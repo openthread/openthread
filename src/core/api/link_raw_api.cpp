@@ -35,6 +35,7 @@
 
 #include <string.h>
 #include <openthread/diag.h>
+#include <openthread/thread.h>
 #include <openthread/platform/diag.h>
 
 #include "common/debug.hpp"
@@ -45,7 +46,7 @@
 #include "mac/mac_frame.hpp"
 #include "utils/parse_cmdline.hpp"
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 using namespace ot;
 
@@ -259,98 +260,6 @@ uint16_t otLinkGetShortAddress(otInstance *aInstance)
     return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().GetShortAddress();
 }
 
-#if OPENTHREAD_ENABLE_DIAG
-static otInstance *sDiagInstance;
-
-void otDiagInit(otInstance *aInstance)
-{
-    sDiagInstance = aInstance;
-}
-
-void otDiagProcessCmdLine(const char *aString, char *aOutput, size_t aOutputMaxLen)
-{
-    enum
-    {
-        kMaxArgs          = OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX,
-        kMaxCommandBuffer = OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE,
-    };
-
-    otError error = OT_ERROR_NONE;
-    char    buffer[kMaxCommandBuffer];
-    char *  argVector[kMaxArgs];
-    uint8_t argCount = 0;
-
-    VerifyOrExit(strnlen(aString, kMaxCommandBuffer) < kMaxCommandBuffer, error = OT_ERROR_NO_BUFS);
-
-    strcpy(buffer, aString);
-    SuccessOrExit(error = Utils::CmdLineParser::ParseCmd(buffer, argCount, argVector, kMaxArgs));
-    VerifyOrExit(argCount >= 1, error = OT_ERROR_INVALID_ARGS);
-
-    if (strcmp(argVector[0], "power") == 0)
-    {
-        char * endptr;
-        int8_t power;
-
-        VerifyOrExit(argCount == 2, error = OT_ERROR_INVALID_ARGS);
-        power = static_cast<int8_t>(strtol(argVector[1], &endptr, 0));
-        VerifyOrExit(*endptr == '\0', error = OT_ERROR_INVALID_ARGS);
-
-        otPlatDiagTxPowerSet(power);
-    }
-    else if (strcmp(argVector[0], "channel") == 0)
-    {
-        char *  endptr;
-        uint8_t channel;
-
-        VerifyOrExit(argCount == 2, error = OT_ERROR_INVALID_ARGS);
-        channel = static_cast<uint8_t>(strtol(argVector[1], &endptr, 0));
-        VerifyOrExit(*endptr == '\0', error = OT_ERROR_INVALID_ARGS);
-
-        otPlatDiagChannelSet(channel);
-    }
-    else if (strcmp(argVector[0], "start") == 0)
-    {
-        otPlatDiagModeSet(true);
-    }
-    else if (strcmp(argVector[0], "stop") == 0)
-    {
-        otPlatDiagModeSet(false);
-    }
-    else
-    {
-        otPlatDiagProcess(sDiagInstance, argCount, argVector, aOutput, aOutputMaxLen);
-    }
-
-exit:
-    switch (error)
-    {
-    case OT_ERROR_NONE:
-        break;
-
-    default:
-        snprintf(aOutput, aOutputMaxLen, "failed: invalid command: %s\r\n", otThreadErrorToString(error));
-        break;
-    }
-}
-
-extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
-{
-    otPlatDiagAlarmCallback(aInstance);
-}
-
-extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
-{
-    // notify OpenThread Diags module on host side
-    otPlatRadioTxDone(aInstance, aFrame, NULL, aError);
-}
-
-extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
-{
-    // notify OpenThread Diags module on host side
-    otPlatRadioReceiveDone(aInstance, aFrame, aError);
-}
-#endif // OPENTHREAD_ENABLE_DIAG
-
 #endif // OPENTHREAD_RADIO
 
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE

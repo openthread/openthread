@@ -33,13 +33,11 @@
 
 #include "openthread/entropy.h"
 
-#include <mbedtls/entropy.h>
-
-#include "common/entropy.hpp"
+#include "common/random_manager.hpp"
 
 using namespace ot;
 
 mbedtls_entropy_context *otEntropyMbedTlsContextGet(void)
 {
-    return Entropy::MbedTlsContextGet();
+    return RandomManager::GetMbedTlsEntropyContext();
 }

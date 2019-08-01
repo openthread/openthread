@@ -119,6 +119,11 @@ exit:
     return;
 }
 
+otError otPlatUartFlush(void)
+{
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
 /**
  * Function for notifying application about transmission being done.
  */

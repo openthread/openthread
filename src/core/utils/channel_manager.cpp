@@ -41,7 +41,7 @@
 #include "common/random.hpp"
 #include "phy/phy.hpp"
 
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 
 namespace ot {
 namespace Utils {
@@ -271,7 +271,7 @@ exit:
     return;
 }
 
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 otError ChannelManager::FindBetterChannel(uint8_t &aNewChannel, uint16_t &aOccupancy)
 {
@@ -386,7 +386,7 @@ exit:
     return error;
 }
 
-#else // OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#else // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 otError ChannelManager::RequestChannelSelect(bool)
 {
@@ -394,7 +394,7 @@ otError ChannelManager::RequestChannelSelect(bool)
     return OT_ERROR_DISABLED_FEATURE;
 }
 
-#endif // OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#endif // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 void ChannelManager::StartAutoSelectTimer(void)
 {
@@ -459,4 +459,4 @@ void ChannelManager::SetFavoredChannels(uint32_t aChannelMask)
 } // namespace Utils
 } // namespace ot
 
-#endif // #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#endif // #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE

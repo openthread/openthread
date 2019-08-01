@@ -400,7 +400,7 @@ public:
      * @param[in]  aTimer  A reference to the timer instance.
      *
      */
-    void Remove(TimerMilli &aTimer) { TimerScheduler::Remove(aTimer, sAlarmMilliApi); };
+    void Remove(TimerMilli &aTimer) { TimerScheduler::Remove(aTimer, sAlarmMilliApi); }
 
     /**
      * This method processes the running timers.
@@ -412,7 +412,7 @@ private:
     static const AlarmApi sAlarmMilliApi;
 };
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 class TimerMicroScheduler;
 
 /**
@@ -501,7 +501,7 @@ public:
      * @param[in]  aTimer  A reference to the timer instance.
      *
      */
-    void Remove(TimerMicro &aTimer) { TimerScheduler::Remove(aTimer, sAlarmMicroApi); };
+    void Remove(TimerMicro &aTimer) { TimerScheduler::Remove(aTimer, sAlarmMicroApi); }
 
     /**
      * This method processes the running timers.
@@ -512,7 +512,7 @@ public:
 private:
     static const AlarmApi sAlarmMicroApi;
 };
-#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
 /**
  * @}

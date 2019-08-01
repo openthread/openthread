@@ -86,6 +86,7 @@ COMMON_SOURCES                                    = \
     ncp_base_dispatcher.cpp                         \
     ncp_buffer.cpp                                  \
     ncp_buffer.hpp                                  \
+    ncp_config.h                                    \
     ncp_spi.cpp                                     \
     ncp_spi.hpp                                     \
     ncp_uart.cpp                                    \

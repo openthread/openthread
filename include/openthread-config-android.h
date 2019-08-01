@@ -27,43 +27,43 @@
  */
 
 /* Define to 1 to enable the border agent feature. */
-#define OPENTHREAD_ENABLE_BORDER_AGENT 1
+#define OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE 1
 
 /* Define to 1 if you want to enable Border Router */
-#define OPENTHREAD_ENABLE_BORDER_ROUTER 1
+#define OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE 1
 
 /* Define to 1 if you want to enable channel manager feature */
-#define OPENTHREAD_ENABLE_CHANNEL_MANAGER 0
+#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE 0
 
 /* Define to 1 if you want to use channel monitor feature */
-#define OPENTHREAD_ENABLE_CHANNEL_MONITOR 0
+#define OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE 0
 
 /* Define to 1 if you want to use child supervision feature */
-#define OPENTHREAD_ENABLE_CHILD_SUPERVISION 1
+#define OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE 1
 
 /* Define to 1 to enable dtls support. */
-#define OPENTHREAD_ENABLE_DTLS 1
+#define OPENTHREAD_CONFIG_DTLS_ENABLE 1
 
 /* Define to 1 if you want to use jam detection feature */
-#define OPENTHREAD_ENABLE_JAM_DETECTION 1
+#define OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE 1
 
 /* Define to 1 to enable the joiner role. */
-#define OPENTHREAD_ENABLE_JOINER 1
+#define OPENTHREAD_CONFIG_JOINER_ENABLE 1
 
 /* Define to 1 if you want to use legacy network support */
-#define OPENTHREAD_ENABLE_LEGACY 1
+#define OPENTHREAD_CONFIG_LEGACY_ENABLE 1
 
 /* Define to 1 to enable the NCP UART interface. */
-#define OPENTHREAD_ENABLE_NCP_UART 1
+#define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
 
 /* Define to 1 to build posix application. */
 #define OPENTHREAD_PLATFORM_POSIX_APP 1
 
 /* Define to 1 if you want to enable Service */
-#define OPENTHREAD_ENABLE_SERVICE 1
+#define OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE 1
 
 /* Define to 1 to enable the UDP forward feature. */
-#define OPENTHREAD_ENABLE_UDP_FORWARD 1
+#define OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE 1
 
 /* OpenThread examples */
 #define OPENTHREAD_EXAMPLES none

@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import node
@@ -39,6 +38,7 @@ LEADER = 1
 DUT_ROUTER1 = 2
 ROUTER2 = 3
 ROUTER24 = 24
+
 
 class Cert_5_2_06_RouterDowngrade(unittest.TestCase):
     def setUp(self):
@@ -55,9 +55,9 @@ class Cert_5_2_06_RouterDowngrade(unittest.TestCase):
                 self.nodes[i].set_router_downgrade_threshold(32)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -71,12 +71,14 @@ class Cert_5_2_06_RouterDowngrade(unittest.TestCase):
             self.simulator.go(5)
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
-        # This method flushes the message queue so calling this method again will return only the newly logged messages.
+        # This method flushes the message queue so calling this method again
+        # will return only the newly logged messages.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
 
         # 2 ROUTER24: Attach to network.
         # All reference testbed devices have been configured with downgrade threshold as 32 except DUT_ROUTER1,
-        # so we don't need to ensure ROUTER24 has a better link quality on posix.
+        # so we don't need to ensure ROUTER24 has a better link quality on
+        # posix.
         self.nodes[ROUTER24].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER24].get_state(), 'router')
@@ -90,13 +92,17 @@ class Cert_5_2_06_RouterDowngrade(unittest.TestCase):
         dut_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
         dut_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
 
-        # Verify it sent an Address Release Message to the Leader when it attached as a child.
+        # Verify it sent an Address Release Message to the Leader when it
+        # attached as a child.
         msg = dut_messages.next_coap_message('0.02')
         command.check_address_release(msg, self.nodes[LEADER])
 
         # 4 & 5
-        router1_rloc = self.nodes[DUT_ROUTER1].get_ip6_address(config.ADDRESS_TYPE.RLOC)
+        router1_rloc = self.nodes[DUT_ROUTER1].get_ip6_address(
+            config.ADDRESS_TYPE.RLOC
+        )
         self.assertTrue(self.nodes[LEADER].ping(router1_rloc))
+
 
 if __name__ == '__main__':
     unittest.main()

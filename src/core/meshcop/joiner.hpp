@@ -162,7 +162,7 @@ private:
     void    SendJoinerFinalize(void);
     void    SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aRequestInfo);
 
-#if OPENTHREAD_ENABLE_CERT_LOG
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     void LogCertMessage(const char *aText, const Coap::Message &aMessage) const;
 #endif
 
@@ -171,7 +171,7 @@ private:
     otJoinerCallback mCallback;
     void *           mContext;
 
-    JoinerRouter mJoinerRouters[OPENTHREAD_CONFIG_MAX_JOINER_ROUTER_ENTRIES];
+    JoinerRouter mJoinerRouters[OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES];
     uint16_t     mJoinerRouterIndex;
 
     Coap::Message *mFinalizeMessage;

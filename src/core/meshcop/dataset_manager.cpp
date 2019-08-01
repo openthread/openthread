@@ -418,7 +418,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, mUriSet));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
     if (Get<Commissioner>().IsActive())
     {
@@ -446,7 +446,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         }
     }
 
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
     if (aDataset.mComponents.mIsActiveTimestampPresent)
     {

@@ -39,7 +39,7 @@
 
 using namespace ot;
 
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 otError otChannelMonitorSetEnabled(otInstance *aInstance, bool aEnabled)
 {
@@ -90,4 +90,4 @@ uint16_t otChannelMonitorGetChannelOccupancy(otInstance *aInstance, uint8_t aCha
     return instance.Get<Utils::ChannelMonitor>().GetChannelOccupancy(aChannel);
 }
 
-#endif // OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#endif // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE

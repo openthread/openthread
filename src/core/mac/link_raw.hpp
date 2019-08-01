@@ -45,17 +45,13 @@
 namespace ot {
 namespace Mac {
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 /**
  * This class defines the raw link-layer object.
  *
  */
 class LinkRaw : public InstanceLocator
-#if OPENTHREAD_RADIO
-    ,
-                public SubMac::Callbacks
-#endif
 {
     friend class ot::Instance;
 
@@ -284,12 +280,12 @@ private:
 
 #if OPENTHREAD_RADIO
     SubMac mSubMac;
-#elif OPENTHREAD_ENABLE_RAW_LINK_API
+#elif OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     SubMac &mSubMac;
 #endif
 };
 
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 } // namespace Mac
 } // namespace ot

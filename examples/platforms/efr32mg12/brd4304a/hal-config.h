@@ -33,6 +33,18 @@
 // [BULBPWM_COLOR]$
 
 // $[BUTTON]
+#define BSP_BUTTON_PRESENT                            (1)
+
+#define BSP_BUTTON0_PIN                               (6U)
+#define BSP_BUTTON0_PORT                              (gpioPortF)
+
+#define BSP_BUTTON1_PIN                               (7U)
+#define BSP_BUTTON1_PORT                              (gpioPortF)
+
+#define BSP_BUTTON_COUNT                              (2U)
+#define BSP_BUTTON_INIT                               { { BSP_BUTTON0_PORT, BSP_BUTTON0_PIN }, { BSP_BUTTON1_PORT, BSP_BUTTON1_PIN } }
+#define BSP_BUTTON_GPIO_DOUT                          (HAL_GPIO_DOUT_LOW)
+#define BSP_BUTTON_GPIO_MODE                          (HAL_GPIO_MODE_INPUT)
 // [BUTTON]$
 
 // $[CMU]

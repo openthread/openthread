@@ -44,7 +44,7 @@
 namespace ot {
 namespace Crypto {
 
-#if OPENTHREAD_ENABLE_ECDSA
+#if OPENTHREAD_CONFIG_ECDSA_ENABLE
 
 otError Ecdsa::Sign(uint8_t *      aOutput,
                     uint16_t *     aOutputLength,
@@ -98,7 +98,7 @@ exit:
     return error;
 }
 
-#endif // OPENTHREAD_ENABLE_ECDSA
+#endif // OPENTHREAD_CONFIG_ECDSA_ENABLE
 
 } // namespace Crypto
 } // namespace ot

@@ -42,6 +42,8 @@
 #include "common/random.hpp"
 #include "mac/mac_frame.hpp"
 #include "net/ip6.hpp"
+#include "thread/device_mode.hpp"
+#include "thread/indirect_sender.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/mle_tlvs.hpp"
 
@@ -112,7 +114,7 @@ public:
      * @returns The device mode flags.
      *
      */
-    uint8_t GetDeviceMode(void) const { return mMode; }
+    Mle::DeviceMode GetDeviceMode(void) const { return Mle::DeviceMode(mMode); }
 
     /**
      * This method sets the device mode flags.
@@ -120,7 +122,7 @@ public:
      * @param[in]  aMode  The device mode flags.
      *
      */
-    void SetDeviceMode(uint8_t aMode) { mMode = aMode; }
+    void SetDeviceMode(Mle::DeviceMode aMode) { mMode = aMode.Get(); }
 
     /**
      * This method indicates whether or not the device is rx-on-when-idle.
@@ -128,7 +130,7 @@ public:
      * @returns TRUE if rx-on-when-idle, FALSE otherwise.
      *
      */
-    bool IsRxOnWhenIdle(void) const { return (mMode & Mle::ModeTlv::kModeRxOnWhenIdle) != 0; }
+    bool IsRxOnWhenIdle(void) const { return GetDeviceMode().IsRxOnWhenIdle(); }
 
     /**
      * This method indicates whether or not the device is a Full Thread Device.
@@ -136,7 +138,7 @@ public:
      * @returns TRUE if a Full Thread Device, FALSE otherwise.
      *
      */
-    bool IsFullThreadDevice(void) const { return (mMode & Mle::ModeTlv::kModeFullThreadDevice) != 0; }
+    bool IsFullThreadDevice(void) const { return GetDeviceMode().IsFullThreadDevice(); }
 
     /**
      * This method indicates whether or not the device uses secure IEEE 802.15.4 Data Request messages.
@@ -144,7 +146,7 @@ public:
      * @returns TRUE if using secure IEEE 802.15.4 Data Request messages, FALSE otherwise.
      *
      */
-    bool IsSecureDataRequest(void) const { return (mMode & Mle::ModeTlv::kModeSecureDataRequest) != 0; }
+    bool IsSecureDataRequest(void) const { return GetDeviceMode().IsSecureDataRequest(); }
 
     /**
      * This method indicates whether or not the device requests Full Network Data.
@@ -152,7 +154,7 @@ public:
      * @returns TRUE if requests Full Network Data, FALSE otherwise.
      *
      */
-    bool IsFullNetworkData(void) const { return (mMode & Mle::ModeTlv::kModeFullNetworkData) != 0; }
+    bool IsFullNetworkData(void) const { return GetDeviceMode().IsFullNetworkData(); }
 
     /**
      * This method sets all bytes of the Extended Address to zero.
@@ -273,22 +275,6 @@ public:
     void SetRloc16(uint16_t aRloc16) { mRloc16 = aRloc16; }
 
     /**
-     * This method indicates whether an IEEE 802.15.4 Data Request message was received.
-     *
-     * @returns TRUE if an IEEE 802.15.4 Data Request message was received, FALSE otherwise.
-     *
-     */
-    bool IsDataRequestPending(void) const { return mDataRequest; }
-
-    /**
-     * This method sets the indicator for whether an IEEE 802.15.4 Data Request message was received.
-     *
-     * @param[in]  aPending  TRUE if an IEEE 802.15.4 Data Request message was received, FALSE otherwise.
-     *
-     */
-    void SetDataRequestPending(bool aPending) { mDataRequest = aPending; }
-
-    /**
      * This method gets the number of consecutive link failures.
      *
      * @returns The number of consecutive link failures.
@@ -338,7 +324,7 @@ public:
      */
     uint8_t GetChallengeSize(void) const { return sizeof(mValidPending.mPending.mChallenge); }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * This method indicates whether or not time sync feature is enabled.
      *
@@ -372,12 +358,11 @@ private:
         } mPending;
     } mValidPending;
 
-    uint32_t mKeySequence;     ///< Current key sequence
-    uint16_t mRloc16;          ///< The RLOC16
-    uint8_t  mState : 3;       ///< The link state
-    uint8_t  mMode : 4;        ///< The MLE device mode
-    bool     mDataRequest : 1; ///< Indicates whether or not a Data Poll was received
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+    uint32_t mKeySequence; ///< Current key sequence
+    uint16_t mRloc16;      ///< The RLOC16
+    uint8_t  mState : 4;   ///< The link state
+    uint8_t  mMode : 4;    ///< The MLE device mode
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     uint8_t mLinkFailures : 7;    ///< Consecutive link failure count
     bool    mTimeSyncEnabled : 1; ///< Indicates whether or not time sync feature is enabled.
 #else
@@ -390,7 +375,7 @@ private:
  * This class represents a Thread Child.
  *
  */
-class Child : public Neighbor
+class Child : public Neighbor, public IndirectSender::ChildInfo, public DataPollHandler::ChildInfo
 {
 public:
     enum
@@ -584,180 +569,6 @@ public:
     uint8_t GetChallengeSize(void) const { return sizeof(mAttachChallenge); }
 
     /**
-     * This method gets the IEEE 802.15.4 Frame Counter used during indirect retransmissions.
-     *
-     * @returns The IEEE 802.15.4 Frame Counter value.
-     *
-     */
-    uint32_t GetIndirectFrameCounter(void) const { return mIndirectFrameCounter; }
-
-    /**
-     * This method sets the IEEE 802.15.4 Frame Counter to use during indirect retransmissions.
-     *
-     * @param[in]  aFrameCounter  The IEEE 802.15.4 Frame Counter value.
-     *
-     */
-    void SetIndirectFrameCounter(uint32_t aFrameCounter) { mIndirectFrameCounter = aFrameCounter; }
-
-    /**
-     * This method gets the message buffer to use for indirect transmissions.
-     *
-     * @returns The message buffer.
-     *
-     */
-    Message *GetIndirectMessage(void) { return mIndirectMessage; }
-
-    /**
-     * This method sets the message buffer to use for indirect transmissions.
-     *
-     * @param[in]  aMessage  The message buffer.
-     *
-     */
-    void SetIndirectMessage(Message *aMessage) { mIndirectMessage = aMessage; }
-
-    /**
-     * This method gets the 6LoWPAN Fragment Offset to use for indirect transmissions.
-     *
-     * @returns The 6LoWPAN Fragment Offset value.
-     *
-     */
-    uint16_t GetIndirectFragmentOffset(void) const { return mIndirectFragmentOffset; }
-
-    /**
-     * This method sets the 6LoWPAN Fragment Offset to use for indirect transmissions.
-     *
-     * @param[in]  aFragmentOffset  The 6LoWPAN Fragment Offset value to use.
-     *
-     */
-    void SetIndirectFragmentOffset(uint16_t aFragmentOffset) { mIndirectFragmentOffset = aFragmentOffset; }
-
-    /**
-     * This method gets the transmission status (success/failure) of the indirect transmission.
-     *
-     * @returns The transmission status of indirect transmission, `true` indicating success, `false` indicating failure.
-     *
-     */
-    bool GetIndirectTxSuccess(void) const { return mIndirectTxSuccess; }
-
-    /**
-     * This method sets the transmission status (success/failure) of the indirect transmission.
-     *
-     * @param[in]  aTxStatus    The transmission status, `true` indicating success, `false` indicating failure.
-     *
-     */
-    void SetIndirectTxSuccess(bool aTxStatus) { mIndirectTxSuccess = aTxStatus; }
-
-    /**
-     * This method gets the IEEE 802.15.4 Key ID to use for indirect retransmissions.
-     *
-     * @returns The IEEE 802.15.4 Key ID value.
-     *
-     */
-    uint8_t GetIndirectKeyId(void) const { return mIndirectKeyId; }
-
-    /**
-     * This method sets the IEEE 802.15.4 Key ID value to use for indirect retransmissions.
-     *
-     * @param[in]  aKeyId  The IEEE 802.15.4 Key ID value.
-     *
-     */
-    void SetIndirectKeyId(uint8_t aKeyId) { mIndirectKeyId = aKeyId; }
-
-    /**
-     * This method gets the number of indirect transmission attempts for the current message.
-     *
-     * @returns The number of indirect transmission attempts.
-     *
-     */
-    uint8_t GetIndirectTxAttempts(void) const { return mIndirectTxAttempts; }
-
-    /**
-     * This method resets the number of indirect transmission attempts to zero.
-     *
-     */
-    void ResetIndirectTxAttempts(void) { mIndirectTxAttempts = 0; }
-
-    /**
-     * This method increments the number of indirect transmission attempts.
-     *
-     */
-    void IncrementIndirectTxAttempts(void) { mIndirectTxAttempts++; }
-
-    /**
-     * This method gets the IEEE 802.15.4 Data Sequence Number to use during indirect retransmissions.
-     *
-     * @returns The IEEE 802.15.4 Data Sequence Number value.
-     *
-     */
-    uint8_t GetIndirectDataSequenceNumber(void) const { return mIndirectDsn; }
-
-    /**
-     * This method sets the IEEE 802.15.4 Data Sequence Number to use during indirect retransmissions.
-     *
-     * @param[in]  aDsn  The IEEE 802.15.4 Data Sequence Number value.
-     *
-     */
-    void SetIndirectDataSequenceNumber(uint8_t aDsn) { mIndirectDsn = aDsn; }
-
-    /**
-     * This method indicates whether or not to source match on the short address.
-     *
-     * @returns TRUE if using the short address, FALSE if using the extended address.
-     *
-     */
-    bool IsIndirectSourceMatchShort(void) const { return mUseShortAddress; }
-
-    /**
-     * This method sets whether or not to source match on the short address.
-     *
-     * @param[in]  aShort  TRUE if using the short address, FALSE if using the extended address.
-     *
-     */
-    void SetIndirectSourceMatchShort(bool aShort) { mUseShortAddress = aShort; }
-
-    /**
-     * This method indicates whether or not the child needs to be added to the source match table.
-     *
-     * @returns TRUE if the child needs to be added to the source match table, FALSE otherwise.
-     *
-     */
-    bool IsIndirectSourceMatchPending(void) const { return mSourceMatchPending; }
-
-    /**
-     * This method sets whether or not the child needs to be added to the source match table.
-     *
-     * @param[in]  aPending  TRUE if the child needs to be added to the source match table, FALSE otherwise.
-     *
-     */
-    void SetIndirectSourceMatchPending(bool aPending) { mSourceMatchPending = aPending; }
-
-    /**
-     * This method returns the number of queued message(s) for the child
-     *
-     * @returns Number of queues message(s).
-     *
-     */
-    uint16_t GetIndirectMessageCount(void) const { return mQueuedMessageCount; }
-
-    /**
-     * This method increments the indirect message count.
-     *
-     */
-    void IncrementIndirectMessageCount(void) { mQueuedMessageCount++; }
-
-    /**
-     * This method decrements the indirect message count.
-     *
-     */
-    void DecrementIndirectMessageCount(void) { mQueuedMessageCount--; }
-
-    /**
-     * This method resets the indirect message count to zero.
-     *
-     */
-    void ResetIndirectMessageCount(void) { mQueuedMessageCount = 0; }
-
-    /**
      * This method clears the requested TLV list.
      *
      */
@@ -782,18 +593,7 @@ public:
      */
     void SetRequestTlv(uint8_t aIndex, uint8_t aType) { mRequestTlvs[aIndex] = aType; }
 
-    /**
-     * This method gets the mac address of child (either rloc16 or extended address depending on `UseShortAddress`
-     * flag).
-     *
-     * @param[out] aMacAddress A reference to a mac address object to which the child's address is copied.
-     *
-     * @returns A (const) reference to the mac address @a aMacAddress.
-     *
-     */
-    const Mac::Address &GetMacAddress(Mac::Address &aMacAddress) const;
-
-#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
     /**
      * This method increments the number of seconds since last supervision of the child.
@@ -815,18 +615,19 @@ public:
      */
     void ResetSecondsSinceLastSupervision(void) { mSecondsSinceSupervision = 0; }
 
-#endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 private:
-#if OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD < 2
-#error OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD should be at least set to 2.
+#if OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD < 2
+#error OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD should be at least set to 2.
 #endif
 
     enum
     {
-        kNumIp6Addresses = OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD - 1,
+        kNumIp6Addresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1,
     };
 
+    uint8_t      mNetworkDataVersion;                                   ///< Current Network Data version
     uint8_t      mMeshLocalIid[Ip6::Address::kInterfaceIdentifierSize]; ///< IPv6 address IID for mesh-local address
     Ip6::Address mIp6Address[kNumIp6Addresses];                         ///< Registered IPv6 addresses
 
@@ -838,21 +639,9 @@ private:
         uint8_t mAttachChallenge[Mle::ChallengeTlv::kMaxSize]; ///< The challenge value
     };
 
-    uint32_t mIndirectFrameCounter;        ///< Frame counter for current indirect message (used fore retx).
-    Message *mIndirectMessage;             ///< Current indirect message.
-    uint16_t mIndirectFragmentOffset : 15; ///< 6LoWPAN fragment offset for the indirect message.
-    bool     mIndirectTxSuccess : 1;       ///< Indicates tx success/failure of current indirect message.
-    uint8_t  mIndirectKeyId;               ///< Key Id for current indirect message (used for retx).
-    uint8_t  mIndirectTxAttempts;          ///< Number of data poll triggered tx attempts.
-    uint8_t  mIndirectDsn;                 ///< MAC level Data Sequence Number (DSN) for retx attempts.
-    uint8_t  mNetworkDataVersion;          ///< Current Network Data version
-    uint16_t mQueuedMessageCount : 13;     ///< Number of queued indirect messages for the child.
-    bool     mUseShortAddress : 1;         ///< Indicates whether to use short or extended address.
-    bool     mSourceMatchPending : 1;      ///< Indicates whether or not pending to add to src match table.
-
-#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
     uint16_t mSecondsSinceSupervision; ///< Number of seconds since last supervision of the child.
-#endif                                 // OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#endif
 
     OT_STATIC_ASSERT(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < 8192, "mQueuedMessageCount cannot fit max required!");
 };
@@ -916,7 +705,7 @@ private:
     uint8_t mNextHop;            ///< The next hop towards this router
     uint8_t mLinkQualityOut : 2; ///< The link quality out for this router
 
-#if OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
+#if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
     uint8_t mCost; ///< The cost to this router via neighbor router
 #else
     uint8_t mCost : 4;     ///< The cost to this router via neighbor router

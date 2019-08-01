@@ -59,7 +59,7 @@ coap response sent
 * [get](#get-address-uri-path-type)
 * [post](#post-address-uri-path-type-payload)
 * [put](#put-address-uri-path-type-payload)
-# [resource](#resource-uri-path)
+* [resource](#resource-uri-path)
 * [start](#start)
 * [stop](#stop)
 

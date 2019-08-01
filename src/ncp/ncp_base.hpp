@@ -35,6 +35,8 @@
 
 #include "openthread-core-config.h"
 
+#include "ncp/ncp_config.h"
+
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 #include <openthread/ip6.h>
 #else
@@ -128,7 +130,7 @@ public:
 #endif
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-#if OPENTHREAD_ENABLE_LEGACY
+#if OPENTHREAD_CONFIG_LEGACY_ENABLE
     /**
      * This callback is invoked by the legacy stack to notify that a new
      * legacy node did join the network.
@@ -255,7 +257,7 @@ protected:
     otError EncodeChannelMask(uint32_t aChannelMask);
     otError DecodeChannelMask(uint32_t &aChannelMask);
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
     static void LinkRawReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
     void        LinkRawReceiveDone(otRadioFrame *aFrame, otError aError);
@@ -269,7 +271,7 @@ protected:
     static void LinkRawEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
     void        LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi);
 
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     static void HandleStateChanged(otChangedFlags aFlags, void *aContext);
@@ -304,7 +306,7 @@ protected:
     static void HandleJamStateChange_Jump(bool aJamState, void *aContext);
     void        HandleJamStateChange(bool aJamState);
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     static void HandleCommissionerEnergyReport_Jump(uint32_t       aChannelMask,
                                                     const uint8_t *aEnergyData,
                                                     uint8_t        aLength,
@@ -315,7 +317,7 @@ protected:
     void        HandleCommissionerPanIdConflict(uint16_t aPanId, uint32_t aChannelMask);
 #endif
 
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
     static void HandleJoinerCallback_Jump(otError aError, void *aContext);
     void        HandleJoinerCallback(otError aError);
 #endif
@@ -334,14 +336,14 @@ protected:
     otError EncodeChildInfo(const otChildInfo &aChildInfo);
 #endif
 
-#if OPENTHREAD_ENABLE_UDP_FORWARD
+#if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     static void HandleUdpForwardStream(otMessage *   aMessage,
                                        uint16_t      aPeerPort,
                                        otIp6Address *aPeerAddr,
                                        uint16_t      aSockPort,
                                        void *        aContext);
     void HandleUdpForwardStream(otMessage *aMessage, uint16_t aPeerPort, otIp6Address &aPeerAddr, uint16_t aPort);
-#endif // OPENTHREAD_ENABLE_UDP_FORWARD
+#endif // OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     otError CommandHandler_NOOP(uint8_t aHeader);
@@ -405,7 +407,7 @@ protected:
 
     otError HandlePropertySet_SPINEL_PROP_HOST_POWER_STATE(uint8_t aHeader);
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
     OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <=
                          OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE - kSpinelCmdHeaderSize - kSpinelPropIdSize,
                      "diag output buffer should be smaller than NCP UART tx buffer");
@@ -413,16 +415,16 @@ protected:
     otError HandlePropertySet_SPINEL_PROP_NEST_STREAM_MFG(uint8_t aHeader);
 #endif
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     otError HandlePropertySet_SPINEL_PROP_THREAD_COMMISSIONER_ENABLED(uint8_t aHeader);
 #endif // OPENTHREAD_FTD
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     otError DecodeStreamRawTxRequest(otRadioFrame &aFrame);
     otError HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader);
 #endif
 
-#if OPENTHREAD_ENABLE_LEGACY
+#if OPENTHREAD_CONFIG_LEGACY_ENABLE
     void StartLegacy(void);
     void StopLegacy(void);
 #else
@@ -553,22 +555,22 @@ protected:
     bool mPcapEnabled;
     bool mDisableStreamWrite;
     bool mShouldEmitChildTableUpdate;
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     bool mAllowLocalServerDataChange;
 #endif
 
 #if OPENTHREAD_FTD
-#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     otExtAddress mSteeringDataAddress;
 #endif
     uint8_t mPreferredRouteId;
 #endif
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     uint8_t mCurTransmitTID;
     int8_t  mCurScanChannel;
     bool    mSrcMatchEnabled;
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     otMessageQueue mMessageQueue;
@@ -579,7 +581,7 @@ protected:
     uint32_t mOutboundInsecureIpFrameCounter; // Number of insecure outbound data/IP frames.
     uint32_t mDroppedOutboundIpFrameCounter;  // Number of dropped outbound data/IP frames.
     uint32_t mDroppedInboundIpFrameCounter;   // Number of dropped inbound data/IP frames.
-#if OPENTHREAD_ENABLE_LEGACY
+#if OPENTHREAD_CONFIG_LEGACY_ENABLE
     const otNcpLegacyHandlers *mLegacyHandlers;
     uint8_t                    mLegacyUlaPrefix[OT_NCP_LEGACY_ULA_PREFIX_LENGTH];
     otExtAddress               mLegacyLastJoinedNode;

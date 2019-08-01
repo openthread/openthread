@@ -33,7 +33,7 @@ import struct
 import time
 
 DLT_IEEE802_15_4 = 195
-PCAP_MAGIC_NUMBER = 0xa1b2c3d4
+PCAP_MAGIC_NUMBER = 0xA1B2C3D4
 PCAP_VERSION_MAJOR = 2
 PCAP_VERSION_MINOR = 4
 
@@ -48,12 +48,16 @@ class PcapCodec(object):
 
     def encode_header(self):
         """ Returns a pcap file header. """
-        return struct.pack("<LHHLLLL",
-                           PCAP_MAGIC_NUMBER,
-                           PCAP_VERSION_MAJOR,
-                           PCAP_VERSION_MINOR,
-                           0, 0, 256,
-                           DLT_IEEE802_15_4)
+        return struct.pack(
+            "<LHHLLLL",
+            PCAP_MAGIC_NUMBER,
+            PCAP_VERSION_MAJOR,
+            PCAP_VERSION_MINOR,
+            0,
+            0,
+            256,
+            DLT_IEEE802_15_4,
+        )
 
     def encode_frame(self, frame, sec, usec):
         """ Returns a pcap encapsulation of the given frame. """

@@ -41,7 +41,7 @@
 #include <mbedtls/ssl.h>
 #include <mbedtls/ssl_cookie.h>
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #include <mbedtls/base64.h>
 #include <mbedtls/x509.h>
@@ -49,7 +49,7 @@
 #include <mbedtls/x509_crt.h>
 #include <mbedtls/x509_csr.h>
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -71,11 +71,11 @@ public:
     {
         kPskMaxLength                = 32,
         kGuardTimeNewConnectionMilli = 2000,
-#if !OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if !OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
         kApplicationDataMaxLength = 512,
 #else
         kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH,
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     };
 
     enum State
@@ -247,7 +247,7 @@ public:
      */
     otError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     /**
      * This method sets the Pre-Shared Key (PSK) for DTLS sessions-
@@ -333,9 +333,9 @@ public:
      *
      */
     void SetSslAuthMode(bool aVerifyPeerCertificate);
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
-#if OPENTHREAD_ENABLE_BORDER_AGENT || OPENTHREAD_ENABLE_COMMISSIONER
+#ifdef MBEDTLS_SSL_SRV_C
     /**
      * This method sets the Client ID used for generating the Hello Cookie.
      *
@@ -346,7 +346,7 @@ public:
      *
      */
     otError SetClientId(const uint8_t *aClientId, uint8_t aLength);
-#endif // OPENTHREAD_ENABLE_BORDER_AGENT || OPENTHREAD_ENABLE_COMMISSIONER
+#endif
 
     /**
      * This method sends data within the DTLS session.
@@ -393,7 +393,7 @@ private:
     void    FreeMbedtls(void);
     otError Setup(bool aClient);
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     /**
      * Set keys and/or certificates for dtls session dependent of used cipher suite.
      *
@@ -401,7 +401,7 @@ private:
      *
      */
     int SetApplicationCoapSecureKeys(void);
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
     static void HandleMbedtlsDebug(void *ctx, int level, const char *file, int line, const char *str);
 
@@ -450,7 +450,7 @@ private:
     uint8_t mPsk[kPskMaxLength];
     uint8_t mPskLength;
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
     const uint8_t *    mCaChainSrc;
@@ -470,7 +470,7 @@ private:
     uint16_t       mPreSharedKeyLength;
     uint16_t       mPreSharedKeyIdLength;
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
     bool mVerifyPeerCertificate;
 

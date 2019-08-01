@@ -362,4 +362,9 @@ exit:
     return error;
 }
 
+otError otPlatUartFlush(void)
+{
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
 #endif // USB_CDC_AS_SERIAL_TRANSPORT == 1

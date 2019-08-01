@@ -33,10 +33,10 @@
 #include "ncp_base.hpp"
 #include <openthread/config.h>
 
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 #include <openthread/channel_manager.h>
 #endif
-#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 #include <openthread/child_supervision.h>
 #endif
 #include <openthread/dataset.h>
@@ -50,7 +50,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 #include "meshcop/commissioner.hpp"
 #endif
 
@@ -331,6 +331,19 @@ exit:
     return error;
 }
 
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PARTITION_ID>(void)
+{
+    uint32_t partitionId = 0;
+    otError  error       = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint32(partitionId));
+
+    otThreadSetLocalLeaderPartitionId(mInstance, partitionId);
+
+exit:
+    return error;
+}
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CHILD_COUNT_MAX>(void)
 {
     return mEncoder.WriteUint8(otThreadGetMaxAllowedChildren(mInstance));
@@ -458,7 +471,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NEW_DATASET>(v
     return error;
 }
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_COMMISSIONER_STATE>(void)
 {
@@ -792,7 +805,7 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_JOINERS>(vo
 exit:
     return error;
 }
-#endif // OPENTHREAD_ENABLE_COMMISSIONER
+#endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT>(void)
 {
@@ -807,7 +820,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_STEERING_DATA>(void)
 {
@@ -825,7 +838,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_STEERING_DATA>
 exit:
     return error;
 }
-#endif // #if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#endif // #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID>(void)
 {
@@ -890,7 +903,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CHILD_SUPERVISION_INTERVAL>(void)
 {
@@ -909,9 +922,9 @@ exit:
     return error;
 }
 
-#endif // OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#endif // OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL>(void)
 {
@@ -1034,9 +1047,9 @@ exit:
     return error;
 }
 
-#endif // OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_TIME_SYNC_PERIOD>(void)
 {
     return mEncoder.WriteUint16(otNetworkTimeGetSyncPeriod(mInstance));
@@ -1072,7 +1085,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_TIME_SYNC_XTAL_THRESH
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 } // namespace Ncp
 } // namespace ot

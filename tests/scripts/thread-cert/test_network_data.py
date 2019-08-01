@@ -39,7 +39,9 @@ import network_data
 
 
 def convert_route_to_bytearray(route):
-    return struct.pack(">HB", route.border_router_16, ((route.prf & 0x03) << 6))
+    return struct.pack(
+        ">HB", route.border_router_16, ((route.prf & 0x03) << 6)
+    )
 
 
 def convert_routes_to_bytearray(routes):
@@ -55,21 +57,26 @@ def convert_has_route_to_bytearray(has_route):
 
 
 def convert_border_router_to_bytearray(border_router):
-    data = struct.pack(">HBB", border_router.border_router_16,
-                       (border_router.o & 0x01) |
-                       ((border_router.r & 0x01) << 1) |
-                       ((border_router.c & 0x01) << 2) |
-                       ((border_router.d & 0x01) << 3) |
-                       ((border_router.s & 0x01) << 4) |
-                       ((border_router.p & 0x01) << 5) |
-                       ((border_router.prf & 0x03) << 6),
-                       ((border_router.n & 0x01) << 7))
+    data = struct.pack(
+        ">HBB",
+        border_router.border_router_16,
+        (border_router.o & 0x01)
+        | ((border_router.r & 0x01) << 1)
+        | ((border_router.c & 0x01) << 2)
+        | ((border_router.d & 0x01) << 3)
+        | ((border_router.s & 0x01) << 4)
+        | ((border_router.p & 0x01) << 5)
+        | ((border_router.prf & 0x03) << 6),
+        ((border_router.n & 0x01) << 7),
+    )
 
     return data
 
 
 def convert_lowpan_id_to_bytearray(lowpan_id):
-    return bytearray([lowpan_id.cid | (lowpan_id.c << 4), lowpan_id.context_length])
+    return bytearray(
+        [lowpan_id.cid | (lowpan_id.c << 4), lowpan_id.context_length]
+    )
 
 
 def convert_prefix_sub_tlvs_to_bytearray(sub_tlvs):
@@ -78,15 +85,15 @@ def convert_prefix_sub_tlvs_to_bytearray(sub_tlvs):
     for sub_tlv in sub_tlvs:
         if isinstance(sub_tlv, network_data.HasRoute):
             value = convert_has_route_to_bytearray(sub_tlv)
-            _type = sub_tlv.stable | ((0 & 0x7f) << 1)
+            _type = sub_tlv.stable | ((0 & 0x7F) << 1)
 
         elif isinstance(sub_tlv, network_data.BorderRouter):
             value = convert_border_router_to_bytearray(sub_tlv)
-            _type = sub_tlv.stable | ((2 & 0x7f) << 1)
+            _type = sub_tlv.stable | ((2 & 0x7F) << 1)
 
         elif isinstance(sub_tlv, network_data.LowpanId):
             value = convert_lowpan_id_to_bytearray(sub_tlv)
-            _type = sub_tlv.stable | ((3 & 0x7f) << 1)
+            _type = sub_tlv.stable | ((3 & 0x7F) << 1)
 
         else:
             raise ValueError
@@ -106,7 +113,7 @@ def convert_service_sub_tlvs_to_bytearray(sub_tlvs):
     for sub_tlv in sub_tlvs:
         if isinstance(sub_tlv, network_data.Server):
             value = convert_server_to_bytearray(sub_tlv)
-            _type = sub_tlv.stable | ((6 & 0x7f) << 1)
+            _type = sub_tlv.stable | ((6 & 0x7F) << 1)
 
         else:
             raise ValueError
@@ -117,11 +124,16 @@ def convert_service_sub_tlvs_to_bytearray(sub_tlvs):
 
 
 def convert_service_to_bytearray(service):
-    return struct.pack(">BLB", ((service.t & 0x01) << 7) | ((service.id) & 0x0f),
-                       service.enterprise_number,
-                       service.service_data_length) + \
-        service.service_data + \
-        convert_service_sub_tlvs_to_bytearray(service.sub_tlvs)
+    return (
+        struct.pack(
+            ">BLB",
+            ((service.t & 0x01) << 7) | ((service.id) & 0x0F),
+            service.enterprise_number,
+            service.service_data_length,
+        )
+        + service.service_data
+        + convert_service_sub_tlvs_to_bytearray(service.sub_tlvs)
+    )
 
 
 def any_border_router_16():
@@ -159,7 +171,12 @@ def any_prefix(prefix_length=None):
     if prefix_length is None:
         prefix_length = any_prefix_length()
 
-    return bytearray([random.getrandbits(8) for _ in range(int(math.ceil(prefix_length / 8)))])
+    return bytearray(
+        [
+            random.getrandbits(8)
+            for _ in range(int(math.ceil(prefix_length / 8)))
+        ]
+    )
 
 
 def any_p():
@@ -199,19 +216,28 @@ def any_context_length():
 
 
 def any_border_router():
-    return network_data.BorderRouter(any_border_router_16(), any_prf(), any_p(), any_s(), any_d(), any_c(), any_r(), any_o(), any_n(), any_stable())
+    return network_data.BorderRouter(
+        any_border_router_16(),
+        any_prf(),
+        any_p(),
+        any_s(),
+        any_d(),
+        any_c(),
+        any_r(),
+        any_o(),
+        any_n(),
+        any_stable(),
+    )
 
 
 def any_lowpan_id():
-    return network_data.LowpanId(any_c(), any_cid(), any_context_length(), any_stable())
+    return network_data.LowpanId(
+        any_c(), any_cid(), any_context_length(), any_stable()
+    )
 
 
 def any_prefix_sub_tlvs():
-    creator = [
-        any_has_route,
-        any_border_router,
-        any_lowpan_id
-    ]
+    creator = [any_has_route, any_border_router, any_lowpan_id]
 
     sub_tlvs = []
 
@@ -257,13 +283,13 @@ def any_server_data(data_length=None):
 
 
 def any_server():
-    return network_data.Server(any_server_16(), any_server_data(), any_stable())
+    return network_data.Server(
+        any_server_16(), any_server_data(), any_stable()
+    )
 
 
 def any_service_sub_tlvs():
-    creator = [
-        any_server
-    ]
+    creator = [any_server]
 
     sub_tlvs = []
 
@@ -279,8 +305,8 @@ def any_stable():
 
 
 class TestRoute(unittest.TestCase):
-
-    def test_should_return_border_router_16_value_when_border_router_16_property_is_called(self):
+    def test_should_return_border_router_16_value_when_border_router_16_property_is_called(
+            self):
         # GIVEN
         border_router_16 = any_border_router_16()
 
@@ -306,15 +332,18 @@ class TestRoute(unittest.TestCase):
 
 
 class TestRouteFactory(unittest.TestCase):
-
-    def test_should_create_Route_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_Route_from_bytearray_when_parse_method_is_called(
+        self
+    ):
         # GIVEN
         border_router_16 = any_border_router_16()
         prf = any_prf()
 
         factory = network_data.RouteFactory()
 
-        data = convert_route_to_bytearray(network_data.Route(border_router_16, prf))
+        data = convert_route_to_bytearray(
+            network_data.Route(border_router_16, prf)
+        )
 
         # WHEN
         actual_route = factory.parse(io.BytesIO(data), None)
@@ -326,8 +355,8 @@ class TestRouteFactory(unittest.TestCase):
 
 
 class TestRoutesFactory(unittest.TestCase):
-
-    def test_should_create_Route_list_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_Route_list_from_bytearray_when_parse_method_is_called(
+            self):
         # GIVEN
         routes = any_routes()
 
@@ -343,7 +372,6 @@ class TestRoutesFactory(unittest.TestCase):
 
 
 class TestHasRoute(unittest.TestCase):
-
     def test_should_return_routes_value_when_routes_property_is_called(self):
         # GIVEN
         routes = any_routes()
@@ -370,13 +398,16 @@ class TestHasRoute(unittest.TestCase):
 
 
 class TestHasRouteFactory(unittest.TestCase):
-
-    def test_should_create_HasRoute_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_HasRoute_from_bytearray_when_parse_method_is_called(
+        self
+    ):
         # GIVEN
         routes = any_routes()
         stable = any_stable()
 
-        factory = network_data.HasRouteFactory(network_data.RoutesFactory(network_data.RouteFactory()))
+        factory = network_data.HasRouteFactory(
+            network_data.RoutesFactory(network_data.RouteFactory())
+        )
 
         data = convert_routes_to_bytearray(routes)
 
@@ -393,12 +424,19 @@ class TestHasRouteFactory(unittest.TestCase):
 
 
 class TestPrefix(unittest.TestCase):
-
-    def test_should_return_domain_id_value_when_domain_id_property_is_called(self):
+    def test_should_return_domain_id_value_when_domain_id_property_is_called(
+        self
+    ):
         # GIVEN
         domain_id = any_domain_id()
 
-        prefix = network_data.Prefix(domain_id, any_prefix_length(), any_prefix(), any_prefix_sub_tlvs(), any_stable())
+        prefix = network_data.Prefix(
+            domain_id,
+            any_prefix_length(),
+            any_prefix(),
+            any_prefix_sub_tlvs(),
+            any_stable(),
+        )
 
         # WHEN
         actual_domain_id = prefix.domain_id
@@ -406,11 +444,18 @@ class TestPrefix(unittest.TestCase):
         # THEN
         self.assertEqual(domain_id, actual_domain_id)
 
-    def test_should_return_prefix_length_value_when_prefix_length_property_is_called(self):
+    def test_should_return_prefix_length_value_when_prefix_length_property_is_called(
+            self):
         # GIVEN
         prefix_length = any_prefix_length()
 
-        prefix = network_data.Prefix(any_domain_id(), prefix_length, any_prefix(), any_prefix_sub_tlvs(), any_stable())
+        prefix = network_data.Prefix(
+            any_domain_id(),
+            prefix_length,
+            any_prefix(),
+            any_prefix_sub_tlvs(),
+            any_stable(),
+        )
 
         # WHEN
         actual_prefix_length = prefix.prefix_length
@@ -422,8 +467,13 @@ class TestPrefix(unittest.TestCase):
         # GIVEN
         prefix = any_prefix()
 
-        prefix_obj = network_data.Prefix(any_domain_id(), any_prefix_length(),
-                                         prefix, any_prefix_sub_tlvs(), any_stable())
+        prefix_obj = network_data.Prefix(
+            any_domain_id(),
+            any_prefix_length(),
+            prefix,
+            any_prefix_sub_tlvs(),
+            any_stable(),
+        )
 
         # WHEN
         actual_prefix = prefix_obj.prefix
@@ -431,11 +481,19 @@ class TestPrefix(unittest.TestCase):
         # THEN
         self.assertEqual(prefix, actual_prefix)
 
-    def test_should_return_sub_tlvs_value_when_sub_tlvs_property_is_called(self):
+    def test_should_return_sub_tlvs_value_when_sub_tlvs_property_is_called(
+        self
+    ):
         # GIVEN
         sub_tlvs = any_prefix_sub_tlvs()
 
-        prefix_obj = network_data.Prefix(any_domain_id(), any_prefix_length(), any_prefix(), sub_tlvs, any_stable())
+        prefix_obj = network_data.Prefix(
+            any_domain_id(),
+            any_prefix_length(),
+            any_prefix(),
+            sub_tlvs,
+            any_stable(),
+        )
 
         # WHEN
         actual_sub_tlvs = prefix_obj.sub_tlvs
@@ -447,8 +505,13 @@ class TestPrefix(unittest.TestCase):
         # GIVEN
         stable = any_stable()
 
-        prefix_obj = network_data.Prefix(any_domain_id(), any_prefix_length(),
-                                         any_prefix(), any_prefix_sub_tlvs(), stable)
+        prefix_obj = network_data.Prefix(
+            any_domain_id(),
+            any_prefix_length(),
+            any_prefix(),
+            any_prefix_sub_tlvs(),
+            stable,
+        )
 
         # WHEN
         actual_stable = prefix_obj.stable
@@ -458,12 +521,15 @@ class TestPrefix(unittest.TestCase):
 
 
 class TestPrefixSubTlvsFactory(unittest.TestCase):
-
-    def test_should_create_SubTlvs_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_SubTlvs_from_bytearray_when_parse_method_is_called(
+        self
+    ):
         # GIVEN
         sub_tlvs = any_prefix_sub_tlvs()
 
-        factory = network_data.PrefixSubTlvsFactory(config.create_default_network_data_prefix_sub_tlvs_factories())
+        factory = network_data.PrefixSubTlvsFactory(
+            config.create_default_network_data_prefix_sub_tlvs_factories()
+        )
 
         data = convert_prefix_sub_tlvs_to_bytearray(sub_tlvs)
 
@@ -476,17 +542,24 @@ class TestPrefixSubTlvsFactory(unittest.TestCase):
 
 
 class TestPrefixFactory(unittest.TestCase):
-
-    def test_should_create_Prefix_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_Prefix_from_bytearray_when_parse_method_is_called(
+        self
+    ):
         # GIVEN
         domain_id = any_domain_id()
         prefix_length = any_prefix_length()
         prefix = any_prefix(prefix_length)
         sub_tlvs = any_prefix_sub_tlvs()
 
-        factory = network_data.PrefixFactory(config.create_default_network_data_prefix_sub_tlvs_factory())
+        factory = network_data.PrefixFactory(
+            config.create_default_network_data_prefix_sub_tlvs_factory()
+        )
 
-        data = bytearray([domain_id, prefix_length]) + prefix + convert_prefix_sub_tlvs_to_bytearray(sub_tlvs)
+        data = (
+            bytearray([domain_id, prefix_length])
+            + prefix
+            + convert_prefix_sub_tlvs_to_bytearray(sub_tlvs)
+        )
 
         message_info = common.MessageInfo()
 
@@ -502,13 +575,23 @@ class TestPrefixFactory(unittest.TestCase):
 
 
 class TestBorderRouter(unittest.TestCase):
-
-    def test_should_return_border_router_16_value_when_border_router_16_property_is_called(self):
+    def test_should_return_border_router_16_value_when_border_router_16_property_is_called(
+            self):
         # GIVEN
         border_router_16 = any_border_router_16()
 
-        border_router = network_data.BorderRouter(border_router_16, any_prf(
-        ), any_p(), any_s(), any_d(), any_c(), any_r(), any_o(), any_n(), any_stable())
+        border_router = network_data.BorderRouter(
+            border_router_16,
+            any_prf(),
+            any_p(),
+            any_s(),
+            any_d(),
+            any_c(),
+            any_r(),
+            any_o(),
+            any_n(),
+            any_stable(),
+        )
 
         # WHEN
         actual_border_router_16 = border_router.border_router_16
@@ -520,8 +603,18 @@ class TestBorderRouter(unittest.TestCase):
         # GIVEN
         prf = any_prf()
 
-        border_router = network_data.BorderRouter(any_border_router_16(
-        ), prf, any_p(), any_s(), any_d(), any_c(), any_r(), any_o(), any_n(), any_stable())
+        border_router = network_data.BorderRouter(
+            any_border_router_16(),
+            prf,
+            any_p(),
+            any_s(),
+            any_d(),
+            any_c(),
+            any_r(),
+            any_o(),
+            any_n(),
+            any_stable(),
+        )
 
         # WHEN
         actual_prf = border_router.prf
@@ -533,8 +626,18 @@ class TestBorderRouter(unittest.TestCase):
         # GIVEN
         p = any_p()
 
-        border_router = network_data.BorderRouter(any_border_router_16(), any_prf(
-        ), p, any_s(), any_d(), any_c(), any_r(), any_o(), any_n(), any_stable())
+        border_router = network_data.BorderRouter(
+            any_border_router_16(),
+            any_prf(),
+            p,
+            any_s(),
+            any_d(),
+            any_c(),
+            any_r(),
+            any_o(),
+            any_n(),
+            any_stable(),
+        )
 
         # WHEN
         actual_p = border_router.p
@@ -546,8 +649,18 @@ class TestBorderRouter(unittest.TestCase):
         # GIVEN
         s = any_s()
 
-        border_router = network_data.BorderRouter(any_border_router_16(), any_prf(
-        ), any_p(), s, any_d(), any_c(), any_r(), any_o(), any_n(), any_stable())
+        border_router = network_data.BorderRouter(
+            any_border_router_16(),
+            any_prf(),
+            any_p(),
+            s,
+            any_d(),
+            any_c(),
+            any_r(),
+            any_o(),
+            any_n(),
+            any_stable(),
+        )
 
         # WHEN
         actual_s = border_router.s
@@ -559,8 +672,18 @@ class TestBorderRouter(unittest.TestCase):
         # GIVEN
         d = any_d()
 
-        border_router = network_data.BorderRouter(any_border_router_16(), any_prf(
-        ), any_p(), any_s(), d, any_c(), any_r(), any_o(), any_n(), any_stable())
+        border_router = network_data.BorderRouter(
+            any_border_router_16(),
+            any_prf(),
+            any_p(),
+            any_s(),
+            d,
+            any_c(),
+            any_r(),
+            any_o(),
+            any_n(),
+            any_stable(),
+        )
 
         # WHEN
         actual_d = border_router.d
@@ -572,8 +695,18 @@ class TestBorderRouter(unittest.TestCase):
         # GIVEN
         c = any_c()
 
-        border_router = network_data.BorderRouter(any_border_router_16(), any_prf(
-        ), any_p(), any_s(), any_d(), c, any_r(), any_o(), any_n(), any_stable())
+        border_router = network_data.BorderRouter(
+            any_border_router_16(),
+            any_prf(),
+            any_p(),
+            any_s(),
+            any_d(),
+            c,
+            any_r(),
+            any_o(),
+            any_n(),
+            any_stable(),
+        )
 
         # WHEN
         actual_c = border_router.c
@@ -585,8 +718,18 @@ class TestBorderRouter(unittest.TestCase):
         # GIVEN
         r = any_r()
 
-        border_router = network_data.BorderRouter(any_border_router_16(), any_prf(
-        ), any_p(), any_s(), any_d(), any_c(), r, any_o(), any_n(), any_stable())
+        border_router = network_data.BorderRouter(
+            any_border_router_16(),
+            any_prf(),
+            any_p(),
+            any_s(),
+            any_d(),
+            any_c(),
+            r,
+            any_o(),
+            any_n(),
+            any_stable(),
+        )
 
         # WHEN
         actual_r = border_router.r
@@ -598,8 +741,18 @@ class TestBorderRouter(unittest.TestCase):
         # GIVEN
         o = any_o()
 
-        border_router = network_data.BorderRouter(any_border_router_16(), any_prf(
-        ), any_p(), any_s(), any_d(), any_c(), any_r(), o, any_n(), any_stable())
+        border_router = network_data.BorderRouter(
+            any_border_router_16(),
+            any_prf(),
+            any_p(),
+            any_s(),
+            any_d(),
+            any_c(),
+            any_r(),
+            o,
+            any_n(),
+            any_stable(),
+        )
 
         # WHEN
         actual_o = border_router.o
@@ -611,8 +764,18 @@ class TestBorderRouter(unittest.TestCase):
         # GIVEN
         n = any_n()
 
-        border_router = network_data.BorderRouter(any_border_router_16(), any_prf(
-        ), any_p(), any_s(), any_d(), any_c(), any_r(), any_o(), n, any_stable())
+        border_router = network_data.BorderRouter(
+            any_border_router_16(),
+            any_prf(),
+            any_p(),
+            any_s(),
+            any_d(),
+            any_c(),
+            any_r(),
+            any_o(),
+            n,
+            any_stable(),
+        )
 
         # WHEN
         actual_n = border_router.n
@@ -624,8 +787,18 @@ class TestBorderRouter(unittest.TestCase):
         # GIVEN
         stable = any_stable()
 
-        border_router = network_data.BorderRouter(any_border_router_16(), any_prf(
-        ), any_p(), any_s(), any_d(), any_c(), any_r(), any_o(), any_n(), stable)
+        border_router = network_data.BorderRouter(
+            any_border_router_16(),
+            any_prf(),
+            any_p(),
+            any_s(),
+            any_d(),
+            any_c(),
+            any_r(),
+            any_o(),
+            any_n(),
+            stable,
+        )
 
         # WHEN
         actual_stable = border_router.stable
@@ -635,8 +808,8 @@ class TestBorderRouter(unittest.TestCase):
 
 
 class TestBorderRouterFactory(unittest.TestCase):
-
-    def test_should_create_BorderRouter_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_BorderRouter_from_bytearray_when_parse_method_is_called(
+            self):
         # GIVEN
         border_router_16 = any_border_router_16()
         prf = any_prf()
@@ -652,7 +825,10 @@ class TestBorderRouterFactory(unittest.TestCase):
         factory = network_data.BorderRouterFactory()
 
         data = convert_border_router_to_bytearray(
-            network_data.BorderRouter(border_router_16, prf, p, s, d, c, r, o, n, stable))
+            network_data.BorderRouter(
+                border_router_16, prf, p, s, d, c, r, o, n, stable
+            )
+        )
 
         message_info = common.MessageInfo()
         message_info.stable = stable
@@ -661,8 +837,12 @@ class TestBorderRouterFactory(unittest.TestCase):
         actual_border_router = factory.parse(io.BytesIO(data), message_info)
 
         # THEN
-        self.assertTrue(isinstance(actual_border_router, network_data.BorderRouter))
-        self.assertEqual(border_router_16, actual_border_router.border_router_16)
+        self.assertTrue(
+            isinstance(actual_border_router, network_data.BorderRouter)
+        )
+        self.assertEqual(
+            border_router_16, actual_border_router.border_router_16
+        )
         self.assertEqual(prf, actual_border_router.prf)
         self.assertEqual(p, actual_border_router.p)
         self.assertEqual(s, actual_border_router.s)
@@ -675,12 +855,13 @@ class TestBorderRouterFactory(unittest.TestCase):
 
 
 class TestLowpanId(unittest.TestCase):
-
     def test_should_return_c_value_when_c_property_is_called(self):
         # GIVEN
         c = any_c()
 
-        lowpan_id = network_data.LowpanId(c, any_cid(), any_context_length(), any_stable())
+        lowpan_id = network_data.LowpanId(
+            c, any_cid(), any_context_length(), any_stable()
+        )
 
         # WHEN
         actual_c = lowpan_id.c
@@ -692,7 +873,9 @@ class TestLowpanId(unittest.TestCase):
         # GIVEN
         cid = any_cid()
 
-        lowpan_id = network_data.LowpanId(any_c(), cid, any_context_length(), any_stable())
+        lowpan_id = network_data.LowpanId(
+            any_c(), cid, any_context_length(), any_stable()
+        )
 
         # WHEN
         actual_cid = lowpan_id.cid
@@ -700,11 +883,14 @@ class TestLowpanId(unittest.TestCase):
         # THEN
         self.assertEqual(cid, actual_cid)
 
-    def test_should_return_context_length_value_when_context_length_property_is_called(self):
+    def test_should_return_context_length_value_when_context_length_property_is_called(
+            self):
         # GIVEN
         context_length = any_context_length()
 
-        lowpan_id = network_data.LowpanId(any_c(), any_cid(), context_length, any_stable())
+        lowpan_id = network_data.LowpanId(
+            any_c(), any_cid(), context_length, any_stable()
+        )
 
         # WHEN
         actual_context_length = lowpan_id.context_length
@@ -716,7 +902,9 @@ class TestLowpanId(unittest.TestCase):
         # GIVEN
         stable = any_stable()
 
-        lowpan_id = network_data.LowpanId(any_c(), any_cid(), any_context_length(), stable)
+        lowpan_id = network_data.LowpanId(
+            any_c(), any_cid(), any_context_length(), stable
+        )
 
         # WHEN
         actual_stable = lowpan_id.stable
@@ -726,8 +914,9 @@ class TestLowpanId(unittest.TestCase):
 
 
 class TestLowpanIdFactory(unittest.TestCase):
-
-    def test_should_create_LowpanId_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_LowpanId_from_bytearray_when_parse_method_is_called(
+        self
+    ):
         # GIVEN
         c = any_c()
         cid = any_cid()
@@ -736,7 +925,9 @@ class TestLowpanIdFactory(unittest.TestCase):
 
         factory = network_data.LowpanIdFactory()
 
-        data = convert_lowpan_id_to_bytearray(network_data.LowpanId(c, cid, context_length, stable))
+        data = convert_lowpan_id_to_bytearray(
+            network_data.LowpanId(c, cid, context_length, stable)
+        )
 
         message_info = common.MessageInfo()
         message_info.stable = stable
@@ -752,13 +943,19 @@ class TestLowpanIdFactory(unittest.TestCase):
 
 
 class TestService(unittest.TestCase):
-
     def test_should_return_t_value_when_t_property_is_called(self):
         # GIVEN
         t = any_t()
 
-        service = network_data.Service(t, any_id(), any_enterprise_number(), any_service_data_length(),
-                                       any_service_data(), any_service_sub_tlvs(), any_stable())
+        service = network_data.Service(
+            t,
+            any_id(),
+            any_enterprise_number(),
+            any_service_data_length(),
+            any_service_data(),
+            any_service_sub_tlvs(),
+            any_stable(),
+        )
 
         # WHEN
         actual_t = service.t
@@ -770,8 +967,15 @@ class TestService(unittest.TestCase):
         # GIVEN
         _id = any_id()
 
-        service = network_data.Service(any_t(), _id, any_enterprise_number(), any_service_data_length(),
-                                       any_service_data(), any_service_sub_tlvs(), any_stable())
+        service = network_data.Service(
+            any_t(),
+            _id,
+            any_enterprise_number(),
+            any_service_data_length(),
+            any_service_data(),
+            any_service_sub_tlvs(),
+            any_stable(),
+        )
 
         # WHEN
         actual_id = service.id
@@ -779,12 +983,20 @@ class TestService(unittest.TestCase):
         # THEN
         self.assertEqual(_id, actual_id)
 
-    def test_should_return_enterprise_number_value_when_enterprise_number_property_is_called(self):
+    def test_should_return_enterprise_number_value_when_enterprise_number_property_is_called(
+            self):
         # GIVEN
         enterprise_number = any_enterprise_number()
 
-        service = network_data.Service(any_t(), any_id(), enterprise_number, any_service_data_length(),
-                                       any_service_data(), any_service_sub_tlvs(), any_stable())
+        service = network_data.Service(
+            any_t(),
+            any_id(),
+            enterprise_number,
+            any_service_data_length(),
+            any_service_data(),
+            any_service_sub_tlvs(),
+            any_stable(),
+        )
 
         # WHEN
         actual_enterprise_number = service.enterprise_number
@@ -792,12 +1004,20 @@ class TestService(unittest.TestCase):
         # THEN
         self.assertEqual(enterprise_number, actual_enterprise_number)
 
-    def test_should_return_service_data_length_value_when_service_data_length_property_is_called(self):
+    def test_should_return_service_data_length_value_when_service_data_length_property_is_called(
+            self):
         # GIVEN
         service_data_length = any_service_data_length()
 
-        service = network_data.Service(any_t(), any_id(), any_enterprise_number(), service_data_length,
-                                       any_service_data(), any_service_sub_tlvs(), any_stable())
+        service = network_data.Service(
+            any_t(),
+            any_id(),
+            any_enterprise_number(),
+            service_data_length,
+            any_service_data(),
+            any_service_sub_tlvs(),
+            any_stable(),
+        )
 
         # WHEN
         actual_service_data_length = service.service_data_length
@@ -805,12 +1025,20 @@ class TestService(unittest.TestCase):
         # THEN
         self.assertEqual(service_data_length, actual_service_data_length)
 
-    def test_should_return_service_data_value_when_service_data_property_is_called(self):
+    def test_should_return_service_data_value_when_service_data_property_is_called(
+            self):
         # GIVEN
         service_data = any_service_data()
 
-        service = network_data.Service(any_t(), any_id(), any_enterprise_number(), any_service_data_length(),
-                                       service_data, any_service_sub_tlvs(), any_stable())
+        service = network_data.Service(
+            any_t(),
+            any_id(),
+            any_enterprise_number(),
+            any_service_data_length(),
+            service_data,
+            any_service_sub_tlvs(),
+            any_stable(),
+        )
 
         # WHEN
         actual_service_data = service.service_data
@@ -818,12 +1046,21 @@ class TestService(unittest.TestCase):
         # THEN
         self.assertEqual(service_data, actual_service_data)
 
-    def test_should_return_sub_tlvs_value_when_sub_tlvs_property_is_called(self):
+    def test_should_return_sub_tlvs_value_when_sub_tlvs_property_is_called(
+        self
+    ):
         # GIVEN
         sub_tlvs = any_service_sub_tlvs()
 
-        service = network_data.Service(any_t(), any_id(), any_enterprise_number(), any_service_data_length(),
-                                       any_service_data(), sub_tlvs, any_stable())
+        service = network_data.Service(
+            any_t(),
+            any_id(),
+            any_enterprise_number(),
+            any_service_data_length(),
+            any_service_data(),
+            sub_tlvs,
+            any_stable(),
+        )
 
         # WHEN
         actual_sub_tlvs = service.sub_tlvs
@@ -835,8 +1072,15 @@ class TestService(unittest.TestCase):
         # GIVEN
         stable = any_stable()
 
-        service = network_data.Service(any_t(), any_id(), any_enterprise_number(), any_service_data_length(),
-                                       any_service_data(), any_service_sub_tlvs(), stable)
+        service = network_data.Service(
+            any_t(),
+            any_id(),
+            any_enterprise_number(),
+            any_service_data_length(),
+            any_service_data(),
+            any_service_sub_tlvs(),
+            stable,
+        )
 
         # WHEN
         actual_stable = service.stable
@@ -846,12 +1090,15 @@ class TestService(unittest.TestCase):
 
 
 class TestServiceSubTlvsFactory(unittest.TestCase):
-
-    def test_should_create_SubTlvs_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_SubTlvs_from_bytearray_when_parse_method_is_called(
+        self
+    ):
         # GIVEN
         sub_tlvs = any_service_sub_tlvs()
 
-        factory = network_data.ServiceSubTlvsFactory(config.create_default_network_data_service_sub_tlvs_factories())
+        factory = network_data.ServiceSubTlvsFactory(
+            config.create_default_network_data_service_sub_tlvs_factories()
+        )
 
         data = convert_service_sub_tlvs_to_bytearray(sub_tlvs)
 
@@ -864,8 +1111,9 @@ class TestServiceSubTlvsFactory(unittest.TestCase):
 
 
 class TestServiceFactory(unittest.TestCase):
-
-    def test_should_create_Service_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_Service_from_bytearray_when_parse_method_is_called(
+        self
+    ):
         # GIVEN
         t = any_t()
         _id = any_id()
@@ -875,10 +1123,21 @@ class TestServiceFactory(unittest.TestCase):
         sub_tlvs = any_service_sub_tlvs()
         stable = any_stable()
 
-        factory = network_data.ServiceFactory(config.create_default_network_data_service_sub_tlvs_factory())
+        factory = network_data.ServiceFactory(
+            config.create_default_network_data_service_sub_tlvs_factory()
+        )
 
-        data = convert_service_to_bytearray(network_data.Service(
-            t, _id, enterprise_number, service_data_length, service_data, sub_tlvs, stable))
+        data = convert_service_to_bytearray(
+            network_data.Service(
+                t,
+                _id,
+                enterprise_number,
+                service_data_length,
+                service_data,
+                sub_tlvs,
+                stable,
+            )
+        )
 
         message_info = common.MessageInfo()
         message_info.stable = stable
@@ -891,18 +1150,23 @@ class TestServiceFactory(unittest.TestCase):
         self.assertEqual(t, actual_service.t)
         self.assertEqual(_id, actual_service.id)
         self.assertEqual(enterprise_number, actual_service.enterprise_number)
-        self.assertEqual(service_data_length, actual_service.service_data_length)
+        self.assertEqual(
+            service_data_length, actual_service.service_data_length
+        )
         self.assertEqual(service_data, actual_service.service_data)
         self.assertEqual(sub_tlvs, actual_service.sub_tlvs)
 
 
 class TestServer(unittest.TestCase):
-
-    def test_should_return_server_16_value_when_server_16_property_is_called(self):
+    def test_should_return_server_16_value_when_server_16_property_is_called(
+        self
+    ):
         # GIVEN
         server_16 = any_server_16()
 
-        server = network_data.Server(server_16, any_server_data(), any_stable())
+        server = network_data.Server(
+            server_16, any_server_data(), any_stable()
+        )
 
         # WHEN
         actual_server_16 = server.server_16
@@ -910,11 +1174,14 @@ class TestServer(unittest.TestCase):
         # THEN
         self.assertEqual(server_16, actual_server_16)
 
-    def test_should_return_server_data_value_when_server_data_property_is_called(self):
+    def test_should_return_server_data_value_when_server_data_property_is_called(
+            self):
         # GIVEN
         server_data = any_server_data()
 
-        server = network_data.Server(any_server_16(), server_data, any_stable())
+        server = network_data.Server(
+            any_server_16(), server_data, any_stable()
+        )
 
         # WHEN
         actual_server_data = server.server_data
@@ -926,7 +1193,9 @@ class TestServer(unittest.TestCase):
         # GIVEN
         stable = any_stable()
 
-        server = network_data.Server(any_server_16(), any_server_data(), stable)
+        server = network_data.Server(
+            any_server_16(), any_server_data(), stable
+        )
 
         # WHEN
         actual_stable = server.stable
@@ -936,8 +1205,9 @@ class TestServer(unittest.TestCase):
 
 
 class TestServerFactory(unittest.TestCase):
-
-    def test_should_create_Server_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_Server_from_bytearray_when_parse_method_is_called(
+        self
+    ):
         # GIVEN
         server_16 = any_server_16()
         server_data = any_server_data()
@@ -945,7 +1215,9 @@ class TestServerFactory(unittest.TestCase):
 
         factory = network_data.ServerFactory()
 
-        data = convert_server_to_bytearray(network_data.Server(server_16, server_data, stable))
+        data = convert_server_to_bytearray(
+            network_data.Server(server_16, server_data, stable)
+        )
 
         message_info = common.MessageInfo()
         message_info.stable = stable

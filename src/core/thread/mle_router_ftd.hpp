@@ -539,7 +539,7 @@ public:
 
     otError SendLinkRequest(Neighbor *aNeighbor);
 
-#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     /**
      * This method sets steering data out of band
      *
@@ -552,7 +552,7 @@ public:
      *
      */
     otError SetSteeringData(const Mac::ExtAddress *aExtAddress);
-#endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#endif // OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
 
     /**
      * This method gets the assigned parent priority.
@@ -647,7 +647,7 @@ public:
      */
     static uint8_t LinkQualityToCost(uint8_t aLinkQuality);
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * This method generates an MLE Time Synchronization message.
      *
@@ -697,7 +697,7 @@ private:
     otError HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void    HandleNetworkDataUpdateRouter(void);
     otError HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     void HandleTimeSync(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 #endif
 
@@ -795,9 +795,9 @@ private:
 
     int8_t mParentPriority; ///< The assigned parent priority value, -2 means not assigned.
 
-#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     MeshCoP::SteeringDataTlv mSteeringData;
-#endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#endif // OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
 };
 
 } // namespace Mle

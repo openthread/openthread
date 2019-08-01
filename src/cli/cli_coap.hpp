@@ -36,7 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
 
 #include "coap/coap_message.hpp"
 
@@ -106,6 +106,6 @@ private:
 } // namespace Cli
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
+#endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
 
 #endif // CLI_COAP_HPP_

@@ -165,6 +165,11 @@ otError otPlatUartSend(const uint8_t *aData, uint16_t aLength)
 
     return error;
 }
+
+otError otPlatUartFlush(void)
+{
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME_UART
 
 static void socket_init(void)
@@ -301,7 +306,7 @@ void otSysProcessDrivers(otInstance *aInstance)
     }
 
     platformAlarmProcess(aInstance);
-    platformRadioProcess(aInstance);
+    platformRadioProcess(aInstance, &read_fds, &write_fds);
 #if OPENTHREAD_POSIX_VIRTUAL_TIME_UART == 0
     platformUartProcess();
 #endif

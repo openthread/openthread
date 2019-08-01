@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -37,12 +36,13 @@ LEADER = 1
 ROUTER1 = 2
 ED = 3
 
+
 class Cert_6_2_1_NewPartition(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,4):
+        for i in range(1, 4):
             self.nodes[i] = node.Node(i, (i == ED), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -63,9 +63,9 @@ class Cert_6_2_1_NewPartition(unittest.TestCase):
         self.nodes[ED].enable_whitelist()
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -89,6 +89,7 @@ class Cert_6_2_1_NewPartition(unittest.TestCase):
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
             self.assertTrue(self.nodes[ROUTER1].ping(addr))
+
 
 if __name__ == '__main__':
     unittest.main()

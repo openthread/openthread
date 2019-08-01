@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -38,23 +37,28 @@ LEADER1 = 2
 ROUTER1 = 3
 LEADER2 = 4
 
+
 class Cert_9_2_14_PanIdQuery(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,5):
+        for i in range(1, 5):
             self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[COMMISSIONER].set_panid(0xface)
         self.nodes[COMMISSIONER].set_mode('rsdn')
-        self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER1].get_addr64())
+        self.nodes[COMMISSIONER].add_whitelist(
+            self.nodes[LEADER1].get_addr64()
+        )
         self.nodes[COMMISSIONER].enable_whitelist()
         self.nodes[COMMISSIONER].set_router_selection_jitter(1)
 
         self.nodes[LEADER1].set_panid(0xface)
         self.nodes[LEADER1].set_mode('rsdn')
-        self.nodes[LEADER1].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
+        self.nodes[LEADER1].add_whitelist(
+            self.nodes[COMMISSIONER].get_addr64()
+        )
         self.nodes[LEADER1].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[LEADER1].enable_whitelist()
 
@@ -71,9 +75,9 @@ class Cert_9_2_14_PanIdQuery(unittest.TestCase):
         self.nodes[LEADER2].enable_whitelist()
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -102,9 +106,12 @@ class Cert_9_2_14_PanIdQuery(unittest.TestCase):
 
         self.nodes[COMMISSIONER].panid_query(0xdead, 0xffffffff, ipaddr)
 
-        self.nodes[COMMISSIONER].panid_query(0xdead, 0xffffffff, 'ff33:0040:fdde:ad00:beef:0:0:1')
+        self.nodes[COMMISSIONER].panid_query(
+            0xdead, 0xffffffff, 'ff33:0040:fdde:ad00:beef:0:0:1'
+        )
 
         self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
+
 
 if __name__ == '__main__':
     unittest.main()

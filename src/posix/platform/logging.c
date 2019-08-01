@@ -46,7 +46,7 @@ void platformLoggingInit(const char *aName)
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED) || \
     (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
 
-    openlog(aName, LOG_PID, LOG_USER);
+    openlog(aName, LOG_PID, LOG_DAEMON);
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
 
 #else

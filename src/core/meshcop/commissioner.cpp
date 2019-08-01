@@ -49,7 +49,7 @@
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 namespace ot {
 namespace MeshCoP {
@@ -953,7 +953,7 @@ void Commissioner::HandleJoinerFinalize(Coap::Message &aMessage, const Ip6::Mess
         }
     }
 
-#if OPENTHREAD_ENABLE_CERT_LOG
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     if (aMessage.GetLength() <= OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE)
     {
         uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
@@ -990,7 +990,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
     joinerMessageInfo.GetPeerAddr().SetIid(mJoinerIid);
     joinerMessageInfo.SetPeerPort(mJoinerPort);
 
-#if OPENTHREAD_ENABLE_CERT_LOG
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
 
     VerifyOrExit(message->GetLength() <= sizeof(buf));
@@ -1123,4 +1123,4 @@ exit:
 } // namespace MeshCoP
 } // namespace ot
 
-#endif // OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE

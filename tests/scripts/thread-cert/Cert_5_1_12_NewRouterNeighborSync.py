@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -40,7 +39,6 @@ ROUTER2 = 3
 
 
 class Cert_5_1_12_NewRouterSync(unittest.TestCase):
-
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -67,17 +65,26 @@ class Cert_5_1_12_NewRouterSync(unittest.TestCase):
         self.nodes[ROUTER2].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
-    def verify_step_4(self, router1_messages, router2_messages, req_receiver, accept_receiver):
-        if router2_messages.contains_mle_message(mle.CommandType.LINK_REQUEST) and \
-            (router1_messages.contains_mle_message(mle.CommandType.LINK_ACCEPT) or
-                router1_messages.contains_mle_message(mle.CommandType.LINK_ACCEPT_AND_REQUEST)):
+    def verify_step_4(
+        self, router1_messages, router2_messages, req_receiver, accept_receiver
+    ):
+        if router2_messages.contains_mle_message(
+            mle.CommandType.LINK_REQUEST
+        ) and (
+            router1_messages.contains_mle_message(mle.CommandType.LINK_ACCEPT)
+            or router1_messages.contains_mle_message(
+                mle.CommandType.LINK_ACCEPT_AND_REQUEST
+            )
+        ):
 
-            msg = router2_messages.next_mle_message(mle.CommandType.LINK_REQUEST)
+            msg = router2_messages.next_mle_message(
+                mle.CommandType.LINK_REQUEST
+            )
 
             msg.assertSentToNode(self.nodes[req_receiver])
             msg.assertMleMessageContainsTlv(mle.SourceAddress)
@@ -86,8 +93,10 @@ class Cert_5_1_12_NewRouterSync(unittest.TestCase):
             msg.assertMleMessageContainsTlv(mle.Version)
             msg.assertMleMessageContainsTlv(mle.TlvRequest)
 
-            msg = router1_messages.next_mle_message_of_one_of_command_types(mle.CommandType.LINK_ACCEPT_AND_REQUEST,
-                                                                            mle.CommandType.LINK_ACCEPT)
+            msg = router1_messages.next_mle_message_of_one_of_command_types(
+                mle.CommandType.LINK_ACCEPT_AND_REQUEST,
+                mle.CommandType.LINK_ACCEPT,
+            )
             self.assertIsNotNone(msg)
 
             msg.assertSentToNode(self.nodes[accept_receiver])
@@ -122,7 +131,7 @@ class Cert_5_1_12_NewRouterSync(unittest.TestCase):
 
         self.simulator.go(10)
 
-        leader_messages = self.simulator.get_messages_sent_by(LEADER)
+        self.simulator.get_messages_sent_by(LEADER)
         router1_messages = self.simulator.get_messages_sent_by(ROUTER1)
         router2_messages = self.simulator.get_messages_sent_by(ROUTER2)
 
@@ -139,13 +148,20 @@ class Cert_5_1_12_NewRouterSync(unittest.TestCase):
 
         self.simulator.go(35)
 
-        leader_messages = self.simulator.get_messages_sent_by(LEADER)
+        self.simulator.get_messages_sent_by(LEADER)
         router1_messages = self.simulator.get_messages_sent_by(ROUTER1)
         router2_messages = self.simulator.get_messages_sent_by(ROUTER2)
 
         # 4 - Router1, Router2
-        self.assertTrue(self.verify_step_4(router1_messages, router2_messages, ROUTER1, ROUTER2) or
-                        self.verify_step_4(router2_messages, router1_messages, ROUTER2, ROUTER1))
+        self.assertTrue(
+            self.verify_step_4(
+                router1_messages, router2_messages, ROUTER1, ROUTER2
+            )
+            or self.verify_step_4(
+                router2_messages, router1_messages, ROUTER2, ROUTER1
+            )
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -33,16 +33,19 @@ import time
 
 from autothreadharness.harness_case import HarnessCase
 
+
 class ED_6_5_1(HarnessCase):
     role = HarnessCase.ROLE_ED
     case = '6 5 1'
     golden_devices_required = 1
+
     def on_dialog(self, dialog, title):
         if title.startswith('Reset DUT'):
             self.dut.stop()
             time.sleep(self.child_timeout + 10)
             self.dut.start()
             return False
+
 
 if __name__ == '__main__':
     unittest.main()

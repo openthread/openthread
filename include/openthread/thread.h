@@ -177,7 +177,7 @@ typedef struct otMleCounters
      *
      * A parent change can happen if device detaches from its current parent and attaches to a different one, or even
      * while device is attached when the periodic parent search feature is enabled  (please see option
-     * OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH).
+     * OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE).
      *
      */
     uint16_t mParentChanges;

@@ -55,7 +55,7 @@ namespace Utils {
  * @{
  */
 
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 /**
  * This class implements the channel monitoring logic.
@@ -212,7 +212,7 @@ private:
     TimerMilli mTimer;
 };
 
-#endif // OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#endif // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 /**
  * @}

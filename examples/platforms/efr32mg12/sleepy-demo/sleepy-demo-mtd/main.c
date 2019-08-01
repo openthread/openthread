@@ -33,7 +33,7 @@
 #include "em_cmu.h"
 #include "em_emu.h"
 #include "gpiointerrupt.h"
-#include "hal-config-board.h"
+#include "hal-config.h"
 #include "hal_common.h"
 #include "openthread-system.h"
 #include "platform-efr32.h"
@@ -114,10 +114,6 @@ int main(int argc, char *argv[])
     otIp6SetEnabled(instance, true);
     otThreadSetEnabled(instance, true);
     efr32SetSleepCallback(sleepCb);
-
-#if OPENTHREAD_ENABLE_DIAG
-    otDiagInit(instance);
-#endif
 
     while (!otSysPseudoResetWasRequested())
     {

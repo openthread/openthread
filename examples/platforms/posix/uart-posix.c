@@ -222,6 +222,11 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
     }
 }
 
+otError otPlatUartFlush(void)
+{
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
 void platformUartProcess(void)
 {
     ssize_t       rval;

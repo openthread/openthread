@@ -32,12 +32,15 @@ import unittest
 
 from autothreadharness.harness_case import HarnessCase
 
+
 class SED_9_2_17(HarnessCase):
     role = HarnessCase.ROLE_SED
     case = '9 2 17'
     golden_devices_required = 2
+
     def on_dialog(self, dialog, title):
         pass
+
 
 if __name__ == '__main__':
     unittest.main()

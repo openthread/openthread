@@ -158,7 +158,7 @@ typedef struct otMessageInfo
  *
  * @retval OT_ERROR_NONE            Successfully brought the IPv6 interface up/down.
  * @retval OT_ERROR_INVALID_STATE   IPv6 interface is not available since device is operating in raw-link mode
- *                                  (applicable only when `OPENTHREAD_ENABLE_RAW_LINK_API` feature is enabled).
+ *                                  (applicable only when `OPENTHREAD_CONFIG_LINK_RAW_ENABLE` feature is enabled).
  *
  */
 otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled);
@@ -178,7 +178,7 @@ bool otIp6IsEnabled(otInstance *aInstance);
  * Add a Network Interface Address to the Thread interface.
  *
  * The passed-in instance @p aAddress is copied by the Thread interface. The Thread interface only
- * supports a fixed number of externally added unicast addresses. See OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS.
+ * supports a fixed number of externally added unicast addresses. See OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aAddress  A pointer to a Network Interface Address.
@@ -214,7 +214,7 @@ const otNetifAddress *otIp6GetUnicastAddresses(otInstance *aInstance);
  * Subscribe the Thread interface to a Network Interface Multicast Address.
  *
  * The passed in instance @p aAddress will be copied by the Thread interface. The Thread interface only
- * supports a fixed number of externally added multicast addresses. See OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS.
+ * supports a fixed number of externally added multicast addresses. See OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aAddress  A pointer to an IP Address.
@@ -518,7 +518,7 @@ otError otIp6SelectSourceAddress(otInstance *aInstance, otMessageInfo *aMessageI
 /**
  * This function indicates whether the SLAAC module is enabled or not.
  *
- * This function requires the build-time feature `OPENTHREAD_CONFIG_ENABLE_SLAAC` to be enabled.
+ * This function requires the build-time feature `OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE` to be enabled.
  *
  * @retval TRUE    SLAAC module is enabled.
  * @retval FALSE   SLAAC module is disabled.
@@ -529,7 +529,7 @@ bool otIp6IsSlaacEnabled(otInstance *aInstance);
 /**
  * This function enables/disables the SLAAC module.
  *
- * This function requires the build-time feature `OPENTHREAD_CONFIG_ENABLE_SLAAC` to be enabled.
+ * This function requires the build-time feature `OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE` to be enabled.
  *
  * When SLAAC module is enabled, SLAAC addresses (based on on-mesh prefixes in Network Data) are added to the interface.
  * When SLAAC module is disabled any previously added SLAAC address is removed.
@@ -559,7 +559,7 @@ typedef bool (*otIp6SlaacPrefixFilter)(otInstance *aInstance, const otIp6Prefix 
 /**
  * This function sets the SLAAC module filter handler.
  *
- * This function requires the build-time feature `OPENTHREAD_CONFIG_ENABLE_SLAAC` to be enabled.
+ * This function requires the build-time feature `OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE` to be enabled.
  *
  * The filter handler is called by SLAAC module when it is about to add a SLAAC address based on a prefix to decide
  * whether the address should be added or not.

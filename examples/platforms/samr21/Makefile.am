@@ -96,6 +96,7 @@ PLATFORM_SOURCES                                                                
     logging.c                                                                                                  \
     misc.c                                                                                                     \
     openthread-core-samr21-config.h                                                                            \
+    openthread-core-samr21-config-check.h                                                                      \
     platform-samr21.h                                                                                          \
     radio.c                                                                                                    \
     system.c                                                                                                   \

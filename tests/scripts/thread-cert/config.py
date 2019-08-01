@@ -46,7 +46,7 @@ import sniffer
 MESH_LOCAL_PREFIX = 'fdde:ad00:beef::/64'
 MESH_LOCAL_PREFIX_REGEX_PATTERN = '^fdde:ad00:beef:(0){0,4}:'
 ROUTING_LOCATOR = '64/:0:ff:fe00:/16'
-ROUTING_LOCATOR_REGEX_PATTERN = '.*:(0)?:0{0,2}ff:fe00:\w{1,4}$'
+ROUTING_LOCATOR_REGEX_PATTERN = r'.*:(0)?:0{0,2}ff:fe00:\w{1,4}$'
 LINK_LOCAL = 'fe80:/112'
 LINK_LOCAL_REGEX_PATTERN = '^fe80:.*'
 ALOC_FLAG_REGEX_PATTERN = '.*:fc..$'
@@ -56,11 +56,36 @@ REALM_LOCAL_ALL_ROUTERS_ADDRESS = 'ff03::2'
 LINK_LOCAL_ALL_NODES_ADDRESS = 'ff02::1'
 LINK_LOCAL_ALL_ROUTERS_ADDRESS = 'ff02::2'
 
-DEFAULT_MASTER_KEY = bytearray([0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-                                0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])
+DEFAULT_MASTER_KEY = bytearray(
+    [
+        0x00,
+        0x11,
+        0x22,
+        0x33,
+        0x44,
+        0x55,
+        0x66,
+        0x77,
+        0x88,
+        0x99,
+        0xaa,
+        0xbb,
+        0xcc,
+        0xdd,
+        0xee,
+        0xff,
+    ]
+)
 
-ADDRESS_TYPE = Enum('ADDRESS_TYPE', ('LINK_LOCAL', 'GLOBAL', 'RLOC', 'ALOC', 'ML_EID'))
-RSSI = {'LINK_QULITY_0': -100, 'LINK_QULITY_1': -95, 'LINK_QULITY_2': -85, 'LINK_QULITY_3': -65}
+ADDRESS_TYPE = Enum(
+    'ADDRESS_TYPE', ('LINK_LOCAL', 'GLOBAL', 'RLOC', 'ALOC', 'ML_EID')
+)
+RSSI = {
+    'LINK_QULITY_0': -100,
+    'LINK_QULITY_1': -95,
+    'LINK_QULITY_2': -85,
+    'LINK_QULITY_3': -65,
+}
 
 SNIFFER_ID = int(os.getenv('SNIFFER_ID', 34))
 PANID = 0xface
@@ -80,14 +105,16 @@ LEADER_NOTIFY_SED_BY_CHILD_UPDATE_REQUEST = True
 
 PROTOCOL_VERSION = 2
 
+
 def create_default_network_data_prefix_sub_tlvs_factories():
     return {
         network_data.TlvType.HAS_ROUTE: network_data.HasRouteFactory(
             routes_factory=network_data.RoutesFactory(
-                route_factory=network_data.RouteFactory())
+                route_factory=network_data.RouteFactory()
+            )
         ),
         network_data.TlvType.BORDER_ROUTER: network_data.BorderRouterFactory(),
-        network_data.TlvType.LOWPAN_ID: network_data.LowpanIdFactory()
+        network_data.TlvType.LOWPAN_ID: network_data.LowpanIdFactory(),
     }
 
 
@@ -97,9 +124,7 @@ def create_default_network_data_prefix_sub_tlvs_factory():
 
 
 def create_default_network_data_service_sub_tlvs_factories():
-    return {
-        network_data.TlvType.SERVER: network_data.ServerFactory()
-    }
+    return {network_data.TlvType.SERVER: network_data.ServerFactory()}
 
 
 def create_default_network_data_service_sub_tlvs_factory():
@@ -138,7 +163,8 @@ def create_default_network_data_tlvs_factories():
 
 def create_default_network_data_tlvs_factory():
     return network_data.NetworkDataTlvsFactory(
-        sub_tlvs_factories=create_default_network_data_tlvs_factories())
+        sub_tlvs_factories=create_default_network_data_tlvs_factories()
+    )
 
 
 def create_default_mle_tlv_route64_factory():
@@ -148,21 +174,27 @@ def create_default_mle_tlv_route64_factory():
 
 def create_default_mle_tlv_network_data_factory():
     return mle.NetworkDataFactory(
-        network_data_tlvs_factory=create_default_network_data_tlvs_factory())
+        network_data_tlvs_factory=create_default_network_data_tlvs_factory()
+    )
 
 
 def create_default_mle_tlv_address_registration_factory():
     return mle.AddressRegistrationFactory(
         addr_compressed_factory=mle.AddressCompressedFactory(),
-        addr_full_factory=mle.AddressFullFactory())
+        addr_full_factory=mle.AddressFullFactory(),
+    )
+
 
 def create_default_mle_tlv_thread_discovery_factory():
     return mle.ThreadDiscoveryFactory(
         thread_discovery_tlvs_factory=create_default_thread_discovery_tlvs_factory())
 
+
 def create_default_thread_discovery_tlvs_factory():
     return mesh_cop.ThreadDiscoveryTlvsFactory(
-        sub_tlvs_factories=create_default_thread_discovery_sub_tlvs_factories())
+        sub_tlvs_factories=create_default_thread_discovery_sub_tlvs_factories()
+    )
+
 
 def create_default_thread_discovery_sub_tlvs_factories():
     return {
@@ -172,8 +204,9 @@ def create_default_thread_discovery_sub_tlvs_factories():
         mesh_cop.TlvType.NETWORK_NAME: mesh_cop.NetworkNameFactory(),
         mesh_cop.TlvType.STEERING_DATA: mesh_cop.SteeringDataFactory(),
         mesh_cop.TlvType.JOINER_UDP_PORT: mesh_cop.JoinerUdpPortFactory(),
-        mesh_cop.TlvType.COMMISSIONER_UDP_PORT: mesh_cop.CommissionerUdpPortFactory()
+        mesh_cop.TlvType.COMMISSIONER_UDP_PORT: mesh_cop.CommissionerUdpPortFactory(),
     }
+
 
 def create_default_mle_tlvs_factories():
     return {
@@ -203,20 +236,24 @@ def create_default_mle_tlvs_factories():
         mle.TlvType.PENDING_OPERATIONAL_DATASET: mle.PendingOperationalDatasetFactory(),
         mle.TlvType.TIME_REQUEST: mle.TimeRequestFactory(),
         mle.TlvType.TIME_PARAMETER: mle.TimeParameterFactory(),
-        mle.TlvType.THREAD_DISCOVERY: create_default_mle_tlv_thread_discovery_factory()
+        mle.TlvType.THREAD_DISCOVERY: create_default_mle_tlv_thread_discovery_factory(),
     }
 
 
 def create_default_mle_crypto_engine(master_key):
-    return net_crypto.CryptoEngine(crypto_material_creator=net_crypto.MleCryptoMaterialCreator(master_key))
+    return net_crypto.CryptoEngine(
+        crypto_material_creator=net_crypto.MleCryptoMaterialCreator(master_key)
+    )
 
 
 def create_default_mle_message_factory(master_key):
     return mle.MleMessageFactory(
         aux_sec_hdr_factory=net_crypto.AuxiliarySecurityHeaderFactory(),
         mle_command_factory=mle.MleCommandFactory(
-            tlvs_factories=create_default_mle_tlvs_factories()),
-        crypto_engine=create_default_mle_crypto_engine(master_key))
+            tlvs_factories=create_default_mle_tlvs_factories()
+        ),
+        crypto_engine=create_default_mle_crypto_engine(master_key),
+    )
 
 
 def create_deafult_network_tlvs_factories():
@@ -230,17 +267,21 @@ def create_deafult_network_tlvs_factories():
         network_layer.TlvType.ROUTER_MASK: network_layer.RouterMaskFactory(),
         network_layer.TlvType.ND_OPTION: network_layer.NdOptionFactory(),
         network_layer.TlvType.ND_DATA: network_layer.NdDataFactory(),
-        network_layer.TlvType.THREAD_NETWORK_DATA: network_layer.ThreadNetworkDataFactory(create_default_network_data_tlvs_factory()),
+        network_layer.TlvType.THREAD_NETWORK_DATA: network_layer.ThreadNetworkDataFactory(
+            create_default_network_data_tlvs_factory()
+        ),
         network_layer.TlvType.XTAL_ACCURACY: network_layer.XtalAccuracyFactory(),
-
         # Routing information are distributed in a Thread network by MLE Routing TLV
         # which is in fact MLE Route64 TLV. Thread specificaton v1.1. - Chapter 5.20
-        network_layer.TlvType.MLE_ROUTING: create_default_mle_tlv_route64_factory()
+        network_layer.TlvType.MLE_ROUTING: create_default_mle_tlv_route64_factory(),
     }
 
 
 def create_default_network_tlvs_factory():
-    return SubTlvsFactory(sub_tlvs_factories=create_deafult_network_tlvs_factories())
+    return SubTlvsFactory(
+        sub_tlvs_factories=create_deafult_network_tlvs_factories()
+    )
+
 
 def create_default_mesh_cop_tlvs_factories():
     return {
@@ -280,11 +321,15 @@ def create_default_mesh_cop_tlvs_factories():
         mesh_cop.TlvType.COUNT: mesh_cop.CountFactory(),
         mesh_cop.TlvType.PERIOD: mesh_cop.PeriodFactory(),
         mesh_cop.TlvType.SCAN_DURATION: mesh_cop.ScanDurationFactory(),
-        mesh_cop.TlvType.ENERGY_LIST: mesh_cop.EnergyListFactory()
+        mesh_cop.TlvType.ENERGY_LIST: mesh_cop.EnergyListFactory(),
     }
 
+
 def create_default_mesh_cop_tlvs_factory():
-    return SubTlvsFactory(sub_tlvs_factories=create_default_mesh_cop_tlvs_factories())
+    return SubTlvsFactory(
+        sub_tlvs_factories=create_default_mesh_cop_tlvs_factories()
+    )
+
 
 def create_default_uri_path_based_payload_factories():
     network_layer_tlvs_factory = create_default_network_tlvs_factory()
@@ -297,25 +342,26 @@ def create_default_uri_path_based_payload_factories():
         "/a/an": network_layer_tlvs_factory,
         "/a/sd": network_layer_tlvs_factory,
         "/c/lp": mesh_cop_tlvs_factory,
-        "/c/cs": mesh_cop_tlvs_factory
+        "/c/cs": mesh_cop_tlvs_factory,
     }
 
 
 def create_default_coap_message_factory():
-    return coap.CoapMessageFactory(options_factory=coap.CoapOptionsFactory(),
-                                   uri_path_based_payload_factories=create_default_uri_path_based_payload_factories(),
-                                   message_id_to_uri_path_binder=coap.CoapMessageIdToUriPathBinder())
+    return coap.CoapMessageFactory(
+        options_factory=coap.CoapOptionsFactory(),
+        uri_path_based_payload_factories=create_default_uri_path_based_payload_factories(),
+        message_id_to_uri_path_binder=coap.CoapMessageIdToUriPathBinder(),
+    )
 
 
 def create_default_ipv6_hop_by_hop_options_factories():
-    return {
-        109: ipv6.MPLOptionFactory()
-    }
+    return {109: ipv6.MPLOptionFactory()}
 
 
 def create_default_ipv6_hop_by_hop_options_factory():
     return ipv6.HopByHopOptionsFactory(
-        options_factories=create_default_ipv6_hop_by_hop_options_factories())
+        options_factories=create_default_ipv6_hop_by_hop_options_factories()
+    )
 
 
 def create_default_based_on_src_dst_ports_udp_payload_factory(master_key):
@@ -327,7 +373,7 @@ def create_default_based_on_src_dst_ports_udp_payload_factory(master_key):
         src_dst_port_based_payload_factories={
             19788: mle_message_factory,
             61631: coap_message_factory,
-            1000: dtls_message_factory
+            1000: dtls_message_factory,
         }
     )
 
@@ -341,7 +387,7 @@ def create_default_ipv6_icmp_body_factories():
         ipv6.ICMP_DESTINATION_UNREACHABLE: ipv6.ICMPv6DestinationUnreachableFactory(),
         ipv6.ICMP_ECHO_REQUEST: ipv6.ICMPv6EchoBodyFactory(),
         ipv6.ICMP_ECHO_RESPONSE: ipv6.ICMPv6EchoBodyFactory(),
-        "default": ipv6.BytesPayloadFactory()
+        "default": ipv6.BytesPayloadFactory(),
     }
 
 
@@ -349,33 +395,30 @@ def create_default_ipv6_upper_layer_factories(master_key):
     return {
         ipv6.IPV6_NEXT_HEADER_UDP: ipv6.UDPDatagramFactory(
             udp_header_factory=ipv6.UDPHeaderFactory(),
-            udp_payload_factory=create_default_based_on_src_dst_ports_udp_payload_factory(master_key)
+            udp_payload_factory=create_default_based_on_src_dst_ports_udp_payload_factory(
+                master_key
+            ),
         ),
         ipv6.IPV6_NEXT_HEADER_ICMP: ipv6.ICMPv6Factory(
             body_factories=create_default_ipv6_icmp_body_factories()
-        )
+        ),
     }
 
 
 def create_default_lowpan_extension_headers_factories():
-    return {
-        ipv6.IPV6_NEXT_HEADER_HOP_BY_HOP: lowpan.LowpanHopByHopFactory(
-            hop_by_hop_options_factory=create_default_ipv6_hop_by_hop_options_factory()
-        )
-    }
+    return {ipv6.IPV6_NEXT_HEADER_HOP_BY_HOP: lowpan.LowpanHopByHopFactory(
+        hop_by_hop_options_factory=create_default_ipv6_hop_by_hop_options_factory())}
 
 
 def create_default_ipv6_extension_headers_factories():
-    return {
-        ipv6.IPV6_NEXT_HEADER_HOP_BY_HOP:  ipv6.HopByHopFactory(
-            hop_by_hop_options_factory=create_default_ipv6_hop_by_hop_options_factory())
-    }
+    return {ipv6.IPV6_NEXT_HEADER_HOP_BY_HOP: ipv6.HopByHopFactory(
+        hop_by_hop_options_factory=create_default_ipv6_hop_by_hop_options_factory())}
 
 
 def create_default_ipv6_packet_factory(master_key):
     return ipv6.IPv6PacketFactory(
         ehf=create_default_ipv6_extension_headers_factories(),
-        ulpf=create_default_ipv6_upper_layer_factories(master_key)
+        ulpf=create_default_ipv6_upper_layer_factories(master_key),
     )
 
 
@@ -387,7 +430,7 @@ def create_default_lowpan_decompressor(context_manager):
         lowpan_extension_headers_factory=lowpan.LowpanExtensionHeadersFactory(
             ext_headers_factories=create_default_lowpan_extension_headers_factories()
         ),
-        lowpan_udp_header_factory=lowpan.LowpanUdpHeaderFactory()
+        lowpan_udp_header_factory=lowpan.LowpanUdpHeaderFactory(),
     )
 
 
@@ -398,12 +441,14 @@ def create_default_thread_context_manager():
     return context_manager
 
 
-def create_default_lowpan_parser(context_manager, master_key=DEFAULT_MASTER_KEY):
+def create_default_lowpan_parser(
+    context_manager, master_key=DEFAULT_MASTER_KEY
+):
     return lowpan.LowpanParser(
         lowpan_mesh_header_factory=lowpan.LowpanMeshHeaderFactory(),
         lowpan_decompressor=create_default_lowpan_decompressor(context_manager),
         lowpan_fragements_buffers_manager=lowpan.LowpanFragmentsBuffersManager(),
-        ipv6_packet_factory=create_default_ipv6_packet_factory(master_key)
+        ipv6_packet_factory=create_default_ipv6_packet_factory(master_key),
     )
 
 
@@ -414,8 +459,8 @@ def create_default_thread_message_factory(master_key=DEFAULT_MASTER_KEY):
     return message.MessageFactory(lowpan_parser=lowpan_parser)
 
 
-def create_default_thread_sniffer(nodeid=SNIFFER_ID):
-    return sniffer.Sniffer(nodeid, create_default_thread_message_factory())
+def create_default_thread_sniffer():
+    return sniffer.Sniffer(create_default_thread_message_factory())
 
 
 def create_default_simulator():

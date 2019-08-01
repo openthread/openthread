@@ -1,6 +1,7 @@
 *.a
 *.bak
 *.db
+*.flash
 *.gcda
 *.gcno
 *.log

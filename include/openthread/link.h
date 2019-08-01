@@ -65,7 +65,7 @@ typedef struct otThreadLinkInfo
     uint8_t  mLqi;          ///< Link Quality Indicator for a received message.
     bool     mLinkSecurity; ///< Indicates whether or not link security is enabled.
 
-    // Applicable/Required only when time sync feature (`OPENTHREAD_CONFIG_ENABLE_TIME_SYNC`) is enabled.
+    // Applicable/Required only when time sync feature (`OPENTHREAD_CONFIG_TIME_SYNC_ENABLE`) is enabled.
     uint8_t mTimeSyncSeq;       ///< The time sync sequence.
     int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time, in microseconds.
 } otThreadLinkInfo;
@@ -427,7 +427,7 @@ uint32_t otLinkGetPollPeriod(otInstance *aInstance);
  * @note This function updates only poll period of sleepy end device. To update child timeout the function
  *       `otSetChildTimeout()` shall be called.
  *
- * @note Minimal non-zero value should be `OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD` (10ms).
+ * @note Minimal non-zero value should be `OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD` (10ms).
  *       Or zero to clear user-specified poll period.
  *
  * @note User-specified value should be no more than the maximal value 0x3FFFFFF ((1 << 26) - 1) allowed,

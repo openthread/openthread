@@ -26,11 +26,10 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 
-import time
 import wpan
 from wpan import verify
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test description:
 #
 # Traffic over multi-hop in a network with chain topology
@@ -53,10 +52,10 @@ from wpan import verify
 
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
-print '-' * 120
-print 'Starting \'{}\''.format(test_name)
+print('-' * 120)
+print('Starting \'{}\''.format(test_name))
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
 
 speedup = 4
@@ -77,12 +76,12 @@ fed_children.append(wpan.Node())
 
 all_nodes = routers + sed_children + fed_children
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Init all nodes
 
 wpan.Node.init_all_nodes()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Build network topology
 #
 #       r1 ----- r2 ---- r3 ----- r4
@@ -115,15 +114,17 @@ sed_children[0].join_node(routers[0], wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
 sed_children[0].set(wpan.WPAN_POLL_INTERVAL, '500')
 
 for index in range(1, NUM_ROUTERS):
-    routers[index].join_node(routers[index -1], wpan.JOIN_TYPE_ROUTER)
-    sed_children[index].join_node(routers[index], wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
+    routers[index].join_node(routers[index - 1], wpan.JOIN_TYPE_ROUTER)
+    sed_children[index].join_node(
+        routers[index], wpan.JOIN_TYPE_SLEEPY_END_DEVICE
+    )
     sed_children[index].set(wpan.WPAN_POLL_INTERVAL, '500')
 
 fed_children[0].join_node(routers[0], wpan.JOIN_TYPE_END_DEVICE)
 fed_children[-1].join_node(routers[-1], wpan.JOIN_TYPE_END_DEVICE)
 
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
 NUM_MSGS = 3
@@ -141,7 +142,8 @@ for msg_length in MSG_LENS:
     verify(sender.was_successful)
     verify(recver.was_successful)
 
-# Send from the SED child of the last router to the SED child of the first router.
+# Send from the SED child of the last router to the SED child of the first
+# router.
 
 src = sed_children[-1].get(wpan.WPAN_IP6_MESH_LOCAL_ADDRESS)[1:-1]
 dst = sed_children[0].get(wpan.WPAN_IP6_MESH_LOCAL_ADDRESS)[1:-1]
@@ -153,7 +155,8 @@ for msg_length in MSG_LENS:
     verify(sender.was_successful)
     verify(recver.was_successful)
 
-# Send from the FED child of the first router to the FED child of the last router.
+# Send from the FED child of the first router to the FED child of the last
+# router.
 
 src = fed_children[0].get(wpan.WPAN_IP6_MESH_LOCAL_ADDRESS)[1:-1]
 dst = fed_children[-1].get(wpan.WPAN_IP6_MESH_LOCAL_ADDRESS)[1:-1]
@@ -165,9 +168,9 @@ for msg_length in MSG_LENS:
     verify(sender.was_successful)
     verify(recver.was_successful)
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
 wpan.Node.finalize_all_nodes()
 
-print '\'{}\' passed.'.format(test_name)
+print('\'{}\' passed.'.format(test_name))

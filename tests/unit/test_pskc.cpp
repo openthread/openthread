@@ -34,6 +34,8 @@
 #include "test_platform.h"
 #include "test_util.h"
 
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+
 static const otExtendedPanId sXPanId = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}};
 
 void TestMinimumPassphrase(void)
@@ -87,3 +89,15 @@ int main(void)
     return 0;
 }
 #endif
+
+#else // #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+
+#ifdef ENABLE_TEST_MAIN
+int main(void)
+{
+    printf("Commissioenr role disabled\n");
+    return 0;
+}
+#endif
+
+#endif // #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE

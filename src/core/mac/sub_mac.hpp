@@ -86,11 +86,17 @@ public:
      * This class defines the callbacks notifying `SubMac` user of changes and events.
      *
      */
-    class Callbacks
+    class Callbacks : public InstanceLocator
     {
-        friend class SubMac;
+    public:
+        /**
+         * This constructor initializes the `Callbacks` object.
+         *
+         * @param[in]  aInstance  A reference to the OpenThread instance.
+         *
+         */
+        explicit Callbacks(Instance &aInstance);
 
-    protected:
         /**
          * This method notifies user of `SubMac` of a received frame.
          *
@@ -160,7 +166,7 @@ public:
          */
         void EnergyScanDone(int8_t aMaxRssi);
 
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
         /**
          * The method notifies user of `SubMac` to process transmit security for the frame, which  happens when the
          * frame includes Header IE(s) that were updated before transmission.
@@ -173,22 +179,15 @@ public:
          */
         void FrameUpdated(Frame &aFrame);
 #endif
-
-        /**
-         * This constructor initializes the `Callbacks` object.
-         *
-         */
-        Callbacks(void) {}
     };
 
     /**
      * This constructor initializes the `SubMac` object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
-     * @param[in]  aCallbacks A reference to the `Callbacks` object.
      *
      */
-    SubMac(Instance &aInstance, Callbacks &aCallbacks);
+    explicit SubMac(Instance &aInstance);
 
     /**
      * This method gets the capabilities provided by platform radio.
@@ -389,7 +388,7 @@ public:
      */
     void HandleEnergyScanDone(int8_t aMaxRssi);
 
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     /**
      * This method handles a "Frame Updated" event from radio platform.
      *
@@ -414,7 +413,7 @@ private:
         kMinBackoff        = 1,  ///< Minimum backoff (milliseconds).
         kAckTimeout        = 16, ///< Timeout for waiting on an ACK (milliseconds).
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
         kEnergyScanRssiSampleInterval = 128, ///< RSSI sample interval during energy scan, 128 usec
 #else
         kEnergyScanRssiSampleInterval = 1, ///< RSSI sample interval during energy scan, 1 ms
@@ -465,10 +464,10 @@ private:
     int8_t             mEnergyScanMaxRssi;
     uint32_t           mEnergyScanEndTime;
     Frame &            mTransmitFrame;
-    Callbacks &        mCallbacks;
+    Callbacks          mCallbacks;
     otLinkPcapCallback mPcapCallback;
     void *             mPcapCallbackContext;
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     TimerMicro mTimer;
 #else
     TimerMilli mTimer;

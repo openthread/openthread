@@ -109,7 +109,7 @@ struct MessageInfo
     bool    mInPriorityQ : 1;  ///< Indicates whether the message is queued in normal or priority queue.
     bool    mTxSuccess : 1;    ///< Indicates whether the direct tx of the message was successful.
     bool    mDoNotEvict : 1;   ///< Indicates whether or not this message may be evicted.
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     bool    mTimeSync : 1;      ///< Indicates whether the message is also used for time sync purpose.
     uint8_t mTimeSyncSeq;       ///< The time sync sequence.
     int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time, in microseconds.
@@ -473,7 +473,7 @@ public:
      * @returns A pointer to the message or NULL if insufficient message buffers are available.
      *
      */
-    Message *Clone(void) const { return Clone(GetLength()); };
+    Message *Clone(void) const { return Clone(GetLength()); }
 
     /**
      * This method returns the datagram tag used for 6LoWPAN fragmentation.
@@ -734,7 +734,7 @@ public:
         return (!mBuffer.mHead.mInfo.mInPriorityQ) ? mBuffer.mHead.mInfo.mQueue.mMessage : NULL;
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * This method indicates whether or not the message is also used for time sync purpose.
      *
@@ -786,7 +786,7 @@ public:
      *
      */
     uint8_t GetTimeSyncSeq(void) const { return mBuffer.mHead.mInfo.mTimeSyncSeq; }
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 private:
     /**

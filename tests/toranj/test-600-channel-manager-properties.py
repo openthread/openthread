@@ -30,29 +30,30 @@ import time
 import wpan
 from wpan import verify
 
-#-----------------------------------------------------------------------------------------------------------------------
-# Test description: This test verifies wpantund properties related to `ChannelManager` feature
+# -----------------------------------------------------------------------------------------------------------------------
+# Test description: This test verifies wpantund properties related to
+# `ChannelManager` feature
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
-print '-' * 120
-print 'Starting \'{}\''.format(test_name)
+print('-' * 120)
+print('Starting \'{}\''.format(test_name))
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
 
 node = wpan.Node()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Init all nodes
 
 wpan.Node.init_all_nodes()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Build network topology
 
 node.form("channel-manager", channel=11)
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
 # Check default property values
@@ -74,23 +75,41 @@ node.set(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_ENABLED, '0')
 verify(node.get(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_ENABLED) == 'false')
 
 node.set(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL, '1000')
-verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL), 0) == 1000)
+verify(
+    int(node.get(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL), 0) == 1000
+)
 
 all_channls_mask = int('0x7fff800', 0)
 chan_11_mask = int('0x800', 0)
 chan_11_to_13_mask = int('0x3800', 0)
 
-node.set(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK, str(all_channls_mask))
-verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK), 0) == all_channls_mask)
+node.set(
+    wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK, str(all_channls_mask)
+)
+verify(
+    int(node.get(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK), 0)
+    == all_channls_mask
+)
 
 node.set(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK, str(chan_11_mask))
-verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK), 0) == chan_11_mask)
+verify(
+    int(node.get(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK), 0)
+    == chan_11_mask
+)
 
-node.set(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK, str(chan_11_to_13_mask))
-verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK), 0) == chan_11_to_13_mask)
+node.set(
+    wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK, str(chan_11_to_13_mask)
+)
+verify(
+    int(node.get(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK), 0)
+    == chan_11_to_13_mask
+)
 
 node.set(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK, str(all_channls_mask))
-verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK), 0) == all_channls_mask)
+verify(
+    int(node.get(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK), 0)
+    == all_channls_mask
+)
 
 node.set(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_ENABLED, '1')
 verify(node.get(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_ENABLED) == 'true')
@@ -103,20 +122,32 @@ start_time = time.time()
 wait_time = 20
 
 while node.get(wpan.WPAN_STATE) != wpan.STATE_ASSOCIATED:
-	if time.time() - start_time > wait_time:
-		print 'Took too long to restore after reset ({}>{} sec)'.format(time.time() - start_time, wait_time)
-		exit(1)
-	time.sleep(2)
+    if time.time() - start_time > wait_time:
+        print(
+            'Took too long to restore after reset ({}>{} sec)'.format(
+                time.time() - start_time, wait_time
+            )
+        )
+        exit(1)
+    time.sleep(2)
 
 verify(node.get(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_ENABLED) == 'true')
-verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK), 0) == all_channls_mask)
-verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK), 0) == chan_11_to_13_mask)
-verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL), 0) == 1000)
+verify(
+    int(node.get(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK), 0)
+    == all_channls_mask
+)
+verify(
+    int(node.get(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK), 0)
+    == chan_11_to_13_mask
+)
+verify(
+    int(node.get(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL), 0) == 1000
+)
 verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_DELAY), 0) == 180)
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
 wpan.Node.finalize_all_nodes()
 
-print '\'{}\' passed.'.format(test_name)
+print('\'{}\' passed.'.format(test_name))

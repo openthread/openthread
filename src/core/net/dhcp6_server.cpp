@@ -41,7 +41,7 @@
 #include "thread/mle.hpp"
 #include "thread/thread_netif.hpp"
 
-#if OPENTHREAD_ENABLE_DHCP6_SERVER
+#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
 
 namespace ot {
 namespace Dhcp6 {
@@ -64,7 +64,7 @@ otError Dhcp6Server::UpdateService(void)
     Lowpan::Context       lowpanContext;
 
     // remove dhcp agent aloc and prefix delegation
-    for (int i = 0; i < OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES; i++)
+    for (int i = 0; i < OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES; i++)
     {
         bool found = false;
 
@@ -149,7 +149,7 @@ otError Dhcp6Server::AddPrefixAgent(const otIp6Prefix &aIp6Prefix, const Lowpan:
     otError      error    = OT_ERROR_NONE;
     PrefixAgent *newEntry = NULL;
 
-    for (int i = 0; i < OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES; i++)
+    for (int i = 0; i < OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES; i++)
     {
         if (!mPrefixAgents[i].IsValid())
         {
@@ -312,7 +312,7 @@ otError Dhcp6Server::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
                  error = OT_ERROR_PARSE);
 
     // mask matching prefix
-    for (uint8_t i = 0; i < OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES; i++)
+    for (uint8_t i = 0; i < OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES; i++)
     {
         if (mPrefixAgents[i].IsValid() && mPrefixAgents[i].IsPrefixMatch(option.GetAddress()))
         {
@@ -394,7 +394,7 @@ otError Dhcp6Server::AppendIaNa(Message &aMessage, IaNa &aIaNa)
 
     if (mPrefixAgentsMask)
     {
-        for (uint8_t i = 0; i < OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES; i++)
+        for (uint8_t i = 0; i < OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES; i++)
         {
             if ((mPrefixAgentsMask & (1 << i)))
             {
@@ -434,7 +434,7 @@ otError Dhcp6Server::AppendIaAddress(Message &aMessage, ClientIdentifier &aClien
     if (mPrefixAgentsMask)
     {
         // if specified, only apply specified prefixes
-        for (uint8_t i = 0; i < OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES; i++)
+        for (uint8_t i = 0; i < OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES; i++)
         {
             if (mPrefixAgentsMask & (1 << i))
             {
@@ -445,7 +445,7 @@ otError Dhcp6Server::AppendIaAddress(Message &aMessage, ClientIdentifier &aClien
     else
     {
         // if not specified, apply all configured prefixes
-        for (uint8_t i = 0; i < OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES; i++)
+        for (uint8_t i = 0; i < OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES; i++)
         {
             if (mPrefixAgents[i].IsValid())
             {
@@ -485,4 +485,4 @@ otError Dhcp6Server::AppendRapidCommit(Message &aMessage)
 } // namespace Dhcp6
 } // namespace ot
 
-#endif //  OPENTHREAD_ENABLE_DHCP6_SERVER
+#endif //  OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE

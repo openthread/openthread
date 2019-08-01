@@ -42,6 +42,7 @@
 #include "mac/mac.hpp"
 #include "meshcop/joiner_router.hpp"
 #include "net/udp6.hpp"
+#include "thread/device_mode.hpp"
 #include "thread/mle_constants.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/topology.hpp"
@@ -304,7 +305,7 @@ public:
 
         /**
          * Applicable/Required only when time synchronization service
-         * (`OPENTHREAD_CONFIG_ENABLE_TIME_SYNC`) is enabled.
+         * (`OPENTHREAD_CONFIG_TIME_SYNC_ENABLE`) is enabled.
          *
          */
         kCommandTimeSync = 99, ///< Time Synchronization
@@ -367,7 +368,7 @@ public:
      * Default constructor for the object.
      *
      */
-    DelayedResponseHeader(void) { memset(this, 0, sizeof(*this)); };
+    DelayedResponseHeader(void) { memset(this, 0, sizeof(*this)); }
 
     /**
      * This constructor initializes the object with specific values.
@@ -380,7 +381,7 @@ public:
     {
         mSendTime    = aSendTime;
         mDestination = aDestination;
-    };
+    }
 
     /**
      * This method appends delayed response header to the message.
@@ -391,7 +392,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
-    otError AppendTo(Message &aMessage) { return aMessage.Append(this, sizeof(*this)); };
+    otError AppendTo(Message &aMessage) { return aMessage.Append(this, sizeof(*this)); }
 
     /**
      * This method reads delayed response header from the message.
@@ -425,7 +426,7 @@ public:
      * @returns  A time when the message shall be sent.
      *
      */
-    uint32_t GetSendTime(void) const { return mSendTime; };
+    uint32_t GetSendTime(void) const { return mSendTime; }
 
     /**
      * This method returns a destination of the delayed message.
@@ -433,7 +434,7 @@ public:
      * @returns  A destination of the delayed message.
      *
      */
-    const Ip6::Address &GetDestination(void) const { return mDestination; };
+    const Ip6::Address &GetDestination(void) const { return mDestination; }
 
     /**
      * This method checks if the message shall be sent before the given time.
@@ -443,7 +444,7 @@ public:
      * @retval TRUE   If the message shall be sent before the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsEarlier(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) > 0); };
+    bool IsEarlier(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) > 0); }
 
     /**
      * This method checks if the message shall be sent after the given time.
@@ -453,7 +454,7 @@ public:
      * @retval TRUE   If the message shall be sent after the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsLater(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) < 0); };
+    bool IsLater(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) < 0); }
 
 private:
     Ip6::Address mDestination; ///< IPv6 address of the message destination.
@@ -631,7 +632,7 @@ public:
      * @returns The Device Mode as reported in the Mode TLV.
      *
      */
-    uint8_t GetDeviceMode(void) const { return mDeviceMode; }
+    DeviceMode GetDeviceMode(void) const { return mDeviceMode; }
 
     /**
      * This method sets the Device Mode as reported in the Mode TLV.
@@ -642,7 +643,7 @@ public:
      * @retval OT_ERROR_INVALID_ARGS  The mode combination specified in @p aMode is invalid.
      *
      */
-    otError SetDeviceMode(uint8_t aDeviceMode);
+    otError SetDeviceMode(DeviceMode aDeviceMode);
 
     /**
      * This method indicates whether or not the device is rx-on-when-idle.
@@ -650,7 +651,7 @@ public:
      * @returns TRUE if rx-on-when-idle, FALSE otherwise.
      *
      */
-    bool IsRxOnWhenIdle(void) const { return (mDeviceMode & ModeTlv::kModeRxOnWhenIdle) != 0; }
+    bool IsRxOnWhenIdle(void) const { return mDeviceMode.IsRxOnWhenIdle(); }
 
     /**
      * This method indicates whether or not the device is a Full Thread Device.
@@ -658,7 +659,7 @@ public:
      * @returns TRUE if a Full Thread Device, FALSE otherwise.
      *
      */
-    bool IsFullThreadDevice(void) const { return (mDeviceMode & ModeTlv::kModeFullThreadDevice) != 0; }
+    bool IsFullThreadDevice(void) const { return mDeviceMode.IsFullThreadDevice(); }
 
     /**
      * This method indicates whether or not the device uses secure IEEE 802.15.4 Data Request messages.
@@ -666,7 +667,7 @@ public:
      * @returns TRUE if using secure IEEE 802.15.4 Data Request messages, FALSE otherwise.
      *
      */
-    bool IsSecureDataRequest(void) const { return (mDeviceMode & ModeTlv::kModeSecureDataRequest) != 0; }
+    bool IsSecureDataRequest(void) const { return mDeviceMode.IsSecureDataRequest(); }
 
     /**
      * This method indicates whether or not the device requests Full Network Data.
@@ -674,7 +675,7 @@ public:
      * @returns TRUE if requests Full Network Data, FALSE otherwise.
      *
      */
-    bool IsFullNetworkData(void) const { return (mDeviceMode & ModeTlv::kModeFullNetworkData) != 0; }
+    bool IsFullNetworkData(void) const { return mDeviceMode.IsFullNetworkData(); }
 
     /**
      * This method indicates whether or not the device is a Minimal End Device.
@@ -682,11 +683,7 @@ public:
      * @returns TRUE if the device is a Minimal End Device, FALSE otherwise.
      *
      */
-    bool IsMinimalEndDevice(void) const
-    {
-        return (mDeviceMode & (ModeTlv::kModeFullThreadDevice | ModeTlv::kModeRxOnWhenIdle)) !=
-               (ModeTlv::kModeFullThreadDevice | ModeTlv::kModeRxOnWhenIdle);
-    }
+    bool IsMinimalEndDevice(void) const { return mDeviceMode.IsMinimalEndDevice(); }
 
     /**
      * This method returns a pointer to the Mesh Local Prefix.
@@ -883,7 +880,7 @@ public:
         return GetAlocAddress(aAddress, GetCommissionerAloc16FromId(aSessionId));
     }
 
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     /**
      * This method retrieves the Service ALOC for given Service ID.
      *
@@ -1177,13 +1174,13 @@ protected:
      * This method appends a Mode TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
-     * @param[in]  aMode     The Device Mode value.
+     * @param[in]  aMode     The Device Mode.
      *
      * @retval OT_ERROR_NONE     Successfully appended the Mode TLV.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Mode TLV.
      *
      */
-    otError AppendMode(Message &aMessage, uint8_t aMode);
+    otError AppendMode(Message &aMessage, DeviceMode aMode);
 
     /**
      * This method appends a Timeout TLV to a message.
@@ -1352,7 +1349,7 @@ protected:
      */
     otError AppendAddressRegistration(Message &aMessage, AddressRegistrationMode aMode = kAppendAllAddresses);
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * This method appends a Time Request TLV to a message.
      *
@@ -1385,7 +1382,7 @@ protected:
      *
      */
     otError AppendXtalAccuracy(Message &aMessage);
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
     /**
      * This method appends a Active Timestamp TLV to a message.
@@ -1639,21 +1636,18 @@ protected:
     static const char *ReattachStateToString(ReattachState aState);
 #endif
 
-    LeaderDataTlv mLeaderData;                    ///< Last received Leader Data TLV.
-    bool          mRetrieveNewNetworkData;        ///< Indicating new Network Data is needed if set.
-    otDeviceRole  mRole;                          ///< Current Thread role.
-    Router        mParent;                        ///< Parent information.
-    uint8_t       mDeviceMode;                    ///< Device mode setting.
-    AttachState   mAttachState;                   ///< The parent request state.
-    ReattachState mReattachState;                 ///< Reattach state
-    uint16_t      mAttachCounter;                 ///< Attach attempt counter.
-    uint16_t      mAnnounceDelay;                 ///< Delay in between sending Announce messages during attach.
-    TimerMilli    mAttachTimer;                   ///< The timer for driving the attach process.
-    TimerMilli    mDelayedResponseTimer;          ///< The timer to delay MLE responses.
-    TimerMilli    mMessageTransmissionTimer;      ///< The timer for (re-)sending of MLE messages (e.g. Child Update).
-    uint32_t      mLastPartitionId;               ///< The partition ID of the previous Thread partition
-    uint8_t       mLastPartitionRouterIdSequence; ///< The router ID sequence from the previous Thread partition
-    uint8_t       mLastPartitionIdTimeout;        ///< The time remaining to avoid the previous Thread partition
+    LeaderDataTlv mLeaderData;               ///< Last received Leader Data TLV.
+    bool          mRetrieveNewNetworkData;   ///< Indicating new Network Data is needed if set.
+    otDeviceRole  mRole;                     ///< Current Thread role.
+    Router        mParent;                   ///< Parent information.
+    DeviceMode    mDeviceMode;               ///< Device mode setting.
+    AttachState   mAttachState;              ///< The parent request state.
+    ReattachState mReattachState;            ///< Reattach state
+    uint16_t      mAttachCounter;            ///< Attach attempt counter.
+    uint16_t      mAnnounceDelay;            ///< Delay in between sending Announce messages during attach.
+    TimerMilli    mAttachTimer;              ///< The timer for driving the attach process.
+    TimerMilli    mDelayedResponseTimer;     ///< The timer to delay MLE responses.
+    TimerMilli    mMessageTransmissionTimer; ///< The timer for (re-)sending of MLE messages (e.g. Child Update).
     uint8_t       mParentLeaderCost;
 
 private:
@@ -1670,9 +1664,9 @@ private:
         kParentSearchRssThreadhold   = OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD,
 
         // Parameters for "attach backoff" feature (CONFIG_ENABLE_ATTACH_BACKOFF) - Intervals are in milliseconds.
-        kAttachBackoffMinInterval = OPENTHREAD_CONFIG_ATTACH_BACKOFF_MINIMUM_INTERVAL,
-        kAttachBackoffMaxInterval = OPENTHREAD_CONFIG_ATTACH_BACKOFF_MAXIMUM_INTERVAL,
-        kAttachBackoffJitter      = OPENTHREAD_CONFIG_ATTACH_BACKOFF_JITTER_INTERVAL,
+        kAttachBackoffMinInterval = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MINIMUM_INTERVAL,
+        kAttachBackoffMaxInterval = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MAXIMUM_INTERVAL,
+        kAttachBackoffJitter      = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_JITTER_INTERVAL,
     };
 
     enum ParentRequestType
@@ -1735,7 +1729,7 @@ private:
     void ResetParentCandidate(void);
 
     otError GetAlocAddress(Ip6::Address &aAddress, uint16_t aAloc16) const;
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     /**
      * This method scans for network data from the leader and updates IP addresses assigned to this
      * interface to make sure that all Service ALOCs (0xfc10-0xfc1f) are properly set.
@@ -1743,11 +1737,11 @@ private:
     void UpdateServiceAlocs(void);
 #endif
 
-#if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
+#if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
     otError InformPreviousParent(void);
 #endif
 
-#if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
+#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     static void HandleParentSearchTimer(Timer &aTimer);
     void        HandleParentSearchTimer(void);
     void        StartParentSearchTimer(void);
@@ -1797,11 +1791,11 @@ private:
     bool            mDiscoverInProgress;
     bool            mDiscoverEnableFiltering;
 
-#if OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
+#if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
     uint16_t mPreviousParentRloc;
 #endif
 
-#if OPENTHREAD_CONFIG_ENABLE_PERIODIC_PARENT_SEARCH
+#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     bool       mParentSearchIsInBackoff : 1;
     bool       mParentSearchBackoffWasCanceled : 1;
     bool       mParentSearchRecentlyDetached : 1;
@@ -1816,8 +1810,8 @@ private:
 
     Ip6::NetifUnicastAddress mLeaderAloc;
 
-#if OPENTHREAD_ENABLE_SERVICE
-    Ip6::NetifUnicastAddress mServiceAlocs[OPENTHREAD_CONFIG_MAX_SERVICE_ALOCS];
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+    Ip6::NetifUnicastAddress mServiceAlocs[OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS];
 #endif
 
     otMleCounters mCounters;

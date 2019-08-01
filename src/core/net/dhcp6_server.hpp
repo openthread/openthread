@@ -214,7 +214,7 @@ private:
 
     Ip6::UdpSocket mSocket;
 
-    PrefixAgent mPrefixAgents[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
+    PrefixAgent mPrefixAgents[OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES];
     uint8_t     mPrefixAgentsCount;
     uint8_t     mPrefixAgentsMask;
 };
