@@ -170,9 +170,15 @@
  *
  * The size of a message buffer in bytes.
  *
+ * Message buffers store pointers which have different sizes on different
+ * system. Setting message buffer size according to the CPU word length
+ * so that message buffer size will be doubled on 64bit system compared
+ * to that on 32bit system. As a result, the first message always have some
+ * bytes left for small packets.
+ *
  */
 #ifndef OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE
-#define OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE 128
+#define OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE (sizeof(void *) * 32)
 #endif
 
 /**
