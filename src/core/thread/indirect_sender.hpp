@@ -41,6 +41,7 @@
 #include "mac/data_poll_handler.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/device_mode.hpp"
+#include "thread/indirect_sender_frame_context.hpp"
 #include "thread/src_match_controller.hpp"
 
 namespace ot {
@@ -60,7 +61,7 @@ class Child;
  * This class implements indirect transmission.
  *
  */
-class IndirectSender : public InstanceLocator
+class IndirectSender : public InstanceLocator, public IndirectSenderBase
 {
     friend class Instance;
     friend class DataPollHandler::Callbacks;
@@ -207,8 +208,11 @@ private:
     };
 
     // Callbacks from DataPollHandler
-    otError PrepareFrameForChild(Mac::TxFrame &aFrame, Child &aChild);
-    void    HandleSentFrameToChild(const Mac::TxFrame &aFrame, otError aError, Child &aChild);
+    otError PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
+    void    HandleSentFrameToChild(const Mac::TxFrame &aFrame,
+                                   const FrameContext &aContext,
+                                   otError             aError,
+                                   Child &             aChild);
     void    HandleFrameChangeDone(Child &aChild);
 
     void     UpdateIndirectMessage(Child &aChild);
@@ -221,7 +225,6 @@ private:
     bool                  mEnabled;
     SourceMatchController mSourceMatchController;
     DataPollHandler       mDataPollHandler;
-    uint16_t              mMessageNextOffset;
 };
 
 /**
