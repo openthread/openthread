@@ -457,6 +457,8 @@ build_samr21() {
 
     mkdir ../output
 
+    export MERGE_BASE_SHA=$(git merge-base HEAD ${TRAVIS_BRANCH})
+
     # pull request
     OPENTHREAD_FLAGS="BORDER_AGENT=1 BORDER_ROUTER=1 CHANNEL_MANAGER=1 CHANNEL_MONITOR=1 CHILD_SUPERVISION=1 COAP=1 COAPS=1 COMMISSIONER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DIAGNOSTIC=1 DISABLE_DOC=1 DNS_CLIENT=1 ECDSA=1 FULL_LOGS=1 JAM_DETECTION=1 JOINER=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 SLAAC=1 SNTP_CLIENT=1 TIME_SYNC=1 UDP_FORWARD=1"
 
@@ -466,7 +468,7 @@ build_samr21() {
     make -f examples/Makefile-nrf52840 ${OPENTHREAD_FLAGS} || die
     mv output/nrf52840 ../output/nrf52840-b
 
-    git checkout ${TRAVIS_BRANCH}
+    git checkout ${MERGE_BASE_SHA}
     git submodule update --init
 
     # base branch
