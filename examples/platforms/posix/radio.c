@@ -634,7 +634,9 @@ static void radioReceive(otInstance *aInstance)
     otEXPECT(sReceiveFrame.mChannel == sReceiveMessage.mChannel);
     otEXPECT(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT);
 
+#if !OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (otPlatRadioGetPromiscuous(aInstance))
+#endif
     {
         // Unable to simulate SFD, so use the rx done timestamp instead.
         sReceiveFrame.mInfo.mRxInfo.mTimestamp = otPlatTimeGet();
