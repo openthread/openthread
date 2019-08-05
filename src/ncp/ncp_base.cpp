@@ -1947,7 +1947,8 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_POWER_STATE>(void)
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_HWADDR>(void)
 {
     otExtAddress hwAddr;
-    otPlatRadioGetIeeeEui64(mInstance, hwAddr.m8);
+
+    otLinkGetFactoryAssignedIeeeEui64(mInstance, &hwAddr);
 
     return mEncoder.WriteEui64(hwAddr);
 }
