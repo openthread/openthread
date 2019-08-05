@@ -514,11 +514,11 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         status = RAIL_StartTx(sTxBandConfig->mRailHandle, aFrame->mChannel, txOptions, &schedulerInfo);
     }
 
-    if(status == RAIL_STATUS_NO_ERROR)
+    if (status == RAIL_STATUS_NO_ERROR)
     {
         otPlatRadioTxStarted(aInstance, aFrame);
-    } 
-    else 
+    }
+    else
     {
         sTransmitError = OT_ERROR_INVALID_STATE;
         sTransmitBusy  = false;

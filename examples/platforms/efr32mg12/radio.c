@@ -538,11 +538,11 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         status = RAIL_StartTx(gRailHandle, aFrame->mChannel, txOptions, NULL);
     }
 
-    if(status == RAIL_STATUS_NO_ERROR)
+    if (status == RAIL_STATUS_NO_ERROR)
     {
         otPlatRadioTxStarted(aInstance, aFrame);
-    } 
-    else 
+    }
+    else
     {
         sTransmitError = OT_ERROR_INVALID_STATE;
         sTransmitBusy  = false;
@@ -837,7 +837,7 @@ void efr32RadioProcess(otInstance *aInstance)
         }
         else
 #endif
-        if (((sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0) || (sTransmitError != OT_ERROR_NONE))
+            if (((sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0) || (sTransmitError != OT_ERROR_NONE))
         {
             otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, sTransmitError);
         }
