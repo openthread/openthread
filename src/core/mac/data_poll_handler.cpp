@@ -236,6 +236,9 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError
     case OT_ERROR_NO_ACK:
         aChild.IncrementIndirectTxAttempts();
 
+        otLogInfoMac("Indirect tx to child %04x failed, attempt %d/%d", aChild.GetRloc16(),
+                     aChild.GetIndirectTxAttempts(), kMaxPollTriggeredTxAttempts);
+
         // Fall through
 
     case OT_ERROR_CHANNEL_ACCESS_FAILURE:
@@ -248,9 +251,6 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError
             mCallbacks.HandleFrameChangeDone(aChild);
             ExitNow();
         }
-
-        otLogInfoMac("Indirect tx to child %04x failed, attempt %d/%d, error:%s", aChild.GetRloc16(),
-                     aChild.GetIndirectTxAttempts(), kMaxPollTriggeredTxAttempts, otThreadErrorToString(aError));
 
         if (aChild.GetIndirectTxAttempts() < kMaxPollTriggeredTxAttempts)
         {
