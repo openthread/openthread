@@ -674,7 +674,7 @@ private:
     void    ReportEnergyScanResult(int8_t aRssi);
 
     void LogFrameRxFailure(const RxFrame *aFrame, otError aError) const;
-    void LogFrameTxFailure(const TxFrame &aFrame, otError aError, uint8_t aRetryCount) const;
+    void LogFrameTxFailure(const TxFrame &aFrame, otError aError, uint8_t aRetryCount, bool aWillRetx) const;
     void LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const;
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE

@@ -133,7 +133,7 @@ public:
          *                        OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
          *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx failed due to activity on the channel,
          *                        OT_ERROR_ABORT when transmission was aborted for other reasons.
-         * @param[in] aRetryCount Number of transmission retries for this frame.
+         * @param[in] aRetryCount Current retry count. This is valid only when sub-mac handles frame re-transmissions.
          * @param[in] aWillRetx   Indicates whether frame will be retransmitted or not. This is applicable only
          *                        when there was an error in current transmission attempt.
          *
