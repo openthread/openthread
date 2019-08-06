@@ -43,6 +43,10 @@ before_script:
 after_success:
   - .travis/after_success.sh
 
+stages:
+  - lint
+  - test
+
 jobs:
   include:
     - env: BUILD_TARGET="posix-app-cli" VERBOSE=1 VIRTUAL_TIME=1
@@ -200,6 +204,3 @@ jobs:
       compiler: gcc
       script: .travis/script.sh VERBOSE=1
       if: type = pull_request
-stages:
-  - name: lint
-  - test
