@@ -514,9 +514,15 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         status = RAIL_StartTx(sTxBandConfig->mRailHandle, aFrame->mChannel, txOptions, &schedulerInfo);
     }
 
-    assert(status == RAIL_STATUS_NO_ERROR);
-
-    otPlatRadioTxStarted(aInstance, aFrame);
+    if (status == RAIL_STATUS_NO_ERROR)
+    {
+        otPlatRadioTxStarted(aInstance, aFrame);
+    }
+    else
+    {
+        sTransmitError = OT_ERROR_CHANNEL_ACCESS_FAILURE;
+        sTransmitBusy  = false;
+    }
 
 exit:
     return error;
