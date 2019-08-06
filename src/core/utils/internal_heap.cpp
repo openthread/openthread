@@ -49,12 +49,12 @@ namespace Utils {
 
 static InternalHeap sHeap;
 
-extern "C" void otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
+extern "C" otError otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
 {
     OT_UNUSED_VARIABLE(aCAlloc);
     OT_UNUSED_VARIABLE(aFree);
 
-    // Intentionally empty.
+    return OT_ERROR_DISABLED_FEATURE;
 }
 
 void InternalHeap::Init(void)

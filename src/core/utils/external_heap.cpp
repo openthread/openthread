@@ -51,10 +51,12 @@ namespace Utils {
 static otHeapCAllocFn sCAlloc;
 static otHeapFreeFn   sFree;
 
-extern "C" void otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
+extern "C" otError otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
 {
     sCAlloc = aCAlloc;
     sFree   = aFree;
+
+    return OT_ERROR_NONE;
 }
 
 Heap::Heap(void)
