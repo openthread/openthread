@@ -61,6 +61,7 @@ COMMONCPPFLAGS                                                                  
     -D__STARTUP_CLEAR_BSS                                                                       \
     -I$(srcdir)                                                                                 \
     -I$(top_srcdir)/include                                                                     \
+    -I$(top_srcdir)/src/core                                                                    \
     -I$(top_srcdir)/third_party/silabs/rail_config                                              \
     -I$(top_srcdir)/examples/platforms/efr32mg21/$(EFR32_BOARD_DIR)                             \
     -I$(EFR32MG_SDK_SRCDIR)                                                                     \
