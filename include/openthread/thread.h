@@ -172,8 +172,8 @@ typedef struct otMleCounters
     /**
      * Number of times device changed its parents.
      *
-     * Support for this counter requires the feature option OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH to be
-     * enabled.
+     * Support for this counter requires the feature option OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH to
+     * be enabled.
      *
      * A parent change can happen if device detaches from its current parent and attaches to a different one, or even
      * while device is attached when the periodic parent search feature is enabled  (please see option

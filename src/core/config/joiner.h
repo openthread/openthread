@@ -46,7 +46,7 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES
+ * @def OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES
  *
  * The maximum number of Joiner Router entries that can be queued by the Joiner.
  *
