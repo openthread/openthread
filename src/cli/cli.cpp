@@ -1023,7 +1023,7 @@ void Interpreter::ProcessEidCache(int argc, char *argv[])
     {
         SuccessOrExit(otThreadGetEidCacheEntry(mInstance, i, &entry));
 
-        if (entry.mValid == false)
+        if (!entry.mValid)
         {
             continue;
         }

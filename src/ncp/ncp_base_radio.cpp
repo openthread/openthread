@@ -116,7 +116,7 @@ void NcpBase::LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame,
     if (mCurTransmitTID)
     {
         uint8_t header       = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0 | mCurTransmitTID;
-        bool    framePending = (aAckFrame != NULL && static_cast<Mac::Frame *>(aAckFrame)->GetFramePending());
+        bool    framePending = (aAckFrame != NULL && static_cast<Mac::RxFrame *>(aAckFrame)->GetFramePending());
 
         // Clear cached transmit TID
         mCurTransmitTID = 0;

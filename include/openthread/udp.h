@@ -154,8 +154,8 @@ otMessage *otUdpNewMessage(otInstance *aInstance, const otMessageSettings *aSett
  * @param[in]  aCallback  A pointer to the application callback function.
  * @param[in]  aContext   A pointer to application-specific context.
  *
- * @retval OT_ERROR_NONE         Successfully opened the socket.
- * @retval OT_ERROR_INVALID_ARGS  Given socket structure was already opened.
+ * @retval OT_ERROR_NONE    Successfully opened the socket.
+ * @retval OT_ERROR_FAILED  Failed to open the socket.
  *
  * @sa otUdpNewMessage
  * @sa otUdpClose

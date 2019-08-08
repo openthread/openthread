@@ -385,7 +385,7 @@ void NcpBase::HandleFrameRemovedFromNcpBuffer(void *                   aContext,
 
 void NcpBase::HandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag)
 {
-    if (mHostPowerStateInProgress == true)
+    if (mHostPowerStateInProgress)
     {
         if (aFrameTag == mHostPowerReplyFrameTag)
         {
@@ -604,7 +604,7 @@ void NcpBase::Log(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aLog
     otError error  = OT_ERROR_NONE;
     uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
 
-    VerifyOrExit(!mDisableStreamWrite);
+    VerifyOrExit(!mDisableStreamWrite, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(SPINEL_PROP_STREAM_LOG));
 
     // If there is a pending queued response we do not allow any new log
@@ -1171,6 +1171,8 @@ otError NcpBase::CommandHandler_RESET(uint8_t aHeader)
         mChangedPropsSet.AddLastStatus(SPINEL_STATUS_RESET_UNKNOWN);
         mUpdateChangedPropsTask.Post();
     }
+
+    sNcpInstance = NULL;
 
     return error;
 }
@@ -1947,7 +1949,8 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_POWER_STATE>(void)
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_HWADDR>(void)
 {
     otExtAddress hwAddr;
-    otPlatRadioGetIeeeEui64(mInstance, hwAddr.m8);
+
+    otLinkGetFactoryAssignedIeeeEui64(mInstance, &hwAddr);
 
     return mEncoder.WriteEui64(hwAddr);
 }

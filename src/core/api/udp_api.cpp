@@ -60,7 +60,7 @@ exit:
 
 otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext)
 {
-    otError         error    = OT_ERROR_INVALID_ARGS;
+    otError         error;
     Instance &      instance = *static_cast<Instance *>(aInstance);
     Ip6::UdpSocket &socket   = *new (aSocket) Ip6::UdpSocket(instance.Get<Ip6::Udp>());
 

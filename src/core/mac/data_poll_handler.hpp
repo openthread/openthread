@@ -41,6 +41,7 @@
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
+#include "thread/indirect_sender_frame_context.hpp"
 
 namespace ot {
 
@@ -134,6 +135,17 @@ public:
 
     private:
         /**
+         * This type defines the frame context associated with a prepared frame.
+         *
+         * Data poll handler treats `FrameContext` as an opaque data type. Data poll handler provides the buffer/object
+         * for the context when a new frame is prepared (from the callback `PrepareFrameForChild()`). It ensures
+         * to save the context along with the prepared frame and provide the same context back in the callback
+         * `HandleSentFrameToChild()` when the indirect transmission of the frame is finished.
+         *
+         */
+        typedef IndirectSenderBase::FrameContext FrameContext;
+
+        /**
          * This constructor initializes the data poll handler object.
          *
          * @param[in]  aInstance   A reference to the OpenThread instance.
@@ -144,19 +156,21 @@ public:
         /**
          * This callback method requests a frame to be prepared for indirect transmission to a given sleepy child.
          *
-         * @param[in] aFrame  A reference to a MAC frame where the new frame would be placed.
-         * @param[in] aChild  The child for which to prepare the frame.
+         * @param[out] aFrame    A reference to a MAC frame where the new frame would be placed.
+         * @prarm[out] aContext  A reference to a `FrameContext` where the context for the new frame would be placed.
+         * @param[in]  aChild    The child for which to prepare the frame.
          *
          * @retval OT_ERROR_NONE   Frame was prepared successfully
          * @retval OT_ERROR_ABORT  Indirect transmission to child should be aborted (no frame for the child).
          *
          */
-        otError PrepareFrameForChild(Mac::Frame &aFrame, Child &aChild);
+        otError PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
 
         /**
          * This callback method notifies the end of indirect frame transmission to a child.
          *
          * @param[in]  aFrame     The transmitted frame.
+         * @param[in]  aContext   The context associated with the frame when it was prepared.
          * @param[in]  aError     OT_ERROR_NONE when the frame was transmitted successfully,
          *                        OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
          *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx failed due to activity on the channel,
@@ -164,7 +178,10 @@ public:
          * @param[in]  aChild     The child to which the frame was transmitted.
          *
          */
-        void HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, Child &aChild);
+        void HandleSentFrameToChild(const Mac::TxFrame &aFrame,
+                                    const FrameContext &aContext,
+                                    otError             aError,
+                                    Child &             aChild);
 
         /**
          * This callback method notifies that a requested frame change from `RequestFrameChange()` is processed.
@@ -242,15 +259,22 @@ public:
 
 private:
     // Callbacks from MAC
-    void    HandleDataPoll(Mac::Frame &aFrame);
-    otError HandleFrameRequest(Mac::Frame &aFrame);
-    void    HandleSentFrame(const Mac::Frame &aFrame, otError aError);
+    void    HandleDataPoll(Mac::RxFrame &aFrame);
+    otError HandleFrameRequest(Mac::TxFrame &aFrame);
+    void    HandleSentFrame(const Mac::TxFrame &aFrame, otError aError);
 
-    void HandleSentFrame(const Mac::Frame &aFrame, otError aError, Child &aChild);
+    void HandleSentFrame(const Mac::TxFrame &aFrame, otError aError, Child &aChild);
     void ProcessPendingPolls(void);
 
-    Child *   mIndirectTxChild;
-    Callbacks mCallbacks;
+    // In the current implementation of `DataPollHandler`, we can have a
+    // single indirect tx operation active at MAC layer at each point of
+    // time. `mIndirectTxChild` indicates the child being handled (NULL
+    // indicates no active indirect tx). `mFrameContext` tracks the
+    // context for the prepared frame for the current indirect tx.
+
+    Child *                 mIndirectTxChild;
+    Callbacks::FrameContext mFrameContext;
+    Callbacks               mCallbacks;
 };
 
 /**

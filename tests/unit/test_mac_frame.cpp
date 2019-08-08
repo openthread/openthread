@@ -78,8 +78,8 @@ void TestMacHeader(void)
 
     for (unsigned i = 0; i < OT_ARRAY_LENGTH(tests); i++)
     {
-        uint8_t    psdu[Mac::Frame::kMTU];
-        Mac::Frame frame;
+        uint8_t      psdu[Mac::Frame::kMTU];
+        Mac::TxFrame frame;
 
         frame.mPsdu = psdu;
 

@@ -769,7 +769,7 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_THREAD_COMMISSIONER_ENABLED(uint8
 
     SuccessOrExit(error = mDecoder.ReadBool(enabled));
 
-    if (enabled == false)
+    if (!enabled)
     {
         error = otCommissionerStop(mInstance);
     }

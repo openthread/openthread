@@ -196,7 +196,7 @@ uint32_t DataPollSender::GetKeepAlivePollPeriod(void) const
     return period;
 }
 
-void DataPollSender::HandlePollSent(Mac::Frame &aFrame, otError aError)
+void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, otError aError)
 {
     Mac::Address macDest;
     bool         shouldRecalculatePollPeriod = false;
@@ -228,7 +228,7 @@ void DataPollSender::HandlePollSent(Mac::Frame &aFrame, otError aError)
             }
         }
 
-        if (mRetxMode == true)
+        if (mRetxMode)
         {
             mRetxMode                   = false;
             mPollTxFailureCounter       = 0;
@@ -251,7 +251,7 @@ void DataPollSender::HandlePollSent(Mac::Frame &aFrame, otError aError)
 
         if (mPollTxFailureCounter < kMaxPollRetxAttempts)
         {
-            if (mRetxMode == false)
+            if (!mRetxMode)
             {
                 mRetxMode                   = true;
                 shouldRecalculatePollPeriod = true;
@@ -301,13 +301,13 @@ exit:
     return;
 }
 
-void DataPollSender::CheckFramePending(Mac::Frame &aFrame)
+void DataPollSender::CheckFramePending(Mac::RxFrame &aFrame)
 {
     VerifyOrExit(mEnabled);
 
     mPollTimeoutCounter = 0;
 
-    if (aFrame.GetFramePending() == true)
+    if (aFrame.GetFramePending())
     {
         SendDataPoll();
     }
@@ -434,12 +434,12 @@ uint32_t DataPollSender::CalculatePollPeriod(void) const
 {
     uint32_t period = 0;
 
-    if (mAttachMode == true)
+    if (mAttachMode)
     {
         period = kAttachDataPollPeriod;
     }
 
-    if (mRetxMode == true)
+    if (mRetxMode)
     {
         if ((period == 0) || (period > kRetxPollPeriod))
         {

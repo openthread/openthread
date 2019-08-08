@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,67 +28,62 @@
 
 /**
  * @file
- *   This file includes definitions for responding to PANID Query Requests.
+ *   This file includes definitions of frame context used for indirect transmission.
  */
 
-#ifndef PANID_QUERY_SERVER_HPP_
-#define PANID_QUERY_SERVER_HPP_
+#ifndef INDIRECT_SENDER_FRAME_CONTETX_HPP_
+#define INDIRECT_SENDER_FRAME_CONTETX_HPP_
 
 #include "openthread-core-config.h"
 
-#include "coap/coap.hpp"
-#include "common/locator.hpp"
-#include "common/timer.hpp"
-#include "net/ip6_address.hpp"
-#include "net/udp6.hpp"
+#include "utils/wrap_stdint.h"
 
 namespace ot {
 
 /**
- * This class implements handling PANID Query Requests.
+ * @addtogroup core-mesh-forwarding
+ *
+ * @brief
+ *   This module includes definitions frame context used by indirect sender.
+ *
+ * @{
+ */
+
+/**
+ * This class defines the `FrameContext` type.
+ *
+ * This is the base class for `IndirectSender`.
  *
  */
-class PanIdQueryServer : public InstanceLocator
+class IndirectSenderBase
 {
 public:
     /**
-     * This constructor initializes the object.
+     * This type defines the frame context used by `IndirectSender`.
+     *
+     * This type specifies all the info that `IndirectSender` requires to be saved along with a prepared frame for
+     * indirect transmission.  `IndirectSender` is designed to contain the common code for handling of indirect
+     * transmission to sleepy children and be able to interface to different lower-layer implementation of
+     * `DataPollHandler`. While the `FrameContext` is defined by the `IndirectSender` itself, the lower-layer
+     * (`DataPollHandler`) is expected to provide the buffer/object for context to be stored (it is provided from the
+     * lower-layer callback asking for a frame to be prepared). This model allows different implementations of
+     * `DataPollHandler` to adopt different strategies on how to save the context.
      *
      */
-    explicit PanIdQueryServer(Instance &aInstance);
-
-private:
-    enum
+    struct FrameContext
     {
-        kScanDelay = 1000, ///< SCAN_DELAY (milliseconds)
+        friend class IndirectSender;
+
+    private:
+        uint16_t mMessageNextOffset; ///< The next offset into the message associated with the prepared frame.
     };
-
-    static void HandleQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleQuery(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    static void HandleScanResult(Instance &aInstance, Mac::RxFrame *aFrame);
-    void        HandleScanResult(Mac::RxFrame *aFrame);
-
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
-
-    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-
-    otError SendConflict(void);
-
-    Ip6::Address mCommissioner;
-    uint32_t     mChannelMask;
-    uint16_t     mPanId;
-
-    TimerMilli mTimer;
-
-    Coap::Resource mPanIdQuery;
 };
 
 /**
  * @}
+ *
  */
 
 } // namespace ot
 
-#endif // PANID_QUERY_SERVER_HPP_
+#endif // INDIRECT_SENDER_FRAME_CONTETX_HPP_

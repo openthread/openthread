@@ -260,6 +260,11 @@ uint16_t otLinkGetShortAddress(otInstance *aInstance)
     return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().GetShortAddress();
 }
 
+void otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui64)
+{
+    otPlatRadioGetIeeeEui64(aInstance, aEui64->m8);
+}
+
 #endif // OPENTHREAD_RADIO
 
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE

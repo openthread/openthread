@@ -140,4 +140,12 @@
  */
 #define RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM 6
 
+/**
+ * @def OPENTHREAD_CONFIG_NCP_UART_ENABLE
+ *
+ * Define to 1 to enable NCP UART support.
+ *
+ */
+#define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
+
 #endif // OPENTHREAD_CORE_EFR32_CONFIG_H_

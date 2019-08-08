@@ -1501,7 +1501,7 @@ Done
 ### diag
 
 Factory Diagnostics module is enabled only when building OpenThread with `OPENTHREAD_CONFIG_DIAG_ENABLE=1` option.
-Go [diagnostics module][1] for more information.
+Go [diagnostics module][DIAG] for more information.
 
 ### service
 
@@ -1534,4 +1534,4 @@ Remove service from Network Data.
 Done
 ```
 
-[1]:../diag/README.md
+[DIAG]:../../src/core/diags/README.md

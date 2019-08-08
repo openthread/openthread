@@ -405,7 +405,6 @@ otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
 
     if (aEnabled)
     {
-        VerifyOrExit(instance.Get<Mac::Mac>().GetPanId() != Mac::kPanIdBroadcast, error = OT_ERROR_INVALID_STATE);
         error = instance.Get<Mle::MleRouter>().Start(/* aAnnounceAttach */ false);
     }
     else
@@ -413,7 +412,6 @@ otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
         instance.Get<Mle::MleRouter>().Stop(true);
     }
 
-exit:
     return error;
 }
 

@@ -611,7 +611,7 @@ otError Ip6::HandleFragment(Message &aMessage)
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(fragmentHeader), &fragmentHeader) == sizeof(fragmentHeader),
                  error = OT_ERROR_PARSE);
 
-    VerifyOrExit(fragmentHeader.GetOffset() == 0 && fragmentHeader.IsMoreFlagSet() == false, error = OT_ERROR_DROP);
+    VerifyOrExit(fragmentHeader.GetOffset() == 0 && !fragmentHeader.IsMoreFlagSet(), error = OT_ERROR_DROP);
 
     aMessage.MoveOffset(sizeof(fragmentHeader));
 
@@ -628,7 +628,7 @@ otError Ip6::HandleExtensionHeaders(Message &aMessage,
     otError         error = OT_ERROR_NONE;
     ExtensionHeader extHeader;
 
-    while (aReceive == true || aNextHeader == kProtoHopOpts)
+    while (aReceive || aNextHeader == kProtoHopOpts)
     {
         VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(extHeader), &extHeader) == sizeof(extHeader),
                      error = OT_ERROR_PARSE);
@@ -690,7 +690,7 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
     otError  error       = OT_ERROR_NONE;
     Message *messageCopy = NULL;
 
-    VerifyOrExit(aFromNcpHost == false, error = OT_ERROR_NO_ROUTE);
+    VerifyOrExit(!aFromNcpHost, error = OT_ERROR_NO_ROUTE);
     VerifyOrExit(mReceiveIp6DatagramCallback != NULL, error = OT_ERROR_NO_ROUTE);
 
     if (mIsReceiveIp6FilterEnabled)

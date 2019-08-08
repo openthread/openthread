@@ -773,7 +773,7 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_ON_MESH_NET
 
     memset(&borderRouterConfig, 0, sizeof(otBorderRouterConfig));
 
-    VerifyOrExit(mAllowLocalNetworkDataChange == true, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(mAllowLocalNetworkDataChange, error = OT_ERROR_INVALID_STATE);
 
     SuccessOrExit(error = mDecoder.ReadIp6Address(borderRouterConfig.mPrefix.mPrefix));
     SuccessOrExit(error = mDecoder.ReadUint8(prefixLength));
@@ -804,7 +804,7 @@ template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_THREAD_ON_MESH_NET
 
     memset(&ip6Prefix, 0, sizeof(otIp6Prefix));
 
-    VerifyOrExit(mAllowLocalNetworkDataChange == true, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(mAllowLocalNetworkDataChange, error = OT_ERROR_INVALID_STATE);
 
     SuccessOrExit(error = mDecoder.ReadIp6Address(ip6Prefix.mPrefix));
     SuccessOrExit(error = mDecoder.ReadUint8(prefixLength));
@@ -864,7 +864,7 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_SERVER_SERVICES>(v
     const uint8_t * data;
     uint16_t        dataLen;
 
-    VerifyOrExit(mAllowLocalServerDataChange == true, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(mAllowLocalServerDataChange, error = OT_ERROR_INVALID_STATE);
 
     SuccessOrExit(error = mDecoder.ReadUint32(cfg.mEnterpriseNumber));
     SuccessOrExit(error = mDecoder.ReadDataWithLen(data, dataLen));
@@ -898,7 +898,7 @@ template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_SERVER_SERVICES>(v
     const uint8_t *serviceData;
     uint16_t       serviceDataLength;
 
-    VerifyOrExit(mAllowLocalServerDataChange == true, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(mAllowLocalServerDataChange, error = OT_ERROR_INVALID_STATE);
 
     SuccessOrExit(error = mDecoder.ReadUint32(enterpriseNumber));
     SuccessOrExit(error = mDecoder.ReadDataWithLen(serviceData, serviceDataLength));
@@ -1902,7 +1902,7 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_OFF_MESH_RO
 
     memset(&routeConfig, 0, sizeof(otExternalRouteConfig));
 
-    VerifyOrExit(mAllowLocalNetworkDataChange == true, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(mAllowLocalNetworkDataChange, error = OT_ERROR_INVALID_STATE);
 
     SuccessOrExit(error = mDecoder.ReadIp6Address(routeConfig.mPrefix.mPrefix));
     SuccessOrExit(error = mDecoder.ReadUint8(prefixLength));
@@ -1927,7 +1927,7 @@ template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_THREAD_OFF_MESH_RO
 
     memset(&ip6Prefix, 0, sizeof(otIp6Prefix));
 
-    VerifyOrExit(mAllowLocalNetworkDataChange == true, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(mAllowLocalNetworkDataChange, error = OT_ERROR_INVALID_STATE);
 
     SuccessOrExit(error = mDecoder.ReadIp6Address(ip6Prefix.mPrefix));
     SuccessOrExit(error = mDecoder.ReadUint8(prefixLength));

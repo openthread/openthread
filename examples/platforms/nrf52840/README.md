@@ -235,8 +235,6 @@ To test the example:
    ```bash
    > dataset masterkey dfd34f0f05cad978ec4e32b0413038ff
    Done
-   > dataset panid 0x8f28
-   Done
    > dataset commit active
    Done
    > ifconfig up
@@ -381,7 +379,7 @@ nRF52840 port extends [OpenThread Diagnostics Module][DIAG].
 
 You can read about all the features [here][nRFDIAG].
 
-[DIAG]: ./../../../src/diag/README.md
+[DIAG]: ./../../../src/core/diags/README.md
 [nRFDIAG]: DIAG.md
 
 ## Radio driver documentation

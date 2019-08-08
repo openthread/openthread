@@ -132,7 +132,7 @@ SOURCES_COMMON                             = \
     api/sntp_api.cpp                         \
     api/tasklet_api.cpp                      \
     api/thread_api.cpp                       \
-    api/thread_ftd_api.cpp                   \ 
+    api/thread_ftd_api.cpp                   \
     api/udp_api.cpp                          \
     coap/coap.cpp                            \
     coap/coap_message.cpp                    \
@@ -398,6 +398,7 @@ HEADERS_COMMON                             = \
     thread/device_mode.hpp                   \
     thread/energy_scan_server.hpp            \
     thread/indirect_sender.hpp               \
+    thread/indirect_sender_frame_context.hpp \
     thread/key_manager.hpp                   \
     thread/link_quality.hpp                  \
     thread/lowpan.hpp                        \

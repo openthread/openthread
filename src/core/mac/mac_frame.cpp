@@ -1033,7 +1033,7 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-void Frame::CopyFrom(const Frame &aFromFrame)
+void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 {
     uint8_t *      psduBuffer   = mPsdu;
     otRadioIeInfo *ieInfoBuffer = mInfo.mTxInfo.mIeInfo;

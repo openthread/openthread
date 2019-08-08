@@ -89,12 +89,12 @@ exit:
     return;
 }
 
-void PanIdQueryServer::HandleScanResult(Instance &aInstance, Mac::Frame *aFrame)
+void PanIdQueryServer::HandleScanResult(Instance &aInstance, Mac::RxFrame *aFrame)
 {
     aInstance.Get<PanIdQueryServer>().HandleScanResult(aFrame);
 }
 
-void PanIdQueryServer::HandleScanResult(Mac::Frame *aFrame)
+void PanIdQueryServer::HandleScanResult(Mac::RxFrame *aFrame)
 {
     uint16_t panId;
 

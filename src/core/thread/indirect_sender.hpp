@@ -41,6 +41,7 @@
 #include "mac/data_poll_handler.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/device_mode.hpp"
+#include "thread/indirect_sender_frame_context.hpp"
 #include "thread/src_match_controller.hpp"
 
 namespace ot {
@@ -60,7 +61,7 @@ class Child;
  * This class implements indirect transmission.
  *
  */
-class IndirectSender : public InstanceLocator
+class IndirectSender : public InstanceLocator, public IndirectSenderBase
 {
     friend class Instance;
     friend class DataPollHandler::Callbacks;
@@ -207,21 +208,23 @@ private:
     };
 
     // Callbacks from DataPollHandler
-    otError PrepareFrameForChild(Mac::Frame &aFrame, Child &aChild);
-    void    HandleSentFrameToChild(const Mac::Frame &aFrame, otError aError, Child &aChild);
+    otError PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
+    void    HandleSentFrameToChild(const Mac::TxFrame &aFrame,
+                                   const FrameContext &aContext,
+                                   otError             aError,
+                                   Child &             aChild);
     void    HandleFrameChangeDone(Child &aChild);
 
     void     UpdateIndirectMessage(Child &aChild);
     Message *FindIndirectMessage(Child &aChild);
     void     RequestMessageUpdate(Child &aChild);
-    uint16_t PrepareDataFrame(Mac::Frame &aFrame, Child &aChild, Message &aMessage);
-    void     PrepareEmptyFrame(Mac::Frame &aFrame, Child &aChild, bool aAckRequest);
+    uint16_t PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, Message &aMessage);
+    void     PrepareEmptyFrame(Mac::TxFrame &aFrame, Child &aChild, bool aAckRequest);
     void     ClearMessagesForRemovedChildren(void);
 
     bool                  mEnabled;
     SourceMatchController mSourceMatchController;
     DataPollHandler       mDataPollHandler;
-    uint16_t              mMessageNextOffset;
 };
 
 /**
