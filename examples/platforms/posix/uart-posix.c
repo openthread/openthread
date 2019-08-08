@@ -224,7 +224,29 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
 
 otError otPlatUartFlush(void)
 {
-    return OT_ERROR_NOT_IMPLEMENTED;
+    otError error = OT_ERROR_NONE;
+    ssize_t count;
+
+    otEXPECT_ACTION(s_write_buffer != NULL && s_write_length > 0, error = OT_ERROR_INVALID_STATE);
+
+    while ((count = write(s_out_fd, s_write_buffer, s_write_length)) > 0 && (s_write_length -= count) > 0)
+    {
+        s_write_buffer += count;
+    }
+
+    if (count != -1)
+    {
+        assert(s_write_length == 0);
+        s_write_buffer = NULL;
+    }
+    else
+    {
+        perror("write(UART)");
+        exit(EXIT_FAILURE);
+    }
+
+exit:
+    return error;
 }
 
 void platformUartProcess(void)
