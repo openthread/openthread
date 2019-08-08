@@ -28,74 +28,22 @@
 
 /**
  * @file
- *   This file includes definitions for heap interface.
+ *   This file includes definitions for setting external heap.
  *
  */
 
-#ifndef OT_HEAP_HPP_
-#define OT_HEAP_HPP_
+#ifndef OT_EXTERNAL_HEAP_HPP_
+#define OT_EXTERNAL_HEAP_HPP_
 
-#include <openthread/heap.h>
-
-#include <stddef.h>
-#include <stdint.h>
+#include "heap.hpp"
 
 namespace ot {
 namespace Utils {
 
-/**
- * This class represents heap interface.
- *
- */
-class Heap
-{
-public:
-    /**
-     * This constructor initializes the heap interface object.
-     *
-     */
-    Heap(void);
-
-    /**
-     * This method allocates at least @p aCount * @aSize bytes memory and initialize to zero.
-     *
-     * @param[in]   aCount  Number of allocate units.
-     * @param[in]   aSize   Unit size in bytes.
-     *
-     * @returns A pointer to the allocated memory.
-     *
-     * @retval  NULL    Indicates not enough memory.
-     *
-     */
-    void *CAlloc(size_t aCount, size_t aSize);
-
-    /**
-     * This method free memory pointed by @p aPointer.
-     *
-     * @param[in]   aPointer    A pointer to the memory to free.
-     *
-     */
-    void Free(void *aPointer);
-
-    /**
-     * This method returns whether the heap is clean.
-     *
-     */
-    bool IsClean(void) const;
-
-    /**
-     * This method returns the capacity of this heap.
-     *
-     */
-    size_t GetCapacity(void) const;
-
-    /**
-     * This method returns free space of this heap.
-     */
-    size_t GetFreeSize(void) const;
-};
+otError HeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree);
 
 } // namespace Utils
 } // namespace ot
 
-#endif // OT_HEAP_HPP_
+
+#endif // OT_EXTERNAL_HEAP_HPP_

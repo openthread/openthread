@@ -28,74 +28,27 @@
 
 /**
  * @file
- *   This file includes definitions for heap interface.
- *
+ *   This file implements the OpenThread external heap API.
  */
 
-#ifndef OT_HEAP_HPP_
-#define OT_HEAP_HPP_
+#include "openthread-core-config.h"
 
 #include <openthread/heap.h>
 
-#include <stddef.h>
-#include <stdint.h>
+#include "utils/external_heap.hpp"
 
-namespace ot {
-namespace Utils {
+using namespace ot::Utils;
 
-/**
- * This class represents heap interface.
- *
- */
-class Heap
+otError otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
 {
-public:
-    /**
-     * This constructor initializes the heap interface object.
-     *
-     */
-    Heap(void);
+#if OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
 
-    /**
-     * This method allocates at least @p aCount * @aSize bytes memory and initialize to zero.
-     *
-     * @param[in]   aCount  Number of allocate units.
-     * @param[in]   aSize   Unit size in bytes.
-     *
-     * @returns A pointer to the allocated memory.
-     *
-     * @retval  NULL    Indicates not enough memory.
-     *
-     */
-    void *CAlloc(size_t aCount, size_t aSize);
+    return HeapSetCAllocFree(aCAlloc, aFree);
 
-    /**
-     * This method free memory pointed by @p aPointer.
-     *
-     * @param[in]   aPointer    A pointer to the memory to free.
-     *
-     */
-    void Free(void *aPointer);
+#else // OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
+    OT_UNUSED_VARIABLE(aCAlloc);
+    OT_UNUSED_VARIABLE(aFree);
 
-    /**
-     * This method returns whether the heap is clean.
-     *
-     */
-    bool IsClean(void) const;
-
-    /**
-     * This method returns the capacity of this heap.
-     *
-     */
-    size_t GetCapacity(void) const;
-
-    /**
-     * This method returns free space of this heap.
-     */
-    size_t GetFreeSize(void) const;
-};
-
-} // namespace Utils
-} // namespace ot
-
-#endif // OT_HEAP_HPP_
+    return OT_ERROR_DISABLED_FEATURE;
+#endif // OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
+}

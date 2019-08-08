@@ -28,74 +28,73 @@
 
 /**
  * @file
- *   This file includes definitions for heap interface.
- *
+ * @brief
+ *  This file defines the API for setting external heap in OpenThread.
  */
 
-#ifndef OT_HEAP_HPP_
-#define OT_HEAP_HPP_
+#ifndef OPENTHREAD_HEAP_H_
+#define OPENTHREAD_HEAP_H_
 
-#include <openthread/heap.h>
+#include <openthread/instance.h>
 
-#include <stddef.h>
-#include <stdint.h>
-
-namespace ot {
-namespace Utils {
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
- * This class represents heap interface.
+ * @addtogroup api-heap
+ *
+ * @brief
+ *   This module includes functions that set the external OpenThread heap.
+ *
+ * @{
  *
  */
-class Heap
-{
-public:
-    /**
-     * This constructor initializes the heap interface object.
-     *
-     */
-    Heap(void);
 
-    /**
-     * This method allocates at least @p aCount * @aSize bytes memory and initialize to zero.
-     *
-     * @param[in]   aCount  Number of allocate units.
-     * @param[in]   aSize   Unit size in bytes.
-     *
-     * @returns A pointer to the allocated memory.
-     *
-     * @retval  NULL    Indicates not enough memory.
-     *
-     */
-    void *CAlloc(size_t aCount, size_t aSize);
+/**
+ * Function pointer used to set external CAlloc function for OpenThread.
+ *
+ * @param[in]   aCount  Number of allocate units.
+ * @param[in]   aSize   Unit size in bytes.
+ *
+ * @returns A pointer to the allocated memory.
+ *
+ * @retval  NULL    Indicates not enough memory.
+ *
+ */
+typedef void *(*otHeapCAllocFn)(size_t aCount, size_t aSize);
 
-    /**
-     * This method free memory pointed by @p aPointer.
-     *
-     * @param[in]   aPointer    A pointer to the memory to free.
-     *
-     */
-    void Free(void *aPointer);
+/**
+ * Function pointer used to set external Free function for OpenThread.
+ *
+ * @param[in]   aPointer    A pointer to the memory to free.
+ *
+ */
+typedef void (*otHeapFreeFn)(void *aPointer);
 
-    /**
-     * This method returns whether the heap is clean.
-     *
-     */
-    bool IsClean(void) const;
+/**
+ * This function sets the external heap CAlloc and Free
+ * functions to be used by the OpenThread stack.
+ *
+ * This function must be used before invoking instance initialization.
+ *
+ * @param[in]  aCAlloc  A pointer to external CAlloc function.
+ * @param[in]  aFree    A pointer to external Free function.
+ *
+ * @retval OT_ERROR_NONE              External heap functions were set.
+ * @retval OT_ERROR_DISABLED_FEATURE  External heap feature is disabled in this build.
+ *
+ */
+otError otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree);
 
-    /**
-     * This method returns the capacity of this heap.
-     *
-     */
-    size_t GetCapacity(void) const;
+/**
+ * @}
+ *
+ */
 
-    /**
-     * This method returns free space of this heap.
-     */
-    size_t GetFreeSize(void) const;
-};
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
-} // namespace Utils
-} // namespace ot
 
-#endif // OT_HEAP_HPP_
+#endif // OPENTHREAD_HEAP_H_

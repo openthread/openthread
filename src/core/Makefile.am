@@ -115,6 +115,7 @@ SOURCES_COMMON                             = \
     api/diags_api.cpp                        \
     api/dns_api.cpp                          \
     api/entropy_api.cpp                      \
+    api/heap_api.cpp                         \
     api/icmp6_api.cpp                        \
     api/instance_api.cpp                     \
     api/ip6_api.cpp                          \
@@ -428,6 +429,7 @@ HEADERS_COMMON                             = \
     utils/channel_manager.hpp                \
     utils/channel_monitor.hpp                \
     utils/child_supervision.hpp              \
+    utils/external_heap.hpp                  \
     utils/internal_heap.hpp                  \
     utils/heap.hpp                           \
     utils/jam_detector.hpp                   \

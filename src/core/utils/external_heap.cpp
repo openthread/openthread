@@ -36,12 +36,7 @@
 
 #if OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE && !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
-#include "heap.hpp"
-
-#include <openthread/instance.h>
-
-#include <stddef.h>
-#include <stdint.h>
+#include "external_heap.hpp"
 
 #include "common/debug.hpp"
 
@@ -51,7 +46,7 @@ namespace Utils {
 static otHeapCAllocFn sCAlloc;
 static otHeapFreeFn   sFree;
 
-extern "C" otError otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
+otError HeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
 {
     sCAlloc = aCAlloc;
     sFree   = aFree;
