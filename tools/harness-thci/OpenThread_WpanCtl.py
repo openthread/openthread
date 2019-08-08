@@ -2164,12 +2164,13 @@ class OpenThread_WpanCtl(IThci):
                 # prepend '0' at the beginning
                 if len(xpanid) < 16:
                     xpanid = xpanid.zfill(16)
-                    print (xpanid)
-                    cmd = WPANCTL_CMD + 'setprop Network:XPANID %s' % xpanid
-                    datasetCmd = (
-                        WPANCTL_CMD
-                        + 'setprop Dataset:ExtendedPanId %s' % xpanid
-                    )
+                    print(xpanid)
+
+                cmd = WPANCTL_CMD + 'setprop Network:XPANID %s' % xpanid
+                datasetCmd = (
+                    WPANCTL_CMD
+                    + 'setprop Dataset:ExtendedPanId %s' % xpanid
+                )
             else:
                 xpanid = xPanId
                 cmd = WPANCTL_CMD + 'setprop Network:XPANID %s' % xpanid

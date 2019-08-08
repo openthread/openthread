@@ -1898,9 +1898,10 @@ class OpenThread(IThci):
                 # prepend '0' at the beginning
                 if len(xpanid) < 16:
                     xpanid = xpanid.zfill(16)
-                    print (xpanid)
-                    cmd = 'extpanid %s' % xpanid
-                    datasetCmd = 'dataset extpanid %s' % xpanid
+                    print(xpanid)
+
+                cmd = 'extpanid %s' % xpanid
+                datasetCmd = 'dataset extpanid %s' % xpanid
             else:
                 xpanid = xPanId
                 cmd = 'extpanid %s' % xpanid
