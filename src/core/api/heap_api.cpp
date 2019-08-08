@@ -45,7 +45,7 @@ otError otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
 
     return HeapSetCAllocFree(aCAlloc, aFree);
 
-#else // OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
+#else  // OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
     OT_UNUSED_VARIABLE(aCAlloc);
     OT_UNUSED_VARIABLE(aFree);
 

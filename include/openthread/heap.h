@@ -96,5 +96,4 @@ otError otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree);
 } // extern "C"
 #endif
 
-
 #endif // OPENTHREAD_HEAP_H_

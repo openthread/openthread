@@ -45,5 +45,4 @@ otError HeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree);
 } // namespace Utils
 } // namespace ot
 
-
 #endif // OT_EXTERNAL_HEAP_HPP_
