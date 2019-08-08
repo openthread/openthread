@@ -382,6 +382,7 @@ otError Mle::Restore(void)
     Get<KeyManager>().SetCurrentKeySequence(networkInfo.mKeySequence);
     Get<KeyManager>().SetMleFrameCounter(networkInfo.mMleFrameCounter);
     Get<KeyManager>().SetMacFrameCounter(networkInfo.mMacFrameCounter);
+    mDeviceMode.Set(networkInfo.mDeviceMode);
 
     switch (networkInfo.mRole)
     {
@@ -394,7 +395,6 @@ otError Mle::Restore(void)
         ExitNow();
     }
 
-    mDeviceMode.Set(networkInfo.mDeviceMode);
     Get<Mac::Mac>().SetShortAddress(networkInfo.mRloc16);
     Get<Mac::Mac>().SetExtAddress(networkInfo.mExtAddress);
 
@@ -458,7 +458,6 @@ otError Mle::Store(void)
         // avoid losing/overwriting previous information when a reboot
         // occurs after a message is sent but before attaching.
 
-        networkInfo.mDeviceMode          = mDeviceMode.Get();
         networkInfo.mRole                = mRole;
         networkInfo.mRloc16              = GetRloc16();
         networkInfo.mPreviousPartitionId = mLeaderData.GetPartitionId();
@@ -491,6 +490,7 @@ otError Mle::Store(void)
     networkInfo.mKeySequence     = Get<KeyManager>().GetCurrentKeySequence();
     networkInfo.mMleFrameCounter = Get<KeyManager>().GetMleFrameCounter() + OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
     networkInfo.mMacFrameCounter = Get<KeyManager>().GetMacFrameCounter() + OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
+    networkInfo.mDeviceMode      = mDeviceMode.Get();
 
     SuccessOrExit(error = Get<Settings>().SaveNetworkInfo(networkInfo));
 
@@ -841,6 +841,8 @@ otError Mle::SetDeviceMode(DeviceMode aDeviceMode)
     mDeviceMode = aDeviceMode;
 
     otLogNoteMle("Mode 0x%02x -> 0x%02x [%s]", oldMode.Get(), mDeviceMode.Get(), mDeviceMode.ToString().AsCString());
+
+    Store();
 
     switch (mRole)
     {
