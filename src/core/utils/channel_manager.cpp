@@ -39,7 +39,7 @@
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
-#include "phy/phy.hpp"
+#include "radio/radio.hpp"
 
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 

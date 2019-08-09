@@ -46,7 +46,7 @@
 #include "net/netif.hpp"
 #include "net/tcp.hpp"
 #include "net/udp6.hpp"
-#include "phy/phy.hpp"
+#include "radio/radio.hpp"
 #include "thread/mle.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"

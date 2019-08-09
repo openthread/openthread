@@ -323,6 +323,11 @@ private:
 
     RandomManager mRandomManager;
 
+    // Radio is initialized before other member variables
+    // (particularly, SubMac and Mac) to allow them to use its methods
+    // from their constructor.
+    Radio mRadio;
+
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     // Notifier, Settings, and MessagePool are initialized  before
     // other member variables since other classes/objects from their
@@ -377,6 +382,16 @@ private:
 };
 
 // Specializations of the `Get<Type>()` method.
+
+template <> inline Radio &Instance::Get(void)
+{
+    return mRadio;
+}
+
+template <> inline Radio::Callbacks &Instance::Get(void)
+{
+    return mRadio.mCallbacks;
+}
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 template <> inline Notifier &Instance::Get(void)

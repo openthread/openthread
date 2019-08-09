@@ -38,7 +38,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "mac/mac.hpp"
-#include "phy/phy.hpp"
+#include "radio/radio.hpp"
 
 using namespace ot;
 
@@ -132,7 +132,9 @@ exit:
 
 void otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui64)
 {
-    otPlatRadioGetIeeeEui64(aInstance, aEui64->m8);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Radio>().GetIeeeEui64(*static_cast<Mac::ExtAddress *>(aEui64));
 }
 
 otPanId otLinkGetPanId(otInstance *aInstance)

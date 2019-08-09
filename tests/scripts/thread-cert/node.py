@@ -476,11 +476,11 @@ class Node:
         self._expect('Done')
 
     def get_state(self):
-        states = ['detached', 'child', 'router', 'leader']
+        states = [r'\ndetached', r'\nchild', r'\nrouter', r'\nleader']
         self.send_command('state')
         match = self._expect(states)
         self._expect('Done')
-        return states[match]
+        return states[match].strip(r'\n')
 
     def set_state(self, state):
         cmd = 'state %s' % state

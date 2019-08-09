@@ -28,31 +28,64 @@
 
 /**
  * @file
- *   This file includes compile-time configurations for the Joiner.
- *
+ *   This file implements the radio callbacks.
  */
 
-#ifndef CONFIG_JOINER_H_
-#define CONFIG_JOINER_H_
+#include "radio.hpp"
 
-/**
- * @def OPENTHREAD_CONFIG_JOINER_ENABLE
- *
- * Define to 1 to enable Joiner support.
- *
- */
-#ifndef OPENTHREAD_CONFIG_JOINER_ENABLE
-#define OPENTHREAD_CONFIG_JOINER_ENABLE 0
+#include "common/instance.hpp"
+#include "common/locator-getters.hpp"
+
+namespace ot {
+
+void Radio::Callbacks::HandleReceiveDone(Mac::RxFrame *aFrame, otError aError)
+{
+    Get<Mac::SubMac>().HandleReceiveDone(aFrame, aError);
+}
+
+void Radio::Callbacks::HandleTransmitStarted(Mac::TxFrame &aFrame)
+{
+    Get<Mac::SubMac>().HandleTransmitStarted(aFrame);
+}
+
+void Radio::Callbacks::HandleTransmitDone(Mac::TxFrame &aFrame, Mac::RxFrame *aAckFrame, otError aError)
+{
+    Get<Mac::SubMac>().HandleTransmitDone(aFrame, aAckFrame, aError);
+}
+
+void Radio::Callbacks::HandleEnergyScanDone(int8_t aMaxRssi)
+{
+    Get<Mac::SubMac>().HandleEnergyScanDone(aMaxRssi);
+}
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+void Radio::Callbacks::HandleFrameUpdated(Mac::TxFrame &aFrame)
+{
+    Get<Mac::SubMac>().HandleFrameUpdated(aFrame);
+}
 #endif
 
-/**
- * @def OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES
- *
- * The maximum number of Joiner Router entries that can be queued by the Joiner.
- *
- */
-#ifndef OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES
-#define OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES 2
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+void Radio::Callbacks::HandleDiagsReceiveDone(Mac::RxFrame *aFrame, otError aError)
+{
+#if OPENTHREAD_RADIO
+    // Pass it to notify OpenThread `Diags` module on host side.
+    HandleReceiveDone(aFrame, aError);
+#else
+    Get<FactoryDiags::Diags>().ReceiveDone(aFrame, aError);
 #endif
+}
 
-#endif // CONFIG_JOINER_H_
+void Radio::Callbacks::HandleDiagsTransmitDone(Mac::TxFrame &aFrame, otError aError)
+{
+#if OPENTHREAD_RADIO
+    // Pass it to notify OpenThread `Diags` module on host side.
+    HandleTransmitDone(aFrame, NULL, aError);
+#else
+    OT_UNUSED_VARIABLE(aFrame);
+    Get<FactoryDiags::Diags>().TransmitDone(aError);
+#endif
+}
+#endif // OPENTHREAD_CONFIG_DIAG_ENABLE
+
+} // namespace ot

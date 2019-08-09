@@ -46,7 +46,7 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES
+ * @def OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES
  *
  * The number of dhcp prefixes.
  *

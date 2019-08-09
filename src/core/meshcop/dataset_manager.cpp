@@ -41,7 +41,7 @@
 #include "common/logging.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
-#include "phy/phy.hpp"
+#include "radio/radio.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"

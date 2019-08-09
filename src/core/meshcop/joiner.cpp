@@ -35,8 +35,6 @@
 
 #include <stdio.h>
 
-#include <openthread/platform/radio.h>
-
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
@@ -45,6 +43,7 @@
 #include "common/logging.hpp"
 #include "mac/mac_frame.hpp"
 #include "meshcop/meshcop.hpp"
+#include "radio/radio.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_uri_paths.hpp"
 
@@ -71,7 +70,7 @@ Joiner::Joiner(Instance &aInstance)
 
 void Joiner::GetJoinerId(Mac::ExtAddress &aJoinerId) const
 {
-    otPlatRadioGetIeeeEui64(&GetInstance(), aJoinerId.m8);
+    Get<Radio>().GetIeeeEui64(aJoinerId);
     ComputeJoinerId(aJoinerId, aJoinerId);
 }
 

@@ -46,7 +46,7 @@
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
 #include "mac/mac_frame.hpp"
-#include "phy/phy.hpp"
+#include "radio/radio.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
@@ -95,8 +95,8 @@ Mac::Mac(Instance &aInstance)
     , mPanChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mRadioChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mRadioChannelAcquisitionId(0)
-    , mSupportedChannelMask(otPlatRadioGetSupportedChannelMask(&aInstance))
-    , mScanChannel(Phy::kChannelMin)
+    , mSupportedChannelMask(Get<Radio>().GetSupportedChannelMask())
+    , mScanChannel(Radio::kChannelMin)
     , mScanDuration(0)
     , mScanChannelMask()
     , mActiveScanHandler(NULL) /* Initialize `mActiveScanHandler` and `mEnergyScanHandler` union */
@@ -435,7 +435,7 @@ void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
 {
     ChannelMask newMask = aMask;
 
-    newMask.Intersect(ChannelMask(otPlatRadioGetSupportedChannelMask(&GetInstance())));
+    newMask.Intersect(ChannelMask(Get<Radio>().GetSupportedChannelMask()));
     VerifyOrExit(newMask != mSupportedChannelMask, Get<Notifier>().SignalIfFirst(OT_CHANGED_SUPPORTED_CHANNEL_MASK));
 
     mSupportedChannelMask = newMask;
@@ -1182,7 +1182,7 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
 
     if (aError != OT_ERROR_NONE)
     {
-        LogFrameTxFailure(aFrame, aError, aRetryCount);
+        LogFrameTxFailure(aFrame, aError, aRetryCount, aWillRetx);
         otDumpDebgMac("TX ERR", aFrame.GetHeader(), 16);
 
         if (aWillRetx)
@@ -1846,7 +1846,7 @@ bool Mac::HandleMacCommand(RxFrame &aFrame)
 void Mac::SetPromiscuous(bool aPromiscuous)
 {
     mPromiscuous = aPromiscuous;
-    otPlatRadioSetPromiscuous(&GetInstance(), aPromiscuous);
+    Get<Radio>().SetPromiscuous(aPromiscuous);
 
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
     mDelayingSleep    = false;
@@ -1864,7 +1864,7 @@ void Mac::ResetCounters(void)
 
 int8_t Mac::GetNoiseFloor(void)
 {
-    return otPlatRadioGetReceiveSensitivity(&GetInstance());
+    return Get<Radio>().GetReceiveSensitivity();
 }
 
 // LCOV_EXCL_START
@@ -1947,10 +1947,13 @@ void Mac::LogFrameRxFailure(const RxFrame *aFrame, otError aError) const
     }
 }
 
-void Mac::LogFrameTxFailure(const TxFrame &aFrame, otError aError, uint8_t aRetryCount) const
+void Mac::LogFrameTxFailure(const TxFrame &aFrame, otError aError, uint8_t aRetryCount, bool aWillRetx) const
 {
-    otLogInfoMac("Frame tx failed, error:%s, retries:%d/%d, %s", otThreadErrorToString(aError), aRetryCount,
-                 aFrame.GetMaxFrameRetries(), aFrame.ToInfoString().AsCString());
+    uint8_t maxAttempts = aFrame.GetMaxFrameRetries() + 1;
+    uint8_t curAttempt  = aWillRetx ? (aRetryCount + 1) : maxAttempts;
+
+    otLogInfoMac("Frame tx attempt %d/%d failed, error:%s, %s", curAttempt, maxAttempts, otThreadErrorToString(aError),
+                 aFrame.ToInfoString().AsCString());
 }
 
 void Mac::LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const
@@ -1968,7 +1971,7 @@ void Mac::LogBeacon(const char *, const BeaconPayload &) const
 {
 }
 
-void Mac::LogFrameTxFailure(const TxFrame &, otError, uint8_t) const
+void Mac::LogFrameTxFailure(const TxFrame &, otError, uint8_t, bool) const
 {
 }
 

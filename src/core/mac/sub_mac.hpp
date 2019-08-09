@@ -37,11 +37,11 @@
 #include "openthread-core-config.h"
 
 #include <openthread/link.h>
-#include <openthread/platform/radio.h>
 
 #include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
+#include "radio/radio.hpp"
 
 namespace ot {
 
@@ -76,6 +76,8 @@ namespace Mac {
  */
 class SubMac : public InstanceLocator
 {
+    friend class Radio::Callbacks;
+
 public:
     enum
     {
@@ -133,7 +135,7 @@ public:
          *                        OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
          *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx failed due to activity on the channel,
          *                        OT_ERROR_ABORT when transmission was aborted for other reasons.
-         * @param[in] aRetryCount Number of transmission retries for this frame.
+         * @param[in] aRetryCount Current retry count. This is valid only when sub-mac handles frame re-transmissions.
          * @param[in] aWillRetx   Indicates whether frame will be retransmitted or not. This is applicable only
          *                        when there was an error in current transmission attempt.
          *
@@ -343,67 +345,6 @@ public:
      */
     otError EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration);
 
-    /**
-     * This method handles a "Receive Done" event from radio platform.
-     *
-     *
-     * @param[in]  aFrame    A pointer to the received frame or NULL if the receive operation failed.
-     * @param[in]  aError    OT_ERROR_NONE when successfully received a frame,
-     *                       OT_ERROR_ABORT when reception was aborted and a frame was not received,
-     *                       OT_ERROR_NO_BUFS when a frame could not be received due to lack of rx buffer space.
-     *
-     */
-    void HandleReceiveDone(RxFrame *aFrame, otError aError);
-
-    /**
-     * This method handles a Transmit Started event from radio platform.
-     *
-     * @param[in]  aFrame     The frame that is being transmitted.
-     *
-     */
-    void HandleTransmitStarted(TxFrame &aFrame);
-
-    /**
-     * This method handles a "Transmit Done" event from radio platform.
-     *
-     * @param[in]  aFrame     The frame that was transmitted.
-     * @param[in]  aAckFrame  A pointer to the ACK frame, NULL if no ACK was received.
-     * @param[in]  aError     OT_ERROR_NONE when the frame was transmitted,
-     *                        OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
-     *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx could not take place due to activity on the channel,
-     *                        OT_ERROR_ABORT when transmission was aborted for other reasons.
-     *
-     */
-    void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError);
-
-    /**
-     * This method handles "Energy Scan Done" event from radio platform.
-     *
-     * This method is used when radio provides OT_RADIO_CAPS_ENERGY_SCAN capability. It is called from
-     * `otPlatRadioEnergyScanDone()`.
-     *
-     * @param[in]  aInstance           The OpenThread instance structure.
-     * @param[in]  aEnergyScanMaxRssi  The maximum RSSI encountered on the scanned channel.
-     *
-     */
-    void HandleEnergyScanDone(int8_t aMaxRssi);
-
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    /**
-     * This method handles a "Frame Updated" event from radio platform.
-     *
-     * This is called to notify OpenThread to process transmit security for the frame, this happens when the frame
-     * includes Header IE(s) that were updated before transmission. It is called from `otPlatRadioFrameUpdated()`.
-     *
-     * @note This method can be called from interrupt context and it would only read/write data passed in
-     *       via @p aFrame, but would not read/write any state within OpenThread.
-     *
-     * @param[in]  aFrame      The frame which needs to process transmit security.
-     *
-     */
-    void HandleFrameUpdated(TxFrame &aFrame);
-#endif
-
 private:
     enum
     {
@@ -447,6 +388,14 @@ private:
     void StartCsmaBackoff(void);
     void BeginTransmit(void);
     void SampleRssi(void);
+
+    void HandleReceiveDone(RxFrame *aFrame, otError aError);
+    void HandleTransmitStarted(TxFrame &aFrame);
+    void HandleTransmitDone(TxFrame &aTxFrame, RxFrame *aAckFrame, otError aError);
+    void HandleEnergyScanDone(int8_t aMaxRssi);
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    void HandleFrameUpdated(TxFrame &aFrame);
+#endif
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);

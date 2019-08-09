@@ -147,17 +147,4 @@
 #define OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE 0
 #endif
 
-/**
- * @def OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
- *
- * Define as 1 for a child to inform its previous parent when it attaches to a new parent.
- *
- * If this feature is enabled, when a device attaches to a new parent, it will send an IP message (with empty payload
- * and mesh-local IP address as the source address) to its previous parent.
- *
- */
-#ifndef OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH
-#define OPENTHREAD_CONFIG_INFORM_PREVIOUS_PARENT_ON_REATTACH 0
-#endif
-
 #endif // CONFIG_TMF_H_

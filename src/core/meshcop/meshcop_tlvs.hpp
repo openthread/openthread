@@ -49,7 +49,7 @@
 #include "common/tlvs.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
-#include "phy/phy.hpp"
+#include "radio/radio.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -1661,7 +1661,7 @@ public:
 private:
     enum
     {
-        kNumMaskEntries = Phy::kNumChannelPages,
+        kNumMaskEntries = Radio::kNumChannelPages,
     };
 
     ChannelMaskEntry mEntries[kNumMaskEntries];

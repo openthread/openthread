@@ -91,9 +91,9 @@ NcpUart::NcpUart(Instance *aInstance)
     , mRxBuffer()
     , mUartSendImmediate(false)
     , mUartSendTask(*aInstance, EncodeAndSendToUart, this)
-#if OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
+#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
     , mTxFrameBufferEncrypterReader(mTxFrameBuffer)
-#endif // OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 {
     mTxFrameBuffer.SetFrameAddedCallback(HandleFrameAddedToNcpBuffer, this);
 
@@ -133,11 +133,11 @@ void NcpUart::EncodeAndSendToUart(void)
 {
     uint16_t len;
     bool     prevHostPowerState;
-#if OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
+#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
     NcpFrameBufferEncrypterReader &txFrameBuffer = mTxFrameBufferEncrypterReader;
 #else
     NcpFrameBuffer &txFrameBuffer = mTxFrameBuffer;
-#endif // OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
     while (!txFrameBuffer.IsEmpty() || (mState == kFinalizingFrame))
     {
@@ -257,7 +257,7 @@ void NcpUart::HandleFrame(otError aError)
 
     if (aError == OT_ERROR_NONE)
     {
-#if OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
+#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
         size_t dataLen = bufLength;
         if (SpinelEncrypter::DecryptInbound(buf, kRxBufferSize, &dataLen))
         {
@@ -265,7 +265,7 @@ void NcpUart::HandleFrame(otError aError)
         }
 #else
         super_t::HandleReceive(buf, bufLength);
-#endif // OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
     }
     else
     {
@@ -308,7 +308,7 @@ void NcpUart::HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength)
     otNcpStreamWrite(0, reinterpret_cast<uint8_t *>(hexbuf + 1), static_cast<int>(strlen(hexbuf) - 1));
 }
 
-#if OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
+#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
 NcpUart::NcpFrameBufferEncrypterReader::NcpFrameBufferEncrypterReader(NcpFrameBuffer &aTxFrameBuffer)
     : mTxFrameBuffer(aTxFrameBuffer)
@@ -373,7 +373,7 @@ void NcpUart::NcpFrameBufferEncrypterReader::Reset(void)
     mDataBufferReadIndex = 0;
 }
 
-#endif // OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
 } // namespace Ncp
 } // namespace ot
