@@ -575,6 +575,8 @@ void Dtls::Receive(Message &aMessage, uint16_t aOffset, uint16_t aLength)
     mReceiveLength  = aLength;
 
     Process();
+
+    mReceiveMessage = NULL;
 }
 
 int Dtls::HandleMbedtlsTransmit(void *aContext, const unsigned char *aBuf, size_t aLength)
