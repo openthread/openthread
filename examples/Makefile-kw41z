@@ -41,14 +41,15 @@ OBJCOPY                         = arm-none-eabi-objcopy
 
 BuildJobs                      ?= 10
 
-configure_OPTIONS               = \
-    --enable-cli                  \
-    --enable-ftd                  \
-    --enable-mtd                  \
-    --enable-ncp                  \
-    --enable-radio-only           \
-    --enable-linker-map           \
-    --with-examples=kw41z         \
+configure_OPTIONS               =     \
+    --enable-cli                      \
+    --enable-ftd                      \
+    --enable-mtd                      \
+    --enable-ncp                      \
+    --enable-radio-only               \
+    --enable-linker-map               \
+    --enable-option-checking=fatal    \
+    --with-examples=kw41z             \
     $(NULL)
 
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..

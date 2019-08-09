@@ -47,6 +47,7 @@ configure_OPTIONS                                          = \
     --enable-mtd                                             \
     --enable-ncp                                             \
     --enable-radio-only                                      \
+    --enable-option-checking=fatal                           \
     --with-examples=cc2652                                   \
     MBEDTLS_CPPFLAGS="$(CC2652_MBEDTLS_CPPFLAGS)"            \
     $(NULL)

@@ -46,6 +46,7 @@ configure_OPTIONS                                 = \
     --enable-ftd                                    \
     --enable-mtd                                    \
     --enable-linker-map                             \
+    --enable-option-checking=fatal                  \
     --with-examples=nrf52840                        \
     $(NULL)
 

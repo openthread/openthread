@@ -45,11 +45,12 @@ OBJCOPY                         = $(CROSS_COMPILE)objcopy
 
 BuildJobs                      ?= 9
 
-configure_OPTIONS               = \
-    --enable-cli                  \
-    --enable-ftd                  \
-    --enable-mtd                  \
-    --with-examples=$(PPREFIX)    \
+configure_OPTIONS               =     \
+    --enable-cli                      \
+    --enable-ftd                      \
+    --enable-mtd                      \
+    --enable-option-checking=fatal    \
+    --with-examples=$(PPREFIX)        \
     $(NULL)
 
 DEFAULT_LOGGING ?= 1

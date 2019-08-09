@@ -66,13 +66,14 @@ COMMONCFLAGS                   := \
 # If the user has asserted COVERAGE, alter the configuration options
 # accordingly.
 
-configure_OPTIONS               = \
-    --enable-cli                  \
-    --enable-ftd                  \
-    --enable-mtd                  \
-    --enable-ncp                  \
-    --enable-radio-only           \
-    --with-examples=posix         \
+configure_OPTIONS               =     \
+    --enable-cli                      \
+    --enable-ftd                      \
+    --enable-mtd                      \
+    --enable-ncp                      \
+    --enable-radio-only               \
+    --enable-option-checking=fatal    \
+    --with-examples=posix             \
     $(NULL)
 
 # Platform specific switches

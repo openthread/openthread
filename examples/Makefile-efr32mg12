@@ -41,14 +41,15 @@ OBJCOPY                         = arm-none-eabi-objcopy
 
 BuildJobs                      ?= 10
 
-configure_OPTIONS               = \
-    --enable-cli                  \
-    --enable-ftd                  \
-    --enable-mtd                  \
-    --enable-ncp                  \
-    --enable-radio-only           \
-    --enable-linker-map           \
-    --with-examples=efr32mg12     \
+configure_OPTIONS               =     \
+    --enable-cli                      \
+    --enable-ftd                      \
+    --enable-mtd                      \
+    --enable-ncp                      \
+    --enable-radio-only               \
+    --enable-linker-map               \
+    --enable-option-checking=fatal    \
+    --with-examples=efr32mg12         \
     MBEDTLS_CPPFLAGS="$(EFR32_MBEDTLS_CPPFLAGS)" \
     $(NULL)
 
