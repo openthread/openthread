@@ -126,15 +126,107 @@ You can prefix the compiler command using the CCPREFIX parameter. This speeds up
 $ make -f examples/Makefile-nrf52840 USB=1 CCPREFIX=ccache
 ```
 
+### CryptoCell 310 support
+
+By default, OpenThread uses mbedTLS library with support for CryptoCell 310 hardware acceleration of cryptographic operations. When building the application, an explicit setup is needed (error checking omitted):
+```
+mbedtls_platform_set_calloc_free(calloc, free);
+mbedtls_platform_setup(NULL);
+```
+
+When building an external application with OpenThread libraries and CryptoCell 310 hardware acceleration, use the following configuration:
+- Crypto libraries:
+  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_glue.a`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_glue_cc310.a`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_glue_vanilla.a`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_cc310_backend.a`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_vanilla_backend.a`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_tls_vanilla.a`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_x509_vanilla.a`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_base_vanilla.a`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libnrf_cc310_platform_0.9.0.a`
+- Include directories:
+  - `third_party/NordicSemiconductor/libraries/nrf_security/mbedtls_platform_config`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/include`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/config`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/nrf_cc310_platform/include`
+- Defines:
+  - `MBEDTLS_CONFIG_FILE` set to  `"nrf-config.h"`
+  - `MBEDTLS_USER_CONFIG_FILE` set to `"nrf52840-mbedtls-config.h"`
 ### Optional disabling of CryptoCell 310 support
 
-By default, mbedTLS library is built with support for CryptoCell 310 hardware acceleration of cryptographic operations used in OpenThread. You can disable CryptoCell 310 and use software cryptography instead by building OpenThread with the following parameter:
+By default, OpenThread uses mbedTLS library with support for CryptoCell 310 hardware acceleration of cryptographic operations. You can disable CryptoCell 310 and use software cryptography instead by building OpenThread with the following parameter:
 ```
-$ make -f examples/Makefile-nrf52840 DISABLE_CC310=1
+$ make -f examples/Makefile-nrf52840 DISABLE_BUILTIN_MBEDTLS=0 ...
 ```
 
-### Optional mbedTLS threading support
-By default, mbedTLS library is built without support for multiple threads. You can enable this built-in support by building OpenThread with the following parameter:
+When building an external application with OpenThread libraries and software cryptography, use the following configuration:
+- Crypto libraries:
+  - `output/nrf52840/lib/libmbedcrypto.a` (present after successful build)
+- Include directories:
+  - `third_party/NordicSemiconductor/libraries/nrf_security/mbedtls_platform_config`
+  - `third_party/mbedtls`
+  - `third_party/mbedtls/repo/include`
+- Defines:
+  - `MBEDTLS_CONFIG_FILE` set to  `"mbedtls-config.h"`
+  - `MBEDTLS_USER_CONFIG_FILE` set to `"nrf52840-mbedtls-config.h"`
+
+### CryptoCell 310 abort mechanism
+
+The CryptoCell 310 platform implements an abort mechanism. By default, any fault in the CryptoCell 310 library results in the system reset. This behavior can be changed by a call to the `nrf_cc310_platform_set_abort()` function. This function must be called before `mbedtls_platform_setup`:
+```
+void nrf_cc310_platform_set_abort(
+	nrf_cc310_platform_abort_apis_t const * const apis)
+```
+
+### CryptoCell 310 RTOS support
+
+The hardware-accelerated mbedTLS library supports access from multiple threads. By default, simple blocking implementation of mutexes is used. The locking mechanism can be replaced by using the `nrf_cc310_platform_set_mutexes()` function. This function must be called before `mbedtls_platform_setup`:
+```
+void nrf_cc310_platform_set_mutexes(nrf_cc310_platform_mutex_apis_t const * const apis,
+                                    nrf_cc310_platform_mutexes_t const * const mutexes)
+```
+
+The sample implementation of mutexes for FreeRTOS and Zephyr operating systems can be found in `nrf_cc310_platform_mutex_freertos.c` and `nrf_cc310_platform_mutex_zephyr.c`. Both files implement the function `int nrf_cc310_platform_mutex_init(void)`. This function must be called before `mbedtls_platform_setup`.
+
+The sample implementation of the abort functionality for FreeRTOS and Zephyr operating systems can be found in `nrf_cc310_platform_abort_freertos.c` and `nrf_cc310_platform_abort_zephyr.c`. Both files implement the function `void nrf_cc310_platform_abort_init(void)`. This function must be called before `mbedtls_platform_setup`.
+
+The typical setup in the RTOS environment (error checking omitted) is as follows:
+```
+mbedtls_platform_set_calloc_free(calloc, free);
+nrf_cc310_platform_abort_init();
+nrf_cc310_platform_mutex_init();
+mbedtls_platform_setup(NULL);
+```
+
+When building an external application that uses RTOS with OpenThread libraries and the CryptoCell 310 hardware acceleration, use the following configuration:
+- Crypto libraries:
+  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_glue.a`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_glue_cc310.a`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_glue_vanilla.a`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_cc310_backend.a`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_vanilla_backend.a`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_tls_vanilla.a`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_x509_vanilla.a`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_base_vanilla.a`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libnrf_cc310_platform_0.9.0.a`
+- Include directories:
+  - `third_party/NordicSemiconductor/libraries/nrf_security/mbedtls_platform_config`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/include`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/config`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/nrf_cc310_platform/include`
+- Defines:
+  - `MBEDTLS_CONFIG_FILE` set to  `"nrf-config.h"`
+  - `MBEDTLS_USER_CONFIG_FILE` set to `"nrf52840-mbedtls-config.h"`
+- Sources:
+  - `nrf_cc310_platform_mutex_freertos.c` or `nrf_cc310_platform_mutex_zephyr.c` from `third_party/NordicSemiconductor/libraries/nrf_security/nrf_cc310_platform/src`, depending on the RTOS used.
+  - `nrf_cc310_platform_abort_freertos.c` or `nrf_cc310_platform_abort_zephyr.c` from `third_party/NordicSemiconductor/libraries/nrf_security/nrf_cc310_platform/src`, depending on the RTOS used.
+
+See [mbedTls Thread Safety and Multi Threading][mbedtls-thread-safety-and-multi-threading] for more details.
+
+### Optional software only mbedTLS threading support
+
+By default, the software-only mbedTLS library is built without support for multiple threads. You can enable this built-in support by building OpenThread with the following parameter:
 
 ```
 $ make -f examples/Makefile-nrf52840 MBEDTLS_THREADING=1
@@ -152,9 +244,21 @@ However, you can modify it, by providing a path to a header file with proper def
 $ make -f examples/Makefile-nrf52840 MBEDTLS_THREADING=1 MBEDTLS_THREADING_MUTEX_DEF="path_to_a_header_file_with_mutex_definition.h"
 ```
 
-See [mbedTls Thread Safety and Multi Threading][mbedtls-thread-safety-and-multi-threading] for more details.
+When building an external application that uses RTOS with OpenThread libraries and software cryptography, use the following configuration:
+- Crypto libraries:
+  - `output/nrf52840/lib/libmbedcrypto.a` (present after successful build)
+- Include directories:
+  - `third_party/NordicSemiconductor/libraries/nrf_security/mbedtls_platform_config`
+  - `third_party/mbedtls`
+  - `third_party/mbedtls/repo/include`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/include/software-only-threading`
+- Defines:
+  - `MBEDTLS_CONFIG_FILE` set to  `"mbedtls-config.h"`
+  - `MBEDTLS_USER_CONFIG_FILE` set to `"nrf52840-mbedtls-config.h"`
+  - `MBEDTLS_THREADING_C`
+  - `MBEDTLS_THREADING_ALT`
 
-Note that as a temporary limitation CryptoCell 310 hardware acceleration is disabled when using mbedTLS threading.
+See [mbedTls Thread Safety and Multi Threading][mbedtls-thread-safety-and-multi-threading] for more details.
 
 [mbedtls-thread-safety-and-multi-threading]: https://tls.mbed.org/kb/development/thread-safety-and-multi-threading
 
