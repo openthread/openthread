@@ -1086,18 +1086,12 @@ void Mle::GenerateNonce(const Mac::ExtAddress &aMacAddr,
                         uint8_t                aSecurityLevel,
                         uint8_t *              aNonce)
 {
-    // source address
     memcpy(aNonce, aMacAddr.m8, sizeof(aMacAddr));
     aNonce += sizeof(aMacAddr);
 
-    // frame counter
-    aNonce[0] = (aFrameCounter >> 24) & 0xff;
-    aNonce[1] = (aFrameCounter >> 16) & 0xff;
-    aNonce[2] = (aFrameCounter >> 8) & 0xff;
-    aNonce[3] = aFrameCounter & 0xff;
-    aNonce += 4;
+    Encoding::BigEndian::WriteUint32(aFrameCounter, aNonce);
+    aNonce += sizeof(uint32_t);
 
-    // security level
     aNonce[0] = aSecurityLevel;
 }
 
