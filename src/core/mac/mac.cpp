@@ -770,22 +770,12 @@ void Mac::FinishOperation(void)
 
 void Mac::GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce)
 {
-    // source address
-    for (int i = 0; i < 8; i++)
-    {
-        aNonce[i] = aAddress.m8[i];
-    }
+    memcpy(aNonce, aAddress.m8, sizeof(ExtAddress));
+    aNonce += sizeof(ExtAddress);
 
-    aNonce += 8;
+    Encoding::BigEndian::WriteUint32(aFrameCounter, aNonce);
+    aNonce += sizeof(uint32_t);
 
-    // frame counter
-    aNonce[0] = (aFrameCounter >> 24) & 0xff;
-    aNonce[1] = (aFrameCounter >> 16) & 0xff;
-    aNonce[2] = (aFrameCounter >> 8) & 0xff;
-    aNonce[3] = (aFrameCounter >> 0) & 0xff;
-    aNonce += 4;
-
-    // security level
     aNonce[0] = aSecurityLevel;
 }
 
