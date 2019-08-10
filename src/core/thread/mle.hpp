@@ -1688,11 +1688,6 @@ private:
         kDataRequestActive, ///< Data Request has been sent, Data Response is expected.
     };
 
-    void GenerateNonce(const Mac::ExtAddress &aMacAddr,
-                       uint32_t               aFrameCounter,
-                       uint8_t                aSecurityLevel,
-                       uint8_t *              aNonce);
-
     static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
     void        HandleStateChanged(otChangedFlags aFlags);
     static void HandleAttachTimer(Timer &aTimer);

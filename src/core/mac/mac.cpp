@@ -768,27 +768,6 @@ void Mac::FinishOperation(void)
     mOperation = kOperationIdle;
 }
 
-void Mac::GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce)
-{
-    // source address
-    for (int i = 0; i < 8; i++)
-    {
-        aNonce[i] = aAddress.m8[i];
-    }
-
-    aNonce += 8;
-
-    // frame counter
-    aNonce[0] = (aFrameCounter >> 24) & 0xff;
-    aNonce[1] = (aFrameCounter >> 16) & 0xff;
-    aNonce[2] = (aFrameCounter >> 8) & 0xff;
-    aNonce[3] = (aFrameCounter >> 0) & 0xff;
-    aNonce += 4;
-
-    // security level
-    aNonce[0] = aSecurityLevel;
-}
-
 otError Mac::PrepareDataRequest(TxFrame &aFrame)
 {
     otError  error = OT_ERROR_NONE;
@@ -913,7 +892,7 @@ void Mac::ProcessTransmitAesCcm(TxFrame &aFrame, const ExtAddress *aExtAddress)
 {
     uint32_t       frameCounter = 0;
     uint8_t        securityLevel;
-    uint8_t        nonce[kNonceSize];
+    uint8_t        nonce[KeyManager::kNonceSize];
     uint8_t        tagLength;
     Crypto::AesCcm aesCcm;
     otError        error;
@@ -921,7 +900,7 @@ void Mac::ProcessTransmitAesCcm(TxFrame &aFrame, const ExtAddress *aExtAddress)
     aFrame.GetSecurityLevel(securityLevel);
     aFrame.GetFrameCounter(frameCounter);
 
-    GenerateNonce(*aExtAddress, frameCounter, securityLevel, nonce);
+    KeyManager::GenerateNonce(*aExtAddress, frameCounter, securityLevel, nonce);
 
     aesCcm.SetKey(aFrame.GetAesKey(), 16);
     tagLength = aFrame.GetFooterLength() - Frame::kFcsSize;
@@ -1380,7 +1359,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
     uint8_t           securityLevel;
     uint8_t           keyIdMode;
     uint32_t          frameCounter;
-    uint8_t           nonce[kNonceSize];
+    uint8_t           nonce[KeyManager::kNonceSize];
     uint8_t           tag[Frame::kMaxMicSize];
     uint8_t           tagLength;
     uint8_t           keyid;
@@ -1472,7 +1451,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
         break;
     }
 
-    GenerateNonce(*extAddress, frameCounter, securityLevel, nonce);
+    KeyManager::GenerateNonce(*extAddress, frameCounter, securityLevel, nonce);
     tagLength = aFrame.GetFooterLength() - Frame::kFcsSize;
 
     aesCcm.SetKey(macKey, 16);
