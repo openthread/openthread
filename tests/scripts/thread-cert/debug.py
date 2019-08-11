@@ -82,8 +82,8 @@ class Inspector:
             if line == 'exit':
                 break
             else:
-                node.interface.send_command(line)
-                node.interface._expect('Done')
+                node.send_command(line)
+                node._expect('Done')
 
     def inspect(self):
         """ Start inspecting.
