@@ -73,7 +73,6 @@ enum
 {
     kDataPollTimeout = 100, ///< Timeout for receiving Data Frame (milliseconds).
     kSleepDelay      = 300, ///< Max sleep delay when frame is pending (milliseconds).
-    kNonceSize       = 13,  ///< Size of IEEE 802.15.4 Nonce (bytes).
 
     kScanDurationDefault = 300, ///< Default interval between channels (milliseconds).
 
@@ -644,11 +643,6 @@ private:
      *
      */
     void ProcessTransmitSecurity(TxFrame &aFrame, bool aProcessAesCcm);
-
-    static void GenerateNonce(const ExtAddress &aAddress,
-                              uint32_t          aFrameCounter,
-                              uint8_t           aSecurityLevel,
-                              uint8_t *         aNonce);
 
     otError ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
     void    UpdateIdleMode(void);
