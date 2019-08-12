@@ -224,7 +224,7 @@ otError HdlcInterface::Write(const uint8_t *aFrame, uint16_t aLength)
 {
     otError error = OT_ERROR_NONE;
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    platformvSendRadioSpinelWriteEvent(aFrame, aLength);
+    platformSimSendRadioSpinelWriteEvent(aFrame, aLength);
 #else
     while (aLength)
     {

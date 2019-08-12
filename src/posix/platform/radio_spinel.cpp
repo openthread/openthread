@@ -984,8 +984,8 @@ otError RadioSpinel::WaitResponse(void)
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
         struct Event event;
 
-        platformvSendSleepEvent(&timeout);
-        platformvReceiveEvent(&event);
+        platformSimSendSleepEvent(&timeout);
+        platformSimReceiveEvent(&event);
 
         switch (event.mEvent)
         {
@@ -1677,12 +1677,12 @@ void ot::PosixApp::RadioSpinel::Update(struct timeval &aTimeout)
     }
 }
 
-void platformvRadioSpinelUpdate(struct timeval *aTimeout)
+void platformSimRadioSpinelUpdate(struct timeval *aTimeout)
 {
     sRadioSpinel.Update(*aTimeout);
 }
 
-void platformvRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent)
+void platformSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent)
 {
     sRadioSpinel.Process(*aEvent);
     OT_UNUSED_VARIABLE(aInstance);

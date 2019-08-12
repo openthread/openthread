@@ -53,7 +53,7 @@ static int      sSockFd     = -1; ///< Socket used to communicating with simulat
 static uint16_t sPortOffset = 0;  ///< Port offset for simulation.
 static int      sNodeId     = 0;  ///< Node id of this simulated device.
 
-void platformvInit(void)
+void platformSimInit(void)
 {
     struct sockaddr_in sockaddr;
     char *             offset;
@@ -100,7 +100,7 @@ void platformvInit(void)
     }
 }
 
-void platformvDeinit(void)
+void platformSimDeinit(void)
 {
     if (sSockFd != -1)
     {
@@ -109,7 +109,7 @@ void platformvDeinit(void)
     }
 }
 
-static void platformvSendEvent(struct Event *aEvent, size_t aLength)
+static void platformSimSendEvent(struct Event *aEvent, size_t aLength)
 {
     ssize_t            rval;
     struct sockaddr_in sockaddr;
@@ -127,7 +127,7 @@ static void platformvSendEvent(struct Event *aEvent, size_t aLength)
     }
 }
 
-void platformvReceiveEvent(struct Event *aEvent)
+void platformSimReceiveEvent(struct Event *aEvent)
 {
     ssize_t rval = recvfrom(sSockFd, aEvent, sizeof(*aEvent), 0, NULL, NULL);
 
@@ -139,7 +139,7 @@ void platformvReceiveEvent(struct Event *aEvent)
     sNow += aEvent->mDelay;
 }
 
-void platformvSendSleepEvent(const struct timeval *aTimeout)
+void platformSimSendSleepEvent(const struct timeval *aTimeout)
 {
     struct Event event;
 
@@ -147,10 +147,10 @@ void platformvSendSleepEvent(const struct timeval *aTimeout)
     event.mEvent      = OT_SIM_EVENT_ALARM_FIRED;
     event.mDataLength = 0;
 
-    platformvSendEvent(&event, offsetof(struct Event, mData));
+    platformSimSendEvent(&event, offsetof(struct Event, mData));
 }
 
-void platformvSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength)
+void platformSimSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength)
 {
     struct Event event;
 
@@ -160,14 +160,14 @@ void platformvSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength)
 
     memcpy(event.mData, aData, aLength);
 
-    platformvSendEvent(&event, offsetof(struct Event, mData) + event.mDataLength);
+    platformSimSendEvent(&event, offsetof(struct Event, mData) + event.mDataLength);
 }
 
-void platformvUpdateFdSet(fd_set *        aReadFdSet,
-                          fd_set *        aWriteFdSet,
-                          fd_set *        aErrorFdSet,
-                          int *           aMaxFd,
-                          struct timeval *aTimeout)
+void platformSimUpdateFdSet(fd_set *        aReadFdSet,
+                            fd_set *        aWriteFdSet,
+                            fd_set *        aErrorFdSet,
+                            int *           aMaxFd,
+                            struct timeval *aTimeout)
 {
     OT_UNUSED_VARIABLE(aWriteFdSet);
     OT_UNUSED_VARIABLE(aErrorFdSet);
@@ -178,13 +178,13 @@ void platformvUpdateFdSet(fd_set *        aReadFdSet,
         *aMaxFd = sSockFd;
     }
 
-    platformvRadioSpinelUpdate(aTimeout);
+    platformSimRadioSpinelUpdate(aTimeout);
 }
 
-void platformvProcess(otInstance *  aInstance,
-                      const fd_set *aReadFdSet,
-                      const fd_set *aWriteFdSet,
-                      const fd_set *aErrorFdSet)
+void platformSimProcess(otInstance *  aInstance,
+                        const fd_set *aReadFdSet,
+                        const fd_set *aWriteFdSet,
+                        const fd_set *aErrorFdSet)
 {
     struct Event event = {0};
 
@@ -194,10 +194,10 @@ void platformvProcess(otInstance *  aInstance,
 
     if (FD_ISSET(sSockFd, aReadFdSet))
     {
-        platformvReceiveEvent(&event);
+        platformSimReceiveEvent(&event);
     }
 
-    platformvRadioSpinelProcess(aInstance, &event);
+    platformSimRadioSpinelProcess(aInstance, &event);
 }
 
 uint64_t platformGetTime(void)
