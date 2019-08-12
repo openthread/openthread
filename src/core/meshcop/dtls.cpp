@@ -66,8 +66,6 @@ Dtls::Dtls(Instance &aInstance, bool aLayerTwoSecurity)
     , mTimerSet(false)
     , mLayerTwoSecurity(aLayerTwoSecurity)
     , mReceiveMessage(NULL)
-    , mReceiveOffset(0)
-    , mReceiveLength(0)
     , mConnectedHandler(NULL)
     , mReceiveHandler(NULL)
     , mSendHandler(NULL)
@@ -207,7 +205,7 @@ void Dtls::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageI
     }
 #endif
 
-    Receive(aMessage, aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset());
+    Receive(aMessage);
 
 exit:
     return;
@@ -568,11 +566,9 @@ exit:
     return error;
 }
 
-void Dtls::Receive(Message &aMessage, uint16_t aOffset, uint16_t aLength)
+void Dtls::Receive(Message &aMessage)
 {
     mReceiveMessage = &aMessage;
-    mReceiveOffset  = aOffset;
-    mReceiveLength  = aLength;
 
     Process();
 }
@@ -642,16 +638,16 @@ int Dtls::HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength)
     }
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
-    VerifyOrExit(mReceiveMessage != NULL && mReceiveLength != 0, rval = MBEDTLS_ERR_SSL_WANT_READ);
+    VerifyOrExit(mReceiveMessage != NULL && (rval = mReceiveMessage->GetLength() - mReceiveMessage->GetOffset()) > 0,
+                 rval = MBEDTLS_ERR_SSL_WANT_READ);
 
-    if (aLength > mReceiveLength)
+    if (aLength > static_cast<size_t>(rval))
     {
-        aLength = mReceiveLength;
+        aLength = static_cast<size_t>(rval);
     }
 
-    rval = mReceiveMessage->Read(mReceiveOffset, static_cast<uint16_t>(aLength), aBuf);
-    mReceiveOffset += static_cast<uint16_t>(rval);
-    mReceiveLength -= static_cast<uint16_t>(rval);
+    rval = mReceiveMessage->Read(mReceiveMessage->GetOffset(), static_cast<uint16_t>(aLength), aBuf);
+    mReceiveMessage->MoveOffset(rval);
 
 exit:
     return rval;
