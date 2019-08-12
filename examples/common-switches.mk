@@ -42,10 +42,10 @@ DEBUG               ?= 0
 DHCP6_CLIENT        ?= 0
 DHCP6_SERVER        ?= 0
 DIAGNOSTIC          ?= 0
-IP6_FRAGM           ?= 0
 DISABLE_DOC         ?= 0
 DNS_CLIENT          ?= 0
 ECDSA               ?= 0
+IP6_FRAGM           ?= 0
 JAM_DETECTION       ?= 0
 JOINER              ?= 0
 LEGACY              ?= 0
@@ -119,10 +119,6 @@ ifeq ($(DIAGNOSTIC),1)
 configure_OPTIONS              += --enable-diag
 endif
 
-ifeq ($(IP6_FRAGM),1)
-COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION=1
-endif
-
 ifeq ($(DISABLE_DOC),1)
 configure_OPTIONS              += --disable-docs
 endif
@@ -133,6 +129,10 @@ endif
 
 ifeq ($(ECDSA),1)
 configure_OPTIONS              += --enable-ecdsa
+endif
+
+ifeq ($(IP6_FRAGM),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION=1
 endif
 
 ifeq ($(JAM_DETECTION),1)

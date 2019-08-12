@@ -551,6 +551,7 @@ public:
     void Init(void)
     {
         mReserved       = 0;
+        mOffsetMore     = 0;
         mIdentification = 0;
     }
 
