@@ -34,6 +34,7 @@
 #include "key_manager.hpp"
 
 #include "common/code_utils.hpp"
+#include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/timer.hpp"
@@ -158,14 +159,11 @@ exit:
 void KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
 {
     Crypto::HmacSha256 hmac;
-    uint8_t            keySequenceBytes[4];
+    uint8_t            keySequenceBytes[sizeof(uint32_t)];
 
     hmac.Start(mMasterKey.m8, sizeof(mMasterKey.m8));
 
-    keySequenceBytes[0] = (aKeySequence >> 24) & 0xff;
-    keySequenceBytes[1] = (aKeySequence >> 16) & 0xff;
-    keySequenceBytes[2] = (aKeySequence >> 8) & 0xff;
-    keySequenceBytes[3] = aKeySequence & 0xff;
+    Encoding::BigEndian::WriteUint32(aKeySequence, keySequenceBytes);
     hmac.Update(keySequenceBytes, sizeof(keySequenceBytes));
     hmac.Update(kThreadString, sizeof(kThreadString));
 
