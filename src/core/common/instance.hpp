@@ -41,6 +41,7 @@
 #include "utils/wrap_stdbool.h"
 
 #include <openthread/error.h>
+#include <openthread/heap.h>
 #include <openthread/platform/logging.h>
 
 #include "common/random_manager.hpp"
@@ -249,7 +250,18 @@ public:
      */
     void InvokeEnergyScanCallback(otEnergyScanResult *aResult) const;
 
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#if OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
+    void  HeapFree(void *aPointer) { mFree(aPointer); }
+    void *HeapCAlloc(size_t aCount, size_t aSize) { return mCAlloc(aCount, aSize); }
+
+    static void HeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
+    {
+        mFree   = aFree;
+        mCAlloc = aCAlloc;
+    }
+#elif !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    void  HeapFree(void *aPointer) { mHeap.Free(aPointer); }
+    void *HeapCAlloc(size_t aCount, size_t aSize) { return mHeap.CAlloc(aCount, aSize); }
     /**
      * This method returns a reference to the Heap object.
      *
@@ -257,7 +269,7 @@ public:
      *
      */
     Utils::Heap &GetHeap(void) { return mHeap; }
-#endif
+#endif // OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     /**
@@ -372,6 +384,10 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     FactoryDiags::Diags mDiags;
+#endif
+#if OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
+    static otHeapFreeFn   mFree;
+    static otHeapCAllocFn mCAlloc;
 #endif
     bool mIsInitialized;
 };

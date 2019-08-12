@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,16 +28,11 @@
 
 /**
  * @file
- *   This file implements internal OpenThread heap.
+ *   This file implements heap.
  *
  */
 
-#include "openthread-core-config.h"
-
-#if !OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE && !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-
 #include "heap.hpp"
-#include "internal_heap.hpp"
 
 #include <string.h>
 
@@ -47,9 +42,7 @@
 namespace ot {
 namespace Utils {
 
-static InternalHeap sHeap;
-
-void InternalHeap::Init(void)
+Heap::Heap(void)
 {
     Block &super = BlockAt(kSuperBlockOffset);
     super.SetSize(kSuperBlockSize);
@@ -66,7 +59,7 @@ void InternalHeap::Init(void)
     mMemory.mFreeSize = kFirstBlockSize;
 }
 
-void *InternalHeap::CAlloc(size_t aCount, size_t aSize)
+void *Heap::CAlloc(size_t aCount, size_t aSize)
 {
     void *   ret  = NULL;
     Block *  prev = NULL;
@@ -124,7 +117,7 @@ exit:
     return ret;
 }
 
-void InternalHeap::BlockInsert(Block &aPrev, Block &aBlock)
+void Heap::BlockInsert(Block &aPrev, Block &aBlock)
 {
     Block *prev = &aPrev;
 
@@ -137,7 +130,7 @@ void InternalHeap::BlockInsert(Block &aPrev, Block &aBlock)
     prev->SetNext(BlockOffset(aBlock));
 }
 
-Block &InternalHeap::BlockPrev(const Block &aBlock)
+Block &Heap::BlockPrev(const Block &aBlock)
 {
     Block *prev = &BlockSuper();
 
@@ -149,7 +142,7 @@ Block &InternalHeap::BlockPrev(const Block &aBlock)
     return *prev;
 }
 
-void InternalHeap::Free(void *aPointer)
+void Heap::Free(void *aPointer)
 {
     if (aPointer == NULL)
     {
@@ -222,37 +215,5 @@ void InternalHeap::Free(void *aPointer)
     }
 }
 
-Heap::Heap(void)
-{
-    sHeap.Init();
-}
-
-void *Heap::CAlloc(size_t aCount, size_t aSize)
-{
-    return sHeap.CAlloc(aCount, aSize);
-}
-
-void Heap::Free(void *aPointer)
-{
-    sHeap.Free(aPointer);
-}
-
-bool Heap::IsClean(void) const
-{
-    return sHeap.IsClean();
-}
-
-size_t Heap::GetCapacity(void) const
-{
-    return sHeap.GetCapacity();
-}
-
-size_t Heap::GetFreeSize(void) const
-{
-    return sHeap.GetFreeSize();
-}
-
 } // namespace Utils
 } // namespace ot
-
-#endif // !OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE && !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE

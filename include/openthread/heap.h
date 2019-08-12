@@ -81,11 +81,8 @@ typedef void (*otHeapFreeFn)(void *aPointer);
  * @param[in]  aCAlloc  A pointer to external CAlloc function.
  * @param[in]  aFree    A pointer to external Free function.
  *
- * @retval OT_ERROR_NONE              External heap functions were set.
- * @retval OT_ERROR_DISABLED_FEATURE  External heap feature is disabled in this build.
- *
  */
-otError otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree);
+void otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree);
 
 /**
  * @}

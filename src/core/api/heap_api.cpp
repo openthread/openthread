@@ -35,20 +35,14 @@
 
 #include <openthread/heap.h>
 
-#include "utils/external_heap.hpp"
+#include "common/instance.hpp"
 
-using namespace ot::Utils;
-
-otError otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
-{
 #if OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
+otHeapFreeFn   ot::Instance::mFree   = NULL;
+otHeapCAllocFn ot::Instance::mCAlloc = NULL;
 
-    return HeapSetCAllocFree(aCAlloc, aFree);
-
-#else  // OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
-    OT_UNUSED_VARIABLE(aCAlloc);
-    OT_UNUSED_VARIABLE(aFree);
-
-    return OT_ERROR_DISABLED_FEATURE;
-#endif // OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
+void otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
+{
+    ot::Instance::HeapSetCAllocFree(aCAlloc, aFree);
 }
+#endif // OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE

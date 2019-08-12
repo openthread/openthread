@@ -217,8 +217,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/utils/channel_manager.cpp                      \
     src/core/utils/channel_monitor.cpp                      \
     src/core/utils/child_supervision.cpp                    \
-    src/core/utils/external_heap.cpp                        \
-    src/core/utils/internal_heap.cpp                        \
+    src/core/utils/heap.cpp                                 \
     src/core/utils/jam_detector.cpp                         \
     src/core/utils/missing_strlcpy.c                        \
     src/core/utils/missing_strlcat.c                        \
