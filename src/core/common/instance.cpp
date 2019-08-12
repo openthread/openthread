@@ -55,7 +55,7 @@ Instance::Instance(void)
     , mTimerMicroScheduler(*this)
 #endif
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && !OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
     , mHeap()
 #endif
     , mMbedTls()

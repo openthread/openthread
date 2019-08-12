@@ -251,8 +251,19 @@ public:
     void InvokeEnergyScanCallback(otEnergyScanResult *aResult) const;
 
 #if OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
-    void  HeapFree(void *aPointer) { mFree(aPointer); }
-    void *HeapCAlloc(size_t aCount, size_t aSize) { return mCAlloc(aCount, aSize); }
+    void HeapFree(void *aPointer)
+    {
+        assert(mFree != NULL);
+
+        mFree(aPointer);
+    }
+
+    void *HeapCAlloc(size_t aCount, size_t aSize)
+    {
+        assert(mCAlloc != NULL);
+
+        return mCAlloc(aCount, aSize);
+    }
 
     static void HeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
     {
@@ -327,8 +338,11 @@ private:
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     // RandomManager is initialized before other objects. Note that it
     // requires MbedTls which itself may use Heap.
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    Utils::Heap mHeap;
+#if OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
+    static otHeapFreeFn   mFree;
+    static otHeapCAllocFn mCAlloc;
+#elif !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    Utils::Heap  mHeap;
 #endif
     Crypto::MbedTls mMbedTls;
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -384,10 +398,6 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     FactoryDiags::Diags mDiags;
-#endif
-#if OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
-    static otHeapFreeFn   mFree;
-    static otHeapCAllocFn mCAlloc;
 #endif
     bool mIsInitialized;
 };
