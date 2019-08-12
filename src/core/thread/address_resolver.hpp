@@ -105,11 +105,12 @@ public:
     /**
      * This method updates an existing cache entry for the EID, if one exists.
      *
-     * @param[in]  aEid     A reference to the EID.
-     * @param[in]  aRloc16  The RLOC16 corresponding to @p aEid.
+     * @param[in]  aEid               A reference to the EID.
+     * @param[in]  aRloc16            The RLOC16 corresponding to @p aEid.
+     * @param[in]  aApplyOptimization Boolean indicates whether or not apply EID-to-RLOC map cache optimization.
      *
      */
-    void UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
+    void UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16, bool aApplyOptimization = false);
 
     /**
      * This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not known.

@@ -212,7 +212,7 @@ void AddressResolver::InvalidateCacheEntry(Cache &aEntry, InvalidationReason aRe
     aEntry.mState = Cache::kStateInvalid;
 }
 
-void AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
+void AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16, bool aApplyOptimization)
 {
     for (int i = 0; i < kCacheEntries; i++)
     {
@@ -241,6 +241,20 @@ void AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddre
         }
 
         ExitNow();
+    }
+
+    if (aApplyOptimization)
+    {
+        Cache *entry = NewCacheEntry();
+        VerifyOrExit(entry != NULL);
+
+        entry->mTarget   = aEid;
+        entry->mRloc16   = aRloc16;
+        entry->mTimeout  = 0;
+        entry->mFailures = 0;
+        entry->mState    = Cache::kStateCached;
+
+        MarkCacheEntryAsUsed(*entry);
     }
 
 exit:
