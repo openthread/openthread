@@ -364,11 +364,9 @@ public:
      * This method provides a received DTLS message to the DTLS object.
      *
      * @param[in]  aMessage  A reference to the message.
-     * @param[in]  aOffset   The offset within @p aMessage where the DTLS message starts.
-     * @param[in]  aLength   The size of the DTLS message (bytes).
      *
      */
-    void Receive(Message &aMessage, uint16_t aOffset, uint16_t aLength);
+    void Receive(Message &aMessage);
 
     /**
      * This method sets the default message sub-type that will be used for all messages without defined
@@ -488,10 +486,7 @@ private:
 
     bool mLayerTwoSecurity : 1;
 
-    const Message *mReceiveMessage;
-
-    uint16_t mReceiveOffset;
-    uint16_t mReceiveLength;
+    Message *mReceiveMessage;
 
     ConnectedHandler mConnectedHandler;
     ReceiveHandler   mReceiveHandler;
