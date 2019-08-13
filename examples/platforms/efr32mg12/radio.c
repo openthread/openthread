@@ -222,7 +222,7 @@ static void efr32RailConfigLoad(efr32BandConfig *aBandConfig)
     assert(status == RAIL_STATUS_NO_ERROR);
 }
 
-static void efr32RadioSetTxPower(uint8_t aPowerDbm)
+static void efr32RadioSetTxPower(int8_t aPowerDbm)
 {
     RAIL_Status_t              status;
     RAIL_TxPowerCurvesConfig_t txPowerCurvesConfig = {curves24Hp, curvesSg, curves24Lp, piecewiseSegments};
