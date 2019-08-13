@@ -277,12 +277,6 @@ otError Dhcp6Client::Solicit(uint16_t aRloc16)
 
 #if OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT
     messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xff03);
-    messageInfo.GetPeerAddr().mFields.m16[1] = HostSwap16(0x0000);
-    messageInfo.GetPeerAddr().mFields.m16[2] = HostSwap16(0x0000);
-    messageInfo.GetPeerAddr().mFields.m16[3] = HostSwap16(0x0000);
-    messageInfo.GetPeerAddr().mFields.m16[4] = HostSwap16(0x0000);
-    messageInfo.GetPeerAddr().mFields.m16[5] = HostSwap16(0x0000);
-    messageInfo.GetPeerAddr().mFields.m16[6] = HostSwap16(0x0000);
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(0x0002);
 #else
     memcpy(messageInfo.GetPeerAddr().mFields.m8, Get<Mle::MleRouter>().GetMeshLocalPrefix().m8,
@@ -442,6 +436,7 @@ void Dhcp6Client::ProcessReply(Message &aMessage)
     uint16_t offset = aMessage.GetOffset();
     uint16_t length = aMessage.GetLength() - aMessage.GetOffset();
     uint16_t optionOffset;
+	
     if ((optionOffset = FindOption(aMessage, offset, length, kOptionStatusCode)) > 0)
     {
         SuccessOrExit(ProcessStatusCode(aMessage, optionOffset));
