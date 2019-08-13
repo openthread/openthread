@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,70 +26,19 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define MAX_ITERATIONS 100
+#ifndef FUZZER_PLATFORM_H_
+#define FUZZER_PLATFORM_H_
 
-#include <stdlib.h>
-#include <string.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#include <openthread/instance.h>
-#include <openthread/ip6.h>
-#include <openthread/link.h>
-#include <openthread/ncp.h>
-#include <openthread/tasklet.h>
-#include <openthread/thread.h>
-#include <openthread/thread_ftd.h>
-#include <openthread/platform/uart.h>
+void FuzzerPlatformInit(void);
+void FuzzerPlatformProcess(otInstance *aInstance);
+bool FuzzerPlatformResetWasRequested(void);
 
-#include "fuzzer_platform.h"
-#include "common/code_utils.hpp"
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
-{
-    const otPanId panId = 0xdead;
-
-    otInstance *instance = NULL;
-    uint8_t *   buf      = NULL;
-
-    VerifyOrExit(size <= 65536);
-
-    FuzzerPlatformInit();
-
-    instance = otInstanceInitSingle();
-    otNcpInit(instance);
-    otLinkSetPanId(instance, panId);
-    otIp6SetEnabled(instance, true);
-    otThreadSetEnabled(instance, true);
-    otThreadBecomeLeader(instance);
-
-    buf = static_cast<uint8_t *>(malloc(size));
-
-    memcpy(buf, data, size);
-
-    otPlatUartReceived(buf, (uint16_t)size);
-
-    VerifyOrExit(!FuzzerPlatformResetWasRequested());
-
-    for (int i = 0; i < MAX_ITERATIONS; i++)
-    {
-        while (otTaskletsArePending(instance))
-        {
-            otTaskletsProcess(instance);
-        }
-
-        FuzzerPlatformProcess(instance);
-    }
-
-exit:
-
-    if (buf != NULL)
-    {
-        free(buf);
-    }
-
-    if (instance != NULL)
-    {
-        otInstanceFinalize(instance);
-    }
-
-    return 0;
-}
+#endif // FUZZER_PLATFORM_H_

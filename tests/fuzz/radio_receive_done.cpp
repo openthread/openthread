@@ -39,10 +39,8 @@
 #include <openthread/thread_ftd.h>
 #include <openthread/platform/radio.h>
 
+#include "fuzzer_platform.h"
 #include "common/code_utils.hpp"
-
-extern "C" void FuzzerPlatformInit(void);
-extern "C" void FuzzerPlatformProcess(otInstance *aInstance);
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
@@ -72,6 +70,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     memcpy(buf, data, frame.mLength);
 
     otPlatRadioReceiveDone(instance, &frame, OT_ERROR_NONE);
+
+    VerifyOrExit(!FuzzerPlatformResetWasRequested());
 
     for (int i = 0; i < MAX_ITERATIONS; i++)
     {
