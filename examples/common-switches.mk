@@ -45,6 +45,7 @@ DIAGNOSTIC          ?= 0
 DISABLE_DOC         ?= 0
 DNS_CLIENT          ?= 0
 ECDSA               ?= 0
+EXTERNAL_HEAP       ?= 0
 JAM_DETECTION       ?= 0
 JOINER              ?= 0
 LEGACY              ?= 0
@@ -60,7 +61,6 @@ SLAAC               ?= 1
 SNTP_CLIENT         ?= 0
 TIME_SYNC           ?= 0
 UDP_FORWARD         ?= 0
-EXTERNAL_HEAP       ?= 0
 
 
 ifeq ($(BIG_ENDIAN),1)
@@ -131,6 +131,10 @@ ifeq ($(ECDSA),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ECDSA_ENABLE=1
 endif
 
+ifeq ($(EXTERNAL_HEAP),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE=1
+endif
+
 ifeq ($(JAM_DETECTION),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_JAM_DETECTION_ENABLE=1
 endif
@@ -183,10 +187,6 @@ endif
 
 ifeq ($(UDP_FORWARD),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1
-endif
-
-ifeq ($(EXTERNAL_HEAP),1)
-COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE=1
 endif
 
 ifeq ($(DISABLE_BUILTIN_MBEDTLS),1)
