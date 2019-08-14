@@ -227,10 +227,17 @@ void BorderAgent::HandleCoapResponse(void *               aContext,
     Coap::Message *      message        = NULL;
     otError              error;
 
-    VerifyOrExit((message = NewMeshCoPMessage(instance.Get<Coap::CoapSecure>())) != NULL, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = aResult);
+    VerifyOrExit((message = NewMeshCoPMessage(instance.Get<Coap::CoapSecure>())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    if (forwardContext.IsPetition())
+    SuccessOrExit(error = forwardContext.ToHeader(*message, response->GetCode()));
+
+    if (response->GetLength() - response->GetOffset() > 0)
+    {
+        SuccessOrExit(error = message->SetPayloadMarker());
+    }
+
+    if (forwardContext.IsPetition() && response->GetCode() == OT_COAP_CODE_CHANGED)
     {
         StateTlv stateTlv;
 
@@ -250,13 +257,6 @@ void BorderAgent::HandleCoapResponse(void *               aContext,
             instance.Get<ThreadNetif>().AddUnicastAddress(borderAgent.mCommissionerAloc);
             instance.Get<Ip6::Udp>().AddReceiver(borderAgent.mUdpReceiver);
         }
-    }
-
-    SuccessOrExit(error = forwardContext.ToHeader(*message, response->GetCode()));
-
-    if (response->GetLength() - response->GetOffset() > 0)
-    {
-        SuccessOrExit(error = message->SetPayloadMarker());
     }
 
     SuccessOrExit(error = borderAgent.ForwardToCommissioner(*message, *response));
