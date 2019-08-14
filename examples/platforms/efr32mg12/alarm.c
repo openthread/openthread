@@ -137,15 +137,23 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
     expires_microsec = (t0 + dt) * US_IN_MS;
     status           = RAIL_SetTimer(gRailHandle, expires_microsec, RAIL_TIME_ABSOLUTE, RAILCb_TimerExpired);
 
-    if (status == RAIL_STATUS_NO_ERROR)
+    if (status != RAIL_STATUS_NO_ERROR)
     {
-        sIsRunning = true;
+        // The RAIL timer could not be set due to expiration time being in the past with respect to RAIL's current
+        // time which is in microseconds. We fallback to using a relative timer from the current time.
+
+        expires_microsec = dt * US_IN_MS;
+        status           = RAIL_SetTimer(gRailHandle, expires_microsec, RAIL_TIME_DELAY, RAILCb_TimerExpired);
+
+        if (status != RAIL_STATUS_NO_ERROR)
+        {
+            otLogCritPlat("Alarm start timer failed, status: %d, dt: %u, t0: %u, now: %u", status, dt, t0,
+                          otPlatAlarmMilliGetNow());
+            assert(false);
+        }
     }
-    else
-    {
-        sIsRunning = false;
-        otLogCritPlat("Alarm set timer, status: %d, dt: %u, t0: %u", status, dt, t0);
-    }
+
+    sIsRunning = true;
 }
 
 void otPlatAlarmMilliStop(otInstance *aInstance)
@@ -175,6 +183,9 @@ void efr32AlarmProcess(otInstance *aInstance)
 
         if (sAlarmDt > RAIL_TIMER_MAX_DELTA_MS)
         {
+            // We split longer delays in two due to the maximum allowed timer in RAIL.  Here we
+            // re-arm the RAIL timer with the remaining part of the alarm.
+
             now = otPlatAlarmMilliGetNow();
             dt  = (sAlarmT0 + sAlarmDt) - now;
 
@@ -190,27 +201,33 @@ void efr32AlarmProcess(otInstance *aInstance)
             new_expires_microsec = (now + dt) * US_IN_MS;
             status = RAIL_SetTimer(gRailHandle, new_expires_microsec, RAIL_TIME_ABSOLUTE, RAILCb_TimerExpired);
 
-            if (status == RAIL_STATUS_NO_ERROR)
+            if (status != RAIL_STATUS_NO_ERROR)
             {
-                sIsRunning = true;
-            }
-            else
-            {
-                sIsRunning = false;
-                otLogCritPlat("Alarm set timer, status: %d, expires: %u, dt: %u, now: %u", status, sAlarmT0 + sAlarmDt,
-                              dt, now);
-            }
-        }
+                new_expires_microsec = dt * US_IN_MS;
+                status = RAIL_SetTimer(gRailHandle, new_expires_microsec, RAIL_TIME_DELAY, RAILCb_TimerExpired);
 
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
-        if (otPlatDiagModeGet())
-        {
-            otPlatDiagAlarmFired(aInstance);
+                if (status != RAIL_STATUS_NO_ERROR)
+                {
+                    otLogCritPlat("Alarm extend timer failed, status: %d, dt: %u, now: %u", status, dt,
+                                  otPlatAlarmMilliGetNow());
+                    assert(false);
+                }
+            }
+
+            sIsRunning = true;
         }
         else
-#endif
         {
-            otPlatAlarmMilliFired(aInstance);
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+            if (otPlatDiagModeGet())
+            {
+                otPlatDiagAlarmFired(aInstance);
+            }
+            else
+#endif
+            {
+                otPlatAlarmMilliFired(aInstance);
+            }
         }
     }
 exit:
