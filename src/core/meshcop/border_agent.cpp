@@ -159,13 +159,13 @@ static Coap::Message::Code CoapCodeFromError(otError aError)
     return code;
 }
 
-static void SendErrorMessage(Coap::CoapSecure &aCoapSecure, ForwardContext &aForwardContext)
+static void SendErrorMessage(Coap::CoapSecure &aCoapSecure, ForwardContext &aForwardContext, otError aError)
 {
     otError        error   = OT_ERROR_NONE;
     Coap::Message *message = NULL;
 
     VerifyOrExit((message = NewMeshCoPMessage(aCoapSecure)) != NULL, error = OT_ERROR_NO_BUFS);
-    SuccessOrExit(error = aForwardContext.ToHeader(*message, CoapCodeFromError(error)));
+    SuccessOrExit(error = aForwardContext.ToHeader(*message, CoapCodeFromError(aError)));
     SuccessOrExit(error = aCoapSecure.SendMessage(*message, aCoapSecure.GetPeerAddress()));
 
 exit:
@@ -180,7 +180,10 @@ exit:
     }
 }
 
-static void SendErrorMessage(Coap::CoapSecure &aCoapSecure, const Coap::Message &aRequest, bool aSeparate)
+static void SendErrorMessage(Coap::CoapSecure &   aCoapSecure,
+                             const Coap::Message &aRequest,
+                             bool                 aSeparate,
+                             otError              aError)
 {
     otError        error   = OT_ERROR_NONE;
     Coap::Message *message = NULL;
@@ -189,11 +192,11 @@ static void SendErrorMessage(Coap::CoapSecure &aCoapSecure, const Coap::Message 
 
     if (aRequest.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE || aSeparate)
     {
-        message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, CoapCodeFromError(error));
+        message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, CoapCodeFromError(aError));
     }
     else
     {
-        message->Init(OT_COAP_TYPE_ACKNOWLEDGMENT, CoapCodeFromError(error));
+        message->Init(OT_COAP_TYPE_ACKNOWLEDGMENT, CoapCodeFromError(aError));
     }
 
     message->SetMessageId(aSeparate ? 0 : aRequest.GetMessageId());
@@ -272,7 +275,7 @@ exit:
         otLogWarnMeshCoP("Commissioner request[%hu] failed: %s", forwardContext.GetMessageId(),
                          otThreadErrorToString(error));
 
-        SendErrorMessage(instance.Get<Coap::CoapSecure>(), forwardContext);
+        SendErrorMessage(instance.Get<Coap::CoapSecure>(), forwardContext, error);
     }
 
     instance.GetHeap().Free(&forwardContext);
@@ -619,7 +622,7 @@ exit:
 
         otLogWarnMeshCoP("Failed to forward to leader: %s", otThreadErrorToString(error));
 
-        SendErrorMessage(Get<Coap::CoapSecure>(), aMessage, aSeparate);
+        SendErrorMessage(Get<Coap::CoapSecure>(), aMessage, aSeparate, error);
     }
 
     return error;
