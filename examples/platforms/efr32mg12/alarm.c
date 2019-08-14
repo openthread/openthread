@@ -147,9 +147,7 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 
         if (status != RAIL_STATUS_NO_ERROR)
         {
-            uint32_t now = otPlatAlarmMilliGetNow();
-            otLogCritPlat("Alarm start timer failed, status: %d, dt: %u, t0: %u, now: %u", status, dt, t0, now);
-            (void)now;
+            otLogCritPlat("Alarm start timer failed, status: %d, dt: %u, t0: %u, now: %u", status, dt, t0, otPlatAlarmMilliGetNow());
             assert(false);
         }
     }
@@ -209,8 +207,7 @@ void efr32AlarmProcess(otInstance *aInstance)
 
                 if (status != RAIL_STATUS_NO_ERROR)
                 {
-                    now = otPlatAlarmMilliGetNow();
-                    otLogCritPlat("Alarm extend timer failed, status: %d, dt: %u, now: %u", status, dt, now);
+                    otLogCritPlat("Alarm extend timer failed, status: %d, dt: %u, now: %u", status, dt, otPlatAlarmMilliGetNow());
                     assert(false);
                 }
             }
