@@ -1026,6 +1026,10 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
                 rvalAddr          = addr;
                 rvalPrefixMatched = candidatePrefixMatched;
             }
+            else
+            {
+                continue;
+            }
         }
         else if (addr->GetScope() > rvalAddr->GetScope())
         {
@@ -1033,6 +1037,10 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
             {
                 rvalAddr          = addr;
                 rvalPrefixMatched = candidatePrefixMatched;
+            }
+            else
+            {
+                continue;
             }
         }
         else if ((rvalAddr->GetScope() == Address::kRealmLocalScope) && (addr->GetScope() == Address::kRealmLocalScope))
@@ -1042,6 +1050,10 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
             {
                 rvalAddr          = addr;
                 rvalPrefixMatched = candidatePrefixMatched;
+            }
+            else
+            {
+                continue;
             }
         }
         else if (addr->mPreferred && !rvalAddr->mPreferred)
@@ -1057,6 +1069,16 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
             // Rule 8: Use longest prefix matching
             rvalAddr          = addr;
             rvalPrefixMatched = candidatePrefixMatched;
+        }
+        else
+        {
+            continue;
+        }
+
+        // infer destination scope based on prefix match
+        if (rvalPrefixMatched >= rvalAddr->mPrefixLength)
+        {
+            destinationScope = rvalAddr->GetScope();
         }
     }
 
