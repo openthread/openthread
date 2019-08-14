@@ -125,6 +125,11 @@ void MleRouter::SetRouterRoleEnabled(bool aEnabled)
 
         break;
     }
+
+    if (IsRouterRoleEnabled() && IsAttached() && !mStateUpdateTimer.IsRunning())
+    {
+        mStateUpdateTimer.Start(kStateUpdatePeriod);
+    }
 }
 
 otError MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
