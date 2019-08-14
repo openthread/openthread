@@ -125,8 +125,8 @@ void MleRouter::SetRouterRoleEnabled(bool aEnabled)
 
         break;
     }
-	
-    if (aEnabled && !mStateUpdateTimer.IsRunning() && IsFullThreadDevice() && (mRole != OT_DEVICE_ROLE_DISABLED))
+
+    if (IsRouterRoleEnabled() && IsAttached() && !mStateUpdateTimer.IsRunning())
     {
         mStateUpdateTimer.Start(kStateUpdatePeriod);
     }
