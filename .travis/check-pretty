@@ -27,26 +27,48 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-[ -n "$BUILD_TARGET" ] || exit 0
+set -e -x -o pipefail
 
-set -e
-
-codecov_upload() {
-    curl -s https://codecov.io/bash > codecov
-    chmod a+x codecov
-
-    # Assume gcov by default, and llvm-cov if CC is clang
-    if [[ -z $CC ]]; then
-        ./codecov
-    elif  "$CC" --version | grep -q gcc; then
-        ./codecov
-    elif "$CC" --version | grep -q clang; then
-        ./codecov -x "llvm-cov gcov"
-    fi
+setup_python()
+{
+  python -m pip install flake8
 }
 
-main() {
-    codecov_upload
+check_python()
+{
+  flake8 --config=script/pystyle.cfg tests tools
+}
+
+check_clang()
+{
+  clang-format --version
+  ./bootstrap
+  ./configure
+  make pretty-check
+}
+
+main()
+{
+  case $1 in
+    setup)
+      setup_python
+      ;;
+    python)
+      check_python
+      ;;
+    clang)
+      check_cpp
+      ;;
+    '')
+      setup_python
+      check_python
+      check_clang
+      ;;
+    *)
+      echo "USAGE: $0 [setup|python|clang]"
+      exit 1
+      ;;
+  esac
 }
 
 main "$@"

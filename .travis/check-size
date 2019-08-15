@@ -1,0 +1,107 @@
+#!/bin/bash
+#
+#  Copyright (c) 2019, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+set -e -x -o pipefail
+
+setup_arm_gcc_7()
+{
+  if arm-none-eabi-gcc --version | grep -q 'Arm Embedded Processors 7'; then
+    return 0
+  fi
+
+  (cd /tmp/
+   wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
+   tar xjf gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2)
+  export PATH=/tmp/gcc-arm-none-eabi-7-2018-q2-update/bin:$PATH
+
+  arm-none-eabi-gcc --version
+}
+
+size_nrf52840()
+{
+    [ ${TRAVIS_PULL_REQUEST} != false ]
+
+    mkdir ../output
+
+    export MERGE_BASE_SHA=$(git merge-base HEAD ${TRAVIS_BRANCH})
+
+    # pull request
+    OPENTHREAD_FLAGS="BORDER_AGENT=1 BORDER_ROUTER=1 CHANNEL_MANAGER=1 CHANNEL_MONITOR=1 CHILD_SUPERVISION=1 COAP=1 COAPS=1 COMMISSIONER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DIAGNOSTIC=1 DISABLE_DOC=1 DNS_CLIENT=1 ECDSA=1 FULL_LOGS=1 JAM_DETECTION=1 JOINER=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 SLAAC=1 SNTP_CLIENT=1 TIME_SYNC=1 UDP_FORWARD=1"
+
+    git checkout -- .
+    git clean -xfd
+    ./bootstrap
+    make -f examples/Makefile-nrf52840 ${OPENTHREAD_FLAGS}
+    mv output/nrf52840 ../output/nrf52840-b
+
+    git checkout ${MERGE_BASE_SHA}
+    git submodule update --init
+
+    # base branch
+    git checkout -- .
+    git clean -xfd
+    ./bootstrap
+    make -f examples/Makefile-nrf52840 ${OPENTHREAD_FLAGS}
+    mv output/nrf52840 ../output/nrf52840-a
+
+    curl -s "${SIZE_REPORT_URL}/bash" > size-report
+    chmod a+x size-report
+
+    ./size-report init OpenThread
+
+    ./size-report size ../output/nrf52840-a/bin/ot-cli-ftd ../output/nrf52840-b/bin/ot-cli-ftd
+    ./size-report size ../output/nrf52840-a/bin/ot-cli-mtd ../output/nrf52840-b/bin/ot-cli-mtd
+    ./size-report size ../output/nrf52840-a/bin/ot-ncp-ftd ../output/nrf52840-b/bin/ot-ncp-ftd
+    ./size-report size ../output/nrf52840-a/bin/ot-ncp-mtd ../output/nrf52840-b/bin/ot-ncp-mtd
+    ./size-report size ../output/nrf52840-a/bin/ot-rcp     ../output/nrf52840-b/bin/ot-rcp
+
+    ./size-report post
+}
+
+main()
+{
+  case $1 in
+    setup)
+      setup_arm_gcc_7
+      ;;
+    nrf52840)
+      size_nrf52840
+      ;;
+    '')
+      setup_arm_gcc_7
+      size_nrf52840
+      ;;
+    *)
+      echo "USAGE: $0 [setup|nrf52840]"
+      exit 1
+      ;;
+  esac
+}
+
+main "$@"

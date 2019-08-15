@@ -27,6 +27,8 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+[ -n "$BUILD_TARGET" ] || exit 0
+
 die() {
 	echo " *** ERROR: " $*
 	exit 1
@@ -57,15 +59,6 @@ cd /tmp || die
         unzip android-ndk-r17c-linux-x86_64.zip > /dev/null
         mv android-ndk-r17c ndk-bundle
         ) || die
-    }
-
-    [ $BUILD_TARGET != pretty-check ] || {
-        clang-format --version || die
-    }
-
-    [ $BUILD_TARGET != py-pretty-check ] || {
-        pip install --upgrade pip || die
-        python -m pip install flake8 || die
     }
 
     [ $BUILD_TARGET != posix-app-pty ] || {
@@ -108,7 +101,7 @@ cd /tmp || die
         arm-none-eabi-gcc --version || die
     }
 
-    [ $BUILD_TARGET != arm-gcc-7 -a $BUILD_TARGET != size-report ] || {
+    [ $BUILD_TARGET != arm-gcc-7 ] || {
         wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2 || die
         tar xjf gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2 || die
         export PATH=/tmp/gcc-arm-none-eabi-7-2018-q2-update/bin:$PATH || die
