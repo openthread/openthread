@@ -48,6 +48,9 @@ ECDSA               ?= 0
 JAM_DETECTION       ?= 0
 JOINER              ?= 0
 LEGACY              ?= 0
+ifeq ($(REFERENCE_DEVICE),1)
+LOG_OUTPUT          ?= APP
+endif
 LINK_RAW            ?= 0
 MAC_FILTER          ?= 0
 MTD_NETDIAG         ?= 0
@@ -146,6 +149,10 @@ ifeq ($(LINK_RAW),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LINK_RAW_ENABLE=1
 endif
 
+ifneq ($(LOG_OUTPUT),)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_$(LOG_OUTPUT)
+endif
+
 ifeq ($(MAC_FILTER),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1
 endif
@@ -160,7 +167,6 @@ endif
 
 # Enable features only required for reference device during certification.
 ifeq ($(REFERENCE_DEVICE),1)
-COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_APP
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE=1
 endif
 

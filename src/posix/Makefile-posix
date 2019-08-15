@@ -53,6 +53,7 @@ JAM_DETECTION                        ?= 1
 JOINER                               ?= 1
 LEGACY                               ?= 1
 LINK_RAW                             ?= 0
+LOG_OUTPUT                           ?= PLATFORM_DEFINED
 MAC_FILTER                           ?= 1
 MTD_NETDIAG                          ?= 1
 READLINE                             ?= readline
