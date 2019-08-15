@@ -46,6 +46,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_DHCP6_MULTICAST_SOLICIT
+ *
+ * Define to 1 to enable DHCPv6 multicast solicit.
+ *
+ */
+#ifndef OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT
+#define OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_DHCP6_CLIENT_NUM_PREFIXES
  *
  * The number of dhcp prefixes.
