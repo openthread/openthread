@@ -1288,6 +1288,16 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_NEST_STREAM_MFG(uint8_t aHeader)
     VerifyOrExit(error == OT_ERROR_NONE, error = WriteLastStatusFrame(aHeader, ThreadErrorToSpinelStatus(error)));
 
     output[sizeof(output) - 1] = '\0';
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    // TODO do not pass mfg prefix
+    // skip mfg prefix from wpantund
+    if (memcmp(string, "mfg ", 4) == 0)
+    {
+        string += 4;
+    }
+#endif
+
     otDiagProcessCmdLine(mInstance, string, output, sizeof(output) - 1);
 
     // Prepare the response

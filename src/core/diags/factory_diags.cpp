@@ -475,15 +475,7 @@ exit:
     {
     case OT_ERROR_NONE:
 
-        if (argCount >= 1)
-        {
-            ProcessCmd(argCount - 1, (argCount == 1) ? NULL : &argVector[1], aOutput, aOutputMaxLen);
-        }
-        else
-        {
-            ProcessCmd(0, NULL, aOutput, aOutputMaxLen);
-        }
-
+        ProcessCmd(argCount, &argVector[0], aOutput, aOutputMaxLen);
         break;
 
     case OT_ERROR_NO_BUFS:
