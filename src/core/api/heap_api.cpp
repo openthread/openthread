@@ -37,7 +37,7 @@
 
 #include "common/instance.hpp"
 
-#if OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 otHeapFreeFn   ot::Instance::mFree   = NULL;
 otHeapCAllocFn ot::Instance::mCAlloc = NULL;
 
@@ -45,4 +45,4 @@ void otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
 {
     ot::Instance::HeapSetCAllocFree(aCAlloc, aFree);
 }
-#endif // OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
+#endif // OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE

@@ -250,7 +250,7 @@ public:
      */
     void InvokeEnergyScanCallback(otEnergyScanResult *aResult) const;
 
-#if OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     void HeapFree(void *aPointer)
     {
         assert(mFree != NULL);
@@ -280,7 +280,7 @@ public:
      *
      */
     Utils::Heap &GetHeap(void) { return mHeap; }
-#endif // OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
+#endif // OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     /**
@@ -338,7 +338,7 @@ private:
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     // RandomManager is initialized before other objects. Note that it
     // requires MbedTls which itself may use Heap.
-#if OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     static otHeapFreeFn   mFree;
     static otHeapCAllocFn mCAlloc;
 #elif !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
