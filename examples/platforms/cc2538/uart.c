@@ -179,7 +179,7 @@ void processReceive(void)
     }
 }
 
-void processTransmit(void)
+otError otPlatUartFlush(void)
 {
     otEXPECT(sTransmitBuffer != NULL);
 
@@ -192,10 +192,16 @@ void processTransmit(void)
     }
 
     sTransmitBuffer = NULL;
-    otPlatUartSendDone();
+    return OT_ERROR_NONE;
 
 exit:
-    return;
+    return OT_ERROR_INVALID_STATE;
+}
+
+void processTransmit(void)
+{
+    otPlatUartFlush();
+    otPlatUartSendDone();
 }
 
 void cc2538UartProcess(void)

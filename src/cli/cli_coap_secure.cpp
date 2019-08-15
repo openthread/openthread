@@ -33,7 +33,7 @@
 
 #include "cli_coap_secure.hpp"
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
 #include <mbedtls/debug.h>
 #include <openthread/ip6.h>
@@ -586,4 +586,4 @@ exit:
 } // namespace Cli
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE

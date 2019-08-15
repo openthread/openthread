@@ -54,70 +54,70 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_SLAAC
+ * @def OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
  *
  * Define as 1 to enable support for adding of auto-configured SLAAC addresses by OpenThread.
  *
  */
-#ifndef OPENTHREAD_CONFIG_ENABLE_SLAAC /* allows command line override */
-#define OPENTHREAD_CONFIG_ENABLE_SLAAC 1
+#ifndef OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE /* allows command line override */
+#define OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE 1
 #endif
 
 #if OPENTHREAD_RADIO
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
+ * @def OPENTHREAD_CONFIG_SOFTWARE_ACK_TIMEOUT_ENABLE
  *
  * Define to 1 if you want to enable software ACK timeout logic.
  *
  */
-#ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT 1
+#ifndef OPENTHREAD_CONFIG_SOFTWARE_ACK_TIMEOUT_ENABLE
+#define OPENTHREAD_CONFIG_SOFTWARE_ACK_TIMEOUT_ENABLE 1
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
+ * @def OPENTHREAD_CONFIG_SOFTWARE_ENERGY_SCAN_ENABLE
  *
  * Define to 1 if you want to enable software energy scanning logic.
  *
- * Applicable only if raw link layer API is enabled (i.e., `OPENTHREAD_ENABLE_RAW_LINK_API` is set).
+ * Applicable only if raw link layer API is enabled (i.e., `OPENTHREAD_CONFIG_LINK_RAW_ENABLE` is set).
  *
  */
-#ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN 1
+#ifndef OPENTHREAD_CONFIG_SOFTWARE_ENERGY_SCAN_ENABLE
+#define OPENTHREAD_CONFIG_SOFTWARE_ENERGY_SCAN_ENABLE 1
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
+ * @def OPENTHREAD_CONFIG_SOFTWARE_RETRANSMIT_ENABLE
  *
  * Define to 1 if you want to enable software retransmission logic.
  *
- * Applicable only if raw link layer API is enabled (i.e., `OPENTHREAD_ENABLE_RAW_LINK_API` is set).
+ * Applicable only if raw link layer API is enabled (i.e., `OPENTHREAD_CONFIG_LINK_RAW_ENABLE` is set).
  *
  */
-#ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT 1
+#ifndef OPENTHREAD_CONFIG_SOFTWARE_RETRANSMIT_ENABLE
+#define OPENTHREAD_CONFIG_SOFTWARE_RETRANSMIT_ENABLE 1
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
+ * @def OPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE
  *
  * Define to 1 if you want to enable software CSMA-CA backoff logic.
  *
- * Applicable only if raw link layer API is enabled (i.e., `OPENTHREAD_ENABLE_RAW_LINK_API` is set).
+ * Applicable only if raw link layer API is enabled (i.e., `OPENTHREAD_CONFIG_LINK_RAW_ENABLE` is set).
  *
  */
-#ifndef OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF 1
+#ifndef OPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE
+#define OPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE 1
 #endif
 #endif // OPENTHREAD_RADIO
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+ * @def OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
  *
  * Define to 1 if you want to support microsecond timer in platform.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER 1
+#define OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE 1
 
 /**
  * @def CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER

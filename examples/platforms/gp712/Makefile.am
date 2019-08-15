@@ -47,6 +47,7 @@ PLATFORM_SOURCES                          = \
     logging.c                               \
     misc.c                                  \
     openthread-core-gp712-config.h          \
+    openthread-core-gp712-config-check.h    \
     platform_qorvo.h                        \
     radio.c                                 \
     radio_qorvo.h                           \

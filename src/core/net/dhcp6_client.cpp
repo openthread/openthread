@@ -43,7 +43,7 @@
 #include "net/dhcp6.hpp"
 #include "thread/thread_netif.hpp"
 
-#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+#if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -321,7 +321,7 @@ otError Dhcp6Client::AppendClientIdentifier(Message &aMessage)
     ClientIdentifier option;
     Mac::ExtAddress  eui64;
 
-    otPlatRadioGetIeeeEui64(&GetInstance(), eui64.m8);
+    Get<Radio>().GetIeeeEui64(eui64);
 
     option.Init();
     option.SetDuidType(kDuidLL);
@@ -494,7 +494,7 @@ otError Dhcp6Client::ProcessClientIdentifier(Message &aMessage, uint16_t aOffset
     ClientIdentifier option;
     Mac::ExtAddress  eui64;
 
-    otPlatRadioGetIeeeEui64(&GetInstance(), eui64.m8);
+    Get<Radio>().GetIeeeEui64(eui64);
 
     VerifyOrExit((((aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option)) &&
                    (option.GetLength() == (sizeof(option) - sizeof(Dhcp6Option))) &&
@@ -593,4 +593,4 @@ exit:
 } // namespace Dhcp6
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
+#endif // OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE

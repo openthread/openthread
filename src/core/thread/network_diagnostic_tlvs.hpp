@@ -45,7 +45,8 @@
 #include "common/tlvs.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "net/ip6_address.hpp"
-#include "phy/phy.hpp"
+#include "radio/radio.hpp"
+#include "thread/device_mode.hpp"
 #include "thread/mle_constants.hpp"
 
 namespace ot {
@@ -275,29 +276,21 @@ public:
      */
     bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
 
-    enum
-    {
-        kModeRxOnWhenIdle      = 1 << 3,
-        kModeSecureDataRequest = 1 << 2,
-        kModeFullThreadDevice  = 1 << 1,
-        kModeFullNetworkData   = 1 << 0,
-    };
-
     /**
-     * This method returns the Mode value.
+     * This method returns the Device Mode.
      *
-     * @returns The Mode value.
+     * @returns The Device Mode.
      *
      */
-    uint8_t GetMode(void) const { return mMode; }
+    Mle::DeviceMode GetMode(void) const { return Mle::DeviceMode(mMode); }
 
     /**
-     * This method sets the Mode value.
+     * This method sets the Device Mode
      *
-     * @param[in]  aMode  The Mode value.
+     * @param[in]  aMode  The Device Mode
      *
      */
-    void SetMode(uint8_t aMode) { mMode = aMode; }
+    void SetMode(Mle::DeviceMode aMode) { mMode = aMode.Get(); }
 
 private:
     uint8_t mMode;
@@ -1255,20 +1248,20 @@ public:
     }
 
     /**
-     * This method returns the Mode value.
+     * This method returns the Device Mode
      *
-     * @returns The Mode value.
+     * @returns The Device Mode
      *
      */
-    uint8_t GetMode(void) const { return mMode; }
+    Mle::DeviceMode GetMode(void) const { return Mle::DeviceMode(mMode); }
 
     /**
-     * This method sets the Mode value.
+     * This method sets the Device Mode.
      *
-     * @param[in]  aMode  The Mode value.
+     * @param[in]  aMode  The Device Mode.
      *
      */
-    void SetMode(uint8_t aMode) { mMode = aMode; }
+    void SetMode(Mle::DeviceMode aMode) { mMode = aMode.Get(); }
 
     /**
      * This method returns the Reserved value.
@@ -1384,7 +1377,7 @@ public:
     uint8_t *GetChannelPages(void) { return mChannelPages; }
 
 private:
-    uint8_t mChannelPages[Phy::kNumChannelPages];
+    uint8_t mChannelPages[Radio::kNumChannelPages];
 } OT_TOOL_PACKED_END;
 
 /**

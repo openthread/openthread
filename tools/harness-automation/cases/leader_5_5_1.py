@@ -34,10 +34,12 @@ import unittest
 
 from autothreadharness.harness_case import HarnessCase
 
+
 class Leader_5_5_1(HarnessCase):
     role = HarnessCase.ROLE_LEADER
     case = '5 5 1'
     golden_devices_required = 1
+
     def on_dialog(self, dialog, title):
         if title.startswith('User Input Required'):
             body = dialog.find_element_by_id('cnfrmMsg').text
@@ -50,6 +52,7 @@ class Leader_5_5_1(HarnessCase):
             time.sleep(timeout)
             self.dut.start()
             return False
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -31,9 +31,9 @@
  *   This file implements the OpenThread Server API.
  */
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 #include <openthread/server.h>
 
@@ -108,4 +108,4 @@ otError otServerRegister(otInstance *aInstance)
     return instance.Get<NetworkData::Local>().SendServerDataNotification();
 }
 
-#endif // OPENTHREAD_ENABLE_SERVICE
+#endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE

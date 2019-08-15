@@ -42,10 +42,43 @@
 #include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
 #endif
 
-#include "openthread-core-default-config.h"
+#include "config/openthread-core-default-config.h"
+
+#include "config/announce_sender.h"
+#include "config/border_router.h"
+#include "config/channel_manager.h"
+#include "config/channel_monitor.h"
+#include "config/child_supervision.h"
+#include "config/coap.h"
+#include "config/commissioner.h"
+#include "config/dhcp6_client.h"
+#include "config/dhcp6_server.h"
+#include "config/diag.h"
+#include "config/dns_client.h"
+#include "config/ip6.h"
+#include "config/joiner.h"
+#include "config/link_quality.h"
+#include "config/link_raw.h"
+#include "config/logging.h"
+#include "config/mac.h"
+#include "config/mle.h"
+#include "config/parent_search.h"
+#include "config/platform.h"
+#include "config/sntp_client.h"
+#include "config/time_sync.h"
+#include "config/tmf.h"
+
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || \
+    OPENTHREAD_CONFIG_COMMISSIONER_ENABLE || OPENTHREAD_CONFIG_JOINER_ENABLE
+#define OPENTHREAD_CONFIG_DTLS_ENABLE 1
+#endif
 
 #undef OPENTHREAD_CORE_CONFIG_H_IN
 
-#include "openthread-core-config-check.h"
+#include "config/openthread-core-config-check.h"
+
+#ifdef OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE
+#include OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE
+#endif
 
 #endif // OPENTHREAD_CORE_CONFIG_H_

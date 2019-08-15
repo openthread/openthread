@@ -405,7 +405,7 @@ exit:
     return message;
 }
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
 const char *Message::CodeToString(void) const
 {
     const char *codeString;
@@ -500,7 +500,7 @@ const char *Message::CodeToString(void) const
 
     return codeString;
 }
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
+#endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
 
 } // namespace Coap
 } // namespace ot

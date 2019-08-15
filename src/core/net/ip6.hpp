@@ -107,9 +107,9 @@ class Ip6 : public InstanceLocator
 public:
     enum
     {
-        kDefaultHopLimit            = OPENTHREAD_CONFIG_IPV6_DEFAULT_HOP_LIMIT,
-        kMaxDatagramLength          = OPENTHREAD_CONFIG_IPV6_DEFAULT_MAX_DATAGRAM,
-        kMaxAssembledDatagramLength = OPENTHREAD_CONFIG_IPV6_MAX_ASSEMBLED_DATAGRAM,
+        kDefaultHopLimit            = OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT,
+        kMaxDatagramLength          = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH,
+        kMaxAssembledDatagramLength = OPENTHREAD_CONFIG_IP6_MAX_ASSEMBLED_DATAGRAM,
         kIp6ReassemblyTimeout       = OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT,
         kMinimalMtu                 = 1280,
         kStateUpdatePeriod          = 1000,
@@ -361,7 +361,7 @@ private:
                                    bool         aReceive);
     otError HandleFragmentation(Message &aMessage, IpProto aIpProto);
     otError HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromNcpHost);
-#if OPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION
+#if OPENTHREAD_CONFIG_IP6_ENABLE_FRAGMENTATION
     void        CleanupFragmentationBuffer(void);
     void        HandleUpdateTimer(void);
     void        UpdateReassemblyList(void);
@@ -389,7 +389,7 @@ private:
     Udp  mUdp;
     Mpl  mMpl;
 
-#if OPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION
+#if OPENTHREAD_CONFIG_IP6_ENABLE_FRAGMENTATION
     TimerMilli   mTimer;
     MessageQueue mReassemblyList;
 #endif

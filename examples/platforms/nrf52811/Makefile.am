@@ -72,12 +72,14 @@ COMMONCPPFLAGS                                                                  
 
 PLATFORM_COMMON_SOURCES                                                                                    = \
     alarm.c                                                                                                  \
+    diag.c                                                                                                   \
     entropy.c                                                                                                \
     fem.c                                                                                                    \
     flash.c                                                                                                  \
     logging.c                                                                                                \
     misc.c                                                                                                   \
     openthread-core-nrf52811-config.h                                                                        \
+    openthread-core-nrf52811-config-check.h                                                                  \
     platform-config.h                                                                                        \
     platform-fem.h                                                                                           \
     platform-nrf5.h                                                                                          \
@@ -96,19 +98,9 @@ SINGLEPHY_CPPFLAGS                                                              
     -DRAAL_SINGLE_PHY=1                                                                                      \
     $(NULL)
 
-PLATFORM_DIAG_SOURCES                                                                                      = \
-    diag.c                                                                                                   \
-    $(NULL)
-
 PLATFORM_SOURCES                                                                                           = \
     $(PLATFORM_COMMON_SOURCES)                                                                               \
     $(NULL)
-
-if OPENTHREAD_ENABLE_DIAG
-PLATFORM_SOURCES                                                                                          += \
-    $(PLATFORM_DIAG_SOURCES)                                                                                 \
-    $(NULL)
-endif
 
 libopenthread_nrf52811_a_CPPFLAGS                                                                          = \
     $(COMMONCPPFLAGS)                                                                                        \
@@ -132,7 +124,6 @@ libopenthread_nrf52811_sdk_a_SOURCES                                            
 
 PRETTY_FILES                                                                                               = \
     $(PLATFORM_COMMON_SOURCES)                                                                               \
-    $(PLATFORM_DIAG_SOURCES)                                                                                 \
     $(NULL)
 Dash                                                                                                       = -
 

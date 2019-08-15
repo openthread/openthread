@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import command
@@ -38,13 +37,14 @@ LEADER = 1
 DUT_ROUTER1 = 2
 MED1 = 3
 
+
 class Cert_5_3_11_AddressQueryTimeoutIntervals(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
         for i in range(1, 4):
-            self.nodes[i] = node.Node(i, (i == MED1), simulator = self.simulator)
+            self.nodes[i] = node.Node(i, (i == MED1), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
@@ -64,9 +64,9 @@ class Cert_5_3_11_AddressQueryTimeoutIntervals(unittest.TestCase):
         self.nodes[MED1].enable_whitelist()
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -83,7 +83,8 @@ class Cert_5_3_11_AddressQueryTimeoutIntervals(unittest.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[MED1].get_state(), 'child')
 
-        # 2 MED1: MED1 sends an ICMPv6 Echo Request to a non-existent mesh-local address X
+        # 2 MED1: MED1 sends an ICMPv6 Echo Request to a non-existent
+        # mesh-local address X
         X = "fdde:ad00:beef:0000:aa55:aa55:aa55:aa55"
         self.assertFalse(self.nodes[MED1].ping(X))
 
@@ -92,9 +93,14 @@ class Cert_5_3_11_AddressQueryTimeoutIntervals(unittest.TestCase):
         # Verify DUT_ROUTER1 sent an Address Query Request message
         dut_router1_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
         msg = dut_router1_messages.next_coap_message('0.02', '/a/aq')
-        command.check_address_query(msg, self.nodes[DUT_ROUTER1], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
+        command.check_address_query(
+            msg,
+            self.nodes[DUT_ROUTER1],
+            config.REALM_LOCAL_ALL_ROUTERS_ADDRESS,
+        )
 
-        # Verify DUT_ROUTER1 didn't receive an Address Query Notification message
+        # Verify DUT_ROUTER1 didn't receive an Address Query Notification
+        # message
         dut_router1_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
         msg = dut_router1_messages.next_coap_message('0.02', '/a/an', False)
         self.assertTrue(msg is None)
@@ -117,7 +123,12 @@ class Cert_5_3_11_AddressQueryTimeoutIntervals(unittest.TestCase):
         # Verify DUT_ROUTER1 sent an Address Query Request message
         dut_router1_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
         msg = dut_router1_messages.next_coap_message('0.02', '/a/aq')
-        command.check_address_query(msg, self.nodes[DUT_ROUTER1], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
+        command.check_address_query(
+            msg,
+            self.nodes[DUT_ROUTER1],
+            config.REALM_LOCAL_ALL_ROUTERS_ADDRESS,
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

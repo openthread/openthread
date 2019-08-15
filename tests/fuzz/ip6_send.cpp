@@ -38,10 +38,8 @@
 #include <openthread/thread.h>
 #include <openthread/thread_ftd.h>
 
+#include "fuzzer_platform.h"
 #include "common/code_utils.hpp"
-
-extern "C" void FuzzerPlatformInit(void);
-extern "C" void FuzzerPlatformProcess(otInstance *aInstance);
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
@@ -74,6 +72,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     error = otIp6Send(instance, message);
 
     message = NULL;
+
+    VerifyOrExit(!FuzzerPlatformResetWasRequested());
 
     for (int i = 0; i < MAX_ITERATIONS; i++)
     {

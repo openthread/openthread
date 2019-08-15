@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -39,12 +38,13 @@ ED = 3
 ROUTER2 = 4
 ROUTER3 = 5
 
+
 class Cert_6_1_7_EDSynchronization(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,6):
+        for i in range(1, 6):
             self.nodes[i] = node.Node(i, (i == ED), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -87,9 +87,9 @@ class Cert_6_1_7_EDSynchronization(unittest.TestCase):
         self.nodes[ROUTER3].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -112,6 +112,7 @@ class Cert_6_1_7_EDSynchronization(unittest.TestCase):
         self.nodes[ROUTER3].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER3].get_state(), 'router')
+
 
 if __name__ == '__main__':
     unittest.main()

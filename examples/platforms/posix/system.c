@@ -135,25 +135,31 @@ void otSysProcessDrivers(otInstance *aInstance)
     platformRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
     platformAlarmUpdateTimeout(&timeout);
 
-    if (!otTaskletsArePending(aInstance))
+    if (otTaskletsArePending(aInstance))
     {
-        rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
-
-        if ((rval < 0) && (errno != EINTR))
-        {
-            perror("select");
-            exit(EXIT_FAILURE);
-        }
+        timeout.tv_sec  = 0;
+        timeout.tv_usec = 0;
     }
+
+    rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
+
+    if (rval >= 0)
+    {
+        platformUartProcess();
+        platformRadioProcess(aInstance, &read_fds, &write_fds);
+    }
+    else if (errno != EINTR)
+    {
+        perror("select");
+        exit(EXIT_FAILURE);
+    }
+
+    platformAlarmProcess(aInstance);
 
     if (gTerminate)
     {
         exit(0);
     }
-
-    platformUartProcess();
-    platformRadioProcess(aInstance);
-    platformAlarmProcess(aInstance);
 }
 
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0

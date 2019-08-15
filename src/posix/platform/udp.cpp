@@ -53,6 +53,8 @@
 
 #include "common/code_utils.hpp"
 
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+
 static uint32_t sPlatNetifIndex = 0;
 
 static const size_t kMaxUdpSize = 1280;
@@ -217,8 +219,8 @@ otError otPlatUdpSocket(otUdpSocket *aUdpSocket)
 
     assert(aUdpSocket->mHandle == NULL);
 
-    fd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-    VerifyOrExit(fd > 0, error = OT_ERROR_FAILED);
+    fd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+    VerifyOrExit(fd >= 0, error = OT_ERROR_FAILED);
 
     aUdpSocket->mHandle = FdToHandle(fd);
 
@@ -388,7 +390,7 @@ void platformUdpInit(const char *aIfName)
 {
     if (aIfName == NULL)
     {
-        exit(OT_EXIT_INVALID_ARGUMENTS);
+        DieNow(OT_EXIT_INVALID_ARGUMENTS);
     }
 
     sPlatNetifIndex = if_nametoindex(aIfName);
@@ -447,3 +449,5 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
 exit:
     return;
 }
+
+#endif // #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE

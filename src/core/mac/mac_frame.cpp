@@ -361,7 +361,7 @@ bool Frame::IsSrcPanIdPresent(uint16_t aFcf) const
 
     if ((aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone && (aFcf & kFcfPanidCompression) == 0)
     {
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
         // Handle a special case in IEEE 802.15.4-2015, when Pan ID Compression is 0, but Src Pan ID is not present:
         //  Dest Address:       Extended
         //  Source Address:     Extended
@@ -763,22 +763,22 @@ uint8_t Frame::GetFooterLength(void) const
 
 exit:
     // Frame Check Sequence
-    footerLength += kFcsSize;
+    footerLength += GetFcsSize();
 
     return footerLength;
 }
 
-uint8_t Frame::GetMaxPayloadLength(void) const
+uint16_t Frame::GetMaxPayloadLength(void) const
 {
-    return kMTU - (GetHeaderLength() + GetFooterLength());
+    return GetMtu() - (GetHeaderLength() + GetFooterLength());
 }
 
-uint8_t Frame::GetPayloadLength(void) const
+uint16_t Frame::GetPayloadLength(void) const
 {
     return GetPsduLength() - (GetHeaderLength() + GetFooterLength());
 }
 
-void Frame::SetPayloadLength(uint8_t aLength)
+void Frame::SetPayloadLength(uint16_t aLength)
 {
     SetPsduLength(GetHeaderLength() + GetFooterLength() + aLength);
 }
@@ -793,7 +793,7 @@ uint8_t Frame::SkipSecurityHeaderIndex(void) const
     // Sequence Number
     index += kDsnSize;
 
-    VerifyOrExit((index + kFcsSize) <= GetPsduLength(), index = kInvalidIndex);
+    VerifyOrExit((index + GetFcsSize()) <= GetPsduLength(), index = kInvalidIndex);
 
     fcf = GetFrameControlField();
 
@@ -839,7 +839,7 @@ uint8_t Frame::SkipSecurityHeaderIndex(void) const
         ExitNow(index = kInvalidIndex);
     }
 
-    VerifyOrExit((index + kFcsSize) <= GetPsduLength(), index = kInvalidIndex);
+    VerifyOrExit((index + GetFcsSize()) <= GetPsduLength(), index = kInvalidIndex);
 
     // Security Control + Frame Counter + Key Identifier
     if ((fcf & kFcfSecurityEnabled) != 0)
@@ -875,14 +875,14 @@ exit:
 uint8_t Frame::FindPayloadIndex(void) const
 {
     uint8_t index = SkipSecurityHeaderIndex();
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     const uint8_t *cur    = NULL;
     const uint8_t *footer = GetFooter();
 #endif
 
     VerifyOrExit(index != kInvalidIndex);
 
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     cur = GetPsdu() + index;
 
     if (IsIePresent())
@@ -936,7 +936,7 @@ const uint8_t *Frame::GetFooter(void) const
     return GetPsdu() + GetPsduLength() - GetFooterLength();
 }
 
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 uint8_t Frame::FindHeaderIeIndex(void) const
 {
     uint8_t index;
@@ -1008,14 +1008,16 @@ const uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
 exit:
     return cur;
 }
-#endif // OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-const uint8_t *Frame::GetTimeIe(void) const
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+const TimeIe *Frame::GetTimeIe(void) const
 {
-    const TimeIe * timeIe       = NULL;
-    const uint8_t *cur          = NULL;
-    uint8_t oui[kVendorOuiSize] = {kVendorOuiNest & 0xff, (kVendorOuiNest >> 8) & 0xff, (kVendorOuiNest >> 16) & 0xff};
+    const TimeIe * timeIe                              = NULL;
+    const uint8_t *cur                                 = NULL;
+    uint8_t        oui[VendorIeHeader::kVendorOuiSize] = {VendorIeHeader::kVendorOuiNest & 0xff,
+                                                   (VendorIeHeader::kVendorOuiNest >> 8) & 0xff,
+                                                   (VendorIeHeader::kVendorOuiNest >> 16) & 0xff};
 
     cur = GetHeaderIe(kHeaderIeVendor);
     VerifyOrExit(cur != NULL);
@@ -1023,30 +1025,48 @@ const uint8_t *Frame::GetTimeIe(void) const
     cur += sizeof(HeaderIe);
 
     timeIe = reinterpret_cast<const TimeIe *>(cur);
-    VerifyOrExit(memcmp(oui, timeIe->GetVendorOui(), kVendorOuiSize) == 0, cur = NULL);
-    VerifyOrExit(timeIe->GetSubType() == kVendorIeTime, cur = NULL);
+    VerifyOrExit(memcmp(oui, timeIe->GetVendorOui(), VendorIeHeader::kVendorOuiSize) == 0, timeIe = NULL);
+    VerifyOrExit(timeIe->GetSubType() == VendorIeHeader::kVendorIeTime, timeIe = NULL);
 
 exit:
-    return cur;
+    return timeIe;
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-void Frame::CopyFrom(const Frame &aFromFrame)
+void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 {
     uint8_t *      psduBuffer   = mPsdu;
-    otRadioIeInfo *ieInfoBuffer = mIeInfo;
+    otRadioIeInfo *ieInfoBuffer = mInfo.mTxInfo.mIeInfo;
 
     memcpy(this, &aFromFrame, sizeof(Frame));
 
     // Set the original buffer pointers back on the frame
     // which were overwritten by above `memcpy()`.
 
-    mPsdu   = psduBuffer;
-    mIeInfo = ieInfoBuffer;
+    mPsdu                 = psduBuffer;
+    mInfo.mTxInfo.mIeInfo = ieInfoBuffer;
 
     memcpy(mPsdu, aFromFrame.mPsdu, aFromFrame.GetPsduLength());
-    memcpy(mIeInfo, aFromFrame.mIeInfo, sizeof(otRadioIeInfo));
+
+    // mIeInfo may be null when TIME_SYNC is not enabled.
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    memcpy(mInfo.mTxInfo.mIeInfo, aFromFrame.mInfo.mTxInfo.mIeInfo, sizeof(otRadioIeInfo));
+#endif
 }
+
+uint16_t Frame::GetMtu(void) const
+{
+    return kMTU;
+}
+
+uint16_t Frame::GetFcsSize(void) const
+{
+    return kFcsSize;
+}
+
+// LCOV_EXCL_START
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
 Frame::InfoString Frame::ToInfoString(void) const
 {
@@ -1121,6 +1141,10 @@ BeaconPayload::InfoString BeaconPayload::ToInfoString(void) const
                       xpanid[7], GetProtocolId(), GetProtocolVersion(), IsJoiningPermitted() ? "yes" : "no",
                       IsNative() ? "yes" : "no");
 }
+
+#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+
+// LCOV_EXCL_STOP
 
 } // namespace Mac
 } // namespace ot

@@ -41,7 +41,7 @@
 #include "mac/mac_frame.hpp"
 #include "thread/thread_netif.hpp"
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 namespace ot {
 namespace NetworkData {
@@ -175,7 +175,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 otError Local::AddService(uint32_t       aEnterpriseNumber,
                           const uint8_t *aServiceData,
                           uint8_t        aServiceDataLength,
@@ -253,7 +253,7 @@ void Local::UpdateRloc(void)
             UpdateRloc(*static_cast<PrefixTlv *>(cur));
             break;
 
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
         case NetworkDataTlv::kTypeService:
             UpdateRloc(*static_cast<ServiceTlv *>(cur));
@@ -302,7 +302,7 @@ void Local::UpdateRloc(BorderRouterTlv &aBorderRouter)
     entry->SetRloc(Get<Mle::MleRouter>().GetRloc16());
 }
 
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 void Local::UpdateRloc(ServiceTlv &aService)
 {
     for (NetworkDataTlv *cur = aService.GetSubTlvs(); cur < aService.GetNext(); cur = cur->GetNext())
@@ -338,7 +338,7 @@ bool Local::IsExternalRouteConsistent(void)
             ContainsExternalRoutes(Get<Leader>(), Get<Mle::MleRouter>().GetRloc16()));
 }
 
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 bool Local::IsServiceConsistent(void)
 {
     return (Get<Leader>().ContainsServices(*this, Get<Mle::MleRouter>().GetRloc16()) &&
@@ -365,7 +365,7 @@ otError Local::SendServerDataNotification(void)
 
     UpdateRloc();
 
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     VerifyOrExit(!IsOnMeshPrefixConsistent() || !IsExternalRouteConsistent() || !IsServiceConsistent(),
                  ClearResubmitDelayTimer());
 #else
@@ -387,4 +387,4 @@ exit:
 } // namespace NetworkData
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE

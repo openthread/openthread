@@ -60,4 +60,12 @@
  */
 #define SETTINGS_CONFIG_PAGE_NUM (2)
 
+/**
+ * @def OPENTHREAD_CONFIG_NCP_UART_ENABLE
+ *
+ * Define to 1 to enable NCP UART support.
+ *
+ */
+#define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
+
 #endif /* OPENTHREAD_CORE_CC2650_CONFIG_H_ */

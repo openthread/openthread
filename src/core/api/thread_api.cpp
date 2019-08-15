@@ -103,59 +103,17 @@ otLinkModeConfig otThreadGetLinkMode(otInstance *aInstance)
 {
     otLinkModeConfig config;
     Instance &       instance = *static_cast<Instance *>(aInstance);
-    uint8_t          mode     = instance.Get<Mle::MleRouter>().GetDeviceMode();
 
-    memset(&config, 0, sizeof(otLinkModeConfig));
-
-    if (mode & Mle::ModeTlv::kModeRxOnWhenIdle)
-    {
-        config.mRxOnWhenIdle = 1;
-    }
-
-    if (mode & Mle::ModeTlv::kModeSecureDataRequest)
-    {
-        config.mSecureDataRequests = 1;
-    }
-
-    if (mode & Mle::ModeTlv::kModeFullThreadDevice)
-    {
-        config.mDeviceType = 1;
-    }
-
-    if (mode & Mle::ModeTlv::kModeFullNetworkData)
-    {
-        config.mNetworkData = 1;
-    }
+    instance.Get<Mle::MleRouter>().GetDeviceMode().Get(config);
 
     return config;
 }
 
 otError otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig)
 {
-    uint8_t   mode     = 0;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    if (aConfig.mRxOnWhenIdle)
-    {
-        mode |= Mle::ModeTlv::kModeRxOnWhenIdle;
-    }
-
-    if (aConfig.mSecureDataRequests)
-    {
-        mode |= Mle::ModeTlv::kModeSecureDataRequest;
-    }
-
-    if (aConfig.mDeviceType)
-    {
-        mode |= Mle::ModeTlv::kModeFullThreadDevice;
-    }
-
-    if (aConfig.mNetworkData)
-    {
-        mode |= Mle::ModeTlv::kModeFullNetworkData;
-    }
-
-    return instance.Get<Mle::MleRouter>().SetDeviceMode(mode);
+    return instance.Get<Mle::MleRouter>().SetDeviceMode(Mle::DeviceMode(aConfig));
 }
 
 const otMasterKey *otThreadGetMasterKey(otInstance *aInstance)
@@ -407,7 +365,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 void otThreadSetReceiveDiagnosticGetCallback(otInstance *                   aInstance,
                                              otReceiveDiagnosticGetCallback aCallback,
                                              void *                         aCallbackContext)
@@ -438,7 +396,7 @@ otError otThreadSendDiagnosticReset(otInstance *        aInstance,
     return instance.Get<NetworkDiagnostic::NetworkDiagnostic>().SendDiagnosticReset(
         *static_cast<const Ip6::Address *>(aDestination), aTlvTypes, aCount);
 }
-#endif // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 
 otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
 {
@@ -447,7 +405,6 @@ otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
 
     if (aEnabled)
     {
-        VerifyOrExit(instance.Get<Mac::Mac>().GetPanId() != Mac::kPanIdBroadcast, error = OT_ERROR_INVALID_STATE);
         error = instance.Get<Mle::MleRouter>().Start(/* aAnnounceAttach */ false);
     }
     else
@@ -455,7 +412,6 @@ otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
         instance.Get<Mle::MleRouter>().Stop(true);
     }
 
-exit:
     return error;
 }
 

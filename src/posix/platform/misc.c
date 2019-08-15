@@ -30,11 +30,14 @@
 #include "platform-posix.h"
 
 #include <assert.h>
+#include <fcntl.h>
 #include <setjmp.h>
+#include <sys/socket.h>
 #include <unistd.h>
 
 #include <openthread/platform/misc.h>
 
+#include "code_utils.h"
 #include "openthread-system.h"
 #include "common/logging.hpp"
 
@@ -45,8 +48,7 @@ static otPlatMcuPowerState gPlatMcuPowerState = OT_PLAT_MCU_POWER_STATE_ON;
 
 void otPlatReset(otInstance *aInstance)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
+    otInstanceFinalize(aInstance);
     otSysDeinit();
 
     longjmp(gResetJump, 1);
@@ -93,32 +95,65 @@ otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance)
     return gPlatMcuPowerState;
 }
 
-void SuccessOrDie(otError aError)
+int SocketWithCloseExec(int aDomain, int aType, int aProtocol)
 {
-    int exitCode;
+    int rval = 0;
+    int fd   = -1;
 
-    switch (aError)
+#ifdef __APPLE__
+    otEXPECT_ACTION((fd = socket(aDomain, aType, aProtocol)) != -1, perror("socket(SOCK_CLOEXEC)"));
+
+    otEXPECT_ACTION((rval = fcntl(fd, F_GETFD, 0)) != -1, perror("fcntl(F_GETFD)"));
+    otEXPECT_ACTION((rval = fcntl(fd, F_SETFD, rval | FD_CLOEXEC)) != -1, perror("fcntl(F_SETFD)"));
+#else
+    otEXPECT_ACTION((fd = socket(aDomain, aType | SOCK_CLOEXEC, aProtocol)) != -1, perror("socket(SOCK_CLOEXEC)"));
+#endif
+
+exit:
+    if (rval == -1 && fd != -1)
     {
-    case OT_ERROR_NONE:
-        return;
+        VerifyOrDie(close(fd) == 0, OT_EXIT_ERROR_ERRNO);
+        fd = -1;
+    }
 
-    case OT_ERROR_INVALID_ARGS:
-        exitCode = OT_EXIT_INVALID_ARGUMENTS;
+    return fd;
+}
+
+const char *otExitCodeToString(uint8_t aExitCode)
+{
+    const char *retval = NULL;
+
+    switch (aExitCode)
+    {
+    case OT_EXIT_SUCCESS:
+        retval = "Success";
+        break;
+
+    case OT_EXIT_FAILURE:
+        retval = "Failure";
+        break;
+
+    case OT_EXIT_INVALID_ARGUMENTS:
+        retval = "InvalidArgument";
+        break;
+
+    case OT_EXIT_RADIO_SPINEL_INCOMPATIBLE:
+        retval = "RadioSpinelIncompatible";
+        break;
+
+    case OT_EXIT_RADIO_SPINEL_RESET:
+        retval = "RadioSpinelReset";
+        break;
+
+    case OT_EXIT_ERROR_ERRNO:
+        retval = strerror(errno);
         break;
 
     default:
-        exitCode = OT_EXIT_FAILURE;
+        assert(false);
+        retval = "UnknownExitCode";
         break;
     }
 
-    otLogCritPlat("Error: %s", otThreadErrorToString(aError));
-    exit(exitCode);
-}
-
-void VerifyOrDie(bool aCondition, int aExitCode)
-{
-    if (!aCondition)
-    {
-        exit(aExitCode);
-    }
+    return retval;
 }

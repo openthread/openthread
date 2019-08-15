@@ -67,12 +67,6 @@ LDADD_COMMON                                                          += \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
-if OPENTHREAD_ENABLE_DIAG
-LDADD_COMMON                                                          += \
-    $(top_builddir)/src/diag/libopenthread-diag.a                        \
-    $(NULL)
-endif # OPENTHREAD_ENABLE_DIAG
-
 bin_PROGRAMS                                                           = \
     $(NULL)
 
@@ -140,9 +134,11 @@ ot_daemon_SOURCES                                                      = \
 
 ot_daemon_LDADD                                                        = \
     $(top_builddir)/src/cli/libopenthread-cli-ftd.a                      \
+    $(top_builddir)/src/ncp/libopenthread-ncp-ftd.a                      \
     $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(LDADD_COMMON)                                                      \
     $(top_builddir)/src/cli/libopenthread-cli-ftd.a                      \
+    $(top_builddir)/src/ncp/libopenthread-ncp-ftd.a                      \
     $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(LDADD_COMMON)                                                      \
     $(NULL)
@@ -167,9 +163,11 @@ ot_cli_SOURCES                                                         = \
 
 ot_cli_LDADD                                                           = \
     $(top_builddir)/src/cli/libopenthread-cli-ftd.a                      \
+    $(top_builddir)/src/ncp/libopenthread-ncp-ftd.a                      \
     $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(LDADD_COMMON)                                                      \
     $(top_builddir)/src/cli/libopenthread-cli-ftd.a                      \
+    $(top_builddir)/src/ncp/libopenthread-ncp-ftd.a                      \
     $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(LDADD_COMMON)                                                      \
     $(NULL)

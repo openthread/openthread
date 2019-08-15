@@ -51,7 +51,7 @@ otError otJoinerStart(otInstance *     aInstance,
                       void *           aContext)
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     error = instance.Get<MeshCoP::Joiner>().Start(aPSKd, aProvisioningUrl, aVendorName, aVendorModel, aVendorSwVersion,
@@ -75,7 +75,7 @@ otError otJoinerStop(otInstance *aInstance)
 {
     otError error;
 
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     instance.Get<MeshCoP::Joiner>().Stop();
@@ -92,7 +92,7 @@ otJoinerState otJoinerGetState(otInstance *aInstance)
 {
     otJoinerState state = OT_JOINER_STATE_IDLE;
 
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     state = instance.Get<MeshCoP::Joiner>().GetState();
@@ -107,7 +107,7 @@ otError otJoinerGetId(otInstance *aInstance, otExtAddress *aJoinerId)
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     instance.Get<MeshCoP::Joiner>().GetJoinerId(*static_cast<Mac::ExtAddress *>(aJoinerId));

@@ -51,8 +51,8 @@ def any_ipv6_address():
 
 
 class TestMessageInfo(unittest.TestCase):
-
-    def test_should_return_source_ipv6_value_when_source_ipv6_property_is_called(self):
+    def test_should_return_source_ipv6_value_when_source_ipv6_property_is_called(
+            self):
         # GIVEN
         source_ipv6 = any_ipv6_address()
 
@@ -63,9 +63,12 @@ class TestMessageInfo(unittest.TestCase):
         actual_source_ipv6 = message_info.source_ipv6
 
         # THEN
-        self.assertEqual(ipaddress.ip_address(bytes(source_ipv6)), actual_source_ipv6)
+        self.assertEqual(
+            ipaddress.ip_address(bytes(source_ipv6)), actual_source_ipv6
+        )
 
-    def test_should_return_destination_ipv6_value_when_destination_ipv6_property_is_called(self):
+    def test_should_return_destination_ipv6_value_when_destination_ipv6_property_is_called(
+            self):
         # GIVEN
         destination_ipv6 = any_ipv6_address()
 
@@ -76,9 +79,13 @@ class TestMessageInfo(unittest.TestCase):
         actual_destination_ipv6 = message_info.destination_ipv6
 
         # THEN
-        self.assertEqual(ipaddress.ip_address(bytes(destination_ipv6)), actual_destination_ipv6)
+        self.assertEqual(
+            ipaddress.ip_address(bytes(destination_ipv6)),
+            actual_destination_ipv6,
+        )
 
-    def test_should_return_source_eui64_value_when_source_eui64_property_is_called(self):
+    def test_should_return_source_eui64_value_when_source_eui64_property_is_called(
+            self):
         # GIVEN
         source_mac_address = any_eui64()
 
@@ -91,7 +98,8 @@ class TestMessageInfo(unittest.TestCase):
         # THEN
         self.assertEqual(source_mac_address, actual_source_mac_address)
 
-    def test_should_return_destination_eui64_value_when_destination_eui64_property_is_called(self):
+    def test_should_return_destination_eui64_value_when_destination_eui64_property_is_called(
+            self):
         # GIVEN
         destination_mac_address = any_eui64()
 
@@ -102,12 +110,14 @@ class TestMessageInfo(unittest.TestCase):
         actual_destination_mac_address = message_info.destination_mac_address
 
         # THEN
-        self.assertEqual(destination_mac_address, actual_destination_mac_address)
+        self.assertEqual(
+            destination_mac_address, actual_destination_mac_address
+        )
 
 
 class TestMacAddress(unittest.TestCase):
-
-    def test_should_create_MacAddress_from_eui64_when_from_eui64_classmethod_is_called(self):
+    def test_should_create_MacAddress_from_eui64_when_from_eui64_classmethod_is_called(
+            self):
         # GIVEN
         eui64 = any_eui64()
 
@@ -118,7 +128,8 @@ class TestMacAddress(unittest.TestCase):
         self.assertEqual(common.MacAddressType.LONG, mac_address.type)
         self.assertEqual(eui64, mac_address.mac_address)
 
-    def test_should_create_MacAddress_from_rloc16_int_when_from_rloc16_classmethod_is_called(self):
+    def test_should_create_MacAddress_from_rloc16_int_when_from_rloc16_classmethod_is_called(
+            self):
         # GIVEN
         rloc16 = any_rloc16_int()
 
@@ -129,7 +140,8 @@ class TestMacAddress(unittest.TestCase):
         self.assertEqual(common.MacAddressType.SHORT, mac_address.type)
         self.assertEqual(struct.pack(">H", rloc16), mac_address.mac_address)
 
-    def test_should_create_MacAddress_from_rloc16_bytearray_when_from_rloc16_classmethod_is_called(self):
+    def test_should_create_MacAddress_from_rloc16_bytearray_when_from_rloc16_classmethod_is_called(
+            self):
         # GIVEN
         rloc16 = any_rloc16_bytearray()
 
@@ -140,7 +152,8 @@ class TestMacAddress(unittest.TestCase):
         self.assertEqual(common.MacAddressType.SHORT, mac_address.type)
         self.assertEqual(rloc16, mac_address.mac_address)
 
-    def test_should_convert_short_MacAddress_to_iid_when_convert_method_is_called(self):
+    def test_should_convert_short_MacAddress_to_iid_when_convert_method_is_called(
+            self):
         # GIVEN
         rloc16 = any_rloc16_bytearray()
 
@@ -150,9 +163,12 @@ class TestMacAddress(unittest.TestCase):
         iid = mac_address.convert_to_iid()
 
         # THEN
-        self.assertEqual(bytearray([0x00, 0x00, 0x00, 0xff, 0xfe, 0x00]) + rloc16, iid)
+        self.assertEqual(
+            bytearray([0x00, 0x00, 0x00, 0xff, 0xfe, 0x00]) + rloc16, iid
+        )
 
-    def test_should_convert_short_MacAddress_to_iid_when_convert_method_is_called(self):
+    def test_should_convert_eui64_MacAddress_to_iid_when_convert_method_is_called(
+            self):
         # GIVEN
         eui64 = any_eui64()
 

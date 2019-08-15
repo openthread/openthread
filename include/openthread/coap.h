@@ -50,8 +50,7 @@ extern "C" {
  * @brief
  *   This module includes functions that control CoAP communication.
  *
- *   The functions in this module are available when application-coap feature (`OPENTHREAD_ENABLE_APPLICATION_COAP`) is
- *   enabled.
+ *   The functions in this module are available when CoAP API feature (`OPENTHREAD_CONFIG_COAP_API_ENABLE`) is enabled.
  *
  * @{
  *

@@ -63,7 +63,7 @@ void kw41zAlarmProcess(otInstance *aInstance)
     if ((sAlarmTime != 0) && (sTime >= sAlarmTime))
     {
         sAlarmTime = 0;
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
         if (otPlatDiagModeGet())
         {

@@ -28,16 +28,15 @@
 
 from wpan import verify
 import wpan
-import time
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test description: forming a Thread network
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
-print '-' * 120
-print 'Starting \'{}\''.format(test_name)
+print('-' * 120)
+print('Starting \'{}\''.format(test_name))
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
 
 speedup = 4
@@ -45,12 +44,12 @@ wpan.Node.set_time_speedup_factor(speedup)
 
 node = wpan.Node()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Init all nodes
 
 wpan.Node.init_all_nodes()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
 # default values after reset
@@ -111,8 +110,15 @@ verify(node.get(wpan.WPAN_STATE) == wpan.STATE_OFFLINE)
 
 # Form a network with all parameters given as part of `form` command itself
 
-node.form('vahman', channel_mask='15,20-24', panid='0x1977', xpanid='1020031510006016',
-	key='0123456789abcdeffecdba9876543210', key_index='1', mesh_local_prefix='fd00:cafe::')
+node.form(
+    'vahman',
+    channel_mask='15,20-24',
+    panid='0x1977',
+    xpanid='1020031510006016',
+    key='0123456789abcdeffecdba9876543210',
+    key_index='1',
+    mesh_local_prefix='fd00:cafe::',
+)
 
 verify(node.get(wpan.WPAN_STATE) == wpan.STATE_ASSOCIATED)
 verify(node.get(wpan.WPAN_NAME) == '"vahman"')
@@ -124,10 +130,17 @@ verify(node.get(wpan.WPAN_PANID) == '0x1977')
 verify(node.get(wpan.WPAN_XPANID) == '0x1020031510006016')
 verify(node.get(wpan.WPAN_IP6_MESH_LOCAL_PREFIX) == '"fd00:cafe::/64"')
 
-#-----------------------------------------------------------------------------------------------------------------------
+# Verify behavior when commands are issued immediately after a `reset`
+
+node.reset()
+node.leave()
+
+node.reset()
+node.form('net-after-reset')
+
+# -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
 wpan.Node.finalize_all_nodes()
 
-print '\'{}\' passed.'.format(test_name)
-
+print('\'{}\' passed.'.format(test_name))

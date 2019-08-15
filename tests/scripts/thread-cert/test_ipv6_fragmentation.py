@@ -27,12 +27,9 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
-import mle
-import network_layer
 import node
 
 LEADER = 1
@@ -60,9 +57,9 @@ class TestIPv6Fragmentation(unittest.TestCase):
         self.nodes[ROUTER].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -90,6 +87,7 @@ class TestIPv6Fragmentation(unittest.TestCase):
 
         self.nodes[ROUTER].udp_stop()
         self.nodes[LEADER].udp_stop()
+
 
 if __name__ == '__main__':
     unittest.main()

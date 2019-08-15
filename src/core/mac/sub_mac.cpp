@@ -45,9 +45,9 @@
 namespace ot {
 namespace Mac {
 
-SubMac::SubMac(Instance &aInstance, Callbacks &aCallbacks)
+SubMac::SubMac(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mRadioCaps(otPlatRadioGetCaps(&aInstance))
+    , mRadioCaps(Get<Radio>().GetCaps())
     , mState(kStateDisabled)
     , mCsmaBackoffs(0)
     , mTransmitRetries(0)
@@ -55,8 +55,8 @@ SubMac::SubMac(Instance &aInstance, Callbacks &aCallbacks)
     , mRxOnWhenBackoff(true)
     , mEnergyScanMaxRssi(kInvalidRssiValue)
     , mEnergyScanEndTime(0)
-    , mTransmitFrame(*static_cast<Frame *>(otPlatRadioGetTransmitBuffer(&aInstance)))
-    , mCallbacks(aCallbacks)
+    , mTransmitFrame(Get<Radio>().GetTransmitBuffer())
+    , mCallbacks(aInstance)
     , mPcapCallback(NULL)
     , mPcapCallbackContext(NULL)
     , mTimer(aInstance, &SubMac::HandleTimer, this)
@@ -68,21 +68,21 @@ otRadioCaps SubMac::GetCaps(void) const
 {
     otRadioCaps caps = mRadioCaps;
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
-#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT
+#if OPENTHREAD_CONFIG_SOFTWARE_ACK_TIMEOUT_ENABLE
     caps |= OT_RADIO_CAPS_ACK_TIMEOUT;
 #endif
 
-#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
+#if OPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE
     caps |= OT_RADIO_CAPS_CSMA_BACKOFF;
 #endif
 
-#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
+#if OPENTHREAD_CONFIG_SOFTWARE_RETRANSMIT_ENABLE
     caps |= OT_RADIO_CAPS_TRANSMIT_RETRIES;
 #endif
 
-#if OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN
+#if OPENTHREAD_CONFIG_SOFTWARE_ENERGY_SCAN_ENABLE
     caps |= OT_RADIO_CAPS_ENERGY_SCAN;
 #endif
 
@@ -96,14 +96,14 @@ otRadioCaps SubMac::GetCaps(void) const
 
 void SubMac::SetPanId(PanId aPanId)
 {
-    otPlatRadioSetPanId(&GetInstance(), aPanId);
+    Get<Radio>().SetPanId(aPanId);
     otLogDebgMac("RadioPanId: 0x%04x", aPanId);
 }
 
 void SubMac::SetShortAddress(ShortAddress aShortAddress)
 {
     mShortAddress = aShortAddress;
-    otPlatRadioSetShortAddress(&GetInstance(), mShortAddress);
+    Get<Radio>().SetShortAddress(mShortAddress);
     otLogDebgMac("RadioShortAddress: 0x%04x", mShortAddress);
 }
 
@@ -115,7 +115,7 @@ void SubMac::SetExtAddress(const ExtAddress &aExtAddress)
 
     // Reverse the byte order before setting on radio.
     address.SetExtended(aExtAddress.m8, /* aReverse */ true);
-    otPlatRadioSetExtendedAddress(&GetInstance(), &address.GetExtended());
+    Get<Radio>().SetExtendedAddress(address.GetExtended());
 
     otLogDebgMac("RadioExtAddress: %s", mExtAddress.ToString().AsCString());
 }
@@ -132,8 +132,8 @@ otError SubMac::Enable(void)
 
     VerifyOrExit(mState == kStateDisabled);
 
-    SuccessOrExit(error = otPlatRadioEnable(&GetInstance()));
-    SuccessOrExit(error = otPlatRadioSleep(&GetInstance()));
+    SuccessOrExit(error = Get<Radio>().Enable());
+    SuccessOrExit(error = Get<Radio>().Sleep());
     SetState(kStateSleep);
 
 exit:
@@ -146,8 +146,8 @@ otError SubMac::Disable(void)
     otError error;
 
     mTimer.Stop();
-    SuccessOrExit(error = otPlatRadioSleep(&GetInstance()));
-    SuccessOrExit(error = otPlatRadioDisable(&GetInstance()));
+    SuccessOrExit(error = Get<Radio>().Sleep());
+    SuccessOrExit(error = Get<Radio>().Disable());
     SetState(kStateDisabled);
 
 exit:
@@ -156,11 +156,11 @@ exit:
 
 otError SubMac::Sleep(void)
 {
-    otError error = otPlatRadioSleep(&GetInstance());
+    otError error = Get<Radio>().Sleep();
 
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnMac("otPlatRadioSleep() failed, error: %s", otThreadErrorToString(error));
+        otLogWarnMac("RadioSleep() failed, error: %s", otThreadErrorToString(error));
         ExitNow();
     }
 
@@ -172,11 +172,11 @@ exit:
 
 otError SubMac::Receive(uint8_t aChannel)
 {
-    otError error = otPlatRadioReceive(&GetInstance(), aChannel);
+    otError error = Get<Radio>().Receive(aChannel);
 
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnMac("otPlatRadioReceive() failed, error: %s", otThreadErrorToString(error));
+        otLogWarnMac("RadioReceive() failed, error: %s", otThreadErrorToString(error));
         ExitNow();
     }
 
@@ -186,7 +186,7 @@ exit:
     return error;
 }
 
-void SubMac::HandleReceiveDone(Frame *aFrame, otError aError)
+void SubMac::HandleReceiveDone(RxFrame *aFrame, otError aError)
 {
     if (mPcapCallback && (aFrame != NULL) && (aError == OT_ERROR_NONE))
     {
@@ -231,7 +231,7 @@ void SubMac::StartCsmaBackoff(void)
 
     VerifyOrExit(ShouldHandleCsmaBackOff(), BeginTransmit());
 
-#if OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
+#if OPENTHREAD_CONFIG_MAC_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
     if ((mTransmitRetries > 0) && (mTransmitRetries == mTransmitFrame.GetMaxFrameRetries()))
     {
         BeginTransmit();
@@ -249,14 +249,14 @@ void SubMac::StartCsmaBackoff(void)
 
     if (mRxOnWhenBackoff)
     {
-        otPlatRadioReceive(&GetInstance(), mTransmitFrame.GetChannel());
+        Get<Radio>().Receive(mTransmitFrame.GetChannel());
     }
     else
     {
-        otPlatRadioSleep(&GetInstance());
+        Get<Radio>().Sleep();
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     mTimer.Start(backoff);
 #else
     mTimer.Start(backoff / 1000UL);
@@ -272,7 +272,7 @@ void SubMac::BeginTransmit(void)
 
     VerifyOrExit(mState == kStateCsmaBackoff);
 
-#if OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
+#if OPENTHREAD_CONFIG_MAC_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
     if ((mTransmitRetries > 0) && (mTransmitRetries == mTransmitFrame.GetMaxFrameRetries()))
     {
         mTransmitFrame.SetCsmaCaEnabled(false);
@@ -283,10 +283,10 @@ void SubMac::BeginTransmit(void)
         mTransmitFrame.SetCsmaCaEnabled(true);
     }
 
-    error = otPlatRadioReceive(&GetInstance(), mTransmitFrame.GetChannel());
+    error = Get<Radio>().Receive(mTransmitFrame.GetChannel());
     assert(error == OT_ERROR_NONE);
 
-    error = otPlatRadioTransmit(&GetInstance(), &mTransmitFrame);
+    error = Get<Radio>().Transmit(mTransmitFrame);
     assert(error == OT_ERROR_NONE);
 
     SetState(kStateTransmit);
@@ -300,11 +300,11 @@ exit:
     return;
 }
 
-void SubMac::HandleTransmitStarted(Frame &aFrame)
+void SubMac::HandleTransmitStarted(TxFrame &aFrame)
 {
     if (ShouldHandleAckTimeout() && aFrame.GetAckRequest())
     {
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
         mTimer.Start(kAckTimeout * 1000UL);
 #else
         mTimer.Start(kAckTimeout);
@@ -312,7 +312,7 @@ void SubMac::HandleTransmitStarted(Frame &aFrame)
     }
 }
 
-void SubMac::HandleTransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError)
+void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError)
 {
     bool ccaSuccess = true;
     bool shouldRetx;
@@ -386,7 +386,7 @@ exit:
 
 int8_t SubMac::GetRssi(void) const
 {
-    return otPlatRadioGetRssi(&GetInstance());
+    return Get<Radio>().GetRssi();
 }
 
 otError SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
@@ -408,12 +408,12 @@ otError SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
 
     if (RadioSupportsEnergyScan())
     {
-        otPlatRadioEnergyScan(&GetInstance(), aScanChannel, aScanDuration);
+        Get<Radio>().EnergyScan(aScanChannel, aScanDuration);
         SetState(kStateEnergyScan);
     }
     else if (ShouldHandleEnergyScan())
     {
-        error = otPlatRadioReceive(&GetInstance(), aScanChannel);
+        error = Get<Radio>().Receive(aScanChannel);
         assert(error == OT_ERROR_NONE);
 
         SetState(kStateEnergyScan);
@@ -473,7 +473,7 @@ void SubMac::HandleTimer(void)
 
     case kStateTransmit:
         otLogDebgMac("Ack timer timed out");
-        otPlatRadioReceive(&GetInstance(), mTransmitFrame.GetChannel());
+        Get<Radio>().Receive(mTransmitFrame.GetChannel());
         HandleTransmitDone(mTransmitFrame, NULL, OT_ERROR_NO_ACK);
         break;
 
@@ -492,12 +492,12 @@ bool SubMac::ShouldHandleCsmaBackOff(void) const
 
     VerifyOrExit(!RadioSupportsCsmaBackoff(), swCsma = false);
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(Get<LinkRaw>().IsEnabled());
 #endif
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API || OPENTHREAD_RADIO
-    swCsma = OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF;
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
+    swCsma = OPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE;
 #endif
 
 exit:
@@ -510,12 +510,12 @@ bool SubMac::ShouldHandleAckTimeout(void) const
 
     VerifyOrExit(!RadioSupportsAckTimeout(), swAckTimeout = false);
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(Get<LinkRaw>().IsEnabled());
 #endif
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API || OPENTHREAD_RADIO
-    swAckTimeout = OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ACK_TIMEOUT;
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
+    swAckTimeout = OPENTHREAD_CONFIG_SOFTWARE_ACK_TIMEOUT_ENABLE;
 #endif
 
 exit:
@@ -528,12 +528,12 @@ bool SubMac::ShouldHandleRetries(void) const
 
     VerifyOrExit(!RadioSupportsRetries(), swRetries = false);
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(Get<LinkRaw>().IsEnabled());
 #endif
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API || OPENTHREAD_RADIO
-    swRetries = OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT;
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
+    swRetries = OPENTHREAD_CONFIG_SOFTWARE_RETRANSMIT_ENABLE;
 #endif
 
 exit:
@@ -546,20 +546,20 @@ bool SubMac::ShouldHandleEnergyScan(void) const
 
     VerifyOrExit(!RadioSupportsEnergyScan(), swEnergyScan = false);
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(Get<LinkRaw>().IsEnabled());
 #endif
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API || OPENTHREAD_RADIO
-    swEnergyScan = OPENTHREAD_CONFIG_ENABLE_SOFTWARE_ENERGY_SCAN;
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
+    swEnergyScan = OPENTHREAD_CONFIG_SOFTWARE_ENERGY_SCAN_ENABLE;
 #endif
 
 exit:
     return swEnergyScan;
 }
 
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
-void SubMac::HandleFrameUpdated(Frame &aFrame)
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+void SubMac::HandleFrameUpdated(TxFrame &aFrame)
 {
     mCallbacks.FrameUpdated(aFrame);
 }
@@ -573,6 +573,8 @@ void SubMac::SetState(State aState)
         mState = aState;
     }
 }
+
+// LCOV_EXCL_START
 
 const char *SubMac::StateToString(State aState)
 {
@@ -603,61 +605,7 @@ const char *SubMac::StateToString(State aState)
     return str;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-// otPlatRadio callbacks
-
-extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
-{
-    Instance *instance = static_cast<Instance *>(aInstance);
-
-    if (instance->IsInitialized())
-    {
-        instance->Get<SubMac>().HandleReceiveDone(static_cast<Frame *>(aFrame), aError);
-    }
-}
-
-extern "C" void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame)
-{
-    Instance *instance = static_cast<Instance *>(aInstance);
-
-    if (instance->IsInitialized())
-    {
-        instance->Get<SubMac>().HandleTransmitStarted(*static_cast<Frame *>(aFrame));
-    }
-}
-
-extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
-{
-    Instance *instance = static_cast<Instance *>(aInstance);
-
-    if (instance->IsInitialized())
-    {
-        instance->Get<SubMac>().HandleTransmitDone(*static_cast<Frame *>(aFrame), static_cast<Frame *>(aAckFrame),
-                                                   aError);
-    }
-}
-
-extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi)
-{
-    Instance *instance = static_cast<Instance *>(aInstance);
-
-    if (instance->IsInitialized())
-    {
-        instance->Get<SubMac>().HandleEnergyScanDone(aEnergyScanMaxRssi);
-    }
-}
-
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
-extern "C" void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFrame)
-{
-    Instance *instance = static_cast<Instance *>(aInstance);
-
-    if (instance->IsInitialized())
-    {
-        instance->Get<SubMac>().HandleFrameUpdated(*static_cast<Frame *>(aFrame));
-    }
-}
-#endif
+// LCOV_EXCL_STOP
 
 } // namespace Mac
 } // namespace ot

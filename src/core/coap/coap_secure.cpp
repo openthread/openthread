@@ -35,7 +35,7 @@
 #include "meshcop/dtls.hpp"
 #include "thread/thread_netif.hpp"
 
-#if OPENTHREAD_ENABLE_DTLS
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
 
 /**
  * @file
@@ -115,7 +115,7 @@ otError CoapSecure::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
     return mDtls.SetPsk(aPsk, aPskLength);
 }
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 otError CoapSecure::SetCertificate(const uint8_t *aX509Cert,
@@ -160,7 +160,7 @@ void CoapSecure::SetSslAuthMode(bool aVerifyPeerCertificate)
     mDtls.SetSslAuthMode(aVerifyPeerCertificate);
 }
 
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
 otError CoapSecure::SendMessage(Message &aMessage, otCoapResponseHandler aHandler, void *aContext)
 {
@@ -265,4 +265,4 @@ exit:
 } // namespace Coap
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_DTLS
+#endif // OPENTHREAD_CONFIG_DTLS_ENABLE

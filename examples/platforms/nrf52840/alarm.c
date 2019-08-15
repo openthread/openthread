@@ -496,7 +496,7 @@ void nrf5AlarmProcess(otInstance *aInstance)
         {
             sTimerData[kMsTimer].mFireAlarm = false;
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
             if (otPlatDiagModeGet())
             {
@@ -677,7 +677,7 @@ void RTC_IRQ_HANDLER(void)
     }
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 uint64_t otPlatTimeGet(void)
 {
     return nrf5AlarmGetCurrentTime();
@@ -687,4 +687,4 @@ uint16_t otPlatTimeGetXtalAccuracy(void)
 {
     return XTAL_ACCURACY;
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE

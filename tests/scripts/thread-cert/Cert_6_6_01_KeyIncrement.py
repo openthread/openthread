@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -36,12 +35,13 @@ import node
 LEADER = 1
 ED = 2
 
+
 class Cert_6_6_1_KeyIncrement(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,3):
+        for i in range(1, 3):
             self.nodes[i] = node.Node(i, (i == ED), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -57,9 +57,9 @@ class Cert_6_6_1_KeyIncrement(unittest.TestCase):
         self.nodes[ED].set_key_switch_guardtime(0)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -81,6 +81,7 @@ class Cert_6_6_1_KeyIncrement(unittest.TestCase):
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
             self.assertTrue(self.nodes[LEADER].ping(addr))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -33,7 +33,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 #include <openthread/border_router.h>
 
@@ -153,4 +153,4 @@ otError otBorderRouterRegister(otInstance *aInstance)
     return instance.Get<NetworkData::Local>().SendServerDataNotification();
 }
 
-#endif // OPENTHREAD_ENABLE_BORDER_ROUTER
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE

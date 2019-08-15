@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import node
@@ -39,12 +38,13 @@ DUT_LEADER = 1
 ROUTER1 = 2
 ROUTER2 = 3
 
+
 class Cert_5_3_6_RouterIdMask(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,4):
+        for i in range(1, 4):
             self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[DUT_LEADER].set_panid(0xface)
@@ -69,9 +69,9 @@ class Cert_5_3_6_RouterIdMask(unittest.TestCase):
         self.nodes[ROUTER2].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -89,7 +89,8 @@ class Cert_5_3_6_RouterIdMask(unittest.TestCase):
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
         router2_id = self.nodes[ROUTER2].get_router_id()
 
-        # Wait DUT_LEADER to establish routing to ROUTER2 via ROUTER1's MLE advertisement.
+        # Wait DUT_LEADER to establish routing to ROUTER2 via ROUTER1's MLE
+        # advertisement.
         self.simulator.go(config.MAX_ADVERTISEMENT_INTERVAL)
 
         # 2
@@ -97,18 +98,22 @@ class Cert_5_3_6_RouterIdMask(unittest.TestCase):
         self._setUpRouter2()
 
         # 3 & 4
-        # Flush the message queue to avoid possible impact on follow-up verification.
-        dut_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
+        # Flush the message queue to avoid possible impact on follow-up
+        # verification.
+        self.simulator.get_messages_sent_by(DUT_LEADER)
 
-        # Verify the cost from DUT_LEADER to ROUTER2 goes to infinity in 12 mins.
+        # Verify the cost from DUT_LEADER to ROUTER2 goes to infinity in 12
+        # mins.
         routing_cost = 1
         for i in range(0, 24):
             self.simulator.go(30)
-            print("%ss" %((i + 1) * 30))
+            print("%ss" % ((i + 1) * 30))
 
             leader_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
-            msg = leader_messages.last_mle_message(mle.CommandType.ADVERTISEMENT, False)
-            if msg == None:
+            msg = leader_messages.last_mle_message(
+                mle.CommandType.ADVERTISEMENT, False
+            )
+            if msg is None:
                 continue
 
             self.assertTrue(command.check_id_set(msg, router2_id))
@@ -118,14 +123,17 @@ class Cert_5_3_6_RouterIdMask(unittest.TestCase):
                 break
         self.assertTrue(routing_cost == 0)
 
-        self.simulator.go(config.INFINITE_COST_TIMEOUT + config.MAX_ADVERTISEMENT_INTERVAL)
+        self.simulator.go(
+            config.INFINITE_COST_TIMEOUT + config.MAX_ADVERTISEMENT_INTERVAL
+        )
         leader_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
         msg = leader_messages.last_mle_message(mle.CommandType.ADVERTISEMENT)
         self.assertFalse(command.check_id_set(msg, router2_id))
 
         # 5
-        # Flush the message queue to avoid possible impact on follow-up verification.
-        dut_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
+        # Flush the message queue to avoid possible impact on follow-up
+        # verification.
+        self.simulator.get_messages_sent_by(DUT_LEADER)
 
         self.nodes[ROUTER2].start()
         self.simulator.go(5)
@@ -142,16 +150,21 @@ class Cert_5_3_6_RouterIdMask(unittest.TestCase):
         router1_id = self.nodes[ROUTER1].get_router_id()
         router2_id = self.nodes[ROUTER2].get_router_id()
 
-        self.simulator.go(config.MAX_NEIGHBOR_AGE + config.MAX_ADVERTISEMENT_INTERVAL)
+        self.simulator.go(
+            config.MAX_NEIGHBOR_AGE + config.MAX_ADVERTISEMENT_INTERVAL
+        )
         leader_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
         msg = leader_messages.last_mle_message(mle.CommandType.ADVERTISEMENT)
         self.assertEqual(command.get_routing_cost(msg, router1_id), 0)
 
-        self.simulator.go(config.INFINITE_COST_TIMEOUT + config.MAX_ADVERTISEMENT_INTERVAL)
+        self.simulator.go(
+            config.INFINITE_COST_TIMEOUT + config.MAX_ADVERTISEMENT_INTERVAL
+        )
         leader_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
         msg = leader_messages.last_mle_message(mle.CommandType.ADVERTISEMENT)
         self.assertFalse(command.check_id_set(msg, router1_id))
         self.assertFalse(command.check_id_set(msg, router2_id))
+
 
 if __name__ == '__main__':
     unittest.main()

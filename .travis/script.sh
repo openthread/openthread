@@ -43,7 +43,7 @@ python --version || die
 }
 
 [ $BUILD_TARGET != py-pretty-check ] || {
-    flake8 --config=script/pystyle.cfg tools/harness-thci/ || die
+    flake8 --config=script/pystyle.cfg tests tools || die
 }
 
 [ $BUILD_TARGET != scan-build ] || {
@@ -54,41 +54,55 @@ python --version || die
     export CPPFLAGS="${CPPFLAGS} -I${TRAVIS_BUILD_DIR}/third_party/mbedtls/repo/include"
     export CPPFLAGS="${CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
 
+    # UART transport
     export CPPFLAGS="${CPPFLAGS}                          \
-        -DOPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION=1"
+        -DOPENTHREAD_CONFIG_BORDER_AGENT_ENABLE=1         \
+        -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1        \
+        -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1      \
+        -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1      \
+        -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1    \
+        -DOPENTHREAD_CONFIG_COAP_API_ENABLE=1             \
+        -DOPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1      \
+        -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1         \
+        -DOPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE=1         \
+        -DOPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE=1         \
+        -DOPENTHREAD_CONFIG_DIAG_ENABLE=1                 \
+        -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1           \
+        -DOPENTHREAD_CONFIG_ECDSA_ENABLE=1                \
+        -DOPENTHREAD_CONFIG_IP6_ENABLE_FRAGMENTATION=1    \
+        -DOPENTHREAD_CONFIG_LEGACY_ENABLE=1               \
+        -DOPENTHREAD_CONFIG_JAM_DETECTION_ENABLE=1        \
+        -DOPENTHREAD_CONFIG_JOINER_ENABLE=1               \
+        -DOPENTHREAD_CONFIG_LINK_RAW_ENABLE=1             \
+        -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1           \
+        -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1             \
+        -DOPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE=1     \
+        -DOPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE=1          \
+        -DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1  \
+        -DOPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1"
 
     scan-build ./configure                \
-        --enable-application-coap         \
-        --enable-application-coap-secure  \
-        --enable-border-agent             \
-        --enable-border-router            \
         --enable-builtin-mbedtls=no       \
-        --enable-cert-log                 \
-        --enable-channel-manager          \
-        --enable-channel-monitor          \
-        --enable-child-supervision        \
         --enable-cli                      \
-        --enable-commissioner             \
-        --enable-dhcp6-client             \
-        --enable-dhcp6-server             \
-        --enable-diag                     \
-        --enable-dns-client               \
-        --enable-ecdsa                    \
         --enable-executable=no            \
         --enable-ftd                      \
-        --enable-jam-detection            \
-        --enable-joiner                   \
-        --enable-legacy                   \
-        --enable-mac-filter               \
         --enable-mtd                      \
-        --enable-mtd-network-diagnostic   \
         --enable-ncp                      \
-        --with-ncp-bus=uart               \
         --enable-radio-only               \
-        --enable-raw-link-api             \
-        --enable-service                  \
-        --enable-sntp-client              \
-        --enable-udp-forward              \
+        --with-examples=posix || die
+
+    scan-build --status-bugs -analyze-headers -v make -j2 || die
+
+    # SPI transport
+    scan-build ./configure                \
+        --enable-builtin-mbedtls=no       \
+        --enable-cli                      \
+        --enable-executable=no            \
+        --enable-ftd                      \
+        --enable-mtd                      \
+        --enable-ncp                      \
+        --enable-radio-only               \
         --with-examples=posix || die
 
     scan-build --status-bugs -analyze-headers -v make -j2 || die
@@ -138,19 +152,6 @@ build_cc2652() {
     arm-none-eabi-size  output/cc2652/bin/ot-cli-mtd || die
     arm-none-eabi-size  output/cc2652/bin/ot-ncp-ftd || die
     arm-none-eabi-size  output/cc2652/bin/ot-ncp-mtd || die
-}
-
-build_emsk() {
-    export PATH=/tmp/arc_gnu_2017.03-rc2_prebuilt_elf32_le_linux_install/bin:$PATH || die
-
-    git checkout -- . || die
-    git clean -xfd || die
-    ./bootstrap || die
-    COMMISSIONER=1 JOINER=1 SLAAC=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-emsk || die
-    arc-elf32-size  output/emsk/bin/ot-cli-ftd || die
-    arc-elf32-size  output/emsk/bin/ot-cli-mtd || die
-    arc-elf32-size  output/emsk/bin/ot-ncp-ftd || die
-    arc-elf32-size  output/emsk/bin/ot-ncp-mtd || die
 }
 
 build_kw41z() {
@@ -299,8 +300,6 @@ build_samr21() {
     build_nrf52840
     build_qpg6095
     build_samr21
-
-    build_emsk
 }
 
 [ $BUILD_TARGET != arm-gcc-7 ] || {
@@ -342,6 +341,18 @@ build_samr21() {
     ./bootstrap || die
     CPPFLAGS=-DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG make -f examples/Makefile-posix || die
 
+    export CPPFLAGS="                                    \
+        -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1       \
+        -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1     \
+        -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1     \
+        -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1   \
+        -DOPENTHREAD_CONFIG_DIAG_ENABLE=1                \
+        -DOPENTHREAD_CONFIG_JAM_DETECTION_ENABLE=1       \
+        -DOPENTHREAD_CONFIG_LEGACY_ENABLE=1              \
+        -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1          \
+        -DOPENTHREAD_CONFIG_NCP_SPI_ENABLE=1             \
+        -DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1"
+
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
@@ -349,17 +360,7 @@ build_samr21() {
         --enable-ncp                        \
         --enable-ftd                        \
         --enable-mtd                        \
-        --with-ncp-bus=spi                  \
         --with-examples=posix               \
-        --enable-border-router              \
-        --enable-child-supervision          \
-        --enable-diag                       \
-        --enable-jam-detection              \
-        --enable-legacy                     \
-        --enable-mac-filter                 \
-        --enable-service                    \
-        --enable-channel-manager            \
-        --enable-channel-monitor            \
         --disable-docs                      \
         --disable-tests                     \
         --with-vendor-extension=./src/core/common/extension_example.cpp || die
@@ -371,18 +372,15 @@ build_samr21() {
     ./configure                             \
         --enable-cli                        \
         --enable-mtd                        \
-        --with-ncp-bus=spi                  \
         --with-examples=posix               \
-        --enable-border-router              \
-        --enable-child-supervision          \
-        --enable-legacy                     \
-        --enable-mac-filter                 \
-        --enable-service                    \
         --disable-docs                      \
         --disable-tests || die
     make -j 8 || die
 
-    export CPPFLAGS="-DOPENTHREAD_CONFIG_ENABLE_TIME_SYNC=1 -DOPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER=1"
+    export CPPFLAGS="                               \
+        -DOPENTHREAD_CONFIG_ANOUNCE_SENDER_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_TIME_SYNC_ENABLE=1      \
+        -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
 
     git checkout -- . || die
     git clean -xfd || die
@@ -393,7 +391,6 @@ build_samr21() {
         --enable-ftd                        \
         --enable-mtd                        \
         --enable-radio-only                 \
-        --with-ncp-bus=uart                 \
         --with-examples=posix || die
     make -j 8 || die
 }
@@ -403,21 +400,21 @@ build_samr21() {
     export ASAN_OPTIONS=symbolize=1 || die
     export DISTCHECK_CONFIGURE_FLAGS= CPPFLAGS=-DOPENTHREAD_POSIX_VIRTUAL_TIME=1 || die
     ./bootstrap || die
-    CERT_LOG=1 make -f examples/Makefile-posix distcheck || die
+    REFERENCE_DEVICE=1 make -f examples/Makefile-posix distcheck || die
 }
 
 [ $BUILD_TARGET != posix-32-bit ] || {
     ./bootstrap || die
-    CERT_LOG=1 COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 make -f examples/Makefile-posix check || die
+    REFERENCE_DEVICE=1 COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 make -f examples/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-app-cli ] || {
     ./bootstrap || die
     # enable code coverage for OpenThread transceiver only
-    CERT_LOG=1 COVERAGE=1 VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix || die
+    REFERENCE_DEVICE=1 COVERAGE=1 VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix || die
     # readline supports pipe, editline does not
-    CERT_LOG=1 COVERAGE=1 READLINE=readline make -f src/posix/Makefile-posix || die
-    CERT_LOG=1 COVERAGE=1 PYTHONUNBUFFERED=1 OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" make -f src/posix/Makefile-posix check || die
+    REFERENCE_DEVICE=1 COVERAGE=1 READLINE=readline make -f src/posix/Makefile-posix || die
+    REFERENCE_DEVICE=1 COVERAGE=1 PYTHONUNBUFFERED=1 OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" make -f src/posix/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-app-pty ] || {
@@ -427,29 +424,73 @@ build_samr21() {
 
 [ $BUILD_TARGET != posix-mtd ] || {
     ./bootstrap || die
-    CERT_LOG=1 COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 USE_MTD=1 make -f examples/Makefile-posix check || die
+    REFERENCE_DEVICE=1 COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 USE_MTD=1 make -f examples/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-ncp-spi ] || {
+    CPPFLAGS="-DOPENTHREAD_CONFIG_NCP_SPI_ENABLE=1"
+
     ./bootstrap || die
-    make -f examples/Makefile-posix check configure_OPTIONS="--enable-ncp --enable-ftd --with-ncp-bus=spi --with-examples=posix" || die
+    make -f examples/Makefile-posix check configure_OPTIONS="--enable-ncp --enable-ftd --with-examples=posix" || die
 }
 
 [ $BUILD_TARGET != posix-app-ncp ] || {
     ./bootstrap || die
-    CERT_LOG=1 COVERAGE=1 VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix || die
+    REFERENCE_DEVICE=1 COVERAGE=1 VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix || die
     # enable code coverage for OpenThread posix radio
-    CERT_LOG=1 COVERAGE=1 READLINE=readline make -f src/posix/Makefile-posix || die
-    CERT_LOG=1 COVERAGE=1 PYTHONUNBUFFERED=1 OT_NCP_PATH="$(pwd)/$(ls output/posix/*/bin/ot-ncp)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" NODE_TYPE=ncp-sim make -f src/posix/Makefile-posix check || die
+    REFERENCE_DEVICE=1 COVERAGE=1 READLINE=readline make -f src/posix/Makefile-posix || die
+    REFERENCE_DEVICE=1 COVERAGE=1 PYTHONUNBUFFERED=1 OT_NCP_PATH="$(pwd)/$(ls output/posix/*/bin/ot-ncp)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" NODE_TYPE=ncp-sim make -f src/posix/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-ncp ] || {
     ./bootstrap || die
-    CERT_LOG=1 COVERAGE=1 PYTHONUNBUFFERED=1 NODE_TYPE=ncp-sim make -f examples/Makefile-posix check || die
+    REFERENCE_DEVICE=1 COVERAGE=1 PYTHONUNBUFFERED=1 NODE_TYPE=ncp-sim make -f examples/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != toranj-test-framework ] || {
     ./tests/toranj/start.sh || die
+}
+
+[ $BUILD_TARGET != size-report ] || {
+    [ ${TRAVIS_PULL_REQUEST} != false ] || die
+
+    export PATH=/tmp/gcc-arm-none-eabi-7-2018-q2-update/bin:$PATH || die
+
+    mkdir ../output
+
+    export MERGE_BASE_SHA=$(git merge-base HEAD ${TRAVIS_BRANCH})
+
+    # pull request
+    OPENTHREAD_FLAGS="BORDER_AGENT=1 BORDER_ROUTER=1 CHANNEL_MANAGER=1 CHANNEL_MONITOR=1 CHILD_SUPERVISION=1 COAP=1 COAPS=1 COMMISSIONER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DIAGNOSTIC=1 DISABLE_DOC=1 DNS_CLIENT=1 ECDSA=1 FULL_LOGS=1 IP6_FRAGM=1 JAM_DETECTION=1 JOINER=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 SLAAC=1 SNTP_CLIENT=1 TIME_SYNC=1 UDP_FORWARD=1"
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    make -f examples/Makefile-nrf52840 ${OPENTHREAD_FLAGS} || die
+    mv output/nrf52840 ../output/nrf52840-b
+
+    git checkout ${MERGE_BASE_SHA}
+    git submodule update --init
+
+    # base branch
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    make -f examples/Makefile-nrf52840 ${OPENTHREAD_FLAGS} || die
+    mv output/nrf52840 ../output/nrf52840-a
+
+    curl -s "${SIZE_REPORT_URL}/bash" > size-report
+    chmod a+x size-report
+
+    ./size-report init OpenThread
+
+    ./size-report size ../output/nrf52840-a/bin/ot-cli-ftd ../output/nrf52840-b/bin/ot-cli-ftd
+    ./size-report size ../output/nrf52840-a/bin/ot-cli-mtd ../output/nrf52840-b/bin/ot-cli-mtd
+    ./size-report size ../output/nrf52840-a/bin/ot-ncp-ftd ../output/nrf52840-b/bin/ot-ncp-ftd
+    ./size-report size ../output/nrf52840-a/bin/ot-ncp-mtd ../output/nrf52840-b/bin/ot-ncp-mtd
+    ./size-report size ../output/nrf52840-a/bin/ot-rcp     ../output/nrf52840-b/bin/ot-rcp
+
+    ./size-report post
 }
 
 [ $BUILD_TARGET != osx ] || {

@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -37,12 +36,13 @@ import node
 LEADER = 1
 ED = 2
 
+
 class Cert_6_1_1_RouterAttach(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,3):
+        for i in range(1, 3):
             self.nodes[i] = node.Node(i, (i == ED), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -56,9 +56,9 @@ class Cert_6_1_1_RouterAttach(unittest.TestCase):
         self.nodes[ED].enable_whitelist()
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -108,7 +108,9 @@ class Cert_6_1_1_RouterAttach(unittest.TestCase):
         msg.assertMleMessageContainsOptionalTlv(mle.MleFrameCounter)
 
         # 5 - leader
-        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        msg = leader_messages.next_mle_message(
+            mle.CommandType.CHILD_ID_RESPONSE
+        )
         msg.assertSentToNode(self.nodes[ED])
 
         # 6 - leader
@@ -116,6 +118,7 @@ class Cert_6_1_1_RouterAttach(unittest.TestCase):
         for addr in ed_addrs:
             if addr[0:4] != 'fe80':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
+
 
 if __name__ == '__main__':
     unittest.main()

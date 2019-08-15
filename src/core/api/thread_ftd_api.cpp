@@ -328,7 +328,7 @@ otError otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtA
 {
     otError error;
 
-#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     error = instance.Get<Mle::MleRouter>().SetSteeringData(static_cast<const Mac::ExtAddress *>(aExtAddress));

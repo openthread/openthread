@@ -37,7 +37,6 @@ DEBUG                                ?= 0
 
 BORDER_AGENT                         ?= 1
 BORDER_ROUTER                        ?= 1
-CERT_LOG                             ?= 1
 COAP                                 ?= 1
 COAPS                                ?= 1
 COMMISSIONER                         ?= 1
@@ -50,13 +49,15 @@ DHCP6_SERVER                         ?= 1
 DIAGNOSTIC                           ?= 1
 DNS_CLIENT                           ?= 1
 ECDSA                                ?= 1
+IP6_FRAGM                            ?= 1
 JAM_DETECTION                        ?= 1
 JOINER                               ?= 1
 LEGACY                               ?= 1
 LINK_RAW                             ?= 0
 MAC_FILTER                           ?= 1
 MTD_NETDIAG                          ?= 1
-READLINE                             ?= edit
+READLINE                             ?= readline
+REFERENCE_DEVICE                     ?= 1
 SERVICE                              ?= 1
 SNTP_CLIENT                          ?= 1
 UDP_FORWARD                          ?= 1
@@ -73,12 +74,11 @@ configure_OPTIONS                   = \
     --enable-ftd                      \
     --enable-ncp                      \
     --enable-posix-app                \
-    --with-ncp-bus=uart               \
     $(NULL)
 
 # Platform specific switches
 
-ifeq (${DAEMON},1)
+ifeq ($(DAEMON),1)
 configure_OPTIONS              += --enable-posix-app-daemon
 endif
 
@@ -88,8 +88,12 @@ COMMONCFLAGS                   += \
     $(NULL)
 endif
 
+ifneq ($(HOST),)
+configure_OPTIONS              += --host=$(HOST)
+endif
+
 ifeq ($(PLATFORM_NETIF),1)
-configure_OPTIONS              += --enable-platform-netif
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE=1
 endif
 
 ifneq ($(READLINE),)

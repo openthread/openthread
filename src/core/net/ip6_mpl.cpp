@@ -242,7 +242,7 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
     uint32_t                   nextTransmissionTime;
     uint8_t                    hopLimit = 0;
 
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_MPL_INTERVAL
+#if OPENTHREAD_CONFIG_MPL_DYNAMIC_INTERVAL_ENABLE
     // adjust the first MPL forward interval dynamically according to the network scale
     uint8_t interval = (kDataMessageInterval / Mle::kMaxRouters) * Get<RouterTable>().GetNeighborCount();
 #else

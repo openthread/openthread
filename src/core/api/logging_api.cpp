@@ -40,7 +40,7 @@
 using namespace ot;
 
 otLogLevel otLoggingGetLevel(void)
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL && !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL && !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 {
     return Instance::Get().GetLogLevel();
 }
@@ -57,8 +57,8 @@ otError otLoggingSetLevel(otLogLevel aLogLevel)
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-#warning "Dynamic log level is not supported along with multiple OT instance feature (`ENABLE_MULTIPLE_INSTANCES`)"
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#warning "Dynamic log level is not supported along with multiple OT instance feature"
 #else
     Instance::Get().SetLogLevel(aLogLevel);
     error = OT_ERROR_NONE;

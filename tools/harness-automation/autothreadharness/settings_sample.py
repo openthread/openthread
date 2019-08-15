@@ -60,7 +60,7 @@ THREAD_SED_POLLING_INTERVAL = 0
 """int: SED polling interval in seconds. Set to 0 to use Harness's default value."""
 
 HARNESS_HOME = 'C:\\GRL\\Thread1.1'
-"""str: Harness installation path, e.g. ``C:\GRL\Thread1.1``"""
+r"""str: Harness installation path, e.g. ``C:\GRL\Thread1.1``"""
 
 HARNESS_URL = 'http://127.0.0.1:8000'
 """str: Harness front-end url"""
@@ -81,7 +81,10 @@ For OpenThread golden devices, ser2net is also supported, just use IP:PORT for t
 """
 
 MIXED_DEVICE_TYPE = True
-"""bool: Whether golden devices are mixed-type. Must put TopologyConfig.txt under HARNESS_HOME\Thread_Harness\TestScripts before testing if True"""
+r"""bool: Whether golden devices are mixed-type. Must put
+        TopologyConfig.txt under
+        HARNESS_HOME\Thread_Harness\TestScripts before testing if True
+"""
 
 OUTPUT_PATH = '.\\output'
 """str: Path to store results and logs, MUST be writable."""

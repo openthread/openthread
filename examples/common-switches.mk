@@ -28,9 +28,9 @@
 
 # OpenThread Features (Makefile default configuration).
 
+BIG_ENDIAN          ?= 0
 BORDER_AGENT        ?= 0
 BORDER_ROUTER       ?= 0
-CERT_LOG            ?= 0
 COAP                ?= 0
 COAPS               ?= 0
 COMMISSIONER        ?= 0
@@ -53,6 +53,7 @@ LINK_RAW            ?= 0
 MAC_FILTER          ?= 0
 MTD_NETDIAG         ?= 0
 PLATFORM_UDP        ?= 0
+REFERENCE_DEVICE    ?= 0
 SERVICE             ?= 0
 SETTINGS_RAM        ?= 0
 # SLAAC is enabled by default
@@ -62,29 +63,28 @@ TIME_SYNC           ?= 0
 UDP_FORWARD         ?= 0
 
 
+ifeq ($(BIG_ENDIAN),1)
+COMMONCFLAGS                   += -DBYTE_ORDER_BIG_ENDIAN=1
+endif
+
 ifeq ($(BORDER_AGENT),1)
-configure_OPTIONS              += --enable-border-agent
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_BORDER_AGENT_ENABLE=1
 endif
 
 ifeq ($(BORDER_ROUTER),1)
-configure_OPTIONS              += --enable-border-router
-endif
-
-ifeq ($(CERT_LOG),1)
-COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_APP
-configure_OPTIONS              += --enable-cert-log
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1
 endif
 
 ifeq ($(COAP),1)
-configure_OPTIONS              += --enable-application-coap
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_COAP_API_ENABLE=1
 endif
 
 ifeq ($(COAPS),1)
-configure_OPTIONS              += --enable-application-coap-secure
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1
 endif
 
 ifeq ($(COMMISSIONER),1)
-configure_OPTIONS              += --enable-commissioner
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1
 endif
 
 ifeq ($(COVERAGE),1)
@@ -92,15 +92,15 @@ configure_OPTIONS              += --enable-coverage
 endif
 
 ifeq ($(CHANNEL_MANAGER),1)
-configure_OPTIONS              += --enable-channel-manager
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1
 endif
 
 ifeq ($(CHANNEL_MONITOR),1)
-configure_OPTIONS              += --enable-channel-monitor
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1
 endif
 
 ifeq ($(CHILD_SUPERVISION),1)
-configure_OPTIONS              += --enable-child-supervision
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1
 endif
 
 ifeq ($(DEBUG),1)
@@ -108,15 +108,15 @@ configure_OPTIONS              += --enable-debug --disable-optimization
 endif
 
 ifeq ($(DHCP6_CLIENT),1)
-configure_OPTIONS              += --enable-dhcp6-client
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE=1
 endif
 
 ifeq ($(DHCP6_SERVER),1)
-configure_OPTIONS              += --enable-dhcp6-server
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE=1
 endif
 
 ifeq ($(DIAGNOSTIC),1)
-configure_OPTIONS              += --enable-diag
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DIAG_ENABLE=1
 endif
 
 ifeq ($(DISABLE_DOC),1)
@@ -124,63 +124,69 @@ configure_OPTIONS              += --disable-docs
 endif
 
 ifeq ($(DNS_CLIENT),1)
-configure_OPTIONS              += --enable-dns-client
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1
 endif
 
 ifeq ($(ECDSA),1)
-configure_OPTIONS              += --enable-ecdsa
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ECDSA_ENABLE=1
 endif
 
 ifeq ($(IP6_FRAGM),1)
-COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION=1
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_IP6_ENABLE_FRAGMENTATION=1
 endif
 
 ifeq ($(JAM_DETECTION),1)
-configure_OPTIONS              += --enable-jam-detection
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_JAM_DETECTION_ENABLE=1
 endif
 
 ifeq ($(JOINER),1)
-configure_OPTIONS              += --enable-joiner
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_JOINER_ENABLE=1
 endif
 
 ifeq ($(LEGACY),1)
-configure_OPTIONS              += --enable-legacy
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LEGACY_ENABLE=1
 endif
 
 ifeq ($(LINK_RAW),1)
-configure_OPTIONS              += --enable-raw-link-api
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LINK_RAW_ENABLE=1
 endif
 
 ifeq ($(MAC_FILTER),1)
-configure_OPTIONS              += --enable-mac-filter
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1
 endif
 
 ifeq ($(MTD_NETDIAG),1)
-configure_OPTIONS              += --enable-mtd-network-diagnostic
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE=1
 endif
 
 ifeq ($(PLATFORM_UDP),1)
-configure_OPTIONS              += --enable-platform-udp
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE=1
+endif
+
+# Enable features only required for reference device during certification.
+ifeq ($(REFERENCE_DEVICE),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_APP
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE=1
 endif
 
 ifeq ($(SERVICE),1)
-configure_OPTIONS              += --enable-service
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1
 endif
 
 ifeq ($(SLAAC),1)
-COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ENABLE_SLAAC=1
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_IP6_SLAAC_ENABLE=1
 endif
 
 ifeq ($(SNTP_CLIENT),1)
-configure_OPTIONS              += --enable-sntp-client
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE=1
 endif
 
 ifeq ($(TIME_SYNC),1)
-COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ENABLE_TIME_SYNC=1 -DOPENTHREAD_CONFIG_HEADER_IE_SUPPORT=1
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_TIME_SYNC_ENABLE=1 -DOPENTHREAD_MAC_CONFIG_HEADER_IE_SUPPORT=1
 endif
 
 ifeq ($(UDP_FORWARD),1)
-configure_OPTIONS              += --enable-udp-forward
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1
 endif
 
 ifeq ($(DISABLE_BUILTIN_MBEDTLS),1)

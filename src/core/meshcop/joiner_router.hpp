@@ -128,19 +128,14 @@ class DelayedJoinEntHeader
 {
 public:
     /**
-     * Default constructor for the object.
-     *
-     */
-    DelayedJoinEntHeader(void) { memset(this, 0, sizeof(*this)); }
-
-    /**
-     * This constructor initializes the object with specific values.
+     * This method initializes the object with specific values.
      *
      * @param[in]  aSendTime     Time when the message shall be sent.
-     * @param[in]  aDestination  IPv6 address of the message destination.
+     * @param[in]  aMessageInfo  IPv6 address of the message destination.
+     * @param[in]  aKek          A pointer to the KEK.
      *
      */
-    DelayedJoinEntHeader(uint32_t aSendTime, Ip6::MessageInfo &aMessageInfo, const uint8_t *aKek)
+    void Init(uint32_t aSendTime, Ip6::MessageInfo &aMessageInfo, const uint8_t *aKek)
     {
         mSendTime    = aSendTime;
         mMessageInfo = aMessageInfo;

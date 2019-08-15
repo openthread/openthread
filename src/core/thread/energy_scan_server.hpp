@@ -88,7 +88,7 @@ private:
     uint8_t      mCount;
     bool         mActive;
 
-    int8_t  mScanResults[OPENTHREAD_CONFIG_MAX_ENERGY_RESULTS];
+    int8_t  mScanResults[OPENTHREAD_CONFIG_TMF_ENERGY_SCAN_MAX_RESULTS];
     uint8_t mScanResultsLength;
 
     TimerMilli mTimer;

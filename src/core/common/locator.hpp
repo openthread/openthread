@@ -44,7 +44,7 @@ namespace ot {
 
 class Instance;
 
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 extern uint64_t gInstanceRaw[];
 #endif
 
@@ -78,7 +78,7 @@ public:
      * @returns A reference to the parent otInstance.
      *
      */
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     Instance &GetInstance(void) const { return mInstance; }
 #else
     Instance &GetInstance(void) const { return *reinterpret_cast<Instance *>(&gInstanceRaw); }
@@ -105,14 +105,14 @@ protected:
      *
      */
     explicit InstanceLocator(Instance &aInstance)
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
         : mInstance(aInstance)
 #endif
     {
         OT_UNUSED_VARIABLE(aInstance);
     }
 
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 private:
     Instance &mInstance;
 #endif
@@ -136,7 +136,7 @@ public:
      *
      */
     template <typename OwnerType> OwnerType &GetOwner(void)
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     {
         return *static_cast<OwnerType *>(mOwner);
     }
@@ -153,14 +153,14 @@ protected:
      *
      */
     explicit OwnerLocator(void *aOwner)
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
         : mOwner(aOwner)
 #endif
     {
         OT_UNUSED_VARIABLE(aOwner);
     }
 
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 private:
     void *mOwner;
 #endif
