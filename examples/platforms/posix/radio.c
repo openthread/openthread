@@ -1087,3 +1087,36 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 
     return POSIX_RECEIVE_SENSITIVITY;
 }
+
+otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCoexMetrics)
+{
+    otError error = OT_ERROR_NONE;
+
+    assert(aInstance != NULL);
+    otEXPECT_ACTION(aCoexMetrics != NULL, error = OT_ERROR_INVALID_ARGS);
+
+    memset(aCoexMetrics, 0, sizeof(otRadioCoexMetrics));
+
+    aCoexMetrics->mStopped                            = false;
+    aCoexMetrics->mNumGrantGlitch                     = 1;
+    aCoexMetrics->mNumTxRequest                       = 2;
+    aCoexMetrics->mNumTxGrantImmediate                = 3;
+    aCoexMetrics->mNumTxGrantWait                     = 4;
+    aCoexMetrics->mNumTxGrantWaitActivated            = 5;
+    aCoexMetrics->mNumTxGrantWaitTimeout              = 6;
+    aCoexMetrics->mNumTxGrantDeactivatedDuringRequest = 7;
+    aCoexMetrics->mNumTxDelayedGrant                  = 8;
+    aCoexMetrics->mAvgTxRequestToGrantTime            = 9;
+    aCoexMetrics->mNumRxRequest                       = 10;
+    aCoexMetrics->mNumRxGrantImmediate                = 11;
+    aCoexMetrics->mNumRxGrantWait                     = 12;
+    aCoexMetrics->mNumRxGrantWaitActivated            = 13;
+    aCoexMetrics->mNumRxGrantWaitTimeout              = 14;
+    aCoexMetrics->mNumRxGrantDeactivatedDuringRequest = 15;
+    aCoexMetrics->mNumRxDelayedGrant                  = 16;
+    aCoexMetrics->mAvgRxRequestToGrantTime            = 17;
+    aCoexMetrics->mNumRxGrantNone                     = 18;
+
+exit:
+    return error;
+}

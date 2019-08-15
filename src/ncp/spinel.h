@@ -1054,6 +1054,7 @@ enum
     SPINEL_CAP_CHILD_SUPERVISION       = (SPINEL_CAP_OPENTHREAD__BEGIN + 8),
     SPINEL_CAP_POSIX_APP               = (SPINEL_CAP_OPENTHREAD__BEGIN + 9),
     SPINEL_CAP_SLAAC                   = (SPINEL_CAP_OPENTHREAD__BEGIN + 10),
+    SPINEL_CAP_COEX_METRICS            = (SPINEL_CAP_OPENTHREAD__BEGIN + 11),
     SPINEL_CAP_OPENTHREAD__END         = 640,
 
     SPINEL_CAP_THREAD__BEGIN        = 1024,
@@ -1626,6 +1627,43 @@ typedef enum
      *
      */
     SPINEL_PROP_RADIO_CAPS = SPINEL_PROP_PHY_EXT__BEGIN + 11,
+
+    /// All coex metrics related counters.
+    /** Format: bLt(LLLLLLLL)t(LLLLLLLLL)  (Read-only)
+     *
+     * The contents include three variables and two structs, first one corresponds to
+     * all transmit related coex counters, second one provides the receive related counters.
+     *
+     *   'b': Stopped               (Stats collection stopped due to saturation).
+     *   'L': NumGrantGlitch        (The number of of grant glitches).
+     *
+     * The transmit structure includes:
+     *
+     *   'L': NumTxRequest                       (The number of tx requests).
+     *   'L': NumTxGrantImmediate                (The number of tx requests while grant was active).
+     *   'L': NumTxGrantWait                     (The number of tx requests while grant was inactive).
+     *   'L': NumTxGrantWaitActivated            (The number of tx requests while grant was inactive that were
+     *                                            ultimately granted).
+     *   'L': NumTxGrantWaitTimeout              (The number of tx requests while grant was inactive that timed out).
+     *   'L': NumTxGrantDeactivatedDuringRequest (The number of tx requests that were in progress when grant was
+     *                                            deactivated).
+     *   'L': NumTxDelayedGrant                  (The number of tx requests that were not granted within 50us).
+     *   'L': AvgTxRequestToGrantTime            (The average time in usec from tx request to grant).
+     *
+     * The receive structure includes:
+     *   'L': NumRxRequest                       (The number of rx requests).
+     *   'L': NumRxGrantImmediate                (The number of rx requests while grant was active).
+     *   'L': NumRxGrantWait                     (The number of rx requests while grant was inactive).
+     *   'L': NumRxGrantWaitActivated            (The number of rx requests while grant was inactive that were
+     *                                            ultimately granted).
+     *   'L': NumRxGrantWaitTimeout              (The number of rx requests while grant was inactive that timed out).
+     *   'L': NumRxGrantDeactivatedDuringRequest (The number of rx requests that were in progress when grant was
+     *                                            deactivated).
+     *   'L': NumRxDelayedGrant                  (The number of rx requests that were not granted within 50us).
+     *   'L': AvgRxRequestToGrantTime            (The average time in usec from rx request to grant).
+     *   'L': NumRxGrantNone                     (The number of rx requests that completed without receiving grant).
+     */
+    SPINEL_PROP_RADIO_COEX_METRICS = SPINEL_PROP_PHY_EXT__BEGIN + 12,
 
     SPINEL_PROP_PHY_EXT__END = 0x1300,
 

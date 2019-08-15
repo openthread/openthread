@@ -198,6 +198,17 @@ public:
     int8_t GetReceiveSensitivity(void) const { return mRxSensitivity; }
 
     /**
+     * This method returns the radio coexistence metrics.
+     *
+     * @param[out] aCoexMetrics  A pointer to the coexistence metrics structure.
+     *
+     * @retval OT_ERROR_NONE          Successfully retrieved the coex metrics.
+     * @retval OT_ERROR_INVALID_ARGS  @p aCoexMetrics was NULL.
+     *
+     */
+    otError GetCoexMetrics(otRadioCoexMetrics *aCoexMetrics);
+
+    /**
      * This method returns a reference to the transmit buffer.
      *
      * The caller forms the IEEE 802.15.4 frame in this buffer then calls otPlatRadioTransmit() to request transmission.

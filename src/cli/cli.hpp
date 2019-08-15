@@ -208,6 +208,9 @@ private:
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     void ProcessCoapSecure(int argc, char *argv[]);
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+    void ProcessCoexMetrics(int argc, char *argv[]);
+#endif
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     void ProcessCommissioner(int argc, char *argv[]);
 #endif

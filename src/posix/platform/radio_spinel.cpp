@@ -892,6 +892,49 @@ int8_t RadioSpinel::GetRssi(void)
     return rssi;
 }
 
+otError RadioSpinel::GetCoexMetrics(otRadioCoexMetrics *aCoexMetrics)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aCoexMetrics != NULL, error = OT_ERROR_INVALID_ARGS);
+
+    error = Get(
+        SPINEL_PROP_RADIO_COEX_METRICS,
+        SPINEL_DATATYPE_BOOL_S                                               // Stopped
+                SPINEL_DATATYPE_UINT32_S                                     // NumGrantGlitch
+                SPINEL_DATATYPE_STRUCT_S(                                    // Tx Coex Metrics Structure
+                    SPINEL_DATATYPE_UINT32_S                                 // NumTxRequest
+                                                SPINEL_DATATYPE_UINT32_S     // NumTxGrantImmediate
+                                                SPINEL_DATATYPE_UINT32_S     // NumTxGrantWait
+                                                SPINEL_DATATYPE_UINT32_S     // NumTxGrantWaitActivated
+                                                SPINEL_DATATYPE_UINT32_S     // NumTxGrantWaitTimeout
+                                                SPINEL_DATATYPE_UINT32_S     // NumTxGrantDeactivatedDuringRequest
+                                                SPINEL_DATATYPE_UINT32_S     // NumTxDelayedGrant
+                                                SPINEL_DATATYPE_UINT32_S     // AvgTxRequestToGrantTime
+                    ) SPINEL_DATATYPE_STRUCT_S(                              // Rx Coex Metrics Structure
+                    SPINEL_DATATYPE_UINT32_S                                 // NumRxRequest
+                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantImmediate
+                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantWait
+                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantWaitActivated
+                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantWaitTimeout
+                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantDeactivatedDuringRequest
+                                                    SPINEL_DATATYPE_UINT32_S // NumRxDelayedGrant
+                                                    SPINEL_DATATYPE_UINT32_S // AvgRxRequestToGrantTime
+                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantNone
+                    ),
+        &aCoexMetrics->mStopped, &aCoexMetrics->mNumGrantGlitch, &aCoexMetrics->mNumTxRequest,
+        &aCoexMetrics->mNumTxGrantImmediate, &aCoexMetrics->mNumTxGrantWait, &aCoexMetrics->mNumTxGrantWaitActivated,
+        &aCoexMetrics->mNumTxGrantWaitTimeout, &aCoexMetrics->mNumTxGrantDeactivatedDuringRequest,
+        &aCoexMetrics->mNumTxDelayedGrant, &aCoexMetrics->mAvgTxRequestToGrantTime, &aCoexMetrics->mNumRxRequest,
+        &aCoexMetrics->mNumRxGrantImmediate, &aCoexMetrics->mNumRxGrantWait, &aCoexMetrics->mNumRxGrantWaitActivated,
+        &aCoexMetrics->mNumRxGrantWaitTimeout, &aCoexMetrics->mNumRxGrantDeactivatedDuringRequest,
+        &aCoexMetrics->mNumRxDelayedGrant, &aCoexMetrics->mAvgRxRequestToGrantTime, &aCoexMetrics->mNumRxGrantNone);
+
+exit:
+    LogIfFail("Get Coex Metrics failed", error);
+    return error;
+}
+
 otError RadioSpinel::SetTransmitPower(int8_t aPower)
 {
     otError error = Set(SPINEL_PROP_PHY_TX_POWER, SPINEL_DATATYPE_INT8_S, aPower);
@@ -1628,6 +1671,12 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return sRadioSpinel.GetReceiveSensitivity();
+}
+
+otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCoexMetrics)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return sRadioSpinel.GetCoexMetrics(aCoexMetrics);
 }
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
