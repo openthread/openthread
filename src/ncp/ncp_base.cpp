@@ -1292,7 +1292,7 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_NEST_STREAM_MFG(uint8_t aHeader)
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     // TODO do not pass mfg prefix
     // skip mfg prefix from wpantund
-    if (strstr(string, "mfg") == string)
+    if (memcmp(string, "mfg ", 4) == 0)
     {
         string += 4;
     }
