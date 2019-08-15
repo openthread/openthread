@@ -436,7 +436,7 @@ void Dhcp6Client::ProcessReply(Message &aMessage)
     uint16_t offset = aMessage.GetOffset();
     uint16_t length = aMessage.GetLength() - aMessage.GetOffset();
     uint16_t optionOffset;
-	
+
     if ((optionOffset = FindOption(aMessage, offset, length, kOptionStatusCode)) > 0)
     {
         SuccessOrExit(ProcessStatusCode(aMessage, optionOffset));
@@ -491,11 +491,9 @@ otError Dhcp6Client::ProcessServerIdentifier(Message &aMessage, uint16_t aOffset
     ServerIdentifier option;
 
     VerifyOrExit((aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option)));
-    VerifyOrExit(((option.GetDuidType() == kDuidLLT) &&
-                  (option.GetDuidHardwareType() == kHardwareTypeEthernet)) ||
-                 ((option.GetLength() == (sizeof(option) - sizeof(Dhcp6Option))) &&
-                  (option.GetDuidType() == kDuidLL) &&
-                  (option.GetDuidHardwareType() == kHardwareTypeEui64)),
+    VerifyOrExit(((option.GetDuidType() == kDuidLLT) && (option.GetDuidHardwareType() == kHardwareTypeEthernet)) ||
+                     ((option.GetLength() == (sizeof(option) - sizeof(Dhcp6Option))) &&
+                      (option.GetDuidType() == kDuidLL) && (option.GetDuidHardwareType() == kHardwareTypeEui64)),
                  error = OT_ERROR_PARSE);
 exit:
     return error;
