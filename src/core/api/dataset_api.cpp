@@ -37,6 +37,7 @@
 
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
+#include "meshcop/dataset_manager.hpp"
 
 using namespace ot;
 
