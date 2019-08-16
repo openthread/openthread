@@ -44,7 +44,10 @@
 #include <openthread/platform/logging.h>
 
 #include "common/random_manager.hpp"
+#include "common/tasklet.hpp"
+#include "common/timer.hpp"
 #include "diags/factory_diags.hpp"
+#include "radio/radio.hpp"
 
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 #include "common/message.hpp"
