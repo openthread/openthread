@@ -424,7 +424,7 @@ bool BorderAgent::HandleUdpReceive(const Message &aMessage, const Ip6::MessageIn
         tlv.SetSourcePort(aMessageInfo.GetPeerPort());
         tlv.SetDestinationPort(aMessageInfo.GetSockPort());
         tlv.SetUdpLength(udpLength);
-        SuccessOrExit(error = message->AppendTlv(tlv));
+        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
 
         offset = message->GetLength();
         SuccessOrExit(error = message->SetLength(offset + udpLength));
