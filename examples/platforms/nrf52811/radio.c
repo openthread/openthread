@@ -729,15 +729,10 @@ void nrf_802154_received_timestamp_raw(uint8_t *p_data, int8_t power, uint8_t lq
         receivedFrame->mInfo.mRxInfo.mAckedWithFramePending = false;
     }
 
-#if !OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    // Get the timestamp when the SFD was received if time sync enabled or promiscuous mode is on.
-    if (otPlatRadioGetPromiscuous(sInstance))
-#endif
-    {
-        uint32_t offset =
-            (int32_t)otPlatAlarmMicroGetNow() - (int32_t)nrf_802154_first_symbol_timestamp_get(time, p_data[0]);
-        receivedFrame->mInfo.mRxInfo.mTimestamp = nrf5AlarmGetCurrentTime() - offset;
-    }
+    // Get the timestamp when the SFD was received.
+    uint32_t offset =
+        (int32_t)otPlatAlarmMicroGetNow() - (int32_t)nrf_802154_first_symbol_timestamp_get(time, p_data[0]);
+    receivedFrame->mInfo.mRxInfo.mTimestamp = nrf5AlarmGetCurrentTime() - offset;
 
     sAckedWithFramePending = false;
 
