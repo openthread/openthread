@@ -500,16 +500,8 @@ AC_ARG_ENABLE(ftd,
     ],
     [enable_ftd=no])
 
-if test "$enable_ftd" = "yes"; then
-    OPENTHREAD_ENABLE_FTD=1
-else
-    OPENTHREAD_ENABLE_FTD=0
-fi
-
 AC_MSG_RESULT(${enable_ftd})
-AC_SUBST(OPENTHREAD_ENABLE_FTD)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_FTD], [test "${enable_ftd}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_FTD], [${OPENTHREAD_ENABLE_FTD}], [Define to 1 to build FTD library.])
 
 #
 # MTD Library
@@ -532,16 +524,8 @@ AC_ARG_ENABLE(mtd,
     ],
     [enable_mtd=no])
 
-if test "$enable_mtd" = "yes"; then
-    OPENTHREAD_ENABLE_MTD=1
-else
-    OPENTHREAD_ENABLE_MTD=0
-fi
-
 AC_MSG_RESULT(${enable_mtd})
-AC_SUBST(OPENTHREAD_ENABLE_MTD)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_MTD], [test "${enable_mtd}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_MTD], [${OPENTHREAD_ENABLE_MTD}], [Define to 1 to build MTD library.])
 
 #
 # Radio Library
@@ -564,16 +548,8 @@ AC_ARG_ENABLE(radio-only,
     ],
     [enable_radio_only=no])
 
-if test "$enable_radio_only" = "yes"; then
-    OPENTHREAD_ENABLE_RADIO_ONLY=1
-else
-    OPENTHREAD_ENABLE_RADIO_ONLY=0
-fi
-
 AC_MSG_RESULT(${enable_radio_only})
-AC_SUBST(OPENTHREAD_ENABLE_RADIO_ONLY)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_RADIO_ONLY], [test "${enable_radio_only}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_RADIO_ONLY], [${OPENTHREAD_ENABLE_RADIO_ONLY}], [Define to 1 to build radio-only library.])
 
 #
 # whether to build executables
@@ -596,16 +572,8 @@ AC_ARG_ENABLE(executable,
     ],
     [enable_executable=yes])
 
-if test "$enable_executable" = "yes"; then
-    OPENTHREAD_ENABLE_EXECUTABLE=1
-else
-    OPENTHREAD_ENABLE_EXECUTABLE=0
-fi
-
 AC_MSG_RESULT(${enable_executable})
-AC_SUBST(OPENTHREAD_ENABLE_EXECUTABLE)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_EXECUTABLE], [test "${enable_executable}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_EXECUTABLE], [${OPENTHREAD_ENABLE_EXECUTABLE}], [Define to 1 to build executables.])
 
 #
 # CLI Library
@@ -628,16 +596,8 @@ AC_ARG_ENABLE(cli,
     ],
     [enable_cli=no])
 
-if test "$enable_cli" = "yes"; then
-    OPENTHREAD_ENABLE_CLI=1
-else
-    OPENTHREAD_ENABLE_CLI=0
-fi
-
 AC_MSG_RESULT(${enable_cli})
-AC_SUBST(OPENTHREAD_ENABLE_CLI)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI], [test "${enable_cli}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_CLI], [${OPENTHREAD_ENABLE_CLI}], [Define to 1 to build CLI library.])
 
 #
 # NCP Library
@@ -660,16 +620,8 @@ AC_ARG_ENABLE(ncp,
     ],
     [enable_ncp=no])
 
-if test "$enable_ncp" = "yes"; then
-    OPENTHREAD_ENABLE_NCP=1
-else
-    OPENTHREAD_ENABLE_NCP=0
-fi
-
 AC_MSG_RESULT(${enable_ncp})
-AC_SUBST(OPENTHREAD_ENABLE_NCP)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP], [test "${enable_ncp}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP], [${OPENTHREAD_ENABLE_NCP}], [Define to 1 to build NCP library.])
 
 #
 # Readline - readline library to use for POSIX CLI
