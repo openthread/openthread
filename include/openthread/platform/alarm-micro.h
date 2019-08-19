@@ -81,7 +81,7 @@ uint32_t otPlatAlarmMicroGetNow(void);
  *
  * @param[in] aInstance  The OpenThread instance structure.
  */
-extern void otPlatAlarmMicroFired(otInstance *aInstance);
+void otPlatAlarmMicroFired(otInstance *aInstance);
 
 /**
  * @}

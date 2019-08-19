@@ -484,7 +484,7 @@ bool otPlatBleIsEnabled(otInstance *aInstance);
  *
  * @param[in] aInstance  The OpenThread instance structure.
  */
-extern void otPlatBleOnEnabled(otInstance *aInstance);
+void otPlatBleOnEnabled(otInstance *aInstance);
 
 /****************************************************************************
  * @section Bluetooth Low Energy GAP.
@@ -615,7 +615,7 @@ otError otPlatBleGapAdvStop(otInstance *aInstance);
  * @param[in]  aConnectionId The identifier of the open connection.
  *
  */
-extern void otPlatBleGapOnConnected(otInstance *aInstance, uint16_t aConnectionId);
+void otPlatBleGapOnConnected(otInstance *aInstance, uint16_t aConnectionId);
 
 /**
  * The BLE driver calls this method to notify OpenThread that the BLE Device
@@ -625,7 +625,7 @@ extern void otPlatBleGapOnConnected(otInstance *aInstance, uint16_t aConnectionI
  * @param[in]  aConnectionId The identifier of the closed connection.
  *
  */
-extern void otPlatBleGapOnDisconnected(otInstance *aInstance, uint16_t aConnectionId);
+void otPlatBleGapOnDisconnected(otInstance *aInstance, uint16_t aConnectionId);
 
 /**
  * Starts BLE Scanning procedure.
@@ -668,7 +668,7 @@ otError otPlatBleGapScanStop(otInstance *aInstance);
  * @param[in]  aPacket    A pointer to the received packet.
  *
  */
-extern void otPlatBleGapOnAdvReceived(otInstance *aInstance, otPlatBleDeviceAddr *aAddress, otBleRadioPacket *aPacket);
+void otPlatBleGapOnAdvReceived(otInstance *aInstance, otPlatBleDeviceAddr *aAddress, otBleRadioPacket *aPacket);
 
 /**
  * The BLE driver calls this method to notify OpenThread that a scan response packet has been received.
@@ -678,9 +678,7 @@ extern void otPlatBleGapOnAdvReceived(otInstance *aInstance, otPlatBleDeviceAddr
  * @param[in]  aPacket    A pointer to the received packet.
  *
  */
-extern void otPlatBleGapOnScanRespReceived(otInstance *         aInstance,
-                                           otPlatBleDeviceAddr *aAddress,
-                                           otBleRadioPacket *   aPacket);
+void otPlatBleGapOnScanRespReceived(otInstance *aInstance, otPlatBleDeviceAddr *aAddress, otBleRadioPacket *aPacket);
 
 /**
  * Starts BLE Connection procedure.
@@ -767,7 +765,7 @@ otError otPlatBleGattClientRead(otInstance *aInstance, uint16_t aHandle);
  * @param[in] aPacket    A pointer to the packet contains read value.
  *
  */
-extern void otPlatBleGattClientOnReadResponse(otInstance *aInstance, otBleRadioPacket *aPacket);
+void otPlatBleGattClientOnReadResponse(otInstance *aInstance, otBleRadioPacket *aPacket);
 
 /**
  * Sends ATT Write Request.
@@ -799,7 +797,8 @@ otError otPlatBleGattClientWrite(otInstance *aInstance, uint16_t aHandle, otBleR
  *
  */
 
-extern void otPlatBleGattClientOnWriteResponse(otInstance *aInstance, uint16_t aHandle);
+void otPlatBleGattClientOnWriteResponse(otInstance *aInstance, uint16_t aHandle);
+
 /**
  * Subscribes for characteristic indications.
  *
@@ -828,7 +827,7 @@ otError otPlatBleGattClientSubscribeRequest(otInstance *aInstance, uint16_t aHan
  * @param[in] aHandle    The handle on which ATT Write Response has been sent.
  *
  */
-extern void otPlatBleGattClientOnSubscribeResponse(otInstance *aInstance, uint16_t aHandle);
+void otPlatBleGattClientOnSubscribeResponse(otInstance *aInstance, uint16_t aHandle);
 
 /**
  * The BLE driver calls this method to notify OpenThread that an ATT Handle Value
@@ -841,7 +840,7 @@ extern void otPlatBleGattClientOnSubscribeResponse(otInstance *aInstance, uint16
  * @param[in] aPacket    A pointer to the packet contains indicated value.
  *
  */
-extern void otPlatBleGattClientOnIndication(otInstance *aInstance, uint16_t aHandle, otBleRadioPacket *aPacket);
+void otPlatBleGattClientOnIndication(otInstance *aInstance, uint16_t aHandle, otBleRadioPacket *aPacket);
 
 /**
  * Performs GATT Primary Service Discovery of all services available.
@@ -888,11 +887,11 @@ otError otPlatBleGattClientServiceDiscover(otInstance *aInstance, const otPlatBl
  *                          Otherwise error indicates the reason of failure is used.
  *
  */
-extern void otPlatBleGattClientOnServiceDiscovered(otInstance *aInstance,
-                                                   uint16_t    aStartHandle,
-                                                   uint16_t    aEndHandle,
-                                                   uint16_t    aServiceUuid,
-                                                   otError     aError);
+void otPlatBleGattClientOnServiceDiscovered(otInstance *aInstance,
+                                            uint16_t    aStartHandle,
+                                            uint16_t    aEndHandle,
+                                            uint16_t    aServiceUuid,
+                                            otError     aError);
 
 /**
  * Performs GATT Characteristic Discovery of a service.
@@ -927,10 +926,10 @@ otError otPlatBleGattClientCharacteristicsDiscover(otInstance *aInstance, uint16
  *                       Otherwise error indicates the reason of failure is used.
  *
  */
-extern void otPlatBleGattClientOnCharacteristicsDiscoverDone(otInstance *                 aInstance,
-                                                             otPlatBleGattCharacteristic *aChars,
-                                                             uint16_t                     aCount,
-                                                             otError                      aError);
+void otPlatBleGattClientOnCharacteristicsDiscoverDone(otInstance *                 aInstance,
+                                                      otPlatBleGattCharacteristic *aChars,
+                                                      uint16_t                     aCount,
+                                                      otError                      aError);
 
 /**
  * Performs GATT Descriptor Discovery.
@@ -963,10 +962,10 @@ otError otPlatBleGattClientDescriptorsDiscover(otInstance *aInstance, uint16_t a
  *                       Otherwise error indicates the reason of failure is used.
  *
  */
-extern void otPlatBleGattClientOnDescriptorsDiscoverDone(otInstance *             aInstance,
-                                                         otPlatBleGattDescriptor *aDescs,
-                                                         uint16_t                 aCount,
-                                                         otError                  aError);
+void otPlatBleGattClientOnDescriptorsDiscoverDone(otInstance *             aInstance,
+                                                  otPlatBleGattDescriptor *aDescs,
+                                                  uint16_t                 aCount,
+                                                  otError                  aError);
 
 /**
  * Sends Exchange MTU Request.
@@ -996,7 +995,7 @@ otError otPlatBleGattClientMtuExchangeRequest(otInstance *aInstance, uint16_t aM
  *                       indicates the reason of failure is used.
  *
  */
-extern void otPlatBleGattClientOnMtuExchangeResponse(otInstance *aInstance, uint16_t aMtu, otError aError);
+void otPlatBleGattClientOnMtuExchangeResponse(otInstance *aInstance, uint16_t aMtu, otError aError);
 
 /*******************************************************************************
  * @section Bluetooth Low Energy GATT Server.
@@ -1047,7 +1046,7 @@ otError otPlatBleGattServerIndicate(otInstance *aInstance, uint16_t aHandle, otB
  * @param[in] aHandle    The handle on which ATT Handle Value Confirmation has been sent.
  *
  */
-extern void otPlatBleGattServerOnIndicationConfirmation(otInstance *aInstance, uint16_t aHandle);
+void otPlatBleGattServerOnIndicationConfirmation(otInstance *aInstance, uint16_t aHandle);
 
 /**
  * The BLE driver calls this method to notify OpenThread that an ATT Write Request
@@ -1060,7 +1059,7 @@ extern void otPlatBleGattServerOnIndicationConfirmation(otInstance *aInstance, u
  * @param[in] aPacket     A pointer to the packet contains value to be written to the attribute.
  *
  */
-extern void otPlatBleGattServerOnWriteRequest(otInstance *aInstance, uint16_t aHandle, otBleRadioPacket *aPacket);
+void otPlatBleGattServerOnWriteRequest(otInstance *aInstance, uint16_t aHandle, otBleRadioPacket *aPacket);
 
 /**
  * The BLE driver calls this method to notify OpenThread that an ATT Read Request
@@ -1073,7 +1072,7 @@ extern void otPlatBleGattServerOnWriteRequest(otInstance *aInstance, uint16_t aH
  * @param[out] aPacket    A pointer to the packet to be filled with pointers to attribute data to be read.
  *
  */
-extern void otPlatBleGattServerOnReadRequest(otInstance *aInstance, uint16_t aHandle, otBleRadioPacket *aPacket);
+void otPlatBleGattServerOnReadRequest(otInstance *aInstance, uint16_t aHandle, otBleRadioPacket *aPacket);
 
 /**
  * The BLE driver calls this method to notify OpenThread that an ATT Subscription
@@ -1086,7 +1085,7 @@ extern void otPlatBleGattServerOnReadRequest(otInstance *aInstance, uint16_t aHa
  * @param[in] aSubscribing True if subscribing, otherwise unsubscribing.
  *
  */
-extern void otPlatBleGattServerOnSubscribeRequest(otInstance *aInstance, uint16_t aHandle, bool aSubscribing);
+void otPlatBleGattServerOnSubscribeRequest(otInstance *aInstance, uint16_t aHandle, bool aSubscribing);
 
 /****************************************************************************
  * @section Bluetooth Low Energy L2CAP Connection Oriented Channels.
@@ -1124,7 +1123,7 @@ otError otPlatBleL2capConnectionRequest(otInstance *aInstance, uint16_t aPsm, ui
  * @param[in]  aPeerCid   The CID represents a channel endpoint on the peer device.
  *
  */
-extern void otPlatBleL2capOnConnectionRequest(otInstance *aInstance, uint16_t aPsm, uint16_t aMtu, uint16_t aPeerCid);
+void otPlatBleL2capOnConnectionRequest(otInstance *aInstance, uint16_t aPsm, uint16_t aMtu, uint16_t aPeerCid);
 
 /**
  * Sends LE Credit Based Connection Response.
@@ -1163,10 +1162,10 @@ otError otPlatBleL2capConnectionResponse(otInstance *        aInstance,
  * @param[in]  aPeerCid   The CID represents a channel endpoint on the peer device.
  *
  */
-extern void otPlatBleL2capOnConnectionResponse(otInstance *        aInstance,
-                                               otPlatBleL2capError aError,
-                                               uint16_t            aMtu,
-                                               uint16_t            aPeerCid);
+void otPlatBleL2capOnConnectionResponse(otInstance *        aInstance,
+                                        otPlatBleL2capError aError,
+                                        uint16_t            aMtu,
+                                        uint16_t            aPeerCid);
 
 /**
  * Sends an SDU on an L2CAP channel.
@@ -1197,10 +1196,10 @@ otError otPlatBleL2capSduSend(otInstance *aInstance, uint16_t aLocalCid, uint16_
  * @param[in] aPacket    A pointer to the packet containing SDU.
  *
  */
-extern void otPlatBleL2capOnSduReceived(otInstance *      aInstance,
-                                        uint16_t          aLocalCid,
-                                        uint16_t          aPeerCid,
-                                        otBleRadioPacket *aPacket);
+void otPlatBleL2capOnSduReceived(otInstance *      aInstance,
+                                 uint16_t          aLocalCid,
+                                 uint16_t          aPeerCid,
+                                 otBleRadioPacket *aPacket);
 
 /**
  * The BLE driver calls this method to notify OpenThread that an L2CAP SDU has been sent.
@@ -1208,7 +1207,7 @@ extern void otPlatBleL2capOnSduReceived(otInstance *      aInstance,
  * @param[in] aInstance  The OpenThread instance structure.
  *
  */
-extern void otPlatBleL2capOnSduSent(otInstance *aInstance);
+void otPlatBleL2capOnSduSent(otInstance *aInstance);
 
 /**
  * Sends an L2CAP Disconnection Request.
@@ -1236,7 +1235,7 @@ otError otPlatBleL2capDisconnect(otInstance *aInstance, uint16_t aLocalCid, uint
  * @param[in] aPeerCid   The peer channel endpoint ID value.
  *
  */
-extern void otPlatBleL2capOnDisconnect(otInstance *aInstance, uint16_t aLocalCid, uint16_t aPeerCid);
+void otPlatBleL2capOnDisconnect(otInstance *aInstance, uint16_t aLocalCid, uint16_t aPeerCid);
 
 /**
  * @}

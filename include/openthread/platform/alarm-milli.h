@@ -81,14 +81,14 @@ uint32_t otPlatAlarmMilliGetNow(void);
  *
  * @param[in] aInstance  The OpenThread instance structure.
  */
-extern void otPlatAlarmMilliFired(otInstance *aInstance);
+void otPlatAlarmMilliFired(otInstance *aInstance);
 
 /**
  * Signal diagnostics module that the alarm has fired.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  */
-extern void otPlatDiagAlarmFired(otInstance *aInstance);
+void otPlatDiagAlarmFired(otInstance *aInstance);
 
 /**
  * @}

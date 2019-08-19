@@ -76,7 +76,7 @@ bool otTaskletsArePending(otInstance *aInstance);
  * @param[in] aInstance A pointer to an OpenThread instance.
  *
  */
-extern void otTaskletsSignalPending(otInstance *aInstance);
+void otTaskletsSignalPending(otInstance *aInstance);
 
 /**
  * @}

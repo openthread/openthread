@@ -470,7 +470,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel);
  *                       OT_ERROR_NO_BUFS when a frame could not be received due to lack of rx buffer space.
  *
  */
-extern void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
+void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
 /**
  * The radio driver calls this method to notify OpenThread diagnostics module of a received frame.
@@ -484,7 +484,7 @@ extern void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, 
  *                       OT_ERROR_NO_BUFS when a frame could not be received due to lack of rx buffer space.
  *
  */
-extern void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
+void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
 /**
  * Get the radio transmit frame buffer.
@@ -527,7 +527,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame);
  * @param[in]  aFrame     A pointer to the frame that is being transmitted.
  *
  */
-extern void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame);
+void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame);
 
 /**
  * The radio driver calls this function to notify OpenThread that the transmit operation has completed,
@@ -542,7 +542,7 @@ extern void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame);
  *                        OT_ERROR_ABORT when transmission was aborted for other reasons.
  *
  */
-extern void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
+void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
 
 /**
  * The radio driver calls this method to notify OpenThread diagnostics module that the transmission has completed.
@@ -556,7 +556,7 @@ extern void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRad
  *                            OT_ERROR_ABORT when transmission was aborted for other reasons.
  *
  */
-extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
+void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
 /**
  * The radio driver calls this method to notify OpenThread to process transmit security for the frame,
@@ -571,7 +571,7 @@ extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFr
  * @param[in]  aFrame      The radio frame which needs to process transmit security.
  *
  */
-extern void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFrame);
+void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFrame);
 
 /**
  * Get the most recent RSSI measurement.
@@ -607,7 +607,7 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
  * @param[in]  aEnergyScanMaxRssi  The maximum RSSI encountered on the scanned channel.
  *
  */
-extern void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
+void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
 
 /**
  * Enable/Disable source address match feature.
