@@ -51,6 +51,8 @@ class TestDiag(unittest.TestCase):
              'failed\r\nstatus 0xd\r\n'),
             ('diag start\n',
              'start diagnostics mode\r\nstatus 0x00\r\n'),
+            ('diag invalid test\n',
+             'diag feature \'invalid\' is not supported'),
             ('diag',
              'diagnostics mode is enabled\r\n'),
             ('diag channel 10\n',
