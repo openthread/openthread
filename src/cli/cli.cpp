@@ -458,10 +458,10 @@ void Interpreter::ProcessChannel(int argc, char *argv[])
                 uint32_t channelMask = otLinkGetSupportedChannelMask(mInstance);
                 uint8_t  channelNum  = sizeof(channelMask) * CHAR_BIT;
 
-                mServer->OutputFormat("interval: %lu\r\n", otChannelMonitorGetSampleInterval(mInstance));
+                mServer->OutputFormat("interval: %u\r\n", otChannelMonitorGetSampleInterval(mInstance));
                 mServer->OutputFormat("threshold: %d\r\n", otChannelMonitorGetRssiThreshold(mInstance));
-                mServer->OutputFormat("window: %lu\r\n", otChannelMonitorGetSampleWindow(mInstance));
-                mServer->OutputFormat("count: %lu\r\n", otChannelMonitorGetSampleCount(mInstance));
+                mServer->OutputFormat("window: %u\r\n", otChannelMonitorGetSampleWindow(mInstance));
+                mServer->OutputFormat("count: %u\r\n", otChannelMonitorGetSampleCount(mInstance));
 
                 mServer->OutputFormat("occupancies:\r\n");
                 for (uint8_t channel = 0; channel < channelNum; channel++)
@@ -1895,7 +1895,8 @@ void Interpreter::HandleIcmpReceive(Message &               aMessage,
 
     VerifyOrExit(aIcmpHeader.mType == OT_ICMP6_TYPE_ECHO_REPLY);
 
-    mServer->OutputFormat("%d bytes from ", aMessage.GetLength() - aMessage.GetOffset() + sizeof(otIcmp6Header));
+    mServer->OutputFormat("%u bytes from ",
+                          aMessage.GetLength() - aMessage.GetOffset() + static_cast<uint16_t>(sizeof(otIcmp6Header)));
 
     OutputIp6Address(aMessageInfo.GetPeerAddr());
 
@@ -2917,7 +2918,7 @@ void Interpreter::HandleSntpResponse(uint64_t aTime, otError aResult)
     {
         // Some Embedded C libraries do not support printing of 64-bit unsigned integers.
         // To simplify, unix epoch time and era number are printed separately.
-        mServer->OutputFormat("SNTP response - Unix time: %ld (era: %ld)\r\n", static_cast<uint32_t>(aTime),
+        mServer->OutputFormat("SNTP response - Unix time: %u (era: %u)\r\n", static_cast<uint32_t>(aTime),
                               static_cast<uint32_t>(aTime >> 32));
     }
     else
