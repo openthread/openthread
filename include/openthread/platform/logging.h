@@ -110,7 +110,7 @@ extern "C" {
  * This type represents the log level.
  *
  */
-typedef uint8_t otLogLevel;
+typedef int otLogLevel;
 
 /**
  * This enumeration represents log regions.
