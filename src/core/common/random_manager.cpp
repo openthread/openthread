@@ -44,6 +44,9 @@
 #include "common/random.hpp"
 #include "crypto/mbedtls.hpp"
 
+#define FIXED_POINT_FRACTIONAL_BITS 6
+#define FLOAT_TO_FIXED(x) ((uint32_t)(x * (1 << FIXED_POINT_FRACTIONAL_BITS)))
+
 namespace ot {
 
 uint16_t                     RandomManager::sInitCount = 0;
@@ -116,29 +119,106 @@ void RandomManager::NonCryptoPrng::Init(uint32_t aSeed)
         aSeed = 0x1;
     }
 
-    mState = aSeed;
+    mState = static_cast<uint32_t>(FLOAT_TO_FIXED(aSeed));
+}
+
+uint32_t RandomManager::NonCryptoPrng::FixedPointDivision(uint32_t aDividend, uint32_t aDivisor)
+{
+    uint32_t divResult = static_cast<uint32_t>(((uint64_t)aDividend * (1 << FIXED_POINT_FRACTIONAL_BITS)) / aDivisor);
+    return divResult;
+}
+
+uint32_t RandomManager::NonCryptoPrng::ComputeLcgRandom(uint32_t  aNumBits,
+                                                        uint32_t  aSeedVal,
+                                                        uint32_t *aDunif,
+                                                        uint32_t  aNdim)
+{
+    uint16_t i      = 0;
+    uint32_t DZ     = 0;
+    uint32_t DOVER  = 0;
+    uint32_t DZ1    = 0;
+    uint32_t DZ2    = 0;
+    uint32_t DOVER1 = 0;
+    uint32_t DOVER2 = 0;
+    uint32_t DTWO31 = 0;
+    uint32_t DMDLS  = 0;
+    uint32_t DA1    = 0;
+    uint32_t DA2    = 0;
+
+    DTWO31 = static_cast<uint32_t>(FLOAT_TO_FIXED(2147483648.0)); /* DTWO31=2**31  */
+    DMDLS  = static_cast<uint32_t>(FLOAT_TO_FIXED(2147483647.0)); /* DMDLS=2**31-1 */
+    DA1    = static_cast<uint32_t>(FLOAT_TO_FIXED(41160.0));      /* DA1=950706376 MOD 2**16 */
+    DA2    = static_cast<uint32_t>(FLOAT_TO_FIXED(950665216.0));  /* DA2=950706376-DA1 */
+
+    DZ = aSeedVal;
+    if (aNumBits > aNdim)
+    {
+        aNumBits = aNdim;
+    }
+
+    for (i = 1; i <= aNumBits; i++)
+    {
+        DZ  = static_cast<uint32_t>(DZ);
+        DZ1 = DZ * DA1;
+        DZ2 = DZ * DA2;
+
+        DOVER1 = FixedPointDivision(DZ1, DTWO31);
+        DOVER2 = FixedPointDivision(DZ2, DTWO31);
+
+        DZ1           = DZ1 - DOVER1 * DTWO31;
+        DZ2           = DZ2 - DOVER2 * DTWO31;
+        DZ            = DZ1 + DZ2 + DOVER1 + DOVER2;
+        DOVER         = FixedPointDivision(DZ, DMDLS);
+        DZ            = DZ - DOVER * DMDLS;
+        aDunif[i - 1] = FixedPointDivision(DZ, DMDLS);
+        aSeedVal      = DZ;
+    }
+
+    return aSeedVal;
 }
 
 uint32_t RandomManager::NonCryptoPrng::GetNext(void)
 {
-    uint32_t mlcg, p, q;
-    uint64_t tmpstate;
+    const uint16_t NUM_OF_BITS          = 32;
+    uint32_t       DUNIF[NUM_OF_BITS]   = {0};
+    uint32_t       epsilon[NUM_OF_BITS] = {0};
+    uint8_t        i                    = 0;
+    uint16_t       bit                  = 0;
+    uint16_t       num_0s               = 0;
+    uint16_t       num_1s               = 0;
+    uint16_t       bitsRead             = 0;
+    uint32_t       iRandomValue         = 0;
 
-    tmpstate = (uint64_t)33614 * (uint64_t)mState;
-    q        = tmpstate & 0xffffffff;
-    q        = q >> 1;
-    p        = tmpstate >> 32;
-    mlcg     = p + q;
+    mState = ComputeLcgRandom(NUM_OF_BITS, mState, DUNIF, NUM_OF_BITS);
 
-    if (mlcg & 0x80000000)
+    for (i = 0; i < NUM_OF_BITS; i++)
     {
-        mlcg &= 0x7fffffff;
-        mlcg++;
+        if (DUNIF[i] < (static_cast<uint32_t>(FLOAT_TO_FIXED(0.5))))
+        {
+            bit = 0;
+            num_0s++;
+        }
+        else
+        {
+            bit = 1;
+            num_1s++;
+        }
+        bitsRead++;
+        epsilon[i] = bit;
+    }
+    for (i = 0; i < NUM_OF_BITS; i++)
+    {
+        if (epsilon[i] == 0)
+        {
+            iRandomValue = iRandomValue * 2 + 0;
+        }
+        else
+        {
+            iRandomValue = iRandomValue * 2 + 1;
+        }
     }
 
-    mState = mlcg;
-
-    return mlcg;
+    return iRandomValue;
 }
 
 #ifndef OPENTHREAD_RADIO

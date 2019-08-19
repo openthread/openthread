@@ -110,6 +110,8 @@ private:
         uint32_t GetNext(void);
 
     private:
+        uint32_t FixedPointDivision(uint32_t aDividend, uint32_t aDivisor);
+        uint32_t ComputeLcgRandom(uint32_t aNumBits, uint32_t aSeedVal, uint32_t *aDunif, uint32_t aNdim);
         uint32_t mState;
     };
 
