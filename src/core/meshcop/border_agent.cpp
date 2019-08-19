@@ -278,7 +278,7 @@ exit:
         SendErrorMessage(instance.Get<Coap::CoapSecure>(), forwardContext, error);
     }
 
-    instance.GetHeap().Free(&forwardContext);
+    instance.HeapFree(&forwardContext);
 }
 
 template <>
@@ -578,7 +578,7 @@ otError BorderAgent::ForwardToLeader(const Coap::Message &   aMessage,
         SuccessOrExit(error = Get<Coap::CoapSecure>().SendAck(aMessage, aMessageInfo));
     }
 
-    forwardContext = static_cast<ForwardContext *>(GetInstance().GetHeap().CAlloc(1, sizeof(ForwardContext)));
+    forwardContext = static_cast<ForwardContext *>(GetInstance().HeapCAlloc(1, sizeof(ForwardContext)));
     VerifyOrExit(forwardContext != NULL, error = OT_ERROR_NO_BUFS);
 
     forwardContext = new (forwardContext) ForwardContext(*this, aMessage, aPetition, aSeparate);
@@ -612,7 +612,7 @@ exit:
     {
         if (forwardContext != NULL)
         {
-            GetInstance().GetHeap().Free(forwardContext);
+            GetInstance().HeapFree(forwardContext);
         }
 
         if (message != NULL)

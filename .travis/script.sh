@@ -345,6 +345,11 @@ build_samr21() {
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
+    CPPFLAGS=-DOPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE=1 make -f examples/Makefile-posix || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
     ./configure                             \
         --enable-ncp                        \
         --enable-ftd                        \
