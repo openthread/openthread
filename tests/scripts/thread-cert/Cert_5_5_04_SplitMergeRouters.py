@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -39,12 +38,13 @@ ROUTER2 = 3
 ROUTER3 = 4
 ROUTER4 = 5
 
+
 class Cert_5_5_4_SplitMergeRouters(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,6):
+        for i in range(1, 6):
             self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -81,12 +81,12 @@ class Cert_5_5_4_SplitMergeRouters(unittest.TestCase):
         self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[LEADER].add_whitelist(self.nodes[ROUTER2].get_addr64())
         self.nodes[LEADER].enable_whitelist()
-        self.nodes[LEADER].set_router_selection_jitter(1)        
+        self.nodes[LEADER].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -123,6 +123,7 @@ class Cert_5_5_4_SplitMergeRouters(unittest.TestCase):
         for addr in addrs:
             if addr[0:4] != 'fe80':
                 self.assertTrue(self.nodes[ROUTER3].ping(addr))
+
 
 if __name__ == '__main__':
     unittest.main()

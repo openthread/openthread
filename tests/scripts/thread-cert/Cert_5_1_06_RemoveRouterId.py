@@ -27,14 +27,12 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import command
 from command import CheckType
 import config
 import mle
-import network_layer
 import node
 
 LEADER = 1
@@ -42,7 +40,6 @@ ROUTER1 = 2
 
 
 class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
-
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -62,9 +59,9 @@ class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
         self.nodes[ROUTER1].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -107,10 +104,17 @@ class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
         msg = router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
         command.check_parent_request(msg, is_first_request=True)
 
-        msg = router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST, sent_to_node=self.nodes[LEADER])
-        command.check_child_id_request(msg, tlv_request=CheckType.CONTAIN,
-            mle_frame_counter=CheckType.OPTIONAL, address_registration=CheckType.NOT_CONTAIN,
-            active_timestamp=CheckType.OPTIONAL, pending_timestamp=CheckType.OPTIONAL)
+        msg = router1_messages.next_mle_message(
+            mle.CommandType.CHILD_ID_REQUEST, sent_to_node=self.nodes[LEADER]
+        )
+        command.check_child_id_request(
+            msg,
+            tlv_request=CheckType.CONTAIN,
+            mle_frame_counter=CheckType.OPTIONAL,
+            address_registration=CheckType.NOT_CONTAIN,
+            active_timestamp=CheckType.OPTIONAL,
+            pending_timestamp=CheckType.OPTIONAL,
+        )
 
         msg = router1_messages.next_coap_message(code="0.02")
         command.check_address_solicit(msg, was_router=True)

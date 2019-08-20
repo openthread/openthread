@@ -37,7 +37,7 @@
 #include "net/udp6.hpp"
 #include "thread/thread_netif.hpp"
 
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
 /**
  * @file
@@ -477,7 +477,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(responseHeader), &responseHeader) ==
                  sizeof(responseHeader));
     VerifyOrExit(responseHeader.GetType() == Header::kTypeResponse && responseHeader.GetQuestionCount() == 1 &&
-                 responseHeader.IsTruncationFlagSet() == false);
+                 !responseHeader.IsTruncationFlagSet());
 
     aMessage.MoveOffset(sizeof(responseHeader));
     offset = aMessage.GetOffset();
@@ -526,4 +526,4 @@ exit:
 } // namespace Dns
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_DNS_CLIENT
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE

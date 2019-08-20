@@ -60,7 +60,7 @@ Ip6::Ip6(Instance &aInstance)
     , mIcmp(aInstance)
     , mUdp(aInstance)
     , mMpl(aInstance)
-#if OPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION
+#if OPENTHREAD_CONFIG_IP6_ENABLE_FRAGMENTATION
     , mTimer(aInstance, &Ip6::HandleTimer, this)
 #endif
 {
@@ -614,7 +614,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION
+#if OPENTHREAD_CONFIG_IP6_ENABLE_FRAGMENTATION
 otError Ip6::HandleFragmentation(Message &aMessage, IpProto aIpProto)
 {
     otError        error = OT_ERROR_NONE;
@@ -673,9 +673,9 @@ otError Ip6::HandleFragmentation(Message &aMessage, IpProto aIpProto)
         assertValue = fragment->Write(aMessage.GetOffset(), sizeof(fragmentHeader), &fragmentHeader);
         assert(assertValue == sizeof(fragmentHeader));
 
-        VerifyOrExit(aMessage.CopyTo(aMessage.GetOffset() + (uint16_t)(offset << 3),
+        VerifyOrExit(aMessage.CopyTo(aMessage.GetOffset() + static_cast<uint16_t>(offset << 3),
                                      aMessage.GetOffset() + sizeof(fragmentHeader), payloadFragment,
-                                     *fragment) == (int)payloadFragment,
+                                     *fragment) == static_cast<int>(payloadFragment),
                      error = OT_ERROR_NO_BUFS);
 
         EnqueueDatagram(*fragment);
@@ -793,8 +793,6 @@ otError Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMess
 
     if (message->GetOffset() >= message->GetLength())
     {
-        offset = 0;
-
         // creates the header for the reassembled ipv6 package
         VerifyOrExit(aMessage.Read(0, sizeof(header), &header) == sizeof(header), error = OT_ERROR_PARSE);
         header.SetPayloadLength(message->GetLength() - sizeof(header));
@@ -919,14 +917,14 @@ otError Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMess
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(fragmentHeader), &fragmentHeader) == sizeof(fragmentHeader),
                  error = OT_ERROR_PARSE);
 
-    VerifyOrExit(fragmentHeader.GetOffset() == 0 && fragmentHeader.IsMoreFlagSet() == false, error = OT_ERROR_DROP);
+    VerifyOrExit(fragmentHeader.GetOffset() == 0 && !fragmentHeader.IsMoreFlagSet(), error = OT_ERROR_DROP);
 
     aMessage.MoveOffset(sizeof(fragmentHeader));
 
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION
+#endif // OPENTHREAD_CONFIG_IP6_ENABLE_FRAGMENTATION
 
 otError Ip6::HandleExtensionHeaders(Message &    aMessage,
                                     Netif *      aNetif,
@@ -940,7 +938,7 @@ otError Ip6::HandleExtensionHeaders(Message &    aMessage,
     otError         error = OT_ERROR_NONE;
     ExtensionHeader extHeader;
 
-    while (aReceive == true || aNextHeader == kProtoHopOpts)
+    while (aReceive || aNextHeader == kProtoHopOpts)
     {
         VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(extHeader), &extHeader) == sizeof(extHeader),
                      error = OT_ERROR_PARSE);
@@ -1007,7 +1005,7 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
     otError  error       = OT_ERROR_NONE;
     Message *messageCopy = NULL;
 
-    VerifyOrExit(aFromNcpHost == false, error = OT_ERROR_NO_ROUTE);
+    VerifyOrExit(!aFromNcpHost, error = OT_ERROR_NO_ROUTE);
     VerifyOrExit(mReceiveIp6DatagramCallback != NULL, error = OT_ERROR_NO_ROUTE);
 
     if (mIsReceiveIp6FilterEnabled)
@@ -1049,7 +1047,7 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
 
                 break;
 
-#if OPENTHREAD_ENABLE_PLATFORM_UDP == 0
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE == 0
             case kCoapUdpPort:
 
                 // do not pass TMF messages
@@ -1059,7 +1057,7 @@ otError Ip6::ProcessReceiveCallback(const Message &    aMessage,
                 }
 
                 break;
-#endif // OPENTHREAD_ENABLE_PLATFORM_UDP
+#endif // OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 
             default:
 #if OPENTHREAD_FTD
@@ -1344,6 +1342,10 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
                 rvalAddr          = addr;
                 rvalPrefixMatched = candidatePrefixMatched;
             }
+            else
+            {
+                continue;
+            }
         }
         else if (addr->GetScope() > rvalAddr->GetScope())
         {
@@ -1351,6 +1353,10 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
             {
                 rvalAddr          = addr;
                 rvalPrefixMatched = candidatePrefixMatched;
+            }
+            else
+            {
+                continue;
             }
         }
         else if ((rvalAddr->GetScope() == Address::kRealmLocalScope) && (addr->GetScope() == Address::kRealmLocalScope))
@@ -1360,6 +1366,10 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
             {
                 rvalAddr          = addr;
                 rvalPrefixMatched = candidatePrefixMatched;
+            }
+            else
+            {
+                continue;
             }
         }
         else if (addr->mPreferred && !rvalAddr->mPreferred)
@@ -1375,6 +1385,16 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
             // Rule 8: Use longest prefix matching
             rvalAddr          = addr;
             rvalPrefixMatched = candidatePrefixMatched;
+        }
+        else
+        {
+            continue;
+        }
+
+        // infer destination scope based on prefix match
+        if (rvalPrefixMatched >= rvalAddr->mPrefixLength)
+        {
+            destinationScope = rvalAddr->GetScope();
         }
     }
 
@@ -1397,6 +1417,8 @@ bool Ip6::IsOnLink(const Address &aAddress) const
 exit:
     return rval;
 }
+
+// LCOV_EXCL_START
 
 const char *Ip6::IpProtoToString(IpProto aIpProto)
 {
@@ -1447,6 +1469,8 @@ const char *Ip6::IpProtoToString(IpProto aIpProto)
 
     return retval;
 }
+
+// LCOV_EXCL_STOP
 
 } // namespace Ip6
 } // namespace ot

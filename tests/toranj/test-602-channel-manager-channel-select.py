@@ -30,12 +30,13 @@ import time
 import wpan
 from wpan import verify
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test description: verifies `ChannelManager` channel selection procedure
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
-print '-' * 120
-print 'Starting \'{}\''.format(test_name)
+print('-' * 120)
+print('Starting \'{}\''.format(test_name))
+
 
 def verify_channel(nodes, new_channel, wait_time=20):
     """
@@ -44,14 +45,23 @@ def verify_channel(nodes, new_channel, wait_time=20):
     """
     start_time = time.time()
 
-    while not all([ (new_channel == int(node.get(wpan.WPAN_CHANNEL), 0)) for node in nodes ]):
+    while not all(
+        [
+            (new_channel == int(node.get(wpan.WPAN_CHANNEL), 0))
+            for node in nodes
+        ]
+    ):
         if time.time() - start_time > wait_time:
-            print 'Took too long to switch to channel {} ({}>{} sec)'.format(new_channel, time.time() - start_time,
-                                                                             wait_time)
+            print(
+                'Took too long to switch to channel {} ({}>{} sec)'.format(
+                    new_channel, time.time() - start_time, wait_time
+                )
+            )
             exit(1)
         time.sleep(0.1)
 
-#-----------------------------------------------------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
 
 # Run the test with 10,000 time speedup factor
@@ -59,42 +69,51 @@ wpan.Node.set_time_speedup_factor(10000)
 
 node = wpan.Node()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Init all nodes
 
 wpan.Node.init_all_nodes()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Build network topology
 
 node.form('channel-manager', channel=24)
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
-all_channls_mask   = int('0x7fff800', 0)
+all_channls_mask = int('0x7fff800', 0)
 chan_12_to_15_mask = int('0x000f000', 0)
 chan_15_to_17_mask = int('0x0038000', 0)
 
 # Set supported channel mask to be all channels
-node.set(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK, str(all_channls_mask))
-verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK), 0) == all_channls_mask)
+node.set(
+    wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK, str(all_channls_mask)
+)
+verify(
+    int(node.get(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK), 0)
+    == all_channls_mask
+)
 
-# Sleep for 4.5 second with speedup factor of 10,000 this is more than 12 hours.
+# Sleep for 4.5 second with speedup factor of 10,000 this is more than 12
+# hours.
 time.sleep(4.5)
 
 verify(int(node.get(wpan.WPAN_CHANNEL_MONITOR_SAMPLE_COUNT), 0) > 970)
 
-# Verify the initial value of `NEW_CHANNEL` (should be zero if there has been no channel change so far).
+# Verify the initial value of `NEW_CHANNEL` (should be zero if there has
+# been no channel change so far).
 
 verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_NEW_CHANNEL), 0) == 0)
 
-# Issue a channel-select with quality check enabled, and verify that no action is taken.
+# Issue a channel-select with quality check enabled, and verify that no
+# action is taken.
 
 node.set(wpan.WPAN_CHANNEL_MANAGER_CHANNEL_SELECT, 'false')
 verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_NEW_CHANNEL), 0) == 0)
 
-# Issue a channel-select with quality check disabled, verify that channel is switched to channel 11.
+# Issue a channel-select with quality check disabled, verify that channel
+# is switched to channel 11.
 
 node.set(wpan.WPAN_CHANNEL_MANAGER_CHANNEL_SELECT, 'true')
 verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_NEW_CHANNEL), 0) == 11)
@@ -105,8 +124,12 @@ verify_channel([node], 11)
 # Even though 11 would be best, quality difference between 11 and 12 is not high enough for selection
 # algorithm to pick an unfavored channel.
 
-node.set(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK, str(chan_12_to_15_mask))
-node.set(wpan.WPAN_CHANNEL_MANAGER_NEW_CHANNEL, '25')  # request a channel change to 25
+node.set(
+    wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK, str(chan_12_to_15_mask)
+)
+node.set(
+    wpan.WPAN_CHANNEL_MANAGER_NEW_CHANNEL, '25'
+)  # request a channel change to 25
 verify_channel([node], 25)
 node.set(wpan.WPAN_CHANNEL_MANAGER_CHANNEL_SELECT, 'true')
 verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_NEW_CHANNEL), 0) == 12)
@@ -117,16 +140,23 @@ verify_channel([node], 12)
 # This time the quality difference between 11 and 15 should be high enough for selection
 # algorithm to pick the best though unfavored channel (i.e., channel 11).
 
-node.set(wpan.WPAN_CHANNEL_MANAGER_NEW_CHANNEL, '25')  # request a channel change to 25
+node.set(
+    wpan.WPAN_CHANNEL_MANAGER_NEW_CHANNEL, '25'
+)  # request a channel change to 25
 verify_channel([node], 25)
-node.set(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK, str(chan_15_to_17_mask))
+node.set(
+    wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK, str(chan_15_to_17_mask)
+)
 node.set(wpan.WPAN_CHANNEL_MANAGER_CHANNEL_SELECT, 'true')
 verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_NEW_CHANNEL), 0) == 11)
 verify_channel([node], 11)
 
-# Set channels 12-15 as favorable and request a channel select, verify that channel is not switched.
+# Set channels 12-15 as favorable and request a channel select, verify
+# that channel is not switched.
 
-node.set(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK, str(chan_12_to_15_mask))
+node.set(
+    wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK, str(chan_12_to_15_mask)
+)
 node.set(wpan.WPAN_CHANNEL_MANAGER_CHANNEL_SELECT, 'true')
 verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_NEW_CHANNEL), 0) == 11)
 verify_channel([node], 11)
@@ -135,7 +165,9 @@ verify_channel([node], 11)
 # However, since quality difference between current channel 12 and new best channel 11 is not large
 # enough, no action should be taken.
 
-node.set(wpan.WPAN_CHANNEL_MANAGER_NEW_CHANNEL, '12')  # request a channel change to 12
+node.set(
+    wpan.WPAN_CHANNEL_MANAGER_NEW_CHANNEL, '12'
+)  # request a channel change to 12
 verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_NEW_CHANNEL), 0) == 12)
 verify_channel([node], 12)
 node.set(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK, str(all_channls_mask))
@@ -143,9 +175,9 @@ node.set(wpan.WPAN_CHANNEL_MANAGER_CHANNEL_SELECT, 'true')
 verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_NEW_CHANNEL), 0) == 12)
 verify_channel([node], 12)
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
 wpan.Node.finalize_all_nodes()
 
-print '\'{}\' passed.'.format(test_name)
+print('\'{}\' passed.'.format(test_name))

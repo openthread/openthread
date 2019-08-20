@@ -30,13 +30,13 @@
 import ctypes
 import os
 import socket
-import sys
+
 
 class SnifferTransport(object):
     """ Interface for transport that allows eavesdrop other nodes. """
 
     def open(self):
-        """ Open transport. 
+        """ Open transport.
 
         Raises:
             RuntimeError: when transport is already opened or when transport opening failed.
@@ -44,7 +44,7 @@ class SnifferTransport(object):
         raise NotImplementedError
 
     def close(self):
-        """ Close transport. 
+        """ Close transport.
 
         Raises:
             RuntimeError: when transport is already closed.
@@ -53,7 +53,7 @@ class SnifferTransport(object):
 
     @property
     def is_opened(self):
-        """ Check if transport is opened. 
+        """ Check if transport is opened.
 
         Returns:
             bool: True if the transport is opened, False in otherwise
@@ -79,7 +79,7 @@ class SnifferTransport(object):
             bufsize (int): size of buffer for incoming data.
 
         Returns:
-            A tuple contains data and node id. 
+            A tuple contains data and node id.
 
             For example:
             (bytearray([0x00, 0x01...], 1)
@@ -96,8 +96,9 @@ class SnifferSocketTransport(SnifferTransport):
 
     PORT_OFFSET = int(os.getenv('PORT_OFFSET', "0"))
 
-    def __init__(self, nodeid):
-        self._nodeid = nodeid
+    RADIO_GROUP = '224.0.0.116'
+
+    def __init__(self):
         self._socket = None
 
     def __del__(self):
@@ -106,12 +107,19 @@ class SnifferSocketTransport(SnifferTransport):
 
         self.close()
 
-    def _nodeid_to_address(self, nodeid, ip_address=""):
-        return ip_address, self.BASE_PORT + (self.PORT_OFFSET * self.WELLKNOWN_NODE_ID) + nodeid
+    def _nodeid_to_address(self, nodeid, ip_address=''):
+        return (
+            ip_address,
+            self.BASE_PORT
+            + (self.PORT_OFFSET * self.WELLKNOWN_NODE_ID)
+            + nodeid,
+        )
 
     def _address_to_nodeid(self, address):
         _, port = address
-        return (port - self.BASE_PORT - (self.PORT_OFFSET * self.WELLKNOWN_NODE_ID))
+        return (
+            port - self.BASE_PORT - (self.PORT_OFFSET * self.WELLKNOWN_NODE_ID)
+        )
 
     def open(self):
         if self.is_opened:
@@ -122,7 +130,11 @@ class SnifferSocketTransport(SnifferTransport):
         if not self.is_opened:
             raise RuntimeError("Transport opening failed.")
 
-        self._socket.bind(self._nodeid_to_address(self._nodeid))
+        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        self._socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
+                                socket.inet_aton(self.RADIO_GROUP) + socket.inet_aton('127.0.0.1'))
+        self._socket.bind(self._nodeid_to_address(self.WELLKNOWN_NODE_ID))
 
     def close(self):
         if not self.is_opened:
@@ -149,11 +161,13 @@ class SnifferSocketTransport(SnifferTransport):
 
 
 class MacFrame(ctypes.Structure):
-    _fields_ = [("buffer", ctypes.c_ubyte * 128),
-                ("length", ctypes.c_ubyte),
-                ("nodeid", ctypes.c_uint)]
+    _fields_ = [
+        ("buffer", ctypes.c_ubyte * 128),
+        ("length", ctypes.c_ubyte),
+        ("nodeid", ctypes.c_uint),
+    ]
+
 
 class SnifferTransportFactory(object):
-
-    def create_transport(self, nodeid):
-        return SnifferSocketTransport(nodeid)
+    def create_transport(self):
+        return SnifferSocketTransport()

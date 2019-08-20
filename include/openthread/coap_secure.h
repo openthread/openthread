@@ -55,8 +55,8 @@ extern "C" {
  * @brief
  *   This module includes functions that control CoAP Secure (CoAP over DTLS) communication.
  *
- *   The functions in this module are available when application-coap-secure feature
- *   (`OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE`) is enabled.
+ *   The functions in this module are available when CoAP Secure API feature
+ *   (`OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE`) is enabled.
  *
  * @{
  *

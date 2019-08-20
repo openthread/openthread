@@ -45,7 +45,6 @@ configure_OPTIONS               = \
     --enable-cli                  \
     --enable-mtd                  \
     --enable-ncp                  \
-    --with-ncp-bus=uart           \
     --enable-radio-only           \
     --enable-linker-map           \
     --with-examples=cc2650        \
@@ -60,6 +59,7 @@ CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/mbedtls
 CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/mbedtls/repo/include
 
 CC2650_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-cc2650-config.h\"'
+CC2650_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-cc2650-config-check.h\"'
 CC2650_CONFIG_FILE_CPPFLAGS += -I$(PWD)/examples/platforms/cc2650/
 
 COMMONCFLAGS                   := \

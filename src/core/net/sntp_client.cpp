@@ -38,7 +38,7 @@
 #include "net/udp6.hpp"
 #include "thread/thread_netif.hpp"
 
-#if OPENTHREAD_ENABLE_SNTP_CLIENT
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
 
 /**
  * @file
@@ -399,4 +399,4 @@ exit:
 } // namespace Sntp
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_SNTP_CLIENT
+#endif // OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE

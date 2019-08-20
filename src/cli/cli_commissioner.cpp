@@ -36,7 +36,7 @@
 #include "cli/cli.hpp"
 #include "cli/cli_server.hpp"
 
-#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
 namespace ot {
 namespace Cli {
@@ -441,4 +441,4 @@ void Commissioner::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask)
 } // namespace Cli
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD

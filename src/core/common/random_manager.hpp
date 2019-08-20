@@ -34,6 +34,17 @@
 #ifndef RANDOM_MANAGER_HPP_
 #define RANDOM_MANAGER_HPP_
 
+#include "openthread-core-config.h"
+
+#include <openthread/error.h>
+
+#ifndef OPENTHREAD_RADIO
+#include <mbedtls/ctr_drbg.h>
+#include <mbedtls/entropy.h>
+#endif
+
+#include "utils/wrap_stdint.h"
+
 namespace ot {
 
 /**
@@ -54,6 +65,89 @@ public:
      *
      */
     ~RandomManager(void);
+
+    /**
+     * This static method generates and returns a random value using a non-crypto Pseudo Random Number Generator.
+     *
+     * @returns    A random `uint32_t` value.
+     *
+     */
+    static uint32_t NonCryptoGetUint32(void);
+
+#ifndef OPENTHREAD_RADIO
+    /**
+     * This static method returns the initialized mbedtls_entropy_context.
+     *
+     * @returns  A pointer to initialized mbedtls_entropy_context.
+     */
+    static mbedtls_entropy_context *GetMbedTlsEntropyContext(void) { return sEntropy.GetContext(); }
+
+    /**
+     * This static method fills a given buffer with cryptographically secure random bytes.
+     *
+     * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
+     * @param[in]  aSize    Size of buffer (number of bytes to fill).
+     *
+     * @retval OT_ERROR_NONE    Successfully filled buffer with random values.
+     *
+     */
+    static otError CryptoFillBuffer(uint8_t *aBuffer, uint16_t aSize) { return sCtrDrbg.FillBuffer(aBuffer, aSize); }
+
+    /**
+     * This static method returns the initialized mbedtls_ctr_drbg_context.
+     *
+     * @returns  A pointer to the initialized mbedtls_ctr_drbg_context.
+     *
+     */
+    static mbedtls_ctr_drbg_context *GetMbedTlsCtrDrbgContext(void) { return sCtrDrbg.GetContext(); }
+#endif
+
+private:
+    class NonCryptoPrng // A non-crypto Pseudo Random Number Generator (PRNG)
+    {
+    public:
+        void     Init(uint32_t aSeed);
+        uint32_t GetNext(void);
+
+    private:
+        uint32_t mState;
+    };
+
+#ifndef OPENTHREAD_RADIO
+    class Entropy
+    {
+    public:
+        void Init(void);
+        void Deinit(void);
+
+        mbedtls_entropy_context *GetContext(void) { return &mEntropyContext; }
+
+    private:
+        static int HandleMbedtlsEntropyPoll(void *aData, unsigned char *aOutput, size_t aInLen, size_t *aOutLen);
+
+        mbedtls_entropy_context mEntropyContext;
+    };
+
+    class CryptoCtrDrbg
+    {
+    public:
+        void    Init(void);
+        void    Deinit(void);
+        otError FillBuffer(uint8_t *aBuffer, uint16_t aSize);
+
+        mbedtls_ctr_drbg_context *GetContext(void) { return &mCtrDrbg; }
+
+    private:
+        mbedtls_ctr_drbg_context mCtrDrbg;
+    };
+#endif
+
+    static uint16_t      sInitCount;
+    static NonCryptoPrng sPrng;
+#ifndef OPENTHREAD_RADIO
+    static Entropy       sEntropy;
+    static CryptoCtrDrbg sCtrDrbg;
+#endif
 };
 
 } // namespace ot

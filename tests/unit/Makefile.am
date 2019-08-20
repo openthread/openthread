@@ -116,6 +116,7 @@ check_PROGRAMS                                                     += \
     test-message-queue                                                \
     test-network-data                                                 \
     test-priority-queue                                               \
+    test-pskc                                                         \
     test-string                                                       \
     test-strlcat                                                      \
     test-strlcpy                                                      \
@@ -123,24 +124,13 @@ check_PROGRAMS                                                     += \
     test-timer                                                        \
     $(NULL)
 
-if OPENTHREAD_ENABLE_COMMISSIONER
-check_PROGRAMS                                                     += \
-    test-pskc                                                         \
-    $(NULL)
-endif
-
 if OPENTHREAD_ENABLE_NCP
 check_PROGRAMS                                                     += \
+    test-hdlc                                                         \
     test-ncp-buffer                                                   \
     test-spinel-decoder                                               \
     test-spinel-encoder                                               \
     $(NULL)
-
-if OPENTHREAD_ENABLE_NCP_UART
-check_PROGRAMS                                                     += \
-    test-hdlc                                                         \
-    $(NULL)
-endif
 endif
 endif # OPENTHREAD_ENABLE_FTD
 

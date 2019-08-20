@@ -40,7 +40,7 @@
 
 using namespace ot;
 
-#if OPENTHREAD_ENABLE_SNTP_CLIENT
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
 otError otSntpClientQuery(otInstance *          aInstance,
                           const otSntpQuery *   aQuery,
                           otSntpResponseHandler aHandler,

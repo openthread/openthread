@@ -55,7 +55,7 @@ namespace Utils {
  * @{
  */
 
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 
 #if OPENTHREAD_FTD
 
@@ -277,7 +277,7 @@ private:
     void        PreparePendingDataset(void);
     void        StartAutoSelectTimer(void);
 
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     otError FindBetterChannel(uint8_t &aNewChannel, uint16_t &aOccupancy);
     bool    ShouldAttemptChannelChange(void);
 #endif
@@ -304,7 +304,7 @@ public:
 
 #endif // OPENTHREAD_FTD
 
-#endif // OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 /**
  * @}
  *

@@ -40,7 +40,7 @@
 
 using namespace ot;
 
-#if OPENTHREAD_ENABLE_JAM_DETECTION
+#if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 
 otError otJamDetectionSetRssiThreshold(otInstance *aInstance, int8_t aRssiThreshold)
 {
@@ -121,4 +121,4 @@ uint64_t otJamDetectionGetHistoryBitmap(otInstance *aInstance)
     return instance.Get<Utils::JamDetector>().GetHistoryBitmap();
 }
 
-#endif // OPENTHREAD_ENABLE_JAM_DETECTION
+#endif // OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE

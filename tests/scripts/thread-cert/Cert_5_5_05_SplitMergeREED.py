@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -40,21 +39,22 @@ ROUTER3 = 4
 ROUTER15 = 16
 REED1 = 17
 
+
 class Cert_5_5_5_SplitMergeREED(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,18):
+        for i in range(1, 18):
             self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
-        for i in range(ROUTER2, ROUTER15+1):
+        for i in range(ROUTER2, ROUTER15 + 1):
             self.nodes[LEADER].add_whitelist(self.nodes[i].get_addr64())
         self.nodes[LEADER].enable_whitelist()
 
-        for i in range(ROUTER2, ROUTER15+1):
+        for i in range(ROUTER2, ROUTER15 + 1):
             self.nodes[i].set_panid(0xface)
             self.nodes[i].set_mode('rsdn')
             self.nodes[i].add_whitelist(self.nodes[LEADER].get_addr64())
@@ -76,9 +76,9 @@ class Cert_5_5_5_SplitMergeREED(unittest.TestCase):
         self.nodes[REED1].enable_whitelist()
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -86,7 +86,7 @@ class Cert_5_5_5_SplitMergeREED(unittest.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
-        for i in range(ROUTER2, ROUTER15+1):
+        for i in range(ROUTER2, ROUTER15 + 1):
             self.nodes[i].start()
             self.simulator.go(5)
             self.assertEqual(self.nodes[i].get_state(), 'router')
@@ -112,6 +112,7 @@ class Cert_5_5_5_SplitMergeREED(unittest.TestCase):
         for addr in addrs:
             if addr[0:4] != 'fe80':
                 self.assertTrue(self.nodes[ROUTER1].ping(addr))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -45,7 +45,7 @@
 #include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 namespace ot {
 namespace Mac {
@@ -59,8 +59,8 @@ LinkRaw::LinkRaw(Instance &aInstance)
     , mTransmitDoneCallback(NULL)
     , mEnergyScanDoneCallback(NULL)
 #if OPENTHREAD_RADIO
-    , mSubMac(aInstance, *this)
-#elif OPENTHREAD_ENABLE_RAW_LINK_API
+    , mSubMac(aInstance)
+#elif OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     , mSubMac(aInstance.Get<SubMac>())
 #endif
 {
@@ -149,7 +149,7 @@ exit:
     return error;
 }
 
-void LinkRaw::InvokeReceiveDone(Frame *aFrame, otError aError)
+void LinkRaw::InvokeReceiveDone(RxFrame *aFrame, otError aError)
 {
     otLogDebgMac("LinkRaw::ReceiveDone(%d bytes), error:%s", (aFrame != NULL) ? aFrame->mLength : 0,
                  otThreadErrorToString(aError));
@@ -173,7 +173,7 @@ exit:
     return error;
 }
 
-void LinkRaw::InvokeTransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError)
+void LinkRaw::InvokeTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError)
 {
     otLogDebgMac("LinkRaw::TransmitDone(%d bytes), error:%s", aFrame.mLength, otThreadErrorToString(aError));
 
@@ -206,12 +206,15 @@ void LinkRaw::InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi)
     }
 }
 
+// LCOV_EXCL_START
+
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
-void LinkRaw::RecordFrameTransmitStatus(const Frame &aFrame,
-                                        const Frame *aAckFrame,
-                                        otError      aError,
-                                        uint8_t      aRetryCount,
-                                        bool         aWillRetx)
+
+void LinkRaw::RecordFrameTransmitStatus(const TxFrame &aFrame,
+                                        const RxFrame *aAckFrame,
+                                        otError        aError,
+                                        uint8_t        aRetryCount,
+                                        bool           aWillRetx)
 {
     OT_UNUSED_VARIABLE(aAckFrame);
     OT_UNUSED_VARIABLE(aWillRetx);
@@ -222,9 +225,12 @@ void LinkRaw::RecordFrameTransmitStatus(const Frame &aFrame,
                      aFrame.GetMaxFrameRetries(), aFrame.ToInfoString().AsCString());
     }
 }
+
 #endif
+
+// LCOV_EXCL_STOP
 
 } // namespace Mac
 } // namespace ot
 
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE

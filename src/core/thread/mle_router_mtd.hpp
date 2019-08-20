@@ -116,9 +116,9 @@ public:
 
     otError SendChildUpdateRequest(void) { return Mle::SendChildUpdateRequest(); }
 
-#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     otError SetSteeringData(const otExtAddress *) { return OT_ERROR_NOT_IMPLEMENTED; }
-#endif // OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#endif // OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
 
     otError GetMaxChildTimeout(uint32_t &) { return OT_ERROR_NOT_IMPLEMENTED; }
 
@@ -144,7 +144,7 @@ private:
     void    HandlePartitionChange(void) {}
     void    StopAdvertiseTimer(void) {}
     otError ProcessRouteTlv(const RouteTlv &) { return OT_ERROR_NONE; }
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     otError HandleTimeSync(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
 #endif
 

@@ -39,7 +39,7 @@
 #include "common/locator.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/mle.hpp"
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 #include "utils/slaac_address.hpp"
 #endif
 
@@ -183,6 +183,14 @@ public:
     void Init(void);
 
     /**
+     * This method de-initializes the platform settings (non-volatile) module.
+     *
+     * This method should be called when OpenThread instance is no longer in use.
+     *
+     */
+    void Deinit(void);
+
+    /**
      * This method removes all settings from the non-volatile store.
      *
      */
@@ -288,7 +296,7 @@ public:
      */
     otError DeleteParentInfo(void);
 
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
     /**
      * This method saves the SLAAC IID secret key.
@@ -328,7 +336,7 @@ public:
      */
     otError DeleteSlaacIidSecretKey(void) { return Delete(kKeySlaacIidSecretKey); }
 
-#endif // OPENTHREAD_CONFIG_ENABLE_SLAAC
+#endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
     /**
      * This method adds a Child Info entry to settings.

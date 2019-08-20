@@ -323,7 +323,7 @@ private:
         bool            mValid : 1;
         bool            mAny : 1;
     };
-    Joiner mJoiners[OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES];
+    Joiner mJoiners[OPENTHREAD_CONFIG_COMMISSIONER_MAX_JOINER_ENTRIES];
 
     uint8_t    mJoinerIid[8];
     uint16_t   mJoinerPort;

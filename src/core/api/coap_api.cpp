@@ -39,7 +39,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
 
 using namespace ot;
 
@@ -225,4 +225,4 @@ otError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const otM
                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
+#endif // OPENTHREAD_CONFIG_COAP_API_ENABLE

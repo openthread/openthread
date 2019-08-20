@@ -218,18 +218,21 @@ static void handleRx(void)
     {
         sRxDone = false;
 
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#error Time sync requires the timestamp of SFD rather than that of rx done!
+#else
         if (otPlatRadioGetPromiscuous(sInstance))
+#endif
         {
-            // Timestamp
-            sReceiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
-            sReceiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
+            // The current driver only supports milliseconds resolution.
+            sReceiveFrame.mInfo.mRxInfo.mTimestamp = otPlatAlarmMilliGetNow() * 1000;
         }
 
         // TODO Set this flag only when the packet is really acknowledged with frame pending set.
         // See https://github.com/openthread/openthread/pull/3785
         sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
         if (otPlatDiagModeGet())
         {
@@ -297,7 +300,7 @@ static void handleTx(void)
 
         sState = OT_RADIO_STATE_RECEIVE;
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
         if (otPlatDiagModeGet())
         {
             otPlatDiagRadioTransmitDone(sInstance, &sTransmitFrame, otStatus);

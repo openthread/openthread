@@ -27,6 +27,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+
+from builtins import input
+
+
 class Inspector:
     """This class provides a way to inspect node status of a test case.
 
@@ -71,21 +75,21 @@ class Inspector:
         """
         node = self.test_case.nodes[nodeid]
         while True:
-            line = raw_input('> ')
+            line = input('> ')
             if not line:
                 continue
 
             if line == 'exit':
                 break
             else:
-                node.interface.send_command(line)
-                node.interface._expect('Done')
+                node.send_command(line)
+                node._expect('Done')
 
     def inspect(self):
         """ Start inspecting.
         """
         while True:
-            line = raw_input('# ')
+            line = input('# ')
             if not line:
                 continue
 

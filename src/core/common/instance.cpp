@@ -41,26 +41,38 @@
 
 namespace ot {
 
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 // Define the raw storage used for OpenThread instance (in single-instance case).
 otDEFINE_ALIGNED_VAR(gInstanceRaw, sizeof(Instance), uint64_t);
 
 #endif
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+
+otHeapFreeFn   ot::Instance::mFree   = NULL;
+otHeapCAllocFn ot::Instance::mCAlloc = NULL;
+
+#endif // OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
 Instance::Instance(void)
     : mTaskletScheduler()
     , mTimerMilliScheduler(*this)
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     , mTimerMicroScheduler(*this)
 #endif
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     , mHeap()
 #endif
     , mMbedTls()
 #endif // #if OPENTHREAD_MTD || OPENTHREAD_FTD
     , mRandomManager()
+    , mRadio(*this)
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     , mNotifier(*this)
     , mSettings(*this)
@@ -71,23 +83,23 @@ Instance::Instance(void)
     , mEnergyScanCallbackContext(NULL)
     , mIp6(*this)
     , mThreadNetif(*this)
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
     , mApplicationCoap(*this)
 #endif
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     , mApplicationCoapSecure(*this, /* aLayerTwoSecurity */ true)
 #endif
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     , mChannelMonitor(*this)
 #endif
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
     , mChannelManager(*this)
 #endif
-#if OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+#if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
     , mAnnounceSender(*this)
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     , mLinkRaw(*this)
 #endif
 #if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
@@ -96,17 +108,20 @@ Instance::Instance(void)
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     , mExtension(Extension::ExtensionBase::Init(*this))
 #endif
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+    , mDiags(*this)
+#endif
     , mIsInitialized(false)
 {
 }
 
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 Instance &Instance::InitSingle(void)
 {
     Instance *instance = &Get();
 
-    VerifyOrExit(instance->mIsInitialized == false);
+    VerifyOrExit(!instance->mIsInitialized);
 
     instance = new (&gInstanceRaw) Instance();
 
@@ -123,7 +138,7 @@ Instance &Instance::Get(void)
     return *static_cast<Instance *>(instance);
 }
 
-#else // #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#else // #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 Instance *Instance::Init(void *aBuffer, size_t *aBufferSize)
 {
@@ -144,7 +159,7 @@ exit:
     return instance;
 }
 
-#endif // OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#endif // OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 void Instance::Reset(void)
 {
@@ -170,7 +185,7 @@ void Instance::AfterInit(void)
 
 void Instance::Finalize(void)
 {
-    VerifyOrExit(mIsInitialized == true);
+    VerifyOrExit(mIsInitialized);
 
     mIsInitialized = false;
 
@@ -178,9 +193,11 @@ void Instance::Finalize(void)
     IgnoreReturnValue(otThreadSetEnabled(this, false));
     IgnoreReturnValue(otIp6SetEnabled(this, false));
     IgnoreReturnValue(otLinkSetEnabled(this, false));
+
+    Get<Settings>().Deinit();
 #endif
 
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
     /**
      * Object was created on buffer, so instead of deleting
@@ -188,7 +205,7 @@ void Instance::Finalize(void)
      */
     this->~Instance();
 
-#endif // !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#endif // !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 exit:
     return;

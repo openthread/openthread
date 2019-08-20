@@ -53,7 +53,7 @@ static int      sSockFd     = -1; ///< Socket used to communicating with simulat
 static uint16_t sPortOffset = 0;  ///< Port offset for simulation.
 static int      sNodeId     = 0;  ///< Node id of this simulated device.
 
-void otSimInit(void)
+void platformSimInit(void)
 {
     struct sockaddr_in sockaddr;
     char *             offset;
@@ -71,8 +71,11 @@ void otSimInit(void)
 
         if (*endptr != '\0')
         {
-            fprintf(stderr, "Invalid PORT_OFFSET: %s\n", offset);
-            exit(OT_EXIT_INVALID_ARGUMENTS);
+            const uint8_t kMsgSize = 40;
+            char          msg[kMsgSize];
+
+            snprintf(msg, sizeof(msg), "Invalid PORT_OFFSET: %s", offset);
+            DieNowWithMessage(msg, OT_EXIT_INVALID_ARGUMENTS);
         }
 
         sPortOffset *= kWellKnownNodeId;
@@ -84,22 +87,20 @@ void otSimInit(void)
     sockaddr.sin_port        = htons(kBasePort + sPortOffset + sNodeId);
     sockaddr.sin_addr.s_addr = INADDR_ANY;
 
-    sSockFd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    sSockFd = SocketWithCloseExec(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
     if (sSockFd == -1)
     {
-        perror("socket");
-        exit(OT_EXIT_FAILURE);
+        DieNowWithMessage("socket", OT_EXIT_ERROR_ERRNO);
     }
 
     if (bind(sSockFd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) == -1)
     {
-        perror("bind");
-        exit(OT_EXIT_FAILURE);
+        DieNowWithMessage("bind", OT_EXIT_ERROR_ERRNO);
     }
 }
 
-void otSimDeinit(void)
+void platformSimDeinit(void)
 {
     if (sSockFd != -1)
     {
@@ -108,7 +109,7 @@ void otSimDeinit(void)
     }
 }
 
-static void otSimSendEvent(struct Event *aEvent, size_t aLength)
+static void platformSimSendEvent(struct Event *aEvent, size_t aLength)
 {
     ssize_t            rval;
     struct sockaddr_in sockaddr;
@@ -122,25 +123,23 @@ static void otSimSendEvent(struct Event *aEvent, size_t aLength)
 
     if (rval < 0)
     {
-        perror("sendto");
-        exit(OT_EXIT_FAILURE);
+        DieNowWithMessage("sendto", OT_EXIT_ERROR_ERRNO);
     }
 }
 
-void otSimReceiveEvent(struct Event *aEvent)
+void platformSimReceiveEvent(struct Event *aEvent)
 {
     ssize_t rval = recvfrom(sSockFd, aEvent, sizeof(*aEvent), 0, NULL, NULL);
 
     if (rval < 0 || (uint16_t)rval < offsetof(struct Event, mData))
     {
-        perror("recvfrom");
-        exit(OT_EXIT_FAILURE);
+        DieNowWithMessage("recvfrom", (rval < 0) ? OT_EXIT_ERROR_ERRNO : OT_EXIT_FAILURE);
     }
 
     sNow += aEvent->mDelay;
 }
 
-void otSimSendSleepEvent(const struct timeval *aTimeout)
+void platformSimSendSleepEvent(const struct timeval *aTimeout)
 {
     struct Event event;
 
@@ -148,10 +147,10 @@ void otSimSendSleepEvent(const struct timeval *aTimeout)
     event.mEvent      = OT_SIM_EVENT_ALARM_FIRED;
     event.mDataLength = 0;
 
-    otSimSendEvent(&event, offsetof(struct Event, mData));
+    platformSimSendEvent(&event, offsetof(struct Event, mData));
 }
 
-void otSimSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength)
+void platformSimSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength)
 {
     struct Event event;
 
@@ -161,14 +160,14 @@ void otSimSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength)
 
     memcpy(event.mData, aData, aLength);
 
-    otSimSendEvent(&event, offsetof(struct Event, mData) + event.mDataLength);
+    platformSimSendEvent(&event, offsetof(struct Event, mData) + event.mDataLength);
 }
 
-void otSimUpdateFdSet(fd_set *        aReadFdSet,
-                      fd_set *        aWriteFdSet,
-                      fd_set *        aErrorFdSet,
-                      int *           aMaxFd,
-                      struct timeval *aTimeout)
+void platformSimUpdateFdSet(fd_set *        aReadFdSet,
+                            fd_set *        aWriteFdSet,
+                            fd_set *        aErrorFdSet,
+                            int *           aMaxFd,
+                            struct timeval *aTimeout)
 {
     OT_UNUSED_VARIABLE(aWriteFdSet);
     OT_UNUSED_VARIABLE(aErrorFdSet);
@@ -179,10 +178,13 @@ void otSimUpdateFdSet(fd_set *        aReadFdSet,
         *aMaxFd = sSockFd;
     }
 
-    otSimRadioSpinelUpdate(aTimeout);
+    platformSimRadioSpinelUpdate(aTimeout);
 }
 
-void otSimProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet)
+void platformSimProcess(otInstance *  aInstance,
+                        const fd_set *aReadFdSet,
+                        const fd_set *aWriteFdSet,
+                        const fd_set *aErrorFdSet)
 {
     struct Event event = {0};
 
@@ -192,13 +194,13 @@ void otSimProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set 
 
     if (FD_ISSET(sSockFd, aReadFdSet))
     {
-        otSimReceiveEvent(&event);
+        platformSimReceiveEvent(&event);
     }
 
-    otSimRadioSpinelProcess(aInstance, &event);
+    platformSimRadioSpinelProcess(aInstance, &event);
 }
 
-uint64_t otSysGetTime(void)
+uint64_t platformGetTime(void)
 {
     return sNow;
 }

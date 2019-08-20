@@ -229,10 +229,10 @@ public:
 private:
     enum
     {
-#if OPENTHREAD_ENABLE_DTLS
-        kMemorySize = OPENTHREAD_CONFIG_HEAP_SIZE, ///< Size of memory buffer (bytes).
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
+        kMemorySize = OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE, ///< Size of memory buffer (bytes).
 #else
-        kMemorySize = OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS, ///< Size of memory buffer (bytes).
+        kMemorySize = OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE_NO_DTLS, ///< Size of memory buffer (bytes).
 #endif
         kAlignSize          = sizeof(void *),                                     ///< The alignment size.
         kBlockRemainderSize = kAlignSize - sizeof(uint16_t) * 2,                  ///< Block unit remainder size.

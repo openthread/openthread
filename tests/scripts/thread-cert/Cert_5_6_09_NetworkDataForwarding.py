@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -41,12 +40,13 @@ SED = 5
 
 MTDS = [ED, SED]
 
+
 class Cert_5_6_9_NetworkDataForwarding(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,6):
+        for i in range(1, 6):
             self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -81,9 +81,9 @@ class Cert_5_6_9_NetworkDataForwarding(unittest.TestCase):
         self.nodes[SED].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -138,6 +138,7 @@ class Cert_5_6_9_NetworkDataForwarding(unittest.TestCase):
         self.simulator.go(10)
 
         self.assertFalse(self.nodes[SED].ping('2007::1'))
+
 
 if __name__ == '__main__':
     unittest.main()

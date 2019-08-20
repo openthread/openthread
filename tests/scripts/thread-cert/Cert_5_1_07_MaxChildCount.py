@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -36,6 +35,7 @@ import node
 LEADER = 1
 ROUTER = 2
 SED1 = 7
+
 
 class Cert_5_1_07_MaxChildCount(unittest.TestCase):
     def setUp(self):
@@ -69,9 +69,9 @@ class Cert_5_1_07_MaxChildCount(unittest.TestCase):
             self.nodes[i].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -100,6 +100,7 @@ class Cert_5_1_07_MaxChildCount(unittest.TestCase):
                 if addr[0:4] != 'fe80' and 'ff:fe00' not in addr:
                     self.assertTrue(self.nodes[LEADER].ping(addr, size=106))
                     break
+
 
 if __name__ == '__main__':
     unittest.main()

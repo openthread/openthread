@@ -430,8 +430,8 @@ private:
     otIp6AddressCallback mAddressCallback;
     void *               mAddressCallbackContext;
 
-    NetifUnicastAddress   mExtUnicastAddresses[OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS];
-    NetifMulticastAddress mExtMulticastAddresses[OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS];
+    NetifUnicastAddress   mExtUnicastAddresses[OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS];
+    NetifMulticastAddress mExtMulticastAddresses[OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS];
 
     static const otNetifMulticastAddress kRealmLocalAllMplForwardersMulticastAddress;
     static const otNetifMulticastAddress kLinkLocalAllNodesMulticastAddress;

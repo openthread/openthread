@@ -26,11 +26,10 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 
-import time
 import wpan
 from wpan import verify
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test description: Network Data (on-mesh prefix) timeout and entry removal
 #
 # Network topology
@@ -51,20 +50,38 @@ from wpan import verify
 #
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
-print '-' * 120
-print 'Starting \'{}\''.format(test_name)
+print('-' * 120)
+print('Starting \'{}\''.format(test_name))
 
 
-def verify_prefix(node_list, prefix, rloc16, prefix_len=64, stable=True, priority='med', on_mesh=False, slaac=False, dhcp=False,
-        configure=False, default_route=False, preferred=True):
+def verify_prefix(
+    node_list,
+    prefix,
+    rloc16,
+    prefix_len=64,
+    stable=True,
+    priority='med',
+    on_mesh=False,
+    slaac=False,
+    dhcp=False,
+    configure=False,
+    default_route=False,
+    preferred=True,
+):
     """
     This function verifies that the `prefix` is present on all the nodes in the `node_list`. It also verifies that the
     `prefix` is associated with the given `rloc16` (as an integer).
     """
     for node in node_list:
-        prefixes = wpan.parse_on_mesh_prefix_result(node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
+        prefixes = wpan.parse_on_mesh_prefix_result(
+            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES)
+        )
         for p in prefixes:
-            if p.prefix == prefix and p.origin == "ncp" and int(p.rloc16(), 0) == rloc16:
+            if (
+                p.prefix == prefix
+                and p.origin == "ncp"
+                and int(p.rloc16(), 0) == rloc16
+            ):
                 verify(int(p.prefix_len) == prefix_len)
                 verify(p.is_stable() == stable)
                 verify(p.is_on_mesh() == on_mesh)
@@ -76,7 +93,10 @@ def verify_prefix(node_list, prefix, rloc16, prefix_len=64, stable=True, priorit
                 verify(p.priority == priority)
                 break
         else:
-            raise wpan.VerifyError("Did not find prefix {} on node {}".format(prefix, node))
+            raise wpan.VerifyError(
+                "Did not find prefix {} on node {}".format(prefix, node)
+            )
+
 
 def verify_no_prefix(node_list, prefix, rloc16):
     """
@@ -84,12 +104,23 @@ def verify_no_prefix(node_list, prefix, rloc16):
     given `rloc16`.
     """
     for node in node_list:
-        prefixes = wpan.parse_on_mesh_prefix_result(node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
+        prefixes = wpan.parse_on_mesh_prefix_result(
+            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES)
+        )
         for p in prefixes:
-            if p.prefix == prefix and p.origin == "ncp" and int(p.rloc16(), 0) == rloc16:
-                raise wpan.VerifyError("Did find prefix {} with rloc {} on node {}".format(prefix, hex(rloc16), node))
+            if (
+                p.prefix == prefix
+                and p.origin == "ncp"
+                and int(p.rloc16(), 0) == rloc16
+            ):
+                raise wpan.VerifyError(
+                    "Did find prefix {} with rloc {} on node {}".format(
+                        prefix, hex(rloc16), node
+                    )
+                )
 
-#-----------------------------------------------------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
 
 speedup = 25
@@ -99,12 +130,12 @@ r1 = wpan.Node()
 r2 = wpan.Node()
 c2 = wpan.Node()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Init all nodes
 
 wpan.Node.init_all_nodes()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Build network topology
 #
 # Test topology:
@@ -125,7 +156,7 @@ c2.whitelist_node(r2)
 c2.join_node(r2, wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
 c2.set(wpan.WPAN_POLL_INTERVAL, '400')
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
 common_prefix = "fd00:cafe::"
@@ -149,27 +180,83 @@ r1_rloc = int(r1.get(wpan.WPAN_THREAD_RLOC16), 0)
 r2_rloc = int(r2.get(wpan.WPAN_THREAD_RLOC16), 0)
 c2_rloc = int(c2.get(wpan.WPAN_THREAD_RLOC16), 0)
 
+
 def check_prefixes():
     # Verify that all three `prefix1`, 'prefix2', and `prefix3` are present on all nodes
     # and respectively associated with `r1`, r2, and `r3` nodes.
-    verify_prefix([r1, r2, c2], prefix1, r1_rloc, on_mesh=True, preferred=True, stable=True)
-    verify_prefix([r1, r2, c2], prefix2, r2_rloc, on_mesh=True, preferred=True, stable=True)
-    verify_prefix([r1, r2, c2], prefix3, c2_rloc, on_mesh=True, preferred=True, stable=True)
+    verify_prefix(
+        [r1, r2, c2],
+        prefix1,
+        r1_rloc,
+        on_mesh=True,
+        preferred=True,
+        stable=True,
+    )
+    verify_prefix(
+        [r1, r2, c2],
+        prefix2,
+        r2_rloc,
+        on_mesh=True,
+        preferred=True,
+        stable=True,
+    )
+    verify_prefix(
+        [r1, r2, c2],
+        prefix3,
+        c2_rloc,
+        on_mesh=True,
+        preferred=True,
+        stable=True,
+    )
 
-    # Verify the presence of `common_prefix` associated with each node (with correct flags).
-    verify_prefix([r1, r2, c2], common_prefix, r1_rloc, on_mesh=True, preferred=True, stable=False)
-    verify_prefix([r1, r2, c2], common_prefix, r2_rloc, on_mesh=True, preferred=True, stable=True)
-    verify_prefix([r1, r2, c2], common_prefix, c2_rloc, on_mesh=True, preferred=False, stable=True)
+    # Verify the presence of `common_prefix` associated with each node (with
+    # correct flags).
+    verify_prefix(
+        [r1, r2, c2],
+        common_prefix,
+        r1_rloc,
+        on_mesh=True,
+        preferred=True,
+        stable=False,
+    )
+    verify_prefix(
+        [r1, r2, c2],
+        common_prefix,
+        r2_rloc,
+        on_mesh=True,
+        preferred=True,
+        stable=True,
+    )
+    verify_prefix(
+        [r1, r2, c2],
+        common_prefix,
+        c2_rloc,
+        on_mesh=True,
+        preferred=False,
+        stable=True,
+    )
+
 
 wpan.verify_within(check_prefixes, wait_time)
 
-# Remove `r2`. This should trigger all the prefixes added by it or its child to timeout and be removed.
+# Remove `r2`. This should trigger all the prefixes added by it or its
+# child to timeout and be removed.
 r2.leave()
+
 
 def check_prefixes_on_r1_after_r2_leave():
     # Verify that entries added by r1 are still present
-    verify_prefix([r1], prefix1, r1_rloc, on_mesh=True, preferred=True, stable=True)
-    verify_prefix([r1], common_prefix, r1_rloc, on_mesh=True, preferred=True, stable=False)
+    verify_prefix(
+        [r1], prefix1, r1_rloc, on_mesh=True, preferred=True, stable=True
+    )
+    verify_prefix(
+        [r1],
+        common_prefix,
+        r1_rloc,
+        on_mesh=True,
+        preferred=True,
+        stable=False,
+    )
 
     # Verify all entries added by `r2` or `c2` are removed
     verify_no_prefix([r1], prefix2, r2_rloc)
@@ -177,11 +264,12 @@ def check_prefixes_on_r1_after_r2_leave():
     verify_no_prefix([r1], common_prefix, r2_rloc)
     verify_no_prefix([r1], common_prefix, c2_rloc)
 
+
 wpan.verify_within(check_prefixes_on_r1_after_r2_leave, wait_time)
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
 wpan.Node.finalize_all_nodes()
 
-print '\'{}\' passed.'.format(test_name)
+print('\'{}\' passed.'.format(test_name))

@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include "cli_config.h"
+
 #include <stdarg.h>
 
 #include <openthread/cli.h>
@@ -47,13 +49,11 @@
 #include "cli/cli_joiner.hpp"
 #include "cli/cli_udp.hpp"
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
-#include <coap/coap_message.hpp>
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
 #include "cli/cli_coap.hpp"
 #endif
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
-#include <coap/coap_message.hpp>
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #include "cli/cli_coap_secure.hpp"
 #endif
 
@@ -202,13 +202,13 @@ private:
     void ProcessChildMax(int argc, char *argv[]);
 #endif
     void ProcessChildTimeout(int argc, char *argv[]);
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
     void ProcessCoap(int argc, char *argv[]);
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     void ProcessCoapSecure(int argc, char *argv[]);
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
-#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     void ProcessCommissioner(int argc, char *argv[]);
 #endif
 #if OPENTHREAD_FTD
@@ -218,11 +218,11 @@ private:
 #if OPENTHREAD_FTD
     void ProcessDelayTimerMin(int argc, char *argv[]);
 #endif
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
     void ProcessDiag(int argc, char *argv[]);
-#endif // OPENTHREAD_ENABLE_DIAG
+#endif // OPENTHREAD_CONFIG_DIAG_ENABLE
     void ProcessDiscover(int argc, char *argv[]);
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     void ProcessDns(int argc, char *argv[]);
 #endif
 #if OPENTHREAD_FTD
@@ -246,7 +246,7 @@ private:
     otError ProcessIpMulticastAddrAdd(int argc, char *argv[]);
     otError ProcessIpMulticastAddrDel(int argc, char *argv[]);
     otError ProcessMulticastPromiscuous(int argc, char *argv[]);
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
     void ProcessJoiner(int argc, char *argv[]);
 #endif
 #if OPENTHREAD_FTD
@@ -263,21 +263,21 @@ private:
 #if OPENTHREAD_FTD
     void ProcessNeighbor(int argc, char *argv[]);
 #endif
-#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     void ProcessNetworkDataRegister(int argc, char *argv[]);
 #endif
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     void ProcessNetworkDataShow(int argc, char *argv[]);
     void ProcessService(int argc, char *argv[]);
 #endif
-#if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     void ProcessNetworkDiagnostic(int argc, char *argv[]);
-#endif // OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 #if OPENTHREAD_FTD
     void ProcessNetworkIdTimeout(int argc, char *argv[]);
 #endif
     void ProcessNetworkName(int argc, char *argv[]);
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     void ProcessNetworkTime(int argc, char *argv[]);
 #endif
     void ProcessPanId(int argc, char *argv[]);
@@ -287,7 +287,7 @@ private:
 #endif
     void ProcessPing(int argc, char *argv[]);
     void ProcessPollPeriod(int argc, char *argv[]);
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     void    ProcessPrefix(int argc, char *argv[]);
     otError ProcessPrefixAdd(int argc, char *argv[]);
     otError ProcessPrefixRemove(int argc, char *argv[]);
@@ -299,7 +299,7 @@ private:
     void ProcessReleaseRouterId(int argc, char *argv[]);
 #endif
     void ProcessReset(int argc, char *argv[]);
-#if OPENTHREAD_ENABLE_BORDER_ROUTER
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     void    ProcessRoute(int argc, char *argv[]);
     otError ProcessRouteAdd(int argc, char *argv[]);
     otError ProcessRouteRemove(int argc, char *argv[]);
@@ -315,7 +315,7 @@ private:
     void ProcessRloc16(int argc, char *argv[]);
     void ProcessScan(int argc, char *argv[]);
     void ProcessSingleton(int argc, char *argv[]);
-#if OPENTHREAD_ENABLE_SNTP_CLIENT
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     void ProcessSntp(int argc, char *argv[]);
 #endif
     void ProcessState(int argc, char *argv[]);
@@ -324,12 +324,12 @@ private:
     void ProcessTxPower(int argc, char *argv[]);
     void ProcessUdp(int argc, char *argv[]);
     void ProcessVersion(int argc, char *argv[]);
-#if OPENTHREAD_ENABLE_MAC_FILTER
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     void    ProcessMacFilter(int argc, char *argv[]);
     void    PrintMacFilter(void);
     otError ProcessMacFilterAddress(int argc, char *argv[]);
     otError ProcessMacFilterRss(int argc, char *argv[]);
-#endif // OPENTHREAD_ENABLE_MAC_FILTER
+#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
     static void HandleIcmpReceive(void *               aContext,
                                   otMessage *          aMessage,
@@ -341,7 +341,7 @@ private:
     static void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
     static void HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext);
 
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     static void HandleDnsResponse(void *        aContext,
                                   const char *  aHostname,
                                   otIp6Address *aAddress,
@@ -349,7 +349,7 @@ private:
                                   otError       aResult);
 #endif
 
-#if OPENTHREAD_ENABLE_SNTP_CLIENT
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     static void HandleSntpResponse(void *aContext, uint64_t aTime, otError aResult);
 #endif
 
@@ -359,10 +359,10 @@ private:
     void HandleEnergyScanResult(otEnergyScanResult *aResult);
     void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx);
     void HandleDiagnosticGetResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     void HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, otError aResult);
 #endif
-#if OPENTHREAD_ENABLE_SNTP_CLIENT
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     void HandleSntpResponse(uint64_t aTime, otError aResult);
 #endif
     static Interpreter &GetOwner(OwnerLocator &aOwnerLocator);
@@ -377,31 +377,31 @@ private:
     uint32_t                    mInterval;
     TimerMilli                  mPingTimer;
     otIcmp6Handler              mIcmpHandler;
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     bool mResolvingInProgress;
     char mResolvingHostname[OT_DNS_MAX_HOSTNAME_LENGTH];
 #endif
 
-#if OPENTHREAD_ENABLE_SNTP_CLIENT
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     bool mSntpQueryingInProgress;
 #endif
 
     UdpExample mUdp;
     Dataset    mDataset;
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
     Coap mCoap;
 #endif
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     CoapSecure mCoapSecure;
 #endif
 
-#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     Commissioner mCommissioner;
 #endif
 
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
     Joiner mJoiner;
 #endif
 

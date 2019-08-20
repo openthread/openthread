@@ -83,12 +83,12 @@ otError Dataset::Print(otOperationalDataset &aDataset)
 {
     if (aDataset.mComponents.mIsPendingTimestampPresent)
     {
-        mInterpreter.mServer->OutputFormat("Pending Timestamp: %d\r\n", aDataset.mPendingTimestamp);
+        mInterpreter.mServer->OutputFormat("Pending Timestamp: %lu\r\n", aDataset.mPendingTimestamp);
     }
 
     if (aDataset.mComponents.mIsActiveTimestampPresent)
     {
-        mInterpreter.mServer->OutputFormat("Active Timestamp: %d\r\n", aDataset.mActiveTimestamp);
+        mInterpreter.mServer->OutputFormat("Active Timestamp: %lu\r\n", aDataset.mActiveTimestamp);
     }
 
     if (aDataset.mComponents.mIsChannelPresent)
@@ -132,7 +132,8 @@ otError Dataset::Print(otOperationalDataset &aDataset)
     if (aDataset.mComponents.mIsNetworkNamePresent)
     {
         mInterpreter.mServer->OutputFormat("Network Name: ");
-        mInterpreter.mServer->OutputFormat("%.*s\r\n", sizeof(aDataset.mNetworkName), aDataset.mNetworkName.m8);
+        mInterpreter.mServer->OutputFormat("%.*s\r\n", static_cast<uint16_t>(sizeof(aDataset.mNetworkName)),
+                                           aDataset.mNetworkName.m8);
     }
 
     if (aDataset.mComponents.mIsPanIdPresent)

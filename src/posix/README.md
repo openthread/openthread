@@ -31,7 +31,7 @@ Test
 ----
 
 **NOTE** Assuming the build system is 64bit Linux, you can use the normal OpenThread CLI as described in the [command line document](../../src/cli/README.md).
-You can also perform radio diagnostics using the command [diag](../../src/diag/README.md).
+You can also perform radio diagnostics using the command [diag](../../src/core/diags/README.md).
 
 ### With Simulation
 

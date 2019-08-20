@@ -97,8 +97,6 @@ The [NXP(Freescale) Test Tool][test-tool] provides a convenient method for flash
     ```bash
     > dataset masterkey dfd34f0f05cad978ec4e32b0413038ff
     Done
-    > dataset panid 0x8f28
-    Done
     > dataset commit active
     Done
     > ifconfig up

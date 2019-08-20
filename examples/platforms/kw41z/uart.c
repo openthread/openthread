@@ -120,6 +120,11 @@ exit:
     return error;
 }
 
+otError otPlatUartFlush(void)
+{
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
 static void processTransmit(void)
 {
     if (sTransmitBuffer && sTransmitDone)

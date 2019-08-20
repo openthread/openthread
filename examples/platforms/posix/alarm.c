@@ -269,7 +269,7 @@ void platformAlarmProcess(otInstance *aInstance)
         {
             sIsMsRunning = false;
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
             if (otPlatDiagModeGet())
             {
@@ -283,7 +283,7 @@ void platformAlarmProcess(otInstance *aInstance)
         }
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
     if (sIsUsRunning)
     {
@@ -297,19 +297,19 @@ void platformAlarmProcess(otInstance *aInstance)
         }
     }
 
-#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
 uint64_t otPlatTimeGet(void)
 {
     return platformGetNow();
 }
 
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 uint16_t otPlatTimeGetXtalAccuracy(void)
 {
     return 0;
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif
 
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0

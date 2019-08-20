@@ -40,10 +40,8 @@
 #include <openthread/thread_ftd.h>
 #include <openthread/platform/uart.h>
 
+#include "fuzzer_platform.h"
 #include "common/code_utils.hpp"
-
-extern "C" void FuzzerPlatformInit(void);
-extern "C" void FuzzerPlatformProcess(otInstance *aInstance);
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
@@ -68,6 +66,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     memcpy(buf, data, size);
 
     otPlatUartReceived(buf, (uint16_t)size);
+
+    VerifyOrExit(!FuzzerPlatformResetWasRequested());
 
     for (int i = 0; i < MAX_ITERATIONS; i++)
     {

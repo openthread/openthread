@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -38,12 +37,13 @@ ROUTER1 = 2
 ROUTER2 = 3
 ED = 4
 
+
 class Cert_6_1_5_RouterAttachLinkQuality(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,5):
+        for i in range(1, 5):
             self.nodes[i] = node.Node(i, (i == ED), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -62,7 +62,9 @@ class Cert_6_1_5_RouterAttachLinkQuality(unittest.TestCase):
         self.nodes[ROUTER2].set_panid(0xface)
         self.nodes[ROUTER2].set_mode('rsdn')
         self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER2].add_whitelist(self.nodes[ED].get_addr64(), rssi=-85)
+        self.nodes[ROUTER2].add_whitelist(
+            self.nodes[ED].get_addr64(), rssi=-85
+        )
         self.nodes[ROUTER2].enable_whitelist()
         self.nodes[ROUTER2].set_router_selection_jitter(1)
 
@@ -73,9 +75,9 @@ class Cert_6_1_5_RouterAttachLinkQuality(unittest.TestCase):
         self.nodes[ED].enable_whitelist()
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -94,6 +96,7 @@ class Cert_6_1_5_RouterAttachLinkQuality(unittest.TestCase):
         self.nodes[ED].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -61,11 +61,13 @@ using ot::Encoding::BigEndian::HostSwap32;
  */
 enum
 {
-    kDhcpClientPort      = 546,
-    kDhcpServerPort      = 547,
-    kTransactionIdSize   = 3,
-    kLinkLayerAddressLen = 8,
-    kHardwareTypeEui64   = 27,
+    kDhcpClientPort          = 546,
+    kDhcpServerPort          = 547,
+    kTransactionIdSize       = 3,
+    kLinkLayerAddressLen     = 8,
+    kHardwareTypeEui64       = 27,
+    kHardwareTypeEthernet    = 1,
+    kLinkLayerAddressPlusLen = 6,
 };
 
 /**

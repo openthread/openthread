@@ -30,28 +30,28 @@ import time
 import wpan
 from wpan import verify
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test description: Verify transmission of data polls and poll interval change.
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
-print '-' * 120
-print 'Starting \'{}\''.format(test_name)
+print('-' * 120)
+print('Starting \'{}\''.format(test_name))
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
 
 speedup = 4
 wpan.Node.set_time_speedup_factor(speedup)
 
-parent = wpan.Node();
+parent = wpan.Node()
 child = wpan.Node()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Init all nodes
 
 wpan.Node.init_all_nodes()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Build network topology
 #
 
@@ -59,7 +59,7 @@ parent.form("poll-interval")
 
 child.join_node(parent, wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
 # Verify the default poll interval is smaller than child_timeout
@@ -68,24 +68,32 @@ child_timeout = int(child.get(wpan.WPAN_THREAD_CHILD_TIMEOUT), 0) * 1000
 default_poll_interval = int(child.get(wpan.WPAN_POLL_INTERVAL), 0)
 verify(0 < default_poll_interval <= child_timeout)
 
-WAIT_TIME = 0.36 # in seconds
+WAIT_TIME = 0.36  # in seconds
 
 # Check number of data polls with different poll intervals
 
-for poll_interval in [100, 200, 500, 50]: # in milliseconds
+for poll_interval in [100, 200, 500, 50]:  # in milliseconds
 
-    poll_count_before = int(child.get(wpan.WPAN_NCP_COUNTER_TX_PKT_DATA_POLL), 0)
+    poll_count_before = int(
+        child.get(wpan.WPAN_NCP_COUNTER_TX_PKT_DATA_POLL), 0
+    )
 
     child.set(wpan.WPAN_POLL_INTERVAL, str(poll_interval))
     verify(int(child.get(wpan.WPAN_POLL_INTERVAL), 0) == poll_interval)
 
     time.sleep(WAIT_TIME)
-    poll_count_after = int(child.get(wpan.WPAN_NCP_COUNTER_TX_PKT_DATA_POLL), 0)
+    poll_count_after = int(
+        child.get(wpan.WPAN_NCP_COUNTER_TX_PKT_DATA_POLL), 0
+    )
     actual_polls = poll_count_after - poll_count_before
 
     expected_polls = WAIT_TIME * 1000 * speedup / poll_interval
 
-    print "poll interval {} ms, polls -> actual {}, expected {}".format(poll_interval, actual_polls, expected_polls)
+    print(
+        "poll interval {} ms, polls -> actual {}, expected {}".format(
+            poll_interval, actual_polls, expected_polls
+        )
+    )
 
     verify(actual_polls >= int(expected_polls))
 
@@ -122,9 +130,9 @@ child.set(wpan.WPAN_THREAD_CHILD_TIMEOUT, str(child_timeout / 1000))
 verify(int(child.get(wpan.WPAN_POLL_INTERVAL), 0) == default_poll_interval)
 
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
 wpan.Node.finalize_all_nodes()
 
-print '\'{}\' passed.'.format(test_name)
+print('\'{}\' passed.'.format(test_name))

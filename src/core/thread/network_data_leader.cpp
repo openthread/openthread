@@ -163,7 +163,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
+#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE || OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 otError LeaderBase::GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16)
 {
     otError         error = OT_ERROR_NOT_FOUND;
@@ -188,7 +188,7 @@ otError LeaderBase::GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16)
 exit:
     return error;
 }
-#endif // OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
+#endif // OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE || OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 
 bool LeaderBase::IsOnMesh(const Ip6::Address &aAddress)
 {
@@ -369,7 +369,7 @@ otError LeaderBase::DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16)
         {
             entry = borderRouter->GetEntry(i);
 
-            if (entry->IsDefaultRoute() == false)
+            if (!entry->IsDefaultRoute())
             {
                 continue;
             }

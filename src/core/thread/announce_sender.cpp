@@ -42,7 +42,7 @@
 #include "common/random.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
-#include "phy/phy.hpp"
+#include "radio/radio.hpp"
 
 namespace ot {
 
@@ -110,7 +110,7 @@ exit:
     return;
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+#if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
 
 AnnounceSender::AnnounceSender(Instance &aInstance)
     : AnnounceSenderBase(aInstance, &AnnounceSender::HandleTimer)
@@ -138,7 +138,7 @@ void AnnounceSender::CheckState(void)
         break;
 
     case OT_DEVICE_ROLE_CHILD:
-        if (mle.IsRouterRoleEnabled() && (mle.GetDeviceMode() & Mle::ModeTlv::kModeRxOnWhenIdle))
+        if (mle.IsRouterRoleEnabled() && mle.IsRxOnWhenIdle())
         {
             period = kReedTxInterval;
             break;
@@ -191,6 +191,6 @@ void AnnounceSender::HandleStateChanged(otChangedFlags aFlags)
     }
 }
 
-#endif // OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+#endif // OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
 
 } // namespace ot

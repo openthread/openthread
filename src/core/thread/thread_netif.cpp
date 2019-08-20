@@ -50,21 +50,21 @@ namespace ot {
 ThreadNetif::ThreadNetif(Instance &aInstance)
     : Netif(aInstance)
     , mCoap(aInstance)
-#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+#if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
     , mDhcp6Client(aInstance)
-#endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
-#if OPENTHREAD_ENABLE_DHCP6_SERVER
+#endif // OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
+#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
     , mDhcp6Server(aInstance)
-#endif // OPENTHREAD_ENABLE_DHCP6_SERVER
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+#endif // OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
     , mSlaac(aInstance)
 #endif
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     , mDnsClient(Get<ThreadNetif>())
-#endif // OPENTHREAD_ENABLE_DNS_CLIENT
-#if OPENTHREAD_ENABLE_SNTP_CLIENT
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpClient(Get<ThreadNetif>())
-#endif // OPENTHREAD_ENABLE_SNTP_CLIENT
+#endif // OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mActiveDataset(aInstance)
     , mPendingDataset(aInstance)
     , mKeyManager(aInstance)
@@ -72,29 +72,29 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     , mMac(aInstance)
     , mMeshForwarder(aInstance)
     , mMleRouter(aInstance)
-#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     , mNetworkDataLocal(aInstance)
 #endif
     , mNetworkDataLeader(aInstance)
-#if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     , mNetworkDiagnostic(aInstance)
 #endif
     , mIsUp(false)
-#if OPENTHREAD_ENABLE_BORDER_AGENT
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     , mBorderAgent(aInstance)
 #endif
-#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     , mCommissioner(aInstance)
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
-#if OPENTHREAD_ENABLE_DTLS
+#endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
     , mCoapSecure(aInstance)
 #endif
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
     , mJoiner(aInstance)
-#endif // OPENTHREAD_ENABLE_JOINER
-#if OPENTHREAD_ENABLE_JAM_DETECTION
+#endif // OPENTHREAD_CONFIG_JOINER_ENABLE
+#if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
     , mJamDetector(aInstance)
-#endif // OPENTHREAD_ENABLE_JAM_DETECTION
+#endif // OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 #if OPENTHREAD_FTD
     , mJoinerRouter(aInstance)
     , mLeader(aInstance)
@@ -105,7 +105,7 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     , mAnnounceBegin(aInstance)
     , mPanIdQuery(aInstance)
     , mEnergyScan(aInstance)
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     , mTimeSync(aInstance)
 #endif
 {
@@ -118,7 +118,7 @@ void ThreadNetif::Up(void)
 
     // Enable the MAC just in case it was disabled while the Interface was down.
     Get<Mac::Mac>().SetEnabled(true);
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     Get<Utils::ChannelMonitor>().Start();
 #endif
     Get<MeshForwarder>().Start();
@@ -128,10 +128,10 @@ void ThreadNetif::Up(void)
     SubscribeAllNodesMulticast();
     Get<Mle::MleRouter>().Enable();
     Get<Coap::Coap>().Start(kCoapUdpPort);
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     Get<Dns::Client>().Start();
 #endif
-#if OPENTHREAD_ENABLE_SNTP_CLIENT
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     Get<Sntp::Client>().Start();
 #endif
     Get<Notifier>().Signal(OT_CHANGED_THREAD_NETIF_STATE);
@@ -144,13 +144,13 @@ void ThreadNetif::Down(void)
 {
     VerifyOrExit(mIsUp);
 
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     Get<Dns::Client>().Stop();
 #endif
-#if OPENTHREAD_ENABLE_SNTP_CLIENT
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     Get<Sntp::Client>().Stop();
 #endif
-#if OPENTHREAD_ENABLE_DTLS
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
     Get<Coap::CoapSecure>().Stop();
 #endif
     Get<Coap::Coap>().Stop();
@@ -162,7 +162,7 @@ void ThreadNetif::Down(void)
 
     mIsUp = false;
     Get<MeshForwarder>().Stop();
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     Get<Utils::ChannelMonitor>().Stop();
 #endif
     Get<Notifier>().Signal(OT_CHANGED_THREAD_NETIF_STATE);

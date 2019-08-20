@@ -217,7 +217,7 @@ public:
      */
     otError SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength);
 
-#if OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
+#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE || OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
     /**
      * This method gets the Rloc of Dhcp Agent of specified contextId.
      *
@@ -229,7 +229,7 @@ public:
      *
      */
     otError GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16);
-#endif // OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
+#endif // OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE || OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 
 protected:
     uint8_t mStableVersion;

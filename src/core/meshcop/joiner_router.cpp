@@ -351,7 +351,7 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
     messageInfo = aMessageInfo;
     messageInfo.SetPeerPort(kCoapUdpPort);
 
-    delayedMessage = DelayedJoinEntHeader(TimerMilli::GetNow() + kDelayJoinEnt, messageInfo, aKek.GetKek());
+    delayedMessage.Init(TimerMilli::GetNow() + kDelayJoinEnt, messageInfo, aKek.GetKek());
     SuccessOrExit(error = delayedMessage.AppendTo(*message));
 
     mDelayedJoinEnts.Enqueue(*message);

@@ -147,6 +147,7 @@ EXTRA_DIST                                                         = \
     test_common.py                                                   \
     test_crypto.py                                                   \
     test_diag.py                                                     \
+    test_ipv6_fragmentation.py                                       \
     test_ipv6.py                                                     \
     test_lowpan.py                                                   \
     test_mac802154.py                                                \
@@ -165,6 +166,8 @@ check_SCRIPTS                                                      = \
     test_coaps.py                                                    \
     test_common.py                                                   \
     test_crypto.py                                                   \
+    test_diag.py                                                     \
+    test_ipv6_fragmentation.py                                       \
     test_ipv6.py                                                     \
     test_lowpan.py                                                   \
     test_mac802154.py                                                \
@@ -266,12 +269,6 @@ check_SCRIPTS                                                      = \
     Cert_9_2_18_RollBackActiveTimestamp.py                           \
     $(NULL)
 
-if OPENTHREAD_ENABLE_DIAG
-check_SCRIPTS                                                     += \
-    test_diag.py                                                     \
-    $(NULL)
-endif
-
 TESTS_ENVIRONMENT                                                  = \
     export                                                           \
     top_builddir='$(top_builddir)'                                   \
@@ -286,6 +283,7 @@ TESTS                                                              = \
 XFAIL_NCP_TESTS                                                    = \
     test_coaps.py                                                    \
     test_diag.py                                                     \
+    test_ipv6_fragmentation.py                                       \
     test_service.py                                                  \
     Cert_5_3_10_AddressQuery.py                                      \
     Cert_8_1_01_Commissioning.py                                     \

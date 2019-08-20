@@ -170,6 +170,8 @@ exit:
     return;
 }
 
+// LCOV_EXCL_START
+
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_CORE == 1)
 
 void Notifier::LogChangedFlags(otChangedFlags aFlags) const
@@ -334,5 +336,7 @@ const char *Notifier::FlagToString(otChangedFlags) const
 }
 
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_CORE == 1)
+
+// LCOV_EXCL_STOP
 
 } // namespace ot

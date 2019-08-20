@@ -80,10 +80,12 @@ libmbedcrypto_a_SOURCES                       = \
     repo/library/x509_crt.c                     \
     $(NULL)
 
-if !OPENTHREAD_EXAMPLES_EFR32
+if !OPENTHREAD_EXAMPLES_EFR32MG12
+if !OPENTHREAD_EXAMPLES_EFR32MG21
 libmbedcrypto_a_SOURCES                      += \
     repo/library/ecp.c                          \
     $(NULL)
+endif
 endif
 
 if OPENTHREAD_BUILD_COVERAGE

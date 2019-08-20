@@ -80,12 +80,14 @@ COMMONCPPFLAGS                                                                  
 
 PLATFORM_COMMON_SOURCES                                                                                    = \
     alarm.c                                                                                                  \
+    diag.c                                                                                                   \
     entropy.c                                                                                                \
     fem.c                                                                                                    \
     flash.c                                                                                                  \
     logging.c                                                                                                \
     misc.c                                                                                                   \
     openthread-core-nrf52840-config.h                                                                        \
+    openthread-core-nrf52840-config-check.h                                                                  \
     platform-config.h                                                                                        \
     platform-fem.h                                                                                           \
     platform-nrf5.h                                                                                          \
@@ -125,19 +127,9 @@ HWCRYPTO_SOURCES                                                                
     @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/sha256_alt_cc310.c                       \
     $(NULL)
 
-PLATFORM_DIAG_SOURCES                                                                                      = \
-    diag.c                                                                                                   \
-    $(NULL)
-
 PLATFORM_SOURCES                                                                                           = \
     $(PLATFORM_COMMON_SOURCES)                                                                               \
     $(NULL)
-
-if OPENTHREAD_ENABLE_DIAG
-PLATFORM_SOURCES                                                                                          += \
-    $(PLATFORM_DIAG_SOURCES)                                                                                 \
-    $(NULL)
-endif
 
 libopenthread_nrf52840_a_CPPFLAGS                                                                          = \
     $(COMMONCPPFLAGS)                                                                                        \
@@ -174,7 +166,6 @@ libopenthread_nrf52840_softdevice_sdk_a_SOURCES                                 
 
 PRETTY_FILES                                                                                               = \
     $(PLATFORM_COMMON_SOURCES)                                                                               \
-    $(PLATFORM_DIAG_SOURCES)                                                                                 \
     $(NULL)
 
 Dash                                                                                                       = -

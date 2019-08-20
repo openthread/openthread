@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -44,21 +43,26 @@ LEADER = 2
 ROUTER1 = 3
 ROUTER2 = 4
 
+
 class Cert_9_2_16_ActivePendingPartition(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,5):
+        for i in range(1, 5):
             self.nodes[i] = node.Node(i, simulator=self.simulator)
 
-        self.nodes[COMMISSIONER].set_active_dataset(1, channel=CHANNEL_INIT, panid=PANID_INIT)
+        self.nodes[COMMISSIONER].set_active_dataset(
+            1, channel=CHANNEL_INIT, panid=PANID_INIT
+        )
         self.nodes[COMMISSIONER].set_mode('rsdn')
         self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[COMMISSIONER].enable_whitelist()
         self.nodes[COMMISSIONER].set_router_selection_jitter(1)
 
-        self.nodes[LEADER].set_active_dataset(1, channel=CHANNEL_INIT, panid=PANID_INIT)
+        self.nodes[LEADER].set_active_dataset(
+            1, channel=CHANNEL_INIT, panid=PANID_INIT
+        )
         self.nodes[LEADER].set_mode('rsdn')
         self.nodes[LEADER].set_partition_id(0xffffffff)
         self.nodes[LEADER].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
@@ -66,14 +70,18 @@ class Cert_9_2_16_ActivePendingPartition(unittest.TestCase):
         self.nodes[LEADER].enable_whitelist()
         self.nodes[LEADER].set_router_selection_jitter(1)
 
-        self.nodes[ROUTER1].set_active_dataset(1, channel=CHANNEL_INIT, panid=PANID_INIT)
+        self.nodes[ROUTER1].set_active_dataset(
+            1, channel=CHANNEL_INIT, panid=PANID_INIT
+        )
         self.nodes[ROUTER1].set_mode('rsdn')
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[ROUTER2].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
         self.nodes[ROUTER1].set_router_selection_jitter(1)
 
-        self.nodes[ROUTER2].set_active_dataset(1, channel=CHANNEL_INIT, panid=PANID_INIT)
+        self.nodes[ROUTER2].set_active_dataset(
+            1, channel=CHANNEL_INIT, panid=PANID_INIT
+        )
         self.nodes[ROUTER2].set_mode('rsdn')
         self._setUpRouter2()
 
@@ -83,9 +91,9 @@ class Cert_9_2_16_ActivePendingPartition(unittest.TestCase):
         self.nodes[ROUTER2].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -103,10 +111,12 @@ class Cert_9_2_16_ActivePendingPartition(unittest.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
-        self.nodes[COMMISSIONER].send_mgmt_pending_set(pending_timestamp=10,
-                                                       active_timestamp=10,
-                                                       delay_timer=600000,
-                                                       mesh_local='fd00:0db9::')
+        self.nodes[COMMISSIONER].send_mgmt_pending_set(
+            pending_timestamp=10,
+            active_timestamp=10,
+            delay_timer=600000,
+            mesh_local='fd00:0db9::',
+        )
         self.simulator.go(5)
 
         self.nodes[ROUTER2].start()
@@ -116,25 +126,36 @@ class Cert_9_2_16_ActivePendingPartition(unittest.TestCase):
         self.nodes[ROUTER2].reset()
         self._setUpRouter2()
 
-        self.nodes[COMMISSIONER].send_mgmt_pending_set(pending_timestamp=20,
-                                                       active_timestamp=20,
-                                                       delay_timer=200000,
-                                                       mesh_local='fd00:0db7::',
-                                                       panid=PANID_FINAL)
+        self.nodes[COMMISSIONER].send_mgmt_pending_set(
+            pending_timestamp=20,
+            active_timestamp=20,
+            delay_timer=200000,
+            mesh_local='fd00:0db7::',
+            panid=PANID_FINAL,
+        )
         self.simulator.go(5)
 
-        self.nodes[COMMISSIONER].send_mgmt_active_set(active_timestamp=15,
-                                                      network_name='threadCert')
+        self.nodes[COMMISSIONER].send_mgmt_active_set(
+            active_timestamp=15, network_name='threadCert'
+        )
         self.simulator.go(100)
 
         self.nodes[ROUTER2].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
-        self.assertEqual(self.nodes[COMMISSIONER].get_network_name(), NETWORK_NAME_FINAL)
-        self.assertEqual(self.nodes[LEADER].get_network_name(), NETWORK_NAME_FINAL)
-        self.assertEqual(self.nodes[ROUTER1].get_network_name(), NETWORK_NAME_FINAL)
-        self.assertEqual(self.nodes[ROUTER2].get_network_name(), NETWORK_NAME_FINAL)
+        self.assertEqual(
+            self.nodes[COMMISSIONER].get_network_name(), NETWORK_NAME_FINAL
+        )
+        self.assertEqual(
+            self.nodes[LEADER].get_network_name(), NETWORK_NAME_FINAL
+        )
+        self.assertEqual(
+            self.nodes[ROUTER1].get_network_name(), NETWORK_NAME_FINAL
+        )
+        self.assertEqual(
+            self.nodes[ROUTER2].get_network_name(), NETWORK_NAME_FINAL
+        )
 
         self.simulator.go(100)
 
@@ -148,6 +169,7 @@ class Cert_9_2_16_ActivePendingPartition(unittest.TestCase):
             if ipaddr[0:4] != 'fe80':
                 break
         self.assertTrue(self.nodes[LEADER].ping(ipaddr))
+
 
 if __name__ == '__main__':
     unittest.main()

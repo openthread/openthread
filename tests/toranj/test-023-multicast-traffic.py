@@ -30,7 +30,7 @@ import time
 import wpan
 from wpan import verify
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test description: Multicast traffic
 #
 # Network topology
@@ -53,21 +53,35 @@ from wpan import verify
 #
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
-print '-' * 120
-print 'Starting \'{}\''.format(test_name)
+print('-' * 120)
+print('Starting \'{}\''.format(test_name))
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Utility functions
 
-def send_mcast(src_node, src_addr, mcast_addr, recving_nodes, non_recving_nodes=[], msg_len=30, mcast_hops=5):
+
+def send_mcast(
+    src_node,
+    src_addr,
+    mcast_addr,
+    recving_nodes,
+    non_recving_nodes=[],
+    msg_len=30,
+    mcast_hops=5,
+):
     """
     Send a multicast message with given `len` from `src_node` using `src_addr` to the multicast address `mcast_addr`.
     Verify that the message is received on all nodes in `recving_nodes` list and that it is not received on all
     nodes in `non_recving_nodes` list.
     """
-    sender = src_node.prepare_tx(src_addr, mcast_addr, msg_len, mcast_hops=mcast_hops)
+    sender = src_node.prepare_tx(
+        src_addr, mcast_addr, msg_len, mcast_hops=mcast_hops
+    )
     recvers = [node.prepare_rx(sender) for node in recving_nodes]
-    listeners = [node.preapre_listener(sender.dst_port, timeout=0.5) for node in non_recving_nodes]
+    listeners = [
+        node.prepare_listener(sender.dst_port, timeout=0.5)
+        for node in non_recving_nodes
+    ]
 
     wpan.Node.perform_async_tx_rx()
 
@@ -76,10 +90,19 @@ def send_mcast(src_node, src_addr, mcast_addr, recving_nodes, non_recving_nodes=
         verify(recvr.was_successful)
     for lsnr in listeners:
         # `all_rx_msg` contains a list of (msg_content, (src_addr, src_port)).
-        verify(len(lsnr.all_rx_msg) == 0 or
-            all([msg[1][0] != sender.src_addr and msg[1][1] != sender.src_port for msg in lsnr.all_rx_msg]))
+        verify(
+            len(lsnr.all_rx_msg) == 0
+            or all(
+                [
+                    msg[1][0] != sender.src_addr
+                    and msg[1][1] != sender.src_port
+                    for msg in lsnr.all_rx_msg
+                ]
+            )
+        )
 
-#-----------------------------------------------------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
 
 speedup = 4
@@ -95,12 +118,12 @@ sed = wpan.Node()
 all_routers = [r1, r2, r3, r4]
 all_nodes = all_routers + [fed, sed]
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Init all nodes
 
 wpan.Node.init_all_nodes()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Build network topology
 #
 # Test topology:
@@ -134,7 +157,7 @@ sed.whitelist_node(r4)
 sed.join_node(r4, wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
 sed.set(wpan.WPAN_POLL_INTERVAL, '600')
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
 ml1 = r1.get(wpan.WPAN_IP6_MESH_LOCAL_ADDRESS)[1:-1]
@@ -190,27 +213,50 @@ send_mcast(r1, ll1, ll_all_thread_nodes_addr, [r1, r2], [fed, r3, r4, sed])
 # fed =>> mesh-local all-thread.
 send_mcast(fed, ml_fed, ml_all_thread_nodes_addr, all_nodes)
 
-#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Send a large multicast message (requiring MAC level fragmentations)
 
 send_mcast(r3, ml3, ml_all_thread_nodes_addr, all_nodes, msg_len=400)
 
-#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Check the hop limit behavior
 
 # r1 =>> mesh-local all-thread (one hop)
-send_mcast(r1, ml1, ml_all_thread_nodes_addr, [r1, r2], [fed, r3, r4, sed], mcast_hops=1)
+send_mcast(
+    r1,
+    ml1,
+    ml_all_thread_nodes_addr,
+    [r1, r2],
+    [fed, r3, r4, sed],
+    mcast_hops=1,
+)
 
 # r1 =>> mesh-local all-thread (two hops)
-send_mcast(r1, ml1, ml_all_thread_nodes_addr, [r1, r2, fed, r3], [r4, sed], mcast_hops=2)
+send_mcast(
+    r1,
+    ml1,
+    ml_all_thread_nodes_addr,
+    [r1, r2, fed, r3],
+    [r4, sed],
+    mcast_hops=2,
+)
 
 # r1 =>> mesh-local all-thread (three hops)
-send_mcast(r1, ml1, ml_all_thread_nodes_addr, [r1, r2, fed, r3, r4], [sed], mcast_hops=3)
+send_mcast(
+    r1,
+    ml1,
+    ml_all_thread_nodes_addr,
+    [r1, r2, fed, r3, r4],
+    [sed],
+    mcast_hops=3,
+)
 
 # r1 =>> mesh-local all-thread (four hops)
-send_mcast(r1, ml1, ml_all_thread_nodes_addr, [r1, r2, fed, r3, r4, sed], mcast_hops=4)
+send_mcast(
+    r1, ml1, ml_all_thread_nodes_addr, [r1, r2, fed, r3, r4, sed], mcast_hops=4
+)
 
-#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Subscribe to a specific multicast address on r2 and sed
 
 mcast_addr = "ff03::114"
@@ -221,9 +267,9 @@ time.sleep(1)
 # r1 =>> specific address
 send_mcast(r1, ml1, mcast_addr, [r2, sed], [r1, r3, r4, fed])
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
 wpan.Node.finalize_all_nodes()
 
-print '\'{}\' passed.'.format(test_name)
+print('\'{}\' passed.'.format(test_name))

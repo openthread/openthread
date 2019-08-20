@@ -431,7 +431,7 @@ public:
      * Default constructor for the object.
      *
      */
-    QueryMetadata(void) { memset(this, 0, sizeof(*this)); };
+    QueryMetadata(void) { memset(this, 0, sizeof(*this)); }
 
     /**
      * This constructor initializes the object with specific values.
@@ -445,7 +445,7 @@ public:
         memset(this, 0, sizeof(*this));
         mResponseHandler = aHandler;
         mResponseContext = aContext;
-    };
+    }
 
     /**
      * This method appends request data to the message.
@@ -456,7 +456,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
-    otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); };
+    otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
 
     /**
      * This method reads request data from the message.
@@ -492,7 +492,7 @@ public:
      * @retval TRUE   If the message shall be sent before the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mTransmissionTime) > 0); };
+    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mTransmissionTime) > 0); }
 
     /**
      * This method checks if the message shall be sent after the given time.
@@ -502,7 +502,7 @@ public:
      * @retval TRUE   If the message shall be sent after the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsLater(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mTransmissionTime) < 0); };
+    bool IsLater(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mTransmissionTime) < 0); }
 
 private:
     uint32_t              mTransmitTimestamp;   ///< Time at the client when the request departed for the server.
@@ -596,8 +596,8 @@ private:
      */
     enum
     {
-        kResponseTimeout = OPENTHREAD_CONFIG_SNTP_RESPONSE_TIMEOUT,
-        kMaxRetransmit   = OPENTHREAD_CONFIG_SNTP_MAX_RETRANSMIT,
+        kResponseTimeout = OPENTHREAD_CONFIG_SNTP_CLIENT_RESPONSE_TIMEOUT,
+        kMaxRetransmit   = OPENTHREAD_CONFIG_SNTP_CLIENT_MAX_RETRANSMIT,
     };
 
     Message *NewMessage(const Header &aHeader);

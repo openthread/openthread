@@ -196,7 +196,7 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
     aBufferInfo->mCoapMessages += messages;
     aBufferInfo->mCoapBuffers += buffers;
 
-#if OPENTHREAD_ENABLE_DTLS
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
     instance.Get<Coap::CoapSecure>().GetRequestMessages().GetInfo(aBufferInfo->mCoapSecureMessages,
                                                                   aBufferInfo->mCoapSecureBuffers);
     instance.Get<Coap::CoapSecure>().GetCachedResponses().GetInfo(messages, buffers);
@@ -207,7 +207,7 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
     aBufferInfo->mCoapSecureBuffers       = 0;
 #endif
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
     instance.GetApplicationCoap().GetRequestMessages().GetInfo(aBufferInfo->mApplicationCoapMessages,
                                                                aBufferInfo->mApplicationCoapBuffers);
     instance.GetApplicationCoap().GetCachedResponses().GetInfo(messages, buffers);

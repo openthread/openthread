@@ -44,7 +44,6 @@ GCCVersion                      = $(shell expr `$(CC) -dumpversion | cut -f1 -d.
 
 configure_OPTIONS                                 = \
     --enable-mtd                                    \
-    --enable-diag                                   \
     --enable-linker-map                             \
     --with-examples=nrf52811                        \
     MBEDTLS_CPPFLAGS="$(NRF52811_MBEDTLS_CPPFLAGS)" \
@@ -68,26 +67,22 @@ NRF52811_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconducto
 NRF52811_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/cmsis
 NRF52811_MBEDTLS_CPPFLAGS += -DNRF52811_XXAA
 
-CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-nrf52811-config.h\"'
-CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/nrf52811/
+NRF52811_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-nrf52811-config.h\"'
+NRF52811_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-nrf52811-config-check.h\"'
+NRF52811_CONFIG_FILE_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/nrf52811/
 
-COMMONCFLAGS                   := \
-    -fdata-sections               \
-    -ffunction-sections           \
-    -Os                           \
-    -g                            \
-    -D$(CONFIG_FILE)              \
-    -I$(CONFIG_FILE_PATH)         \
+COMMONCFLAGS                      := \
+    -fdata-sections                  \
+    -ffunction-sections              \
+    -Os                              \
+    -g                               \
+    $(NRF52811_CONFIG_FILE_CPPFLAGS) \
     $(NULL)
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
 ifeq ($(DCDC),1)
 COMMONCFLAGS += -DDCDC_ENABLE
-endif
-
-ifneq ($(CERT_LOG),1)
-COMMONCFLAGS += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
 endif
 
 #
@@ -102,10 +97,10 @@ configure_OPTIONS              += --enable-ncp
 configure_OPTIONS              += --enable-radio-only
 ifeq ($(NCP_SPI),1)
 COMMONCFLAGS                   += -DSPIS_AS_SERIAL_TRANSPORT=1
-configure_OPTIONS              += --with-ncp-bus=spi
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_NCP_SPI_ENABLE=1
 else
 COMMONCFLAGS                   += -DUART_AS_SERIAL_TRANSPORT=1
-configure_OPTIONS              += --with-ncp-bus=uart
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1
 configure_OPTIONS              += --enable-cli
 endif # NCP_SPI == 1
 endif # DISABLE_TRANSPORTS

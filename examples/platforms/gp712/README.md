@@ -20,7 +20,7 @@ The build process will complain if additional packages are required.
 $ cd <path-to-openthread>
 $ ./script/bootstrap
 $ ./bootstrap
-$ CERT_LOG=1 CLI_LOGGING=1 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 BORDER_ROUTER=1 make -f examples/Makefile-gp712
+$ REFERENCE_DEVICE=1 CLI_LOGGING=1 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 BORDER_ROUTER=1 make -f examples/Makefile-gp712
 ```
 
 After a successful build, the `elf` files are found in
