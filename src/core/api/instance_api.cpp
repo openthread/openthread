@@ -35,16 +35,16 @@
 
 #include <openthread/instance.h>
 #include <openthread/platform/misc.h>
-#include <openthread/platform/radio.h>
 
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/new.hpp"
+#include "radio/radio.hpp"
 
 using namespace ot;
 
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
 {
     Instance *instance;
@@ -59,7 +59,7 @@ otInstance *otInstanceInitSingle(void)
 {
     return &Instance::InitSingle();
 }
-#endif // #if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#endif // #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 bool otInstanceIsInitialized(otInstance *aInstance)
 {
@@ -153,11 +153,7 @@ const char *otGetVersionString(void)
 
 const char *otGetRadioVersionString(otInstance *aInstance)
 {
-    return otPlatRadioGetVersionString(aInstance);
-}
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-OT_TOOL_WEAK const char *otPlatRadioGetVersionString(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return otGetVersionString();
+    return instance.Get<Radio>().GetVersionString();
 }

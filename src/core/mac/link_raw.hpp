@@ -45,17 +45,13 @@
 namespace ot {
 namespace Mac {
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 /**
  * This class defines the raw link-layer object.
  *
  */
 class LinkRaw : public InstanceLocator
-#if OPENTHREAD_RADIO
-    ,
-                public SubMac::Callbacks
-#endif
 {
     friend class ot::Instance;
 
@@ -116,7 +112,7 @@ public:
      *                       OT_ERROR_NO_BUFS when a frame could not be received due to lack of rx buffer space.
      *
      */
-    void InvokeReceiveDone(Frame *aFrame, otError aError);
+    void InvokeReceiveDone(RxFrame *aFrame, otError aError);
 
     /**
      * This method gets the radio transmit frame.
@@ -124,7 +120,7 @@ public:
      * @returns The transmit frame.
      *
      */
-    Frame &GetTransmitFrame(void) { return mSubMac.GetTransmitFrame(); }
+    TxFrame &GetTransmitFrame(void) { return mSubMac.GetTransmitFrame(); }
 
     /**
      * This method starts a (single) Transmit on the link-layer.
@@ -150,7 +146,7 @@ public:
      *                        OT_ERROR_ABORT when transmission was aborted for other reasons.
      *
      */
-    void InvokeTransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError);
+    void InvokeTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError);
 
     /**
      * This method starts a (single) Energy Scan on the link-layer.
@@ -265,13 +261,13 @@ public:
      *
      */
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
-    void RecordFrameTransmitStatus(const Frame &aFrame,
-                                   const Frame *aAckFrame,
-                                   otError      aError,
-                                   uint8_t      aRetryCount,
-                                   bool         aWillRetx);
+    void RecordFrameTransmitStatus(const TxFrame &aFrame,
+                                   const RxFrame *aAckFrame,
+                                   otError        aError,
+                                   uint8_t        aRetryCount,
+                                   bool           aWillRetx);
 #else
-    void    RecordFrameTransmitStatus(const Frame &, const Frame *, otError, uint8_t, bool) {}
+    void    RecordFrameTransmitStatus(const TxFrame &, const RxFrame *, otError, uint8_t, bool) {}
 #endif
 
 private:
@@ -284,12 +280,12 @@ private:
 
 #if OPENTHREAD_RADIO
     SubMac mSubMac;
-#elif OPENTHREAD_ENABLE_RAW_LINK_API
+#elif OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     SubMac &mSubMac;
 #endif
 };
 
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 } // namespace Mac
 } // namespace ot

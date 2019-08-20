@@ -26,11 +26,10 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 
-import time
 import wpan
 from wpan import verify
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test description:
 #
 # This test covers the situation where a node attached to a parent with a different mesh-local prefix. It verifies
@@ -38,10 +37,10 @@ from wpan import verify
 # filtered (by wpantund).
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
-print '-' * 120
-print 'Starting \'{}\''.format(test_name)
+print('-' * 120)
+print('Starting \'{}\''.format(test_name))
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
 
 speedup = 4
@@ -50,12 +49,12 @@ wpan.Node.set_time_speedup_factor(speedup)
 node1 = wpan.Node()
 node2 = wpan.Node()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Init all nodes
 
 wpan.Node.init_all_nodes()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
 NET_NAME = 'ml-change'
@@ -68,23 +67,42 @@ ML_PREFIX_1 = 'fd00:1::'
 ML_PREFIX_2 = 'fd00:2::'
 
 # Form a network on node1
-node1.form(NET_NAME, channel=CHANNEL, panid=PANID, xpanid=XPANID, key=KEY, mesh_local_prefix = ML_PREFIX_1)
+node1.form(
+    NET_NAME,
+    channel=CHANNEL,
+    panid=PANID,
+    xpanid=XPANID,
+    key=KEY,
+    mesh_local_prefix=ML_PREFIX_1,
+)
 
-# On node2, form a network with same parameters but a different mesh-local prefix
-node2.form(NET_NAME, channel=CHANNEL, panid=PANID, xpanid=XPANID, key=KEY, mesh_local_prefix = ML_PREFIX_2)
+# On node2, form a network with same parameters but a different mesh-local
+# prefix
+node2.form(
+    NET_NAME,
+    channel=CHANNEL,
+    panid=PANID,
+    xpanid=XPANID,
+    key=KEY,
+    mesh_local_prefix=ML_PREFIX_2,
+)
 
-# Node 2 is expected to attach to node1 and adopt the mesh-local prefix from node1
+# Node 2 is expected to attach to node1 and adopt the mesh-local prefix
+# from node1
 
 verify(node2.is_associated())
-verify(node2.get(wpan.WPAN_IP6_MESH_LOCAL_PREFIX) == node1.get(wpan.WPAN_IP6_MESH_LOCAL_PREFIX))
+verify(
+    node2.get(wpan.WPAN_IP6_MESH_LOCAL_PREFIX)
+    == node1.get(wpan.WPAN_IP6_MESH_LOCAL_PREFIX)
+)
 
 # Ensure that there are only two addresses on the node2 (link-local and mesh-local address) and that RLOC
 # address is correctly filtered (by wpantund).
 verify(len(wpan.parse_list(node2.get(wpan.WPAN_IP6_ALL_ADDRESSES))) == 2)
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
 wpan.Node.finalize_all_nodes()
 
-print '\'{}\' passed.'.format(test_name)
+print('\'{}\' passed.'.format(test_name))

@@ -46,7 +46,7 @@ namespace Mle {
 
 enum
 {
-    kMaxChildren               = OPENTHREAD_CONFIG_MAX_CHILDREN,
+    kMaxChildren               = OPENTHREAD_CONFIG_MLE_MAX_CHILDREN,
     kMaxChildKeepAliveAttempts = 4, ///< Maximum keep alive attempts before attempting to reattach to a new Parent
     kFailedChildTransmissions  = OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS, ///< FAILED_CHILD_TRANSMISSIONS
 };
@@ -77,8 +77,8 @@ enum
     kMaxLinkRequestTimeout          = 2000,  ///< Maximum delay for receiving a Link Accept
     kMinTimeoutKeepAlive            = (((kMaxChildKeepAliveAttempts + 1) * kUnicastRetransmissionDelay) /
                             1000), ///< Minimum timeout(s) for keep alive
-    kMinTimeoutDataPoll             = (OPENTHREAD_CONFIG_MINIMUM_POLL_PERIOD +
-                           OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS * OPENTHREAD_CONFIG_RETX_POLL_PERIOD) /
+    kMinTimeoutDataPoll             = (OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD +
+                           OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS * OPENTHREAD_CONFIG_MAC_RETX_POLL_PERIOD) /
                           1000, ///< Minimum timeout(s) for data poll
     kMinTimeout = (kMinTimeoutKeepAlive >= kMinTimeoutDataPoll ? kMinTimeoutKeepAlive
                                                                : kMinTimeoutDataPoll), ///< Minimum timeout(s)
@@ -99,7 +99,7 @@ enum
 enum
 {
     kAdvertiseIntervalMin = 1, ///< ADVERTISEMENT_I_MIN (sec)
-#if OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
+#if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
     kAdvertiseIntervalMax = 5, ///< ADVERTISEMENT_I_MAX (sec) proposal
 #else
     kAdvertiseIntervalMax = 32, ///< ADVERTISEMENT_I_MAX (sec)
@@ -108,26 +108,26 @@ enum
     kRouterIdReuseDelay        = 100, ///< ID_REUSE_DELAY (sec)
     kRouterIdSequencePeriod    = 10,  ///< ID_SEQUENCE_PERIOD (sec)
     kMaxNeighborAge            = 100, ///< MAX_NEIGHBOR_AGE (sec)
-#if OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
+#if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
     kMaxRouteCost = 127, ///< MAX_ROUTE_COST proposal
 #else
     kMaxRouteCost         = 16, ///< MAX_ROUTE_COST
 #endif
-    kMaxRouterId                = 62,                                      ///< MAX_ROUTER_ID
-    kInvalidRouterId            = kMaxRouterId + 1,                        ///< Value indicating incorrect Router Id
-    kMaxRouters                 = OPENTHREAD_CONFIG_MAX_ROUTERS,           ///< MAX_ROUTERS
-    kMinDowngradeNeighbors      = 7,                                       ///< MIN_DOWNGRADE_NEIGHBORS
-    kNetworkIdTimeout           = 120,                                     ///< NETWORK_ID_TIMEOUT (sec)
-    kParentRouteToLeaderTimeout = 20,                                      ///< PARENT_ROUTE_TO_LEADER_TIMEOUT (sec)
-    kRouterSelectionJitter      = 120,                                     ///< ROUTER_SELECTION_JITTER (sec)
-    kRouterDowngradeThreshold   = 23,                                      ///< ROUTER_DOWNGRADE_THRESHOLD (routers)
-    kRouterUpgradeThreshold     = 16,                                      ///< ROUTER_UPGRADE_THRESHOLD (routers)
-    kMaxLeaderToRouterTimeout   = 90,                                      ///< INFINITE_COST_TIMEOUT (sec)
-    kReedAdvertiseInterval      = 570,                                     ///< REED_ADVERTISEMENT_INTERVAL (sec)
-    kReedAdvertiseJitter        = 60,                                      ///< REED_ADVERTISEMENT_JITTER (sec)
-    kLeaderWeight               = 64,                                      ///< Default leader weight
-    kMleEndDeviceTimeout        = OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT, ///< MLE_END_DEVICE_TIMEOUT (sec)
-    kMeshLocalPrefixContextId   = 0,                                       ///< 0 is reserved for Mesh Local Prefix
+    kMaxRouterId                = 62,                                          ///< MAX_ROUTER_ID
+    kInvalidRouterId            = kMaxRouterId + 1,                            ///< Value indicating incorrect Router Id
+    kMaxRouters                 = OPENTHREAD_CONFIG_MLE_MAX_ROUTERS,           ///< MAX_ROUTERS
+    kMinDowngradeNeighbors      = 7,                                           ///< MIN_DOWNGRADE_NEIGHBORS
+    kNetworkIdTimeout           = 120,                                         ///< NETWORK_ID_TIMEOUT (sec)
+    kParentRouteToLeaderTimeout = 20,                                          ///< PARENT_ROUTE_TO_LEADER_TIMEOUT (sec)
+    kRouterSelectionJitter      = 120,                                         ///< ROUTER_SELECTION_JITTER (sec)
+    kRouterDowngradeThreshold   = 23,                                          ///< ROUTER_DOWNGRADE_THRESHOLD (routers)
+    kRouterUpgradeThreshold     = 16,                                          ///< ROUTER_UPGRADE_THRESHOLD (routers)
+    kMaxLeaderToRouterTimeout   = 90,                                          ///< INFINITE_COST_TIMEOUT (sec)
+    kReedAdvertiseInterval      = 570,                                         ///< REED_ADVERTISEMENT_INTERVAL (sec)
+    kReedAdvertiseJitter        = 60,                                          ///< REED_ADVERTISEMENT_JITTER (sec)
+    kLeaderWeight               = 64,                                          ///< Default leader weight
+    kMleEndDeviceTimeout        = OPENTHREAD_CONFIG_MLE_CHILD_TIMEOUT_DEFAULT, ///< MLE_END_DEVICE_TIMEOUT (sec)
+    kMeshLocalPrefixContextId   = 0,                                           ///< 0 is reserved for Mesh Local Prefix
 };
 
 /**

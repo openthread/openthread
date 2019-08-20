@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import node
@@ -41,12 +40,13 @@ ROUTER3 = 4
 MED1 = 5
 MED1_TIMEOUT = 3
 
+
 class Cert_5_3_3_AddressQuery(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,6):
+        for i in range(1, 6):
             self.nodes[i] = node.Node(i, (i == MED1), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid()
@@ -84,9 +84,9 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
         self.nodes[MED1].enable_whitelist()
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -106,39 +106,54 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
         self.assertEqual(self.nodes[ROUTER3].get_state(), 'router')
         self.assertEqual(self.nodes[MED1].get_state(), 'child')
 
-
         # 2
-        # Flush the message queue to avoid possible impact on follow-up verification.
+        # Flush the message queue to avoid possible impact on follow-up
+        # verification.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
 
-        router3_mleid = self.nodes[ROUTER3].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+        router3_mleid = self.nodes[ROUTER3].get_ip6_address(
+            config.ADDRESS_TYPE.ML_EID
+        )
         self.assertTrue(self.nodes[MED1].ping(router3_mleid))
 
-        # Verify DUT_ROUTER2 sent an Address Query Request to the Realm local address.
+        # Verify DUT_ROUTER2 sent an Address Query Request to the Realm local
+        # address.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
         msg = dut_messages.next_coap_message('0.02', '/a/aq')
-        command.check_address_query(msg, self.nodes[DUT_ROUTER2], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
+        command.check_address_query(
+            msg,
+            self.nodes[DUT_ROUTER2],
+            config.REALM_LOCAL_ALL_ROUTERS_ADDRESS,
+        )
 
         # 3
-        # Wait the finish of address resolution traffic triggerred by previous ping.
+        # Wait the finish of address resolution traffic triggerred by previous
+        # ping.
         self.simulator.go(5)
 
-        # Flush the message queue to avoid possible impact on follow-up verification.
+        # Flush the message queue to avoid possible impact on follow-up
+        # verification.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
 
-        med1_mleid = self.nodes[MED1].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+        med1_mleid = self.nodes[MED1].get_ip6_address(
+            config.ADDRESS_TYPE.ML_EID
+        )
         self.assertTrue(self.nodes[ROUTER1].ping(med1_mleid))
 
         # Verify DUT_ROUTER2 responded with an Address Notification.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
         msg = dut_messages.next_coap_message('0.02', '/a/an')
-        command.check_address_notification(msg, self.nodes[DUT_ROUTER2], self.nodes[ROUTER1])
+        command.check_address_notification(
+            msg, self.nodes[DUT_ROUTER2], self.nodes[ROUTER1]
+        )
 
         # 4
-        # Wait the finish of address resolution traffic triggerred by previous ping.
+        # Wait the finish of address resolution traffic triggerred by previous
+        # ping.
         self.simulator.go(5)
 
-        # Flush the message queue to avoid possible impact on follow-up verification.
+        # Flush the message queue to avoid possible impact on follow-up
+        # verification.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
 
         self.assertTrue(self.nodes[MED1].ping(router3_mleid))
@@ -152,25 +167,33 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
         # Power off ROUTER3 and wait for leader to expire its Router ID.
         # In this topology, ROUTER3 has two neighbors (Leader and DUT_ROUTER2),
         # so the wait time is (MAX_NEIGHBOR_AGE (100s) + worst propagation time (32s * 15) for bad routing +\
-        # INFINITE_COST_TIMEOUT (90s) + transmission time + extra redundancy), totally ~700s.
+        # INFINITE_COST_TIMEOUT (90s) + transmission time + extra redundancy),
+        # totally ~700s.
         self.nodes[ROUTER3].stop()
         self.simulator.go(700)
 
-        # Flush the message queue to avoid possible impact on follow-up verification.
+        # Flush the message queue to avoid possible impact on follow-up
+        # verification.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
 
         self.assertFalse(self.nodes[MED1].ping(router3_mleid))
 
-        # Verify DUT_ROUTER2 sent an Address Query Request to the Realm local address.
+        # Verify DUT_ROUTER2 sent an Address Query Request to the Realm local
+        # address.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
         msg = dut_messages.next_coap_message('0.02', '/a/aq')
-        command.check_address_query(msg, self.nodes[DUT_ROUTER2], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
+        command.check_address_query(
+            msg,
+            self.nodes[DUT_ROUTER2],
+            config.REALM_LOCAL_ALL_ROUTERS_ADDRESS,
+        )
 
         # 6
         self.nodes[MED1].stop()
         self.simulator.go(MED1_TIMEOUT)
 
-        # Flush the message queue to avoid possible impact on follow-up verification.
+        # Flush the message queue to avoid possible impact on follow-up
+        # verification.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
 
         self.assertFalse(self.nodes[ROUTER1].ping(med1_mleid))
@@ -180,6 +203,7 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
         msg = dut_messages.next_coap_message('0.02', '/a/an', False)
         assert msg is None, "The Address Notification is not expected."
+
 
 if __name__ == '__main__':
     unittest.main()

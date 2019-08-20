@@ -44,7 +44,7 @@
 static bool     sIsMsRunning = false;
 static uint32_t sMsAlarm     = 0;
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 static bool     sIsUsRunning = false;
 static uint32_t sUsAlarm     = 0;
 #endif
@@ -96,7 +96,7 @@ void otPlatAlarmMilliStop(otInstance *aInstance)
     sIsMsRunning = false;
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 uint32_t otPlatAlarmMicroGetNow(void)
 {
     return (uint32_t)(otSysGetTime());
@@ -116,7 +116,7 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
 
     sIsUsRunning = false;
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
 void platformAlarmUpdateTimeout(struct timeval *aTimeout)
 {
@@ -133,7 +133,7 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
         remaining -= (now % US_PER_MS);
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     if (sIsUsRunning)
     {
         int32_t usRemaining = (int32_t)(sUsAlarm - (uint32_t)now);
@@ -143,7 +143,7 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
             remaining = usRemaining;
         }
     }
-#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
 exit:
     if (remaining <= 0)
@@ -177,7 +177,7 @@ void platformAlarmProcess(otInstance *aInstance)
         {
             sIsMsRunning = false;
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
             if (otPlatDiagModeGet())
             {
@@ -191,7 +191,7 @@ void platformAlarmProcess(otInstance *aInstance)
         }
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
     if (sIsUsRunning)
     {
@@ -205,5 +205,5 @@ void platformAlarmProcess(otInstance *aInstance)
         }
     }
 
-#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 }

@@ -26,11 +26,10 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 
-import time
 import wpan
 from wpan import verify
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test description: Multicast addresses on routers, FEDs, and SEDs
 #
 # Test topology:
@@ -50,10 +49,10 @@ from wpan import verify
 #
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
-print '-' * 120
-print 'Starting \'{}\''.format(test_name)
+print('-' * 120)
+print('Starting \'{}\''.format(test_name))
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
 
 speedup = 4
@@ -63,20 +62,22 @@ router = wpan.Node()
 fed = wpan.Node()
 sed = wpan.Node()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Init all nodes
 
 wpan.Node.init_all_nodes()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Utility functions
+
 
 def check_multicast_addresses(node, mcast_addr_list):
     addrs = wpan.parse_list(node.get(wpan.WPAN_IP6_MULTICAST_ADDRESSES))
     for addr in mcast_addr_list:
         verify(addr in addrs)
 
-#-----------------------------------------------------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------------------------------------------------
 # Build network topology
 #
 
@@ -87,7 +88,7 @@ sed.join_node(router, wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
 
 sed.set(wpan.WPAN_POLL_INTERVAL, '800')
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
 # Get the mesh-local prefix (remove the "/64" at the end of the string)
@@ -100,17 +101,17 @@ rl_all_thread_nodes_addr = 'ff33:40:' + ml_prefix + '1'
 
 # List of multicast addresses subscribed by all nodes
 mcast_addrs = [
-    "ff02::1",   # All nodes link-local
-    "ff03::1",   # All nodes realm-local
+    "ff02::1",  # All nodes link-local
+    "ff03::1",  # All nodes realm-local
     "ff03::fc",  # All MPL forwarder realm-local
     ll_all_thread_nodes_addr,
-    rl_all_thread_nodes_addr
+    rl_all_thread_nodes_addr,
 ]
 
 # List of multicast addresses subscribed by routers only
 router_mcast_addrs = mcast_addrs + [
-    "ff02::2",   # All routers link-local
-    "ff03::2"    # All routers realm-local
+    "ff02::2",  # All routers link-local
+    "ff03::2",  # All routers realm-local
 ]
 
 check_multicast_addresses(router, router_mcast_addrs)
@@ -128,11 +129,11 @@ for node in [router, fed, sed]:
 
     node.remove(wpan.WPAN_IP6_MULTICAST_ADDRESSES, MCAST_ADDR)
     addrs = wpan.parse_list(node.get(wpan.WPAN_IP6_MULTICAST_ADDRESSES))
-    verify(not MCAST_ADDR in addrs)
+    verify(MCAST_ADDR not in addrs)
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
 wpan.Node.finalize_all_nodes()
 
-print '\'{}\' passed.'.format(test_name)
+print('\'{}\' passed.'.format(test_name))

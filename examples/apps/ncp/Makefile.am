@@ -63,12 +63,6 @@ LDADD_MBEDTLS                                                         += \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
-if OPENTHREAD_ENABLE_DIAG
-LDADD_DIAG                                                            += \
-    $(top_builddir)/src/diag/libopenthread-diag.a                        \
-    $(NULL)
-endif
-
 if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 LDADD_COMMON                                                          += \
     $(OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS)                              \

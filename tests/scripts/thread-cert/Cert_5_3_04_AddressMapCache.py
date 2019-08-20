@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import node
@@ -44,12 +43,13 @@ ED4 = 7
 
 MTDS = [SED1, ED1, ED2, ED3, ED4]
 
+
 class Cert_5_3_4_AddressMapCache(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,8):
+        for i in range(1, 8):
             self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -72,7 +72,8 @@ class Cert_5_3_4_AddressMapCache(unittest.TestCase):
         self.nodes[SED1].set_mode('s')
         self.nodes[SED1].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64())
 
-        # Set the SED1's timeout in order to receive the icmp reply when keep alive with DUT_ROUTER.
+        # Set the SED1's timeout in order to receive the icmp reply when keep
+        # alive with DUT_ROUTER.
         self.nodes[SED1].set_timeout(5)
         self.nodes[SED1].enable_whitelist()
 
@@ -83,9 +84,9 @@ class Cert_5_3_4_AddressMapCache(unittest.TestCase):
             self.nodes[ED].enable_whitelist()
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -104,33 +105,47 @@ class Cert_5_3_4_AddressMapCache(unittest.TestCase):
         for i in MTDS:
             self.assertEqual(self.nodes[i].get_state(), 'child')
 
-        # This method flushes the message queue so calling this method again will return only the newly logged messages.
+        # This method flushes the message queue so calling this method again
+        # will return only the newly logged messages.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
 
         # 2
         for ED in [ED1, ED2, ED3, ED4]:
-            ed_mleid = self.nodes[ED].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+            ed_mleid = self.nodes[ED].get_ip6_address(
+                config.ADDRESS_TYPE.ML_EID
+            )
             self.assertTrue(self.nodes[SED1].ping(ed_mleid))
             self.simulator.go(5)
 
-            # Verify DUT_ROUTER1 generated an Address Query Request to find each node's RLOC.
+            # Verify DUT_ROUTER1 generated an Address Query Request to find
+            # each node's RLOC.
             dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
             msg = dut_messages.next_coap_message('0.02', '/a/aq')
-            command.check_address_query(msg, self.nodes[DUT_ROUTER1], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
+            command.check_address_query(
+                msg,
+                self.nodes[DUT_ROUTER1],
+                config.REALM_LOCAL_ALL_ROUTERS_ADDRESS,
+            )
 
         # 3 & 4
-        # This method flushes the message queue so calling this method again will return only the newly logged messages.
+        # This method flushes the message queue so calling this method again
+        # will return only the newly logged messages.
         dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
 
         for ED in [ED1, ED2, ED3, ED4]:
-            ed_mleid = self.nodes[ED].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+            ed_mleid = self.nodes[ED].get_ip6_address(
+                config.ADDRESS_TYPE.ML_EID
+            )
             self.assertTrue(self.nodes[SED1].ping(ed_mleid))
             self.simulator.go(5)
 
             # Verify DUT_ROUTER1 didn't generate an Address Query Request.
             dut_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
             msg = dut_messages.next_coap_message('0.02', '/a/aq', False)
-            assert msg is None, "Error: The DUT sent an unexpected Address Query Request"
+            assert (
+                msg is None
+            ), "Error: The DUT sent an unexpected Address Query Request"
+
 
 if __name__ == '__main__':
     unittest.main()

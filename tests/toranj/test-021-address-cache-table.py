@@ -26,11 +26,10 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 
-import time
 import wpan
 from wpan import verify
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test description: Address Cache Table
 #
 # This test verifies the behavior of `AddressResolver` module and entries in
@@ -42,10 +41,10 @@ from wpan import verify
 # address cache table.
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
-print '-' * 120
-print 'Starting \'{}\''.format(test_name)
+print('-' * 120)
+print('Starting \'{}\''.format(test_name))
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
 
 speedup = 4
@@ -58,12 +57,12 @@ c1 = wpan.Node()
 c2 = wpan.Node()
 c3 = wpan.Node()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Init all nodes
 
 wpan.Node.init_all_nodes()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Build network topology
 #
 #     r1 ---- r2 ---- r3
@@ -102,7 +101,7 @@ c3.whitelist_node(r3)
 r3.whitelist_node(c3)
 c3.join_node(r3, wpan.JOIN_TYPE_END_DEVICE)
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 #
 
@@ -122,12 +121,17 @@ r3_rloc = int(r3.get(wpan.WPAN_THREAD_RLOC16), 16)
 c3_rloc = int(c3.get(wpan.WPAN_THREAD_RLOC16), 16)
 
 # Wait till we have a valid "next hop" route on r1 towards r3
+
+
 def check_r1_router_table():
-    router_table = wpan.parse_router_table_result(r1.get(wpan.WPAN_THREAD_ROUTER_TABLE))
+    router_table = wpan.parse_router_table_result(
+        r1.get(wpan.WPAN_THREAD_ROUTER_TABLE)
+    )
     verify(len(router_table) == 3)
     for entry in router_table:
         if entry.rloc16 == r3_rloc:
             verify(entry.next_hop != INVALID_ROUTER_ID)
+
 
 wpan.verify_within(check_r1_router_table, ROUTER_TABLE_WAIT_TIME)
 
@@ -153,7 +157,9 @@ verify(sender.was_successful and recver.was_successful)
 # The address cache table on r1 should contain two entries for
 # c2 and c3 addresses.
 
-addr_cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+addr_cache_table = wpan.parse_address_cache_table_result(
+    r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE)
+)
 verify(len(addr_cache_table) == 2)
 
 for entry in addr_cache_table:
@@ -164,9 +170,9 @@ for entry in addr_cache_table:
         # Entry for c3 should point towards c3 itself.
         verify(entry.rloc16 == c3_rloc)
     else:
-        raise(VerifyError("Unknown entry in the address cache table"))
+        raise (wpan.VerifyError("Unknown entry in the address cache table"))
 
-#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Force c2 to switch its parent from r2 to r3
 
@@ -175,7 +181,10 @@ PARENT_SUPERVISION_INTERVAL = 1
 
 REATTACH_WAIT_TIME = CHILD_SUPERVISION_CHECK_TIMEOUT / speedup + 6
 
-c2.set(wpan.WPAN_CHILD_SUPERVISION_CHECK_TIMEOUT, str(CHILD_SUPERVISION_CHECK_TIMEOUT))
+c2.set(
+    wpan.WPAN_CHILD_SUPERVISION_CHECK_TIMEOUT,
+    str(CHILD_SUPERVISION_CHECK_TIMEOUT),
+)
 r3.set(wpan.WPAN_CHILD_SUPERVISION_INTERVAL, str(PARENT_SUPERVISION_INTERVAL))
 
 r2.un_whitelist_node(c2)
@@ -187,9 +196,11 @@ c2.whitelist_node(r3)
 # Upon re-attach, previous parent r2 is notified and should remove c2 from
 # its child table.
 
+
 def check_c2_is_removed_from_r2_child_table():
     child_table = wpan.parse_list(r2.get(wpan.WPAN_THREAD_CHILD_TABLE))
     verify(len(child_table) == 0)
+
 
 wpan.verify_within(check_c2_is_removed_from_r2_child_table, REATTACH_WAIT_TIME)
 
@@ -219,7 +230,9 @@ verify(sender.was_successful and recver.was_successful)
 
 # The address cache table on r1 should still be the same as before.
 
-addr_cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+addr_cache_table = wpan.parse_address_cache_table_result(
+    r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE)
+)
 verify(len(addr_cache_table) == 2)
 
 for entry in addr_cache_table:
@@ -230,7 +243,7 @@ for entry in addr_cache_table:
         # Entry for c3 should still point towards c3
         verify(entry.rloc16 == c3_rloc)
     else:
-        raise(VerifyError("Unknown entry in the address cache table"))
+        raise (wpan.VerifyError("Unknown entry in the address cache table"))
 
 # Send a UDP message from c2 to c1.
 # This message will be forwarded by r1 to its FED child c1.
@@ -245,7 +258,9 @@ verify(sender.was_successful and recver.was_successful)
 #
 # verify that the address cache table is updated correctly.
 
-addr_cache_table = wpan.parse_address_cache_table_result(r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+addr_cache_table = wpan.parse_address_cache_table_result(
+    r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE)
+)
 verify(len(addr_cache_table) == 2)
 
 for entry in addr_cache_table:
@@ -256,11 +271,11 @@ for entry in addr_cache_table:
         # Entry for c3's address should still point to c3
         verify(entry.rloc16 == c3_rloc)
     else:
-        raise(VerifyError("Unknown entry in the address cache table"))
+        raise (wpan.VerifyError("Unknown entry in the address cache table"))
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
 wpan.Node.finalize_all_nodes()
 
-print '\'{}\' passed.'.format(test_name)
+print('\'{}\' passed.'.format(test_name))

@@ -38,7 +38,7 @@
 #include "common/logging.hpp"
 #include "common/random.hpp"
 
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 namespace ot {
 namespace Utils {
@@ -105,8 +105,8 @@ uint16_t ChannelMonitor::GetChannelOccupancy(uint8_t aChannel) const
 {
     uint16_t occupancy = 0;
 
-    VerifyOrExit((Phy::kChannelMin <= aChannel) && (aChannel <= Phy::kChannelMax));
-    occupancy = mChannelOccupancy[aChannel - Phy::kChannelMin];
+    VerifyOrExit((Radio::kChannelMin <= aChannel) && (aChannel <= Radio::kChannelMax));
+    occupancy = mChannelOccupancy[aChannel - Radio::kChannelMin];
 
 exit:
     return occupancy;
@@ -146,7 +146,7 @@ void ChannelMonitor::HandleEnergyScanResult(otEnergyScanResult *aResult)
     }
     else
     {
-        uint8_t  channelIndex = (aResult->mChannel - Phy::kChannelMin);
+        uint8_t  channelIndex = (aResult->mChannel - Radio::kChannelMin);
         uint32_t newAverage   = mChannelOccupancy[channelIndex];
         uint32_t newValue     = 0;
         uint32_t weight;
@@ -235,4 +235,4 @@ Mac::ChannelMask ChannelMonitor::FindBestChannels(const Mac::ChannelMask &aMask,
 } // namespace Utils
 } // namespace ot
 
-#endif // #if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#endif // #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE

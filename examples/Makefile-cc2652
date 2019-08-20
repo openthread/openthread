@@ -43,11 +43,9 @@ BuildJobs                                                 ?= 10
 
 configure_OPTIONS                                          = \
     --enable-cli                                             \
-    --enable-diag                                            \
     --enable-ftd                                             \
     --enable-mtd                                             \
     --enable-ncp                                             \
-    --with-ncp-bus=uart                                      \
     --enable-radio-only                                      \
     --with-examples=cc2652                                   \
     MBEDTLS_CPPFLAGS="$(CC2652_MBEDTLS_CPPFLAGS)"            \
@@ -68,10 +66,9 @@ CC2652_MBEDTLS_CPPFLAGS                                    = \
     -I$(PWD)/third_party/mbedtls/repo/include                \
     $(NULL)
 
-CC2652_CONFIG_FILE_CPPFLAGS                                                   = \
-    -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-cc2652-config.h\"' \
-    -I$(PWD)/examples/platforms/cc2652/                                         \
-    $(NULL)
+CC2652_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-cc2652-config.h\"'
+CC2652_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-cc2652-config-check.h\"'
+CC2652_CONFIG_FILE_CPPFLAGS += -I$(PWD)/examples/platforms/cc2652/
 
 COMMONCFLAGS                                              := \
     -fdata-sections                                          \

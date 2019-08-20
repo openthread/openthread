@@ -44,6 +44,7 @@ PLATFORM_SOURCES                          = \
     flash.c                                 \
     misc.c                                  \
     openthread-core-cc2538-config.h         \
+    openthread-core-cc2538-config-check.h   \
     platform-cc2538.h                       \
     radio.c                                 \
     rom-utility.h                           \

@@ -40,7 +40,7 @@
 
 using namespace ot;
 
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 
 void otChannelManagerRequestChannelChange(otInstance *aInstance, uint8_t aChannel)
 {
@@ -133,4 +133,4 @@ void otChannelManagerSetFavoredChannels(otInstance *aInstance, uint32_t aChannel
     return instance.Get<Utils::ChannelManager>().SetFavoredChannels(aChannelMask);
 }
 
-#endif // OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD
+#endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD

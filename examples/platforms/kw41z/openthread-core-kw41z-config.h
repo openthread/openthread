@@ -38,7 +38,7 @@
 /**
  * @def OPENTHREAD_CONFIG_LOG_OUTPUT
  *
- * The emsk platform provides an otPlatLog() function.
+ * The kw41z platform provides an otPlatLog() function.
  */
 #ifndef OPENTHREAD_CONFIG_LOG_OUTPUT /* allow command line override */
 #define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
@@ -85,19 +85,27 @@
 #define RADIO_CONFIG_SRC_MATCH_ENTRY_NUM 128
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
+ * @def OPENTHREAD_CONFIG_SOFTWARE_RETRANSMIT_ENABLE
  *
  * Define to 1 if you want to enable software retransmission logic.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT 1
+#define OPENTHREAD_CONFIG_SOFTWARE_RETRANSMIT_ENABLE 1
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
+ * @def OPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE
  *
  * Define to 1 if you want to enable software CSMA-CA backoff logic.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF 1
+#define OPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE 1
+
+/**
+ * @def OPENTHREAD_CONFIG_NCP_UART_ENABLE
+ *
+ * Define to 1 to enable NCP UART support.
+ *
+ */
+#define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
 
 #endif // OPENTHREAD_CORE_KW41Z_CONFIG_H_

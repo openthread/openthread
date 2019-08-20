@@ -33,37 +33,169 @@
 
 #include "random_manager.hpp"
 
-#include <openthread/error.h>
+#include <openthread/platform/entropy.h>
 
-#include "debug.hpp"
-#include "entropy.hpp"
-#include "random.hpp"
+#ifndef OPENTHREAD_RADIO
+#include <mbedtls/entropy_poll.h>
+#endif
+
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/random.hpp"
+#include "crypto/mbedtls.hpp"
 
 namespace ot {
+
+uint16_t                     RandomManager::sInitCount = 0;
+RandomManager::NonCryptoPrng RandomManager::sPrng;
+
+#ifndef OPENTHREAD_RADIO
+RandomManager::Entropy       RandomManager::sEntropy;
+RandomManager::CryptoCtrDrbg RandomManager::sCtrDrbg;
+#endif
 
 RandomManager::RandomManager(void)
 {
     uint32_t seed;
     otError  error;
 
-    Entropy::Init();
+    assert(sInitCount < 0xffff);
 
-    error = Entropy::GetUint32(seed);
-    assert(error == OT_ERROR_NONE);
-
-    Random::NonCrypto::Seed(seed);
+    VerifyOrExit(sInitCount == 0);
 
 #ifndef OPENTHREAD_RADIO
-    Random::Crypto::Init();
+    sEntropy.Init();
 #endif
+
+    error = otPlatEntropyGet(reinterpret_cast<uint8_t *>(&seed), sizeof(seed));
+    assert(error == OT_ERROR_NONE);
+
+    sPrng.Init(seed);
+
+#ifndef OPENTHREAD_RADIO
+    sCtrDrbg.Init();
+#endif
+
+exit:
+    sInitCount++;
 }
 
 RandomManager::~RandomManager(void)
 {
+    assert(sInitCount > 0);
+
+    sInitCount--;
+    VerifyOrExit(sInitCount == 0);
+
 #ifndef OPENTHREAD_RADIO
-    Random::Crypto::Deinit();
+    sCtrDrbg.Deinit();
+    sEntropy.Deinit();
 #endif
-    Entropy::Deinit();
+
+exit:
+    return;
 }
+
+uint32_t RandomManager::NonCryptoGetUint32(void)
+{
+    assert(sInitCount > 0);
+
+    return sPrng.GetNext();
+}
+
+//-------------------------------------------------------------------
+// NonCryptoPrng
+
+void RandomManager::NonCryptoPrng::Init(uint32_t aSeed)
+{
+    // The PRNG has a cycle of length 1 for the below two initial
+    // seeds. For all other seed values the cycle is ~2^31 long.
+
+    if ((aSeed == 0) || (aSeed == 0x7fffffff))
+    {
+        aSeed = 0x1;
+    }
+
+    mState = aSeed;
+}
+
+uint32_t RandomManager::NonCryptoPrng::GetNext(void)
+{
+    uint32_t mlcg, p, q;
+    uint64_t tmpstate;
+
+    tmpstate = (uint64_t)33614 * (uint64_t)mState;
+    q        = tmpstate & 0xffffffff;
+    q        = q >> 1;
+    p        = tmpstate >> 32;
+    mlcg     = p + q;
+
+    if (mlcg & 0x80000000)
+    {
+        mlcg &= 0x7fffffff;
+        mlcg++;
+    }
+
+    mState = mlcg;
+
+    return mlcg;
+}
+
+#ifndef OPENTHREAD_RADIO
+
+//-------------------------------------------------------------------
+// Entropy
+
+void RandomManager::Entropy::Init(void)
+{
+    mbedtls_entropy_init(&mEntropyContext);
+    mbedtls_entropy_add_source(&mEntropyContext, &RandomManager::Entropy::HandleMbedtlsEntropyPoll, NULL,
+                               MBEDTLS_ENTROPY_MIN_HARDWARE, MBEDTLS_ENTROPY_SOURCE_STRONG);
+}
+
+void RandomManager::Entropy::Deinit(void)
+{
+    mbedtls_entropy_free(&mEntropyContext);
+}
+
+int RandomManager::Entropy::HandleMbedtlsEntropyPoll(void *         aData,
+                                                     unsigned char *aOutput,
+                                                     size_t         aInLen,
+                                                     size_t *       aOutLen)
+{
+    int rval = MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
+
+    SuccessOrExit(otPlatEntropyGet(reinterpret_cast<uint8_t *>(aOutput), static_cast<uint16_t>(aInLen)));
+    rval = 0;
+
+    VerifyOrExit(aOutLen != NULL);
+    *aOutLen = aInLen;
+
+exit:
+    OT_UNUSED_VARIABLE(aData);
+    return rval;
+}
+
+//-------------------------------------------------------------------
+// CryptoCtrDrbg
+
+void RandomManager::CryptoCtrDrbg::Init(void)
+{
+    mbedtls_ctr_drbg_init(&mCtrDrbg);
+    mbedtls_ctr_drbg_seed(&mCtrDrbg, mbedtls_entropy_func, RandomManager::GetMbedTlsEntropyContext(), NULL, 0);
+}
+
+void RandomManager::CryptoCtrDrbg::Deinit(void)
+{
+    mbedtls_ctr_drbg_free(&mCtrDrbg);
+}
+
+otError RandomManager::CryptoCtrDrbg::FillBuffer(uint8_t *aBuffer, uint16_t aSize)
+{
+    return ot::Crypto::MbedTls::MapError(
+        mbedtls_ctr_drbg_random(&mCtrDrbg, static_cast<unsigned char *>(aBuffer), static_cast<size_t>(aSize)));
+}
+
+#endif // #ifndef OPENTHREAD_RADIO
 
 } // namespace ot

@@ -48,9 +48,10 @@
 #include "mac/sub_mac.hpp"
 #include "thread/key_manager.hpp"
 #include "thread/link_quality.hpp"
-#include "thread/topology.hpp"
 
 namespace ot {
+
+class Neighbor;
 
 /**
  * @addtogroup core-mac
@@ -86,14 +87,14 @@ enum
     kMaxFrameRetriesIndirect =
         OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT, ///< macMaxFrameRetries for indirect transmissions
 
-    kTxNumBcast = OPENTHREAD_CONFIG_TX_NUM_BCAST ///< Number of times each broadcast frame is transmitted
+    kTxNumBcast = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST ///< Number of times each broadcast frame is transmitted
 };
 
 /**
  * This class implements the IEEE 802.15.4 MAC.
  *
  */
-class Mac : public InstanceLocator, public SubMac::Callbacks
+class Mac : public InstanceLocator
 {
     friend class ot::Instance;
 
@@ -113,7 +114,7 @@ public:
      * @param[in]  aBeaconFrame   A pointer to the Beacon frame or NULL to indicate end of Active Scan operation.
      *
      */
-    typedef void (*ActiveScanHandler)(Instance &aInstance, Frame *aBeaconFrame);
+    typedef void (*ActiveScanHandler)(Instance &aInstance, RxFrame *aBeaconFrame);
 
     /**
      * This method starts an IEEE 802.15.4 Active Scan.
@@ -140,7 +141,7 @@ public:
      * @retval OT_ERROR_PARSE           Failed parsing the beacon frame.
      *
      */
-    otError ConvertBeaconToActiveScanResult(Frame *aBeaconFrame, otActiveScanResult &aResult);
+    otError ConvertBeaconToActiveScanResult(RxFrame *aBeaconFrame, otActiveScanResult &aResult);
 
     /**
      * This function pointer is called during an Energy Scan when the result for a channel is ready or the scan
@@ -208,14 +209,26 @@ public:
     void SetRxOnWhenIdle(bool aRxOnWhenIdle);
 
     /**
-     * This method requests a new MAC frame transmission.
+     * This method requests a direct data frame transmission.
      *
      * @retval OT_ERROR_NONE           Frame transmission request is scheduled successfully.
      * @retval OT_ERROR_ALREADY        MAC is busy sending earlier transmission request.
      * @retval OT_ERROR_INVALID_STATE  The MAC layer is not enabled.
      *
      */
-    otError RequestFrameTransmission(void);
+    otError RequestDirectFrameTransmission(void);
+
+#if OPENTHREAD_FTD
+    /**
+     * This method requests an indirect data frame transmission.
+     *
+     * @retval OT_ERROR_NONE           Frame transmission request is scheduled successfully.
+     * @retval OT_ERROR_ALREADY        MAC is busy sending earlier transmission request.
+     * @retval OT_ERROR_INVALID_STATE  The MAC layer is not enabled.
+     *
+     */
+    otError RequestIndirectFrameTransmission(void);
+#endif
 
     /**
      * This method requests an Out of Band frame for MAC Transmission.
@@ -425,7 +438,7 @@ public:
      *                     OT_ERROR_ABORT when reception was aborted and a frame was not received.
      *
      */
-    void HandleReceivedFrame(Frame *aFrame, otError aError);
+    void HandleReceivedFrame(RxFrame *aFrame, otError aError);
 
     /**
      * This method records CCA status (success/failure) for a frame transmission attempt.
@@ -453,11 +466,11 @@ public:
      *                        when there was an error in transmission (i.e., `aError` is not NONE).
      *
      */
-    void RecordFrameTransmitStatus(const Frame &aFrame,
-                                   const Frame *aAckFrame,
-                                   otError      aError,
-                                   uint8_t      aRetryCount,
-                                   bool         aWillRetx);
+    void RecordFrameTransmitStatus(const TxFrame &aFrame,
+                                   const RxFrame *aAckFrame,
+                                   otError        aError,
+                                   uint8_t        aRetryCount,
+                                   bool           aWillRetx);
 
     /**
      * This method is called to handle transmit events.
@@ -470,7 +483,7 @@ public:
      *                         OT_ERROR_ABORT when transmission was aborted for other reasons.
      *
      */
-    void HandleTransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError);
+    void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError);
 
     /**
      * This method returns if an active scan is in progress.
@@ -483,6 +496,16 @@ public:
      *
      */
     bool IsEnergyScanInProgress(void) const { return (mOperation == kOperationEnergyScan) || (mPendingEnergyScan); }
+
+#if OPENTHREAD_FTD
+    /**
+     * This method indicates whether the MAC layer is performing an indirect transmission (in middle of a tx).
+     *
+     * @returns TRUE if in middle of an indirect transmission, FALSE otherwise.
+     *
+     */
+    bool IsPerformingIndirectTransmit(void) const { return (mOperation == kOperationTransmitDataIndirect); }
+#endif
 
     /**
      * This method returns if the MAC layer is in transmit state.
@@ -584,7 +607,7 @@ public:
      *                          for AES CCM computation.
      *
      */
-    static void ProcessTransmitAesCcm(Frame &aFrame, const ExtAddress *aExtAddress);
+    static void ProcessTransmitAesCcm(TxFrame &aFrame, const ExtAddress *aExtAddress);
 
 private:
     enum
@@ -600,7 +623,10 @@ private:
         kOperationActiveScan,
         kOperationEnergyScan,
         kOperationTransmitBeacon,
-        kOperationTransmitData,
+        kOperationTransmitDataDirect,
+#if OPENTHREAD_FTD
+        kOperationTransmitDataIndirect,
+#endif
         kOperationTransmitPoll,
         kOperationWaitingForData,
         kOperationTransmitOutOfBandFrame,
@@ -617,24 +643,24 @@ private:
      * @param[in]  aProcessAesCcm  TRUE to perform AES CCM immediately, FALSE otherwise.
      *
      */
-    void ProcessTransmitSecurity(Frame &aFrame, bool aProcessAesCcm);
+    void ProcessTransmitSecurity(TxFrame &aFrame, bool aProcessAesCcm);
 
     static void GenerateNonce(const ExtAddress &aAddress,
                               uint32_t          aFrameCounter,
                               uint8_t           aSecurityLevel,
                               uint8_t *         aNonce);
 
-    otError ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
+    otError ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
     void    UpdateIdleMode(void);
     void    StartOperation(Operation aOperation);
     void    FinishOperation(void);
     void    PerformNextOperation(void);
-    otError PrepareDataRequest(Frame &aFrame);
-    void    PrepareBeaconRequest(Frame &aFrame);
-    void    PrepareBeacon(Frame &aFrame);
+    otError PrepareDataRequest(TxFrame &aFrame);
+    void    PrepareBeaconRequest(TxFrame &aFrame);
+    void    PrepareBeacon(TxFrame &aFrame);
     bool    ShouldSendBeacon(void) const;
     void    BeginTransmit(void);
-    otError HandleMacCommand(Frame &aFrame);
+    bool    HandleMacCommand(RxFrame &aFrame);
     Frame * GetOperationFrame(void);
 
     static void HandleTimer(Timer &aTimer);
@@ -647,13 +673,12 @@ private:
     void    PerformEnergyScan(void);
     void    ReportEnergyScanResult(int8_t aRssi);
 
-    void LogFrameRxFailure(const Frame *aFrame, otError aError) const;
-    void LogFrameTxFailure(const Frame &aFrame, otError aError, uint8_t aRetryCount) const;
+    void LogFrameRxFailure(const RxFrame *aFrame, otError aError) const;
+    void LogFrameTxFailure(const TxFrame &aFrame, otError aError, uint8_t aRetryCount, bool aWillRetx) const;
     void LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const;
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-    void    ProcessTimeIe(Frame &aFrame);
-    uint8_t GetTimeIeOffset(Frame &aFrame);
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    uint8_t GetTimeIeOffset(const Frame &aFrame);
 #endif
 
     static const char *OperationToString(Operation aOperation);
@@ -662,7 +687,10 @@ private:
     bool mPendingActiveScan : 1;
     bool mPendingEnergyScan : 1;
     bool mPendingTransmitBeacon : 1;
-    bool mPendingTransmitData : 1;
+    bool mPendingTransmitDataDirect : 1;
+#if OPENTHREAD_FTD
+    bool mPendingTransmitDataIndirect : 1;
+#endif
     bool mPendingTransmitPoll : 1;
     bool mPendingTransmitOobFrame : 1;
     bool mPendingWaitingForData : 1;
@@ -670,7 +698,7 @@ private:
     bool mRxOnWhenIdle : 1;
     bool mPromiscuous : 1;
     bool mBeaconsEnabled : 1;
-#if OPENTHREAD_CONFIG_STAY_AWAKE_BETWEEN_FRAGMENTS
+#if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
     bool mShouldDelaySleep : 1;
     bool mDelayingSleep : 1;
 #endif
@@ -698,15 +726,15 @@ private:
     SubMac             mSubMac;
     Tasklet            mOperationTask;
     TimerMilli         mTimer;
-    Frame *            mOobFrame;
+    TxFrame *          mOobFrame;
     otMacCounters      mCounters;
     uint32_t           mKeyIdMode2FrameCounter;
     SuccessRateTracker mCcaSuccessRateTracker;
     uint16_t           mCcaSampleCount;
 
-#if OPENTHREAD_ENABLE_MAC_FILTER
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     Filter mFilter;
-#endif // OPENTHREAD_ENABLE_MAC_FILTER
+#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 };
 
 /**

@@ -27,11 +27,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 
 import time
-import subprocess
 import wpan
 from wpan import verify
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test description: Adding off-mesh routes (on routers and FEDs) and traffic flow to off-mesh addresses.
 #
 # Test topology:
@@ -53,10 +52,10 @@ from wpan import verify
 #
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
-print '-' * 120
-print 'Starting \'{}\''.format(test_name)
+print('-' * 120)
+print('Starting \'{}\''.format(test_name))
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
 
 speedup = 4
@@ -69,7 +68,7 @@ sed2 = wpan.Node()
 
 all_nodes = [r1, fed1, r2, sed2]
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Init all nodes
 
 wpan.Node.init_all_nodes()
@@ -80,7 +79,7 @@ for node in all_nodes:
     # on-mesh).
     node.set("Daemon:IPv6:AutoUpdateInterfaceAddrsOnNCP", '0')
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Build network topology
 #
 #   r1 ---- r2
@@ -106,19 +105,19 @@ sed2.join_node(r2, wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
 
 sed2.set(wpan.WPAN_POLL_INTERVAL, '1500')
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
-ON_MESH_PREFIX   = "fd00:1234::"
+ON_MESH_PREFIX = "fd00:1234::"
 OFF_MESH_ROUTE_1 = "fd00:abba::"
 OFF_MESH_ROUTE_2 = "fd00:cafe::"
 OFF_MESH_ROUTE_3 = "fd00:baba::"
-OFF_MESH_ADDR_1  = OFF_MESH_ROUTE_1 + "1"
-OFF_MESH_ADDR_2  = OFF_MESH_ROUTE_2 + "2"
-OFF_MESH_ADDR_3  = OFF_MESH_ROUTE_3 + "3"
+OFF_MESH_ADDR_1 = OFF_MESH_ROUTE_1 + "1"
+OFF_MESH_ADDR_2 = OFF_MESH_ROUTE_2 + "2"
+OFF_MESH_ADDR_3 = OFF_MESH_ROUTE_3 + "3"
 
 # Add on-mesh prefix
-r1.config_gateway(ON_MESH_PREFIX);
+r1.config_gateway(ON_MESH_PREFIX)
 
 # The off-mesh-routes are added as follows:
 # - `r1` adds OFF_MESH_ROUTE_1,
@@ -136,7 +135,8 @@ fed1.add_ip6_address_on_interface(OFF_MESH_ADDR_3)
 
 time.sleep(0.5)
 
-# Traffic from `sed2` to `OFF_MESH_ADDR_1` (verify that it is received on `r1`).
+# Traffic from `sed2` to `OFF_MESH_ADDR_1` (verify that it is received on
+# `r1`).
 
 src = sed2.find_ip6_address_with_prefix(ON_MESH_PREFIX)
 sender = sed2.prepare_tx(src, OFF_MESH_ADDR_1, "Hello Route1")
@@ -163,9 +163,9 @@ wpan.Node.perform_async_tx_rx()
 verify(sender.was_successful)
 verify(recver.was_successful)
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
 wpan.Node.finalize_all_nodes()
 
-print '\'{}\' passed.'.format(test_name)
+print('\'{}\' passed.'.format(test_name))

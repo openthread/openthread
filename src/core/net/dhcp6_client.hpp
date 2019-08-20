@@ -157,7 +157,7 @@ private:
     uint8_t  mTransactionId[kTransactionIdSize];
     uint32_t mStartTime;
 
-    IdentityAssociation  mIdentityAssociations[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
+    IdentityAssociation  mIdentityAssociations[OPENTHREAD_CONFIG_DHCP6_CLIENT_NUM_PREFIXES];
     IdentityAssociation *mIdentityAssociationCurrent;
 };
 

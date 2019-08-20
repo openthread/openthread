@@ -153,7 +153,7 @@ otInstance *otSysInit(int aArgCount, char *aArgVector[])
     platformAlarmInit(speedUpFactor);
     platformRadioInit(radioFile, radioConfig, reset);
     platformRandomInit();
-#if OPENTHREAD_ENABLE_PLATFORM_UDP && OPENTHREAD_ENABLE_PLATFORM_NETIF == 0
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE && OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE == 0
     platformUdpInit(getenv("PLATFORM_NETIF"));
 #endif
 
@@ -173,7 +173,7 @@ otInstance *otSysInit(int aArgCount, char *aArgVector[])
     return instance;
 }
 
-#if OPENTHREAD_ENABLE_PLATFORM_NETIF
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
 void otSysInitNetif(otInstance *aInstance)
 {
     platformNetifInit(aInstance);
@@ -226,10 +226,10 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
     platformAlarmUpdateTimeout(&aMainloop->mTimeout);
     platformUartUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet,
                             &aMainloop->mMaxFd);
-#if OPENTHREAD_ENABLE_PLATFORM_UDP
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     platformUdpUpdateFdSet(aInstance, &aMainloop->mReadFdSet, &aMainloop->mMaxFd);
 #endif
-#if OPENTHREAD_ENABLE_PLATFORM_NETIF
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet,
                              &aMainloop->mMaxFd);
 #endif
@@ -299,10 +299,10 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
 #endif
     platformUartProcess(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
     platformAlarmProcess(aInstance);
-#if OPENTHREAD_ENABLE_PLATFORM_NETIF
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifProcess(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
 #endif
-#if OPENTHREAD_ENABLE_PLATFORM_UDP
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     platformUdpProcess(aInstance, &aMainloop->mReadFdSet);
 #endif
 }

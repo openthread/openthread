@@ -160,7 +160,7 @@ public:
      */
     otError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     /**
@@ -253,7 +253,7 @@ public:
      */
     void SetSslAuthMode(bool aVerifyPeerCertificate);
 
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
     /**
      * This method sends a CoAP message over secure DTLS connection.

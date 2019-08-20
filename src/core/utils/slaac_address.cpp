@@ -44,7 +44,7 @@
 #include "crypto/sha256.hpp"
 #include "net/ip6_address.hpp"
 
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
 namespace ot {
 namespace Utils {
@@ -335,4 +335,4 @@ exit:
 } // namespace Utils
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_ENABLE_SLAAC
+#endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE

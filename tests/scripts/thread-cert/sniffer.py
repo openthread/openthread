@@ -46,27 +46,27 @@ import sniffer_transport
 
 class Sniffer:
 
-    """ Class representing the Sniffing node, whose main task is listening and logging message exchange performed by other nodes. """
+    """ Class representing the Sniffing node, whose main task is listening
+        and logging message exchange performed by other nodes.
+    """
 
     logger = logging.getLogger("sniffer.Sniffer")
 
     RECV_BUFFER_SIZE = 4096
 
-    def __init__(self, nodeid, message_factory):
+    def __init__(self, message_factory):
         """
         Args:
-            nodeid (int): Node identifier
             message_factory (MessageFactory): Class producing messages from data bytes.
         """
 
-        self.nodeid = nodeid
         self._message_factory = message_factory
 
         self._pcap = pcap.PcapCodec(os.getenv('TEST_NAME', 'current'))
 
         # Create transport
         transport_factory = sniffer_transport.SnifferTransportFactory()
-        self._transport = transport_factory.create_transport(nodeid)
+        self._transport = transport_factory.create_transport()
 
         self._thread = None
         self._thread_alive = threading.Event()
@@ -125,7 +125,8 @@ class Sniffer:
     def get_messages_sent_by(self, nodeid):
         """ Get sniffed messages.
 
-        Note! This method flushes the message queue so calling this method again will return only the newly logged messages.
+        Note! This method flushes the message queue so calling this
+        method again will return only the newly logged messages.
 
         Args:
             nodeid (int): node id

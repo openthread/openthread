@@ -45,7 +45,6 @@ GCCVersion                      = $(shell expr `$(CC) -dumpversion | cut -f1 -d.
 configure_OPTIONS                                 = \
     --enable-ftd                                    \
     --enable-mtd                                    \
-    --enable-diag                                   \
     --enable-linker-map                             \
     --with-examples=nrf52840                        \
     $(NULL)
@@ -72,23 +71,19 @@ NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconducto
 NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/cmsis
 NRF52840_MBEDTLS_CPPFLAGS += -DNRF52840_XXAA
 
-CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-nrf52840-config.h\"'
-CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/nrf52840/
+NRF52840_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-nrf52840-config.h\"'
+NRF52840_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-nrf52840-config-check.h\"'
+NRF52840_CONFIG_FILE_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/nrf52840/
 
-COMMONCFLAGS                   := \
-    -fdata-sections               \
-    -ffunction-sections           \
-    -Os                           \
-    -g                            \
-    -D$(CONFIG_FILE)              \
-    -I$(CONFIG_FILE_PATH)         \
+COMMONCFLAGS                      := \
+    -fdata-sections                  \
+    -ffunction-sections              \
+    -Os                              \
+    -g                               \
+    $(NRF52840_CONFIG_FILE_CPPFLAGS) \
     $(NULL)
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
-
-ifneq ($(CERT_LOG),1)
-COMMONCFLAGS += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
-endif
 
 ifeq ($(BOOTLOADER),1)
 configure_OPTIONS += --with-custom-linker-file=$(AbsTopSourceDir)/examples/platforms/nrf52840/nrf52840_bootloader.ld
@@ -108,9 +103,9 @@ configure_OPTIONS              += --enable-ncp
 configure_OPTIONS              += --enable-radio-only
 ifeq ($(NCP_SPI),1)
 COMMONCFLAGS                   += -DSPIS_AS_SERIAL_TRANSPORT=1
-configure_OPTIONS              += --with-ncp-bus=spi
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_NCP_SPI_ENABLE=1
 else
-configure_OPTIONS              += --with-ncp-bus=uart
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1
 configure_OPTIONS              += --enable-cli
 ifeq ($(USB),1)
 COMMONCFLAGS                   += -DUSB_CDC_AS_SERIAL_TRANSPORT=1

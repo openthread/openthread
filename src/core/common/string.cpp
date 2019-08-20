@@ -59,6 +59,6 @@ otError StringBase::Write(char *aBuffer, uint16_t aSize, uint16_t &aLength, cons
     }
 
     return error;
-};
+}
 
 } // namespace ot

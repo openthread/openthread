@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -38,12 +37,13 @@ ROUTER1 = 2
 ROUTER2 = 3
 ROUTER3 = 4
 
+
 class Cert_5_5_7_SplitMergeThreeWay(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,5):
+        for i in range(1, 5):
             self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[LEADER1].set_panid(0xface)
@@ -76,9 +76,9 @@ class Cert_5_5_7_SplitMergeThreeWay(unittest.TestCase):
         self.nodes[LEADER1].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -119,6 +119,7 @@ class Cert_5_5_7_SplitMergeThreeWay(unittest.TestCase):
         for addr in addrs:
             if addr[0:4] != 'fe80':
                 self.assertTrue(self.nodes[ROUTER1].ping(addr))
+
 
 if __name__ == '__main__':
     unittest.main()

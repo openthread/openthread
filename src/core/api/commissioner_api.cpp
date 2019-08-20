@@ -47,10 +47,10 @@ otError otCommissionerStart(otInstance *                 aInstance,
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-#if OPENTHREAD_ENABLE_BORDER_AGENT
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     SuccessOrExit(error = instance.Get<MeshCoP::BorderAgent>().Stop());
 #endif
     SuccessOrExit(error =
@@ -72,11 +72,11 @@ otError otCommissionerStop(otInstance *aInstance)
 
     otError error = OT_ERROR_DISABLED_FEATURE;
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     SuccessOrExit(error = instance.Get<MeshCoP::Commissioner>().Stop());
-#if OPENTHREAD_ENABLE_BORDER_AGENT
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     SuccessOrExit(error = instance.Get<MeshCoP::BorderAgent>().Start());
 #endif
 exit:
@@ -88,7 +88,7 @@ otError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aEui6
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     error =
@@ -107,7 +107,7 @@ otError otCommissionerRemoveJoiner(otInstance *aInstance, const otExtAddress *aE
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     error = instance.Get<MeshCoP::Commissioner>().RemoveJoiner(static_cast<const Mac::ExtAddress *>(aEui64), 0);
@@ -123,7 +123,7 @@ otError otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *aPro
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     error = instance.Get<MeshCoP::Commissioner>().SetProvisioningUrl(aProvisioningUrl);
@@ -139,7 +139,7 @@ const char *otCommissionerGetProvisioningUrl(otInstance *aInstance, uint16_t *aL
 {
     const char *url = NULL;
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     if (aLength != NULL)
@@ -162,7 +162,7 @@ otError otCommissionerAnnounceBegin(otInstance *        aInstance,
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     error = instance.Get<MeshCoP::Commissioner>().GetAnnounceBeginClient().SendRequest(
@@ -189,7 +189,7 @@ otError otCommissionerEnergyScan(otInstance *                       aInstance,
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     error = instance.Get<MeshCoP::Commissioner>().GetEnergyScanClient().SendQuery(
@@ -218,7 +218,7 @@ otError otCommissionerPanIdQuery(otInstance *                        aInstance,
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     error = instance.Get<MeshCoP::Commissioner>().GetPanIdQueryClient().SendQuery(
@@ -239,7 +239,7 @@ otError otCommissionerSendMgmtGet(otInstance *aInstance, const uint8_t *aTlvs, u
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     error = instance.Get<MeshCoP::Commissioner>().SendMgmtCommissionerGetRequest(aTlvs, aLength);
@@ -259,7 +259,7 @@ otError otCommissionerSendMgmtSet(otInstance *                  aInstance,
 {
     otError error = OT_ERROR_DISABLED_FEATURE;
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     error = instance.Get<MeshCoP::Commissioner>().SendMgmtCommissionerSetRequest(*aDataset, aTlvs, aLength);
@@ -277,7 +277,7 @@ uint16_t otCommissionerGetSessionId(otInstance *aInstance)
 {
     uint16_t sessionId = 0;
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     sessionId = instance.Get<MeshCoP::Commissioner>().GetSessionId();
@@ -292,7 +292,7 @@ otCommissionerState otCommissionerGetState(otInstance *aInstance)
 {
     otCommissionerState state = OT_COMMISSIONER_STATE_DISABLED;
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     state = instance.Get<MeshCoP::Commissioner>().GetState();
@@ -313,7 +313,7 @@ otError otCommissionerGeneratePSKc(otInstance *           aInstance,
 
     otError error = OT_ERROR_DISABLED_FEATURE;
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     error = MeshCoP::Commissioner::GeneratePSKc(aPassPhrase, aNetworkName, *aExtPanId, aPSKc);
 #else
     OT_UNUSED_VARIABLE(aInstance);

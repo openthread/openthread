@@ -43,15 +43,23 @@
 #define OPENTHREAD_CONFIG_PLATFORM_INFO "POSIX-APP"
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_SLAAC
+ * @def OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
  *
  * Define as 1 to enable support for adding of auto-configured SLAAC addresses by OpenThread.
  *
  */
-#ifndef OPENTHREAD_CONFIG_ENABLE_SLAAC /* allows command line override */
-#define OPENTHREAD_CONFIG_ENABLE_SLAAC 1
+#ifndef OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE /* allows command line override */
+#define OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE 1
 #endif
 
 #define OPENTHREAD_CONFIG_UART_CLI_RAW 1
+
+/**
+ * @def OPENTHREAD_CONFIG_NCP_UART_ENABLE
+ *
+ * Define to 1 to enable NCP UART support.
+ *
+ */
+#define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
 
 #endif // OPENTHREAD_CORE_POSIX_CONFIG_H_

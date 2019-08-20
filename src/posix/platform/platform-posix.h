@@ -35,12 +35,17 @@
 #ifndef PLATFORM_POSIX_H_
 #define PLATFORM_POSIX_H_
 
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
 #include <sys/select.h>
 #include <sys/time.h>
 
+#include <openthread/error.h>
 #include <openthread/instance.h>
 
 #include "platform-config.h"
+#include "common/logging.hpp"
 
 /**
  * This is the socket name used by daemon mode.
@@ -100,7 +105,88 @@ enum
      * Unexpected radio spinel reset.
      */
     OT_EXIT_RADIO_SPINEL_RESET = 4,
+
+    /**
+     * System call or library function error.
+     */
+    OT_EXIT_ERROR_ERRNO = 5,
 };
+
+/**
+ * This function converts an exit code into a string.
+ *
+ * @param[in]  aExitCode  An exit code.
+ *
+ * @returns  A string representation of an exit code.
+ *
+ */
+const char *otExitCodeToString(uint8_t aExitCode);
+
+/**
+ * This macro checks for the specified condition, which is expected to commonly be true,
+ * and both records exit status and terminates the program if the condition is false.
+ *
+ * @param[in]   aCondition  The condition to verify
+ * @param[in]   aExitCode   The exit code.
+ *
+ */
+#define VerifyOrDie(aCondition, aExitCode)                                                                           \
+    do                                                                                                               \
+    {                                                                                                                \
+        if (!(aCondition))                                                                                           \
+        {                                                                                                            \
+            fprintf(stderr, "exit(%d): %s line %d, %s\r\n", aExitCode, __func__, __LINE__,                           \
+                    otExitCodeToString(aExitCode));                                                                  \
+            otLogCritPlat("exit(%d): %s line %d, %s", aExitCode, __func__, __LINE__, otExitCodeToString(aExitCode)); \
+            exit(aExitCode);                                                                                         \
+        }                                                                                                            \
+    } while (false)
+
+/**
+ * This macro checks for the specified error code, which is expected to commonly be successful,
+ * and both records exit status and terminates the program if the error code is unsuccessful.
+ *
+ * @param[in]  aError  An error code to be evaluated against OT_ERROR_NONE.
+ *
+ */
+#define SuccessOrDie(aError)                                                                                        \
+    do                                                                                                              \
+    {                                                                                                               \
+        if (aError != OT_ERROR_NONE)                                                                                \
+        {                                                                                                           \
+            uint8_t exitCode;                                                                                       \
+            exitCode = (aError == OT_ERROR_INVALID_ARGS) ? OT_EXIT_INVALID_ARGUMENTS : OT_EXIT_FAILURE;             \
+            fprintf(stderr, "exit(%d): %s line %d, %s\r\n", exitCode, __func__, __LINE__,                           \
+                    otThreadErrorToString(aError));                                                                 \
+            otLogCritPlat("exit(%d): %s line %d, %s", exitCode, __func__, __LINE__, otThreadErrorToString(aError)); \
+            exit(exitCode);                                                                                         \
+        }                                                                                                           \
+    } while (false)
+
+/**
+ * This macro unconditionally both records exit status and terminates the program.
+ *
+ * @param[in]   aExitCode   The exit code.
+ *
+ */
+#define DieNow(aExitCode) VerifyOrDie(false, aExitCode)
+
+/**
+ * This macro unconditionally both records exit status and exit message and terminates the program.
+ *
+ * @param[in]   aMessage    The exit message.
+ * @param[in]   aExitCode   The exit code.
+ *
+ */
+#define DieNowWithMessage(aMessage, aExitCode)                                                       \
+    do                                                                                               \
+    {                                                                                                \
+        fprintf(stderr, "exit(%d): %s line %d, %s, %s\r\n", aExitCode, __func__, __LINE__, aMessage, \
+                otExitCodeToString(aExitCode));                                                      \
+        otLogCritPlat("exit(%d): %s line %d, %s, %s", aExitCode, __func__, __LINE__, aMessage,       \
+                      otExitCodeToString(aExitCode));                                                \
+        exit(aExitCode);                                                                             \
+    } while (false)
 
 /**
  * Unique node ID.
@@ -382,22 +468,18 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadSet);
 void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMaxFd);
 
 /**
- * This function ends the current process with exit code @p aExitCode if @p aCondition is false.
+ * This function creates a socket with SOCK_CLOEXEC flag set.
  *
- * @param[in]   aCondition  The condition to verify
- * @param[in]   aExitCode   The exit code if exits.
+ * @param[in]   aDomain     The communication domain.
+ * @param[in]   aType       The semantics of communication.
+ * @param[in]   aProtocol   The protocol to use.
  *
- */
-void VerifyOrDie(bool aCondition, int aExitCode);
-
-/**
- * This function ends the current process if @p aError is not OT_ERROR_NONE.
- * The error code will be mapped from @p aError.
+ * @returns The file descriptor of the created socket.
  *
- * @param[in]   aError  The OpenThread error code.
+ * @retval  -1  Failed to create socket.
  *
  */
-void SuccessOrDie(otError aError);
+int SocketWithCloseExec(int aDomain, int aType, int aProtocol);
 
 #ifdef __cplusplus
 }

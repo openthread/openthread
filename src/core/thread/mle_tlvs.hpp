@@ -43,6 +43,7 @@
 #include "common/tlvs.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
+#include "thread/device_mode.hpp"
 #include "thread/mle_constants.hpp"
 
 namespace ot {
@@ -110,7 +111,7 @@ public:
 
         /**
          * Applicable/Required only when time synchronization service
-         * (`OPENTHREAD_CONFIG_ENABLE_TIME_SYNC`) is enabled.
+         * (`OPENTHREAD_CONFIG_TIME_SYNC_ENABLE`) is enabled.
          *
          */
         kTimeRequest   = 252, ///< Time Request TLV
@@ -245,21 +246,13 @@ public:
      */
     bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
-    enum
-    {
-        kModeRxOnWhenIdle      = 1 << 3,
-        kModeSecureDataRequest = 1 << 2,
-        kModeFullThreadDevice  = 1 << 1,
-        kModeFullNetworkData   = 1 << 0,
-    };
-
     /**
      * This method returns the Mode value.
      *
      * @returns The Mode value.
      *
      */
-    uint8_t GetMode(void) const { return mMode; }
+    DeviceMode GetMode(void) const { return DeviceMode(mMode); }
 
     /**
      * This method sets the Mode value.
@@ -267,7 +260,7 @@ public:
      * @param[in]  aMode  The Mode value.
      *
      */
-    void SetMode(uint8_t aMode) { mMode = aMode; }
+    void SetMode(DeviceMode aMode) { mMode = aMode.Get(); }
 
 private:
     uint8_t mMode;
@@ -495,7 +488,7 @@ private:
     uint32_t mFrameCounter;
 } OT_TOOL_PACKED_END;
 
-#if !OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
+#if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
 
 /**
  * This class implements Source Address TLV generation and parsing.
@@ -669,7 +662,7 @@ private:
     uint8_t mRouteData[kMaxRouterId + 1];
 } OT_TOOL_PACKED_END;
 
-#else // OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
+#else // OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
 
 /**
  * This class implements Source Address TLV generation and parsing.
@@ -879,7 +872,7 @@ private:
     uint8_t mRouteData[kMaxRouterId + 1 + kMaxRouterId / 2 + 1];
 } OT_TOOL_PACKED_END;
 
-#endif // OPENTHREAD_CONFIG_ENABLE_LONG_ROUTES
+#endif // OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
 
 /**
  * This class implements Source Address TLV generation and parsing.
@@ -1866,7 +1859,7 @@ private:
     uint16_t mPanId;
 } OT_TOOL_PACKED_END;
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 /**
  * This class implements Time Request TLV generation and parsing.
  *
@@ -2005,7 +1998,7 @@ public:
 private:
     uint16_t mXtalAccuracy;
 } OT_TOOL_PACKED_END;
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 /**
  * This class implements Active Timestamp TLV generation and parsing.

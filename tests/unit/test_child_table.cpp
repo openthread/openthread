@@ -41,7 +41,7 @@ static ot::Instance *sInstance;
 
 enum
 {
-    kMaxChildren = OPENTHREAD_CONFIG_MAX_CHILDREN,
+    kMaxChildren = OPENTHREAD_CONFIG_MLE_MAX_CHILDREN,
 };
 
 struct TestChild

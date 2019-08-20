@@ -36,7 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 #include <openthread/network_time.h>
 
 #include "common/locator.hpp"
@@ -96,7 +96,7 @@ public:
      * @returns The time synchronization sequence.
      *
      */
-    uint8_t GetTimeSyncSeq(void) const { return mTimeSyncSeq; };
+    uint8_t GetTimeSyncSeq(void) const { return mTimeSyncSeq; }
 
     /**
      * This method gets the time offset to the Thread network time.
@@ -104,7 +104,7 @@ public:
      * @returns The time offset to the Thread network time, in microseconds.
      *
      */
-    int64_t GetNetworkTimeOffset(void) const { return mNetworkTimeOffset; };
+    int64_t GetNetworkTimeOffset(void) const { return mNetworkTimeOffset; }
 
     /**
      * Set the time synchronization period.
@@ -227,6 +227,6 @@ private:
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 #endif // TIME_SYNC_HPP_

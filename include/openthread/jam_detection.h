@@ -47,8 +47,8 @@ extern "C" {
  * @brief
  *   This module includes functions for signal jamming detection feature.
  *
- *   The functions in this module are available when jam-detection feature (`OPENTHREAD_ENABLE_JAM_DETECTION`) is
- *   enabled.
+ *   The functions in this module are available when jam-detection feature (`OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE`)
+ *   is enabled.
  *
  * @{
  *

@@ -30,6 +30,11 @@
 
 #include "openthread/config.h"
 
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+
 #if HAVE_LIBEDIT || HAVE_LIBREADLINE
 #if HAVE_LIBEDIT
 #include <editline/readline.h>
@@ -39,11 +44,6 @@
 #else
 #error "Missing readline library"
 #endif
-
-#include <assert.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
 
 #include <openthread/cli.h>
 

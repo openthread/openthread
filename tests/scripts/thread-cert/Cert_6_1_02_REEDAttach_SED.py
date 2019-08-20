@@ -42,12 +42,13 @@ LEADER = 1
 REED = 2
 SED = 3
 
+
 class Cert_6_1_2_REEDAttach_SED(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,4):
+        for i in range(1, 4):
             self.nodes[i] = node.Node(i, (i == SED), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -69,9 +70,9 @@ class Cert_6_1_2_REEDAttach_SED(unittest.TestCase):
         self.nodes[SED].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -84,7 +85,7 @@ class Cert_6_1_2_REEDAttach_SED(unittest.TestCase):
         self.assertEqual(self.nodes[REED].get_state(), 'child')
 
         self.nodes[SED].start()
-        self.simulator.go(5) 
+        self.simulator.go(5)
         self.assertEqual(self.nodes[SED].get_state(), 'child')
         self.assertEqual(self.nodes[REED].get_state(), 'router')
 
@@ -99,10 +100,16 @@ class Cert_6_1_2_REEDAttach_SED(unittest.TestCase):
         check_parent_request(msg, is_first_request=False)
 
         # Step 6 - DUT sends Child ID Request
-        msg = sed_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST, sent_to_node=self.nodes[REED])
-        check_child_id_request(msg, address_registration=CheckType.CONTAIN,
-            tlv_request=CheckType.CONTAIN, mle_frame_counter=CheckType.OPTIONAL,
-            route64=CheckType.OPTIONAL)
+        msg = sed_messages.next_mle_message(
+            mle.CommandType.CHILD_ID_REQUEST, sent_to_node=self.nodes[REED]
+        )
+        check_child_id_request(
+            msg,
+            address_registration=CheckType.CONTAIN,
+            tlv_request=CheckType.CONTAIN,
+            mle_frame_counter=CheckType.OPTIONAL,
+            route64=CheckType.OPTIONAL,
+        )
 
         # Wait DEFAULT_CHILD_TIMEOUT seconds,
         # ensure SED has received the CHILD_ID_RESPONSE,
@@ -112,15 +119,21 @@ class Cert_6_1_2_REEDAttach_SED(unittest.TestCase):
 
         # Step 11 - SED sends periodic 802.15.4 Data Request messages
         msg = sed_messages.next_message()
-        self.assertEqual(False, msg.isMacAddressTypeLong())    # Extra check, keep-alive messages are of short types of mac address
+        self.assertEqual(
+            False, msg.isMacAddressTypeLong()
+        )  # Extra check, keep-alive messages are of short types of mac address
         self.assertEqual(msg.type, message.MessageType.COMMAND)
-        self.assertEqual(msg.mac_header.command_type, mac802154.MacHeader.CommandIdentifier.DATA_REQUEST)
+        self.assertEqual(
+            msg.mac_header.command_type,
+            mac802154.MacHeader.CommandIdentifier.DATA_REQUEST,
+        )
 
         # Step 12 - REED sends ICMPv6 echo request, to DUT link local address
         sed_addrs = self.nodes[SED].get_addrs()
         for addr in sed_addrs:
             if addr[0:4] == 'fe80':
                 self.assertTrue(self.nodes[REED].ping(addr))
+
 
 if __name__ == '__main__':
     unittest.main()

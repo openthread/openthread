@@ -147,10 +147,7 @@ static void processReceive(void)
     }
 }
 
-/**
- * @brief process the transmit side of the buffers
- */
-static void processTransmit(void)
+otError otPlatUartFlush(void)
 {
     otEXPECT(sSendBuffer != NULL);
 
@@ -162,10 +159,20 @@ static void processTransmit(void)
 
     sSendBuffer = NULL;
     sSendLen    = 0;
-    otPlatUartSendDone();
+
+    return OT_ERROR_NONE;
 
 exit:
-    return;
+    return OT_ERROR_INVALID_STATE;
+}
+
+/**
+ * @brief process the transmit side of the buffers
+ */
+static void processTransmit(void)
+{
+    otPlatUartFlush();
+    otPlatUartSendDone();
 }
 
 /**

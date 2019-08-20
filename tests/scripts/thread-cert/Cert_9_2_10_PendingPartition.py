@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -47,21 +46,26 @@ SED1 = 5
 
 MTDS = [ED1, SED1]
 
+
 class Cert_9_2_10_PendingPartition(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,6):
+        for i in range(1, 6):
             self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
 
-        self.nodes[COMMISSIONER].set_active_dataset(15, channel=CHANNEL_INIT, panid=PANID_INIT)
+        self.nodes[COMMISSIONER].set_active_dataset(
+            15, channel=CHANNEL_INIT, panid=PANID_INIT
+        )
         self.nodes[COMMISSIONER].set_mode('rsdn')
         self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[COMMISSIONER].enable_whitelist()
         self.nodes[COMMISSIONER].set_router_selection_jitter(1)
 
-        self.nodes[LEADER].set_active_dataset(15, channel=CHANNEL_INIT, panid=PANID_INIT)
+        self.nodes[LEADER].set_active_dataset(
+            15, channel=CHANNEL_INIT, panid=PANID_INIT
+        )
         self.nodes[LEADER].set_mode('rsdn')
         self.nodes[LEADER].set_partition_id(0xffffffff)
         self.nodes[LEADER].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
@@ -69,7 +73,9 @@ class Cert_9_2_10_PendingPartition(unittest.TestCase):
         self.nodes[LEADER].enable_whitelist()
         self.nodes[LEADER].set_router_selection_jitter(1)
 
-        self.nodes[ROUTER1].set_active_dataset(15, channel=CHANNEL_INIT, panid=PANID_INIT)
+        self.nodes[ROUTER1].set_active_dataset(
+            15, channel=CHANNEL_INIT, panid=PANID_INIT
+        )
         self.nodes[ROUTER1].set_mode('rsdn')
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[ED1].get_addr64())
@@ -91,9 +97,9 @@ class Cert_9_2_10_PendingPartition(unittest.TestCase):
         self.nodes[SED1].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -119,11 +125,13 @@ class Cert_9_2_10_PendingPartition(unittest.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
-        self.nodes[COMMISSIONER].send_mgmt_pending_set(pending_timestamp=30,
-                                                       active_timestamp=165,
-                                                       delay_timer=150000,
-                                                       channel=CHANNEL_FINAL,
-                                                       panid=PANID_FINAL)
+        self.nodes[COMMISSIONER].send_mgmt_pending_set(
+            pending_timestamp=30,
+            active_timestamp=165,
+            delay_timer=150000,
+            channel=CHANNEL_FINAL,
+            panid=PANID_FINAL,
+        )
         self.simulator.go(5)
 
         print(self.nodes[COMMISSIONER].get_channel())
@@ -170,6 +178,7 @@ class Cert_9_2_10_PendingPartition(unittest.TestCase):
                 break
 
         self.assertTrue(self.nodes[LEADER].ping(ipaddr))
+
 
 if __name__ == '__main__':
     unittest.main()

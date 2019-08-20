@@ -309,8 +309,8 @@ otError otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset
  * If the dataset does not include an Active Timestamp, the dataset is only partially complete.
  *
  * If Thread is enabled on a device that has a partially complete Active Dataset, the device will attempt to attach to
- * an existing Thread network using any existing information in the dataset. The minimum set of information needed to
- * attach is the PAN ID and Thread Master Key.
+ * an existing Thread network using any existing information in the dataset. Only the Thread Master Key is needed to
+ * attach to a network.
  *
  * If channel is not included in the dataset, the device will send MLE Announce messages across different channels to
  * find neighbors on other channels.

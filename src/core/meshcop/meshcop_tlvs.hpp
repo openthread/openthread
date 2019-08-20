@@ -49,7 +49,7 @@
 #include "common/tlvs.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
-#include "phy/phy.hpp"
+#include "radio/radio.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -1395,13 +1395,13 @@ public:
          * Minimum Delay Timer value for a Pending Operational Dataset (ms)
          *
          */
-        kDelayTimerMinimal = OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_MINIMUM_DELAY,
+        kDelayTimerMinimal = OPENTHREAD_CONFIG_TMF_PENDING_DATASET_MINIMUM_DELAY,
 
         /**
          * Default Delay Timer value for a Pending Operational Dataset (ms)
          *
          */
-        kDelayTimerDefault = OPENTHREAD_CONFIG_MESHCOP_PENDING_DATASET_DEFAULT_DELAY,
+        kDelayTimerDefault = OPENTHREAD_CONFIG_TMF_PENDING_DATASET_DEFAULT_DELAY,
     };
 
 private:
@@ -1661,7 +1661,7 @@ public:
 private:
     enum
     {
-        kNumMaskEntries = Phy::kNumChannelPages,
+        kNumMaskEntries = Radio::kNumChannelPages,
     };
 
     ChannelMaskEntry mEntries[kNumMaskEntries];

@@ -1114,7 +1114,7 @@ spinel_ssize_t spinel_datatype_vpack(uint8_t *     data_out,
 // ----------------------------------------------------------------------------
 // MARK: -
 
-// **** LCOV_EXCL_START ****
+// LCOV_EXCL_START
 
 const char *spinel_command_to_cstr(unsigned int command)
 {
@@ -2619,7 +2619,7 @@ const char *spinel_capability_to_cstr(unsigned int capability)
     return ret;
 }
 
-// **** LCOV_EXCL_STOP ****
+// LCOV_EXCL_STOP
 
 /* -------------------------------------------------------------------------- */
 
