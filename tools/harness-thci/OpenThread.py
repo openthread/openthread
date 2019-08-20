@@ -500,7 +500,7 @@ class OpenThread(IThci):
         strIp6Prefix = prefix[:19]
         return strIp6Prefix + '::'
 
-    def __convertLongToString(self, iValue):
+    def __convertLongToString(self, iValue, fillZeros=None):
         """convert a long hex integer to string
            remove '0x' and 'L' return string
 
@@ -510,13 +510,11 @@ class OpenThread(IThci):
         Returns:
             string of this long integer without '0x' and 'L'
         """
-        string = ''
-        strValue = str(hex(iValue))
+        fmt = '%x'
+        if fillZeros is not None:
+            fmt = '%%0%dx' % fillZeros
 
-        string = strValue.lstrip('0x')
-        string = string.rstrip('L')
-
-        return string
+        return fmt % iValue
 
     def __readCommissioningLogs(self, durationInSeconds):
         """read logs during the commissioning process
@@ -765,12 +763,7 @@ class OpenThread(IThci):
                 address64 = self.mac
 
             if not isinstance(xEUI, str):
-                address64 = self.__convertLongToString(xEUI)
-
-                # prepend 0 at the beginning
-                if len(address64) < 16:
-                    address64 = address64.zfill(16)
-                    print (address64)
+                address64 = self.__convertLongToString(xEUI, 16)
             else:
                 address64 = xEUI
 
@@ -875,12 +868,7 @@ class OpenThread(IThci):
         print (key)
         try:
             if not isinstance(key, str):
-                masterKey = self.__convertLongToString(key)
-
-                # prpend '0' at the beginning
-                if len(masterKey) < 32:
-                    masterKey = masterKey.zfill(32)
-                    print (masterKey)
+                masterKey = self.__convertLongToString(key, 32)
 
                 cmd = 'masterkey %s' % masterKey
                 datasetCmd = 'dataset masterkey %s' % masterKey
@@ -1893,12 +1881,7 @@ class OpenThread(IThci):
         print (xPanId)
         try:
             if not isinstance(xPanId, str):
-                xpanid = self.__convertLongToString(xPanId)
-
-                # prepend '0' at the beginning
-                if len(xpanid) < 16:
-                    xpanid = xpanid.zfill(16)
-                    print(xpanid)
+                xpanid = self.__convertLongToString(xPanId, 16)
 
                 cmd = 'extpanid %s' % xpanid
                 datasetCmd = 'dataset extpanid %s' % xpanid
@@ -2145,12 +2128,7 @@ class OpenThread(IThci):
         timeout = 500
 
         if not isinstance(xEUI, str):
-            eui64 = self.__convertLongToString(xEUI)
-
-            # prepend 0 at the beginning
-            if len(eui64) < 16:
-                eui64 = eui64.zfill(16)
-                print (eui64)
+            eui64 = self.__convertLongToString(xEUI, 16)
         else:
             eui64 = xEUI
 
@@ -2338,8 +2316,8 @@ class OpenThread(IThci):
             True: successful to send MGMT_ED_SCAN message.
             False: fail to send MGMT_ED_SCAN message
         """
-        print ('%s call MGMT_ED_SCAN' % self.port)
-        channelMask = ''
+        print('%s call MGMT_ED_SCAN' % self.port)
+
         channelMask = '0x' + self.__convertLongToString(
             self.__convertChannelMask(listChannelMask)
         )
@@ -2372,7 +2350,7 @@ class OpenThread(IThci):
         """
         print ('%s call MGMT_PANID_QUERY' % self.port)
         panid = ''
-        channelMask = ''
+
         channelMask = '0x' + self.__convertLongToString(
             self.__convertChannelMask(listChannelMask)
         )
@@ -2398,8 +2376,8 @@ class OpenThread(IThci):
             True: successful to send MGMT_ANNOUNCE_BEGIN message.
             False: fail to send MGMT_ANNOUNCE_BEGIN message.
         """
-        print ('%s call MGMT_ANNOUNCE_BEGIN' % self.port)
-        channelMask = ''
+        print('%s call MGMT_ANNOUNCE_BEGIN' % self.port)
+
         channelMask = '0x' + self.__convertLongToString(
             self.__convertChannelMask(listChannelMask)
         )
@@ -2482,10 +2460,7 @@ class OpenThread(IThci):
 
             if xExtendedPanId is not None:
                 cmd += ' extpanid '
-                xpanid = self.__convertLongToString(xExtendedPanId)
-
-                if len(xpanid) < 16:
-                    xpanid = xpanid.zfill(16)
+                xpanid = self.__convertLongToString(xExtendedPanId, 16)
 
                 cmd += xpanid
 
@@ -2503,10 +2478,7 @@ class OpenThread(IThci):
 
             if xMasterKey is not None:
                 cmd += ' masterkey '
-                key = self.__convertLongToString(xMasterKey)
-
-                if len(key) < 32:
-                    key = key.zfill(32)
+                key = self.__convertLongToString(xMasterKey, 32)
 
                 cmd += key
 
@@ -2693,10 +2665,7 @@ class OpenThread(IThci):
 
             if xMasterKey is not None:
                 cmd += ' masterkey '
-                key = self.__convertLongToString(xMasterKey)
-
-                if len(key) < 32:
-                    key = key.zfill(32)
+                key = self.__convertLongToString(xMasterKey, 32)
 
                 cmd += key
 

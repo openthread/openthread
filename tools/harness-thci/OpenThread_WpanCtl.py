@@ -675,7 +675,7 @@ class OpenThread_WpanCtl(IThci):
         strIp6Prefix = prefix[:19]
         return strIp6Prefix + '::'
 
-    def __convertLongToString(self, iValue):
+    def __convertLongToString(self, iValue, fillZeros=None):
         """convert a long hex integer to string
            remove '0x' and 'L' return string
 
@@ -685,13 +685,11 @@ class OpenThread_WpanCtl(IThci):
         Returns:
             string of this long integer without '0x' and 'L'
         """
-        string = ''
-        strValue = str(hex(iValue))
+        fmt = '%x'
+        if fillZeros is not None:
+            fmt = '%%0%dx' % fillZeros
 
-        string = strValue.lstrip('0x')
-        string = string.rstrip('L')
-
-        return string
+        return fmt % iValue
 
     def __convertChannelMask(self, channelsArray):
         """convert channelsArray to bitmask format
@@ -1028,12 +1026,7 @@ class OpenThread_WpanCtl(IThci):
                 address64 = self.mac
 
             if not isinstance(xEUI, str):
-                address64 = self.__convertLongToString(xEUI)
-
-                # prepend 0 at the beginning
-                if len(address64) < 16:
-                    address64 = address64.zfill(16)
-                    print (address64)
+                address64 = self.__convertLongToString(xEUI, 16)
             else:
                 address64 = xEUI
 
@@ -1189,12 +1182,7 @@ class OpenThread_WpanCtl(IThci):
 
         try:
             if not isinstance(key, str):
-                masterKey = self.__convertLongToString(key)
-
-                # prpend '0' at the beginning
-                if len(masterKey) < 32:
-                    masterKey = masterKey.zfill(32)
-
+                masterKey = self.__convertLongToString(key, 32)
                 cmd = WPANCTL_CMD + 'setprop Network:Key %s' % masterKey
                 datasetCmd = (
                     WPANCTL_CMD + 'setprop Dataset:MasterKey %s' % masterKey
@@ -2159,13 +2147,7 @@ class OpenThread_WpanCtl(IThci):
         print (xPanId)
         try:
             if not isinstance(xPanId, str):
-                xpanid = self.__convertLongToString(xPanId)
-
-                # prepend '0' at the beginning
-                if len(xpanid) < 16:
-                    xpanid = xpanid.zfill(16)
-                    print(xpanid)
-
+                xpanid = self.__convertLongToString(xPanId, 16)
                 cmd = WPANCTL_CMD + 'setprop Network:XPANID %s' % xpanid
                 datasetCmd = (
                     WPANCTL_CMD
@@ -2391,12 +2373,7 @@ class OpenThread_WpanCtl(IThci):
         """
         print ('%s call scanJoiner' % self.port)
         if not isinstance(xEUI, str):
-            eui64 = self.__convertLongToString(xEUI)
-
-            # prepend 0 at the beginning
-            if len(eui64) < 16:
-                eui64 = eui64.zfill(16)
-                print (eui64)
+            eui64 = self.__convertLongToString(xEUI, 16)
         else:
             eui64 = xEUI
 
@@ -2742,9 +2719,7 @@ class OpenThread_WpanCtl(IThci):
                     return False
 
             if xExtendedPanId is not None:
-                xpanid = self.__convertLongToString(xExtendedPanId)
-                if len(xpanid) < 16:
-                    xpanid = xpanid.zfill(16)
+                xpanid = self.__convertLongToString(xExtendedPanId, 16)
                 setExtendedPanIdCmd = (
                     WPANCTL_CMD + 'setprop Dataset:ExtendedPanId ' + xpanid
                 )
@@ -2777,10 +2752,7 @@ class OpenThread_WpanCtl(IThci):
                     return False
 
             if xMasterKey is not None:
-                key = self.__convertLongToString(xMasterKey)
-
-                if len(key) < 32:
-                    key = key.zfill(32)
+                key = self.__convertLongToString(xMasterKey, 16)
 
                 setMasterKeyCmd = (
                     WPANCTL_CMD + 'setprop Dataset:MasterKey ' + key
@@ -3029,11 +3001,7 @@ class OpenThread_WpanCtl(IThci):
                     return False
 
             if xMasterKey is not None:
-                key = self.__convertLongToString(xMasterKey)
-
-                if len(key) < 32:
-                    key = key.zfill(32)
-
+                key = self.__convertLongToString(xMasterKey, 32)
                 setMasterKeyCmd = (
                     WPANCTL_CMD + 'setprop Dataset:MasterKey ' + key
                 )
