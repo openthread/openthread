@@ -41,6 +41,7 @@
 #include "utils/wrap_stdbool.h"
 
 #include <openthread/error.h>
+#include <openthread/heap.h>
 #include <openthread/platform/logging.h>
 
 #include "common/random_manager.hpp"
@@ -249,7 +250,29 @@ public:
      */
     void InvokeEnergyScanCallback(otEnergyScanResult *aResult) const;
 
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+    void HeapFree(void *aPointer)
+    {
+        assert(mFree != NULL);
+
+        mFree(aPointer);
+    }
+
+    void *HeapCAlloc(size_t aCount, size_t aSize)
+    {
+        assert(mCAlloc != NULL);
+
+        return mCAlloc(aCount, aSize);
+    }
+
+    static void HeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
+    {
+        mFree   = aFree;
+        mCAlloc = aCAlloc;
+    }
+#elif !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    void  HeapFree(void *aPointer) { mHeap.Free(aPointer); }
+    void *HeapCAlloc(size_t aCount, size_t aSize) { return mHeap.CAlloc(aCount, aSize); }
     /**
      * This method returns a reference to the Heap object.
      *
@@ -257,7 +280,7 @@ public:
      *
      */
     Utils::Heap &GetHeap(void) { return mHeap; }
-#endif
+#endif // OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     /**
@@ -315,8 +338,11 @@ private:
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     // RandomManager is initialized before other objects. Note that it
     // requires MbedTls which itself may use Heap.
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    Utils::Heap mHeap;
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+    static otHeapFreeFn   mFree;
+    static otHeapCAllocFn mCAlloc;
+#elif !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    Utils::Heap  mHeap;
 #endif
     Crypto::MbedTls mMbedTls;
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD

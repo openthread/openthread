@@ -26,33 +26,71 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_PLATFORM_CONFIG_H_
-#define OPENTHREAD_PLATFORM_CONFIG_H_
-
 /**
  * @file
  * @brief
- *   This file includes the POSIX platform-specific configurations.
+ *  This file defines the API for setting external heap in OpenThread.
  */
 
-/**
- * @def OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
- *
- * Define as 1 to enable PTY device support in POSIX app.
- *
- */
-#ifndef OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
-#define OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE 1
+#ifndef OPENTHREAD_HEAP_H_
+#define OPENTHREAD_HEAP_H_
+
+#include <openthread/instance.h>
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /**
- * @def OPENTHREAD_POSIX_APP_SOCKET_BASENAME
+ * @addtogroup api-heap
  *
- * Define socket basename used by POSIX app daemon.
+ * @brief
+ *   This module includes functions that set the external OpenThread heap.
+ *
+ * @{
  *
  */
-#ifndef OPENTHREAD_POSIX_APP_SOCKET_BASENAME
-#define OPENTHREAD_POSIX_APP_SOCKET_BASENAME "/tmp/openthread"
+
+/**
+ * Function pointer used to set external CAlloc function for OpenThread.
+ *
+ * @param[in]   aCount  Number of allocate units.
+ * @param[in]   aSize   Unit size in bytes.
+ *
+ * @returns A pointer to the allocated memory.
+ *
+ * @retval  NULL    Indicates not enough memory.
+ *
+ */
+typedef void *(*otHeapCAllocFn)(size_t aCount, size_t aSize);
+
+/**
+ * Function pointer used to set external Free function for OpenThread.
+ *
+ * @param[in]   aPointer    A pointer to the memory to free.
+ *
+ */
+typedef void (*otHeapFreeFn)(void *aPointer);
+
+/**
+ * This function sets the external heap CAlloc and Free
+ * functions to be used by the OpenThread stack.
+ *
+ * This function must be used before invoking instance initialization.
+ *
+ * @param[in]  aCAlloc  A pointer to external CAlloc function.
+ * @param[in]  aFree    A pointer to external Free function.
+ *
+ */
+void otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree);
+
+/**
+ * @}
+ *
+ */
+
+#ifdef __cplusplus
+} // extern "C"
 #endif
 
-#endif // OPENTHREAD_PLATFORM_CONFIG_H_
+#endif // OPENTHREAD_HEAP_H_

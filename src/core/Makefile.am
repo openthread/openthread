@@ -115,6 +115,7 @@ SOURCES_COMMON                             = \
     api/diags_api.cpp                        \
     api/dns_api.cpp                          \
     api/entropy_api.cpp                      \
+    api/heap_api.cpp                         \
     api/icmp6_api.cpp                        \
     api/instance_api.cpp                     \
     api/ip6_api.cpp                          \

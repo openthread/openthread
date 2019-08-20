@@ -26,33 +26,20 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_PLATFORM_CONFIG_H_
-#define OPENTHREAD_PLATFORM_CONFIG_H_
-
 /**
  * @file
- * @brief
- *   This file includes the POSIX platform-specific configurations.
+ *   This file implements the OpenThread external heap API.
  */
 
-/**
- * @def OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
- *
- * Define as 1 to enable PTY device support in POSIX app.
- *
- */
-#ifndef OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
-#define OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE 1
-#endif
+#include "openthread-core-config.h"
 
-/**
- * @def OPENTHREAD_POSIX_APP_SOCKET_BASENAME
- *
- * Define socket basename used by POSIX app daemon.
- *
- */
-#ifndef OPENTHREAD_POSIX_APP_SOCKET_BASENAME
-#define OPENTHREAD_POSIX_APP_SOCKET_BASENAME "/tmp/openthread"
-#endif
+#include <openthread/heap.h>
 
-#endif // OPENTHREAD_PLATFORM_CONFIG_H_
+#include "common/instance.hpp"
+
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+void otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
+{
+    ot::Instance::HeapSetCAllocFree(aCAlloc, aFree);
+}
+#endif // OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE

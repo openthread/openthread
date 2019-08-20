@@ -48,6 +48,17 @@ otDEFINE_ALIGNED_VAR(gInstanceRaw, sizeof(Instance), uint64_t);
 
 #endif
 
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+
+otHeapFreeFn   ot::Instance::mFree   = NULL;
+otHeapCAllocFn ot::Instance::mCAlloc = NULL;
+
+#endif // OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
 Instance::Instance(void)
     : mTaskletScheduler()
     , mTimerMilliScheduler(*this)
@@ -55,7 +66,7 @@ Instance::Instance(void)
     , mTimerMicroScheduler(*this)
 #endif
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     , mHeap()
 #endif
     , mMbedTls()

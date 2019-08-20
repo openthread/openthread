@@ -465,11 +465,7 @@ exit:
 void platformRadioInit(void)
 {
 #if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
-    struct sockaddr_in sockaddr;
-    char *             offset;
-
-    memset(&sockaddr, 0, sizeof(sockaddr));
-    sockaddr.sin_family = AF_INET;
+    char *offset;
 
     offset = getenv("PORT_OFFSET");
 

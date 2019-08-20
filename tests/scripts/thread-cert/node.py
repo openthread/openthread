@@ -78,7 +78,7 @@ class Node:
             cmd = './ot-cli-%s' % mode
 
         if 'RADIO_DEVICE' in os.environ:
-            cmd += ' %s' % os.environ['RADIO_DEVICE']
+            cmd += ' -v %s' % os.environ['RADIO_DEVICE']
             os.environ['NODE_ID'] = str(nodeid)
 
         cmd += ' %d' % nodeid

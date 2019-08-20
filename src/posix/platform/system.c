@@ -36,154 +36,41 @@
 #include "platform-posix.h"
 
 #include <assert.h>
-#include <getopt.h>
-#include <libgen.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include <openthread-core-config.h>
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
 
-#include "openthread-system.h"
-
-static const struct option kOptions[] = {
-    {"dry-run", no_argument, NULL, 'n'},          {"no-reset", no_argument, NULL, 0},
-    {"radio-version", no_argument, NULL, 0},      {"help", no_argument, NULL, 'h'},
-    {"time-speed", required_argument, NULL, 's'}, {0, 0, 0, 0}};
-
 uint64_t gNodeId = 0;
 
-static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
+otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 {
-    fprintf(aStream,
-            "Syntax:\n"
-            "    %s [Options] NodeId|Device|Command [DeviceConfig|CommandArgs]\n"
-            "Options:\n"
-            "    -n  --dry-run               Just verify if arguments is valid and radio spinel is compatible.\n"
-            "        --no-reset              Do not reset RCP on initialization\n"
-            "        --radio-version         Print radio firmware version\n"
-            "    -s  --time-speed factor     Time speed up factor.\n"
-            "    -h  --help                  Display this usage information.\n",
-            aProgramName);
-    exit(aExitCode);
-}
-
-otInstance *otSysInit(int aArgCount, char *aArgVector[])
-{
-    const char *radioFile         = NULL;
-    const char *radioConfig       = "";
-    otInstance *instance          = NULL;
-    uint32_t    speedUpFactor     = 1;
-    bool        isDryRun          = false;
-    bool        reset             = true;
-    bool        printRadioVersion = false;
-
-    optind = 1;
-
-    while (true)
-    {
-        int index  = 0;
-        int option = getopt_long(aArgCount, aArgVector, "hns:", kOptions, &index);
-
-        if (option == -1)
-        {
-            break;
-        }
-
-        switch (option)
-        {
-        case 'h':
-            PrintUsage(aArgVector[0], stdout, OT_EXIT_SUCCESS);
-            break;
-        case 'n':
-            isDryRun = true;
-            break;
-        case 's':
-        {
-            char *endptr  = NULL;
-            speedUpFactor = (uint32_t)strtol(optarg, &endptr, 0);
-
-            if (*endptr != '\0' || speedUpFactor == 0)
-            {
-                fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", optarg);
-                exit(OT_EXIT_INVALID_ARGUMENTS);
-            }
-            break;
-        }
-        case 0:
-            if (!strcmp(kOptions[index].name, "radio-version"))
-            {
-                printRadioVersion = true;
-            }
-            else if (!strcmp(kOptions[index].name, "no-reset"))
-            {
-                reset = false;
-            }
-            break;
-        case '?':
-            PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
-            break;
-        default:
-            assert(false);
-            break;
-        }
-    }
-
-    if (optind >= aArgCount)
-    {
-        PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
-    }
-
-    radioFile = aArgVector[optind];
-    if (optind + 1 < aArgCount)
-    {
-        radioConfig = aArgVector[optind + 1];
-    }
-
-    platformLoggingInit(basename(aArgVector[0]));
+    otInstance *instance = NULL;
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    otSimInit();
+    platformSimInit();
 #endif
-    platformAlarmInit(speedUpFactor);
-    platformRadioInit(radioFile, radioConfig, reset);
+    platformAlarmInit(aPlatformConfig->mSpeedUpFactor);
+    platformRadioInit(aPlatformConfig->mRadioFile, aPlatformConfig->mRadioConfig, aPlatformConfig->mResetRadio);
     platformRandomInit();
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE && OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE == 0
-    platformUdpInit(getenv("PLATFORM_NETIF"));
-#endif
 
     instance = otInstanceInitSingle();
-    assert(instance);
+    assert(instance != NULL);
 
-    if (printRadioVersion)
-    {
-        printf("%s\n", otPlatRadioGetVersionString(instance));
-    }
-
-    if (isDryRun)
-    {
-        exit(OT_EXIT_SUCCESS);
-    }
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+    platformNetifInit(instance);
+#elif OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    platformUdpInit(aPlatformConfig->mInterfaceName);
+#endif
 
     return instance;
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
-void otSysInitNetif(otInstance *aInstance)
-{
-    platformNetifInit(aInstance);
-}
-#endif
-
 void otSysDeinit(void)
 {
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    otSimDeinit();
+    platformSimDeinit();
 #endif
     platformRadioDeinit();
 }
@@ -234,8 +121,8 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
                              &aMainloop->mMaxFd);
 #endif
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    otSimUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet, &aMainloop->mMaxFd,
-                     &aMainloop->mTimeout);
+    platformSimUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet, &aMainloop->mMaxFd,
+                           &aMainloop->mTimeout);
 #else
     platformRadioUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mMaxFd, &aMainloop->mTimeout);
 #endif
@@ -273,7 +160,7 @@ int otSysMainloopPoll(otSysMainloopContext *aMainloop)
 
             if (noWrite)
             {
-                otSimSendSleepEvent(&aMainloop->mTimeout);
+                platformSimSendSleepEvent(&aMainloop->mTimeout);
             }
 
             rval = select(aMainloop->mMaxFd + 1, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet,
@@ -293,7 +180,7 @@ int otSysMainloopPoll(otSysMainloopContext *aMainloop)
 void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMainloop)
 {
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    otSimProcess(aInstance, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
+    platformSimProcess(aInstance, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
 #else
     platformRadioProcess(aInstance, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet);
 #endif

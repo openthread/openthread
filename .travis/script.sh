@@ -36,16 +36,6 @@ set -x
 
 python --version || die
 
-[ $BUILD_TARGET != pretty-check ] || {
-    ./bootstrap || die
-    ./configure || die
-    make pretty-check || die
-}
-
-[ $BUILD_TARGET != py-pretty-check ] || {
-    flake8 --config=script/pystyle.cfg tests tools || die
-}
-
 [ $BUILD_TARGET != scan-build ] || {
     ./bootstrap || die
 
@@ -356,6 +346,11 @@ build_samr21() {
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
+    CPPFLAGS=-DOPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE=1 make -f examples/Makefile-posix || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
     ./configure                             \
         --enable-ncp                        \
         --enable-ftd                        \
@@ -411,10 +406,10 @@ build_samr21() {
 [ $BUILD_TARGET != posix-app-cli ] || {
     ./bootstrap || die
     # enable code coverage for OpenThread transceiver only
-    REFERENCE_DEVICE=1 COVERAGE=1 VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix || die
+    COVERAGE=1 VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix || die
     # readline supports pipe, editline does not
     REFERENCE_DEVICE=1 COVERAGE=1 READLINE=readline make -f src/posix/Makefile-posix || die
-    REFERENCE_DEVICE=1 COVERAGE=1 PYTHONUNBUFFERED=1 OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" make -f src/posix/Makefile-posix check || die
+    REFERENCE_DEVICE=1 COVERAGE=1 PYTHONUNBUFFERED=1 OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli) -v" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" make -f src/posix/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-app-pty ] || {
@@ -449,48 +444,6 @@ build_samr21() {
 
 [ $BUILD_TARGET != toranj-test-framework ] || {
     ./tests/toranj/start.sh || die
-}
-
-[ $BUILD_TARGET != size-report ] || {
-    [ ${TRAVIS_PULL_REQUEST} != false ] || die
-
-    export PATH=/tmp/gcc-arm-none-eabi-7-2018-q2-update/bin:$PATH || die
-
-    mkdir ../output
-
-    export MERGE_BASE_SHA=$(git merge-base HEAD ${TRAVIS_BRANCH})
-
-    # pull request
-    OPENTHREAD_FLAGS="BORDER_AGENT=1 BORDER_ROUTER=1 CHANNEL_MANAGER=1 CHANNEL_MONITOR=1 CHILD_SUPERVISION=1 COAP=1 COAPS=1 COMMISSIONER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DIAGNOSTIC=1 DISABLE_DOC=1 DNS_CLIENT=1 ECDSA=1 FULL_LOGS=1 IP6_FRAGM=1 JAM_DETECTION=1 JOINER=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 SLAAC=1 SNTP_CLIENT=1 TIME_SYNC=1 UDP_FORWARD=1"
-
-    git checkout -- . || die
-    git clean -xfd || die
-    ./bootstrap || die
-    make -f examples/Makefile-nrf52840 ${OPENTHREAD_FLAGS} || die
-    mv output/nrf52840 ../output/nrf52840-b
-
-    git checkout ${MERGE_BASE_SHA}
-    git submodule update --init
-
-    # base branch
-    git checkout -- . || die
-    git clean -xfd || die
-    ./bootstrap || die
-    make -f examples/Makefile-nrf52840 ${OPENTHREAD_FLAGS} || die
-    mv output/nrf52840 ../output/nrf52840-a
-
-    curl -s "${SIZE_REPORT_URL}/bash" > size-report
-    chmod a+x size-report
-
-    ./size-report init OpenThread
-
-    ./size-report size ../output/nrf52840-a/bin/ot-cli-ftd ../output/nrf52840-b/bin/ot-cli-ftd
-    ./size-report size ../output/nrf52840-a/bin/ot-cli-mtd ../output/nrf52840-b/bin/ot-cli-mtd
-    ./size-report size ../output/nrf52840-a/bin/ot-ncp-ftd ../output/nrf52840-b/bin/ot-ncp-ftd
-    ./size-report size ../output/nrf52840-a/bin/ot-ncp-mtd ../output/nrf52840-b/bin/ot-ncp-mtd
-    ./size-report size ../output/nrf52840-a/bin/ot-rcp     ../output/nrf52840-b/bin/ot-rcp
-
-    ./size-report post
 }
 
 [ $BUILD_TARGET != osx ] || {

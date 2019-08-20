@@ -717,7 +717,7 @@ void RadioSpinel::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMax
     }
     else if (mState == kStateTransmitting)
     {
-        uint64_t now = otSysGetTime();
+        uint64_t now = platformGetTime();
 
         if (now < mTxRadioEndUs)
         {
@@ -774,7 +774,7 @@ void RadioSpinel::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
                               mTxError);
         }
     }
-    else if (mState == kStateTransmitting && otSysGetTime() >= mTxRadioEndUs)
+    else if (mState == kStateTransmitting && platformGetTime() >= mTxRadioEndUs)
     {
         DieNowWithMessage("radio tx timeout", OT_EXIT_FAILURE);
     }
@@ -975,7 +975,7 @@ otError RadioSpinel::Remove(spinel_prop_key_t aKey, const char *aFormat, ...)
 
 otError RadioSpinel::WaitResponse(void)
 {
-    uint64_t       now     = otSysGetTime();
+    uint64_t       now     = platformGetTime();
     uint64_t       end     = now + kMaxWaitTime * US_PER_MS;
     struct timeval timeout = {kMaxWaitTime / 1000, (kMaxWaitTime % 1000) * 1000};
 
@@ -984,8 +984,8 @@ otError RadioSpinel::WaitResponse(void)
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
         struct Event event;
 
-        otSimSendSleepEvent(&timeout);
-        otSimReceiveEvent(&event);
+        platformSimSendSleepEvent(&timeout);
+        platformSimReceiveEvent(&event);
 
         switch (event.mEvent)
         {
@@ -1044,7 +1044,7 @@ otError RadioSpinel::WaitResponse(void)
         }
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME
 
-        now = otSysGetTime();
+        now = platformGetTime();
 
         if (end > now)
         {
@@ -1107,7 +1107,7 @@ void RadioSpinel::RadioTransmit(void)
 
     if (error == OT_ERROR_NONE)
     {
-        mTxRadioEndUs = otSysGetTime() + TX_WAIT_US;
+        mTxRadioEndUs = platformGetTime() + TX_WAIT_US;
         mState        = kStateTransmitting;
     }
     else
@@ -1307,7 +1307,6 @@ otError RadioSpinel::Receive(uint8_t aChannel)
     mState = kStateReceive;
 
 exit:
-    assert(error == OT_ERROR_NONE);
     return error;
 }
 
@@ -1678,12 +1677,12 @@ void ot::PosixApp::RadioSpinel::Update(struct timeval &aTimeout)
     }
 }
 
-void otSimRadioSpinelUpdate(struct timeval *aTimeout)
+void platformSimRadioSpinelUpdate(struct timeval *aTimeout)
 {
     sRadioSpinel.Update(*aTimeout);
 }
 
-void otSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent)
+void platformSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent)
 {
     sRadioSpinel.Process(*aEvent);
     OT_UNUSED_VARIABLE(aInstance);
