@@ -3282,9 +3282,14 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     }
 #endif
 
-    // if already have a candidate parent, only seek a better parent
-    if (mParentCandidate.GetState() == Neighbor::kStateParentResponse)
+    // Continue to process the "ParentResponse" if it is from current
+    // parent candidate to update the challenge and frame counters.
+
+    if ((mParentCandidate.GetState() == Neighbor::kStateParentResponse) &&
+        (mParentCandidate.GetExtAddress() != extAddress))
     {
+        // if already have a candidate parent, only seek a better parent
+
         int compare = 0;
 
         if (IsFullThreadDevice())
