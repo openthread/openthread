@@ -44,14 +44,14 @@
 
 using namespace ot;
 
-uint8_t otThreadGetMaxAllowedChildren(otInstance *aInstance)
+uint16_t otThreadGetMaxAllowedChildren(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.Get<ChildTable>().GetMaxChildrenAllowed();
 }
 
-otError otThreadSetMaxAllowedChildren(otInstance *aInstance, uint8_t aMaxChildren)
+otError otThreadSetMaxAllowedChildren(otInstance *aInstance, uint16_t aMaxChildren)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
@@ -250,7 +250,7 @@ exit:
     return error;
 }
 
-otError otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex, otChildInfo *aChildInfo)
+otError otThreadGetChildInfoByIndex(otInstance *aInstance, uint16_t aChildIndex, otChildInfo *aChildInfo)
 {
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -264,7 +264,7 @@ exit:
 }
 
 otError otThreadGetChildNextIp6Address(otInstance *               aInstance,
-                                       uint8_t                    aChildIndex,
+                                       uint16_t                   aChildIndex,
                                        otChildIp6AddressIterator *aIterator,
                                        otIp6Address *             aAddress)
 {

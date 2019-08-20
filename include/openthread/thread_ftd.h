@@ -103,7 +103,7 @@ typedef struct otEidCacheEntry
  * @sa otThreadSetMaxAllowedChildren
  *
  */
-uint8_t otThreadGetMaxAllowedChildren(otInstance *aInstance);
+uint16_t otThreadGetMaxAllowedChildren(otInstance *aInstance);
 
 /**
  * Set the maximum number of children currently allowed.
@@ -120,7 +120,7 @@ uint8_t otThreadGetMaxAllowedChildren(otInstance *aInstance);
  * @sa otThreadGetMaxAllowedChildren
  *
  */
-otError otThreadSetMaxAllowedChildren(otInstance *aInstance, uint8_t aMaxChildren);
+otError otThreadSetMaxAllowedChildren(otInstance *aInstance, uint16_t aMaxChildren);
 
 /**
  * This function indicates whether or not the Router Role is enabled.
@@ -449,7 +449,7 @@ otError otThreadGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChi
  * @sa otGetMaxAllowedChildren
  *
  */
-otError otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex, otChildInfo *aChildInfo);
+otError otThreadGetChildInfoByIndex(otInstance *aInstance, uint16_t aChildIndex, otChildInfo *aChildInfo);
 
 /**
  * This function gets the next IPv6 address (using an iterator) for a given child.
@@ -469,7 +469,7 @@ otError otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex, 
  *
  */
 otError otThreadGetChildNextIp6Address(otInstance *               aInstance,
-                                       uint8_t                    aChildIndex,
+                                       uint16_t                   aChildIndex,
                                        otChildIp6AddressIterator *aIterator,
                                        otIp6Address *             aAddress);
 

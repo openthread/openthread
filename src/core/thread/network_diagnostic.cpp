@@ -224,7 +224,7 @@ exit:
 otError NetworkDiagnostic::AppendChildTable(Message &aMessage)
 {
     otError         error   = OT_ERROR_NONE;
-    uint8_t         count   = 0;
+    uint16_t        count   = 0;
     uint8_t         timeout = 0;
     ChildTableTlv   tlv;
     ChildTableEntry entry;
@@ -232,7 +232,13 @@ otError NetworkDiagnostic::AppendChildTable(Message &aMessage)
     tlv.Init();
 
     count = Get<ChildTable>().GetNumChildren(ChildTable::kInStateValid);
-    tlv.SetLength(count * sizeof(ChildTableEntry));
+
+    if (count > (CHAR_BIT * sizeof(uint8_t) / sizeof(ChildTableEntry)))
+    {
+        count = CHAR_BIT * sizeof(uint8_t) / sizeof(ChildTableEntry);
+    }
+
+    tlv.SetLength(static_cast<uint8_t>(count * sizeof(ChildTableEntry)));
 
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(ChildTableTlv)));
 

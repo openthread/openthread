@@ -105,17 +105,17 @@ static bool StateMatchesFilter(Child::State aState, ChildTable::StateFilter aFil
 }
 
 // Verifies that `ChildTable` contains a given list of `TestChild` entries.
-void VerifyChildTableContent(ChildTable &aTable, uint8_t aChildListLength, const TestChild *aChildList)
+void VerifyChildTableContent(ChildTable &aTable, uint16_t aChildListLength, const TestChild *aChildList)
 {
     printf("Test ChildTable with %d entries", aChildListLength);
 
-    for (uint8_t k = 0; k < OT_ARRAY_LENGTH(kAllFilters); k++)
+    for (uint16_t k = 0; k < OT_ARRAY_LENGTH(kAllFilters); k++)
     {
         ChildTable::StateFilter filter = kAllFilters[k];
 
         // Verify that we can find all children from given list by rloc or extended address.
 
-        for (uint8_t listIndex = 0; listIndex < aChildListLength; listIndex++)
+        for (uint16_t listIndex = 0; listIndex < aChildListLength; listIndex++)
         {
             Child *      child;
             Mac::Address address;
@@ -146,7 +146,7 @@ void VerifyChildTableContent(ChildTable &aTable, uint8_t aChildListLength, const
 
         // Verify `ChildTable::Iterator` behavior when starting from different child entries.
 
-        for (uint8_t listIndex = 0; listIndex <= aChildListLength; listIndex++)
+        for (uint16_t listIndex = 0; listIndex <= aChildListLength; listIndex++)
         {
             Child *startingChild = NULL;
 
@@ -161,7 +161,7 @@ void VerifyChildTableContent(ChildTable &aTable, uint8_t aChildListLength, const
             {
                 ChildTable::Iterator iter(*sInstance, filter, startingChild);
                 bool                 childObserved[kMaxChildren];
-                uint8_t              numChildren = 0;
+                uint16_t             numChildren = 0;
 
                 memset(childObserved, 0, sizeof(childObserved));
 
@@ -183,9 +183,9 @@ void VerifyChildTableContent(ChildTable &aTable, uint8_t aChildListLength, const
 
                 for (; !iter.IsDone(); iter++)
                 {
-                    Child * child   = iter.GetChild();
-                    bool    didFind = false;
-                    uint8_t childIndex;
+                    Child *  child   = iter.GetChild();
+                    bool     didFind = false;
+                    uint16_t childIndex;
 
                     VerifyOrQuit(child != NULL, "iter.GetChild() failed");
 
@@ -193,7 +193,7 @@ void VerifyChildTableContent(ChildTable &aTable, uint8_t aChildListLength, const
                     VerifyOrQuit(childIndex < aTable.GetMaxChildrenAllowed(), "Child Index is out of bound");
                     VerifyOrQuit(aTable.GetChildAtIndex(childIndex) == child, "GetChildAtIndex() failed");
 
-                    for (uint8_t index = 0; index < aChildListLength; index++)
+                    for (uint16_t index = 0; index < aChildListLength; index++)
                     {
                         if (ChildMatches(*iter.GetChild(), aChildList[index]))
                         {
@@ -223,7 +223,7 @@ void VerifyChildTableContent(ChildTable &aTable, uint8_t aChildListLength, const
                 // Verify that there is no missing or extra entry between the expected list
                 // and what was observed/returned by the iterator.
 
-                for (uint8_t index = 0; index < aChildListLength; index++)
+                for (uint16_t index = 0; index < aChildListLength; index++)
                 {
                     if (StateMatchesFilter(aChildList[index].mState, filter))
                     {
@@ -296,9 +296,9 @@ void TestChildTable(void)
         },
     };
 
-    const uint8_t testListLength = OT_ARRAY_LENGTH(testChildList);
+    const uint16_t testListLength = OT_ARRAY_LENGTH(testChildList);
 
-    uint8_t testNumAllowedChildren = 2;
+    uint16_t testNumAllowedChildren = 2;
 
     ChildTable *table;
     otError     error;
@@ -314,7 +314,7 @@ void TestChildTable(void)
     VerifyOrQuit(table->GetMaxChildrenAllowed() == table->GetMaxChildren(),
                  "GetMaxChildrenAllowed() initial value is incorrect ");
 
-    for (uint8_t i = 0; i < OT_ARRAY_LENGTH(kAllFilters); i++)
+    for (uint16_t i = 0; i < OT_ARRAY_LENGTH(kAllFilters); i++)
     {
         ChildTable::StateFilter filter = kAllFilters[i];
 
@@ -332,7 +332,7 @@ void TestChildTable(void)
                  "Default child table size is too small for the unit test");
 
     // Add the child entries from test list one by one and verify the table content
-    for (uint8_t i = 0; i < testListLength; i++)
+    for (uint16_t i = 0; i < testListLength; i++)
     {
         Child *child;
 
@@ -354,7 +354,7 @@ void TestChildTable(void)
     VerifyChildTableContent(*table, 0, testChildList);
 
     // Add the child entries from test list in reverse order and verify the table content
-    for (uint8_t i = testListLength; i > 0; i--)
+    for (uint16_t i = testListLength; i > 0; i--)
     {
         Child *child;
 
@@ -385,7 +385,7 @@ void TestChildTable(void)
     VerifyOrQuit(error == OT_ERROR_NONE, "SetMaxChildrenAllowed() failed");
     VerifyOrQuit(table->GetMaxChildrenAllowed() == testNumAllowedChildren, "GetMaxChildrenAllowed() failed");
 
-    for (uint8_t num = 0; num < testNumAllowedChildren; num++)
+    for (uint16_t num = 0; num < testNumAllowedChildren; num++)
     {
         Child *child = table->GetNewChild();
 

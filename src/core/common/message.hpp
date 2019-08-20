@@ -63,8 +63,9 @@ namespace ot {
 
 enum
 {
-    kNumBuffers = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS,
-    kBufferSize = OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE,
+    kNumBuffers     = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS,
+    kBufferSize     = OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE,
+    kChildMaskBytes = BitVectorBytes(OPENTHREAD_CONFIG_MLE_MAX_CHILDREN),
 };
 
 class Message;
@@ -93,8 +94,8 @@ struct MessageInfo
     uint16_t    mDatagramTag; ///< The datagram tag used for 6LoWPAN fragmentation.
     RssAverager mRssAverager; ///< The averager maintaining the received signal strength (RSS) average.
 
-    uint8_t mChildMask[8]; ///< A bit-vector to indicate which sleepy children need to receive this.
-    uint8_t mTimeout;      ///< Seconds remaining before dropping the message.
+    uint8_t mChildMask[kChildMaskBytes]; ///< A bit-vector to indicate which sleepy children need to receive this.
+    uint8_t mTimeout;                    ///< Seconds remaining before dropping the message.
     union
     {
         uint16_t mPanId;   ///< Used for MLE Discover Request and Response messages.
@@ -500,7 +501,7 @@ public:
      * @retval FALSE  If the message is not scheduled to be forwarded to the child.
      *
      */
-    bool GetChildMask(uint8_t aChildIndex) const;
+    bool GetChildMask(uint16_t aChildIndex) const;
 
     /**
      * This method unschedules forwarding of the message to the child.
@@ -508,7 +509,7 @@ public:
      * @param[in]  aChildIndex  The index into the child table.
      *
      */
-    void ClearChildMask(uint8_t aChildIndex);
+    void ClearChildMask(uint16_t aChildIndex);
 
     /**
      * This method schedules forwarding of the message to the child.
@@ -516,7 +517,7 @@ public:
      * @param[in]  aChildIndex  The index into the child table.
      *
      */
-    void SetChildMask(uint8_t aChildIndex);
+    void SetChildMask(uint16_t aChildIndex);
 
     /**
      * This method returns whether or not the message forwarding is scheduled for at least one child.

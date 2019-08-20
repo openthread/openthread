@@ -587,7 +587,7 @@ void Interpreter::ProcessChild(int argc, char *argv[])
 
     if (isTable || strcmp(argv[0], "list") == 0)
     {
-        uint8_t maxChildren;
+        uint16_t maxChildren;
 
         if (isTable)
         {
@@ -599,7 +599,7 @@ void Interpreter::ProcessChild(int argc, char *argv[])
 
         maxChildren = otThreadGetMaxAllowedChildren(mInstance);
 
-        for (uint8_t i = 0; i < maxChildren; i++)
+        for (uint16_t i = 0; i < maxChildren; i++)
         {
             if ((otThreadGetChildInfoByIndex(mInstance, i, &childInfo) != OT_ERROR_NONE) || childInfo.mIsStateRestoring)
             {
@@ -686,14 +686,14 @@ exit:
 
 void Interpreter::ProcessChildIp(int argc, char *argv[])
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t maxChildren;
+    otError  error = OT_ERROR_NONE;
+    uint16_t maxChildren;
 
     VerifyOrExit(argc == 0, error = OT_ERROR_INVALID_ARGS);
 
     maxChildren = otThreadGetMaxAllowedChildren(mInstance);
 
-    for (uint8_t childIndex = 0; childIndex < maxChildren; childIndex++)
+    for (uint16_t childIndex = 0; childIndex < maxChildren; childIndex++)
     {
         otChildIp6AddressIterator iterator = OT_CHILD_IP6_ADDRESS_ITERATOR_INIT;
         otIp6Address              ip6Address;
@@ -732,7 +732,7 @@ void Interpreter::ProcessChildMax(int argc, char *argv[])
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        SuccessOrExit(error = otThreadSetMaxAllowedChildren(mInstance, static_cast<uint8_t>(value)));
+        SuccessOrExit(error = otThreadSetMaxAllowedChildren(mInstance, static_cast<uint16_t>(value)));
     }
 
 exit:
