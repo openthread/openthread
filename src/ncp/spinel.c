@@ -2576,10 +2576,6 @@ const char *spinel_capability_to_cstr(unsigned int capability)
         ret = "SLAAC";
         break;
 
-    case SPINEL_CAP_COEX_METRICS:
-        ret = "COEX_METRICS";
-        break;
-
     case SPINEL_CAP_ERROR_RATE_TRACKING:
         ret = "ERROR_RATE_TRACKING";
         break;

@@ -892,11 +892,9 @@ int8_t RadioSpinel::GetRssi(void)
     return rssi;
 }
 
-otError RadioSpinel::GetCoexMetrics(otRadioCoexMetrics *aCoexMetrics)
+otError RadioSpinel::GetCoexMetrics(otRadioCoexMetrics &aCoexMetrics)
 {
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(aCoexMetrics != NULL, error = OT_ERROR_INVALID_ARGS);
+    otError error;
 
     error = Get(
         SPINEL_PROP_RADIO_COEX_METRICS,
@@ -922,15 +920,14 @@ otError RadioSpinel::GetCoexMetrics(otRadioCoexMetrics *aCoexMetrics)
                                                     SPINEL_DATATYPE_UINT32_S // AvgRxRequestToGrantTime
                                                     SPINEL_DATATYPE_UINT32_S // NumRxGrantNone
                     ),
-        &aCoexMetrics->mStopped, &aCoexMetrics->mNumGrantGlitch, &aCoexMetrics->mNumTxRequest,
-        &aCoexMetrics->mNumTxGrantImmediate, &aCoexMetrics->mNumTxGrantWait, &aCoexMetrics->mNumTxGrantWaitActivated,
-        &aCoexMetrics->mNumTxGrantWaitTimeout, &aCoexMetrics->mNumTxGrantDeactivatedDuringRequest,
-        &aCoexMetrics->mNumTxDelayedGrant, &aCoexMetrics->mAvgTxRequestToGrantTime, &aCoexMetrics->mNumRxRequest,
-        &aCoexMetrics->mNumRxGrantImmediate, &aCoexMetrics->mNumRxGrantWait, &aCoexMetrics->mNumRxGrantWaitActivated,
-        &aCoexMetrics->mNumRxGrantWaitTimeout, &aCoexMetrics->mNumRxGrantDeactivatedDuringRequest,
-        &aCoexMetrics->mNumRxDelayedGrant, &aCoexMetrics->mAvgRxRequestToGrantTime, &aCoexMetrics->mNumRxGrantNone);
+        &aCoexMetrics.mStopped, &aCoexMetrics.mNumGrantGlitch, &aCoexMetrics.mNumTxRequest,
+        &aCoexMetrics.mNumTxGrantImmediate, &aCoexMetrics.mNumTxGrantWait, &aCoexMetrics.mNumTxGrantWaitActivated,
+        &aCoexMetrics.mNumTxGrantWaitTimeout, &aCoexMetrics.mNumTxGrantDeactivatedDuringRequest,
+        &aCoexMetrics.mNumTxDelayedGrant, &aCoexMetrics.mAvgTxRequestToGrantTime, &aCoexMetrics.mNumRxRequest,
+        &aCoexMetrics.mNumRxGrantImmediate, &aCoexMetrics.mNumRxGrantWait, &aCoexMetrics.mNumRxGrantWaitActivated,
+        &aCoexMetrics.mNumRxGrantWaitTimeout, &aCoexMetrics.mNumRxGrantDeactivatedDuringRequest,
+        &aCoexMetrics.mNumRxDelayedGrant, &aCoexMetrics.mAvgRxRequestToGrantTime, &aCoexMetrics.mNumRxGrantNone);
 
-exit:
     LogIfFail("Get Coex Metrics failed", error);
     return error;
 }
@@ -1676,7 +1673,15 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCoexMetrics)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.GetCoexMetrics(aCoexMetrics);
+
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aCoexMetrics != NULL, error = OT_ERROR_INVALID_ARGS);
+
+    error = sRadioSpinel.GetCoexMetrics(*aCoexMetrics);
+
+exit:
+    return error;
 }
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME

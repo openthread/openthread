@@ -200,13 +200,13 @@ public:
     /**
      * This method returns the radio coexistence metrics.
      *
-     * @param[out] aCoexMetrics  A pointer to the coexistence metrics structure.
+     * @param[out] aCoexMetrics  A reference to the coexistence metrics structure.
      *
      * @retval OT_ERROR_NONE          Successfully retrieved the coex metrics.
      * @retval OT_ERROR_INVALID_ARGS  @p aCoexMetrics was NULL.
      *
      */
-    otError GetCoexMetrics(otRadioCoexMetrics *aCoexMetrics);
+    otError GetCoexMetrics(otRadioCoexMetrics &aCoexMetrics);
 
     /**
      * This method returns a reference to the transmit buffer.

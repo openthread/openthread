@@ -1734,10 +1734,6 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_802_15_4_915MHZ_OQPSK));
 #endif
 
-#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
-    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_COEX_METRICS));
-#endif
-
 #if OPENTHREAD_FTD
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_CONFIG_FTD));
 #elif OPENTHREAD_MTD

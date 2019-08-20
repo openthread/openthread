@@ -796,24 +796,26 @@ void Interpreter::ProcessCoexMetrics(int argc, char *argv[])
     SuccessOrExit(error);
 
     mServer->OutputFormat("Stopped: %s\r\n", metrics.mStopped ? "true" : "false");
-    mServer->OutputFormat("NumGrantGlitch: %d\r\n", metrics.mNumGrantGlitch);
-    mServer->OutputFormat("NumTxRequest: %d\r\n", metrics.mNumTxRequest);
-    mServer->OutputFormat("NumTxGrantImmediate: %d\r\n", metrics.mNumTxGrantImmediate);
-    mServer->OutputFormat("NumTxGrantWait: %d\r\n", metrics.mNumTxGrantWait);
-    mServer->OutputFormat("NumTxGrantWaitActivated: %d\r\n", metrics.mNumTxGrantWaitActivated);
-    mServer->OutputFormat("NumTxGrantWaitTimeout: %d\r\n", metrics.mNumTxGrantWaitTimeout);
-    mServer->OutputFormat("NumTxGrantDeactivatedDuringRequest: %d\r\n", metrics.mNumTxGrantDeactivatedDuringRequest);
-    mServer->OutputFormat("NumTxDelayedGrant: %d\r\n", metrics.mNumTxDelayedGrant);
-    mServer->OutputFormat("AvgTxRequestToGrantTime: %d\r\n", metrics.mAvgTxRequestToGrantTime);
-    mServer->OutputFormat("NumRxRequest: %d\r\n", metrics.mNumRxRequest);
-    mServer->OutputFormat("NumRxGrantImmediate: %d\r\n", metrics.mNumRxGrantImmediate);
-    mServer->OutputFormat("NumRxGrantWait: %d\r\n", metrics.mNumRxGrantWait);
-    mServer->OutputFormat("NumRxGrantWaitActivated: %d\r\n", metrics.mNumRxGrantWaitActivated);
-    mServer->OutputFormat("NumRxGrantWaitTimeout: %d\r\n", metrics.mNumRxGrantWaitTimeout);
-    mServer->OutputFormat("NumRxGrantDeactivatedDuringRequest: %d\r\n", metrics.mNumRxGrantDeactivatedDuringRequest);
-    mServer->OutputFormat("NumRxDelayedGrant: %d\r\n", metrics.mNumRxDelayedGrant);
-    mServer->OutputFormat("AvgRxRequestToGrantTime: %d\r\n", metrics.mAvgRxRequestToGrantTime);
-    mServer->OutputFormat("NumRxGrantNone: %d\r\n", metrics.mNumRxGrantNone);
+    mServer->OutputFormat("Grant Glitch: %u\r\n", metrics.mNumGrantGlitch);
+    mServer->OutputFormat("Transmit metrics\r\n");
+    mServer->OutputFormat("    Request: %u\r\n", metrics.mNumTxRequest);
+    mServer->OutputFormat("    Grant Immediate: %u\r\n", metrics.mNumTxGrantImmediate);
+    mServer->OutputFormat("    Grant Wait: %u\r\n", metrics.mNumTxGrantWait);
+    mServer->OutputFormat("    Grant Wait Activated: %u\r\n", metrics.mNumTxGrantWaitActivated);
+    mServer->OutputFormat("    Grant Wait Timeout: %u\r\n", metrics.mNumTxGrantWaitTimeout);
+    mServer->OutputFormat("    Grant Deactivated During Request: %u\r\n", metrics.mNumTxGrantDeactivatedDuringRequest);
+    mServer->OutputFormat("    Delayed Grant: %u\r\n", metrics.mNumTxDelayedGrant);
+    mServer->OutputFormat("    Average Request To Grant Time: %u\r\n", metrics.mAvgTxRequestToGrantTime);
+    mServer->OutputFormat("Receive metrics\r\n");
+    mServer->OutputFormat("    Request: %u\r\n", metrics.mNumRxRequest);
+    mServer->OutputFormat("    Grant Immediate: %u\r\n", metrics.mNumRxGrantImmediate);
+    mServer->OutputFormat("    Grant Wait: %u\r\n", metrics.mNumRxGrantWait);
+    mServer->OutputFormat("    Grant Wait Activated: %u\r\n", metrics.mNumRxGrantWaitActivated);
+    mServer->OutputFormat("    Grant Wait Timeout: %u\r\n", metrics.mNumRxGrantWaitTimeout);
+    mServer->OutputFormat("    Grant Deactivated During Request: %u\r\n", metrics.mNumRxGrantDeactivatedDuringRequest);
+    mServer->OutputFormat("    Delayed Grant: %u\r\n", metrics.mNumRxDelayedGrant);
+    mServer->OutputFormat("    Average Request To Grant Time: %u\r\n", metrics.mAvgRxRequestToGrantTime);
+    mServer->OutputFormat("    Grant None: %u\r\n", metrics.mNumRxGrantNone);
 
 exit:
     AppendResult(error);
