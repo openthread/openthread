@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief This module defines Pseudo-random number generator Abstraction Layer.
+ * @brief Module that defines the pseudo-random number generator Abstraction Layer.
  *
  */
 
@@ -47,27 +47,27 @@ extern "C" {
  * @defgroup nrf_802154_random Random Abstraction Layer for the 802.15.4 driver
  * @{
  * @ingroup nrf_802154_random
- * @brief Pseudo-random number generator Abstraction Layer interface for the 802.15.4 driver.
+ * @brief The pseudo-random number generator Abstraction Layer interface for the 802.15.4 driver.
  *
- * Random Abstraction Layer is an abstraction layer of a pseudo-random number generator that is used
- * to perform CSMA-CA procedure correctly.
+ * The Random Abstraction Layer is an abstraction layer of a pseudo-random number generator that is
+ * used to perform CSMA-CA procedure correctly.
  *
  */
 
 /**
- * @brief Initialize random number generator.
+ * @brief Initializes the random number generator.
  */
 void nrf_802154_random_init(void);
 
 /**
- * @brief Uninitialize random number generator.
+ * @brief Deinitializes the random number generator.
  */
 void nrf_802154_random_deinit(void);
 
 /**
- * @brief Get a pseudo-random number.
+ * @brief Gets a pseudo-random number.
  *
- * @return Pseudo-random number.
+ * @returns Pseudo-random number.
  */
 uint32_t nrf_802154_random_get(void);
 

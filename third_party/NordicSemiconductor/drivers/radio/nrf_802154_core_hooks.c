@@ -51,7 +51,7 @@ typedef bool (* abort_hook)(nrf_802154_term_t term_lvl, req_originator_t req_ori
 typedef void (* transmitted_hook)(const uint8_t * p_frame);
 typedef bool (* tx_failed_hook)(const uint8_t * p_frame, nrf_802154_tx_error_t error);
 typedef bool (* tx_started_hook)(const uint8_t * p_frame);
-typedef void (* rx_started_hook)(void);
+typedef void (* rx_started_hook)(const uint8_t * p_frame);
 typedef void (* rx_ack_started_hook)(void);
 
 /* Since some compilers do not allow empty initializers for arrays with unspecified bounds,
@@ -208,7 +208,7 @@ bool nrf_802154_core_hooks_tx_started(const uint8_t * p_frame)
     return result;
 }
 
-void nrf_802154_core_hooks_rx_started(void)
+void nrf_802154_core_hooks_rx_started(const uint8_t * p_frame)
 {
     for (uint32_t i = 0; i < sizeof(m_rx_started_hooks) / sizeof(m_rx_started_hooks[0]); i++)
     {
@@ -217,7 +217,7 @@ void nrf_802154_core_hooks_rx_started(void)
             break;
         }
 
-        m_rx_started_hooks[i]();
+        m_rx_started_hooks[i](p_frame);
     }
 }
 

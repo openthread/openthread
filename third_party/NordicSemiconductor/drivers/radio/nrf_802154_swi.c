@@ -44,6 +44,7 @@
 #include "nrf_802154_config.h"
 #include "nrf_802154_core.h"
 #include "nrf_802154_rx_buffer.h"
+#include "nrf_802154_utils.h"
 #include "nrf_egu.h"
 #include "platform/clock/nrf_802154_clock.h"
 
@@ -157,7 +158,9 @@ typedef enum
     REQ_TYPE_CONTINUOUS_CARRIER,
     REQ_TYPE_BUFFER_FREE,
     REQ_TYPE_CHANNEL_UPDATE,
-    REQ_TYPE_CCA_CFG_UPDATE
+    REQ_TYPE_CCA_CFG_UPDATE,
+    REQ_TYPE_RSSI_MEASURE,
+    REQ_TYPE_RSSI_GET,
 } nrf_802154_req_type_t;
 
 /// Request data in request queue.
@@ -225,9 +228,20 @@ typedef struct
 
         struct
         {
-            bool * p_result;                              ///< CCA config update request result.
-        } cca_cfg_update;                                 ///< CCA config update request details.
-    } data;                                               ///< Request data depending on it's type.
+            bool * p_result; ///< CCA config update request result.
+        } cca_cfg_update;    ///< CCA config update request details.
+
+        struct
+        {
+            bool * p_result; ///< RSSI measurement request result.
+        } rssi_measure;      ///< RSSI measurement request details.
+
+        struct
+        {
+            int8_t * p_rssi;                              ///< RSSI measurement result.
+            bool   * p_result;                            ///< RSSI measurement status.
+        } rssi_get;                                       ///< Details of the getter that retrieves the RSSI measurement result.
+    } data;                                               ///< Request data depending on its type.
 } nrf_802154_req_data_t;
 
 static nrf_802154_ntf_data_t m_ntf_queue[NTF_QUEUE_SIZE]; ///< Notification queue.
@@ -434,6 +448,9 @@ void nrf_802154_swi_init(void)
 
     nrf_egu_int_enable(SWI_EGU, NTF_INT | HFCLK_STOP_INT | REQ_INT);
 
+#if !NRF_IS_IRQ_PRIORITY_ALLOWED(NRF_802154_SWI_PRIORITY)
+#error NRF_802154_SWI_PRIORITY value out of the allowed range.
+#endif
     NVIC_SetPriority(SWI_IRQn, NRF_802154_SWI_PRIORITY);
     NVIC_ClearPendingIRQ(SWI_IRQn);
     NVIC_EnableIRQ(SWI_IRQn);
@@ -658,6 +675,27 @@ void nrf_802154_swi_cca_cfg_update(bool * p_result)
     req_exit();
 }
 
+void nrf_802154_swi_rssi_measure(bool * p_result)
+{
+    nrf_802154_req_data_t * p_slot = req_enter();
+
+    p_slot->type                       = REQ_TYPE_RSSI_MEASURE;
+    p_slot->data.rssi_measure.p_result = p_result;
+
+    req_exit();
+}
+
+void nrf_802154_swi_rssi_measurement_get(int8_t * p_rssi, bool * p_result)
+{
+    nrf_802154_req_data_t * p_slot = req_enter();
+
+    p_slot->type                   = REQ_TYPE_RSSI_GET;
+    p_slot->data.rssi_get.p_rssi   = p_rssi;
+    p_slot->data.rssi_get.p_result = p_result;
+
+    req_exit();
+}
+
 void SWI_IRQHandler(void)
 {
     if (nrf_egu_event_check(SWI_EGU, NTF_EVENT))
@@ -807,6 +845,15 @@ void SWI_IRQHandler(void)
 
                 case REQ_TYPE_CCA_CFG_UPDATE:
                     *(p_slot->data.cca_cfg_update.p_result) = nrf_802154_core_cca_cfg_update();
+                    break;
+
+                case REQ_TYPE_RSSI_MEASURE:
+                    *(p_slot->data.rssi_measure.p_result) = nrf_802154_core_rssi_measure();
+                    break;
+
+                case REQ_TYPE_RSSI_GET:
+                    *(p_slot->data.rssi_get.p_result) =
+                        nrf_802154_core_last_rssi_measurement_get(p_slot->data.rssi_get.p_rssi);
                     break;
 
                 default:

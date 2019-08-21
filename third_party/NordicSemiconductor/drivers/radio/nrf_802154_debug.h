@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief This module contains debug helpers for 802.15.4 radio driver for nRF SoC devices.
+ * @brief Module that contains debug helpers for the 802.15.4 radio driver for the nRF SoC devices.
  *
  */
 
@@ -57,6 +57,8 @@ extern "C" {
 #define FUNCTION_CSMACA             0x0008UL
 #define FUNCTION_TRANSMIT_AT        0x0009UL
 #define FUNCTION_RECEIVE_AT         0x000AUL
+#define FUNCTION_TRANSMIT_AT_CANCEL 0x000BUL
+#define FUNCTION_RECEIVE_AT_CANCEL  0x000CUL
 
 #define FUNCTION_IRQ_HANDLER        0x0100UL
 #define FUNCTION_EVENT_FRAMESTART   0x0101UL
@@ -88,6 +90,7 @@ extern "C" {
 #define FUNCTION_RSCH_DELAYED_TIMESLOT_REQ         0x048BUL
 #define FUNCTION_RSCH_TIMER_DELAYED_PREC           0x048CUL
 #define FUNCTION_RSCH_TIMER_DELAYED_START          0x048DUL
+#define FUNCTION_RSCH_DELAYED_TIMESLOT_CANCEL      0x048EUL
 
 #define FUNCTION_CSMA_ABORT                        0x0500UL
 #define FUNCTION_CSMA_TX_FAILED                    0x0501UL
@@ -118,22 +121,25 @@ extern "C" {
 #define FUNCTION_requested_prio_lvl_is_at_least    0x1007UL
 #define FUNCTION_notify_core                       0x1008UL
 
-#define PIN_DBG_RADIO_EVT_END                      11
-#define PIN_DBG_RADIO_EVT_DISABLED                 12
-#define PIN_DBG_RADIO_EVT_READY                    13
-#define PIN_DBG_RADIO_EVT_FRAMESTART               14
-#define PIN_DBG_RADIO_EVT_EDEND                    25
-#define PIN_DBG_RADIO_EVT_PHYEND                   24
+#ifdef NRF52811_XXAA
 
-#define PIN_DBG_TIMESLOT_ACTIVE                    3
-#define PIN_DBG_TIMESLOT_EXTEND_REQ                4
-#define PIN_DBG_TIMESLOT_SESSION_IDLE              16
-#define PIN_DBG_TIMESLOT_RADIO_IRQ                 28
-#define PIN_DBG_TIMESLOT_FAILED                    29
-#define PIN_DBG_TIMESLOT_BLOCKED                   30
-#define PIN_DBG_RAAL_CRITICAL_SECTION              15
+#define PIN_DBG_RADIO_EVT_END        13
+#define PIN_DBG_RADIO_EVT_DISABLED   14
+#define PIN_DBG_RADIO_EVT_READY      17
+#define PIN_DBG_RADIO_EVT_FRAMESTART 18
+#define PIN_DBG_RADIO_EVT_EDEND      25
+#define PIN_DBG_RADIO_EVT_PHYEND     24
 
-#define PIN_DBG_RTC0_EVT_REM                       31
+#else
+
+#define PIN_DBG_RADIO_EVT_END        11
+#define PIN_DBG_RADIO_EVT_DISABLED   12
+#define PIN_DBG_RADIO_EVT_READY      13
+#define PIN_DBG_RADIO_EVT_FRAMESTART 14
+#define PIN_DBG_RADIO_EVT_EDEND      25
+#define PIN_DBG_RADIO_EVT_PHYEND     24
+
+#endif
 
 #ifdef __cplusplus
 }

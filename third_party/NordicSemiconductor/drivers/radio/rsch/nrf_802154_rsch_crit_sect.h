@@ -39,26 +39,26 @@
  * @defgroup nrf_802154_rsch_crit_sect RSCH event queue used during critical sections
  * @{
  * @ingroup nrf_802154_rsch
- * @brief Critical section implementation for the RSCH module.
+ * @brief The critical section implementation for the RSCH module.
  */
 
 /**
- * @brief Initialize the RSCH critical section module.
+ * @brief Initializes the RSCH critical section module.
  */
 void nrf_802154_rsch_crit_sect_init(void);
 
 /**
- * @brief Request priority level from RSCH through the critical section module.
+ * @brief Requests the priority level from RSCH through the critical section module.
  *
  * @param[in]  prio  Requested priority level.
  */
 void nrf_802154_rsch_crit_sect_prio_request(rsch_prio_t prio);
 
 /**
- * @brief This function is called to notify the core that approved RSCH priority has changed.
+ * @brief Notifies the core that the approved RSCH priority has changed.
  *
- * @note This function is called from critical section context and does not preempt other critical
- *       sections.
+ * @note This function is called from the critical section context and does not preempt
+ *       other critical sections.
  *
  * @param[in]  prio  Approved priority level.
  */
