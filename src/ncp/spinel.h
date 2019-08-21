@@ -1627,6 +1627,43 @@ typedef enum
      */
     SPINEL_PROP_RADIO_CAPS = SPINEL_PROP_PHY_EXT__BEGIN + 11,
 
+    /// All coex metrics related counters.
+    /** Format: t(LLLLLLLL)t(LLLLLLLLL)bL  (Read-only)
+     *
+     * The contents include two structures and two common variables, first structure corresponds to
+     * all transmit related coex counters, second structure provides the receive related counters.
+     *
+     * The transmit structure includes:
+     *   'L': NumTxRequest                       (The number of tx requests).
+     *   'L': NumTxGrantImmediate                (The number of tx requests while grant was active).
+     *   'L': NumTxGrantWait                     (The number of tx requests while grant was inactive).
+     *   'L': NumTxGrantWaitActivated            (The number of tx requests while grant was inactive that were
+     *                                            ultimately granted).
+     *   'L': NumTxGrantWaitTimeout              (The number of tx requests while grant was inactive that timed out).
+     *   'L': NumTxGrantDeactivatedDuringRequest (The number of tx requests that were in progress when grant was
+     *                                            deactivated).
+     *   'L': NumTxDelayedGrant                  (The number of tx requests that were not granted within 50us).
+     *   'L': AvgTxRequestToGrantTime            (The average time in usec from tx request to grant).
+     *
+     * The receive structure includes:
+     *   'L': NumRxRequest                       (The number of rx requests).
+     *   'L': NumRxGrantImmediate                (The number of rx requests while grant was active).
+     *   'L': NumRxGrantWait                     (The number of rx requests while grant was inactive).
+     *   'L': NumRxGrantWaitActivated            (The number of rx requests while grant was inactive that were
+     *                                            ultimately granted).
+     *   'L': NumRxGrantWaitTimeout              (The number of rx requests while grant was inactive that timed out).
+     *   'L': NumRxGrantDeactivatedDuringRequest (The number of rx requests that were in progress when grant was
+     *                                            deactivated).
+     *   'L': NumRxDelayedGrant                  (The number of rx requests that were not granted within 50us).
+     *   'L': AvgRxRequestToGrantTime            (The average time in usec from rx request to grant).
+     *   'L': NumRxGrantNone                     (The number of rx requests that completed without receiving grant).
+     *
+     * Two common variables:
+     *   'b': Stopped        (Stats collection stopped due to saturation).
+     *   'L': NumGrantGlitch (The number of of grant glitches).
+     */
+    SPINEL_PROP_RADIO_COEX_METRICS = SPINEL_PROP_PHY_EXT__BEGIN + 12,
+
     SPINEL_PROP_PHY_EXT__END = 0x1300,
 
     SPINEL_PROP_MAC__BEGIN = 0x30,

@@ -106,6 +106,9 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     {"coaps", &Interpreter::ProcessCoapSecure},
 #endif
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+    {"coex", &Interpreter::ProcessCoexMetrics},
+#endif
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     {"commissioner", &Interpreter::ProcessCommissioner},
 #endif
@@ -780,6 +783,44 @@ void Interpreter::ProcessCoapSecure(int argc, char *argv[])
 }
 
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+void Interpreter::ProcessCoexMetrics(int argc, char *argv[])
+{
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
+    otRadioCoexMetrics metrics;
+    otError            error = otPlatRadioGetCoexMetrics(mInstance, &metrics);
+
+    SuccessOrExit(error);
+
+    mServer->OutputFormat("Stopped: %s\r\n", metrics.mStopped ? "true" : "false");
+    mServer->OutputFormat("Grant Glitch: %u\r\n", metrics.mNumGrantGlitch);
+    mServer->OutputFormat("Transmit metrics\r\n");
+    mServer->OutputFormat("    Request: %u\r\n", metrics.mNumTxRequest);
+    mServer->OutputFormat("    Grant Immediate: %u\r\n", metrics.mNumTxGrantImmediate);
+    mServer->OutputFormat("    Grant Wait: %u\r\n", metrics.mNumTxGrantWait);
+    mServer->OutputFormat("    Grant Wait Activated: %u\r\n", metrics.mNumTxGrantWaitActivated);
+    mServer->OutputFormat("    Grant Wait Timeout: %u\r\n", metrics.mNumTxGrantWaitTimeout);
+    mServer->OutputFormat("    Grant Deactivated During Request: %u\r\n", metrics.mNumTxGrantDeactivatedDuringRequest);
+    mServer->OutputFormat("    Delayed Grant: %u\r\n", metrics.mNumTxDelayedGrant);
+    mServer->OutputFormat("    Average Request To Grant Time: %u\r\n", metrics.mAvgTxRequestToGrantTime);
+    mServer->OutputFormat("Receive metrics\r\n");
+    mServer->OutputFormat("    Request: %u\r\n", metrics.mNumRxRequest);
+    mServer->OutputFormat("    Grant Immediate: %u\r\n", metrics.mNumRxGrantImmediate);
+    mServer->OutputFormat("    Grant Wait: %u\r\n", metrics.mNumRxGrantWait);
+    mServer->OutputFormat("    Grant Wait Activated: %u\r\n", metrics.mNumRxGrantWaitActivated);
+    mServer->OutputFormat("    Grant Wait Timeout: %u\r\n", metrics.mNumRxGrantWaitTimeout);
+    mServer->OutputFormat("    Grant Deactivated During Request: %u\r\n", metrics.mNumRxGrantDeactivatedDuringRequest);
+    mServer->OutputFormat("    Delayed Grant: %u\r\n", metrics.mNumRxDelayedGrant);
+    mServer->OutputFormat("    Average Request To Grant Time: %u\r\n", metrics.mAvgRxRequestToGrantTime);
+    mServer->OutputFormat("    Grant None: %u\r\n", metrics.mNumRxGrantNone);
+
+exit:
+    AppendResult(error);
+}
+#endif // OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])

@@ -246,6 +246,32 @@ typedef enum otRadioState
  */
 
 /**
+ * This structure represents radio coexistence metrics.
+ */
+typedef struct otRadioCoexMetrics
+{
+    uint32_t mNumGrantGlitch;          ///< Number of grant glitches.
+    uint32_t mNumTxRequest;            ///< Number of tx requests.
+    uint32_t mNumTxGrantImmediate;     ///< Number of tx requests while grant was active.
+    uint32_t mNumTxGrantWait;          ///< Number of tx requests while grant was inactive.
+    uint32_t mNumTxGrantWaitActivated; ///< Number of tx requests while grant was inactive that were ultimately granted.
+    uint32_t mNumTxGrantWaitTimeout;   ///< Number of tx requests while grant was inactive that timed out.
+    uint32_t mNumTxGrantDeactivatedDuringRequest; ///< Number of tx that were in progress when grant was deactivated.
+    uint32_t mNumTxDelayedGrant;                  ///< Number of tx requests that were not granted within 50us.
+    uint32_t mAvgTxRequestToGrantTime;            ///< Average time in usec from tx request to grant.
+    uint32_t mNumRxRequest;                       ///< Number of rx requests.
+    uint32_t mNumRxGrantImmediate;                ///< Number of rx requests while grant was active.
+    uint32_t mNumRxGrantWait;                     ///< Number of rx requests while grant was inactive.
+    uint32_t mNumRxGrantWaitActivated; ///< Number of rx requests while grant was inactive that were ultimately granted.
+    uint32_t mNumRxGrantWaitTimeout;   ///< Number of rx requests while grant was inactive that timed out.
+    uint32_t mNumRxGrantDeactivatedDuringRequest; ///< Number of rx that were in progress when grant was deactivated.
+    uint32_t mNumRxDelayedGrant;                  ///< Number of rx requests that were not granted within 50us.
+    uint32_t mAvgRxRequestToGrantTime;            ///< Average time in usec from rx request to grant.
+    uint32_t mNumRxGrantNone;                     ///< Number of rx requests that completed without receiving grant.
+    bool     mStopped;                            ///< Stats collection stopped due to saturation.
+} otRadioCoexMetrics;
+
+/**
  * @}
  *
  */
@@ -706,12 +732,23 @@ uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance);
 /**
  * Get the radio preferred channel mask that the device prefers to form on.
  *
- * @param[in]  aInstance   The OpenThread instance strucyyture.
+ * @param[in]  aInstance   The OpenThread instance structure.
  *
  * @returns The radio preferred channel mask.
  *
  */
 uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance);
+
+/**
+ * Get the radio coexistence metrics.
+ *
+ * @param[in]  aInstance     The OpenThread instance structure.
+ * @param[out] aCoexMetrics  A pointer to the coexistence metrics structure.
+ *
+ * @retval OT_ERROR_NONE          Successfully retrieved the coex metrics.
+ * @retval OT_ERROR_INVALID_ARGS  @p aCoexMetrics was NULL.
+ */
+otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCoexMetrics);
 
 /**
  * @}

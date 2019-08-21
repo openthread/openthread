@@ -892,6 +892,47 @@ int8_t RadioSpinel::GetRssi(void)
     return rssi;
 }
 
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+otError RadioSpinel::GetCoexMetrics(otRadioCoexMetrics &aCoexMetrics)
+{
+    otError error;
+
+    error = Get(SPINEL_PROP_RADIO_COEX_METRICS,
+                SPINEL_DATATYPE_STRUCT_S(                                    // Tx Coex Metrics Structure
+                    SPINEL_DATATYPE_UINT32_S                                 // NumTxRequest
+                                                SPINEL_DATATYPE_UINT32_S     // NumTxGrantImmediate
+                                                SPINEL_DATATYPE_UINT32_S     // NumTxGrantWait
+                                                SPINEL_DATATYPE_UINT32_S     // NumTxGrantWaitActivated
+                                                SPINEL_DATATYPE_UINT32_S     // NumTxGrantWaitTimeout
+                                                SPINEL_DATATYPE_UINT32_S     // NumTxGrantDeactivatedDuringRequest
+                                                SPINEL_DATATYPE_UINT32_S     // NumTxDelayedGrant
+                                                SPINEL_DATATYPE_UINT32_S     // AvgTxRequestToGrantTime
+                    ) SPINEL_DATATYPE_STRUCT_S(                              // Rx Coex Metrics Structure
+                    SPINEL_DATATYPE_UINT32_S                                 // NumRxRequest
+                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantImmediate
+                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantWait
+                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantWaitActivated
+                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantWaitTimeout
+                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantDeactivatedDuringRequest
+                                                    SPINEL_DATATYPE_UINT32_S // NumRxDelayedGrant
+                                                    SPINEL_DATATYPE_UINT32_S // AvgRxRequestToGrantTime
+                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantNone
+                    ) SPINEL_DATATYPE_BOOL_S                                 // Stopped
+                    SPINEL_DATATYPE_UINT32_S,                                // NumGrantGlitch
+                &aCoexMetrics.mNumTxRequest, &aCoexMetrics.mNumTxGrantImmediate, &aCoexMetrics.mNumTxGrantWait,
+                &aCoexMetrics.mNumTxGrantWaitActivated, &aCoexMetrics.mNumTxGrantWaitTimeout,
+                &aCoexMetrics.mNumTxGrantDeactivatedDuringRequest, &aCoexMetrics.mNumTxDelayedGrant,
+                &aCoexMetrics.mAvgTxRequestToGrantTime, &aCoexMetrics.mNumRxRequest, &aCoexMetrics.mNumRxGrantImmediate,
+                &aCoexMetrics.mNumRxGrantWait, &aCoexMetrics.mNumRxGrantWaitActivated,
+                &aCoexMetrics.mNumRxGrantWaitTimeout, &aCoexMetrics.mNumRxGrantDeactivatedDuringRequest,
+                &aCoexMetrics.mNumRxDelayedGrant, &aCoexMetrics.mAvgRxRequestToGrantTime, &aCoexMetrics.mNumRxGrantNone,
+                &aCoexMetrics.mStopped, &aCoexMetrics.mNumGrantGlitch);
+
+    LogIfFail("Get Coex Metrics failed", error);
+    return error;
+}
+#endif
+
 otError RadioSpinel::SetTransmitPower(int8_t aPower)
 {
     otError error = Set(SPINEL_PROP_PHY_TX_POWER, SPINEL_DATATYPE_INT8_S, aPower);
@@ -1628,6 +1669,22 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
     return sRadioSpinel.GetReceiveSensitivity();
 }
+
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCoexMetrics)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aCoexMetrics != NULL, error = OT_ERROR_INVALID_ARGS);
+
+    error = sRadioSpinel.GetCoexMetrics(*aCoexMetrics);
+
+exit:
+    return error;
+}
+#endif
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
 void ot::PosixApp::RadioSpinel::Process(const Event &aEvent)

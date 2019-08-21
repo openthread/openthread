@@ -126,4 +126,14 @@
  *
  */
 #define CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER 1
+
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+ *
+ * Define to 1 if you want to enable radio coexistence metrics implemented in platform.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+#define OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE 1
+#endif
 #endif // OPENTHREAD_CORE_POSIX_CONFIG_H_

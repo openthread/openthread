@@ -2200,6 +2200,52 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_PREFERRED>(v
     return EncodeChannelMask(otPlatRadioGetPreferredChannelMask(mInstance));
 }
 
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RADIO_COEX_METRICS>(void)
+{
+    otRadioCoexMetrics coexMetrics;
+    otError            error = otPlatRadioGetCoexMetrics(mInstance, &coexMetrics);
+
+    if (error != OT_ERROR_NONE)
+    {
+        error = mEncoder.OverwriteWithLastStatusError(SPINEL_STATUS_INVALID_COMMAND_FOR_PROP);
+        ExitNow();
+    }
+
+    // Encode Tx Request related metrics
+    SuccessOrExit(error = mEncoder.OpenStruct());
+    SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumTxRequest));
+    SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumTxGrantImmediate));
+    SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumTxGrantWait));
+    SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumTxGrantWaitActivated));
+    SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumTxGrantWaitTimeout));
+    SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumTxGrantDeactivatedDuringRequest));
+    SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumTxDelayedGrant));
+    SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mAvgTxRequestToGrantTime));
+    SuccessOrExit(error = mEncoder.CloseStruct());
+
+    // Encode Rx Request related metrics
+    SuccessOrExit(error = mEncoder.OpenStruct());
+    SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumRxRequest));
+    SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumRxGrantImmediate));
+    SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumRxGrantWait));
+    SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumRxGrantWaitActivated));
+    SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumRxGrantWaitTimeout));
+    SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumRxGrantDeactivatedDuringRequest));
+    SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumRxDelayedGrant));
+    SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mAvgRxRequestToGrantTime));
+    SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumRxGrantNone));
+    SuccessOrExit(error = mEncoder.CloseStruct());
+
+    // Encode common metrics
+    SuccessOrExit(error = mEncoder.WriteBool(coexMetrics.mStopped));
+    SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumGrantGlitch));
+
+exit:
+    return error;
+}
+#endif
+
 } // namespace Ncp
 } // namespace ot
 
