@@ -2202,9 +2202,6 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RADIO_COEX_METRICS>(v
         ExitNow();
     }
 
-    SuccessOrExit(error = mEncoder.WriteBool(coexMetrics.mStopped));
-    SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumGrantGlitch));
-
     // Encode Tx Request related metrics
     SuccessOrExit(error = mEncoder.OpenStruct());
     SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumTxRequest));
@@ -2229,6 +2226,10 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RADIO_COEX_METRICS>(v
     SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mAvgRxRequestToGrantTime));
     SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumRxGrantNone));
     SuccessOrExit(error = mEncoder.CloseStruct());
+
+    // Encode common metrics
+    SuccessOrExit(error = mEncoder.WriteBool(coexMetrics.mStopped));
+    SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumGrantGlitch));
 
 exit:
     return error;

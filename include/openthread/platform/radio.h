@@ -742,7 +742,7 @@ uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance);
 /**
  * Get the radio coexistence metrics.
  *
- * @param[in]  aInstance     The OpenThread instance strucyyture.
+ * @param[in]  aInstance     The OpenThread instance structure.
  * @param[out] aCoexMetrics  A pointer to the coexistence metrics structure.
  *
  * @retval OT_ERROR_NONE          Successfully retrieved the coex metrics.

@@ -197,6 +197,7 @@ public:
      */
     int8_t GetReceiveSensitivity(void) const { return mRxSensitivity; }
 
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
     /**
      * This method returns the radio coexistence metrics.
      *
@@ -207,6 +208,7 @@ public:
      *
      */
     otError GetCoexMetrics(otRadioCoexMetrics &aCoexMetrics);
+#endif
 
     /**
      * This method returns a reference to the transmit buffer.

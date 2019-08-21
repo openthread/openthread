@@ -1088,6 +1088,7 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
     return POSIX_RECEIVE_SENSITIVITY;
 }
 
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
 otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCoexMetrics)
 {
     otError error = OT_ERROR_NONE;
@@ -1120,3 +1121,4 @@ otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCo
 exit:
     return error;
 }
+#endif

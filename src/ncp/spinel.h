@@ -1628,16 +1628,12 @@ typedef enum
     SPINEL_PROP_RADIO_CAPS = SPINEL_PROP_PHY_EXT__BEGIN + 11,
 
     /// All coex metrics related counters.
-    /** Format: bLt(LLLLLLLL)t(LLLLLLLLL)  (Read-only)
+    /** Format: t(LLLLLLLL)t(LLLLLLLLL)bL  (Read-only)
      *
-     * The contents include three variables and two structs, first one corresponds to
-     * all transmit related coex counters, second one provides the receive related counters.
-     *
-     *   'b': Stopped               (Stats collection stopped due to saturation).
-     *   'L': NumGrantGlitch        (The number of of grant glitches).
+     * The contents include two structures and two common variables, first structure corresponds to
+     * all transmit related coex counters, second structure provides the receive related counters.
      *
      * The transmit structure includes:
-     *
      *   'L': NumTxRequest                       (The number of tx requests).
      *   'L': NumTxGrantImmediate                (The number of tx requests while grant was active).
      *   'L': NumTxGrantWait                     (The number of tx requests while grant was inactive).
@@ -1661,6 +1657,10 @@ typedef enum
      *   'L': NumRxDelayedGrant                  (The number of rx requests that were not granted within 50us).
      *   'L': AvgRxRequestToGrantTime            (The average time in usec from rx request to grant).
      *   'L': NumRxGrantNone                     (The number of rx requests that completed without receiving grant).
+     *
+     * Two common variables:
+     *   'b': Stopped        (Stats collection stopped due to saturation).
+     *   'L': NumGrantGlitch (The number of of grant glitches).
      */
     SPINEL_PROP_RADIO_COEX_METRICS = SPINEL_PROP_PHY_EXT__BEGIN + 12,
 
