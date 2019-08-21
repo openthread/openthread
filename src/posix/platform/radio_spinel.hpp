@@ -199,7 +199,7 @@ public:
 
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
     /**
-     * This method returns the radio coexistence metrics.
+     * This method retrieves the radio coexistence metrics.
      *
      * @param[out] aCoexMetrics  A reference to the coexistence metrics structure.
      *
