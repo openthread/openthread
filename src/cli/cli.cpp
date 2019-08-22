@@ -91,7 +91,6 @@ namespace ot {
 namespace Cli {
 
 const struct Command Interpreter::sCommands[] = {
-    {"help", &Interpreter::ProcessHelp},
     {"bufferinfo", &Interpreter::ProcessBufferInfo},
     {"channel", &Interpreter::ProcessChannel},
 #if OPENTHREAD_FTD
@@ -140,6 +139,7 @@ const struct Command Interpreter::sCommands[] = {
     {"extaddr", &Interpreter::ProcessExtAddress},
     {"extpanid", &Interpreter::ProcessExtPanId},
     {"factoryreset", &Interpreter::ProcessFactoryReset},
+    {"help", &Interpreter::ProcessHelp},
     {"ifconfig", &Interpreter::ProcessIfconfig},
     {"ipaddr", &Interpreter::ProcessIpAddr},
     {"ipmaddr", &Interpreter::ProcessIpMulticastAddr},

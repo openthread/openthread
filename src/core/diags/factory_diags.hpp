@@ -145,15 +145,18 @@ private:
     static otError ParseLong(char *aString, long &aLong);
 
     static const struct Command sCommands[];
-    struct Stats                mStats;
 
-    int8_t        mTxPower;
-    uint8_t       mChannel;
-    uint8_t       mTxLen;
+#if !OPENTHREAD_RADIO
+    struct Stats mStats;
+
+    otRadioFrame *mTxPacket;
     uint32_t      mTxPeriod;
     uint32_t      mTxPackets;
-    otRadioFrame *mTxPacket;
+    uint8_t       mChannel;
+    int8_t        mTxPower;
+    uint8_t       mTxLen;
     bool          mRepeatActive;
+#endif
 };
 
 #endif // #if OPENTHREAD_CONFIG_DIAG_ENABLE
