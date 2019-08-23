@@ -294,6 +294,7 @@ static bool addr_index_find(const uint8_t * p_addr,
                             bool            extended)
 {
     uint8_t * p_addr_array;
+    bool      valid_data_type = true;
 
     switch (data_type)
     {
@@ -307,8 +308,14 @@ static bool addr_index_find(const uint8_t * p_addr,
             break;
 
         default:
+            valid_data_type = false;
             assert(false);
             break;
+    }
+
+    if (!valid_data_type)
+    {
+        return false;
     }
 
     return addr_binary_search(p_addr, p_addr_array, p_location, data_type, extended);
@@ -330,6 +337,7 @@ static bool addr_add(const uint8_t * p_addr, uint32_t location, uint8_t data_typ
     uint32_t   max_addr_array_len;
     uint8_t  * p_addr_array;
     uint8_t    entry_size;
+    bool       valid_data_type = true;
 
     switch (data_type)
     {
@@ -368,11 +376,12 @@ static bool addr_add(const uint8_t * p_addr, uint32_t location, uint8_t data_typ
             break;
 
         default:
+            valid_data_type = false;
             assert(false);
             break;
     }
 
-    if (*p_addr_array_len == max_addr_array_len)
+    if (!valid_data_type || (*p_addr_array_len == max_addr_array_len))
     {
         return false;
     }
@@ -404,6 +413,7 @@ static bool addr_remove(uint32_t location, uint8_t data_type, bool extended)
     uint32_t * p_addr_array_len;
     uint8_t  * p_addr_array;
     uint8_t    entry_size;
+    bool       valid_data_type = true;
 
     switch (data_type)
     {
@@ -438,11 +448,12 @@ static bool addr_remove(uint32_t location, uint8_t data_type, bool extended)
             break;
 
         default:
+            valid_data_type = false;
             assert(false);
             break;
     }
 
-    if (*p_addr_array_len == 0)
+    if (!valid_data_type || (*p_addr_array_len == 0))
     {
         return false;
     }

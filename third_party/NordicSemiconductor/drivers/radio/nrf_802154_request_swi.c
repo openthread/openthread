@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+/* Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -171,4 +171,16 @@ bool nrf_802154_request_channel_update(void)
 bool nrf_802154_request_cca_cfg_update(void)
 {
     REQUEST_FUNCTION_NO_ARGS(nrf_802154_core_cca_cfg_update, nrf_802154_swi_cca_cfg_update)
+}
+
+bool nrf_802154_request_rssi_measure(void)
+{
+    REQUEST_FUNCTION_NO_ARGS(nrf_802154_core_rssi_measure, nrf_802154_swi_rssi_measure)
+}
+
+bool nrf_802154_request_rssi_measurement_get(int8_t * p_rssi)
+{
+    REQUEST_FUNCTION(nrf_802154_core_last_rssi_measurement_get,
+                     nrf_802154_swi_rssi_measurement_get,
+                     p_rssi)
 }

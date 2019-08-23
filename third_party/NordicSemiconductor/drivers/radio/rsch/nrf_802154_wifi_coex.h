@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief This module defines the Wifi coexistence module.
+ * @brief Module that defines the Wi-Fi coexistence module.
  *
  */
 
@@ -43,57 +43,57 @@ extern "C" {
 #endif
 
 /**
- * @defgroup nrf_wifi_coex Wifi Coexistence
+ * @defgroup nrf_wifi_coex Wi-Fi Coexistence
  * @{
  * @ingroup nrf_802154
- * @brief Wifi Coexistence module.
+ * @brief The Wi-Fi Coexistence module.
  *
- * Wifi Coexistence module is a client of the PTA (defined in the 802.15.2). It manages GPIO
+ * The Wi-Fi Coexistence module is a client of the PTA (defined in the 802.15.2). It manages GPIO
  * to assert pins and respond to pin state changes.
  */
 
 /**
- * @brief Initialize the Wifi Coexistence module.
+ * @brief Initializes the Wi-Fi Coexistence module.
  *
- * @note This function shall be called once, before any other function from this module.
+ * @note This function must be called once, before any other function from this module.
  *
  */
 void nrf_802154_wifi_coex_init(void);
 
 /**
- * @brief Uninitialize the Wifi Coexistence module.
+ * @brief Deinitializes the Wi-Fi Coexistence module.
  *
  */
 void nrf_802154_wifi_coex_uninit(void);
 
 /**
- * @brief Request given priority from the Wifi Coexistence module.
+ * @brief Requests the given priority from the Wi-Fi Coexistence module.
  *
- * @note The approval of requested priority is notified asynchronously by the
+ * @note The approval of the requested priority is notified asynchronously by the
  *       @ref nrf_802154_wifi_coex_prio_changed call.
  *
- * @param[in]  priority  Requested priority level.
+ * @param[in]  priority  The requested priority level.
  *
  */
 void nrf_802154_wifi_coex_prio_req(rsch_prio_t priority);
 
 /**
- * @brief Get priority denial event address.
+ * @brief Gets the priority denial event address.
  *
- * Get an address of a hardware event that notifies about denial of the previously approved
+ * Get the address of a hardware event that notifies about the denial of a previously approved
  * priority.
  *
- * @return Address of a priority denial event.
+ * @returns Address of the priority denial event.
  */
 void * nrf_802154_wifi_coex_deny_event_addr_get(void);
 
 /**
- * @biref Approved priority change notification.
+ * @brief Notifies about the approved priority change.
  *
- * The Wifi Coexistence module calls this function to notify the RSCH of currently approved
+ * The Wi-Fi Coexistence module calls this function to notify the RSCH of the currently approved
  * priority level.
  *
- * @param[in]  priority  Approved priority level.
+ * @param[in]  priority  The approved priority level.
  */
 extern void nrf_802154_wifi_coex_prio_changed(rsch_prio_t priority);
 

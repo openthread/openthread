@@ -43,6 +43,7 @@
 #include "../nrf_802154_debug.h"
 #include "nrf_802154_config.h"
 #include "nrf_802154_const.h"
+#include "nrf_802154_frame_parser.h"
 #include "nrf_802154_notification.h"
 #include "nrf_802154_pib.h"
 #include "nrf_802154_procedures_duration.h"
@@ -69,6 +70,16 @@ typedef enum
 } delayed_trx_op_state_t;
 
 /**
+ * @brief RX delayed operation frame data.
+ */
+typedef struct
+{
+    uint32_t sof_timestamp; ///< Timestamp of last start of frame notification received in RX window.
+    uint8_t  psdu_length;   ///< Length in bytes of the frame to be received in RX window.
+    bool     ack_requested; ///< Flag indicating if Ack for the frame to be received in RX window is requested.
+} delayed_rx_frame_data_t;
+
+/**
  * @brief TX delayed operation configuration.
  */
 static const uint8_t * mp_tx_data;         ///< Pointer to a buffer containing PHR and PSDU of the frame requested to be transmitted.
@@ -87,9 +98,9 @@ static uint8_t            m_rx_channel;    ///< Channel number on which receptio
 static volatile delayed_trx_op_state_t m_dly_op_state[RSCH_DLY_TS_NUM];
 
 /**
- * @brief Timestamp of last start of frame notification received in RX window.
+ * @brief RX delayed operation frame data.
  */
-static uint32_t m_sof_timestamp;
+static volatile delayed_rx_frame_data_t m_dly_rx_frame;
 
 /**
  * Set state of a delayed operation.
@@ -225,15 +236,21 @@ static void notify_rx_timeout(void * p_context)
 
     if (dly_op_state_get(RSCH_DLY_RX) == DELAYED_TRX_OP_STATE_ONGOING)
     {
-        uint32_t now              = nrf_802154_timer_sched_time_get();
-        uint32_t max_frame_length = nrf_802154_rx_duration_get(MAX_PACKET_SIZE, true);
-        uint32_t sof_timestamp    = m_sof_timestamp;
+        uint32_t now           = nrf_802154_timer_sched_time_get();
+        uint32_t sof_timestamp = m_dly_rx_frame.sof_timestamp;
 
-        if (nrf_802154_timer_sched_time_is_in_future(now, sof_timestamp, max_frame_length))
+        // Make sure that the timestamp has been latched safely. If frame reception preempts the code
+        // after executing this line, the RX window will not be extended.
+        __DMB();
+        uint8_t  psdu_length   = m_dly_rx_frame.psdu_length;
+        bool     ack_requested = m_dly_rx_frame.ack_requested;
+        uint32_t frame_length  = nrf_802154_rx_duration_get(psdu_length, ack_requested);
+
+        if (nrf_802154_timer_sched_time_is_in_future(now, sof_timestamp, frame_length))
         {
             // @TODO protect against infinite extensions - allow only one timer extension
             m_timeout_timer.t0 = sof_timestamp;
-            m_timeout_timer.dt = max_frame_length;
+            m_timeout_timer.dt = frame_length;
 
             nrf_802154_timer_sched_add(&m_timeout_timer, true);
         }
@@ -265,7 +282,7 @@ static void tx_timeslot_started_callback(bool result)
     // To avoid attaching to every possible transmit hook, in order to be able
     // to switch from ONGOING to STOPPED state, ONGOING state is not used at all
     // and state is changed to STOPPED right after transmit request.
-    dly_op_state_set(RSCH_DLY_TX, DELAYED_TRX_OP_STATE_PENDING, DELAYED_TRX_OP_STATE_STOPPED);
+    m_dly_op_state[RSCH_DLY_TX] = DELAYED_TRX_OP_STATE_STOPPED;
 
     if (!result)
     {
@@ -288,8 +305,10 @@ static void rx_timeslot_started_callback(bool result)
 
         now = nrf_802154_timer_sched_time_get();
 
-        m_timeout_timer.t0 = now;
-        m_sof_timestamp    = now;
+        m_timeout_timer.t0           = now;
+        m_dly_rx_frame.sof_timestamp = now;
+        m_dly_rx_frame.psdu_length   = 0;
+        m_dly_rx_frame.ack_requested = false;
 
         nrf_802154_timer_sched_add(&m_timeout_timer, true);
     }
@@ -409,7 +428,7 @@ bool nrf_802154_delayed_trx_receive(uint32_t t0,
         m_rx_channel = channel;
 
         // remove timer in case it was left after abort operation
-        nrf_802154_timer_sched_remove(&m_timeout_timer);
+        nrf_802154_timer_sched_remove(&m_timeout_timer, NULL);
 
         result = dly_op_request(t0, dt, timeslot_length, RSCH_DLY_RX);
     }
@@ -417,11 +436,8 @@ bool nrf_802154_delayed_trx_receive(uint32_t t0,
     return result;
 }
 
-void nrf_802154_rsch_delayed_timeslot_started(rsch_dly_ts_id_t dly_ts_id)
+static inline void timeslot_started_callout(rsch_dly_ts_id_t dly_ts_id)
 {
-    assert(dly_ts_id < RSCH_DLY_TS_NUM);
-    assert(dly_op_state_get(dly_ts_id) == DELAYED_TRX_OP_STATE_PENDING);
-
     switch (dly_ts_id)
     {
         case RSCH_DLY_TX:
@@ -433,8 +449,53 @@ void nrf_802154_rsch_delayed_timeslot_started(rsch_dly_ts_id_t dly_ts_id)
             break;
 
         default:
+            assert(false);
             break;
     }
+}
+
+void nrf_802154_rsch_delayed_timeslot_started(rsch_dly_ts_id_t dly_ts_id)
+{
+    switch (dly_op_state_get(dly_ts_id))
+    {
+        case DELAYED_TRX_OP_STATE_PENDING:
+            timeslot_started_callout(dly_ts_id);
+            break;
+
+        case DELAYED_TRX_OP_STATE_STOPPED:
+            /* Intentionally do nothing */
+            break;
+
+        default:
+            assert(false);
+    }
+}
+
+bool nrf_802154_delayed_trx_transmit_cancel(void)
+{
+    bool result;
+
+    result                      = nrf_802154_rsch_delayed_timeslot_cancel(RSCH_DLY_TX);
+    m_dly_op_state[RSCH_DLY_TX] = DELAYED_TRX_OP_STATE_STOPPED;
+
+    return result;
+}
+
+bool nrf_802154_delayed_trx_receive_cancel(void)
+{
+    bool result;
+
+    result = nrf_802154_rsch_delayed_timeslot_cancel(RSCH_DLY_RX);
+
+    bool was_running;
+
+    nrf_802154_timer_sched_remove(&m_timeout_timer, &was_running);
+
+    m_dly_op_state[RSCH_DLY_RX] = DELAYED_TRX_OP_STATE_STOPPED;
+
+    result = result || was_running;
+
+    return result;
 }
 
 bool nrf_802154_delayed_trx_abort(nrf_802154_term_t term_lvl, req_originator_t req_orig)
@@ -467,10 +528,12 @@ bool nrf_802154_delayed_trx_abort(nrf_802154_term_t term_lvl, req_originator_t r
     return result;
 }
 
-void nrf_802154_delayed_trx_rx_started_hook(void)
+void nrf_802154_delayed_trx_rx_started_hook(const uint8_t * p_frame)
 {
     if (dly_op_state_get(RSCH_DLY_RX) == DELAYED_TRX_OP_STATE_ONGOING)
     {
-        m_sof_timestamp = nrf_802154_timer_sched_time_get();
+        m_dly_rx_frame.sof_timestamp = nrf_802154_timer_sched_time_get();
+        m_dly_rx_frame.psdu_length   = p_frame[PHR_OFFSET];
+        m_dly_rx_frame.ack_requested = nrf_802154_frame_parser_ar_bit_is_set(p_frame);
     }
 }

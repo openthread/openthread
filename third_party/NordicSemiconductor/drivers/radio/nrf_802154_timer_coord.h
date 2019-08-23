@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief This module defines the Timer Coordinator interface.
+ * @brief Module that defines the Timer Coordinator interface.
  *
  */
 
@@ -47,57 +47,59 @@ extern "C" {
  * @defgroup nrf_802154_timer_coord Timer Coordinator
  * @{
  * @ingroup nrf_802154
- * @brief Timer Coordinator interface.
+ * @brief The Timer Coordinator interface.
  *
- * Timer Coordinator is responsible to synchronize and coordinate operations of the Low Power timer
- * that counts absolute time and the High Precision timer that counts time relative to a timeslot.
+ * Timer Coordinator is responsible for synchronizing and coordinating operations of the Low Power
+ * timer that counts the absolute time and the High Precision timer that counts the time relative to
+ * a timeslot.
  */
 
 /**
- * @brief Initialize the Timer Coordinator module.
+ * @brief Initializes the Timer Coordinator module.
  *
  */
 void nrf_802154_timer_coord_init(void);
 
 /**
- * @brief Uninitialize the Timer Coordinator module.
+ * @brief Deinitializes the Timer Coordinator module.
  *
  */
 void nrf_802154_timer_coord_uninit(void);
 
 /**
- * @brief Start the Timer Coordinator.
+ * @brief Starts the Timer Coordinator module.
  *
  * This function starts the HP timer and synchronizes it with the LP timer.
  *
- * Started Timer Coordinator resynchronizes automatically in constant interval.
+ * Once started, Timer Coordinator resynchronizes automatically in a constant interval.
  */
 void nrf_802154_timer_coord_start(void);
 
 /**
- * @brief Stop the Timer Coordinator.
+ * @brief Stops the Timer Coordinator module.
  *
  * This function stops the HP timer.
  */
 void nrf_802154_timer_coord_stop(void);
 
 /**
- * @brief Prepare getting precise timestamp of given event.
+ * @brief Prepares for getting a precise timestamp of the given event.
  *
  * @param[in]  event_addr  Address of the peripheral register corresponding to the event that
- *                         should be timestamped.
+ *                         is to be time-stamped.
  */
 void nrf_802154_timer_coord_timestamp_prepare(uint32_t event_addr);
 
 /**
- * @brief Get timestamp of the recently prepared event.
+ * @brief Gets the timestamp of the recently prepared event.
  *
- * If recently prepared event occurred a few times since preparation, this function returns
- * timestamp of the first occurrence.
- * If the requested event did not occur since preparation or HP timer is not synchronized, this
- * function returns false.
+ * If the recently prepared event occurred a few times since the preparation, this function returns
+ * the timestamp of the first occurrence.
+ * If the requested event did not occur since the preparation or the HP timer is not synchronized,
+ * this function returns false.
  *
- * @param[out]  p_timestamp  Precise absolute timestamp of recently prepared event [us].
+ * @param[out]  p_timestamp  Precise absolute timestamp of the recently prepared event,
+ *                           in microseconds (us).
  *
  * @retval true   Timestamp is available.
  * @retval false  Timestamp is unavailable.

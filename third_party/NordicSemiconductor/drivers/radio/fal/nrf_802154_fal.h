@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief This module defines nRF 802.15.4 FEM abstraction layer.
+ * @brief This module defines the nRF 802.15.4 Frontend Module abstraction layer.
  *
  */
 
@@ -45,12 +45,12 @@ extern "C" {
 /**
  * @brief Returns 'power' value.
  *
- * @note This is just a stub implementation used when MPSL is not linked.
+ * @note This is a stub implementation used when MPSL is not linked.
  *
  * @param[in]  channel  Ignored.
  * @param[in]  power    TX power in dbm.
  *
- * @retval 'power' value
+ * @returns Value of 'power' argument.
  */
 int8_t nrf_802154_fal_tx_power_get(const uint8_t channel, const int8_t power);
 

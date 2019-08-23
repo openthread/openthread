@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief This module contains debug helpers for 802.15.4 radio driver for nRF SoC devices.
+ * @brief Module that contains debug helpers for the 802.15.4 radio driver for the nRF SoC devices.
  *
  */
 
@@ -46,13 +46,6 @@ extern "C" {
 
 #define EVENT_TRACE_ENTER               0x0001UL
 #define EVENT_TRACE_EXIT                0x0002UL
-
-#define PIN_DBG_RADIO_EVT_END           11
-#define PIN_DBG_RADIO_EVT_DISABLED      12
-#define PIN_DBG_RADIO_EVT_READY         13
-#define PIN_DBG_RADIO_EVT_FRAMESTART    14
-#define PIN_DBG_RADIO_EVT_EDEND         25
-#define PIN_DBG_RADIO_EVT_PHYEND        24
 
 #define PIN_DBG_TIMESLOT_ACTIVE         3
 #define PIN_DBG_TIMESLOT_EXTEND_REQ     4
@@ -140,7 +133,7 @@ extern volatile uint32_t nrf_802154_debug_log_ptr;
 #endif // ENABLE_DEBUG_GPIO
 
 /**
- * @brief Initialize debug helpers for nRF 802.15.4 driver.
+ * @brief Initializes debug helpers for the nRF 802.15.4 driver.
  */
 void nrf_802154_debug_init(void);
 

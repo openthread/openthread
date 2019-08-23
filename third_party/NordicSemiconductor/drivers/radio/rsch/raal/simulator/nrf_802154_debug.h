@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief This module contains debug helpers for 802.15.4 radio driver for nRF SoC devices.
+ * @brief Module that contains debug helpers for the 802.15.4 radio driver for the nRF SoC devices.
  *
  */
 
