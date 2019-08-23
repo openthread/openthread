@@ -696,11 +696,7 @@ void nrf5RadioProcess(otInstance *aInstance)
     }
 }
 
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 void nrf_802154_received_timestamp_raw(uint8_t *p_data, int8_t power, uint8_t lqi, uint32_t time)
-#else
-void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
-#endif
 {
     otRadioFrame *receivedFrame = NULL;
 
@@ -733,17 +729,13 @@ void nrf_802154_received_raw(uint8_t *p_data, int8_t power, uint8_t lqi)
         receivedFrame->mInfo.mRxInfo.mAckedWithFramePending = false;
     }
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     // Get the timestamp when the SFD was received.
+#if !NRF_802154_TX_STARTED_NOTIFY_ENABLED
+#error "NRF_802154_TX_STARTED_NOTIFY_ENABLED is required!"
+#endif
     uint32_t offset =
         (int32_t)otPlatAlarmMicroGetNow() - (int32_t)nrf_802154_first_symbol_timestamp_get(time, p_data[0]);
-    receivedFrame->mInfo.mRxInfo.mTimestamp = otPlatTimeGet() - offset;
-#else
-    if (otPlatRadioGetPromiscuous(sInstance))
-    {
-        receivedFrame->mInfo.mRxInfo.mTimestamp = nrf5AlarmGetCurrentTime();
-    }
-#endif
+    receivedFrame->mInfo.mRxInfo.mTimestamp = nrf5AlarmGetCurrentTime() - offset;
 
     sAckedWithFramePending = false;
 
