@@ -201,11 +201,11 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CHILD_TABLE>(v
 {
     otError     error = OT_ERROR_NONE;
     otChildInfo childInfo;
-    uint8_t     maxChildren;
+    uint16_t    maxChildren;
 
     maxChildren = otThreadGetMaxAllowedChildren(mInstance);
 
-    for (uint8_t index = 0; index < maxChildren; index++)
+    for (uint16_t index = 0; index < maxChildren; index++)
     {
         if ((otThreadGetChildInfoByIndex(mInstance, index, &childInfo) != OT_ERROR_NONE) || childInfo.mIsStateRestoring)
         {
@@ -259,13 +259,13 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CHILD_TABLE_AD
 {
     otError                   error = OT_ERROR_NONE;
     otChildInfo               childInfo;
-    uint8_t                   maxChildren;
+    uint16_t                  maxChildren;
     otIp6Address              ip6Address;
     otChildIp6AddressIterator iterator = OT_CHILD_IP6_ADDRESS_ITERATOR_INIT;
 
     maxChildren = otThreadGetMaxAllowedChildren(mInstance);
 
-    for (uint8_t childIndex = 0; childIndex < maxChildren; childIndex++)
+    for (uint16_t childIndex = 0; childIndex < maxChildren; childIndex++)
     {
         if ((otThreadGetChildInfoByIndex(mInstance, childIndex, &childInfo) != OT_ERROR_NONE) ||
             childInfo.mIsStateRestoring)
@@ -346,7 +346,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CHILD_COUNT_MAX>(void)
 {
-    return mEncoder.WriteUint8(otThreadGetMaxAllowedChildren(mInstance));
+    return mEncoder.WriteUint8(static_cast<uint8_t>(otThreadGetMaxAllowedChildren(mInstance)));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CHILD_COUNT_MAX>(void)

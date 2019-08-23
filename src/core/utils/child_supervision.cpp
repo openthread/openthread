@@ -63,8 +63,8 @@ void ChildSupervisor::SetSupervisionInterval(uint16_t aInterval)
 
 Child *ChildSupervisor::GetDestination(const Message &aMessage) const
 {
-    Child * child = NULL;
-    uint8_t childIndex;
+    Child *  child = NULL;
+    uint16_t childIndex;
 
     VerifyOrExit(aMessage.GetType() == Message::kTypeSupervision);
 
@@ -78,7 +78,7 @@ exit:
 void ChildSupervisor::SendMessage(Child &aChild)
 {
     Message *message = NULL;
-    uint8_t  childIndex;
+    uint16_t childIndex;
 
     VerifyOrExit(aChild.GetIndirectMessageCount() == 0);
 

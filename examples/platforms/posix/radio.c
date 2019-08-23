@@ -139,8 +139,8 @@ static bool     sPromiscuous = false;
 static bool     sTxWait      = false;
 static int8_t   sTxPower     = 0;
 
-static uint8_t      sShortAddressMatchTableCount = 0;
-static uint8_t      sExtAddressMatchTableCount   = 0;
+static uint16_t     sShortAddressMatchTableCount = 0;
+static uint16_t     sExtAddressMatchTableCount   = 0;
 static uint16_t     sShortAddressMatchTable[POSIX_MAX_SRC_MATCH_ENTRIES];
 static otExtAddress sExtAddressMatchTable[POSIX_MAX_SRC_MATCH_ENTRIES];
 static bool         sSrcMatchEnabled = false;

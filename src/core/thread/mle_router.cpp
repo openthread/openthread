@@ -2903,7 +2903,7 @@ otError MleRouter::SendChildUpdateRequest(Child &aChild)
 
     if (!aChild.IsRxOnWhenIdle())
     {
-        uint8_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
+        uint16_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
 
         for (message = Get<MeshForwarder>().GetSendQueue().GetHead(); message; message = message->GetNext())
         {
@@ -3466,7 +3466,7 @@ exit:
     return error;
 }
 
-otError MleRouter::GetChildInfoByIndex(uint8_t aChildIndex, otChildInfo &aChildInfo)
+otError MleRouter::GetChildInfoByIndex(uint16_t aChildIndex, otChildInfo &aChildInfo)
 {
     otError error = OT_ERROR_NONE;
     Child * child = NULL;
@@ -3480,7 +3480,7 @@ exit:
     return error;
 }
 
-otError MleRouter::GetChildNextIp6Address(uint8_t                    aChildIndex,
+otError MleRouter::GetChildNextIp6Address(uint16_t                   aChildIndex,
                                           Child::Ip6AddressIterator &aIterator,
                                           Ip6::Address &             aAddress)
 {
@@ -3499,9 +3499,9 @@ exit:
 
 void MleRouter::RestoreChildren(void)
 {
-    otError error          = OT_ERROR_NONE;
-    bool    foundDuplicate = false;
-    uint8_t numChildren    = 0;
+    otError  error          = OT_ERROR_NONE;
+    bool     foundDuplicate = false;
+    uint16_t numChildren    = 0;
 
     for (Settings::ChildInfoIterator iter(GetInstance()); !iter.IsDone(); iter++)
     {
@@ -3660,7 +3660,7 @@ otError MleRouter::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, otNeig
     {
         for (index = aIterator;; index++)
         {
-            Child *child = mChildTable.GetChildAtIndex(static_cast<uint8_t>(index));
+            Child *child = mChildTable.GetChildAtIndex(static_cast<uint16_t>(index));
 
             if (child == NULL)
             {
@@ -4181,8 +4181,8 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
     }
     else
     {
-        uint8_t numChildren = mChildTable.GetNumChildren(ChildTable::kInStateValid);
-        uint8_t maxAllowed  = mChildTable.GetMaxChildrenAllowed();
+        uint16_t numChildren = mChildTable.GetNumChildren(ChildTable::kInStateValid);
+        uint16_t maxAllowed  = mChildTable.GetMaxChildrenAllowed();
 
         if ((maxAllowed - numChildren) < (maxAllowed / 3))
         {
@@ -4562,8 +4562,8 @@ void MleRouter::RemoveChildren(void)
 
 bool MleRouter::HasSmallNumberOfChildren(void)
 {
-    uint8_t numChildren = 0;
-    uint8_t routerCount = mRouterTable.GetActiveRouterCount();
+    uint16_t numChildren = 0;
+    uint8_t  routerCount = mRouterTable.GetActiveRouterCount();
 
     VerifyOrExit(routerCount > mRouterDowngradeThreshold);
 
