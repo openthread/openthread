@@ -137,8 +137,8 @@ COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ECDSA_ENABLE=1
 endif
 
 ifeq ($(EST_CLIENT),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_COAP_API_ENABLE=1 -DOPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1
 configure_OPTIONS              += --enable-est-client
-configure_OPTIONS              += --enable-application-coap-secure
 endif
 
 ifeq ($(EXTERNAL_HEAP),1)

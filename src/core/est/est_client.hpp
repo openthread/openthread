@@ -31,7 +31,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_ENABLE_EST_CLIENT
+#if OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
 
 #include <openthread/est_client.h>
 
@@ -127,6 +127,20 @@ public:
                     void *                    aContext);
 
     /**
+     * This method prints CSR attributes in ASN.1 format to a human readable string.
+     *
+     * @param[in]   aData           A pointer to the beginning of the ASN.1 formatted CSR attributes data.
+     * @param[in]   aDataEnd        A pointer to the end of the ASN.1 formatted CSR attributes data.
+     * @param[in]   aString         A pointer to a string buffer.
+     * @param[in]   aStringLength   Length of the string buffer.
+     *
+     * @retval OT_ERROR_NONE    Successfully printed CSR attributes to string.
+     * @retval OT_ERROR_PARSE   ASN.1 parsing error.
+     * @retval OT_ERROR_NO_BUFS Buffer too small.
+     */
+    otError CsrAttributesToString(uint8_t *aData, const uint8_t *aDataEnd, char *aString, uint32_t aStringLength);
+
+    /**
      * This method terminates the secure connection to the EST server.
      *
      */
@@ -220,39 +234,30 @@ private:
 
     static void CoapSecureConnectedHandle(bool aConnected, void *aContext);
     void        CoapSecureConnectedHandle(bool aConnected);
-    otError     CmsReadSignedData(uint8_t * aMessage,
-                                  uint32_t  aMessageLength,
-                                  uint8_t **aPayload,
-                                  uint32_t *aPayloadLength);
-    otError     WriteCsr(const uint8_t *aPrivateKey,
-                         size_t         aPrivateLeyLength,
-                         otMdType       aMdType,
-                         uint8_t        aKeyUsageFlags,
-                         uint8_t *      aX509Extensions,
-                         uint32_t       aX509ExtensionsLength,
-                         uint8_t *      aOutput,
-                         size_t *       aOutputLength);
+    otError CmsReadSignedData(uint8_t *aMessage, uint32_t aMessageLength, uint8_t **aPayload, uint32_t *aPayloadLength);
+    otError WriteCsr(const uint8_t *aPrivateKey,
+                     size_t         aPrivateLeyLength,
+                     otMdType       aMdType,
+                     uint8_t        aKeyUsageFlags,
+                     uint8_t *      aX509Extensions,
+                     uint32_t       aX509ExtensionsLength,
+                     uint8_t *      aOutput,
+                     size_t *       aOutputLength);
     static void SimpleEnrollResponseHandler(void *               aContext,
                                             otMessage *          aMessage,
                                             const otMessageInfo *aMessageInfo,
                                             otError              aResult);
-    void        SimpleEnrollResponseHandler(otMessage *          aMessage,
-                                            const otMessageInfo *aMessageInfo,
-                                            otError              aResult);
+    void        SimpleEnrollResponseHandler(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult);
     static void GetCaCertificatesResponseHandler(void *               aContext,
                                                  otMessage *          aMessage,
                                                  const otMessageInfo *aMessageInfo,
                                                  otError              aResult);
-    void        GetCaCertificatesResponseHandler(otMessage *          aMessage,
-                                                 const otMessageInfo *aMessageInfo,
-                                                 otError              aResult);
+    void GetCaCertificatesResponseHandler(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult);
     static void GetCsrAttributesResponseHandler(void *               aContext,
                                                 otMessage *          aMessage,
                                                 const otMessageInfo *aMessageInfo,
                                                 otError              aResult);
-    void        GetCsrAttributesResponseHandler(otMessage *          aMessage,
-                                                const otMessageInfo *aMessageInfo,
-                                                otError              aResult);
+    void GetCsrAttributesResponseHandler(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult);
 
     bool                      mIsConnected;
     bool                      mStarted;
@@ -268,6 +273,6 @@ private:
 } // namespace Est
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_EST_CLIENT
+#endif // OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
 
 #endif // EST_CLIENT_HPP_

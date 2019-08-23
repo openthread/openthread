@@ -36,30 +36,30 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_ENABLE_EST_CLIENT
+#if OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
 
 #include <stdint.h>
 
 #include <mbedtls/asn1.h>
 #include <mbedtls/asn1write.h>
 
-#define otAsn1Buffer    mbedtls_asn1_buf
+#define otAsn1Buffer mbedtls_asn1_buf
 #define otAsn1Bitstring mbedtls_asn1_bitstring
-#define otAsn1Sequence  mbedtls_asn1_sequence
+#define otAsn1Sequence mbedtls_asn1_sequence
 #define otAsn1NamedData mbedtls_asn1_named_data
 
-#define otAsn1GetLength         mbedtls_asn1_get_len
-#define otAsn1GetTag            mbedtls_asn1_get_tag
-#define otAsn1GetBool           mbedtls_asn1_get_bool
-#define otAsn1GetInteger        mbedtls_asn1_get_int
-#define otAsn1GetBitstring      mbedtls_asn1_get_bitstring
-#define otAsn1GetBitstringNull  mbedtls_asn1_get_bitstring_null
-#define otAsn1GetSequenceOf     mbedtls_asn1_get_sequence_of
-#define otAsn1GetMpi            mbedtls_asn1_get_mpi
-#define otAsn1GetAlgorithm      mbedtls_asn1_get_alg
-#define otAsn1GetAlgorithmNull  mbedtls_asn1_get_alg_null
-#define otAsn1FindNamedData     mbedtls_asn1_find_named_data
-#define otAsn1FreeNamedData     mbedtls_asn1_free_named_data
+#define otAsn1GetLength mbedtls_asn1_get_len
+#define otAsn1GetTag mbedtls_asn1_get_tag
+#define otAsn1GetBool mbedtls_asn1_get_bool
+#define otAsn1GetInteger mbedtls_asn1_get_int
+#define otAsn1GetBitstring mbedtls_asn1_get_bitstring
+#define otAsn1GetBitstringNull mbedtls_asn1_get_bitstring_null
+#define otAsn1GetSequenceOf mbedtls_asn1_get_sequence_of
+#define otAsn1GetMpi mbedtls_asn1_get_mpi
+#define otAsn1GetAlgorithm mbedtls_asn1_get_alg
+#define otAsn1GetAlgorithmNull mbedtls_asn1_get_alg_null
+#define otAsn1FindNamedData mbedtls_asn1_find_named_data
+#define otAsn1FreeNamedData mbedtls_asn1_free_named_data
 #define otAsn1FreeNamedDataList mbedtls_asn1_free_named_data_list
 
 namespace ot {
@@ -71,5 +71,5 @@ void Deinit(void);
 } // namespace Asn1
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_EST_CLIENT
+#endif // OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
 #endif // ASN1_HPP_

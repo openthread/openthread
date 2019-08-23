@@ -386,7 +386,7 @@ private:
     Utils::ChannelManager mChannelManager;
 #endif
 
-#if OPENTHREAD_ENABLE_EST_CLIENT
+#if OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
     Est::Client mEstClient;
 #endif
 
@@ -657,7 +657,7 @@ template <> inline Dhcp6::Dhcp6Server &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_ENABLE_EST_CLIENT
+#if OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
 template <> inline Est::Client &Instance::Get(void)
 {
     return mEstClient;

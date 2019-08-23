@@ -88,7 +88,7 @@ libmbedcrypto_a_SOURCES                      += \
 endif
 endif
 
-if OPENTHREAD_ENABLE_EST_CLIENT
+if OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
 libmbedcrypto_a_SOURCES                      += \
     repo/library/pkwrite.c                      \
     repo/library/x509write_csr.c                \
@@ -96,7 +96,7 @@ libmbedcrypto_a_SOURCES                      += \
     $(NULL)
 endif
 
-if OPENTHREAD_ENABLE_EST_CLIENT
+if OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
 libmbedcrypto_a_SOURCES                      += \
     repo/library/pkwrite.c                      \
     repo/library/x509write_csr.c                \

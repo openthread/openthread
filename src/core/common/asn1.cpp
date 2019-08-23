@@ -33,7 +33,7 @@
 
 #include "asn1.hpp"
 
-#if OPENTHREAD_ENABLE_EST_CLIENT
+#if OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
 
 namespace ot {
 namespace Asn1 {
@@ -49,4 +49,4 @@ void Deinit(void)
 } // namespace Asn1
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_EST_CLIENT
+#endif // OPENTHREAD_CONFIG_EST_CLIENT_ENABLE

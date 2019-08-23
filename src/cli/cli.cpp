@@ -126,7 +126,7 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     {"dns", &Interpreter::ProcessDns},
 #endif
-#if OPENTHREAD_ENABLE_EST_CLIENT
+#if OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
     {"est", &Interpreter::ProcessEstClient},
 #endif
 #if OPENTHREAD_FTD
@@ -245,6 +245,9 @@ Interpreter::Interpreter(Instance *aInstance)
 #endif
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     , mCommissioner(*this)
+#endif
+#if OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
+    , mEstClient(*this)
 #endif
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
     , mJoiner(*this)
@@ -1094,7 +1097,7 @@ void Interpreter::HandleDnsResponse(const char *aHostname, Ip6::Address &aAddres
 }
 #endif // OPENTHREAD_ENABLE_DNS_CLIENT
 
-#if OPENTHREAD_ENABLE_EST_CLIENT
+#if OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
 void Interpreter::ProcessEstClient(int argc, char *argv[])
 {
     otError error;

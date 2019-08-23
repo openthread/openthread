@@ -36,7 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_ENABLE_EST_CLIENT
+#if OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
 
 #include "est/est_client.hpp"
 #include "openthread/crypto.h"
@@ -118,6 +118,6 @@ private:
 } // namespace Cli
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_EST_CLIENT
+#endif // OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
 
 #endif // CLI_EST_CLIENT_HPP_

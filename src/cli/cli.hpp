@@ -57,7 +57,7 @@
 #include "cli/cli_coap_secure.hpp"
 #endif
 
-#if OPENTHREAD_ENABLE_EST_CLIENT
+#if OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
 #include <est/est_client.hpp>
 #include "cli/cli_est_client.hpp"
 #endif
@@ -217,9 +217,9 @@ private:
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     void ProcessCoapSecure(int argc, char *argv[]);
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
-#if OPENTHREAD_ENABLE_EST_CLIENT
+#if OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
     void ProcessEstClient(int argc, char *argv[]);
-#endif // OPENTHREAD_ENABLE_EST_CLIENT
+#endif // OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
     void ProcessCoexMetrics(int argc, char *argv[]);
 #endif
@@ -416,7 +416,7 @@ private:
     Commissioner mCommissioner;
 #endif
 
-#if OPENTHREAD_ENABLE_EST_CLIENT
+#if OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
     EstClient mEstClient;
 #endif
 

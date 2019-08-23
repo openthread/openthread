@@ -33,10 +33,11 @@
 
 #include "cli_est_client.hpp"
 
-#if OPENTHREAD_ENABLE_EST_CLIENT
+#include <string.h>
+
+#if OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
 
 #include <mbedtls/debug.h>
-#include <mbedtls/oid.h>
 #include <openthread/coap_secure.h>
 #include <openthread/ip6.h>
 
@@ -44,6 +45,9 @@
 #include "cli/cli.hpp"
 #include "cli/cli_server.hpp"
 #include "core/common/asn1.hpp"
+
+#define CLI_EST_CLIENT_PRINTOUT_BUFFER_LENGTH 250
+#define CLI_EST_CLIENT_PRINTOUT_STRING_LENGTH 50
 
 namespace ot {
 namespace Cli {
@@ -95,13 +99,13 @@ otError EstClient::ProcessHelp(int argc, char *argv[])
 otError EstClient::ProcessStart(int argc, char *argv[])
 {
     otError error;
-    bool    mVerifyPeerCert = false;
+    bool    verifyPeerCert = false;
 
     if (argc > 1)
     {
         if (strcmp(argv[1], "true") == 0)
         {
-            mVerifyPeerCert = true;
+            verifyPeerCert = true;
         }
         else if (strcmp(argv[1], "false") != 0)
         {
@@ -109,7 +113,7 @@ otError EstClient::ProcessStart(int argc, char *argv[])
         }
     }
 
-    SuccessOrExit(error = otEstClientStart(mInterpreter.mInstance, mVerifyPeerCert));
+    SuccessOrExit(error = otEstClientStart(mInterpreter.mInstance, verifyPeerCert));
 
 exit:
     return error;
@@ -148,20 +152,20 @@ otError EstClient::ProcessStop(int argc, char *argv[])
 
 otError EstClient::ProcessConnect(int argc, char *argv[])
 {
-    otError    mError;
-    otSockAddr mServerAddress;
+    otError    error;
+    otSockAddr serverAddress;
 
-    memset(&mServerAddress, 0, sizeof(mServerAddress));
+    memset(&serverAddress, 0, sizeof(serverAddress));
 
     // Destination IPv6 address
     if (argc > 1)
     {
-        SuccessOrExit(mError = otIp6AddressFromString(argv[1], &mServerAddress.mAddress));
+        SuccessOrExit(error = otIp6AddressFromString(argv[1], &serverAddress.mAddress));
     }
     else
     {
-        SuccessOrExit(mError = otIp6AddressFromString((const char *)OT_EST_COAPS_DEFAULT_EST_SERVER_IP6,
-                                                      &mServerAddress.mAddress));
+        SuccessOrExit(
+            error = otIp6AddressFromString((const char *)OT_EST_COAPS_DEFAULT_EST_SERVER_IP6, &serverAddress.mAddress));
     }
 
     // check for port specification
@@ -169,36 +173,36 @@ otError EstClient::ProcessConnect(int argc, char *argv[])
     {
         long value;
 
-        SuccessOrExit(mError = Interpreter::ParseLong(argv[2], value));
-        mServerAddress.mPort = static_cast<uint16_t>(value);
+        SuccessOrExit(error = Interpreter::ParseLong(argv[2], value));
+        serverAddress.mPort = static_cast<uint16_t>(value);
     }
     else
     {
-        mServerAddress.mPort = OT_EST_COAPS_DEFAULT_EST_SERVER_PORT;
+        serverAddress.mPort = OT_EST_COAPS_DEFAULT_EST_SERVER_PORT;
     }
 
-    SuccessOrExit(mError = otEstClientSetCaCertificateChain(mInterpreter.mInstance,
-                                                            (const uint8_t *)OT_CLI_EST_CLIENT_TRUSTED_ROOT_CERTIFICATE,
-                                                            sizeof(OT_CLI_EST_CLIENT_TRUSTED_ROOT_CERTIFICATE)));
+    SuccessOrExit(error = otEstClientSetCaCertificateChain(mInterpreter.mInstance,
+                                                           (const uint8_t *)OT_CLI_EST_CLIENT_TRUSTED_ROOT_CERTIFICATE,
+                                                           sizeof(OT_CLI_EST_CLIENT_TRUSTED_ROOT_CERTIFICATE)));
 
     if (mOpCertificateLength == 0)
     {
-        SuccessOrExit(mError = otEstClientSetCertificate(
+        SuccessOrExit(error = otEstClientSetCertificate(
                           mInterpreter.mInstance, (const uint8_t *)OT_CLI_EST_CLIENT_X509_CERT,
                           sizeof(OT_CLI_EST_CLIENT_X509_CERT), (const uint8_t *)OT_CLI_EST_CLIENT_PRIV_KEY,
                           sizeof(OT_CLI_EST_CLIENT_PRIV_KEY)));
     }
     else
     {
-        SuccessOrExit(mError = otEstClientSetCertificate(mInterpreter.mInstance, mOpCertificate, mOpCertificateLength,
-                                                         mPrivateKey, mPrivateKeyLength));
+        SuccessOrExit(error = otEstClientSetCertificate(mInterpreter.mInstance, mOpCertificate, mOpCertificateLength,
+                                                        mPrivateKey, mPrivateKeyLength));
     }
 
-    SuccessOrExit(mError = otEstClientConnect(mInterpreter.mInstance, &mServerAddress, &EstClient::HandleConnected,
-                                              &EstClient::HandleResponse, this));
+    SuccessOrExit(error = otEstClientConnect(mInterpreter.mInstance, &serverAddress, &EstClient::HandleConnected,
+                                             &EstClient::HandleResponse, this));
 
 exit:
-    return mError;
+    return error;
 }
 
 otError EstClient::ProcessDisconnect(int argc, char *argv[])
@@ -213,75 +217,75 @@ otError EstClient::ProcessDisconnect(int argc, char *argv[])
 
 otError EstClient::ProcessGetCaCertificate(int argc, char *argv[])
 {
-    otError mError;
+    otError error;
 
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
-    mError = otEstClientGetCaCertificates(mInterpreter.mInstance);
-    VerifyOrExit(mError == OT_ERROR_NONE);
+    error = otEstClientGetCaCertificates(mInterpreter.mInstance);
+    VerifyOrExit(error == OT_ERROR_NONE);
 
 exit:
 
-    return mError;
+    return error;
 }
 otError EstClient::ProcessGetCsrAttributes(int argc, char *argv[])
 {
-    otError mError;
+    otError error;
 
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
-    mError = otEstClientGetCsrAttributes(mInterpreter.mInstance);
-    VerifyOrExit(mError == OT_ERROR_NONE);
+    error = otEstClientGetCsrAttributes(mInterpreter.mInstance);
+    VerifyOrExit(error == OT_ERROR_NONE);
 
 exit:
 
-    return mError;
+    return error;
 }
 
 otError EstClient::ProcessSimpleEnroll(int argc, char *argv[])
 {
-    otError mError;
-    uint8_t mKeyUsageFlags = (OT_EST_KEY_USAGE_KEY_CERT_SIGN | OT_EST_KEY_USAGE_DATA_ENCIPHERMENT);
+    otError error;
+    uint8_t keyUsageFlags = (OT_EST_KEY_USAGE_KEY_CERT_SIGN | OT_EST_KEY_USAGE_DATA_ENCIPHERMENT);
 
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
     EstClient::CleanUpTemporaryBuffer();
 
-    mError = otCryptoEcpGenenrateKey(mPrivateKeyTemp, &mPrivateKeyTempLength, mPublicKeyTemp, &mPublicKeyTempLength);
-    VerifyOrExit(mError == OT_ERROR_NONE);
-    mError = otEstClientSimpleEnroll(mInterpreter.mInstance, mPrivateKeyTemp, mPrivateKeyTempLength, OT_MD_TYPE_SHA256,
-                                     mKeyUsageFlags, NULL, 0);
-    VerifyOrExit(mError == OT_ERROR_NONE);
+    error = otCryptoEcpGenenrateKey(mPrivateKeyTemp, &mPrivateKeyTempLength, mPublicKeyTemp, &mPublicKeyTempLength);
+    VerifyOrExit(error == OT_ERROR_NONE);
+    error = otEstClientSimpleEnroll(mInterpreter.mInstance, mPrivateKeyTemp, mPrivateKeyTempLength, OT_MD_TYPE_SHA256,
+                                    keyUsageFlags, NULL, 0);
+    VerifyOrExit(error == OT_ERROR_NONE);
 
 exit:
 
-    return mError;
+    return error;
 }
 
 otError EstClient::ProcessSimpleReEnroll(int argc, char *argv[])
 {
-    otError mError;
-    uint8_t mKeyUsageFlags = (OT_EST_KEY_USAGE_KEY_CERT_SIGN | OT_EST_KEY_USAGE_DATA_ENCIPHERMENT);
+    otError error;
+    uint8_t keyUsageFlags = (OT_EST_KEY_USAGE_KEY_CERT_SIGN | OT_EST_KEY_USAGE_DATA_ENCIPHERMENT);
 
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
-    VerifyOrExit(mOpCertificate[0] != 0, mError = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(mOpCertificate[0] != 0, error = OT_ERROR_INVALID_STATE);
 
     EstClient::CleanUpTemporaryBuffer();
 
-    mError = otCryptoEcpGenenrateKey(mPrivateKeyTemp, &mPrivateKeyTempLength, mPublicKeyTemp, &mPublicKeyTempLength);
-    VerifyOrExit(mError == OT_ERROR_NONE);
-    mError = otEstClientSimpleReEnroll(mInterpreter.mInstance, mPrivateKeyTemp, mPrivateKeyTempLength,
-                                       OT_MD_TYPE_SHA256, mKeyUsageFlags, NULL, 0);
-    VerifyOrExit(mError == OT_ERROR_NONE);
+    error = otCryptoEcpGenenrateKey(mPrivateKeyTemp, &mPrivateKeyTempLength, mPublicKeyTemp, &mPublicKeyTempLength);
+    VerifyOrExit(error == OT_ERROR_NONE);
+    error = otEstClientSimpleReEnroll(mInterpreter.mInstance, mPrivateKeyTemp, mPrivateKeyTempLength, OT_MD_TYPE_SHA256,
+                                      keyUsageFlags, NULL, 0);
+    VerifyOrExit(error == OT_ERROR_NONE);
 
 exit:
 
-    return mError;
+    return error;
 }
 
 otError EstClient::Process(int argc, char *argv[])
@@ -361,10 +365,7 @@ void EstClient::HandleResponse(otError aError, otEstType aType, uint8_t *aPayloa
             }
             break;
         case OT_EST_TYPE_CSR_ATTR:
-            if(PrintoutCsrAttributes(aPayload, aPayload + aPayloadLength) != OT_ERROR_NONE)
-            {
-                mInterpreter.mServer->OutputFormat("invalid format received\r\n");
-            }
+            PrintoutCsrAttributes(aPayload, aPayload + aPayloadLength);
             break;
         case OT_EST_TYPE_SERVER_SIDE_KEY:
             break;
@@ -417,235 +418,36 @@ void EstClient::CleanUpTemporaryBuffer(void)
 
 otError EstClient::PrintoutCsrAttributes(uint8_t *aData, const uint8_t *aDataEnd)
 {
-    otError  mError                   = OT_ERROR_NONE;
-    uint8_t *mSetBegin                = NULL;
-    size_t   mAttributeOidLength      = 0;
-    size_t   mAttributeSetLength      = 0;
-    size_t   mAttributeSequenceLength = 0;
+    otError error                                                  = OT_ERROR_NONE;
+    char    buffer[CLI_EST_CLIENT_PRINTOUT_BUFFER_LENGTH]          = {0};
+    char    printBuffer[CLI_EST_CLIENT_PRINTOUT_STRING_LENGTH + 1] = {0};
 
-    VerifyOrExit(otAsn1GetTag(&aData, aDataEnd, &mAttributeSequenceLength, MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE) == 0,
-                 mError = OT_ERROR_PARSE);
+    error = otEstClientCsrAttributesToString(mInterpreter.mInstance, aData, aDataEnd, buffer,
+                                             CLI_EST_CLIENT_PRINTOUT_BUFFER_LENGTH);
 
-    while(aData < aDataEnd)
+    if (error == OT_ERROR_NONE)
     {
-        switch(*aData)
+        for (char i = 0; i < CLI_EST_CLIENT_PRINTOUT_BUFFER_LENGTH / CLI_EST_CLIENT_PRINTOUT_STRING_LENGTH; i++)
         {
-        case MBEDTLS_ASN1_OID:
-            VerifyOrExit(otAsn1GetTag(&aData, aDataEnd, &mAttributeOidLength, MBEDTLS_ASN1_OID) == 0,
-                         mError = OT_ERROR_PARSE);
+            strncpy(printBuffer, &buffer[i * CLI_EST_CLIENT_PRINTOUT_STRING_LENGTH],
+                    CLI_EST_CLIENT_PRINTOUT_STRING_LENGTH);
 
-            if(memcmp(aData, MBEDTLS_OID_DIGEST_ALG_MD5, sizeof(MBEDTLS_OID_DIGEST_ALG_MD5) - 1) == 0)
-            {
-                mInterpreter.mServer->OutputFormat("MESSAGE DIGEST: MD5\r\n");
-            }
-            else if(memcmp(aData, MBEDTLS_OID_DIGEST_ALG_SHA256, sizeof(MBEDTLS_OID_DIGEST_ALG_SHA256) - 1) == 0)
-            {
-                mInterpreter.mServer->OutputFormat("MESSAGE DIGEST: SHA256\r\n");
-            }
-            else if(memcmp(aData, MBEDTLS_OID_DIGEST_ALG_SHA384, sizeof(MBEDTLS_OID_DIGEST_ALG_SHA384) - 1) == 0)
-            {
-                mInterpreter.mServer->OutputFormat("MESSAGE DIGEST: SHA384\r\n");
-            }
-            else if(memcmp(aData, MBEDTLS_OID_DIGEST_ALG_SHA512, sizeof(MBEDTLS_OID_DIGEST_ALG_SHA512) - 1) == 0)
-            {
-                mInterpreter.mServer->OutputFormat("MESSAGE DIGEST: SHA512\r\n");
-            }
-            else if(memcmp(aData, MBEDTLS_OID_ECDSA_SHA256, sizeof(MBEDTLS_OID_ECDSA_SHA256) - 1) == 0)
-            {
-                mInterpreter.mServer->OutputFormat("SIGING ALGORITHM: ECDSA with SHA256\r\n");
-            }
-            else if(memcmp(aData, MBEDTLS_OID_ECDSA_SHA384, sizeof(MBEDTLS_OID_ECDSA_SHA384) - 1) == 0)
-            {
-                mInterpreter.mServer->OutputFormat("SIGING ALGORITHM: ECDSA with SHA384\r\n");
-            }
-            else if(memcmp(aData, MBEDTLS_OID_ECDSA_SHA512, sizeof(MBEDTLS_OID_ECDSA_SHA512) - 1) == 0)
-            {
-                mInterpreter.mServer->OutputFormat("SIGING ALGORITHM: ECDSA with SHA512\r\n");
-            }
-            else
-            {
-                mInterpreter.mServer->OutputFormat("unknown attribute\r\n");
-            }
-            aData += mAttributeOidLength;
-            break;
-
-        case MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE:
-            VerifyOrExit(otAsn1GetTag(&aData, aDataEnd, &mAttributeSequenceLength, MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE) == 0,
-                         mError = OT_ERROR_PARSE);
-            VerifyOrExit(otAsn1GetTag(&aData, aDataEnd, &mAttributeOidLength, MBEDTLS_ASN1_OID) == 0,
-                         mError = OT_ERROR_PARSE);
-
-            if(memcmp(aData, MBEDTLS_OID_EC_ALG_UNRESTRICTED, sizeof(MBEDTLS_OID_EC_ALG_UNRESTRICTED) - 1) == 0)
-            {
-                mInterpreter.mServer->OutputFormat("KEY TYPE: EC\r\n");
-
-                aData += mAttributeOidLength;
-                VerifyOrExit(otAsn1GetTag(&aData, aDataEnd, &mAttributeSetLength, MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SET) == 0,
-                             mError = OT_ERROR_PARSE);
-
-                mSetBegin = aData;
-                while(aData < (mSetBegin + mAttributeSetLength))
-                {
-                    VerifyOrExit(otAsn1GetTag(&aData, aDataEnd, &mAttributeOidLength, MBEDTLS_ASN1_OID) == 0,
-                                 mError = OT_ERROR_PARSE);
-
-                    if(memcmp(aData, MBEDTLS_OID_EC_GRP_SECP192R1, sizeof(MBEDTLS_OID_EC_GRP_SECP192R1) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    EC GROUP: SECP192R1\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_EC_GRP_SECP224R1, sizeof(MBEDTLS_OID_EC_GRP_SECP224R1) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    EC GROUP: SECP224R1\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_EC_GRP_SECP256R1, sizeof(MBEDTLS_OID_EC_GRP_SECP256R1) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    EC GROUP: SECP256R1\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_EC_GRP_SECP384R1, sizeof(MBEDTLS_OID_EC_GRP_SECP384R1) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    EC GROUP: SECP384R1\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_EC_GRP_SECP521R1, sizeof(MBEDTLS_OID_EC_GRP_SECP521R1) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    EC GROUP: SECP521R1\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_EC_GRP_SECP192K1, sizeof(MBEDTLS_OID_EC_GRP_SECP192K1) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    EC GROUP: SECP192K1\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_EC_GRP_SECP224K1, sizeof(MBEDTLS_OID_EC_GRP_SECP224K1) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    EC GROUP: SECP224K1\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_EC_GRP_SECP256K1, sizeof(MBEDTLS_OID_EC_GRP_SECP256K1) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    EC GROUP: SECP256K1\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_EC_GRP_BP256R1, sizeof(MBEDTLS_OID_EC_GRP_BP256R1) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    EC GROUP: BP256R1\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_EC_GRP_BP384R1, sizeof(MBEDTLS_OID_EC_GRP_BP384R1) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    EC GROUP: BP384R1\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_EC_GRP_BP512R1, sizeof(MBEDTLS_OID_EC_GRP_BP512R1) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    EC GROUP: BP512R1\r\n");
-                    }
-                    else
-                    {
-                        mInterpreter.mServer->OutputFormat("    unknown attribute\r\n");
-                    }
-                    aData += mAttributeOidLength;
-                }
-            }
-            else if(memcmp(aData, MBEDTLS_OID_PKCS9_CSR_EXT_REQ, sizeof(MBEDTLS_OID_PKCS9_CSR_EXT_REQ) - 1) == 0)
-            {
-                mInterpreter.mServer->OutputFormat("CSR EXTENSION REQUEST\r\n");
-
-                aData += mAttributeOidLength;
-                VerifyOrExit(otAsn1GetTag(&aData, aDataEnd, &mAttributeSetLength, MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SET) == 0,
-                             mError = OT_ERROR_PARSE);
-
-                mSetBegin = aData;
-                while(aData < (mSetBegin + mAttributeSetLength))
-                {
-                    VerifyOrExit(otAsn1GetTag(&aData, aDataEnd, &mAttributeOidLength, MBEDTLS_ASN1_OID) == 0,
-                                 mError = OT_ERROR_PARSE);
-
-                    if(memcmp(aData, MBEDTLS_OID_AUTHORITY_KEY_IDENTIFIER, sizeof(MBEDTLS_OID_AUTHORITY_KEY_IDENTIFIER) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    AUTHORITY KEY IDENTIFIER\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_SUBJECT_KEY_IDENTIFIER, sizeof(MBEDTLS_OID_SUBJECT_KEY_IDENTIFIER) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    SUBJECT KEY IDENTIFIER\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_KEY_USAGE, sizeof(MBEDTLS_OID_KEY_USAGE) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    KEY USAGE\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_CERTIFICATE_POLICIES, sizeof(MBEDTLS_OID_CERTIFICATE_POLICIES) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    CERTIFICATE POLICIES\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_POLICY_MAPPINGS, sizeof(MBEDTLS_OID_POLICY_MAPPINGS) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    POLICY MAPPINGS\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_SUBJECT_ALT_NAME, sizeof(MBEDTLS_OID_SUBJECT_ALT_NAME) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    SUBJECT ALT NAME\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_ISSUER_ALT_NAME, sizeof(MBEDTLS_OID_ISSUER_ALT_NAME) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    ISSUER ALT NAME\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_SUBJECT_DIRECTORY_ATTRS, sizeof(MBEDTLS_OID_SUBJECT_DIRECTORY_ATTRS) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    SUBJECT DIRECTORY ATTRS\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_BASIC_CONSTRAINTS, sizeof(MBEDTLS_OID_BASIC_CONSTRAINTS) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    BASIC CONSTRAINTS\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_NAME_CONSTRAINTS, sizeof(MBEDTLS_OID_NAME_CONSTRAINTS) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    NAME CONSTRAINTS\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_POLICY_CONSTRAINTS, sizeof(MBEDTLS_OID_POLICY_CONSTRAINTS) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    POLICY CONSTRAINTS\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_EXTENDED_KEY_USAGE, sizeof(MBEDTLS_OID_EXTENDED_KEY_USAGE) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    EXTENDED KEY USAGE\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_CRL_DISTRIBUTION_POINTS, sizeof(MBEDTLS_OID_CRL_DISTRIBUTION_POINTS) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    CRL DISTRIBUTION POINTS\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_INIHIBIT_ANYPOLICY, sizeof(MBEDTLS_OID_INIHIBIT_ANYPOLICY) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    INIHIBIT ANYPOLICY\r\n");
-                    }
-                    else if(memcmp(aData, MBEDTLS_OID_FRESHEST_CRL, sizeof(MBEDTLS_OID_FRESHEST_CRL) - 1) == 0)
-                    {
-                        mInterpreter.mServer->OutputFormat("    FRESHEST CRL\r\n");
-                    }
-                    else
-                    {
-                        mInterpreter.mServer->OutputFormat("    unknown attribute\r\n");
-                    }
-                    aData += mAttributeOidLength;
-                }
-            }
-            else
-            {
-                mInterpreter.mServer->OutputFormat("unknown attribute\r\n");
-
-                aData += mAttributeSequenceLength;
-            }
-            break;
-
-        default:
-            mInterpreter.mServer->OutputFormat("unknown attribute\r\n");
-
-            aData++;
-            VerifyOrExit(otAsn1GetLength(&aData, aDataEnd, &mAttributeSequenceLength) == 0,
-                         mError = OT_ERROR_PARSE);
-            aData += mAttributeSequenceLength;
-            break;
+            mInterpreter.mServer->OutputFormat(printBuffer);
         }
     }
+    else if (error == OT_ERROR_NO_BUFS)
+    {
+        mInterpreter.mServer->OutputFormat("buffer too small\r\n");
+    }
+    else
+    {
+        mInterpreter.mServer->OutputFormat("invalid format received\r\n");
+    }
 
-exit:
-
-    return mError;
+    return error;
 }
 
 } // namespace Cli
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_EST_CLIENT
+#endif // OPENTHREAD_CONFIG_EST_CLIENT_ENABLE

@@ -52,7 +52,7 @@ size_nrf52840()
     export MERGE_BASE_SHA=$(git merge-base HEAD ${TRAVIS_BRANCH})
 
     # pull request
-    OPENTHREAD_FLAGS="BORDER_AGENT=1 BORDER_ROUTER=1 CHANNEL_MANAGER=1 CHANNEL_MONITOR=1 CHILD_SUPERVISION=1 COAP=1 COAPS=1 COMMISSIONER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DIAGNOSTIC=1 DISABLE_DOC=1 DNS_CLIENT=1 ECDSA=1 FULL_LOGS=1 JAM_DETECTION=1 JOINER=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 SLAAC=1 SNTP_CLIENT=1 TIME_SYNC=1 UDP_FORWARD=1"
+    OPENTHREAD_FLAGS="BORDER_AGENT=1 BORDER_ROUTER=1 CHANNEL_MANAGER=1 CHANNEL_MONITOR=1 CHILD_SUPERVISION=1 COAP=1 COAPS=1 COMMISSIONER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DIAGNOSTIC=1 DISABLE_DOC=1 DNS_CLIENT=1 ECDSA=1 EST_CLIENT=1 FULL_LOGS=1 JAM_DETECTION=1 JOINER=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 SLAAC=1 SNTP_CLIENT=1 TIME_SYNC=1 UDP_FORWARD=1"
 
     git checkout -- .
     git clean -xfd
@@ -80,15 +80,6 @@ size_nrf52840()
     ./size-report size ../output/nrf52840-a/bin/ot-ncp-ftd ../output/nrf52840-b/bin/ot-ncp-ftd
     ./size-report size ../output/nrf52840-a/bin/ot-ncp-mtd ../output/nrf52840-b/bin/ot-ncp-mtd
     ./size-report size ../output/nrf52840-a/bin/ot-rcp     ../output/nrf52840-b/bin/ot-rcp
-
-    ./size-report size ../output/nrf52840-a/lib/libopenthread-cli-ftd.a ../output/nrf52840-b/lib/libopenthread-cli-ftd.a
-    ./size-report size ../output/nrf52840-a/lib/libopenthread-cli-mtd.a ../output/nrf52840-b/lib/libopenthread-cli-mtd.a
-    ./size-report size ../output/nrf52840-a/lib/libopenthread-ftd.a     ../output/nrf52840-b/lib/libopenthread-ftd.a
-    ./size-report size ../output/nrf52840-a/lib/libopenthread-mtd.a     ../output/nrf52840-b/lib/libopenthread-mtd.a
-    ./size-report size ../output/nrf52840-a/lib/libopenthread-ncp-ftd.a ../output/nrf52840-b/lib/libopenthread-ncp-ftd.a
-    ./size-report size ../output/nrf52840-a/lib/libopenthread-ncp-mtd.a ../output/nrf52840-b/lib/libopenthread-ncp-mtd.a
-    ./size-report size ../output/nrf52840-a/lib/libopenthread-rcp.a     ../output/nrf52840-b/lib/libopenthread-rcp.a
-    ./size-report size ../output/nrf52840-a/lib/libopenthread-radio.a   ../output/nrf52840-b/lib/libopenthread-radio.a
 
     ./size-report post
 }

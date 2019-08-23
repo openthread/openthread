@@ -96,7 +96,7 @@ exit:
     return;
 }
 
-#if OPENTHREAD_ENABLE_EST_CLIENT
+#if OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
 
 otError otCryptoEcpGenenrateKey(uint8_t * aPrivateKey,
                                 uint32_t *aPrivateKeyLength,
@@ -108,7 +108,7 @@ otError otCryptoEcpGenenrateKey(uint8_t * aPrivateKey,
     return Ecp::KeyPairGeneration(aPrivateKey, aPrivateKeyLength, aPublicKey, aPublicKeyLength);
 }
 
-#endif // OPENTHREAD_ENABLE_EST_CLIENT
+#endif // OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
 
 #if OPENTHREAD_CONFIG_ECDSA_ENABLE
 

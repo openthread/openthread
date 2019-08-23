@@ -47,7 +47,7 @@
 namespace ot {
 namespace Crypto {
 
-#if OPENTHREAD_ENABLE_EST_CLIENT
+#if OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
 
 otError Ecp::KeyPairGeneration(uint8_t * aPrivateKey,
                                uint32_t *aPrivateKeyLength,
@@ -84,7 +84,7 @@ exit:
     return error;
 }
 
-#endif // OPENTHREAD_ENABLE_EST_CLIENT
+#endif // OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
 
 } // namespace Crypto
 } // namespace ot

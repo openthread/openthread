@@ -294,13 +294,13 @@ typedef enum otCoapOptionContentFormat
     OT_COAP_OPTION_CONTENT_FORMAT_PKCS7_MIME_CERT_ONLY = 281,
 
     /**
-     * application/pkcs7-mime [draft-ietf-ace-coap-est-06]
+     * application/pkcs7-mime [draft-ietf-ace-coap-est-12]
      * smime-type = CMC-request
      */
     OT_COAP_OPTION_CONTENT_FORMAT_PKCS7_MIME_CMS_REQUEST = 282,
 
     /**
-     * application/pkcs7-mine [draft-ietf-ace-coap-est-06]
+     * application/pkcs7-mine [draft-ietf-ace-coap-est-12]
      * smime-type = CMC-response
      */
     OT_COAP_OPTION_CONTENT_FORMAT_PKCS7_MIME_CMC_RESPONSE = 283,

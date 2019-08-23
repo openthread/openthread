@@ -39,7 +39,7 @@
 #include "common/locator-getters.hpp"
 #include "est/est_client.hpp"
 
-#if OPENTHREAD_ENABLE_EST_CLIENT
+#if OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
 
 using namespace ot;
 
@@ -89,6 +89,17 @@ otError otEstClientConnect(otInstance *              aInstance,
                                                aResponseHandler, aContext);
 }
 
+otError otEstClientCsrAttributesToString(otInstance *   aInstance,
+                                         uint8_t *      aData,
+                                         const uint8_t *aDataEnd,
+                                         char *         aString,
+                                         uint32_t       aStringLength)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Est::Client>().CsrAttributesToString(aData, aDataEnd, aString, aStringLength);
+}
+
 void otEstClientDisconnect(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -113,8 +124,7 @@ otError otEstClientSimpleEnroll(otInstance *   aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Est::Client>().SimpleEnroll(aPrivateKey, aPrivateLeyLength,
-                                                    aMdType, aKeyUsageFlags,
+    return instance.Get<Est::Client>().SimpleEnroll(aPrivateKey, aPrivateLeyLength, aMdType, aKeyUsageFlags,
                                                     aX509Extensions, aX509ExtensionsLength);
 }
 
@@ -128,8 +138,7 @@ otError otEstClientSimpleReEnroll(otInstance *   aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Est::Client>().SimpleReEnroll(aPrivateKey, aPrivateLeyLength,
-                                                      aMdType, aKeyUsageFlags,
+    return instance.Get<Est::Client>().SimpleReEnroll(aPrivateKey, aPrivateLeyLength, aMdType, aKeyUsageFlags,
                                                       aX509Extensions, aX509ExtensionsLength);
 }
 
@@ -154,4 +163,4 @@ otError otEstClientGetCaCertificates(otInstance *aInstance)
     return instance.Get<Est::Client>().GetCaCertificates();
 }
 
-#endif // OPENTHREAD_ENABLE_EST_CLIENT
+#endif // OPENTHREAD_CONFIG_EST_CLIENT_ENABLE

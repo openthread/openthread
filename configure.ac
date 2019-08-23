@@ -669,15 +669,14 @@ AC_ARG_ENABLE(est_client,
     [enable_est_client=no])
 
 if test "$enable_est_client" = "yes"; then
-    OPENTHREAD_ENABLE_EST_CLIENT=1
-    enable_application_coap_secure="yes"
+    OPENTHREAD_CONFIG_EST_CLIENT_ENABLE=1
 else
-    OPENTHREAD_ENABLE_EST_CLIENT=0
+    OPENTHREAD_CONFIG_EST_CLIENT_ENABLE=0
 fi
 
-AC_SUBST(OPENTHREAD_ENABLE_EST_CLIENT)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_EST_CLIENT], [test "${enable_est_client}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_EST_CLIENT],[${OPENTHREAD_ENABLE_EST_CLIENT}],[Define to 1 if you want to enable EST Client])
+AC_SUBST(OPENTHREAD_CONFIG_EST_CLIENT_ENABLE)
+AM_CONDITIONAL([OPENTHREAD_CONFIG_EST_CLIENT_ENABLE], [test "${enable_est_client}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_CONFIG_EST_CLIENT_ENABLE],[${OPENTHREAD_CONFIG_EST_CLIENT_ENABLE}],[Define to 1 if you want to enable EST Client])
 
 #
 # Vendor Extension - Specify a C++ source file which will be built as part of OpenThread core library.
@@ -764,8 +763,6 @@ AC_MSG_CHECKING([for NCP Spinel Encrypter])
 AC_MSG_RESULT(${OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS-none})
 AC_SUBST(OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER], [test "${OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER}" = "1"])
-
-#
 
 #
 # Linker Map Output

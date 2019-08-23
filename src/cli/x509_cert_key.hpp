@@ -102,7 +102,7 @@ extern "C" {
     "JXk3\r\n"                                                             \
     "-----END CERTIFICATE-----\r\n"
 
-#if OPENTHREAD_ENABLE_EST_CLIENT
+#if OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
 
 /**
  * Place your X.509 certificate (PEM format) for EST session
@@ -150,7 +150,7 @@ extern "C" {
     "u/fS4xwQsOqQzuECIQCWQbzbr8P577w/AgQbnageY28keimterxuOgy01SBbpg==\r\n" \
     "-----END CERTIFICATE-----\r\n"
 
-#endif // OPENTHREAD_ENABLE_EST_CLIENT
+#endif // OPENTHREAD_CONFIG_EST_CLIENT_ENABLE
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
