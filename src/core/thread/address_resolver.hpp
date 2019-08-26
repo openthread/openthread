@@ -125,6 +125,14 @@ public:
      */
     otError Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16);
 
+    /**
+     * This method restarts any ongoing address queries.
+     *
+     * Any existing address queries will be restarted as if they are being sent for the first time.
+     *
+     */
+    void RestartAddressQueries(void);
+
 private:
     enum
     {
