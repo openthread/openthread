@@ -146,7 +146,7 @@ otError UdpExample::ProcessSend(int argc, char *argv[])
 
     if (argc == 4)
     {
-        if (strcmp(argv[curArg++], (const char *)"-s") == 0)
+        if (strcmp(argv[curArg++], "-s") == 0)
         {
             Interpreter::ParseUnsignedLong(argv[curArg++], autoGenMessageLength);
         }
@@ -197,10 +197,9 @@ exit:
 otError UdpExample::WriteCharToBuffer(otMessage *aMessage, uint16_t aMessageSize)
 {
     otError error     = OT_ERROR_NONE;
-    int     index     = 0;
     uint8_t character = 0x30; // 0
 
-    for (index = 0; index < static_cast<int>(aMessageSize); index++)
+    for (uint16_t index = 0; index < aMessageSize; index++)
     {
         SuccessOrExit(error = otMessageAppend(aMessage, &character, 1));
         character++;

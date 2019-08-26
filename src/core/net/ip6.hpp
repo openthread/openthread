@@ -94,8 +94,6 @@ using ot::Encoding::BigEndian::HostSwap32;
  *
  */
 
-#define MAKE_DIVIDABLE_BY_EIGHT(length) (length) & 0xfff8
-
 /**
  * This class implements the core IPv6 message processing.
  *
@@ -359,9 +357,9 @@ private:
                                    bool         aForward,
                                    bool         aFromNcpHost,
                                    bool         aReceive);
-    otError HandleFragmentation(Message &aMessage, IpProto aIpProto);
+    otError FragmentDatagram(Message &aMessage, IpProto aIpProto);
     otError HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromNcpHost);
-#if OPENTHREAD_CONFIG_IP6_ENABLE_FRAGMENTATION
+#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
     void        CleanupFragmentationBuffer(void);
     void        HandleUpdateTimer(void);
     void        UpdateReassemblyList(void);
@@ -389,7 +387,7 @@ private:
     Udp  mUdp;
     Mpl  mMpl;
 
-#if OPENTHREAD_CONFIG_IP6_ENABLE_FRAGMENTATION
+#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
     TimerMilli   mTimer;
     MessageQueue mReassemblyList;
 #endif

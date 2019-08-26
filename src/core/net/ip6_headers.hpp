@@ -626,6 +626,35 @@ public:
      */
     void SetIdentification(uint32_t aIdentification) { mIdentification = aIdentification; }
 
+    /**
+     * This method returns the next valid payload length for a fragment.
+     *
+     * @param[in]  aLength  The payload length to be validated for a fragment.
+     *
+     * @returns Valid IPv6 fragment payload length.
+     *
+     */
+    static inline uint16_t MakeDivisibleByEight(uint16_t aLength) { return aLength & 0xfff8; }
+
+    /**
+     * This method converts the fragment offset of 8-octet units into bytes.
+     *
+     * @param[in]  aOffset  The fragment offset in 8-octet units.
+     *
+     * @returns The fragment offset in bytes.
+     *
+     */
+    static inline uint16_t FragmentOffsetToBytes(uint16_t aOffset) { return static_cast<uint16_t>(aOffset << 3); }
+
+    /**
+     * This method converts a fragment offset in bytes into a fragment offset in 8-octet units.
+     *
+     * @param[in]  aOffset  The fragment offset in bytes.
+     *
+     * @returns The fragment offset in 8-octet units.
+     */
+    static inline uint16_t BytesToFragmentOffset(uint16_t aOffset) { return aOffset >> 3; }
+
 private:
     uint8_t mNextHeader;
     uint8_t mReserved;

@@ -77,13 +77,15 @@ class TestIPv6Fragmentation(unittest.TestCase):
         self.nodes[LEADER].udp_start("::", 12345)
         self.nodes[ROUTER].udp_start("::", 12345)
 
-        self.nodes[LEADER].udp_send(1921, mleid_router, 12345)
+        self.nodes[LEADER].udp_send(1952, mleid_router, 12345)
         self.simulator.go(5)
-        self.nodes[ROUTER].udp_check_rx(1921)
+        self.nodes[ROUTER].udp_check_rx(1952)
 
         self.nodes[ROUTER].udp_send(1831, mleid_leader, 12345)
         self.simulator.go(5)
         self.nodes[LEADER].udp_check_rx(1831)
+
+        self.nodes[ROUTER].udp_send(1953, mleid_leader, 12345, False)
 
         self.nodes[ROUTER].udp_stop()
         self.nodes[LEADER].udp_stop()
