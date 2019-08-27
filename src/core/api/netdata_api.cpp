@@ -42,15 +42,11 @@ using namespace ot;
 
 otError otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
 {
-    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aData != NULL && aDataLength != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aData != NULL && aDataLength != NULL);
 
-    error = instance.Get<NetworkData::Leader>().GetNetworkData(aStable, aData, *aDataLength);
-
-exit:
-    return error;
+    return instance.Get<NetworkData::Leader>().GetNetworkData(aStable, aData, *aDataLength);
 }
 
 otError otNetDataGetNextOnMeshPrefix(otInstance *           aInstance,

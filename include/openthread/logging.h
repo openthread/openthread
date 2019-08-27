@@ -68,12 +68,8 @@ otLogLevel otLoggingGetLevel(void);
  *
  * @param[in]  aLogLevel               The log level.
  *
- * @retval OT_ERROR_NONE               The log level was changed successfully.
- * @retval OT_ERROR_DISABLED_FEATURE   The dynamic log level feature is not supported.
- *                                     (see `OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL` configuration option).
- *
  */
-otError otLoggingSetLevel(otLogLevel aLogLevel);
+void otLoggingSetLevel(otLogLevel aLogLevel);
 
 /**
  * @}

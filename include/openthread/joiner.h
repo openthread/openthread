@@ -111,11 +111,8 @@ otError otJoinerStart(otInstance *     aInstance,
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
- * @retval OT_ERROR_NONE              Successfully disabled the Joiner role.
- * @retval OT_ERROR_DISABLED_FEATURE  The Joiner feature is not enabled in this build.
- *
  */
-otError otJoinerStop(otInstance *aInstance);
+void otJoinerStop(otInstance *aInstance);
 
 /**
  * This function returns the Joiner State.
@@ -141,11 +138,8 @@ otJoinerState otJoinerGetState(otInstance *aInstance);
  * @param[in]   aInstance  A pointer to the OpenThread instance.
  * @param[out]  aJoinerId  A pointer to where the Joiner ID is placed.
  *
- * @retval OT_ERROR_NONE              Successfully retrieved the Joiner ID.
- * @retval OT_ERROR_DISABLED_FEATURE  The Joiner feature is not enabled in this build.
- *
  */
-otError otJoinerGetId(otInstance *aInstance, otExtAddress *aJoinerId);
+void otJoinerGetId(otInstance *aInstance, otExtAddress *aJoinerId);
 
 /**
  * @}

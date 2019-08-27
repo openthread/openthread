@@ -44,15 +44,11 @@ using namespace ot;
 
 otError otServerGetNetDataLocal(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
 {
-    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aData != NULL && aDataLength != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aData != NULL && aDataLength != NULL);
 
-    error = instance.Get<NetworkData::Local>().GetNetworkData(aStable, aData, *aDataLength);
-
-exit:
-    return error;
+    return instance.Get<NetworkData::Local>().GetNetworkData(aStable, aData, *aDataLength);
 }
 
 otError otServerAddService(otInstance *aInstance, const otServiceConfig *aConfig)

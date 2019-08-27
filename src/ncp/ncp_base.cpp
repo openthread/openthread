@@ -2141,9 +2141,9 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>(
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>(void)
 {
+    otError    error;
     uint8_t    spinelNcpLogLevel = 0;
     otLogLevel logLevel;
-    otError    error = OT_ERROR_NONE;
 
     SuccessOrExit(error = mDecoder.ReadUint8(spinelNcpLogLevel));
 
@@ -2180,7 +2180,12 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>(
         break;
     }
 
-    error = otLoggingSetLevel(logLevel);
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+    otLoggingSetLevel(logLevel);
+#else
+    OT_UNUSED_VARIABLE(logLevel);
+    ExitNow(error = OT_ERROR_DISABLED_FEATURE);
+#endif
 
 exit:
     return error;

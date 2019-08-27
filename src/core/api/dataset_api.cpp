@@ -53,54 +53,38 @@ bool otDatasetIsCommissioned(otInstance *aInstance)
 
 otError otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset)
 {
-    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aDataset != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aDataset != NULL);
 
-    error = instance.Get<MeshCoP::ActiveDataset>().Read(*aDataset);
-
-exit:
-    return error;
+    return instance.Get<MeshCoP::ActiveDataset>().Read(*aDataset);
 }
 
 otError otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aDataset)
 {
-    otError   error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aDataset != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aDataset != NULL);
 
-    error = instance.Get<MeshCoP::ActiveDataset>().Save(*aDataset);
-
-exit:
-    return error;
+    return instance.Get<MeshCoP::ActiveDataset>().Save(*aDataset);
 }
 
 otError otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDataset)
 {
-    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aDataset != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aDataset != NULL);
 
-    error = instance.Get<MeshCoP::PendingDataset>().Read(*aDataset);
-
-exit:
-    return error;
+    return instance.Get<MeshCoP::PendingDataset>().Read(*aDataset);
 }
 
 otError otDatasetSetPending(otInstance *aInstance, const otOperationalDataset *aDataset)
 {
-    otError   error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aDataset != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aDataset != NULL);
 
-    error = instance.Get<MeshCoP::PendingDataset>().Save(*aDataset);
-
-exit:
-    return error;
+    return instance.Get<MeshCoP::PendingDataset>().Save(*aDataset);
 }
 
 otError otDatasetSendMgmtActiveGet(otInstance *                          aInstance,
