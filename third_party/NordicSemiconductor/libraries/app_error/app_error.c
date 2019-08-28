@@ -83,8 +83,8 @@ void app_error_handler_bare(ret_code_t error_code)
  */
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
 {
-    (void)line_num;
-    (void)p_file_name;
+    UNUSED_VARIABLE(line_num);
+    UNUSED_VARIABLE(p_file_name);
 
     app_error_handler_bare(error_code);
 }
