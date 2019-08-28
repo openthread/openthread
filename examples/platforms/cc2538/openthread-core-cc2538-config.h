@@ -101,6 +101,20 @@
 #define SETTINGS_CONFIG_PAGE_SIZE 2048
 
 /**
+ * @def OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE
+ *
+ * The size of heap buffer when DTLS is enabled.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+#define OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE (3072 * sizeof(void *))
+#else
+#define OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE (1568 * sizeof(void *))
+#endif
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_NCP_UART_ENABLE
  *
  * Define to 1 to enable NCP UART support.
