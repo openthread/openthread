@@ -46,6 +46,7 @@ DISABLE_DOC         ?= 0
 DNS_CLIENT          ?= 0
 ECDSA               ?= 0
 EXTERNAL_HEAP       ?= 0
+IP6_FRAGM           ?= 0
 JAM_DETECTION       ?= 0
 JOINER              ?= 0
 LEGACY              ?= 0
@@ -136,6 +137,10 @@ endif
 
 ifeq ($(EXTERNAL_HEAP),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE=1
+endif
+
+ifeq ($(IP6_FRAGM),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE=1
 endif
 
 ifeq ($(JAM_DETECTION),1)

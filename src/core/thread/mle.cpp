@@ -968,15 +968,18 @@ void Mle::SetRloc16(uint16_t aRloc16)
 {
     Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal16);
 
+    Get<Mac::Mac>().SetShortAddress(aRloc16);
+    Get<Ip6::Mpl>().SetSeedId(aRloc16);
+
     if (aRloc16 != Mac::kShortAddrInvalid)
     {
         // mesh-local 16
         mMeshLocal16.GetAddress().mFields.m16[7] = HostSwap16(aRloc16);
         Get<ThreadNetif>().AddUnicastAddress(mMeshLocal16);
+#ifdef OPENTHREAD_FTD
+        Get<AddressResolver>().RestartAddressQueries();
+#endif
     }
-
-    Get<Mac::Mac>().SetShortAddress(aRloc16);
-    Get<Ip6::Mpl>().SetSeedId(aRloc16);
 }
 
 void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLeaderRouterId)

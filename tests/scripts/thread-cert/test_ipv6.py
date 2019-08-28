@@ -61,6 +61,7 @@ from ipv6 import (
     BytesPayloadFactory,
     ICMPv6DestinationUnreachable,
     UdpBasedOnSrcDstPortsPayloadFactory,
+    FragmentHeader,
 )
 
 import common
@@ -155,6 +156,18 @@ def any_code():
 
 def any_checksum():
     return any_uint(16)
+
+
+def any_fragment_offset():
+    return any_uint(13)
+
+
+def any_bool():
+    return (any_uint(1) == 1)
+
+
+def any_fragment_identification():
+    return any_uint(32)
 
 
 def any_icmp_payload(_type, code, checksum, body):
@@ -750,6 +763,46 @@ class TestUDPDatagram(unittest.TestCase):
             struct.pack("!H", payload_length) + struct.pack("!H", checksum) + payload
 
         self.assertEqual(expected_udp_dgram_bytes, udp_dgram_bytes)
+
+
+class TestIPv6FragmentHeader(unittest.TestCase):
+
+    def test_shold_convert_IPv6_fragment_header_to_bytes_when_to_bytes_method_is_called(self):
+        # GIVEN
+        type = any_type()
+        offset = any_fragment_offset()
+        more_flag = any_bool()
+        identification = any_fragment_identification()
+
+        ipv6_fragment_header = FragmentHeader(type, offset, more_flag, identification)
+
+        # WHEN
+        actual = ipv6_fragment_header.to_bytes()
+
+        # THEN
+        expected = bytearray([type, 0x00, offset >> 5, ((offset << 3) & 0xff) | more_flag])\
+            + struct.pack("!I", identification)
+
+        self.assertEqual(expected, actual)
+
+    def test_should_create_FragmentHeader_when_from_bytes_classmethod_is_called(self):
+        # GIVEN
+        type = any_type()
+        offset = any_fragment_offset()
+        more_flag = any_bool()
+        identification = any_fragment_identification()
+
+        data = bytearray([type, 0x00, offset >> 5, ((offset << 3) & 0xff) | more_flag])\
+            + struct.pack("!I", identification)
+
+        # WHEN
+        ipv6_fragment_header = FragmentHeader.from_bytes(io.BytesIO(data))
+
+        # THEN
+        self.assertEqual(type, ipv6_fragment_header.next_header)
+        self.assertEqual(offset, ipv6_fragment_header.offset)
+        self.assertEqual(more_flag, ipv6_fragment_header.more_flag)
+        self.assertEqual(identification, ipv6_fragment_header.identification)
 
 
 class TestICMPv6(unittest.TestCase):

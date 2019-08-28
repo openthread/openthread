@@ -147,6 +147,7 @@ EXTRA_DIST                                                         = \
     test_common.py                                                   \
     test_crypto.py                                                   \
     test_diag.py                                                     \
+    test_ipv6_fragmentation.py                                       \
     test_ipv6.py                                                     \
     test_lowpan.py                                                   \
     test_mac802154.py                                                \
@@ -166,6 +167,7 @@ check_SCRIPTS                                                      = \
     test_common.py                                                   \
     test_crypto.py                                                   \
     test_diag.py                                                     \
+    test_ipv6_fragmentation.py                                       \
     test_ipv6.py                                                     \
     test_lowpan.py                                                   \
     test_mac802154.py                                                \
@@ -281,6 +283,7 @@ TESTS                                                              = \
 XFAIL_NCP_TESTS                                                    = \
     test_coaps.py                                                    \
     test_diag.py                                                     \
+    test_ipv6_fragmentation.py                                       \
     test_service.py                                                  \
     Cert_5_3_10_AddressQuery.py                                      \
     Cert_8_1_01_Commissioning.py                                     \

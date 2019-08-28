@@ -48,6 +48,7 @@ DHCP6_SERVER                   ?= 1
 DIAGNOSTIC                     ?= 1
 DNS_CLIENT                     ?= 1
 ECDSA                          ?= 1
+IP6_FRAGM                      ?= 1
 JAM_DETECTION                  ?= 1
 JOINER                         ?= 1
 LEGACY                         ?= 1

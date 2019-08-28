@@ -80,6 +80,7 @@ private:
     otError ProcessConnect(int argc, char *argv[]);
     otError ProcessOpen(int argc, char *argv[]);
     otError ProcessSend(int argc, char *argv[]);
+    otError WriteCharToBuffer(otMessage *aMessage, uint16_t aSize);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo);

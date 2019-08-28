@@ -28,6 +28,8 @@
 
 #include "platform-posix.h"
 
+#include <errno.h>
+
 #include <openthread/dataset.h>
 #include <openthread/random_noncrypto.h>
 #include <openthread/platform/alarm-micro.h>
@@ -815,15 +817,22 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
     {
         ssize_t rval = recvfrom(sRxFd, (char *)&sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
 
-        if (rval < 0)
+        if (rval > 0)
+        {
+            sReceiveFrame.mLength = (uint8_t)(rval - 1);
+
+            radioReceive(aInstance);
+        }
+        else if (rval == 0)
+        {
+            // socket is closed, which should not happen
+            assert(false);
+        }
+        else if (errno != EINTR && errno != EAGAIN)
         {
             perror("recvfrom(sRxFd)");
             exit(EXIT_FAILURE);
         }
-
-        sReceiveFrame.mLength = (uint8_t)(rval - 1);
-
-        radioReceive(aInstance);
     }
 #endif
 
