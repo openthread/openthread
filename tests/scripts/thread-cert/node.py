@@ -1052,6 +1052,31 @@ class Node:
             payload += tlv.to_hex()
         self.commissioner_mgmtset(self.bytes_to_hex_str(payload))
 
+    def udp_start(self, local_ipaddr, local_port):
+        cmd = 'udp open'
+        self.send_command(cmd)
+        self._expect('Done')
+
+        cmd = 'udp bind %s %s' % (local_ipaddr, local_port)
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def udp_stop(self):
+        cmd = 'udp close'
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def udp_send(self, bytes, ipaddr, port, success=True):
+        cmd = 'udp send -s %d %s %d' % (bytes, ipaddr, port)
+        self.send_command(cmd)
+        if success:
+            self._expect('Done')
+        else:
+            self._expect('Error')
+
+    def udp_check_rx(self, bytes_should_rx):
+        self._expect('%d bytes' % bytes_should_rx)
+
 
 if __name__ == '__main__':
     unittest.main()

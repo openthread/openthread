@@ -115,6 +115,18 @@ Send a UDP message.
 > udp send fdde:ad00:beef:0:bb1:ebd6:ad10:f33 1234 hello
 ```
 
+### send \-s \<message_size\> \<ip\> \<port\>
+
+Send a few bytes over UDP.
+
+* message_size: number of bytes to be send.
+* ip: the IPv6 destination address.
+* port: the UDP destination port.
+
+```bash
+> udp send -s 800 fdde:ad00:beef:0:bb1:ebd6:ad10:f33 1234
+```
+
 ### send \<message\>
 
 Send a UDP message on a connected socket.
