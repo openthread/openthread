@@ -132,16 +132,6 @@ otError CoapSecure::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain
 }
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
-#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-otError CoapSecure::SetPreSharedKey(const uint8_t *aPsk,
-                                    uint16_t       aPskLength,
-                                    const uint8_t *aPskIdentity,
-                                    uint16_t       aPskIdLength)
-{
-    return mDtls.SetPreSharedKey(aPsk, aPskLength, aPskIdentity, aPskIdLength);
-}
-#endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-
 #ifdef MBEDTLS_BASE64_C
 otError CoapSecure::GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize)
 {

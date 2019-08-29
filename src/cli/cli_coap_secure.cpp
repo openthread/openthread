@@ -340,7 +340,7 @@ otError CoapSecure::ProcessDisconnect(int argc, char *argv[])
 
 otError CoapSecure::ProcessPsk(int argc, char *argv[])
 {
-    otError error;
+    otError error = OT_ERROR_NONE;
     size_t  length;
 
     VerifyOrExit(argc > 2, error = OT_ERROR_INVALID_ARGS);
@@ -355,7 +355,7 @@ otError CoapSecure::ProcessPsk(int argc, char *argv[])
     mPskIdLength = static_cast<uint8_t>(length);
     memcpy(mPskId, argv[2], mPskIdLength);
 
-    SuccessOrExit(error = otCoapSecureSetPsk(mInterpreter.mInstance, mPsk, mPskLength, mPskId, mPskIdLength));
+    otCoapSecureSetPsk(mInterpreter.mInstance, mPsk, mPskLength, mPskId, mPskIdLength);
     mUseCertificate = false;
 
 exit:

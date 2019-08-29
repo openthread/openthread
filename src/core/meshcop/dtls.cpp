@@ -492,13 +492,8 @@ otError Dtls::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
-otError Dtls::SetPreSharedKey(const uint8_t *aPsk,
-                              uint16_t       aPskLength,
-                              const uint8_t *aPskIdentity,
-                              uint16_t       aPskIdLength)
+void Dtls::SetPreSharedKey(const uint8_t *aPsk, uint16_t aPskLength, const uint8_t *aPskIdentity, uint16_t aPskIdLength)
 {
-    otError error = OT_ERROR_NONE;
-
     assert(aPsk != NULL);
     assert(aPskIdentity != NULL);
     assert(aPskLength > 0);
@@ -511,8 +506,6 @@ otError Dtls::SetPreSharedKey(const uint8_t *aPsk,
 
     mCipherSuites[0] = MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8;
     mCipherSuites[1] = 0;
-
-    return error;
 }
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 

@@ -43,6 +43,7 @@
 
 using namespace ot;
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 uint32_t otThreadGetChildTimeout(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -462,7 +463,6 @@ void otThreadResetMleCounters(otInstance *aInstance)
     instance.Get<Mle::MleRouter>().ResetCounters();
 }
 
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
 void otThreadRegisterParentResponseCallback(otInstance *                   aInstance,
                                             otThreadParentResponseCallback aCallback,
                                             void *                         aContext)

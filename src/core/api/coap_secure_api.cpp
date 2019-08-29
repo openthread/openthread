@@ -79,17 +79,17 @@ otError otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-otError otCoapSecureSetPsk(otInstance *   aInstance,
-                           const uint8_t *aPsk,
-                           uint16_t       aPskLength,
-                           const uint8_t *aPskIdentity,
-                           uint16_t       aPskIdLength)
+void otCoapSecureSetPsk(otInstance *   aInstance,
+                        const uint8_t *aPsk,
+                        uint16_t       aPskLength,
+                        const uint8_t *aPskIdentity,
+                        uint16_t       aPskIdLength)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     assert(aPsk != NULL && aPskLength != 0 && aPskIdentity != NULL && aPskIdLength != 0);
 
-    return instance.GetApplicationCoapSecure().SetPreSharedKey(aPsk, aPskLength, aPskIdentity, aPskIdLength);
+    instance.GetApplicationCoapSecure().SetPreSharedKey(aPsk, aPskLength, aPskIdentity, aPskIdLength);
 }
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 

@@ -173,13 +173,11 @@ public:
      * @param[in]  aPskIdentity  The Identity Name for the PSK.
      * @param[in]  aPskIdLength  The PSK Identity Length.
      *
-     * @retval OT_ERROR_NONE  Successfully set the PSK.
-     *
      */
-    otError SetPreSharedKey(const uint8_t *aPsk,
-                            uint16_t       aPskLength,
-                            const uint8_t *aPskIdentity,
-                            uint16_t       aPskIdLength);
+    void SetPreSharedKey(const uint8_t *aPsk, uint16_t aPskLength, const uint8_t *aPskIdentity, uint16_t aPskIdLength)
+    {
+        mDtls.SetPreSharedKey(aPsk, aPskLength, aPskIdentity, aPskIdLength);
+    }
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED

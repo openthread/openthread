@@ -48,6 +48,9 @@ extern "C" {
  * @brief
  *   This module includes functions for the Thread Joiner role.
  *
+ * @note
+ *   The functions in this module requires `OPENTHREAD_CONFIG_JOINER_ENABLE=1`.
+ *
  * @{
  *
  */

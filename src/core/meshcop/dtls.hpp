@@ -263,10 +263,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully set the PSK.
      *
      */
-    otError SetPreSharedKey(const uint8_t *aPsk,
-                            uint16_t       aPskLength,
-                            const uint8_t *aPskIdentity,
-                            uint16_t       aPskIdLength);
+    void SetPreSharedKey(const uint8_t *aPsk, uint16_t aPskLength, const uint8_t *aPskIdentity, uint16_t aPskIdLength);
 
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
@@ -316,8 +313,9 @@ public:
      * @param[out]  aCertLength      The length of the base64 encoded peer certificate.
      * @param[in]   aCertBufferSize  The buffer size of aPeerCert.
      *
-     * @retval OT_ERROR_NONE     Successfully get the peer certificate.
-     * @retval OT_ERROR_NO_BUFS  Can't allocate memory for certificate.
+     * @retval OT_ERROR_INVALID_STATE   Not connected yet.
+     * @retval OT_ERROR_NONE            Successfully get the peer certificate.
+     * @retval OT_ERROR_NO_BUFS         Can't allocate memory for certificate.
      *
      */
     otError GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize);
