@@ -212,8 +212,10 @@ void AddressResolver::InvalidateCacheEntry(Cache &aEntry, InvalidationReason aRe
     aEntry.mState = Cache::kStateInvalid;
 }
 
-void AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16, bool aApplyOptimization)
+otError AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
 {
+    otError error = OT_ERROR_NOT_FOUND;
+
     for (int i = 0; i < kCacheEntries; i++)
     {
         if (mCache[i].mState == Cache::kStateInvalid || mCache[i].mTarget != aEid)
@@ -240,25 +242,29 @@ void AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddre
             otLogNoteArp("Cache entry updated (snoop): %s, 0x%04x", aEid.ToString().AsCString(), aRloc16);
         }
 
-        ExitNow();
+        error = OT_ERROR_NONE;
     }
 
-    if (aApplyOptimization)
-    {
-        Cache *entry = NewCacheEntry();
-        VerifyOrExit(entry != NULL);
+    return error;
+}
 
-        entry->mTarget   = aEid;
-        entry->mRloc16   = aRloc16;
-        entry->mTimeout  = 0;
-        entry->mFailures = 0;
-        entry->mState    = Cache::kStateCached;
+otError AddressResolver::AddCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
+{
+    otError error = OT_ERROR_NONE;
+    Cache * entry = NewCacheEntry();
 
-        MarkCacheEntryAsUsed(*entry);
-    }
+    VerifyOrExit(entry != NULL, error = OT_ERROR_NO_BUFS);
+
+    entry->mTarget   = aEid;
+    entry->mRloc16   = aRloc16;
+    entry->mTimeout  = 0;
+    entry->mFailures = 0;
+    entry->mState    = Cache::kStateCached;
+
+    MarkCacheEntryAsUsed(*entry);
 
 exit:
-    return;
+    return error;
 }
 
 void AddressResolver::RestartAddressQueries(void)

@@ -607,7 +607,12 @@ void MeshForwarder::UpdateRoutes(uint8_t *           aFrame,
             applyOptimization = true;
         }
 
-        Get<AddressResolver>().UpdateCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort(), applyOptimization);
+        if (Get<AddressResolver>().UpdateCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort()) ==
+                OT_ERROR_NOT_FOUND &&
+            applyOptimization)
+        {
+            Get<AddressResolver>().AddCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort());
+        }
     }
 
     neighbor = Get<Mle::MleRouter>().GetNeighbor(ip6Header.GetSource());
