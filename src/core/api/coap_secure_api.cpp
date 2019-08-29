@@ -53,28 +53,28 @@ otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort)
 }
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-otError otCoapSecureSetCertificate(otInstance *   aInstance,
-                                   const uint8_t *aX509Cert,
-                                   uint32_t       aX509Length,
-                                   const uint8_t *aPrivateKey,
-                                   uint32_t       aPrivateKeyLength)
+void otCoapSecureSetCertificate(otInstance *   aInstance,
+                                const uint8_t *aX509Cert,
+                                uint32_t       aX509Length,
+                                const uint8_t *aPrivateKey,
+                                uint32_t       aPrivateKeyLength)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     assert(aX509Cert != NULL && aX509Length != 0 && aPrivateKey != NULL && aPrivateKeyLength != 0);
 
-    return instance.GetApplicationCoapSecure().SetCertificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);
+    instance.GetApplicationCoapSecure().SetCertificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);
 }
 
-otError otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
-                                          const uint8_t *aX509CaCertificateChain,
-                                          uint32_t       aX509CaCertChainLength)
+void otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
+                                       const uint8_t *aX509CaCertificateChain,
+                                       uint32_t       aX509CaCertChainLength)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     assert(aX509CaCertificateChain != NULL && aX509CaCertChainLength != 0);
 
-    return instance.GetApplicationCoapSecure().SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLength);
+    instance.GetApplicationCoapSecure().SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLength);
 }
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 

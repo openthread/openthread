@@ -118,17 +118,17 @@ otError CoapSecure::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-otError CoapSecure::SetCertificate(const uint8_t *aX509Cert,
-                                   uint32_t       aX509Length,
-                                   const uint8_t *aPrivateKey,
-                                   uint32_t       aPrivateKeyLength)
+void CoapSecure::SetCertificate(const uint8_t *aX509Cert,
+                                uint32_t       aX509Length,
+                                const uint8_t *aPrivateKey,
+                                uint32_t       aPrivateKeyLength)
 {
-    return mDtls.SetCertificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);
+    mDtls.SetCertificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);
 }
 
-otError CoapSecure::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength)
+void CoapSecure::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength)
 {
-    return mDtls.SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLength);
+    mDtls.SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLength);
 }
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 

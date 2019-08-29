@@ -309,11 +309,11 @@ otError otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIndex, otEidCac
 }
 
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
-otError otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtAddress)
+void otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::MleRouter>().SetSteeringData(static_cast<const Mac::ExtAddress *>(aExtAddress));
+    instance.Get<Mle::MleRouter>().SetSteeringData(static_cast<const Mac::ExtAddress *>(aExtAddress));
 }
 #endif
 

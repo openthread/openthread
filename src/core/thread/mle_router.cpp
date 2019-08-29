@@ -2601,9 +2601,8 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
-otError MleRouter::SetSteeringData(const Mac::ExtAddress *aExtAddress)
+void MleRouter::SetSteeringData(const Mac::ExtAddress *aExtAddress)
 {
-    otError         error = OT_ERROR_NONE;
     Mac::ExtAddress nullExtAddr;
     Mac::ExtAddress allowAnyExtAddr;
 
@@ -2632,8 +2631,6 @@ otError MleRouter::SetSteeringData(const Mac::ExtAddress *aExtAddress)
         // compute Bloom Filter
         mSteeringData.ComputeBloomFilter(joinerId);
     }
-
-    return error;
 }
 #endif // OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
 

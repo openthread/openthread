@@ -96,7 +96,6 @@ typedef void (*otJoinerCallback)(otError aError, void *aContext);
  *
  * @retval OT_ERROR_NONE              Successfully started the Commissioner role.
  * @retval OT_ERROR_INVALID_ARGS      @p aPSKd or @p aProvisioningUrl is invalid.
- * @retval OT_ERROR_DISABLED_FEATURE  The Joiner feature is not enabled in this build.
  *
  */
 otError otJoinerStart(otInstance *     aInstance,

@@ -2258,28 +2258,18 @@ exit:
 // MARK: Peek/Poke delegate API
 // ----------------------------------------------------------------------------
 
-otError otNcpRegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
-                                       otNcpDelegateAllowPeekPoke aAllowPokeDelegate)
-{
-    OT_UNUSED_VARIABLE(aAllowPeekDelegate);
-    OT_UNUSED_VARIABLE(aAllowPokeDelegate);
-
-    otError error = OT_ERROR_NONE;
-
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
+void otNcpRegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
+                                    otNcpDelegateAllowPeekPoke aAllowPokeDelegate)
+{
     ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
 
     if (ncp != NULL)
     {
         ncp->RegisterPeekPokeDelagates(aAllowPeekDelegate, aAllowPokeDelegate);
     }
-#else
-    error = OT_ERROR_DISABLED_FEATURE;
-
-#endif // OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
-
-    return error;
 }
+#endif // OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
 
 // ----------------------------------------------------------------------------
 // MARK: Virtual Datastream I/O (Public API)

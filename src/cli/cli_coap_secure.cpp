@@ -368,19 +368,15 @@ otError CoapSecure::ProcessX509(int argc, char *argv[])
     OT_UNUSED_VARIABLE(argv);
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-    otError error;
+    otCoapSecureSetCertificate(mInterpreter.mInstance, (const uint8_t *)OT_CLI_COAPS_X509_CERT,
+                               sizeof(OT_CLI_COAPS_X509_CERT), (const uint8_t *)OT_CLI_COAPS_PRIV_KEY,
+                               sizeof(OT_CLI_COAPS_PRIV_KEY));
 
-    SuccessOrExit(error = otCoapSecureSetCertificate(
-                      mInterpreter.mInstance, (const uint8_t *)OT_CLI_COAPS_X509_CERT, sizeof(OT_CLI_COAPS_X509_CERT),
-                      (const uint8_t *)OT_CLI_COAPS_PRIV_KEY, sizeof(OT_CLI_COAPS_PRIV_KEY)));
-
-    SuccessOrExit(error = otCoapSecureSetCaCertificateChain(mInterpreter.mInstance,
-                                                            (const uint8_t *)OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE,
-                                                            sizeof(OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE)));
+    otCoapSecureSetCaCertificateChain(mInterpreter.mInstance, (const uint8_t *)OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE,
+                                      sizeof(OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE));
     mUseCertificate = true;
 
-exit:
-    return error;
+    return OT_ERROR_NONE;
 #else
     return OT_ERROR_DISABLED_FEATURE;
 #endif

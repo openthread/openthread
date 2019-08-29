@@ -150,23 +150,20 @@ void otCoapSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertifica
  * This method sets the local device's X509 certificate with corresponding private key for
  * DTLS session with DTLS_ECDHE_ECDSA_WITH_AES_128_CCM_8.
  *
+ * @note This function requires `MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED=1`.
+ *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aX509Cert          A pointer to the PEM formatted X509 certificate.
  * @param[in]  aX509Length        The length of certificate.
  * @param[in]  aPrivateKey        A pointer to the PEM formatted private key.
  * @param[in]  aPrivateKeyLength  The length of the private key.
  *
- * @retval OT_ERROR_NONE              Successfully set the x509 certificate
- *                                    with his private key.
- * @retval OT_ERROR_DISABLED_FEATURE  Mbedtls config not enabled
- *                                    MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED.
- *
  */
-otError otCoapSecureSetCertificate(otInstance *   aInstance,
-                                   const uint8_t *aX509Cert,
-                                   uint32_t       aX509Length,
-                                   const uint8_t *aPrivateKey,
-                                   uint32_t       aPrivateKeyLength);
+void otCoapSecureSetCertificate(otInstance *   aInstance,
+                                const uint8_t *aX509Cert,
+                                uint32_t       aX509Length,
+                                const uint8_t *aPrivateKey,
+                                uint32_t       aPrivateKeyLength);
 
 /**
  * This method sets the trusted top level CAs. It is needed for validating the
@@ -174,16 +171,16 @@ otError otCoapSecureSetCertificate(otInstance *   aInstance,
  *
  * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
  *
+ * @note This function requires `MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED=1`.
+ *
  * @param[in]  aInstance                A pointer to an OpenThread instance.
  * @param[in]  aX509CaCertificateChain  A pointer to the PEM formatted X509 CA chain.
  * @param[in]  aX509CaCertChainLength   The length of chain.
  *
- * @retval OT_ERROR_NONE  Successfully set the trusted top level CAs.
- *
  */
-otError otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
-                                          const uint8_t *aX509CaCertificateChain,
-                                          uint32_t       aX509CaCertChainLength);
+void otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
+                                       const uint8_t *aX509CaCertificateChain,
+                                       uint32_t       aX509CaCertChainLength);
 
 /**
  * This method initializes DTLS session with a peer.

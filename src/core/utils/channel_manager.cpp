@@ -385,15 +385,6 @@ exit:
 
     return error;
 }
-
-#else // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
-
-otError ChannelManager::RequestChannelSelect(bool)
-{
-    otLogInfoUtil("ChannelManager: ChannelMonitor feature is disabled - cannot select channel");
-    return OT_ERROR_DISABLED_FEATURE;
-}
-
 #endif // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 void ChannelManager::StartAutoSelectTimer(void)
