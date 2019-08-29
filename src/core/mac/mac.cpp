@@ -815,7 +815,6 @@ void Mac::PrepareBeaconRequest(TxFrame &aFrame)
 
 void Mac::PrepareBeacon(TxFrame &aFrame)
 {
-    uint8_t        numUnsecurePorts;
     uint8_t        beaconLength;
     uint16_t       fcf;
     Beacon *       beacon        = NULL;
@@ -836,10 +835,7 @@ void Mac::PrepareBeacon(TxFrame &aFrame)
     {
         beaconPayload->Init();
 
-        // set the Joining Permitted flag
-        Get<Ip6::Filter>().GetUnsecurePorts(numUnsecurePorts);
-
-        if (numUnsecurePorts)
+        if (IsJoinable())
         {
             beaconPayload->SetJoiningPermitted();
         }
@@ -877,15 +873,21 @@ bool Mac::ShouldSendBeacon(void) const
         // false) but only if it is in joinable state (unsecure port
         // list is not empty).
 
-        uint8_t numUnsecurePorts;
-
-        Get<Ip6::Filter>().GetUnsecurePorts(numUnsecurePorts);
-        shouldSend = (numUnsecurePorts != 0);
+        shouldSend = IsJoinable();
     }
 #endif
 
 exit:
     return shouldSend;
+}
+
+bool Mac::IsJoinable(void) const
+{
+    uint8_t numUnsecurePorts;
+
+    Get<Ip6::Filter>().GetUnsecurePorts(numUnsecurePorts);
+
+    return (numUnsecurePorts != 0);
 }
 
 void Mac::ProcessTransmitAesCcm(TxFrame &aFrame, const ExtAddress *aExtAddress)
