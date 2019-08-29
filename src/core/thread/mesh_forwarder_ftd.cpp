@@ -594,7 +594,8 @@ void MeshForwarder::UpdateRoutes(uint8_t *           aFrame,
     VerifyOrExit(!aMeshDest.IsBroadcast() && aMeshSource.IsShort());
     SuccessOrExit(GetIp6Header(aFrame, aFrameLength, aMeshSource, aMeshDest, ip6Header));
 
-    if (!ip6Header.GetSource().IsRoutingLocator() && !ip6Header.GetSource().IsAnycastRoutingLocator())
+    if (!ip6Header.GetSource().IsRoutingLocator() && !ip6Header.GetSource().IsAnycastRoutingLocator() &&
+        Get<NetworkData::Leader>().IsOnMesh(ip6Header.GetSource()) /* only for on mesh address which may require AQ */)
     {
         // Thread 1.1 Specification 5.5.2.2:
         // An FTDs MAY add/update EID-to-RLOC Map Cache entries by inspecting packets being received.

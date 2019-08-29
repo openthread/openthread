@@ -103,11 +103,12 @@ public:
     void Remove(uint8_t aRouterId);
 
     /**
-     * This method updates an existing cache entry for the EID, if one exists.
+     * This method updates an existing cache entry for the EID, if one exists, or
+     * adds one cache entry if optimization should be applied.
      *
      * @param[in]  aEid               A reference to the EID.
      * @param[in]  aRloc16            The RLOC16 corresponding to @p aEid.
-     * @param[in]  aApplyOptimization Boolean indicates whether or not apply EID-to-RLOC map cache optimization.
+     * @param[in]  aApplyOptimization Boolean indicates whether or not adds one EID-to-RLOC for map cache optimization.
      *
      */
     void UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16, bool aApplyOptimization = false);
