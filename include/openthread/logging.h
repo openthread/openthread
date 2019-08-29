@@ -66,7 +66,7 @@ otLogLevel otLoggingGetLevel(void);
 /**
  * This function sets the log level.
  *
- * @note This function requires `OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL=1` to be enabled.
+ * @note This function requires `OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL=1`.
  *
  * @param[in]  aLogLevel               The log level.
  *
