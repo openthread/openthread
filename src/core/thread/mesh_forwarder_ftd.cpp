@@ -589,7 +589,6 @@ void MeshForwarder::UpdateRoutes(uint8_t *           aFrame,
 {
     Ip6::Header ip6Header;
     Neighbor *  neighbor;
-    bool        applyOptimization = false;
 
     VerifyOrExit(!aMeshDest.IsBroadcast() && aMeshSource.IsShort());
     SuccessOrExit(GetIp6Header(aFrame, aFrameLength, aMeshSource, aMeshDest, ip6Header));
@@ -597,21 +596,18 @@ void MeshForwarder::UpdateRoutes(uint8_t *           aFrame,
     if (!ip6Header.GetSource().IsRoutingLocator() && !ip6Header.GetSource().IsAnycastRoutingLocator() &&
         Get<NetworkData::Leader>().IsOnMesh(ip6Header.GetSource()) /* only for on mesh address which may require AQ */)
     {
-        // Thread 1.1 Specification 5.5.2.2:
-        // An FTDs MAY add/update EID-to-RLOC Map Cache entries by inspecting packets being received.
-        if ((Get<Mle::MleRouter>().IsFullThreadDevice() /* FTD */ &&
-             !Get<Mle::MleRouter>().IsMinimalChild(aMeshSource.GetShort()) /* Excluding MTD child source */) &&
-            (aMeshDest.GetShort() == Get<Mac::Mac>().GetShortAddress() ||
-             Get<Mle::MleRouter>().IsMinimalChild(aMeshDest.GetShort())) /* Received for itself or its MTD child */)
-        {
-            applyOptimization = true;
-        }
-
         if (Get<AddressResolver>().UpdateCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort()) ==
-                OT_ERROR_NOT_FOUND &&
-            applyOptimization)
+            OT_ERROR_NOT_FOUND)
         {
-            Get<AddressResolver>().AddCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort());
+            // Thread 1.1 Specification 5.5.2.2:
+            // FTDs MAY add/update EID-to-RLOC Map Cache entries by inspecting packets being received.
+            if ((Get<Mle::MleRouter>().IsFullThreadDevice() /* only for FTD */ &&
+                 !Get<Mle::MleRouter>().IsMinimalChild(aMeshSource.GetShort()) /* Exclude MTD child source */) &&
+                (aMeshDest.GetShort() == Get<Mac::Mac>().GetShortAddress() ||
+                 Get<Mle::MleRouter>().IsMinimalChild(aMeshDest.GetShort())) /* Received for itself or its MTD child */)
+            {
+                Get<AddressResolver>().AddCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort());
+            }
         }
     }
 
