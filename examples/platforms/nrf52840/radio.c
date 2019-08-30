@@ -86,8 +86,8 @@ static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE + 1];
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 static otRadioIeInfo sTransmitIeInfo;
+static otInstance *  sInstance = NULL;
 #endif
-static otInstance *sInstance = NULL;
 
 static otRadioFrame sAckFrame;
 static bool         sAckedWithFramePending;
@@ -283,7 +283,11 @@ otError otPlatRadioEnable(otInstance *aInstance)
 {
     otError error;
 
+#if !OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    OT_UNUSED_VARIABLE(aInstance);
+#else
     sInstance = aInstance;
+#endif
 
     if (sDisabled)
     {
