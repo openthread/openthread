@@ -182,15 +182,11 @@ exit:
 
 uint32_t DataPollSender::GetKeepAlivePollPeriod(void) const
 {
-    uint32_t period = 0;
+    uint32_t period = GetDefaultPollPeriod();
 
     if (mExternalPollPeriod != 0)
     {
-        period = mExternalPollPeriod;
-    }
-    else
-    {
-        period = GetDefaultPollPeriod();
+        UpdateIfLarger(period, mExternalPollPeriod);
     }
 
     return period;
@@ -430,47 +426,41 @@ void DataPollSender::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
     }
 }
 
+void DataPollSender::UpdateIfLarger(uint32_t &aPreiod, uint32_t aNewPeriod)
+{
+    if (aPreiod > aNewPeriod)
+    {
+        aPreiod = aNewPeriod;
+    }
+}
+
 uint32_t DataPollSender::CalculatePollPeriod(void) const
 {
-    uint32_t period = 0;
+    uint32_t period = GetDefaultPollPeriod();
 
     if (mAttachMode)
     {
-        period = kAttachDataPollPeriod;
+        UpdateIfLarger(period, kAttachDataPollPeriod);
     }
 
     if (mRetxMode)
     {
-        if ((period == 0) || (period > kRetxPollPeriod))
-        {
-            period = kRetxPollPeriod;
-        }
+        UpdateIfLarger(period, kRetxPollPeriod);
     }
 
     if (mRemainingFastPolls != 0)
     {
-        if ((period == 0) || (period > kFastPollPeriod))
-        {
-            period = kFastPollPeriod;
-        }
+        UpdateIfLarger(period, kFastPollPeriod);
     }
 
     if (mExternalPollPeriod != 0)
     {
-        if ((period == 0) || (period > mExternalPollPeriod))
-        {
-            period = mExternalPollPeriod;
-        }
+        UpdateIfLarger(period, mExternalPollPeriod);
     }
 
     if (period == 0)
     {
-        period = GetDefaultPollPeriod();
-
-        if (period == 0)
-        {
-            period = kMinPollPeriod;
-        }
+        period = kMinPollPeriod;
     }
 
     return period;

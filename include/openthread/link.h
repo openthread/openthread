@@ -431,7 +431,7 @@ uint32_t otLinkGetPollPeriod(otInstance *aInstance);
  *       Or zero to clear user-specified poll period.
  *
  * @note User-specified value should be no more than the maximal value 0x3FFFFFF ((1 << 26) - 1) allowed,
- * otherwise it would be cilpped by the maximal value.
+ * otherwise it would be clipped by the maximal value.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aPollPeriod  data poll period in milliseconds.

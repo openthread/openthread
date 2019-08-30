@@ -105,15 +105,16 @@ public:
     /**
      * This method sets/clears a user-specified/external data poll period.
      *
+     * Value of zero for `aPeriod` clears the user-specified poll period.
+     *
      * If the user provides a non-zero poll period, the user value specifies the maximum period between data
      * request transmissions. Note that OpenThread may send data request transmissions more frequently when expecting
-     * a control-message from a parent or in case of data poll transmission failures or timeouts.
+     * a control-message from a parent or in case of data poll transmission failures or timeouts, or when the specified
+     * value is larger than the child timeout.
      *
-     * Minimal non-zero value should be `OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD` (10ms). Or zero to clear
-     * user-specified poll period.
-     *
-     * User-specified value should be no more than the maximal value 0x3FFFFFF ((1 << 26) - 1) allowed, otherwise it
-     * would be cilpped by the maximal value.
+     * A non-zero `aPeriod` should be larger than or equal to `OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD` (10ms) or
+     * this method returns `OT_ERROR_INVALID_ARGS`. If a non-zero `aPeriod` is larger than maximum value of
+     * `0x3FFFFFF ((1 << 26) - 1)`, it would be clipped to this value.
      *
      * @param[in]  aPeriod  The data poll period in milliseconds.
      *
@@ -222,10 +223,24 @@ public:
     /**
      * This method gets the maximum data polling period in use.
      *
-     * @returns the maximum data polling period in use.
+     * The maximum data poll period is determined based as the minimum of the user-specified poll interval and the
+     * default poll interval.
+     *
+     * @returns The maximum data polling period in use.
      *
      */
     uint32_t GetKeepAlivePollPeriod(void) const;
+
+    /**
+     * This method returns the default maximum poll period.
+     *
+     * The default poll period is determined based on the child timeout interval, ensuing the child would send data poll
+     * within the child's timeout.
+     *
+     * @returns The maximum default data polling interval (in msec).
+     *
+     */
+    uint32_t GetDefaultPollPeriod(void) const;
 
 private:
     enum // Poll period under different conditions (in milliseconds).
@@ -254,7 +269,7 @@ private:
     void        ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector);
     uint32_t    CalculatePollPeriod(void) const;
     static void HandlePollTimer(Timer &aTimer);
-    uint32_t    GetDefaultPollPeriod(void) const;
+    static void UpdateIfLarger(uint32_t &aPreiod, uint32_t aNewPeriod);
 
     uint32_t mTimerStartTime;
     uint32_t mPollPeriod;
