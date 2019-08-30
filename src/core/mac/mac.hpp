@@ -678,6 +678,11 @@ private:
 
     static const char *OperationToString(Operation aOperation);
 
+    static const uint8_t         sMode2Key[];
+    static const otExtAddress    sMode2ExtAddress;
+    static const otExtendedPanId sExtendedPanidInit;
+    static const char            sNetworkNameInit[];
+
     bool mEnabled : 1;
     bool mPendingActiveScan : 1;
     bool mPendingEnergyScan : 1;
