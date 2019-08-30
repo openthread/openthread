@@ -336,7 +336,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             {
                 TimeoutTlv tlv;
                 tlv.Init();
-                tlv.SetTimeout(TimerMilli::MsecToSec(Get<DataPollSender>().GetKeepAlivePollPeriod()));
+                tlv.SetTimeout(Get<Mle::MleRouter>().GetTimeout());
                 SuccessOrExit(error = aResponse.AppendTlv(tlv));
             }
 
