@@ -41,8 +41,6 @@
 #include "common/logging.hpp"
 #include "utils/code_utils.h"
 
-#define RFCORE_RXTX_INT (141)
-
 #define RFCORE_XREG_RFIRQM0 0x4008868C // RF interrupt masks
 #define RFCORE_XREG_RFIRQM1 0x40088690 // RF interrupt masks
 #define RFCORE_XREG_RFERRM 0x40088694  // RF error interrupt mask
