@@ -52,7 +52,10 @@ const struct CoapSecure::Command CoapSecure::sCommands[] = {
     {"get", &CoapSecure::ProcessRequest},       {"post", &CoapSecure::ProcessRequest},
     {"psk", &CoapSecure::ProcessPsk},           {"put", &CoapSecure::ProcessRequest},
     {"resource", &CoapSecure::ProcessResource}, {"start", &CoapSecure::ProcessStart},
-    {"stop", &CoapSecure::ProcessStop},         {"x509", &CoapSecure::ProcessX509},
+    {"stop", &CoapSecure::ProcessStop},
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+    {"x509", &CoapSecure::ProcessX509},
+#endif
 };
 
 CoapSecure::CoapSecure(Interpreter &aInterpreter)
@@ -362,12 +365,12 @@ exit:
     return error;
 }
 
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 otError CoapSecure::ProcessX509(int argc, char *argv[])
 {
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
-#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     otCoapSecureSetCertificate(mInterpreter.mInstance, (const uint8_t *)OT_CLI_COAPS_X509_CERT,
                                sizeof(OT_CLI_COAPS_X509_CERT), (const uint8_t *)OT_CLI_COAPS_PRIV_KEY,
                                sizeof(OT_CLI_COAPS_PRIV_KEY));
@@ -377,10 +380,8 @@ otError CoapSecure::ProcessX509(int argc, char *argv[])
     mUseCertificate = true;
 
     return OT_ERROR_NONE;
-#else
-    return OT_ERROR_DISABLED_FEATURE;
-#endif
 }
+#endif
 
 otError CoapSecure::Process(int argc, char *argv[])
 {

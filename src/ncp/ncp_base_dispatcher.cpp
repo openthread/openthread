@@ -969,9 +969,11 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_CHANNEL_MANAGER_FAVORED_CHANNELS:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CHANNEL_MANAGER_FAVORED_CHANNELS>;
         break;
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     case SPINEL_PROP_CHANNEL_MANAGER_CHANNEL_SELECT:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CHANNEL_MANAGER_CHANNEL_SELECT>;
         break;
+#endif
     case SPINEL_PROP_CHANNEL_MANAGER_AUTO_SELECT_ENABLED:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CHANNEL_MANAGER_AUTO_SELECT_ENABLED>;
         break;
