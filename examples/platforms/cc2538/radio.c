@@ -728,7 +728,17 @@ exit:
 
 void cc2538RadioProcess(otInstance *aInstance)
 {
-    readFrame(aInstance);
+#if OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+    // Disable the receive interrupt so that sReceiveFrame doesn't get
+    // blatted by the interrupt handler while we're polling.
+    HWREG(RFCORE_XREG_RFIRQM0) &= ~RFCORE_XREG_RFIRQM0_RXPKTDONE;
+#endif
+
+    if (sReceiveFrame.mLength == 0)
+    {
+        // sReceiveFrame is empty, so check for any received data.
+        readFrame();
+    }
 
 #if OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
     if (sDroppedFrameLength != 0)
@@ -798,10 +808,30 @@ void cc2538RadioProcess(otInstance *aInstance)
     }
 
     sReceiveFrame.mLength = 0;
+
+#if OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+    // Turn the receive interrupt handler back on now the buffer is clear.
+    HWREG(RFCORE_XREG_RFIRQM0) |= RFCORE_XREG_RFIRQM0_RXPKTDONE;
+#endif
 }
 
 void RFCoreRxTxIntHandler(void)
 {
+#if OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+    if (RFCORE_SFR_RFIRQF0 & RFCORE_SFR_RFIRQF0_RXPKTDONE)
+    {
+        readFrame();
+
+        if (sReceiveFrame.mLength > 0)
+        {
+            // A frame has been received, disable the interrupt handler
+            // until the main loop has dealt with this previous frame,
+            // otherwise we might overwrite it whilst it is being read.
+            HWREG(RFCORE_XREG_RFIRQM0) &= ~RFCORE_XREG_RFIRQM0_RXPKTDONE;
+        }
+    }
+#endif
+
     HWREG(RFCORE_SFR_RFIRQF0) = 0;
 }
 
