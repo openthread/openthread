@@ -171,6 +171,13 @@ static int8_t  sTxPower = 0;
 static otRadioState sState             = OT_RADIO_STATE_DISABLED;
 static bool         sIsReceiverEnabled = false;
 
+#if OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+// Debugging _and_ logging are enabled, so if there's a dropped frame
+// we'll need to store the length here as using snprintf from an interrupt
+// handler is not a good idea.
+static uint8_t sDroppedFrameLength = 0;
+#endif
+
 void enableReceiver(void)
 {
     if (!sIsReceiverEnabled)
@@ -697,8 +704,14 @@ void readFrame(otInstance *aInstance)
         // resets rxfifo
         HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
         HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
-
+#if OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+        // Debugging _and_ logging are enabled, it may not be safe to do
+        // logging if we're in the interrupt context, so just stash the
+        // length and do the logging later.
+        sDroppedFrameLength = length;
+#else
         otLogDebgPlat("Dropping %d received bytes (Invalid CRC)", length);
+#endif
     }
 
     // check for rxfifo overflow
@@ -716,6 +729,14 @@ exit:
 void cc2538RadioProcess(otInstance *aInstance)
 {
     readFrame(aInstance);
+
+#if OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+    if (sDroppedFrameLength != 0)
+    {
+        otLogDebgPlat("Dropping %d received bytes (Invalid CRC)", sDroppedFrameLength);
+        sDroppedFrameLength = 0;
+    }
+#endif
 
     if ((sState == OT_RADIO_STATE_RECEIVE && sReceiveFrame.mLength > 0) ||
         (sState == OT_RADIO_STATE_TRANSMIT && sReceiveFrame.mLength > IEEE802154_ACK_LENGTH))
