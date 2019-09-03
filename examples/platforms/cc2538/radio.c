@@ -661,7 +661,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     }
 }
 
-void readFrame(otInstance *aInstance)
+static void readFrame(void)
 {
     uint8_t length;
     uint8_t crcCorr;
@@ -678,7 +678,7 @@ void readFrame(otInstance *aInstance)
 #error Time sync requires the timestamp of SFD rather than that of rx done!
 #else
     // Timestamp
-    if (otPlatRadioGetPromiscuous(aInstance))
+    if (cc2538RadioGetPromiscuous())
 #endif
     {
         // The current driver only supports milliseconds resolution.
