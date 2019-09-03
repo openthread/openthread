@@ -325,10 +325,12 @@ void cc2538RadioInit(void)
     sReceiveFrame.mLength  = 0;
     sReceiveFrame.mPsdu    = sReceivePsdu;
 
+#if OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
     // Enable interrupts for RX/TX, interrupt 141.
     // That's NVIC index 5 bit 13.
     HWREG(NVIC_EN0 + (5 * 4)) = (1 << 13);
     HWREG(RFCORE_XREG_RFIRQM0) |= RFCORE_XREG_RFIRQM0_RXPKTDONE;
+#endif
 
     // enable clock
     HWREG(SYS_CTRL_RCGCRFC) = SYS_CTRL_RCGCRFC_RFC0;
