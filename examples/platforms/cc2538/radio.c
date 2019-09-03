@@ -610,11 +610,16 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
     return OT_RADIO_CAPS_NONE;
 }
 
+static bool cc2538RadioGetPromiscuous(void)
+{
+    return (HWREG(RFCORE_XREG_FRMFILT0) & RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN) == 0;
+}
+
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    return (HWREG(RFCORE_XREG_FRMFILT0) & RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN) == 0;
+    return cc2538RadioGetPromiscuous();
 }
 
 static int8_t cc2538RadioGetRssiOffset(void)
