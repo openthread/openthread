@@ -34,12 +34,12 @@ import unittest
 
 class Border_7_1_1(HarnessCase):
     role = HarnessCase.ROLE_BORDER
-    case = "7 1 1"
+    case = '7 1 1'
     golden_devices_required = 3
 
     def on_dialog(self, dialog, title):
         pass
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

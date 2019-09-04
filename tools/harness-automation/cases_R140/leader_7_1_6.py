@@ -31,12 +31,15 @@
 from autothreadharness.harness_case import HarnessCase
 import unittest
 
+
 class Leader_7_1_6(HarnessCase):
     role = HarnessCase.ROLE_LEADER
     case = '7 1 6'
     golden_devices_required = 4
+
     def on_dialog(self, dialog, title):
         pass
+
 
 if __name__ == '__main__':
     unittest.main()

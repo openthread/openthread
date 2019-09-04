@@ -95,9 +95,7 @@ class OpenThreadController(threading.Thread):
     def _connect(self):
         logger.debug("My port is %s", self.port)
         if self.port.startswith("NET"):
-            portnum = settings.SER2NET_PORTBASE + int(
-                self.port.split("NET")[1]
-            )
+            portnum = settings.SER2NET_PORTBASE + int(self.port.split("NET")[1])
             logger.debug("My port num is %d", portnum)
             address = (settings.SER2NET_HOSTNAME, portnum)
             self.handle = socket.create_connection(address)
@@ -109,9 +107,7 @@ class OpenThreadController(threading.Thread):
             self.handle.setblocking(0)
             self._is_net = True
         else:
-            self.handle = serial.Serial(
-                self.port, 115200, timeout=0, xonxoff=True
-            )
+            self.handle = serial.Serial(self.port, 115200, timeout=0, xonxoff=True)
             self._is_net = False
 
     def _read(self, size=512):

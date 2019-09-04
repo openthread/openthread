@@ -93,10 +93,7 @@ class HarnessController(object):
                 % (settings.HARNESS_HOME, settings.HARNESS_HOME),
             )
 
-            self.harness_file = '%s\\harness-%s.log' % (
-                self.result_dir,
-                time.strftime('%Y%m%d%H%M%S'),
-            )
+            self.harness_file = '%s\\harness-%s.log' % (self.result_dir, time.strftime('%Y%m%d%H%M%S'))
             with open(self.harness_file, 'w') as harness_out:
                 self.harness = subprocess.Popen(
                     [
@@ -116,11 +113,7 @@ class HarnessController(object):
         if self.miniweb:
             logger.warning('Miniweb already started')
         else:
-            with open(
-                '%s\\miniweb-%s.log'
-                % (self.result_dir, time.strftime('%Y%m%d%H%M%S')),
-                'w',
-            ) as miniweb_out:
+            with open('%s\\miniweb-%s.log' % (self.result_dir, time.strftime('%Y%m%d%H%M%S')), 'w') as miniweb_out:
                 self.miniweb = subprocess.Popen(
                     [settings.HARNESS_HOME + '\\MiniWeb\\miniweb.exe'],
                     stdout=miniweb_out,
