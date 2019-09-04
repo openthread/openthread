@@ -39,7 +39,6 @@ NM                              = arm-none-eabi-nm
 RANLIB                          = arm-none-eabi-ranlib
 OBJCOPY                         = arm-none-eabi-objcopy
 
-BuildJobs                      ?= 10
 GCCVersion                      = $(shell expr `$(CC) -dumpversion | cut -f1 -d.`)
 
 configure_OPTIONS                                 = \
