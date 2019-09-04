@@ -72,7 +72,7 @@ class DummyPduController(PduController):
         pass
 
     def reboot(self, **params):
-        logger.info("No PDU controller connected.")
+        logger.info('No PDU controller connected.')
 
     def close(self):
         pass
@@ -89,10 +89,10 @@ class ApcPduController(PduController):
         """Initialize the telnet connection
         """
         self.tn = telnetlib.Telnet(self.ip, self.port)
-        self.tn.read_until("User Name")
-        self.tn.write("apc\r\n")
-        self.tn.read_until("Password")
-        self.tn.write("apc\r\n")
+        self.tn.read_until('User Name')
+        self.tn.write('apc\r\n')
+        self.tn.read_until('Password')
+        self.tn.write('apc\r\n')
         self.until_done()
 
     def open(self, **params):
@@ -104,27 +104,27 @@ class ApcPduController(PduController):
         Example:
             params = {'port': 23, 'ip': 'localhost'}
         """
-        logger.info("opening telnet")
-        self.port = params["port"]
-        self.ip = params["ip"]
+        logger.info('opening telnet')
+        self.port = params['port']
+        self.ip = params['ip']
         self.tn = None
         self._init()
 
     def close(self):
         """Close telnet connection"""
-        logger.info("closing telnet")
+        logger.info('closing telnet')
         if self.tn:
             self.tn.close()
 
     def until_done(self):
         """Wait until the prompt encountered
         """
-        self.until(r"^>")
+        self.until(r'^>')
 
     def until(self, regex):
         """Wait until the regex encountered
         """
-        logger.debug("waiting for %s", regex)
+        logger.debug('waiting for %s', regex)
         r = re.compile(regex, re.M)
         self.tn.expect([r])
 
@@ -137,41 +137,41 @@ class ApcPduController(PduController):
         Example:
             params = {'outlet': 1}
         """
-        outlet = params["outlet"]
+        outlet = params['outlet']
 
         # main menu
-        self.tn.write("\x1b\r\n")
+        self.tn.write('\x1b\r\n')
         self.until_done()
         # Device Manager
-        self.tn.write("1\r\n")
+        self.tn.write('1\r\n')
         self.until_done()
         # Outlet Management
-        self.tn.write("2\r\n")
+        self.tn.write('2\r\n')
         self.until_done()
         # Outlet Control
-        self.tn.write("1\r\n")
+        self.tn.write('1\r\n')
         self.until_done()
         # Select outlet
-        self.tn.write("%d\r\n" % outlet)
+        self.tn.write('%d\r\n' % outlet)
         self.until_done()
         # Control
-        self.tn.write("1\r\n")
+        self.tn.write('1\r\n')
         self.until_done()
         # off
-        self.tn.write("2\r\n")
-        self.until("to cancel")
-        self.tn.write("YES\r\n")
-        self.until("to continue")
-        self.tn.write("\r\n")
+        self.tn.write('2\r\n')
+        self.until('to cancel')
+        self.tn.write('YES\r\n')
+        self.until('to continue')
+        self.tn.write('\r\n')
         self.until_done()
 
         time.sleep(5)
         # on
-        self.tn.write("1\r\n")
-        self.until("to cancel")
-        self.tn.write("YES\r\n")
-        self.until("to continue")
-        self.tn.write("\r\n")
+        self.tn.write('1\r\n')
+        self.until('to cancel')
+        self.tn.write('YES\r\n')
+        self.until('to continue')
+        self.tn.write('\r\n')
         self.until_done()
 
 
@@ -180,14 +180,14 @@ class NordicBoardPduController(PduController):
         pass
 
     def _pin_reset(self, serial_number):
-        os.system("nrfjprog -f NRF52 --snr {} -p".format(serial_number))
+        os.system('nrfjprog -f NRF52 --snr {} -p'.format(serial_number))
 
     def reboot(self, **params):
-        boards_serial_numbers = params["boards_serial_numbers"]
+        boards_serial_numbers = params['boards_serial_numbers']
 
         for serial_number in boards_serial_numbers:
             logger.info(
-                "Resetting board with the serial number: %s", serial_number
+                'Resetting board with the serial number: %s', serial_number
             )
             self._pin_reset(serial_number)
 
@@ -197,24 +197,24 @@ class NordicBoardPduController(PduController):
 
 class IpPowerSocketPduController(PduController):
     def open(self, **params):
-        self._base_url = "http://{}/outs.cgi?out".format(params["ip"])
+        self._base_url = 'http://{}/outs.cgi?out'.format(params['ip'])
         password_manager = HTTPPasswordMgrWithDefaultRealm()
         password_manager.add_password(
-            None, self._base_url, params["user"], params["pass"]
+            None, self._base_url, params['user'], params['pass']
         )
         authentication_handler = HTTPBasicAuthHandler(password_manager)
         self._opener = build_opener(authentication_handler)
 
     def reboot(self, **params):
-        logger.info("Executing power cycle")
-        for socket in params["sockets"]:
+        logger.info('Executing power cycle')
+        for socket in params['sockets']:
             self._turn_off(socket)
             time.sleep(2)
             self._turn_on(socket)
             time.sleep(2)
 
     def _change_state(self, socket, state):
-        self._opener.open("{}{}={}".format(self._base_url, socket, state))
+        self._opener.open('{}{}={}'.format(self._base_url, socket, state))
 
     def _turn_off(self, socket):
         self._change_state(socket, 1)
@@ -232,7 +232,7 @@ class ManualPduController(PduController):
         pass
 
     def reboot(self, **kwargs):
-        input("Reset all devices and press enter to continue..")
+        input('Reset all devices and press enter to continue..')
 
     def close(self):
         pass

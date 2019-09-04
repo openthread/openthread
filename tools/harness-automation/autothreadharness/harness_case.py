@@ -78,14 +78,14 @@ def wait_until(what, times=-1):
 
     """
     while times:
-        logger.info("Waiting times left %d", times)
+        logger.info('Waiting times left %d', times)
         try:
             if what() is True:
                 return True
         except BaseException:
-            logger.exception("Wait failed")
+            logger.exception('Wait failed')
         else:
-            logger.warning("Trial[%d] failed", times)
+            logger.warning('Trial[%d] failed', times)
         times -= 1
         time.sleep(1)
 
@@ -158,7 +158,7 @@ class HarnessCase(unittest.TestCase):
     """bool: whether use harness auto dut feature"""
 
     timeout = (
-        hasattr(settings, "TIMEOUT") and settings.TIMEOUT or DEFAULT_TIMEOUT
+        hasattr(settings, 'TIMEOUT') and settings.TIMEOUT or DEFAULT_TIMEOUT
     )
     """number: timeout in seconds to stop running this test case"""
 
@@ -169,7 +169,7 @@ class HarnessCase(unittest.TestCase):
         self.dut = None
         self._browser = None
         self._hc = None
-        self.result_dir = "%s\\%s" % (
+        self.result_dir = '%s\\%s' % (
             settings.OUTPUT_PATH,
             self.__class__.__name__,
         )
@@ -177,17 +177,29 @@ class HarnessCase(unittest.TestCase):
         self.add_all_devices = False
         self.new_th = False
 
-        if (
-            re.match(r"v", settings.HARNESS_VERSION, re.I)
-            and settings.HARNESS_VERSION.upper().replace(" ", "") > "R1.4.0"
+        harness_info = ConfigParser.ConfigParser()
+        harness_info.read(
+            '%s\\info.ini' % settings.HARNESS_HOME
+        )
+        if harness_info.has_option(
+                'Thread_Harness_Info', 'Version'
+        ) and harness_info.has_option(
+                'Thread_Harness_Info', 'Mode'
         ):
-            self.new_th = True
+            harness_version = harness_info.get('Thread_Harness_Info', 'Version').rsplit(' ', 1)[1]
+            harness_mode = harness_info.get('Thread_Harness_Info', 'Mode')
 
-        if (
-            re.match(r"v", settings.HARNESS_VERSION, re.I)
-            and settings.HARNESS_VERSION.upper().replace(" ", "") > "V49.4"
-        ):
-            self.new_th = True
+            if (
+                harness_mode == 'External'
+                and harness_version > '1.4.0'
+            ):
+                self.new_th = True
+
+            if (
+                    harness_mode == 'Internal'
+                    and harness_version > '49.4'
+            ):
+                self.new_th = True
 
         super(HarnessCase, self).__init__(*args, **kwargs)
 
@@ -205,10 +217,10 @@ class HarnessCase(unittest.TestCase):
                 port, _ = device
                 try:
                     with OpenThreadController(port) as otc:
-                        logger.info("Resetting %s", port)
+                        logger.info('Resetting %s', port)
                         otc.reset()
                 except BaseException:
-                    logger.exception("Failed to reset device %s", port)
+                    logger.exception('Failed to reset device %s', port)
                     self.history.mark_bad_golden_device(device)
 
             return
@@ -223,13 +235,13 @@ class HarnessCase(unittest.TestCase):
                 )
                 pdu.open(**settings.PDU_CONTROLLER_OPEN_PARAMS)
             except EOFError:
-                logger.warning("Failed to connect to telnet")
+                logger.warning('Failed to connect to telnet')
                 tries = tries - 1
                 if tries:
                     time.sleep(10)
                     continue
                 else:
-                    logger.error("Fatal error: cannot connect to apc")
+                    logger.error('Fatal error: cannot connect to apc')
                     raise
             else:
                 pdu.reboot(**settings.PDU_CONTROLLER_REBOOT_PARAMS)
@@ -251,30 +263,30 @@ class HarnessCase(unittest.TestCase):
 
         harness_config = ConfigParser.ConfigParser()
         harness_config.read(
-            "%s\\Config\\Configuration.ini" % settings.HARNESS_HOME
+            '%s\\Config\\Configuration.ini' % settings.HARNESS_HOME
         )
         if harness_config.has_option(
-            "THREAD_HARNESS_CONFIG", "BrowserAutoNavigate"
+            'THREAD_HARNESS_CONFIG', 'BrowserAutoNavigate'
         ) and harness_config.getboolean(
-            "THREAD_HARNESS_CONFIG", "BrowserAutoNavigate"
+            'THREAD_HARNESS_CONFIG', 'BrowserAutoNavigate'
         ):
             logger.error(
-                "BrowserAutoNavigate in Configuration.ini should be False"
+                'BrowserAutoNavigate in Configuration.ini should be False'
             )
             raise FailError(
-                "BrowserAutoNavigate in Configuration.ini should be False"
+                'BrowserAutoNavigate in Configuration.ini should be False'
             )
         if settings.MIXED_DEVICE_TYPE:
             if harness_config.has_option(
-                "THREAD_HARNESS_CONFIG", "EnableDeviceSelection"
+                'THREAD_HARNESS_CONFIG', 'EnableDeviceSelection'
             ) and not harness_config.getboolean(
-                "THREAD_HARNESS_CONFIG", "EnableDeviceSelection"
+                'THREAD_HARNESS_CONFIG', 'EnableDeviceSelection'
             ):
                 logger.error(
-                    "EnableDeviceSelection in Configuration.ini should be True"
+                    'EnableDeviceSelection in Configuration.ini should be True'
                 )
                 raise FailError(
-                    "EnableDeviceSelection in Configuration.ini should be True"
+                    'EnableDeviceSelection in Configuration.ini should be True'
                 )
 
     def _destroy_harness(self):
@@ -311,12 +323,12 @@ class HarnessCase(unittest.TestCase):
         """
         try:
             chrome_options = webdriver.ChromeOptions()
-            chrome_options.add_argument("--disable-extensions")
-            chrome_options.add_argument("--disable-infobars")
-            chrome_options.add_argument("--ignore-certificate-errors")
+            chrome_options.add_argument('--disable-extensions')
+            chrome_options.add_argument('--disable-infobars')
+            chrome_options.add_argument('--ignore-certificate-errors')
             chrome_options.add_experimental_option(
-                "prefs",
-                {"profile.managed_default_content_settings.notifications": 1},
+                'prefs',
+                {'profile.managed_default_content_settings.notifications': 1},
             )
 
             browser = webdriver.Chrome(chrome_options=chrome_options)
@@ -325,11 +337,11 @@ class HarnessCase(unittest.TestCase):
             browser.maximize_window()
             browser.get(settings.HARNESS_URL)
             self._browser = browser
-            if not wait_until(lambda: "Thread" in browser.title, 30):
-                self.assertIn("Thread", browser.title)
+            if not wait_until(lambda: 'Thread' in browser.title, 30):
+                self.assertIn('Thread', browser.title)
             return True
         except Exception as e:
-            logger.info("Init chrome error: {0}".format(type(e).__name__))
+            logger.info('Init chrome error: {0}'.format(type(e).__name__))
             return False
 
     def _destroy_browser(self):
@@ -340,8 +352,8 @@ class HarnessCase(unittest.TestCase):
         self._browser = None
 
     def _init_rf_shield(self):
-        if getattr(settings, "SHIELD_CONTROLLER_TYPE", None) and getattr(
-            settings, "SHIELD_CONTROLLER_PARAMS", None
+        if getattr(settings, 'SHIELD_CONTROLLER_TYPE', None) and getattr(
+            settings, 'SHIELD_CONTROLLER_PARAMS', None
         ):
             self.rf_shield = get_rf_shield_controller(
                 shield_type=settings.SHIELD_CONTROLLER_TYPE,
@@ -361,32 +373,31 @@ class HarnessCase(unittest.TestCase):
         if self.__class__ is HarnessCase:
             return
 
-        logger.info("Setting up")
+        logger.info('Setting up')
         # clear files
-        logger.info("Deleting all .pdf")
-        os.system('del /q "%HOMEDRIVE%%HOMEPATH%\\Downloads\\NewPdf_*.pdf"')
-        logger.info("Deleting all .xlsx")
+
         if not self.new_th:
-            os.system(
-                'del /q "%HOMEDRIVE%%HOMEPATH%\\Downloads\\ExcelReport*.xlsx"'
-            )
-        logger.info("Deleting all .pcapng")
+            logger.info('Deleting all .pdf')
+            os.system('del /q "%HOMEDRIVE%%HOMEPATH%\\Downloads\\NewPdf_*.pdf"')
+            logger.info('Deleting all .xlsx')
+            os.system('del /q "%HOMEDRIVE%%HOMEPATH%\\Downloads\\ExcelReport*.xlsx"')
+        logger.info('Deleting all .pcapng')
         os.system('del /q "%s\\Captures\\*.pcapng"' % settings.HARNESS_HOME)
 
         # using temp files to fix excel downloading fail
         if self.new_th:
-            logger.info("Empty files in Reports and Logs")
+            logger.info('Empty files in Reports and Logs')
             os.system('del /q "%s\\Reports\\*.*"' % settings.HARNESS_HOME)
             os.system('del /q "%s\\Logs\\*.*"' % settings.HARNESS_HOME)
         else:
-            logger.info("Empty files in temps")
+            logger.info('Empty files in temps')
             os.system(
                 'del /q "%s\\Thread_Harness\\temp\\*.*"'
                 % settings.HARNESS_HOME
             )
 
         # create directory
-        os.system("mkdir %s" % self.result_dir)
+        os.system('mkdir %s' % self.result_dir)
         self._init_harness()
         self._init_devices()
         self._init_dut()
@@ -400,7 +411,7 @@ class HarnessCase(unittest.TestCase):
         if self.__class__ is HarnessCase:
             return
 
-        logger.info("Tearing down")
+        logger.info('Tearing down')
         self._destroy_harness()
         self._destroy_browser()
         self._destroy_dut()
@@ -418,97 +429,97 @@ class HarnessCase(unittest.TestCase):
 
         # Detect Sniffer
         try:
-            dialog = self._browser.find_element_by_id("capture-Setup-modal")
+            dialog = self._browser.find_element_by_id('capture-Setup-modal')
         except BaseException:
-            logger.exception("Failed to get dialog.")
+            logger.exception('Failed to get dialog.')
         else:
-            if dialog and dialog.get_attribute("aria-hidden") == "false":
+            if dialog and dialog.get_attribute('aria-hidden') == 'false':
                 times = 100
                 while times:
                     status = dialog.find_element_by_class_name(
-                        "status-notify"
+                        'status-notify'
                     ).text
-                    if "Searching" in status:
-                        logger.info("Still detecting..")
-                    elif "Not" in status:
-                        logger.warning("Sniffer device not verified!")
+                    if 'Searching' in status:
+                        logger.info('Still detecting..')
+                    elif 'Not' in status:
+                        logger.warning('Sniffer device not verified!')
                         button = dialog.find_element_by_id(
-                            "snifferAutoDetectBtn"
+                            'snifferAutoDetectBtn'
                         )
                         button.click()
-                    elif "Verified" in status:
-                        logger.info("Verified!")
+                    elif 'Verified' in status:
+                        logger.info('Verified!')
                         button = dialog.find_element_by_id(
-                            "saveCaptureSettings"
+                            'saveCaptureSettings'
                         )
                         button.click()
                         break
                     else:
                         logger.warning(
-                            "Unexpected sniffer verification status"
+                            'Unexpected sniffer verification status'
                         )
 
                     times = times - 1
                     time.sleep(1)
 
                 if not times:
-                    raise Exception("Unable to detect sniffer device")
+                    raise Exception('Unable to detect sniffer device')
 
         time.sleep(1)
 
         try:
-            skip_button = self._browser.find_element_by_id("SkipPrepareDevice")
+            skip_button = self._browser.find_element_by_id('SkipPrepareDevice')
             if skip_button.is_enabled():
                 skip_button.click()
                 time.sleep(1)
         except BaseException:
-            logger.info("Still detecting sniffers")
+            logger.info('Still detecting sniffers')
 
         try:
-            next_button = self._browser.find_element_by_id("nextButton")
+            next_button = self._browser.find_element_by_id('nextButton')
         except BaseException:
-            logger.exception("Failed to finish setup")
+            logger.exception('Failed to finish setup')
             return
 
         if not next_button.is_enabled():
-            logger.info("Harness is still not ready")
+            logger.info('Harness is still not ready')
             return
 
         # General Setup
         try:
             if self.child_timeout or self.sed_polling_interval:
-                logger.info("finding general Setup button")
-                button = self._browser.find_element_by_id("general-Setup")
+                logger.info('finding general Setup button')
+                button = self._browser.find_element_by_id('general-Setup')
                 button.click()
                 time.sleep(2)
 
                 dialog = self._browser.find_element_by_id(
-                    "general-Setup-modal"
+                    'general-Setup-modal'
                 )
-                if dialog.get_attribute("aria-hidden") != "false":
-                    raise Exception("Missing General Setup dialog")
+                if dialog.get_attribute('aria-hidden') != 'false':
+                    raise Exception('Missing General Setup dialog')
 
                 field = dialog.find_element_by_id(
-                    "inp_general_child_update_wait_time"
+                    'inp_general_child_update_wait_time'
                 )
                 field.clear()
                 if self.child_timeout:
                     field.send_keys(str(self.child_timeout))
 
                 field = dialog.find_element_by_id(
-                    "inp_general_sed_polling_rate"
+                    'inp_general_sed_polling_rate'
                 )
                 field.clear()
                 if self.sed_polling_interval:
                     field.send_keys(str(self.sed_polling_interval))
 
-                button = dialog.find_element_by_id("saveGeneralSettings")
+                button = dialog.find_element_by_id('saveGeneralSettings')
                 button.click()
                 time.sleep(1)
 
         except BaseException:
-            logger.info("general setup exception")
-            logger.exception("Failed to do general setup")
+            logger.info('general setup exception')
+            logger.exception('Failed to do general setup')
             return
 
         # Finish this page
@@ -516,12 +527,12 @@ class HarnessCase(unittest.TestCase):
         time.sleep(1)
 
     def _connect_devices(self):
-        connect_all = self._browser.find_element_by_link_text("Connect All")
+        connect_all = self._browser.find_element_by_link_text('Connect All')
         connect_all.click()
 
     def _add_device(self, port, device_type_id):
         browser = self._browser
-        test_bed = browser.find_element_by_id("test-bed")
+        test_bed = browser.find_element_by_id('test-bed')
         device = browser.find_element_by_id(device_type_id)
         # drag
         action_chains = ActionChains(browser)
@@ -530,14 +541,14 @@ class HarnessCase(unittest.TestCase):
         time.sleep(1)
 
         # drop
-        drop_hw = browser.find_element_by_class_name("drop-hw")
+        drop_hw = browser.find_element_by_class_name('drop-hw')
         action_chains = ActionChains(browser)
         action_chains.move_to_element(drop_hw)
         action_chains.release(drop_hw).perform()
 
         time.sleep(0.5)
-        selected_hw = browser.find_element_by_class_name("selected-hw")
-        form_inputs = selected_hw.find_elements_by_tag_name("input")
+        selected_hw = browser.find_element_by_class_name('selected-hw')
+        form_inputs = selected_hw.find_elements_by_tag_name('input')
         form_port = form_inputs[0]
         form_port.clear()
         form_port.send_keys(port)
@@ -548,15 +559,15 @@ class HarnessCase(unittest.TestCase):
         Connect number of golden devices required by each case.
         """
         browser = self._browser
-        test_bed = browser.find_element_by_id("test-bed")
+        test_bed = browser.find_element_by_id('test-bed')
         time.sleep(3)
-        selected_hw_set = test_bed.find_elements_by_class_name("selected-hw")
+        selected_hw_set = test_bed.find_elements_by_class_name('selected-hw')
         selected_hw_num = len(selected_hw_set)
 
         while selected_hw_num:
             remove_button = selected_hw_set[
                 selected_hw_num - 1
-            ].find_element_by_class_name("removeSelectedDevice")
+            ].find_element_by_class_name('removeSelectedDevice')
             remove_button.click()
             selected_hw_num = selected_hw_num - 1
 
@@ -569,7 +580,7 @@ class HarnessCase(unittest.TestCase):
             )
         ]
         logger.info(
-            "Available golden devices: %s", json.dumps(devices, indent=2)
+            'Available golden devices: %s', json.dumps(devices, indent=2)
         )
         golden_devices_required = self.golden_devices_required
 
@@ -580,39 +591,39 @@ class HarnessCase(unittest.TestCase):
                 + "\\Thread_Harness\\TestScripts\\TopologyConfig.txt"
             )
             try:
-                f_topo = open(topo_file, "r")
+                f_topo = open(topo_file, 'r')
             except IOError:
-                logger.info("%s can NOT be found", topo_file)
+                logger.info('%s can NOT be found', topo_file)
                 raise GoldenDeviceNotEnoughError()
             topo_mixed_devices = []
             try:
                 while True:
                     topo_line = f_topo.readline().strip()
-                    if re.match(r"#.*", topo_line):
+                    if re.match(r'#.*', topo_line):
                         continue
-                    match_line = re.match(r"(.*)-(.*)", topo_line, re.M | re.I)
+                    match_line = re.match(r'(.*)-(.*)', topo_line, re.M | re.I)
                     if not match_line:
                         continue
                     case_id = match_line.group(1)
 
-                    if re.sub(r"\.", " ", case_id) == self.case:
+                    if re.sub(r'\.', ' ', case_id) == self.case:
                         logger.info(
-                            "Get line by case %s: %s", case_id, topo_line
+                            'Get line by case %s: %s', case_id, topo_line
                         )
-                        topo_device_list = re.split(",", match_line.group(2))
+                        topo_device_list = re.split(',', match_line.group(2))
                         for i in range(len(topo_device_list)):
-                            topo_device = re.split(":", topo_device_list[i])
+                            topo_device = re.split(':', topo_device_list[i])
                             topo_mixed_devices.append(tuple(topo_device))
                         break
                     else:
                         continue
             except Exception as e:
                 logger.info(
-                    "Get devices from topology config file error: %s", e
+                    'Get devices from topology config file error: %s', e
                 )
                 raise GoldenDeviceNotEnoughError()
             logger.info(
-                "Golden devices in topology config file for case %s: %s",
+                'Golden devices in topology config file for case %s: %s',
                 case_id,
                 topo_mixed_devices,
             )
@@ -628,7 +639,7 @@ class HarnessCase(unittest.TestCase):
                         missing_golden_devices.remove(mixed_device_item)
                         break
             logger.info(
-                "Golden devices in topology config file mapped in settings : %s",
+                'Golden devices in topology config file mapped in settings : %s',
                 golden_device_candidates,
             )
             if len(topo_mixed_devices) != len(golden_device_candidates):
@@ -638,20 +649,20 @@ class HarnessCase(unittest.TestCase):
                         device_dict[missing_device[1]] += 1
                     else:
                         device_dict[missing_device[1]] = 1
-                logger.info("Missing Devices: %s", device_dict)
+                logger.info('Missing Devices: %s', device_dict)
                 raise GoldenDeviceNotEnoughError()
             else:
                 devices = golden_device_candidates
                 golden_devices_required = len(devices)
                 logger.info(
-                    "All case-needed golden devices: %s",
+                    'All case-needed golden devices: %s',
                     json.dumps(devices, indent=2),
                 )
 
         if self.auto_dut and not settings.DUT_DEVICE:
             if settings.MIXED_DEVICE_TYPE:
-                logger.info("Must set DUT_DEVICE")
-                raise FailError("DUT_DEVICE must be set for mixed testbed")
+                logger.info('Must set DUT_DEVICE')
+                raise FailError('DUT_DEVICE must be set for mixed testbed')
             golden_devices_required += 1
 
         if len(devices) < golden_devices_required:
@@ -671,7 +682,7 @@ class HarnessCase(unittest.TestCase):
         # enable AUTO DUT
         if self.auto_dut:
             checkbox_auto_dut = browser.find_element_by_id(
-                "EnableAutoDutSelection"
+                'EnableAutoDutSelection'
             )
             if not checkbox_auto_dut.is_selected():
                 checkbox_auto_dut.click()
@@ -679,7 +690,7 @@ class HarnessCase(unittest.TestCase):
 
             if settings.DUT_DEVICE:
                 radio_auto_dut = browser.find_element_by_class_name(
-                    "AutoDUT_RadBtns"
+                    'AutoDUT_RadBtns'
                 )
                 if not radio_auto_dut.is_selected():
                     radio_auto_dut.click()
@@ -687,19 +698,19 @@ class HarnessCase(unittest.TestCase):
         while True:
             try:
                 self._connect_devices()
-                button_next = browser.find_element_by_id("nextBtn")
+                button_next = browser.find_element_by_id('nextBtn')
                 if not wait_until(
-                    lambda: "disabled"
-                    not in button_next.get_attribute("class"),
+                    lambda: 'disabled'
+                    not in button_next.get_attribute('class'),
                     times=(30 + 4 * number_of_devices_to_add),
                 ):
                     bad_ones = []
                     selected_hw_set = test_bed.find_elements_by_class_name(
-                        "selected-hw"
+                        'selected-hw'
                     )
                     for selected_hw in selected_hw_set:
                         form_inputs = selected_hw.find_elements_by_tag_name(
-                            "input"
+                            'input'
                         )
                         form_port = form_inputs[0]
                         if form_port.is_enabled():
@@ -707,10 +718,10 @@ class HarnessCase(unittest.TestCase):
 
                     for selected_hw in bad_ones:
                         form_inputs = selected_hw.find_elements_by_tag_name(
-                            "input"
+                            'input'
                         )
                         form_port = form_inputs[0]
-                        port = form_port.get_attribute("value").encode("utf8")
+                        port = form_port.get_attribute('value').encode('utf8')
                         if (
                             settings.DUT_DEVICE
                             and port == settings.DUT_DEVICE[0]
@@ -718,9 +729,9 @@ class HarnessCase(unittest.TestCase):
                             if settings.PDU_CONTROLLER_TYPE is None:
                                 # connection error cannot recover without power
                                 # cycling
-                                raise FatalError("Failed to connect to DUT")
+                                raise FatalError('Failed to connect to DUT')
                             else:
-                                raise FailError("Failed to connect to DUT")
+                                raise FailError('Failed to connect to DUT')
 
                         if settings.PDU_CONTROLLER_TYPE is None:
                             # port cannot recover without power cycling
@@ -728,7 +739,7 @@ class HarnessCase(unittest.TestCase):
 
                         # remove the bad one
                         selected_hw.find_element_by_class_name(
-                            "removeSelectedDevice"
+                            'removeSelectedDevice'
                         ).click()
                         time.sleep(0.1)
 
@@ -738,15 +749,15 @@ class HarnessCase(unittest.TestCase):
                             devices = None
 
                     if devices is None:
-                        logger.warning("Golden devices not enough")
+                        logger.warning('Golden devices not enough')
                         raise GoldenDeviceNotEnoughError()
                     else:
-                        logger.info("Try again with new golden devices")
+                        logger.info('Try again with new golden devices')
                         continue
 
                 if self.auto_dut and not settings.DUT_DEVICE:
                     radio_auto_dut = browser.find_element_by_class_name(
-                        "AutoDUT_RadBtns"
+                        'AutoDUT_RadBtns'
                     )
                     if not radio_auto_dut.is_selected():
                         radio_auto_dut.click()
@@ -756,15 +767,15 @@ class HarnessCase(unittest.TestCase):
                 button_next.click()
                 if not wait_until(
                     lambda: self._browser.current_url.endswith(
-                        "TestExecution.html"
+                        'TestExecution.html'
                     ),
                     20,
                 ):
-                    raise Exception("Failed to load TestExecution page")
+                    raise Exception('Failed to load TestExecution page')
             except FailError:
                 raise
             except BaseException:
-                logger.exception("Unexpected error")
+                logger.exception('Unexpected error')
             else:
                 break
 
@@ -772,46 +783,46 @@ class HarnessCase(unittest.TestCase):
         """Select the test case.
         """
         # select the case
-        elem = Select(self._browser.find_element_by_id("select-dut"))
+        elem = Select(self._browser.find_element_by_id('select-dut'))
         elem.select_by_value(str(role))
         time.sleep(1)
 
         checkbox = None
         wait_until(
             lambda: self._browser.find_elements_by_css_selector(
-                ".tree-node .tree-title"
+                '.tree-node .tree-title'
             )
             and True
         )
         elems = self._browser.find_elements_by_css_selector(
-            ".tree-node .tree-title"
+            '.tree-node .tree-title'
         )
-        finder = re.compile(r".*\b" + case + r"\b")
-        finder_dotted = re.compile(r".*\b" + case.replace(" ", r"\.") + r"\b")
+        finder = re.compile(r'.*\b' + case + r'\b')
+        finder_dotted = re.compile(r'.*\b' + case.replace(' ', r'\.') + r'\b')
         for elem in elems:
             action_chains = ActionChains(self._browser)
             action_chains.move_to_element(elem)
             action_chains.perform()
             logger.debug(elem.text)
             if finder.match(elem.text) or finder_dotted.match(elem.text):
-                parent = elem.find_element_by_xpath("..")
-                checkbox = parent.find_element_by_class_name("tree-checkbox")
+                parent = elem.find_element_by_xpath('..')
+                checkbox = parent.find_element_by_class_name('tree-checkbox')
                 break
 
         if not checkbox:
             time.sleep(5)
-            raise Exception("Failed to find the case")
+            raise Exception('Failed to find the case')
 
         self._browser.execute_script("$('.overview').css('left', '0')")
         checkbox.click()
         time.sleep(1)
 
-        elem = self._browser.find_element_by_id("runTest")
+        elem = self._browser.find_element_by_id('runTest')
         elem.click()
         if not wait_until(
-            lambda: self._browser.find_element_by_id("stopTest") and True, 10
+            lambda: self._browser.find_element_by_id('stopTest') and True, 10
         ):
-            raise Exception("Failed to start test case")
+            raise Exception('Failed to start test case')
 
     def _collect_result(self):
         """Collect test result.
@@ -819,38 +830,38 @@ class HarnessCase(unittest.TestCase):
         Generate PDF, excel and pcap file
         """
         # generate pdf
-        self._browser.find_element_by_class_name("save-pdf").click()
+        self._browser.find_element_by_class_name('save-pdf').click()
         time.sleep(1)
         try:
-            dialog = self._browser.find_element_by_id("Testinfo")
+            dialog = self._browser.find_element_by_id('Testinfo')
         except BaseException:
-            logger.exception("Failed to get test info dialog.")
+            logger.exception('Failed to get test info dialog.')
         else:
-            if dialog.get_attribute("aria-hidden") != "false":
-                raise Exception("Test information dialog not ready")
+            if dialog.get_attribute('aria-hidden') != 'false':
+                raise Exception('Test information dialog not ready')
 
             version = (
                 self.auto_dut and settings.DUT_VERSION or self.dut.version
             )
-            dialog.find_element_by_id("inp_dut_manufacturer").send_keys(
+            dialog.find_element_by_id('inp_dut_manufacturer').send_keys(
                 settings.DUT_MANUFACTURER
             )
-            dialog.find_element_by_id("inp_dut_firmware_version").send_keys(
+            dialog.find_element_by_id('inp_dut_firmware_version').send_keys(
                 version
             )
-            dialog.find_element_by_id("inp_tester_name").send_keys(
+            dialog.find_element_by_id('inp_tester_name').send_keys(
                 settings.TESTER_NAME
             )
-            dialog.find_element_by_id("inp_remarks").send_keys(
+            dialog.find_element_by_id('inp_remarks').send_keys(
                 settings.TESTER_REMARKS
             )
-            dialog.find_element_by_id("generatePdf").click()
+            dialog.find_element_by_id('generatePdf').click()
 
         time.sleep(1)
         main_window = self._browser.current_window_handle
 
         # generate excel
-        self._browser.find_element_by_class_name("save-excel").click()
+        self._browser.find_element_by_class_name('save-excel').click()
         time.sleep(1)
         for window_handle in self._browser.window_handles:
             if window_handle != main_window:
@@ -859,7 +870,7 @@ class HarnessCase(unittest.TestCase):
         self._browser.switch_to.window(main_window)
 
         # save pcap
-        self._browser.find_element_by_class_name("save-wireshark").click()
+        self._browser.find_element_by_class_name('save-wireshark').click()
         time.sleep(1)
         for window_handle in self._browser.window_handles:
             if window_handle != main_window:
@@ -887,45 +898,45 @@ class HarnessCase(unittest.TestCase):
     def _wait_dialog(self):
         """Wait for dialogs and handle them until done.
         """
-        logger.debug("waiting for dialog")
+        logger.debug('waiting for dialog')
         done = False
         error = False
 
-        logger.info("self timeout %d", self.timeout)
+        logger.info('self timeout %d', self.timeout)
         while not done and self.timeout:
             try:
-                dialog = self._browser.find_element_by_id("RemoteConfirm")
+                dialog = self._browser.find_element_by_id('RemoteConfirm')
             except BaseException:
-                logger.exception("Failed to get dialog.")
+                logger.exception('Failed to get dialog.')
             else:
-                if dialog and dialog.get_attribute("aria-hidden") == "false":
+                if dialog and dialog.get_attribute('aria-hidden') == 'false':
                     title = dialog.find_element_by_class_name(
-                        "modal-title"
+                        'modal-title'
                     ).text
                     time.sleep(1)
-                    logger.info("Handling dialog[%s]", title)
+                    logger.info('Handling dialog[%s]', title)
 
                     try:
                         done = self._handle_dialog(dialog, title)
                     except BaseException:
-                        logger.exception("Error handling dialog: %s", title)
+                        logger.exception('Error handling dialog: %s', title)
                         error = True
 
                     if done is None:
-                        raise FailError("Unexpected dialog occurred")
+                        raise FailError('Unexpected dialog occurred')
 
-                    dialog.find_element_by_id("ConfirmOk").click()
+                    dialog.find_element_by_id('ConfirmOk').click()
 
             time.sleep(1)
 
             try:
-                stop_button = self._browser.find_element_by_id("stopTest")
+                stop_button = self._browser.find_element_by_id('stopTest')
                 if done:
                     stop_button.click()
                     # wait for stop procedure end
                     time.sleep(10)
             except NoSuchElementException:
-                logger.info("Test stopped")
+                logger.info('Test stopped')
                 time.sleep(5)
                 done = True
 
@@ -936,15 +947,15 @@ class HarnessCase(unittest.TestCase):
                 lines = self._hc.tail()
                 if 'SUCCESS: The process "dumpcap.exe" with PID ' in lines:
                     logger.info(
-                        "Tshark should be ended now, lets wait at most 30 seconds."
+                        'Tshark should be ended now, lets wait at most 30 seconds.'
                     )
                     if not wait_until(
-                        lambda: "tshark.exe"
-                        not in subprocess.check_output("tasklist"),
+                        lambda: 'tshark.exe'
+                        not in subprocess.check_output('tasklist'),
                         30,
                     ):
                         res = subprocess.check_output(
-                            "taskkill /t /f /im tshark.exe",
+                            'taskkill /t /f /im tshark.exe',
                             stderr=subprocess.STDOUT,
                             shell=True,
                         )
@@ -952,11 +963,11 @@ class HarnessCase(unittest.TestCase):
 
         # Wait until case really stopped
         wait_until(
-            lambda: self._browser.find_element_by_id("runTest") and True, 30
+            lambda: self._browser.find_element_by_id('runTest') and True, 30
         )
 
         if error:
-            raise FailError("Fail for previous exceptions")
+            raise FailError('Fail for previous exceptions')
 
     def _handle_dialog(self, dialog, title):
         """Handle a dialog.
@@ -970,19 +981,19 @@ class HarnessCase(unittest.TestCase):
         if isinstance(done, bool):
             return done
 
-        if title.startswith("Start DUT"):
-            body = dialog.find_element_by_id("cnfrmMsg").text
-            if "Sleepy End Device" in body:
-                self.dut.mode = "s"
+        if title.startswith('Start DUT'):
+            body = dialog.find_element_by_id('cnfrmMsg').text
+            if 'Sleepy End Device' in body:
+                self.dut.mode = 's'
                 self.dut.child_timeout = self.child_timeout
-            elif "End Device" in body:
-                self.dut.mode = "rsn"
+            elif 'End Device' in body:
+                self.dut.mode = 'rsn'
                 self.dut.child_timeout = self.child_timeout
             else:
-                self.dut.mode = "rsdn"
+                self.dut.mode = 'rsdn'
 
-            if "at channel" in body:
-                self.channel = int(body.split(":")[1])
+            if 'at channel' in body:
+                self.channel = int(body.split(':')[1])
 
             self.dut.channel = self.channel
             self.dut.panid = settings.THREAD_PANID
@@ -990,72 +1001,72 @@ class HarnessCase(unittest.TestCase):
             self.dut.extpanid = settings.THREAD_EXTPANID
             self.dut.start()
 
-        elif title.startswith("MAC Address Required") or title.startswith(
-            "DUT Random Extended MAC Address Required"
+        elif title.startswith('MAC Address Required') or title.startswith(
+            'DUT Random Extended MAC Address Required'
         ):
             mac = self.dut.mac
-            inp = dialog.find_element_by_id("cnfrmInpText")
+            inp = dialog.find_element_by_id('cnfrmInpText')
             inp.clear()
-            inp.send_keys("0x%s" % mac)
+            inp.send_keys('0x%s' % mac)
 
-        elif title.startswith("LL64 Address"):
+        elif title.startswith('LL64 Address'):
             ll64 = None
             for addr in self.dut.addrs:
                 addr = addr.lower()
-                if addr.startswith("fe80") and not re.match(
-                    ".+ff:fe00:[0-9a-f]{0,4}$", addr
+                if addr.startswith('fe80') and not re.match(
+                    '.+ff:fe00:[0-9a-f]{0,4}$', addr
                 ):
                     ll64 = addr
                     break
 
             if not ll64:
-                raise FailError("No link local address found")
+                raise FailError('No link local address found')
 
-            logger.info("Link local address is %s", ll64)
-            inp = dialog.find_element_by_id("cnfrmInpText")
+            logger.info('Link local address is %s', ll64)
+            inp = dialog.find_element_by_id('cnfrmInpText')
             inp.clear()
             inp.send_keys(ll64)
 
-        elif title.startswith("Enter Channel"):
+        elif title.startswith('Enter Channel'):
             self.dut.channel = self.channel
-            inp = dialog.find_element_by_id("cnfrmInpText")
+            inp = dialog.find_element_by_id('cnfrmInpText')
             inp.clear()
             inp.send_keys(str(self.dut.channel))
 
-        elif title.startswith("User Action Needed"):
-            body = dialog.find_element_by_id("cnfrmMsg").text
-            if body.startswith("Power Down the DUT"):
+        elif title.startswith('User Action Needed'):
+            body = dialog.find_element_by_id('cnfrmMsg').text
+            if body.startswith('Power Down the DUT'):
                 self.dut.stop()
             return True
 
-        elif title.startswith("Short Address"):
-            short_addr = "0x%s" % self.dut.short_addr
-            inp = dialog.find_element_by_id("cnfrmInpText")
+        elif title.startswith('Short Address'):
+            short_addr = '0x%s' % self.dut.short_addr
+            inp = dialog.find_element_by_id('cnfrmInpText')
             inp.clear()
             inp.send_keys(short_addr)
 
-        elif title.startswith("ML64 Address"):
+        elif title.startswith('ML64 Address'):
             ml64 = None
             for addr in self.dut.addrs:
-                if addr.startswith("fd") and not re.match(
-                    ".+ff:fe00:[0-9a-f]{0,4}$", addr
+                if addr.startswith('fd') and not re.match(
+                    '.+ff:fe00:[0-9a-f]{0,4}$', addr
                 ):
                     ml64 = addr
                     break
 
             if not ml64:
-                raise Exception("No mesh local address found")
+                raise Exception('No mesh local address found')
 
-            logger.info("Mesh local address is %s", ml64)
-            inp = dialog.find_element_by_id("cnfrmInpText")
+            logger.info('Mesh local address is %s', ml64)
+            inp = dialog.find_element_by_id('cnfrmInpText')
             inp.clear()
             inp.send_keys(ml64)
 
-        elif title.startswith("Shield Devices") or title.startswith(
-            "Sheild DUT"
+        elif title.startswith('Shield Devices') or title.startswith(
+            'Sheild DUT'
         ):
             if self.rf_shield:
-                logger.info("Shielding devices")
+                logger.info('Shielding devices')
                 with self.rf_shield:
                     self.rf_shield.shield()
             elif self.dut and settings.SHIELD_SIMULATION:
@@ -1063,52 +1074,52 @@ class HarnessCase(unittest.TestCase):
                     self.channel == THREAD_CHANNEL_MAX and THREAD_CHANNEL_MIN
                 ) or (self.channel + 1)
             else:
-                input("Shield DUT and press enter to continue..")
+                input('Shield DUT and press enter to continue..')
 
-        elif title.startswith("Unshield Devices") or title.startswith(
-            "Bring DUT Back to network"
+        elif title.startswith('Unshield Devices') or title.startswith(
+            'Bring DUT Back to network'
         ):
             if self.rf_shield:
-                logger.info("Unshielding devices")
+                logger.info('Unshielding devices')
                 with self.rf_shield:
                     self.rf_shield.unshield()
             elif self.dut and settings.SHIELD_SIMULATION:
                 self.dut.channel = self.channel
             else:
-                input("Bring DUT and press enter to continue..")
+                input('Bring DUT and press enter to continue..')
 
-        elif title.startswith("Configure Prefix on DUT"):
-            body = dialog.find_element_by_id("cnfrmMsg").text
-            body = body.split(": ")[1]
+        elif title.startswith('Configure Prefix on DUT'):
+            body = dialog.find_element_by_id('cnfrmMsg').text
+            body = body.split(': ')[1]
             params = reduce(
                 lambda params, param: params.update(
-                    ((param[0].strip(" "), param[1]),)
+                    ((param[0].strip(' '), param[1]),)
                 )
                 or params,
-                [it.split("=") for it in body.split(", ")],
+                [it.split('=') for it in body.split(', ')],
                 {},
             )
-            prefix = params["P_Prefix"].strip("\0\r\n\t ")
+            prefix = params['P_Prefix'].strip('\0\r\n\t ')
             flags = []
-            if params.get("P_slaac_preferred", 0) == "1":
-                flags.append("p")
-            flags.append("ao")
-            if params.get("P_stable", 0) == "1":
-                flags.append("s")
-            if params.get("P_default", 0) == "1":
-                flags.append("r")
-            prf = "high"
-            self.dut.add_prefix(prefix, "".join(flags), prf)
+            if params.get('P_slaac_preferred', 0) == '1':
+                flags.append('p')
+            flags.append('ao')
+            if params.get('P_stable', 0) == '1':
+                flags.append('s')
+            if params.get('P_default', 0) == '1':
+                flags.append('r')
+            prf = 'high'
+            self.dut.add_prefix(prefix, ''.join(flags), prf)
 
         return False
 
     def test(self):
         """This method will only start test case in child class"""
         if self.__class__ is HarnessCase:
-            logger.warning("Skip this harness itself")
+            logger.warning('Skip this harness itself')
             return
 
-        logger.info("Testing role[%d] case[%s]", self.role, self.case)
+        logger.info('Testing role[%d] case[%s]', self.role, self.case)
 
         init_browser_times = 5
         while True:
@@ -1124,29 +1135,29 @@ class HarnessCase(unittest.TestCase):
             # prepare test case
             while True:
                 url = self._browser.current_url
-                if url.endswith("SetupPage.html"):
+                if url.endswith('SetupPage.html'):
                     self._setup_page()
-                elif url.endswith("TestBed.html"):
+                elif url.endswith('TestBed.html'):
                     self._test_bed()
-                elif url.endswith("TestExecution.html"):
-                    logger.info("Ready to handle dialogs")
+                elif url.endswith('TestExecution.html'):
+                    logger.info('Ready to handle dialogs')
                     break
                 time.sleep(2)
         except UnexpectedAlertPresentException:
-            logger.exception("Failed to connect to harness server")
+            logger.exception('Failed to connect to harness server')
             raise SystemExit()
         except FatalError:
-            logger.exception("Test stopped for fatal error")
+            logger.exception('Test stopped for fatal error')
             raise SystemExit()
         except FailError:
-            logger.exception("Test failed")
+            logger.exception('Test failed')
             raise
         except BaseException:
-            logger.exception("Something wrong")
+            logger.exception('Something wrong')
 
         self._select_case(self.role, self.case)
 
-        logger.info("start to wait test process end")
+        logger.info('start to wait test process end')
         self._wait_dialog()
 
         try:
@@ -1166,12 +1177,11 @@ class HarnessCase(unittest.TestCase):
             else:
                 self._collect_result()
         except BaseException:
-            logger.exception("Failed to collect results")
+            logger.exception('Failed to collect results')
             raise
 
         # get case result
-        status = self._browser.find_element_by_class_name("title-test").text
+        status = self._browser.find_element_by_class_name('title-test').text
         logger.info(status)
-        success = "Pass" in status
+        success = 'Pass' in status
         self.assertTrue(success)
-

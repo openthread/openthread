@@ -31,26 +31,26 @@
 AUTO_DUT = True
 """bool: Whether use the auto DUT feature of thread harness."""
 
-DUT_DEVICE = ("COM16", "OpenThread")
+DUT_DEVICE = ('COM16', 'OpenThread')
 """(str, str): The first element is serial port of the DUT, and the second is
 the device type. This must be set if AUTO_DUT=False."""
 
-DUT_VERSION = "g12345"
+DUT_VERSION = 'g12345'
 """str: Version of DUT, must be set if AUTO_DUT=False."""
 
-DUT_MANUFACTURER = "Open Thread"
+DUT_MANUFACTURER = 'Open Thread'
 """str: Manufacturer of the DUT"""
 
 THREAD_CHANNEL = 18
 """int: Thread channel"""
 
-THREAD_PANID = "0xface"
+THREAD_PANID = '0xface'
 """str: Thread PAN ID"""
 
-THREAD_NETWORKNAME = "GRL"
+THREAD_NETWORKNAME = 'GRL'
 """str: Thread network name"""
 
-THREAD_EXTPANID = "000db80000000000"
+THREAD_EXTPANID = '000db80000000000'
 """str: Thread extended PAN ID"""
 
 THREAD_CHILD_TIMEOUT = 0
@@ -59,19 +59,16 @@ THREAD_CHILD_TIMEOUT = 0
 THREAD_SED_POLLING_INTERVAL = 0
 """int: SED polling interval in seconds. Set to 0 to use Harness's default value."""
 
-HARNESS_HOME = "C:\\GRL\\Thread1.1"
-r"""str: Harness installation path, e.g. ``C:\GRL\Thread1.1``"""
+HARNESS_HOME = 'C:\\GRL\\Thread1.1'
+"""str: Harness installation path, e.g. 'C:\GRL\Thread1.1'"""
 
-HARNESS_URL = "http://127.0.0.1:8000"
+HARNESS_URL = 'http://127.0.0.1:8000'
 """str: Harness front-end url"""
 
-HARNESS_VERSION = "R1.4.0"
-"""str: Harness version, official or internal release, e.g. 'R1.4.0' or 'V49.4' """
-
-TESTER_NAME = "Thread Open"
+TESTER_NAME = 'Thread Open'
 """str: Who are you"""
 
-TESTER_REMARKS = "OpenThread is great"
+TESTER_REMARKS = 'OpenThread is great'
 """str: Any comments in the final PDF"""
 
 GOLDEN_DEVICES = []
@@ -89,7 +86,7 @@ r"""bool: Whether golden devices are mixed-type. Must put
         HARNESS_HOME\Thread_Harness\TestScripts before testing if True
 """
 
-OUTPUT_PATH = ".\\output"
+OUTPUT_PATH = '.\\output'
 """str: Path to store results and logs, MUST be writable."""
 
 SHIELD_SIMULATION = False
@@ -107,7 +104,7 @@ Types of supported PDU controllers:
     - 'IP_POWER_SOCKET_PDU_CONTROLLER' - when IP Power Socket 5G10A connected
 """
 
-PDU_CONTROLLER_OPEN_PARAMS = {"port": 23, "ip": "127.0.0.1"}
+PDU_CONTROLLER_OPEN_PARAMS = {'port': 23, 'ip': '127.0.0.1'}
 """dict: Parameters pass to the "open" method of PDU controller.
 
 Example parameters for the 'APC_PDU_CONTROLLER':
@@ -120,7 +117,7 @@ Example parameters for the 'IP_POWER_SOCKET_PDU_CONTROLLER':
     {'user': 'user', 'pass': 'pass', 'ip': '127.0.0.1'}
 """
 
-PDU_CONTROLLER_REBOOT_PARAMS = {"outlet": 1}
+PDU_CONTROLLER_REBOOT_PARAMS = {'outlet': 1}
 """dict: Parameters pass to the "reboot" method of PDU controller.
 
 Example parameters for the 'APC_PDU_CONTROLLER':
