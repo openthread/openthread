@@ -1077,6 +1077,69 @@ class Node:
     def udp_check_rx(self, bytes_should_rx):
         self._expect('%d bytes' % bytes_should_rx)
 
+    def router_list(self):
+        cmd = 'router list'
+        self.send_command(cmd)
+        self._expect([r'(\d+)((\s\d+)*)'])
+
+        g = self.pexpect.match.groups()
+        router_list = g[0] + ' ' + g[1]
+        router_list = [int(x) for x in router_list.split()]
+        self._expect('Done')
+        return router_list
+
+    def router_table(self):
+        cmd = 'router table'
+        self.send_command(cmd)
+
+        self._expect(r'(.*)Done')
+        g = self.pexpect.match.groups()
+        output = g[0]
+        lines = output.strip().split('\n')
+        lines = [l.strip() for l in lines]
+        router_table = {}
+        for i, line in enumerate(lines):
+            if not line.startswith('|') or not line.endswith('|'):
+                if i not in (0, 2):
+                    # should not happen
+                    print("unexpected line %d: %s" % (i, line))
+
+                continue
+
+            line = line[1:][:-1]
+            line = [x.strip() for x in line.split('|')]
+            if len(line) != 8:
+                print("unexpected line %d: %s" % (i, line))
+                continue
+
+            try:
+                int(line[0])
+            except ValueError:
+                if i != 1:
+                    print("unexpected line %d: %s" % (i, line))
+                continue
+
+            id = int(line[0])
+            rloc16 = int(line[1], 16)
+            nexthop = int(line[2])
+            pathcost = int(line[3])
+            lqin = int(line[4])
+            lqout = int(line[5])
+            age = int(line[6])
+            emac = str(line[7])
+
+            router_table[id] = {
+                'rloc16': rloc16,
+                'nexthop': nexthop,
+                'pathcost': pathcost,
+                'lqin': lqin,
+                'lqout': lqout,
+                'age': age,
+                'emac': emac,
+            }
+
+        return router_table
+
 
 if __name__ == '__main__':
     unittest.main()
