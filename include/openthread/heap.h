@@ -73,6 +73,27 @@ typedef void *(*otHeapCAllocFn)(size_t aCount, size_t aSize);
 typedef void (*otHeapFreeFn)(void *aPointer);
 
 /**
+ * This method allocates at least @p aCount * @aSize bytes memory and initialize to zero.
+ *
+ * @param[in]   aCount  Number of allocate units.
+ * @param[in]   aSize   Unit size in bytes.
+ *
+ * @returns A pointer to the allocated memory.
+ *
+ * @retval  NULL    Indicates not enough memory.
+ *
+ */
+void *otHeapCAlloc(size_t aCount, size_t aSize);
+
+/**
+ * This method free memory pointed by @p aPointer.
+ *
+ * @param[in]   aPointer    A pointer to the memory to free.
+ *
+ */
+void otHeapFree(void *aPointer);
+
+/**
  * This function sets the external heap CAlloc and Free
  * functions to be used by the OpenThread stack.
  *

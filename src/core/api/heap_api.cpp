@@ -37,7 +37,46 @@
 
 #include "common/instance.hpp"
 
-#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE || OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+
+#if OPENTHREAD_RADIO
+
+void *otHeapCAlloc(size_t aCount, size_t aSize)
+{
+    OT_UNUSED_VARIABLE(aCount);
+    OT_UNUSED_VARIABLE(aSize);
+
+    // Should never get called!
+    assert(false);
+
+    return NULL;
+}
+
+void otHeapFree(void *aPointer)
+{
+    OT_UNUSED_VARIABLE(aPointer);
+
+    // Should never get called!
+    assert(false);
+}
+
+#else // OPENTHREAD_RADIO
+
+void *otHeapCAlloc(size_t aCount, size_t aSize)
+{
+    return ot::Instance::Get().HeapCAlloc(aCount, aSize);
+}
+
+void otHeapFree(void *aPointer)
+{
+    ot::Instance::Get().HeapFree(aPointer);
+}
+
+#endif // OPENTHREAD_RADIO
+
+#endif // !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE || OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE && !OPENTHREAD_RADIO
 void otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
 {
     ot::Instance::HeapSetCAllocFree(aCAlloc, aFree);

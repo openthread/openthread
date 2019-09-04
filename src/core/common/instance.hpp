@@ -272,6 +272,7 @@ public:
 #elif !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     void  HeapFree(void *aPointer) { mHeap.Free(aPointer); }
     void *HeapCAlloc(size_t aCount, size_t aSize) { return mHeap.CAlloc(aCount, aSize); }
+
     /**
      * This method returns a reference to the Heap object.
      *
