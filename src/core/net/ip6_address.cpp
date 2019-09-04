@@ -181,7 +181,7 @@ void Address::ToExtAddress(Mac::ExtAddress &aExtAddress) const
 
 void Address::ToExtAddress(Mac::Address &aMacAddress) const
 {
-    aMacAddress.SetExtended(mFields.m8 + kInterfaceIdentifierOffset, /* reverse */ false);
+    aMacAddress.SetExtended(mFields.m8 + kInterfaceIdentifierOffset);
     aMacAddress.GetExtended().ToggleLocal();
 }
 

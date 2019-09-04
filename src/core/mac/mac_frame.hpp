@@ -97,10 +97,33 @@ public:
     typedef String<kInfoStringSize> InfoString;
 
     /**
+     * This enumeration type specifies the copy byte order when Extended Address is being copied to/from a buffer.
+     *
+     */
+    enum CopyByteOrder
+    {
+        kNormalByteOrder,  // Copy address bytes in normal order (as provided in array buffer).
+        kReverseByteOrder, // Copy address bytes in reverse byte order.
+    };
+
+    /**
      * This method generates a random IEEE 802.15.4 Extended Address.
      *
      */
     void GenerateRandom(void);
+
+    /**
+     * This method sets the Extended Address from a given byte array.
+     *
+     * @param[in] aBuffer    Pointer to an array containing the Extended Address. `OT_EXT_ADDRESS_SIZE` bytes from
+     *                       buffer are copied to form the Extended Address.
+     * @param[in] aByteOrder The byte order to use when copying the address.
+     *
+     */
+    void Set(const uint8_t *aBuffer, CopyByteOrder aByteOrder = kNormalByteOrder)
+    {
+        CopyAddress(m8, aBuffer, aByteOrder);
+    }
 
     /**
      * This method indicates whether or not the Group bit is set.
@@ -169,6 +192,18 @@ public:
     void ToggleLocal(void) { m8[0] ^= kLocalFlag; }
 
     /**
+     * This method copies the Extended Address into a given buffer.
+     *
+     * @param[out] aBuffer     A pointer to a buffer to copy the Extended Address into.
+     * @param[in]  aByteOrder  The byte order to copy the address.
+     *
+     */
+    void CopyTo(uint8_t *aBuffer, CopyByteOrder aByteOrder = kNormalByteOrder) const
+    {
+        CopyAddress(aBuffer, m8, aByteOrder);
+    }
+
+    /**
      * This method evaluates whether or not the Extended Addresses match.
      *
      * @param[in]  aOther  The Extended Address to compare.
@@ -199,6 +234,8 @@ public:
     InfoString ToString(void) const;
 
 private:
+    static void CopyAddress(uint8_t *aDst, const uint8_t *aSrc, CopyByteOrder aByteOrder);
+
     enum
     {
         kGroupFlag = 1 << 0,
@@ -338,17 +375,20 @@ public:
     }
 
     /**
-     * This method sets the address with an Extended Address given as byte array.
+     * This method sets the address with an Extended Address given as a byte array.
      *
      * The type is also updated to indicate that the address is Extended.
      *
-     * @param[in]  aBuffer   Pointer to a array containing the Extended Address. `OT_EXT_ADDRESS_SIZE` bytes from buffer
-     *                       are copied to form the Extended Address.
-     * @param[in]  aReverse  If `true` then `OT_EXT_ADDRESS_SIZE` bytes from @p aBuffer are copied in reverse order,
-     *                       otherwise they are copied as provided.
+     * @param[in] aBuffer    Pointer to an array containing the Extended Address. `OT_EXT_ADDRESS_SIZE` bytes from
+     *                       buffer are copied to form the Extended Address.
+     * @param[in] aByteOrder The byte order to copy the address from @p aBuffer.
      *
      */
-    void SetExtended(const uint8_t *aBuffer, bool aReverse);
+    void SetExtended(const uint8_t *aBuffer, ExtAddress::CopyByteOrder aByteOrder = ExtAddress::kNormalByteOrder)
+    {
+        mShared.mExtAddress.Set(aBuffer, aByteOrder);
+        mType = kTypeExtended;
+    }
 
     /**
      * This method indicates whether or not the address is a Short Broadcast Address.

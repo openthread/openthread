@@ -33,9 +33,127 @@
 #include "radio/radio.hpp"
 #include "utils/wrap_string.h"
 
+#include "test_platform.h"
 #include "test_util.h"
 
 namespace ot {
+
+bool CompareReversed(const uint8_t *aFirst, const uint8_t *aSecond, uint16_t aLength)
+{
+    bool matches = true;
+
+    for (uint16_t i = 0; i < aLength; i++)
+    {
+        if (aFirst[i] != aSecond[aLength - 1 - i])
+        {
+            matches = false;
+            break;
+        }
+    }
+
+    return matches;
+}
+
+void TestMacAddress(void)
+{
+    const uint8_t           kExtAddr[OT_EXT_ADDRESS_SIZE] = {0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0};
+    const Mac::ShortAddress kShortAddr                    = 0x1234;
+
+    ot::Instance *  instance;
+    Mac::Address    addr;
+    Mac::ExtAddress extAddr;
+    uint8_t         buffer[OT_EXT_ADDRESS_SIZE];
+
+    instance = testInitInstance();
+    VerifyOrQuit(instance != NULL, "NULL instance\n");
+
+    // Mac::ExtAddress
+
+    extAddr.GenerateRandom();
+    VerifyOrQuit(extAddr.IsLocal(), "Random Extended Address should have its Local bit set\n");
+    VerifyOrQuit(!extAddr.IsGroup(), "Random Extended Address should not have its Group bit set\n");
+
+    extAddr.CopyTo(buffer);
+    VerifyOrQuit(memcmp(extAddr.m8, buffer, OT_EXT_ADDRESS_SIZE) == 0, "ExtAddress::CopyTo() failed\n");
+
+    extAddr.CopyTo(buffer, Mac::ExtAddress::kReverseByteOrder);
+    VerifyOrQuit(CompareReversed(extAddr.m8, buffer, OT_EXT_ADDRESS_SIZE), "ExtAddress::CopyTo() failed\n");
+
+    extAddr.Set(kExtAddr);
+    VerifyOrQuit(memcmp(extAddr.m8, kExtAddr, OT_EXT_ADDRESS_SIZE) == 0, "ExtAddress::Set() failed\n");
+
+    extAddr.Set(kExtAddr, Mac::ExtAddress::kReverseByteOrder);
+    VerifyOrQuit(CompareReversed(extAddr.m8, kExtAddr, OT_EXT_ADDRESS_SIZE), "ExtAddress::Set() failed\n");
+
+    extAddr.SetLocal(true);
+    VerifyOrQuit(extAddr.IsLocal(), "ExtAddress::SetLocal() failed\n");
+    extAddr.SetLocal(false);
+    VerifyOrQuit(!extAddr.IsLocal(), "ExtAddress::SetLocal() failed\n");
+    extAddr.ToggleLocal();
+    VerifyOrQuit(extAddr.IsLocal(), "ExtAddress::SetLocal() failed\n");
+    extAddr.ToggleLocal();
+    VerifyOrQuit(!extAddr.IsLocal(), "ExtAddress::SetLocal() failed\n");
+
+    extAddr.SetGroup(true);
+    VerifyOrQuit(extAddr.IsGroup(), "ExtAddress::SetGroup() failed\n");
+    extAddr.SetGroup(false);
+    VerifyOrQuit(!extAddr.IsGroup(), "ExtAddress::SetGroup() failed\n");
+    extAddr.ToggleGroup();
+    VerifyOrQuit(extAddr.IsGroup(), "ExtAddress::SetGroup() failed\n");
+    extAddr.ToggleGroup();
+    VerifyOrQuit(!extAddr.IsGroup(), "ExtAddress::SetGroup() failed\n");
+
+    // Mac::Address
+
+    VerifyOrQuit(addr.IsNone(), "Address constructor failed\n");
+    VerifyOrQuit(addr.GetType() == Mac::Address::kTypeNone, "Address::GetType() failed\n");
+
+    addr.SetShort(kShortAddr);
+    VerifyOrQuit(addr.GetType() == Mac::Address::kTypeShort, "Address::GetType() failed\n");
+    VerifyOrQuit(addr.IsShort(), "Address::SetShort() failed\n");
+    VerifyOrQuit(!addr.IsExtended(), "Address::SetShort() failed\n");
+    VerifyOrQuit(addr.GetShort() == kShortAddr, "Address::GetShort() failed\n");
+
+    addr.SetExtended(extAddr);
+    VerifyOrQuit(addr.GetType() == Mac::Address::kTypeExtended, "Address::GetType() failed\n");
+    VerifyOrQuit(!addr.IsShort(), "Address::SetExtended() failed\n");
+    VerifyOrQuit(addr.IsExtended(), "Address::SetExtended() failed\n");
+    VerifyOrQuit(addr.GetExtended() == extAddr, "Address::GetExtended() failed\n");
+
+    addr.SetExtended(extAddr.m8, Mac::ExtAddress::kReverseByteOrder);
+    VerifyOrQuit(addr.GetType() == Mac::Address::kTypeExtended, "Address::GetType() failed\n");
+    VerifyOrQuit(!addr.IsShort(), "Address::SetExtended() failed\n");
+    VerifyOrQuit(addr.IsExtended(), "Address::SetExtended() failed\n");
+    VerifyOrQuit(CompareReversed(addr.GetExtended().m8, extAddr.m8, OT_EXT_ADDRESS_SIZE),
+                 "Address::SetExtended() reverse byte order failed");
+
+    addr.SetNone();
+    VerifyOrQuit(addr.GetType() == Mac::Address::kTypeNone, "Address::GetType() failed\n");
+    VerifyOrQuit(addr.IsNone(), "Address:SetNone() failed\n");
+    VerifyOrQuit(!addr.IsShort(), "Address::SetNone() failed\n");
+    VerifyOrQuit(!addr.IsExtended(), "Address::SetNone() failed\n");
+
+    VerifyOrQuit(!addr.IsBroadcast(), "Address:IsBroadcast() failed\n");
+    VerifyOrQuit(!addr.IsShortAddrInvalid(), "Address:IsShortAddrInvalid() failed\n");
+
+    addr.SetExtended(extAddr);
+    VerifyOrQuit(!addr.IsBroadcast(), "Address:IsBroadcast() failed\n");
+    VerifyOrQuit(!addr.IsShortAddrInvalid(), "Address:IsShortAddrInvalid() failed\n");
+
+    addr.SetShort(kShortAddr);
+    VerifyOrQuit(!addr.IsBroadcast(), "Address:IsBroadcast() failed\n");
+    VerifyOrQuit(!addr.IsShortAddrInvalid(), "Address:IsShortAddrInvalid() failed\n");
+
+    addr.SetShort(Mac::kShortAddrBroadcast);
+    VerifyOrQuit(addr.IsBroadcast(), "Address:IsBroadcast() failed\n");
+    VerifyOrQuit(!addr.IsShortAddrInvalid(), "Address:IsShortAddrInvalid() failed\n");
+
+    addr.SetShort(Mac::kShortAddrInvalid);
+    VerifyOrQuit(!addr.IsBroadcast(), "Address:IsBroadcast() failed\n");
+    VerifyOrQuit(addr.IsShortAddrInvalid(), "Address:IsShortAddrInvalid() failed\n");
+
+    testFreeInstance(instance);
+}
 
 void TestMacHeader(void)
 {
@@ -217,6 +335,7 @@ void TestMacChannelMask(void)
 #ifdef ENABLE_TEST_MAIN
 int main(void)
 {
+    ot::TestMacAddress();
     ot::TestMacHeader();
     ot::TestMacChannelMask();
     printf("All tests passed\n");
