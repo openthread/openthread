@@ -149,14 +149,19 @@ uint32_t RandomManager::NonCryptoPrng::GetNext(void)
 void RandomManager::Entropy::Init(void)
 {
     mbedtls_entropy_init(&mEntropyContext);
+
+#ifndef OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
     mbedtls_entropy_add_source(&mEntropyContext, &RandomManager::Entropy::HandleMbedtlsEntropyPoll, NULL,
                                MBEDTLS_ENTROPY_MIN_HARDWARE, MBEDTLS_ENTROPY_SOURCE_STRONG);
+#endif // OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
 }
 
 void RandomManager::Entropy::Deinit(void)
 {
     mbedtls_entropy_free(&mEntropyContext);
 }
+
+#ifndef OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
 
 int RandomManager::Entropy::HandleMbedtlsEntropyPoll(void *         aData,
                                                      unsigned char *aOutput,
@@ -175,6 +180,8 @@ exit:
     OT_UNUSED_VARIABLE(aData);
     return rval;
 }
+
+#endif // OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
 
 //-------------------------------------------------------------------
 // CryptoCtrDrbg
