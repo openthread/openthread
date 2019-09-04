@@ -1075,6 +1075,9 @@ examples/platforms/efr32mg12/sleepy-demo/Makefile
 examples/platforms/efr32mg12/sleepy-demo/sleepy-demo-ftd/Makefile
 examples/platforms/efr32mg12/sleepy-demo/sleepy-demo-mtd/Makefile
 examples/platforms/efr32mg21/Makefile
+examples/platforms/efr32mg21/sleepy-demo/Makefile
+examples/platforms/efr32mg21/sleepy-demo/sleepy-demo-ftd/Makefile
+examples/platforms/efr32mg21/sleepy-demo/sleepy-demo-mtd/Makefile
 examples/platforms/gp712/Makefile
 examples/platforms/kw41z/Makefile
 examples/platforms/nrf52811/Makefile

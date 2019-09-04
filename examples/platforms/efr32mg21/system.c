@@ -34,18 +34,23 @@
 
 #include <string.h>
 
+#include <openthread/tasklet.h>
 #include <openthread/platform/uart.h>
 
 #include "common/logging.hpp"
 
 #include "bsp.h"
 #include "em_chip.h"
+#include "em_core.h"
+#include "em_emu.h"
+#include "em_system.h"
+#include "hal-config.h"
 #include "hal_common.h"
+#include "rail.h"
+#include "rtcdriver.h"
 
 #include "openthread-core-efr32-config.h"
 #include "platform-efr32.h"
-
-#include "hal-config.h"
 
 #if (HAL_FEM_ENABLE)
 #include "fem-control.h"
@@ -58,6 +63,8 @@
 void halInitChipSpecific(void);
 
 otInstance *sInstance;
+static bool (*sCanSleepCallback)(void);
+static void (*sDeviceOutOfSleepCb)(void);
 
 void otSysInit(int argc, char *argv[])
 {
@@ -69,6 +76,7 @@ void otSysInit(int argc, char *argv[])
     halInitChipSpecific();
 
     BSP_Init(BSP_INIT_BCC);
+    RTCDRV_Init();
 
 #if (HAL_FEM_ENABLE)
     initFem();
@@ -95,6 +103,51 @@ void otSysDeinit(void)
 #if USE_EFR32_LOG
     efr32LogDeinit();
 #endif
+}
+
+void efr32SetSleepCallback(bool (*aCallback)(void), void (*aCallbackWake)(void))
+{
+    sCanSleepCallback   = aCallback;
+    sDeviceOutOfSleepCb = aCallbackWake;
+}
+
+void efr32Sleep(void)
+{
+    bool canDeepSleep      = false;
+    int  wakeupProcessTime = 1000;
+    CORE_DECLARE_IRQ_STATE;
+
+    if (RAIL_Sleep(wakeupProcessTime, &canDeepSleep) == RAIL_STATUS_NO_ERROR)
+    {
+        if (canDeepSleep)
+        {
+            CORE_ENTER_ATOMIC();
+            if (sCanSleepCallback != NULL && sCanSleepCallback())
+            {
+                EMU_EnterEM2(true);
+            }
+            CORE_EXIT_ATOMIC();
+            // TODO OT will handle an interrupt here and it mustn't call any RAIL APIs
+
+            while (RAIL_Wake(0) != RAIL_STATUS_NO_ERROR)
+            {
+            }
+
+            if (sDeviceOutOfSleepCb != NULL)
+            {
+                sDeviceOutOfSleepCb();
+            }
+        }
+        else
+        {
+            CORE_ENTER_ATOMIC();
+            if (sCanSleepCallback != NULL && sCanSleepCallback())
+            {
+                EMU_EnterEM1();
+            }
+            CORE_EXIT_ATOMIC();
+        }
+    }
 }
 
 void otSysProcessDrivers(otInstance *aInstance)
