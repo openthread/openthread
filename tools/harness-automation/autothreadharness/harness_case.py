@@ -338,19 +338,15 @@ class HarnessCase(unittest.TestCase):
         logger.info('Setting up')
         # clear files
 
-        if not self.new_th:
-            logger.info('Deleting all .pdf')
-            os.system('del /q "%HOMEDRIVE%%HOMEPATH%\\Downloads\\NewPdf_*.pdf"')
-            logger.info('Deleting all .xlsx')
-            os.system('del /q "%HOMEDRIVE%%HOMEPATH%\\Downloads\\ExcelReport*.xlsx"')
         logger.info('Deleting all .pcapng')
         os.system('del /q "%s\\Captures\\*.pcapng"' % settings.HARNESS_HOME)
+        logger.info('Empty files in Logs')
+        os.system('del /q "%s\\Logs\\*.*"' % settings.HARNESS_HOME)
 
         # using temp files to fix excel downloading fail
         if self.new_th:
-            logger.info('Empty files in Reports and Logs')
+            logger.info('Empty files in Reports')
             os.system('del /q "%s\\Reports\\*.*"' % settings.HARNESS_HOME)
-            os.system('del /q "%s\\Logs\\*.*"' % settings.HARNESS_HOME)
         else:
             logger.info('Empty files in temps')
             os.system('del /q "%s\\Thread_Harness\\temp\\*.*"' % settings.HARNESS_HOME)
@@ -715,50 +711,14 @@ class HarnessCase(unittest.TestCase):
     def _collect_result(self):
         """Collect test result.
 
-        Generate PDF, excel and pcap file
+        Copy PDF and pcap file to result directory
         """
-        # generate pdf
-        self._browser.find_element_by_class_name('save-pdf').click()
-        time.sleep(1)
-        try:
-            dialog = self._browser.find_element_by_id('Testinfo')
-        except BaseException:
-            logger.exception('Failed to get test info dialog.')
+
+        if self.new_th:
+            os.system('copy "%s\\Reports\\*.*" "%s"' % (settings.HARNESS_HOME, self.result_dir))
         else:
-            if dialog.get_attribute('aria-hidden') != 'false':
-                raise Exception('Test information dialog not ready')
+            os.system('copy "%s\\Thread_Harness\\temp\\*.*" "%s"' % (settings.HARNESS_HOME, self.result_dir))
 
-            version = self.auto_dut and settings.DUT_VERSION or self.dut.version
-            dialog.find_element_by_id('inp_dut_manufacturer').send_keys(settings.DUT_MANUFACTURER)
-            dialog.find_element_by_id('inp_dut_firmware_version').send_keys(version)
-            dialog.find_element_by_id('inp_tester_name').send_keys(settings.TESTER_NAME)
-            dialog.find_element_by_id('inp_remarks').send_keys(settings.TESTER_REMARKS)
-            dialog.find_element_by_id('generatePdf').click()
-
-        time.sleep(1)
-        main_window = self._browser.current_window_handle
-
-        # generate excel
-        self._browser.find_element_by_class_name('save-excel').click()
-        time.sleep(1)
-        for window_handle in self._browser.window_handles:
-            if window_handle != main_window:
-                self._browser.switch_to.window(window_handle)
-                self._browser.close()
-        self._browser.switch_to.window(main_window)
-
-        # save pcap
-        self._browser.find_element_by_class_name('save-wireshark').click()
-        time.sleep(1)
-        for window_handle in self._browser.window_handles:
-            if window_handle != main_window:
-                self._browser.switch_to.window(window_handle)
-                self._browser.close()
-        self._browser.switch_to.window(main_window)
-
-        os.system('copy "%%HOMEPATH%%\\Downloads\\ExcelReport_*.xlsx" %s\\' % self.result_dir)
-        os.system('copy "%s\\Thread_Harness\\temp\\*.*" "%s"' % (settings.HARNESS_HOME, self.result_dir))
-        os.system('copy "%%HOMEPATH%%\\Downloads\\NewPdf_*.pdf" %s\\' % self.result_dir)
         os.system('copy "%s\\Captures\\*.pcapng" %s\\' % (settings.HARNESS_HOME, self.result_dir))
 
     def _wait_dialog(self):
@@ -1000,12 +960,7 @@ class HarnessCase(unittest.TestCase):
         self._wait_dialog()
 
         try:
-            if self.new_th:
-                os.system('copy "%s\\Logs\\*.*" "%s"' % (settings.HARNESS_HOME, self.result_dir))
-                os.system('copy "%s\\Reports\\*.*" "%s"' % (settings.HARNESS_HOME, self.result_dir))
-                os.system('copy "%s\\Captures\\*.*" "%s"' % (settings.HARNESS_HOME, self.result_dir))
-            else:
-                self._collect_result()
+            self._collect_result()
         except BaseException:
             logger.exception('Failed to collect results')
             raise

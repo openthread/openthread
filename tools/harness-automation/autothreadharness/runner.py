@@ -312,7 +312,8 @@ def discover(
         auto_reboot_args = argv + names
     else:
         auto_reboot_args = None
-        os.system('del "%s"' % RESUME_SCRIPT_PATH)
+        if os.path.isfile(RESUME_SCRIPT_PATH):
+            os.system('del "%s"' % RESUME_SCRIPT_PATH)
 
     # manual reset
     if manual_reset:
