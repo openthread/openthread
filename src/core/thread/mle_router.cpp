@@ -1427,7 +1427,8 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
     uint8_t cost;
     uint8_t linkQuality;
     bool    update;
-    bool    changed = false;
+    bool    resetAdvInterval = false;
+    bool    changed          = false;
 
     neighbor = mRouterTable.GetRouter(aRouterId);
     VerifyOrExit(neighbor != NULL);
@@ -1461,7 +1462,16 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
 
                 if (neighbor->GetLinkQualityOut() != linkQuality)
                 {
+                    uint8_t oldLinkCost = mRouterTable.GetLinkCost(*neighbor);
                     neighbor->SetLinkQualityOut(linkQuality);
+                    nextHop = mRouterTable.GetRouter(neighbor->GetNextHop());
+
+                    // reset MLE advertisement timer if neighbor route cost changed to or from infinite
+                    if (nextHop == NULL &&
+                        (oldLinkCost >= kMaxRouteCost) != (mRouterTable.GetLinkCost(*neighbor) >= kMaxRouteCost))
+                    {
+                        resetAdvInterval = true;
+                    }
                     update = true;
                 }
             }
@@ -1494,7 +1504,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
                         {
                             if (nextHop == NULL && mRouterTable.GetLinkCost(*router) >= kMaxRouteCost)
                             {
-                                ResetAdvertiseInterval();
+                                resetAdvInterval = true;
                             }
 
                             router->SetNextHop(aRouterId);
@@ -1505,7 +1515,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
                         {
                             if (mRouterTable.GetLinkCost(*router) >= kMaxRouteCost)
                             {
-                                ResetAdvertiseInterval();
+                                resetAdvInterval = true;
                             }
 
                             router->SetNextHop(kInvalidRouterId);
@@ -1537,6 +1547,11 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
         changed |= update;
 
     } while (update);
+
+    if (resetAdvInterval)
+    {
+        ResetAdvertiseInterval();
+    }
 
 #if (OPENTHREAD_CONFIG_LOG_MLE && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO))
 
