@@ -60,7 +60,7 @@ THREAD_SED_POLLING_INTERVAL = 0
 """int: SED polling interval in seconds. Set to 0 to use Harness's default value."""
 
 HARNESS_HOME = 'C:\\GRL\\Thread1.1'
-"""str: Harness installation path, e.g. 'C:\GRL\Thread1.1'"""
+"""str: Harness installation path, e.g. 'C:\\GRL\\Thread1.1'"""
 
 HARNESS_URL = 'http://127.0.0.1:8000'
 """str: Harness front-end url"""
