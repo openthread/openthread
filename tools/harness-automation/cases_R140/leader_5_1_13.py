@@ -28,8 +28,10 @@
 #
 
 
-from autothreadharness.harness_case import HarnessCase
 import unittest
+import time
+
+from autothreadharness.harness_case import HarnessCase
 
 
 class Leader_5_1_13(HarnessCase):

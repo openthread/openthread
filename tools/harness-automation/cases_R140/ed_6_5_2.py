@@ -28,9 +28,7 @@
 #
 
 
-import time
 import unittest
-import re
 
 from autothreadharness.harness_case import HarnessCase
 

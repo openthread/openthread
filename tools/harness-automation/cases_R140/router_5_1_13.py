@@ -29,7 +29,6 @@
 
 
 import unittest
-import time
 
 from autothreadharness.harness_case import HarnessCase
 
