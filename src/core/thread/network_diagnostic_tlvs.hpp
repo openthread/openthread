@@ -1348,6 +1348,24 @@ public:
         return *reinterpret_cast<ChildTableEntry *>(GetValue() + (aIndex * sizeof(ChildTableEntry)));
     }
 
+    /**
+     * This method reads the Child Table entry at @p aIndex.
+     *
+     * @param[in]  aIndex  The index into the Child Table list.
+     *
+     * @returns  if read successfully.
+     */
+    otError ReadEntry(ChildTableEntry &aEntry, Message &aMessage, uint16_t aOffset, uint8_t aIndex)
+    {
+        otError error = OT_ERROR_PARSE;
+        if (aMessage.Read(aOffset + sizeof(ChildTableTlv) + (aIndex * sizeof(ChildTableEntry)), sizeof(ChildTableEntry),
+                          &aEntry) == sizeof(ChildTableEntry))
+        {
+            error = OT_ERROR_NONE;
+        }
+        return error;
+    }
+
 } OT_TOOL_PACKED_END;
 
 /**
