@@ -32,7 +32,7 @@
  *  This file defines the top-level functions for the OpenThread CoAP Secure implementation.
  *
  *  @note
- *   The functions in this module requires the build-time feature `OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1`.
+ *   The functions in this module require the build-time feature `OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1`.
  *
  *  @note
  *   To enable cipher suite DTLS_PSK_WITH_AES_128_CCM_8, MBEDTLS_KEY_EXCHANGE_PSK_ENABLED

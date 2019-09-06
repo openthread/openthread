@@ -233,7 +233,6 @@ otError otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort)
  *
  * Configuration option `OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE` should be set to enable setting of steering
  * data out of band.
- * error.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  * @param[in]  aExtAddress     Address used to update the steering data.

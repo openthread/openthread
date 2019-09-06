@@ -127,7 +127,6 @@ otError otChannelManagerSetDelay(otInstance *aInstance, uint16_t aDelay);
  *
  * @retval OT_ERROR_NONE               Channel selection finished successfully.
  * @retval OT_ERROR_NOT_FOUND          Supported channel mask is empty, therefore could not select a channel.
- * @retval OT_ERROR_INVALID_STATE      Thread is not enabled or not enough data to select a new channel.
  *
  */
 otError otChannelManagerRequestChannelSelect(otInstance *aInstance, bool aSkipQualityCheck);

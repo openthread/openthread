@@ -47,7 +47,7 @@ extern "C" {
  * @addtogroup api-thread-general
  *
  * @note
- *   The functions in this module requires `OPENTHREAD_FTD=1` or `OPENTHREAD_MTD=1`.
+ *   The functions in this module require `OPENTHREAD_FTD=1` or `OPENTHREAD_MTD=1`.
  *
  * @{
  *
