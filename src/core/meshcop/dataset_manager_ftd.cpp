@@ -262,16 +262,15 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
     // notify commissioner if update is from thread device
     if (!isUpdateFromCommissioner)
     {
-        BorderAgentLocatorTlv *borderAgentLocator;
-        Ip6::Address           destination;
+        CommissionerSessionIdTlv *localSessionId;
+        Ip6::Address              destination;
 
-        borderAgentLocator = static_cast<BorderAgentLocatorTlv *>(
-            Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kBorderAgentLocator));
-        VerifyOrExit(borderAgentLocator != NULL);
+        localSessionId = static_cast<CommissionerSessionIdTlv *>(
+            Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kCommissionerSessionId));
+        VerifyOrExit(localSessionId != NULL);
 
-        memset(&destination, 0, sizeof(destination));
-        destination                = Get<Mle::MleRouter>().GetMeshLocal16();
-        destination.mFields.m16[7] = HostSwap16(borderAgentLocator->GetBorderAgentLocator());
+        SuccessOrExit(
+            Get<Mle::MleRouter>().GetCommissionerAloc(destination, localSessionId->GetCommissionerSessionId()));
 
         Get<Leader>().SendDatasetChanged(destination);
     }
