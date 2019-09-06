@@ -86,8 +86,8 @@ exit:
 
 otError IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChild)
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t childIndex;
+    otError  error = OT_ERROR_NONE;
+    uint16_t childIndex;
 
     VerifyOrExit(!aChild.IsRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
 
@@ -105,8 +105,8 @@ exit:
 
 otError IndirectSender::RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild)
 {
-    otError error      = OT_ERROR_NONE;
-    uint8_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
+    otError  error      = OT_ERROR_NONE;
+    uint16_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
 
     VerifyOrExit(aMessage.GetChildMask(childIndex), error = OT_ERROR_NOT_FOUND);
 
@@ -175,7 +175,7 @@ void IndirectSender::HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMo
 
     if (!aOldMode.IsRxOnWhenIdle() && aChild.IsRxOnWhenIdle() && (aChild.GetIndirectMessageCount() > 0))
     {
-        uint8_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
+        uint16_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
 
         for (Message *message = Get<MeshForwarder>().mSendQueue.GetHead(); message; message = message->GetNext())
         {
@@ -204,7 +204,7 @@ Message *IndirectSender::FindIndirectMessage(Child &aChild)
 {
     Message *message;
     Message *next;
-    uint8_t  childIndex = Get<ChildTable>().GetChildIndex(aChild);
+    uint16_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
 
     for (message = Get<MeshForwarder>().mSendQueue.GetHead(); message; message = next)
     {
@@ -482,7 +482,7 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
         // The indirect tx of this message to the child is done.
 
         otError      txError    = aError;
-        uint8_t      childIndex = Get<ChildTable>().GetChildIndex(aChild);
+        uint16_t     childIndex = Get<ChildTable>().GetChildIndex(aChild);
         Mac::Address macDest;
 
         aChild.SetIndirectMessage(NULL);

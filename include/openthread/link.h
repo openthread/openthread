@@ -425,7 +425,7 @@ uint32_t otLinkGetPollPeriod(otInstance *aInstance);
  * Set/clear user-specified/external data poll period for sleepy end device.
  *
  * @note This function updates only poll period of sleepy end device. To update child timeout the function
- *       `otSetChildTimeout()` shall be called.
+ *       `otThreadSetChildTimeout()` shall be called.
  *
  * @note Minimal non-zero value should be `OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD` (10ms).
  *       Or zero to clear user-specified poll period.

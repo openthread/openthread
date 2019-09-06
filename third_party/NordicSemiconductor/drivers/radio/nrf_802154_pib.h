@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief This file implements storage of PIB attributes in nRF 802.15.4 radio driver.
+ * @brief Module that implements the storage of PIB attributes in the nRF 802.15.4 radio driver.
  *
  */
 
@@ -46,142 +46,143 @@ extern "C" {
 #endif
 
 /**
- * @brief Initialize this module.
+ * @brief Initializes this module.
  */
 void nrf_802154_pib_init(void);
 
 /**
- * @brief Check if promiscuous mode is enabled.
+ * @brief Checks if the promiscuous mode is enabled.
  *
- * @retval  true   If promiscuous mode is enabled.
- * @retval  false  If promiscuous mode is disabled.
+ * @retval  true   The promiscuous mode is enabled.
+ * @retval  false  The promiscuous mode is disabled.
  */
 bool nrf_802154_pib_promiscuous_get(void);
 
 /**
- * @brief Enable or disable promiscuous mode.
+ * @brief Enables or disables the promiscuous mode.
  *
- * @param[in]  enabled  If promiscuous mode should be enabled.
+ * @param[in]  enabled  If the promiscuous mode is to be enabled.
  */
 void nrf_802154_pib_promiscuous_set(bool enabled);
 
 /**
- * @brief Check if auto ACK procedure is enabled.
+ * @brief Checks if the auto ACK procedure is enabled.
  *
- * @retval  true   If auto ACK procedure is enabled.
- * @retval  false  If auto ACK procedure is disabled.
+ * @retval  true   The auto ACK procedure is enabled.
+ * @retval  false  The auto ACK procedure is disabled.
  */
 bool nrf_802154_pib_auto_ack_get(void);
 
 /**
- * @brief Enable or disable auto ACK procedure.
+ * @brief Enables or disables the auto ACK procedure.
  *
- * @param[in]  enabled  If auto ACK procedure should be enabled.
+ * @param[in]  enabled  If the auto ACK procedure is to be enabled.
  */
 void nrf_802154_pib_auto_ack_set(bool enabled);
 
 /**
- * @brief Check if radio is configured as the PAN coordinator.
+ * @brief Checks if the radio is configured as the PAN coordinator.
  *
- * @retval  true   If radio is configured as the PAN coordinator.
- * @retval  false  If radio is not configured as the PAN coordinator.
+ * @retval  true   The radio is configured as the PAN coordinator.
+ * @retval  false  The radio is not configured as the PAN coordinator.
  */
 bool nrf_802154_pib_pan_coord_get(void);
 
 /**
- * @brief Notify driver that radio is configured as the PAN coordinator.
+ * @brief Configures the device as the PAN coordinator.
  *
- * @param[in]  enabled  If radio is configured as the PAN coordinator.
+ * @param[in]  enabled  If the radio is configured as the PAN coordinator.
  */
 void nrf_802154_pib_pan_coord_set(bool enabled);
 
 /**
- * @brief Get currently used channel.
+ * @brief Gets the currently used channel.
  *
- * @return  Channel number used by the driver.
+ * @returns  Channel number used by the driver.
  */
 uint8_t nrf_802154_pib_channel_get(void);
 
 /**
- * @brief Set channel that will be used by the driver.
+ * @brief Sets the channel that will be used by the driver.
  *
- * @param[in]  channel  Number of channel used by the driver.
+ * @param[in]  channel  Number of the channel used by the driver.
  */
 void nrf_802154_pib_channel_set(uint8_t channel);
 
 /**
- * @brief Get transmit power.
+ * @brief Gets the transmit power.
  *
- * @returns  Transmit power [dBm].
+ * @returns  Transmit power in dBm.
  */
 nrf_radio_txpower_t nrf_802154_pib_tx_power_get(void);
 
 /**
- * @brief Set transmit power used for ACK frames.
+ * @brief Sets the transmit power used for ACK frames.
  *
- * @param[in]  dbm  Transmit power [dBm].
+ * @param[in]  dbm  Transmit power in dBm.
  */
 void nrf_802154_pib_tx_power_set(int8_t dbm);
 
 /**
- * @brief Get PAN Id used by this device.
+ * @brief Gets the PAN ID used by this device.
  *
- * @returns Pointer to buffer containing PAN Id value (2 bytes, little-endian).
+ * @returns Pointer to the buffer containing the PAN ID value (2 bytes, little-endian).
  */
 const uint8_t * nrf_802154_pib_pan_id_get(void);
 
 /**
- * @brief Set PAN Id used by this device.
+ * @brief Sets the PAN ID used by this device.
  *
- * @param[in]  p_pan_id  Pointer to PAN Id (2 bytes, little-endian).
+ * @param[in]  p_pan_id  Pointer to the PAN ID (2 bytes, little-endian).
  *
- * This function makes copy of the PAN Id.
+ * This function makes a copy of the PAN ID.
  */
 void nrf_802154_pib_pan_id_set(const uint8_t * p_pan_id);
 
 /**
- * @brief Get Extended Address of this device
+ * @brief Gets the extended address of this device.
  *
- * @returns Pointer to buffer containing extended address (8 bytes, little-endian).
+ * @returns Pointer to the buffer containing the extended address (8 bytes, little-endian).
  */
 const uint8_t * nrf_802154_pib_extended_address_get(void);
 
 /**
- * @brief Set Extended Address of this device.
+ * @brief Sets the extended address of this device.
  *
  * @param[in]  p_extended_address  Pointer to extended address (8 bytes, little-endian).
  *
- * This function makes copy of the address.
+ * This function makes a copy of the address.
  */
 void nrf_802154_pib_extended_address_set(const uint8_t * p_extended_address);
 
 /**
- * @brief Get Short Address of this device
+ * @brief Gets the short address of this device.
  *
- * @returns Pointer to buffer containing short address (2 bytes, little-endian).
+ * @returns Pointer to the buffer containing the short address (2 bytes, little-endian).
  */
 const uint8_t * nrf_802154_pib_short_address_get(void);
 
 /**
- * @brief Set Short Address of this device.
+ * @brief Sets the short address of this device.
  *
- * @param[in]  p_short_address  Pointer to short address (2 bytes, little-endian).
+ * @param[in]  p_short_address  Pointer to the short address (2 bytes, little-endian).
  *
- * This function makes copy of the address.
+ * This function makes a copy of the address.
  */
 void nrf_802154_pib_short_address_set(const uint8_t * p_short_address);
 
 /**
- * @brief Set radio CCA mode and threshold.
+ * @brief Sets the radio CCA mode and threshold.
  *
- * @param[in] p_cca_cfg A pointer to the CCA configuration structure. Only fields relevant to selected mode are updated.
+ * @param[in] p_cca_cfg Pointer to the CCA configuration structure. Only fields relevant
+ *                      to the selected mode are updated.
  */
 void nrf_802154_pib_cca_cfg_set(const nrf_802154_cca_cfg_t * p_cca_cfg);
 
 /**
- * @brief Get current radio CCA configuration.
+ * @brief Gets the current radio CCA configuration.
  *
- * @param[out] p_cca_cfg A pointer to the structure for current CCA configuration.
+ * @param[out] p_cca_cfg Pointer to the structure for the current CCA configuration.
  */
 void nrf_802154_pib_cca_cfg_get(nrf_802154_cca_cfg_t * p_cca_cfg);
 

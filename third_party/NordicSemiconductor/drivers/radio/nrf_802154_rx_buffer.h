@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief This module contains buffer for frames received by nRF 802.15.4 radio driver.
+ * @brief Module that contains buffer for frames received by the nRF 802.15.4 radio driver.
  *
  */
 
@@ -46,7 +46,7 @@ extern "C" {
 #endif
 
 /**
- * @brief Structure containing received frame.
+ * @brief Structure that contains the received frame.
  */
 typedef struct
 {
@@ -55,23 +55,23 @@ typedef struct
 } rx_buffer_t;
 
 /**
- * @brief Array containing all buffers used to receive frame.
+ * @brief Array that contains all buffers used to receive frame.
  *
- * This array is in global scope to allow optimizations in Core module in case there is only
+ * This array is in the global scope to allow optimizations in the core module if there is only
  * one buffer provided by this module.
  *
  */
 extern rx_buffer_t nrf_802154_rx_buffers[];
 
 /**
- * @brief Initialize buffer for received frames.
+ * @brief Initializes the buffer for received frames.
  */
 void nrf_802154_rx_buffer_init(void);
 
 /**
- * @brief Get free buffer to receive a frame.
+ * @brief Gets a free buffer to receive a frame.
  *
- * @return  Pointer to free buffer of NULL if no free buffer is available.
+ * @returns  Pointer to a free buffer, or NULL if no free buffer is available.
  */
 rx_buffer_t * nrf_802154_rx_buffer_free_find(void);
 

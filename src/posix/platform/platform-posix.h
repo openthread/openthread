@@ -41,6 +41,7 @@
 #include <sys/select.h>
 #include <sys/time.h>
 
+#include <openthread-system.h>
 #include <openthread/error.h>
 #include <openthread/instance.h>
 
@@ -74,43 +75,6 @@ struct Event
     uint16_t mDataLength;
     uint8_t  mData[OT_EVENT_DATA_MAX_SIZE];
 } OT_TOOL_PACKED_END;
-
-/**
- * This enumeration represents exit codes used when OpenThread exits.
- *
- */
-enum
-{
-    /**
-     * Success.
-     */
-    OT_EXIT_SUCCESS = 0,
-
-    /**
-     * Generic failure.
-     */
-    OT_EXIT_FAILURE = 1,
-
-    /**
-     * Invalid arguments.
-     */
-    OT_EXIT_INVALID_ARGUMENTS = 2,
-
-    /**
-     * Incompatible radio spinel.
-     */
-    OT_EXIT_RADIO_SPINEL_INCOMPATIBLE = 3,
-
-    /**
-     * Unexpected radio spinel reset.
-     */
-    OT_EXIT_RADIO_SPINEL_RESET = 4,
-
-    /**
-     * System call or library function error.
-     */
-    OT_EXIT_ERROR_ERRNO = 5,
-};
 
 /**
  * This function converts an exit code into a string.
@@ -351,32 +315,33 @@ void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *a
 void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet);
 
 /**
- * This function initialize simulation.
+ * This function initialize virtual time simulation.
  *
  */
-void otSimInit(void);
+void platformSimInit(void);
 
 /**
- * This function deinitialize simulation.
+ * This function deinitialize virtual time simulation.
  *
  */
-void otSimDeinit(void);
+void platformSimDeinit(void);
 
 /**
- * This function performs simulation processing.
+ * This function performs virtual time simulation processing.
  *
  * @param[in]   aInstance       A pointer to the OpenThread instance.
  * @param[in]   aReadFdSet      A pointer to the read file descriptors.
  * @param[in]   aWriteFdSet     A pointer to the write file descriptors.
  *
  */
-void otSimProcess(otInstance *  aInstance,
-                  const fd_set *aReadFdSet,
-                  const fd_set *aWriteFdSet,
-                  const fd_set *aErrorFdSet);
+void platformSimProcess(otInstance *  aInstance,
+                        const fd_set *aReadFdSet,
+                        const fd_set *aWriteFdSet,
+                        const fd_set *aErrorFdSet);
 
 /**
- * This function updates the file descriptor sets with file descriptors used by the simulation.
+ * This function updates the file descriptor sets with file descriptors
+ * used by the virtual time simulation.
  *
  * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
  * @param[inout]  aWriteFdSet  A pointer to the write file descriptors.
@@ -385,53 +350,54 @@ void otSimProcess(otInstance *  aInstance,
  * @param[inout]  aTimeout     A pointer to the timeout.
  *
  */
-void otSimUpdateFdSet(fd_set *        aReadFdSet,
-                      fd_set *        aWriteFdSet,
-                      fd_set *        aErrorFdSet,
-                      int *           aMaxFd,
-                      struct timeval *aTimeout);
+void platformSimUpdateFdSet(fd_set *        aReadFdSet,
+                            fd_set *        aWriteFdSet,
+                            fd_set *        aErrorFdSet,
+                            int *           aMaxFd,
+                            struct timeval *aTimeout);
 
 /**
- * This function sends radio spinel frame through simulation.
+ * This function sends radio spinel event of virtual time simulation.
  *
  * @param[in] aData     A pointer to the spinel frame.
  * @param[in] aLength   Length of the spinel frame.
  *
  */
-void otSimSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength);
+void platformSimSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength);
 
 /**
- * This function receives a simulation event.
+ * This function receives an event of virtual time simulation.
  *
  * @param[out]  aEvent  A pointer to the event receiving the event.
  *
  */
-void otSimReceiveEvent(struct Event *aEvent);
+void platformSimReceiveEvent(struct Event *aEvent);
 
 /**
- * This function sends sleep event through simulation.
+ * This function sends sleep event through virtual time simulation.
  *
  * @param[in]   aTimeout    A pointer to the time sleeping.
  *
  */
-void otSimSendSleepEvent(const struct timeval *aTimeout);
+void platformSimSendSleepEvent(const struct timeval *aTimeout);
 
 /**
- * This function updates the file descriptor sets with file descriptors used by radio spinel.
+ * This function updates the file descriptor sets with file descriptors
+ * used by radio spinel of virtual time simulation.
  *
  * @param[out]   aTimeout    A pointer to the timeout event to be updated.
  *
  */
-void otSimRadioSpinelUpdate(struct timeval *atimeout);
+void platformSimRadioSpinelUpdate(struct timeval *atimeout);
 
 /**
- * This function performs radio spinel processing.
+ * This function performs radio spinel processing of virtual time simulation.
  *
  * @param[in]   aInstance   A pointer to the OpenThread instance.
  * @param[in]   aEvent      A pointer to the current event.
  *
  */
-void otSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent);
+void platformSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent);
 
 /**
  * This function gets system time in microseconds without applying speed up factor.
@@ -439,7 +405,7 @@ void otSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent);
  * @returns System time in microseconds.
  *
  */
-uint64_t otSysGetTime(void);
+uint64_t platformGetTime(void);
 
 /**
  * This function initializes platform UDP driver.

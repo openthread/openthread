@@ -206,7 +206,7 @@ bool nrf_802154_csma_ca_abort(nrf_802154_term_t term_lvl, req_originator_t req_o
     if (term_lvl >= NRF_802154_TERM_802154)
     {
         // Stop CSMA-CA if termination level is high enough.
-        nrf_802154_timer_sched_remove(&m_timer);
+        nrf_802154_timer_sched_remove(&m_timer, NULL);
         procedure_stop();
 
         result = true;

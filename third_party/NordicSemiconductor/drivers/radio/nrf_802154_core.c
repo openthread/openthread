@@ -52,8 +52,10 @@
 #include "nrf_802154_revision.h"
 #include "nrf_802154_rssi.h"
 #include "nrf_802154_rx_buffer.h"
+#include "nrf_802154_utils.h"
 #include "nrf_802154_timer_coord.h"
 #include "nrf_802154_types.h"
+#include "nrf_802154_utils.h"
 #include "nrf_egu.h"
 #include "nrf_ppi.h"
 #include "nrf_radio.h"
@@ -197,11 +199,12 @@ typedef struct
 
 #endif  // !NRF_802154_DISABLE_BCC_MATCHING
 #if NRF_802154_TX_STARTED_NOTIFY_ENABLED
-    bool tx_started : 1; ///< If requested transmission has started.
+    bool tx_started   : 1; ///< If the requested transmission has started.
 
 #endif  // NRF_802154_TX_STARTED_NOTIFY_ENABLED
+    bool rssi_started : 1;
 } nrf_802154_flags_t;
-static nrf_802154_flags_t m_flags;               ///< Flags used to store current driver state.
+static nrf_802154_flags_t m_flags;               ///< Flags used to store the current driver state.
 
 static volatile bool m_rsch_timeslot_is_granted; ///< State of the RSCH timeslot.
 
@@ -230,9 +233,27 @@ static void rx_flags_clear(void)
 #endif // !NRF_802154_DISABLE_BCC_MATCHING
 }
 
-/** Get result of last RSSI measurement.
+/** Request the RSSI measurement. */
+static void rssi_measure(void)
+{
+    m_flags.rssi_started = true;
+    nrf_radio_event_clear(NRF_RADIO_EVENT_RSSIEND);
+    nrf_radio_task_trigger(NRF_RADIO_TASK_RSSISTART);
+}
+
+/** Wait for the RSSI measurement. */
+static void rssi_measurement_wait(void)
+{
+    while (!nrf_radio_event_check(NRF_RADIO_EVENT_RSSIEND))
+    {
+        // Intentionally empty: This function is called from a critical section.
+        // WFE would not be waken up by a RADIO event.
+    }
+}
+
+/** Get the result of the last RSSI measurement.
  *
- * @returns  Result of last RSSI measurement [dBm].
+ * @returns  Result of the last RSSI measurement in dBm.
  */
 static int8_t rssi_last_measurement_get(void)
 {
@@ -307,7 +328,9 @@ static void transmit_started_notify(void)
 /** Notify that reception of a frame has started. */
 static void receive_started_notify(void)
 {
-    nrf_802154_core_hooks_rx_started();
+    const uint8_t * p_frame = mp_current_rx_buffer->data;
+
+    nrf_802154_core_hooks_rx_started(p_frame);
 }
 
 #endif
@@ -485,7 +508,7 @@ static void channel_set(uint8_t channel)
  */
 static bool ack_is_requested(const uint8_t * p_frame)
 {
-    return (p_frame[ACK_REQUEST_OFFSET] & ACK_REQUEST_BIT) ? true : false;
+    return nrf_802154_frame_parser_ar_bit_is_set(p_frame);
 }
 
 /***************************************************************************************************
@@ -565,6 +588,9 @@ static void nrf_radio_reset(void)
 /** Initialize interrupts for radio peripheral. */
 static void irq_init(void)
 {
+#if !NRF_IS_IRQ_PRIORITY_ALLOWED(NRF_802154_IRQ_PRIORITY)
+#error NRF_802154_IRQ_PRIORITY value out of the allowed range.
+#endif
     NVIC_SetPriority(RADIO_IRQn, NRF_802154_IRQ_PRIORITY);
     NVIC_ClearPendingIRQ(RADIO_IRQn);
 }
@@ -1360,6 +1386,8 @@ static void rx_init(bool disabled_was_triggered)
 
     // Clear filtering flag
     rx_flags_clear();
+    // Clear the RSSI measurement flag.
+    m_flags.rssi_started = false;
 
     nrf_radio_txpower_set(nrf_802154_pib_tx_power_get());
 
@@ -1738,9 +1766,10 @@ static void cont_prec_denied(void)
         {
             irq_deinit();
             nrf_radio_reset();
-            nrf_fem_control_pin_clear();
-            nrf_802154_timer_coord_stop();
         }
+
+        nrf_fem_control_pin_clear();
+        nrf_802154_timer_coord_stop();
 
         result = current_operation_terminate(NRF_802154_TERM_802154, REQ_ORIG_RSCH, false);
         assert(result);
@@ -1924,6 +1953,8 @@ static void irq_crcok_state_rx(void)
     uint8_t * p_received_data = mp_current_rx_buffer->data;
     uint32_t  ints_to_disable = 0;
     uint32_t  ints_to_enable  = 0;
+
+    m_flags.rssi_started = true;
 
 #if NRF_802154_DISABLE_BCC_MATCHING
     uint8_t               num_data_bytes      = PHR_SIZE + FCF_SIZE;
@@ -2775,21 +2806,12 @@ bool nrf_802154_core_sleep(nrf_802154_term_t term_lvl)
     {
         if ((m_state != RADIO_STATE_SLEEP) && (m_state != RADIO_STATE_FALLING_ASLEEP))
         {
-            if (critical_section_can_be_processed_now())
-            {
-                result = current_operation_terminate(term_lvl, REQ_ORIG_CORE, true);
+            result = current_operation_terminate(term_lvl, REQ_ORIG_CORE, true);
 
-                if (result)
-                {
-                    state_set(RADIO_STATE_FALLING_ASLEEP);
-                    falling_asleep_init();
-                }
-            }
-            else
+            if (result)
             {
-                nrf_radio_reset();
-                state_set(RADIO_STATE_SLEEP);
-                sleep_init();
+                state_set(RADIO_STATE_FALLING_ASLEEP);
+                falling_asleep_init();
             }
         }
 
@@ -3062,6 +3084,57 @@ bool nrf_802154_core_cca_cfg_update(void)
             cca_configuration_update();
         }
 
+        nrf_802154_critical_section_exit();
+    }
+
+    return result;
+}
+
+bool nrf_802154_core_rssi_measure(void)
+{
+    bool result = critical_section_enter_and_verify_timeslot_length();
+
+    if (result)
+    {
+        if (timeslot_is_granted() && (m_state == RADIO_STATE_RX))
+        {
+            rssi_measure();
+        }
+        else
+        {
+            result = false;
+        }
+
+        nrf_802154_critical_section_exit();
+    }
+
+    return result;
+}
+
+bool nrf_802154_core_last_rssi_measurement_get(int8_t * p_rssi)
+{
+    bool result       = false;
+    bool rssi_started = m_flags.rssi_started;
+    bool in_crit_sect = false;
+
+    if (rssi_started)
+    {
+        in_crit_sect = critical_section_enter_and_verify_timeslot_length();
+    }
+
+    if (rssi_started && in_crit_sect)
+    {
+        // Checking if a timeslot is granted is valid only in a critical section
+        if (timeslot_is_granted())
+        {
+            rssi_measurement_wait();
+            *p_rssi = rssi_last_measurement_get();
+            result  = true;
+        }
+    }
+
+    if (in_crit_sect)
+    {
         nrf_802154_critical_section_exit();
     }
 

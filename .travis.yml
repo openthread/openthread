@@ -185,11 +185,7 @@ jobs:
       language: generic
       script: .travis/script.sh
     - stage: lint
-      env: BUILD_TARGET="py-pretty-check"
-      os: linux
-      python: "2.7"
-      script: .travis/script.sh
-    - env: BUILD_TARGET="pretty-check"
+      name: "Pretty Check"
       os: linux
       addons:
         apt:
@@ -198,9 +194,9 @@ jobs:
             - ubuntu-toolchain-r-test
           packages:
             - clang-format-6.0
-      script: .travis/script.sh
-    - env: BUILD_TARGET="size-report"
+      script: .travis/check-pretty
+    - env:
+      name: "Size Report"
       os: linux
-      compiler: gcc
-      script: .travis/script.sh VERBOSE=1
+      script: .travis/check-size
       if: type = pull_request

@@ -27,6 +27,8 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+[ -n "$BUILD_TARGET" ] || exit 0
+
 die() {
 	echo " *** ERROR: " $*
 	exit 1
@@ -37,7 +39,7 @@ set -x
 cd /tmp || die
 
 [ $TRAVIS_OS_NAME != linux ] || {
-    (cd /etc/apt/sources.list.d && sudo rm -rf cassandra.list* couchdb.list* mongodb-3.4.list* rabbitmq_rabbitmq-server.list* chris-lea-redis-server.list* github_git-lfs.list*)
+    (cd /etc/apt/sources.list.d && sudo rm -rf cassandra.list* couchdb.list* mongodb-3.4.list* rabbitmq_rabbitmq-server.list* chris-lea-redis-server.list* github_git-lfs.list* pgdg.list)
     sudo apt-get update || die
 
     [ $BUILD_TARGET != posix-distcheck -a $BUILD_TARGET != posix-32-bit -a $BUILD_TARGET != posix-app-cli -a $BUILD_TARGET != posix-mtd -a $BUILD_TARGET != posix-ncp -a $BUILD_TARGET != posix-app-ncp ] || {
@@ -57,15 +59,6 @@ cd /tmp || die
         unzip android-ndk-r17c-linux-x86_64.zip > /dev/null
         mv android-ndk-r17c ndk-bundle
         ) || die
-    }
-
-    [ $BUILD_TARGET != pretty-check ] || {
-        clang-format --version || die
-    }
-
-    [ $BUILD_TARGET != py-pretty-check ] || {
-        pip install --upgrade pip || die
-        python -m pip install flake8 || die
     }
 
     [ $BUILD_TARGET != posix-app-pty ] || {
@@ -108,7 +101,7 @@ cd /tmp || die
         arm-none-eabi-gcc --version || die
     }
 
-    [ $BUILD_TARGET != arm-gcc-7 -a $BUILD_TARGET != size-report ] || {
+    [ $BUILD_TARGET != arm-gcc-7 ] || {
         wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2 || die
         tar xjf gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2 || die
         export PATH=/tmp/gcc-arm-none-eabi-7-2018-q2-update/bin:$PATH || die

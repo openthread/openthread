@@ -29,7 +29,8 @@
  */
 
 /**
- * @brief This module defines Radio Arbiter Abstraction Layer interface.
+ * @brief Module that defines the Radio Arbiter Abstraction Layer interface
+ * using Timeslot API provided by SoftDevice.
  *
  */
 
@@ -45,7 +46,7 @@
 extern "C" {
 #endif
 
-/** @brief RAAL Softdevice default parameters. */
+/** @brief RAAL SoftDevice default parameters. */
 #define NRF_RAAL_TIMESLOT_DEFAULT_LENGTH                    6400
 #define NRF_RAAL_TIMESLOT_DEFAULT_ALLOC_ITERS               5
 #define NRF_RAAL_TIMESLOT_DEFAULT_SAFE_MARGIN               nrf_raal_softdevice_safe_margin_calc( \
@@ -66,9 +67,10 @@ extern "C" {
                                                              NRF_RAAL_TIMESLOT_DEFAULT_SAFE_MARGIN_CRYSTAL_TICKS)
 
 /**
- * @brief Function used to calculate safe margin from LF clock accuracy in ppm unit.
+ * @brief Function-like macro used to calculate a safe margin from the LF clock accuracy
+ *        in ppm unit.
  *
- * @param[in]  ppm  LF clock accuracy in ppm unit.
+ * @param[in]  ppm  LF clock accuracy in ppm units.
  */
 #define nrf_raal_softdevice_safe_margin_calc(ppm)           (NRF_802154_RTC_TICKS_TO_US(              \
                                                                  NRF_RAAL_TIMESLOT_SAFE_MARGIN_TICKS( \
@@ -80,46 +82,50 @@ extern "C" {
 typedef struct
 {
     /**
-     * @brief Timeslot length requested by the module in microseconds.
+     * @brief Timeslot length requested by the module, in microseconds.
      */
     uint32_t timeslot_length;
 
     /**
-     * @brief Longest acceptable delay until the start of the requested timeslot in microseconds.
+     * @brief The longest acceptable delay until the start of the requested timeslot,
+     *        in microseconds.
      */
     uint32_t timeslot_timeout;
 
     /**
-     * @brief Maximum single timeslot length created by extension processing in microseconds.
+     * @brief The maximum single timeslot length created by the extension processing,
+     *        in microseconds.
      */
     uint32_t timeslot_max_length;
 
     /**
-     * @brief Maximum number of iteration of dividing timeslot_length by factor of 2 performed by arbiter.
+     * @brief The maximum number of iteration of dividing timeslot_length by factor of 2 performed
+     *        by the arbiter.
      */
     uint16_t timeslot_alloc_iters;
 
     /**
-     * @brief Safe margin before timeslot is finished and nrf_raal_timeslot_ended should be called in microseconds.
-     * @ref nrf_raal_softdevice_safe_margin_calc can be used to calculate proper value based on clock accuracy.
-     * This value can also be selected experimentally.
+     * @brief The safe margin before the timeslot is finished and nrf_raal_timeslot_ended
+     * is to be called, in microseconds. @ref nrf_raal_softdevice_safe_margin_calc can be used
+     * to calculate the proper value based on the clock accuracy. This value can also be selected
+     * experimentally.
      */
     uint16_t timeslot_safe_margin;
 
     /**
-     * @brief Clock accuracy in ppm unit.
+     * @brief The clock accuracy in ppm unit.
      */
     uint16_t lf_clk_accuracy_ppm;
 } nrf_raal_softdevice_cfg_t;
 
 /**
- * @brief Function used to inform RAAL client about Softdevice's SoC events.
+ * @brief Informs the RAAL client about the SoftDevice SoC events.
  *
  */
 void nrf_raal_softdevice_soc_evt_handler(uint32_t evt_id);
 
 /**
- * @brief Function used to set non-default parameters of RAAL.
+ * @brief Sets non-default parameters of RAAL.
  *
  */
 void nrf_raal_softdevice_config(const nrf_raal_softdevice_cfg_t * p_cfg);

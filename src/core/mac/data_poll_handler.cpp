@@ -154,8 +154,6 @@ void DataPollHandler::HandleDataPoll(Mac::RxFrame &aFrame)
         ExitNow();
     }
 
-    VerifyOrExit(!Get<SourceMatchController>().IsEnabled() || (indirectMsgCount > 0));
-
     if (mIndirectTxChild == NULL)
     {
         mIndirectTxChild = child;

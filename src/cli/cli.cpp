@@ -91,7 +91,6 @@ namespace ot {
 namespace Cli {
 
 const struct Command Interpreter::sCommands[] = {
-    {"help", &Interpreter::ProcessHelp},
     {"bufferinfo", &Interpreter::ProcessBufferInfo},
     {"channel", &Interpreter::ProcessChannel},
 #if OPENTHREAD_FTD
@@ -105,6 +104,9 @@ const struct Command Interpreter::sCommands[] = {
 #endif
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     {"coaps", &Interpreter::ProcessCoapSecure},
+#endif
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+    {"coex", &Interpreter::ProcessCoexMetrics},
 #endif
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     {"commissioner", &Interpreter::ProcessCommissioner},
@@ -137,6 +139,7 @@ const struct Command Interpreter::sCommands[] = {
     {"extaddr", &Interpreter::ProcessExtAddress},
     {"extpanid", &Interpreter::ProcessExtPanId},
     {"factoryreset", &Interpreter::ProcessFactoryReset},
+    {"help", &Interpreter::ProcessHelp},
     {"ifconfig", &Interpreter::ProcessIfconfig},
     {"ipaddr", &Interpreter::ProcessIpAddr},
     {"ipmaddr", &Interpreter::ProcessIpMulticastAddr},
@@ -458,10 +461,10 @@ void Interpreter::ProcessChannel(int argc, char *argv[])
                 uint32_t channelMask = otLinkGetSupportedChannelMask(mInstance);
                 uint8_t  channelNum  = sizeof(channelMask) * CHAR_BIT;
 
-                mServer->OutputFormat("interval: %lu\r\n", otChannelMonitorGetSampleInterval(mInstance));
+                mServer->OutputFormat("interval: %u\r\n", otChannelMonitorGetSampleInterval(mInstance));
                 mServer->OutputFormat("threshold: %d\r\n", otChannelMonitorGetRssiThreshold(mInstance));
-                mServer->OutputFormat("window: %lu\r\n", otChannelMonitorGetSampleWindow(mInstance));
-                mServer->OutputFormat("count: %lu\r\n", otChannelMonitorGetSampleCount(mInstance));
+                mServer->OutputFormat("window: %u\r\n", otChannelMonitorGetSampleWindow(mInstance));
+                mServer->OutputFormat("count: %u\r\n", otChannelMonitorGetSampleCount(mInstance));
 
                 mServer->OutputFormat("occupancies:\r\n");
                 for (uint8_t channel = 0; channel < channelNum; channel++)
@@ -587,7 +590,7 @@ void Interpreter::ProcessChild(int argc, char *argv[])
 
     if (isTable || strcmp(argv[0], "list") == 0)
     {
-        uint8_t maxChildren;
+        uint16_t maxChildren;
 
         if (isTable)
         {
@@ -599,7 +602,7 @@ void Interpreter::ProcessChild(int argc, char *argv[])
 
         maxChildren = otThreadGetMaxAllowedChildren(mInstance);
 
-        for (uint8_t i = 0; i < maxChildren; i++)
+        for (uint16_t i = 0; i < maxChildren; i++)
         {
             if ((otThreadGetChildInfoByIndex(mInstance, i, &childInfo) != OT_ERROR_NONE) || childInfo.mIsStateRestoring)
             {
@@ -686,14 +689,14 @@ exit:
 
 void Interpreter::ProcessChildIp(int argc, char *argv[])
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t maxChildren;
+    otError  error = OT_ERROR_NONE;
+    uint16_t maxChildren;
 
     VerifyOrExit(argc == 0, error = OT_ERROR_INVALID_ARGS);
 
     maxChildren = otThreadGetMaxAllowedChildren(mInstance);
 
-    for (uint8_t childIndex = 0; childIndex < maxChildren; childIndex++)
+    for (uint16_t childIndex = 0; childIndex < maxChildren; childIndex++)
     {
         otChildIp6AddressIterator iterator = OT_CHILD_IP6_ADDRESS_ITERATOR_INIT;
         otIp6Address              ip6Address;
@@ -732,7 +735,7 @@ void Interpreter::ProcessChildMax(int argc, char *argv[])
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        SuccessOrExit(error = otThreadSetMaxAllowedChildren(mInstance, static_cast<uint8_t>(value)));
+        SuccessOrExit(error = otThreadSetMaxAllowedChildren(mInstance, static_cast<uint16_t>(value)));
     }
 
 exit:
@@ -780,6 +783,44 @@ void Interpreter::ProcessCoapSecure(int argc, char *argv[])
 }
 
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+void Interpreter::ProcessCoexMetrics(int argc, char *argv[])
+{
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
+    otRadioCoexMetrics metrics;
+    otError            error = otPlatRadioGetCoexMetrics(mInstance, &metrics);
+
+    SuccessOrExit(error);
+
+    mServer->OutputFormat("Stopped: %s\r\n", metrics.mStopped ? "true" : "false");
+    mServer->OutputFormat("Grant Glitch: %u\r\n", metrics.mNumGrantGlitch);
+    mServer->OutputFormat("Transmit metrics\r\n");
+    mServer->OutputFormat("    Request: %u\r\n", metrics.mNumTxRequest);
+    mServer->OutputFormat("    Grant Immediate: %u\r\n", metrics.mNumTxGrantImmediate);
+    mServer->OutputFormat("    Grant Wait: %u\r\n", metrics.mNumTxGrantWait);
+    mServer->OutputFormat("    Grant Wait Activated: %u\r\n", metrics.mNumTxGrantWaitActivated);
+    mServer->OutputFormat("    Grant Wait Timeout: %u\r\n", metrics.mNumTxGrantWaitTimeout);
+    mServer->OutputFormat("    Grant Deactivated During Request: %u\r\n", metrics.mNumTxGrantDeactivatedDuringRequest);
+    mServer->OutputFormat("    Delayed Grant: %u\r\n", metrics.mNumTxDelayedGrant);
+    mServer->OutputFormat("    Average Request To Grant Time: %u\r\n", metrics.mAvgTxRequestToGrantTime);
+    mServer->OutputFormat("Receive metrics\r\n");
+    mServer->OutputFormat("    Request: %u\r\n", metrics.mNumRxRequest);
+    mServer->OutputFormat("    Grant Immediate: %u\r\n", metrics.mNumRxGrantImmediate);
+    mServer->OutputFormat("    Grant Wait: %u\r\n", metrics.mNumRxGrantWait);
+    mServer->OutputFormat("    Grant Wait Activated: %u\r\n", metrics.mNumRxGrantWaitActivated);
+    mServer->OutputFormat("    Grant Wait Timeout: %u\r\n", metrics.mNumRxGrantWaitTimeout);
+    mServer->OutputFormat("    Grant Deactivated During Request: %u\r\n", metrics.mNumRxGrantDeactivatedDuringRequest);
+    mServer->OutputFormat("    Delayed Grant: %u\r\n", metrics.mNumRxDelayedGrant);
+    mServer->OutputFormat("    Average Request To Grant Time: %u\r\n", metrics.mAvgRxRequestToGrantTime);
+    mServer->OutputFormat("    Grant None: %u\r\n", metrics.mNumRxGrantNone);
+
+exit:
+    AppendResult(error);
+}
+#endif // OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])
@@ -1895,7 +1936,8 @@ void Interpreter::HandleIcmpReceive(Message &               aMessage,
 
     VerifyOrExit(aIcmpHeader.mType == OT_ICMP6_TYPE_ECHO_REPLY);
 
-    mServer->OutputFormat("%d bytes from ", aMessage.GetLength() - aMessage.GetOffset() + sizeof(otIcmp6Header));
+    mServer->OutputFormat("%u bytes from ",
+                          aMessage.GetLength() - aMessage.GetOffset() + static_cast<uint16_t>(sizeof(otIcmp6Header)));
 
     OutputIp6Address(aMessageInfo.GetPeerAddr());
 
@@ -2917,7 +2959,7 @@ void Interpreter::HandleSntpResponse(uint64_t aTime, otError aResult)
     {
         // Some Embedded C libraries do not support printing of 64-bit unsigned integers.
         // To simplify, unix epoch time and era number are printed separately.
-        mServer->OutputFormat("SNTP response - Unix time: %ld (era: %ld)\r\n", static_cast<uint32_t>(aTime),
+        mServer->OutputFormat("SNTP response - Unix time: %u (era: %u)\r\n", static_cast<uint32_t>(aTime),
                               static_cast<uint32_t>(aTime >> 32));
     }
     else

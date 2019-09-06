@@ -34,50 +34,52 @@
 #include <stdint.h>
 
 /**
- * @defgroup nrf_802154_rssi RSSI calculations used internally in the 802.15.4 driver.
+ * @defgroup nrf_802154_rssi RSSI calculations used internally in the 802.15.4 driver
  * @{
  * @ingroup nrf_802154
  * @brief RSSI calculations used internally in the 802.15.4 driver.
  */
 
 /**
- * @brief Get RSSISAMPLE temperature correction value for temperature provided by platform.
+ * @brief Gets the RSSISAMPLE temperature correction value.
+ *
+ * The correction value is based on the last temperature value reported by the platform.
  *
  * @returns RSSISAMPLE temperature correction value (Errata 153).
  */
 int8_t nrf_802154_rssi_sample_temp_corr_value_get(void);
 
 /**
- * @brief Adjust the given RSSISAMPLE value using a temperature correction factor.
+ * @brief Adjusts the given RSSISAMPLE value by a temperature correction factor.
  *
- * @param[in]  rssi_sample  Value read from RSSISAMPLE register.
+ * @param[in]  rssi_sample  Value read from the RSSISAMPLE register.
  *
  * @returns RSSISAMPLE corrected by a temperature factor (Errata 153).
  */
 uint8_t nrf_802154_rssi_sample_corrected_get(uint8_t rssi_sample);
 
 /**
- * @brief Adjust the reported LQI value using a temperature correction factor.
+ * @brief Adjusts the reported LQI value using a temperature correction factor.
  *
- * @param[in]  lqi   Value read from LQI byte.
+ * @param[in]  lqi   Value read from the LQI byte.
  *
  * @returns LQI byte value corrected by a temperature factor (Errata 153).
  */
 uint8_t nrf_802154_rssi_lqi_corrected_get(uint8_t lqi);
 
 /**
- * @brief Adjust the EDSAMPLE value using a temperature correction factor.
+ * @brief Adjusts the EDSAMPLE value using a temperature correction factor.
  *
- * @param[in]  ed    Value read from EDSAMPLE register.
+ * @param[in]  ed    Value read from the EDSAMPLE register.
  *
  * @returns EDSAMPLE value corrected by a temperature factor (Errata 153).
  */
 uint8_t nrf_802154_rssi_ed_corrected_get(uint8_t ed);
 
 /**
- * @brief Adjust the CCA ED threshold value using a temperature correction factor.
+ * @brief Adjusts the CCA ED threshold value using a temperature correction factor.
  *
- * @param[in]  cca_ed  Value representing CCA ED threshold that should be corrected.
+ * @param[in]  cca_ed  Value representing the CCA ED threshold to be corrected.
  *
  * @returns CCA ED threshold value corrected by a temperature factor (Errata 153).
  */

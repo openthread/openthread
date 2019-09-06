@@ -49,6 +49,7 @@ static AlarmState   sAlarmMicro;
 static uint32_t     sRandomState = 1;
 static uint8_t      sRadioTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE];
 static otRadioFrame sRadioTransmitFrame = {.mPsdu = sRadioTransmitPsdu};
+static bool         sResetWasRequested  = false;
 
 void FuzzerPlatformInit(void)
 {
@@ -90,6 +91,11 @@ void FuzzerPlatformProcess(otInstance *aInstance)
         }
 #endif
     }
+}
+
+bool FuzzerPlatformResetWasRequested(void)
+{
+    return sResetWasRequested;
 }
 
 uint32_t otPlatAlarmMilliGetNow(void)
@@ -159,6 +165,8 @@ void otDiagProcessCmdLine(otInstance *aInstance, const char *aString, char *aOut
 void otPlatReset(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
+    sResetWasRequested = true;
 }
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)

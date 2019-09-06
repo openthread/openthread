@@ -45,6 +45,7 @@ except ImportError:
 IPV6_NEXT_HEADER_HOP_BY_HOP = 0
 IPV6_NEXT_HEADER_TCP = 6
 IPV6_NEXT_HEADER_UDP = 17
+IPV6_NEXT_HEADER_FRAGMENT = 44
 IPV6_NEXT_HEADER_ICMP = 58
 
 UPPER_LAYER_PROTOCOLS = [
@@ -55,6 +56,7 @@ UPPER_LAYER_PROTOCOLS = [
 
 # ICMP Protocol codes
 ICMP_DESTINATION_UNREACHABLE = 1
+ICMP_TIME_EXCEEDED = 3
 ICMP_ECHO_REQUEST = 128
 ICMP_ECHO_RESPONSE = 129
 
@@ -377,6 +379,7 @@ class IPv6Packet(ConvertibleToBytes):
     Extension headers:
         - HopByHop
         - Routing header (not implemented in this module)
+        - Fragment Header
 
     Upper layer protocols:
         - ICMPv6
@@ -641,6 +644,68 @@ class ICMPv6(UpperLayerProtocol):
 
     def __len__(self):
         return len(self.header) + len(self.body)
+
+
+class FragmentHeader(ExtensionHeader):
+
+    """ Class representing Fragment extension header.
+
+    +-------------+----------+-----------------+-----+---+----------------+
+    | Next Header | Reserved | Fragment Offset | Res | M | Identification |
+    +-------------+----------+-----------------+-----+---+----------------+
+
+    Fragment extention header consists of:
+        - next_header type (8 bit)
+        - fragment offset which is multiple of 8 (13 bit)
+        - more_flag to indicate further data (1 bit)
+        - identification for all associated fragments (32 bit)
+    """
+    @property
+    def type(self):
+        return 44
+
+    @property
+    def identification(self):
+        return self._identification
+
+    @property
+    def more_flag(self):
+        return self._more_flag
+
+    @property
+    def offset(self):
+        return self._fragm_offset
+
+    def __init__(self, next_header=None, fragm_offset=0, more_flag=False, identification=0):
+        super(FragmentHeader, self).__init__(next_header, 0)
+        self._fragm_offset = fragm_offset
+        self._more_flag = more_flag
+        self._identification = identification
+
+    def callculate_offset(self, position):
+        return position >> 3
+
+    def to_bytes(self):
+        data = bytearray([self.next_header, 0x00])
+        data += bytearray([self._fragm_offset >> 5, ((self._fragm_offset << 3) | self._more_flag) & 0xff])
+        data += struct.pack(">I", self._identification)
+
+        return data
+
+    @classmethod
+    def from_bytes(cls, data):
+        next_header = struct.unpack(">B", data.read(1))[0]
+        struct.unpack(">B", data.read(1))[0]    # reserved
+        fragment_offset = struct.unpack(">H", data.read(2))[0]
+        more_flag = fragment_offset & 0x1
+        identificaton = struct.unpack(">I", data.read(4))[0]
+
+        fragment_offset = fragment_offset >> 3
+
+        return cls(next_header, fragment_offset, more_flag, identificaton)
+
+    def __len__(self):
+        return 64
 
 
 class HopByHop(ExtensionHeader):

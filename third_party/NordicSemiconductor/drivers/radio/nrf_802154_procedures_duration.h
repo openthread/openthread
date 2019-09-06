@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief This module contains calculations of 802.15.4 radio driver procedures duration.
+ * @brief Module that contains calculations of the duration of the 802.15.4 radio driver procedures.
  *
  */
 

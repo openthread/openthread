@@ -275,12 +275,17 @@ otError Dhcp6Client::Solicit(uint16_t aRloc16)
     SuccessOrExit(error = AppendIaAddress(*message, aRloc16));
     SuccessOrExit(error = AppendRapidCommit(*message));
 
+#if OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT
+    messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xff03);
+    messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(0x0002);
+#else
     memcpy(messageInfo.GetPeerAddr().mFields.m8, Get<Mle::MleRouter>().GetMeshLocalPrefix().m8,
            sizeof(otMeshLocalPrefix));
     messageInfo.GetPeerAddr().mFields.m16[4] = HostSwap16(0x0000);
     messageInfo.GetPeerAddr().mFields.m16[5] = HostSwap16(0x00ff);
     messageInfo.GetPeerAddr().mFields.m16[6] = HostSwap16(0xfe00);
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(aRloc16);
+#endif
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.mPeerPort = kDhcpServerPort;
 
@@ -432,6 +437,11 @@ void Dhcp6Client::ProcessReply(Message &aMessage)
     uint16_t length = aMessage.GetLength() - aMessage.GetOffset();
     uint16_t optionOffset;
 
+    if ((optionOffset = FindOption(aMessage, offset, length, kOptionStatusCode)) > 0)
+    {
+        SuccessOrExit(ProcessStatusCode(aMessage, optionOffset));
+    }
+
     // Server Identifier
     VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionServerIdentifier)) > 0);
     SuccessOrExit(ProcessServerIdentifier(aMessage, optionOffset));
@@ -480,9 +490,10 @@ otError Dhcp6Client::ProcessServerIdentifier(Message &aMessage, uint16_t aOffset
     otError          error = OT_ERROR_NONE;
     ServerIdentifier option;
 
-    VerifyOrExit(((aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option)) &&
-                  (option.GetLength() == (sizeof(option) - sizeof(Dhcp6Option))) && (option.GetDuidType() == kDuidLL) &&
-                  (option.GetDuidHardwareType() == kHardwareTypeEui64)),
+    VerifyOrExit((aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option)));
+    VerifyOrExit(((option.GetDuidType() == kDuidLLT) && (option.GetDuidHardwareType() == kHardwareTypeEthernet)) ||
+                     ((option.GetLength() == (sizeof(option) - sizeof(Dhcp6Option))) &&
+                      (option.GetDuidType() == kDuidLL) && (option.GetDuidHardwareType() == kHardwareTypeEui64)),
                  error = OT_ERROR_PARSE);
 exit:
     return error;
@@ -546,8 +557,8 @@ otError Dhcp6Client::ProcessStatusCode(Message &aMessage, uint16_t aOffset)
     otError    error = OT_ERROR_NONE;
     StatusCode option;
 
-    VerifyOrExit(((aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option)) &&
-                  (option.GetLength() == (sizeof(option) - sizeof(Dhcp6Option))) &&
+    VerifyOrExit(((aMessage.Read(aOffset, sizeof(option), &option) >= sizeof(option)) &&
+                  (option.GetLength() >= (sizeof(option) - sizeof(Dhcp6Option))) &&
                   (option.GetStatusCode() == kStatusSuccess)),
                  error = OT_ERROR_PARSE);
 

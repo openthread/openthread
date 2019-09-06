@@ -55,17 +55,18 @@
 namespace ot {
 namespace Mac {
 
-static const uint8_t sMode2Key[] = {0x78, 0x58, 0x16, 0x86, 0xfd, 0xb4, 0x58, 0x0f,
-                                    0xb0, 0x92, 0x54, 0x6a, 0xec, 0xbd, 0x15, 0x66};
+const uint8_t Mac::sMode2Key[] = {0x78, 0x58, 0x16, 0x86, 0xfd, 0xb4, 0x58, 0x0f,
+                                  0xb0, 0x92, 0x54, 0x6a, 0xec, 0xbd, 0x15, 0x66};
 
-static const otExtAddress sMode2ExtAddress = {
+const otExtAddress Mac::sMode2ExtAddress = {
     {0x35, 0x06, 0xfe, 0xb8, 0x23, 0xd4, 0x87, 0x12},
 };
 
-static const otExtendedPanId sExtendedPanidInit = {
+const otExtendedPanId Mac::sExtendedPanidInit = {
     {0xde, 0xad, 0x00, 0xbe, 0xef, 0x00, 0xca, 0xfe},
 };
-static const char sNetworkNameInit[] = "OpenThread";
+
+const char Mac::sNetworkNameInit[] = "OpenThread";
 
 Mac::Mac(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -815,7 +816,6 @@ void Mac::PrepareBeaconRequest(TxFrame &aFrame)
 
 void Mac::PrepareBeacon(TxFrame &aFrame)
 {
-    uint8_t        numUnsecurePorts;
     uint8_t        beaconLength;
     uint16_t       fcf;
     Beacon *       beacon        = NULL;
@@ -836,10 +836,7 @@ void Mac::PrepareBeacon(TxFrame &aFrame)
     {
         beaconPayload->Init();
 
-        // set the Joining Permitted flag
-        Get<Ip6::Filter>().GetUnsecurePorts(numUnsecurePorts);
-
-        if (numUnsecurePorts)
+        if (IsJoinable())
         {
             beaconPayload->SetJoiningPermitted();
         }
@@ -877,15 +874,21 @@ bool Mac::ShouldSendBeacon(void) const
         // false) but only if it is in joinable state (unsecure port
         // list is not empty).
 
-        uint8_t numUnsecurePorts;
-
-        Get<Ip6::Filter>().GetUnsecurePorts(numUnsecurePorts);
-        shouldSend = (numUnsecurePorts != 0);
+        shouldSend = IsJoinable();
     }
 #endif
 
 exit:
     return shouldSend;
+}
+
+bool Mac::IsJoinable(void) const
+{
+    uint8_t numUnsecurePorts;
+
+    Get<Ip6::Filter>().GetUnsecurePorts(numUnsecurePorts);
+
+    return (numUnsecurePorts != 0);
 }
 
 void Mac::ProcessTransmitAesCcm(TxFrame &aFrame, const ExtAddress *aExtAddress)

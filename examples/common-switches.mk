@@ -45,9 +45,14 @@ DIAGNOSTIC          ?= 0
 DISABLE_DOC         ?= 0
 DNS_CLIENT          ?= 0
 ECDSA               ?= 0
+EXTERNAL_HEAP       ?= 0
+IP6_FRAGM           ?= 0
 JAM_DETECTION       ?= 0
 JOINER              ?= 0
 LEGACY              ?= 0
+ifeq ($(REFERENCE_DEVICE),1)
+LOG_OUTPUT          ?= APP
+endif
 LINK_RAW            ?= 0
 MAC_FILTER          ?= 0
 MTD_NETDIAG         ?= 0
@@ -130,6 +135,14 @@ ifeq ($(ECDSA),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ECDSA_ENABLE=1
 endif
 
+ifeq ($(EXTERNAL_HEAP),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE=1
+endif
+
+ifeq ($(IP6_FRAGM),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE=1
+endif
+
 ifeq ($(JAM_DETECTION),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_JAM_DETECTION_ENABLE=1
 endif
@@ -146,6 +159,10 @@ ifeq ($(LINK_RAW),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LINK_RAW_ENABLE=1
 endif
 
+ifneq ($(LOG_OUTPUT),)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_$(LOG_OUTPUT)
+endif
+
 ifeq ($(MAC_FILTER),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1
 endif
@@ -160,7 +177,6 @@ endif
 
 # Enable features only required for reference device during certification.
 ifeq ($(REFERENCE_DEVICE),1)
-COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_APP
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE=1
 endif
 
@@ -228,4 +244,3 @@ endif
 
 CFLAGS += ${LOG_FLAGS}
 CXXFLAGS += ${LOG_FLAGS}
-

@@ -63,8 +63,9 @@ namespace ot {
 
 enum
 {
-    kNumBuffers = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS,
-    kBufferSize = OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE,
+    kNumBuffers     = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS,
+    kBufferSize     = OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE,
+    kChildMaskBytes = BitVectorBytes(OPENTHREAD_CONFIG_MLE_MAX_CHILDREN),
 };
 
 class Message;
@@ -87,14 +88,15 @@ struct MessageInfo
         PriorityQueue *mPriority; ///< Identifies the priority queue (if any) where this message is queued.
     } mQueue;                     ///< Identifies the queue (if any) where this message is queued.
 
+    uint32_t mDatagramTag;    ///< The datagram tag used for 6LoWPAN fragmentation or identification used for IPv6
+                              ///< fragmentation.
     uint16_t    mReserved;    ///< Number of header bytes reserved for the message.
     uint16_t    mLength;      ///< Number of bytes within the message.
     uint16_t    mOffset;      ///< A byte offset within the message.
-    uint16_t    mDatagramTag; ///< The datagram tag used for 6LoWPAN fragmentation.
     RssAverager mRssAverager; ///< The averager maintaining the received signal strength (RSS) average.
 
-    uint8_t mChildMask[8]; ///< A bit-vector to indicate which sleepy children need to receive this.
-    uint8_t mTimeout;      ///< Seconds remaining before dropping the message.
+    uint8_t mChildMask[kChildMaskBytes]; ///< A bit-vector to indicate which sleepy children need to receive this.
+    uint8_t mTimeout;                    ///< Seconds remaining before dropping the message.
     union
     {
         uint16_t mPanId;   ///< Used for MLE Discover Request and Response messages.
@@ -476,12 +478,13 @@ public:
     Message *Clone(void) const { return Clone(GetLength()); }
 
     /**
-     * This method returns the datagram tag used for 6LoWPAN fragmentation.
+     * This method returns the datagram tag used for 6LoWPAN fragmentation or the identification used for IPv6
+     * fragmentation.
      *
-     * @returns The 6LoWPAN datagram tag.
+     * @returns The 6LoWPAN datagram tag or the IPv6 fragment identification.
      *
      */
-    uint16_t GetDatagramTag(void) const { return mBuffer.mHead.mInfo.mDatagramTag; }
+    uint32_t GetDatagramTag(void) const { return mBuffer.mHead.mInfo.mDatagramTag; }
 
     /**
      * This method sets the datagram tag used for 6LoWPAN fragmentation.
@@ -489,7 +492,7 @@ public:
      * @param[in]  aTag  The 6LoWPAN datagram tag.
      *
      */
-    void SetDatagramTag(uint16_t aTag) { mBuffer.mHead.mInfo.mDatagramTag = aTag; }
+    void SetDatagramTag(uint32_t aTag) { mBuffer.mHead.mInfo.mDatagramTag = aTag; }
 
     /**
      * This method returns whether or not the message forwarding is scheduled for the child.
@@ -500,7 +503,7 @@ public:
      * @retval FALSE  If the message is not scheduled to be forwarded to the child.
      *
      */
-    bool GetChildMask(uint8_t aChildIndex) const;
+    bool GetChildMask(uint16_t aChildIndex) const;
 
     /**
      * This method unschedules forwarding of the message to the child.
@@ -508,7 +511,7 @@ public:
      * @param[in]  aChildIndex  The index into the child table.
      *
      */
-    void ClearChildMask(uint8_t aChildIndex);
+    void ClearChildMask(uint16_t aChildIndex);
 
     /**
      * This method schedules forwarding of the message to the child.
@@ -516,7 +519,7 @@ public:
      * @param[in]  aChildIndex  The index into the child table.
      *
      */
-    void SetChildMask(uint8_t aChildIndex);
+    void SetChildMask(uint16_t aChildIndex);
 
     /**
      * This method returns whether or not the message forwarding is scheduled for at least one child.

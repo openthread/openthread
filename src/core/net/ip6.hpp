@@ -44,6 +44,7 @@
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/timer.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip6_address.hpp"
 #include "net/ip6_headers.hpp"
@@ -104,8 +105,12 @@ class Ip6 : public InstanceLocator
 public:
     enum
     {
-        kDefaultHopLimit   = OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT,
-        kMaxDatagramLength = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH,
+        kDefaultHopLimit            = OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT,
+        kMaxDatagramLength          = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH,
+        kMaxAssembledDatagramLength = OPENTHREAD_CONFIG_IP6_MAX_ASSEMBLED_DATAGRAM,
+        kIp6ReassemblyTimeout       = OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT,
+        kMinimalMtu                 = 1280,
+        kStateUpdatePeriod          = 1000,
     };
 
     /**
@@ -344,12 +349,23 @@ private:
                                    const MessageInfo &aMessageInfo,
                                    uint8_t            aIpProto,
                                    bool               aFromNcpHost);
-    otError HandleExtensionHeaders(Message &aMessage,
-                                   Header & aHeader,
-                                   uint8_t &aNextHeader,
-                                   bool     aForward,
-                                   bool     aReceive);
-    otError HandleFragment(Message &aMessage);
+    otError HandleExtensionHeaders(Message &    aMessage,
+                                   Netif *      aNetif,
+                                   MessageInfo &aMessageInfo,
+                                   Header &     aHeader,
+                                   uint8_t &    aNextHeader,
+                                   bool         aForward,
+                                   bool         aFromNcpHost,
+                                   bool         aReceive);
+    otError FragmentDatagram(Message &aMessage, IpProto aIpProto);
+    otError HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromNcpHost);
+#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+    void        CleanupFragmentationBuffer(void);
+    void        HandleUpdateTimer(void);
+    void        UpdateReassemblyList(void);
+    otError     SendIcmpError(Message &aMessage, IcmpHeader::Type aIcmpType, IcmpHeader::Code aIcmpCode);
+    static void HandleTimer(Timer &aTimer);
+#endif
     otError AddMplOption(Message &aMessage, Header &aHeader);
     otError AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
     otError InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
@@ -370,6 +386,11 @@ private:
     Icmp mIcmp;
     Udp  mUdp;
     Mpl  mMpl;
+
+#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+    TimerMilli   mTimer;
+    MessageQueue mReassemblyList;
+#endif
 };
 
 /**

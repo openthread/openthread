@@ -286,15 +286,15 @@ void SubMac::BeginTransmit(void)
     error = Get<Radio>().Receive(mTransmitFrame.GetChannel());
     assert(error == OT_ERROR_NONE);
 
-    error = Get<Radio>().Transmit(mTransmitFrame);
-    assert(error == OT_ERROR_NONE);
-
     SetState(kStateTransmit);
 
     if (mPcapCallback)
     {
         mPcapCallback(&mTransmitFrame, true, mPcapCallbackContext);
     }
+
+    error = Get<Radio>().Transmit(mTransmitFrame);
+    assert(error == OT_ERROR_NONE);
 
 exit:
     return;

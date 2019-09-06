@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief This file implements incoming frame filter API.
+ * @brief Module that implements the incoming frame filter API.
  *
  */
 
@@ -42,34 +42,35 @@
 #include "nrf_802154_types.h"
 
 /**
- * @defgroup nrf_802154_filter Incoming frame filter API.
+ * @defgroup nrf_802154_filter Incoming frame filter API
  * @{
  * @ingroup nrf_802154
- * @brief Procedures used to discard incoming frames that contain unexpected data in PHR or MHR.
+ * @brief Procedures used to discard the incoming frames that contain unexpected data in PHR or MHR.
  */
 
 /**
- * @brief Verify if given part of the frame is valid.
+ * @brief Verifies if the given part of the frame is valid.
  *
- * This function is called a few times for each received frame. First call is after FCF is received
- * (PSDU length is 1 - @p p_num_bytes value is 1). Subsequent calls are performed when number of
- * bytes requested by previous call is available. Iteration ends when function does not request
- * any more bytes to check.
- * If verified part of the function is correct this function returns true and sets @p p_num_bytes to
- * number of bytes that should be available in PSDU during next iteration. If frame is correct and
- * there is nothing more to check, function returns true and does not modify @p p_num_bytes value.
- * If verified frame is incorrect this function returns false and @p p_num_bytes value is undefined.
+ * This function is called a few times for each received frame. The first call is after the FCF
+ * is received (PSDU length is 2 and @p p_num_bytes value is 3). The subsequent calls are performed
+ * when the number of bytes requested by the previous call is available. The iteration ends
+ * when the function does not request any more bytes to check.
+ * If the verified part of the function is correct, this function returns true and sets
+ * @p p_num_bytes to the number of bytes that should be available in PSDU during the next iteration.
+ * If the frame is correct and there is nothing more to check, this function returns true
+ * and does not modify the @p p_num_bytes value. If the verified frame is incorrect, this function
+ * returns false and the @p p_num_bytes value is undefined.
  *
- * @param[in]    p_data       Pointer to a buffer containing PHR and PSDU of incoming frame.
- * @param[inout] p_num_bytes  Number of bytes available in @p p_data buffer. This value is set to
- *                            requested number of bytes for next iteration or this value is
- *                            unchanged if no more iterations shall be performed during filtering of
- *                            given frame.
+ * @param[in]    p_data       Pointer to a buffer that contains PHR and PSDU of the incoming frame.
+ * @param[inout] p_num_bytes  Number of bytes available in @p p_data buffer. This value is either
+ *                            set to the requested number of bytes for the next iteration or remains
+ *                            unchanged if no more iterations are to be performed during
+ *                            the filtering of the given frame.
  *
  * @retval NRF_802154_RX_ERROR_NONE               Verified part of the incoming frame is valid.
  * @retval NRF_802154_RX_ERROR_INVALID_FRAME      Verified part of the incoming frame is invalid.
  * @retval NRF_802154_RX_ERROR_INVALID_DEST_ADDR  Incoming frame has destination address that
- *                                                mismatches address of this node.
+ *                                                mismatches the address of this node.
  */
 nrf_802154_rx_error_t nrf_802154_filter_frame_part(const uint8_t * p_data, uint8_t * p_num_bytes);
 

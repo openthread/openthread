@@ -593,7 +593,23 @@ void MeshForwarder::UpdateRoutes(uint8_t *           aFrame,
     VerifyOrExit(!aMeshDest.IsBroadcast() && aMeshSource.IsShort());
     SuccessOrExit(GetIp6Header(aFrame, aFrameLength, aMeshSource, aMeshDest, ip6Header));
 
-    Get<AddressResolver>().UpdateCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort());
+    if (!ip6Header.GetSource().IsRoutingLocator() && !ip6Header.GetSource().IsAnycastRoutingLocator() &&
+        Get<NetworkData::Leader>().IsOnMesh(ip6Header.GetSource()) /* only for on mesh address which may require AQ */)
+    {
+        if (Get<AddressResolver>().UpdateCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort()) ==
+            OT_ERROR_NOT_FOUND)
+        {
+            // Thread 1.1 Specification 5.5.2.2:
+            // FTDs MAY add/update EID-to-RLOC Map Cache entries by inspecting packets being received.
+            if ((Get<Mle::MleRouter>().IsFullThreadDevice() /* only for FTD */ &&
+                 !Get<Mle::MleRouter>().IsMinimalChild(aMeshSource.GetShort()) /* Exclude MTD child source */) &&
+                (aMeshDest.GetShort() == Get<Mac::Mac>().GetShortAddress() ||
+                 Get<Mle::MleRouter>().IsMinimalChild(aMeshDest.GetShort())) /* Received for itself or its MTD child */)
+            {
+                Get<AddressResolver>().AddCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort());
+            }
+        }
+    }
 
     neighbor = Get<Mle::MleRouter>().GetNeighbor(ip6Header.GetSource());
     VerifyOrExit(neighbor != NULL && !neighbor->IsFullThreadDevice());

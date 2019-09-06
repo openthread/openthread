@@ -65,16 +65,16 @@ RandomManager::RandomManager(void)
 
 #ifndef OPENTHREAD_RADIO
     sEntropy.Init();
-#endif
+    sCtrDrbg.Init();
 
+    error = Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&seed), sizeof(seed));
+    assert(error == OT_ERROR_NONE);
+#else
     error = otPlatEntropyGet(reinterpret_cast<uint8_t *>(&seed), sizeof(seed));
     assert(error == OT_ERROR_NONE);
+#endif
 
     sPrng.Init(seed);
-
-#ifndef OPENTHREAD_RADIO
-    sCtrDrbg.Init();
-#endif
 
 exit:
     sInitCount++;

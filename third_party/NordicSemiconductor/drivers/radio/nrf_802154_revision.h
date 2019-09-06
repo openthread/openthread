@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief This module contains helpers for checking nRF SoC revision.
+ * @brief Module that contains helpers for checking the nRF SoC revision.
  *
  */
 
@@ -44,19 +44,20 @@ extern "C" {
 #endif
 
 /**
- * @brief This function initializes the module by reading the nRF52840 revision
- *        from the registers and storing it for convenient access.
+ * @brief Initializes the module by reading the nRF52840 revision from the registers and storing it
+ * for convenient access.
  *
  * @note If the chip revision is not recognized, this module assumes that it is running on a newer
- *       chip revision that has all of the features, that the most recent known revision has.
+ *       chip revision that has all of the features compared to the features of the most recent
+ *       known revision.
  */
 void nrf_802154_revision_init(void);
 
 /**
- * @brief Function to check if the program is running on NRF52840 revision that supports PHYEND event.
+ * @brief Checks if the program is running on the nRF52840 revision that supports the PHYEND event.
  *
- * @retval true  If PHYEND event is supported.
- * @retval false If PHYEND event is not supported.
+ * @retval true  The PHYEND event is supported.
+ * @retval false The PHYEND event is not supported.
  */
 bool nrf_802154_revision_has_phyend_event(void);
 

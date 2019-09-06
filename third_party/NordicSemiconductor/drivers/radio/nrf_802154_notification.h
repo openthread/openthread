@@ -44,48 +44,48 @@ extern "C" {
  * @defgroup nrf_802154_notification 802.15.4 driver notification
  * @{
  * @ingroup nrf_802154
- * @brief Notifications to the next higher layer triggered from 802.15.4 radio driver.
+ * @brief Notifications to the next higher layer triggered from the 802.15.4 radio driver.
  */
 
 /**
- * @brief Function type used for external notification
+ * @brief Function type used for notifications from critical sections in the core module.
  *
- * This function is called instead of default notification. Function is passed to request to notify
- * atomically during request processing.
+ * This function is called instead of the default notification. The function is passed to request
+ * notifications from a critical section during the request processing.
  *
- * @param[in]  result  If called request succeeded.
+ * @param[in]  result  If the called request succeeded.
  */
 typedef void (* nrf_802154_notification_func_t)(bool result);
 
 /**
- * @brief Initialize notification module.
+ * @brief Initializes the notification module.
  */
 void nrf_802154_notification_init(void);
 
 /**
- * @brief Notify next higher layer that a frame was received.
+ * @brief Notifies the next higher layer that a frame was received.
  *
- * @param[in]  p_data  Pointer to a buffer containing PHR and PSDU of the received frame.
+ * @param[in]  p_data  Pointer to a buffer that contains PHR and PSDU of the received frame.
  * @param[in]  power   RSSI measured during the frame reception.
  * @param[in]  lqi     LQI indicating measured link quality during the frame reception.
  */
 void nrf_802154_notify_received(uint8_t * p_data, int8_t power, uint8_t lqi);
 
 /**
- * @brief Notify next higher layer that reception of a frame failed.
+ * @brief Notifies the next higher layer that the reception of a frame failed.
  *
- * @param[in]  error  An error code that indicates reason of the failure.
+ * @param[in]  error  Error code that indicates the reason of the failure.
  */
 void nrf_802154_notify_receive_failed(nrf_802154_rx_error_t error);
 
 /**
- * @brief Notify next higher layer that a frame was transmitted.
+ * @brief Notifies the next higher layer that a frame was transmitted.
  *
- * @param[in]  p_frame  Pointer to a buffer containing PHR and PSDU of the transmitted frame.
- * @param[in]  p_ack    Pointer to a buffer containing PHR and PSDU of ACK frame. NULL if ACK was
+ * @param[in]  p_frame  Pointer to a buffer that contains PHR and PSDU of the transmitted frame.
+ * @param[in]  p_ack    Pointer to a buffer that containsthat contains PHR and PSDU of ACK frame. NULL if ACK was
  *                      not requested.
- * @param[in]  power    RSSI of received frame or 0 if ACK was not requested.
- * @param[in]  lqi      LQI of received frame of 0 if ACK was not requested.
+ * @param[in]  power    RSSI of the received frame or 0 if ACK was not requested.
+ * @param[in]  lqi      LQI of the received frame of 0 if ACK was not requested.
  */
 void nrf_802154_notify_transmitted(const uint8_t * p_frame,
                                    uint8_t       * p_ack,
@@ -93,39 +93,39 @@ void nrf_802154_notify_transmitted(const uint8_t * p_frame,
                                    uint8_t         lqi);
 
 /**
- * @brief Notify next higher layer that a frame was not transmitted.
+ * @brief Notifies the next higher layer that a frame was not transmitted.
  *
- * @param[in]  p_frame  Pointer to a buffer containing PHR and PSDU of the frame that failed transmit
- *                      operation.
- * @param[in]  error    An error code indicating reason of the failure.
+ * @param[in]  p_frame  Pointer to a buffer that contains PHR and PSDU of the frame that failed
+ *                      the transmission operation.
+ * @param[in]  error    An error code indicating the reason of the failure.
  */
 void nrf_802154_notify_transmit_failed(const uint8_t * p_frame, nrf_802154_tx_error_t error);
 
 /**
- * @brief Notify next higher layer that energy detection procedure ended.
+ * @brief Notifies the next higher layer that the energy detection procedure ended.
  *
  * @param[in]  result  Detected energy level.
  */
 void nrf_802154_notify_energy_detected(uint8_t result);
 
 /**
- * @brief Notify next higher layer that energy detection procedure failed.
+ * @brief Notifies the next higher layer that the energy detection procedure failed.
  *
- * @param[in]  error  An error code indicating reason of the failure.
+ * @param[in]  error  Error code indicating the reason of the failure.
  */
 void nrf_802154_notify_energy_detection_failed(nrf_802154_ed_error_t error);
 
 /**
- * @brief Notify next higher layer that CCA procedure ended.
+ * @brief Notifies the next higher layer that the CCA procedure ended.
  *
  * @param[in]  is_free  If detected that channel is free.
  */
 void nrf_802154_notify_cca(bool is_free);
 
 /**
- * @brief Notify next higher layer that CCA procedure failed.
+ * @brief Notifies the next higher layer that the CCA procedure failed.
  *
- * @param[in]  error  An error code indicating reason of the failure.
+ * @param[in]  error  Error code indicating reason of the failure.
  */
 void nrf_802154_notify_cca_failed(nrf_802154_cca_error_t error);
 

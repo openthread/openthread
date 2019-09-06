@@ -96,6 +96,8 @@ send "extaddr\r\n"
 expect "Done"
 send "ipaddr\r\n"
 expect "Done"
+send "coex\r\n"
+expect "Done"
 wait
 EOF
 

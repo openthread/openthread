@@ -46,38 +46,42 @@ extern "C" {
  * @defgroup nrf_802154_swi 802.15.4 driver SWI management
  * @{
  * @ingroup nrf_802154
- * @brief SWI manager for 802.15.4 driver.
+ * @brief SWI manager for the 802.15.4 driver.
  */
 
 /**
- * @brief Initialize SWI module.
+ * @brief Initializes the SWI module.
  */
 void nrf_802154_swi_init(void);
 
 /**
- * @brief Notify next higher layer that a frame was received from SWI priority level.
+ * @brief Notifies the next higher layer that a frame was received.
  *
- * @param[in]  p_data  Pointer to a buffer containing PHR and PSDU of the received frame.
+ * The notification is triggered from the SWI priority level.
+ *
+ * @param[in]  p_data  Pointer to a buffer that contains PHR and PSDU of the received frame.
  * @param[in]  power   RSSI measured during the frame reception.
- * @param[in]  lqi     LQI indicating measured link quality during the frame reception.
+ * @param[in]  lqi     LQI that indicates the measured link quality during the frame reception.
  */
 void nrf_802154_swi_notify_received(uint8_t * p_data, int8_t power, uint8_t lqi);
 
 /**
- * @brief Notify next higher layer that reception of a frame failed.
+ * @brief Notifies the next higher layer that the reception of a frame failed.
  *
- * @param[in]  error  An error code that indicates reason of the failure.
+ * @param[in]  error  Error code that indicates reason of the failure.
  */
 void nrf_802154_swi_notify_receive_failed(nrf_802154_rx_error_t error);
 
 /**
- * @brief Notify next higher layer that a frame was transmitted from SWI priority level.
+ * @brief Notifies the next higher layer that a frame was transmitted
  *
- * @param[in]  p_frame  Pointer to a buffer containing PHR and PSDU of the transmitted frame.
- * @param[in]  p_ack    Pointer to a buffer containing PHR and PSDU of ACK frame. NULL if ACK was
+ * The notification is triggered from the SWI priority level.
+ *
+ * @param[in]  p_frame  Pointer to a buffer that contains PHR and PSDU of the transmitted frame.
+ * @param[in]  p_ack    Pointer to a buffer that contains PHR and PSDU of ACK frame. NULL if ACK was
  *                      not requested.
- * @param[in]  power    RSSI of received frame or 0 if ACK was not requested.
- * @param[in]  lqi      LQI of received frame of 0 if ACK was not requested.
+ * @param[in]  power    RSSI of the received frame, or 0 if ACK was not requested.
+ * @param[in]  lqi      LQI of the received frame, or 0 if ACK was not requested.
  */
 void nrf_802154_swi_notify_transmitted(const uint8_t * p_frame,
                                        uint8_t       * p_data,
@@ -85,73 +89,83 @@ void nrf_802154_swi_notify_transmitted(const uint8_t * p_frame,
                                        uint8_t         lqi);
 
 /**
- * @brief Notify next higher layer that a frame was not transmitted from SWI priority level.
+ * @brief Notifies the next higher layer that a frame was not transmitted from the SWI priority
+ * level.
  *
- * @param[in]  p_frame  Pointer to a buffer containing PHR and PSDU of the frame that failed
+ * @param[in]  p_frame  Pointer to a buffer that contains PHR and PSDU of the frame that failed
  *                      the transmission.
  * @param[in]  error    Reason of the transmission failure.
  */
 void nrf_802154_swi_notify_transmit_failed(const uint8_t * p_frame, nrf_802154_tx_error_t error);
 
 /**
- * @brief Notify next higher layer that energy detection procedure ended from SWI priority level.
+ * @brief Notifies the next higher layer that the energy detection procedure ended from
+ * the SWI priority level.
  *
  * @param[in]  result  Detected energy level.
  */
 void nrf_802154_swi_notify_energy_detected(uint8_t result);
 
 /**
- * @brief Notify next higher layer that energy detection procedure failed from SWI priority level.
+ * @brief Notifies the next higher layer that the energy detection procedure failed from
+ * the SWI priority level.
  *
  * @param[in]  error  Reason of the energy detection failure.
  */
 void nrf_802154_swi_notify_energy_detection_failed(nrf_802154_ed_error_t error);
 
 /**
- * @brief Notify next higher layer that CCA procedure ended from SWI priority level.
+ * @brief Notifies the next higher layer that the Clear Channel Assessment (CCA) procedure ended.
  *
- * @param[in]  channel_free  If detected free channel.
+ * The notification is triggered from the SWI priority level.
+ *
+ * @param[in]  channel_free  If a free channel was detected.
  */
 void nrf_802154_swi_notify_cca(bool channel_free);
 
 /**
- * @brief Notify next higher layer that CCA procedure failed from SWI priority level.
+ * @brief Notifies the next higher layer that the Clear Channel Assessment (CCA) procedure failed.
+ *
+ * The notification is triggered from the SWI priority level.
  *
  * @param[in]  error  Reason of the CCA failure.
  */
 void nrf_802154_swi_notify_cca_failed(nrf_802154_cca_error_t error);
 
 /**
- * @brief Request stop of the HF clock from the SWI priority level.
+ * @brief Requests a stop of the HF clock.
  *
- * @note This function should be called through notification module to prevent calling it from
+ * The notification is triggered from the SWI priority level.
+ *
+ * @note This function is to be called through notification module to prevent calling it from
  *       the arbiter context.
  */
 void nrf_802154_swi_hfclk_stop(void);
 
 /**
- * @brief Terminate stopping of the HF clock.
+ * @brief Terminates the stopping of the HF clock.
  *
- * @note This function terminates stopping of the HF clock only if it has not been performed.
+ * @note This function terminates the stopping of the HF clock only if it has not been performed
+ * yet.
  */
 void nrf_802154_swi_hfclk_stop_terminate(void);
 
 /**
- * @brief Request entering sleep state from SWI priority.
+ * @brief Requests entering the @ref RADIO_STATE_SLEEP state from the SWI priority.
  *
  * @param[in]   term_lvl  Termination level of this request. Selects procedures to abort.
- * @param[out]  p_result  Result of entering sleep state.
+ * @param[out]  p_result  Result of entering the sleep state.
  */
 void nrf_802154_swi_sleep(nrf_802154_term_t term_lvl, bool * p_result);
 
 /**
- * @brief Request entering receive state from SWI priority.
+ * @brief Requests entering the @ref RADIO_STATE_RX state from the SWI priority.
  *
  * @param[in]   term_lvl         Termination level of this request. Selects procedures to abort.
  * @param[in]   req_orig         Module that originates this request.
- * @param[in]   notify_function  Function called to notify status of this procedure. May be NULL.
+ * @param[in]   notify_function  Function called to notify the status of the procedure. May be NULL.
  * @param[in]   notify_abort     If abort notification should be triggered automatically.
- * @param[out]  p_result         Result of entering receive state.
+ * @param[out]  p_result         Result of entering the receive state.
  */
 void nrf_802154_swi_receive(nrf_802154_term_t              term_lvl,
                             req_originator_t               req_orig,
@@ -160,19 +174,20 @@ void nrf_802154_swi_receive(nrf_802154_term_t              term_lvl,
                             bool                         * p_result);
 
 /**
- * @biref Request entering transmit state from SWI priority.
+ * @biref Requests entering the @ref RADIO_STATE_TX state from the SWI priority.
  *
  * @param[in]   term_lvl         Termination level of this request. Selects procedures to abort.
  * @param[in]   req_orig         Module that originates this request.
- * @param[in]   p_data           Pointer to a buffer containing PHR and PSDU of the frame to be
+ * @param[in]   p_data           Pointer to a buffer that contains PHR and PSDU of the frame to be
  *                               transmitted.
- * @param[in]   cca              If the driver should perform CCA procedure before transmission.
+ * @param[in]   cca              If the driver should perform the CCA procedure before transmission.
  * @param[in]   immediate        If true, the driver schedules transmission immediately or never;
- *                               if false transmission may be postponed until tx preconditions are
- *                               met.
- * @param[in]   notify_function  Function called to notify status of this procedure instead of
- *                               default notification. If NULL default notification is used.
- * @param[out]  p_result         Result of entering transmit state.
+ *                               if false, the transmission may be postponed until TX preconditions
+ *                               are met.
+ * @param[in]   notify_function  Function called to notify the status of this procedure instead of
+ *                               the default notification. If NULL, the default notification
+ *                               is used.
+ * @param[out]  p_result         Result of entering the transmit state.
  */
 void nrf_802154_swi_transmit(nrf_802154_term_t              term_lvl,
                              req_originator_t               req_orig,
@@ -183,48 +198,59 @@ void nrf_802154_swi_transmit(nrf_802154_term_t              term_lvl,
                              bool                         * p_result);
 
 /**
- * @brief Request entering energy detection state from SWI priority.
+ * @brief Requests entering the @ref RADIO_STATE_ED state from the SWI priority.
  *
  * @param[in]   term_lvl  Termination level of this request. Selects procedures to abort.
- * @param[in]   time_us   Requested duration of energy detection procedure.
- * @param[out]  p_result  Result of entering energy detection state.
+ * @param[in]   time_us   Requested duration of the energy detection procedure.
+ * @param[out]  p_result  Result of entering the energy detection state.
  */
 void nrf_802154_swi_energy_detection(nrf_802154_term_t term_lvl,
                                      uint32_t          time_us,
                                      bool            * p_result);
 
 /**
- * @brief Request entering CCA state from SWI priority.
+ * @brief Requests entering the @ref RADIO_STATE_CCA state from the SWI priority.
  *
  * @param[in]   term_lvl  Termination level of this request. Selects procedures to abort.
- * @param[out]  p_result  Result of entering CCA state.
+ * @param[out]  p_result  Result of entering the CCA state.
  */
 void nrf_802154_swi_cca(nrf_802154_term_t term_lvl, bool * p_result);
 
 /**
- * @brief Request entering continuous carrier state from SWI priority.
+ * @brief Requests entering the @ref RADIO_STATE_CONTINUOUS_CARRIER state from the SWI priority.
  *
  * @param[in]   term_lvl  Termination level of this request. Selects procedures to abort.
- * @param[out]  p_result  Result of entering continuous carrier state.
+ * @param[out]  p_result  Result of entering the continuous carrier state.
  */
 void nrf_802154_swi_continuous_carrier(nrf_802154_term_t term_lvl, bool * p_result);
 
 /**
- * @brief Notify Core module that given buffer is not used anymore and can be freed.
+ * @brief Notifies the core module that the given buffer is not used anymore and can be freed.
  *
- * @param[in]  p_data  Pointer to the buffer to free.
+ * @param[in]  p_data  Pointer to the buffer to be freed.
  */
 void nrf_802154_swi_buffer_free(uint8_t * p_data, bool * p_result);
 
 /**
- * @brief Notify Core module that the next higher layer requested channel change.
+ * @brief Notifies the core module that the next higher layer has requested a channel change.
  */
 void nrf_802154_swi_channel_update(bool * p_result);
 
 /**
- * @brief Notify Core module that the next higher layer requested CCA configuration change.
+ * @brief Notifies the core module that the next higher layer has requested a CCA configuration
+ * change.
  */
 void nrf_802154_swi_cca_cfg_update(bool * p_result);
+
+/**
+ * @brief Notifies the core module that the next higher layer requested the RSSI measurement.
+ */
+void nrf_802154_swi_rssi_measure(bool * p_result);
+
+/**
+ * @brief Gets the last RSSI measurement result from the core module.
+ */
+void nrf_802154_swi_rssi_measurement_get(int8_t * p_rssi, bool * p_result);
 
 /**
  *@}

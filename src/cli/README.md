@@ -20,6 +20,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [counters](#counters)
 * [dataset](README_DATASET.md)
 * [delaytimermin](#delaytimermin)
+* [diag](#diag)
 * [discover](#discover-channel)
 * [dns](#dns-resolve-hostname-dns-server-ip-dns-server-port)
 * [eidcache](#eidcache)
@@ -65,14 +66,13 @@ OpenThread test scripts use the CLI to execute test cases.
 * [routerselectionjitter](#routerselectionjitter)
 * [routerupgradethreshold](#routerupgradethreshold)
 * [scan](#scan-channel)
+* [service](#service)
 * [singleton](#singleton)
 * [sntp](#sntp-query-sntp-server-ip-sntp-server-port)
 * [state](#state)
 * [thread](#thread-start)
 * [txpower](#txpower)
 * [version](#version)
-* [diag](#diag)
-* [service](#service)
 
 ## OpenThread Command Details
 

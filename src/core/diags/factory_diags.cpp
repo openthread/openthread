@@ -74,8 +74,7 @@ void Diags::ProcessChannel(int aArgCount, char *aArgVector[], char *aOutput, siz
     SuccessOrExit(error = ParseLong(aArgVector[0], value));
     VerifyOrExit(value >= Radio::kChannelMin && value <= Radio::kChannelMax, error = OT_ERROR_INVALID_ARGS);
 
-    mChannel = static_cast<uint8_t>(value);
-    otPlatDiagChannelSet(mChannel);
+    otPlatDiagChannelSet(static_cast<uint8_t>(value));
 
 exit:
     AppendErrorResult(error, aOutput, aOutputMaxLen);
@@ -90,8 +89,7 @@ void Diags::ProcessPower(int aArgCount, char *aArgVector[], char *aOutput, size_
 
     SuccessOrExit(error = ParseLong(aArgVector[0], value));
 
-    mTxPower = static_cast<int8_t>(value);
-    otPlatDiagTxPowerSet(mTxPower);
+    otPlatDiagTxPowerSet(static_cast<int8_t>(value));
 
 exit:
     AppendErrorResult(error, aOutput, aOutputMaxLen);
@@ -132,12 +130,12 @@ const struct Diags::Command Diags::sCommands[] = {
 
 Diags::Diags(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTxPower(0)
-    , mChannel(20)
-    , mTxLen(0)
+    , mTxPacket(&Get<Radio>().GetTransmitBuffer())
     , mTxPeriod(0)
     , mTxPackets(0)
-    , mTxPacket(&Get<Radio>().GetTransmitBuffer())
+    , mChannel(20)
+    , mTxPower(0)
+    , mTxLen(0)
     , mRepeatActive(false)
 {
     memset(&mStats, 0, sizeof(mStats));
@@ -475,15 +473,7 @@ exit:
     {
     case OT_ERROR_NONE:
 
-        if (argCount >= 1)
-        {
-            ProcessCmd(argCount - 1, (argCount == 1) ? NULL : &argVector[1], aOutput, aOutputMaxLen);
-        }
-        else
-        {
-            ProcessCmd(0, NULL, aOutput, aOutputMaxLen);
-        }
-
+        ProcessCmd(argCount, &argVector[0], aOutput, aOutputMaxLen);
         break;
 
     case OT_ERROR_NO_BUFS:

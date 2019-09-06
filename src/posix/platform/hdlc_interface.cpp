@@ -224,7 +224,7 @@ otError HdlcInterface::Write(const uint8_t *aFrame, uint16_t aLength)
 {
     otError error = OT_ERROR_NONE;
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    otSimSendRadioSpinelWriteEvent(aFrame, aLength);
+    platformSimSendRadioSpinelWriteEvent(aFrame, aLength);
 #else
     while (aLength)
     {
@@ -254,7 +254,7 @@ otError HdlcInterface::WaitForWritable(void)
 {
     otError        error   = OT_ERROR_NONE;
     struct timeval timeout = {kMaxWaitTime / 1000, (kMaxWaitTime % 1000) * 1000};
-    uint64_t       now     = otSysGetTime();
+    uint64_t       now     = platformGetTime();
     uint64_t       end     = now + kMaxWaitTime * US_PER_MS;
     fd_set         writeFds;
     fd_set         errorFds;
@@ -289,7 +289,7 @@ otError HdlcInterface::WaitForWritable(void)
             DieNow(OT_EXIT_ERROR_ERRNO);
         }
 
-        now = otSysGetTime();
+        now = platformGetTime();
 
         if (end > now)
         {
@@ -337,7 +337,10 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
         tios.c_cflag = CS8 | HUPCL | CREAD | CLOCAL;
 
         // example: 115200N1
-        sscanf(aConfig, "%u%c%d", &speed, &parity, &cstopb);
+        if (aConfig != NULL)
+        {
+            sscanf(aConfig, "%u%c%d", &speed, &parity, &cstopb);
+        }
 
         switch (parity)
         {

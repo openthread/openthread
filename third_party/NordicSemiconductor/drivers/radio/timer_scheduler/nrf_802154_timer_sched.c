@@ -172,14 +172,19 @@ static inline void handle_timer(void)
 }
 
 /**
- * @brief Remove timer from the queue
+ * @brief Remove a timer from the queue.
  *
- * @param [inout]  p_timer  Pointer to timer to remove from the queue.
+ * The timer to be removed can be running or not running. If the timer is running, it is removed from
+ * the timer queue and the value pointed by the @c p_was_running parameter is set to true. If the timer is not running,
+ * the value pointed by @c p_was_running is set to false.
+ *
+ * @param[in,out]  p_timer        Pointer to the timer to remove from the queue.
+ * @param[out]    p_was_running  Informs a caller if the timer was running. Pass NULL if irrelevant.
  *
  * @retval true   @sa handle_timer() shall be called by caller of this function.
  * @retval false  @sa handle_timer() shall not be called by the caller.
  */
-static bool timer_remove(nrf_802154_timer_t * p_timer)
+static bool timer_remove(nrf_802154_timer_t * p_timer, bool * p_was_running)
 {
     assert(p_timer != NULL);
 
@@ -251,10 +256,13 @@ static bool timer_remove(nrf_802154_timer_t * p_timer)
         }
     }
 
+    bool was_running = false;
+
     // Write to the pointer next on removal to ensure that node removal is detected by
-    // lower pritority context in case it was going to be used.
+    // lower priority context in case it was going to be used.
     if (p_cur != NULL)
     {
+        was_running = true;
         uint32_t temp;
 
         do
@@ -264,6 +272,11 @@ static bool timer_remove(nrf_802154_timer_t * p_timer)
             assert((void *)temp != p_cur);
         }
         while (__STREXW(temp, (uint32_t *)&p_cur->p_next));
+    }
+
+    if (p_was_running != NULL)
+    {
+        *p_was_running = was_running;
     }
 
     return (timer_start || timer_stop);
@@ -332,7 +345,7 @@ void nrf_802154_timer_sched_add(nrf_802154_timer_t * p_timer, bool round_up)
         p_timer->dt += nrf_802154_lp_timer_granularity_get() - 1;
     }
 
-    if (timer_remove(p_timer))
+    if (timer_remove(p_timer, NULL))
     {
         handle_timer();
     }
@@ -396,9 +409,9 @@ void nrf_802154_timer_sched_add(nrf_802154_timer_t * p_timer, bool round_up)
     nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_TSCH_ADD);
 }
 
-void nrf_802154_timer_sched_remove(nrf_802154_timer_t * p_timer)
+void nrf_802154_timer_sched_remove(nrf_802154_timer_t * p_timer, bool * p_was_running)
 {
-    if (timer_remove(p_timer))
+    if (timer_remove(p_timer, p_was_running))
     {
         handle_timer();
     }
@@ -443,9 +456,11 @@ void nrf_802154_lp_timer_fired(void)
             nrf_802154_timer_callback_t callback  = p_timer->callback;
             void                      * p_context = p_timer->p_context;
 
-            (void)timer_remove(p_timer);
+            bool was_running;
 
-            if (callback != NULL)
+            (void)timer_remove(p_timer, &was_running);
+
+            if (was_running && (callback != NULL))
             {
                 callback(p_context);
             }

@@ -1343,7 +1343,7 @@ public:
      *
      * @returns  A reference to the Child Table entry.
      */
-    ChildTableEntry &GetEntry(uint8_t aIndex)
+    ChildTableEntry &GetEntry(uint16_t aIndex)
     {
         return *reinterpret_cast<ChildTableEntry *>(GetValue() + (aIndex * sizeof(ChildTableEntry)));
     }

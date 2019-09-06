@@ -180,7 +180,7 @@ public:
      * @returns The index corresponding to @p aChild.
      *
      */
-    uint8_t GetChildIndex(const Child &aChild) const { return static_cast<uint8_t>(&aChild - mChildren); }
+    uint16_t GetChildIndex(const Child &aChild) const { return static_cast<uint16_t>(&aChild - mChildren); }
 
     /**
      * This method returns a pointer to a `Child` entry at a given index, or `NULL` if the index is out of bounds,
@@ -191,7 +191,7 @@ public:
      * @returns A pointer to the `Child` corresponding to the given index, or `NULL` if the index is out of bounds.
      *
      */
-    Child *GetChildAtIndex(uint8_t aChildIndex);
+    Child *GetChildAtIndex(uint16_t aChildIndex);
 
     /**
      * This method gets a new/unused `Child` entry from the child table.
@@ -255,7 +255,7 @@ public:
      * @returns Number of children matching the given state filer.
      *
      */
-    uint8_t GetNumChildren(StateFilter aFilter) const;
+    uint16_t GetNumChildren(StateFilter aFilter) const;
 
     /**
      * This method returns the maximum number of children that can be supported (build-time constant).
@@ -266,7 +266,7 @@ public:
      * @returns  The maximum number of children supported
      *
      */
-    uint8_t GetMaxChildren(void) const { return kMaxChildren; }
+    uint16_t GetMaxChildren(void) const { return kMaxChildren; }
 
     /**
      * This method get the maximum number of children allowed.
@@ -274,7 +274,7 @@ public:
      * @returns  The maximum number of children allowed.
      *
      */
-    uint8_t GetMaxChildrenAllowed(void) const { return mMaxChildrenAllowed; }
+    uint16_t GetMaxChildrenAllowed(void) const { return mMaxChildrenAllowed; }
 
     /**
      * This method sets the maximum number of children allowed.
@@ -289,7 +289,7 @@ public:
      * @retval OT_ERROR_INVALID_STATE The child table is not empty.
      *
      */
-    otError SetMaxChildrenAllowed(uint8_t aMaxChildren);
+    otError SetMaxChildrenAllowed(uint16_t aMaxChildren);
 
 private:
     enum
@@ -299,8 +299,8 @@ private:
 
     static bool MatchesFilter(const Child &aChild, StateFilter aFilter);
 
-    uint8_t mMaxChildrenAllowed;
-    Child   mChildren[kMaxChildren];
+    uint16_t mMaxChildrenAllowed;
+    Child    mChildren[kMaxChildren];
 };
 
 #endif // OPENTHREAD_FTD
@@ -338,8 +338,8 @@ public:
     }
     void Clear(void) {}
 
-    uint8_t GetChildIndex(const Child &) const { return 0; }
-    Child * GetChildAtIndex(uint8_t) { return NULL; }
+    uint16_t GetChildIndex(const Child &) const { return 0; }
+    Child *  GetChildAtIndex(uint16_t) { return NULL; }
 
     Child *GetNewChild(void) { return NULL; }
 
@@ -347,11 +347,11 @@ public:
     Child *FindChild(const Mac::ExtAddress &, StateFilter) { return NULL; }
     Child *FindChild(const Mac::Address &, StateFilter) { return NULL; }
 
-    bool    HasChildren(StateFilter) const { return false; }
-    uint8_t GetNumChildren(StateFilter) const { return 0; }
-    uint8_t GetMaxChildren(void) const { return 0; }
-    uint8_t GetMaxChildrenAllowed(void) const { return 0; }
-    otError SetMaxChildrenAllowed(uint8_t) { return OT_ERROR_INVALID_STATE; }
+    bool     HasChildren(StateFilter) const { return false; }
+    uint16_t GetNumChildren(StateFilter) const { return 0; }
+    uint16_t GetMaxChildren(void) const { return 0; }
+    uint16_t GetMaxChildrenAllowed(void) const { return 0; }
+    otError  SetMaxChildrenAllowed(uint16_t) { return OT_ERROR_INVALID_STATE; }
 };
 
 #endif // OPENTHREAD_MTD

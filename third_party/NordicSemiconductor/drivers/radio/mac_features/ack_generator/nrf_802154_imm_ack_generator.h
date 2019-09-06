@@ -29,7 +29,8 @@
  */
 
 /**
- * @brief This module contains an immediate acknowledgement (Imm-Ack) generator for 802.15.4 radio driver.
+ * @brief Module that contains an immediate acknowledgement (Imm-Ack) generator
+ * for the 802.15.4 radio driver.
  *
  */
 
@@ -39,14 +40,18 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-/** Initialize the Immediate ACK generator module. */
+/** Initializes the Immediate ACK generator module. */
 void nrf_802154_imm_ack_generator_init(void);
 
-/** Create an Immediate ACK in response to provided frame and insert it into an appropriate radio buffer.
+/** Creates an Immediate ACK in response to the provided frame.
  *
- * @param [in]  p_frame  Pointer to a buffer containing PHR and PSDU of the frame to respond to.
+ *  This function creates an Immediate ACK frame and inserts it into a radio buffer.
  *
- * @returns  Pointer to a constant buffer containing PHR and PSDU of the created Immediate ACK frame.
+ * @param [in]  p_frame  Pointer to the buffer that contains PHR and PSDU of the frame
+ *                       to respond to.
+ *
+ * @returns  Pointer to a constant buffer that contains PHR and PSDU of the created
+ *           Immediate ACK frame.
  */
 const uint8_t * nrf_802154_imm_ack_generator_create(const uint8_t * p_frame);
 

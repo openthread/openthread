@@ -717,7 +717,7 @@ void RadioSpinel::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMax
     }
     else if (mState == kStateTransmitting)
     {
-        uint64_t now = otSysGetTime();
+        uint64_t now = platformGetTime();
 
         if (now < mTxRadioEndUs)
         {
@@ -774,7 +774,7 @@ void RadioSpinel::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
                               mTxError);
         }
     }
-    else if (mState == kStateTransmitting && otSysGetTime() >= mTxRadioEndUs)
+    else if (mState == kStateTransmitting && platformGetTime() >= mTxRadioEndUs)
     {
         DieNowWithMessage("radio tx timeout", OT_EXIT_FAILURE);
     }
@@ -892,6 +892,47 @@ int8_t RadioSpinel::GetRssi(void)
     return rssi;
 }
 
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+otError RadioSpinel::GetCoexMetrics(otRadioCoexMetrics &aCoexMetrics)
+{
+    otError error;
+
+    error = Get(SPINEL_PROP_RADIO_COEX_METRICS,
+                SPINEL_DATATYPE_STRUCT_S(                                    // Tx Coex Metrics Structure
+                    SPINEL_DATATYPE_UINT32_S                                 // NumTxRequest
+                                                SPINEL_DATATYPE_UINT32_S     // NumTxGrantImmediate
+                                                SPINEL_DATATYPE_UINT32_S     // NumTxGrantWait
+                                                SPINEL_DATATYPE_UINT32_S     // NumTxGrantWaitActivated
+                                                SPINEL_DATATYPE_UINT32_S     // NumTxGrantWaitTimeout
+                                                SPINEL_DATATYPE_UINT32_S     // NumTxGrantDeactivatedDuringRequest
+                                                SPINEL_DATATYPE_UINT32_S     // NumTxDelayedGrant
+                                                SPINEL_DATATYPE_UINT32_S     // AvgTxRequestToGrantTime
+                    ) SPINEL_DATATYPE_STRUCT_S(                              // Rx Coex Metrics Structure
+                    SPINEL_DATATYPE_UINT32_S                                 // NumRxRequest
+                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantImmediate
+                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantWait
+                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantWaitActivated
+                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantWaitTimeout
+                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantDeactivatedDuringRequest
+                                                    SPINEL_DATATYPE_UINT32_S // NumRxDelayedGrant
+                                                    SPINEL_DATATYPE_UINT32_S // AvgRxRequestToGrantTime
+                                                    SPINEL_DATATYPE_UINT32_S // NumRxGrantNone
+                    ) SPINEL_DATATYPE_BOOL_S                                 // Stopped
+                    SPINEL_DATATYPE_UINT32_S,                                // NumGrantGlitch
+                &aCoexMetrics.mNumTxRequest, &aCoexMetrics.mNumTxGrantImmediate, &aCoexMetrics.mNumTxGrantWait,
+                &aCoexMetrics.mNumTxGrantWaitActivated, &aCoexMetrics.mNumTxGrantWaitTimeout,
+                &aCoexMetrics.mNumTxGrantDeactivatedDuringRequest, &aCoexMetrics.mNumTxDelayedGrant,
+                &aCoexMetrics.mAvgTxRequestToGrantTime, &aCoexMetrics.mNumRxRequest, &aCoexMetrics.mNumRxGrantImmediate,
+                &aCoexMetrics.mNumRxGrantWait, &aCoexMetrics.mNumRxGrantWaitActivated,
+                &aCoexMetrics.mNumRxGrantWaitTimeout, &aCoexMetrics.mNumRxGrantDeactivatedDuringRequest,
+                &aCoexMetrics.mNumRxDelayedGrant, &aCoexMetrics.mAvgRxRequestToGrantTime, &aCoexMetrics.mNumRxGrantNone,
+                &aCoexMetrics.mStopped, &aCoexMetrics.mNumGrantGlitch);
+
+    LogIfFail("Get Coex Metrics failed", error);
+    return error;
+}
+#endif
+
 otError RadioSpinel::SetTransmitPower(int8_t aPower)
 {
     otError error = Set(SPINEL_PROP_PHY_TX_POWER, SPINEL_DATATYPE_INT8_S, aPower);
@@ -975,7 +1016,7 @@ otError RadioSpinel::Remove(spinel_prop_key_t aKey, const char *aFormat, ...)
 
 otError RadioSpinel::WaitResponse(void)
 {
-    uint64_t       now     = otSysGetTime();
+    uint64_t       now     = platformGetTime();
     uint64_t       end     = now + kMaxWaitTime * US_PER_MS;
     struct timeval timeout = {kMaxWaitTime / 1000, (kMaxWaitTime % 1000) * 1000};
 
@@ -984,8 +1025,8 @@ otError RadioSpinel::WaitResponse(void)
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
         struct Event event;
 
-        otSimSendSleepEvent(&timeout);
-        otSimReceiveEvent(&event);
+        platformSimSendSleepEvent(&timeout);
+        platformSimReceiveEvent(&event);
 
         switch (event.mEvent)
         {
@@ -1044,7 +1085,7 @@ otError RadioSpinel::WaitResponse(void)
         }
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME
 
-        now = otSysGetTime();
+        now = platformGetTime();
 
         if (end > now)
         {
@@ -1107,7 +1148,7 @@ void RadioSpinel::RadioTransmit(void)
 
     if (error == OT_ERROR_NONE)
     {
-        mTxRadioEndUs = otSysGetTime() + TX_WAIT_US;
+        mTxRadioEndUs = platformGetTime() + TX_WAIT_US;
         mState        = kStateTransmitting;
     }
     else
@@ -1307,7 +1348,6 @@ otError RadioSpinel::Receive(uint8_t aChannel)
     mState = kStateReceive;
 
 exit:
-    assert(error == OT_ERROR_NONE);
     return error;
 }
 
@@ -1630,6 +1670,22 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
     return sRadioSpinel.GetReceiveSensitivity();
 }
 
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCoexMetrics)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aCoexMetrics != NULL, error = OT_ERROR_INVALID_ARGS);
+
+    error = sRadioSpinel.GetCoexMetrics(*aCoexMetrics);
+
+exit:
+    return error;
+}
+#endif
+
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
 void ot::PosixApp::RadioSpinel::Process(const Event &aEvent)
 {
@@ -1678,12 +1734,12 @@ void ot::PosixApp::RadioSpinel::Update(struct timeval &aTimeout)
     }
 }
 
-void otSimRadioSpinelUpdate(struct timeval *aTimeout)
+void platformSimRadioSpinelUpdate(struct timeval *aTimeout)
 {
     sRadioSpinel.Update(*aTimeout);
 }
 
-void otSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent)
+void platformSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent)
 {
     sRadioSpinel.Process(*aEvent);
     OT_UNUSED_VARIABLE(aInstance);

@@ -653,6 +653,7 @@ private:
     void    PrepareBeaconRequest(TxFrame &aFrame);
     void    PrepareBeacon(TxFrame &aFrame);
     bool    ShouldSendBeacon(void) const;
+    bool    IsJoinable(void) const;
     void    BeginTransmit(void);
     bool    HandleMacCommand(RxFrame &aFrame);
     Frame * GetOperationFrame(void);
@@ -676,6 +677,11 @@ private:
 #endif
 
     static const char *OperationToString(Operation aOperation);
+
+    static const uint8_t         sMode2Key[];
+    static const otExtAddress    sMode2ExtAddress;
+    static const otExtendedPanId sExtendedPanidInit;
+    static const char            sNetworkNameInit[];
 
     bool mEnabled : 1;
     bool mPendingActiveScan : 1;

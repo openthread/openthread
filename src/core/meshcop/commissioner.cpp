@@ -144,6 +144,7 @@ otError Commissioner::Start(otCommissionerStateCallback  aStateCallback,
 {
     otError error = OT_ERROR_NONE;
 
+    VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().Start(SendRelayTransmit, this));
