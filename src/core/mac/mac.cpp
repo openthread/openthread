@@ -373,14 +373,11 @@ otError Mac::SetPanChannel(uint8_t aChannel)
 
     VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = OT_ERROR_INVALID_ARGS);
 
-    VerifyOrExit(mPanChannel != aChannel, Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_CHANNEL));
+    SuccessOrExit(Get<Notifier>().Update(mPanChannel, aChannel, OT_CHANGED_THREAD_CHANNEL));
 
-    mPanChannel = aChannel;
     mCcaSuccessRateTracker.Reset();
-    Get<Notifier>().Signal(OT_CHANGED_THREAD_CHANNEL);
 
     VerifyOrExit(!mRadioChannelAcquisitionId);
-
     mRadioChannel = mPanChannel;
 
     UpdateIdleMode();
@@ -441,13 +438,7 @@ void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
     ChannelMask newMask = aMask;
 
     newMask.Intersect(ChannelMask(Get<Radio>().GetSupportedChannelMask()));
-    VerifyOrExit(newMask != mSupportedChannelMask, Get<Notifier>().SignalIfFirst(OT_CHANGED_SUPPORTED_CHANNEL_MASK));
-
-    mSupportedChannelMask = newMask;
-    Get<Notifier>().Signal(OT_CHANGED_SUPPORTED_CHANNEL_MASK);
-
-exit:
-    return;
+    Get<Notifier>().Update(mSupportedChannelMask, newMask, OT_CHANGED_SUPPORTED_CHANNEL_MASK);
 }
 
 otError Mac::SetNetworkName(const char *aNameString)
@@ -485,10 +476,8 @@ exit:
 
 void Mac::SetPanId(PanId aPanId)
 {
-    VerifyOrExit(mPanId != aPanId, Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_PANID));
-    mPanId = aPanId;
+    SuccessOrExit(Get<Notifier>().Update(mPanId, aPanId, OT_CHANGED_THREAD_PANID));
     mSubMac.SetPanId(mPanId);
-    Get<Notifier>().Signal(OT_CHANGED_THREAD_PANID);
 
 exit:
     return;
@@ -496,13 +485,7 @@ exit:
 
 void Mac::SetExtendedPanId(const ExtendedPanId &aExtendedPanId)
 {
-    VerifyOrExit(mExtendedPanId != aExtendedPanId, Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_EXT_PANID));
-
-    mExtendedPanId = aExtendedPanId;
-    Get<Notifier>().Signal(OT_CHANGED_THREAD_EXT_PANID);
-
-exit:
-    return;
+    Get<Notifier>().Update(mExtendedPanId, aExtendedPanId, OT_CHANGED_THREAD_EXT_PANID);
 }
 
 otError Mac::RequestDirectFrameTransmission(void)

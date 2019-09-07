@@ -102,11 +102,7 @@ void KeyManager::Stop(void)
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 void KeyManager::SetPskc(const Pskc &aPskc)
 {
-    VerifyOrExit(mPskc != aPskc, Get<Notifier>().SignalIfFirst(OT_CHANGED_PSKC));
-    mPskc = aPskc;
-    Get<Notifier>().Signal(OT_CHANGED_PSKC);
-
-exit:
+    Get<Notifier>().Update(mPskc, aPskc, OT_CHANGED_PSKC);
     mIsPskcSet = true;
 }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -116,9 +112,9 @@ otError KeyManager::SetMasterKey(const MasterKey &aKey)
     otError error = OT_ERROR_NONE;
     Router *parent;
 
-    VerifyOrExit(mMasterKey != aKey, Get<Notifier>().SignalIfFirst(OT_CHANGED_MASTER_KEY));
+    SuccessOrExit(
+        Get<Notifier>().Update(mMasterKey, aKey, OT_CHANGED_MASTER_KEY | OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER));
 
-    mMasterKey   = aKey;
     mKeySequence = 0;
     ComputeKey(mKeySequence, mKey);
 
@@ -143,8 +139,6 @@ otError KeyManager::SetMasterKey(const MasterKey &aKey)
         iter.GetChild()->SetLinkFrameCounter(0);
         iter.GetChild()->SetMleFrameCounter(0);
     }
-
-    Get<Notifier>().Signal(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER | OT_CHANGED_MASTER_KEY);
 
 exit:
     return error;
