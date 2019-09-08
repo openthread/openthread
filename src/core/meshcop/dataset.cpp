@@ -319,7 +319,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
     {
         MeshCoP::NetworkMasterKeyTlv tlv;
         tlv.Init();
-        tlv.SetNetworkMasterKey(aDataset.mMasterKey);
+        tlv.SetNetworkMasterKey(static_cast<const MasterKey &>(aDataset.mMasterKey));
         Set(tlv);
     }
 
@@ -563,8 +563,7 @@ otError Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdat
         {
             const NetworkMasterKeyTlv *key = static_cast<const NetworkMasterKeyTlv *>(cur);
 
-            if (aIsMasterKeyUpdated &&
-                memcmp(&key->GetNetworkMasterKey(), &keyManager.GetMasterKey(), OT_MASTER_KEY_SIZE))
+            if (aIsMasterKeyUpdated && (key->GetNetworkMasterKey() != keyManager.GetMasterKey()))
             {
                 *aIsMasterKeyUpdated = true;
             }

@@ -50,6 +50,7 @@
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
 #include "radio/radio.hpp"
+#include "thread/key_manager.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -518,18 +519,18 @@ public:
      * @returns The Network Master Key value.
      *
      */
-    const otMasterKey &GetNetworkMasterKey(void) const { return mNetworkMasterKey; }
+    const MasterKey &GetNetworkMasterKey(void) const { return mNetworkMasterKey; }
 
     /**
      * This method sets the Network Master Key value.
      *
-     * @param[in]  aNetworkMasterKey  A pointer to the Network Master Key value.
+     * @param[in]  aMasterKey  The Network Master Key.
      *
      */
-    void SetNetworkMasterKey(const otMasterKey &aNetworkMasterKey) { mNetworkMasterKey = aNetworkMasterKey; }
+    void SetNetworkMasterKey(const MasterKey &aMasterKey) { mNetworkMasterKey = aMasterKey; }
 
 private:
-    otMasterKey mNetworkMasterKey;
+    MasterKey mNetworkMasterKey;
 } OT_TOOL_PACKED_END;
 
 /**

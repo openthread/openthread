@@ -56,6 +56,42 @@ namespace ot {
  * @{
  */
 
+/**
+ * This class represents a Thread Master Key.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class MasterKey : public otMasterKey
+{
+public:
+    /**
+     * This method evaluates whether or not the Thread Master Keys match.
+     *
+     * @param[in]  aOther  The Thread Master Key to compare.
+     *
+     * @retval TRUE   If the Thread Master Keys match.
+     * @retval FALSE  If the Thread Master Keys do not match.
+     *
+     */
+    bool operator==(const MasterKey &aOther) const { return memcmp(m8, aOther.m8, sizeof(MasterKey)) == 0; }
+
+    /**
+     * This method evaluates whether or not the Thread Master Keys match.
+     *
+     * @param[in]  aOther  The Thread Master Key to compare.
+     *
+     * @retval TRUE   If the Thread Master Keys do not match.
+     * @retval FALSE  If the Thread Master Keys match.
+     *
+     */
+    bool operator!=(const MasterKey &aOther) const { return memcmp(m8, aOther.m8, sizeof(MasterKey)) != 0; }
+
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class defines Thread Key Manager.
+ *
+ */
 class KeyManager : public InstanceLocator
 {
 public:
@@ -86,23 +122,23 @@ public:
     void Stop(void);
 
     /**
-     * This method returns a reference to the Thread Master Key
+     * This method returns the Thread Master Key.
      *
-     * @returns A reference to the Thread Master Key.
+     * @returns The Thread Master Key.
      *
      */
-    const otMasterKey &GetMasterKey(void) const;
+    const MasterKey &GetMasterKey(void) const { return mMasterKey; }
 
     /**
      * This method sets the Thread Master Key.
      *
-     * @param[in]  aKey        A reference to the Thread Master Key.
+     * @param[in]  aKey        A Thread Master Key.
      *
      * @retval OT_ERROR_NONE          Successfully set the Thread Master Key.
      * @retval OT_ERROR_INVALID_ARGS  The @p aKeyLength value was invalid.
      *
      */
-    otError SetMasterKey(const otMasterKey &aKey);
+    otError SetMasterKey(const MasterKey &aKey);
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
@@ -370,7 +406,10 @@ private:
     static void HandleKeyRotationTimer(Timer &aTimer);
     void        HandleKeyRotationTimer(void);
 
-    otMasterKey mMasterKey;
+    static const uint8_t     kThreadString[];
+    static const otMasterKey kDefaultMasterKey;
+
+    MasterKey mMasterKey;
 
     uint32_t mKeySequence;
     uint8_t  mKey[Crypto::HmacSha256::kHashSize];
