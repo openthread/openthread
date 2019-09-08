@@ -38,20 +38,20 @@
 
 namespace ot {
 
-otError Tlv::Get(const Message &aMessage, uint8_t aType, uint16_t aMaxLength, Tlv &aTlv)
+otError Tlv::Get(const Message &aMessage, uint8_t aType, uint16_t aMaxSize, Tlv &aTlv)
 {
-    otError  error = OT_ERROR_NOT_FOUND;
+    otError  error;
     uint16_t offset;
+    uint16_t size;
 
-    SuccessOrExit(error = GetOffset(aMessage, aType, offset));
-    aMessage.Read(offset, sizeof(Tlv), &aTlv);
+    SuccessOrExit(error = Find(aMessage, aType, &offset, &size, NULL));
 
-    if (aMaxLength > sizeof(aTlv) + aTlv.GetLength())
+    if (aMaxSize > size)
     {
-        aMaxLength = sizeof(aTlv) + aTlv.GetLength();
+        aMaxSize = size;
     }
 
-    aMessage.Read(offset, aMaxLength, &aTlv);
+    aMessage.Read(offset, aMaxSize, &aTlv);
 
 exit:
     return error;
@@ -59,77 +59,83 @@ exit:
 
 otError Tlv::GetOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset)
 {
-    otError  error  = OT_ERROR_NOT_FOUND;
-    uint16_t offset = aMessage.GetOffset();
-    uint16_t end    = aMessage.GetLength();
-    Tlv      tlv;
+    return Find(aMessage, aType, &aOffset, NULL, NULL);
+}
 
-    while (offset + sizeof(tlv) <= end)
+otError Tlv::GetValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aValueOffset, uint16_t &aLength)
+{
+    otError  error;
+    uint16_t offset;
+    uint16_t size;
+    bool     isExtendedTlv;
+
+    SuccessOrExit(error = Find(aMessage, aType, &offset, &size, &isExtendedTlv));
+
+    if (!isExtendedTlv)
     {
-        uint32_t length = sizeof(tlv);
-
-        aMessage.Read(offset, sizeof(tlv), &tlv);
-
-        if (tlv.GetLength() != kExtendedLength)
-        {
-            length += tlv.GetLength();
-        }
-        else
-        {
-            uint16_t extLength;
-
-            VerifyOrExit(sizeof(extLength) == aMessage.Read(offset + sizeof(tlv), sizeof(extLength), &extLength));
-            length += sizeof(extLength) + HostSwap16(extLength);
-        }
-
-        VerifyOrExit(offset + length <= end);
-
-        if (tlv.GetType() == aType)
-        {
-            aOffset = offset;
-            ExitNow(error = OT_ERROR_NONE);
-        }
-
-        offset += static_cast<uint16_t>(length);
+        aValueOffset = offset + sizeof(Tlv);
+        aLength      = size - sizeof(Tlv);
+    }
+    else
+    {
+        aValueOffset = offset + sizeof(ExtendedTlv);
+        aLength      = size - sizeof(ExtendedTlv);
     }
 
 exit:
     return error;
 }
 
-otError Tlv::GetValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset, uint16_t &aLength)
+otError Tlv::Find(const Message &aMessage, uint8_t aType, uint16_t *aOffset, uint16_t *aSize, bool *aIsExtendedTlv)
 {
     otError  error  = OT_ERROR_NOT_FOUND;
     uint16_t offset = aMessage.GetOffset();
     uint16_t end    = aMessage.GetLength();
     Tlv      tlv;
+    uint16_t size;
 
-    while (offset + sizeof(tlv) <= end)
+    while (true)
     {
-        uint16_t length;
+        VerifyOrExit(offset + sizeof(Tlv) <= end);
+        aMessage.Read(offset, sizeof(Tlv), &tlv);
 
-        aMessage.Read(offset, sizeof(tlv), &tlv);
-        offset += sizeof(tlv);
-        length = tlv.GetLength();
-
-        if (length == kExtendedLength)
+        if (tlv.mLength != kExtendedLength)
         {
-            VerifyOrExit(offset + sizeof(length) <= end);
-            aMessage.Read(offset, sizeof(length), &length);
-            offset += sizeof(length);
-            length = HostSwap16(length);
+            size = tlv.GetSize();
+        }
+        else
+        {
+            ExtendedTlv extTlv;
+
+            VerifyOrExit(offset + sizeof(ExtendedTlv) <= end);
+            aMessage.Read(offset, sizeof(ExtendedTlv), &extTlv);
+            size = extTlv.GetSize();
         }
 
-        VerifyOrExit(length <= end - offset);
+        VerifyOrExit(offset + size <= end);
 
         if (tlv.GetType() == aType)
         {
-            aOffset = offset;
-            aLength = length;
-            ExitNow(error = OT_ERROR_NONE);
+            if (aOffset != NULL)
+            {
+                *aOffset = offset;
+            }
+
+            if (aSize != NULL)
+            {
+                *aSize = size;
+            }
+
+            if (aIsExtendedTlv != NULL)
+            {
+                *aIsExtendedTlv = (tlv.mLength == kExtendedLength);
+            }
+
+            error = OT_ERROR_NONE;
+            ExitNow();
         }
 
-        offset += length;
+        offset += size;
     }
 
 exit:

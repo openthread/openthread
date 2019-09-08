@@ -415,6 +415,19 @@ public:
     otError AppendTlv(const Tlv &aTlv);
 
     /**
+     * This method appends an Extended TLV to the end of the message.
+     *
+     * On success, this method grows the message by the size of the Extended TLV.
+     *
+     * @param[in]  aExtendedTlv  A reference to an Extended TLV.
+     *
+     * @retval OT_ERROR_NONE     Successfully appended the Extended TLV to the message.
+     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
+     *
+     */
+    otError AppendTlv(const ExtendedTlv &aExtendedTlv);
+
+    /**
      * This method reads bytes from the message.
      *
      * @param[in]  aOffset  Byte offset within the message to begin reading.

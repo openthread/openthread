@@ -407,6 +407,11 @@ otError Message::AppendTlv(const Tlv &aTlv)
     return Append(&aTlv, aTlv.GetSize());
 }
 
+otError Message::AppendTlv(const ExtendedTlv &aExtendedTlv)
+{
+    return Append(&aExtendedTlv, aExtendedTlv.GetSize());
+}
+
 otError Message::Prepend(const void *aBuf, uint16_t aLength)
 {
     otError error     = OT_ERROR_NONE;
