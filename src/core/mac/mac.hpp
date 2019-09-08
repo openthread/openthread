@@ -414,20 +414,20 @@ public:
     void SetPanId(PanId aPanId);
 
     /**
-     * This method returns the IEEE 802.15.4 Extended PAN ID.
+     * This method returns the IEEE 802.15.4 Extended PAN Identifier.
      *
-     * @returns A pointer to the IEEE 802.15.4 Extended PAN ID.
+     * @returns The IEEE 802.15.4 Extended PAN Identifier.
      *
      */
-    const otExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
+    const ExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
 
     /**
-     * This method sets the IEEE 802.15.4 Extended PAN ID.
+     * This method sets the IEEE 802.15.4 Extended PAN Identifier.
      *
-     * @param[in]  aExtendedPanId  The IEEE 802.15.4 Extended PAN ID.
+     * @param[in]  aExtendedPanId  The IEEE 802.15.4 Extended PAN Identifier.
      *
      */
-    void SetExtendedPanId(const otExtendedPanId &aExtendedPanId);
+    void SetExtendedPanId(const ExtendedPanId &aExtendedPanId);
 
     /**
      * This method is called to handle a received frame.
@@ -703,20 +703,20 @@ private:
     bool mDelayingSleep : 1;
 #endif
 
-    Operation       mOperation;
-    uint8_t         mBeaconSequence;
-    uint8_t         mDataSequence;
-    uint8_t         mBroadcastTransmitCount;
-    PanId           mPanId;
-    uint8_t         mPanChannel;
-    uint8_t         mRadioChannel;
-    uint16_t        mRadioChannelAcquisitionId;
-    ChannelMask     mSupportedChannelMask;
-    otExtendedPanId mExtendedPanId;
-    otNetworkName   mNetworkName;
-    uint8_t         mScanChannel;
-    uint16_t        mScanDuration;
-    ChannelMask     mScanChannelMask;
+    Operation     mOperation;
+    uint8_t       mBeaconSequence;
+    uint8_t       mDataSequence;
+    uint8_t       mBroadcastTransmitCount;
+    PanId         mPanId;
+    uint8_t       mPanChannel;
+    uint8_t       mRadioChannel;
+    uint16_t      mRadioChannelAcquisitionId;
+    ChannelMask   mSupportedChannelMask;
+    ExtendedPanId mExtendedPanId;
+    otNetworkName mNetworkName;
+    uint8_t       mScanChannel;
+    uint16_t      mScanDuration;
+    ChannelMask   mScanChannelMask;
     union
     {
         ActiveScanHandler mActiveScanHandler;

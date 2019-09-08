@@ -40,6 +40,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
+#include "mac/mac_frame.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/mle_tlvs.hpp"
 
@@ -303,7 +304,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
     {
         MeshCoP::ExtendedPanIdTlv tlv;
         tlv.Init();
-        tlv.SetExtendedPanId(aDataset.mExtendedPanId);
+        tlv.SetExtendedPanId(static_cast<const Mac::ExtendedPanId &>(aDataset.mExtendedPanId));
         Set(tlv);
     }
 

@@ -314,7 +314,8 @@ otError otCommissionerGeneratePSKc(otInstance *           aInstance,
     otError error = OT_ERROR_DISABLED_FEATURE;
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-    error = MeshCoP::Commissioner::GeneratePSKc(aPassPhrase, aNetworkName, *aExtPanId, aPSKc);
+    error = MeshCoP::Commissioner::GeneratePSKc(aPassPhrase, aNetworkName,
+                                                *static_cast<const Mac::ExtendedPanId *>(aExtPanId), aPSKc);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aPassPhrase);

@@ -1090,10 +1090,10 @@ exit:
     return error;
 }
 
-otError Commissioner::GeneratePSKc(const char *           aPassPhrase,
-                                   const char *           aNetworkName,
-                                   const otExtendedPanId &aExtPanId,
-                                   uint8_t *              aPSKc)
+otError Commissioner::GeneratePSKc(const char *              aPassPhrase,
+                                   const char *              aNetworkName,
+                                   const Mac::ExtendedPanId &aExtPanId,
+                                   uint8_t *                 aPSKc)
 {
     otError     error      = OT_ERROR_NONE;
     const char *saltPrefix = "Thread";

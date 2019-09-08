@@ -71,7 +71,7 @@ otError otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *a
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
-    instance.Get<Mac::Mac>().SetExtendedPanId(*aExtendedPanId);
+    instance.Get<Mac::Mac>().SetExtendedPanId(*static_cast<const Mac::ExtendedPanId *>(aExtendedPanId));
 
     prefix.m8[0] = 0xfd;
     memcpy(&prefix.m8[1], aExtendedPanId->m8, 5);
