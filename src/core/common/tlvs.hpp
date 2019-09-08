@@ -75,7 +75,20 @@ public:
     void SetType(uint8_t aType) { mType = aType; }
 
     /**
+     * This method indicates whether the TLV is an Extended TLV.
+     *
+     * @retval TRUE  If the TLV is an Extended TLV.
+     * @retval FALSE If the TLV is not an Extended TLV.
+     *
+     */
+    bool IsExtended(void) const { return (mLength == kExtendedLength); }
+
+    /**
      * This method returns the Length value.
+     *
+     * @note This method should be used when TLV is not an Extended TLV, otherwise the returned length from this method
+     * would not be correct. When TLV is an Extended TLV, the TLV should be down-casted to the `ExtendedTlv` type and
+     * the `ExtendedTlv::GetLength()` should be used instead.
      *
      * @returns The Length value.
      *
@@ -91,64 +104,78 @@ public:
     void SetLength(uint8_t aLength) { mLength = aLength; }
 
     /**
-     * This method returns the total size including Type, Length, and Value fields.
+     * This method returns the TLV's total size (number of bytes) including Type, Length, and Value fields.
+     *
+     * This method correctly returns the TLV size independent of whether the TLV is an Extended TLV or not.
      *
      * @returns The total size include Type, Length, and Value fields.
      *
      */
-    uint16_t GetSize(void) const { return sizeof(Tlv) + mLength; }
+    uint16_t GetSize(void) const;
 
     /**
      * This method returns a pointer to the Value.
      *
+     * This method can be used independent of whether the TLV is an Extended TLV or not.
+     *
      * @returns A pointer to the value.
      *
      */
-    uint8_t *GetValue(void) { return reinterpret_cast<uint8_t *>(this) + sizeof(Tlv); }
+    uint8_t *GetValue(void);
 
     /**
      * This method returns a pointer to the Value.
      *
+     * This method can be used independent of whether the TLV is an Extended TLV or not.
+     *
      * @returns A pointer to the value.
      *
      */
-    const uint8_t *GetValue(void) const { return reinterpret_cast<const uint8_t *>(this) + sizeof(Tlv); }
+    const uint8_t *GetValue(void) const;
 
     /**
      * This method returns a pointer to the next TLV.
+     *
+     * This method correctly returns the next TLV independent of whether the current TLV is an Extended TLV or not.
      *
      * @returns A pointer to the next TLV.
      *
      */
-    Tlv *GetNext(void) { return reinterpret_cast<Tlv *>(reinterpret_cast<uint8_t *>(this) + sizeof(*this) + mLength); }
+    Tlv *GetNext(void) { return reinterpret_cast<Tlv *>(reinterpret_cast<uint8_t *>(this) + GetSize()); }
 
     /**
      * This method returns a pointer to the next TLV.
+     *
+     * This method correctly returns the next TLV independent of whether the current TLV is an Extended TLV or not.
      *
      * @returns A pointer to the next TLV.
      *
      */
     const Tlv *GetNext(void) const
     {
-        return reinterpret_cast<const Tlv *>(reinterpret_cast<const uint8_t *>(this) + sizeof(*this) + mLength);
+        return reinterpret_cast<const Tlv *>(reinterpret_cast<const uint8_t *>(this) + GetSize());
     }
 
     /**
      * This static method reads the requested TLV out of @p aMessage.
      *
+     * This method can be used independent of whether the read TLV (from message) is an Extended TLV or not.
+     *
      * @param[in]   aMessage    A reference to the message.
      * @param[in]   aType       The Type value to search for.
-     * @param[in]   aMaxLength  Maximum number of bytes to read.
+     * @param[in]   aMaxSize    Maximum number of bytes to read.
      * @param[out]  aTlv        A reference to the TLV that will be copied to.
      *
      * @retval OT_ERROR_NONE       Successfully copied the TLV.
      * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
      *
      */
-    static otError Get(const Message &aMessage, uint8_t aType, uint16_t aMaxLength, Tlv &aTlv);
+    static otError Get(const Message &aMessage, uint8_t aType, uint16_t aMaxSize, Tlv &aTlv);
 
     /**
      * This static method obtains the offset of a TLV within @p aMessage.
+     *
+     * This method can be used independent of whether the read TLV (from message) is an Extended TLV or not.
      *
      * @param[in]   aMessage    A reference to the message.
      * @param[in]   aType       The Type value to search for.
@@ -163,6 +190,8 @@ public:
     /**
      * This static method finds the offset and length of a given TLV type.
      *
+     * This method can be used independent of whether the read TLV (from message) is an Extended TLV or not.
+     *
      * @param[in]   aMessage    A reference to the message.
      * @param[in]   aType       The Type value to search for.
      * @param[out]  aOffset     The offset where the value starts.
@@ -175,16 +204,35 @@ public:
     static otError GetValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset, uint16_t &aLength);
 
 protected:
-    /**
-     * Length values.
-     *
-     */
     enum
     {
         kExtendedLength = 255, ///< Extended Length value
     };
 
 private:
+    /**
+     * This private static method searches within a given message for TLV type and outputs the TLV offset, size and
+     * whether it is an Extended TLV.
+     *
+     * A NULL pointer can be used for output parameters @p aOffset, @p aSize, or @p aIsExtendedTlv if the parameter
+     * is not required.
+     *
+     * @param[in]   aMessage       A reference to the message to search within.
+     * @param[in]   aType          The TLV type to search for.
+     * @param[out]  aOffset        A pointer to a variable to output the offset to the start of the TLV.
+     * @param[out]  aSize          A pointer to a variable to output the size (total number of bytes) of the TLV.
+     * @param[out]  aIsExtendedTlv A pointer to a boolean variable to output whether the found TLV is extended or not.
+     *
+     * @retval OT_ERROR_NONE       Successfully found the TLV.
+     * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
+     *
+     */
+    static otError Find(const Message &aMessage,
+                        uint8_t        aType,
+                        uint16_t *     aOffset,
+                        uint16_t *     aSize,
+                        bool *         aIsExtendedTlv);
+
     uint8_t mType;
     uint8_t mLength;
 } OT_TOOL_PACKED_END;
