@@ -438,8 +438,6 @@ private:
     static void HandleUdpTransmit(Tasklet &aTasklet);
     void        HandleUdpTransmit(void);
 
-    static int HandleMbedtlsEntropyPoll(void *aData, unsigned char *aOutput, size_t aInLen, size_t *aOutLen);
-
     void Process(void);
 
     State mState;

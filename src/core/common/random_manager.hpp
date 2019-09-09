@@ -45,6 +45,11 @@
 
 #include "utils/wrap_stdint.h"
 
+#if (!defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES) && \
+     (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) || defined(MBEDTLS_HAVEGE_C) || defined(MBEDTLS_ENTROPY_HARDWARE_ALT)))
+#define OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
+#endif
+
 namespace ot {
 
 /**
@@ -123,7 +128,9 @@ private:
         mbedtls_entropy_context *GetContext(void) { return &mEntropyContext; }
 
     private:
+#ifndef OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
         static int HandleMbedtlsEntropyPoll(void *aData, unsigned char *aOutput, size_t aInLen, size_t *aOutLen);
+#endif // OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
 
         mbedtls_entropy_context mEntropyContext;
     };
