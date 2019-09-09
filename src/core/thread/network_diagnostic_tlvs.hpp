@@ -1351,7 +1351,7 @@ public:
     /**
      * This method reads the Child Table entry at @p aIndex.
      *
-     * @param[in]   aEntry      A reference to a ChidTableEntry.
+     * @param[out]  aEntry      A reference to a ChidTableEntry.
      * @param[in]   aMessage    A reference to the message.
      * @param[in]   aOffset     The offset of the ChildTableTLV in aMessage.
      * @param[in]   aIndex      The index into the Child Table list.
@@ -1362,11 +1362,15 @@ public:
     otError ReadEntry(ChildTableEntry &aEntry, Message &aMessage, uint16_t aOffset, uint8_t aIndex)
     {
         otError error = OT_ERROR_NOT_FOUND;
+
+        VerifyOrExit(aIndex < GetNumEntries());
+
         if (aMessage.Read(aOffset + sizeof(ChildTableTlv) + (aIndex * sizeof(ChildTableEntry)), sizeof(ChildTableEntry),
                           &aEntry) == sizeof(ChildTableEntry))
         {
             error = OT_ERROR_NONE;
         }
+    exit:
         return error;
     }
 
