@@ -148,7 +148,8 @@ otError UdpExample::ProcessSend(int argc, char *argv[])
     {
         if (strcmp(argv[curArg++], "-s") == 0)
         {
-            Interpreter::ParseUnsignedLong(argv[curArg++], autoGenMessageLength);
+            error = Interpreter::ParseUnsignedLong(argv[curArg++], autoGenMessageLength);
+            SuccessOrExit(error);
         }
         else
         {
