@@ -71,8 +71,7 @@ static int FdFromHandle(void *aHandle)
 
 static bool IsLinkLocal(const struct in6_addr &aAddress)
 {
-    return (aAddress.s6_addr[0] == 0xfe && aAddress.s6_addr[1] == 0x80) ||
-           (aAddress.s6_addr[0] == 0xff && aAddress.s6_addr[1] == 0x02);
+    return (aAddress.s6_addr[0] == 0xfe && aAddress.s6_addr[1] == 0x80);
 }
 
 static bool IsMulticast(const struct in6_addr &aAddress)

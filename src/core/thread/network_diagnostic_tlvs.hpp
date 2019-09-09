@@ -1351,8 +1351,9 @@ public:
     /**
      * This method reads the Child Table entry at @p aIndex.
      *
+     * @param[in]   aEntry      A reference to a ChidTableEntry.
      * @param[in]   aMessage    A reference to the message.
-     * @param[out]  aOffset     The offset of the ChildTableTLV in aMessage.
+     * @param[in]   aOffset     The offset of the ChildTableTLV in aMessage.
      * @param[in]   aIndex      The index into the Child Table list.
      *
      * @retval  OT_ERROR_NOT_FOUND  No such entry is found.
