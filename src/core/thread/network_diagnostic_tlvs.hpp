@@ -1351,7 +1351,7 @@ public:
     /**
      * This method reads the Child Table entry at @p aIndex.
      *
-     * @param[out]  aEntry      A reference to a ChidTableEntry.
+     * @param[out]  aEntry      A reference to a ChildTableEntry.
      * @param[in]   aMessage    A reference to the message.
      * @param[in]   aOffset     The offset of the ChildTableTLV in aMessage.
      * @param[in]   aIndex      The index into the Child Table list.
@@ -1359,7 +1359,7 @@ public:
      * @retval  OT_ERROR_NOT_FOUND  No such entry is found.
      * @retval  OT_ERROR_NONE       Successfully read the entry.
      */
-    otError ReadEntry(ChildTableEntry &aEntry, Message &aMessage, uint16_t aOffset, uint8_t aIndex)
+    otError ReadEntry(ChildTableEntry &aEntry, Message &aMessage, uint16_t aOffset, uint8_t aIndex) const
     {
         otError error = OT_ERROR_NOT_FOUND;
 
@@ -1370,6 +1370,7 @@ public:
         {
             error = OT_ERROR_NONE;
         }
+        
     exit:
         return error;
     }
