@@ -132,10 +132,6 @@ spinel_status_t NcpBase::ThreadErrorToSpinelStatus(otError aError)
         ret = SPINEL_STATUS_ITEM_NOT_FOUND;
         break;
 
-    case OT_ERROR_DISABLED_FEATURE:
-        ret = SPINEL_STATUS_INVALID_COMMAND_FOR_PROP;
-        break;
-
     default:
         // Unknown error code. Wrap it as a Spinel status and return that.
         ret = static_cast<spinel_status_t>(SPINEL_STATUS_STACK_NATIVE__BEGIN + static_cast<uint32_t>(aError));
@@ -1939,11 +1935,6 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MCU_POWER_STATE>(void
     return mEncoder.WriteUint8(SPINEL_MCU_POWER_STATE_ON);
 }
 
-template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MCU_POWER_STATE>(void)
-{
-    return OT_ERROR_DISABLED_FEATURE;
-}
-
 #endif // OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_POWER_STATE>(void)
@@ -2139,6 +2130,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>(
     return mEncoder.WriteUint8(ConvertLogLevel(otLoggingGetLevel()));
 }
 
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>(void)
 {
     otError    error;
@@ -2180,16 +2172,12 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>(
         break;
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
     otLoggingSetLevel(logLevel);
-#else
-    OT_UNUSED_VARIABLE(logLevel);
-    ExitNow(error = OT_ERROR_DISABLED_FEATURE);
-#endif
 
 exit:
     return error;
 }
+#endif // OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_SUPPORTED>(void)
 {
