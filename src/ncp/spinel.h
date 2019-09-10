@@ -1664,6 +1664,13 @@ typedef enum
      */
     SPINEL_PROP_RADIO_COEX_METRICS = SPINEL_PROP_PHY_EXT__BEGIN + 12,
 
+    /// Radio Coex Enable
+    /** Format: `b`
+     *
+     * Indicates if radio coex is enabled or disabled. Set to true to enable radio coex.
+     */
+    SPINEL_PROP_RADIO_COEX_ENABLE = SPINEL_PROP_PHY_EXT__BEGIN + 13,
+
     SPINEL_PROP_PHY_EXT__END = 0x1300,
 
     SPINEL_PROP_MAC__BEGIN = 0x30,

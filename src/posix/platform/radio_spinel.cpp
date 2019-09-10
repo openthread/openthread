@@ -893,6 +893,25 @@ int8_t RadioSpinel::GetRssi(void)
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+otError RadioSpinel::CoexEnable(void)
+{
+    return Set(SPINEL_PROP_RADIO_COEX_ENABLE, SPINEL_DATATYPE_BOOL_S, true);
+}
+
+otError RadioSpinel::CoexDisable(void)
+{
+    return Set(SPINEL_PROP_RADIO_COEX_ENABLE, SPINEL_DATATYPE_BOOL_S, false);
+}
+
+bool RadioSpinel::IsCoexEnabled(void)
+{
+    bool    enabled;
+    otError error = Get(SPINEL_PROP_RADIO_COEX_ENABLE, SPINEL_DATATYPE_BOOL_S, &enabled);
+
+    LogIfFail("Get Coex State failed", error);
+    return enabled;
+}
+
 otError RadioSpinel::GetCoexMetrics(otRadioCoexMetrics &aCoexMetrics)
 {
     otError error;
@@ -1671,9 +1690,27 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+otError otPlatRadioCoexEnable(otInstance *aInstance)
+{
+    assert(aInstance != NULL);
+    return sRadioSpinel.CoexEnable();
+}
+
+otError otPlatRadioCoexDisable(otInstance *aInstance)
+{
+    assert(aInstance != NULL);
+    return sRadioSpinel.CoexDisable();
+}
+
+bool otPlatRadioIsCoexEnabled(otInstance *aInstance)
+{
+    assert(aInstance != NULL);
+    return sRadioSpinel.IsCoexEnabled();
+}
+
 otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCoexMetrics)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    assert(aInstance != NULL);
 
     otError error = OT_ERROR_NONE;
 

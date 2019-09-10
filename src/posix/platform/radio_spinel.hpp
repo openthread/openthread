@@ -199,6 +199,38 @@ public:
 
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
     /**
+     * Enable the radio coex.
+     *
+     * @param[in] aInstance  The OpenThread instance structure.
+     *
+     * @retval OT_ERROR_NONE     Successfully enabled.
+     * @retval OT_ERROR_FAILED   The radio coex could not be enabled.
+     *
+     */
+    otError CoexEnable(void);
+
+    /**
+     * Disable the radio coex.
+     *
+     * @param[in] aInstance  The OpenThread instance structure.
+     *
+     * @retval OT_ERROR_NONE     Successfully disabled.
+     * @retval OT_ERROR_FAILED   The radio coex could not be disabled.
+     *
+     */
+    otError CoexDisable(void);
+
+    /**
+     * Check whether radio coex is enabled or not.
+     *
+     * @param[in] aInstance  The OpenThread instance structure.
+     *
+     * @returns TRUE if the radio coex is enabled, FALSE otherwise.
+     *
+     */
+    bool IsCoexEnabled(void);
+
+    /**
      * This method retrieves the radio coexistence metrics.
      *
      * @param[out] aCoexMetrics  A reference to the coexistence metrics structure.
