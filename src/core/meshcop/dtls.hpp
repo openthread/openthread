@@ -263,15 +263,11 @@ public:
      * @retval OT_ERROR_NONE  Successfully set the PSK.
      *
      */
-    otError SetPreSharedKey(const uint8_t *aPsk,
-                            uint16_t       aPskLength,
-                            const uint8_t *aPskIdentity,
-                            uint16_t       aPskIdLength);
+    void SetPreSharedKey(const uint8_t *aPsk, uint16_t aPskLength, const uint8_t *aPskIdentity, uint16_t aPskIdLength);
 
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-
     /**
      * This method sets a reference to the own x509 certificate with corresponding private key.
      *
@@ -282,13 +278,11 @@ public:
      * @param[in]  aPrivateKey        A pointer to the PEM formatted private key.
      * @param[in]  aPrivateKeyLength  The length of the private key.
      *
-     * @retval OT_ERROR_NONE  Successfully set the x509 certificate with his private key.
-     *
      */
-    otError SetCertificate(const uint8_t *aX509Certificate,
-                           uint32_t       aX509CertLength,
-                           const uint8_t *aPrivateKey,
-                           uint32_t       aPrivateKeyLength);
+    void SetCertificate(const uint8_t *aX509Certificate,
+                        uint32_t       aX509CertLength,
+                        const uint8_t *aPrivateKey,
+                        uint32_t       aPrivateKeyLength);
 
     /**
      * This method sets the trusted top level CAs. It is needed for validate the
@@ -299,11 +293,8 @@ public:
      * @param[in]  aX509CaCertificateChain  A pointer to the PEM formatted X509 CA chain.
      * @param[in]  aX509CaCertChainLength   The length of chain.
      *
-     * @retval OT_ERROR_NONE  Successfully set the trusted top level CAs.
-     *
      */
-    otError SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength);
-
+    void SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength);
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
 #ifdef MBEDTLS_BASE64_C
@@ -316,8 +307,9 @@ public:
      * @param[out]  aCertLength      The length of the base64 encoded peer certificate.
      * @param[in]   aCertBufferSize  The buffer size of aPeerCert.
      *
-     * @retval OT_ERROR_NONE     Successfully get the peer certificate.
-     * @retval OT_ERROR_NO_BUFS  Can't allocate memory for certificate.
+     * @retval OT_ERROR_INVALID_STATE   Not connected yet.
+     * @retval OT_ERROR_NONE            Successfully get the peer certificate.
+     * @retval OT_ERROR_NO_BUFS         Can't allocate memory for certificate.
      *
      */
     otError GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize);

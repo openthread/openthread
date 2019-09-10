@@ -524,12 +524,14 @@ void Interpreter::ProcessChannel(int argc, char *argv[])
             SuccessOrExit(error = ParseLong(argv[2], value));
             otChannelManagerRequestChannelChange(mInstance, static_cast<uint8_t>(value));
         }
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
         else if (strcmp(argv[1], "select") == 0)
         {
             VerifyOrExit(argc > 2, error = OT_ERROR_INVALID_ARGS);
             SuccessOrExit(error = ParseLong(argv[2], value));
             error = otChannelManagerRequestChannelSelect(mInstance, (value != 0) ? true : false);
         }
+#endif
         else if (strcmp(argv[1], "auto") == 0)
         {
             VerifyOrExit(argc > 2, error = OT_ERROR_INVALID_ARGS);

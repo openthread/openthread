@@ -833,7 +833,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_STEERING_DATA>
 
     SuccessOrExit(error = mDecoder.ReadEui64(mSteeringDataAddress));
 
-    SuccessOrExit(error = otThreadSetSteeringData(mInstance, &mSteeringDataAddress));
+    otThreadSetSteeringData(mInstance, &mSteeringDataAddress);
 
 exit:
     return error;

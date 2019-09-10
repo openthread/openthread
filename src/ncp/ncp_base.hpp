@@ -121,9 +121,6 @@ public:
      * @param[in] aAllowPeekDelegate      Delegate function pointer for peek operation.
      * @param[in] aAllowPokeDelegate      Delegate function pointer for poke operation.
      *
-     * @retval OT_ERROR_NONE              Successfully registered delegate functions.
-     * @retval OT_ERROR_DISABLED_FEATURE  Peek/Poke feature is disabled (by a build-time configuration option).
-     *
      */
     void RegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
                                    otNcpDelegateAllowPeekPoke aAllowPokeDelegate);

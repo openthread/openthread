@@ -1493,7 +1493,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_JOINER_COMMIS
 
     if (action == false)
     {
-        error = otJoinerStop(mInstance);
+        otJoinerStop(mInstance);
         ExitNow();
     }
 

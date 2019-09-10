@@ -46,6 +46,9 @@ extern "C" {
 /**
  * @addtogroup api-thread-general
  *
+ * @note
+ *   The functions in this module require `OPENTHREAD_FTD=1` or `OPENTHREAD_MTD=1`.
+ *
  * @{
  *
  */
@@ -753,13 +756,10 @@ typedef void (*otThreadParentResponseCallback)(otThreadParentResponseInfo *aInfo
  * @param[in]  aCallback  A pointer to a function that is called upon receiving an MLE Parent Response message.
  * @param[in]  aContext   A pointer to callback client-specific context.
  *
- * @retval OT_ERROR_NONE              On successful registration
- * @retval OT_ERROR_DISABLED_FEATURE  If the feature is not supported
- *
  */
-otError otThreadRegisterParentResponseCallback(otInstance *                   aInstance,
-                                               otThreadParentResponseCallback aCallback,
-                                               void *                         aContext);
+void otThreadRegisterParentResponseCallback(otInstance *                   aInstance,
+                                            otThreadParentResponseCallback aCallback,
+                                            void *                         aContext);
 
 /**
  * @}

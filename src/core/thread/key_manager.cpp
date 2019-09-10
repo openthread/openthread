@@ -114,7 +114,7 @@ exit:
 otError KeyManager::SetMasterKey(const MasterKey &aKey)
 {
     otError error = OT_ERROR_NONE;
-    Router *routers;
+    Router *parent;
 
     VerifyOrExit(mMasterKey != aKey, Get<Notifier>().SignalIfFirst(OT_CHANGED_MASTER_KEY));
 
@@ -123,10 +123,10 @@ otError KeyManager::SetMasterKey(const MasterKey &aKey)
     ComputeKey(mKeySequence, mKey);
 
     // reset parent frame counters
-    routers = Get<Mle::MleRouter>().GetParent();
-    routers->SetKeySequence(0);
-    routers->SetLinkFrameCounter(0);
-    routers->SetMleFrameCounter(0);
+    parent = Get<Mle::MleRouter>().GetParent();
+    parent->SetKeySequence(0);
+    parent->SetLinkFrameCounter(0);
+    parent->SetMleFrameCounter(0);
 
     // reset router frame counters
     for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++)

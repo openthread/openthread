@@ -155,7 +155,6 @@ public:
      * @retval OT_ERROR_NONE               Channel selection finished successfully.
      * @retval OT_ERROR_NOT_FOUND          Supported channels is empty, therefore could not select a channel.
      * @retval OT_ERROR_INVALID_STATE      Thread is not enabled or not enough data to select new channel.
-     * @retval OT_ERROR_DISABLED_FEATURE   `ChannelMonitor` feature is disabled by build-time configuration options.
      *
      */
     otError RequestChannelSelect(bool aSkipQualityCheck);

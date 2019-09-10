@@ -239,28 +239,20 @@ void otThreadSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRouterJitt
 
 otError otThreadGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChildInfo *aChildInfo)
 {
-    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aChildInfo != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aChildInfo != NULL);
 
-    error = instance.Get<Mle::MleRouter>().GetChildInfoById(aChildId, *aChildInfo);
-
-exit:
-    return error;
+    return instance.Get<Mle::MleRouter>().GetChildInfoById(aChildId, *aChildInfo);
 }
 
 otError otThreadGetChildInfoByIndex(otInstance *aInstance, uint16_t aChildIndex, otChildInfo *aChildInfo)
 {
-    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aChildInfo != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aChildInfo != NULL);
 
-    error = instance.Get<Mle::MleRouter>().GetChildInfoByIndex(aChildIndex, *aChildInfo);
-
-exit:
-    return error;
+    return instance.Get<Mle::MleRouter>().GetChildInfoByIndex(aChildIndex, *aChildInfo);
 }
 
 otError otThreadGetChildNextIp6Address(otInstance *               aInstance,
@@ -273,7 +265,7 @@ otError otThreadGetChildNextIp6Address(otInstance *               aInstance,
     Child::Ip6AddressIterator iterator;
     Ip6::Address *            address;
 
-    VerifyOrExit(aIterator != NULL && aAddress != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aIterator != NULL && aAddress != NULL);
 
     address = static_cast<Ip6::Address *>(aAddress);
     iterator.Set(*aIterator);
@@ -301,46 +293,29 @@ uint8_t otThreadGetMaxRouterId(otInstance *aInstance)
 
 otError otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRouterInfo *aRouterInfo)
 {
-    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aRouterInfo != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aRouterInfo != NULL);
 
-    error = instance.Get<RouterTable>().GetRouterInfo(aRouterId, *aRouterInfo);
-
-exit:
-    return error;
+    return instance.Get<RouterTable>().GetRouterInfo(aRouterId, *aRouterInfo);
 }
 
 otError otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIndex, otEidCacheEntry *aEntry)
 {
-    otError   error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aEntry != NULL, error = OT_ERROR_INVALID_ARGS);
-    error = instance.Get<AddressResolver>().GetEntry(aIndex, *aEntry);
-
-exit:
-    return error;
+    assert(aEntry != NULL);
+    return instance.Get<AddressResolver>().GetEntry(aIndex, *aEntry);
 }
-
-otError otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtAddress)
-{
-    otError error;
 
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
+void otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtAddress)
+{
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = instance.Get<Mle::MleRouter>().SetSteeringData(static_cast<const Mac::ExtAddress *>(aExtAddress));
-#else
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aExtAddress);
-
-    error = OT_ERROR_DISABLED_FEATURE;
-#endif
-
-    return error;
+    instance.Get<Mle::MleRouter>().SetSteeringData(static_cast<const Mac::ExtAddress *>(aExtAddress));
 }
+#endif
 
 const otPSKc *otThreadGetPSKc(otInstance *aInstance)
 {

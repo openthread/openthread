@@ -682,9 +682,11 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_POWER_STATE:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_POWER_STATE>;
         break;
+#if OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
     case SPINEL_PROP_MCU_POWER_STATE:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MCU_POWER_STATE>;
         break;
+#endif
     case SPINEL_PROP_UNSOL_UPDATE_FILTER:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_UNSOL_UPDATE_FILTER>;
         break;
@@ -805,9 +807,11 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING>;
         break;
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
     case SPINEL_PROP_DEBUG_NCP_LOG_LEVEL:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>;
         break;
+#endif
     case SPINEL_PROP_THREAD_DISCOVERY_SCAN_JOINER_FLAG:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_DISCOVERY_SCAN_JOINER_FLAG>;
         break;
@@ -969,9 +973,11 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_CHANNEL_MANAGER_FAVORED_CHANNELS:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CHANNEL_MANAGER_FAVORED_CHANNELS>;
         break;
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     case SPINEL_PROP_CHANNEL_MANAGER_CHANNEL_SELECT:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CHANNEL_MANAGER_CHANNEL_SELECT>;
         break;
+#endif
     case SPINEL_PROP_CHANNEL_MANAGER_AUTO_SELECT_ENABLED:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CHANNEL_MANAGER_AUTO_SELECT_ENABLED>;
         break;

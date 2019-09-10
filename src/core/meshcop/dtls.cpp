@@ -451,13 +451,11 @@ exit:
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
-otError Dtls::SetCertificate(const uint8_t *aX509Certificate,
-                             uint32_t       aX509CertLength,
-                             const uint8_t *aPrivateKey,
-                             uint32_t       aPrivateKeyLength)
+void Dtls::SetCertificate(const uint8_t *aX509Certificate,
+                          uint32_t       aX509CertLength,
+                          const uint8_t *aPrivateKey,
+                          uint32_t       aPrivateKeyLength)
 {
-    otError error = OT_ERROR_NONE;
-
     assert(aX509CertLength > 0);
     assert(aX509Certificate != NULL);
 
@@ -471,34 +469,23 @@ otError Dtls::SetCertificate(const uint8_t *aX509Certificate,
 
     mCipherSuites[0] = MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8;
     mCipherSuites[1] = 0;
-
-    return error;
 }
 
-otError Dtls::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength)
+void Dtls::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength)
 {
-    otError error = OT_ERROR_NONE;
-
     assert(aX509CaCertChainLength > 0);
     assert(aX509CaCertificateChain != NULL);
 
     mCaChainSrc    = aX509CaCertificateChain;
     mCaChainLength = aX509CaCertChainLength;
-
-    return error;
 }
 
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
-otError Dtls::SetPreSharedKey(const uint8_t *aPsk,
-                              uint16_t       aPskLength,
-                              const uint8_t *aPskIdentity,
-                              uint16_t       aPskIdLength)
+void Dtls::SetPreSharedKey(const uint8_t *aPsk, uint16_t aPskLength, const uint8_t *aPskIdentity, uint16_t aPskIdLength)
 {
-    otError error = OT_ERROR_NONE;
-
     assert(aPsk != NULL);
     assert(aPskIdentity != NULL);
     assert(aPskLength > 0);
@@ -511,8 +498,6 @@ otError Dtls::SetPreSharedKey(const uint8_t *aPsk,
 
     mCipherSuites[0] = MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8;
     mCipherSuites[1] = 0;
-
-    return error;
 }
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 

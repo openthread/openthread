@@ -119,7 +119,7 @@ otError otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExt
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aExtAddress != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aExtAddress != NULL);
     VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
     instance.Get<Mac::Mac>().SetExtAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
@@ -205,28 +205,20 @@ otError otLinkFilterSetAddressMode(otInstance *aInstance, otMacFilterAddressMode
 
 otError otLinkFilterAddAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aExtAddress != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aExtAddress != NULL);
 
-    error = instance.Get<Mac::Filter>().AddAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
-
-exit:
-    return error;
+    return instance.Get<Mac::Filter>().AddAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
 }
 
 otError otLinkFilterRemoveAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aExtAddress != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aExtAddress != NULL);
 
-    error = instance.Get<Mac::Filter>().RemoveAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
-
-exit:
-    return error;
+    return instance.Get<Mac::Filter>().RemoveAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
 }
 
 void otLinkFilterClearAddresses(otInstance *aInstance)
@@ -238,15 +230,11 @@ void otLinkFilterClearAddresses(otInstance *aInstance)
 
 otError otLinkFilterGetNextAddress(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry)
 {
-    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aIterator != NULL && aEntry != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aIterator != NULL && aEntry != NULL);
 
-    error = instance.Get<Mac::Filter>().GetNextAddress(*aIterator, *aEntry);
-
-exit:
-    return error;
+    return instance.Get<Mac::Filter>().GetNextAddress(*aIterator, *aEntry);
 }
 
 otError otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddress *aExtAddress, int8_t aRss)
@@ -272,15 +260,11 @@ void otLinkFilterClearRssIn(otInstance *aInstance)
 
 otError otLinkFilterGetNextRssIn(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry)
 {
-    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aIterator != NULL && aEntry != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aIterator != NULL && aEntry != NULL);
 
-    error = instance.Get<Mac::Filter>().GetNextRssIn(*aIterator, *aEntry);
-
-exit:
-    return error;
+    return instance.Get<Mac::Filter>().GetNextRssIn(*aIterator, *aEntry);
 }
 
 uint8_t otLinkConvertRssToLinkQuality(otInstance *aInstance, int8_t aRss)

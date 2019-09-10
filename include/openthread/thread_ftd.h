@@ -232,8 +232,7 @@ otError otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort)
  * Set Steering data out of band.
  *
  * Configuration option `OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE` should be set to enable setting of steering
- * data out of band. Otherwise calling this function does nothing and it returns `OT_ERROR_DISABLED_FEATURE`
- * error.
+ * data out of band.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  * @param[in]  aExtAddress     Address used to update the steering data.
@@ -241,11 +240,8 @@ otError otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort)
  *                             All 0xFFs to set steering data/bloom filter to accept/allow all.
  *                             A specific EUI64 which is then added to current steering data/bloom filter.
  *
- * @retval  OT_ERROR_NONE              Successfully set/updated the steering data.
- * @retval  OT_ERROR_DISABLED_FEATURE  Feature is disabled, not capable of setting steering data out of band.
- *
  */
-otError otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtAddress);
+void otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
  * Get the CONTEXT_ID_REUSE_DELAY parameter used in the Leader role.

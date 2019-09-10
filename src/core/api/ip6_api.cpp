@@ -237,14 +237,9 @@ otError otIp6AddressFromString(const char *aString, otIp6Address *aAddress)
 
 uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond)
 {
-    uint8_t rval;
+    assert(aFirst != NULL && aSecond != NULL);
 
-    VerifyOrExit(aFirst != NULL && aSecond != NULL, rval = 0);
-
-    rval = static_cast<const Ip6::Address *>(aFirst)->PrefixMatch(*static_cast<const Ip6::Address *>(aSecond));
-
-exit:
-    return rval;
+    return static_cast<const Ip6::Address *>(aFirst)->PrefixMatch(*static_cast<const Ip6::Address *>(aSecond));
 }
 
 bool otIp6IsAddressUnspecified(const otIp6Address *aAddress)

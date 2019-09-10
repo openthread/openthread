@@ -173,13 +173,11 @@ public:
      * @param[in]  aPskIdentity  The Identity Name for the PSK.
      * @param[in]  aPskIdLength  The PSK Identity Length.
      *
-     * @retval OT_ERROR_NONE  Successfully set the PSK.
-     *
      */
-    otError SetPreSharedKey(const uint8_t *aPsk,
-                            uint16_t       aPskLength,
-                            const uint8_t *aPskIdentity,
-                            uint16_t       aPskIdLength);
+    void SetPreSharedKey(const uint8_t *aPsk, uint16_t aPskLength, const uint8_t *aPskIdentity, uint16_t aPskIdLength)
+    {
+        mDtls.SetPreSharedKey(aPsk, aPskLength, aPskIdentity, aPskIdLength);
+    }
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -193,13 +191,11 @@ public:
      * @param[in]  aPrivateKey        A pointer to the PEM formatted private key.
      * @param[in]  aPrivateKeyLength  The length of the private key.
      *
-     * @retval OT_ERROR_NONE  Successfully set the x509 certificate with his private key.
-     *
      */
-    otError SetCertificate(const uint8_t *aX509Cert,
-                           uint32_t       aX509Length,
-                           const uint8_t *aPrivateKey,
-                           uint32_t       aPrivateKeyLength);
+    void SetCertificate(const uint8_t *aX509Cert,
+                        uint32_t       aX509Length,
+                        const uint8_t *aPrivateKey,
+                        uint32_t       aPrivateKeyLength);
 
     /**
      * This method sets the trusted top level CAs. It is needed for validate the
@@ -210,10 +206,8 @@ public:
      * @param[in]  aX509CaCertificateChain  A pointer to the PEM formatted X509 CA chain.
      * @param[in]  aX509CaCertChainLength   The length of chain.
      *
-     * @retval OT_ERROR_NONE  Successfully set the trusted top level CAs.
-     *
      */
-    otError SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength);
+    void SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength);
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
 #ifdef MBEDTLS_BASE64_C

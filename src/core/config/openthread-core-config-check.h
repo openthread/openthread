@@ -42,6 +42,12 @@
 #error "OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT requires OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE to be also set."
 #endif
 
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+#error "Dynamic log level is not supported along with multiple OT instance feature"
+#endif
+#endif
+
 /*
  * Removed or replaced OPENTHREAD_CONFIG options.
  *

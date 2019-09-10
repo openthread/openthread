@@ -548,10 +548,8 @@ public:
      *                          All 0xFFs sets steering data to 0xFF
      *                          Anything else is used to compute the bloom filter
      *
-     * @retval OT_ERROR_NONE  Steering data was set
-     *
      */
-    otError SetSteeringData(const Mac::ExtAddress *aExtAddress);
+    void SetSteeringData(const Mac::ExtAddress *aExtAddress);
 #endif // OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
 
     /**

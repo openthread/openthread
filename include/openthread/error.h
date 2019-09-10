@@ -340,11 +340,6 @@ typedef enum otError
     OT_ERROR_NOT_LOWPAN_DATA_FRAME = 32,
 
     /**
-     * A feature/functionality disabled by build-time configuration options.
-     */
-    OT_ERROR_DISABLED_FEATURE = 33,
-
-    /**
      * The link margin was too low.
      */
     OT_ERROR_LINK_MARGIN_LOW = 34,
