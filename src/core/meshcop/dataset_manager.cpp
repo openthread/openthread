@@ -470,7 +470,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     {
         NetworkMasterKeyTlv masterkey;
         masterkey.Init();
-        masterkey.SetNetworkMasterKey(aDataset.mMasterKey);
+        masterkey.SetNetworkMasterKey(static_cast<const MasterKey &>(aDataset.mMasterKey));
         SuccessOrExit(error = message->AppendTlv(masterkey));
     }
 

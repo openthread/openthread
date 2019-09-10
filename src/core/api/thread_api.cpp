@@ -131,7 +131,7 @@ otError otThreadSetMasterKey(otInstance *aInstance, const otMasterKey *aKey)
     VerifyOrExit(aKey != NULL, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
-    error = instance.Get<KeyManager>().SetMasterKey(*aKey);
+    error = instance.Get<KeyManager>().SetMasterKey(*static_cast<const MasterKey *>(aKey));
     instance.Get<MeshCoP::ActiveDataset>().Clear();
     instance.Get<MeshCoP::PendingDataset>().Clear();
 

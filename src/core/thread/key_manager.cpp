@@ -44,11 +44,11 @@
 
 namespace ot {
 
-static const uint8_t kThreadString[] = {
+const uint8_t KeyManager::kThreadString[] = {
     'T', 'h', 'r', 'e', 'a', 'd',
 };
 
-static const otMasterKey kDefaultMasterKey = {{
+const otMasterKey KeyManager::kDefaultMasterKey = {{
     0x00,
     0x11,
     0x22,
@@ -69,7 +69,6 @@ static const otMasterKey kDefaultMasterKey = {{
 
 KeyManager::KeyManager(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mMasterKey(kDefaultMasterKey)
     , mKeySequence(0)
     , mMacFrameCounter(0)
     , mMleFrameCounter(0)
@@ -84,6 +83,7 @@ KeyManager::KeyManager(Instance &aInstance)
     , mSecurityPolicyFlags(0xff)
     , mIsPSKcSet(false)
 {
+    mMasterKey = static_cast<const MasterKey &>(kDefaultMasterKey);
     memset(&mPSKc, 0, sizeof(mPSKc));
     ComputeKey(mKeySequence, mKey);
 }
@@ -111,18 +111,12 @@ exit:
 }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
-const otMasterKey &KeyManager::GetMasterKey(void) const
-{
-    return mMasterKey;
-}
-
-otError KeyManager::SetMasterKey(const otMasterKey &aKey)
+otError KeyManager::SetMasterKey(const MasterKey &aKey)
 {
     otError error = OT_ERROR_NONE;
     Router *routers;
 
-    VerifyOrExit(memcmp(&mMasterKey, &aKey, sizeof(mMasterKey)) != 0,
-                 Get<Notifier>().SignalIfFirst(OT_CHANGED_MASTER_KEY));
+    VerifyOrExit(mMasterKey != aKey, Get<Notifier>().SignalIfFirst(OT_CHANGED_MASTER_KEY));
 
     mMasterKey   = aKey;
     mKeySequence = 0;

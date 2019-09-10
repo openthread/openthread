@@ -157,8 +157,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
 
     // check network master key
     if (Tlv::GetTlv(aMessage, Tlv::kNetworkMasterKey, sizeof(masterKey), masterKey) == OT_ERROR_NONE &&
-        masterKey.IsValid() &&
-        memcmp(&masterKey.GetNetworkMasterKey(), &Get<KeyManager>().GetMasterKey(), OT_MASTER_KEY_SIZE))
+        masterKey.IsValid() && (masterKey.GetNetworkMasterKey() != Get<KeyManager>().GetMasterKey()))
     {
         doesAffectConnectivity = true;
         doesAffectMasterKey    = true;
@@ -166,8 +165,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
 
     // check active timestamp rollback
     if (type == Tlv::kPendingTimestamp &&
-        (masterKey.GetLength() == 0 ||
-         memcmp(&masterKey.GetNetworkMasterKey(), &Get<KeyManager>().GetMasterKey(), OT_MASTER_KEY_SIZE) == 0))
+        ((masterKey.GetLength() == 0) || (masterKey.GetNetworkMasterKey() == Get<KeyManager>().GetMasterKey())))
     {
         // no change to master key, active timestamp must be ahead
         const Timestamp *localActiveTimestamp = Get<ActiveDataset>().GetTimestamp();
