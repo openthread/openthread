@@ -156,14 +156,14 @@ exit:
 
 otError otLinkRawSrcMatchAddExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    Mac::Address address;
-    otError      error    = OT_ERROR_NONE;
-    Instance &   instance = *static_cast<Instance *>(aInstance);
+    Mac::ExtAddress address;
+    otError         error    = OT_ERROR_NONE;
+    Instance &      instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
-    address.SetExtended(aExtAddress->m8, /* aReverse */ true);
-    error = instance.Get<Radio>().AddSrcMatchExtEntry(address.GetExtended());
+    address.Set(aExtAddress->m8, Mac::ExtAddress::kReverseByteOrder);
+    error = instance.Get<Radio>().AddSrcMatchExtEntry(address);
 
 exit:
     return error;
@@ -183,14 +183,14 @@ exit:
 
 otError otLinkRawSrcMatchClearExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    Mac::Address address;
-    otError      error    = OT_ERROR_NONE;
-    Instance &   instance = *static_cast<Instance *>(aInstance);
+    Mac::ExtAddress address;
+    otError         error    = OT_ERROR_NONE;
+    Instance &      instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(instance.Get<Mac::LinkRaw>().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 
-    address.SetExtended(aExtAddress->m8, /* aReverse */ true);
-    error = instance.Get<Radio>().ClearSrcMatchExtEntry(address.GetExtended());
+    address.Set(aExtAddress->m8, Mac::ExtAddress::kReverseByteOrder);
+    error = instance.Get<Radio>().ClearSrcMatchExtEntry(address);
 
 exit:
     return error;

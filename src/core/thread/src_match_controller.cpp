@@ -153,10 +153,10 @@ otError SourceMatchController::AddAddress(const Child &aChild)
     }
     else
     {
-        Mac::Address address;
+        Mac::ExtAddress address;
 
-        address.SetExtended(aChild.GetExtAddress().m8, /* aReverse */ true);
-        error = Get<Radio>().AddSrcMatchExtEntry(address.GetExtended());
+        address.Set(aChild.GetExtAddress().m8, Mac::ExtAddress::kReverseByteOrder);
+        error = Get<Radio>().AddSrcMatchExtEntry(address);
 
         otLogDebgMac("SrcAddrMatch - Adding addr: %s -- %s (%d)", aChild.GetExtAddress().ToString().AsCString(),
                      otThreadErrorToString(error), error);
@@ -185,10 +185,10 @@ void SourceMatchController::ClearEntry(Child &aChild)
     }
     else
     {
-        Mac::Address address;
+        Mac::ExtAddress address;
 
-        address.SetExtended(aChild.GetExtAddress().m8, /* aReverse */ true);
-        error = Get<Radio>().ClearSrcMatchExtEntry(address.GetExtended());
+        address.Set(aChild.GetExtAddress().m8, Mac::ExtAddress::kReverseByteOrder);
+        error = Get<Radio>().ClearSrcMatchExtEntry(address);
 
         otLogDebgMac("SrcAddrMatch - Clearing addr: %s -- %s (%d)", aChild.GetExtAddress().ToString().AsCString(),
                      otThreadErrorToString(error), error);

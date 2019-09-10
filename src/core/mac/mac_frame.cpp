@@ -66,20 +66,21 @@ ExtAddress::InfoString ExtAddress::ToString(void) const
     return InfoString("%02x%02x%02x%02x%02x%02x%02x%02x", m8[0], m8[1], m8[2], m8[3], m8[4], m8[5], m8[6], m8[7]);
 }
 
-void Address::SetExtended(const uint8_t *aBuffer, bool aReverse)
+void ExtAddress::CopyAddress(uint8_t *aDst, const uint8_t *aSrc, CopyByteOrder aByteOrder)
 {
-    mType = kTypeExtended;
+    switch (aByteOrder)
+    {
+    case kNormalByteOrder:
+        memcpy(aDst, aSrc, sizeof(ExtAddress));
+        break;
 
-    if (aReverse)
-    {
-        for (unsigned int i = 0; i < sizeof(ExtAddress); i++)
+    case kReverseByteOrder:
+        aSrc += sizeof(ExtAddress) - 1;
+        for (uint8_t len = sizeof(ExtAddress); len > 0; len--)
         {
-            mShared.mExtAddress.m8[i] = aBuffer[sizeof(ExtAddress) - 1 - i];
+            *aDst++ = *aSrc--;
         }
-    }
-    else
-    {
-        memcpy(mShared.mExtAddress.m8, aBuffer, sizeof(ExtAddress));
+        break;
     }
 }
 
@@ -290,7 +291,7 @@ otError Frame::GetDstAddr(Address &aAddress) const
         break;
 
     case kFcfDstAddrExt:
-        aAddress.SetExtended(GetPsdu() + index, /* reverse */ true);
+        aAddress.SetExtended(GetPsdu() + index, ExtAddress::kReverseByteOrder);
         break;
 
     default:
@@ -310,16 +311,12 @@ void Frame::SetDstAddr(ShortAddress aShortAddress)
 
 void Frame::SetDstAddr(const ExtAddress &aExtAddress)
 {
-    uint8_t  index = FindDstAddrIndex();
-    uint8_t *buf   = GetPsdu() + index;
+    uint8_t index = FindDstAddrIndex();
 
     assert((GetFrameControlField() & kFcfDstAddrMask) == kFcfDstAddrExt);
     assert(index != kInvalidIndex);
 
-    for (unsigned int i = 0; i < sizeof(ExtAddress); i++)
-    {
-        buf[i] = aExtAddress.m8[sizeof(ExtAddress) - 1 - i];
-    }
+    aExtAddress.CopyTo(GetPsdu() + index, ExtAddress::kReverseByteOrder);
 }
 
 void Frame::SetDstAddr(const Address &aAddress)
@@ -462,7 +459,7 @@ otError Frame::GetSrcAddr(Address &aAddress) const
         break;
 
     case kFcfSrcAddrExt:
-        aAddress.SetExtended(GetPsdu() + index, /* reverse */ true);
+        aAddress.SetExtended(GetPsdu() + index, ExtAddress::kReverseByteOrder);
         break;
 
     default:
@@ -486,16 +483,12 @@ void Frame::SetSrcAddr(ShortAddress aShortAddress)
 
 void Frame::SetSrcAddr(const ExtAddress &aExtAddress)
 {
-    uint8_t  index = FindSrcAddrIndex();
-    uint8_t *buf   = GetPsdu() + index;
+    uint8_t index = FindSrcAddrIndex();
 
     assert((GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrExt);
     assert(index != kInvalidIndex);
 
-    for (unsigned int i = 0; i < sizeof(aExtAddress); i++)
-    {
-        buf[i] = aExtAddress.m8[sizeof(aExtAddress) - 1 - i];
-    }
+    aExtAddress.CopyTo(GetPsdu() + index, ExtAddress::kReverseByteOrder);
 }
 
 void Frame::SetSrcAddr(const Address &aAddress)

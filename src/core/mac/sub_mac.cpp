@@ -109,13 +109,13 @@ void SubMac::SetShortAddress(ShortAddress aShortAddress)
 
 void SubMac::SetExtAddress(const ExtAddress &aExtAddress)
 {
-    Address address;
+    ExtAddress address;
 
     mExtAddress = aExtAddress;
 
     // Reverse the byte order before setting on radio.
-    address.SetExtended(aExtAddress.m8, /* aReverse */ true);
-    Get<Radio>().SetExtendedAddress(address.GetExtended());
+    address.Set(aExtAddress.m8, ExtAddress::kReverseByteOrder);
+    Get<Radio>().SetExtendedAddress(address);
 
     otLogDebgMac("RadioExtAddress: %s", mExtAddress.ToString().AsCString());
 }
