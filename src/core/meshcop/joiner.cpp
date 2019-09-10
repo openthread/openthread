@@ -557,7 +557,7 @@ void Joiner::HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo
     Get<Mle::MleRouter>().SetMeshLocalPrefix(meshLocalPrefix.GetMeshLocalPrefix());
     Get<Mac::Mac>().SetExtendedPanId(extendedPanId.GetExtendedPanId());
 
-    Get<Mac::Mac>().SetNetworkName(networkName.GetNetworkName(), networkName.GetNetworkNameLength());
+    Get<Mac::Mac>().SetNetworkName(networkName.GetNetworkName());
 
     otLogInfoMeshCoP("Joiner successful!");
 

@@ -155,6 +155,82 @@ void TestMacAddress(void)
     testFreeInstance(instance);
 }
 
+void CompareNetworkName(const Mac::NetworkName &aNetworkName, const char *aNameString)
+{
+    uint8_t len = static_cast<uint8_t>(strlen(aNameString));
+
+    VerifyOrQuit(strcmp(aNetworkName.GetAsCString(), aNameString) == 0, "NetworkName does not match expected value\n");
+
+    VerifyOrQuit(aNetworkName.GetAsData().GetLength() == len, "NetworkName:GetAsData().GetLength() is incorrect\n");
+    VerifyOrQuit(memcmp(aNetworkName.GetAsData().GetBuffer(), aNameString, len) == 0,
+                 "NetworkName:GetAsData().GetBuffer() is incorrect\n");
+}
+
+void TestMacNetworkName(void)
+{
+    const char kEmptyName[]   = "";
+    const char kName1[]       = "network";
+    const char kName2[]       = "network-name";
+    const char kLongName[]    = "0123456789abcdef";
+    const char kTooLongName[] = "0123456789abcdef0";
+
+    char             buffer[sizeof(kTooLongName) + 2];
+    uint8_t          len;
+    Mac::NetworkName networkName;
+
+    CompareNetworkName(networkName, kEmptyName);
+
+    SuccessOrQuit(networkName.Set(Mac::NetworkName::Data(kName1, sizeof(kName1))), "NetworkName::Set() failed\n");
+    CompareNetworkName(networkName, kName1);
+
+    VerifyOrQuit(networkName.Set(Mac::NetworkName::Data(kName1, sizeof(kName1))) == OT_ERROR_ALREADY,
+                 "NetworkName::Set() accepted same name without returning OT_ERROR_ALREADY");
+    CompareNetworkName(networkName, kName1);
+
+    VerifyOrQuit(networkName.Set(Mac::NetworkName::Data(kName1, sizeof(kName1) - 1)) == OT_ERROR_ALREADY,
+                 "NetworkName::Set() accepted same name without returning OT_ERROR_ALREADY");
+
+    SuccessOrQuit(networkName.Set(Mac::NetworkName::Data(kName2, sizeof(kName2))), "NetworkName::Set() failed\n");
+    CompareNetworkName(networkName, kName2);
+
+    SuccessOrQuit(networkName.Set(Mac::NetworkName::Data(kEmptyName, 0)), "NetworkName::Set() failed\n");
+    CompareNetworkName(networkName, kEmptyName);
+
+    SuccessOrQuit(networkName.Set(Mac::NetworkName::Data(kLongName, sizeof(kLongName))), "NetworkName::Set() failed\n");
+    CompareNetworkName(networkName, kLongName);
+
+    VerifyOrQuit(networkName.Set(Mac::NetworkName::Data(kLongName, sizeof(kLongName) - 1)) == OT_ERROR_ALREADY,
+                 "NetworkName::Set() accepted same name without returning OT_ERROR_ALREADY");
+
+    SuccessOrQuit(networkName.Set(Mac::NetworkName::Data(NULL, 0)), "NetworkName::Set() failed\n");
+    CompareNetworkName(networkName, kEmptyName);
+
+    SuccessOrQuit(networkName.Set(Mac::NetworkName::Data(kName1, sizeof(kName1))), "NetworkName::Set() failed\n");
+
+    VerifyOrQuit(networkName.Set(Mac::NetworkName::Data(kTooLongName, sizeof(kTooLongName))) == OT_ERROR_INVALID_ARGS,
+                 "NetworkName::Set() accepted an invalid (too long) name\n");
+
+    CompareNetworkName(networkName, kName1);
+
+    memset(buffer, 'a', sizeof(buffer));
+    len = networkName.GetAsData().CopyTo(buffer, 1);
+    VerifyOrQuit(len == 1, "NetworkName::Data::CopyTo() failed\n");
+    VerifyOrQuit(buffer[0] == kName1[0], "NetworkName::Data::CopyTo() failed\n");
+    VerifyOrQuit(buffer[1] == 'a', "NetworkName::Data::CopyTo() failed\n");
+
+    memset(buffer, 'a', sizeof(buffer));
+    len = networkName.GetAsData().CopyTo(buffer, sizeof(kName1) - 1);
+    VerifyOrQuit(len == sizeof(kName1) - 1, "NetworkName::Data::CopyTo() failed\n");
+    VerifyOrQuit(memcmp(buffer, kName1, sizeof(kName1) - 1) == 0, "NetworkName::Data::CopyTo() failed\n");
+    VerifyOrQuit(buffer[sizeof(kName1)] == 'a', "NetworkName::Data::CopyTo() failed\n");
+
+    memset(buffer, 'a', sizeof(buffer));
+    len = networkName.GetAsData().CopyTo(buffer, sizeof(buffer));
+    VerifyOrQuit(len == sizeof(kName1) - 1, "NetworkName::Data::CopyTo() failed\n");
+    VerifyOrQuit(memcmp(buffer, kName1, sizeof(kName1) - 1) == 0, "NetworkName::Data::CopyTo() failed\n");
+    VerifyOrQuit(buffer[sizeof(kName1)] == 0, "NetworkName::Data::CopyTo() failed\n");
+}
+
 void TestMacHeader(void)
 {
     static const struct
@@ -336,6 +412,7 @@ void TestMacChannelMask(void)
 int main(void)
 {
     ot::TestMacAddress();
+    ot::TestMacNetworkName();
     ot::TestMacHeader();
     ot::TestMacChannelMask();
     printf("All tests passed\n");

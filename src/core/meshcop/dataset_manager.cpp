@@ -478,7 +478,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     {
         NetworkNameTlv networkname;
         networkname.Init();
-        networkname.SetNetworkName(aDataset.mNetworkName.m8);
+        networkname.SetNetworkName(static_cast<const Mac::NetworkName &>(aDataset.mNetworkName).GetAsData());
         SuccessOrExit(error = message->AppendTlv(networkname));
     }
 
