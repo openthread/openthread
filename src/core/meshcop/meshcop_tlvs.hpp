@@ -47,6 +47,7 @@
 #include "common/encoding.hpp"
 #include "common/message.hpp"
 #include "common/tlvs.hpp"
+#include "mac/mac_frame.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
 #include "radio/radio.hpp"
@@ -361,18 +362,18 @@ public:
      * @returns The Extended PAN ID value.
      *
      */
-    const otExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
+    const Mac::ExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
 
     /**
      * This method sets the Extended PAN ID value.
      *
-     * @param[in]  aExtendedPanId  A pointer to the Extended PAN ID value.
+     * @param[in]  aExtendedPanId  An Extended PAN ID value.
      *
      */
-    void SetExtendedPanId(const otExtendedPanId &aExtendedPanId) { mExtendedPanId = aExtendedPanId; }
+    void SetExtendedPanId(const Mac::ExtendedPanId &aExtendedPanId) { mExtendedPanId = aExtendedPanId; }
 
 private:
-    otExtendedPanId mExtendedPanId;
+    Mac::ExtendedPanId mExtendedPanId;
 } OT_TOOL_PACKED_END;
 
 /**

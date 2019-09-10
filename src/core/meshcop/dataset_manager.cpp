@@ -486,7 +486,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     {
         ExtendedPanIdTlv extpanid;
         extpanid.Init();
-        extpanid.SetExtendedPanId(aDataset.mExtendedPanId);
+        extpanid.SetExtendedPanId(static_cast<const Mac::ExtendedPanId &>(aDataset.mExtendedPanId));
         SuccessOrExit(error = message->AppendTlv(extpanid));
     }
 

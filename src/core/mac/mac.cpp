@@ -118,11 +118,11 @@ Mac::Mac(Instance &aInstance)
     mCcaSuccessRateTracker.Reset();
     memset(&mCounters, 0, sizeof(otMacCounters));
     memset(&mNetworkName, 0, sizeof(otNetworkName));
-    memset(&mExtendedPanId, 0, sizeof(otExtendedPanId));
+    memset(&mExtendedPanId, 0, sizeof(ExtendedPanId));
 
     mSubMac.Enable();
 
-    SetExtendedPanId(sExtendedPanidInit);
+    SetExtendedPanId(static_cast<const ExtendedPanId &>(sExtendedPanidInit));
     SetNetworkName(sNetworkNameInit);
     SetPanId(mPanId);
     SetExtAddress(randomExtAddress);
@@ -239,7 +239,7 @@ otError Mac::ConvertBeaconToActiveScanResult(RxFrame *aBeaconFrame, otActiveScan
         aResult.mIsJoinable = beaconPayload->IsJoiningPermitted();
         aResult.mIsNative   = beaconPayload->IsNative();
         memcpy(&aResult.mNetworkName, beaconPayload->GetNetworkName(), BeaconPayload::kNetworkNameSize);
-        memcpy(&aResult.mExtendedPanId, beaconPayload->GetExtendedPanId(), BeaconPayload::kExtPanIdSize);
+        aResult.mExtendedPanId = beaconPayload->GetExtendedPanId();
     }
 
     LogBeacon("Received", *beaconPayload);
@@ -474,10 +474,9 @@ exit:
     return;
 }
 
-void Mac::SetExtendedPanId(const otExtendedPanId &aExtendedPanId)
+void Mac::SetExtendedPanId(const ExtendedPanId &aExtendedPanId)
 {
-    VerifyOrExit(memcmp(mExtendedPanId.m8, aExtendedPanId.m8, sizeof(mExtendedPanId)) != 0,
-                 Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_EXT_PANID));
+    VerifyOrExit(mExtendedPanId != aExtendedPanId, Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_EXT_PANID));
 
     mExtendedPanId = aExtendedPanId;
     Get<Notifier>().Signal(OT_CHANGED_THREAD_EXT_PANID);
@@ -846,7 +845,7 @@ void Mac::PrepareBeacon(TxFrame &aFrame)
         }
 
         beaconPayload->SetNetworkName(mNetworkName.m8);
-        beaconPayload->SetExtendedPanId(mExtendedPanId.m8);
+        beaconPayload->SetExtendedPanId(mExtendedPanId);
 
         beaconLength += sizeof(*beaconPayload);
     }

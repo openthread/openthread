@@ -385,6 +385,57 @@ private:
 };
 
 /**
+ * This structure represents an IEEE 802.15.4 Extended PAN Identifier.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class ExtendedPanId : public otExtendedPanId
+{
+public:
+    enum
+    {
+        kInfoStringSize = 17, // Max chars for the info string (`ToString()`).
+    };
+
+    /**
+     * This type defines the fixed-length `String` object returned from `ToString()`.
+     *
+     */
+    typedef String<kInfoStringSize> InfoString;
+
+    /**
+     * This method evaluates whether or not the Extended PAN Identifiers match.
+     *
+     * @param[in]  aOther  The Extended PAN Id to compare.
+     *
+     * @retval TRUE   If the Extended PAN Identifiers match.
+     * @retval FALSE  If the Extended PAN Identifiers do not match.
+     *
+     */
+    bool operator==(const ExtendedPanId &aOther) const;
+
+    /**
+     * This method evaluates whether or not the Extended PAN Identifiers match.
+     *
+     * @param[in]  aOther  The Extended PAN Id to compare.
+     *
+     * @retval TRUE   If the Extended Addresses do not match.
+     * @retval FALSE  If the Extended Addresses match.
+     *
+     */
+    bool operator!=(const ExtendedPanId &aOther) const;
+
+    /**
+     * This method converts an address to a string.
+     *
+     * @returns An `InfoString` containing the string representation of the Extended PAN Identifier.
+     *
+     */
+    InfoString ToString(void) const;
+
+} OT_TOOL_PACKED_END;
+
+/**
  * This class implements IEEE 802.15.4 IE (Information Element) generation and parsing.
  *
  */
@@ -1502,7 +1553,6 @@ public:
     {
         kProtocolId      = 3,  ///< Thread Protocol ID.
         kNetworkNameSize = 16, ///< Size of Thread Network Name (bytes).
-        kExtPanIdSize    = 8,  ///< Size of Thread Extended PAN ID.
         kInfoStringSize  = 92, ///< Max chars for the info string (@sa ToInfoString()).
     };
 
@@ -1628,20 +1678,20 @@ public:
     }
 
     /**
-     * This method returns a pointer to the Extended PAN ID field.
+     * This method returns the Extended PAN ID field.
      *
-     * @returns A pointer to the Extended PAN ID field.
+     * @returns The Extended PAN ID field.
      *
      */
-    const uint8_t *GetExtendedPanId(void) const { return mExtendedPanId; }
+    const ExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
 
     /**
      * This method sets the Extended PAN ID field.
      *
-     * @param[in]  aExtPanId  A pointer to the Extended PAN ID.
+     * @param[in]  aExtPanId  An Extended PAN ID.
      *
      */
-    void SetExtendedPanId(const uint8_t *aExtPanId) { memcpy(mExtendedPanId, aExtPanId, sizeof(mExtendedPanId)); }
+    void SetExtendedPanId(const ExtendedPanId &aExtPanId) { mExtendedPanId = aExtPanId; }
 
     /**
      * This method returns information about the Beacon as a `InfoString`.
@@ -1652,10 +1702,10 @@ public:
     InfoString ToInfoString(void) const;
 
 private:
-    uint8_t mProtocolId;
-    uint8_t mFlags;
-    char    mNetworkName[kNetworkNameSize];
-    uint8_t mExtendedPanId[kExtPanIdSize];
+    uint8_t       mProtocolId;
+    uint8_t       mFlags;
+    char          mNetworkName[kNetworkNameSize];
+    ExtendedPanId mExtendedPanId;
 } OT_TOOL_PACKED_END;
 
 /**
