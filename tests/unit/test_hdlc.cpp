@@ -517,7 +517,7 @@ void TestEncoderDecoder(void)
 
 uint32_t GetRandom(uint32_t max)
 {
-    return rand() % max;
+    return static_cast<uint32_t>(rand()) % max;
 }
 
 void TestFuzzEncoderDecoder(void)

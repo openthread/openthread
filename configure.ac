@@ -232,8 +232,8 @@ AC_PATH_PROG(CMP, cmp)
 #   -Wall                        CC, CXX
 #
 
-PROSPECTIVE_CFLAGS="-Wall -Wextra -Wshadow -Werror -std=c99 -pedantic-errors"
-PROSPECTIVE_CXXFLAGS="-Wall -Wextra -Wshadow -Werror -std=gnu++98 -Wno-c++14-compat -fno-exceptions"
+PROSPECTIVE_CFLAGS="-Wall -Wextra -Wshadow -Werror -std=c99 -pedantic-errors -Wno-gnu-zero-variadic-macro-arguments"
+PROSPECTIVE_CXXFLAGS="-Wall -Wextra -Wshadow -Werror -std=gnu++98 -Wno-c++14-compat -fno-exceptions -Wno-gnu-zero-variadic-macro-arguments"
 
 AC_CACHE_CHECK([whether $CC is Clang],
     [nl_cv_clang],

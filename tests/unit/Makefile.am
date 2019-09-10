@@ -51,6 +51,7 @@ if OPENTHREAD_BUILD_TESTS
 
 AM_CPPFLAGS                                                         = \
     -DOPENTHREAD_FTD=1                                                \
+    -DOPENTHREAD_CONFIG_LOG_PLATFORM=0                                \
     -I$(top_srcdir)/include                                           \
     -I$(top_srcdir)/src                                               \
     -I$(top_srcdir)/src/core                                          \

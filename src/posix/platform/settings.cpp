@@ -349,18 +349,12 @@ void otPlatSettingsWipe(otInstance *aInstance)
 
 uint64_t gNodeId = 1;
 
-const char *otExitCodeToString(uint8_t aExitCode)
-{
-    OT_UNUSED_VARIABLE(aExitCode);
-    return "SELF_TEST";
-}
-
 int main()
 {
     otInstance *instance = NULL;
     uint8_t     data[60];
 
-    for (size_t i = 0; i < sizeof(data); ++i)
+    for (uint8_t i = 0; i < sizeof(data); ++i)
     {
         data[i] = i;
     }

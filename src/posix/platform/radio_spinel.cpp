@@ -527,11 +527,11 @@ void RadioSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, 
 
         if (status >= SPINEL_STATUS_RESET__BEGIN && status <= SPINEL_STATUS_RESET__END)
         {
-            otLogCritPlat("RCP reset: %s", spinel_status_to_cstr(status));
-            mIsReady = true;
-
             // If RCP crashes/resets while radio was enabled, posix app exits.
             VerifyOrDie(!IsEnabled(), OT_EXIT_RADIO_SPINEL_RESET);
+
+            otLogInfoPlat("RCP reset: %s", spinel_status_to_cstr(status));
+            mIsReady = true;
         }
         else
         {

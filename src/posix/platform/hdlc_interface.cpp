@@ -138,7 +138,7 @@ otError HdlcInterface::Init(const char *aRadioFile, const char *aRadioConfig)
 
     VerifyOrExit(mSockFd == -1, error = OT_ERROR_ALREADY);
 
-    VerifyOrExit(stat(aRadioFile, &st) == 0, perror("stat ncp file failed"); error = OT_ERROR_INVALID_ARGS);
+    VerifyOrDie(stat(aRadioFile, &st) == 0, OT_EXIT_INVALID_ARGUMENTS);
 
     if (S_ISCHR(st.st_mode))
     {
@@ -277,11 +277,11 @@ otError HdlcInterface::WaitForWritable(void)
             }
             else if (FD_ISSET(mSockFd, &errorFds))
             {
-                DieNowWithMessage("socket error", OT_EXIT_FAILURE);
+                DieNow(OT_EXIT_FAILURE);
             }
             else
             {
-                DieNowWithMessage("select error", OT_EXIT_FAILURE);
+                assert(false);
             }
         }
         else if ((rval < 0) && (errno != EINTR))
