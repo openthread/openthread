@@ -1370,7 +1370,7 @@ public:
         {
             error = OT_ERROR_NONE;
         }
-        
+
     exit:
         return error;
     }
