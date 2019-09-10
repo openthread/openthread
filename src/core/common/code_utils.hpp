@@ -36,8 +36,9 @@
 
 #include "openthread-core-config.h"
 
+#include <stdbool.h>
+
 #include "utils/static_assert.hpp"
-#include "utils/wrap_stdbool.h"
 
 /**
  * This macro calculates the number of elements in an array.

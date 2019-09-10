@@ -36,14 +36,13 @@
 
 #include "openthread-core-config.h"
 
+#include <stdint.h>
 #include <openthread/error.h>
 
 #ifndef OPENTHREAD_RADIO
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/entropy.h>
 #endif
-
-#include "utils/wrap_stdint.h"
 
 #if (!defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES) && \
      (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) || defined(MBEDTLS_HAVEGE_C) || defined(MBEDTLS_ENTROPY_HARDWARE_ALT)))

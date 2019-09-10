@@ -36,9 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include <stdbool.h>
 #include <stdint.h>
-
-#include "utils/wrap_stdbool.h"
 
 #include <openthread/instance.h>
 #include <openthread/platform/toolchain.h>
