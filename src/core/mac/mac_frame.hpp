@@ -959,6 +959,7 @@ public:
      * @param[out]  aPanId  The Destination PAN Identifier.
      *
      * @retval OT_ERROR_NONE   Successfully retrieved the Destination PAN Identifier.
+     * @retval OT_ERROR_PARSE  Failed to parse the PAN Identifier.
      *
      */
     otError GetDstPanId(PanId &aPanId) const;

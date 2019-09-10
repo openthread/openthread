@@ -39,6 +39,7 @@
 #include <openthread/platform/time.h>
 
 #include "utils/code_utils.h"
+#include "utils/mac_frame.h"
 #include "utils/soft_source_match_table.h"
 
 // The IPv4 group for receiving packets of radio simulation
@@ -46,44 +47,11 @@
 
 enum
 {
-    IEEE802154_MIN_LENGTH = 5,
-    IEEE802154_MAX_LENGTH = 127,
     IEEE802154_ACK_LENGTH = 5,
 
-    IEEE802154_BROADCAST = 0xffff,
+    IEEE802154_FRAME_TYPE_ACK = 2 << 0,
 
-    IEEE802154_FRAME_TYPE_ACK    = 2 << 0,
-    IEEE802154_FRAME_TYPE_MACCMD = 3 << 0,
-    IEEE802154_FRAME_TYPE_MASK   = 7 << 0,
-
-    IEEE802154_SECURITY_ENABLED  = 1 << 3,
-    IEEE802154_FRAME_PENDING     = 1 << 4,
-    IEEE802154_ACK_REQUEST       = 1 << 5,
-    IEEE802154_PANID_COMPRESSION = 1 << 6,
-
-    IEEE802154_DST_ADDR_NONE  = 0 << 2,
-    IEEE802154_DST_ADDR_SHORT = 2 << 2,
-    IEEE802154_DST_ADDR_EXT   = 3 << 2,
-    IEEE802154_DST_ADDR_MASK  = 3 << 2,
-
-    IEEE802154_SRC_ADDR_NONE  = 0 << 6,
-    IEEE802154_SRC_ADDR_SHORT = 2 << 6,
-    IEEE802154_SRC_ADDR_EXT   = 3 << 6,
-    IEEE802154_SRC_ADDR_MASK  = 3 << 6,
-
-    IEEE802154_DSN_OFFSET     = 2,
-    IEEE802154_DSTPAN_OFFSET  = 3,
-    IEEE802154_DSTADDR_OFFSET = 5,
-
-    IEEE802154_SEC_LEVEL_MASK = 7 << 0,
-
-    IEEE802154_KEY_ID_MODE_0    = 0 << 3,
-    IEEE802154_KEY_ID_MODE_1    = 1 << 3,
-    IEEE802154_KEY_ID_MODE_2    = 2 << 3,
-    IEEE802154_KEY_ID_MODE_3    = 3 << 3,
-    IEEE802154_KEY_ID_MODE_MASK = 3 << 3,
-
-    IEEE802154_MACCMD_DATA_REQ = 4,
+    IEEE802154_FRAME_PENDING = 1 << 4,
 };
 
 enum
@@ -102,6 +70,7 @@ extern uint16_t sPortOffset;
 static int      sTxFd       = -1;
 static int      sRxFd       = -1;
 static uint16_t sPortOffset = 0;
+static uint16_t sPort       = 0;
 #endif
 
 enum
@@ -134,12 +103,12 @@ static otRadioFrame        sAckFrame;
 static otRadioIeInfo sTransmitIeInfo;
 #endif
 
-static uint8_t  sExtendedAddress[OT_EXT_ADDRESS_SIZE];
-static uint16_t sShortAddress;
-static uint16_t sPanid;
-static bool     sPromiscuous = false;
-static bool     sTxWait      = false;
-static int8_t   sTxPower     = 0;
+static otExtAddress   sExtAddress;
+static otShortAddress sShortAddress;
+static otPanId        sPanid;
+static bool           sPromiscuous = false;
+static bool           sTxWait      = false;
+static int8_t         sTxPower     = 0;
 
 static bool sSrcMatchEnabled = false;
 
@@ -147,153 +116,42 @@ static bool sSrcMatchEnabled = false;
 static bool sRadioCoexEnabled = true;
 #endif
 
-static inline bool isFrameTypeAck(const uint8_t *aFrame)
+static void RevertExtAddress(otExtAddress *aReverted, const otExtAddress *aOrigin)
 {
-    return (aFrame[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK;
-}
-
-static inline bool isFrameTypeMacCmd(const uint8_t *aFrame)
-{
-    return (aFrame[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_MACCMD;
-}
-
-static inline bool isSecurityEnabled(const uint8_t *aFrame)
-{
-    return (aFrame[0] & IEEE802154_SECURITY_ENABLED) != 0;
-}
-
-static inline bool isAckRequested(const uint8_t *aFrame)
-{
-    return (aFrame[0] & IEEE802154_ACK_REQUEST) != 0;
-}
-
-static inline bool isPanIdCompressed(const uint8_t *aFrame)
-{
-    return (aFrame[0] & IEEE802154_PANID_COMPRESSION) != 0;
-}
-
-static inline bool isDataRequestAndHasFramePending(const uint8_t *aFrame)
-{
-    const uint8_t *cur = aFrame;
-    uint8_t        securityControl;
-    bool           isDataRequest   = false;
-    bool           hasFramePending = false;
-
-    // FCF + DSN
-    cur += 2 + 1;
-
-    otEXPECT(isFrameTypeMacCmd(aFrame));
-
-    // Destination PAN + Address
-    switch (aFrame[1] & IEEE802154_DST_ADDR_MASK)
+    for (size_t i = 0; i < sizeof(*aReverted); i++)
     {
-    case IEEE802154_DST_ADDR_SHORT:
-        cur += sizeof(otPanId) + sizeof(otShortAddress);
-        break;
+        aReverted->m8[i] = aOrigin->m8[sizeof(*aOrigin) - 1 - i];
+    }
+}
 
-    case IEEE802154_DST_ADDR_EXT:
-        cur += sizeof(otPanId) + sizeof(otExtAddress);
-        break;
+static bool isDataRequestAndHasFramePending(const otRadioFrame *aFrame)
+{
+    bool         rval = false;
+    otMacAddress src;
 
+    otEXPECT(sSrcMatchEnabled);
+    otEXPECT(otMacFrameIsDataRequest(aFrame));
+    otEXPECT(otMacFrameGetSrcAddr(aFrame, &src) == OT_ERROR_NONE);
+
+    switch (src.mType)
+    {
+    case OT_MAC_ADDRESS_TYPE_SHORT:
+        rval = utilsSoftSrcMatchShortFindEntry(src.mAddress.mShortAddress) >= 0;
+        break;
+    case OT_MAC_ADDRESS_TYPE_EXTENDED:
+    {
+        otExtAddress extAddr;
+
+        RevertExtAddress(&extAddr, &src.mAddress.mExtAddress);
+        rval = utilsSoftSrcMatchExtFindEntry(&extAddr) >= 0;
+        break;
+    }
     default:
-        goto exit;
-    }
-
-    // Source PAN + Address
-    switch (aFrame[1] & IEEE802154_SRC_ADDR_MASK)
-    {
-    case IEEE802154_SRC_ADDR_SHORT:
-        if (!isPanIdCompressed(aFrame))
-        {
-            cur += sizeof(otPanId);
-        }
-
-        if (sSrcMatchEnabled)
-        {
-            hasFramePending = utilsSoftSrcMatchShortFindEntry((uint16_t)(cur[1] << 8 | cur[0])) >= 0;
-        }
-
-        cur += sizeof(otShortAddress);
         break;
-
-    case IEEE802154_SRC_ADDR_EXT:
-        if (!isPanIdCompressed(aFrame))
-        {
-            cur += sizeof(otPanId);
-        }
-
-        if (sSrcMatchEnabled)
-        {
-            hasFramePending = utilsSoftSrcMatchExtFindEntry((const otExtAddress *)cur) >= 0;
-        }
-
-        cur += sizeof(otExtAddress);
-        break;
-
-    default:
-        goto exit;
     }
-
-    // Security Control + Frame Counter + Key Identifier
-    if (isSecurityEnabled(aFrame))
-    {
-        securityControl = *cur;
-
-        if (securityControl & IEEE802154_SEC_LEVEL_MASK)
-        {
-            cur += 1 + 4;
-        }
-
-        switch (securityControl & IEEE802154_KEY_ID_MODE_MASK)
-        {
-        case IEEE802154_KEY_ID_MODE_0:
-            cur += 0;
-            break;
-
-        case IEEE802154_KEY_ID_MODE_1:
-            cur += 1;
-            break;
-
-        case IEEE802154_KEY_ID_MODE_2:
-            cur += 5;
-            break;
-
-        case IEEE802154_KEY_ID_MODE_3:
-            cur += 9;
-            break;
-        }
-    }
-
-    // Command ID
-    isDataRequest = cur[0] == IEEE802154_MACCMD_DATA_REQ;
 
 exit:
-    return isDataRequest && hasFramePending;
-}
-
-static inline uint8_t getDsn(const uint8_t *aFrame)
-{
-    return aFrame[IEEE802154_DSN_OFFSET];
-}
-
-static inline otPanId getDstPan(const uint8_t *aFrame)
-{
-    return (otPanId)((aFrame[IEEE802154_DSTPAN_OFFSET + 1] << 8) | aFrame[IEEE802154_DSTPAN_OFFSET]);
-}
-
-static inline otShortAddress getShortAddress(const uint8_t *aFrame)
-{
-    return (otShortAddress)((aFrame[IEEE802154_DSTADDR_OFFSET + 1] << 8) | aFrame[IEEE802154_DSTADDR_OFFSET]);
-}
-
-static inline void getExtAddress(const uint8_t *aFrame, otExtAddress *aAddress)
-{
-    size_t i;
-
-    for (i = 0; i < sizeof(otExtAddress); i++)
-    {
-        aAddress->m8[i] = aFrame[IEEE802154_DSTADDR_OFFSET + (sizeof(otExtAddress) - 1 - i)];
-    }
+    return rval;
 }
 
 static uint16_t crc16_citt(uint16_t aFcs, uint8_t aByte)
@@ -338,7 +196,7 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
     aIeeeEui64[7] = gNodeId & 0xff;
 }
 
-void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanid)
+void otPlatRadioSetPanId(otInstance *aInstance, otPanId aPanid)
 {
     assert(aInstance != NULL);
 
@@ -350,13 +208,10 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aE
 {
     assert(aInstance != NULL);
 
-    for (size_t i = 0; i < sizeof(sExtendedAddress); i++)
-    {
-        sExtendedAddress[i] = aExtAddress->m8[sizeof(sExtendedAddress) - 1 - i];
-    }
+    RevertExtAddress(&sExtAddress, aExtAddress);
 }
 
-void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
+void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aAddress)
 {
     assert(aInstance != NULL);
 
@@ -381,8 +236,9 @@ static void initFds(void)
 
     otEXPECT_ACTION((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) != -1, perror("socket(sTxFd)"));
 
+    sPort                    = (uint16_t)(9000 + sPortOffset + gNodeId);
     sockaddr.sin_family      = AF_INET;
-    sockaddr.sin_port        = htons((uint16_t)(9000 + sPortOffset + gNodeId));
+    sockaddr.sin_port        = htons(sPort);
     sockaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
     otEXPECT_ACTION(setsockopt(fd, IPPROTO_IP, IP_MULTICAST_IF, &sockaddr.sin_addr, sizeof(sockaddr.sin_addr)) != -1,
@@ -598,7 +454,7 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 static void radioReceive(otInstance *aInstance)
 {
     bool isTxDone = false;
-    bool isAck    = isFrameTypeAck(sReceiveFrame.mPsdu);
+    bool isAck    = otMacFrameIsAck(&sReceiveFrame);
 
     otEXPECT(sReceiveFrame.mChannel == sReceiveMessage.mChannel);
     otEXPECT(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT);
@@ -608,9 +464,9 @@ static void radioReceive(otInstance *aInstance)
 
     if (sTxWait)
     {
-        if (isAckRequested(sTransmitFrame.mPsdu))
+        if (otMacFrameIsAckRequested(&sTransmitFrame))
         {
-            isTxDone = isAck && getDsn(sReceiveFrame.mPsdu) == getDsn(sTransmitFrame.mPsdu);
+            isTxDone = isAck && otMacFrameGetSequence(&sReceiveFrame) == otMacFrameGetSequence(&sTransmitFrame);
         }
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
         // Simulate tx done when receiving the echo frame.
@@ -699,7 +555,7 @@ void radioSendMessage(otInstance *aInstance)
     radioTransmit(&sTransmitMessage, &sTransmitFrame);
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
-    sTxWait = isAckRequested(sTransmitFrame.mPsdu);
+    sTxWait = otMacFrameIsAckRequested(&sTransmitFrame);
 
     if (!sTxWait)
     {
@@ -786,13 +642,22 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
 #if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
     if (FD_ISSET(sRxFd, aReadFdSet))
     {
-        ssize_t rval = recvfrom(sRxFd, (char *)&sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
+        struct sockaddr_in sockaddr;
+        socklen_t          len = sizeof(sockaddr);
+        ssize_t            rval;
+
+        memset(&sockaddr, 0, sizeof(sockaddr));
+        rval =
+            recvfrom(sRxFd, (char *)&sReceiveMessage, sizeof(sReceiveMessage), 0, (struct sockaddr *)&sockaddr, &len);
 
         if (rval > 0)
         {
-            sReceiveFrame.mLength = (uint8_t)(rval - 1);
+            if (sockaddr.sin_port != htons(sPort))
+            {
+                sReceiveFrame.mLength = (uint16_t)(rval - 1);
 
-            radioReceive(aInstance);
+                radioReceive(aInstance);
+            }
         }
         else if (rval == 0)
         {
@@ -849,14 +714,14 @@ void radioSendAck(void)
     sAckFrame.mLength    = IEEE802154_ACK_LENGTH;
     sAckMessage.mPsdu[0] = IEEE802154_FRAME_TYPE_ACK;
 
-    if (isDataRequestAndHasFramePending(sReceiveFrame.mPsdu))
+    if (isDataRequestAndHasFramePending(&sReceiveFrame))
     {
         sAckMessage.mPsdu[0] |= IEEE802154_FRAME_PENDING;
         sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
     }
 
     sAckMessage.mPsdu[1] = 0;
-    sAckMessage.mPsdu[2] = getDsn(sReceiveFrame.mPsdu);
+    sAckMessage.mPsdu[2] = otMacFrameGetSequence(&sReceiveFrame);
 
     sAckMessage.mChannel = sReceiveFrame.mChannel;
 
@@ -866,45 +731,19 @@ void radioSendAck(void)
 
 void radioProcessFrame(otInstance *aInstance)
 {
-    otError        error = OT_ERROR_NONE;
-    otPanId        dstpan;
-    otShortAddress short_address;
-    otExtAddress   ext_address;
-
-    otEXPECT_ACTION(sPromiscuous == false, error = OT_ERROR_NONE);
-
-    switch (sReceiveFrame.mPsdu[1] & IEEE802154_DST_ADDR_MASK)
-    {
-    case IEEE802154_DST_ADDR_NONE:
-        break;
-
-    case IEEE802154_DST_ADDR_SHORT:
-        dstpan        = getDstPan(sReceiveFrame.mPsdu);
-        short_address = getShortAddress(sReceiveFrame.mPsdu);
-        otEXPECT_ACTION((dstpan == IEEE802154_BROADCAST || dstpan == sPanid) &&
-                            (short_address == IEEE802154_BROADCAST || short_address == sShortAddress),
-                        error = OT_ERROR_ABORT);
-        break;
-
-    case IEEE802154_DST_ADDR_EXT:
-        dstpan = getDstPan(sReceiveFrame.mPsdu);
-        getExtAddress(sReceiveFrame.mPsdu, &ext_address);
-        otEXPECT_ACTION((dstpan == IEEE802154_BROADCAST || dstpan == sPanid) &&
-                            memcmp(&ext_address, sExtendedAddress, sizeof(ext_address)) == 0,
-                        error = OT_ERROR_ABORT);
-        break;
-
-    default:
-        error = OT_ERROR_ABORT;
-        goto exit;
-    }
+    otError error = OT_ERROR_NONE;
 
     sReceiveFrame.mInfo.mRxInfo.mRssi = -20;
     sReceiveFrame.mInfo.mRxInfo.mLqi  = OT_RADIO_LQI_NONE;
 
     sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = false;
+
+    otEXPECT(sPromiscuous == false);
+
+    otEXPECT_ACTION(otMacFrameIsMatched(&sReceiveFrame, sPanid, sShortAddress, &sExtAddress), error = OT_ERROR_ABORT);
+
     // generate acknowledgment
-    if (isAckRequested(sReceiveFrame.mPsdu))
+    if (otMacFrameIsAckRequested(&sReceiveFrame))
     {
         radioSendAck();
     }
