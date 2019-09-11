@@ -57,8 +57,34 @@ namespace Cli {
 
 const struct Perf::Command Perf::sCommands[] = {{"help", &Perf::ProcessHelp},     {"client", &Perf::ProcessClient},
                                                 {"server", &Perf::ProcessServer}, {"start", &Perf::ProcessStart},
-                                                {"stop", &Perf::ProcessStop},     {"show", &Perf::ProcessShow},
+                                                {"stop", &Perf::ProcessStop},     {"list", &Perf::ProcessList},
                                                 {"clear", &Perf::ProcessClear}};
+
+template <typename Type> void List<Type>::Remove(Type &aNode)
+{
+    Type *pre = NULL;
+    Type *cur = mHead;
+
+    while (cur != NULL)
+    {
+        if (cur == &aNode)
+        {
+            if (pre == NULL)
+            {
+                mHead = cur->GetNext();
+            }
+            else
+            {
+                pre->SetNext(cur->GetNext());
+            }
+
+            break;
+        }
+
+        pre = cur;
+        cur = cur->GetNext();
+    }
+}
 
 Session::Session(Perf &aPerf, const Setting &aSetting, uint8_t aRole)
     : mPerf(&aPerf)
@@ -926,7 +952,6 @@ void Session::TimerFired(void)
 
         if (mFinCounter >= kMaxNumFin)
         {
-            CloseSocket();
             mState = kStateInvalid;
         }
         else
@@ -936,7 +961,6 @@ void Session::TimerFired(void)
         break;
 
     case kStateReceivingFin:
-        CloseSocket();
         mState = kStateInvalid;
         break;
 
@@ -1062,11 +1086,11 @@ Perf::Perf(Interpreter &aInterpreter)
     , mPrintClientHeaderFlag(false)
     , mTimer(*aInterpreter.mInstance, &Perf::s_HandleTimer, this)
     , mServerSetting(NULL)
+    , mSettingList()
+    , mSessionList()
     , mInterpreter(aInterpreter)
     , mInstance(aInterpreter.mInstance)
 {
-    memset(mSettings, 0, sizeof(mSettings));
-    memset(mSessions, 0, sizeof(mSessions));
 }
 
 otError Perf::Process(int argc, char *argv[])
@@ -1373,17 +1397,19 @@ void Perf::PrintSetting(Setting &aSetting)
 
 void Perf::SessionStop(uint8_t aRole)
 {
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(mSessions); i++)
+    Session *session = mSessionList.GetHead();
+    Session *nextSession;
+
+    while (session != NULL)
     {
-        if (!mSessions[i].IsStateValid())
+        nextSession = session->GetNext();
+
+        if (session->GetRole() == aRole)
         {
-            continue;
+            FreeSession(*session);
         }
 
-        if (mSessions[i].GetRole() == aRole)
-        {
-            mSessions[i].Free();
-        }
+        session = nextSession;
     }
 }
 
@@ -1398,7 +1424,7 @@ otError Perf::ServerStart()
 
     if (session->PrepareReceive() != OT_ERROR_NONE)
     {
-        session->Free();
+        FreeSession(*session);
         ExitNow(error = OT_ERROR_FAILED);
     }
 
@@ -1417,19 +1443,23 @@ otError Perf::ClientStart()
 {
     otError  error         = OT_ERROR_NONE;
     bool     clientRunning = false;
+    Setting *setting       = mSettingList.GetHead();
     Session *session;
+    uint8_t  index = 0;
 
     VerifyOrExit(!mClientRunning);
 
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(mSettings); i++)
+    while (setting != NULL)
     {
-        if (!mSettings[i].IsFlagSet(Setting::kFlagValid) || !mSettings[i].IsFlagSet(Setting::kFlagClient))
+        if (!setting->IsFlagSet(Setting::kFlagClient))
         {
+            setting = setting->GetNext();
             continue;
         }
 
-        VerifyOrExit((session = NewSession(mSettings[i], Session::kRoleClient)) != NULL, error = OT_ERROR_NO_BUFS);
-        SuccessOrExit(session->PrepareTransmit(static_cast<uint8_t>(i)));
+        VerifyOrExit((session = NewSession(*setting, static_cast<uint8_t>(Session::kRoleClient))) != NULL,
+                     error = OT_ERROR_NO_BUFS);
+        SuccessOrExit(session->PrepareTransmit(index++));
 
         if (mPrintClientHeaderFlag == false)
         {
@@ -1438,6 +1468,8 @@ otError Perf::ClientStart()
         }
 
         clientRunning = true;
+
+        setting = setting->GetNext();
     }
 
     VerifyOrExit(clientRunning);
@@ -1528,15 +1560,16 @@ exit:
 
 Session *Perf::FindValidSession(uint8_t aRole)
 {
-    Session *session = NULL;
+    Session *session = mSessionList.GetHead();
 
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(mSessions); i++)
+    while (session != NULL)
     {
-        if ((mSessions[i].IsStateValid()) && (mSessions[i].GetRole() == aRole))
+        if ((session->IsStateValid()) && (session->GetRole() == aRole))
         {
-            session = &mSessions[i];
             break;
         }
+
+        session = session->GetNext();
     }
 
     return session;
@@ -1589,16 +1622,14 @@ exit:
     return error;
 }
 
-otError Perf::ProcessShow(int argc, char *argv[])
+otError Perf::ProcessList(int argc, char *argv[])
 {
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(mSettings); i++)
-    {
-        if (!mSettings[i].IsFlagSet(Setting::kFlagValid))
-        {
-            continue;
-        }
+    Setting *cur = mSettingList.GetHead();
 
-        PrintSetting(mSettings[i]);
+    while (cur != NULL)
+    {
+        PrintSetting(*cur);
+        cur = cur->GetNext();
     }
 
     OT_UNUSED_VARIABLE(argc);
@@ -1609,17 +1640,20 @@ otError Perf::ProcessShow(int argc, char *argv[])
 
 otError Perf::ProcessClear(int argc, char *argv[])
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
+    Setting *cur   = mSettingList.GetHead();
+    Setting *next;
 
     VerifyOrExit(!(mServerRunning || mClientRunning), error = OT_ERROR_BUSY);
 
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(mSettings); i++)
+    while (cur != NULL)
     {
-        if (mSettings[i].IsFlagSet(Setting::kFlagValid))
-        {
-            FreeSetting(mSettings[i]);
-        }
+        next = cur->GetNext();
+        mInstance->HeapFree(static_cast<void *>(cur));
+        cur = next;
     }
+
+    mServerSetting = NULL;
 
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
@@ -1642,11 +1676,19 @@ void Perf::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageIn
 
     if ((session = FindSession(*aMessageInfo)) == NULL)
     {
+        PerfHeader perfHeader;
+
+        VerifyOrExit(otMessageRead(aMessage, otMessageGetOffset(aMessage), &perfHeader, sizeof(PerfHeader)) ==
+                     sizeof(PerfHeader));
+
+        // Reject FIN packet
+        VerifyOrExit(!perfHeader.GetFinFlag());
+
         VerifyOrExit((session = NewSession(aSession.GetSetting(), Session::kRoleServer)) != NULL);
 
         if (session->HandleFistMessage(*aMessage, *aMessageInfo) != OT_ERROR_NONE)
         {
-            session->Free();
+            FreeSession(*session);
         }
     }
     else
@@ -1662,56 +1704,53 @@ Setting *Perf::NewSetting()
 {
     Setting *setting = NULL;
 
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(mSettings); i++)
-    {
-        if (!mSettings[i].IsFlagSet(Setting::kFlagValid))
-        {
-            setting = new (static_cast<void *>(&mSettings[i])) Setting();
-            setting->SetFlag(Setting::kFlagValid);
-            break;
-        }
-    }
+    VerifyOrExit((setting = static_cast<Setting *>(mInstance->HeapCAlloc(1, sizeof(Setting)))) != NULL);
 
+    setting = new (static_cast<void *>(setting)) Setting();
+    mSettingList.Add(*setting);
+
+exit:
     return setting;
 }
 
 void Perf::FreeSetting(Setting &aSetting)
 {
-    if (!aSetting.IsFlagSet(Setting::kFlagClient))
-    {
-        mServerSetting = NULL;
-    }
-
-    aSetting.ClearFlag(Setting::kFlagValid);
+    mSettingList.Remove(aSetting);
+    mInstance->HeapFree(static_cast<void *>(&aSetting));
 }
 
 Session *Perf::NewSession(const Setting &aSetting, uint8_t aRole)
 {
     Session *session = NULL;
 
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(mSessions); i++)
-    {
-        if (!mSessions[i].IsStateValid())
-        {
-            session = new (static_cast<void *>(&mSessions[i])) Session(*this, aSetting, aRole);
-            break;
-        }
-    }
+    VerifyOrExit((session = static_cast<Session *>(mInstance->HeapCAlloc(1, sizeof(Session)))) != NULL);
 
+    session = new (static_cast<void *>(session)) Session(*this, aSetting, aRole);
+    mSessionList.Add(*session);
+
+exit:
     return session;
+}
+
+void Perf::FreeSession(Session &aSession)
+{
+    aSession.CloseSocket();
+    mSessionList.Remove(aSession);
+    mInstance->HeapFree(static_cast<void *>(&aSession));
 }
 
 Session *Perf::FindSession(const otMessageInfo &aMessageInfo)
 {
-    Session *session = NULL;
+    Session *session = mSessionList.GetHead();
 
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(mSessions); i++)
+    while (session != NULL)
     {
-        if ((mSessions[i].IsStateValid()) && mSessions[i].MatchMsgInfo(aMessageInfo))
+        if ((session->IsStateValid()) && session->MatchMsgInfo(aMessageInfo))
         {
-            session = &mSessions[i];
             break;
         }
+
+        session = session->GetNext();
     }
 
     return session;
@@ -1732,18 +1771,18 @@ Perf &Perf::GetOwner(OwnerLocator &aOwnerLocator)
 otError Perf::FindMinDelayInterval(uint32_t &aInterval)
 {
     otError  error       = OT_ERROR_NONE;
+    Session *session     = mSessionList.GetHead();
     uint32_t minInterval = UINT32_MAX;
     uint32_t interval;
 
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(mSessions); i++)
+    while (session != NULL)
     {
-        if (mSessions[i].GetDelayInterval(interval) == OT_ERROR_NONE)
+        if ((session->GetDelayInterval(interval) == OT_ERROR_NONE) && (interval < minInterval))
         {
-            if (interval < minInterval)
-            {
-                minInterval = interval;
-            }
+            minInterval = interval;
         }
+
+        session = session->GetNext();
     }
 
     VerifyOrExit(minInterval != UINT32_MAX, error = OT_ERROR_NOT_FOUND);
@@ -1777,9 +1816,20 @@ void Perf::s_HandleTimer(Timer &aTimer)
 
 void Perf::HandleTimer(void)
 {
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(mSessions); i++)
+    Session *session = mSessionList.GetHead();
+    Session *nextSession;
+
+    while (session != NULL)
     {
-        mSessions[i].TimerFired();
+        nextSession = session->GetNext();
+
+        session->TimerFired();
+        if (!session->IsStateValid())
+        {
+            FreeSession(*session);
+        }
+
+        session = nextSession;
     }
 
     UpdateClientState();

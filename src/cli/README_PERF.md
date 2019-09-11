@@ -11,11 +11,12 @@ Cli Perf is a performance tool used to test throughput, latency, jitter, out of 
 Use the `TIME_SYNC=1` build switch to enable Time Sync API support.
 Use the `CLI_PERF=1` build switch to enable Cli Perf support.
 
-Note: Latency measurement is based on Time Sync feature.
+Note: Latency measurement is based on Time Sync feature. If user doesn't want to test latency or
+the dev board doesn't support Time Sync feature, just remove the 'TIME_SYNC=1' build switch.
 
 ```bash
-> ./bootstrap
-> make -f examples/Makefile-nrf52840 TIME_SYNC=1 CLI_PERF=1 
+ ./bootstrap
+ make -f examples/Makefile-nrf52840 TIME_SYNC=1 CLI_PERF=1
 ```
 
 ### Example 1: Test Unicast Traffic
@@ -321,7 +322,7 @@ On node 1, it shows the test result.
 * [client](#client-destaddr-address-bandwidth-value-length-value-priority-value-time-value-count-value-id-value-findelay-value-echo-value-interval-value-format-value)
 * [start](#start)
 * [stop](#stop)
-* [show](#show)
+* [list](#list)
 * [clear](#clear)
 
 ## Command Details
@@ -335,7 +336,7 @@ client
 server
 start
 stop
-show
+list
 clear
 Done
 ```
@@ -458,11 +459,11 @@ Stop client transmiting packets.
 Done
 ```
 
-### show
-Show perf sessions.
+### list
+Show perf settings.
 
 ```bash
-> perf show
+> perf list
 perf client destaddr fdde:ad00:beef:0:0:ff:fe00:fc00 bandwidth 2000 length 64 priority 1 id 1
 perf client destaddr fdde:ad00:beef:0:0:ff:fe00:fc00 bandwidth 2000 length 64 priority 2 id 2
 Done

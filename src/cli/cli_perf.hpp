@@ -88,7 +88,7 @@ public:
      * @returns The value time (in microseconds).
      *
      */
-    uint64_t GetTime(void) { return static_cast<uint64_t>(HostSwap32(mSec)) * USEC_PER_SEC + HostSwap32(mUsec); }
+    uint64_t GetTime(void) const { return static_cast<uint64_t>(HostSwap32(mSec)) * USEC_PER_SEC + HostSwap32(mUsec); }
 
     /**
      * This method gets the sequence number.
@@ -112,7 +112,7 @@ public:
      * @returns The sending interval (in microseconds).
      *
      */
-    uint32_t GetSendingInterval(void) { return HostSwap32(mSendingIntervalUs); }
+    uint32_t GetSendingInterval(void) const { return HostSwap32(mSendingIntervalUs); }
 
     /**
      * This method sets the sending interval.
@@ -232,10 +232,94 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
+ * This class implements the ListNode object.
+ *
+ */
+template <typename Type> class ListNode
+{
+public:
+    /**
+     * This constructor initializes the ListNode object.
+     *
+     */
+    ListNode()
+        : mNext(NULL)
+    {
+    }
+
+    /**
+     * This method sets the poiner of the next node.
+     *
+     * @param[in]  aNode  A pointer to the next node.
+     *
+     */
+    void SetNext(Type *aNode) { mNext = aNode; }
+
+    /**
+     * This method gets the poiner of the nest node.
+     *
+     * @retval A pointer to the next node.
+     *
+     */
+    Type *GetNext(void) const { return mNext; }
+
+private:
+    Type *mNext;
+};
+
+/**
+ * This class implements the List object.
+ *
+ */
+template <typename Type> class List
+{
+public:
+    /**
+     * This constructor initializes the List object.
+     *
+     */
+    List()
+        : mHead(NULL)
+    {
+    }
+
+    /**
+     * This method adds the node to the List.
+     *
+     * @param[in]  aNode  A reference to the node.
+     *
+     */
+    void Add(Type &aNode)
+    {
+        aNode.SetNext(mHead);
+        mHead = &aNode;
+    }
+
+    /**
+     * This method removes the node from the List.
+     *
+     * @param[in]  aNode  A reference to the node.
+     *
+     */
+    void Remove(Type &aNode);
+
+    /**
+     * This method returns the header of the List.
+     *
+     * @retval  A pointer to the header of the list.
+     *
+     */
+    Type *GetHead(void) const { return mHead; }
+
+private:
+    Type *mHead;
+};
+
+/**
  * This class implements the Setting object.
  *
  */
-class Setting
+class Setting : public ListNode<Setting>
 {
 public:
     /**
@@ -504,7 +588,7 @@ struct otPerfContext
  * This class implements the session.
  *
  */
-class Session
+class Session : public ListNode<Session>
 {
 public:
     enum
@@ -567,14 +651,10 @@ public:
     bool IsStateValid(void) { return mState != kStateInvalid; }
 
     /**
-     * This method closes the opened socket and set the session to invalid state.
+     * This method closes the opened sockets.
      *
      */
-    void Free(void)
-    {
-        CloseSocket();
-        mState = kStateInvalid;
-    }
+    void CloseSocket(void);
 
     /**
      * This method returns a reference to the setting object.
@@ -776,7 +856,6 @@ private:
     uint32_t UsToTimerTime(uint32_t aTime);
 
     otError OpenSocket(void);
-    void    CloseSocket(void);
 
     otError SendData(void);
     otError SendReply(PerfHeader &aPerfHeader, otMessagePriority aPriority, uint16_t aLength);
@@ -855,8 +934,6 @@ private:
 
     enum
     {
-        kNumSettings      = OPENTHREAD_CONFIG_CLI_PERF_NUM_SESSIONS,
-        kNumSessions      = OPENTHREAD_CONFIG_CLI_PERF_NUM_SESSIONS,
         kMaxPayloadLength = Ip6::Ip6::kMaxDatagramLength - sizeof(Ip6::Header) - sizeof(Ip6::UdpHeader),
     };
 
@@ -868,7 +945,7 @@ private:
     otError ProcessStart(int argc, char *argv[]);
     otError ProcessStop(int argc, char *argv[]);
     otError ProcessSync(int argc, char *argv[]);
-    otError ProcessShow(int argc, char *argv[]);
+    otError ProcessList(int argc, char *argv[]);
     otError ProcessClear(int argc, char *argv[]);
 
     void    SessionStop(uint8_t aRole);
@@ -881,6 +958,7 @@ private:
     void        HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo, Session &aSession);
 
     Session *NewSession(const Setting &aSetting, uint8_t aRole);
+    void     FreeSession(Session &aSession);
     Session *FindSession(const otMessageInfo &aMessageInfo);
     Session *FindValidSession(uint8_t aRole);
     void     UpdateClientState(void);
@@ -908,9 +986,10 @@ private:
     TimerMilli mTimer;
 #endif
 
-    Session  mSessions[kNumSessions];
-    Setting  mSettings[kNumSettings];
     Setting *mServerSetting;
+
+    List<Setting> mSettingList;
+    List<Session> mSessionList;
 
     Interpreter &mInterpreter;
     Instance *   mInstance;
