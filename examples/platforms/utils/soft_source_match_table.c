@@ -68,7 +68,7 @@ int8_t utilsSoftSrcMatchShortFindEntry(const uint16_t aShortAddress)
     {
         if (checksum == srcMatchShortEntry[i].checksum && srcMatchShortEntry[i].allocated)
         {
-            entry = i;
+            entry = (int8_t)i;
             break;
         }
     }
@@ -84,7 +84,7 @@ static inline int8_t findSrcMatchShortAvailEntry(void)
     {
         if (!srcMatchShortEntry[i].allocated)
         {
-            entry = i;
+            entry = (int8_t)i;
             break;
         }
     }
@@ -118,7 +118,7 @@ otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t a
 
     otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM, error = OT_ERROR_NO_BUFS);
 
-    addToSrcMatchShortIndirect(entry, aShortAddress);
+    addToSrcMatchShortIndirect((uint8_t)entry, aShortAddress);
 
 exit:
     return error;
@@ -136,7 +136,7 @@ otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t
 
     otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM, error = OT_ERROR_NO_ADDRESS);
 
-    removeFromSrcMatchShortIndirect(entry);
+    removeFromSrcMatchShortIndirect((uint8_t)entry);
 
 exit:
     return error;
@@ -175,7 +175,7 @@ int8_t utilsSoftSrcMatchExtFindEntry(const otExtAddress *aExtAddress)
     {
         if (checksum == srcMatchExtEntry[i].checksum && srcMatchExtEntry[i].allocated)
         {
-            entry = i;
+            entry = (int8_t)i;
             break;
         }
     }
@@ -191,7 +191,7 @@ static inline int8_t findSrcMatchExtAvailEntry(void)
     {
         if (!srcMatchExtEntry[i].allocated)
         {
-            entry = i;
+            entry = (int8_t)i;
             break;
         }
     }
@@ -230,7 +230,7 @@ otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress
 
     otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM, error = OT_ERROR_NO_BUFS);
 
-    addToSrcMatchExtIndirect(entry, aExtAddress);
+    addToSrcMatchExtIndirect((uint8_t)entry, aExtAddress);
 
 exit:
     return error;
@@ -248,7 +248,7 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddre
 
     otEXPECT_ACTION(entry >= 0 && entry < RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM, error = OT_ERROR_NO_ADDRESS);
 
-    removeFromSrcMatchExtIndirect(entry);
+    removeFromSrcMatchExtIndirect((uint8_t)entry);
 
 exit:
     return error;

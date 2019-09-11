@@ -342,6 +342,8 @@ build_samr21() {
         -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1          \
         -DOPENTHREAD_CONFIG_NCP_SPI_ENABLE=1             \
         -DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1"
+    export CPPFLAGS="${CPPFLAGS} -I${TRAVIS_BUILD_DIR}/examples/platforms/posix"
+    export CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\\\"openthread-core-posix-config.h\\\""
 
     git checkout -- . || die
     git clean -xfd || die
@@ -376,6 +378,8 @@ build_samr21() {
         -DOPENTHREAD_CONFIG_ANOUNCE_SENDER_ENABLE=1 \
         -DOPENTHREAD_CONFIG_TIME_SYNC_ENABLE=1      \
         -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
+    export CPPFLAGS="${CPPFLAGS} -I${TRAVIS_BUILD_DIR}/examples/platforms/posix"
+    export CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\\\"openthread-core-posix-config.h\\\""
 
     git checkout -- . || die
     git clean -xfd || die

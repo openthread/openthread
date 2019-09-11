@@ -392,6 +392,22 @@
  */
 #define OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE    1
 
+/**
+ * @def RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
+ *
+ * The number of short source address table entries.
+ *
+ */
+#define RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
+
+/**
+ * @def RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
+ *
+ * The number of extended source address table entries.
+ *
+ */
+#define RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
+
 #if OPENTHREAD_RADIO
 /**
  * @def OPENTHREAD_CONFIG_SOFTWARE_ACK_TIMEOUT_ENABLE

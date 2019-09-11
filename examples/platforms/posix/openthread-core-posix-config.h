@@ -143,7 +143,9 @@
  * The number of short source address table entries.
  *
  */
-#define RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM 32
+#ifndef RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
+#define RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM 10
+#endif
 
 /**
  * @def RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
@@ -151,6 +153,8 @@
  * The number of extended source address table entries.
  *
  */
-#define RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM 32
+#ifndef RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
+#define RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM 10
+#endif
 
 #endif // OPENTHREAD_CORE_POSIX_CONFIG_H_
