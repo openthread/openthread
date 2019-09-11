@@ -136,4 +136,21 @@
 #ifndef OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 #define OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE 1
 #endif
+
+/**
+ * @def RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
+ *
+ * The number of short source address table entries.
+ *
+ */
+#define RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM 32
+
+/**
+ * @def RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
+ *
+ * The number of extended source address table entries.
+ *
+ */
+#define RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM 32
+
 #endif // OPENTHREAD_CORE_POSIX_CONFIG_H_
