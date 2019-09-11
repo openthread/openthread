@@ -1365,7 +1365,7 @@ public:
                 aMessage.Read(aOffset + sizeof(ChildTableTlv) + (aIndex * sizeof(ChildTableEntry)),
                               sizeof(ChildTableEntry), &aEntry) == sizeof(ChildTableEntry))
                    ? OT_ERROR_NONE
-                   : OT_ERROR_NOT_FOUND;
+                   : OT_ERROR_INVALID_ARGS;
     }
 
 } OT_TOOL_PACKED_END;
