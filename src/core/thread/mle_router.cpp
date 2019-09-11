@@ -4358,16 +4358,8 @@ otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
         length += entry.GetLength();
     }
 
-    if (length > 0)
-    {
-        tlv.SetLength(length);
-        aMessage.Write(startOffset, sizeof(tlv), &tlv);
-    }
-    else
-    {
-        // remove AddressRegistrationTlv if no address to be echoed back
-        aMessage.SetLength(startOffset);
-    }
+    tlv.SetLength(length);
+    aMessage.Write(startOffset, sizeof(tlv), &tlv);
 
 exit:
     return error;
