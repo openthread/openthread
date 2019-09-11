@@ -147,7 +147,7 @@ static uint16_t     sShortAddressMatchTable[POSIX_MAX_SRC_MATCH_ENTRIES];
 static otExtAddress sExtAddressMatchTable[POSIX_MAX_SRC_MATCH_ENTRIES];
 static bool         sSrcMatchEnabled = false;
 
-#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 static bool sRadioCoexEnabled = true;
 #endif
 
@@ -1097,7 +1097,7 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
     return POSIX_RECEIVE_SENSITIVITY;
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 otError otPlatRadioCoexEnable(otInstance *aInstance)
 {
     assert(aInstance != NULL);

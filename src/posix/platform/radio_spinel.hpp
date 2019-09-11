@@ -197,7 +197,7 @@ public:
      */
     int8_t GetReceiveSensitivity(void) const { return mRxSensitivity; }
 
-#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
     /**
      * Enable the radio coex.
      *

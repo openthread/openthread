@@ -2200,7 +2200,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_PREFERRED>(v
     return EncodeChannelMask(otPlatRadioGetPreferredChannelMask(mInstance));
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RADIO_COEX_ENABLE>(void)
 {
     bool    enabled;

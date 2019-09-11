@@ -105,7 +105,7 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     {"coaps", &Interpreter::ProcessCoapSecure},
 #endif
-#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
     {"coex", &Interpreter::ProcessCoexMetrics},
 #endif
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
@@ -784,12 +784,24 @@ void Interpreter::ProcessCoapSecure(int argc, char *argv[])
 
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
-#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 void Interpreter::ProcessCoexMetrics(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
 
     if (argc == 0)
+    {
+        mServer->OutputFormat("%s\r\n", otPlatRadioIsCoexEnabled(mInstance) ? "Enabled" : "Disabled");
+    }
+    else if (strcmp(argv[0], "enable") == 0)
+    {
+        error = otPlatRadioCoexEnable(mInstance);
+    }
+    else if (strcmp(argv[0], "disable") == 0)
+    {
+        error = otPlatRadioCoexDisable(mInstance);
+    }
+    else if (strcmp(argv[0], "metrics") == 0)
     {
         otRadioCoexMetrics metrics;
 
@@ -819,18 +831,6 @@ void Interpreter::ProcessCoexMetrics(int argc, char *argv[])
         mServer->OutputFormat("    Average Request To Grant Time: %u\r\n", metrics.mAvgRxRequestToGrantTime);
         mServer->OutputFormat("    Grant None: %u\r\n", metrics.mNumRxGrantNone);
     }
-    else if (strcmp(argv[0], "enable") == 0)
-    {
-        error = otPlatRadioCoexEnable(mInstance);
-    }
-    else if (strcmp(argv[0], "disable") == 0)
-    {
-        error = otPlatRadioCoexDisable(mInstance);
-    }
-    else if (strcmp(argv[0], "state") == 0)
-    {
-        mServer->OutputFormat("%s\r\n", otPlatRadioIsCoexEnabled(mInstance) ? "Enabled" : "Disabled");
-    }
     else
     {
         ExitNow(error = OT_ERROR_INVALID_ARGS);
@@ -839,7 +839,7 @@ void Interpreter::ProcessCoexMetrics(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
-#endif // OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])

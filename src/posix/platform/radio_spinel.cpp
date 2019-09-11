@@ -892,7 +892,7 @@ int8_t RadioSpinel::GetRssi(void)
     return rssi;
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 otError RadioSpinel::CoexEnable(void)
 {
     return Set(SPINEL_PROP_RADIO_COEX_ENABLE, SPINEL_DATATYPE_BOOL_S, true);
@@ -1689,7 +1689,7 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
     return sRadioSpinel.GetReceiveSensitivity();
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 otError otPlatRadioCoexEnable(otInstance *aInstance)
 {
     assert(aInstance != NULL);
