@@ -1361,18 +1361,11 @@ public:
      */
     otError ReadEntry(ChildTableEntry &aEntry, Message &aMessage, uint16_t aOffset, uint8_t aIndex) const
     {
-        otError error = OT_ERROR_NOT_FOUND;
-
-        VerifyOrExit(aIndex < GetNumEntries());
-
-        if (aMessage.Read(aOffset + sizeof(ChildTableTlv) + (aIndex * sizeof(ChildTableEntry)), sizeof(ChildTableEntry),
-                          &aEntry) == sizeof(ChildTableEntry))
-        {
-            error = OT_ERROR_NONE;
-        }
-
-    exit:
-        return error;
+        return (aIndex < GetNumEntries() &&
+                aMessage.Read(aOffset + sizeof(ChildTableTlv) + (aIndex * sizeof(ChildTableEntry)),
+                              sizeof(ChildTableEntry), &aEntry) == sizeof(ChildTableEntry))
+                   ? OT_ERROR_NONE
+                   : OT_ERROR_NOT_FOUND;
     }
 
 } OT_TOOL_PACKED_END;
