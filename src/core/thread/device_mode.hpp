@@ -36,10 +36,11 @@
 
 #include "openthread-core-config.h"
 
+#include <stdint.h>
+
 #include <openthread/thread.h>
 
 #include "common/string.hpp"
-#include "utils/wrap_stdint.h"
 
 namespace ot {
 namespace Mle {

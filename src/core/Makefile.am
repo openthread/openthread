@@ -435,8 +435,6 @@ HEADERS_COMMON                             = \
     utils/parse_cmdline.hpp                  \
     utils/slaac_address.hpp                  \
     utils/static_assert.hpp                  \
-    utils/wrap_stdbool.h                     \
-    utils/wrap_stdint.h                      \
     utils/wrap_string.h                      \
     $(NULL)
 

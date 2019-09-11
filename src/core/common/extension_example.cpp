@@ -33,12 +33,12 @@
 
 #include "openthread-core-config.h"
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "common/code_utils.hpp"
 #include "common/extension.hpp"
 #include "common/new.hpp"
-#include "utils/wrap_stdbool.h"
 
 namespace ot {
 namespace Extension {
