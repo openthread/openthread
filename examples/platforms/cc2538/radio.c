@@ -743,11 +743,7 @@ void cc2538RadioProcess(otInstance *aInstance)
     HWREG(RFCORE_XREG_RFIRQM0) &= ~RFCORE_XREG_RFIRQM0_RXPKTDONE;
 #endif
 
-    if (sReceiveFrame.mLength == 0)
-    {
-        // sReceiveFrame is empty, so check for any received data.
-        readFrame();
-    }
+    readFrame();
 
 #if OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
     if (sDroppedFrameLength != 0)
