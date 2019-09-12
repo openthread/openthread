@@ -818,7 +818,7 @@ void cc2538RadioProcess(otInstance *aInstance)
 void RFCoreRxTxIntHandler(void)
 {
 #if OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
-    if (RFCORE_SFR_RFIRQF0 & RFCORE_SFR_RFIRQF0_RXPKTDONE)
+    if (HWREG(RFCORE_SFR_RFIRQF0) & RFCORE_SFR_RFIRQF0_RXPKTDONE)
     {
         readFrame();
 
