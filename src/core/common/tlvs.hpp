@@ -59,6 +59,15 @@ class Tlv
 {
 public:
     /**
+     * Length values.
+     *
+     */
+    enum
+    {
+        kBaseTlvMaxLength = 254, ///< The maximum length of the Base TLV format.
+    };
+
+    /**
      * This method returns the Type value.
      *
      * @returns The Type value.

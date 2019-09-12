@@ -233,9 +233,13 @@ otError NetworkDiagnostic::AppendChildTable(Message &aMessage)
 
     count = Get<ChildTable>().GetNumChildren(ChildTable::kInStateValid);
 
-    if (count > (CHAR_BIT * sizeof(uint8_t) / sizeof(ChildTableEntry)))
+    // The length of the Child Table TLV may exceed the outgoing link's MTU (1280B).
+    // As a workaround we limit the number of entries in the Child Table TLV,
+    // also to avoid using extended TLV format. The issue is processed by the
+    // Thread Group (SPEC-894).
+    if (count > (Tlv::kBaseTlvMaxLength / sizeof(ChildTableEntry)))
     {
-        count = CHAR_BIT * sizeof(uint8_t) / sizeof(ChildTableEntry);
+        count = Tlv::kBaseTlvMaxLength / sizeof(ChildTableEntry);
     }
 
     tlv.SetLength(static_cast<uint8_t>(count * sizeof(ChildTableEntry)));
@@ -244,6 +248,8 @@ otError NetworkDiagnostic::AppendChildTable(Message &aMessage)
 
     for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter++)
     {
+        VerifyOrExit(count--);
+
         Child &child = *iter.GetChild();
 
         timeout = 0;
