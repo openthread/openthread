@@ -756,6 +756,8 @@ otError otPlatRadioSetCoexEnabled(otInstance *aInstance, bool aEnabled);
 /**
  * Check whether radio coex is enabled or not.
  *
+ * This function is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
+ *
  * @param[in] aInstance  The OpenThread instance structure.
  *
  * @returns TRUE if the radio coex is enabled, FALSE otherwise.
