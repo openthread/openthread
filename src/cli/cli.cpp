@@ -795,11 +795,11 @@ void Interpreter::ProcessCoexMetrics(int argc, char *argv[])
     }
     else if (strcmp(argv[0], "enable") == 0)
     {
-        error = otPlatRadioCoexEnable(mInstance);
+        error = otPlatRadioSetCoexEnabled(mInstance, true);
     }
     else if (strcmp(argv[0], "disable") == 0)
     {
-        error = otPlatRadioCoexDisable(mInstance);
+        error = otPlatRadioSetCoexEnabled(mInstance, false);
     }
     else if (strcmp(argv[0], "metrics") == 0)
     {

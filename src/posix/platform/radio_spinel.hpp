@@ -202,23 +202,13 @@ public:
      * Enable the radio coex.
      *
      * @param[in] aInstance  The OpenThread instance structure.
+     * @param[in] aEnabled   TRUE to enable the radio coex, FALSE otherwise.
      *
      * @retval OT_ERROR_NONE     Successfully enabled.
      * @retval OT_ERROR_FAILED   The radio coex could not be enabled.
      *
      */
-    otError CoexEnable(void);
-
-    /**
-     * Disable the radio coex.
-     *
-     * @param[in] aInstance  The OpenThread instance structure.
-     *
-     * @retval OT_ERROR_NONE     Successfully disabled.
-     * @retval OT_ERROR_FAILED   The radio coex could not be disabled.
-     *
-     */
-    otError CoexDisable(void);
+    otError SetCoexEnabled(bool aEnabled);
 
     /**
      * Check whether radio coex is enabled or not.

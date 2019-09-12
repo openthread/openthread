@@ -2207,15 +2207,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RADIO_COEX_ENABLE>(vo
     otError error = OT_ERROR_NONE;
 
     SuccessOrExit(error = mDecoder.ReadBool(enabled));
-
-    if (enabled)
-    {
-        error = otPlatRadioCoexEnable(mInstance);
-    }
-    else
-    {
-        error = otPlatRadioCoexDisable(mInstance);
-    }
+    error = otPlatRadioSetCoexEnabled(mInstance, enabled);
 
 exit:
     return error;
