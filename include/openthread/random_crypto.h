@@ -45,7 +45,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup api-random
+ * @addtogroup api-random-crypto
  *
  * @brief
  *   This module includes functions that generates cryptographic random numbers.

@@ -131,9 +131,9 @@ extern "C" {
  * @defgroup api-random-group        Random Number Generator
  *
  * @{
- * 
+ *
  * @defgroup api-random-crypto       RNG Cryptographic
- * @defgroup api-random-non-crypto   RNG Non-cryptographic	
+ * @defgroup api-random-non-crypto   RNG Non-cryptographic
  *
  * @}
  *
