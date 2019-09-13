@@ -123,11 +123,20 @@ extern "C" {
  * @defgroup api-crypto              Crypto
  * @defgroup api-entropy             Entropy Source
  * @defgroup api-factory-diagnostics Factory Diagnostics
+ * @defgroup api-heap                Heap
  * @defgroup api-jam-detection       Jam Detection
  * @defgroup api-logging             Logging
  * @defgroup api-ncp                 Network Co-Processor
  * @defgroup api-network-time        Network Time Synchronization
- * @defgroup api-random              Random Number Generator
+ * @defgroup api-random-group        Random Number Generator
+ *
+ * @{
+ * 
+ * @defgroup api-random-crypto       RNG Cryptographic
+ * @defgroup api-random-non-crypto   RNG Non-cryptographic	
+ *
+ * @}
+ *
  * @defgroup api-sntp                SNTP
  *
  * @}
