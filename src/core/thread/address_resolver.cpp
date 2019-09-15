@@ -660,7 +660,7 @@ void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::Mes
         if (child.HasIp6Address(GetInstance(), targetTlv.GetTarget()))
         {
             mlIidTlv.SetIid(child.GetExtAddress());
-            lastTransactionTimeTlv.SetTime(TimerMilli::Elapsed(child.GetLastHeard()));
+            lastTransactionTimeTlv.SetTime(TimerMilli::GetNow() - child.GetLastHeard());
             SendAddressQueryResponse(targetTlv, mlIidTlv, &lastTransactionTimeTlv, aMessageInfo.GetPeerAddr());
             ExitNow();
         }

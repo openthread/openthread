@@ -1886,8 +1886,8 @@ void Mle::HandleDelayedResponseTimer(Timer &aTimer)
 void Mle::HandleDelayedResponseTimer(void)
 {
     DelayedResponseHeader delayedResponse;
-    uint32_t              now         = TimerMilli::GetNow();
-    uint32_t              nextDelay   = TimerMilli::kForeverDt;
+    TimeMilli             now         = TimerMilli::GetNow();
+    uint32_t              nextDelay   = TimeMilli::kMaxDuration;
     Message *             message     = mDelayedResponses.GetHead();
     Message *             nextMessage = NULL;
 
@@ -1898,10 +1898,12 @@ void Mle::HandleDelayedResponseTimer(void)
 
         if (delayedResponse.IsLater(now))
         {
+            uint32_t diff = delayedResponse.GetSendTime() - now;
+
             // Calculate the next delay and choose the lowest.
-            if (delayedResponse.GetSendTime() - now < nextDelay)
+            if (diff < nextDelay)
             {
-                nextDelay = delayedResponse.GetSendTime() - now;
+                nextDelay = diff;
             }
         }
         else
@@ -1935,7 +1937,7 @@ void Mle::HandleDelayedResponseTimer(void)
         message = nextMessage;
     }
 
-    if (nextDelay != TimerMilli::kForeverDt)
+    if (nextDelay != TimeMilli::kMaxDuration)
     {
         mDelayedResponseTimer.Start(nextDelay);
     }
@@ -2186,8 +2188,8 @@ void Mle::ScheduleMessageTransmissionTimer(void)
 
     if ((mRole == OT_DEVICE_ROLE_CHILD) && IsRxOnWhenIdle())
     {
-        interval = TimerMilli::SecToMsec(mTimeout) -
-                   static_cast<uint32_t>(kUnicastRetransmissionDelay) * kMaxChildKeepAliveAttempts;
+        interval =
+            Time::SecToMsec(mTimeout) - static_cast<uint32_t>(kUnicastRetransmissionDelay) * kMaxChildKeepAliveAttempts;
     }
 
 exit:
@@ -2557,9 +2559,9 @@ exit:
 
 otError Mle::AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay)
 {
-    otError  error = OT_ERROR_NONE;
-    uint32_t alarmFireTime;
-    uint32_t sendTime = TimerMilli::GetNow() + aDelay;
+    otError   error = OT_ERROR_NONE;
+    TimeMilli alarmFireTime;
+    TimeMilli sendTime = TimerMilli::GetNow() + aDelay;
 
     // Append the message with DelayedRespnoseHeader and add to the list.
     DelayedResponseHeader delayedResponse(sendTime, aDestination);
@@ -4051,7 +4053,7 @@ void Mle::HandleParentSearchTimer(void)
         // from `UpdateParentSearchState()`. We want to limit this to happen
         // only once within a backoff interval.
 
-        if (TimerMilli::Elapsed(mParentSearchBackoffCancelTime) >= kParentSearchBackoffInterval)
+        if (TimerMilli::GetNow() - mParentSearchBackoffCancelTime >= kParentSearchBackoffInterval)
         {
             mParentSearchBackoffWasCanceled = false;
             otLogInfoMle("PeriodicParentSearch: Backoff cancellation is allowed on parent switch");

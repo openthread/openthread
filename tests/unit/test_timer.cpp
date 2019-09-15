@@ -317,7 +317,7 @@ int TestTwoTimers(void)
 
     sNow += kTimerInterval;
 
-    timer2.StartAt(kTimeT0, kTimerInterval - 2); // Timer 2 is even before timer 1
+    timer2.StartAt(ot::TimeMilli(kTimeT0), kTimerInterval - 2); // Timer 2 is even before timer 1
 
     VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler] == 0, "TestTwoTimers: Handler CallCount Failed.\n");
     VerifyOrQuit(timer1.IsRunning() == true, "TestTwoTimers: Timer running Failed.\n");
@@ -364,7 +364,7 @@ int TestTwoTimers(void)
 
     sNow += kTimerInterval + 5;
 
-    timer2.Start(ot::Timer::kMaxDt);
+    timer2.Start(ot::Timer::kMaxDelay);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart] == 1, "TestTwoTimers: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop] == 0, "TestTwoTimers: Stop CallCount Failed.\n");
@@ -380,12 +380,12 @@ int TestTwoTimers(void)
     VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler] == 1, "TestTwoTimers: Handler CallCount Failed.\n");
     VerifyOrQuit(timer1.GetFiredCounter() == 1, "TestTwoTimers: Fire Counter failed.\n");
     VerifyOrQuit(sPlatT0 == sNow, "TestTwoTimers: Start params Failed.\n");
-    VerifyOrQuit(sPlatDt == ot::Timer::kMaxDt, "TestTwoTimers: Start params Failed.\n");
+    VerifyOrQuit(sPlatDt == ot::Timer::kMaxDelay, "TestTwoTimers: Start params Failed.\n");
     VerifyOrQuit(timer1.IsRunning() == false, "TestTwoTimers: Timer running Failed.\n");
     VerifyOrQuit(timer2.IsRunning() == true, "TestTwoTimers: Timer running Failed.\n");
     VerifyOrQuit(sTimerOn == true, "TestTwoTimers: Platform Timer State Failed.\n");
 
-    sNow += ot::Timer::kMaxDt;
+    sNow += ot::Timer::kMaxDelay;
     otPlatAlarmMilliFired(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart] == 2, "TestTwoTimers: Start CallCount Failed.\n");
@@ -415,7 +415,7 @@ static void TenTimers(uint32_t aTimeShift)
     const uint32_t kNumTriggers               = 7;
     const uint32_t kTimeT0[kNumTimers]        = {1000, 1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008};
     const uint32_t kTimerInterval[kNumTimers] = {
-        20, 100, (ot::Timer::kMaxDt - kTimeT0[2]), 100000, 1000000, 10, ot::Timer::kMaxDt, 200, 200, 200};
+        20, 100, (ot::Timer::kMaxDelay - kTimeT0[2]), 100000, 1000000, 10, ot::Timer::kMaxDelay, 200, 200, 200};
     // Expected timer fire order
     // timer #     Trigger time
     //   5            1014
@@ -426,10 +426,10 @@ static void TenTimers(uint32_t aTimeShift)
     //   9            1208
     //   3          101002
     //   4         1001003
-    //   2          kMaxDt
-    //   6   kMaxDt + 1005
+    //   2          kMaxDuration
+    //   6   kMaxDuration + 1005
     const uint32_t kTriggerTimes[kNumTriggers] = {
-        1014, 1020, 1100, 1207, 101004, ot::Timer::kMaxDt, ot::Timer::kMaxDt + kTimeT0[6]};
+        1014, 1020, 1100, 1207, 101004, ot::Timer::kMaxDelay, ot::Timer::kMaxDelay + kTimeT0[6]};
     // Expected timers fired by each kTriggerTimes[] value
     //  Trigger #    Timers Fired
     //    0             5
@@ -546,7 +546,7 @@ int TestTenTimers(void)
 {
     // Time shift to change the start/fire time of ten timers.
     const uint32_t kTimeShift[] = {
-        0, 100000U, 0U - 1U, 0U - 1100U, ot::Timer::kMaxDt, ot::Timer::kMaxDt + 1020U,
+        0, 100000U, 0U - 1U, 0U - 1100U, ot::Timer::kMaxDelay, ot::Timer::kMaxDelay + 1020U,
     };
 
     size_t i;
@@ -554,6 +554,87 @@ int TestTenTimers(void)
     for (i = 0; i < OT_ARRAY_LENGTH(kTimeShift); i++)
     {
         TenTimers(kTimeShift[i]);
+    }
+
+    return 0;
+}
+
+/**
+ * Test the `Timer::Time` class.
+ */
+int TestTimerTime(void)
+{
+    const uint32_t kMaxTime      = 0xffffffff;
+    const uint32_t kStartTimes[] = {0, 100, kMaxTime / 2, kMaxTime - 100, kMaxTime};
+    const uint32_t kDurations[]  = {1, 100, ot::Timer::kMaxDelay - 1, ot::Timer::kMaxDelay};
+
+    ot::Time t1;
+    ot::Time t2;
+
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(kStartTimes); i++)
+    {
+        uint32_t start = kStartTimes[i];
+
+        for (size_t j = 0; j < OT_ARRAY_LENGTH(kDurations); j++)
+        {
+            uint32_t duration = kDurations[j];
+
+            printf("TestTimerTime() start=%-10x  duration=%-10x ", start, duration);
+
+            t1.SetValue(start);
+            VerifyOrQuit(t1.GetValue() == start, "Time::SetValue() failed.\n");
+
+            t2 = t1;
+            VerifyOrQuit(t1.GetValue() == start, "Time assignment failed.\n");
+
+            VerifyOrQuit(t1 == t2, "Time == failed.\n");
+            VerifyOrQuit(!(t1 != t2), "Time != failed.\n");
+            VerifyOrQuit(!(t1 < t2), "Time < failed.\n");
+            VerifyOrQuit((t1 <= t2), "Time <= failed.\n");
+            VerifyOrQuit(!(t1 > t2), "Time > failed.\n");
+            VerifyOrQuit((t1 >= t2), "Time >= failed.\n");
+            VerifyOrQuit(t2 - t1 == 0, "Time difference failed\n");
+
+            t2 = t1 + duration;
+            VerifyOrQuit(!(t1 == t2), "Time == failed.\n");
+            VerifyOrQuit((t1 != t2), "Time != failed.\n");
+            VerifyOrQuit((t1 < t2), "Time < failed.\n");
+            VerifyOrQuit((t1 <= t2), "Time <= failed.\n");
+            VerifyOrQuit(!(t1 > t2), "Time > failed.\n");
+            VerifyOrQuit(!(t1 >= t2), "Time >= failed.\n");
+            VerifyOrQuit(t2 - t1 == duration, "Time difference failed\n");
+
+            t2 = t1;
+            t2 += duration;
+            VerifyOrQuit(!(t1 == t2), "Time == failed.\n");
+            VerifyOrQuit((t1 != t2), "Time != failed.\n");
+            VerifyOrQuit((t1 < t2), "Time < failed.\n");
+            VerifyOrQuit((t1 <= t2), "Time <= failed.\n");
+            VerifyOrQuit(!(t1 > t2), "Time > failed.\n");
+            VerifyOrQuit(!(t1 >= t2), "Time >= failed.\n");
+            VerifyOrQuit(t2 - t1 == duration, "Time difference failed\n");
+
+            t2 = t1 - duration;
+            VerifyOrQuit(!(t1 == t2), "Time == failed.\n");
+            VerifyOrQuit((t1 != t2), "Time != failed.\n");
+            VerifyOrQuit(!(t1 < t2), "Time < failed.\n");
+            VerifyOrQuit(!(t1 <= t2), "Time <= failed.\n");
+            VerifyOrQuit((t1 > t2), "Time > failed.\n");
+            VerifyOrQuit((t1 >= t2), "Time >= failed.\n");
+            VerifyOrQuit(t1 - t2 == duration, "Time difference failed\n");
+
+            t2 = t1;
+            t2 -= duration;
+            VerifyOrQuit(!(t1 == t2), "Time == failed.\n");
+            VerifyOrQuit((t1 != t2), "Time != failed.\n");
+            VerifyOrQuit(!(t1 < t2), "Time < failed.\n");
+            VerifyOrQuit(!(t1 <= t2), "Time <= failed.\n");
+            VerifyOrQuit((t1 > t2), "Time > failed.\n");
+            VerifyOrQuit((t1 >= t2), "Time >= failed.\n");
+            VerifyOrQuit(t1 - t2 == duration, "Time difference failed\n");
+
+            printf("--> PASSED\n");
+        }
     }
 
     return 0;
@@ -570,6 +651,7 @@ void RunTimerTests(void)
 int main(void)
 {
     RunTimerTests();
+    TestTimerTime();
     printf("All tests passed\n");
     return 0;
 }

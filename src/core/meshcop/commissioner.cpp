@@ -276,7 +276,7 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64, const char *aPskd
 
         (void)strlcpy(joiner->mPsk, aPskd, sizeof(joiner->mPsk));
         joiner->mValid          = true;
-        joiner->mExpirationTime = TimerMilli::GetNow() + TimerMilli::SecToMsec(aTimeout);
+        joiner->mExpirationTime = TimerMilli::GetNow() + Time::SecToMsec(aTimeout);
 
         UpdateJoinerExpirationTimer();
 
@@ -346,12 +346,11 @@ otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDela
 
         if (aDelay > 0)
         {
-            uint32_t now = TimerMilli::GetNow();
+            TimeMilli now = TimerMilli::GetNow();
 
-            if ((static_cast<int32_t>(joiner->mExpirationTime - now) > 0) &&
-                (static_cast<uint32_t>(joiner->mExpirationTime - now) > TimerMilli::SecToMsec(aDelay)))
+            if ((joiner->mExpirationTime > now) && (joiner->mExpirationTime - now > Time::SecToMsec(aDelay)))
             {
-                joiner->mExpirationTime = now + TimerMilli::SecToMsec(aDelay);
+                joiner->mExpirationTime = now + Time::SecToMsec(aDelay);
                 UpdateJoinerExpirationTimer();
             }
         }
@@ -427,7 +426,7 @@ void Commissioner::HandleJoinerExpirationTimer(Timer &aTimer)
 
 void Commissioner::HandleJoinerExpirationTimer(void)
 {
-    uint32_t now = TimerMilli::GetNow();
+    TimeMilli now = TimerMilli::GetNow();
 
     // Remove Joiners.
     for (Joiner *joiner = &mJoiners[0]; joiner < OT_ARRAY_END(mJoiners); joiner++)
@@ -437,7 +436,7 @@ void Commissioner::HandleJoinerExpirationTimer(void)
             continue;
         }
 
-        if (static_cast<int32_t>(now - joiner->mExpirationTime) >= 0)
+        if (now >= joiner->mExpirationTime)
         {
             otLogDebgMeshCoP("removing joiner due to timeout or successfully joined");
             RemoveJoiner(&joiner->mEui64, 0); // remove immediately
@@ -449,32 +448,34 @@ void Commissioner::HandleJoinerExpirationTimer(void)
 
 void Commissioner::UpdateJoinerExpirationTimer(void)
 {
-    uint32_t now         = TimerMilli::GetNow();
-    uint32_t nextTimeout = TimerMilli::kForeverDt;
+    TimeMilli now         = TimerMilli::GetNow();
+    uint32_t  nextTimeout = TimeMilli::kMaxDuration;
 
     // Check if timer should be set for next Joiner.
     for (Joiner *joiner = &mJoiners[0]; joiner < OT_ARRAY_END(mJoiners); joiner++)
     {
-        int32_t diff;
+        uint32_t diff;
 
         if (!joiner->mValid)
         {
             continue;
         }
 
-        diff = TimerMilli::Diff(now, joiner->mExpirationTime);
-        if (diff <= 0)
+        if (now >= joiner->mExpirationTime)
         {
             nextTimeout = 0;
             break;
         }
-        else if (static_cast<uint32_t>(diff) < nextTimeout)
+
+        diff = joiner->mExpirationTime - now;
+
+        if (diff < nextTimeout)
         {
-            nextTimeout = static_cast<uint32_t>(diff);
+            nextTimeout = diff;
         }
     }
 
-    if (nextTimeout != TimerMilli::kForeverDt)
+    if (nextTimeout != TimeMilli::kMaxDuration)
     {
         // Update the timer to the timeout of the next Joiner.
         mJoinerExpirationTimer.Start(nextTimeout);
@@ -724,7 +725,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Message *         aMessage
     SetState(OT_COMMISSIONER_STATE_ACTIVE);
 
     mTransmitAttempts = 0;
-    mTimer.Start(TimerMilli::SecToMsec(kKeepAliveTimeout) / 2);
+    mTimer.Start(Time::SecToMsec(kKeepAliveTimeout) / 2);
 
 exit:
 
@@ -736,7 +737,7 @@ exit:
         }
         else
         {
-            mTimer.Start(TimerMilli::SecToMsec(kPetitionRetryDelay));
+            mTimer.Start(Time::SecToMsec(kPetitionRetryDelay));
         }
     }
 }
@@ -808,7 +809,7 @@ void Commissioner::HandleLeaderKeepAliveResponse(Coap::Message *         aMessag
 
     VerifyOrExit(state.GetState() == StateTlv::kAccept, SetState(OT_COMMISSIONER_STATE_DISABLED));
 
-    mTimer.Start(TimerMilli::SecToMsec(kKeepAliveTimeout) / 2);
+    mTimer.Start(Time::SecToMsec(kKeepAliveTimeout) / 2);
 
 exit:
 

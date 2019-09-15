@@ -222,7 +222,7 @@ void SupervisionListener::RestartTimer(void)
     if ((mTimeout != 0) && (Get<Mle::MleRouter>().GetRole() != OT_DEVICE_ROLE_DISABLED) &&
         !Get<MeshForwarder>().GetRxOnWhenIdle())
     {
-        mTimer.Start(TimerMilli::SecToMsec(mTimeout));
+        mTimer.Start(Time::SecToMsec(mTimeout));
     }
     else
     {

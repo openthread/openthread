@@ -1966,7 +1966,7 @@ void Interpreter::HandleIcmpReceive(Message &               aMessage,
 
     if (aMessage.Read(aMessage.GetOffset(), sizeof(uint32_t), &timestamp) >= static_cast<int>(sizeof(uint32_t)))
     {
-        mServer->OutputFormat(" time=%dms", TimerMilli::Elapsed(HostSwap32(timestamp)));
+        mServer->OutputFormat(" time=%dms", TimerMilli::GetNow().GetValue() - HostSwap32(timestamp));
     }
 
     mServer->OutputFormat("\r\n");
@@ -2022,7 +2022,7 @@ void Interpreter::ProcessPing(int argc, char *argv[])
 
         case 3:
             SuccessOrExit(error = ParsePingInterval(argv[index], interval));
-            VerifyOrExit(0 < interval && interval <= Timer::kMaxDt, error = OT_ERROR_INVALID_ARGS);
+            VerifyOrExit(0 < interval && interval <= Timer::kMaxDelay, error = OT_ERROR_INVALID_ARGS);
             mInterval = interval;
             break;
 
@@ -2049,7 +2049,7 @@ void Interpreter::HandlePingTimer(Timer &aTimer)
 void Interpreter::HandlePingTimer()
 {
     otError  error     = OT_ERROR_NONE;
-    uint32_t timestamp = HostSwap32(TimerMilli::GetNow());
+    uint32_t timestamp = HostSwap32(TimerMilli::GetNow().GetValue());
 
     otMessage *          message;
     const otMessageInfo *messageInfo = static_cast<const otMessageInfo *>(&mMessageInfo);

@@ -44,13 +44,13 @@ namespace ot {
 const TimerScheduler::AlarmApi TimerMilliScheduler::sAlarmMilliApi = {&otPlatAlarmMilliStartAt, &otPlatAlarmMilliStop,
                                                                       &otPlatAlarmMilliGetNow};
 
-bool Timer::DoesFireBefore(const Timer &aSecondTimer, uint32_t aNow)
+bool Timer::DoesFireBefore(const Timer &aSecondTimer, Time aNow)
 {
     bool retval;
-    bool isBeforeNow = TimerScheduler::IsStrictlyBefore(GetFireTime(), aNow);
+    bool isBeforeNow = (GetFireTime() < aNow);
 
     // Check if one timer is before `now` and the other one is not.
-    if (TimerScheduler::IsStrictlyBefore(aSecondTimer.GetFireTime(), aNow) != isBeforeNow)
+    if ((aSecondTimer.GetFireTime() < aNow) != isBeforeNow)
     {
         // One timer is before `now` and the other one is not, so if this timer's fire time is before `now` then
         // the second fire time would be after `now` and this timer would fire before the second timer.
@@ -62,16 +62,21 @@ bool Timer::DoesFireBefore(const Timer &aSecondTimer, uint32_t aNow)
         // Both timers are before `now` or both are after `now`. Either way the difference is guaranteed to be less
         // than `kMaxDt` so we can safely compare the fire times directly.
 
-        retval = TimerScheduler::IsStrictlyBefore(GetFireTime(), aSecondTimer.GetFireTime());
+        retval = GetFireTime() < aSecondTimer.GetFireTime();
     }
 
     return retval;
 }
 
-void TimerMilli::StartAt(uint32_t aT0, uint32_t aDt)
+void TimerMilli::Start(uint32_t aDelay)
 {
-    assert(aDt <= kMaxDt);
-    mFireTime = aT0 + aDt;
+    StartAt(GetNow(), aDelay);
+}
+
+void TimerMilli::StartAt(TimeMilli aStartTime, uint32_t aDelay)
+{
+    assert(aDelay <= kMaxDelay);
+    mFireTime = aStartTime + aDelay;
     Get<TimerMilliScheduler>().Add(*this);
 }
 
@@ -97,7 +102,9 @@ void TimerScheduler::Add(Timer &aTimer, const AlarmApi &aAlarmApi)
 
         for (cur = mHead; cur; cur = cur->mNext)
         {
-            if (aTimer.DoesFireBefore(*cur, aAlarmApi.AlarmGetNow()))
+            Time now(aAlarmApi.AlarmGetNow());
+
+            if (aTimer.DoesFireBefore(*cur, now))
             {
                 if (prev)
                 {
@@ -160,10 +167,12 @@ void TimerScheduler::SetAlarm(const AlarmApi &aAlarmApi)
     }
     else
     {
-        uint32_t now       = aAlarmApi.AlarmGetNow();
-        uint32_t remaining = IsStrictlyBefore(now, mHead->mFireTime) ? (mHead->mFireTime - now) : 0;
+        Time     now(aAlarmApi.AlarmGetNow());
+        uint32_t remaining;
 
-        aAlarmApi.AlarmStartAt(&GetInstance(), now, remaining);
+        remaining = (now < mHead->mFireTime) ? (mHead->mFireTime - now) : 0;
+
+        aAlarmApi.AlarmStartAt(&GetInstance(), now.GetValue(), remaining);
     }
 }
 
@@ -173,32 +182,20 @@ void TimerScheduler::ProcessTimers(const AlarmApi &aAlarmApi)
 
     if (timer)
     {
-        if (!IsStrictlyBefore(aAlarmApi.AlarmGetNow(), timer->mFireTime))
+        Time now(aAlarmApi.AlarmGetNow());
+
+        if (now >= timer->mFireTime)
         {
-            Remove(*timer, aAlarmApi);
+            Remove(*timer, aAlarmApi); // `Remove()` will `SetAlarm` for next timer if there is any.
             timer->Fired();
-        }
-        else
-        {
-            SetAlarm(aAlarmApi);
+            ExitNow();
         }
     }
-    else
-    {
-        SetAlarm(aAlarmApi);
-    }
-}
 
-bool TimerScheduler::IsStrictlyBefore(uint32_t aTimeA, uint32_t aTimeB)
-{
-    uint32_t diff = aTimeA - aTimeB;
+    SetAlarm(aAlarmApi);
 
-    // Three cases:
-    // 1) aTimeA is before  aTimeB  =>  Difference is negative (last bit of difference is set)   => Returning true.
-    // 2) aTimeA is same as aTimeB  =>  Difference is zero     (last bit of difference is clear) => Returning false.
-    // 3) aTimeA is after   aTimeB  =>  Difference is positive (last bit of difference is clear) => Returning false.
-
-    return ((diff & (1UL << 31)) != 0);
+exit:
+    return;
 }
 
 extern "C" void otPlatAlarmMilliFired(otInstance *aInstance)
@@ -215,11 +212,15 @@ exit:
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 const TimerScheduler::AlarmApi TimerMicroScheduler::sAlarmMicroApi = {&otPlatAlarmMicroStartAt, &otPlatAlarmMicroStop,
                                                                       &otPlatAlarmMicroGetNow};
-
-void TimerMicro::StartAt(uint32_t aT0, uint32_t aDt)
+void                           TimerMicro::Start(uint32_t aDelay)
 {
-    assert(aDt <= kMaxDt);
-    mFireTime = aT0 + aDt;
+    StartAt(GetNow(), aDelay);
+}
+
+void TimerMicro::StartAt(TimeMicro aStartTime, uint32_t aDelay)
+{
+    assert(aDelay <= kMaxDelay);
+    mFireTime = aStartTime + aDelay;
     Get<TimerMicroScheduler>().Add(*this);
 }
 

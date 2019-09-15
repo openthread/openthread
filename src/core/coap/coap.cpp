@@ -260,8 +260,8 @@ void CoapBase::HandleRetransmissionTimer(Timer &aTimer)
 
 void CoapBase::HandleRetransmissionTimer(void)
 {
-    uint32_t         now       = TimerMilli::GetNow();
-    uint32_t         nextDelta = TimerMilli::kForeverDt;
+    TimeMilli        now       = TimerMilli::GetNow();
+    uint32_t         nextDelta = TimeMilli::kMaxDuration;
     CoapMetadata     coapMetadata;
     Message *        message     = static_cast<Message *>(mPendingRequests.GetHead());
     Message *        nextMessage = NULL;
@@ -274,7 +274,8 @@ void CoapBase::HandleRetransmissionTimer(void)
 
         if (coapMetadata.IsLater(now))
         {
-            uint32_t diff = TimerMilli::Elapsed(now, coapMetadata.mNextTimerShot);
+            uint32_t diff = coapMetadata.mNextTimerShot - now;
+
             // Calculate the next delay and choose the lowest.
             if (diff < nextDelta)
             {
@@ -314,7 +315,7 @@ void CoapBase::HandleRetransmissionTimer(void)
         message = nextMessage;
     }
 
-    if (nextDelta != TimerMilli::kForeverDt)
+    if (nextDelta != TimeMilli::kMaxDuration)
     {
         mRetransmissionTimer.Start(nextDelta);
     }
@@ -372,7 +373,7 @@ Message *CoapBase::CopyAndEnqueueMessage(const Message &     aMessage,
     // Setup the timer.
     if (mRetransmissionTimer.IsRunning())
     {
-        uint32_t alarmFireTime;
+        TimeMilli alarmFireTime;
 
         // If timer is already running, check if it should be restarted with earlier fire time.
         alarmFireTime = mRetransmissionTimer.GetFireTime();
@@ -682,10 +683,10 @@ CoapMetadata::CoapMetadata(bool                    aConfirmable,
     mResponseHandler       = aHandler;
     mResponseContext       = aContext;
     mRetransmissionCount   = 0;
-    mRetransmissionTimeout = TimerMilli::SecToMsec(kAckTimeout);
+    mRetransmissionTimeout = Time::SecToMsec(kAckTimeout);
     mRetransmissionTimeout += Random::NonCrypto::GetUint32InRange(
-        0, TimerMilli::SecToMsec(kAckTimeout) * kAckRandomFactorNumerator / kAckRandomFactorDenominator -
-               TimerMilli::SecToMsec(kAckTimeout) + 1);
+        0, Time::SecToMsec(kAckTimeout) * kAckRandomFactorNumerator / kAckRandomFactorDenominator -
+               Time::SecToMsec(kAckTimeout) + 1);
 
     if (aConfirmable)
     {
@@ -790,7 +791,7 @@ void ResponsesQueue::EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &
 
     if (!mTimer.IsRunning())
     {
-        mTimer.Start(TimerMilli::SecToMsec(kExchangeLifetime));
+        mTimer.Start(Time::SecToMsec(kExchangeLifetime));
     }
 
 exit:
@@ -852,9 +853,15 @@ void ResponsesQueue::HandleTimer(void)
 
 uint32_t EnqueuedResponseHeader::GetRemainingTime(void) const
 {
-    int32_t remainingTime = static_cast<int32_t>(mDequeueTime - TimerMilli::GetNow());
+    TimeMilli now           = TimerMilli::GetNow();
+    uint32_t  remainingTime = 0;
 
-    return remainingTime >= 0 ? static_cast<uint32_t>(remainingTime) : 0;
+    if (mDequeueTime > now)
+    {
+        remainingTime = mDequeueTime - now;
+    }
+
+    return remainingTime;
 }
 
 Coap::Coap(Instance &aInstance)

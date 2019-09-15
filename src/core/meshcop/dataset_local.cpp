@@ -107,7 +107,7 @@ otError DatasetLocal::Read(Dataset &aDataset) const
         delayTimer = static_cast<DelayTimerTlv *>(aDataset.Get(Tlv::kDelayTimer));
         VerifyOrExit(delayTimer);
 
-        elapsed = TimerMilli::Elapsed(mUpdateTime);
+        elapsed = TimerMilli::GetNow() - mUpdateTime;
 
         if (delayTimer->GetDelayTimer() > elapsed)
         {

@@ -113,7 +113,7 @@ void Leader::HandlePetition(Coap::Message &aMessage, const Ip6::MessageInfo &aMe
     }
 
     state = StateTlv::kAccept;
-    mTimer.Start(TimerMilli::SecToMsec(kTimeoutLeaderPetition));
+    mTimer.Start(Time::SecToMsec(kTimeoutLeaderPetition));
 
 exit:
     SendPetitionResponse(aMessage, aMessageInfo, state);
@@ -207,7 +207,7 @@ void Leader::HandleKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aM
         }
 
         responseState = StateTlv::kAccept;
-        mTimer.Start(TimerMilli::SecToMsec(kTimeoutLeaderPetition));
+        mTimer.Start(Time::SecToMsec(kTimeoutLeaderPetition));
     }
 
     SendKeepAliveResponse(aMessage, aMessageInfo, responseState);

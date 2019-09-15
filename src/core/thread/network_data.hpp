@@ -41,6 +41,7 @@
 
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
+#include "common/timer.hpp"
 #include "net/udp6.hpp"
 #include "thread/lowpan.hpp"
 #include "thread/mle_router.hpp"
@@ -517,7 +518,7 @@ private:
 
     const Type mType;
     bool       mLastAttemptWait;
-    uint32_t   mLastAttempt;
+    TimeMilli  mLastAttempt;
 };
 
 } // namespace NetworkData

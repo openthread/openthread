@@ -271,10 +271,10 @@ private:
     static void HandlePollTimer(Timer &aTimer);
     static void UpdateIfLarger(uint32_t &aPreiod, uint32_t aNewPeriod);
 
-    uint32_t mTimerStartTime;
-    uint32_t mPollPeriod;
-    uint32_t mExternalPollPeriod : 26; //< In milliseconds.
-    uint8_t  mFastPollsUsers : 6;      //< Number of callers which request fast polls.
+    TimeMilli mTimerStartTime;
+    uint32_t  mPollPeriod;
+    uint32_t  mExternalPollPeriod : 26; //< In milliseconds.
+    uint8_t   mFastPollsUsers : 6;      //< Number of callers which request fast polls.
 
     TimerMilli mTimer;
 

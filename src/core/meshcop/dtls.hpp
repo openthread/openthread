@@ -471,8 +471,8 @@ private:
 
     TimerMilliContext mTimer;
 
-    uint32_t mTimerIntermediate;
-    bool     mTimerSet : 1;
+    TimeMilli mTimerIntermediate;
+    bool      mTimerSet : 1;
 
     bool mLayerTwoSecurity : 1;
 
