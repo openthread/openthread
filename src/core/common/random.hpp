@@ -160,7 +160,7 @@ inline uint32_t AddJitter(uint32_t aValue, uint16_t aJitter)
 
 } // namespace NonCrypto
 
-#ifndef OPENTHREAD_RADIO
+#if !OPENTHREAD_RADIO
 
 namespace Crypto {
 

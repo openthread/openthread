@@ -41,6 +41,7 @@
 #include <openthread/dataset.h>
 
 #include "common/locator.hpp"
+#include "common/random.hpp"
 #include "common/timer.hpp"
 #include "crypto/hmac_sha256.hpp"
 #include "mac/mac_frame.hpp"
@@ -85,6 +86,48 @@ public:
      *
      */
     bool operator!=(const MasterKey &aOther) const { return memcmp(m8, aOther.m8, sizeof(MasterKey)) != 0; }
+
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class represents a Thread Pre-Shared Key for the Commissioner (PSKc).
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class Pskc : public otPskc
+{
+public:
+    /**
+     * This method evaluates whether or not the Thread PSKc values match.
+     *
+     * @param[in]  aOther  The Thread PSKc to compare.
+     *
+     * @retval TRUE   If the Thread PSKc values match.
+     * @retval FALSE  If the Thread PSKc values do not match.
+     *
+     */
+    bool operator==(const Pskc &aOther) const { return memcmp(m8, aOther.m8, sizeof(Pskc)) == 0; }
+
+    /**
+     * This method evaluates whether or not the Thread PSKc values match.
+     *
+     * @param[in]  aOther  The Thread PSKc to compare.
+     *
+     * @retval TRUE   If the Thread PSKc values do not match.
+     * @retval FALSE  If the Thread PSKc values match.
+     *
+     */
+    bool operator!=(const Pskc &aOther) const { return !(*this == aOther); }
+
+#if !OPENTHREAD_RADIO
+    /**
+     * This method generates a cryptographically secure random sequence to populate the Thread PSKc.
+     *
+     * @retval OT_ERROR_NONE  Successfully generated a random Thread PSKc.
+     *
+     */
+    otError GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, sizeof(Pskc)); }
+#endif
 
 } OT_TOOL_PACKED_END;
 
@@ -150,7 +193,7 @@ public:
      * @retval FALSE if the PSKc is not not configured.
      *
      */
-    bool IsPSKcSet(void) const { return mIsPSKcSet; }
+    bool IsPskcSet(void) const { return mIsPskcSet; }
 
     /**
      * This method returns a pointer to the PSKc.
@@ -158,15 +201,15 @@ public:
      * @returns A reference to the PSKc.
      *
      */
-    const otPSKc &GetPSKc(void) const { return mPSKc; }
+    const Pskc &GetPskc(void) const { return mPskc; }
 
     /**
      * This method sets the PSKc.
      *
-     * @param[in]  aPSKc    A reference to the PSKc.
+     * @param[in]  aPskc    A reference to the PSKc.
      *
      */
-    void SetPSKc(const otPSKc &aPSKc);
+    void SetPskc(const Pskc &aPskc);
 #endif
 
     /**
@@ -428,13 +471,13 @@ private:
     TimerMilli mKeyRotationTimer;
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    otPSKc mPSKc;
+    Pskc mPskc;
 #endif
     uint8_t  mKek[kMaxKeyLength];
     uint32_t mKekFrameCounter;
 
     uint8_t mSecurityPolicyFlags;
-    bool    mIsPSKcSet : 1;
+    bool    mIsPskcSet : 1;
 };
 
 /**

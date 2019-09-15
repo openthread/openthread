@@ -191,7 +191,7 @@ const struct Command Interpreter::sCommands[] = {
     {"prefix", &Interpreter::ProcessPrefix},
 #endif
 #if OPENTHREAD_FTD
-    {"pskc", &Interpreter::ProcessPSKc},
+    {"pskc", &Interpreter::ProcessPskc},
     {"releaserouterid", &Interpreter::ProcessReleaseRouterId},
 #endif
     {"reset", &Interpreter::ProcessReset},
@@ -1507,13 +1507,13 @@ exit:
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_FTD
-void Interpreter::ProcessPSKc(int argc, char *argv[])
+void Interpreter::ProcessPskc(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
 
     if (argc == 0)
     {
-        const otPSKc *pskc = otThreadGetPSKc(mInstance);
+        const otPskc *pskc = otThreadGetPskc(mInstance);
 
         for (int i = 0; i < OT_PSKC_MAX_SIZE; i++)
         {
@@ -1524,10 +1524,10 @@ void Interpreter::ProcessPSKc(int argc, char *argv[])
     }
     else
     {
-        otPSKc pskc;
+        otPskc pskc;
 
         VerifyOrExit(Hex2Bin(argv[0], pskc.m8, sizeof(pskc)) == OT_PSKC_MAX_SIZE, error = OT_ERROR_PARSE);
-        SuccessOrExit(error = otThreadSetPSKc(mInstance, &pskc));
+        SuccessOrExit(error = otThreadSetPskc(mInstance, &pskc));
     }
 
 exit:

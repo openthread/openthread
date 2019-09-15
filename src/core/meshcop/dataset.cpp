@@ -213,11 +213,11 @@ void Dataset::Get(otOperationalDataset &aDataset) const
             break;
         }
 
-        case Tlv::kPSKc:
+        case Tlv::kPskc:
         {
-            const PSKcTlv *tlv                  = static_cast<const PSKcTlv *>(cur);
-            aDataset.mPSKc                      = tlv->GetPSKc();
-            aDataset.mComponents.mIsPSKcPresent = true;
+            const PskcTlv *tlv                  = static_cast<const PskcTlv *>(cur);
+            aDataset.mPskc                      = tlv->GetPskc();
+            aDataset.mComponents.mIsPskcPresent = true;
             break;
         }
 
@@ -340,11 +340,11 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         Set(tlv);
     }
 
-    if (aDataset.mComponents.mIsPSKcPresent)
+    if (aDataset.mComponents.mIsPskcPresent)
     {
-        MeshCoP::PSKcTlv tlv;
+        MeshCoP::PskcTlv tlv;
         tlv.Init();
-        tlv.SetPSKc(aDataset.mPSKc);
+        tlv.SetPskc(static_cast<const Pskc &>(aDataset.mPskc));
         Set(tlv);
     }
 
@@ -575,10 +575,10 @@ otError Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdat
 
 #if OPENTHREAD_FTD
 
-        case Tlv::kPSKc:
+        case Tlv::kPskc:
         {
-            const PSKcTlv *pskc = static_cast<const PSKcTlv *>(cur);
-            keyManager.SetPSKc(pskc->GetPSKc());
+            const PskcTlv *pskc = static_cast<const PskcTlv *>(cur);
+            keyManager.SetPskc(pskc->GetPskc());
             break;
         }
 

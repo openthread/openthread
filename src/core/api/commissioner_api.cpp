@@ -73,11 +73,11 @@ exit:
     return error;
 }
 
-otError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aEui64, const char *aPSKd, uint32_t aTimeout)
+otError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aEui64, const char *aPskd, uint32_t aTimeout)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<MeshCoP::Commissioner>().AddJoiner(static_cast<const Mac::ExtAddress *>(aEui64), aPSKd,
+    return instance.Get<MeshCoP::Commissioner>().AddJoiner(static_cast<const Mac::ExtAddress *>(aEui64), aPskd,
                                                            aTimeout);
 }
 
@@ -188,15 +188,15 @@ otCommissionerState otCommissionerGetState(otInstance *aInstance)
     return instance.Get<MeshCoP::Commissioner>().GetState();
 }
 
-otError otCommissionerGeneratePSKc(otInstance *           aInstance,
+otError otCommissionerGeneratePskc(otInstance *           aInstance,
                                    const char *           aPassPhrase,
                                    const char *           aNetworkName,
                                    const otExtendedPanId *aExtPanId,
-                                   uint8_t *              aPSKc)
+                                   uint8_t *              aPskc)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    return MeshCoP::Commissioner::GeneratePSKc(aPassPhrase, aNetworkName,
-                                               *static_cast<const Mac::ExtendedPanId *>(aExtPanId), aPSKc);
+    return MeshCoP::Commissioner::GeneratePskc(aPassPhrase, aNetworkName,
+                                               *static_cast<const Mac::ExtendedPanId *>(aExtPanId), aPskc);
 }
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE

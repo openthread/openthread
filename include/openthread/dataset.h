@@ -124,7 +124,7 @@ typedef struct otMeshLocalPrefix otMeshLocalPrefix;
  *
  */
 OT_TOOL_PACKED_BEGIN
-struct otPSKc
+struct otPskc
 {
     uint8_t m8[OT_PSKC_MAX_SIZE]; ///< Byte values
 } OT_TOOL_PACKED_END;
@@ -133,7 +133,7 @@ struct otPSKc
  * This structure represents a PSKc.
  *
  */
-typedef struct otPSKc otPSKc;
+typedef struct otPskc otPskc;
 
 /**
  * This structure represent Security Policy.
@@ -206,7 +206,7 @@ typedef struct otOperationalDatasetComponents
     bool mIsDelayPresent : 1;            ///< TRUE if Delay Timer is present, FALSE otherwise.
     bool mIsPanIdPresent : 1;            ///< TRUE if PAN ID is present, FALSE otherwise.
     bool mIsChannelPresent : 1;          ///< TRUE if Channel is present, FALSE otherwise.
-    bool mIsPSKcPresent : 1;             ///< TRUE if PSKc is present, FALSE otherwise.
+    bool mIsPskcPresent : 1;             ///< TRUE if PSKc is present, FALSE otherwise.
     bool mIsSecurityPolicyPresent : 1;   ///< TRUE if Security Policy is present, FALSE otherwise.
     bool mIsChannelMaskPresent : 1;      ///< TRUE if Channel Mask is present, FALSE otherwise.
 } otOperationalDatasetComponents;
@@ -228,7 +228,7 @@ typedef struct otOperationalDataset
     uint32_t                       mDelay;            ///< Delay Timer
     otPanId                        mPanId;            ///< PAN ID
     uint16_t                       mChannel;          ///< Channel
-    otPSKc                         mPSKc;             ///< PSKc
+    otPskc                         mPskc;             ///< PSKc
     otSecurityPolicy               mSecurityPolicy;   ///< Security Policy
     otChannelMask                  mChannelMask;      ///< Channel Mask
     otOperationalDatasetComponents mComponents;       ///< Specifies which components are set in the Dataset.

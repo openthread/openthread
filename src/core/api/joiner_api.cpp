@@ -42,7 +42,7 @@ using namespace ot;
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
 otError otJoinerStart(otInstance *     aInstance,
-                      const char *     aPSKd,
+                      const char *     aPskd,
                       const char *     aProvisioningUrl,
                       const char *     aVendorName,
                       const char *     aVendorModel,
@@ -53,7 +53,7 @@ otError otJoinerStart(otInstance *     aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<MeshCoP::Joiner>().Start(aPSKd, aProvisioningUrl, aVendorName, aVendorModel, aVendorSwVersion,
+    return instance.Get<MeshCoP::Joiner>().Start(aPskd, aProvisioningUrl, aVendorName, aVendorModel, aVendorSwVersion,
                                                  aVendorData, aCallback, aContext);
 }
 

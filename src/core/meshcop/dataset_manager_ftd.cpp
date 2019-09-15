@@ -323,7 +323,7 @@ otError ActiveDataset::CreateNewNetwork(otOperationalDataset &aDataset)
     aDataset.mActiveTimestamp = 1;
 
     SuccessOrExit(error = Random::Crypto::FillBuffer(aDataset.mMasterKey.m8, sizeof(aDataset.mMasterKey)));
-    SuccessOrExit(error = Random::Crypto::FillBuffer(aDataset.mPSKc.m8, sizeof(aDataset.mPSKc)));
+    SuccessOrExit(error = static_cast<Pskc &>(aDataset.mPskc).GenerateRandom());
     SuccessOrExit(error = Random::Crypto::FillBuffer(aDataset.mExtendedPanId.m8, sizeof(aDataset.mExtendedPanId)));
 
     aDataset.mMeshLocalPrefix.m8[0] = 0xfd;
@@ -359,7 +359,7 @@ otError ActiveDataset::CreateNewNetwork(otOperationalDataset &aDataset)
     aDataset.mComponents.mIsMeshLocalPrefixPresent = true;
     aDataset.mComponents.mIsPanIdPresent           = true;
     aDataset.mComponents.mIsChannelPresent         = true;
-    aDataset.mComponents.mIsPSKcPresent            = true;
+    aDataset.mComponents.mIsPskcPresent            = true;
     aDataset.mComponents.mIsSecurityPolicyPresent  = true;
     aDataset.mComponents.mIsChannelMaskPresent     = true;
 
@@ -450,24 +450,24 @@ otError ActiveDataset::GenerateLocal(void)
     }
 
     // PSKc
-    if (dataset.Get(Tlv::kPSKc) == NULL)
+    if (dataset.Get(Tlv::kPskc) == NULL)
     {
-        PSKcTlv tlv;
+        PskcTlv tlv;
 
         tlv.Init();
 
-        if (Get<KeyManager>().IsPSKcSet())
+        if (Get<KeyManager>().IsPskcSet())
         {
             // use configured PSKc
-            tlv.SetPSKc(Get<KeyManager>().GetPSKc());
+            tlv.SetPskc(Get<KeyManager>().GetPskc());
         }
         else
         {
             // PSKc has not yet been configured, generate new PSKc at random
-            otPSKc pskc;
+            Pskc pskc;
 
-            SuccessOrExit(error = Random::Crypto::FillBuffer(pskc.m8, sizeof(pskc)));
-            tlv.SetPSKc(pskc);
+            SuccessOrExit(error = pskc.GenerateRandom());
+            tlv.SetPskc(pskc);
         }
 
         dataset.Set(tlv);

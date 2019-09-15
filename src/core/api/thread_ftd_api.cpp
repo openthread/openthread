@@ -317,21 +317,21 @@ void otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtAddr
 }
 #endif
 
-const otPSKc *otThreadGetPSKc(otInstance *aInstance)
+const otPskc *otThreadGetPskc(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return &instance.Get<KeyManager>().GetPSKc();
+    return &instance.Get<KeyManager>().GetPskc();
 }
 
-otError otThreadSetPSKc(otInstance *aInstance, const otPSKc *aPSKc)
+otError otThreadSetPskc(otInstance *aInstance, const otPskc *aPskc)
 {
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
-    instance.Get<KeyManager>().SetPSKc(*aPSKc);
+    instance.Get<KeyManager>().SetPskc(*static_cast<const Pskc *>(aPskc));
     instance.Get<MeshCoP::ActiveDataset>().Clear();
     instance.Get<MeshCoP::PendingDataset>().Clear();
 

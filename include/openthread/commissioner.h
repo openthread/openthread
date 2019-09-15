@@ -181,12 +181,12 @@ otError otCommissionerStop(otInstance *aInstance);
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aEui64             A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.
- * @param[in]  aPSKd              A pointer to the PSKd.
+ * @param[in]  aPskd              A pointer to the PSKd.
  * @param[in]  aTimeout           A time after which a Joiner is automatically removed, in seconds.
  *
  * @retval OT_ERROR_NONE          Successfully added the Joiner.
  * @retval OT_ERROR_NO_BUFS       No buffers available to add the Joiner.
- * @retval OT_ERROR_INVALID_ARGS  @p aEui64 or @p aPSKd is invalid.
+ * @retval OT_ERROR_INVALID_ARGS  @p aEui64 or @p aPskd is invalid.
  * @retval OT_ERROR_INVALID_STATE The commissioner is not active.
  *
  * @note Only use this after successfully starting the Commissioner role with otCommissionerStart().
@@ -194,7 +194,7 @@ otError otCommissionerStop(otInstance *aInstance);
  */
 otError otCommissionerAddJoiner(otInstance *        aInstance,
                                 const otExtAddress *aEui64,
-                                const char *        aPSKd,
+                                const char *        aPskd,
                                 uint32_t            aTimeout);
 
 /**
@@ -412,17 +412,17 @@ otCommissionerState otCommissionerGetState(otInstance *aInstance);
  * @param[in]  aPassPhrase   The commissioning passphrase.
  * @param[in]  aNetworkName  The network name for PSKc computation.
  * @param[in]  aExtPanId     The extended pan id for PSKc computation.
- * @param[out] aPSKc         A pointer to the generated PSKc.
+ * @param[out] aPskc         A pointer to the generated PSKc.
  *
  * @retval OT_ERROR_NONE          Successfully generate PSKc.
  * @retval OT_ERROR_INVALID_ARGS  If any of the input arguments is invalid.
  *
  */
-otError otCommissionerGeneratePSKc(otInstance *           aInstance,
+otError otCommissionerGeneratePskc(otInstance *           aInstance,
                                    const char *           aPassPhrase,
                                    const char *           aNetworkName,
                                    const otExtendedPanId *aExtPanId,
-                                   uint8_t *              aPSKc);
+                                   uint8_t *              aPskc);
 
 /**
  * @}

@@ -617,9 +617,9 @@ otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDa
         datasetTlvs[length++] = Tlv::kChannel;
     }
 
-    if (aDatasetComponents.mIsPSKcPresent)
+    if (aDatasetComponents.mIsPskcPresent)
     {
-        datasetTlvs[length++] = Tlv::kPSKc;
+        datasetTlvs[length++] = Tlv::kPskc;
     }
 
     if (aDatasetComponents.mIsSecurityPolicyPresent)

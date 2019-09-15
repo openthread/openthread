@@ -65,7 +65,7 @@ const Dataset::Command Dataset::sCommands[] = {
     {"panid", &Dataset::ProcessPanId},
     {"pending", &Dataset::ProcessPending},
     {"pendingtimestamp", &Dataset::ProcessPendingTimestamp},
-    {"pskc", &Dataset::ProcessPSKc},
+    {"pskc", &Dataset::ProcessPskc},
     {"securitypolicy", &Dataset::ProcessSecurityPolicy},
 };
 
@@ -141,10 +141,10 @@ otError Dataset::Print(otOperationalDataset &aDataset)
         mInterpreter.mServer->OutputFormat("PAN ID: 0x%04x\r\n", aDataset.mPanId);
     }
 
-    if (aDataset.mComponents.mIsPSKcPresent)
+    if (aDataset.mComponents.mIsPskcPresent)
     {
         mInterpreter.mServer->OutputFormat("PSKc: ");
-        OutputBytes(aDataset.mPSKc.m8, sizeof(aDataset.mPSKc.m8));
+        OutputBytes(aDataset.mPskc.m8, sizeof(aDataset.mPskc.m8));
         mInterpreter.mServer->OutputFormat("\r\n");
     }
 
@@ -675,7 +675,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessPSKc(int argc, char *argv[])
+otError Dataset::ProcessPskc(int argc, char *argv[])
 {
     otError  error = OT_ERROR_NONE;
     uint16_t length;
@@ -683,10 +683,10 @@ otError Dataset::ProcessPSKc(int argc, char *argv[])
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
     length = static_cast<uint16_t>((strlen(argv[0]) + 1) / 2);
     VerifyOrExit(length <= OT_PSKC_MAX_SIZE, error = OT_ERROR_NO_BUFS);
-    VerifyOrExit(Interpreter::Hex2Bin(argv[0], sDataset.mPSKc.m8 + OT_PSKC_MAX_SIZE - length, length) == length,
+    VerifyOrExit(Interpreter::Hex2Bin(argv[0], sDataset.mPskc.m8 + OT_PSKC_MAX_SIZE - length, length) == length,
                  error = OT_ERROR_PARSE);
 
-    sDataset.mComponents.mIsPSKcPresent = true;
+    sDataset.mComponents.mIsPskcPresent = true;
 
 exit:
     return error;

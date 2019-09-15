@@ -85,7 +85,7 @@ exit:
     return;
 }
 
-otError Joiner::Start(const char *     aPSKd,
+otError Joiner::Start(const char *     aPskd,
                       const char *     aProvisioningUrl,
                       const char *     aVendorName,
                       const char *     aVendorModel,
@@ -107,8 +107,8 @@ otError Joiner::Start(const char *     aPSKd,
     Get<Mle::MleRouter>().UpdateLinkLocalAddress();
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().Start(kJoinerUdpPort));
-    SuccessOrExit(error = Get<Coap::CoapSecure>().SetPsk(reinterpret_cast<const uint8_t *>(aPSKd),
-                                                         static_cast<uint8_t>(strlen(aPSKd))));
+    SuccessOrExit(error = Get<Coap::CoapSecure>().SetPsk(reinterpret_cast<const uint8_t *>(aPskd),
+                                                         static_cast<uint8_t>(strlen(aPskd))));
 
     for (JoinerRouter *router = &mJoinerRouters[0]; router < OT_ARRAY_END(mJoinerRouters); router++)
     {
