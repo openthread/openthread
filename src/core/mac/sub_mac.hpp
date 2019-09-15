@@ -411,7 +411,7 @@ private:
     ExtAddress         mExtAddress;
     bool               mRxOnWhenBackoff;
     int8_t             mEnergyScanMaxRssi;
-    uint32_t           mEnergyScanEndTime;
+    TimeMilli          mEnergyScanEndTime;
     TxFrame &          mTransmitFrame;
     Callbacks          mCallbacks;
     otLinkPcapCallback mPcapCallback;

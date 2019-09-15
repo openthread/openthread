@@ -40,6 +40,7 @@
 
 #include "common/message.hpp"
 #include "common/random.hpp"
+#include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
 #include "net/ip6.hpp"
 #include "thread/device_mode.hpp"
@@ -208,7 +209,7 @@ public:
      * @returns The last heard time.
      *
      */
-    uint32_t GetLastHeard(void) const { return mLastHeard; }
+    TimeMilli GetLastHeard(void) const { return mLastHeard; }
 
     /**
      * This method sets the last heard time.
@@ -216,7 +217,7 @@ public:
      * @param[in]  aLastHeard  The last heard time.
      *
      */
-    void SetLastHeard(uint32_t aLastHeard) { mLastHeard = aLastHeard; }
+    void SetLastHeard(TimeMilli aLastHeard) { mLastHeard = aLastHeard; }
 
     /**
      * This method gets the link frame counter value.
@@ -344,7 +345,7 @@ public:
 
 private:
     Mac::ExtAddress mMacAddr;   ///< The IEEE 802.15.4 Extended Address
-    uint32_t        mLastHeard; ///< Time when last heard.
+    TimeMilli       mLastHeard; ///< Time when last heard.
     union
     {
         struct

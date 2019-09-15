@@ -154,8 +154,8 @@ private:
 
     TrickleTimer mTrickleTimer;
 
-    uint8_t  mTransactionId[kTransactionIdSize];
-    uint32_t mStartTime;
+    uint8_t   mTransactionId[kTransactionIdSize];
+    TimeMilli mStartTime;
 
     IdentityAssociation  mIdentityAssociations[OPENTHREAD_CONFIG_DHCP6_CLIENT_NUM_PREFIXES];
     IdentityAssociation *mIdentityAssociationCurrent;

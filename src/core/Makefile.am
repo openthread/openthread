@@ -318,6 +318,7 @@ HEADERS_COMMON                             = \
     common/settings.hpp                      \
     common/string.hpp                        \
     common/tasklet.hpp                       \
+    common/time.hpp                          \
     common/timer.hpp                         \
     common/tlvs.hpp                          \
     common/trickle_timer.hpp                 \

@@ -418,7 +418,7 @@ otError SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
 
         SetState(kStateEnergyScan);
         mEnergyScanMaxRssi = kInvalidRssiValue;
-        mEnergyScanEndTime = TimerMilli::GetNow() + aScanDuration;
+        mEnergyScanEndTime = TimerMilli::GetNow() + static_cast<uint32_t>(aScanDuration);
         mTimer.Start(0);
     }
     else
@@ -442,7 +442,7 @@ void SubMac::SampleRssi(void)
         }
     }
 
-    if (TimerMilliScheduler::IsStrictlyBefore(TimerMilli::GetNow(), mEnergyScanEndTime))
+    if (TimerMilli::GetNow() < mEnergyScanEndTime)
     {
         mTimer.StartAt(mTimer.GetFireTime(), kEnergyScanRssiSampleInterval);
     }

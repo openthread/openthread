@@ -320,8 +320,8 @@ otError otThreadGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
     aParentInfo->mPathCost       = parent->GetCost();
     aParentInfo->mLinkQualityIn  = parent->GetLinkInfo().GetLinkQuality();
     aParentInfo->mLinkQualityOut = parent->GetLinkQualityOut();
-    aParentInfo->mAge       = static_cast<uint8_t>(TimerMilli::MsecToSec(TimerMilli::Elapsed(parent->GetLastHeard())));
-    aParentInfo->mAllocated = true;
+    aParentInfo->mAge            = static_cast<uint8_t>(Time::MsecToSec(TimerMilli::GetNow() - parent->GetLastHeard()));
+    aParentInfo->mAllocated      = true;
     aParentInfo->mLinkEstablished = parent->GetState() == Neighbor::kStateValid;
 
 #if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE

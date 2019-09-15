@@ -244,7 +244,7 @@ private:
     };
 
     uint16_t   mContextUsed;
-    uint32_t   mContextLastUsed[kNumContextIds];
+    TimeMilli  mContextLastUsed[kNumContextIds];
     uint32_t   mContextIdReuseDelay;
     TimerMilli mTimer;
 

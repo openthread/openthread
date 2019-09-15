@@ -386,8 +386,8 @@ exit:
 
 void DataPollSender::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
 {
-    uint32_t now;
-    uint32_t oldPeriod = mPollPeriod;
+    TimeMilli now;
+    uint32_t  oldPeriod = mPollPeriod;
 
     if (aPollPeriodSelector == kRecalculatePollPeriod)
     {
@@ -408,7 +408,8 @@ void DataPollSender::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
             // a switch to a shorter poll interval, the first data poll
             // will not be sent too quickly (and possibly before the
             // response is available/prepared on the parent node).
-            if (TimerScheduler::IsStrictlyBefore(mTimerStartTime + mPollPeriod, now + kMinPollPeriod))
+
+            if (mTimerStartTime + mPollPeriod < now + kMinPollPeriod)
             {
                 mTimer.StartAt(now, kMinPollPeriod);
             }
@@ -473,7 +474,7 @@ void DataPollSender::HandlePollTimer(Timer &aTimer)
 
 uint32_t DataPollSender::GetDefaultPollPeriod(void) const
 {
-    return TimerMilli::SecToMsec(Get<Mle::MleRouter>().GetTimeout()) -
+    return Time::SecToMsec(Get<Mle::MleRouter>().GetTimeout()) -
            static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;
 }
 

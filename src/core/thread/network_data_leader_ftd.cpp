@@ -1193,9 +1193,9 @@ void Leader::StartContextReuseTimer(uint8_t aContextId)
 {
     mContextLastUsed[aContextId - kMinContextId] = TimerMilli::GetNow();
 
-    if (mContextLastUsed[aContextId - kMinContextId] == 0)
+    if (mContextLastUsed[aContextId - kMinContextId].GetValue() == 0)
     {
-        mContextLastUsed[aContextId - kMinContextId] = 1;
+        mContextLastUsed[aContextId - kMinContextId].SetValue(1);
     }
 
     mTimer.Start(kStateUpdatePeriod);
@@ -1203,7 +1203,7 @@ void Leader::StartContextReuseTimer(uint8_t aContextId)
 
 void Leader::StopContextReuseTimer(uint8_t aContextId)
 {
-    mContextLastUsed[aContextId - kMinContextId] = 0;
+    mContextLastUsed[aContextId - kMinContextId].SetValue(0);
 }
 
 otError Leader::SendServerDataNotification(uint16_t aRloc16)
@@ -1559,12 +1559,12 @@ void Leader::HandleTimer(void)
 
     for (uint8_t i = 0; i < kNumContextIds; i++)
     {
-        if (mContextLastUsed[i] == 0)
+        if (mContextLastUsed[i].GetValue() == 0)
         {
             continue;
         }
 
-        if (TimerMilli::Elapsed(mContextLastUsed[i]) >= TimerMilli::SecToMsec(mContextIdReuseDelay))
+        if (TimerMilli::GetNow() - mContextLastUsed[i] >= Time::SecToMsec(mContextIdReuseDelay))
         {
             FreeContext(kMinContextId + i);
         }

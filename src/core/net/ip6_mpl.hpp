@@ -320,7 +320,7 @@ public:
      * @retval TRUE   If the message shall be sent before the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mTransmissionTime) > 0); }
+    bool IsEarlier(TimeMilli aTime) const { return aTime > mTransmissionTime; }
 
     /**
      * This method checks if the message shall be sent after the given time.
@@ -330,7 +330,7 @@ public:
      * @retval TRUE   If the message shall be sent after the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsLater(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mTransmissionTime) < 0); }
+    bool IsLater(TimeMilli aTime) const { return aTime < mTransmissionTime; }
 
     /**
      * This method returns the MPL Seed Id value.
@@ -386,7 +386,7 @@ public:
      * @returns The transmission timestamp of the message.
      *
      */
-    uint32_t GetTransmissionTime(void) const { return mTransmissionTime; }
+    TimeMilli GetTransmissionTime(void) const { return mTransmissionTime; }
 
     /**
      * This method sets the transmission timestamp of the message.
@@ -394,7 +394,7 @@ public:
      * @param[in]  aTransmissionTime  The transmission timestamp of the message.
      *
      */
-    void SetTransmissionTime(uint32_t aTransmissionTime) { mTransmissionTime = aTransmissionTime; }
+    void SetTransmissionTime(TimeMilli aTransmissionTime) { mTransmissionTime = aTransmissionTime; }
 
     /**
      * This method returns the offset from the transmission time to the end of trickle interval.
@@ -418,14 +418,14 @@ public:
      * @param[in] aCurrentTime Current time (in milliseconds).
      * @param[in] aInterval    The current interval size (in milliseconds).
      */
-    void GenerateNextTransmissionTime(uint32_t aCurrentTime, uint8_t aInterval);
+    void GenerateNextTransmissionTime(TimeMilli aCurrentTime, uint8_t aInterval);
 
 private:
-    uint16_t mSeedId;
-    uint8_t  mSequence;
-    uint8_t  mTransmissionCount;
-    uint32_t mTransmissionTime;
-    uint8_t  mIntervalOffset;
+    uint16_t  mSeedId;
+    uint8_t   mSequence;
+    uint8_t   mTransmissionCount;
+    TimeMilli mTransmissionTime;
+    uint8_t   mIntervalOffset;
 } OT_TOOL_PACKED_END;
 
 /**

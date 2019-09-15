@@ -209,10 +209,10 @@ private:
     uint16_t mTimeSyncPeriod;   ///< The time synchronization period.
     uint16_t mXtalThreshold;    ///< The XTAL accuracy threshold for a device to become a Router, in PPM.
 #if OPENTHREAD_FTD
-    uint32_t mLastTimeSyncSent; ///< The time when the last time synchronization message was sent.
+    TimeMilli mLastTimeSyncSent; ///< The time when the last time synchronization message was sent.
 #endif
-    uint32_t mLastTimeSyncReceived; ///< The time when the last time synchronization message was received.
-    int64_t  mNetworkTimeOffset;    ///< The time offset to the Thread Network time
+    TimeMilli mLastTimeSyncReceived; ///< The time when the last time synchronization message was received.
+    int64_t   mNetworkTimeOffset;    ///< The time offset to the Thread Network time
     otNetworkTimeSyncCallbackFn
                         mTimeSyncCallback; ///< The callback to be called when time sync is handled or status updated.
     void *              mTimeSyncCallbackContext; ///< The context to be passed to callback.

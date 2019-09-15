@@ -135,7 +135,7 @@ public:
      * @param[in]  aKek          A pointer to the KEK.
      *
      */
-    void Init(uint32_t aSendTime, Ip6::MessageInfo &aMessageInfo, const uint8_t *aKek)
+    void Init(TimeMilli aSendTime, Ip6::MessageInfo &aMessageInfo, const uint8_t *aKek)
     {
         mSendTime    = aSendTime;
         mMessageInfo = aMessageInfo;
@@ -185,7 +185,7 @@ public:
      * @returns  A time when the message shall be sent.
      *
      */
-    uint32_t GetSendTime(void) const { return mSendTime; }
+    TimeMilli GetSendTime(void) const { return mSendTime; }
 
     /**
      * This method returns a destination of the delayed message.
@@ -211,7 +211,7 @@ public:
      * @retval TRUE   If the message shall be sent before the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mSendTime) > 0); }
+    bool IsEarlier(TimeMilli aTime) const { return aTime > mSendTime; }
 
     /**
      * This method checks if the message shall be sent after the given time.
@@ -221,11 +221,11 @@ public:
      * @retval TRUE   If the message shall be sent after the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsLater(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mSendTime) < 0); }
+    bool IsLater(TimeMilli aTime) const { return aTime < mSendTime; }
 
 private:
     Ip6::MessageInfo mMessageInfo;                    ///< Message info of the message to send.
-    uint32_t         mSendTime;                       ///< Time when the message shall be sent.
+    TimeMilli        mSendTime;                       ///< Time when the message shall be sent.
     uint8_t          mKek[KeyManager::kMaxKeyLength]; ///< KEK used by MAC layer to encode this message.
 };
 

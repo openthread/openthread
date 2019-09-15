@@ -121,7 +121,7 @@ public:
      * @returns The local time this dataset was last updated or restored.
      *
      */
-    uint32_t GetUpdateTime(void) const { return mUpdateTime; }
+    TimeMilli GetUpdateTime(void) const { return mUpdateTime; }
 
     /**
      * This method stores the dataset into non-volatile memory.
@@ -156,7 +156,7 @@ private:
     void SetTimestamp(const Dataset &aDataset);
 
     Timestamp mTimestamp;            ///< Active or Pending Timestamp
-    uint32_t  mUpdateTime;           ///< Local time last updated
+    TimeMilli mUpdateTime;           ///< Local time last updated
     Tlv::Type mType;                 ///< Active or Pending
     bool      mTimestampPresent : 1; ///< Whether a timestamp is present
     bool      mSaved : 1;            ///< Whether a dataset is saved in non-volatile

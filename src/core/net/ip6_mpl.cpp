@@ -43,13 +43,13 @@
 namespace ot {
 namespace Ip6 {
 
-void MplBufferedMessageMetadata::GenerateNextTransmissionTime(uint32_t aCurrentTime, uint8_t aInterval)
+void MplBufferedMessageMetadata::GenerateNextTransmissionTime(TimeMilli aCurrentTime, uint8_t aInterval)
 {
     // Emulate Trickle timer behavior and set up the next retransmission within [0,I) range.
-    uint8_t t = aInterval == 0 ? aInterval : Random::NonCrypto::GetUint8InRange(0, aInterval);
+    uint8_t t = (aInterval == 0) ? aInterval : Random::NonCrypto::GetUint8InRange(0, aInterval);
 
     // Set transmission time at the beginning of the next interval.
-    SetTransmissionTime(aCurrentTime + GetIntervalOffset() + t);
+    SetTransmissionTime(aCurrentTime + static_cast<uint32_t>(GetIntervalOffset() + t));
     SetIntervalOffset(aInterval - t);
 }
 
@@ -235,11 +235,11 @@ exit:
 
 void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound)
 {
-    uint32_t                   now         = TimerMilli::GetNow();
+    TimeMilli                  now         = TimerMilli::GetNow();
     otError                    error       = OT_ERROR_NONE;
     Message *                  messageCopy = NULL;
     MplBufferedMessageMetadata messageMetadata;
-    uint32_t                   nextTransmissionTime;
+    TimeMilli                  nextTransmissionTime;
     uint8_t                    hopLimit = 0;
 
 #if OPENTHREAD_CONFIG_MPL_DYNAMIC_INTERVAL_ENABLE
@@ -333,8 +333,8 @@ void Mpl::HandleRetransmissionTimer(Timer &aTimer)
 
 void Mpl::HandleRetransmissionTimer(void)
 {
-    uint32_t                   now       = TimerMilli::GetNow();
-    uint32_t                   nextDelta = TimerMilli::kForeverDt;
+    TimeMilli                  now       = TimerMilli::GetNow();
+    uint32_t                   nextDelta = TimeMilli::kMaxDuration;
     MplBufferedMessageMetadata messageMetadata;
 
     Message *message     = mBufferedMessageSet.GetHead();
@@ -347,7 +347,7 @@ void Mpl::HandleRetransmissionTimer(void)
 
         if (messageMetadata.IsLater(now))
         {
-            uint32_t diff = TimerMilli::Elapsed(now, messageMetadata.GetTransmissionTime());
+            uint32_t diff = messageMetadata.GetTransmissionTime() - now;
 
             // Calculate the next retransmission time and choose the lowest.
             if (diff < nextDelta)
@@ -379,7 +379,7 @@ void Mpl::HandleRetransmissionTimer(void)
                 messageMetadata.GenerateNextTransmissionTime(now, kDataMessageInterval);
                 messageMetadata.UpdateIn(*message);
 
-                diff = TimerMilli::Elapsed(now, messageMetadata.GetTransmissionTime());
+                diff = messageMetadata.GetTransmissionTime() - now;
 
                 // Check if retransmission time is lower than the current lowest one.
                 if (diff < nextDelta)
@@ -413,7 +413,7 @@ void Mpl::HandleRetransmissionTimer(void)
         message = nextMessage;
     }
 
-    if (nextDelta != TimerMilli::kForeverDt)
+    if (nextDelta != TimeMilli::kMaxDuration)
     {
         mRetransmissionTimer.Start(nextDelta);
     }

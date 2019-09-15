@@ -41,6 +41,7 @@
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/timer.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 
 namespace ot {
@@ -139,7 +140,7 @@ public:
      * @returns The local time the dataset was last updated.
      *
      */
-    uint32_t GetUpdateTime(void) const { return mUpdateTime; }
+    TimeMilli GetUpdateTime(void) const { return mUpdateTime; }
 
     /**
      * This method returns a reference to the Timestamp.
@@ -242,7 +243,7 @@ private:
     void Remove(uint8_t *aStart, uint8_t aLength);
 
     uint8_t   mTlvs[kMaxSize]; ///< The Dataset buffer
-    uint32_t  mUpdateTime;     ///< Local time last updated
+    TimeMilli mUpdateTime;     ///< Local time last updated
     uint16_t  mLength;         ///< The number of valid bytes in @var mTlvs
     Tlv::Type mType;           ///< Active or Pending
 };

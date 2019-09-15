@@ -492,7 +492,7 @@ public:
      * @retval TRUE   If the message shall be sent before the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mTransmissionTime) > 0); }
+    bool IsEarlier(TimeMilli aTime) const { return aTime > mTransmissionTime; }
 
     /**
      * This method checks if the message shall be sent after the given time.
@@ -502,13 +502,13 @@ public:
      * @retval TRUE   If the message shall be sent after the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsLater(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mTransmissionTime) < 0); }
+    bool IsLater(TimeMilli aTime) const { return aTime < mTransmissionTime; }
 
 private:
     uint32_t              mTransmitTimestamp;   ///< Time at the client when the request departed for the server.
     otSntpResponseHandler mResponseHandler;     ///< A function pointer that is called on response reception.
     void *                mResponseContext;     ///< A pointer to arbitrary context information.
-    uint32_t              mTransmissionTime;    ///< Time when the timer should shoot for this message.
+    TimeMilli             mTransmissionTime;    ///< Time when the timer should shoot for this message.
     Ip6::Address          mSourceAddress;       ///< IPv6 address of the message source.
     Ip6::Address          mDestinationAddress;  ///< IPv6 address of the message destination.
     uint16_t              mDestinationPort;     ///< UDP port of the message destination.

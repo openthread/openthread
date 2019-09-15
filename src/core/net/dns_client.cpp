@@ -159,10 +159,10 @@ exit:
 
 Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetadata &aQueryMetadata)
 {
-    otError  error       = OT_ERROR_NONE;
-    uint32_t now         = TimerMilli::GetNow();
-    Message *messageCopy = NULL;
-    uint32_t nextTransmissionTime;
+    otError   error       = OT_ERROR_NONE;
+    TimeMilli now         = TimerMilli::GetNow();
+    Message * messageCopy = NULL;
+    TimeMilli nextTransmissionTime;
 
     // Create a message copy for further retransmissions.
     VerifyOrExit((messageCopy = aMessage.Clone()) != NULL, error = OT_ERROR_NO_BUFS);
@@ -394,8 +394,8 @@ void Client::HandleRetransmissionTimer(Timer &aTimer)
 
 void Client::HandleRetransmissionTimer(void)
 {
-    uint32_t         now       = TimerMilli::GetNow();
-    uint32_t         nextDelta = TimerMilli::kForeverDt;
+    TimeMilli        now       = TimerMilli::GetNow();
+    uint32_t         nextDelta = TimeMilli::kMaxDuration;
     QueryMetadata    queryMetadata;
     Message *        message     = mPendingQueries.GetHead();
     Message *        nextMessage = NULL;
@@ -408,7 +408,7 @@ void Client::HandleRetransmissionTimer(void)
 
         if (queryMetadata.IsLater(now))
         {
-            uint32_t diff = TimerMilli::Elapsed(now, queryMetadata.mTransmissionTime);
+            uint32_t diff = queryMetadata.mTransmissionTime - TimerMilli::GetNow();
 
             // Calculate the next delay and choose the lowest.
             if (diff < nextDelta)
@@ -425,12 +425,12 @@ void Client::HandleRetransmissionTimer(void)
             queryMetadata.mTransmissionTime = now + kResponseTimeout;
             queryMetadata.UpdateIn(*message);
 
-            diff = TimerMilli::Elapsed(now, queryMetadata.mTransmissionTime);
+            diff = kResponseTimeout;
 
             // Check if retransmission time is lower than current lowest.
             if (diff < nextDelta)
             {
-                nextDelta = queryMetadata.mTransmissionTime - now;
+                nextDelta = kResponseTimeout;
             }
 
             // Retransmit
@@ -449,7 +449,7 @@ void Client::HandleRetransmissionTimer(void)
         message = nextMessage;
     }
 
-    if (nextDelta != TimerMilli::kForeverDt)
+    if (nextDelta != TimeMilli::kMaxDuration)
     {
         mRetransmissionTimer.Start(nextDelta);
     }

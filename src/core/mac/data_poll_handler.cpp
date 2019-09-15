@@ -300,8 +300,7 @@ void DataPollHandler::ProcessPendingPolls(void)
 
         // Find the child with earliest poll receive time.
 
-        if ((mIndirectTxChild == NULL) ||
-            TimerScheduler::IsStrictlyBefore(child->GetLastHeard(), mIndirectTxChild->GetLastHeard()))
+        if ((mIndirectTxChild == NULL) || (child->GetLastHeard() < mIndirectTxChild->GetLastHeard()))
         {
             mIndirectTxChild = child;
         }

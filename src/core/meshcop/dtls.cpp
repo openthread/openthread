@@ -668,7 +668,7 @@ int Dtls::HandleMbedtlsGetTimer(void)
     {
         rval = 2;
     }
-    else if (static_cast<int32_t>(mTimerIntermediate - TimerMilli::GetNow()) <= 0)
+    else if (mTimerIntermediate <= TimerMilli::GetNow())
     {
         rval = 1;
     }

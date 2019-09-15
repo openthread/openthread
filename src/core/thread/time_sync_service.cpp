@@ -153,7 +153,7 @@ void TimeSync::NotifyTimeSyncCallback(void)
 void TimeSync::ProcessTimeSync(void)
 {
     if (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER &&
-        TimerMilli::Elapsed(mLastTimeSyncSent) > TimerMilli::SecToMsec(mTimeSyncPeriod))
+        (TimerMilli::GetNow() - mLastTimeSyncSent > Time::SecToMsec(mTimeSyncPeriod)))
     {
         IncrementTimeSyncSeq();
         mTimeSyncRequired = true;
@@ -192,7 +192,7 @@ void TimeSync::HandleStateChanged(otChangedFlags aFlags)
 
         // Network time status will become OT_NETWORK_TIME_UNSYNCHRONIZED because no network time has yet been received
         // on the new partition.
-        mLastTimeSyncReceived = 0;
+        mLastTimeSyncReceived.SetValue(0);
 
         stateChanged = true;
 
@@ -223,8 +223,8 @@ void TimeSync::HandleTimeout(Timer &aTimer)
 void TimeSync::CheckAndHandleChanges(bool aTimeUpdated)
 {
     otNetworkTimeStatus networkTimeStatus       = OT_NETWORK_TIME_SYNCHRONIZED;
-    const uint32_t      resyncNeededThresholdMs = 2 * TimerMilli::SecToMsec(mTimeSyncPeriod);
-    const uint32_t      timeSyncLastSyncMs      = TimerMilli::Elapsed(mLastTimeSyncReceived);
+    const uint32_t      resyncNeededThresholdMs = 2 * Time::SecToMsec(mTimeSyncPeriod);
+    const uint32_t      timeSyncLastSyncMs      = TimerMilli::GetNow() - mLastTimeSyncReceived;
 
     mTimer.Stop();
 
@@ -238,7 +238,7 @@ void TimeSync::CheckAndHandleChanges(bool aTimeUpdated)
 
     case OT_DEVICE_ROLE_CHILD:
     case OT_DEVICE_ROLE_ROUTER:
-        if (mLastTimeSyncReceived == 0)
+        if (mLastTimeSyncReceived.GetValue() == 0)
         {
             // Haven't yet received any time sync
             networkTimeStatus = OT_NETWORK_TIME_UNSYNCHRONIZED;
