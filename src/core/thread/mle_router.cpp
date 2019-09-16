@@ -1421,10 +1421,6 @@ exit:
 void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
 {
     Router *neighbor;
-    uint8_t curCost;
-    uint8_t newCost;
-    uint8_t oldNextHop;
-    uint8_t cost;
     bool    resetAdvInterval = false;
     bool    changed          = false;
 
@@ -1432,13 +1428,15 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
     VerifyOrExit(neighbor != NULL);
 
     // update link quality out to neighbor
-    changed |= UpdateLinkQualityOut(aRoute, neighbor, resetAdvInterval);
+    changed = UpdateLinkQualityOut(aRoute, neighbor, resetAdvInterval);
 
     // update routes
     for (uint8_t i = 0, routeCount = 0; i <= kMaxRouterId; i++)
     {
         Router *router;
         Router *nextHop;
+        uint8_t oldNextHop;
+        uint8_t cost;
 
         if (!aRoute.IsRouterIdSet(i))
         {
@@ -1493,8 +1491,8 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
         }
         else
         {
-            curCost = router->GetCost() + mRouterTable.GetLinkCost(*nextHop);
-            newCost = cost + mRouterTable.GetLinkCost(*neighbor);
+            uint8_t curCost = router->GetCost() + mRouterTable.GetLinkCost(*nextHop);
+            uint8_t newCost = cost + mRouterTable.GetLinkCost(*neighbor);
 
             if (newCost < curCost)
             {
@@ -1539,34 +1537,35 @@ bool MleRouter::UpdateLinkQualityOut(const RouteTlv &aRoute, Router *aNeighbor, 
     bool    changed = false;
     uint8_t linkQuality;
     uint8_t myRouterId;
+    uint8_t myRouteCount;
+    uint8_t oldLinkCost;
+    Router *nextHop;
 
     myRouterId = GetRouterId(GetRloc16());
-    if (aRoute.IsRouterIdSet(myRouterId))
+    VerifyOrExit(aRoute.IsRouterIdSet(myRouterId));
+
+    myRouteCount = 0;
+    for (uint8_t i = 0; i < myRouterId; i++)
     {
-        uint8_t myRouteCount = 0;
-        for (uint8_t i = 0; i < myRouterId; i++)
-        {
-            myRouteCount += aRoute.IsRouterIdSet(i);
-        }
-
-        linkQuality = aRoute.GetLinkQualityIn(myRouteCount);
-
-        if (aNeighbor->GetLinkQualityOut() != linkQuality)
-        {
-            uint8_t oldLinkCost = mRouterTable.GetLinkCost(*aNeighbor);
-            aNeighbor->SetLinkQualityOut(linkQuality);
-            Router *nextHop = mRouterTable.GetRouter(aNeighbor->GetNextHop());
-
-            // reset MLE advertisement timer if neighbor route cost changed to or from infinite
-            if (nextHop == NULL &&
-                (oldLinkCost >= kMaxRouteCost) != (mRouterTable.GetLinkCost(*aNeighbor) >= kMaxRouteCost))
-            {
-                aResetAdvInterval = true;
-            }
-            changed = true;
-        }
+        myRouteCount += aRoute.IsRouterIdSet(i);
     }
 
+    linkQuality = aRoute.GetLinkQualityIn(myRouteCount);
+    VerifyOrExit(aNeighbor->GetLinkQualityOut() != linkQuality);
+
+    oldLinkCost = mRouterTable.GetLinkCost(*aNeighbor);
+
+    aNeighbor->SetLinkQualityOut(linkQuality);
+    nextHop = mRouterTable.GetRouter(aNeighbor->GetNextHop());
+
+    // reset MLE advertisement timer if neighbor route cost changed to or from infinite
+    if (nextHop == NULL && (oldLinkCost >= kMaxRouteCost) != (mRouterTable.GetLinkCost(*aNeighbor) >= kMaxRouteCost))
+    {
+        aResetAdvInterval = true;
+    }
+    changed = true;
+
+exit:
     return changed;
 }
 
