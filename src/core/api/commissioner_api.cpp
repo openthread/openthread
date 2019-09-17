@@ -81,7 +81,7 @@ otError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aEui6
                                                            aTimeout);
 }
 
-otError otCommissionerGetNextJoinerInfo(otInstance *aInstance, int16_t &aIterator, otJoinerInfo &aJoiner)
+otError otCommissionerGetNextJoinerInfo(otInstance *aInstance, uint16_t &aIterator, otJoinerInfo &aJoiner)
 {
     otError error = OT_ERROR_NONE;
 
