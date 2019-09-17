@@ -297,7 +297,7 @@ exit:
     return error;
 }
 
-otError Commissioner::GetNextJoinerInfo(int16_t &aIterator, otJoinerInfo &aJoiner)
+otError Commissioner::GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoiner)
 {
     otError error = OT_ERROR_NONE;
     size_t  index;

@@ -120,7 +120,7 @@ public:
      * @retval OT_ERROR_FAILED      The iterator is illegal.
      *
      */
-    otError GetNextJoinerInfo(int16_t &aIterator, otJoinerInfo &aJoiner);
+    otError GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoiner);
 
     /**
      * This method removes a Joiner entry.

@@ -110,18 +110,14 @@ typedef struct otCommissioningDataset
     bool mIsJoinerUdpPortSet : 1; ///< TRUE if Joiner UDP Port is set, FALSE otherwise.
 } otCommissioningDataset;
 
-enum
-{
-    kPskMaxLength = 32,
-};
 /**
  * This structure represents a Joiner Info.
  *
  */
 typedef struct otJoinerInfo
 {
-    otExtAddress mEui64;                  /// Joiner eui64
-    char         mPsk[kPskMaxLength + 1]; /// Joiner pskc
+    otExtAddress mEui64;                 /// Joiner eui64
+    char         mPsk[OT_PSKC_MAX_SIZE]; /// Joiner pskc
 
     bool mAny : 1; /// TRUE if eui64 isn't set, FALSE otherwise.
 } otJoinerInfo;
@@ -210,7 +206,7 @@ otError otCommissionerAddJoiner(otInstance *        aInstance,
  * @retval OT_ERROR_FAILED      The iterator is illegal.
  *
  */
-otError otCommissionerGetNextJoinerInfo(otInstance *aInstance, int16_t &aIterator, otJoinerInfo &aJoiner);
+otError otCommissionerGetNextJoinerInfo(otInstance *aInstance, uint16_t &aIterator, otJoinerInfo &aJoiner);
 
 /**
  * This function removes a Joiner entry.
