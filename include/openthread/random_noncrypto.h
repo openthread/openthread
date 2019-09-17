@@ -42,7 +42,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup api-random
+ * @addtogroup api-random-non-crypto
  *
  * @brief
  *   This module includes functions that generates non cryptographic random numbers.
