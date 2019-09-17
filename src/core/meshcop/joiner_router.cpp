@@ -80,7 +80,7 @@ void JoinerRouter::HandleStateChanged(otChangedFlags aFlags)
     {
         Ip6::SockAddr sockaddr;
 
-        VerifyOrExit(mSocket.IsBound());
+        VerifyOrExit(!mSocket.IsBound());
 
         sockaddr.mPort = GetJoinerUdpPort();
 
