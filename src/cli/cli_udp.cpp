@@ -138,7 +138,8 @@ otError UdpExample::ProcessSend(int argc, char *argv[])
     otMessageInfo messageInfo;
     otMessage *   message              = NULL;
     int           curArg               = 0;
-    unsigned long autoGenMessageLength = 0;
+    bool          autoGenPayload       = false;
+    unsigned long autoGenPayloadLength = 0;
 
     memset(&messageInfo, 0, sizeof(messageInfo));
 
@@ -148,7 +149,8 @@ otError UdpExample::ProcessSend(int argc, char *argv[])
     {
         if (strcmp(argv[curArg++], "-s") == 0)
         {
-            error = Interpreter::ParseUnsignedLong(argv[curArg++], autoGenMessageLength);
+            autoGenPayload = true;
+            error          = Interpreter::ParseUnsignedLong(argv[curArg++], autoGenPayloadLength);
             SuccessOrExit(error);
         }
         else
@@ -173,9 +175,9 @@ otError UdpExample::ProcessSend(int argc, char *argv[])
     message = otUdpNewMessage(mInterpreter.mInstance, NULL);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
-    if (autoGenMessageLength != 0)
+    if (autoGenPayload)
     {
-        error = WriteCharToBuffer(message, static_cast<uint16_t>(autoGenMessageLength));
+        error = WriteCharToBuffer(message, static_cast<uint16_t>(autoGenPayloadLength));
     }
     else
     {
