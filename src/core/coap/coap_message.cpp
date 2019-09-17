@@ -358,9 +358,28 @@ otError Message::ParseHeader(void)
     VerifyOrExit(GetHelpData().mNextOptionOffset > 0, error = OT_ERROR_PARSE);
     GetHelpData().mHeaderLength = GetHelpData().mNextOptionOffset - GetHelpData().mHeaderOffset;
     MoveOffset(GetHelpData().mHeaderLength);
+    GetHelpData().mIsMessageIdValid = true;
 
 exit:
     return error;
+}
+
+uint16_t Message::GetMessageId(void) const
+{
+    const HelpData &helpData = GetHelpData();
+
+    // Invalid usage to get before set
+    assert(helpData.mIsMessageIdValid);
+
+    return HostSwap16(helpData.mHeader.mMessageId);
+}
+
+void Message::SetMessageId(uint16_t aMessageId)
+{
+    HelpData &helpData = GetHelpData();
+
+    helpData.mHeader.mMessageId = HostSwap16(aMessageId);
+    helpData.mIsMessageIdValid  = true;
 }
 
 otError Message::SetToken(const uint8_t *aToken, uint8_t aTokenLength)

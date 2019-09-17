@@ -151,8 +151,7 @@ otError CoapBase::SendMessage(Message &               aMessage,
     }
 
     // Set Message Id if it was not already set.
-    if (aMessage.GetMessageId() == 0 &&
-        (aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE || aMessage.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE))
+    if (!aMessage.IsMessageIdValid())
     {
         aMessage.SetMessageId(mMessageId++);
     }

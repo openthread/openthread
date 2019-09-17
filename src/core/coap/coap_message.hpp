@@ -204,7 +204,16 @@ public:
      * @returns The Message ID value.
      *
      */
-    uint16_t GetMessageId(void) const { return HostSwap16(GetHelpData().mHeader.mMessageId); }
+    uint16_t GetMessageId(void) const;
+
+    /**
+     * This method returns if the Message ID is valid.
+     *
+     * @retval  TRUE    The message ID is set or read from CoAP packet.
+     * @retval  FALSE   The message ID is not set.
+     *
+     */
+    uint16_t IsMessageIdValid(void) const { return GetHelpData().mIsMessageIdValid; }
 
     /**
      * This method sets the Message ID value.
@@ -212,7 +221,7 @@ public:
      * @param[in]  aMessageId  The Message ID value.
      *
      */
-    void SetMessageId(uint16_t aMessageId) { GetHelpData().mHeader.mMessageId = HostSwap16(aMessageId); }
+    void SetMessageId(uint16_t aMessageId);
 
     /**
      * This method returns the Token length.
@@ -591,6 +600,7 @@ private:
         uint16_t     mOptionLast;
         uint16_t     mHeaderOffset; ///< The byte offset for the CoAP Header
         uint16_t     mHeaderLength;
+        bool         mIsMessageIdValid : 1; ///< Whether the message id is valid.
     };
 
     const HelpData &GetHelpData(void) const
