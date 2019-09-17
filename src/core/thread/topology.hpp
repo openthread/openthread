@@ -435,6 +435,12 @@ public:
     };
 
     /**
+     * This method clears the child entry.
+     *
+     */
+    void Clear(void);
+
+    /**
      * This method indicates if the child state is valid or being attached or being restored.
      *
      * The states `kStateRestored`, `kStateChildIdRequest`, `kStateChildUpdateRequest`, `kStateValid`, (and
@@ -654,6 +660,12 @@ private:
 class Router : public Neighbor
 {
 public:
+    /**
+     * This method clears the router entry.
+     *
+     */
+    void Clear(void);
+
     /**
      * This method gets the router ID of the next hop to this router.
      *

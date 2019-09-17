@@ -1650,8 +1650,6 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
     {
         VerifyOrExit((child = mChildTable.GetNewChild()) != NULL);
 
-        memset(child, 0, sizeof(*child));
-
         // MAC Address
         child->SetExtAddress(macAddr);
         child->GetLinkInfo().Clear();
@@ -3531,7 +3529,7 @@ void MleRouter::RestoreChildren(void)
             foundDuplicate = true;
         }
 
-        memset(child, 0, sizeof(*child));
+        child->Clear();
 
         child->SetExtAddress(*static_cast<const Mac::ExtAddress *>(&childInfo.mExtAddress));
         child->GetLinkInfo().Clear();

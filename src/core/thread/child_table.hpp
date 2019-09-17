@@ -170,7 +170,7 @@ public:
      * This method clears the child table.
      *
      */
-    void Clear(void) { memset(mChildren, 0, sizeof(mChildren)); }
+    void Clear(void);
 
     /**
      * This method returns the child table index for a given `Child` instance.
