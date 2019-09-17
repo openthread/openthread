@@ -740,7 +740,35 @@ uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance);
 uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance);
 
 /**
+ * Enable the radio coex.
+ *
+ * This function is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ * @param[in] aEnabled   TRUE to enable the radio coex, FALSE otherwise.
+ *
+ * @retval OT_ERROR_NONE     Successfully enabled.
+ * @retval OT_ERROR_FAILED   The radio coex could not be enabled.
+ *
+ */
+otError otPlatRadioSetCoexEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * Check whether radio coex is enabled or not.
+ *
+ * This function is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ *
+ * @returns TRUE if the radio coex is enabled, FALSE otherwise.
+ *
+ */
+bool otPlatRadioIsCoexEnabled(otInstance *aInstance);
+
+/**
  * Get the radio coexistence metrics.
+ *
+ * This function is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
  *
  * @param[in]  aInstance     The OpenThread instance structure.
  * @param[out] aCoexMetrics  A pointer to the coexistence metrics structure.

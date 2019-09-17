@@ -98,13 +98,13 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+ * @def OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
  *
- * Define to 1 if you want to enable radio coexistence metrics implemented in platform.
+ * Define to 1 if you want to enable radio coexistence implemented in platform.
  *
  */
-#ifndef OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
-#define OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE 0
+#ifndef OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+#define OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE 0
 #endif
 
 #endif // CONFIG_PLATFORM_H_

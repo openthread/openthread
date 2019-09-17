@@ -1054,6 +1054,7 @@ enum
     SPINEL_CAP_CHILD_SUPERVISION       = (SPINEL_CAP_OPENTHREAD__BEGIN + 8),
     SPINEL_CAP_POSIX_APP               = (SPINEL_CAP_OPENTHREAD__BEGIN + 9),
     SPINEL_CAP_SLAAC                   = (SPINEL_CAP_OPENTHREAD__BEGIN + 10),
+    SPINEL_CAP_RADIO_COEX              = (SPINEL_CAP_OPENTHREAD__BEGIN + 11),
     SPINEL_CAP_OPENTHREAD__END         = 640,
 
     SPINEL_CAP_THREAD__BEGIN        = 1024,
@@ -1630,6 +1631,8 @@ typedef enum
     /// All coex metrics related counters.
     /** Format: t(LLLLLLLL)t(LLLLLLLLL)bL  (Read-only)
      *
+     * Required capability: SPINEL_CAP_RADIO_COEX
+     *
      * The contents include two structures and two common variables, first structure corresponds to
      * all transmit related coex counters, second structure provides the receive related counters.
      *
@@ -1663,6 +1666,15 @@ typedef enum
      *   'L': NumGrantGlitch (The number of of grant glitches).
      */
     SPINEL_PROP_RADIO_COEX_METRICS = SPINEL_PROP_PHY_EXT__BEGIN + 12,
+
+    /// Radio Coex Enable
+    /** Format: `b`
+     *
+     * Required capability: SPINEL_CAP_RADIO_COEX
+     *
+     * Indicates if radio coex is enabled or disabled. Set to true to enable radio coex.
+     */
+    SPINEL_PROP_RADIO_COEX_ENABLE = SPINEL_PROP_PHY_EXT__BEGIN + 13,
 
     SPINEL_PROP_PHY_EXT__END = 0x1300,
 

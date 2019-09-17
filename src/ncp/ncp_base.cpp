@@ -1801,6 +1801,10 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_SLAAC));
 #endif
 
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_RADIO_COEX));
+#endif
+
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_PEEK_POKE));
 #endif
@@ -2193,7 +2197,24 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_PREFERRED>(v
     return EncodeChannelMask(otPlatRadioGetPreferredChannelMask(mInstance));
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RADIO_COEX_ENABLE>(void)
+{
+    bool    enabled;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadBool(enabled));
+    error = otPlatRadioSetCoexEnabled(mInstance, enabled);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RADIO_COEX_ENABLE>(void)
+{
+    return mEncoder.WriteBool(otPlatRadioIsCoexEnabled(mInstance));
+}
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RADIO_COEX_METRICS>(void)
 {
     otRadioCoexMetrics coexMetrics;
@@ -2201,7 +2222,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RADIO_COEX_METRICS>(v
 
     if (error != OT_ERROR_NONE)
     {
-        error = mEncoder.OverwriteWithLastStatusError(SPINEL_STATUS_INVALID_COMMAND_FOR_PROP);
+        error = mEncoder.OverwriteWithLastStatusError(ThreadErrorToSpinelStatus(error));
         ExitNow();
     }
 

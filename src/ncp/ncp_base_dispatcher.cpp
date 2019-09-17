@@ -140,9 +140,12 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_PHY_CHAN_PREFERRED:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_PREFERRED>;
         break;
-#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
     case SPINEL_PROP_RADIO_COEX_METRICS:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_RADIO_COEX_METRICS>;
+        break;
+    case SPINEL_PROP_RADIO_COEX_ENABLE:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_RADIO_COEX_ENABLE>;
         break;
 #endif
 
@@ -717,6 +720,11 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_MAC_SCAN_PERIOD:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_SCAN_PERIOD>;
         break;
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+    case SPINEL_PROP_RADIO_COEX_ENABLE:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_RADIO_COEX_ENABLE>;
+        break;
+#endif
 
         // --------------------------------------------------------------------------
         // MTD (or FTD) Properties (Set Handler)
