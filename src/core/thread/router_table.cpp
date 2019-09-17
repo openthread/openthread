@@ -183,7 +183,7 @@ void RouterTable::UpdateAllocation(void)
 
             if (router.GetRouterId() != routerId)
             {
-                memset(&router, 0, sizeof(router));
+                router.Clear();
                 router.SetRloc16(Mle::Mle::GetRloc16(routerId));
                 router.SetNextHop(Mle::kInvalidRouterId);
             }
@@ -194,7 +194,7 @@ void RouterTable::UpdateAllocation(void)
     for (uint8_t index = mActiveRouterCount; index < Mle::kMaxRouters; index++)
     {
         Router &router = mRouters[index];
-        memset(&router, 0, sizeof(router));
+        router.Clear();
         router.SetRloc16(0xffff);
     }
 }

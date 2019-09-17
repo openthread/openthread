@@ -117,7 +117,7 @@ Mle::Mle(Instance &aInstance)
 
     memset(&mLeaderData, 0, sizeof(mLeaderData));
     memset(&mParentLeaderData, 0, sizeof(mParentLeaderData));
-    memset(&mParent, 0, sizeof(mParent));
+    mParent.Clear();
     memset(&mChildIdRequest, 0, sizeof(mChildIdRequest));
     memset(&mLinkLocal64, 0, sizeof(mLinkLocal64));
     memset(&mMeshLocal64, 0, sizeof(mMeshLocal64));
@@ -125,7 +125,7 @@ Mle::Mle(Instance &aInstance)
     memset(&mLinkLocalAllThreadNodes, 0, sizeof(mLinkLocalAllThreadNodes));
     memset(&mRealmLocalAllThreadNodes, 0, sizeof(mRealmLocalAllThreadNodes));
     memset(&mLeaderAloc, 0, sizeof(mLeaderAloc));
-    memset(&mParentCandidate, 0, sizeof(mParentCandidate));
+    mParentCandidate.Clear();
     ResetCounters();
 
     // link-local 64
@@ -423,7 +423,7 @@ otError Mle::Restore(void)
             ExitNow();
         }
 
-        memset(&mParent, 0, sizeof(mParent));
+        mParent.Clear();
         mParent.SetExtAddress(*static_cast<Mac::ExtAddress *>(&parentInfo.mExtAddress));
         mParent.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                          DeviceMode::kModeFullNetworkData | DeviceMode::kModeSecureDataRequest));
@@ -3175,8 +3175,7 @@ exit:
 
 void Mle::ResetParentCandidate(void)
 {
-    memset(&mParentCandidate, 0, sizeof(mParentCandidate));
-    mParentCandidate.SetState(Neighbor::kStateInvalid);
+    mParentCandidate.Clear();
 }
 
 otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence)

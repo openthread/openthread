@@ -46,6 +46,12 @@ void Neighbor::GenerateChallenge(void)
     Random::NonCrypto::FillBuffer(mValidPending.mPending.mChallenge, sizeof(mValidPending.mPending.mChallenge));
 }
 
+void Child::Clear(void)
+{
+    memset(reinterpret_cast<void *>(this), 0, sizeof(Child));
+    SetState(kStateInvalid);
+}
+
 bool Child::IsStateValidOrAttaching(void) const
 {
     bool rval = false;
@@ -238,6 +244,12 @@ exit:
 void Child::GenerateChallenge(void)
 {
     Random::NonCrypto::FillBuffer(mAttachChallenge, sizeof(mAttachChallenge));
+}
+
+void Router::Clear(void)
+{
+    memset(reinterpret_cast<void *>(this), 0, sizeof(Router));
+    SetState(kStateInvalid);
 }
 
 } // namespace ot

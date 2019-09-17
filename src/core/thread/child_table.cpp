@@ -102,7 +102,15 @@ ChildTable::ChildTable(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mMaxChildrenAllowed(kMaxChildren)
 {
-    memset(mChildren, 0, sizeof(mChildren));
+    Clear();
+}
+
+void ChildTable::Clear(void)
+{
+    for (Child *child = &mChildren[0]; child < OT_ARRAY_END(mChildren); child++)
+    {
+        child->Clear();
+    }
 }
 
 Child *ChildTable::GetChildAtIndex(uint16_t aChildIndex)
@@ -124,7 +132,7 @@ Child *ChildTable::GetNewChild(void)
     {
         if (child->GetState() == Child::kStateInvalid)
         {
-            memset(child, 0, sizeof(Child));
+            child->Clear();
             ExitNow();
         }
     }
