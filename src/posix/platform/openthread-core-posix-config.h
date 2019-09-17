@@ -35,6 +35,16 @@
 #define OPENTHREAD_CORE_POSIX_CONFIG_H_
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_PLATFORM
+ *
+ * Define to enable platform region logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_PLATFORM
+#define OPENTHREAD_CONFIG_LOG_PLATFORM 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_PLATFORM_INFO
  *
  * The platform-specific string to insert into the OpenThread version string.
