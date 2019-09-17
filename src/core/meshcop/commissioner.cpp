@@ -297,6 +297,35 @@ exit:
     return error;
 }
 
+otError Commissioner::GetNextJoinerInfo(int16_t &aIterator, otJoinerInfo &aJoiner)
+{
+    otError error = OT_ERROR_NONE;
+    size_t  index;
+
+    memset(&aJoiner, 0, sizeof(aJoiner));
+
+    if (aIterator >= 0)
+    {
+        for (index = aIterator; index < OT_ARRAY_LENGTH(mJoiners); index++)
+        {
+            if (mJoiners[index].mValid)
+            {
+                aJoiner.mAny = mJoiners[index].mAny;
+                memcpy(&aJoiner.mEui64, &mJoiners[index].mEui64, sizeof(mJoiners[index].mEui64));
+                strlcpy(aJoiner.mPsk, mJoiners[index].mPsk, sizeof(mJoiners[index].mPsk));
+                aIterator = index + 1;
+                ExitNow();
+            }
+        }
+        error = OT_ERROR_NOT_FOUND;
+    }
+    else
+        error = OT_ERROR_FAILED;
+
+exit:
+    return error;
+}
+
 otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDelay)
 {
     otError error = OT_ERROR_NOT_FOUND;
