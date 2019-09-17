@@ -128,6 +128,8 @@ otError Tlv::Find(const Message &aMessage, uint8_t aType, uint16_t *aOffset, uin
 
             VerifyOrExit(sizeof(ExtendedTlv) <= remainingLen);
             aMessage.Read(offset, sizeof(ExtendedTlv), &extTlv);
+
+            VerifyOrExit(extTlv.GetLength() <= (remainingLen - sizeof(ExtendedTlv)));
             size = extTlv.GetSize();
         }
 
