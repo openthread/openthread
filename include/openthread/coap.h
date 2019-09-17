@@ -343,6 +343,19 @@ typedef struct otCoapResource
 void otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode);
 
 /**
+ * This function initializes a response message.
+ *
+ * @note Both message ID and token are set according to @p aRequest.
+ *
+ * @param[inout] aResponse  A pointer to the CoAP response message.
+ * @param[in]    aRequest   A pointer to the CoAP request message.
+ * @param[in]    aType      CoAP message type.
+ * @param[in]    aCode      CoAP message code.
+ *
+ */
+otError otCoapMessageInitResponse(otMessage *aResponse, const otMessage *aRequest, otCoapType aType, otCoapCode aCode);
+
+/**
  * This function sets the Token value and length in a header.
  *
  * @param[inout]  aMessage          A pointer to the CoAP message.
@@ -489,15 +502,6 @@ otError otCoapMessageAppendUriQueryOption(otMessage *aMessage, const char *aUriQ
  *
  */
 otError otCoapMessageSetPayloadMarker(otMessage *aMessage);
-
-/**
- * This function sets the Message ID value.
- *
- * @param[in]  aMessage     A pointer to the CoAP message.
- * @param[in]  aMessageId   The Message ID value.
- *
- */
-void otCoapMessageSetMessageId(otMessage *aMessage, uint16_t aMessageId);
 
 /**
  * This function returns the Type value.

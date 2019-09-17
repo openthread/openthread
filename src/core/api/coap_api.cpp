@@ -64,6 +64,16 @@ void otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode)
     static_cast<Coap::Message *>(aMessage)->Init(aType, aCode);
 }
 
+otError otCoapMessageInitResponse(otMessage *aResponse, const otMessage *aRequest, otCoapType aType, otCoapCode aCode)
+{
+    Coap::Message &      response = *static_cast<Coap::Message *>(aResponse);
+    const Coap::Message &request  = *static_cast<const Coap::Message *>(aRequest);
+
+    response.Init(aType, aCode);
+
+    return response.SetToken(request.GetToken(), request.GetTokenLength());
+}
+
 otError otCoapMessageSetToken(otMessage *aMessage, const uint8_t *aToken, uint8_t aTokenLength)
 {
     return static_cast<Coap::Message *>(aMessage)->SetToken(aToken, aTokenLength);
@@ -117,11 +127,6 @@ otError otCoapMessageAppendUriQueryOption(otMessage *aMessage, const char *aUriQ
 otError otCoapMessageSetPayloadMarker(otMessage *aMessage)
 {
     return static_cast<Coap::Message *>(aMessage)->SetPayloadMarker();
-}
-
-void otCoapMessageSetMessageId(otMessage *aMessage, uint16_t aMessageId)
-{
-    return static_cast<Coap::Message *>(aMessage)->SetMessageId(aMessageId);
 }
 
 otCoapType otCoapMessageGetType(const otMessage *aMessage)

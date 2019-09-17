@@ -330,10 +330,7 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
         responseMessage = otCoapNewMessage(mInterpreter.mInstance, NULL);
         VerifyOrExit(responseMessage != NULL, error = OT_ERROR_NO_BUFS);
 
-        otCoapMessageInit(responseMessage, OT_COAP_TYPE_ACKNOWLEDGMENT, responseCode);
-        otCoapMessageSetMessageId(responseMessage, otCoapMessageGetMessageId(aMessage));
-        SuccessOrExit(error = otCoapMessageSetToken(responseMessage, otCoapMessageGetToken(aMessage),
-                                                    otCoapMessageGetTokenLength(aMessage)));
+        otCoapMessageInitResponse(responseMessage, aMessage, OT_COAP_TYPE_ACKNOWLEDGMENT, responseCode);
 
         if (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET)
         {
