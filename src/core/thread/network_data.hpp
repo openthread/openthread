@@ -92,7 +92,7 @@ class NetworkData : public InstanceLocator
 public:
     enum
     {
-        kMaxSize = 255, ///< Maximum size of Thread Network Data in bytes.
+        kMaxSize = 254, ///< Maximum size of Thread Network Data in bytes.
     };
 
     /**
