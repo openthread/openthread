@@ -1687,19 +1687,19 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 otError otPlatRadioSetCoexEnabled(otInstance *aInstance, bool aEnabled)
 {
-    assert(aInstance != NULL);
+    OT_UNUSED_VARIABLE(aInstance);
     return sRadioSpinel.SetCoexEnabled(aEnabled);
 }
 
 bool otPlatRadioIsCoexEnabled(otInstance *aInstance)
 {
-    assert(aInstance != NULL);
+    OT_UNUSED_VARIABLE(aInstance);
     return sRadioSpinel.IsCoexEnabled();
 }
 
 otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCoexMetrics)
 {
-    assert(aInstance != NULL);
+    OT_UNUSED_VARIABLE(aInstance);
 
     otError error = OT_ERROR_NONE;
 
