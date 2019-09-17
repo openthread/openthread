@@ -667,14 +667,11 @@ static void readFrame(void)
     uint8_t crcCorr;
     int     i;
 
-    if (sReceiveFrame.mLength != 0)
-    {
-        /*
-         * There is already a frame present in the buffer, return early so
-         * we do not overwrite it (hopefully we'll catch it on the next run).
-         */
-        return;
-    }
+    /*
+     * There is already a frame present in the buffer, return early so
+     * we do not overwrite it (hopefully we'll catch it on the next run).
+     */
+    otEXPECT(sReceiveFrame.mLength == 0);
 
     otEXPECT(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT);
     otEXPECT((HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_FIFOP) != 0);
