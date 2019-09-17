@@ -76,11 +76,11 @@ void JoinerRouter::HandleStateChanged(otChangedFlags aFlags)
     VerifyOrExit(Get<Mle::MleRouter>().IsFullThreadDevice());
     VerifyOrExit(aFlags & OT_CHANGED_THREAD_NETDATA);
 
-    Get<Ip6::Filter>().RemoveUnsecurePort(mSocket.GetSockName().mPort);
-
     if (Get<NetworkData::Leader>().IsJoiningEnabled())
     {
         Ip6::SockAddr sockaddr;
+
+        VerifyOrExit(!mSocket.IsBound());
 
         sockaddr.mPort = GetJoinerUdpPort();
 
@@ -91,6 +91,8 @@ void JoinerRouter::HandleStateChanged(otChangedFlags aFlags)
     }
     else
     {
+        Get<Ip6::Filter>().RemoveUnsecurePort(mSocket.GetSockName().mPort);
+
         mSocket.Close();
     }
 
