@@ -601,6 +601,7 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
     switch (mResponsesQueue.GetMatchedResponseCopy(aMessage, aMessageInfo, &cachedResponse))
     {
     case OT_ERROR_NONE:
+        cachedResponse->Finish();
         error = Send(*cachedResponse, aMessageInfo);
         // fall through
         ;
