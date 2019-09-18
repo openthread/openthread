@@ -234,7 +234,7 @@ public:
      * @returns TRUE if the two masks are different, FALSE otherwise.
      *
      */
-    bool operator!=(const ChannelMask &aAnother) const { return (mMask != aAnother.mMask); }
+    bool operator!=(const ChannelMask &aAnother) const { return !(*this == aAnother); }
 
     /**
      * This method converts the channel mask into a human-readable string.

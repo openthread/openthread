@@ -84,7 +84,7 @@ public:
      * @retval FALSE  If the Thread Master Keys match.
      *
      */
-    bool operator!=(const MasterKey &aOther) const { return memcmp(m8, aOther.m8, sizeof(MasterKey)) != 0; }
+    bool operator!=(const MasterKey &aOther) const { return !(*this == aOther); }
 
 } OT_TOOL_PACKED_END;
 

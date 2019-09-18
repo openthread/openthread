@@ -223,7 +223,7 @@ public:
      * @retval FALSE  If the Extended Addresses match.
      *
      */
-    bool operator!=(const ExtAddress &aOther) const;
+    bool operator!=(const ExtAddress &aOther) const { return !(*this == aOther); }
 
     /**
      * This method converts an address to a string.
@@ -463,7 +463,7 @@ public:
      * @retval FALSE  If the Extended Addresses match.
      *
      */
-    bool operator!=(const ExtendedPanId &aOther) const;
+    bool operator!=(const ExtendedPanId &aOther) const { return !(*this == aOther); }
 
     /**
      * This method converts an address to a string.
