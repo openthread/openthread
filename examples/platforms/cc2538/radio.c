@@ -41,8 +41,6 @@
 #include "common/logging.hpp"
 #include "utils/code_utils.h"
 
-#define RFCORE_RXTX_INT (141)
-
 #define RFCORE_XREG_RFIRQM0 0x4008868C // RF interrupt masks
 #define RFCORE_XREG_RFIRQM1 0x40088690 // RF interrupt masks
 #define RFCORE_XREG_RFERRM 0x40088694  // RF error interrupt mask
@@ -172,6 +170,13 @@ static int8_t  sTxPower = 0;
 
 static otRadioState sState             = OT_RADIO_STATE_DISABLED;
 static bool         sIsReceiverEnabled = false;
+
+#if OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+// Debugging _and_ logging are enabled, so if there's a dropped frame
+// we'll need to store the length here as using snprintf from an interrupt
+// handler is not a good idea.
+static uint8_t sDroppedFrameLength = 0;
+#endif
 
 void enableReceiver(void)
 {
@@ -327,10 +332,12 @@ void cc2538RadioInit(void)
     sReceiveFrame.mLength  = 0;
     sReceiveFrame.mPsdu    = sReceivePsdu;
 
-    // Enable interrupts for RX/TX, interrupt 141.
-    // That's NVIC index 5 bit 13.
-    HWREG(NVIC_EN0 + (5 * 4)) = (1 << 13);
+#if OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+    // Enable interrupts for RX/TX, interrupt 26.
+    // That's NVIC index 0 (26 >> 5) bit 26 (26 & 0x1f).
+    HWREG(NVIC_EN0 + (0 * 4)) = (1 << 26);
     HWREG(RFCORE_XREG_RFIRQM0) |= RFCORE_XREG_RFIRQM0_RXPKTDONE;
+#endif
 
     // enable clock
     HWREG(SYS_CTRL_RCGCRFC) = SYS_CTRL_RCGCRFC_RFC0;
@@ -610,11 +617,16 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
     return OT_RADIO_CAPS_NONE;
 }
 
+static bool cc2538RadioGetPromiscuous(void)
+{
+    return (HWREG(RFCORE_XREG_FRMFILT0) & RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN) == 0;
+}
+
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    return (HWREG(RFCORE_XREG_FRMFILT0) & RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN) == 0;
+    return cc2538RadioGetPromiscuous();
 }
 
 static int8_t cc2538RadioGetRssiOffset(void)
@@ -649,11 +661,17 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     }
 }
 
-void readFrame(otInstance *aInstance)
+static void readFrame(void)
 {
     uint8_t length;
     uint8_t crcCorr;
     int     i;
+
+    /*
+     * There is already a frame present in the buffer, return early so
+     * we do not overwrite it (hopefully we'll catch it on the next run).
+     */
+    otEXPECT(sReceiveFrame.mLength == 0);
 
     otEXPECT(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT);
     otEXPECT((HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_FIFOP) != 0);
@@ -666,7 +684,7 @@ void readFrame(otInstance *aInstance)
 #error Time sync requires the timestamp of SFD rather than that of rx done!
 #else
     // Timestamp
-    if (otPlatRadioGetPromiscuous(aInstance))
+    if (cc2538RadioGetPromiscuous())
 #endif
     {
         // The current driver only supports milliseconds resolution.
@@ -692,8 +710,14 @@ void readFrame(otInstance *aInstance)
         // resets rxfifo
         HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
         HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
-
+#if OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+        // Debugging _and_ logging are enabled, it may not be safe to do
+        // logging if we're in the interrupt context, so just stash the
+        // length and do the logging later.
+        sDroppedFrameLength = length;
+#else
         otLogDebgPlat("Dropping %d received bytes (Invalid CRC)", length);
+#endif
     }
 
     // check for rxfifo overflow
@@ -710,7 +734,21 @@ exit:
 
 void cc2538RadioProcess(otInstance *aInstance)
 {
-    readFrame(aInstance);
+#if OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+    // Disable the receive interrupt so that sReceiveFrame doesn't get
+    // blatted by the interrupt handler while we're polling.
+    HWREG(RFCORE_XREG_RFIRQM0) &= ~RFCORE_XREG_RFIRQM0_RXPKTDONE;
+#endif
+
+    readFrame();
+
+#if OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+    if (sDroppedFrameLength != 0)
+    {
+        otLogDebgPlat("Dropping %d received bytes (Invalid CRC)", sDroppedFrameLength);
+        sDroppedFrameLength = 0;
+    }
+#endif
 
     if ((sState == OT_RADIO_STATE_RECEIVE && sReceiveFrame.mLength > 0) ||
         (sState == OT_RADIO_STATE_TRANSMIT && sReceiveFrame.mLength > IEEE802154_ACK_LENGTH))
@@ -772,10 +810,30 @@ void cc2538RadioProcess(otInstance *aInstance)
     }
 
     sReceiveFrame.mLength = 0;
+
+#if OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+    // Turn the receive interrupt handler back on now the buffer is clear.
+    HWREG(RFCORE_XREG_RFIRQM0) |= RFCORE_XREG_RFIRQM0_RXPKTDONE;
+#endif
 }
 
 void RFCoreRxTxIntHandler(void)
 {
+#if OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+    if (HWREG(RFCORE_SFR_RFIRQF0) & RFCORE_SFR_RFIRQF0_RXPKTDONE)
+    {
+        readFrame();
+
+        if (sReceiveFrame.mLength > 0)
+        {
+            // A frame has been received, disable the interrupt handler
+            // until the main loop has dealt with this previous frame,
+            // otherwise we might overwrite it whilst it is being read.
+            HWREG(RFCORE_XREG_RFIRQM0) &= ~RFCORE_XREG_RFIRQM0_RXPKTDONE;
+        }
+    }
+#endif
+
     HWREG(RFCORE_SFR_RFIRQF0) = 0;
 }
 
