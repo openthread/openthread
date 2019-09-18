@@ -337,7 +337,7 @@ private:
     };
     Joiner mJoiners[OPENTHREAD_CONFIG_COMMISSIONER_MAX_JOINER_ENTRIES];
 
-    uint8_t    mJoinerIid[8];
+    uint8_t    mJoinerIid[Ip6::Address::kInterfaceIdentifierSize];
     uint16_t   mJoinerPort;
     uint16_t   mJoinerRloc;
     uint8_t    mJoinerIndex;
