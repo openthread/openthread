@@ -305,8 +305,11 @@ public:
      */
     void SetIid(const Mac::ExtAddress &aExtAddress)
     {
-        memcpy(mIid, aExtAddress.m8, sizeof(mIid));
-        mIid[0] ^= 0x2;
+        Mac::ExtAddress addr;
+
+        addr = aExtAddress;
+        addr.ToggleLocal();
+        addr.CopyTo(mIid);
     }
 
 private:
