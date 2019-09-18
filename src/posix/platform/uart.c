@@ -67,6 +67,9 @@ otError otPlatUartEnable(void)
     struct sockaddr_un sockname;
     int                ret;
 
+    // This allows implementing pseudo reset.
+    otEXPECT(sUartSocket == -1);
+
     sUartSocket = SocketWithCloseExec(AF_UNIX, SOCK_STREAM, 0);
 
     if (sUartSocket == -1)
@@ -109,6 +112,8 @@ otError otPlatUartEnable(void)
     {
         DieNowWithMessage("listen", OT_EXIT_ERROR_ERRNO);
     }
+
+exit:
 #endif // OPENTHREAD_ENABLE_POSIX_APP_DAEMON
 
     sEnabled = true;
@@ -135,6 +140,7 @@ otError otPlatUartDisable(void)
 
     if (sUartLock != -1)
     {
+        (void)flock(sUartLock, LOCK_UN);
         close(sUartLock);
         sUartLock = -1;
     }
