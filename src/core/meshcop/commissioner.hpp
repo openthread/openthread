@@ -110,6 +110,18 @@ public:
     otError AddJoiner(const Mac::ExtAddress *aEui64, const char *aPSKd, uint32_t aTimeout);
 
     /**
+     * This method get joiner info at aIterator position.
+     *
+     * @param[inout]    aIterator   A iterator to the index of the joiner.
+     * @param[out]      aJoiner     A reference to Joiner info.
+     *
+     * @retval OT_ERROR_NONE        Successfully get the Joiner info.
+     * @retval OT_ERROR_NOT_FOUND   Not found next Joiner.
+     *
+     */
+    otError GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoiner) const;
+
+    /**
      * This method removes a Joiner entry.
      *
      * @param[in]  aEui64          A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.

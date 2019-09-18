@@ -110,6 +110,21 @@ typedef struct otCommissioningDataset
     bool mIsJoinerUdpPortSet : 1; ///< TRUE if Joiner UDP Port is set, FALSE otherwise.
 } otCommissioningDataset;
 
+#define OT_PSKD_MAX_SIZE 32 ///< Size of a Joiner PSKd (bytes)
+
+/**
+ * This structure represents a Joiner Info.
+ *
+ */
+typedef struct otJoinerInfo
+{
+    otExtAddress mEui64;                     ///< Joiner eui64
+    char         mPsk[OT_PSKD_MAX_SIZE + 1]; ///< Joiner pskd
+    uint32_t     mExpirationTime;            ///< Joiner expiration time in msec
+
+    bool mAny : 1; /// TRUE if eui64 isn't set, FALSE otherwise.
+} otJoinerInfo;
+
 /**
  * This function pointer is called whenever the commissioner state changes.
  *
@@ -181,6 +196,19 @@ otError otCommissionerAddJoiner(otInstance *        aInstance,
                                 const otExtAddress *aEui64,
                                 const char *        aPSKd,
                                 uint32_t            aTimeout);
+
+/**
+ * This method get joiner info at aIterator position.
+ *
+ * @param[in]      aInstance   A pointer to instance.
+ * @param[inout]   aIterator   A iterator to the index of the joiner.
+ * @param[out]     aJoiner     A reference to Joiner info.
+ *
+ * @retval OT_ERROR_NONE        Successfully get the Joiner info.
+ * @retval OT_ERROR_NOT_FOUND   Not found next Joiner.
+ *
+ */
+otError otCommissionerGetNextJoinerInfo(otInstance *aInstance, uint16_t &aIterator, otJoinerInfo &aJoiner);
 
 /**
  * This function removes a Joiner entry.
