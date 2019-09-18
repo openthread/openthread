@@ -84,7 +84,7 @@ otError AddressResolver::GetEntry(uint8_t aIndex, otEidCacheEntry &aEntry) const
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aIndex < kCacheEntries, error = OT_ERROR_INVALID_ARGS);
-    memcpy(&aEntry.mTarget, &mCache[aIndex].mTarget, sizeof(aEntry.mTarget));
+    aEntry.mTarget = mCache[aIndex].mTarget;
     aEntry.mRloc16 = mCache[aIndex].mRloc16;
     aEntry.mAge    = mCache[aIndex].mAge;
     aEntry.mValid  = mCache[aIndex].mState == Cache::kStateCached;
@@ -512,7 +512,7 @@ otError AddressResolver::SendAddressError(const ThreadTargetTlv &      aTarget,
     }
     else
     {
-        memcpy(&messageInfo.GetPeerAddr(), aDestination, sizeof(messageInfo.GetPeerAddr()));
+        messageInfo.SetPeerAddr(*aDestination);
     }
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
@@ -579,8 +579,8 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
         }
     }
 
-    memcpy(&macAddr, mlIidTlv.GetIid(), sizeof(macAddr));
-    macAddr.m8[0] ^= 0x2;
+    macAddr.Set(mlIidTlv.GetIid());
+    macAddr.ToggleLocal();
 
     for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter++)
     {
