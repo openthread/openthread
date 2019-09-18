@@ -210,7 +210,7 @@ static inline bool isDataRequestAndHasFramePending(const uint8_t *aFrame)
 
         if (sSrcMatchEnabled)
         {
-            hasFramePending = utilsSoftSrcMatchShortFindEntry((uint16_t)(cur[1] << 8 | cur[0])) < 0 ? false : true;
+            hasFramePending = utilsSoftSrcMatchShortFindEntry((uint16_t)(cur[1] << 8 | cur[0])) >= 0;
         }
 
         cur += sizeof(otShortAddress);
@@ -224,7 +224,7 @@ static inline bool isDataRequestAndHasFramePending(const uint8_t *aFrame)
 
         if (sSrcMatchEnabled)
         {
-            hasFramePending = utilsSoftSrcMatchExtFindEntry((const otExtAddress *)cur) < 0 ? false : true;
+            hasFramePending = utilsSoftSrcMatchExtFindEntry((const otExtAddress *)cur) >= 0;
         }
 
         cur += sizeof(otExtAddress);
