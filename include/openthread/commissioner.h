@@ -111,6 +111,7 @@ typedef struct otCommissioningDataset
 } otCommissioningDataset;
 
 #define OT_PSKD_MAX_SIZE 32 ///< Size of a Joiner PSKd (bytes)
+
 /**
  * This structure represents a Joiner Info.
  *
