@@ -169,13 +169,16 @@ void Address::SetIid(const uint8_t *aIid)
 
 void Address::SetIid(const Mac::ExtAddress &aExtAddress)
 {
-    memcpy(mFields.m8 + kInterfaceIdentifierOffset, aExtAddress.m8, kInterfaceIdentifierSize);
-    mFields.m8[kInterfaceIdentifierOffset] ^= 0x02;
+    Mac::ExtAddress addr;
+
+    addr = aExtAddress;
+    addr.ToggleLocal();
+    addr.CopyTo(mFields.m8 + kInterfaceIdentifierOffset);
 }
 
 void Address::ToExtAddress(Mac::ExtAddress &aExtAddress) const
 {
-    memcpy(aExtAddress.m8, mFields.m8 + kInterfaceIdentifierOffset, sizeof(aExtAddress.m8));
+    aExtAddress.Set(mFields.m8 + kInterfaceIdentifierOffset);
     aExtAddress.ToggleLocal();
 }
 
