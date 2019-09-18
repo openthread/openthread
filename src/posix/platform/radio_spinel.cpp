@@ -309,6 +309,7 @@ exit:
 void RadioSpinel::Deinit(void)
 {
     mHdlcInterface.Deinit();
+    // This allows implementing pseudo reset.
     new (this) RadioSpinel();
 }
 

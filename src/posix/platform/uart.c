@@ -140,11 +140,10 @@ otError otPlatUartDisable(void)
 
     if (sUartLock != -1)
     {
+        (void)flock(sUartLock, LOCK_UN | LOCK_NB);
         close(sUartLock);
         sUartLock = -1;
     }
-
-    (void)flock(sUartLock, LOCK_UN | LOCK_NB);
 #endif // OPENTHREAD_ENABLE_POSIX_APP_DAEMON
 
     return error;
