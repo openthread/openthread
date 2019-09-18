@@ -313,7 +313,7 @@ otError Commissioner::GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoin
 
         aJoiner.mAny = mJoiners[index].mAny;
         memcpy(&aJoiner.mEui64, &mJoiners[index].mEui64, sizeof(aJoiner.mEui64));
-        strlcpy(aJoiner.mPSKd, mJoiners[index].mPSKd, sizeof(aJoiner.mPSKd));
+        strlcpy(aJoiner.mPsk, mJoiners[index].mPsk, sizeof(aJoiner.mPsk));
         aJoiner.mExpirationTime = mJoiners[index].mExpirationTime;
         aIterator               = static_cast<uint16_t>(index) + 1;
         ExitNow();

@@ -117,9 +117,9 @@ typedef struct otCommissioningDataset
  */
 typedef struct otJoinerInfo
 {
-    otExtAddress mEui64;                      /// Joiner eui64
-    char         mPSKd[OT_PSKD_MAX_SIZE + 1]; /// Joiner pskc
-    uint32_t     mExpirationTime;             /// Joiner expiration time
+    otExtAddress mEui64;                     /// Joiner eui64
+    char         mPsk[OT_PSKD_MAX_SIZE + 1]; /// Joiner pskd
+    uint32_t     mExpirationTime;            /// Joiner expiration time
 
     bool mAny : 1; /// TRUE if eui64 isn't set, FALSE otherwise.
 } otJoinerInfo;
