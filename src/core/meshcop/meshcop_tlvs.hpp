@@ -824,6 +824,11 @@ OT_TOOL_PACKED_BEGIN
 class CommissionerIdTlv : public Tlv
 {
 public:
+    enum
+    {
+        kMaxLength = 64, ///< maximum length (bytes)
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -867,11 +872,6 @@ public:
     }
 
 private:
-    enum
-    {
-        kMaxLength = 64,
-    };
-
     char mCommissionerId[kMaxLength];
 } OT_TOOL_PACKED_END;
 
