@@ -117,7 +117,6 @@ public:
      *
      * @retval OT_ERROR_NONE        Successfully get the Joiner info.
      * @retval OT_ERROR_NOT_FOUND   Not found next Joiner.
-     * @retval OT_ERROR_FAILED      The iterator is illegal.
      *
      */
     otError GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoiner);

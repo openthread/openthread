@@ -117,9 +117,9 @@ typedef struct otCommissioningDataset
  */
 typedef struct otJoinerInfo
 {
-    otExtAddress mEui64;                     /// Joiner eui64
-    char         mPsk[OT_PSKD_MAX_SIZE + 1]; /// Joiner pskc
-    uint32_t     mExpirationTime;            /// Joiner expiration time
+    otExtAddress mEui64;                      /// Joiner eui64
+    char         mPSKd[OT_PSKD_MAX_SIZE + 1]; /// Joiner pskc
+    uint32_t     mExpirationTime;             /// Joiner expiration time
 
     bool mAny : 1; /// TRUE if eui64 isn't set, FALSE otherwise.
 } otJoinerInfo;
@@ -205,7 +205,6 @@ otError otCommissionerAddJoiner(otInstance *        aInstance,
  *
  * @retval OT_ERROR_NONE        Successfully get the Joiner info.
  * @retval OT_ERROR_NOT_FOUND   Not found next Joiner.
- * @retval OT_ERROR_FAILED      The iterator is illegal.
  *
  */
 otError otCommissionerGetNextJoinerInfo(otInstance *aInstance, uint16_t &aIterator, otJoinerInfo &aJoiner);

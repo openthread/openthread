@@ -302,14 +302,14 @@ otError Commissioner::GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoin
     otError error = OT_ERROR_NONE;
     size_t  index;
 
-    memset(&aJoiner, 0, sizeof(aJoiner));
-
     for (index = aIterator; index < OT_ARRAY_LENGTH(mJoiners); index++)
     {
         if (!mJoiners[index].mValid)
         {
             continue;
         }
+
+        memset(&aJoiner, 0, sizeof(aJoiner));
 
         aJoiner.mAny = mJoiners[index].mAny;
         memcpy(&aJoiner.mEui64, &mJoiners[index].mEui64, sizeof(aJoiner.mEui64));
