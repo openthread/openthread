@@ -291,20 +291,22 @@ void Leader::HandleCommissioningGet(Coap::Message &aMessage, const Ip6::MessageI
     uint8_t      tlvs[NetworkData::kMaxSize];
     uint8_t      length = 0;
 
-    while (offset < aMessage.GetLength())
+    while (offset + sizeof(tlv) <= aMessage.GetLength())
     {
         aMessage.Read(offset, sizeof(tlv), &tlv);
+        VerifyOrExit(tlv.GetLength() <= aMessage.GetLength() - offset - sizeof(tlv));
 
         if (tlv.GetType() == MeshCoP::Tlv::kGet)
         {
             length = tlv.GetLength();
-            aMessage.Read(offset + sizeof(MeshCoP::Tlv), length, tlvs);
+            aMessage.Read(offset + sizeof(tlv), length, tlvs);
             break;
         }
 
         offset += sizeof(tlv) + tlv.GetLength();
     }
 
+exit:
     SendCommissioningGetResponse(aMessage, aMessageInfo, tlvs, length);
 }
 
