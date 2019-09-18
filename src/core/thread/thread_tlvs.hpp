@@ -305,8 +305,10 @@ public:
      */
     void SetIid(const Mac::ExtAddress &aExtAddress)
     {
-        memcpy(mIid, aExtAddress.m8, sizeof(mIid));
-        mIid[0] ^= 0x2;
+        Mac::ExtAddress *iid = reinterpret_cast<Mac::ExtAddress *>(mIid);
+
+        *iid = aExtAddress;
+        iid->ToggleLocal();
     }
 
 private:
