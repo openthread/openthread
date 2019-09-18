@@ -119,7 +119,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND   Not found next Joiner.
      *
      */
-    otError GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoiner);
+    otError GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoiner) const;
 
     /**
      * This method removes a Joiner entry.

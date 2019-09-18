@@ -297,7 +297,7 @@ exit:
     return error;
 }
 
-otError Commissioner::GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoiner)
+otError Commissioner::GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoiner) const
 {
     otError error = OT_ERROR_NONE;
     size_t  index;
@@ -311,10 +311,10 @@ otError Commissioner::GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoin
 
         memset(&aJoiner, 0, sizeof(aJoiner));
 
-        aJoiner.mAny = mJoiners[index].mAny;
-        memcpy(&aJoiner.mEui64, &mJoiners[index].mEui64, sizeof(aJoiner.mEui64));
+        aJoiner.mAny   = mJoiners[index].mAny;
+        aJoiner.mEui64 = mJoiners[index].mEui64;
         strlcpy(aJoiner.mPsk, mJoiners[index].mPsk, sizeof(aJoiner.mPsk));
-        aJoiner.mExpirationTime = mJoiners[index].mExpirationTime;
+        aJoiner.mExpirationTime = mJoiners[index].mExpirationTime - TimerMilli::GetNow();
         aIterator               = static_cast<uint16_t>(index) + 1;
         ExitNow();
     }
