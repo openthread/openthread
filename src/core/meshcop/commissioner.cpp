@@ -318,6 +318,7 @@ otError Commissioner::GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoin
         aIterator               = static_cast<uint16_t>(index) + 1;
         ExitNow();
     }
+
     error = OT_ERROR_NOT_FOUND;
 
 exit:
