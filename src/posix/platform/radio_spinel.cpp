@@ -51,6 +51,7 @@
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>
 #include <common/logging.hpp>
+#include <common/new.hpp>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
@@ -308,6 +309,7 @@ exit:
 void RadioSpinel::Deinit(void)
 {
     mHdlcInterface.Deinit();
+    new (this) RadioSpinel();
 }
 
 void RadioSpinel::HandleSpinelFrame(HdlcInterface::RxFrameBuffer &aFrameBuffer)
