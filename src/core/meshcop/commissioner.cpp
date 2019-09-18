@@ -306,14 +306,17 @@ otError Commissioner::GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoin
 
     for (index = aIterator; index < OT_ARRAY_LENGTH(mJoiners); index++)
     {
-        if (mJoiners[index].mValid)
+        if (!mJoiners[index].mValid)
         {
-            aJoiner.mAny = mJoiners[index].mAny;
-            memcpy(&aJoiner.mEui64, &mJoiners[index].mEui64, sizeof(mJoiners[index].mEui64));
-            strlcpy(aJoiner.mPsk, mJoiners[index].mPsk, sizeof(mJoiners[index].mPsk));
-            aIterator = index + 1;
-            ExitNow();
+            continue;
         }
+
+        aJoiner.mAny = mJoiners[index].mAny;
+        memcpy(&aJoiner.mEui64, &mJoiners[index].mEui64, sizeof(aJoiner.mEui64));
+        strlcpy(aJoiner.mPsk, mJoiners[index].mPsk, sizeof(aJoiner.mPsk));
+        aJoiner.mExpirationTime = mJoiners[index].mExpirationTime;
+        aIterator               = static_cast<uint16_t>(index) + 1;
+        ExitNow();
     }
     error = OT_ERROR_NOT_FOUND;
 

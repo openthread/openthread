@@ -110,14 +110,16 @@ typedef struct otCommissioningDataset
     bool mIsJoinerUdpPortSet : 1; ///< TRUE if Joiner UDP Port is set, FALSE otherwise.
 } otCommissioningDataset;
 
+#define OT_PSKD_MAX_SIZE 32 ///< Size of a Joiner PSKd (bytes)
 /**
  * This structure represents a Joiner Info.
  *
  */
 typedef struct otJoinerInfo
 {
-    otExtAddress mEui64;                 /// Joiner eui64
-    char         mPsk[OT_PSKC_MAX_SIZE]; /// Joiner pskc
+    otExtAddress mEui64;                     /// Joiner eui64
+    char         mPsk[OT_PSKD_MAX_SIZE + 1]; /// Joiner pskc
+    uint32_t     mExpirationTime;            /// Joiner expiration time
 
     bool mAny : 1; /// TRUE if eui64 isn't set, FALSE otherwise.
 } otJoinerInfo;
@@ -195,14 +197,14 @@ otError otCommissionerAddJoiner(otInstance *        aInstance,
                                 uint32_t            aTimeout);
 
 /**
- * This method Get joiner info at aIterator position.
+ * This method get joiner info at aIterator position.
  *
- * @param[in]   aInstance   A pointer to instance.
- * @param[in]   aIterator   A iterator to the index of the joiner.
- * @param[out]  aJoiner     A reference to Joiner info.
+ * @param[in]      aInstance   A pointer to instance.
+ * @param[inout]   aIterator   A iterator to the index of the joiner.
+ * @param[out]     aJoiner     A reference to Joiner info.
  *
  * @retval OT_ERROR_NONE        Successfully get the Joiner info.
- * @retval OT_ERROR_NO_FOUND    Not found next Joiner.
+ * @retval OT_ERROR_NOT_FOUND   Not found next Joiner.
  * @retval OT_ERROR_FAILED      The iterator is illegal.
  *
  */

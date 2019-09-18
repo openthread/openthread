@@ -112,11 +112,11 @@ public:
     /**
      * This method Get joiner info at aIterator position.
      *
-     * @param[in]   aIterator   A iterator to the index of the joiner.
-     * @param[out]  aJoiner     A reference to Joiner info.
+     * @param[inout]    aIterator   A iterator to the index of the joiner.
+     * @param[out]      aJoiner     A reference to Joiner info.
      *
      * @retval OT_ERROR_NONE        Successfully get the Joiner info.
-     * @retval OT_ERROR_NO_FOUND    Not found next Joiner.
+     * @retval OT_ERROR_NOT_FOUND   Not found next Joiner.
      * @retval OT_ERROR_FAILED      The iterator is illegal.
      *
      */
