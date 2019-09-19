@@ -143,8 +143,8 @@ static int8_t   sTxPower     = 0;
 
 static bool sSrcMatchEnabled = false;
 
-#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE	
-static bool sRadioCoexEnabled = true;	
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+static bool sRadioCoexEnabled = true;
 #endif
 
 static inline bool isFrameTypeAck(const uint8_t *aFrame)
