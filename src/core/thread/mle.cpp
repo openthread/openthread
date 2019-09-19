@@ -2684,7 +2684,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     tagLength = sizeof(tag);
     aesCcm.Finalize(tag, &tagLength);
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    VerifyOrExit(memcmp(messageTag, tag, sizeof(tag)) == 0);
+    VerifyOrExit(memcmp(messageTag, tag, sizeof(tag)) == 0, otLogDebgMle("MLE CCM FAIL"));
 #endif
 
     if (keySequence > Get<KeyManager>().GetCurrentKeySequence())
