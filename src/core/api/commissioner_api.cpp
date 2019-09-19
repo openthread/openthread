@@ -81,11 +81,17 @@ otError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aEui6
                                                            aTimeout);
 }
 
-otError otCommissionerGetNextJoinerInfo(otInstance *aInstance, uint16_t &aIterator, otJoinerInfo &aJoiner)
+otError otCommissionerGetNextJoinerInfo(otInstance *aInstance, uint16_t *aIterator, otJoinerInfo *aJoiner)
 {
+    otError   error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<MeshCoP::Commissioner>().GetNextJoinerInfo(aIterator, aJoiner);
+    VerifyOrExit(aIterator && aJoiner, error = OT_ERROR_INVALID_ARGS);
+
+    error = instance.Get<MeshCoP::Commissioner>().GetNextJoinerInfo(*aIterator, *aJoiner);
+
+exit:
+    return error;
 }
 
 otError otCommissionerRemoveJoiner(otInstance *aInstance, const otExtAddress *aEui64)

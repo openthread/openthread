@@ -201,14 +201,15 @@ otError otCommissionerAddJoiner(otInstance *        aInstance,
  * This method get joiner info at aIterator position.
  *
  * @param[in]      aInstance   A pointer to instance.
- * @param[inout]   aIterator   A iterator to the index of the joiner.
+ * @param[inout]   aIterator   A pointer to the Joiner Info iterator context.
  * @param[out]     aJoiner     A reference to Joiner info.
  *
- * @retval OT_ERROR_NONE        Successfully get the Joiner info.
- * @retval OT_ERROR_NOT_FOUND   Not found next Joiner.
+ * @retval OT_ERROR_NONE          Successfully get the Joiner info.
+ * @retval OT_ERROR_INVALID_ARGS  @p aIterator or @p aJoiner are NULL.
+ * @retval OT_ERROR_NOT_FOUND     Not found next Joiner.
  *
  */
-otError otCommissionerGetNextJoinerInfo(otInstance *aInstance, uint16_t &aIterator, otJoinerInfo &aJoiner);
+otError otCommissionerGetNextJoinerInfo(otInstance *aInstance, uint16_t *aIterator, otJoinerInfo *aJoiner);
 
 /**
  * This function removes a Joiner entry.
