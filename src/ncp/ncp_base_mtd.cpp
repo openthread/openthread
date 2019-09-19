@@ -1078,11 +1078,11 @@ otError NcpBase::EncodeOperationalDataset(const otOperationalDataset &aDataset)
         SuccessOrExit(mEncoder.CloseStruct());
     }
 
-    if (aDataset.mComponents.mIsPSKcPresent)
+    if (aDataset.mComponents.mIsPskcPresent)
     {
         SuccessOrExit(mEncoder.OpenStruct());
         SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_NET_PSKC));
-        SuccessOrExit(mEncoder.WriteData(aDataset.mPSKc.m8, sizeof(spinel_net_pskc_t)));
+        SuccessOrExit(mEncoder.WriteData(aDataset.mPskc.m8, sizeof(spinel_net_pskc_t)));
         SuccessOrExit(mEncoder.CloseStruct());
     }
 
@@ -1281,10 +1281,10 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
                 SuccessOrExit(error = mDecoder.ReadData(psk, len));
                 VerifyOrExit(len == OT_PSKC_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
-                memcpy(aDataset.mPSKc.m8, psk, OT_PSKC_MAX_SIZE);
+                memcpy(aDataset.mPskc.m8, psk, OT_PSKC_MAX_SIZE);
             }
 
-            aDataset.mComponents.mIsPSKcPresent = true;
+            aDataset.mComponents.mIsPskcPresent = true;
             break;
 
         case SPINEL_PROP_DATASET_SECURITY_POLICY:

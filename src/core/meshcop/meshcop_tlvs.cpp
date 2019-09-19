@@ -64,8 +64,8 @@ bool Tlv::IsValid(const Tlv &aTlv)
         rval = static_cast<const NetworkMasterKeyTlv &>(aTlv).IsValid();
         break;
 
-    case Tlv::kPSKc:
-        rval = static_cast<const PSKcTlv &>(aTlv).IsValid();
+    case Tlv::kPskc:
+        rval = static_cast<const PskcTlv &>(aTlv).IsValid();
         break;
 
     case Tlv::kMeshLocalPrefix:

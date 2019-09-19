@@ -239,7 +239,7 @@ public:
     /**
      * This method sets the PSK.
      *
-     * @param[in]  aPSK  A pointer to the PSK.
+     * @param[in]  aPsk  A pointer to the PSK.
      *
      * @retval OT_ERROR_NONE          Successfully set the PSK.
      * @retval OT_ERROR_INVALID_ARGS  The PSK is invalid.

@@ -312,7 +312,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_PSKC>(void)
 {
-    return mEncoder.WriteData(otThreadGetPSKc(mInstance)->m8, sizeof(spinel_net_pskc_t));
+    return mEncoder.WriteData(otThreadGetPskc(mInstance)->m8, sizeof(spinel_net_pskc_t));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PSKC>(void)
@@ -325,7 +325,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PSKC>(void)
 
     VerifyOrExit(len == sizeof(spinel_net_pskc_t), error = OT_ERROR_PARSE);
 
-    error = otThreadSetPSKc(mInstance, reinterpret_cast<const otPSKc *>(ptr));
+    error = otThreadSetPskc(mInstance, reinterpret_cast<const otPskc *>(ptr));
 
 exit:
     return error;
@@ -789,10 +789,10 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_JOINERS>(vo
 {
     otError             error         = OT_ERROR_NONE;
     const otExtAddress *eui64         = NULL;
-    const char *        aPSKd         = NULL;
+    const char *        pskd          = NULL;
     uint32_t            joinerTimeout = 0;
 
-    SuccessOrExit(error = mDecoder.ReadUtf8(aPSKd));
+    SuccessOrExit(error = mDecoder.ReadUtf8(pskd));
     SuccessOrExit(error = mDecoder.ReadUint32(joinerTimeout));
 
     if (mDecoder.ReadEui64(eui64) != OT_ERROR_NONE)
@@ -800,7 +800,7 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_JOINERS>(vo
         eui64 = NULL;
     }
 
-    error = otCommissionerAddJoiner(mInstance, eui64, aPSKd, joinerTimeout);
+    error = otCommissionerAddJoiner(mInstance, eui64, pskd, joinerTimeout);
 
 exit:
     return error;

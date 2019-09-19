@@ -94,7 +94,7 @@ private:
     otError ProcessPendingTimestamp(int argc, char *argv[]);
     otError ProcessMgmtSetCommand(int argc, char *argv[]);
     otError ProcessMgmtGetCommand(int argc, char *argv[]);
-    otError ProcessPSKc(int argc, char *argv[]);
+    otError ProcessPskc(int argc, char *argv[]);
     otError ProcessSecurityPolicy(int argc, char *argv[]);
 
     Interpreter &mInterpreter;

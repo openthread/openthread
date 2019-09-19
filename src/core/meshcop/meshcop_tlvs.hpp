@@ -78,7 +78,7 @@ public:
         kPanId                   = OT_MESHCOP_TLV_PANID,                    ///< PAN ID TLV
         kExtendedPanId           = OT_MESHCOP_TLV_EXTPANID,                 ///< Extended PAN ID TLV
         kNetworkName             = OT_MESHCOP_TLV_NETWORKNAME,              ///< Network Name TLV
-        kPSKc                    = OT_MESHCOP_TLV_PSKC,                     ///< PSKc TLV
+        kPskc                    = OT_MESHCOP_TLV_PSKC,                     ///< PSKc TLV
         kNetworkMasterKey        = OT_MESHCOP_TLV_MASTERKEY,                ///< Network Master Key TLV
         kNetworkKeySequence      = OT_MESHCOP_TLV_NETWORK_KEY_SEQUENCE,     ///< Network Key Sequence TLV
         kMeshLocalPrefix         = OT_MESHCOP_TLV_MESHLOCALPREFIX,          ///< Mesh Local Prefix TLV
@@ -445,7 +445,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class PSKcTlv : public Tlv
+class PskcTlv : public Tlv
 {
 public:
     /**
@@ -454,7 +454,7 @@ public:
      */
     void Init(void)
     {
-        SetType(kPSKc);
+        SetType(kPskc);
         SetLength(sizeof(*this) - sizeof(Tlv));
     }
 
@@ -473,18 +473,18 @@ public:
      * @returns The PSKc value.
      *
      */
-    const otPSKc &GetPSKc(void) const { return mPSKc; }
+    const Pskc &GetPskc(void) const { return mPskc; }
 
     /**
      * This method sets the PSKc value.
      *
-     * @param[in]  aPSKc  A pointer to the PSKc value.
+     * @param[in]  aPskc  A pointer to the PSKc value.
      *
      */
-    void SetPSKc(const otPSKc &aPSKc) { mPSKc = aPSKc; }
+    void SetPskc(const Pskc &aPskc) { mPskc = aPskc; }
 
 private:
-    otPSKc mPSKc;
+    Pskc mPskc;
 } OT_TOOL_PACKED_END;
 
 /**

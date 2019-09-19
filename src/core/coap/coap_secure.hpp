@@ -151,7 +151,7 @@ public:
     /**
      * This method sets the PSK.
      *
-     * @param[in]  aPSK        A pointer to the PSK.
+     * @param[in]  aPsk        A pointer to the PSK.
      * @param[in]  aPskLength  The PSK length.
      *
      * @retval OT_ERROR_NONE          Successfully set the PSK.

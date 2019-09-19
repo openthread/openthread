@@ -99,7 +99,7 @@ public:
      * This method adds a Joiner entry.
      *
      * @param[in]  aEui64        A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.
-     * @param[in]  aPSKd         A pointer to the PSKd.
+     * @param[in]  aPskd         A pointer to the PSKd.
      * @param[in]  aTimeout      A time after which a Joiner is automatically removed, in seconds.
      *
      * @retval OT_ERROR_NONE           Successfully added the Joiner.
@@ -107,7 +107,7 @@ public:
      * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
      *
      */
-    otError AddJoiner(const Mac::ExtAddress *aEui64, const char *aPSKd, uint32_t aTimeout);
+    otError AddJoiner(const Mac::ExtAddress *aEui64, const char *aPskd, uint32_t aTimeout);
 
     /**
      * This method get joiner info at aIterator position.
@@ -222,16 +222,16 @@ public:
      * @param[in]  aPassPhrase   The commissioning passphrase.
      * @param[in]  aNetworkName  The network name for PSKc computation.
      * @param[in]  aExtPanId     The extended pan id for PSKc computation.
-     * @param[out] aPSKc         A pointer to where the generated PSKc will be placed.
+     * @param[out] aPskc         A pointer to where the generated PSKc will be placed.
      *
      * @retval OT_ERROR_NONE          Successfully generate PSKc.
      * @retval OT_ERROR_INVALID_ARGS  If the length of passphrase is out of range.
      *
      */
-    static otError GeneratePSKc(const char *              aPassPhrase,
+    static otError GeneratePskc(const char *              aPassPhrase,
                                 const char *              aNetworkName,
                                 const Mac::ExtendedPanId &aExtPanId,
-                                uint8_t *                 aPSKc);
+                                uint8_t *                 aPskc);
 
     /**
      * This method returns a reference to the AnnounceBeginClient instance.

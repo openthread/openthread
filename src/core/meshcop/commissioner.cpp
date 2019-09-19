@@ -244,13 +244,13 @@ void Commissioner::ClearJoiners(void)
     SendCommissionerSet();
 }
 
-otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64, const char *aPSKd, uint32_t aTimeout)
+otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64, const char *aPskd, uint32_t aTimeout)
 {
     otError error = OT_ERROR_NO_BUFS;
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
 
-    VerifyOrExit(strlen(aPSKd) <= Dtls::kPskMaxLength, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(strlen(aPskd) <= Dtls::kPskMaxLength, error = OT_ERROR_INVALID_ARGS);
     RemoveJoiner(aEui64, 0); // remove immediately
 
     for (size_t i = 0; i < OT_ARRAY_LENGTH(mJoiners); i++)
@@ -270,7 +270,7 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64, const char *aPSKd
             mJoiners[i].mAny = true;
         }
 
-        (void)strlcpy(mJoiners[i].mPsk, aPSKd, sizeof(mJoiners[i].mPsk));
+        (void)strlcpy(mJoiners[i].mPsk, aPskd, sizeof(mJoiners[i].mPsk));
         mJoiners[i].mValid          = true;
         mJoiners[i].mExpirationTime = TimerMilli::GetNow() + TimerMilli::SecToMsec(aTimeout);
 
@@ -286,11 +286,11 @@ exit:
     {
         if (aEui64)
         {
-            otLogInfoMeshCoP("Added Joiner (%s, %s)", aEui64->ToString().AsCString(), aPSKd);
+            otLogInfoMeshCoP("Added Joiner (%s, %s)", aEui64->ToString().AsCString(), aPskd);
         }
         else
         {
-            otLogInfoMeshCoP("Added Joiner (*, %s)", aPSKd);
+            otLogInfoMeshCoP("Added Joiner (*, %s)", aPskd);
         }
     }
 
@@ -1118,10 +1118,10 @@ exit:
     return error;
 }
 
-otError Commissioner::GeneratePSKc(const char *              aPassPhrase,
+otError Commissioner::GeneratePskc(const char *              aPassPhrase,
                                    const char *              aNetworkName,
                                    const Mac::ExtendedPanId &aExtPanId,
-                                   uint8_t *                 aPSKc)
+                                   uint8_t *                 aPskc)
 {
     otError     error      = OT_ERROR_NONE;
     const char *saltPrefix = "Thread";
@@ -1143,7 +1143,7 @@ otError Commissioner::GeneratePSKc(const char *              aPassPhrase,
     saltLen += static_cast<uint16_t>(strlen(aNetworkName));
 
     otPbkdf2Cmac(reinterpret_cast<const uint8_t *>(aPassPhrase), static_cast<uint16_t>(strlen(aPassPhrase)),
-                 reinterpret_cast<const uint8_t *>(salt), saltLen, 16384, OT_PSKC_MAX_SIZE, aPSKc);
+                 reinterpret_cast<const uint8_t *>(salt), saltLen, 16384, OT_PSKC_MAX_SIZE, aPskc);
 
 exit:
     return error;

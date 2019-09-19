@@ -85,7 +85,7 @@ typedef void (*otJoinerCallback)(otError aError, void *aContext);
  * This function enables the Thread Joiner role.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aPSKd             A pointer to the PSKd.
+ * @param[in]  aPskd             A pointer to the PSKd.
  * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
  * @param[in]  aVendorName       A pointer to the Vendor Name (may be NULL).
  * @param[in]  aVendorModel      A pointer to the Vendor Model (may be NULL).
@@ -95,11 +95,11 @@ typedef void (*otJoinerCallback)(otError aError, void *aContext);
  * @param[in]  aContext          A pointer to application-specific context.
  *
  * @retval OT_ERROR_NONE              Successfully started the Commissioner role.
- * @retval OT_ERROR_INVALID_ARGS      @p aPSKd or @p aProvisioningUrl is invalid.
+ * @retval OT_ERROR_INVALID_ARGS      @p aPskd or @p aProvisioningUrl is invalid.
  *
  */
 otError otJoinerStart(otInstance *     aInstance,
-                      const char *     aPSKd,
+                      const char *     aPskd,
                       const char *     aProvisioningUrl,
                       const char *     aVendorName,
                       const char *     aVendorModel,

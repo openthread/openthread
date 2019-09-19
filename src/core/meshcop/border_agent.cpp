@@ -652,7 +652,7 @@ otError BorderAgent::Start(void)
     VerifyOrExit(mState == OT_BORDER_AGENT_STATE_STOPPED, error = OT_ERROR_ALREADY);
 
     SuccessOrExit(error = coaps.Start(kBorderAgentUdpPort));
-    SuccessOrExit(error = coaps.SetPsk(Get<KeyManager>().GetPSKc().m8, OT_PSKC_MAX_SIZE));
+    SuccessOrExit(error = coaps.SetPsk(Get<KeyManager>().GetPskc().m8, OT_PSKC_MAX_SIZE));
     coaps.SetConnectedCallback(HandleConnected, this);
 
     coaps.AddResource(mActiveGet);

@@ -45,7 +45,7 @@ void TestMinimumPassphrase(void)
                                     0xcc, 0xd1, 0xe4, 0xc0, 0x1d, 0x01, 0x54, 0xf8};
     const char    passphrase[]   = "123456";
     otInstance *  instance       = testInitInstance();
-    SuccessOrQuit(ot::MeshCoP::Commissioner::GeneratePSKc(passphrase, "OpenThread",
+    SuccessOrQuit(ot::MeshCoP::Commissioner::GeneratePskc(passphrase, "OpenThread",
                                                           static_cast<const ot::Mac::ExtendedPanId &>(sXPanId), pskc),
                   "TestMinimumPassphrase failed to generate PSKc");
     VerifyOrQuit(memcmp(pskc, expectedPskc, sizeof(pskc)) == 0, "TestMinimumPassphrase got wrong pskc");
@@ -75,7 +75,7 @@ void TestMaximumPassphrase(void)
                               "123456781234567";
 
     otInstance *instance = testInitInstance();
-    SuccessOrQuit(ot::MeshCoP::Commissioner::GeneratePSKc(passphrase, "OpenThread",
+    SuccessOrQuit(ot::MeshCoP::Commissioner::GeneratePskc(passphrase, "OpenThread",
                                                           static_cast<const ot::Mac::ExtendedPanId &>(sXPanId), pskc),
                   "TestMaximumPassphrase failed to generate PSKc");
     VerifyOrQuit(memcmp(pskc, expectedPskc, sizeof(pskc)) == 0, "TestMaximumPassphrase got wrong pskc");
