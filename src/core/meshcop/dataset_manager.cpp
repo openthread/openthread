@@ -530,11 +530,11 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         SuccessOrExit(error = message->AppendTlv(channelMask));
     }
 
-    if (aDataset.mComponents.mIsPSKcPresent)
+    if (aDataset.mComponents.mIsPskcPresent)
     {
-        PSKcTlv pskc;
+        PskcTlv pskc;
         pskc.Init();
-        pskc.SetPSKc(aDataset.mPSKc);
+        pskc.SetPskc(static_cast<const Pskc &>(aDataset.mPskc));
         SuccessOrExit(error = message->AppendTlv(pskc));
     }
 
