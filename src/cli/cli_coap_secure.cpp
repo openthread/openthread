@@ -558,8 +558,8 @@ void CoapSecure::DefaultHandler(void *aContext, otMessage *aMessage, const otMes
 
 void CoapSecure::DefaultHandler(otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    otError    error = OT_ERROR_NONE;
-    otMessage *responseMessage;
+    otError    error           = OT_ERROR_NONE;
+    otMessage *responseMessage = NULL;
 
     if ((otCoapMessageGetType(aMessage) == OT_COAP_TYPE_CONFIRMABLE) ||
         (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET))
@@ -576,7 +576,10 @@ void CoapSecure::DefaultHandler(otMessage *aMessage, const otMessageInfo *aMessa
     }
 
 exit:
-    return;
+    if (error != OT_ERROR_NONE && responseMessage != NULL)
+    {
+        otMessageFree(responseMessage);
+    }
 }
 #endif // CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 
