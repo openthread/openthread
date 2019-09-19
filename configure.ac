@@ -405,14 +405,11 @@ if test "$enable_builtin_mbedtls" = "yes" -a ! "${MBEDTLS_CPPFLAGS}"; then
 fi
 
 if test "$enable_builtin_mbedtls" = "yes"; then
-    OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=1
-else
-    OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=0
+    CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=1"
 fi
 
 AC_MSG_CHECKING([whether mbed TLS should be enabled])
 AC_MSG_RESULT(${enable_builtin_mbedtls})
-AC_DEFINE_UNQUOTED([OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS], [${OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS}], [Define to 1 if you want to enable support for bultin-mbedtls.])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_BUILTIN_MBEDTLS], [test "${enable_builtin_mbedtls}" = "yes"])
 
 #
@@ -437,15 +434,11 @@ AC_ARG_ENABLE(posix-app,
     [enable_posix_app=no])
 
 if test "$enable_posix_app" = "yes"; then
-    OPENTHREAD_PLATFORM_POSIX_APP=1
-else
-    OPENTHREAD_PLATFORM_POSIX_APP=0
+    CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_PLATFORM_POSIX_APP=1"
 fi
 
 AC_MSG_RESULT(${enable_posix_app})
-AC_SUBST(OPENTHREAD_PLATFORM_POSIX_APP)
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_POSIX_APP], [test "${enable_posix_app}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_PLATFORM_POSIX_APP], [${OPENTHREAD_PLATFORM_POSIX_APP}], [Define to 1 to build posix application.])
 
 #
 # POSIX Daemon
@@ -469,15 +462,11 @@ AC_ARG_ENABLE(posix-app-daemon,
     [enable_posix_app_daemon=no])
 
 if test "$enable_posix_app_daemon" = "yes"; then
-    OPENTHREAD_ENABLE_POSIX_APP_DAEMON=1
-else
-    OPENTHREAD_ENABLE_POSIX_APP_DAEMON=0
+    CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_ENABLE_POSIX_APP_DAEMON=1"
 fi
 
 AC_MSG_RESULT(${enable_posix_app_daemon})
-AC_SUBST(OPENTHREAD_ENABLE_POSIX_APP_DAEMON)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_POSIX_APP_DAEMON], [test "${enable_posix_app_daemon}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_POSIX_APP_DAEMON], [${OPENTHREAD_ENABLE_POSIX_APP_DAEMON}], [Define to 1 to build posix application in daemon mode.])
 
 #
 # FTD Library
@@ -667,6 +656,7 @@ AC_ARG_WITH(
         then AC_MSG_ERROR([Can't open ${withval} for --with-vendor-extension])
         else
             OPENTHREAD_ENABLE_VENDOR_EXTENSION=1
+            CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_ENABLE_VENDOR_EXTENSION=1"
 
             # Get the absolute path.
             OPENTHREAD_VENDOR_EXTENSION_SOURCE=$(cd `dirname ${withval}` && pwd)/$(basename ${withval})
@@ -680,7 +670,6 @@ AC_ARG_WITH(
 AC_MSG_CHECKING([for vendor extension])
 AC_MSG_RESULT(${OPENTHREAD_VENDOR_EXTENSION_SOURCE-none})
 AC_SUBST(OPENTHREAD_VENDOR_EXTENSION_SOURCE)
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_VENDOR_EXTENSION],[${OPENTHREAD_ENABLE_VENDOR_EXTENSION}],[Define to 1 if using vendor extension])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_VENDOR_EXTENSION], [test "${OPENTHREAD_ENABLE_VENDOR_EXTENSION}" = "1"])
 
 #
@@ -697,6 +686,7 @@ AC_ARG_WITH(
         then AC_MSG_ERROR([Can't open ${withval} for --with-ncp-vendor-hook-source])
         else
             OPENTHREAD_ENABLE_NCP_VENDOR_HOOK=1
+            CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_ENABLE_NCP_VENDOR_HOOK=1"
 
             # Get the absolute path.
             OPENTHREAD_NCP_VENDOR_HOOK_SOURCE=$(cd `dirname ${withval}` && pwd)/$(basename ${withval})
@@ -710,7 +700,6 @@ AC_ARG_WITH(
 AC_MSG_CHECKING([for NCP vendor hook source])
 AC_MSG_RESULT(${OPENTHREAD_NCP_VENDOR_HOOK_SOURCE-none})
 AC_SUBST(OPENTHREAD_NCP_VENDOR_HOOK_SOURCE)
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_VENDOR_HOOK],[${OPENTHREAD_ENABLE_NCP_VENDOR_HOOK}],[Define to 1 if using NCP vendor hook])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_VENDOR_HOOK], [test "${OPENTHREAD_ENABLE_NCP_VENDOR_HOOK}" = "1"])
 
 #
@@ -725,6 +714,7 @@ AC_ARG_WITH(
         then OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER=0
         else
             OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER=1
+            CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER=1"
             OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS=${withval}
         fi
     ],
@@ -736,7 +726,6 @@ AC_ARG_WITH(
 AC_MSG_CHECKING([for NCP Spinel Encrypter])
 AC_MSG_RESULT(${OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS-none})
 AC_SUBST(OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS)
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER],[${OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER}],[Define to 1 if using NCP Spinel Encrypter])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER], [test "${OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER}" = "1"])
 
 #
@@ -804,122 +793,26 @@ AC_ARG_WITH(examples,
     ],
     [with_examples=none])
 
-OPENTHREAD_ENABLE_EXAMPLES=${with_examples}
+AM_CONDITIONAL([OPENTHREAD_ENABLE_EXAMPLES], [test ${with_examples} != "none"])
 
-case ${with_examples} in
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_POSIX],     [test "${with_examples}" = "posix"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC1352],    [test "${with_examples}" = "cc1352"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2538],    [test "${with_examples}" = "cc2538"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2650],    [test "${with_examples}" = "cc2650"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2652],    [test "${with_examples}" = "cc2652"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32MG12], [test "${with_examples}" = "efr32mg12"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32MG21], [test "${with_examples}" = "efr32mg21"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_GP712],     [test "${with_examples}" = "gp712"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_KW41Z],     [test "${with_examples}" = "kw41z"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52811],  [test "${with_examples}" = "nrf52811"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52840],  [test "${with_examples}" = "nrf52840"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_QPG6095],   [test "${with_examples}" = "qpg6095"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_SAMR21],    [test "${with_examples}" = "samr21"])
 
-    posix)
-        OPENTHREAD_EXAMPLES_POSIX=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_POSIX],[${OPENTHREAD_EXAMPLES_POSIX}],[Define to 1 if you want to use posix examples])
-        ;;
-
-    cc1352)
-        OPENTHREAD_EXAMPLES_CC1352=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC1352],[${OPENTHREAD_EXAMPLES_CC1352}],[Define to 1 if you want to use cc1352 examples])
-        ;;
-
-    cc2538)
-        OPENTHREAD_EXAMPLES_CC2538=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2538],[${OPENTHREAD_EXAMPLES_CC2538}],[Define to 1 if you want to use cc2538 examples])
-        ;;
-
-    cc2650)
-        OPENTHREAD_EXAMPLES_CC2650=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2650],[${OPENTHREAD_EXAMPLES_CC2650}],[Define to 1 if you want to use cc2650 examples])
-        ;;
-
-    cc2652)
-        OPENTHREAD_EXAMPLES_CC2652=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2652],[${OPENTHREAD_EXAMPLES_CC2652}],[Define to 1 if you want to use cc2652 examples])
-        ;;
-
-    efr32mg12)
-        OPENTHREAD_EXAMPLES_EFR32MG12=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_EFR32MG12],[${OPENTHREAD_EXAMPLES_EFR32MG12}],[Define to 1 if you want to use efr32mg12 examples])
-        ;;
-
-    efr32mg21)
-        OPENTHREAD_EXAMPLES_EFR32MG21=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_EFR32MG21],[${OPENTHREAD_EXAMPLES_EFR32MG21}],[Define to 1 if you want to use efr32mg21 examples])
-        ;;
-
-    gp712)
-        OPENTHREAD_EXAMPLES_GP712=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_GP712],[${OPENTHREAD_EXAMPLES_GP712}],[Define to 1 if you want to use gp712 examples])
-        ;;
-
-    kw41z)
-        OPENTHREAD_EXAMPLES_KW41Z=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_KW41Z],[${OPENTHREAD_EXAMPLES_KW41Z}],[Define to 1 if you want to use kw41z examples])
-        ;;
-
-    nrf52811)
-        OPENTHREAD_EXAMPLES_NRF52811=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_NRF52811],[${OPENTHREAD_EXAMPLES_NRF52811}],[Define to 1 if you want to use nrf52811 examples])
-        ;;
-
-    nrf52840)
-        OPENTHREAD_EXAMPLES_NRF52840=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_NRF52840],[${OPENTHREAD_EXAMPLES_NRF52840}],[Define to 1 if you want to use nrf52840 examples])
-        ;;
-
-    qpg6095)
-        OPENTHREAD_EXAMPLES_QPG6095=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_QPG6095],[${OPENTHREAD_EXAMPLES_QPG6095}],[Define to 1 if you want to use qpg6095 examples])
-        ;;
-
-    samr21)
-        OPENTHREAD_EXAMPLES_SAMR21=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_SAMR21],[${OPENTHREAD_EXAMPLES_SAMR21}],[Define to 1 if you want to use samr21 examples])
-        ;;
-
-esac
+AM_COND_IF([OPENTHREAD_EXAMPLES_POSIX], CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_EXAMPLES_POSIX=1")
 
 AC_MSG_CHECKING([whether to enable examples])
-AC_MSG_RESULT(${OPENTHREAD_EXAMPLES})
-
-AC_SUBST(OPENTHREAD_ENABLE_EXAMPLES)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_EXAMPLES], [test ${with_examples} != "none"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_EXAMPLES],[${OPENTHREAD_ENABLE_EXAMPLES}],[OpenThread examples])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_POSIX)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_POSIX], [test "${with_examples}" = "posix"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_CC1352)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC1352], [test "${with_examples}" = "cc1352"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_CC2538)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2538], [test "${with_examples}" = "cc2538"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_CC2650)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2650], [test "${with_examples}" = "cc2650"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_CC2652)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2652], [test "${with_examples}" = "cc2652"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_EFR32MG12)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32MG12], [test "${with_examples}" = "efr32mg12"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_EFR32MG21)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32MG21], [test "${with_examples}" = "efr32mg21"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_GP712)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_GP712], [test "${with_examples}" = "gp712"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_KW41Z)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_KW41Z], [test "${with_examples}" = "kw41z"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_NRF52811)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52811], [test "${with_examples}" = "nrf52811"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_NRF52840)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52840], [test "${with_examples}" = "nrf52840"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_QPG6095)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_QPG6095], [test "${with_examples}" = "qpg6095"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_SAMR21)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_SAMR21], [test "${with_examples}" = "samr21"])
+AC_MSG_RESULT(${with_examples})
 
 #
 # Tools
@@ -957,7 +850,7 @@ NL_ENABLE_DOCS([auto],[NO])
 
 AM_CONDITIONAL(OPENTHREAD_BUILD_DOCS, [test "${nl_cv_build_docs}" = "yes"])
 
-AM_CONDITIONAL(OPENTHREAD_POSIX, [test "${OPENTHREAD_PLATFORM_POSIX_APP}" = "1" -o "${OPENTHREAD_EXAMPLES_POSIX}" = "1"])
+AM_CONDITIONAL(OPENTHREAD_POSIX, [test "${enable_posix_app}" = "yes" -o "${OPENTHREAD_EXAMPLES_POSIX}" = "1"])
 
 #
 # Checks for libraries and packages.
