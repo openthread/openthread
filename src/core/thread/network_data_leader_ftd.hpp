@@ -225,9 +225,8 @@ private:
     void        HandleCommissioningGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void SendCommissioningGetResponse(const Coap::Message &   aRequest,
-                                      const Ip6::MessageInfo &aMessageInfo,
-                                      const uint8_t *         aTlvs,
-                                      uint8_t                 aLength);
+                                      uint16_t                aLength,
+                                      const Ip6::MessageInfo &aMessageInfo);
     void SendCommissioningSetResponse(const Coap::Message &    aRequest,
                                       const Ip6::MessageInfo & aMessageInfo,
                                       MeshCoP::StateTlv::State aState);

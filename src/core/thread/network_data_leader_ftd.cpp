@@ -286,32 +286,19 @@ void Leader::HandleCommissioningGet(void *aContext, otMessage *aMessage, const o
 
 void Leader::HandleCommissioningGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    MeshCoP::Tlv tlv;
-    uint16_t     offset = aMessage.GetOffset();
-    uint8_t      tlvs[NetworkData::kMaxSize];
-    uint8_t      length = 0;
+    uint16_t length = 0;
+    uint16_t offset;
 
-    while (offset < aMessage.GetLength())
-    {
-        aMessage.Read(offset, sizeof(tlv), &tlv);
+    SuccessOrExit(Tlv::GetValueOffset(aMessage, MeshCoP::Tlv::kGet, offset, length));
+    aMessage.SetOffset(offset);
 
-        if (tlv.GetType() == MeshCoP::Tlv::kGet)
-        {
-            length = tlv.GetLength();
-            aMessage.Read(offset + sizeof(MeshCoP::Tlv), length, tlvs);
-            break;
-        }
-
-        offset += sizeof(tlv) + tlv.GetLength();
-    }
-
-    SendCommissioningGetResponse(aMessage, aMessageInfo, tlvs, length);
+exit:
+    SendCommissioningGetResponse(aMessage, length, aMessageInfo);
 }
 
 void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
-                                          const Ip6::MessageInfo &aMessageInfo,
-                                          const uint8_t *         aTlvs,
-                                          uint8_t                 aLength)
+                                          uint16_t                aLength,
+                                          const Ip6::MessageInfo &aMessageInfo)
 {
     otError        error = OT_ERROR_NONE;
     Coap::Message *message;
@@ -345,10 +332,14 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
     {
         for (index = 0; index < aLength; index++)
         {
+            uint8_t type;
+
+            aRequest.Read(aRequest.GetOffset() + index, sizeof(type), &type);
+
             for (MeshCoP::Tlv *cur                                          = reinterpret_cast<MeshCoP::Tlv *>(data);
                  cur < reinterpret_cast<MeshCoP::Tlv *>(data + length); cur = cur->GetNext())
             {
-                if (cur->GetType() == aTlvs[index])
+                if (cur->GetType() == type)
                 {
                     SuccessOrExit(error = message->AppendTlv(*cur));
                     break;
