@@ -43,6 +43,12 @@
 
 #include "utils/code_utils.h"
 
+#define LOG_COLOR_CODE_DEFAULT "\x1B[0m"
+#define LOG_COLOR_CODE_RED "\x1B[1;31m"
+#define LOG_COLOR_CODE_GREEN "\x1B[1;32m"
+#define LOG_COLOR_CODE_YELLOW "\x1B[1;33m"
+#define LOG_COLOR_CODE_CYAN "\x1B[1;36m"
+
 // Macro to append content to end of the log string.
 
 #define LOG_PRINTF(...)                                                                   \
@@ -59,6 +65,8 @@ OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const 
     OT_UNUSED_VARIABLE(aLogRegion);
 
     char         logString[512];
+    int          logLevel = LOG_CRIT;
+    char *       logColor = NULL;
     unsigned int offset;
     int          charsWritten;
     va_list      args;
@@ -73,8 +81,45 @@ OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const 
 
     otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);
 
+    switch (aLogLevel)
+    {
+    case OT_LOG_LEVEL_NONE:
+        logLevel = LOG_ALERT;
+        logColor = LOG_COLOR_CODE_DEFAULT;
+        break;
+    case OT_LOG_LEVEL_CRIT:
+        logLevel = LOG_CRIT;
+        logColor = LOG_COLOR_CODE_RED;
+        break;
+    case OT_LOG_LEVEL_WARN:
+        logLevel = LOG_WARNING;
+        logColor = LOG_COLOR_CODE_YELLOW;
+        break;
+    case OT_LOG_LEVEL_NOTE:
+        logColor = LOG_COLOR_CODE_CYAN;
+        logLevel = LOG_NOTICE;
+        break;
+    case OT_LOG_LEVEL_INFO:
+        logColor = LOG_COLOR_CODE_GREEN;
+        logLevel = LOG_INFO;
+        break;
+    case OT_LOG_LEVEL_DEBG:
+        logColor = LOG_COLOR_CODE_DEFAULT;
+        logLevel = LOG_DEBUG;
+        break;
+    default:
+        assert(false);
+        logLevel = LOG_DEBUG;
+        break;
+    }
+
 exit:
-    syslog(LOG_CRIT, "%s", logString);
+#if OPENTHREAD_CONFIG_LOG_COLOR_ENABLE
+    syslog(logLevel, "%s%s%s", logColor, logString, LOG_COLOR_CODE_DEFAULT);
+#else
+    OT_UNUSED_VARIABLE(logColor);
+    syslog(logLevel, "%s", logString);
+#endif // OPENTHREAD_CONFIG_LOG_COLOR_ENABLE
 }
 
 #endif // #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)

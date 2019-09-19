@@ -278,6 +278,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_COLOR_ENABLE
+ *
+ * Define as 1 to enable color in logs.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_COLOR_ENABLE
+#define OPENTHREAD_CONFIG_LOG_COLOR_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_SUFFIX
  *
  * Define suffix to append at the end of logs.
