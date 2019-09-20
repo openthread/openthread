@@ -88,7 +88,6 @@ enum
  * This class implements metadata required for CoAP retransmission.
  *
  */
-OT_TOOL_PACKED_BEGIN
 class CoapMetadata
 {
     friend class CoapBase;
@@ -192,7 +191,7 @@ private:
     uint8_t               mRetransmissionCount;   ///< Number of retransmissions.
     bool                  mAcknowledged : 1;      ///< Information that request was acknowledged.
     bool                  mConfirmable : 1;       ///< Information that message is confirmable.
-} OT_TOOL_PACKED_END;
+};
 
 /**
  * This class implements CoAP resource handling.

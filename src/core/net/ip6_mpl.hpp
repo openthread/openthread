@@ -247,7 +247,6 @@ private:
  * This class represents metadata required for MPL retransmissions.
  *
  */
-OT_TOOL_PACKED_BEGIN
 class MplBufferedMessageMetadata
 {
 public:
@@ -426,7 +425,7 @@ private:
     uint8_t   mTransmissionCount;
     TimeMilli mTransmissionTime;
     uint8_t   mIntervalOffset;
-} OT_TOOL_PACKED_END;
+};
 
 /**
  * This class implements MPL message processing.
