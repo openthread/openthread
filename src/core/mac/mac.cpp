@@ -97,6 +97,7 @@ Mac::Mac(Instance &aInstance)
     , mRadioChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mRadioChannelAcquisitionId(0)
     , mSupportedChannelMask(Get<Radio>().GetSupportedChannelMask())
+    , mNetworkName()
     , mScanChannel(Radio::kChannelMin)
     , mScanDuration(0)
     , mScanChannelMask()
@@ -117,7 +118,6 @@ Mac::Mac(Instance &aInstance)
 
     mCcaSuccessRateTracker.Reset();
     memset(&mCounters, 0, sizeof(otMacCounters));
-    memset(&mNetworkName, 0, sizeof(otNetworkName));
     memset(&mExtendedPanId, 0, sizeof(ExtendedPanId));
 
     mSubMac.Enable();
@@ -238,7 +238,7 @@ otError Mac::ConvertBeaconToActiveScanResult(RxFrame *aBeaconFrame, otActiveScan
         aResult.mVersion    = beaconPayload->GetProtocolVersion();
         aResult.mIsJoinable = beaconPayload->IsJoiningPermitted();
         aResult.mIsNative   = beaconPayload->IsNative();
-        memcpy(&aResult.mNetworkName, beaconPayload->GetNetworkName(), BeaconPayload::kNetworkNameSize);
+        static_cast<NetworkName &>(aResult.mNetworkName).Set(beaconPayload->GetNetworkName());
         aResult.mExtendedPanId = beaconPayload->GetExtendedPanId();
     }
 
@@ -446,17 +446,33 @@ exit:
     return;
 }
 
-otError Mac::SetNetworkName(const char *aBuffer, uint8_t aLength)
+otError Mac::SetNetworkName(const char *aNameString)
 {
-    otError error  = OT_ERROR_NONE;
-    uint8_t newLen = static_cast<uint8_t>(strnlen(aBuffer, aLength));
+    // When setting Network Name from a string, we treat it as `Data`
+    // with `kMaxSize + 1` chars. `NetworkName::Set(data)` will look
+    // for null char in the data (within its given size) to calculate
+    // the name's length and ensure that the name fits in `kMaxSize`
+    // chars. The `+ 1` ensures that a `aNameString` with length
+    // longer than `kMaxSize` is correctly rejected (returning error
+    // `OT_ERROR_INVALID_ARGS`).
 
-    VerifyOrExit(newLen <= OT_NETWORK_NAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(newLen != strlen(mNetworkName.m8) || memcmp(mNetworkName.m8, aBuffer, newLen) != 0,
-                 Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_NETWORK_NAME));
+    NetworkName::Data data(aNameString, NetworkName::kMaxSize + 1);
 
-    memcpy(mNetworkName.m8, aBuffer, newLen);
-    mNetworkName.m8[newLen] = 0;
+    return SetNetworkName(data);
+}
+
+otError Mac::SetNetworkName(const NetworkName::Data &aName)
+{
+    otError error = mNetworkName.Set(aName);
+
+    if (error == OT_ERROR_ALREADY)
+    {
+        Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_NETWORK_NAME);
+        error = OT_ERROR_NONE;
+        ExitNow();
+    }
+
+    SuccessOrExit(error);
     Get<Notifier>().Signal(OT_CHANGED_THREAD_NETWORK_NAME);
 
 exit:
@@ -844,7 +860,7 @@ void Mac::PrepareBeacon(TxFrame &aFrame)
             beaconPayload->ClearJoiningPermitted();
         }
 
-        beaconPayload->SetNetworkName(mNetworkName.m8);
+        beaconPayload->SetNetworkName(mNetworkName.GetAsData());
         beaconPayload->SetExtendedPanId(mExtendedPanId);
 
         beaconLength += sizeof(*beaconPayload);

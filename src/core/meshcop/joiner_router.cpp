@@ -297,7 +297,7 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
     SuccessOrExit(error = message->AppendTlv(extendedPanId));
 
     networkName.Init();
-    networkName.SetNetworkName(Get<Mac::Mac>().GetNetworkName());
+    networkName.SetNetworkName(Get<Mac::Mac>().GetNetworkName().GetAsData());
     SuccessOrExit(error = message->AppendTlv(networkName));
 
     Get<ActiveDataset>().Read(dataset);

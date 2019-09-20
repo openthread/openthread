@@ -366,36 +366,32 @@ public:
     /**
      * This method returns the IEEE 802.15.4 Network Name.
      *
-     * @returns A pointer to the IEEE 802.15.4 Network Name.
+     * @returns The IEEE 802.15.4 Network Name.
      *
      */
-    const char *GetNetworkName(void) const { return mNetworkName.m8; }
+    const NetworkName &GetNetworkName(void) const { return mNetworkName; }
 
     /**
      * This method sets the IEEE 802.15.4 Network Name.
      *
-     * @param[in]  aNetworkName  A pointer to the string. Must be null terminated.
+     * @param[in]  aNameString   A pointer to a string character array. Must be null terminated.
      *
      * @retval OT_ERROR_NONE           Successfully set the IEEE 802.15.4 Network Name.
      * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
      *
      */
-    otError SetNetworkName(const char *aNetworkName)
-    {
-        return SetNetworkName(aNetworkName, OT_NETWORK_NAME_MAX_SIZE + 1);
-    }
+    otError SetNetworkName(const char *aNameString);
 
     /**
      * This method sets the IEEE 802.15.4 Network Name.
      *
-     * @param[in]  aBuffer  A pointer to the char buffer containing the name. Does not need to be null terminated.
-     * @param[in]  aLength  Number of chars in the buffer.
+     * @param[in]  aNameData     A name data (pointer to char buffer and length).
      *
      * @retval OT_ERROR_NONE           Successfully set the IEEE 802.15.4 Network Name.
      * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
      *
      */
-    otError SetNetworkName(const char *aBuffer, uint8_t aLength);
+    otError SetNetworkName(const NetworkName::Data &aNameData);
 
     /**
      * This method returns the IEEE 802.15.4 PAN ID.
@@ -713,7 +709,7 @@ private:
     uint16_t      mRadioChannelAcquisitionId;
     ChannelMask   mSupportedChannelMask;
     ExtendedPanId mExtendedPanId;
-    otNetworkName mNetworkName;
+    NetworkName   mNetworkName;
     uint8_t       mScanChannel;
     uint16_t      mScanDuration;
     ChannelMask   mScanChannelMask;

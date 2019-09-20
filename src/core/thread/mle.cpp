@@ -3825,8 +3825,7 @@ otError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Message
 
         case MeshCoP::Tlv::kNetworkName:
             aMessage.Read(offset, sizeof(networkName), &networkName);
-            memcpy(&result.mNetworkName, networkName.GetNetworkName(), networkName.GetNetworkNameLength());
-            result.mNetworkName.m8[networkName.GetNetworkNameLength()] = '\0';
+            static_cast<Mac::NetworkName &>(result.mNetworkName).Set(networkName.GetNetworkName());
             break;
 
         case MeshCoP::Tlv::kSteeringData:

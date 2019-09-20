@@ -476,6 +476,110 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
+ * This structure represents an IEEE802.15.4 Network Name.
+ *
+ */
+class NetworkName : public otNetworkName
+{
+public:
+    enum
+    {
+        kMaxSize = OT_NETWORK_NAME_MAX_SIZE, // Maximum number of chars in Network Name (excludes null char).
+    };
+
+    /**
+     * This class represents an IEEE802.15.4 Network Name as Data (pointer to a char buffer along with a length).
+     *
+     * @note The char array does NOT need to be null terminated.
+     *
+     */
+    class Data
+    {
+    public:
+        /**
+         * This constructor initializes the Data object.
+         *
+         * @param[in] aBuffer   A pointer to a `char` buffer (does not need to be null terminated).
+         * @param[in] aLength   The length (number of chars) in the buffer.
+         *
+         */
+        Data(const char *aBuffer, uint8_t aLength)
+            : mBuffer(aBuffer)
+            , mLength(aLength)
+        {
+        }
+
+        /**
+         * This method returns the pointer to char buffer (not necessarily null terminated).
+         *
+         * @returns The pointer to the char buffer.
+         *
+         */
+        const char *GetBuffer(void) const { return mBuffer; }
+
+        /**
+         * This method returns the length (number of chars in buffer).
+         *
+         * @returns The name length.
+         *
+         */
+        uint8_t GetLength(void) const { return mLength; }
+
+        /**
+         * This method copies the name data into a given char buffer with a given size.
+         *
+         * The given buffer is cleared (`memset` to zero) before copying the Network Name into it. The copied string
+         * in @p aBuffer is NOT necessarily null terminated.
+         *
+         * @param[out] aBuffer   A pointer to a buffer where to copy the Network Name into.
+         * @param[in]  aMaxSize  Size of @p aBuffer (maximum number of chars to write into @p aBuffer).
+         *
+         * @returns The actual number of chars copied into @p aBuffer.
+         *
+         */
+        uint8_t CopyTo(char *aBuffer, uint8_t aMaxSize) const;
+
+    private:
+        const char *mBuffer;
+        uint8_t     mLength;
+    };
+
+    /**
+     * This constructor initializes the IEEE802.15.4 Network Name as an empty string.
+     *
+     */
+    NetworkName(void) { m8[0] = '\0'; }
+
+    /**
+     * This method gets the IEEE802.15.4 Network Name as a null terminated C string.
+     *
+     * @returns The Network Name as a null terminated C string array.
+     *
+     */
+    const char *GetAsCString(void) const { return m8; }
+
+    /**
+     * This method gets the IEEE802.15.4 Network Name as Data.
+     *
+     * @returns The Network Name as Data.
+     *
+     */
+    Data GetAsData(void) const;
+
+    /**
+     * This method sets the IEEE 802.15.4 Network Name.
+     *
+     * @param[in]  aNameData           A reference to name data.
+     *
+     * @retval OT_ERROR_NONE           Successfully set the IEEE 802.15.4 Network Name.
+     * @retval OT_ERROR_ALREADY        The name is already set to the same string.
+     * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
+     *
+     */
+    otError Set(const Data &aNameData);
+};
+
+/**
  * This class implements IEEE 802.15.4 IE (Information Element) generation and parsing.
  *
  */
@@ -1591,9 +1695,8 @@ class BeaconPayload
 public:
     enum
     {
-        kProtocolId      = 3,  ///< Thread Protocol ID.
-        kNetworkNameSize = 16, ///< Size of Thread Network Name (bytes).
-        kInfoStringSize  = 92, ///< Max chars for the info string (@sa ToInfoString()).
+        kProtocolId     = 3,  ///< Thread Protocol ID.
+        kInfoStringSize = 92, ///< Max chars for the info string (@sa ToInfoString()).
     };
 
     enum
@@ -1697,25 +1800,20 @@ public:
     }
 
     /**
-     * This method returns a pointer to the Network Name field.
+     * This method gets the Network Name field.
      *
-     * @returns A pointer to the network name field.
+     * @returns The Network Name field as `NetworkName::Data`.
      *
      */
-    const char *GetNetworkName(void) const { return mNetworkName; }
+    NetworkName::Data GetNetworkName(void) const { return NetworkName::Data(mNetworkName, sizeof(mNetworkName)); }
 
     /**
      * This method sets the Network Name field.
      *
-     * @param[in]  aNetworkName  A pointer to the Network Name.
+     * @param[in]  aNameData  The Network Name (as a `NetworkName::Data`).
      *
      */
-    void SetNetworkName(const char *aNetworkName)
-    {
-        size_t length = strnlen(aNetworkName, sizeof(mNetworkName));
-        memset(mNetworkName, 0, sizeof(mNetworkName));
-        memcpy(mNetworkName, aNetworkName, length);
-    }
+    void SetNetworkName(const NetworkName::Data &aNameData) { aNameData.CopyTo(mNetworkName, sizeof(mNetworkName)); }
 
     /**
      * This method returns the Extended PAN ID field.
@@ -1744,7 +1842,7 @@ public:
 private:
     uint8_t       mProtocolId;
     uint8_t       mFlags;
-    char          mNetworkName[kNetworkNameSize];
+    char          mNetworkName[NetworkName::kMaxSize];
     ExtendedPanId mExtendedPanId;
 } OT_TOOL_PACKED_END;
 

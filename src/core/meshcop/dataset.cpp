@@ -191,8 +191,7 @@ void Dataset::Get(otOperationalDataset &aDataset) const
         case Tlv::kNetworkName:
         {
             const NetworkNameTlv *tlv = static_cast<const NetworkNameTlv *>(cur);
-            memcpy(aDataset.mNetworkName.m8, tlv->GetNetworkName(), tlv->GetLength());
-            aDataset.mNetworkName.m8[tlv->GetLength()] = '\0';
+            static_cast<Mac::NetworkName &>(aDataset.mNetworkName).Set(tlv->GetNetworkName());
             aDataset.mComponents.mIsNetworkNamePresent = true;
             break;
         }
@@ -328,7 +327,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
     {
         MeshCoP::NetworkNameTlv tlv;
         tlv.Init();
-        tlv.SetNetworkName(aDataset.mNetworkName.m8);
+        tlv.SetNetworkName(static_cast<const Mac::NetworkName &>(aDataset.mNetworkName).GetAsData());
         Set(tlv);
     }
 
@@ -556,7 +555,7 @@ otError Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdat
         case Tlv::kNetworkName:
         {
             const NetworkNameTlv *name = static_cast<const NetworkNameTlv *>(cur);
-            mac.SetNetworkName(name->GetNetworkName(), name->GetLength());
+            mac.SetNetworkName(name->GetNetworkName());
             break;
         }
 

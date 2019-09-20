@@ -405,39 +405,23 @@ public:
     bool IsValid(void) const { return true; }
 
     /**
-     * This method returns the Network Name length.
+     * This method gets the Network Name value.
      *
-     * @returns The Network Name length.
-     *
-     */
-    uint8_t GetNetworkNameLength(void) const
-    {
-        return GetLength() <= sizeof(mNetworkName) ? GetLength() : sizeof(mNetworkName);
-    }
-
-    /**
-     * This method returns the Network Name value.
-     *
-     * @returns The Network Name value.
+     * @returns The Network Name value (as `NetworkName::Data`).
      *
      */
-    const char *GetNetworkName(void) const { return mNetworkName; }
+    Mac::NetworkName::Data GetNetworkName(void) const;
 
     /**
      * This method sets the Network Name value.
      *
-     * @param[in]  aNetworkName  A pointer to the Network Name value.
+     * @param[in] aNameData   A Network Name value (as `NetworkName::Data`).
      *
      */
-    void SetNetworkName(const char *aNetworkName)
-    {
-        size_t length = strnlen(aNetworkName, sizeof(mNetworkName));
-        memcpy(mNetworkName, aNetworkName, length);
-        SetLength(static_cast<uint8_t>(length));
-    }
+    void SetNetworkName(const Mac::NetworkName::Data &aNameData);
 
 private:
-    char mNetworkName[OT_NETWORK_NAME_MAX_SIZE];
+    char mNetworkName[Mac::NetworkName::kMaxSize];
 } OT_TOOL_PACKED_END;
 
 /**
