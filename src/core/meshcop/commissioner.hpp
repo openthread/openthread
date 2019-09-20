@@ -112,14 +112,14 @@ public:
     /**
      * This method get joiner info at aIterator position.
      *
-     * @param[inout]    aIterator   A iterator to the index of the joiner.
-     * @param[out]      aJoiner     A reference to Joiner info.
+     * @param[inout]    aIterator   A pointer to iterator, the index of the joiner.
+     * @param[out]      aJoiner     A pointer to Joiner info.
      *
      * @retval OT_ERROR_NONE        Successfully get the Joiner info.
      * @retval OT_ERROR_NOT_FOUND   Not found next Joiner.
      *
      */
-    otError GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoiner) const;
+    otError GetNextJoinerInfo(uint16_t *aIterator, otJoinerInfo *aJoiner) const;
 
     /**
      * This method removes a Joiner entry.
