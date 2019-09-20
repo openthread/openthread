@@ -51,7 +51,6 @@ namespace Dns {
  * This class implements metadata required for DNS retransmission.
  *
  */
-OT_TOOL_PACKED_BEGIN
 class QueryMetadata
 {
     friend class Client;
@@ -143,7 +142,7 @@ private:
     Ip6::Address         mDestinationAddress;  ///< IPv6 address of the message destination.
     uint16_t             mDestinationPort;     ///< UDP port of the message destination.
     uint8_t              mRetransmissionCount; ///< Number of retransmissions.
-} OT_TOOL_PACKED_END;
+};
 
 /**
  * This class implements DNS client.

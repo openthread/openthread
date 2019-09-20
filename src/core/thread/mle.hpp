@@ -360,7 +360,6 @@ private:
  * This class implements functionality required for delaying MLE responses.
  *
  */
-OT_TOOL_PACKED_BEGIN
 class DelayedResponseHeader
 {
 public:
@@ -461,7 +460,7 @@ public:
 private:
     Ip6::Address mDestination; ///< IPv6 address of the message destination.
     TimeMilli    mSendTime;    ///< Time when the message shall be sent.
-} OT_TOOL_PACKED_END;
+};
 
 /**
  * This class implements MLE functionality required by the Thread EndDevices, Router, and Leader roles.
