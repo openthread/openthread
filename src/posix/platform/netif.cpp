@@ -410,13 +410,8 @@ void platformNetifInit(otInstance *aInstance)
 
     VerifyOrExit(ioctl(sTunFd, TUNSETIFF, static_cast<void *>(&ifr)) == 0,
                  otLogCritPlat("Unable to configure tun device %s", OPENTHREAD_POSIX_TUN_DEVICE));
-#if defined(ARPHRD_6LOWPAN)
-    VerifyOrExit(ioctl(sTunFd, TUNSETLINK, ARPHRD_6LOWPAN) == 0,
+    VerifyOrExit(ioctl(sTunFd, TUNSETLINK, ARPHRD_VOID) == 0,
                  otLogCritPlat("Unable to set link type of tun device %s", OPENTHREAD_POSIX_TUN_DEVICE));
-#else
-    VerifyOrExit(ioctl(sTunFd, TUNSETLINK, ARPHRD_ETHER) == 0,
-                 otLogCritPlat("Unable to set link type of tun device %s", OPENTHREAD_POSIX_TUN_DEVICE));
-#endif
 
     sTunIndex = if_nametoindex(ifr.ifr_name);
     VerifyOrExit(sTunIndex > 0);
