@@ -340,12 +340,11 @@ private:
     uint8_t    mJoinerIid[Ip6::Address::kInterfaceIdentifierSize];
     uint16_t   mJoinerPort;
     uint16_t   mJoinerRloc;
-    uint8_t    mJoinerIndex;
-    TimerMilli mJoinerExpirationTimer;
-
-    TimerMilli mTimer;
     uint16_t   mSessionId;
+    uint8_t    mJoinerIndex;
     uint8_t    mTransmitAttempts;
+    TimerMilli mJoinerExpirationTimer;
+    TimerMilli mTimer;
 
     Coap::Resource mRelayReceive;
     Coap::Resource mDatasetChanged;
