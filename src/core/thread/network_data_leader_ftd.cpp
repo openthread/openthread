@@ -261,6 +261,16 @@ void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageI
                     VerifyOrExit(length + cur->GetSize() <= sizeof(tlvs));
                     memcpy(tlvs + length, reinterpret_cast<uint8_t *>(cur), cur->GetSize());
                     length += cur->GetSize();
+                } else {
+                    MeshCoP::Tlv tlv;
+                    // If there is no valid TLV with the type in incoming request,
+                    // merge the TLV in local Commissioning Dataset.
+                    if (MeshCoP::Tlv::GetTlv(aMessage, cur->GetType(), sizeof(tlv), tlv) != OT_ERROR_NONE)
+                    {
+                        VerifyOrExit(length + cur->GetSize() <= sizeof(tlvs));
+                        memcpy(tlvs + length, reinterpret_cast<uint8_t *>(cur), cur->GetSize());
+                        length += cur->GetSize();
+                    }
                 }
             }
         }
