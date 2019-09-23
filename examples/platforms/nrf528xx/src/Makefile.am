@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2017, The OpenThread Authors.
+#  Copyright (c) 2019, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,23 +26,13 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-#
-# nrf52840 platform-specific Makefile
-#
+include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-LDADD_COMMON                                                                                 += \
-    $(top_builddir)/examples/platforms/nrf52840/libopenthread-nrf52840.a                        \
-    $(top_builddir)/third_party/NordicSemiconductor/libnordicsemi-nrf52840-sdk.a                \
-    $(top_builddir)/third_party/NordicSemiconductor/libnordicsemi-nrf52840-radio-driver.a       \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_cc310/lib/libnrf_cc310_0.9.10.a \
+PRETTY_FILES=                                   \
+    *.c                                         \
+    platform-config.h                           \
+    platform-fem.h                              \
+    platform-nrf5.h                             \
     $(NULL)
 
-if OPENTHREAD_ENABLE_CUSTOM_LINKER_FILE
-LDFLAGS_COMMON                                                                               += \
-    -T $(OPENTHREAD_CUSTOM_LINKER_FILE)                                                         \
-    $(NULL)
-else
-LDFLAGS_COMMON                                                                               += \
-    -T $(top_srcdir)/examples/platforms/nrf52840/nrf52840.ld                                    \
-    $(NULL)
-endif
+include $(abs_top_nlbuild_autotools_dir)/automake/post.am

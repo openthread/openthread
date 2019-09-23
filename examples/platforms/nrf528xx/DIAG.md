@@ -1,6 +1,6 @@
 ## Diagnostic module
 
-nRF52840 port extends [OpenThread Diagnostics Module][DIAG].
+nRF52811 and nRF52840 ports extend [OpenThread Diagnostics Module][DIAG].
 
 New commands allow for more accurate low level radio testing.
 

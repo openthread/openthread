@@ -26,33 +26,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/config.h>
-#include <openthread-core-config.h>
+/**
+ * @file
+ * This file includes the proper platform configuration.
+ */
 
-#include <stdint.h>
-#include <string.h>
-#include <assert.h>
-
-#include <utils/code_utils.h>
-#include <utils/flash.h>
-
-#include "hal/nrf_nvmc.h"
-#include "platform-nrf5.h"
-
-otError nrf5FlashPageErase(uint32_t aAddress)
-{
-    nrf_nvmc_page_erase(aAddress);
-
-    return OT_ERROR_NONE;
-}
-
-bool nrf5FlashIsBusy(void)
-{
-    return NRF_NVMC->READY != NVMC_READY_READY_Ready;
-}
-
-uint32_t nrf5FlashWrite(uint32_t aAddress, const uint8_t *aData, uint32_t aSize)
-{
-    nrf_nvmc_write_bytes(aAddress, aData, aSize);
-    return aSize;
-}
+#if defined(NRF52811_XXAA)
+#include <nrf52811/platform-config.h>
+#elif defined(NRF52840_XXAA)
+#include <nrf52840/platform-config.h>
+#endif

@@ -26,12 +26,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/config.h>
 #include <openthread-core-config.h>
+#include <openthread/config.h>
 
+#include <assert.h>
 #include <stdint.h>
 #include <string.h>
-#include <assert.h>
 
 #include <openthread/platform/alarm-milli.h>
 
@@ -41,10 +41,11 @@
 #include "platform-nrf5.h"
 #include "softdevice.h"
 
-#define FLASH_PAGE_SIZE  4096
-#define FLASH_TIMEOUT    500
+#define FLASH_PAGE_SIZE 4096
+#define FLASH_TIMEOUT 500
 
-typedef enum {
+typedef enum
+{
     FLASH_STATE_IDLE,
     FLASH_STATE_WAITING_FOR_IDLE,
     FLASH_STATE_PENDING,
@@ -109,8 +110,7 @@ static void waitInState(SdFlashState state)
         {
             break;
         }
-    }
-    while (otPlatAlarmMilliGetNow() - startTime < FLASH_TIMEOUT);
+    } while (otPlatAlarmMilliGetNow() - startTime < FLASH_TIMEOUT);
 }
 
 static otError sdFlashSingleWrite(uint32_t aAddress, const uint8_t *aData, uint32_t aSize)
@@ -206,8 +206,8 @@ bool nrf5FlashIsBusy(void)
 
 uint32_t nrf5FlashWrite(uint32_t aAddress, const uint8_t *aData, uint32_t aSize)
 {
-    otError  error = OT_ERROR_NONE;
-    uint32_t result = 0;
+    otError  error     = OT_ERROR_NONE;
+    uint32_t result    = 0;
     uint32_t remainder = (aAddress % sizeof(uint32_t));
     uint32_t blockSize;
     uint32_t blockValue;
@@ -223,16 +223,14 @@ uint32_t nrf5FlashWrite(uint32_t aAddress, const uint8_t *aData, uint32_t aSize)
 
         memcpy((uint8_t *)&blockValue + remainder, aData, blockSize);
 
-        error = sdFlashSingleWrite(aAddress - remainder,
-                                   (uint8_t *)&blockValue,
-                                   sizeof(blockValue) / sizeof(uint32_t));
+        error = sdFlashSingleWrite(aAddress - remainder, (uint8_t *)&blockValue, sizeof(blockValue) / sizeof(uint32_t));
 
         otEXPECT(error == OT_ERROR_NONE);
 
         aAddress += blockSize;
-        aData    += blockSize;
-        aSize    -= blockSize;
-        result   += blockSize;
+        aData += blockSize;
+        aSize -= blockSize;
+        result += blockSize;
     }
 
     otEXPECT(aSize);
@@ -241,16 +239,14 @@ uint32_t nrf5FlashWrite(uint32_t aAddress, const uint8_t *aData, uint32_t aSize)
     remainder = aSize % sizeof(uint32_t);
     blockSize = aSize - remainder;
 
-    error = sdFlashSingleWrite(aAddress,
-                               aData,
-                               blockSize / sizeof(uint32_t));
+    error = sdFlashSingleWrite(aAddress, aData, blockSize / sizeof(uint32_t));
 
     otEXPECT(error == OT_ERROR_NONE);
 
     aAddress += blockSize;
-    aData    += blockSize;
-    aSize    -= blockSize;
-    result   += blockSize;
+    aData += blockSize;
+    aSize -= blockSize;
+    result += blockSize;
 
     // Store any additional bytes that didn't fit into middle block.
     if (remainder)
@@ -259,9 +255,7 @@ uint32_t nrf5FlashWrite(uint32_t aAddress, const uint8_t *aData, uint32_t aSize)
 
         memcpy((uint8_t *)&blockValue, aData, remainder);
 
-        error = sdFlashSingleWrite(aAddress,
-                                   (uint8_t *)&blockValue,
-                                   sizeof(blockValue) / sizeof(uint32_t));
+        error = sdFlashSingleWrite(aAddress, (uint8_t *)&blockValue, sizeof(blockValue) / sizeof(uint32_t));
 
         otEXPECT(error == OT_ERROR_NONE);
 

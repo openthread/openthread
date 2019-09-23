@@ -39,8 +39,8 @@ DIST_SUBDIRS                            = \
     efr32mg21                             \
     gp712                                 \
     kw41z                                 \
-    nrf52811                              \
-    nrf52840                              \
+    nrf528xx                              \
+    nrf528xx/src                          \
     posix                                 \
     qpg6095                               \
     samr21                                \
@@ -85,12 +85,8 @@ if OPENTHREAD_EXAMPLES_KW41Z
 SUBDIRS                                += kw41z
 endif
 
-if OPENTHREAD_EXAMPLES_NRF52811
-SUBDIRS                                += nrf52811
-endif
-
-if OPENTHREAD_EXAMPLES_NRF52840
-SUBDIRS                                += nrf52840
+if OPENTHREAD_EXAMPLES_NRF528XX
+SUBDIRS                                += nrf528xx
 endif
 
 if OPENTHREAD_EXAMPLES_POSIX
@@ -120,8 +116,7 @@ PRETTY_SUBDIRS                          = \
     efr32mg21                             \
     gp712                                 \
     kw41z                                 \
-    nrf52811                              \
-    nrf52840                              \
+    nrf528xx/src                          \
     posix                                 \
     qpg6095                               \
     samr21                                \

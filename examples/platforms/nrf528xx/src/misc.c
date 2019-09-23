@@ -36,12 +36,13 @@
 
 #if SOFTDEVICE_PRESENT
 #include "softdevice.h"
-#endif
+#endif // SOFTDEVICE_PRESENT
 
 static uint32_t sResetReason;
 
 bool gPlatformPseudoResetWasRequested;
 
+#if NRF52840_XXAA
 __WEAK void nrf5CryptoInit(void)
 {
     // This function is defined as weak so it could be overridden with external implementation.
@@ -51,6 +52,7 @@ __WEAK void nrf5CryptoDeinit(void)
 {
     // This function is defined as weak so it could be overridden with external implementation.
 }
+#endif
 
 void nrf5MiscInit(void)
 {
@@ -102,12 +104,17 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
     {
         reason = OT_PLAT_RESET_REASON_FAULT;
     }
-    else if ((sResetReason & POWER_RESETREAS_OFF_Msk) || (sResetReason & POWER_RESETREAS_LPCOMP_Msk) ||
-             (sResetReason & POWER_RESETREAS_DIF_Msk) || (sResetReason & POWER_RESETREAS_NFC_Msk) ||
+    else if ((sResetReason & POWER_RESETREAS_OFF_Msk) || (sResetReason & POWER_RESETREAS_DIF_Msk))
+    {
+        reason = OT_PLAT_RESET_REASON_OTHER;
+    }
+#if NRF52840_XXAA
+    else if ((sResetReason & POWER_RESETREAS_LPCOMP_Msk) || (sResetReason & POWER_RESETREAS_NFC_Msk) ||
              (sResetReason & POWER_RESETREAS_VBUS_Msk))
     {
         reason = OT_PLAT_RESET_REASON_OTHER;
     }
+#endif // NRF52840_XXAA
     else
     {
         reason = OT_PLAT_RESET_REASON_POWER_ON;

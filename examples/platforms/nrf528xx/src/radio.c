@@ -74,7 +74,7 @@
 
 enum
 {
-    NRF52811_RECEIVE_SENSITIVITY = -100, // dBm
+    NRF528XX_RECEIVE_SENSITIVITY = -100, // dBm
 };
 
 static bool sDisabled;
@@ -840,7 +840,8 @@ void nrf_802154_energy_detected(uint8_t result)
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return NRF52811_RECEIVE_SENSITIVITY;
+
+    return NRF528XX_RECEIVE_SENSITIVITY;
 }
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT

@@ -26,22 +26,19 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-#
-# nrf52811 platform-specific Makefile
-#
+# Use automake includes since we cannot use SUBDIRS feature due to  cleanup
+# errors - few targets may use the same source file but dependency file is 
+# created only once which leads to errors when auto-generated Makefile tries
+# to remove .Po files that were already removed
 
-LDADD_COMMON                                                                                 += \
-    $(top_builddir)/examples/platforms/nrf52811/libopenthread-nrf52811.a                        \
-    $(top_builddir)/third_party/NordicSemiconductor/libnordicsemi-nrf52811-sdk.a                \
-    $(top_builddir)/third_party/NordicSemiconductor/libnordicsemi-nrf52811-radio-driver.a       \
-    $(NULL)
-
-if OPENTHREAD_ENABLE_CUSTOM_LINKER_FILE
-LDFLAGS_COMMON                                                                               += \
-    -T $(OPENTHREAD_CUSTOM_LINKER_FILE)                                                         \
-    $(NULL)
-else
-LDFLAGS_COMMON                                                                               += \
-    -T $(top_srcdir)/examples/platforms/nrf52811/nrf52811.ld                                    \
-    $(NULL)
+if OPENTHREAD_EXAMPLES_NRF52811
+include nrf52811/Makefile.am
 endif
+
+if OPENTHREAD_EXAMPLES_NRF52840
+include nrf52840/Makefile.am
+endif
+
+PRETTY_SUBDIRS =     \
+    src              \
+    $(NULL)

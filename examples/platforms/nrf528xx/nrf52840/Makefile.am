@@ -41,10 +41,11 @@ override CXXFLAGS                                    := $(filter-out -pedantic-e
 COMMONCPPFLAGS                                                                                             = \
     -DCONFIG_GPIO_AS_PINRESET                                                                                \
     -DNRF52840_XXAA                                                                                          \
+    -I$(srcdir)                                                                                              \
     -I$(top_srcdir)/include                                                                                  \
     -I$(top_srcdir)/examples/platforms                                                                       \
+    -I$(top_srcdir)/examples/platforms/nrf528xx/src                                                          \
     -I$(top_srcdir)/src/core                                                                                 \
-    -I$(srcdir)                                                                                              \
     -I$(top_srcdir)/third_party/NordicSemiconductor                                                          \
     -I$(top_srcdir)/third_party/NordicSemiconductor/cmsis                                                    \
     -I$(top_srcdir)/third_party/NordicSemiconductor/dependencies                                             \
@@ -79,35 +80,29 @@ COMMONCPPFLAGS                                                                  
     $(NULL)
 
 PLATFORM_COMMON_SOURCES                                                                                    = \
-    alarm.c                                                                                                  \
-    diag.c                                                                                                   \
-    entropy.c                                                                                                \
-    fem.c                                                                                                    \
-    flash.c                                                                                                  \
-    logging.c                                                                                                \
-    misc.c                                                                                                   \
-    openthread-core-nrf52840-config.h                                                                        \
-    openthread-core-nrf52840-config-check.h                                                                  \
-    platform-config.h                                                                                        \
-    platform-fem.h                                                                                           \
-    platform-nrf5.h                                                                                          \
-    radio.c                                                                                                  \
-    temp.c                                                                                                   \
-    spi-slave.c                                                                                              \
-    system.c                                                                                                 \
-    uart.c                                                                                                   \
-    usb-cdc-uart.c                                                                                           \
+    src/alarm.c                                                                                              \
+    src/diag.c                                                                                               \
+    src/entropy.c                                                                                            \
+    src/fem.c                                                                                                \
+    src/flash.c                                                                                              \
+    src/logging.c                                                                                            \
+    src/misc.c                                                                                               \
+    src/radio.c                                                                                              \
+    src/spi-slave.c                                                                                          \
+    src/system.c                                                                                             \
+    src/temp.c                                                                                               \
+    src/uart.c                                                                                               \
+    src/usb-cdc-uart.c                                                                                       \
     $(NULL)
 
 SINGLEPHY_SOURCES                                                                                          = \
-    flash_nosd.c                                                                                             \
+    src/flash_nosd.c                                                                                             \
     $(NULL)
 
 SOFTDEVICE_SOURCES                                                                                         = \
-    flash_sd.c                                                                                               \
-    platform-softdevice.h                                                                                    \
-    softdevice.c                                                                                             \
-    softdevice.h                                                                                             \
+    src/flash_sd.c                                                                                               \
+    src/softdevice.c                                                                                             \
+    src/softdevice.h                                                                                             \
     $(NULL)
 
 SOFTDEVICE_CPPFLAGS                                                                                        = \
@@ -164,10 +159,6 @@ libopenthread_nrf52840_softdevice_sdk_a_SOURCES                                 
     $(HWCRYPTO_SOURCES)                                                                                      \
     $(NULL)
 
-PRETTY_FILES                                                                                               = \
-    $(PLATFORM_COMMON_SOURCES)                                                                               \
-    $(NULL)
-
 Dash                                                                                                       = -
 
 libopenthread_nrf52840_a_LIBADD                                                                            = \
@@ -179,4 +170,5 @@ libopenthread_nrf52840_sdk_a_LIBADD                                             
 
 libopenthread_nrf52840_softdevice_sdk_a_LIBADD                                                             = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
+
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

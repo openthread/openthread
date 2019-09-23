@@ -814,6 +814,7 @@ AM_COND_IF([OPENTHREAD_EXAMPLES_POSIX], CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_EXAMP
 AC_MSG_CHECKING([whether to enable examples])
 AC_MSG_RESULT(${with_examples})
 
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF528XX], [test OPENTHREAD_EXAMPLES_NRF52811 || test OPENTHREAD_EXAMPLES_NRF52840])
 #
 # Tools
 #
@@ -973,8 +974,8 @@ examples/platforms/efr32mg21/sleepy-demo/sleepy-demo-ftd/Makefile
 examples/platforms/efr32mg21/sleepy-demo/sleepy-demo-mtd/Makefile
 examples/platforms/gp712/Makefile
 examples/platforms/kw41z/Makefile
-examples/platforms/nrf52811/Makefile
-examples/platforms/nrf52840/Makefile
+examples/platforms/nrf528xx/Makefile
+examples/platforms/nrf528xx/src/Makefile
 examples/platforms/qpg6095/Makefile
 examples/platforms/samr21/Makefile
 examples/platforms/posix/Makefile
