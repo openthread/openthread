@@ -60,7 +60,7 @@ public:
      * Default constructor for the object.
      *
      */
-    QueryMetadata(void) { memset(this, 0, sizeof(*this)); }
+    QueryMetadata(void);
 
     /**
      * This constructor initializes the object with specific values.
@@ -69,12 +69,7 @@ public:
      * @param[in]  aContext  Context for the handler function.
      *
      */
-    QueryMetadata(otDnsResponseHandler aHandler, void *aContext)
-    {
-        memset(this, 0, sizeof(*this));
-        mResponseHandler = aHandler;
-        mResponseContext = aContext;
-    }
+    QueryMetadata(otDnsResponseHandler aHandler, void *aContext);
 
     /**
      * This method appends request data to the message.

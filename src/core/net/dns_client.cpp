@@ -49,6 +49,30 @@ using ot::Encoding::BigEndian::HostSwap16;
 namespace ot {
 namespace Dns {
 
+QueryMetadata::QueryMetadata(void)
+    : mHostname(NULL)
+    , mResponseHandler(NULL)
+    , mResponseContext(NULL)
+    , mTransmissionTime()
+    , mDestinationPort(0)
+    , mRetransmissionCount(0)
+{
+    mSourceAddress.Clear();
+    mDestinationAddress.Clear();
+}
+
+QueryMetadata::QueryMetadata(otDnsResponseHandler aHandler, void *aContext)
+    : mHostname(NULL)
+    , mResponseHandler(aHandler)
+    , mResponseContext(aContext)
+    , mTransmissionTime()
+    , mDestinationPort(0)
+    , mRetransmissionCount(0)
+{
+    mSourceAddress.Clear();
+    mDestinationAddress.Clear();
+}
+
 Client::Client(Ip6::Netif &aNetif)
     : mSocket(aNetif.Get<Ip6::Udp>())
     , mMessageId(0)
