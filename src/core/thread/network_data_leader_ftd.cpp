@@ -240,37 +240,39 @@ void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageI
     // verify whether or not MGMT_COMM_SET.req includes at least one valid TLV
     VerifyOrExit(hasValidTlv);
 
-    // Find Commissioning Data TLV
-    for (NetworkDataTlv *netDataTlv = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-         netDataTlv < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength); netDataTlv = netDataTlv->GetNext())
+    // Match against and merge local Commissioning Dataset
     {
-        if (netDataTlv->GetType() == NetworkDataTlv::kTypeCommissioningData)
+        NetworkDataTlv *localCommissioningDataTlv;
+        VerifyOrExit((localCommissioningDataTlv = GetCommissioningData()) != NULL);
+
+        // Iterate over MeshCoP TLVs and extract desired data
+        for (cur = reinterpret_cast<MeshCoP::Tlv *>(localCommissioningDataTlv->GetValue());
+             cur < reinterpret_cast<MeshCoP::Tlv *>(localCommissioningDataTlv->GetValue() +
+                                                    localCommissioningDataTlv->GetLength());
+             cur = cur->GetNext())
         {
-            // Iterate over MeshCoP TLVs and extract desired data
-            for (cur = reinterpret_cast<MeshCoP::Tlv *>(netDataTlv->GetValue());
-                 cur < reinterpret_cast<MeshCoP::Tlv *>(netDataTlv->GetValue() + netDataTlv->GetLength());
-                 cur = cur->GetNext())
+            if (cur->GetType() == MeshCoP::Tlv::kCommissionerSessionId)
             {
-                if (cur->GetType() == MeshCoP::Tlv::kCommissionerSessionId)
-                {
-                    VerifyOrExit(sessionId ==
-                                 static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur)->GetCommissionerSessionId());
-                }
-                else if (cur->GetType() == MeshCoP::Tlv::kBorderAgentLocator)
+                VerifyOrExit(sessionId ==
+                             static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur)->GetCommissionerSessionId());
+            }
+            else if (cur->GetType() == MeshCoP::Tlv::kBorderAgentLocator)
+            {
+                VerifyOrExit(length + cur->GetSize() <= sizeof(tlvs));
+                memcpy(tlvs + length, reinterpret_cast<uint8_t *>(cur), cur->GetSize());
+                length += cur->GetSize();
+            }
+            else
+            {
+                MeshCoP::Tlv tlv;
+
+                // If there is no valid TLV with the type in incoming request,
+                // merge the TLV in local Commissioning Dataset.
+                if (MeshCoP::Tlv::GetTlv(aMessage, cur->GetType(), sizeof(tlv), tlv) != OT_ERROR_NONE)
                 {
                     VerifyOrExit(length + cur->GetSize() <= sizeof(tlvs));
                     memcpy(tlvs + length, reinterpret_cast<uint8_t *>(cur), cur->GetSize());
                     length += cur->GetSize();
-                } else {
-                    MeshCoP::Tlv tlv;
-                    // If there is no valid TLV with the type in incoming request,
-                    // merge the TLV in local Commissioning Dataset.
-                    if (MeshCoP::Tlv::GetTlv(aMessage, cur->GetType(), sizeof(tlv), tlv) != OT_ERROR_NONE)
-                    {
-                        VerifyOrExit(length + cur->GetSize() <= sizeof(tlvs));
-                        memcpy(tlvs + length, reinterpret_cast<uint8_t *>(cur), cur->GetSize());
-                        length += cur->GetSize();
-                    }
                 }
             }
         }
