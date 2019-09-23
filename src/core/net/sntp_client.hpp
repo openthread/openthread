@@ -60,13 +60,7 @@ public:
      * Default constructor for SNTP Header.
      *
      */
-    Header(void)
-    {
-        memset(this, 0, sizeof(*this));
-
-        // Set default value of flags field.
-        SetFlags(kNtpVersion << kVersionOffset | kModeClient << kModeOffset);
-    }
+    Header(void);
 
     /**
      * Defines supported SNTP modes.
@@ -430,7 +424,7 @@ public:
      * Default constructor for the object.
      *
      */
-    QueryMetadata(void) { memset(this, 0, sizeof(*this)); }
+    QueryMetadata(void);
 
     /**
      * This constructor initializes the object with specific values.
@@ -439,12 +433,7 @@ public:
      * @param[in]  aContext  Context for the handler function.
      *
      */
-    QueryMetadata(otSntpResponseHandler aHandler, void *aContext)
-    {
-        memset(this, 0, sizeof(*this));
-        mResponseHandler = aHandler;
-        mResponseContext = aContext;
-    }
+    QueryMetadata(otSntpResponseHandler aHandler, void *aContext);
 
     /**
      * This method appends request data to the message.

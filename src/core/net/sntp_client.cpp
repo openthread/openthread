@@ -48,6 +48,49 @@
 namespace ot {
 namespace Sntp {
 
+Header::Header(void)
+    : mFlags(kNtpVersion << kVersionOffset | kModeClient << kModeOffset)
+    , mStratum(0)
+    , mPoll(0)
+    , mPrecision(0)
+    , mRootDelay(0)
+    , mRootDispersion(0)
+    , mReferenceId(0)
+    , mReferenceTimestampSeconds(0)
+    , mReferenceTimestampFraction(0)
+    , mOriginateTimestampSeconds(0)
+    , mOriginateTimestampFraction(0)
+    , mReceiveTimestampSeconds(0)
+    , mReceiveTimestampFraction(0)
+    , mTransmitTimestampSeconds(0)
+    , mTransmitTimestampFraction(0)
+{
+}
+
+QueryMetadata::QueryMetadata(void)
+    : mTransmitTimestamp(0)
+    , mResponseHandler(NULL)
+    , mResponseContext(NULL)
+    , mTransmissionTime(0)
+    , mDestinationPort(0)
+    , mRetransmissionCount(0)
+{
+    mSourceAddress.Clear();
+    mDestinationAddress.Clear();
+}
+
+QueryMetadata::QueryMetadata(otSntpResponseHandler aHandler, void *aContext)
+    : mTransmitTimestamp(0)
+    , mResponseHandler(aHandler)
+    , mResponseContext(aContext)
+    , mTransmissionTime(0)
+    , mDestinationPort(0)
+    , mRetransmissionCount(0)
+{
+    mSourceAddress.Clear();
+    mDestinationAddress.Clear();
+}
+
 Client::Client(Ip6::Netif &aNetif)
     : mSocket(aNetif.Get<Ip6::Udp>())
     , mRetransmissionTimer(aNetif.GetInstance(), &Client::HandleRetransmissionTimer, this)
