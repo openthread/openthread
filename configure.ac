@@ -406,6 +406,8 @@ fi
 
 if test "$enable_builtin_mbedtls" = "yes"; then
     CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=1"
+else
+    CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=0"
 fi
 
 AC_MSG_CHECKING([whether mbed TLS should be enabled])
@@ -435,6 +437,8 @@ AC_ARG_ENABLE(posix-app,
 
 if test "$enable_posix_app" = "yes"; then
     CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_PLATFORM_POSIX_APP=1"
+else
+    CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_PLATFORM_POSIX_APP=0"
 fi
 
 AC_MSG_RESULT(${enable_posix_app})
@@ -463,6 +467,8 @@ AC_ARG_ENABLE(posix-app-daemon,
 
 if test "$enable_posix_app_daemon" = "yes"; then
     CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_ENABLE_POSIX_APP_DAEMON=1"
+else
+    CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_ENABLE_POSIX_APP_DAEMON=0"
 fi
 
 AC_MSG_RESULT(${enable_posix_app_daemon})
@@ -656,7 +662,6 @@ AC_ARG_WITH(
         then AC_MSG_ERROR([Can't open ${withval} for --with-vendor-extension])
         else
             OPENTHREAD_ENABLE_VENDOR_EXTENSION=1
-            CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_ENABLE_VENDOR_EXTENSION=1"
 
             # Get the absolute path.
             OPENTHREAD_VENDOR_EXTENSION_SOURCE=$(cd `dirname ${withval}` && pwd)/$(basename ${withval})
@@ -667,6 +672,7 @@ AC_ARG_WITH(
         with_vendor_extension=none
     ])
 
+CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_ENABLE_VENDOR_EXTENSION=${OPENTHREAD_ENABLE_VENDOR_EXTENSION}"
 AC_MSG_CHECKING([for vendor extension])
 AC_MSG_RESULT(${OPENTHREAD_VENDOR_EXTENSION_SOURCE-none})
 AC_SUBST(OPENTHREAD_VENDOR_EXTENSION_SOURCE)
@@ -714,7 +720,6 @@ AC_ARG_WITH(
         then OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER=0
         else
             OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER=1
-            CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER=1"
             OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS=${withval}
         fi
     ],
@@ -723,6 +728,7 @@ AC_ARG_WITH(
         with_ncp_spinel_encrypter_libs=none
     ])
 
+CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER=${OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER}"
 AC_MSG_CHECKING([for NCP Spinel Encrypter])
 AC_MSG_RESULT(${OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS-none})
 AC_SUBST(OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS)
@@ -850,7 +856,7 @@ NL_ENABLE_DOCS([auto],[NO])
 
 AM_CONDITIONAL(OPENTHREAD_BUILD_DOCS, [test "${nl_cv_build_docs}" = "yes"])
 
-AM_CONDITIONAL(OPENTHREAD_POSIX, [test "${enable_posix_app}" = "yes" -o "${OPENTHREAD_EXAMPLES_POSIX}" = "1"])
+AM_CONDITIONAL(OPENTHREAD_POSIX, [test "${enable_posix_app}" = "yes" -o "${with_examples}" = "posix"])
 
 #
 # Checks for libraries and packages.
