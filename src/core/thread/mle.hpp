@@ -367,7 +367,12 @@ public:
      * Default constructor for the object.
      *
      */
-    DelayedResponseHeader(void) { memset(this, 0, sizeof(*this)); }
+    DelayedResponseHeader(void)
+        : mDestination()
+        , mSendTime(0)
+    {
+        mDestination.Clear();
+    }
 
     /**
      * This constructor initializes the object with specific values.
@@ -377,9 +382,9 @@ public:
      *
      */
     DelayedResponseHeader(TimeMilli aSendTime, const Ip6::Address &aDestination)
+        : mDestination(aDestination)
+        , mSendTime(aSendTime)
     {
-        mSendTime    = aSendTime;
-        mDestination = aDestination;
     }
 
     /**
