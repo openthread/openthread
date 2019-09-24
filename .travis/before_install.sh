@@ -47,7 +47,7 @@ cd /tmp || die
         pip install -r $TRAVIS_BUILD_DIR/tests/scripts/thread-cert/requirements.txt || die
         [ $BUILD_TARGET != posix-ncp -a $BUILD_TARGET != posix-app-ncp ] || {
             # Packages used by ncp tools.
-            pip install git+https://github.com/openthread/pyspinel.git@style/remove-python2 || die
+            pip install git+https://github.com/bukepo/pyspinel.git@style/remove-python2 || die
         }
     }
 
