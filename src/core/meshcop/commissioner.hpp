@@ -323,6 +323,8 @@ private:
     void SetState(otCommissionerState aState);
     void SignalJoinerEvent(otCommissionerJoinerEvent aEvent, const Mac::ExtAddress &aJoinerId);
 
+    static const char *StateToString(otCommissionerState aState);
+
     struct Joiner
     {
         Mac::ExtAddress mEui64;

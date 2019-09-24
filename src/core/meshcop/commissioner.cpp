@@ -89,6 +89,8 @@ void Commissioner::SetState(otCommissionerState aState)
 {
     VerifyOrExit(mState != aState);
 
+    otLogInfoMeshCoP("Commissioner State: %s -> %s", StateToString(mState), StateToString(aState));
+
     mState = aState;
 
     if (mStateCallback)
@@ -1124,6 +1126,36 @@ otError Commissioner::GeneratePskc(const char *              aPassPhrase,
 exit:
     return error;
 }
+
+// LCOV_EXCL_START
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+
+const char *Commissioner::StateToString(otCommissionerState aState)
+{
+    const char *str = "Unknown";
+
+    switch (aState)
+    {
+    case OT_COMMISSIONER_STATE_DISABLED:
+        str = "disabled";
+        break;
+    case OT_COMMISSIONER_STATE_PETITION:
+        str = "petition";
+        break;
+    case OT_COMMISSIONER_STATE_ACTIVE:
+        str = "active";
+        break;
+    default:
+        break;
+    }
+
+    return str;
+}
+
+#endif // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+
+// LCOV_EXCL_STOP
 
 } // namespace MeshCoP
 } // namespace ot
