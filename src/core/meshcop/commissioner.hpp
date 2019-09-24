@@ -140,7 +140,7 @@ public:
      * @returns A pointer to char buffer containing the URL string.
      *
      */
-    const char *GetProvisioningUrl(void) const;
+    const char *GetProvisioningUrl(void) const { return mProvisioningUrl; }
 
     /**
      * This method sets the Provisioning URL.
@@ -159,7 +159,7 @@ public:
      * @returns The Commissioner Session ID.
      *
      */
-    uint16_t GetSessionId(void) const;
+    uint16_t GetSessionId(void) const { return mSessionId; }
 
     /**
      * This method indicates whether or not the Commissioner role is active.
@@ -179,7 +179,7 @@ public:
      * @retval OT_COMMISSIONER_STATE_ACTIVE    Commissioner enabled.
      *
      */
-    otCommissionerState GetState(void) const;
+    otCommissionerState GetState(void) const { return mState; }
 
     /**
      * This method sends MGMT_COMMISSIONER_GET.

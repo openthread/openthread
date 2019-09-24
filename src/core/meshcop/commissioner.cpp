@@ -374,11 +374,6 @@ exit:
     return error;
 }
 
-const char *Commissioner::GetProvisioningUrl(void) const
-{
-    return mProvisioningUrl;
-}
-
 otError Commissioner::SetProvisioningUrl(const char *aProvisioningUrl)
 {
     otError error = OT_ERROR_NONE;
@@ -399,16 +394,6 @@ otError Commissioner::SetProvisioningUrl(const char *aProvisioningUrl)
 
 exit:
     return error;
-}
-
-uint16_t Commissioner::GetSessionId(void) const
-{
-    return mSessionId;
-}
-
-otCommissionerState Commissioner::GetState(void) const
-{
-    return mState;
 }
 
 void Commissioner::HandleTimer(Timer &aTimer)
