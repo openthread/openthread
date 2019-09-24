@@ -895,7 +895,7 @@ void Coap::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessage
 
 otError Coap::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    return mSocket.SendTo(aMessage, aMessageInfo);
+    return mSocket.IsBound() ? mSocket.SendTo(aMessage, aMessageInfo) : OT_ERROR_INVALID_STATE;
 }
 
 } // namespace Coap
