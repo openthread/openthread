@@ -102,18 +102,11 @@ otError otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *aPro
     return instance.Get<MeshCoP::Commissioner>().SetProvisioningUrl(aProvisioningUrl);
 }
 
-const char *otCommissionerGetProvisioningUrl(otInstance *aInstance, uint16_t *aLength)
+const char *otCommissionerGetProvisioningUrl(otInstance *aInstance)
 {
-    const char *url = NULL;
-
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    if (aLength != NULL)
-    {
-        url = instance.Get<MeshCoP::Commissioner>().GetProvisioningUrl(*aLength);
-    }
-
-    return url;
+    return instance.Get<MeshCoP::Commissioner>().GetProvisioningUrl();
 }
 
 otError otCommissionerAnnounceBegin(otInstance *        aInstance,

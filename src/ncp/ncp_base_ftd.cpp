@@ -578,19 +578,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_COMMISSIONER_PROVISIONING_URL>(void)
 {
-    otError     error  = OT_ERROR_NONE;
-    uint16_t    length = 0;
-    const char *url    = otCommissionerGetProvisioningUrl(mInstance, &length);
-
-    if (url != NULL && length > 0)
-    {
-        SuccessOrExit(error = mEncoder.WriteData(reinterpret_cast<const uint8_t *>(url), length));
-    }
-
-    SuccessOrExit(error = mEncoder.WriteUint8(0));
-
-exit:
-    return error;
+    return mEncoder.WriteUtf8(otCommissionerGetProvisioningUrl(mInstance));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_PROVISIONING_URL>(void)

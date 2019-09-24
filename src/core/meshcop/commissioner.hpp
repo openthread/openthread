@@ -137,22 +137,18 @@ public:
     /**
      * This method gets the Provisioning URL.
      *
-     * @param[out]   aLength     A reference to `uint16_t` to return the length (number of chars) in the URL string.
-     *
-     * Note that the returned URL string buffer is not necessarily null-terminated.
-     *
      * @returns A pointer to char buffer containing the URL string.
      *
      */
-    const char *GetProvisioningUrl(uint16_t &aLength) const;
+    const char *GetProvisioningUrl(void) const;
 
     /**
      * This method sets the Provisioning URL.
      *
-     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
+     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL to set URL to empty string).
      *
-     * @retval OT_ERROR_NONE          Successfully added the Joiner.
-     * @retval OT_ERROR_INVALID_ARGS  @p aProvisioningUrl is invalid.
+     * @retval OT_ERROR_NONE          Successfully set the Provisioning URL.
+     * @retval OT_ERROR_INVALID_ARGS  @p aProvisioningUrl is invalid (too long).
      *
      */
     otError SetProvisioningUrl(const char *aProvisioningUrl);
@@ -356,7 +352,7 @@ private:
 
     Ip6::NetifUnicastAddress mCommissionerAloc;
 
-    ProvisioningUrlTlv mProvisioningUrl;
+    char mProvisioningUrl[OT_PROVISIONING_URL_MAX_SIZE + 1]; // + 1 is for null char at end of string.
 
     otCommissionerStateCallback  mStateCallback;
     otCommissionerJoinerCallback mJoinerCallback;

@@ -81,7 +81,8 @@ Commissioner::Commissioner(Instance &aInstance)
     mCommissionerAloc.mValid              = true;
     mCommissionerAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
     mCommissionerAloc.mScopeOverrideValid = true;
-    mProvisioningUrl.Init();
+
+    mProvisioningUrl[0] = '\0';
 }
 
 void Commissioner::SetState(otCommissionerState aState)
@@ -373,24 +374,28 @@ exit:
     return error;
 }
 
-const char *Commissioner::GetProvisioningUrl(uint16_t &aLength) const
+const char *Commissioner::GetProvisioningUrl(void) const
 {
-    aLength = mProvisioningUrl.GetLength();
-
-    return mProvisioningUrl.GetProvisioningUrl();
+    return mProvisioningUrl;
 }
 
 otError Commissioner::SetProvisioningUrl(const char *aProvisioningUrl)
 {
     otError error = OT_ERROR_NONE;
+    uint8_t len;
 
-    if (aProvisioningUrl != NULL)
+    if (aProvisioningUrl == NULL)
     {
-        size_t len = strnlen(aProvisioningUrl, MeshCoP::ProvisioningUrlTlv::kMaxLength + 1);
-        VerifyOrExit(len <= MeshCoP::ProvisioningUrlTlv::kMaxLength, error = OT_ERROR_INVALID_ARGS);
+        mProvisioningUrl[0] = '\0';
+        ExitNow();
     }
 
-    mProvisioningUrl.SetProvisioningUrl(aProvisioningUrl);
+    len = static_cast<uint8_t>(strnlen(aProvisioningUrl, sizeof(mProvisioningUrl)));
+
+    VerifyOrExit(len < sizeof(mProvisioningUrl), error = OT_ERROR_INVALID_ARGS);
+
+    memcpy(mProvisioningUrl, aProvisioningUrl, len);
+    mProvisioningUrl[len] = '\0';
 
 exit:
     return error;
@@ -959,9 +964,10 @@ void Commissioner::HandleJoinerFinalize(Coap::Message &aMessage, const Ip6::Mess
 
     if (Tlv::GetTlv(aMessage, Tlv::kProvisioningUrl, sizeof(provisioningUrl), provisioningUrl) == OT_ERROR_NONE)
     {
-        if (provisioningUrl.GetProvisioningUrlLength() != mProvisioningUrl.GetProvisioningUrlLength() ||
-            memcmp(provisioningUrl.GetProvisioningUrl(), mProvisioningUrl.GetProvisioningUrl(),
-                   provisioningUrl.GetProvisioningUrlLength()) != 0)
+        uint8_t len = static_cast<uint8_t>(strnlen(mProvisioningUrl, sizeof(mProvisioningUrl)));
+
+        if ((provisioningUrl.GetProvisioningUrlLength() != len) ||
+            !memcmp(provisioningUrl.GetProvisioningUrl(), mProvisioningUrl, len))
         {
             state = StateTlv::kReject;
         }

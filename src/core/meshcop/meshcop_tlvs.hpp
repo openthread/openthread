@@ -1832,7 +1832,7 @@ class ProvisioningUrlTlv : public Tlv
 public:
     enum
     {
-        kMaxLength = 64, // Maximum number of chars in the Provisioning URL string.
+        kMaxLength = OT_PROVISIONING_URL_MAX_SIZE, // Maximum number of chars in the Provisioning URL string.
     };
 
     /**
