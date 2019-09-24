@@ -81,6 +81,8 @@ typedef enum otCommissionerJoinerEvent
 #define OT_COMMISSIONING_PASSPHRASE_MIN_SIZE 6   ///< Minimum size of the Commissioning Passphrase
 #define OT_COMMISSIONING_PASSPHRASE_MAX_SIZE 255 ///< Maximum size of the Commissioning Passphrase
 
+#define OT_PROVISIONING_URL_MAX_SIZE 64 ///< Max size (number of chars) in Provisioning URL string (excludes null char).
+
 #define OT_STEERING_DATA_MAX_LENGTH 16 ///< Max steering data length (bytes)
 
 /**
@@ -230,23 +232,20 @@ otError otCommissionerRemoveJoiner(otInstance *aInstance, const otExtAddress *aE
  * This function gets the Provisioning URL.
  *
  * @param[in]    aInstance       A pointer to an OpenThread instance.
- * @param[out]   aLength         A pointer to `uint16_t` to return the length (number of chars) in the URL string.
  *
- * Note that the returned URL string buffer is not necessarily null-terminated.
- *
- * @returns A pointer to char buffer containing the URL string, or NULL if @p aLength is NULL.
+ * @returns A pointer to the URL string.
  *
  */
-const char *otCommissionerGetProvisioningUrl(otInstance *aInstance, uint16_t *aLength);
+const char *otCommissionerGetProvisioningUrl(otInstance *aInstance);
 
 /**
  * This function sets the Provisioning URL.
  *
  * @param[in]  aInstance             A pointer to an OpenThread instance.
- * @param[in]  aProvisioningUrl      A pointer to the Provisioning URL (may be NULL).
+ * @param[in]  aProvisioningUrl      A pointer to the Provisioning URL (may be NULL to set as empty string).
  *
  * @retval OT_ERROR_NONE          Successfully set the Provisioning URL.
- * @retval OT_ERROR_INVALID_ARGS  @p aProvisioningUrl is invalid.
+ * @retval OT_ERROR_INVALID_ARGS  @p aProvisioningUrl is invalid (too long).
  *
  */
 otError otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *aProvisioningUrl);
