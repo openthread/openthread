@@ -85,8 +85,21 @@ COMMONCFLAGS                      := \
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
 ifeq ($(BOOTLOADER),1)
-configure_OPTIONS += --with-custom-linker-file=$(AbsTopSourceDir)/examples/platforms/nrf528xx/nrf52840/nrf52840_bootloader.ld
+$(info Warning: BOOTLOADER switch is deprecated. Defaulting to BOOTLOADER_USB=1.)
+BOOTLOADER_USB = 1
+endif
+
+ifeq ($(BOOTLOADER_USB),1)
+configure_OPTIONS += --with-custom-linker-file=$(AbsTopSourceDir)/examples/platforms/nrf528xx/nrf52840/nrf52840_bootloader_usb.ld
 COMMONCFLAGS += -DAPP_USBD_NRF_DFU_TRIGGER_ENABLED=1
+endif
+
+ifeq ($(BOOTLOADER_UART),1)
+configure_OPTIONS += --with-custom-linker-file=$(AbsTopSourceDir)/examples/platforms/nrf528xx/nrf52840/nrf52840_bootloader_uart.ld
+endif
+
+ifeq ($(BOOTLOADER_BLE),1)
+configure_OPTIONS += --with-custom-linker-file=$(AbsTopSourceDir)/examples/platforms/nrf528xx/nrf52840/nrf52840_bootloader_ble.ld
 endif
 
 #
