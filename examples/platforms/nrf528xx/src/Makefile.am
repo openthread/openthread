@@ -30,7 +30,6 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 PRETTY_FILES=                                   \
     *.c                                         \
-    platform-config.h                           \
     platform-fem.h                              \
     platform-nrf5.h                             \
     $(NULL)
