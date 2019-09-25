@@ -47,12 +47,14 @@ namespace ot {
 namespace Cli {
 
 const struct CoapSecure::Command CoapSecure::sCommands[] = {
-    {"help", &CoapSecure::ProcessHelp},         {"connect", &CoapSecure::ProcessConnect},
-    {"delete", &CoapSecure::ProcessRequest},    {"disconnect", &CoapSecure::ProcessDisconnect},
-    {"get", &CoapSecure::ProcessRequest},       {"post", &CoapSecure::ProcessRequest},
-    {"psk", &CoapSecure::ProcessPsk},           {"put", &CoapSecure::ProcessRequest},
-    {"resource", &CoapSecure::ProcessResource}, {"start", &CoapSecure::ProcessStart},
-    {"stop", &CoapSecure::ProcessStop},
+    {"help", &CoapSecure::ProcessHelp},      {"connect", &CoapSecure::ProcessConnect},
+    {"delete", &CoapSecure::ProcessRequest}, {"disconnect", &CoapSecure::ProcessDisconnect},
+    {"get", &CoapSecure::ProcessRequest},    {"post", &CoapSecure::ProcessRequest},
+    {"put", &CoapSecure::ProcessRequest},    {"resource", &CoapSecure::ProcessResource},
+    {"start", &CoapSecure::ProcessStart},    {"stop", &CoapSecure::ProcessStop},
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+    {"psk", &CoapSecure::ProcessPsk},
+#endif
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     {"x509", &CoapSecure::ProcessX509},
 #endif
@@ -341,6 +343,7 @@ otError CoapSecure::ProcessDisconnect(int argc, char *argv[])
     return OT_ERROR_NONE;
 }
 
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 otError CoapSecure::ProcessPsk(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
@@ -364,6 +367,7 @@ otError CoapSecure::ProcessPsk(int argc, char *argv[])
 exit:
     return error;
 }
+#endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 otError CoapSecure::ProcessX509(int argc, char *argv[])
