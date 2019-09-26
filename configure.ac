@@ -975,7 +975,6 @@ examples/platforms/efr32mg21/sleepy-demo/sleepy-demo-mtd/Makefile
 examples/platforms/gp712/Makefile
 examples/platforms/kw41z/Makefile
 examples/platforms/nrf528xx/Makefile
-examples/platforms/nrf528xx/src/Makefile
 examples/platforms/qpg6095/Makefile
 examples/platforms/samr21/Makefile
 examples/platforms/posix/Makefile

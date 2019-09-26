@@ -39,6 +39,14 @@ if OPENTHREAD_EXAMPLES_NRF52840
 include nrf52840/Makefile.am
 endif
 
-PRETTY_SUBDIRS =     \
-    src              \
+include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+
+PRETTY_FILES              = \
+    src/*.c                 \
+    src/platform-fem.h      \
+    src/platform-nrf5.h     \
+    nrf52840/*.h            \
+    nrf52811/*.h            \
     $(NULL)
+
+include $(abs_top_nlbuild_autotools_dir)/automake/post.am

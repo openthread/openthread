@@ -96,13 +96,13 @@ PLATFORM_COMMON_SOURCES                                                         
     $(NULL)
 
 SINGLEPHY_SOURCES                                                                                          = \
-    src/flash_nosd.c                                                                                             \
+    src/flash_nosd.c                                                                                         \
     $(NULL)
 
 SOFTDEVICE_SOURCES                                                                                         = \
-    src/flash_sd.c                                                                                               \
-    src/softdevice.c                                                                                             \
-    src/softdevice.h                                                                                             \
+    src/flash_sd.c                                                                                           \
+    src/softdevice.c                                                                                         \
+    src/softdevice.h                                                                                         \
     $(NULL)
 
 SOFTDEVICE_CPPFLAGS                                                                                        = \

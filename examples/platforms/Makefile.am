@@ -40,7 +40,6 @@ DIST_SUBDIRS                            = \
     gp712                                 \
     kw41z                                 \
     nrf528xx                              \
-    nrf528xx/src                          \
     posix                                 \
     qpg6095                               \
     samr21                                \
@@ -116,7 +115,7 @@ PRETTY_SUBDIRS                          = \
     efr32mg21                             \
     gp712                                 \
     kw41z                                 \
-    nrf528xx/src                          \
+    nrf528xx                              \
     posix                                 \
     qpg6095                               \
     samr21                                \
