@@ -738,6 +738,13 @@ void Mac::PerformNextOperation(void)
     {
         mPendingTransmitDataDirect = false;
         mOperation                 = kOperationTransmitDataDirect;
+
+        if (mPendingTransmitPoll)
+        {
+            // Ensure that a pending "transmit poll" operation request
+            // is prioritized over any future "transmit data" requests.
+            mShouldTxPollBeforeData = true;
+        }
     }
 
     if (mOperation != kOperationIdle)
