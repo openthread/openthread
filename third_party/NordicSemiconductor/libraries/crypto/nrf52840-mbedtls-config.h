@@ -51,15 +51,4 @@
     _Pragma("diag_suppress=68")
 #endif
 
-/**
- * @def NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT
- *
- * Define as 1 to enable AES usage in interrupt context and AES-256, by introducing a software AES under platform layer.
- *
- * @note This feature must be enabled to support AES-256 used by Commissioner and Joiner, and AES usage in interrupt context
- *       used by Header IE related features.
- *
- */
-#define NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT 1
-
 #endif // NRF52840_MBEDTLS_CONFIG_H_
