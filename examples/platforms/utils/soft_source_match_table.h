@@ -58,11 +58,11 @@ void utilsSoftSrcMatchSetPanId(uint16_t aPanId);
 #endif // RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM || RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
 
 #if RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
-int8_t utilsSoftSrcMatchShortFindEntry(const uint16_t aShortAddress);
+int16_t utilsSoftSrcMatchShortFindEntry(const uint16_t aShortAddress);
 #endif // RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
 
 #if RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
-int8_t utilsSoftSrcMatchExtFindEntry(const otExtAddress *aExtAddress);
+int16_t utilsSoftSrcMatchExtFindEntry(const otExtAddress *aExtAddress);
 #endif // RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
 
 #ifdef __cplusplus
