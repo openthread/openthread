@@ -72,7 +72,7 @@ NRF52840_MBEDTLS_CPPFLAGS += -DNRF52840_XXAA
 
 NRF52840_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-nrf52840-config.h\"'
 NRF52840_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-nrf52840-config-check.h\"'
-NRF52840_CONFIG_FILE_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/nrf52840/
+NRF52840_CONFIG_FILE_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/nrf528xx/nrf52840
 
 COMMONCFLAGS                      := \
     -fdata-sections                  \
@@ -85,7 +85,7 @@ COMMONCFLAGS                      := \
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
 ifeq ($(BOOTLOADER),1)
-configure_OPTIONS += --with-custom-linker-file=$(AbsTopSourceDir)/examples/platforms/nrf52840/nrf52840_bootloader.ld
+configure_OPTIONS += --with-custom-linker-file=$(AbsTopSourceDir)/examples/platforms/nrf528xx/nrf52840/nrf52840_bootloader.ld
 COMMONCFLAGS += -DAPP_USBD_NRF_DFU_TRIGGER_ENABLED=1
 endif
 

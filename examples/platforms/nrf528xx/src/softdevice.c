@@ -26,33 +26,79 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/config.h>
-#include <openthread-core-config.h>
+/**
+ * @file
+ *   This file implements the OpenThread softdevice helper functions.
+ *
+ */
 
+#include <openthread-core-config.h>
+#include <openthread/config.h>
+
+#include <assert.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <string.h>
-#include <assert.h>
 
-#include <utils/code_utils.h>
-#include <utils/flash.h>
-
-#include "hal/nrf_nvmc.h"
 #include "platform-nrf5.h"
+#include "platform-softdevice.h"
+#include "softdevice.h"
 
-otError nrf5FlashPageErase(uint32_t aAddress)
+#include <nrf_raal_softdevice.h>
+
+otError nrf5SdErrorToOtError(uint32_t aSdError)
 {
-    nrf_nvmc_page_erase(aAddress);
+    switch (aSdError)
+    {
+    case NRF_SUCCESS:
+        return OT_ERROR_NONE;
+        break;
 
-    return OT_ERROR_NONE;
+    case NRF_ERROR_INVALID_STATE:
+    case NRF_ERROR_BUSY:
+        return OT_ERROR_INVALID_STATE;
+        break;
+
+    case NRF_ERROR_INVALID_PARAM:
+    case NRF_ERROR_INVALID_ADDR:
+        return OT_ERROR_INVALID_ARGS;
+        break;
+
+    case NRF_ERROR_NO_MEM:
+        return OT_ERROR_NO_BUFS;
+        break;
+
+    case NRF_ERROR_NOT_FOUND:
+        return OT_ERROR_NOT_FOUND;
+        break;
+
+    case NRF_ERROR_NOT_SUPPORTED:
+        return OT_ERROR_NOT_IMPLEMENTED;
+        break;
+
+    default:
+        return OT_ERROR_FAILED;
+        break;
+    }
 }
 
-bool nrf5FlashIsBusy(void)
+void otSysSoftdeviceSocEvtHandler(uint32_t aEvtId)
 {
-    return NRF_NVMC->READY != NVMC_READY_READY_Ready;
+    nrf5SdSocFlashProcess(aEvtId);
+    nrf_raal_softdevice_soc_evt_handler(aEvtId);
 }
 
-uint32_t nrf5FlashWrite(uint32_t aAddress, const uint8_t *aData, uint32_t aSize)
+void otSysSoftdeviceRaalConfig(const otSysSoftdeviceRaalConfigParams *aConfig)
 {
-    nrf_nvmc_write_bytes(aAddress, aData, aSize);
-    return aSize;
+    nrf_raal_softdevice_cfg_t cfg;
+    memset(&cfg, 0, sizeof(cfg));
+
+    cfg.timeslot_length      = aConfig->timeslotLength;
+    cfg.timeslot_timeout     = aConfig->timeslotTimeout;
+    cfg.timeslot_max_length  = aConfig->timeslotMaxLength;
+    cfg.timeslot_alloc_iters = aConfig->timeslotAllocIters;
+    cfg.timeslot_safe_margin = aConfig->timeslotSafeMargin;
+    cfg.lf_clk_accuracy_ppm  = aConfig->lfClkAccuracyPpm;
+
+    nrf_raal_softdevice_config(&cfg);
 }

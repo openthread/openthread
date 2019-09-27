@@ -40,10 +40,11 @@ override CXXFLAGS                                    := $(filter-out -pedantic-e
 COMMONCPPFLAGS                                                                                             = \
     -DCONFIG_GPIO_AS_PINRESET                                                                                \
     -DNRF52811_XXAA                                                                                          \
+    -I$(srcdir)                                                                                              \
     -I$(top_srcdir)/include                                                                                  \
     -I$(top_srcdir)/examples/platforms                                                                       \
+    -I$(top_srcdir)/examples/platforms/nrf528xx/src                                                          \
     -I$(top_srcdir)/src/core                                                                                 \
-    -I$(srcdir)                                                                                              \
     -I$(top_srcdir)/third_party/NordicSemiconductor                                                          \
     -I$(top_srcdir)/third_party/NordicSemiconductor/cmsis                                                    \
     -I$(top_srcdir)/third_party/NordicSemiconductor/dependencies                                             \
@@ -71,27 +72,22 @@ COMMONCPPFLAGS                                                                  
     $(NULL)
 
 PLATFORM_COMMON_SOURCES                                                                                    = \
-    alarm.c                                                                                                  \
-    diag.c                                                                                                   \
-    entropy.c                                                                                                \
-    fem.c                                                                                                    \
-    flash.c                                                                                                  \
-    logging.c                                                                                                \
-    misc.c                                                                                                   \
-    openthread-core-nrf52811-config.h                                                                        \
-    openthread-core-nrf52811-config-check.h                                                                  \
-    platform-config.h                                                                                        \
-    platform-fem.h                                                                                           \
-    platform-nrf5.h                                                                                          \
-    radio.c                                                                                                  \
-    temp.c                                                                                                   \
-    spi-slave.c                                                                                              \
-    system.c                                                                                                 \
-    uart.c                                                                                                   \
+    src/alarm.c                                                                                              \
+    src/diag.c                                                                                               \
+    src/entropy.c                                                                                            \
+    src/fem.c                                                                                                \
+    src/flash.c                                                                                              \
+    src/logging.c                                                                                            \
+    src/misc.c                                                                                               \
+    src/radio.c                                                                                              \
+    src/spi-slave.c                                                                                          \
+    src/system.c                                                                                             \
+    src/temp.c                                                                                               \
+    src/uart.c                                                                                               \
     $(NULL)
 
 SINGLEPHY_SOURCES                                                                                          = \
-    flash_nosd.c                                                                                             \
+    src/flash_nosd.c                                                                                         \
     $(NULL)
 
 SINGLEPHY_CPPFLAGS                                                                                         = \
@@ -122,9 +118,6 @@ libopenthread_nrf52811_sdk_a_SOURCES                                            
     $(SINGLEPHY_SOURCES)                                                                                     \
     $(NULL)
 
-PRETTY_FILES                                                                                               = \
-    $(PLATFORM_COMMON_SOURCES)                                                                               \
-    $(NULL)
 Dash                                                                                                       = -
 
 libopenthread_nrf52811_a_LIBADD                                                                            = \

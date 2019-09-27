@@ -31,7 +31,7 @@
 #
 
 LDADD_COMMON                                                                                 += \
-    $(top_builddir)/examples/platforms/nrf52840/libopenthread-nrf52840.a                        \
+    $(top_builddir)/examples/platforms/nrf528xx/libopenthread-nrf52840.a                        \
     $(top_builddir)/third_party/NordicSemiconductor/libnordicsemi-nrf52840-sdk.a                \
     $(top_builddir)/third_party/NordicSemiconductor/libnordicsemi-nrf52840-radio-driver.a       \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_cc310/lib/libnrf_cc310_0.9.10.a \
@@ -43,6 +43,6 @@ LDFLAGS_COMMON                                                                  
     $(NULL)
 else
 LDFLAGS_COMMON                                                                               += \
-    -T $(top_srcdir)/examples/platforms/nrf52840/nrf52840.ld                                    \
+    -T $(top_srcdir)/examples/platforms/nrf528xx/nrf52840/nrf52840.ld                           \
     $(NULL)
 endif

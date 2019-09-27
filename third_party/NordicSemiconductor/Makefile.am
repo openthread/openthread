@@ -90,7 +90,7 @@ COMMONCPPFLAGS                                                                  
 NRF52840_CPPFLAGS                                                                                                       = \
     -DNRF52840_XXAA                                                                                                       \
     -DNRF_802154_PROJECT_CONFIG=\"platform-config.h\"                                                                     \
-    -I$(top_srcdir)/examples/platforms/nrf52840                                                                           \
+    -I$(top_srcdir)/examples/platforms/nrf528xx/nrf52840/                                                                 \
     $(NULL)
 
 NRF52811_CPPFLAGS                                                                                                       = \
@@ -98,7 +98,7 @@ NRF52811_CPPFLAGS                                                               
     -DNRF_802154_PROJECT_CONFIG=\"platform-config.h\"                                                                     \
     -D__HEAP_SIZE=0                                                                                                       \
     -D__STACK_SIZE=2048                                                                                                   \
-    -I$(top_srcdir)/examples/platforms/nrf52811                                                                           \
+    -I$(top_srcdir)/examples/platforms/nrf528xx/nrf52811                                                                  \
     $(NULL)
 
 NORDICSEMI_COMMON_SOURCES                                                                                               = \

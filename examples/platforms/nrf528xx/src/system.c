@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -55,15 +55,18 @@ void __cxa_pure_virtual(void)
 
 void otSysInit(int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
     if (gPlatformPseudoResetWasRequested)
     {
         otSysDeinit();
     }
 
-    (void)argc;
-    (void)argv;
-
-#if DCDC_ENABLE
+#if ((!SOFTDEVICE_PRESENT) && (NRF52840_XXAA))
+    // Enable I-code cache
+    NRF_NVMC->ICACHECNF = NVMC_ICACHECNF_CACHEEN_Enabled;
+#elif (DCDC_ENABLE)
     NRF_POWER->DCDCEN = 1;
 #endif
 
@@ -77,8 +80,17 @@ void otSysInit(int argc, char *argv[])
     nrf5RandomInit();
     if (!gPlatformPseudoResetWasRequested)
     {
-#if (UART_AS_SERIAL_TRANSPORT == 1)
+#if ((UART_AS_SERIAL_TRANSPORT == 1) || (USB_CDC_AS_SERIAL_TRANSPORT == 1))
         nrf5UartInit();
+#endif
+#if NRF52840_XXAA
+        nrf5CryptoInit();
+#endif
+    }
+    else
+    {
+#if ((UART_AS_SERIAL_TRANSPORT == 1) || (USB_CDC_AS_SERIAL_TRANSPORT == 1))
+        nrf5UartClearPendingData();
 #endif
     }
 
@@ -106,7 +118,10 @@ void otSysDeinit(void)
 #endif
     if (!gPlatformPseudoResetWasRequested)
     {
-#if (UART_AS_SERIAL_TRANSPORT == 1)
+#if NRF52840_XXAA
+        nrf5CryptoDeinit();
+#endif
+#if ((UART_AS_SERIAL_TRANSPORT == 1) || (USB_CDC_AS_SERIAL_TRANSPORT == 1))
         nrf5UartDeinit();
 #endif
     }
@@ -126,7 +141,7 @@ bool otSysPseudoResetWasRequested(void)
 void otSysProcessDrivers(otInstance *aInstance)
 {
     nrf5RadioProcess(aInstance);
-#if (UART_AS_SERIAL_TRANSPORT == 1)
+#if ((UART_AS_SERIAL_TRANSPORT == 1) || (USB_CDC_AS_SERIAL_TRANSPORT == 1))
     nrf5UartProcess();
 #endif
 #if (SPIS_AS_SERIAL_TRANSPORT == 1)
