@@ -34,7 +34,7 @@ import serial
 import time
 
 
-ABC = abc.ABC if sys.version_info >= (3, 4) else abc.ABCMeta("ABC", (), {})
+ABC = abc.ABC if sys.version_info >= (3, 4) else abc.ABCMeta('ABC', (), {})
 logger = logging.getLogger(__name__)
 
 

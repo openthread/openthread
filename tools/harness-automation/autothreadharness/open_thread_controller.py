@@ -38,10 +38,10 @@ import serial
 
 from . import settings
 
-__all__ = ["OpenThreadController"]
+__all__ = ['OpenThreadController']
 logger = logging.getLogger(__name__)
 
-linesepx = re.compile(r"\r\n|\n")
+linesepx = re.compile(r'\r\n|\n')
 
 
 class OpenThreadController(threading.Thread):
@@ -93,16 +93,16 @@ class OpenThreadController(threading.Thread):
             self.handle = None
 
     def _connect(self):
-        logger.debug("My port is %s", self.port)
-        if self.port.startswith("NET"):
-            portnum = settings.SER2NET_PORTBASE + int(self.port.split("NET")[1])
-            logger.debug("My port num is %d", portnum)
+        logger.debug('My port is %s', self.port)
+        if self.port.startswith('NET'):
+            portnum = settings.SER2NET_PORTBASE + int(self.port.split('NET')[1])
+            logger.debug('My port num is %d', portnum)
             address = (settings.SER2NET_HOSTNAME, portnum)
             self.handle = socket.create_connection(address)
             self.handle.setblocking(0)
             self._is_net = True
-        elif ":" in self.port:
-            host, port = self.port.split(":")
+        elif ':' in self.port:
+            host, port = self.port.split(':')
             self.handle = socket.create_connection((host, port))
             self.handle.setblocking(0)
             self._is_net = True
@@ -129,7 +129,7 @@ class OpenThreadController(threading.Thread):
             expected    str: the expected string
             times       int: number of trials
         """
-        logger.debug("[%s] Expecting [%s]", self.port, expected)
+        logger.debug('[%s] Expecting [%s]', self.port, expected)
         retry_times = 10
         while times:
             if not retry_times:
@@ -146,7 +146,7 @@ class OpenThreadController(threading.Thread):
 
             times -= 1
 
-        raise Exception("failed to find expected string[%s]" % expected)
+        raise Exception('failed to find expected string[%s]' % expected)
 
     def _readline(self):
         """Read exactly one line from the device, nonblocking.
@@ -157,14 +157,14 @@ class OpenThreadController(threading.Thread):
         if len(self.lines) > 1:
             return self.lines.pop(0)
 
-        tail = ""
+        tail = ''
         if len(self.lines):
             tail = self.lines.pop()
 
         try:
             tail += self._read()
         except socket.error:
-            logging.exception("No new data")
+            logging.exception('No new data')
             time.sleep(0.1)
 
         self.lines += linesepx.split(tail)
@@ -181,10 +181,10 @@ class OpenThreadController(threading.Thread):
         try:
             self._read()
         except socket.error:
-            logging.debug("Nothing cleared")
+            logging.debug('Nothing cleared')
 
-        logger.debug("sending [%s]", line)
-        self._write(line + "\r\n")
+        logger.debug('sending [%s]', line)
+        self._write(line + '\r\n')
 
         # wait for write to complete
         time.sleep(0.5)
@@ -200,7 +200,7 @@ class OpenThreadController(threading.Thread):
         Returns:
             [str]: The output lines
         """
-        logger.debug("DUT> %s", req)
+        logger.debug('DUT> %s', req)
         self._log and self.pause()
         times = 3
         res = None
@@ -216,9 +216,9 @@ class OpenThreadController(threading.Thread):
 
                 while True:
                     line = self._readline()
-                    logger.debug("Got line %s", line)
+                    logger.debug('Got line %s', line)
 
-                    if line == "Done":
+                    if line == 'Done':
                         break
 
                     if line:
@@ -226,7 +226,7 @@ class OpenThreadController(threading.Thread):
                 break
 
             except BaseException:
-                logger.exception("Failed to send command")
+                logger.exception('Failed to send command')
                 self.close()
                 self._init()
 
@@ -253,27 +253,27 @@ class OpenThreadController(threading.Thread):
         Returns:
             bool: started or not
         """
-        state = self._req("state")[0]
-        return state != "disabled"
+        state = self._req('state')[0]
+        return state != 'disabled'
 
     def start(self):
         """Start openthread
         """
-        self._req("ifconfig up")
-        self._req("thread start")
+        self._req('ifconfig up')
+        self._req('thread start')
 
     def stop(self):
         """Stop openthread
         """
-        self._req("thread stop")
-        self._req("ifconfig down")
+        self._req('thread stop')
+        self._req('ifconfig down')
 
     def reset(self):
         """Reset openthread device, not equivalent to stop and start
         """
-        logger.debug("DUT> reset")
+        logger.debug('DUT> reset')
         self._log and self.pause()
-        self._sendline("reset")
+        self._sendline('reset')
         self._read()
         self._log and self.resume()
 
@@ -288,76 +288,76 @@ class OpenThreadController(threading.Thread):
     @property
     def networkname(self):
         """str: Thread network name."""
-        return self._req("networkname")[0]
+        return self._req('networkname')[0]
 
     @networkname.setter
     def networkname(self, value):
-        self._req("networkname %s" % value)
+        self._req('networkname %s' % value)
 
     @property
     def mode(self):
         """str: Thread mode."""
-        return self._req("mode")[0]
+        return self._req('mode')[0]
 
     @mode.setter
     def mode(self, value):
-        self._req("mode %s" % value)
+        self._req('mode %s' % value)
 
     @property
     def mac(self):
         """str: MAC address of the device"""
-        return self._req("extaddr")[0]
+        return self._req('extaddr')[0]
 
     @property
     def addrs(self):
         """[str]: IP addresses of the devices"""
-        return self._req("ipaddr")
+        return self._req('ipaddr')
 
     @property
     def short_addr(self):
         """str: Short address"""
-        return self._req("rloc16")[0]
+        return self._req('rloc16')[0]
 
     @property
     def channel(self):
         """int: Channel number of openthread"""
-        return int(self._req("channel")[0])
+        return int(self._req('channel')[0])
 
     @channel.setter
     def channel(self, value):
-        self._req("channel %d" % value)
+        self._req('channel %d' % value)
 
     @property
     def panid(self):
         """str: Thread panid"""
-        return self._req("panid")[0]
+        return self._req('panid')[0]
 
     @panid.setter
     def panid(self, value):
-        self._req("panid %s" % value)
+        self._req('panid %s' % value)
 
     @property
     def extpanid(self):
         """str: Thread extpanid"""
-        return self._req("extpanid")[0]
+        return self._req('extpanid')[0]
 
     @extpanid.setter
     def extpanid(self, value):
-        self._req("extpanid %s" % value)
+        self._req('extpanid %s' % value)
 
     @property
     def child_timeout(self):
         """str: Thread child timeout in seconds"""
-        return self._req("childtimeout")[0]
+        return self._req('childtimeout')[0]
 
     @child_timeout.setter
     def child_timeout(self, value):
-        self._req("childtimeout %d" % value)
+        self._req('childtimeout %d' % value)
 
     @property
     def version(self):
         """str: Open thread version"""
-        return self._req("version")[0]
+        return self._req('version')[0]
 
     def add_prefix(self, prefix, flags, prf):
         """Add network prefix.
@@ -367,21 +367,21 @@ class OpenThreadController(threading.Thread):
             flags (str): network prefix flags, please refer thread documentation for details
             prf (str): network prf, please refer thread documentation for details
         """
-        self._req("prefix add %s %s %s" % (prefix, flags, prf))
+        self._req('prefix add %s %s %s' % (prefix, flags, prf))
         time.sleep(1)
-        self._req("netdataregister")
+        self._req('netdataregister')
 
     def remove_prefix(self, prefix):
         """Remove network prefix.
         """
-        self._req("prefix remove %s" % prefix)
+        self._req('prefix remove %s' % prefix)
         time.sleep(1)
-        self._req("netdataregister")
+        self._req('netdataregister')
 
     def enable_blacklist(self):
         """Enable blacklist feature"""
-        self._req("blacklist enable")
+        self._req('blacklist enable')
 
     def add_blacklist(self, mac):
         """Add a mac address to blacklist"""
-        self._req("blacklist add %s" % mac)
+        self._req('blacklist add %s' % mac)

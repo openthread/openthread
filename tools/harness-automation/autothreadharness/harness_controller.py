@@ -43,7 +43,7 @@ HARNESS_SVN_VERSION_R44 = 1471
 
 
 def _try_kill(proc):
-    logger.info("Try kill process")
+    logger.info('Try kill process')
     times = 1
 
     while proc.poll() is None:
