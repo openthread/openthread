@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   GCC linker script for nRF52840 with USB bootloader.
+ *   GCC linker script for nRF52840 with BLE bootloader.
  */
 
 SEARCH_DIR(.)
@@ -37,7 +37,7 @@ GROUP(-lgcc -lc -lnosys)
 MEMORY
 {
   FLASH (rx) : ORIGIN = 0x00026000, LENGTH = 0xd2000
-  RAM (rwx) :  ORIGIN = 0x20002c08, LENGTH = 0x3d3f8
+  RAM (rwx) :  ORIGIN = 0x20000008, LENGTH = 0x3fff8
 }
 
 OUTPUT_FORMAT ("elf32-littlearm", "elf32-bigarm", "elf32-littlearm")

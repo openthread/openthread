@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   GCC linker script for nRF52840 with USB bootloader.
+ *   GCC linker script for nRF52840 with UART bootloader.
  */
 
 SEARCH_DIR(.)
