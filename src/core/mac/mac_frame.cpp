@@ -1092,16 +1092,6 @@ void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 #endif
 }
 
-uint16_t Frame::GetMtu(void) const
-{
-    return kMTU;
-}
-
-uint16_t Frame::GetFcsSize(void) const
-{
-    return kFcsSize;
-}
-
 // LCOV_EXCL_START
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
