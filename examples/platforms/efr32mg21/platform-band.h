@@ -43,6 +43,26 @@
 
 #define RAIL_TX_FIFO_SIZE (OT_RADIO_FRAME_MAX_SIZE + 1)
 
+typedef struct efr32RadioCounters
+{
+    uint64_t mRailPlatTxTriggered;
+    uint64_t mRailPlatRadioReceiveDoneCbCount;
+    uint64_t mRailPlatRadioEnergyScanDoneCbCount;
+    uint64_t mRailPlatRadioTxDoneCbCount;
+    uint64_t mRailTxStarted;
+    uint64_t mRailTxStartFailed;
+    uint64_t mRailEventConfigScheduled;
+    uint64_t mRailEventConfigUnScheduled;
+    uint64_t mRailEventPacketSent;
+    uint64_t mRailEventChannelBusy;
+    uint64_t mRailEventEnergyScanCompleted;
+    uint64_t mRailEventCalNeeded;
+    uint64_t mRailEventPacketReceived;
+    uint64_t mRailEventNoAck;
+    uint64_t mRailEventTxAbort;
+    uint64_t mRailEventSchedulerStatusError;
+} efr32RadioCounters;
+
 typedef struct efr32CommonConfig
 {
     RAIL_Config_t mRailConfig;
