@@ -404,7 +404,11 @@ exit:
 
 otError Message::AppendTlv(const Tlv &aTlv)
 {
-    return Append(&aTlv, aTlv.GetSize());
+    uint32_t size = aTlv.GetSize();
+
+    assert(size <= UINT16_MAX);
+
+    return Append(&aTlv, static_cast<uint16_t>(size));
 }
 
 otError Message::Prepend(const void *aBuf, uint16_t aLength)

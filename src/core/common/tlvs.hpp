@@ -120,7 +120,7 @@ public:
      * @returns The total size include Type, Length, and Value fields.
      *
      */
-    uint16_t GetSize(void) const;
+    uint32_t GetSize(void) const;
 
     /**
      * This method returns a pointer to the Value.

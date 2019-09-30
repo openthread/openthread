@@ -38,7 +38,7 @@
 
 namespace ot {
 
-uint16_t Tlv::GetSize(void) const
+uint32_t Tlv::GetSize(void) const
 {
     return IsExtended() ? sizeof(ExtendedTlv) + static_cast<const ExtendedTlv *>(this)->GetLength()
                         : sizeof(Tlv) + GetLength();
@@ -108,7 +108,7 @@ otError Tlv::Find(const Message &aMessage, uint8_t aType, uint16_t *aOffset, uin
     uint16_t offset       = aMessage.GetOffset();
     uint16_t remainingLen = aMessage.GetLength();
     Tlv      tlv;
-    uint16_t size;
+    uint32_t size;
 
     VerifyOrExit(offset <= remainingLen);
     remainingLen -= offset;
@@ -144,7 +144,7 @@ otError Tlv::Find(const Message &aMessage, uint8_t aType, uint16_t *aOffset, uin
 
             if (aSize != NULL)
             {
-                *aSize = size;
+                *aSize = static_cast<uint16_t>(size);
             }
 
             if (aIsExtendedTlv != NULL)
