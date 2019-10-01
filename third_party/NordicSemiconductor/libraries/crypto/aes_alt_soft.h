@@ -52,8 +52,6 @@
 
 #ifdef MBEDTLS_AES_ALT
 
-#if NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT
-
 #include "aes_alt.h"
 
 #ifdef __cplusplus
@@ -105,8 +103,6 @@ int aes_soft_crypt_ecb(mbedtls_aes_context * ctx,
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* NRF_MBEDTLS_AES_ALT_INTERRUPT_CONTEXT */
 
 #endif /* MBEDTLS_AES_ALT */
 
