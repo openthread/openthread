@@ -65,6 +65,18 @@ Note that the USB CDC ACM serial transport is not supported with Engineering sam
 If you are using Windows 7 or earlier, you must load an additional USB CDC driver.
 The driver can be found in `third_party/NordicSemiconductor/libraries/usb/nordic_cdc_acm_example.inf`.
 
+### Bootloader support
+
+The examples support the following bootloaders for performing a Device Firmware Upgrade (DFU):
+* USB bootloader
+* UART bootloader
+* BLE bootloader
+
+The support for a particular bootloader can be enabled with the following switches:
+* USB: `BOOTLOADER=USB`
+* UART: `BOOTLOADER=UART`
+* BLE: `BOOTLOADER=BLE`
+
 ### nRF52840 dongle support (PCA10059)
 
 You can build the libraries with support for the USB bootloader with USB DFU trigger support in PCA10059. As this dongle uses the native USB support, you must enable it as well.
@@ -72,7 +84,7 @@ You can build the libraries with support for the USB bootloader with USB DFU tri
 To build the libraries, run make with the following parameters:
 
 ```
-$ make -f examples/Makefile-nrf52840 USB=1 BOOTLOADER=1
+$ make -f examples/Makefile-nrf52840 USB=1 BOOTLOADER=USB
 ```
 
 See [nRF52840 Dongle Programming][nrf52840-dongle-programming] for more details about how to use the USB bootloader.
@@ -380,7 +392,7 @@ nRF52840 port extends [OpenThread Diagnostics Module][DIAG].
 You can read about all the features [here][nRFDIAG].
 
 [DIAG]: ./../../../src/core/diags/README.md
-[nRFDIAG]: DIAG.md
+[nRFDIAG]: ./../DIAG.md
 
 ## Radio driver documentation
 

@@ -72,7 +72,7 @@ $ make -f examples/Makefile-nrf52811
 ```
 
 After a successful build, the `elf` files can be found in
-`<path-to-openthread>/output/nrf52811/bin`.  
+`<path-to-openthread>/output/nrf52811/bin`.
 You can convert them to hex using `arm-none-eabi-objcopy`:
 ```bash
 $ arm-none-eabi-objcopy -O ihex ot-cli-mtd ot-cli-mtd.hex
@@ -173,7 +173,7 @@ To test the example:
    ```
 
    After a couple of seconds the node will become a Leader of the network.
-   
+
    ```bash
    > state
    leader
@@ -197,7 +197,7 @@ To test the example:
       ```shell
       screen /dev/ttyACM1 115200
       ```
-      
+
       You are now connected with the CLI on the second board
 
 8. Use the following commands to attach to the network on the second board:
@@ -350,7 +350,7 @@ nRF52811 supports [OpenThread Diagnostics Module][DIAG], with some additional fe
 For more information, see [nRF Diag command reference][nRFDIAG].
 
 [DIAG]: ./../../../src/core/diags/README.md
-[nRFDIAG]: DIAG.md
+[nRFDIAG]: ./../DIAG.md
 
 ## Radio driver documentation
 
