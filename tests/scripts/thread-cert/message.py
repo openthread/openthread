@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -30,7 +30,6 @@
 import io
 import ipaddress
 import struct
-import sys
 
 import coap
 import common
@@ -349,9 +348,6 @@ class Message(object):
         assert sent_to_node
 
     def assertSentToDestinationAddress(self, ipv6_address):
-        if sys.version_info[0] == 2:
-            ipv6_address = ipv6_address.decode("utf-8")
-
         assert (
             self.ipv6_packet.ipv6_header.destination_address
             == ipaddress.ip_address(ipv6_address)
