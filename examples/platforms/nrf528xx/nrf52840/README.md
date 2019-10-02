@@ -67,14 +67,12 @@ The driver can be found in `third_party/NordicSemiconductor/libraries/usb/nordic
 
 ### Bootloader support
 
-The examples support the following bootloaders for performing the DFU:
+The examples support the following bootloaders for performing a Device Firmware Upgrade (DFU):
 * USB bootloader
 * UART bootloader
 * BLE bootloader
 
-Each bootloader supports flashing the new firmware using USB, UART and BLE respectively.
-
-The support for the particular bootloader can be enabled with the following switches:
+The support for a particular bootloader can be enabled with the following switches:
 * USB: `BOOTLOADER=USB`
 * UART: `BOOTLOADER=UART`
 * BLE: `BOOTLOADER=BLE`
