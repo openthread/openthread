@@ -823,6 +823,10 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
 
         status = RAIL_Calibrate(aRailHandle, NULL, RAIL_CAL_ALL_PENDING);
         assert(status == RAIL_STATUS_NO_ERROR);
+
+#if RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
+        sRailDebugCounters.mRailEventCalNeeded++;
+#endif
     }
 
     if (aEvents & RAIL_EVENT_RSSI_AVERAGE_DONE)
@@ -839,6 +843,10 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
         {
             sEnergyScanResultDbm = energyScanResultQuarterDbm / QUARTER_DBM_IN_DBM;
         }
+
+#if RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
+        sRailDebugCounters.mRailPlatRadioEnergyScanDoneCbCount++;
+#endif
     }
     if (aEvents & RAIL_EVENT_SCHEDULER_STATUS)
     {
@@ -897,6 +905,10 @@ void efr32RadioProcess(otInstance *aInstance)
     {
         sEnergyScanStatus = ENERGY_SCAN_STATUS_IDLE;
         otPlatRadioEnergyScanDone(aInstance, sEnergyScanResultDbm);
+
+#if RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
+        sRailDebugCounters.mRailEventEnergyScanCompleted++;
+#endif
     }
 
     processNextRxPacket(aInstance);
