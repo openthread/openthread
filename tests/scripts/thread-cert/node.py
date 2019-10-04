@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -60,10 +60,7 @@ class Node:
             self.__init_sim(nodeid, mode)
 
         if self.verbose:
-            if sys.version_info[0] == 2:
-                self.pexpect.logfile_read = sys.stdout
-            else:
-                self.pexpect.logfile_read = sys.stdout.buffer
+            self.pexpect.logfile_read = sys.stdout.buffer
 
         self._initialized = True
 
@@ -543,8 +540,6 @@ class Node:
         for addr in addrs:
             if isinstance(addr, bytearray):
                 addr = bytes(addr)
-            elif isinstance(addr, str) and sys.version_info[0] == 2:
-                addr = addr.decode("utf-8")
             ipv6_address = ipaddress.ip_address(addr)
             if ipv6_address in network:
                 return ipv6_address.exploded
