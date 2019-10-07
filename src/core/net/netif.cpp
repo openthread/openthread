@@ -134,7 +134,7 @@ void Netif::SubscribeAllNodesMulticast(void)
         }
     }
 
-    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED);
+    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSCRIBED);
 }
 
 void Netif::UnsubscribeAllNodesMulticast(void)
@@ -152,7 +152,7 @@ void Netif::UnsubscribeAllNodesMulticast(void)
         }
     }
 
-    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED);
+    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSCRIBED);
 }
 
 otError Netif::SubscribeAllRoutersMulticast(void)
@@ -190,7 +190,7 @@ otError Netif::SubscribeAllRoutersMulticast(void)
         }
     }
 
-    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED);
+    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSCRIBED);
 
 exit:
     return error;
@@ -231,7 +231,7 @@ exit:
             }
         }
 
-        Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED);
+        Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSCRIBED);
     }
 
     return error;
@@ -257,7 +257,7 @@ otError Netif::SubscribeMulticast(NetifMulticastAddress &aAddress)
         mAddressCallback(&aAddress.mAddress, kMulticastPrefixLength, true, mAddressCallbackContext);
     }
 
-    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED);
+    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSCRIBED);
 
 exit:
     return error;
@@ -295,7 +295,7 @@ exit:
             mAddressCallback(&aAddress.mAddress, kMulticastPrefixLength, false, mAddressCallbackContext);
         }
 
-        Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED);
+        Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSCRIBED);
     }
 
     return error;
@@ -355,7 +355,7 @@ otError Netif::SubscribeExternalMulticast(const Address &aAddress)
     entry->mAddress     = aAddress;
     entry->mNext        = mMulticastAddresses;
     mMulticastAddresses = entry;
-    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED);
+    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSCRIBED);
 
 exit:
     return error;
@@ -395,7 +395,7 @@ otError Netif::UnsubscribeExternalMulticast(const Address &aAddress)
     // To mark the address entry as unused/available, set the `mNext` pointer back to the entry itself.
     entry->mNext = entry;
 
-    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED);
+    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSCRIBED);
 
 exit:
     return error;
