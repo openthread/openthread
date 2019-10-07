@@ -239,6 +239,10 @@ extern "C" {
 #define UINT8_MAX 0xff
 #endif
 
+#ifndef UINT16_MAX
+#define UINT16_MAX 0xffff
+#endif
+
 #endif
 #endif
 
