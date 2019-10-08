@@ -70,6 +70,7 @@ otError otCoapMessageInitResponse(otMessage *aResponse, const otMessage *aReques
     const Coap::Message &request  = *static_cast<const Coap::Message *>(aRequest);
 
     response.Init(aType, aCode);
+    response.SetMessageId(request.GetMessageId());
 
     return response.SetToken(request.GetToken(), request.GetTokenLength());
 }
