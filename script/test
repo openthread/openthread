@@ -54,7 +54,7 @@ do_clean() {
 
 do_cert() {
     [[ ! -d tmp ]] || rm -rvf tmp
-    PYTHONUNBUFFERED=1 python "$1"
+    PYTHONUNBUFFERED=1 "$1"
 }
 
 print_usage() {
