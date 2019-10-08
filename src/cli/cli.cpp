@@ -3077,6 +3077,10 @@ void Interpreter::ProcessThread(int argc, char *argv[])
     {
         SuccessOrExit(error = otThreadSetEnabled(mInstance, false));
     }
+    else if (strcmp(argv[0], "version") == 0)
+    {
+        mServer->OutputFormat("%s\r\n", otGetThreadVersionString());
+    }
     else
     {
         ExitNow(error = OT_ERROR_INVALID_ARGS);

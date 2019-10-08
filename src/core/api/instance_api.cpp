@@ -116,6 +116,12 @@ otError otInstanceErasePersistentInfo(otInstance *aInstance)
 }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
+const char *otGetThreadVersionString(void)
+{
+    static const char sThreadVersion[] = "1.1";
+    return sThreadVersion;
+}
+
 const char *otGetVersionString(void)
 {
     /**
