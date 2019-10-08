@@ -189,10 +189,8 @@ exit:
 
 Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetadata &aQueryMetadata)
 {
-    otError   error       = OT_ERROR_NONE;
-    TimeMilli now         = TimerMilli::GetNow();
-    Message * messageCopy = NULL;
-    TimeMilli nextTransmissionTime;
+    otError  error       = OT_ERROR_NONE;
+    Message *messageCopy = NULL;
 
     // Create a message copy for further retransmissions.
     VerifyOrExit((messageCopy = aMessage.Clone()) != NULL, error = OT_ERROR_NO_BUFS);
@@ -201,21 +199,7 @@ Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetad
     SuccessOrExit(error = aQueryMetadata.AppendTo(*messageCopy));
     mPendingQueries.Enqueue(*messageCopy);
 
-    // Setup the timer.
-    if (mRetransmissionTimer.IsRunning())
-    {
-        // If timer is already running, check if it should be restarted with earlier fire time.
-        nextTransmissionTime = mRetransmissionTimer.GetFireTime();
-
-        if (aQueryMetadata.IsEarlier(nextTransmissionTime))
-        {
-            mRetransmissionTimer.Start(aQueryMetadata.mTransmissionTime - now);
-        }
-    }
-    else
-    {
-        mRetransmissionTimer.Start(aQueryMetadata.mTransmissionTime - now);
-    }
+    mRetransmissionTimer.FireAtIfEarlier(aQueryMetadata.mTransmissionTime);
 
 exit:
 
@@ -311,44 +295,32 @@ void Client::HandleRetransmissionTimer(Timer &aTimer)
 
 void Client::HandleRetransmissionTimer(void)
 {
-    TimeMilli        now       = TimerMilli::GetNow();
-    uint32_t         nextDelta = TimeMilli::kMaxDuration;
+    TimeMilli        now      = TimerMilli::GetNow();
+    TimeMilli        nextTime = now.GetDistantFuture();
     QueryMetadata    queryMetadata;
-    Message *        message     = mPendingQueries.GetHead();
-    Message *        nextMessage = NULL;
+    Message *        message;
+    Message *        nextMessage;
     Ip6::MessageInfo messageInfo;
 
-    while (message != NULL)
+    for (message = mPendingQueries.GetHead(); message != NULL; message = nextMessage)
     {
         nextMessage = message->GetNext();
+
         queryMetadata.ReadFrom(*message);
 
-        if (queryMetadata.IsLater(now))
+        if (now >= queryMetadata.mTransmissionTime)
         {
-            uint32_t diff = queryMetadata.mTransmissionTime - now;
-
-            // Calculate the next delay and choose the lowest.
-            if (diff < nextDelta)
+            if (queryMetadata.mRetransmissionCount >= kMaxRetransmit)
             {
-                nextDelta = diff;
+                // No expected response.
+                FinalizeSntpTransaction(*message, queryMetadata, 0, OT_ERROR_RESPONSE_TIMEOUT);
+                continue;
             }
-        }
-        else if (queryMetadata.mRetransmissionCount < kMaxRetransmit)
-        {
-            uint32_t diff;
 
             // Increment retransmission counter and timer.
             queryMetadata.mRetransmissionCount++;
             queryMetadata.mTransmissionTime = now + kResponseTimeout;
             queryMetadata.UpdateIn(*message);
-
-            diff = kResponseTimeout;
-
-            // Check if retransmission time is lower than current lowest.
-            if (diff < nextDelta)
-            {
-                nextDelta = diff;
-            }
 
             // Retransmit
             messageInfo.SetPeerAddr(queryMetadata.mDestinationAddress);
@@ -357,18 +329,16 @@ void Client::HandleRetransmissionTimer(void)
 
             SendCopy(*message, messageInfo);
         }
-        else
-        {
-            // No expected response.
-            FinalizeSntpTransaction(*message, queryMetadata, 0, OT_ERROR_RESPONSE_TIMEOUT);
-        }
 
-        message = nextMessage;
+        if (nextTime > queryMetadata.mTransmissionTime)
+        {
+            nextTime = queryMetadata.mTransmissionTime;
+        }
     }
 
-    if (nextDelta != TimeMilli::kMaxDuration)
+    if (nextTime < now.GetDistantFuture())
     {
-        mRetransmissionTimer.Start(nextDelta);
+        mRetransmissionTimer.FireAt(nextTime);
     }
 }
 

@@ -235,11 +235,9 @@ exit:
 
 void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound)
 {
-    TimeMilli                  now         = TimerMilli::GetNow();
     otError                    error       = OT_ERROR_NONE;
     Message *                  messageCopy = NULL;
     MplBufferedMessageMetadata messageMetadata;
-    TimeMilli                  nextTransmissionTime;
     uint8_t                    hopLimit = 0;
 
 #if OPENTHREAD_CONFIG_MPL_DYNAMIC_INTERVAL_ENABLE
@@ -262,27 +260,12 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
     messageMetadata.SetSeedId(aSeedId);
     messageMetadata.SetSequence(aSequence);
     messageMetadata.SetTransmissionCount(aIsOutbound ? 1 : 0);
-    messageMetadata.GenerateNextTransmissionTime(now, interval);
+    messageMetadata.GenerateNextTransmissionTime(TimerMilli::GetNow(), interval);
 
-    // Append the message with MplBufferedMessageMetadata and add it to the queue.
     SuccessOrExit(error = messageMetadata.AppendTo(*messageCopy));
     mBufferedMessageSet.Enqueue(*messageCopy);
 
-    if (mRetransmissionTimer.IsRunning())
-    {
-        // If timer is already running, check if it should be restarted with earlier fire time.
-        nextTransmissionTime = mRetransmissionTimer.GetFireTime();
-
-        if (messageMetadata.IsEarlier(nextTransmissionTime))
-        {
-            mRetransmissionTimer.Start(messageMetadata.GetTransmissionTime() - now);
-        }
-    }
-    else
-    {
-        // Otherwise just set the timer.
-        mRetransmissionTimer.Start(messageMetadata.GetTransmissionTime() - now);
-    }
+    mRetransmissionTimer.FireAtIfEarlier(messageMetadata.GetTransmissionTime());
 
 exit:
 
@@ -333,26 +316,23 @@ void Mpl::HandleRetransmissionTimer(Timer &aTimer)
 
 void Mpl::HandleRetransmissionTimer(void)
 {
-    TimeMilli                  now       = TimerMilli::GetNow();
-    uint32_t                   nextDelta = TimeMilli::kMaxDuration;
+    TimeMilli                  now      = TimerMilli::GetNow();
+    TimeMilli                  nextTime = now.GetDistantFuture();
     MplBufferedMessageMetadata messageMetadata;
+    Message *                  message;
+    Message *                  nextMessage;
 
-    Message *message     = mBufferedMessageSet.GetHead();
-    Message *nextMessage = NULL;
-
-    while (message != NULL)
+    for (message = mBufferedMessageSet.GetHead(); message != NULL; message = nextMessage)
     {
         nextMessage = message->GetNext();
+
         messageMetadata.ReadFrom(*message);
 
-        if (messageMetadata.IsLater(now))
+        if (now < messageMetadata.GetTransmissionTime())
         {
-            uint32_t diff = messageMetadata.GetTransmissionTime() - now;
-
-            // Calculate the next retransmission time and choose the lowest.
-            if (diff < nextDelta)
+            if (nextTime > messageMetadata.GetTransmissionTime())
             {
-                nextDelta = diff;
+                nextTime = messageMetadata.GetTransmissionTime();
             }
         }
         else
@@ -362,8 +342,6 @@ void Mpl::HandleRetransmissionTimer(void)
 
             if (messageMetadata.GetTransmissionCount() < GetTimerExpirations())
             {
-                uint32_t diff;
-
                 Message *messageCopy = message->Clone(message->GetLength() - sizeof(MplBufferedMessageMetadata));
 
                 if (messageCopy != NULL)
@@ -379,12 +357,9 @@ void Mpl::HandleRetransmissionTimer(void)
                 messageMetadata.GenerateNextTransmissionTime(now, kDataMessageInterval);
                 messageMetadata.UpdateIn(*message);
 
-                diff = messageMetadata.GetTransmissionTime() - now;
-
-                // Check if retransmission time is lower than the current lowest one.
-                if (diff < nextDelta)
+                if (nextTime > messageMetadata.GetTransmissionTime())
                 {
-                    nextDelta = diff;
+                    nextTime = messageMetadata.GetTransmissionTime();
                 }
             }
             else
@@ -409,13 +384,11 @@ void Mpl::HandleRetransmissionTimer(void)
                 }
             }
         }
-
-        message = nextMessage;
     }
 
-    if (nextDelta != TimeMilli::kMaxDuration)
+    if (nextTime < now.GetDistantFuture())
     {
-        mRetransmissionTimer.Start(nextDelta);
+        mRetransmissionTimer.FireAt(nextTime);
     }
 }
 

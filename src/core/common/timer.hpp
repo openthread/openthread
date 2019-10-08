@@ -176,6 +176,23 @@ public:
     void StartAt(TimeMilli sStartTime, uint32_t aDelay);
 
     /**
+     * This method schedules the timer to fire at a given fire time.
+     *
+     * @param[in]  aFireTime  The fire time.
+     *
+     */
+    void FireAt(TimeMilli aFireTime);
+
+    /**
+     * This method (re-)schedules the timer with a given a fire time only if the timer is not running or the new given
+     * fire time is earlier than the current fire time.
+     *
+     * @param[in]  aFireTime  The fire time.
+     *
+     */
+    void FireAtIfEarlier(TimeMilli aFireTime);
+
+    /**
      * This method stops the timer.
      *
      */
@@ -380,6 +397,14 @@ public:
      *
      */
     void StartAt(TimeMicro aStartTime, uint32_t aDelay);
+
+    /**
+     * This method schedules the timer to fire at a given fire time.
+     *
+     * @param[in]  aFireTime  The fire time.
+     *
+     */
+    void FireAt(TimeMicro aFireTime);
 
     /**
      * This method stops the timer.

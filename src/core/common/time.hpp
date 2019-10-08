@@ -218,6 +218,30 @@ public:
     bool operator>(const Time &aOther) const { return (aOther < *this); }
 
     /**
+     * This method returns a new `Time` instance which is in distant future relative to current `Time` object.
+     *
+     * The returned distance future `Time` is guaranteed to be equal or after (as defined by comparison operator `<=`)
+     * any other `Time` which is after this `Time` object, i.e., for any `t` for which we have `*this <= t`, it is
+     * ensured that `t <= this->GetGetDistantFuture()`.
+     *
+     * @returns A new `Time` in distance future relative to current `Time` object.
+     *
+     */
+    Time GetDistantFuture(void) const { return Time(mValue + kDistantFuture); }
+
+    /**
+     * This method returns a new `Time` instance which is in distant past relative to current `Time` object.
+     *
+     * The returned distance past `Time` is guaranteed to be equal or before (as defined by comparison operator `>=`)
+     * any other `Time` which is before this `Time` object, i.e., for any `t` for which we have `*this >= t`, it is
+     * ensured that `t >= this->GetDistantPast()`.
+     *
+     * @returns A new `Time` in distance past relative to current `Time` object.
+     *
+     */
+    Time GetDistantPast(void) const { return Time(mValue - kDistantFuture); }
+
+    /**
      * This static method converts a given number of seconds to milliseconds.
      *
      * @returns The number of milliseconds.
@@ -234,6 +258,11 @@ public:
     static uint32_t MsecToSec(uint32_t aMilliseconds) { return aMilliseconds / 1000u; }
 
 private:
+    enum
+    {
+        kDistantFuture = (1UL << 31),
+    };
+
     uint32_t mValue;
 };
 
