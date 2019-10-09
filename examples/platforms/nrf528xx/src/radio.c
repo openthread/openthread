@@ -148,9 +148,9 @@ static void setPendingEvent(RadioPendingEvents aEvent)
 
     do
     {
-        pendingEvents = __LDREXW((unsigned long volatile *)&sPendingEvents);
+        pendingEvents = __LDREXW((uint32_t *)&sPendingEvents);
         pendingEvents |= bitToSet;
-    } while (__STREXW(pendingEvents, (unsigned long volatile *)&sPendingEvents));
+    } while (__STREXW(pendingEvents, (uint32_t *)&sPendingEvents));
 
     otSysEventSignalPending();
 }
@@ -162,9 +162,9 @@ static void resetPendingEvent(RadioPendingEvents aEvent)
 
     do
     {
-        pendingEvents = __LDREXW((unsigned long volatile *)&sPendingEvents);
+        pendingEvents = __LDREXW((uint32_t *)&sPendingEvents);
         pendingEvents &= bitsToRemain;
-    } while (__STREXW(pendingEvents, (unsigned long volatile *)&sPendingEvents));
+    } while (__STREXW(pendingEvents, (uint32_t *)&sPendingEvents));
 }
 
 static inline void clearPendingEvents(void)
@@ -177,9 +177,9 @@ static inline void clearPendingEvents(void)
 
     do
     {
-        pendingEvents = __LDREXW((unsigned long volatile *)&sPendingEvents);
+        pendingEvents = __LDREXW((uint32_t *)&sPendingEvents);
         pendingEvents &= bitsToRemain;
-    } while (__STREXW(pendingEvents, (unsigned long volatile *)&sPendingEvents));
+    } while (__STREXW(pendingEvents, (uint32_t *)&sPendingEvents));
 }
 
 #if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE
