@@ -219,12 +219,12 @@ void otInstanceFactoryReset(otInstance *aInstance);
 otError otInstanceErasePersistentInfo(otInstance *aInstance);
 
 /**
- * This function gets the Thread stack version string.
+ * This function gets the Thread stack version.
  *
- * @returns A pointer to the Thread stack version.
+ * @returns the Thread stack version.
  *
  */
-const char *otGetThreadVersionString(void);
+uint16_t otGetThreadVersion(void);
 
 /**
  * This function gets the OpenThread version string.
