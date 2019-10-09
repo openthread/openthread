@@ -265,11 +265,11 @@ const char *Notifier::FlagToString(otChangedFlags aFlag) const
         retval = "Child-";
         break;
 
-    case OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED:
+    case OT_CHANGED_IP6_MULTICAST_SUBSCRIBED:
         retval = "Ip6Mult+";
         break;
 
-    case OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED:
+    case OT_CHANGED_IP6_MULTICAST_UNSUBSCRIBED:
         retval = "Ip6Mult-";
         break;
 

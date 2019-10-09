@@ -134,8 +134,8 @@ enum
     OT_CHANGED_THREAD_NETDATA              = 1 << 9,  ///< Thread Network Data changed
     OT_CHANGED_THREAD_CHILD_ADDED          = 1 << 10, ///< Child was added
     OT_CHANGED_THREAD_CHILD_REMOVED        = 1 << 11, ///< Child was removed
-    OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED   = 1 << 12, ///< Subscribed to a IPv6 multicast address
-    OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED = 1 << 13, ///< Unsubscribed from a IPv6 multicast address
+    OT_CHANGED_IP6_MULTICAST_SUBSCRIBED    = 1 << 12, ///< Subscribed to a IPv6 multicast address
+    OT_CHANGED_IP6_MULTICAST_UNSUBSCRIBED  = 1 << 13, ///< Unsubscribed from a IPv6 multicast address
     OT_CHANGED_THREAD_CHANNEL              = 1 << 14, ///< Thread network channel changed
     OT_CHANGED_THREAD_PANID                = 1 << 15, ///< Thread network PAN Id changed
     OT_CHANGED_THREAD_NETWORK_NAME         = 1 << 16, ///< Thread network name changed
