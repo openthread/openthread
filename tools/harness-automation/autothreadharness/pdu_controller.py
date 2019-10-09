@@ -33,22 +33,12 @@ import re
 import telnetlib
 import time
 
-from builtins import input
-
 try:
     # python 2
-    from urllib2 import (
-        HTTPPasswordMgrWithDefaultRealm,
-        HTTPBasicAuthHandler,
-        build_opener,
-    )
+    from urllib2 import HTTPPasswordMgrWithDefaultRealm, HTTPBasicAuthHandler, build_opener
 except ImportError:
     # python 3
-    from urllib.request import (
-        HTTPPasswordMgrWithDefaultRealm,
-        HTTPBasicAuthHandler,
-        build_opener,
-    )
+    from urllib.request import HTTPPasswordMgrWithDefaultRealm, HTTPBasicAuthHandler, build_opener
 
 logger = logging.getLogger(__name__)
 
@@ -188,9 +178,7 @@ class NordicBoardPduController(PduController):
         boards_serial_numbers = params['boards_serial_numbers']
 
         for serial_number in boards_serial_numbers:
-            logger.info(
-                'Resetting board with the serial number: %s', serial_number
-            )
+            logger.info('Resetting board with the serial number: %s', serial_number)
             self._pin_reset(serial_number)
 
     def close(self):
@@ -201,9 +189,7 @@ class IpPowerSocketPduController(PduController):
     def open(self, **params):
         self._base_url = 'http://{}/outs.cgi?out'.format(params['ip'])
         password_manager = HTTPPasswordMgrWithDefaultRealm()
-        password_manager.add_password(
-            None, self._base_url, params['user'], params['pass']
-        )
+        password_manager.add_password(None, self._base_url, params['user'], params['pass'])
         authentication_handler = HTTPBasicAuthHandler(password_manager)
         self._opener = build_opener(authentication_handler)
 
