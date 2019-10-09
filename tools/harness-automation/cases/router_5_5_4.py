@@ -35,7 +35,7 @@ import unittest
 class Router_5_5_4(HarnessCase):
     role = HarnessCase.ROLE_ROUTER
     case = '5 5 4'
-    golden_devices_required = 5
+    golden_devices_required = 4
 
     def on_dialog(self, dialog, title):
         pass
