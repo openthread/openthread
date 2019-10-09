@@ -54,6 +54,7 @@ static bool IsMle(Instance &aInstance, uint16_t aPort)
 #if OPENTHREAD_FTD
     return aPort == ot::Mle::kUdpPort || aPort == aInstance.Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort();
 #else
+    OT_UNUSED_VARIABLE(aInstance);
     return aPort == ot::Mle::kUdpPort;
 #endif
 }
