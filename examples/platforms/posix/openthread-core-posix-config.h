@@ -137,34 +137,4 @@
 #define OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE 1
 #endif
 
-/**
- * @def OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
- *
- * The maximum number of children.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
-#define OPENTHREAD_CONFIG_MLE_MAX_CHILDREN 10
-#endif
-
-/**
- * @def RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
- *
- * The number of short source address table entries.
- *
- */
-#ifndef RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
-#define RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
-#endif
-
-/**
- * @def RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
- *
- * The number of extended source address table entries.
- *
- */
-#ifndef RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
-#define RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
-#endif
-
 #endif // OPENTHREAD_CORE_POSIX_CONFIG_H_
