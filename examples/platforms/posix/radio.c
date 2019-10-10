@@ -177,7 +177,7 @@ static inline bool isDataRequestAndHasFramePending(const uint8_t *aFrame)
     const uint8_t *cur = aFrame;
     uint8_t        securityControl;
     bool           isDataRequest   = false;
-    bool           hasFramePending = false;
+    bool           hasFramePending = true;
 
     // FCF + DSN
     cur += 2 + 1;
