@@ -113,18 +113,18 @@ SHIELD_CASE_ORDER = {
 """dict: RF-shield needed scenarios and corresponding orders.
 Example:
  'Leader_9_2_9': [('Router_2', False), ('Commissioner', True), ('Router_1', False), ('DUT', True)]:
-   For scenario Leader_9_2_9, on the Configure Test Bed page of the Test Harness, the device sort order 
+   For scenario Leader_9_2_9, on the Configure Test Bed page of the Test Harness, the device sort order
    should be like:
-   Router_2
-   Commissioner
-   Router_1
-   DUT
-   And the ('Commissioner', True) and ('DUT', True) indicate Commissioner device and DUT2 device should 
-   be in the RF-box and choose from SHIELD_GOLDEN_DEVICES and DUT2_DEVICE. Otherwise ('DUT', False) means 
-   DUT device is not in RF-box and use DUT_DEVICE. The other roles devices with False should be selected 
+     Router_2
+     Commissioner
+     Router_1
+     DUT
+   And the ('Commissioner', True) and ('DUT', True) indicate Commissioner device and DUT2 device should
+   be in the RF-box and choose from SHIELD_GOLDEN_DEVICES and DUT2_DEVICE. Otherwise ('DUT', False) means
+   DUT device is not in RF-box and use DUT_DEVICE. The other roles devices with False should be selected
    from GOLDEN_DEVICES.
 
- ‘MED_6_3_2’: ’’ means no device drag order. DUT2_DEVICE should be applied as DUT and the other gold devices 
+ ‘MED_6_3_2’: ’’ means no device drag order. DUT2_DEVICE should be applied as DUT and the other gold devices
  are from GOLDEN_DEVICES.
 """
 
