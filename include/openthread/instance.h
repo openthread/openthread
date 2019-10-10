@@ -219,9 +219,9 @@ void otInstanceFactoryReset(otInstance *aInstance);
 otError otInstanceErasePersistentInfo(otInstance *aInstance);
 
 /**
- * This function gets the Thread stack version.
+ * This function gets the Thread protocol version.
  *
- * @returns the Thread stack version.
+ * @returns the Thread protocol version.
  *
  */
 uint16_t otGetThreadVersion(void);
