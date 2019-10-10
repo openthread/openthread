@@ -129,8 +129,8 @@ static bool isDataRequestAndHasFramePending(const otRadioFrame *aFrame)
     bool         rval = false;
     otMacAddress src;
 
-    otEXPECT(sSrcMatchEnabled);
     otEXPECT(otMacFrameIsDataRequest(aFrame));
+    otEXPECT_ACTION(sSrcMatchEnabled, rval = true);
     otEXPECT(otMacFrameGetSrcAddr(aFrame, &src) == OT_ERROR_NONE);
 
     switch (src.mType)
