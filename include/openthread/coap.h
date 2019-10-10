@@ -352,6 +352,9 @@ void otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode);
  * @param[in]    aType      CoAP message type.
  * @param[in]    aCode      CoAP message code.
  *
+ * @retval OT_ERROR_NONE     Successfully initialized the response message.
+ * @retval OT_ERROR_NO_BUFS  Insufficient message buffers available to initialize the response message.
+ *
  */
 otError otCoapMessageInitResponse(otMessage *aResponse, const otMessage *aRequest, otCoapType aType, otCoapCode aCode);
 
