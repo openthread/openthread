@@ -354,16 +354,13 @@ static otError platformSettingsDelete(otInstance *aInstance, uint16_t aKey, int 
 exit:
     VerifyOrDie(error != OT_ERROR_PARSE, OT_EXIT_FAILURE);
 
-    if (error == OT_ERROR_NONE)
+    if (aSwapFd != NULL)
     {
-        if (aSwapFd == NULL)
-        {
-            swapPersist(swapFd);
-        }
-        else
-        {
-            *aSwapFd = swapFd;
-        }
+        *aSwapFd = swapFd;
+    }
+    else if (error == OT_ERROR_NONE)
+    {
+        swapPersist(swapFd);
     }
     else if (error == OT_ERROR_NOT_FOUND)
     {
