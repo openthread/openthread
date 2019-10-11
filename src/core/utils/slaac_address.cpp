@@ -152,7 +152,7 @@ void Slaac::Update(UpdateMode aMode)
         // If enabled, remove any SLAAC addresses with no matching on-mesh prefix,
         // otherwise (when disabled) remove all previously added SLAAC addresses.
 
-        for (slaacAddr = &mAddresses[0]; slaacAddr < &mAddresses[OT_ARRAY_LENGTH(mAddresses)]; slaacAddr++)
+        for (slaacAddr = &mAddresses[0]; slaacAddr < OT_ARRAY_END(mAddresses); slaacAddr++)
         {
             if (!slaacAddr->mValid)
             {
@@ -220,7 +220,7 @@ void Slaac::Update(UpdateMode aMode)
             {
                 bool added = false;
 
-                for (slaacAddr = &mAddresses[0]; slaacAddr < &mAddresses[OT_ARRAY_LENGTH(mAddresses)]; slaacAddr++)
+                for (slaacAddr = &mAddresses[0]; slaacAddr < OT_ARRAY_END(mAddresses); slaacAddr++)
                 {
                     if (slaacAddr->mValid)
                     {
