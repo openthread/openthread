@@ -31,9 +31,9 @@ $ ./script/bootstrap
 
 ### Flashing and debugging tools
 
-[nRF5-Command-Line-Tools]: https://www.nordicsemi.com/Software-and-Tools/Development-Tools/nRF5-Command-Line-Tools
+[nRF-Command-Line-Tools]: https://www.nordicsemi.com/Software-and-Tools/Development-Tools/nRF-Command-Line-Tools
 
-Install the [nRF5 Command Line Tools][nRF5-Command-Line-Tools] to flash, debug, and make use of logging features on the nRF52840 DK with SEGGER J-Link.
+Install the [nRF Command Line Tools][nRF-Command-Line-Tools] to flash, debug, and make use of logging features on the nRF52840 DK with SEGGER J-Link.
 
 ## Building the examples
 
@@ -175,7 +175,7 @@ After the Thread Network security credentials have been successfully obtained, t
 ## Flashing the binaries
 
 Flash the compiled binaries onto nRF52840 using `nrfjprog` which is
-part of the [nRF5 Command Line Tools][nRF5-Command-Line-Tools].
+part of the [nRF Command Line Tools][nRF-Command-Line-Tools].
 
 ```bash
 $ nrfjprog -f nrf52 --chiperase --program output/nrf52840/bin/ot-cli-ftd.hex --reset
