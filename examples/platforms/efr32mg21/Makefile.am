@@ -46,6 +46,8 @@ libopenthread_efr32mg21_a_CPPFLAGS                                            = 
     -D__START=main                                                              \
     -D__STARTUP_CLEAR_BSS                                                       \
     -DPLATFORM_HEADER=\"@top_builddir@/third_party/silabs/gecko_sdk_suite/v2.6/platform/base/hal/micro/cortexm3/compiler/gcc.h\" \
+    -DEFR32_SERIES2_CONFIG1_MICRO                                               \
+    -DNVIC_CONFIG=\"platform/base/hal/micro/cortexm3/efm32/nvic-config.h\"      \
     -Wno-sign-compare                                                           \
     -DCORTEXM3                                                                  \
     -DPHY=EMBER_PHY_RAIL                                                        \
