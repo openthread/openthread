@@ -32,10 +32,10 @@
 
 using namespace ot;
 
-bool otMacFrameIsMatched(const otRadioFrame *aFrame,
-                         otPanId             aPanId,
-                         otShortAddress      aShortAddress,
-                         const otExtAddress *aExtAddress)
+bool otMacFrameDoesAddrMatch(const otRadioFrame *aFrame,
+                             otPanId             aPanId,
+                             otShortAddress      aShortAddress,
+                             const otExtAddress *aExtAddress)
 {
     const Mac::Frame &frame = *static_cast<const Mac::Frame *>(aFrame);
     bool              rval  = false;

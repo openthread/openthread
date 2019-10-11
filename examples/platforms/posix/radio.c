@@ -116,11 +116,11 @@ static bool sSrcMatchEnabled = false;
 static bool sRadioCoexEnabled = true;
 #endif
 
-static void RevertExtAddress(otExtAddress *aReverted, const otExtAddress *aOrigin)
+static void ReverseExtAddress(otExtAddress *aReversed, const otExtAddress *aOrigin)
 {
-    for (size_t i = 0; i < sizeof(*aReverted); i++)
+    for (size_t i = 0; i < sizeof(*aReversed); i++)
     {
-        aReverted->m8[i] = aOrigin->m8[sizeof(*aOrigin) - 1 - i];
+        aReversed->m8[i] = aOrigin->m8[sizeof(*aOrigin) - 1 - i];
     }
 }
 
@@ -142,7 +142,7 @@ static bool isDataRequestAndHasFramePending(const otRadioFrame *aFrame)
     {
         otExtAddress extAddr;
 
-        RevertExtAddress(&extAddr, &src.mAddress.mExtAddress);
+        ReverseExtAddress(&extAddr, &src.mAddress.mExtAddress);
         rval = utilsSoftSrcMatchExtFindEntry(&extAddr) >= 0;
         break;
     }
@@ -208,7 +208,7 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aE
 {
     assert(aInstance != NULL);
 
-    RevertExtAddress(&sExtAddress, aExtAddress);
+    ReverseExtAddress(&sExtAddress, aExtAddress);
 }
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aAddress)
@@ -740,7 +740,8 @@ void radioProcessFrame(otInstance *aInstance)
 
     otEXPECT(sPromiscuous == false);
 
-    otEXPECT_ACTION(otMacFrameIsMatched(&sReceiveFrame, sPanid, sShortAddress, &sExtAddress), error = OT_ERROR_ABORT);
+    otEXPECT_ACTION(otMacFrameDoesAddrMatch(&sReceiveFrame, sPanid, sShortAddress, &sExtAddress),
+                    error = OT_ERROR_ABORT);
 
     // generate acknowledgment
     if (otMacFrameIsAckRequested(&sReceiveFrame))

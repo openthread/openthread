@@ -113,10 +113,10 @@ bool otMacFrameIsAckRequested(const otRadioFrame *aFrame);
  * @retval  false   It doesn't match.
  *
  */
-bool otMacFrameIsMatched(const otRadioFrame *aFrame,
-                         otPanId             aPanId,
-                         otShortAddress      aShortAddress,
-                         const otExtAddress *aExtAddress);
+bool otMacFrameDoesAddrMatch(const otRadioFrame *aFrame,
+                             otPanId             aPanId,
+                             otShortAddress      aShortAddress,
+                             const otExtAddress *aExtAddress);
 
 /**
  * Get source MAC address.
