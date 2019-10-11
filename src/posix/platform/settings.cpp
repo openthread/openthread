@@ -53,6 +53,8 @@ static const size_t kMaxFileNameSize = sizeof(OPENTHREAD_CONFIG_POSIX_SETTINGS_P
 
 static int sSettingsFd = -1;
 
+static otError platformSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex, int *aSwapFd);
+
 static void getSettingsFileName(char aFileName[kMaxFileNameSize], bool aSwap)
 {
     const char *offset = getenv("PORT_OFFSET");
@@ -238,8 +240,21 @@ exit:
 
 otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
-    otPlatSettingsDelete(aInstance, aKey, -1);
-    return otPlatSettingsAdd(aInstance, aKey, aValue, aValueLength);
+    int     swapFd = -1;
+    otError error  = platformSettingsDelete(aInstance, aKey, -1, &swapFd);
+
+    VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_NOT_FOUND);
+
+    VerifyOrDie(write(swapFd, &aKey, sizeof(aKey)) == sizeof(aKey) &&
+                    write(swapFd, &aValueLength, sizeof(aValueLength)) == sizeof(aValueLength) &&
+                    write(swapFd, aValue, aValueLength) == aValueLength,
+                OT_EXIT_FAILURE);
+
+    swapPersist(swapFd);
+    error = OT_ERROR_NONE;
+
+exit:
+    return error;
 }
 
 otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
@@ -266,6 +281,18 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
 }
 
 otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
+{
+    return platformSettingsDelete(aInstance, aKey, aIndex, NULL);
+}
+
+/**
+ * This function removes a setting either from swap file or persisted file.
+ *
+ * If @p aSwapFd is null, the persisted file will be updated.
+ * If @p aSwapFd is not null, this function generates a swap file with the given setting removed and @p aSwapFd is set
+ * to the file descriptor.
+ */
+static otError platformSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex, int *aSwapFd)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -329,7 +356,14 @@ exit:
 
     if (error == OT_ERROR_NONE)
     {
-        swapPersist(swapFd);
+        if (aSwapFd == NULL)
+        {
+            swapPersist(swapFd);
+        }
+        else
+        {
+            *aSwapFd = swapFd;
+        }
     }
     else if (error == OT_ERROR_NOT_FOUND)
     {
