@@ -89,16 +89,17 @@ Netif::Netif(Instance &aInstance)
     , mAddressCallback(NULL)
     , mAddressCallbackContext(NULL)
 {
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(mExtUnicastAddresses); i++)
+    for (NetifUnicastAddress *entry = &mExtUnicastAddresses[0]; entry < OT_ARRAY_END(mExtUnicastAddresses); entry++)
     {
         // To mark the address as unused/available, set the `mNext` to point back to itself.
-        mExtUnicastAddresses[i].mNext = &mExtUnicastAddresses[i];
+        entry->mNext = entry;
     }
 
-    for (size_t i = 0; i < OT_ARRAY_LENGTH(mExtMulticastAddresses); i++)
+    for (NetifMulticastAddress *entry = &mExtMulticastAddresses[0]; entry < OT_ARRAY_END(mExtMulticastAddresses);
+         entry++)
     {
         // To mark the address as unused/available, set the `mNext` to point back to itself.
-        mExtMulticastAddresses[i].mNext = &mExtMulticastAddresses[i];
+        entry->mNext = entry;
     }
 }
 
@@ -330,7 +331,6 @@ otError Netif::SubscribeExternalMulticast(const Address &aAddress)
 {
     otError                error = OT_ERROR_NONE;
     NetifMulticastAddress *entry;
-    size_t                 num = OT_ARRAY_LENGTH(mExtMulticastAddresses);
 
     VerifyOrExit(mMulticastAddresses != NULL, error = OT_ERROR_INVALID_STATE);
 
@@ -340,7 +340,7 @@ otError Netif::SubscribeExternalMulticast(const Address &aAddress)
     }
 
     // Find an available entry in the `mExtMulticastAddresses` array.
-    for (entry = &mExtMulticastAddresses[0]; num > 0; num--, entry++)
+    for (entry = &mExtMulticastAddresses[0]; entry < OT_ARRAY_END(mExtMulticastAddresses); entry++)
     {
         // In an unused/available entry, `mNext` points back to the entry itself.
         if (entry->mNext == entry)
@@ -349,7 +349,7 @@ otError Netif::SubscribeExternalMulticast(const Address &aAddress)
         }
     }
 
-    VerifyOrExit(num > 0, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(entry < OT_ARRAY_END(mExtMulticastAddresses), error = OT_ERROR_NO_BUFS);
 
     // Copy the address into the available entry and add it to linked-list.
     entry->mAddress     = aAddress;
@@ -366,13 +366,12 @@ otError Netif::UnsubscribeExternalMulticast(const Address &aAddress)
     otError                error = OT_ERROR_NONE;
     NetifMulticastAddress *entry;
     NetifMulticastAddress *last = NULL;
-    size_t                 num  = OT_ARRAY_LENGTH(mExtMulticastAddresses);
 
     for (entry = mMulticastAddresses; entry; entry = entry->GetNext())
     {
         if (entry->GetAddress() == aAddress)
         {
-            VerifyOrExit((entry >= &mExtMulticastAddresses[0]) && (entry < &mExtMulticastAddresses[num]),
+            VerifyOrExit((entry >= &mExtMulticastAddresses[0]) && (entry < OT_ARRAY_END(mExtMulticastAddresses)),
                          error = OT_ERROR_INVALID_ARGS);
 
             if (last)
@@ -403,9 +402,8 @@ exit:
 
 void Netif::UnsubscribeAllExternalMulticastAddresses(void)
 {
-    size_t num = OT_ARRAY_LENGTH(mExtMulticastAddresses);
-
-    for (NetifMulticastAddress *entry = &mExtMulticastAddresses[0]; num > 0; num--, entry++)
+    for (NetifMulticastAddress *entry = &mExtMulticastAddresses[0]; entry < OT_ARRAY_END(mExtMulticastAddresses);
+         entry++)
     {
         // In unused entries, the `mNext` points back to the entry itself.
         if (entry->mNext != entry)
@@ -489,7 +487,6 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
 {
     otError              error = OT_ERROR_NONE;
     NetifUnicastAddress *entry;
-    size_t               num = OT_ARRAY_LENGTH(mExtUnicastAddresses);
 
     VerifyOrExit(!aAddress.GetAddress().IsLinkLocal(), error = OT_ERROR_INVALID_ARGS);
 
@@ -497,7 +494,7 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
     {
         if (entry->GetAddress() == aAddress.GetAddress())
         {
-            VerifyOrExit((entry >= &mExtUnicastAddresses[0]) && (entry < &mExtUnicastAddresses[num]),
+            VerifyOrExit((entry >= &mExtUnicastAddresses[0]) && (entry < OT_ARRAY_END(mExtUnicastAddresses)),
                          error = OT_ERROR_INVALID_ARGS);
 
             entry->mPrefixLength = aAddress.mPrefixLength;
@@ -508,7 +505,7 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
     }
 
     // Find an available entry in the `mExtUnicastAddresses` array.
-    for (entry = &mExtUnicastAddresses[0]; num > 0; num--, entry++)
+    for (entry = &mExtUnicastAddresses[0]; entry < OT_ARRAY_END(mExtUnicastAddresses); entry++)
     {
         // In an unused/available entry, `mNext` points back to the entry itself.
         if (entry->mNext == entry)
@@ -517,7 +514,7 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
         }
     }
 
-    VerifyOrExit(num > 0, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(entry < OT_ARRAY_END(mExtUnicastAddresses), error = OT_ERROR_NO_BUFS);
 
     // Copy the new address into the available entry and insert it in linked-list.
     *entry            = aAddress;
@@ -535,13 +532,12 @@ otError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
     otError              error = OT_ERROR_NONE;
     NetifUnicastAddress *entry;
     NetifUnicastAddress *last = NULL;
-    size_t               num  = OT_ARRAY_LENGTH(mExtUnicastAddresses);
 
     for (entry = mUnicastAddresses; entry; entry = entry->GetNext())
     {
         if (entry->GetAddress() == aAddress)
         {
-            VerifyOrExit((entry >= &mExtUnicastAddresses[0]) && (entry < &mExtUnicastAddresses[num]),
+            VerifyOrExit((entry >= &mExtUnicastAddresses[0]) && (entry < OT_ARRAY_END(mExtUnicastAddresses)),
                          error = OT_ERROR_INVALID_ARGS);
 
             if (last)
@@ -572,9 +568,7 @@ exit:
 
 void Netif::RemoveAllExternalUnicastAddresses(void)
 {
-    size_t num = OT_ARRAY_LENGTH(mExtUnicastAddresses);
-
-    for (NetifUnicastAddress *entry = &mExtUnicastAddresses[0]; num > 0; num--, entry++)
+    for (NetifUnicastAddress *entry = &mExtUnicastAddresses[0]; entry < OT_ARRAY_END(mExtUnicastAddresses); entry++)
     {
         // In unused entries, the `mNext` points back to the entry itself.
         if (entry->mNext != entry)
