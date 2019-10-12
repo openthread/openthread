@@ -217,6 +217,14 @@ typedef struct otThreadParentResponseInfo
 otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
+ * This function gets the Thread protocol version.
+ *
+ * @returns the Thread protocol version.
+ *
+ */
+uint16_t otThreadGetVersion(void);
+
+/**
  * This function indicates whether a node is the only router on the network.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.

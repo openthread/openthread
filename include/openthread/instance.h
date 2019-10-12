@@ -219,14 +219,6 @@ void otInstanceFactoryReset(otInstance *aInstance);
 otError otInstanceErasePersistentInfo(otInstance *aInstance);
 
 /**
- * This function gets the Thread protocol version.
- *
- * @returns the Thread protocol version.
- *
- */
-uint16_t otGetThreadVersion(void);
-
-/**
  * This function gets the OpenThread version string.
  *
  * @returns A pointer to the OpenThread version.

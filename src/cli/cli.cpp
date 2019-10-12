@@ -3079,7 +3079,7 @@ void Interpreter::ProcessThread(int argc, char *argv[])
     }
     else if (strcmp(argv[0], "version") == 0)
     {
-        mServer->OutputFormat("%u\r\n", otGetThreadVersion());
+        mServer->OutputFormat("%u\r\n", otThreadGetVersion());
     }
     else
     {
