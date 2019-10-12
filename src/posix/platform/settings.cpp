@@ -111,8 +111,8 @@ static void swapPersist(int aFd)
     getSettingsFileName(dataFile, false);
 
     VerifyOrDie(0 == close(sSettingsFd), OT_EXIT_ERROR_ERRNO);
-    VerifyOrDie(0 == rename(swapFile, dataFile), OT_EXIT_ERROR_ERRNO);
     VerifyOrDie(0 == fsync(aFd), OT_EXIT_ERROR_ERRNO);
+    VerifyOrDie(0 == rename(swapFile, dataFile), OT_EXIT_ERROR_ERRNO);
 
     sSettingsFd = aFd;
 }
@@ -243,7 +243,7 @@ otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *a
     int     swapFd = -1;
     otError error  = platformSettingsDelete(aInstance, aKey, -1, &swapFd);
 
-    VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_NOT_FOUND);
+    assert(error == OT_ERROR_NONE || error == OT_ERROR_NOT_FOUND);
 
     VerifyOrDie(write(swapFd, &aKey, sizeof(aKey)) == sizeof(aKey) &&
                     write(swapFd, &aValueLength, sizeof(aValueLength)) == sizeof(aValueLength) &&
@@ -288,9 +288,18 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 /**
  * This function removes a setting either from swap file or persisted file.
  *
- * If @p aSwapFd is null, the persisted file will be updated.
- * If @p aSwapFd is not null, this function generates a swap file with the given setting removed and @p aSwapFd is set
- * to the file descriptor.
+ * @param[in]  aInstance  The OpenThread instance structure.
+ * @param[in]  aKey       The key associated with the requested setting.
+ * @param[in]  aIndex     The index of the value to be removed. If set to -1, all values for this aKey will be removed.
+ * @param[out] aSwapFd    A optional pointer to receive file descriptor of the generated swap file descriptor.
+ *
+ * @note
+ *   If @p aSwapFd is null, operate deleting on the setting file.
+ *   If @p aSwapFd is not null, operate on the swap file, and  aSwapFd will point to the swap file descriptor.
+ *
+ * @retval OT_ERROR_NONE        The given key and index was found and removed successfully.
+ * @retval OT_ERROR_NOT_FOUND   The given key or index was not found in the setting store.
+ *
  */
 static otError platformSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex, int *aSwapFd)
 {

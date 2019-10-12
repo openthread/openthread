@@ -161,7 +161,7 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
  *  @param[in] aIndex     The index of the value to be removed. If set to -1, all values for this aKey will be removed.
  *
  *  @retval OT_ERROR_NONE             The given key and index was found and removed successfully.
- *  @retval OT_ERROR_NOT_FOUND        The given key or index  was not found in the setting store.
+ *  @retval OT_ERROR_NOT_FOUND        The given key or index was not found in the setting store.
  *  @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on this platform.
  */
 otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex);
