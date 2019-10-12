@@ -240,10 +240,18 @@ exit:
 
 otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
-    int     swapFd = -1;
-    otError error  = platformSettingsDelete(aInstance, aKey, -1, &swapFd);
+    int swapFd = -1;
 
-    assert(error == OT_ERROR_NONE || error == OT_ERROR_NOT_FOUND);
+    switch (platformSettingsDelete(aInstance, aKey, -1, &swapFd))
+    {
+    case OT_ERROR_NONE:
+    case OT_ERROR_NOT_FOUND:
+        break;
+
+    default:
+        assert(false);
+        break;
+    }
 
     VerifyOrDie(write(swapFd, &aKey, sizeof(aKey)) == sizeof(aKey) &&
                     write(swapFd, &aValueLength, sizeof(aValueLength)) == sizeof(aValueLength) &&
@@ -251,10 +259,8 @@ otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *a
                 OT_EXIT_FAILURE);
 
     swapPersist(swapFd);
-    error = OT_ERROR_NONE;
 
-exit:
-    return error;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
