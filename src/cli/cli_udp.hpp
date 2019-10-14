@@ -74,6 +74,13 @@ private:
         otError (UdpExample::*mCommand)(int argc, char *argv[]);
     };
 
+    enum PayloadType
+    {
+        kTypeText      = 0,
+        kTypeAutoSize  = 1,
+        kTypeHexString = 2,
+    };
+
     otError ProcessHelp(int argc, char *argv[]);
     otError ProcessBind(int argc, char *argv[]);
     otError ProcessClose(int argc, char *argv[]);

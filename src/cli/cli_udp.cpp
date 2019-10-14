@@ -136,33 +136,18 @@ otError UdpExample::ProcessSend(int argc, char *argv[])
 {
     otError       error;
     otMessageInfo messageInfo;
-    otMessage *   message              = NULL;
-    int           curArg               = 0;
-    bool          autoGenPayload       = false;
-    unsigned long autoGenPayloadLength = 0;
+    otMessage *   message       = NULL;
+    int           curArg        = 0;
+    uint16_t      payloadLength = 0;
+    PayloadType   payloadType   = kTypeText;
 
     memset(&messageInfo, 0, sizeof(messageInfo));
 
-    VerifyOrExit(argc == 1 || argc == 3 || argc == 4, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(argc >= 1 && argc <= 4, error = OT_ERROR_INVALID_ARGS);
 
-    if (argc == 4)
-    {
-        if (strcmp(argv[curArg++], "-s") == 0)
-        {
-            autoGenPayload = true;
-            error          = Interpreter::ParseUnsignedLong(argv[curArg++], autoGenPayloadLength);
-            SuccessOrExit(error);
-        }
-        else
-        {
-            ExitNow(error = OT_ERROR_INVALID_ARGS);
-        }
-    }
-
-    if (argc >= 3)
+    if (argc > 2)
     {
         long value;
-
         error = otIp6AddressFromString(argv[curArg++], &messageInfo.mPeerAddr);
         SuccessOrExit(error);
 
@@ -172,17 +157,70 @@ otError UdpExample::ProcessSend(int argc, char *argv[])
         messageInfo.mPeerPort = static_cast<uint16_t>(value);
     }
 
+    if (argc == 2 || argc == 4)
+    {
+        int typePos = curArg++;
+
+        if (strcmp(argv[typePos], "-s") == 0)
+        {
+            unsigned long value;
+            payloadType = kTypeAutoSize;
+            SuccessOrExit(error = Interpreter::ParseUnsignedLong(argv[curArg], value));
+            payloadLength = static_cast<uint16_t>(value);
+        }
+        else if (strcmp(argv[typePos], "-x") == 0)
+        {
+            payloadLength = static_cast<uint16_t>(strlen(argv[curArg]));
+            payloadType   = kTypeHexString;
+        }
+        else if (strcmp(argv[typePos], "-t") == 0)
+        {
+            payloadType = kTypeText;
+        }
+    }
+
     message = otUdpNewMessage(mInterpreter.mInstance, NULL);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
-    if (autoGenPayload)
+    switch (payloadType)
     {
-        error = WriteCharToBuffer(message, static_cast<uint16_t>(autoGenPayloadLength));
-    }
-    else
-    {
+    case kTypeText:
         error = otMessageAppend(message, argv[curArg], static_cast<uint16_t>(strlen(argv[curArg])));
+        break;
+    case kTypeAutoSize:
+        error = WriteCharToBuffer(message, payloadLength);
+        break;
+    case kTypeHexString:
+    {
+        uint8_t     buf[50];
+        int         bufLen           = 0;
+        const char *hexIndex         = argv[curArg];
+        int         remaingHexLen    = strlen(argv[curArg]);
+        uint16_t    conversionHexLen = 0;
+
+        while (remaingHexLen > 0)
+        {
+            bufLen = Interpreter::Hex2Bin(hexIndex, buf, sizeof(buf), true);
+
+            VerifyOrExit(bufLen > 0, error = OT_ERROR_INVALID_ARGS);
+
+            conversionHexLen = bufLen * 2;
+
+            if ((remaingHexLen & 0x0001) != 0)
+            {
+                conversionHexLen -= 1;
+            }
+
+            hexIndex += conversionHexLen;
+            remaingHexLen -= conversionHexLen;
+            SuccessOrExit(error = otMessageAppend(message, buf, static_cast<uint16_t>(bufLen)));
+        }
     }
+    break;
+    default:
+        break;
+    }
+
     SuccessOrExit(error);
 
     error = otUdpSend(&mSocket, message, &messageInfo);
