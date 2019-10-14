@@ -1314,6 +1314,16 @@ Disable Thread protocol operation and detach from a Thread network.
 Done
 ```
 
+### thread version
+
+Get the Thread Version number.
+
+```bash
+> thread version
+2
+Done
+```
+
 ### txpower
 
 Get the transmit power in dBm.

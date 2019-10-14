@@ -42,6 +42,8 @@
 #include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
 #endif
 
+#define OPENTHREAD_THREAD_VERSION (2)
+
 #include "config/openthread-core-default-config.h"
 
 #include "config/announce_sender.h"

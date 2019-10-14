@@ -414,6 +414,11 @@ otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
     return error;
 }
 
+uint16_t otThreadGetVersion(void)
+{
+    return OPENTHREAD_THREAD_VERSION;
+}
+
 bool otThreadIsSingleton(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

@@ -57,24 +57,24 @@ enum
  */
 enum
 {
-    kThreadVersion                  = 2,     ///< Thread Version
-    kUdpPort                        = 19788, ///< MLE UDP Port
-    kParentRequestRouterTimeout     = 750,   ///< Router Parent Request timeout
-    kParentRequestDuplicateMargin   = 50,    ///< Margin for duplicate parent request
-    kParentRequestReedTimeout       = 1250,  ///< Router and REEDs Parent Request timeout
-    kAttachStartJitter              = 50,    ///< Maximum jitter time added to start of attach.
-    kAnnounceProcessTimeout         = 250,   ///< Timeout after receiving Announcement before channel/pan-id change
-    kAnnounceTimeout                = 1400,  ///< Total timeout used for sending Announcement messages
-    kMinAnnounceDelay               = 80,    ///< Minimum delay between Announcement messages
-    kParentResponseMaxDelayRouters  = 500,   ///< Maximum delay for response for Parent Request sent to routers only
-    kParentResponseMaxDelayAll      = 1000,  ///< Maximum delay for response for Parent Request sent to all devices
-    kUnicastRetransmissionDelay     = 1000,  ///< Base delay before retransmitting an MLE unicast.
-    kChildUpdateRequestPendingDelay = 100,   ///< Delay (in ms) for aggregating Child Update Request.
-    kMaxTransmissionCount           = 3,     ///< Maximum number of times an MLE message may be transmitted.
-    kMaxResponseDelay               = 1000,  ///< Maximum delay before responding to a multicast request
-    kMaxChildIdRequestTimeout       = 5000,  ///< Maximum delay for receiving a Child ID Request
-    kMaxChildUpdateResponseTimeout  = 2000,  ///< Maximum delay for receiving a Child Update Response
-    kMaxLinkRequestTimeout          = 2000,  ///< Maximum delay for receiving a Link Accept
+    kThreadVersion                  = OPENTHREAD_THREAD_VERSION, ///< Thread Version
+    kUdpPort                        = 19788,                     ///< MLE UDP Port
+    kParentRequestRouterTimeout     = 750,                       ///< Router Parent Request timeout
+    kParentRequestDuplicateMargin   = 50,                        ///< Margin for duplicate parent request
+    kParentRequestReedTimeout       = 1250,                      ///< Router and REEDs Parent Request timeout
+    kAttachStartJitter              = 50,                        ///< Maximum jitter time added to start of attach.
+    kAnnounceProcessTimeout         = 250,  ///< Timeout after receiving Announcement before channel/pan-id change
+    kAnnounceTimeout                = 1400, ///< Total timeout used for sending Announcement messages
+    kMinAnnounceDelay               = 80,   ///< Minimum delay between Announcement messages
+    kParentResponseMaxDelayRouters  = 500,  ///< Maximum delay for response for Parent Request sent to routers only
+    kParentResponseMaxDelayAll      = 1000, ///< Maximum delay for response for Parent Request sent to all devices
+    kUnicastRetransmissionDelay     = 1000, ///< Base delay before retransmitting an MLE unicast.
+    kChildUpdateRequestPendingDelay = 100,  ///< Delay (in ms) for aggregating Child Update Request.
+    kMaxTransmissionCount           = 3,    ///< Maximum number of times an MLE message may be transmitted.
+    kMaxResponseDelay               = 1000, ///< Maximum delay before responding to a multicast request
+    kMaxChildIdRequestTimeout       = 5000, ///< Maximum delay for receiving a Child ID Request
+    kMaxChildUpdateResponseTimeout  = 2000, ///< Maximum delay for receiving a Child Update Response
+    kMaxLinkRequestTimeout          = 2000, ///< Maximum delay for receiving a Link Accept
     kMinTimeoutKeepAlive            = (((kMaxChildKeepAliveAttempts + 1) * kUnicastRetransmissionDelay) /
                             1000), ///< Minimum timeout(s) for keep alive
     kMinTimeoutDataPoll             = (OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD +
