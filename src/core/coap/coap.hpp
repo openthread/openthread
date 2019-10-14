@@ -403,7 +403,7 @@ private:
      * @param[in]  aRequest      The CoAP message containing Message ID.
      * @param[in]  aMessageInfo  The message info containing source endpoint address and port.
      *
-     * @returns Matching cached response or NULL if not found
+     * @returns Matching cached response or NULL if not found.
      *
      */
     const Message *FindMatchedResponse(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo) const;
