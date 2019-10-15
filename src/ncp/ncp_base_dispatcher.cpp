@@ -86,6 +86,9 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_PHY_RX_SENSITIVITY:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_RX_SENSITIVITY>;
         break;
+    case SPINEL_PROP_PHY_CCA_THRESHOLD:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CCA_THRESHOLD>;
+        break;
     case SPINEL_PROP_PHY_TX_POWER:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_TX_POWER>;
         break;
@@ -692,6 +695,9 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
 #endif
     case SPINEL_PROP_UNSOL_UPDATE_FILTER:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_UNSOL_UPDATE_FILTER>;
+        break;
+    case SPINEL_PROP_PHY_CCA_THRESHOLD:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CCA_THRESHOLD>;
         break;
     case SPINEL_PROP_PHY_TX_POWER:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_PHY_TX_POWER>;

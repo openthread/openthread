@@ -109,6 +109,7 @@ static otPanId        sPanid;
 static bool           sPromiscuous = false;
 static bool           sTxWait      = false;
 static int8_t         sTxPower     = 0;
+static int8_t         sCCAEDThresh = -74;
 
 static bool sSrcMatchEnabled = false;
 
@@ -796,6 +797,24 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
     assert(aInstance != NULL);
 
     sTxPower = aPower;
+
+    return OT_ERROR_NONE;
+}
+
+otError otPlatRadioGetCCAEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
+{
+    assert(aInstance != NULL);
+
+    *aThreshold = sCCAEDThresh;
+
+    return OT_ERROR_NONE;
+}
+
+otError otPlatRadioSetCCAEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
+{
+    assert(aInstance != NULL);
+
+    sCCAEDThresh = aThreshold;
 
     return OT_ERROR_NONE;
 }

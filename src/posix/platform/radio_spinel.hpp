@@ -163,6 +163,30 @@ public:
     otError SetTransmitPower(int8_t aPower);
 
     /**
+     * This method gets the radio's CCA ED threshold in dBm.
+     *
+     * @param[out]  aThreshold    The CCA ED threshold in dBm.
+     *
+     * @retval  OT_ERROR_NONE               Succeeded.
+     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
+     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
+     *
+     */
+    otError GetCCAEnergyDetectThreshold(int8_t &aThreshold);
+
+    /**
+     * This method sets the radio's CCA ED threshold in dBm.
+     *
+     * @param[in]   aThreshold     The CCA ED threshold in dBm.
+     *
+     * @retval  OT_ERROR_NONE               Succeeded.
+     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
+     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
+     *
+     */
+    otError SetCCAEnergyDetectThreshold(int8_t aThreshold);
+
+    /**
      * This method returns the radio sw version string.
      *
      * @returns A pointer to the radio version string.
