@@ -374,6 +374,7 @@ def create_default_based_on_src_dst_ports_udp_payload_factory(master_key):
             19788: mle_message_factory,
             61631: coap_message_factory,
             1000: dtls_message_factory,
+            5684: dtls_message_factory,
         }
     )
 
