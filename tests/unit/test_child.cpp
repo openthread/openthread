@@ -143,7 +143,7 @@ void TestChildIp6Address(void)
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     printf("Child state after init");
-    memset(&child, 0, sizeof(child));
+    child.Clear();
     VerifyChildIp6Addresses(child, 0, NULL);
     printf(" -- PASS\n");
 
