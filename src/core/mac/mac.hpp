@@ -426,6 +426,22 @@ public:
     void SetExtendedPanId(const ExtendedPanId &aExtendedPanId);
 
     /**
+     * This method returns the maximum number of frame retries during direct transmission.
+     *
+     * @returns The maximum number of retries during direct transmission.
+     *
+     */
+    uint8_t GetMaxFrameRetriesDirect(void) const { return mMaxFrameRetriesDirect; }
+
+    /**
+     * This method sets the maximum number of frame retries during direct transmission.
+     *
+     * @param[in]  aMaxFrameRetriesDirect  The maximum number of retries during direct transmission.
+     *
+     */
+    void SetMaxFrameRetriesDirect(uint8_t aMaxFrameRetriesDirect) { mMaxFrameRetriesDirect = aMaxFrameRetriesDirect; }
+
+    /**
      * This method is called to handle a received frame.
      *
      * @param[in]  aFrame  A pointer to the received frame, or NULL if the receive operation was aborted.
@@ -713,6 +729,7 @@ private:
     uint8_t       mScanChannel;
     uint16_t      mScanDuration;
     ChannelMask   mScanChannelMask;
+    uint8_t       mMaxFrameRetriesDirect;
     union
     {
         ActiveScanHandler mActiveScanHandler;

@@ -101,6 +101,7 @@ Mac::Mac(Instance &aInstance)
     , mScanChannel(Radio::kChannelMin)
     , mScanDuration(0)
     , mScanChannelMask()
+    , mMaxFrameRetriesDirect(kMaxFrameRetriesDirect)
     , mActiveScanHandler(NULL) /* Initialize `mActiveScanHandler` and `mEnergyScanHandler` union */
     , mSubMac(aInstance)
     , mOperationTask(aInstance, &Mac::HandleOperationTask, this)
@@ -1027,7 +1028,7 @@ void Mac::BeginTransmit(void)
         PrepareBeaconRequest(sendFrame);
         sendFrame.SetSequence(0);
         sendFrame.SetMaxCsmaBackoffs(kMaxCsmaBackoffsDirect);
-        sendFrame.SetMaxFrameRetries(kMaxFrameRetriesDirect);
+        sendFrame.SetMaxFrameRetries(mMaxFrameRetriesDirect);
         break;
 
     case kOperationTransmitBeacon:
@@ -1035,7 +1036,7 @@ void Mac::BeginTransmit(void)
         PrepareBeacon(sendFrame);
         sendFrame.SetSequence(mBeaconSequence++);
         sendFrame.SetMaxCsmaBackoffs(kMaxCsmaBackoffsDirect);
-        sendFrame.SetMaxFrameRetries(kMaxFrameRetriesDirect);
+        sendFrame.SetMaxFrameRetries(mMaxFrameRetriesDirect);
         break;
 
     case kOperationTransmitPoll:
@@ -1043,13 +1044,13 @@ void Mac::BeginTransmit(void)
         SuccessOrExit(error = PrepareDataRequest(sendFrame));
         sendFrame.SetSequence(mDataSequence++);
         sendFrame.SetMaxCsmaBackoffs(kMaxCsmaBackoffsDirect);
-        sendFrame.SetMaxFrameRetries(kMaxFrameRetriesDirect);
+        sendFrame.SetMaxFrameRetries(mMaxFrameRetriesDirect);
         break;
 
     case kOperationTransmitDataDirect:
         sendFrame.SetChannel(mRadioChannel);
         sendFrame.SetMaxCsmaBackoffs(kMaxCsmaBackoffsDirect);
-        sendFrame.SetMaxFrameRetries(kMaxFrameRetriesDirect);
+        sendFrame.SetMaxFrameRetries(mMaxFrameRetriesDirect);
         SuccessOrExit(error = Get<MeshForwarder>().HandleFrameRequest(sendFrame));
         sendFrame.SetSequence(mDataSequence++);
         break;
