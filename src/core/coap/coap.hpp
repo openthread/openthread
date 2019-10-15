@@ -397,6 +397,17 @@ private:
         kMaxCachedResponses = OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES,
     };
 
+    /**
+     * Check if CoAP response exists in the cache that matches given Message ID and source endpoint.
+     *
+     * @param[in]  aRequest      The CoAP message containing Message ID.
+     * @param[in]  aMessageInfo  The message info containing source endpoint address and port.
+     *
+     * @returns Matching cached response or NULL if not found.
+     *
+     */
+    const Message *FindMatchedResponse(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo) const;
+
     void DequeueResponse(Message &aMessage)
     {
         mQueue.Dequeue(aMessage);

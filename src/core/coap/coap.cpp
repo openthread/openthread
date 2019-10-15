@@ -713,14 +713,29 @@ otError ResponsesQueue::GetMatchedResponseCopy(const Message &         aRequest,
                                                const Ip6::MessageInfo &aMessageInfo,
                                                Message **              aResponse)
 {
-    otError                error = OT_ERROR_NOT_FOUND;
-    Message *              message;
-    EnqueuedResponseHeader enqueuedResponseHeader;
-    Ip6::MessageInfo       messageInfo;
+    otError        error = OT_ERROR_NONE;
+    const Message *cacheResponse;
 
-    for (message = static_cast<Message *>(mQueue.GetHead()); message != NULL;
-         message = static_cast<Message *>(message->GetNext()))
+    cacheResponse = FindMatchedResponse(aRequest, aMessageInfo);
+    VerifyOrExit(cacheResponse != NULL, error = OT_ERROR_NOT_FOUND);
+
+    *aResponse = cacheResponse->Clone(cacheResponse->GetLength() - sizeof(EnqueuedResponseHeader));
+    VerifyOrExit(*aResponse != NULL, error = OT_ERROR_NO_BUFS);
+
+exit:
+    return error;
+}
+
+const Message *ResponsesQueue::FindMatchedResponse(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo) const
+{
+    Message *matchedResponse = NULL;
+
+    for (Message *message = static_cast<Message *>(mQueue.GetHead()); message != NULL;
+         message          = static_cast<Message *>(message->GetNext()))
     {
+        EnqueuedResponseHeader enqueuedResponseHeader;
+        Ip6::MessageInfo       messageInfo;
+
         enqueuedResponseHeader.ReadFrom(*message);
         messageInfo = enqueuedResponseHeader.GetMessageInfo();
 
@@ -741,41 +756,23 @@ otError ResponsesQueue::GetMatchedResponseCopy(const Message &         aRequest,
             continue;
         }
 
-        VerifyOrExit((*aResponse = message->Clone(message->GetLength() - sizeof(EnqueuedResponseHeader))) != NULL,
-                     error = OT_ERROR_NO_BUFS);
-
-        error = OT_ERROR_NONE;
-        break;
+        ExitNow(matchedResponse = message);
     }
 
 exit:
-    return error;
+    return matchedResponse;
 }
 
 void ResponsesQueue::EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    otError                error          = OT_ERROR_NONE;
-    Message *              cachedResponse = NULL;
-    Message *              responseCopy   = NULL;
+    otError                error        = OT_ERROR_NONE;
+    Message *              responseCopy = NULL;
     EnqueuedResponseHeader enqueuedResponseHeader(aMessageInfo);
     uint16_t               messageCount;
     uint16_t               bufferCount;
 
-    switch (GetMatchedResponseCopy(aMessage, aMessageInfo, &cachedResponse))
-    {
-    case OT_ERROR_NOT_FOUND:
-        break;
-
-    case OT_ERROR_NONE:
-        assert(cachedResponse != NULL);
-        cachedResponse->Free();
-
-        // fall through
-
-    case OT_ERROR_NO_BUFS:
-    default:
-        ExitNow();
-    }
+    // return success if matched response already exists in the cache
+    VerifyOrExit(FindMatchedResponse(aMessage, aMessageInfo) == NULL);
 
     mQueue.GetInfo(messageCount, bufferCount);
 
