@@ -301,7 +301,7 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
  *
  * @note
  *   If @p aSwapFd is null, operate deleting on the setting file.
- *   If @p aSwapFd is not null, operate on the swap file, and  aSwapFd will point to the swap file descriptor.
+ *   If @p aSwapFd is not null, operate on the swap file, and aSwapFd will point to the swap file descriptor.
  *
  * @retval OT_ERROR_NONE        The given key and index was found and removed successfully.
  * @retval OT_ERROR_NOT_FOUND   The given key or index was not found in the setting store.
