@@ -187,6 +187,20 @@ otShortAddress otLinkGetShortAddress(otInstance *aInstance)
     return instance.Get<Mac::Mac>().GetShortAddress();
 }
 
+uint8_t otLinkGetMaxFrameRetriesDirect(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Mac::Mac>().GetMaxFrameRetriesDirect();
+}
+
+void otLinkSetMaxFrameRetriesDirect(otInstance *aInstance, uint8_t aMaxFrameRetriesDirect)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Mac::Mac>().SetMaxFrameRetriesDirect(aMaxFrameRetriesDirect);
+}
+
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
 otMacFilterAddressMode otLinkFilterGetAddressMode(otInstance *aInstance)
