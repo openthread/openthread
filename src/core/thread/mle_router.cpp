@@ -2047,6 +2047,9 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
 
             IgnoreReturnValue(iter.GetChild()->RemoveIp6Address(GetInstance(), address));
         }
+
+        // Clear EID-to-RLOC cache for the unicast address registered by the child.
+        Get<AddressResolver>().RemoveCacheEntry(address);
     }
 
     if (registeredCount == 0)

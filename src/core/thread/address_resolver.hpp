@@ -115,6 +115,17 @@ public:
     otError UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
 
     /**
+     * This method removes the cache entry for the EID.
+     *
+     * @param[in]  aEid               A reference to the EID.
+     *
+     * @retval OT_ERROR_NONE          Successfully removed the cache entry.
+     * @retval OT_ERROR_NOT_FOUND     No cache entry with @p aEid.
+     *
+     */
+    otError RemoveCacheEntry(const Ip6::Address &aEid);
+
+    /**
      * This method adds one cache entry for the EID.
      *
      * @param[in]  aEid               A reference to the EID.
@@ -197,6 +208,7 @@ private:
         kReasonRemovingRloc16,
         kReasonReceivedIcmpDstUnreachNoRoute,
         kReasonEvictingForNewEntry,
+        kReasonRemovingEid,
     };
 
     static const char *ConvertInvalidationReasonToString(InvalidationReason aReason);

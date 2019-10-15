@@ -174,6 +174,10 @@ const char *AddressResolver::ConvertInvalidationReasonToString(InvalidationReaso
     case kReasonEvictingForNewEntry:
         str = "evicting for new entry";
         break;
+
+    case kReasonRemovingEid:
+        str = "removing eid";
+        break;
     }
 
     return str;
@@ -243,6 +247,25 @@ otError AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAd
         }
 
         error = OT_ERROR_NONE;
+    }
+
+    return error;
+}
+
+otError AddressResolver::RemoveCacheEntry(const Ip6::Address &aEid)
+{
+    otError error = OT_ERROR_NOT_FOUND;
+
+    for (int i = 0; i < kCacheEntries; i++)
+    {
+        if (mCache[i].mState == Cache::kStateInvalid || mCache[i].mTarget != aEid)
+        {
+            continue;
+        }
+
+        InvalidateCacheEntry(mCache[i], kReasonRemovingEid);
+        error = OT_ERROR_NONE;
+        break;
     }
 
     return error;
