@@ -441,6 +441,24 @@ public:
      */
     void SetMaxFrameRetriesDirect(uint8_t aMaxFrameRetriesDirect) { mMaxFrameRetriesDirect = aMaxFrameRetriesDirect; }
 
+#if OPENTHREAD_FTD
+    /**
+     * This method returns the maximum number of frame retries during indirect transmission.
+     *
+     * @returns The maximum number of retries during indirect transmission.
+     *
+     */
+    uint8_t GetMaxFrameRetriesIndirect(void) const { return mMaxFrameRetriesIndirect; }
+
+    /**
+     * This method sets the maximum number of frame retries during indirect transmission.
+     *
+     * @param[in]  aMaxFrameRetriesIndirect  The maximum number of retries induring indirect transmission.
+     *
+     */
+    void SetMaxFrameRetriesIndirect(uint8_t aMaxFrameRetriesIndirect) { mMaxFrameRetriesIndirect = aMaxFrameRetriesIndirect; }
+#endif
+
     /**
      * This method is called to handle a received frame.
      *
@@ -730,6 +748,9 @@ private:
     uint16_t      mScanDuration;
     ChannelMask   mScanChannelMask;
     uint8_t       mMaxFrameRetriesDirect;
+#if OPENTHREAD_FTD
+    uint8_t       mMaxFrameRetriesIndirect;
+#endif
     union
     {
         ActiveScanHandler mActiveScanHandler;

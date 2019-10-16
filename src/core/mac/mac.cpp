@@ -102,6 +102,9 @@ Mac::Mac(Instance &aInstance)
     , mScanDuration(0)
     , mScanChannelMask()
     , mMaxFrameRetriesDirect(kMaxFrameRetriesDirect)
+#if OPENTHREAD_FTD
+    , mMaxFrameRetriesIndirect(kMaxFrameRetriesIndirect)
+#endif
     , mActiveScanHandler(NULL) /* Initialize `mActiveScanHandler` and `mEnergyScanHandler` union */
     , mSubMac(aInstance)
     , mOperationTask(aInstance, &Mac::HandleOperationTask, this)
@@ -1059,7 +1062,7 @@ void Mac::BeginTransmit(void)
     case kOperationTransmitDataIndirect:
         sendFrame.SetChannel(mRadioChannel);
         sendFrame.SetMaxCsmaBackoffs(kMaxCsmaBackoffsIndirect);
-        sendFrame.SetMaxFrameRetries(kMaxFrameRetriesIndirect);
+        sendFrame.SetMaxFrameRetries(mMaxFrameRetriesIndirect);
         SuccessOrExit(error = Get<DataPollHandler>().HandleFrameRequest(sendFrame));
 
         // If the frame is marked as a retransmission, then data sequence number is already set.
