@@ -169,14 +169,6 @@ public:
      * @returns A reference to the Extended Address.
      *
      */
-    Mac::ExtAddress &GetExtAddress(void) { return mMacAddr; }
-
-    /**
-     * This method returns the Extended Address.
-     *
-     * @returns A reference to the Extended Address.
-     *
-     */
     const Mac::ExtAddress &GetExtAddress(void) const { return mMacAddr; }
 
     /**
