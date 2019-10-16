@@ -535,7 +535,7 @@ class HarnessCase(unittest.TestCase):
 
         """check if case need to use shield box and its device order in Testbed page
         Example:
-         In case script leader_9_2_9.py: 
+         In case script leader_9_2_9.py:
           case_need_shield = True
           device_order = [('Router_2', False), ('Commissioner', True), ('Router_1', False), ('DUT', True)]
          On the TestBed page of the Test Harness, the device sort order for Leader_9_2_9
