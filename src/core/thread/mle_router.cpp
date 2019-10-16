@@ -2249,6 +2249,14 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kMode, sizeof(mode), mode));
     VerifyOrExit(mode.IsValid(), error = OT_ERROR_PARSE);
 
+    // Challenge
+    challenge.SetLength(0);
+    if (Tlv::GetTlv(aMessage, Tlv::kChallenge, sizeof(challenge), challenge) == OT_ERROR_NONE)
+    {
+        VerifyOrExit(challenge.IsValid(), error = OT_ERROR_PARSE);
+        tlvs[tlvslength++] = Tlv::kResponse;
+    }
+
     // Find Child
     aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
     child = mChildTable.FindChild(macAddr, ChildTable::kInStateAnyExceptInvalid);
@@ -2263,7 +2271,7 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
         if (mode.GetMode().IsRxOnWhenIdle())
         {
             tlvs[tlvslength++] = Tlv::kStatus;
-            SendChildUpdateResponse(NULL, aMessageInfo, tlvs, tlvslength, NULL);
+            SendChildUpdateResponse(NULL, aMessageInfo, tlvs, tlvslength, challenge);
         }
 
         ExitNow();
@@ -2277,11 +2285,8 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
     // Parent MUST include Leader Data TLV in Child Update Response
     tlvs[tlvslength++] = Tlv::kLeaderData;
 
-    // Challenge
-    if (Tlv::GetTlv(aMessage, Tlv::kChallenge, sizeof(challenge), challenge) == OT_ERROR_NONE)
+    if (challenge.IsValid())
     {
-        VerifyOrExit(challenge.IsValid(), error = OT_ERROR_PARSE);
-        tlvs[tlvslength++] = Tlv::kResponse;
         tlvs[tlvslength++] = Tlv::kMleFrameCounter;
         tlvs[tlvslength++] = Tlv::kLinkFrameCounter;
     }
@@ -2362,7 +2367,7 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
         }
     }
 
-    SendChildUpdateResponse(child, aMessageInfo, tlvs, tlvslength, &challenge);
+    SendChildUpdateResponse(child, aMessageInfo, tlvs, tlvslength, challenge);
 
 exit:
     return error;
@@ -2968,7 +2973,7 @@ void MleRouter::SendChildUpdateResponse(Child *                 aChild,
                                         const Ip6::MessageInfo &aMessageInfo,
                                         const uint8_t *         aTlvs,
                                         uint8_t                 aTlvsLength,
-                                        const ChallengeTlv *    aChallenge)
+                                        const ChallengeTlv &    aChallenge)
 {
     otError  error = OT_ERROR_NONE;
     Message *message;
@@ -3003,7 +3008,7 @@ void MleRouter::SendChildUpdateResponse(Child *                 aChild,
             break;
 
         case Tlv::kResponse:
-            SuccessOrExit(error = AppendResponse(*message, aChallenge->GetChallenge(), aChallenge->GetLength()));
+            SuccessOrExit(error = AppendResponse(*message, aChallenge.GetChallenge(), aChallenge.GetLength()));
             break;
 
         case Tlv::kSourceAddress:
