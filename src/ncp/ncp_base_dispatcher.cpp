@@ -550,6 +550,9 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         // FTD Only Properties (Get Handler)
 
 #if OPENTHREAD_FTD
+    case SPINEL_PROP_MAC_MAX_RETRY_NUMBER_INDIRECT:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_MAX_RETRY_NUMBER_INDIRECT>;
+        break;
     case SPINEL_PROP_NET_PSKC:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_NET_PSKC>;
         break;
@@ -909,6 +912,9 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
         // FTD Only Properties (Set Handler)
 
 #if OPENTHREAD_FTD
+    case SPINEL_PROP_MAC_MAX_RETRY_NUMBER_INDIRECT:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_MAC_MAX_RETRY_NUMBER_INDIRECT>;
+        break;
     case SPINEL_PROP_NET_PSKC:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_NET_PSKC>;
         break;
