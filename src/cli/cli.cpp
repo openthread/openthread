@@ -3496,6 +3496,24 @@ void Interpreter::ProcessMacRetries(int argc, char *argv[])
             otLinkSetMaxFrameRetriesDirect(mInstance, static_cast<uint8_t>(value));
         }
     }
+#ifdef OPENTHREAD_FTD
+    else if (strcmp(argv[0], "indirect") == 0)
+    {
+        if (argc == 1)
+        {
+            mServer->OutputFormat("%d\r\n", otLinkGetMaxFrameRetriesIndirect(mInstance));
+        }
+        else
+        {
+            unsigned long value;
+
+            SuccessOrExit(error = ParseUnsignedLong(argv[1], value));
+            VerifyOrExit(value <= 0xff, error = OT_ERROR_INVALID_ARGS);
+
+            otLinkSetMaxFrameRetriesIndirect(mInstance, static_cast<uint8_t>(value));
+        }
+    }
+#endif
     else
     {
         error = OT_ERROR_INVALID_ARGS;
