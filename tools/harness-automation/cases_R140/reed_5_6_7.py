@@ -38,7 +38,6 @@ class REED_5_6_7(HarnessCase):
     case = '5 6 7'
     golden_devices_required = 16
     case_need_shield = True
-    device_order = ''
 
     def on_dialog(self, dialog, title):
         pass

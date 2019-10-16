@@ -163,7 +163,7 @@ class HarnessCase(unittest.TestCase):
     case_need_shield = False
     """bool: whether needs RF-box"""
 
-    device_order = ''
+    device_order = []
     """list: device drag order in TestHarness TestBed page"""
 
     def __init__(self, *args, **kwargs):
@@ -562,9 +562,11 @@ class HarnessCase(unittest.TestCase):
             if not settings.DUT2_DEVICE:
                 logger.info('Must set DUT2_DEVICE')
                 raise FailError('DUT2_DEVICE must be set in settings.py')
-            if isinstance(self.device_order, list):
+            if isinstance(self.device_order, list) and self.device_order:
                 shield_order = self.device_order
                 logger.info('case %s devices ordered by %s ', self.case, shield_order)
+            else:
+                logger.info('case %s uses %s as DUT', self.case, settings.DUT2_DEVICE)
 
         # for test bed with multi-vendor devices
         if settings.MIXED_DEVICE_TYPE:
