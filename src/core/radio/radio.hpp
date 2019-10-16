@@ -289,6 +289,34 @@ public:
     otError SetTransmitPower(int8_t aPower) { return otPlatRadioSetTransmitPower(GetInstance(), aPower); }
 
     /**
+     * This method gets the radio's CCA ED threshold in dBm.
+     *
+     * @param[in] aThreshold    The CCA ED threshold in dBm.
+     *
+     * @retval OT_ERROR_NONE             A reference to output the CCA ED threshold in dBm.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  CCA ED threshold configuration via dBm is not implemented.
+     *
+     */
+    otError GetCcaEnergyDetectThreshold(int8_t &aThreshold)
+    {
+        return otPlatRadioGetCcaEnergyDetectThreshold(GetInstance(), &aThreshold);
+    }
+
+    /**
+     * This method sets the radio's CCA ED threshold in dBm.
+     *
+     * @param[in] aThreshold    The CCA ED threshold in dBm.
+     *
+     * @retval OT_ERROR_NONE             Successfully set the CCA ED threshold.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  CCA ED threshold configuration via dBm is not implemented.
+     *
+     */
+    otError SetCcaEnergyDetectThreshold(int8_t &aThreshold)
+    {
+        return otPlatRadioSetCcaEnergyDetectThreshold(GetInstance(), aThreshold);
+    }
+
+    /**
      * This method gets the status of promiscuous mode.
      *
      * @retval TRUE   Promiscuous mode is enabled.

@@ -886,6 +886,14 @@ otError RadioSpinel::GetTransmitPower(int8_t &aPower)
     return error;
 }
 
+otError RadioSpinel::GetCcaEnergyDetectThreshold(int8_t &aThreshold)
+{
+    otError error = Get(SPINEL_PROP_PHY_CCA_THRESHOLD, SPINEL_DATATYPE_INT8_S, &aThreshold);
+
+    LogIfFail("Get CCA ED threshold failed", error);
+    return error;
+}
+
 int8_t RadioSpinel::GetRssi(void)
 {
     int8_t  rssi  = OT_RADIO_RSSI_INVALID;
@@ -954,6 +962,13 @@ otError RadioSpinel::SetTransmitPower(int8_t aPower)
 {
     otError error = Set(SPINEL_PROP_PHY_TX_POWER, SPINEL_DATATYPE_INT8_S, aPower);
     LogIfFail("Set transmit power failed", error);
+    return error;
+}
+
+otError RadioSpinel::SetCcaEnergyDetectThreshold(int8_t aThreshold)
+{
+    otError error = Set(SPINEL_PROP_PHY_CCA_THRESHOLD, SPINEL_DATATYPE_INT8_S, aThreshold);
+    LogIfFail("Set CCA ED threshold failed", error);
     return error;
 }
 
@@ -1679,6 +1694,19 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return sRadioSpinel.SetTransmitPower(aPower);
+}
+
+otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
+{
+    assert(aThreshold != NULL);
+    OT_UNUSED_VARIABLE(aInstance);
+    return sRadioSpinel.GetTransmitPower(*aThreshold);
+}
+
+otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return sRadioSpinel.GetCcaEnergyDetectThreshold(aThreshold);
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)

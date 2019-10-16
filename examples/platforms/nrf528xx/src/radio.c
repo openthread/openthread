@@ -74,7 +74,8 @@
 
 enum
 {
-    NRF528XX_RECEIVE_SENSITIVITY = -100, // dBm
+    NRF528XX_RECEIVE_SENSITIVITY  = -100, // dBm
+    NRF528XX_MIN_CCA_ED_THRESHOLD = -94,  // dBm
 };
 
 static bool sDisabled;
@@ -558,6 +559,51 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
     nrf_802154_tx_power_set(aPower);
 
     return OT_ERROR_NONE;
+}
+
+otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    otError              error = OT_ERROR_NONE;
+    nrf_802154_cca_cfg_t ccaConfig;
+
+    if (aThreshold == NULL)
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+    else
+    {
+        nrf_802154_cca_cfg_get(&ccaConfig);
+        // The radio driver has no function to convert ED threshold to dBm
+        *aThreshold = (int8_t)ccaConfig.ed_threshold + NRF528XX_MIN_CCA_ED_THRESHOLD;
+    }
+
+    return error;
+}
+
+otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    otError              error = OT_ERROR_NONE;
+    nrf_802154_cca_cfg_t ccaConfig;
+
+    // The minimum value of ED threshold for radio driver is -94 dBm
+    if (aThreshold < NRF528XX_MIN_CCA_ED_THRESHOLD)
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+    else
+    {
+        memset(&ccaConfig, 0, sizeof(ccaConfig));
+        ccaConfig.mode         = NRF_RADIO_CCA_MODE_ED;
+        ccaConfig.ed_threshold = nrf_802154_ccaedthres_from_dbm_calculate(aThreshold);
+
+        nrf_802154_cca_cfg_set(&ccaConfig);
+    }
+
+    return error;
 }
 
 void nrf5RadioProcess(otInstance *aInstance)

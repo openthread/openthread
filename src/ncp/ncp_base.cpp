@@ -2074,6 +2074,37 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_RX_SENSITIVITY>(v
     return mEncoder.WriteInt8(otPlatRadioGetReceiveSensitivity(mInstance));
 }
 
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CCA_THRESHOLD>(void)
+{
+    int8_t  threshold;
+    otError error = OT_ERROR_NONE;
+
+    error = otPlatRadioGetCcaEnergyDetectThreshold(mInstance, &threshold);
+
+    if (error == OT_ERROR_NONE)
+    {
+        error = mEncoder.WriteInt8(threshold);
+    }
+    else
+    {
+        error = mEncoder.OverwriteWithLastStatusError(ThreadErrorToSpinelStatus(error));
+    }
+
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CCA_THRESHOLD>(void)
+{
+    int8_t  threshold = 0;
+    otError error     = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadInt8(threshold));
+    error = otPlatRadioSetCcaEnergyDetectThreshold(mInstance, threshold);
+
+exit:
+    return error;
+}
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_TX_POWER>(void)
 {
     int8_t  power;
