@@ -160,6 +160,12 @@ class HarnessCase(unittest.TestCase):
     started = 0
     """number: test case started timestamp"""
 
+    case_need_shield = False
+    """bool: whether needs RF-box"""
+
+    device_order = ''
+    """list: device drag order in TestHarness TestBed page"""
+
     def __init__(self, *args, **kwargs):
         self.dut = None
         self._browser = None
@@ -532,20 +538,38 @@ class HarnessCase(unittest.TestCase):
         if settings.DUT_DEVICE:
             dut_device = settings.DUT_DEVICE
 
-        # check if case need to use shield box and its device order in Testbed page
-        shield_scenario = self.__class__.__name__
+        """check if case need to use shield box and its device order in Testbed page
+        Example:
+         In case script leader_9_2_9.py: 
+          case_need_shield = True
+          device_order = [('Router_2', False), ('Commissioner', True), ('Router_1', False), ('DUT', True)]
+         On the TestBed page of the Test Harness, the device sort order for Leader_9_2_9
+           should be like:
+             Router_2
+             Commissioner
+             Router_1
+             DUT
+           The ('Commissioner', True) and ('DUT', True) indicate Commissioner device and DUT2 device should
+           be in the RF-box and choose from SHIELD_GOLDEN_DEVICES and DUT2_DEVICE. Otherwise ('DUT', False) means
+           DUT device is not in RF-box and use DUT_DEVICE. The other roles devices with False should be selected
+           from GOLDEN_DEVICES.
+
+         In case script med_6_3_2.py:
+         case_need_shield = True
+         device_order = ''
+         means no device drag order. DUT2_DEVICE should be applied as DUT and the other gold devices
+         are from GOLDEN_DEVICES.
+        """
         shield_order = []
         need_shield = False
-        if settings.SHIELD_CASE_ORDER and isinstance(settings.SHIELD_CASE_ORDER, dict):
-            for scenario, order in settings.SHIELD_CASE_ORDER.items():
-                if shield_scenario == scenario:
-                    need_shield = True
-                    if not settings.DUT2_DEVICE:
-                        logger.info('Must set DUT2_DEVICE')
-                        raise FailError('DUT2_DEVICE must be set')
-                    if order and isinstance(order, list):
-                        shield_order = order
-                        logger.info('scenario %s devices ordered by %s ', shield_scenario, shield_order)
+        if self.case_need_shield:
+            need_shield = True
+            if not settings.DUT2_DEVICE:
+                logger.info('Must set DUT2_DEVICE')
+                raise FailError('DUT2_DEVICE must be set in settings.py')
+            if isinstance(self.device_order, list):
+                shield_order = self.device_order
+                logger.info('case %s devices ordered by %s ', self.case, shield_order)
 
         # for test bed with multi-vendor devices
         if settings.MIXED_DEVICE_TYPE:
