@@ -2820,7 +2820,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         }
         else
         {
-            HandleChildUpdateResponse(aMessage, aMessageInfo);
+            HandleChildUpdateResponse(aMessage, aMessageInfo, neighbor);
         }
 
         break;
@@ -3563,7 +3563,9 @@ exit:
     return error;
 }
 
-otError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError Mle::HandleChildUpdateResponse(const Message &         aMessage,
+                                       const Ip6::MessageInfo &aMessageInfo,
+                                       const Neighbor *        aNeighbor)
 {
     otError             error = OT_ERROR_NONE;
     StatusTlv           status;
@@ -3575,6 +3577,25 @@ otError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::Messa
     TimeoutTlv          timeout;
 
     LogMleMessage("Receive Child Update Response from parent", aMessageInfo.GetPeerAddr());
+
+    switch (mRole)
+    {
+    case OT_DEVICE_ROLE_DETACHED:
+        VerifyOrExit(
+            (Tlv::GetTlv(aMessage, Tlv::kResponse, sizeof(response), response) == OT_ERROR_NONE) &&
+                (response.IsValid()) &&
+                (!memcmp(response.GetResponse(), mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge))),
+            error = OT_ERROR_SECURITY);
+        break;
+
+    case OT_DEVICE_ROLE_CHILD:
+        VerifyOrExit((aNeighbor == &mParent) && mParent.IsStateValid(), error = OT_ERROR_SECURITY);
+        break;
+
+    default:
+        assert(false);
+        break;
+    }
 
     // Status
     if (Tlv::GetTlv(aMessage, Tlv::kStatus, sizeof(status), status) == OT_ERROR_NONE)
@@ -3588,22 +3609,9 @@ otError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::Messa
     VerifyOrExit(mode.IsValid(), error = OT_ERROR_PARSE);
     VerifyOrExit(mode.GetMode() == mDeviceMode, error = OT_ERROR_DROP);
 
-    if (mChildUpdateRequestState == kChildUpdateRequestActive)
-    {
-        mChildUpdateAttempts     = 0;
-        mChildUpdateRequestState = kChildUpdateRequestNone;
-        ScheduleMessageTransmissionTimer();
-    }
-
     switch (mRole)
     {
     case OT_DEVICE_ROLE_DETACHED:
-        // Response
-        SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kResponse, sizeof(response), response));
-        VerifyOrExit(response.IsValid(), error = OT_ERROR_PARSE);
-        VerifyOrExit(memcmp(response.GetResponse(), mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge)) == 0,
-                     error = OT_ERROR_DROP);
-
         SuccessOrExit(error =
                           Tlv::GetTlv(aMessage, Tlv::kLinkFrameCounter, sizeof(linkFrameCounter), linkFrameCounter));
         VerifyOrExit(linkFrameCounter.IsValid(), error = OT_ERROR_PARSE);
@@ -3667,7 +3675,16 @@ otError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::Messa
 
 exit:
 
-    if (error != OT_ERROR_NONE)
+    if (error == OT_ERROR_NONE)
+    {
+        if (mChildUpdateRequestState == kChildUpdateRequestActive)
+        {
+            mChildUpdateAttempts     = 0;
+            mChildUpdateRequestState = kChildUpdateRequestNone;
+            ScheduleMessageTransmissionTimer();
+        }
+    }
+    else
     {
         otLogWarnMleErr(error, "Failed to process Child Update Response");
     }

@@ -1709,7 +1709,9 @@ private:
     otError HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleChildIdResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError HandleChildUpdateResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError HandleChildUpdateResponse(const Message &         aMessage,
+                                      const Ip6::MessageInfo &aMessageInfo,
+                                      const Neighbor *        aNeighbor);
     otError HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence);
     otError HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
