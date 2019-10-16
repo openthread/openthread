@@ -384,11 +384,6 @@ class HarnessCase(unittest.TestCase):
         if not self.started:
             self.started = time.time()
 
-        if time.time() - self.started > 5 * len(settings.GOLDEN_DEVICES):
-            # self._browser.refresh()
-            time.sleep(1)
-            return
-
         # Detect Sniffer
         try:
             dialog = self._browser.find_element_by_id('capture-Setup-modal')
