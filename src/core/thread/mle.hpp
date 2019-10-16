@@ -1706,7 +1706,7 @@ private:
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void        ScheduleMessageTransmissionTimer(void);
 
-    otError HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
     otError HandleChildIdResponse(const Message &         aMessage,
                                   const Ip6::MessageInfo &aMessageInfo,
                                   const Neighbor *        aNeighbor);
