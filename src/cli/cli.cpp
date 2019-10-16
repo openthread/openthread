@@ -158,6 +158,7 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     {"macfilter", &Interpreter::ProcessMacFilter},
 #endif
+    {"macretries", &Interpreter::ProcessMacRetries},
     {"masterkey", &Interpreter::ProcessMasterKey},
     {"mode", &Interpreter::ProcessMode},
 #if OPENTHREAD_FTD
@@ -3472,6 +3473,37 @@ exit:
 }
 
 #endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+
+void Interpreter::ProcessMacRetries(int argc, char *argv[])
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(argc > 0 && argc <= 2, error = OT_ERROR_INVALID_ARGS);
+
+    if (strcmp(argv[0], "direct") == 0)
+    {
+        if (argc == 1)
+        {
+            mServer->OutputFormat("%d\r\n", otLinkGetMaxFrameRetriesDirect(mInstance));
+        }
+        else
+        {
+            unsigned long value;
+
+            SuccessOrExit(error = ParseUnsignedLong(argv[1], value));
+            VerifyOrExit(value <= 0xff, error = OT_ERROR_INVALID_ARGS);
+
+            otLinkSetMaxFrameRetriesDirect(mInstance, static_cast<uint8_t>(value));
+        }
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+exit:
+    AppendResult(error);
+}
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 void Interpreter::ProcessDiag(int argc, char *argv[])
