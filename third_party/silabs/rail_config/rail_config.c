@@ -159,8 +159,8 @@ const RAIL_ChannelConfigEntry_t generated_channels[] = {
     .baseFrequency = 904000000,
     .channelSpacing = 2000000,
     .physicalChannelOffset = 0,
-    .channelNumberStart = 0,
-    .channelNumberEnd = 20,
+    .channelNumberStart = 1,
+    .channelNumberEnd = 10,
     .maxPower = RAIL_TX_POWER_MAX,
     .attr = &generated_entryAttr
   },
