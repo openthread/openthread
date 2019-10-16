@@ -718,7 +718,7 @@ private:
                                     const Ip6::MessageInfo &aMessageInfo,
                                     const uint8_t *         aTlvs,
                                     uint8_t                 aTlvsLength,
-                                    const ChallengeTlv *    aChallenge);
+                                    const ChallengeTlv &    aChallenge);
     otError SendDataResponse(const Ip6::Address &aDestination,
                              const uint8_t *     aTlvs,
                              uint8_t             aTlvsLength,
