@@ -2766,7 +2766,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         break;
 
     case Header::kCommandAdvertisement:
-        HandleAdvertisement(aMessage, aMessageInfo);
+        HandleAdvertisement(aMessage, aMessageInfo, neighbor);
         break;
 
     case Header::kCommandDataRequest:
@@ -2832,12 +2832,9 @@ exit:
     return;
 }
 
-otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor)
 {
     otError          error = OT_ERROR_NONE;
-    Mac::ExtAddress  macAddr;
-    bool             isNeighbor;
-    Neighbor *       neighbor;
     SourceAddressTlv sourceAddress;
     LeaderDataTlv    leaderData;
     RouteTlv         route;
@@ -2854,38 +2851,27 @@ otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
     VerifyOrExit(leaderData.IsValid(), error = OT_ERROR_PARSE);
 
-    aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
-
     if (mRole != OT_DEVICE_ROLE_DETACHED)
     {
         if (IsFullThreadDevice())
         {
             SuccessOrExit(error = Get<MleRouter>().HandleAdvertisement(aMessage, aMessageInfo));
         }
-        else
+        else if ((aNeighbor == &mParent) && (mParent.GetRloc16() != sourceAddress.GetRloc16()))
         {
             // Remove stale parent.
-            if (GetNeighbor(macAddr) == static_cast<Neighbor *>(&mParent) &&
-                mParent.GetRloc16() != sourceAddress.GetRloc16())
-            {
-                BecomeDetached();
-            }
+            BecomeDetached();
         }
     }
-
-    isNeighbor = false;
 
     switch (mRole)
     {
     case OT_DEVICE_ROLE_DISABLED:
     case OT_DEVICE_ROLE_DETACHED:
-        break;
+        ExitNow();
 
     case OT_DEVICE_ROLE_CHILD:
-        if (mParent.GetExtAddress() != macAddr)
-        {
-            break;
-        }
+        VerifyOrExit(aNeighbor == &mParent);
 
         if ((mParent.GetRloc16() == sourceAddress.GetRloc16()) &&
             (leaderData.GetPartitionId() != mLeaderData.GetPartitionId() ||
@@ -2903,28 +2889,20 @@ otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo
             mRetrieveNewNetworkData = true;
         }
 
-        isNeighbor = true;
         mParent.SetLastHeard(TimerMilli::GetNow());
         break;
 
     case OT_DEVICE_ROLE_ROUTER:
     case OT_DEVICE_ROLE_LEADER:
-        if ((neighbor = Get<MleRouter>().GetNeighbor(macAddr)) != NULL && neighbor->IsStateValid())
-        {
-            isNeighbor = true;
-        }
-
+        VerifyOrExit(aNeighbor && aNeighbor->IsStateValid());
         break;
     }
 
-    if (isNeighbor)
+    if (mRetrieveNewNetworkData ||
+        (static_cast<int8_t>(leaderData.GetDataVersion() - Get<NetworkData::Leader>().GetVersion()) > 0))
     {
-        if (mRetrieveNewNetworkData ||
-            (static_cast<int8_t>(leaderData.GetDataVersion() - Get<NetworkData::Leader>().GetVersion()) > 0))
-        {
-            delay = Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
-            SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay);
-        }
+        delay = Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
+        SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay);
     }
 
 exit:
