@@ -1935,6 +1935,14 @@ typedef enum
      */
     SPINEL_PROP_MAC_MAX_RETRY_NUMBER_DIRECT = SPINEL_PROP_MAC_EXT__BEGIN + 10,
 
+    /// MAC Max indirect retry number
+    /** Format: `C`
+     *
+     * The maximum (user-specified) number of indirect frame transmission retries.
+     *
+     */
+    SPINEL_PROP_MAC_MAX_RETRY_NUMBER_INDIRECT = SPINEL_PROP_MAC_EXT__BEGIN + 11,
+
     SPINEL_PROP_MAC_EXT__END = 0x1400,
 
     SPINEL_PROP_NET__BEGIN = 0x40,
