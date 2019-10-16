@@ -801,7 +801,7 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
     return OT_ERROR_NONE;
 }
 
-otError otPlatRadioGetCCAEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
+otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
 {
     assert(aInstance != NULL);
 
@@ -810,7 +810,7 @@ otError otPlatRadioGetCCAEnergyDetectThreshold(otInstance *aInstance, int8_t *aT
     return OT_ERROR_NONE;
 }
 
-otError otPlatRadioSetCCAEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
+otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
 {
     assert(aInstance != NULL);
 

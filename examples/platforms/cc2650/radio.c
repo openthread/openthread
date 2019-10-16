@@ -1286,7 +1286,7 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 /**
  * Function documented in platform/radio.h
  */
-otError otPlatRadioGetCCAEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
+otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aThreshold);
@@ -1297,7 +1297,7 @@ otError otPlatRadioGetCCAEnergyDetectThreshold(otInstance *aInstance, int8_t *aT
 /**
  * Function documented in platform/radio.h
  */
-otError otPlatRadioSetCCAEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
+otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aThreshold);

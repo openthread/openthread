@@ -297,9 +297,9 @@ public:
      * @retval OT_ERROR_NOT_IMPLEMENTED  CCA ED threshold configuration via dBm is not implemented.
      *
      */
-    otError GetCCAEnergyDetectThreshold(int8_t &aThreshold)
+    otError GetCcaEnergyDetectThreshold(int8_t &aThreshold)
     {
-        return otPlatRadioGetCCAEnergyDetectThreshold(GetInstance(), &aThreshold);
+        return otPlatRadioGetCcaEnergyDetectThreshold(GetInstance(), &aThreshold);
     }
 
     /**
@@ -311,9 +311,9 @@ public:
      * @retval OT_ERROR_NOT_IMPLEMENTED  CCA ED threshold configuration via dBm is not implemented.
      *
      */
-    otError SetCCAEnergyDetectThreshold(int8_t &aThreshold)
+    otError SetCcaEnergyDetectThreshold(int8_t &aThreshold)
     {
-        return otPlatRadioSetCCAEnergyDetectThreshold(GetInstance(), aThreshold);
+        return otPlatRadioSetCcaEnergyDetectThreshold(GetInstance(), aThreshold);
     }
 
     /**

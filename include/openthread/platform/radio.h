@@ -392,7 +392,7 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower);
  * @retval OT_ERROR_NOT_IMPLEMENTED  CCA ED threshold configuration via dBm is not implemented.
  *
  */
-otError otPlatRadioGetCCAEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold);
+otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold);
 
 /**
  * Set the radio's CCA ED threshold in dBm.
@@ -405,7 +405,7 @@ otError otPlatRadioGetCCAEnergyDetectThreshold(otInstance *aInstance, int8_t *aT
  * @retval OT_ERROR_NOT_IMPLEMENTED  CCA ED threshold configuration via dBm is not implemented.
  *
  */
-otError otPlatRadioSetCCAEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold);
+otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold);
 
 /**
  * Get the status of promiscuous mode.

@@ -2079,7 +2079,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CCA_THRESHOLD>(vo
     int8_t  threshold;
     otError error = OT_ERROR_NONE;
 
-    error = otPlatRadioGetCCAEnergyDetectThreshold(mInstance, &threshold);
+    error = otPlatRadioGetCcaEnergyDetectThreshold(mInstance, &threshold);
 
     if (error == OT_ERROR_NONE)
     {
@@ -2099,7 +2099,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CCA_THRESHOLD>(vo
     otError error     = OT_ERROR_NONE;
 
     SuccessOrExit(error = mDecoder.ReadInt8(threshold));
-    error = otPlatRadioSetCCAEnergyDetectThreshold(mInstance, threshold);
+    error = otPlatRadioSetCcaEnergyDetectThreshold(mInstance, threshold);
 
 exit:
     return error;

@@ -327,14 +327,14 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-otError otPlatRadioGetCCAEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
+otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aThreshold);
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-otError otPlatRadioSetCCAEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
+otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aThreshold);
