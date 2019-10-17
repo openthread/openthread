@@ -187,15 +187,14 @@ otError EstClient::ProcessConnect(int argc, char *argv[])
 
     if (mOpCertificateLength == 0)
     {
-        otEstClientSetCertificate(
-                          mInterpreter.mInstance, (const uint8_t *)OT_CLI_EST_CLIENT_X509_CERT,
-                          sizeof(OT_CLI_EST_CLIENT_X509_CERT), (const uint8_t *)OT_CLI_EST_CLIENT_PRIV_KEY,
-                          sizeof(OT_CLI_EST_CLIENT_PRIV_KEY));
+        otEstClientSetCertificate(mInterpreter.mInstance, (const uint8_t *)OT_CLI_EST_CLIENT_X509_CERT,
+                                  sizeof(OT_CLI_EST_CLIENT_X509_CERT), (const uint8_t *)OT_CLI_EST_CLIENT_PRIV_KEY,
+                                  sizeof(OT_CLI_EST_CLIENT_PRIV_KEY));
     }
     else
     {
-        otEstClientSetCertificate(mInterpreter.mInstance, mOpCertificate, mOpCertificateLength,
-                                  mPrivateKey, mPrivateKeyLength);
+        otEstClientSetCertificate(mInterpreter.mInstance, mOpCertificate, mOpCertificateLength, mPrivateKey,
+                                  mPrivateKeyLength);
     }
 
     SuccessOrExit(error = otEstClientConnect(mInterpreter.mInstance, &serverAddress, &EstClient::HandleConnected,

@@ -107,9 +107,9 @@ void Client::Stop(void)
 }
 
 void Client::SetCertificate(const uint8_t *aX509Cert,
-                               uint32_t       aX509Length,
-                               const uint8_t *aPrivateKey,
-                               uint32_t       aPrivateKeyLength)
+                            uint32_t       aX509Length,
+                            const uint8_t *aPrivateKey,
+                            uint32_t       aPrivateKeyLength)
 {
     mCoapSecure.SetCertificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);
 }
