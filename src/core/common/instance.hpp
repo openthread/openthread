@@ -54,6 +54,7 @@
 #include "coap/coap.hpp"
 #include "common/code_utils.hpp"
 #include "crypto/mbedtls.hpp"
+#include "est/est_client.hpp"
 #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 #include "utils/heap.hpp"
 #endif

@@ -181,21 +181,21 @@ otError EstClient::ProcessConnect(int argc, char *argv[])
         serverAddress.mPort = OT_EST_COAPS_DEFAULT_EST_SERVER_PORT;
     }
 
-    SuccessOrExit(error = otEstClientSetCaCertificateChain(mInterpreter.mInstance,
-                                                           (const uint8_t *)OT_CLI_EST_CLIENT_TRUSTED_ROOT_CERTIFICATE,
-                                                           sizeof(OT_CLI_EST_CLIENT_TRUSTED_ROOT_CERTIFICATE)));
+    otEstClientSetCaCertificateChain(mInterpreter.mInstance,
+                                     (const uint8_t *)OT_CLI_EST_CLIENT_TRUSTED_ROOT_CERTIFICATE,
+                                     sizeof(OT_CLI_EST_CLIENT_TRUSTED_ROOT_CERTIFICATE));
 
     if (mOpCertificateLength == 0)
     {
-        SuccessOrExit(error = otEstClientSetCertificate(
+        otEstClientSetCertificate(
                           mInterpreter.mInstance, (const uint8_t *)OT_CLI_EST_CLIENT_X509_CERT,
                           sizeof(OT_CLI_EST_CLIENT_X509_CERT), (const uint8_t *)OT_CLI_EST_CLIENT_PRIV_KEY,
-                          sizeof(OT_CLI_EST_CLIENT_PRIV_KEY)));
+                          sizeof(OT_CLI_EST_CLIENT_PRIV_KEY));
     }
     else
     {
-        SuccessOrExit(error = otEstClientSetCertificate(mInterpreter.mInstance, mOpCertificate, mOpCertificateLength,
-                                                        mPrivateKey, mPrivateKeyLength));
+        otEstClientSetCertificate(mInterpreter.mInstance, mOpCertificate, mOpCertificateLength,
+                                  mPrivateKey, mPrivateKeyLength);
     }
 
     SuccessOrExit(error = otEstClientConnect(mInterpreter.mInstance, &serverAddress, &EstClient::HandleConnected,

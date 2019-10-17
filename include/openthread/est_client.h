@@ -183,17 +183,12 @@ void otEstClientStop(otInstance *aInstance);
  * @param[in]  aPrivateKey        A pointer to the PEM formatted private key.
  * @param[in]  aPrivateKeyLength  The length of the private key.
  *
- * @retval OT_ERROR_NONE              Successfully set the x509 certificate
- *                                    with his private key.
- * @retval OT_ERROR_DISABLED_FEATURE  Mbedtls config not enabled
- *                                    MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED.
- *
  */
-otError otEstClientSetCertificate(otInstance *   aInstance,
-                                  const uint8_t *aX509Cert,
-                                  uint32_t       aX509Length,
-                                  const uint8_t *aPrivateKey,
-                                  uint32_t       aPrivateKeyLength);
+void otEstClientSetCertificate(otInstance *   aInstance,
+                               const uint8_t *aX509Cert,
+                               uint32_t       aX509Length,
+                               const uint8_t *aPrivateKey,
+                               uint32_t       aPrivateKeyLength);
 
 /**
  * This method sets the trusted top level CAs. It is needed for validating the
@@ -203,12 +198,10 @@ otError otEstClientSetCertificate(otInstance *   aInstance,
  * @param[in]  aX509CaCertificateChain  A pointer to the PEM formatted X509 CA chain.
  * @param[in]  aX509CaCertChainLength   The length of chain.
  *
- * @retval OT_ERROR_NONE  Successfully set the trusted top level CAs.
- *
  */
-otError otEstClientSetCaCertificateChain(otInstance *   aInstance,
-                                         const uint8_t *aX509CaCertificateChain,
-                                         uint32_t       aX509CaCertChainLength);
+void otEstClientSetCaCertificateChain(otInstance *   aInstance,
+                                      const uint8_t *aX509CaCertificateChain,
+                                      uint32_t       aX509CaCertChainLength);
 
 /**
  * This method initializes CoAP Secure session with a EST over CoAP Secure server.

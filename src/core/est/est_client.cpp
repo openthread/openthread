@@ -106,18 +106,17 @@ void Client::Stop(void)
     mStarted = false;
 }
 
-otError Client::SetCertificate(const uint8_t *aX509Cert,
+void Client::SetCertificate(const uint8_t *aX509Cert,
                                uint32_t       aX509Length,
                                const uint8_t *aPrivateKey,
                                uint32_t       aPrivateKeyLength)
 {
-    return mCoapSecure.SetCertificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);
-    ;
+    mCoapSecure.SetCertificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);
 }
 
-otError Client::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength)
+void Client::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength)
 {
-    return mCoapSecure.SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLength);
+    mCoapSecure.SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLength);
 }
 
 otError Client::Connect(const Ip6::SockAddr &     aSockAddr,

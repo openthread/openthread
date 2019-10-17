@@ -57,24 +57,24 @@ void otEstClientStop(otInstance *aInstance)
     instance.Get<Est::Client>().Stop();
 }
 
-otError otEstClientSetCertificate(otInstance *   aInstance,
-                                  const uint8_t *aX509Cert,
-                                  uint32_t       aX509Length,
-                                  const uint8_t *aPrivateKey,
-                                  uint32_t       aPrivateKeyLength)
+void otEstClientSetCertificate(otInstance *   aInstance,
+                               const uint8_t *aX509Cert,
+                               uint32_t       aX509Length,
+                               const uint8_t *aPrivateKey,
+                               uint32_t       aPrivateKeyLength)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Est::Client>().SetCertificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);
+    instance.Get<Est::Client>().SetCertificate(aX509Cert, aX509Length, aPrivateKey, aPrivateKeyLength);
 }
 
-otError otEstClientSetCaCertificateChain(otInstance *   aInstance,
-                                         const uint8_t *aX509CaCertificateChain,
-                                         uint32_t       aX509CaCertChainLength)
+void otEstClientSetCaCertificateChain(otInstance *   aInstance,
+                                      const uint8_t *aX509CaCertificateChain,
+                                      uint32_t       aX509CaCertChainLength)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Est::Client>().SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLength);
+    instance.Get<Est::Client>().SetCaCertificateChain(aX509CaCertificateChain, aX509CaCertChainLength);
 }
 
 otError otEstClientConnect(otInstance *              aInstance,
