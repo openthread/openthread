@@ -1710,21 +1710,18 @@ int main(int argc, char *argv[])
 
     syslog(LOG_NOTICE, "spi-hdlc-adapter " SPI_HDLC_VERSION " (" __TIME__ " " __DATE__ ")\n");
 
-    argc -= optind;
-    argv += optind;
-
-    if (argc == 0)
+    if (optind == argc)
     {
         fprintf(stderr, "%s: Missing SPI device path\n", prog);
         exit(EXIT_FAILURE);
     }
-    else if (argc == 1)
+    else if (optind + 1 == argc)
     {
-        if (!setup_spi_dev(argv[0]))
+        if (!setup_spi_dev(argv[optind]))
         {
             char spi_path[64];
 
-            strncpy(spi_path, argv[0], sizeof(spi_path) - 1);
+            strncpy(spi_path, argv[optind], sizeof(spi_path) - 1);
             spi_path[sizeof(spi_path) - 1] = 0;
             syslog(LOG_ERR, "%s: Unable to open SPI device \"%s\", %s", prog, spi_path, strerror(errno));
             exit(EXIT_FAILURE);
@@ -1732,7 +1729,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        fprintf(stderr, "%s: Unexpected argument \"%s\"\n", prog, argv[1]);
+        fprintf(stderr, "%s: Unexpected argument \"%s\"\n", prog, argv[optind + 1]);
         exit(EXIT_FAILURE);
     }
 
