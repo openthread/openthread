@@ -60,27 +60,27 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT
+ * @def OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT
  *
- * The maximum number of retries allowed after a transmission failure for direct transmissions.
+ * The default maximum number of retries allowed after a transmission failure for direct transmissions.
  *
  * Equivalent to macMaxFrameRetries, default value is 3.
  *
  */
-#ifndef OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT
-#define OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT 3
+#ifndef OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT
+#define OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT 3
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT
+ * @def OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT
  *
- * The maximum number of retries allowed after a transmission failure for indirect transmissions.
+ * The default maximum number of retries allowed after a transmission failure for indirect transmissions.
  *
  * Equivalent to macMaxFrameRetries, default value is 0.
  *
  */
-#ifndef OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT
-#define OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT 0
+#ifndef OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT
+#define OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT 0
 #endif
 
 /**
@@ -94,7 +94,7 @@
  * Takes the place of macTransactionPersistenceTime. The time period is specified in units of IEEE 802.15.4 Data
  * Request receptions, rather than being governed by macBeaconOrder.
  *
- * @sa OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT
+ * @sa OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT
  *
  */
 #ifndef OPENTHREAD_CONFIG_MAC_MAX_TX_ATTEMPTS_INDIRECT_POLLS

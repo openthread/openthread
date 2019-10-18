@@ -101,9 +101,9 @@ Mac::Mac(Instance &aInstance)
     , mScanChannel(Radio::kChannelMin)
     , mScanDuration(0)
     , mScanChannelMask()
-    , mMaxFrameRetriesDirect(kMaxFrameRetriesDirect)
+    , mMaxFrameRetriesDirect(kDefaultMaxFrameRetriesDirect)
 #if OPENTHREAD_FTD
-    , mMaxFrameRetriesIndirect(kMaxFrameRetriesIndirect)
+    , mMaxFrameRetriesIndirect(kDefaultMaxFrameRetriesIndirect)
 #endif
     , mActiveScanHandler(NULL) /* Initialize `mActiveScanHandler` and `mEnergyScanHandler` union */
     , mSubMac(aInstance)

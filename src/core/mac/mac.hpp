@@ -81,10 +81,10 @@ enum
     kMaxCsmaBackoffsIndirect =
         OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT, ///< macMaxCsmaBackoffs for indirect transmissions
 
-    kMaxFrameRetriesDirect =
-        OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT, ///< macMaxFrameRetries for direct transmissions
-    kMaxFrameRetriesIndirect =
-        OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT, ///< macMaxFrameRetries for indirect transmissions
+    kDefaultMaxFrameRetriesDirect =
+        OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT, ///< macDefaultMaxFrameRetries for direct transmissions
+    kDefaultMaxFrameRetriesIndirect =
+        OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT, ///< macDefaultMaxFrameRetries for indirect transmissions
 
     kTxNumBcast = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST ///< Number of times each broadcast frame is transmitted
 };
