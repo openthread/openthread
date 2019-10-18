@@ -134,7 +134,7 @@ otError UdpExample::ProcessOpen(int argc, char *argv[])
 
 otError UdpExample::ProcessSend(int argc, char *argv[])
 {
-    otError       error;
+    otError       error = OT_ERROR_NONE;
     otMessageInfo messageInfo;
     otMessage *   message       = NULL;
     int           curArg        = 0;
@@ -185,43 +185,38 @@ otError UdpExample::ProcessSend(int argc, char *argv[])
     switch (payloadType)
     {
     case kTypeText:
-        error = otMessageAppend(message, argv[curArg], static_cast<uint16_t>(strlen(argv[curArg])));
+        SuccessOrExit(error = otMessageAppend(message, argv[curArg], static_cast<uint16_t>(strlen(argv[curArg]))));
         break;
     case kTypeAutoSize:
-        error = WriteCharToBuffer(message, payloadLength);
+        SuccessOrExit(error = WriteCharToBuffer(message, payloadLength));
         break;
     case kTypeHexString:
     {
         uint8_t     buf[50];
-        int         bufLen           = 0;
-        const char *hexIndex         = argv[curArg];
-        int         remaingHexLen    = strlen(argv[curArg]);
-        uint16_t    conversionHexLen = 0;
+        int16_t     bufLen;
+        uint16_t    conversionLength = 0;
+        const char *hexString        = argv[curArg];
 
-        while (remaingHexLen > 0)
+        while (payloadLength > 0)
         {
-            bufLen = Interpreter::Hex2Bin(hexIndex, buf, sizeof(buf), true);
+            bufLen = static_cast<int16_t>(Interpreter::Hex2Bin(hexString, buf, sizeof(buf), true));
 
             VerifyOrExit(bufLen > 0, error = OT_ERROR_INVALID_ARGS);
 
-            conversionHexLen = bufLen * 2;
+            conversionLength = static_cast<uint16_t>(bufLen * 2);
 
-            if ((remaingHexLen & 0x0001) != 0)
+            if ((payloadLength & 0x01) != 0)
             {
-                conversionHexLen -= 1;
+                conversionLength -= 1;
             }
 
-            hexIndex += conversionHexLen;
-            remaingHexLen -= conversionHexLen;
+            hexString += conversionLength;
+            payloadLength -= conversionLength;
             SuccessOrExit(error = otMessageAppend(message, buf, static_cast<uint16_t>(bufLen)));
         }
-    }
-    break;
-    default:
         break;
     }
-
-    SuccessOrExit(error);
+    }
 
     error = otUdpSend(&mSocket, message, &messageInfo);
 
