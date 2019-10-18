@@ -84,7 +84,8 @@ enum
     kDefaultMaxFrameRetriesDirect =
         OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT, ///< macDefaultMaxFrameRetries for direct transmissions
     kDefaultMaxFrameRetriesIndirect =
-        OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT, ///< macDefaultMaxFrameRetries for indirect transmissions
+        OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT, ///< macDefaultMaxFrameRetries for indirect
+                                                                  ///< transmissions
 
     kTxNumBcast = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST ///< Number of times each broadcast frame is transmitted
 };
@@ -456,7 +457,10 @@ public:
      * @param[in]  aMaxFrameRetriesIndirect  The maximum number of retries induring indirect transmission.
      *
      */
-    void SetMaxFrameRetriesIndirect(uint8_t aMaxFrameRetriesIndirect) { mMaxFrameRetriesIndirect = aMaxFrameRetriesIndirect; }
+    void SetMaxFrameRetriesIndirect(uint8_t aMaxFrameRetriesIndirect)
+    {
+        mMaxFrameRetriesIndirect = aMaxFrameRetriesIndirect;
+    }
 #endif
 
     /**
@@ -749,7 +753,7 @@ private:
     ChannelMask   mScanChannelMask;
     uint8_t       mMaxFrameRetriesDirect;
 #if OPENTHREAD_FTD
-    uint8_t       mMaxFrameRetriesIndirect;
+    uint8_t mMaxFrameRetriesIndirect;
 #endif
     union
     {
