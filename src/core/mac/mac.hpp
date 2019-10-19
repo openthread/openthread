@@ -454,7 +454,7 @@ public:
     /**
      * This method sets the maximum number of frame retries during indirect transmission.
      *
-     * @param[in]  aMaxFrameRetriesIndirect  The maximum number of retries induring indirect transmission.
+     * @param[in]  aMaxFrameRetriesIndirect  The maximum number of retries during indirect transmission.
      *
      */
     void SetMaxFrameRetriesIndirect(uint8_t aMaxFrameRetriesIndirect)
