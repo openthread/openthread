@@ -121,24 +121,6 @@ public:
     void Deinit(void);
 
     /**
-     *
-     * This method returns the socket file descriptor associated with the interface.
-     *
-     * @returns The associated socket file descriptor, or -1 if interface is not initializes.
-     *
-     */
-    int GetSocket(void) const { return mSockFd; }
-
-    /**
-     * This method instructs `HdlcInterface` to read and decode data from radio over the socket.
-     *
-     * If a full HDLC frame is decoded while reading data, this method invokes the `HandleReceivedFrame()` (on the
-     * `aCallback` object from constructor) to pass the received frame to be processed.
-     *
-     */
-    void Read(void);
-
-    /**
      * This method gets the `RxFrameBuffer`.
      *
      * The receive frame buffer is an `Hdlc::MultiFrameBuffer` and therefore it is capable of storing multiple
@@ -170,6 +152,35 @@ public:
      */
     otError SendFrame(const uint8_t *aFrame, uint16_t aLength);
 
+    /**
+     * This method waits for receiving any spinel response frame within specified interval.
+     *
+     * @retval OT_ERROR_NONE             Spinel response frame is received.
+     * @retval OT_ERROR_RESPONSE_TIMEOUT No spinel response frame is received within @p aTimeout.
+     *
+     */
+    otError WaitResponse(struct timeval &aTimeout);
+
+    /**
+     * This method updates the file descriptor sets with file descriptors used by the radio driver.
+     *
+     * @param[inout]  aReadFdSet   A reference to the read file descriptors.
+     * @param[inout]  aWriteFdSet  A reference to the write file descriptors.
+     * @param[inout]  aMaxFd       A reference to the max file descriptor.
+     * @param[inout]  aTimeout     A reference to the timeout.
+     *
+     */
+    void UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout);
+
+    /**
+     * This method performs radio driver processing.
+     *
+     * @param[in]   aReadFdSet      A reference to the read file descriptors.
+     * @param[in]   aWriteFdSet     A reference to the write file descriptors.
+     *
+     */
+    void Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet);
+
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     /**
      * This method process read data (decode the data).
@@ -185,6 +196,15 @@ public:
 #endif
 
 private:
+    /**
+     * This method instructs `HdlcInterface` to read and decode data from radio over the socket.
+     *
+     * If a full HDLC frame is decoded while reading data, this method invokes the `HandleReceivedFrame()` (on the
+     * `aCallback` object from constructor) to pass the received frame to be processed.
+     *
+     */
+    void Read(void);
+
     /**
      * This method waits for the socket file descriptor associated with the HDLC interface to become writable within
      * `kMaxWaitTime` interval.
