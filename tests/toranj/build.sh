@@ -42,6 +42,7 @@ display_usage() {
     echo ""
     echo "Options:"
     echo "        -c/--enable-coverage  Enable code coverage"
+    echo "        -t/--enable-tests     Enable tests"
     echo ""
 }
 
@@ -51,12 +52,17 @@ die() {
 }
 
 coverage=no
+tests=no
 
 while [ $# -ge 2 ]
 do
     case $1 in
         -c|--enable-coverage)
             coverage=yes
+            shift
+            ;;
+        -t|--enable-tests)
+            tests=yes
             shift
             ;;
         *)
@@ -76,7 +82,7 @@ build_config=$1
 
 configure_options="                \
     --disable-docs                 \
-    --disable-tests                \
+    --enable-tests=$tests          \
     --enable-coverage=$coverage    \
     --enable-ftd                   \
     --enable-ncp                   \
@@ -109,7 +115,7 @@ case ${build_config} in
             --enable-radio-only                 \
             --with-examples=posix               \
             --disable-docs                      \
-            --disable-tests || die
+            --enable-tests=$tests || die
         make -j 8 || die
         ;;
 
