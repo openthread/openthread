@@ -369,7 +369,8 @@ exit:
 
 otError ActiveDataset::GenerateLocal(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError error   = OT_ERROR_NONE;
+    bool    changed = false;
     Dataset dataset(mLocal.GetType());
 
     VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), error = OT_ERROR_INVALID_STATE);
@@ -384,6 +385,7 @@ otError ActiveDataset::GenerateLocal(void)
         activeTimestampTlv.SetSeconds(0);
         activeTimestampTlv.SetTicks(0);
         dataset.Set(activeTimestampTlv);
+        changed = true;
     }
 
     // Channel
@@ -393,6 +395,7 @@ otError ActiveDataset::GenerateLocal(void)
         tlv.Init();
         tlv.SetChannel(Get<Mac::Mac>().GetPanChannel());
         dataset.Set(tlv);
+        changed = true;
     }
 
     // channelMask
@@ -402,6 +405,7 @@ otError ActiveDataset::GenerateLocal(void)
         tlv.Init();
         tlv.SetChannelMask(Get<Mac::Mac>().GetSupportedChannelMask().GetMask());
         dataset.Set(tlv);
+        changed = true;
     }
 
     // Extended PAN ID
@@ -411,6 +415,7 @@ otError ActiveDataset::GenerateLocal(void)
         tlv.Init();
         tlv.SetExtendedPanId(Get<Mac::Mac>().GetExtendedPanId());
         dataset.Set(tlv);
+        changed = true;
     }
 
     // Mesh-Local Prefix
@@ -420,6 +425,7 @@ otError ActiveDataset::GenerateLocal(void)
         tlv.Init();
         tlv.SetMeshLocalPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
         dataset.Set(tlv);
+        changed = true;
     }
 
     // Master Key
@@ -429,6 +435,7 @@ otError ActiveDataset::GenerateLocal(void)
         tlv.Init();
         tlv.SetNetworkMasterKey(Get<KeyManager>().GetMasterKey());
         dataset.Set(tlv);
+        changed = true;
     }
 
     // Network Name
@@ -438,6 +445,7 @@ otError ActiveDataset::GenerateLocal(void)
         tlv.Init();
         tlv.SetNetworkName(Get<Mac::Mac>().GetNetworkName().GetAsData());
         dataset.Set(tlv);
+        changed = true;
     }
 
     // Pan ID
@@ -447,6 +455,7 @@ otError ActiveDataset::GenerateLocal(void)
         tlv.Init();
         tlv.SetPanId(Get<Mac::Mac>().GetPanId());
         dataset.Set(tlv);
+        changed = true;
     }
 
     // PSKc
@@ -471,6 +480,7 @@ otError ActiveDataset::GenerateLocal(void)
         }
 
         dataset.Set(tlv);
+        changed = true;
     }
 
     // Security Policy
@@ -481,7 +491,10 @@ otError ActiveDataset::GenerateLocal(void)
         tlv.SetRotationTime(static_cast<uint16_t>(Get<KeyManager>().GetKeyRotation()));
         tlv.SetFlags(Get<KeyManager>().GetSecurityPolicyFlags());
         dataset.Set(tlv);
+        changed = true;
     }
+
+    VerifyOrExit(changed);
 
     SuccessOrExit(error = mLocal.Save(dataset));
     Restore();
