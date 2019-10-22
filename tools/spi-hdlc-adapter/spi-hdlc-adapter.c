@@ -1133,6 +1133,8 @@ static bool setup_spi_dev(const char *path)
     const uint8_t spi_word_bits = 8;
     int           ret;
 
+    syslog(LOG_DEBUG, "SPI device path: %s", path);
+
     fd = open(path, O_RDWR | O_CLOEXEC);
     if (fd < 0)
     {
@@ -1188,6 +1190,8 @@ static bool setup_res_gpio(const char *path)
     char *dir_path   = NULL;
     char *value_path = NULL;
     int   len;
+
+    syslog(LOG_DEBUG, "Reset gpio path: %s", path);
 
     len = asprintf(&dir_path, "%s/direction", path);
 
@@ -1274,6 +1278,8 @@ static bool setup_int_gpio(const char *path)
     int     setup_fd = -1;
 
     sIntGpioValueFd = -1;
+
+    syslog(LOG_DEBUG, "Interrupt gpio path: %s", path);
 
     len = asprintf(&dir_path, "%s/direction", path);
 
