@@ -1286,7 +1286,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
         break;
 
     case kOperationTransmitPoll:
-        assert(aFrame.GetAckRequest());
+        assert((aError != OT_ERROR_NONE) || aFrame.GetAckRequest());
 
         if ((aError == OT_ERROR_NONE) && (aAckFrame != NULL))
         {
