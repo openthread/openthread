@@ -147,12 +147,12 @@ otError CoapBase::SendMessage(Message &               aMessage,
     if ((aMessage.GetType() == OT_COAP_TYPE_ACKNOWLEDGMENT || aMessage.GetType() == OT_COAP_TYPE_RESET) &&
         aMessage.GetCode() != OT_COAP_CODE_EMPTY)
     {
+        assert(aMessage.IsMessageIdValid());
         mResponsesQueue.EnqueueResponse(aMessage, aMessageInfo);
     }
-
-    // Set Message Id if it was not already set.
-    if (!aMessage.IsMessageIdValid())
+    else
     {
+        assert(!aMessage.IsMessageIdValid());
         aMessage.SetMessageId(mMessageId++);
     }
 
