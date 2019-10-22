@@ -234,7 +234,6 @@ otError CoapBase::SendHeaderResponse(Message::Code aCode, const Message &aReques
 
     case OT_COAP_TYPE_NON_CONFIRMABLE:
         message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, aCode);
-        message->SetMessageId(mMessageId++);
         break;
 
     default:
