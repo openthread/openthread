@@ -141,10 +141,6 @@ static int sMode = MODE_PTY;
 static int sMode = MODE_STDIO;
 #endif
 
-static const char *sSpiDevPath     = NULL;
-static const char *sIntGpioDevPath = NULL;
-static const char *sResGpioDevPath = NULL;
-
 static int sLogLevel = LOG_WARNING;
 
 static int sSpiDevFd       = -1;
@@ -1136,7 +1132,8 @@ static bool setup_spi_dev(const char *path)
     int           fd            = -1;
     const uint8_t spi_word_bits = 8;
     int           ret;
-    sSpiDevPath = path;
+
+    syslog(LOG_DEBUG, "SPI device path: %s", path);
 
     fd = open(path, O_RDWR | O_CLOEXEC);
     if (fd < 0)
@@ -1194,7 +1191,7 @@ static bool setup_res_gpio(const char *path)
     char *value_path = NULL;
     int   len;
 
-    sResGpioDevPath = path;
+    syslog(LOG_DEBUG, "Reset gpio path: %s", path);
 
     len = asprintf(&dir_path, "%s/direction", path);
 
@@ -1282,7 +1279,7 @@ static bool setup_int_gpio(const char *path)
 
     sIntGpioValueFd = -1;
 
-    sIntGpioDevPath = path;
+    syslog(LOG_DEBUG, "Interrupt gpio path: %s", path);
 
     len = asprintf(&dir_path, "%s/direction", path);
 
@@ -1719,33 +1716,26 @@ int main(int argc, char *argv[])
 
     syslog(LOG_NOTICE, "spi-hdlc-adapter " SPI_HDLC_VERSION " (" __TIME__ " " __DATE__ ")\n");
 
-    argc -= optind;
-    argv += optind;
-
-    if (argc >= 1)
+    if (optind == argc)
     {
-        if (!setup_spi_dev(argv[0]))
+        fprintf(stderr, "%s: Missing SPI device path\n", prog);
+        exit(EXIT_FAILURE);
+    }
+    else if (optind + 1 == argc)
+    {
+        if (!setup_spi_dev(argv[optind]))
         {
             char spi_path[64];
 
-            strncpy(spi_path, argv[0], sizeof(spi_path) - 1);
+            strncpy(spi_path, argv[optind], sizeof(spi_path) - 1);
             spi_path[sizeof(spi_path) - 1] = 0;
             syslog(LOG_ERR, "%s: Unable to open SPI device \"%s\", %s", prog, spi_path, strerror(errno));
             exit(EXIT_FAILURE);
         }
-        argc--;
-        argv++;
     }
-
-    if (argc >= 1)
+    else
     {
-        fprintf(stderr, "%s: Unexpected argument \"%s\"\n", prog, argv[0]);
-        exit(EXIT_FAILURE);
-    }
-
-    if (sSpiDevPath == NULL)
-    {
-        fprintf(stderr, "%s: Missing SPI device path\n", prog);
+        fprintf(stderr, "%s: Unexpected argument \"%s\"\n", prog, argv[optind + 1]);
         exit(EXIT_FAILURE);
     }
 
