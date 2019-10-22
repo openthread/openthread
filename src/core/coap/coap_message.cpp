@@ -363,20 +363,6 @@ exit:
     return error;
 }
 
-uint16_t Message::GetMessageId(void) const
-{
-    const HelpData &helpData = GetHelpData();
-
-    return HostSwap16(helpData.mHeader.mMessageId);
-}
-
-void Message::SetMessageId(uint16_t aMessageId)
-{
-    HelpData &helpData = GetHelpData();
-
-    helpData.mHeader.mMessageId = HostSwap16(aMessageId);
-}
-
 otError Message::SetToken(const uint8_t *aToken, uint8_t aTokenLength)
 {
     GetHelpData().mHeader.mVersionTypeToken = (GetHelpData().mHeader.mVersionTypeToken & ~kTokenLengthMask) |
