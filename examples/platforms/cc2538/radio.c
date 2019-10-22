@@ -262,6 +262,21 @@ void setTxPower(int8_t aTxPower)
     }
 }
 
+static bool cc2538SrcMatchEnabled(void)
+{
+    return (HWREG(RFCORE_XREG_FRMCTRL1) & RFCORE_XREG_FRMCTRL1_PENDING_OR) == 0;
+}
+
+static bool cc2538GetSrcMatchFoundIntFlag(void)
+{
+    bool flag = (HWREG(RFCORE_SFR_RFIRQF0) & RFCORE_SFR_RFIRQF0_SRC_MATCH_FOUND) != 0;
+    if (flag)
+    {
+        HWREG(RFCORE_SFR_RFIRQF0) &= ~RFCORE_SFR_RFIRQF0_SRC_MATCH_FOUND;
+    }
+    return flag;
+}
+
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -704,6 +719,14 @@ static void readFrame(void)
     {
         sReceiveFrame.mLength            = length;
         sReceiveFrame.mInfo.mRxInfo.mLqi = crcCorr & CC2538_LQI_BIT_MASK;
+
+        if (length > IEEE802154_ACK_LENGTH)
+        {
+            // Set ACK FP flag for the received frame according to whether SRC_MATCH_FOUND was triggered just before
+            // if SRC MATCH is not enabled, SRC_MATCH_FOUND is not triggered and all ACK FP is always set
+            sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending =
+                cc2538SrcMatchEnabled() ? cc2538GetSrcMatchFoundIntFlag() : true;
+        }
     }
     else
     {
@@ -753,9 +776,6 @@ void cc2538RadioProcess(otInstance *aInstance)
     if ((sState == OT_RADIO_STATE_RECEIVE && sReceiveFrame.mLength > 0) ||
         (sState == OT_RADIO_STATE_TRANSMIT && sReceiveFrame.mLength > IEEE802154_ACK_LENGTH))
     {
-        // TODO Set this flag only when the packet is really acknowledged with frame pending set.
-        // See https://github.com/openthread/openthread/pull/3785
-        sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 
         if (otPlatDiagModeGet())
