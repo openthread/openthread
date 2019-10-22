@@ -144,17 +144,17 @@ otError CoapBase::SendMessage(Message &               aMessage,
     Message *    storedCopy = NULL;
     uint16_t     copyLength = 0;
 
-    if ((aMessage.GetType() == OT_COAP_TYPE_ACKNOWLEDGMENT || aMessage.GetType() == OT_COAP_TYPE_RESET) &&
-        aMessage.GetCode() != OT_COAP_CODE_EMPTY)
+    switch (aMessage.GetType())
     {
+    case OT_COAP_TYPE_ACKNOWLEDGMENT:
         mResponsesQueue.EnqueueResponse(aMessage, aMessageInfo);
-    }
-
-    // Set Message Id if it was not already set.
-    if (aMessage.GetMessageId() == 0 &&
-        (aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE || aMessage.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE))
-    {
+        break;
+    case OT_COAP_TYPE_RESET:
+        assert(aMessage.GetCode() == OT_COAP_CODE_EMPTY);
+        break;
+    default:
         aMessage.SetMessageId(mMessageId++);
+        break;
     }
 
     aMessage.Finish();
@@ -231,7 +231,6 @@ otError CoapBase::SendHeaderResponse(Message::Code aCode, const Message &aReques
 
     case OT_COAP_TYPE_NON_CONFIRMABLE:
         message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, aCode);
-        message->SetMessageId(mMessageId++);
         break;
 
     default:
