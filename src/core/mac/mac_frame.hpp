@@ -852,6 +852,15 @@ public:
     typedef String<kInfoStringSize> InfoString;
 
     /**
+     * This method indicates whether the frame is empty (no payload).
+     *
+     * @retval TRUE  The frame is empty (no PSDU payload).
+     * @retval FALSE The frame is not empty.
+     *
+     */
+    bool IsEmpty(void) const { return (mLength == 0); }
+
+    /**
      * This method initializes the MAC header.
      *
      * @param[in]  aFcf          The Frame Control field.

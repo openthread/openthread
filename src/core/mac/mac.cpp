@@ -1114,6 +1114,13 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
+        // If the sendFrame could not be prepared and the tx is being
+        // aborted, we set the frame length to zero to mark it as empty.
+        // The empty frame helps differentiate between an aborted tx due
+        // to OpenThread itself not being able to prepare the frame, versus
+        // the radio platform aborting the tx operation.
+
+        sendFrame.SetLength(0);
         HandleTransmitDone(sendFrame, NULL, OT_ERROR_ABORT);
     }
 }
@@ -1148,6 +1155,8 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
     bool      ackRequested = aFrame.GetAckRequest();
     Address   dstAddr;
     Neighbor *neighbor;
+
+    VerifyOrExit(!aFrame.IsEmpty());
 
     aFrame.GetDstAddr(dstAddr);
     neighbor = Get<Mle::MleRouter>().GetNeighbor(dstAddr);
@@ -1251,23 +1260,26 @@ exit:
 
 void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError)
 {
-    Address dstAddr;
-
-    // Determine whether to re-transmit a broadcast frame.
-
-    aFrame.GetDstAddr(dstAddr);
-
-    if (dstAddr.IsBroadcast())
+    if (!aFrame.IsEmpty())
     {
-        mBroadcastTransmitCount++;
+        Address dstAddr;
 
-        if (mBroadcastTransmitCount < kTxNumBcast)
+        // Determine whether to re-transmit a broadcast frame.
+
+        aFrame.GetDstAddr(dstAddr);
+
+        if (dstAddr.IsBroadcast())
         {
-            mSubMac.Send();
-            ExitNow();
-        }
+            mBroadcastTransmitCount++;
 
-        mBroadcastTransmitCount = 0;
+            if (mBroadcastTransmitCount < kTxNumBcast)
+            {
+                mSubMac.Send();
+                ExitNow();
+            }
+
+            mBroadcastTransmitCount = 0;
+        }
     }
 
     // Determine next action based on current operation.
@@ -1286,7 +1298,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
         break;
 
     case kOperationTransmitPoll:
-        assert(aFrame.GetAckRequest());
+        assert(aFrame.IsEmpty() || aFrame.GetAckRequest());
 
         if ((aError == OT_ERROR_NONE) && (aAckFrame != NULL))
         {

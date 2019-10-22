@@ -250,7 +250,7 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError
             ExitNow();
         }
 
-        if (aChild.GetIndirectTxAttempts() < kMaxPollTriggeredTxAttempts)
+        if ((aChild.GetIndirectTxAttempts() < kMaxPollTriggeredTxAttempts) && !aFrame.IsEmpty())
         {
             // We save the frame counter, key id, and data sequence number of
             // current frame so we use the same values for the retransmission
