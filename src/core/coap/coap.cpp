@@ -144,16 +144,20 @@ otError CoapBase::SendMessage(Message &               aMessage,
     Message *    storedCopy = NULL;
     uint16_t     copyLength = 0;
 
-    if ((aMessage.GetType() == OT_COAP_TYPE_ACKNOWLEDGMENT || aMessage.GetType() == OT_COAP_TYPE_RESET) &&
-        aMessage.GetCode() != OT_COAP_CODE_EMPTY)
+    switch (aMessage.GetType())
     {
+    case OT_COAP_TYPE_ACKNOWLEDGMENT:
         assert(aMessage.IsMessageIdValid());
         mResponsesQueue.EnqueueResponse(aMessage, aMessageInfo);
-    }
-    else
-    {
+        break;
+    case OT_COAP_TYPE_RESET:
+        assert(aMessage.IsMessageIdValid());
+        assert(aMessage.GetCode() == OT_COAP_CODE_EMPTY);
+        break;
+    default:
         assert(!aMessage.IsMessageIdValid());
         aMessage.SetMessageId(mMessageId++);
+        break;
     }
 
     aMessage.Finish();
