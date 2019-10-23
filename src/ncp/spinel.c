@@ -86,7 +86,7 @@
 #define ENOMEM 1
 #endif
 
-// IAR's errno.h apparently doesn't define ERANGE.
+// When errno.h is not included
 #ifndef ERANGE
 // There is no real good choice for what to set
 // errno to in this case, so we just pick the
