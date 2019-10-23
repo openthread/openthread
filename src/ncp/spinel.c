@@ -45,7 +45,9 @@
 
 #include "spinel.h"
 
+#if !SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR
 #include <errno.h>
+#endif
 #include <limits.h>
 
 #ifndef SPINEL_PLATFORM_HEADER
@@ -82,6 +84,14 @@
 // errno to in this case, so we just pick the
 // value '1' somewhat arbitrarily.
 #define ENOMEM 1
+#endif
+
+// IAR's errno.h apparently doesn't define ERANGE.
+#ifndef ERANGE
+// There is no real good choice for what to set
+// errno to in this case, so we just pick the
+// value '1' somewhat arbitrarily.
+#define ERANGE 1
 #endif
 
 #if defined(errno) && SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR
