@@ -38,6 +38,16 @@ if(OT_SIMULATION_VIRTUAL_TIME_UART)
     list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART=1")
 endif()
 
+if (OT_OTNS)
+    if (NOT OT_SIMULATION_VIRTUAL_TIME)
+        message(FATAL_ERROR "OTNS requires virtual time simulations")
+    endif()
+
+    if (OT_SIMULATION_VIRTUAL_TIME_UART)
+        message(FATAL_ERROR "OTNS does not support virtual time UART")
+    endif()
+endif()
+
 if(NOT OT_CONFIG)
     set(OT_CONFIG "openthread-core-simulation-config.h")
     set(OT_CONFIG ${OT_CONFIG} PARENT_SCOPE)
@@ -66,6 +76,7 @@ add_library(openthread-simulation
     system.c
     uart.c
     virtual_time/alarm-sim.c
+    virtual_time/otns.c
     virtual_time/platform-sim.c
     $<TARGET_OBJECTS:openthread-platform-utils>
 )

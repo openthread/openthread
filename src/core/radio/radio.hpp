@@ -237,10 +237,7 @@ public:
      * @param[in] aExtAddress  The IEEE 802.15.4 Extended Address stored in little-endian byte order.
      *
      */
-    void SetExtendedAddress(const Mac::ExtAddress &aExtAddress)
-    {
-        otPlatRadioSetExtendedAddress(GetInstance(), &aExtAddress);
-    }
+    void SetExtendedAddress(const Mac::ExtAddress &aExtAddress);
 
     /**
      * This method sets the Short Address for address filtering.
@@ -248,7 +245,7 @@ public:
      * @param[in] aShortAddress  The IEEE 802.15.4 Short Address.
      *
      */
-    void SetShortAddress(Mac::ShortAddress aShortAddress) { otPlatRadioSetShortAddress(GetInstance(), aShortAddress); }
+    void SetShortAddress(Mac::ShortAddress aShortAddress);
 
     /**
      * This method gets the radio's transmit power in dBm.

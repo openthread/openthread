@@ -65,6 +65,7 @@
 
 #include "common/new.hpp"
 #include "net/ip6.hpp"
+#include "utils/otns.hpp"
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 #include <openthread/backbone_router.h>
@@ -2164,13 +2165,14 @@ void Interpreter::HandleIcmpReceive(otMessage *          aMessage,
                                     const otMessageInfo *aMessageInfo,
                                     const otIcmp6Header *aIcmpHeader)
 {
-    uint32_t timestamp;
+    uint32_t timestamp = 0;
+    uint16_t datasize;
 
     VerifyOrExit(aIcmpHeader->mType == OT_ICMP6_TYPE_ECHO_REPLY);
     VerifyOrExit((mPingIdentifier != 0) && (mPingIdentifier == HostSwap16(aIcmpHeader->mData.m16[0])));
 
-    mServer->OutputFormat("%u bytes from ", otMessageGetLength(aMessage) - otMessageGetOffset(aMessage) +
-                                                static_cast<uint16_t>(sizeof(otIcmp6Header)));
+    datasize = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
+    mServer->OutputFormat("%u bytes from ", datasize + static_cast<uint16_t>(sizeof(otIcmp6Header)));
 
     OutputIp6Address(aMessageInfo->mPeerAddr);
 
@@ -2182,6 +2184,9 @@ void Interpreter::HandleIcmpReceive(otMessage *          aMessage,
     }
 
     mServer->OutputFormat("\r\n");
+
+    SignalPingReply(static_cast<const Ip6::MessageInfo *>(aMessageInfo)->GetPeerAddr(), datasize, HostSwap32(timestamp),
+                    aMessageInfo->mHopLimit);
 
 exit:
     return;
@@ -2283,6 +2288,9 @@ void Interpreter::SendPing(void)
     SuccessOrExit(otMessageAppend(message, &timestamp, sizeof(timestamp)));
     SuccessOrExit(otMessageSetLength(message, mPingLength));
     SuccessOrExit(otIcmp6SendEchoRequest(mInstance, message, &messageInfo, mPingIdentifier));
+
+    SignalPingRequest(static_cast<Ip6::MessageInfo *>(&messageInfo)->GetPeerAddr(), mPingLength, HostSwap32(timestamp),
+                      messageInfo.mHopLimit);
 
     message = NULL;
 
@@ -4173,6 +4181,36 @@ Interpreter &Interpreter::GetOwner(OwnerLocator &aOwnerLocator)
     Interpreter &interpreter = Server::sServer->GetInterpreter();
 #endif
     return interpreter;
+}
+
+void Interpreter::SignalPingRequest(const Ip6::Address &aPeerAddress,
+                                    uint16_t            aPingLength,
+                                    uint32_t            aTimestamp,
+                                    uint8_t             aHopLimit)
+{
+    OT_UNUSED_VARIABLE(aPeerAddress);
+    OT_UNUSED_VARIABLE(aPingLength);
+    OT_UNUSED_VARIABLE(aTimestamp);
+    OT_UNUSED_VARIABLE(aHopLimit);
+
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+    mInstance->Get<Utils::OtnsStub>().EmitPingRequest(aPeerAddress, aPingLength, aTimestamp, aHopLimit);
+#endif
+}
+
+void Interpreter::SignalPingReply(const Ip6::Address &aPeerAddress,
+                                  uint16_t            aPingLength,
+                                  uint32_t            aTimestamp,
+                                  uint8_t             aHopLimit)
+{
+    OT_UNUSED_VARIABLE(aPeerAddress);
+    OT_UNUSED_VARIABLE(aPingLength);
+    OT_UNUSED_VARIABLE(aTimestamp);
+    OT_UNUSED_VARIABLE(aHopLimit);
+
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+    mInstance->Get<Utils::OtnsStub>().EmitPingReply(aPeerAddress, aPingLength, aTimestamp, aHopLimit);
+#endif
 }
 
 extern "C" void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength)

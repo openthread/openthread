@@ -207,6 +207,7 @@ SOURCES_COMMON                             = \
     net/netif.cpp                            \
     net/sntp_client.cpp                      \
     net/udp6.cpp                             \
+    radio/radio.cpp                          \
     radio/radio_callbacks.cpp                \
     radio/radio_platform.cpp                 \
     thread/address_resolver.cpp              \
@@ -241,6 +242,7 @@ SOURCES_COMMON                             = \
     utils/flash.cpp                          \
     utils/heap.cpp                           \
     utils/jam_detector.cpp                   \
+    utils/otns.cpp                           \
     utils/parse_cmdline.cpp                  \
     utils/slaac_address.cpp                  \
     $(NULL)
@@ -269,6 +271,7 @@ libopenthread_radio_a_SOURCES              = \
     mac/mac_types.cpp                        \
     mac/sub_mac.cpp                          \
     mac/sub_mac_callbacks.cpp                \
+    radio/radio.cpp                          \
     radio/radio_callbacks.cpp                \
     radio/radio_platform.cpp                 \
     thread/link_quality.cpp                  \
@@ -445,6 +448,7 @@ HEADERS_COMMON                             = \
     utils/flash.hpp                          \
     utils/heap.hpp                           \
     utils/jam_detector.hpp                   \
+    utils/otns.hpp                           \
     utils/parse_cmdline.hpp                  \
     utils/slaac_address.hpp                  \
     utils/static_assert.hpp                  \
