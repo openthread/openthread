@@ -897,8 +897,11 @@ void MeshForwarder::HandleSentFrame(Mac::TxFrame &aFrame, otError aError)
 
     VerifyOrExit(mEnabled);
 
-    aFrame.GetDstAddr(macDest);
-    neighbor = UpdateNeighborOnSentFrame(aFrame, aError, macDest);
+    if (!aFrame.IsEmpty())
+    {
+        aFrame.GetDstAddr(macDest);
+        neighbor = UpdateNeighborOnSentFrame(aFrame, aError, macDest);
+    }
 
     VerifyOrExit(mSendMessage != NULL);
     assert(mSendMessage->GetDirectTransmission());
