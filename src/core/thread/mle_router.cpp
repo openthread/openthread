@@ -557,17 +557,15 @@ exit:
     return error;
 }
 
-otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor)
 {
     otError          error    = OT_ERROR_NONE;
     Neighbor *       neighbor = NULL;
-    Mac::ExtAddress  macAddr;
     ChallengeTlv     challenge;
     VersionTlv       version;
     LeaderDataTlv    leaderData;
     SourceAddressTlv sourceAddress;
     TlvRequestTlv    tlvRequest;
-    uint16_t         rloc16;
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     TimeRequestTlv timeRequest;
 #endif
@@ -577,8 +575,6 @@ otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Message
     VerifyOrExit(mRole == OT_DEVICE_ROLE_ROUTER || mRole == OT_DEVICE_ROLE_LEADER, error = OT_ERROR_INVALID_STATE);
 
     VerifyOrExit(mAttachState == kAttachStateIdle, error = OT_ERROR_INVALID_STATE);
-
-    aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
 
     // Challenge
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kChallenge, sizeof(challenge), challenge));
@@ -598,20 +594,24 @@ otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Message
     // Source Address
     if (Tlv::GetTlv(aMessage, Tlv::kSourceAddress, sizeof(sourceAddress), sourceAddress) == OT_ERROR_NONE)
     {
+        uint16_t rloc16;
+
         VerifyOrExit(sourceAddress.IsValid(), error = OT_ERROR_PARSE);
 
         rloc16 = sourceAddress.GetRloc16();
 
-        if ((neighbor = GetNeighbor(macAddr)) != NULL && neighbor->GetRloc16() != rloc16)
+        if (aNeighbor && aNeighbor->IsStateValid() && aNeighbor->GetRloc16() != rloc16)
         {
             // remove stale neighbors
-            RemoveNeighbor(*neighbor);
-            neighbor = NULL;
+            RemoveNeighbor(*aNeighbor);
         }
 
         if (IsActiveRouter(rloc16))
         {
-            // source is a router
+            Mac::ExtAddress macAddr;
+
+            aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
+
             neighbor = mRouterTable.GetRouter(GetRouterId(rloc16));
             VerifyOrExit(neighbor != NULL, error = OT_ERROR_PARSE);
             VerifyOrExit(!neighbor->IsStateLinkRequest(), error = OT_ERROR_ALREADY);
@@ -632,18 +632,13 @@ otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Message
                 VerifyOrExit(neighbor->GetExtAddress() == macAddr);
             }
         }
-        else
-        {
-            // source is not a router
-            neighbor = NULL;
-        }
     }
     else
     {
         // lack of source address indicates router coming out of reset
-        VerifyOrExit((neighbor = GetNeighbor(macAddr)) != NULL && neighbor->IsStateValid() &&
-                         IsActiveRouter(neighbor->GetRloc16()),
+        VerifyOrExit(aNeighbor && aNeighbor->IsStateValid() && IsActiveRouter(aNeighbor->GetRloc16()),
                      error = OT_ERROR_DROP);
+        neighbor = aNeighbor;
     }
 
     // TLV Request
