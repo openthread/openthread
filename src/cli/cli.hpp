@@ -150,8 +150,8 @@ public:
      * @param[in]   aHex            A pointer to the hex string.
      * @param[out]  aBin            A pointer to where the binary representation is placed.
      * @param[in]   aBinLength      Maximum length of the binary representation.
-     * @param[in]   aAllowTruncate  Whether or not allow @aBin less than the required buffer
-     *                              to convert @p aHex string.
+     * @param[in]   aAllowTruncate  TRUE if @p aBinLength may be less than what is required
+     *                              to convert @p aHex to binary representation, FALSE otherwise.
      *
      *
      * @returns The number of bytes in the binary representation.
