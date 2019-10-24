@@ -57,7 +57,6 @@ EFR32_BOARD_DIR                             = $(shell echo $(BOARD) | tr A-Z a-z
 EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.6
 
 COMMONCPPFLAGS                                                                                = \
-    -D__START=main                                                                              \
     -D__STARTUP_CLEAR_BSS                                                                       \
     -I$(srcdir)                                                                                 \
     -I$(top_srcdir)/include                                                                     \
