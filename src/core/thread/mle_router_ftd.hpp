@@ -674,7 +674,7 @@ private:
     otError RefreshStoredChildren(void);
     void    HandleDetachStart(void);
     otError HandleChildStart(AttachMode aMode);
-    otError HandleLinkRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError HandleLinkRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
     otError HandleLinkAccept(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence);
     otError HandleLinkAccept(const Message &         aMessage,
                              const Ip6::MessageInfo &aMessageInfo,

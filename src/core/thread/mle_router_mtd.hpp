@@ -129,7 +129,7 @@ public:
 private:
     void    HandleDetachStart(void) {}
     otError HandleChildStart(AttachMode) { return OT_ERROR_NONE; }
-    otError HandleLinkRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
+    otError HandleLinkRequest(const Message &, const Ip6::MessageInfo &, Neighbor *) { return OT_ERROR_DROP; }
     otError HandleLinkAccept(const Message &, const Ip6::MessageInfo &, uint32_t) { return OT_ERROR_DROP; }
     otError HandleLinkAccept(const Message &, const Ip6::MessageInfo &, uint32_t, bool) { return OT_ERROR_DROP; }
     otError HandleLinkAcceptAndRequest(const Message &, const Ip6::MessageInfo &, uint32_t) { return OT_ERROR_DROP; }
