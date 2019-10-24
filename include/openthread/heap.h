@@ -72,25 +72,12 @@ typedef void *(*otHeapCAllocFn)(size_t aCount, size_t aSize);
  */
 typedef void (*otHeapFreeFn)(void *aPointer);
 
-/**
- * This method allocates at least @p aCount * @aSize bytes memory and initialize to zero.
- *
- * @param[in]   aCount  Number of allocate units.
- * @param[in]   aSize   Unit size in bytes.
- *
- * @returns A pointer to the allocated memory.
- *
- * @retval  NULL    Indicates not enough memory.
- *
- */
+// This is a temporary API and would be removed after moving heap to platform.
+// TODO: Remove after moving heap to platform.
 void *otHeapCAlloc(size_t aCount, size_t aSize);
 
-/**
- * This method free memory pointed by @p aPointer.
- *
- * @param[in]   aPointer    A pointer to the memory to free.
- *
- */
+// This is a temporary API and would be removed after moving heap to platform.
+// TODO: Remove after moving heap to platform.
 void otHeapFree(void *aPointer);
 
 /**
