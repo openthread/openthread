@@ -43,8 +43,6 @@ EFR32_BOARD_DIR                               = $(shell echo $(BOARD) | tr A-Z a
 EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.6
 
 libopenthread_efr32mg21_a_CPPFLAGS                                            = \
-    -D__START=main                                                              \
-    -D__STARTUP_CLEAR_BSS                                                       \
     -DPLATFORM_HEADER=\"@top_builddir@/third_party/silabs/gecko_sdk_suite/v2.6/platform/base/hal/micro/cortexm3/compiler/gcc.h\" \
     -Wno-sign-compare                                                           \
     -DCORTEXM3                                                                  \

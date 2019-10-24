@@ -112,6 +112,7 @@ COMMONCFLAGS                       := \
     -Os                               \
     -g                                \
     -I$(HAL_CONF_DIR)                 \
+    -D__START=main                    \
     -D$(MCU)                          \
     $(EFR32MG12_CONFIG_FILE_CPPFLAGS) \
     $(NULL)
