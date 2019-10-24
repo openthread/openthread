@@ -45,7 +45,6 @@
 #include "common/random.hpp"
 #include "common/settings.hpp"
 #include "crypto/aes_ccm.hpp"
-#include "mac/mac_frame.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "net/netif.hpp"

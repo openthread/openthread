@@ -42,7 +42,7 @@
 #include "common/message.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "net/udp6.hpp"
 #include "thread/key_manager.hpp"

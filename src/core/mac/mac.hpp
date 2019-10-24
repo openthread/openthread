@@ -45,6 +45,7 @@
 #include "mac/channel_mask.hpp"
 #include "mac/mac_filter.hpp"
 #include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "mac/sub_mac.hpp"
 #include "thread/key_manager.hpp"
 #include "thread/link_quality.hpp"

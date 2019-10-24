@@ -39,7 +39,7 @@
 #include <stdint.h>
 
 #include "common/string.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 
 namespace ot {
 namespace Ip6 {

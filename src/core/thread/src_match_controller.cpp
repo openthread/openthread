@@ -38,7 +38,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "radio/radio.hpp"
 #include "thread/mesh_forwarder.hpp"
 #include "thread/thread_netif.hpp"

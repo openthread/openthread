@@ -44,7 +44,7 @@
 #include "common/logging.hpp"
 #include "common/message.hpp"
 #include "common/timer.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "meshcop/meshcop.hpp"
 #include "thread/lowpan.hpp"
 #include "thread/mle_router.hpp"
