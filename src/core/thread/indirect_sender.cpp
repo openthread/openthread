@@ -165,7 +165,7 @@ exit:
 
 void IndirectSender::HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMode)
 {
-    if (!aChild.IsRxOnWhenIdle() && (aChild.GetState() == Neighbor::kStateValid))
+    if (!aChild.IsRxOnWhenIdle() && (aChild.IsStateValid()))
     {
         SetChildUseShortAddress(aChild, true);
     }

@@ -92,7 +92,39 @@ public:
     void SetState(State aState) { mState = static_cast<uint8_t>(aState); }
 
     /**
-     * This method indicates whether the neighbor/child is being restored.
+     * This method indicates whether the neighbor is in the Invalid state.
+     *
+     * @returns TRUE if the neighbor is in the Invalid state, FALSE otherwise.
+     *
+     */
+    bool IsStateInvalid(void) const { return (mState == kStateInvalid); }
+
+    /**
+     * This method indicates whether the neighbor is in the Child ID Request state.
+     *
+     * @returns TRUE if the neighbor is in the Child ID Request state, FALSE otherwise.
+     *
+     */
+    bool IsStateChildIdRequest(void) const { return (mState == kStateChildIdRequest); }
+
+    /**
+     * This method indicates whether the neighbor is in the Link Request state.
+     *
+     * @returns TRUE if the neighbor is in the Link Request state, FALSE otherwise.
+     *
+     */
+    bool IsStateLinkRequest(void) const { return (mState == kStateLinkRequest); }
+
+    /**
+     * This method indicates whether the neighbor is in the Parent Response state.
+     *
+     * @returns TRUE if the neighbor is in the Parent Response state, FALSE otherwise.
+     *
+     */
+    bool IsStateParentResponse(void) const { return (mState == kStateParentResponse); }
+
+    /**
+     * This method indicates whether the neighbor is being restored.
      *
      * @returns TRUE if the neighbor is being restored, FALSE otherwise.
      *
@@ -100,9 +132,25 @@ public:
     bool IsStateRestoring(void) const { return (mState == kStateRestored) || (mState == kStateChildUpdateRequest); }
 
     /**
-     * This method indicates whether the neighbor/child is in valid state or if it is being restored.
+     * This method indicates whether the neighbor is in the Restored state.
      *
-     * When in these states messages can be sent to and/or received from the neighbor/child.
+     * @returns TRUE if the neighbor is in the Restored state, FALSE otherwise.
+     *
+     */
+    bool IsStateRestored(void) const { return (mState == kStateRestored); }
+
+    /**
+     * This method indicates whether the neighbor is valid (frame counters are synchronized).
+     *
+     * @returns TRUE if the neighbor is valid, FALSE otherwise.
+     *
+     */
+    bool IsStateValid(void) const { return (mState == kStateValid); }
+
+    /**
+     * This method indicates whether the neighbor is in valid state or if it is being restored.
+     *
+     * When in these states messages can be sent to and/or received from the neighbor.
      *
      * @returns TRUE if the neighbor is in valid, restored, or being restored states, FALSE otherwise.
      *

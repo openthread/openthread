@@ -205,7 +205,7 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, otError aError)
         Get<MeshForwarder>().UpdateNeighborOnSentFrame(aFrame, aError, macDest);
     }
 
-    if (Get<Mle::MleRouter>().GetParentCandidate()->GetState() == Neighbor::kStateInvalid)
+    if (Get<Mle::MleRouter>().GetParentCandidate()->IsStateInvalid())
     {
         StopPolling();
         Get<Mle::MleRouter>().BecomeDetached();

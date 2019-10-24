@@ -1454,7 +1454,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
         // the tag/MIC. Such a frame is later filtered in `RxDoneTask` which only allows MAC
         // Data Request frames from a child being restored.
 
-        if (aNeighbor->GetState() == Neighbor::kStateValid)
+        if (aNeighbor->IsStateValid())
         {
             if (keySequence < aNeighbor->GetKeySequence())
             {
@@ -1510,7 +1510,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
     VerifyOrExit(memcmp(tag, aFrame.GetFooter(), tagLength) == 0, error = OT_ERROR_SECURITY);
 #endif
 
-    if ((keyIdMode == Frame::kKeyIdMode1) && (aNeighbor->GetState() == Neighbor::kStateValid))
+    if ((keyIdMode == Frame::kKeyIdMode1) && (aNeighbor->IsStateValid()))
     {
         if (aNeighbor->GetKeySequence() != keySequence)
         {
