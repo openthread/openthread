@@ -261,16 +261,20 @@ Interpreter::Interpreter(Instance *aInstance)
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 }
 
-int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength)
+int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength, bool aAllowTruncate)
 {
     size_t      hexLength = strlen(aHex);
     const char *hexEnd    = aHex + hexLength;
     uint8_t *   cur       = aBin;
     uint8_t     numChars  = hexLength & 1;
     uint8_t     byte      = 0;
+    int         len       = 0;
     int         rval;
 
-    VerifyOrExit((hexLength + 1) / 2 <= aBinLength, rval = -1);
+    if (!aAllowTruncate)
+    {
+        VerifyOrExit((hexLength + 1) / 2 <= aBinLength, rval = -1);
+    }
 
     while (aHex < hexEnd)
     {
@@ -299,6 +303,12 @@ int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength)
             numChars = 0;
             *cur++   = byte;
             byte     = 0;
+            len++;
+
+            if (len == aBinLength)
+            {
+                ExitNow(rval = len);
+            }
         }
         else
         {
@@ -306,7 +316,7 @@ int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength)
         }
     }
 
-    rval = static_cast<int>(cur - aBin);
+    rval = len;
 
 exit:
     return rval;

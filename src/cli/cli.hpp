@@ -147,13 +147,16 @@ public:
     /**
      * This method converts a hex string to binary.
      *
-     * @param[in]   aHex        A pointer to the hex string.
-     * @param[out]  aBin        A pointer to where the binary representation is placed.
-     * @param[in]   aBinLength  Maximum length of the binary representation.
+     * @param[in]   aHex            A pointer to the hex string.
+     * @param[out]  aBin            A pointer to where the binary representation is placed.
+     * @param[in]   aBinLength      Maximum length of the binary representation.
+     * @param[in]   aAllowTruncate  TRUE if @p aBinLength may be less than what is required
+     *                              to convert @p aHex to binary representation, FALSE otherwise.
+     *
      *
      * @returns The number of bytes in the binary representation.
      */
-    static int Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength);
+    static int Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength, bool aAllowTruncate = false);
 
     /**
      * Write error code the CLI console

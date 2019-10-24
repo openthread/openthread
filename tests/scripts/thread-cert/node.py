@@ -1062,7 +1062,7 @@ class Node:
         self._expect('Done')
 
     def udp_send(self, bytes, ipaddr, port, success=True):
-        cmd = 'udp send -s %d %s %d' % (bytes, ipaddr, port)
+        cmd = 'udp send %s %d -s %d ' % (ipaddr, port, bytes)
         self.send_command(cmd)
         if success:
             self._expect('Done')
