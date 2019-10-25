@@ -119,7 +119,7 @@ Get preferred channel mask.
 
 ```bash
 > channel preferred
-134215680
+0x7fff800
 Done
 ```
 
@@ -129,7 +129,7 @@ Get supported channel mask.
 
 ```bash
 > channel supported
-134215680
+0x7fff800
 Done
 ```
 
