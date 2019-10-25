@@ -66,6 +66,13 @@ SUBDIRS                                += \
     $(NULL)
 endif
 
+if OPENTHREAD_EXAMPLES_NRF52833
+SUBDIRS                                += \
+    jlink                                 \
+    NordicSemiconductor                   \
+    $(NULL)
+endif
+
 if OPENTHREAD_EXAMPLES_NRF52811
 SUBDIRS                                += \
     jlink                                 \

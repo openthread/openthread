@@ -52,6 +52,7 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/clock                                            \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/common                                           \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio                                            \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/fem/simple_gpio                            \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/hal                                        \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/mac_features                               \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/mac_features/ack_generator                 \

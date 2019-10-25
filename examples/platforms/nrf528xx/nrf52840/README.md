@@ -531,7 +531,7 @@ The following toolchains have been used for testing and verification:
 
 # Nordic Semiconductor's nRF5 SDK for Thread and Zigbee
 
-Use [nRF5 Software Development Kit (SDK) for Thread and Zigbee][nRF5-SDK-Thread-Zigbee] when developing Thread products with Nordic Semiconductor's advanced nRF52840 or nRF52811 SoCs.
+Use [nRF5 Software Development Kit (SDK) for Thread and Zigbee][nRF5-SDK-Thread-Zigbee] when developing Thread products with Nordic Semiconductor's advanced nRF52840, nRF52833 or nRF52811 SoCs.
 
 The <i>nRF5 SDK for Thread and Zigbee</i> includes:
  - a pre-built OpenThread stack for the Nordic nRF52840 and nRF52811 SoCs,

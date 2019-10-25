@@ -191,7 +191,7 @@
  *
  */
 #ifndef RTC_INSTANCE
-#define RTC_INSTANCE NRF_RTC0
+#define RTC_INSTANCE NRF_RTC2
 #endif
 
 /**
@@ -201,7 +201,7 @@
  *
  */
 #ifndef RTC_IRQ_HANDLER
-#define RTC_IRQ_HANDLER RTC0_IRQHandler
+#define RTC_IRQ_HANDLER RTC2_IRQHandler
 #endif
 
 /**
@@ -211,7 +211,7 @@
  *
  */
 #ifndef RTC_IRQN
-#define RTC_IRQN RTC0_IRQn
+#define RTC_IRQN RTC2_IRQn
 #endif
 
 /**
@@ -323,6 +323,60 @@
  */
 #ifndef SPIS_PIN_HOST_IRQ
 #define SPIS_PIN_HOST_IRQ 30
+#endif
+
+/*******************************************************************************
+ * @section USB driver configuration.
+ ******************************************************************************/
+
+/**
+ * @def USB_HOST_UART_CONFIG_DELAY_MS
+ *
+ * Delay after DTR gets asserted that we start send any queued data. This allows slow
+ * Linux-based hosts to have enough time to configure their port for raw mode.
+ *
+ */
+#ifndef USB_HOST_UART_CONFIG_DELAY_MS
+#define USB_HOST_UART_CONFIG_DELAY_MS 10
+#endif
+
+/**
+ * @def USB_CDC_AS_SERIAL_TRANSPORT
+ *
+ * Use USB CDC driver for serial communication.
+ */
+#ifndef USB_CDC_AS_SERIAL_TRANSPORT
+#define USB_CDC_AS_SERIAL_TRANSPORT 0
+#endif
+
+/**
+ * @def The USB interface to use for CDC ACM COMM.
+ *
+ * According to the USB Specification, interface numbers cannot have gaps. Tailor this value to adhere to this
+ * limitation. Takes values between 0-255.
+ */
+#ifndef USB_CDC_ACM_COMM_INTERFACE
+#define USB_CDC_ACM_COMM_INTERFACE 1
+#endif
+
+/**
+ * @def The USB interface to use for CDC ACM DATA.
+ *
+ * According to the USB Specification, interface numbers cannot have gaps. Tailor this value to adhere to this
+ * limitation. Takes values between 0-255.
+ */
+#ifndef USB_CDC_ACM_DATA_INTERFACE
+#define USB_CDC_ACM_DATA_INTERFACE 2
+#endif
+
+/**
+ * @def OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+ *
+ * Reset the application, not the chip, when a software reset is requested.
+ * via `otPlatReset()`.
+ */
+#ifndef OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+#define OPENTHREAD_PLATFORM_USE_PSEUDO_RESET USB_CDC_AS_SERIAL_TRANSPORT
 #endif
 
 /*******************************************************************************
