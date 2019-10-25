@@ -36,7 +36,7 @@
 #ifndef NRF_802154_WIFI_COEX_H_
 #define NRF_802154_WIFI_COEX_H_
 
-#include "nrf_802154_rsch.h"
+#include "rsch/nrf_802154_rsch.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -75,7 +75,7 @@ void nrf_802154_wifi_coex_uninit(void);
  * @param[in]  priority  The requested priority level.
  *
  */
-void nrf_802154_wifi_coex_prio_req(rsch_prio_t priority);
+void nrf_802154_wifi_coex_prio_request(rsch_prio_t priority);
 
 /**
  * @brief Gets the priority denial event address.

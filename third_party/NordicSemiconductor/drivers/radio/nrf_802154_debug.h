@@ -141,6 +141,49 @@ extern "C" {
 
 #endif
 
+#define PPI_DBG_RADIO_EVT_END           0
+#define PPI_DBG_RADIO_EVT_DISABLED      1
+#define PPI_DBG_RADIO_EVT_READY         2
+#define PPI_DBG_RADIO_EVT_FRAMESTART    3
+#define PPI_DBG_RADIO_EVT_EDEND         4
+
+#define GPIOTE_DBG_RADIO_EVT_END        0
+#define GPIOTE_DBG_RADIO_EVT_DISABLED   1
+#define GPIOTE_DBG_RADIO_EVT_READY      2
+#define GPIOTE_DBG_RADIO_EVT_FRAMESTART 3
+#define GPIOTE_DBG_RADIO_EVT_EDEND      4
+
+#if ENABLE_DEBUG_GPIO
+
+#define NRF_802154_DEBUG_PINS_USED_MASK            ((1 << PIN_DBG_RADIO_EVT_END) |        \
+                                                    (1 << PIN_DBG_RADIO_EVT_DISABLED) |   \
+                                                    (1 << PIN_DBG_RADIO_EVT_READY) |      \
+                                                    (1 << PIN_DBG_RADIO_EVT_FRAMESTART) | \
+                                                    (1 << PIN_DBG_RADIO_EVT_EDEND) |      \
+                                                    (1 << PIN_DBG_RADIO_EVT_PHYEND))
+
+#define NRF_802154_DEBUG_PPI_CHANNELS_USED_MASK    ((1 << PPI_DBG_RADIO_EVT_END) |        \
+                                                    (1 << PPI_DBG_RADIO_EVT_DISABLED) |   \
+                                                    (1 << PPI_DBG_RADIO_EVT_READY) |      \
+                                                    (1 << PPI_DBG_RADIO_EVT_FRAMESTART) | \
+                                                    (1 << PPI_DBG_RADIO_EVT_EDEND) |      \
+                                                    (1 << PPI_DBG_RADIO_EVT_PHYEND))
+
+#define NRF_802154_DEBUG_GPIOTE_CHANNELS_USED_MASK ((1 << GPIOTE_DBG_RADIO_EVT_END) |        \
+                                                    (1 << GPIOTE_DBG_RADIO_EVT_DISABLED) |   \
+                                                    (1 << GPIOTE_DBG_RADIO_EVT_READY) |      \
+                                                    (1 << GPIOTE_DBG_RADIO_EVT_FRAMESTART) | \
+                                                    (1 << GPIOTE_DBG_RADIO_EVT_EDEND) |      \
+                                                    (1 << GPIOTE_DBG_RADIO_EVT_PHYEND))
+
+#else // ENABLE_DEBUG_GPIO
+
+#define NRF_802154_DEBUG_PINS_USED_MASK            0
+#define NRF_802154_DEBUG_PPI_CHANNELS_USED_MASK    0
+#define NRF_802154_DEBUG_GPIOTE_CHANNELS_USED_MASK 0
+
+#endif // ENABLE_DEBUG_GPIO
+
 #ifdef __cplusplus
 }
 #endif

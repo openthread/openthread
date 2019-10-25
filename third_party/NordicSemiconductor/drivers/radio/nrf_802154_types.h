@@ -139,6 +139,23 @@ typedef uint8_t nrf_802154_ack_data_t;
 #define NRF_802154_ACK_DATA_IE          0x01
 
 /**
+ * @brief Methods of source address matching.
+ *
+ * You can use one of the following methods that can be set during the initialization phase
+ * by calling @ref nrf_802154_src_matching_method:
+ *   - For Thread: @ref NRF_802154_SRC_ADDR_MATCH_THREAD -- The pending bit is set only for the addresses found in the list.
+ *   - For Zigbee: @ref NRF_802154_SRC_ADDR_MATCH_ZIGBEE -- The pending bit is cleared only for the short addresses found in the list.\n
+ *     This method does not set pending bit in non-command and non-data-request frames.
+ *   - For standard-compliant implementation: @ref NRF_802154_SRC_ADDR_MATCH_ALWAYS_1 -- The pending bit is always set to 1.\n
+ *     This requires an empty data frame with AR set to 0 to be transmitted immediately afterwards.
+ */
+typedef uint8_t nrf_802154_src_addr_match_t;
+
+#define NRF_802154_SRC_ADDR_MATCH_THREAD   0x00 // !< Implementation for the Thread protocol.
+#define NRF_802154_SRC_ADDR_MATCH_ZIGBEE   0x01 // !< Implementation for the Zigbee protocol.
+#define NRF_802154_SRC_ADDR_MATCH_ALWAYS_1 0x02 // !< Standard compliant implementation.
+
+/**
  * @brief RSSI measurement results.
  */
 

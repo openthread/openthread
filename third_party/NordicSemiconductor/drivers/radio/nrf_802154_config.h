@@ -125,71 +125,6 @@ extern "C" {
 #endif
 
 /**
- * @def NRF_802154_TIMER_INSTANCE
- *
- * The timer instance used both by the driver for ACK IFS and by the FEM module.
- *
- */
-#ifndef NRF_802154_TIMER_INSTANCE
-#define NRF_802154_TIMER_INSTANCE NRF_TIMER1
-#endif
-
-/**
- * @def NRF_802154_COUNTER_TIMER_INSTANCE
- *
- * The timer instance used by the driver for detecting when PSDU is being received.
- *
- * @note This configuration is used only when the NRF_RADIO_EVENT_BCMATCH event handling is disabled
- *       (see @ref NRF_802154_DISABLE_BCC_MATCHING).
- */
-#ifndef NRF_802154_COUNTER_TIMER_INSTANCE
-#define NRF_802154_COUNTER_TIMER_INSTANCE NRF_TIMER2
-#endif
-
-/**
- * @def NRF_802154_SWI_EGU_INSTANCE
- *
- * The SWI EGU instance used by the driver to synchronize PPIs and for requests and notifications if
- * SWI is in use.
- *
- * @note This option is used by the core module regardless of the driver configuration.
- *
- */
-#ifndef NRF_802154_SWI_EGU_INSTANCE
-
-#ifdef NRF52811_XXAA
-#define NRF_802154_SWI_EGU_INSTANCE NRF_EGU0
-#else
-#define NRF_802154_SWI_EGU_INSTANCE NRF_EGU3
-#endif
-
-#endif
-
-/**
- * @def NRF_802154_SWI_IRQ_HANDLER
- *
- * The SWI EGU IRQ handler used by the driver for requests and notifications if SWI is in use.
- *
- * @note This option is used when the driver uses SWI to process requests and notifications.
- *
- */
-#ifndef NRF_802154_SWI_IRQ_HANDLER
-#define NRF_802154_SWI_IRQ_HANDLER SWI3_EGU3_IRQHandler
-#endif
-
-/**
- * @def NRF_802154_SWI_IRQN
- *
- * The SWI EGU IRQ number used by the driver for requests and notifications if SWI is in use.
- *
- * @note This option is used when the driver uses SWI to process requests and notifications.
- *
- */
-#ifndef NRF_802154_SWI_IRQN
-#define NRF_802154_SWI_IRQN SWI3_EGU3_IRQn
-#endif
-
-/**
  * @def NRF_802154_SWI_PRIORITY
  *
  * The priority of software interrupt used for requests and notifications.
@@ -270,7 +205,7 @@ extern "C" {
  * @def NRF_802154_FRAME_TIMESTAMP_ENABLED
  *
  * If timestamps are to be added to the frames received.
- * Enabling this feature enables the functions @ref nrf_802154_received_timsestamp_raw,
+ * Enabling this feature enables the functions @ref nrf_802154_received_timestamp_raw,
  * @ref nrf_802154_received_timestamp, @ref nrf_802154_transmitted_timestamp_raw, and
  * @ref nrf_802154_transmitted_timestamp, which add timestamps to the frames received.
  *
@@ -338,63 +273,6 @@ extern "C" {
  */
 #ifndef NRF_802154_RTC_IRQ_PRIORITY
 #define NRF_802154_RTC_IRQ_PRIORITY 6
-#endif
-
-/**
- * @def NRF_802154_RTC_INSTANCE
- *
- * The RTC instance used in the standalone timer driver implementation.
- *
- * @note This configuration is only applicable for the Low Power Timer Abstraction Layer
- *       implementation in nrf_802154_lp_timer_nodrv.c.
- *
- */
-#ifndef NRF_802154_RTC_INSTANCE
-
-#ifdef NRF52811_XXAA
-#define NRF_802154_RTC_INSTANCE NRF_RTC0
-#else
-#define NRF_802154_RTC_INSTANCE NRF_RTC2
-#endif
-
-#endif
-
-/**
- * @def NRF_802154_RTC_IRQ_HANDLER
- *
- * The RTC interrupt handler name used in the standalone timer driver implementation.
- *
- * @note This configuration is only applicable for Low Power Timer Abstraction Layer implementation
- *       in nrf_802154_lp_timer_nodrv.c.
- *
- */
-#ifndef NRF_802154_RTC_IRQ_HANDLER
-
-#ifdef NRF52811_XXAA
-#define NRF_802154_RTC_IRQ_HANDLER RTC0_IRQHandler
-#else
-#define NRF_802154_RTC_IRQ_HANDLER RTC2_IRQHandler
-#endif
-
-#endif
-
-/**
- * @def NRF_802154_RTC_IRQN
- *
- * The RTC Interrupt number used in the standalone timer driver implementation.
- *
- * @note This configuration is only applicable for the Low Power Timer Abstraction Layer implementation
- *       in nrf_802154_lp_timer_nodrv.c.
- *
- */
-#ifndef NRF_802154_RTC_IRQN
-
-#ifdef NRF52811_XXAA
-#define NRF_802154_RTC_IRQN RTC0_IRQn
-#else
-#define NRF_802154_RTC_IRQN RTC2_IRQn
-#endif
-
 #endif
 
 /**

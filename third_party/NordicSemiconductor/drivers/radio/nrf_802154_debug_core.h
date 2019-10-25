@@ -57,8 +57,24 @@ extern "C" {
 
 #define PIN_DBG_RTC0_EVT_REM            31
 
+#if ENABLE_DEBUG_GPIO
+
+#define NRF_802154_DEBUG_CORE_PINS_USED ((1 << PIN_DBG_TIMESLOT_ACTIVE) |       \
+                                         (1 << PIN_DBG_TIMESLOT_EXTEND_REQ) |   \
+                                         (1 << PIN_DBG_TIMESLOT_SESSION_IDLE) | \
+                                         (1 << PIN_DBG_TIMESLOT_RADIO_IRQ) |    \
+                                         (1 << PIN_DBG_TIMESLOT_FAILED) |       \
+                                         (1 << PIN_DBG_TIMESLOT_BLOCKED) |      \
+                                         (1 << PIN_DBG_RAAL_CRITICAL_SECTION))
+
+#else // ENABLE_DEBUG_GPIO
+
+#define NRF_802154_DEBUG_CORE_PINS_USED 0
+
+#endif
+
 #ifndef DEBUG_VERBOSITY
-#define DEBUG_VERBOSITY                 1
+#define DEBUG_VERBOSITY 1
 #endif
 
 #ifndef CU_TEST

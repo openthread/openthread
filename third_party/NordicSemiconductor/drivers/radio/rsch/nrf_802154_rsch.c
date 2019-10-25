@@ -7,6 +7,7 @@
 #include "../nrf_802154_debug.h"
 #include "nrf_802154_priority_drop.h"
 #include "platform/clock/nrf_802154_clock.h"
+#include "platform/coex/nrf_802154_wifi_coex.h"
 #include "raal/nrf_raal_api.h"
 #include "timer_scheduler/nrf_802154_timer_sched.h"
 
@@ -227,6 +228,9 @@ static inline void all_prec_update(void)
                 nrf_802154_clock_hfclk_start();
                 nrf_raal_continuous_mode_enter();
             }
+
+            nrf_802154_wifi_coex_prio_request(new_prio);
+            prec_approved_prio_set(RSCH_PREC_COEX, new_prio);
         }
 
         mutex_unlock(&m_req_mutex);
@@ -363,6 +367,7 @@ static void delayed_timeslot_prec_request(void * p_context)
 void nrf_802154_rsch_init(void)
 {
     nrf_raal_init();
+    nrf_802154_wifi_coex_init();
 
     m_ntf_mutex          = 0;
     m_req_mutex          = 0;
@@ -388,6 +393,7 @@ void nrf_802154_rsch_uninit(void)
         nrf_802154_timer_sched_remove(&m_dly_ts[i].timer, NULL);
     }
 
+    nrf_802154_wifi_coex_uninit();
     nrf_raal_uninit();
 }
 

@@ -45,6 +45,7 @@
 
 #include "platform/clock/nrf_802154_clock.h"
 #include "nrf_802154_config.h"
+#include "nrf_802154_peripherals.h"
 #include "nrf_802154_utils.h"
 
 #define RTC_LP_TIMER_COMPARE_CHANNEL    0
