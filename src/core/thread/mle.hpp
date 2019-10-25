@@ -1708,7 +1708,9 @@ private:
 
     otError HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleChildIdResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError HandleChildUpdateRequest(const Message &         aMessage,
+                                     const Ip6::MessageInfo &aMessageInfo,
+                                     Neighbor *              aNeighbor);
     otError HandleChildUpdateResponse(const Message &         aMessage,
                                       const Ip6::MessageInfo &aMessageInfo,
                                       const Neighbor *        aNeighbor);
