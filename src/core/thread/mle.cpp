@@ -2750,18 +2750,6 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
         neighbor->SetMleFrameCounter(frameCounter + 1);
     }
-    else
-    {
-        if (!(command == Header::kCommandLinkRequest || command == Header::kCommandLinkAccept ||
-              command == Header::kCommandLinkAcceptAndRequest || command == Header::kCommandAdvertisement ||
-              command == Header::kCommandParentRequest || command == Header::kCommandParentResponse ||
-              command == Header::kCommandChildIdRequest || command == Header::kCommandChildUpdateRequest ||
-              command == Header::kCommandChildUpdateResponse || command == Header::kCommandAnnounce))
-        {
-            otLogDebgMle("mle sequence unknown! %d", command);
-            ExitNow();
-        }
-    }
 
     switch (command)
     {
@@ -2782,11 +2770,11 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         break;
 
     case Header::kCommandDataRequest:
-        Get<MleRouter>().HandleDataRequest(aMessage, aMessageInfo);
+        Get<MleRouter>().HandleDataRequest(aMessage, aMessageInfo, neighbor);
         break;
 
     case Header::kCommandDataResponse:
-        HandleDataResponse(aMessage, aMessageInfo);
+        HandleDataResponse(aMessage, aMessageInfo, neighbor);
         break;
 
     case Header::kCommandParentRequest:
@@ -2802,7 +2790,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         break;
 
     case Header::kCommandChildIdResponse:
-        HandleChildIdResponse(aMessage, aMessageInfo);
+        HandleChildIdResponse(aMessage, aMessageInfo, neighbor);
         break;
 
     case Header::kCommandChildUpdateRequest:
@@ -2835,7 +2823,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     case Header::kCommandTimeSync:
-        Get<MleRouter>().HandleTimeSync(aMessage, aMessageInfo);
+        Get<MleRouter>().HandleTimeSync(aMessage, aMessageInfo, neighbor);
         break;
 #endif
     }
@@ -2943,11 +2931,15 @@ exit:
     return error;
 }
 
-otError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError Mle::HandleDataResponse(const Message &         aMessage,
+                                const Ip6::MessageInfo &aMessageInfo,
+                                const Neighbor *        aNeighbor)
 {
     otError error;
 
     LogMleMessage("Receive Data Response", aMessageInfo.GetPeerAddr());
+
+    VerifyOrExit(aNeighbor && aNeighbor->IsStateValid(), error = OT_ERROR_SECURITY);
 
     error = HandleLeaderData(aMessage, aMessageInfo);
 
@@ -2966,6 +2958,7 @@ otError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo 
         IgnoreReturnValue(Get<DataPollSender>().StopFastPolls());
     }
 
+exit:
     return error;
 }
 
@@ -3383,7 +3376,9 @@ exit:
     return error;
 }
 
-otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError Mle::HandleChildIdResponse(const Message &         aMessage,
+                                   const Ip6::MessageInfo &aMessageInfo,
+                                   const Neighbor *        aNeighbor)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
@@ -3403,6 +3398,8 @@ otError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::MessageIn
     VerifyOrExit(sourceAddress.IsValid(), error = OT_ERROR_PARSE);
 
     LogMleMessage("Receive Child ID Response", aMessageInfo.GetPeerAddr(), sourceAddress.GetRloc16());
+
+    VerifyOrExit(aNeighbor && aNeighbor->IsStateValid(), error = OT_ERROR_SECURITY);
 
     VerifyOrExit(mAttachState == kAttachStateChildIdRequest);
 

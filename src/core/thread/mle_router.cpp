@@ -2483,7 +2483,9 @@ exit:
     return error;
 }
 
-otError MleRouter::HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError MleRouter::HandleDataRequest(const Message &         aMessage,
+                                     const Ip6::MessageInfo &aMessageInfo,
+                                     const Neighbor *        aNeighbor)
 {
     otError             error = OT_ERROR_NONE;
     TlvRequestTlv       tlvRequest;
@@ -2493,6 +2495,8 @@ otError MleRouter::HandleDataRequest(const Message &aMessage, const Ip6::Message
     uint8_t             numTlvs;
 
     LogMleMessage("Receive Data Request", aMessageInfo.GetPeerAddr());
+
+    VerifyOrExit(aNeighbor && aNeighbor->IsStateValid(), error = OT_ERROR_SECURITY);
 
     // TLV Request
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kTlvRequest, sizeof(tlvRequest), tlvRequest));
@@ -4657,11 +4661,16 @@ bool MleRouter::IsSleepyChildSubscribed(const Ip6::Address &aAddress, Child &aCh
 }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-void MleRouter::HandleTimeSync(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void MleRouter::HandleTimeSync(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor)
 {
     LogMleMessage("Receive Time Sync", aMessageInfo.GetPeerAddr());
 
+    VerifyOrExit(aNeighbor && aNeighbor->IsStateValid());
+
     Get<TimeSync>().HandleTimeSyncMessage(aMessage);
+
+exit:
+    return;
 }
 
 otError MleRouter::SendTimeSync(void)
