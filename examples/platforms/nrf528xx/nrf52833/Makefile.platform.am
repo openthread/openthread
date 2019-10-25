@@ -26,32 +26,22 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Use automake includes since we cannot use SUBDIRS feature due to  cleanup
-# errors - few targets may use the same source file but dependency file is 
-# created only once which leads to errors when auto-generated Makefile tries
-# to remove .Po files that were already removed
+#
+# nrf52833 platform-specific Makefile
+#
 
-if OPENTHREAD_EXAMPLES_NRF52811
-include nrf52811/Makefile.am
-endif
-
-if OPENTHREAD_EXAMPLES_NRF52833
-include nrf52833/Makefile.am
-endif
-
-if OPENTHREAD_EXAMPLES_NRF52840
-include nrf52840/Makefile.am
-endif
-
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
-
-PRETTY_FILES                  = \
-    src/platform-fem.h          \
-    src/platform-nrf5.h         \
-    $(wildcard src/*.c)         \
-    $(wildcard nrf52811/*.h)    \
-    $(wildcard nrf52833/*.h)    \
-    $(wildcard nrf52840/*.h)    \
+LDADD_COMMON                                                                                 += \
+    $(top_builddir)/examples/platforms/nrf528xx/libopenthread-nrf52833.a                        \
+    $(top_builddir)/third_party/NordicSemiconductor/libnordicsemi-nrf52833-sdk.a                \
+    $(top_builddir)/third_party/NordicSemiconductor/libnordicsemi-nrf52833-radio-driver.a       \
     $(NULL)
 
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am
+if OPENTHREAD_ENABLE_CUSTOM_LINKER_FILE
+LDFLAGS_COMMON                                                                               += \
+    -T $(OPENTHREAD_CUSTOM_LINKER_FILE)                                                         \
+    $(NULL)
+else
+LDFLAGS_COMMON                                                                               += \
+    -T $(top_srcdir)/examples/platforms/nrf528xx/nrf52833/nrf52833.ld                           \
+    $(NULL)
+endif

@@ -782,12 +782,12 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_CUSTOM_LINKER_FILE], [test "${with_custom_link
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: no, posix, cc1352, cc2538, cc2650, cc2652, efr32mg12, efr32mg21, gp712, kw41z, nrf52811, nrf52840, qpg6095, samr21 @<:@default=no@:>@.])],
+        [Specify the examples from one of: no, posix, cc1352, cc2538, cc2650, cc2652, efr32mg12, efr32mg21, gp712, kw41z, nrf52811, nrf52833, nrf52840, qpg6095, samr21 @<:@default=no@:>@.])],
     [
         case "${with_examples}" in
         no)
             ;;
-        posix|cc1352|cc2538|cc2650|cc2652|efr32mg12|efr32mg21|gp712|kw41z|nrf52811|nrf52840|qpg6095|samr21)
+        posix|cc1352|cc2538|cc2650|cc2652|efr32mg12|efr32mg21|gp712|kw41z|nrf52811|nrf52833|nrf52840|qpg6095|samr21)
             if test ${enable_posix_app} = "yes"; then
                 AC_MSG_ERROR([--with-examples must be no when POSIX apps are enabled by --enable-posix-app])
             fi
@@ -811,6 +811,7 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32MG21], [test "${with_examples}" = "efr3
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_GP712],     [test "${with_examples}" = "gp712"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_KW41Z],     [test "${with_examples}" = "kw41z"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52811],  [test "${with_examples}" = "nrf52811"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52833],  [test "${with_examples}" = "nrf52833"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52840],  [test "${with_examples}" = "nrf52840"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_QPG6095],   [test "${with_examples}" = "qpg6095"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_SAMR21],    [test "${with_examples}" = "samr21"])
@@ -820,7 +821,7 @@ AM_COND_IF([OPENTHREAD_EXAMPLES_POSIX], CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_EXAMP
 AC_MSG_CHECKING([whether to enable examples])
 AC_MSG_RESULT(${with_examples})
 
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF528XX], [test OPENTHREAD_EXAMPLES_NRF52811 || test OPENTHREAD_EXAMPLES_NRF52840])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF528XX], [test OPENTHREAD_EXAMPLES_NRF52811 || test OPENTHREAD_EXAMPLES_NRF52833 || test OPENTHREAD_EXAMPLES_NRF52840])
 #
 # Tools
 #
