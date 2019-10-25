@@ -2362,6 +2362,10 @@ otError Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, con
             SuccessOrExit(error = AppendTimeout(*message, mTimeout));
             break;
 
+        case Tlv::kStatus:
+            SuccessOrExit(error = AppendStatus(*message, StatusTlv::kError));
+            break;
+
         case Tlv::kAddressRegistration:
             if (!IsFullThreadDevice())
             {
@@ -2808,7 +2812,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         }
         else
         {
-            HandleChildUpdateRequest(aMessage, aMessageInfo);
+            HandleChildUpdateRequest(aMessage, aMessageInfo, neighbor);
         }
 
         break;
@@ -3500,15 +3504,15 @@ exit:
     return error;
 }
 
-otError Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+otError Mle::HandleChildUpdateRequest(const Message &         aMessage,
+                                      const Ip6::MessageInfo &aMessageInfo,
+                                      Neighbor *              aNeighbor)
 {
-    static const uint8_t kMaxResponseTlvs = 5;
+    static const uint8_t kMaxResponseTlvs = 6;
 
     otError          error = OT_ERROR_NONE;
-    Mac::ExtAddress  srcAddr;
     SourceAddressTlv sourceAddress;
     ChallengeTlv     challenge;
-    StatusTlv        status;
     TlvRequestTlv    tlvRequest;
     uint8_t          tlvs[kMaxResponseTlvs] = {};
     uint8_t          numTlvs                = 0;
@@ -3519,42 +3523,60 @@ otError Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::Messag
 
     LogMleMessage("Receive Child Update Request from parent", aMessageInfo.GetPeerAddr(), sourceAddress.GetRloc16());
 
-    VerifyOrExit(mParent.GetRloc16() == sourceAddress.GetRloc16(), error = OT_ERROR_DROP);
-
-    // Leader Data, Network Data, Active Timestamp, Pending Timestamp
-    SuccessOrExit(error = HandleLeaderData(aMessage, aMessageInfo));
-
-    // Status
-    if (Tlv::GetTlv(aMessage, Tlv::kStatus, sizeof(status), status) == OT_ERROR_NONE)
+    // Challenge
+    if (Tlv::GetTlv(aMessage, Tlv::kChallenge, sizeof(challenge), challenge) == OT_ERROR_NONE)
     {
-        VerifyOrExit(status.IsValid(), error = OT_ERROR_PARSE);
+        VerifyOrExit(challenge.IsValid(), error = OT_ERROR_PARSE);
+        tlvs[numTlvs++] = Tlv::kResponse;
+        tlvs[numTlvs++] = Tlv::kMleFrameCounter;
+        tlvs[numTlvs++] = Tlv::kLinkFrameCounter;
+    }
 
-        aMessageInfo.GetPeerAddr().ToExtAddress(srcAddr);
-        VerifyOrExit(mParent.GetExtAddress() == srcAddr, error = OT_ERROR_DROP);
+    if (aNeighbor == &mParent)
+    {
+        StatusTlv status;
 
-        if (status.GetStatus() == StatusTlv::kError)
+        if (Tlv::GetTlv(aMessage, Tlv::kStatus, sizeof(status), status) == OT_ERROR_NONE)
+        {
+            VerifyOrExit(status.IsValid(), error = OT_ERROR_PARSE);
+
+            if (status.GetStatus() == StatusTlv::kError)
+            {
+                BecomeDetached();
+                ExitNow();
+            }
+        }
+
+        if (mParent.GetRloc16() != sourceAddress.GetRloc16())
         {
             BecomeDetached();
             ExitNow();
         }
+
+        // Leader Data, Network Data, Active Timestamp, Pending Timestamp
+        SuccessOrExit(error = HandleLeaderData(aMessage, aMessageInfo));
+    }
+    else
+    {
+        // this device is not a child of the Child Update Request source
+        tlvs[numTlvs++] = Tlv::kStatus;
     }
 
     // TLV Request
     if (Tlv::GetTlv(aMessage, Tlv::kTlvRequest, sizeof(tlvRequest), tlvRequest) == OT_ERROR_NONE)
     {
-        VerifyOrExit(tlvRequest.IsValid() && tlvRequest.GetLength() <= sizeof(tlvs), error = OT_ERROR_PARSE);
-        memcpy(tlvs, tlvRequest.GetTlvs(), tlvRequest.GetLength());
-        numTlvs += tlvRequest.GetLength();
-    }
+        VerifyOrExit(tlvRequest.IsValid(), error = OT_ERROR_PARSE);
 
-    // Challenge
-    if (Tlv::GetTlv(aMessage, Tlv::kChallenge, sizeof(challenge), challenge) == OT_ERROR_NONE)
-    {
-        VerifyOrExit(challenge.IsValid(), error = OT_ERROR_PARSE);
-        VerifyOrExit(static_cast<size_t>(numTlvs + 3) <= sizeof(tlvs), error = OT_ERROR_NO_BUFS);
-        tlvs[numTlvs++] = Tlv::kResponse;
-        tlvs[numTlvs++] = Tlv::kMleFrameCounter;
-        tlvs[numTlvs++] = Tlv::kLinkFrameCounter;
+        for (uint8_t i = 0; i < tlvRequest.GetLength(); i++)
+        {
+            if (numTlvs >= sizeof(tlvs))
+            {
+                otLogNoteMle("Failed to respond with TLVs: %d of %d", i, tlvRequest.GetLength());
+                break;
+            }
+
+            tlvs[numTlvs++] = tlvRequest.GetTlvs()[i];
+        }
     }
 
     SuccessOrExit(error = SendChildUpdateResponse(tlvs, numTlvs, challenge));
