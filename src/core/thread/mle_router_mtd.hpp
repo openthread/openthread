@@ -137,7 +137,10 @@ private:
     otError HandleParentRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
     otError HandleChildIdRequest(const Message &, const Ip6::MessageInfo &, uint32_t) { return OT_ERROR_DROP; }
     otError HandleChildUpdateRequest(const Message &, const Ip6::MessageInfo &, uint32_t) { return OT_ERROR_DROP; }
-    otError HandleChildUpdateResponse(const Message &, const Ip6::MessageInfo &, uint32_t) { return OT_ERROR_DROP; }
+    otError HandleChildUpdateResponse(const Message &, const Ip6::MessageInfo &, uint32_t, Neighbor *)
+    {
+        return OT_ERROR_DROP;
+    }
     otError HandleDataRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
     void    HandleNetworkDataUpdateRouter(void) {}
     otError HandleDiscoveryRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
