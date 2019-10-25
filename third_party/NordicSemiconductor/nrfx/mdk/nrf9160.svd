@@ -613,16 +613,24 @@ POSSIBILITY OF SUCH DAMAGE.\n
           <dim>0xBE</dim>
           <dimIncrement>0x4</dimIncrement>
           <name>OTP[%s]</name>
-          <description>Description collection: OTP bits [31+n*32:0+n*32].</description>
+          <description>Description collection: One time programmable memory</description>
           <addressOffset>0x108</addressOffset>
           <access>read-write</access>
           <resetValue>0xFFFFFFFF</resetValue>
           <fields>
             <field>
-              <name>OTP</name>
-              <description>Bits [31+n*32:0+n*32] of OTP region</description>
+              <name>LOWER</name>
+              <description>Lower half word</description>
               <lsb>0</lsb>
+              <msb>15</msb>
+              <access>read-writeonce</access>
+            </field>
+            <field>
+              <name>UPPER</name>
+              <description>Upper half word</description>
+              <lsb>16</lsb>
               <msb>31</msb>
+              <access>read-writeonce</access>
             </field>
           </fields>
         </register>
@@ -660,7 +668,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
             </register>
             <register>
               <name>PERM</name>
-              <description>Description cluster: Define permissions for the key slot with ID=n+1. Bits 0-15 and 16-31 can only be written once.</description>
+              <description>Description cluster: Define permissions for the key slot. Bits 0-15 and 16-31 can only be written when equal to 0xFFFF.</description>
               <addressOffset>0x004</addressOffset>
               <access>read-write</access>
               <resetValue>0xFFFFFFFF</resetValue>
@@ -752,14 +760,14 @@ POSSIBILITY OF SUCH DAMAGE.\n
               <dim>0x4</dim>
               <dimIncrement>0x4</dimIncrement>
               <name>VALUE[%s]</name>
-              <description>Description collection: Define bits [31+o*32:0+o*32] of value assigned to KMU key slot ID=n+1</description>
+              <description>Description collection: Define bits [31+o*32:0+o*32] of value assigned to KMU key slot.</description>
               <addressOffset>0x000</addressOffset>
               <access>read-write</access>
               <resetValue>0xFFFFFFFF</resetValue>
               <fields>
                 <field>
                   <name>VALUE</name>
-                  <description>Define bits [31+o*32:0+o*32] of value assigned to KMU key slot ID=n+1</description>
+                  <description>Define bits [31+o*32:0+o*32] of value assigned to KMU key slot</description>
                   <lsb>0</lsb>
                   <msb>31</msb>
                 </field>
@@ -784,6 +792,46 @@ POSSIBILITY OF SUCH DAMAGE.\n
       <groupName>TAD</groupName>
       <size>0x20</size>
       <registers>
+        <register>
+          <name>CLOCKSTART</name>
+          <description>Start all trace and debug clocks.</description>
+          <addressOffset>0x000</addressOffset>
+          <access>write-only</access>
+          <fields>
+            <field>
+              <name>START</name>
+              <lsb>0</lsb>
+              <msb>0</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Start</name>
+                  <description>Start all trace and debug clocks.</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>CLOCKSTOP</name>
+          <description>Stop all trace and debug clocks.</description>
+          <addressOffset>0x004</addressOffset>
+          <access>write-only</access>
+          <fields>
+            <field>
+              <name>STOP</name>
+              <lsb>0</lsb>
+              <msb>0</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Stop</name>
+                  <description>Stop all trace and debug clocks.</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
         <register>
           <name>ENABLE</name>
           <description>Enable debug domain and aquire selected GPIOs</description>
@@ -3141,93 +3189,8 @@ POSSIBILITY OF SUCH DAMAGE.\n
           </fields>
         </register>
         <register>
-          <name>POFCON</name>
-          <description>Power-fail comparator configuration</description>
-          <addressOffset>0x510</addressOffset>
-          <access>read-write</access>
-          <resetValue>0x00000008</resetValue>
-          <fields>
-            <field>
-              <name>POF</name>
-              <description>Enable or disable power-fail comparator</description>
-              <lsb>0</lsb>
-              <msb>0</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>Disable</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>Enable</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>THRESHOLD</name>
-              <description>Power-fail comparator threshold setting</description>
-              <lsb>1</lsb>
-              <msb>4</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>V19</name>
-                  <description>Set threshold to 1.9 V</description>
-                  <value>6</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>V20</name>
-                  <description>Set threshold to 2.0 V</description>
-                  <value>7</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>V21</name>
-                  <description>Set threshold to 2.1 V</description>
-                  <value>8</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>V22</name>
-                  <description>Set threshold to 2.2 V</description>
-                  <value>9</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>V23</name>
-                  <description>Set threshold to 2.3 V</description>
-                  <value>10</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>V24</name>
-                  <description>Set threshold to 2.4 V</description>
-                  <value>11</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>V25</name>
-                  <description>Set threshold to 2.5 V</description>
-                  <value>12</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>V26</name>
-                  <description>Set threshold to 2.6 V</description>
-                  <value>13</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>V27</name>
-                  <description>Set threshold to 2.7 V</description>
-                  <value>14</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>V28</name>
-                  <description>Set threshold to 2.8 V</description>
-                  <value>15</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-          </fields>
-        </register>
-        <register>
           <name>DCDCEN</name>
-          <description>Enable DC/DC mode of the main voltage regulator</description>
+          <description>Enable DC/DC mode of the main voltage regulator.</description>
           <addressOffset>0x578</addressOffset>
           <access>read-write</access>
           <fields>
@@ -4837,7 +4800,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
           </register>
           <register>
             <name>TXSTATUS</name>
-            <description>Status to indicate if data sent from the CPU to the debugger status has been read</description>
+            <description>Status to indicate if data sent from the CPU to the debugger has been read</description>
             <addressOffset>0x84</addressOffset>
             <access>read-only</access>
             <resetValue>0x00000000</resetValue>
@@ -4871,25 +4834,25 @@ POSSIBILITY OF SUCH DAMAGE.\n
           <addressOffset>0x500</addressOffset>
           <register>
             <name>LOCK</name>
-            <description>Lock ERASEALL mechanism</description>
+            <description>Lock register ERASEPROTECT.DISABLE from being written until next reset</description>
             <addressOffset>0x000</addressOffset>
             <access>read-writeonce</access>
             <resetValue>0x00000000</resetValue>
             <fields>
               <field>
-                <name>ERASEPROTECTLOCK</name>
-                <description>Enable or disable the ERASEALL mechanism</description>
+                <name>LOCK</name>
+                <description>Lock register ERASEPROTECT.DISABLE from being written until next reset</description>
                 <lsb>0</lsb>
                 <msb>0</msb>
                 <enumeratedValues>
                   <enumeratedValue>
                     <name>Unlocked</name>
-                    <description>ERASEALL can be issued</description>
+                    <description>Register ERASEPROTECT.DISABLE is writeable</description>
                     <value>0</value>
                   </enumeratedValue>
                   <enumeratedValue>
                     <name>Locked</name>
-                    <description>ERASEALL is locked</description>
+                    <description>Register ERASEPROTECT.DISABLE is read-only</description>
                     <value>1</value>
                   </enumeratedValue>
                 </enumeratedValues>
@@ -4898,14 +4861,14 @@ POSSIBILITY OF SUCH DAMAGE.\n
           </register>
           <register>
             <name>DISABLE</name>
-            <description>Unlock ERASEPROTECT and perform ERASEALL</description>
+            <description>Disable ERASEPROTECT and perform ERASEALL</description>
             <addressOffset>0x004</addressOffset>
             <access>read-write</access>
             <resetValue>0x00000000</resetValue>
             <fields>
               <field>
                 <name>KEY</name>
-                <description>Initiate secure erase even though ERASEPROTECT is enabled if KEY fields match</description>
+                <description>The ERASEALL sequence will be initiated if value of KEY fields are non-zero and KEY fields match on both CPU and debugger side</description>
                 <lsb>0</lsb>
                 <msb>31</msb>
               </field>
@@ -6136,13 +6099,13 @@ POSSIBILITY OF SUCH DAMAGE.\n
         </register>
         <register>
           <name>ORC</name>
-          <description>Over-read character. Character clocked out in case and over-read of the TXD buffer.</description>
+          <description>Over-read character. Character clocked out in case an over-read of the TXD buffer.</description>
           <addressOffset>0x5C0</addressOffset>
           <access>read-write</access>
           <fields>
             <field>
               <name>ORC</name>
-              <description>Over-read character. Character clocked out in case and over-read of the TXD buffer.</description>
+              <description>Over-read character. Character clocked out in case an over-read of the TXD buffer.</description>
               <lsb>0</lsb>
               <msb>7</msb>
             </field>
@@ -6961,6 +6924,32 @@ POSSIBILITY OF SUCH DAMAGE.\n
               </field>
             </fields>
           </register>
+          <register>
+            <name>LIST</name>
+            <description>EasyDMA list type</description>
+            <addressOffset>0x00C</addressOffset>
+            <access>read-write</access>
+            <fields>
+              <field>
+                <name>LIST</name>
+                <description>List type</description>
+                <lsb>0</lsb>
+                <msb>1</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Disabled</name>
+                    <description>Disable EasyDMA list</description>
+                    <value>0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>ArrayList</name>
+                    <description>Use array list</description>
+                    <value>1</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+            </fields>
+          </register>
         </cluster>
         <cluster>
           <name>TXD</name>
@@ -7007,6 +6996,32 @@ POSSIBILITY OF SUCH DAMAGE.\n
                 <description>Number of bytes transmitted in last granted transaction</description>
                 <lsb>0</lsb>
                 <msb>12</msb>
+              </field>
+            </fields>
+          </register>
+          <register>
+            <name>LIST</name>
+            <description>EasyDMA list type</description>
+            <addressOffset>0x00C</addressOffset>
+            <access>read-write</access>
+            <fields>
+              <field>
+                <name>LIST</name>
+                <description>List type</description>
+                <lsb>0</lsb>
+                <msb>1</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Disabled</name>
+                    <description>Disable EasyDMA list</description>
+                    <value>0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>ArrayList</name>
+                    <description>Use array list</description>
+                    <value>1</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
             </fields>
           </register>
@@ -7437,13 +7452,13 @@ POSSIBILITY OF SUCH DAMAGE.\n
         </register>
         <register>
           <name>EVENTS_SUSPENDED</name>
-          <description>Last byte has been sent out after the SUSPEND task has been issued, TWI traffic is now suspended.</description>
+          <description>SUSPEND task has been issued, TWI traffic is now suspended.</description>
           <addressOffset>0x148</addressOffset>
           <access>read-write</access>
           <fields>
             <field>
               <name>EVENTS_SUSPENDED</name>
-              <description>Last byte has been sent out after the SUSPEND task has been issued, TWI traffic is now suspended.</description>
+              <description>SUSPEND task has been issued, TWI traffic is now suspended.</description>
               <lsb>0</lsb>
               <msb>0</msb>
               <enumeratedValues>
@@ -10132,6 +10147,32 @@ POSSIBILITY OF SUCH DAMAGE.\n
               </field>
             </fields>
           </register>
+          <register>
+            <name>LIST</name>
+            <description>EasyDMA list type</description>
+            <addressOffset>0x00C</addressOffset>
+            <access>read-write</access>
+            <fields>
+              <field>
+                <name>LIST</name>
+                <description>List type</description>
+                <lsb>0</lsb>
+                <msb>1</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Disabled</name>
+                    <description>Disable EasyDMA list</description>
+                    <value>0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>ArrayList</name>
+                    <description>Use array list</description>
+                    <value>1</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+            </fields>
+          </register>
         </cluster>
         <cluster>
           <name>TXD</name>
@@ -10178,6 +10219,32 @@ POSSIBILITY OF SUCH DAMAGE.\n
                 <description>Number of bytes transferred in the last TXD transaction</description>
                 <lsb>0</lsb>
                 <msb>12</msb>
+              </field>
+            </fields>
+          </register>
+          <register>
+            <name>LIST</name>
+            <description>EasyDMA list type</description>
+            <addressOffset>0x00C</addressOffset>
+            <access>read-write</access>
+            <fields>
+              <field>
+                <name>LIST</name>
+                <description>List type</description>
+                <lsb>0</lsb>
+                <msb>1</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Disabled</name>
+                    <description>Disable EasyDMA list</description>
+                    <value>0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>ArrayList</name>
+                    <description>Use array list</description>
+                    <value>1</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
             </fields>
           </register>
@@ -16180,7 +16247,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>Busy</name>
-                  <description>ADC is busy. Conversion in progress.</description>
+                  <description>ADC is busy. Single conversion in progress.</description>
                   <value>1</value>
                 </enumeratedValue>
               </enumeratedValues>
@@ -16280,8 +16347,8 @@ POSSIBILITY OF SUCH DAMAGE.\n
                     <value>8</value>
                   </enumeratedValue>
                   <enumeratedValue>
-                    <name>VDD</name>
-                    <description>VDD</description>
+                    <name>VDDGPIO</name>
+                    <description>VDD_GPIO</description>
                     <value>9</value>
                   </enumeratedValue>
                 </enumeratedValues>
@@ -16347,8 +16414,8 @@ POSSIBILITY OF SUCH DAMAGE.\n
                     <value>8</value>
                   </enumeratedValue>
                   <enumeratedValue>
-                    <name>VDD</name>
-                    <description>VDD</description>
+                    <name>VDD_GPIO</name>
+                    <description>VDD_GPIO</description>
                     <value>9</value>
                   </enumeratedValue>
                 </enumeratedValues>
@@ -16380,12 +16447,12 @@ POSSIBILITY OF SUCH DAMAGE.\n
                   </enumeratedValue>
                   <enumeratedValue>
                     <name>Pullup</name>
-                    <description>Pull-up to VDD</description>
+                    <description>Pull-up to VDD_GPIO</description>
                     <value>2</value>
                   </enumeratedValue>
                   <enumeratedValue>
                     <name>VDD1_2</name>
-                    <description>Set input at VDD/2</description>
+                    <description>Set input at VDD_GPIO/2</description>
                     <value>3</value>
                   </enumeratedValue>
                 </enumeratedValues>
@@ -16408,12 +16475,12 @@ POSSIBILITY OF SUCH DAMAGE.\n
                   </enumeratedValue>
                   <enumeratedValue>
                     <name>Pullup</name>
-                    <description>Pull-up to VDD</description>
+                    <description>Pull-up to VDD_GPIO</description>
                     <value>2</value>
                   </enumeratedValue>
                   <enumeratedValue>
                     <name>VDD1_2</name>
-                    <description>Set input at VDD/2</description>
+                    <description>Set input at VDD_GPIO/2</description>
                     <value>3</value>
                   </enumeratedValue>
                 </enumeratedValues>
@@ -16479,7 +16546,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
                   </enumeratedValue>
                   <enumeratedValue>
                     <name>VDD1_4</name>
-                    <description>VDD/4 as reference</description>
+                    <description>VDD_GPIO/4 as reference</description>
                     <value>1</value>
                   </enumeratedValue>
                 </enumeratedValues>
@@ -17813,6 +17880,34 @@ POSSIBILITY OF SUCH DAMAGE.\n
               <description>Prescaler value</description>
               <lsb>0</lsb>
               <msb>3</msb>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <dim>0x6</dim>
+          <dimIncrement>0x4</dimIncrement>
+          <name>ONESHOTEN[%s]</name>
+          <description>Description collection: Enable one-shot operation for Capture/Compare channel n</description>
+          <addressOffset>0x514</addressOffset>
+          <access>read-write</access>
+          <fields>
+            <field>
+              <name>ONESHOTEN</name>
+              <description>Enable one-shot operation</description>
+              <lsb>0</lsb>
+              <msb>0</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Disable</name>
+                  <description>Disable one-shot operation</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Enable</name>
+                  <description>Enable one-shot operation</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
             </field>
           </fields>
         </register>
@@ -21416,7 +21511,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
     </peripheral>
     <peripheral>
       <name>EGU0_NS</name>
-      <description>Event Generator Unit 0</description>
+      <description>Event generator unit 0</description>
       <baseAddress>0x4001B000</baseAddress>
       <headerStructName>EGU</headerStructName>
       <!--Security dma=NA-->
@@ -22730,7 +22825,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
     </peripheral>
     <peripheral derivedFrom="EGU0_NS">
       <name>EGU0_S</name>
-      <description>Event Generator Unit 1</description>
+      <description>Event generator unit 1</description>
       <baseAddress>0x5001B000</baseAddress>
       <!--Security dma=NA-->
       <!--Security securemapping=US-->
@@ -22741,7 +22836,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
     </peripheral>
     <peripheral derivedFrom="EGU0_NS">
       <name>EGU1_NS</name>
-      <description>Event Generator Unit 2</description>
+      <description>Event generator unit 2</description>
       <baseAddress>0x4001C000</baseAddress>
       <!--Security dma=NA-->
       <!--Security securemapping=US-->
@@ -22752,7 +22847,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
     </peripheral>
     <peripheral derivedFrom="EGU0_NS">
       <name>EGU1_S</name>
-      <description>Event Generator Unit 3</description>
+      <description>Event generator unit 3</description>
       <baseAddress>0x5001C000</baseAddress>
       <!--Security dma=NA-->
       <!--Security securemapping=US-->
@@ -22763,7 +22858,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
     </peripheral>
     <peripheral derivedFrom="EGU0_NS">
       <name>EGU2_NS</name>
-      <description>Event Generator Unit 4</description>
+      <description>Event generator unit 4</description>
       <baseAddress>0x4001D000</baseAddress>
       <!--Security dma=NA-->
       <!--Security securemapping=US-->
@@ -22774,7 +22869,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
     </peripheral>
     <peripheral derivedFrom="EGU0_NS">
       <name>EGU2_S</name>
-      <description>Event Generator Unit 5</description>
+      <description>Event generator unit 5</description>
       <baseAddress>0x5001D000</baseAddress>
       <!--Security dma=NA-->
       <!--Security securemapping=US-->
@@ -22785,7 +22880,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
     </peripheral>
     <peripheral derivedFrom="EGU0_NS">
       <name>EGU3_NS</name>
-      <description>Event Generator Unit 6</description>
+      <description>Event generator unit 6</description>
       <baseAddress>0x4001E000</baseAddress>
       <!--Security dma=NA-->
       <!--Security securemapping=US-->
@@ -22796,7 +22891,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
     </peripheral>
     <peripheral derivedFrom="EGU0_NS">
       <name>EGU3_S</name>
-      <description>Event Generator Unit 7</description>
+      <description>Event generator unit 7</description>
       <baseAddress>0x5001E000</baseAddress>
       <!--Security dma=NA-->
       <!--Security securemapping=US-->
@@ -22807,7 +22902,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
     </peripheral>
     <peripheral derivedFrom="EGU0_NS">
       <name>EGU4_NS</name>
-      <description>Event Generator Unit 8</description>
+      <description>Event generator unit 8</description>
       <baseAddress>0x4001F000</baseAddress>
       <!--Security dma=NA-->
       <!--Security securemapping=US-->
@@ -22818,7 +22913,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
     </peripheral>
     <peripheral derivedFrom="EGU0_NS">
       <name>EGU4_S</name>
-      <description>Event Generator Unit 9</description>
+      <description>Event generator unit 9</description>
       <baseAddress>0x5001F000</baseAddress>
       <!--Security dma=NA-->
       <!--Security securemapping=US-->
@@ -22829,7 +22924,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
     </peripheral>
     <peripheral derivedFrom="EGU0_NS">
       <name>EGU5_NS</name>
-      <description>Event Generator Unit 10</description>
+      <description>Event generator unit 10</description>
       <baseAddress>0x40020000</baseAddress>
       <!--Security dma=NA-->
       <!--Security securemapping=US-->
@@ -22840,7 +22935,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
     </peripheral>
     <peripheral derivedFrom="EGU0_NS">
       <name>EGU5_S</name>
-      <description>Event Generator Unit 11</description>
+      <description>Event generator unit 11</description>
       <baseAddress>0x50020000</baseAddress>
       <!--Security dma=NA-->
       <!--Security securemapping=US-->
@@ -27740,13 +27835,13 @@ POSSIBILITY OF SUCH DAMAGE.\n
         </register>
         <register>
           <name>EVENTS_KEYSLOT_PUSHED</name>
-          <description>Key successfully pushed over secure APB</description>
+          <description>Key slot successfully pushed over secure APB</description>
           <addressOffset>0x100</addressOffset>
           <access>read-write</access>
           <fields>
             <field>
               <name>EVENTS_KEYSLOT_PUSHED</name>
-              <description>Key successfully pushed over secure APB</description>
+              <description>Key slot successfully pushed over secure APB</description>
               <lsb>0</lsb>
               <msb>0</msb>
               <enumeratedValues>
@@ -27766,13 +27861,13 @@ POSSIBILITY OF SUCH DAMAGE.\n
         </register>
         <register>
           <name>EVENTS_KEYSLOT_REVOKED</name>
-          <description>Key has been revoked and cannot be tasked for selection</description>
+          <description>Key slot has been revoked and cannot be tasked for selection</description>
           <addressOffset>0x104</addressOffset>
           <access>read-write</access>
           <fields>
             <field>
               <name>EVENTS_KEYSLOT_REVOKED</name>
-              <description>Key has been revoked and cannot be tasked for selection</description>
+              <description>Key slot has been revoked and cannot be tasked for selection</description>
               <lsb>0</lsb>
               <msb>0</msb>
               <enumeratedValues>
@@ -28168,14 +28263,14 @@ POSSIBILITY OF SUCH DAMAGE.\n
         </register>
         <register>
           <name>SELECTKEYSLOT</name>
-          <description>Select key slot ID to be read over AHB or pushed over secure APB when TASKS_PUSH_KEYSLOT is started</description>
+          <description>Select key slot to be read over AHB or pushed over secure APB when TASKS_PUSH_KEYSLOT is started</description>
           <addressOffset>0x500</addressOffset>
           <access>read-write</access>
           <resetValue>0x00000000</resetValue>
           <fields>
             <field>
               <name>ID</name>
-              <description>Select key slot ID to be read over AHB, or pushed over secure APB, when TASKS_PUSH_KEYSLOT is started NOTE: ID=0 is not a valid key ID. The 0 ID should be used when the KMU is idle or not in use NOTE: Note that index N in UICR-&amp;gt;KEYSLOT.KEY[N] and UICR-&amp;gt;KEYSLOT.CONFIG[N] corresponds to KMU keyslot ID=N+1</description>
+              <description>Select key slot ID to be read over AHB, or pushed over secure APB, when TASKS_PUSH_KEYSLOT is started NOTE: ID=0 is not a valid key slot ID. The 0 ID should be used when the KMU is idle or not in use NOTE: Index N in UICR-&amp;gt;KEYSLOT.KEY[N] and UICR-&amp;gt;KEYSLOT.CONFIG[N] corresponds to KMU key slot ID=N+1</description>
               <lsb>0</lsb>
               <msb>7</msb>
             </field>
@@ -28296,7 +28391,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
           <name>ERASEALL</name>
           <description>Register for erasing all non-volatile user memory</description>
           <addressOffset>0x50C</addressOffset>
-          <access>read-write</access>
+          <access>write-only</access>
           <!--Security securemapping=S-->
           <fields>
             <field>
@@ -28390,7 +28485,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
           <fields>
             <field>
               <name>HITS</name>
-              <description>Number of cache hits</description>
+              <description>Number of cache hits Write zero to clear</description>
               <lsb>0</lsb>
               <msb>31</msb>
             </field>
@@ -28405,7 +28500,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
           <fields>
             <field>
               <name>MISSES</name>
-              <description>Number of cache misses</description>
+              <description>Number of cache misses Write zero to clear</description>
               <lsb>0</lsb>
               <msb>31</msb>
             </field>
@@ -28473,92 +28568,6 @@ POSSIBILITY OF SUCH DAMAGE.\n
                   <name>Keyvalid</name>
                   <description>Key value</description>
                   <value>0xAFBE5A7</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-          </fields>
-        </register>
-        <register>
-          <name>FORCEONNVM</name>
-          <description>Force on all NVM supplies. Also see the internal section in the NVMC chapter.</description>
-          <addressOffset>0x700</addressOffset>
-          <access>read-write</access>
-          <!--Security securemapping=S-->
-          <fields>
-            <field>
-              <name>FORCEONNVM</name>
-              <description>Force on all NVM supplies. Also see the internal section in the NVMC chapter.</description>
-              <lsb>0</lsb>
-              <msb>0</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>DoNotForceOn</name>
-                  <description>Do not force on NVM supply</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>ForceOn</name>
-                  <description>Force on NVM supply</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-          </fields>
-        </register>
-        <register>
-          <name>FORCEOFFNVM</name>
-          <description>Force off NVM supply. Also see the internal section in the NVMC chapter.</description>
-          <addressOffset>0x728</addressOffset>
-          <access>read-write</access>
-          <!--Security securemapping=S-->
-          <fields>
-            <field>
-              <name>FORCEOFFNVM0</name>
-              <description>Force off NVM supply 0. Also see the internal section in the NVMC chapter.</description>
-              <lsb>0</lsb>
-              <msb>0</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>DoNotForceOff</name>
-                  <description>Do not force off supply</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>ForceOff</name>
-                  <description>Force off supply</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>FORCEOFFNVM1</name>
-              <description>Force off NVM supply 1. Also see the internal section in the NVMC chapter.</description>
-              <lsb>1</lsb>
-              <msb>1</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>DoNotForceOff</name>
-                  <description>Do not force off supply</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>ForceOff</name>
-                  <description>Force off supply</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>KEY</name>
-              <description>KEY</description>
-              <lsb>8</lsb>
-              <msb>31</msb>
-              <enumeratedValues>
-                <usage>write</usage>
-                <enumeratedValue>
-                  <name>EnableWrite</name>
-                  <description>Must be written in order to write to bits 0-7. Any other value will ignore writes to this register. Read as zero.</description>
-                  <value>0xACCE55</value>
                 </enumeratedValue>
               </enumeratedValues>
             </field>
@@ -28998,9 +29007,191 @@ POSSIBILITY OF SUCH DAMAGE.\n
       <!--Security securemapping=US-->
     </peripheral>
     <peripheral>
+      <name>CC_HOST_RGF_S</name>
+      <description>CRYPTOCELL HOST_RGF interface</description>
+      <baseAddress>0x50840000</baseAddress>
+      <headerStructName>CC_HOST_RGF</headerStructName>
+      <!--Security dma=NSA-->
+      <!--Security securemapping=S-->
+      <addressBlock>
+        <offset>0</offset>
+        <size>0x2000</size>
+        <usage>registers</usage>
+      </addressBlock>
+      <groupName>CC_HOST_RGF</groupName>
+      <size>0x20</size>
+      <registers>
+        <register>
+          <name>HOST_CRYPTOKEY_SEL</name>
+          <description>AES hardware key select</description>
+          <addressOffset>0x1A38</addressOffset>
+          <access>read-write</access>
+          <resetValue>0x00000000</resetValue>
+          <fields>
+            <field>
+              <name>HOST_CRYPTOKEY_SEL</name>
+              <description>Select the source of the HW key that is used by the AES engine</description>
+              <lsb>0</lsb>
+              <msb>1</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>K_DR</name>
+                  <description>Use device root key K_DR from CRYPTOCELL AO power domain</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>K_PRTL</name>
+                  <description>Use hard-coded RTL key K_PRTL</description>
+                  <value>1</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Session</name>
+                  <description>Use provided session key</description>
+                  <value>2</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>HOST_IOT_KPRTL_LOCK</name>
+          <description>This write-once register is the K_PRTL lock register. When this register is set, K_PRTL cannot be used and a zeroed key will be used instead. The value of this register is saved in the CRYPTOCELL AO power domain.</description>
+          <addressOffset>0x1A4C</addressOffset>
+          <access>read-write</access>
+          <resetValue>0x00000000</resetValue>
+          <fields>
+            <field>
+              <name>HOST_IOT_KPRTL_LOCK</name>
+              <description>This register is the K_PRTL lock register. When this register is set, K_PRTL cannot be used and a zeroed key will be used instead. The value of this register is saved in the CRYPTOCELL AO power domain.</description>
+              <lsb>0</lsb>
+              <msb>0</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Disabled</name>
+                  <description>K_PRTL can be selected for use from register HOST_CRYPTOKEY_SEL</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Enabled</name>
+                  <description>K_PRTL has been locked until next power-on reset (POR). If K_PRTL is selected anyway, a zeroed key will be used instead.</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>HOST_IOT_KDR0</name>
+          <description>This register holds bits 31:0 of K_DR. The value of this register is saved in the CRYPTOCELL AO power domain. Reading from this address returns the K_DR valid status indicating if K_DR is successfully retained.</description>
+          <addressOffset>0x1A50</addressOffset>
+          <access>read-write</access>
+          <resetValue>0x00000000</resetValue>
+          <fields>
+            <field>
+              <name>HOST_IOT_KDR0</name>
+              <description>Write: K_DR bits 31:0. Read: 0x00000000 when 128-bit K_DR key value is not yet retained in the CRYPTOCELL AO power domain. Read: 0x00000001 when 128-bit K_DR key value is successfully retained in the CRYPTOCELL AO power domain.</description>
+              <lsb>0</lsb>
+              <msb>31</msb>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>HOST_IOT_KDR1</name>
+          <description>This register holds bits 63:32 of K_DR. The value of this register is saved in the CRYPTOCELL AO power domain.</description>
+          <addressOffset>0x1A54</addressOffset>
+          <access>write-only</access>
+          <resetValue>0x00000000</resetValue>
+          <fields>
+            <field>
+              <name>HOST_IOT_KDR1</name>
+              <description>K_DR bits 63:32</description>
+              <lsb>0</lsb>
+              <msb>31</msb>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>HOST_IOT_KDR2</name>
+          <description>This register holds bits 95:64 of K_DR. The value of this register is saved in the CRYPTOCELL AO power domain.</description>
+          <addressOffset>0x1A58</addressOffset>
+          <access>write-only</access>
+          <resetValue>0x00000000</resetValue>
+          <fields>
+            <field>
+              <name>HOST_IOT_KDR2</name>
+              <description>K_DR bits 95:64</description>
+              <lsb>0</lsb>
+              <msb>31</msb>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>HOST_IOT_KDR3</name>
+          <description>This register holds bits 127:96 of K_DR. The value of this register is saved in the CRYPTOCELL AO power domain.</description>
+          <addressOffset>0x1A5C</addressOffset>
+          <access>write-only</access>
+          <resetValue>0x00000000</resetValue>
+          <fields>
+            <field>
+              <name>HOST_IOT_KDR3</name>
+              <description>K_DR bits 127:96</description>
+              <lsb>0</lsb>
+              <msb>31</msb>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>HOST_IOT_LCS</name>
+          <description>Controls lifecycle state (LCS) for CRYPTOCELL subsystem</description>
+          <addressOffset>0x1A60</addressOffset>
+          <access>read-write</access>
+          <resetValue>0x00000002</resetValue>
+          <fields>
+            <field>
+              <name>LCS</name>
+              <description>Lifecycle state value. This field is write-once per reset.</description>
+              <lsb>0</lsb>
+              <msb>2</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Debug</name>
+                  <description>CC310 operates in debug mode</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Secure</name>
+                  <description>CC310 operates in secure mode</description>
+                  <value>2</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>LCS_IS_VALID</name>
+              <description>Read-only field. Indicates if CRYPTOCELL LCS has been successfully configured since last reset.</description>
+              <lsb>8</lsb>
+              <msb>8</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Invalid</name>
+                  <description>Valid LCS not yet retained in the CRYPTOCELL AO power domain</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Valid</name>
+                  <description>Valid LCS successfully retained in the CRYPTOCELL AO power domain</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+      </registers>
+    </peripheral>
+    <peripheral>
       <name>CRYPTOCELL_S</name>
       <description>ARM TrustZone CryptoCell register interface</description>
       <baseAddress>0x50840000</baseAddress>
+      <alternatePeripheral>CC_HOST_RGF_S</alternatePeripheral>
       <headerStructName>CRYPTOCELL</headerStructName>
       <!--Security dma=NSA-->
       <!--Security securemapping=S-->
@@ -29036,7 +29227,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>Enabled</name>
-                  <description>CRYPTOCELL subsystem enabled</description>
+                  <description>CRYPTOCELL subsystem enabled.</description>
                   <value>1</value>
                 </enumeratedValue>
               </enumeratedValues>
@@ -34890,13 +35081,13 @@ POSSIBILITY OF SUCH DAMAGE.\n
         </register>
         <register>
           <name>DETECTMODE</name>
-          <description>Select between default DETECT signal behaviour and LDETECT mode (For non-secure pin only)</description>
+          <description>Select between default DETECT signal behavior and LDETECT mode (For non-secure pin only)</description>
           <addressOffset>0x024</addressOffset>
           <access>read-write</access>
           <fields>
             <field>
               <name>DETECTMODE</name>
-              <description>Select between default DETECT signal behaviour and LDETECT mode</description>
+              <description>Select between default DETECT signal behavior and LDETECT mode</description>
               <lsb>0</lsb>
               <msb>0</msb>
               <enumeratedValues>
@@ -34907,7 +35098,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>LDETECT</name>
-                  <description>Use the latched LDETECT behaviour</description>
+                  <description>Use the latched LDETECT behavior</description>
                   <value>1</value>
                 </enumeratedValue>
               </enumeratedValues>
@@ -34916,13 +35107,13 @@ POSSIBILITY OF SUCH DAMAGE.\n
         </register>
         <register>
           <name>DETECTMODE_SEC</name>
-          <description>Select between default DETECT signal behaviour and LDETECT mode (For secure pin only)</description>
+          <description>Select between default DETECT signal behavior and LDETECT mode (For secure pin only)</description>
           <addressOffset>0x028</addressOffset>
           <access>read-write</access>
           <fields>
             <field>
               <name>DETECTMODE</name>
-              <description>Select between default DETECT signal behaviour and LDETECT mode</description>
+              <description>Select between default DETECT signal behavior and LDETECT mode</description>
               <lsb>0</lsb>
               <msb>0</msb>
               <enumeratedValues>
@@ -34933,7 +35124,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>LDETECT</name>
-                  <description>Use the latched LDETECT behaviour</description>
+                  <description>Use the latched LDETECT behavior</description>
                   <value>1</value>
                 </enumeratedValue>
               </enumeratedValues>
@@ -35036,7 +35227,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>D0S1</name>
-                  <description>Disconnect '0' standard '1' (normally used for wired-or connections)</description>
+                  <description>Disconnect '0', standard '1' (normally used for wired-or connections)</description>
                   <value>4</value>
                 </enumeratedValue>
                 <enumeratedValue>
@@ -35046,7 +35237,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>S0D1</name>
-                  <description>Standard '0'. disconnect '1' (normally used for wired-and connections)</description>
+                  <description>Standard '0', disconnect '1' (normally used for wired-and connections)</description>
                   <value>6</value>
                 </enumeratedValue>
                 <enumeratedValue>

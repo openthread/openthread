@@ -209,6 +209,29 @@ __Vectors_Size                      EQU   __Vectors_End - __Vectors
         PUBWEAK Reset_Handler
         SECTION .text:CODE:REORDER:NOROOT(2)
 Reset_Handler
+        /* Workaround for Errata 185 RAM: RAM corruption at extreme corners 
+         * found at the Errata document for your device located
+         * at https://infocenter.nordicsemi.com/index.jsp */
+        
+        LDR     R0, =0x10000130
+        LDR     R0, [R0]
+        LDR     R1, =0x10000134
+        LDR     R1, [R1]
+        
+        CMP     R0, #0xA
+        BNE     skip
+        CMP     R1, #0x0
+        BNE     skip
+        
+        LDR     R0, =0x40000EE4
+        LDR     R2, [R0]
+        LDR     R3, =0xFFFFFF8F
+        ANDS    R2, R2, R3
+        LDR     R3, =0x00000040
+        ORRS    R2, R2, R3
+        STR     R2, [R0]
+        
+skip
 
         LDR     R0, =SystemInit
         BLX     R0

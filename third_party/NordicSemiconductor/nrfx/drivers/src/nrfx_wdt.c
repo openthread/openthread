@@ -87,7 +87,10 @@ nrfx_err_t nrfx_wdt_init(nrfx_wdt_config_t const * p_config,
 
     nrf_wdt_behaviour_set(p_config->behaviour);
 
-    nrf_wdt_reload_value_set((p_config->reload_value * 32768) / 1000);
+    uint64_t ticks = (p_config->reload_value * 32768ULL) / 1000;
+    NRFX_ASSERT(ticks <= UINT32_MAX);
+
+    nrf_wdt_reload_value_set((uint32_t) ticks);
 
 #if !NRFX_CHECK(NRFX_WDT_CONFIG_NO_IRQ)
     NRFX_IRQ_PRIORITY_SET(WDT_IRQn, p_config->interrupt_priority);

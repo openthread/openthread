@@ -2,6 +2,8 @@
 @page nrf52840_drivers nRF52840 Drivers
 @{
 
+@ref nrf_aar
+
 @ref nrf_acl
 
 @ref nrf_ccm
@@ -11,6 +13,8 @@
 @ref nrf_comp
 
 @ref nrf_ecb
+
+@ref nrf_ficr
 
 @ref nrf_gpio
 
