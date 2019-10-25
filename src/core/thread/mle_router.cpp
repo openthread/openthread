@@ -768,21 +768,24 @@ exit:
 
 otError MleRouter::HandleLinkAccept(const Message &         aMessage,
                                     const Ip6::MessageInfo &aMessageInfo,
-                                    uint32_t                aKeySequence)
+                                    uint32_t                aKeySequence,
+                                    Neighbor *              aNeighbor)
 {
-    return HandleLinkAccept(aMessage, aMessageInfo, aKeySequence, false);
+    return HandleLinkAccept(aMessage, aMessageInfo, aKeySequence, aNeighbor, false);
 }
 
 otError MleRouter::HandleLinkAcceptAndRequest(const Message &         aMessage,
                                               const Ip6::MessageInfo &aMessageInfo,
-                                              uint32_t                aKeySequence)
+                                              uint32_t                aKeySequence,
+                                              Neighbor *              aNeighbor)
 {
-    return HandleLinkAccept(aMessage, aMessageInfo, aKeySequence, true);
+    return HandleLinkAccept(aMessage, aMessageInfo, aKeySequence, aNeighbor, true);
 }
 
 otError MleRouter::HandleLinkAccept(const Message &         aMessage,
                                     const Ip6::MessageInfo &aMessageInfo,
                                     uint32_t                aKeySequence,
+                                    Neighbor *              aNeighbor,
                                     bool                    aRequest)
 {
     static const uint8_t dataRequestTlvs[] = {Tlv::kNetworkData};
@@ -790,7 +793,6 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
     otError                 error    = OT_ERROR_NONE;
     const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
     Router *                router;
-    Neighbor *              neighbor;
     Neighbor::State         neighborState;
     Mac::ExtAddress         macAddr;
     VersionTlv              version;
@@ -803,10 +805,6 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
     RouteTlv                route;
     LeaderDataTlv           leaderData;
     LinkMarginTlv           linkMargin;
-    ChallengeTlv            challenge;
-    TlvRequestTlv           tlvRequest;
-
-    aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
 
     // Source Address
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kSourceAddress, sizeof(sourceAddress), sourceAddress));
@@ -821,19 +819,44 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
         LogMleMessage("Receive Link Accept", aMessageInfo.GetPeerAddr(), sourceAddress.GetRloc16());
     }
 
-    // Version
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kVersion, sizeof(version), version));
-    VerifyOrExit(version.IsValid(), error = OT_ERROR_PARSE);
+    VerifyOrExit(IsActiveRouter(sourceAddress.GetRloc16()), error = OT_ERROR_PARSE);
+
+    routerId      = GetRouterId(sourceAddress.GetRloc16());
+    router        = mRouterTable.GetRouter(routerId);
+    neighborState = (router != NULL) ? router->GetState() : Neighbor::kStateInvalid;
 
     // Response
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kResponse, sizeof(response), response));
     VerifyOrExit(response.IsValid(), error = OT_ERROR_PARSE);
 
-    // Remove stale neighbors
-    if ((neighbor = GetNeighbor(macAddr)) != NULL && neighbor->GetRloc16() != sourceAddress.GetRloc16())
+    // verify response
+    switch (neighborState)
     {
-        RemoveNeighbor(*neighbor);
+    case Neighbor::kStateLinkRequest:
+        VerifyOrExit(memcmp(router->GetChallenge(), response.GetResponse(), router->GetChallengeSize()) == 0,
+                     error = OT_ERROR_SECURITY);
+        break;
+
+    case Neighbor::kStateInvalid:
+        VerifyOrExit((mChallengeTimeout > 0) && (memcmp(mChallenge, response.GetResponse(), sizeof(mChallenge)) == 0),
+                     error = OT_ERROR_SECURITY);
+
+    case Neighbor::kStateValid:
+        break;
+
+    default:
+        ExitNow(error = OT_ERROR_SECURITY);
     }
+
+    // Remove stale neighbors
+    if (aNeighbor && aNeighbor->GetRloc16() != sourceAddress.GetRloc16())
+    {
+        RemoveNeighbor(*aNeighbor);
+    }
+
+    // Version
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kVersion, sizeof(version), version));
+    VerifyOrExit(version.IsValid(), error = OT_ERROR_PARSE);
 
     // Link-Layer Frame Counter
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLinkFrameCounter, sizeof(linkFrameCounter), linkFrameCounter));
@@ -861,32 +884,6 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
 
         // Wait for an MLE Advertisement to establish a routing cost to the neighbor
         linkMargin.SetLinkMargin(0);
-    }
-
-    VerifyOrExit(IsActiveRouter(sourceAddress.GetRloc16()), error = OT_ERROR_PARSE);
-
-    routerId      = GetRouterId(sourceAddress.GetRloc16());
-    router        = mRouterTable.GetRouter(routerId);
-    neighborState = (router != NULL) ? router->GetState() : Neighbor::kStateInvalid;
-
-    // verify response
-    switch (neighborState)
-    {
-    case Neighbor::kStateLinkRequest:
-        VerifyOrExit(memcmp(router->GetChallenge(), response.GetResponse(), router->GetChallengeSize()) == 0,
-                     error = OT_ERROR_SECURITY);
-        break;
-
-    case Neighbor::kStateInvalid:
-        VerifyOrExit((mChallengeTimeout > 0) && (memcmp(mChallenge, response.GetResponse(), sizeof(mChallenge)) == 0),
-                     error = OT_ERROR_SECURITY);
-        break;
-
-    case Neighbor::kStateValid:
-        break;
-
-    default:
-        ExitNow(error = OT_ERROR_INVALID_STATE);
     }
 
     switch (mRole)
@@ -968,6 +965,7 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
     }
 
     // finish link synchronization
+    aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
     router->SetExtAddress(macAddr);
     router->SetRloc16(sourceAddress.GetRloc16());
     router->SetLinkFrameCounter(linkFrameCounter.GetFrameCounter());
@@ -986,6 +984,9 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
 
     if (aRequest)
     {
+        ChallengeTlv  challenge;
+        TlvRequestTlv tlvRequest;
+
         // Challenge
         SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kChallenge, sizeof(challenge), challenge));
         VerifyOrExit(challenge.IsValid(), error = OT_ERROR_PARSE);
