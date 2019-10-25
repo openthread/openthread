@@ -1707,14 +1707,18 @@ private:
     void        ScheduleMessageTransmissionTimer(void);
 
     otError HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError HandleChildIdResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError HandleChildIdResponse(const Message &         aMessage,
+                                  const Ip6::MessageInfo &aMessageInfo,
+                                  const Neighbor *        aNeighbor);
     otError HandleChildUpdateRequest(const Message &         aMessage,
                                      const Ip6::MessageInfo &aMessageInfo,
                                      Neighbor *              aNeighbor);
     otError HandleChildUpdateResponse(const Message &         aMessage,
                                       const Ip6::MessageInfo &aMessageInfo,
                                       const Neighbor *        aNeighbor);
-    otError HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError HandleDataResponse(const Message &         aMessage,
+                               const Ip6::MessageInfo &aMessageInfo,
+                               const Neighbor *        aNeighbor);
     otError HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence);
     otError HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

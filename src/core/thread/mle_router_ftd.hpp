@@ -698,11 +698,11 @@ private:
                                       const Ip6::MessageInfo &aMessageInfo,
                                       uint32_t                aKeySequence,
                                       Neighbor *              aNeighbor);
-    otError HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor);
     void    HandleNetworkDataUpdateRouter(void);
     otError HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    void HandleTimeSync(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleTimeSync(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor);
 #endif
 
     otError ProcessRouteTlv(const RouteTlv &aRoute);

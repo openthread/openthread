@@ -147,14 +147,14 @@ private:
     {
         return OT_ERROR_DROP;
     }
-    otError HandleDataRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
+    otError HandleDataRequest(const Message &, const Ip6::MessageInfo &, const Neighbor *) { return OT_ERROR_DROP; }
     void    HandleNetworkDataUpdateRouter(void) {}
     otError HandleDiscoveryRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
     void    HandlePartitionChange(void) {}
     void    StopAdvertiseTimer(void) {}
     otError ProcessRouteTlv(const RouteTlv &) { return OT_ERROR_NONE; }
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    otError HandleTimeSync(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
+    otError HandleTimeSync(const Message &, const Ip6::MessageInfo &, const Neighbor *) { return OT_ERROR_DROP; }
 #endif
 
     ChildTable  mChildTable;
