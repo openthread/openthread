@@ -40,6 +40,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "nrf_802154_types.h"
+
 /**
  * @brief Initializes the ACK data generator module.
  */
@@ -98,6 +100,19 @@ bool nrf_802154_ack_data_for_addr_clear(const uint8_t * p_addr, bool extended, u
  * @param[in]  data_type Type of data that is to be cleared for all addresses of a given length.
  */
 void nrf_802154_ack_data_reset(bool extended, uint8_t data_type);
+
+/**
+ * @brief Select the source matching algorithm.
+ *
+ * @note This function is to be called after the driver initialization, but before the transceiver is enabled.
+ *
+ * When calling @ref nrf_802154_ack_data_pending_bit_should_be_set, one of several algorithms
+ * for source address matching will be chosen. To ensure a specific algorithm is selected,
+ * call this function before @ref rf_802154_ack_data_pending_bit_should_be_set.
+ *
+ * @param[in]  match_method Source matching method to be used.
+ */
+void nrf_802154_ack_data_src_addr_matching_method_set(nrf_802154_src_addr_match_t match_method);
 
 /**
  * @brief Checks if a pending bit is to be set in the ACK frame sent in response to a given frame.

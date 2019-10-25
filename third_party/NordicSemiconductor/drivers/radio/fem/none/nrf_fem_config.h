@@ -1,4 +1,4 @@
-/* Copyright (c) 2019, Nordic Semiconductor ASA
+/* Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,55 +28,34 @@
  *
  */
 
-/**
- * @file
- *   This file implements the pseudo-random number generator abstraction layer.
- *
- * This pseudo-random number abstraction layer uses standard library rand() function.
- *
- */
+#ifndef NRF_FEM_CONFIG_H_
+#define NRF_FEM_CONFIG_H_
 
-#include "nrf_802154_random.h"
-
-#include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 
-#include "nrf.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#if RAAL_SOFTDEVICE
-#include <nrf_soc.h>
-#endif // RAAL_SOFTDEVICE
-
-void nrf_802154_random_init(void)
+/**
+ * @brief Configuration parameters for pins that enable or disable (or both) either Power Amplifier (PA) or Low Noise Amplifier (LNA).
+ */
+typedef struct
 {
-    uint32_t seed;
 
-#if RAAL_SOFTDEVICE
-    uint32_t result;
+} nrf_fem_gpiote_pin_config_t;
 
-    do
-    {
-        result = sd_rand_application_vector_get((uint8_t *)&seed, sizeof(seed));
-    }
-    while (result != NRF_SUCCESS);
-#else // RAAL_SOFTDEVICE
-    NRF_RNG->TASKS_START = 1;
-
-    while (!NRF_RNG->EVENTS_VALRDY);
-    NRF_RNG->EVENTS_VALRDY = 0;
-
-    seed = NRF_RNG->VALUE;
-#endif // RAAL_SOFTDEVICE
-
-    srand((unsigned int)seed);
-}
-
-void nrf_802154_random_deinit(void)
+/**
+ * @brief Configuration parameters for the PA/LNA interface.
+ */
+typedef struct
 {
-    // Intentionally empty
-}
 
-uint32_t nrf_802154_random_get(void)
-{
-    return (uint32_t)rand();
+} nrf_fem_interface_config_t;
+
+#ifdef __cplusplus
 }
+#endif
+
+#endif /* NRF_FEM_CONFIG_H_ */

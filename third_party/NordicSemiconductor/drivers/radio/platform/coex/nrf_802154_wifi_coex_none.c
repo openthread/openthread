@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+/* Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,40 +29,41 @@
  */
 
 /**
- * @brief Module that contains helpers for checking the nRF SoC revision.
+ * @file
+ *   This file implements the nrf 802.15.4 WiFi Coexitstence abstraction in case no implementation is used.
  *
  */
 
-#ifndef NRF_802154_REVISION_H_
-#define NRF_802154_REVISION_H_
+#include "nrf_802154_wifi_coex.h"
 
-#include <stdbool.h>
-#include <stdint.h>
+#include "stddef.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <nrf.h>
 
-/**
- * @brief Initializes the module by reading the nRF52840 revision from the registers and storing it
- * for convenient access.
- *
- * @note If the chip revision is not recognized, this module assumes that it is running on a newer
- *       chip revision that has all of the features compared to the features of the most recent
- *       known revision.
- */
-void nrf_802154_revision_init(void);
-
-/**
- * @brief Checks if the program is running on the nRF52840 revision that supports the PHYEND event.
- *
- * @retval true  The PHYEND event is supported.
- * @retval false The PHYEND event is not supported.
- */
-bool nrf_802154_revision_has_phyend_event(void);
-
-#ifdef __cplusplus
+void nrf_802154_wifi_coex_init(void)
+{
+    // Intentionally empty
 }
-#endif
 
-#endif /* NRF_802154_REVISION_H_ */
+void nrf_802154_wifi_coex_uninit(void)
+{
+    // Intentionally empty
+}
+
+void nrf_802154_wifi_coex_prio_request(rsch_prio_t priority)
+{
+    (void)priority;
+    // Intentionally empty
+}
+
+void * nrf_802154_wifi_coex_deny_event_addr_get(void)
+{
+    // Intentionally empty
+    return NULL;
+}
+
+__WEAK void nrf_802154_wifi_coex_prio_changed(rsch_prio_t priority)
+{
+    (void)priority;
+    // Intentionally empty
+}

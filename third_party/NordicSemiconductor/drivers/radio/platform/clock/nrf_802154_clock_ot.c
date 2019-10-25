@@ -1,4 +1,4 @@
-/* Copyright (c) 2019, Nordic Semiconductor ASA
+/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,53 +30,85 @@
 
 /**
  * @file
- *   This file implements the pseudo-random number generator abstraction layer.
+ *   This file implements the nrf 802.15.4 HF Clock abstraction with SDK driver.
  *
- * This pseudo-random number abstraction layer uses standard library rand() function.
- *
+ * This implementation uses clock driver implementation from SDK.
  */
 
-#include "nrf_802154_random.h"
+#include "nrf_802154_clock.h"
 
-#include <stdlib.h>
-#include <stdint.h>
+#include <stddef.h>
 
-#include "nrf.h"
+#include <compiler_abstraction.h>
+#include <nrf_drv_clock.h>
 
-#if RAAL_SOFTDEVICE
-#include <nrf_soc.h>
-#endif // RAAL_SOFTDEVICE
+static void clock_handler(nrf_drv_clock_evt_type_t event);
 
-void nrf_802154_random_init(void)
+static nrf_drv_clock_handler_item_t m_clock_handler =
 {
-    uint32_t seed;
+    .p_next        = NULL,
+    .event_handler = clock_handler,
+};
 
-#if RAAL_SOFTDEVICE
-    uint32_t result;
-
-    do
+static void clock_handler(nrf_drv_clock_evt_type_t event)
+{
+    if (event == NRF_DRV_CLOCK_EVT_HFCLK_STARTED)
     {
-        result = sd_rand_application_vector_get((uint8_t *)&seed, sizeof(seed));
+        nrf_802154_clock_hfclk_ready();
     }
-    while (result != NRF_SUCCESS);
-#else // RAAL_SOFTDEVICE
-    NRF_RNG->TASKS_START = 1;
 
-    while (!NRF_RNG->EVENTS_VALRDY);
-    NRF_RNG->EVENTS_VALRDY = 0;
-
-    seed = NRF_RNG->VALUE;
-#endif // RAAL_SOFTDEVICE
-
-    srand((unsigned int)seed);
+    if (event == NRF_DRV_CLOCK_EVT_LFCLK_STARTED)
+    {
+        nrf_802154_clock_lfclk_ready();
+    }
 }
 
-void nrf_802154_random_deinit(void)
+void nrf_802154_clock_init(void)
 {
-    // Intentionally empty
+    // Intentionally empty.
 }
 
-uint32_t nrf_802154_random_get(void)
+void nrf_802154_clock_deinit(void)
 {
-    return (uint32_t)rand();
+    // Intentionally empty.
+}
+
+void nrf_802154_clock_hfclk_start(void)
+{
+    nrf_drv_clock_hfclk_request(&m_clock_handler);
+}
+
+void nrf_802154_clock_hfclk_stop(void)
+{
+    nrf_drv_clock_hfclk_release();
+}
+
+bool nrf_802154_clock_hfclk_is_running(void)
+{
+    return nrf_drv_clock_hfclk_is_running();
+}
+
+void nrf_802154_clock_lfclk_start(void)
+{
+    nrf_drv_clock_lfclk_request(&m_clock_handler);
+}
+
+void nrf_802154_clock_lfclk_stop(void)
+{
+    nrf_drv_clock_lfclk_release();
+}
+
+bool nrf_802154_clock_lfclk_is_running(void)
+{
+    return nrf_drv_clock_lfclk_is_running();
+}
+
+__WEAK void nrf_802154_clock_hfclk_ready(void)
+{
+    // Intentionally empty.
+}
+
+__WEAK void nrf_802154_clock_lfclk_ready(void)
+{
+    // Intentionally empty.
 }

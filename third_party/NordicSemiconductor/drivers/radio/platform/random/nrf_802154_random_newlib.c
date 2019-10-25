@@ -32,9 +32,11 @@
  * @file
  *   This file implements the pseudo-random number generator abstraction layer.
  *
- * This pseudo-random number abstraction layer uses standard library rand() function.
+ * This pseudo-random number abstraction layer uses newlib's rand_r() function.
  *
  */
+
+#define _POSIX_C_SOURCE 1 // Enable access to POSIX functions (rand_r is not from the std library)
 
 #include "nrf_802154_random.h"
 
@@ -47,16 +49,16 @@
 #include <nrf_soc.h>
 #endif // RAAL_SOFTDEVICE
 
+unsigned int m_seed;
+
 void nrf_802154_random_init(void)
 {
-    uint32_t seed;
-
 #if RAAL_SOFTDEVICE
     uint32_t result;
 
     do
     {
-        result = sd_rand_application_vector_get((uint8_t *)&seed, sizeof(seed));
+        result = sd_rand_application_vector_get((uint8_t *)&m_seed, sizeof(m_seed));
     }
     while (result != NRF_SUCCESS);
 #else // RAAL_SOFTDEVICE
@@ -65,10 +67,8 @@ void nrf_802154_random_init(void)
     while (!NRF_RNG->EVENTS_VALRDY);
     NRF_RNG->EVENTS_VALRDY = 0;
 
-    seed = NRF_RNG->VALUE;
+    m_seed = NRF_RNG->VALUE;
 #endif // RAAL_SOFTDEVICE
-
-    srand((unsigned int)seed);
 }
 
 void nrf_802154_random_deinit(void)
@@ -78,5 +78,5 @@ void nrf_802154_random_deinit(void)
 
 uint32_t nrf_802154_random_get(void)
 {
-    return (uint32_t)rand();
+    return (uint32_t)rand_r(&m_seed);
 }
