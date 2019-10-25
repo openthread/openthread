@@ -241,6 +241,7 @@ EXTRA_DIST                                 = \
 
 libopenthread_radio_a_SOURCES              = \
     api/diags_api.cpp                        \
+    api/heap_api.cpp                         \
     api/instance_api.cpp                     \
     api/link_raw_api.cpp                     \
     api/logging_api.cpp                      \
