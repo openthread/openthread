@@ -1155,6 +1155,25 @@ static void usbd_ep_data_handler(nrfx_usbd_ep_t ep, uint8_t bitpos)
     if (NRF_USBD_EPIN_CHECK(ep))
     {
         /* IN endpoint (Device -> Host) */
+
+        /* Secure against the race condition that occurs when an IN transfer is interrupted
+         * by an OUT transaction, which in turn is interrupted by a process with higher priority.
+         * If the IN events ENDEPIN and EPDATA arrive during that high priority process,
+         * the OUT handler might call usbd_ep_data_handler without calling
+         * nrf_usbd_epin_dma_handler (or nrf_usbd_ep0in_dma_handler) for the IN transaction.
+         */
+        if (nrf_usbd_event_get_and_clear(nrfx_usbd_ep_to_endevent(ep)))
+        {
+            if (ep != NRFX_USBD_EPIN0)
+            {
+                nrf_usbd_epin_dma_handler(ep);
+            }
+            else
+            {
+                nrf_usbd_ep0in_dma_handler();
+            }
+        }
+
         if (0 == (m_ep_dma_waiting & (1U << bitpos)))
         {
             NRFX_LOG_DEBUG("USBD event: EndpointData: In finished");
@@ -1199,7 +1218,7 @@ static void ev_setup_handler(void)
     }
 
     m_last_setup_dir =
-        ((bmRequestType & USBD_BMREQUESTTYPE_DIRECTION_Msk) == 
+        ((bmRequestType & USBD_BMREQUESTTYPE_DIRECTION_Msk) ==
          (USBD_BMREQUESTTYPE_DIRECTION_HostToDevice << USBD_BMREQUESTTYPE_DIRECTION_Pos)) ?
         NRFX_USBD_EPOUT0 : NRFX_USBD_EPIN0;
 
@@ -1466,7 +1485,8 @@ static void usbd_dmareq_process(void)
                 /* There is a lot of USBD registers that cannot be accessed during EasyDMA transfer.
                  * This is quick fix to maintain stability of the stack.
                  * It cost some performance but makes stack stable. */
-                while (!nrf_usbd_event_check(nrfx_usbd_ep_to_endevent(ep)))
+                while (!nrf_usbd_event_check(nrfx_usbd_ep_to_endevent(ep)) &&
+                       !nrf_usbd_event_check(NRF_USBD_EVENT_USBRESET))
                 {
                     /* Empty */
                 }
@@ -1725,7 +1745,7 @@ void nrfx_usbd_enable(void)
         }
         NRFX_CRITICAL_SECTION_EXIT();
     }
-    
+
     if (nrfx_usbd_errata_171())
     {
         NRFX_CRITICAL_SECTION_ENTER();
@@ -1750,7 +1770,7 @@ void nrfx_usbd_enable(void)
         /* Empty loop */
     }
     nrf_usbd_eventcause_clear(NRF_USBD_EVENTCAUSE_READY_MASK);
-    
+
     if (nrfx_usbd_errata_171())
     {
         NRFX_CRITICAL_SECTION_ENTER();
@@ -1979,7 +1999,9 @@ void nrfx_usbd_force_bus_wakeup(void)
 void nrfx_usbd_ep_max_packet_size_set(nrfx_usbd_ep_t ep, uint16_t size)
 {
     /* Only power of 2 size allowed */
-    NRFX_ASSERT((size != 0) && (size & (size - 1)) == 0);
+    NRFX_ASSERT((size & 0x01) == 0);
+    /* 0 allowed only for ISO endpoints */
+    NRFX_ASSERT((size != 0) || NRF_USBD_EPISO_CHECK(ep));
     /* Packet size cannot be higher than maximum buffer size */
     NRFX_ASSERT((NRF_USBD_EPISO_CHECK(ep) && (size <= usbd_ep_iso_capacity(ep))) ||
                 (!NRF_USBD_EPISO_CHECK(ep) && (size <= NRFX_USBD_EPSIZE)));

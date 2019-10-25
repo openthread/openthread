@@ -1599,6 +1599,7 @@ POSSIBILITY OF SUCH DAMAGE.
 /* Bits 31..0 : Part code */
 #define FICR_INFO_PART_PART_Pos (0UL) /*!< Position of PART field. */
 #define FICR_INFO_PART_PART_Msk (0xFFFFFFFFUL << FICR_INFO_PART_PART_Pos) /*!< Bit mask of PART field. */
+#define FICR_INFO_PART_PART_N52833 (0x52833UL) /*!< nRF52833 */
 #define FICR_INFO_PART_PART_N52840 (0x52840UL) /*!< nRF52840 */
 #define FICR_INFO_PART_PART_Unspecified (0xFFFFFFFFUL) /*!< Unspecified */
 
@@ -1624,6 +1625,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define FICR_INFO_PACKAGE_PACKAGE_Pos (0UL) /*!< Position of PACKAGE field. */
 #define FICR_INFO_PACKAGE_PACKAGE_Msk (0xFFFFFFFFUL << FICR_INFO_PACKAGE_PACKAGE_Pos) /*!< Bit mask of PACKAGE field. */
 #define FICR_INFO_PACKAGE_PACKAGE_QI (0x2004UL) /*!< QIxx - 73-pin aQFN */
+#define FICR_INFO_PACKAGE_PACKAGE_CK (0x2005UL) /*!< CKxx - WLCSP */
 #define FICR_INFO_PACKAGE_PACKAGE_Unspecified (0xFFFFFFFFUL) /*!< Unspecified */
 
 /* Register: FICR_INFO_RAM */
@@ -1781,7 +1783,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define FICR_TEMP_T4_T_Msk (0xFFUL << FICR_TEMP_T4_T_Pos) /*!< Bit mask of T field. */
 
 /* Register: FICR_NFC_TAGHEADER0 */
-/* Description: Default header for NFC tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST and NFCID1_LAST. */
+/* Description: Default header for NFC tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST, and NFCID1_LAST. */
 
 /* Bits 31..24 : Unique identifier byte 3 */
 #define FICR_NFC_TAGHEADER0_UD3_Pos (24UL) /*!< Position of UD3 field. */
@@ -1800,7 +1802,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define FICR_NFC_TAGHEADER0_MFGID_Msk (0xFFUL << FICR_NFC_TAGHEADER0_MFGID_Pos) /*!< Bit mask of MFGID field. */
 
 /* Register: FICR_NFC_TAGHEADER1 */
-/* Description: Default header for NFC tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST and NFCID1_LAST. */
+/* Description: Default header for NFC tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST, and NFCID1_LAST. */
 
 /* Bits 31..24 : Unique identifier byte 7 */
 #define FICR_NFC_TAGHEADER1_UD7_Pos (24UL) /*!< Position of UD7 field. */
@@ -1819,7 +1821,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define FICR_NFC_TAGHEADER1_UD4_Msk (0xFFUL << FICR_NFC_TAGHEADER1_UD4_Pos) /*!< Bit mask of UD4 field. */
 
 /* Register: FICR_NFC_TAGHEADER2 */
-/* Description: Default header for NFC tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST and NFCID1_LAST. */
+/* Description: Default header for NFC tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST, and NFCID1_LAST. */
 
 /* Bits 31..24 : Unique identifier byte 11 */
 #define FICR_NFC_TAGHEADER2_UD11_Pos (24UL) /*!< Position of UD11 field. */
@@ -1838,7 +1840,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define FICR_NFC_TAGHEADER2_UD8_Msk (0xFFUL << FICR_NFC_TAGHEADER2_UD8_Pos) /*!< Bit mask of UD8 field. */
 
 /* Register: FICR_NFC_TAGHEADER3 */
-/* Description: Default header for NFC tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST and NFCID1_LAST. */
+/* Description: Default header for NFC tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST, and NFCID1_LAST. */
 
 /* Bits 31..24 : Unique identifier byte 15 */
 #define FICR_NFC_TAGHEADER3_UD15_Pos (24UL) /*!< Position of UD15 field. */
@@ -7015,17 +7017,17 @@ POSSIBILITY OF SUCH DAMAGE.
 /* Description: Power control */
 
 /* Register: POWER_TASKS_CONSTLAT */
-/* Description: Enable constant latency mode */
+/* Description: Enable Constant Latency mode */
 
-/* Bit 0 : Enable constant latency mode */
+/* Bit 0 : Enable Constant Latency mode */
 #define POWER_TASKS_CONSTLAT_TASKS_CONSTLAT_Pos (0UL) /*!< Position of TASKS_CONSTLAT field. */
 #define POWER_TASKS_CONSTLAT_TASKS_CONSTLAT_Msk (0x1UL << POWER_TASKS_CONSTLAT_TASKS_CONSTLAT_Pos) /*!< Bit mask of TASKS_CONSTLAT field. */
 #define POWER_TASKS_CONSTLAT_TASKS_CONSTLAT_Trigger (1UL) /*!< Trigger task */
 
 /* Register: POWER_TASKS_LOWPWR */
-/* Description: Enable low power mode (variable latency) */
+/* Description: Enable Low-power mode (variable latency) */
 
-/* Bit 0 : Enable low power mode (variable latency) */
+/* Bit 0 : Enable Low-power mode (variable latency) */
 #define POWER_TASKS_LOWPWR_TASKS_LOWPWR_Pos (0UL) /*!< Position of TASKS_LOWPWR field. */
 #define POWER_TASKS_LOWPWR_TASKS_LOWPWR_Msk (0x1UL << POWER_TASKS_LOWPWR_TASKS_LOWPWR_Pos) /*!< Bit mask of TASKS_LOWPWR field. */
 #define POWER_TASKS_LOWPWR_TASKS_LOWPWR_Trigger (1UL) /*!< Trigger task */
@@ -7341,7 +7343,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define POWER_GPREGRET2_GPREGRET_Msk (0xFFUL << POWER_GPREGRET2_GPREGRET_Pos) /*!< Bit mask of GPREGRET field. */
 
 /* Register: POWER_DCDCEN */
-/* Description: Enable DC/DC converter for REG1 stage. */
+/* Description: Enable DC/DC converter for REG1 stage */
 
 /* Bit 0 : Enable DC/DC converter for REG1 stage. */
 #define POWER_DCDCEN_DCDCEN_Pos (0UL) /*!< Position of DCDCEN field. */
@@ -7350,7 +7352,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define POWER_DCDCEN_DCDCEN_Enabled (1UL) /*!< Enable */
 
 /* Register: POWER_DCDCEN0 */
-/* Description: Enable DC/DC converter for REG0 stage. */
+/* Description: Enable DC/DC converter for REG0 stage */
 
 /* Bit 0 : Enable DC/DC converter for REG0 stage. */
 #define POWER_DCDCEN0_DCDCEN_Pos (0UL) /*!< Position of DCDCEN field. */
@@ -15828,9 +15830,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #define UICR_DEBUGCTRL_CPUNIDEN_Enabled (0xFFUL) /*!< Enable CPU ITM and ETM functionality (default behavior) */
 
 /* Register: UICR_REGOUT0 */
-/* Description: GPIO reference voltage / external output supply voltage in high voltage mode */
+/* Description: Output voltage from REG0 regulator stage. The maximum output voltage from this stage is given as VDDH - VREG0DROP. */
 
-/* Bits 2..0 : Output voltage from of REG0 regulator stage. The maximum output voltage from this stage is given as VDDH - VEXDIF. */
+/* Bits 2..0 : Output voltage from REG0 regulator stage. */
 #define UICR_REGOUT0_VOUT_Pos (0UL) /*!< Position of VOUT field. */
 #define UICR_REGOUT0_VOUT_Msk (0x7UL << UICR_REGOUT0_VOUT_Pos) /*!< Bit mask of VOUT field. */
 #define UICR_REGOUT0_VOUT_1V8 (0UL) /*!< 1.8 V */
@@ -15936,9 +15938,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #define USBD_EVENTS_STARTED_EVENTS_STARTED_Generated (1UL) /*!< Event generated */
 
 /* Register: USBD_EVENTS_ENDEPIN */
-/* Description: Description collection: The whole EPIN[n] buffer has been consumed. The RAM buffer can be accessed safely by software. */
+/* Description: Description collection: The whole EPIN[n] buffer has been consumed. The buffer can be accessed safely by software. */
 
-/* Bit 0 : The whole EPIN[n] buffer has been consumed. The RAM buffer can be accessed safely by software. */
+/* Bit 0 : The whole EPIN[n] buffer has been consumed. The buffer can be accessed safely by software. */
 #define USBD_EVENTS_ENDEPIN_EVENTS_ENDEPIN_Pos (0UL) /*!< Position of EVENTS_ENDEPIN field. */
 #define USBD_EVENTS_ENDEPIN_EVENTS_ENDEPIN_Msk (0x1UL << USBD_EVENTS_ENDEPIN_EVENTS_ENDEPIN_Pos) /*!< Bit mask of EVENTS_ENDEPIN field. */
 #define USBD_EVENTS_ENDEPIN_EVENTS_ENDEPIN_NotGenerated (0UL) /*!< Event not generated */
@@ -15954,27 +15956,27 @@ POSSIBILITY OF SUCH DAMAGE.
 #define USBD_EVENTS_EP0DATADONE_EVENTS_EP0DATADONE_Generated (1UL) /*!< Event generated */
 
 /* Register: USBD_EVENTS_ENDISOIN */
-/* Description: The whole ISOIN buffer has been consumed. The RAM buffer can be accessed safely by software. */
+/* Description: The whole ISOIN buffer has been consumed. The buffer can be accessed safely by software. */
 
-/* Bit 0 : The whole ISOIN buffer has been consumed. The RAM buffer can be accessed safely by software. */
+/* Bit 0 : The whole ISOIN buffer has been consumed. The buffer can be accessed safely by software. */
 #define USBD_EVENTS_ENDISOIN_EVENTS_ENDISOIN_Pos (0UL) /*!< Position of EVENTS_ENDISOIN field. */
 #define USBD_EVENTS_ENDISOIN_EVENTS_ENDISOIN_Msk (0x1UL << USBD_EVENTS_ENDISOIN_EVENTS_ENDISOIN_Pos) /*!< Bit mask of EVENTS_ENDISOIN field. */
 #define USBD_EVENTS_ENDISOIN_EVENTS_ENDISOIN_NotGenerated (0UL) /*!< Event not generated */
 #define USBD_EVENTS_ENDISOIN_EVENTS_ENDISOIN_Generated (1UL) /*!< Event generated */
 
 /* Register: USBD_EVENTS_ENDEPOUT */
-/* Description: Description collection: The whole EPOUT[n] buffer has been consumed. The RAM buffer can be accessed safely by software. */
+/* Description: Description collection: The whole EPOUT[n] buffer has been consumed. The buffer can be accessed safely by software. */
 
-/* Bit 0 : The whole EPOUT[n] buffer has been consumed. The RAM buffer can be accessed safely by software. */
+/* Bit 0 : The whole EPOUT[n] buffer has been consumed. The buffer can be accessed safely by software. */
 #define USBD_EVENTS_ENDEPOUT_EVENTS_ENDEPOUT_Pos (0UL) /*!< Position of EVENTS_ENDEPOUT field. */
 #define USBD_EVENTS_ENDEPOUT_EVENTS_ENDEPOUT_Msk (0x1UL << USBD_EVENTS_ENDEPOUT_EVENTS_ENDEPOUT_Pos) /*!< Bit mask of EVENTS_ENDEPOUT field. */
 #define USBD_EVENTS_ENDEPOUT_EVENTS_ENDEPOUT_NotGenerated (0UL) /*!< Event not generated */
 #define USBD_EVENTS_ENDEPOUT_EVENTS_ENDEPOUT_Generated (1UL) /*!< Event generated */
 
 /* Register: USBD_EVENTS_ENDISOOUT */
-/* Description: The whole ISOOUT buffer has been consumed. The RAM buffer can be accessed safely by software. */
+/* Description: The whole ISOOUT buffer has been consumed. The buffer can be accessed safely by software. */
 
-/* Bit 0 : The whole ISOOUT buffer has been consumed. The RAM buffer can be accessed safely by software. */
+/* Bit 0 : The whole ISOOUT buffer has been consumed. The buffer can be accessed safely by software. */
 #define USBD_EVENTS_ENDISOOUT_EVENTS_ENDISOOUT_Pos (0UL) /*!< Position of EVENTS_ENDISOOUT field. */
 #define USBD_EVENTS_ENDISOOUT_EVENTS_ENDISOOUT_Msk (0x1UL << USBD_EVENTS_ENDISOOUT_EVENTS_ENDISOOUT_Pos) /*!< Bit mask of EVENTS_ENDISOOUT field. */
 #define USBD_EVENTS_ENDISOOUT_EVENTS_ENDISOOUT_NotGenerated (0UL) /*!< Event not generated */
@@ -17136,7 +17138,7 @@ POSSIBILITY OF SUCH DAMAGE.
 /* Register: USBD_EPIN_PTR */
 /* Description: Description cluster: Data pointer */
 
-/* Bits 31..0 : Data pointer. Accepts any address in Data RAM. */
+/* Bits 31..0 : Data pointer */
 #define USBD_EPIN_PTR_PTR_Pos (0UL) /*!< Position of PTR field. */
 #define USBD_EPIN_PTR_PTR_Msk (0xFFFFFFFFUL << USBD_EPIN_PTR_PTR_Pos) /*!< Bit mask of PTR field. */
 
@@ -17157,7 +17159,7 @@ POSSIBILITY OF SUCH DAMAGE.
 /* Register: USBD_ISOIN_PTR */
 /* Description: Data pointer */
 
-/* Bits 31..0 : Data pointer. Accepts any address in Data RAM. */
+/* Bits 31..0 : Data pointer */
 #define USBD_ISOIN_PTR_PTR_Pos (0UL) /*!< Position of PTR field. */
 #define USBD_ISOIN_PTR_PTR_Msk (0xFFFFFFFFUL << USBD_ISOIN_PTR_PTR_Pos) /*!< Bit mask of PTR field. */
 
@@ -17178,7 +17180,7 @@ POSSIBILITY OF SUCH DAMAGE.
 /* Register: USBD_EPOUT_PTR */
 /* Description: Description cluster: Data pointer */
 
-/* Bits 31..0 : Data pointer. Accepts any address in Data RAM. */
+/* Bits 31..0 : Data pointer */
 #define USBD_EPOUT_PTR_PTR_Pos (0UL) /*!< Position of PTR field. */
 #define USBD_EPOUT_PTR_PTR_Msk (0xFFFFFFFFUL << USBD_EPOUT_PTR_PTR_Pos) /*!< Bit mask of PTR field. */
 
@@ -17199,7 +17201,7 @@ POSSIBILITY OF SUCH DAMAGE.
 /* Register: USBD_ISOOUT_PTR */
 /* Description: Data pointer */
 
-/* Bits 31..0 : Data pointer. Accepts any address in Data RAM. */
+/* Bits 31..0 : Data pointer */
 #define USBD_ISOOUT_PTR_PTR_Pos (0UL) /*!< Position of PTR field. */
 #define USBD_ISOOUT_PTR_PTR_Msk (0xFFFFFFFFUL << USBD_ISOOUT_PTR_PTR_Pos) /*!< Bit mask of PTR field. */
 

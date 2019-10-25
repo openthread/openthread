@@ -45,69 +45,104 @@
 
 static inline bool nrfx_usbd_errata_type_52840(void)
 {
-    return (*(uint32_t *)0x10000130UL == 0x8UL);
+    return (*(uint32_t const *)0x10000130UL == 0x8UL);
 }
 
-static inline bool nrfx_usbd_errata_type_52840_eng_a(void)
+static inline bool nrfx_usbd_errata_type_52840_eng_a_or_later(void)
 {
     return nrfx_usbd_errata_type_52840();
 }
 
-static inline bool nrfx_usbd_errata_type_52840_eng_b(void)
+static inline bool nrfx_usbd_errata_type_52840_eng_b_or_later(void)
 {
-    return (nrfx_usbd_errata_type_52840() && (*(uint32_t *)0x10000134UL >= 0x1UL));
+    return (nrfx_usbd_errata_type_52840() && (*(uint32_t const *)0x10000134UL >= 0x1UL));
 }
 
-static inline bool nrfx_usbd_errata_type_52840_eng_c(void)
+static inline bool nrfx_usbd_errata_type_52840_eng_c_or_later(void)
 {
-    return (nrfx_usbd_errata_type_52840() && (*(uint32_t *)0x10000134UL >= 0x2UL));
+    return (nrfx_usbd_errata_type_52840() && (*(uint32_t const *)0x10000134UL >= 0x2UL));
 }
 
-static inline bool nrfx_usbd_errata_type_52840_eng_d(void)
+static inline bool nrfx_usbd_errata_type_52840_eng_d_or_later(void)
 {
-    return (nrfx_usbd_errata_type_52840() && (*(uint32_t *)0x10000134UL >= 0x3UL));
+    return (nrfx_usbd_errata_type_52840() && (*(uint32_t const *)0x10000134UL >= 0x3UL));
 }
 
-/* Errata: USBD: EPDATA event is not always generated. */
+static inline bool nrfx_usbd_errata_type_52833(void)
+{
+    return (*(uint32_t const *)0x10000130UL == 0x0DUL);
+}
+
+static inline bool nrfx_usbd_errata_type_52833_eng_a_or_later(void)
+{
+    return nrfx_usbd_errata_type_52833();
+}
+
+/* Errata: USBD: EPDATA event is not always generated.
+ *
+ * Applies to nRF52840 Engineering A.
+ **/
 static inline bool nrfx_usbd_errata_104(void)
 {
-    return (NRFX_USBD_ERRATA_ENABLE && (!nrfx_usbd_errata_type_52840_eng_b()));
+    return (NRFX_USBD_ERRATA_ENABLE && (nrfx_usbd_errata_type_52840()
+                                        && !nrfx_usbd_errata_type_52840_eng_b_or_later()));
 }
 
-/* Errata: During setup read/write transfer USBD acknowledges setup stage without SETUP task. */
+/* Errata: During setup read/write transfer USBD acknowledges setup stage without SETUP task.
+ *
+ * Applies to nRF52840 Engineering A.
+ **/
 static inline bool nrfx_usbd_errata_154(void)
 {
-    return (NRFX_USBD_ERRATA_ENABLE && (!nrfx_usbd_errata_type_52840_eng_b()));
+    return (NRFX_USBD_ERRATA_ENABLE && (nrfx_usbd_errata_type_52840()
+                                        && !nrfx_usbd_errata_type_52840_eng_b_or_later()));
 }
 
-/* Errata: ISO double buffering not functional. */
+/* Errata: ISO double buffering not functional.
+ *
+ * Applies to nRF52840.
+ **/
 static inline bool nrfx_usbd_errata_166(void)
 {
-    return (NRFX_USBD_ERRATA_ENABLE && true);
+    return (NRFX_USBD_ERRATA_ENABLE && nrfx_usbd_errata_type_52840());
 }
 
-/* Errata: USBD might not reach its active state. */
+/* Errata: USBD might not reach its active state.
+ *
+ * Applies to nRF52840.
+ **/
 static inline bool nrfx_usbd_errata_171(void)
 {
-    return (NRFX_USBD_ERRATA_ENABLE && true);
+    return (NRFX_USBD_ERRATA_ENABLE && nrfx_usbd_errata_type_52840());
 }
 
-/* Errata: USB cannot be enabled. */
+/* Errata: USB cannot be enabled.
+ *
+ * Applies to nRF52840 Engineering B or later and nRF52833.
+ **/
 static inline bool nrfx_usbd_errata_187(void)
 {
-    return (NRFX_USBD_ERRATA_ENABLE && nrfx_usbd_errata_type_52840_eng_b());
+    return (NRFX_USBD_ERRATA_ENABLE && (nrfx_usbd_errata_type_52840_eng_b_or_later()
+                                        || nrfx_usbd_errata_type_52833()));
 }
 
-/* Errata: USBD cannot receive tasks during DMA. */
+/* Errata: USBD cannot receive tasks during DMA.
+ *
+ * Applies to nRF52840.
+ **/
 static inline bool nrfx_usbd_errata_199(void)
 {
-    return (NRFX_USBD_ERRATA_ENABLE && true);
+    return (NRFX_USBD_ERRATA_ENABLE && nrfx_usbd_errata_type_52840());
 }
 
-/* Errata: SIZE.EPOUT not writable. */
+/* Errata: SIZE.EPOUT not writable.
+ *
+ * Applies to nRF52840 Engineering A.
+ **/
 static inline bool nrfx_usbd_errata_200(void)
 {
-    return (NRFX_USBD_ERRATA_ENABLE && (!nrfx_usbd_errata_type_52840_eng_b()));
+    return (NRFX_USBD_ERRATA_ENABLE && (nrfx_usbd_errata_type_52840()
+                                        && !nrfx_usbd_errata_type_52840_eng_b_or_later()));
 }
 
 #endif // NRFX_USBD_ERRATA_H__

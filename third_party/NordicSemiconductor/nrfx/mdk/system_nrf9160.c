@@ -33,6 +33,16 @@ NOTICE: This file has been modified by Nordic Semiconductor ASA.
 
 #define __SYSTEM_CLOCK      (64000000UL)     /*!< nRF9160 Application core uses a fixed System Clock Frequency of 64MHz */
 
+#define TRACE_PIN_CNF_VALUE (   (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos) | \
+                                (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos) | \
+                                (GPIO_PIN_CNF_PULL_Disabled << GPIO_PIN_CNF_PULL_Pos) | \
+                                (GPIO_PIN_CNF_DRIVE_H0H1 << GPIO_PIN_CNF_DRIVE_Pos) | \
+                                (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos) )
+#define TRACE_TRACECLK_PIN   (21)
+#define TRACE_TRACEDATA0_PIN (22)
+#define TRACE_TRACEDATA1_PIN (23)
+#define TRACE_TRACEDATA2_PIN (24)
+#define TRACE_TRACEDATA3_PIN (25)
 
 #if defined ( __CC_ARM )
     uint32_t SystemCoreClock __attribute__((used)) = __SYSTEM_CLOCK;  
@@ -42,6 +52,13 @@ NOTICE: This file has been modified by Nordic Semiconductor ASA.
     uint32_t SystemCoreClock __attribute__((used)) = __SYSTEM_CLOCK;
 #endif
 
+/* Global values used used in Secure mode SystemInit. */
+#if !defined(NRF_TRUSTZONE_NONSECURE)
+    /* Global values used by UICR erase fix algorithm. */
+    static uint32_t uicr_erased_value;
+    static uint32_t uicr_new_value;
+#endif
+
 /* Errata are only handled in secure mode since they usually need access to FICR. */
 #if !defined(NRF_TRUSTZONE_NONSECURE)
     static bool uicr_HFXOSRC_erased(void);
@@ -49,6 +66,7 @@ NOTICE: This file has been modified by Nordic Semiconductor ASA.
     static bool errata_6(void);
     static bool errata_14(void);
     static bool errata_15(void);
+    static bool errata_20(void);
 #endif
 
 void SystemCoreClockUpdate(void)
@@ -66,8 +84,34 @@ void SystemInit(void)
         #if defined (__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
           SAU->CTRL |= (1 << SAU_CTRL_ALLNS_Pos);
         #endif
+        
+        /* Workaround for Errata 6 "POWER: SLEEPENTER and SLEEPEXIT events asserted after pin reset" found at the Errata document
+            for your device located at https://infocenter.nordicsemi.com/index.jsp  */
+        if (errata_6()){
+            NRF_POWER_S->EVENTS_SLEEPENTER = (POWER_EVENTS_SLEEPENTER_EVENTS_SLEEPENTER_NotGenerated << POWER_EVENTS_SLEEPENTER_EVENTS_SLEEPENTER_Pos);
+            NRF_POWER_S->EVENTS_SLEEPEXIT = (POWER_EVENTS_SLEEPEXIT_EVENTS_SLEEPEXIT_NotGenerated << POWER_EVENTS_SLEEPEXIT_EVENTS_SLEEPEXIT_Pos);
+        }
 
-        /* Trimming of the device. Copy all the trimming values from FICR into the target addresses. Trim 
+        /* Workaround for Errata 14 "REGULATORS: LDO mode at startup" found at the Errata document
+            for your device located at https://infocenter.nordicsemi.com/index.jsp  */
+        if (errata_14()){
+            *((volatile uint32_t *)0x50004A38) = 0x01ul;
+            NRF_REGULATORS_S->DCDCEN = REGULATORS_DCDCEN_DCDCEN_Enabled << REGULATORS_DCDCEN_DCDCEN_Pos;
+        }
+
+        /* Workaround for Errata 15 "REGULATORS: LDO mode at startup" found at the Errata document
+            for your device located at https://infocenter.nordicsemi.com/index.jsp  */
+        if (errata_15()){
+            NRF_REGULATORS_S->DCDCEN = REGULATORS_DCDCEN_DCDCEN_Enabled << REGULATORS_DCDCEN_DCDCEN_Pos;
+        }
+
+        /* Workaround for Errata 20 "RAM content cannot be trusted upon waking up from System ON Idle or System OFF mode" found at the Errata document
+            for your device located at https://infocenter.nordicsemi.com/index.jsp  */
+        if (errata_20()){
+            *((volatile uint32_t *)0x5003AEE4) = 0xE;
+        }
+
+        /* Trimming of the device. Copy all the trimming values from FICR into the target addresses. Trim
          until one ADDR is not initialized. */
         uint32_t index = 0;
         for (index = 0; index < 256ul && NRF_FICR_S->TRIMCNF[index].ADDR != 0xFFFFFFFFul; index++){
@@ -79,56 +123,96 @@ void SystemInit(void)
               #pragma diag_default=Pa082
           #endif
         }
-          
+
         /* Set UICR->HFXOSRC and UICR->HFXOCNT to working defaults if UICR was erased */
         if (uicr_HFXOSRC_erased() || uicr_HFXOCNT_erased()) {
           /* Wait for pending NVMC operations to finish */
           while (NRF_NVMC_S->READY != NVMC_READY_READY_Ready);
-          
+
           /* Enable write mode in NVMC */
           NRF_NVMC_S->CONFIG = NVMC_CONFIG_WEN_Wen;
           while (NRF_NVMC_S->READY != NVMC_READY_READY_Ready);
-          
+
           if (uicr_HFXOSRC_erased()){
             /* Write default value to UICR->HFXOSRC */
-            NRF_UICR_S->HFXOSRC = (NRF_UICR_S->HFXOSRC & ~UICR_HFXOSRC_HFXOSRC_Msk) | UICR_HFXOSRC_HFXOSRC_TCXO;
+            uicr_erased_value = NRF_UICR_S->HFXOSRC;
+            uicr_new_value = (uicr_erased_value & ~UICR_HFXOSRC_HFXOSRC_Msk) | UICR_HFXOSRC_HFXOSRC_TCXO;
+            NRF_UICR_S->HFXOSRC = uicr_new_value;
             while (NRF_NVMC_S->READY != NVMC_READY_READY_Ready);
           }
-          
+
           if (uicr_HFXOCNT_erased()){
             /* Write default value to UICR->HFXOCNT */
-            NRF_UICR_S->HFXOCNT = (NRF_UICR_S->HFXOCNT & ~UICR_HFXOCNT_HFXOCNT_Msk) | 0x20;
+            uicr_erased_value = NRF_UICR_S->HFXOCNT;
+            uicr_new_value = (uicr_erased_value & ~UICR_HFXOCNT_HFXOCNT_Msk) | 0x20;
+            NRF_UICR_S->HFXOCNT = uicr_new_value;
             while (NRF_NVMC_S->READY != NVMC_READY_READY_Ready);
           }
-                
+
           /* Enable read mode in NVMC */
           NRF_NVMC_S->CONFIG = NVMC_CONFIG_WEN_Ren;
           while (NRF_NVMC_S->READY != NVMC_READY_READY_Ready);
-          
+
           /* Reset to apply clock select update */
           NVIC_SystemReset();
         }
-        
-        /* Workaround for Errata 6 "POWER: SLEEPENTER and SLEEPEXIT events asserted after pin reset" found at the Errata document
-       for your device located at https://www.nordicsemi.com/DocLib  */
-        if (errata_6()){
-            NRF_POWER_S->EVENTS_SLEEPENTER = (POWER_EVENTS_SLEEPENTER_EVENTS_SLEEPENTER_NotGenerated << POWER_EVENTS_SLEEPENTER_EVENTS_SLEEPENTER_Pos);
-            NRF_POWER_S->EVENTS_SLEEPEXIT = (POWER_EVENTS_SLEEPEXIT_EVENTS_SLEEPEXIT_NotGenerated << POWER_EVENTS_SLEEPEXIT_EVENTS_SLEEPEXIT_Pos);
-        }
-        
-        /* Workaround for Errata 14 "REGULATORS: LDO mode at startup" found at the Errata document
-       for your device located at https://www.nordicsemi.com/DocLib  */
-        if (errata_14()){
-            *(uint32_t *)0x50004A38 = 0x01ul;
-            NRF_REGULATORS_S->DCDCEN = REGULATORS_DCDCEN_DCDCEN_Enabled << REGULATORS_DCDCEN_DCDCEN_Pos;
-        }
 
-        /* Workaround for Errata 15 "REGULATORS: LDO mode at startup" found at the Errata document
-       for your device located at https://www.nordicsemi.com/DocLib  */
-        if (errata_15()){
-            *(uint32_t *)0x50004A38 = 0x00ul;
-            NRF_REGULATORS_S->DCDCEN = REGULATORS_DCDCEN_DCDCEN_Enabled << REGULATORS_DCDCEN_DCDCEN_Pos;
-        }
+        /* Enable Trace functionality. If ENABLE_TRACE is not defined, TRACE pins will be used as GPIOs (see Product
+           Specification to see which ones). */
+        #if defined (ENABLE_TRACE)
+            // Enable Trace And Debug peripheral
+            NRF_TAD_S->ENABLE = TAD_ENABLE_ENABLE_Msk;
+            NRF_TAD_S->CLOCKSTART = TAD_CLOCKSTART_START_Msk;
+
+            // Set up Trace pads SPU firewall
+            NRF_SPU_S->GPIOPORT[0].PERM &= ~(1 << TRACE_TRACECLK_PIN);
+            NRF_SPU_S->GPIOPORT[0].PERM &= ~(1 << TRACE_TRACEDATA0_PIN);
+            NRF_SPU_S->GPIOPORT[0].PERM &= ~(1 << TRACE_TRACEDATA1_PIN);
+            NRF_SPU_S->GPIOPORT[0].PERM &= ~(1 << TRACE_TRACEDATA2_PIN);
+            NRF_SPU_S->GPIOPORT[0].PERM &= ~(1 << TRACE_TRACEDATA3_PIN);
+
+            // Configure trace port pads
+            NRF_P0_S->PIN_CNF[TRACE_TRACECLK_PIN] =   TRACE_PIN_CNF_VALUE;
+            NRF_P0_S->PIN_CNF[TRACE_TRACEDATA0_PIN] = TRACE_PIN_CNF_VALUE;
+            NRF_P0_S->PIN_CNF[TRACE_TRACEDATA1_PIN] = TRACE_PIN_CNF_VALUE;
+            NRF_P0_S->PIN_CNF[TRACE_TRACEDATA2_PIN] = TRACE_PIN_CNF_VALUE;
+            NRF_P0_S->PIN_CNF[TRACE_TRACEDATA3_PIN] = TRACE_PIN_CNF_VALUE;
+
+            // Select trace pins
+            NRF_TAD_S->PSEL.TRACECLK   = TRACE_TRACECLK_PIN;
+            NRF_TAD_S->PSEL.TRACEDATA0 = TRACE_TRACEDATA0_PIN;
+            NRF_TAD_S->PSEL.TRACEDATA1 = TRACE_TRACEDATA1_PIN;
+            NRF_TAD_S->PSEL.TRACEDATA2 = TRACE_TRACEDATA2_PIN;
+            NRF_TAD_S->PSEL.TRACEDATA3 = TRACE_TRACEDATA3_PIN;
+
+            // Set trace port speed to 32 MHz
+            NRF_TAD_S->TRACEPORTSPEED = TAD_TRACEPORTSPEED_TRACEPORTSPEED_32MHz;
+
+            *((uint32_t *)(0xE0053000ul)) = 0x00000001ul;
+            
+            *((uint32_t *)(0xE005AFB0ul))  = 0xC5ACCE55ul;
+            *((uint32_t *)(0xE005A000ul)) &= 0xFFFFFF00ul;
+            *((uint32_t *)(0xE005A004ul))  = 0x00000009ul;
+            *((uint32_t *)(0xE005A000ul))  = 0x00000303ul;
+            *((uint32_t *)(0xE005AFB0ul))  = 0x00000000ul;
+
+            *((uint32_t *)(0xE005BFB0ul))  = 0xC5ACCE55ul;
+            *((uint32_t *)(0xE005B000ul)) &= 0xFFFFFF00ul;
+            *((uint32_t *)(0xE005B004ul))  = 0x00003000ul;
+            *((uint32_t *)(0xE005B000ul))  = 0x00000308ul;
+            *((uint32_t *)(0xE005BFB0ul))  = 0x00000000ul;
+
+            *((uint32_t *)(0xE0058FB0ul)) = 0xC5ACCE55ul;
+            *((uint32_t *)(0xE0058000ul)) = 0x00000000ul;
+            *((uint32_t *)(0xE0058004ul)) = 0x00000000ul;
+            *((uint32_t *)(0xE0058FB0ul)) = 0x00000000ul;
+
+            /* Rom table does not list ETB, or TPIU base addresses.
+             * Some debug probes may require manual configuration of these peripherals to enable tracing.
+             * ETB_BASE = 0xE0051000
+             * TPIU_BASE = 0xE0054000
+             */
+        #endif
 
         /* Allow Non-Secure code to run FPU instructions. 
          * If only the secure code should control FPU power state these registers should be configured accordingly in the secure application code. */
@@ -201,6 +285,16 @@ void SystemInit(void)
             if (*(uint32_t *)0x00FF0134 == 0x02ul){
                 return true;
             }
+        }
+
+        return false;
+    }
+
+
+    bool errata_20()
+    {
+        if (((*(uint32_t *)0x00FF0004) & 0x1E) != 0x1C){
+            return true;
         }
 
         return false;
