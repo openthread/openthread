@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2011 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -64,46 +64,49 @@ extern "C" {
  */
 enum BLE_GAP_SVCS
 {
-  SD_BLE_GAP_ADDR_SET              = BLE_GAP_SVC_BASE,       /**< Set own Bluetooth Address. */
-  SD_BLE_GAP_ADDR_GET              = BLE_GAP_SVC_BASE + 1,   /**< Get own Bluetooth Address. */
-  SD_BLE_GAP_WHITELIST_SET         = BLE_GAP_SVC_BASE + 2,   /**< Set active whitelist. */
-  SD_BLE_GAP_DEVICE_IDENTITIES_SET = BLE_GAP_SVC_BASE + 3,   /**< Set device identity list. */
-  SD_BLE_GAP_PRIVACY_SET           = BLE_GAP_SVC_BASE + 4,   /**< Set Privacy settings*/
-  SD_BLE_GAP_PRIVACY_GET           = BLE_GAP_SVC_BASE + 5,   /**< Get Privacy settings*/
-  SD_BLE_GAP_ADV_SET_CONFIGURE     = BLE_GAP_SVC_BASE + 6,   /**< Configure an advertising set. */
-  SD_BLE_GAP_ADV_START             = BLE_GAP_SVC_BASE + 7,   /**< Start Advertising. */
-  SD_BLE_GAP_ADV_STOP              = BLE_GAP_SVC_BASE + 8,   /**< Stop Advertising. */
-  SD_BLE_GAP_CONN_PARAM_UPDATE     = BLE_GAP_SVC_BASE + 9,   /**< Connection Parameter Update. */
-  SD_BLE_GAP_DISCONNECT            = BLE_GAP_SVC_BASE + 10,  /**< Disconnect. */
-  SD_BLE_GAP_TX_POWER_SET          = BLE_GAP_SVC_BASE + 11,  /**< Set TX Power. */
-  SD_BLE_GAP_APPEARANCE_SET        = BLE_GAP_SVC_BASE + 12,  /**< Set Appearance. */
-  SD_BLE_GAP_APPEARANCE_GET        = BLE_GAP_SVC_BASE + 13,  /**< Get Appearance. */
-  SD_BLE_GAP_PPCP_SET              = BLE_GAP_SVC_BASE + 14,  /**< Set PPCP. */
-  SD_BLE_GAP_PPCP_GET              = BLE_GAP_SVC_BASE + 15,  /**< Get PPCP. */
-  SD_BLE_GAP_DEVICE_NAME_SET       = BLE_GAP_SVC_BASE + 16,  /**< Set Device Name. */
-  SD_BLE_GAP_DEVICE_NAME_GET       = BLE_GAP_SVC_BASE + 17,  /**< Get Device Name. */
-  SD_BLE_GAP_AUTHENTICATE          = BLE_GAP_SVC_BASE + 18,  /**< Initiate Pairing/Bonding. */
-  SD_BLE_GAP_SEC_PARAMS_REPLY      = BLE_GAP_SVC_BASE + 19,  /**< Reply with Security Parameters. */
-  SD_BLE_GAP_AUTH_KEY_REPLY        = BLE_GAP_SVC_BASE + 20,  /**< Reply with an authentication key. */
-  SD_BLE_GAP_LESC_DHKEY_REPLY      = BLE_GAP_SVC_BASE + 21,  /**< Reply with an LE Secure Connections DHKey. */
-  SD_BLE_GAP_KEYPRESS_NOTIFY       = BLE_GAP_SVC_BASE + 22,  /**< Notify of a keypress during an authentication procedure. */
-  SD_BLE_GAP_LESC_OOB_DATA_GET     = BLE_GAP_SVC_BASE + 23,  /**< Get the local LE Secure Connections OOB data. */
-  SD_BLE_GAP_LESC_OOB_DATA_SET     = BLE_GAP_SVC_BASE + 24,  /**< Set the remote LE Secure Connections OOB data. */
-  SD_BLE_GAP_ENCRYPT               = BLE_GAP_SVC_BASE + 25,  /**< Initiate encryption procedure. */
-  SD_BLE_GAP_SEC_INFO_REPLY        = BLE_GAP_SVC_BASE + 26,  /**< Reply with Security Information. */
-  SD_BLE_GAP_CONN_SEC_GET          = BLE_GAP_SVC_BASE + 27,  /**< Obtain connection security level. */
-  SD_BLE_GAP_RSSI_START            = BLE_GAP_SVC_BASE + 28,  /**< Start reporting of changes in RSSI. */
-  SD_BLE_GAP_RSSI_STOP             = BLE_GAP_SVC_BASE + 29,  /**< Stop reporting of changes in RSSI. */
-  SD_BLE_GAP_SCAN_START            = BLE_GAP_SVC_BASE + 30,  /**< Start Scanning. */
-  SD_BLE_GAP_SCAN_STOP             = BLE_GAP_SVC_BASE + 31,  /**< Stop Scanning. */
-  SD_BLE_GAP_CONNECT               = BLE_GAP_SVC_BASE + 32,  /**< Connect. */
-  SD_BLE_GAP_CONNECT_CANCEL        = BLE_GAP_SVC_BASE + 33,  /**< Cancel ongoing connection procedure. */
-  SD_BLE_GAP_RSSI_GET              = BLE_GAP_SVC_BASE + 34,  /**< Get the last RSSI sample. */
-  SD_BLE_GAP_PHY_UPDATE            = BLE_GAP_SVC_BASE + 35,  /**< Initiate or respond to a PHY Update Procedure. */
-  SD_BLE_GAP_DATA_LENGTH_UPDATE    = BLE_GAP_SVC_BASE + 36,  /**< Initiate or respond to a Data Length Update Procedure. */
-  SD_BLE_GAP_QOS_CHANNEL_SURVEY_START  = BLE_GAP_SVC_BASE + 37, /**< Start Quality of Service (QoS) channel survey module. */
-  SD_BLE_GAP_QOS_CHANNEL_SURVEY_STOP   = BLE_GAP_SVC_BASE + 38, /**< Stop Quality of Service (QoS) channel survey module. */
-  SD_BLE_GAP_ADV_ADDR_GET          = BLE_GAP_SVC_BASE + 39, /**< Get the Address used on air while Advertising. */
+  SD_BLE_GAP_ADDR_SET                   = BLE_GAP_SVC_BASE,       /**< Set own Bluetooth Address. */
+  SD_BLE_GAP_ADDR_GET                   = BLE_GAP_SVC_BASE + 1,   /**< Get own Bluetooth Address. */
+  SD_BLE_GAP_WHITELIST_SET              = BLE_GAP_SVC_BASE + 2,   /**< Set active whitelist. */
+  SD_BLE_GAP_DEVICE_IDENTITIES_SET      = BLE_GAP_SVC_BASE + 3,   /**< Set device identity list. */
+  SD_BLE_GAP_PRIVACY_SET                = BLE_GAP_SVC_BASE + 4,   /**< Set Privacy settings*/
+  SD_BLE_GAP_PRIVACY_GET                = BLE_GAP_SVC_BASE + 5,   /**< Get Privacy settings*/
+  SD_BLE_GAP_ADV_SET_CONFIGURE          = BLE_GAP_SVC_BASE + 6,   /**< Configure an advertising set. */
+  SD_BLE_GAP_ADV_START                  = BLE_GAP_SVC_BASE + 7,   /**< Start Advertising. */
+  SD_BLE_GAP_ADV_STOP                   = BLE_GAP_SVC_BASE + 8,   /**< Stop Advertising. */
+  SD_BLE_GAP_CONN_PARAM_UPDATE          = BLE_GAP_SVC_BASE + 9,   /**< Connection Parameter Update. */
+  SD_BLE_GAP_DISCONNECT                 = BLE_GAP_SVC_BASE + 10,  /**< Disconnect. */
+  SD_BLE_GAP_TX_POWER_SET               = BLE_GAP_SVC_BASE + 11,  /**< Set TX Power. */
+  SD_BLE_GAP_APPEARANCE_SET             = BLE_GAP_SVC_BASE + 12,  /**< Set Appearance. */
+  SD_BLE_GAP_APPEARANCE_GET             = BLE_GAP_SVC_BASE + 13,  /**< Get Appearance. */
+  SD_BLE_GAP_PPCP_SET                   = BLE_GAP_SVC_BASE + 14,  /**< Set PPCP. */
+  SD_BLE_GAP_PPCP_GET                   = BLE_GAP_SVC_BASE + 15,  /**< Get PPCP. */
+  SD_BLE_GAP_DEVICE_NAME_SET            = BLE_GAP_SVC_BASE + 16,  /**< Set Device Name. */
+  SD_BLE_GAP_DEVICE_NAME_GET            = BLE_GAP_SVC_BASE + 17,  /**< Get Device Name. */
+  SD_BLE_GAP_AUTHENTICATE               = BLE_GAP_SVC_BASE + 18,  /**< Initiate Pairing/Bonding. */
+  SD_BLE_GAP_SEC_PARAMS_REPLY           = BLE_GAP_SVC_BASE + 19,  /**< Reply with Security Parameters. */
+  SD_BLE_GAP_AUTH_KEY_REPLY             = BLE_GAP_SVC_BASE + 20,  /**< Reply with an authentication key. */
+  SD_BLE_GAP_LESC_DHKEY_REPLY           = BLE_GAP_SVC_BASE + 21,  /**< Reply with an LE Secure Connections DHKey. */
+  SD_BLE_GAP_KEYPRESS_NOTIFY            = BLE_GAP_SVC_BASE + 22,  /**< Notify of a keypress during an authentication procedure. */
+  SD_BLE_GAP_LESC_OOB_DATA_GET          = BLE_GAP_SVC_BASE + 23,  /**< Get the local LE Secure Connections OOB data. */
+  SD_BLE_GAP_LESC_OOB_DATA_SET          = BLE_GAP_SVC_BASE + 24,  /**< Set the remote LE Secure Connections OOB data. */
+  SD_BLE_GAP_ENCRYPT                    = BLE_GAP_SVC_BASE + 25,  /**< Initiate encryption procedure. */
+  SD_BLE_GAP_SEC_INFO_REPLY             = BLE_GAP_SVC_BASE + 26,  /**< Reply with Security Information. */
+  SD_BLE_GAP_CONN_SEC_GET               = BLE_GAP_SVC_BASE + 27,  /**< Obtain connection security level. */
+  SD_BLE_GAP_RSSI_START                 = BLE_GAP_SVC_BASE + 28,  /**< Start reporting of changes in RSSI. */
+  SD_BLE_GAP_RSSI_STOP                  = BLE_GAP_SVC_BASE + 29,  /**< Stop reporting of changes in RSSI. */
+  SD_BLE_GAP_SCAN_START                 = BLE_GAP_SVC_BASE + 30,  /**< Start Scanning. */
+  SD_BLE_GAP_SCAN_STOP                  = BLE_GAP_SVC_BASE + 31,  /**< Stop Scanning. */
+  SD_BLE_GAP_CONNECT                    = BLE_GAP_SVC_BASE + 32,  /**< Connect. */
+  SD_BLE_GAP_CONNECT_CANCEL             = BLE_GAP_SVC_BASE + 33,  /**< Cancel ongoing connection procedure. */
+  SD_BLE_GAP_RSSI_GET                   = BLE_GAP_SVC_BASE + 34,  /**< Get the last RSSI sample. */
+  SD_BLE_GAP_PHY_UPDATE                 = BLE_GAP_SVC_BASE + 35,  /**< Initiate or respond to a PHY Update Procedure. */
+  SD_BLE_GAP_DATA_LENGTH_UPDATE         = BLE_GAP_SVC_BASE + 36,  /**< Initiate or respond to a Data Length Update Procedure. */
+  SD_BLE_GAP_QOS_CHANNEL_SURVEY_START   = BLE_GAP_SVC_BASE + 37, /**< Start Quality of Service (QoS) channel survey module. */
+  SD_BLE_GAP_QOS_CHANNEL_SURVEY_STOP    = BLE_GAP_SVC_BASE + 38, /**< Stop Quality of Service (QoS) channel survey module. */
+  SD_BLE_GAP_ADV_ADDR_GET               = BLE_GAP_SVC_BASE + 39, /**< Get the Address used on air while Advertising. */
+  SD_BLE_GAP_NEXT_CONN_EVT_COUNTER_GET  = BLE_GAP_SVC_BASE + 40, /**< Get the next connection event counter. */
+  SD_BLE_GAP_CONN_EVT_TRIGGER_START     = BLE_GAP_SVC_BASE + 41, /** Start triggering a given task on connection event start. */
+  SD_BLE_GAP_CONN_EVT_TRIGGER_STOP      = BLE_GAP_SVC_BASE + 42, /** Stop triggering the task configured using @ref sd_ble_gap_conn_evt_trigger_start. */
 };
 
 /**@brief GAP Event IDs.
@@ -130,7 +133,7 @@ enum BLE_GAP_EVTS
   BLE_GAP_EVT_SCAN_REQ_REPORT             = BLE_GAP_EVT_BASE + 16,  /**< Scan request report.                            \n See @ref ble_gap_evt_scan_req_report_t. */
   BLE_GAP_EVT_PHY_UPDATE_REQUEST          = BLE_GAP_EVT_BASE + 17,  /**< PHY Update Request.                             \n Reply with @ref sd_ble_gap_phy_update. \n See @ref ble_gap_evt_phy_update_request_t. */
   BLE_GAP_EVT_PHY_UPDATE                  = BLE_GAP_EVT_BASE + 18,  /**< PHY Update Procedure is complete.               \n See @ref ble_gap_evt_phy_update_t.           */
-  BLE_GAP_EVT_DATA_LENGTH_UPDATE_REQUEST = BLE_GAP_EVT_BASE + 19,   /**< Data Length Update Request.                     \n Reply with @ref sd_ble_gap_data_length_update.\n See @ref ble_gap_evt_data_length_update_request_t. */
+  BLE_GAP_EVT_DATA_LENGTH_UPDATE_REQUEST = BLE_GAP_EVT_BASE + 19,   /**< Data Length Update Request.                     \n Reply with @ref sd_ble_gap_data_length_update. \n See @ref ble_gap_evt_data_length_update_request_t. */
   BLE_GAP_EVT_DATA_LENGTH_UPDATE         = BLE_GAP_EVT_BASE + 20,   /**< LL Data Channel PDU payload length updated.     \n See @ref ble_gap_evt_data_length_update_t. */
   BLE_GAP_EVT_QOS_CHANNEL_SURVEY_REPORT  = BLE_GAP_EVT_BASE + 21,   /**< Channel survey report.                          \n See @ref ble_gap_evt_qos_channel_survey_report_t. */
   BLE_GAP_EVT_ADV_SET_TERMINATED         = BLE_GAP_EVT_BASE + 22,   /**< Advertising set terminated.                     \n See @ref ble_gap_evt_adv_set_terminated_t. */
@@ -155,8 +158,12 @@ enum BLE_GAP_OPTS
  */
 enum BLE_GAP_CFGS
 {
-  BLE_GAP_CFG_ROLE_COUNT    = BLE_GAP_CFG_BASE,     /**< Role count configuration.  */
-  BLE_GAP_CFG_DEVICE_NAME   = BLE_GAP_CFG_BASE + 1, /**< Device name configuration. */
+  BLE_GAP_CFG_ROLE_COUNT       = BLE_GAP_CFG_BASE,     /**< Role count configuration.  */
+  BLE_GAP_CFG_DEVICE_NAME      = BLE_GAP_CFG_BASE + 1, /**< Device name configuration. */
+  BLE_GAP_CFG_PPCP_INCL_CONFIG = BLE_GAP_CFG_BASE + 2, /**< Peripheral Preferred Connection Parameters characteristic
+                                                            inclusion configuration. */
+  BLE_GAP_CFG_CAR_INCL_CONFIG  = BLE_GAP_CFG_BASE + 3, /**< Central Address Resolution characteristic
+                                                            inclusion configuration. */
 };
 
 /**@brief GAP TX Power roles.
@@ -646,6 +653,27 @@ enum BLE_GAP_TX_POWER_ROLES
 
 /** @} */
 
+/** @defgroup BLE_GAP_CHAR_INCL_CONFIG GAP Characteristic inclusion configurations
+ * @{
+ */
+#define BLE_GAP_CHAR_INCL_CONFIG_INCLUDE               (0) /**< Include the characteristic in the Attribute Table */
+#define BLE_GAP_CHAR_INCL_CONFIG_EXCLUDE_WITH_SPACE    (1) /**< Do not include the characteristic in the Attribute table.
+                                                                The SoftDevice will reserve the attribute handles
+                                                                which are otherwise used for this characteristic.
+                                                                By reserving the attribute handles it will be possible
+                                                                to upgrade the SoftDevice without changing handle of the
+                                                                Service Changed characteristic. */
+#define BLE_GAP_CHAR_INCL_CONFIG_EXCLUDE_WITHOUT_SPACE (2) /**< Do not include the characteristic in the Attribute table.
+                                                                The SoftDevice will not reserve the attribute handles
+                                                                which are otherwise used for this characteristic. */
+/**@} */
+
+
+/** @defgroup BLE_GAP_CHAR_INCL_CONFIG_DEFAULTS Characteristic inclusion default values
+ * @{ */
+#define BLE_GAP_PPCP_INCL_CONFIG_DEFAULT     (BLE_GAP_CHAR_INCL_CONFIG_INCLUDE) /**< Included by default. */
+#define BLE_GAP_CAR_INCL_CONFIG_DEFAULT      (BLE_GAP_CHAR_INCL_CONFIG_INCLUDE) /**< Included by default. */
+/**@} */
 
 /**@addtogroup BLE_GAP_STRUCTURES Structures
  * @{ */
@@ -1315,7 +1343,10 @@ typedef struct
   ble_gap_data_length_params_t peer_params; /**< Peer data length parameters. */
 } ble_gap_evt_data_length_update_request_t;
 
-/**@brief Event structure for @ref BLE_GAP_EVT_DATA_LENGTH_UPDATE. */
+/**@brief Event structure for @ref BLE_GAP_EVT_DATA_LENGTH_UPDATE.
+ *
+ * @note This event may also be raised after a PHY Update procedure.
+ */
 typedef struct
 {
   ble_gap_data_length_params_t effective_params;  /**< The effective data length parameters. */
@@ -1445,11 +1476,31 @@ typedef struct
 } ble_gap_cfg_device_name_t;
 
 
+/**@brief Peripheral Preferred Connection Parameters include configuration parameters, set with @ref sd_ble_cfg_set. */
+typedef struct
+{
+  uint8_t include_cfg;     /**< Inclusion configuration of the Peripheral Preferred Connection Parameters characteristic.
+                                See @ref BLE_GAP_CHAR_INCL_CONFIG. Default is @ref BLE_GAP_PPCP_INCL_CONFIG_DEFAULT. */
+} ble_gap_cfg_ppcp_incl_cfg_t;
+
+
+/**@brief Central Address Resolution include configuration parameters, set with @ref sd_ble_cfg_set. */
+typedef struct
+{
+  uint8_t include_cfg;     /**< Inclusion configuration of the Central Address Resolution characteristic.
+                                See @ref BLE_GAP_CHAR_INCL_CONFIG. Default is @ref BLE_GAP_CAR_INCL_CONFIG_DEFAULT. */
+} ble_gap_cfg_car_incl_cfg_t;
+
+
 /**@brief Configuration structure for GAP configurations. */
 typedef union
 {
-  ble_gap_cfg_role_count_t  role_count_cfg;  /**< Role count configuration, cfg_id is @ref BLE_GAP_CFG_ROLE_COUNT. */
-  ble_gap_cfg_device_name_t device_name_cfg; /**< Device name configuration, cfg_id is @ref BLE_GAP_CFG_DEVICE_NAME. */
+  ble_gap_cfg_role_count_t      role_count_cfg;   /**< Role count configuration, cfg_id is @ref BLE_GAP_CFG_ROLE_COUNT. */
+  ble_gap_cfg_device_name_t     device_name_cfg;  /**< Device name configuration, cfg_id is @ref BLE_GAP_CFG_DEVICE_NAME. */
+  ble_gap_cfg_ppcp_incl_cfg_t   ppcp_include_cfg; /**< Peripheral Preferred Connection Parameters characteristic include
+                                                       configuration, cfg_id is @ref BLE_GAP_CFG_PPCP_INCL_CONFIG. */
+  ble_gap_cfg_car_incl_cfg_t    car_include_cfg;  /**< Central Address Resolution characteristic include configuration,
+                                                       cfg_id is @ref BLE_GAP_CFG_CAR_INCL_CONFIG. */
 } ble_gap_cfg_t;
 
 
@@ -1532,6 +1583,10 @@ typedef struct
 
 /**@brief Passkey Option.
  *
+ * @mscs
+ * @mmsc{@ref BLE_GAP_PERIPH_BONDING_STATIC_PK_MSC}
+ * @endmscs
+ *
  * @details Structure containing the passkey to be used during pairing. This can be used with @ref
  *          sd_ble_opt_set to make the SoftDevice use a preprogrammed passkey for authentication
  *          instead of generating a random one.
@@ -1603,8 +1658,22 @@ typedef union
   ble_gap_opt_auth_payload_timeout_t    auth_payload_timeout;      /**< Parameters for the authenticated payload timeout option.*/
   ble_gap_opt_slave_latency_disable_t   slave_latency_disable;     /**< Parameters for the Disable slave latency option */
 } ble_gap_opt_t;
-/**@} */
 
+/**@brief  Connection event triggering parameters. */
+typedef struct
+{
+  uint8_t  ppi_ch_id;                /**< PPI channel to use. This channel should be regarded as reserved until
+                                          connection event PPI task triggering is stopped.
+                                          The PPI channel ID can not be one of the PPI channels reserved by
+                                          the SoftDevice. See @ref NRF_SOC_SD_PPI_CHANNELS_SD_ENABLED_MSK. */
+  uint32_t task_endpoint;            /**< Task Endpoint to trigger. */
+  uint16_t conn_evt_counter_start;   /**< The connection event on which the task triggering should start. */
+  uint16_t period_in_events;         /**< Trigger period. Valid range is [1, 32767].
+                                          If the device is in slave role and slave latency is enabled,
+                                          this parameter should be set to a multiple of (slave latency + 1)
+                                          to ensure low power operation. */
+} ble_gap_conn_event_trigger_t;
+/**@} */
 
 /**@addtogroup BLE_GAP_FUNCTIONS Functions
  * @{ */
@@ -1747,6 +1816,10 @@ SVCALL(SD_BLE_GAP_DEVICE_IDENTITIES_SET, uint32_t, sd_ble_gap_device_identities_
  * @retval ::NRF_ERROR_INVALID_ADDR The pointer to privacy settings is NULL or invalid.
  *                                  Otherwise, the p_device_irk pointer in privacy parameter is an invalid pointer.
  * @retval ::NRF_ERROR_INVALID_PARAM Out of range parameters are provided.
+ * @retval ::NRF_ERROR_NOT_SUPPORTED The SoftDevice does not support privacy if the Central Address Resolution
+                                     characteristic is not configured to be included and the SoftDevice is configured
+                                     to support central roles.
+                                     See @ref ble_gap_cfg_car_incl_cfg_t and @ref ble_gap_cfg_role_count_t.
  * @retval ::NRF_ERROR_INVALID_STATE Privacy settings cannot be changed while advertising, scanning
  *                                   or creating a connection.
  */
@@ -1838,7 +1911,10 @@ SVCALL(SD_BLE_GAP_ADV_SET_CONFIGURE, uint32_t, sd_ble_gap_adv_set_configure(uint
  *
  * @retval ::NRF_SUCCESS                  The BLE stack has started advertising.
  * @retval ::NRF_ERROR_INVALID_STATE      adv_handle is not configured or already advertising.
- * @retval ::NRF_ERROR_CONN_COUNT         The limit of available connections has been reached; connectable advertiser cannot be started.
+ * @retval ::NRF_ERROR_CONN_COUNT         The limit of available connections for this connection configuration
+ *                                        tag has been reached; connectable advertiser cannot be started.
+ *                                        To increase the number of available connections,
+ *                                        use @ref sd_ble_cfg_set with @ref BLE_GAP_CFG_ROLE_COUNT or @ref BLE_CONN_CFG_GAP.
  * @retval ::BLE_ERROR_INVALID_ADV_HANDLE Advertising handle not found. Configure a new adveriting handle with @ref sd_ble_gap_adv_set_configure.
  * @retval ::NRF_ERROR_NOT_FOUND          conn_cfg_tag not found.
  * @retval ::NRF_ERROR_INVALID_PARAM      Invalid parameter(s) supplied:
@@ -1987,6 +2063,8 @@ SVCALL(SD_BLE_GAP_APPEARANCE_GET, uint32_t, sd_ble_gap_appearance_get(uint16_t *
  * @retval ::NRF_SUCCESS Peripheral Preferred Connection Parameters set successfully.
  * @retval ::NRF_ERROR_INVALID_ADDR Invalid pointer supplied.
  * @retval ::NRF_ERROR_INVALID_PARAM Invalid parameter(s) supplied.
+ * @retval ::NRF_ERROR_NOT_SUPPORTED The characteristic is not included in the Attribute Table,
+                                     see @ref ble_gap_cfg_ppcp_incl_cfg_t.
  */
 SVCALL(SD_BLE_GAP_PPCP_SET, uint32_t, sd_ble_gap_ppcp_set(ble_gap_conn_params_t const *p_conn_params));
 
@@ -1997,6 +2075,8 @@ SVCALL(SD_BLE_GAP_PPCP_SET, uint32_t, sd_ble_gap_ppcp_set(ble_gap_conn_params_t 
  *
  * @retval ::NRF_SUCCESS Peripheral Preferred Connection Parameters retrieved successfully.
  * @retval ::NRF_ERROR_INVALID_ADDR Invalid pointer supplied.
+ * @retval ::NRF_ERROR_NOT_SUPPORTED The characteristic is not included in the Attribute Table,
+                                     see @ref ble_gap_cfg_ppcp_incl_cfg_t.
  */
 SVCALL(SD_BLE_GAP_PPCP_GET, uint32_t, sd_ble_gap_ppcp_get(ble_gap_conn_params_t *p_conn_params));
 
@@ -2083,6 +2163,10 @@ SVCALL(SD_BLE_GAP_DEVICE_NAME_GET, uint32_t, sd_ble_gap_device_name_get(uint8_t 
  * @retval ::NRF_ERROR_NO_MEM The maximum number of authentication procedures that can run in parallel for the given role is reached.
  * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid connection handle supplied.
  * @retval ::NRF_ERROR_NOT_SUPPORTED Setting of sign or link fields in @ref ble_gap_sec_kdist_t not supported.
+ *                                   Distribution of own Identity Information is only supported if the Central
+ *                                   Address Resolution characteristic is configured to be included or
+ *                                   the Softdevice is configured to support peripheral roles only.
+ *                                   See @ref ble_gap_cfg_car_incl_cfg_t and @ref ble_gap_cfg_role_count_t.
  * @retval ::NRF_ERROR_TIMEOUT A SMP timeout has occurred, and further SMP operations on this link is prohibited.
  */
 SVCALL(SD_BLE_GAP_AUTHENTICATE, uint32_t, sd_ble_gap_authenticate(uint16_t conn_handle, ble_gap_sec_params_t const *p_sec_params));
@@ -2094,7 +2178,7 @@ SVCALL(SD_BLE_GAP_AUTHENTICATE, uint32_t, sd_ble_gap_authenticate(uint16_t conn_
  * @note    If the call returns an error code, the request is still pending, and the reply call may be repeated with corrected parameters.
  *
  * @events
- * @event{This function is used during authentication procedures\, see the list of events in the documentation of @ref sd_ble_gap_authenticate.}
+ * @event{This function is used during authentication procedures, see the list of events in the documentation of @ref sd_ble_gap_authenticate.}
  * @endevents
  *
  * @mscs
@@ -2143,6 +2227,10 @@ SVCALL(SD_BLE_GAP_AUTHENTICATE, uint32_t, sd_ble_gap_authenticate(uint16_t conn_
  * @retval ::NRF_ERROR_INVALID_STATE Security parameters has not been requested.
  * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid connection handle supplied.
  * @retval ::NRF_ERROR_NOT_SUPPORTED Setting of sign or link fields in @ref ble_gap_sec_kdist_t not supported.
+ *                                   Distribution of own Identity Information is only supported if the Central
+ *                                   Address Resolution characteristic is configured to be included or
+ *                                   the Softdevice is configured to support peripheral roles only.
+ *                                   See @ref ble_gap_cfg_car_incl_cfg_t and @ref ble_gap_cfg_role_count_t.
  */
 SVCALL(SD_BLE_GAP_SEC_PARAMS_REPLY, uint32_t, sd_ble_gap_sec_params_reply(uint16_t conn_handle, uint8_t sec_status, ble_gap_sec_params_t const *p_sec_params, ble_gap_sec_keyset_t const *p_sec_keyset));
 
@@ -2341,7 +2429,7 @@ SVCALL(SD_BLE_GAP_ENCRYPT, uint32_t, sd_ble_gap_encrypt(uint16_t conn_handle, bl
  * @retval ::NRF_ERROR_INVALID_STATE Invalid state to perform operation. Either:
  *                                   - No link has been established.
  *                                   - No @ref BLE_GAP_EVT_SEC_REQUEST pending.
- *                                   - LE long term key requested command not allowed.
+ *                                   - Encryption information provided by the app without being requested. See @ref ble_gap_evt_sec_info_request_t::enc_info.
  * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid connection handle supplied.
  */
 SVCALL(SD_BLE_GAP_SEC_INFO_REPLY, uint32_t, sd_ble_gap_sec_info_reply(uint16_t conn_handle, ble_gap_enc_info_t const *p_enc_info, ble_gap_irk_t const *p_id_info, ble_gap_sign_info_t const *p_sign_info));
@@ -2527,7 +2615,9 @@ SVCALL(SD_BLE_GAP_SCAN_STOP, uint32_t, sd_ble_gap_scan_stop(void));
  * @retval ::NRF_ERROR_INVALID_STATE The SoftDevice is in an invalid state to perform this operation. This may be due to an
  *                                   existing locally initiated connect procedure, which must complete before initiating again.
  * @retval ::BLE_ERROR_GAP_INVALID_BLE_ADDR Invalid Peer address.
- * @retval ::NRF_ERROR_CONN_COUNT The limit of available connections has been reached.
+ * @retval ::NRF_ERROR_CONN_COUNT The limit of available connections for this connection configuration tag has been reached.
+ *                                To increase the number of available connections,
+ *                                use @ref sd_ble_cfg_set with @ref BLE_GAP_CFG_ROLE_COUNT or @ref BLE_CONN_CFG_GAP.
  * @retval ::NRF_ERROR_RESOURCES Either:
  *                                 - Not enough BLE role slots available.
  *                                   Stop one or more currently active roles (Central, Peripheral or Observer) and try again.
@@ -2573,12 +2663,12 @@ SVCALL(SD_BLE_GAP_CONNECT_CANCEL, uint32_t, sd_ble_gap_connect_cancel(void));
  *            @ref BLE_GAP_EVT_PHY_UPDATE event will have a status set to
  *            @ref BLE_HCI_UNSUPPORTED_REMOTE_FEATURE.
  *
- *            If the PHY procedure was rejected by the peer due to a procedure collision, the status
+ *            If the PHY Update procedure was rejected by the peer due to a procedure collision, the status
  *            will be @ref BLE_HCI_STATUS_CODE_LMP_ERROR_TRANSACTION_COLLISION or
  *            @ref BLE_HCI_DIFFERENT_TRANSACTION_COLLISION.
  *            If the peer responds to the PHY Update procedure with invalid parameters, the status
  *            will be @ref BLE_HCI_STATUS_CODE_INVALID_LMP_PARAMETERS.
- *            If the PHY procedure was rejected by the peer for a different reason, the status will
+ *            If the PHY Update procedure was rejected by the peer for a different reason, the status will
  *            contain the reason as specified by the peer.
  *
  * @events
@@ -2678,10 +2768,70 @@ SVCALL(SD_BLE_GAP_QOS_CHANNEL_SURVEY_START, uint32_t, sd_ble_gap_qos_channel_sur
 
 /**@brief   Stop the Quality of Service (QoS) channel survey module.
  *
+ * @note    The SoftDevice may generate one @ref BLE_GAP_EVT_QOS_CHANNEL_SURVEY_REPORT event after this
+ *          function is called.
+ *
  * @retval ::NRF_SUCCESS             The module is successfully stopped.
  * @retval ::NRF_ERROR_INVALID_STATE Trying to stop the module when it is not running.
  */
 SVCALL(SD_BLE_GAP_QOS_CHANNEL_SURVEY_STOP, uint32_t, sd_ble_gap_qos_channel_survey_stop(void));
+
+
+/**@brief   Obtain the next connection event counter value.
+ *
+ * @details The connection event counter is initialized to zero on the first connection event. The value is incremented
+ *          by one for each connection event. For more information see Bluetooth Core Specification v5.0, Vol 6, Part B,
+ *          Section 4.5.1.
+ *
+ * @note    The connection event counter obtained through this API will be outdated if this API is called
+ *          at the same time as the connection event counter is incremented.
+ *
+ * @note    This API will always return the last connection event counter + 1.
+ *          The actual connection event may be multiple connection events later if:
+ *           - Slave latency is enabled and there is no data to transmit or receive.
+ *           - Another role is scheduled with a higher priority at the same time as the next connection event.
+ *
+ * @param[in]   conn_handle       Connection handle.
+ * @param[out]  p_counter         Pointer to the variable where the next connection event counter will be written.
+ *
+ * @retval ::NRF_SUCCESS                   The connection event counter was successfully retrieved.
+ * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid connection handle parameter supplied.
+ * @retval ::NRF_ERROR_INVALID_ADDR        Invalid pointer supplied.
+ */
+SVCALL(SD_BLE_GAP_NEXT_CONN_EVT_COUNTER_GET, uint32_t, sd_ble_gap_next_conn_evt_counter_get(uint16_t conn_handle, uint16_t * p_counter));
+
+
+/**@brief   Start triggering a given task on connection event start.
+ *
+ * @details When enabled, this feature will trigger a PPI task at the start of connection events.
+ *          The application can configure the SoftDevice to trigger every N connection events starting from
+ *          a given connection event counter. See also @ref ble_gap_conn_event_trigger_t.
+ *
+ * @param[in]   conn_handle   Connection handle.
+ * @param[in]   p_params      Connection event trigger parameters.
+ *
+ * @retval ::NRF_SUCCESS                   Success.
+ * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid connection handle supplied.
+ * @retval ::NRF_ERROR_INVALID_ADDR        Invalid pointer supplied.
+ * @retval ::NRF_ERROR_INVALID_PARAM       Invalid parameter supplied. See @ref ble_gap_conn_event_trigger_t.
+ * @retval ::NRF_ERROR_INVALID_STATE       Either:
+ *                                         - Trying to start connection event triggering when it is already ongoing.
+ *                                         - @ref ble_gap_conn_event_trigger_t::conn_evt_counter_start is in the past.
+ *                                           Use @ref sd_ble_gap_next_conn_evt_counter_get to find a new value
+                                             to be used as ble_gap_conn_event_trigger_t::conn_evt_counter_start.
+ */
+SVCALL(SD_BLE_GAP_CONN_EVT_TRIGGER_START, uint32_t, sd_ble_gap_conn_evt_trigger_start(uint16_t conn_handle, ble_gap_conn_event_trigger_t const * p_params));
+
+
+/**@brief   Stop triggering the task configured using @ref sd_ble_gap_conn_evt_trigger_start.
+ *
+ * @param[in]   conn_handle   Connection handle.
+ *
+ * @retval ::NRF_SUCCESS                   Success.
+ * @retval ::BLE_ERROR_INVALID_CONN_HANDLE Invalid connection handle supplied.
+ * @retval ::NRF_ERROR_INVALID_STATE       Trying to stop connection event triggering when it is not enabled.
+ */
+SVCALL(SD_BLE_GAP_CONN_EVT_TRIGGER_STOP, uint32_t, sd_ble_gap_conn_evt_trigger_stop(uint16_t conn_handle));
 
 
 /** @} */
