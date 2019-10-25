@@ -460,6 +460,14 @@ void Interpreter::ProcessChannel(int argc, char *argv[])
     {
         mServer->OutputFormat("%d\r\n", otLinkGetChannel(mInstance));
     }
+    else if (strcmp(argv[0], "supported") == 0)
+    {
+        mServer->OutputFormat("0x%x\r\n", otPlatRadioGetSupportedChannelMask(mInstance));
+    }
+    else if (strcmp(argv[0], "preferred") == 0)
+    {
+        mServer->OutputFormat("0x%x\r\n", otPlatRadioGetPreferredChannelMask(mInstance));
+    }
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     else if (strcmp(argv[0], "monitor") == 0)
     {

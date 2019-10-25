@@ -113,6 +113,26 @@ Set the IEEE 802.15.4 Channel value.
 Done
 ```
 
+### channel preferred
+
+Get preferred channel mask.
+
+```bash
+> channel preferred
+0x7fff800
+Done
+```
+
+### channel supported
+
+Get supported channel mask.
+
+```bash
+> channel supported
+0x7fff800
+Done
+```
+
 ### child list
 
 List attached Child IDs.
