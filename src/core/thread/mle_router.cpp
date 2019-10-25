@@ -2370,11 +2370,11 @@ exit:
 
 otError MleRouter::HandleChildUpdateResponse(const Message &         aMessage,
                                              const Ip6::MessageInfo &aMessageInfo,
-                                             uint32_t                aKeySequence)
+                                             uint32_t                aKeySequence,
+                                             Neighbor *              aNeighbor)
 {
     otError                 error    = OT_ERROR_NONE;
     const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
-    Mac::ExtAddress         macAddr;
     SourceAddressTlv        sourceAddress;
     TimeoutTlv              timeout;
     ResponseTlv             response;
@@ -2385,16 +2385,27 @@ otError MleRouter::HandleChildUpdateResponse(const Message &         aMessage,
     Child *                 child;
     uint16_t                addressRegistrationOffset = 0;
 
-    // Find Child
-    aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
-
-    child = mChildTable.FindChild(macAddr, ChildTable::kInStateAnyExceptInvalid);
-
-    if (child == NULL)
+    if ((aNeighbor == NULL) || IsActiveRouter(aNeighbor->GetRloc16()))
     {
         LogMleMessage("Receive Child Update Response from unknown child", aMessageInfo.GetPeerAddr());
         ExitNow(error = OT_ERROR_NOT_FOUND);
     }
+
+    child = static_cast<Child *>(aNeighbor);
+
+    // Response
+    if (Tlv::GetTlv(aMessage, Tlv::kResponse, sizeof(response), response) == OT_ERROR_NONE)
+    {
+        VerifyOrExit(response.IsValid() &&
+                         memcmp(response.GetResponse(), child->GetChallenge(), child->GetChallengeSize()) == 0,
+                     error = OT_ERROR_SECURITY);
+    }
+    else
+    {
+        VerifyOrExit(child->IsStateValid(), error = OT_ERROR_SECURITY);
+    }
+
+    LogMleMessage("Receive Child Update Response from child", aMessageInfo.GetPeerAddr(), child->GetRloc16());
 
     // Source Address
     if (Tlv::GetTlv(aMessage, Tlv::kSourceAddress, sizeof(sourceAddress), sourceAddress) == OT_ERROR_NONE)
@@ -2403,20 +2414,9 @@ otError MleRouter::HandleChildUpdateResponse(const Message &         aMessage,
 
         if (child->GetRloc16() != sourceAddress.GetRloc16())
         {
-            LogMleMessage("Receive Child Update Response from unknown child", aMessageInfo.GetPeerAddr(),
-                          sourceAddress.GetRloc16());
-            ExitNow(error = OT_ERROR_PARSE);
+            RemoveNeighbor(*child);
+            ExitNow();
         }
-    }
-
-    LogMleMessage("Receive Child Update Response from child", aMessageInfo.GetPeerAddr(), child->GetRloc16());
-
-    // Response
-    if (Tlv::GetTlv(aMessage, Tlv::kResponse, sizeof(response), response) == OT_ERROR_NONE)
-    {
-        VerifyOrExit(response.IsValid() &&
-                         memcmp(response.GetResponse(), child->GetChallenge(), child->GetChallengeSize()) == 0,
-                     error = OT_ERROR_SECURITY);
     }
 
     // Status

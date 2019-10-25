@@ -691,7 +691,8 @@ private:
                                      uint32_t                aKeySequence);
     otError HandleChildUpdateResponse(const Message &         aMessage,
                                       const Ip6::MessageInfo &aMessageInfo,
-                                      uint32_t                aKeySequence);
+                                      uint32_t                aKeySequence,
+                                      Neighbor *              aNeighbor);
     otError HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void    HandleNetworkDataUpdateRouter(void);
     otError HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
