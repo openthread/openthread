@@ -41,7 +41,7 @@
 #include "common/timer.hpp"
 #include "common/trickle_timer.hpp"
 #include "mac/mac.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "net/dhcp6.hpp"
 #include "net/udp6.hpp"
 

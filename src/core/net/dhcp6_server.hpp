@@ -38,7 +38,7 @@
 
 #include "common/locator.hpp"
 #include "mac/mac.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "net/dhcp6.hpp"
 #include "net/udp6.hpp"
 #include "thread/network_data_leader.hpp"

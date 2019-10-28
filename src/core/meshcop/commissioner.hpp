@@ -42,7 +42,7 @@
 #include "coap/coap_secure.hpp"
 #include "common/locator.hpp"
 #include "common/timer.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "meshcop/announce_begin_client.hpp"
 #include "meshcop/dtls.hpp"
 #include "meshcop/energy_scan_client.hpp"

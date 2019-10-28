@@ -46,7 +46,7 @@
 #include "common/code_utils.hpp"
 #include "common/locator.hpp"
 #include "common/tlvs.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "thread/link_quality.hpp"
 
 namespace ot {

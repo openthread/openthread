@@ -44,7 +44,7 @@
 #include "coap/coap_message.hpp"
 #include "common/timer.hpp"
 #include "common/trickle_timer.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "net/icmp6.hpp"
 #include "net/udp6.hpp"

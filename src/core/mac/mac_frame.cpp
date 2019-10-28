@@ -34,106 +34,12 @@
 #include "mac_frame.hpp"
 
 #include <stdio.h>
-#include "utils/wrap_string.h"
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/instance.hpp"
-#include "common/random.hpp"
 
 namespace ot {
 namespace Mac {
-
-void ExtAddress::GenerateRandom(void)
-{
-    Random::NonCrypto::FillBuffer(m8, sizeof(ExtAddress));
-    SetGroup(false);
-    SetLocal(true);
-}
-
-bool ExtAddress::operator==(const ExtAddress &aOther) const
-{
-    return memcmp(m8, aOther.m8, sizeof(ExtAddress)) == 0;
-}
-
-ExtAddress::InfoString ExtAddress::ToString(void) const
-{
-    return InfoString("%02x%02x%02x%02x%02x%02x%02x%02x", m8[0], m8[1], m8[2], m8[3], m8[4], m8[5], m8[6], m8[7]);
-}
-
-void ExtAddress::CopyAddress(uint8_t *aDst, const uint8_t *aSrc, CopyByteOrder aByteOrder)
-{
-    switch (aByteOrder)
-    {
-    case kNormalByteOrder:
-        memcpy(aDst, aSrc, sizeof(ExtAddress));
-        break;
-
-    case kReverseByteOrder:
-        aSrc += sizeof(ExtAddress) - 1;
-        for (uint8_t len = sizeof(ExtAddress); len > 0; len--)
-        {
-            *aDst++ = *aSrc--;
-        }
-        break;
-    }
-}
-
-Address::InfoString Address::ToString(void) const
-{
-    return (mType == kTypeExtended) ? GetExtended().ToString()
-                                    : (mType == kTypeNone ? InfoString("None") : InfoString("0x%04x", GetShort()));
-}
-
-bool ExtendedPanId::operator==(const ExtendedPanId &aOther) const
-{
-    return memcmp(m8, aOther.m8, sizeof(ExtendedPanId)) == 0;
-}
-
-ExtendedPanId::InfoString ExtendedPanId::ToString(void) const
-{
-    return InfoString("%02x%02x%02x%02x%02x%02x%02x%02x", m8[0], m8[1], m8[2], m8[3], m8[4], m8[5], m8[6], m8[7]);
-}
-
-uint8_t NetworkName::Data::CopyTo(char *aBuffer, uint8_t aMaxSize) const
-{
-    uint8_t len = GetLength();
-
-    memset(aBuffer, 0, aMaxSize);
-
-    if (len > aMaxSize)
-    {
-        len = aMaxSize;
-    }
-
-    memcpy(aBuffer, GetBuffer(), len);
-
-    return len;
-}
-
-NetworkName::Data NetworkName::GetAsData(void) const
-{
-    uint8_t len = static_cast<uint8_t>(strnlen(m8, kMaxSize + 1));
-
-    return Data(m8, len);
-}
-
-otError NetworkName::Set(const Data &aNameData)
-{
-    otError error  = OT_ERROR_NONE;
-    uint8_t newLen = static_cast<uint8_t>(strnlen(aNameData.GetBuffer(), aNameData.GetLength()));
-
-    VerifyOrExit(newLen <= kMaxSize, error = OT_ERROR_INVALID_ARGS);
-
-    // Ensure the new name does not match the current one.
-    VerifyOrExit(memcmp(m8, aNameData.GetBuffer(), newLen) || (m8[newLen] != '\0'), error = OT_ERROR_ALREADY);
-
-    memcpy(m8, aNameData.GetBuffer(), newLen);
-    m8[newLen] = '\0';
-
-exit:
-    return error;
-}
 
 void Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
 {

@@ -39,6 +39,7 @@
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "common/timer.hpp"
+#include "mac/mac_frame.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
 
