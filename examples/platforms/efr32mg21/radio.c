@@ -34,6 +34,7 @@
 
 #include <assert.h>
 
+#include "openthread-system.h"
 #include <openthread/config.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
@@ -718,6 +719,8 @@ static void processNextRxPacket(otInstance *aInstance)
         }
     }
 
+    otSysEventSignalPending();
+
 exit:
 
     if (packetHandle != RAIL_RX_PACKET_HANDLE_INVALID)
@@ -862,6 +865,8 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
 #endif
         }
     }
+
+    otSysEventSignalPending();
 }
 
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
@@ -900,11 +905,14 @@ void efr32RadioProcess(otInstance *aInstance)
 #if RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
         sRailDebugCounters.mRailPlatRadioTxDoneCbCount++;
 #endif
+
+        otSysEventSignalPending();
     }
     else if (sEnergyScanMode == ENERGY_SCAN_MODE_ASYNC && sEnergyScanStatus == ENERGY_SCAN_STATUS_COMPLETED)
     {
         sEnergyScanStatus = ENERGY_SCAN_STATUS_IDLE;
         otPlatRadioEnergyScanDone(aInstance, sEnergyScanResultDbm);
+        otSysEventSignalPending();
 
 #if RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
         sRailDebugCounters.mRailEventEnergyScanCompleted++;

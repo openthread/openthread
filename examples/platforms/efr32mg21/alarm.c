@@ -68,6 +68,7 @@ static bool     sIsRunning = false;
 
 static void RAILCb_TimerExpired(RAIL_Handle_t aHandle)
 {
+    otSysEventSignalPending();
 }
 
 void efr32AlarmInit(void)

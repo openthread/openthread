@@ -34,7 +34,7 @@
 
 #include <string.h>
 
-#include <openthread/tasklet.h>
+#include "openthread-system.h"
 #include <openthread/platform/uart.h>
 
 #include "common/logging.hpp"
@@ -71,10 +71,18 @@ void otSysInit(int argc, char *argv[])
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
+    __disable_irq();
+
+#undef FIXED_EXCEPTION
+#define FIXED_EXCEPTION(vectorNumber, functionName, deviceIrqn, deviceIrqHandler)
+#define EXCEPTION(vectorNumber, functionName, deviceIrqn, deviceIrqHandler, priorityLevel, subpriority) \
+    NVIC_SetPriority(deviceIrqn, NVIC_EncodePriority(PRIGROUP_POSITION, priorityLevel, subpriority));
+#include NVIC_CONFIG
+#undef EXCEPTION
+
+    NVIC_SetPriorityGrouping(PRIGROUP_POSITION);
     CHIP_Init();
-
     halInitChipSpecific();
-
     BSP_Init(BSP_INIT_BCC);
     RTCDRV_Init();
 
@@ -82,6 +90,8 @@ void otSysInit(int argc, char *argv[])
     initFem();
     wakeupFem();
 #endif
+
+    __enable_irq();
 
 #if USE_EFR32_LOG
     efr32LogInit();
@@ -159,4 +169,9 @@ void otSysProcessDrivers(otInstance *aInstance)
     efr32UartProcess();
     efr32RadioProcess(aInstance);
     efr32AlarmProcess(aInstance);
+}
+
+__WEAK void otSysEventSignalPending(void)
+{
+    // Intentionally empty
 }
