@@ -155,10 +155,10 @@ const struct Command Interpreter::sCommands[] = {
     {"leaderpartitionid", &Interpreter::ProcessLeaderPartitionId},
     {"leaderweight", &Interpreter::ProcessLeaderWeight},
 #endif
+    {"mac", &Interpreter::ProcessMac},
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     {"macfilter", &Interpreter::ProcessMacFilter},
 #endif
-    {"macretries", &Interpreter::ProcessMacRetries},
     {"masterkey", &Interpreter::ProcessMasterKey},
     {"mode", &Interpreter::ProcessMode},
 #if OPENTHREAD_FTD
@@ -3474,7 +3474,26 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
-void Interpreter::ProcessMacRetries(int argc, char *argv[])
+void Interpreter::ProcessMac(int argc, char *argv[])
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
+
+    if (strcmp(argv[0], "retries") == 0)
+    {
+        error = ProcessMacRetries(argc - 1, argv + 1);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+exit:
+    AppendResult(error);
+}
+
+otError Interpreter::ProcessMacRetries(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -3520,7 +3539,7 @@ void Interpreter::ProcessMacRetries(int argc, char *argv[])
     }
 
 exit:
-    AppendResult(error);
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
