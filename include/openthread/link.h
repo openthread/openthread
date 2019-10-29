@@ -752,6 +752,14 @@ int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality
 const otMacCounters *otLinkGetCounters(otInstance *aInstance);
 
 /**
+ * Reset the MAC layer counters.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ */
+void otLinkResetCounters(otInstance *aInstance);
+
+/**
  * This function pointer is called when an IEEE 802.15.4 frame is received.
  *
  * @note This callback is called after FCS processing and @p aFrame may not contain the actual FCS that was received.
