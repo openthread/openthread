@@ -47,6 +47,8 @@ extern "C" {
  * @brief
  *   This module includes functions that set the external OpenThread heap.
  *
+ * @note This API is deprecated and use of it is discouraged.
+ *
  * @{
  *
  */
