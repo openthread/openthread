@@ -296,6 +296,23 @@ NcpBase *NcpBase::GetNcpInstance(void)
     return sNcpInstance;
 }
 
+void NcpBase::ResetCounters(void)
+{
+    mFramingErrorCounter          = 0;
+    mRxSpinelFrameCounter         = 0;
+    mRxSpinelOutOfOrderTidCounter = 0;
+    mTxSpinelFrameCounter         = 0;
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    mInboundSecureIpFrameCounter    = 0;
+    mInboundInsecureIpFrameCounter  = 0;
+    mOutboundSecureIpFrameCounter   = 0;
+    mOutboundInsecureIpFrameCounter = 0;
+    mDroppedOutboundIpFrameCounter  = 0;
+    mDroppedInboundIpFrameCounter   = 0;
+#endif
+}
+
 // ----------------------------------------------------------------------------
 // MARK: Serial Traffic Glue
 // ----------------------------------------------------------------------------

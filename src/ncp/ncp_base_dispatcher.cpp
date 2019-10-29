@@ -513,6 +513,9 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_CNTR_IP_RX_FAILURE:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_IP_RX_FAILURE>;
         break;
+    case SPINEL_PROP_CNTR_ALL_IP_COUNTERS:
+        handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_ALL_IP_COUNTERS>;
+        break;
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     case SPINEL_PROP_THREAD_NETWORK_TIME:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NETWORK_TIME>;
@@ -890,6 +893,15 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
 #endif
     case SPINEL_PROP_CNTR_RESET:
         handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CNTR_RESET>;
+        break;
+    case SPINEL_PROP_CNTR_ALL_MAC_COUNTERS:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CNTR_ALL_MAC_COUNTERS>;
+        break;
+    case SPINEL_PROP_CNTR_MLE_COUNTERS:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CNTR_MLE_COUNTERS>;
+        break;
+    case SPINEL_PROP_CNTR_ALL_IP_COUNTERS:
+        handler = &NcpBase::HandlePropertySet<SPINEL_PROP_CNTR_ALL_IP_COUNTERS>;
         break;
 #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
     case SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT:
