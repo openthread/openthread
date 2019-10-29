@@ -371,6 +371,13 @@ const otMacCounters *otLinkGetCounters(otInstance *aInstance)
     return &instance.Get<Mac::Mac>().GetCounters();
 }
 
+void otLinkResetCounters(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Mac::Mac>().ResetCounters();
+}
+
 otError otLinkActiveScan(otInstance *             aInstance,
                          uint32_t                 aScanChannels,
                          uint16_t                 aScanDuration,
