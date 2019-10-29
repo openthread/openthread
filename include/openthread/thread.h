@@ -731,6 +731,14 @@ otError otThreadSendDiagnosticReset(otInstance *        aInstance,
 const otIpCounters *otThreadGetIp6Counters(otInstance *aInstance);
 
 /**
+ * Reset the IPv6 counters.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ */
+void otThreadResetIp6Counters(otInstance *aInstance);
+
+/**
  * Get the Thread MLE counters.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
