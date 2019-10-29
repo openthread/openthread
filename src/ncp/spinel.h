@@ -1927,6 +1927,23 @@ typedef enum
      */
     SPINEL_PROP_MAC_CCA_FAILURE_RATE = SPINEL_PROP_MAC_EXT__BEGIN + 9,
 
+    /// MAC Max direct retry number
+    /** Format: `C`
+     *
+     * The maximum (user-specified) number of direct frame transmission retries.
+     *
+     */
+    SPINEL_PROP_MAC_MAX_RETRY_NUMBER_DIRECT = SPINEL_PROP_MAC_EXT__BEGIN + 10,
+
+    /// MAC Max indirect retry number
+    /** Format: `C`
+     * Required capability: `SPINEL_CAP_CONFIG_FTD`
+     *
+     * The maximum (user-specified) number of indirect frame transmission retries.
+     *
+     */
+    SPINEL_PROP_MAC_MAX_RETRY_NUMBER_INDIRECT = SPINEL_PROP_MAC_EXT__BEGIN + 11,
+
     SPINEL_PROP_MAC_EXT__END = 0x1400,
 
     SPINEL_PROP_NET__BEGIN = 0x40,

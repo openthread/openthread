@@ -82,10 +82,11 @@ enum
     kMaxCsmaBackoffsIndirect =
         OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT, ///< macMaxCsmaBackoffs for indirect transmissions
 
-    kMaxFrameRetriesDirect =
-        OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT, ///< macMaxFrameRetries for direct transmissions
-    kMaxFrameRetriesIndirect =
-        OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT, ///< macMaxFrameRetries for indirect transmissions
+    kDefaultMaxFrameRetriesDirect =
+        OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT, ///< macDefaultMaxFrameRetries for direct transmissions
+    kDefaultMaxFrameRetriesIndirect =
+        OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT, ///< macDefaultMaxFrameRetries for indirect
+                                                                  ///< transmissions
 
     kTxNumBcast = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST ///< Number of times each broadcast frame is transmitted
 };
@@ -427,6 +428,43 @@ public:
     void SetExtendedPanId(const ExtendedPanId &aExtendedPanId);
 
     /**
+     * This method returns the maximum number of frame retries during direct transmission.
+     *
+     * @returns The maximum number of retries during direct transmission.
+     *
+     */
+    uint8_t GetMaxFrameRetriesDirect(void) const { return mMaxFrameRetriesDirect; }
+
+    /**
+     * This method sets the maximum number of frame retries during direct transmission.
+     *
+     * @param[in]  aMaxFrameRetriesDirect  The maximum number of retries during direct transmission.
+     *
+     */
+    void SetMaxFrameRetriesDirect(uint8_t aMaxFrameRetriesDirect) { mMaxFrameRetriesDirect = aMaxFrameRetriesDirect; }
+
+#if OPENTHREAD_FTD
+    /**
+     * This method returns the maximum number of frame retries during indirect transmission.
+     *
+     * @returns The maximum number of retries during indirect transmission.
+     *
+     */
+    uint8_t GetMaxFrameRetriesIndirect(void) const { return mMaxFrameRetriesIndirect; }
+
+    /**
+     * This method sets the maximum number of frame retries during indirect transmission.
+     *
+     * @param[in]  aMaxFrameRetriesIndirect  The maximum number of retries during indirect transmission.
+     *
+     */
+    void SetMaxFrameRetriesIndirect(uint8_t aMaxFrameRetriesIndirect)
+    {
+        mMaxFrameRetriesIndirect = aMaxFrameRetriesIndirect;
+    }
+#endif
+
+    /**
      * This method is called to handle a received frame.
      *
      * @param[in]  aFrame  A pointer to the received frame, or NULL if the receive operation was aborted.
@@ -714,6 +752,10 @@ private:
     uint8_t       mScanChannel;
     uint16_t      mScanDuration;
     ChannelMask   mScanChannelMask;
+    uint8_t       mMaxFrameRetriesDirect;
+#if OPENTHREAD_FTD
+    uint8_t mMaxFrameRetriesIndirect;
+#endif
     union
     {
         ActiveScanHandler mActiveScanHandler;

@@ -336,6 +336,8 @@ private:
     otError ProcessMacFilterAddress(int argc, char *argv[]);
     otError ProcessMacFilterRss(int argc, char *argv[]);
 #endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+    void    ProcessMac(int argc, char *argv[]);
+    otError ProcessMacRetries(int argc, char *argv[]);
 
     static void HandleIcmpReceive(void *               aContext,
                                   otMessage *          aMessage,

@@ -155,6 +155,7 @@ const struct Command Interpreter::sCommands[] = {
     {"leaderpartitionid", &Interpreter::ProcessLeaderPartitionId},
     {"leaderweight", &Interpreter::ProcessLeaderWeight},
 #endif
+    {"mac", &Interpreter::ProcessMac},
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     {"macfilter", &Interpreter::ProcessMacFilter},
 #endif
@@ -3490,6 +3491,74 @@ exit:
 }
 
 #endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+
+void Interpreter::ProcessMac(int argc, char *argv[])
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
+
+    if (strcmp(argv[0], "retries") == 0)
+    {
+        error = ProcessMacRetries(argc - 1, argv + 1);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+exit:
+    AppendResult(error);
+}
+
+otError Interpreter::ProcessMacRetries(int argc, char *argv[])
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(argc > 0 && argc <= 2, error = OT_ERROR_INVALID_ARGS);
+
+    if (strcmp(argv[0], "direct") == 0)
+    {
+        if (argc == 1)
+        {
+            mServer->OutputFormat("%d\r\n", otLinkGetMaxFrameRetriesDirect(mInstance));
+        }
+        else
+        {
+            unsigned long value;
+
+            SuccessOrExit(error = ParseUnsignedLong(argv[1], value));
+            VerifyOrExit(value <= 0xff, error = OT_ERROR_INVALID_ARGS);
+
+            otLinkSetMaxFrameRetriesDirect(mInstance, static_cast<uint8_t>(value));
+        }
+    }
+#ifdef OPENTHREAD_FTD
+    else if (strcmp(argv[0], "indirect") == 0)
+    {
+        if (argc == 1)
+        {
+            mServer->OutputFormat("%d\r\n", otLinkGetMaxFrameRetriesIndirect(mInstance));
+        }
+        else
+        {
+            unsigned long value;
+
+            SuccessOrExit(error = ParseUnsignedLong(argv[1], value));
+            VerifyOrExit(value <= 0xff, error = OT_ERROR_INVALID_ARGS);
+
+            otLinkSetMaxFrameRetriesIndirect(mInstance, static_cast<uint8_t>(value));
+        }
+    }
+#endif
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+exit:
+    return error;
+}
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 void Interpreter::ProcessDiag(int argc, char *argv[])

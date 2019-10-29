@@ -371,7 +371,7 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
 
     // Set the default value for all optional parameters.
     aFrame.mInfo.mTxInfo.mMaxCsmaBackoffs = OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT;
-    aFrame.mInfo.mTxInfo.mMaxFrameRetries = OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT;
+    aFrame.mInfo.mTxInfo.mMaxFrameRetries = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT;
     aFrame.mInfo.mTxInfo.mCsmaCaEnabled   = true;
 
     // All the next parameters are optional. Note that even if the

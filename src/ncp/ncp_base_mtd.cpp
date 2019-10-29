@@ -213,6 +213,23 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_EXTENDED_ADDR>(vo
     return mEncoder.WriteEui64(*otLinkGetExtendedAddress(mInstance));
 }
 
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_MAX_RETRY_NUMBER_DIRECT>(void)
+{
+    return mEncoder.WriteUint8(otLinkGetMaxFrameRetriesDirect(mInstance));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_MAX_RETRY_NUMBER_DIRECT>(void)
+{
+    uint8_t maxFrameRetriesDirect;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(maxFrameRetriesDirect));
+    otLinkSetMaxFrameRetriesDirect(mInstance, maxFrameRetriesDirect);
+
+exit:
+    return error;
+}
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_FREQ>(void)
 {
     uint32_t      freq_khz(0);

@@ -310,6 +310,23 @@ exit:
     return error;
 }
 
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_MAX_RETRY_NUMBER_INDIRECT>(void)
+{
+    return mEncoder.WriteUint8(otLinkGetMaxFrameRetriesIndirect(mInstance));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_MAX_RETRY_NUMBER_INDIRECT>(void)
+{
+    uint8_t maxFrameRetriesIndirect;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(maxFrameRetriesIndirect));
+    otLinkSetMaxFrameRetriesIndirect(mInstance, maxFrameRetriesIndirect);
+
+exit:
+    return error;
+}
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_PSKC>(void)
 {
     return mEncoder.WriteData(otThreadGetPskc(mInstance)->m8, sizeof(spinel_net_pskc_t));

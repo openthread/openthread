@@ -455,6 +455,44 @@ otError otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod);
 otShortAddress otLinkGetShortAddress(otInstance *aInstance);
 
 /**
+ * This method returns the maximum number of frame retries during direct transmission.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The maximum number of retries during direct transmission.
+ *
+ */
+uint8_t otLinkGetMaxFrameRetriesDirect(otInstance *aInstance);
+
+/**
+ * This method sets the maximum number of frame retries during direct transmission.
+ *
+ * @param[in]  aInstance               A pointer to an OpenThread instance.
+ * @param[in]  aMaxFrameRetriesDirect  The maximum number of retries during direct transmission.
+ *
+ */
+void otLinkSetMaxFrameRetriesDirect(otInstance *aInstance, uint8_t aMaxFrameRetriesDirect);
+
+/**
+ * This method returns the maximum number of frame retries during indirect transmission.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The maximum number of retries during indirect transmission.
+ *
+ */
+uint8_t otLinkGetMaxFrameRetriesIndirect(otInstance *aInstance);
+
+/**
+ * This method sets the maximum number of frame retries during indirect transmission.
+ *
+ * @param[in]  aInstance                 A pointer to an OpenThread instance.
+ * @param[in]  aMaxFrameRetriesIndirect  The maximum number of retries during indirect transmission.
+ *
+ */
+void otLinkSetMaxFrameRetriesIndirect(otInstance *aInstance, uint8_t aMaxFrameRetriesIndirect);
+
+/**
  * This function gets the address mode of MAC filter.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
