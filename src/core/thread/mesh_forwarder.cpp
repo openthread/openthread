@@ -496,14 +496,7 @@ otError MeshForwarder::HandleFrameRequest(Mac::TxFrame &aFrame)
             // value.
             if (mSendMessage->GetPanId() == Mac::kPanIdBroadcast && Get<Mac::Mac>().GetPanId() == Mac::kPanIdBroadcast)
             {
-                uint16_t panid;
-
-                do
-                {
-                    panid = Random::NonCrypto::GetUint16();
-                } while (panid == Mac::kPanIdBroadcast);
-
-                Get<Mac::Mac>().SetPanId(panid);
+                Get<Mac::Mac>().SetPanId(Mac::GenerateRandomPanId());
             }
         }
 

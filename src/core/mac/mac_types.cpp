@@ -42,6 +42,18 @@
 namespace ot {
 namespace Mac {
 
+PanId GenerateRandomPanId(void)
+{
+    PanId panId;
+
+    do
+    {
+        panId = Random::NonCrypto::GetUint16();
+    } while (panId == kPanIdBroadcast);
+
+    return panId;
+}
+
 void ExtAddress::GenerateRandom(void)
 {
     Random::NonCrypto::FillBuffer(m8, sizeof(ExtAddress));
