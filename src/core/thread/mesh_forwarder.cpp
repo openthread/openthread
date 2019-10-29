@@ -78,10 +78,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
 {
     mFragTag = Random::NonCrypto::GetUint16();
 
-    mIpCounters.mTxSuccess = 0;
-    mIpCounters.mRxSuccess = 0;
-    mIpCounters.mTxFailure = 0;
-    mIpCounters.mRxFailure = 0;
+    ResetCounters();
 
 #if OPENTHREAD_FTD
     memset(mFragmentEntries, 0, sizeof(mFragmentEntries));
