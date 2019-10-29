@@ -69,7 +69,6 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mEnabled(false)
     , mScanChannels(0)
     , mScanChannel(0)
-    , mMacRadioAcquisitionId(0)
     , mRestorePanId(Mac::kPanIdBroadcast)
     , mScanning(false)
 #if OPENTHREAD_FTD
@@ -191,8 +190,6 @@ otError MeshForwarder::PrepareDiscoverRequest(void)
 
     mScanChannel  = Mac::ChannelMask::kChannelIteratorFirst;
     mRestorePanId = Get<Mac::Mac>().GetPanId();
-
-    SuccessOrExit(error = Get<Mac::Mac>().AcquireRadioChannel(&mMacRadioAcquisitionId));
 
     mScanning = true;
 
@@ -486,7 +483,7 @@ otError MeshForwarder::HandleFrameRequest(Mac::TxFrame &aFrame)
     case Message::kTypeIp6:
         if (mSendMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest)
         {
-            SuccessOrExit(error = Get<Mac::Mac>().SetRadioChannel(mMacRadioAcquisitionId, mScanChannel));
+            SuccessOrExit(error = Get<Mac::Mac>().SetTemporaryChannel(mScanChannel));
 
             aFrame.SetChannel(mScanChannel);
 
@@ -1034,12 +1031,7 @@ void MeshForwarder::HandleDiscoverComplete(void)
 {
     assert(mScanning);
 
-    if (mMacRadioAcquisitionId)
-    {
-        Get<Mac::Mac>().ReleaseRadioChannel();
-        mMacRadioAcquisitionId = 0;
-    }
-
+    Get<Mac::Mac>().ClearTemporaryChannel();
     Get<Mac::Mac>().SetPanId(mRestorePanId);
     mScanning = false;
     Get<Mle::MleRouter>().HandleDiscoverComplete();

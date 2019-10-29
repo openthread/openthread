@@ -513,7 +513,6 @@ private:
 
     Mac::ChannelMask mScanChannels;
     uint8_t          mScanChannel;
-    uint16_t         mMacRadioAcquisitionId;
     uint16_t         mRestorePanId;
     bool             mScanning;
 
