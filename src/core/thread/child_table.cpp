@@ -130,7 +130,7 @@ Child *ChildTable::GetNewChild(void)
 
     for (uint16_t num = mMaxChildrenAllowed; num != 0; num--, child++)
     {
-        if (child->GetState() == Child::kStateInvalid)
+        if (child->IsStateInvalid())
         {
             child->Clear();
             ExitNow();
@@ -253,7 +253,7 @@ bool ChildTable::MatchesFilter(const Child &aChild, StateFilter aFilter)
     switch (aFilter)
     {
     case kInStateValid:
-        rval = (aChild.GetState() == Child::kStateValid);
+        rval = aChild.IsStateValid();
         break;
 
     case kInStateValidOrRestoring:
@@ -261,7 +261,7 @@ bool ChildTable::MatchesFilter(const Child &aChild, StateFilter aFilter)
         break;
 
     case kInStateChildIdRequest:
-        rval = (aChild.GetState() == Child::kStateChildIdRequest);
+        rval = aChild.IsStateChildIdRequest();
         break;
 
     case kInStateValidOrAttaching:
@@ -269,7 +269,7 @@ bool ChildTable::MatchesFilter(const Child &aChild, StateFilter aFilter)
         break;
 
     case kInStateAnyExceptInvalid:
-        rval = (aChild.GetState() != Child::kStateInvalid);
+        rval = !aChild.IsStateInvalid();
         break;
 
     case kInStateAnyExceptValidOrRestoring:

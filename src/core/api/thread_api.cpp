@@ -322,7 +322,7 @@ otError otThreadGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
     aParentInfo->mLinkQualityOut = parent->GetLinkQualityOut();
     aParentInfo->mAge            = static_cast<uint8_t>(Time::MsecToSec(TimerMilli::GetNow() - parent->GetLastHeard()));
     aParentInfo->mAllocated      = true;
-    aParentInfo->mLinkEstablished = parent->GetState() == Neighbor::kStateValid;
+    aParentInfo->mLinkEstablished = parent->IsStateValid();
 
 #if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 exit:

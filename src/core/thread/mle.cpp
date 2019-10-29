@@ -1677,7 +1677,7 @@ void Mle::HandleAttachTimer(void)
         // parent.
 
         if ((linkQuality == 3 || mAttachState != kAttachStateParentRequestRouter) &&
-            mParentCandidate.GetState() == Neighbor::kStateParentResponse &&
+            mParentCandidate.IsStateParentResponse() &&
             (mRole != OT_DEVICE_ROLE_CHILD || mReceivedResponseFromParent || mParentRequestMode == kAttachBetter) &&
             SendChildIdRequest() == OT_ERROR_NONE)
         {
@@ -2723,7 +2723,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         break;
     }
 
-    if (neighbor != NULL && neighbor->GetState() == Neighbor::kStateValid)
+    if (neighbor != NULL && neighbor->IsStateValid())
     {
         if (keySequence == neighbor->GetKeySequence())
         {
@@ -2918,7 +2918,7 @@ otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo
 
     case OT_DEVICE_ROLE_ROUTER:
     case OT_DEVICE_ROLE_LEADER:
-        if ((neighbor = Get<MleRouter>().GetNeighbor(macAddr)) != NULL && neighbor->GetState() == Neighbor::kStateValid)
+        if ((neighbor = Get<MleRouter>().GetNeighbor(macAddr)) != NULL && neighbor->IsStateValid())
         {
             isNeighbor = true;
         }
@@ -3288,8 +3288,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     // Continue to process the "ParentResponse" if it is from current
     // parent candidate to update the challenge and frame counters.
 
-    if ((mParentCandidate.GetState() == Neighbor::kStateParentResponse) &&
-        (mParentCandidate.GetExtAddress() != extAddress))
+    if (mParentCandidate.IsStateParentResponse() && (mParentCandidate.GetExtAddress() != extAddress))
     {
         // if already have a candidate parent, only seek a better parent
 
@@ -3875,11 +3874,11 @@ Neighbor *Mle::GetNeighbor(uint16_t aAddress)
 {
     Neighbor *rval = NULL;
 
-    if ((mParent.IsStateValidOrRestoring()) && (mParent.GetRloc16() == aAddress))
+    if (mParent.IsStateValidOrRestoring() && (mParent.GetRloc16() == aAddress))
     {
         rval = &mParent;
     }
-    else if ((mParentCandidate.GetState() == Neighbor::kStateValid) && (mParentCandidate.GetRloc16() == aAddress))
+    else if (mParentCandidate.IsStateValid() && (mParentCandidate.GetRloc16() == aAddress))
     {
         rval = &mParentCandidate;
     }
@@ -3891,11 +3890,11 @@ Neighbor *Mle::GetNeighbor(const Mac::ExtAddress &aAddress)
 {
     Neighbor *rval = NULL;
 
-    if ((mParent.IsStateValidOrRestoring()) && (mParent.GetExtAddress() == aAddress))
+    if (mParent.IsStateValidOrRestoring() && (mParent.GetExtAddress() == aAddress))
     {
         rval = &mParent;
     }
-    else if ((mParentCandidate.GetState() == Neighbor::kStateValid) && (mParentCandidate.GetExtAddress() == aAddress))
+    else if (mParentCandidate.IsStateValid() && (mParentCandidate.GetExtAddress() == aAddress))
     {
         rval = &mParentCandidate;
     }
@@ -3927,8 +3926,7 @@ Neighbor *Mle::GetNeighbor(const Mac::Address &aAddress)
 uint16_t Mle::GetNextHop(uint16_t aDestination) const
 {
     OT_UNUSED_VARIABLE(aDestination);
-    return (mParent.GetState() == Neighbor::kStateValid) ? mParent.GetRloc16()
-                                                         : static_cast<uint16_t>(Mac::kShortAddrInvalid);
+    return (mParent.IsStateValid()) ? mParent.GetRloc16() : static_cast<uint16_t>(Mac::kShortAddrInvalid);
 }
 
 bool Mle::IsRoutingLocator(const Ip6::Address &aAddress) const
@@ -3958,7 +3956,7 @@ Router *Mle::GetParentCandidate(void)
 {
     Router *rval;
 
-    if (mParentCandidate.GetState() == Neighbor::kStateValid)
+    if (mParentCandidate.IsStateValid())
     {
         rval = &mParentCandidate;
     }
