@@ -1937,6 +1937,7 @@ typedef enum
 
     /// MAC Max indirect retry number
     /** Format: `C`
+     * Required capability: `SPINEL_CAP_CONFIG_FTD`
      *
      * The maximum (user-specified) number of indirect frame transmission retries.
      *
