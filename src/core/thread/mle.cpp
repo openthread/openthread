@@ -316,12 +316,11 @@ exit:
 
 void Mle::SetRole(otDeviceRole aRole)
 {
-    VerifyOrExit(aRole != mRole, Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_ROLE));
+    otDeviceRole oldRole = mRole;
 
-    otLogNoteMle("Role %s -> %s", RoleToString(mRole), RoleToString(aRole));
+    SuccessOrExit(Get<Notifier>().Update(mRole, aRole, OT_CHANGED_THREAD_ROLE));
 
-    mRole = aRole;
-    Get<Notifier>().Signal(OT_CHANGED_THREAD_ROLE);
+    otLogNoteMle("Role %s -> %s", RoleToString(oldRole), RoleToString(mRole));
 
     switch (mRole)
     {
@@ -354,7 +353,7 @@ void Mle::SetRole(otDeviceRole aRole)
 #endif
 
 exit:
-    return;
+    OT_UNUSED_VARIABLE(oldRole);
 }
 
 void Mle::SetAttachState(AttachState aState)
