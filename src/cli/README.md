@@ -39,8 +39,8 @@ OpenThread test scripts use the CLI to execute test cases.
 * [leaderweight](#leaderweight)
 * [linkquality](#linkquality-extaddr)
 * [logfilename](#logfilename-filename)
+* [mac](#mac-retries-direct)
 * [macfilter](#macfilter)
-* [macretries](#macretries)
 * [masterkey](#masterkey)
 * [mode](#mode)
 * [neighbor](#neighbor-list)
@@ -1354,6 +1354,44 @@ OPENTHREAD/gf4f2f04; Jul  1 2016 17:00:09
 Done
 ```
 
+### mac retries direct
+
+Get the number of direct TX retries on the MAC layer.
+
+```bash
+> mac retries direct
+3
+Done
+```
+
+### mac retries direct \<number\>
+
+Set the number of direct TX retries on the MAC layer.
+
+```bash
+> mac retries direct 5
+Done
+```
+
+### mac retries indirect
+
+Get the number of indirect TX retries on the MAC layer.
+
+```bash
+> mac retries indirect
+3
+Done
+```
+
+### mac retries indirect \<number\>
+
+Set the number of indirect TX retries on the MAC layer.
+
+```bash
+> mac retries indirect 5
+Done
+```
+
 ### macfilter
 
 List the macfilter status, including address and received signal strength filter settings.
@@ -1506,44 +1544,6 @@ Clear all the received signal strength or received link quality settings.
 
 ```bash
 > macfilter rss clear
-Done
-```
-
-### macretries direct
-
-Get the number of direct TX retries on the MAC layer.
-
-```bash
-> macretries direct
-3
-Done
-```
-
-### macretries direct \<number\>
-
-Set the number of direct TX retries on the MAC layer.
-
-```bash
-> macretries direct 5
-Done
-```
-
-### macretries indirect
-
-Get the number of indirect TX retries on the MAC layer.
-
-```bash
-> macretries indirect
-3
-Done
-```
-
-### macretries indirect \<number\>
-
-Set the number of indirect TX retries on the MAC layer.
-
-```bash
-> macretries indirect 5
 Done
 ```
 
