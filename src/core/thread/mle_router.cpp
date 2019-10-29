@@ -3132,14 +3132,12 @@ bool MleRouter::IsMinimalChild(uint16_t aRloc16)
 
 void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 {
-    bool isActiveRouter = IsActiveRouter(aNeighbor.GetRloc16());
-
     if (mRole == OT_DEVICE_ROLE_CHILD && &aNeighbor == &mParent)
     {
         BecomeDetached();
     }
 
-    if (!isActiveRouter)
+    if (!IsActiveRouter(aNeighbor.GetRloc16()))
     {
         if (aNeighbor.IsStateValidOrRestoring())
         {
