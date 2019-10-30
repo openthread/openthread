@@ -3208,6 +3208,29 @@ typedef enum
      */
     SPINEL_PROP_MESHCOP_COMMISSIONER_MGMT_SET = SPINEL_PROP_MESHCOP_EXT__BEGIN + 6,
 
+    // Thread Commissioner Generate PSKc
+    /** Format: `UUd` - Write only
+     *
+     * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
+     *
+     * Writing to this property allows user to generate PSKc from a given commissioning pass-phrase, network name,
+     * extended PAN Id.
+     *
+     * Written value format is:
+     *
+     *   `U` : The commissioning pass-phrase.
+     *   `U` : Network Name.
+     *   `d` : Extended PAN ID.
+     *
+     * The response on success would be a `VALUE_IS` command with the PSKc with format below:
+     *
+     *   `D` : The PSKc
+     *
+     * On a failure a `LAST_STATUS` is emitted with the error status.
+     *
+     */
+    SPINEL_PROP_MESHCOP_COMMISSIONER_GENERATE_PSKC = SPINEL_PROP_MESHCOP_EXT__BEGIN + 7,
+
     SPINEL_PROP_MESHCOP_EXT__END = 0x1900,
 
     SPINEL_PROP_OPENTHREAD__BEGIN = 0x1900,

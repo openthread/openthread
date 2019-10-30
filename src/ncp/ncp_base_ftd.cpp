@@ -759,6 +759,32 @@ exit:
     return error;
 }
 
+otError NcpBase::HandlePropertySet_SPINEL_PROP_MESHCOP_COMMISSIONER_GENERATE_PSKC(uint8_t aHeader)
+{
+    otError        error = OT_ERROR_NONE;
+    const char *   passPhrase;
+    const char *   networkName;
+    const uint8_t *extPanIdData;
+    uint16_t       length;
+    otPskc         pskc;
+
+    SuccessOrExit(error = mDecoder.ReadUtf8(passPhrase));
+    SuccessOrExit(error = mDecoder.ReadUtf8(networkName));
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(extPanIdData, length));
+    VerifyOrExit(length == sizeof(spinel_net_xpanid_t), error = OT_ERROR_PARSE);
+
+    SuccessOrExit(error = otCommissionerGeneratePskc(passPhrase, networkName,
+                                                     reinterpret_cast<const otExtendedPanId *>(extPanIdData), &pskc));
+
+    SuccessOrExit(
+        error = mEncoder.BeginFrame(aHeader, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_MESHCOP_COMMISSIONER_GENERATE_PSKC));
+    SuccessOrExit(error = mEncoder.WriteData(pskc.m8, sizeof(pskc)));
+    SuccessOrExit(error = mEncoder.EndFrame());
+
+exit:
+    return error;
+}
+
 // SPINEL_PROP_THREAD_COMMISSIONER_ENABLED is replaced by SPINEL_PROP_MESHCOP_COMMISSIONER_STATE. Please use the new
 // property. The old property/implementation remains for backward compatibility.
 
