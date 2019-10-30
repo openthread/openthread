@@ -42,4 +42,12 @@
  */
 #define OPENTHREAD_CONFIG_PLATFORM_INFO "GP712"
 
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_SET_ACK_FP_CORRECTLY
+ *
+ * Define to 1 if ACK FP is correctly set in the platform radio driver
+ *
+ */
+#define OPENTHREAD_CONFIG_PLATFORM_SET_ACK_FP_CORRECTLY 0
+
 #endif // OPENTHREAD_CORE_GP712_CONFIG_H_

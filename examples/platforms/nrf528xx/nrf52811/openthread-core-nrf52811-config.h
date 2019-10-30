@@ -232,4 +232,12 @@
 _Pragma("diag_suppress=111") _Pragma("diag_suppress=128")
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_SET_ACK_FP_CORRECTLY
+ *
+ * Define to 1 if ACK FP is correctly set in the platform radio driver
+ *
+ */
+#define OPENTHREAD_CONFIG_PLATFORM_SET_ACK_FP_CORRECTLY 1
+
 #endif // OPENTHREAD_CORE_NRF52811_CONFIG_H_

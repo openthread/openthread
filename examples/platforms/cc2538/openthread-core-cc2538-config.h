@@ -260,4 +260,12 @@
 #define OPENTHREAD_CONFIG_CC2592_HGM_DEFAULT_STATE true
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_SET_ACK_FP_CORRECTLY
+ *
+ * Define to 1 if ACK FP is correctly set in the platform radio driver
+ *
+ */
+#define OPENTHREAD_CONFIG_PLATFORM_SET_ACK_FP_CORRECTLY 0
+
 #endif // OPENTHREAD_CORE_CC2538_CONFIG_H_

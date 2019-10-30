@@ -107,4 +107,14 @@
 #define OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_SET_ACK_FP_CORRECTLY
+ *
+ * Define to 1 if ACK FP is correctly set in the platform radio driver
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_SET_ACK_FP_CORRECTLY
+#error "Please define OPENTHREAD_CONFIG_PLATFORM_SET_ACK_FP_CORRECTLY accordingly"
+#endif
+
 #endif // CONFIG_PLATFORM_H_

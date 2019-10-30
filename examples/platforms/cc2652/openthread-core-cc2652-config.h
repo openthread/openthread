@@ -68,4 +68,12 @@
  */
 #define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
 
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_SET_ACK_FP_CORRECTLY
+ *
+ * Define to 1 if ACK FP is correctly set in the platform radio driver
+ *
+ */
+#define OPENTHREAD_CONFIG_PLATFORM_SET_ACK_FP_CORRECTLY 0
+
 #endif /* OPENTHREAD_CORE_CC2650_CONFIG_H_ */
