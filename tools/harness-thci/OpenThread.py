@@ -1081,7 +1081,6 @@ class OpenThread(IThci):
 
             # set Thread device mode with a given role
             self.__setDeviceMode(mode)
-            self.__setKeySwitchGuardTime(0)
 
             # start OpenThread
             self.__startOpenThread()
@@ -1648,6 +1647,9 @@ class OpenThread(IThci):
         print('%s call setKeySequenceCounter' % self.port)
         print(iKeySequenceValue)
         try:
+            # avoid key switch guard timer protection for reference device
+            self.__setKeySwitchGuardTime(0)
+
             cmd = 'keysequence counter %s' % str(iKeySequenceValue)
             if self.__sendCommand(cmd)[-1] == 'Done':
                 time.sleep(1)
@@ -1680,6 +1682,8 @@ class OpenThread(IThci):
         print(iIncrementValue)
         currentKeySeq = ''
         try:
+            # avoid key switch guard timer protection for reference device
+            self.__setKeySwitchGuardTime(0)
             currentKeySeq = self.getKeySequenceCounter()
             keySequence = int(currentKeySeq, 10) + iIncrementValue
             print(keySequence)
