@@ -2049,7 +2049,7 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
         }
 
         // Clear EID-to-RLOC cache for the unicast address registered by the child.
-        Get<AddressResolver>().RemoveCacheEntry(address);
+        Get<AddressResolver>().Remove(address);
     }
 
     if (registeredCount == 0)

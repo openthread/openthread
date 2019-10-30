@@ -103,6 +103,14 @@ public:
     void Remove(uint8_t aRouterId);
 
     /**
+     * This method removes the cache entry for the EID.
+     *
+     * @param[in]  aEid               A reference to the EID.
+     *
+     */
+    void Remove(const Ip6::Address &aEid);
+
+    /**
      * This method updates an existing cache entry for the EID.
      *
      * @param[in]  aEid               A reference to the EID.
@@ -113,17 +121,6 @@ public:
      *
      */
     otError UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
-
-    /**
-     * This method removes the cache entry for the EID.
-     *
-     * @param[in]  aEid               A reference to the EID.
-     *
-     * @retval OT_ERROR_NONE          Successfully removed the cache entry.
-     * @retval OT_ERROR_NOT_FOUND     No cache entry with @p aEid.
-     *
-     */
-    otError RemoveCacheEntry(const Ip6::Address &aEid);
 
     /**
      * This method adds one cache entry for the EID.

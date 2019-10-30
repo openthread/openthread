@@ -115,6 +115,20 @@ void AddressResolver::Remove(uint16_t aRloc16)
     }
 }
 
+void AddressResolver::Remove(const Ip6::Address &aEid)
+{
+    for (int i = 0; i < kCacheEntries; i++)
+    {
+        if (mCache[i].mState == Cache::kStateInvalid || mCache[i].mTarget != aEid)
+        {
+            continue;
+        }
+
+        InvalidateCacheEntry(mCache[i], kReasonRemovingEid);
+        break;
+    }
+}
+
 AddressResolver::Cache *AddressResolver::NewCacheEntry(void)
 {
     Cache *rval = NULL;
@@ -247,25 +261,6 @@ otError AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAd
         }
 
         error = OT_ERROR_NONE;
-    }
-
-    return error;
-}
-
-otError AddressResolver::RemoveCacheEntry(const Ip6::Address &aEid)
-{
-    otError error = OT_ERROR_NOT_FOUND;
-
-    for (int i = 0; i < kCacheEntries; i++)
-    {
-        if (mCache[i].mState == Cache::kStateInvalid || mCache[i].mTarget != aEid)
-        {
-            continue;
-        }
-
-        InvalidateCacheEntry(mCache[i], kReasonRemovingEid);
-        error = OT_ERROR_NONE;
-        break;
     }
 
     return error;
