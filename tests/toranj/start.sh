@@ -140,6 +140,7 @@ run test-034-poor-link-parent-child-attach.py
 run test-035-child-timeout-large-data-poll.py
 run test-036-wpantund-host-route-management.py
 run test-037-wpantund-auto-add-route-for-on-mesh-prefix.py
+run test-038-clear-address-cache-for-sed.py
 run test-100-mcu-power-state.py
 run test-600-channel-manager-properties.py
 run test-601-channel-manager-channel-change.py
