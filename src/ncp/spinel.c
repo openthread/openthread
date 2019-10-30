@@ -1883,6 +1883,10 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "MESHCOP_COMMISSIONER_MGMT_SET";
         break;
 
+    case SPINEL_PROP_MESHCOP_COMMISSIONER_GENERATE_PSKC:
+        ret = "MESHCOP_COMMISSIONER_GENERATE_PSKC";
+        break;
+
     case SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL:
         ret = "CHANNEL_MANAGER_NEW_CHANNEL";
         break;
