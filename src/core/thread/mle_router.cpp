@@ -3132,19 +3132,20 @@ bool MleRouter::IsMinimalChild(uint16_t aRloc16)
 
 void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 {
-    if (mRole == OT_DEVICE_ROLE_CHILD && &aNeighbor == &mParent)
+    if (&aNeighbor == &mParent)
     {
-        BecomeDetached();
+        if (mRole == OT_DEVICE_ROLE_CHILD)
+        {
+            BecomeDetached();
+        }
     }
-
-    if (!IsActiveRouter(aNeighbor.GetRloc16()))
+    else if (!IsActiveRouter(aNeighbor.GetRloc16()))
     {
         if (aNeighbor.IsStateValidOrRestoring())
         {
             Signal(OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED, aNeighbor);
         }
 
-        aNeighbor.SetState(Neighbor::kStateInvalid);
         Get<IndirectSender>().ClearAllMessagesForSleepyChild(static_cast<Child &>(aNeighbor));
         Get<NetworkData::Leader>().SendServerDataNotification(aNeighbor.GetRloc16());
 
