@@ -90,6 +90,12 @@ void nrf5AlarmProcess(otInstance *aInstance);
 uint64_t nrf5AlarmGetCurrentTime(void);
 
 /**
+ * Function for getting raw counter value in RTC ticks.
+ *
+ */
+uint64_t nrf5AlarmGetRawCounter(void);
+
+/**
  * Initialization of Random Number Generator.
  *
  */
