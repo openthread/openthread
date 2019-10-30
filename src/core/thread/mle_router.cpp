@@ -3931,16 +3931,6 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
     SuccessOrExit(ThreadTlv::GetTlv(*aMessage, ThreadTlv::kRouterMask, sizeof(routerMaskTlv), routerMaskTlv));
     VerifyOrExit(routerMaskTlv.IsValid());
 
-    // if allocated routerId is different from previous routerId
-    if (IsRouterIdValid(mPreviousRouterId) && routerId != mPreviousRouterId)
-    {
-        // reset children info if any
-        if (HasChildren())
-        {
-            RemoveChildren();
-        }
-    }
-
     // assign short address
     SetRouterId(routerId);
 
