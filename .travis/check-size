@@ -60,7 +60,7 @@ size_nrf52840()
     make -f examples/Makefile-nrf52840 ${OPENTHREAD_FLAGS}
     mv output/nrf52840 ../output/nrf52840-b
 
-    git checkout ${MERGE_BASE_SHA}
+    git checkout -f ${MERGE_BASE_SHA}
     git submodule update --init
 
     # base branch
