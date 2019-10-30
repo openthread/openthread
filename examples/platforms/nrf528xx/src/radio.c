@@ -72,6 +72,10 @@
 
 // clang-format on
 
+#if defined(__ICCARM__)
+_Pragma("diag_suppress=Pe167")
+#endif
+
 enum
 {
     NRF528XX_RECEIVE_SENSITIVITY  = -100, // dBm
