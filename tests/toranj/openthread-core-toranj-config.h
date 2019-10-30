@@ -418,5 +418,13 @@
 #define OPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE          1
 #endif // OPENTHREAD_RADIO
 
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_SET_ACK_FP_CORRECTLY
+ *
+ * Define to 1 if ACK FP is correctly set in the platform radio driver
+ *
+ */
+#define OPENTHREAD_CONFIG_PLATFORM_SET_ACK_FP_CORRECTLY 1
+
 #endif /* OPENTHREAD_CORE_TORANJ_CONFIG_H_ */
 
