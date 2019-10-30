@@ -47,8 +47,6 @@ extern "C" {
  * @brief
  *   This module includes functions that set the external OpenThread heap.
  *
- * @note This API is deprecated and use of it is discouraged.
- *
  * @{
  *
  */
@@ -76,10 +74,18 @@ typedef void (*otHeapFreeFn)(void *aPointer);
 
 // This is a temporary API and would be removed after moving heap to platform.
 // TODO: Remove after moving heap to platform.
+/**
+ * @note This API is deprecated and use of it is discouraged.
+ *
+ */
 void *otHeapCAlloc(size_t aCount, size_t aSize);
 
 // This is a temporary API and would be removed after moving heap to platform.
 // TODO: Remove after moving heap to platform.
+/**
+ * @note This API is deprecated and use of it is discouraged.
+ *
+ */
 void otHeapFree(void *aPointer);
 
 /**
