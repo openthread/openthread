@@ -106,10 +106,7 @@ class SimpleTestResult(unittest.TestResult):
             test (TestCase): The test just run
             passed (bool): Whether the case is passed
         """
-        if str(test.__class__.__name__) in self.result and 'fails' in self.result[str(test.__class__.__name__)]:
-            fails = int(self.result[str(test.__class__.__name__)]['fails'])
-        else:
-            fails = 0
+        fails = self.result.get(test.__class__.__name__, {}).get('fails', 0)
         if passed is False:
             fails += 1
         self.result[str(test.__class__.__name__)] = {
