@@ -154,6 +154,11 @@ void DataPollHandler::HandleDataPoll(Mac::RxFrame &aFrame)
         ExitNow();
     }
 
+#if !OPENTHREAD_CONFIG_PLATFORM_SET_ACK_FP_CORRECTLY
+    // if the platform driver does not set ACK FP correctly, then use source match to determine if ACK FP was set
+    VerifyOrExit(!Get<SourceMatchController>().IsEnabled() || (indirectMsgCount > 0));
+#endif
+
     if (mIndirectTxChild == NULL)
     {
         mIndirectTxChild = child;

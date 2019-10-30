@@ -1007,6 +1007,7 @@ void kw41zRadioProcess(otInstance *aInstance)
     if (sRxDone)
     {
         // TODO Set this flag only when the packet is really acknowledged with frame pending set.
+        //  Then, set platform macro OPENTHREAD_CONFIG_PLATFORM_SET_ACK_FP_CORRECTLY to 1.
         // See https://github.com/openthread/openthread/pull/3785
         sRxFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
 

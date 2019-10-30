@@ -754,6 +754,7 @@ void cc2538RadioProcess(otInstance *aInstance)
         (sState == OT_RADIO_STATE_TRANSMIT && sReceiveFrame.mLength > IEEE802154_ACK_LENGTH))
     {
         // TODO Set this flag only when the packet is really acknowledged with frame pending set.
+        //  Then, set platform macro OPENTHREAD_CONFIG_PLATFORM_SET_ACK_FP_CORRECTLY to 1.
         // See https://github.com/openthread/openthread/pull/3785
         sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
