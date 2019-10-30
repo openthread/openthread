@@ -49,7 +49,8 @@ void *otHeapCAlloc(size_t aCount, size_t aSize)
     // Should never get called!
     assert(false);
 
-    return NULL;
+    // This function is reachable when asserts are disabled
+    OT_UNREACHABLE_CODE(return NULL;)
 }
 
 void otHeapFree(void *aPointer)

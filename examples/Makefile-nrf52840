@@ -64,13 +64,13 @@ TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
 NRF52840_MBEDTLS_CPPFLAGS += -DMBEDTLS_USER_CONFIG_FILE='\"nrf52840-mbedtls-config.h\"'
-NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/libraries/nrf_security/mbedtls_platform_config
+NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/libraries/nrf_security/mbedtls_plat_config
 
 ifeq ($(DISABLE_BUILTIN_MBEDTLS), 1)
 NRF52840_MBEDTLS_CPPFLAGS += -DMBEDTLS_CONFIG_FILE='\"nrf-config.h\"'
 NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/libraries/nrf_security/include
 NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/libraries/nrf_security/config
-NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/libraries/nrf_security/nrf_cc310_platform/include
+NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/libraries/nrf_security/nrf_cc310_plat/include
 else
 NRF52840_MBEDTLS_CPPFLAGS += -DMBEDTLS_CONFIG_FILE='\"mbedtls-config.h\"'
 NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls
