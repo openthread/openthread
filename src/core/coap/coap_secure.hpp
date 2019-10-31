@@ -164,8 +164,8 @@ public:
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     /**
-     * This method sets the Pre-Shared Key (PSK) for DTLS sessions
-     * identified by a PSK.
+     * This method sets the Pre-Shared Key (PSK) for DTLS sessions identified by a PSK.
+     *
      * DTLS mode "TLS with AES 128 CCM 8" for Application CoAPS.
      *
      * @param[in]  aPsk          A pointer to the PSK.
@@ -198,8 +198,7 @@ public:
                         uint32_t       aPrivateKeyLength);
 
     /**
-     * This method sets the trusted top level CAs. It is needed for validate the
-     * certificate of the peer.
+     * This method sets the trusted top level CAs. It is needed for validate the certificate of the peer.
      *
      * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
      *
@@ -228,21 +227,19 @@ public:
 #endif // MBEDTLS_BASE64_C
 
     /**
-     * This method sets the connected callback to indicate, when
-     * a Client connect to the CoAP Secure server.
+     * This method sets the connected callback to indicate, when a Client connect to the CoAP Secure server.
      *
-     * @param[in]  aCallback     A pointer to a function that will be called once DTLS connection is
-     * established.
+     * @param[in]  aCallback     A pointer to a function that will be called once DTLS connection is established.
      * @param[in]  aContext      A pointer to arbitrary context information.
      *
      */
     void SetClientConnectedCallback(ConnectedCallback aCallback, void *aContext);
 
     /**
-     * This method set the authentication mode for the coap secure connection.
-     * Disable or enable the verification of peer certificate.
+     * This method sets the authentication mode for the CoAP secure connection. It disables or enables the verification
+     * of peer certificate.
      *
-     * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should verify.
+     * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should be verified
      *
      */
     void SetSslAuthMode(bool aVerifyPeerCertificate);
@@ -291,7 +288,6 @@ public:
 
     /**
      * This method is used to pass UDP messages to the secure CoAP server.
-     * It can be used when messages are received other way that via server's socket.
      *
      * @param[in]  aMessage      A reference to the received message.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.

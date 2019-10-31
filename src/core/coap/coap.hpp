@@ -203,7 +203,7 @@ public:
     /**
      * This method returns a pointer to the next resource.
      *
-     * @returns A Pointer to the next resource.
+     * @returns A pointer to the next resource.
      *
      */
     Resource *GetNext(void) const { return static_cast<Resource *>(mNext); }
@@ -211,7 +211,7 @@ public:
     /**
      * This method returns a pointer to the Uri-Path.
      *
-     * @returns A Pointer to the Uri-Path.
+     * @returns A pointer to the Uri-Path.
      *
      */
     const char *GetUriPath(void) const { return mUriPath; }
@@ -255,7 +255,7 @@ public:
     }
 
     /**
-     * This method append metadata to the message.
+     * This method appends metadata to the message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
@@ -314,10 +314,11 @@ public:
     explicit ResponsesQueue(Instance &aInstance);
 
     /**
-     * Add given response to the cache.
+     * This method adds a given response to the cache.
      *
      * If matching response (the same Message ID, source endpoint address and port) exists in the cache given
      * response is not added.
+     *
      * The CoAP response is copied before it is added to the cache.
      *
      * @param[in]  aMessage      The CoAP response to add to the cache.
@@ -327,23 +328,23 @@ public:
     void EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
-     * Remove the oldest response from the cache.
+     * This method removes the oldest response from the cache.
      *
      */
     void DequeueOldestResponse(void);
 
     /**
-     * Remove all responses from the cache.
+     * This method removes all responses from the cache.
      *
      */
     void DequeueAllResponses(void);
 
     /**
-     * Get a copy of CoAP response from the cache that matches given Message ID and source endpoint.
+     * This method gets a copy of CoAP response from the cache that matches a given Message ID and source endpoint.
      *
      * @param[in]  aRequest      The CoAP message containing Message ID.
      * @param[in]  aMessageInfo  The message info containing source endpoint address and port.
-     * @param[out] aResponse     A pointer to a copy of a cached CoAP response matching given arguments.
+     * @param[out] aResponse     A pointer to return a copy of a cached CoAP response matching given arguments.
      *
      * @retval OT_ERROR_NONE       Matching response found and successfully created a copy.
      * @retval OT_ERROR_NO_BUFS    Matching response found but there is not sufficient buffer to create a copy.
@@ -353,7 +354,7 @@ public:
     otError GetMatchedResponseCopy(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo, Message **aResponse);
 
     /**
-     * Get a reference to the cached CoAP responses queue.
+     * This method gets a reference to the cached CoAP responses queue.
      *
      * @returns  A reference to the cached CoAP responses queue.
      *
@@ -367,12 +368,13 @@ private:
     };
 
     /**
-     * Check if CoAP response exists in the cache that matches given Message ID and source endpoint.
+     * This method checks whether a CoAP response exists in the cache that matches a given Message ID and source
+     * endpoint.
      *
      * @param[in]  aRequest      The CoAP message containing Message ID.
      * @param[in]  aMessageInfo  The message info containing source endpoint address and port.
      *
-     * @returns Matching cached response or NULL if not found.
+     * @returns A pointer to the matching cached response or NULL if not found.
      *
      */
     const Message *FindMatchedResponse(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo) const;
@@ -413,7 +415,7 @@ public:
     typedef otError (*Sender)(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
-     * This function pointer is called before CoAP server processing a CoAP packets.
+     * This function pointer is called before CoAP server processing a CoAP message.
      *
      * @param[in]   aMessage        A reference to the message.
      @ @param[in]   aMessageInfo    A reference to the message info associated with @p aMessage.
@@ -452,10 +454,11 @@ public:
      */
     void RemoveResource(Resource &aResource);
 
-    /* This function sets the default handler for unhandled CoAP requests.
+    /* This method sets the default handler for unhandled CoAP requests.
      *
      * @param[in]  aHandler   A function pointer that shall be called when an unhandled request arrives.
      * @param[in]  aContext   A pointer to arbitrary context information. May be NULL if not used.
+     *
      */
     void SetDefaultHandler(otCoapRequestHandler aHandler, void *aContext);
 
@@ -621,7 +624,7 @@ protected:
      *
      * @param[in]  aInstance        A reference to the OpenThread instance.
      * @param[in]  aSender          A function pointer to send CoAP message, which SHOULD be a static
-     *                              member method of a descendent of this class.
+     *                              member method of a descendant of this class.
      *
      */
     explicit CoapBase(Instance &aInstance, Sender aSender);
