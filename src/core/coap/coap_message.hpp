@@ -80,7 +80,7 @@ public:
         kMinHeaderLength    = 4,   ///< Minimum header length
         kMaxHeaderLength    = 512, ///< Maximum header length
         kDefaultTokenLength = 2,   ///< Default token length
-        kTypeOffset         = 4,   ///< The type offset in the first byte of a coap header
+        kTypeOffset         = 4,   ///< The type offset in the first byte of a CoAP header
     };
 
     /**
@@ -257,9 +257,9 @@ public:
     otError SetToken(uint8_t aTokenLength);
 
     /**
-     *  This method checks if Tokens in two CoAP headers are equal.
+     * This method checks if Tokens in two CoAP headers are equal.
      *
-     *  @param[in]  aMessage  A header to compare.
+     * @param[in]  aMessage  A header to compare.
      *
      * @retval TRUE   If two Tokens are equal.
      * @retval FALSE  If Tokens differ in length or value.
