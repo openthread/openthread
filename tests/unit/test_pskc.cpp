@@ -40,7 +40,7 @@ static const otExtendedPanId sXPanId = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x0
 
 void TestMinimumPassphrase(void)
 {
-    uint8_t       pskc[OT_PSKC_MAX_SIZE];
+    ot::Pskc      pskc;
     const uint8_t expectedPskc[] = {0x44, 0x98, 0x8e, 0x22, 0xcf, 0x65, 0x2e, 0xee,
                                     0xcc, 0xd1, 0xe4, 0xc0, 0x1d, 0x01, 0x54, 0xf8};
     const char    passphrase[]   = "123456";
@@ -48,13 +48,13 @@ void TestMinimumPassphrase(void)
     SuccessOrQuit(ot::MeshCoP::Commissioner::GeneratePskc(passphrase, "OpenThread",
                                                           static_cast<const ot::Mac::ExtendedPanId &>(sXPanId), pskc),
                   "TestMinimumPassphrase failed to generate PSKc");
-    VerifyOrQuit(memcmp(pskc, expectedPskc, sizeof(pskc)) == 0, "TestMinimumPassphrase got wrong pskc");
+    VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc)) == 0, "TestMinimumPassphrase got wrong pskc");
     testFreeInstance(instance);
 }
 
 void TestMaximumPassphrase(void)
 {
-    uint8_t       pskc[OT_PSKC_MAX_SIZE];
+    ot::Pskc      pskc;
     const uint8_t expectedPskc[] = {0x9e, 0x81, 0xbd, 0x35, 0xa2, 0x53, 0x76, 0x2f,
                                     0x80, 0xee, 0x04, 0xff, 0x2f, 0xa2, 0x85, 0xe9};
     const char    passphrase[]   = "1234567812345678"
@@ -78,7 +78,7 @@ void TestMaximumPassphrase(void)
     SuccessOrQuit(ot::MeshCoP::Commissioner::GeneratePskc(passphrase, "OpenThread",
                                                           static_cast<const ot::Mac::ExtendedPanId &>(sXPanId), pskc),
                   "TestMaximumPassphrase failed to generate PSKc");
-    VerifyOrQuit(memcmp(pskc, expectedPskc, sizeof(pskc)) == 0, "TestMaximumPassphrase got wrong pskc");
+    VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc)) == 0, "TestMaximumPassphrase got wrong pskc");
     testFreeInstance(instance);
 }
 

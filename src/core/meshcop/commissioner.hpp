@@ -48,6 +48,7 @@
 #include "meshcop/energy_scan_client.hpp"
 #include "meshcop/panid_query_client.hpp"
 #include "net/udp6.hpp"
+#include "thread/key_manager.hpp"
 #include "thread/mle.hpp"
 
 namespace ot {
@@ -218,7 +219,7 @@ public:
      * @param[in]  aPassPhrase   The commissioning passphrase.
      * @param[in]  aNetworkName  The network name for PSKc computation.
      * @param[in]  aExtPanId     The extended pan id for PSKc computation.
-     * @param[out] aPskc         A pointer to where the generated PSKc will be placed.
+     * @param[out] aPskc         A reference to a PSKc where the generated PSKc will be placed.
      *
      * @retval OT_ERROR_NONE          Successfully generate PSKc.
      * @retval OT_ERROR_INVALID_ARGS  If the length of passphrase is out of range.
@@ -227,7 +228,7 @@ public:
     static otError GeneratePskc(const char *              aPassPhrase,
                                 const char *              aNetworkName,
                                 const Mac::ExtendedPanId &aExtPanId,
-                                uint8_t *                 aPskc);
+                                Pskc &                    aPskc);
 
     /**
      * This method returns a reference to the AnnounceBeginClient instance.
