@@ -1700,13 +1700,13 @@ otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aT
 {
     assert(aThreshold != NULL);
     OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.GetTransmitPower(*aThreshold);
+    return sRadioSpinel.GetCcaEnergyDetectThreshold(*aThreshold);
 }
 
 otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.GetCcaEnergyDetectThreshold(aThreshold);
+    return sRadioSpinel.SetCcaEnergyDetectThreshold(aThreshold);
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
