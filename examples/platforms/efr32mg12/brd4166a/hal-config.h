@@ -149,11 +149,11 @@
 // $[LED]
 #define BSP_LED_PRESENT                       (1)
 
-#define BSP_LED0_PIN                          (4)
-#define BSP_LED0_PORT                         (gpioPortF)
+#define BSP_LED0_PIN                          (8)
+#define BSP_LED0_PORT                         (gpioPortD)
 
-#define BSP_LED1_PIN                          (5)
-#define BSP_LED1_PORT                         (gpioPortF)
+#define BSP_LED1_PIN                          (9)
+#define BSP_LED1_PORT                         (gpioPortD)
 
 #define HAL_LED_ENABLE                        { 0, 1 }
 #define HAL_LED_COUNT                         (2)
