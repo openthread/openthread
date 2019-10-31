@@ -181,15 +181,12 @@ otCommissionerState otCommissionerGetState(otInstance *aInstance)
     return instance.Get<MeshCoP::Commissioner>().GetState();
 }
 
-otError otCommissionerGeneratePskc(otInstance *           aInstance,
-                                   const char *           aPassPhrase,
+otError otCommissionerGeneratePskc(const char *           aPassPhrase,
                                    const char *           aNetworkName,
                                    const otExtendedPanId *aExtPanId,
-                                   uint8_t *              aPskc)
+                                   otPskc *               aPskc)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
-    return MeshCoP::Commissioner::GeneratePskc(aPassPhrase, aNetworkName,
-                                               *static_cast<const Mac::ExtendedPanId *>(aExtPanId), aPskc);
+    return MeshCoP::Commissioner::GeneratePskc(
+        aPassPhrase, aNetworkName, *static_cast<const Mac::ExtendedPanId *>(aExtPanId), *static_cast<Pskc *>(aPskc));
 }
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE

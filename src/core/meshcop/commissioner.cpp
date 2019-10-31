@@ -1100,7 +1100,7 @@ exit:
 otError Commissioner::GeneratePskc(const char *              aPassPhrase,
                                    const char *              aNetworkName,
                                    const Mac::ExtendedPanId &aExtPanId,
-                                   uint8_t *                 aPskc)
+                                   Pskc &                    aPskc)
 {
     otError     error      = OT_ERROR_NONE;
     const char *saltPrefix = "Thread";
@@ -1122,7 +1122,7 @@ otError Commissioner::GeneratePskc(const char *              aPassPhrase,
     saltLen += static_cast<uint16_t>(strlen(aNetworkName));
 
     otPbkdf2Cmac(reinterpret_cast<const uint8_t *>(aPassPhrase), static_cast<uint16_t>(strlen(aPassPhrase)),
-                 reinterpret_cast<const uint8_t *>(salt), saltLen, 16384, OT_PSKC_MAX_SIZE, aPskc);
+                 reinterpret_cast<const uint8_t *>(salt), saltLen, 16384, OT_PSKC_MAX_SIZE, aPskc.m8);
 
 exit:
     return error;

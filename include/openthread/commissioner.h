@@ -403,25 +403,23 @@ uint16_t otCommissionerGetSessionId(otInstance *aInstance);
 otCommissionerState otCommissionerGetState(otInstance *aInstance);
 
 /**
- * This method generates PSKc.
+ * This helper function generates PSKc from a given pass-phrase, network name, and extended PAN Id.
  *
  * PSKc is used to establish the Commissioner Session.
  *
- * @param[in]  aInstance     A pointer to an OpenThread instance.
- * @param[in]  aPassPhrase   The commissioning passphrase.
+ * @param[in]  aPassPhrase   The commissioning pass-phrase.
  * @param[in]  aNetworkName  The network name for PSKc computation.
- * @param[in]  aExtPanId     The extended pan id for PSKc computation.
- * @param[out] aPskc         A pointer to the generated PSKc.
+ * @param[in]  aExtPanId     The extended PAN ID for PSKc computation.
+ * @param[out] aPskc         A pointer to variable to output the generated PSKc.
  *
  * @retval OT_ERROR_NONE          Successfully generate PSKc.
  * @retval OT_ERROR_INVALID_ARGS  If any of the input arguments is invalid.
  *
  */
-otError otCommissionerGeneratePskc(otInstance *           aInstance,
-                                   const char *           aPassPhrase,
+otError otCommissionerGeneratePskc(const char *           aPassPhrase,
                                    const char *           aNetworkName,
                                    const otExtendedPanId *aExtPanId,
-                                   uint8_t *              aPskc);
+                                   otPskc *               aPskc);
 
 /**
  * @}
