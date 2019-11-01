@@ -515,7 +515,7 @@ otError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
 
     if (aNeighbor == NULL)
     {
-        Random::NonCrypto::FillBuffer(mChallenge, sizeof(mChallenge));
+        Random::Crypto::FillBuffer(mChallenge, sizeof(mChallenge));
 
         mChallengeTimeout = (((2 * kMaxResponseDelay) + kStateUpdatePeriod - 1) / kStateUpdatePeriod);
 
@@ -535,7 +535,7 @@ otError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
         {
             uint8_t challenge[ChallengeTlv::kMaxSize];
 
-            Random::NonCrypto::FillBuffer(challenge, sizeof(challenge));
+            Random::Crypto::FillBuffer(challenge, sizeof(challenge));
             SuccessOrExit(error = AppendChallenge(*message, challenge, sizeof(challenge)));
         }
 

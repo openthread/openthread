@@ -1971,7 +1971,7 @@ otError Mle::SendParentRequest(ParentRequestType aType)
     uint8_t      scanMask = 0;
     Ip6::Address destination;
 
-    Random::NonCrypto::FillBuffer(mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge));
+    Random::Crypto::FillBuffer(mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge));
 
     switch (aType)
     {
@@ -2298,7 +2298,7 @@ otError Mle::SendChildUpdateRequest(void)
     switch (mRole)
     {
     case OT_DEVICE_ROLE_DETACHED:
-        Random::NonCrypto::FillBuffer(mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge));
+        Random::Crypto::FillBuffer(mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge));
         SuccessOrExit(error = AppendChallenge(*message, mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge)));
         break;
 
