@@ -59,17 +59,23 @@ COMMON_CPPFLAGS                                   = \
     $(NULL)
 
 libopenthread_ncp_mtd_a_CPPFLAGS                  = \
+    -DOPENTHREAD_RADIO=0                            \
+    -DOPENTHREAD_FTD=0                              \
     -DOPENTHREAD_MTD=1                              \
     $(COMMON_CPPFLAGS)                              \
     $(NULL)
 
 libopenthread_ncp_ftd_a_CPPFLAGS                  = \
+    -DOPENTHREAD_RADIO=0                            \
     -DOPENTHREAD_FTD=1                              \
+    -DOPENTHREAD_MTD=0                              \
     $(COMMON_CPPFLAGS)                              \
     $(NULL)
 
 libopenthread_rcp_a_CPPFLAGS                      = \
     -DOPENTHREAD_RADIO=1                            \
+    -DOPENTHREAD_FTD=0                              \
+    -DOPENTHREAD_MTD=0                              \
     $(COMMON_CPPFLAGS)                              \
     $(NULL)
 

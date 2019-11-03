@@ -49,17 +49,23 @@ CPPFLAGS_COMMON                            = \
 
 libopenthread_radio_a_CPPFLAGS             = \
     $(CPPFLAGS_COMMON)                       \
+    -DOPENTHREAD_MTD=0                       \
+    -DOPENTHREAD_FTD=0                       \
     -DOPENTHREAD_RADIO=1                     \
     $(NULL)
 
 libopenthread_ftd_a_CPPFLAGS               = \
     $(CPPFLAGS_COMMON)                       \
+    -DOPENTHREAD_MTD=0                       \
     -DOPENTHREAD_FTD=1                       \
+    -DOPENTHREAD_RADIO=0                     \
     $(NULL)
 
 libopenthread_mtd_a_CPPFLAGS               = \
     $(CPPFLAGS_COMMON)                       \
     -DOPENTHREAD_MTD=1                       \
+    -DOPENTHREAD_FTD=0                       \
+    -DOPENTHREAD_RADIO=0                     \
     $(NULL)
 
 #------------------------------------------------------

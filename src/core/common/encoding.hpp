@@ -36,6 +36,10 @@
 
 #include "openthread-core-config.h"
 
+#ifndef BYTE_ORDER_BIG_ENDIAN
+#define BYTE_ORDER_BIG_ENDIAN 0
+#endif
+
 #include <limits.h>
 #include <stdint.h>
 

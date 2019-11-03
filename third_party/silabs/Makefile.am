@@ -52,6 +52,10 @@ override CXXFLAGS                            := $(filter-out -pedantic-errors,$(
 override CFLAGS                              := $(filter-out -Wshadow,$(CFLAGS))
 override CXXFLAGS                            := $(filter-out -Wshadow,$(CXXFLAGS))
 
+# Do not enable -Wundef for Silicon Labs SDK sources
+override CFLAGS                              := $(filter-out -Wundef,$(CFLAGS))
+override CXXFLAGS                            := $(filter-out -Wundef,$(CXXFLAGS))
+
 EFR32_BOARD_DIR                             = $(shell echo $(BOARD) | tr A-Z a-z)
 
 EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.6

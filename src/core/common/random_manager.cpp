@@ -35,7 +35,7 @@
 
 #include <openthread/platform/entropy.h>
 
-#ifndef OPENTHREAD_RADIO
+#if !OPENTHREAD_RADIO
 #include <mbedtls/entropy_poll.h>
 #endif
 
@@ -49,7 +49,7 @@ namespace ot {
 uint16_t                     RandomManager::sInitCount = 0;
 RandomManager::NonCryptoPrng RandomManager::sPrng;
 
-#ifndef OPENTHREAD_RADIO
+#if !OPENTHREAD_RADIO
 RandomManager::Entropy       RandomManager::sEntropy;
 RandomManager::CryptoCtrDrbg RandomManager::sCtrDrbg;
 #endif
@@ -63,7 +63,7 @@ RandomManager::RandomManager(void)
 
     VerifyOrExit(sInitCount == 0);
 
-#ifndef OPENTHREAD_RADIO
+#if !OPENTHREAD_RADIO
     sEntropy.Init();
     sCtrDrbg.Init();
 
@@ -87,7 +87,7 @@ RandomManager::~RandomManager(void)
     sInitCount--;
     VerifyOrExit(sInitCount == 0);
 
-#ifndef OPENTHREAD_RADIO
+#if !OPENTHREAD_RADIO
     sCtrDrbg.Deinit();
     sEntropy.Deinit();
 #endif
@@ -141,7 +141,7 @@ uint32_t RandomManager::NonCryptoPrng::GetNext(void)
     return mlcg;
 }
 
-#ifndef OPENTHREAD_RADIO
+#if !OPENTHREAD_RADIO
 
 //-------------------------------------------------------------------
 // Entropy
@@ -203,6 +203,6 @@ otError RandomManager::CryptoCtrDrbg::FillBuffer(uint8_t *aBuffer, uint16_t aSiz
         mbedtls_ctr_drbg_random(&mCtrDrbg, static_cast<unsigned char *>(aBuffer), static_cast<size_t>(aSize)));
 }
 
-#endif // #ifndef OPENTHREAD_RADIO
+#endif // #if !OPENTHREAD_RADIO
 
 } // namespace ot

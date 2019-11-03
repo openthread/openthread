@@ -1195,11 +1195,11 @@ public:
 
     enum
     {
-        kProtocolVersion = 2,                     ///< Thread Protocol version.
-        kVersionOffset   = 4,                     ///< Version field bit offset.
-        kVersionMask     = 0xf << kVersionOffset, ///< Version field mask.
-        kNativeFlag      = 1 << 3,                ///< Native Commissioner flag.
-        kJoiningFlag     = 1 << 0,                ///< Joining Permitted flag.
+        kProtocolVersion = OPENTHREAD_THREAD_VERSION, ///< Thread Protocol version.
+        kVersionOffset   = 4,                         ///< Version field bit offset.
+        kVersionMask     = 0xf << kVersionOffset,     ///< Version field mask.
+        kNativeFlag      = 1 << 3,                    ///< Native Commissioner flag.
+        kJoiningFlag     = 1 << 0,                    ///< Joining Permitted flag.
     };
 
     /**
@@ -1287,7 +1287,7 @@ public:
     {
         mFlags |= kJoiningFlag;
 
-#if OPENTHREAD_CONFIG_MAC_JOIN_BEACON_VERSION != kProtocolVersion
+#if OPENTHREAD_CONFIG_MAC_JOIN_BEACON_VERSION != OPENTHREAD_THREAD_VERSION
         mFlags &= ~kVersionMask;
         mFlags |= OPENTHREAD_CONFIG_MAC_JOIN_BEACON_VERSION << kVersionOffset;
 #endif
