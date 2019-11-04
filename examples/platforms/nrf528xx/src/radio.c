@@ -70,8 +70,6 @@
 #define FRAME_PENDING_OFFSET  1            ///< Byte containing pending bit (+1 for frame length byte).
 #define FRAME_PENDING_BIT     (1 << 4)     ///< Frame Pending bit.
 
-// clang-format on
-
 #if defined(__ICCARM__)
 _Pragma("diag_suppress=Pe167")
 #endif
@@ -81,6 +79,8 @@ enum
     NRF528XX_RECEIVE_SENSITIVITY  = -100, // dBm
     NRF528XX_MIN_CCA_ED_THRESHOLD = -94,  // dBm
 };
+
+// clang-format on
 
 static bool sDisabled;
 
