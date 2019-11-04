@@ -266,6 +266,6 @@
  * Define to 1 if ACK FP is correctly set in the platform radio driver
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_SET_ACK_FP_CORRECTLY 0
+#define OPENTHREAD_CONFIG_PLATFORM_SET_ACK_FP_CORRECTLY 1
 
 #endif // OPENTHREAD_CORE_CC2538_CONFIG_H_
