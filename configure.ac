@@ -624,12 +624,12 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP], [test "${enable_ncp}" = "yes"])
 
 AC_ARG_WITH(
     [readline],
-    [AS_HELP_STRING([--with-readline],[Specify the readline library (none|readline|edit) @<:@default=none@:>@.])],
+    [AS_HELP_STRING([--with-readline],[Specify the readline library (no|readline|edit) @<:@default=no@:>@.])],
     [],
-    [with_readline=none])
+    [with_readline=no])
 
 case "${with_readline}" in
-"none")
+"no")
     ;;
 "readline")
     # Prefer GNU readline installed by Homebrew.
@@ -654,7 +654,7 @@ esac
 
 AC_ARG_WITH(
     [vendor-extension],
-    [AS_HELP_STRING([--with-vendor-extension=<VENDOR_EXT.CPP>],[Specify a C++ source file built as part of OpenThread core library. @<:@default=none@:>@.])],
+    [AS_HELP_STRING([--with-vendor-extension=<VENDOR_EXT.CPP>],[Specify a C++ source file built as part of OpenThread core library. @<:@default=no@:>@.])],
     [
         if test "${withval}" = "no"
         then OPENTHREAD_ENABLE_VENDOR_EXTENSION=0
@@ -669,12 +669,12 @@ AC_ARG_WITH(
     ],
     [
         OPENTHREAD_ENABLE_VENDOR_EXTENSION=0
-        with_vendor_extension=none
+        with_vendor_extension=no
     ])
 
 CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_ENABLE_VENDOR_EXTENSION=${OPENTHREAD_ENABLE_VENDOR_EXTENSION}"
 AC_MSG_CHECKING([for vendor extension])
-AC_MSG_RESULT(${OPENTHREAD_VENDOR_EXTENSION_SOURCE-none})
+AC_MSG_RESULT(${OPENTHREAD_VENDOR_EXTENSION_SOURCE-no})
 AC_SUBST(OPENTHREAD_VENDOR_EXTENSION_SOURCE)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_VENDOR_EXTENSION], [test "${OPENTHREAD_ENABLE_VENDOR_EXTENSION}" = "1"])
 
@@ -684,7 +684,7 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_VENDOR_EXTENSION], [test "${OPENTHREAD_ENABLE_
 
 AC_ARG_WITH(
     [ncp-vendor-hook-source],
-    [AS_HELP_STRING([--with-ncp-vendor-hook-source=<VENDOR_HOOK.CPP>],[Specify a C++ file that implements the NCP vendor hook. @<:@default=none@:>@.])],
+    [AS_HELP_STRING([--with-ncp-vendor-hook-source=<VENDOR_HOOK.CPP>],[Specify a C++ file that implements the NCP vendor hook. @<:@default=no@:>@.])],
     [
         if test "${withval}" = "no"
         then OPENTHREAD_ENABLE_NCP_VENDOR_HOOK=0
@@ -700,11 +700,11 @@ AC_ARG_WITH(
     ],
     [
         OPENTHREAD_ENABLE_NCP_VENDOR_HOOK=0
-        with_ncp_vendor_hook_source=none
+        with_ncp_vendor_hook_source=no
     ])
 
 AC_MSG_CHECKING([for NCP vendor hook source])
-AC_MSG_RESULT(${OPENTHREAD_NCP_VENDOR_HOOK_SOURCE-none})
+AC_MSG_RESULT(${OPENTHREAD_NCP_VENDOR_HOOK_SOURCE-no})
 AC_SUBST(OPENTHREAD_NCP_VENDOR_HOOK_SOURCE)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_VENDOR_HOOK], [test "${OPENTHREAD_ENABLE_NCP_VENDOR_HOOK}" = "1"])
 
@@ -714,7 +714,7 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_VENDOR_HOOK], [test "${OPENTHREAD_ENABLE_N
 
 AC_ARG_WITH(
     [ncp-spinel-encrypter-libs],
-    [AS_HELP_STRING([--with-ncp-spinel-encrypter-libs=<LIBSPINEL_ENCRYPTER.A>],[Specify library files (absolute paths) implementing the NCP Spinel Encrypter. @<:@default=none@:>@.])],
+    [AS_HELP_STRING([--with-ncp-spinel-encrypter-libs=<LIBSPINEL_ENCRYPTER.A>],[Specify library files (absolute paths) implementing the NCP Spinel Encrypter. @<:@default=no@:>@.])],
     [
         if test "${withval}" = "no"
         then OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER=0
@@ -725,12 +725,12 @@ AC_ARG_WITH(
     ],
     [
         OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER=0
-        with_ncp_spinel_encrypter_libs=none
+        with_ncp_spinel_encrypter_libs=no
     ])
 
 CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER=${OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER}"
 AC_MSG_CHECKING([for NCP Spinel Encrypter])
-AC_MSG_RESULT(${OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS-none})
+AC_MSG_RESULT(${OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS-no})
 AC_SUBST(OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER], [test "${OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER}" = "1"])
 
@@ -764,7 +764,7 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_LINKER_MAP], [test "${enable_linker_map}" = "y
 
 AC_ARG_WITH(
     [custom-linker-file],
-    [AS_HELP_STRING([--with-custom-linker-file=<linkerfile.ld>],[Specify custom linker file (absolute path). @<:@default=none@:>@.])],
+    [AS_HELP_STRING([--with-custom-linker-file=<linkerfile.ld>],[Specify custom linker file (absolute path). @<:@default=no@:>@.])],
     [
         with_custom_linker_file=yes
         OPENTHREAD_CUSTOM_LINKER_FILE=${withval}
@@ -782,14 +782,14 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_CUSTOM_LINKER_FILE], [test "${with_custom_link
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: none, posix, cc1352, cc2538, cc2650, cc2652, efr32mg12, efr32mg21, gp712, kw41z, nrf52811, nrf52840, qpg6095, samr21 @<:@default=none@:>@.])],
+        [Specify the examples from one of: no, posix, cc1352, cc2538, cc2650, cc2652, efr32mg12, efr32mg21, gp712, kw41z, nrf52811, nrf52840, qpg6095, samr21 @<:@default=no@:>@.])],
     [
         case "${with_examples}" in
-        none)
+        no)
             ;;
         posix|cc1352|cc2538|cc2650|cc2652|efr32mg12|efr32mg21|gp712|kw41z|nrf52811|nrf52840|qpg6095|samr21)
             if test ${enable_posix_app} = "yes"; then
-                AC_MSG_ERROR([--with-examples must be none when POSIX apps are enabled by --enable-posix-app])
+                AC_MSG_ERROR([--with-examples must be no when POSIX apps are enabled by --enable-posix-app])
             fi
             ;;
         *)
@@ -797,9 +797,9 @@ AC_ARG_WITH(examples,
             ;;
         esac
     ],
-    [with_examples=none])
+    [with_examples=no])
 
-AM_CONDITIONAL([OPENTHREAD_ENABLE_EXAMPLES], [test ${with_examples} != "none"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_EXAMPLES], [test ${with_examples} != "no"])
 
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_POSIX],     [test "${with_examples}" = "posix"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC1352],    [test "${with_examples}" = "cc1352"])
