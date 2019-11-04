@@ -268,6 +268,22 @@ Reset_Handler:
 .L_loop3_done:
 #endif /* __STARTUP_CLEAR_BSS */
 
+.equ    Stack_Pattern, 0xDEADBEEF
+    ldr r1, =__StackLimit
+    ldr r2, =__StackTop
+
+    ldr r0, =Stack_Pattern
+
+    subs r2, r2, r1
+    ble .L_loop4_done
+
+.L_loop4:
+    subs r2, r2, #4
+    str r0, [r1, r2]
+    bgt .L_loop4
+
+.L_loop4_done:
+
 /* Execute SystemInit function. */
     bl SystemInit
 

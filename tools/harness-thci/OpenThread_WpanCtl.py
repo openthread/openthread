@@ -1402,7 +1402,6 @@ class OpenThread_WpanCtl(IThci):
 
             # set Thread device mode with a given role
             self.__setDeviceMode(mode)
-            self.__setKeySwitchGuardTime(0)  # temporally
             time.sleep(0.1)
             # start OpenThreadWpan
             self.__startOpenThreadWpan()
@@ -1979,6 +1978,9 @@ class OpenThread_WpanCtl(IThci):
         print('%s call setKeySequenceCounter' % self.port)
         print(iKeySequenceValue)
         try:
+            # avoid key switch guard timer protection for reference device
+            self.__setKeySwitchGuardTime(0)
+
             cmd = WPANCTL_CMD + 'setprop Network:KeyIndex %s' % str(
                 iKeySequenceValue
             )
@@ -2015,6 +2017,9 @@ class OpenThread_WpanCtl(IThci):
         print(iIncrementValue)
         currentKeySeq = ''
         try:
+            # avoid key switch guard timer protection for reference device
+            self.__setKeySwitchGuardTime(0)
+
             currentKeySeq = self.getKeySequenceCounter()
             keySequence = int(currentKeySeq, 10) + iIncrementValue
             print(keySequence)

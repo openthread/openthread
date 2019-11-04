@@ -84,6 +84,7 @@ Mac::Mac(Instance &aInstance)
     , mShouldTxPollBeforeData(false)
     , mRxOnWhenIdle(false)
     , mBeaconsEnabled(false)
+    , mUsingTemporaryChannel(false)
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
     , mShouldDelaySleep(false)
     , mDelayingSleep(false)
@@ -95,7 +96,6 @@ Mac::Mac(Instance &aInstance)
     , mPanId(kPanIdBroadcast)
     , mPanChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mRadioChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
-    , mRadioChannelAcquisitionId(0)
     , mSupportedChannelMask(Get<Radio>().GetSupportedChannelMask())
     , mNetworkName()
     , mScanChannel(Radio::kChannelMin)
@@ -377,7 +377,8 @@ otError Mac::SetPanChannel(uint8_t aChannel)
 
     mCcaSuccessRateTracker.Reset();
 
-    VerifyOrExit(!mRadioChannelAcquisitionId);
+    VerifyOrExit(!mUsingTemporaryChannel);
+
     mRadioChannel = mPanChannel;
 
     UpdateIdleMode();
@@ -386,16 +387,14 @@ exit:
     return error;
 }
 
-otError Mac::SetRadioChannel(uint16_t aAcquisitionId, uint8_t aChannel)
+otError Mac::SetTemporaryChannel(uint8_t aChannel)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = OT_ERROR_INVALID_ARGS);
 
-    VerifyOrExit(mRadioChannelAcquisitionId && aAcquisitionId == mRadioChannelAcquisitionId,
-                 error = OT_ERROR_INVALID_STATE);
-
-    mRadioChannel = aChannel;
+    mUsingTemporaryChannel = true;
+    mRadioChannel          = aChannel;
 
     UpdateIdleMode();
 
@@ -403,34 +402,14 @@ exit:
     return error;
 }
 
-otError Mac::AcquireRadioChannel(uint16_t *aAcquisitionId)
+void Mac::ClearTemporaryChannel(void)
 {
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(aAcquisitionId != NULL, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(!mRadioChannelAcquisitionId, error = OT_ERROR_INVALID_STATE);
-
-    mRadioChannelAcquisitionId = Random::NonCrypto::GetUint16InRange(1, kMaxAcquisitionId);
-
-    *aAcquisitionId = mRadioChannelAcquisitionId;
-
-exit:
-    return error;
-}
-
-otError Mac::ReleaseRadioChannel(void)
-{
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(mRadioChannelAcquisitionId, error = OT_ERROR_INVALID_STATE);
-
-    mRadioChannelAcquisitionId = 0;
-    mRadioChannel              = mPanChannel;
-
-    UpdateIdleMode();
-
-exit:
-    return error;
+    if (mUsingTemporaryChannel)
+    {
+        mUsingTemporaryChannel = false;
+        mRadioChannel          = mPanChannel;
+        UpdateIdleMode();
+    }
 }
 
 void Mac::SetSupportedChannelMask(const ChannelMask &aMask)

@@ -345,10 +345,7 @@ otError ActiveDataset::CreateNewNetwork(otOperationalDataset &aDataset)
     aDataset.mChannel     = preferredChannels.ChooseRandomChannel();
     aDataset.mChannelMask = supportedChannels.GetMask();
 
-    do
-    {
-        aDataset.mPanId = Random::NonCrypto::GetUint16();
-    } while (aDataset.mPanId == Mac::kPanIdBroadcast);
+    aDataset.mPanId = Mac::GenerateRandomPanId();
 
     snprintf(aDataset.mNetworkName.m8, sizeof(aDataset.mNetworkName), "OpenThread-%04x", aDataset.mPanId);
 

@@ -421,6 +421,8 @@ protected:
     otError HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader);
 #endif
 
+    void ResetCounters(void);
+
 #if OPENTHREAD_CONFIG_LEGACY_ENABLE
     void StartLegacy(void);
     void StopLegacy(void);

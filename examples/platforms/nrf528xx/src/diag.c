@@ -256,12 +256,22 @@ static void processGpio(otInstance *aInstance, int argc, char *argv[], char *aOu
 
     if (argc == 1)
     {
-        uint32_t value;
+        uint32_t           value;
+        nrf_gpio_pin_dir_t pindir;
 
         error = parseLong(argv[0], &pinnum);
         otEXPECT(error == OT_ERROR_NONE);
 
-        value = nrf_gpio_pin_read(pinnum);
+        pindir = nrf_gpio_pin_dir_get(pinnum);
+
+        if (pindir == NRF_GPIO_PIN_DIR_INPUT)
+        {
+            value = nrf_gpio_pin_read(pinnum);
+        }
+        else
+        {
+            value = nrf_gpio_pin_out_read(pinnum);
+        }
 
         snprintf(aOutput, aOutputMaxLen, "gpio %d = %d\r\n", (uint8_t)pinnum, (uint8_t)value);
     }

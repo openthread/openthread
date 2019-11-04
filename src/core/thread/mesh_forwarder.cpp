@@ -69,7 +69,6 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mEnabled(false)
     , mScanChannels(0)
     , mScanChannel(0)
-    , mMacRadioAcquisitionId(0)
     , mRestorePanId(Mac::kPanIdBroadcast)
     , mScanning(false)
 #if OPENTHREAD_FTD
@@ -79,10 +78,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
 {
     mFragTag = Random::NonCrypto::GetUint16();
 
-    mIpCounters.mTxSuccess = 0;
-    mIpCounters.mRxSuccess = 0;
-    mIpCounters.mTxFailure = 0;
-    mIpCounters.mRxFailure = 0;
+    ResetCounters();
 
 #if OPENTHREAD_FTD
     memset(mFragmentEntries, 0, sizeof(mFragmentEntries));
@@ -191,8 +187,6 @@ otError MeshForwarder::PrepareDiscoverRequest(void)
 
     mScanChannel  = Mac::ChannelMask::kChannelIteratorFirst;
     mRestorePanId = Get<Mac::Mac>().GetPanId();
-
-    SuccessOrExit(error = Get<Mac::Mac>().AcquireRadioChannel(&mMacRadioAcquisitionId));
 
     mScanning = true;
 
@@ -486,7 +480,7 @@ otError MeshForwarder::HandleFrameRequest(Mac::TxFrame &aFrame)
     case Message::kTypeIp6:
         if (mSendMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest)
         {
-            SuccessOrExit(error = Get<Mac::Mac>().SetRadioChannel(mMacRadioAcquisitionId, mScanChannel));
+            SuccessOrExit(error = Get<Mac::Mac>().SetTemporaryChannel(mScanChannel));
 
             aFrame.SetChannel(mScanChannel);
 
@@ -496,14 +490,7 @@ otError MeshForwarder::HandleFrameRequest(Mac::TxFrame &aFrame)
             // value.
             if (mSendMessage->GetPanId() == Mac::kPanIdBroadcast && Get<Mac::Mac>().GetPanId() == Mac::kPanIdBroadcast)
             {
-                uint16_t panid;
-
-                do
-                {
-                    panid = Random::NonCrypto::GetUint16();
-                } while (panid == Mac::kPanIdBroadcast);
-
-                Get<Mac::Mac>().SetPanId(panid);
+                Get<Mac::Mac>().SetPanId(Mac::GenerateRandomPanId());
             }
         }
 
@@ -1041,12 +1028,7 @@ void MeshForwarder::HandleDiscoverComplete(void)
 {
     assert(mScanning);
 
-    if (mMacRadioAcquisitionId)
-    {
-        Get<Mac::Mac>().ReleaseRadioChannel();
-        mMacRadioAcquisitionId = 0;
-    }
-
+    Get<Mac::Mac>().ClearTemporaryChannel();
     Get<Mac::Mac>().SetPanId(mRestorePanId);
     mScanning = false;
     Get<Mle::MleRouter>().HandleDiscoverComplete();

@@ -162,11 +162,16 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
 {
     VerifyOrExit(aKeySequence != mKeySequence, Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER));
 
-    // Check if the guard timer has expired if key rotation is requested.
-    if ((aKeySequence == (mKeySequence + 1)) && (mKeySwitchGuardTime != 0) && mKeyRotationTimer.IsRunning() &&
-        mKeySwitchGuardEnabled)
+    if ((aKeySequence == (mKeySequence + 1)) && mKeyRotationTimer.IsRunning())
     {
-        VerifyOrExit(mHoursSinceKeyRotation >= mKeySwitchGuardTime);
+        if (mKeySwitchGuardEnabled)
+        {
+            // Check if the guard timer has expired if key rotation is requested.
+            VerifyOrExit(mHoursSinceKeyRotation >= mKeySwitchGuardTime);
+            StartKeyRotationTimer();
+        }
+
+        mKeySwitchGuardEnabled = true;
     }
 
     mKeySequence = aKeySequence;
@@ -174,12 +179,6 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
 
     mMacFrameCounter = 0;
     mMleFrameCounter = 0;
-
-    if (mKeyRotationTimer.IsRunning())
-    {
-        mKeySwitchGuardEnabled = true;
-        StartKeyRotationTimer();
-    }
 
     Get<Notifier>().Signal(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER);
 

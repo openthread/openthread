@@ -66,6 +66,8 @@
 #define US_PER_S            NRF_802154_US_PER_S
 #define US_PER_OVERFLOW     (512UL * NRF_802154_US_PER_S)  ///< Time that has passed between overflow events. On full RTC speed, it occurs every 512 s.
 
+#define RTC_COUNTER_BITS    24  ///< Number of bits in RTC COUNTER register.
+
 #define MS_PER_S            1000UL
 
 #define MIN_RTC_COMPARE_EVENT_TICKS  2                                                        ///< Minimum number of RTC ticks delay that guarantees that RTC compare event will fire.
@@ -521,6 +523,16 @@ void nrf5AlarmProcess(otInstance *aInstance)
 inline uint64_t nrf5AlarmGetCurrentTime(void)
 {
     return GetCurrentTime(kUsTimer);
+}
+
+uint64_t nrf5AlarmGetRawCounter(void)
+{
+    uint32_t offset  = 0;
+    uint32_t counter = 0;
+
+    GetOffsetAndCounter(&offset, &counter);
+
+    return (((uint64_t)offset) << RTC_COUNTER_BITS) | counter;
 }
 
 uint32_t otPlatAlarmMilliGetNow(void)

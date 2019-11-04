@@ -515,7 +515,7 @@ otError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
 
     if (aNeighbor == NULL)
     {
-        Random::NonCrypto::FillBuffer(mChallenge, sizeof(mChallenge));
+        Random::Crypto::FillBuffer(mChallenge, sizeof(mChallenge));
 
         mChallengeTimeout = (((2 * kMaxResponseDelay) + kStateUpdatePeriod - 1) / kStateUpdatePeriod);
 
@@ -535,7 +535,7 @@ otError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
         {
             uint8_t challenge[ChallengeTlv::kMaxSize];
 
-            Random::NonCrypto::FillBuffer(challenge, sizeof(challenge));
+            Random::Crypto::FillBuffer(challenge, sizeof(challenge));
             SuccessOrExit(error = AppendChallenge(*message, challenge, sizeof(challenge)));
         }
 
@@ -3132,49 +3132,35 @@ bool MleRouter::IsMinimalChild(uint16_t aRloc16)
 
 void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 {
-    switch (mRole)
+    if (&aNeighbor == &mParent)
     {
-    case OT_DEVICE_ROLE_DISABLED:
-    case OT_DEVICE_ROLE_DETACHED:
-        break;
-
-    case OT_DEVICE_ROLE_CHILD:
-        if (&aNeighbor == &mParent)
+        if (mRole == OT_DEVICE_ROLE_CHILD)
         {
             BecomeDetached();
         }
-
-        break;
-
-    case OT_DEVICE_ROLE_ROUTER:
-    case OT_DEVICE_ROLE_LEADER:
-        if (!IsActiveRouter(aNeighbor.GetRloc16()))
+    }
+    else if (!IsActiveRouter(aNeighbor.GetRloc16()))
+    {
+        if (aNeighbor.IsStateValidOrRestoring())
         {
-            if (aNeighbor.IsStateValidOrRestoring())
-            {
-                Signal(OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED, aNeighbor);
-            }
-
-            aNeighbor.SetState(Neighbor::kStateInvalid);
-
-            Get<IndirectSender>().ClearAllMessagesForSleepyChild(static_cast<Child &>(aNeighbor));
-            Get<NetworkData::Leader>().SendServerDataNotification(aNeighbor.GetRloc16());
-
-            if (aNeighbor.IsFullThreadDevice())
-            {
-                // Clear all EID-to-RLOC entries associated with the child.
-                Get<AddressResolver>().Remove(aNeighbor.GetRloc16());
-            }
-
-            RemoveStoredChild(aNeighbor.GetRloc16());
-        }
-        else if (aNeighbor.IsStateValid())
-        {
-            Signal(OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED, aNeighbor);
-            mRouterTable.RemoveNeighbor(static_cast<Router &>(aNeighbor));
+            Signal(OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED, aNeighbor);
         }
 
-        break;
+        Get<IndirectSender>().ClearAllMessagesForSleepyChild(static_cast<Child &>(aNeighbor));
+        Get<NetworkData::Leader>().SendServerDataNotification(aNeighbor.GetRloc16());
+
+        if (aNeighbor.IsFullThreadDevice())
+        {
+            // Clear all EID-to-RLOC entries associated with the child.
+            Get<AddressResolver>().Remove(aNeighbor.GetRloc16());
+        }
+
+        RemoveStoredChild(aNeighbor.GetRloc16());
+    }
+    else if (aNeighbor.IsStateValid())
+    {
+        Signal(OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED, aNeighbor);
+        mRouterTable.RemoveNeighbor(static_cast<Router &>(aNeighbor));
     }
 
     aNeighbor.GetLinkInfo().Clear();
@@ -3930,16 +3916,6 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
 
     SuccessOrExit(ThreadTlv::GetTlv(*aMessage, ThreadTlv::kRouterMask, sizeof(routerMaskTlv), routerMaskTlv));
     VerifyOrExit(routerMaskTlv.IsValid());
-
-    // if allocated routerId is different from previous routerId
-    if (IsRouterIdValid(mPreviousRouterId) && routerId != mPreviousRouterId)
-    {
-        // reset children info if any
-        if (HasChildren())
-        {
-            RemoveChildren();
-        }
-    }
 
     // assign short address
     SetRouterId(routerId);

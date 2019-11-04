@@ -454,6 +454,13 @@ const otIpCounters *otThreadGetIp6Counters(otInstance *aInstance)
     return &instance.Get<MeshForwarder>().GetCounters();
 }
 
+void otThreadResetIp6Counters(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<MeshForwarder>().ResetCounters();
+}
+
 const otMleCounters *otThreadGetMleCounters(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
