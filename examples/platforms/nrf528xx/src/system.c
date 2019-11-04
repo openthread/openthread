@@ -45,15 +45,6 @@
 
 #include <openthread/config.h>
 
-#if !OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS && PLATFORM_OPENTHREAD_VANILLA
-
-#include <mbedtls/platform.h>
-#include <mbedtls/threading.h>
-
-#include <openthread/heap.h>
-
-#endif
-
 extern bool gPlatformPseudoResetWasRequested;
 
 void __cxa_pure_virtual(void)
@@ -77,11 +68,6 @@ void otSysInit(int argc, char *argv[])
     NRF_NVMC->ICACHECNF = NVMC_ICACHECNF_CACHEEN_Enabled;
 #elif (DCDC_ENABLE)
     NRF_POWER->DCDCEN = 1;
-#endif
-
-#if !OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS && PLATFORM_OPENTHREAD_VANILLA
-    mbedtls_platform_set_calloc_free(otHeapCAlloc, otHeapFree);
-    mbedtls_platform_setup(NULL);
 #endif
 
     nrf_drv_clock_init();
@@ -144,10 +130,6 @@ void otSysDeinit(void)
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED) || \
     (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
     nrf5LogDeinit();
-#endif
-
-#if !OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS && PLATFORM_OPENTHREAD_VANILLA
-    mbedtls_platform_teardown(NULL);
 #endif
 }
 

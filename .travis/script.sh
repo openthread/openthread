@@ -223,28 +223,6 @@ build_nrf52840() {
     git clean -xfd || die
     ./bootstrap || die
     DISABLE_TRANSPORTS=1 make -f examples/Makefile-nrf52840 $OPENTHREAD_FLAGS || die
-
-    # Software cryptography
-    git checkout -- . || die
-    git clean -xfd || die
-    ./bootstrap || die
-    DISABLE_BUILTIN_MBEDTLS=0 make -f examples/Makefile-nrf52840 $OPENTHREAD_FLAGS || die
-    arm-none-eabi-size  output/nrf52840/bin/ot-cli-ftd || die
-    arm-none-eabi-size  output/nrf52840/bin/ot-cli-mtd || die
-    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-ftd || die
-    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-mtd || die
-    arm-none-eabi-size  output/nrf52840/bin/ot-rcp || die
-
-    # Software cryptography with threading support
-    git checkout -- . || die
-    git clean -xfd || die
-    ./bootstrap || die
-    DISABLE_BUILTIN_MBEDTLS=0 MBEDTLS_THREADING=1 make -f examples/Makefile-nrf52840 $OPENTHREAD_FLAGS || die
-    arm-none-eabi-size  output/nrf52840/bin/ot-cli-ftd || die
-    arm-none-eabi-size  output/nrf52840/bin/ot-cli-mtd || die
-    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-ftd || die
-    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-mtd || die
-    arm-none-eabi-size  output/nrf52840/bin/ot-rcp || die
 }
 
 build_qpg6095() {

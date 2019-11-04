@@ -30,25 +30,12 @@
 # nrf52840 platform-specific Makefile
 #
 
-LDADD_COMMON                                                                           += \
-    $(top_builddir)/examples/platforms/nrf528xx/libopenthread-nrf52840.a                  \
-    $(top_builddir)/third_party/NordicSemiconductor/libnordicsemi-nrf52840-sdk.a          \
-    $(top_builddir)/third_party/NordicSemiconductor/libnordicsemi-nrf52840-radio-driver.a \
+LDADD_COMMON                                                                                 += \
+    $(top_builddir)/examples/platforms/nrf528xx/libopenthread-nrf52840.a                        \
+    $(top_builddir)/third_party/NordicSemiconductor/libnordicsemi-nrf52840-sdk.a                \
+    $(top_builddir)/third_party/NordicSemiconductor/libnordicsemi-nrf52840-radio-driver.a       \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_cc310/lib/libnrf_cc310_0.9.10.a \
     $(NULL)
-
-if !OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
-LDADD_COMMON                                                                                              += \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_glue.a            \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_glue_cc310.a      \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_glue_vanilla.a    \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_cc310_backend.a   \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_vanilla_backend.a \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_tls_vanilla.a        \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_x509_vanilla.a       \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_base_vanilla.a       \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libnrf_cc310_platform_0.9.0.a   \
-    $(NULL)
-endif
 
 if OPENTHREAD_ENABLE_CUSTOM_LINKER_FILE
 LDFLAGS_COMMON                                                                               += \

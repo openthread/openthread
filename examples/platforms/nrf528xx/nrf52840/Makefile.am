@@ -112,6 +112,16 @@ SOFTDEVICE_CPPFLAGS                                                             
     -DS140                                                                                                   \
     $(NULL)
 
+HWCRYPTO_SOURCES                                                                                           = \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/aes_alt.c                                \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/aes_alt_cc310.c                          \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/aes_alt_soft.c                           \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/cc310_mbedtls.c                          \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/ecp_alt_cc310.c                          \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/ecp_curves_alt.c                         \
+    @top_builddir@/third_party/NordicSemiconductor/libraries/crypto/sha256_alt_cc310.c                       \
+    $(NULL)
+
 PLATFORM_SOURCES                                                                                           = \
     $(PLATFORM_COMMON_SOURCES)                                                                               \
     $(NULL)
@@ -119,12 +129,12 @@ PLATFORM_SOURCES                                                                
 libopenthread_nrf52840_a_CPPFLAGS                                                                          = \
     $(COMMONCPPFLAGS)                                                                                        \
     $(SINGLEPHY_CPPFLAGS)                                                                                    \
-    -DPLATFORM_OPENTHREAD_VANILLA                                                                             \
     $(NULL)
 
 libopenthread_nrf52840_a_SOURCES                                                                           = \
     $(PLATFORM_SOURCES)                                                                                      \
     $(SINGLEPHY_SOURCES)                                                                                     \
+    $(HWCRYPTO_SOURCES)                                                                                      \
     $(NULL)
 
 libopenthread_nrf52840_sdk_a_CPPFLAGS                                                                      = \
@@ -135,6 +145,7 @@ libopenthread_nrf52840_sdk_a_CPPFLAGS                                           
 libopenthread_nrf52840_sdk_a_SOURCES                                                                       = \
     $(PLATFORM_SOURCES)                                                                                      \
     $(SINGLEPHY_SOURCES)                                                                                     \
+    $(HWCRYPTO_SOURCES)                                                                                      \
     $(NULL)
 
 libopenthread_nrf52840_softdevice_sdk_a_CPPFLAGS                                                           = \
@@ -145,6 +156,7 @@ libopenthread_nrf52840_softdevice_sdk_a_CPPFLAGS                                
 libopenthread_nrf52840_softdevice_sdk_a_SOURCES                                                            = \
     $(PLATFORM_SOURCES)                                                                                      \
     $(SOFTDEVICE_SOURCES)                                                                                    \
+    $(HWCRYPTO_SOURCES)                                                                                      \
     $(NULL)
 
 Dash                                                                                                       = -
