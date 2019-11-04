@@ -370,6 +370,7 @@ otError ActiveDataset::GenerateLocal(void)
     Dataset dataset(mLocal.GetType());
 
     VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!mLocal.IsTimestampPresent(), error = OT_ERROR_ALREADY);
 
     mLocal.Read(dataset);
 

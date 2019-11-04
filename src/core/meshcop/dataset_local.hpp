@@ -81,6 +81,15 @@ public:
     bool IsSaved(void) const { return mSaved; }
 
     /**
+     * This method indicates whether an Active (Pending) Timestamp is present in the Active (Pending) Dataset.
+     *
+     * @retval TRUE  if an Active/Pending Timestamp is present.
+     * @retval FALSE if an Active/Pending Timestamp is not present.
+     *
+     */
+    bool IsTimestampPresent(void) const { return mTimestampPresent; }
+
+    /**
      * This method restores and retrieves the dataset from non-volatile memory.
      *
      * This method also sets the memory-cached timestamp for subsequent calls to `Compare()`.
