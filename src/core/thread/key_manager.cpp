@@ -238,13 +238,7 @@ exit:
 
 void KeyManager::SetSecurityPolicyFlags(uint8_t aSecurityPolicyFlags)
 {
-    Notifier &notifier = Get<Notifier>();
-
-    if (!notifier.HasSignaled(OT_CHANGED_SECURITY_POLICY) || (mSecurityPolicyFlags != aSecurityPolicyFlags))
-    {
-        mSecurityPolicyFlags = aSecurityPolicyFlags;
-        notifier.Signal(OT_CHANGED_SECURITY_POLICY);
-    }
+    Get<Notifier>().Update(mSecurityPolicyFlags, aSecurityPolicyFlags, OT_CHANGED_SECURITY_POLICY);
 }
 
 void KeyManager::StartKeyRotationTimer(void)
