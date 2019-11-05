@@ -146,6 +146,7 @@ static int sLogLevel = LOG_WARNING;
 static int sSpiDevFd       = -1;
 static int sResGpioValueFd = -1;
 static int sIntGpioValueFd = -1;
+static int sCsGpioValueFd  = -1;
 
 static int sHdlcInputFd  = -1;
 static int sHdlcOutputFd = -1;
@@ -424,6 +425,21 @@ static uint8_t *get_real_rx_frame_start(void)
     return ret;
 }
 
+static void assert_spi_cs(bool is_assert)
+{
+    uint8_t gpioPinState = is_assert ? '0' : '1';
+
+    if (sCsGpioValueFd == -1)
+    {
+        return;
+    }
+
+    if (write(sCsGpioValueFd, &gpioPinState, 1) == -1)
+    {
+        syslog(LOG_ERR, "assert_spi_cs(): error on write: %d (%s)", errno, strerror(errno));
+    }
+}
+
 static int do_spi_xfer(int len)
 {
     int ret;
@@ -567,7 +583,9 @@ static int push_pull_spi(void)
     }
 
     // Perform the SPI transaction.
+    assert_spi_cs(true);
     ret = do_spi_xfer(spi_xfer_bytes);
+    assert_spi_cs(false);
 
     if (ret < 0)
     {
@@ -1184,6 +1202,64 @@ bail:
     return sSpiDevFd >= 0;
 }
 
+static bool setup_cs_gpio(const char *path)
+{
+    int   setup_fd   = -1;
+    char *dir_path   = NULL;
+    char *value_path = NULL;
+    int   len;
+
+    syslog(LOG_DEBUG, "nSSEL gpio path: %s", path);
+
+    len = asprintf(&dir_path, "%s/direction", path);
+
+    if (len < 0)
+    {
+        perror("asprintf");
+        goto bail;
+    }
+
+    len = asprintf(&value_path, "%s/value", path);
+
+    if (len < 0)
+    {
+        perror("asprintf");
+        goto bail;
+    }
+
+    setup_fd = open(dir_path, O_WRONLY | O_CLOEXEC);
+
+    if (setup_fd >= 0)
+    {
+        if (-1 == write(setup_fd, "high\n", 5))
+        {
+            perror("set_res_direction");
+            goto bail;
+        }
+    }
+
+    sCsGpioValueFd = open(value_path, O_WRONLY | O_CLOEXEC);
+
+bail:
+
+    if (setup_fd >= 0)
+    {
+        close(setup_fd);
+    }
+
+    if (dir_path)
+    {
+        free(dir_path);
+    }
+
+    if (value_path)
+    {
+        free(value_path);
+    }
+
+    return sCsGpioValueFd >= 0;
+}
+
 static bool setup_res_gpio(const char *path)
 {
     int   setup_fd   = -1;
@@ -1500,6 +1576,7 @@ int main(int argc, char *argv[])
         {"pty", no_argument, &sMode, MODE_PTY},
         {"gpio-int", required_argument, NULL, 'i'},
         {"gpio-res", required_argument, NULL, 'r'},
+        {"gpio-cs", required_argument, NULL, 's'},
         {"verbose", optional_argument, NULL, ARG_VERBOSE},
         {"version", no_argument, NULL, 'V'},
         {"raw", no_argument, NULL, ARG_RAW},
@@ -1551,7 +1628,7 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-        int c = getopt_long(argc, argv, "i:r:vVh?", options, NULL);
+        int c = getopt_long(argc, argv, "i:r:s:vVh?", options, NULL);
         if (c == -1)
         {
             break;
@@ -1672,6 +1749,14 @@ int main(int argc, char *argv[])
                     exit(EXIT_FAILURE);
                 }
                 syslog(LOG_NOTICE, "MTU set to %d bytes", sMTU);
+                break;
+
+            case 's':
+                if (!setup_cs_gpio(optarg))
+                {
+                    syslog(LOG_ERR, "Unable to setup nSSEL GPIO \"%s\", %s", optarg, strerror(errno));
+                    exit(EXIT_FAILURE);
+                }
                 break;
 
             case 'r':

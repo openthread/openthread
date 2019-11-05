@@ -35,6 +35,9 @@ protocol document.
     value is `0`.
 *   `--spi-speed[=hertz]`: Specify the SPI speed in hertz. Default
     value is `1000000` (1MHz).
+*   `--spi-cs[=gpio-path]`: Specify the a path to the Linux
+    sysfs-exported GPIO directory for the `C̅S̅` pin. If not
+    specified, `spi-hdlc-adapter` will not assert C̅S̅ before SPI transaction.
 *   `--spi-cs-delay[=usec]`: Specify the delay after C̅S̅ assertion,
     in microseconds. Default is 20µs. Note that this may need to be
     set to zero for spi-hdlc-adapter to work with some SPI drivers.
@@ -75,6 +78,7 @@ properties on the GPIOs:
 1.  Set `I̅N̅T̅/direction` to `in`.
 2.  Set `I̅N̅T̅/edge` to `falling`.
 3.  Set `R̅E̅S̅/direction` to `high`.
+4.  Set `C̅S̅/direction` to `high`.
 
 When resetting the slave device, `spi-hdlc` performs the following
 procedure:
@@ -82,6 +86,7 @@ procedure:
 1.  Set `R̅E̅S̅/direction` to `low`.
 2.  Sleep for 30ms.
 3.  Set `R̅E̅S̅/direction` to `high`.
+4.  Set `C̅S̅/direction` to `high`.
 
 ## Statistics ##
 
