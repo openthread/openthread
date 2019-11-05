@@ -107,38 +107,252 @@ typedef struct otMacFilterEntry
  */
 typedef struct otMacCounters
 {
-    uint32_t mTxTotal;              ///< The total number of transmissions.
-    uint32_t mTxUnicast;            ///< The total number of unicast transmissions.
-    uint32_t mTxBroadcast;          ///< The total number of broadcast transmissions.
-    uint32_t mTxAckRequested;       ///< The number of transmissions with ack request.
-    uint32_t mTxAcked;              ///< The number of transmissions that were acked.
-    uint32_t mTxNoAckRequested;     ///< The number of transmissions without ack request.
-    uint32_t mTxData;               ///< The number of transmitted data.
-    uint32_t mTxDataPoll;           ///< The number of transmitted data poll.
-    uint32_t mTxBeacon;             ///< The number of transmitted beacon.
-    uint32_t mTxBeaconRequest;      ///< The number of transmitted beacon request.
-    uint32_t mTxOther;              ///< The number of transmitted other types of frames.
-    uint32_t mTxRetry;              ///< The number of retransmission times.
-    uint32_t mTxErrCca;             ///< The number of CCA failure times.
-    uint32_t mTxErrAbort;           ///< The number of frame transmission failures due to abort error.
-    uint32_t mTxErrBusyChannel;     ///< The number of frames that were dropped due to a busy channel.
-    uint32_t mRxTotal;              ///< The total number of received packets.
-    uint32_t mRxUnicast;            ///< The total number of unicast packets received.
-    uint32_t mRxBroadcast;          ///< The total number of broadcast packets received.
-    uint32_t mRxData;               ///< The number of received data.
-    uint32_t mRxDataPoll;           ///< The number of received data poll.
-    uint32_t mRxBeacon;             ///< The number of received beacon.
-    uint32_t mRxBeaconRequest;      ///< The number of received beacon request.
-    uint32_t mRxOther;              ///< The number of received other types of frames.
-    uint32_t mRxAddressFiltered;    ///< The number of received packets filtered by address filter.
-    uint32_t mRxDestAddrFiltered;   ///< The number of received packets filtered by destination check.
-    uint32_t mRxDuplicated;         ///< The number of received duplicated packets.
-    uint32_t mRxErrNoFrame;         ///< The number of received packets with no or malformed content.
-    uint32_t mRxErrUnknownNeighbor; ///< The number of received packets from unknown neighbor.
-    uint32_t mRxErrInvalidSrcAddr;  ///< The number of received packets whose source address is invalid.
-    uint32_t mRxErrSec;             ///< The number of received packets with security error.
-    uint32_t mRxErrFcs;             ///< The number of received packets with FCS error.
-    uint32_t mRxErrOther;           ///< The number of received packets with other error.
+    /**
+     * The total amount of unique MAC frame transmission requests.
+     *
+     * Note that this counter is incremented for each MAC transmission request only by one,
+     * regardless of the amount of CCA failures, CSMA-CA attempts, or retransmissions.
+     *
+     * This incrementation rule applies to the following counters:
+     *   @p mTxUnicast
+     *   @p mTxBroadcast
+     *   @p mTxAckRequested
+     *   @p mTxNoAckRequested
+     *   @p mTxData
+     *   @p mTxDataPoll
+     *   @p mTxBeacon
+     *   @p mTxBeaconRequest
+     *   @p mTxOther
+     *   @p mTxErrAbort
+     *   @p mTxErrBusyChannel
+     *
+     * The following equations are valid:
+     *     @p mTxTotal = @p mTxUnicast + @p mTxBroadcast
+     *     @p mTxTotal = @p mTxAckRequested + @p mTxNoAckRequested
+     *     @p mTxTotal = @p mTxData + @p mTxDataPoll + @p mTxBeacon + @p mTxBeaconRequest + @p mTxOther
+     *
+     */
+    uint32_t mTxTotal;
+
+    /**
+     * The total amount of unique unicast MAC frame transmission requests.
+     *
+     */
+    uint32_t mTxUnicast;
+
+    /**
+     * The total amount of unique broadcast MAC frame transmission requests.
+     *
+     */
+    uint32_t mTxBroadcast;
+
+    /**
+     * The total amount of unique MAC frame transmission requests with requested acknowledgment.
+     *
+     */
+    uint32_t mTxAckRequested;
+
+    /**
+     * The total amount of unique MAC frame transmission requests that were acked.
+     *
+     */
+    uint32_t mTxAcked;
+
+    /**
+     * The total amount of unique MAC frame transmission requests without requested acknowledgment.
+     *
+     */
+    uint32_t mTxNoAckRequested;
+
+    /**
+     * The total amount of unique MAC Data frame transmission requests.
+     *
+     */
+    uint32_t mTxData;
+
+    /**
+     * The total amount of unique MAC Data Poll frame transmission requests.
+     *
+     */
+    uint32_t mTxDataPoll;
+
+    /**
+     * The total amount of unique MAC Beacon frame transmission requests.
+     *
+     */
+    uint32_t mTxBeacon;
+
+    /**
+     * The total amount of unique MAC Beacon Request frame transmission requests.
+     *
+     */
+    uint32_t mTxBeaconRequest;
+
+    /**
+     * The total amount of unique other MAC frame transmission requests.
+     *
+     * This counter is currently unused.
+     *
+     */
+    uint32_t mTxOther;
+
+    /**
+     * The total amount of MAC retransmission attempts.
+     *
+     * Note that this counter is incremented by one for each retransmission attempt that may be
+     * triggered by lack of acknowledgement, CSMA/CA failure, or other type of transmission error.
+     * The @p mTxRetry counter is incremented both for unicast and broadcast MAC frames.
+     *
+     * Check the following configuration parameters to control the amount of retransmissions in the system:
+     *   @sa OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT
+     *   @sa OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT
+     *   @sa OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST
+     *   @sa OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT
+     *   @sa OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT
+     *
+     * Currently, this counter is invalid if the platform's radio driver capability includes
+     * @sa OT_RADIO_CAPS_TRANSMIT_RETRIES.
+     *
+     */
+    uint32_t mTxRetry;
+
+    /**
+     * The total amount of CCA failures.
+     *
+     * The meaning of this counter can be different and it depends on the platform's radio driver capabilities.
+     *
+     * If @sa OT_RADIO_CAPS_CSMA_BACKOFF is enabled, this counter represents the total amount of full CSMA/CA
+     * failed attempts and it is incremented by one also for each retransmission (in case of a CSMA/CA fail).
+     *
+     * If @sa OT_RADIO_CAPS_TRANSMIT_RETRIES is enabled, this counter represents the total amount of full CSMA/CA
+     * failed attempts and it is incremented by one for each individual data frame request (regardless of the amount of
+     * retransmissions).
+     *
+     */
+    uint32_t mTxErrCca;
+
+    /**
+     * The total amount of unique MAC transmission request failures cause by an abort error.
+     *
+     */
+    uint32_t mTxErrAbort;
+
+    /**
+     * The total amount of unique MAC transmission requests failures caused by a busy channel (a CSMA/CA fail).
+     *
+     */
+    uint32_t mTxErrBusyChannel;
+
+    /**
+     * The total amount of received frames.
+     *
+     * This counter counts all frames reported by the platform's radio driver, including frames
+     * that were dropped, for example because of an FCS error.
+     *
+     */
+    uint32_t mRxTotal;
+
+    /**
+     * The total amount of unicast frames received.
+     *
+     */
+    uint32_t mRxUnicast;
+
+    /**
+     * The total amount of broadcast frames received.
+     *
+     */
+    uint32_t mRxBroadcast;
+
+    /**
+     * The total amount of MAC Data frames received.
+     *
+     */
+    uint32_t mRxData;
+
+    /**
+     * The total amount of MAC Data Poll frames received.
+     *
+     */
+    uint32_t mRxDataPoll;
+
+    /**
+     * The total amount of MAC Beacon frames received.
+     *
+     */
+    uint32_t mRxBeacon;
+
+    /**
+     * The total amount of MAC Beacon Request frames received.
+     *
+     */
+    uint32_t mRxBeaconRequest;
+
+    /**
+     * The total amount of other types of frames received.
+     *
+     */
+    uint32_t mRxOther;
+
+    /**
+     * The total amount of frames dropped by MAC Filter module, for example received from blacklisted node.
+     *
+     */
+    uint32_t mRxAddressFiltered;
+
+    /**
+     * The total amount of frames dropped by destination address check, for example received frame for other node.
+     *
+     */
+    uint32_t mRxDestAddrFiltered;
+
+    /**
+     * The total amount of frames dropped due to duplication, that is when the frame has been already received.
+     *
+     * This counter may be incremented, for example when ACK frame generated by the receiver hasn't reached
+     * transmitter node which performed retransmission.
+     *
+     */
+    uint32_t mRxDuplicated;
+
+    /**
+     * The total amount of frames dropped because of missing or malformed content.
+     *
+     */
+    uint32_t mRxErrNoFrame;
+
+    /**
+     * The total amount of frames dropped due to unknown neighbor.
+     *
+     */
+    uint32_t mRxErrUnknownNeighbor;
+
+    /**
+     * The total amount of frames dropped due to invalid source address.
+     *
+     */
+    uint32_t mRxErrInvalidSrcAddr;
+
+    /**
+     * The total amount of frames dropped due to security error.
+     *
+     * This counter may be incremented, for example when lower than expected Frame Counter is used
+     * to encrypt the frame.
+     *
+     */
+    uint32_t mRxErrSec;
+
+    /**
+     * The total amount of frames dropped due to invalid FCS.
+     *
+     */
+    uint32_t mRxErrFcs;
+
+    /**
+     * The total amount of frames dropped due to other error.
+     *
+     */
+    uint32_t mRxErrOther;
 } otMacCounters;
 
 /**
