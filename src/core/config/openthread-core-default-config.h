@@ -35,6 +35,8 @@
 #ifndef OPENTHREAD_CORE_DEFAULT_CONFIG_H_
 #define OPENTHREAD_CORE_DEFAULT_CONFIG_H_
 
+#include "config/coap.h"
+
 /**
  * @def OPENTHREAD_CONFIG_STACK_VENDOR_OUI
  *

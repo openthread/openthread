@@ -35,6 +35,8 @@
 #ifndef CONFIG_MAC_H_
 #define CONFIG_MAC_H_
 
+#include "config/time_sync.h"
+
 /**
  * @def OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT
  *

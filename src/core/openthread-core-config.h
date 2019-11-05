@@ -44,9 +44,6 @@
 
 #define OPENTHREAD_THREAD_VERSION (2)
 
-// This should be before openthread-core-default-config.h
-#include "config/coap.h"
-
 #include "config/openthread-core-default-config.h"
 
 #include "config/announce_sender.h"
@@ -54,6 +51,7 @@
 #include "config/channel_manager.h"
 #include "config/channel_monitor.h"
 #include "config/child_supervision.h"
+#include "config/coap.h"
 #include "config/commissioner.h"
 #include "config/dhcp6_client.h"
 #include "config/dhcp6_server.h"
@@ -64,15 +62,12 @@
 #include "config/link_quality.h"
 #include "config/link_raw.h"
 #include "config/logging.h"
-
-// This should be before mac.h
-#include "config/time_sync.h"
-
 #include "config/mac.h"
 #include "config/mle.h"
 #include "config/parent_search.h"
 #include "config/platform.h"
 #include "config/sntp_client.h"
+#include "config/time_sync.h"
 #include "config/tmf.h"
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || \
