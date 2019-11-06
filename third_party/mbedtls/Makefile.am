@@ -55,6 +55,7 @@ libmbedcrypto_a_SOURCES                       = \
     repo/library/ecdh.c                         \
     repo/library/ecdsa.c                        \
     repo/library/ecjpake.c                      \
+    repo/library/ecp.c                          \
     repo/library/ecp_curves.c                   \
     repo/library/entropy.c                      \
     repo/library/entropy_poll.c                 \
@@ -79,14 +80,6 @@ libmbedcrypto_a_SOURCES                       = \
     repo/library/x509.c                         \
     repo/library/x509_crt.c                     \
     $(NULL)
-
-if !OPENTHREAD_EXAMPLES_EFR32MG12
-if !OPENTHREAD_EXAMPLES_EFR32MG21
-libmbedcrypto_a_SOURCES                      += \
-    repo/library/ecp.c                          \
-    $(NULL)
-endif
-endif
 
 if OPENTHREAD_BUILD_COVERAGE
 Dash                                          = -
