@@ -386,7 +386,7 @@ bool NetworkData::ContainsOnMeshPrefixes(NetworkData &aCompare, uint16_t aRloc16
 
         while ((error = GetNextOnMeshPrefix(innerIterator, aRloc16, innerConfig)) == OT_ERROR_NONE)
         {
-            if (memcmp(&outerConfig, &innerConfig, (sizeof(outerConfig) - sizeof(outerConfig.mRloc16))) == 0)
+            if (memcmp(&outerConfig, &innerConfig, sizeof(outerConfig)) == 0)
             {
                 break;
             }
