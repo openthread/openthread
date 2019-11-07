@@ -27,7 +27,7 @@ extern "C"
 
 
 
-/* @brief Function to generate entropy using Arm CryptoCell CC310
+/**@brief Function to generate entropy using Arm CryptoCell CC310
  *
  * This API corresponds to mbedtls_hardware_poll. It provides TRNG using
  * the Arm CC310 hardware accelerator.
