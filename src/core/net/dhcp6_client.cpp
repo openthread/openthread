@@ -70,10 +70,10 @@ bool Dhcp6Client::MatchNetifAddressWithPrefix(const Ip6::NetifUnicastAddress &aN
 
 void Dhcp6Client::UpdateAddresses(void)
 {
-    bool                  found    = false;
-    bool                  newAgent = false;
-    otNetworkDataIterator iterator;
-    otBorderRouterConfig  config;
+    bool                            found    = false;
+    bool                            newAgent = false;
+    NetworkData::Iterator           iterator;
+    NetworkData::OnMeshPrefixConfig config;
 
     // remove addresses directly if prefix not valid in network data
     for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); i++)
@@ -86,9 +86,9 @@ void Dhcp6Client::UpdateAddresses(void)
         }
 
         found    = false;
-        iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+        iterator = NetworkData::kIteratorInit;
 
-        while ((otNetDataGetNextOnMeshPrefix(&GetInstance(), &iterator, &config)) == OT_ERROR_NONE)
+        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == OT_ERROR_NONE)
         {
             if (!config.mDhcp)
             {
@@ -110,9 +110,9 @@ void Dhcp6Client::UpdateAddresses(void)
     }
 
     // add IdentityAssociation for new configured prefix
-    iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    iterator = NetworkData::kIteratorInit;
 
-    while (otNetDataGetNextOnMeshPrefix(&GetInstance(), &iterator, &config) == OT_ERROR_NONE)
+    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == OT_ERROR_NONE)
     {
         IdentityAssociation *ia = NULL;
 
