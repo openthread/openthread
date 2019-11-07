@@ -371,7 +371,6 @@ void JoinerRouter::SendDelayedJoinerEntrust(void)
 {
     DelayedJoinEntHeader delayedJoinEnt;
     Coap::Message *      message = static_cast<Coap::Message *>(mDelayedJoinEnts.GetHead());
-    TimeMilli            now     = TimerMilli::GetNow();
     Ip6::MessageInfo     messageInfo;
 
     VerifyOrExit(message != NULL);
@@ -383,9 +382,9 @@ void JoinerRouter::SendDelayedJoinerEntrust(void)
     VerifyOrExit(!mExpectJoinEntRsp ||
                  memcmp(Get<KeyManager>().GetKek(), delayedJoinEnt.GetKek(), KeyManager::kMaxKeyLength) == 0);
 
-    if (delayedJoinEnt.IsLater(now))
+    if (TimerMilli::GetNow() < delayedJoinEnt.GetSendTime())
     {
-        mTimer.Start(delayedJoinEnt.GetSendTime() - now);
+        mTimer.FireAt(delayedJoinEnt.GetSendTime());
     }
     else
     {

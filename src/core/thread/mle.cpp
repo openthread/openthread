@@ -1884,24 +1884,22 @@ void Mle::HandleDelayedResponseTimer(Timer &aTimer)
 void Mle::HandleDelayedResponseTimer(void)
 {
     DelayedResponseHeader delayedResponse;
-    TimeMilli             now         = TimerMilli::GetNow();
-    uint32_t              nextDelay   = TimeMilli::kMaxDuration;
-    Message *             message     = mDelayedResponses.GetHead();
-    Message *             nextMessage = NULL;
+    TimeMilli             now          = TimerMilli::GetNow();
+    TimeMilli             nextSendTime = now.GetDistantFuture();
+    Message *             message;
+    Message *             nextMessage;
 
-    while (message != NULL)
+    for (message = mDelayedResponses.GetHead(); message != NULL; message = nextMessage)
     {
         nextMessage = message->GetNext();
+
         delayedResponse.ReadFrom(*message);
 
-        if (delayedResponse.IsLater(now))
+        if (now < delayedResponse.GetSendTime())
         {
-            uint32_t diff = delayedResponse.GetSendTime() - now;
-
-            // Calculate the next delay and choose the lowest.
-            if (diff < nextDelay)
+            if (nextSendTime > delayedResponse.GetSendTime())
             {
-                nextDelay = diff;
+                nextSendTime = delayedResponse.GetSendTime();
             }
         }
         else
@@ -1917,7 +1915,7 @@ void Mle::HandleDelayedResponseTimer(void)
                 LogMleMessage("Send delayed message", delayedResponse.GetDestination());
 
                 // Here enters fast poll mode, as for Rx-Off-when-idle device, the enqueued msg should
-                // be Mle Data Reqeuest.
+                // be Mle Data Request.
                 // Note: Finer-grade check (e.g. message subtype) might be required when deciding whether
                 // or not enters fast poll mode fast poll mode if there are other type of delayed message
                 // for Rx-Off-when-idle device.
@@ -1931,13 +1929,11 @@ void Mle::HandleDelayedResponseTimer(void)
                 message->Free();
             }
         }
-
-        message = nextMessage;
     }
 
-    if (nextDelay != TimeMilli::kMaxDuration)
+    if (nextSendTime < now.GetDistantFuture())
     {
-        mDelayedResponseTimer.Start(nextDelay);
+        mDelayedResponseTimer.FireAt(nextSendTime);
     }
 }
 
@@ -2561,30 +2557,13 @@ exit:
 
 otError Mle::AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay)
 {
-    otError   error = OT_ERROR_NONE;
-    TimeMilli alarmFireTime;
-    TimeMilli sendTime = TimerMilli::GetNow() + aDelay;
+    otError               error = OT_ERROR_NONE;
+    DelayedResponseHeader delayedResponse(TimerMilli::GetNow() + aDelay, aDestination);
 
-    // Append the message with DelayedRespnoseHeader and add to the list.
-    DelayedResponseHeader delayedResponse(sendTime, aDestination);
     SuccessOrExit(error = delayedResponse.AppendTo(aMessage));
     mDelayedResponses.Enqueue(aMessage);
 
-    if (mDelayedResponseTimer.IsRunning())
-    {
-        // If timer is already running, check if it should be restarted with earlier fire time.
-        alarmFireTime = mDelayedResponseTimer.GetFireTime();
-
-        if (delayedResponse.IsEarlier(alarmFireTime))
-        {
-            mDelayedResponseTimer.Start(aDelay);
-        }
-    }
-    else
-    {
-        // Otherwise just set the timer.
-        mDelayedResponseTimer.Start(aDelay);
-    }
+    mDelayedResponseTimer.FireAtIfEarlier(delayedResponse.GetSendTime());
 
 exit:
     return error;

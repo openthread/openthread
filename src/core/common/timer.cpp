@@ -76,8 +76,21 @@ void TimerMilli::Start(uint32_t aDelay)
 void TimerMilli::StartAt(TimeMilli aStartTime, uint32_t aDelay)
 {
     assert(aDelay <= kMaxDelay);
-    mFireTime = aStartTime + aDelay;
+    FireAt(aStartTime + aDelay);
+}
+
+void TimerMilli::FireAt(TimeMilli aFireTime)
+{
+    mFireTime = aFireTime;
     Get<TimerMilliScheduler>().Add(*this);
+}
+
+void TimerMilli::FireAtIfEarlier(TimeMilli aFireTime)
+{
+    if (!IsRunning() || (mFireTime > aFireTime))
+    {
+        FireAt(aFireTime);
+    }
 }
 
 void TimerMilli::Stop(void)
@@ -220,7 +233,12 @@ void                           TimerMicro::Start(uint32_t aDelay)
 void TimerMicro::StartAt(TimeMicro aStartTime, uint32_t aDelay)
 {
     assert(aDelay <= kMaxDelay);
-    mFireTime = aStartTime + aDelay;
+    FireAt(aStartTime + aDelay);
+}
+
+void TimerMicro::FireAt(TimeMicro aFireTime)
+{
+    mFireTime = aFireTime;
     Get<TimerMicroScheduler>().Add(*this);
 }
 

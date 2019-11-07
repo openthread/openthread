@@ -158,28 +158,6 @@ public:
         return aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
     }
 
-    /**
-     * This method checks if the message shall be sent before the given time.
-     *
-     * @param[in]  aTime  A time to compare.
-     *
-     * @retval TRUE   If the message shall be sent before the given time.
-     * @retval FALSE  Otherwise.
-     *
-     */
-    bool IsEarlier(TimeMilli aTime) const { return aTime >= mNextTimerShot; }
-
-    /**
-     * This method checks if the message shall be sent after the given time.
-     *
-     * @param[in]  aTime  A time to compare.
-     *
-     * @retval TRUE   If the message shall be sent after the given time.
-     * @retval FALSE  Otherwise.
-     *
-     */
-    bool IsLater(TimeMilli aTime) const { return aTime < mNextTimerShot; }
-
 private:
     Ip6::Address          mSourceAddress;         ///< IPv6 address of the message source.
     Ip6::Address          mDestinationAddress;    ///< IPv6 address of the message destination.
@@ -251,6 +229,8 @@ private:
  */
 class EnqueuedResponseHeader
 {
+    friend class ResponsesQueue;
+
 public:
     /**
      * Default constructor creating empty object.
@@ -296,17 +276,6 @@ public:
         assert(length == sizeof(*this));
         OT_UNUSED_VARIABLE(length);
     }
-
-    /**
-     * This method checks if the message shall be sent before the given time.
-     *
-     * @param[in]  aTime  A time to compare.
-     *
-     * @retval TRUE   If the message shall be sent before the given time.
-     * @retval FALSE  Otherwise.
-     *
-     */
-    bool IsEarlier(TimeMilli aTime) const { return aTime >= mDequeueTime; }
 
     /**
      * This method returns number of milliseconds in which the message should be sent.

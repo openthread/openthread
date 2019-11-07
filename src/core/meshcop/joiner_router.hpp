@@ -203,26 +203,6 @@ public:
      */
     const uint8_t *GetKek(void) const { return mKek; }
 
-    /**
-     * This method checks if the message shall be sent before the given time.
-     *
-     * @param[in]  aTime  A time to compare.
-     *
-     * @retval TRUE   If the message shall be sent before the given time.
-     * @retval FALSE  Otherwise.
-     */
-    bool IsEarlier(TimeMilli aTime) const { return aTime > mSendTime; }
-
-    /**
-     * This method checks if the message shall be sent after the given time.
-     *
-     * @param[in]  aTime  A time to compare.
-     *
-     * @retval TRUE   If the message shall be sent after the given time.
-     * @retval FALSE  Otherwise.
-     */
-    bool IsLater(TimeMilli aTime) const { return aTime < mSendTime; }
-
 private:
     Ip6::MessageInfo mMessageInfo;                    ///< Message info of the message to send.
     TimeMilli        mSendTime;                       ///< Time when the message shall be sent.

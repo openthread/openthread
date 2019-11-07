@@ -633,6 +633,16 @@ int TestTimerTime(void)
             VerifyOrQuit((t1 >= t2), "Time >= failed.\n");
             VerifyOrQuit(t1 - t2 == duration, "Time difference failed\n");
 
+            t2 = t1.GetDistantFuture();
+            VerifyOrQuit((t1 < t2), "GetDistanceFuture() failed\n");
+            t2 += 1;
+            VerifyOrQuit(!(t1 < t2), "GetDistanceFuture() failed\n");
+
+            t2 = t1.GetDistantPast();
+            VerifyOrQuit((t1 > t2), "GetDistantPast() failed\n");
+            t2 -= 1;
+            VerifyOrQuit(!(t1 > t2), "GetDistantPast() failed\n");
+
             printf("--> PASSED\n");
         }
     }

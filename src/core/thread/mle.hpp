@@ -440,28 +440,6 @@ public:
      */
     const Ip6::Address &GetDestination(void) const { return mDestination; }
 
-    /**
-     * This method checks if the message shall be sent before the given time.
-     *
-     * @param[in]  aTime  A time to compare.
-     *
-     * @retval TRUE   If the message shall be sent before the given time.
-     * @retval FALSE  Otherwise.
-     *
-     */
-    bool IsEarlier(TimeMilli aTime) { return aTime > mSendTime; }
-
-    /**
-     * This method checks if the message shall be sent after the given time.
-     *
-     * @param[in]  aTime  A time to compare.
-     *
-     * @retval TRUE   If the message shall be sent after the given time.
-     * @retval FALSE  Otherwise.
-     *
-     */
-    bool IsLater(TimeMilli aTime) { return aTime < mSendTime; }
-
 private:
     Ip6::Address mDestination; ///< IPv6 address of the message destination.
     TimeMilli    mSendTime;    ///< Time when the message shall be sent.

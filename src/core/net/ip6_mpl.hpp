@@ -312,26 +312,6 @@ public:
     }
 
     /**
-     * This method checks if the message shall be sent before the given time.
-     *
-     * @param[in]  aTime  A time to compare.
-     *
-     * @retval TRUE   If the message shall be sent before the given time.
-     * @retval FALSE  Otherwise.
-     */
-    bool IsEarlier(TimeMilli aTime) const { return aTime > mTransmissionTime; }
-
-    /**
-     * This method checks if the message shall be sent after the given time.
-     *
-     * @param[in]  aTime  A time to compare.
-     *
-     * @retval TRUE   If the message shall be sent after the given time.
-     * @retval FALSE  Otherwise.
-     */
-    bool IsLater(TimeMilli aTime) const { return aTime < mTransmissionTime; }
-
-    /**
      * This method returns the MPL Seed Id value.
      *
      * @returns The MPL Seed Id value.
