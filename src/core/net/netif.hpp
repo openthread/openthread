@@ -59,26 +59,6 @@ class Ip6;
  */
 
 /**
- * This class represents an IPv6 Link Address.
- *
- */
-class LinkAddress
-{
-public:
-    /**
-     * Hardware types.
-     *
-     */
-    enum HardwareType
-    {
-        kEui64 = 27,
-    };
-    HardwareType    mType;       ///< Link address type.
-    uint8_t         mLength;     ///< Length of link address.
-    Mac::ExtAddress mExtAddress; ///< Link address.
-};
-
-/**
  * This class implements an IPv6 network interface unicast address.
  *
  */
