@@ -110,7 +110,7 @@ otError otBorderRouterGetNextOnMeshPrefix(otInstance *           aInstance,
 
     assert(aIterator != NULL && aConfig != NULL);
 
-    return instance.Get<NetworkData::Local>().GetNextOnMeshPrefix(aIterator, aConfig);
+    return instance.Get<NetworkData::Local>().GetNextOnMeshPrefix(*aIterator, *aConfig);
 }
 
 otError otBorderRouterAddRoute(otInstance *aInstance, const otExternalRouteConfig *aConfig)
@@ -140,7 +140,7 @@ otError otBorderRouterGetNextRoute(otInstance *           aInstance,
 
     assert(aIterator != NULL && aConfig != NULL);
 
-    return instance.Get<NetworkData::Local>().GetNextExternalRoute(aIterator, aConfig);
+    return instance.Get<NetworkData::Local>().GetNextExternalRoute(*aIterator, *aConfig);
 }
 
 otError otBorderRouterRegister(otInstance *aInstance)

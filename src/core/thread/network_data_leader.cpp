@@ -170,10 +170,10 @@ otError LeaderBase::GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16)
 
     if ((GetContext(aContextId, lowpanContext)) == OT_ERROR_NONE)
     {
-        otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
-        otBorderRouterConfig  config;
+        Iterator           iterator = kIteratorInit;
+        OnMeshPrefixConfig config;
 
-        while (GetNextOnMeshPrefix(&iterator, &config) == OT_ERROR_NONE)
+        while (GetNextOnMeshPrefix(iterator, config) == OT_ERROR_NONE)
         {
             if (otIp6PrefixMatch(&(config.mPrefix.mPrefix), reinterpret_cast<const otIp6Address *>(
                                                                 lowpanContext.mPrefix)) >= config.mPrefix.mLength)

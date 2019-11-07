@@ -1589,7 +1589,7 @@ void Mle::UpdateServiceAlocs(void)
     uint16_t              serviceAloc        = 0;
     uint8_t               serviceId          = 0;
     int                   i                  = 0;
-    otNetworkDataIterator serviceIterator    = OT_NETWORK_DATA_ITERATOR_INIT;
+    NetworkData::Iterator serviceIterator    = NetworkData::kIteratorInit;
     int                   serviceAlocsLength = OT_ARRAY_LENGTH(mServiceAlocs);
 
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED);
@@ -1608,7 +1608,7 @@ void Mle::UpdateServiceAlocs(void)
     }
 
     // Now add any missing service alocs which should be there, if there is enough space in mServiceAlocs
-    while (Get<NetworkData::Leader>().GetNextServiceId(&serviceIterator, rloc, &serviceId) == OT_ERROR_NONE)
+    while (Get<NetworkData::Leader>().GetNextServiceId(serviceIterator, rloc, serviceId) == OT_ERROR_NONE)
     {
         for (i = 0; i < serviceAlocsLength; i++)
         {
