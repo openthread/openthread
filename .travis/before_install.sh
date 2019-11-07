@@ -61,6 +61,27 @@ cd /tmp || die
         ) || die
     }
 
+    [ $BUILD_TARGET != gn-build ] || {
+        # Install ninja
+        (
+        cd $HOME
+        wget -O ninja.zip https://chrome-infra-packages.appspot.com/dl/infra/ninja/linux-amd64/+/latest
+        unzip -o ninja.zip
+        chmod a+x ninja && mkdir -p bin && mv -f ninja bin/ && export PATH=${HOME}/bin:$PATH
+        ninja --version
+        ) || die
+
+
+        # Get latest gn
+        (
+        cd $HOME
+        wget -O gn.zip https://chrome-infra-packages.appspot.com/dl/gn/gn/linux-amd64/+/latest
+        unzip -o gn.zip
+        chmod a+x gn && mv -f gn bin/
+        gn --version
+        ) || die
+    }
+
     [ $BUILD_TARGET != posix-app-pty ] || {
         sudo apt-get install socat expect || die
         JOBS=$(getconf _NPROCESSORS_ONLN)

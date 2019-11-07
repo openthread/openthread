@@ -102,6 +102,10 @@ python --version || die
     (cd .. && ${TRAVIS_BUILD_DIR}/.travis/check-android-build) || die
 }
 
+[ $BUILD_TARGET != gn-build ] || {
+    (cd ${TRAVIS_BUILD_DIR} && .travis/check-gn-build) || die
+}
+
 build_cc1352() {
     git checkout -- . || die
     git clean -xfd || die

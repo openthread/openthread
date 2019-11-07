@@ -66,6 +66,9 @@ jobs:
       dist: trusty
       python: "2.7" # The old Android build system only supports python2
       script: .travis/script.sh
+    - env: BUILD_TARGET="gn-build" VERBOSE=1
+      os: linux
+      script: .travis/script.sh
     - env: BUILD_TARGET="posix-distcheck" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: clang
