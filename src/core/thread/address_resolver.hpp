@@ -103,6 +103,14 @@ public:
     void Remove(uint8_t aRouterId);
 
     /**
+     * This method removes the cache entry for the EID.
+     *
+     * @param[in]  aEid               A reference to the EID.
+     *
+     */
+    void Remove(const Ip6::Address &aEid);
+
+    /**
      * This method updates an existing cache entry for the EID.
      *
      * @param[in]  aEid               A reference to the EID.
@@ -197,6 +205,7 @@ private:
         kReasonRemovingRloc16,
         kReasonReceivedIcmpDstUnreachNoRoute,
         kReasonEvictingForNewEntry,
+        kReasonRemovingEid,
     };
 
     static const char *ConvertInvalidationReasonToString(InvalidationReason aReason);

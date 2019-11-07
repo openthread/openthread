@@ -115,6 +115,20 @@ void AddressResolver::Remove(uint16_t aRloc16)
     }
 }
 
+void AddressResolver::Remove(const Ip6::Address &aEid)
+{
+    for (int i = 0; i < kCacheEntries; i++)
+    {
+        if (mCache[i].mState == Cache::kStateInvalid || mCache[i].mTarget != aEid)
+        {
+            continue;
+        }
+
+        InvalidateCacheEntry(mCache[i], kReasonRemovingEid);
+        break;
+    }
+}
+
 AddressResolver::Cache *AddressResolver::NewCacheEntry(void)
 {
     Cache *rval = NULL;
@@ -173,6 +187,10 @@ const char *AddressResolver::ConvertInvalidationReasonToString(InvalidationReaso
 
     case kReasonEvictingForNewEntry:
         str = "evicting for new entry";
+        break;
+
+    case kReasonRemovingEid:
+        str = "removing eid";
         break;
     }
 
