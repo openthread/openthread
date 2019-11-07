@@ -43,6 +43,7 @@
 #include "mac/mac.hpp"
 #include "mac/mac_types.hpp"
 #include "net/dhcp6.hpp"
+#include "net/netif.hpp"
 #include "net/udp6.hpp"
 
 namespace ot {
@@ -87,11 +88,11 @@ enum IaStatus
  */
 struct IdentityAssociation
 {
-    otNetifAddress mNetifAddress;      ///< the NetifAddress
-    uint32_t       mPreferredLifetime; ///< The preferred lifetime.
-    uint32_t       mValidLifetime;     ///< The valid lifetime.
-    uint16_t       mPrefixAgentRloc;   ///< Rloc of Prefix Agent
-    uint8_t        mStatus;            ///< Status of IdentityAssociation
+    Ip6::NetifUnicastAddress mNetifAddress;      ///< the NetifAddress
+    uint32_t                 mPreferredLifetime; ///< The preferred lifetime.
+    uint32_t                 mValidLifetime;     ///< The valid lifetime.
+    uint16_t                 mPrefixAgentRloc;   ///< Rloc of Prefix Agent
+    uint8_t                  mStatus;            ///< Status of IdentityAssociation
 };
 
 /**
@@ -120,7 +121,7 @@ private:
     void Start(void);
     void Stop(void);
 
-    static bool MatchNetifAddressWithPrefix(const otNetifAddress &aNetifAddress, const otIp6Prefix &aIp6Prefix);
+    static bool MatchNetifAddressWithPrefix(const Ip6::NetifUnicastAddress &aAddress, const otIp6Prefix &aIp6Prefix);
 
     otError Solicit(uint16_t aRloc16);
 

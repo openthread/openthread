@@ -61,10 +61,11 @@ Dhcp6Client::Dhcp6Client(Instance &aInstance)
     memset(mIdentityAssociations, 0, sizeof(mIdentityAssociations));
 }
 
-bool Dhcp6Client::MatchNetifAddressWithPrefix(const otNetifAddress &aNetifAddress, const otIp6Prefix &aIp6Prefix)
+bool Dhcp6Client::MatchNetifAddressWithPrefix(const Ip6::NetifUnicastAddress &aNetifAddress,
+                                              const otIp6Prefix &             aIp6Prefix)
 {
-    return aIp6Prefix.mLength == aNetifAddress.mPrefixLength &&
-           otIp6PrefixMatch(&aNetifAddress.mAddress, &aIp6Prefix.mPrefix) >= aIp6Prefix.mLength;
+    return (aIp6Prefix.mLength == aNetifAddress.mPrefixLength) &&
+           (aNetifAddress.GetAddress().PrefixMatch(aIp6Prefix.mPrefix) >= aIp6Prefix.mLength);
 }
 
 void Dhcp6Client::UpdateAddresses(void)
@@ -103,7 +104,7 @@ void Dhcp6Client::UpdateAddresses(void)
 
         if (!found)
         {
-            Get<ThreadNetif>().RemoveUnicastAddress(*static_cast<Ip6::NetifUnicastAddress *>(&ia.mNetifAddress));
+            Get<ThreadNetif>().RemoveUnicastAddress(ia.mNetifAddress);
             mIdentityAssociations[i].mStatus = kIaStatusInvalid;
         }
     }
@@ -584,7 +585,7 @@ otError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
             continue;
         }
 
-        if (otIp6PrefixMatch(&ia.mNetifAddress.mAddress, &option.GetAddress()) >= ia.mNetifAddress.mPrefixLength)
+        if (ia.mNetifAddress.GetAddress().PrefixMatch(option.GetAddress()) >= ia.mNetifAddress.mPrefixLength)
         {
             mIdentityAssociations[i].mNetifAddress.mAddress   = option.GetAddress();
             mIdentityAssociations[i].mPreferredLifetime       = option.GetPreferredLifetime();
@@ -592,7 +593,7 @@ otError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
             mIdentityAssociations[i].mNetifAddress.mPreferred = option.GetPreferredLifetime() != 0;
             mIdentityAssociations[i].mNetifAddress.mValid     = option.GetValidLifetime() != 0;
             mIdentityAssociations[i].mStatus                  = kIaStatusSolicitReplied;
-            Get<ThreadNetif>().AddUnicastAddress(*static_cast<Ip6::NetifUnicastAddress *>(&ia.mNetifAddress));
+            Get<ThreadNetif>().AddUnicastAddress(ia.mNetifAddress);
             break;
         }
     }
