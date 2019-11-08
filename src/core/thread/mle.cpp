@@ -114,8 +114,8 @@ Mle::Mle(Instance &aInstance)
 {
     otMeshLocalPrefix meshLocalPrefix;
 
-    memset(&mLeaderData, 0, sizeof(mLeaderData));
-    memset(&mParentLeaderData, 0, sizeof(mParentLeaderData));
+    mLeaderData.Clear();
+    mParentLeaderData.Clear();
     mParent.Clear();
     memset(&mChildIdRequest, 0, sizeof(mChildIdRequest));
     mParentCandidate.Clear();
