@@ -84,7 +84,7 @@ KeyManager::KeyManager(Instance &aInstance)
     , mIsPskcSet(false)
 {
     mMasterKey = static_cast<const MasterKey &>(kDefaultMasterKey);
-    memset(&mPskc, 0, sizeof(mPskc));
+    mPskc.Clear();
     ComputeKey(mKeySequence, mKey);
 }
 
