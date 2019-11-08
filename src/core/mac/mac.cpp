@@ -122,7 +122,7 @@ Mac::Mac(Instance &aInstance)
 
     mCcaSuccessRateTracker.Reset();
     memset(&mCounters, 0, sizeof(otMacCounters));
-    memset(&mExtendedPanId, 0, sizeof(ExtendedPanId));
+    mExtendedPanId.Clear();
 
     mSubMac.Enable();
 
