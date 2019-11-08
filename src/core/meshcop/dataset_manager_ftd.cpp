@@ -210,10 +210,10 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
                 uint8_t value[Dataset::kMaxValueSize];
             } OT_TOOL_PACKED_END data;
 
-            aMessage.Read(offset, sizeof(Tlv), &data.tlv);
+            VerifyOrExit(aMessage.Read(offset, sizeof(Tlv), &data.tlv) == sizeof(Tlv));
             VerifyOrExit(data.tlv.GetLength() <= sizeof(data.value));
 
-            aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value);
+            VerifyOrExit(aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value) == data.tlv.GetLength());
 
             switch (data.tlv.GetType())
             {
