@@ -98,6 +98,12 @@ class Pskc : public otPskc
 {
 public:
     /**
+     * This method clears the PSKc (sets all bytes to zero).
+     *
+     */
+    void Clear(void) { memset(this, 0, sizeof(*this)); }
+
+    /**
      * This method evaluates whether or not the Thread PSKc values match.
      *
      * @param[in]  aOther  The Thread PSKc to compare.
