@@ -118,16 +118,11 @@ Mle::Mle(Instance &aInstance)
     memset(&mParentLeaderData, 0, sizeof(mParentLeaderData));
     mParent.Clear();
     memset(&mChildIdRequest, 0, sizeof(mChildIdRequest));
-    memset(&mLinkLocal64, 0, sizeof(mLinkLocal64));
-    memset(&mMeshLocal64, 0, sizeof(mMeshLocal64));
-    memset(&mMeshLocal16, 0, sizeof(mMeshLocal16));
-    memset(&mLinkLocalAllThreadNodes, 0, sizeof(mLinkLocalAllThreadNodes));
-    memset(&mRealmLocalAllThreadNodes, 0, sizeof(mRealmLocalAllThreadNodes));
-    memset(&mLeaderAloc, 0, sizeof(mLeaderAloc));
     mParentCandidate.Clear();
     ResetCounters();
 
     // link-local 64
+    mLinkLocal64.Clear();
     mLinkLocal64.GetAddress().mFields.m16[0] = HostSwap16(0xfe80);
     mLinkLocal64.GetAddress().SetIid(Get<Mac::Mac>().GetExtAddress());
     mLinkLocal64.mPrefixLength = 64;
@@ -135,6 +130,7 @@ Mle::Mle(Instance &aInstance)
     mLinkLocal64.mValid        = true;
 
     // Leader Aloc
+    mLeaderAloc.Clear();
     mLeaderAloc.mPrefixLength       = 64;
     mLeaderAloc.mPreferred          = true;
     mLeaderAloc.mValid              = true;
@@ -146,8 +142,7 @@ Mle::Mle(Instance &aInstance)
     // Service Alocs
     for (size_t i = 0; i < OT_ARRAY_LENGTH(mServiceAlocs); i++)
     {
-        memset(&mServiceAlocs[i], 0, sizeof(mServiceAlocs[i]));
-
+        mServiceAlocs[i].Clear();
         mServiceAlocs[i].mPrefixLength               = 64;
         mServiceAlocs[i].mPreferred                  = true;
         mServiceAlocs[i].mValid                      = true;
@@ -165,6 +160,7 @@ Mle::Mle(Instance &aInstance)
     meshLocalPrefix.m8[7] = 0x00;
 
     // mesh-local 64
+    mMeshLocal64.Clear();
     Random::NonCrypto::FillBuffer(mMeshLocal64.GetAddress().mFields.m8 + OT_IP6_PREFIX_SIZE,
                                   OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE);
 
@@ -175,6 +171,7 @@ Mle::Mle(Instance &aInstance)
     mMeshLocal64.mScopeOverrideValid = true;
 
     // mesh-local 16
+    mMeshLocal16.Clear();
     mMeshLocal16.GetAddress().mFields.m16[4] = HostSwap16(0x0000);
     mMeshLocal16.GetAddress().mFields.m16[5] = HostSwap16(0x00ff);
     mMeshLocal16.GetAddress().mFields.m16[6] = HostSwap16(0xfe00);
@@ -189,11 +186,13 @@ Mle::Mle(Instance &aInstance)
     Get<Ip6::Mpl>().SetMatchingAddress(mMeshLocal16.GetAddress());
 
     // link-local all thread nodes
+    mLinkLocalAllThreadNodes.Clear();
     mLinkLocalAllThreadNodes.GetAddress().mFields.m16[0] = HostSwap16(0xff32);
     mLinkLocalAllThreadNodes.GetAddress().mFields.m16[6] = HostSwap16(0x0000);
     mLinkLocalAllThreadNodes.GetAddress().mFields.m16[7] = HostSwap16(0x0001);
 
     // realm-local all thread nodes
+    mRealmLocalAllThreadNodes.Clear();
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[0] = HostSwap16(0xff33);
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[6] = HostSwap16(0x0000);
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[7] = HostSwap16(0x0001);

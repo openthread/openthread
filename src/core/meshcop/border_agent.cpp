@@ -355,6 +355,7 @@ BorderAgent::BorderAgent(Instance &aInstance)
     , mTimer(aInstance, HandleTimeout, this)
     , mState(OT_BORDER_AGENT_STATE_STOPPED)
 {
+    mCommissionerAloc.Clear();
     mCommissionerAloc.mPrefixLength       = 64;
     mCommissionerAloc.mPreferred          = true;
     mCommissionerAloc.mValid              = true;

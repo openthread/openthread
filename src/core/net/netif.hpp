@@ -68,6 +68,12 @@ class NetifUnicastAddress : public otNetifAddress
 
 public:
     /**
+     * This method clears the object (setting all fields to zero).
+     *
+     */
+    void Clear(void) { memset(this, 0, sizeof(*this)); }
+
+    /**
      * This method returns the unicast address.
      *
      * @returns The unicast address.
@@ -120,6 +126,12 @@ class NetifMulticastAddress : public otNetifMulticastAddress
     friend class Netif;
 
 public:
+    /**
+     * This method clears the object (setting all fields to zero).
+     *
+     */
+    void Clear(void) { memset(this, 0, sizeof(*this)); }
+
     /**
      * This method returns the multicast address.
      *

@@ -76,6 +76,7 @@ Commissioner::Commissioner(Instance &aInstance)
 {
     memset(mJoiners, 0, sizeof(mJoiners));
 
+    mCommissionerAloc.Clear();
     mCommissionerAloc.mPrefixLength       = 64;
     mCommissionerAloc.mPreferred          = true;
     mCommissionerAloc.mValid              = true;
