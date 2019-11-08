@@ -75,8 +75,8 @@ otError UdpSocket::Open(otUdpReceive aHandler, void *aContext)
 {
     otError error = OT_ERROR_NONE;
 
-    memset(&mSockName, 0, sizeof(mSockName));
-    memset(&mPeerName, 0, sizeof(mPeerName));
+    GetSockName().Clear();
+    GetPeerName().Clear();
     mHandler = aHandler;
     mContext = aContext;
 
@@ -142,8 +142,8 @@ otError UdpSocket::Close(void)
 #endif
 
     Get<Udp>().RemoveSocket(*this);
-    memset(&mSockName, 0, sizeof(mSockName));
-    memset(&mPeerName, 0, sizeof(mPeerName));
+    GetSockName().Clear();
+    GetPeerName().Clear();
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 exit:
