@@ -2604,8 +2604,8 @@ void MleRouter::SetSteeringData(const Mac::ExtAddress *aExtAddress)
     Mac::ExtAddress nullExtAddr;
     Mac::ExtAddress allowAnyExtAddr;
 
-    memset(nullExtAddr.m8, 0, sizeof(nullExtAddr.m8));
-    memset(allowAnyExtAddr.m8, 0xFF, sizeof(allowAnyExtAddr.m8));
+    nullExtAddr.Clear();
+    allowAnyExtAddr.Fill(0xff);
 
     mSteeringData.Init();
 
