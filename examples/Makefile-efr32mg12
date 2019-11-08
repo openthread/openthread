@@ -119,6 +119,21 @@ COMMONCFLAGS                       := \
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
+#
+# Platform-Specific switches
+#
+
+DMP                            ?= 0
+RADIODEBUG                     ?= 0
+
+ifeq ($(DMP),1)
+COMMONCFLAGS                   += -DRADIO_CONFIG_DMP_SUPPORT=1
+endif
+
+ifeq ($(RADIODEBUG),1)
+COMMONCFLAGS                   += -DRADIO_CONFIG_DEBUG_COUNTERS_SUPPORT=1
+endif
+
 CPPFLAGS                       += \
     $(COMMONCFLAGS)               \
     $(target_CPPFLAGS)            \

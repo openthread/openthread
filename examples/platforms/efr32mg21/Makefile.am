@@ -43,15 +43,8 @@ EFR32_BOARD_DIR                               = $(shell echo $(BOARD) | tr A-Z a
 EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.6
 
 libopenthread_efr32mg21_a_CPPFLAGS                                            = \
-    -DPLATFORM_HEADER=\"@top_builddir@/third_party/silabs/gecko_sdk_suite/v2.6/platform/base/hal/micro/cortexm3/compiler/gcc.h\" \
     -DEFR32_SERIES2_CONFIG1_MICRO                                               \
     -DNVIC_CONFIG=\"platform/base/hal/micro/cortexm3/efm32/nvic-config.h\"      \
-    -Wno-sign-compare                                                           \
-    -DCORTEXM3                                                                  \
-    -DPHY=EMBER_PHY_RAIL                                                        \
-    -DMICRO=EMBER_MICRO_CORTEXM3_EFR32                                          \
-    -DCORTEXM3_EFM32_MICRO                                                      \
-    -DPLAT=EMBER_PLATFORM_CORTEXM3                                              \
     -I$(top_srcdir)/include                                                     \
     -I$(top_srcdir)/examples/platforms                                          \
     -I$(top_srcdir)/examples/platforms/efr32mg21/$(EFR32_BOARD_DIR)             \
@@ -67,11 +60,8 @@ libopenthread_efr32mg21_a_CPPFLAGS                                            = 
     -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/plugin/pa-conversions       \
     -I$(EFR32MG_SDK_SRCDIR)/hardware/kit/common/bsp                             \
     -I$(EFR32MG_SDK_SRCDIR)/hardware/kit/EFR32MG21_$(BOARD)/config              \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/base/                                      \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/base/hal                                   \
     -I$(EFR32MG_SDK_SRCDIR)/platform/base/hal/micro/cortexm3/efm32              \
     -I$(EFR32MG_SDK_SRCDIR)/platform/base/hal/micro/cortexm3/efm32/config       \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/base/hal/plugin                            \
     -I$(EFR32MG_SDK_SRCDIR)/platform/CMSIS/Include                              \
     -I$(EFR32MG_SDK_SRCDIR)/platform/Device/SiliconLabs/EFR32MG21/Include       \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/common/inc                           \
@@ -98,6 +88,7 @@ PLATFORM_SOURCES                                                              = 
     logging.c                                                                   \
     misc.c                                                                      \
     openthread-core-efr32-config.h                                              \
+    openthread-core-efr32-config-check.h                                        \
     platform-efr32.h                                                            \
     platform-band.h                                                             \
     radio.c                                                                     \

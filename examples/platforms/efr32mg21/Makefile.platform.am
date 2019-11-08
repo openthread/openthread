@@ -30,12 +30,19 @@
 # efr32mg21 platform-specific Makefile
 #
 
-LDADD_COMMON                                                          += \
+LIBRAIL = $(shell                                                                \
+if [ "$(DMP)" = "1" ]; then                                                      \
+    echo "librail_multiprotocol_efr32xg21_gcc_release.a";                        \
+else                                                                             \
+    echo "librail_efr32xg21_gcc_release.a";                                      \
+fi )
+
+LDADD_COMMON                                                                  += \
     $(top_builddir)/examples/platforms/efr32mg21/libopenthread-efr32mg21.a       \
     $(top_builddir)/third_party/silabs/libsilabs-efr32mg21-sdk.a                 \
-    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.6/platform/radio/rail_lib/autogen/librail_release/librail_efr32xg21_gcc_release.a \
+    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.6/platform/radio/rail_lib/autogen/librail_release/$(LIBRAIL) \
     $(NULL)
-
+    
 LDFLAGS_COMMON                                                        += \
     -T $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.6/platform/Device/SiliconLabs/EFR32MG21/Source/GCC/efr32mg21.ld \
     $(NULL)
