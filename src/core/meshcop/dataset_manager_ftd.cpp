@@ -75,7 +75,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
     bool            isUpdateFromCommissioner = false;
     bool            doesAffectConnectivity   = false;
     bool            doesAffectMasterKey      = false;
-    StateTlv::State state                    = StateTlv::kAccept;
+    StateTlv::State state                    = StateTlv::kReject;
     Dataset         dataset(mLocal.GetType());
 
     ActiveTimestampTlv       activeTimestamp;
@@ -95,43 +95,43 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
     pendingTimestamp.SetLength(0);
     sessionId.SetLength(0);
 
-    VerifyOrExit(Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER, state = StateTlv::kReject);
+    VerifyOrExit(Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER);
 
     // verify that TLV data size is less than maximum TLV value size
     while (offset < aMessage.GetLength())
     {
         aMessage.Read(offset, sizeof(tlv), &tlv);
-        VerifyOrExit(tlv.GetLength() <= Dataset::kMaxValueSize, state = StateTlv::kReject);
+        VerifyOrExit(tlv.GetLength() <= Dataset::kMaxValueSize);
         offset += sizeof(tlv) + tlv.GetLength();
     }
 
     // verify that does not overflow dataset buffer
-    VerifyOrExit((offset - aMessage.GetOffset()) <= Dataset::kMaxSize, state = StateTlv::kReject);
+    VerifyOrExit((offset - aMessage.GetOffset()) <= Dataset::kMaxSize);
 
     type = (strcmp(mUriSet, OT_URI_PATH_ACTIVE_SET) == 0 ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp);
 
     if (Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp) != OT_ERROR_NONE)
     {
-        ExitNow(state = StateTlv::kReject);
+        ExitNow();
     }
 
-    VerifyOrExit(activeTimestamp.IsValid(), state = StateTlv::kReject);
+    VerifyOrExit(activeTimestamp.IsValid());
 
     if (Tlv::GetTlv(aMessage, Tlv::kPendingTimestamp, sizeof(pendingTimestamp), pendingTimestamp) == OT_ERROR_NONE)
     {
-        VerifyOrExit(pendingTimestamp.IsValid(), state = StateTlv::kReject);
+        VerifyOrExit(pendingTimestamp.IsValid());
     }
 
     // verify the request includes a timestamp that is ahead of the locally stored value
     timestamp = (type == Tlv::kActiveTimestamp) ? static_cast<Timestamp *>(&activeTimestamp)
                                                 : static_cast<Timestamp *>(&pendingTimestamp);
 
-    VerifyOrExit(mLocal.Compare(timestamp) > 0, state = StateTlv::kReject);
+    VerifyOrExit(mLocal.Compare(timestamp) > 0);
 
     // check channel
     if (Tlv::GetTlv(aMessage, Tlv::kChannel, sizeof(channel), channel) == OT_ERROR_NONE)
     {
-        VerifyOrExit(channel.IsValid(), state = StateTlv::kReject);
+        VerifyOrExit(channel.IsValid());
 
         if (channel.GetChannel() != Get<Mac::Mac>().GetPanChannel())
         {
@@ -170,8 +170,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
         // no change to master key, active timestamp must be ahead
         const Timestamp *localActiveTimestamp = Get<ActiveDataset>().GetTimestamp();
 
-        VerifyOrExit(localActiveTimestamp == NULL || localActiveTimestamp->Compare(activeTimestamp) > 0,
-                     state = StateTlv::kReject);
+        VerifyOrExit(localActiveTimestamp == NULL || localActiveTimestamp->Compare(activeTimestamp) > 0);
     }
 
     // check commissioner session id
@@ -185,13 +184,11 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
             Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kCommissionerSessionId));
 
         VerifyOrExit(sessionId.IsValid() && localId != NULL &&
-                         localId->GetCommissionerSessionId() == sessionId.GetCommissionerSessionId(),
-                     state = StateTlv::kReject);
+                     localId->GetCommissionerSessionId() == sessionId.GetCommissionerSessionId());
     }
 
     // verify an MGMT_ACTIVE_SET.req from a Commissioner does not affect connectivity
-    VerifyOrExit(!isUpdateFromCommissioner || type == Tlv::kPendingTimestamp || !doesAffectConnectivity,
-                 state = StateTlv::kReject);
+    VerifyOrExit(!isUpdateFromCommissioner || type == Tlv::kPendingTimestamp || !doesAffectConnectivity);
 
     if (isUpdateFromCommissioner)
     {
@@ -214,7 +211,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
             } OT_TOOL_PACKED_END data;
 
             aMessage.Read(offset, sizeof(Tlv), &data.tlv);
-            VerifyOrExit(data.tlv.GetLength() <= sizeof(data.value), state = StateTlv::kReject);
+            VerifyOrExit(data.tlv.GetLength() <= sizeof(data.value));
 
             aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value);
 
@@ -241,14 +238,14 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
                 // fall through
 
             default:
-                VerifyOrExit(dataset.Set(data.tlv) == OT_ERROR_NONE, state = StateTlv::kReject);
+                SuccessOrExit(dataset.Set(data.tlv));
                 break;
             }
 
             offset += sizeof(Tlv) + data.tlv.GetLength();
         }
 
-        VerifyOrExit(Save(dataset) == OT_ERROR_NONE, state = StateTlv::kReject);
+        SuccessOrExit(Save(dataset));
         Get<NetworkData::Leader>().IncrementVersion();
         Get<NetworkData::Leader>().IncrementStableVersion();
     }
@@ -256,6 +253,8 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
     {
         Get<PendingDataset>().ApplyActiveDataset(activeTimestamp, aMessage);
     }
+
+    state = StateTlv::kAccept;
 
     // notify commissioner if update is from thread device
     if (!isUpdateFromCommissioner)
@@ -280,7 +279,7 @@ exit:
         SendSetResponse(aMessage, aMessageInfo, state);
     }
 
-    return state == StateTlv::kAccept ? OT_ERROR_NONE : OT_ERROR_DROP;
+    return (state == StateTlv::kAccept) ? OT_ERROR_NONE : OT_ERROR_DROP;
 }
 
 void DatasetManager::SendSetResponse(const Coap::Message &   aRequest,
