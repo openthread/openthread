@@ -202,7 +202,13 @@ public:
      * This constructor initializes the object.
      *
      */
-    SockAddr(void) { memset(this, 0, sizeof(*this)); }
+    SockAddr(void) { Clear(); }
+
+    /**
+     * This method clears the object (sets all fields to zero).
+     *
+     */
+    void Clear(void) { memset(this, 0, sizeof(*this)); }
 
     /**
      * This method returns a reference to the IPv6 address.
