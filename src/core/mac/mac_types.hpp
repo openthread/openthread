@@ -462,6 +462,12 @@ public:
     typedef String<kInfoStringSize> InfoString;
 
     /**
+     * This method clears the Extended PAN Identifier (sets all bytes to zero).
+     *
+     */
+    void Clear(void) { memset(this, 0, sizeof(*this)); }
+
+    /**
      * This method evaluates whether or not the Extended PAN Identifiers match.
      *
      * @param[in]  aOther  The Extended PAN Id to compare.
