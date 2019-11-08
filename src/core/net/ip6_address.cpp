@@ -268,7 +268,7 @@ otError Address::FromString(const char *aBuf)
     char        ch;
     uint8_t     d;
 
-    memset(mFields.m8, 0, 16);
+    Clear();
 
     dst--;
 

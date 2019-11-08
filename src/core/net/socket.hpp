@@ -67,6 +67,14 @@ public:
      * @returns A reference to the local socket address.
      *
      */
+    Address &GetSockAddr(void) { return *static_cast<Address *>(&mSockAddr); }
+
+    /**
+     * This method returns a reference to the local socket address.
+     *
+     * @returns A reference to the local socket address.
+     *
+     */
     const Address &GetSockAddr(void) const { return *static_cast<const Address *>(&mSockAddr); }
 
     /**
