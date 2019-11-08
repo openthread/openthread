@@ -44,7 +44,6 @@
 #include "common/locator-getters.hpp"
 #include "radio/radio.hpp"
 #include "utils/parse_cmdline.hpp"
-#include "utils/wrap_string.h"
 
 namespace ot {
 namespace FactoryDiags {
@@ -138,7 +137,7 @@ Diags::Diags(Instance &aInstance)
     , mTxLen(0)
     , mRepeatActive(false)
 {
-    memset(&mStats, 0, sizeof(mStats));
+    mStats.Clear();
 
     otPlatDiagChannelSet(mChannel);
     otPlatDiagTxPowerSet(mTxPower);
@@ -272,7 +271,7 @@ void Diags::ProcessStart(int aArgCount, char *aArgVector[], char *aOutput, size_
     SuccessOrExit(error = Get<Radio>().Receive(mChannel));
     SuccessOrExit(error = Get<Radio>().SetTransmitPower(mTxPower));
     otPlatDiagModeSet(true);
-    memset(&mStats, 0, sizeof(mStats));
+    mStats.Clear();
     snprintf(aOutput, aOutputMaxLen, "start diagnostics mode\r\nstatus 0x%02x\r\n", error);
 
 exit:
@@ -287,7 +286,7 @@ void Diags::ProcessStats(int aArgCount, char *aArgVector[], char *aOutput, size_
 
     if ((aArgCount == 1) && (strcmp(aArgVector[0], "clear") == 0))
     {
-        memset(&mStats, 0, sizeof(mStats));
+        mStats.Clear();
         snprintf(aOutput, aOutputMaxLen, "stats cleared\r\n");
     }
     else
