@@ -538,6 +538,15 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         SuccessOrExit(error = message->AppendTlv(pskc));
     }
 
+    if (aDataset.mComponents.mIsSecurityPolicyPresent)
+    {
+        SecurityPolicyTlv securityPolicy;
+        securityPolicy.Init();
+        securityPolicy.SetRotationTime(aDataset.mSecurityPolicy.mRotationTime);
+        securityPolicy.SetFlags(aDataset.mSecurityPolicy.mFlags);
+        SuccessOrExit(error = message->AppendTlv(securityPolicy));
+    }
+
     if (aLength > 0)
     {
         SuccessOrExit(error = message->Append(aTlvs, aLength));
