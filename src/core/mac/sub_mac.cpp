@@ -61,7 +61,7 @@ SubMac::SubMac(Instance &aInstance)
     , mPcapCallbackContext(NULL)
     , mTimer(aInstance, &SubMac::HandleTimer, this)
 {
-    memset(mExtAddress.m8, 0, sizeof(mExtAddress));
+    mExtAddress.Clear();
 }
 
 otRadioCaps SubMac::GetCaps(void) const
