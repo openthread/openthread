@@ -567,7 +567,7 @@ public:
      * This method resets mac counters
      *
      */
-    void ResetCounters(void);
+    void ResetCounters(void) { memset(&mCounters, 0, sizeof(mCounters)); }
 
     /**
      * This method returns the MAC counter.
