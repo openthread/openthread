@@ -121,7 +121,7 @@ Mac::Mac(Instance &aInstance)
     randomExtAddress.GenerateRandom();
 
     mCcaSuccessRateTracker.Reset();
-    memset(&mCounters, 0, sizeof(otMacCounters));
+    ResetCounters();
     mExtendedPanId.Clear();
 
     mSubMac.Enable();
@@ -1837,11 +1837,6 @@ void Mac::SetPromiscuous(bool aPromiscuous)
 
     mSubMac.SetRxOnWhenBackoff(mRxOnWhenIdle || mPromiscuous);
     UpdateIdleMode();
-}
-
-void Mac::ResetCounters(void)
-{
-    memset(&mCounters, 0, sizeof(mCounters));
 }
 
 int8_t Mac::GetNoiseFloor(void)
