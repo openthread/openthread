@@ -3571,7 +3571,7 @@ otError MleRouter::StoreChild(const Child &aChild)
 
     IgnoreReturnValue(RemoveStoredChild(aChild.GetRloc16()));
 
-    memset(&childInfo, 0, sizeof(childInfo));
+    childInfo.Clear();
     childInfo.mExtAddress = aChild.GetExtAddress();
     childInfo.mTimeout    = aChild.GetTimeout();
     childInfo.mRloc16     = aChild.GetRloc16();
