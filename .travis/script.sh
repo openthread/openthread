@@ -389,6 +389,21 @@ build_samr21() {
     build_samr21
 }
 
+[ $BUILD_TARGET != arm-gcc-9 ] || {
+    export PATH=/tmp/gcc-arm-none-eabi-9-2019-q4-major/bin:$PATH || die
+
+    build_cc1352
+    build_cc2538
+    build_cc2650
+    build_cc2652
+    build_kw41z
+    build_nrf52811
+    build_nrf52833
+    build_nrf52840
+    build_qpg6095
+    build_samr21
+}
+
 [ $BUILD_TARGET != posix ] || {
     git checkout -- . || die
     git clean -xfd || die
