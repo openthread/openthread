@@ -44,5 +44,5 @@ LDADD_COMMON                                                                  +=
     $(NULL)
 
 LDFLAGS_COMMON                                                                += \
-    -T $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.6/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/efr32mg12p.ld \
+    -T $(top_srcdir)/examples/platforms/efr32mg12/efr32mg12.ld                   \
     $(NULL)

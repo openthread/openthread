@@ -87,6 +87,156 @@ pseudo_reset:
 
     otSysInit(argc, argv);
 
+
+//------------------------------------------------------------------------------
+#define RUN_OT_NVM3_UNIT_TEST 1
+#if RUN_OT_NVM3_UNIT_TEST
+
+//OT NVM3 Unit Tests (Tests OT Settings Objects)
+
+{
+    #include <openthread/platform/settings.h>
+    #include <assert.h>
+    #include <string.h>
+
+    uint8_t     data[60];
+    for (uint8_t i = 0; i < sizeof(data); ++i)
+    {
+        data[i] = i;
+    }
+
+    otPlatSettingsInit(instance);
+
+    // verify empty situation
+    otPlatSettingsWipe(instance);
+    {
+        uint8_t  value[sizeof(data)];
+        uint16_t length = sizeof(value);
+
+        assert(otPlatSettingsGet(instance, 0, 0, value, &length) == OT_ERROR_NOT_FOUND);
+        assert(otPlatSettingsDelete(instance, 0, 0) == OT_ERROR_NOT_FOUND);
+        assert(otPlatSettingsDelete(instance, 0, -1) == OT_ERROR_NOT_FOUND);
+    }
+
+    // verify write one record
+    assert(otPlatSettingsSet(instance, 0, data, sizeof(data) / 2) == OT_ERROR_NONE);
+    {
+        uint8_t  value[sizeof(data)];
+        uint16_t length = sizeof(value);
+
+        assert(otPlatSettingsGet(instance, 0, 0, NULL, NULL) == OT_ERROR_NONE);
+        assert(otPlatSettingsGet(instance, 0, 0, NULL, &length) == OT_ERROR_NONE);
+        assert(length == sizeof(data) / 2);
+
+        length = sizeof(value);
+        assert(otPlatSettingsGet(instance, 0, 0, value, &length) == OT_ERROR_NONE);
+        assert(length == sizeof(data) / 2);
+        assert(0 == memcmp(value, data, length));
+
+        // insufficient buffer
+        length -= 1;
+        value[length] = 0;
+        assert(otPlatSettingsGet(instance, 0, 0, value, &length) == OT_ERROR_NONE);
+        // verify length becomes the actual length of the record
+        assert(length == sizeof(data) / 2);
+        // verify this byte is not changed.
+        assert(value[length - 1] == 0);   // i.e. checks value[29] == 0.
+
+        // wrong index
+        assert(otPlatSettingsGet(instance, 0, 1, NULL, NULL) == OT_ERROR_NOT_FOUND);
+        // wrong key
+        assert(otPlatSettingsGet(instance, 1, 0, NULL, NULL) == OT_ERROR_NOT_FOUND);
+    }
+    otPlatSettingsWipe(instance);
+
+    // verify write two records
+    assert(otPlatSettingsSet(instance, 0, data, sizeof(data)) == OT_ERROR_NONE);
+    assert(otPlatSettingsAdd(instance, 0, data, sizeof(data) / 2) == OT_ERROR_NONE);
+    {
+        uint8_t  value[sizeof(data)];
+        uint16_t length = sizeof(value);
+
+        assert(otPlatSettingsGet(instance, 0, 1, value, &length) == OT_ERROR_NONE);
+        assert(length == sizeof(data) / 2);
+        assert(0 == memcmp(value, data, length));
+
+        length = sizeof(value);
+        assert(otPlatSettingsGet(instance, 0, 0, value, &length) == OT_ERROR_NONE);
+        assert(length == sizeof(data));
+        assert(0 == memcmp(value, data, length));
+    }
+    otPlatSettingsWipe(instance);
+
+    // verify write two records of different keys
+    assert(otPlatSettingsSet(instance, 0, data, sizeof(data)) == OT_ERROR_NONE);
+    assert(otPlatSettingsAdd(instance, 1, data, sizeof(data) / 2) == OT_ERROR_NONE);
+    {
+        uint8_t  value[sizeof(data)];
+        uint16_t length = sizeof(value);
+
+        assert(otPlatSettingsGet(instance, 1, 0, value, &length) == OT_ERROR_NONE);
+        assert(length == sizeof(data) / 2);
+        assert(0 == memcmp(value, data, length));
+
+        length = sizeof(value);
+        assert(otPlatSettingsGet(instance, 0, 0, value, &length) == OT_ERROR_NONE);
+        assert(length == sizeof(data));
+        assert(0 == memcmp(value, data, length));
+    }
+    otPlatSettingsWipe(instance);
+
+    // verify delete record
+    assert(otPlatSettingsAdd(instance, 0, data, sizeof(data)) == OT_ERROR_NONE);
+    assert(otPlatSettingsAdd(instance, 0, data, sizeof(data) / 2) == OT_ERROR_NONE);
+    assert(otPlatSettingsAdd(instance, 0, data, sizeof(data) / 3) == OT_ERROR_NONE);
+    {
+        uint8_t  value[sizeof(data)];
+        uint16_t length = sizeof(value);
+
+        // wrong key
+        assert(otPlatSettingsDelete(instance, 1, 0) == OT_ERROR_NOT_FOUND);
+        assert(otPlatSettingsDelete(instance, 1, -1) == OT_ERROR_NOT_FOUND);
+
+        // wrong index
+        assert(otPlatSettingsDelete(instance, 0, 3) == OT_ERROR_NOT_FOUND);
+
+        // delete one record
+        assert(otPlatSettingsDelete(instance, 0, 1) == OT_ERROR_NONE);
+        assert(otPlatSettingsGet(instance, 0, 1, value, &length) == OT_ERROR_NONE);
+        assert(length == sizeof(data) / 3);
+        assert(0 == memcmp(value, data, length));
+
+        // delete all records
+        assert(otPlatSettingsDelete(instance, 0, -1) == OT_ERROR_NONE);
+        assert(otPlatSettingsGet(instance, 0, 0, NULL, NULL) == OT_ERROR_NOT_FOUND);
+    }
+    otPlatSettingsWipe(instance);
+
+    // verify delete all records of a type
+    assert(otPlatSettingsAdd(instance, 0, data, sizeof(data)) == OT_ERROR_NONE);
+    assert(otPlatSettingsAdd(instance, 1, data, sizeof(data) / 2) == OT_ERROR_NONE);
+    assert(otPlatSettingsAdd(instance, 0, data, sizeof(data) / 3) == OT_ERROR_NONE);
+    {
+        uint8_t  value[sizeof(data)];
+        uint16_t length = sizeof(value);
+
+        assert(otPlatSettingsDelete(instance, 0, -1) == OT_ERROR_NONE);
+        assert(otPlatSettingsGet(instance, 0, 0, value, &length) == OT_ERROR_NOT_FOUND);
+        assert(otPlatSettingsGet(instance, 1, 0, value, &length) == OT_ERROR_NONE);
+        assert(length == sizeof(data) / 2);
+        assert(0 == memcmp(value, data, length));
+
+        assert(otPlatSettingsDelete(instance, 0, 0) == OT_ERROR_NOT_FOUND);
+        assert(otPlatSettingsGet(instance, 0, 0, NULL, NULL) == OT_ERROR_NOT_FOUND);
+    }
+    otPlatSettingsWipe(instance);
+    otPlatSettingsDeinit(instance);
+}
+#endif // RUN_OT_NVM3_UNIT_TEST
+
+//------------------------------------------------------------------------------
+
+
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     // Call to query the buffer size
     (void)otInstanceInit(NULL, &otInstanceBufferLength);

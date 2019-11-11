@@ -44,6 +44,11 @@
 #include "utils/code_utils.h"
 #include "utils/wrap_string.h"
 
+
+#if !OPENTHREAD_SETTINGS_RAM
+
+#if !OPENTHREAD_USE_THIRD_PARTY_NVM_MANAGER
+
 #include "flash.h"
 
 #define OT_FLASH_BLOCK_ADD_BEGIN_FLAG (1 << 0)
@@ -100,8 +105,6 @@ struct settingsBlock
 #if (SETTINGS_CONFIG_PAGE_NUM <= 1)
 #error "Invalid value for `SETTINGS_CONFIG_PAGE_NUM` (should be >= 2)"
 #endif
-
-#if !OPENTHREAD_SETTINGS_RAM
 
 static uint32_t sSettingsBaseAddress;
 static uint32_t sSettingsUsedSize;
@@ -255,6 +258,7 @@ exit:
 }
 
 // settings API
+
 void otPlatSettingsInit(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -432,5 +436,7 @@ void otPlatSettingsWipe(otInstance *aInstance)
     initSettings(sSettingsBaseAddress, (uint32_t)OT_SETTINGS_IN_USE);
     otPlatSettingsInit(aInstance);
 }
+
+#endif /* OPENTHREAD_USE_THIRD_PARTY_NVM_MANAGER */
 
 #endif /* OPENTHREAD_SETTINGS_RAM */

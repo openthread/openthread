@@ -81,6 +81,8 @@ libopenthread_efr32mg12_a_CPPFLAGS                                            = 
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/dmadrv/inc                           \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/dmadrv/config                        \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/rtcdrv/inc                           \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/nvm3/inc                             \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/nvm3/config                          \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emlib/inc                                  \
     -I$(EFR32MG_SDK_SRCDIR)/platform/halconfig/inc/hal-config                   \
     -I$(EFR32MG_SDK_SRCDIR)/util/plugin/plugin-common/fem-control               \
@@ -105,6 +107,14 @@ PLATFORM_SOURCES                                                              = 
     startup-gcc.c                                                               \
     system.c                                                                    \
     uart.c                                                                      \
+    $(EFR32_SDK_ROOT)/platform/emdrv/nvm3/src/nvm3.c                            \
+    $(EFR32_SDK_ROOT)/platform/emdrv/nvm3/src/nvm3_lock.c                       \
+    $(EFR32_SDK_ROOT)/platform/emdrv/nvm3/src/nvm3_default.c                    \
+    $(EFR32_SDK_ROOT)/platform/emdrv/nvm3/src/nvm3_hal_flash.c                  \
+    $(EFR32_SDK_ROOT)/platform/emdrv/nvm3/src/nvm3_page.c                       \
+    $(EFR32_SDK_ROOT)/platform/emdrv/nvm3/src/nvm3_object.c                     \
+    $(EFR32_SDK_ROOT)/platform/emdrv/nvm3/src/nvm3_cache.c                      \
+    $(EFR32_SDK_ROOT)/platform/emdrv/nvm3/src/nvm3_utils.c                      \
     $(NULL)
 
 noinst_HEADERS                                                                = \
