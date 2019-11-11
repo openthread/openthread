@@ -115,6 +115,13 @@ cd /tmp || die
         arm-none-eabi-gcc --version || die
     }
 
+    [ $BUILD_TARGET != arm-gcc-9 ] || {
+        wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2019q4/RC2.1/gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2 || die
+        tar xjf gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2 || die
+        export PATH=/tmp/gcc-arm-none-eabi-9-2019-q4-major/bin:$PATH || die
+        arm-none-eabi-gcc --version || die
+    }
+
     [ $BUILD_TARGET != posix-32-bit -a $BUILD_TARGET != posix-mtd ] || {
         sudo apt-get install g++-multilib || die
     }
