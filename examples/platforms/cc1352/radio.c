@@ -33,6 +33,7 @@
  */
 
 #include <openthread/config.h>
+#include "openthread-core-config.h"
 
 #include <assert.h>
 #include <utils/code_utils.h>

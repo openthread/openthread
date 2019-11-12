@@ -26,6 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "openthread-core-config.h"
+
 #include <driverlib/aon_rtc.h>
 #include <stdbool.h>
 #include <stdint.h>
