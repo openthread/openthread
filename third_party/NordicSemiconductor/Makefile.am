@@ -55,6 +55,10 @@ endif
 override CFLAGS   := $(filter-out -pedantic-errors,$(CFLAGS))
 override CXXFLAGS := $(filter-out -pedantic-errors,$(CXXFLAGS))
 
+# Do not enable -Wundef for Nordic Semiconductor driver library
+override CFLAGS   := $(filter-out -Wundef,$(CFLAGS))
+override CXXFLAGS := $(filter-out -Wundef,$(CXXFLAGS))
+
 COMMONCPPFLAGS                                                                                                          = \
     -DCONFIG_GPIO_AS_PINRESET                                                                                             \
     -DENABLE_FEM=1                                                                                                        \
