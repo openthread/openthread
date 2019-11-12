@@ -147,22 +147,6 @@ public:
          */
         void HandleEnergyScanDone(int8_t aMaxRssi);
 
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-        /**
-         * This callback method handles a "Frame Updated" event from radio platform.
-         *
-         * This is called to notify OpenThread to process transmit security for the frame, this happens when the frame
-         * includes Header IE(s) that were updated before transmission. It is called from `otPlatRadioFrameUpdated()`.
-         *
-         * @note This method can be called from interrupt context and it would only read/write data passed in
-         *       via @p aFrame, but would not read/write any state within OpenThread.
-         *
-         * @param[in]  aFrame      The frame which needs to process transmit security.
-         *
-         */
-        void HandleFrameUpdated(Mac::TxFrame &aFrame);
-#endif
-
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
         /**
          * This callback method handles a "Receive Done" event from radio platform when diagnostics mode is enabled.

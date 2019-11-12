@@ -58,13 +58,6 @@ void Radio::Callbacks::HandleEnergyScanDone(int8_t aMaxRssi)
     Get<Mac::SubMac>().HandleEnergyScanDone(aMaxRssi);
 }
 
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-void Radio::Callbacks::HandleFrameUpdated(Mac::TxFrame &aFrame)
-{
-    Get<Mac::SubMac>().HandleFrameUpdated(aFrame);
-}
-#endif
-
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 void Radio::Callbacks::HandleDiagsReceiveDone(Mac::RxFrame *aFrame, otError aError)
 {

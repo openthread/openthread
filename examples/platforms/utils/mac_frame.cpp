@@ -115,3 +115,8 @@ uint8_t otMacFrameGetSequence(const otRadioFrame *aFrame)
 {
     return static_cast<const Mac::Frame *>(aFrame)->GetSequence();
 }
+
+void otMacFrameProcessTransmitAesCcm(otRadioFrame *aFrame, const otExtAddress *aExtAddress)
+{
+    static_cast<Mac::TxFrame *>(aFrame)->ProcessTransmitAesCcm(*static_cast<const Mac::ExtAddress *>(aExtAddress));
+}
