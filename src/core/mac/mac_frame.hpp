@@ -1098,7 +1098,7 @@ public:
     /**
      * This method performs AES CCM on the frame which is going to be sent.
      *
-     * @param[in]  aExtAddress  A pointer to the extended address, which will be used to generate nonce
+     * @param[in]  aExtAddress  A reference to the extended address, which will be used to generate nonce
      *                          for AES CCM computation.
      *
      */
