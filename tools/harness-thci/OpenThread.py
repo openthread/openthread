@@ -69,6 +69,8 @@ class OpenThread(IThci):
     # officially released.
     firmwarePrefix = 'OPENTHREAD/'
 
+    _update_router_status = False
+
     # def __init__(self, SerialPort=COMPortName, EUI=MAC_Address):
     def __init__(self, **kwargs):
         """initialize the serial port and default network parameters
@@ -1086,6 +1088,11 @@ class OpenThread(IThci):
             self.__startOpenThread()
             time.sleep(3)
 
+            if self._update_router_status and eRoleId == Thread_Device_Role.Router:
+                self.__updateRouterStatus()
+
+            time.sleep(5)  # increase delay temporally (+5s) to remedy TH's delay updates
+
             return True
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('joinNetwork() Error: ' + str(e))
@@ -1186,7 +1193,7 @@ class OpenThread(IThci):
             self._sendline(cmd)
             self._expect(cmd)
             # wait echo reply
-            time.sleep(1)
+            time.sleep(6)  # increase delay temporally (+5s) to remedy TH's delay updates
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('ping() Error: ' + str(e))
 
@@ -2817,6 +2824,9 @@ class OpenThread(IThci):
 
     def updateRouterStatus(self):
         """force update to router as if there is child id request"""
+        self._update_router_status = True
+
+    def __updateRouterStatus(self):
         print('%s call updateRouterStatus' % self.port)
         cmd = 'state'
         while True:
