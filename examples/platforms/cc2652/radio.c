@@ -1556,14 +1556,15 @@ otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    otError error = OT_ERROR_NONE;
-    uint8_t idx   = rfCoreFindExtSrcMatchIdx((uint64_t *)aExtAddress);
+    otError  error      = OT_ERROR_NONE;
+    uint64_t extAddress = *(uint64_t *)aExtAddress;
+    uint8_t  idx        = rfCoreFindExtSrcMatchIdx(&extAddress);
 
     if (idx == CC2652_SRC_MATCH_NONE)
     {
         /* the entry does not exist already, add it */
         otEXPECT_ACTION((idx = rfCoreFindEmptyExtSrcMatchIdx()) != CC2652_SRC_MATCH_NONE, error = OT_ERROR_NO_BUFS);
-        sSrcMatchExtData.extAddrEnt[idx] = *((uint64_t *)aExtAddress);
+        sSrcMatchExtData.extAddrEnt[idx] = extAddress;
     }
 
     if (sReceiveCmd.status == ACTIVE || sReceiveCmd.status == IEEE_SUSPENDED)
@@ -1589,10 +1590,11 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddre
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    otError error = OT_ERROR_NONE;
-    uint8_t idx;
+    otError  error      = OT_ERROR_NONE;
+    uint64_t extAddress = *(uint64_t *)aExtAddress;
+    uint8_t  idx;
 
-    otEXPECT_ACTION((idx = rfCoreFindExtSrcMatchIdx((uint64_t *)aExtAddress)) != CC2652_SRC_MATCH_NONE,
+    otEXPECT_ACTION((idx = rfCoreFindExtSrcMatchIdx(&extAddress)) != CC2652_SRC_MATCH_NONE,
                     error = OT_ERROR_NO_ADDRESS);
 
     if (sReceiveCmd.status == ACTIVE || sReceiveCmd.status == IEEE_SUSPENDED)
