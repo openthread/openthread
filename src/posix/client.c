@@ -30,6 +30,15 @@
 
 #include <openthread/platform/toolchain.h>
 
+#define OPENTHREAD_USE_READLINE (HAVE_LIBEDIT || HAVE_LIBREADLINE)
+
+#if HAVE_LIBEDIT
+#include <editline/readline.h>
+#elif HAVE_LIBREADLINE
+#include <readline/history.h>
+#include <readline/readline.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,16 +49,33 @@
 #include "code_utils.h"
 #include "platform-posix.h"
 
+static int sSessionFd = -1;
+
+#if OPENTHREAD_USE_READLINE
+static void InputCallback(char *aLine)
+{
+    if (aLine != NULL)
+    {
+        add_history(aLine);
+        dprintf(sSessionFd, "%s\n", aLine);
+        free(aLine);
+    }
+    else
+    {
+        exit(OT_EXIT_SUCCESS);
+    }
+}
+#endif // OPENTHREAD_USE_READLINE
+
 int main(int argc, char *argv[])
 {
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
     int ret;
-    int session = -1;
 
-    session = socket(AF_UNIX, SOCK_STREAM, 0);
-    otEXPECT_ACTION(session != -1, perror("socket"); ret = OT_EXIT_FAILURE);
+    sSessionFd = socket(AF_UNIX, SOCK_STREAM, 0);
+    otEXPECT_ACTION(sSessionFd != -1, perror("socket"); ret = OT_EXIT_FAILURE);
 
     {
         struct sockaddr_un sockname;
@@ -58,27 +84,34 @@ int main(int argc, char *argv[])
         sockname.sun_family = AF_UNIX;
         strncpy(sockname.sun_path, OPENTHREAD_POSIX_APP_SOCKET_NAME, sizeof(sockname.sun_path) - 1);
 
-        ret = connect(session, (const struct sockaddr *)&sockname, sizeof(struct sockaddr_un));
+        ret = connect(sSessionFd, (const struct sockaddr *)&sockname, sizeof(struct sockaddr_un));
 
         if (ret == -1)
         {
             fprintf(stderr, "OpenThread daemon is not running.\n");
             otEXIT_NOW(ret = OT_EXIT_FAILURE);
         }
+
+#if OPENTHREAD_USE_READLINE
+        rl_instream           = stdin;
+        rl_outstream          = stdout;
+        rl_inhibit_completion = true;
+        rl_callback_handler_install("> ", InputCallback);
+        rl_already_prompted = 1;
+#endif
     }
 
     while (1)
     {
-        char   buffer[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
-        fd_set readFdSet;
-        int    maxFd = STDIN_FILENO;
+        fd_set  readFdSet;
+        char    buffer[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
+        ssize_t rval;
+        int     maxFd = sSessionFd > STDIN_FILENO ? sSessionFd : STDIN_FILENO;
 
         FD_ZERO(&readFdSet);
 
         FD_SET(STDIN_FILENO, &readFdSet);
-        FD_SET(session, &readFdSet);
-
-        maxFd = session > maxFd ? session : maxFd;
+        FD_SET(sSessionFd, &readFdSet);
 
         ret = select(maxFd + 1, &readFdSet, NULL, NULL, NULL);
 
@@ -91,35 +124,41 @@ int main(int argc, char *argv[])
 
         if (FD_ISSET(STDIN_FILENO, &readFdSet))
         {
+#if OPENTHREAD_USE_READLINE
+            rl_callback_read_char();
+#else
             otEXPECT_ACTION(fgets(buffer, sizeof(buffer), stdin) != NULL, ret = OT_EXIT_FAILURE);
 
-            ret = (int)write(session, buffer, strlen(buffer));
-            otEXPECT_ACTION(ret != -1, perror("write"); ret = OT_EXIT_FAILURE);
+            rval = write(sSessionFd, buffer, strlen(buffer));
+            otEXPECT_ACTION(rval != -1, perror("write"); ret = OT_EXIT_FAILURE);
+#endif
         }
 
-        if (FD_ISSET(session, &readFdSet))
+        if (FD_ISSET(sSessionFd, &readFdSet))
         {
-            ret = (int)read(session, buffer, sizeof(buffer));
-            otEXPECT_ACTION(ret != -1, perror("read"); ret = OT_EXIT_FAILURE);
+            // leave 1 byte for trailing '\0'
+            rval = read(sSessionFd, buffer, sizeof(buffer));
+            otEXPECT_ACTION(rval != -1, perror("read"); ret = OT_EXIT_FAILURE);
 
-            if (ret == 0)
+            if (rval == 0)
             {
-                // daemon closed session
+                // daemon closed sSessionFd
                 otEXIT_NOW(ret = OT_EXIT_FAILURE);
             }
             else
             {
-                buffer[ret] = 0;
-                printf("%s", buffer);
-                fflush(stdout);
+                write(STDOUT_FILENO, buffer, rval);
             }
         }
     }
 
 exit:
-    if (session != -1)
+    if (sSessionFd != -1)
     {
-        close(session);
+#if OPENTHREAD_USE_READLINE
+        rl_callback_handler_remove();
+#endif
+        close(sSessionFd);
     }
 
     return ret;
