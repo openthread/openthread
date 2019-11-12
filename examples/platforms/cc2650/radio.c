@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/config.h>
 #include "openthread-core-config.h"
+#include <openthread/config.h>
 
 #include "cc2650_radio.h"
 #include <assert.h>
