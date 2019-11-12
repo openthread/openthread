@@ -108,7 +108,7 @@ typedef struct otMacFilterEntry
 typedef struct otMacCounters
 {
     /**
-     * The total amount of unique MAC frame transmission requests.
+     * The total number of unique MAC frame transmission requests.
      *
      * Note that this counter is incremented for each MAC transmission request only by one,
      * regardless of the amount of CCA failures, CSMA-CA attempts, or retransmissions.
@@ -135,61 +135,61 @@ typedef struct otMacCounters
     uint32_t mTxTotal;
 
     /**
-     * The total amount of unique unicast MAC frame transmission requests.
+     * The total number of unique unicast MAC frame transmission requests.
      *
      */
     uint32_t mTxUnicast;
 
     /**
-     * The total amount of unique broadcast MAC frame transmission requests.
+     * The total number of unique broadcast MAC frame transmission requests.
      *
      */
     uint32_t mTxBroadcast;
 
     /**
-     * The total amount of unique MAC frame transmission requests with requested acknowledgment.
+     * The total number of unique MAC frame transmission requests with requested acknowledgment.
      *
      */
     uint32_t mTxAckRequested;
 
     /**
-     * The total amount of unique MAC frame transmission requests that were acked.
+     * The total number of unique MAC frame transmission requests that were acked.
      *
      */
     uint32_t mTxAcked;
 
     /**
-     * The total amount of unique MAC frame transmission requests without requested acknowledgment.
+     * The total number of unique MAC frame transmission requests without requested acknowledgment.
      *
      */
     uint32_t mTxNoAckRequested;
 
     /**
-     * The total amount of unique MAC Data frame transmission requests.
+     * The total number of unique MAC Data frame transmission requests.
      *
      */
     uint32_t mTxData;
 
     /**
-     * The total amount of unique MAC Data Poll frame transmission requests.
+     * The total number of unique MAC Data Poll frame transmission requests.
      *
      */
     uint32_t mTxDataPoll;
 
     /**
-     * The total amount of unique MAC Beacon frame transmission requests.
+     * The total number of unique MAC Beacon frame transmission requests.
      *
      */
     uint32_t mTxBeacon;
 
     /**
-     * The total amount of unique MAC Beacon Request frame transmission requests.
+     * The total number of unique MAC Beacon Request frame transmission requests.
      *
      */
     uint32_t mTxBeaconRequest;
 
     /**
-     * The total amount of unique other MAC frame transmission requests.
+     * The total number of unique other MAC frame transmission requests.
      *
      * This counter is currently unused.
      *
@@ -197,7 +197,7 @@ typedef struct otMacCounters
     uint32_t mTxOther;
 
     /**
-     * The total amount of MAC retransmission attempts.
+     * The total number of MAC retransmission attempts.
      *
      * Note that this counter is incremented by one for each retransmission attempt that may be
      * triggered by lack of acknowledgement, CSMA/CA failure, or other type of transmission error.
@@ -217,14 +217,14 @@ typedef struct otMacCounters
     uint32_t mTxRetry;
 
     /**
-     * The total amount of CCA failures.
+     * The total number of CCA failures.
      *
      * The meaning of this counter can be different and it depends on the platform's radio driver capabilities.
      *
-     * If @sa OT_RADIO_CAPS_CSMA_BACKOFF is enabled, this counter represents the total amount of full CSMA/CA
+     * If @sa OT_RADIO_CAPS_CSMA_BACKOFF is enabled, this counter represents the total number of full CSMA/CA
      * failed attempts and it is incremented by one also for each retransmission (in case of a CSMA/CA fail).
      *
-     * If @sa OT_RADIO_CAPS_TRANSMIT_RETRIES is enabled, this counter represents the total amount of full CSMA/CA
+     * If @sa OT_RADIO_CAPS_TRANSMIT_RETRIES is enabled, this counter represents the total number of full CSMA/CA
      * failed attempts and it is incremented by one for each individual data frame request (regardless of the amount of
      * retransmissions).
      *
@@ -232,19 +232,19 @@ typedef struct otMacCounters
     uint32_t mTxErrCca;
 
     /**
-     * The total amount of unique MAC transmission request failures cause by an abort error.
+     * The total number of unique MAC transmission request failures cause by an abort error.
      *
      */
     uint32_t mTxErrAbort;
 
     /**
-     * The total amount of unique MAC transmission requests failures caused by a busy channel (a CSMA/CA fail).
+     * The total number of unique MAC transmission requests failures caused by a busy channel (a CSMA/CA fail).
      *
      */
     uint32_t mTxErrBusyChannel;
 
     /**
-     * The total amount of received frames.
+     * The total number of received frames.
      *
      * This counter counts all frames reported by the platform's radio driver, including frames
      * that were dropped, for example because of an FCS error.
@@ -253,61 +253,61 @@ typedef struct otMacCounters
     uint32_t mRxTotal;
 
     /**
-     * The total amount of unicast frames received.
+     * The total number of unicast frames received.
      *
      */
     uint32_t mRxUnicast;
 
     /**
-     * The total amount of broadcast frames received.
+     * The total number of broadcast frames received.
      *
      */
     uint32_t mRxBroadcast;
 
     /**
-     * The total amount of MAC Data frames received.
+     * The total number of MAC Data frames received.
      *
      */
     uint32_t mRxData;
 
     /**
-     * The total amount of MAC Data Poll frames received.
+     * The total number of MAC Data Poll frames received.
      *
      */
     uint32_t mRxDataPoll;
 
     /**
-     * The total amount of MAC Beacon frames received.
+     * The total number of MAC Beacon frames received.
      *
      */
     uint32_t mRxBeacon;
 
     /**
-     * The total amount of MAC Beacon Request frames received.
+     * The total number of MAC Beacon Request frames received.
      *
      */
     uint32_t mRxBeaconRequest;
 
     /**
-     * The total amount of other types of frames received.
+     * The total number of other types of frames received.
      *
      */
     uint32_t mRxOther;
 
     /**
-     * The total amount of frames dropped by MAC Filter module, for example received from blacklisted node.
+     * The total number of frames dropped by MAC Filter module, for example received from blacklisted node.
      *
      */
     uint32_t mRxAddressFiltered;
 
     /**
-     * The total amount of frames dropped by destination address check, for example received frame for other node.
+     * The total number of frames dropped by destination address check, for example received frame for other node.
      *
      */
     uint32_t mRxDestAddrFiltered;
 
     /**
-     * The total amount of frames dropped due to duplication, that is when the frame has been already received.
+     * The total number of frames dropped due to duplication, that is when the frame has been already received.
      *
      * This counter may be incremented, for example when ACK frame generated by the receiver hasn't reached
      * transmitter node which performed retransmission.
@@ -316,25 +316,25 @@ typedef struct otMacCounters
     uint32_t mRxDuplicated;
 
     /**
-     * The total amount of frames dropped because of missing or malformed content.
+     * The total number of frames dropped because of missing or malformed content.
      *
      */
     uint32_t mRxErrNoFrame;
 
     /**
-     * The total amount of frames dropped due to unknown neighbor.
+     * The total number of frames dropped due to unknown neighbor.
      *
      */
     uint32_t mRxErrUnknownNeighbor;
 
     /**
-     * The total amount of frames dropped due to invalid source address.
+     * The total number of frames dropped due to invalid source address.
      *
      */
     uint32_t mRxErrInvalidSrcAddr;
 
     /**
-     * The total amount of frames dropped due to security error.
+     * The total number of frames dropped due to security error.
      *
      * This counter may be incremented, for example when lower than expected Frame Counter is used
      * to encrypt the frame.
@@ -343,13 +343,13 @@ typedef struct otMacCounters
     uint32_t mRxErrSec;
 
     /**
-     * The total amount of frames dropped due to invalid FCS.
+     * The total number of frames dropped due to invalid FCS.
      *
      */
     uint32_t mRxErrFcs;
 
     /**
-     * The total amount of frames dropped due to other error.
+     * The total number of frames dropped due to other error.
      *
      */
     uint32_t mRxErrOther;
