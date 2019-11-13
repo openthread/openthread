@@ -136,7 +136,6 @@ int main(int argc, char *argv[])
 
         if (FD_ISSET(sSessionFd, &readFdSet))
         {
-            // leave 1 byte for trailing '\0'
             rval = read(sSessionFd, buffer, sizeof(buffer));
             otEXPECT_ACTION(rval != -1, perror("read"); ret = OT_EXIT_FAILURE);
 
