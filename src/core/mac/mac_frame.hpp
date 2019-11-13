@@ -1095,6 +1095,14 @@ public:
      */
     void CopyFrom(const TxFrame &aFromFrame);
 
+    /**
+     * This method performs AES CCM on the frame which is going to be sent.
+     *
+     * @param[in]  aExtAddress  A reference to the extended address, which will be used to generate nonce
+     *                          for AES CCM computation.
+     *
+     */
+    void ProcessTransmitAesCcm(const ExtAddress &aExtAddress);
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * This method sets the Time IE offset.

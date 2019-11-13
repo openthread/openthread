@@ -37,6 +37,8 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "crypto/aes_ccm.hpp"
+#include "thread/key_manager.hpp"
 
 namespace ot {
 namespace Mac {
@@ -996,6 +998,40 @@ void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     memcpy(mInfo.mTxInfo.mIeInfo, aFromFrame.mInfo.mTxInfo.mIeInfo, sizeof(otRadioIeInfo));
 #endif
+}
+
+void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
+{
+#if OPENTHREAD_RADIO
+    OT_UNUSED_VARIABLE(aExtAddress);
+#else
+    uint32_t       frameCounter = 0;
+    uint8_t        securityLevel;
+    uint8_t        nonce[KeyManager::kNonceSize];
+    uint8_t        tagLength;
+    Crypto::AesCcm aesCcm;
+    otError        error;
+
+    VerifyOrExit(GetSecurityEnabled());
+
+    SuccessOrExit(error = GetSecurityLevel(securityLevel));
+    SuccessOrExit(error = GetFrameCounter(frameCounter));
+
+    KeyManager::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
+
+    aesCcm.SetKey(GetAesKey(), 16);
+    tagLength = GetFooterLength() - Frame::kFcsSize;
+
+    error = aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, nonce, sizeof(nonce));
+    assert(error == OT_ERROR_NONE);
+
+    aesCcm.Header(GetHeader(), GetHeaderLength());
+    aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), true);
+    aesCcm.Finalize(GetFooter(), &tagLength);
+
+exit:
+    return;
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 }
 
 // LCOV_EXCL_START

@@ -613,16 +613,6 @@ public:
      */
     bool IsEnabled(void) const { return mEnabled; }
 
-    /**
-     * This method performs AES CCM on the frame which is going to be sent.
-     *
-     * @param[in]  aFrame       A reference to the MAC frame buffer that is going to be sent.
-     * @param[in]  aExtAddress  A pointer to the extended address, which will be used to generate nonce
-     *                          for AES CCM computation.
-     *
-     */
-    static void ProcessTransmitAesCcm(TxFrame &aFrame, const ExtAddress *aExtAddress);
-
 private:
     enum
     {

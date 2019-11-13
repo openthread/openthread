@@ -545,7 +545,7 @@ void radioSendMessage(otInstance *aInstance)
 
     if (notifyFrameUpdated)
     {
-        otPlatRadioFrameUpdated(aInstance, &sTransmitFrame);
+        otMacFrameProcessTransmitAesCcm(&sTransmitFrame, &sExtAddress);
     }
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
