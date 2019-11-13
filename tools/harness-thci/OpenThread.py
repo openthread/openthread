@@ -257,6 +257,18 @@ class OpenThread(IThci):
             ModuleHelper.WriteIntoDebugLogger('sendCommand() Error: ' + str(e))
             raise
 
+    def __disableRouterRole(self):
+        """disable router role
+        """
+        print('call __disableRouterRole')
+        try:
+            cmd = 'routerrole disable'
+            self.__sendCommand(cmd)
+        except Exception as e:
+            ModuleHelper.WriteIntoDebugLogger(
+                '__disableRouterRole() Error: ' + str(e)
+            )
+
     def __setDeviceMode(self, mode):
         """set thread device mode:
 
@@ -1070,11 +1082,10 @@ class OpenThread(IThci):
                 # set ROUTER_UPGRADE_THRESHOLD
                 self.__setRouterUpgradeThreshold(0)
             elif eRoleId == Thread_Device_Role.EndDevice_FED:
-                # always remain an ED, never request to be a router
                 print('join as FED')
                 mode = 'rsdn'
-                # set ROUTER_UPGRADE_THRESHOLD
-                self.__setRouterUpgradeThreshold(0)
+                # always remain an ED, never request to be a router
+                self.__disableRouterRole()
             elif eRoleId == Thread_Device_Role.EndDevice_MED:
                 print('join as MED')
                 mode = 'rsn'
