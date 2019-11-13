@@ -2064,6 +2064,7 @@ otError MleRouter::HandleChildIdRequest(const Message &         aMessage,
     otError                 error    = OT_ERROR_NONE;
     const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
     Mac::ExtAddress         macAddr;
+    VersionTlv              version;
     ResponseTlv             response;
     LinkFrameCounterTlv     linkFrameCounter;
     MleFrameCounterTlv      mleFrameCounter;
@@ -2089,6 +2090,10 @@ otError MleRouter::HandleChildIdRequest(const Message &         aMessage,
 
     child = mChildTable.FindChild(macAddr, ChildTable::kInStateAnyExceptInvalid);
     VerifyOrExit(child != NULL, error = OT_ERROR_ALREADY);
+
+    // Version
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kVersion, sizeof(version), version));
+    VerifyOrExit(version.IsValid(), error = OT_ERROR_PARSE);
 
     // Response
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kResponse, sizeof(response), response));
@@ -2171,6 +2176,7 @@ otError MleRouter::HandleChildIdRequest(const Message &         aMessage,
     child->SetMleFrameCounter(mleFrameCounter.GetFrameCounter());
     child->SetKeySequence(aKeySequence);
     child->SetDeviceMode(mode.GetMode());
+    child->SetVersion(static_cast<uint8_t>(version.GetVersion()));
     child->GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
     child->SetTimeout(timeout.GetTimeout());
 
@@ -2379,6 +2385,7 @@ otError MleRouter::HandleChildUpdateResponse(const Message &         aMessage,
 {
     otError                 error    = OT_ERROR_NONE;
     const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
+    VersionTlv              version;
     SourceAddressTlv        sourceAddress;
     TimeoutTlv              timeout;
     ResponseTlv             response;
@@ -2410,6 +2417,13 @@ otError MleRouter::HandleChildUpdateResponse(const Message &         aMessage,
     }
 
     LogMleMessage("Receive Child Update Response from child", aMessageInfo.GetPeerAddr(), child->GetRloc16());
+
+    // Version
+    if (Tlv::GetTlv(aMessage, Tlv::kVersion, sizeof(version), version) == OT_ERROR_NONE)
+    {
+        VerifyOrExit(version.IsValid(), error = OT_ERROR_PARSE);
+        child->SetVersion(static_cast<uint8_t>(version.GetVersion()));
+    }
 
     // Source Address
     if (Tlv::GetTlv(aMessage, Tlv::kSourceAddress, sizeof(sourceAddress), sourceAddress) == OT_ERROR_NONE)
@@ -2988,6 +3002,10 @@ void MleRouter::SendChildUpdateResponse(Child *                 aChild,
     {
         switch (aTlvs[i])
         {
+        case Tlv::kVersion:
+            SuccessOrExit(error = AppendVersion(*message));
+            break;
+
         case Tlv::kStatus:
             SuccessOrExit(error = AppendStatus(*message, StatusTlv::kError));
             break;

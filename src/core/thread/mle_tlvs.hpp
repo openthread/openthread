@@ -1625,13 +1625,16 @@ public:
     }
 
     /**
-     * This method indicates whether or not the TLV appears to be well-formed.
+     * This method indicates whether or not the TLV appears to be well-formed and valid version.
      *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
+     * @retval TRUE   If the TLV appears to be well-formed and valid version.
+     * @retval FALSE  If the TLV does not appear to be well-formed or invalid version.
      *
      */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const
+    {
+        return (GetLength() >= sizeof(*this) - sizeof(Tlv)) && mVersion >= OPENTHREAD_THREAD_VERSION_1_1;
+    }
 
     /**
      * This method returns the Version value.

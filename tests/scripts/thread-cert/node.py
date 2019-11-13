@@ -350,6 +350,10 @@ class Node:
         self._expect('Done')
         return addr64
 
+    def set_addr64(self, addr64):
+        self.send_command('extaddr %s' % addr64)
+        self._expect('Done')
+
     def get_eui64(self):
         self.send_command('eui64')
         i = self._expect('([0-9a-fA-F]{16})')
@@ -457,6 +461,18 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
+    def get_pollperiod(self):
+        self.send_command('pollperiod')
+        i = self._expect(r'(\d+)\r?\n')
+        if i == 0:
+            pollperiod = self.pexpect.match.groups()[0]
+        self._expect('Done')
+        return pollperiod
+
+    def set_pollperiod(self, pollperiod):
+        self.send_command('pollperiod %d' % pollperiod)
+        self._expect('Done')
+
     def set_router_upgrade_threshold(self, threshold):
         cmd = 'routerupgradethreshold %d' % threshold
         self.send_command(cmd)
@@ -532,6 +548,11 @@ class Node:
                 break
 
         return addrs
+
+    def get_addr_link_local(self):
+        for addr in self.get_addrs():
+            if addr.startswith('fe80'):
+                return addr
 
     def get_addr(self, prefix):
         network = ipaddress.ip_network(u'%s' % str(prefix))

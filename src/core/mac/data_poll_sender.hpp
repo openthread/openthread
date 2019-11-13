@@ -232,6 +232,12 @@ public:
     uint32_t GetKeepAlivePollPeriod(void) const;
 
     /**
+     * This method resets the timer for sending keep-alive message.
+     *
+     */
+    void ResetKeepAliveTimer(void);
+
+    /**
      * This method returns the default maximum poll period.
      *
      * The default poll period is determined based on the child timeout interval, ensuing the child would send data poll

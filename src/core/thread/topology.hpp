@@ -316,6 +316,28 @@ public:
     void SetRloc16(uint16_t aRloc16) { mRloc16 = aRloc16; }
 
     /**
+     * This method indicates whether Enhanced Keep-Alive is supported or not.
+     *
+     * @returns TRUE if Enhanced Keep-Alive is supported, FALSE otherwise.
+     *
+     */
+    bool IsEnhancedKeepAliveSupported(void) const { return mVersion >= OPENTHREAD_THREAD_VERSION_1_2; }
+
+    /**
+     * This method gets the device MLE version.
+     *
+     */
+    uint8_t GetVersion(void) const { return mVersion; }
+
+    /**
+     * This method sets the device MLE version.
+     *
+     * @param[in]  aVersion  The device MLE version.
+     *
+     */
+    void SetVersion(uint8_t aVersion) { mVersion = aVersion; }
+
+    /**
      * This method gets the number of consecutive link failures.
      *
      * @returns The number of consecutive link failures.
@@ -409,6 +431,7 @@ private:
 #else
     uint8_t mLinkFailures; ///< Consecutive link failure count
 #endif
+    uint8_t         mVersion;  ///< The MLE version
     LinkQualityInfo mLinkInfo; ///< Link quality info (contains average RSS, link margin and link quality)
 };
 

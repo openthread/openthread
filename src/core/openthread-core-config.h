@@ -36,13 +36,18 @@
 
 #include <openthread/config.h>
 
+#define OPENTHREAD_THREAD_VERSION_1_1 2
+#define OPENTHREAD_THREAD_VERSION_1_2 3
+
 #define OPENTHREAD_CORE_CONFIG_H_IN
 
 #ifdef OPENTHREAD_PROJECT_CORE_CONFIG_FILE
 #include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
 #endif
 
-#define OPENTHREAD_THREAD_VERSION (2)
+#ifndef OPENTHREAD_THREAD_VERSION
+#define OPENTHREAD_THREAD_VERSION OPENTHREAD_THREAD_VERSION_1_1
+#endif
 
 #include "config/openthread-core-default-config.h"
 

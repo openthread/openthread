@@ -2294,9 +2294,14 @@ otError Mle::SendChildUpdateRequest(void)
     switch (mRole)
     {
     case OT_DEVICE_ROLE_DETACHED:
+    {
+        const uint8_t tlvs[] = {Tlv::kVersion};
+
         Random::Crypto::FillBuffer(mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge));
         SuccessOrExit(error = AppendChallenge(*message, mParentRequest.mChallenge, sizeof(mParentRequest.mChallenge)));
+        SuccessOrExit(error = AppendTlvRequest(*message, tlvs, sizeof(tlvs)));
         break;
+    }
 
     case OT_DEVICE_ROLE_CHILD:
         SuccessOrExit(error = AppendSourceAddress(*message));
@@ -2354,6 +2359,10 @@ otError Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, con
     {
         switch (aTlvs[i])
         {
+        case Tlv::kVersion:
+            SuccessOrExit(error = AppendVersion(*message));
+            break;
+
         case Tlv::kTimeout:
             SuccessOrExit(error = AppendTimeout(*message, mTimeout));
             break;
@@ -3135,6 +3144,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     otError                 error    = OT_ERROR_NONE;
     const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
     ResponseTlv             response;
+    VersionTlv              version;
     SourceAddressTlv        sourceAddress;
     LeaderDataTlv           leaderData;
     LinkMarginTlv           linkMarginTlv;
@@ -3154,6 +3164,10 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     VerifyOrExit(sourceAddress.IsValid(), error = OT_ERROR_PARSE);
 
     LogMleMessage("Receive Parent Response", aMessageInfo.GetPeerAddr(), sourceAddress.GetRloc16());
+
+    // Version
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kVersion, sizeof(version), version));
+    VerifyOrExit(version.IsValid(), error = OT_ERROR_PARSE);
 
     // Response
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kResponse, sizeof(response), response));
@@ -3305,6 +3319,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     mParentCandidate.SetRloc16(sourceAddress.GetRloc16());
     mParentCandidate.SetLinkFrameCounter(linkFrameCounter.GetFrameCounter());
     mParentCandidate.SetMleFrameCounter(mleFrameCounter.GetFrameCounter());
+    mParentCandidate.SetVersion(static_cast<uint8_t>(version.GetVersion()));
     mParentCandidate.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                               DeviceMode::kModeFullNetworkData | DeviceMode::kModeSecureDataRequest));
     mParentCandidate.GetLinkInfo().Clear();
@@ -3547,6 +3562,7 @@ otError Mle::HandleChildUpdateResponse(const Message &         aMessage,
     StatusTlv           status;
     ModeTlv             mode;
     ResponseTlv         response;
+    VersionTlv          version;
     LinkFrameCounterTlv linkFrameCounter;
     MleFrameCounterTlv  mleFrameCounter;
     SourceAddressTlv    sourceAddress;
@@ -3588,6 +3604,11 @@ otError Mle::HandleChildUpdateResponse(const Message &         aMessage,
     switch (mRole)
     {
     case OT_DEVICE_ROLE_DETACHED:
+        // Version
+        SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kVersion, sizeof(version), version));
+        VerifyOrExit(version.IsValid(), error = OT_ERROR_PARSE);
+        mParent.SetVersion(static_cast<uint8_t>(version.GetVersion()));
+
         SuccessOrExit(error =
                           Tlv::GetTlv(aMessage, Tlv::kLinkFrameCounter, sizeof(linkFrameCounter), linkFrameCounter));
         VerifyOrExit(linkFrameCounter.IsValid(), error = OT_ERROR_PARSE);
