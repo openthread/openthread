@@ -43,6 +43,16 @@
 
 #define RAIL_TX_FIFO_SIZE (OT_RADIO_FRAME_MAX_SIZE + 1)
 
+#define RADIO_SCHEDULER_BACKGROUND_RX_PRIORITY 255
+#define RADIO_SCHEDULER_CHANNEL_SCAN_PRIORITY 255
+#define RADIO_SCHEDULER_CHANNEL_SLIP_TIME 500000UL
+#define RADIO_SCHEDULER_TX_PRIORITY 100
+#define RADIO_SCHEDULER_TX_SLIP_TIME 500000UL
+
+#define RADIO_TIMING_CSMA_OVERHEAD_US 500
+#define RADIO_TIMING_DEFAULT_BYTETIME_US 32   // only used if RAIL_GetBitRate returns 0
+#define RADIO_TIMING_DEFAULT_SYMBOLTIME_US 16 // only used if RAIL_GetSymbolRate returns 0
+
 typedef struct efr32RadioCounters
 {
     uint64_t mRailPlatTxTriggered;
@@ -61,18 +71,17 @@ typedef struct efr32RadioCounters
     uint64_t mRailEventNoAck;
     uint64_t mRailEventTxAbort;
     uint64_t mRailEventSchedulerStatusError;
+    uint64_t mRailEventsSchedulerStatusTransmitBusy;
+    uint32_t mRailEventsSchedulerStatusLastStatus;
 } efr32RadioCounters;
-
-typedef struct efr32CommonConfig
-{
-    RAIL_Config_t mRailConfig;
-    uint8_t
-        mRailTxFifo[RAIL_TX_FIFO_SIZE]; // must be 2 power between 64 and 4096, and bigger than OT_RADIO_FRAME_MAX_SIZE
-} efr32CommonConfig;
 
 typedef struct efr32BandConfig
 {
+    RAIL_Handle_t               mRailHandle;
+    RAIL_Config_t               mRailConfig;
+    RAILSched_Config_t          mRailSchedState;
     const RAIL_ChannelConfig_t *mChannelConfig;
+    uint8_t                     mRailTxFifo[OT_RADIO_FRAME_MAX_SIZE + 1];
     uint8_t                     mChannelMin;
     uint8_t                     mChannelMax;
 } efr32BandConfig;
