@@ -2878,7 +2878,10 @@ otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo
     }
 
     if (mRetrieveNewNetworkData ||
-        (static_cast<int8_t>(leaderData.GetDataVersion() - Get<NetworkData::Leader>().GetVersion()) > 0))
+        (IsFullNetworkData() &&
+         (static_cast<int8_t>(leaderData.GetDataVersion() - Get<NetworkData::Leader>().GetVersion()) > 0)) ||
+        (!IsFullNetworkData() &&
+         (static_cast<int8_t>(leaderData.GetStableDataVersion() - Get<NetworkData::Leader>().GetStableVersion()) > 0)))
     {
         delay = Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
         SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay);
