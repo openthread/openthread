@@ -1713,6 +1713,7 @@ private:
     uint32_t Reattach(void);
 
     bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, uint8_t aLinkMargin, ConnectivityTlv &aConnectivityTlv);
+    bool IsNetworkDataNewer(const LeaderDataTlv &aLeaderData);
     void ResetParentCandidate(void);
 
     otError GetAlocAddress(Ip6::Address &aAddress, uint16_t aAloc16) const;
