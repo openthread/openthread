@@ -80,6 +80,17 @@ typedef struct otMacAddress
 bool otMacFrameIsAck(const otRadioFrame *aFrame);
 
 /**
+ * Check if @p aFrame is a Data frame.
+ *
+ * @param[in]   aFrame          A pointer to the frame.
+ *
+ * @retval  true    It is an Data frame.
+ * @retval  false   It is not an Data frame.
+ *
+ */
+bool otMacFrameIsData(const otRadioFrame *aFrame);
+
+/**
  * Check if @p aFrame is an Data Request Command.
  *
  * @param[in]   aFrame          A pointer to the frame.

@@ -401,7 +401,7 @@ private:
     void      HandleReceivedFrame(Mac::RxFrame &aFrame);
     otError   HandleFrameRequest(Mac::TxFrame &aFrame);
     Neighbor *UpdateNeighborOnSentFrame(Mac::TxFrame &aFrame, otError aError, const Mac::Address &aMacDest);
-    void      HandleSentFrame(Mac::TxFrame &aFrame, otError aError);
+    void      HandleSentFrame(Mac::TxFrame &aFrame, Mac::RxFrame *aAckFrame, otError aError);
 
     static void HandleDiscoverTimer(Timer &aTimer);
     void        HandleDiscoverTimer(void);
