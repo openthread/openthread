@@ -519,13 +519,9 @@ void Joiner::HandleJoinerEntrust(void *aContext, otMessage *aMessage, const otMe
 
 void Joiner::HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    otError               error;
-    NetworkMasterKeyTlv   masterKey;
-    MeshLocalPrefixTlv    meshLocalPrefix;
-    ExtendedPanIdTlv      extendedPanId;
-    NetworkNameTlv        networkName;
-    ActiveTimestampTlv    activeTimestamp;
-    NetworkKeySequenceTlv networkKeySeq;
+    otError              error;
+    NetworkMasterKeyTlv  masterKey;
+    otOperationalDataset dataset;
 
     VerifyOrExit(mState == OT_JOINER_STATE_ENTRUST && aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE &&
                      aMessage.GetCode() == OT_COAP_CODE_POST,
@@ -537,26 +533,18 @@ void Joiner::HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkMasterKey, sizeof(masterKey), masterKey));
     VerifyOrExit(masterKey.IsValid(), error = OT_ERROR_PARSE);
 
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kMeshLocalPrefix, sizeof(meshLocalPrefix), meshLocalPrefix));
-    VerifyOrExit(meshLocalPrefix.IsValid(), error = OT_ERROR_PARSE);
+    memset(&dataset, 0, sizeof(dataset));
 
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kExtendedPanId, sizeof(extendedPanId), extendedPanId));
-    VerifyOrExit(extendedPanId.IsValid(), error = OT_ERROR_PARSE);
+    dataset.mMasterKey                      = masterKey.GetNetworkMasterKey();
+    dataset.mComponents.mIsMasterKeyPresent = true;
 
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkName, sizeof(networkName), networkName));
+    dataset.mChannel                      = Get<Mac::Mac>().GetPanChannel();
+    dataset.mComponents.mIsChannelPresent = true;
 
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp));
-    VerifyOrExit(activeTimestamp.IsValid(), error = OT_ERROR_PARSE);
+    dataset.mPanId                      = Get<Mac::Mac>().GetPanId();
+    dataset.mComponents.mIsPanIdPresent = true;
 
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkKeySequence, sizeof(networkKeySeq), networkKeySeq));
-    VerifyOrExit(networkKeySeq.IsValid(), error = OT_ERROR_PARSE);
-
-    Get<KeyManager>().SetMasterKey(masterKey.GetNetworkMasterKey());
-    Get<KeyManager>().SetCurrentKeySequence(networkKeySeq.GetNetworkKeySequence());
-    Get<Mle::MleRouter>().SetMeshLocalPrefix(meshLocalPrefix.GetMeshLocalPrefix());
-    Get<Mac::Mac>().SetExtendedPanId(extendedPanId.GetExtendedPanId());
-
-    Get<Mac::Mac>().SetNetworkName(networkName.GetNetworkName());
+    Get<MeshCoP::ActiveDataset>().Save(dataset);
 
     otLogInfoMeshCoP("Joiner successful!");
 
