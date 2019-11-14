@@ -2931,7 +2931,7 @@ bool Mle::IsNetworkDataNewer(const LeaderDataTlv &aLeaderData)
         diff = static_cast<int8_t>(aLeaderData.GetStableDataVersion() - Get<NetworkData::Leader>().GetStableVersion());
     }
 
-    return (diff > 0) ? true : false;
+    return (diff > 0);
 }
 
 otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

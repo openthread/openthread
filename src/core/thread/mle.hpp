@@ -908,17 +908,6 @@ public:
     otError GetLeaderData(otLeaderData &aLeaderData);
 
     /**
-     * This method indicates whether or not there is newer available Network Data.
-     *
-     * @param[in]  aLeaderData  A reference to the leader data.
-     *
-     * @retval TRUE  If Network Data version in @p aLeaderDataa is newer.
-     * @retval FALSE If Network Data version in @p aLeaderDataa is not newer.
-     *
-     */
-    bool IsNetworkDataNewer(const LeaderDataTlv &aLeaderData);
-
-    /**
      * This method returns the Child ID portion of an RLOC16.
      *
      * @param[in]  aRloc16  The RLOC16 value.
@@ -1724,6 +1713,7 @@ private:
     uint32_t Reattach(void);
 
     bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, uint8_t aLinkMargin, ConnectivityTlv &aConnectivityTlv);
+    bool IsNetworkDataNewer(const LeaderDataTlv &aLeaderData);
     void ResetParentCandidate(void);
 
     otError GetAlocAddress(Ip6::Address &aAddress, uint16_t aAloc16) const;
