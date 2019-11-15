@@ -892,9 +892,9 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
         mServer->OutputFormat("mac\r\n");
         mServer->OutputFormat("mle\r\n");
     }
-    else if (argc == 1)
+    else if (strcmp(argv[0], "mac") == 0)
     {
-        if (strcmp(argv[0], "mac") == 0)
+        if (argc == 1)
         {
             const otMacCounters *macCounters = otLinkGetCounters(mInstance);
 
@@ -930,7 +930,18 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
             mServer->OutputFormat("    RxErrFcs: %d\r\n", macCounters->mRxErrFcs);
             mServer->OutputFormat("    RxErrOther: %d\r\n", macCounters->mRxErrOther);
         }
-        else if (strcmp(argv[0], "mle") == 0)
+        else if ((argc == 2) || (strcmp(argv[0], "reset") == 0))
+        {
+            otLinkResetCounters(mInstance);
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+    }
+    else if (strcmp(argv[0], "mle") == 0)
+    {
+        if (argc == 1)
         {
             const otMleCounters *mleCounters = otThreadGetMleCounters(mInstance);
 
@@ -944,6 +955,10 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
             mServer->OutputFormat("Better Partition Attach Attempts: %d\r\n",
                                   mleCounters->mBetterPartitionAttachAttempts);
             mServer->OutputFormat("Parent Changes: %d\r\n", mleCounters->mParentChanges);
+        }
+        else if ((argc == 2) && (strcmp(argv[0], "reset") == 0))
+        {
+            otThreadResetMleCounters(mInstance);
         }
         else
         {
