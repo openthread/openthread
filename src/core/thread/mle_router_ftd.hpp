@@ -688,7 +688,7 @@ private:
                                        const Ip6::MessageInfo &aMessageInfo,
                                        uint32_t                aKeySequence,
                                        Neighbor *              aNeighbor);
-    otError HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *);
     otError HandleParentRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleChildIdRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence);
     otError HandleChildUpdateRequest(const Message &         aMessage,
