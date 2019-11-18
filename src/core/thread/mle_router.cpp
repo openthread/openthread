@@ -600,12 +600,6 @@ otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Message
 
         rloc16 = sourceAddress.GetRloc16();
 
-        if (aNeighbor && aNeighbor->IsStateValid() && aNeighbor->GetRloc16() != rloc16)
-        {
-            // remove stale neighbors
-            RemoveNeighbor(*aNeighbor);
-        }
-
         if (IsActiveRouter(rloc16))
         {
             Mac::ExtAddress macAddr;
