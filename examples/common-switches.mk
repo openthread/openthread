@@ -44,6 +44,7 @@ DHCP6_SERVER        ?= 0
 DIAGNOSTIC          ?= 0
 DISABLE_DOC         ?= 0
 DNS_CLIENT          ?= 0
+DYNAMIC_LOG_LEVEL   ?= 0
 ECDSA               ?= 0
 EXTERNAL_HEAP       ?= 0
 IP6_FRAGM           ?= 0
@@ -129,6 +130,10 @@ endif
 
 ifeq ($(DNS_CLIENT),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1
+endif
+
+ifeq ($(DYNAMIC_LOG_LEVEL),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL=1
 endif
 
 ifeq ($(ECDSA),1)
