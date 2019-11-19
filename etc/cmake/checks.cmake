@@ -32,4 +32,4 @@ check_function_exists("strlcat" HAVE_STRLCAT)
 check_function_exists("strlcpy" HAVE_STRLCPY)
 check_function_exists("strnlen" HAVE_STRNLEN)
 
-configure_file(${OT_ROOT_DIR}/etc/cmake/openthread-config-generic.h.in ${OT_ROOT_DIR}/etc/cmake/openthread-config-generic.h)
+configure_file(${PROJECT_SOURCE_DIR}/etc/cmake/openthread-config-generic.h.in ${PROJECT_SOURCE_DIR}/etc/cmake/openthread-config-generic.h)
