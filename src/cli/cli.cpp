@@ -930,7 +930,7 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
             mServer->OutputFormat("    RxErrFcs: %d\r\n", macCounters->mRxErrFcs);
             mServer->OutputFormat("    RxErrOther: %d\r\n", macCounters->mRxErrOther);
         }
-        else if ((argc == 2) || (strcmp(argv[0], "reset") == 0))
+        else if ((argc == 2) && (strcmp(argv[0], "reset") == 0))
         {
             otLinkResetCounters(mInstance);
         }

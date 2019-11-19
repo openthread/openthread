@@ -247,7 +247,7 @@ Done
 Get the supported counter names.
 
 ```bash
->counters
+> counters
 mac
 mle
 Done
@@ -309,9 +309,9 @@ Done
 Reset the counter value.
 
 ```bash
->counters mac reset
+> counters mac reset
 Done
->counters mle reset
+> counters mle reset
 Done
 ```
 
