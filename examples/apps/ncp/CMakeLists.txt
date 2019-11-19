@@ -53,7 +53,6 @@ target_link_libraries(ot-ncp-ftd
     openthread-ncp-ftd
     ${OT_PLATFORM_LIB}
     openthread-ftd
-    openthread-platform-utils
     ${OT_PLATFORM_LIB}
     mbedcrypto
 )
@@ -62,7 +61,6 @@ target_link_libraries(ot-ncp-mtd
     openthread-ncp-mtd
     ${OT_PLATFORM_LIB}
     openthread-mtd
-    openthread-platform-utils
     ${OT_PLATFORM_LIB}
     mbedcrypto
 )
@@ -71,6 +69,5 @@ target_link_libraries(ot-rcp
     openthread-rcp
     ${OT_PLATFORM_LIB}
     openthread-radio
-    openthread-platform-utils
     ${OT_PLATFORM_LIB}
 )
