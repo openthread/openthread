@@ -533,7 +533,9 @@ class HarnessCase(unittest.TestCase):
         if settings.DUT_DEVICE:
             dut_device = settings.DUT_DEVICE
 
-        """check if case need to use shield box and its device order in Testbed page
+        """check if test case need to use RF-shield box and its device order in Testbed page
+        Two parameters case_need_shield & device_order should be set in the case script
+        according to the requires: https://openthread.io/certification/test-cases#rf_shielding
         Example:
          In case script leader_9_2_9.py:
           case_need_shield = True
@@ -555,16 +557,12 @@ class HarnessCase(unittest.TestCase):
          means no device drag order. DUT2_DEVICE should be applied as DUT and the other gold devices
          are from GOLDEN_DEVICES.
         """
-        shield_order = []
-        need_shield = False
         if self.case_need_shield:
-            need_shield = True
             if not settings.DUT2_DEVICE:
                 logger.info('Must set DUT2_DEVICE')
                 raise FailError('DUT2_DEVICE must be set in settings.py')
             if isinstance(self.device_order, list) and self.device_order:
-                shield_order = self.device_order
-                logger.info('case %s devices ordered by %s ', self.case, shield_order)
+                logger.info('case %s devices ordered by %s ', self.case, self.device_order)
             else:
                 logger.info('case %s uses %s as DUT', self.case, settings.DUT2_DEVICE)
 
@@ -604,38 +602,44 @@ class HarnessCase(unittest.TestCase):
             golden_device_candidates = []
             missing_golden_devices = topo_mixed_devices[:]
 
-            # mapping topology config devices with golden devices and shield order in settings
-            if need_shield and shield_order:
-                for shield_item in shield_order:
+            # mapping topology config devices with golden devices by device order
+            if self.case_need_shield and self.device_order:
+                matched_dut = False
+                for device_order_item in self.device_order:
                     matched = False
                     for mixed_device_item in topo_mixed_devices:
-                        # device need to be shielded
-                        if shield_item[1]:
-                            if 'DUT' in shield_item[0]:
+                        # mapping device in device_order which need to be shielded
+                        if device_order_item[1]:
+                            if 'DUT' in device_order_item[0]:
                                 golden_device_candidates.append(settings.DUT2_DEVICE)
                                 dut_device = settings.DUT2_DEVICE
+                                matched_dut = True
                                 matched = True
                                 break
                             for device_item in shield_devices:
-                                if shield_item[0] == mixed_device_item[0] and mixed_device_item[1] == device_item[1]:
+                                if device_order_item[0] == mixed_device_item[0] and mixed_device_item[1] == device_item[1]:
                                     golden_device_candidates.append(device_item)
                                     shield_devices.remove(device_item)
                                     matched = True
                                     break
+                        # mapping device in device_order which do not need to be shielded
                         else:
-                            if 'DUT' in shield_item[0]:
+                            if 'DUT' in device_order_item[0]:
                                 golden_device_candidates.append(settings.DUT_DEVICE)
+                                matched_dut = True
                                 matched = True
                                 break
                             for device_item in devices:
-                                if shield_item[0] == mixed_device_item[0] and mixed_device_item[1] == device_item[1]:
+                                if device_order_item[0] == mixed_device_item[0] and mixed_device_item[1] == device_item[1]:
                                     golden_device_candidates.append(device_item)
                                     devices.remove(device_item)
                                     matched = True
                                     break
                     if not matched:
-                        logger.info('Golden device not enough in : no %s', shield_item)
+                        logger.info('Golden device not enough in : no %s', device_order_item)
                         raise GoldenDeviceNotEnoughError()
+                if not matched_dut:
+                    raise FailError('Failed to find DUT in device_order')
                 devices = golden_device_candidates
                 self.add_all_devices = True
             else:
@@ -660,17 +664,19 @@ class HarnessCase(unittest.TestCase):
                     devices = golden_device_candidates
                     golden_devices_required = len(devices)
                     logger.info('All case-needed golden devices: %s', json.dumps(devices, indent=2))
+        # for test bed with single vendor devices
         else:
-            # for unique vendor devices
             golden_device_candidates = []
-            if need_shield and shield_order:
-                for shield_item in shield_order:
+            if self.case_need_shield and self.device_order:
+                matched_dut = False
+                for device_order_item in self.device_order:
                     matched = False
-                    # device need to be shielded
-                    if shield_item[1]:
-                        if 'DUT' in shield_item[0]:
+                    # choose device which need to be shielded
+                    if device_order_item[1]:
+                        if 'DUT' in device_order_item[0]:
                             golden_device_candidates.append(settings.DUT2_DEVICE)
                             dut_device = settings.DUT2_DEVICE
+                            matched_dut = True
                             matched = True
                         else:
                             for device_item in shield_devices:
@@ -678,9 +684,11 @@ class HarnessCase(unittest.TestCase):
                                 shield_devices.remove(device_item)
                                 matched = True
                                 break
+                    # choose device which do not need to be shielded
                     else:
-                        if 'DUT' in shield_item[0]:
+                        if 'DUT' in device_order_item[0]:
                             golden_device_candidates.append(settings.DUT_DEVICE)
+                            matched_dut = True
                             matched = True
                         else:
                             for device_item in devices:
@@ -689,8 +697,10 @@ class HarnessCase(unittest.TestCase):
                                 matched = True
                                 break
                     if not matched:
-                        logger.info('Golden device not enough in : no %s', shield_item)
+                        logger.info('Golden device not enough in : no %s', device_order_item)
                         raise GoldenDeviceNotEnoughError()
+                if not matched_dut:
+                    raise FailError('Failed to find DUT in device_order')
                 devices = golden_device_candidates
                 self.add_all_devices = True
 
@@ -709,8 +719,8 @@ class HarnessCase(unittest.TestCase):
             self._add_device(*devices.pop())
 
         # add DUT
-        if need_shield:
-            if not shield_order:
+        if self.case_need_shield:
+            if not self.device_order:
                 self._add_device(*settings.DUT2_DEVICE)
         else:
             if settings.DUT_DEVICE:
@@ -725,10 +735,10 @@ class HarnessCase(unittest.TestCase):
 
             if settings.DUT_DEVICE:
                 radio_auto_dut = browser.find_element_by_class_name('AutoDUT_RadBtns')
-                if not radio_auto_dut.is_selected() and not shield_order:
+                if not radio_auto_dut.is_selected() and not self.device_order:
                     radio_auto_dut.click()
 
-                if shield_order:
+                if self.device_order:
                     selected_hw_set = test_bed.find_elements_by_class_name('selected-hw')
                     for selected_hw in selected_hw_set:
                         form_inputs = selected_hw.find_elements_by_tag_name('input')
