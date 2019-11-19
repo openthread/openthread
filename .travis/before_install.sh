@@ -42,6 +42,11 @@ cd /tmp || die
     (cd /etc/apt/sources.list.d && sudo rm -rf cassandra.list* couchdb.list* mongodb-3.4.list* rabbitmq_rabbitmq-server.list* chris-lea-redis-server.list* github_git-lfs.list* pgdg.list)
     sudo apt-get update || die
 
+    sudo apt-get install ninja-build
+
+    pip3 install --upgrade pip
+    pip3 install cmake
+
     [ $BUILD_TARGET != posix-distcheck -a $BUILD_TARGET != posix-32-bit -a $BUILD_TARGET != posix-app-cli -a $BUILD_TARGET != posix-mtd -a $BUILD_TARGET != posix-ncp -a $BUILD_TARGET != posix-app-ncp ] || {
         pip install --upgrade pip || die
         pip install -r $TRAVIS_BUILD_DIR/tests/scripts/thread-cert/requirements.txt || die

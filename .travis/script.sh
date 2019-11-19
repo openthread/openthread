@@ -120,6 +120,13 @@ build_cc1352() {
 build_cc2538() {
     git checkout -- . || die
     git clean -xfd || die
+    mkdir build && cd build || die
+    cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=examples/platforms/cc2538/arm-none-eabi.cmake -DOT_PLATFORM=cc2538 .. || die
+    ninja || die
+    cd .. || die
+
+    git checkout -- . || die
+    git clean -xfd || die
     ./bootstrap || die
     COMMISSIONER=1 JOINER=1 SLAAC=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-cc2538 || die
     arm-none-eabi-size  output/cc2538/bin/ot-cli-ftd || die
@@ -409,6 +416,13 @@ build_samr21() {
 }
 
 [ $BUILD_TARGET != posix ] || {
+    git checkout -- . || die
+    git clean -xfd || die
+    mkdir build && cd build || die
+    cmake -GNinja -DOT_PLATFORM=posix .. || die
+    ninja || die
+    cd .. || die
+
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
