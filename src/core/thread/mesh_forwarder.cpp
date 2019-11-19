@@ -1101,7 +1101,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::RxFrame &aFrame)
         {
             Child *child = Get<ChildTable>().FindChild(macSource, ChildTable::kInStateAnyExceptInvalid);
 
-            if (child != NULL && child->IsEnhancedKeepAliveSupported())
+            if (child != NULL && !child->IsRxOnWhenIdle() && child->IsEnhancedKeepAliveSupported())
             {
                 child->SetLastHeard(TimerMilli::GetNow());
             }
