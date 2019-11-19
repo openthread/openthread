@@ -26,6 +26,15 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+set(OT_PLATFORM_LIB "openthread-cc2538" PARENT_SCOPE)
+
+list(APPEND OT_PLATFORM_DEFINES
+    "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-cc2538-config.h\""
+    "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-cc2538-config-check.h\""
+    "OPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
+)
+set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
+
 add_library(openthread-cc2538
     alarm.c
     diag.c
@@ -41,6 +50,7 @@ add_library(openthread-cc2538
 )
 
 target_link_libraries(openthread-cc2538 PRIVATE openthread-platform-utils)
+target_link_options(openthread-cc2538 PUBLIC -T${PROJECT_SOURCE_DIR}/examples/platforms/cc2538/cc2538.ld)
 
 target_compile_definitions(openthread-cc2538 PUBLIC ${OT_PLATFORM_DEFINES})
 

@@ -26,7 +26,15 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-find_library(LIBRT rt)
+set(OT_PLATFORM_LIB "openthread-posix" PARENT_SCOPE)
+
+list(APPEND OT_PLATFORM_DEFINES
+    "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\""
+    "OPENTHREAD_EXAMPLES_POSIX=1"
+    "OPENTHREAD_POSIX=1"
+    "OPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
+)
+set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
 add_library(openthread-posix
     alarm.c
@@ -44,6 +52,7 @@ add_library(openthread-posix
     $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
+find_library(LIBRT rt)
 if(LIBRT)
     target_link_libraries(openthread-posix PRIVATE ${LIBRT})
 endif()
