@@ -423,13 +423,18 @@ void Diags::TransmitDone(otError aError)
         if (mTxPackets > 1)
         {
             mTxPackets--;
-            TransmitPacket();
+        }
+        else
+        {
+            ExitNow();
         }
     }
-    else
-    {
-        TransmitPacket();
-    }
+
+    VerifyOrExit(!mRepeatActive);
+    TransmitPacket();
+
+exit:
+    return;
 }
 
 #endif // OPENTHREAD_RADIO
