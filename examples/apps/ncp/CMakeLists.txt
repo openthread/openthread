@@ -41,8 +41,8 @@ add_executable(ot-rcp
 set(COMMON_INCLUDES
     ${OT_PUBLIC_INCLUDES}
     ${OT_PRIVATE_INCLUDES}
-    ${OT_ROOT_DIR}/examples/platforms
-    ${OT_ROOT_DIR}/src/core
+    ${PROJECT_SOURCE_DIR}/examples/platforms
+    ${PROJECT_SOURCE_DIR}/src/core
 )
 
 target_include_directories(ot-ncp-ftd PRIVATE ${COMMON_INCLUDES})

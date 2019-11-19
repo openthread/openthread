@@ -50,8 +50,8 @@ target_compile_definitions(openthread-rcp PRIVATE
 
 set(COMMON_INCLUDES
     ${OT_PRIVATE_INCLUDES}
-    ${OT_ROOT_DIR}/src
-    ${OT_ROOT_DIR}/src/core
+    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/src/core
 )
 
 set(COMMON_SOURCES

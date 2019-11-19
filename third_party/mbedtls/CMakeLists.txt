@@ -35,7 +35,7 @@ target_compile_definitions(mbedcrypto PRIVATE
 target_include_directories(mbedcrypto PRIVATE
     ${OT_PUBLIC_INCLUDES}
     ${OT_PRIVATE_INCLUDES}
-    ${OT_ROOT_DIR}/src/core
+    ${PROJECT_SOURCE_DIR}/src/core
 )
 
 target_sources(mbedcrypto PRIVATE
