@@ -32,13 +32,11 @@ project(openthread)
 option(OT_BUILD_EXECUTABLES "Build executables" ON)
 option(OT_BUILTIN_MBEDTLS "Enable builtin mbedTLS" ON)
 
-set(OT_ROOT_DIR ${PROJECT_SOURCE_DIR} CACHE INTERNAL "OpenThread source root.")
-
-include("${OT_ROOT_DIR}/etc/cmake/checks.cmake")
-include("${OT_ROOT_DIR}/etc/cmake/options.cmake")
+include("${PROJECT_SOURCE_DIR}/etc/cmake/checks.cmake")
+include("${PROJECT_SOURCE_DIR}/etc/cmake/options.cmake")
 
 execute_process(
-    COMMAND "${OT_ROOT_DIR}/third_party/nlbuild-autotools/repo/scripts/mkversion" "-b" "`cat .default-version`" "."
+    COMMAND "${PROJECT_SOURCE_DIR}/third_party/nlbuild-autotools/repo/scripts/mkversion" "-b" "`cat .default-version`" "."
     OUTPUT_VARIABLE __version OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 set(OT_VERSION "${__version}")
@@ -52,7 +50,7 @@ set(OT_PLATFORM "none" CACHE STRING "Target platform chosen by the user at confi
 
 function(ot_get_platforms arg_platforms)
     set(result "none")
-    set(platforms_dir "${OT_ROOT_DIR}/examples/platforms")
+    set(platforms_dir "${PROJECT_SOURCE_DIR}/examples/platforms")
     file(GLOB platforms RELATIVE "${platforms_dir}" "${platforms_dir}/*")
     foreach(platform IN LISTS platforms)
         if(IS_DIRECTORY "${platforms_dir}/${platform}")
@@ -69,19 +67,19 @@ if(NOT OT_PLATFORM IN_LIST OT_EXAMPLE_PLATFORMS)
     message(FATAL_ERROR "Platform unknown: ${OT_PLATFORM}")
 endif()
 
-list(APPEND OT_PUBLIC_INCLUDES ${OT_ROOT_DIR}/etc/cmake)
-list(APPEND OT_PUBLIC_INCLUDES ${OT_ROOT_DIR}/include)
+list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/etc/cmake)
+list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/include)
 
 if(NOT OT_PLATFORM MATCHES "none")
-    list(APPEND OT_PRIVATE_INCLUDES ${OT_ROOT_DIR}/examples/platforms/${OT_PLATFORM})
-    include("${OT_ROOT_DIR}/examples/platforms/${OT_PLATFORM}/platform.cmake")
+    list(APPEND OT_PRIVATE_INCLUDES ${PROJECT_SOURCE_DIR}/examples/platforms/${OT_PLATFORM})
+    include("${PROJECT_SOURCE_DIR}/examples/platforms/${OT_PLATFORM}/platform.cmake")
 endif()
 
 list(APPEND OT_PRIVATE_DEFINES ${OT_PLATFORM_DEFINES})
 
 if(OT_BUILTIN_MBEDTLS)
-    list(APPEND OT_PRIVATE_INCLUDES ${OT_ROOT_DIR}/third_party/mbedtls)
-    list(APPEND OT_PRIVATE_INCLUDES ${OT_ROOT_DIR}/third_party/mbedtls/repo/include)
+    list(APPEND OT_PRIVATE_INCLUDES ${PROJECT_SOURCE_DIR}/third_party/mbedtls)
+    list(APPEND OT_PRIVATE_INCLUDES ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include)
 
     list(APPEND OT_PRIVATE_DEFINES
         "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\""

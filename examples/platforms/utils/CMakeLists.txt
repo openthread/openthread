@@ -42,10 +42,10 @@ target_compile_definitions(openthread-platform-utils PRIVATE
 target_include_directories(openthread-platform-utils PRIVATE
     ${OT_PUBLIC_INCLUDES}
     ${OT_PRIVATE_INCLUDES}
-    ${OT_ROOT_DIR}/examples/platforms
-    ${OT_ROOT_DIR}/examples/platforms/utils
-    ${OT_ROOT_DIR}/src/core
-    ${OT_ROOT_DIR}/third_party/jlink/SEGGER_RTT_V640/RTT
+    ${PROJECT_SOURCE_DIR}/examples/platforms
+    ${PROJECT_SOURCE_DIR}/examples/platforms/utils
+    ${PROJECT_SOURCE_DIR}/src/core
+    ${PROJECT_SOURCE_DIR}/third_party/jlink/SEGGER_RTT_V640/RTT
 )
 
 # Provide a static library implementation of platform-utils for non-cmake platforms
