@@ -86,13 +86,6 @@ extern "C" {
  */
 
 /**
- * @def OT_TOOL_ALIGN
- *
- * Compiler-specific alignment modifier.
- *
- */
-
-/**
  * @def OT_TOOL_WEAK
  *
  * Compiler-specific weak symbol modifier.
@@ -111,8 +104,6 @@ extern "C" {
 #define OT_TOOL_PACKED_END __attribute__((packed))
 #define OT_TOOL_WEAK __attribute__((weak))
 
-#define OT_TOOL_ALIGN(X)
-
 #elif defined(__ICCARM__) || defined(__ICC8051__)
 
 // http://supp.iar.com/FilesPublic/UPDINFO/004916/arm/doc/EWARM_DevelopmentGuide.ENU.pdf
@@ -124,8 +115,6 @@ extern "C" {
 #define OT_TOOL_PACKED_END
 #define OT_TOOL_WEAK __weak
 
-#define OT_TOOL_ALIGN(X)
-
 #elif defined(__SDCC)
 
 // Structures are packed by default in sdcc, as it primarily targets 8-bit MCUs.
@@ -134,8 +123,6 @@ extern "C" {
 #define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END
 #define OT_TOOL_WEAK
-
-#define OT_TOOL_ALIGN(X)
 
 #else
 
@@ -147,8 +134,6 @@ extern "C" {
 #define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END
 #define OT_TOOL_WEAK
-
-#define OT_TOOL_ALIGN(X)
 
 #endif
 
