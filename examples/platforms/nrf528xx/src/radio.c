@@ -254,6 +254,21 @@ void nrf5RadioDeinit(void)
     sPendingEvents = 0;
 }
 
+void nrf5RadioClearPendingEvents(void)
+{
+    sPendingEvents = 0;
+
+    for (uint32_t i = 0; i < NRF_802154_RX_BUFFERS; i++)
+    {
+        if (sReceivedFrames[i].mPsdu != NULL)
+        {
+            uint8_t *bufferAddress   = &sReceivedFrames[i].mPsdu[-1];
+            sReceivedFrames[i].mPsdu = NULL;
+            nrf_802154_buffer_free_raw(bufferAddress);
+        }
+    }
+}
+
 otRadioState otPlatRadioGetState(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
