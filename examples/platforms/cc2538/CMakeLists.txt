@@ -42,6 +42,8 @@ add_library(openthread-cc2538
 
 target_link_libraries(openthread-cc2538 PRIVATE openthread-platform-utils)
 
+target_compile_definitions(openthread-cc2538 PUBLIC ${OT_PLATFORM_DEFINES})
+
 target_include_directories(openthread-cc2538 PRIVATE
     ${OT_PUBLIC_INCLUDES}
     ${OT_PRIVATE_INCLUDES}
