@@ -415,6 +415,9 @@ void otPlatDiagModeSet(bool aMode)
     {
         otPlatRadioReceive(NULL, sChannel);
         otPlatRadioSleep(NULL);
+
+        // Clear all remaining events before switching to MAC callbacks.
+        nrf5RadioClearPendingEvents();
     }
     else
     {
