@@ -34,6 +34,7 @@ option(OT_BUILTIN_MBEDTLS "Enable builtin mbedTLS" ON)
 
 include("${PROJECT_SOURCE_DIR}/etc/cmake/checks.cmake")
 include("${PROJECT_SOURCE_DIR}/etc/cmake/options.cmake")
+include("${PROJECT_SOURCE_DIR}/etc/cmake/functions.cmake")
 
 execute_process(
     COMMAND "${PROJECT_SOURCE_DIR}/third_party/nlbuild-autotools/repo/scripts/mkversion" "-b" "`cat .default-version`" "."
@@ -46,19 +47,6 @@ list(APPEND OT_PRIVATE_DEFINES
 )
 
 set(OT_PLATFORM "none" CACHE STRING "Target platform chosen by the user at configure time")
-
-function(ot_get_platforms arg_platforms)
-    set(result "none")
-    set(platforms_dir "${PROJECT_SOURCE_DIR}/examples/platforms")
-    file(GLOB platforms RELATIVE "${platforms_dir}" "${platforms_dir}/*")
-    foreach(platform IN LISTS platforms)
-        if(IS_DIRECTORY "${platforms_dir}/${platform}")
-            list(APPEND result "${platform}")
-        endif()
-    endforeach()
-
-    set(${arg_platforms} "${result}" PARENT_SCOPE)
-endfunction()
 
 ot_get_platforms(OT_EXAMPLE_PLATFORMS)
 set_property(CACHE OT_PLATFORM PROPERTY STRINGS ${OT_EXAMPLE_PLATFORMS})
