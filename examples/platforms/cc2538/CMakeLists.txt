@@ -37,7 +37,10 @@ add_library(openthread-cc2538
     system.c
     logging.c
     uart.c
+    $<TARGET_OBJECTS:openthread-platform-utils>
 )
+
+target_link_libraries(openthread-cc2538 PRIVATE openthread-platform-utils)
 
 target_include_directories(openthread-cc2538 PRIVATE
     ${OT_PUBLIC_INCLUDES}

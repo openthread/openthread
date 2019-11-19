@@ -41,11 +41,14 @@ add_library(openthread-posix
     uart-posix.c
     sim/alarm-sim.c
     sim/platform-sim.c
+    $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
 if(LIBRT)
     target_link_libraries(openthread-posix PRIVATE ${LIBRT})
 endif()
+
+target_link_libraries(openthread-posix PRIVATE openthread-platform-utils)
 
 target_include_directories(openthread-posix PRIVATE
     ${OT_PUBLIC_INCLUDES}

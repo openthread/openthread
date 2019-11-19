@@ -26,7 +26,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_library(openthread-platform-utils
+add_library(openthread-platform-utils OBJECT
     debug_uart.c
     logging_rtt.c
     mac_frame.cpp
@@ -47,3 +47,7 @@ target_include_directories(openthread-platform-utils PRIVATE
     ${OT_ROOT_DIR}/src/core
     ${OT_ROOT_DIR}/third_party/jlink/SEGGER_RTT_V640/RTT
 )
+
+# Provide a static library implementation of platform-utils for non-cmake platforms
+add_library(openthread-platform-utils-static $<TARGET_OBJECTS:openthread-platform-utils>)
+target_link_libraries(openthread-platform-utils-static PUBLIC openthread-platform-utils)
