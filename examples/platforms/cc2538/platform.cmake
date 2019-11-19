@@ -26,10 +26,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_definitions(
-    -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE="openthread-core-cc2538-config.h"
-    -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE="openthread-core-cc2538-config-check.h"
-    -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1
+list(APPEND OT_PLATFORM_DEFINES
+    "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-cc2538-config.h\""
+    "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-cc2538-config-check.h\""
+    "OPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
 )
 
 set(common_c_flags "-mcpu=cortex-m3 -mfloat-abi=soft")

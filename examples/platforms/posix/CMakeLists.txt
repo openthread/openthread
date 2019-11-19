@@ -50,6 +50,8 @@ endif()
 
 target_link_libraries(openthread-posix PRIVATE openthread-platform-utils)
 
+target_compile_definitions(openthread-posix PUBLIC ${OT_PLATFORM_DEFINES})
+
 target_include_directories(openthread-posix PRIVATE
     ${OT_PUBLIC_INCLUDES}
     ${OT_PRIVATE_INCLUDES}

@@ -43,9 +43,9 @@ execute_process(
 )
 set(OT_VERSION "${__version}")
 
-add_definitions(
-    -DPACKAGE_NAME="OPENTHREAD"
-    -DPACKAGE_VERSION="${OT_VERSION}"
+list(APPEND OT_PRIVATE_DEFINES
+    "PACKAGE_NAME=\"OPENTHREAD\""
+    "PACKAGE_VERSION=\"${OT_VERSION}\""
 )
 
 set(OT_PLATFORM "none" CACHE STRING "Target platform chosen by the user at configure time")
@@ -77,12 +77,14 @@ if(NOT OT_PLATFORM MATCHES "none")
     include("${OT_ROOT_DIR}/examples/platforms/${OT_PLATFORM}/platform.cmake")
 endif()
 
+list(APPEND OT_PRIVATE_DEFINES ${OT_PLATFORM_DEFINES})
+
 if(OT_BUILTIN_MBEDTLS)
     list(APPEND OT_PRIVATE_INCLUDES ${OT_ROOT_DIR}/third_party/mbedtls)
     list(APPEND OT_PRIVATE_INCLUDES ${OT_ROOT_DIR}/third_party/mbedtls/repo/include)
 
-    add_definitions(
-        -DMBEDTLS_CONFIG_FILE="mbedtls-config.h"
+    list(APPEND OT_PRIVATE_DEFINES
+        "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\""
     )
 endif()
 
