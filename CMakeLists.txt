@@ -37,9 +37,8 @@ include("${PROJECT_SOURCE_DIR}/etc/cmake/options.cmake")
 
 execute_process(
     COMMAND "${PROJECT_SOURCE_DIR}/third_party/nlbuild-autotools/repo/scripts/mkversion" "-b" "`cat .default-version`" "."
-    OUTPUT_VARIABLE __version OUTPUT_STRIP_TRAILING_WHITESPACE
+    OUTPUT_VARIABLE OT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE
 )
-set(OT_VERSION "${__version}")
 
 list(APPEND OT_PRIVATE_DEFINES
     "PACKAGE_NAME=\"OPENTHREAD\""
