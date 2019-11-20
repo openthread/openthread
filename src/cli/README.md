@@ -247,7 +247,7 @@ Done
 Get the supported counter names.
 
 ```bash
->counters
+> counters
 mac
 mle
 Done
@@ -301,6 +301,17 @@ Attach Attempts: 1
 Partition Id Changes: 1
 Better Partition Attach Attempts: 0
 Parent Changes: 0
+Done
+```
+
+### counters \<countername\> reset
+
+Reset the counter value.
+
+```bash
+> counters mac reset
+Done
+> counters mle reset
 Done
 ```
 
