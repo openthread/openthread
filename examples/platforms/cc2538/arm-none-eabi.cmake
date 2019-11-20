@@ -39,7 +39,7 @@ set(COMMON_C_FLAGS                 "-mthumb -fno-builtin -Wall -fdata-sections -
 set(CMAKE_C_FLAGS                  "${COMMON_C_FLAGS} -std=gnu99")
 set(CMAKE_CXX_FLAGS                "${COMMON_C_FLAGS} -fno-exceptions -fno-rtti")
 set(CMAKE_ASM_FLAGS                "${COMMON_C_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS         "${COMMON_C_FLAGS} -Wl,--gc-sections -specs=nano.specs -specs=nosys.specs -Wl,-Map=${CMAKE_PROJECT_NAME}.map -nostartfiles")
+set(CMAKE_EXE_LINKER_FLAGS         "${COMMON_C_FLAGS} -Wl,--gc-sections -specs=nano.specs -specs=nosys.specs -nostartfiles")
 
 set(CMAKE_C_FLAGS_DEBUG            "-Og -g")
 set(CMAKE_CXX_FLAGS_DEBUG          "-Og -g")
