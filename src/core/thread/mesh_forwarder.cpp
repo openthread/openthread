@@ -1098,6 +1098,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::RxFrame &aFrame)
 
 #if OPENTHREAD_THREAD_VERSION >= OPENTHREAD_THREAD_VERSION_1_2 && OPENTHREAD_FTD
         // From Thread 1.2, MAC Data Frame can also act as keep-alive message if child supports
+        if (aFrame.GetSecurityEnabled())
         {
             Child *child = Get<ChildTable>().FindChild(macSource, ChildTable::kInStateAnyExceptInvalid);
 
