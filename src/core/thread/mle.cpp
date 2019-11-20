@@ -423,7 +423,7 @@ otError Mle::Restore(void)
 
         mParent.Clear();
         mParent.SetExtAddress(*static_cast<Mac::ExtAddress *>(&parentInfo.mExtAddress));
-        mParent.SetVersion(parentInfo.mVersion);
+        mParent.SetVersion(static_cast<uint8_t>(parentInfo.mVersion));
         mParent.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                          DeviceMode::kModeFullNetworkData | DeviceMode::kModeSecureDataRequest));
         mParent.SetRloc16(GetRloc16(GetRouterId(networkInfo.mRloc16)));
