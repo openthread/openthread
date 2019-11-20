@@ -36,10 +36,13 @@ include("${PROJECT_SOURCE_DIR}/etc/cmake/checks.cmake")
 include("${PROJECT_SOURCE_DIR}/etc/cmake/options.cmake")
 include("${PROJECT_SOURCE_DIR}/etc/cmake/functions.cmake")
 
+file(READ .default-version OT_DEFAULT_VERSION)
 execute_process(
-    COMMAND "${PROJECT_SOURCE_DIR}/third_party/nlbuild-autotools/repo/scripts/mkversion" "-b" "`cat .default-version`" "."
+    COMMAND bash "-c" "third_party/nlbuild-autotools/repo/scripts/mkversion -b ${OT_DEFAULT_VERSION}"
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     OUTPUT_VARIABLE OT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+message(STATUS "Version: ${OT_VERSION}")
 
 list(APPEND OT_PRIVATE_DEFINES
     "PACKAGE_NAME=\"OPENTHREAD\""
