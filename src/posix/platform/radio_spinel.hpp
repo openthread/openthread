@@ -603,7 +603,8 @@ private:
      */
     bool IsSafeToHandleNow(spinel_prop_key_t aKey) const
     {
-        return !(aKey == SPINEL_PROP_STREAM_RAW || aKey == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT);
+        return !((mWaitingKey != SPINEL_PROP_LAST_STATUS) &&
+                 (aKey == SPINEL_PROP_STREAM_RAW || aKey == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT));
     }
 
     void HandleNotification(HdlcInterface::RxFrameBuffer &aFrameBuffer);
