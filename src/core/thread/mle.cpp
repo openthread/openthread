@@ -3607,9 +3607,11 @@ otError Mle::HandleChildUpdateResponse(const Message &         aMessage,
     {
     case OT_DEVICE_ROLE_DETACHED:
         // Version
-        SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kVersion, sizeof(version), version));
-        VerifyOrExit(version.IsValid(), error = OT_ERROR_PARSE);
-        mParent.SetVersion(static_cast<uint8_t>(version.GetVersion()));
+        if (OT_ERROR_NONE == Tlv::GetTlv(aMessage, Tlv::kVersion, sizeof(version), version))
+        {
+            VerifyOrExit(version.IsValid(), error = OT_ERROR_PARSE);
+            mParent.SetVersion(static_cast<uint8_t>(version.GetVersion()));
+        }
 
         SuccessOrExit(error =
                           Tlv::GetTlv(aMessage, Tlv::kLinkFrameCounter, sizeof(linkFrameCounter), linkFrameCounter));
