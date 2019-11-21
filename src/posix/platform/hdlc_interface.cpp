@@ -125,7 +125,6 @@ namespace PosixApp {
 HdlcInterface::HdlcInterface(Callbacks &aCallbacks)
     : mCallbacks(aCallbacks)
     , mSockFd(-1)
-    , mIsDecoding(false)
     , mRxFrameBuffer()
     , mHdlcDecoder(mRxFrameBuffer, HandleHdlcFrame, this)
 {
@@ -199,9 +198,7 @@ void HdlcInterface::Read(void)
 
 void HdlcInterface::Decode(const uint8_t *aBuffer, uint16_t aLength)
 {
-    mIsDecoding = true;
     mHdlcDecoder.Decode(aBuffer, aLength);
-    mIsDecoding = false;
 }
 
 otError HdlcInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
