@@ -39,6 +39,7 @@
 #include <openthread/icmp6.h>
 
 #include "common/encoding.hpp"
+#include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "net/ip6_headers.hpp"
 
@@ -201,7 +202,7 @@ public:
  * This class implements ICMPv6 message handlers.
  *
  */
-class IcmpHandler : public otIcmp6Handler
+class IcmpHandler : public otIcmp6Handler, public LinkedListEntry<IcmpHandler>
 {
     friend class Icmp;
 
@@ -225,8 +226,6 @@ private:
     {
         mReceiveCallback(mContext, &aMessage, &aMessageInfo, &aIcmp6Header);
     }
-
-    IcmpHandler *GetNext(void) { return static_cast<IcmpHandler *>(mNext); }
 };
 
 /**
@@ -347,7 +346,7 @@ public:
 private:
     otError HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo);
 
-    IcmpHandler *mHandlers;
+    LinkedList<IcmpHandler> mHandlers;
 
     uint16_t        mEchoSequence;
     otIcmp6EchoMode mEchoMode;

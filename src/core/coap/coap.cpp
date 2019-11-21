@@ -49,7 +49,7 @@ namespace Coap {
 CoapBase::CoapBase(Instance &aInstance, Sender aSender)
     : InstanceLocator(aInstance)
     , mRetransmissionTimer(aInstance, &Coap::HandleRetransmissionTimer, this)
-    , mResources(NULL)
+    , mResources()
     , mContext(NULL)
     , mInterceptor(NULL)
     , mResponsesQueue(aInstance)
@@ -81,40 +81,13 @@ void CoapBase::ClearRequestsAndResponses(void)
 
 otError CoapBase::AddResource(Resource &aResource)
 {
-    otError error = OT_ERROR_NONE;
-
-    for (Resource *cur = mResources; cur; cur = cur->GetNext())
-    {
-        VerifyOrExit(cur != &aResource, error = OT_ERROR_ALREADY);
-    }
-
-    aResource.mNext = mResources;
-    mResources      = &aResource;
-
-exit:
-    return error;
+    return mResources.Add(aResource);
 }
 
 void CoapBase::RemoveResource(Resource &aResource)
 {
-    if (mResources == &aResource)
-    {
-        mResources = aResource.GetNext();
-    }
-    else
-    {
-        for (Resource *cur = mResources; cur; cur = cur->GetNext())
-        {
-            if (cur->mNext == &aResource)
-            {
-                cur->mNext = aResource.mNext;
-                ExitNow();
-            }
-        }
-    }
-
-exit:
-    aResource.mNext = NULL;
+    mResources.Remove(aResource);
+    aResource.SetNext(NULL);
 }
 
 void CoapBase::SetDefaultHandler(otCoapRequestHandler aHandler, void *aContext)
@@ -611,7 +584,7 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
 
     curUriPath[0] = '\0';
 
-    for (const Resource *resource = mResources; resource; resource = resource->GetNext())
+    for (const Resource *resource = mResources.GetHead(); resource; resource = resource->GetNext())
     {
         if (strcmp(resource->mUriPath, uriPath) == 0)
         {

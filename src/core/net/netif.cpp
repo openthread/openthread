@@ -82,8 +82,8 @@ const otNetifMulticastAddress Netif::kLinkLocalAllRoutersMulticastAddress = {
 
 Netif::Netif(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mUnicastAddresses(NULL)
-    , mMulticastAddresses(NULL)
+    , mUnicastAddresses()
+    , mMulticastAddresses()
     , mMulticastPromiscuous(false)
     , mNext(NULL)
     , mAddressCallback(NULL)
@@ -107,7 +107,7 @@ bool Netif::IsMulticastSubscribed(const Address &aAddress) const
 {
     bool rval = false;
 
-    for (NetifMulticastAddress *cur = mMulticastAddresses; cur; cur = cur->GetNext())
+    for (const NetifMulticastAddress *cur = mMulticastAddresses.GetHead(); cur; cur = cur->GetNext())
     {
         if (cur->GetAddress() == aAddress)
         {
@@ -121,10 +121,10 @@ exit:
 
 void Netif::SubscribeAllNodesMulticast(void)
 {
-    assert(mMulticastAddresses == NULL);
+    assert(mMulticastAddresses.IsEmpty());
 
-    mMulticastAddresses = static_cast<NetifMulticastAddress *>(
-        const_cast<otNetifMulticastAddress *>(&kLinkLocalAllNodesMulticastAddress));
+    mMulticastAddresses.SetHead(static_cast<NetifMulticastAddress *>(
+        const_cast<otNetifMulticastAddress *>(&kLinkLocalAllNodesMulticastAddress)));
 
     if (mAddressCallback != NULL)
     {
@@ -140,9 +140,9 @@ void Netif::SubscribeAllNodesMulticast(void)
 
 void Netif::UnsubscribeAllNodesMulticast(void)
 {
-    assert(mMulticastAddresses == NULL || mMulticastAddresses == &kLinkLocalAllNodesMulticastAddress);
+    assert(mMulticastAddresses.IsEmpty() || mMulticastAddresses.GetHead() == &kLinkLocalAllNodesMulticastAddress);
 
-    mMulticastAddresses = NULL;
+    mMulticastAddresses.SetHead(NULL);
 
     if (mAddressCallback != NULL)
     {
@@ -160,14 +160,14 @@ otError Netif::SubscribeAllRoutersMulticast(void)
 {
     otError error = OT_ERROR_NONE;
 
-    if (mMulticastAddresses == &kLinkLocalAllNodesMulticastAddress)
+    if (mMulticastAddresses.GetHead() == &kLinkLocalAllNodesMulticastAddress)
     {
-        mMulticastAddresses = static_cast<NetifMulticastAddress *>(
-            const_cast<otNetifMulticastAddress *>(&kLinkLocalAllRoutersMulticastAddress));
+        mMulticastAddresses.SetHead(static_cast<NetifMulticastAddress *>(
+            const_cast<otNetifMulticastAddress *>(&kLinkLocalAllRoutersMulticastAddress)));
     }
     else
     {
-        for (NetifMulticastAddress *cur = mMulticastAddresses; cur; cur = cur->GetNext())
+        for (NetifMulticastAddress *cur = mMulticastAddresses.GetHead(); cur; cur = cur->GetNext())
         {
             if (cur == &kLinkLocalAllRoutersMulticastAddress)
             {
@@ -201,14 +201,14 @@ otError Netif::UnsubscribeAllRoutersMulticast(void)
 {
     otError error = OT_ERROR_NONE;
 
-    if (mMulticastAddresses == &kLinkLocalAllRoutersMulticastAddress)
+    if (mMulticastAddresses.GetHead() == &kLinkLocalAllRoutersMulticastAddress)
     {
-        mMulticastAddresses = static_cast<NetifMulticastAddress *>(
-            const_cast<otNetifMulticastAddress *>(&kLinkLocalAllNodesMulticastAddress));
+        mMulticastAddresses.SetHead(static_cast<NetifMulticastAddress *>(
+            const_cast<otNetifMulticastAddress *>(&kLinkLocalAllNodesMulticastAddress)));
         ExitNow();
     }
 
-    for (NetifMulticastAddress *cur = mMulticastAddresses; cur; cur = cur->GetNext())
+    for (NetifMulticastAddress *cur = mMulticastAddresses.GetHead(); cur; cur = cur->GetNext())
     {
         if (cur->mNext == &kLinkLocalAllRoutersMulticastAddress)
         {
@@ -240,18 +240,9 @@ exit:
 
 otError Netif::SubscribeMulticast(NetifMulticastAddress &aAddress)
 {
-    otError error = OT_ERROR_NONE;
+    otError error;
 
-    for (NetifMulticastAddress *cur = mMulticastAddresses; cur; cur = cur->GetNext())
-    {
-        if (cur == &aAddress)
-        {
-            ExitNow(error = OT_ERROR_ALREADY);
-        }
-    }
-
-    aAddress.mNext      = mMulticastAddresses;
-    mMulticastAddresses = &aAddress;
+    SuccessOrExit(error = mMulticastAddresses.Add(aAddress));
 
     if (mAddressCallback != NULL)
     {
@@ -266,39 +257,18 @@ exit:
 
 otError Netif::UnsubscribeMulticast(const NetifMulticastAddress &aAddress)
 {
-    otError error = OT_ERROR_NONE;
+    otError error;
 
-    if (mMulticastAddresses == &aAddress)
+    SuccessOrExit(error = mMulticastAddresses.Remove(aAddress));
+
+    if (mAddressCallback != NULL)
     {
-        mMulticastAddresses = mMulticastAddresses->GetNext();
-        ExitNow();
-    }
-    else if (mMulticastAddresses != NULL)
-    {
-        for (NetifMulticastAddress *cur = mMulticastAddresses; cur->GetNext(); cur = cur->GetNext())
-        {
-            if (cur->mNext == &aAddress)
-            {
-                cur->mNext = aAddress.mNext;
-                ExitNow();
-            }
-        }
+        mAddressCallback(&aAddress.mAddress, kMulticastPrefixLength, false, mAddressCallbackContext);
     }
 
-    ExitNow(error = OT_ERROR_NOT_FOUND);
+    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSCRIBED);
 
 exit:
-
-    if (error != OT_ERROR_NOT_FOUND)
-    {
-        if (mAddressCallback != NULL)
-        {
-            mAddressCallback(&aAddress.mAddress, kMulticastPrefixLength, false, mAddressCallbackContext);
-        }
-
-        Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSCRIBED);
-    }
-
     return error;
 }
 
@@ -332,7 +302,7 @@ otError Netif::SubscribeExternalMulticast(const Address &aAddress)
     otError                error = OT_ERROR_NONE;
     NetifMulticastAddress *entry;
 
-    VerifyOrExit(mMulticastAddresses != NULL, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!mMulticastAddresses.IsEmpty(), error = OT_ERROR_INVALID_STATE);
 
     if (IsMulticastSubscribed(aAddress))
     {
@@ -352,9 +322,8 @@ otError Netif::SubscribeExternalMulticast(const Address &aAddress)
     VerifyOrExit(entry < OT_ARRAY_END(mExtMulticastAddresses), error = OT_ERROR_NO_BUFS);
 
     // Copy the address into the available entry and add it to linked-list.
-    entry->mAddress     = aAddress;
-    entry->mNext        = mMulticastAddresses;
-    mMulticastAddresses = entry;
+    entry->mAddress = aAddress;
+    mMulticastAddresses.Push(*entry);
     Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSCRIBED);
 
 exit:
@@ -367,7 +336,7 @@ otError Netif::UnsubscribeExternalMulticast(const Address &aAddress)
     NetifMulticastAddress *entry;
     NetifMulticastAddress *last = NULL;
 
-    for (entry = mMulticastAddresses; entry; entry = entry->GetNext())
+    for (entry = mMulticastAddresses.GetHead(); entry; entry = entry->GetNext())
     {
         if (entry->GetAddress() == aAddress)
         {
@@ -376,11 +345,11 @@ otError Netif::UnsubscribeExternalMulticast(const Address &aAddress)
 
             if (last)
             {
-                last->mNext = entry->GetNext();
+                mMulticastAddresses.PopAfter(*last);
             }
             else
             {
-                mMulticastAddresses = entry->GetNext();
+                mMulticastAddresses.Pop();
             }
 
             break;
@@ -421,18 +390,9 @@ void Netif::SetAddressCallback(otIp6AddressCallback aCallback, void *aCallbackCo
 
 otError Netif::AddUnicastAddress(NetifUnicastAddress &aAddress)
 {
-    otError error = OT_ERROR_NONE;
+    otError error;
 
-    for (NetifUnicastAddress *cur = mUnicastAddresses; cur; cur = cur->GetNext())
-    {
-        if (cur == &aAddress)
-        {
-            ExitNow(error = OT_ERROR_ALREADY);
-        }
-    }
-
-    aAddress.mNext    = mUnicastAddresses;
-    mUnicastAddresses = &aAddress;
+    SuccessOrExit(error = mUnicastAddresses.Add(aAddress));
 
     if (mAddressCallback != NULL)
     {
@@ -447,39 +407,18 @@ exit:
 
 otError Netif::RemoveUnicastAddress(const NetifUnicastAddress &aAddress)
 {
-    otError error = OT_ERROR_NONE;
+    otError error;
 
-    if (mUnicastAddresses == &aAddress)
+    SuccessOrExit(error = mUnicastAddresses.Remove(aAddress));
+
+    if (mAddressCallback != NULL)
     {
-        mUnicastAddresses = mUnicastAddresses->GetNext();
-        ExitNow();
-    }
-    else if (mUnicastAddresses != NULL)
-    {
-        for (NetifUnicastAddress *cur = mUnicastAddresses; cur->GetNext(); cur = cur->GetNext())
-        {
-            if (cur->mNext == &aAddress)
-            {
-                cur->mNext = aAddress.mNext;
-                ExitNow();
-            }
-        }
+        mAddressCallback(&aAddress.mAddress, aAddress.mPrefixLength, false, mAddressCallbackContext);
     }
 
-    ExitNow(error = OT_ERROR_NOT_FOUND);
+    Get<Notifier>().Signal(aAddress.mRloc ? OT_CHANGED_THREAD_RLOC_REMOVED : OT_CHANGED_IP6_ADDRESS_REMOVED);
 
 exit:
-
-    if (error != OT_ERROR_NOT_FOUND)
-    {
-        if (mAddressCallback != NULL)
-        {
-            mAddressCallback(&aAddress.mAddress, aAddress.mPrefixLength, false, mAddressCallbackContext);
-        }
-
-        Get<Notifier>().Signal(aAddress.mRloc ? OT_CHANGED_THREAD_RLOC_REMOVED : OT_CHANGED_IP6_ADDRESS_REMOVED);
-    }
-
     return error;
 }
 
@@ -490,7 +429,7 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
 
     VerifyOrExit(!aAddress.GetAddress().IsLinkLocal(), error = OT_ERROR_INVALID_ARGS);
 
-    for (entry = mUnicastAddresses; entry; entry = entry->GetNext())
+    for (entry = mUnicastAddresses.GetHead(); entry; entry = entry->GetNext())
     {
         if (entry->GetAddress() == aAddress.GetAddress())
         {
@@ -517,9 +456,8 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
     VerifyOrExit(entry < OT_ARRAY_END(mExtUnicastAddresses), error = OT_ERROR_NO_BUFS);
 
     // Copy the new address into the available entry and insert it in linked-list.
-    *entry            = aAddress;
-    entry->mNext      = mUnicastAddresses;
-    mUnicastAddresses = entry;
+    *entry = aAddress;
+    mUnicastAddresses.Push(*entry);
 
     Get<Notifier>().Signal(OT_CHANGED_IP6_ADDRESS_ADDED);
 
@@ -533,7 +471,7 @@ otError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
     NetifUnicastAddress *entry;
     NetifUnicastAddress *last = NULL;
 
-    for (entry = mUnicastAddresses; entry; entry = entry->GetNext())
+    for (entry = mUnicastAddresses.GetHead(); entry; entry = entry->GetNext())
     {
         if (entry->GetAddress() == aAddress)
         {
@@ -542,11 +480,11 @@ otError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
 
             if (last)
             {
-                last->mNext = entry->mNext;
+                mUnicastAddresses.PopAfter(*last);
             }
             else
             {
-                mUnicastAddresses = entry->GetNext();
+                mUnicastAddresses.Pop();
             }
 
             break;
@@ -582,7 +520,7 @@ bool Netif::IsUnicastAddress(const Address &aAddress) const
 {
     bool rval = false;
 
-    for (const NetifUnicastAddress *cur = mUnicastAddresses; cur; cur = cur->GetNext())
+    for (const NetifUnicastAddress *cur = mUnicastAddresses.GetHead(); cur; cur = cur->GetNext())
     {
         if (cur->GetAddress() == aAddress)
         {

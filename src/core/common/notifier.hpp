@@ -42,6 +42,7 @@
 #include <openthread/instance.h>
 #include <openthread/platform/toolchain.h>
 
+#include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"
 
@@ -79,9 +80,10 @@ public:
      * This class defines a `Notifier` callback instance.
      *
      */
-    class Callback : public OwnerLocator
+    class Callback : public OwnerLocator, public LinkedListEntry<Callback>
     {
         friend class Notifier;
+        friend class LinkedListEntry<Callback>;
 
     public:
         /**
@@ -232,11 +234,11 @@ private:
     void        LogChangedFlags(otChangedFlags aFlags) const;
     const char *FlagToString(otChangedFlags aFlag) const;
 
-    otChangedFlags   mFlagsToSignal;
-    otChangedFlags   mSignaledFlags;
-    Tasklet          mTask;
-    Callback *       mCallbacks;
-    ExternalCallback mExternalCallbacks[kMaxExternalHandlers];
+    otChangedFlags       mFlagsToSignal;
+    otChangedFlags       mSignaledFlags;
+    Tasklet              mTask;
+    LinkedList<Callback> mCallbacks;
+    ExternalCallback     mExternalCallbacks[kMaxExternalHandlers];
 };
 
 /**
