@@ -99,7 +99,7 @@ OT_STATIC_ASSERT(OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH <= OPENTHREAD_CONFIG_CLI_
 namespace ot {
 namespace Cli {
 
-static otDEFINE_ALIGNED_VAR(sCliUartRaw, sizeof(Uart), uint64_t);
+static OT_DEFINE_ALIGNED_VAR(sCliUartRaw, sizeof(Uart), uint64_t);
 
 extern "C" void otCliUartInit(otInstance *aInstance)
 {

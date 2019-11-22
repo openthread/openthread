@@ -62,7 +62,7 @@ public:
 // `ExtensionBase` API
 // ----------------------------------------------------------------------------
 
-static otDEFINE_ALIGNED_VAR(sExtensionRaw, sizeof(Extension), uint64_t);
+static OT_DEFINE_ALIGNED_VAR(sExtensionRaw, sizeof(Extension), uint64_t);
 
 ExtensionBase &ExtensionBase::Init(Instance &aInstance)
 {
