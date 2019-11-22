@@ -30,7 +30,7 @@
 #include <stddef.h>
 #include "mqttsn_client.hpp"
 #include "mqttsn_serializer.hpp"
-#include "common/logging.hpp"
+#include "common/timer.hpp"
 
 /**
  * @file
@@ -48,11 +48,6 @@
  *
  */
 #define MQTTSN_MIN_PACKET_LENGTH 2
-/**
- * Logging region for MQTT-SN client
- *
- */
-#define MQTTSN_LOG_REGION OT_LOG_REGION_CORE
 
 namespace ot {
 
@@ -297,7 +292,7 @@ void MqttsnClient::HandleUdpReceive(void *aContext, otMessage *aMessage, const o
     }
     message.Read(offset, length, data);
 
-    otLogDebgCore("UDP message received:");
+    otLogDebgMqttsn("UDP message received:");
     otDumpDebgCore("received", data, length);
 
     // Determine message type
@@ -306,7 +301,7 @@ void MqttsnClient::HandleUdpReceive(void *aContext, otMessage *aMessage, const o
     {
         return;
     }
-    otLogDebgCore("Message type: %d", messageType);
+    otLogDebgMqttsn("Message type: %d", messageType);
 
     // Handle received message type
     switch (messageType)
@@ -1026,7 +1021,7 @@ exit:
     return error;
 }
 
-otError MqttsnClient::Connect(MqttsnConfig &aConfig)
+otError MqttsnClient::Connect(const MqttsnConfig &aConfig)
 {
     otError error = OT_ERROR_NONE;
     int32_t length = -1;
@@ -1462,7 +1457,7 @@ ClientState MqttsnClient::GetState()
     return mClientState;
 }
 
-otError MqttsnClient::SetConnectedCallback(ConnectedCallbackFunc aCallback, void* aContext)
+otError MqttsnClient::SetConnectedCallback(otMqttsnConnectedHandler aCallback, void* aContext)
 {
     mConnectedCallback = aCallback;
     mConnectContext = aContext;
@@ -1541,7 +1536,7 @@ otError MqttsnClient::SendMessage(Message &aMessage, const Ip6::Address &aAddres
     messageInfo.SetPeerPort(aPort);
     messageInfo.SetIsHostInterface(false);
 
-    otLogDebgCore("Sending message to %s[:%u]", messageInfo.GetPeerAddr().ToString().AsCString(), messageInfo.GetPeerPort());
+    otLogDebgMqttsn("Sending message to %s[:%u]", messageInfo.GetPeerAddr().ToString().AsCString(), messageInfo.GetPeerPort());
     SuccessOrExit(error = mSocket.SendTo(aMessage, messageInfo));
 
 exit:

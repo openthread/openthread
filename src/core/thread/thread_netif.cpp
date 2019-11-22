@@ -108,6 +108,9 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     , mTimeSync(aInstance)
 #endif
+#if OPENTHREAD_CONFIG_MQTTSN_ENABLE
+	, mMqttsnClient(aInstance)
+#endif
 {
     Get<Coap::Coap>().SetInterceptor(&ThreadNetif::TmfFilter, this);
 }

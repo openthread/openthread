@@ -82,6 +82,7 @@ extern "C" {
 #define _OT_REGION_IP6_PREFIX "-IP6-----: "
 #define _OT_REGION_MAC_PREFIX "-MAC-----: "
 #define _OT_REGION_MEM_PREFIX "-MEM-----: "
+#define _OT_REGION_MQTTSN_PREFIX "-MQTTSN-----: "
 #define _OT_REGION_NCP_PREFIX "-NCP-----: "
 #define _OT_REGION_MESH_COP_PREFIX "-MESH-CP-: "
 #define _OT_REGION_NET_DIAG_PREFIX "-DIAG----: "
@@ -99,6 +100,7 @@ extern "C" {
 #define _OT_REGION_IP6_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_MAC_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_MEM_PREFIX _OT_REGION_SUFFIX
+#define _OT_REGION_MQTTSN_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_NCP_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_MESH_COP_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_NET_DIAG_PREFIX _OT_REGION_SUFFIX
@@ -1159,6 +1161,24 @@ extern "C" {
 #define otLogInfoCoap(aFormat, ...)
 #define otLogInfoCoapErr(aError, aFormat, ...)
 #define otLogDebgCoap(aFormat, ...)
+#endif
+
+#if OPENTHREAD_CONFIG_LOG_MQTTSN == 1
+#define otLogCritMqttsn(aFormat, ...) otLogCrit(OT_LOG_REGION_MQTTSN, _OT_REGION_MQTTSN_PREFIX aFormat, ##__VA_ARGS__)
+#define otLogWarnMqttsn(aFormat, ...) otLogWarn(OT_LOG_REGION_MQTTSN, _OT_REGION_MQTTSN_PREFIX aFormat, ##__VA_ARGS__)
+#define otLogNoteMqttsn(aFormat, ...) otLogNote(OT_LOG_REGION_MQTTSN, _OT_REGION_MQTTSN_PREFIX aFormat, ##__VA_ARGS__)
+#define otLogInfoMqttsn(aFormat, ...) otLogInfo(OT_LOG_REGION_MQTTSN, _OT_REGION_MQTTSN_PREFIX aFormat, ##__VA_ARGS__)
+#define otLogInfoMqttsnErr(aError, aFormat, ...)                                                                \
+    otLogInfo(OT_LOG_REGION_MQTTSN, _OT_REGION_MQTTSN_PREFIX "Error %s: " aFormat, otThreadErrorToString(aError), \
+              ##__VA_ARGS__)
+#define otLogDebgMqttsn(aFormat, ...) otLogDebg(OT_LOG_REGION_MQTTSN, _OT_REGION_MQTTSN_PREFIX aFormat, ##__VA_ARGS__)
+#else
+#define otLogCritMqttsn(aFormat, ...)
+#define otLogWarnMqttsn(aFormat, ...)
+#define otLogNoteMqttsn(aFormat, ...)
+#define otLogInfoMqttsn(aFormat, ...)
+#define otLogInfoMqttsnErr(aError, aFormat, ...)
+#define otLogDebgMqttsn(aFormat, ...)
 #endif
 
 /**

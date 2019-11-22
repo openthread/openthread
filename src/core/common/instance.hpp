@@ -74,6 +74,9 @@
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
 #include "common/extension.hpp"
 #endif
+#if OPENTHREAD_CONFIG_MQTTSN_ENABLE
+#include "mqttsn/mqttsn_client.hpp"
+#endif
 
 /**
  * @addtogroup core-instance
@@ -762,6 +765,13 @@ template <> inline Extension::ExtensionBase &Instance::Get(void)
 template <> inline FactoryDiags::Diags &Instance::Get(void)
 {
     return mDiags;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_MQTTSN_ENABLE
+template <> inline Mqttsn::MqttsnClient &Instance::Get(void)
+{
+    return mThreadNetif.mMqttsnClient;
 }
 #endif
 

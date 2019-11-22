@@ -83,6 +83,10 @@
 #include "utils/jam_detector.hpp"
 #endif // OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 
+#if OPENTHREAD_CONFIG_MQTTSN_ENABLE
+#include "mqttsn/mqttsn_client.hpp"
+#endif
+
 namespace ot {
 
 /**
@@ -229,6 +233,10 @@ private:
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     TimeSync mTimeSync;
+#endif
+
+#if OPENTHREAD_CONFIG_MQTTSN_ENABLE
+    Mqttsn::MqttsnClient       mMqttsnClient;
 #endif
 };
 

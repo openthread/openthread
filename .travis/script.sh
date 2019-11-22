@@ -65,6 +65,7 @@ python --version || die
         -DOPENTHREAD_CONFIG_JOINER_ENABLE=1               \
         -DOPENTHREAD_CONFIG_LINK_RAW_ENABLE=1             \
         -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1           \
+        -DOPENTHREAD_CONFIG_MQTTSB_ENABLE=1               \
         -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1             \
         -DOPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE=1     \
         -DOPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE=1          \

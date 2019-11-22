@@ -33,7 +33,8 @@
 #include "common/instance.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
-#include "openthread/error.h"
+#include <openthread/error.h>
+#include <openthread/mqttsn.h>
 
 /**
  * @file
@@ -49,17 +50,7 @@ namespace Mqttsn {
  * MQTT-SN message return code.
  *
  */
-enum ReturnCode
-{
-    kCodeAccepted = 0,
-    kCodeRejectedCongestion = 1,
-    kCodeRejectedTopicId = 2,
-    kCodeRejectedNotSupported = 3,
-    /**
-     * Pending message timed out. this value is not returned by gateway.
-     */
-    kCodeTimeout = -1,
-};
+typedef otMqttsnReturnCode ReturnCode;
 
 /**
  * MQTT-SN quality of service level.
@@ -620,15 +611,6 @@ class MqttsnClient: public InstanceLocator
 {
 public:
     /**
-     * Declaration of function for connection callback.
-     *
-     * @param[in]  aCode     CONNACK return code value or -1 when connection establishment timed out.
-     * @param[in]  aContext  A pointer to connection callback context object.
-     *
-     */
-    typedef void (*ConnectedCallbackFunc)(ReturnCode aCode, void* aContext);
-
-    /**
      * Declaration of function for subscribe callback.
      *
      * @param[in]  aCode     SUBACK return code or -1 when subscription timed out.
@@ -775,7 +757,7 @@ public:
      * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
      *
      */
-    otError Connect(MqttsnConfig &aConfig);
+    otError Connect(const MqttsnConfig &aConfig);
 
     /**
      * Subscribe to the topic by topic name string.
@@ -981,7 +963,7 @@ public:
      * @retval OT_ERROR_NONE  Callback function successfully set.
      *
      */
-    otError SetConnectedCallback(ConnectedCallbackFunc aCallback, void* aContext);
+    otError SetConnectedCallback(otMqttsnConnectedHandler aCallback, void* aContext);
 
     /**
      * Set callback function invoked when publish message received from the topic.
@@ -1178,7 +1160,7 @@ private:
     WaitingMessagesQueue<void*> mConnectQueue;
     WaitingMessagesQueue<void*> mDisconnectQueue;
     WaitingMessagesQueue<void*> mPingreqQueue;
-    ConnectedCallbackFunc mConnectedCallback;
+    otMqttsnConnectedHandler mConnectedCallback;
     void* mConnectContext;
     PublishReceivedCallbackFunc mPublishReceivedCallback;
     void* mPublishReceivedContext;

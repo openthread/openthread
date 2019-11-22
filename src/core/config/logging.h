@@ -238,6 +238,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_MQTTSN
+ *
+ * Define to enable MQTT-SN logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_MQTTSN
+#define OPENTHREAD_CONFIG_LOG_MQTTSN 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_CORE
  *
  * Define to enable OpenThread Core logging.
