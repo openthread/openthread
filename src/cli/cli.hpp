@@ -57,6 +57,10 @@
 #include "cli/cli_coap_secure.hpp"
 #endif
 
+#if OPENTHREAD_CONFIG_MQTTSN_ENABLE
+#include "cli/cli_mqtt.hpp"
+#endif
+
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 
@@ -101,6 +105,7 @@ class Interpreter
     friend class Dataset;
     friend class Joiner;
     friend class UdpExample;
+    friend class Mqtt;
 
 public:
     /**
@@ -266,6 +271,9 @@ private:
 #endif
     void ProcessMasterKey(int argc, char *argv[]);
     void ProcessMode(int argc, char *argv[]);
+#if OPENTHREAD_CONFIG_MQTTSN_ENABLE
+    void ProcessMqtt(int argc, char *argv[]);
+#endif
 #if OPENTHREAD_FTD
     void ProcessNeighbor(int argc, char *argv[]);
 #endif
@@ -411,6 +419,10 @@ private:
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
     Joiner mJoiner;
+#endif
+
+#if OPENTHREAD_CONFIG_MQTTSN_ENABLE
+    Mqtt mMqtt;
 #endif
 
     Instance *mInstance;

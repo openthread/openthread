@@ -161,6 +161,9 @@ const struct Command Interpreter::sCommands[] = {
 #endif
     {"masterkey", &Interpreter::ProcessMasterKey},
     {"mode", &Interpreter::ProcessMode},
+#if OPENTHREAD_CONFIG_MQTTSN_ENABLE
+	{"mqtt", &Interpreter::ProcessMqtt},
+#endif
 #if OPENTHREAD_FTD
     {"neighbor", &Interpreter::ProcessNeighbor},
 #endif
@@ -246,6 +249,9 @@ Interpreter::Interpreter(Instance *aInstance)
 #endif
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
     , mJoiner(*this)
+#endif
+#if OPENTHREAD_CONFIG_MQTTSN_ENABLE
+    , mMqtt(aInstance)
 #endif
     , mInstance(aInstance)
 {
@@ -1647,6 +1653,15 @@ void Interpreter::ProcessMode(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+
+#if OPENTHREAD_CONFIG_MQTTSN_ENABLE
+void Interpreter::ProcessMqtt(int argc, char *argv[])
+{
+	otError error;
+	error = mMqtt.Process(argc, argv);
+	AppendResult(error);
+}
+#endif
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessNeighbor(int argc, char *argv[])
