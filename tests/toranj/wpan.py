@@ -434,7 +434,12 @@ class Node(object):
         return self.wpanctl('status')
 
     def leave(self):
-        return self.wpanctl('leave')
+        res = self.wpanctl('leave')
+        for _ in range(5):
+            if self.get(WPAN_STATE) != STATE_OFFLINE:
+                print('***WARN***: Not in offline state')
+                time.sleep(1)
+        return res
 
     def form(
             self,
