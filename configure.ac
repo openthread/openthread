@@ -961,6 +961,7 @@ third_party/Makefile
 third_party/jlink/Makefile
 third_party/mbedtls/Makefile
 third_party/NordicSemiconductor/Makefile
+third_party/paho/Makefile
 third_party/silabs/Makefile
 examples/Makefile
 examples/apps/Makefile

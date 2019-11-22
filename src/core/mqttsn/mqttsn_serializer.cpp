@@ -27,8 +27,11 @@
  */
 
 #include <string.h>
+#include <stddef.h>
+#include <openthread/platform/toolchain.h>
+#include <MQTTSNPacket.h>
+
 #include "mqttsn_serializer.hpp"
-#include "MQTTSNPacket.h"
 
 /**
  * @file
@@ -115,7 +118,7 @@ otError GwInfoMessage::Serialize(uint8_t* aBuffer, uint8_t aBufferLength, int32_
     }
     else
     {
-        length = MQTTSNSerialize_gwinfo(aBuffer, aBufferLength, mGatewayId, 0, nullptr);
+        length = MQTTSNSerialize_gwinfo(aBuffer, aBufferLength, mGatewayId, 0, NULL);
     }
     if (length <= 0)
     {
@@ -363,6 +366,8 @@ otError PubcompMessage::Serialize(uint8_t* aBuffer, uint8_t aBufferLength, int32
 
 otError PubcompMessage::Deserialize(const uint8_t* aBuffer, int32_t aBufferLength)
 {
+	OT_UNUSED_VARIABLE(aBuffer);
+	OT_UNUSED_VARIABLE(aBufferLength);
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -379,6 +384,8 @@ otError PubrecMessage::Serialize(uint8_t* aBuffer, uint8_t aBufferLength, int32_
 
 otError PubrecMessage::Deserialize(const uint8_t* aBuffer, int32_t aBufferLength)
 {
+    OT_UNUSED_VARIABLE(aBuffer);
+    OT_UNUSED_VARIABLE(aBufferLength);
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -395,6 +402,8 @@ otError PubrelMessage::Serialize(uint8_t* aBuffer, uint8_t aBufferLength, int32_
 
 otError PubrelMessage::Deserialize(const uint8_t* aBuffer, int32_t aBufferLength)
 {
+	OT_UNUSED_VARIABLE(aBuffer);
+	OT_UNUSED_VARIABLE(aBufferLength);
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 

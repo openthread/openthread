@@ -42,9 +42,10 @@ if OPENTHREAD_ENABLE_RADIO_ONLY
 lib_LIBRARIES                             += libopenthread-radio.a
 endif
 
-CPPFLAGS_COMMON                            = \
-    -I$(top_srcdir)/include                  \
-    $(OPENTHREAD_TARGET_DEFINES)             \
+CPPFLAGS_COMMON                                           = \
+    -I$(top_srcdir)/include                                 \
+    -I$(top_srcdir)/third_party/paho/paho/MQTTSNPacket/src  \
+    $(OPENTHREAD_TARGET_DEFINES)                            \
     $(NULL)
 
 libopenthread_radio_a_CPPFLAGS             = \
@@ -184,6 +185,8 @@ SOURCES_COMMON                             = \
     meshcop/meshcop_tlvs.cpp                 \
     meshcop/panid_query_client.cpp           \
     meshcop/timestamp.cpp                    \
+	mqttsn/mqttsn_client.cpp                 \
+	mqttsn/mqttsn_serializer.cpp             \
     net/dhcp6_client.cpp                     \
     net/dhcp6_server.cpp                     \
     net/dns_client.cpp                       \
@@ -382,6 +385,8 @@ HEADERS_COMMON                             = \
     meshcop/meshcop_tlvs.hpp                 \
     meshcop/panid_query_client.hpp           \
     meshcop/timestamp.hpp                    \
+	mqttsn/mqttsn_client.hpp                 \
+	mqttsn/mqttsn_serializer.hpp             \
     net/dhcp6.hpp                            \
     net/dhcp6_client.hpp                     \
     net/dhcp6_server.hpp                     \

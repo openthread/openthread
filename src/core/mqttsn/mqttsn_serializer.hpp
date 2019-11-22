@@ -174,7 +174,7 @@ public:
         ;
     }
 
-    GwInfoMessage (uint8_t aGatewayId, bool aHasAddress, const Ip6::Address &aAddress, int32_t aAddressLength)
+    GwInfoMessage (uint8_t aGatewayId, bool aHasAddress, const Ip6::Address &aAddress)
         : MessageBase(kTypeGwInfo)
         , mGatewayId(aGatewayId)
         , mHasAddress(aHasAddress)
@@ -719,7 +719,7 @@ public:
         ;
     }
 
-    UnsubackMessage (ReturnCode aReturnCode, uint16_t aMessageId)
+    UnsubackMessage (uint16_t aMessageId)
         : MessageBase(kTypeUnsuback)
         , mMessageId(aMessageId)
     {
