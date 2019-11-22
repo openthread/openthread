@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,41 +26,50 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "radio.hpp"
+/**
+ * @file
+ *   This file includes compile-time configurations for the radio links.
+ *
+ */
 
-#include "common/locator-getters.hpp"
-#include "utils/otns.hpp"
+#ifndef CONFIG_RADIO_LINK_H_
+#define CONFIG_RADIO_LINK_H_
 
-namespace ot {
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-
-void Radio::SetExtendedAddress(const Mac::ExtAddress &aExtAddress)
-{
-    otPlatRadioSetExtendedAddress(GetInstancePtr(), &aExtAddress);
-
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
-    Get<Utils::Otns>().EmitExtendedAddress(aExtAddress);
-#endif
-}
-
-void Radio::SetShortAddress(Mac::ShortAddress aShortAddress)
-{
-    otPlatRadioSetShortAddress(GetInstancePtr(), aShortAddress);
-
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
-    Get<Utils::Otns>().EmitShortAddress(aShortAddress);
-#endif
-}
-
-otError Radio::Transmit(Mac::TxFrame &aFrame)
-{
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
-    Get<Utils::Otns>().EmitTransmit(aFrame);
+/**
+ * @def OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+ *
+ * Set to 1 to enable support for IEEE802.15.4 radio link.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+#define OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE 1
 #endif
 
-    return otPlatRadioTransmit(GetInstancePtr(), &aFrame);
-}
-#endif // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+/**
+ * @def OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+ *
+ * Set to 1 to enable support for Thread Radio Encapsulation Link (TREL).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#define OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE 0
+#endif
 
-} // namespace ot
+//--------------------------------------------------------------
+
+#if !OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE && !OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#error "No radio link type is enabled - at least one radio link type should be enabled"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_MULTI_RADIO
+#error "OPENTHREAD_CONFIG_MULTI_RADIO should not be defined directly." \
+       "It is derived from CONFIG_RADIO_LINK_<TYPE>_ENABLE options."
+#endif
+
+#if (OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE)
+#define OPENTHREAD_CONFIG_MULTI_RADIO 1
+#else
+#define OPENTHREAD_CONFIG_MULTI_RADIO 0
+#endif
+
+#endif // CONFIG_RADIO_LINK_H_

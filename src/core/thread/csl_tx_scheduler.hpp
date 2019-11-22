@@ -196,8 +196,8 @@ private:
     uint32_t GetNextCslTransmissionDelay(const Child &aChild, uint64_t aRadioNow, uint32_t &aDelayFromLastRx) const;
 
     // Callbacks from `Mac`
-    otError HandleFrameRequest(Mac::TxFrame &aFrame);
-    void    HandleSentFrame(const Mac::TxFrame &aFrame, otError aError);
+    Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
+    void          HandleSentFrame(const Mac::TxFrame &aFrame, otError aError);
 
     void HandleSentFrame(const Mac::TxFrame &aFrame, otError aError, Child &aChild);
 

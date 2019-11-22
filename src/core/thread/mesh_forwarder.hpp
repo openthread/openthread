@@ -306,6 +306,24 @@ public:
      */
     const PriorityQueue &GetResolvingQueue(void) const { return mResolvingQueue; }
 #endif
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    /**
+     * This method handles a deferred ack.
+     *
+     * Some radio links can use deferred ack logic, where a tx request always report `HandleSentFrame()` quickly. The
+     * link layer would wait for the ack and report it at a later time using this method.
+     *
+     * The link layer is expected to call `HandleDeferredAck()` (with success or failure status) for every tx request
+     * on the radio link.
+     *
+     * @param[in] aNeighbor  The neighbor for which the deferred ack status is being reported.
+     * @param[in] aTxError   The deferred ack error status: `OT_ERROR_NONE` to indicate a deferred ack was received,
+     *                       `OT_ERROR_NO_ACK` to indicate an ack timeout.
+     *
+     */
+    void HandleDeferredAck(Neighbor &aNeighbor, otError aTxError);
+#endif
+
 private:
     enum : uint8_t
     {
@@ -415,7 +433,8 @@ private:
                               const Mac::Address &aMacDest,
                               bool                aAddMeshHeader = false,
                               uint16_t            aMeshSource    = 0xffff,
-                              uint16_t            aMeshDest      = 0xffff);
+                              uint16_t            aMeshDest      = 0xffff,
+                              bool                aAddFragHeader = false);
     void     PrepareEmptyFrame(Mac::TxFrame &aFrame, const Mac::Address &aMacDest, bool aAckRequest);
 
     void    SendMesh(Message &aMessage, Mac::TxFrame &aFrame);
@@ -433,10 +452,12 @@ private:
     void    RemoveMessage(Message &aMessage);
     void    HandleDiscoverComplete(void);
 
-    void      HandleReceivedFrame(Mac::RxFrame &aFrame);
-    otError   HandleFrameRequest(Mac::TxFrame &aFrame);
-    Neighbor *UpdateNeighborOnSentFrame(Mac::TxFrame &aFrame, otError aError, const Mac::Address &aMacDest);
-    void      HandleSentFrame(Mac::TxFrame &aFrame, otError aError);
+    void          HandleReceivedFrame(Mac::RxFrame &aFrame);
+    Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
+    Neighbor *    UpdateNeighborOnSentFrame(Mac::TxFrame &aFrame, otError aError, const Mac::Address &aMacDest);
+    void          UpdateNeighborLinkFailures(Neighbor &aNeighbor, otError aError, bool aAllowNeighborRemove);
+    void          HandleSentFrame(Mac::TxFrame &aFrame, otError aError);
+    void          UpdateSendMessage(otError aFrameTxError, Mac::Address &aMacDest, Neighbor *aNeighbor);
 
     void        HandleTimeTick(void);
     static void ScheduleTransmissionTask(Tasklet &aTasklet);

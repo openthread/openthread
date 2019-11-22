@@ -33,6 +33,7 @@
 #include <openthread/instance.h>
 #include <openthread/platform/time.h>
 
+#include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "radio/radio.hpp"
 
@@ -41,62 +42,137 @@ using namespace ot;
 //---------------------------------------------------------------------------------------------------------------------
 // otPlatRadio callbacks
 
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+
 extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
-    Instance *instance = static_cast<Instance *>(aInstance);
+    Instance &    instance = *static_cast<Instance *>(aInstance);
+    Mac::RxFrame *rxFrame  = static_cast<Mac::RxFrame *>(aFrame);
 
-    if (instance->IsInitialized())
+    VerifyOrExit(instance.IsInitialized());
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    if (rxFrame != nullptr)
     {
-        instance->Get<Radio::Callbacks>().HandleReceiveDone(static_cast<Mac::RxFrame *>(aFrame), aError);
+        rxFrame->SetRadioType(Mac::kRadioTypeIeee802154);
     }
+#endif
+
+    instance.Get<Radio::Callbacks>().HandleReceiveDone(rxFrame, aError);
+
+exit:
+    return;
 }
 
 extern "C" void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    Instance *instance = static_cast<Instance *>(aInstance);
+    Instance &    instance = *static_cast<Instance *>(aInstance);
+    Mac::TxFrame &txFrame  = *static_cast<Mac::TxFrame *>(aFrame);
 
-    if (instance->IsInitialized())
-    {
-        instance->Get<Radio::Callbacks>().HandleTransmitStarted(*static_cast<Mac::TxFrame *>(aFrame));
-    }
+    VerifyOrExit(instance.IsInitialized());
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    txFrame.SetRadioType(Mac::kRadioTypeIeee802154);
+#endif
+
+    instance.Get<Radio::Callbacks>().HandleTransmitStarted(txFrame);
+
+exit:
+    return;
 }
 
 extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
 {
-    Instance *instance = static_cast<Instance *>(aInstance);
+    Instance &    instance = *static_cast<Instance *>(aInstance);
+    Mac::TxFrame &txFrame  = *static_cast<Mac::TxFrame *>(aFrame);
+    Mac::RxFrame *ackFrame = static_cast<Mac::RxFrame *>(aAckFrame);
 
-    if (instance->IsInitialized())
+    VerifyOrExit(instance.IsInitialized());
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    if (ackFrame != nullptr)
     {
-        instance->Get<Radio::Callbacks>().HandleTransmitDone(*static_cast<Mac::TxFrame *>(aFrame),
-                                                             static_cast<Mac::RxFrame *>(aAckFrame), aError);
+        ackFrame->SetRadioType(Mac::kRadioTypeIeee802154);
     }
+
+    txFrame.SetRadioType(Mac::kRadioTypeIeee802154);
+#endif
+
+    instance.Get<Radio::Callbacks>().HandleTransmitDone(txFrame, ackFrame, aError);
+
+exit:
+    return;
 }
 
 extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi)
 {
-    Instance *instance = static_cast<Instance *>(aInstance);
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    if (instance->IsInitialized())
-    {
-        instance->Get<Radio::Callbacks>().HandleEnergyScanDone(aEnergyScanMaxRssi);
-    }
+    VerifyOrExit(instance.IsInitialized());
+    instance.Get<Radio::Callbacks>().HandleEnergyScanDone(aEnergyScanMaxRssi);
+
+exit:
+    return;
 }
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
-    Instance *instance = static_cast<Instance *>(aInstance);
+    Instance &    instance = *static_cast<Instance *>(aInstance);
+    Mac::RxFrame *rxFrame  = static_cast<Mac::RxFrame *>(aFrame);
 
-    instance->Get<Radio::Callbacks>().HandleDiagsReceiveDone(static_cast<Mac::RxFrame *>(aFrame), aError);
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    if (rxFrame != nullptr)
+    {
+        rxFrame->SetRadioType(Mac::kRadioTypeIeee802154);
+    }
+#endif
+
+    instance.Get<Radio::Callbacks>().HandleDiagsReceiveDone(rxFrame, aError);
 }
 
 extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
-    Instance *instance = static_cast<Instance *>(aInstance);
+    Instance &    instance = *static_cast<Instance *>(aInstance);
+    Mac::TxFrame &txFrame  = *static_cast<Mac::TxFrame *>(aFrame);
 
-    instance->Get<Radio::Callbacks>().HandleDiagsTransmitDone(*static_cast<Mac::TxFrame *>(aFrame), aError);
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    txFrame.SetRadioType(Mac::kRadioTypeIeee802154);
+#endif
+
+    instance.Get<Radio::Callbacks>().HandleDiagsTransmitDone(txFrame, aError);
 }
 #endif
+
+#else // #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+
+extern "C" void otPlatRadioReceiveDone(otInstance *, otRadioFrame *, otError)
+{
+}
+
+extern "C" void otPlatRadioTxStarted(otInstance *, otRadioFrame *)
+{
+}
+
+extern "C" void otPlatRadioTxDone(otInstance *, otRadioFrame *, otRadioFrame *, otError)
+{
+}
+
+extern "C" void otPlatRadioEnergyScanDone(otInstance *, int8_t)
+{
+}
+
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+extern "C" void otPlatDiagRadioReceiveDone(otInstance *, otRadioFrame *, otError)
+{
+}
+
+extern "C" void otPlatDiagRadioTransmitDone(otInstance *, otRadioFrame *, otError)
+{
+}
+#endif
+
+#endif // // #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------
 // Default/weak implementation of radio platform APIs

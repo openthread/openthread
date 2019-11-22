@@ -446,6 +446,13 @@ template <> inline MeshForwarder &Instance::Get(void)
     return mThreadNetif.mMeshForwarder;
 }
 
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+template <> inline RadioSelector &Instance::Get(void)
+{
+    return mThreadNetif.mRadioSelector;
+}
+#endif
+
 template <> inline Mle::Mle &Instance::Get(void)
 {
     return mThreadNetif.mMleRouter;
@@ -500,8 +507,15 @@ template <> inline Mac::Mac &Instance::Get(void)
 
 template <> inline Mac::SubMac &Instance::Get(void)
 {
-    return mThreadNetif.mMac.mSubMac;
+    return mThreadNetif.mMac.mLinks.mSubMac;
 }
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+template <> inline Trel::Link &Instance::Get(void)
+{
+    return mThreadNetif.mMac.mLinks.mTrel;
+}
+#endif
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 template <> inline Mac::Filter &Instance::Get(void)

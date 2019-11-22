@@ -272,11 +272,12 @@ void TestMacHeader(void)
 
     for (const auto &test : tests)
     {
-        uint8_t      psdu[Mac::Frame::kMtu];
+        uint8_t      psdu[OT_RADIO_FRAME_MAX_SIZE];
         Mac::TxFrame frame;
 
-        frame.mPsdu   = psdu;
-        frame.mLength = 0;
+        frame.mPsdu      = psdu;
+        frame.mLength    = 0;
+        frame.mRadioType = 0;
 
         frame.InitMacHeader(test.fcf, test.secCtl);
         VerifyOrQuit(frame.GetHeaderLength() == test.headerLength, "MacHeader test failed");

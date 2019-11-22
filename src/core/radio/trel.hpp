@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,41 +26,81 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "radio.hpp"
+/**
+ * @file
+ *   This file includes definitions for Thread Radio Encapsulation Link (TREL).
+ */
 
-#include "common/locator-getters.hpp"
-#include "utils/otns.hpp"
+#ifndef TREL_HPP_
+#define TREL_HPP_
+
+#include "openthread-core-config.h"
+
+#include "common/locator.hpp"
+#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
 namespace ot {
+namespace Trel {
 
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+/**
+ * @addtogroup core-trel
+ *
+ * @brief
+ *   This module includes definitions for Thread Radio Encapsulation Link (TREL)
+ *
+ * @{
+ *
+ */
 
-void Radio::SetExtendedAddress(const Mac::ExtAddress &aExtAddress)
+/**
+ * This class represents a Thread Radio Encapsulation Link (TREL).
+ *
+ */
+class Link : public InstanceLocator
 {
-    otPlatRadioSetExtendedAddress(GetInstancePtr(), &aExtAddress);
+    friend class Instance;
 
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
-    Get<Utils::Otns>().EmitExtendedAddress(aExtAddress);
-#endif
-}
+public:
+    enum
+    {
+        kMtuSize = 1600,
+        kFcsSize = 0,
+    };
 
-void Radio::SetShortAddress(Mac::ShortAddress aShortAddress)
-{
-    otPlatRadioSetShortAddress(GetInstancePtr(), aShortAddress);
+    explicit Link(Instance &aInstance);
 
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
-    Get<Utils::Otns>().EmitShortAddress(aShortAddress);
-#endif
-}
+    void SetPanId(Mac::PanId) {}
 
-otError Radio::Transmit(Mac::TxFrame &aFrame)
-{
-#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
-    Get<Utils::Otns>().EmitTransmit(aFrame);
-#endif
+    void Enable(void) {}
+    void Disable(void) {}
 
-    return otPlatRadioTransmit(GetInstancePtr(), &aFrame);
-}
-#endif // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    void Sleep(void) {}
+    void Receive(uint8_t) {}
+    void Send(void);
 
+    Mac::TxFrame &GetTransmitFrame(void) { return mTxFrame; }
+
+private:
+    enum
+    {
+        kHeaderSize = 10,
+    };
+
+    Mac::TxFrame mTxFrame;
+    uint8_t      mFrameBuffer[kHeaderSize + kMtuSize];
+};
+
+/**
+ * @}
+ *
+ */
+
+} // namespace Trel
 } // namespace ot
+
+#endif // #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+
+#endif // TREL_HPP_
