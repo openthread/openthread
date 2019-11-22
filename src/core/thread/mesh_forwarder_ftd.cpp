@@ -671,7 +671,21 @@ void MeshForwarder::HandleMesh(uint8_t *             aFrame,
         message->WriteBytes(offset, aFrame, aFrameLength);
         message->SetLinkInfo(aLinkInfo);
 
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+        // We set the received radio type on the message in order for it
+        // to be logged correctly from LogMessage().
+        message->SetRadioType(static_cast<Mac::RadioType>(aLinkInfo.mRadioType));
+#endif
+
         LogMessage(kMessageReceive, *message, &aMacSource, OT_ERROR_NONE);
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+        // Since the message will be forwarded, we clear the radio
+        // type on the message to allow the radio type for tx to be
+        // selected later (based on the radios supported by the next
+        // hop).
+        message->ClearRadioType();
+#endif
 
         IgnoreError(SendMessage(*message));
     }
@@ -990,6 +1004,8 @@ otError MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
     Lowpan::MeshHeader     meshHeader;
     Lowpan::FragmentHeader fragmentHeader;
     uint16_t               headerLength;
+    bool                   shouldLogRadio = false;
+    const char *           radioString    = "";
 
     SuccessOrExit(meshHeader.ParseFrom(aMessage, headerLength));
 
@@ -1006,15 +1022,21 @@ otError MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
 
     shouldLogRss = (aAction == kMessageReceive) || (aAction == kMessageReassemblyDrop);
 
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    shouldLogRadio = true;
+    radioString    = aMessage.IsRadioTypeSet() ? RadioTypeToString(aMessage.GetRadioType()) : "all";
+#endif
+
     otLogMac(
-        aLogLevel, "%s mesh frame, len:%d%s%s, msrc:%s, mdst:%s, hops:%d, frag:%s, sec:%s%s%s%s%s",
+        aLogLevel, "%s mesh frame, len:%d%s%s, msrc:%s, mdst:%s, hops:%d, frag:%s, sec:%s%s%s%s%s%s%s",
         MessageActionToString(aAction, aError), aMessage.GetLength(),
         (aMacAddress == nullptr) ? "" : ((aAction == kMessageReceive) ? ", from:" : ", to:"),
         (aMacAddress == nullptr) ? "" : aMacAddress->ToString().AsCString(), aMeshSource.ToString().AsCString(),
         aMeshDest.ToString().AsCString(), meshHeader.GetHopsLeft() + ((aAction == kMessageReceive) ? 1 : 0),
         hasFragmentHeader ? "yes" : "no", aMessage.IsLinkSecurityEnabled() ? "yes" : "no",
         (aError == OT_ERROR_NONE) ? "" : ", error:", (aError == OT_ERROR_NONE) ? "" : otThreadErrorToString(aError),
-        shouldLogRss ? ", rss:" : "", shouldLogRss ? aMessage.GetRssAverager().ToString().AsCString() : "");
+        shouldLogRss ? ", rss:" : "", shouldLogRss ? aMessage.GetRssAverager().ToString().AsCString() : "",
+        shouldLogRadio ? ", radio:" : "", radioString);
 
     if (hasFragmentHeader)
     {

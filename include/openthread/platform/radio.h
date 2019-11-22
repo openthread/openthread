@@ -217,6 +217,8 @@ typedef struct otRadioFrame
     uint16_t mLength;  ///< Length of the PSDU.
     uint8_t  mChannel; ///< Channel used to transmit/receive the frame.
 
+    uint8_t mRadioType; ///< Radio link type - should be ignored by radio driver.
+
     /**
      * The union of transmit and receive information for a radio frame.
      */

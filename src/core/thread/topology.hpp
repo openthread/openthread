@@ -52,6 +52,7 @@
 #include "thread/link_quality.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
+#include "thread/radio_selector.hpp"
 
 namespace ot {
 
@@ -64,6 +65,10 @@ class LinkMetricsSeriesInfo; ///< Forward declaration for including each other w
  *
  */
 class Neighbor : public InstanceLocatorInit
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    ,
+                 public RadioSelector::NeighborInfo
+#endif
 {
 public:
     /**
@@ -406,20 +411,20 @@ public:
     void SetLastHeard(TimeMilli aLastHeard) { mLastHeard = aLastHeard; }
 
     /**
-     * This method gets the link frame counter value.
+     * This method gets the link frame counters.
      *
-     * @returns The link frame counter value.
+     * @returns A reference to `Mac::LinkFrameCounters` containing link frame counter for all supported radio links.
      *
      */
-    uint32_t GetLinkFrameCounter(void) const { return mValidPending.mValid.mLinkFrameCounter; }
+    Mac::LinkFrameCounters &GetLinkFrameCounters(void) { return mValidPending.mValid.mLinkFrameCounters; }
 
     /**
-     * This method sets the link frame counter value.
+     * This method gets the link frame counters.
      *
-     * @param[in]  aFrameCounter  The link frame counter value.
+     * @returns A reference to `Mac::LinkFrameCounters` containing link frame counter for all supported radio links.
      *
      */
-    void SetLinkFrameCounter(uint32_t aFrameCounter) { mValidPending.mValid.mLinkFrameCounter = aFrameCounter; }
+    const Mac::LinkFrameCounters &GetLinkFrameCounters(void) const { return mValidPending.mValid.mLinkFrameCounters; }
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     /**
@@ -485,6 +490,60 @@ public:
      *
      */
     void SetRloc16(uint16_t aRloc16) { mRloc16 = aRloc16; }
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    /**
+     * This method clears the last received fragment tag.
+     *
+     * The last received fragment tag is used for detect duplicate frames (receievd over different radios) when
+     * multi-radio feature is enabled.
+     *
+     */
+    void ClearLastRxFragmentTag(void) { mLastRxFragmentTag = 0; }
+
+    /**
+     * This method gets the last received fragment tag.
+     *
+     * This method MUST be used only when the tag is set (and not cleared). Otherwise its behavior is undefined.
+     *
+     * @returns The last received fragment tag.
+     *
+     */
+    uint16_t GetLastRxFragmentTag(void) const { return mLastRxFragmentTag; }
+
+    /**
+     * This method set the last received fragment tag.
+     *
+     * @param[in] aTag   The new tag value.
+     *
+     */
+    void SetLastRxFragmentTag(uint16_t aTag) { mLastRxFragmentTag = (aTag == 0) ? 0xffff : aTag; }
+
+    /**
+     * This method indicates whether the last received fragment tag is set or not.
+     *
+     * @returns TRUE if the last received fragment tag is set, FALSE otherwise.
+     *
+     */
+    bool IsLastRxFragmentTagSet(void) const { return (mLastRxFragmentTag != 0); }
+
+    /**
+     * This method indicates whether the last received fragment tag is strictly after a given tag value.
+     *
+     * This method MUST be used only when the tag is set (and not cleared). Otherwise its behavior is undefined.
+     *
+     * The tag value compassion follows the Serial Number Arithmetic logic from RFC-1982. It is semantically equivalent
+     * to `LastRxFragementTag > aTag`.
+     *
+     * @param[in] aTag   A tag value to compare against.
+     *
+     * @returns TRUE if the current last rx fragment tag is strictly after @p aTag, FALSE if they are equal or it is
+     * before @p aTag.
+     *
+     */
+    bool IsLastRxFragmentTagAfter(uint16_t aTag) const { return ((aTag - mLastRxFragmentTag) & (1U << 15)) != 0; }
+
+#endif // OPENTHREAD_CONFIG_MULTI_RADIO
 
     /**
      * This method indicates whether or not it is a valid Thread 1.1 neighbor.
@@ -672,8 +731,8 @@ private:
     {
         struct
         {
-            uint32_t mLinkFrameCounter; ///< The Link Frame Counter
-            uint32_t mMleFrameCounter;  ///< The MLE Frame Counter
+            Mac::LinkFrameCounters mLinkFrameCounters; ///< The Link Frame Counters
+            uint32_t               mMleFrameCounter;   ///< The MLE Frame Counter
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
             uint32_t mLinkAckFrameCounter; ///< The Link Ack Frame Counter
 #endif
@@ -683,6 +742,10 @@ private:
             uint8_t mChallenge[Mle::kMaxChallengeSize]; ///< The challenge value
         } mPending;
     } mValidPending;
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    uint16_t mLastRxFragmentTag; ///< Last received fragment tag
+#endif
 
     uint32_t mKeySequence; ///< Current key sequence
     uint16_t mRloc16;      ///< The RLOC16

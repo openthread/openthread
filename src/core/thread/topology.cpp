@@ -66,10 +66,11 @@ exit:
 void Neighbor::Info::SetFrom(const Neighbor &aNeighbor)
 {
     Clear();
+
     mExtAddress       = aNeighbor.GetExtAddress();
     mAge              = Time::MsecToSec(TimerMilli::GetNow() - aNeighbor.GetLastHeard());
     mRloc16           = aNeighbor.GetRloc16();
-    mLinkFrameCounter = aNeighbor.GetLinkFrameCounter();
+    mLinkFrameCounter = aNeighbor.GetLinkFrameCounters().GetMaximum();
     mMleFrameCounter  = aNeighbor.GetMleFrameCounter();
     mLinkQualityIn    = aNeighbor.GetLinkInfo().GetLinkQuality();
     mAverageRssi      = aNeighbor.GetLinkInfo().GetAverageRss();

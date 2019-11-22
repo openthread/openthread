@@ -73,6 +73,9 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     , mMeshForwarder(aInstance)
     , mMleRouter(aInstance)
     , mDiscoverScanner(aInstance)
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    , mRadioSelector(aInstance)
+#endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     , mNetworkDataLocal(aInstance)
 #endif

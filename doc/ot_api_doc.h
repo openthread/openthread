@@ -158,6 +158,7 @@
  * @defgroup plat-spi-slave           SPI Slave
  * @defgroup plat-time                Time Service
  * @defgroup plat-toolchain           Toolchain
+ * @defgroup plat-trel                TREL
  * @defgroup plat-uart                UART
  *
  * @}

@@ -215,6 +215,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/mac/mac.cpp                                    \
     src/core/mac/mac_filter.cpp                             \
     src/core/mac/mac_frame.cpp                              \
+    src/core/mac/mac_links.cpp                              \
     src/core/mac/mac_types.cpp                              \
     src/core/mac/sub_mac.cpp                                \
     src/core/mac/sub_mac_callbacks.cpp                      \
@@ -250,6 +251,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/radio/radio.cpp                                \
     src/core/radio/radio_callbacks.cpp                      \
     src/core/radio/radio_platform.cpp                       \
+    src/core/radio/trel.cpp                                 \
     src/core/thread/address_resolver.cpp                    \
     src/core/thread/announce_begin_server.cpp               \
     src/core/thread/announce_sender.cpp                     \
@@ -278,6 +280,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/network_data_notifier.cpp               \
     src/core/thread/network_diagnostic.cpp                  \
     src/core/thread/panid_query_server.cpp                  \
+    src/core/thread/radio_selector.cpp                      \
     src/core/thread/router_table.cpp                        \
     src/core/thread/src_match_controller.cpp                \
     src/core/thread/thread_netif.cpp                        \

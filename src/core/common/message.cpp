@@ -625,6 +625,9 @@ void Message::SetLinkInfo(const ThreadLinkInfo &aLinkInfo)
     SetTimeSyncSeq(aLinkInfo.mTimeSyncSeq);
     SetNetworkTimeOffset(aLinkInfo.mNetworkTimeOffset);
 #endif
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    SetRadioType(static_cast<Mac::RadioType>(aLinkInfo.mRadioType));
+#endif
 }
 
 bool Message::IsTimeSync(void) const
