@@ -38,10 +38,11 @@ namespace ot {
 namespace Cli {
 
 const struct Mqtt::Command Mqtt::sCommands[] = {
-    {"help", &Mqtt::ProcessHelp},           {"start", &Mqtt::ProcessStart},
-    {"stop", &Mqtt::ProcessStop},           {"connect", &Mqtt::ProcessConnect},
-    {"subscribe", &Mqtt::ProcessSubscribe}, {"state", &Mqtt::ProcessState},
-    {"register", &Mqtt::ProcessRegister},   {"publish", &Mqtt::ProcessPublish}
+    {"help", &Mqtt::ProcessHelp},               {"start", &Mqtt::ProcessStart},
+    {"stop", &Mqtt::ProcessStop},               {"connect", &Mqtt::ProcessConnect},
+    {"subscribe", &Mqtt::ProcessSubscribe},     {"state", &Mqtt::ProcessState},
+    {"register", &Mqtt::ProcessRegister},       {"publish", &Mqtt::ProcessPublish},
+    {"unsubscribe", &Mqtt::ProcessUnsubscribe},
 };
 
 Mqtt::Mqtt(Interpreter &aInterpreter)
@@ -199,6 +200,21 @@ exit:
     return error;
 }
 
+otError Mqtt::ProcessUnsubscribe(int argc, char *argv[])
+{
+    otError error;
+    long topicId;
+
+    if (argc != 2)
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+    SuccessOrExit(error = mInterpreter.ParseLong(argv[1], topicId));
+    SuccessOrExit(error = otMqttsnUnsubscribe(mInterpreter.mInstance, (otMqttsnTopicId)topicId, &Mqtt::HandleUnsubscribed, this));
+exit:
+    return error;
+}
+
 void Mqtt::HandleConnected(otMqttsnReturnCode aCode, void *aContext)
 {
 	static_cast<Mqtt *>(aContext)->HandleConnected(aCode);
@@ -264,6 +280,23 @@ void Mqtt::HandlePublished(otMqttsnReturnCode aCode)
     else
     {
         PrintFailedWithCode("publish", aCode);
+    }
+}
+
+void Mqtt::HandleUnsubscribed(otMqttsnReturnCode aCode, void* aContext)
+{
+    static_cast<Mqtt *>(aContext)->HandleUnsubscribed(aCode);
+}
+
+void Mqtt::HandleUnsubscribed(otMqttsnReturnCode aCode)
+{
+    if (aCode == kCodeAccepted)
+    {
+        mInterpreter.mServer->OutputFormat("unsubscribed\r\n");
+    }
+    else
+    {
+        PrintFailedWithCode("unsubscribe", aCode);
     }
 }
 

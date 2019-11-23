@@ -78,6 +78,7 @@ private:
     otError ProcessState(int argc, char *argv[]);
     otError ProcessRegister(int argc, char *argv[]);
     otError ProcessPublish(int argc, char *argv[]);
+    otError ProcessUnsubscribe(int argc, char *argv[]);
 
     static void HandleConnected(otMqttsnReturnCode aCode, void *aContext);
     void        HandleConnected(otMqttsnReturnCode aCode);
@@ -87,6 +88,8 @@ private:
     void        HandleRegistered(otMqttsnReturnCode aCode, otMqttsnTopicId aTopicId);
     static void HandlePublished(otMqttsnReturnCode aCode, void* aContext);
     void        HandlePublished(otMqttsnReturnCode aCode);
+    static void HandleUnsubscribed(otMqttsnReturnCode aCode, void* aContext);
+    void        HandleUnsubscribed(otMqttsnReturnCode aCode);
 
     void PrintFailedWithCode(const char *aCommandName, otMqttsnReturnCode aCode);
 
