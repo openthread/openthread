@@ -42,7 +42,8 @@ const struct Mqtt::Command Mqtt::sCommands[] = {
     {"stop", &Mqtt::ProcessStop},               {"connect", &Mqtt::ProcessConnect},
     {"subscribe", &Mqtt::ProcessSubscribe},     {"state", &Mqtt::ProcessState},
     {"register", &Mqtt::ProcessRegister},       {"publish", &Mqtt::ProcessPublish},
-    {"unsubscribe", &Mqtt::ProcessUnsubscribe}, {"disconnect", &Mqtt::ProcessDisconnect}
+    {"unsubscribe", &Mqtt::ProcessUnsubscribe}, {"disconnect", &Mqtt::ProcessDisconnect},
+    {"sleep", &Mqtt::ProcessSleep},             {"awake", &Mqtt::ProcessAwake}
 };
 
 Mqtt::Mqtt(Interpreter &aInterpreter)
@@ -229,6 +230,36 @@ otError Mqtt::ProcessDisconnect(int argc, char *argv[])
     OT_UNUSED_VARIABLE(argv);
 
     return otMqttsnDisconnect(mInterpreter.mInstance);
+}
+
+otError Mqtt::ProcessSleep(int argc, char *argv[])
+{
+    otError error;
+    long duration;
+
+    if (argc != 2)
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+    SuccessOrExit(error = mInterpreter.ParseLong(argv[1], duration));
+    SuccessOrExit(error = otMqttsnSleep(mInterpreter.mInstance, (uint16_t)duration));
+exit:
+    return error;
+}
+
+otError Mqtt::ProcessAwake(int argc, char *argv[])
+{
+    otError error;
+    long timeout;
+
+    if (argc != 2)
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+    SuccessOrExit(error = mInterpreter.ParseLong(argv[1], timeout));
+    SuccessOrExit(error = otMqttsnSleep(mInterpreter.mInstance, (uint32_t)timeout));
+exit:
+    return error;
 }
 
 void Mqtt::HandleConnected(otMqttsnReturnCode aCode, void *aContext)

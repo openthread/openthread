@@ -80,6 +80,8 @@ private:
     otError ProcessPublish(int argc, char *argv[]);
     otError ProcessUnsubscribe(int argc, char *argv[]);
     otError ProcessDisconnect(int argc, char *argv[]);
+    otError ProcessSleep(int argc, char *argv[]);
+    otError ProcessAwake(int argc, char *argv[]);
 
     static void HandleConnected(otMqttsnReturnCode aCode, void *aContext);
     void        HandleConnected(otMqttsnReturnCode aCode);
