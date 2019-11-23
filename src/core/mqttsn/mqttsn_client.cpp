@@ -31,6 +31,8 @@
 #include "mqttsn_client.hpp"
 #include "mqttsn_serializer.hpp"
 #include "common/timer.hpp"
+#include "common/instance.hpp"
+#include "common/logging.hpp"
 
 /**
  * @file
@@ -517,7 +519,7 @@ void MqttsnClient::AdvertiseReceived(const Ip6::MessageInfo &messageInfo, const 
     }
     if (mAdvertiseCallback)
     {
-        mAdvertiseCallback(messageInfo.GetPeerAddr(), advertiseMessage.GetGatewayId(),
+        mAdvertiseCallback(&messageInfo.GetPeerAddr(), advertiseMessage.GetGatewayId(),
             advertiseMessage.GetDuration(), mAdvertiseContext);
     }
 }
@@ -531,9 +533,9 @@ void MqttsnClient::GwinfoReceived(const Ip6::MessageInfo &messageInfo, const uns
     }
     if (mSearchGwCallback)
     {
-        Ip6::Address address = (gwInfoMessage.GetHasAddress()) ? gwInfoMessage.GetAddress()
+        const Ip6::Address &address = (gwInfoMessage.GetHasAddress()) ? gwInfoMessage.GetAddress()
             : messageInfo.GetPeerAddr();
-        mSearchGwCallback(address, gwInfoMessage.GetGatewayId(), mSearchGwContext);
+        mSearchGwCallback(&address, gwInfoMessage.GetGatewayId(), mSearchGwContext);
     }
 }
 

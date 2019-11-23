@@ -251,7 +251,7 @@ Interpreter::Interpreter(Instance *aInstance)
     , mJoiner(*this)
 #endif
 #if OPENTHREAD_CONFIG_MQTTSN_ENABLE
-    , mMqtt(aInstance)
+    , mMqtt(*this)
 #endif
     , mInstance(aInstance)
 {

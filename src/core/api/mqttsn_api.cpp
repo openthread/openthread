@@ -29,6 +29,7 @@
 #include <string.h>
 #include <openthread/mqttsn.h>
 #include "mqttsn/mqttsn_client.hpp"
+#include "common/instance.hpp"
 
 #if OPENTHREAD_CONFIG_MQTTSN_ENABLE
 
@@ -73,10 +74,10 @@ otError otMqttsnConnect(otInstance *aInstance, const otMqttsnConfig *aConfig)
     return client.Connect(config);
 }
 
-otError otMqttsnConnectDefault(otInstance *aInstance, otIp6Address aAddress, uint16_t mPort) {
+otError otMqttsnConnectDefault(otInstance *aInstance, otIp6Address *aAddress, uint16_t mPort) {
     Instance &instance = *static_cast<Instance *>(aInstance);
     Mqttsn::MqttsnConfig config;
-    config.SetAddress(static_cast<Ip6::Address>(aAddress));
+    config.SetAddress(*static_cast<Ip6::Address *>(aAddress));
     config.SetClientId(MQTTSN_DEFAULT_CLIENT_ID);
     config.SetPort(mPort);
     Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
@@ -125,18 +126,18 @@ otError otMqttsnPublishShort(otInstance *aInstance, const uint8_t* aData, int32_
     return client.Publish(aData, aLength, aQos, aShortTopicName, aHandler, aContext);
 }
 
-otError otMqttsnPublishQosm1(otInstance *aInstance, const uint8_t* aData, int32_t aLength, otMqttsnTopicId aTopicId, otIp6Address aAddress, uint16_t aPort)
+otError otMqttsnPublishQosm1(otInstance *aInstance, const uint8_t* aData, int32_t aLength, otMqttsnTopicId aTopicId, const otIp6Address* aAddress, uint16_t aPort)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
     Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
-    return client.PublishQosm1(aData, aLength, aTopicId, static_cast<Ip6::Address>(aAddress), aPort);
+    return client.PublishQosm1(aData, aLength, aTopicId, *static_cast<const Ip6::Address *>(aAddress), aPort);
 }
 
-otError otMqttsnPublishQosm1Short(otInstance *aInstance, const uint8_t* aData, int32_t aLength, const char* aShortTopicName, otIp6Address aAddress, uint16_t aPort)
+otError otMqttsnPublishQosm1Short(otInstance *aInstance, const uint8_t* aData, int32_t aLength, const char* aShortTopicName, const otIp6Address* aAddress, uint16_t aPort)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
     Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
-    return client.PublishQosm1(aData, aLength, aShortTopicName, static_cast<Ip6::Address>(aAddress), aPort);
+    return client.PublishQosm1(aData, aLength, aShortTopicName, *static_cast<const Ip6::Address *>(aAddress), aPort);
 }
 
 otError otMqttsnUnsubscribe(otInstance *aInstance, otMqttsnTopicId aTopicId, otMqttsnUnsubscribedHandler aHandler, void* aContext)
@@ -171,11 +172,11 @@ otError otMqttsnAwake(otInstance *aInstance, uint32_t aTimeout)
     return instance.Get<Mqttsn::MqttsnClient>().Awake(aTimeout);
 }
 
-otError otMqttsnSearchGateway(otInstance *aInstance, const otIp6Address aMulticastAddress, uint16_t aPort, uint8_t aRadius)
+otError otMqttsnSearchGateway(otInstance *aInstance, const otIp6Address* aMulticastAddress, uint16_t aPort, uint8_t aRadius)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
     Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
-    return client.SearchGateway(static_cast<Ip6::Address>(aMulticastAddress), aPort, aRadius);
+    return client.SearchGateway(*static_cast<const Ip6::Address *>(aMulticastAddress), aPort, aRadius);
 }
 
 otError otMqttsnSetConnectedHandler(otInstance *aInstance, otMqttsnConnectedHandler aHandler, void *aContext)
@@ -317,10 +318,10 @@ otError otMqttsnDisconnectTypeToString(otMqttsnDisconnectType aDisconnectType, c
     return OT_ERROR_NONE;
 }
 
-otError otMqttsnAddressTypeToString(otIp6Address aAddress, const char** aAddressString)
+otError otMqttsnAddressTypeToString(const otIp6Address* aAddress, const char** aAddressString)
 {
-    Ip6::Address address = static_cast<Ip6::Address>(aAddress);
-    aAddressString = address.ToString().AsCString();
+    const Ip6::Address &address = *static_cast<const Ip6::Address *>(aAddress);
+    *aAddressString = address.ToString().AsCString();
     return OT_ERROR_NONE;
 }
 

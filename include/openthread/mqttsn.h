@@ -154,7 +154,7 @@ typedef struct otMqttsnConfig {
 	/**
 	 * Gateway IPv6 address.
 	 */
-	otIp6Address mAddress;
+	otIp6Address *mAddress;
 	/**
 	 * Gateway interface port number.
 	 */
@@ -255,23 +255,23 @@ typedef void (*otMqttsnDisconnectedHandler)(otMqttsnDisconnectType aType, void* 
 /**
  * Declaration of function for search gateway callback.
  *
- * @param[in]  aAddress  A reference to IPv6 address of discovered gateway.
+ * @param[in]  aAddress  A pointer to IPv6 address of discovered gateway.
  * @param[in]  aAddress  Discovered gateway ID.
  * @param[in]  aContext  A pointer to search gateway context object.
  *
  */
-typedef void (*otMqttsnSearchgwHandler)(otIp6Address aAddress, uint8_t aGatewayId, void* aContext);
+typedef void (*otMqttsnSearchgwHandler)(const otIp6Address* aAddress, uint8_t aGatewayId, void* aContext);
 
 /**
  * Declaration of function for advertise callback.
  *
- * @param[in]  aAddress    A reference to advertised gateway IPv6 address.
+ * @param[in]  aAddress    A pointer to advertised gateway IPv6 address.
  * @param[in]  aGatewayId  Advertised gateway ID.
  * @param[in]  aDuration   Advertise message duration parameter.
  * @param[in]  aContext    A pointer to advertise callback context object.
  *
  */
-typedef void (*otMqttsnAdvertiseHandler)(otIp6Address aAddress, uint8_t aGatewayId, uint32_t aDuration, void* aContext);
+typedef void (*otMqttsnAdvertiseHandler)(const otIp6Address* aAddress, uint8_t aGatewayId, uint32_t aDuration, void* aContext);
 
 /**
  * Declaration of function for callback invoked when register message received.
@@ -320,7 +320,7 @@ otMqttsnClientState otMqttsnGetState(otInstance *aInstance);
  * Establish MQTT-SN connection with gateway.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aConfig  A reference to configuration object with connection parameters.
+ * @param[in]  aConfig    A pointer to configuration object with connection parameters.
  *
  * @retval OT_ERROR_NONE           Connection message successfully queued.
  * @retval OT_ERROR_INVALID_ARGS   Invalid connection parameters.
@@ -334,7 +334,7 @@ otError otMqttsnConnect(otInstance *aInstance, const otMqttsnConfig *aConfig);
  * Establish MQTT-SN connection with gateway with default configuration.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  mAddress   Gateway IPv6 address.
+ * @param[in]  mAddress   A pointer to a gateway IPv6 address.
  * @param[in]  mPort      Gateway interface port number.
  *
  * @retval OT_ERROR_NONE           Connection message successfully queued.
@@ -343,7 +343,7 @@ otError otMqttsnConnect(otInstance *aInstance, const otMqttsnConfig *aConfig);
  * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
  *
  */
-otError otMqttsnConnectDefault(otInstance *aInstance, otIp6Address aAddress, uint16_t mPort);
+otError otMqttsnConnectDefault(otInstance *aInstance, const otIp6Address* aAddress, uint16_t mPort);
 
 /**
  * Subscribe to the topic by topic name string.
@@ -462,7 +462,7 @@ otError otMqttsnPublishShort(otInstance *aInstance, const uint8_t* aData, int32_
  * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
  *
  */
-otError otMqttsnPublishQosm1(otInstance *aInstance, const uint8_t* aData, int32_t aLength, otMqttsnTopicId aTopicId, otIp6Address aAddress, uint16_t aPort);
+otError otMqttsnPublishQosm1(otInstance *aInstance, const uint8_t* aData, int32_t aLength, otMqttsnTopicId aTopicId, const otIp6Address* aAddress, uint16_t aPort);
 
 /**
  * Publish message to the topic with specific short topic name with QoS level -1. No connection or subscription is required.
@@ -479,7 +479,7 @@ otError otMqttsnPublishQosm1(otInstance *aInstance, const uint8_t* aData, int32_
  * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
  *
  */
-otError otMqttsnPublishQosm1Short(otInstance *aInstance, const uint8_t* aData, int32_t aLength, const char* aShortTopicName, otIp6Address aAddress, uint16_t aPort);
+otError otMqttsnPublishQosm1Short(otInstance *aInstance, const uint8_t* aData, int32_t aLength, const char* aShortTopicName, const otIp6Address* aAddress, uint16_t aPort);
 
 /**
  * Unsubscribe from the topic with specific topic ID.
@@ -554,7 +554,7 @@ otError otMqttsnAwake(otInstance *aInstance, uint32_t aTimeout);
  * Search for gateway with multicast message.
  *
  * @param[in]  aInstance        A pointer to an OpenThread instance.
- * @param[in]  aMulticastAddress  A reference to multicast IPv6 address.
+ * @param[in]  aMulticastAddress  A pointer to multicast IPv6 address.
  * @param[in]  aPort              Gateway port number.
  * @param[in]  aRadius            Message hop limit (time to live)
  *
@@ -562,7 +562,7 @@ otError otMqttsnAwake(otInstance *aInstance, uint32_t aTimeout);
  * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
  *
  */
-otError otMqttsnSearchGateway(otInstance *aInstance, const otIp6Address aMulticastAddress, uint16_t aPort, uint8_t aRadius);
+otError otMqttsnSearchGateway(otInstance *aInstance, const otIp6Address* aMulticastAddress, uint16_t aPort, uint8_t aRadius);
 
 
 /**
@@ -695,6 +695,6 @@ otError otMqttsnDisconnectTypeToString(otMqttsnDisconnectType aDisconnectType, c
  * @retval OT_ERROR_INVALID_ARGS      Invalid Ip6 address value.
  *
  */
-otError otMqttsnAddressTypeToString(otIp6Address aAddress, const char** aAddressString);
+otError otMqttsnAddressTypeToString(const otIp6Address* aAddress, const char** aAddressString);
 
 #endif /* OPENTHREAD_MQTTSN_H_ */

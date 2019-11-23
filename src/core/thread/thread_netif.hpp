@@ -38,6 +38,7 @@
 
 #include "coap/coap.hpp"
 #include "coap/coap_secure.hpp"
+#include "mqttsn/mqttsn_client.hpp"
 #include "mac/mac.hpp"
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
@@ -82,10 +83,6 @@
 #if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 #include "utils/jam_detector.hpp"
 #endif // OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
-
-#if OPENTHREAD_CONFIG_MQTTSN_ENABLE
-#include "mqttsn/mqttsn_client.hpp"
-#endif
 
 namespace ot {
 

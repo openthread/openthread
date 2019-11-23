@@ -52,6 +52,7 @@
 #endif
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 #include "coap/coap.hpp"
+#include "mqttsn/mqttsn_client.hpp"
 #include "common/code_utils.hpp"
 #include "crypto/mbedtls.hpp"
 #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
@@ -74,10 +75,6 @@
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
 #include "common/extension.hpp"
 #endif
-#if OPENTHREAD_CONFIG_MQTTSN_ENABLE
-#include "mqttsn/mqttsn_client.hpp"
-#endif
-
 /**
  * @addtogroup core-instance
  *
@@ -597,6 +594,11 @@ template <> inline Coap::CoapSecure &Instance::Get(void)
 }
 #endif
 
+template <> inline Mqttsn::MqttsnClient &Instance::Get(void)
+{
+    return mThreadNetif.mMqttsnClient;
+}
+
 template <> inline MeshCoP::ActiveDataset &Instance::Get(void)
 {
     return mThreadNetif.mActiveDataset;
@@ -765,13 +767,6 @@ template <> inline Extension::ExtensionBase &Instance::Get(void)
 template <> inline FactoryDiags::Diags &Instance::Get(void)
 {
     return mDiags;
-}
-#endif
-
-#if OPENTHREAD_CONFIG_MQTTSN_ENABLE
-template <> inline Mqttsn::MqttsnClient &Instance::Get(void)
-{
-    return mThreadNetif.mMqttsnClient;
 }
 #endif
 

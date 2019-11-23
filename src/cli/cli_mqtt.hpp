@@ -98,8 +98,8 @@ private:
     otMqttsnReturnCode        HandlePublishReceived(const uint8_t* aPayload, int32_t aPayloadLength, otMqttsnTopicIdType aTopicIdType, otMqttsnTopicId aTopicId, const char* aShortTopicName);
     static void HandleDisconnected(otMqttsnDisconnectType aType, void* aContext);
     void        HandleDisconnected(otMqttsnDisconnectType aType);
-    static void HandleSearchgwResponse(otIp6Address aAddress, uint8_t aGatewayId, void* aContext);
-    void        HandleSearchgwResponse(otIp6Address aAddress, uint8_t aGatewayId);
+    static void HandleSearchgwResponse(const otIp6Address* aAddress, uint8_t aGatewayId, void* aContext);
+    void        HandleSearchgwResponse(const otIp6Address* aAddress, uint8_t aGatewayId);
 
     void PrintFailedWithCode(const char *aCommandName, otMqttsnReturnCode aCode);
 

@@ -128,7 +128,7 @@ otError Mqtt::ProcessConnect(int argc, char *argv[])
     }
     SuccessOrExit(error = otMqttsnSetConnectedHandler(mInterpreter.mInstance, &Mqtt::HandleConnected, this));
     SuccessOrExit(error = otMqttsnSetDisconnectedHandler(mInterpreter.mInstance, &Mqtt::HandleDisconnected, this));
-    SuccessOrExit(error = otMqttsnConnectDefault(mInterpreter.mInstance, destinationIp, (uint16_t)destinationPort));
+    SuccessOrExit(error = otMqttsnConnectDefault(mInterpreter.mInstance, &destinationIp, (uint16_t)destinationPort));
 
 exit:
 	return error;
@@ -187,7 +187,7 @@ otError Mqtt::ProcessPublish(int argc, char *argv[])
     otError error;
     long topicId;
     otMqttsnQos qos = kQos1;
-    uint8_t* data = "";
+    const char* data = "";
     int32_t length = 0;
 
     if (argc < 2 || argc > 4)
@@ -197,14 +197,14 @@ otError Mqtt::ProcessPublish(int argc, char *argv[])
     SuccessOrExit(error = mInterpreter.ParseLong(argv[1], topicId));
     if (argc > 2)
     {
-        data = static_cast<uint8_t *>(argv[2]);
+        data = argv[2];
         length = strlen(argv[2]);
     }
     if (argc > 3)
     {
         SuccessOrExit(error = otMqttsnStringToQos(argv[3], &qos));
     }
-    SuccessOrExit(error = otMqttsnPublish(mInterpreter.mInstance, data,
+    SuccessOrExit(error = otMqttsnPublish(mInterpreter.mInstance, (uint8_t *)data,
         length, qos, (otMqttsnTopicId)topicId, &Mqtt::HandlePublished, this));
 exit:
     return error;
@@ -277,7 +277,7 @@ otError Mqtt::ProcessSearchgw(int argc, char *argv[])
     SuccessOrExit(error = otIp6AddressFromString(argv[1], &multicastAddress));
     SuccessOrExit(error = mInterpreter.ParseLong(argv[2], port));
     SuccessOrExit(error = mInterpreter.ParseLong(argv[3], radius));
-    SuccessOrExit(error = otMqttsnSearchGateway(mInterpreter.mInstance, multicastAddress, (uint16_t)port, (uint8_t)radius));
+    SuccessOrExit(error = otMqttsnSearchGateway(mInterpreter.mInstance, &multicastAddress, (uint16_t)port, (uint8_t)radius));
     SuccessOrExit(error = otMqttsnSetSearchgwHandler(mInterpreter.mInstance, &Mqtt::HandleSearchgwResponse, this));
 exit:
     return error;
@@ -307,6 +307,7 @@ void Mqtt::HandleSubscribed(otMqttsnReturnCode aCode, otMqttsnTopicId aTopicId, 
 
 void Mqtt::HandleSubscribed(otMqttsnReturnCode aCode, otMqttsnTopicId aTopicId, otMqttsnQos aQos)
 {
+    OT_UNUSED_VARIABLE(aQos);
     if (aCode == kCodeAccepted)
     {
         mInterpreter.mServer->OutputFormat("subscribed topic id:%u\r\n", (unsigned int)aTopicId);
@@ -405,18 +406,17 @@ void Mqtt::HandleDisconnected(otMqttsnDisconnectType aType)
     }
 }
 
-void Mqtt::HandleSearchgwResponse(otIp6Address aAddress, uint8_t aGatewayId, void* aContext)
+void Mqtt::HandleSearchgwResponse(const otIp6Address* aAddress, uint8_t aGatewayId, void* aContext)
 {
     static_cast<Mqtt *>(aContext)->HandleSearchgwResponse(aAddress, aGatewayId);
 }
 
-void Mqtt::HandleSearchgwResponse(otIp6Address aAddress, uint8_t aGatewayId)
+void Mqtt::HandleSearchgwResponse(const otIp6Address* aAddress, uint8_t aGatewayId)
 {
-    otError error;
     const char *addressString;
     if (otMqttsnAddressTypeToString(aAddress, &addressString) == OT_ERROR_NONE)
     {
-        mInterpreter.mServer->OutputFormat("searchgw response from gateway id %u with address: %s\r\n");
+        mInterpreter.mServer->OutputFormat("searchgw response from gateway id %u with address: %s\r\n", (unsigned int)aGatewayId, addressString);
     }
 }
 

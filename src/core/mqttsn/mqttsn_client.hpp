@@ -30,11 +30,9 @@
 #define MQTTSN_CLIENT_HPP_
 
 #include "common/locator.hpp"
-#include "common/instance.hpp"
 #include "common/tasklet.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
-#include <openthread/error.h>
 #include <openthread/mqttsn.h>
 
 /**
@@ -44,7 +42,6 @@
  */
 
 namespace ot {
-
 namespace Mqttsn {
 
 /**
@@ -554,7 +551,7 @@ public:
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    MqttsnClient(Instance &aInstance);
+    explicit MqttsnClient(Instance &aInstance);
 
     /**
      * Default object destructor.

@@ -55,6 +55,7 @@ LEGACY                         ?= 1
 LINK_RAW                       ?= 1
 MAC_FILTER                     ?= 1
 MTD_NETDIAG                    ?= 1
+MQTT                           ?= 1
 REFERENCE_DEVICE               ?= 1
 SERVICE                        ?= 1
 SNTP_CLIENT                    ?= 1
