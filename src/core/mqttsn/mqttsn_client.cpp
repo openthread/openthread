@@ -632,7 +632,7 @@ void MqttsnClient::PubackReceived(const Ip6::MessageInfo &messageInfo, const uns
 
     // Process QoS level 1 message
     // Find message waiting for acknowledge
-    MessageMetadata<PublishCallbackFunc> metadata;
+    MessageMetadata<otMqttsnPublishedHandler> metadata;
     Message* publishMessage = mPublishQos1Queue.Find(pubackMessage.GetMessageId(), metadata);
     if (publishMessage)
     {
@@ -685,7 +685,7 @@ void MqttsnClient::PubrecReceived(const Ip6::MessageInfo &messageInfo, const uns
 
     // Process QoS level 2 message
     // Find message waiting for receive acknowledge
-    MessageMetadata<PublishCallbackFunc> metadata;
+    MessageMetadata<otMqttsnPublishedHandler> metadata;
     Message* publishMessage = mPublishQos2PublishQueue.Find(pubrecMessage.GetMessageId(), metadata);
     if (!publishMessage)
     {
@@ -706,8 +706,8 @@ void MqttsnClient::PubrecReceived(const Ip6::MessageInfo &messageInfo, const uns
     }
 
     // Enqueue PUBREL message and wait for PUBCOMP
-    const MessageMetadata<PublishCallbackFunc> &pubrelMetadata = MessageMetadata<PublishCallbackFunc>(mConfig.GetAddress(),
-        mConfig.GetPort(), metadata.mMessageId, TimerMilli::GetNow().GetValue(), mConfig.GetRetransmissionTimeout() * 1000,
+    const MessageMetadata<otMqttsnPublishedHandler> pubrelMetadata(mConfig.GetAddress(), mConfig.GetPort(),
+        metadata.mMessageId, TimerMilli::GetNow().GetValue(), mConfig.GetRetransmissionTimeout() * 1000,
         mConfig.GetRetransmissionCount(), metadata.mCallback, this);
     if (mPublishQos2PubrelQueue.EnqueueCopy(*responseMessage, responseMessage->GetLength(), pubrelMetadata) != OT_ERROR_NONE)
     {
@@ -784,7 +784,7 @@ void MqttsnClient::PubcompReceived(const Ip6::MessageInfo &messageInfo, const un
 
     // Process QoS level 2 PUBCOMP message
     // Find PUBREL message waiting for receive acknowledge
-    MessageMetadata<PublishCallbackFunc> metadata;
+    MessageMetadata<otMqttsnPublishedHandler> metadata;
     Message* pubrelMessage = mPublishQos2PubrelQueue.Find(pubcompMessage.GetMessageId(), metadata);
     if (!pubrelMessage)
     {
@@ -1192,7 +1192,7 @@ exit:
     return error;
 }
 
-otError MqttsnClient::Publish(const uint8_t* aData, int32_t aLength, Qos aQos, const char* aShortTopicName, PublishCallbackFunc aCallback, void* aContext)
+otError MqttsnClient::Publish(const uint8_t* aData, int32_t aLength, Qos aQos, const char* aShortTopicName, otMqttsnPublishedHandler aCallback, void* aContext)
 {
     otError error = OT_ERROR_NONE;
     int32_t length = -1;
@@ -1219,14 +1219,14 @@ otError MqttsnClient::Publish(const uint8_t* aData, int32_t aLength, Qos aQos, c
     {
         // If QoS level 1 enqueue message to waiting queue - waiting for PUBACK
         SuccessOrExit(error = mPublishQos1Queue.EnqueueCopy(*message, message->GetLength(),
-            MessageMetadata<PublishCallbackFunc>(mConfig.GetAddress(), mConfig.GetPort(), mMessageId, TimerMilli::GetNow().GetValue(),
+            MessageMetadata<otMqttsnPublishedHandler>(mConfig.GetAddress(), mConfig.GetPort(), mMessageId, TimerMilli::GetNow().GetValue(),
                 mConfig.GetRetransmissionTimeout() * 1000, mConfig.GetRetransmissionCount(), aCallback, aContext)));
     }
     if (aQos == kQos2)
     {
         // If QoS level 1 enqueue message to waiting queue - waiting for PUBREC
         SuccessOrExit(error = mPublishQos2PublishQueue.EnqueueCopy(*message, message->GetLength(),
-            MessageMetadata<PublishCallbackFunc>(mConfig.GetAddress(), mConfig.GetPort(), mMessageId, TimerMilli::GetNow().GetValue(),
+            MessageMetadata<otMqttsnPublishedHandler>(mConfig.GetAddress(), mConfig.GetPort(), mMessageId, TimerMilli::GetNow().GetValue(),
                 mConfig.GetRetransmissionTimeout() * 1000, mConfig.GetRetransmissionCount(), aCallback, aContext)));
     }
     mMessageId++;
@@ -1235,7 +1235,7 @@ exit:
     return error;
 }
 
-otError MqttsnClient::Publish(const uint8_t* aData, int32_t aLength, Qos aQos, TopicId aTopicId, PublishCallbackFunc aCallback, void* aContext)
+otError MqttsnClient::Publish(const uint8_t* aData, int32_t aLength, Qos aQos, TopicId aTopicId, otMqttsnPublishedHandler aCallback, void* aContext)
 {
     otError error = OT_ERROR_NONE;
     int32_t length = -1;
@@ -1258,14 +1258,14 @@ otError MqttsnClient::Publish(const uint8_t* aData, int32_t aLength, Qos aQos, T
     {
         // If QoS level 1 enqueue message to waiting queue - waiting for PUBACK
         SuccessOrExit(error = mPublishQos1Queue.EnqueueCopy(*message, message->GetLength(),
-            MessageMetadata<PublishCallbackFunc>(mConfig.GetAddress(), mConfig.GetPort(), mMessageId, TimerMilli::GetNow().GetValue(),
+            MessageMetadata<otMqttsnPublishedHandler>(mConfig.GetAddress(), mConfig.GetPort(), mMessageId, TimerMilli::GetNow().GetValue(),
                 mConfig.GetRetransmissionTimeout() * 1000, mConfig.GetRetransmissionCount(), aCallback, aContext)));
     }
     if (aQos == kQos2)
     {
         // If QoS level 1 enqueue message to waiting queue - waiting for PUBREC
         SuccessOrExit(error = mPublishQos2PublishQueue.EnqueueCopy(*message, message->GetLength(),
-            MessageMetadata<PublishCallbackFunc>(mConfig.GetAddress(), mConfig.GetPort(), mMessageId, TimerMilli::GetNow().GetValue(),
+            MessageMetadata<otMqttsnPublishedHandler>(mConfig.GetAddress(), mConfig.GetPort(), mMessageId, TimerMilli::GetNow().GetValue(),
                 mConfig.GetRetransmissionTimeout() * 1000, mConfig.GetRetransmissionCount(), aCallback, aContext)));
     }
     mMessageId++;
@@ -1274,7 +1274,7 @@ exit:
     return error;
 }
 
-otError MqttsnClient::PublishQosm1(const uint8_t* aData, int32_t aLength, const char* aShortTopicName, Ip6::Address aAddress, uint16_t aPort)
+otError MqttsnClient::PublishQosm1(const uint8_t* aData, int32_t aLength, const char* aShortTopicName, const Ip6::Address &aAddress, uint16_t aPort)
 {
     otError error = OT_ERROR_NONE;
     int32_t length = -1;
@@ -1295,7 +1295,7 @@ exit:
     return error;
 }
 
-otError MqttsnClient::PublishQosm1(const uint8_t* aData, int32_t aLength, TopicId aTopicId, Ip6::Address aAddress, uint16_t aPort)
+otError MqttsnClient::PublishQosm1(const uint8_t* aData, int32_t aLength, TopicId aTopicId, const Ip6::Address &aAddress, uint16_t aPort)
 {
     otError error = OT_ERROR_NONE;
     int32_t length = -1;
@@ -1648,21 +1648,21 @@ void MqttsnClient::HandleUnsubscribeTimeout(const MessageMetadata<UnsubscribeCal
     aMetadata.mCallback(kCodeTimeout, aMetadata.mContext);
 }
 
-void MqttsnClient::HandlePublishQos1Timeout(const MessageMetadata<PublishCallbackFunc> &aMetadata, void* aContext)
+void MqttsnClient::HandlePublishQos1Timeout(const MessageMetadata<otMqttsnPublishedHandler> &aMetadata, void* aContext)
 {
     MqttsnClient* client = static_cast<MqttsnClient*>(aContext);
     client->mTimeoutRaised = true;
     aMetadata.mCallback(kCodeTimeout, aMetadata.mContext);
 }
 
-void MqttsnClient::HandlePublishQos2PublishTimeout(const MessageMetadata<PublishCallbackFunc> &aMetadata, void* aContext)
+void MqttsnClient::HandlePublishQos2PublishTimeout(const MessageMetadata<otMqttsnPublishedHandler> &aMetadata, void* aContext)
 {
     MqttsnClient* client = static_cast<MqttsnClient*>(aContext);
     client->mTimeoutRaised = true;
     aMetadata.mCallback(kCodeTimeout, aMetadata.mContext);
 }
 
-void MqttsnClient::HandlePublishQos2PubrelTimeout(const MessageMetadata<PublishCallbackFunc> &aMetadata, void* aContext)
+void MqttsnClient::HandlePublishQos2PubrelTimeout(const MessageMetadata<otMqttsnPublishedHandler> &aMetadata, void* aContext)
 {
     MqttsnClient* client = static_cast<MqttsnClient*>(aContext);
     client->mTimeoutRaised = true;

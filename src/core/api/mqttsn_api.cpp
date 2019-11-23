@@ -73,10 +73,10 @@ otError otMqttsnConnect(otInstance *aInstance, const otMqttsnConfig *aConfig)
     return client.Connect(config);
 }
 
-otError otMqttsnConnectDefault(otInstance *aInstance, otIp6Address mAddress, uint16_t mPort) {
+otError otMqttsnConnectDefault(otInstance *aInstance, otIp6Address aAddress, uint16_t mPort) {
     Instance &instance = *static_cast<Instance *>(aInstance);
     Mqttsn::MqttsnConfig config;
-    config.SetAddress(*static_cast<Ip6::Address *>(mAddress));
+    config.SetAddress(static_cast<Ip6::Address>(aAddress));
     config.SetClientId(MQTTSN_DEFAULT_CLIENT_ID);
     config.SetPort(mPort);
     Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
@@ -109,6 +109,34 @@ otError otMqttsnRegister(otInstance *aInstance, const char* aTopicName, otMqttsn
     Instance &instance = *static_cast<Instance *>(aInstance);
     Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
     return client.Register(aTopicName, aHandler, aContext);
+}
+
+otError otMqttsnPublish(otInstance *aInstance, const uint8_t* aData, int32_t aLength, otMqttsnQos aQos, otMqttsnTopicId aTopicId, otMqttsnPublishedHandler aHandler, void* aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
+    return client.Publish(aData, aLength, aQos, aTopicId, aHandler, aContext);
+}
+
+otError otMqttsnPublishShort(otInstance *aInstance, const uint8_t* aData, int32_t aLength, otMqttsnQos aQos, const char* aShortTopicName, otMqttsnPublishedHandler aHandler, void* aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
+    return client.Publish(aData, aLength, aQos, aShortTopicName, aHandler, aContext);
+}
+
+otError PublishQosm1(otInstance *aInstance, const uint8_t* aData, int32_t aLength, otMqttsnTopicId aTopicId, otIp6Address aAddress, uint16_t aPort)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
+    return client.PublishQosm1(aData, aLength, aTopicId, static_cast<Ip6::Address>(aAddress), aPort);
+}
+
+otError PublishQosm1Short(otInstance *aInstance, const uint8_t* aData, int32_t aLength, const char* aShortTopicName, otIp6Address aAddress, uint16_t aPort)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
+    return client.PublishQosm1(aData, aLength, aShortTopicName, static_cast<Ip6::Address>(aAddress), aPort);
 }
 
 otError otMqttsnSetConnectedHandler(otInstance *aInstance, otMqttsnConnectedHandler aHandler, void *aContext)

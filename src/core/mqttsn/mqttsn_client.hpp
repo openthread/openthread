@@ -619,16 +619,6 @@ public:
     typedef void (*SearchGwCallbackFunc)(const Ip6::Address &aAddress, uint8_t aGatewayId, void* aContext);
 
     /**
-     * Declaration of function for register callback.
-     *
-     * @param[in]  aCode     REGACK return code or -1 when subscription timed out.
-     * @param[in]  aTopicId  Registered topic ID.
-     * @param[in]  aContext  A pointer to register callback context object.
-     *
-     */
-    typedef void (*RegisterCallbackFunc)(ReturnCode aCode, TopicId aTopicId, void* aContext);
-
-    /**
      * Declaration of function for callback invoked when register message received.
      *
      * @param[in]  aTopicId    Registered topic ID.
@@ -639,16 +629,6 @@ public:
      *
      */
     typedef ReturnCode (*RegisterReceivedCallbackFunc)(TopicId aTopicId, const TopicNameString &aTopicName, void* aContext);
-
-    /**
-     * Declaration of function for publish callback. It is invoked only when quality of service level is 1 or 2.
-     *
-     * @param[in]  aCode     Publish response code or -1 when publish timed out.
-     * @param[in]  aTopicId  Topic ID of published message. It is set to 0 when timed out or short topic name is used.
-     * @param[in]  aContext  A pointer to publish callback context object.
-     *
-     */
-    typedef void (*PublishCallbackFunc)(ReturnCode aCode, void* aContext);
 
     /**
      * Declaration of function for unsubscribe callback.
@@ -773,7 +753,7 @@ public:
      * @param[in]  aLength          Length of message payload data.
      * @param[in]  aQos             Message quality of service level.
      * @param[in]  aShortTopicName  A pointer to short topic name string of target topic.
-     * @param[in]  aCallback        A function pointer to callback invoked when registration is acknowledged.
+     * @param[in]  aCallback        A function pointer to callback invoked when publish is acknowledged.
      * @param[in]  aContext         A pointer to context object passed to callback.
      *
      * @retval OT_ERROR_NONE           Publish message successfully queued.
@@ -782,7 +762,7 @@ public:
      * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
      *
      */
-    otError Publish(const uint8_t* aData, int32_t aLength, Qos aQos, const char* aShortTopicName, PublishCallbackFunc aCallback, void* aContext);
+    otError Publish(const uint8_t* aData, int32_t aLength, Qos aQos, const char* aShortTopicName, otMqttsnPublishedHandler aCallback, void* aContext);
 
     /**
      * Publish message to the topic with specific topic ID.
@@ -791,7 +771,7 @@ public:
      * @param[in]  aLength    Length of message payload data.
      * @param[in]  aQos       Message quality of service level.
      * @param[in]  aTopicId   Topic ID of target topic.
-     * @param[in]  aCallback  A function pointer to callback invoked when registration is acknowledged.
+     * @param[in]  aCallback  A function pointer to callback invoked when publish is acknowledged.
      * @param[in]  aContext   A pointer to context object passed to callback.
      *
      * @retval OT_ERROR_NONE           Publish message successfully queued.
@@ -799,7 +779,7 @@ public:
      * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
      *
      */
-    otError Publish(const uint8_t* aData, int32_t aLength, Qos aQos, TopicId aTopicId, PublishCallbackFunc aCallback, void* aContext);
+    otError Publish(const uint8_t* aData, int32_t aLength, Qos aQos, TopicId aTopicId, otMqttsnPublishedHandler aCallback, void* aContext);
 
     /**
      * Publish message to the topic with specific short topic name with QoS level -1. No connection or subscription is required.
@@ -815,7 +795,7 @@ public:
      * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
      *
      */
-    otError PublishQosm1(const uint8_t* aData, int32_t aLength, const char* aShortTopicName, Ip6::Address aAddress, uint16_t aPort);
+    otError PublishQosm1(const uint8_t* aData, int32_t aLength, const char* aShortTopicName, const Ip6::Address &aAddress, uint16_t aPort);
 
     /**
      * Publish message to the topic with specific topic ID with QoS level -1. No connection or subscription is required.
@@ -830,7 +810,7 @@ public:
      * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
      *
      */
-    otError PublishQosm1(const uint8_t* aData, int32_t aLength, TopicId aTopicId, Ip6::Address aAddress, uint16_t aPort);
+    otError PublishQosm1(const uint8_t* aData, int32_t aLength, TopicId aTopicId, const Ip6::Address &aAddress, uint16_t aPort);
 
     /**
      * Unsubscribe from the topic with specific short topic name.
@@ -1086,11 +1066,11 @@ private:
 
     static void HandleUnsubscribeTimeout(const MessageMetadata<UnsubscribeCallbackFunc> &aMetadata, void* aContext);
 
-    static void HandlePublishQos1Timeout(const MessageMetadata<PublishCallbackFunc> &aMetadata, void* aContext);
+    static void HandlePublishQos1Timeout(const MessageMetadata<otMqttsnPublishedHandler> &aMetadata, void* aContext);
 
-    static void HandlePublishQos2PublishTimeout(const MessageMetadata<PublishCallbackFunc> &aMetadata, void* aContext);
+    static void HandlePublishQos2PublishTimeout(const MessageMetadata<otMqttsnPublishedHandler> &aMetadata, void* aContext);
 
-    static void HandlePublishQos2PubrelTimeout(const MessageMetadata<PublishCallbackFunc> &aMetadata, void* aContext);
+    static void HandlePublishQos2PubrelTimeout(const MessageMetadata<otMqttsnPublishedHandler> &aMetadata, void* aContext);
 
     static void HandlePublishQos2PubrecTimeout(const MessageMetadata<void*> &aMetadata, void* aContext);
 
@@ -1119,9 +1099,9 @@ private:
     WaitingMessagesQueue<otMqttsnSubscribedHandler> mSubscribeQueue;
     WaitingMessagesQueue<otMqttsnRegisteredHandler> mRegisterQueue;
     WaitingMessagesQueue<UnsubscribeCallbackFunc> mUnsubscribeQueue;
-    WaitingMessagesQueue<PublishCallbackFunc> mPublishQos1Queue;
-    WaitingMessagesQueue<PublishCallbackFunc> mPublishQos2PublishQueue;
-    WaitingMessagesQueue<PublishCallbackFunc> mPublishQos2PubrelQueue;
+    WaitingMessagesQueue<otMqttsnPublishedHandler> mPublishQos1Queue;
+    WaitingMessagesQueue<otMqttsnPublishedHandler> mPublishQos2PublishQueue;
+    WaitingMessagesQueue<otMqttsnPublishedHandler> mPublishQos2PubrelQueue;
     WaitingMessagesQueue<void*> mPublishQos2PubrecQueue;
     WaitingMessagesQueue<void*> mConnectQueue;
     WaitingMessagesQueue<void*> mDisconnectQueue;

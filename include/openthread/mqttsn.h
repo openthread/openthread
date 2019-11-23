@@ -165,6 +165,16 @@ typedef void (*otMqttsnSubscribedHandler)(otMqttsnReturnCode aCode, otMqttsnTopi
 typedef void (*otMqttsnRegisteredHandler)(otMqttsnReturnCode aCode, otMqttsnTopicId aTopicId, void* aContext);
 
 /**
+ * Declaration of function for publish callback. It is invoked only when quality of service level is 1 or 2.
+ *
+ * @param[in]  aCode     Publish response code or -1 when publish timed out.
+ * @param[in]  aTopicId  Topic ID of published message. It is set to 0 when timed out or short topic name is used.
+ * @param[in]  aContext  A pointer to publish callback context object.
+ *
+ */
+typedef void (*otMqttsnPublishedHandler)(otMqttsnReturnCode aCode, void* aContext);
+
+/**
  * Start MQTT-SN service and start connection and listening.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
@@ -222,7 +232,7 @@ otError otMqttsnConnect(otInstance *aInstance, const otMqttsnConfig *aConfig);
  * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
  *
  */
-otError otMqttsnConnectDefault(otInstance *aInstance, otIp6Address mAddress, uint16_t mPort);
+otError otMqttsnConnectDefault(otInstance *aInstance, otIp6Address aAddress, uint16_t mPort);
 
 /**
  * Subscribe to the topic by topic name string.
@@ -289,6 +299,76 @@ otError otMqttsnSubscribeTopicId(otInstance *aInstance, otMqttsnTopicId aTopicId
  *
  */
 otError otMqttsnRegister(otInstance *aInstance, const char* aTopicName, otMqttsnRegisteredHandler aHandler, void* aContext);
+
+/**
+ * Publish message to the topic with specific topic ID.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aData      A pointer to byte array to be send as message payload.
+ * @param[in]  aLength    Length of message payload data.
+ * @param[in]  aQos       Message quality of service level.
+ * @param[in]  aTopicId   Topic ID of target topic.
+ * @param[in]  aHandler   A function pointer to callback invoked when publish is acknowledged.
+ * @param[in]  aContext   A pointer to context object passed to callback.
+ *
+ * @retval OT_ERROR_NONE           Publish message successfully queued.
+ * @retval OT_ERROR_INVALID_STATE  The client is not in active state.
+ * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
+ *
+ */
+otError otMqttsnPublish(otInstance *aInstance, const uint8_t* aData, int32_t aLength, otMqttsnQos aQos, otMqttsnTopicId aTopicId, otMqttsnPublishedHandler aHandler, void* aContext);
+
+/**
+ * Publish message to the topic with specific short topic name.
+ *
+ * @param[in]  aInstance        A pointer to an OpenThread instance.
+ * @param[in]  aData            A pointer to byte array to be send as message payload.
+ * @param[in]  aLength          Length of message payload data.
+ * @param[in]  aQos             Message quality of service level.
+ * @param[in]  aShortTopicName  A pointer to short topic name string of target topic.
+ * @param[in]  aHandler         A function pointer to callback invoked when publish is acknowledged.
+ * @param[in]  aContext         A pointer to context object passed to callback.
+ *
+ * @retval OT_ERROR_NONE           Publish message successfully queued.
+ * @retval OT_ERROR_INVALID_ARGS   Invalid publish parameters. Short topic name must have one or two characters.
+ * @retval OT_ERROR_INVALID_STATE  The client is not in active state.
+ * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
+ *
+ */
+otError otMqttsnPublishShort(otInstance *aInstance, const uint8_t* aData, int32_t aLength, otMqttsnQos aQos, const char* aShortTopicName, otMqttsnPublishedHandler aHandler, void* aContext);
+
+/**
+ * Publish message to the topic with specific topic ID with QoS level -1. No connection or subscription is required.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aData      A pointer to byte array to be send as message payload.
+ * @param[in]  aLength    Length of message payload data.
+ * @param[in]  aTopicId   Topic ID of target topic.
+ * @param[in]  aAddress   Gateway address.
+ * @param[in]  aPort      Gateway port.
+ *
+ * @retval OT_ERROR_NONE           Publish message successfully queued.
+ * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
+ *
+ */
+otError PublishQosm1(otInstance *aInstance, const uint8_t* aData, int32_t aLength, otMqttsnTopicId aTopicId, otIp6Address aAddress, uint16_t aPort);
+
+/**
+ * Publish message to the topic with specific short topic name with QoS level -1. No connection or subscription is required.
+ *
+ * @param[in]  aInstance        A pointer to an OpenThread instance.
+ * @param[in]  aData            A pointer to byte array to be send as message payload.
+ * @param[in]  aLength          Length of message payload data.
+ * @param[in]  aShortTopicName  A pointer to short topic name string of target topic.
+ * @param[in]  aAddress         Gateway address.
+ * @param[in]  aPort            Gateway port.
+ *
+ * @retval OT_ERROR_NONE           Publish message successfully queued.
+ * @retval OT_ERROR_INVALID_ARGS   Invalid publish parameters. Short topic name must have one or two characters.
+ * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
+ *
+ */
+otError PublishQosm1Short(otInstance *aInstance, const uint8_t* aData, int32_t aLength, const char* aShortTopicName, otIp6Address aAddress, uint16_t aPort);
 
 /**
  * Set handler which is invoked when connection is acknowledged.
