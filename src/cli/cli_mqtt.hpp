@@ -79,6 +79,7 @@ private:
     otError ProcessRegister(int argc, char *argv[]);
     otError ProcessPublish(int argc, char *argv[]);
     otError ProcessUnsubscribe(int argc, char *argv[]);
+    otError ProcessDisconnect(int argc, char *argv[]);
 
     static void HandleConnected(otMqttsnReturnCode aCode, void *aContext);
     void        HandleConnected(otMqttsnReturnCode aCode);
@@ -92,6 +93,8 @@ private:
     void        HandleUnsubscribed(otMqttsnReturnCode aCode);
     static otMqttsnReturnCode HandlePublishReceived(const uint8_t* aPayload, int32_t aPayloadLength, otMqttsnTopicIdType aTopicIdType, otMqttsnTopicId aTopicId, const char* aShortTopicName, void* aContext);
     otMqttsnReturnCode        HandlePublishReceived(const uint8_t* aPayload, int32_t aPayloadLength, otMqttsnTopicIdType aTopicIdType, otMqttsnTopicId aTopicId, const char* aShortTopicName);
+    static void HandleDisconnected(otMqttsnDisconnectType aType, void* aContext);
+    void        HandleDisconnected(otMqttsnDisconnectType aType);
 
     void PrintFailedWithCode(const char *aCommandName, otMqttsnReturnCode aCode);
 

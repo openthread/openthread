@@ -42,7 +42,7 @@ const struct Mqtt::Command Mqtt::sCommands[] = {
     {"stop", &Mqtt::ProcessStop},               {"connect", &Mqtt::ProcessConnect},
     {"subscribe", &Mqtt::ProcessSubscribe},     {"state", &Mqtt::ProcessState},
     {"register", &Mqtt::ProcessRegister},       {"publish", &Mqtt::ProcessPublish},
-    {"unsubscribe", &Mqtt::ProcessUnsubscribe},
+    {"unsubscribe", &Mqtt::ProcessUnsubscribe}, {"disconnect", &Mqtt::ProcessDisconnect}
 };
 
 Mqtt::Mqtt(Interpreter &aInterpreter)
@@ -125,6 +125,7 @@ otError Mqtt::ProcessConnect(int argc, char *argv[])
     	ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
     SuccessOrExit(error = otMqttsnSetConnectedHandler(mInterpreter.mInstance, &Mqtt::HandleConnected, this));
+    SuccessOrExit(error = otMqttsnSetDisconnectedHandler(mInterpreter.mInstance, &Mqtt::HandleDisconnected, this));
     SuccessOrExit(error = otMqttsnConnectDefault(mInterpreter.mInstance, destinationIp, (uint16_t)destinationPort));
 
 exit:
@@ -152,6 +153,9 @@ exit:
 
 otError Mqtt::ProcessState(int argc, char *argv[])
 {
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
     otError error;
     otMqttsnClientState clientState;
     const char *clientStateString;
@@ -217,6 +221,14 @@ otError Mqtt::ProcessUnsubscribe(int argc, char *argv[])
     SuccessOrExit(error = otMqttsnUnsubscribe(mInterpreter.mInstance, (otMqttsnTopicId)topicId, &Mqtt::HandleUnsubscribed, this));
 exit:
     return error;
+}
+
+otError Mqtt::ProcessDisconnect(int argc, char *argv[])
+{
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+
+    return otMqttsnDisconnect(mInterpreter.mInstance);
 }
 
 void Mqtt::HandleConnected(otMqttsnReturnCode aCode, void *aContext)
@@ -321,6 +333,24 @@ otMqttsnReturnCode Mqtt::HandlePublishReceived(const uint8_t* aPayload, int32_t 
     }
     mInterpreter.mServer->OutputFormat("%.*s\r\n", aPayloadLength, aPayload);
     return kCodeAccepted;
+}
+
+void Mqtt::HandleDisconnected(otMqttsnDisconnectType aType, void* aContext)
+{
+    static_cast<Mqtt *>(aContext)->HandleDisconnected(aType);
+}
+
+void Mqtt::HandleDisconnected(otMqttsnDisconnectType aType)
+{
+    const char* disconnectTypeText;
+    if (otMqttsnDisconnectTypeToString(aType, &disconnectTypeText) == OT_ERROR_NONE)
+    {
+        mInterpreter.mServer->OutputFormat("disconnected reason: %s\r\n", disconnectTypeText);
+    }
+    else
+    {
+        mInterpreter.mServer->OutputFormat("disconnected with unknown reason: %d\r\n", aType);
+    }
 }
 
 void Mqtt::PrintFailedWithCode(const char *aCommandName, otMqttsnReturnCode aCode)
