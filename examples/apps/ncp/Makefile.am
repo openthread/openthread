@@ -39,6 +39,7 @@ CPPFLAGS_COMMON                                                       += \
     $(NULL)
 
 LDADD_COMMON                                                          += \
+    $(top_builddir)/third_party/paho/libpaho.a                           \
     $(NULL)
 
 LDFLAGS_COMMON                                                        += \

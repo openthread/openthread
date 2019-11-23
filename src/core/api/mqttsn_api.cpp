@@ -74,10 +74,11 @@ otError otMqttsnConnect(otInstance *aInstance, const otMqttsnConfig *aConfig)
     return client.Connect(config);
 }
 
-otError otMqttsnConnectDefault(otInstance *aInstance, otIp6Address *aAddress, uint16_t mPort) {
+otError otMqttsnConnectDefault(otInstance *aInstance, const otIp6Address *aAddress, uint16_t mPort)
+{
     Instance &instance = *static_cast<Instance *>(aInstance);
     Mqttsn::MqttsnConfig config;
-    config.SetAddress(*static_cast<Ip6::Address *>(aAddress));
+    config.SetAddress(*static_cast<const Ip6::Address *>(aAddress));
     config.SetClientId(MQTTSN_DEFAULT_CLIENT_ID);
     config.SetPort(mPort);
     Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();

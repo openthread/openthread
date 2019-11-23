@@ -30,6 +30,7 @@
 #include <stddef.h>
 #include "mqttsn_client.hpp"
 #include "mqttsn_serializer.hpp"
+#include "common/locator-getters.hpp"
 #include "common/timer.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"
@@ -961,8 +962,7 @@ void MqttsnClient::DisconnectReceived(const Ip6::MessageInfo &messageInfo, const
 
 void MqttsnClient::HandleProcessTask(Tasklet &aTasklet)
 {
-    otError error = aTasklet.GetOwner<MqttsnClient>().Process();
-    if (error != OT_ERROR_NONE)
+    if (aTasklet.GetOwner<MqttsnClient>().Process() != OT_ERROR_NONE)
     {
         otLogWarnMqttsn("Process task failed: %s", otThreadErrorToString(error));
     }

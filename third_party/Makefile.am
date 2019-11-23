@@ -41,6 +41,7 @@ EXTRA_DIST                              = \
 DIST_SUBDIRS                            = \
     jlink                                 \
     mbedtls                               \
+    paho                                  \
     $(NULL)
 
 SUBDIRS =
@@ -49,6 +50,7 @@ if OPENTHREAD_EXAMPLES_EFR32MG12
 SUBDIRS                                += \
     silabs                                \
     jlink                                 \
+    paho                                  \
     $(NULL)
 endif
 
@@ -56,6 +58,7 @@ if OPENTHREAD_EXAMPLES_EFR32MG21
 SUBDIRS                                += \
     silabs                                \
     jlink                                 \
+    paho                                  \
     $(NULL)
 endif
 
@@ -63,6 +66,7 @@ if OPENTHREAD_EXAMPLES_NRF52840
 SUBDIRS                                += \
     jlink                                 \
     NordicSemiconductor                   \
+    paho                                  \
     $(NULL)
 endif
 
@@ -70,6 +74,7 @@ if OPENTHREAD_EXAMPLES_NRF52833
 SUBDIRS                                += \
     jlink                                 \
     NordicSemiconductor                   \
+    paho                                  \
     $(NULL)
 endif
 
@@ -77,6 +82,7 @@ if OPENTHREAD_EXAMPLES_NRF52811
 SUBDIRS                                += \
     jlink                                 \
     NordicSemiconductor                   \
+    paho                                  \
     $(NULL)
 endif
 
