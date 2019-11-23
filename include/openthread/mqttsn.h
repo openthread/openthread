@@ -175,6 +175,15 @@ typedef void (*otMqttsnRegisteredHandler)(otMqttsnReturnCode aCode, otMqttsnTopi
 typedef void (*otMqttsnPublishedHandler)(otMqttsnReturnCode aCode, void* aContext);
 
 /**
+ * Declaration of function for unsubscribe callback.
+ *
+ * @param[in]  aCode     UNSUBACK response code or -1 when publish timed out.
+ * @param[in]  aContext  A pointer to unsubscribe callback context object.
+ *
+ */
+typedef void (*otMqttsnUnsubscribedHandler)(otMqttsnReturnCode aCode, void* aContext);
+
+/**
  * Start MQTT-SN service and start connection and listening.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
@@ -351,7 +360,7 @@ otError otMqttsnPublishShort(otInstance *aInstance, const uint8_t* aData, int32_
  * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
  *
  */
-otError PublishQosm1(otInstance *aInstance, const uint8_t* aData, int32_t aLength, otMqttsnTopicId aTopicId, otIp6Address aAddress, uint16_t aPort);
+otError otMqttsnPublishQosm1(otInstance *aInstance, const uint8_t* aData, int32_t aLength, otMqttsnTopicId aTopicId, otIp6Address aAddress, uint16_t aPort);
 
 /**
  * Publish message to the topic with specific short topic name with QoS level -1. No connection or subscription is required.
@@ -368,7 +377,38 @@ otError PublishQosm1(otInstance *aInstance, const uint8_t* aData, int32_t aLengt
  * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
  *
  */
-otError PublishQosm1Short(otInstance *aInstance, const uint8_t* aData, int32_t aLength, const char* aShortTopicName, otIp6Address aAddress, uint16_t aPort);
+otError otMqttsnPublishQosm1Short(otInstance *aInstance, const uint8_t* aData, int32_t aLength, const char* aShortTopicName, otIp6Address aAddress, uint16_t aPort);
+
+/**
+ * Unsubscribe from the topic with specific topic ID.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aTopicId   A pointer to short topic name string of target topic.
+ * @param[in]  aHandler   A function pointer to callback invoked when unsubscription is acknowledged.
+ * @param[in]  aContext   A pointer to context object passed to callback.
+ *
+ * @retval OT_ERROR_NONE           Unsubscribe message successfully queued.
+ * @retval OT_ERROR_INVALID_STATE  The client is not in active state.
+ * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to unsubscribe.
+ *
+ */
+otError otMqttsnUnsubscribe(otInstance *aInstance, otMqttsnTopicId aTopicId, otMqttsnUnsubscribedHandler aHandler, void* aContext);
+
+/**
+ * Unsubscribe from the topic with specific short topic name.
+ *
+ * @param[in]  aInstance        A pointer to an OpenThread instance.
+ * @param[in]  aShortTopicName  A pointer to short topic name string of target topic.
+ * @param[in]  aHandler         A function pointer to callback invoked when unsubscription is acknowledged.
+ * @param[in]  aContext         A pointer to context object passed to callback.
+ *
+ * @retval OT_ERROR_NONE           Unsubscribe message successfully queued.
+ * @retval OT_ERROR_INVALID_ARGS   Invalid unsubscribe parameters. Short topic name must have one or two characters.
+ * @retval OT_ERROR_INVALID_STATE  The client is not in active state.
+ * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
+ *
+ */
+otError otMqttsnUnsubscribeShort(otInstance *aInstance, const char* aShortTopicName, otMqttsnUnsubscribedHandler aHandler, void* aContext);
 
 /**
  * Set handler which is invoked when connection is acknowledged.

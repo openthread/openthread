@@ -818,7 +818,7 @@ void MqttsnClient::UnsubackReceived(const Ip6::MessageInfo &messageInfo, const u
         return;
     }
     // Find unsubscription message waiting for confirmation
-    MessageMetadata<UnsubscribeCallbackFunc> metadata;
+    MessageMetadata<otMqttsnUnsubscribedHandler> metadata;
     Message* unsubscribeMessage = mUnsubscribeQueue.Find(unsubackMessage.GetMessageId(), metadata);
     if (!unsubscribeMessage)
     {
@@ -1313,7 +1313,7 @@ exit:
     return error;
 }
 
-otError MqttsnClient::Unsubscribe(const char* aShortTopicName, UnsubscribeCallbackFunc aCallback, void* aContext)
+otError MqttsnClient::Unsubscribe(const char* aShortTopicName, otMqttsnUnsubscribedHandler aCallback, void* aContext)
 {
     otError error = OT_ERROR_NONE;
     int32_t length = -1;
@@ -1338,7 +1338,7 @@ otError MqttsnClient::Unsubscribe(const char* aShortTopicName, UnsubscribeCallba
     SuccessOrExit(error = SendMessage(*message));
     // Enqueue message to waiting queue - waiting for UNSUBACK
     SuccessOrExit(error = mUnsubscribeQueue.EnqueueCopy(*message, message->GetLength(),
-        MessageMetadata<UnsubscribeCallbackFunc>(mConfig.GetAddress(), mConfig.GetPort(), mMessageId, TimerMilli::GetNow().GetValue(),
+        MessageMetadata<otMqttsnUnsubscribedHandler>(mConfig.GetAddress(), mConfig.GetPort(), mMessageId, TimerMilli::GetNow().GetValue(),
             mConfig.GetRetransmissionTimeout() * 1000, mConfig.GetRetransmissionCount(), aCallback, aContext)));
     mMessageId++;
 
@@ -1346,7 +1346,7 @@ exit:
     return error;
 }
 
-otError MqttsnClient::Unsubscribe(TopicId aTopicId, UnsubscribeCallbackFunc aCallback, void* aContext)
+otError MqttsnClient::Unsubscribe(TopicId aTopicId, otMqttsnUnsubscribedHandler aCallback, void* aContext)
 {
     otError error = OT_ERROR_NONE;
     int32_t length = -1;
@@ -1367,7 +1367,7 @@ otError MqttsnClient::Unsubscribe(TopicId aTopicId, UnsubscribeCallbackFunc aCal
     SuccessOrExit(error = SendMessage(*message));
     // Enqueue message to waiting queue - waiting for UNSUBACK
     SuccessOrExit(error = mUnsubscribeQueue.EnqueueCopy(*message, message->GetLength(),
-        MessageMetadata<UnsubscribeCallbackFunc>(mConfig.GetAddress(), mConfig.GetPort(), mMessageId, TimerMilli::GetNow().GetValue(),
+        MessageMetadata<otMqttsnUnsubscribedHandler>(mConfig.GetAddress(), mConfig.GetPort(), mMessageId, TimerMilli::GetNow().GetValue(),
             mConfig.GetRetransmissionTimeout() * 1000, mConfig.GetRetransmissionCount(), aCallback, aContext)));
     mMessageId++;
 
@@ -1641,7 +1641,7 @@ void MqttsnClient::HandleRegisterTimeout(const MessageMetadata<otMqttsnRegistere
     aMetadata.mCallback(kCodeTimeout, 0, aMetadata.mContext);
 }
 
-void MqttsnClient::HandleUnsubscribeTimeout(const MessageMetadata<UnsubscribeCallbackFunc> &aMetadata, void* aContext)
+void MqttsnClient::HandleUnsubscribeTimeout(const MessageMetadata<otMqttsnUnsubscribedHandler> &aMetadata, void* aContext)
 {
     MqttsnClient* client = static_cast<MqttsnClient*>(aContext);
     client->mTimeoutRaised = true;

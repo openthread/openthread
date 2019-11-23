@@ -631,15 +631,6 @@ public:
     typedef ReturnCode (*RegisterReceivedCallbackFunc)(TopicId aTopicId, const TopicNameString &aTopicName, void* aContext);
 
     /**
-     * Declaration of function for unsubscribe callback.
-     *
-     * @param[in]  aCode     UNSUBACK response code or -1 when publish timed out.
-     * @param[in]  aContext  A pointer to unsubscribe callback context object.
-     *
-     */
-    typedef void (*UnsubscribeCallbackFunc)(ReturnCode aCode, void* aContext);
-
-    /**
      * Declaration of function for disconnection callback.
      *
      * @param[in]  aType     Disconnection reason.
@@ -825,7 +816,7 @@ public:
      * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
      *
      */
-    otError Unsubscribe(const char* aShortTopicName, UnsubscribeCallbackFunc aCallback, void* aContext);
+    otError Unsubscribe(const char* aShortTopicName, otMqttsnUnsubscribedHandler aCallback, void* aContext);
 
     /**
      * Unsubscribe from the topic with specific topic ID.
@@ -839,7 +830,7 @@ public:
      * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to unsubscribe.
      *
      */
-    otError Unsubscribe(TopicId aTopicId, UnsubscribeCallbackFunc aCallback, void* aContext);
+    otError Unsubscribe(TopicId aTopicId, otMqttsnUnsubscribedHandler aCallback, void* aContext);
 
     /**
      * Disconnect MQTT-SN client from gateway.
@@ -1064,7 +1055,7 @@ private:
 
     static void HandleRegisterTimeout(const MessageMetadata<otMqttsnRegisteredHandler> &aMetadata, void* aContext);
 
-    static void HandleUnsubscribeTimeout(const MessageMetadata<UnsubscribeCallbackFunc> &aMetadata, void* aContext);
+    static void HandleUnsubscribeTimeout(const MessageMetadata<otMqttsnUnsubscribedHandler> &aMetadata, void* aContext);
 
     static void HandlePublishQos1Timeout(const MessageMetadata<otMqttsnPublishedHandler> &aMetadata, void* aContext);
 
@@ -1098,7 +1089,7 @@ private:
     Tasklet mProcessTask;
     WaitingMessagesQueue<otMqttsnSubscribedHandler> mSubscribeQueue;
     WaitingMessagesQueue<otMqttsnRegisteredHandler> mRegisterQueue;
-    WaitingMessagesQueue<UnsubscribeCallbackFunc> mUnsubscribeQueue;
+    WaitingMessagesQueue<otMqttsnUnsubscribedHandler> mUnsubscribeQueue;
     WaitingMessagesQueue<otMqttsnPublishedHandler> mPublishQos1Queue;
     WaitingMessagesQueue<otMqttsnPublishedHandler> mPublishQos2PublishQueue;
     WaitingMessagesQueue<otMqttsnPublishedHandler> mPublishQos2PubrelQueue;

@@ -125,18 +125,32 @@ otError otMqttsnPublishShort(otInstance *aInstance, const uint8_t* aData, int32_
     return client.Publish(aData, aLength, aQos, aShortTopicName, aHandler, aContext);
 }
 
-otError PublishQosm1(otInstance *aInstance, const uint8_t* aData, int32_t aLength, otMqttsnTopicId aTopicId, otIp6Address aAddress, uint16_t aPort)
+otError otMqttsnPublishQosm1(otInstance *aInstance, const uint8_t* aData, int32_t aLength, otMqttsnTopicId aTopicId, otIp6Address aAddress, uint16_t aPort)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
     Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
     return client.PublishQosm1(aData, aLength, aTopicId, static_cast<Ip6::Address>(aAddress), aPort);
 }
 
-otError PublishQosm1Short(otInstance *aInstance, const uint8_t* aData, int32_t aLength, const char* aShortTopicName, otIp6Address aAddress, uint16_t aPort)
+otError otMqttsnPublishQosm1Short(otInstance *aInstance, const uint8_t* aData, int32_t aLength, const char* aShortTopicName, otIp6Address aAddress, uint16_t aPort)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
     Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
     return client.PublishQosm1(aData, aLength, aShortTopicName, static_cast<Ip6::Address>(aAddress), aPort);
+}
+
+otError otMqttsnUnsubscribe(otInstance *aInstance, otMqttsnTopicId aTopicId, otMqttsnUnsubscribedHandler aHandler, void* aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
+    return client.Unsubscribe(aTopicId, aHandler, aContext);
+}
+
+otError otMqttsnUnsubscribeShort(otInstance *aInstance, const char* aShortTopicName, otMqttsnUnsubscribedHandler aHandler, void* aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
+    return client.Unsubscribe(aShortTopicName, aHandler, aContext);
 }
 
 otError otMqttsnSetConnectedHandler(otInstance *aInstance, otMqttsnConnectedHandler aHandler, void *aContext)
