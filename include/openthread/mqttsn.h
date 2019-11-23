@@ -95,6 +95,28 @@ enum otMqttsnClientState
 };
 
 /**
+ * MQTT-SN topic identificator type.
+ */
+enum otMqttsnTopicIdType
+{
+    /**
+     * Predefined topic ID.
+     *
+     */
+    kTopicId,
+    /**
+     * Two character short topic name.
+     *
+     */
+    kShortTopicName,
+    /**
+     * Long topic name.
+     *
+     */
+    kTopicName
+};
+
+/**
  * Topic ID type.
  *
  */
@@ -182,6 +204,20 @@ typedef void (*otMqttsnPublishedHandler)(otMqttsnReturnCode aCode, void* aContex
  *
  */
 typedef void (*otMqttsnUnsubscribedHandler)(otMqttsnReturnCode aCode, void* aContext);
+
+/**
+ * Declaration of function for callback invoked when publish message received.
+ *
+ * @param[in]  aPayload         A pointer to PUBLISH message payload byte array.
+ * @param[in]  aPayloadLength   PUBLISH message payload length.
+ * @param[in]  aTopicIdType     Topic ID type. Possible values are kTopicId or kShortTopicName.
+ * @param[in]  aTopicId         PUBLISH message topic ID. It is set only when aTopicIdType is kTopicId.
+ * @param[in]  aShortTopicName  PUBLISH message short topic name. It is set only when aTopicIdType is kShortTopicName.
+ * @param[in]  aContext         A pointer to publish received callback context object.
+ *
+ * @returns  Code to be send in response PUBACK message. Timeout value is not relevant.
+ */
+typedef otMqttsnReturnCode (*otMqttsnPublishReceivedHandler)(const uint8_t* aPayload, int32_t aPayloadLength, otMqttsnTopicIdType aTopicIdType, otMqttsnTopicId aTopicId, const char* aShortTopicName, void* aContext);
 
 /**
  * Start MQTT-SN service and start connection and listening.
@@ -421,6 +457,18 @@ otError otMqttsnUnsubscribeShort(otInstance *aInstance, const char* aShortTopicN
  *
  */
 otError otMqttsnSetConnectedHandler(otInstance *aInstance, otMqttsnConnectedHandler aHandler, void *aContext);
+
+/**
+ * Set callback function invoked when publish message received from the topic.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aHandler   A function pointer to publish received callback function.
+ * @param[in]  aContext   A pointer to context object passed to callback.
+ *
+ * @retval OT_ERROR_NONE  Callback function successfully set.
+ *
+ */
+otError otMqttsnSetPublishReceivedHandler(otInstance *aInstance, otMqttsnPublishReceivedHandler aHandler, void* aContext);
 
 /**
  * Get string value of given return code.

@@ -160,6 +160,13 @@ otError otMqttsnSetConnectedHandler(otInstance *aInstance, otMqttsnConnectedHand
     return client.SetConnectedCallback(aHandler, aContext);
 }
 
+otError otMqttsnSetPublishReceivedHandler(otInstance *aInstance, otMqttsnPublishReceivedHandler aHandler, void* aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
+    return client.SetPublishReceivedCallback(aHandler, aContext);
+}
+
 otError otMqttsnReturnCodeToString(otMqttsnReturnCode aCode, const char** aCodeString)
 {
     switch (aCode)

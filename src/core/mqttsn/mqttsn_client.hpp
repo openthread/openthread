@@ -111,24 +111,7 @@ enum
 /**
  * MQTT-SN topic identificator type.
  */
-enum TopicIdType
-{
-    /**
-     * Predefined topic ID.
-     *
-     */
-    kTopicId,
-    /**
-     * Two character short topic name.
-     *
-     */
-    kShortTopicName,
-    /**
-     * Long topic name.
-     *
-     */
-    kTopicName
-};
+typedef otMqttsnTopicIdType TopicIdType;
 
 /**
  * Topic ID type.
@@ -584,20 +567,6 @@ class MqttsnClient: public InstanceLocator
 {
 public:
     /**
-     * Declaration of function for callback invoked when publish message received.
-     *
-     * @param[in]  aPayload         A pointer to PUBLISH message payload byte array.
-     * @param[in]  aPayloadLength   PUBLISH message payload length.
-     * @param[in]  aTopicIdType     Topic ID type. Possible values are kTopicId or kShortTopicName.
-     * @param[in]  aTopicId         PUBLISH message topic ID. It is set only when aTopicIdType is kTopicId.
-     * @param[in]  aShortTopicName  PUBLISH message short topic name. It is set only when aTopicIdType is kShortTopicName.
-     * @param[in]  aContext         A pointer to publish received callback context object.
-     *
-     * @returns  Code to be send in response PUBACK message. Timeout value is not relevant.
-     */
-    typedef ReturnCode (*PublishReceivedCallbackFunc)(const uint8_t* aPayload, int32_t aPayloadLength, TopicIdType aTopicIdType, TopicId aTopicId, ShortTopicNameString aShortTopicName, void* aContext);
-
-    /**
      * Declaration of function for advertise callback.
      *
      * @param[in]  aAddress    A reference to advertised gateway IPv6 address.
@@ -907,7 +876,7 @@ public:
      * @retval OT_ERROR_NONE  Callback function successfully set.
      *
      */
-    otError SetPublishReceivedCallback(PublishReceivedCallbackFunc aCallback, void* aContext);
+    otError SetPublishReceivedCallback(otMqttsnPublishReceivedHandler aCallback, void* aContext);
 
     /**
      * Set callback function invoked when advertise message received from the gateway.
@@ -1099,7 +1068,7 @@ private:
     WaitingMessagesQueue<void*> mPingreqQueue;
     otMqttsnConnectedHandler mConnectedCallback;
     void* mConnectContext;
-    PublishReceivedCallbackFunc mPublishReceivedCallback;
+    otMqttsnPublishReceivedHandler mPublishReceivedCallback;
     void* mPublishReceivedContext;
     AdvertiseCallbackFunc mAdvertiseCallback;
     void* mAdvertiseContext;

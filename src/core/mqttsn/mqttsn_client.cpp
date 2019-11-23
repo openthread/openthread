@@ -454,7 +454,7 @@ void MqttsnClient::PublishReceived(const Ip6::MessageInfo &messageInfo, const un
     {
         // Invoke callback
         code = mPublishReceivedCallback(publishMessage.GetPayload(), publishMessage.GetPayloadLength(),
-            publishMessage.GetTopicIdType(), publishMessage.GetTopicId(), publishMessage.GetShortTopicName(),
+            publishMessage.GetTopicIdType(), publishMessage.GetTopicId(), publishMessage.GetShortTopicName().AsCString(),
             mPublishReceivedContext);
     }
 
@@ -1488,7 +1488,7 @@ otError MqttsnClient::SetConnectedCallback(otMqttsnConnectedHandler aCallback, v
     return OT_ERROR_NONE;
 }
 
-otError MqttsnClient::SetPublishReceivedCallback(PublishReceivedCallbackFunc aCallback, void* aContext)
+otError MqttsnClient::SetPublishReceivedCallback(otMqttsnPublishReceivedHandler aCallback, void* aContext)
 {
     mPublishReceivedCallback = aCallback;
     mPublishReceivedContext = aContext;
