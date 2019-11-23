@@ -63,25 +63,7 @@ typedef otMqttsnQos Qos;
  * Disconnected state reason.
  *
  */
-enum DisconnectType
-{
-    /**
-     * Client was disconnected by gateway/broker.
-     */
-    kServer,
-    /**
-     * Disconnection was invoked by client.
-     */
-    kClient,
-    /**
-     * Client changed state to asleep
-     */
-    kAsleep,
-    /**
-     * Communication timeout.
-     */
-    kTimeout
-};
+typedef otMqttsnDisconnectType DisconnectType;
 
 /**
  * Client lifecycle states.
@@ -909,7 +891,7 @@ public:
      * @retval OT_ERROR_NONE  Callback function successfully set.
      *
      */
-    otError SetDisconnectedCallback(DisconnectedCallbackFunc aCallback, void* aContext);
+    otError SetDisconnectedCallback(otMqttsnDisconnectedHandler aCallback, void* aContext);
 
     /**
      * Set callback function invoked when register acknowledged.
@@ -1074,7 +1056,7 @@ private:
     void* mAdvertiseContext;
     SearchGwCallbackFunc mSearchGwCallback;
     void* mSearchGwContext;
-    DisconnectedCallbackFunc mDisconnectedCallback;
+    otMqttsnDisconnectedHandler mDisconnectedCallback;
     void* mDisconnectedContext;
     RegisterReceivedCallbackFunc mRegisterReceivedCallback;
     void* mRegisterReceivedContext;

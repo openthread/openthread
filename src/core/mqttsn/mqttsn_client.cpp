@@ -892,7 +892,7 @@ void MqttsnClient::PingrespReceived(const Ip6::MessageInfo &messageInfo, const u
         mClientState = kStateAsleep;
         if (mDisconnectedCallback)
         {
-            mDisconnectedCallback(kAsleep, mDisconnectedContext);
+            mDisconnectedCallback(kDisconnectAsleep, mDisconnectedContext);
         }
     }
 }
@@ -920,7 +920,7 @@ void MqttsnClient::DisconnectReceived(const Ip6::MessageInfo &messageInfo, const
     }
 
     // Handle disconnection behavior depending on client state
-    DisconnectType reason = kServer;
+    DisconnectType reason = kDisconnectServer;
     switch (mClientState)
     {
     case kStateActive:
@@ -930,19 +930,19 @@ void MqttsnClient::DisconnectReceived(const Ip6::MessageInfo &messageInfo, const
         {
             // Regular disconnect
             mClientState = kStateDisconnected;
-            reason = kServer;
+            reason = kDisconnectServer;
         }
         else if (mSleepRequested)
         {
             // Sleep state was requested - go asleep
             mClientState = kStateAsleep;
-            reason = kAsleep;
+            reason = kDisconnectAsleep;
         }
         else
         {
             // Disconnected by gateway
             mClientState = kStateDisconnected;
-            reason = kServer;
+            reason = kDisconnectServer;
         }
         break;
     default:
@@ -995,7 +995,7 @@ otError MqttsnClient::Stop()
         OnDisconnected();
         if (mDisconnectedCallback)
         {
-            mDisconnectedCallback(kClient, mDisconnectedContext);
+            mDisconnectedCallback(kDisconnectClient, mDisconnectedContext);
         }
     }
     return error;
@@ -1034,7 +1034,7 @@ exit:
         OnDisconnected();
         if (mDisconnectedCallback)
         {
-            mDisconnectedCallback(kTimeout, mDisconnectedContext);
+            mDisconnectedCallback(kDisconnectTimeout, mDisconnectedContext);
         }
     }
     // Only enqueue process when client connected
@@ -1509,7 +1509,7 @@ otError MqttsnClient::SetSearchGwCallback(SearchGwCallbackFunc aCallback, void* 
     return OT_ERROR_NONE;
 }
 
-otError MqttsnClient::SetDisconnectedCallback(DisconnectedCallbackFunc aCallback, void* aContext)
+otError MqttsnClient::SetDisconnectedCallback(otMqttsnDisconnectedHandler aCallback, void* aContext)
 {
     mDisconnectedCallback = aCallback;
     mDisconnectedContext = aContext;

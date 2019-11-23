@@ -117,6 +117,30 @@ enum otMqttsnTopicIdType
 };
 
 /**
+ * Disconnected state reason.
+ *
+ */
+enum otMqttsnDisconnectType
+{
+    /**
+     * Client was disconnected by gateway/broker.
+     */
+    kDisconnectServer,
+    /**
+     * Disconnection was invoked by client.
+     */
+    kDisconnectClient,
+    /**
+     * Client changed state to asleep
+     */
+    kDisconnectAsleep,
+    /**
+     * Communication timeout.
+     */
+    kDisconnectTimeout
+};
+
+/**
  * Topic ID type.
  *
  */
@@ -218,6 +242,15 @@ typedef void (*otMqttsnUnsubscribedHandler)(otMqttsnReturnCode aCode, void* aCon
  * @returns  Code to be send in response PUBACK message. Timeout value is not relevant.
  */
 typedef otMqttsnReturnCode (*otMqttsnPublishReceivedHandler)(const uint8_t* aPayload, int32_t aPayloadLength, otMqttsnTopicIdType aTopicIdType, otMqttsnTopicId aTopicId, const char* aShortTopicName, void* aContext);
+
+/**
+ * Declaration of function for disconnection callback.
+ *
+ * @param[in]  aType     Disconnection reason.
+ * @param[in]  aContext  A pointer to disconnection callback context object.
+ *
+ */
+typedef void (*otMqttsnDisconnectedHandler)(otMqttsnDisconnectType aType, void* aContext);
 
 /**
  * Start MQTT-SN service and start connection and listening.
@@ -447,6 +480,18 @@ otError otMqttsnUnsubscribe(otInstance *aInstance, otMqttsnTopicId aTopicId, otM
 otError otMqttsnUnsubscribeShort(otInstance *aInstance, const char* aShortTopicName, otMqttsnUnsubscribedHandler aHandler, void* aContext);
 
 /**
+ * Disconnect MQTT-SN client from gateway.
+ *
+ * @param[in]  aInstance        A pointer to an OpenThread instance.
+ *
+ * @retval OT_ERROR_NONE           Disconnection message successfully queued.
+ * @retval OT_ERROR_INVALID_STATE  The client is not in relevant state. It must be asleep, awake or active.
+ * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
+ *
+ */
+otError otMqttsnDisconnect(otInstance *aInstance);
+
+/**
  * Set handler which is invoked when connection is acknowledged.
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
@@ -469,6 +514,17 @@ otError otMqttsnSetConnectedHandler(otInstance *aInstance, otMqttsnConnectedHand
  *
  */
 otError otMqttsnSetPublishReceivedHandler(otInstance *aInstance, otMqttsnPublishReceivedHandler aHandler, void* aContext);
+
+/**
+ * Set callback function invoked when disconnect acknowledged or timed out.
+ *
+ * @param[in]  aHandler   A function pointer to disconnect callback function.
+ * @param[in]  aContext   A pointer to context object passed to callback.
+ *
+ * @retval OT_ERROR_NONE  Callback function successfully set.
+ *
+ */
+otError otMqttsnSetDisconnectedHandler(otInstance *aInstance, otMqttsnDisconnectedHandler aHandler, void* aContext);
 
 /**
  * Get string value of given return code.
@@ -505,5 +561,17 @@ otError otMqttsnStringToQos(const char* aQosString, otMqttsnQos *aQos);
  *
  */
 otError otMqttsnClientStateToString(otMqttsnClientState aClientState, const char** aClientStateString);
+
+/**
+ * Get string value of given MQTT-SN disconnect type.
+ *
+ * @param[in]  aDisconnectType        MQTT-SN disconnect type.
+ * @param[out] aDisconnectTypeString  A pointer to string pointer which will contain disconnect type string value.
+ *
+ * @retval OT_ERROR_NONE              String value was obtained.
+ * @retval OT_ERROR_INVALID_ARGS      Invalid disconnect type value.
+ *
+ */
+otError otMqttsnDisconnectTypeToString(otMqttsnDisconnectType aDisconnectType, const char** aDisconnectTypeString);
 
 #endif /* OPENTHREAD_MQTTSN_H_ */

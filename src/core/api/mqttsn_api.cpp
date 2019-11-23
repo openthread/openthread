@@ -153,6 +153,12 @@ otError otMqttsnUnsubscribeShort(otInstance *aInstance, const char* aShortTopicN
     return client.Unsubscribe(aShortTopicName, aHandler, aContext);
 }
 
+otError otMqttsnDisconnect(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    return instance.Get<Mqttsn::MqttsnClient>().Disconnect();
+}
+
 otError otMqttsnSetConnectedHandler(otInstance *aInstance, otMqttsnConnectedHandler aHandler, void *aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -165,6 +171,13 @@ otError otMqttsnSetPublishReceivedHandler(otInstance *aInstance, otMqttsnPublish
     Instance &instance = *static_cast<Instance *>(aInstance);
     Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
     return client.SetPublishReceivedCallback(aHandler, aContext);
+}
+
+otError otMqttsnSetDisconnectedHandler(otInstance *aInstance, otMqttsnDisconnectedHandler aHandler, void* aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
+    return client.SetDisconnectedCallback(aHandler, aContext);
 }
 
 otError otMqttsnReturnCodeToString(otMqttsnReturnCode aCode, const char** aCodeString)
@@ -235,6 +248,28 @@ otError otMqttsnClientStateToString(otMqttsnClientState aClientState, const char
         break;
     case kStateLost:
         *aClientStateString = "Lost";
+        break;
+    default:
+        return OT_ERROR_INVALID_ARGS;
+    }
+    return OT_ERROR_NONE;
+}
+
+otError otMqttsnDisconnectTypeToString(otMqttsnDisconnectType aDisconnectType, const char** aDisconnectTypeString)
+{
+    switch (aDisconnectType)
+    {
+    case kDisconnectServer:
+        *aDisconnectTypeString = "Server";
+        break;
+    case kDisconnectClient:
+        *aDisconnectTypeString = "Client";
+        break;
+    case kDisconnectAsleep:
+        *aDisconnectTypeString = "Asleep";
+        break;
+    case kDisconnectTimeout:
+        *aDisconnectTypeString = "Timeout";
         break;
     default:
         return OT_ERROR_INVALID_ARGS;
