@@ -492,6 +492,32 @@ otError otMqttsnUnsubscribeShort(otInstance *aInstance, const char* aShortTopicN
 otError otMqttsnDisconnect(otInstance *aInstance);
 
 /**
+ * Put the client into asleep state or change sleep duration. Client must be awaken or reconnected before duration time passes.
+ *
+ * @param[in]  aInstance        A pointer to an OpenThread instance.
+ * @param[in]  aDuration  Duration time for which will the client stay in asleep state.
+ *
+ * @retval OT_ERROR_NONE           Sleep request successfully queued.
+ * @retval OT_ERROR_INVALID_STATE  The client is not in relevant state. It must be asleep, awake or active.
+ * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
+ *
+ */
+otError otMqttsnSleep(otInstance *aInstance, uint16_t aDuration);
+
+/**
+ * Awake the client and receive pending messages.
+ *
+ * @param[in]  aInstance        A pointer to an OpenThread instance.
+ * @param[in]  aTimeout  Timeout in milliseconds for staying in awake state. PINGRESP message must be received before timeout time passes.
+ *
+ * @retval OT_ERROR_NONE           Awake request successfully queued.
+ * @retval OT_ERROR_INVALID_STATE  The client is not in relevant state. It must be asleep or awake.
+ * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
+ *
+ */
+otError otMqttsnAwake(otInstance *aInstance, uint32_t aTimeout);
+
+/**
  * Set handler which is invoked when connection is acknowledged.
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.

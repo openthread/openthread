@@ -159,6 +159,18 @@ otError otMqttsnDisconnect(otInstance *aInstance)
     return instance.Get<Mqttsn::MqttsnClient>().Disconnect();
 }
 
+otError otMqttsnSleep(otInstance *aInstance, uint16_t aDuration)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    return instance.Get<Mqttsn::MqttsnClient>().Sleep(aDuration);
+}
+
+otError otMqttsnAwake(otInstance *aInstance, uint32_t aTimeout)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    return instance.Get<Mqttsn::MqttsnClient>().Awake(aTimeout);
+}
+
 otError otMqttsnSetConnectedHandler(otInstance *aInstance, otMqttsnConnectedHandler aHandler, void *aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
