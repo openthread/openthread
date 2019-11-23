@@ -76,11 +76,14 @@ private:
     otError ProcessConnect(int argc, char *argv[]);
     otError ProcessSubscribe(int argc, char *argv[]);
     otError ProcessState(int argc, char *argv[]);
+    otError ProcessRegister(int argc, char *argv[]);
 
     static void HandleConnected(otMqttsnReturnCode aCode, void *aContext);
     void        HandleConnected(otMqttsnReturnCode aCode);
     static void HandleSubscribed(otMqttsnReturnCode aCode, otMqttsnTopicId aTopicId, otMqttsnQos aQos, void* aContext);
     void        HandleSubscribed(otMqttsnReturnCode aCode, otMqttsnTopicId aTopicId, otMqttsnQos aQos);
+    static void HandleRegistered(otMqttsnReturnCode aCode, otMqttsnTopicId aTopicId, void* aContext);
+    void        HandleRegistered(otMqttsnReturnCode aCode, otMqttsnTopicId aTopicId);
 
     void PrintFailedWithCode(const char *aCommandName, otMqttsnReturnCode aCode);
 

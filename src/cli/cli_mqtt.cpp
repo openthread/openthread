@@ -40,7 +40,8 @@ namespace Cli {
 const struct Mqtt::Command Mqtt::sCommands[] = {
     {"help", &Mqtt::ProcessHelp},           {"start", &Mqtt::ProcessStart},
     {"stop", &Mqtt::ProcessStop},           {"connect", &Mqtt::ProcessConnect},
-    {"subscribe", &Mqtt::ProcessSubscribe}, {"state", &Mqtt::ProcessState}
+    {"subscribe", &Mqtt::ProcessSubscribe}, {"state", &Mqtt::ProcessState},
+    {"register", &Mqtt::ProcessRegister}
 };
 
 Mqtt::Mqtt(Interpreter &aInterpreter)
@@ -136,6 +137,20 @@ exit:
     return error;
 }
 
+otError Mqtt::ProcessRegister(int argc, char *argv[])
+{
+    otError error;
+    char *topicName;
+    if (argc != 1)
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+    topicName = argv[0];
+    SuccessOrExit(error = otMqttsnRegister(mInterpreter.mInstance, topicName, &HandleRegistered, this));
+exit:
+    return error;
+}
+
 void Mqtt::HandleConnected(otMqttsnReturnCode aCode, void *aContext)
 {
 	static_cast<Mqtt *>(aContext)->HandleConnected(aCode);
@@ -167,6 +182,23 @@ void Mqtt::HandleSubscribed(otMqttsnReturnCode aCode, otMqttsnTopicId aTopicId, 
     else
     {
         PrintFailedWithCode("subscribe", aCode);
+    }
+}
+
+void Mqtt::HandleRegistered(otMqttsnReturnCode aCode, otMqttsnTopicId aTopicId, void* aContext)
+{
+    static_cast<Mqtt *>(aContext)->HandleRegistered(aCode, aTopicId);
+}
+
+void Mqtt::HandleRegistered(otMqttsnReturnCode aCode, otMqttsnTopicId aTopicId)
+{
+    if (aCode == kCodeAccepted)
+    {
+        mInterpreter.mServer->OutputFormat("registered topic id:%u\r\n", (unsigned int)aTopicId);
+    }
+    else
+    {
+        PrintFailedWithCode("register", aCode);
     }
 }
 
