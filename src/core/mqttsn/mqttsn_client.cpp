@@ -596,7 +596,7 @@ void MqttsnClient::RegisterReceived(const Ip6::MessageInfo &messageInfo, const u
     ReturnCode code = kCodeRejectedTopicId;
     if (mRegisterReceivedCallback)
     {
-        code = mRegisterReceivedCallback(registerMessage.GetTopicId(), registerMessage.GetTopicName(), mRegisterReceivedContext);
+        code = mRegisterReceivedCallback(registerMessage.GetTopicId(), registerMessage.GetTopicName().AsCString(), mRegisterReceivedContext);
     }
 
     // Send REGACK response message
@@ -1495,14 +1495,14 @@ otError MqttsnClient::SetPublishReceivedCallback(otMqttsnPublishReceivedHandler 
     return OT_ERROR_NONE;
 }
 
-otError MqttsnClient::SetAdvertiseCallback(AdvertiseCallbackFunc aCallback, void* aContext)
+otError MqttsnClient::SetAdvertiseCallback(otMqttsnAdvertiseHandler aCallback, void* aContext)
 {
     mAdvertiseCallback = aCallback;
     mAdvertiseContext = aContext;
     return OT_ERROR_NONE;
 }
 
-otError MqttsnClient::SetSearchGwCallback(SearchGwCallbackFunc aCallback, void* aContext)
+otError MqttsnClient::SetSearchGwCallback(otMqttsnSearchgwHandler aCallback, void* aContext)
 {
     mSearchGwCallback = aCallback;
     mSearchGwContext = aContext;
@@ -1516,7 +1516,7 @@ otError MqttsnClient::SetDisconnectedCallback(otMqttsnDisconnectedHandler aCallb
     return OT_ERROR_NONE;
 }
 
-otError MqttsnClient::SetRegisterReceivedCallback(RegisterReceivedCallbackFunc aCallback, void* aContext)
+otError MqttsnClient::SetRegisterReceivedCallback(otMqttsnRegisterReceivedHandler aCallback, void* aContext)
 {
     mRegisterReceivedCallback = aCallback;
     mRegisterReceivedContext = aContext;

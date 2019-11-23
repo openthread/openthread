@@ -253,6 +253,39 @@ typedef otMqttsnReturnCode (*otMqttsnPublishReceivedHandler)(const uint8_t* aPay
 typedef void (*otMqttsnDisconnectedHandler)(otMqttsnDisconnectType aType, void* aContext);
 
 /**
+ * Declaration of function for search gateway callback.
+ *
+ * @param[in]  aAddress  A reference to IPv6 address of discovered gateway.
+ * @param[in]  aAddress  Discovered gateway ID.
+ * @param[in]  aContext  A pointer to search gateway context object.
+ *
+ */
+typedef void (*otMqttsnSearchgwHandler)(otIp6Address aAddress, uint8_t aGatewayId, void* aContext);
+
+/**
+ * Declaration of function for advertise callback.
+ *
+ * @param[in]  aAddress    A reference to advertised gateway IPv6 address.
+ * @param[in]  aGatewayId  Advertised gateway ID.
+ * @param[in]  aDuration   Advertise message duration parameter.
+ * @param[in]  aContext    A pointer to advertise callback context object.
+ *
+ */
+typedef void (*otMqttsnAdvertiseHandler)(otIp6Address aAddress, uint8_t aGatewayId, uint32_t aDuration, void* aContext);
+
+/**
+ * Declaration of function for callback invoked when register message received.
+ *
+ * @param[in]  aTopicId    Registered topic ID.
+ * @param[in]  aTopicName  Long topic name string mapped to registered topic.
+ * @param[in]  aContext    A pointer to register received callback context object.
+ *
+ * @returns  Code to be send in response REGACK message. Timeout value is not relevant.
+ *
+ */
+typedef otMqttsnReturnCode (*otMqttsnRegisterReceivedHandler)(otMqttsnTopicId aTopicId, const char *aTopicName, void* aContext);
+
+/**
  * Start MQTT-SN service and start connection and listening.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
@@ -559,6 +592,7 @@ otError otMqttsnSetPublishReceivedHandler(otInstance *aInstance, otMqttsnPublish
 /**
  * Set callback function invoked when disconnect acknowledged or timed out.
  *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aHandler   A function pointer to disconnect callback function.
  * @param[in]  aContext   A pointer to context object passed to callback.
  *
@@ -566,6 +600,42 @@ otError otMqttsnSetPublishReceivedHandler(otInstance *aInstance, otMqttsnPublish
  *
  */
 otError otMqttsnSetDisconnectedHandler(otInstance *aInstance, otMqttsnDisconnectedHandler aHandler, void* aContext);
+
+/**
+ * Set callback function invoked when gateway info received from gateway.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aHandler   A function pointer to gateway info received callback function.
+ * @param[in]  aContext   A pointer to context object passed to callback.
+ *
+ * @retval OT_ERROR_NONE  Callback function successfully set.
+ *
+ */
+otError otMqttsnSetSearchgwHandler(otInstance *aInstance, otMqttsnSearchgwHandler aHandler, void* aContext);
+
+/**
+ * Set callback function invoked when advertise message received from the gateway.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aHandler   A function pointer to advertise callback function.
+ * @param[in]  aContext   A pointer to context object passed to callback.
+ *
+ * @retval OT_ERROR_NONE  Callback function successfully set.
+ *
+ */
+otError otMqttsnSetAdvertiseHandler(otInstance *aInstance, otMqttsnAdvertiseHandler aHandler, void* aContext);
+
+/**
+ * Set callback function invoked when register message received.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aHandler   A function pointer to register callback function.
+ * @param[in]  aContext   A pointer to context object passed to callback.
+ *
+ * @retval OT_ERROR_NONE  Callback function successfully set.
+ *
+ */
+otError otMqttsnSetRegisterReceivedHandler(otInstance *aInstance, otMqttsnRegisterReceivedHandler aHandler, void* aContext);
 
 /**
  * Get string value of given return code.
@@ -614,5 +684,17 @@ otError otMqttsnClientStateToString(otMqttsnClientState aClientState, const char
  *
  */
 otError otMqttsnDisconnectTypeToString(otMqttsnDisconnectType aDisconnectType, const char** aDisconnectTypeString);
+
+/**
+ * Get string value of given Ip6 address.
+ *
+ * @param[in]  aAddress        Ip6 address.
+ * @param[out] aAddressString  A pointer to string pointer which will contain Ip6 address string value.
+ *
+ * @retval OT_ERROR_NONE              String value was obtained.
+ * @retval OT_ERROR_INVALID_ARGS      Invalid Ip6 address value.
+ *
+ */
+otError otMqttsnAddressTypeToString(otIp6Address aAddress, const char** aAddressString);
 
 #endif /* OPENTHREAD_MQTTSN_H_ */

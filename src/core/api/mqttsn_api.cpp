@@ -199,6 +199,27 @@ otError otMqttsnSetDisconnectedHandler(otInstance *aInstance, otMqttsnDisconnect
     return client.SetDisconnectedCallback(aHandler, aContext);
 }
 
+otError otMqttsnSetSearchgwHandler(otInstance *aInstance, otMqttsnSearchgwHandler aHandler, void* aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
+    return client.SetSearchGwCallback(aHandler, aContext);
+}
+
+otError otMqttsnSetAdvertiseHandler(otInstance *aInstance, otMqttsnAdvertiseHandler aHandler, void* aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
+    return client.SetAdvertiseCallback(aHandler, aContext);
+}
+
+otError otMqttsnSetRegisterReceivedHandler(otInstance *aInstance, otMqttsnRegisterReceivedHandler aHandler, void* aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
+    return client.SetRegisterReceivedCallback(aHandler, aContext);
+}
+
 otError otMqttsnReturnCodeToString(otMqttsnReturnCode aCode, const char** aCodeString)
 {
     switch (aCode)
@@ -293,6 +314,13 @@ otError otMqttsnDisconnectTypeToString(otMqttsnDisconnectType aDisconnectType, c
     default:
         return OT_ERROR_INVALID_ARGS;
     }
+    return OT_ERROR_NONE;
+}
+
+otError otMqttsnAddressTypeToString(otIp6Address aAddress, const char** aAddressString)
+{
+    Ip6::Address address = static_cast<Ip6::Address>(aAddress);
+    aAddressString = address.ToString().AsCString();
     return OT_ERROR_NONE;
 }
 

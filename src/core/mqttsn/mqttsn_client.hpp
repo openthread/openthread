@@ -549,48 +549,6 @@ class MqttsnClient: public InstanceLocator
 {
 public:
     /**
-     * Declaration of function for advertise callback.
-     *
-     * @param[in]  aAddress    A reference to advertised gateway IPv6 address.
-     * @param[in]  aGatewayId  Advertised gateway ID.
-     * @param[in]  aDuration   Advertise message duration parameter.
-     * @param[in]  aContext    A pointer to advertise callback context object.
-     *
-     */
-    typedef void (*AdvertiseCallbackFunc)(const Ip6::Address &aAddress, uint8_t aGatewayId, uint32_t aDuration, void* aContext);
-
-    /**
-     * Declaration of function for search gateway callback.
-     *
-     * @param[in]  aAddress  A reference to IPv6 address of discovered gateway.
-     * @param[in]  aAddress  Discovered gateway ID.
-     * @param[in]  aContext  A pointer to search gateway context object.
-     *
-     */
-    typedef void (*SearchGwCallbackFunc)(const Ip6::Address &aAddress, uint8_t aGatewayId, void* aContext);
-
-    /**
-     * Declaration of function for callback invoked when register message received.
-     *
-     * @param[in]  aTopicId    Registered topic ID.
-     * @param[in]  aTopicName  Long topic name string mapped to registered topic.
-     * @param[in]  aContext    A pointer to register received callback context object.
-     *
-     * @returns  Code to be send in response REGACK message. Timeout value is not relevant.
-     *
-     */
-    typedef ReturnCode (*RegisterReceivedCallbackFunc)(TopicId aTopicId, const TopicNameString &aTopicName, void* aContext);
-
-    /**
-     * Declaration of function for disconnection callback.
-     *
-     * @param[in]  aType     Disconnection reason.
-     * @param[in]  aContext  A pointer to disconnection callback context object.
-     *
-     */
-    typedef void (*DisconnectedCallbackFunc)(DisconnectType aType, void* aContext);
-
-    /**
      * This constructor initializes the object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
@@ -869,7 +827,7 @@ public:
      * @retval OT_ERROR_NONE  Callback function successfully set.
      *
      */
-    otError SetAdvertiseCallback(AdvertiseCallbackFunc aCallback, void* aContext);
+    otError SetAdvertiseCallback(otMqttsnAdvertiseHandler aCallback, void* aContext);
 
     /**
      * Set callback function invoked when gateway info received from gateway.
@@ -880,7 +838,7 @@ public:
      * @retval OT_ERROR_NONE  Callback function successfully set.
      *
      */
-    otError SetSearchGwCallback(SearchGwCallbackFunc aCallback, void* aContext);
+    otError SetSearchGwCallback(otMqttsnSearchgwHandler aCallback, void* aContext);
 
     /**
      * Set callback function invoked when disconnect acknowledged or timed out.
@@ -894,7 +852,7 @@ public:
     otError SetDisconnectedCallback(otMqttsnDisconnectedHandler aCallback, void* aContext);
 
     /**
-     * Set callback function invoked when register acknowledged.
+     * Set callback function invoked when register message received.
      *
      * @param[in]  aCallback  A function pointer to register callback function.
      * @param[in]  aContext   A pointer to context object passed to callback.
@@ -902,7 +860,7 @@ public:
      * @retval OT_ERROR_NONE  Callback function successfully set.
      *
      */
-    otError SetRegisterReceivedCallback(RegisterReceivedCallbackFunc aCallback, void* aContext);
+    otError SetRegisterReceivedCallback(otMqttsnRegisterReceivedHandler aCallback, void* aContext);
 
 protected:
     /**
@@ -1052,13 +1010,13 @@ private:
     void* mConnectContext;
     otMqttsnPublishReceivedHandler mPublishReceivedCallback;
     void* mPublishReceivedContext;
-    AdvertiseCallbackFunc mAdvertiseCallback;
+    otMqttsnAdvertiseHandler mAdvertiseCallback;
     void* mAdvertiseContext;
-    SearchGwCallbackFunc mSearchGwCallback;
+    otMqttsnSearchgwHandler mSearchGwCallback;
     void* mSearchGwContext;
     otMqttsnDisconnectedHandler mDisconnectedCallback;
     void* mDisconnectedContext;
-    RegisterReceivedCallbackFunc mRegisterReceivedCallback;
+    otMqttsnRegisterReceivedHandler mRegisterReceivedCallback;
     void* mRegisterReceivedContext;
 };
 
