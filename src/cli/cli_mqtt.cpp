@@ -278,6 +278,7 @@ otError Mqtt::ProcessSearchgw(int argc, char *argv[])
     SuccessOrExit(error = mInterpreter.ParseLong(argv[2], port));
     SuccessOrExit(error = mInterpreter.ParseLong(argv[3], radius));
     SuccessOrExit(error = otMqttsnSearchGateway(mInterpreter.mInstance, multicastAddress, (uint16_t)port, (uint8_t)radius));
+    SuccessOrExit(error = otMqttsnSetSearchgwHandler(mInterpreter.mInstance, &Mqtt::HandleSearchgwResponse, this));
 exit:
     return error;
 }
@@ -401,6 +402,21 @@ void Mqtt::HandleDisconnected(otMqttsnDisconnectType aType)
     else
     {
         mInterpreter.mServer->OutputFormat("disconnected with unknown reason: %d\r\n", aType);
+    }
+}
+
+void Mqtt::HandleSearchgwResponse(otIp6Address aAddress, uint8_t aGatewayId, void* aContext)
+{
+    static_cast<Mqtt *>(aContext)->HandleSearchgwResponse(aAddress, aGatewayId);
+}
+
+void Mqtt::HandleSearchgwResponse(otIp6Address aAddress, uint8_t aGatewayId)
+{
+    otError error;
+    const char *addressString;
+    if (otMqttsnAddressTypeToString(aAddress, &addressString) == OT_ERROR_NONE)
+    {
+        mInterpreter.mServer->OutputFormat("searchgw response from gateway id %u with address: %s\r\n");
     }
 }
 
