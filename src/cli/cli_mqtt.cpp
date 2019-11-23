@@ -43,7 +43,8 @@ const struct Mqtt::Command Mqtt::sCommands[] = {
     {"subscribe", &Mqtt::ProcessSubscribe},     {"state", &Mqtt::ProcessState},
     {"register", &Mqtt::ProcessRegister},       {"publish", &Mqtt::ProcessPublish},
     {"unsubscribe", &Mqtt::ProcessUnsubscribe}, {"disconnect", &Mqtt::ProcessDisconnect},
-    {"sleep", &Mqtt::ProcessSleep},             {"awake", &Mqtt::ProcessAwake}
+    {"sleep", &Mqtt::ProcessSleep},             {"awake", &Mqtt::ProcessAwake},
+    {"searchgw", &Mqtt::ProcessSearchgw}
 };
 
 Mqtt::Mqtt(Interpreter &aInterpreter)
@@ -258,6 +259,25 @@ otError Mqtt::ProcessAwake(int argc, char *argv[])
     }
     SuccessOrExit(error = mInterpreter.ParseLong(argv[1], timeout));
     SuccessOrExit(error = otMqttsnSleep(mInterpreter.mInstance, (uint32_t)timeout));
+exit:
+    return error;
+}
+
+otError Mqtt::ProcessSearchgw(int argc, char *argv[])
+{
+    otError error;
+    otIp6Address multicastAddress;
+    long port;
+    long radius;
+
+    if (argc != 4)
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+    SuccessOrExit(error = otIp6AddressFromString(argv[1], &multicastAddress));
+    SuccessOrExit(error = mInterpreter.ParseLong(argv[2], port));
+    SuccessOrExit(error = mInterpreter.ParseLong(argv[3], radius));
+    SuccessOrExit(error = otMqttsnSearchGateway(mInterpreter.mInstance, multicastAddress, (uint16_t)port, (uint8_t)radius));
 exit:
     return error;
 }
