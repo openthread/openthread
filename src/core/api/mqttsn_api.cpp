@@ -104,6 +104,13 @@ otError otMqttsnSubscribeTopicId(otInstance *aInstance, otMqttsnTopicId aTopicId
     return client.Subscribe(aTopicId, aQos, aHandler, aContext);
 }
 
+otError otMqttsnRegister(otInstance *aInstance, const char* aTopicName, otMqttsnRegisteredHandler aHandler, void* aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
+    return client.Register(aTopicName, aHandler, aContext);
+}
+
 otError otMqttsnSetConnectedHandler(otInstance *aInstance, otMqttsnConnectedHandler aHandler, void *aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

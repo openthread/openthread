@@ -556,7 +556,7 @@ void MqttsnClient::RegackReceived(const Ip6::MessageInfo &messageInfo, const uns
         return;
     }
     // Find waiting message with corresponding ID
-    MessageMetadata<RegisterCallbackFunc> metadata;
+    MessageMetadata<otMqttsnRegisteredHandler> metadata;
     Message* registerMessage = mRegisterQueue.Find(regackMessage.GetMessageId(), metadata);
     if (!registerMessage)
     {
@@ -1163,7 +1163,7 @@ exit:
     return error;
 }
 
-otError MqttsnClient::Register(const char* aTopicName, RegisterCallbackFunc aCallback, void* aContext)
+otError MqttsnClient::Register(const char* aTopicName, otMqttsnRegisteredHandler aCallback, void* aContext)
 {
     otError error = OT_ERROR_NONE;
     int32_t length = -1;
@@ -1184,7 +1184,7 @@ otError MqttsnClient::Register(const char* aTopicName, RegisterCallbackFunc aCal
     SuccessOrExit(error = SendMessage(*message));
     // Enqueue message to waiting queue - waiting for REGACK
     SuccessOrExit(error = mRegisterQueue.EnqueueCopy(*message, message->GetLength(),
-        MessageMetadata<RegisterCallbackFunc>(mConfig.GetAddress(), mConfig.GetPort(), mMessageId, TimerMilli::GetNow().GetValue(),
+        MessageMetadata<otMqttsnRegisteredHandler>(mConfig.GetAddress(), mConfig.GetPort(), mMessageId, TimerMilli::GetNow().GetValue(),
             mConfig.GetRetransmissionTimeout() * 1000, mConfig.GetRetransmissionCount(), aCallback, aContext)));
     mMessageId++;
 
@@ -1634,7 +1634,7 @@ void MqttsnClient::HandleSubscribeTimeout(const MessageMetadata<otMqttsnSubscrib
     aMetadata.mCallback(kCodeTimeout, 0, kQos0, aMetadata.mContext);
 }
 
-void MqttsnClient::HandleRegisterTimeout(const MessageMetadata<RegisterCallbackFunc> &aMetadata, void* aContext)
+void MqttsnClient::HandleRegisterTimeout(const MessageMetadata<otMqttsnRegisteredHandler> &aMetadata, void* aContext)
 {
     MqttsnClient* client = static_cast<MqttsnClient*>(aContext);
     client->mTimeoutRaised = true;

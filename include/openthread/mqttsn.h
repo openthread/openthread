@@ -155,6 +155,16 @@ typedef void (*otMqttsnConnectedHandler)(otMqttsnReturnCode aCode, void *aContex
 typedef void (*otMqttsnSubscribedHandler)(otMqttsnReturnCode aCode, otMqttsnTopicId aTopicId, otMqttsnQos aQos, void* aContext);
 
 /**
+ * Declaration of function for register callback.
+ *
+ * @param[in]  aCode     REGACK return code or -1 when subscription timed out.
+ * @param[in]  aTopicId  Registered topic ID.
+ * @param[in]  aContext  A pointer to register callback context object.
+ *
+ */
+typedef void (*otMqttsnRegisteredHandler)(otMqttsnReturnCode aCode, otMqttsnTopicId aTopicId, void* aContext);
+
+/**
  * Start MQTT-SN service and start connection and listening.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
@@ -264,6 +274,21 @@ otError otMqttsnSubscribeShort(otInstance *aInstance, const char *aShortTopicNam
  *
  */
 otError otMqttsnSubscribeTopicId(otInstance *aInstance, otMqttsnTopicId aTopicId, otMqttsnQos aQos, otMqttsnSubscribedHandler aHandler, void *aContext);
+
+/**
+ * Register to topic with long topic name and obtain related topic ID.
+ *
+ * @param[in]  aInstance           A pointer to an OpenThread instance.
+ * @param[in]  aTopicName          A pointer to long topic name string.
+ * @param[in]  aHandler            A function pointer to callback invoked when registration is acknowledged.
+ * @param[in]  aContext            A pointer to context object passed to callback.
+ *
+ * @retval OT_ERROR_NONE           Registration message successfully queued.
+ * @retval OT_ERROR_INVALID_STATE  The client is not in active state.
+ * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
+ *
+ */
+otError otMqttsnRegister(otInstance *aInstance, const char* aTopicName, otMqttsnRegisteredHandler aHandler, void* aContext);
 
 /**
  * Set handler which is invoked when connection is acknowledged.

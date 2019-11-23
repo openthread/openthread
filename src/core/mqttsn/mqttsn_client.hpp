@@ -764,7 +764,7 @@ public:
      * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
      *
      */
-    otError Register(const char* aTopicName, RegisterCallbackFunc aCallback, void* aContext);
+    otError Register(const char* aTopicName, otMqttsnRegisteredHandler aCallback, void* aContext);
 
     /**
      * Publish message to the topic with specific short topic name.
@@ -1082,7 +1082,7 @@ private:
 
     static void HandleSubscribeTimeout(const MessageMetadata<otMqttsnSubscribedHandler> &aMetadata, void* aContext);
 
-    static void HandleRegisterTimeout(const MessageMetadata<RegisterCallbackFunc> &aMetadata, void* aContext);
+    static void HandleRegisterTimeout(const MessageMetadata<otMqttsnRegisteredHandler> &aMetadata, void* aContext);
 
     static void HandleUnsubscribeTimeout(const MessageMetadata<UnsubscribeCallbackFunc> &aMetadata, void* aContext);
 
@@ -1117,7 +1117,7 @@ private:
     bool mIsRunning;
     Tasklet mProcessTask;
     WaitingMessagesQueue<otMqttsnSubscribedHandler> mSubscribeQueue;
-    WaitingMessagesQueue<RegisterCallbackFunc> mRegisterQueue;
+    WaitingMessagesQueue<otMqttsnRegisteredHandler> mRegisterQueue;
     WaitingMessagesQueue<UnsubscribeCallbackFunc> mUnsubscribeQueue;
     WaitingMessagesQueue<PublishCallbackFunc> mPublishQos1Queue;
     WaitingMessagesQueue<PublishCallbackFunc> mPublishQos2PublishQueue;
