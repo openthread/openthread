@@ -41,13 +41,37 @@ const struct Mqtt::Command Mqtt::sCommands[] = {
     {"help", &Mqtt::ProcessHelp},           {"start", &Mqtt::ProcessStart},
     {"stop", &Mqtt::ProcessStop},           {"connect", &Mqtt::ProcessConnect},
     {"subscribe", &Mqtt::ProcessSubscribe}, {"state", &Mqtt::ProcessState},
-    {"register", &Mqtt::ProcessRegister}
+    {"register", &Mqtt::ProcessRegister},   {"publish", &Mqtt::ProcessPublish}
 };
 
 Mqtt::Mqtt(Interpreter &aInterpreter)
     : mInterpreter(aInterpreter)
 {
     ;
+}
+
+otError Mqtt::Process(int argc, char *argv[])
+{
+    otError error = OT_ERROR_PARSE;
+
+    if (argc < 1)
+    {
+        ProcessHelp(0, NULL);
+        error = OT_ERROR_INVALID_ARGS;
+    }
+    else
+    {
+        for (size_t i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
+        {
+            if (strcmp(argv[0], sCommands[i].mName) == 0)
+            {
+                error = (this->*sCommands[i].mCommand)(argc, argv);
+                break;
+            }
+        }
+    }
+
+    return error;
 }
 
 otError Mqtt::ProcessHelp(int argc, char *argv[])
@@ -85,12 +109,12 @@ otError Mqtt::ProcessConnect(int argc, char *argv[])
 	otIp6Address destinationIp;
 	long destinationPort;
 
-    if (argc != 2)
+    if (argc != 3)
     {
     	ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
-    SuccessOrExit(error = otIp6AddressFromString(argv[0], &destinationIp));
-    SuccessOrExit(error = mInterpreter.ParseLong(argv[0], destinationPort));
+    SuccessOrExit(error = otIp6AddressFromString(argv[1], &destinationIp));
+    SuccessOrExit(error = mInterpreter.ParseLong(argv[2], destinationPort));
     if (destinationPort < 1 || destinationPort > 65535)
     {
     	ExitNow(error = OT_ERROR_INVALID_ARGS);
@@ -107,14 +131,14 @@ otError Mqtt::ProcessSubscribe(int argc, char *argv[])
     otError error;
     char *topicName;
     otMqttsnQos qos = kQos1;
-    if (argc < 1 || argc > 2)
+    if (argc < 2 || argc > 3)
     {
         ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
-    topicName = argv[0];
-    if (argc > 1)
+    topicName = argv[1];
+    if (argc > 2)
     {
-        SuccessOrExit(error = otMqttsnStringToQos(argv[1], &qos));
+        SuccessOrExit(error = otMqttsnStringToQos(argv[2], &qos));
     }
     SuccessOrExit(error = otMqttsnSubscribe(mInterpreter.mInstance, topicName, qos, &HandleSubscribed, this));
 exit:
@@ -126,10 +150,6 @@ otError Mqtt::ProcessState(int argc, char *argv[])
     otError error;
     otMqttsnClientState clientState;
     const char *clientStateString;
-    if (argc != 0)
-    {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
-    }
     clientState = otMqttsnGetState(mInterpreter.mInstance);
     SuccessOrExit(error = otMqttsnClientStateToString(clientState, &clientStateString));
     mInterpreter.mServer->OutputFormat("%s\r\n", clientStateString);
@@ -141,12 +161,40 @@ otError Mqtt::ProcessRegister(int argc, char *argv[])
 {
     otError error;
     char *topicName;
-    if (argc != 1)
+    if (argc != 2)
     {
         ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
-    topicName = argv[0];
+    topicName = argv[1];
     SuccessOrExit(error = otMqttsnRegister(mInterpreter.mInstance, topicName, &HandleRegistered, this));
+exit:
+    return error;
+}
+
+otError Mqtt::ProcessPublish(int argc, char *argv[])
+{
+    otError error;
+    long topicId;
+    otMqttsnQos qos = kQos1;
+    uint8_t* data = "";
+    int32_t length = 0;
+
+    if (argc < 2 || argc > 4)
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+    SuccessOrExit(error = mInterpreter.ParseLong(argv[1], topicId));
+    if (argc > 2)
+    {
+        data = static_cast<uint8_t *>(argv[2]);
+        length = strlen(argv[2]);
+    }
+    if (argc > 3)
+    {
+        SuccessOrExit(error = otMqttsnStringToQos(argv[3], &qos));
+    }
+    SuccessOrExit(error = otMqttsnPublish(mInterpreter.mInstance, data,
+        length, qos, (otMqttsnTopicId)topicId, &Mqtt::HandlePublished, this));
 exit:
     return error;
 }
@@ -199,6 +247,23 @@ void Mqtt::HandleRegistered(otMqttsnReturnCode aCode, otMqttsnTopicId aTopicId)
     else
     {
         PrintFailedWithCode("register", aCode);
+    }
+}
+
+void Mqtt::HandlePublished(otMqttsnReturnCode aCode, void* aContext)
+{
+    static_cast<Mqtt *>(aContext)->HandlePublished(aCode);
+}
+
+void Mqtt::HandlePublished(otMqttsnReturnCode aCode)
+{
+    if (aCode == kCodeAccepted)
+    {
+        mInterpreter.mServer->OutputFormat("published\r\n");
+    }
+    else
+    {
+        PrintFailedWithCode("publish", aCode);
     }
 }
 
