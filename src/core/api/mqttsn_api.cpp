@@ -26,6 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <string.h>
 #include <openthread/mqttsn.h>
 #include "mqttsn/mqttsn_client.hpp"
 
@@ -37,70 +38,152 @@ using namespace ot;
 
 otError otMqttsnStart(otInstance *aInstance, uint16_t aPort)
 {
-	Instance &instance = *static_cast<Instance *>(aInstance);
-	return instance.Get<Mqttsn::MqttsnClient>().Start(aPort);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    return instance.Get<Mqttsn::MqttsnClient>().Start(aPort);
 }
 
 otError otMqttsnStop(otInstance *aInstance)
 {
-	Instance &instance = *static_cast<Instance *>(aInstance);
-	return instance.Get<Mqttsn::MqttsnClient>().Stop();
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    return instance.Get<Mqttsn::MqttsnClient>().Stop();
+}
+
+otMqttsnClientState otMqttsnGetState(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    return instance.Get<Mqttsn::MqttsnClient>().GetState();
 }
 
 otError otMqttsnConnect(otInstance *aInstance, const otMqttsnConfig *aConfig)
 {
-	Instance &instance = *static_cast<Instance *>(aInstance);
-	if (aConfig == NULL)
-	{
-		return OT_ERROR_INVALID_ARGS;
-	}
-	Mqttsn::MqttsnConfig config;
-	config.SetAddress(*static_cast<Ip6::Address *>(aConfig->mAddress));
-	config.SetCleanSession(aConfig->mCleanSession);
-	config.SetClientId(aConfig->mClientId);
-	config.SetKeepAlive(aConfig->mKeepAlive);
-	config.SetPort(aConfig->mPort);
-	config.SetRetransmissionCount(aConfig->mRetransmissionCount);
-	config.SetRetransmissionTimeout(aConfig->mRetransmissionTimeout);
-	Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
-	return client.Connect(config);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    if (aConfig == NULL)
+    {
+        return OT_ERROR_INVALID_ARGS;
+    }
+    Mqttsn::MqttsnConfig config;
+    config.SetAddress(*static_cast<Ip6::Address *>(aConfig->mAddress));
+    config.SetCleanSession(aConfig->mCleanSession);
+    config.SetClientId(aConfig->mClientId);
+    config.SetKeepAlive(aConfig->mKeepAlive);
+    config.SetPort(aConfig->mPort);
+    config.SetRetransmissionCount(aConfig->mRetransmissionCount);
+    config.SetRetransmissionTimeout(aConfig->mRetransmissionTimeout);
+    Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
+    return client.Connect(config);
 }
 
-otError otMqttsnConnectDefault(otInstance *aInstance, otIp6Address mAddress, uint16_t mPort)
+otError otMqttsnConnectDefault(otInstance *aInstance, otIp6Address mAddress, uint16_t mPort) {
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Mqttsn::MqttsnConfig config;
+    config.SetAddress(*static_cast<Ip6::Address *>(mAddress));
+    config.SetClientId(MQTTSN_DEFAULT_CLIENT_ID);
+    config.SetPort(mPort);
+    Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
+    return client.Connect(config);
+}
+
+otError otMqttsnSubscribe(otInstance *aInstance, const char *aTopicName, otMqttsnQos aQos, otMqttsnSubscribedHandler aHandler, void *aContext)
 {
-	Instance &instance = *static_cast<Instance *>(aInstance);
-	Mqttsn::MqttsnConfig config;
-	config.SetAddress(*static_cast<Ip6::Address *>(mAddress));
-	config.SetClientId(MQTTSN_DEFAULT_CLIENT_ID);
-	config.SetPort(mPort);
-	Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
-	return client.Connect(config);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
+    return client.Subscribe(aTopicName, false, aQos, aHandler, aContext);
+}
+
+otError otMqttsnSubscribeShort(otInstance *aInstance, const char *aShortTopicName, otMqttsnQos aQos, otMqttsnSubscribedHandler aHandler, void *aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
+    return client.Subscribe(aShortTopicName, true, aQos, aHandler, aContext);
+}
+
+otError otMqttsnSubscribeTopicId(otInstance *aInstance, otMqttsnTopicId aTopicId, otMqttsnQos aQos, otMqttsnSubscribedHandler aHandler, void *aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
+    return client.Subscribe(aTopicId, aQos, aHandler, aContext);
 }
 
 otError otMqttsnSetConnectedHandler(otInstance *aInstance, otMqttsnConnectedHandler aHandler, void *aContext)
 {
-	Instance &instance = *static_cast<Instance *>(aInstance);
-	Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
-	return client.SetConnectedCallback(aHandler, aContext);
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
+    return client.SetConnectedCallback(aHandler, aContext);
 }
 
-const char* otMqttsnReturnCodeToString(otMqttsnReturnCode aCode)
+otError otMqttsnReturnCodeToString(otMqttsnReturnCode aCode, const char** aCodeString)
 {
-	switch (aCode)
-	{
-	case kCodeAccepted:
-		return "Accepted";
-	case kCodeRejectedCongestion:
-		return "RejectedCongestion";
-	case kCodeRejectedNotSupported:
-		return "RejectedNotSupported";
-	case kCodeRejectedTopicId:
-		return "RejectedTopicId";
-	case kCodeTimeout:
-		return "Timeout";
-	default:
-		return "Unknown";
-	}
+    switch (aCode)
+    {
+    case kCodeAccepted:
+        *aCodeString = "Accepted";
+        break;
+    case kCodeRejectedCongestion:
+        *aCodeString = "RejectedCongestion";
+        break;
+    case kCodeRejectedNotSupported:
+        *aCodeString = "RejectedNotSupported";
+        break;
+    case kCodeRejectedTopicId:
+        *aCodeString = "RejectedTopicId";
+        break;
+    case kCodeTimeout:
+        *aCodeString = "Timeout";
+        break;
+    default:
+        return OT_ERROR_INVALID_ARGS;
+    }
+    return OT_ERROR_NONE;
+}
+
+otError otMqttsnStringToQos(const char* aQosString, otMqttsnQos *aQos)
+{
+    if (strcmp(aQosString, "0") == 0)
+    {
+        *aQos = kQos0;
+    }
+    else if (strcmp(aQosString, "1") == 0)
+    {
+        *aQos = kQos1;
+    }
+    else if (strcmp(aQosString, "2") == 0)
+    {
+        *aQos = kQos2;
+    }
+    else if (strcmp(aQosString, "-1") == 0)
+    {
+        *aQos = kQosm1;
+    }
+    else
+    {
+        return OT_ERROR_INVALID_ARGS;
+    }
+    return OT_ERROR_NONE;
+}
+
+otError otMqttsnClientStateToString(otMqttsnClientState aClientState, const char** aClientStateString)
+{
+    switch (aClientState)
+    {
+    case kStateDisconnected:
+        *aClientStateString = "Disconnected";
+        break;
+    case kStateActive:
+        *aClientStateString = "Active";
+        break;
+    case kStateAsleep:
+        *aClientStateString = "Asleep";
+        break;
+    case kStateAwake:
+        *aClientStateString = "Awake";
+        break;
+    case kStateLost:
+        *aClientStateString = "Lost";
+        break;
+    default:
+        return OT_ERROR_INVALID_ARGS;
+    }
+    return OT_ERROR_NONE;
 }
 
 #endif

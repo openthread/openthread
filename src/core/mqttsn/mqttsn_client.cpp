@@ -237,6 +237,8 @@ MqttsnClient::MqttsnClient(Instance& instance)
     , mSleepRequested(false)
     , mTimeoutRaised(false)
     , mClientState(kStateDisconnected)
+    , mIsRunning(false)
+    , mProcessTask(instance, &MqttsnClient::HandleProcessTask, this)
     , mSubscribeQueue(HandleSubscribeTimeout, this, HandleSubscribeRetransmission, this)
     , mRegisterQueue(HandleRegisterTimeout, this, HandleMessageRetransmission, this)
     , mUnsubscribeQueue(HandleUnsubscribeTimeout, this, HandleMessageRetransmission, this)
@@ -404,7 +406,7 @@ void MqttsnClient::SubackReceived(const Ip6::MessageInfo &messageInfo, const uns
     }
 
     // Find waiting message with corresponding ID
-    MessageMetadata<SubscribeCallbackFunc> metadata;
+    MessageMetadata<otMqttsnSubscribedHandler> metadata;
     Message* subscribeMessage = mSubscribeQueue.Find(subackMessage.GetMessageId(), metadata);
     if (subscribeMessage)
     {
@@ -955,6 +957,15 @@ void MqttsnClient::DisconnectReceived(const Ip6::MessageInfo &messageInfo, const
     }
 }
 
+void MqttsnClient::HandleProcessTask(Tasklet &aTasklet)
+{
+    otError error = aTasklet.GetOwner<MqttsnClient>().Process();
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMqttsn("Process task failed: %s", otThreadErrorToString(error));
+    }
+}
+
 otError MqttsnClient::Start(uint16_t aPort)
 {
     otError error = OT_ERROR_NONE;
@@ -966,12 +977,16 @@ otError MqttsnClient::Start(uint16_t aPort)
     // Start listening on configured port
     SuccessOrExit(error = mSocket.Bind(sockaddr));
 
+    // Enqueue process task which will handle message queues etc.
+    SuccessOrExit(error = mProcessTask.Post());
+    mIsRunning = true;
 exit:
     return error;
 }
 
 otError MqttsnClient::Stop()
 {
+    mIsRunning = false;
     otError error = mSocket.Close();
     // Disconnect client if it is not disconnected already
     mClientState = kStateDisconnected;
@@ -989,8 +1004,13 @@ otError MqttsnClient::Stop()
 otError MqttsnClient::Process()
 {
     otError error = OT_ERROR_NONE;
-
     uint32_t now = TimerMilli::GetNow().GetValue();
+
+    if (mIsRunning)
+    {
+        // Enqueue again if client running
+        SuccessOrExit(error = mProcessTask.Post());
+    }
 
     // Process keep alive and send periodical PINGREQ message
     if (mClientState == kStateActive && mPingReqTime != 0 && mPingReqTime <= now)
@@ -1017,7 +1037,11 @@ exit:
             mDisconnectedCallback(kTimeout, mDisconnectedContext);
         }
     }
-
+    // Only enqueue process when client connected
+    if (mClientState != kStateDisconnected && mClientState != kStateLost)
+    {
+        mProcessTask.Post();
+    }
     return error;
 }
 
@@ -1051,12 +1075,11 @@ otError MqttsnClient::Connect(const MqttsnConfig &aConfig)
 
     // Set next keepalive PINGREQ time
     mPingReqTime = TimerMilli::GetNow().GetValue() + mConfig.GetKeepAlive() * 700;
-
 exit:
     return error;
 }
 
-otError MqttsnClient::Subscribe(const char* aTopicName, bool aIsShortTopicName, Qos aQos, SubscribeCallbackFunc aCallback, void* aContext)
+otError MqttsnClient::Subscribe(const char* aTopicName, bool aIsShortTopicName, Qos aQos, otMqttsnSubscribedHandler aCallback, void* aContext)
 {
     otError error = OT_ERROR_NONE;
     int32_t length = -1;
@@ -1064,8 +1087,9 @@ otError MqttsnClient::Subscribe(const char* aTopicName, bool aIsShortTopicName, 
     Message *message = NULL;
     int32_t topicNameLength = strlen(aTopicName);
     SubscribeMessage subscribeMessage;
-    // Topic length must be 1 or 2
     VerifyOrExit(topicNameLength > 0, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(topicNameLength < kMaxTopicNameLength, error = OT_ERROR_INVALID_ARGS);
+    // Topic length must be 1 or 2
     VerifyOrExit(!aIsShortTopicName || length <= 2, error = OT_ERROR_INVALID_ARGS);
     subscribeMessage = aIsShortTopicName ?
         SubscribeMessage(false, aQos, mMessageId, kShortTopicName, 0, aTopicName, "")
@@ -1093,7 +1117,7 @@ otError MqttsnClient::Subscribe(const char* aTopicName, bool aIsShortTopicName, 
 
     // Enqueue message to waiting queue - waiting for SUBACK
     SuccessOrExit(error = mSubscribeQueue.EnqueueCopy(*message, message->GetLength(),
-        MessageMetadata<SubscribeCallbackFunc>(mConfig.GetAddress(), mConfig.GetPort(), mMessageId, TimerMilli::GetNow().GetValue(),
+        MessageMetadata<otMqttsnSubscribedHandler>(mConfig.GetAddress(), mConfig.GetPort(), mMessageId, TimerMilli::GetNow().GetValue(),
             mConfig.GetRetransmissionTimeout() * 1000, mConfig.GetRetransmissionCount(), aCallback, aContext)));
     mMessageId++;
 
@@ -1101,7 +1125,7 @@ exit:
     return error;
 }
 
-otError MqttsnClient::Subscribe(TopicId aTopicId, Qos aQos, SubscribeCallbackFunc aCallback, void* aContext)
+otError MqttsnClient::Subscribe(TopicId aTopicId, Qos aQos, otMqttsnSubscribedHandler aCallback, void* aContext)
 {
     otError error = OT_ERROR_NONE;
     int32_t length = -1;
@@ -1131,7 +1155,7 @@ otError MqttsnClient::Subscribe(TopicId aTopicId, Qos aQos, SubscribeCallbackFun
 
     // Enqueue message to waiting queue - waiting for SUBACK
     SuccessOrExit(error = mSubscribeQueue.EnqueueCopy(*message, message->GetLength(),
-        MessageMetadata<SubscribeCallbackFunc>(mConfig.GetAddress(), mConfig.GetPort(), mMessageId, TimerMilli::GetNow().GetValue(),
+        MessageMetadata<otMqttsnSubscribedHandler>(mConfig.GetAddress(), mConfig.GetPort(), mMessageId, TimerMilli::GetNow().GetValue(),
             mConfig.GetRetransmissionTimeout() * 1000, mConfig.GetRetransmissionCount(), aCallback, aContext)));
     mMessageId++;
 
@@ -1603,7 +1627,7 @@ bool MqttsnClient::VerifyGatewayAddress(const Ip6::MessageInfo &aMessageInfo)
         && aMessageInfo.GetPeerPort() == mConfig.GetPort();
 }
 
-void MqttsnClient::HandleSubscribeTimeout(const MessageMetadata<SubscribeCallbackFunc> &aMetadata, void* aContext)
+void MqttsnClient::HandleSubscribeTimeout(const MessageMetadata<otMqttsnSubscribedHandler> &aMetadata, void* aContext)
 {
     MqttsnClient* client = static_cast<MqttsnClient*>(aContext);
     client->mTimeoutRaised = true;

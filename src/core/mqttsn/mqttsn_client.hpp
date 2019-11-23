@@ -31,6 +31,7 @@
 
 #include "common/locator.hpp"
 #include "common/instance.hpp"
+#include "common/tasklet.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
 #include <openthread/error.h>
@@ -56,13 +57,7 @@ typedef otMqttsnReturnCode ReturnCode;
  * MQTT-SN quality of service level.
  *
  */
-enum Qos
-{
-    kQos0 = 0x0,
-    kQos1 = 0x1,
-    kQos2 = 0x2,
-    kQosm1 = 0x3
-};
+typedef otMqttsnQos Qos;
 
 /**
  * Disconnected state reason.
@@ -92,29 +87,7 @@ enum DisconnectType
  * Client lifecycle states.
  *
  */
-enum ClientState
-{
-    /**
-     * Client is not connected to gateway.
-     */
-    kStateDisconnected,
-    /**
-     * Client is connected to gateway and currently alive.
-     */
-    kStateActive,
-    /**
-     * Client is in sleeping state.
-     */
-    kStateAsleep,
-    /**
-     * Client is awaken from sleep.
-     */
-    kStateAwake,
-    /**
-     * Client connection is lost due to communication error.
-     */
-    kStateLost,
-};
+typedef otMqttsnClientState ClientState;
 
 enum
 {
@@ -161,7 +134,7 @@ enum TopicIdType
  * Topic ID type.
  *
  */
-typedef uint16_t TopicId;
+typedef otMqttsnTopicId TopicId;
 
 /**
  * Short topic name string.
@@ -611,17 +584,6 @@ class MqttsnClient: public InstanceLocator
 {
 public:
     /**
-     * Declaration of function for subscribe callback.
-     *
-     * @param[in]  aCode     SUBACK return code or -1 when subscription timed out.
-     * @param[in]  aTopicId  Subscribed topic ID. The value is 0 when timed out or subscribed by short topic name.
-     * @param[in]  aQos      Subscribed quality of service level.
-     * @param[in]  aContext  A pointer to subscription callback context object.
-     *
-     */
-    typedef void (*SubscribeCallbackFunc)(ReturnCode aCode, TopicId aTopicId, Qos aQos, void* aContext);
-
-    /**
      * Declaration of function for callback invoked when publish message received.
      *
      * @param[in]  aPayload         A pointer to PUBLISH message payload byte array.
@@ -774,7 +736,7 @@ public:
      * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
      *
      */
-    otError Subscribe(const char* aTopicName, bool aIsShortTopicName, Qos aQos, SubscribeCallbackFunc aCallback, void* aContext);
+    otError Subscribe(const char* aTopicName, bool aIsShortTopicName, Qos aQos, otMqttsnSubscribedHandler aCallback, void* aContext);
 
     /**
      * Subscribe to the topic by topic ID.
@@ -788,7 +750,7 @@ public:
      * @retval OT_ERROR_INVALID_STATE  The client is not in active state.
      * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
      */
-    otError Subscribe(TopicId aTopicId, Qos aQos, SubscribeCallbackFunc aCallback, void* aContext);
+    otError Subscribe(TopicId aTopicId, Qos aQos, otMqttsnSubscribedHandler aCallback, void* aContext);
 
     /**
      * Register to topic with long topic name and obtain related topic ID.
@@ -1116,7 +1078,9 @@ private:
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
-    static void HandleSubscribeTimeout(const MessageMetadata<SubscribeCallbackFunc> &aMetadata, void* aContext);
+    static void HandleProcessTask(Tasklet &aTasklet);
+
+    static void HandleSubscribeTimeout(const MessageMetadata<otMqttsnSubscribedHandler> &aMetadata, void* aContext);
 
     static void HandleRegisterTimeout(const MessageMetadata<RegisterCallbackFunc> &aMetadata, void* aContext);
 
@@ -1150,7 +1114,9 @@ private:
     bool mSleepRequested;
     bool mTimeoutRaised;
     ClientState mClientState;
-    WaitingMessagesQueue<SubscribeCallbackFunc> mSubscribeQueue;
+    bool mIsRunning;
+    Tasklet mProcessTask;
+    WaitingMessagesQueue<otMqttsnSubscribedHandler> mSubscribeQueue;
     WaitingMessagesQueue<RegisterCallbackFunc> mRegisterQueue;
     WaitingMessagesQueue<UnsubscribeCallbackFunc> mUnsubscribeQueue;
     WaitingMessagesQueue<PublishCallbackFunc> mPublishQos1Queue;
