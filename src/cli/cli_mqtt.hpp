@@ -90,6 +90,8 @@ private:
     void        HandlePublished(otMqttsnReturnCode aCode);
     static void HandleUnsubscribed(otMqttsnReturnCode aCode, void* aContext);
     void        HandleUnsubscribed(otMqttsnReturnCode aCode);
+    static otMqttsnReturnCode HandlePublishReceived(const uint8_t* aPayload, int32_t aPayloadLength, otMqttsnTopicIdType aTopicIdType, otMqttsnTopicId aTopicId, const char* aShortTopicName, void* aContext);
+    otMqttsnReturnCode        HandlePublishReceived(const uint8_t* aPayload, int32_t aPayloadLength, otMqttsnTopicIdType aTopicIdType, otMqttsnTopicId aTopicId, const char* aShortTopicName);
 
     void PrintFailedWithCode(const char *aCommandName, otMqttsnReturnCode aCode);
 

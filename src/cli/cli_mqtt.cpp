@@ -90,10 +90,14 @@ otError Mqtt::ProcessHelp(int argc, char *argv[])
 
 otError Mqtt::ProcessStart(int argc, char *argv[])
 {
+    otError error;
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
-    return otMqttsnStart(mInterpreter.mInstance, OT_DEFAULT_MQTTSN_PORT);
+    SuccessOrExit(error = otMqttsnSetPublishReceivedHandler(mInterpreter.mInstance, &Mqtt::HandlePublishReceived, this));
+    SuccessOrExit(error = otMqttsnStart(mInterpreter.mInstance, OT_DEFAULT_MQTTSN_PORT));
+exit:
+    return error;
 }
 
 otError Mqtt::ProcessStop(int argc, char *argv[])
@@ -298,6 +302,25 @@ void Mqtt::HandleUnsubscribed(otMqttsnReturnCode aCode)
     {
         PrintFailedWithCode("unsubscribe", aCode);
     }
+}
+
+otMqttsnReturnCode Mqtt::HandlePublishReceived(const uint8_t* aPayload, int32_t aPayloadLength, otMqttsnTopicIdType aTopicIdType, otMqttsnTopicId aTopicId, const char* aShortTopicName, void* aContext)
+{
+    return static_cast<Mqtt *>(aContext)->HandlePublishReceived(aPayload, aPayloadLength, aTopicIdType, aTopicId, aShortTopicName);
+}
+
+otMqttsnReturnCode Mqtt::HandlePublishReceived(const uint8_t* aPayload, int32_t aPayloadLength, otMqttsnTopicIdType aTopicIdType, otMqttsnTopicId aTopicId, const char* aShortTopicName)
+{
+    if (aTopicIdType == kTopicId)
+    {
+        mInterpreter.mServer->OutputFormat("received publish from topic id %u:\r\n", (unsigned int)aTopicId);
+    }
+    else if (aTopicIdType == kShortTopicName)
+    {
+        mInterpreter.mServer->OutputFormat("received publish from topic %s:\r\n", aShortTopicName);
+    }
+    mInterpreter.mServer->OutputFormat("%.*s\r\n", aPayloadLength, aPayload);
+    return kCodeAccepted;
 }
 
 void Mqtt::PrintFailedWithCode(const char *aCommandName, otMqttsnReturnCode aCode)
