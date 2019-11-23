@@ -518,6 +518,21 @@ otError otMqttsnSleep(otInstance *aInstance, uint16_t aDuration);
 otError otMqttsnAwake(otInstance *aInstance, uint32_t aTimeout);
 
 /**
+ * Search for gateway with multicast message.
+ *
+ * @param[in]  aInstance        A pointer to an OpenThread instance.
+ * @param[in]  aMulticastAddress  A reference to multicast IPv6 address.
+ * @param[in]  aPort              Gateway port number.
+ * @param[in]  aRadius            Message hop limit (time to live)
+ *
+ * @retval OT_ERROR_NONE           Search gateway request successfully queued.
+ * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
+ *
+ */
+otError otMqttsnSearchGateway(otInstance *aInstance, const otIp6Address aMulticastAddress, uint16_t aPort, uint8_t aRadius);
+
+
+/**
  * Set handler which is invoked when connection is acknowledged.
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.

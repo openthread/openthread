@@ -171,6 +171,13 @@ otError otMqttsnAwake(otInstance *aInstance, uint32_t aTimeout)
     return instance.Get<Mqttsn::MqttsnClient>().Awake(aTimeout);
 }
 
+otError otMqttsnSearchGateway(otInstance *aInstance, const otIp6Address aMulticastAddress, uint16_t aPort, uint8_t aRadius)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
+    return client.SearchGateway(static_cast<Ip6::Address>(aMulticastAddress), aPort, aRadius);
+}
+
 otError otMqttsnSetConnectedHandler(otInstance *aInstance, otMqttsnConnectedHandler aHandler, void *aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
