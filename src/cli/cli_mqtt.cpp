@@ -38,8 +38,9 @@ namespace ot {
 namespace Cli {
 
 const struct Mqtt::Command Mqtt::sCommands[] = {
-    {"help", &Mqtt::ProcessHelp},        {"start", &Mqtt::ProcessStart},   {"stop", &Mqtt::ProcessStop},
-    {"connect", &Mqtt::ProcessConnect},
+    {"help", &Mqtt::ProcessHelp},           {"start", &Mqtt::ProcessStart},
+    {"stop", &Mqtt::ProcessStop},           {"connect", &Mqtt::ProcessConnect},
+    {"subscribe", &Mqtt::ProcessSubscribe}, {"state", &Mqtt::ProcessState}
 };
 
 Mqtt::Mqtt(Interpreter &aInterpreter)
@@ -100,6 +101,41 @@ exit:
 	return error;
 }
 
+otError Mqtt::ProcessSubscribe(int argc, char *argv[])
+{
+    otError error;
+    char *topicName;
+    otMqttsnQos qos = kQos1;
+    if (argc < 1 || argc > 2)
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+    topicName = argv[0];
+    if (argc > 1)
+    {
+        SuccessOrExit(error = otMqttsnStringToQos(argv[1], &qos));
+    }
+    SuccessOrExit(error = otMqttsnSubscribe(mInterpreter.mInstance, topicName, qos, &HandleSubscribed, this));
+exit:
+    return error;
+}
+
+otError Mqtt::ProcessState(int argc, char *argv[])
+{
+    otError error;
+    otMqttsnClientState clientState;
+    const char *clientStateString;
+    if (argc != 0)
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+    clientState = otMqttsnGetState(mInterpreter.mInstance);
+    SuccessOrExit(error = otMqttsnClientStateToString(clientState, &clientStateString));
+    mInterpreter.mServer->OutputFormat("%s\r\n", clientStateString);
+exit:
+    return error;
+}
+
 void Mqtt::HandleConnected(otMqttsnReturnCode aCode, void *aContext)
 {
 	static_cast<Mqtt *>(aContext)->HandleConnected(aCode);
@@ -113,9 +149,38 @@ void Mqtt::HandleConnected(otMqttsnReturnCode aCode)
 	}
 	else
 	{
-		const char* codeText = otMqttsnReturnCodeToString(aCode);
-		mInterpreter.mServer->OutputFormat("connection failed: %s\r\n", codeText);
+	    PrintFailedWithCode("connect", aCode);
 	}
+}
+
+void Mqtt::HandleSubscribed(otMqttsnReturnCode aCode, otMqttsnTopicId aTopicId, otMqttsnQos aQos, void* aContext)
+{
+    static_cast<Mqtt *>(aContext)->HandleSubscribed(aCode, aTopicId, aQos);
+}
+
+void Mqtt::HandleSubscribed(otMqttsnReturnCode aCode, otMqttsnTopicId aTopicId, otMqttsnQos aQos)
+{
+    if (aCode == kCodeAccepted)
+    {
+        mInterpreter.mServer->OutputFormat("subscribed topic id:%u\r\n", (unsigned int)aTopicId);
+    }
+    else
+    {
+        PrintFailedWithCode("subscribe", aCode);
+    }
+}
+
+void Mqtt::PrintFailedWithCode(const char *aCommandName, otMqttsnReturnCode aCode)
+{
+    const char* codeText;
+    if (otMqttsnReturnCodeToString(aCode, &codeText) == OT_ERROR_NONE)
+    {
+        mInterpreter.mServer->OutputFormat("%s failed: %s\r\n", aCommandName, codeText);
+    }
+    else
+    {
+        mInterpreter.mServer->OutputFormat("%s failed with unknown code: %d\r\n", aCommandName, aCode);
+    }
 }
 
 } // namespace Cli
