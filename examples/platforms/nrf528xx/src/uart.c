@@ -284,9 +284,7 @@ void UARTE0_UART0_IRQHandler(void)
     // Check if any error has been detected.
     if (nrf_uart_event_check(UART_INSTANCE, NRF_UART_EVENT_ERROR))
     {
-        // Clear error event and ignore erronous byte in RXD register.
         nrf_uart_event_clear(UART_INSTANCE, NRF_UART_EVENT_ERROR);
-        nrf_uart_event_clear(UART_INSTANCE, NRF_UART_EVENT_RXDRDY);
     }
     else if (nrf_uart_event_check(UART_INSTANCE, NRF_UART_EVENT_RXDRDY))
     {
