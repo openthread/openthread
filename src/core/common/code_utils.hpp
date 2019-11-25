@@ -72,14 +72,14 @@
  * @returns The aligned pointer.
  *
  */
-#define otALIGN(aPointer, aAlignment) \
+#define OT_ALIGN(aPointer, aAlignment) \
     ((void *)(((uintptr_t)(aPointer) + (aAlignment)-1UL) & ~((uintptr_t)(aAlignment)-1UL)))
 
 // Calculates the aligned variable size.
-#define otALIGNED_VAR_SIZE(size, align_type) (((size) + (sizeof(align_type) - 1)) / sizeof(align_type))
+#define OT_ALIGNED_VAR_SIZE(size, align_type) (((size) + (sizeof(align_type) - 1)) / sizeof(align_type))
 
 // Allocate the structure using "raw" storage.
-#define otDEFINE_ALIGNED_VAR(name, size, align_type) \
+#define OT_DEFINE_ALIGNED_VAR(name, size, align_type) \
     align_type name[(((size) + (sizeof(align_type) - 1)) / sizeof(align_type))]
 
 /**

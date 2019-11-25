@@ -44,7 +44,7 @@ namespace ot {
 #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 // Define the raw storage used for OpenThread instance (in single-instance case).
-otDEFINE_ALIGNED_VAR(gInstanceRaw, sizeof(Instance), uint64_t);
+OT_DEFINE_ALIGNED_VAR(gInstanceRaw, sizeof(Instance), uint64_t);
 
 #endif
 
