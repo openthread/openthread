@@ -112,3 +112,4 @@ __WEAK void nrf_802154_clock_lfclk_ready(void)
 {
     // Intentionally empty.
 }
+
