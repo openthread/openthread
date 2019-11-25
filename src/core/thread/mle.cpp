@@ -3607,10 +3607,22 @@ otError Mle::HandleChildUpdateResponse(const Message &         aMessage,
     {
     case OT_DEVICE_ROLE_DETACHED:
         // Version
-        if (OT_ERROR_NONE == Tlv::GetTlv(aMessage, Tlv::kVersion, sizeof(version), version))
+        error = Tlv::GetTlv(aMessage, Tlv::kVersion, sizeof(version), version);
+
+        switch (error)
         {
+        case OT_ERROR_NONE:
             VerifyOrExit(version.IsValid(), error = OT_ERROR_PARSE);
             mParent.SetVersion(static_cast<uint8_t>(version.GetVersion()));
+            break;
+
+        case OT_ERROR_NOT_FOUND: // For 1.1 compatibility
+            mParent.SetVersion(OPENTHREAD_THREAD_VERSION_1_1);
+            break;
+
+        default:
+            ExitNow();
+            break;
         }
 
         SuccessOrExit(error =
