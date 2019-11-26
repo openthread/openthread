@@ -84,19 +84,6 @@ exit:
     return error;
 }
 
-otError otServerGetNextLeaderService(otInstance *aInstance, otNetworkDataIterator *aIterator, otServiceConfig *aConfig)
-{
-    otError   error    = OT_ERROR_NONE;
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    VerifyOrExit(aIterator && aConfig, error = OT_ERROR_INVALID_ARGS);
-
-    error = instance.Get<NetworkData::Leader>().GetNextService(*aIterator, *aConfig);
-
-exit:
-    return error;
-}
-
 otError otServerRegister(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

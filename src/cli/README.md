@@ -1596,6 +1596,8 @@ Add service to the Network Data.
 ```bash
 > service add 44970 foo bar
 Done
+> netdataregister
+Done
 > ipaddr
 fdde:ad00:beef:0:0:ff:fe00:fc10
 fdde:ad00:beef:0:0:ff:fe00:fc00
@@ -1611,6 +1613,14 @@ Remove service from Network Data.
 
 ```bash
 > service remove 44970 foo
+Done
+> netdataregister
+Done
+> ipaddr
+fdde:ad00:beef:0:0:ff:fe00:fc00
+fdde:ad00:beef:0:0:ff:fe00:7c00
+fe80:0:0:0:1486:2f57:3c:6e10
+fdde:ad00:beef:0:8ca4:19ed:217a:eff9
 Done
 ```
 
