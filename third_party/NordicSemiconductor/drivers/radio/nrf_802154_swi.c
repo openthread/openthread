@@ -43,6 +43,7 @@
 #include "nrf_802154.h"
 #include "nrf_802154_config.h"
 #include "nrf_802154_core.h"
+#include "nrf_802154_peripherals.h"
 #include "nrf_802154_rx_buffer.h"
 #include "nrf_802154_utils.h"
 #include "nrf_egu.h"
@@ -54,6 +55,7 @@
  * detection.
  */
 #define NTF_QUEUE_SIZE     (NRF_802154_RX_BUFFERS + 3)
+
 /** Size of requests queue.
  *
  * Two is minimal queue size. It is not expected in current implementation to queue a few requests.

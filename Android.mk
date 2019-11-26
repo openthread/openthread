@@ -32,6 +32,8 @@ OPENTHREAD_DEFAULT_VERSION := $(shell cat $(LOCAL_PATH)/.default-version)
 OPENTHREAD_SOURCE_VERSION := $(shell git -C $(LOCAL_PATH) describe --always --match "[0-9].*" 2> /dev/null)
 
 OPENTHREAD_COMMON_FLAGS                                          := \
+    -DOPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL=1                  \
+    -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                         \
     -DPACKAGE=\"openthread\"                                        \
     -DPACKAGE_BUGREPORT=\"openthread-devel@googlegroups.com\"       \
     -DPACKAGE_NAME=\"OPENTHREAD\"                                   \

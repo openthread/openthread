@@ -1591,7 +1591,7 @@ void Mle::UpdateServiceAlocs(void)
     uint16_t              serviceAloc        = 0;
     uint8_t               serviceId          = 0;
     int                   i                  = 0;
-    otNetworkDataIterator serviceIterator    = OT_NETWORK_DATA_ITERATOR_INIT;
+    NetworkData::Iterator serviceIterator    = NetworkData::kIteratorInit;
     int                   serviceAlocsLength = OT_ARRAY_LENGTH(mServiceAlocs);
 
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED);
@@ -1610,7 +1610,7 @@ void Mle::UpdateServiceAlocs(void)
     }
 
     // Now add any missing service alocs which should be there, if there is enough space in mServiceAlocs
-    while (Get<NetworkData::Leader>().GetNextServiceId(&serviceIterator, rloc, &serviceId) == OT_ERROR_NONE)
+    while (Get<NetworkData::Leader>().GetNextServiceId(serviceIterator, rloc, serviceId) == OT_ERROR_NONE)
     {
         for (i = 0; i < serviceAlocsLength; i++)
         {
@@ -2888,8 +2888,7 @@ otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo
         break;
     }
 
-    if (mRetrieveNewNetworkData ||
-        (static_cast<int8_t>(leaderData.GetDataVersion() - Get<NetworkData::Leader>().GetVersion()) > 0))
+    if (mRetrieveNewNetworkData || IsNetworkDataNewer(leaderData))
     {
         delay = Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
         SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay);
@@ -2930,6 +2929,22 @@ exit:
     return error;
 }
 
+bool Mle::IsNetworkDataNewer(const LeaderDataTlv &aLeaderData)
+{
+    int8_t diff;
+
+    if (IsFullNetworkData())
+    {
+        diff = static_cast<int8_t>(aLeaderData.GetDataVersion() - Get<NetworkData::Leader>().GetVersion());
+    }
+    else
+    {
+        diff = static_cast<int8_t>(aLeaderData.GetStableDataVersion() - Get<NetworkData::Leader>().GetStableVersion());
+    }
+
+    return (diff > 0);
+}
+
 otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     otError             error = OT_ERROR_NONE;
@@ -2961,19 +2976,7 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
     }
     else if (!mRetrieveNewNetworkData)
     {
-        int8_t diff;
-
-        if (IsFullNetworkData())
-        {
-            diff = static_cast<int8_t>(leaderData.GetDataVersion() - Get<NetworkData::Leader>().GetVersion());
-        }
-        else
-        {
-            diff =
-                static_cast<int8_t>(leaderData.GetStableDataVersion() - Get<NetworkData::Leader>().GetStableVersion());
-        }
-
-        VerifyOrExit(diff > 0);
+        VerifyOrExit(IsNetworkDataNewer(leaderData));
     }
 
     // Active Timestamp

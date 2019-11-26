@@ -1911,8 +1911,9 @@ const char *otLogLevelToPrefixString(otLogLevel aLogLevel);
 #endif // OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
 
 /**
- * `OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION` is a configuration parameter (see `openthread-core-default-config.h`) which
- * specifies the function/macro to be used for logging in OpenThread. By default it is set to `otPlatLog()`.
+ * `OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION` is a configuration parameter (see `config/logging.h`) which specifies the
+ * function/macro to be used for logging in OpenThread. By default it is set to `otPlatLog()`.
+ *
  */
 #define _otPlatLog(aLogLevel, aRegion, aFormat, ...) \
     OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION(aLogLevel, aRegion, aFormat, ##__VA_ARGS__)

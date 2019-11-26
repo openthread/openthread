@@ -215,6 +215,11 @@ POSSIBILITY OF SUCH DAMAGE.\n
                 <msb>31</msb>
                 <enumeratedValues>
                   <enumeratedValue>
+                    <name>N52833</name>
+                    <description>nRF52833</description>
+                    <value>0x52833</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
                     <name>N52840</name>
                     <description>nRF52840</description>
                     <value>0x52840</value>
@@ -302,6 +307,11 @@ POSSIBILITY OF SUCH DAMAGE.\n
                     <name>QI</name>
                     <description>QIxx - 73-pin aQFN</description>
                     <value>0x2004</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>CK</name>
+                    <description>CKxx - WLCSP</description>
+                    <value>0x2005</value>
                   </enumeratedValue>
                   <enumeratedValue>
                     <name>Unspecified</name>
@@ -706,7 +716,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
           <addressOffset>0x450</addressOffset>
           <register>
             <name>TAGHEADER0</name>
-            <description>Default header for NFC tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST and NFCID1_LAST.</description>
+            <description>Default header for NFC tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST, and NFCID1_LAST.</description>
             <addressOffset>0x000</addressOffset>
             <access>read-only</access>
             <resetValue>0xFFFFFF5F</resetValue>
@@ -739,7 +749,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
           </register>
           <register>
             <name>TAGHEADER1</name>
-            <description>Default header for NFC tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST and NFCID1_LAST.</description>
+            <description>Default header for NFC tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST, and NFCID1_LAST.</description>
             <addressOffset>0x004</addressOffset>
             <access>read-only</access>
             <resetValue>0xFFFFFFFF</resetValue>
@@ -772,7 +782,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
           </register>
           <register>
             <name>TAGHEADER2</name>
-            <description>Default header for NFC tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST and NFCID1_LAST.</description>
+            <description>Default header for NFC tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST, and NFCID1_LAST.</description>
             <addressOffset>0x008</addressOffset>
             <access>read-only</access>
             <resetValue>0xFFFFFFFF</resetValue>
@@ -805,7 +815,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
           </register>
           <register>
             <name>TAGHEADER3</name>
-            <description>Default header for NFC tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST and NFCID1_LAST.</description>
+            <description>Default header for NFC tag. Software can read these values to populate NFCID1_3RD_LAST, NFCID1_2ND_LAST, and NFCID1_LAST.</description>
             <addressOffset>0x00C</addressOffset>
             <access>read-only</access>
             <resetValue>0xFFFFFFFF</resetValue>
@@ -893,7 +903,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
             <description>Amount of bytes for the startup tests</description>
             <addressOffset>0x00C</addressOffset>
             <access>read-only</access>
-            <resetValue>0x00000210</resetValue>
+            <resetValue>0xFFFFFFFF</resetValue>
             <fields>
               <field>
                 <name>STARTUP</name>
@@ -979,7 +989,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
       <size>0x20</size>
       <registers>
         <register>
-          <dim>0xF</dim>
+          <dim>0xD</dim>
           <dimIncrement>0x4</dimIncrement>
           <name>NRFFW[%s]</name>
           <description>Description collection: Reserved for Nordic firmware design</description>
@@ -1171,14 +1181,14 @@ POSSIBILITY OF SUCH DAMAGE.\n
         </register>
         <register>
           <name>REGOUT0</name>
-          <description>GPIO reference voltage / external output supply voltage in high voltage mode</description>
+          <description>Output voltage from REG0 regulator stage. The maximum output voltage from this stage is given as VDDH - VREG0DROP.</description>
           <addressOffset>0x304</addressOffset>
           <access>read-write</access>
           <resetValue>0xFFFFFFFF</resetValue>
           <fields>
             <field>
               <name>VOUT</name>
-              <description>Output voltage from of REG0 regulator stage. The maximum output voltage from this stage is given as VDDH - VEXDIF.</description>
+              <description>Output voltage from REG0 regulator stage.</description>
               <lsb>0</lsb>
               <msb>2</msb>
               <enumeratedValues>
@@ -2292,13 +2302,13 @@ POSSIBILITY OF SUCH DAMAGE.\n
       <registers>
         <register>
           <name>TASKS_CONSTLAT</name>
-          <description>Enable constant latency mode</description>
+          <description>Enable Constant Latency mode</description>
           <addressOffset>0x78</addressOffset>
           <access>write-only</access>
           <fields>
             <field>
               <name>TASKS_CONSTLAT</name>
-              <description>Enable constant latency mode</description>
+              <description>Enable Constant Latency mode</description>
               <lsb>0</lsb>
               <msb>0</msb>
               <enumeratedValues>
@@ -2313,13 +2323,13 @@ POSSIBILITY OF SUCH DAMAGE.\n
         </register>
         <register>
           <name>TASKS_LOWPWR</name>
-          <description>Enable low power mode (variable latency)</description>
+          <description>Enable Low-power mode (variable latency)</description>
           <addressOffset>0x7C</addressOffset>
           <access>write-only</access>
           <fields>
             <field>
               <name>TASKS_LOWPWR</name>
-              <description>Enable low power mode (variable latency)</description>
+              <description>Enable Low-power mode (variable latency)</description>
               <lsb>0</lsb>
               <msb>0</msb>
               <enumeratedValues>
@@ -3357,7 +3367,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
         </register>
         <register>
           <name>DCDCEN</name>
-          <description>Enable DC/DC converter for REG1 stage.</description>
+          <description>Enable DC/DC converter for REG1 stage</description>
           <addressOffset>0x578</addressOffset>
           <access>read-write</access>
           <fields>
@@ -3383,7 +3393,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
         </register>
         <register>
           <name>DCDCEN0</name>
-          <description>Enable DC/DC converter for REG0 stage.</description>
+          <description>Enable DC/DC converter for REG0 stage</description>
           <addressOffset>0x580</addressOffset>
           <access>read-write</access>
           <fields>
@@ -49229,13 +49239,13 @@ POSSIBILITY OF SUCH DAMAGE.\n
           <dim>0x8</dim>
           <dimIncrement>0x4</dimIncrement>
           <name>EVENTS_ENDEPIN[%s]</name>
-          <description>Description collection: The whole EPIN[n] buffer has been consumed. The RAM buffer can be accessed safely by software.</description>
+          <description>Description collection: The whole EPIN[n] buffer has been consumed. The buffer can be accessed safely by software.</description>
           <addressOffset>0x108</addressOffset>
           <access>read-write</access>
           <fields>
             <field>
               <name>EVENTS_ENDEPIN</name>
-              <description>The whole EPIN[n] buffer has been consumed. The RAM buffer can be accessed safely by software.</description>
+              <description>The whole EPIN[n] buffer has been consumed. The buffer can be accessed safely by software.</description>
               <lsb>0</lsb>
               <msb>0</msb>
               <enumeratedValues>
@@ -49281,13 +49291,13 @@ POSSIBILITY OF SUCH DAMAGE.\n
         </register>
         <register>
           <name>EVENTS_ENDISOIN</name>
-          <description>The whole ISOIN buffer has been consumed. The RAM buffer can be accessed safely by software.</description>
+          <description>The whole ISOIN buffer has been consumed. The buffer can be accessed safely by software.</description>
           <addressOffset>0x12C</addressOffset>
           <access>read-write</access>
           <fields>
             <field>
               <name>EVENTS_ENDISOIN</name>
-              <description>The whole ISOIN buffer has been consumed. The RAM buffer can be accessed safely by software.</description>
+              <description>The whole ISOIN buffer has been consumed. The buffer can be accessed safely by software.</description>
               <lsb>0</lsb>
               <msb>0</msb>
               <enumeratedValues>
@@ -49309,13 +49319,13 @@ POSSIBILITY OF SUCH DAMAGE.\n
           <dim>0x8</dim>
           <dimIncrement>0x4</dimIncrement>
           <name>EVENTS_ENDEPOUT[%s]</name>
-          <description>Description collection: The whole EPOUT[n] buffer has been consumed. The RAM buffer can be accessed safely by software.</description>
+          <description>Description collection: The whole EPOUT[n] buffer has been consumed. The buffer can be accessed safely by software.</description>
           <addressOffset>0x130</addressOffset>
           <access>read-write</access>
           <fields>
             <field>
               <name>EVENTS_ENDEPOUT</name>
-              <description>The whole EPOUT[n] buffer has been consumed. The RAM buffer can be accessed safely by software.</description>
+              <description>The whole EPOUT[n] buffer has been consumed. The buffer can be accessed safely by software.</description>
               <lsb>0</lsb>
               <msb>0</msb>
               <enumeratedValues>
@@ -49335,13 +49345,13 @@ POSSIBILITY OF SUCH DAMAGE.\n
         </register>
         <register>
           <name>EVENTS_ENDISOOUT</name>
-          <description>The whole ISOOUT buffer has been consumed. The RAM buffer can be accessed safely by software.</description>
+          <description>The whole ISOOUT buffer has been consumed. The buffer can be accessed safely by software.</description>
           <addressOffset>0x150</addressOffset>
           <access>read-write</access>
           <fields>
             <field>
               <name>EVENTS_ENDISOOUT</name>
-              <description>The whole ISOOUT buffer has been consumed. The RAM buffer can be accessed safely by software.</description>
+              <description>The whole ISOOUT buffer has been consumed. The buffer can be accessed safely by software.</description>
               <lsb>0</lsb>
               <msb>0</msb>
               <enumeratedValues>
@@ -53093,7 +53103,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
             <fields>
               <field>
                 <name>PTR</name>
-                <description>Data pointer. Accepts any address in Data RAM.</description>
+                <description>Data pointer</description>
                 <lsb>0</lsb>
                 <msb>31</msb>
               </field>
@@ -53142,7 +53152,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
             <fields>
               <field>
                 <name>PTR</name>
-                <description>Data pointer. Accepts any address in Data RAM.</description>
+                <description>Data pointer</description>
                 <lsb>0</lsb>
                 <msb>31</msb>
               </field>
@@ -53193,7 +53203,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
             <fields>
               <field>
                 <name>PTR</name>
-                <description>Data pointer. Accepts any address in Data RAM.</description>
+                <description>Data pointer</description>
                 <lsb>0</lsb>
                 <msb>31</msb>
               </field>
@@ -53242,7 +53252,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
             <fields>
               <field>
                 <name>PTR</name>
-                <description>Data pointer. Accepts any address in Data RAM.</description>
+                <description>Data pointer</description>
                 <lsb>0</lsb>
                 <msb>31</msb>
               </field>

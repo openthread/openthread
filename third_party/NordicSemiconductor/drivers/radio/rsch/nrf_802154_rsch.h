@@ -64,6 +64,7 @@ typedef enum
 {
     RSCH_PREC_HFCLK,
     RSCH_PREC_RAAL,
+    RSCH_PREC_COEX,
     RSCH_PREC_CNT,
 } rsch_prec_t;
 
@@ -117,7 +118,7 @@ void nrf_802154_rsch_uninit(void);
  * possible to give the radio driver core as much radio time as possible while
  * disturbing the other activities to the minimum extent.
  *
- * @note The start of a timeslot is indicated by the @ref nrf_802154_rsch_prec_approved call.
+ * @note The start of a timeslot is indicated by the @ref nrf_802154_rsch_prec_is_approved call.
  * @note To disable the continuous radio mode, the @ref RSCH_PRIO_IDLE should be used.
  *
  * @param[in]  prio  Priority level used in the continuous radio mode.
@@ -137,7 +138,7 @@ void nrf_802154_rsch_continuous_ended(void);
 /**
  * @brief Immediately requests a timeslot for radio communication.
  *
- * This function is to be called only after @ref nrf_802154_rsch_prec_approved indicated the
+ * This function is to be called only after @ref nrf_802154_rsch_prec_is_approved indicated the
  * start of a timeslot.
  *
  * @param[in] length_us  Requested radio timeslot length in microseconds.

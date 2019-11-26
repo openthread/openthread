@@ -102,6 +102,10 @@ python --version || die
     (cd .. && ${TRAVIS_BUILD_DIR}/.travis/check-android-build) || die
 }
 
+[ $BUILD_TARGET != gn-build ] || {
+    (cd ${TRAVIS_BUILD_DIR} && .travis/check-gn-build) || die
+}
+
 build_cc1352() {
     git checkout -- . || die
     git clean -xfd || die
@@ -114,6 +118,13 @@ build_cc1352() {
 }
 
 build_cc2538() {
+    git checkout -- . || die
+    git clean -xfd || die
+    mkdir build && cd build || die
+    cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=examples/platforms/cc2538/arm-none-eabi.cmake -DOT_PLATFORM=cc2538 .. || die
+    ninja || die
+    cd .. || die
+
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
@@ -181,6 +192,48 @@ build_nrf52811() {
     git clean -xfd || die
     ./bootstrap || die
     DISABLE_TRANSPORTS=1 make -f examples/Makefile-nrf52811 || die
+}
+
+build_nrf52833() {
+    # Default OpenThread switches for nRF52833 platform
+    OPENTHREAD_FLAGS="BORDER_AGENT=1 BORDER_ROUTER=1 COAP=1 COAPS=1 COMMISSIONER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 ECDSA=1 FULL_LOGS=1 IP6_FRAGM=1 JOINER=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 SLAAC=1 SNTP_CLIENT=1 UDP_FORWARD=1"
+
+    # UART transport
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    make -f examples/Makefile-nrf52833 $OPENTHREAD_FLAGS || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-ncp-mtd || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-rcp || die
+
+    # USB transport
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    USB=1 make -f examples/Makefile-nrf52833 $OPENTHREAD_FLAGS || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-ncp-mtd || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-rcp || die
+
+    # SPI transport for NCP
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    NCP_SPI=1 make -f examples/Makefile-nrf52833 $OPENTHREAD_FLAGS || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-ncp-mtd || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-rcp || die
+
+    # Build without transport (no CLI or NCP applications)
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    DISABLE_TRANSPORTS=1 make -f examples/Makefile-nrf52833 $OPENTHREAD_FLAGS || die
 }
 
 build_nrf52840() {
@@ -281,6 +334,7 @@ build_samr21() {
     build_cc2652
     build_kw41z
     build_nrf52811
+    build_nrf52833
     build_nrf52840
     build_qpg6095
     build_samr21
@@ -295,6 +349,7 @@ build_samr21() {
     build_cc2652
     build_kw41z
     build_nrf52811
+    build_nrf52833
     build_nrf52840
     build_qpg6095
     build_samr21
@@ -309,6 +364,7 @@ build_samr21() {
     build_cc2652
     build_kw41z
     build_nrf52811
+    build_nrf52833
     build_nrf52840
     build_qpg6095
     build_samr21
@@ -323,6 +379,7 @@ build_samr21() {
     build_cc2652
     build_kw41z
     build_nrf52811
+    build_nrf52833
     build_nrf52840
     build_qpg6095
     build_samr21
@@ -337,12 +394,35 @@ build_samr21() {
     build_cc2652
     build_kw41z
     build_nrf52811
+    build_nrf52833
+    build_nrf52840
+    build_qpg6095
+    build_samr21
+}
+
+[ $BUILD_TARGET != arm-gcc-9 ] || {
+    export PATH=/tmp/gcc-arm-none-eabi-9-2019-q4-major/bin:$PATH || die
+
+    build_cc1352
+    build_cc2538
+    build_cc2650
+    build_cc2652
+    build_kw41z
+    build_nrf52811
+    build_nrf52833
     build_nrf52840
     build_qpg6095
     build_samr21
 }
 
 [ $BUILD_TARGET != posix ] || {
+    git checkout -- . || die
+    git clean -xfd || die
+    mkdir build && cd build || die
+    cmake -GNinja -DOT_PLATFORM=posix .. || die
+    ninja || die
+    cd .. || die
+
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die

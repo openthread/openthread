@@ -76,11 +76,11 @@ void otSysInit(int argc, char *argv[])
 #undef FIXED_EXCEPTION
 #define FIXED_EXCEPTION(vectorNumber, functionName, deviceIrqn, deviceIrqHandler)
 #define EXCEPTION(vectorNumber, functionName, deviceIrqn, deviceIrqHandler, priorityLevel, subpriority) \
-    NVIC_SetPriority(deviceIrqn, NVIC_EncodePriority(PRIGROUP_POSITION, priorityLevel, subpriority));
+    NVIC_SetPriority(deviceIrqn, NVIC_EncodePriority(PRIGROUP_POSITION - 1, priorityLevel, subpriority));
 #include NVIC_CONFIG
 #undef EXCEPTION
 
-    NVIC_SetPriorityGrouping(PRIGROUP_POSITION);
+    NVIC_SetPriorityGrouping(PRIGROUP_POSITION - 1);
     CHIP_Init();
     halInitChipSpecific();
     BSP_Init(BSP_INIT_BCC);

@@ -60,14 +60,14 @@ extern "C" {
 /**
  * @brief Macro for placing a runtime assertion.
  *
- * @param expression  Expression to evaluate.
+ * @param expression Expression to be evaluated.
  */
 #define NRFX_ASSERT(expression)
 
 /**
  * @brief Macro for placing a compile time assertion.
  *
- * @param expression  Expression to evaluate.
+ * @param expression Expression to be evaluated.
  */
 #define NRFX_STATIC_ASSERT(expression)
 
@@ -76,22 +76,22 @@ extern "C" {
 /**
  * @brief Macro for setting the priority of a specific IRQ.
  *
- * @param irq_number  IRQ number.
- * @param priority    Priority to set.
+ * @param irq_number IRQ number.
+ * @param priority   Priority to be set.
  */
 #define NRFX_IRQ_PRIORITY_SET(irq_number, priority)
 
 /**
  * @brief Macro for enabling a specific IRQ.
  *
- * @param irq_number  IRQ number.
+ * @param irq_number IRQ number.
  */
 #define NRFX_IRQ_ENABLE(irq_number)
 
 /**
  * @brief Macro for checking if a specific IRQ is enabled.
  *
- * @param irq_number  IRQ number.
+ * @param irq_number IRQ number.
  *
  * @retval true  If the IRQ is enabled.
  * @retval false Otherwise.
@@ -101,21 +101,21 @@ extern "C" {
 /**
  * @brief Macro for disabling a specific IRQ.
  *
- * @param irq_number  IRQ number.
+ * @param irq_number IRQ number.
  */
 #define NRFX_IRQ_DISABLE(irq_number)
 
 /**
  * @brief Macro for setting a specific IRQ as pending.
  *
- * @param irq_number  IRQ number.
+ * @param irq_number IRQ number.
  */
 #define NRFX_IRQ_PENDING_SET(irq_number)
 
 /**
  * @brief Macro for clearing the pending status of a specific IRQ.
  *
- * @param irq_number  IRQ number.
+ * @param irq_number IRQ number.
  */
 #define NRFX_IRQ_PENDING_CLEAR(irq_number)
 
@@ -127,14 +127,10 @@ extern "C" {
  */
 #define NRFX_IRQ_IS_PENDING(irq_number)
 
-/**
- * @brief Macro for entering into a critical section.
- */
+/** @brief Macro for entering into a critical section. */
 #define NRFX_CRITICAL_SECTION_ENTER()
 
-/**
- * @brief Macro for exiting from a critical section.
- */
+/** @brief Macro for exiting from a critical section. */
 #define NRFX_CRITICAL_SECTION_EXIT()
 
 //------------------------------------------------------------------------------
@@ -156,16 +152,14 @@ extern "C" {
 
 //------------------------------------------------------------------------------
 
-/**
- * @brief Atomic 32-bit unsigned type.
- */
+/** @brief Atomic 32-bit unsigned type. */
 #define nrfx_atomic_t
 
 /**
  * @brief Macro for storing a value to an atomic object and returning its previous value.
  *
- * @param[in] p_data  Atomic memory pointer.
- * @param[in] value   Value to store.
+ * @param[in] p_data Atomic memory pointer.
+ * @param[in] value  Value to store.
  *
  * @return Previous value of the atomic object.
  */
@@ -174,8 +168,8 @@ extern "C" {
 /**
  * @brief Macro for running a bitwise OR operation on an atomic object and returning its previous value.
  *
- * @param[in] p_data  Atomic memory pointer.
- * @param[in] value   Value of the second operand in the OR operation.
+ * @param[in] p_data Atomic memory pointer.
+ * @param[in] value  Value of the second operand in the OR operation.
  *
  * @return Previous value of the atomic object.
  */
@@ -185,8 +179,8 @@ extern "C" {
  * @brief Macro for running a bitwise AND operation on an atomic object
  *        and returning its previous value.
  *
- * @param[in] p_data  Atomic memory pointer.
- * @param[in] value   Value of the second operand in the AND operation.
+ * @param[in] p_data Atomic memory pointer.
+ * @param[in] value  Value of the second operand in the AND operation.
  *
  * @return Previous value of the atomic object.
  */
@@ -196,8 +190,8 @@ extern "C" {
  * @brief Macro for running a bitwise XOR operation on an atomic object
  *        and returning its previous value.
  *
- * @param[in] p_data  Atomic memory pointer.
- * @param[in] value   Value of the second operand in the XOR operation.
+ * @param[in] p_data Atomic memory pointer.
+ * @param[in] value  Value of the second operand in the XOR operation.
  *
  * @return Previous value of the atomic object.
  */
@@ -207,8 +201,8 @@ extern "C" {
  * @brief Macro for running an addition operation on an atomic object
  *        and returning its previous value.
  *
- * @param[in] p_data  Atomic memory pointer.
- * @param[in] value   Value of the second operand in the ADD operation.
+ * @param[in] p_data Atomic memory pointer.
+ * @param[in] value  Value of the second operand in the ADD operation.
  *
  * @return Previous value of the atomic object.
  */
@@ -218,8 +212,8 @@ extern "C" {
  * @brief Macro for running a subtraction operation on an atomic object
  *        and returning its previous value.
  *
- * @param[in] p_data  Atomic memory pointer.
- * @param[in] value   Value of the second operand in the SUB operation.
+ * @param[in] p_data Atomic memory pointer.
+ * @param[in] value  Value of the second operand in the SUB operation.
  *
  * @return Previous value of the atomic object.
  */
@@ -237,34 +231,22 @@ extern "C" {
 
 //------------------------------------------------------------------------------
 
-/**
- * @brief Bitmask defining DPPI channels reserved to be used outside of nrfx.
- */
+/** @brief Bitmask that defines DPPI channels that are reserved for use outside of the nrfx library. */
 #define NRFX_DPPI_CHANNELS_USED  0
 
-/**
- * @brief Bitmask defining DPPI groups reserved to be used outside of nrfx.
- */
+/** @brief Bitmask that defines DPPI groups that are reserved for use outside of the nrfx library. */
 #define NRFX_DPPI_GROUPS_USED    0
 
-/**
- * @brief Bitmask defining PPI channels reserved to be used outside of nrfx.
- */
+/** @brief Bitmask that defines PPI channels that are reserved for use outside of the nrfx library. */
 #define NRFX_PPI_CHANNELS_USED  0
 
-/**
- * @brief Bitmask defining PPI groups reserved to be used outside of nrfx.
- */
+/** @brief Bitmask that defines PPI groups that are reserved for use outside of the nrfx library. */
 #define NRFX_PPI_GROUPS_USED    0
 
-/**
- * @brief Bitmask defining SWI instances reserved to be used outside of nrfx.
- */
+/** @brief Bitmask that defines SWI instances that are reserved for use outside of the nrfx library. */
 #define NRFX_SWI_USED           0
 
-/**
- * @brief Bitmask defining TIMER instances reserved to be used outside of nrfx.
- */
+/** @brief Bitmask that defines TIMER instances that are reserved for use outside of the nrfx library. */
 #define NRFX_TIMERS_USED        0
 
 /** @} */

@@ -35,6 +35,72 @@ POSSIBILITY OF SUCH DAMAGE.
 
 /*lint ++flb "Enter library region" */
 
+/* Peripheral: CC_HOST_RGF */
+/* Description: CRYPTOCELL HOST_RGF interface */
+
+/* Register: CC_HOST_RGF_HOST_CRYPTOKEY_SEL */
+/* Description: AES hardware key select */
+
+/* Bits 1..0 : Select the source of the HW key that is used by the AES engine */
+#define CC_HOST_RGF_HOST_CRYPTOKEY_SEL_HOST_CRYPTOKEY_SEL_Pos (0UL) /*!< Position of HOST_CRYPTOKEY_SEL field. */
+#define CC_HOST_RGF_HOST_CRYPTOKEY_SEL_HOST_CRYPTOKEY_SEL_Msk (0x3UL << CC_HOST_RGF_HOST_CRYPTOKEY_SEL_HOST_CRYPTOKEY_SEL_Pos) /*!< Bit mask of HOST_CRYPTOKEY_SEL field. */
+#define CC_HOST_RGF_HOST_CRYPTOKEY_SEL_HOST_CRYPTOKEY_SEL_K_DR (0UL) /*!< Use device root key K_DR from CRYPTOCELL AO power domain */
+#define CC_HOST_RGF_HOST_CRYPTOKEY_SEL_HOST_CRYPTOKEY_SEL_K_PRTL (1UL) /*!< Use hard-coded RTL key K_PRTL */
+#define CC_HOST_RGF_HOST_CRYPTOKEY_SEL_HOST_CRYPTOKEY_SEL_Session (2UL) /*!< Use provided session key */
+
+/* Register: CC_HOST_RGF_HOST_IOT_KPRTL_LOCK */
+/* Description: This write-once register is the K_PRTL lock register. When this register is set, K_PRTL cannot be used and a zeroed key will be used instead. The value of this register is saved in the CRYPTOCELL AO power domain. */
+
+/* Bit 0 : This register is the K_PRTL lock register. When this register is set, K_PRTL cannot be used and a zeroed key will be used instead. The value of this register is saved in the CRYPTOCELL AO power domain. */
+#define CC_HOST_RGF_HOST_IOT_KPRTL_LOCK_HOST_IOT_KPRTL_LOCK_Pos (0UL) /*!< Position of HOST_IOT_KPRTL_LOCK field. */
+#define CC_HOST_RGF_HOST_IOT_KPRTL_LOCK_HOST_IOT_KPRTL_LOCK_Msk (0x1UL << CC_HOST_RGF_HOST_IOT_KPRTL_LOCK_HOST_IOT_KPRTL_LOCK_Pos) /*!< Bit mask of HOST_IOT_KPRTL_LOCK field. */
+#define CC_HOST_RGF_HOST_IOT_KPRTL_LOCK_HOST_IOT_KPRTL_LOCK_Disabled (0UL) /*!< K_PRTL can be selected for use from register HOST_CRYPTOKEY_SEL */
+#define CC_HOST_RGF_HOST_IOT_KPRTL_LOCK_HOST_IOT_KPRTL_LOCK_Enabled (1UL) /*!< K_PRTL has been locked until next power-on reset (POR). If K_PRTL is selected anyway, a zeroed key will be used instead. */
+
+/* Register: CC_HOST_RGF_HOST_IOT_KDR0 */
+/* Description: This register holds bits 31:0 of K_DR. The value of this register is saved in the CRYPTOCELL AO power domain. Reading from this address returns the K_DR valid status indicating if K_DR is successfully retained. */
+
+/* Bits 31..0 : Write: K_DR bits 31:0. Read: 0x00000000 when 128-bit K_DR key value is not yet retained in the CRYPTOCELL AO power domain. Read: 0x00000001 when 128-bit K_DR key value is successfully retained in the CRYPTOCELL AO power domain. */
+#define CC_HOST_RGF_HOST_IOT_KDR0_HOST_IOT_KDR0_Pos (0UL) /*!< Position of HOST_IOT_KDR0 field. */
+#define CC_HOST_RGF_HOST_IOT_KDR0_HOST_IOT_KDR0_Msk (0xFFFFFFFFUL << CC_HOST_RGF_HOST_IOT_KDR0_HOST_IOT_KDR0_Pos) /*!< Bit mask of HOST_IOT_KDR0 field. */
+
+/* Register: CC_HOST_RGF_HOST_IOT_KDR1 */
+/* Description: This register holds bits 63:32 of K_DR. The value of this register is saved in the CRYPTOCELL AO power domain. */
+
+/* Bits 31..0 : K_DR bits 63:32 */
+#define CC_HOST_RGF_HOST_IOT_KDR1_HOST_IOT_KDR1_Pos (0UL) /*!< Position of HOST_IOT_KDR1 field. */
+#define CC_HOST_RGF_HOST_IOT_KDR1_HOST_IOT_KDR1_Msk (0xFFFFFFFFUL << CC_HOST_RGF_HOST_IOT_KDR1_HOST_IOT_KDR1_Pos) /*!< Bit mask of HOST_IOT_KDR1 field. */
+
+/* Register: CC_HOST_RGF_HOST_IOT_KDR2 */
+/* Description: This register holds bits 95:64 of K_DR. The value of this register is saved in the CRYPTOCELL AO power domain. */
+
+/* Bits 31..0 : K_DR bits 95:64 */
+#define CC_HOST_RGF_HOST_IOT_KDR2_HOST_IOT_KDR2_Pos (0UL) /*!< Position of HOST_IOT_KDR2 field. */
+#define CC_HOST_RGF_HOST_IOT_KDR2_HOST_IOT_KDR2_Msk (0xFFFFFFFFUL << CC_HOST_RGF_HOST_IOT_KDR2_HOST_IOT_KDR2_Pos) /*!< Bit mask of HOST_IOT_KDR2 field. */
+
+/* Register: CC_HOST_RGF_HOST_IOT_KDR3 */
+/* Description: This register holds bits 127:96 of K_DR. The value of this register is saved in the CRYPTOCELL AO power domain. */
+
+/* Bits 31..0 : K_DR bits 127:96 */
+#define CC_HOST_RGF_HOST_IOT_KDR3_HOST_IOT_KDR3_Pos (0UL) /*!< Position of HOST_IOT_KDR3 field. */
+#define CC_HOST_RGF_HOST_IOT_KDR3_HOST_IOT_KDR3_Msk (0xFFFFFFFFUL << CC_HOST_RGF_HOST_IOT_KDR3_HOST_IOT_KDR3_Pos) /*!< Bit mask of HOST_IOT_KDR3 field. */
+
+/* Register: CC_HOST_RGF_HOST_IOT_LCS */
+/* Description: Controls lifecycle state (LCS) for CRYPTOCELL subsystem */
+
+/* Bit 8 : Read-only field. Indicates if CRYPTOCELL LCS has been successfully configured since last reset. */
+#define CC_HOST_RGF_HOST_IOT_LCS_LCS_IS_VALID_Pos (8UL) /*!< Position of LCS_IS_VALID field. */
+#define CC_HOST_RGF_HOST_IOT_LCS_LCS_IS_VALID_Msk (0x1UL << CC_HOST_RGF_HOST_IOT_LCS_LCS_IS_VALID_Pos) /*!< Bit mask of LCS_IS_VALID field. */
+#define CC_HOST_RGF_HOST_IOT_LCS_LCS_IS_VALID_Invalid (0UL) /*!< Valid LCS not yet retained in the CRYPTOCELL AO power domain */
+#define CC_HOST_RGF_HOST_IOT_LCS_LCS_IS_VALID_Valid (1UL) /*!< Valid LCS successfully retained in the CRYPTOCELL AO power domain */
+
+/* Bits 2..0 : Lifecycle state value. This field is write-once per reset. */
+#define CC_HOST_RGF_HOST_IOT_LCS_LCS_Pos (0UL) /*!< Position of LCS field. */
+#define CC_HOST_RGF_HOST_IOT_LCS_LCS_Msk (0x7UL << CC_HOST_RGF_HOST_IOT_LCS_LCS_Pos) /*!< Bit mask of LCS field. */
+#define CC_HOST_RGF_HOST_IOT_LCS_LCS_Debug (0UL) /*!< CC310 operates in debug mode */
+#define CC_HOST_RGF_HOST_IOT_LCS_LCS_Secure (2UL) /*!< CC310 operates in secure mode */
+
+
 /* Peripheral: CLOCK */
 /* Description: Clock management 0 */
 
@@ -309,7 +375,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define CRYPTOCELL_ENABLE_ENABLE_Pos (0UL) /*!< Position of ENABLE field. */
 #define CRYPTOCELL_ENABLE_ENABLE_Msk (0x1UL << CRYPTOCELL_ENABLE_ENABLE_Pos) /*!< Bit mask of ENABLE field. */
 #define CRYPTOCELL_ENABLE_ENABLE_Disabled (0UL) /*!< CRYPTOCELL subsystem disabled */
-#define CRYPTOCELL_ENABLE_ENABLE_Enabled (1UL) /*!< CRYPTOCELL subsystem enabled */
+#define CRYPTOCELL_ENABLE_ENABLE_Enabled (1UL) /*!< CRYPTOCELL subsystem enabled. */
 
 
 /* Peripheral: CTRLAPPERI */
@@ -339,7 +405,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define CTRLAPPERI_MAILBOX_TXDATA_TXDATA_Msk (0xFFFFFFFFUL << CTRLAPPERI_MAILBOX_TXDATA_TXDATA_Pos) /*!< Bit mask of TXDATA field. */
 
 /* Register: CTRLAPPERI_MAILBOX_TXSTATUS */
-/* Description: Status to indicate if data sent from the CPU to the debugger status has been read */
+/* Description: Status to indicate if data sent from the CPU to the debugger has been read */
 
 /* Bit 0 : Status of data in register TXDATA */
 #define CTRLAPPERI_MAILBOX_TXSTATUS_TXSTATUS_Pos (0UL) /*!< Position of TXSTATUS field. */
@@ -348,18 +414,18 @@ POSSIBILITY OF SUCH DAMAGE.
 #define CTRLAPPERI_MAILBOX_TXSTATUS_TXSTATUS_DataPending (1UL) /*!< Data pending in register TXDATA */
 
 /* Register: CTRLAPPERI_ERASEPROTECT_LOCK */
-/* Description: Lock ERASEALL mechanism */
+/* Description: Lock register ERASEPROTECT.DISABLE from being written until next reset */
 
-/* Bit 0 : Enable or disable the ERASEALL mechanism */
-#define CTRLAPPERI_ERASEPROTECT_LOCK_ERASEPROTECTLOCK_Pos (0UL) /*!< Position of ERASEPROTECTLOCK field. */
-#define CTRLAPPERI_ERASEPROTECT_LOCK_ERASEPROTECTLOCK_Msk (0x1UL << CTRLAPPERI_ERASEPROTECT_LOCK_ERASEPROTECTLOCK_Pos) /*!< Bit mask of ERASEPROTECTLOCK field. */
-#define CTRLAPPERI_ERASEPROTECT_LOCK_ERASEPROTECTLOCK_Unlocked (0UL) /*!< ERASEALL can be issued */
-#define CTRLAPPERI_ERASEPROTECT_LOCK_ERASEPROTECTLOCK_Locked (1UL) /*!< ERASEALL is locked */
+/* Bit 0 : Lock register ERASEPROTECT.DISABLE from being written until next reset */
+#define CTRLAPPERI_ERASEPROTECT_LOCK_LOCK_Pos (0UL) /*!< Position of LOCK field. */
+#define CTRLAPPERI_ERASEPROTECT_LOCK_LOCK_Msk (0x1UL << CTRLAPPERI_ERASEPROTECT_LOCK_LOCK_Pos) /*!< Bit mask of LOCK field. */
+#define CTRLAPPERI_ERASEPROTECT_LOCK_LOCK_Unlocked (0UL) /*!< Register ERASEPROTECT.DISABLE is writeable */
+#define CTRLAPPERI_ERASEPROTECT_LOCK_LOCK_Locked (1UL) /*!< Register ERASEPROTECT.DISABLE is read-only */
 
 /* Register: CTRLAPPERI_ERASEPROTECT_DISABLE */
-/* Description: Unlock ERASEPROTECT and perform ERASEALL */
+/* Description: Disable ERASEPROTECT and perform ERASEALL */
 
-/* Bits 31..0 : Initiate secure erase even though ERASEPROTECT is enabled if KEY fields match */
+/* Bits 31..0 : The ERASEALL sequence will be initiated if value of KEY fields are non-zero and KEY fields match on both CPU and debugger side */
 #define CTRLAPPERI_ERASEPROTECT_DISABLE_KEY_Pos (0UL) /*!< Position of KEY field. */
 #define CTRLAPPERI_ERASEPROTECT_DISABLE_KEY_Msk (0xFFFFFFFFUL << CTRLAPPERI_ERASEPROTECT_DISABLE_KEY_Pos) /*!< Bit mask of KEY field. */
 
@@ -839,7 +905,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 
 /* Peripheral: EGU */
-/* Description: Event Generator Unit 0 */
+/* Description: Event generator unit 0 */
 
 /* Register: EGU_TASKS_TRIGGER */
 /* Description: Description collection: Trigger n for triggering the corresponding TRIGGERED[n] event */
@@ -2409,18 +2475,18 @@ POSSIBILITY OF SUCH DAMAGE.
 #define KMU_TASKS_PUSH_KEYSLOT_TASKS_PUSH_KEYSLOT_Trigger (1UL) /*!< Trigger task */
 
 /* Register: KMU_EVENTS_KEYSLOT_PUSHED */
-/* Description: Key successfully pushed over secure APB */
+/* Description: Key slot successfully pushed over secure APB */
 
-/* Bit 0 : Key successfully pushed over secure APB */
+/* Bit 0 : Key slot successfully pushed over secure APB */
 #define KMU_EVENTS_KEYSLOT_PUSHED_EVENTS_KEYSLOT_PUSHED_Pos (0UL) /*!< Position of EVENTS_KEYSLOT_PUSHED field. */
 #define KMU_EVENTS_KEYSLOT_PUSHED_EVENTS_KEYSLOT_PUSHED_Msk (0x1UL << KMU_EVENTS_KEYSLOT_PUSHED_EVENTS_KEYSLOT_PUSHED_Pos) /*!< Bit mask of EVENTS_KEYSLOT_PUSHED field. */
 #define KMU_EVENTS_KEYSLOT_PUSHED_EVENTS_KEYSLOT_PUSHED_NotGenerated (0UL) /*!< Event not generated */
 #define KMU_EVENTS_KEYSLOT_PUSHED_EVENTS_KEYSLOT_PUSHED_Generated (1UL) /*!< Event generated */
 
 /* Register: KMU_EVENTS_KEYSLOT_REVOKED */
-/* Description: Key has been revoked and cannot be tasked for selection */
+/* Description: Key slot has been revoked and cannot be tasked for selection */
 
-/* Bit 0 : Key has been revoked and cannot be tasked for selection */
+/* Bit 0 : Key slot has been revoked and cannot be tasked for selection */
 #define KMU_EVENTS_KEYSLOT_REVOKED_EVENTS_KEYSLOT_REVOKED_Pos (0UL) /*!< Position of EVENTS_KEYSLOT_REVOKED field. */
 #define KMU_EVENTS_KEYSLOT_REVOKED_EVENTS_KEYSLOT_REVOKED_Msk (0x1UL << KMU_EVENTS_KEYSLOT_REVOKED_EVENTS_KEYSLOT_REVOKED_Pos) /*!< Bit mask of EVENTS_KEYSLOT_REVOKED field. */
 #define KMU_EVENTS_KEYSLOT_REVOKED_EVENTS_KEYSLOT_REVOKED_NotGenerated (0UL) /*!< Event not generated */
@@ -2541,9 +2607,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #define KMU_STATUS_SELECTED_Enabled (1UL) /*!< Key slot ID successfully selected by KMU */
 
 /* Register: KMU_SELECTKEYSLOT */
-/* Description: Select key slot ID to be read over AHB or pushed over secure APB when TASKS_PUSH_KEYSLOT is started */
+/* Description: Select key slot to be read over AHB or pushed over secure APB when TASKS_PUSH_KEYSLOT is started */
 
-/* Bits 7..0 : Select key slot ID to be read over AHB, or pushed over secure APB, when TASKS_PUSH_KEYSLOT is started NOTE: ID=0 is not a valid key ID. The 0 ID should be used when the KMU is idle or not in use NOTE: Note that index N in UICR-&gt;KEYSLOT.KEY[N] and UICR-&gt;KEYSLOT.CONFIG[N] corresponds to KMU keyslot ID=N+1 */
+/* Bits 7..0 : Select key slot ID to be read over AHB, or pushed over secure APB, when TASKS_PUSH_KEYSLOT is started NOTE: ID=0 is not a valid key slot ID. The 0 ID should be used when the KMU is idle or not in use NOTE: Index N in UICR-&gt;KEYSLOT.KEY[N] and UICR-&gt;KEYSLOT.CONFIG[N] corresponds to KMU key slot ID=N+1 */
 #define KMU_SELECTKEYSLOT_ID_Pos (0UL) /*!< Position of ID field. */
 #define KMU_SELECTKEYSLOT_ID_Msk (0xFFUL << KMU_SELECTKEYSLOT_ID_Pos) /*!< Bit mask of ID field. */
 
@@ -2614,14 +2680,14 @@ POSSIBILITY OF SUCH DAMAGE.
 /* Register: NVMC_IHIT */
 /* Description: I-code cache hit counter */
 
-/* Bits 31..0 : Number of cache hits */
+/* Bits 31..0 : Number of cache hits Write zero to clear */
 #define NVMC_IHIT_HITS_Pos (0UL) /*!< Position of HITS field. */
 #define NVMC_IHIT_HITS_Msk (0xFFFFFFFFUL << NVMC_IHIT_HITS_Pos) /*!< Bit mask of HITS field. */
 
 /* Register: NVMC_IMISS */
 /* Description: I-code cache miss counter */
 
-/* Bits 31..0 : Number of cache misses */
+/* Bits 31..0 : Number of cache misses Write zero to clear */
 #define NVMC_IMISS_MISSES_Pos (0UL) /*!< Position of MISSES field. */
 #define NVMC_IMISS_MISSES_Msk (0xFFFFFFFFUL << NVMC_IMISS_MISSES_Pos) /*!< Bit mask of MISSES field. */
 
@@ -2647,35 +2713,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #define NVMC_WRITEUICRNS_SET_Pos (0UL) /*!< Position of SET field. */
 #define NVMC_WRITEUICRNS_SET_Msk (0x1UL << NVMC_WRITEUICRNS_SET_Pos) /*!< Bit mask of SET field. */
 #define NVMC_WRITEUICRNS_SET_Set (1UL) /*!< Set value */
-
-/* Register: NVMC_FORCEONNVM */
-/* Description: Force on all NVM supplies. Also see the internal section in the NVMC chapter. */
-
-/* Bit 0 : Force on all NVM supplies. Also see the internal section in the NVMC chapter. */
-#define NVMC_FORCEONNVM_FORCEONNVM_Pos (0UL) /*!< Position of FORCEONNVM field. */
-#define NVMC_FORCEONNVM_FORCEONNVM_Msk (0x1UL << NVMC_FORCEONNVM_FORCEONNVM_Pos) /*!< Bit mask of FORCEONNVM field. */
-#define NVMC_FORCEONNVM_FORCEONNVM_DoNotForceOn (0UL) /*!< Do not force on NVM supply */
-#define NVMC_FORCEONNVM_FORCEONNVM_ForceOn (1UL) /*!< Force on NVM supply */
-
-/* Register: NVMC_FORCEOFFNVM */
-/* Description: Force off NVM supply. Also see the internal section in the NVMC chapter. */
-
-/* Bits 31..8 : KEY */
-#define NVMC_FORCEOFFNVM_KEY_Pos (8UL) /*!< Position of KEY field. */
-#define NVMC_FORCEOFFNVM_KEY_Msk (0xFFFFFFUL << NVMC_FORCEOFFNVM_KEY_Pos) /*!< Bit mask of KEY field. */
-#define NVMC_FORCEOFFNVM_KEY_EnableWrite (0xACCE55UL) /*!< Must be written in order to write to bits 0-7. Any other value will ignore writes to this register. Read as zero. */
-
-/* Bit 1 : Force off NVM supply 1. Also see the internal section in the NVMC chapter. */
-#define NVMC_FORCEOFFNVM_FORCEOFFNVM1_Pos (1UL) /*!< Position of FORCEOFFNVM1 field. */
-#define NVMC_FORCEOFFNVM_FORCEOFFNVM1_Msk (0x1UL << NVMC_FORCEOFFNVM_FORCEOFFNVM1_Pos) /*!< Bit mask of FORCEOFFNVM1 field. */
-#define NVMC_FORCEOFFNVM_FORCEOFFNVM1_DoNotForceOff (0UL) /*!< Do not force off supply */
-#define NVMC_FORCEOFFNVM_FORCEOFFNVM1_ForceOff (1UL) /*!< Force off supply */
-
-/* Bit 0 : Force off NVM supply 0. Also see the internal section in the NVMC chapter. */
-#define NVMC_FORCEOFFNVM_FORCEOFFNVM0_Pos (0UL) /*!< Position of FORCEOFFNVM0 field. */
-#define NVMC_FORCEOFFNVM_FORCEOFFNVM0_Msk (0x1UL << NVMC_FORCEOFFNVM_FORCEOFFNVM0_Pos) /*!< Bit mask of FORCEOFFNVM0 field. */
-#define NVMC_FORCEOFFNVM_FORCEOFFNVM0_DoNotForceOff (0UL) /*!< Do not force off supply */
-#define NVMC_FORCEOFFNVM_FORCEOFFNVM0_ForceOff (1UL) /*!< Force off supply */
 
 
 /* Peripheral: GPIO */
@@ -4370,22 +4407,22 @@ POSSIBILITY OF SUCH DAMAGE.
 #define GPIO_LATCH_PIN0_Latched (1UL) /*!< Criteria has been met */
 
 /* Register: GPIO_DETECTMODE */
-/* Description: Select between default DETECT signal behaviour and LDETECT mode (For non-secure pin only) */
+/* Description: Select between default DETECT signal behavior and LDETECT mode (For non-secure pin only) */
 
-/* Bit 0 : Select between default DETECT signal behaviour and LDETECT mode */
+/* Bit 0 : Select between default DETECT signal behavior and LDETECT mode */
 #define GPIO_DETECTMODE_DETECTMODE_Pos (0UL) /*!< Position of DETECTMODE field. */
 #define GPIO_DETECTMODE_DETECTMODE_Msk (0x1UL << GPIO_DETECTMODE_DETECTMODE_Pos) /*!< Bit mask of DETECTMODE field. */
 #define GPIO_DETECTMODE_DETECTMODE_Default (0UL) /*!< DETECT directly connected to PIN DETECT signals */
-#define GPIO_DETECTMODE_DETECTMODE_LDETECT (1UL) /*!< Use the latched LDETECT behaviour */
+#define GPIO_DETECTMODE_DETECTMODE_LDETECT (1UL) /*!< Use the latched LDETECT behavior */
 
 /* Register: GPIO_DETECTMODE_SEC */
-/* Description: Select between default DETECT signal behaviour and LDETECT mode (For secure pin only) */
+/* Description: Select between default DETECT signal behavior and LDETECT mode (For secure pin only) */
 
-/* Bit 0 : Select between default DETECT signal behaviour and LDETECT mode */
+/* Bit 0 : Select between default DETECT signal behavior and LDETECT mode */
 #define GPIO_DETECTMODE_SEC_DETECTMODE_Pos (0UL) /*!< Position of DETECTMODE field. */
 #define GPIO_DETECTMODE_SEC_DETECTMODE_Msk (0x1UL << GPIO_DETECTMODE_SEC_DETECTMODE_Pos) /*!< Bit mask of DETECTMODE field. */
 #define GPIO_DETECTMODE_SEC_DETECTMODE_Default (0UL) /*!< DETECT directly connected to PIN DETECT signals */
-#define GPIO_DETECTMODE_SEC_DETECTMODE_LDETECT (1UL) /*!< Use the latched LDETECT behaviour */
+#define GPIO_DETECTMODE_SEC_DETECTMODE_LDETECT (1UL) /*!< Use the latched LDETECT behavior */
 
 /* Register: GPIO_PIN_CNF */
 /* Description: Description collection: Configuration of GPIO pins */
@@ -4404,9 +4441,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #define GPIO_PIN_CNF_DRIVE_H0S1 (1UL) /*!< High drive '0', standard '1' */
 #define GPIO_PIN_CNF_DRIVE_S0H1 (2UL) /*!< Standard '0', high drive '1' */
 #define GPIO_PIN_CNF_DRIVE_H0H1 (3UL) /*!< High drive '0', high 'drive '1'' */
-#define GPIO_PIN_CNF_DRIVE_D0S1 (4UL) /*!< Disconnect '0' standard '1' (normally used for wired-or connections) */
+#define GPIO_PIN_CNF_DRIVE_D0S1 (4UL) /*!< Disconnect '0', standard '1' (normally used for wired-or connections) */
 #define GPIO_PIN_CNF_DRIVE_D0H1 (5UL) /*!< Disconnect '0', high drive '1' (normally used for wired-or connections) */
-#define GPIO_PIN_CNF_DRIVE_S0D1 (6UL) /*!< Standard '0'. disconnect '1' (normally used for wired-and connections) */
+#define GPIO_PIN_CNF_DRIVE_S0D1 (6UL) /*!< Standard '0', disconnect '1' (normally used for wired-and connections) */
 #define GPIO_PIN_CNF_DRIVE_H0D1 (7UL) /*!< High drive '0', disconnect '1' (normally used for wired-and connections) */
 
 /* Bits 3..2 : Pull configuration */
@@ -5436,31 +5473,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #define REGULATORS_SYSTEMOFF_SYSTEMOFF_Msk (0x1UL << REGULATORS_SYSTEMOFF_SYSTEMOFF_Pos) /*!< Bit mask of SYSTEMOFF field. */
 #define REGULATORS_SYSTEMOFF_SYSTEMOFF_Enable (1UL) /*!< Enable System OFF mode */
 
-/* Register: REGULATORS_POFCON */
-/* Description: Power-fail comparator configuration */
-
-/* Bits 4..1 : Power-fail comparator threshold setting */
-#define REGULATORS_POFCON_THRESHOLD_Pos (1UL) /*!< Position of THRESHOLD field. */
-#define REGULATORS_POFCON_THRESHOLD_Msk (0xFUL << REGULATORS_POFCON_THRESHOLD_Pos) /*!< Bit mask of THRESHOLD field. */
-#define REGULATORS_POFCON_THRESHOLD_V19 (6UL) /*!< Set threshold to 1.9 V */
-#define REGULATORS_POFCON_THRESHOLD_V20 (7UL) /*!< Set threshold to 2.0 V */
-#define REGULATORS_POFCON_THRESHOLD_V21 (8UL) /*!< Set threshold to 2.1 V */
-#define REGULATORS_POFCON_THRESHOLD_V22 (9UL) /*!< Set threshold to 2.2 V */
-#define REGULATORS_POFCON_THRESHOLD_V23 (10UL) /*!< Set threshold to 2.3 V */
-#define REGULATORS_POFCON_THRESHOLD_V24 (11UL) /*!< Set threshold to 2.4 V */
-#define REGULATORS_POFCON_THRESHOLD_V25 (12UL) /*!< Set threshold to 2.5 V */
-#define REGULATORS_POFCON_THRESHOLD_V26 (13UL) /*!< Set threshold to 2.6 V */
-#define REGULATORS_POFCON_THRESHOLD_V27 (14UL) /*!< Set threshold to 2.7 V */
-#define REGULATORS_POFCON_THRESHOLD_V28 (15UL) /*!< Set threshold to 2.8 V */
-
-/* Bit 0 : Enable or disable power-fail comparator */
-#define REGULATORS_POFCON_POF_Pos (0UL) /*!< Position of POF field. */
-#define REGULATORS_POFCON_POF_Msk (0x1UL << REGULATORS_POFCON_POF_Pos) /*!< Bit mask of POF field. */
-#define REGULATORS_POFCON_POF_Disabled (0UL) /*!< Disable */
-#define REGULATORS_POFCON_POF_Enabled (1UL) /*!< Enable */
-
 /* Register: REGULATORS_DCDCEN */
-/* Description: Enable DC/DC mode of the main voltage regulator */
+/* Description: Enable DC/DC mode of the main voltage regulator. */
 
 /* Bit 0 : Enable DC/DC converter */
 #define REGULATORS_DCDCEN_DCDCEN_Pos (0UL) /*!< Position of DCDCEN field. */
@@ -6582,7 +6596,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define SAADC_STATUS_STATUS_Pos (0UL) /*!< Position of STATUS field. */
 #define SAADC_STATUS_STATUS_Msk (0x1UL << SAADC_STATUS_STATUS_Pos) /*!< Bit mask of STATUS field. */
 #define SAADC_STATUS_STATUS_Ready (0UL) /*!< ADC is ready. No on-going conversion. */
-#define SAADC_STATUS_STATUS_Busy (1UL) /*!< ADC is busy. Conversion in progress. */
+#define SAADC_STATUS_STATUS_Busy (1UL) /*!< ADC is busy. Single conversion in progress. */
 
 /* Register: SAADC_ENABLE */
 /* Description: Enable or disable ADC */
@@ -6608,7 +6622,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define SAADC_CH_PSELP_PSELP_AnalogInput5 (6UL) /*!< AIN5 */
 #define SAADC_CH_PSELP_PSELP_AnalogInput6 (7UL) /*!< AIN6 */
 #define SAADC_CH_PSELP_PSELP_AnalogInput7 (8UL) /*!< AIN7 */
-#define SAADC_CH_PSELP_PSELP_VDD (9UL) /*!< VDD */
+#define SAADC_CH_PSELP_PSELP_VDDGPIO (9UL) /*!< VDD_GPIO */
 
 /* Register: SAADC_CH_PSELN */
 /* Description: Description cluster: Input negative pin selection for CH[n] */
@@ -6625,7 +6639,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define SAADC_CH_PSELN_PSELN_AnalogInput5 (6UL) /*!< AIN5 */
 #define SAADC_CH_PSELN_PSELN_AnalogInput6 (7UL) /*!< AIN6 */
 #define SAADC_CH_PSELN_PSELN_AnalogInput7 (8UL) /*!< AIN7 */
-#define SAADC_CH_PSELN_PSELN_VDD (9UL) /*!< VDD */
+#define SAADC_CH_PSELN_PSELN_VDD_GPIO (9UL) /*!< VDD_GPIO */
 
 /* Register: SAADC_CH_CONFIG */
 /* Description: Description cluster: Input configuration for CH[n] */
@@ -6656,7 +6670,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define SAADC_CH_CONFIG_REFSEL_Pos (12UL) /*!< Position of REFSEL field. */
 #define SAADC_CH_CONFIG_REFSEL_Msk (0x1UL << SAADC_CH_CONFIG_REFSEL_Pos) /*!< Bit mask of REFSEL field. */
 #define SAADC_CH_CONFIG_REFSEL_Internal (0UL) /*!< Internal reference (0.6 V) */
-#define SAADC_CH_CONFIG_REFSEL_VDD1_4 (1UL) /*!< VDD/4 as reference */
+#define SAADC_CH_CONFIG_REFSEL_VDD1_4 (1UL) /*!< VDD_GPIO/4 as reference */
 
 /* Bits 10..8 : Gain control */
 #define SAADC_CH_CONFIG_GAIN_Pos (8UL) /*!< Position of GAIN field. */
@@ -6675,16 +6689,16 @@ POSSIBILITY OF SUCH DAMAGE.
 #define SAADC_CH_CONFIG_RESN_Msk (0x3UL << SAADC_CH_CONFIG_RESN_Pos) /*!< Bit mask of RESN field. */
 #define SAADC_CH_CONFIG_RESN_Bypass (0UL) /*!< Bypass resistor ladder */
 #define SAADC_CH_CONFIG_RESN_Pulldown (1UL) /*!< Pull-down to GND */
-#define SAADC_CH_CONFIG_RESN_Pullup (2UL) /*!< Pull-up to VDD */
-#define SAADC_CH_CONFIG_RESN_VDD1_2 (3UL) /*!< Set input at VDD/2 */
+#define SAADC_CH_CONFIG_RESN_Pullup (2UL) /*!< Pull-up to VDD_GPIO */
+#define SAADC_CH_CONFIG_RESN_VDD1_2 (3UL) /*!< Set input at VDD_GPIO/2 */
 
 /* Bits 1..0 : Positive channel resistor control */
 #define SAADC_CH_CONFIG_RESP_Pos (0UL) /*!< Position of RESP field. */
 #define SAADC_CH_CONFIG_RESP_Msk (0x3UL << SAADC_CH_CONFIG_RESP_Pos) /*!< Bit mask of RESP field. */
 #define SAADC_CH_CONFIG_RESP_Bypass (0UL) /*!< Bypass resistor ladder */
 #define SAADC_CH_CONFIG_RESP_Pulldown (1UL) /*!< Pull-down to GND */
-#define SAADC_CH_CONFIG_RESP_Pullup (2UL) /*!< Pull-up to VDD */
-#define SAADC_CH_CONFIG_RESP_VDD1_2 (3UL) /*!< Set input at VDD/2 */
+#define SAADC_CH_CONFIG_RESP_Pullup (2UL) /*!< Pull-up to VDD_GPIO */
+#define SAADC_CH_CONFIG_RESP_VDD1_2 (3UL) /*!< Set input at VDD_GPIO/2 */
 
 /* Register: SAADC_CH_LIMIT */
 /* Description: Description cluster: High/low limits for event monitoring a channel */
@@ -7185,9 +7199,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #define SPIM_CONFIG_ORDER_LsbFirst (1UL) /*!< Least significant bit shifted out first */
 
 /* Register: SPIM_ORC */
-/* Description: Over-read character. Character clocked out in case and over-read of the TXD buffer. */
+/* Description: Over-read character. Character clocked out in case an over-read of the TXD buffer. */
 
-/* Bits 7..0 : Over-read character. Character clocked out in case and over-read of the TXD buffer. */
+/* Bits 7..0 : Over-read character. Character clocked out in case an over-read of the TXD buffer. */
 #define SPIM_ORC_ORC_Pos (0UL) /*!< Position of ORC field. */
 #define SPIM_ORC_ORC_Msk (0xFFUL << SPIM_ORC_ORC_Pos) /*!< Bit mask of ORC field. */
 
@@ -7470,6 +7484,15 @@ POSSIBILITY OF SUCH DAMAGE.
 #define SPIS_RXD_AMOUNT_AMOUNT_Pos (0UL) /*!< Position of AMOUNT field. */
 #define SPIS_RXD_AMOUNT_AMOUNT_Msk (0x1FFFUL << SPIS_RXD_AMOUNT_AMOUNT_Pos) /*!< Bit mask of AMOUNT field. */
 
+/* Register: SPIS_RXD_LIST */
+/* Description: EasyDMA list type */
+
+/* Bits 1..0 : List type */
+#define SPIS_RXD_LIST_LIST_Pos (0UL) /*!< Position of LIST field. */
+#define SPIS_RXD_LIST_LIST_Msk (0x3UL << SPIS_RXD_LIST_LIST_Pos) /*!< Bit mask of LIST field. */
+#define SPIS_RXD_LIST_LIST_Disabled (0UL) /*!< Disable EasyDMA list */
+#define SPIS_RXD_LIST_LIST_ArrayList (1UL) /*!< Use array list */
+
 /* Register: SPIS_TXD_PTR */
 /* Description: TXD data pointer */
 
@@ -7490,6 +7513,15 @@ POSSIBILITY OF SUCH DAMAGE.
 /* Bits 12..0 : Number of bytes transmitted in last granted transaction */
 #define SPIS_TXD_AMOUNT_AMOUNT_Pos (0UL) /*!< Position of AMOUNT field. */
 #define SPIS_TXD_AMOUNT_AMOUNT_Msk (0x1FFFUL << SPIS_TXD_AMOUNT_AMOUNT_Pos) /*!< Bit mask of AMOUNT field. */
+
+/* Register: SPIS_TXD_LIST */
+/* Description: EasyDMA list type */
+
+/* Bits 1..0 : List type */
+#define SPIS_TXD_LIST_LIST_Pos (0UL) /*!< Position of LIST field. */
+#define SPIS_TXD_LIST_LIST_Msk (0x3UL << SPIS_TXD_LIST_LIST_Pos) /*!< Bit mask of LIST field. */
+#define SPIS_TXD_LIST_LIST_Disabled (0UL) /*!< Disable EasyDMA list */
+#define SPIS_TXD_LIST_LIST_ArrayList (1UL) /*!< Use array list */
 
 /* Register: SPIS_CONFIG */
 /* Description: Configuration register */
@@ -8190,6 +8222,22 @@ POSSIBILITY OF SUCH DAMAGE.
 /* Peripheral: TAD */
 /* Description: Trace and debug control */
 
+/* Register: TAD_CLOCKSTART */
+/* Description: Start all trace and debug clocks. */
+
+/* Bit 0 :   */
+#define TAD_CLOCKSTART_START_Pos (0UL) /*!< Position of START field. */
+#define TAD_CLOCKSTART_START_Msk (0x1UL << TAD_CLOCKSTART_START_Pos) /*!< Bit mask of START field. */
+#define TAD_CLOCKSTART_START_Start (1UL) /*!< Start all trace and debug clocks. */
+
+/* Register: TAD_CLOCKSTOP */
+/* Description: Stop all trace and debug clocks. */
+
+/* Bit 0 :   */
+#define TAD_CLOCKSTOP_STOP_Pos (0UL) /*!< Position of STOP field. */
+#define TAD_CLOCKSTOP_STOP_Msk (0x1UL << TAD_CLOCKSTOP_STOP_Pos) /*!< Bit mask of STOP field. */
+#define TAD_CLOCKSTOP_STOP_Stop (1UL) /*!< Stop all trace and debug clocks. */
+
 /* Register: TAD_ENABLE */
 /* Description: Enable debug domain and aquire selected GPIOs */
 
@@ -8620,6 +8668,15 @@ POSSIBILITY OF SUCH DAMAGE.
 #define TIMER_PRESCALER_PRESCALER_Pos (0UL) /*!< Position of PRESCALER field. */
 #define TIMER_PRESCALER_PRESCALER_Msk (0xFUL << TIMER_PRESCALER_PRESCALER_Pos) /*!< Bit mask of PRESCALER field. */
 
+/* Register: TIMER_ONESHOTEN */
+/* Description: Description collection: Enable one-shot operation for Capture/Compare channel n */
+
+/* Bit 0 : Enable one-shot operation */
+#define TIMER_ONESHOTEN_ONESHOTEN_Pos (0UL) /*!< Position of ONESHOTEN field. */
+#define TIMER_ONESHOTEN_ONESHOTEN_Msk (0x1UL << TIMER_ONESHOTEN_ONESHOTEN_Pos) /*!< Bit mask of ONESHOTEN field. */
+#define TIMER_ONESHOTEN_ONESHOTEN_Disable (0UL) /*!< Disable one-shot operation */
+#define TIMER_ONESHOTEN_ONESHOTEN_Enable (1UL) /*!< Enable one-shot operation */
+
 /* Register: TIMER_CC */
 /* Description: Description collection: Capture/Compare register n */
 
@@ -8755,9 +8812,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #define TWIM_EVENTS_ERROR_EVENTS_ERROR_Generated (1UL) /*!< Event generated */
 
 /* Register: TWIM_EVENTS_SUSPENDED */
-/* Description: Last byte has been sent out after the SUSPEND task has been issued, TWI traffic is now suspended. */
+/* Description: SUSPEND task has been issued, TWI traffic is now suspended. */
 
-/* Bit 0 : Last byte has been sent out after the SUSPEND task has been issued, TWI traffic is now suspended. */
+/* Bit 0 : SUSPEND task has been issued, TWI traffic is now suspended. */
 #define TWIM_EVENTS_SUSPENDED_EVENTS_SUSPENDED_Pos (0UL) /*!< Position of EVENTS_SUSPENDED field. */
 #define TWIM_EVENTS_SUSPENDED_EVENTS_SUSPENDED_Msk (0x1UL << TWIM_EVENTS_SUSPENDED_EVENTS_SUSPENDED_Pos) /*!< Bit mask of EVENTS_SUSPENDED field. */
 #define TWIM_EVENTS_SUSPENDED_EVENTS_SUSPENDED_NotGenerated (0UL) /*!< Event not generated */
@@ -9680,6 +9737,15 @@ POSSIBILITY OF SUCH DAMAGE.
 #define TWIS_RXD_AMOUNT_AMOUNT_Pos (0UL) /*!< Position of AMOUNT field. */
 #define TWIS_RXD_AMOUNT_AMOUNT_Msk (0x1FFFUL << TWIS_RXD_AMOUNT_AMOUNT_Pos) /*!< Bit mask of AMOUNT field. */
 
+/* Register: TWIS_RXD_LIST */
+/* Description: EasyDMA list type */
+
+/* Bits 1..0 : List type */
+#define TWIS_RXD_LIST_LIST_Pos (0UL) /*!< Position of LIST field. */
+#define TWIS_RXD_LIST_LIST_Msk (0x3UL << TWIS_RXD_LIST_LIST_Pos) /*!< Bit mask of LIST field. */
+#define TWIS_RXD_LIST_LIST_Disabled (0UL) /*!< Disable EasyDMA list */
+#define TWIS_RXD_LIST_LIST_ArrayList (1UL) /*!< Use array list */
+
 /* Register: TWIS_TXD_PTR */
 /* Description: TXD Data pointer */
 
@@ -9700,6 +9766,15 @@ POSSIBILITY OF SUCH DAMAGE.
 /* Bits 12..0 : Number of bytes transferred in the last TXD transaction */
 #define TWIS_TXD_AMOUNT_AMOUNT_Pos (0UL) /*!< Position of AMOUNT field. */
 #define TWIS_TXD_AMOUNT_AMOUNT_Msk (0x1FFFUL << TWIS_TXD_AMOUNT_AMOUNT_Pos) /*!< Bit mask of AMOUNT field. */
+
+/* Register: TWIS_TXD_LIST */
+/* Description: EasyDMA list type */
+
+/* Bits 1..0 : List type */
+#define TWIS_TXD_LIST_LIST_Pos (0UL) /*!< Position of LIST field. */
+#define TWIS_TXD_LIST_LIST_Msk (0x3UL << TWIS_TXD_LIST_LIST_Pos) /*!< Bit mask of LIST field. */
+#define TWIS_TXD_LIST_LIST_Disabled (0UL) /*!< Disable EasyDMA list */
+#define TWIS_TXD_LIST_LIST_ArrayList (1UL) /*!< Use array list */
 
 /* Register: TWIS_ADDRESS */
 /* Description: Description collection: TWI slave address n */
@@ -10560,11 +10635,15 @@ POSSIBILITY OF SUCH DAMAGE.
 #define UICR_ERASEPROTECT_PALL_Unprotected (0xFFFFFFFFUL) /*!< Unprotected */
 
 /* Register: UICR_OTP */
-/* Description: Description collection: OTP bits [31+n*32:0+n*32]. */
+/* Description: Description collection: One time programmable memory */
 
-/* Bits 31..0 : Bits [31+n*32:0+n*32] of OTP region */
-#define UICR_OTP_OTP_Pos (0UL) /*!< Position of OTP field. */
-#define UICR_OTP_OTP_Msk (0xFFFFFFFFUL << UICR_OTP_OTP_Pos) /*!< Bit mask of OTP field. */
+/* Bits 31..16 : Upper half word */
+#define UICR_OTP_UPPER_Pos (16UL) /*!< Position of UPPER field. */
+#define UICR_OTP_UPPER_Msk (0xFFFFUL << UICR_OTP_UPPER_Pos) /*!< Bit mask of UPPER field. */
+
+/* Bits 15..0 : Lower half word */
+#define UICR_OTP_LOWER_Pos (0UL) /*!< Position of LOWER field. */
+#define UICR_OTP_LOWER_Msk (0xFFFFUL << UICR_OTP_LOWER_Pos) /*!< Bit mask of LOWER field. */
 
 /* Register: UICR_KEYSLOT_CONFIG_DEST */
 /* Description: Description cluster: Destination address where content of the key value registers (KEYSLOT.KEYn.VALUE[0-3])
@@ -10577,7 +10656,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define UICR_KEYSLOT_CONFIG_DEST_DEST_Msk (0xFFFFFFFFUL << UICR_KEYSLOT_CONFIG_DEST_DEST_Pos) /*!< Bit mask of DEST field. */
 
 /* Register: UICR_KEYSLOT_CONFIG_PERM */
-/* Description: Description cluster: Define permissions for the key slot with ID=n+1. Bits 0-15 and 16-31 can only be written once. */
+/* Description: Description cluster: Define permissions for the key slot. Bits 0-15 and 16-31 can only be written when equal to 0xFFFF. */
 
 /* Bit 16 : Revocation state for the key slot */
 #define UICR_KEYSLOT_CONFIG_PERM_STATE_Pos (16UL) /*!< Position of STATE field. */
@@ -10604,9 +10683,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #define UICR_KEYSLOT_CONFIG_PERM_WRITE_Enabled (1UL) /*!< Enable write to the key value registers */
 
 /* Register: UICR_KEYSLOT_KEY_VALUE */
-/* Description: Description collection: Define bits [31+o*32:0+o*32] of value assigned to KMU key slot ID=n+1 */
+/* Description: Description collection: Define bits [31+o*32:0+o*32] of value assigned to KMU key slot. */
 
-/* Bits 31..0 : Define bits [31+o*32:0+o*32] of value assigned to KMU key slot ID=n+1 */
+/* Bits 31..0 : Define bits [31+o*32:0+o*32] of value assigned to KMU key slot */
 #define UICR_KEYSLOT_KEY_VALUE_VALUE_Pos (0UL) /*!< Position of VALUE field. */
 #define UICR_KEYSLOT_KEY_VALUE_VALUE_Msk (0xFFFFFFFFUL << UICR_KEYSLOT_KEY_VALUE_VALUE_Pos) /*!< Bit mask of VALUE field. */
 

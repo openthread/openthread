@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2012 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -123,7 +123,6 @@ enum BLE_COMMON_OPTS
   BLE_COMMON_OPT_PA_LNA          = BLE_OPT_BASE + 0, /**< PA and LNA options */
   BLE_COMMON_OPT_CONN_EVT_EXT    = BLE_OPT_BASE + 1, /**< Extended connection events option */
   BLE_COMMON_OPT_EXTENDED_RC_CAL = BLE_OPT_BASE + 2, /**< Extended RC calibration option */
-  BLE_COMMON_OPT_ADV_SCHED_CFG   = BLE_OPT_BASE + 3, /**< Advertiser role scheduling configuration option */
 };
 
 /** @} */
@@ -146,12 +145,6 @@ enum BLE_COMMON_OPTS
 #define BLE_EVT_LEN_MAX(ATT_MTU) ( \
     offsetof(ble_evt_t, evt.gattc_evt.params.prim_srvc_disc_rsp.services) + ((ATT_MTU) - 1) / 4 * sizeof(ble_gattc_service_t) \
 )
-
-/** @defgroup ADV_SCHED_CFG Advertiser Role Scheduling Configuration
- * @{ */
-#define ADV_SCHED_CFG_DEFAULT  0  /**< Default advertiser role scheduling configuration. */
-#define ADV_SCHED_CFG_IMPROVED 1  /**< Improved advertiser role scheduling configuration in which the housekeeping time is reduced. */
-/** @} */
 
 /** @defgroup BLE_USER_MEM_TYPES User Memory Types
  * @{ */
@@ -310,23 +303,12 @@ typedef struct
    uint8_t enable : 1; /**< Enable extended RC calibration, enabled by default. */
 } ble_common_opt_extended_rc_cal_t;
 
-/**
- * @brief Configuration of BLE advertiser role scheduling.
- *
- * @note @ref sd_ble_opt_get is not supported for this option.
- */
-typedef struct
-{
-  uint8_t sched_cfg;  /**< See @ref ADV_SCHED_CFG. */
-} ble_common_opt_adv_sched_cfg_t;
-
 /**@brief Option structure for common options. */
 typedef union
 {
   ble_common_opt_pa_lna_t          pa_lna;          /**< Parameters for controlling PA and LNA pin toggling. */
   ble_common_opt_conn_evt_ext_t    conn_evt_ext;    /**< Parameters for enabling extended connection events. */
   ble_common_opt_extended_rc_cal_t extended_rc_cal; /**< Parameters for enabling extended RC calibration. */
-  ble_common_opt_adv_sched_cfg_t   adv_sched_cfg;   /**< Parameters for configuring advertiser role scheduling. */
 } ble_common_opt_t;
 
 /**@brief Common BLE Option type, wrapping the module specific options. */
@@ -545,18 +527,17 @@ SVCALL(SD_BLE_UUID_VS_ADD, uint32_t, sd_ble_uuid_vs_add(ble_uuid128_t const *p_v
  *
  * @note Currently this function can only be called with a p_uuid_type set to @ref BLE_UUID_TYPE_UNKNOWN or the last added UUID type.
  *
- * @param[in]  p_uuid_type  Pointer to a uint8_t where the type field in @ref ble_uuid_t::type corresponds to the UUID type that
- *                          shall be removed. If the type is set to @ref BLE_UUID_TYPE_UNKNOWN, or the pointer is NULL, the last
- *                          Vendor Specific base UUID will be removed.
- * @param[out] p_uuid_type  Pointer to a uint8_t where the type field in @ref ble_uuid_t corresponds to the UUID type that was
- *                          removed. If function returns with a failure, it contains the last type that is in use by the ATT Server.
+ * @param[inout] p_uuid_type Pointer to a uint8_t where its value matches the UUID type in @ref ble_uuid_t::type to be removed.
+ *                           If the type is set to @ref BLE_UUID_TYPE_UNKNOWN, or the pointer is NULL, the last Vendor Specific
+ *                           base UUID will be removed. If the function returns successfully, the UUID type that was removed will
+ *                           be written back to @p p_uuid_type. If function returns with a failure, it contains the last type that
+ *                           is in use by the ATT Server.
  *
  * @retval ::NRF_SUCCESS Successfully removed the Vendor Specific base UUID.
  * @retval ::NRF_ERROR_INVALID_ADDR If p_uuid_type is invalid.
  * @retval ::NRF_ERROR_INVALID_PARAM If p_uuid_type points to a non-valid UUID type.
  * @retval ::NRF_ERROR_FORBIDDEN If the Vendor Specific base UUID is in use by the ATT Server.
  */
-
 SVCALL(SD_BLE_UUID_VS_REMOVE, uint32_t, sd_ble_uuid_vs_remove(uint8_t *p_uuid_type));
 
 
@@ -637,10 +618,6 @@ SVCALL(SD_BLE_USER_MEM_REPLY, uint32_t, sd_ble_user_mem_reply(uint16_t conn_hand
 /**@brief Set a BLE option.
  *
  * @details This call allows the application to set the value of an option.
- *
- * @mscs
- * @mmsc{@ref BLE_GAP_PERIPH_BONDING_STATIC_PK_MSC}
- * @endmscs
  *
  * @param[in] opt_id Option ID, see @ref BLE_COMMON_OPTS and @ref BLE_GAP_OPTS.
  * @param[in] p_opt Pointer to a ble_opt_t structure containing the option value.

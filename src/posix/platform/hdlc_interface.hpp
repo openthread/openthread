@@ -130,14 +130,6 @@ public:
     int GetSocket(void) const { return mSockFd; }
 
     /**
-     * This method indicates whether the `HdclInterface` is currently decoding a received frame or not.
-     *
-     * @returns  TRUE if currently decoding a received frame, FALSE otherwise.
-     *
-     */
-    bool IsDecoding(void) const { return mIsDecoding; }
-
-    /**
      * This method instructs `HdlcInterface` to read and decode data from radio over the socket.
      *
      * If a full HDLC frame is decoded while reading data, this method invokes the `HandleReceivedFrame()` (on the

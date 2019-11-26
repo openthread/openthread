@@ -51,7 +51,7 @@ extern "C" {
 #define NRF_RAAL_TIMESLOT_DEFAULT_ALLOC_ITERS               5
 #define NRF_RAAL_TIMESLOT_DEFAULT_SAFE_MARGIN               nrf_raal_softdevice_safe_margin_calc( \
         NRF_RAAL_DEFAULT_LF_CLK_ACCURACY_PPM)
-#define NRF_RAAL_TIMESLOT_DEFAULT_TIMEOUT                   4500
+#define NRF_RAAL_TIMESLOT_DEFAULT_TIMEOUT                   2500
 #define NRF_RAAL_TIMESLOT_DEFAULT_MAX_LENGTH                120000000
 #define NRF_RAAL_DEFAULT_LF_CLK_ACCURACY_PPM                500
 

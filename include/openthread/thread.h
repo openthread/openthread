@@ -74,7 +74,6 @@ typedef enum
 /**
  * This structure represents an MLE Link Mode configuration.
  */
-OT_TOOL_ALIGN(4)
 typedef struct otLinkModeConfig
 {
     bool mRxOnWhenIdle : 1;       ///< 1, if the sender has its receiver on when not transmitting. 0, otherwise.
@@ -130,7 +129,6 @@ typedef struct otLeaderData
  * This structure holds diagnostic information for a Thread Router
  *
  */
-OT_TOOL_ALIGN(4)
 typedef struct
 {
     otExtAddress mExtAddress;          ///< IEEE 802.15.4 Extended Address

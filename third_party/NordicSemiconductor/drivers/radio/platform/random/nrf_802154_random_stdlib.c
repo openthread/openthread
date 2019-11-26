@@ -44,7 +44,7 @@
 #include "nrf.h"
 
 #if RAAL_SOFTDEVICE
-#include <softdevice.h>
+#include <nrf_soc.h>
 #endif // RAAL_SOFTDEVICE
 
 void nrf_802154_random_init(void)

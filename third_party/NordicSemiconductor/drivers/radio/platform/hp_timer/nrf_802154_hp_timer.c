@@ -47,9 +47,10 @@
 #include <nrf_timer.h>
 
 #include "nrf_802154_config.h"
+#include "nrf_802154_peripherals.h"
 
 /**@brief Timer instance. */
-#define TIMER                 NRF_TIMER0
+#define TIMER                 NRF_802154_HIGH_PRECISION_TIMER_INSTANCE
 
 /**@brief Timer compare channel definitions. */
 #define TIMER_CC_CAPTURE      NRF_TIMER_CC_CHANNEL1

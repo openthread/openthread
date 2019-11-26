@@ -167,6 +167,12 @@ void nrf5RadioDeinit(void);
 void nrf5RadioProcess(otInstance *aInstance);
 
 /**
+ * Function for clearing Radio driver pending events.
+ *
+ */
+void nrf5RadioClearPendingEvents(void);
+
+/**
  * Initialization of hardware crypto engine.
  *
  */

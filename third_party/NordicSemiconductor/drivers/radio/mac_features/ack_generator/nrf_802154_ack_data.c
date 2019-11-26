@@ -43,7 +43,6 @@
 #include "mac_features/nrf_802154_frame_parser.h"
 #include "nrf_802154_config.h"
 #include "nrf_802154_const.h"
-#include "nrf_802154_types.h"
 
 /// Maximum number of Short Addresses of nodes for which there is ACK data to set.
 #define NUM_SHORT_ADDRESSES    NRF_802154_PENDING_SHORT_ADDRESSES
@@ -91,8 +90,9 @@ typedef struct
 } ie_arrays_t;
 
 // TODO: Combine below arrays to perform binary search only once per Ack generation.
-static pending_bit_arrays_t m_pending_bit;
-static ie_arrays_t          m_ie;
+static pending_bit_arrays_t        m_pending_bit;
+static ie_arrays_t                 m_ie;
+static nrf_802154_src_addr_match_t m_src_matching_method;
 
 /***************************************************************************************************
  * @section Array handling helper functions
@@ -322,6 +322,106 @@ static bool addr_index_find(const uint8_t * p_addr,
 }
 
 /**
+ * @brief Thread implementation of the address matching algorithm.
+ *
+ * @param[in]  p_frame  Pointer to the frame for which the ACK frame is being prepared.
+ *
+ * @retval true   Pending bit is to be set.
+ * @retval false  Pending bit is to be cleared.
+ */
+static bool addr_match_thread(const uint8_t * p_frame)
+{
+    bool            extended;
+    uint32_t        location;
+    const uint8_t * p_src_addr = nrf_802154_frame_parser_src_addr_get(p_frame, &extended);
+
+    // The pending bit is set by default.
+    if (!m_pending_bit.enabled || (NULL == p_src_addr))
+    {
+        return true;
+    }
+
+    return addr_index_find(p_src_addr, &location, NRF_802154_ACK_DATA_PENDING_BIT, extended);
+}
+
+/**
+ * @brief Zigbee implementation of the address matching algorithm.
+ *
+ * @param[in]  p_frame  Pointer to the frame for which the ACK frame is being prepared.
+ *
+ * @retval true   Pending bit is to be set.
+ * @retval false  Pending bit is to be cleared.
+ */
+static bool addr_match_zigbee(const uint8_t * p_frame)
+{
+    uint8_t                            frame_type;
+    nrf_802154_frame_parser_mhr_data_t mhr_fields;
+    uint32_t                           location;
+    const uint8_t                    * p_cmd = p_frame;
+    bool                               ret   = false;
+
+    // If ack data generator module is disabled do not perform check, return true by default.
+    if (!m_pending_bit.enabled)
+    {
+        return true;
+    }
+
+    // Check the frame type.
+    frame_type = (p_frame[FRAME_TYPE_OFFSET] & FRAME_TYPE_MASK);
+
+    // Parse the MAC header and retrieve the command type.
+    if (nrf_802154_frame_parser_mhr_parse(p_frame, &mhr_fields))
+    {
+        // Note: Security header is not included in the offset.
+        // If security is to be used at any point, additional calculation
+        // in nrf_802154_frame_parser_mhr_parse needs to be implemented.
+        p_cmd += mhr_fields.addressing_end_offset;
+    }
+    else
+    {
+        // If invalid source or destination addressing mode is detected, assume unknown device.
+        // Command type cannot be checked, as addressing_end_offset value will be invalid.
+        return true;
+    }
+
+    // Check frame type and command type.
+    if ((frame_type == FRAME_TYPE_COMMAND) && (*p_cmd == MAC_CMD_DATA_REQ))
+    {
+        // Check addressing type - in long case address, pb should always be 1.
+        if (mhr_fields.src_addr_size == SHORT_ADDRESS_SIZE)
+        {
+            // Return true if address is not found on the m_pending_bits list.
+            ret = !addr_index_find(mhr_fields.p_src_addr,
+                                   &location,
+                                   NRF_802154_ACK_DATA_PENDING_BIT,
+                                   false);
+        }
+        else
+        {
+            ret = true;
+        }
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Standard-compliant implementation of the address matching algorithm.
+ *
+ * Function always returns true. It is IEEE 802.15.4 compliant, as per 6.7.3.
+ * Higher layer should ensure empty data frame with no AR is sent afterwards.
+ *
+ * @param[in]  p_frame  Pointer to the frame for which the ACK frame is being prepared.
+ *
+ * @retval true   Pending bit is to be set.
+ */
+static bool addr_match_standard_compliant(const uint8_t * p_frame)
+{
+    (void)p_frame;
+    return true;
+}
+
+/**
  * @brief Add an address to the address list in ascending order.
  *
  * @param[in]  p_addr           Pointer to the address to be added.
@@ -491,6 +591,7 @@ void nrf_802154_ack_data_init(void)
     memset(&m_ie, 0, sizeof(m_ie));
 
     m_pending_bit.enabled = true;
+    m_src_matching_method = NRF_802154_SRC_ADDR_MATCH_THREAD;
 }
 
 void nrf_802154_ack_data_enable(bool enabled)
@@ -567,19 +668,45 @@ void nrf_802154_ack_data_reset(bool extended, uint8_t data_type)
     }
 }
 
-bool nrf_802154_ack_data_pending_bit_should_be_set(const uint8_t * p_frame)
+void nrf_802154_ack_data_src_addr_matching_method_set(nrf_802154_src_addr_match_t match_method)
 {
-    bool            extended;
-    uint32_t        location;
-    const uint8_t * p_src_addr = nrf_802154_frame_parser_src_addr_get(p_frame, &extended);
-
-    // The pending bit is set by default.
-    if (!m_pending_bit.enabled || NULL == p_src_addr)
+    switch (match_method)
     {
-        return true;
+        case NRF_802154_SRC_ADDR_MATCH_THREAD:
+        case NRF_802154_SRC_ADDR_MATCH_ZIGBEE:
+        case NRF_802154_SRC_ADDR_MATCH_ALWAYS_1:
+            m_src_matching_method = match_method;
+            break;
+
+        default:
+            assert(false);
     }
 
-    return addr_index_find(p_src_addr, &location, NRF_802154_ACK_DATA_PENDING_BIT, extended);
+}
+
+bool nrf_802154_ack_data_pending_bit_should_be_set(const uint8_t * p_frame)
+{
+    bool ret;
+
+    switch (m_src_matching_method)
+    {
+        case NRF_802154_SRC_ADDR_MATCH_THREAD:
+            ret = addr_match_thread(p_frame);
+            break;
+
+        case NRF_802154_SRC_ADDR_MATCH_ZIGBEE:
+            ret = addr_match_zigbee(p_frame);
+            break;
+
+        case NRF_802154_SRC_ADDR_MATCH_ALWAYS_1:
+            ret = addr_match_standard_compliant(p_frame);
+            break;
+
+        default:
+            assert(false);
+    }
+
+    return ret;
 }
 
 const uint8_t * nrf_802154_ack_data_ie_get(const uint8_t * p_src_addr,
