@@ -376,10 +376,7 @@ bool MleRouter::HandleAdvertiseTimer(void)
 {
     bool continueTrickle = true;
 
-    if (!IsFullThreadDevice())
-    {
-        ExitNow(continueTrickle = false);
-    }
+    VerifyOrExit(IsRouterEligible(), continueTrickle = false);
 
     SendAdvertisement();
 
@@ -1077,7 +1074,7 @@ bool MleRouter::IsSingleton(void)
 {
     bool rval = true;
 
-    if (IsAttached() && IsFullThreadDevice())
+    if (IsAttached() && IsRouterEligible())
     {
         // not a singleton if any other routers exist
         if (mRouterTable.GetActiveRouterCount() > 1)
@@ -2653,7 +2650,7 @@ otError MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Me
     LogMleMessage("Receive Discovery Request", aMessageInfo.GetPeerAddr());
 
     // only Routers and REEDs respond
-    VerifyOrExit(IsFullThreadDevice(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(IsRouterEligible(), error = OT_ERROR_INVALID_STATE);
 
     // find MLE Discovery TLV
     VerifyOrExit(Tlv::GetOffset(aMessage, Tlv::kDiscovery, offset) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
