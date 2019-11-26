@@ -2777,11 +2777,11 @@ void Interpreter::ProcessRouterEligible(int argc, char *argv[])
     }
     else if (strcmp(argv[0], "enable") == 0)
     {
-        otThreadSetRouterEligible(mInstance, true);
+        error = otThreadSetRouterEligible(mInstance, true);
     }
     else if (strcmp(argv[0], "disable") == 0)
     {
-        otThreadSetRouterEligible(mInstance, false);
+        error = otThreadSetRouterEligible(mInstance, false);
     }
     else
     {

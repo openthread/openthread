@@ -142,8 +142,11 @@ bool otThreadIsRouterEligible(otInstance *aInstance);
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aEligible  TRUE to configure the device as router-eligible, FALSE otherwise.
  *
+ * @retval OT_ERROR_NONE         Successfully set the router-eligible configuration.
+ * @retval OT_ERROR_NOT_CAPABLE  The device is not capable of becoming a router.
+ *
  */
-void otThreadSetRouterEligible(otInstance *aInstance, bool aEligible);
+otError otThreadSetRouterEligible(otInstance *aInstance, bool aEligible);
 
 /**
  * Set the preferred Router Id.

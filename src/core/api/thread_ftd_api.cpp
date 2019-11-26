@@ -65,11 +65,11 @@ bool otThreadIsRouterEligible(otInstance *aInstance)
     return instance.Get<Mle::MleRouter>().IsRouterEligible();
 }
 
-void otThreadSetRouterEligible(otInstance *aInstance, bool aEligible)
+otError otThreadSetRouterEligible(otInstance *aInstance, bool aEligible)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.Get<Mle::MleRouter>().SetRouterEligible(aEligible);
+    return instance.Get<Mle::MleRouter>().SetRouterEligible(aEligible);
 }
 
 otError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId)

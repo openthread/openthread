@@ -304,7 +304,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_ROUTER_ROLE_EN
 
     SuccessOrExit(error = mDecoder.ReadBool(eligible));
 
-    otThreadSetRouterEligible(mInstance, eligible);
+    error = otThreadSetRouterEligible(mInstance, eligible);
 
 exit:
     return error;
