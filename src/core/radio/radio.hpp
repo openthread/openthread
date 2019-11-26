@@ -295,7 +295,7 @@ public:
      * @retval OT_ERROR_NOT_IMPLEMENTED  CCA ED threshold configuration via dBm is not implemented.
      *
      */
-    otError SetCcaEnergyDetectThreshold(int8_t &aThreshold)
+    otError SetCcaEnergyDetectThreshold(int8_t aThreshold)
     {
         return otPlatRadioSetCcaEnergyDetectThreshold(GetInstance(), aThreshold);
     }
