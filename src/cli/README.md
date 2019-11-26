@@ -43,6 +43,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [macfilter](#macfilter)
 * [masterkey](#masterkey)
 * [mode](#mode)
+* [mqtt](README_MQTT.md)
 * [neighbor](#neighbor-list)
 * [netdataregister](#netdataregister)
 * [netdatashow](#netdatashow)
