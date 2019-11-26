@@ -60,7 +60,7 @@ public:
     {
     }
 
-    bool IsRouterRoleEnabled(void) const { return false; }
+    bool IsRouterEligible(void) const { return false; }
 
     bool IsSingleton(void) const { return false; }
 

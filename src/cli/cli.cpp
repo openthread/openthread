@@ -202,7 +202,7 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_FTD
     {"router", &Interpreter::ProcessRouter},
     {"routerdowngradethreshold", &Interpreter::ProcessRouterDowngradeThreshold},
-    {"routerrole", &Interpreter::ProcessRouterRole},
+    {"routereligible", &Interpreter::ProcessRouterEligible},
     {"routerselectionjitter", &Interpreter::ProcessRouterSelectionJitter},
     {"routerupgradethreshold", &Interpreter::ProcessRouterUpgradeThreshold},
 #endif
@@ -2760,13 +2760,13 @@ exit:
     AppendResult(error);
 }
 
-void Interpreter::ProcessRouterRole(int argc, char *argv[])
+void Interpreter::ProcessRouterEligible(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;
 
     if (argc == 0)
     {
-        if (otThreadIsRouterRoleEnabled(mInstance))
+        if (otThreadIsRouterEligible(mInstance))
         {
             mServer->OutputFormat("Enabled\r\n");
         }
@@ -2777,11 +2777,11 @@ void Interpreter::ProcessRouterRole(int argc, char *argv[])
     }
     else if (strcmp(argv[0], "enable") == 0)
     {
-        otThreadSetRouterRoleEnabled(mInstance, true);
+        otThreadSetRouterEligible(mInstance, true);
     }
     else if (strcmp(argv[0], "disable") == 0)
     {
-        otThreadSetRouterRoleEnabled(mInstance, false);
+        otThreadSetRouterEligible(mInstance, false);
     }
     else
     {

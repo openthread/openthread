@@ -86,24 +86,24 @@ public:
     explicit MleRouter(Instance &aInstance);
 
     /**
-     * This method indicates whether or not the Router Role is enabled.
+     * This method indicates whether or not the device is router-eligible.
      *
-     * @retval true   If the Router Role is enabled.
-     * @retval false  If the Router Role is not enabled.
+     * @retval true   If device is router-eligible.
+     * @retval false  If device is not router-eligible.
      *
      */
-    bool IsRouterRoleEnabled(void) const;
+    bool IsRouterEligible(void) const;
 
     /**
-     * This method sets whether or not the Router Role is enabled.
+     * This method sets whether or not the device is router-eligible.
      *
-     * If @p aEnable is false and the device is currently operating as a router, this call will cause the device to
+     * If @p aEligible is false and the device is currently operating as a router, this call will cause the device to
      * detach and attempt to reattach as a child.
      *
-     * @param[in]  aEnabled  TRUE to enable the Router Role, FALSE otherwise.
+     * @param[in]  aEligible  TRUE to configure device router-eligible, FALSE otherwise.
      *
      */
-    void SetRouterRoleEnabled(bool aEnabled);
+    void SetRouterEligible(bool aEligible);
 
     /**
      * This method indicates whether a node is the only router on the network.
@@ -784,7 +784,7 @@ private:
     uint8_t  mRouterDowngradeThreshold;
     uint8_t  mLeaderWeight;
     uint32_t mFixedLeaderPartitionId; ///< only for certification testing
-    bool     mRouterRoleEnabled : 1;
+    bool     mRouterEligible : 1;
     bool     mAddressSolicitPending : 1;
 
     uint8_t mRouterId;

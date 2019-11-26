@@ -71,7 +71,7 @@ MleRouter::MleRouter(Instance &aInstance)
     , mRouterDowngradeThreshold(kRouterDowngradeThreshold)
     , mLeaderWeight(kLeaderWeight)
     , mFixedLeaderPartitionId(0)
-    , mRouterRoleEnabled(true)
+    , mRouterEligible(true)
     , mAddressSolicitPending(false)
     , mPreviousPartitionIdRouter(0)
     , mPreviousPartitionId(0)
@@ -97,14 +97,14 @@ void MleRouter::HandlePartitionChange(void)
     mRouterTable.Clear();
 }
 
-bool MleRouter::IsRouterRoleEnabled(void) const
+bool MleRouter::IsRouterEligible(void) const
 {
-    return mRouterRoleEnabled && IsFullThreadDevice();
+    return mRouterEligible && IsFullThreadDevice();
 }
 
-void MleRouter::SetRouterRoleEnabled(bool aEnabled)
+void MleRouter::SetRouterEligible(bool aEligible)
 {
-    mRouterRoleEnabled = aEnabled;
+    mRouterEligible = aEligible;
 
     switch (mRole)
     {
@@ -113,12 +113,12 @@ void MleRouter::SetRouterRoleEnabled(bool aEnabled)
         break;
 
     case OT_DEVICE_ROLE_CHILD:
-        Get<Mac::Mac>().SetBeaconEnabled(mRouterRoleEnabled);
+        Get<Mac::Mac>().SetBeaconEnabled(mRouterEligible);
         break;
 
     case OT_DEVICE_ROLE_ROUTER:
     case OT_DEVICE_ROLE_LEADER:
-        if (!mRouterRoleEnabled)
+        if (!mRouterEligible)
         {
             BecomeDetached();
         }
@@ -133,7 +133,7 @@ otError MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
 
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(mRole != OT_DEVICE_ROLE_ROUTER, error = OT_ERROR_NONE);
-    VerifyOrExit(IsRouterRoleEnabled(), error = OT_ERROR_NOT_CAPABLE);
+    VerifyOrExit(IsRouterEligible(), error = OT_ERROR_NOT_CAPABLE);
 
     otLogInfoMle("Attempt to become router");
 
@@ -170,7 +170,7 @@ otError MleRouter::BecomeLeader(void)
     VerifyOrExit(!Get<MeshCoP::ActiveDataset>().IsPartiallyComplete(), error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(mRole != OT_DEVICE_ROLE_LEADER, error = OT_ERROR_NONE);
-    VerifyOrExit(IsRouterRoleEnabled(), error = OT_ERROR_NOT_CAPABLE);
+    VerifyOrExit(IsRouterEligible(), error = OT_ERROR_NOT_CAPABLE);
 
     mRouterTable.Clear();
 
@@ -223,7 +223,7 @@ otError MleRouter::HandleChildStart(AttachMode aMode)
     StopLeader();
     mStateUpdateTimer.Start(kStateUpdatePeriod);
 
-    if (mRouterRoleEnabled)
+    if (mRouterEligible)
     {
         Get<Mac::Mac>().SetBeaconEnabled(true);
     }
@@ -1580,7 +1580,7 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
 
     LogMleMessage("Receive Parent Request", aMessageInfo.GetPeerAddr());
 
-    VerifyOrExit(IsRouterRoleEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(IsRouterEligible(), error = OT_ERROR_INVALID_STATE);
 
     // A Router MUST NOT send an MLE Parent Response if:
 
@@ -2080,7 +2080,7 @@ otError MleRouter::HandleChildIdRequest(const Message &         aMessage,
 
     LogMleMessage("Receive Child ID Request", aMessageInfo.GetPeerAddr());
 
-    VerifyOrExit(IsRouterRoleEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(IsRouterEligible(), error = OT_ERROR_INVALID_STATE);
 
     // only process message when operating as a child, router, or leader
     VerifyOrExit(IsAttached(), error = OT_ERROR_INVALID_STATE);
