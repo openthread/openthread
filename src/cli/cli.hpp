@@ -314,7 +314,7 @@ private:
 #if OPENTHREAD_FTD
     void ProcessRouter(int argc, char *argv[]);
     void ProcessRouterDowngradeThreshold(int argc, char *argv[]);
-    void ProcessRouterRole(int argc, char *argv[]);
+    void ProcessRouterEligible(int argc, char *argv[]);
     void ProcessRouterSelectionJitter(int argc, char *argv[]);
     void ProcessRouterUpgradeThreshold(int argc, char *argv[]);
 #endif

@@ -63,7 +63,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [route](#route-add-prefix-s-prf)
 * [router](#router-list)
 * [routerdowngradethreshold](#routerdowngradethreshold)
-* [routerrole](#routerrole)
+* [routereligible](#routereligible)
 * [routerselectionjitter](#routerselectionjitter)
 * [routerupgradethreshold](#routerupgradethreshold)
 * [scan](#scan-channel)
@@ -1175,31 +1175,31 @@ Set the ROUTER_DOWNGRADE_THRESHOLD value.
 Done
 ```
 
-### routerrole
+### routereligible
 
 Indicates whether the router role is enabled or disabled.
 
 ```bash
-> routerrole
+> routereligible
 Enabled
 Done
 ```
 
-### routerrole enable
+### routereligible enable
 
 Enable the router role.
 
 ```bash
-> routerrole enable
+> routereligible enable
 Done
 ```
 
-### routerrole disable
+### routereligible disable
 
 Disable the router role.
 
 ```bash
-> routerrole disable
+> routereligible disable
 Done
 ```
 
