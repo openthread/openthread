@@ -1309,15 +1309,16 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
         uint8_t overrideScope;
         uint8_t candidatePrefixMatched;
 
-        candidateAddr          = &addr->GetAddress();
-        candidatePrefixMatched = destination->PrefixMatch(*candidateAddr);
-        overrideScope          = (candidatePrefixMatched >= addr->mPrefixLength) ? addr->GetScope() : destinationScope;
+        candidateAddr = &addr->GetAddress();
 
         if (candidateAddr->IsAnycastRoutingLocator())
         {
             // Don't use anycast address as source address.
             continue;
         }
+
+        candidatePrefixMatched = destination->PrefixMatch(*candidateAddr);
+        overrideScope          = (candidatePrefixMatched >= addr->mPrefixLength) ? addr->GetScope() : destinationScope;
 
         if (rvalAddr == NULL)
         {
@@ -1358,8 +1359,9 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
         }
         else if ((rvalAddr->GetScope() == Address::kRealmLocalScope) && (addr->GetScope() == Address::kRealmLocalScope))
         {
-            // Additional rule: Prefer EID
-            if (rvalAddr->GetAddress().IsRoutingLocator())
+            // Additional rule: Prefer EID for non RLOC destination
+            //                  (stick to RLOC source selection for RLOC destination)
+            if (rvalAddr->GetAddress().IsRoutingLocator() && !destination->IsRoutingLocator())
             {
                 rvalAddr          = addr;
                 rvalPrefixMatched = candidatePrefixMatched;
