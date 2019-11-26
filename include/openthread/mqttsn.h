@@ -151,13 +151,13 @@ typedef uint16_t otMqttsnTopicId;
  *
  */
 typedef struct otMqttsnConfig {
-	/**
-	 * Gateway IPv6 address.
-	 */
-	otIp6Address *mAddress;
-	/**
-	 * Gateway interface port number.
-	 */
+    /**
+    * Gateway IPv6 address.
+    */
+    otIp6Address *mAddress;
+    /**
+    * Gateway interface port number.
+    */
     uint16_t mPort;
     /**
      * Client id string.
