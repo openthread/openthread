@@ -102,8 +102,11 @@ public:
      *
      * @param[in]  aEligible  TRUE to configure device router-eligible, FALSE otherwise.
      *
+     * @retval OT_ERROR_NONE         Successfully set the router-eligible configuration.
+     * @retval OT_ERROR_NOT_CAPABLE  The device is not capable of becoming a router.
+     *
      */
-    void SetRouterEligible(bool aEligible);
+    otError SetRouterEligible(bool aEligible);
 
     /**
      * This method indicates whether a node is the only router on the network.

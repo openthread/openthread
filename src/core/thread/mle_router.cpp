@@ -102,8 +102,12 @@ bool MleRouter::IsRouterEligible(void) const
     return mRouterEligible && IsFullThreadDevice();
 }
 
-void MleRouter::SetRouterEligible(bool aEligible)
+otError MleRouter::SetRouterEligible(bool aEligible)
 {
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(IsFullThreadDevice(), error = OT_ERROR_NOT_CAPABLE);
+
     mRouterEligible = aEligible;
 
     switch (mRole)
@@ -125,6 +129,9 @@ void MleRouter::SetRouterEligible(bool aEligible)
 
         break;
     }
+
+exit:
+    return error;
 }
 
 otError MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
