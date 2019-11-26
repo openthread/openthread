@@ -617,7 +617,10 @@ class HarnessCase(unittest.TestCase):
                                 matched = True
                                 break
                             for device_item in shield_devices:
-                                if device_order_item[0] == mixed_device_item[0] and mixed_device_item[1] == device_item[1]:
+                                if (
+                                    device_order_item[0] == mixed_device_item[0]
+                                    and mixed_device_item[1] == device_item[1]
+                                ):
                                     golden_device_candidates.append(device_item)
                                     shield_devices.remove(device_item)
                                     matched = True
@@ -630,7 +633,10 @@ class HarnessCase(unittest.TestCase):
                                 matched = True
                                 break
                             for device_item in devices:
-                                if device_order_item[0] == mixed_device_item[0] and mixed_device_item[1] == device_item[1]:
+                                if (
+                                    device_order_item[0] == mixed_device_item[0]
+                                    and mixed_device_item[1] == device_item[1]
+                                ):
                                     golden_device_candidates.append(device_item)
                                     devices.remove(device_item)
                                     matched = True
