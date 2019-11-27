@@ -61,7 +61,7 @@ void TestAllocateSingle(void)
 
     for (size_t size = 1; size <= heap.GetCapacity(); ++size)
     {
-        Log("%s allocating %zu bytes...", __func__, size);
+        printf("%s allocating %zu bytes...\n", __func__, size);
         void *p = heap.CAlloc(1, size);
         VerifyOrQuit(p != NULL && !heap.IsClean() && heap.GetFreeSize() + size <= totalSize, "allocating failed!");
         memset(p, 0xff, size);
@@ -97,7 +97,7 @@ void TestAllocateRandomly(size_t aSizeLimit, unsigned int aSeed)
     do
     {
         size_t size = sizeof(Node) + static_cast<size_t>(rand()) % aSizeLimit;
-        Log("TestAllocateRandomly allocating %zu bytes...", size);
+        printf("TestAllocateRandomly allocating %zu bytes...\n", size);
         last->mNext = static_cast<Node *>(heap.CAlloc(1, size));
 
         // No more memory for allocation.
@@ -126,7 +126,7 @@ void TestAllocateRandomly(size_t aSizeLimit, unsigned int aSeed)
             }
 
             Node *curr = prev->mNext;
-            Log("TestAllocateRandomly freeing %zu bytes...", curr->mSize);
+            printf("TestAllocateRandomly freeing %zu bytes...\n", curr->mSize);
             prev->mNext = curr->mNext;
             heap.Free(curr);
 
@@ -144,7 +144,7 @@ void TestAllocateRandomly(size_t aSizeLimit, unsigned int aSeed)
     while (last)
     {
         Node *next = last->mNext;
-        Log("TestAllocateRandomly freeing %zu bytes...", last->mSize);
+        printf("TestAllocateRandomly freeing %zu bytes...\n", last->mSize);
         heap.Free(last);
         last = next;
     }
@@ -161,7 +161,7 @@ void TestAllocateMultiple(void)
     for (unsigned int seed = 0; seed < 10; ++seed)
     {
         size_t sizeLimit = (1 << seed);
-        Log("TestAllocateRandomly(%zu, %u)...", sizeLimit, seed);
+        printf("TestAllocateRandomly(%zu, %u)...\n", sizeLimit, seed);
         TestAllocateRandomly(sizeLimit, seed);
     }
 }
