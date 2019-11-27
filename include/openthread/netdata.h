@@ -179,7 +179,7 @@ typedef struct otServerConfig
  */
 typedef struct otServiceConfig
 {
-    uint8_t        mServiceID;         ///< Used to return service ID when iterating over network data from leader.
+    uint8_t        mServiceID;         ///< Used to return service ID when iterating over the partition's Network Data.
     uint32_t       mEnterpriseNumber;  ///< IANA Enterprise Number.
     uint8_t        mServiceDataLength; ///< Length of service data.
     uint8_t        mServiceData[OT_SERVICE_DATA_MAX_SIZE]; ///< Service data bytes.
@@ -187,7 +187,7 @@ typedef struct otServiceConfig
 } otServiceConfig;
 
 /**
- * This method provides a full or stable copy of the Leader's Thread Network Data.
+ * This method provides a full or stable copy of the Parition's Thread Network Data.
  *
  * @param[in]     aInstance    A pointer to an OpenThread instance.
  * @param[in]     aStable      TRUE when copying the stable version, FALSE when copying the full version.
@@ -237,7 +237,7 @@ otError otNetDataGetNextRoute(otInstance *aInstance, otNetworkDataIterator *aIte
  * @param[out]    aConfig    A pointer to where the service information will be placed.
  *
  * @retval OT_ERROR_NONE       Successfully found the next service.
- * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the leader Network Data.
+ * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the partition's Network Data.
  *
  */
 otError otNetDataGetNextService(otInstance *aInstance, otNetworkDataIterator *aIterator, otServiceConfig *aConfig);

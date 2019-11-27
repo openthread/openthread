@@ -221,7 +221,7 @@ bool Local::IsExternalRouteConsistent(void)
             ContainsExternalRoutes(Get<Leader>(), Get<Mle::MleRouter>().GetRloc16()));
 }
 
-#endif
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 otError Local::AddService(uint32_t       aEnterpriseNumber,
@@ -317,7 +317,7 @@ bool Local::IsServiceConsistent(void)
             ContainsServices(Get<Leader>(), Get<Mle::MleRouter>().GetRloc16()));
 }
 
-#endif
+#endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 void Local::UpdateRloc(void)
 {
