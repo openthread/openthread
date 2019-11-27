@@ -51,11 +51,11 @@ void TestAllocateSingle(void)
 
     {
         void *p = heap.CAlloc(1, 0);
-        VerifyOrQuit(p == NULL && totalSize == heap.GetFreeSize(), "TestAllocateSingle allocate 1 x 0 byte failed!\n");
+        VerifyOrQuit(p == NULL && totalSize == heap.GetFreeSize(), "TestAllocateSingle allocate 1 x 0 byte failed!");
         heap.Free(p);
 
         p = heap.CAlloc(0, 1);
-        VerifyOrQuit(p == NULL && totalSize == heap.GetFreeSize(), "TestAllocateSingle allocate 0 x 1 byte failed!\n");
+        VerifyOrQuit(p == NULL && totalSize == heap.GetFreeSize(), "TestAllocateSingle allocate 0 x 1 byte failed!");
         heap.Free(p);
     }
 
@@ -63,7 +63,7 @@ void TestAllocateSingle(void)
     {
         Log("%s allocating %zu bytes...", __func__, size);
         void *p = heap.CAlloc(1, size);
-        VerifyOrQuit(p != NULL && !heap.IsClean() && heap.GetFreeSize() + size <= totalSize, "allocating failed!\n");
+        VerifyOrQuit(p != NULL && !heap.IsClean() && heap.GetFreeSize() + size <= totalSize, "allocating failed!");
         memset(p, 0xff, size);
         heap.Free(p);
         VerifyOrQuit(heap.IsClean() && heap.GetFreeSize() == totalSize, "freeing failed!\n");
@@ -106,7 +106,7 @@ void TestAllocateRandomly(size_t aSizeLimit, unsigned int aSeed)
             break;
         }
 
-        VerifyOrQuit(last->mNext->mNext == NULL, "TestAllocateRandomly memory not initialized to zero!\n");
+        VerifyOrQuit(last->mNext->mNext == NULL, "TestAllocateRandomly memory not initialized to zero!");
         last        = last->mNext;
         last->mSize = size;
         ++nnodes;
@@ -150,7 +150,7 @@ void TestAllocateRandomly(size_t aSizeLimit, unsigned int aSeed)
     }
 
     VerifyOrQuit(heap.IsClean() && heap.GetFreeSize() == totalSize,
-                 "TestAllocateRandomly heap not clean after freeing all!\n");
+                 "TestAllocateRandomly heap not clean after freeing all!");
 }
 
 /**
