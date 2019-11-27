@@ -167,13 +167,8 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
     printf("LOWPAN_IPHC length ---------- %d\n", aVector.mIphcHeader.mLength);
     printf("IPv6 uncompressed offset ---- %d\n\n", aVector.mPayloadOffset);
 
-    printf("Expected IPv6 uncompressed packet: \n");
-    otTestPrintHex(ip6, ip6Length);
-    printf("\n");
-
-    printf("Expected LOWPAN_IPHC compressed frame: \n");
-    otTestPrintHex(iphc, iphcLength);
-    printf("\n");
+    DumpBuffer("Expected IPv6 uncompressed packet", ip6, ip6Length);
+    DumpBuffer("Expected LOWPAN_IPHC compressed frame", iphc, iphcLength);
 
     if (aCompress)
     {
@@ -194,9 +189,8 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
             // Append payload to the LOWPAN_IPHC.
             message->Read(message->GetOffset(), message->GetLength() - message->GetOffset(), result + compressBytes);
 
-            printf("Resulted LOWPAN_IPHC compressed frame: \n");
-            otTestPrintHex(result, compressBytes + message->GetLength() - message->GetOffset());
-            printf("\n");
+            DumpBuffer("Resulted LOWPAN_IPHC compressed frame", result,
+                       compressBytes + message->GetLength() - message->GetOffset());
 
             VerifyOrQuit(compressBytes == aVector.mIphcHeader.mLength, "6lo: Lowpan::Compress failed");
             VerifyOrQuit(message->GetOffset() == aVector.mPayloadOffset, "6lo: Lowpan::Compress failed");
@@ -223,9 +217,8 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
             memcpy(result + message->GetLength(), iphc + decompressedBytes,
                    iphcLength - static_cast<uint16_t>(decompressedBytes));
 
-            printf("Resulted IPv6 uncompressed packet: \n");
-            otTestPrintHex(result, message->GetLength() + iphcLength - decompressedBytes);
-            printf("\n");
+            DumpBuffer("Resulted IPv6 uncompressed packet", result,
+                       message->GetLength() + iphcLength - decompressedBytes);
 
             VerifyOrQuit(decompressedBytes == aVector.mIphcHeader.mLength, "6lo: Lowpan::Decompress failed");
             VerifyOrQuit(message->GetOffset() == aVector.mPayloadOffset, "6lo: Lowpan::Decompress failed");
