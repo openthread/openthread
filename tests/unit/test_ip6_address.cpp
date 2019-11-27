@@ -44,12 +44,12 @@ static void checkAddressFromString(Ip6AddressStringTestVector *aTestVector)
 
     error = address.FromString(aTestVector->mString);
 
-    VerifyOrQuit(error == aTestVector->mError, "Ip6::Address::FromString returned unexpected error code\n");
+    VerifyOrQuit(error == aTestVector->mError, "Ip6::Address::FromString returned unexpected error code");
 
     if (error == OT_ERROR_NONE)
     {
         VerifyOrQuit(0 == memcmp(address.mFields.m8, aTestVector->mAddr, OT_IP6_ADDRESS_SIZE),
-                     "Ip6::Address::FromString parsing failed\n");
+                     "Ip6::Address::FromString parsing failed");
     }
 }
 

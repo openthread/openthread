@@ -73,7 +73,7 @@ void TestHmacSha256(void)
             hmac.Update(reinterpret_cast<const uint8_t *>(tests[i].data), static_cast<uint16_t>(strlen(tests[i].data)));
             hmac.Finish(hash);
 
-            VerifyOrQuit(memcmp(hash, tests[i].hash, sizeof(tests[i].hash)) == 0, "HMAC-SHA-256 failed\n");
+            VerifyOrQuit(memcmp(hash, tests[i].hash, sizeof(tests[i].hash)) == 0, "HMAC-SHA-256 failed");
         }
     }
 

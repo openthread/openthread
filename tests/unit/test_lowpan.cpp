@@ -99,7 +99,7 @@ void TestIphcVector::GetUncompressedStream(Message &aMessage)
                       "6lo: Message::Append failed");
     }
 
-    SuccessOrQuit(aMessage.Append(mPayload.mData, mPayload.mLength), "6lo: Message::Append failed5");
+    SuccessOrQuit(aMessage.Append(mPayload.mData, mPayload.mLength), "6lo: Message::Append failed");
 }
 
 /**
