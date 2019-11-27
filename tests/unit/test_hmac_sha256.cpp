@@ -80,11 +80,9 @@ void TestHmacSha256(void)
     testFreeInstance(instance);
 }
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestHmacSha256();
     printf("All tests passed\n");
     return 0;
 }
-#endif

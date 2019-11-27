@@ -124,11 +124,9 @@ void TestToolchain(void)
     test_addr_bitfield();
 }
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestToolchain();
     printf("All tests passed\n");
     return 0;
 }
-#endif

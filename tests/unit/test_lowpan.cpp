@@ -1841,7 +1841,6 @@ void TestLowpanIphc(void)
 
 } // namespace ot
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestLowpanIphc();
@@ -1849,4 +1848,3 @@ int main(void)
     printf("All tests passed\n");
     return 0;
 }
-#endif

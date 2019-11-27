@@ -30,7 +30,6 @@
 
 #include "test_util.h"
 
-#ifdef ENABLE_TEST_MAIN
 int main(int argc, char *argv[])
 {
     (void)argv;
@@ -46,4 +45,3 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-#endif
