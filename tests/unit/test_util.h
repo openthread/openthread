@@ -72,15 +72,6 @@ extern "C" {
         }                                                                               \
     } while (false)
 
-//#define CompileTimeAssert(COND, MSG) typedef char __C_ASSERT__[(COND)?1:-1]
-
-// I would use the above definition for CompileTimeAssert, but I am getting the following errors
-// when I run 'make -f examples/Makefile-posix distcheck':
-//
-//      error: typedef "__C_ASSERT__" locally defined but not used [-Werror=unused-local-typedefs]
-//
-#define CompileTimeAssert(COND, MSG)
-
 #ifdef __cplusplus
 }
 #endif
