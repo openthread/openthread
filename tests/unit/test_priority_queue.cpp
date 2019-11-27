@@ -323,11 +323,9 @@ void TestPriorityQueue(void)
     testFreeInstance(instance);
 }
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestPriorityQueue();
     printf("All tests passed\n");
     return 0;
 }
-#endif

@@ -294,7 +294,6 @@ void TestMessageQueueOtApis(void)
     testFreeInstance(sInstance);
 }
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestMessageQueue();
@@ -302,4 +301,3 @@ int main(void)
     printf("All tests passed\n");
     return 0;
 }
-#endif

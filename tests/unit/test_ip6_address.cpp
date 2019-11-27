@@ -204,11 +204,9 @@ void TestIp6AddressFromString(void)
     }
 }
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestIp6AddressFromString();
     printf("All tests passed\n");
     return 0;
 }
-#endif

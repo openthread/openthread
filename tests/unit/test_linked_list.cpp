@@ -142,11 +142,9 @@ void TestLinkedList(void)
     VerifyLinkedListContent(list, NULL);
 }
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestLinkedList();
     printf("All tests passed\n");
     return 0;
 }
-#endif

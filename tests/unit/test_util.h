@@ -36,9 +36,6 @@
 extern "C" {
 #endif
 
-// Enable main functions
-#define ENABLE_TEST_MAIN
-
 /**
  * This macro verifies a given error status to be successful (compared against value zero (0)), otherwise, it emits a
  * given error messages and exits the program.

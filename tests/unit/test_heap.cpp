@@ -172,11 +172,9 @@ void RunTimerTests(void)
     TestAllocateMultiple();
 }
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     RunTimerTests();
     printf("All tests passed\n");
     return 0;
 }
-#endif

@@ -657,7 +657,6 @@ void RunTimerTests(void)
     TestTenTimers();
 }
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     RunTimerTests();
@@ -665,4 +664,3 @@ int main(void)
     printf("All tests passed\n");
     return 0;
 }
-#endif

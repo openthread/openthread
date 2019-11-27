@@ -1098,7 +1098,6 @@ void TestFuzzNcpFrameBuffer(void)
 } // namespace Ncp
 } // namespace ot
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     ot::Ncp::TestNcpFrameBuffer();
@@ -1106,4 +1105,3 @@ int main(void)
     printf("\nAll tests passed.\n");
     return 0;
 }
-#endif
