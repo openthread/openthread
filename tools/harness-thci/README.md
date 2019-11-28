@@ -77,7 +77,7 @@ in the ‘Configure Test Bed’ Page of Test Harness. The configuration is as fo
         Param5 : 'ip' for SSH login
         Param6 : SSH username
         Param7 : SSH password
-        Param8 : comma separated CLI prompt and Wpan command prefix
+        Param8 : comma separated CLI prompt, Wpan command prefix, Wpan interface
         Param9 : comma separated device's setting commands before test
 
 6. Copy "OpenThread_WpanCtl.py" to `C:\GRL\Thread1.1\Thread_Harness\THCI`.

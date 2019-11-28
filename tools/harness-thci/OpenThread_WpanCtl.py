@@ -74,8 +74,8 @@ class OpenThread_WpanCtl(IThci):
             self.logStatus = {'stop': 'stop', 'running': 'running', 'pauseReq': 'pauseReq', 'paused': 'paused'}
             self.logThreadStatus = self.logStatus['stop']
             self.connectType = (kwargs.get('Param5')).strip().lower() if kwargs.get('Param5') is not None else 'usb'
-            (self.prompt, self.wpan_cmd_prefix) = (
-                kwargs.get('Param8').strip().split(',') if kwargs.get('Param8') else ['#', 'wpanctl']
+            (self.prompt, self.wpan_cmd_prefix, self.wpan_interface) = (
+                kwargs.get('Param8').strip().split(',') if kwargs.get('Param8') else ['#', 'wpanctl', 'wpan0']
             )
             self.wpan_cmd_prefix += ' '
             self.precmd = (kwargs.get('Param9')).strip().split(',') if kwargs.get('Param9') else []
@@ -1321,7 +1321,7 @@ class OpenThread_WpanCtl(IThci):
         print('%s call ping' % self.port)
         print('destination: %s' % destination)
         try:
-            cmd = 'ping %s -c 1 -s %s -I %s' % (destination, str(length), WPAN_INTERFACE)
+            cmd = 'ping %s -c 1 -s %s -I %s' % (destination, str(length), self.wpan_interface)
             if self._is_net:
                 ssh_stdin, ssh_stdout, ssh_stderr = self.handle.exec_command(cmd)
             else:
@@ -1343,7 +1343,7 @@ class OpenThread_WpanCtl(IThci):
         print('%s call multicast_Ping' % self.port)
         print('destination: %s' % destination)
         try:
-            cmd = 'ping %s -c 1 -s %s -I %s' % (destination, str(length), WPAN_INTERFACE)
+            cmd = 'ping %s -c 1 -s %s -I %s' % (destination, str(length), self.wpan_interface)
             if self._is_net:
                 ssh_stdin, ssh_stdout, ssh_stderr = self.handle.exec_command(cmd)
             else:

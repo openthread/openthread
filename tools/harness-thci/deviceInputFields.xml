@@ -121,7 +121,7 @@
         </ITEM>
         <ITEM type="hidden"
               label = ""
-              forParam="Param8">pi@raspberrypi, sudo wpanctl -I wpan0
+              forParam="Param8">pi@raspberrypi, sudo wpanctl -I wpan0, wpan0
         </ITEM>
         <ITEM type="hidden"
               label = ""
