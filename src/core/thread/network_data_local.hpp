@@ -38,6 +38,8 @@
 
 #include "thread/network_data.hpp"
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+
 namespace ot {
 
 /**
@@ -51,7 +53,6 @@ namespace ot {
 
 namespace NetworkData {
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 /**
  * This class implements the Thread Network Data contributed by the local device.
  *
@@ -186,7 +187,6 @@ private:
 
     uint16_t mOldRloc;
 };
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 } // namespace NetworkData
 
@@ -195,5 +195,7 @@ private:
  */
 
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 #endif // NETWORK_DATA_LOCAL_HPP_

@@ -41,10 +41,10 @@
 #include "mac/mac_types.hpp"
 #include "thread/thread_netif.hpp"
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+
 namespace ot {
 namespace NetworkData {
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 Local::Local(Instance &aInstance)
     : NetworkData(aInstance, kTypeLocal)
@@ -389,7 +389,7 @@ exit:
     return error;
 }
 
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-
 } // namespace NetworkData
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
