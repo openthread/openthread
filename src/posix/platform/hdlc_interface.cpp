@@ -223,8 +223,6 @@ otError HdlcInterface::Write(const uint8_t *aFrame, uint16_t aLength)
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     platformSimSendRadioSpinelWriteEvent(aFrame, aLength);
 #else
-    SuccessOrExit(error = WaitForWritable());
-
     while (aLength)
     {
         ssize_t rval = write(mSockFd, aFrame, aLength);

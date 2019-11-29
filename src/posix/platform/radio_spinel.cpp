@@ -772,7 +772,7 @@ void RadioSpinel::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
     }
     else if (mState == kStateTransmitting && platformGetTime() >= mTxRadioEndUs)
     {
-        // Frame has been successfully passed to radio, but no `TransmitDone` event received wthin TX_WAIT_US.
+        // Frame has been successfully passed to radio, but no `TransmitDone` event received within TX_WAIT_US.
         DieNowWithMessage("radio tx timeout", OT_EXIT_FAILURE);
     }
 }
