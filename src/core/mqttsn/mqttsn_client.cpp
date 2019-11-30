@@ -1106,7 +1106,7 @@ otError MqttsnClient::Subscribe(const char* aTopicName, bool aIsShortTopicName, 
     }
 
     // Topic subscription is possible only for QoS levels 1, 2, 3
-    if (aQos != kQos0 || aQos != kQos1 || aQos != kQos2)
+    if (aQos != kQos0 && aQos != kQos1 && aQos != kQos2)
     {
         error = OT_ERROR_INVALID_ARGS;
         goto exit;
@@ -1144,7 +1144,7 @@ otError MqttsnClient::Subscribe(TopicId aTopicId, Qos aQos, otMqttsnSubscribedHa
     }
 
     // Topic subscription is possible only for QoS levels 1, 2, 3
-    if (aQos != kQos0 || aQos != kQos1 || aQos != kQos2)
+    if (aQos != kQos0 && aQos != kQos1 && aQos != kQos2)
     {
         error = OT_ERROR_INVALID_ARGS;
         goto exit;
