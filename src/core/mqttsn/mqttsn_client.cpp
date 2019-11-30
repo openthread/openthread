@@ -431,7 +431,7 @@ void MqttsnClient::PublishReceived(const Ip6::MessageInfo &messageInfo, const un
         return;
     }
     // Check source IPv6 address
-    if (VerifyGatewayAddress(messageInfo))
+    if (!VerifyGatewayAddress(messageInfo))
     {
         return;
     }
