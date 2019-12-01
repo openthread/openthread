@@ -266,11 +266,11 @@ otError PublishMessage::Serialize(uint8_t* aBuffer, uint8_t aBufferLength, int32
     switch (mTopicIdType)
     {
     case kTopicId:
-        topicId.type = MQTTSN_TOPIC_TYPE_PREDEFINED;
+        topicId.type = MQTTSN_TOPIC_TYPE_NORMAL;
         topicId.data.id = static_cast<unsigned short>(mTopicId);
         break;
     case kShortTopicName:
-        topicId.type = MQTTSN_TOPIC_TYPE_NORMAL;
+        topicId.type = MQTTSN_TOPIC_TYPE_SHORT;
         memcpy(topicId.data.short_name, mShortTopicName.AsCString(), 2);
         break;
     default:
