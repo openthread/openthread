@@ -482,6 +482,21 @@ otError otMqttsnPublishQosm1(otInstance *aInstance, const uint8_t* aData, int32_
 otError otMqttsnPublishQosm1Short(otInstance *aInstance, const uint8_t* aData, int32_t aLength, const char* aShortTopicName, const otIp6Address* aAddress, uint16_t aPort);
 
 /**
+ * Unsubscribe from the topic by topic name string.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aTopicName A pointer to long topic name string.
+ * @param[in]  aHandler   A function pointer to callback invoked when unsubscription is acknowledged.
+ * @param[in]  aContext   A pointer to context object passed to callback.
+ *
+ * @retval OT_ERROR_NONE           Unsubscribe message successfully queued.
+ * @retval OT_ERROR_INVALID_STATE  The client is not in active state.
+ * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to unsubscribe.
+ *
+ */
+otError otMqttsnUnsubscribe(otInstance *aInstance, const char *aTopicName, otMqttsnUnsubscribedHandler aHandler, void* aContext);
+
+/**
  * Unsubscribe from the topic with specific topic ID.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
@@ -494,7 +509,7 @@ otError otMqttsnPublishQosm1Short(otInstance *aInstance, const uint8_t* aData, i
  * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to unsubscribe.
  *
  */
-otError otMqttsnUnsubscribe(otInstance *aInstance, otMqttsnTopicId aTopicId, otMqttsnUnsubscribedHandler aHandler, void* aContext);
+otError otMqttsnUnsubscribeTopicId(otInstance *aInstance, otMqttsnTopicId aTopicId, otMqttsnUnsubscribedHandler aHandler, void* aContext);
 
 /**
  * Unsubscribe from the topic with specific short topic name.

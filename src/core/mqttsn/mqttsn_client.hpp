@@ -712,9 +712,10 @@ public:
     /**
      * Unsubscribe from the topic with specific short topic name.
      *
-     * @param[in]  aShortTopicName  A pointer to short topic name string of target topic.
-     * @param[in]  aCallback        A function pointer to callback invoked when unsubscription is acknowledged.
-     * @param[in]  aContext         A pointer to context object passed to callback.
+     * @param[in]  aTopicName         A pointer to long topic name string.
+     * @param[in]  aIsShortTopicName  Set to true when unsubscribing by long topic name or false in case of short topic name.
+     * @param[in]  aCallback          A function pointer to callback invoked when unsubscription is acknowledged.
+     * @param[in]  aContext           A pointer to context object passed to callback.
      *
      * @retval OT_ERROR_NONE           Unsubscribe message successfully queued.
      * @retval OT_ERROR_INVALID_ARGS   Invalid unsubscribe parameters. Short topic name must have one or two characters.
@@ -722,7 +723,7 @@ public:
      * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to process.
      *
      */
-    otError Unsubscribe(const char* aShortTopicName, otMqttsnUnsubscribedHandler aCallback, void* aContext);
+    otError Unsubscribe(const char* aTopicName, bool aIsShortTopicName, otMqttsnUnsubscribedHandler aCallback, void* aContext);
 
     /**
      * Unsubscribe from the topic with specific topic ID.

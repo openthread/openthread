@@ -673,12 +673,13 @@ public:
         ;
     }
 
-    UnsubscribeMessage (uint16_t aMessageId, TopicIdType aTopicIdType, TopicId aTopicId, const char* aShortTopicName)
+    UnsubscribeMessage (uint16_t aMessageId, TopicIdType aTopicIdType, TopicId aTopicId, const char* aShortTopicName, const char* aTopicName)
         : MessageBase(kTypeUnsubscribe)
         , mMessageId(aMessageId)
         , mTopicIdType(aTopicIdType)
         , mTopicId(aTopicId)
         , mShortTopicName("%s", aShortTopicName)
+        , mTopicName("%s", aTopicName)
     {
         ;
     }
@@ -708,6 +709,7 @@ private:
     TopicIdType mTopicIdType;
     TopicId mTopicId;
     ShortTopicNameString mShortTopicName;
+    TopicNameString mTopicName;
 };
 
 class UnsubackMessage : public MessageBase

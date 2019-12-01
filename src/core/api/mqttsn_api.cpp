@@ -141,7 +141,14 @@ otError otMqttsnPublishQosm1Short(otInstance *aInstance, const uint8_t* aData, i
     return client.PublishQosm1(aData, aLength, aShortTopicName, *static_cast<const Ip6::Address *>(aAddress), aPort);
 }
 
-otError otMqttsnUnsubscribe(otInstance *aInstance, otMqttsnTopicId aTopicId, otMqttsnUnsubscribedHandler aHandler, void* aContext)
+otError otMqttsnUnsubscribe(otInstance *aInstance, const char *aTopicName, otMqttsnUnsubscribedHandler aHandler, void* aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
+    return client.Unsubscribe(aTopicName, false, aHandler, aContext);
+}
+
+otError otMqttsnUnsubscribeTopicId(otInstance *aInstance, otMqttsnTopicId aTopicId, otMqttsnUnsubscribedHandler aHandler, void* aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
     Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
@@ -152,7 +159,7 @@ otError otMqttsnUnsubscribeShort(otInstance *aInstance, const char* aShortTopicN
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
     Mqttsn::MqttsnClient &client = instance.Get<Mqttsn::MqttsnClient>();
-    return client.Unsubscribe(aShortTopicName, aHandler, aContext);
+    return client.Unsubscribe(aShortTopicName, true, aHandler, aContext);
 }
 
 otError otMqttsnDisconnect(otInstance *aInstance)

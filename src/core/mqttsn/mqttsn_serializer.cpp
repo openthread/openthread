@@ -511,12 +511,17 @@ otError UnsubscribeMessage::Serialize(uint8_t* aBuffer, uint8_t aBufferLength, i
     memset(&topicId, 0, sizeof(topicId));
     switch (mTopicIdType)
     {
+    case kTopicName:
+        topicId.type = MQTTSN_TOPIC_TYPE_NORMAL;
+        topicId.data.long_.name = const_cast<char*>(mTopicName.AsCString());
+        topicId.data.long_.len = mTopicName.GetLength();
+        break;
     case kTopicId:
         topicId.type = MQTTSN_TOPIC_TYPE_PREDEFINED;
         topicId.data.id = static_cast<unsigned short>(mTopicId);
         break;
     case kShortTopicName:
-        topicId.type = MQTTSN_TOPIC_TYPE_NORMAL;
+        topicId.type = MQTTSN_TOPIC_TYPE_SHORT;
         memcpy(topicId.data.short_name, mShortTopicName.AsCString(), 2);
         break;
     default:

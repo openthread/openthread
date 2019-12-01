@@ -1330,16 +1330,21 @@ exit:
     return error;
 }
 
-otError MqttsnClient::Unsubscribe(const char* aShortTopicName, otMqttsnUnsubscribedHandler aCallback, void* aContext)
+otError MqttsnClient::Unsubscribe(const char* aTopicName, bool aIsShortTopicName, otMqttsnUnsubscribedHandler aCallback, void* aContext)
 {
     otError error = OT_ERROR_NONE;
     int32_t length = -1;
     Message* message = NULL;
-    int32_t topicNameLength = strlen(aShortTopicName);
+    int32_t topicNameLength = strlen(aTopicName);
     UnsubscribeMessage unsubscribeMessage;
     // Topic length must be 1 or 2
-    VerifyOrExit(topicNameLength > 0 && topicNameLength <= 2, error = OT_ERROR_INVALID_ARGS);
-    unsubscribeMessage = UnsubscribeMessage(mMessageId, kShortTopicName, 0, aShortTopicName);
+    VerifyOrExit(topicNameLength > 0, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(topicNameLength < kMaxTopicNameLength, error = OT_ERROR_INVALID_ARGS);
+    // Topic length must be 1 or 2
+    VerifyOrExit(!aIsShortTopicName || length <= 2, error = OT_ERROR_INVALID_ARGS);
+    unsubscribeMessage = aIsShortTopicName ?
+        UnsubscribeMessage(mMessageId, kShortTopicName, 0, aTopicName, "")
+        : UnsubscribeMessage(mMessageId, kTopicName, 0, "", aTopicName);
     unsigned char buffer[MAX_PACKET_SIZE];
 
     // Client state must be active
@@ -1368,7 +1373,7 @@ otError MqttsnClient::Unsubscribe(TopicId aTopicId, otMqttsnUnsubscribedHandler 
     otError error = OT_ERROR_NONE;
     int32_t length = -1;
     Message* message = NULL;
-    UnsubscribeMessage unsubscribeMessage(mMessageId, kTopicId, aTopicId, "");
+    UnsubscribeMessage unsubscribeMessage(mMessageId, kTopicId, aTopicId, "", "");
     unsigned char buffer[MAX_PACKET_SIZE];
 
     // Client state must be active
