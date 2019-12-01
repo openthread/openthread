@@ -1331,24 +1331,29 @@ exit:
 
 otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMode aMode)
 {
-    otError                         error = OT_ERROR_NONE;
-    Tlv                             tlv;
-    AddressRegistrationEntry        entry;
-    Lowpan::Context                 context;
-    bool                            meshLocalOnlyDone = false;
-    bool                            meshLocalDone     = false;
-    uint8_t                         length            = 0;
-    uint8_t                         counter           = 0;
-    uint16_t                        startOffset       = aMessage.GetLength();
-    const Ip6::NetifUnicastAddress *next              = NULL;
+    otError                  error = OT_ERROR_NONE;
+    Tlv                      tlv;
+    AddressRegistrationEntry entry;
+    Lowpan::Context          context;
+    uint8_t                  length      = 0;
+    uint8_t                  counter     = 0;
+    uint16_t                 startOffset = aMessage.GetLength();
 
     tlv.SetType(Tlv::kAddressRegistration);
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
 
-    for (const Ip6::NetifUnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr; addr = next)
-    {
-        next = addr->GetNext();
+    // Prioritize MlEid
+    entry.SetContextId(kMeshLocalPrefixContextId);
+    entry.SetIid(GetMeshLocal64().GetIid());
+    SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
+    length += entry.GetLength();
 
+    // Continue to append the other addresses if not `kAppendMeshLocalOnly` mode
+    VerifyOrExit(aMode != kAppendMeshLocalOnly);
+    counter++;
+
+    for (const Ip6::NetifUnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr; addr = addr->GetNext())
+    {
         if (addr->GetAddress().IsLinkLocal() || IsRoutingLocator(addr->GetAddress()) ||
             IsAnycastLocator(addr->GetAddress()))
         {
@@ -1357,32 +1362,8 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
 
         if (addr->GetAddress() == GetMeshLocal64())
         {
-            if (aMode == kAppendMeshLocalOnly)
-            {
-                // Set `meshLocalOnlyDone` to `true` to exit after the address is appended
-                meshLocalOnlyDone = true;
-            }
-            else if (!meshLocalDone)
-            {
-                // Prioritize MlEid.
-                meshLocalDone = true;
-
-                // restart from the unicast address list head after append MlEid
-                next = Get<ThreadNetif>().GetUnicastAddresses();
-            }
-            else
-            {
-                // skip MlEid which was appended already.
-                continue;
-            }
-        }
-        else
-        {
-            // The other unicast addresses to register
-            if (aMode == kAppendMeshLocalOnly || !meshLocalDone)
-            {
-                continue;
-            }
+            // skip MlEid which was appended already.
+            continue;
         }
 
         if (Get<NetworkData::Leader>().GetContext(addr->GetAddress(), context) == OT_ERROR_NONE)
@@ -1402,7 +1383,7 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
         length += entry.GetLength();
         counter++;
         // only continue to append if there is available entry.
-        VerifyOrExit(!meshLocalOnlyDone && (counter < OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER));
+        VerifyOrExit(counter < OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER);
     }
 
     // For sleepy end device, register external multicast addresses to the parent for indirect transmission
