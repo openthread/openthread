@@ -933,7 +933,7 @@ void MqttsnClient::DisconnectReceived(const Ip6::MessageInfo &messageInfo, const
         {
             // Regular disconnect
             mClientState = kStateDisconnected;
-            reason = kDisconnectServer;
+            reason = kDisconnectClient;
         }
         else if (mSleepRequested)
         {
