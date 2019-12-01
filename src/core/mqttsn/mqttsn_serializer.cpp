@@ -309,6 +309,7 @@ otError PublishMessage::Deserialize(const uint8_t* aBuffer, int32_t aBufferLengt
     switch (topicId.type)
     {
     case MQTTSN_TOPIC_TYPE_PREDEFINED:
+    case MQTTSN_TOPIC_TYPE_NORMAL:
         mTopicIdType = kTopicId;
         mTopicId = topicId.data.id;
         break;
