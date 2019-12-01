@@ -114,14 +114,14 @@ registered topic id: 1
 
 Usage: `mqtt publish <topic-id> [payload] [qos]`
 
-Publish data to the topic.
+Publish data to the topic. Data are encoded as string and white spaces are currentyl not supported (separate words are recognized as additional parameters).
 
 * topic-id: ID of the topic. Can be obtained by [register](#register).
 * payload: Text to be send in publish message payload. If empty, then empty data are send (optional).
 * qos: Quality of service of publish. Possible values are 0, 1, or 2. Default value is 1 (optional).
 
 ```bash
-> mqtt publish 1 payload
+> mqtt publish 1 {"temperature":24.0}
 Done
 published
 ```
