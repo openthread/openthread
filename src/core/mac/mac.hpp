@@ -661,7 +661,6 @@ private:
     bool    IsJoinable(void) const;
     void    BeginTransmit(void);
     bool    HandleMacCommand(RxFrame &aFrame);
-    Frame * GetOperationFrame(void);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
