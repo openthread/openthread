@@ -60,7 +60,7 @@ otError Mqtt::Process(int argc, char *argv[])
     if (argc < 1)
     {
         ProcessHelp(0, NULL);
-        error = OT_ERROR_INVALID_ARGS;
+        error = OT_ERROR_NONE;
     }
     else
     {
