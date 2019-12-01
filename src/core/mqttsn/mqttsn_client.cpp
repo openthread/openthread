@@ -1021,6 +1021,7 @@ otError MqttsnClient::Process()
     }
 
     // Handle pending messages timeouts
+    SuccessOrExit(error = mConnectQueue.HandleTimer());
     SuccessOrExit(error = mSubscribeQueue.HandleTimer());
     SuccessOrExit(error = mRegisterQueue.HandleTimer());
     SuccessOrExit(error = mUnsubscribeQueue.HandleTimer());
@@ -1056,8 +1057,22 @@ otError MqttsnClient::Connect(const MqttsnConfig &aConfig)
     unsigned char buffer[MAX_PACKET_SIZE];
 
     // Cannot connect in active state (already connected)
-    if (mClientState == kStateActive || !mConnectQueue.IsEmpty())
+    if (mClientState == kStateActive)
     {
+        error = OT_ERROR_INVALID_STATE;
+        goto exit;
+    }
+    // Previous Connect message is still pending
+    if (!mConnectQueue.IsEmpty())
+    {
+        otLogInfoMqttsn("Previous connect message is still pending. Wait for timeout.");
+        error = OT_ERROR_INVALID_STATE;
+        goto exit;
+    }
+    // MQTT-SN service is not running
+    if (!mIsRunning)
+    {
+        otLogInfoMqttsn("MQTT-SN service is not running.");
         error = OT_ERROR_INVALID_STATE;
         goto exit;
     }
