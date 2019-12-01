@@ -114,7 +114,7 @@ registered topic id: 1
 
 Usage: `mqtt publish <topic-id> [payload] [qos]`
 
-Publish data to the topic. Data are encoded as string and white spaces are currentyl not supported (separate words are recognized as additional parameters).
+Publish data to the topic. Data are encoded as string and white spaces are currentyl not supported (separated words are recognized as additional parameters).
 
 * topic-id: ID of the topic. Can be obtained by [register](#register).
 * payload: Text to be send in publish message payload. If empty, then empty data are send (optional).
