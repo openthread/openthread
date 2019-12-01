@@ -128,14 +128,14 @@ published
 
 ### unsubscribe
 
-Usage: `mqtt unsubscribe <topic-id>`
+Usage: `mqtt unsubscribe <topic>`
 
 Unsubscribe from the topic.
 
-* topic-id: ID of the topic.
+* topic: Name of the topic to unsubscribe.
 
 ```bash
-> mqtt unsubscribe 1
+> mqtt unsubscribe sensors
 Done
 unsubscribed
 ```

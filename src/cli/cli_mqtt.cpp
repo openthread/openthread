@@ -213,14 +213,14 @@ exit:
 otError Mqtt::ProcessUnsubscribe(int argc, char *argv[])
 {
     otError error;
-    long topicId;
+    char *topicName;
 
     if (argc != 2)
     {
         ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
-    SuccessOrExit(error = mInterpreter.ParseLong(argv[1], topicId));
-    SuccessOrExit(error = otMqttsnUnsubscribe(mInterpreter.mInstance, (otMqttsnTopicId)topicId, &Mqtt::HandleUnsubscribed, this));
+    topicName = argv[1];
+    SuccessOrExit(error = otMqttsnUnsubscribe(mInterpreter.mInstance, topicName, &Mqtt::HandleUnsubscribed, this));
 exit:
     return error;
 }
