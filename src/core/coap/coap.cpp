@@ -669,7 +669,7 @@ CoapMetadata::CoapMetadata(bool                    aConfirmable,
     else
     {
         // Set overall response timeout.
-        mNextTimerShot = TimerMilli::GetNow() + kMaxTransmitWait;
+        mNextTimerShot = TimerMilli::GetNow() + Time::SecToMsec(kMaxTransmitWait);
     }
 
     mAcknowledged = false;
