@@ -269,7 +269,7 @@ private:
     void        ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector);
     uint32_t    CalculatePollPeriod(void) const;
     static void HandlePollTimer(Timer &aTimer);
-    static void UpdateIfLarger(uint32_t &aPreiod, uint32_t aNewPeriod);
+    static void UpdateIfLarger(uint32_t &aPeriod, uint32_t aNewPeriod);
 
     TimeMilli mTimerStartTime;
     uint32_t  mPollPeriod;

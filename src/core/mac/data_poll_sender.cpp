@@ -430,11 +430,11 @@ void DataPollSender::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
     }
 }
 
-void DataPollSender::UpdateIfLarger(uint32_t &aPreiod, uint32_t aNewPeriod)
+void DataPollSender::UpdateIfLarger(uint32_t &aPeriod, uint32_t aNewPeriod)
 {
-    if (aPreiod > aNewPeriod)
+    if (aPeriod > aNewPeriod)
     {
-        aPreiod = aNewPeriod;
+        aPeriod = aNewPeriod;
     }
 }
 
