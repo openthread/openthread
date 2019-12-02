@@ -1673,7 +1673,7 @@ void ot::PosixApp::RadioSpinel::Process(const Event &aEvent)
     }
     else if (mState == kStateTransmitting && platformGetTime() >= mTxRadioEndUs)
     {
-        // Frame has been successfully passed to radio, but no `TransmitDone` event received wthin TX_WAIT_US.
+        // Frame has been successfully passed to radio, but no `TransmitDone` event received within TX_WAIT_US.
         DieNowWithMessage("radio tx timeout", OT_EXIT_FAILURE);
     }
 }
