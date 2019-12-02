@@ -153,9 +153,9 @@ public:
     otError SendFrame(const uint8_t *aFrame, uint16_t aLength);
 
     /**
-     * This method waits for receiving any spinel response frame within specified interval.
+     * This method waits for receiving part or all of spinel response frame within specified interval.
      *
-     * @retval OT_ERROR_NONE             Spinel response frame is received.
+     * @retval OT_ERROR_NONE             Part or all of spinel response frame is received.
      * @retval OT_ERROR_RESPONSE_TIMEOUT No spinel response frame is received within @p aTimeout.
      *
      */
