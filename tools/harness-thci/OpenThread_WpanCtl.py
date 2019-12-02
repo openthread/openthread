@@ -73,22 +73,23 @@ class OpenThread_WpanCtl(IThci):
             self._is_net = False  # whether device is through ser2net
             self.logStatus = {'stop': 'stop', 'running': 'running', 'pauseReq': 'pauseReq', 'paused': 'paused'}
             self.logThreadStatus = self.logStatus['stop']
+            # connection type 'ip' stands for SSH
             self.connectType = (kwargs.get('Param5')).strip().lower() if kwargs.get('Param5') is not None else 'usb'
+            # comma separated CLI prompt, wpanctl cmd prefix, Wpan interface
             (self.prompt, self.wpan_cmd_prefix, self.wpan_interface) = (
                 kwargs.get('Param8').strip().split(',') if kwargs.get('Param8') else ['#', 'wpanctl', 'wpan0']
             )
             self.wpan_cmd_prefix += ' '
+            # comma separated setting commands
             self.precmd = (kwargs.get('Param9')).strip().split(',') if kwargs.get('Param9') else []
             if self.connectType == 'ip':
                 self.dutIpv4 = kwargs.get('TelnetIP')
                 self.dutPort = kwargs.get('TelnetPort')
                 self.port = self.dutIpv4 + ':' + self.dutPort
+                # username for SSH
                 self.username = kwargs.get('Param6').strip() if kwargs.get('Param6') else None
+                # password for SSH
                 self.password = kwargs.get('Param7').strip() if kwargs.get('Param7') else None
-                if not self.password:
-                    self.auth_password = False
-                else:
-                    self.auth_password = True
             else:
                 self.port = kwargs.get('SerialPort')
             self.intialize()
@@ -201,7 +202,7 @@ class OpenThread_WpanCtl(IThci):
         logging.info('%s: sendCommand[%s]', self.port, cmd)
         if self.logThreadStatus == self.logStatus['running']:
             self.logThreadStatus = self.logStatus['pauseReq']
-            while self.logThreadStatus != self.logStatus['paused'] and self.logThreadStatus != self.logStatus['stop']:
+            while self.logThreadStatus not in (self.logStatus['paused'], self.logStatus['stop']):
                 pass
 
         ssh_stdin = None
@@ -756,7 +757,7 @@ class OpenThread_WpanCtl(IThci):
             try:
                 import paramiko
 
-                if not self.auth_password:
+                if not self.password:
                     transport = paramiko.Transport((self.dutIpv4, int(self.dutPort)))
                     transport.start_client()
                     transport.auth_none(self.username)
