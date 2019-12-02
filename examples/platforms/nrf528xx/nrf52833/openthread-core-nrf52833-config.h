@@ -256,6 +256,26 @@
 #define OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT 1
 #endif
 
+/**
+ * @def RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
+ *
+ * The number of short source address table entries.
+ *
+ */
+#ifndef RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
+#define RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM 0
+#endif
+
+/**
+ * @def RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
+ *
+ * The number of extended source address table entries.
+ *
+ */
+#ifndef RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
+#define RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM 0
+#endif
+
 /*
  * Suppress the ARMCC warning on unreachable statement,
  * e.g. break after assert(false) or ExitNow() macro.

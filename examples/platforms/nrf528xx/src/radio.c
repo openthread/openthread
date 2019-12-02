@@ -85,13 +85,13 @@ enum
 
 static bool sDisabled;
 
-static otExtAddress sExtAddress;
 static otError      sReceiveError = OT_ERROR_NONE;
 static otRadioFrame sReceivedFrames[NRF_802154_RX_BUFFERS];
 static otRadioFrame sTransmitFrame;
 static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE + 1];
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+static otExtAddress  sExtAddress;
 static otRadioIeInfo sTransmitIeInfo;
 static otInstance *  sInstance = NULL;
 #endif
@@ -222,12 +222,12 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
-
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     for (size_t i = 0; i < sizeof(*aExtAddress); i++)
     {
         sExtAddress.m8[i] = aExtAddress->m8[sizeof(*aExtAddress) - 1 - i];
     }
-
+#endif
     nrf_802154_extended_address_set(aExtAddress->m8);
 }
 
