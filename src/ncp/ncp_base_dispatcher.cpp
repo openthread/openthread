@@ -543,10 +543,10 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
     case SPINEL_PROP_SERVER_SERVICES:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_SERVICES>;
         break;
+#endif
     case SPINEL_PROP_SERVER_LEADER_SERVICES:
         handler = &NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_LEADER_SERVICES>;
         break;
-#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
         // --------------------------------------------------------------------------

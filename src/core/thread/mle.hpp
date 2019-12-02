@@ -864,7 +864,6 @@ public:
         return GetAlocAddress(aAddress, GetCommissionerAloc16FromId(aSessionId));
     }
 
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     /**
      * This method retrieves the Service ALOC for given Service ID.
      *
@@ -876,7 +875,6 @@ public:
      *
      */
     otError GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const;
-#endif
 
     /**
      * This method adds Leader's ALOC to its Thread interface.

@@ -272,8 +272,8 @@ private:
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     void ProcessNetworkDataRegister(int argc, char *argv[]);
 #endif
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     void ProcessNetworkDataShow(int argc, char *argv[]);
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     void ProcessService(int argc, char *argv[]);
 #endif
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
