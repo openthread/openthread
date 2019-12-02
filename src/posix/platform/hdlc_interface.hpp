@@ -153,13 +153,13 @@ public:
     otError SendFrame(const uint8_t *aFrame, uint16_t aLength);
 
     /**
-     * This method waits for receiving part or all of spinel response frame within specified interval.
+     * This method waits for receiving part or all of spinel frame within specified interval.
      *
-     * @retval OT_ERROR_NONE             Part or all of spinel response frame is received.
-     * @retval OT_ERROR_RESPONSE_TIMEOUT No spinel response frame is received within @p aTimeout.
+     * @retval OT_ERROR_NONE             Part or all of spinel frame is received.
+     * @retval OT_ERROR_RESPONSE_TIMEOUT No spinel frame is received within @p aTimeout.
      *
      */
-    otError WaitResponse(struct timeval &aTimeout);
+    otError WaitForFrame(struct timeval &aTimeout);
 
     /**
      * This method updates the file descriptor sets with file descriptors used by the radio driver.

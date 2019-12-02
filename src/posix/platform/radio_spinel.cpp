@@ -1040,7 +1040,7 @@ otError RadioSpinel::WaitResponse(void)
 
     do
     {
-        if (mHdlcInterface.WaitResponse(timeout) == OT_ERROR_RESPONSE_TIMEOUT)
+        if (mHdlcInterface.WaitForFrame(timeout) == OT_ERROR_RESPONSE_TIMEOUT)
         {
             FreeTid(mWaitingTid);
             mWaitingTid = 0;

@@ -247,7 +247,7 @@ exit:
     return error;
 }
 
-otError HdlcInterface::WaitResponse(struct timeval &aTimeout)
+otError HdlcInterface::WaitForFrame(struct timeval &aTimeout)
 {
     otError error = OT_ERROR_NONE;
 
