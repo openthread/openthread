@@ -72,16 +72,8 @@ class OT_Sniffer(ISniffer):
         @param captureFileLocation : string : Full path with the filename with extension is passed.
         """
         try:
-            # baudrate auto detection
-            cmd_baudrate = ['extcap_ot.bat', '--extcap-interface', self.port, '--extcap-baudrate']
-            p_baudrate = subprocess.Popen(cmd_baudrate, stdout=subprocess.PIPE, shell=True)
-
-            for line in p_baudrate.stdout.readlines():
-                if line.startswith('baudrate'):
-                    # e.g. baudrate:115200
-                    self.baudrate = line.split(':')[1][:6]
-
-            p_baudrate.wait()
+            # e.g. COM6:460800
+            self.baudrate = int(self.port.split(':')[1])
 
             # start sniffer
             if self.baudrate is not None:
