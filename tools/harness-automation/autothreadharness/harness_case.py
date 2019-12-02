@@ -533,7 +533,7 @@ class HarnessCase(unittest.TestCase):
         if settings.DUT_DEVICE:
             dut_device = settings.DUT_DEVICE
 
-        """check if test case need to use RF-shield box and its device order in Testbed page
+        """check if test case needs to use RF-shield box and its device order in Testbed page
         Two parameters case_need_shield & device_order should be set in the case script
         according to the requires: https://openthread.io/certification/test-cases#rf_shielding
         Example:
@@ -553,8 +553,8 @@ class HarnessCase(unittest.TestCase):
 
          In case script med_6_3_2.py:
          case_need_shield = True
-         device_order = ''
-         means no device drag order. DUT2_DEVICE should be applied as DUT and the other gold devices
+         device_order = [] # or not defined
+         means no device drag order. DUT2_DEVICE should be applied as DUT and the other golden devices
          are from GOLDEN_DEVICES.
         """
         if self.case_need_shield:
@@ -608,7 +608,7 @@ class HarnessCase(unittest.TestCase):
                 for device_order_item in self.device_order:
                     matched = False
                     for mixed_device_item in topo_mixed_devices:
-                        # mapping device in device_order which need to be shielded
+                        # mapping device in device_order which needs to be shielded
                         if device_order_item[1]:
                             if 'DUT' in device_order_item[0]:
                                 golden_device_candidates.append(settings.DUT2_DEVICE)
@@ -625,7 +625,7 @@ class HarnessCase(unittest.TestCase):
                                     shield_devices.remove(device_item)
                                     matched = True
                                     break
-                        # mapping device in device_order which do not need to be shielded
+                        # mapping device in device_order which does not need to be shielded
                         else:
                             if 'DUT' in device_order_item[0]:
                                 golden_device_candidates.append(settings.DUT_DEVICE)
@@ -677,7 +677,7 @@ class HarnessCase(unittest.TestCase):
                 matched_dut = False
                 for device_order_item in self.device_order:
                     matched = False
-                    # choose device which need to be shielded
+                    # choose device which needs to be shielded
                     if device_order_item[1]:
                         if 'DUT' in device_order_item[0]:
                             golden_device_candidates.append(settings.DUT2_DEVICE)
@@ -690,7 +690,7 @@ class HarnessCase(unittest.TestCase):
                                 shield_devices.remove(device_item)
                                 matched = True
                                 break
-                    # choose device which do not need to be shielded
+                    # choose device which does not need to be shielded
                     else:
                         if 'DUT' in device_order_item[0]:
                             golden_device_candidates.append(settings.DUT_DEVICE)
