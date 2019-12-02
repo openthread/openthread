@@ -3191,13 +3191,6 @@ it is (2^48 - 1), our restriction is :  (int - 0xFFFF - 0xF).*/
  */
 /* #undef MBEDTLS_AES_256_CMAC_C */
 
-/*
- * Nordic added. Ensure there is a definition of mbedtls_ecp_restart_ctx
- */
-#if defined(MBEDTLS_ECP_ALT) && !defined(MBEDTLS_ECP_RESTARTABLE)
-typedef void mbedtls_ecp_restart_ctx;
-#endif
-
 
 
 #include "mbedtls/check_config.h"
