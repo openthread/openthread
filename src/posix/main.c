@@ -46,6 +46,7 @@
 #define OPENTHREAD_POSIX_APP_TYPE_CLI 2
 
 #include <openthread/diag.h>
+#include <openthread/logging.h>
 #include <openthread/tasklet.h>
 #include <openthread/platform/radio.h>
 #if OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_NCP
@@ -65,7 +66,8 @@ static jmp_buf gResetJump;
 
 void __gcov_flush();
 
-static const struct option kOptions[] = {{"dry-run", no_argument, NULL, 'n'},
+static const struct option kOptions[] = {{"debug-level", required_argument, NULL, 'd'},
+                                         {"dry-run", no_argument, NULL, 'n'},
                                          {"help", no_argument, NULL, 'h'},
                                          {"interface-name", required_argument, NULL, 'I'},
                                          {"no-reset", no_argument, NULL, 0},
@@ -81,6 +83,7 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    %s [Options] NodeId|Device|Command [DeviceConfig|CommandArgs]\n"
             "Options:\n"
             "    -I  --interface-name name   Thread network interface name.\n"
+            "    -d  --debug-level           Debug level of logging.\n"
             "    -n  --dry-run               Just verify if arguments is valid and radio spinel is compatible.\n"
             "        --no-reset              Do not reset RCP on initialization\n"
             "        --radio-version         Print radio firmware version\n"
@@ -98,6 +101,7 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
     bool             isDryRun          = false;
     bool             printRadioVersion = false;
     bool             isVerbose         = false;
+    int              logLevel          = OT_LOG_LEVEL_CRIT;
 
     memset(&config, 0, sizeof(config));
 
@@ -109,7 +113,7 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
     while (true)
     {
         int index  = 0;
-        int option = getopt_long(aArgCount, aArgVector, "hI:ns:v", kOptions, &index);
+        int option = getopt_long(aArgCount, aArgVector, "d:hI:ns:v", kOptions, &index);
 
         if (option == -1)
         {
@@ -118,6 +122,9 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
 
         switch (option)
         {
+        case 'd':
+            logLevel = atoi(optarg);
+            break;
         case 'h':
             PrintUsage(aArgVector[0], stdout, OT_EXIT_SUCCESS);
             break;
@@ -191,6 +198,7 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
         exit(OT_EXIT_SUCCESS);
     }
 
+    otLoggingSetLevel(logLevel);
     return instance;
 }
 

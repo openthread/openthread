@@ -48,6 +48,7 @@ DHCP6_CLIENT                         ?= 1
 DHCP6_SERVER                         ?= 1
 DIAGNOSTIC                           ?= 1
 DNS_CLIENT                           ?= 1
+DYNAMIC_LOG_LEVEL                    ?= 1
 ECDSA                                ?= 1
 IP6_FRAGM                            ?= 1
 JAM_DETECTION                        ?= 1
