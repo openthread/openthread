@@ -327,12 +327,12 @@ void HdlcInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aM
 
 void HdlcInterface::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
 {
+    OT_UNUSED_VARIABLE(aWriteFdSet);
+
     if (FD_ISSET(mSockFd, &aReadFdSet))
     {
         Read();
     }
-
-    OT_UNUSED_VARIABLE(aWriteFdSet);
 }
 
 otError HdlcInterface::WaitForWritable(void)
