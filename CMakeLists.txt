@@ -59,6 +59,14 @@ if(NOT OT_PLATFORM IN_LIST OT_EXAMPLE_PLATFORMS)
     endif()
 endif()
 
+# OT_CONFIG allows users to specify the path to OpenThread project core
+# config header file. The default value of this parameter is empty string.
+# When not specified by user (value is ""), a platform cmake file may
+# choose to change this variable to provide its own core config header
+# file instead.
+
+set(OT_CONFIG "" CACHE STRING "OpenThread project-specific config header file chosen by user at configure time")
+
 list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_BINARY_DIR}/etc/cmake)
 list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/etc/cmake)
 list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/include)
@@ -69,6 +77,11 @@ if(OT_PLATFORM STREQUAL "posix-host")
 elseif(NOT OT_PLATFORM MATCHES "none")
     list(APPEND OT_PRIVATE_INCLUDES ${PROJECT_SOURCE_DIR}/examples/platforms/${OT_PLATFORM})
     add_subdirectory("${PROJECT_SOURCE_DIR}/examples/platforms/${OT_PLATFORM}")
+endif()
+
+if(OT_CONFIG)
+    list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
+    message(STATUS "Project core config: \"${OT_CONFIG}\"")
 endif()
 
 list(APPEND OT_PRIVATE_DEFINES ${OT_PLATFORM_DEFINES})
