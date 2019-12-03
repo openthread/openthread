@@ -1298,26 +1298,25 @@ exit:
 
 const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
 {
-    Address *                  destination = &aMessageInfo.GetPeerAddr();
-    const NetifUnicastAddress *rvalAddr    = NULL;
-    const Address *            candidateAddr;
-    uint8_t                    rvalPrefixMatched = 0;
+    Address *                  destination       = &aMessageInfo.GetPeerAddr();
     uint8_t                    destinationScope  = destination->GetScope();
+    const NetifUnicastAddress *rvalAddr          = NULL;
+    uint8_t                    rvalPrefixMatched = 0;
 
     for (const NetifUnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr; addr = addr->GetNext())
     {
-        uint8_t overrideScope;
-        uint8_t candidatePrefixMatched;
-
-        candidateAddr          = &addr->GetAddress();
-        candidatePrefixMatched = destination->PrefixMatch(*candidateAddr);
-        overrideScope          = (candidatePrefixMatched >= addr->mPrefixLength) ? addr->GetScope() : destinationScope;
+        const Address *candidateAddr = &addr->GetAddress();
+        uint8_t        candidatePrefixMatched;
+        uint8_t        overrideScope;
 
         if (candidateAddr->IsAnycastRoutingLocator())
         {
             // Don't use anycast address as source address.
             continue;
         }
+
+        candidatePrefixMatched = destination->PrefixMatch(*candidateAddr);
+        overrideScope          = (candidatePrefixMatched >= addr->mPrefixLength) ? addr->GetScope() : destinationScope;
 
         if (rvalAddr == NULL)
         {
