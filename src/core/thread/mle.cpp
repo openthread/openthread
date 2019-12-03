@@ -1029,7 +1029,6 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 otError Mle::GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
 {
     otError error = OT_ERROR_NONE;
@@ -1045,7 +1044,6 @@ otError Mle::GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
 exit:
     return error;
 }
-#endif
 
 otError Mle::AddLeaderAloc(void)
 {
@@ -2838,7 +2836,7 @@ otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo
     {
         if (IsFullThreadDevice())
         {
-            SuccessOrExit(error = Get<MleRouter>().HandleAdvertisement(aMessage, aMessageInfo));
+            SuccessOrExit(error = Get<MleRouter>().HandleAdvertisement(aMessage, aMessageInfo, aNeighbor));
         }
         else if ((aNeighbor == &mParent) && (mParent.GetRloc16() != sourceAddress.GetRloc16()))
         {

@@ -123,24 +123,30 @@ uint16_t otThreadGetMaxAllowedChildren(otInstance *aInstance);
 otError otThreadSetMaxAllowedChildren(otInstance *aInstance, uint16_t aMaxChildren);
 
 /**
- * This function indicates whether or not the Router Role is enabled.
+ * This method indicates whether or not the device is router-eligible.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @retval TRUE   If the Router Role is enabled.
- * @retval FALSE  If the Router Role is not enabled.
+ * @retval TRUE   If device is router-eligible.
+ * @retval FALSE  If device is not router-eligible.
  *
  */
-bool otThreadIsRouterRoleEnabled(otInstance *aInstance);
+bool otThreadIsRouterEligible(otInstance *aInstance);
 
 /**
- * This function sets whether or not the Router Role is enabled.
+ * This function sets whether or not the device is router-eligible.
  *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aEnabled  TRUE if the Router Role is enabled, FALSE otherwise.
+ * If @p aEligible is false and the device is currently operating as a router, this call will cause the device to
+ * detach and attempt to reattach as a child.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aEligible  TRUE to configure the device as router-eligible, FALSE otherwise.
+ *
+ * @retval OT_ERROR_NONE         Successfully set the router-eligible configuration.
+ * @retval OT_ERROR_NOT_CAPABLE  The device is not capable of becoming a router.
  *
  */
-void otThreadSetRouterRoleEnabled(otInstance *aInstance, bool aEnabled);
+otError otThreadSetRouterEligible(otInstance *aInstance, bool aEligible);
 
 /**
  * Set the preferred Router Id.

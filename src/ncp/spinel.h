@@ -3481,8 +3481,6 @@ typedef enum
      *
      * This property provides all services registered on the leader
      *
-     * Required capability: SPINEL_CAP_THREAD_SERVICE
-     *
      * Array of structures containing:
      *
      *  `C`: Service ID

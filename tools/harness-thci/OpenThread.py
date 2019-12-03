@@ -257,16 +257,16 @@ class OpenThread(IThci):
             ModuleHelper.WriteIntoDebugLogger('sendCommand() Error: ' + str(e))
             raise
 
-    def __disableRouterRole(self):
+    def __disableRouterEligible(self):
         """disable router role
         """
-        print('call __disableRouterRole')
+        print('call __disableRouterEligible')
         try:
-            cmd = 'routerrole disable'
+            cmd = 'routereligible disable'
             self.__sendCommand(cmd)
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger(
-                '__disableRouterRole() Error: ' + str(e)
+                '__disableRouterEligible() Error: ' + str(e)
             )
 
     def __setDeviceMode(self, mode):
@@ -1085,7 +1085,7 @@ class OpenThread(IThci):
                 print('join as FED')
                 mode = 'rsdn'
                 # always remain an ED, never request to be a router
-                self.__disableRouterRole()
+                self.__disableRouterEligible()
             elif eRoleId == Thread_Device_Role.EndDevice_MED:
                 print('join as MED')
                 mode = 'rsn'

@@ -58,18 +58,18 @@ otError otThreadSetMaxAllowedChildren(otInstance *aInstance, uint16_t aMaxChildr
     return instance.Get<ChildTable>().SetMaxChildrenAllowed(aMaxChildren);
 }
 
-bool otThreadIsRouterRoleEnabled(otInstance *aInstance)
+bool otThreadIsRouterEligible(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::MleRouter>().IsRouterRoleEnabled();
+    return instance.Get<Mle::MleRouter>().IsRouterEligible();
 }
 
-void otThreadSetRouterRoleEnabled(otInstance *aInstance, bool aEnabled)
+otError otThreadSetRouterEligible(otInstance *aInstance, bool aEligible)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.Get<Mle::MleRouter>().SetRouterRoleEnabled(aEnabled);
+    return instance.Get<Mle::MleRouter>().SetRouterEligible(aEligible);
 }
 
 otError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId)

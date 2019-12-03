@@ -950,6 +950,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_SERVICES>(void
 exit:
     return error;
 }
+#endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_LEADER_SERVICES>(void)
 {
@@ -957,7 +958,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_LEADER_SERVICE
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otServiceConfig       cfg;
 
-    while (otServerGetNextLeaderService(mInstance, &iterator, &cfg) == OT_ERROR_NONE)
+    while (otNetDataGetNextService(mInstance, &iterator, &cfg) == OT_ERROR_NONE)
     {
         SuccessOrExit(error = mEncoder.OpenStruct());
 
@@ -974,8 +975,6 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_LEADER_SERVICE
 exit:
     return error;
 }
-
-#endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_DISCOVERY_SCAN_JOINER_FLAG>(void)
 {

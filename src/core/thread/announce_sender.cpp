@@ -138,7 +138,7 @@ void AnnounceSender::CheckState(void)
         break;
 
     case OT_DEVICE_ROLE_CHILD:
-        if (mle.IsRouterRoleEnabled() && mle.IsRxOnWhenIdle())
+        if (mle.IsRouterEligible() && mle.IsRxOnWhenIdle())
         {
             period = kReedTxInterval;
             break;

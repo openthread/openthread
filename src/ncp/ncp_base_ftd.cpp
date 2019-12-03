@@ -294,17 +294,17 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED>(void)
 {
-    return mEncoder.WriteBool(otThreadIsRouterRoleEnabled(mInstance));
+    return mEncoder.WriteBool(otThreadIsRouterEligible(mInstance));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED>(void)
 {
-    bool    enabled;
+    bool    eligible;
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = mDecoder.ReadBool(enabled));
+    SuccessOrExit(error = mDecoder.ReadBool(eligible));
 
-    otThreadSetRouterRoleEnabled(mInstance, enabled);
+    error = otThreadSetRouterEligible(mInstance, eligible);
 
 exit:
     return error;
