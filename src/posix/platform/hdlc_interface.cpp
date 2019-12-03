@@ -271,7 +271,7 @@ otError HdlcInterface::WaitForFrame(struct timeval &aTimeout)
         assert(false);
         break;
     }
-#else // OPENTHREAD_POSIX_VIRTUAL_TIME
+#else  // OPENTHREAD_POSIX_VIRTUAL_TIME
     fd_set read_fds;
     fd_set error_fds;
     int rval;
@@ -306,7 +306,7 @@ otError HdlcInterface::WaitForFrame(struct timeval &aTimeout)
     {
         DieNowWithMessage("wait response", OT_EXIT_FAILURE);
     }
-#endif
+#endif // OPENTHREAD_POSIX_VIRTUAL_TIME
 
 exit:
     return error;
@@ -314,15 +314,15 @@ exit:
 
 void HdlcInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout)
 {
+    OT_UNUSED_VARIABLE(aWriteFdSet);
+    OT_UNUSED_VARIABLE(aTimeout);
+
     FD_SET(mSockFd, &aReadFdSet);
 
     if (aMaxFd < mSockFd)
     {
         aMaxFd = mSockFd;
     }
-
-    OT_UNUSED_VARIABLE(aWriteFdSet);
-    OT_UNUSED_VARIABLE(aTimeout);
 }
 
 void HdlcInterface::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)

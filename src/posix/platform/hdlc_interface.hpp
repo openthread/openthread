@@ -155,6 +155,8 @@ public:
     /**
      * This method waits for receiving part or all of spinel frame within specified interval.
      *
+     * @param[in]  aTimeout  A reference to the timeout.
+     *
      * @retval OT_ERROR_NONE             Part or all of spinel frame is received.
      * @retval OT_ERROR_RESPONSE_TIMEOUT No spinel frame is received within @p aTimeout.
      *
