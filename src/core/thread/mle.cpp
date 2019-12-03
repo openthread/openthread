@@ -1342,7 +1342,7 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
     tlv.SetType(Tlv::kAddressRegistration);
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
 
-    // Prioritize MlEid
+    // Prioritize ML-EID
     entry.SetContextId(kMeshLocalPrefixContextId);
     entry.SetIid(GetMeshLocal64().GetIid());
     SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
@@ -1355,14 +1355,8 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
     for (const Ip6::NetifUnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr; addr = addr->GetNext())
     {
         if (addr->GetAddress().IsLinkLocal() || IsRoutingLocator(addr->GetAddress()) ||
-            IsAnycastLocator(addr->GetAddress()))
+            IsAnycastLocator(addr->GetAddress()) || addr->GetAddress() == GetMeshLocal64())
         {
-            continue;
-        }
-
-        if (addr->GetAddress() == GetMeshLocal64())
-        {
-            // skip MlEid which was appended already.
             continue;
         }
 
