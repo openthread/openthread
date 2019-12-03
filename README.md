@@ -2,7 +2,7 @@
 
 **This project is currently in progress. See original repository [openthread-mqttsn](https://github.com/kyberpunk/openthread-mqttsn) for more information**.
 
-This project contains fork of OpenThread SDK which implements MQTT-SN protocol on Thread network. MQTT-SN implementation is part of OpenThread library build. This is not official OpenThread project. This code may be outdated and there can be some bugs or missing features. If you want to use latest OpenThread project please go to [official repository](https://github.com/openthread/openthread).
+This project contains fork of OpenThread SDK which implements MQTT-SN protocol on Thread network. MQTT-SN implementation is part of OpenThread library build. MQTT-SN implementation allows user to send MQTT messages from Thread network to regular MQTT broker in external IP network. This is not official OpenThread project. OpenThread code may be outdated and there can be some bugs or missing features. If you want to use latest OpenThread project please go to [official repository](https://github.com/openthread/openthread).
 
 * MQTT-SN over Thread network uses UDP as transport layer. UDP MQTT-SN packets are tranformed and forwarded to MQTT broker by [Eclipse Paho MQTT-SN Gateway](https://github.com/eclipse/paho.mqtt-sn.embedded-c/tree/master/MQTTSNGateway).
 
@@ -30,3 +30,21 @@ OpenThread released by Google is an open-source implementation of the Thread net
 * Linux device such as [Raspberry Pi](https://www.raspberrypi.org/) acting as border router with installed Docker - [Docker install guide](https://docs.docker.com/v17.09/engine/installation/), [guide for Raspberry](https://www.raspberrypi.org/blog/docker-comes-to-raspberry-pi/)
 * 2 Thread devices compatible with OpenThread - check [here](https://openthread.io/platforms)
 * Environment for building firmware with [GNU Arm Embedded Toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm)
+
+### Build and flash NCP
+
+OpenThread Border Router runs on an NCP design. First clone openthread MQTT-SN repository:
+
+```
+git clone https://github.com/kyberpunk/openthread.git --recursive
+```
+
+Select a supported OpenThread platform to use as an NCP and follow the [official building instructions](https://openthread.io/guides/border-router/build). For example for KW41Z platform run following commands:
+
+```
+cd openthread
+./script/bootstrap
+./bootstrap
+make -f examples/Makefile-kw41z BORDER_AGENT=1 BORDER_ROUTER=1 COMMISSIONER=1 UDP_FORWARD=1
+```
+
