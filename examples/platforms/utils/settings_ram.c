@@ -63,6 +63,11 @@ void otPlatSettingsInit(otInstance *aInstance)
     sSettingsBufLength = 0;
 }
 
+void otPlatSettingsDeinit(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
 otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
 {
     OT_UNUSED_VARIABLE(aInstance);
