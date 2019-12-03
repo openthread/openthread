@@ -27,6 +27,6 @@ OpenThread released by Google is an open-source implementation of the Thread net
 
 ### Requirements
 
-* Linux device such as [Raspberry Pi](https://www.raspberrypi.org/) or regular computer acting as border router
+* Linux device such as [Raspberry Pi](https://www.raspberrypi.org/) acting as border router with installed Docker - [Docker install guide](https://docs.docker.com/v17.09/engine/installation/), [guide for Raspberry](https://www.raspberrypi.org/blog/docker-comes-to-raspberry-pi/)
 * 2 Thread devices compatible with OpenThread - check [here](https://openthread.io/platforms)
 * Environment for building firmware with [GNU Arm Embedded Toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm)
