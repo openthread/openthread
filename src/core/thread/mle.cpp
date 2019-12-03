@@ -1335,7 +1335,6 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
     Tlv                      tlv;
     AddressRegistrationEntry entry;
     Lowpan::Context          context;
-    bool                     done        = false;
     uint8_t                  length      = 0;
     uint8_t                  counter     = 0;
     uint16_t                 startOffset = aMessage.GetLength();
@@ -1343,23 +1342,22 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
     tlv.SetType(Tlv::kAddressRegistration);
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
 
+    // Prioritize ML-EID
+    entry.SetContextId(kMeshLocalPrefixContextId);
+    entry.SetIid(GetMeshLocal64().GetIid());
+    SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
+    length += entry.GetLength();
+
+    // Continue to append the other addresses if not `kAppendMeshLocalOnly` mode
+    VerifyOrExit(aMode != kAppendMeshLocalOnly);
+    counter++;
+
     for (const Ip6::NetifUnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr; addr = addr->GetNext())
     {
         if (addr->GetAddress().IsLinkLocal() || IsRoutingLocator(addr->GetAddress()) ||
-            IsAnycastLocator(addr->GetAddress()))
+            IsAnycastLocator(addr->GetAddress()) || addr->GetAddress() == GetMeshLocal64())
         {
             continue;
-        }
-
-        if (aMode == kAppendMeshLocalOnly)
-        {
-            if (addr->GetAddress() != GetMeshLocal64())
-            {
-                continue;
-            }
-
-            // Set `done` to `true` to exit after the address is appended.
-            done = true;
         }
 
         if (Get<NetworkData::Leader>().GetContext(addr->GetAddress(), context) == OT_ERROR_NONE)
@@ -1379,7 +1377,7 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
         length += entry.GetLength();
         counter++;
         // only continue to append if there is available entry.
-        VerifyOrExit(!done && (counter < OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER));
+        VerifyOrExit(counter < OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER);
     }
 
     // For sleepy end device, register external multicast addresses to the parent for indirect transmission
