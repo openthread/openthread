@@ -531,12 +531,11 @@ private:
 
     enum State
     {
-        kStateDisabled,        ///< Radio is disabled.
-        kStateSleep,           ///< Radio is sleep.
-        kStateReceive,         ///< Radio is in receive mode.
-        kStateTransmitPending, ///< Frame transmission requested, waiting to pass frame to radio.
-        kStateTransmitting,    ///< Frame passed to radio for transmission, waiting for done event from radio.
-        kStateTransmitDone,    ///< Radio indicated frame transmission is done.
+        kStateDisabled,     ///< Radio is disabled.
+        kStateSleep,        ///< Radio is sleep.
+        kStateReceive,      ///< Radio is in receive mode.
+        kStateTransmitting, ///< Frame passed to radio for transmission, waiting for done event from radio.
+        kStateTransmitDone, ///< Radio indicated frame transmission is done.
     };
 
     otError CheckSpinelVersion(void);
@@ -640,7 +639,8 @@ private:
     void HandleWaitingResponse(uint32_t aCommand, spinel_prop_key_t aKey, const uint8_t *aBuffer, uint16_t aLength);
 
     void RadioReceive(void);
-    void RadioTransmit(void);
+
+    void TransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
 
     otInstance *mInstance;
 
