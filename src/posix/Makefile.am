@@ -51,7 +51,6 @@ CPPFLAGS_COMMON                                                        = \
     -I$(top_srcdir)/src/core                                             \
     -I$(top_srcdir)/src/posix/platform                                   \
     -D_GNU_SOURCE                                                        \
-    $(OPENTHREAD_TARGET_DEFINES)                                         \
     $(NULL)
 
 LIBTOOLFLAGS_COMMON = --preserve-dup-deps
