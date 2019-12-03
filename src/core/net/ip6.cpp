@@ -1364,19 +1364,6 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
                 continue;
             }
         }
-        else if ((rvalAddr->GetScope() == Address::kRealmLocalScope) && (addr->GetScope() == Address::kRealmLocalScope))
-        {
-            // Additional rule: Prefer EID
-            if (rvalAddr->GetAddress().IsRoutingLocator())
-            {
-                rvalAddr          = addr;
-                rvalPrefixMatched = candidatePrefixMatched;
-            }
-            else
-            {
-                continue;
-            }
-        }
         else if (addr->mPreferred && !rvalAddr->mPreferred)
         {
             // Rule 3: Avoid deprecated addresses
@@ -1388,6 +1375,13 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
             // Rule 6: Prefer matching label
             // Rule 7: Prefer public address
             // Rule 8: Use longest prefix matching
+            rvalAddr          = addr;
+            rvalPrefixMatched = candidatePrefixMatched;
+        }
+        else if ((candidatePrefixMatched == rvalPrefixMatched) &&
+                 (destination->IsRoutingLocator() == candidateAddr->IsRoutingLocator()))
+        {
+            // Additional rule: Prefer RLOC source for RLOC destination, EID source for anything else
             rvalAddr          = addr;
             rvalPrefixMatched = candidatePrefixMatched;
         }
