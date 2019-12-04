@@ -48,3 +48,51 @@ cd openthread
 make -f examples/Makefile-kw41z BORDER_AGENT=1 BORDER_ROUTER=1 COMMISSIONER=1 UDP_FORWARD=1
 ```
 
+After a successful build, the elf files are found in output/kw41z/bin. You can convert them to bin files using arm-none-eabi-objcopy:
+
+```
+cd /output/kw41z/bin
+arm-none-eabi-objcopy -O binary ot-ncp-ftd ot-ncp-ftd.bin
+```
+
+Then flash the binary and connect NCP device to border router device.
+
+### Install border router
+
+Border router device provides functionality for routing and  forwarding communication from Thread subnet to other IP networks. In this example border router consists of [OpenThread Border Router](https://openthread.io/guides/border-router) (OTBR) which is capable of routing communication with Thread network and [Eclipse Paho MQTT-SN Gateway](https://github.com/eclipse/paho.mqtt-sn.embedded-c/tree/master/MQTTSNGateway) which transforms MQTT-SN UDP packets to MQTT.
+
+All applications for border router are provided as Docker images. First step is to install docker on your platform ([Docker install guide](https://docs.docker.com/v17.09/engine/installation/)). On Raspberry Pi platform just run following script:
+
+```
+curl -sSL https://get.docker.com | sh
+```
+
+In real application it is best practice to use DNS server for resolving host IP address. In this example are used simple static addresses for locating services. Create custom docker network `test` for this purpose:
+
+```
+sudo docker network create --subnet=172.18.0.0/16 test
+```
+
+Run new OTBR container from official image:
+
+```
+sudo docker run -d --name otbr --sysctl "net.ipv6.conf.all.disable_ipv6=0 net.ipv4.conf.all.forwarding=1 net.ipv6.conf.all.forwarding=1" -p 80:8080 --dns=127.0.0.1 -v /dev/ttyACM0:/dev/ttyACM0 --net test --ip 172.18.0.6 --privileged openthread/otbr --ncp-path /dev/ttyACM0 --nat64-prefix "2018:ff9b::/96"
+```
+
+Container will use `test` network with static IP address 172.18.0.6. If needed replace `/dev/ttyACM0` in `-v` and `--ncp-path` parameter with name under which appear NCP device in your system (`/dev/ttyS0`, `/dev/ttyUSB0` etc.). NAT-64 prefix is set to `2018:ff9b::/96`. It allows address translation and routing to local addresses.
+
+Next step is to run Mosquitto container as MQTT broker for sample test. Broker IP address in `test` network will be 172.18.0.7:
+
+```
+sudo docker run -d --name mosquitto --net test --ip 172.18.0.7 kyberpunk/mosquitto
+```
+
+As last step run container with MQTT-SN Gateway:
+
+```
+sudo docker run -d --name paho --net test --ip 172.18.0.8 kyberpunk/paho --broker-name 172.18.0.7 --broker-port 1883
+```
+
+MQTT-SN gateway service address is 172.18.0.8 which can be translated to IPv6 as 2018:ff9b::ac12:8. See more information [here](https://openthread.io/guides/thread-primer/ipv6-addressing).
+
+**IMPORTANT NOTICE: In this network configuration MQTT-SN network does not support SEARCHGW and ADVERTISE messages in Thread network until you configure multicast forwarding.** Alternativelly you can use UDPv6 version of gateway ([kyberpunk/paho6](https://hub.docker.com/repository/docker/kyberpunk/paho6) image) and attach it to OTBR container interface wpan0 (--net "container:otbr").
