@@ -123,10 +123,10 @@ namespace ot {
 namespace PosixApp {
 
 HdlcInterface::HdlcInterface(Callbacks &aCallbacks)
-    : mCallbacks(aCallbacks)
+    : SpinelInterface()
+    , mCallbacks(aCallbacks)
     , mSockFd(-1)
-    , mRxFrameBuffer()
-    , mHdlcDecoder(mRxFrameBuffer, HandleHdlcFrame, this)
+    , mHdlcDecoder(GetRxFrameBuffer(), HandleHdlcFrame, this)
 {
 }
 
@@ -612,11 +612,11 @@ void HdlcInterface::HandleHdlcFrame(otError aError)
 {
     if (aError == OT_ERROR_NONE)
     {
-        mCallbacks.HandleReceivedFrame(*this);
+        mCallbacks.HandleReceivedFrame();
     }
     else
     {
-        mRxFrameBuffer.DiscardFrame();
+        GetRxFrameBuffer().DiscardFrame();
         otLogWarnPlat("Error decoding hdlc frame: %s", otThreadErrorToString(aError));
     }
 }

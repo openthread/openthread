@@ -57,6 +57,7 @@ noinst_HEADERS                            = \
     platform-posix.h                        \
     hdlc_interface.hpp                      \
     radio_spinel.hpp                        \
+    spinel_interface.hpp                    \
     $(NULL)
 
 openthread_HEADERS                        = \

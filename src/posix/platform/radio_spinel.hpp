@@ -37,13 +37,14 @@
 #include <openthread/platform/radio.h>
 
 #include "hdlc_interface.hpp"
+#include "spinel_interface.hpp"
 #include "ncp/ncp_config.h"
 #include "ncp/spinel.h"
 
 namespace ot {
 namespace PosixApp {
 
-class RadioSpinel : public HdlcInterface::Callbacks
+class RadioSpinel : public SpinelInterface::Callbacks
 {
 public:
     /**
@@ -511,11 +512,12 @@ public:
     uint32_t GetRadioChannelMask(bool aPreferred);
 
     /**
-     *  This method processes a received Spinel frame.
+     * This method processes a received Spinel frame.
      *
-     * @param[in] aFrameBuffer The frame buffer constaining the newly received frame.
+     * The newly received frame is available in `RxFrameBuffer` from `SpinelInterface::GetRxFrameBuffer()`.
+     *
      */
-    void HandleSpinelFrame(HdlcInterface::RxFrameBuffer &aFrameBuffer);
+    void HandleReceivedFrame(void);
 
 private:
     enum
