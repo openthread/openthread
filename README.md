@@ -20,7 +20,7 @@ This project contains fork of OpenThread SDK which implements MQTT-SN protocol o
 * [OpenThread with MQTT-SN client support](#OpenThread-with-MQTT-SN-client-support)<br>
   * [Contents](#Contents)<br>
   * [About OpenThread](#About-OpenThread)<br>
-  * [Requirements](#About-MQTT-SN)<br>
+  * [About MQTT-SN](#About-MQTT-SN)<br>
 * [Trying MQTT-SN client with CLI application example](#Trying-MQTT-SN-client-with-CLI-application-example)<br>
   * [Requirements](#Requirements)<br>
   * [Build and flash NCP](#Build-and-flash-NCP)<br>
