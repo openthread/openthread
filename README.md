@@ -36,10 +36,6 @@ OpenThread released by Google is an open-source implementation of the Thread net
 
 ## Trying MQTT-SN client with CLI application example
 
-[Requirements](#Requirements)<br>
-[Build and flash NCP](#Build-and-flash-NCP)<br>
-[Install border router](#Install-border-router)
-
 ### Requirements
 
 * Linux device such as [Raspberry Pi](https://www.raspberrypi.org/) acting as border router with installed Docker - [Docker install guide](https://docs.docker.com/v17.09/engine/installation/), [guide for Raspberry](https://www.raspberrypi.org/blog/docker-comes-to-raspberry-pi/)
