@@ -95,4 +95,4 @@ sudo docker run -d --name paho --net test --ip 172.18.0.8 kyberpunk/paho --broke
 
 MQTT-SN gateway service address is 172.18.0.8 which can be translated to IPv6 as 2018:ff9b::ac12:8. See more information [here](https://openthread.io/guides/thread-primer/ipv6-addressing).
 
-**IMPORTANT NOTICE: In this network configuration MQTT-SN network does not support SEARCHGW and ADVERTISE messages in Thread network until you configure multicast forwarding.** Alternativelly you can use UDPv6 version of gateway ([kyberpunk/paho6](https://hub.docker.com/repository/docker/kyberpunk/paho6) image) and attach it to OTBR container interface wpan0 (--net "container:otbr").
+**IMPORTANT NOTICE: In this network configuration MQTT-SN network does not support SEARCHGW and ADVERTISE messages in Thread network until you configure multicast forwarding.** Alternativelly you can use UDPv6 version of gateway ([kyberpunk/paho6](https://hub.docker.com/repository/docker/kyberpunk/paho6) image) and attach it to OTBR container interface wpan0 (`--net "container:otbr"`).
