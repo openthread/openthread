@@ -76,7 +76,10 @@ sudo docker network create --subnet=172.18.0.0/16 test
 Run new OTBR container from official image:
 
 ```
-sudo docker run -d --name otbr --sysctl "net.ipv6.conf.all.disable_ipv6=0 net.ipv4.conf.all.forwarding=1 net.ipv6.conf.all.forwarding=1" -p 80:8080 --dns=127.0.0.1 -v /dev/ttyACM0:/dev/ttyACM0 --net test --ip 172.18.0.6 --privileged openthread/otbr --ncp-path /dev/ttyACM0 --nat64-prefix "2018:ff9b::/96"
+sudo docker run -d --name otbr --sysctl "net.ipv6.conf.all.disable_ipv6=0 \
+        net.ipv4.conf.all.forwarding=1 net.ipv6.conf.all.forwarding=1" -p 80:8080 \
+        --dns=127.0.0.1 -v /dev/ttyACM0:/dev/ttyACM0 --net test --ip 172.18.0.6 \
+        --privileged openthread/otbr --ncp-path /dev/ttyACM0 --nat64-prefix "2018:ff9b::/96"
 ```
 
 Container will use `test` network with static IP address 172.18.0.6. If needed replace `/dev/ttyACM0` in `-v` and `--ncp-path` parameter with name under which appear NCP device in your system (`/dev/ttyS0`, `/dev/ttyUSB0` etc.). NAT-64 prefix is set to `2018:ff9b::/96`. It allows address translation and routing to local addresses.
@@ -90,7 +93,8 @@ sudo docker run -d --name mosquitto --net test --ip 172.18.0.7 kyberpunk/mosquit
 As last step run container with MQTT-SN Gateway:
 
 ```
-sudo docker run -d --name paho --net test --ip 172.18.0.8 kyberpunk/paho --broker-name 172.18.0.7 --broker-port 1883
+sudo docker run -d --name paho --net test --ip 172.18.0.8 kyberpunk/paho \
+        --broker-name 172.18.0.7 --broker-port 1883
 ```
 
 MQTT-SN gateway service address is 172.18.0.8 which can be translated to IPv6 as 2018:ff9b::ac12:8. See more information [here](https://openthread.io/guides/thread-primer/ipv6-addressing).
