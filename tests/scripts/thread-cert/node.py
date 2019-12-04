@@ -576,19 +576,6 @@ class Node:
 
         return None
 
-    def get_addr_rloc(self):
-        addrs = self.get_addrs()
-        for addr in addrs:
-            segs = addr.split(':')
-            if (
-                segs[4] == '0'
-                and segs[5] == 'ff'
-                and segs[6] == 'fe00'
-                and segs[7] != 'fc00'
-            ):
-                return addr
-        return None
-
     def get_addr_leader_aloc(self):
         addrs = self.get_addrs()
         for addr in addrs:
