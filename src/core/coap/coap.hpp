@@ -35,6 +35,7 @@
 
 #include "coap/coap_message.hpp"
 #include "common/debug.hpp"
+#include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/timer.hpp"
@@ -175,7 +176,7 @@ private:
  * This class implements CoAP resource handling.
  *
  */
-class Resource : public otCoapResource
+class Resource : public otCoapResource, public LinkedListEntry<Resource>
 {
     friend class CoapBase;
 
@@ -199,14 +200,6 @@ public:
         mContext = aContext;
         mNext    = NULL;
     }
-
-    /**
-     * This method returns a pointer to the next resource.
-     *
-     * @returns A pointer to the next resource.
-     *
-     */
-    Resource *GetNext(void) const { return static_cast<Resource *>(mNext); }
 
     /**
      * This method returns a pointer to the Uri-Path.
@@ -678,7 +671,7 @@ private:
     uint16_t          mMessageId;
     TimerMilliContext mRetransmissionTimer;
 
-    Resource *mResources;
+    LinkedList<Resource> mResources;
 
     void *         mContext;
     Interceptor    mInterceptor;

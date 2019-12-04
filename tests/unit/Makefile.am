@@ -111,6 +111,7 @@ check_PROGRAMS                                                     += \
     test-hmac-sha256                                                  \
     test-ip6-address                                                  \
     test-link-quality                                                 \
+    test-linked-list                                                  \
     test-lowpan                                                       \
     test-mac-frame                                                    \
     test-message                                                      \
@@ -185,6 +186,9 @@ test_ip6_address_SOURCES     = test_platform.cpp test_ip6_address.cpp
 test_link_quality_LDADD      = $(COMMON_LDADD)
 test_link_quality_SOURCES    = test_platform.cpp test_link_quality.cpp
 
+test_linked_list_LDADD       = $(COMMON_LDADD)
+test_linked_list_SOURCES     = test_platform.cpp test_linked_list.cpp
+
 test_lowpan_LDADD            = $(COMMON_LDADD)
 test_lowpan_SOURCES          = test_platform.cpp test_lowpan.cpp test_util.cpp
 
@@ -243,6 +247,7 @@ PRETTY_FILES                                                        = \
     $(test_heap_SOURCES)                                              \
     $(test_hmac_sha256_SOURCES)                                       \
     $(test_link_quality_SOURCES)                                      \
+    $(test_linked_list_SOURCES)                                       \
     $(test_lowpan_SOURCES)                                            \
     $(test_mac_frame_SOURCES)                                         \
     $(test_message_queue_SOURCES)                                     \

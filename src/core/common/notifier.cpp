@@ -54,7 +54,7 @@ Notifier::Notifier(Instance &aInstance)
     , mFlagsToSignal(0)
     , mSignaledFlags(0)
     , mTask(aInstance, &Notifier::HandleStateChanged, this)
-    , mCallbacks(NULL)
+    , mCallbacks()
 {
     for (unsigned int i = 0; i < kMaxExternalHandlers; i++)
     {
@@ -65,8 +65,7 @@ Notifier::Notifier(Instance &aInstance)
 
 void Notifier::RegisterCallback(Callback &aCallback)
 {
-    aCallback.mNext = mCallbacks;
-    mCallbacks      = &aCallback;
+    mCallbacks.Push(aCallback);
 }
 
 otError Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aContext)
@@ -151,7 +150,7 @@ void Notifier::HandleStateChanged(void)
 
     LogChangedFlags(flags);
 
-    for (Callback *callback = mCallbacks; callback != NULL; callback = callback->mNext)
+    for (Callback *callback = mCallbacks.GetHead(); callback != NULL; callback = callback->GetNext())
     {
         callback->Invoke(flags);
     }
