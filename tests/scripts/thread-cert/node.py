@@ -533,6 +533,36 @@ class Node:
 
         return addrs
 
+    def get_mleid(self):
+        addr = None
+        cmd = 'ipaddr mleid'
+        self.send_command(cmd)
+        i = self._expect(r'(\S+(:\S*)+)\r?\n')
+        if i == 0:
+            addr = self.pexpect.match.groups()[0].decode("utf-8")
+        self._expect('Done')
+        return addr
+
+    def get_linklocal(self):
+        addr = None
+        cmd = 'ipaddr linklocal'
+        self.send_command(cmd)
+        i = self._expect(r'(\S+(:\S*)+)\r?\n')
+        if i == 0:
+            addr = self.pexpect.match.groups()[0].decode("utf-8")
+        self._expect('Done')
+        return addr
+
+    def get_rloc(self):
+        addr = None
+        cmd = 'ipaddr rloc'
+        self.send_command(cmd)
+        i = self._expect(r'(\S+(:\S*)+)\r?\n')
+        if i == 0:
+            addr = self.pexpect.match.groups()[0].decode("utf-8")
+        self._expect('Done')
+        return addr
+
     def get_addr(self, prefix):
         network = ipaddress.ip_network(u'%s' % str(prefix))
         addrs = self.get_addrs()
