@@ -94,19 +94,13 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
     exit(aExitCode);
 }
 
-static otInstance *InitInstance(int aArgCount, char *aArgVector[])
+void ParseArg(int aArgCount, char *aArgVector[], otPlatformConfig *aConfig)
 {
-    otPlatformConfig config;
-    otInstance *     instance          = NULL;
-    bool             isDryRun          = false;
-    bool             printRadioVersion = false;
-    bool             isVerbose         = false;
-    int              logLevel          = OT_LOG_LEVEL_CRIT;
+    memset(aConfig, 0, sizeof(otPlatformConfig));
 
-    memset(&config, 0, sizeof(config));
-
-    config.mSpeedUpFactor = 1;
-    config.mResetRadio    = true;
+    aConfig->mSpeedUpFactor = 1;
+    aConfig->mResetRadio    = true;
+    aConfig->mLogLevel      = OT_LOG_LEVEL_CRIT;
 
     optind = 1;
 
@@ -123,23 +117,23 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
         switch (option)
         {
         case 'd':
-            logLevel = atoi(optarg);
+            aConfig->mLogLevel = (uint8_t)atoi(optarg);
             break;
         case 'h':
             PrintUsage(aArgVector[0], stdout, OT_EXIT_SUCCESS);
             break;
         case 'I':
-            config.mInterfaceName = optarg;
+            aConfig->mInterfaceName = optarg;
             break;
         case 'n':
-            isDryRun = true;
+            aConfig->mIsDryRun = true;
             break;
         case 's':
         {
-            char *endptr          = NULL;
-            config.mSpeedUpFactor = (uint32_t)strtol(optarg, &endptr, 0);
+            char *endptr            = NULL;
+            aConfig->mSpeedUpFactor = (uint32_t)strtol(optarg, &endptr, 0);
 
-            if (*endptr != '\0' || config.mSpeedUpFactor == 0)
+            if (*endptr != '\0' || aConfig->mSpeedUpFactor == 0)
             {
                 fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", optarg);
                 exit(OT_EXIT_INVALID_ARGUMENTS);
@@ -147,17 +141,17 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
             break;
         }
         case 'v':
-            isVerbose = true;
+            aConfig->mIsVerbose = true;
             break;
 
         case 0:
             if (!strcmp(kOptions[index].name, "radio-version"))
             {
-                printRadioVersion = true;
+                aConfig->mPrintRadioVersion = true;
             }
             else if (!strcmp(kOptions[index].name, "no-reset"))
             {
-                config.mResetRadio = false;
+                aConfig->mResetRadio = false;
             }
             break;
         case '?':
@@ -169,36 +163,44 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
         }
     }
 
-#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
-    openlog(aArgVector[0], LOG_PID | (isVerbose ? LOG_PERROR : 0), LOG_DAEMON);
-    setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
-#endif
-
     if (optind >= aArgCount)
     {
         PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
     }
 
-    config.mRadioFile = aArgVector[optind];
+    aConfig->mRadioFile = aArgVector[optind];
 
     if (optind + 1 < aArgCount)
     {
-        config.mRadioConfig = aArgVector[optind + 1];
+        aConfig->mRadioConfig = aArgVector[optind + 1];
     }
+}
+
+static otInstance *InitInstance(int aArgCount, char *aArgVector[])
+{
+    otPlatformConfig config;
+    otInstance *     instance = NULL;
+
+    ParseArg(aArgCount, aArgVector, &config);
+
+#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+    openlog(aArgVector[0], LOG_PID | (config.mIsVerbose ? LOG_PERROR : 0), LOG_DAEMON);
+    setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
+#endif
 
     instance = otSysInit(&config);
 
-    if (printRadioVersion)
+    if (config.mPrintRadioVersion)
     {
         printf("%s\n", otPlatRadioGetVersionString(instance));
     }
 
-    if (isDryRun)
+    if (config.mIsDryRun)
     {
         exit(OT_EXIT_SUCCESS);
     }
 
-    otLoggingSetLevel(logLevel);
+    otLoggingSetLevel(config.mLogLevel);
     return instance;
 }
 

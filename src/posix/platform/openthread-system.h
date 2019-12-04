@@ -90,12 +90,17 @@ enum
  */
 typedef struct otPlatformConfig
 {
-    uint64_t    mNodeId;        /// Unique node ID.
-    const char *mInterfaceName; /// Thread network interface name.
-    const char *mRadioFile;     /// Radio file path.
-    const char *mRadioConfig;   /// Radio configurations.
-    uint32_t    mSpeedUpFactor; /// Speed up factor.
-    bool        mResetRadio;    /// Whether to reset RCP when initializing.
+    uint32_t    mSpeedUpFactor;     ///< Speed up factor.
+    uint8_t     mLogLevel;          ///< Debug level of logging.
+    bool        mIsDryRun;          ///< Dry run.
+    bool        mPrintRadioVersion; ///< Whether to print radio firmware version.
+    bool        mIsVerbose;         ///< Whether to print log to stderr.
+
+    uint64_t    mNodeId;        ///< Unique node ID.
+    const char *mInterfaceName; ///< Thread network interface name.
+    const char *mRadioFile;     ///< Radio file path.
+    const char *mRadioConfig;   ///< Radio configurations.
+    bool        mResetRadio;    ///< Whether to reset RCP when initializing.
 } otPlatformConfig;
 
 /**
