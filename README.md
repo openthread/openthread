@@ -25,8 +25,8 @@ OpenThread released by Google is an open-source implementation of the Thread net
 
 ## Trying MQTT-SN client with CLI application example
 
-[Requirements](#Requirements)
-[Build and flash NCP](#Build-and-flash-NCP)
+[Requirements](#Requirements)<br>
+[Build and flash NCP](#Build-and-flash-NCP)<br>
 [Install border router](#Install-border-router)
 
 ### Requirements
