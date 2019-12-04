@@ -40,7 +40,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
-#ifdef OPENTHREAD_TARGET_DARWIN
+#ifdef __APPLE__
 #include <util.h>
 #else
 #include <pty.h>
