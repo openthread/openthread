@@ -1,5 +1,16 @@
 # OpenThread with MQTT-SN client support
 
+* [OpenThread with MQTT-SN client support](#OpenThread-with-MQTT-SN-client-support)<br>
+  * [Contents](#Contents)<br>
+  * [About OpenThread](#About-OpenThread)<br>
+  * [About MQTT-SN](#About-MQTT-SN)<br>
+* [Trying MQTT-SN client with CLI application example](#Trying-MQTT-SN-client-with-CLI-application-example)<br>
+  * [Requirements](#Requirements)<br>
+  * [Build and flash NCP](#Build-and-flash-NCP)<br>
+  * [Install border router](#Install-border-router)
+
+### Overview
+
 **This project is currently in progress. See original repository [openthread-mqttsn](https://github.com/kyberpunk/openthread-mqttsn) for more information**.
 
 This project contains fork of OpenThread SDK which implements MQTT-SN protocol on Thread network. MQTT-SN implementation is part of OpenThread library build. MQTT-SN implementation allows user to send MQTT messages from Thread network to regular MQTT broker in external IP network. This is not official OpenThread project. OpenThread code may be outdated and there can be some bugs or missing features. If you want to use latest OpenThread project please go to [official repository](https://github.com/openthread/openthread).
@@ -14,17 +25,6 @@ This project contains fork of OpenThread SDK which implements MQTT-SN protocol o
 * Periodic keepalive requests
 * Multicast gateway search and advertising
 * Sleep mode for sleeping devices
-
-### Contents
-
-* [OpenThread with MQTT-SN client support](#OpenThread-with-MQTT-SN-client-support)<br>
-  * [Contents](#Contents)<br>
-  * [About OpenThread](#About-OpenThread)<br>
-  * [About MQTT-SN](#About-MQTT-SN)<br>
-* [Trying MQTT-SN client with CLI application example](#Trying-MQTT-SN-client-with-CLI-application-example)<br>
-  * [Requirements](#Requirements)<br>
-  * [Build and flash NCP](#Build-and-flash-NCP)<br>
-  * [Install border router](#Install-border-router)
 
 ### About OpenThread
 
