@@ -7,7 +7,7 @@
 * [Trying MQTT-SN client with CLI application example](#Trying-MQTT-SN-client-with-CLI-application-example)<br>
   * [Requirements](#Requirements)<br>
   * [Build and flash NCP](#Build-and-flash-NCP)<br>
-  * [Install border router](#Install-border-router)
+  * [Install border router with MQTT-SN gateway](#Install-border-router-with-MQTT-SN-gateway)
   * [Build CLI example](#Build-CLI-example)
   * [Connect to the broker](#Connect-to-the-broker)
   * [Subscribe the topic](#Subscribe-the-topic)
@@ -72,7 +72,7 @@ arm-none-eabi-objcopy -O binary ot-ncp-ftd ot-ncp-ftd.bin
 
 Then flash the binary and connect NCP device to border router device.
 
-### Install border router
+### Install border router with MQTT-SN gateway
 
 Border router device provides functionality for routing and  forwarding communication from Thread subnet to other IP networks. In this example border router consists of [OpenThread Border Router](https://openthread.io/guides/border-router) (OTBR) which is capable of routing communication with Thread network and [Eclipse Paho MQTT-SN Gateway](https://github.com/eclipse/paho.mqtt-sn.embedded-c/tree/master/MQTTSNGateway) which transforms MQTT-SN UDP packets to MQTT.
 
@@ -132,6 +132,18 @@ arm-none-eabi-objcopy -O binary ot-cli-ftd ot-cli-ftd.bin
 ```
 
 ### Connect to the broker
+
+Firs of all the CLI device must be commisioned into the Thread network. Follow the the [OTBR commissioning guide](https://openthread.io/guides/border-router/external-commissioning). When device joined the Thread network you can start MQTT-SN service and connect to gateway which is reachable on NAT-64 translated IPv6 address 2018:ff9b::ac12:8.
+
+```bash
+> mqtt start
+Done
+> mqtt connect 2018:ff9b::ac12:8 10000
+Done
+connected
+```
+
+You will see `connected` message when client successfully connected to the gateway. Client stays connected and periodically sends keepalive messages. See more information about `connect` command in [CLI reference](src/cli/README_MQTT.md#connect).
 
 ### Subscribe the topic
 
