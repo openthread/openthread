@@ -8,6 +8,10 @@
   * [Requirements](#Requirements)<br>
   * [Build and flash NCP](#Build-and-flash-NCP)<br>
   * [Install border router](#Install-border-router)
+  * [Build CLI example](#Build-CLI-example)
+  * [Connect to the broker](#Connect-to-the-broker)
+  * [Subscribe the topic](#Subscribe-the-topic)
+  * [Publish a message](#Publish-a-message)
 
 ### Overview
 
@@ -111,3 +115,24 @@ sudo docker run -d --name paho --net test --ip 172.18.0.8 kyberpunk/paho \
 MQTT-SN gateway service address is 172.18.0.8 which can be translated to IPv6 as 2018:ff9b::ac12:8. See more information [here](https://openthread.io/guides/thread-primer/ipv6-addressing).
 
 **IMPORTANT NOTICE: In this network configuration MQTT-SN network does not support SEARCHGW and ADVERTISE messages in Thread network until you configure multicast forwarding.** Alternativelly you can use UDPv6 version of gateway ([kyberpunk/paho6](https://hub.docker.com/repository/docker/kyberpunk/paho6) image) and attach it to OTBR container interface wpan0 (`--net "container:otbr"`).
+
+### Build CLI example
+
+Build the CLI example firmware accordingly to your [platform](https://openthread.io/platforms). For example for KW41Z platform run:
+
+```
+make -f examples/Makefile-kw41z MQTT=1 JOINER=1
+```
+
+Convert fimware to binary and flash your device with `ot-cli-ftd.bin`.
+
+```
+cd /output/kw41z/bin
+arm-none-eabi-objcopy -O binary ot-cli-ftd ot-cli-ftd.bin
+```
+
+### Connect to the broker
+
+### Subscribe the topic
+
+### Publish a message
