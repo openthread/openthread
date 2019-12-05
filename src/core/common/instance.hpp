@@ -594,10 +594,12 @@ template <> inline Coap::CoapSecure &Instance::Get(void)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_MQTTSN_ENABLE
 template <> inline Mqttsn::MqttsnClient &Instance::Get(void)
 {
     return mThreadNetif.mMqttsnClient;
 }
+#endif
 
 template <> inline MeshCoP::ActiveDataset &Instance::Get(void)
 {
