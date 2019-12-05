@@ -41,7 +41,6 @@ class OT_Sniffer(ISniffer):
         try:
             self.channel = kwargs.get('channel')
             self.port = kwargs.get('addressofDevice')
-            self.baudrate = None
             self.subprocess = None
             self.is_active = False
 
@@ -72,39 +71,32 @@ class OT_Sniffer(ISniffer):
         @param captureFileLocation : string : Full path with the filename with extension is passed.
         """
         try:
-            # e.g. COM6:460800
-            self.baudrate = int(self.port.split(':')[1])
-
             # start sniffer
-            if self.baudrate is not None:
-                self.setChannel(channelToCapture)
-                p_where = subprocess.Popen('py -3 -c "import sys; print(sys.executable)"', stdout=subprocess.PIPE, shell=True)
-                # python_exe: e.g. C:\Python37\python.exe
-                python_exe = p_where.stdout.readline().strip()
+            self.setChannel(channelToCapture)
+            p_where = subprocess.Popen('py -3 -c "import sys; print(sys.executable)"', stdout=subprocess.PIPE, shell=True)
+            # python_exe: e.g. C:\Python37\python.exe
+            python_exe = p_where.stdout.readline().strip()
 
-                if python_exe.endswith(".exe"):
-                    # sniffer_py: e.g. C:\Python37\Scripts\sniffer.py
-                    sniffer_py = str(os.path.dirname(python_exe)) + '\\Scripts\\sniffer.py'
+            if python_exe.endswith(".exe"):
+                # sniffer_py: e.g. C:\Python37\Scripts\sniffer.py
+                sniffer_py = str(os.path.dirname(python_exe)) + '\\Scripts\\sniffer.py'
 
-                    cmd = [
-                        python_exe,
-                        sniffer_py,
-                        '-c',
-                        str(self.channel),
-                        '-u',
-                        str(self.port),
-                        '-b',
-                        str(self.baudrate),
-                        '--crc',
-                        '-o',
-                        captureFileLocation,
-                    ]
-                    self.is_active = True
-                    ModuleHelper.WriteIntoDebugLogger('OT_Sniffer: [cmd] --> %s' % str(cmd))
-                    self.subprocess = subprocess.Popen(cmd)
-
-            else:
-                ModuleHelper.WriteIntoDebugLogger('OT_Sniffer: [startSniffer] --> Wrong baudrate!')
+                cmd = [
+                    python_exe,
+                    sniffer_py,
+                    '-c',
+                    str(self.channel),
+                    '-u',
+                    str(self.port.split(':')[0]),
+                    '-b',
+                    str(self.port.split(':')[1]),
+                    '--crc',
+                    '-o',
+                    captureFileLocation,
+                ]
+                self.is_active = True
+                ModuleHelper.WriteIntoDebugLogger('OT_Sniffer: [cmd] --> %s' % str(cmd))
+                self.subprocess = subprocess.Popen(cmd)
 
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('OT_Sniffer: [startSniffer] --> Error: ' + str(e))
