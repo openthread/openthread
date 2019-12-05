@@ -44,7 +44,6 @@ BuildJobs                                                 ?= 10
 configure_OPTIONS                                          = \
     --enable-cli                                             \
     --enable-ftd                                             \
-    --enable-mtd                                             \
     --enable-ncp                                             \
     --enable-radio-only                                      \
     --with-examples=cc1352                                   \

@@ -42,12 +42,12 @@ OBJCOPY                         = arm-none-eabi-objcopy
 BuildJobs                      ?= 10
 GCCVersion                      = $(shell expr `$(CC) -dumpversion | cut -f1 -d.`)
 
+RADIO_ONLY                     ?= 1
+
 configure_OPTIONS                                 = \
     --enable-cli                                    \
     --enable-ftd                                    \
-    --enable-mtd                                    \
     --enable-ncp                                    \
-    --enable-radio-only                             \
     --enable-linker-map                             \
     --with-examples=qpg6095                         \
     MBEDTLS_CPPFLAGS="$(QPG6095_MBEDTLS_CPPFLAGS)"  \

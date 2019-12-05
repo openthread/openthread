@@ -58,8 +58,10 @@ LOG_OUTPUT          ?= APP
 endif
 LINK_RAW            ?= 0
 MAC_FILTER          ?= 0
+MTD                 ?= 1
 MTD_NETDIAG         ?= 0
 PLATFORM_UDP        ?= 0
+RADIO_ONLY          ?= 0
 REFERENCE_DEVICE    ?= 0
 SERVICE             ?= 0
 SETTINGS_RAM        ?= 0
@@ -183,12 +185,24 @@ ifeq ($(MAC_FILTER),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1
 endif
 
+ifeq ($(MTD),1)
+configure_OPTIONS               += --enable-mtd=yes
+else
+configure_OPTIONS               += --enable-mtd=no
+endif
+
 ifeq ($(MTD_NETDIAG),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE=1
 endif
 
 ifeq ($(PLATFORM_UDP),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE=1
+endif
+
+ifeq ($(RADIO_ONLY),1)
+configure_OPTIONS               += --enable-radio-only=yes
+else
+configure_OPTIONS               += --enable-radio-only=no
 endif
 
 # Enable features only required for reference device during certification.

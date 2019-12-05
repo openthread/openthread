@@ -48,7 +48,6 @@ BuildJobs                      ?= 9
 configure_OPTIONS               = \
     --enable-cli                  \
     --enable-ftd                  \
-    --enable-mtd                  \
     --with-examples=$(PPREFIX)    \
     $(NULL)
 

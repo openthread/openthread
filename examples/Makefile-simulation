@@ -55,7 +55,9 @@ JOINER                         ?= 1
 LEGACY                         ?= 1
 LINK_RAW                       ?= 1
 MAC_FILTER                     ?= 1
+MTD                            ?= 1
 MTD_NETDIAG                    ?= 1
+RADIO_ONLY                     ?= 1
 REFERENCE_DEVICE               ?= 1
 SERVICE                        ?= 1
 SNTP_CLIENT                    ?= 1
@@ -71,9 +73,7 @@ COMMONCFLAGS                   := \
 configure_OPTIONS               = \
     --enable-cli                  \
     --enable-ftd                  \
-    --enable-mtd                  \
     --enable-ncp                  \
-    --enable-radio-only           \
     --with-examples=simulation    \
     $(NULL)
 

@@ -41,12 +41,12 @@ OBJCOPY                         = arm-none-eabi-objcopy
 
 BuildJobs                      ?= 10
 
+RADIO_ONLY                     ?= 1
+
 configure_OPTIONS               = \
     --enable-cli                  \
     --enable-ftd                  \
-    --enable-mtd                  \
     --enable-ncp                  \
-    --enable-radio-only           \
     --enable-linker-map           \
     --with-examples=kw41z         \
     $(NULL)

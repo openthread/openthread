@@ -41,6 +41,7 @@ OBJCOPY                         = arm-none-eabi-objcopy
 
 BuildJobs                      ?= 10
 
+RADIO_ONLY                     ?= 1
 
 # Board setup
 
@@ -59,9 +60,7 @@ endif
 configure_OPTIONS               = \
     --enable-cli                  \
     --enable-ftd                  \
-    --enable-mtd                  \
     --enable-ncp                  \
-    --enable-radio-only           \
     --enable-linker-map           \
     --with-examples=samr21        \
     MBEDTLS_CPPFLAGS="$(SAMR21_MBEDTLS_CPPFLAGS)" \

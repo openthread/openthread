@@ -51,7 +51,6 @@ endif
 
 configure_OPTIONS                                 = \
     --enable-ftd                                    \
-    --enable-mtd                                    \
     --enable-linker-map                             \
     --with-examples=nrf52840                        \
     $(NULL)
