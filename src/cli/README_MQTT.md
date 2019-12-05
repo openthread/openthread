@@ -54,7 +54,7 @@ Done
 
 Usage: `mqtt connect <gateway-ip> <gateway-port>`
 
-Connect to MQTT-SN gateway.
+Connect to MQTT-SN gateway. Client is connected with default connection settings. Default keepalive time is 30 seconds, message timeout threshold 10 seconds and failed messages retransmission count is 3 times.
 
 * gateway-ip: IPv6 address of MQTT-SN gateway.
 * gateway-port: Port number of MQTT-SN service.
