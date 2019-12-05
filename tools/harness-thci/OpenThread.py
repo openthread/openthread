@@ -60,6 +60,13 @@ LINESEPX = re.compile(r'\r\n|\n')
 """regex: used to split lines"""
 
 
+def lstrip_0x(s):
+    if s.startswith('0x'):
+        s = s[2:]
+
+    return s
+
+
 class OpenThread(IThci):
     LOWEST_POSSIBLE_PARTATION_ID = 0x1
     LINK_QUALITY_CHANGE_TIME = 100
@@ -503,7 +510,7 @@ class OpenThread(IThci):
             IPv6 address dotted-quad format
         """
         prefix1 = strIp6Prefix.rstrip('L')
-        prefix2 = prefix1.lstrip('0x')
+        prefix2 = lstrip_0x(prefix1)
         hexPrefix = str(prefix2).ljust(16, '0')
         hexIter = iter(hexPrefix)
         finalMac = ':'.join(
@@ -1432,7 +1439,7 @@ class OpenThread(IThci):
             euiStr = euiStr.rstrip('L')
             address64 = ''
             if '0x' in euiStr:
-                address64 = euiStr.lstrip('0x')
+                address64 = lstrip_0x(euiStr)
                 # prepend 0 at the beginning
                 if len(address64) < 16:
                     address64 = address64.zfill(16)
@@ -2410,7 +2417,7 @@ class OpenThread(IThci):
                 cmd += Addr
 
             if len(TLVs) != 0:
-                tlvs = ''.join(hex(tlv).lstrip('0x').zfill(2) for tlv in TLVs)
+                tlvs = ''.join('%02x' % tlv for tlv in TLVs)
                 cmd += ' binary '
                 cmd += tlvs
 
@@ -2509,7 +2516,7 @@ class OpenThread(IThci):
                     ModuleHelper.Default_XpanId,
                     ModuleHelper.Default_NwkName,
                 )
-                pskc = hex(stretchedPskc).rstrip('L').lstrip('0x')
+                pskc = '%x' % stretchedPskc
 
                 if len(pskc) < 32:
                     pskc = pskc.zfill(32)
@@ -2605,7 +2612,7 @@ class OpenThread(IThci):
                 cmd += Addr
 
             if len(TLVs) != 0:
-                tlvs = ''.join(hex(tlv).lstrip('0x').zfill(2) for tlv in TLVs)
+                tlvs = ''.join('%02x' % tlv for tlv in TLVs)
                 cmd += ' binary '
                 cmd += tlvs
 
@@ -2707,7 +2714,7 @@ class OpenThread(IThci):
             cmd = 'commissioner mgmtget'
 
             if len(TLVs) != 0:
-                tlvs = ''.join(hex(tlv).lstrip('0x').zfill(2) for tlv in TLVs)
+                tlvs = ''.join('%02x' % tlv for tlv in TLVs)
                 cmd += ' binary '
                 cmd += tlvs
 
@@ -2761,7 +2768,7 @@ class OpenThread(IThci):
 
             if xChannelTlv is not None:
                 cmd += ' binary '
-                cmd += '000300' + hex(xChannelTlv).lstrip('0x').zfill(4)
+                cmd += '000300' + '%04x' % xChannelTlv
 
             print(cmd)
 

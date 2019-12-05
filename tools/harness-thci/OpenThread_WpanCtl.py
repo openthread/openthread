@@ -67,6 +67,13 @@ WPANCTL_CMD = 'sudo wpanctl -I ' + WPAN_INTERFACE + ' '
 LINESEPX = re.compile(r'\r\n|\n')
 
 
+def lstrip_0x(s):
+    if s.startswith('0x'):
+        s = s[2:]
+
+    return s
+
+
 class OpenThread_WpanCtl(IThci):
     LOWEST_POSSIBLE_PARTATION_ID = 0x1
     LINK_QUALITY_CHANGE_TIME = 100
@@ -663,7 +670,7 @@ class OpenThread_WpanCtl(IThci):
             IPv6 address dotted-quad format
         """
         prefix1 = strIp6Prefix.rstrip('L')
-        prefix2 = prefix1.lstrip('0x')
+        prefix2 = lstrip_0x(prefix1)
         hexPrefix = str(prefix2).ljust(16, '0')
         hexIter = iter(hexPrefix)
         finalMac = ':'.join(
@@ -1104,9 +1111,7 @@ class OpenThread_WpanCtl(IThci):
             )[0]
         )
         mlprefix = prefix.split('/')[0]
-        rloc16 = self.__sendCommand(WPANCTL_CMD + 'getprop -v Thread:RLOC16')[
-            0
-        ].lstrip('0x')
+        rloc16 = lstrip_0x(self.__sendCommand(WPANCTL_CMD + 'getprop -v Thread:RLOC16')[0])
         print('prefix: %s' % prefix)
         print('mlprefix: %s ' % mlprefix)
         print('rloc16: %s' % rloc16)
@@ -2617,7 +2622,7 @@ class OpenThread_WpanCtl(IThci):
             cmd = WPANCTL_CMD + 'dataset mgmt-get-active'
 
             if len(TLVs) != 0:
-                tlvs = ''.join(hex(tlv).lstrip('0x').zfill(2) for tlv in TLVs)
+                tlvs = ''.join('%02x' % tlv for tlv in TLVs)
                 setTLVCmd = WPANCTL_CMD + 'setprop Dataset:RawTlvs ' + tlvs
                 if self.__sendCommand(setTLVCmd)[0] == 'Fail':
                     return False
@@ -2678,9 +2683,7 @@ class OpenThread_WpanCtl(IThci):
                 return False
 
             if listActiveTimestamp is not None:
-                sActiveTimestamp = str(hex(listActiveTimestamp[0]))
-                if len(sActiveTimestamp) < 18:
-                    sActiveTimestamp = sActiveTimestamp.lstrip('0x').zfill(16)
+                sActiveTimestamp = '%016x' % listActiveTimestamp[0]
                 setActiveTimeCmd = (
                     WPANCTL_CMD
                     + 'setprop Dataset:ActiveTimestamp '
@@ -2767,7 +2770,7 @@ class OpenThread_WpanCtl(IThci):
                     ModuleHelper.Default_XpanId,
                     ModuleHelper.Default_NwkName,
                 )
-                pskc = hex(stretchedPskc).rstrip('L').lstrip('0x')
+                pskc = '%x' % stretchedPskc
 
                 if len(pskc) < 32:
                     pskc = pskc.zfill(32)
@@ -2863,7 +2866,7 @@ class OpenThread_WpanCtl(IThci):
             cmd = WPANCTL_CMD + 'dataset mgmt-get-pending'
 
             if len(TLVs) != 0:
-                tlvs = ''.join(hex(tlv).lstrip('0x').zfill(2) for tlv in TLVs)
+                tlvs = ''.join('%02x' % tlv for tlv in TLVs)
                 setTLVCmd = WPANCTL_CMD + 'setprop Dataset:RawTlvs ' + tlvs
                 if self.__sendCommand(setTLVCmd)[0] == 'Fail':
                     return False
@@ -2916,9 +2919,7 @@ class OpenThread_WpanCtl(IThci):
                 return False
 
             if listPendingTimestamp is not None:
-                sActiveTimestamp = str(hex(listPendingTimestamp[0]))
-                if len(sActiveTimestamp) < 18:
-                    sActiveTimestamp = sActiveTimestamp.lstrip('0x').zfill(16)
+                sActiveTimestamp = '%016x' % listPendingTimestamp[0]
                 setPendingTimeCmd = (
                     WPANCTL_CMD
                     + 'setprop Dataset:PendingTimestamp '
@@ -2928,9 +2929,7 @@ class OpenThread_WpanCtl(IThci):
                     return False
 
             if listActiveTimestamp is not None:
-                sActiveTimestamp = str(hex(listActiveTimestamp[0]))
-                if len(sActiveTimestamp) < 18:
-                    sActiveTimestamp = sActiveTimestamp.lstrip('0x').zfill(16)
+                sActiveTimestamp = '%016x' % listActiveTimestamp[0]
                 setActiveTimeCmd = (
                     WPANCTL_CMD
                     + 'setprop Dataset:ActiveTimestamp '
@@ -3012,7 +3011,7 @@ class OpenThread_WpanCtl(IThci):
             print(TLVs)
 
             if len(TLVs) != 0:
-                tlvs = ''.join(hex(tlv).lstrip('0x').zfill(2) for tlv in TLVs)
+                tlvs = ''.join('%02x' % tlv for tlv in TLVs)
                 cmd += tlvs
 
             print(cmd)
@@ -3057,9 +3056,7 @@ class OpenThread_WpanCtl(IThci):
             elif xCommissionerSessionID is None:
                 # use original session id
                 if self.isActiveCommissioner is True:
-                    cmd += '0b02' + self.__getCommissionerSessionId().lstrip(
-                        '0x'
-                    )
+                    cmd += '0b02' + lstrip_0x(self.__getCommissionerSessionId())
                 else:
                     pass
 
@@ -3074,7 +3071,7 @@ class OpenThread_WpanCtl(IThci):
                 cmd += '0902' + str(hex(xBorderRouterLocator))
 
             if xChannelTlv is not None:
-                cmd += '000300' + hex(xChannelTlv).lstrip('0x').zfill(4)
+                cmd += '000300' + '%04x' % xChannelTlv
 
             print(cmd)
 
