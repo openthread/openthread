@@ -145,6 +145,12 @@ connected
 
 You will see `connected` message when client successfully connected to the gateway. Client stays connected and periodically sends keepalive messages. See more information about `connect` command in [CLI reference](src/cli/README_MQTT.md#connect).
 
+You can also see log of messages forwarded by MQTT-SN gateway:
+
+```
+docker logs paho
+```
+
 ### Subscribe the topic
 
 ### Publish a message
