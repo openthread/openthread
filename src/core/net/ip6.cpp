@@ -460,7 +460,15 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto 
     header.SetDscp(PriorityToDscp(aMessage.GetPriority()));
     header.SetPayloadLength(payloadLength);
     header.SetNextHeader(aIpProto);
-    header.SetHopLimit(aMessageInfo.mHopLimit ? aMessageInfo.mHopLimit : static_cast<uint8_t>(kDefaultHopLimit));
+
+    if (aMessageInfo.GetHopLimit() != 0 || aMessageInfo.ShouldAllowZeroHopLimit())
+    {
+        header.SetHopLimit(aMessageInfo.GetHopLimit());
+    }
+    else
+    {
+        header.SetHopLimit(static_cast<uint8_t>(kDefaultHopLimit));
+    }
 
     if (aMessageInfo.GetSockAddr().IsUnspecified() || aMessageInfo.GetSockAddr().IsMulticast())
     {

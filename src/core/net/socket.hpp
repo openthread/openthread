@@ -183,6 +183,15 @@ public:
     bool IsHostInterface(void) const { return mIsHostInterface; }
 
     /**
+     * This method indicates whether or not to apply hop limit 0.
+     *
+     * @retval TRUE  if applying hop limit 0 when `mHopLimit` field is 0.
+     * @retval FALSE if applying default `OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT` when `mHopLimit` field is 0.
+     *
+     */
+    bool ShouldAllowZeroHopLimit(void) const { return mAllowZeroHopLimit; }
+
+    /**
      * This method sets whether the peer is via the host interface.
      *
      * @param[in]  aIsHost  TRUE if the peer is via the host interface, FALSE otherwise.
