@@ -53,7 +53,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [panid](#panid)
 * [parent](#parent)
 * [parentpriority](#parentpriority)
-* [ping](#ping-ipaddr-size-count-interval)
+* [ping](#ping-ipaddr-size-count-interval-hoplimit)
 * [pollperiod](#pollperiod-pollperiod)
 * [prefix](#prefix-add-prefix-pvdcsr-prf)
 * [promiscuous](#promiscuous)
@@ -937,17 +937,20 @@ Set the assigned parent priority value: 1, 0, -1 or -2.
 Done
 ```
 
-### ping \<ipaddr\> [size] [count] [interval]
+### ping \<ipaddr\> [size] [count] [interval] [hoplimit]
 
 Send an ICMPv6 Echo Request.
 
 * size: The number of data bytes to be sent.
 * count: The number of ICMPv6 Echo Requests to be sent.
 * interval: The interval between two consecutive ICMPv6 Echo Requests in seconds. The value may have fractional form, for example `0.5`.
+* hoplimit: The hoplimit of ICMPv6 Echo Request to be sent.
 
 ```bash
 > ping fdde:ad00:beef:0:558:f56b:d688:799
 16 bytes from fdde:ad00:beef:0:558:f56b:d688:799: icmp_seq=1 hlim=64 time=28ms
+
+> ping ff05::1 100 1 1 1
 ```
 
 ### ping stop
