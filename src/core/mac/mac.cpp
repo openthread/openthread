@@ -1479,7 +1479,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
     mCounters.mRxTotal++;
 
-    VerifyOrExit(error == OT_ERROR_NONE);
+    SuccessOrExit(error);
     VerifyOrExit(aFrame != NULL, error = OT_ERROR_NO_FRAME_RECEIVED);
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
 
@@ -1527,10 +1527,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
     case Address::kTypeShort:
         otLogDebgMac("Received frame from short address 0x%04x", srcaddr.GetShort());
 
-        if (neighbor == NULL)
-        {
-            ExitNow(error = OT_ERROR_UNKNOWN_NEIGHBOR);
-        }
+        VerifyOrExit(neighbor != NULL, error = OT_ERROR_UNKNOWN_NEIGHBOR);
 
         srcaddr.SetExtended(neighbor->GetExtAddress());
 
@@ -1539,10 +1536,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
     case Address::kTypeExtended:
 
         // Duplicate Address Protection
-        if (srcaddr.GetExtended() == GetExtAddress())
-        {
-            ExitNow(error = OT_ERROR_INVALID_SOURCE_ADDRESS);
-        }
+        VerifyOrExit(srcaddr.GetExtended() != GetExtAddress(), error = OT_ERROR_INVALID_SOURCE_ADDRESS);
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
