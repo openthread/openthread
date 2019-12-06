@@ -1333,7 +1333,7 @@ void Mac::HandleTimer(void)
 otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor)
 {
     KeyManager &      keyManager = Get<KeyManager>();
-    otError           error      = OT_ERROR_NONE;
+    otError           error      = OT_ERROR_SECURITY;
     uint8_t           securityLevel;
     uint8_t           keyIdMode;
     uint32_t          frameCounter;
@@ -1346,23 +1346,24 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
     const ExtAddress *extAddress;
     Crypto::AesCcm    aesCcm;
 
-    VerifyOrExit(aFrame.GetSecurityEnabled());
+    VerifyOrExit(aFrame.GetSecurityEnabled(), error = OT_ERROR_NONE);
 
     aFrame.GetSecurityLevel(securityLevel);
     aFrame.GetFrameCounter(frameCounter);
-    otLogDebgMac("Frame counter %u", frameCounter);
+    otLogDebgMac("Rx security - frame counter %u", frameCounter);
 
     aFrame.GetKeyIdMode(keyIdMode);
 
     switch (keyIdMode)
     {
     case Frame::kKeyIdMode0:
-        VerifyOrExit((macKey = keyManager.GetKek()) != NULL, error = OT_ERROR_SECURITY);
+        macKey = keyManager.GetKek();
+        VerifyOrExit(macKey != NULL);
         extAddress = &aSrcAddr.GetExtended();
         break;
 
     case Frame::kKeyIdMode1:
-        VerifyOrExit(aNeighbor != NULL, error = OT_ERROR_SECURITY);
+        VerifyOrExit(aNeighbor != NULL);
 
         aFrame.GetKeyId(keyid);
         keyid--;
@@ -1387,7 +1388,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
         }
         else
         {
-            ExitNow(error = OT_ERROR_SECURITY);
+            ExitNow();
         }
 
         // If the frame is from a neighbor not in valid state (e.g., it is from a child being
@@ -1397,21 +1398,14 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
 
         if (aNeighbor->IsStateValid())
         {
-            if (keySequence < aNeighbor->GetKeySequence())
+            VerifyOrExit(keySequence >= aNeighbor->GetKeySequence());
+
+            if (keySequence == aNeighbor->GetKeySequence())
             {
-                ExitNow(error = OT_ERROR_SECURITY);
-            }
-            else if (keySequence == aNeighbor->GetKeySequence())
-            {
-                if ((frameCounter + 1) < aNeighbor->GetLinkFrameCounter())
-                {
-                    ExitNow(error = OT_ERROR_SECURITY);
-                }
-                else if ((frameCounter + 1) == aNeighbor->GetLinkFrameCounter())
-                {
-                    // drop duplicated frames
-                    ExitNow(error = OT_ERROR_DUPLICATED);
-                }
+                // If frame counter is one off, then frame is a duplicate.
+                VerifyOrExit((frameCounter + 1) != aNeighbor->GetLinkFrameCounter(), error = OT_ERROR_DUPLICATED);
+
+                VerifyOrExit(frameCounter >= aNeighbor->GetLinkFrameCounter());
             }
         }
 
@@ -1425,7 +1419,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
         break;
 
     default:
-        ExitNow(error = OT_ERROR_SECURITY);
+        ExitNow();
         break;
     }
 
@@ -1434,8 +1428,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
 
     aesCcm.SetKey(macKey, 16);
 
-    error = aesCcm.Init(aFrame.GetHeaderLength(), aFrame.GetPayloadLength(), tagLength, nonce, sizeof(nonce));
-    VerifyOrExit(error == OT_ERROR_NONE, error = OT_ERROR_SECURITY);
+    SuccessOrExit(aesCcm.Init(aFrame.GetHeaderLength(), aFrame.GetPayloadLength(), tagLength, nonce, sizeof(nonce)));
 
     aesCcm.Header(aFrame.GetHeader(), aFrame.GetHeaderLength());
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
@@ -1448,10 +1441,10 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
     aesCcm.Finalize(tag, &tagLength);
 
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    VerifyOrExit(memcmp(tag, aFrame.GetFooter(), tagLength) == 0, error = OT_ERROR_SECURITY);
+    VerifyOrExit(memcmp(tag, aFrame.GetFooter(), tagLength) == 0);
 #endif
 
-    if ((keyIdMode == Frame::kKeyIdMode1) && (aNeighbor->IsStateValid()))
+    if ((keyIdMode == Frame::kKeyIdMode1) && aNeighbor->IsStateValid())
     {
         if (aNeighbor->GetKeySequence() != keySequence)
         {
@@ -1466,6 +1459,8 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
             keyManager.SetCurrentKeySequence(keySequence);
         }
     }
+
+    error = OT_ERROR_NONE;
 
 exit:
     return error;
