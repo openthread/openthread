@@ -1473,9 +1473,6 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
     PanId     panid;
     Neighbor *neighbor;
     otError   error = aError;
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-    int8_t rssi = OT_MAC_FILTER_FIXED_RSS_DISABLED;
-#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
     mCounters.mRxTotal++;
 
@@ -1539,17 +1536,24 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
         VerifyOrExit(srcaddr.GetExtended() != GetExtAddress(), error = OT_ERROR_INVALID_SOURCE_ADDRESS);
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-
-        // Source filter Processing. Check if filtered out by whitelist or blacklist.
-        SuccessOrExit(error = mFilter.Apply(srcaddr.GetExtended(), rssi));
-
-        // override with the rssi in setting
-        if (rssi != OT_MAC_FILTER_FIXED_RSS_DISABLED)
         {
-            aFrame->SetRssi(rssi);
-        }
+            int8_t fixedRss;
 
-#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+            SuccessOrExit(error = mFilter.Apply(srcaddr.GetExtended(), fixedRss));
+
+            if (fixedRss != Filter::kFixedRssDisabled)
+            {
+                aFrame->SetRssi(fixedRss);
+
+                // Clear any previous link info to ensure the fixed RSSI
+                // value takes effect quickly.
+                if (neighbor != NULL)
+                {
+                    neighbor->GetLinkInfo().Clear();
+                }
+            }
+        }
+#endif
 
         break;
     }
@@ -1601,16 +1605,6 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
     if (neighbor != NULL)
     {
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-
-        // make assigned rssi to take effect quickly
-        if (rssi != OT_MAC_FILTER_FIXED_RSS_DISABLED)
-        {
-            neighbor->GetLinkInfo().Clear();
-        }
-
-#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-
         neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), aFrame->GetRssi());
 
         if (aFrame->GetSecurityEnabled())
