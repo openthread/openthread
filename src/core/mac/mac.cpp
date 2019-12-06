@@ -105,7 +105,7 @@ Mac::Mac(Instance &aInstance)
 #if OPENTHREAD_FTD
     , mMaxFrameRetriesIndirect(kDefaultMaxFrameRetriesIndirect)
 #endif
-    , mActiveScanHandler(NULL) /* Initialize `mActiveScanHandler` and `mEnergyScanHandler` union */
+    , mActiveScanHandler(NULL) // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
     , mSubMac(aInstance)
     , mOperationTask(aInstance, &Mac::HandleOperationTask, this)
     , mTimer(aInstance, &Mac::HandleTimer, this)
@@ -1035,7 +1035,6 @@ void Mac::BeginTransmit(void)
 
     if (applyTransmitSecurity)
     {
-        // Security Processing
         ProcessTransmitSecurity(sendFrame, processTransmitAesCcm);
     }
 
@@ -1370,19 +1369,16 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
 
         if (keyid == (keyManager.GetCurrentKeySequence() & 0x7f))
         {
-            // same key index
             keySequence = keyManager.GetCurrentKeySequence();
             macKey      = keyManager.GetCurrentMacKey();
         }
         else if (keyid == ((keyManager.GetCurrentKeySequence() - 1) & 0x7f))
         {
-            // previous key index
             keySequence = keyManager.GetCurrentKeySequence() - 1;
             macKey      = keyManager.GetTemporaryMacKey(keySequence);
         }
         else if (keyid == ((keyManager.GetCurrentKeySequence() + 1) & 0x7f))
         {
-            // next key index
             keySequence = keyManager.GetCurrentKeySequence() + 1;
             macKey      = keyManager.GetTemporaryMacKey(keySequence);
         }
@@ -1434,7 +1430,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     aesCcm.Payload(aFrame.GetPayload(), aFrame.GetPayload(), aFrame.GetPayloadLength(), false);
 #else
-    // for fuzz tests, execute AES but do not alter the payload
+    // For fuzz tests, execute AES but do not alter the payload
     uint8_t fuzz[OT_RADIO_FRAME_MAX_SIZE];
     aesCcm.Payload(fuzz, aFrame.GetPayload(), aFrame.GetPayloadLength(), false);
 #endif
@@ -1528,7 +1524,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
         srcaddr.SetExtended(neighbor->GetExtAddress());
 
-        // fall through
+        // Fall through
 
     case Address::kTypeExtended:
 
@@ -1558,19 +1554,15 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
         break;
     }
 
-    // Increment counters
     if (dstaddr.IsBroadcast())
     {
-        // Broadcast frame
         mCounters.mRxBroadcast++;
     }
     else
     {
-        // Unicast frame
         mCounters.mRxUnicast++;
     }
 
-    // Security Processing
     error = ProcessReceiveSecurity(*aFrame, srcaddr, neighbor);
 
     switch (error)
@@ -1638,7 +1630,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
             ExitNow();
         }
 
-        // Fall-through
+        // Fall through
 
     case kOperationEnergyScan:
 
@@ -1930,7 +1922,7 @@ uint8_t Mac::GetTimeIeOffset(const Frame &aFrame)
 exit:
     return offset;
 }
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#endif
 
 } // namespace Mac
 } // namespace ot
