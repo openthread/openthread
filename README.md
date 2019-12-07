@@ -24,7 +24,8 @@ This project contains fork of OpenThread SDK which implements MQTT-SN protocol o
 
 **Provided MQTT-SN client implements most important features specified by protocol MQTT-SN v1.2:**
 
-* Publish and subscribe with QoS level 0, 1, 2 and -1
+* Publish and subscribe with QoS level 0, 1, 2
+* Easy publish with QoS level -1 without maintaining connection
 * Periodic keepalive requests
 * Multicast gateway search and advertising
 * Sleep mode for sleeping devices
