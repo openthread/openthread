@@ -12,10 +12,9 @@
   * [Connect to the broker](#Connect-to-the-broker)
   * [Subscribe the topic](#Subscribe-the-topic)
   * [Publish a message](#Publish-a-message)
+* [MQTT-SN source files](#MQTT-SN-source-files)
 
 ### Overview
-
-**This project is currently in progress. See original repository [openthread-mqttsn](https://github.com/kyberpunk/openthread-mqttsn) for more information**.
 
 This project contains fork of OpenThread SDK which implements MQTT-SN protocol on Thread network. MQTT-SN implementation is part of OpenThread library build. MQTT-SN implementation allows user to send MQTT messages from Thread network to regular MQTT broker in external IP network. This is not official OpenThread project. OpenThread code may be outdated and there can be some bugs or missing features. If you want to use latest OpenThread project please go to [official repository](https://github.com/openthread/openthread).
 
@@ -163,8 +162,8 @@ subscribed topic id: 1
 
 You can test subscription by sending test message with `mosquitto_pub` from mosquitto Docker container.
 
-```
-sudo docker exec -it mosquitto mosquitto_pub -h 127.0.0.1 -t sensors -m "{\"temperature\":24.0}"
+```bash
+$ sudo docker exec -it mosquitto mosquitto_pub -h 127.0.0.1 -t sensors -m "{\"temperature\":24.0}"
 ```
 
 Following output should appean on CLI device:
@@ -177,3 +176,24 @@ received publish from topic id 1:
 See more information about `subscribe` command in [CLI reference](src/cli/README_MQTT.md#subscribe).
 
 ### Publish a message
+
+Publish a message with publish `command`. To determine the topic id `register` command should be used:
+
+```bash
+> mqtt register sensors
+registered topic id:1
+> mqtt publish 1 {"temperature":24.0}
+Done
+published
+```
+
+`published` message should be written to CLI output when publish succeeded. You can test reception of PUBLISH message with `mosquitto_sub` command from mosquitto Docker container.
+
+```bash
+$ sudo docker exec -it mosquitto mosquitto_sub -h 127.0.0.1 -t sensors
+{"temperature":24.0}
+```
+
+See more information about `publish` command in [CLI reference](src/cli/README_MQTT.md#publish).
+
+## MQTT-SN source files
