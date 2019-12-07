@@ -153,4 +153,27 @@ docker logs paho
 
 ### Subscribe the topic
 
+After successful connection can CLI device subscribe to MQTT topic with `subscribe` command.
+
+```bash
+> mqtt subscribe sensors
+Done
+subscribed topic id: 1
+```
+
+You can test subscription by sending test message with `mosquitto_pub` from mosquitto Docker container.
+
+```
+sudo docker exec -it mosquitto mosquitto_pub -h 127.0.0.1 -t sensors -m "{\"temperature\":24.0}"
+```
+
+Following output should appean on CLI device:
+
+```bash
+received publish from topic id 1:
+{"temperature":24.0}
+```
+
+See more information about `subscribe` command in [CLI reference](src/cli/README_MQTT.md#subscribe).
+
 ### Publish a message
