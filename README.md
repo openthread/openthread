@@ -197,3 +197,12 @@ $ sudo docker exec -it mosquitto mosquitto_sub -h 127.0.0.1 -t sensors
 See more information about `publish` command in [CLI reference](src/cli/README_MQTT.md#publish).
 
 ## MQTT-SN source files
+[third_party/paho](third_party/paho)<br>
+[src/core/mqttsn/mqttsn_client.cpp](src/core/mqttsn/mqttsn_client.cpp)<br>
+[src/core/mqttsn/mqttsn_client.hpp](src/core/mqttsn/mqttsn_client.hpp)<br>
+[src/core/mqttsn/mqttsn_serializer.cpp](src/core/mqttsn/mqttsn_serializer.cpp)<br>
+[src/core/mqttsn/mqttsn_serializer.hpp](src/core/mqttsn/mqttsn_serializer.hpp)<br>
+[include/openthread/mqttsn.h](include/openthread/mqttsn.h)<br>
+[src/core/api/mqttsn_api.cpp](src/core/api/mqttsn_api.cpp)<br>
+[src/cli/cli_mqtt.cpp](src/cli/cli_mqtt.cpp)<br>
+[src/cli/cli_mqtt.hpp](src/cli/cli_mqtt.hpp)
