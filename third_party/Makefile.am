@@ -86,6 +86,12 @@ SUBDIRS                                += \
     $(NULL)
 endif
 
+if OPENTHREAD_EXAMPLES_CC1352
+SUBDIRS                                += \
+    paho                                  \
+    $(NULL)
+endif
+
 if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 SUBDIRS                                += \
     mbedtls                               \
