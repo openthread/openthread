@@ -227,7 +227,7 @@ otError Ip6::AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInf
     MessageInfo                messageInfo(aMessageInfo);
 
     // Use IP-in-IP encapsulation (RFC2473) and ALL_MPL_FORWARDERS address.
-    memset(&messageInfo.GetPeerAddr(), 0, sizeof(Address));
+    messageInfo.GetPeerAddr().Clear();
     messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xff03);
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(0x00fc);
 
@@ -1298,25 +1298,33 @@ exit:
 
 const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
 {
-    Address *                  destination = &aMessageInfo.GetPeerAddr();
-    const NetifUnicastAddress *rvalAddr    = NULL;
-    const Address *            candidateAddr;
-    uint8_t                    rvalPrefixMatched = 0;
+    Address *                  destination       = &aMessageInfo.GetPeerAddr();
     uint8_t                    destinationScope  = destination->GetScope();
+    const NetifUnicastAddress *rvalAddr          = NULL;
+    uint8_t                    rvalPrefixMatched = 0;
 
     for (const NetifUnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr; addr = addr->GetNext())
     {
-        uint8_t overrideScope;
-        uint8_t candidatePrefixMatched;
-
-        candidateAddr          = &addr->GetAddress();
-        candidatePrefixMatched = destination->PrefixMatch(*candidateAddr);
-        overrideScope          = (candidatePrefixMatched >= addr->mPrefixLength) ? addr->GetScope() : destinationScope;
+        const Address *candidateAddr = &addr->GetAddress();
+        uint8_t        candidatePrefixMatched;
+        uint8_t        overrideScope;
 
         if (candidateAddr->IsAnycastRoutingLocator())
         {
             // Don't use anycast address as source address.
             continue;
+        }
+
+        candidatePrefixMatched = destination->PrefixMatch(*candidateAddr);
+
+        if (candidatePrefixMatched >= addr->mPrefixLength)
+        {
+            candidatePrefixMatched = addr->mPrefixLength;
+            overrideScope          = addr->GetScope();
+        }
+        else
+        {
+            overrideScope = destinationScope;
         }
 
         if (rvalAddr == NULL)
@@ -1356,19 +1364,6 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
                 continue;
             }
         }
-        else if ((rvalAddr->GetScope() == Address::kRealmLocalScope) && (addr->GetScope() == Address::kRealmLocalScope))
-        {
-            // Additional rule: Prefer EID
-            if (rvalAddr->GetAddress().IsRoutingLocator())
-            {
-                rvalAddr          = addr;
-                rvalPrefixMatched = candidatePrefixMatched;
-            }
-            else
-            {
-                continue;
-            }
-        }
         else if (addr->mPreferred && !rvalAddr->mPreferred)
         {
             // Rule 3: Avoid deprecated addresses
@@ -1380,6 +1375,13 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
             // Rule 6: Prefer matching label
             // Rule 7: Prefer public address
             // Rule 8: Use longest prefix matching
+            rvalAddr          = addr;
+            rvalPrefixMatched = candidatePrefixMatched;
+        }
+        else if ((candidatePrefixMatched == rvalPrefixMatched) &&
+                 (destination->IsRoutingLocator() == candidateAddr->IsRoutingLocator()))
+        {
+            // Additional rule: Prefer RLOC source for RLOC destination, EID source for anything else
             rvalAddr          = addr;
             rvalPrefixMatched = candidatePrefixMatched;
         }

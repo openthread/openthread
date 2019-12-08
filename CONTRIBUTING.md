@@ -51,12 +51,9 @@ git remote add upstream git@github.com:openthread/openthread.git
 
 ### Contributor License Agreement (CLA)
 
-The OpenThread Project requires all contributors to sign a Contributor License Agreement ([individual](https://developers.google.com/open-source/cla/individual) or [corporate](https://developers.google.com/open-source/cla/corporate)) in order to protect contributors, users, and Google in issues of intellectual property.
+Contributions to this project must be accompanied by a Contributor License Agreement. You (or your employer) retain the copyright to your contribution; this simply gives us permission to use and redistribute your contributions as part of the project. Head over to <https://cla.developers.google.com/> to see your current agreements on file or to sign a new one.
 
-With each Pull Request, an automated check occurs to verify that you have signed the CLA.  Make sure that you sign the CLA with the same email address associated with your commits (i.e. via the `user.email` Git config as described on GitHub's [Set up Git](https://help.github.com/articles/set-up-git/) page.
-
-NOTE: Only original source code from you and other people that have signed the CLA can be accepted into the repository. This policy does not apply to [third_party](https://github.com/openthread/openthread/tree/master/third_party).
-
+You generally only need to submit a CLA once, so if you've already submitted one (even if it was for a different project), you probably don't need to do it again.
 
 ### Submitting a Pull Request
 

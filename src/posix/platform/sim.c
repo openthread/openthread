@@ -171,14 +171,13 @@ void platformSimUpdateFdSet(fd_set *        aReadFdSet,
 {
     OT_UNUSED_VARIABLE(aWriteFdSet);
     OT_UNUSED_VARIABLE(aErrorFdSet);
+    OT_UNUSED_VARIABLE(aTimeout);
 
     FD_SET(sSockFd, aReadFdSet);
     if (*aMaxFd < sSockFd)
     {
         *aMaxFd = sSockFd;
     }
-
-    platformSimRadioSpinelUpdate(aTimeout);
 }
 
 void platformSimProcess(otInstance *  aInstance,

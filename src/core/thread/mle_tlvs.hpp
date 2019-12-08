@@ -977,6 +977,12 @@ class LeaderDataTlv : public Tlv
 {
 public:
     /**
+     * This method clears the object (setting all fields to zero).
+     *
+     */
+    void Clear(void) { memset(this, 0, sizeof(*this)); }
+
+    /**
      * This method initializes the TLV.
      *
      */

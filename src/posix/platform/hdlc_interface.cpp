@@ -40,7 +40,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
-#ifdef OPENTHREAD_TARGET_DARWIN
+#ifdef __APPLE__
 #include <util.h>
 #else
 #include <pty.h>
@@ -245,6 +245,94 @@ otError HdlcInterface::Write(const uint8_t *aFrame, uint16_t aLength)
 exit:
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME
     return error;
+}
+
+otError HdlcInterface::WaitForFrame(struct timeval &aTimeout)
+{
+    otError error = OT_ERROR_NONE;
+
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+    struct Event event;
+
+    platformSimSendSleepEvent(&aTimeout);
+    platformSimReceiveEvent(&event);
+
+    switch (event.mEvent)
+    {
+    case OT_SIM_EVENT_RADIO_SPINEL_WRITE:
+        Decode(event.mData, event.mDataLength);
+        break;
+
+    case OT_SIM_EVENT_ALARM_FIRED:
+        ExitNow(error = OT_ERROR_RESPONSE_TIMEOUT);
+        break;
+
+    default:
+        assert(false);
+        break;
+    }
+#else  // OPENTHREAD_POSIX_VIRTUAL_TIME
+    fd_set read_fds;
+    fd_set error_fds;
+    int rval;
+
+    FD_ZERO(&read_fds);
+    FD_ZERO(&error_fds);
+    FD_SET(mSockFd, &read_fds);
+    FD_SET(mSockFd, &error_fds);
+
+    rval = select(mSockFd + 1, &read_fds, NULL, &error_fds, &aTimeout);
+
+    if (rval > 0)
+    {
+        if (FD_ISSET(mSockFd, &read_fds))
+        {
+            Read();
+        }
+        else if (FD_ISSET(mSockFd, &error_fds))
+        {
+            DieNowWithMessage("NCP error", OT_EXIT_FAILURE);
+        }
+        else
+        {
+            DieNow(OT_EXIT_FAILURE);
+        }
+    }
+    else if (rval == 0)
+    {
+        ExitNow(error = OT_ERROR_RESPONSE_TIMEOUT);
+    }
+    else if (errno != EINTR)
+    {
+        DieNowWithMessage("wait response", OT_EXIT_FAILURE);
+    }
+#endif // OPENTHREAD_POSIX_VIRTUAL_TIME
+
+exit:
+    return error;
+}
+
+void HdlcInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout)
+{
+    OT_UNUSED_VARIABLE(aWriteFdSet);
+    OT_UNUSED_VARIABLE(aTimeout);
+
+    FD_SET(mSockFd, &aReadFdSet);
+
+    if (aMaxFd < mSockFd)
+    {
+        aMaxFd = mSockFd;
+    }
+}
+
+void HdlcInterface::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
+{
+    OT_UNUSED_VARIABLE(aWriteFdSet);
+
+    if (FD_ISSET(mSockFd, &aReadFdSet))
+    {
+        Read();
+    }
 }
 
 otError HdlcInterface::WaitForWritable(void)

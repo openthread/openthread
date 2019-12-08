@@ -571,7 +571,7 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6:
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
-    memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
+    responseInfo.GetSockAddr().Clear();
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, responseInfo));
 
     SetState(OT_JOINER_STATE_JOINED);

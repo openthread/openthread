@@ -227,7 +227,7 @@ void Slaac::Update(UpdateMode aMode)
                         continue;
                     }
 
-                    memset(slaacAddr, 0, sizeof(*slaacAddr));
+                    slaacAddr->Clear();
                     memcpy(&slaacAddr->mAddress, &prefix.mPrefix, BitVectorBytes(prefix.mLength));
 
                     slaacAddr->mPrefixLength = prefix.mLength;

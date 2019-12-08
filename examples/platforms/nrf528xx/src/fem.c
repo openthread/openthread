@@ -45,20 +45,31 @@
 
 void PlatformFemSetConfigParams(const PlatformFemConfigParams *aConfig)
 {
-    nrf_802154_fem_control_cfg_t cfg;
+    nrf_fem_interface_config_t cfg;
 
     memset(&cfg, 0, sizeof(cfg));
 
-    cfg.pa_cfg.enable       = aConfig->mPaCfg.mEnable;
-    cfg.pa_cfg.active_high  = aConfig->mPaCfg.mActiveHigh;
-    cfg.pa_cfg.gpio_pin     = aConfig->mPaCfg.mGpioPin;
-    cfg.lna_cfg.enable      = aConfig->mLnaCfg.mEnable;
-    cfg.lna_cfg.active_high = aConfig->mLnaCfg.mActiveHigh;
-    cfg.lna_cfg.gpio_pin    = aConfig->mLnaCfg.mGpioPin;
-    cfg.ppi_ch_id_clr       = aConfig->mPpiChIdClr;
-    cfg.ppi_ch_id_set       = aConfig->mPpiChIdSet;
-    cfg.pa_gpiote_ch_id     = aConfig->mGpiotePaChId;
-    cfg.lna_gpiote_ch_id    = aConfig->mGpioteLnaChId;
+    cfg.fem_config.pa_time_gap_us   = aConfig->mFemPhyCfg.mPaTimeGapUs;
+    cfg.fem_config.lna_time_gap_us  = aConfig->mFemPhyCfg.mLnaTimeGapUs;
+    cfg.fem_config.pdn_settle_us    = aConfig->mFemPhyCfg.mPdnSettleUs;
+    cfg.fem_config.trx_hold_us      = aConfig->mFemPhyCfg.mTrxHoldUs;
+    cfg.fem_config.pa_gain_db       = aConfig->mFemPhyCfg.mPaGainDb;
+    cfg.fem_config.lna_gain_db      = aConfig->mFemPhyCfg.mLnaGainDb;
+    cfg.pa_pin_config.enable        = aConfig->mPaCfg.mEnable;
+    cfg.pa_pin_config.active_high   = aConfig->mPaCfg.mActiveHigh;
+    cfg.pa_pin_config.gpio_pin      = aConfig->mPaCfg.mGpioPin;
+    cfg.pa_pin_config.gpiote_ch_id  = aConfig->mPaCfg.mGpioteChId;
+    cfg.lna_pin_config.enable       = aConfig->mLnaCfg.mEnable;
+    cfg.lna_pin_config.active_high  = aConfig->mLnaCfg.mActiveHigh;
+    cfg.lna_pin_config.gpio_pin     = aConfig->mLnaCfg.mGpioPin;
+    cfg.lna_pin_config.gpiote_ch_id = aConfig->mLnaCfg.mGpioteChId;
+    cfg.pdn_pin_config.enable       = aConfig->mPdnCfg.mEnable;
+    cfg.pdn_pin_config.active_high  = aConfig->mPdnCfg.mActiveHigh;
+    cfg.pdn_pin_config.gpio_pin     = aConfig->mPdnCfg.mGpioPin;
+    cfg.pdn_pin_config.gpiote_ch_id = aConfig->mPdnCfg.mGpioteChId;
+    cfg.ppi_ch_id_clr               = aConfig->mPpiChIdClr;
+    cfg.ppi_ch_id_set               = aConfig->mPpiChIdSet;
+    cfg.ppi_ch_id_pdn               = aConfig->mPpiChIdPdn;
 
-    nrf_802154_fem_control_cfg_set(&cfg);
+    nrf_fem_interface_configuration_set(&cfg);
 }

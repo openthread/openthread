@@ -521,6 +521,21 @@ build_samr21() {
 }
 
 [ $BUILD_TARGET != posix-app-pty ] || {
+    # check daemon mode
+    git checkout -- . || die
+    git clean -xfd || die
+    mkdir build && cd build || die
+    cmake -GNinja -DOT_PLATFORM=posix-host -DOT_DAEMON=ON .. || die
+    ninja || die
+    cd .. || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    mkdir build && cd build || die
+    cmake -GNinja -DOT_PLATFORM=posix-host .. || die
+    ninja || die
+    cd .. || die
+
     ./bootstrap
     .travis/check-posix-app-pty || die
 }

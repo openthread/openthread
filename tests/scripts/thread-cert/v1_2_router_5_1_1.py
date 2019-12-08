@@ -164,8 +164,8 @@ class Router_5_1_01(thread_cert.TestCase):
         msg.assertMleMessageContainsTlv(mle.Route64)
 
         # 11 - Verify connectivity by sending an ICMPv6 Echo Request to the DUT link local address
-        self.assertTrue(self.nodes[LEADER].ping(self.nodes[ROUTER_1].get_addr_link_local()))
-        self.assertTrue(self.nodes[ROUTER_1].ping(self.nodes[LEADER].get_addr_link_local()))
+        self.assertTrue(self.nodes[LEADER].ping(self.nodes[ROUTER_1].get_linklocal()))
+        self.assertTrue(self.nodes[ROUTER_1].ping(self.nodes[LEADER].get_linklocal()))
 
 
 if __name__ == '__main__':

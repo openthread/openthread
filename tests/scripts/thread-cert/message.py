@@ -353,6 +353,12 @@ class Message(object):
             == ipaddress.ip_address(ipv6_address)
         )
 
+    def assertSentFromSourceAddress(self, ipv6_address):
+        assert (
+            self.ipv6_packet.ipv6_header.source_address
+            == ipaddress.ip_address(ipv6_address)
+        )
+
     def assertSentWithHopLimit(self, hop_limit):
         assert self.ipv6_packet.ipv6_header.hop_limit == hop_limit
 

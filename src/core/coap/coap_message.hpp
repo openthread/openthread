@@ -585,6 +585,9 @@ private:
      */
     struct HelpData
     {
+        void Clear(void) { memset(this, 0, sizeof(*this)); }
+        void ClearOption(void) { memset(&mOption, 0, sizeof(mOption)); }
+
         Header       mHeader;
         otCoapOption mOption;
         uint16_t     mNextOptionOffset; ///< The byte offset for the next CoAP Option

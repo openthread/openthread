@@ -234,7 +234,7 @@ otError Filter::GetNextRssIn(Iterator &aIterator, Entry &aEntry)
     // Return the default RssIn at the end of list
     if ((aIterator == OT_ARRAY_LENGTH(mFilterEntries)) && (mDefaultRssIn != kFixedRssDisabled))
     {
-        memset(&aEntry.mExtAddress, 0xff, OT_EXT_ADDRESS_SIZE);
+        static_cast<ExtAddress &>(aEntry.mExtAddress).Fill(0xff);
         aEntry.mRssIn = mDefaultRssIn;
         error         = OT_ERROR_NONE;
         aIterator++;

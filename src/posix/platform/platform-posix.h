@@ -370,15 +370,6 @@ void platformSimReceiveEvent(struct Event *aEvent);
 void platformSimSendSleepEvent(const struct timeval *aTimeout);
 
 /**
- * This function updates the file descriptor sets with file descriptors
- * used by radio spinel of virtual time simulation.
- *
- * @param[out]   aTimeout    A pointer to the timeout event to be updated.
- *
- */
-void platformSimRadioSpinelUpdate(struct timeval *atimeout);
-
-/**
  * This function performs radio spinel processing of virtual time simulation.
  *
  * @param[in]   aInstance   A pointer to the OpenThread instance.

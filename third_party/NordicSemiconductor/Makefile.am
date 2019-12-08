@@ -68,7 +68,7 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/common                                                        \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio                                                         \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/fem                                                     \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/fem/simple_gpio                                         \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/fem/three_pin_gpio                                      \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/hal                                                     \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch                                                    \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch/raal                                               \
@@ -171,7 +171,7 @@ RADIO_DRIVER_SOURCES                                                            
     drivers/radio/mac_features/nrf_802154_filter.c                                                                        \
     drivers/radio/mac_features/nrf_802154_frame_parser.c                                                                  \
     drivers/radio/mac_features/nrf_802154_precise_ack_timeout.c                                                           \
-    drivers/radio/fem/simple_gpio/nrf_fem_simple_gpio.c                                                                   \
+    drivers/radio/fem/three_pin_gpio/nrf_fem_three_pin_gpio.c                                                             \
     drivers/radio/nrf_802154_core_hooks.c                                                                                 \
     drivers/radio/nrf_802154_core.c                                                                                       \
     drivers/radio/nrf_802154_critical_section.c                                                                           \

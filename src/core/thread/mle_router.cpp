@@ -445,7 +445,7 @@ otError MleRouter::SendAdvertisement(void)
         break;
     }
 
-    memset(&destination, 0, sizeof(destination));
+    destination.Clear();
     destination.mFields.m16[0] = HostSwap16(0xff02);
     destination.mFields.m16[7] = HostSwap16(0x0001);
     SuccessOrExit(error = SendMessage(*message, destination));
@@ -471,7 +471,7 @@ otError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
     Message *            message;
     Ip6::Address         destination;
 
-    memset(&destination, 0, sizeof(destination));
+    destination.Clear();
 
     VerifyOrExit((message = NewMleMessage()) != NULL, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandLinkRequest));
@@ -1925,7 +1925,7 @@ void MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &aChallenge
     SuccessOrExit(error = AppendConnectivity(*message));
     SuccessOrExit(error = AppendVersion(*message));
 
-    memset(&destination, 0, sizeof(destination));
+    destination.Clear();
     destination.mFields.m16[0] = HostSwap16(0xfe80);
     destination.SetIid(aChild->GetExtAddress());
 
@@ -2568,7 +2568,7 @@ void MleRouter::HandleNetworkDataUpdateRouter(void)
 
     VerifyOrExit(mRole == OT_DEVICE_ROLE_ROUTER || mRole == OT_DEVICE_ROLE_LEADER);
 
-    memset(&destination, 0, sizeof(destination));
+    destination.Clear();
     destination.mFields.m16[0] = HostSwap16(0xff02);
     destination.mFields.m16[7] = HostSwap16(0x0001);
 
@@ -2623,8 +2623,8 @@ void MleRouter::SetSteeringData(const Mac::ExtAddress *aExtAddress)
     Mac::ExtAddress nullExtAddr;
     Mac::ExtAddress allowAnyExtAddr;
 
-    memset(nullExtAddr.m8, 0, sizeof(nullExtAddr.m8));
-    memset(allowAnyExtAddr.m8, 0xFF, sizeof(allowAnyExtAddr.m8));
+    nullExtAddr.Clear();
+    allowAnyExtAddr.Fill(0xff);
 
     mSteeringData.Init();
 
@@ -2906,7 +2906,7 @@ otError MleRouter::SendChildIdResponse(Child &aChild)
     }
 #endif
 
-    memset(&destination, 0, sizeof(destination));
+    destination.Clear();
     destination.mFields.m16[0] = HostSwap16(0xfe80);
     destination.SetIid(aChild.GetExtAddress());
     SuccessOrExit(error = SendMessage(*message, destination));
@@ -2968,7 +2968,7 @@ otError MleRouter::SendChildUpdateRequest(Child &aChild)
         SuccessOrExit(error = AppendChallenge(*message, aChild.GetChallenge(), aChild.GetChallengeSize()));
     }
 
-    memset(&destination, 0, sizeof(destination));
+    destination.Clear();
     destination.mFields.m16[0] = HostSwap16(0xfe80);
     destination.SetIid(aChild.GetExtAddress());
     SuccessOrExit(error = SendMessage(*message, destination));
@@ -3589,7 +3589,7 @@ otError MleRouter::StoreChild(const Child &aChild)
 
     IgnoreReturnValue(RemoveStoredChild(aChild.GetRloc16()));
 
-    memset(&childInfo, 0, sizeof(childInfo));
+    childInfo.Clear();
     childInfo.mExtAddress = aChild.GetExtAddress();
     childInfo.mTimeout    = aChild.GetTimeout();
     childInfo.mRloc16     = aChild.GetRloc16();
@@ -4710,7 +4710,7 @@ otError MleRouter::SendTimeSync(void)
 
     message->SetTimeSync(true);
 
-    memset(&destination, 0, sizeof(destination));
+    destination.Clear();
     destination.mFields.m16[0] = HostSwap16(0xff02);
     destination.mFields.m16[7] = HostSwap16(0x0001);
     SuccessOrExit(error = SendMessage(*message, destination));

@@ -67,6 +67,14 @@ public:
      * @returns A reference to the local socket address.
      *
      */
+    Address &GetSockAddr(void) { return *static_cast<Address *>(&mSockAddr); }
+
+    /**
+     * This method returns a reference to the local socket address.
+     *
+     * @returns A reference to the local socket address.
+     *
+     */
     const Address &GetSockAddr(void) const { return *static_cast<const Address *>(&mSockAddr); }
 
     /**
@@ -194,7 +202,13 @@ public:
      * This constructor initializes the object.
      *
      */
-    SockAddr(void) { memset(this, 0, sizeof(*this)); }
+    SockAddr(void) { Clear(); }
+
+    /**
+     * This method clears the object (sets all fields to zero).
+     *
+     */
+    void Clear(void) { memset(this, 0, sizeof(*this)); }
 
     /**
      * This method returns a reference to the IPv6 address.
