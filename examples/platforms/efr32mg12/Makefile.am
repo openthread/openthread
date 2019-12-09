@@ -40,10 +40,10 @@ override CXXFLAGS                            := $(filter-out -pedantic-errors,$(
 
 EFR32_BOARD_DIR                               = $(shell echo $(BOARD) | tr A-Z a-z)
 
-EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.6
+EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/$(SDKVERSION)
 
 libopenthread_efr32mg12_a_CPPFLAGS                                            = \
-    -DPLATFORM_HEADER=\"@top_builddir@/third_party/silabs/gecko_sdk_suite/v2.6/platform/base/hal/micro/cortexm3/compiler/gcc.h\" \
+    -DPLATFORM_HEADER=\"platform/base/hal/micro/cortexm3/compiler/gcc.h\" \
     -DNVIC_CONFIG=\"platform/base/hal/micro/cortexm3/efm32/nvic-config.h\"      \
     -Wno-sign-compare                                                           \
     -DCORTEXM3                                                                  \
@@ -80,9 +80,12 @@ libopenthread_efr32mg12_a_CPPFLAGS                                            = 
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/ustimer/inc                          \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/dmadrv/inc                           \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/dmadrv/config                        \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/rtcdrv/inc                           \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emlib/inc                                  \
     -I$(EFR32MG_SDK_SRCDIR)/platform/halconfig/inc/hal-config                   \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/common/inc                                 \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/service/mpu/inc                            \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/service/sleeptimer/inc                     \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/service/sleeptimer/config                  \
     -I$(EFR32MG_SDK_SRCDIR)/util/plugin/plugin-common/fem-control               \
     -Wno-unused-parameter                                                       \
     -Wno-missing-field-initializers                                             \

@@ -40,7 +40,7 @@ override CXXFLAGS                            := $(filter-out -pedantic-errors,$(
 
 EFR32_BOARD_DIR                               = $(shell echo $(BOARD) | tr A-Z a-z)
 
-EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.6
+EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/$(SDKVERSION)
 
 libopenthread_efr32mg21_a_CPPFLAGS                                            = \
     -DEFR32_SERIES2_CONFIG1_MICRO                                               \
@@ -74,9 +74,12 @@ libopenthread_efr32mg21_a_CPPFLAGS                                            = 
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/ustimer/inc                          \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/dmadrv/inc                           \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/dmadrv/config                        \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/rtcdrv/inc                           \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emlib/inc                                  \
     -I$(EFR32MG_SDK_SRCDIR)/platform/halconfig/inc/hal-config                   \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/common/inc                                 \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/service/mpu/inc                            \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/service/sleeptimer/inc                     \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/service/sleeptimer/config                  \
     -I$(EFR32MG_SDK_SRCDIR)/util/plugin/plugin-common/fem-control               \
     -Wno-unused-parameter                                                       \
     -Wno-missing-field-initializers                                             \

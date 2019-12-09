@@ -54,7 +54,7 @@ override CXXFLAGS                            := $(filter-out -Wshadow,$(CXXFLAGS
 
 EFR32_BOARD_DIR                             = $(shell echo $(BOARD) | tr A-Z a-z)
 
-EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.6
+EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/$(SDKVERSION)
 
 COMMONCPPFLAGS                                                                                = \
     -D__STARTUP_CLEAR_BSS                                                                       \
@@ -62,7 +62,6 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/include                                                                     \
     -I$(top_srcdir)/src/core                                                                    \
     -I$(top_srcdir)/third_party/silabs/rail_config                                              \
-    -I$(top_srcdir)/examples/platforms/efr32mg21/$(EFR32_BOARD_DIR)                             \
     -I$(EFR32MG_SDK_SRCDIR)                                                                     \
     -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/common                                      \
     -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/chip/efr32                                  \
@@ -80,9 +79,12 @@ COMMONCPPFLAGS                                                                  
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/ustimer/inc                                          \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/dmadrv/inc                                           \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/dmadrv/config                                        \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/rtcdrv/inc                                           \
     -I$(EFR32MG_SDK_SRCDIR)/platform/emlib/inc                                                  \
     -I$(EFR32MG_SDK_SRCDIR)/platform/halconfig/inc/hal-config                                   \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/common/inc                                                 \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/service/mpu/inc                                            \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/service/sleeptimer/inc                                     \
+    -I$(EFR32MG_SDK_SRCDIR)/platform/service/sleeptimer/config                                  \
     -I$(EFR32MG_SDK_SRCDIR)/util/plugin/plugin-common/fem-control                               \
     -Wno-unused-parameter                                                                       \
     -Wno-missing-field-initializers                                                             \
@@ -94,55 +96,58 @@ SILABS_EFR32MG12_CPPFLAGS                                                       
     $(NULL)
 
 SILABS_EFR32MG21_CPPFLAGS                                                                     = \
+    -I$(top_srcdir)/examples/platforms/efr32mg21/$(EFR32_BOARD_DIR)                             \
     -I$(EFR32MG_SDK_SRCDIR)/hardware/kit/EFR32MG21_$(BOARD)/config                              \
     -I$(EFR32MG_SDK_SRCDIR)/platform/Device/SiliconLabs/EFR32MG21P/Include                      \
     $(NULL)
 
 SILABS_COMMON_SOURCES                                                                         = \
     rail_config/rail_config.c                                                                   \
-    gecko_sdk_suite/v2.6/hardware/kit/common/bsp/bsp_bcc.c                                      \
-    gecko_sdk_suite/v2.6/hardware/kit/common/bsp/bsp_init.c                                     \
-    gecko_sdk_suite/v2.6/hardware/kit/common/bsp/bsp_stk.c                                      \
-    gecko_sdk_suite/v2.6/hardware/kit/common/bsp/bsp_stk_leds.c                                 \
-    gecko_sdk_suite/v2.6/platform/emdrv/dmadrv/src/dmadrv.c                                     \
-    gecko_sdk_suite/v2.6/platform/emdrv/gpiointerrupt/src/gpiointerrupt.c                       \
-    gecko_sdk_suite/v2.6/platform/emdrv/rtcdrv/src/rtcdriver.c                                  \
-    gecko_sdk_suite/v2.6/platform/emdrv/uartdrv/src/uartdrv.c                                   \
-    gecko_sdk_suite/v2.6/platform/emdrv/ustimer/src/ustimer.c                                   \
-    gecko_sdk_suite/v2.6/platform/emlib/src/em_adc.c                                            \
-    gecko_sdk_suite/v2.6/platform/emlib/src/em_cmu.c                                            \
-    gecko_sdk_suite/v2.6/platform/emlib/src/em_core.c                                           \
-    gecko_sdk_suite/v2.6/platform/emlib/src/em_crypto.c                                         \
-    gecko_sdk_suite/v2.6/platform/emlib/src/em_emu.c                                            \
-    gecko_sdk_suite/v2.6/platform/emlib/src/em_gpio.c                                           \
-    gecko_sdk_suite/v2.6/platform/emlib/src/em_ldma.c                                           \
-    gecko_sdk_suite/v2.6/platform/emlib/src/em_leuart.c                                         \
-    gecko_sdk_suite/v2.6/platform/emlib/src/em_msc.c                                            \
-    gecko_sdk_suite/v2.6/platform/emlib/src/em_rmu.c                                            \
-    gecko_sdk_suite/v2.6/platform/emlib/src/em_rtcc.c                                           \
-    gecko_sdk_suite/v2.6/platform/emlib/src/em_system.c                                         \
-    gecko_sdk_suite/v2.6/platform/emlib/src/em_timer.c                                          \
-    gecko_sdk_suite/v2.6/platform/emlib/src/em_usart.c                                          \
-    gecko_sdk_suite/v2.6/platform/radio/rail_lib/hal/efr32/hal_efr.c                            \
-    gecko_sdk_suite/v2.6/platform/radio/rail_lib/hal/hal_common.c                               \
-    gecko_sdk_suite/v2.6/util/third_party/mbedtls/library/ecp.c                                 \
-    gecko_sdk_suite/v2.6/util/third_party/mbedtls/sl_crypto/src/crypto_aes.c                    \
-    gecko_sdk_suite/v2.6/util/third_party/mbedtls/sl_crypto/src/crypto_ecp.c                    \
-    gecko_sdk_suite/v2.6/util/third_party/mbedtls/sl_crypto/src/crypto_management.c             \
+    gecko_sdk_suite/$(SDKVERSION)/hardware/kit/common/bsp/bsp_bcc.c                                      \
+    gecko_sdk_suite/$(SDKVERSION)/hardware/kit/common/bsp/bsp_init.c                                     \
+    gecko_sdk_suite/$(SDKVERSION)/hardware/kit/common/bsp/bsp_stk.c                                      \
+    gecko_sdk_suite/$(SDKVERSION)/hardware/kit/common/bsp/bsp_stk_leds.c                                 \
+    gecko_sdk_suite/$(SDKVERSION)/platform/emdrv/dmadrv/src/dmadrv.c                                     \
+    gecko_sdk_suite/$(SDKVERSION)/platform/emdrv/gpiointerrupt/src/gpiointerrupt.c                       \
+    gecko_sdk_suite/$(SDKVERSION)/platform/emdrv/uartdrv/src/uartdrv.c                                   \
+    gecko_sdk_suite/$(SDKVERSION)/platform/emdrv/ustimer/src/ustimer.c                                   \
+    gecko_sdk_suite/$(SDKVERSION)/platform/emlib/src/em_adc.c                                            \
+    gecko_sdk_suite/$(SDKVERSION)/platform/emlib/src/em_cmu.c                                            \
+    gecko_sdk_suite/$(SDKVERSION)/platform/emlib/src/em_core.c                                           \
+    gecko_sdk_suite/$(SDKVERSION)/platform/emlib/src/em_crypto.c                                         \
+    gecko_sdk_suite/$(SDKVERSION)/platform/emlib/src/em_emu.c                                            \
+    gecko_sdk_suite/$(SDKVERSION)/platform/emlib/src/em_gpio.c                                           \
+    gecko_sdk_suite/$(SDKVERSION)/platform/emlib/src/em_ldma.c                                           \
+    gecko_sdk_suite/$(SDKVERSION)/platform/emlib/src/em_leuart.c                                         \
+    gecko_sdk_suite/$(SDKVERSION)/platform/emlib/src/em_msc.c                                            \
+    gecko_sdk_suite/$(SDKVERSION)/platform/emlib/src/em_rmu.c                                            \
+    gecko_sdk_suite/$(SDKVERSION)/platform/emlib/src/em_rtcc.c                                           \
+    gecko_sdk_suite/$(SDKVERSION)/platform/emlib/src/em_system.c                                         \
+    gecko_sdk_suite/$(SDKVERSION)/platform/emlib/src/em_timer.c                                          \
+    gecko_sdk_suite/$(SDKVERSION)/platform/emlib/src/em_usart.c                                          \
+    gecko_sdk_suite/$(SDKVERSION)/platform/radio/rail_lib/hal/efr32/hal_efr.c                            \
+    gecko_sdk_suite/$(SDKVERSION)/platform/radio/rail_lib/hal/hal_common.c                               \
+    gecko_sdk_suite/$(SDKVERSION)/platform/service/mpu/src/sl_mpu.c                                      \
+    gecko_sdk_suite/$(SDKVERSION)/platform/service/sleeptimer/src/sl_sleeptimer.c                        \
+    gecko_sdk_suite/$(SDKVERSION)/platform/service/sleeptimer/src/sl_sleeptimer_hal_rtcc.c               \
+    gecko_sdk_suite/$(SDKVERSION)/util/third_party/mbedtls/library/ecp.c                                 \
+    gecko_sdk_suite/$(SDKVERSION)/util/third_party/mbedtls/sl_crypto/src/crypto_aes.c                    \
+    gecko_sdk_suite/$(SDKVERSION)/util/third_party/mbedtls/sl_crypto/src/crypto_ecp.c                    \
+    gecko_sdk_suite/$(SDKVERSION)/util/third_party/mbedtls/sl_crypto/src/crypto_management.c             \
     $(NULL)
 
 SILABS_EFR32MG12_SOURCES                                                                      = \
-    gecko_sdk_suite/v2.6/platform/Device/SiliconLabs/EFR32MG12P/Source/system_efr32mg12p.c      \
-    gecko_sdk_suite/v2.6/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/startup_efr32mg12p.c \
+    gecko_sdk_suite/$(SDKVERSION)/platform/Device/SiliconLabs/EFR32MG12P/Source/system_efr32mg12p.c      \
+    gecko_sdk_suite/$(SDKVERSION)/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/startup_efr32mg12p.c \
     $(NULL)
 
 SILABS_EFR32MG21_SOURCES                                                                      = \
-    gecko_sdk_suite/v2.6/platform/Device/SiliconLabs/EFR32MG21/Source/system_efr32mg21.c        \
-    gecko_sdk_suite/v2.6/platform/Device/SiliconLabs/EFR32MG21/Source/GCC/startup_efr32mg21.c   \
-    gecko_sdk_suite/v2.6/platform/emlib/src/em_se.c                                             \
-    gecko_sdk_suite/v2.6/util/third_party/mbedtls/sl_crypto/src/se_trng.c                       \
-    gecko_sdk_suite/v2.6/util/third_party/mbedtls/sl_crypto/src/se_aes.c                        \
-    gecko_sdk_suite/v2.6/util/third_party/mbedtls/sl_crypto/src/se_management.c                 \
+    gecko_sdk_suite/$(SDKVERSION)/platform/Device/SiliconLabs/EFR32MG21/Source/system_efr32mg21.c        \
+    gecko_sdk_suite/$(SDKVERSION)/platform/Device/SiliconLabs/EFR32MG21/Source/GCC/startup_efr32mg21.c   \
+    gecko_sdk_suite/$(SDKVERSION)/platform/emlib/src/em_se.c                                             \
+    gecko_sdk_suite/$(SDKVERSION)/util/third_party/mbedtls/sl_crypto/src/se_trng.c                       \
+    gecko_sdk_suite/$(SDKVERSION)/util/third_party/mbedtls/sl_crypto/src/se_aes.c                        \
+    gecko_sdk_suite/$(SDKVERSION)/util/third_party/mbedtls/sl_crypto/src/se_management.c                 \
     $(NULL)
 
 libsilabs_efr32mg12_sdk_a_CPPFLAGS                                                            = \

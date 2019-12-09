@@ -37,7 +37,6 @@
 #include "hal_common.h"
 #include "openthread-system.h"
 #include "platform-efr32.h"
-#include "rtcdriver.h"
 #include <common/logging.hpp>
 #include <openthread-core-config.h>
 #include <openthread/cli.h>
