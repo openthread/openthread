@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2012 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2012 - 2019, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -129,6 +129,15 @@ extern uint32_t __etext;
  */
 /* lint -restore */
 
+#if defined(MBR_PRESENT) || defined(SOFTDEVICE_PRESENT)
+#include "nrf_mbr.h"
+#define BOOTLOADER_ADDRESS      ((*(uint32_t *)MBR_BOOTLOADER_ADDR) == 0xFFFFFFFF ? *MBR_UICR_BOOTLOADER_ADDR : *(uint32_t *)MBR_BOOTLOADER_ADDR) /**< The currently configured start address of the bootloader. If 0xFFFFFFFF, no bootloader start address is configured. */
+#define MBR_PARAMS_PAGE_ADDRESS ((*(uint32_t *)MBR_PARAM_PAGE_ADDR) == 0xFFFFFFFF ? *MBR_UICR_PARAM_PAGE_ADDR : *(uint32_t *)MBR_PARAM_PAGE_ADDR) /**< The currently configured address of the MBR params page. If 0xFFFFFFFF, no MBR params page address is configured. */
+#else
+#define BOOTLOADER_ADDRESS      (NRF_UICR->NRFFW[0]) /**< Check UICR, just in case. */
+#define MBR_PARAMS_PAGE_ADDRESS (NRF_UICR->NRFFW[1]) /**< Check UICR, just in case. */
+#endif
+
 enum
 {
     UNIT_0_625_MS = 625,        /**< Number of microseconds in 0.625 milliseconds. */
@@ -203,8 +212,13 @@ enum
 #ifndef __LINT__
 
 #ifdef __GNUC__
+#ifdef __cplusplus
+#define STATIC_ASSERT_SIMPLE(EXPR)      extern char (*_do_assert(void)) [sizeof(char[1 - 2*!(EXPR)])]
+#define STATIC_ASSERT_MSG(EXPR, MSG)    extern char (*_do_assert(void)) [sizeof(char[1 - 2*!(EXPR)])]
+#else
 #define STATIC_ASSERT_SIMPLE(EXPR)      _Static_assert(EXPR, "unspecified message")
 #define STATIC_ASSERT_MSG(EXPR, MSG)    _Static_assert(EXPR, MSG)
+#endif
 #endif
 
 #ifdef __CC_ARM
@@ -775,7 +789,8 @@ typedef struct
  * @return All arguments processed by given macro
  */
 #define MACRO_MAP_FOR(...) MACRO_MAP_FOR_(__VA_ARGS__)
-#define MACRO_MAP_FOR_N_LIST 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+#define MACRO_MAP_FOR_N_LIST 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, \
+                            19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32
 #define MACRO_MAP_FOR_(...) MACRO_MAP_FOR_N(NUM_VA_ARGS_LESS_1(__VA_ARGS__), __VA_ARGS__)
 
 /**
@@ -1177,6 +1192,7 @@ static __INLINE uint8_t uint16_big_encode(uint16_t value, uint8_t * p_encoded_da
  *
  * @param[in]   value            Value to be encoded.
  * @param[out]  p_encoded_data   Buffer where the encoded data will be written.
+ *                               The address pointed to must be word alligned.
  *
  * @return      Number of bytes written.
  */

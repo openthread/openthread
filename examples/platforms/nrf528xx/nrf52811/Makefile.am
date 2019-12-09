@@ -62,6 +62,7 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/app_error                                      \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/atfifo                                         \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/atomic                                         \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/block_dev                                      \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/delay                                          \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/utf_converter                                  \
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx                                                     \
