@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -67,11 +67,12 @@ bool nrf_drv_power_init_check(void)
 
 ret_code_t nrf_drv_power_init(nrf_drv_power_config_t const * p_config)
 {
-#ifdef SOFTDEVICE_PRESENT
     if (m_initialized)
     {
         return NRF_ERROR_MODULE_ALREADY_INITIALIZED;
     }
+
+#ifdef SOFTDEVICE_PRESENT
     if (nrf_sdh_is_enabled())
     {
         return NRF_ERROR_INVALID_STATE;

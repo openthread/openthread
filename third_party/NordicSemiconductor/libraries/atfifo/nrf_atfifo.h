@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2011 - 2019, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *

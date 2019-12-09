@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2019, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -276,7 +276,7 @@ typedef union {
  */
 typedef struct {
     uint8_t            bmRequestType; //!< Setup type bitfield
-    uint8_t            bmRequest;     //!< One of @ref app_usbd_setup_stdrequest_t values or class dependent one.
+    uint8_t            bRequest;      //!< One of @ref app_usbd_setup_stdrequest_t values or class dependent one.
     app_usbd_setup_w_t wValue;        //!< byte 2, 3
     app_usbd_setup_w_t wIndex;        //!< byte 4, 5
     app_usbd_setup_w_t wLength;       //!< byte 6, 7
