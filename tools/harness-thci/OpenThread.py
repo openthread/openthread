@@ -60,13 +60,6 @@ LINESEPX = re.compile(r'\r\n|\n')
 """regex: used to split lines"""
 
 
-def lstrip_0x(s):
-    if s.startswith('0x'):
-        s = s[2:]
-
-    return s
-
-
 class OpenThread(IThci):
     LOWEST_POSSIBLE_PARTATION_ID = 0x1
     LINK_QUALITY_CHANGE_TIME = 100
@@ -510,7 +503,7 @@ class OpenThread(IThci):
             IPv6 address dotted-quad format
         """
         prefix1 = strIp6Prefix.rstrip('L')
-        prefix2 = lstrip_0x(prefix1)
+        prefix2 = self.__lstrip0x(prefix1)
         hexPrefix = str(prefix2).ljust(16, '0')
         hexIter = iter(hexPrefix)
         finalMac = ':'.join(
@@ -1439,7 +1432,7 @@ class OpenThread(IThci):
             euiStr = euiStr.rstrip('L')
             address64 = ''
             if '0x' in euiStr:
-                address64 = lstrip_0x(euiStr)
+                address64 = self.__lstrip0x(euiStr)
                 # prepend 0 at the beginning
                 if len(address64) < 16:
                     address64 = address64.zfill(16)
@@ -2876,3 +2869,18 @@ class OpenThread(IThci):
             return True
         else:
             return False
+
+    @staticmethod
+    def __lstrip0x(s):
+        """strip 0x at the beginning of a hex string if it exists
+
+        Args:
+            s: hex string
+
+        Returns:
+            hex string with leading 0x stripped
+        """
+        if s.startswith('0x'):
+            s = s[2:]
+
+        return s
