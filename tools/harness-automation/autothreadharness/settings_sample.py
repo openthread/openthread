@@ -93,7 +93,7 @@ into the RF-box besides DUT2_DEVICE.
 
 Example for CV testbed, 2 conformance devices should be put into the RF-box and listed here.
 
-Example for IV testbed using TopologyConfig_20180907b.txt, 1 OpenThread, 1 ARM and 1 SiLabs devices should be 
+Example for IV testbed using TopologyConfig_20180907b.txt, 1 OpenThread, 1 ARM and 1 SiLabs devices should be
 put into the RF-box and listed here.
 
 Example for IV testbed using TopologyConfig_20180907cK.txt, 1 OpenThread and 2 ARM devices should be put into
