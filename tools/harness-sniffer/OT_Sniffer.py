@@ -73,7 +73,11 @@ class OT_Sniffer(ISniffer):
         try:
             # start sniffer
             self.setChannel(channelToCapture)
-            p_where = subprocess.Popen('py -3 -c "import sys; print(sys.executable)"', stdout=subprocess.PIPE, shell=True)
+            p_where = subprocess.Popen(
+                'py -3 -c "import sys; print(sys.executable)"',
+                stdout=subprocess.PIPE,
+                shell=True,
+            )
             # python_exe: e.g. C:\Python37\python.exe
             python_exe = p_where.stdout.readline().strip()
 
