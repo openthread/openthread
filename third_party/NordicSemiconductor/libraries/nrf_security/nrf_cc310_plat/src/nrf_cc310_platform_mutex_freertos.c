@@ -115,7 +115,7 @@ static void mutex_free(nrf_cc310_platform_mutex_t *mutex)
 
     p_mutex = (SemaphoreHandle_t)mutex->mutex;
 
-    vSemaphoreDelete(*p_mutex);
+    vSemaphoreDelete(p_mutex);
 
     /* Reset the mutex to invalid state */
     mutex->flags = NRF_CC310_PLATFORM_MUTEX_MASK_INVALID;
