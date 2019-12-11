@@ -604,7 +604,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        otLogInfoCoapErr(error, "Failed to process request");
+        otLogInfoCoap("Failed to process request: %s", otThreadErrorToString(error));
 
         if (error == OT_ERROR_NOT_FOUND && !aMessageInfo.GetSockAddr().IsMulticast())
         {
