@@ -764,7 +764,14 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
                                     uint32_t                aKeySequence,
                                     Neighbor *              aNeighbor)
 {
-    return HandleLinkAccept(aMessage, aMessageInfo, aKeySequence, aNeighbor, false);
+    otError error = HandleLinkAccept(aMessage, aMessageInfo, aKeySequence, aNeighbor, false);
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMle("Failed to process Link Accept: %s", otThreadErrorToString(error));
+    }
+
+    return error;
 }
 
 otError MleRouter::HandleLinkAcceptAndRequest(const Message &         aMessage,
@@ -772,7 +779,14 @@ otError MleRouter::HandleLinkAcceptAndRequest(const Message &         aMessage,
                                               uint32_t                aKeySequence,
                                               Neighbor *              aNeighbor)
 {
-    return HandleLinkAccept(aMessage, aMessageInfo, aKeySequence, aNeighbor, true);
+    otError error = HandleLinkAccept(aMessage, aMessageInfo, aKeySequence, aNeighbor, true);
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMle("Failed to process Link Accept and Request: %s", otThreadErrorToString(error));
+    }
+
+    return error;
 }
 
 otError MleRouter::HandleLinkAccept(const Message &         aMessage,
@@ -1676,6 +1690,12 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
     SendParentResponse(child, challenge, !scanMask.IsEndDeviceFlagSet());
 
 exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMle("Failed to process Parent Request: %s", otThreadErrorToString(error));
+    }
+
     return error;
 }
 
@@ -2224,6 +2244,12 @@ otError MleRouter::HandleChildIdRequest(const Message &         aMessage,
     }
 
 exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMle("Failed to process Child ID Request: %s", otThreadErrorToString(error));
+    }
+
     return error;
 }
 
@@ -2374,6 +2400,12 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
     SendChildUpdateResponse(child, aMessageInfo, tlvs, tlvslength, challenge);
 
 exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMle("Failed to process Child Update Request from child: %s", otThreadErrorToString(error));
+    }
+
     return error;
 }
 
@@ -2488,6 +2520,12 @@ otError MleRouter::HandleChildUpdateResponse(const Message &         aMessage,
     child->GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
 
 exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMle("Failed to process Child Update Response from child: %s", otThreadErrorToString(error));
+    }
+
     return error;
 }
 
@@ -2543,6 +2581,12 @@ otError MleRouter::HandleDataRequest(const Message &         aMessage,
     SendDataResponse(aMessageInfo.GetPeerAddr(), tlvs, numTlvs, 0);
 
 exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMle("Failed to process Data Request: %s", otThreadErrorToString(error));
+    }
+
     return error;
 }
 
@@ -2803,9 +2847,14 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        message->Free();
+        otLogWarnMle("Failed to process Discovery Response: %s", otThreadErrorToString(error));
+
+        if (message != NULL)
+        {
+            message->Free();
+        }
     }
 
     return error;
