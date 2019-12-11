@@ -230,6 +230,7 @@ typedef enum otRadioState
     OT_RADIO_STATE_SLEEP    = 1,
     OT_RADIO_STATE_RECEIVE  = 2,
     OT_RADIO_STATE_TRANSMIT = 3,
+    OT_RADIO_STATE_INVALID  = 255,
 } otRadioState;
 
 /**
