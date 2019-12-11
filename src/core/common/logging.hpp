@@ -1129,16 +1129,12 @@ extern "C" {
 #define otLogWarnCoap(aFormat, ...) otLogWarn(OT_LOG_REGION_COAP, _OT_REGION_COAP_PREFIX aFormat, ##__VA_ARGS__)
 #define otLogNoteCoap(aFormat, ...) otLogNote(OT_LOG_REGION_COAP, _OT_REGION_COAP_PREFIX aFormat, ##__VA_ARGS__)
 #define otLogInfoCoap(aFormat, ...) otLogInfo(OT_LOG_REGION_COAP, _OT_REGION_COAP_PREFIX aFormat, ##__VA_ARGS__)
-#define otLogInfoCoapErr(aError, aFormat, ...)                                                                \
-    otLogInfo(OT_LOG_REGION_COAP, _OT_REGION_COAP_PREFIX "Error %s: " aFormat, otThreadErrorToString(aError), \
-              ##__VA_ARGS__)
 #define otLogDebgCoap(aFormat, ...) otLogDebg(OT_LOG_REGION_COAP, _OT_REGION_COAP_PREFIX aFormat, ##__VA_ARGS__)
 #else
 #define otLogCritCoap(aFormat, ...)
 #define otLogWarnCoap(aFormat, ...)
 #define otLogNoteCoap(aFormat, ...)
 #define otLogInfoCoap(aFormat, ...)
-#define otLogInfoCoapErr(aError, aFormat, ...)
 #define otLogDebgCoap(aFormat, ...)
 #endif
 
