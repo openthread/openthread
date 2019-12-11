@@ -319,6 +319,14 @@ public:
     int8_t GetRssi(void) const;
 
     /**
+     * This method gets the number of transmit retries of last transmit packet.
+     *
+     * @returns Number of transmit retries.
+     *
+     */
+    uint8_t GetTransmitRetries(void) const;
+
+    /**
      * This method begins energy scan.
      *
      * @param[in] aScanChannel   The channel to perform the energy scan on.

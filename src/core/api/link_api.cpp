@@ -315,6 +315,36 @@ int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality
 
 #endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
+#if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+const uint32_t *otLinkGetTxDirectRetrySuccessHistogramGet(otInstance *aInstance, uint8_t *aNumberOfEntries)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Mac::Mac>().DirectRetrySuccessHistogramGet(aNumberOfEntries);
+}
+
+const uint32_t *otLinkGetTxIndirectRetrySuccessHistogramGet(otInstance *aInstance, uint8_t *aNumberOfEntries)
+{
+#if OPENTHREAD_FTD
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Mac::Mac>().IndirectRetrySuccessHistogramGet(aNumberOfEntries);
+#else
+    OT_UNUSED_VARIABLE(aInstance);
+    *aNumberOfEntries = 0;
+
+    return NULL;
+#endif
+}
+
+void otLinkGetTxRetrySuccessHistogramClear(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Mac::Mac>().ResetRetrySuccessHistogram();
+}
+#endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+
 void otLinkSetPcapCallback(otInstance *aInstance, otLinkPcapCallback aPcapCallback, void *aCallbackContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

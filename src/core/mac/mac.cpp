@@ -1261,6 +1261,18 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
 
     case kOperationTransmitDataDirect:
         mCounters.mTxData++;
+
+        if (aError != OT_ERROR_NONE)
+        {
+            mCounters.mTxDirectMaxRetryExpiry++;
+        }
+#if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+        else if (mSubMac.GetTransmitRetries() < OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT)
+        {
+            mRetryHistogram.mTxDirectRetrySuccess[mSubMac.GetTransmitRetries()]++;
+        }
+#endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+
         otDumpDebgMac("TX", aFrame.GetHeader(), aFrame.GetLength());
         FinishOperation();
         Get<MeshForwarder>().HandleSentFrame(aFrame, aError);
@@ -1270,6 +1282,18 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
 #if OPENTHREAD_FTD
     case kOperationTransmitDataIndirect:
         mCounters.mTxData++;
+
+        if (aError != OT_ERROR_NONE)
+        {
+            mCounters.mTxIndirectMaxRetryExpiry++;
+        }
+#if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+        else if (mSubMac.GetTransmitRetries() < OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT)
+        {
+            mRetryHistogram.mTxIndirectRetrySuccess[mSubMac.GetTransmitRetries()]++;
+        }
+#endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+
         otDumpDebgMac("TX", aFrame.GetHeader(), aFrame.GetLength());
         FinishOperation();
         Get<DataPollHandler>().HandleSentFrame(aFrame, aError);
@@ -1630,7 +1654,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
             ExitNow();
         }
 
-        // Fall through
+        // Fall-through
 
     case kOperationEnergyScan:
 
@@ -1788,6 +1812,43 @@ void Mac::SetPromiscuous(bool aPromiscuous)
     mSubMac.SetRxOnWhenBackoff(mRxOnWhenIdle || mPromiscuous);
     UpdateIdleMode();
 }
+
+#if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+const uint32_t *Mac::DirectRetrySuccessHistogramGet(uint8_t *aNumberOfEntries)
+{
+    if (mMaxFrameRetriesDirect >= OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT)
+    {
+        *aNumberOfEntries = OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT;
+    }
+    else
+    {
+        *aNumberOfEntries = mMaxFrameRetriesDirect + 1;
+    }
+
+    return mRetryHistogram.mTxDirectRetrySuccess;
+}
+
+#if OPENTHREAD_FTD
+const uint32_t *Mac::IndirectRetrySuccessHistogramGet(uint8_t *aNumberOfEntries)
+{
+    if (mMaxFrameRetriesIndirect >= OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT)
+    {
+        *aNumberOfEntries = OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT;
+    }
+    else
+    {
+        *aNumberOfEntries = mMaxFrameRetriesIndirect + 1;
+    }
+
+    return mRetryHistogram.mTxIndirectRetrySuccess;
+}
+#endif // OPENTHREAD_FTD
+
+void Mac::ResetRetrySuccessHistogram()
+{
+    memset(&mRetryHistogram, 0, sizeof(mRetryHistogram));
+}
+#endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 
 int8_t Mac::GetNoiseFloor(void)
 {

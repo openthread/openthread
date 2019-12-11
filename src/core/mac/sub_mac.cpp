@@ -374,8 +374,6 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aEr
         ExitNow();
     }
 
-    mTransmitRetries = 0;
-
     SetState(kStateReceive);
 
     mCallbacks.TransmitDone(aFrame, aAckFrame, aError);
@@ -387,6 +385,11 @@ exit:
 int8_t SubMac::GetRssi(void) const
 {
     return Get<Radio>().GetRssi();
+}
+
+uint8_t SubMac::GetTransmitRetries(void) const
+{
+    return mTransmitRetries;
 }
 
 otError SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
