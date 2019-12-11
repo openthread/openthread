@@ -62,6 +62,15 @@
 #endif
 #include <openthread-system.h>
 
+typedef struct PosixConfig
+{
+    otPlatformConfig mPlatformConfig;    ///< Platform configuration.
+    int              mLogLevel;          ///< Debug level of logging.
+    bool             mIsDryRun;          ///< Dry run.
+    bool             mPrintRadioVersion; ///< Whether to print radio firmware version.
+    bool             mIsVerbose;         ///< Whether to print log to stderr.
+} PosixConfig;
+
 static jmp_buf gResetJump;
 
 void __gcov_flush();
@@ -94,13 +103,13 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
     exit(aExitCode);
 }
 
-void ParseArg(int aArgCount, char *aArgVector[], otPlatformConfig *aConfig)
+void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
 {
-    memset(aConfig, 0, sizeof(otPlatformConfig));
+    memset(aConfig, 0, sizeof(PosixConfig));
 
-    aConfig->mSpeedUpFactor = 1;
-    aConfig->mResetRadio    = true;
-    aConfig->mLogLevel      = OT_LOG_LEVEL_CRIT;
+    aConfig->mPlatformConfig.mSpeedUpFactor = 1;
+    aConfig->mPlatformConfig.mResetRadio    = true;
+    aConfig->mLogLevel                      = OT_LOG_LEVEL_CRIT;
 
     optind = 1;
 
@@ -117,23 +126,24 @@ void ParseArg(int aArgCount, char *aArgVector[], otPlatformConfig *aConfig)
         switch (option)
         {
         case 'd':
-            aConfig->mLogLevel = (uint8_t)atoi(optarg);
+            aConfig->mLogLevel = atoi(optarg);
             break;
         case 'h':
             PrintUsage(aArgVector[0], stdout, OT_EXIT_SUCCESS);
             break;
         case 'I':
-            aConfig->mInterfaceName = optarg;
+            aConfig->mPlatformConfig.mInterfaceName = optarg;
             break;
         case 'n':
             aConfig->mIsDryRun = true;
             break;
         case 's':
         {
-            char *endptr            = NULL;
-            aConfig->mSpeedUpFactor = (uint32_t)strtol(optarg, &endptr, 0);
+            char *endptr = NULL;
 
-            if (*endptr != '\0' || aConfig->mSpeedUpFactor == 0)
+            aConfig->mPlatformConfig.mSpeedUpFactor = (uint32_t)strtol(optarg, &endptr, 0);
+
+            if (*endptr != '\0' || aConfig->mPlatformConfig.mSpeedUpFactor == 0)
             {
                 fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", optarg);
                 exit(OT_EXIT_INVALID_ARGUMENTS);
@@ -151,7 +161,7 @@ void ParseArg(int aArgCount, char *aArgVector[], otPlatformConfig *aConfig)
             }
             else if (!strcmp(kOptions[index].name, "no-reset"))
             {
-                aConfig->mResetRadio = false;
+                aConfig->mPlatformConfig.mResetRadio = false;
             }
             break;
         case '?':
@@ -168,18 +178,18 @@ void ParseArg(int aArgCount, char *aArgVector[], otPlatformConfig *aConfig)
         PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
     }
 
-    aConfig->mRadioFile = aArgVector[optind];
+    aConfig->mPlatformConfig.mRadioFile = aArgVector[optind];
 
     if (optind + 1 < aArgCount)
     {
-        aConfig->mRadioConfig = aArgVector[optind + 1];
+        aConfig->mPlatformConfig.mRadioConfig = aArgVector[optind + 1];
     }
 }
 
 static otInstance *InitInstance(int aArgCount, char *aArgVector[])
 {
-    otPlatformConfig config;
-    otInstance *     instance = NULL;
+    PosixConfig config;
+    otInstance *instance = NULL;
 
     ParseArg(aArgCount, aArgVector, &config);
 
@@ -188,7 +198,7 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
 #endif
 
-    instance = otSysInit(&config);
+    instance = otSysInit(&config.mPlatformConfig);
 
     if (config.mPrintRadioVersion)
     {

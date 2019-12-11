@@ -90,13 +90,8 @@ enum
  */
 typedef struct otPlatformConfig
 {
-    uint32_t    mSpeedUpFactor;     ///< Speed up factor.
-    uint8_t     mLogLevel;          ///< Debug level of logging.
-    bool        mIsDryRun;          ///< Dry run.
-    bool        mPrintRadioVersion; ///< Whether to print radio firmware version.
-    bool        mIsVerbose;         ///< Whether to print log to stderr.
-
     uint64_t    mNodeId;        ///< Unique node ID.
+    uint32_t    mSpeedUpFactor; ///< Speed up factor.
     const char *mInterfaceName; ///< Thread network interface name.
     const char *mRadioFile;     ///< Radio file path.
     const char *mRadioConfig;   ///< Radio configurations.
