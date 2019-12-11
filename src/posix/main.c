@@ -65,7 +65,7 @@
 typedef struct PosixConfig
 {
     otPlatformConfig mPlatformConfig;    ///< Platform configuration.
-    int              mLogLevel;          ///< Debug level of logging.
+    otLogLevel       mLogLevel;          ///< Debug level of logging.
     bool             mIsDryRun;          ///< Dry run.
     bool             mPrintRadioVersion; ///< Whether to print radio firmware version.
     bool             mIsVerbose;         ///< Whether to print log to stderr.
@@ -126,7 +126,7 @@ void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         switch (option)
         {
         case 'd':
-            aConfig->mLogLevel = atoi(optarg);
+            aConfig->mLogLevel = (otLogLevel)atoi(optarg);
             break;
         case 'h':
             PrintUsage(aArgVector[0], stdout, OT_EXIT_SUCCESS);
