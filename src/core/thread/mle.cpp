@@ -2572,6 +2572,7 @@ void Mle::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageI
 
 void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
+    otError         error = OT_ERROR_NONE;
     Header          header;
     uint32_t        keySequence;
     const uint8_t * mleKey;
@@ -2588,11 +2589,13 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     uint8_t         command;
     Neighbor *      neighbor;
 
+    otLogDebgMle("Receive UDP message");
+
     VerifyOrExit(aMessageInfo.GetLinkInfo() != NULL);
-    VerifyOrExit(aMessageInfo.GetHopLimit() == kMleHopLimit);
+    VerifyOrExit(aMessageInfo.GetHopLimit() == kMleHopLimit, error = OT_ERROR_PARSE);
 
     length = aMessage.Read(aMessage.GetOffset(), sizeof(header), &header);
-    VerifyOrExit(header.IsValid() && header.GetLength() <= length);
+    VerifyOrExit(header.IsValid() && header.GetLength() <= length, error = OT_ERROR_PARSE);
 
     if (header.GetSecuritySuite() == Header::kNoSecurity)
     {
@@ -2615,7 +2618,8 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         ExitNow();
     }
 
-    VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED && header.GetSecuritySuite() == Header::k154Security);
+    VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(header.GetSecuritySuite() == Header::k154Security, error = OT_ERROR_PARSE);
 
     keySequence = header.GetKeyId();
 
@@ -2628,20 +2632,22 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         mleKey = Get<KeyManager>().GetTemporaryMleKey(keySequence);
     }
 
-    VerifyOrExit(aMessage.GetOffset() + header.GetLength() + sizeof(messageTag) <= aMessage.GetLength());
+    VerifyOrExit(aMessage.GetOffset() + header.GetLength() + sizeof(messageTag) <= aMessage.GetLength(),
+                 error = OT_ERROR_PARSE);
     aMessage.MoveOffset(header.GetLength() - 1);
 
     aMessage.Read(aMessage.GetLength() - sizeof(messageTag), sizeof(messageTag), messageTag);
-    SuccessOrExit(aMessage.SetLength(aMessage.GetLength() - sizeof(messageTag)));
+    SuccessOrExit(error = aMessage.SetLength(aMessage.GetLength() - sizeof(messageTag)));
 
     aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
     frameCounter = header.GetFrameCounter();
     KeyManager::GenerateNonce(macAddr, frameCounter, Mac::Frame::kSecEncMic32, nonce);
 
     aesCcm.SetKey(mleKey, 16);
-    SuccessOrExit(
-        aesCcm.Init(sizeof(aMessageInfo.GetPeerAddr()) + sizeof(aMessageInfo.GetSockAddr()) + header.GetHeaderLength(),
-                    aMessage.GetLength() - aMessage.GetOffset(), sizeof(messageTag), nonce, sizeof(nonce)));
+    SuccessOrExit(error = aesCcm.Init(sizeof(aMessageInfo.GetPeerAddr()) + sizeof(aMessageInfo.GetSockAddr()) +
+                                          header.GetHeaderLength(),
+                                      aMessage.GetLength() - aMessage.GetOffset(), sizeof(messageTag), nonce,
+                                      sizeof(nonce)));
 
     aesCcm.Header(&aMessageInfo.GetPeerAddr(), sizeof(aMessageInfo.GetPeerAddr()));
     aesCcm.Header(&aMessageInfo.GetSockAddr(), sizeof(aMessageInfo.GetSockAddr()));
@@ -2662,7 +2668,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     tagLength = sizeof(tag);
     aesCcm.Finalize(tag, &tagLength);
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    VerifyOrExit(memcmp(messageTag, tag, sizeof(tag)) == 0);
+    VerifyOrExit(memcmp(messageTag, tag, sizeof(tag)) == 0, error = OT_ERROR_SECURITY);
 #endif
 
     if (keySequence > Get<KeyManager>().GetCurrentKeySequence())
@@ -2704,20 +2710,11 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     {
         if (keySequence == neighbor->GetKeySequence())
         {
-            if (frameCounter < neighbor->GetMleFrameCounter())
-            {
-                otLogDebgMle("mle frame reject 1");
-                ExitNow();
-            }
+            VerifyOrExit(frameCounter >= neighbor->GetMleFrameCounter(), error = OT_ERROR_DUPLICATED);
         }
         else
         {
-            if (keySequence <= neighbor->GetKeySequence())
-            {
-                otLogDebgMle("mle frame reject 2");
-                ExitNow();
-            }
-
+            VerifyOrExit(keySequence > neighbor->GetKeySequence(), error = OT_ERROR_DUPLICATED);
             neighbor->SetKeySequence(keySequence);
             neighbor->SetLinkFrameCounter(0);
         }
@@ -2803,6 +2800,12 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     }
 
 exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogNoteMle("Failed to process UDP: %s", otThreadErrorToString(error));
+    }
+
     return;
 }
 
@@ -2879,6 +2882,12 @@ otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo
     }
 
 exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMle("Failed to process Advertisement: %s", otThreadErrorToString(error));
+    }
+
     return error;
 }
 
@@ -2894,11 +2903,6 @@ otError Mle::HandleDataResponse(const Message &         aMessage,
 
     error = HandleLeaderData(aMessage, aMessageInfo);
 
-    if (error != OT_ERROR_NONE)
-    {
-        otLogWarnMle("Failed to process Data Response: %s", otThreadErrorToString(error));
-    }
-
     if (mDataRequestState == kDataRequestNone && !IsRxOnWhenIdle())
     {
         // Here simply stops fast data poll request by Mle Data Request.
@@ -2910,6 +2914,12 @@ otError Mle::HandleDataResponse(const Message &         aMessage,
     }
 
 exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMle("Failed to process Data Response: %s", otThreadErrorToString(error));
+    }
+
     return error;
 }
 
@@ -3523,7 +3533,7 @@ otError Mle::HandleChildUpdateRequest(const Message &         aMessage,
         {
             if (numTlvs >= sizeof(tlvs))
             {
-                otLogNoteMle("Failed to respond with TLVs: %d of %d", i, tlvRequest.GetLength());
+                otLogWarnMle("Failed to respond with TLVs: %d of %d", i, tlvRequest.GetLength());
                 break;
             }
 
@@ -3534,6 +3544,12 @@ otError Mle::HandleChildUpdateRequest(const Message &         aMessage,
     SuccessOrExit(error = SendChildUpdateResponse(tlvs, numTlvs, challenge));
 
 exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMle("Failed to process Child Update Request from parent: %s", otThreadErrorToString(error));
+    }
+
     return error;
 }
 
@@ -3733,6 +3749,12 @@ otError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMe
     }
 
 exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMle("Failed to process Announce: %s", otThreadErrorToString(error));
+    }
+
     return error;
 }
 
