@@ -37,6 +37,7 @@ class REED_5_6_7(HarnessCase):
     role = HarnessCase.ROLE_REED
     case = '5 6 7'
     golden_devices_required = 16
+    case_need_shield = True
 
     def on_dialog(self, dialog, title):
         pass

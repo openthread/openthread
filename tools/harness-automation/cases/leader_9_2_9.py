@@ -37,6 +37,8 @@ class Leader_9_2_9(HarnessCase):
     role = HarnessCase.ROLE_LEADER
     case = '9 2 9'
     golden_devices_required = 3
+    case_need_shield = True
+    device_order = [('Router_2', False), ('Commissioner', True), ('Router_1', False), ('DUT', True)]
 
     def on_dialog(self, dialog, title):
         pass
