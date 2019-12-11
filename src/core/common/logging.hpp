@@ -723,9 +723,6 @@ extern "C" {
 #define otLogNoteMac(aFormat, ...) otLogNote(OT_LOG_REGION_MAC, _OT_REGION_MAC_PREFIX aFormat, ##__VA_ARGS__)
 #define otLogInfoMac(aFormat, ...) otLogInfo(OT_LOG_REGION_MAC, _OT_REGION_MAC_PREFIX aFormat, ##__VA_ARGS__)
 #define otLogDebgMac(aFormat, ...) otLogDebg(OT_LOG_REGION_MAC, _OT_REGION_MAC_PREFIX aFormat, ##__VA_ARGS__)
-#define otLogDebgMacErr(aError, aFormat, ...)                                                               \
-    otLogWarn(OT_LOG_REGION_MAC, _OT_REGION_MAC_PREFIX "Error %s: " aFormat, otThreadErrorToString(aError), \
-              ##__VA_ARGS__)
 #define otLogMac(aLogLevel, aFormat, ...)                                                     \
     do                                                                                        \
     {                                                                                         \
@@ -742,7 +739,6 @@ extern "C" {
 #define otLogNoteMac(aFormat, ...)
 #define otLogInfoMac(aFormat, ...)
 #define otLogDebgMac(aFormat, ...)
-#define otLogDebgMacErr(aError, aFormat, ...)
 #define otLogMac(aLogLevel, aFormat, ...)
 #endif
 
@@ -801,15 +797,11 @@ extern "C" {
 #define otLogNoteCore(aFormat, ...) otLogNote(OT_LOG_REGION_CORE, _OT_REGION_CORE_PREFIX aFormat, ##__VA_ARGS__)
 #define otLogInfoCore(aFormat, ...) otLogInfo(OT_LOG_REGION_CORE, _OT_REGION_CORE_PREFIX aFormat, ##__VA_ARGS__)
 #define otLogDebgCore(aFormat, ...) otLogDebg(OT_LOG_REGION_CORE, _OT_REGION_CORE_PREFIX aFormat, ##__VA_ARGS__)
-#define otLogDebgCoreErr(aError, aFormat, ...)                                                                \
-    otLogWarn(OT_LOG_REGION_CORE, _OT_REGION_CORE_PREFIX "Error %s: " aFormat, otThreadErrorToString(aError), \
-              ##__VA_ARGS__)
 #else
 #define otLogCritCore(aFormat, ...)
 #define otLogWarnCore(aFormat, ...)
 #define otLogInfoCore(aFormat, ...)
 #define otLogDebgCore(aFormat, ...)
-#define otLogDebgCoreErr(aError, aFormat, ...)
 #endif
 
 /**
@@ -929,16 +921,12 @@ extern "C" {
 #define otLogWarnUtil(aFormat, ...) otLogWarn(OT_LOG_REGION_UTIL, _OT_REGION_UTIL_PREFIX aFormat, ##__VA_ARGS__)
 #define otLogNoteUtil(aFormat, ...) otLogNote(OT_LOG_REGION_UTIL, _OT_REGION_UTIL_PREFIX aFormat, ##__VA_ARGS__)
 #define otLogInfoUtil(aFormat, ...) otLogInfo(OT_LOG_REGION_UTIL, _OT_REGION_UTIL_PREFIX aFormat, ##__VA_ARGS__)
-#define otLogInfoUtilErr(aError, aFormat, ...)                                                                \
-    otLogInfo(OT_LOG_REGION_UTIL, _OT_REGION_CORE_PREFIX "Error %s: " aFormat, otThreadErrorToString(aError), \
-              ##__VA_ARGS__)
 #define otLogDebgUtil(aFormat, ...) otLogDebg(OT_LOG_REGION_UTIL, _OT_REGION_UTIL_PREFIX aFormat, ##__VA_ARGS__)
 #else
 #define otLogCritUtil(aFormat, ...)
 #define otLogWarnUtil(aFormat, ...)
 #define otLogNoteUtil(aFormat, ...)
 #define otLogInfoUtil(aFormat, ...)
-#define otLogInfoUtilErr(aError, aFormat, ...)
 #define otLogDebgUtil(aFormat, ...)
 #endif
 
@@ -1082,15 +1070,12 @@ extern "C" {
 #define otLogWarnCli(aFormat, ...) otLogWarn(OT_LOG_REGION_CLI, _OT_REGION_CLI_PREFIX aFormat, ##__VA_ARGS__)
 #define otLogNoteCli(aFormat, ...) otLogNote(OT_LOG_REGION_CLI, _OT_REGION_CLI_PREFIX aFormat, ##__VA_ARGS__)
 #define otLogInfoCli(aFormat, ...) otLogInfo(OT_LOG_REGION_CLI, _OT_REGION_CLI_PREFIX aFormat, ##__VA_ARGS__)
-#define otLogInfoCliErr(aError, aFormat, ...) \
-    otLogInfo(OT_LOG_REGION_CLI, "Error %s: " aFormat, otThreadErrorToString(aError), ##__VA_ARGS__)
 #define otLogDebgCli(aFormat, ...) otLogDebg(OT_LOG_REGION_CLI, _OT_REGION_CLI_PREFIX aFormat, ##__VA_ARGS__)
 #else
 #define otLogCritCli(aFormat, ...)
 #define otLogWarnCli(aFormat, ...)
 #define otLogNoteCli(aFormat, ...)
 #define otLogInfoCli(aFormat, ...)
-#define otLogInfoCliErr(aError, aFormat, ...)
 #define otLogDebgCli(aFormat, ...)
 #endif
 
