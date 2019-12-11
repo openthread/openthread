@@ -999,7 +999,7 @@ const uint32_t *otLinkGetTxIndirectRetrySuccessHistogramGet(otInstance *aInstanc
  * @param[in]   aInstance          A pointer to an OpenThread instance.
  *
  */
-void otLinkGetTxRetrySuccessHistogramClear(otInstance *aInstance);
+void otLinkResetTxRetrySuccessHistogram(otInstance *aInstance);
 
 /**
  * Get the MAC layer counters.

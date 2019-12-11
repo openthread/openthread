@@ -337,7 +337,7 @@ const uint32_t *otLinkGetTxIndirectRetrySuccessHistogramGet(otInstance *aInstanc
 #endif
 }
 
-void otLinkGetTxRetrySuccessHistogramClear(otInstance *aInstance)
+void otLinkResetTxRetrySuccessHistogram(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 

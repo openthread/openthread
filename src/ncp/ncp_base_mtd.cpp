@@ -2576,7 +2576,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_CNTR_MAC_RETRY_HISTOGRAM>(void)
 {
-    otLinkGetTxRetrySuccessHistogramClear(mInstance);
+    otLinkResetTxRetrySuccessHistogram(mInstance);
 
     return OT_ERROR_NONE;
 }
@@ -2952,6 +2952,9 @@ exit:
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_CNTR_RESET>(void)
 {
     otLinkResetCounters(mInstance);
+#if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+    otLinkResetTxRetrySuccessHistogram(mInstance);
+#endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
     otThreadResetIp6Counters(mInstance);
     otThreadResetMleCounters(mInstance);
     ResetCounters();
