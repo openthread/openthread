@@ -385,16 +385,12 @@ extern "C" {
 #if OPENTHREAD_CONFIG_LOG_MLE == 1
 #define otLogCritMle(aFormat, ...) otLogCrit(OT_LOG_REGION_MLE, _OT_REGION_MLE_PREFIX aFormat, ##__VA_ARGS__)
 #define otLogWarnMle(aFormat, ...) otLogWarn(OT_LOG_REGION_MLE, _OT_REGION_MLE_PREFIX aFormat, ##__VA_ARGS__)
-#define otLogWarnMleErr(aError, aFormat, ...)                                                               \
-    otLogWarn(OT_LOG_REGION_MLE, _OT_REGION_MLE_PREFIX "Error %s: " aFormat, otThreadErrorToString(aError), \
-              ##__VA_ARGS__)
 #define otLogNoteMle(aFormat, ...) otLogNote(OT_LOG_REGION_MLE, _OT_REGION_MLE_PREFIX aFormat, ##__VA_ARGS__)
 #define otLogInfoMle(aFormat, ...) otLogInfo(OT_LOG_REGION_MLE, _OT_REGION_MLE_PREFIX aFormat, ##__VA_ARGS__)
 #define otLogDebgMle(aFormat, ...) otLogDebg(OT_LOG_REGION_MLE, _OT_REGION_MLE_PREFIX aFormat, ##__VA_ARGS__)
 #else
 #define otLogCritMle(aFormat, ...)
 #define otLogWarnMle(aFormat, ...)
-#define otLogWarnMleErr(aError, aFormat, ...)
 #define otLogNoteMle(aFormat, ...)
 #define otLogInfoMle(aFormat, ...)
 #define otLogDebgMle(aFormat, ...)
