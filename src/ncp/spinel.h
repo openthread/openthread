@@ -3860,8 +3860,8 @@ enum
     /// MAC retry histogram.
     /** Format: t(A(L))t(A(L))
      *
-     * The contents include two structs, first one is histogram which corresponds to retransmissions number of direct messages,
-     * second one provides the histogram of retransmissions for indirect messages.
+     * The contents include two structs, first one is histogram which corresponds to retransmissions number of direct
+     * messages, second one provides the histogram of retransmissions for indirect messages.
      *
      * The first structure includes:
      *   'L': DirectRetry[0]                   (The number of packets after 0 retry).
