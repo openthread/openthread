@@ -2326,11 +2326,7 @@ class OpenThread_WpanCtl(IThci):
 
             if listActiveTimestamp is not None:
                 sActiveTimestamp = '%016x' % listActiveTimestamp[0]
-                setActiveTimeCmd = (
-                    self.wpan_cmd_prefix
-                    + 'setprop Dataset:ActiveTimestamp '
-                    + sActiveTimestamp
-                )
+                setActiveTimeCmd = self.wpan_cmd_prefix + 'setprop Dataset:ActiveTimestamp ' + sActiveTimestamp
                 if self.__sendCommand(setActiveTimeCmd)[0] == 'Fail':
                     return False
 
@@ -2389,11 +2385,7 @@ class OpenThread_WpanCtl(IThci):
 
             if sPSKc is not None:
                 setRawTLVCmd += '0410'
-                stretchedPskc = Thread_PBKDF2.get(
-                    sPSKc,
-                    ModuleHelper.Default_XpanId,
-                    ModuleHelper.Default_NwkName,
-                )
+                stretchedPskc = Thread_PBKDF2.get(sPSKc, ModuleHelper.Default_XpanId, ModuleHelper.Default_NwkName)
                 pskc = '%x' % stretchedPskc
 
                 if len(pskc) < 32:
@@ -2535,21 +2527,13 @@ class OpenThread_WpanCtl(IThci):
 
             if listPendingTimestamp is not None:
                 sActiveTimestamp = '%016x' % listPendingTimestamp[0]
-                setPendingTimeCmd = (
-                    self.wpan_cmd_prefix
-                    + 'setprop Dataset:PendingTimestamp '
-                    + sActiveTimestamp
-                )
+                setPendingTimeCmd = self.wpan_cmd_prefix + 'setprop Dataset:PendingTimestamp ' + sActiveTimestamp
                 if self.__sendCommand(setPendingTimeCmd)[0] == 'Fail':
                     return False
 
             if listActiveTimestamp is not None:
                 sActiveTimestamp = '%016x' % listActiveTimestamp[0]
-                setActiveTimeCmd = (
-                    self.wpan_cmd_prefix
-                    + 'setprop Dataset:ActiveTimestamp '
-                    + sActiveTimestamp
-                )
+                setActiveTimeCmd = self.wpan_cmd_prefix + 'setprop Dataset:ActiveTimestamp ' + sActiveTimestamp
                 if self.__sendCommand(setActiveTimeCmd)[0] == 'Fail':
                     return False
 
