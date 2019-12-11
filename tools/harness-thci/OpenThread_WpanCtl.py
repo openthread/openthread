@@ -689,7 +689,7 @@ class OpenThread_WpanCtl(IThci):
         maxDuration = 150  # seconds
         t_end = time.time() + maxDuration
         while time.time() < t_end:
-            joinerState = self.__stripValue(self.__sendCommand('sudo wpanctl getprop -v NCP:State')[0])
+            joinerState = self.__stripValue(self.__sendCommand(self.wpan_cmd_prefix + 'getprop -v NCP:State')[0])
             if joinerState == 'offline:commissioned':
                 return True
             elif joinerState == 'associating:credentials-needed':
