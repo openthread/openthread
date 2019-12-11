@@ -3860,8 +3860,8 @@ enum
     /// MAC retry histogram.
     /** Format: t(A(L))t(A(L))
      *
-     * The contents include two structs, first one is histogram which corresponds to retries of direct transmission,
-     * second one provides the histogram of retries for indirect transmission.
+     * The contents include two structs, first one is histogram which corresponds to retransmissions number of direct messages,
+     * second one provides the histogram of retransmissions for indirect messages.
      *
      * The first structure includes:
      *   'L': DirectRetry[0]                   (The number of packets after 0 retry).
@@ -3869,7 +3869,7 @@ enum
      *    ...
      *   'L': DirectRetry[n]                   (The number of packets after n retry).
      *
-     * The size of the array is compile fixed to OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT.
+     * The size of the array is OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT.
      *
      * The second structure includes:
      *   'L': IndirectRetry[0]                   (The number of packets after 0 retry).
@@ -3877,7 +3877,7 @@ enum
      *    ...
      *   'L': IndirectRetry[m]                   (The number of packets after m retry).
      *
-     * The size of the array is compile fixed to OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT.
+     * The size of the array is OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT.
      *
      * Writing to this property with any value would reset MAC retry histogram.
      *
