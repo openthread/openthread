@@ -820,6 +820,8 @@ static int push_hdlc(void)
 
             unescaped_frame_len = sSpiRxPayloadSize;
 
+            escaped_frame_buffer[escaped_frame_len++] = HDLC_BYTE_FLAG;
+
             for (i = 0; i < sSpiRxPayloadSize; i++)
             {
                 c   = spiRxFrameBuffer[i + HEADER_LEN];
