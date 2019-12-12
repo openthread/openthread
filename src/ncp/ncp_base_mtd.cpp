@@ -2541,18 +2541,11 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_MAC_RETRY_HISTOG
     uint8_t         histogramDirectEntries;
     uint8_t         histogramIndirectEntries;
 
-    histogramDirect   = otLinkGetTxDirectRetrySuccessHistogramGet(mInstance, &histogramDirectEntries);
-    histogramIndirect = otLinkGetTxIndirectRetrySuccessHistogramGet(mInstance, &histogramIndirectEntries);
+    histogramDirect   = otLinkGetTxDirectRetrySuccessHistogram(mInstance, histogramDirectEntries);
+    histogramIndirect = otLinkGetTxIndirectRetrySuccessHistogram(mInstance, histogramIndirectEntries);
 
-    if (histogramDirectEntries)
-    {
-        assert(histogramDirect != NULL);
-    }
-
-    if (histogramIndirectEntries)
-    {
-        assert(histogramIndirect != NULL);
-    }
+    assert((histogramDirectEntries == 0) || (histogramDirect != NULL));
+    assert((histogramIndirectEntries == 0) || (histogramIndirect != NULL));
 
     // Encode direct message retries histogram
     SuccessOrExit(error = mEncoder.OpenStruct());
@@ -2954,7 +2947,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_CNTR_RESET>(void)
     otLinkResetCounters(mInstance);
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
     otLinkResetTxRetrySuccessHistogram(mInstance);
-#endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+#endif
     otThreadResetIp6Counters(mInstance);
     otThreadResetMleCounters(mInstance);
     ResetCounters();

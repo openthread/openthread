@@ -316,25 +316,27 @@ int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality
 #endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
-const uint32_t *otLinkGetTxDirectRetrySuccessHistogramGet(otInstance *aInstance, uint8_t *aNumberOfEntries)
+const uint32_t *otLinkGetTxDirectRetrySuccessHistogram(otInstance *aInstance, uint8_t &aNumberOfEntries)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mac::Mac>().DirectRetrySuccessHistogramGet(aNumberOfEntries);
+    return instance.Get<Mac::Mac>().GetDirectRetrySuccessHistogram(aNumberOfEntries);
 }
 
-const uint32_t *otLinkGetTxIndirectRetrySuccessHistogramGet(otInstance *aInstance, uint8_t *aNumberOfEntries)
+const uint32_t *otLinkGetTxIndirectRetrySuccessHistogram(otInstance *aInstance, uint8_t &aNumberOfEntries)
 {
+    uint32_t *histogram = NULL;
+
 #if OPENTHREAD_FTD
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mac::Mac>().IndirectRetrySuccessHistogramGet(aNumberOfEntries);
+    histogram = (uint32_t *)instance.Get<Mac::Mac>().GetIndirectRetrySuccessHistogram(aNumberOfEntries);
 #else
     OT_UNUSED_VARIABLE(aInstance);
-    *aNumberOfEntries = 0;
-
-    return NULL;
+    aNumberOfEntries = 0;
 #endif
+
+    return histogram;
 }
 
 void otLinkResetTxRetrySuccessHistogram(otInstance *aInstance)

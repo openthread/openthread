@@ -311,20 +311,20 @@ public:
     otError Send(void);
 
     /**
+     * This method gets the number of transmit retries of last transmit packet.
+     *
+     * @returns Number of transmit retries.
+     *
+     */
+    uint8_t GetTransmitRetries(void) const { return mTransmitRetries; }
+
+    /**
      * This method gets the most recent RSSI measurement.
      *
      * @returns The RSSI in dBm when it is valid. `kInvalidRssiValue` when RSSI is invalid.
      *
      */
     int8_t GetRssi(void) const;
-
-    /**
-     * This method gets the number of transmit retries of last transmit packet.
-     *
-     * @returns Number of transmit retries.
-     *
-     */
-    uint8_t GetTransmitRetries(void) const;
 
     /**
      * This method begins energy scan.

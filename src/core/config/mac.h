@@ -96,7 +96,7 @@
 /**
  * @def OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT
  *
- * The default size of MAC histogram array for direct retry successed message transmission.
+ * The default size of MAC histogram array for success message retry direct transmission.
  *
  * Default value is (OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT + 1).
  *
@@ -109,7 +109,7 @@
 /**
  * @def OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT
  *
- * The default size of MAC histogram array for indirect retry successed message transmission.
+ * The default size of MAC histogram array for success message retry direct transmission.
  *
  * Default value is (OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT + 1).
  *
