@@ -2239,7 +2239,7 @@ const char *spinel_net_role_to_cstr(uint8_t net_role)
     return ret;
 }
 
-const char *spinel_mcu_power_state_to_cstr(spinel_mcu_power_state_t mcu_power_state)
+const char *spinel_mcu_power_state_to_cstr(uint8_t mcu_power_state)
 {
     const char *ret = "MCU_POWER_STATE_UNKNOWN";
 
@@ -2255,6 +2255,9 @@ const char *spinel_mcu_power_state_to_cstr(spinel_mcu_power_state_t mcu_power_st
 
     case SPINEL_MCU_POWER_STATE_OFF:
         ret = "MCU_POWER_STATE_OFF";
+        break;
+
+    default:
         break;
     }
 
