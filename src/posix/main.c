@@ -103,7 +103,7 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
     exit(aExitCode);
 }
 
-void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
+static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
 {
     memset(aConfig, 0, sizeof(PosixConfig));
 
