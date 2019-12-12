@@ -307,6 +307,12 @@ void CoapBase::HandleRetransmissionTimer(void)
 
         if (now >= metadata.mNextTimerShot)
         {
+            if (message->IsRequest() && metadata.mObserve && metadata.mAcknowledged)
+            {
+                // This is a RFC7641 subscription.  Do not time out.
+                continue;
+            }
+
             if (!metadata.mConfirmable || (metadata.mRetransmissionsRemaining == 0))
             {
                 // No expected response or acknowledgment.
