@@ -994,6 +994,8 @@ enum
     SPINEL_CMD_EXPERIMENTAL__END   = 2097152,
 };
 
+typedef uint32_t spinel_command_t;
+
 enum
 {
     SPINEL_CAP_LOCK       = 1,
@@ -1080,6 +1082,8 @@ enum
     SPINEL_CAP_EXPERIMENTAL__BEGIN = 2000000,
     SPINEL_CAP_EXPERIMENTAL__END   = 2097152,
 };
+
+typedef uint32_t spinel_capability_t;
 
 /**
  * Property Keys
@@ -4075,7 +4079,7 @@ SPINEL_API_EXTERN const char *spinel_next_packed_datatype(const char *pack_forma
 
 // ----------------------------------------------------------------------------
 
-SPINEL_API_EXTERN const char *spinel_command_to_cstr(unsigned int command);
+SPINEL_API_EXTERN const char *spinel_command_to_cstr(spinel_command_t command);
 
 SPINEL_API_EXTERN const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key);
 
@@ -4085,7 +4089,7 @@ SPINEL_API_EXTERN const char *spinel_mcu_power_state_to_cstr(spinel_mcu_power_st
 
 SPINEL_API_EXTERN const char *spinel_status_to_cstr(spinel_status_t status);
 
-SPINEL_API_EXTERN const char *spinel_capability_to_cstr(unsigned int capability);
+SPINEL_API_EXTERN const char *spinel_capability_to_cstr(spinel_capability_t capability);
 
 // ----------------------------------------------------------------------------
 
