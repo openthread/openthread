@@ -432,6 +432,22 @@ exit:
     return err;
 }
 
+const otCoapOption *OptionIterator::GetFirstOptionMatching(otCoapOptionType aOption)
+{
+    const otCoapOption *rval = NULL;
+    for (const otCoapOption *option = GetFirstOption(); option != NULL; option = GetNextOption())
+    {
+        if (option->mNumber == aOption)
+        {
+            // Found, stop searching
+            rval = option;
+            break;
+        }
+    }
+
+    return rval;
+}
+
 const otCoapOption *OptionIterator::GetFirstOption(void)
 {
     const otCoapOption *option  = NULL;
@@ -447,6 +463,22 @@ const otCoapOption *OptionIterator::GetFirstOption(void)
     }
 
     return option;
+}
+
+const otCoapOption *OptionIterator::GetNextOptionMatching(otCoapOptionType aOption)
+{
+    const otCoapOption *rval = NULL;
+    for (const otCoapOption *option = GetNextOption(); option != NULL; option = GetNextOption())
+    {
+        if (option->mNumber == aOption)
+        {
+            // Found, stop searching
+            rval = option;
+            break;
+        }
+    }
+
+    return rval;
 }
 
 const otCoapOption *OptionIterator::GetNextOption(void)

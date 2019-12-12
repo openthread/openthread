@@ -682,6 +682,18 @@ const uint8_t *otCoapMessageGetToken(const otMessage *aMessage);
 otError otCoapOptionIteratorInit(otCoapOptionIterator *aIterator, const otMessage *aMessage);
 
 /**
+ * This function returns a pointer to the first option matching the specified option number.
+ *
+ * @param[in]  aIterator A pointer to the CoAP message option iterator.
+ * @param[in]  aOption   The option number sought.
+ *
+ * @returns A pointer to the first matching option. If no matching option is present NULL pointer is returned.
+ *
+ */
+const otCoapOption *otCoapOptionIteratorGetFirstOptionMatching(otCoapOptionIterator *aIterator,
+                                                               otCoapOptionType      aOption);
+
+/**
  * This function returns a pointer to the first option.
  *
  * @param[inout]  aIterator A pointer to the CoAP message option iterator.
@@ -690,6 +702,18 @@ otError otCoapOptionIteratorInit(otCoapOptionIterator *aIterator, const otMessag
  *
  */
 const otCoapOption *otCoapOptionIteratorGetFirstOption(otCoapOptionIterator *aIterator);
+
+/**
+ * This function returns a pointer to the next option matching the specified option number.
+ *
+ * @param[in]  aIterator A pointer to the CoAP message option iterator.
+ * @param[in]  aOption   The option number sought.
+ *
+ * @returns A pointer to the next matching option. If no further matching option is present NULL pointer is returned.
+ *
+ */
+const otCoapOption *otCoapOptionIteratorGetNextOptionMatching(otCoapOptionIterator *aIterator,
+                                                              otCoapOptionType      aOption);
 
 /**
  * This function returns a pointer to the next option.

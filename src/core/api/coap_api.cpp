@@ -180,9 +180,20 @@ otError otCoapOptionIteratorInit(otCoapOptionIterator *aIterator, const otMessag
     return static_cast<Coap::OptionIterator *>(aIterator)->Init(static_cast<const Coap::Message *>(aMessage));
 }
 
+const otCoapOption *otCoapOptionIteratorGetFirstOptionMatching(otCoapOptionIterator *aIterator,
+                                                               otCoapOptionType      aOption)
+{
+    return static_cast<Coap::OptionIterator *>(aIterator)->GetFirstOptionMatching(aOption);
+}
+
 const otCoapOption *otCoapOptionIteratorGetFirstOption(otCoapOptionIterator *aIterator)
 {
     return static_cast<Coap::OptionIterator *>(aIterator)->GetFirstOption();
+}
+
+const otCoapOption *otCoapOptionIteratorGetNextOptionMatching(otCoapOptionIterator *aIterator, otCoapOptionType aOption)
+{
+    return static_cast<Coap::OptionIterator *>(aIterator)->GetNextOptionMatching(aOption);
 }
 
 const otCoapOption *otCoapOptionIteratorGetNextOption(otCoapOptionIterator *aIterator)

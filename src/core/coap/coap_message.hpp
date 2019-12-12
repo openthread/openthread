@@ -640,11 +640,25 @@ public:
     otError Init(const Message *aMessage);
 
     /**
+     * This method returns a pointer to the first option matching the given option number.
+     *
+     * @param[in]   aOption         Option number to look for.
+     */
+    const otCoapOption *GetFirstOptionMatching(otCoapOptionType aOption);
+
+    /**
      * This method returns a pointer to the first option.
      *
      * @returns A pointer to the first option. If no option is present NULL pointer is returned.
      */
     const otCoapOption *GetFirstOption(void);
+
+    /**
+     * This method returns a pointer to the next option matching the given option number.
+     *
+     * @param[in]   aOption         Option number to look for.
+     */
+    const otCoapOption *GetNextOptionMatching(otCoapOptionType aOption);
 
     /**
      * This method returns a pointer to the next option.
