@@ -658,7 +658,6 @@ typedef struct
 typedef int          spinel_ssize_t;
 typedef unsigned int spinel_size_t;
 typedef uint8_t      spinel_tid_t;
-typedef unsigned int spinel_cid_t;
 
 enum
 {
