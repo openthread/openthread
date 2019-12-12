@@ -176,6 +176,31 @@ otError CoapBase::SendMessage(Message &               aMessage,
         iterator.Init(&aMessage);
         observe = (iterator.GetFirstOptionMatching(OT_COAP_OPTION_OBSERVE) != NULL);
 
+        // Special case, if we're sending a GET with Observe=1, that is a cancellation.
+        if (observe && (aMessage.GetCode() == OT_COAP_CODE_GET))
+        {
+            uint64_t observeVal = 0;
+
+            SuccessOrExit(error = iterator.GetOptionValue(observeVal));
+
+            if (observeVal == 1)
+            {
+                Metadata handlerMetadata;
+
+                // We're cancelling our subscription, so disable special-case handling on this request.
+                observe = false;
+
+                // If we can find the previous handler context, cancel that too.  Peer address
+                // and tokens, etc should all match.
+                Message *origRequest = FindRelatedRequest(aMessage, aMessageInfo, handlerMetadata);
+                if (origRequest != NULL)
+                {
+                    FinalizeCoapTransaction(*origRequest, handlerMetadata, NULL, NULL, OT_ERROR_NONE);
+                }
+            }
+        }
+
+        // Enqueue and send
         metadata.Init(aMessage.IsConfirmable(), observe, aMessageInfo, aHandler, aContext, aTxParameters);
         storedCopy = CopyAndEnqueueMessage(aMessage, copyLength, metadata);
         VerifyOrExit(storedCopy != NULL, error = OT_ERROR_NO_BUFS);
