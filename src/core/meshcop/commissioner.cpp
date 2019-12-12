@@ -1109,7 +1109,8 @@ otError Commissioner::GeneratePskc(const char *              aPassPhrase,
     uint16_t    saltLen = 0;
 
     VerifyOrExit((strlen(aPassPhrase) >= OT_COMMISSIONING_PASSPHRASE_MIN_SIZE) &&
-                     (strlen(aPassPhrase) <= OT_COMMISSIONING_PASSPHRASE_MAX_SIZE),
+                     (strlen(aPassPhrase) <= OT_COMMISSIONING_PASSPHRASE_MAX_SIZE) &&
+                     (strlen(aNetworkName) <= OT_NETWORK_NAME_MAX_SIZE),
                  error = OT_ERROR_INVALID_ARGS);
 
     memset(salt, 0, sizeof(salt));
