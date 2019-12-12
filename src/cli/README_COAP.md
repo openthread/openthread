@@ -55,12 +55,15 @@ coap response sent
 ## Command List
 
 * [help](#help)
+* [cancel](#cancel)
 * [delete](#delete-address-uri-path-type-payload)
 * [get](#get-address-uri-path-type)
+* [observe](#observe-address-uri-path-type)
 * [parameters](#parameters)
 * [post](#post-address-uri-path-type-payload)
 * [put](#put-address-uri-path-type-payload)
 * [resource](#resource-uri-path)
+* [set](#set-new-content)
 * [start](#start)
 * [stop](#stop)
 
@@ -71,18 +74,31 @@ coap response sent
 ```bash
 > coap help
 help
+cancel
 delete
 get
+observe
 parameters
 post
 put
 resource
+set
 start
 stop
 Done
 ```
 
 List the CoAP CLI commands.
+
+### cancel
+
+Request the cancellation of an existing observation subscription to a remote
+resource.
+
+```bash
+> coap cancel
+Done
+```
 
 ### delete \<address\> \<uri-path\> \[type\] \[payload\]
 
@@ -104,6 +120,20 @@ Done
 
 ```bash
 > coap get fdde:ad00:beef:0:2780:9423:166c:1aac test-resource
+Done
+```
+
+### observe \<address\> \<uri-path\> \[type\]
+
+This is the same a `get`, but the `Observe` parameter will be sent, set to 0
+triggering a subscription request.
+
+* address: IPv6 address of the CoAP server.
+* uri-path: URI path of the resource.
+* type: "con" for Confirmable or "non-con" for Non-confirmable (default).
+
+```bash
+> coap observe fdde:ad00:beef:0:2780:9423:166c:1aac test-resource
 Done
 ```
 
@@ -177,6 +207,15 @@ Sets the URI path for the test resource.
 Done
 > coap resource
 test-resource
+Done
+```
+
+### set \[new-content\]
+
+Sets the content sent by the test resource.  If a CoAP client is observing the resource, a notification is sent to that client.
+
+```bash
+> coap set Testing123
 Done
 ```
 

@@ -82,17 +82,28 @@ private:
         otError (Coap::*mCommand)(int argc, char *argv[]);
     };
 
+    otError CancelResourceSubscription(void);
+    void    CancelSubscriber(void);
+
     void PrintPayload(otMessage *aMessage) const;
 
     otError ProcessHelp(int argc, char *argv[]);
+    otError ProcessCancel(int argc, char *argv[]);
     otError ProcessParameters(int argc, char *argv[]);
     otError ProcessRequest(int argc, char *argv[]);
     otError ProcessResource(int argc, char *argv[]);
+    otError ProcessSet(int argc, char *argv[]);
     otError ProcessStart(int argc, char *argv[]);
     otError ProcessStop(int argc, char *argv[]);
 
     static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo);
+
+    static void HandleNotificationResponse(void *               aContext,
+                                           otMessage *          aMessage,
+                                           const otMessageInfo *aMessageInfo,
+                                           otError              aError);
+    void        HandleNotificationResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
 
     static void HandleResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
     void        HandleResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
@@ -117,7 +128,17 @@ private:
     otCoapTxParameters mResponseTxParameters;
 
     otCoapResource mResource;
+    otIp6Address   mRequestAddr;
+    otSockAddr     mSubscriberSock;
+    char           mRequestUri[kMaxUriLength];
+    uint8_t        mRequestToken[OT_COAP_MAX_TOKEN_LENGTH];
+    uint8_t        mSubscriberToken[OT_COAP_MAX_TOKEN_LENGTH];
     char           mUriPath[kMaxUriLength];
+    char           mResourceContent[kMaxBufferSize];
+    uint32_t       mObserveSerial;
+    uint8_t        mRequestTokenLength;
+    uint8_t        mSubscriberTokenLength;
+    bool           mSubscriberConfirmableNotifications;
 };
 
 } // namespace Cli
