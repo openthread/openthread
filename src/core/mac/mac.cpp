@@ -105,7 +105,7 @@ Mac::Mac(Instance &aInstance)
 #if OPENTHREAD_FTD
     , mMaxFrameRetriesIndirect(kDefaultMaxFrameRetriesIndirect)
 #endif
-    , mActiveScanHandler(NULL) /* Initialize `mActiveScanHandler` and `mEnergyScanHandler` union */
+    , mActiveScanHandler(NULL) // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
     , mSubMac(aInstance)
     , mOperationTask(aInstance, &Mac::HandleOperationTask, this)
     , mTimer(aInstance, &Mac::HandleTimer, this)
@@ -1035,7 +1035,6 @@ void Mac::BeginTransmit(void)
 
     if (applyTransmitSecurity)
     {
-        // Security Processing
         ProcessTransmitSecurity(sendFrame, processTransmitAesCcm);
     }
 
@@ -1339,7 +1338,7 @@ void Mac::HandleTimer(void)
 otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor)
 {
     KeyManager &      keyManager = Get<KeyManager>();
-    otError           error      = OT_ERROR_NONE;
+    otError           error      = OT_ERROR_SECURITY;
     uint8_t           securityLevel;
     uint8_t           keyIdMode;
     uint32_t          frameCounter;
@@ -1352,48 +1351,46 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
     const ExtAddress *extAddress;
     Crypto::AesCcm    aesCcm;
 
-    VerifyOrExit(aFrame.GetSecurityEnabled());
+    VerifyOrExit(aFrame.GetSecurityEnabled(), error = OT_ERROR_NONE);
 
     aFrame.GetSecurityLevel(securityLevel);
     aFrame.GetFrameCounter(frameCounter);
-    otLogDebgMac("Frame counter %u", frameCounter);
+    otLogDebgMac("Rx security - frame counter %u", frameCounter);
 
     aFrame.GetKeyIdMode(keyIdMode);
 
     switch (keyIdMode)
     {
     case Frame::kKeyIdMode0:
-        VerifyOrExit((macKey = keyManager.GetKek()) != NULL, error = OT_ERROR_SECURITY);
+        macKey = keyManager.GetKek();
+        VerifyOrExit(macKey != NULL);
         extAddress = &aSrcAddr.GetExtended();
         break;
 
     case Frame::kKeyIdMode1:
-        VerifyOrExit(aNeighbor != NULL, error = OT_ERROR_SECURITY);
+        VerifyOrExit(aNeighbor != NULL);
 
         aFrame.GetKeyId(keyid);
         keyid--;
 
         if (keyid == (keyManager.GetCurrentKeySequence() & 0x7f))
         {
-            // same key index
             keySequence = keyManager.GetCurrentKeySequence();
             macKey      = keyManager.GetCurrentMacKey();
         }
         else if (keyid == ((keyManager.GetCurrentKeySequence() - 1) & 0x7f))
         {
-            // previous key index
             keySequence = keyManager.GetCurrentKeySequence() - 1;
             macKey      = keyManager.GetTemporaryMacKey(keySequence);
         }
         else if (keyid == ((keyManager.GetCurrentKeySequence() + 1) & 0x7f))
         {
-            // next key index
             keySequence = keyManager.GetCurrentKeySequence() + 1;
             macKey      = keyManager.GetTemporaryMacKey(keySequence);
         }
         else
         {
-            ExitNow(error = OT_ERROR_SECURITY);
+            ExitNow();
         }
 
         // If the frame is from a neighbor not in valid state (e.g., it is from a child being
@@ -1403,21 +1400,14 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
 
         if (aNeighbor->IsStateValid())
         {
-            if (keySequence < aNeighbor->GetKeySequence())
+            VerifyOrExit(keySequence >= aNeighbor->GetKeySequence());
+
+            if (keySequence == aNeighbor->GetKeySequence())
             {
-                ExitNow(error = OT_ERROR_SECURITY);
-            }
-            else if (keySequence == aNeighbor->GetKeySequence())
-            {
-                if ((frameCounter + 1) < aNeighbor->GetLinkFrameCounter())
-                {
-                    ExitNow(error = OT_ERROR_SECURITY);
-                }
-                else if ((frameCounter + 1) == aNeighbor->GetLinkFrameCounter())
-                {
-                    // drop duplicated frames
-                    ExitNow(error = OT_ERROR_DUPLICATED);
-                }
+                // If frame counter is one off, then frame is a duplicate.
+                VerifyOrExit((frameCounter + 1) != aNeighbor->GetLinkFrameCounter(), error = OT_ERROR_DUPLICATED);
+
+                VerifyOrExit(frameCounter >= aNeighbor->GetLinkFrameCounter());
             }
         }
 
@@ -1431,7 +1421,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
         break;
 
     default:
-        ExitNow(error = OT_ERROR_SECURITY);
+        ExitNow();
         break;
     }
 
@@ -1440,24 +1430,23 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
 
     aesCcm.SetKey(macKey, 16);
 
-    error = aesCcm.Init(aFrame.GetHeaderLength(), aFrame.GetPayloadLength(), tagLength, nonce, sizeof(nonce));
-    VerifyOrExit(error == OT_ERROR_NONE, error = OT_ERROR_SECURITY);
+    SuccessOrExit(aesCcm.Init(aFrame.GetHeaderLength(), aFrame.GetPayloadLength(), tagLength, nonce, sizeof(nonce)));
 
     aesCcm.Header(aFrame.GetHeader(), aFrame.GetHeaderLength());
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     aesCcm.Payload(aFrame.GetPayload(), aFrame.GetPayload(), aFrame.GetPayloadLength(), false);
 #else
-    // for fuzz tests, execute AES but do not alter the payload
+    // For fuzz tests, execute AES but do not alter the payload
     uint8_t fuzz[OT_RADIO_FRAME_MAX_SIZE];
     aesCcm.Payload(fuzz, aFrame.GetPayload(), aFrame.GetPayloadLength(), false);
 #endif
     aesCcm.Finalize(tag, &tagLength);
 
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    VerifyOrExit(memcmp(tag, aFrame.GetFooter(), tagLength) == 0, error = OT_ERROR_SECURITY);
+    VerifyOrExit(memcmp(tag, aFrame.GetFooter(), tagLength) == 0);
 #endif
 
-    if ((keyIdMode == Frame::kKeyIdMode1) && (aNeighbor->IsStateValid()))
+    if ((keyIdMode == Frame::kKeyIdMode1) && aNeighbor->IsStateValid())
     {
         if (aNeighbor->GetKeySequence() != keySequence)
         {
@@ -1473,6 +1462,8 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
         }
     }
 
+    error = OT_ERROR_NONE;
+
 exit:
     return error;
 }
@@ -1484,13 +1475,10 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
     PanId     panid;
     Neighbor *neighbor;
     otError   error = aError;
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-    int8_t rssi = OT_MAC_FILTER_FIXED_RSS_DISABLED;
-#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
     mCounters.mRxTotal++;
 
-    VerifyOrExit(error == OT_ERROR_NONE);
+    SuccessOrExit(error);
     VerifyOrExit(aFrame != NULL, error = OT_ERROR_NO_FRAME_RECEIVED);
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
 
@@ -1538,52 +1526,49 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
     case Address::kTypeShort:
         otLogDebgMac("Received frame from short address 0x%04x", srcaddr.GetShort());
 
-        if (neighbor == NULL)
-        {
-            ExitNow(error = OT_ERROR_UNKNOWN_NEIGHBOR);
-        }
+        VerifyOrExit(neighbor != NULL, error = OT_ERROR_UNKNOWN_NEIGHBOR);
 
         srcaddr.SetExtended(neighbor->GetExtAddress());
 
-        // fall through
+        // Fall through
 
     case Address::kTypeExtended:
 
         // Duplicate Address Protection
-        if (srcaddr.GetExtended() == GetExtAddress())
-        {
-            ExitNow(error = OT_ERROR_INVALID_SOURCE_ADDRESS);
-        }
+        VerifyOrExit(srcaddr.GetExtended() != GetExtAddress(), error = OT_ERROR_INVALID_SOURCE_ADDRESS);
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-
-        // Source filter Processing. Check if filtered out by whitelist or blacklist.
-        SuccessOrExit(error = mFilter.Apply(srcaddr.GetExtended(), rssi));
-
-        // override with the rssi in setting
-        if (rssi != OT_MAC_FILTER_FIXED_RSS_DISABLED)
         {
-            aFrame->SetRssi(rssi);
-        }
+            int8_t fixedRss;
 
-#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+            SuccessOrExit(error = mFilter.Apply(srcaddr.GetExtended(), fixedRss));
+
+            if (fixedRss != Filter::kFixedRssDisabled)
+            {
+                aFrame->SetRssi(fixedRss);
+
+                // Clear any previous link info to ensure the fixed RSSI
+                // value takes effect quickly.
+                if (neighbor != NULL)
+                {
+                    neighbor->GetLinkInfo().Clear();
+                }
+            }
+        }
+#endif
 
         break;
     }
 
-    // Increment counters
     if (dstaddr.IsBroadcast())
     {
-        // Broadcast frame
         mCounters.mRxBroadcast++;
     }
     else
     {
-        // Unicast frame
         mCounters.mRxUnicast++;
     }
 
-    // Security Processing
     error = ProcessReceiveSecurity(*aFrame, srcaddr, neighbor);
 
     switch (error)
@@ -1618,16 +1603,6 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
     if (neighbor != NULL)
     {
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-
-        // make assigned rssi to take effect quickly
-        if (rssi != OT_MAC_FILTER_FIXED_RSS_DISABLED)
-        {
-            neighbor->GetLinkInfo().Clear();
-        }
-
-#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-
         neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), aFrame->GetRssi());
 
         if (aFrame->GetSecurityEnabled())
@@ -1661,7 +1636,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
             ExitNow();
         }
 
-        // Fall-through
+        // Fall through
 
     case kOperationEnergyScan:
 
@@ -1953,7 +1928,7 @@ uint8_t Mac::GetTimeIeOffset(const Frame &aFrame)
 exit:
     return offset;
 }
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#endif
 
 } // namespace Mac
 } // namespace ot

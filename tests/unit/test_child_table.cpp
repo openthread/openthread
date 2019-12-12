@@ -402,11 +402,9 @@ void TestChildTable(void)
 
 } // namespace ot
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     ot::TestChildTable();
     printf("\nAll tests passed.\n");
     return 0;
 }
-#endif

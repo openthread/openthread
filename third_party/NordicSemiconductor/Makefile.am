@@ -81,6 +81,7 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/app_error                                                   \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/atfifo                                                      \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/atomic                                                      \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/block_dev                                                   \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/delay                                                       \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/usb                                                         \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/config                                                  \
@@ -318,7 +319,7 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/NordicSemiconductor/cmsis/core_cmSimd.h                                                     \
     $(top_srcdir)/third_party/NordicSemiconductor/dependencies/app_util_platform.h                                        \
     $(top_srcdir)/third_party/NordicSemiconductor/dependencies/app_util.h                                                 \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/apply_old_config.h                                         \
+    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/legacy/apply_old_config.h                                  \
     $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nordic_common.h                                            \
     $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_assert.h                                               \
     $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrf_error.h                                                \
@@ -400,6 +401,7 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/atfifo/nrf_atfifo.h                                           \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/atomic/nrf_atomic_internal.h                                  \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/atomic/nrf_atomic.h                                           \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/block_dev/nrf_block_dev.h                                     \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/delay/nrf_delay.h                                             \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_class_base.h                                     \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/app_usbd_core.h                                           \

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -44,6 +44,7 @@
 #include <stdbool.h>
 
 #include "nrf_drv_usbd.h"
+#include "nrf_block_dev.h"
 #include "app_usbd_class_base.h"
 #include "app_usbd.h"
 #include "app_usbd_core.h"

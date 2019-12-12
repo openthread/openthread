@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2013 - 2019, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -93,6 +93,7 @@ extern "C" {
 #define NRF_ERROR_GAZELLE_ERR_BASE          (0x8300)    /**< Base address for Gazelle related errors. */
 #define NRF_ERROR_BLE_IPSP_ERR_BASE         (0x8400)    /**< Base address for BLE IPSP related errors. */
 #define NRF_ERROR_CRYPTO_ERR_BASE           (0x8500)    /**< Base address for crypto related errors. */
+#define NRF_ERROR_FDS_ERR_BASE              (0x8600)    /**< Base address for FDS related errors. */
 /** @} */
 
 

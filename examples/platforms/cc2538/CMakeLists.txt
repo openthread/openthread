@@ -28,12 +28,18 @@
 
 set(OT_PLATFORM_LIB "openthread-cc2538" PARENT_SCOPE)
 
+if(NOT OT_CONFIG)
+    set(OT_CONFIG "openthread-core-cc2538-config.h")
+    set(OT_CONFIG ${OT_CONFIG} PARENT_SCOPE)
+endif()
+
 list(APPEND OT_PLATFORM_DEFINES
-    "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-cc2538-config.h\""
     "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-cc2538-config-check.h\""
     "OPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
+
+list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
 
 add_library(openthread-cc2538
     alarm.c

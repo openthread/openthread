@@ -28,13 +28,19 @@
 
 set(OT_PLATFORM_LIB "openthread-posix" PARENT_SCOPE)
 
+if(NOT OT_CONFIG)
+    set(OT_CONFIG "openthread-core-posix-config.h")
+    set(OT_CONFIG ${OT_CONFIG} PARENT_SCOPE)
+endif()
+
 list(APPEND OT_PLATFORM_DEFINES
-    "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\""
     "OPENTHREAD_EXAMPLES_POSIX=1"
     "OPENTHREAD_POSIX=1"
     "OPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
+
+list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
 
 add_library(openthread-posix
     alarm.c

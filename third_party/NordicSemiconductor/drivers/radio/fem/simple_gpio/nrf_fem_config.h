@@ -117,7 +117,7 @@ typedef struct
 
 /** Mask of GPIOTE channels used for FEM control. */
 #define NRF_802154_FEM_GPIOTE_CHANNELS_USED_MASK   (        \
-        (1 << NRF_FEM_CONTROL_DEAFULT_LNA_GPIOTE_CHANNEL) | \
+        (1 << NRF_FEM_CONTROL_DEFAULT_LNA_GPIOTE_CHANNEL) | \
         (1 << NRF_FEM_CONTROL_DEFAULT_PA_GPIOTE_CHANNEL))
 
 #ifdef __cplusplus

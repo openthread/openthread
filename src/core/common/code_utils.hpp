@@ -86,7 +86,7 @@
  * This macro checks for the specified status, which is expected to commonly be successful, and branches to the local
  * label 'exit' if the status is unsuccessful.
  *
- *  @param[in]  aStatus     A scalar status to be evaluated against zero (0).
+ * @param[in]  aStatus     A scalar status to be evaluated against zero (0).
  *
  */
 #define SuccessOrExit(aStatus) \
@@ -102,8 +102,8 @@
  * This macro checks for the specified condition, which is expected to commonly be true, and both executes @a ... and
  * branches to the local label 'exit' if the condition is false.
  *
- *  @param[in]  aCondition  A Boolean expression to be evaluated.
- *  @param[in]  ...         An expression or block to execute when the assertion fails.
+ * @param[in]  aCondition  A Boolean expression to be evaluated.
+ * @param[in]  ...         An expression or block to execute when the assertion fails.
  *
  */
 #define VerifyOrExit(aCondition, ...) \

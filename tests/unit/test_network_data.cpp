@@ -112,7 +112,7 @@ void TestNetworkDataIterator(void)
 
         for (uint8_t i = 0; i < OT_ARRAY_LENGTH(routes); i++)
         {
-            SuccessOrQuit(netData.GetNextExternalRoute(iter, config), "GetNextExternalRoute() failed\n");
+            SuccessOrQuit(netData.GetNextExternalRoute(iter, config), "GetNextExternalRoute() failed");
             PrintExternalRouteConfig(config);
             VerifyOrQuit(CompareExternalRouteConfig(config, routes[i]) == true,
                          "external route config does not match expectation");
@@ -162,7 +162,7 @@ void TestNetworkDataIterator(void)
 
         for (uint8_t i = 0; i < OT_ARRAY_LENGTH(routes); i++)
         {
-            SuccessOrQuit(netData.GetNextExternalRoute(iter, config), "GetNextExternalRoute() failed\n");
+            SuccessOrQuit(netData.GetNextExternalRoute(iter, config), "GetNextExternalRoute() failed");
             PrintExternalRouteConfig(config);
             VerifyOrQuit(CompareExternalRouteConfig(config, routes[i]) == true,
                          "external route config does not match expectation");
@@ -175,7 +175,6 @@ void TestNetworkDataIterator(void)
 } // namespace NetworkData
 } // namespace ot
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     ot::NetworkData::TestNetworkDataIterator();
@@ -183,4 +182,3 @@ int main(void)
     printf("\nAll tests passed\n");
     return 0;
 }
-#endif

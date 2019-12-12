@@ -2033,6 +2033,7 @@ void Interpreter::ProcessPing(int argc, char *argv[])
 
     VerifyOrExit(!mPingTimer.IsRunning(), error = OT_ERROR_BUSY);
 
+    mMessageInfo = Ip6::MessageInfo();
     SuccessOrExit(error = mMessageInfo.GetPeerAddr().FromString(argv[0]));
 
     mLength   = 8;
@@ -2057,6 +2058,16 @@ void Interpreter::ProcessPing(int argc, char *argv[])
             SuccessOrExit(error = ParsePingInterval(argv[index], interval));
             VerifyOrExit(0 < interval && interval <= Timer::kMaxDelay, error = OT_ERROR_INVALID_ARGS);
             mInterval = interval;
+            break;
+
+        case 4:
+            SuccessOrExit(error = ParseLong(argv[index], value));
+            VerifyOrExit(0 <= value && value <= 255, error = OT_ERROR_INVALID_ARGS);
+            mMessageInfo.mHopLimit = static_cast<uint8_t>(value);
+            if (value == 0)
+            {
+                mMessageInfo.mAllowZeroHopLimit = true;
+            }
             break;
 
         default:
