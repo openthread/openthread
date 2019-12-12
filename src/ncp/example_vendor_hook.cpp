@@ -47,7 +47,7 @@ otError NcpBase::VendorCommandHandler(uint8_t aHeader, unsigned int aCommand)
     // TODO: Implement your command handlers here.
 
     default:
-        error = SendLastStatus(aHeader, SPINEL_STATUS_INVALID_COMMAND);
+        error = PrepareLastStatusResponse(aHeader, SPINEL_STATUS_INVALID_COMMAND);
     }
 
     return error;
