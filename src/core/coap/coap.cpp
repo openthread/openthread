@@ -527,16 +527,29 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
         if (aMessage.IsEmpty())
         {
             // Empty acknowledgment.
-            if (metadata.mConfirmable)
+            if (metadata.mObserve && !request->IsRequest())
             {
-                metadata.mAcknowledged = true;
-                metadata.UpdateIn(*request);
+                // This is the ACK to our RFC7641 notification.  There will be no
+                // "separate" response so pass it back as if it were a piggy-backed
+                // response so we can stop re-sending and the application can move on.
+                FinalizeCoapTransaction(*request, metadata, &aMessage, &aMessageInfo, OT_ERROR_NONE);
             }
-
-            // Remove the message if response is not expected, otherwise await response.
-            if (metadata.mResponseHandler == NULL)
+            else
             {
-                DequeueMessage(*request);
+                // This is not related to RFC7641 or the outgoing "request" was not a
+                // notification.
+                if (metadata.mConfirmable)
+                {
+                    metadata.mAcknowledged = true;
+                    metadata.UpdateIn(*request);
+                }
+
+                // Remove the message if response is not expected, otherwise await
+                // response.
+                if (metadata.mResponseHandler == NULL)
+                {
+                    DequeueMessage(*request);
+                }
             }
         }
         else if (aMessage.IsResponse() && aMessage.IsTokenEqual(*request))
