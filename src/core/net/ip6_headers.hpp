@@ -88,7 +88,7 @@ using ot::Encoding::BigEndian::HostSwap32;
 /**
  * Internet Protocol Numbers
  */
-enum IpProto
+enum
 {
     kProtoHopOpts  = 0,  ///< IPv6 Hop-by-Hop Option
     kProtoTcp      = 6,  ///< Transmission Control Protocol
@@ -241,7 +241,7 @@ public:
      * @returns The IPv6 Next Header value.
      *
      */
-    IpProto GetNextHeader(void) const { return static_cast<IpProto>(mNextHeader); }
+    uint8_t GetNextHeader(void) const { return mNextHeader; }
 
     /**
      * This method sets the IPv6 Next Header value.
@@ -249,7 +249,7 @@ public:
      * @param[in]  aNextHeader  The IPv6 Next Header value.
      *
      */
-    void SetNextHeader(IpProto aNextHeader) { mNextHeader = static_cast<uint8_t>(aNextHeader); }
+    void SetNextHeader(uint8_t aNextHeader) { mNextHeader = aNextHeader; }
 
     /**
      * This method returns the IPv6 Hop Limit value.
@@ -355,7 +355,7 @@ public:
      * @returns The IPv6 Next Header value.
      *
      */
-    IpProto GetNextHeader(void) const { return static_cast<IpProto>(mNextHeader); }
+    uint8_t GetNextHeader(void) const { return mNextHeader; }
 
     /**
      * This method sets the IPv6 Next Header value.
@@ -363,7 +363,7 @@ public:
      * @param[in]  aNextHeader  The IPv6 Next Header value.
      *
      */
-    void SetNextHeader(IpProto aNextHeader) { mNextHeader = static_cast<uint8_t>(aNextHeader); }
+    void SetNextHeader(uint8_t aNextHeader) { mNextHeader = aNextHeader; }
 
     /**
      * This method returns the IPv6 Header Extension Length value.
@@ -561,7 +561,7 @@ public:
      * @returns The IPv6 Next Header value.
      *
      */
-    IpProto GetNextHeader(void) const { return static_cast<IpProto>(mNextHeader); }
+    uint8_t GetNextHeader(void) const { return mNextHeader; }
 
     /**
      * This method sets the IPv6 Next Header value.
@@ -569,7 +569,7 @@ public:
      * @param[in]  aNextHeader  The IPv6 Next Header value.
      *
      */
-    void SetNextHeader(IpProto aNextHeader) { mNextHeader = static_cast<uint8_t>(aNextHeader); }
+    void SetNextHeader(uint8_t aNextHeader) { mNextHeader = aNextHeader; }
 
     /**
      * This method returns the Fragment Offset value.

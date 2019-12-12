@@ -174,7 +174,7 @@ uint16_t Ip6::UpdateChecksum(uint16_t aChecksum, const Address &aAddress)
 uint16_t Ip6::ComputePseudoheaderChecksum(const Address &aSource,
                                           const Address &aDestination,
                                           uint16_t       aLength,
-                                          IpProto        aProto)
+                                          uint8_t        aProto)
 {
     uint16_t checksum;
 
@@ -448,7 +448,7 @@ void Ip6::EnqueueDatagram(Message &aMessage)
     mSendQueueTask.Post();
 }
 
-otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto aIpProto)
+otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto)
 {
     otError                    error = OT_ERROR_NONE;
     Header                     header;
@@ -623,7 +623,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
-otError Ip6::FragmentDatagram(Message &aMessage, IpProto aIpProto)
+otError Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
 {
     otError        error = OT_ERROR_NONE;
     Header         header;
@@ -801,7 +801,7 @@ otError Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMess
         // creates the header for the reassembled ipv6 package
         VerifyOrExit(aMessage.Read(0, sizeof(header), &header) == sizeof(header), error = OT_ERROR_PARSE);
         header.SetPayloadLength(message->GetLength() - sizeof(header));
-        header.SetNextHeader(static_cast<IpProto>(fragmentHeader.GetNextHeader()));
+        header.SetNextHeader(fragmentHeader.GetNextHeader());
         assertValue = message->Write(0, sizeof(header), &header);
         assert(assertValue == sizeof(header));
 
@@ -901,7 +901,7 @@ exit:
 }
 
 #else
-otError Ip6::FragmentDatagram(Message &aMessage, IpProto aIpProto)
+otError Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
 {
     OT_UNUSED_VARIABLE(aIpProto);
 
@@ -1427,7 +1427,7 @@ exit:
 
 // LCOV_EXCL_START
 
-const char *Ip6::IpProtoToString(IpProto aIpProto)
+const char *Ip6::IpProtoToString(uint8_t aIpProto)
 {
     const char *retval;
 
