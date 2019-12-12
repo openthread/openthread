@@ -374,7 +374,7 @@
 extern "C" {
 #endif
 
-typedef enum
+enum
 {
     SPINEL_STATUS_OK                       = 0,  ///< Operation has completed successfully.
     SPINEL_STATUS_FAILURE                  = 1,  ///< Operation has failed for some undefined reason.
@@ -469,7 +469,9 @@ typedef enum
 
     SPINEL_STATUS_EXPERIMENTAL__BEGIN = 2000000,
     SPINEL_STATUS_EXPERIMENTAL__END   = 2097152,
-} spinel_status_t;
+};
+
+typedef uint32_t spinel_status_t;
 
 typedef enum
 {
@@ -1106,7 +1108,7 @@ enum
  *    Experimental |          2,000,000 - 2,097,151 | Experimental use only
  *
  */
-typedef enum
+enum
 {
     /// Last Operation Status
     /** Format: `i` - Read-only
@@ -3898,7 +3900,9 @@ typedef enum
 
     SPINEL_PROP_EXPERIMENTAL__BEGIN = 2000000,
     SPINEL_PROP_EXPERIMENTAL__END   = 2097152,
-} spinel_prop_key_t;
+};
+
+typedef uint32_t spinel_prop_key_t;
 
 // ----------------------------------------------------------------------------
 
