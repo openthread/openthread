@@ -127,7 +127,7 @@ typedef enum otCoapOptionType
     OT_COAP_OPTION_URI_HOST       = 3,  ///< Uri-Host
     OT_COAP_OPTION_E_TAG          = 4,  ///< ETag
     OT_COAP_OPTION_IF_NONE_MATCH  = 5,  ///< If-None-Match
-    OT_COAP_OPTION_OBSERVE        = 6,  ///< Observe
+    OT_COAP_OPTION_OBSERVE        = 6,  ///< Observe [RFC7641]
     OT_COAP_OPTION_URI_PORT       = 7,  ///< Uri-Port
     OT_COAP_OPTION_LOCATION_PATH  = 8,  ///< Location-Path
     OT_COAP_OPTION_URI_PATH       = 11, ///< Uri-Path
