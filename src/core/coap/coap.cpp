@@ -169,7 +169,14 @@ otError CoapBase::SendMessage(Message &               aMessage,
     {
         Metadata metadata;
 
-        metadata.Init(aMessage.IsConfirmable(), aMessageInfo, aHandler, aContext, aTxParameters);
+        // Whether or not to turn on special "Observe" handling.
+        OptionIterator iterator;
+        bool           observe;
+
+        iterator.Init(&aMessage);
+        observe = (iterator.GetFirstOptionMatching(OT_COAP_OPTION_OBSERVE) != NULL);
+
+        metadata.Init(aMessage.IsConfirmable(), observe, aMessageInfo, aHandler, aContext, aTxParameters);
         storedCopy = CopyAndEnqueueMessage(aMessage, copyLength, metadata);
         VerifyOrExit(storedCopy != NULL, error = OT_ERROR_NO_BUFS);
     }
@@ -665,6 +672,7 @@ exit:
 }
 
 void CoapBase::Metadata::Init(bool                    aConfirmable,
+                              bool                    aObserve,
                               const Ip6::MessageInfo &aMessageInfo,
                               ResponseHandler         aHandler,
                               void *                  aContext,
@@ -679,6 +687,7 @@ void CoapBase::Metadata::Init(bool                    aConfirmable,
     mRetransmissionTimeout    = aTxParameters.CalculateInitialRetransmissionTimeout();
     mAcknowledged             = false;
     mConfirmable              = aConfirmable;
+    mObserve                  = aObserve;
     mNextTimerShot =
         TimerMilli::GetNow() + (aConfirmable ? mRetransmissionTimeout : aTxParameters.CalculateMaxTransmitWait());
 }

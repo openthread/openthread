@@ -526,6 +526,7 @@ private:
     struct Metadata
     {
         void Init(bool                    aConfirmable,
+                  bool                    aObserve,
                   const Ip6::MessageInfo &aMessageInfo,
                   ResponseHandler         aHandler,
                   void *                  aContext,
@@ -545,6 +546,7 @@ private:
         uint8_t         mRetransmissionsRemaining; // Number of retransmissions remaining.
         bool            mAcknowledged : 1;         // Information that request was acknowledged.
         bool            mConfirmable : 1;          // Information that message is confirmable.
+        bool            mObserve : 1;              // Information that this request involves Observations.
     };
 
     static void HandleRetransmissionTimer(Timer &aTimer);
