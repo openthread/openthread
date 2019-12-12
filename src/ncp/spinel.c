@@ -1116,7 +1116,7 @@ spinel_ssize_t spinel_datatype_vpack(uint8_t *     data_out,
 
 // LCOV_EXCL_START
 
-const char *spinel_command_to_cstr(unsigned int command)
+const char *spinel_command_to_cstr(spinel_command_t command)
 {
     const char *ret = "UNKNOWN";
 
@@ -2422,7 +2422,7 @@ const char *spinel_status_to_cstr(spinel_status_t status)
     return ret;
 }
 
-const char *spinel_capability_to_cstr(unsigned int capability)
+const char *spinel_capability_to_cstr(spinel_capability_t capability)
 {
     const char *ret = "UNKNOWN";
 
