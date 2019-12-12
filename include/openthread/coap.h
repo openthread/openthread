@@ -491,6 +491,7 @@ otError otCoapMessageAppendOption(otMessage *aMessage, uint16_t aNumber, uint16_
  * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
  * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
  *
+ * @see otCoapMessageGetOptionUintValue
  */
 otError otCoapMessageAppendUintOption(otMessage *aMessage, uint16_t aNumber, uint32_t aValue);
 
@@ -724,6 +725,21 @@ const otCoapOption *otCoapOptionIteratorGetNextOptionMatching(otCoapOptionIterat
  *
  */
 const otCoapOption *otCoapOptionIteratorGetNextOption(otCoapOptionIterator *aIterator);
+
+/**
+ * This function fills current option value into @p aValue assuming the current value is an unsigned integer encoded
+ * according to https://tools.ietf.org/html/rfc7252#section-3.2
+ *
+ * @param[inout]    aIterator   A pointer to the CoAP message option iterator.
+ * @param[out]      aValue      A pointer to an unsigned integer to receive the option value.
+ *
+ * @retval  OT_ERROR_NONE       Successfully filled value.
+ * @retval  OT_ERROR_NOT_FOUND  No current option.
+ * @retval  OT_ERROR_NO_BUFS    Value is too long to fit in a uint64_t.
+ *
+ * @see otCoapMessageAppendUintOption
+ */
+otError otCoapOptionIteratorGetOptionUintValue(otCoapOptionIterator *aIterator, uint64_t *const aValue);
 
 /**
  * This function fills current option value into @p aValue.

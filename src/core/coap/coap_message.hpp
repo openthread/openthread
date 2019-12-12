@@ -668,6 +668,16 @@ public:
     const otCoapOption *GetNextOption(void);
 
     /**
+     * This function fills current option value into @p aValue.  The option is assumed to be an unsigned integer.
+     *
+     * @retval  OT_ERROR_NONE       Successfully filled value.
+     * @retval  OT_ERROR_NOT_FOUND  No more options, aIterator->mNextOptionOffset is set to offset of payload.
+     * @retval  OT_ERROR_NO_BUFS    Value is too long to fit in a uint64_t.
+     *
+     */
+    otError GetOptionValue(uint64_t &aValue) const;
+
+    /**
      * This function fills current option value into @p aValue.
      *
      * @retval  OT_ERROR_NONE       Successfully filled value.
