@@ -506,11 +506,21 @@ void CoapBase::Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageIn
 void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Metadata metadata;
-    Message *request = NULL;
-    otError  error   = OT_ERROR_NONE;
+    Message *request         = NULL;
+    otError  error           = OT_ERROR_NONE;
+    bool     responseObserve = false;
 
     request = FindRelatedRequest(aMessage, aMessageInfo, metadata);
     VerifyOrExit(request != NULL);
+
+    if (metadata.mObserve && request->IsRequest())
+    {
+        // We sent Observe in our request, see if we received Observe in the response too.
+        OptionIterator iterator;
+
+        iterator.Init(&aMessage);
+        responseObserve = (iterator.GetFirstOptionMatching(OT_COAP_OPTION_OBSERVE) != NULL);
+    }
 
     switch (aMessage.GetType())
     {
@@ -554,8 +564,23 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
         }
         else if (aMessage.IsResponse() && aMessage.IsTokenEqual(*request))
         {
-            // Piggybacked response.
-            FinalizeCoapTransaction(*request, metadata, &aMessage, &aMessageInfo, OT_ERROR_NONE);
+            // Piggybacked response.  If there's an Observe option present in both
+            // request and response, and we have a response handler; then we're
+            // dealing with RFC7641 rules here.
+            // (If there is no response handler, then we're wasting our time!)
+            if (metadata.mObserve && responseObserve && (metadata.mResponseHandler != NULL))
+            {
+                // This is a RFC7641 notification.  The request is *not* done!
+                metadata.mResponseHandler(metadata.mResponseContext, &aMessage, &aMessageInfo, OT_ERROR_NONE);
+
+                // Consider the message acknowledged at this point.
+                metadata.mAcknowledged = true;
+                metadata.UpdateIn(*request);
+            }
+            else
+            {
+                FinalizeCoapTransaction(*request, metadata, &aMessage, &aMessageInfo, OT_ERROR_NONE);
+            }
         }
 
         // Silently ignore acknowledgments carrying requests (RFC 7252, p. 4.2)
@@ -565,13 +590,14 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
     case OT_COAP_TYPE_CONFIRMABLE:
         // Send empty ACK if it is a CON message.
         SendAck(aMessage, aMessageInfo);
-        FinalizeCoapTransaction(*request, metadata, &aMessage, &aMessageInfo, OT_ERROR_NONE);
-        break;
-
+        // Fall through
+        // Handling of RFC7641 and multicast is below.
     case OT_COAP_TYPE_NON_CONFIRMABLE:
-        // Separate response.
-
-        if (metadata.mDestinationAddress.IsMulticast() && metadata.mResponseHandler != NULL)
+        // Separate response or observation notification.  If the request was to a multicast
+        // address, OR both the request and response carry Observe options, then this is NOT
+        // the final message, we may see multiples.
+        if ((metadata.mResponseHandler != NULL) &&
+            (metadata.mDestinationAddress.IsMulticast() || (metadata.mObserve && responseObserve)))
         {
             // If multicast non-confirmable request, allow multiple responses
             metadata.mResponseHandler(metadata.mResponseContext, &aMessage, &aMessageInfo, OT_ERROR_NONE);
