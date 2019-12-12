@@ -350,11 +350,11 @@ private:
     static void HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext);
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    static void HandleDnsResponse(void *        aContext,
-                                  const char *  aHostname,
-                                  otIp6Address *aAddress,
-                                  uint32_t      aTtl,
-                                  otError       aResult);
+    static void HandleDnsResponse(void *              aContext,
+                                  const char *        aHostname,
+                                  const otIp6Address *aAddress,
+                                  uint32_t            aTtl,
+                                  otError             aResult);
 #endif
 
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
@@ -368,7 +368,7 @@ private:
     void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx);
     void HandleDiagnosticGetResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    void HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, otError aResult);
+    void HandleDnsResponse(const char *aHostname, const Ip6::Address *aAddress, uint32_t aTtl, otError aResult);
 #endif
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     void HandleSntpResponse(uint64_t aTime, otError aResult);

@@ -1078,23 +1078,26 @@ exit:
     }
 }
 
-void Interpreter::HandleDnsResponse(void *        aContext,
-                                    const char *  aHostname,
-                                    otIp6Address *aAddress,
-                                    uint32_t      aTtl,
-                                    otError       aResult)
+void Interpreter::HandleDnsResponse(void *              aContext,
+                                    const char *        aHostname,
+                                    const otIp6Address *aAddress,
+                                    uint32_t            aTtl,
+                                    otError             aResult)
 {
-    static_cast<Interpreter *>(aContext)->HandleDnsResponse(aHostname, *static_cast<Ip6::Address *>(aAddress), aTtl,
-                                                            aResult);
+    static_cast<Interpreter *>(aContext)->HandleDnsResponse(aHostname, static_cast<const Ip6::Address *>(aAddress),
+                                                            aTtl, aResult);
 }
 
-void Interpreter::HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, otError aResult)
+void Interpreter::HandleDnsResponse(const char *aHostname, const Ip6::Address *aAddress, uint32_t aTtl, otError aResult)
 {
     mServer->OutputFormat("DNS response for %s - ", aHostname);
 
     if (aResult == OT_ERROR_NONE)
     {
-        OutputIp6Address(aAddress);
+        if (aAddress != NULL)
+        {
+            OutputIp6Address(*aAddress);
+        }
         mServer->OutputFormat(" TTL: %d\r\n", aTtl);
     }
     else
