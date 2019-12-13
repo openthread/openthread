@@ -103,16 +103,14 @@ public:
      *
      * @note This method should be called before reading and sending frames to the interface.
      *
-     *
-     * @param[in]   aRadioFile    The path to either a UART device or an executable.
-     * @param[in]   aRadioConfig  Parameters to be given to the device or executable.
+     * @param[in]  aPlatformConfig  Platform configuration structure.
      *
      * @retval OT_ERROR_NONE          The interface is initialized successfully
      * @retval OT_ERROR_ALREADY       The interface is already initialized.
      * @retval OT_ERROR_INVALID_ARGS  The UART device or executable cannot be found or failed to open/run.
      *
      */
-    otError Init(const char *aRadioFile, const char *aRadioConfig);
+    otError Init(const otPlatformConfig &aPlatformConfig);
 
     /**
      * This method deinitializes the interface to the RCP.
