@@ -55,7 +55,7 @@ public:
     /**
      * Initialize this radio transceiver.
      *
-     * @param[in]  aPlatformConfig  Argument vector.
+     * @param[in]  aPlatformConfig  Platform configuration structure.
      *
      */
     void Init(const otPlatformConfig &aPlatformConfig);

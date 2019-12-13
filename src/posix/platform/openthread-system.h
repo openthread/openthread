@@ -104,7 +104,7 @@ typedef struct otPlatformConfig
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
  *       when initialization of OpenThread's drivers is most appropriate.
  *
- * @param[in]  aPlatformConfig  Argument vector.
+ * @param[in]  aPlatformConfig  Platform configuration structure.
  *
  * @returns A pointer to the OpenThread instance.
  *

@@ -103,7 +103,7 @@ public:
      *
      * @note This method should be called before reading and sending frames to the interface.
      *
-     * @param[in]  aPlatformConfig  Argument vector.
+     * @param[in]  aPlatformConfig  Platform configuration structure.
      *
      * @retval OT_ERROR_NONE          The interface is initialized successfully
      * @retval OT_ERROR_ALREADY       The interface is already initialized.

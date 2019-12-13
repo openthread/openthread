@@ -195,7 +195,7 @@ void platformAlarmAdvanceNow(uint64_t aDelta);
  * @note Even when @p aPlatformConfig->mResetRadio is false, a reset event (i.e. a PROP_LAST_STATUS between
  * [SPINEL_STATUS_RESET__BEGIN, SPINEL_STATUS_RESET__END]) is still expected from RCP.
  *
- * @param[in]  aPlatformConfig  Argument vector.
+ * @param[in]  aPlatformConfig  Platform configuration structure.
  *
  */
 void platformRadioInit(const otPlatformConfig *aPlatformConfig);
