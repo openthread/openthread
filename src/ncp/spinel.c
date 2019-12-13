@@ -2611,7 +2611,7 @@ const char *spinel_capability_to_cstr(spinel_capability_t capability)
         ret = "RADIO_COEX";
         break;
 
-    case SPINEL_CAP_TX_RETRY_HISTOGRAM:
+    case SPINEL_CAP_MAC_RETRY_HISTOGRAM:
         ret = "TX_RETRY_HISTOGRAM";
         break;
 

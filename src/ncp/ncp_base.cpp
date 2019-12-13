@@ -1826,7 +1826,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
-    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_TX_RETRY_HISTOGRAM));
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_MAC_RETRY_HISTOGRAM));
 #endif
 
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE

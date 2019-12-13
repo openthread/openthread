@@ -1058,7 +1058,7 @@ enum
     SPINEL_CAP_POSIX_APP               = (SPINEL_CAP_OPENTHREAD__BEGIN + 9),
     SPINEL_CAP_SLAAC                   = (SPINEL_CAP_OPENTHREAD__BEGIN + 10),
     SPINEL_CAP_RADIO_COEX              = (SPINEL_CAP_OPENTHREAD__BEGIN + 11),
-    SPINEL_CAP_TX_RETRY_HISTOGRAM      = (SPINEL_CAP_OPENTHREAD__BEGIN + 12),
+    SPINEL_CAP_MAC_RETRY_HISTOGRAM     = (SPINEL_CAP_OPENTHREAD__BEGIN + 12),
     SPINEL_CAP_OPENTHREAD__END         = 640,
 
     SPINEL_CAP_THREAD__BEGIN        = 1024,
@@ -3861,7 +3861,7 @@ enum
     /// MAC retry histogram.
     /** Format: t(A(L))t(A(L))
      *
-     * Required capability: SPINEL_CAP_TX_RETRY_HISTOGRAM
+     * Required capability: SPINEL_CAP_MAC_RETRY_HISTOGRAM
      *
      * The contents include two structs, first one is histogram which corresponds to retransmissions number of direct
      * messages, second one provides the histogram of retransmissions for indirect messages.
