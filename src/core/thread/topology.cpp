@@ -41,18 +41,7 @@
 
 namespace ot {
 
-void Neighbor::GenerateChallenge(void)
-{
-    Random::Crypto::FillBuffer(mValidPending.mPending.mChallenge, sizeof(mValidPending.mPending.mChallenge));
-}
-
-void Child::Clear(void)
-{
-    memset(reinterpret_cast<void *>(this), 0, sizeof(Child));
-    SetState(kStateInvalid);
-}
-
-bool Child::IsStateValidOrAttaching(void) const
+bool Neighbor::IsStateValidOrAttaching(void) const
 {
     bool rval = false;
 
@@ -73,6 +62,17 @@ bool Child::IsStateValidOrAttaching(void) const
     }
 
     return rval;
+}
+
+void Neighbor::GenerateChallenge(void)
+{
+    Random::Crypto::FillBuffer(mValidPending.mPending.mChallenge, sizeof(mValidPending.mPending.mChallenge));
+}
+
+void Child::Clear(void)
+{
+    memset(reinterpret_cast<void *>(this), 0, sizeof(Child));
+    SetState(kStateInvalid);
 }
 
 void Child::ClearIp6Addresses(void)
