@@ -600,7 +600,7 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
     macAddr.Set(mlIidTlv.GetIid());
     macAddr.ToggleLocal();
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValid); !iter.IsDone(); iter++)
     {
         Child &child = *iter.GetChild();
 
@@ -666,7 +666,7 @@ void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::Mes
         ExitNow();
     }
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValid); !iter.IsDone(); iter++)
     {
         Child &child = *iter.GetChild();
 

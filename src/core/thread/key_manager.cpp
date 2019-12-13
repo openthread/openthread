@@ -133,7 +133,7 @@ otError KeyManager::SetMasterKey(const MasterKey &aKey)
     }
 
     // reset child frame counters
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
     {
         iter.GetChild()->SetKeySequence(0);
         iter.GetChild()->SetLinkFrameCounter(0);

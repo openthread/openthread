@@ -72,7 +72,7 @@ void IndirectSender::Stop(void)
 {
     VerifyOrExit(mEnabled);
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
     {
         iter.GetChild()->SetIndirectMessage(NULL);
         mSourceMatchController.ResetMessageCount(*iter.GetChild());
@@ -557,8 +557,7 @@ exit:
 
 void IndirectSender::ClearMessagesForRemovedChildren(void)
 {
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptValidOrRestoring); !iter.IsDone();
-         iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptValidOrRestoring); !iter.IsDone(); iter++)
     {
         if (iter.GetChild()->GetIndirectMessageCount() == 0)
         {
