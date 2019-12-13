@@ -158,6 +158,17 @@ public:
     bool IsStateValidOrRestoring(void) const { return (mState == kStateValid) || IsStateRestoring(); }
 
     /**
+     * This method indicates if the neighbor state is valid, attaching, or restored.
+     *
+     * The states `kStateRestored`, `kStateChildIdRequest`, `kStateChildUpdateRequest`, `kStateValid`, and
+     * `kStateLinkRequest` are considered as valid, attaching, or restored.
+     *
+     * @returns TRUE if the neighbor state is valid, attaching, or restored, FALSE otherwise.
+     *
+     */
+    bool IsStateValidOrAttaching(void) const;
+
+    /**
      * This method gets the device mode flags.
      *
      * @returns The device mode flags.
@@ -479,17 +490,6 @@ public:
      *
      */
     void Clear(void);
-
-    /**
-     * This method indicates if the child state is valid or being attached or being restored.
-     *
-     * The states `kStateRestored`, `kStateChildIdRequest`, `kStateChildUpdateRequest`, `kStateValid`, (and
-     * `kStateLinkRequest) are considered as attached or being restored.
-     *
-     * @returns TRUE if the child is attached or being restored.
-     *
-     */
-    bool IsStateValidOrAttaching(void) const;
 
     /**
      * This method clears the IPv6 address list for the child.
