@@ -51,22 +51,6 @@ class ChildTable : public InstanceLocator
 {
 public:
     /**
-     * This enumeration defines child state filters used for finding a child or iterating through the child table.
-     *
-     * Each filter definition accepts a subset of `Child:State` values.
-     *
-     */
-    enum StateFilter
-    {
-        kInStateValid,                     ///< Accept child only in `Child::kStateValid`.
-        kInStateValidOrRestoring,          ///< Accept child with `Child::IsStateValidOrRestoring()` being `true`.
-        kInStateChildIdRequest,            ///< Accept child only in `Child:kStateChildIdRequest`.
-        kInStateValidOrAttaching,          ///< Accept child with `Child::IsStateValidOrAttaching()` being `true`.
-        kInStateAnyExceptInvalid,          ///< Accept child in any state except `Child:kStateInvalid`.
-        kInStateAnyExceptValidOrRestoring, ///< Accept child in any state except `Child::IsStateValidOrRestoring()`.
-    };
-
-    /**
      * This class represents an iterator for iterating through the child entries in the child table.
      *
      */
@@ -80,7 +64,7 @@ public:
          * @param[in] aFilter    A child state filter.
          *
          */
-        Iterator(Instance &aInstance, StateFilter aFilter);
+        Iterator(Instance &aInstance, Child::StateFilter aFilter);
 
         /**
          * This constructor initializes an `Iterator` instance to start from a given child.
@@ -96,7 +80,7 @@ public:
          * @param[in] aStartingChild   A pointer to a child. If non-NULL, the iterator starts from the given entry.
          *
          */
-        Iterator(Instance &aInstance, StateFilter aFilter, Child *aStartingChild);
+        Iterator(Instance &aInstance, Child::StateFilter aFilter, Child *aStartingChild);
 
         /**
          * This method resets the iterator to start over.
@@ -153,9 +137,9 @@ public:
         Child *GetChild(void) { return mChild; }
 
     private:
-        StateFilter mFilter;
-        Child *     mStart;
-        Child *     mChild;
+        Child::StateFilter mFilter;
+        Child *            mStart;
+        Child *            mChild;
     };
 
     /**
@@ -212,7 +196,7 @@ public:
      * @returns  A pointer to the `Child` entry if one is found, or `NULL` otherwise.
      *
      */
-    Child *FindChild(uint16_t aRloc16, StateFilter aFilter);
+    Child *FindChild(uint16_t aRloc16, Child::StateFilter aFilter);
 
     /**
      * This method searches the child table for a `Child` with a given extended address also matching a given state
@@ -224,7 +208,7 @@ public:
      * @returns  A pointer to the `Child` entry if one is found, or `NULL` otherwise.
      *
      */
-    Child *FindChild(const Mac::ExtAddress &aAddress, StateFilter aFilter);
+    Child *FindChild(const Mac::ExtAddress &aAddress, Child::StateFilter aFilter);
 
     /**
      * This method searches the child table for a `Child` with a given address also matching a given state filter.
@@ -235,7 +219,7 @@ public:
      * @returns  A pointer to the `Child` entry if one is found, or `NULL` otherwise.
      *
      */
-    Child *FindChild(const Mac::Address &aAddress, StateFilter aFilter);
+    Child *FindChild(const Mac::Address &aAddress, Child::StateFilter aFilter);
 
     /**
      * This method indicates whether the child table contains any child matching a given state filter.
@@ -245,7 +229,7 @@ public:
      * @returns  TRUE if the table contains at least one child table matching the given filter, FALSE otherwise.
      *
      */
-    bool HasChildren(StateFilter aFilter) const;
+    bool HasChildren(Child::StateFilter aFilter) const;
 
     /**
      * This method returns the number of children in the child table matching a given state filter.
@@ -255,7 +239,7 @@ public:
      * @returns Number of children matching the given state filer.
      *
      */
-    uint16_t GetNumChildren(StateFilter aFilter) const;
+    uint16_t GetNumChildren(Child::StateFilter aFilter) const;
 
     /**
      * This method returns the maximum number of children that can be supported (build-time constant).
@@ -297,8 +281,6 @@ private:
         kMaxChildren = OPENTHREAD_CONFIG_MLE_MAX_CHILDREN,
     };
 
-    static bool MatchesFilter(const Child &aChild, StateFilter aFilter);
-
     uint16_t mMaxChildrenAllowed;
     Child    mChildren[kMaxChildren];
 };
@@ -310,20 +292,11 @@ private:
 class ChildTable : public InstanceLocator
 {
 public:
-    enum StateFilter
-    {
-        kInStateValid,
-        kInStateValidOrRestoring,
-        kInStateChildIdRequest,
-        kInStateValidOrAttaching,
-        kInStateAnyExceptInvalid,
-    };
-
     class Iterator
     {
     public:
-        Iterator(Instance &, StateFilter) {}
-        Iterator(Instance &, StateFilter, Child *) {}
+        Iterator(Instance &, Child::StateFilter) {}
+        Iterator(Instance &, Child::StateFilter, Child *) {}
         void   Reset(void) {}
         bool   IsDone(void) const { return true; }
         void   Advance(void) {}
@@ -343,12 +316,12 @@ public:
 
     Child *GetNewChild(void) { return NULL; }
 
-    Child *FindChild(uint16_t, StateFilter) { return NULL; }
-    Child *FindChild(const Mac::ExtAddress &, StateFilter) { return NULL; }
-    Child *FindChild(const Mac::Address &, StateFilter) { return NULL; }
+    Child *FindChild(uint16_t, Child::StateFilter) { return NULL; }
+    Child *FindChild(const Mac::ExtAddress &, Child::StateFilter) { return NULL; }
+    Child *FindChild(const Mac::Address &, Child::StateFilter) { return NULL; }
 
-    bool     HasChildren(StateFilter) const { return false; }
-    uint16_t GetNumChildren(StateFilter) const { return 0; }
+    bool     HasChildren(Child::StateFilter) const { return false; }
+    uint16_t GetNumChildren(Child::StateFilter) const { return 0; }
     uint16_t GetMaxChildren(void) const { return 0; }
     uint16_t GetMaxChildrenAllowed(void) const { return 0; }
     otError  SetMaxChildrenAllowed(uint16_t) { return OT_ERROR_INVALID_STATE; }
