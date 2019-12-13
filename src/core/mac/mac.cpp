@@ -1099,7 +1099,7 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
     VerifyOrExit(!aFrame.IsEmpty());
 
     aFrame.GetDstAddr(dstAddr);
-    neighbor = Get<Mle::MleRouter>().GetNeighbor(dstAddr);
+    neighbor = Get<NeighborTable>().FindNeighbor(dstAddr, Neighbor::kInStateValidOrRestoring);
 
 #if OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
 
@@ -1482,7 +1482,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
     aFrame->GetSrcAddr(srcaddr);
     aFrame->GetDstAddr(dstaddr);
-    neighbor = Get<Mle::MleRouter>().GetNeighbor(srcaddr);
+    neighbor = Get<NeighborTable>().FindNeighbor(srcaddr, Neighbor::kInStateValidOrRestoring);
 
     // Destination Address Filtering
     switch (dstaddr.GetType())
@@ -1496,11 +1496,13 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
                          ((mRxOnWhenIdle && dstaddr.IsBroadcast()) || dstaddr.GetShort() == GetShortAddress()),
                      error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
 
+#if OPENTHREAD_FTD
         // Allow  multicasts from neighbor routers if FTD
         if (neighbor == NULL && dstaddr.IsBroadcast() && Get<Mle::MleRouter>().IsFullThreadDevice())
         {
-            neighbor = Get<Mle::MleRouter>().GetRxOnlyNeighborRouter(srcaddr);
+            neighbor = Get<NeighborTable>().FindRxOnlyNeighbor(srcaddr, Neighbor::kInStateValidOrRestoring);
         }
+#endif
 
         break;
 

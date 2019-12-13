@@ -206,10 +206,14 @@ void SupervisionListener::SetTimeout(uint16_t aTimeout)
 
 void SupervisionListener::UpdateOnReceive(const Mac::Address &aSourceAddress, bool aIsSecure)
 {
+    Neighbor *neighbor;
+
     // If listener is enabled and device is a child and it received a secure frame from its parent, restart the timer.
 
-    VerifyOrExit(mTimer.IsRunning() && aIsSecure && (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_CHILD) &&
-                 (Get<Mle::MleRouter>().GetNeighbor(aSourceAddress) == &Get<Mle::MleRouter>().GetParent()));
+    VerifyOrExit(mTimer.IsRunning() && aIsSecure && (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_CHILD));
+
+    neighbor = Get<NeighborTable>().FindNeighbor(aSourceAddress, Neighbor::kInStateValidOrRestoring);
+    VerifyOrExit(neighbor == &Get<Mle::MleRouter>().GetParent());
 
     RestartTimer();
 

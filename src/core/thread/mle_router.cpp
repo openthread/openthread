@@ -3134,7 +3134,7 @@ otError MleRouter::SendDataResponse(const Ip6::Address &aDestination,
         switch (aTlvs[i])
         {
         case Tlv::kNetworkData:
-            neighbor   = GetNeighbor(aDestination);
+            neighbor   = mNeighborTable.FindNeighbor(aDestination, Neighbor::kInStateValidOrRestoring);
             stableOnly = neighbor != NULL ? !neighbor->IsFullNetworkData() : false;
             SuccessOrExit(error = AppendNetworkData(*message, stableOnly));
             break;
@@ -3184,7 +3184,7 @@ bool MleRouter::IsMinimalChild(uint16_t aRloc16)
     {
         Neighbor *neighbor;
 
-        neighbor = GetNeighbor(aRloc16);
+        neighbor = mNeighborTable.FindNeighbor(aRloc16, Neighbor::kInStateValidOrRestoring);
 
         rval = (neighbor != NULL) && (!neighbor->IsFullThreadDevice());
     }
@@ -3227,164 +3227,6 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 
     aNeighbor.GetLinkInfo().Clear();
     aNeighbor.SetState(Neighbor::kStateInvalid);
-}
-
-Neighbor *MleRouter::GetNeighbor(uint16_t aAddress)
-{
-    Neighbor *rval = NULL;
-
-    if (aAddress == Mac::kShortAddrBroadcast || aAddress == Mac::kShortAddrInvalid)
-    {
-        ExitNow();
-    }
-
-    switch (mRole)
-    {
-    case OT_DEVICE_ROLE_DISABLED:
-        break;
-
-    case OT_DEVICE_ROLE_DETACHED:
-    case OT_DEVICE_ROLE_CHILD:
-        rval = Mle::GetNeighbor(aAddress);
-        break;
-
-    case OT_DEVICE_ROLE_ROUTER:
-    case OT_DEVICE_ROLE_LEADER:
-        rval = mChildTable.FindChild(aAddress, Child::kInStateValidOrRestoring);
-        VerifyOrExit(rval == NULL);
-
-        rval = mRouterTable.FindNeighbor(aAddress, Router::kInStateValidOrRestoring);
-        break;
-    }
-
-exit:
-    return rval;
-}
-
-Neighbor *MleRouter::GetNeighbor(const Mac::ExtAddress &aAddress)
-{
-    Neighbor *rval = NULL;
-
-    switch (mRole)
-    {
-    case OT_DEVICE_ROLE_DISABLED:
-        break;
-
-    case OT_DEVICE_ROLE_DETACHED:
-    case OT_DEVICE_ROLE_CHILD:
-        rval = Mle::GetNeighbor(aAddress);
-        break;
-
-    case OT_DEVICE_ROLE_ROUTER:
-    case OT_DEVICE_ROLE_LEADER:
-        rval = mChildTable.FindChild(aAddress, Child::kInStateValidOrRestoring);
-        VerifyOrExit(rval == NULL);
-
-        rval = mRouterTable.FindNeighbor(aAddress, Router::kInStateValidOrRestoring);
-
-        if (rval != NULL)
-        {
-            ExitNow();
-        }
-
-        if (IsAttaching())
-        {
-            rval = Mle::GetNeighbor(aAddress);
-        }
-
-        break;
-    }
-
-exit:
-    return rval;
-}
-
-Neighbor *MleRouter::GetNeighbor(const Mac::Address &aAddress)
-{
-    Neighbor *rval = NULL;
-
-    switch (aAddress.GetType())
-    {
-    case Mac::Address::kTypeShort:
-        rval = GetNeighbor(aAddress.GetShort());
-        break;
-
-    case Mac::Address::kTypeExtended:
-        rval = GetNeighbor(aAddress.GetExtended());
-        break;
-
-    default:
-        break;
-    }
-
-    return rval;
-}
-
-Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
-{
-    Mac::Address    macAddr;
-    Lowpan::Context context;
-    Child *         child;
-    Neighbor *      rval = NULL;
-
-    if (aAddress.IsLinkLocal())
-    {
-        if (aAddress.mFields.m16[4] == HostSwap16(0x0000) && aAddress.mFields.m16[5] == HostSwap16(0x00ff) &&
-            aAddress.mFields.m16[6] == HostSwap16(0xfe00))
-        {
-            macAddr.SetShort(HostSwap16(aAddress.mFields.m16[7]));
-        }
-        else
-        {
-            aAddress.ToExtAddress(macAddr);
-        }
-
-        ExitNow(rval = GetNeighbor(macAddr));
-    }
-
-    if (Get<NetworkData::Leader>().GetContext(aAddress, context) != OT_ERROR_NONE)
-    {
-        context.mContextId = 0xff;
-    }
-
-    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValidOrRestoring); !iter.IsDone(); iter++)
-    {
-        child = iter.GetChild();
-
-        if (context.mContextId == kMeshLocalPrefixContextId && aAddress.mFields.m16[4] == HostSwap16(0x0000) &&
-            aAddress.mFields.m16[5] == HostSwap16(0x00ff) && aAddress.mFields.m16[6] == HostSwap16(0xfe00) &&
-            aAddress.mFields.m16[7] == HostSwap16(child->GetRloc16()))
-        {
-            ExitNow(rval = child);
-        }
-
-        if (child->HasIp6Address(GetInstance(), aAddress))
-        {
-            ExitNow(rval = child);
-        }
-    }
-
-    VerifyOrExit(context.mContextId == kMeshLocalPrefixContextId, rval = NULL);
-
-    if (aAddress.mFields.m16[4] == HostSwap16(0x0000) && aAddress.mFields.m16[5] == HostSwap16(0x00ff) &&
-        aAddress.mFields.m16[6] == HostSwap16(0xfe00))
-    {
-        rval = mRouterTable.FindNeighbor(HostSwap16(aAddress.mFields.m16[7]), Router::kInStateValidOrRestoring);
-    }
-
-exit:
-    return rval;
-}
-
-Neighbor *MleRouter::GetRxOnlyNeighborRouter(const Mac::Address &aAddress)
-{
-    Neighbor *rval = NULL;
-
-    VerifyOrExit(mRole == OT_DEVICE_ROLE_CHILD, rval = NULL);
-    rval = mRouterTable.FindNeighbor(aAddress, Router::kInStateValidOrRestoring);
-
-exit:
-    return rval;
 }
 
 uint16_t MleRouter::GetNextHop(uint16_t aDestination)
@@ -3786,7 +3628,7 @@ otError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, I
             // IPv6 destination is this device
             ExitNow();
         }
-        else if (GetNeighbor(aIp6Header.GetDestination()) != NULL)
+        else if (mNeighborTable.FindNeighbor(aIp6Header.GetDestination(), Neighbor::kInStateValidOrRestoring) != NULL)
         {
             // IPv6 destination is an RFD child
             ExitNow();

@@ -848,7 +848,7 @@ Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame &aFrame, otError
 
     VerifyOrExit(mEnabled);
 
-    neighbor = Get<Mle::MleRouter>().GetNeighbor(aMacDest);
+    neighbor = Get<NeighborTable>().FindNeighbor(aMacDest, Neighbor::kInStateValidOrRestoring);
     VerifyOrExit(neighbor != NULL);
 
     VerifyOrExit(aFrame.GetAckRequest());

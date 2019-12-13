@@ -448,6 +448,11 @@ template <> inline Mle::MleRouter &Instance::Get(void)
     return mThreadNetif.mMleRouter;
 }
 
+template <> inline NeighborTable &Instance::Get(void)
+{
+    return mThreadNetif.mMleRouter.mNeighborTable;
+}
+
 template <> inline ChildTable &Instance::Get(void)
 {
     return mThreadNetif.mMleRouter.mChildTable;

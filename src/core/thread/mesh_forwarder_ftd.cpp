@@ -107,8 +107,9 @@ otError MeshForwarder::SendMessage(Message &aMessage)
                 }
             }
         }
-        else if ((neighbor = mle.GetNeighbor(ip6Header.GetDestination())) != NULL && !neighbor->IsRxOnWhenIdle() &&
-                 !aMessage.GetDirectTransmission())
+        else if ((neighbor = Get<NeighborTable>().FindNeighbor(ip6Header.GetDestination(),
+                                                               Neighbor::kInStateValidOrRestoring)) != NULL &&
+                 !neighbor->IsRxOnWhenIdle() && !aMessage.GetDirectTransmission())
         {
             // destined for a sleepy child
             Child &child = *static_cast<Child *>(neighbor);
@@ -219,8 +220,7 @@ exit:
 
 void MeshForwarder::RemoveMessages(Child &aChild, uint8_t aSubType)
 {
-    Mle::MleRouter &mle = Get<Mle::MleRouter>();
-    Message *       nextMessage;
+    Message *nextMessage;
 
     for (Message *message = mSendQueue.GetHead(); message; message = nextMessage)
     {
@@ -241,7 +241,8 @@ void MeshForwarder::RemoveMessages(Child &aChild, uint8_t aSubType)
 
                 IgnoreReturnValue(message->Read(0, sizeof(ip6header), &ip6header));
 
-                if (&aChild == static_cast<Child *>(mle.GetNeighbor(ip6header.GetDestination())))
+                if (&aChild == static_cast<Child *>(Get<NeighborTable>().FindNeighbor(
+                                   ip6header.GetDestination(), Neighbor::kInStateValidOrRestoring)))
                 {
                     message->ClearDirectTransmission();
                 }
@@ -255,7 +256,8 @@ void MeshForwarder::RemoveMessages(Child &aChild, uint8_t aSubType)
 
                 IgnoreReturnValue(meshHeader.Init(*message));
 
-                if (&aChild == static_cast<Child *>(mle.GetNeighbor(meshHeader.GetDestination())))
+                if (&aChild == static_cast<Child *>(Get<NeighborTable>().FindNeighbor(
+                                   meshHeader.GetDestination(), Neighbor::kInStateValidOrRestoring)))
                 {
                     message->ClearDirectTransmission();
                 }
@@ -348,11 +350,11 @@ otError MeshForwarder::UpdateMeshRoute(Message &aMessage)
 
     if (nextHop != Mac::kShortAddrInvalid)
     {
-        neighbor = Get<Mle::MleRouter>().GetNeighbor(nextHop);
+        neighbor = Get<NeighborTable>().FindNeighbor(nextHop, Neighbor::kInStateValidOrRestoring);
     }
     else
     {
-        neighbor = Get<Mle::MleRouter>().GetNeighbor(meshHeader.GetDestination());
+        neighbor = Get<NeighborTable>().FindNeighbor(meshHeader.GetDestination(), Neighbor::kInStateValidOrRestoring);
     }
 
     if (neighbor == NULL)
@@ -427,7 +429,8 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
             ExitNow(error = OT_ERROR_DROP);
         }
     }
-    else if ((neighbor = mle.GetNeighbor(ip6Header.GetDestination())) != NULL)
+    else if ((neighbor = Get<NeighborTable>().FindNeighbor(ip6Header.GetDestination(),
+                                                           Neighbor::kInStateValidOrRestoring)) != NULL)
     {
         mMeshDest = neighbor->GetRloc16();
     }
@@ -605,7 +608,7 @@ void MeshForwarder::UpdateRoutes(uint8_t *           aFrame,
         }
     }
 
-    neighbor = Get<Mle::MleRouter>().GetNeighbor(ip6Header.GetSource());
+    neighbor = Get<NeighborTable>().FindNeighbor(ip6Header.GetSource(), Neighbor::kInStateValidOrRestoring);
     VerifyOrExit(neighbor != NULL && !neighbor->IsFullThreadDevice());
 
     if (Mle::Mle::GetRouterId(aMeshSource.GetShort()) != Mle::Mle::GetRouterId(Get<Mac::Mac>().GetShortAddress()))

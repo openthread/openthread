@@ -356,57 +356,6 @@ public:
     otError StoreChild(const Child &aChild);
 
     /**
-     * This method returns a pointer to a Neighbor object.
-     *
-     * @param[in]  aAddress  The address of the Neighbor.
-     *
-     * @returns A pointer to the Neighbor corresponding to @p aAddress, NULL otherwise.
-     *
-     */
-    Neighbor *GetNeighbor(uint16_t aAddress);
-
-    /**
-     * This method returns a pointer to a Neighbor object.
-     *
-     * @param[in]  aAddress  The address of the Neighbor.
-     *
-     * @returns A pointer to the Neighbor corresponding to @p aAddress, NULL otherwise.
-     *
-     */
-    Neighbor *GetNeighbor(const Mac::ExtAddress &aAddress);
-
-    /**
-     * This method returns a pointer to a Neighbor object.
-     *
-     * @param[in]  aAddress  The address of the Neighbor.
-     *
-     * @returns A pointer to the Neighbor corresponding to @p aAddress, NULL otherwise.
-     *
-     */
-    Neighbor *GetNeighbor(const Mac::Address &aAddress);
-
-    /**
-     * This method returns a pointer to a Neighbor object.
-     *
-     * @param[in]  aAddress  The address of the Neighbor.
-     *
-     * @returns A pointer to the Neighbor corresponding to @p aAddress, NULL otherwise.
-     *
-     */
-    Neighbor *GetNeighbor(const Ip6::Address &aAddress);
-
-    /**
-     * This method returns a pointer to a Neighbor object if a one-way link is maintained
-     * as in the instance of an FTD child with neighbor routers.
-     *
-     * @param[in]  aAddress  The address of the Neighbor.
-     *
-     * @returns A pointer to the Neighbor corresponding to @p aAddress, NULL otherwise.
-     *
-     */
-    Neighbor *GetRxOnlyNeighborRouter(const Mac::Address &aAddress);
-
-    /**
      * This method retains diagnostic information for an attached child by Child ID or RLOC16.
      *
      * @param[in]   aChildId    The Child ID or RLOC16 for an attached child.

@@ -162,6 +162,7 @@ set(COMMON_SOURCES
     thread/mesh_forwarder_mtd.cpp
     thread/mle.cpp
     thread/mle_router.cpp
+    thread/neighbor_table.cpp
     thread/network_data.cpp
     thread/network_data_leader.cpp
     thread/network_data_leader_ftd.cpp

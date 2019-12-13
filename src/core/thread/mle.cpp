@@ -64,6 +64,7 @@ Mle::Mle(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mRetrieveNewNetworkData(false)
     , mRole(OT_DEVICE_ROLE_DISABLED)
+    , mNeighborTable(aInstance)
     , mDeviceMode(DeviceMode::kModeRxOnWhenIdle | DeviceMode::kModeSecureDataRequest)
     , mAttachState(kAttachStateIdle)
     , mReattachState(kReattachStop)
@@ -2041,7 +2042,7 @@ otError Mle::SendChildIdRequest(void)
             //
             // Parent state is not normally invalidated after becoming a Router/Leader (see #1875).  When trying to
             // attach to a better partition, invalidating old parent state (especially when in kStateRestored) ensures
-            // that GetNeighbor() returns mParentCandidate when processing the Child ID Response.
+            // that FindParentNeighbor() returns mParentCandidate when processing the Child ID Response.
             mParent.SetState(Neighbor::kStateInvalid);
         }
     }
@@ -2685,18 +2686,18 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     {
     case OT_DEVICE_ROLE_DETACHED:
     case OT_DEVICE_ROLE_CHILD:
-        neighbor = GetNeighbor(macAddr);
+        neighbor = mNeighborTable.FindParentNeighbor(macAddr, Neighbor::kInStateValidOrRestoring);
         break;
 
     case OT_DEVICE_ROLE_ROUTER:
     case OT_DEVICE_ROLE_LEADER:
         if (command == Header::kCommandChildIdResponse)
         {
-            neighbor = GetNeighbor(macAddr);
+            neighbor = mNeighborTable.FindParentNeighbor(macAddr, Neighbor::kInStateValidOrRestoring);
         }
         else
         {
-            neighbor = Get<MleRouter>().GetNeighbor(macAddr);
+            neighbor = mNeighborTable.FindNeighbor(macAddr, Neighbor::kInStateValidOrRestoring);
         }
 
         break;
@@ -3880,59 +3881,6 @@ exit:
     }
 
     return error;
-}
-
-Neighbor *Mle::GetNeighbor(uint16_t aAddress)
-{
-    Neighbor *rval = NULL;
-
-    if (mParent.IsStateValidOrRestoring() && (mParent.GetRloc16() == aAddress))
-    {
-        rval = &mParent;
-    }
-    else if (mParentCandidate.IsStateValid() && (mParentCandidate.GetRloc16() == aAddress))
-    {
-        rval = &mParentCandidate;
-    }
-
-    return rval;
-}
-
-Neighbor *Mle::GetNeighbor(const Mac::ExtAddress &aAddress)
-{
-    Neighbor *rval = NULL;
-
-    if (mParent.IsStateValidOrRestoring() && (mParent.GetExtAddress() == aAddress))
-    {
-        rval = &mParent;
-    }
-    else if (mParentCandidate.IsStateValid() && (mParentCandidate.GetExtAddress() == aAddress))
-    {
-        rval = &mParentCandidate;
-    }
-
-    return rval;
-}
-
-Neighbor *Mle::GetNeighbor(const Mac::Address &aAddress)
-{
-    Neighbor *neighbor = NULL;
-
-    switch (aAddress.GetType())
-    {
-    case Mac::Address::kTypeShort:
-        neighbor = GetNeighbor(aAddress.GetShort());
-        break;
-
-    case Mac::Address::kTypeExtended:
-        neighbor = GetNeighbor(aAddress.GetExtended());
-        break;
-
-    default:
-        break;
-    }
-
-    return neighbor;
 }
 
 uint16_t Mle::GetNextHop(uint16_t aDestination) const
