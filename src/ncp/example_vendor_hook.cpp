@@ -119,4 +119,40 @@ otError NcpBase::VendorSetPropertyHandler(spinel_prop_key_t aPropKey)
 }  // namespace Ncp
 }  // namespace ot
 
-#endif
+//-------------------------------------------------------------------------------------------------------------------
+// When OPENTHREAD_ENABLE_NCP_VENDOR_HOOK is enabled, vendor code is
+// expected to provide the `otNcpInit()` function. The reason behind
+// this is to enable vendor code to define its own sub-class of
+// `NcpBase` or `NcpUart`/`NcpSpi`.
+//
+// Example below show how to add a vendor sub-class over `NcpUart`.
+
+#include "ncp_uart.hpp"
+#include "common/new.hpp"
+
+class NcpVendorUart : public ot::Ncp::NcpUart
+{
+public:
+    NcpVendorUart(ot::Instance *aInstance)
+        : ot::Ncp::NcpUart(aInstance)
+    {}
+
+    // Add public/private methods or member variables
+};
+
+static OT_DEFINE_ALIGNED_VAR(sNcpVendorRaw, sizeof(NcpVendorUart), uint64_t);
+
+extern "C" void otNcpInit(otInstance *aInstance)
+{
+    NcpVendorUart *ncpVendor = NULL;
+    ot::Instance * instance  = static_cast<ot::Instance *>(aInstance);
+
+    ncpVendor = new (&sNcpVendorRaw) NcpVendorUart(instance);
+
+    if (ncpVendor == NULL || ncpVendor != ot::Ncp::NcpBase::GetNcpInstance())
+    {
+        assert(false);
+    }
+}
+
+#endif // #if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
