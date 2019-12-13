@@ -366,6 +366,35 @@ void Diags::ProcessRadio(int aArgCount, char *aArgVector[], char *aOutput, size_
         snprintf(aOutput, aOutputMaxLen, "set radio from sleep to receive on channel %d\r\nstatus 0x%02x\r\n", mChannel,
                  error);
     }
+    else if (strcmp(aArgVector[0], "state") == 0)
+    {
+        otRadioState state = Get<Radio>().GetState();
+
+        error = OT_ERROR_NONE;
+
+        switch (state)
+        {
+        case OT_RADIO_STATE_DISABLED:
+            snprintf(aOutput, aOutputMaxLen, "disabled\r\n");
+            break;
+
+        case OT_RADIO_STATE_SLEEP:
+            snprintf(aOutput, aOutputMaxLen, "sleep\r\n");
+            break;
+
+        case OT_RADIO_STATE_RECEIVE:
+            snprintf(aOutput, aOutputMaxLen, "receive\r\n");
+            break;
+
+        case OT_RADIO_STATE_TRANSMIT:
+            snprintf(aOutput, aOutputMaxLen, "transmit\r\n");
+            break;
+
+        default:
+            snprintf(aOutput, aOutputMaxLen, "invalid\r\n");
+            break;
+        }
+    }
 
 exit:
     AppendErrorResult(error, aOutput, aOutputMaxLen);
