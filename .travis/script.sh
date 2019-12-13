@@ -490,6 +490,22 @@ build_samr21() {
         --enable-radio-only                 \
         --with-examples=posix || die
     make -j 8 || die
+
+    export CPPFLAGS="                               \
+        -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    ./configure                             \
+        --enable-ncp                        \
+        --enable-ftd                        \
+        --enable-mtd                        \
+        --with-examples=posix               \
+        --disable-docs                      \
+        --disable-tests                     \
+        --with-ncp-vendor-hook-source=./src/ncp/example_vendor_hook.cpp || die
+    make -j 8 || die
 }
 
 [ $BUILD_TARGET != posix-distcheck ] || {
