@@ -170,7 +170,7 @@ public:
      */
     virtual void Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet) = 0;
 
-private:
+protected:
     RxFrameBuffer mRxFrameBuffer;
 };
 
