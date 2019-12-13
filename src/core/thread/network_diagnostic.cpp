@@ -230,7 +230,7 @@ otError NetworkDiagnostic::AppendChildTable(Message &aMessage)
 
     tlv.Init();
 
-    count = Get<ChildTable>().GetNumChildren(ChildTable::kInStateValid);
+    count = Get<ChildTable>().GetNumChildren(Child::kInStateValid);
 
     // The length of the Child Table TLV may exceed the outgoing link's MTU (1280B).
     // As a workaround we limit the number of entries in the Child Table TLV,
@@ -245,7 +245,7 @@ otError NetworkDiagnostic::AppendChildTable(Message &aMessage)
 
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(ChildTableTlv)));
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValid); !iter.IsDone(); iter++)
     {
         VerifyOrExit(count--);
 
