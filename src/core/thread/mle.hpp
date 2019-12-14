@@ -603,6 +603,19 @@ public:
     bool IsAttached(void) const;
 
     /**
+     * This method indicates whether device is currently attaching or not.
+     *
+     * Note that an already attached device may also be in attaching state. Examples of this include a leader/router
+     * trying to attach to a better partition, or a child trying to find a better parent (when feature
+     * `OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE` is enabled).
+     *
+     * @retval TRUE   Device is currently trying to attach.
+     * @retval FALSE  Device is not in middle of attach process.
+     *
+     */
+    bool IsAttaching(void) const { return (mAttachState != kAttachStateIdle); }
+
+    /**
      * This method returns the current Thread interface state.
      *
      * @returns The current Thread interface state.
