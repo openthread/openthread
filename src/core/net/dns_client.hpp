@@ -206,7 +206,7 @@ private:
     Message *FindRelatedQuery(const Header &aResponseHeader, QueryMetadata &aQueryMetadata);
     void     FinalizeDnsTransaction(Message &            aQuery,
                                     const QueryMetadata &aQueryMetadata,
-                                    otIp6Address *       aAddress,
+                                    const otIp6Address * aAddress,
                                     uint32_t             aTtl,
                                     otError              aResult);
 
