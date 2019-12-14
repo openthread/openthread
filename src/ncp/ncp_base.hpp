@@ -202,14 +202,23 @@ protected:
         uint32_t     mPropKeyOrStatus : 24; ///< 3 bytes for either property key or spinel status.
     };
 
+    struct HandlerEntry
+    {
+        spinel_prop_key_t        mKey;
+        NcpBase::PropertyHandler mHandler;
+    };
+
     NcpFrameBuffer::FrameTag GetLastOutboundFrameTag(void);
 
     otError HandleCommand(uint8_t aHeader);
 
-    PropertyHandler FindGetPropertyHandler(spinel_prop_key_t aKey);
-    PropertyHandler FindSetPropertyHandler(spinel_prop_key_t aKey);
-    PropertyHandler FindInsertPropertyHandler(spinel_prop_key_t aKey);
-    PropertyHandler FindRemovePropertyHandler(spinel_prop_key_t aKey);
+    static PropertyHandler FindPropertyHandler(const HandlerEntry *aHandlerEntries,
+                                               size_t              aSize,
+                                               spinel_prop_key_t   aKey);
+    static PropertyHandler FindGetPropertyHandler(spinel_prop_key_t aKey);
+    static PropertyHandler FindSetPropertyHandler(spinel_prop_key_t aKey);
+    static PropertyHandler FindInsertPropertyHandler(spinel_prop_key_t aKey);
+    static PropertyHandler FindRemovePropertyHandler(spinel_prop_key_t aKey);
 
     bool    HandlePropertySetForSpecialProperties(uint8_t aHeader, spinel_prop_key_t aKey, otError &aError);
     otError HandleCommandPropertySet(uint8_t aHeader, spinel_prop_key_t aKey);
