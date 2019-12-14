@@ -616,7 +616,7 @@ exit:
     return error;
 }
 
-otError Lowpan::DispatchToNextHeader(uint8_t aDispatch, Ip6::IpProto &aNextHeader)
+otError Lowpan::DispatchToNextHeader(uint8_t aDispatch, uint8_t &aNextHeader)
 {
     otError error = OT_ERROR_NONE;
 
@@ -671,7 +671,7 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
     uint16_t             hcCtl;
     Context              srcContext, dstContext;
     bool                 srcContextValid = true, dstContextValid = true;
-    Ip6::IpProto         nextHeader;
+    uint8_t              nextHeader;
     uint8_t *            bytes;
 
     VerifyOrExit(remaining >= 2);
@@ -743,7 +743,7 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
     if ((hcCtl & kHcNextHeader) == 0)
     {
         VerifyOrExit(remaining >= 1);
-        aIp6Header.SetNextHeader(static_cast<Ip6::IpProto>(cur[0]));
+        aIp6Header.SetNextHeader(cur[0]);
         cur++;
         remaining--;
         aCompressedNextHeader = false;
@@ -956,7 +956,7 @@ int Lowpan::DecompressExtensionHeader(Message &aMessage, const uint8_t *aBuf, ui
     uint16_t        remaining = aBufLength;
     uint8_t         hdr[2];
     uint8_t         len;
-    Ip6::IpProto    nextHeader;
+    uint8_t         nextHeader;
     uint8_t         ctl = cur[0];
     uint8_t         padLength;
     Ip6::OptionPad1 optionPad1;
