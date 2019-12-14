@@ -3253,7 +3253,7 @@ Neighbor *MleRouter::GetNeighbor(uint16_t aAddress)
         rval = mChildTable.FindChild(aAddress, Child::kInStateValidOrRestoring);
         VerifyOrExit(rval == NULL);
 
-        rval = mRouterTable.GetNeighbor(aAddress);
+        rval = mRouterTable.FindNeighbor(aAddress, Router::kInStateValidOrRestoring);
         break;
     }
 
@@ -3280,7 +3280,7 @@ Neighbor *MleRouter::GetNeighbor(const Mac::ExtAddress &aAddress)
         rval = mChildTable.FindChild(aAddress, Child::kInStateValidOrRestoring);
         VerifyOrExit(rval == NULL);
 
-        rval = mRouterTable.GetNeighbor(aAddress);
+        rval = mRouterTable.FindNeighbor(aAddress, Router::kInStateValidOrRestoring);
 
         if (rval != NULL)
         {
@@ -3369,7 +3369,7 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
     if (aAddress.mFields.m16[4] == HostSwap16(0x0000) && aAddress.mFields.m16[5] == HostSwap16(0x00ff) &&
         aAddress.mFields.m16[6] == HostSwap16(0xfe00))
     {
-        rval = mRouterTable.GetNeighbor(HostSwap16(aAddress.mFields.m16[7]));
+        rval = mRouterTable.FindNeighbor(HostSwap16(aAddress.mFields.m16[7]), Router::kInStateValidOrRestoring);
     }
 
 exit:
@@ -3381,20 +3381,7 @@ Neighbor *MleRouter::GetRxOnlyNeighborRouter(const Mac::Address &aAddress)
     Neighbor *rval = NULL;
 
     VerifyOrExit(mRole == OT_DEVICE_ROLE_CHILD, rval = NULL);
-
-    switch (aAddress.GetType())
-    {
-    case Mac::Address::kTypeShort:
-        rval = mRouterTable.GetNeighbor(aAddress.GetShort());
-        break;
-
-    case Mac::Address::kTypeExtended:
-        rval = mRouterTable.GetNeighbor(aAddress.GetExtended());
-        break;
-
-    default:
-        break;
-    }
+    rval = mRouterTable.FindNeighbor(aAddress, Router::kInStateValidOrRestoring);
 
 exit:
     return rval;

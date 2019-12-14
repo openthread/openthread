@@ -211,24 +211,38 @@ public:
     uint8_t GetLinkCost(Router &aRouter);
 
     /**
-     * This method returns the neighbor for a given RLOC16.
+     * This method searches the router table for an entry with a given RLOC16 also matching a given state filter.
      *
-     * @param[in]  aRloc16  The RLOC16 value.
+     * @param[in]  aRloc16  A RLOC16 address.
+     * @param[in]  aFilter  A neighbor state filter.
      *
-     * @returns A pointer to the router or NULL if the router could not be found.
+     * @returns  A pointer to the `Router` entry if one is found, or `NULL` otherwise.
      *
      */
-    Router *GetNeighbor(uint16_t aRloc16);
+    Router *FindNeighbor(uint16_t aRloc16, Neighbor::StateFilter aFilter);
 
     /**
-     * This method returns the neighbor for a given IEEE Extended Address.
+     * This method searches the router table for an entry with a given extended address also matching a given state
+     * filter.
      *
-     * @param[in]  aExtAddress  A reference to the IEEE Extended Address.
+     * @param[in]  aAddress A reference to an extended address.
+     * @param[in]  aFilter  A neighbor state filter.
      *
-     * @returns A pointer to the router or NULL if the router could not be found.
+     * @returns  A pointer to the `Router` entry if one is found, or `NULL` otherwise.
      *
      */
-    Router *GetNeighbor(const Mac::ExtAddress &aExtAddress);
+    Router *FindNeighbor(const Mac::ExtAddress &aAddress, Neighbor::StateFilter aFilter);
+
+    /**
+     * This method searches the router table for an entry with a given address also matching a given state filter.
+     *
+     * @param[in]  aAddress A reference to a MAC address.
+     * @param[in]  aFilter  A neighbor state filter.
+     *
+     * @returns  A pointer to the `Router` entry if one is found, or `NULL` otherwise.
+     *
+     */
+    Router *FindNeighbor(const Mac::Address &aAddress, Neighbor::StateFilter aFilter);
 
     /**
      * This method returns the router for a given router id.

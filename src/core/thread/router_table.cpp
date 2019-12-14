@@ -344,7 +344,7 @@ uint8_t RouterTable::GetActiveLinkCount(void) const
     return activeLinks;
 }
 
-Router *RouterTable::GetNeighbor(uint16_t aRloc16)
+Router *RouterTable::FindNeighbor(uint16_t aRloc16, Neighbor::StateFilter aFilter)
 {
     Router *router = NULL;
 
@@ -352,7 +352,7 @@ Router *RouterTable::GetNeighbor(uint16_t aRloc16)
 
     for (router = GetFirstEntry(); router != NULL; router = GetNextEntry(router))
     {
-        if (router->IsStateValid() && router->GetRloc16() == aRloc16)
+        if (router->MatchesFilter(aFilter) && router->GetRloc16() == aRloc16)
         {
             ExitNow();
         }
@@ -362,7 +362,7 @@ exit:
     return router;
 }
 
-Router *RouterTable::GetNeighbor(const Mac::ExtAddress &aExtAddress)
+Router *RouterTable::FindNeighbor(const Mac::ExtAddress &aExtAddress, Neighbor::StateFilter aFilter)
 {
     Router *router = NULL;
 
@@ -370,13 +370,34 @@ Router *RouterTable::GetNeighbor(const Mac::ExtAddress &aExtAddress)
 
     for (router = GetFirstEntry(); router != NULL; router = GetNextEntry(router))
     {
-        if (router->IsStateValid() && router->GetExtAddress() == aExtAddress)
+        if (router->MatchesFilter(aFilter) && router->GetExtAddress() == aExtAddress)
         {
             ExitNow();
         }
     }
 
 exit:
+    return router;
+}
+
+Router *RouterTable::FindNeighbor(const Mac::Address &aAddress, Neighbor::StateFilter aFilter)
+{
+    Router *router = NULL;
+
+    switch (aAddress.GetType())
+    {
+    case Mac::Address::kTypeShort:
+        router = FindNeighbor(aAddress.GetShort(), aFilter);
+        break;
+
+    case Mac::Address::kTypeExtended:
+        router = FindNeighbor(aAddress.GetExtended(), aFilter);
+        break;
+
+    default:
+        break;
+    }
+
     return router;
 }
 
