@@ -624,7 +624,7 @@ otError Mle::BecomeChild(AttachMode aMode)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(mAttachState == kAttachStateIdle, error = OT_ERROR_BUSY);
+    VerifyOrExit(!IsAttaching(), error = OT_ERROR_BUSY);
 
     if (mReattachState == kReattachStart)
     {
