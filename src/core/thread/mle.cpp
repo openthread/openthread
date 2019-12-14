@@ -3959,11 +3959,6 @@ bool Mle::IsMeshLocalAddress(const Ip6::Address &aAddress) const
     return aAddress.PrefixMatch(GetMeshLocal16()) >= Ip6::Address::kMeshLocalPrefixLength;
 }
 
-Router *Mle::GetParent(void)
-{
-    return &mParent;
-}
-
 Router *Mle::GetParentCandidate(void)
 {
     Router *rval;
