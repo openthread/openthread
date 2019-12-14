@@ -138,7 +138,7 @@ otError DataPollSender::GetPollDestinationAddress(Mac::Address &aDest) const
 
     VerifyOrExit((parent != NULL) && parent->IsStateValidOrRestoring(), error = OT_ERROR_ABORT);
 
-    if ((Get<Mac::Mac>().GetShortAddress() == Mac::kShortAddrInvalid) || (parent != Get<Mle::MleRouter>().GetParent()))
+    if ((Get<Mac::Mac>().GetShortAddress() == Mac::kShortAddrInvalid) || (parent != &Get<Mle::MleRouter>().GetParent()))
     {
         aDest.SetExtended(parent->GetExtAddress());
     }

@@ -747,12 +747,12 @@ public:
     }
 
     /**
-     * This method returns a pointer to the parent when operating in End Device mode.
+     * This method gets the parent when operating in End Device mode.
      *
-     * @returns A pointer to the parent.
+     * @returns A reference to the parent.
      *
      */
-    Router *GetParent(void);
+    Router &GetParent(void) { return mParent; }
 
     /**
      * This method returns a pointer to the parent candidate or parent.

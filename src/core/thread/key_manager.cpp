@@ -119,7 +119,7 @@ otError KeyManager::SetMasterKey(const MasterKey &aKey)
     ComputeKey(mKeySequence, mKey);
 
     // reset parent frame counters
-    parent = Get<Mle::MleRouter>().GetParent();
+    parent = &Get<Mle::MleRouter>().GetParent();
     parent->SetKeySequence(0);
     parent->SetLinkFrameCounter(0);
     parent->SetMleFrameCounter(0);

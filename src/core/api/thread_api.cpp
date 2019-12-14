@@ -311,7 +311,7 @@ otError otThreadGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
     VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_CHILD, error = OT_ERROR_INVALID_STATE);
 #endif
 
-    parent = instance.Get<Mle::MleRouter>().GetParent();
+    parent = &instance.Get<Mle::MleRouter>().GetParent();
 
     aParentInfo->mExtAddress     = parent->GetExtAddress();
     aParentInfo->mRloc16         = parent->GetRloc16();
@@ -334,12 +334,10 @@ otError otThreadGetParentAverageRssi(otInstance *aInstance, int8_t *aParentRssi)
 {
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
-    Router *  parent;
 
     assert(aParentRssi != NULL);
 
-    parent       = instance.Get<Mle::MleRouter>().GetParent();
-    *aParentRssi = parent->GetLinkInfo().GetAverageRss();
+    *aParentRssi = instance.Get<Mle::MleRouter>().GetParent().GetLinkInfo().GetAverageRss();
 
     VerifyOrExit(*aParentRssi != OT_RADIO_RSSI_INVALID, error = OT_ERROR_FAILED);
 
@@ -351,12 +349,10 @@ otError otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aLastRssi)
 {
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
-    Router *  parent;
 
     assert(aLastRssi != NULL);
 
-    parent     = instance.Get<Mle::MleRouter>().GetParent();
-    *aLastRssi = parent->GetLinkInfo().GetLastRss();
+    *aLastRssi = instance.Get<Mle::MleRouter>().GetParent().GetLinkInfo().GetLastRss();
 
     VerifyOrExit(*aLastRssi != OT_RADIO_RSSI_INVALID, error = OT_ERROR_FAILED);
 
