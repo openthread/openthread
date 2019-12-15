@@ -755,15 +755,12 @@ public:
     Router &GetParent(void) { return mParent; }
 
     /**
-     * This method returns a pointer to the parent candidate or parent.
+     * This method get the parent candidate.
      *
-     * This method is useful when sending IEEE 802.15.4 Data Request frames while attempting to attach to a new parent.
-     *
-     * If attempting to attach to a new parent, this method returns the parent candidate.
-     * If not attempting to attach, this method returns the parent.
+     * The parent candidate is valid when attempting to attach to a new parent.
      *
      */
-    Router *GetParentCandidate(void);
+    Router &GetParentCandidate(void) { return mParentCandidate; }
 
     /**
      * This method indicates whether or not an IPv6 address is an RLOC.
