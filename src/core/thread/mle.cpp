@@ -3959,22 +3959,6 @@ bool Mle::IsMeshLocalAddress(const Ip6::Address &aAddress) const
     return aAddress.PrefixMatch(GetMeshLocal16()) >= Ip6::Address::kMeshLocalPrefixLength;
 }
 
-Router *Mle::GetParentCandidate(void)
-{
-    Router *rval;
-
-    if (mParentCandidate.IsStateValid())
-    {
-        rval = &mParentCandidate;
-    }
-    else
-    {
-        rval = &mParent;
-    }
-
-    return rval;
-}
-
 otError Mle::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header)
 {
     otError          error = OT_ERROR_DROP;

@@ -40,6 +40,7 @@
 #include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
+#include "thread/topology.hpp"
 
 namespace ot {
 
@@ -266,10 +267,11 @@ private:
         kRecalculatePollPeriod,
     };
 
-    void        ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector);
-    uint32_t    CalculatePollPeriod(void) const;
-    static void HandlePollTimer(Timer &aTimer);
-    static void UpdateIfLarger(uint32_t &aPeriod, uint32_t aNewPeriod);
+    void            ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector);
+    uint32_t        CalculatePollPeriod(void) const;
+    const Neighbor &GetParent(void) const;
+    static void     HandlePollTimer(Timer &aTimer);
+    static void     UpdateIfLarger(uint32_t &aPeriod, uint32_t aNewPeriod);
 
     TimeMilli mTimerStartTime;
     uint32_t  mPollPeriod;
