@@ -511,7 +511,7 @@ build_samr21() {
 [ $BUILD_TARGET != posix-distcheck ] || {
     export ASAN_SYMBOLIZER_PATH=`which llvm-symbolizer` || die
     export ASAN_OPTIONS=symbolize=1 || die
-    export DISTCHECK_CONFIGURE_FLAGS= CPPFLAGS="-DOPENTHREAD_POSIX_VIRTUAL_TIME=1 -DOPENTHREAD_CHECK_NCP_HANDLER_ENTRIES_SORTED=1" || die
+    export DISTCHECK_CONFIGURE_FLAGS= CPPFLAGS=-DOPENTHREAD_POSIX_VIRTUAL_TIME=1 || die
     ./bootstrap || die
     REFERENCE_DEVICE=1 make -f examples/Makefile-posix distcheck || die
 }
@@ -572,7 +572,7 @@ build_samr21() {
 
 [ $BUILD_TARGET != posix-ncp ] || {
     ./bootstrap || die
-    REFERENCE_DEVICE=1 COVERAGE=1 PYTHONUNBUFFERED=1 NODE_TYPE=ncp-sim make -f examples/Makefile-posix check || die
+    CPPFLAGS=-DOPENTHREAD_CHECK_NCP_HANDLER_ENTRIES_SORTED=1 REFERENCE_DEVICE=1 COVERAGE=1 PYTHONUNBUFFERED=1 NODE_TYPE=ncp-sim make -f examples/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != toranj-test-framework ] || {
