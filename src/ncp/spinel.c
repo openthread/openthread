@@ -2612,7 +2612,7 @@ const char *spinel_capability_to_cstr(spinel_capability_t capability)
         break;
 
     case SPINEL_CAP_MAC_RETRY_HISTOGRAM:
-        ret = "TX_RETRY_HISTOGRAM";
+        ret = "MAC_RETRY_HISTOGRAM";
         break;
 
     case SPINEL_CAP_ERROR_RATE_TRACKING:

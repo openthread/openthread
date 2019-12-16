@@ -2541,8 +2541,8 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_MAC_RETRY_HISTOG
     uint8_t         histogramDirectEntries;
     uint8_t         histogramIndirectEntries;
 
-    histogramDirect   = otLinkGetTxDirectRetrySuccessHistogram(mInstance, histogramDirectEntries);
-    histogramIndirect = otLinkGetTxIndirectRetrySuccessHistogram(mInstance, histogramIndirectEntries);
+    histogramDirect   = otLinkGetTxDirectRetrySuccessHistogram(mInstance, &histogramDirectEntries);
+    histogramIndirect = otLinkGetTxIndirectRetrySuccessHistogram(mInstance, &histogramIndirectEntries);
 
     assert((histogramDirectEntries == 0) || (histogramDirect != NULL));
     assert((histogramIndirectEntries == 0) || (histogramIndirect != NULL));
