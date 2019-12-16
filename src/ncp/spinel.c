@@ -1407,6 +1407,10 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "CHANNEL_MONITOR_CHANNEL_OCCUPANCY";
         break;
 
+    case SPINEL_PROP_RADIO_CAPS:
+        ret = "RADIO_CAPS";
+        break;
+
     case SPINEL_PROP_RADIO_COEX_METRICS:
         ret = "RADIO_COEX_METRICS";
         break;
