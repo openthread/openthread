@@ -193,10 +193,9 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
 
     ParseArg(aArgCount, aArgVector, &config);
 
-#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
     openlog(aArgVector[0], LOG_PID | (config.mIsVerbose ? LOG_PERROR : 0), LOG_DAEMON);
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
-#endif
+    otLoggingSetLevel(config.mLogLevel);
 
     instance = otSysInit(&config.mPlatformConfig);
 
@@ -210,7 +209,6 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
         exit(OT_EXIT_SUCCESS);
     }
 
-    otLoggingSetLevel(config.mLogLevel);
     return instance;
 }
 
