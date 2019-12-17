@@ -325,12 +325,12 @@ const uint32_t *otLinkGetTxDirectRetrySuccessHistogram(otInstance *aInstance, ui
 
 const uint32_t *otLinkGetTxIndirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries)
 {
-    uint32_t *histogram = NULL;
+    const uint32_t *histogram = NULL;
 
 #if OPENTHREAD_FTD
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    histogram = (uint32_t *)instance.Get<Mac::Mac>().GetIndirectRetrySuccessHistogram(*aNumberOfEntries);
+    histogram = instance.Get<Mac::Mac>().GetIndirectRetrySuccessHistogram(*aNumberOfEntries);
 #else
     OT_UNUSED_VARIABLE(aInstance);
     *aNumberOfEntries = 0;
