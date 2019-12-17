@@ -2208,7 +2208,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>(
     return mEncoder.WriteUint8(ConvertLogLevel(otLoggingGetLevel()));
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>(void)
 {
     otError    error;
@@ -2255,7 +2255,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>(
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+#endif // OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_SUPPORTED>(void)
 {

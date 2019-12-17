@@ -559,7 +559,7 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
       {SPINEL_PROP_NEST_LEGACY_ULA_PREFIX, &NcpBase::HandlePropertySet<SPINEL_PROP_NEST_LEGACY_ULA_PREFIX>},
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
       {SPINEL_PROP_DEBUG_NCP_LOG_LEVEL, &NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>},
 #endif
     };

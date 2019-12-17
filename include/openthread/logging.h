@@ -55,7 +55,7 @@ extern "C" {
 /**
  * This function returns the current log level.
  *
- * If dynamic log level feature `OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL` is enabled, this function returns the
+ * If dynamic log level feature `OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE` is enabled, this function returns the
  * currently set dynamic log level. Otherwise, this function returns the build-time configured log level.
  *
  * @returns The log level.
@@ -66,7 +66,7 @@ otLogLevel otLoggingGetLevel(void);
 /**
  * This function sets the log level.
  *
- * @note This function requires `OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL=1`.
+ * @note This function requires `OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1`.
  *
  * @param[in]  aLogLevel               The log level.
  *

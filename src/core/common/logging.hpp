@@ -1869,7 +1869,7 @@ const char *otLogLevelToPrefixString(otLogLevel aLogLevel);
 #define _otLogFormatter(aLogLevel, aRegion, aFormat, ...) \
     _otDynamicLog(aLogLevel, aRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, ##__VA_ARGS__)
 
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL == 1
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE == 1
 
 /**
  * Local/private macro to dynamically filter log level.
@@ -1881,11 +1881,11 @@ const char *otLogLevelToPrefixString(otLogLevel aLogLevel);
             _otPlatLog(aLogLevel, aRegion, aFormat, ##__VA_ARGS__); \
     } while (false)
 
-#else // OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+#else // OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
 
 #define _otDynamicLog(aLogLevel, aRegion, aFormat, ...) _otPlatLog(aLogLevel, aRegion, aFormat, ##__VA_ARGS__)
 
-#endif // OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+#endif // OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
 
 /**
  * `OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION` is a configuration parameter (see `config/logging.h`) which specifies the
