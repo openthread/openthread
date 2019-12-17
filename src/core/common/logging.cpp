@@ -157,81 +157,47 @@ void otDump(otLogLevel, otLogRegion, const char *, const void *, const size_t)
 #endif // OPENTHREAD_CONFIG_LOG_PKT_DUMP
 
 static const char *const sThreadErrorStrings[OT_NUM_ERRORS] = {
-    // OT_ERROR_NONE = 0,
-    "OK",
-    // OT_ERROR_FAILED = 1,
-    "Failed",
-    // OT_ERROR_DROP = 2,
-    "Drop",
-    // OT_ERROR_NO_BUFS = 3,
-    "NoBufs",
-    // OT_ERROR_NO_ROUTE = 4,
-    "NoRoute",
-    // OT_ERROR_BUSY = 5,
-    "Busy",
-    // OT_ERROR_PARSE = 6,
-    "Parse",
-    // OT_ERROR_INVALID_ARGS = 7,
-    "InvalidArgs",
-    // OT_ERROR_SECURITY = 8,
-    "Security",
-    // OT_ERROR_ADDRESS_QUERY = 9,
-    "AddressQuery",
-    // OT_ERROR_NO_ADDRESS = 10,
-    "NoAddress",
-    // OT_ERROR_ABORT = 11,
-    "Abort",
-    // OT_ERROR_NOT_IMPLEMENTED = 12,
-    "NotImplemented",
-    // OT_ERROR_INVALID_STATE = 13,
-    "InvalidState",
-    // OT_ERROR_NO_ACK = 14,
-    "NoAck",
-    // OT_ERROR_CHANNEL_ACCESS_FAILURE = 15,
-    "ChannelAccessFailure",
-    // OT_ERROR_DETACHED = 16,
-    "Detached",
-    // OT_ERROR_FCS = 17,
-    "FcsErr",
-    // OT_ERROR_NO_FRAME_RECEIVED = 18,
-    "NoFrameReceived",
-    // OT_ERROR_UNKNOWN_NEIGHBOR = 19,
-    "UnknownNeighbor",
-    // OT_ERROR_INVALID_SOURCE_ADDRESS = 20,
-    "InvalidSourceAddress",
-    // OT_ERROR_ADDRESS_FILTERED = 21,
-    "AddressFiltered",
-    // OT_ERROR_DESTINATION_ADDRESS_FILTERED = 22,
-    "DestinationAddressFiltered",
-    // OT_ERROR_NOT_FOUND = 23,
-    "NotFound",
-    // OT_ERROR_ALREADY = 24,
-    "Already",
-    // otError 25 is unknown
-    "UnknownErrorType",
-    // OT_ERROR_IP6_ADDRESS_CREATION_FAILURE = 26,
-    "Ipv6AddressCreationFailure",
-    // OT_ERROR_NOT_CAPABLE = 27,
-    "NotCapable",
-    // OT_ERROR_RESPONSE_TIMEOUT = 28,
-    "ResponseTimeout",
-    // OT_ERROR_DUPLICATED = 29,
-    "Duplicated",
-    // OT_ERROR_REASSEMBLY_TIMEOUT = 30,
-    "ReassemblyTimeout",
-    // OT_ERROR_NOT_TMF = 31,
-    "NotTmf",
-    // OT_ERROR_NOT_LOWPAN_DATA_FRAME = 32,
-    "NonLowpanDataFrame",
-    // otError 33 is unknown
-    "UnknownErrorType",
-    // OT_ERROR_LINK_MARGIN_LOW = 34,
-    "LinkMarginLow",
+    "OK",                         // OT_ERROR_NONE = 0
+    "Failed",                     // OT_ERROR_FAILED = 1
+    "Drop",                       // OT_ERROR_DROP = 2
+    "NoBufs",                     // OT_ERROR_NO_BUFS = 3
+    "NoRoute",                    // OT_ERROR_NO_ROUTE = 4
+    "Busy",                       // OT_ERROR_BUSY = 5
+    "Parse",                      // OT_ERROR_PARSE = 6
+    "InvalidArgs",                // OT_ERROR_INVALID_ARGS = 7
+    "Security",                   // OT_ERROR_SECURITY = 8
+    "AddressQuery",               // OT_ERROR_ADDRESS_QUERY = 9
+    "NoAddress",                  // OT_ERROR_NO_ADDRESS = 10
+    "Abort",                      // OT_ERROR_ABORT = 11
+    "NotImplemented",             // OT_ERROR_NOT_IMPLEMENTED = 12
+    "InvalidState",               // OT_ERROR_INVALID_STATE = 13
+    "NoAck",                      // OT_ERROR_NO_ACK = 14
+    "ChannelAccessFailure",       // OT_ERROR_CHANNEL_ACCESS_FAILURE = 15
+    "Detached",                   // OT_ERROR_DETACHED = 16
+    "FcsErr",                     // OT_ERROR_FCS = 17
+    "NoFrameReceived",            // OT_ERROR_NO_FRAME_RECEIVED = 18
+    "UnknownNeighbor",            // OT_ERROR_UNKNOWN_NEIGHBOR = 19
+    "InvalidSourceAddress",       // OT_ERROR_INVALID_SOURCE_ADDRESS = 20
+    "AddressFiltered",            // OT_ERROR_ADDRESS_FILTERED = 21
+    "DestinationAddressFiltered", // OT_ERROR_DESTINATION_ADDRESS_FILTERED = 22
+    "NotFound",                   // OT_ERROR_NOT_FOUND = 23
+    "Already",                    // OT_ERROR_ALREADY = 24
+    "UnknownErrorType",           // otError 25 is unknown
+    "Ipv6AddressCreationFailure", // OT_ERROR_IP6_ADDRESS_CREATION_FAILURE = 26
+    "NotCapable",                 // OT_ERROR_NOT_CAPABLE = 27
+    "ResponseTimeout",            // OT_ERROR_RESPONSE_TIMEOUT = 28
+    "Duplicated",                 // OT_ERROR_DUPLICATED = 29
+    "ReassemblyTimeout",          // OT_ERROR_REASSEMBLY_TIMEOUT = 30
+    "NotTmf",                     // OT_ERROR_NOT_TMF = 31
+    "NonLowpanDataFrame",         // OT_ERROR_NOT_LOWPAN_DATA_FRAME = 32
+    "UnknownErrorType",           // otError 33 is unknown
+    "LinkMarginLow",              // OT_ERROR_LINK_MARGIN_LOW = 34
 };
 
 const char *otThreadErrorToString(otError aError)
 {
     const char *retval;
+
     if (aError < OT_ARRAY_LENGTH(sThreadErrorStrings))
     {
         retval = sThreadErrorStrings[aError];
