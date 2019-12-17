@@ -36,11 +36,11 @@ namespace ot {
 namespace Ncp {
 
 #if __cplusplus >= 201103L
-constexpr bool NcpBase::IsHandlerEntriesSorted(const HandlerEntry *aHandlerEntries, size_t aSize)
+constexpr bool NcpBase::AreHandlerEntriesSorted(const HandlerEntry *aHandlerEntries, size_t aSize)
 {
     return aSize < 2 ? true
                      : ((aHandlerEntries[aSize - 1].mKey > aHandlerEntries[aSize - 2].mKey) &&
-                        IsHandlerEntriesSorted(aHandlerEntries, aSize - 1));
+                        AreHandlerEntriesSorted(aHandlerEntries, aSize - 1));
 }
 #endif
 
@@ -344,7 +344,7 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
     };
 
 #if __cplusplus >= 201103L
-    static_assert(IsHandlerEntriesSorted(sHandlerEntries, OT_ARRAY_LENGTH(sHandlerEntries)),
+    static_assert(AreHandlerEntriesSorted(sHandlerEntries, OT_ARRAY_LENGTH(sHandlerEntries)),
                   "NCP property getter entries not sorted!");
 #endif
 
@@ -561,7 +561,7 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
     };
 
 #if __cplusplus >= 201103L
-    static_assert(IsHandlerEntriesSorted(sHandlerEntries, OT_ARRAY_LENGTH(sHandlerEntries)),
+    static_assert(AreHandlerEntriesSorted(sHandlerEntries, OT_ARRAY_LENGTH(sHandlerEntries)),
                   "NCP property setter entries not sorted!");
 #endif
 

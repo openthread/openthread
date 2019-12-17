@@ -213,7 +213,7 @@ protected:
     otError HandleCommand(uint8_t aHeader);
 
 #if __cplusplus >= 201103L
-    static constexpr bool IsHandlerEntriesSorted(const HandlerEntry *aHandlerEntries, size_t aSize);
+    static constexpr bool AreHandlerEntriesSorted(const HandlerEntry *aHandlerEntries, size_t aSize);
 #endif
 
     static PropertyHandler FindPropertyHandler(const HandlerEntry *aHandlerEntries,
