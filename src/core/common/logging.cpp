@@ -182,7 +182,7 @@ static const char *const sThreadErrorStrings[OT_NUM_ERRORS] = {
     "DestinationAddressFiltered", // OT_ERROR_DESTINATION_ADDRESS_FILTERED = 22
     "NotFound",                   // OT_ERROR_NOT_FOUND = 23
     "Already",                    // OT_ERROR_ALREADY = 24
-    "UnknownErrorType",           // otError 25 is unknown
+    "ReservedError25",            // otError 25 is reserved
     "Ipv6AddressCreationFailure", // OT_ERROR_IP6_ADDRESS_CREATION_FAILURE = 26
     "NotCapable",                 // OT_ERROR_NOT_CAPABLE = 27
     "ResponseTimeout",            // OT_ERROR_RESPONSE_TIMEOUT = 28
