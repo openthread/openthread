@@ -156,153 +156,56 @@ void otDump(otLogLevel, otLogRegion, const char *, const void *, const size_t)
 }
 #endif // OPENTHREAD_CONFIG_LOG_PKT_DUMP
 
+static const char *const sThreadErrorStrings[OT_NUM_ERRORS] = {
+    "OK",                         // OT_ERROR_NONE = 0
+    "Failed",                     // OT_ERROR_FAILED = 1
+    "Drop",                       // OT_ERROR_DROP = 2
+    "NoBufs",                     // OT_ERROR_NO_BUFS = 3
+    "NoRoute",                    // OT_ERROR_NO_ROUTE = 4
+    "Busy",                       // OT_ERROR_BUSY = 5
+    "Parse",                      // OT_ERROR_PARSE = 6
+    "InvalidArgs",                // OT_ERROR_INVALID_ARGS = 7
+    "Security",                   // OT_ERROR_SECURITY = 8
+    "AddressQuery",               // OT_ERROR_ADDRESS_QUERY = 9
+    "NoAddress",                  // OT_ERROR_NO_ADDRESS = 10
+    "Abort",                      // OT_ERROR_ABORT = 11
+    "NotImplemented",             // OT_ERROR_NOT_IMPLEMENTED = 12
+    "InvalidState",               // OT_ERROR_INVALID_STATE = 13
+    "NoAck",                      // OT_ERROR_NO_ACK = 14
+    "ChannelAccessFailure",       // OT_ERROR_CHANNEL_ACCESS_FAILURE = 15
+    "Detached",                   // OT_ERROR_DETACHED = 16
+    "FcsErr",                     // OT_ERROR_FCS = 17
+    "NoFrameReceived",            // OT_ERROR_NO_FRAME_RECEIVED = 18
+    "UnknownNeighbor",            // OT_ERROR_UNKNOWN_NEIGHBOR = 19
+    "InvalidSourceAddress",       // OT_ERROR_INVALID_SOURCE_ADDRESS = 20
+    "AddressFiltered",            // OT_ERROR_ADDRESS_FILTERED = 21
+    "DestinationAddressFiltered", // OT_ERROR_DESTINATION_ADDRESS_FILTERED = 22
+    "NotFound",                   // OT_ERROR_NOT_FOUND = 23
+    "Already",                    // OT_ERROR_ALREADY = 24
+    "ReservedError25",            // otError 25 is reserved
+    "Ipv6AddressCreationFailure", // OT_ERROR_IP6_ADDRESS_CREATION_FAILURE = 26
+    "NotCapable",                 // OT_ERROR_NOT_CAPABLE = 27
+    "ResponseTimeout",            // OT_ERROR_RESPONSE_TIMEOUT = 28
+    "Duplicated",                 // OT_ERROR_DUPLICATED = 29
+    "ReassemblyTimeout",          // OT_ERROR_REASSEMBLY_TIMEOUT = 30
+    "NotTmf",                     // OT_ERROR_NOT_TMF = 31
+    "NonLowpanDataFrame",         // OT_ERROR_NOT_LOWPAN_DATA_FRAME = 32
+    "ReservedError33",            // otError 33 is reserved
+    "LinkMarginLow",              // OT_ERROR_LINK_MARGIN_LOW = 34
+};
+
 const char *otThreadErrorToString(otError aError)
 {
     const char *retval;
 
-    switch (aError)
+    if (aError < OT_ARRAY_LENGTH(sThreadErrorStrings))
     {
-    case OT_ERROR_NONE:
-        retval = "OK";
-        break;
-
-    case OT_ERROR_FAILED:
-        retval = "Failed";
-        break;
-
-    case OT_ERROR_DROP:
-        retval = "Drop";
-        break;
-
-    case OT_ERROR_NO_BUFS:
-        retval = "NoBufs";
-        break;
-
-    case OT_ERROR_NO_ROUTE:
-        retval = "NoRoute";
-        break;
-
-    case OT_ERROR_BUSY:
-        retval = "Busy";
-        break;
-
-    case OT_ERROR_PARSE:
-        retval = "Parse";
-        break;
-
-    case OT_ERROR_INVALID_ARGS:
-        retval = "InvalidArgs";
-        break;
-
-    case OT_ERROR_SECURITY:
-        retval = "Security";
-        break;
-
-    case OT_ERROR_ADDRESS_QUERY:
-        retval = "AddressQuery";
-        break;
-
-    case OT_ERROR_NO_ADDRESS:
-        retval = "NoAddress";
-        break;
-
-    case OT_ERROR_ABORT:
-        retval = "Abort";
-        break;
-
-    case OT_ERROR_NOT_IMPLEMENTED:
-        retval = "NotImplemented";
-        break;
-
-    case OT_ERROR_INVALID_STATE:
-        retval = "InvalidState";
-        break;
-
-    case OT_ERROR_NO_ACK:
-        retval = "NoAck";
-        break;
-
-    case OT_ERROR_CHANNEL_ACCESS_FAILURE:
-        retval = "ChannelAccessFailure";
-        break;
-
-    case OT_ERROR_DETACHED:
-        retval = "Detached";
-        break;
-
-    case OT_ERROR_FCS:
-        retval = "FcsErr";
-        break;
-
-    case OT_ERROR_NO_FRAME_RECEIVED:
-        retval = "NoFrameReceived";
-        break;
-
-    case OT_ERROR_UNKNOWN_NEIGHBOR:
-        retval = "UnknownNeighbor";
-        break;
-
-    case OT_ERROR_INVALID_SOURCE_ADDRESS:
-        retval = "InvalidSourceAddress";
-        break;
-
-    case OT_ERROR_ADDRESS_FILTERED:
-        retval = "AddressFiltered";
-        break;
-
-    case OT_ERROR_DESTINATION_ADDRESS_FILTERED:
-        retval = "DestinationAddressFiltered";
-        break;
-
-    case OT_ERROR_NOT_FOUND:
-        retval = "NotFound";
-        break;
-
-    case OT_ERROR_ALREADY:
-        retval = "Already";
-        break;
-
-    case OT_ERROR_IP6_ADDRESS_CREATION_FAILURE:
-        retval = "Ipv6AddressCreationFailure";
-        break;
-
-    case OT_ERROR_NOT_CAPABLE:
-        retval = "NotCapable";
-        break;
-
-    case OT_ERROR_RESPONSE_TIMEOUT:
-        retval = "ResponseTimeout";
-        break;
-
-    case OT_ERROR_DUPLICATED:
-        retval = "Duplicated";
-        break;
-
-    case OT_ERROR_REASSEMBLY_TIMEOUT:
-        retval = "ReassemblyTimeout";
-        break;
-
-    case OT_ERROR_NOT_TMF:
-        retval = "NotTmf";
-        break;
-
-    case OT_ERROR_NOT_LOWPAN_DATA_FRAME:
-        retval = "NonLowpanDataFrame";
-        break;
-
-    case OT_ERROR_GENERIC:
-        retval = "GenericError";
-        break;
-
-    case OT_ERROR_LINK_MARGIN_LOW:
-        retval = "LinkMarginLow";
-        break;
-
-    default:
-        retval = "UnknownErrorType";
-        break;
+        retval = sThreadErrorStrings[aError];
     }
-
+    else
+    {
+        retval = "UnknownErrorType";
+    }
     return retval;
 }
 
