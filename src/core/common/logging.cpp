@@ -190,7 +190,7 @@ static const char *const sThreadErrorStrings[OT_NUM_ERRORS] = {
     "ReassemblyTimeout",          // OT_ERROR_REASSEMBLY_TIMEOUT = 30
     "NotTmf",                     // OT_ERROR_NOT_TMF = 31
     "NonLowpanDataFrame",         // OT_ERROR_NOT_LOWPAN_DATA_FRAME = 32
-    "UnknownErrorType",           // otError 33 is unknown
+    "ReservedError33",            // otError 33 is reserved
     "LinkMarginLow",              // OT_ERROR_LINK_MARGIN_LOW = 34
 };
 
