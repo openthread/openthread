@@ -53,9 +53,6 @@ extern "C" {
 /**
  * This structure holds diagnostic information for a Thread Child
  *
- * `mFrameErrorRate` and `mMessageErrorRate` require `OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING` feature to be
- * enabled.
- *
  */
 typedef struct
 {

@@ -3660,17 +3660,13 @@ otError MleRouter::GetChildInfo(Child &aChild, otChildInfo &aChildInfo)
     aChildInfo.mLinkQualityIn      = aChild.GetLinkInfo().GetLinkQuality();
     aChildInfo.mAverageRssi        = aChild.GetLinkInfo().GetAverageRss();
     aChildInfo.mLastRssi           = aChild.GetLinkInfo().GetLastRss();
-
-#if OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
-    aChildInfo.mFrameErrorRate   = aChild.GetLinkInfo().GetFrameErrorRate();
-    aChildInfo.mMessageErrorRate = aChild.GetLinkInfo().GetMessageErrorRate();
-#endif
-
-    aChildInfo.mRxOnWhenIdle      = aChild.IsRxOnWhenIdle();
-    aChildInfo.mSecureDataRequest = aChild.IsSecureDataRequest();
-    aChildInfo.mFullThreadDevice  = aChild.IsFullThreadDevice();
-    aChildInfo.mFullNetworkData   = aChild.IsFullNetworkData();
-    aChildInfo.mIsStateRestoring  = aChild.IsStateRestoring();
+    aChildInfo.mFrameErrorRate     = aChild.GetLinkInfo().GetFrameErrorRate();
+    aChildInfo.mMessageErrorRate   = aChild.GetLinkInfo().GetMessageErrorRate();
+    aChildInfo.mRxOnWhenIdle       = aChild.IsRxOnWhenIdle();
+    aChildInfo.mSecureDataRequest  = aChild.IsSecureDataRequest();
+    aChildInfo.mFullThreadDevice   = aChild.IsFullThreadDevice();
+    aChildInfo.mFullNetworkData    = aChild.IsFullNetworkData();
+    aChildInfo.mIsStateRestoring   = aChild.IsStateRestoring();
 
 exit:
     return error;
@@ -3678,18 +3674,16 @@ exit:
 
 void MleRouter::GetNeighborInfo(Neighbor &aNeighbor, otNeighborInfo &aNeighInfo)
 {
-    aNeighInfo.mExtAddress       = aNeighbor.GetExtAddress();
-    aNeighInfo.mAge              = Time::MsecToSec(TimerMilli::GetNow() - aNeighbor.GetLastHeard());
-    aNeighInfo.mRloc16           = aNeighbor.GetRloc16();
-    aNeighInfo.mLinkFrameCounter = aNeighbor.GetLinkFrameCounter();
-    aNeighInfo.mMleFrameCounter  = aNeighbor.GetMleFrameCounter();
-    aNeighInfo.mLinkQualityIn    = aNeighbor.GetLinkInfo().GetLinkQuality();
-    aNeighInfo.mAverageRssi      = aNeighbor.GetLinkInfo().GetAverageRss();
-    aNeighInfo.mLastRssi         = aNeighbor.GetLinkInfo().GetLastRss();
-#if OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
-    aNeighInfo.mFrameErrorRate   = aNeighbor.GetLinkInfo().GetFrameErrorRate();
-    aNeighInfo.mMessageErrorRate = aNeighbor.GetLinkInfo().GetMessageErrorRate();
-#endif
+    aNeighInfo.mExtAddress        = aNeighbor.GetExtAddress();
+    aNeighInfo.mAge               = Time::MsecToSec(TimerMilli::GetNow() - aNeighbor.GetLastHeard());
+    aNeighInfo.mRloc16            = aNeighbor.GetRloc16();
+    aNeighInfo.mLinkFrameCounter  = aNeighbor.GetLinkFrameCounter();
+    aNeighInfo.mMleFrameCounter   = aNeighbor.GetMleFrameCounter();
+    aNeighInfo.mLinkQualityIn     = aNeighbor.GetLinkInfo().GetLinkQuality();
+    aNeighInfo.mAverageRssi       = aNeighbor.GetLinkInfo().GetAverageRss();
+    aNeighInfo.mLastRssi          = aNeighbor.GetLinkInfo().GetLastRss();
+    aNeighInfo.mFrameErrorRate    = aNeighbor.GetLinkInfo().GetFrameErrorRate();
+    aNeighInfo.mMessageErrorRate  = aNeighbor.GetLinkInfo().GetMessageErrorRate();
     aNeighInfo.mRxOnWhenIdle      = aNeighbor.IsRxOnWhenIdle();
     aNeighInfo.mSecureDataRequest = aNeighbor.IsSecureDataRequest();
     aNeighInfo.mFullThreadDevice  = aNeighbor.IsFullThreadDevice();
