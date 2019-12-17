@@ -35,9 +35,31 @@
 namespace ot {
 namespace Ncp {
 
+#if __cplusplus >= 201103L
+constexpr bool NcpBase::IsHandlerEntriesSorted(const HandlerEntry *aHandlerEntries, size_t aSize)
+{
+    bool rval = true;
+
+    for (size_t i = 1; i < aSize; ++i)
+    {
+        if (aHandlerEntries[i].mKey <= aHandlerEntries[i - 1].mKey)
+        {
+            rval = false;
+        }
+    }
+
+    return rval;
+}
+#endif
+
 NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
 {
-    static const HandlerEntry sHandlerEntries[] =
+#if __cplusplus >= 201103L
+    constexpr
+#else
+    const
+#endif
+        static HandlerEntry sHandlerEntries[] =
     { {SPINEL_PROP_LAST_STATUS, &NcpBase::HandlePropertyGet<SPINEL_PROP_LAST_STATUS>},
       {SPINEL_PROP_PROTOCOL_VERSION, &NcpBase::HandlePropertyGet<SPINEL_PROP_PROTOCOL_VERSION>},
       {SPINEL_PROP_NCP_VERSION, &NcpBase::HandlePropertyGet<SPINEL_PROP_NCP_VERSION>},
@@ -329,17 +351,8 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
       {SPINEL_PROP_DEBUG_TEST_WATCHDOG, &NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_TEST_WATCHDOG>},
     };
 
-#if OPENTHREAD_CHECK_NCP_HANDLER_ENTRIES_SORTED
-    // No static check way found in C++03
-    static bool sIsSortedChecked = false;
-    if (!sIsSortedChecked)
-    {
-        for (size_t i = 1; i < OT_ARRAY_LENGTH(sHandlerEntries); ++i)
-        {
-            assert(sHandlerEntries[i].mKey > sHandlerEntries[i - 1].mKey);
-        }
-        sIsSortedChecked = true;
-    }
+#if __cplusplus >= 201103L
+    static_assert(IsHandlerEntriesSorted(sHandlerEntries, OT_ARRAY_LENGTH(sHandlerEntries)));
 #endif
 
     return FindPropertyHandler(sHandlerEntries, OT_ARRAY_LENGTH(sHandlerEntries), aKey);
@@ -347,7 +360,12 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
 
 NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
 {
-    static const HandlerEntry sHandlerEntries[] =
+#if __cplusplus >= 201103L
+    constexpr
+#else
+    const
+#endif
+        static HandlerEntry sHandlerEntries[] =
     { {SPINEL_PROP_POWER_STATE, &NcpBase::HandlePropertySet<SPINEL_PROP_POWER_STATE>},
 #if OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
       {SPINEL_PROP_MCU_POWER_STATE, &NcpBase::HandlePropertySet<SPINEL_PROP_MCU_POWER_STATE>},
@@ -549,17 +567,8 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
 #endif
     };
 
-#if OPENTHREAD_CHECK_NCP_HANDLER_ENTRIES_SORTED
-    // No static check way found in C++03
-    static bool sIsSortedChecked = false;
-    if (!sIsSortedChecked)
-    {
-        for (size_t i = 1; i < OT_ARRAY_LENGTH(sHandlerEntries); ++i)
-        {
-            assert(sHandlerEntries[i].mKey > sHandlerEntries[i - 1].mKey);
-        }
-        sIsSortedChecked = true;
-    }
+#if __cplusplus >= 201103L
+    static_assert(IsHandlerEntriesSorted(sHandlerEntries, OT_ARRAY_LENGTH(sHandlerEntries)));
 #endif
 
     return FindPropertyHandler(sHandlerEntries, OT_ARRAY_LENGTH(sHandlerEntries), aKey);

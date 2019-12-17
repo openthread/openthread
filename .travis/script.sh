@@ -572,7 +572,7 @@ build_samr21() {
 
 [ $BUILD_TARGET != posix-ncp ] || {
     ./bootstrap || die
-    CPPFLAGS=-DOPENTHREAD_CHECK_NCP_HANDLER_ENTRIES_SORTED=1 REFERENCE_DEVICE=1 COVERAGE=1 PYTHONUNBUFFERED=1 NODE_TYPE=ncp-sim make -f examples/Makefile-posix check || die
+    REFERENCE_DEVICE=1 COVERAGE=1 PYTHONUNBUFFERED=1 NODE_TYPE=ncp-sim make -f examples/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != toranj-test-framework ] || {
