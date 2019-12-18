@@ -150,11 +150,6 @@ static void LogIfFail(const char *aText, otError aError)
     }
 }
 
-void HdlcInterface::Callbacks::HandleReceivedFrame(HdlcInterface &aInterface)
-{
-    static_cast<RadioSpinel *>(this)->HandleSpinelFrame(aInterface.GetRxFrameBuffer());
-}
-
 RadioSpinel::RadioSpinel(void)
     : mInstance(NULL)
     , mHdlcInterface(*this)
@@ -313,13 +308,14 @@ void RadioSpinel::Deinit(void)
     new (this) RadioSpinel();
 }
 
-void RadioSpinel::HandleSpinelFrame(HdlcInterface::RxFrameBuffer &aFrameBuffer)
+void RadioSpinel::HandleReceivedFrame(void)
 {
-    otError        error = OT_ERROR_NONE;
-    uint8_t        header;
-    spinel_ssize_t unpacked;
+    otError                         error       = OT_ERROR_NONE;
+    SpinelInterface::RxFrameBuffer &frameBuffer = mHdlcInterface.GetRxFrameBuffer();
+    uint8_t                         header;
+    spinel_ssize_t                  unpacked;
 
-    unpacked = spinel_datatype_unpack(aFrameBuffer.GetFrame(), aFrameBuffer.GetLength(), "C", &header);
+    unpacked = spinel_datatype_unpack(frameBuffer.GetFrame(), frameBuffer.GetLength(), "C", &header);
 
     VerifyOrExit(unpacked > 0 && (header & SPINEL_HEADER_FLAG) == SPINEL_HEADER_FLAG &&
                      SPINEL_HEADER_GET_IID(header) == 0,
@@ -327,18 +323,18 @@ void RadioSpinel::HandleSpinelFrame(HdlcInterface::RxFrameBuffer &aFrameBuffer)
 
     if (SPINEL_HEADER_GET_TID(header) == 0)
     {
-        HandleNotification(aFrameBuffer);
+        HandleNotification(frameBuffer);
     }
     else
     {
-        HandleResponse(aFrameBuffer.GetFrame(), aFrameBuffer.GetLength());
-        aFrameBuffer.DiscardFrame();
+        HandleResponse(frameBuffer.GetFrame(), frameBuffer.GetLength());
+        frameBuffer.DiscardFrame();
     }
 
 exit:
     if (error != OT_ERROR_NONE)
     {
-        aFrameBuffer.DiscardFrame();
+        frameBuffer.DiscardFrame();
         otLogWarnPlat("Error handling hdlc frame: %s", otThreadErrorToString(error));
     }
 }
@@ -1761,4 +1757,18 @@ uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return sRadioSpinel.GetRadioChannelMask(true);
+}
+
+/*
+ * Calling a pure virtual function is illegal. If the code calls a pure virtual function, then the compiler
+ * calls the function "__cxa_pure_virtual()" to handle it. The call to this function should never happen in
+ * the normal application run. If it happens it means there is a bug.
+ *
+ * This function is defined here to avoid that some libraries don't define it when COVERAGE is set to 1.
+ *
+ */
+extern "C" void __cxa_pure_virtual()
+{
+    otLogCritPlat("__cxa_pure_virtual() is called");
+    exit(OT_EXIT_FAILURE);
 }
