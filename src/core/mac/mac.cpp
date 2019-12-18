@@ -1101,8 +1101,6 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
     aFrame.GetDstAddr(dstAddr);
     neighbor = Get<Mle::MleRouter>().GetNeighbor(dstAddr);
 
-#if OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
-
     // Record frame transmission success/failure state (for a neighbor).
 
     if ((neighbor != NULL) && ackRequested)
@@ -1128,8 +1126,6 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
             break;
         }
     }
-
-#endif // OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
 
     // Log frame transmission failure.
 

@@ -306,8 +306,6 @@ public:
      */
     int8_t GetLastRss(void) const { return mLastRss; }
 
-#if OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
-
     /**
      * This method adds a MAC frame transmission status (success/failure) and updates the frame tx error rate.
      *
@@ -357,8 +355,6 @@ public:
      *
      */
     uint16_t GetMessageErrorRate(void) const { return mMessageErrorRate.GetFailureRate(); }
-
-#endif // OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
 
     /**
      * This method converts a received signal strength value to a link margin value.
@@ -436,10 +432,9 @@ private:
     RssAverager mRssAverager;
     uint8_t     mLinkQuality;
     int8_t      mLastRss;
-#if OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
+
     SuccessRateTracker mFrameErrorRate;
     SuccessRateTracker mMessageErrorRate;
-#endif
 };
 
 /**
