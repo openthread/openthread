@@ -1720,7 +1720,11 @@ private:
     otError  SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Address &aDestination);
     uint32_t Reattach(void);
 
-    bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, uint8_t aLinkMargin, ConnectivityTlv &aConnectivityTlv);
+    bool IsBetterParent(uint16_t               aRloc16,
+                        uint8_t                aLinkQuality,
+                        uint8_t                aLinkMargin,
+                        const ConnectivityTlv &aConnectivityTlv,
+                        VersionTlv &           aVersionTlv);
     bool IsNetworkDataNewer(const LeaderDataTlv &aLeaderData);
 
     otError GetAlocAddress(Ip6::Address &aAddress, uint16_t aAloc16) const;
@@ -1761,6 +1765,8 @@ private:
     uint8_t    mParentLinkQuality3;
     uint8_t    mParentLinkQuality2;
     uint8_t    mParentLinkQuality1;
+    uint16_t   mParentSedBufferSize;
+    uint8_t    mParentSedDatagramCount;
 
     uint8_t                 mChildUpdateAttempts;
     ChildUpdateRequestState mChildUpdateRequestState;
