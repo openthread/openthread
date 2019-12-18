@@ -100,6 +100,7 @@ ot_platform_headers                     = \
     openthread/platform/settings.h        \
     openthread/platform/messagepool.h     \
     openthread/platform/toolchain.h       \
+    openthread/platform/trel-udp6.h       \
     $(NULL)
 
 ot_platformdir = $(includedir)/openthread/platform
