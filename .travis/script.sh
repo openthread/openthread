@@ -583,8 +583,12 @@ build_samr21() {
 
 [ $BUILD_TARGET != v1.2 ] || {
     ./bootstrap || die
-    REFERENCE_DEVICE=1 make -f examples/Makefile-posix || die
-    ./script/test v1.2 || die
+    ./script/test build || die
+
+    ls tests/scripts/thread-cert/v1_2_*.py | while read test_case; do
+        [[ ! -d tmp ]] || rm -rvf tmp
+        PYTHONUNBUFFERED=1 "${test_case}"
+    done
 }
 
 [ $BUILD_TARGET != posix-app-pty ] || {
