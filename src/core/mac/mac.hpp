@@ -577,6 +577,38 @@ public:
      */
     otMacCounters &GetCounters(void) { return mCounters; }
 
+#if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+    /**
+     * This method returns the MAC retry histogram for direct transmission.
+     *
+     * @param[out]  aNumberOfEntries    A reference to where the size of returned histogram array is placed.
+     *
+     * @returns     A pointer to the histogram of retries (in a form of an array).
+     *              The n-th element indicates that the packet has been sent with n-th retry.
+     *
+     */
+    const uint32_t *GetDirectRetrySuccessHistogram(uint8_t &aNumberOfEntries);
+
+#if OPENTHREAD_FTD
+    /**
+     * This method returns the MAC retry histogram for indirect transmission.
+     *
+     * @param[out]  aNumberOfEntries    A reference to where the size of returned histogram array is placed.
+     *
+     * @returns     A pointer to the histogram of retries (in a form of an array).
+     *              The n-th element indicates that the packet has been sent with n-th retry.
+     *
+     */
+    const uint32_t *GetIndirectRetrySuccessHistogram(uint8_t &aNumberOfEntries);
+#endif
+
+    /**
+     * This method resets MAC retry histogram.
+     *
+     */
+    void ResetRetrySuccessHistogram(void);
+#endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+
     /**
      * This method returns the noise floor value (currently use the radio receive sensitivity value).
      *
@@ -635,6 +667,29 @@ private:
         kOperationWaitingForData,
         kOperationTransmitOutOfBandFrame,
     };
+
+#if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+    struct RetryHistogram
+    {
+        /**
+         * Histogram of number of retries for a single direct packet until success
+         * [0 retry: packet count, 1 retry: packet count, 2 retry : packet count ...
+         *  until max retry limit: packet count]
+         *
+         *  The size of the array is OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT.
+         */
+        uint32_t mTxDirectRetrySuccess[OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT];
+
+        /**
+         * Histogram of number of retries for a single indirect packet until success
+         * [0 retry: packet count, 1 retry: packet count, 2 retry : packet count ...
+         *  until max retry limit: packet count]
+         *
+         *  The size of the array is OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT.
+         */
+        uint32_t mTxIndirectRetrySuccess[OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT];
+    };
+#endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 
     /**
      * This method processes transmit security on the frame which is going to be sent.
@@ -739,6 +794,9 @@ private:
     uint32_t           mKeyIdMode2FrameCounter;
     SuccessRateTracker mCcaSuccessRateTracker;
     uint16_t           mCcaSampleCount;
+#if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+    RetryHistogram mRetryHistogram;
+#endif
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     Filter mFilter;

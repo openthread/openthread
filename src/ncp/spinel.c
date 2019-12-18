@@ -2183,6 +2183,10 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "CNTR_ALL_IP_COUNTERS";
         break;
 
+    case SPINEL_PROP_CNTR_MAC_RETRY_HISTOGRAM:
+        ret = "CNTR_MAC_RETRY_HISTOGRAM";
+        break;
+
     case SPINEL_PROP_NEST_STREAM_MFG:
         ret = "NEST_STREAM_MFG";
         break;
@@ -2605,6 +2609,10 @@ const char *spinel_capability_to_cstr(spinel_capability_t capability)
 
     case SPINEL_CAP_RADIO_COEX:
         ret = "RADIO_COEX";
+        break;
+
+    case SPINEL_CAP_MAC_RETRY_HISTOGRAM:
+        ret = "MAC_RETRY_HISTOGRAM";
         break;
 
     case SPINEL_CAP_ERROR_RATE_TRACKING:
