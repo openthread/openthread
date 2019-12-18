@@ -251,7 +251,9 @@ LOCAL_SRC_FILES                                          := \
     src/core/radio/radio.cpp                                \
     src/core/radio/radio_callbacks.cpp                      \
     src/core/radio/radio_platform.cpp                       \
-    src/core/radio/trel.cpp                                 \
+    src/core/radio/trel_interface.cpp                       \
+    src/core/radio/trel_link.cpp                            \
+    src/core/radio/trel_packet.cpp                          \
     src/core/thread/address_resolver.cpp                    \
     src/core/thread/announce_begin_server.cpp               \
     src/core/thread/announce_sender.cpp                     \

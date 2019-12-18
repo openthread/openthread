@@ -515,6 +515,11 @@ template <> inline Trel::Link &Instance::Get(void)
 {
     return mThreadNetif.mMac.mLinks.mTrel;
 }
+
+template <> inline Trel::Interface &Instance::Get(void)
+{
+    return mThreadNetif.mMac.mLinks.mTrel.mInterface;
+}
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE

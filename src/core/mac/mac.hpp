@@ -50,7 +50,7 @@
 #include "mac/mac_links.hpp"
 #include "mac/mac_types.hpp"
 #include "mac/sub_mac.hpp"
-#include "radio/trel.hpp"
+#include "radio/trel_link.hpp"
 #include "thread/key_manager.hpp"
 #include "thread/link_quality.hpp"
 

@@ -69,6 +69,7 @@ add_library(openthread-simulation
     radio.c
     spi-stubs.c
     system.c
+    trel.c
     uart.c
     virtual_time/alarm-sim.c
     virtual_time/platform-sim.c
