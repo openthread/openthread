@@ -108,14 +108,14 @@ public:
      *
      * @note This method should be called before reading and sending spinel frames to the interface.
      *
-     * @param[in]   aConfig  Parameters to be given to the device or executable.
+     * @param[in]  aPlatformConfig  Platform configuration structure.
      *
      * @retval OT_ERROR_NONE          The interface is initialized successfully
      * @retval OT_ERROR_ALREADY       The interface is already initialized.
      * @retval OT_ERROR_INVALID_ARGS  The device or executable cannot be found or failed to open/run.
      *
      */
-    virtual otError Init(const char *aRadioFile, const char *aRadioConfig) = 0;
+    virtual otError Init(const otPlatformConfig &aPlatformConfig) = 0;
 
     /**
      * This method deinitializes the interface to the Radio Co-processor (RCP).
