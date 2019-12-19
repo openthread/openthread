@@ -43,7 +43,6 @@
 #include "common/encoding.hpp"
 #include "common/message.hpp"
 #include "common/tlvs.hpp"
-#include "meshcop/meshcop_tlvs.hpp"
 #include "net/ip6_address.hpp"
 #include "radio/radio.hpp"
 #include "thread/device_mode.hpp"
