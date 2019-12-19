@@ -140,7 +140,7 @@ static const RAIL_IEEE802154_Config_t sRailIeee802154Config = {
     .ackConfig =
         {
             .enable     = true,
-            .ackTimeout = 894,
+            .ackTimeout = 864,
             .rxTransitions =
                 {
                     .success = RAIL_RF_STATE_RX,
@@ -166,7 +166,28 @@ static const RAIL_IEEE802154_Config_t sRailIeee802154Config = {
     .isPanCoordinator = false,
 };
 
-RAIL_DECLARE_TX_POWER_VBAT_CURVES(piecewiseSegments, curvesSg, curves24Hp, curves24Lp);
+static const uint8_t piecewiseSegments = RAIL_PA_CURVES_2P4_HP_SG_PIECEWISE_SEGMENTS;
+
+#if RADIO_CONFIG_2P4GHZ_PA_USES_DCDC
+RAIL_DECLARE_PA_2P4_HP_DCDC;
+static const RAIL_TxPowerCurves_t curves24Hp[1] = {
+    {RAIL_PA_CURVES_2P4_HP_DCDC_MAX_POWER, RAIL_PA_CURVES_2P4_HP_DCDC_MIN_POWER, twoPointFourHpDcdcCurves}};
+#else
+RAIL_DECLARE_PA_2P4_HP_VBAT;
+static const RAIL_TxPowerCurves_t curves24Hp[1] = {
+    {RAIL_PA_CURVES_2P4_HP_VBAT_MAX_POWER, RAIL_PA_CURVES_2P4_HP_VBAT_MIN_POWER, twoPointFourHpVbatCurves}};
+#endif
+static const int16_t curves24Lp[RAIL_PA_CURVES_LP_VALUES] = RAIL_PA_CURVES_2P4_LP;
+
+#if RADIO_CONFIG_SUBGIG_PA_USES_DCDC
+RAIL_DECLARE_PA_SG_DCDC;
+static const RAIL_TxPowerCurves_t curvesSg[1] = {
+    {RAIL_PA_CURVES_SG_DCDC_MAX_POWER, RAIL_PA_CURVES_SG_DCDC_MIN_POWER, subgigDcdcCurves}};
+#else
+RAIL_DECLARE_PA_SG_VBAT;
+static const RAIL_TxPowerCurves_t curvesSg[1] = {
+    {RAIL_PA_CURVES_SG_VBAT_MAX_POWER, RAIL_PA_CURVES_SG_VBAT_MIN_POWER, subgigVbatCurves}};
+#endif
 
 static int8_t sTxPowerDbm = OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER;
 
@@ -233,8 +254,8 @@ static void efr32RailConfigLoad(efr32BandConfig *aBandConfig)
 
 static void efr32RadioSetTxPower(int8_t aPowerDbm)
 {
-    RAIL_Status_t              status;
-    RAIL_TxPowerCurvesConfig_t txPowerCurvesConfig = {curves24Hp, curvesSg, curves24Lp, piecewiseSegments};
+    RAIL_Status_t                    status;
+    const RAIL_TxPowerCurvesConfig_t txPowerCurvesConfig = {curves24Hp, curvesSg, curves24Lp, piecewiseSegments};
 
     status = RAIL_InitTxPowerCurves(&txPowerCurvesConfig);
     assert(status == RAIL_STATUS_NO_ERROR);
@@ -704,11 +725,11 @@ static void processNextRxPacket(otInstance *aInstance)
 
     length = packetInfo.packetBytes + 1;
 
-    // check the length in recv packet info structure
-    otEXPECT(length == packetInfo.firstPortionData[0]);
+    // check the length in recv packet info structure; RAIL should take care of this.
+    assert(length == packetInfo.firstPortionData[0]);
 
-    // check the length validity of recv packet
-    otEXPECT(length >= IEEE802154_MIN_LENGTH && length <= IEEE802154_MAX_LENGTH);
+    // check the length validity of recv packet; RAIL should take care of this.
+    assert(length >= IEEE802154_MIN_LENGTH && length <= IEEE802154_MAX_LENGTH);
 
     otLogInfoPlat("Received data:%d", length);
 
@@ -719,9 +740,7 @@ static void processNextRxPacket(otInstance *aInstance)
     packetInfo.packetBytes--;
 
     // read packet
-    memcpy(sReceiveFrame.mPsdu, packetInfo.firstPortionData, packetInfo.firstPortionBytes);
-    memcpy(sReceiveFrame.mPsdu + packetInfo.firstPortionBytes, packetInfo.lastPortionData,
-           packetInfo.packetBytes - packetInfo.firstPortionBytes);
+    RAIL_CopyRxPacket(sReceiveFrame.mPsdu, &packetInfo);
 
     status = RAIL_ReleaseRxPacket(gRailHandle, packetHandle);
     if (status == RAIL_STATUS_NO_ERROR)
@@ -776,14 +795,11 @@ static void processNextRxPacket(otInstance *aInstance)
         {
             // signal MAC layer for each received frame if promiscous is enabled
             // otherwise only signal MAC layer for non-ACK frame
-            if (sPromiscuous || sReceiveFrame.mLength > IEEE802154_ACK_LENGTH)
-            {
-                otLogInfoPlat("Received %d bytes", sReceiveFrame.mLength);
-                otPlatRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
+            otLogInfoPlat("Received %d bytes", sReceiveFrame.mLength);
+            otPlatRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
 #if RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
-                sRailDebugCounters.mRailPlatRadioReceiveDoneCbCount++;
+            sRailDebugCounters.mRailPlatRadioReceiveDoneCbCount++;
 #endif
-            }
         }
     }
 
