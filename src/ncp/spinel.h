@@ -374,7 +374,7 @@
 extern "C" {
 #endif
 
-typedef enum
+enum
 {
     SPINEL_STATUS_OK                       = 0,  ///< Operation has completed successfully.
     SPINEL_STATUS_FAILURE                  = 1,  ///< Operation has failed for some undefined reason.
@@ -469,7 +469,9 @@ typedef enum
 
     SPINEL_STATUS_EXPERIMENTAL__BEGIN = 2000000,
     SPINEL_STATUS_EXPERIMENTAL__END   = 2097152,
-} spinel_status_t;
+};
+
+typedef uint32_t spinel_status_t;
 
 typedef enum
 {
@@ -656,7 +658,6 @@ typedef struct
 typedef int          spinel_ssize_t;
 typedef unsigned int spinel_size_t;
 typedef uint8_t      spinel_tid_t;
-typedef unsigned int spinel_cid_t;
 
 enum
 {
@@ -992,6 +993,8 @@ enum
     SPINEL_CMD_EXPERIMENTAL__END   = 2097152,
 };
 
+typedef uint32_t spinel_command_t;
+
 enum
 {
     SPINEL_CAP_LOCK       = 1,
@@ -1055,6 +1058,7 @@ enum
     SPINEL_CAP_POSIX_APP               = (SPINEL_CAP_OPENTHREAD__BEGIN + 9),
     SPINEL_CAP_SLAAC                   = (SPINEL_CAP_OPENTHREAD__BEGIN + 10),
     SPINEL_CAP_RADIO_COEX              = (SPINEL_CAP_OPENTHREAD__BEGIN + 11),
+    SPINEL_CAP_MAC_RETRY_HISTOGRAM     = (SPINEL_CAP_OPENTHREAD__BEGIN + 12),
     SPINEL_CAP_OPENTHREAD__END         = 640,
 
     SPINEL_CAP_THREAD__BEGIN        = 1024,
@@ -1078,6 +1082,8 @@ enum
     SPINEL_CAP_EXPERIMENTAL__BEGIN = 2000000,
     SPINEL_CAP_EXPERIMENTAL__END   = 2097152,
 };
+
+typedef uint32_t spinel_capability_t;
 
 /**
  * Property Keys
@@ -1106,7 +1112,7 @@ enum
  *    Experimental |          2,000,000 - 2,097,151 | Experimental use only
  *
  */
-typedef enum
+enum
 {
     /// Last Operation Status
     /** Format: `i` - Read-only
@@ -3770,41 +3776,44 @@ typedef enum
      *
      * The transmit structure includes:
      *
-     *   'L': TxTotal              (The total number of transmissions).
-     *   'L': TxUnicast            (The total number of unicast transmissions).
-     *   'L': TxBroadcast          (The total number of broadcast transmissions).
-     *   'L': TxAckRequested       (The number of transmissions with ack request).
-     *   'L': TxAcked              (The number of transmissions that were acked).
-     *   'L': TxNoAckRequested     (The number of transmissions without ack request).
-     *   'L': TxData               (The number of transmitted data).
-     *   'L': TxDataPoll           (The number of transmitted data poll).
-     *   'L': TxBeacon             (The number of transmitted beacon).
-     *   'L': TxBeaconRequest      (The number of transmitted beacon request).
-     *   'L': TxOther              (The number of transmitted other types of frames).
-     *   'L': TxRetry              (The number of retransmission times).
-     *   'L': TxErrCca             (The number of CCA failure times).
-     *   'L': TxErrAbort           (The number of frame transmission failures due to abort error).
-     *   'L': TxErrBusyChannel     (The number of frames that were dropped due to a busy channel).
+     *   'L': TxTotal                  (The total number of transmissions).
+     *   'L': TxUnicast                (The total number of unicast transmissions).
+     *   'L': TxBroadcast              (The total number of broadcast transmissions).
+     *   'L': TxAckRequested           (The number of transmissions with ack request).
+     *   'L': TxAcked                  (The number of transmissions that were acked).
+     *   'L': TxNoAckRequested         (The number of transmissions without ack request).
+     *   'L': TxData                   (The number of transmitted data).
+     *   'L': TxDataPoll               (The number of transmitted data poll).
+     *   'L': TxBeacon                 (The number of transmitted beacon).
+     *   'L': TxBeaconRequest          (The number of transmitted beacon request).
+     *   'L': TxOther                  (The number of transmitted other types of frames).
+     *   'L': TxRetry                  (The number of retransmission times).
+     *   'L': TxErrCca                 (The number of CCA failure times).
+     *   'L': TxErrAbort               (The number of frame transmission failures due to abort error).
+     *   'L': TxErrBusyChannel         (The number of frames that were dropped due to a busy channel).
+     *   'L': TxDirectMaxRetryExpiry   (The number of expired retransmission retries for direct message).
+     *   'L': TxIndirectMaxRetryExpiry (The number of expired retransmission retries for indirect message).
      *
      * The receive structure includes:
      *
-     *   'L': RxTotal              (The total number of received packets).
-     *   'L': RxUnicast            (The total number of unicast packets received).
-     *   'L': RxBroadcast          (The total number of broadcast packets received).
-     *   'L': RxData               (The number of received data).
-     *   'L': RxDataPoll           (The number of received data poll).
-     *   'L': RxBeacon             (The number of received beacon).
-     *   'L': RxBeaconRequest      (The number of received beacon request).
-     *   'L': RxOther              (The number of received other types of frames).
-     *   'L': RxAddressFiltered    (The number of received packets filtered by address filter (whitelist or blacklist)).
-     *   'L': RxDestAddrFiltered   (The number of received packets filtered by destination check).
-     *   'L': RxDuplicated         (The number of received duplicated packets).
-     *   'L': RxErrNoFrame         (The number of received packets with no or malformed content).
-     *   'L': RxErrUnknownNeighbor (The number of received packets from unknown neighbor).
-     *   'L': RxErrInvalidSrcAddr  (The number of received packets whose source address is invalid).
-     *   'L': RxErrSec             (The number of received packets with security error).
-     *   'L': RxErrFcs             (The number of received packets with FCS error).
-     *   'L': RxErrOther           (The number of received packets with other error).
+     *   'L': RxTotal                  (The total number of received packets).
+     *   'L': RxUnicast                (The total number of unicast packets received).
+     *   'L': RxBroadcast              (The total number of broadcast packets received).
+     *   'L': RxData                   (The number of received data).
+     *   'L': RxDataPoll               (The number of received data poll).
+     *   'L': RxBeacon                 (The number of received beacon).
+     *   'L': RxBeaconRequest          (The number of received beacon request).
+     *   'L': RxOther                  (The number of received other types of frames).
+     *   'L': RxAddressFiltered        (The number of received packets filtered by address filter
+     *                                  (whitelist or blacklist)).
+     *   'L': RxDestAddrFiltered       (The number of received packets filtered by destination check).
+     *   'L': RxDuplicated             (The number of received duplicated packets).
+     *   'L': RxErrNoFrame             (The number of received packets with no or malformed content).
+     *   'L': RxErrUnknownNeighbor     (The number of received packets from unknown neighbor).
+     *   'L': RxErrInvalidSrcAddr      (The number of received packets whose source address is invalid).
+     *   'L': RxErrSec                 (The number of received packets with security error).
+     *   'L': RxErrFcs                 (The number of received packets with FCS error).
+     *   'L': RxErrOther               (The number of received packets with other error).
      *
      * Writing to this property with any value would reset all MAC counters to zero.
      *
@@ -3848,6 +3857,35 @@ typedef enum
      *
      */
     SPINEL_PROP_CNTR_ALL_IP_COUNTERS = SPINEL_PROP_CNTR__BEGIN + 403,
+
+    /// MAC retry histogram.
+    /** Format: t(A(L))t(A(L))
+     *
+     * Required capability: SPINEL_CAP_MAC_RETRY_HISTOGRAM
+     *
+     * The contents include two structs, first one is histogram which corresponds to retransmissions number of direct
+     * messages, second one provides the histogram of retransmissions for indirect messages.
+     *
+     * The first structure includes:
+     *   'L': DirectRetry[0]                   (The number of packets after 0 retry).
+     *   'L': DirectRetry[1]                   (The number of packets after 1 retry).
+     *    ...
+     *   'L': DirectRetry[n]                   (The number of packets after n retry).
+     *
+     * The size of the array is OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT.
+     *
+     * The second structure includes:
+     *   'L': IndirectRetry[0]                   (The number of packets after 0 retry).
+     *   'L': IndirectRetry[1]                   (The number of packets after 1 retry).
+     *    ...
+     *   'L': IndirectRetry[m]                   (The number of packets after m retry).
+     *
+     * The size of the array is OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT.
+     *
+     * Writing to this property with any value would reset MAC retry histogram.
+     *
+     */
+    SPINEL_PROP_CNTR_MAC_RETRY_HISTOGRAM = SPINEL_PROP_CNTR__BEGIN + 404,
 
     SPINEL_PROP_CNTR__END = 0x800,
 
@@ -3898,7 +3936,9 @@ typedef enum
 
     SPINEL_PROP_EXPERIMENTAL__BEGIN = 2000000,
     SPINEL_PROP_EXPERIMENTAL__END   = 2097152,
-} spinel_prop_key_t;
+};
+
+typedef uint32_t spinel_prop_key_t;
 
 // ----------------------------------------------------------------------------
 
@@ -4071,17 +4111,17 @@ SPINEL_API_EXTERN const char *spinel_next_packed_datatype(const char *pack_forma
 
 // ----------------------------------------------------------------------------
 
-SPINEL_API_EXTERN const char *spinel_command_to_cstr(unsigned int command);
+SPINEL_API_EXTERN const char *spinel_command_to_cstr(spinel_command_t command);
 
 SPINEL_API_EXTERN const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key);
 
 SPINEL_API_EXTERN const char *spinel_net_role_to_cstr(uint8_t net_role);
 
-SPINEL_API_EXTERN const char *spinel_mcu_power_state_to_cstr(spinel_mcu_power_state_t mcu_power_state);
+SPINEL_API_EXTERN const char *spinel_mcu_power_state_to_cstr(uint8_t mcu_power_state);
 
 SPINEL_API_EXTERN const char *spinel_status_to_cstr(spinel_status_t status);
 
-SPINEL_API_EXTERN const char *spinel_capability_to_cstr(unsigned int capability);
+SPINEL_API_EXTERN const char *spinel_capability_to_cstr(spinel_capability_t capability);
 
 // ----------------------------------------------------------------------------
 

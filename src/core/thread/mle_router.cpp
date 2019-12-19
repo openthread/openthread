@@ -764,7 +764,14 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
                                     uint32_t                aKeySequence,
                                     Neighbor *              aNeighbor)
 {
-    return HandleLinkAccept(aMessage, aMessageInfo, aKeySequence, aNeighbor, false);
+    otError error = HandleLinkAccept(aMessage, aMessageInfo, aKeySequence, aNeighbor, false);
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMle("Failed to process Link Accept: %s", otThreadErrorToString(error));
+    }
+
+    return error;
 }
 
 otError MleRouter::HandleLinkAcceptAndRequest(const Message &         aMessage,
@@ -772,7 +779,14 @@ otError MleRouter::HandleLinkAcceptAndRequest(const Message &         aMessage,
                                               uint32_t                aKeySequence,
                                               Neighbor *              aNeighbor)
 {
-    return HandleLinkAccept(aMessage, aMessageInfo, aKeySequence, aNeighbor, true);
+    otError error = HandleLinkAccept(aMessage, aMessageInfo, aKeySequence, aNeighbor, true);
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMle("Failed to process Link Accept and Request: %s", otThreadErrorToString(error));
+    }
+
+    return error;
 }
 
 otError MleRouter::HandleLinkAccept(const Message &         aMessage,
@@ -1676,6 +1690,12 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
     SendParentResponse(child, challenge, !scanMask.IsEndDeviceFlagSet());
 
 exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMle("Failed to process Parent Request: %s", otThreadErrorToString(error));
+    }
+
     return error;
 }
 
@@ -2230,6 +2250,12 @@ otError MleRouter::HandleChildIdRequest(const Message &         aMessage,
     }
 
 exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMle("Failed to process Child ID Request: %s", otThreadErrorToString(error));
+    }
+
     return error;
 }
 
@@ -2380,6 +2406,12 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
     SendChildUpdateResponse(child, aMessageInfo, tlvs, tlvslength, challenge);
 
 exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMle("Failed to process Child Update Request from child: %s", otThreadErrorToString(error));
+    }
+
     return error;
 }
 
@@ -2502,6 +2534,12 @@ otError MleRouter::HandleChildUpdateResponse(const Message &         aMessage,
     child->GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
 
 exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMle("Failed to process Child Update Response from child: %s", otThreadErrorToString(error));
+    }
+
     return error;
 }
 
@@ -2557,6 +2595,12 @@ otError MleRouter::HandleDataRequest(const Message &         aMessage,
     SendDataResponse(aMessageInfo.GetPeerAddr(), tlvs, numTlvs, 0);
 
 exit:
+
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMle("Failed to process Data Request: %s", otThreadErrorToString(error));
+    }
+
     return error;
 }
 
@@ -2720,7 +2764,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnMleErr(error, "Failed to process Discovery Request");
+        otLogWarnMle("Failed to process Discovery Request: %s", otThreadErrorToString(error));
     }
 
     return error;
@@ -2817,9 +2861,14 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        message->Free();
+        otLogWarnMle("Failed to process Discovery Response: %s", otThreadErrorToString(error));
+
+        if (message != NULL)
+        {
+            message->Free();
+        }
     }
 
     return error;
@@ -3034,7 +3083,7 @@ void MleRouter::SendChildUpdateResponse(Child *                 aChild,
             break;
 
         case Tlv::kResponse:
-            SuccessOrExit(error = AppendResponse(*message, aChallenge.GetChallenge(), aChallenge.GetLength()));
+            SuccessOrExit(error = AppendResponse(*message, aChallenge.GetChallenge(), aChallenge.GetChallengeLength()));
             break;
 
         case Tlv::kSourceAddress:
@@ -3629,17 +3678,13 @@ otError MleRouter::GetChildInfo(Child &aChild, otChildInfo &aChildInfo)
     aChildInfo.mLinkQualityIn      = aChild.GetLinkInfo().GetLinkQuality();
     aChildInfo.mAverageRssi        = aChild.GetLinkInfo().GetAverageRss();
     aChildInfo.mLastRssi           = aChild.GetLinkInfo().GetLastRss();
-
-#if OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
-    aChildInfo.mFrameErrorRate   = aChild.GetLinkInfo().GetFrameErrorRate();
-    aChildInfo.mMessageErrorRate = aChild.GetLinkInfo().GetMessageErrorRate();
-#endif
-
-    aChildInfo.mRxOnWhenIdle      = aChild.IsRxOnWhenIdle();
-    aChildInfo.mSecureDataRequest = aChild.IsSecureDataRequest();
-    aChildInfo.mFullThreadDevice  = aChild.IsFullThreadDevice();
-    aChildInfo.mFullNetworkData   = aChild.IsFullNetworkData();
-    aChildInfo.mIsStateRestoring  = aChild.IsStateRestoring();
+    aChildInfo.mFrameErrorRate     = aChild.GetLinkInfo().GetFrameErrorRate();
+    aChildInfo.mMessageErrorRate   = aChild.GetLinkInfo().GetMessageErrorRate();
+    aChildInfo.mRxOnWhenIdle       = aChild.IsRxOnWhenIdle();
+    aChildInfo.mSecureDataRequest  = aChild.IsSecureDataRequest();
+    aChildInfo.mFullThreadDevice   = aChild.IsFullThreadDevice();
+    aChildInfo.mFullNetworkData    = aChild.IsFullNetworkData();
+    aChildInfo.mIsStateRestoring   = aChild.IsStateRestoring();
 
 exit:
     return error;
@@ -3647,18 +3692,16 @@ exit:
 
 void MleRouter::GetNeighborInfo(Neighbor &aNeighbor, otNeighborInfo &aNeighInfo)
 {
-    aNeighInfo.mExtAddress       = aNeighbor.GetExtAddress();
-    aNeighInfo.mAge              = Time::MsecToSec(TimerMilli::GetNow() - aNeighbor.GetLastHeard());
-    aNeighInfo.mRloc16           = aNeighbor.GetRloc16();
-    aNeighInfo.mLinkFrameCounter = aNeighbor.GetLinkFrameCounter();
-    aNeighInfo.mMleFrameCounter  = aNeighbor.GetMleFrameCounter();
-    aNeighInfo.mLinkQualityIn    = aNeighbor.GetLinkInfo().GetLinkQuality();
-    aNeighInfo.mAverageRssi      = aNeighbor.GetLinkInfo().GetAverageRss();
-    aNeighInfo.mLastRssi         = aNeighbor.GetLinkInfo().GetLastRss();
-#if OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
-    aNeighInfo.mFrameErrorRate   = aNeighbor.GetLinkInfo().GetFrameErrorRate();
-    aNeighInfo.mMessageErrorRate = aNeighbor.GetLinkInfo().GetMessageErrorRate();
-#endif
+    aNeighInfo.mExtAddress        = aNeighbor.GetExtAddress();
+    aNeighInfo.mAge               = Time::MsecToSec(TimerMilli::GetNow() - aNeighbor.GetLastHeard());
+    aNeighInfo.mRloc16            = aNeighbor.GetRloc16();
+    aNeighInfo.mLinkFrameCounter  = aNeighbor.GetLinkFrameCounter();
+    aNeighInfo.mMleFrameCounter   = aNeighbor.GetMleFrameCounter();
+    aNeighInfo.mLinkQualityIn     = aNeighbor.GetLinkInfo().GetLinkQuality();
+    aNeighInfo.mAverageRssi       = aNeighbor.GetLinkInfo().GetAverageRss();
+    aNeighInfo.mLastRssi          = aNeighbor.GetLinkInfo().GetLastRss();
+    aNeighInfo.mFrameErrorRate    = aNeighbor.GetLinkInfo().GetFrameErrorRate();
+    aNeighInfo.mMessageErrorRate  = aNeighbor.GetLinkInfo().GetMessageErrorRate();
     aNeighInfo.mRxOnWhenIdle      = aNeighbor.IsRxOnWhenIdle();
     aNeighInfo.mSecureDataRequest = aNeighbor.IsSecureDataRequest();
     aNeighInfo.mFullThreadDevice  = aNeighbor.IsFullThreadDevice();

@@ -76,26 +76,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
- *
- * Define to 1 to enable the Border Agent service.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-#define OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE 0
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
- *
- * Define to 1 to enable the Border Router service.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-#define OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE 0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_ECDSA_ENABLE
  *
  * Define to 1 to enable ECDSA support.

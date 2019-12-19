@@ -62,6 +62,15 @@
 #endif
 #include <openthread-system.h>
 
+typedef struct PosixConfig
+{
+    otPlatformConfig mPlatformConfig;    ///< Platform configuration.
+    otLogLevel       mLogLevel;          ///< Debug level of logging.
+    bool             mIsDryRun;          ///< Dry run.
+    bool             mPrintRadioVersion; ///< Whether to print radio firmware version.
+    bool             mIsVerbose;         ///< Whether to print log to stderr.
+} PosixConfig;
+
 static jmp_buf gResetJump;
 
 void __gcov_flush();
@@ -94,19 +103,13 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
     exit(aExitCode);
 }
 
-static otInstance *InitInstance(int aArgCount, char *aArgVector[])
+static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
 {
-    otPlatformConfig config;
-    otInstance *     instance          = NULL;
-    bool             isDryRun          = false;
-    bool             printRadioVersion = false;
-    bool             isVerbose         = false;
-    int              logLevel          = OT_LOG_LEVEL_CRIT;
+    memset(aConfig, 0, sizeof(PosixConfig));
 
-    memset(&config, 0, sizeof(config));
-
-    config.mSpeedUpFactor = 1;
-    config.mResetRadio    = true;
+    aConfig->mPlatformConfig.mSpeedUpFactor = 1;
+    aConfig->mPlatformConfig.mResetRadio    = true;
+    aConfig->mLogLevel                      = OT_LOG_LEVEL_CRIT;
 
     optind = 1;
 
@@ -123,23 +126,24 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
         switch (option)
         {
         case 'd':
-            logLevel = atoi(optarg);
+            aConfig->mLogLevel = (otLogLevel)atoi(optarg);
             break;
         case 'h':
             PrintUsage(aArgVector[0], stdout, OT_EXIT_SUCCESS);
             break;
         case 'I':
-            config.mInterfaceName = optarg;
+            aConfig->mPlatformConfig.mInterfaceName = optarg;
             break;
         case 'n':
-            isDryRun = true;
+            aConfig->mIsDryRun = true;
             break;
         case 's':
         {
-            char *endptr          = NULL;
-            config.mSpeedUpFactor = (uint32_t)strtol(optarg, &endptr, 0);
+            char *endptr = NULL;
 
-            if (*endptr != '\0' || config.mSpeedUpFactor == 0)
+            aConfig->mPlatformConfig.mSpeedUpFactor = (uint32_t)strtol(optarg, &endptr, 0);
+
+            if (*endptr != '\0' || aConfig->mPlatformConfig.mSpeedUpFactor == 0)
             {
                 fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", optarg);
                 exit(OT_EXIT_INVALID_ARGUMENTS);
@@ -147,17 +151,17 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
             break;
         }
         case 'v':
-            isVerbose = true;
+            aConfig->mIsVerbose = true;
             break;
 
         case 0:
             if (!strcmp(kOptions[index].name, "radio-version"))
             {
-                printRadioVersion = true;
+                aConfig->mPrintRadioVersion = true;
             }
             else if (!strcmp(kOptions[index].name, "no-reset"))
             {
-                config.mResetRadio = false;
+                aConfig->mPlatformConfig.mResetRadio = false;
             }
             break;
         case '?':
@@ -169,36 +173,42 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
         }
     }
 
-#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
-    openlog(aArgVector[0], LOG_PID | (isVerbose ? LOG_PERROR : 0), LOG_DAEMON);
-    setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
-#endif
-
     if (optind >= aArgCount)
     {
         PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
     }
 
-    config.mRadioFile = aArgVector[optind];
+    aConfig->mPlatformConfig.mRadioFile = aArgVector[optind];
 
     if (optind + 1 < aArgCount)
     {
-        config.mRadioConfig = aArgVector[optind + 1];
+        aConfig->mPlatformConfig.mRadioConfig = aArgVector[optind + 1];
     }
+}
 
-    instance = otSysInit(&config);
+static otInstance *InitInstance(int aArgCount, char *aArgVector[])
+{
+    PosixConfig config;
+    otInstance *instance = NULL;
 
-    if (printRadioVersion)
+    ParseArg(aArgCount, aArgVector, &config);
+
+    openlog(aArgVector[0], LOG_PID | (config.mIsVerbose ? LOG_PERROR : 0), LOG_DAEMON);
+    setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
+    otLoggingSetLevel(config.mLogLevel);
+
+    instance = otSysInit(&config.mPlatformConfig);
+
+    if (config.mPrintRadioVersion)
     {
         printf("%s\n", otPlatRadioGetVersionString(instance));
     }
 
-    if (isDryRun)
+    if (config.mIsDryRun)
     {
         exit(OT_EXIT_SUCCESS);
     }
 
-    otLoggingSetLevel(logLevel);
     return instance;
 }
 

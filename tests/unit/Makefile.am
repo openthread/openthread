@@ -115,6 +115,7 @@ check_PROGRAMS                                                     += \
     test-mac-frame                                                    \
     test-message                                                      \
     test-message-queue                                                \
+    test-netif                                                        \
     test-network-data                                                 \
     test-priority-queue                                               \
     test-pskc                                                         \
@@ -205,6 +206,9 @@ test_message_queue_SOURCES   = $(COMMON_SOURCES) test_message_queue.cpp
 test_ncp_buffer_LDADD        = $(COMMON_LDADD)
 test_ncp_buffer_SOURCES      = $(COMMON_SOURCES) test_ncp_buffer.cpp
 
+test_netif_LDADD             = $(COMMON_LDADD)
+test_netif_SOURCES           = $(COMMON_SOURCES) test_netif.cpp
+
 test_network_data_LDADD      = $(COMMON_LDADD)
 test_network_data_SOURCES    = $(COMMON_SOURCES) test_network_data.cpp
 
@@ -254,6 +258,7 @@ PRETTY_FILES                                                        = \
     $(test_message_queue_SOURCES)                                     \
     $(test_message_SOURCES)                                           \
     $(test_ncp_buffer_SOURCES)                                        \
+    $(test_netif_SOURCES)                                             \
     $(test_network_data_SOURCES)                                      \
     $(test_priority_queue_SOURCES)                                    \
     $(test_pskc_SOURCES)                                              \

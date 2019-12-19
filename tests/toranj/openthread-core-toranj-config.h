@@ -203,12 +203,12 @@
 #define OPENTHREAD_CONFIG_LOG_LEVEL                             OT_LOG_LEVEL_INFO
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+ * @def OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
  *
  * Define as 1 to enable dynamic log level control.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL              1
+#define OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE              1
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL

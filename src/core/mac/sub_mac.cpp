@@ -374,8 +374,6 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aEr
         ExitNow();
     }
 
-    mTransmitRetries = 0;
-
     SetState(kStateReceive);
 
     mCallbacks.TransmitDone(aFrame, aAckFrame, aError);

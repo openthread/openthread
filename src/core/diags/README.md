@@ -125,6 +125,15 @@ set radio from sleep to receive on channel 11
 status 0x00
 ```
 
+### diag radio state
+
+Return the state of the radio.
+
+```bash
+> diag radio state
+sleep
+```
+
 ### diag stats
 
 Print statistics during diagnostics mode.

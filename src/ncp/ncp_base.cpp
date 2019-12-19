@@ -1809,9 +1809,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_TIME_SYNC));
 #endif
 
-#if OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_ERROR_RATE_TRACKING));
-#endif
 
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_OOB_STEERING_DATA));
@@ -1823,6 +1821,10 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
 
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_RADIO_COEX));
+#endif
+
+#if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_MAC_RETRY_HISTOGRAM));
 #endif
 
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
@@ -2094,6 +2096,27 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_RX_SENSITIVITY>(v
     return mEncoder.WriteInt8(otPlatRadioGetReceiveSensitivity(mInstance));
 }
 
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_FREQ>(void)
+{
+    uint32_t      freq_khz(0);
+    const uint8_t chan(otLinkGetChannel(mInstance));
+
+    if (chan == 0)
+    {
+        freq_khz = 868300;
+    }
+    else if (chan < 11)
+    {
+        freq_khz = 906000 - (2000 * 1) + 2000 * (chan);
+    }
+    else if (chan < 26)
+    {
+        freq_khz = 2405000 - (5000 * 11) + 5000 * (chan);
+    }
+
+    return mEncoder.WriteUint32(freq_khz);
+}
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CCA_THRESHOLD>(void)
 {
     int8_t  threshold;
@@ -2185,7 +2208,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>(
     return mEncoder.WriteUint8(ConvertLogLevel(otLoggingGetLevel()));
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>(void)
 {
     otError    error;
@@ -2232,7 +2255,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>(
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+#endif // OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_SUPPORTED>(void)
 {

@@ -41,14 +41,14 @@ using namespace ot;
 
 otLogLevel otLoggingGetLevel(void)
 {
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL && !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE && !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     return Instance::Get().GetLogLevel();
 #else
     return static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL);
 #endif
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
 void otLoggingSetLevel(otLogLevel aLogLevel)
 {
     Instance::Get().SetLogLevel(aLogLevel);

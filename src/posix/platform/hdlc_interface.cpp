@@ -123,37 +123,37 @@ namespace ot {
 namespace PosixApp {
 
 HdlcInterface::HdlcInterface(Callbacks &aCallbacks)
-    : mCallbacks(aCallbacks)
+    : SpinelInterface()
+    , mCallbacks(aCallbacks)
     , mSockFd(-1)
-    , mRxFrameBuffer()
     , mHdlcDecoder(mRxFrameBuffer, HandleHdlcFrame, this)
 {
 }
 
-otError HdlcInterface::Init(const char *aRadioFile, const char *aRadioConfig)
+otError HdlcInterface::Init(const otPlatformConfig &aPlatformConfig)
 {
     otError     error = OT_ERROR_NONE;
     struct stat st;
 
     VerifyOrExit(mSockFd == -1, error = OT_ERROR_ALREADY);
 
-    VerifyOrDie(stat(aRadioFile, &st) == 0, OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(stat(aPlatformConfig.mRadioFile, &st) == 0, OT_EXIT_INVALID_ARGUMENTS);
 
     if (S_ISCHR(st.st_mode))
     {
-        mSockFd = OpenFile(aRadioFile, aRadioConfig);
+        mSockFd = OpenFile(aPlatformConfig.mRadioFile, aPlatformConfig.mRadioConfig);
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     }
 #if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
     else if (S_ISREG(st.st_mode))
     {
-        mSockFd = ForkPty(aRadioFile, aRadioConfig);
+        mSockFd = ForkPty(aPlatformConfig.mRadioFile, aPlatformConfig.mRadioConfig);
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     }
 #endif // OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
     else
     {
-        otLogCritPlat("Radio file '%s' not supported", aRadioFile);
+        otLogCritPlat("Radio file '%s' not supported", aPlatformConfig.mRadioFile);
         ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
@@ -612,7 +612,7 @@ void HdlcInterface::HandleHdlcFrame(otError aError)
 {
     if (aError == OT_ERROR_NONE)
     {
-        mCallbacks.HandleReceivedFrame(*this);
+        mCallbacks.HandleReceivedFrame();
     }
     else
     {

@@ -52,19 +52,29 @@ void VerifyLinkedListContent(const ot::LinkedList<Entry> &aList, ...)
 {
     va_list args;
     Entry * argEntry;
+    Entry * argPrev = NULL;
 
     va_start(args, aList);
 
     for (const Entry *entry = aList.GetHead(); entry; entry = entry->GetNext())
     {
+        Entry *prev;
+
         argEntry = va_arg(args, Entry *);
         VerifyOrQuit(argEntry != NULL, "List contains more entries than expected");
         VerifyOrQuit(argEntry == entry, "List does not contain the same entry");
         VerifyOrQuit(aList.Contains(*argEntry), "List::Contains() failed");
+
+        SuccessOrQuit(aList.Find(*argEntry, prev), "List::Find() failed");
+        VerifyOrQuit(prev == argPrev, "List::Find() returned prev entry is incorrect");
+
+        argPrev = argEntry;
     }
 
     argEntry = va_arg(args, Entry *);
     VerifyOrQuit(argEntry == NULL, "List contains less entries than expected");
+
+    VerifyOrQuit(aList.GetTail() == argPrev, "List::GetTail() failed");
 }
 
 void TestLinkedList(void)

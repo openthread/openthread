@@ -217,6 +217,18 @@ typedef struct otMacCounters
     uint32_t mTxRetry;
 
     /**
+     * The total number of unique MAC transmission packets that meet maximal retry limit for direct packets.
+     *
+     */
+    uint32_t mTxDirectMaxRetryExpiry;
+
+    /**
+     * The total number of unique MAC transmission packets that meet maximal retry limit for indirect packets.
+     *
+     */
+    uint32_t mTxIndirectMaxRetryExpiry;
+
+    /**
      * The total number of CCA failures.
      *
      * The meaning of this counter can be different and it depends on the platform's radio driver capabilities.
@@ -954,6 +966,43 @@ uint8_t otLinkConvertRssToLinkQuality(otInstance *aInstance, int8_t aRss);
  *
  */
 int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality);
+
+/**
+ * This method gets histogram of retries for a single direct packet until success.
+ *
+ * This function is valid when OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE configuration is enabled.
+ *
+ * @param[in]   aInstance          A pointer to an OpenThread instance.
+ * @param[out]  aNumberOfEntries   A pointer to where the size of returned histogram array is placed.
+ *
+ * @returns     A pointer to the histogram of retries (in a form of an array).
+ *              The n-th element indicates that the packet has been sent with n-th retry.
+ */
+const uint32_t *otLinkGetTxDirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries);
+
+/**
+ * This method gets histogram of retries for a single indirect packet until success.
+ *
+ * This function is valid when OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE configuration is enabled.
+ *
+ * @param[in]   aInstance          A pointer to an OpenThread instance.
+ * @param[out]  aNumberOfEntries   A pointer to where the size of returned histogram array is placed.
+ *
+ * @returns     A pointer to the histogram of retries (in a form of an array).
+ *              The n-th element indicates that the packet has been sent with n-th retry.
+ *
+ */
+const uint32_t *otLinkGetTxIndirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries);
+
+/**
+ * This method clears histogram statistics for direct and indirect transmissions.
+ *
+ * This function is valid when OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE configuration is enabled.
+ *
+ * @param[in]   aInstance          A pointer to an OpenThread instance.
+ *
+ */
+void otLinkResetTxRetrySuccessHistogram(otInstance *aInstance);
 
 /**
  * Get the MAC layer counters.

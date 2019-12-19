@@ -117,3 +117,10 @@ OT_TOOL_WEAK const char *otPlatRadioGetVersionString(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
     return otGetVersionString();
 }
+
+OT_TOOL_WEAK otRadioState otPlatRadioGetState(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return OT_RADIO_STATE_INVALID;
+}

@@ -433,6 +433,52 @@ build_samr21() {
     ./bootstrap || die
     CPPFLAGS=-DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG make -f examples/Makefile-posix || die
 
+    export CPPFLAGS="                                             \
+        -DOPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE=1              \
+        -DOPENTHREAD_CONFIG_BORDER_AGENT_ENABLE=1                 \
+        -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1                \
+        -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1              \
+        -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1              \
+        -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1            \
+        -DOPENTHREAD_CONFIG_COAP_API_ENABLE=1                     \
+        -DOPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1              \
+        -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1                 \
+        -DOPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE=1                 \
+        -DOPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE=1                 \
+        -DOPENTHREAD_CONFIG_DIAG_ENABLE=1                         \
+        -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1                   \
+        -DOPENTHREAD_CONFIG_ECDSA_ENABLE=1                        \
+        -DOPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE=1            \
+        -DOPENTHREAD_CONFIG_IP6_SLAAC_ENABLE=1                    \
+        -DOPENTHREAD_CONFIG_LEGACY_ENABLE=1                       \
+        -DOPENTHREAD_CONFIG_MAC_BEACON_RSP_WHEN_JOINABLE_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE=1           \
+        -DOPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE=1    \
+        -DOPENTHREAD_CONFIG_MPL_DYNAMIC_INTERVAL_ENABLE           \
+        -DOPENTHREAD_CONFIG_JAM_DETECTION_ENABLE=1                \
+        -DOPENTHREAD_CONFIG_JOINER_ENABLE=1                       \
+        -DOPENTHREAD_CONFIG_LINK_RAW_ENABLE=1                     \
+        -DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1            \
+        -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                   \
+        -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1                     \
+        -DOPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE=1               \
+        -DOPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE=1          \
+        -DOPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE=1          \
+        -DOPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE=1             \
+        -DOPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE=1                  \
+        -DOPENTHREAD_CONFIG_SOFTWARE_ACK_TIMEOUT_ENABLE=1         \
+        -DOPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE=1        \
+        -DOPENTHREAD_CONFIG_SOFTWARE_ENERGY_SCAN_ENABLE=1         \
+        -DOPENTHREAD_CONFIG_SOFTWARE_RETRANSMIT_ENABLE=1          \
+        -DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1          \
+        -DOPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE=1         \
+        -DOPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1"
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    make -f examples/Makefile-posix || die
+
     export CPPFLAGS="                                    \
         -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1       \
         -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1     \
@@ -449,6 +495,11 @@ build_samr21() {
     git clean -xfd || die
     ./bootstrap || die
     CPPFLAGS=-DOPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE=1 make -f examples/Makefile-posix || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    CPPFLAGS=-DOPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE=1 make -f examples/Makefile-posix || die
 
     git checkout -- . || die
     git clean -xfd || die
@@ -489,6 +540,22 @@ build_samr21() {
         --enable-mtd                        \
         --enable-radio-only                 \
         --with-examples=posix || die
+    make -j 8 || die
+
+    export CPPFLAGS="                               \
+        -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    ./configure                             \
+        --enable-ncp                        \
+        --enable-ftd                        \
+        --enable-mtd                        \
+        --with-examples=posix               \
+        --disable-docs                      \
+        --disable-tests                     \
+        --with-ncp-vendor-hook-source=./src/ncp/example_vendor_hook.cpp || die
     make -j 8 || die
 }
 

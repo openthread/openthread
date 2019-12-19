@@ -303,6 +303,72 @@ public:
         return error;
     }
 
+    /**
+     * This method searches within the linked list to find an entry and if found returns a pointer to previous entry.
+     *
+     * @param[in]  aEntry      A reference to an entry to find.
+     * @param[out] aPrevEntry  A pointer to output previous entry on success (when @p aEntry is found is the list).
+     *                         @p aPrevEntry is set to NULL if the @p aEntry is head of the list. Otherwise it
+     *                         is updated to point to previous entry before @p aEntry in the list.
+     *
+     * @retval OT_ERROR_NONE       The entry was found in the list and @p aPrevEntry was updated successfully.
+     * @retval OT_ERROR_NOT_FOUND  The entry was not found in the list.
+     *
+     */
+    otError Find(const Type &aEntry, Type *&aPrevEntry) const
+    {
+        otError error = OT_ERROR_NOT_FOUND;
+
+        if (mHead == &aEntry)
+        {
+            aPrevEntry = NULL;
+            error      = OT_ERROR_NONE;
+        }
+        else
+        {
+            for (Type *cur = mHead; cur->GetNext() != NULL; cur = cur->GetNext())
+            {
+                if (cur->GetNext() == &aEntry)
+                {
+                    aPrevEntry = cur;
+                    error      = OT_ERROR_NONE;
+                    break;
+                }
+            }
+        }
+
+        return error;
+    }
+
+    /**
+     * This method returns the tail of the linked list (i.e., the last entry in the list).
+     *
+     * @returns A pointer to tail entry in the linked list or NULL if list is empty.
+     *
+     */
+    const Type *GetTail(void) const
+    {
+        const Type *tail = mHead;
+
+        if (tail != NULL)
+        {
+            while (tail->GetNext() != NULL)
+            {
+                tail = tail->GetNext();
+            }
+        }
+
+        return tail;
+    }
+
+    /**
+     * This method returns the tail of the linked list (i.e., the last entry in the list).
+     *
+     * @returns A pointer to tail entry in the linked list or NULL if list is empty.
+     *
+     */
+    Type *GetTail(void) { return const_cast<Type *>(const_cast<const LinkedList<Type> *>(this)->GetTail()); }
+
 private:
     Type *mHead;
 };
