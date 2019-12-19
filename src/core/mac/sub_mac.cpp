@@ -370,6 +370,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aEr
     if (shouldRetx)
     {
         mTransmitRetries++;
+        aFrame.SetIsARetransmission(true);
         StartCsmaBackoff();
         ExitNow();
     }

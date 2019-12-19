@@ -956,6 +956,7 @@ void Mac::BeginTransmit(void)
     TxFrame &sendFrame             = mSubMac.GetTransmitFrame();
 
     VerifyOrExit(mEnabled, error = OT_ERROR_ABORT);
+    sendFrame.SetIsARetransmission(false);
 
     switch (mOperation)
     {
