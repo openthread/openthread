@@ -36,7 +36,7 @@
 #define __BOARD_CONFIG_H__
 
 #define RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT 1   /// Dev board suppports OQPSK modulation in 2.4GHz band.
-#define RADIO_CONFIG_2P4GHZ_PA_USES_DCDC  0   /// The 2.4GHz PA is fed from VBAT
+#define RADIO_CONFIG_2P4GHZ_PA_USES_DCDC  1   /// The 2.4GHz PA is fed from the DCDC
 
 #ifndef RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
 #define RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT 0 /// Set to 1 to enable debug counters in radio.c
