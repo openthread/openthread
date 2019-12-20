@@ -380,27 +380,6 @@ public:
     otError AppendUriQueryOption(const char *aUriQuery);
 
     /**
-     * This method returns a pointer to the first option.
-     *
-     */
-    const otCoapOption *GetFirstOption(void);
-
-    /**
-     * This method returns a pointer to the next option.
-     *
-     */
-    const otCoapOption *GetNextOption(void);
-
-    /**
-     * This function fills current option value into @p aValue.
-     *
-     * @retval  OT_ERROR_NONE       Successfully filled value.
-     * @retval  OT_ERROR_NOT_FOUND  No more options, aIterator->mNextOptionOffset is set to offset of payload.
-     *
-     */
-    otError GetOptionValue(void *aValue) const;
-
-    /**
      * This method adds Payload Marker indicating beginning of the payload to the CoAP header.
      *
      * It also set offset to the start of payload.
@@ -586,14 +565,11 @@ private:
     struct HelpData
     {
         void Clear(void) { memset(this, 0, sizeof(*this)); }
-        void ClearOption(void) { memset(&mOption, 0, sizeof(mOption)); }
 
-        Header       mHeader;
-        otCoapOption mOption;
-        uint16_t     mNextOptionOffset; ///< The byte offset for the next CoAP Option
-        uint16_t     mOptionLast;
-        uint16_t     mHeaderOffset; ///< The byte offset for the CoAP Header
-        uint16_t     mHeaderLength;
+        Header   mHeader;
+        uint16_t mOptionLast;
+        uint16_t mHeaderOffset; ///< The byte offset for the CoAP Header
+        uint16_t mHeaderLength;
     };
 
     const HelpData &GetHelpData(void) const
@@ -605,6 +581,41 @@ private:
     }
 
     HelpData &GetHelpData(void) { return const_cast<HelpData &>(static_cast<const Message *>(this)->GetHelpData()); }
+};
+
+class OptionIterator : public ::otCoapOptionIterator
+{
+public:
+    /**
+     * Initialise the state of the iterator to iterate over the given message.
+     *
+     */
+    void Init(const Message *aMessage);
+
+    /**
+     * This method returns a pointer to the first option.
+     *
+     */
+    const otCoapOption *GetFirstOption(void);
+
+    /**
+     * This method returns a pointer to the next option.
+     *
+     */
+    const otCoapOption *GetNextOption(void);
+
+    /**
+     * This function fills current option value into @p aValue.
+     *
+     * @retval  OT_ERROR_NONE       Successfully filled value.
+     * @retval  OT_ERROR_NOT_FOUND  No more options, aIterator->mNextOptionOffset is set to offset of payload.
+     *
+     */
+    otError GetOptionValue(void *aValue) const;
+
+private:
+    void           ClearOption(void) { memset(&mOption, 0, sizeof(mOption)); }
+    const Message &GetMessage(void) const { return *static_cast<const Message *>(mMessage); }
 };
 
 /**
