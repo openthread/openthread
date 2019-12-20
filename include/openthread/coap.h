@@ -150,6 +150,17 @@ typedef struct otCoapOption
 } otCoapOption;
 
 /**
+ * This structure acts as an iterator for CoAP options
+ *
+ */
+typedef struct otCoapOptionIterator
+{
+    const otMessage *mMessage;          ///< CoAP message
+    otCoapOption     mOption;           ///< CoAP message option
+    uint16_t         mNextOptionOffset; ///< Byte offset of next option
+} otCoapOptionIterator;
+
+/**
  * CoAP Content Format codes.  The full list is documented at
  * https://www.iana.org/assignments/core-parameters/core-parameters.xhtml#content-formats
  */
