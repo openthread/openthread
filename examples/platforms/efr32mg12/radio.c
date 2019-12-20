@@ -75,12 +75,14 @@ enum
     EFR32_RSSI_AVERAGING_TIMEOUT = 300,  // us
 };
 
+#if RADIO_CONFIG_DMP_SUPPORT
 enum
 {
     EFR32_SCHEDULER_SAMPLE_RSSI_PRIORITY = 10, // High priority
     EFR32_SCHEDULER_TX_PRIORITY          = 10, // High priority
     EFR32_SCHEDULER_RX_PRIORITY          = 20, // Low priority
 };
+#endif
 
 enum
 {
@@ -401,11 +403,15 @@ static otError efr32StartEnergyScan(energyScanMode aMode, uint16_t aChannel, RAI
         sCurrentBandConfig = config;
     }
 
-    RAIL_SchedulerInfo_t scanSchedulerInfo = {.priority        = RADIO_SCHEDULER_CHANNEL_SCAN_PRIORITY,
-                                              .slipTime        = RADIO_SCHEDULER_CHANNEL_SLIP_TIME,
-                                              .transactionTime = aAveragingTimeUs};
-
-    status = RAIL_StartAverageRssi(gRailHandle, aChannel, aAveragingTimeUs, &scanSchedulerInfo);
+#if RADIO_CONFIG_DMP_SUPPORT
+    const RAIL_SchedulerInfo_t        scanSchedulerInfo  = {.priority        = RADIO_SCHEDULER_CHANNEL_SCAN_PRIORITY,
+                                                    .slipTime        = RADIO_SCHEDULER_CHANNEL_SLIP_TIME,
+                                                    .transactionTime = aAveragingTimeUs};
+    const RAIL_SchedulerInfo_t *const pScanSchedulerInfo = &scanSchedulerInfo;
+#else
+    const RAIL_SchedulerInfo_t *const pScanSchedulerInfo = NULL;
+#endif
+    status = RAIL_StartAverageRssi(gRailHandle, aChannel, aAveragingTimeUs, pScanSchedulerInfo);
     otEXPECT_ACTION(status == RAIL_STATUS_NO_ERROR, error = OT_ERROR_FAILED);
 
 exit:
@@ -542,12 +548,16 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
         sCurrentBandConfig = config;
     }
 
-    RAIL_SchedulerInfo_t bgRxSchedulerInfo = {
+#if RADIO_CONFIG_DMP_SUPPORT
+    const RAIL_SchedulerInfo_t bgRxSchedulerInfo = {
         .priority = RADIO_SCHEDULER_BACKGROUND_RX_PRIORITY,
         // sliptime/transaction time is not used for bg rx
     };
-
-    status = RAIL_StartRx(gRailHandle, aChannel, &bgRxSchedulerInfo);
+    const RAIL_SchedulerInfo_t *const pBgRxSchedulerInfo = &bgRxSchedulerInfo;
+#else
+    const RAIL_SchedulerInfo_t *const pBgRxSchedulerInfo = NULL;
+#endif
+    status = RAIL_StartRx(gRailHandle, aChannel, pBgRxSchedulerInfo);
     otEXPECT_ACTION(status == RAIL_STATUS_NO_ERROR, error = OT_ERROR_FAILED);
 
     otLogInfoPlat("State=OT_RADIO_STATE_RECEIVE", NULL);
@@ -592,11 +602,16 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     RAIL_WriteTxFifo(gRailHandle, &frameLength, sizeof frameLength, true);
     RAIL_WriteTxFifo(gRailHandle, aFrame->mPsdu, frameLength - 2, false);
 
+#if RADIO_CONFIG_DMP_SUPPORT
     RAIL_SchedulerInfo_t txSchedulerInfo = {
         .priority        = RADIO_SCHEDULER_TX_PRIORITY,
         .slipTime        = RADIO_SCHEDULER_CHANNEL_SLIP_TIME,
         .transactionTime = 0, // will be calculated later if DMP is used
     };
+    const RAIL_SchedulerInfo_t *const pTxSchedulerInfo = &txSchedulerInfo;
+#else
+    const RAIL_SchedulerInfo_t *const pTxSchedulerInfo = NULL;
+#endif
 
     if (aFrame->mPsdu[0] & IEEE802154_ACK_REQUEST)
     {
@@ -634,11 +649,11 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         // time needed for CSMA/CA
         txSchedulerInfo.transactionTime += RADIO_TIMING_CSMA_OVERHEAD_US;
 #endif
-        status = RAIL_StartCcaCsmaTx(gRailHandle, aFrame->mChannel, txOptions, &csmaConfig, &txSchedulerInfo);
+        status = RAIL_StartCcaCsmaTx(gRailHandle, aFrame->mChannel, txOptions, &csmaConfig, pTxSchedulerInfo);
     }
     else
     {
-        status = RAIL_StartTx(gRailHandle, aFrame->mChannel, txOptions, &txSchedulerInfo);
+        status = RAIL_StartTx(gRailHandle, aFrame->mChannel, txOptions, pTxSchedulerInfo);
     }
 
     if (status == RAIL_STATUS_NO_ERROR)
@@ -853,6 +868,13 @@ static void ieee802154DataRequestCommand(RAIL_Handle_t aRailHandle)
 
 static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
 {
+#if !RADIO_CONFIG_DMP_SUPPORT
+    if (aEvents & (RAIL_EVENT_CONFIG_SCHEDULED | RAIL_EVENT_CONFIG_UNSCHEDULED | RAIL_EVENT_SCHEDULER_STATUS))
+    {
+        assert(0);
+    }
+#endif
+#if RADIO_CONFIG_DMP_SUPPORT
     if (aEvents & RAIL_EVENT_CONFIG_SCHEDULED)
     {
         DEBUG_COUNTERS_INC(mRailEventConfigScheduled);
@@ -861,6 +883,7 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
     {
         DEBUG_COUNTERS_INC(mRailEventConfigUnScheduled);
     }
+#endif
     if (aEvents & RAIL_EVENT_IEEE802154_DATA_REQUEST_COMMAND)
     {
         ieee802154DataRequestCommand(aRailHandle);
@@ -935,6 +958,7 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
 
         DEBUG_COUNTERS_INC(mRailPlatRadioEnergyScanDoneCbCount);
     }
+#if RADIO_CONFIG_DMP_SUPPORT
     if (aEvents & RAIL_EVENT_SCHEDULER_STATUS)
     {
         RAIL_SchedulerStatus_t status = RAIL_GetSchedulerStatus(aRailHandle);
@@ -961,6 +985,7 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
             DEBUG_COUNTERS_INC(mRailEventsSchedulerStatusTransmitBusy);
         }
     }
+#endif
 
     otSysEventSignalPending();
 }
