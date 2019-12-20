@@ -225,7 +225,8 @@ exit:
 
 otError Message::ParseHeader(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError        error = OT_ERROR_NONE;
+    OptionIterator iterator;
 
     assert(mBuffer.mHead.mInfo.mReserved >=
            sizeof(GetHelpData()) +
@@ -236,12 +237,13 @@ otError Message::ParseHeader(void)
     GetHelpData().mHeaderOffset = GetOffset();
     Read(GetHelpData().mHeaderOffset, sizeof(GetHelpData().mHeader), &GetHelpData().mHeader);
 
-    for (const otCoapOption *option = GetFirstOption(); option != NULL; option = GetNextOption())
+    iterator.Init(this);
+    for (const otCoapOption *option = iterator.GetFirstOption(); option != NULL; option = iterator.GetNextOption())
     {
     }
 
-    VerifyOrExit(GetHelpData().mNextOptionOffset > 0, error = OT_ERROR_PARSE);
-    GetHelpData().mHeaderLength = GetHelpData().mNextOptionOffset - GetHelpData().mHeaderOffset;
+    VerifyOrExit(iterator.mNextOptionOffset > 0, error = OT_ERROR_PARSE);
+    GetHelpData().mHeaderLength = iterator.mNextOptionOffset - GetHelpData().mHeaderOffset;
     MoveOffset(GetHelpData().mHeaderLength);
 
 exit:
