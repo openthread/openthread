@@ -122,7 +122,19 @@ static uint8_t          sTransmitPsdu[IEEE802154_MAX_LENGTH];
 static volatile otError sTransmitError;
 
 static efr32CommonConfig sCommonConfig;
-static efr32BandConfig   sBandConfigs[EFR32_NUM_BAND_CONFIGS];
+
+static const efr32BandConfig sBandConfigs[EFR32_NUM_BAND_CONFIGS] = {
+#if RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT
+    {.mChannelConfig = NULL,
+     .mChannelMin    = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN,
+     .mChannelMax    = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX},
+#endif
+#if RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
+    {.mChannelConfig = &generated_channelConfig,
+     .mChannelMin    = OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN,
+     .mChannelMax    = OT_RADIO_915MHZ_OQPSK_CHANNEL_MAX},
+#endif
+};
 
 #if RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
 static efr32RadioCounters sRailDebugCounters;
@@ -212,7 +224,7 @@ static const RAIL_TxPowerCurves_t curvesSg[1] = {
 
 static int8_t sTxPowerDbm = OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER;
 
-static efr32BandConfig *sCurrentBandConfig = NULL;
+static const efr32BandConfig *sCurrentBandConfig = NULL;
 
 static RAIL_Handle_t efr32RailInit(efr32CommonConfig *aCommonConfig)
 {
@@ -249,7 +261,7 @@ static RAIL_Handle_t efr32RailInit(efr32CommonConfig *aCommonConfig)
     return handle;
 }
 
-static void efr32RailConfigLoad(efr32BandConfig *aBandConfig)
+static void efr32RailConfigLoad(const efr32BandConfig *aBandConfig)
 {
     RAIL_Status_t status;
 #if HAL_PA_2P4_LOWPOWER == 1
@@ -285,9 +297,9 @@ static void efr32RadioSetTxPower(int8_t aPowerDbm)
     assert(status == RAIL_STATUS_NO_ERROR);
 }
 
-static efr32BandConfig *efr32RadioGetBandConfig(uint8_t aChannel)
+static const efr32BandConfig *efr32RadioGetBandConfig(uint8_t aChannel)
 {
-    efr32BandConfig *config = NULL;
+    const efr32BandConfig *config = NULL;
 
     for (uint8_t i = 0; i < EFR32_NUM_BAND_CONFIGS; i++)
     {
@@ -309,22 +321,6 @@ static void efr32ConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAI
     sCommonConfig.mRailConfig.scheduler = &(sCommonConfig.railSchedState);
 #else
     sCommonConfig.mRailConfig.scheduler = NULL; // only needed for DMP
-#endif
-
-    uint8_t index = 0;
-
-#if RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT
-    sBandConfigs[index].mChannelConfig = NULL;
-    sBandConfigs[index].mChannelMin    = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN;
-    sBandConfigs[index].mChannelMax    = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX;
-
-    index++;
-#endif
-
-#if RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
-    sBandConfigs[index].mChannelConfig = channelConfigs[0];
-    sBandConfigs[index].mChannelMin    = OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN;
-    sBandConfigs[index].mChannelMax    = OT_RADIO_915MHZ_OQPSK_CHANNEL_MAX;
 #endif
 
 #if RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
@@ -383,9 +379,9 @@ void efr32RadioDeinit(void)
 
 static otError efr32StartEnergyScan(energyScanMode aMode, uint16_t aChannel, RAIL_Time_t aAveragingTimeUs)
 {
-    RAIL_Status_t    status;
-    otError          error  = OT_ERROR_NONE;
-    efr32BandConfig *config = NULL;
+    RAIL_Status_t          status;
+    otError                error  = OT_ERROR_NONE;
+    const efr32BandConfig *config = NULL;
 
     otEXPECT_ACTION(sEnergyScanStatus == ENERGY_SCAN_STATUS_IDLE, error = OT_ERROR_BUSY);
 
@@ -531,9 +527,9 @@ exit:
 
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
-    otError          error = OT_ERROR_NONE;
-    RAIL_Status_t    status;
-    efr32BandConfig *config;
+    otError                error = OT_ERROR_NONE;
+    RAIL_Status_t          status;
+    const efr32BandConfig *config;
 
     OT_UNUSED_VARIABLE(aInstance);
     otEXPECT_ACTION(sState != OT_RADIO_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
@@ -570,12 +566,12 @@ exit:
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    otError           error      = OT_ERROR_NONE;
-    RAIL_CsmaConfig_t csmaConfig = RAIL_CSMA_CONFIG_802_15_4_2003_2p4_GHz_OQPSK_CSMA;
-    RAIL_TxOptions_t  txOptions  = RAIL_TX_OPTIONS_DEFAULT;
-    efr32BandConfig * config;
-    RAIL_Status_t     status;
-    uint8_t           frameLength;
+    otError                 error      = OT_ERROR_NONE;
+    const RAIL_CsmaConfig_t csmaConfig = RAIL_CSMA_CONFIG_802_15_4_2003_2p4_GHz_OQPSK_CSMA;
+    RAIL_TxOptions_t        txOptions  = RAIL_TX_OPTIONS_DEFAULT;
+    const efr32BandConfig * config;
+    RAIL_Status_t           status;
+    uint8_t                 frameLength;
 
     DEBUG_COUNTERS_INC(mRailPlatTxTriggered);
 
