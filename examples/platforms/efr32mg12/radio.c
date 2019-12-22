@@ -656,9 +656,12 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     }
     else
     {
+        // TODO: should we assert on some error conditions? (eg. RAIL_STATUS_INVALID_PARAMETER)
+
         DEBUG_COUNTERS_INC(mRailTxStartFailed);
         sTransmitError = OT_ERROR_CHANNEL_ACCESS_FAILURE;
         sTransmitBusy  = false;
+        otSysEventSignalPending();
     }
 
 exit:
@@ -779,6 +782,10 @@ static void processNextRxPacket(otInstance *aInstance)
         RAIL_YieldRadio(gRailHandle);
         sTransmitBusy = false;
 
+        // TODO: signal MAC layer for each received frame if promiscous is enabled
+
+        // TODO: replace this check with an assert; RAIL should handle this internally (to be confirmed).
+        // See https://github.com/openthread/openthread/issues/3642
         if (sReceiveFrame.mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET])
         {
             sTransmitError = OT_ERROR_NONE;
@@ -790,7 +797,9 @@ static void processNextRxPacket(otInstance *aInstance)
     }
     else
     {
-        otEXPECT(length != IEEE802154_ACK_LENGTH);
+        // signal MAC layer for each received frame if promiscous is enabled
+        // otherwise only signal MAC layer for non-ACK frame
+        otEXPECT(sPromiscuous || (length != IEEE802154_ACK_LENGTH));
 
         sReceiveError = OT_ERROR_NONE;
 
@@ -806,7 +815,6 @@ static void processNextRxPacket(otInstance *aInstance)
         sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-
         if (otPlatDiagModeGet())
         {
             otPlatDiagRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
@@ -814,8 +822,6 @@ static void processNextRxPacket(otInstance *aInstance)
         else
 #endif
         {
-            // signal MAC layer for each received frame if promiscous is enabled
-            // otherwise only signal MAC layer for non-ACK frame
             otLogInfoPlat("Received %d bytes", sReceiveFrame.mLength);
             otPlatRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
             DEBUG_COUNTERS_INC(mRailPlatRadioReceiveDoneCbCount);
@@ -1018,12 +1024,15 @@ void efr32RadioProcess(otInstance *aInstance)
 
         DEBUG_COUNTERS_INC(mRailPlatRadioTxDoneCbCount);
 
+        // TODO: why is this here?
         otSysEventSignalPending();
     }
     else if (sEnergyScanMode == ENERGY_SCAN_MODE_ASYNC && sEnergyScanStatus == ENERGY_SCAN_STATUS_COMPLETED)
     {
         sEnergyScanStatus = ENERGY_SCAN_STATUS_IDLE;
         otPlatRadioEnergyScanDone(aInstance, sEnergyScanResultDbm);
+
+        // TODO: why is this here?
         otSysEventSignalPending();
 
         DEBUG_COUNTERS_INC(mRailEventEnergyScanCompleted);
