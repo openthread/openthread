@@ -283,6 +283,8 @@ static void efr32RailConfigLoad(const efr32BandConfig *aBandConfig)
     }
     status = RAIL_ConfigTxPower(gRailHandle, &txPowerConfig);
     assert(status == RAIL_STATUS_NO_ERROR);
+
+    sCurrentBandConfig = aBandConfig;
 }
 
 static void efr32RadioSetTxPower(int8_t aPowerDbm)
@@ -313,6 +315,25 @@ static const efr32BandConfig *efr32RadioGetBandConfig(uint8_t aChannel)
     return config;
 }
 
+static otError efr32RadioSetChannel(uint8_t aChannel, bool abort)
+{
+    otError                error  = OT_ERROR_NONE;
+    const efr32BandConfig *config = efr32RadioGetBandConfig(aChannel);
+    otEXPECT_ACTION(config != NULL, error = OT_ERROR_INVALID_ARGS);
+
+    if (sCurrentBandConfig != config)
+    {
+        if (abort)
+        {
+            RAIL_Idle(gRailHandle, RAIL_IDLE_ABORT, true);
+        }
+        efr32RailConfigLoad(config);
+    }
+
+exit:
+    return error;
+}
+
 static void efr32ConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAIL_Events_t events))
 {
     sCommonConfig.mRailConfig.eventsCallback = aEventCallback;
@@ -329,7 +350,9 @@ static void efr32ConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAI
 
     gRailHandle = efr32RailInit(&sCommonConfig);
     assert(gRailHandle != NULL);
-    efr32RailConfigLoad(&(sBandConfigs[0]));
+
+    otError error = efr32RadioSetChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL, false);
+    assert(error == OT_ERROR_NONE);
 }
 
 void efr32RadioInit(void)
@@ -354,9 +377,6 @@ void efr32RadioInit(void)
     sTransmitFrame.mLength = 0;
     sTransmitFrame.mPsdu   = sTransmitPsdu;
 
-    sCurrentBandConfig = efr32RadioGetBandConfig(OPENTHREAD_CONFIG_DEFAULT_CHANNEL);
-    assert(sCurrentBandConfig != NULL);
-
     efr32RadioSetTxPower(sTxPowerDbm);
 
     sEnergyScanStatus = ENERGY_SCAN_STATUS_IDLE;
@@ -379,9 +399,8 @@ void efr32RadioDeinit(void)
 
 static otError efr32StartEnergyScan(energyScanMode aMode, uint16_t aChannel, RAIL_Time_t aAveragingTimeUs)
 {
-    RAIL_Status_t          status;
-    otError                error  = OT_ERROR_NONE;
-    const efr32BandConfig *config = NULL;
+    RAIL_Status_t status;
+    otError       error = OT_ERROR_NONE;
 
     otEXPECT_ACTION(sEnergyScanStatus == ENERGY_SCAN_STATUS_IDLE, error = OT_ERROR_BUSY);
 
@@ -390,14 +409,8 @@ static otError efr32StartEnergyScan(energyScanMode aMode, uint16_t aChannel, RAI
 
     RAIL_Idle(gRailHandle, RAIL_IDLE, true);
 
-    config = efr32RadioGetBandConfig(aChannel);
-    otEXPECT_ACTION(config != NULL, error = OT_ERROR_INVALID_ARGS);
-
-    if (sCurrentBandConfig != config)
-    {
-        efr32RailConfigLoad(config);
-        sCurrentBandConfig = config;
-    }
+    error = efr32RadioSetChannel(aChannel, false);
+    otEXPECT(error == OT_ERROR_NONE);
 
 #if RADIO_CONFIG_DMP_SUPPORT
     const RAIL_SchedulerInfo_t        scanSchedulerInfo  = {.priority        = RADIO_SCHEDULER_CHANNEL_SCAN_PRIORITY,
@@ -527,22 +540,14 @@ exit:
 
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
-    otError                error = OT_ERROR_NONE;
-    RAIL_Status_t          status;
-    const efr32BandConfig *config;
+    otError       error = OT_ERROR_NONE;
+    RAIL_Status_t status;
 
     OT_UNUSED_VARIABLE(aInstance);
     otEXPECT_ACTION(sState != OT_RADIO_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
-    config = efr32RadioGetBandConfig(aChannel);
-    otEXPECT_ACTION(config != NULL, error = OT_ERROR_INVALID_ARGS);
-
-    if (sCurrentBandConfig != config)
-    {
-        RAIL_Idle(gRailHandle, RAIL_IDLE_ABORT, true);
-        efr32RailConfigLoad(config);
-        sCurrentBandConfig = config;
-    }
+    error = efr32RadioSetChannel(aChannel, true);
+    otEXPECT(error == OT_ERROR_NONE);
 
 #if RADIO_CONFIG_DMP_SUPPORT
     const RAIL_SchedulerInfo_t bgRxSchedulerInfo = {
@@ -569,7 +574,6 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     otError                 error      = OT_ERROR_NONE;
     const RAIL_CsmaConfig_t csmaConfig = RAIL_CSMA_CONFIG_802_15_4_2003_2p4_GHz_OQPSK_CSMA;
     RAIL_TxOptions_t        txOptions  = RAIL_TX_OPTIONS_DEFAULT;
-    const efr32BandConfig * config;
     RAIL_Status_t           status;
     uint8_t                 frameLength;
 
@@ -580,19 +584,12 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     otEXPECT_ACTION((sState != OT_RADIO_STATE_DISABLED) && (sState != OT_RADIO_STATE_TRANSMIT),
                     error = OT_ERROR_INVALID_STATE);
 
-    config = efr32RadioGetBandConfig(aFrame->mChannel);
-    otEXPECT_ACTION(config != NULL, error = OT_ERROR_INVALID_ARGS);
+    error = efr32RadioSetChannel(aFrame->mChannel, true);
+    otEXPECT(error == OT_ERROR_NONE);
 
     sState         = OT_RADIO_STATE_TRANSMIT;
     sTransmitError = OT_ERROR_NONE;
     sTransmitBusy  = true;
-
-    if (sCurrentBandConfig != config)
-    {
-        RAIL_Idle(gRailHandle, RAIL_IDLE_ABORT, true);
-        efr32RailConfigLoad(config);
-        sCurrentBandConfig = config;
-    }
 
     frameLength = (uint8_t)aFrame->mLength;
     RAIL_WriteTxFifo(gRailHandle, &frameLength, sizeof frameLength, true);
