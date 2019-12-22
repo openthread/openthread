@@ -608,6 +608,8 @@ protected:
     uint32_t mTxSpinelFrameCounter;         // Number of sent (outbound) spinel frames.
 
     bool mDidInitialUpdates;
+
+    uint64_t mLogTimestampBase;             // Timestamp base used for logging
 };
 
 } // namespace Ncp

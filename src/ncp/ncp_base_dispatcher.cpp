@@ -515,6 +515,7 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_DEBUG_NCP_LOG_LEVEL),
 #endif
+      {SPINEL_PROP_DEBUG_LOG_TIMESTAMP_BASE, &NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_LOG_TIMESTAMP_BASE>},
     };
 
 #undef OT_NCP_SET_HANDLER_ENTRY
