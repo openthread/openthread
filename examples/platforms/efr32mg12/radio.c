@@ -809,7 +809,7 @@ static void processNextRxPacket(otInstance *aInstance)
         // Get the timestamp when the SFD was received
         assert(packetDetails.timeReceived.timePosition != RAIL_PACKET_TIME_INVALID);
         packetDetails.timeReceived.totalPacketBytes = length + 1;
-        status = RAIL_GetRxTimeSyncWordEndAlt(gRailHandle, &packetDetails);
+        status                                      = RAIL_GetRxTimeSyncWordEndAlt(gRailHandle, &packetDetails);
         assert(status == RAIL_STATUS_NO_ERROR);
         sReceiveFrame.mInfo.mRxInfo.mTimestamp = packetDetails.timeReceived.packetTime;
 
@@ -870,22 +870,6 @@ static void ieee802154DataRequestCommand(RAIL_Handle_t aRailHandle)
 
 static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
 {
-#if !RADIO_CONFIG_DMP_SUPPORT
-    if (aEvents & (RAIL_EVENT_CONFIG_SCHEDULED | RAIL_EVENT_CONFIG_UNSCHEDULED | RAIL_EVENT_SCHEDULER_STATUS))
-    {
-        assert(0);
-    }
-#endif
-#if RADIO_CONFIG_DMP_SUPPORT
-    if (aEvents & RAIL_EVENT_CONFIG_SCHEDULED)
-    {
-        DEBUG_COUNTERS_INC(mRailEventConfigScheduled);
-    }
-    if (aEvents & RAIL_EVENT_CONFIG_UNSCHEDULED)
-    {
-        DEBUG_COUNTERS_INC(mRailEventConfigUnScheduled);
-    }
-#endif
     if (aEvents & RAIL_EVENT_IEEE802154_DATA_REQUEST_COMMAND)
     {
         ieee802154DataRequestCommand(aRailHandle);
@@ -988,6 +972,19 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
             DEBUG_COUNTERS_INC(mRailEventsSchedulerStatusTransmitBusy);
         }
     }
+
+    if (aEvents & RAIL_EVENT_CONFIG_SCHEDULED)
+    {
+        DEBUG_COUNTERS_INC(mRailEventConfigScheduled);
+    }
+
+    if (aEvents & RAIL_EVENT_CONFIG_UNSCHEDULED)
+    {
+        DEBUG_COUNTERS_INC(mRailEventConfigUnScheduled);
+    }
+#else
+    assert((aEvents & (RAIL_EVENT_CONFIG_SCHEDULED | RAIL_EVENT_CONFIG_UNSCHEDULED | RAIL_EVENT_SCHEDULER_STATUS)) ==
+           0);
 #endif
 
     otSysEventSignalPending();
