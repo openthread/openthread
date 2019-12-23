@@ -197,6 +197,22 @@ void Neighbor::RemoveAllForwardTrackingSeriesInfo(void)
 }
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
+const char *Neighbor::StateToString(State aState)
+{
+    static const char *kStateStrings[] = {
+        "Invalid",        // kStateInvalid
+        "Restored",       // kStateRestored
+        "ParentReq",      // kStateParentRequest
+        "ParentRes",      // kStateParentResponse
+        "ChildIdReq",     // kStateChildIdRequest
+        "LinkReq",        // kStateLinkRequest
+        "ChildUpdateReq", // kStateChildUpdateRequest
+        "Valid",          // kStateValid
+    };
+
+    return static_cast<uint8_t>(aState) < OT_ARRAY_LENGTH(kStateStrings) ? kStateStrings[aState] : "Unknown";
+}
+
 void Child::Info::SetFrom(const Child &aChild)
 {
     Clear();
