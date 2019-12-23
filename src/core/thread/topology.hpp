@@ -645,6 +645,17 @@ public:
     void RemoveAllForwardTrackingSeriesInfo(void);
 
 #endif
+
+    /**
+     * This method converts a given `State` to a human-readable string.
+     *
+     * @param[in] aState   A neighbor state.
+     *
+     * @returns A string representation of given state.
+     *
+     */
+    static const char *StateToString(State aState);
+
 protected:
     /**
      * This method initializes the `Neighbor` object.
