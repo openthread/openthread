@@ -2880,6 +2880,12 @@ otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo
         delay = Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
         SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay);
     }
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+    else
+    {
+        Get<NetworkData::Local>().SendServerDataNotification();
+    }
+#endif
 
 exit:
 
