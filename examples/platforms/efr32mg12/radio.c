@@ -143,19 +143,39 @@ static efr32RadioCounters sRailDebugCounters;
     {                                 \
         sRailDebugCounters.counter++; \
     } while (0)
-#define DEBUG_COUNTERS_SET_STATUS(status)                                 \
-    do                                                                    \
-    {                                                                     \
-        sRailDebugCounters.mRailEventsSchedulerStatusLastStatus = status; \
+#define DEBUG_COUNTERS_SET(variable, status)  \
+    do                                        \
+    {                                         \
+        sRailDebugCounters.variable = status; \
     } while (0)
+#define DEBUG_COUNTERS_INIT()                                                 \
+    do                                                                        \
+    {                                                                         \
+        memset(&sRailDebugCounters, 0x00, sizeof(efr32RadioCounters));        \
+        sRailDebugCounters.mRailSourceMatchTableLookupTime.mMin = UINT32_MAX; \
+    } while (0)
+#define DEBUG_COUNTERS_TM_START(tm) uint32_t tm = RAIL_GetTime()
+#define DEBUG_COUNTERS_TM_END(tm) efr32TimeMeasurementAdd(&sRailDebugCounters.tm, tm)
 #else
 #define DEBUG_COUNTERS_INC(counter) \
     do                              \
     {                               \
     } while (0)
-#define DEBUG_COUNTERS_SET_STATUS(status) \
-    do                                    \
-    {                                     \
+#define DEBUG_COUNTERS_SET(variable, status) \
+    do                                       \
+    {                                        \
+    } while (0)
+#define DEBUG_COUNTERS_INIT() \
+    do                        \
+    {                         \
+    } while (0)
+#define DEBUG_COUNTERS_TM_START(tm) \
+    do                              \
+    {                               \
+    } while (0)
+#define DEBUG_COUNTERS_TM_END(tm) \
+    do                            \
+    {                             \
     } while (0)
 #endif
 
@@ -225,6 +245,22 @@ static const RAIL_TxPowerCurves_t curvesSg[1] = {
 static int8_t sTxPowerDbm = OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER;
 
 static const efr32BandConfig *sCurrentBandConfig = NULL;
+
+#if RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
+static void efr32TimeMeasurementAdd(efr32TimeMeasurement *aTimeMeasurement, uint32_t aValue)
+{
+    aTimeMeasurement->mCount++;
+    aTimeMeasurement->mSum += aValue;
+    if (aTimeMeasurement->mMin > aValue)
+    {
+        aTimeMeasurement->mMin = aValue;
+    }
+    if (aTimeMeasurement->mMax < aValue)
+    {
+        aTimeMeasurement->mMax = aValue;
+    }
+}
+#endif
 
 static RAIL_Handle_t efr32RailInit(efr32CommonConfig *aCommonConfig)
 {
@@ -344,9 +380,7 @@ static void efr32ConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAI
     sCommonConfig.mRailConfig.scheduler = NULL; // only needed for DMP
 #endif
 
-#if RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
-    memset(&sRailDebugCounters, 0x00, sizeof(efr32RadioCounters));
-#endif
+    DEBUG_COUNTERS_INIT();
 
     gRailHandle = efr32RailInit(&sCommonConfig);
     assert(gRailHandle != NULL);
@@ -852,6 +886,8 @@ static void ieee802154DataRequestCommand(RAIL_Handle_t aRailHandle)
         status = RAIL_IEEE802154_GetAddress(aRailHandle, &sourceAddress);
         assert(status == RAIL_STATUS_NO_ERROR);
 
+        DEBUG_COUNTERS_TM_START(mRailSourceMatchTableLookupTime);
+
         if ((sourceAddress.length == RAIL_IEEE802154_LongAddress &&
              utilsSoftSrcMatchExtFindEntry((otExtAddress *)sourceAddress.longAddress) >= 0) ||
             (sourceAddress.length == RAIL_IEEE802154_ShortAddress &&
@@ -860,6 +896,8 @@ static void ieee802154DataRequestCommand(RAIL_Handle_t aRailHandle)
             status = RAIL_IEEE802154_SetFramePending(aRailHandle);
             assert(status == RAIL_STATUS_NO_ERROR);
         }
+
+        DEBUG_COUNTERS_TM_END(mRailSourceMatchTableLookupTime);
     }
     else
     {
@@ -968,7 +1006,7 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
         }
         else if (sTransmitBusy)
         {
-            DEBUG_COUNTERS_SET_STATUS(status);
+            DEBUG_COUNTERS_SET(mRailEventsSchedulerStatusLastStatus, status);
             DEBUG_COUNTERS_INC(mRailEventsSchedulerStatusTransmitBusy);
         }
     }
