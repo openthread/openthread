@@ -806,9 +806,12 @@ static void processNextRxPacket(otInstance *aInstance)
         sReceiveFrame.mInfo.mRxInfo.mRssi = packetDetails.rssi;
         sReceiveFrame.mInfo.mRxInfo.mLqi  = packetDetails.lqi;
 
-        // TODO: grab timestamp and handle conversion to msec/usec and RAIL_GetRxTimeSyncWordEndAlt
-        // sReceiveFrame.mInfo.mRxInfo.mMsec = packetDetails.packetTime;
-        // sReceiveFrame.mInfo.mRxInfo.mUsec = packetDetails.packetTime;
+        // Get the timestamp when the SFD was received
+        assert(packetDetails.timeReceived.timePosition != RAIL_PACKET_TIME_INVALID);
+        packetDetails.timeReceived.totalPacketBytes = length + 1;
+        status = RAIL_GetRxTimeSyncWordEndAlt(gRailHandle, &packetDetails);
+        assert(status == RAIL_STATUS_NO_ERROR);
+        sReceiveFrame.mInfo.mRxInfo.mTimestamp = packetDetails.timeReceived.packetTime;
 
         // TODO Set this flag only when the packet is really acknowledged with frame pending set.
         // See https://github.com/openthread/openthread/pull/3785
@@ -887,6 +890,7 @@ static void RAILCb_Generic(RAIL_Handle_t aRailHandle, RAIL_Events_t aEvents)
     {
         ieee802154DataRequestCommand(aRailHandle);
     }
+
     if (aEvents & RAIL_EVENTS_TX_COMPLETION)
     {
         if (aEvents & RAIL_EVENT_TX_PACKET_SENT)
