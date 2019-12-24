@@ -79,7 +79,7 @@ DataPollHandler::DataPollHandler(Instance &aInstance)
 
 void DataPollHandler::Clear(void)
 {
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
     {
         Child &child = *iter.GetChild();
         child.SetDataPollPending(false);
@@ -134,7 +134,7 @@ void DataPollHandler::HandleDataPoll(Mac::RxFrame &aFrame)
     VerifyOrExit(Get<Mle::MleRouter>().GetRole() != OT_DEVICE_ROLE_DETACHED);
 
     SuccessOrExit(aFrame.GetSrcAddr(macSource));
-    child = Get<ChildTable>().FindChild(macSource, ChildTable::kInStateValidOrRestoring);
+    child = Get<ChildTable>().FindChild(macSource, Child::kInStateValidOrRestoring);
     VerifyOrExit(child != NULL);
 
     child->SetLastHeard(TimerMilli::GetNow());
@@ -289,7 +289,7 @@ exit:
 
 void DataPollHandler::ProcessPendingPolls(void)
 {
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValidOrRestoring); !iter.IsDone(); iter++)
     {
         Child *child = iter.GetChild();
 

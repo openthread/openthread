@@ -76,6 +76,22 @@ public:
     };
 
     /**
+     * This enumeration defines state filters used for finding a neighbor or iterating through the child/neighbor table.
+     *
+     * Each filter definition accepts a subset of `State` values.
+     *
+     */
+    enum StateFilter
+    {
+        kInStateValid,                     ///< Accept child only in `kStateValid`.
+        kInStateValidOrRestoring,          ///< Accept child with `IsStateValidOrRestoring()` being `true`.
+        kInStateChildIdRequest,            ///< Accept child only in `Child:kStateChildIdRequest`.
+        kInStateValidOrAttaching,          ///< Accept child with `IsStateValidOrAttaching()` being `true`.
+        kInStateAnyExceptInvalid,          ///< Accept child in any state except `kStateInvalid`.
+        kInStateAnyExceptValidOrRestoring, ///< Accept child in any state except `IsStateValidOrRestoring()`.
+    };
+
+    /**
      * This method returns the current state.
      *
      * @returns The current state.
@@ -156,6 +172,27 @@ public:
      *
      */
     bool IsStateValidOrRestoring(void) const { return (mState == kStateValid) || IsStateRestoring(); }
+
+    /**
+     * This method indicates if the neighbor state is valid, attaching, or restored.
+     *
+     * The states `kStateRestored`, `kStateChildIdRequest`, `kStateChildUpdateRequest`, `kStateValid`, and
+     * `kStateLinkRequest` are considered as valid, attaching, or restored.
+     *
+     * @returns TRUE if the neighbor state is valid, attaching, or restored, FALSE otherwise.
+     *
+     */
+    bool IsStateValidOrAttaching(void) const;
+
+    /**
+     * This method indicates whether neighbor state matches a given state filter.
+     *
+     * @param[in] aFilter   A state filter (`StateFilter` enumeration) to match against.
+     *
+     * @returns TRUE if the neighbor state matches the filter, FALSE otherwise.
+     *
+     */
+    bool MatchesFilter(StateFilter aFilter) const;
 
     /**
      * This method gets the device mode flags.
@@ -502,17 +539,6 @@ public:
      *
      */
     void Clear(void);
-
-    /**
-     * This method indicates if the child state is valid or being attached or being restored.
-     *
-     * The states `kStateRestored`, `kStateChildIdRequest`, `kStateChildUpdateRequest`, `kStateValid`, (and
-     * `kStateLinkRequest) are considered as attached or being restored.
-     *
-     * @returns TRUE if the child is attached or being restored.
-     *
-     */
-    bool IsStateValidOrAttaching(void) const;
 
     /**
      * This method clears the IPv6 address list for the child.

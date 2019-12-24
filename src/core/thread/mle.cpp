@@ -626,7 +626,7 @@ otError Mle::BecomeChild(AttachMode aMode)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(mAttachState == kAttachStateIdle, error = OT_ERROR_BUSY);
+    VerifyOrExit(!IsAttaching(), error = OT_ERROR_BUSY);
 
     if (mReattachState == kReattachStart)
     {
@@ -2884,6 +2884,12 @@ otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo
         delay = Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
         SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay);
     }
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+    else
+    {
+        Get<NetworkData::Local>().SendServerDataNotification();
+    }
+#endif
 
 exit:
 
@@ -3967,27 +3973,6 @@ bool Mle::IsAnycastLocator(const Ip6::Address &aAddress) const
 bool Mle::IsMeshLocalAddress(const Ip6::Address &aAddress) const
 {
     return aAddress.PrefixMatch(GetMeshLocal16()) >= Ip6::Address::kMeshLocalPrefixLength;
-}
-
-Router *Mle::GetParent(void)
-{
-    return &mParent;
-}
-
-Router *Mle::GetParentCandidate(void)
-{
-    Router *rval;
-
-    if (mParentCandidate.IsStateValid())
-    {
-        rval = &mParentCandidate;
-    }
-    else
-    {
-        rval = &mParent;
-    }
-
-    return rval;
 }
 
 otError Mle::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header)

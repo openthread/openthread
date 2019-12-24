@@ -210,7 +210,7 @@ otError SourceMatchController::AddPendingEntries(void)
 {
     otError error = OT_ERROR_NONE;
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValidOrRestoring); !iter.IsDone(); iter++)
     {
         if (iter.GetChild()->IsIndirectSourceMatchPending())
         {

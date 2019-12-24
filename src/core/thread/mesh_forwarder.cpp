@@ -140,7 +140,7 @@ exit:
 void MeshForwarder::RemoveMessage(Message &aMessage)
 {
 #if OPENTHREAD_FTD
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
     {
         IgnoreReturnValue(mIndirectSender.RemoveMessageFromSleepyChild(aMessage, *iter.GetChild()));
     }
@@ -1100,7 +1100,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::RxFrame &aFrame)
         // From Thread 1.2, MAC Data Frame can also act as keep-alive message if child supports
         if (aFrame.GetSecurityEnabled())
         {
-            Child *child = Get<ChildTable>().FindChild(macSource, ChildTable::kInStateAnyExceptInvalid);
+            Child *child = Get<ChildTable>().FindChild(macSource, Child::kInStateAnyExceptInvalid);
 
             if (child != NULL && !child->IsRxOnWhenIdle() && child->IsEnhancedKeepAliveSupported())
             {

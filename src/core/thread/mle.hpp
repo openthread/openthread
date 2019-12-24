@@ -603,6 +603,19 @@ public:
     bool IsAttached(void) const;
 
     /**
+     * This method indicates whether device is currently attaching or not.
+     *
+     * Note that an already attached device may also be in attaching state. Examples of this include a leader/router
+     * trying to attach to a better partition, or a child trying to find a better parent (when feature
+     * `OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE` is enabled).
+     *
+     * @retval TRUE   Device is currently trying to attach.
+     * @retval FALSE  Device is not in middle of attach process.
+     *
+     */
+    bool IsAttaching(void) const { return (mAttachState != kAttachStateIdle); }
+
+    /**
      * This method returns the current Thread interface state.
      *
      * @returns The current Thread interface state.
@@ -734,23 +747,20 @@ public:
     }
 
     /**
-     * This method returns a pointer to the parent when operating in End Device mode.
+     * This method gets the parent when operating in End Device mode.
      *
-     * @returns A pointer to the parent.
+     * @returns A reference to the parent.
      *
      */
-    Router *GetParent(void);
+    Router &GetParent(void) { return mParent; }
 
     /**
-     * This method returns a pointer to the parent candidate or parent.
+     * This method get the parent candidate.
      *
-     * This method is useful when sending IEEE 802.15.4 Data Request frames while attempting to attach to a new parent.
-     *
-     * If attempting to attach to a new parent, this method returns the parent candidate.
-     * If not attempting to attach, this method returns the parent.
+     * The parent candidate is valid when attempting to attach to a new parent.
      *
      */
-    Router *GetParentCandidate(void);
+    Router &GetParentCandidate(void) { return mParentCandidate; }
 
     /**
      * This method indicates whether or not an IPv6 address is an RLOC.
