@@ -99,14 +99,16 @@ void MleRouter::HandlePartitionChange(void)
 
 bool MleRouter::IsRouterEligible(void) const
 {
-    return mRouterEligible && IsFullThreadDevice();
+    return mRouterEligible && IsFullThreadDevice() &&
+           (Get<KeyManager>().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_ROUTERS);
 }
 
 otError MleRouter::SetRouterEligible(bool aEligible)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(IsFullThreadDevice(), error = OT_ERROR_NOT_CAPABLE);
+    VerifyOrExit(IsFullThreadDevice() && (Get<KeyManager>().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_ROUTERS),
+                 error = OT_ERROR_NOT_CAPABLE);
 
     mRouterEligible = aEligible;
 
