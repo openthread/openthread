@@ -43,8 +43,15 @@ import binascii
 
 class Node:
 
-    def __init__(self, nodeid, is_mtd=False, simulator=None, version=None, is_bbr=False):
+    def __init__(self,
+                 nodeid,
+                 is_mtd=False,
+                 simulator=None,
+                 name=None,
+                 version=None,
+                 is_bbr=False):
         self.nodeid = nodeid
+        self.name = name or ('Node%d' % nodeid)
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
         self.node_type = os.getenv('NODE_TYPE', 'sim')
         self.env_version = os.getenv('THREAD_VERSION', '1.1')
