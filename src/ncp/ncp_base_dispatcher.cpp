@@ -576,172 +576,107 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
 
 NcpBase::PropertyHandler NcpBase::FindInsertPropertyHandler(spinel_prop_key_t aKey)
 {
-    NcpBase::PropertyHandler handler;
-
-    switch (aKey)
-    {
-        // --------------------------------------------------------------------------
-        // Common Properties (Insert Handler)
-
-    case SPINEL_PROP_UNSOL_UPDATE_FILTER:
-        handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_UNSOL_UPDATE_FILTER>;
-        break;
-
-        // --------------------------------------------------------------------------
-        // MTD (or FTD) Properties (Insert Handler)
-
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
-    case SPINEL_PROP_IPV6_ADDRESS_TABLE:
-        handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_IPV6_ADDRESS_TABLE>;
-        break;
-    case SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE:
-        handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE>;
-        break;
-    case SPINEL_PROP_THREAD_ASSISTING_PORTS:
-        handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_ASSISTING_PORTS>;
-        break;
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-    case SPINEL_PROP_THREAD_OFF_MESH_ROUTES:
-        handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_OFF_MESH_ROUTES>;
-        break;
-    case SPINEL_PROP_THREAD_ON_MESH_NETS:
-        handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_ON_MESH_NETS>;
-        break;
+#if __cplusplus >= 201103L
+    constexpr
+#else
+    const
 #endif
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-    case SPINEL_PROP_MAC_WHITELIST:
-        handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_WHITELIST>;
-        break;
-    case SPINEL_PROP_MAC_BLACKLIST:
-        handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_BLACKLIST>;
-        break;
-    case SPINEL_PROP_MAC_FIXED_RSS:
-        handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_FIXED_RSS>;
-        break;
+        static HandlerEntry sHandlerEntries[] = {
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+            {SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_ON_MESH_NETS>},
+            {SPINEL_PROP_THREAD_OFF_MESH_ROUTES, &NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_OFF_MESH_ROUTES>},
+#endif
+            {SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_ASSISTING_PORTS>},
+            {SPINEL_PROP_IPV6_ADDRESS_TABLE, &NcpBase::HandlePropertyInsert<SPINEL_PROP_IPV6_ADDRESS_TABLE>},
+            {SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE,
+             &NcpBase::HandlePropertyInsert<SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE>},
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+            {SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS,
+             &NcpBase::HandlePropertyInsert<SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS>},
 #endif
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    case SPINEL_PROP_SERVER_SERVICES:
-        handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_SERVER_SERVICES>;
-        break;
+            {SPINEL_PROP_SERVER_SERVICES, &NcpBase::HandlePropertyInsert<SPINEL_PROP_SERVER_SERVICES>},
 #endif
-#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
-
-        // --------------------------------------------------------------------------
-        // FTD Only Properties (Insert Handler)
-
-#if OPENTHREAD_FTD
-#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-    case SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS:
-        handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS>;
-        break;
-    case SPINEL_PROP_THREAD_JOINERS:
-        handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_JOINERS>;
-        break;
+#endif // #if OPENTHREAD_MTD || OPENTHREAD_FTD
+            {SPINEL_PROP_UNSOL_UPDATE_FILTER, &NcpBase::HandlePropertyInsert<SPINEL_PROP_UNSOL_UPDATE_FILTER>},
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+            {SPINEL_PROP_MAC_WHITELIST, &NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_WHITELIST>},
 #endif
-#endif // OPENTHREAD_FTD
-
-        // --------------------------------------------------------------------------
-        // Raw Link API Properties (Insert Handler)
-
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    case SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES:
-        handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES>;
-        break;
-    case SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES:
-        handler = &NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES>;
-        break;
+            {SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES,
+             &NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES>},
+            {SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES,
+             &NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES>},
+#endif
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+            {SPINEL_PROP_MAC_BLACKLIST, &NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_BLACKLIST>},
+            {SPINEL_PROP_MAC_FIXED_RSS, &NcpBase::HandlePropertyInsert<SPINEL_PROP_MAC_FIXED_RSS>},
+#endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+            {SPINEL_PROP_THREAD_JOINERS, &NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_JOINERS>},
+#endif
+        };
+
+#if __cplusplus >= 201103L
+    static_assert(AreHandlerEntriesSorted(sHandlerEntries, OT_ARRAY_LENGTH(sHandlerEntries)),
+                  "NCP property setter entries not sorted!");
 #endif
 
-    default:
-        handler = NULL;
-    }
-
-    return handler;
+    return FindPropertyHandler(sHandlerEntries, OT_ARRAY_LENGTH(sHandlerEntries), aKey);
 }
 
 NcpBase::PropertyHandler NcpBase::FindRemovePropertyHandler(spinel_prop_key_t aKey)
 {
-    NcpBase::PropertyHandler handler;
-
-    switch (aKey)
-    {
-        // --------------------------------------------------------------------------
-        // Common Properties (Remove Handler)
-
-    case SPINEL_PROP_UNSOL_UPDATE_FILTER:
-        handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_UNSOL_UPDATE_FILTER>;
-        break;
-
-        // --------------------------------------------------------------------------
-        // MTD (or FTD) Properties (Remove Handler)
-
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
-    case SPINEL_PROP_IPV6_ADDRESS_TABLE:
-        handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_IPV6_ADDRESS_TABLE>;
-        break;
-    case SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE:
-        handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE>;
-        break;
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-    case SPINEL_PROP_THREAD_OFF_MESH_ROUTES:
-        handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_THREAD_OFF_MESH_ROUTES>;
-        break;
-    case SPINEL_PROP_THREAD_ON_MESH_NETS:
-        handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_THREAD_ON_MESH_NETS>;
-        break;
+#if __cplusplus >= 201103L
+    constexpr
+#else
+    const
 #endif
-    case SPINEL_PROP_THREAD_ASSISTING_PORTS:
-        handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_THREAD_ASSISTING_PORTS>;
-        break;
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-    case SPINEL_PROP_MAC_WHITELIST:
-        handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_WHITELIST>;
-        break;
-    case SPINEL_PROP_MAC_BLACKLIST:
-        handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_BLACKLIST>;
-        break;
-    case SPINEL_PROP_MAC_FIXED_RSS:
-        handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_FIXED_RSS>;
-        break;
+        static HandlerEntry sHandlerEntries[] = {
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+            {SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::HandlePropertyRemove<SPINEL_PROP_THREAD_ON_MESH_NETS>},
+            {SPINEL_PROP_THREAD_OFF_MESH_ROUTES, &NcpBase::HandlePropertyRemove<SPINEL_PROP_THREAD_OFF_MESH_ROUTES>},
+#endif
+            {SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::HandlePropertyRemove<SPINEL_PROP_THREAD_ASSISTING_PORTS>},
+            {SPINEL_PROP_IPV6_ADDRESS_TABLE, &NcpBase::HandlePropertyRemove<SPINEL_PROP_IPV6_ADDRESS_TABLE>},
+            {SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE,
+             &NcpBase::HandlePropertyRemove<SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE>},
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+            {SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS,
+             &NcpBase::HandlePropertyRemove<SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS>},
 #endif
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    case SPINEL_PROP_SERVER_SERVICES:
-        handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_SERVER_SERVICES>;
-        break;
+            {SPINEL_PROP_SERVER_SERVICES, &NcpBase::HandlePropertyRemove<SPINEL_PROP_SERVER_SERVICES>},
 #endif
-#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
-
-        // --------------------------------------------------------------------------
-        // FTD Only Properties (Remove Handler)
-
-#if OPENTHREAD_FTD
-    case SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS:
-        handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS>;
-        break;
-#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-    case SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS:
-        handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_MESHCOP_COMMISSIONER_JOINERS>;
-        break;
+#endif // #if OPENTHREAD_MTD || OPENTHREAD_FTD
+            {SPINEL_PROP_UNSOL_UPDATE_FILTER, &NcpBase::HandlePropertyRemove<SPINEL_PROP_UNSOL_UPDATE_FILTER>},
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+            {SPINEL_PROP_MAC_WHITELIST, &NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_WHITELIST>},
 #endif
-#endif // OPENTHREAD_FTD
-
-        // --------------------------------------------------------------------------
-        // Raw Link API Properties (Remove Handler)
-
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    case SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES:
-        handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES>;
-        break;
-    case SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES:
-        handler = &NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES>;
-        break;
+            {SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES,
+             &NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES>},
+            {SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES,
+             &NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES>},
+#endif
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+            {SPINEL_PROP_MAC_BLACKLIST, &NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_BLACKLIST>},
+            {SPINEL_PROP_MAC_FIXED_RSS, &NcpBase::HandlePropertyRemove<SPINEL_PROP_MAC_FIXED_RSS>},
+#endif
+#if OPENTHREAD_FTD
+            {SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS,
+             &NcpBase::HandlePropertyRemove<SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS>},
+#endif
+        };
+
+#if __cplusplus >= 201103L
+    static_assert(AreHandlerEntriesSorted(sHandlerEntries, OT_ARRAY_LENGTH(sHandlerEntries)),
+                  "NCP property setter entries not sorted!");
 #endif
 
-    default:
-        handler = NULL;
-    }
-
-    return handler;
+    return FindPropertyHandler(sHandlerEntries, OT_ARRAY_LENGTH(sHandlerEntries), aKey);
 }
 
 NcpBase::PropertyHandler NcpBase::FindPropertyHandler(const HandlerEntry *aHandlerEntries,
