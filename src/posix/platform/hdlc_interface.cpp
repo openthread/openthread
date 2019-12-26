@@ -119,6 +119,8 @@
 
 #endif // __APPLE__
 
+#if OPENTHREAD_POSIX_NCP_UART_ENABLE
+
 namespace ot {
 namespace PosixApp {
 
@@ -623,3 +625,4 @@ void HdlcInterface::HandleHdlcFrame(otError aError)
 
 } // namespace PosixApp
 } // namespace ot
+#endif // OPENTHREAD_POSIX_NCP_UART_ENABLE

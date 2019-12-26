@@ -28,82 +28,44 @@
 
 /**
  * @file
- *   This file includes definitions for the spinel interface to Radio Co-processor (RCP)
- *
+ *   This file includes definitions for the SPI interface to radio (RCP).
  */
 
-#ifndef POSIX_APP_SPINEL_INTERFACE_HPP_
-#define POSIX_APP_SPINEL_INTERFACE_HPP_
+#ifndef POSIX_APP_SPI_INTERFACE_HPP_
+#define POSIX_APP_SPI_INTERFACE_HPP_
+
+#include "spinel_interface.hpp"
+#include "ncp/hdlc.hpp"
 
 #include <openthread-system.h>
 
-#include "ncp/hdlc.hpp"
+#if OPENTHREAD_POSIX_NCP_SPI_ENABLE
+
+#include "ncp/ncp_spi.hpp"
 
 namespace ot {
 namespace PosixApp {
 
-class SpinelInterface
+/**
+ * This class defines an SPI interface to the Radio Co-processor (RCP)
+ *
+ */
+class SpiInterface : public SpinelInterface
 {
 public:
-    enum
-    {
-        kMaxWaitTime  = 2000, ///< Maximum wait time in Milliseconds for socket to become writable (see `SendFrame`).
-        kMaxFrameSize = 2048, ///< Maximum frame size (number of bytes).
-    };
-
-    /**
-     * This type defines a receive frame buffer to store received spinel frame(s).
-     *
-     * @note The receive frame buffer is an `Hdlc::MultiFrameBuffer` and therefore it is capable of storing multiple
-     * frames in a FIFO queue manner.
-     *
-     */
-    typedef Hdlc::MultiFrameBuffer<kMaxFrameSize> RxFrameBuffer;
-
-    /**
-     * This class defines the callbacks provided by `SpinelInterface` to its owner/user.
-     *
-     */
-    class Callbacks
-    {
-    public:
-        /**
-         * This callback is invoked to notify owner/user of `SpinelInterface` of a received spinel frame.
-         *
-         * The newly received frame is available in `RxFrameBuffer` from `SpinelInterface::GetRxFrameBuffer()`.
-         * User can read and process the frame. The callback is expected to either discard the new frame using
-         * `RxFrameBuffer::DiscardFrame()` or save the frame using `RxFrameBuffer::SaveFrame()` to be read and
-         * processed later.
-         *
-         */
-        virtual void HandleReceivedFrame(void) = 0;
-    };
-
     /**
      * This constructor initializes the object.
      *
+     * @param[in] aCallback   A reference to a `Callback` object.
+     *
      */
-    SpinelInterface()
-        : mRxFrameBuffer()
-    {
-    }
+    explicit SpiInterface(Callbacks &aCallbacks);
 
     /**
-     * This method gets the `RxFrameBuffer`.
-     *
-     * The receive frame buffer is an `Hdlc::MultiFrameBuffer` and therefore it is capable of storing multiple
-     * spinel frames in a FIFO queue manner. The `RxFrameBuffer` contains the received spinel frames.
-     *
-     * When during `Process()` or `WaitForFrame()` the `Callbacks::HandleReceivedFrame()` is invoked, the newly
-     * received spinel frame is available in the receive frame buffer. The callback is expected to either process
-     * and then discard the frame (using `RxFrameBuffer::DiscardFrame()` method) or save the frame
-     * (using `RxFrameBuffer::SaveFrame()` so that it can be read later.
-     *
-     * @returns A reference to receive frame buffer containing newly received spinel frame or previously saved spinel
-     *          frames.
+     * This destructor deinitializes the object.
      *
      */
-    RxFrameBuffer &GetRxFrameBuffer(void) { return mRxFrameBuffer; }
+    ~SpiInterface(void);
 
     /**
      * This method initializes the interface to the Radio Co-processor (RCP)
@@ -114,16 +76,16 @@ public:
      *
      * @retval OT_ERROR_NONE          The interface is initialized successfully
      * @retval OT_ERROR_ALREADY       The interface is already initialized.
-     * @retval OT_ERROR_INVALID_ARGS  The device or executable cannot be found or failed to open/run.
+     * @retval OT_ERROR_INVALID_ARGS  The UART device or executable cannot be found or failed to open/run.
      *
      */
-    virtual otError Init(const otPlatformConfig &aPlatformConfig) = 0;
+    otError Init(const otPlatformConfig &aPlatformConfig);
 
     /**
-     * This method deinitializes the interface to the Radio Co-processor (RCP).
+     * This method deinitializes the interface to the RCP.
      *
      */
-    virtual void Deinit(void) = 0;
+    void Deinit(void);
 
     /**
      * This method encodes and sends a spinel frame to Radio Co-processor (RCP) over the socket.
@@ -139,7 +101,7 @@ public:
      * @retval OT_ERROR_FAILED   Failed to send due to socket not becoming writable within `kMaxWaitTime`.
      *
      */
-    virtual otError SendFrame(const uint8_t *aFrame, uint16_t aLength) = 0;
+    otError SendFrame(const uint8_t *aFrame, uint16_t aLength);
 
     /**
      * This method waits for receiving part or all of spinel frame within specified interval.
@@ -150,7 +112,7 @@ public:
      * @retval OT_ERROR_RESPONSE_TIMEOUT No spinel frame is received within @p aTimeout.
      *
      */
-    virtual otError WaitForFrame(struct timeval &aTimeout) = 0;
+    otError WaitForFrame(struct timeval &aTimeout);
 
     /**
      * This method updates the file descriptor sets with file descriptors used by the radio driver.
@@ -161,7 +123,7 @@ public:
      * @param[inout]  aTimeout     A reference to the timeout.
      *
      */
-    virtual void UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout) = 0;
+    void UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout);
 
     /**
      * This method performs radio driver processing.
@@ -170,13 +132,87 @@ public:
      * @param[in]   aWriteFdSet     A reference to the write file descriptors.
      *
      */
-    virtual void Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet) = 0;
+    void Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet);
 
-protected:
-    RxFrameBuffer mRxFrameBuffer;
+private:
+    int     SetupGpioHandle(int aFd, uint8_t aLine, uint32_t aHandleFlags, const char *aLabel);
+    int     SetupGpioEvent(int aFd, uint8_t aLine, uint32_t aHandleFlags, uint32_t aEventFlags, const char *aLabel);
+    void    SetGpioValue(int aFd, uint8_t aValue);
+    uint8_t GetGpioValue(int aFd);
+
+    void ResetPinInit(const char *aCharDev, uint8_t aLine);
+    void IntPinInit(const char *aCharDev, uint8_t aLine);
+    void SpiDevInit(const char *aPath, uint8_t aMode, uint32_t aSpeed);
+    void TrigerReset(void);
+
+    uint8_t *GetRealRxFrameStart(void);
+    otError  DoSpiXfer(int len);
+    otError  PushPullSpi(void);
+
+    bool CheckInterrupt(void);
+    void HandleReceivedFrame(Ncp::SpiFrame &aSpiFrame);
+    void LogStats(void);
+    void LogError(const char * aString);
+    void LogBuffer(const char *aDesc, const uint8_t *aBuffer, int aLength, bool aForce);
+
+    enum
+    {
+        kSpiModeMax              = 3,
+        kSpiAlignAllowanceMax    = 16,
+        kSpiFrameHeaderSize      = 5,
+        kImmediateRetryTimeoutMs = 1,
+        kFastRetryTimeoutMs      = 10,
+        kSlowRetryTimeoutMs      = 33,
+        kImmediateRetryCount     = 5,
+        kFastRetryCount          = 15,
+        kDebugBytesPerLine       = 16, 
+        kGpioIntAssertState      = 0,
+        kGpioResetAssertState    = 0,
+    };
+
+    enum
+    {
+        kMsecPerSec      = 1000,
+        kUsecPerMsec     = 1000,
+        kSpiPollPeriodMs = (kMsecPerSec / 30),
+    };
+
+    Callbacks &mCallbacks;
+
+    int mSpiDevFd;
+    int mResetGpioValueFd;
+    int mIntGpioValueFd;
+
+    uint8_t  mSpiMode;
+    uint32_t mSpiSpeedHz;
+    uint32_t mSpiCsDelayUs;
+    uint8_t  mSpiAlignAllowance;
+    uint16_t mSpiSmallPacketSize;
+
+    uint64_t mSlaveResetCount;
+    uint64_t mSpiFrameCount;
+    uint64_t mSpiValidFrameCount;
+    uint64_t mSpiGarbageFrameCount;
+    uint64_t mSpiDuplexFrameCount;
+    uint64_t mSpiUnresponsiveFrameCount;
+    uint64_t mSpiRxFrameCount;
+    uint64_t mSpiRxFrameByteCount;
+    uint64_t mSpiTxFrameCount;
+    uint64_t mSpiTxFrameByteCount;
+
+    uint8_t  mSpiRxFrameBuffer[kMaxFrameSize + kSpiAlignAllowanceMax];
+
+    bool     mSpiTxIsReady;
+    uint16_t mSpiTxRefusedCount;
+    uint16_t mSpiTxPayloadSize;
+    uint8_t  mSpiTxFrameBuffer[kMaxFrameSize + kSpiAlignAllowanceMax];
+
+    bool     mDidPrintRateLimitLog;
+    uint16_t mSpiSlaveDataLen;
 };
 
 } // namespace PosixApp
 } // namespace ot
 
-#endif // POSIX_APP_SPINEL_INTERFACE_HPP_
+#endif // OPENTHREAD_POSIX_NCP_SPI_ENABLE
+#endif // POSIX_APP_SPI_INTERFACE_HPP_

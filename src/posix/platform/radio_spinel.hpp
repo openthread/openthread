@@ -36,7 +36,14 @@
 
 #include <openthread/platform/radio.h>
 
+#if OPENTHREAD_POSIX_NCP_UART_ENABLE
 #include "hdlc_interface.hpp"
+#endif
+
+#if OPENTHREAD_POSIX_NCP_SPI_ENABLE
+#include "spi_interface.hpp"
+#endif
+
 #include "spinel_interface.hpp"
 #include "ncp/ncp_config.h"
 #include "ncp/spinel.h"
@@ -522,7 +529,7 @@ public:
 private:
     enum
     {
-        kMaxSpinelFrame        = HdlcInterface::kMaxFrameSize,
+        kMaxSpinelFrame        = SpinelInterface::kMaxFrameSize,
         kMaxWaitTime           = 2000, ///< Max time to wait for response in milliseconds.
         kVersionStringSize     = 128,  ///< Max size of version string.
         kCapsBufferSize        = 100,  ///< Max buffer size used to store `SPINEL_PROP_CAPS` value.
@@ -629,7 +636,7 @@ private:
         return !(aKey == SPINEL_PROP_STREAM_RAW || aKey == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT);
     }
 
-    void HandleNotification(HdlcInterface::RxFrameBuffer &aFrameBuffer);
+    void HandleNotification(SpinelInterface::RxFrameBuffer &aFrameBuffer);
     void HandleNotification(const uint8_t *aBuffer, uint16_t aLength);
     void HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, uint16_t aLength);
 
@@ -643,7 +650,13 @@ private:
 
     otInstance *mInstance;
 
-    HdlcInterface mHdlcInterface;
+#if OPENTHREAD_POSIX_NCP_UART_ENABLE
+    HdlcInterface mSpinelInterface;
+#endif
+
+#if OPENTHREAD_POSIX_NCP_SPI_ENABLE
+    SpiInterface mSpinelInterface;
+#endif
 
     uint16_t          mCmdTidsInUse;    ///< Used transaction ids.
     spinel_tid_t      mCmdNextTid;      ///< Next available transaction id.

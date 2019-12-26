@@ -36,8 +36,9 @@
 
 #include "platform-config.h"
 #include "spinel_interface.hpp"
-
 #include "ncp/hdlc.hpp"
+
+#if OPENTHREAD_POSIX_NCP_UART_ENABLE
 
 namespace ot {
 namespace PosixApp {
@@ -207,4 +208,5 @@ private:
 } // namespace PosixApp
 } // namespace ot
 
+#endif // OPENTHREAD_POSIX_NCP_UART_ENABLE
 #endif // POSIX_APP_HDLC_INTERFACE_HPP_

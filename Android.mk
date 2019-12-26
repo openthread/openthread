@@ -99,6 +99,7 @@ LOCAL_CFLAGS                                                                := \
     -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1                          \
     -DOPENTHREAD_FTD=1                                                         \
     -DOPENTHREAD_POSIX=1                                                       \
+    -DOPENTHREAD_POSIX_NCP_UART_ENABLE=1                                       \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                             \
     $(OPENTHREAD_PROJECT_CFLAGS)                                               \
     $(NULL)
@@ -242,6 +243,7 @@ LOCAL_SRC_FILES                                          := \
     src/posix/platform/misc.c                               \
     src/posix/platform/radio_spinel.cpp                     \
     src/posix/platform/settings.cpp                         \
+    src/posix/platform/spi_interface.cpp                    \
     src/posix/platform/system.c                             \
     src/posix/platform/uart.c                               \
     third_party/mbedtls/repo/library/md.c                   \
@@ -299,6 +301,7 @@ LOCAL_CFLAGS                                                                := \
     -DOPENTHREAD_FTD=1                                                         \
     -DOPENTHREAD_POSIX=1                                                       \
     -DOPENTHREAD_POSIX_APP_TYPE=2                                              \
+    -DOPENTHREAD_POSIX_NCP_UART_ENABLE=1                                       \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                             \
     $(OPENTHREAD_PROJECT_CFLAGS)                                               \
     $(NULL)
@@ -350,6 +353,7 @@ LOCAL_CFLAGS                                                                := \
     -DOPENTHREAD_FTD=1                                                         \
     -DOPENTHREAD_POSIX=1                                                       \
     -DOPENTHREAD_POSIX_APP_TYPE=1                                              \
+    -DOPENTHREAD_POSIX_NCP_UART_ENABLE=1                                       \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                             \
     $(OPENTHREAD_PROJECT_CFLAGS)                                               \
     $(NULL)

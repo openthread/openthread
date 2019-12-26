@@ -126,7 +126,7 @@ case ${build_config} in
         echo "===================================================================================================="
         ./bootstrap || die
         ./configure                             \
-            CPPFLAGS="$cppflags_config -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1" \
+            CPPFLAGS="$cppflags_config -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1 -DOPENTHREAD_POSIX_NCP_UART_ENABLE=1" \
             --enable-posix-app                  \
             $configure_options || die
         make -j 8 || die
