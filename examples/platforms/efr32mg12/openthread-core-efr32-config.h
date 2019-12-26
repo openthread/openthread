@@ -93,7 +93,7 @@
  * Define to 1 if you want to enable software CSMA-CA backoff logic.
  *
  */
-#define OPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE 1
+#define OPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE 0
 
 /**
  * @def OPENTHREAD_CONFIG_SOFTWARE_ENERGY_SCAN_ENABLE
@@ -101,7 +101,7 @@
  * Define to 1 if you want to enable software energy scanning logic.
  *
  */
-#define OPENTHREAD_CONFIG_SOFTWARE_ENERGY_SCAN_ENABLE 1
+#define OPENTHREAD_CONFIG_SOFTWARE_ENERGY_SCAN_ENABLE 0
 
 /**
  * @def SETTINGS_CONFIG_BASE_ADDRESS
@@ -126,22 +126,6 @@
  *
  */
 #define SETTINGS_CONFIG_PAGE_NUM 4
-
-/**
- * @def RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
- *
- * The number of short source address table entries.
- *
- */
-#define RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM 6
-
-/**
- * @def RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
- *
- * The number of extended source address table entries.
- *
- */
-#define RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM 6
 
 /**
  * @def OPENTHREAD_CONFIG_NCP_UART_ENABLE
