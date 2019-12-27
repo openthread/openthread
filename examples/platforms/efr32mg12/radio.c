@@ -503,11 +503,8 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 
     utilsSoftSrcMatchSetPanId(aPanId);
 
-    for (uint8_t i = 0; i < EFR32_NUM_BAND_CONFIGS; i++)
-    {
-        status = RAIL_IEEE802154_SetPanId(gRailHandle, aPanId, 0);
-        assert(status == RAIL_STATUS_NO_ERROR);
-    }
+    status = RAIL_IEEE802154_SetPanId(gRailHandle, aPanId, 0);
+    assert(status == RAIL_STATUS_NO_ERROR);
 }
 
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aAddress)
@@ -519,11 +516,8 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aA
     otLogInfoPlat("ExtAddr=%X%X%X%X%X%X%X%X", aAddress->m8[7], aAddress->m8[6], aAddress->m8[5], aAddress->m8[4],
                   aAddress->m8[3], aAddress->m8[2], aAddress->m8[1], aAddress->m8[0]);
 
-    for (uint8_t i = 0; i < EFR32_NUM_BAND_CONFIGS; i++)
-    {
-        status = RAIL_IEEE802154_SetLongAddress(gRailHandle, (uint8_t *)aAddress->m8, 0);
-        assert(status == RAIL_STATUS_NO_ERROR);
-    }
+    status = RAIL_IEEE802154_SetLongAddress(gRailHandle, (uint8_t *)aAddress->m8, 0);
+    assert(status == RAIL_STATUS_NO_ERROR);
 }
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
@@ -534,11 +528,8 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
 
     otLogInfoPlat("ShortAddr=%X", aAddress);
 
-    for (uint8_t i = 0; i < EFR32_NUM_BAND_CONFIGS; i++)
-    {
-        status = RAIL_IEEE802154_SetShortAddress(gRailHandle, aAddress, 0);
-        assert(status == RAIL_STATUS_NO_ERROR);
-    }
+    status = RAIL_IEEE802154_SetShortAddress(gRailHandle, aAddress, 0);
+    assert(status == RAIL_STATUS_NO_ERROR);
 }
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
@@ -765,11 +756,8 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 
     sPromiscuous = aEnable;
 
-    for (uint8_t i = 0; i < EFR32_NUM_BAND_CONFIGS; i++)
-    {
-        status = RAIL_IEEE802154_SetPromiscuousMode(gRailHandle, aEnable);
-        assert(status == RAIL_STATUS_NO_ERROR);
-    }
+    status = RAIL_IEEE802154_SetPromiscuousMode(gRailHandle, aEnable);
+    assert(status == RAIL_STATUS_NO_ERROR);
 }
 
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
