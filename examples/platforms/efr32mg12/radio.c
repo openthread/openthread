@@ -311,25 +311,30 @@ static RAIL_Handle_t efr32RailInit(efr32CommonConfig *aCommonConfig)
 
 static void efr32RailConfigLoad(const efr32BandConfig *aBandConfig)
 {
-    RAIL_Status_t status;
-#if HAL_PA_2P4_LOWPOWER == 1
-    RAIL_TxPowerConfig_t txPowerConfig = {RAIL_TX_POWER_MODE_2P4_LP, HAL_PA_VOLTAGE, 10};
-#else
-    RAIL_TxPowerConfig_t txPowerConfig = {RAIL_TX_POWER_MODE_2P4_HP, HAL_PA_VOLTAGE, 10};
-#endif
-    if (aBandConfig->mChannelConfig != NULL)
+    RAIL_Status_t               status;
+    const RAIL_TxPowerConfig_t *pTxPowerConfig = NULL;
+
+    if (RADIO_CONFIG_915MHZ_OQPSK_SUPPORT && (aBandConfig->mChannelConfig != NULL))
     {
+        const RAIL_TxPowerConfig_t txPowerConfigSg = {RAIL_TX_POWER_MODE_SUBGIG, RADIO_CONFIG_SUBGIG_PA_VOLTAGE, 10};
+
         uint16_t firstChannel = RAIL_ConfigChannels(gRailHandle, aBandConfig->mChannelConfig, NULL);
         assert(firstChannel == aBandConfig->mChannelMin);
-
-        txPowerConfig.mode = RAIL_TX_POWER_MODE_SUBGIG;
+        pTxPowerConfig = &txPowerConfigSg;
     }
-    else
+    else if (RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT)
     {
+#if HAL_PA_2P4_LOWPOWER == 1
+        const RAIL_TxPowerConfig_t txPowerConfig2p4 = {RAIL_TX_POWER_MODE_2P4_LP, RADIO_CONFIG_2P4GHZ_PA_VOLTAGE, 10};
+#else
+        const RAIL_TxPowerConfig_t txPowerConfig2p4 = {RAIL_TX_POWER_MODE_2P4_HP, RADIO_CONFIG_2P4GHZ_PA_VOLTAGE, 10};
+#endif
         status = RAIL_IEEE802154_Config2p4GHzRadio(gRailHandle);
         assert(status == RAIL_STATUS_NO_ERROR);
+        pTxPowerConfig = &txPowerConfig2p4;
     }
-    status = RAIL_ConfigTxPower(gRailHandle, &txPowerConfig);
+
+    status = RAIL_ConfigTxPower(gRailHandle, pTxPowerConfig);
     assert(status == RAIL_STATUS_NO_ERROR);
 
     sCurrentBandConfig = aBandConfig;
@@ -463,14 +468,14 @@ static otError efr32StartEnergyScan(energyScanMode aMode, uint16_t aChannel, RAI
     otEXPECT(error == OT_ERROR_NONE);
 
 #if RADIO_CONFIG_DMP_SUPPORT
-    const RAIL_SchedulerInfo_t        scanSchedulerInfo  = {.priority        = RADIO_SCHEDULER_CHANNEL_SCAN_PRIORITY,
+    const RAIL_SchedulerInfo_t scanSchedulerInfo = {.priority        = RADIO_SCHEDULER_CHANNEL_SCAN_PRIORITY,
                                                     .slipTime        = RADIO_SCHEDULER_CHANNEL_SLIP_TIME,
                                                     .transactionTime = aAveragingTimeUs};
-    const RAIL_SchedulerInfo_t *const pScanSchedulerInfo = &scanSchedulerInfo;
+
+    status = RAIL_StartAverageRssi(gRailHandle, aChannel, aAveragingTimeUs, &scanSchedulerInfo);
 #else
-    const RAIL_SchedulerInfo_t *const pScanSchedulerInfo = NULL;
+    status = RAIL_StartAverageRssi(gRailHandle, aChannel, aAveragingTimeUs, NULL);
 #endif
-    status = RAIL_StartAverageRssi(gRailHandle, aChannel, aAveragingTimeUs, pScanSchedulerInfo);
     otEXPECT_ACTION(status == RAIL_STATUS_NO_ERROR, error = OT_ERROR_FAILED);
 
 exit:
@@ -595,11 +600,11 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
         .priority = RADIO_SCHEDULER_BACKGROUND_RX_PRIORITY,
         // sliptime/transaction time is not used for bg rx
     };
-    const RAIL_SchedulerInfo_t *const pBgRxSchedulerInfo = &bgRxSchedulerInfo;
+
+    status = RAIL_StartRx(gRailHandle, aChannel, &bgRxSchedulerInfo);
 #else
-    const RAIL_SchedulerInfo_t *const pBgRxSchedulerInfo = NULL;
+    status = RAIL_StartRx(gRailHandle, aChannel, NULL);
 #endif
-    status = RAIL_StartRx(gRailHandle, aChannel, pBgRxSchedulerInfo);
     otEXPECT_ACTION(status == RAIL_STATUS_NO_ERROR, error = OT_ERROR_FAILED);
 
     otLogInfoPlat("State=OT_RADIO_STATE_RECEIVE", NULL);
