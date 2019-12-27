@@ -49,7 +49,6 @@
 #include "em_cmu.h"
 #include "em_core.h"
 #include "em_system.h"
-#include "hal-config.h"
 #include "openthread-core-efr32-config.h"
 #include "pa_conversions_efr32.h"
 #include "platform-band.h"
@@ -318,7 +317,8 @@ static void efr32RailConfigLoad(const efr32BandConfig *aBandConfig)
 
     if (RADIO_CONFIG_915MHZ_OQPSK_SUPPORT && (aBandConfig->mChannelConfig != NULL))
     {
-        const RAIL_TxPowerConfig_t txPowerConfigSg = {RAIL_TX_POWER_MODE_SUBGIG, RADIO_CONFIG_SUBGIG_PA_VOLTAGE, 10};
+        const RAIL_TxPowerConfig_t txPowerConfigSg = {RAIL_TX_POWER_MODE_SUBGIG, RADIO_CONFIG_SUBGIG_PA_VOLTAGE,
+                                                      RADIO_CONFIG_SUBGIG_PA_RAMP};
 
         uint16_t firstChannel = RAIL_ConfigChannels(gRailHandle, aBandConfig->mChannelConfig, NULL);
         assert(firstChannel == aBandConfig->mChannelMin);
@@ -326,10 +326,12 @@ static void efr32RailConfigLoad(const efr32BandConfig *aBandConfig)
     }
     else if (RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT)
     {
-#if HAL_PA_2P4_LOWPOWER == 1
-        const RAIL_TxPowerConfig_t txPowerConfig2p4 = {RAIL_TX_POWER_MODE_2P4_LP, RADIO_CONFIG_2P4GHZ_PA_VOLTAGE, 10};
+#if RADIO_CONFIG_2P4GHZ_PA_LOWPOWER
+        const RAIL_TxPowerConfig_t txPowerConfig2p4 = {RAIL_TX_POWER_MODE_2P4_LP, RADIO_CONFIG_2P4GHZ_PA_VOLTAGE,
+                                                       RADIO_CONFIG_2P4GHZ_PA_RAMP};
 #else
-        const RAIL_TxPowerConfig_t txPowerConfig2p4 = {RAIL_TX_POWER_MODE_2P4_HP, RADIO_CONFIG_2P4GHZ_PA_VOLTAGE, 10};
+        const RAIL_TxPowerConfig_t txPowerConfig2p4 = {RAIL_TX_POWER_MODE_2P4_HP, RADIO_CONFIG_2P4GHZ_PA_VOLTAGE,
+                                                       RADIO_CONFIG_2P4GHZ_PA_RAMP};
 #endif
         status = RAIL_IEEE802154_Config2p4GHzRadio(gRailHandle);
         assert(status == RAIL_STATUS_NO_ERROR);
