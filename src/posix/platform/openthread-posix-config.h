@@ -48,6 +48,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME
+ *
+ * Defines the default interface name used for TREL UDP6 platform.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME
+#define OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME "trel"
+#endif
+
+/**
  * @def OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME
  *
  * Define socket basename used by POSIX app daemon.

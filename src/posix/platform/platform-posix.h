@@ -390,6 +390,41 @@ enum SocketBlockOption
 };
 
 /**
+ * This function initializes platform TREL UDP6 driver.
+ *
+ * @param[in]   aInterfaceName   The name of network interface.
+ *
+ */
+void platformTrelInit(const char *aInterfaceName);
+
+/**
+ * This function shuts down the platform TREL UDP6 platform driver.
+ *
+ */
+void platformTrelDeinit(void);
+
+/**
+ * This function updates the file descriptor sets with file descriptors used by the TREL driver.
+ *
+ * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
+ * @param[inout]  aWriteFdSet  A pointer to the write file descriptors.
+ * @param[inout]  aMaxFd       A pointer to the max file descriptor.
+ * @param[inout]  aTimeout     A pointer to the timeout.
+ *
+ */
+void platformTrelUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd, struct timeval *aTimeout);
+
+/**
+ * This function performs TREL driver processing.
+ *
+ * @param[in]   aInstance       A pointer to the OpenThread instance.
+ * @param[in]   aReadFdSet      A pointer to the read file descriptors.
+ * @param[in]   aWriteFdSet     A pointer to the write file descriptors.
+ *
+ */
+void platformTrelProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet);
+
+/**
  * This function creates a socket with SOCK_CLOEXEC flag set.
  *
  * @param[in]   aDomain       The communication domain.

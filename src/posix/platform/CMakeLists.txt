@@ -73,6 +73,7 @@ add_library(openthread-posix
     settings.cpp
     spi_interface.cpp
     system.cpp
+    trel_udp6.cpp
     uart.cpp
     udp.cpp
     virtual_time.cpp
