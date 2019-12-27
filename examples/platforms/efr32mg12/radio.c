@@ -170,6 +170,8 @@ RAIL_DECLARE_TX_POWER_VBAT_CURVES(piecewiseSegments, curvesSg, curves24Hp, curve
 
 static int8_t sTxPowerDbm = OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER;
 
+static int8_t sCcaThresholdDbm = -75; // default -75dBm energy detect threshold
+
 static efr32BandConfig *sCurrentBandConfig = NULL;
 
 static RAIL_Handle_t efr32RailInit(efr32CommonConfig *aCommonConfig)
@@ -587,6 +589,9 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         // time needed for CSMA/CA
         txSchedulerInfo.transactionTime += RADIO_TIMING_CSMA_OVERHEAD_US;
 #endif
+        csmaConfig.csmaTries    = aFrame->mInfo.mTxInfo.mMaxCsmaBackoffs;
+        csmaConfig.ccaThreshold = sCcaThresholdDbm;
+
         status = RAIL_StartCcaCsmaTx(gRailHandle, aFrame->mChannel, txOptions, &csmaConfig, &txSchedulerInfo);
     }
     else
@@ -751,6 +756,7 @@ static void processNextRxPacket(otInstance *aInstance)
         // Get the timestamp when the SFD was received
         assert(packetDetails.timeReceived.timePosition != RAIL_PACKET_TIME_INVALID);
         packetDetails.timeReceived.totalPacketBytes = length + 1;
+
         status = RAIL_GetRxTimeSyncWordEndAlt(gRailHandle, &packetDetails);
         assert(status == RAIL_STATUS_NO_ERROR);
         sReceiveFrame.mInfo.mRxInfo.mTimestamp = packetDetails.timeReceived.packetTime;
@@ -1031,17 +1037,23 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aThreshold);
 
-    return OT_ERROR_NOT_IMPLEMENTED;
+    otError error = OT_ERROR_NONE;
+    otEXPECT_ACTION(aThreshold != NULL, error = OT_ERROR_INVALID_ARGS);
+
+    *aThreshold = sCcaThresholdDbm;
+
+exit:
+    return error;
 }
 
 otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aThreshold);
 
-    return OT_ERROR_NOT_IMPLEMENTED;
+    sCcaThresholdDbm = aThreshold;
+
+    return OT_ERROR_NONE;
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
