@@ -256,6 +256,8 @@ static const RAIL_TxPowerCurves_t curvesSg[1] = {
 
 static int8_t sTxPowerDbm = OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER;
 
+static int8_t sCcaThresholdDbm = -75; // default -75dBm energy detect threshold
+
 static const efr32BandConfig *sCurrentBandConfig = NULL;
 
 #if RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
@@ -617,11 +619,10 @@ exit:
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    otError                 error      = OT_ERROR_NONE;
-    const RAIL_CsmaConfig_t csmaConfig = RAIL_CSMA_CONFIG_802_15_4_2003_2p4_GHz_OQPSK_CSMA;
-    RAIL_TxOptions_t        txOptions  = RAIL_TX_OPTIONS_DEFAULT;
-    RAIL_Status_t           status;
-    uint8_t                 frameLength;
+    otError          error     = OT_ERROR_NONE;
+    RAIL_TxOptions_t txOptions = RAIL_TX_OPTIONS_DEFAULT;
+    RAIL_Status_t    status;
+    uint8_t          frameLength;
 
     DEBUG_COUNTERS_INC(mRailPlatTxTriggered);
 
@@ -688,6 +689,9 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         // time needed for CSMA/CA
         txSchedulerInfo.transactionTime += RADIO_TIMING_CSMA_OVERHEAD_US;
 #endif
+        RAIL_CsmaConfig_t csmaConfig = RAIL_CSMA_CONFIG_802_15_4_2003_2p4_GHz_OQPSK_CSMA;
+        csmaConfig.csmaTries         = aFrame->mInfo.mTxInfo.mMaxCsmaBackoffs;
+        csmaConfig.ccaThreshold      = sCcaThresholdDbm;
         status = RAIL_StartCcaCsmaTx(gRailHandle, aFrame->mChannel, txOptions, &csmaConfig, pTxSchedulerInfo);
     }
     else
@@ -1191,17 +1195,23 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aThreshold);
 
-    return OT_ERROR_NOT_IMPLEMENTED;
+    otError error = OT_ERROR_NONE;
+    otEXPECT_ACTION(aThreshold != NULL, error = OT_ERROR_INVALID_ARGS);
+
+    *aThreshold = sCcaThresholdDbm;
+
+exit:
+    return error;
 }
 
 otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aThreshold);
 
-    return OT_ERROR_NOT_IMPLEMENTED;
+    sCcaThresholdDbm = aThreshold;
+
+    return OT_ERROR_NONE;
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
