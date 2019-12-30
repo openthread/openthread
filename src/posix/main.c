@@ -54,6 +54,9 @@
 
 #define OPENTHREAD_POSIX_APP_TYPE_NCP 1
 #define OPENTHREAD_POSIX_APP_TYPE_CLI 2
+#define MAX_SUPPORT_PROTOCOL 3
+#define MAX_SUPPORT_PARAMETER 3
+#define DEVICE_FILE_LEN 20
 
 #include <openthread/diag.h>
 #include <openthread/logging.h>
@@ -87,6 +90,17 @@ typedef struct PosixConfig
     bool             mPrintRadioVersion; ///< Whether to print radio firmware version.
     bool             mIsVerbose;         ///< Whether to print log to stderr.
 } PosixConfig;
+
+const char *sProtocol[]    = {"hdlc", "spi", "spinel", "uart", "forkpty"};
+const char *sConnectPara[] = {"baudrate", "parity", "flowcontrol", "forkpty-arg"};
+
+typedef struct RadioUrl
+{
+    const char *sProtocol[MAX_SUPPORT_PROTOCOL];
+    char        device[DEVICE_FILE_LEN];
+    const char *sParameter[MAX_SUPPORT_PARAMETER];
+    char        sValue[DEVICE_FILE_LEN];
+} RadioUrl;
 
 static jmp_buf gResetJump;
 
@@ -140,7 +154,10 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
 {
     fprintf(aStream,
             "Syntax:\n"
-            "    %s [Options] NodeId|Device|Command [DeviceConfig|CommandArgs]\n"
+            "    %s [Options] RadioURL\n"
+            "    RadioURL: URL of the device and method for Thread core and RCP communication.\n"
+            "              'protocols://device-file?connection-parameter1=value1&connection-parameter2=value2'\n"
+            "              e.g. 'spinel+hdlc+uart:///dev/ttyUSB0?baudrate=115200'\n"
             "Options:\n"
             "    -d  --debug-level             Debug level of logging.\n"
             "    -h  --help                    Display this usage information.\n"
@@ -179,9 +196,72 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
     exit(aExitCode);
 }
 
+static int ParseUrl(RadioUrl *info, char *url)
+{
+    char *deviceInfo = strstr(url, "://");
+    char *pStart     = url;
+    char *pEnd       = NULL;
+    char *pMid       = NULL;
+    int   i          = 0;
+    int   j          = 0;
+    int   cProtocol  = sizeof(sProtocol) / sizeof(sProtocol[0]);
+    // int cParameter = sizeof(sConnectPara) / sizeof(sConnectPara[0]);
+    memset(info, 0, sizeof(RadioUrl));
+
+    if (!deviceInfo)
+    {
+        return -1;
+    }
+
+    while (pEnd != deviceInfo)
+    {
+        pEnd = strstr(pStart, "+");
+        if (!pEnd)
+        {
+            pEnd = deviceInfo;
+        }
+        for (i = 0; i < cProtocol; i++)
+        {
+            if (strncmp(pStart, sProtocol[i], (int)(pEnd - pStart)) == 0)
+            {
+                info->sProtocol[j] = sProtocol[i];
+                j++;
+            }
+        }
+
+        pStart = pEnd + 1;
+    }
+
+    pStart = deviceInfo + 3;
+    pEnd   = strstr(pStart, "?");
+    if (pEnd)
+    {
+        strncpy(info->device, pStart, pEnd - pStart);
+    }
+    else
+    {
+        return -1;
+    }
+
+    pStart = pEnd + 1;
+    while (pStart)
+    {
+        pEnd = strstr(pStart, "&");
+        pMid = strstr(pStart, "=");
+        if (!pEnd)
+        {
+            strcpy(info->sValue, pMid + 1);
+            break;
+        }
+        pStart = pEnd + 1;
+    }
+    return 0;
+}
+
 static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
 {
     memset(aConfig, 0, sizeof(*aConfig));
+    RadioUrl aUrl;
 
     aConfig->mPlatformConfig.mSpeedUpFactor      = 1;
     aConfig->mPlatformConfig.mResetRadio         = true;
@@ -219,8 +299,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         case 'n':
             aConfig->mIsDryRun = true;
             break;
-        case 's':
-        {
+        case 's': {
             char *endptr = NULL;
 
             aConfig->mPlatformConfig.mSpeedUpFactor = (uint32_t)strtol(optarg, &endptr, 0);
@@ -283,16 +362,15 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         }
     }
 
-    if (optind >= aArgCount)
+    if (ParseUrl(&aUrl, aArgVector[optind]) < 0)
     {
         PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
     }
-
-    aConfig->mPlatformConfig.mRadioFile = aArgVector[optind];
-
-    if (optind + 1 < aArgCount)
+    aConfig->mPlatformConfig.mRadioFile   = aUrl.device;
+    aConfig->mPlatformConfig.mRadioConfig = aUrl.sValue;
+    if (optind >= aArgCount)
     {
-        aConfig->mPlatformConfig.mRadioConfig = aArgVector[optind + 1];
+        PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
     }
 }
 
@@ -319,6 +397,7 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
         exit(OT_EXIT_SUCCESS);
     }
 
+    otLoggingSetLevel(config.mLogLevel);
     return instance;
 }
 
