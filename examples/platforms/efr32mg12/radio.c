@@ -129,7 +129,7 @@ static otRadioFrame sReceiveFrame;
 static otError      sReceiveError;
 
 static otRadioFrame     sTransmitFrame;
-static uint8_t          sTransmitPsdu[IEEE802154_MAX_LENGTH];
+static uint8_t          sTransmitBuffer[RAIL_TX_FIFO_SIZE];
 static volatile otError sTransmitError;
 
 static efr32CommonConfig sCommonConfig;
@@ -304,9 +304,6 @@ static RAIL_Handle_t efr32RailInit(efr32CommonConfig *aCommonConfig)
     );
     assert(status == RAIL_STATUS_NO_ERROR);
 
-    uint16_t actualLenth = RAIL_SetTxFifo(handle, aCommonConfig->mRailTxFifo, 0, sizeof(aCommonConfig->mRailTxFifo));
-    assert(actualLenth == sizeof(aCommonConfig->mRailTxFifo));
-
     return handle;
 }
 
@@ -430,7 +427,7 @@ void efr32RadioInit(void)
     sReceiveFrame.mLength  = 0;
     sReceiveFrame.mPsdu    = sReceivePsdu;
     sTransmitFrame.mLength = 0;
-    sTransmitFrame.mPsdu   = sTransmitPsdu;
+    sTransmitFrame.mPsdu   = sTransmitBuffer + 1;
 
     memset(sAckedWithFPFifo, 0, sizeof(sAckedWithFPFifo));
     sAckedWithFPWriteIndex = 0;
@@ -624,7 +621,6 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     otError          error     = OT_ERROR_NONE;
     RAIL_TxOptions_t txOptions = RAIL_TX_OPTIONS_DEFAULT;
     RAIL_Status_t    status;
-    uint8_t          frameLength;
 
     DEBUG_COUNTERS_INC(mRailPlatTxTriggered);
 
@@ -640,9 +636,8 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     sTransmitError = OT_ERROR_NONE;
     sTransmitBusy  = true;
 
-    frameLength = (uint8_t)aFrame->mLength;
-    RAIL_WriteTxFifo(gRailHandle, &frameLength, sizeof frameLength, true);
-    RAIL_WriteTxFifo(gRailHandle, aFrame->mPsdu, frameLength - 2, false);
+    sTransmitBuffer[0] = (uint8_t)aFrame->mLength;
+    RAIL_SetTxFifo(gRailHandle, sTransmitBuffer, aFrame->mLength - 1, sizeof(sTransmitBuffer));
 
 #if RADIO_CONFIG_DMP_SUPPORT
     RAIL_SchedulerInfo_t txSchedulerInfo = {

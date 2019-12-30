@@ -41,6 +41,7 @@
 #include "rail_config.h"
 #include "rail_ieee802154.h"
 
+// must be 2 power between 64 and 4096, and bigger than OT_RADIO_FRAME_MAX_SIZE
 #define RAIL_TX_FIFO_SIZE (OT_RADIO_FRAME_MAX_SIZE + 1)
 
 #if RADIO_CONFIG_DMP_SUPPORT
@@ -92,8 +93,6 @@ typedef struct efr32CommonConfig
 #if RADIO_CONFIG_DMP_SUPPORT
     RAILSched_Config_t railSchedState;
 #endif
-    uint8_t
-        mRailTxFifo[RAIL_TX_FIFO_SIZE]; // must be 2 power between 64 and 4096, and bigger than OT_RADIO_FRAME_MAX_SIZE
 } efr32CommonConfig;
 
 typedef struct efr32BandConfig
