@@ -36,15 +36,18 @@
 
 #include "openthread-core-config.h"
 
+#include <stdbool.h>
 #include <stdint.h>
 
-#include "utils/wrap_stdbool.h"
-
 #include <openthread/error.h>
+#include <openthread/heap.h>
 #include <openthread/platform/logging.h>
 
 #include "common/random_manager.hpp"
+#include "common/tasklet.hpp"
+#include "common/timer.hpp"
 #include "diags/factory_diags.hpp"
+#include "radio/radio.hpp"
 
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 #include "common/message.hpp"
@@ -165,7 +168,7 @@ public:
      *
      */
     otLogLevel GetLogLevel(void) const
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
     {
         return mLogLevel;
     }
@@ -175,7 +178,7 @@ public:
     }
 #endif
 
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
     /**
      * This method sets the log level.
      *
@@ -249,7 +252,30 @@ public:
      */
     void InvokeEnergyScanCallback(otEnergyScanResult *aResult) const;
 
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+    void HeapFree(void *aPointer)
+    {
+        assert(mFree != NULL);
+
+        mFree(aPointer);
+    }
+
+    void *HeapCAlloc(size_t aCount, size_t aSize)
+    {
+        assert(mCAlloc != NULL);
+
+        return mCAlloc(aCount, aSize);
+    }
+
+    static void HeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
+    {
+        mFree   = aFree;
+        mCAlloc = aCAlloc;
+    }
+#elif !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    void  HeapFree(void *aPointer) { mHeap.Free(aPointer); }
+    void *HeapCAlloc(size_t aCount, size_t aSize) { return mHeap.CAlloc(aCount, aSize); }
+
     /**
      * This method returns a reference to the Heap object.
      *
@@ -257,7 +283,7 @@ public:
      *
      */
     Utils::Heap &GetHeap(void) { return mHeap; }
-#endif
+#endif // OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     /**
@@ -315,8 +341,11 @@ private:
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     // RandomManager is initialized before other objects. Note that it
     // requires MbedTls which itself may use Heap.
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    Utils::Heap mHeap;
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+    static otHeapFreeFn   mFree;
+    static otHeapCAllocFn mCAlloc;
+#elif !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    Utils::Heap  mHeap;
 #endif
     Crypto::MbedTls mMbedTls;
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -369,7 +398,7 @@ private:
     Mac::LinkRaw mLinkRaw;
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
     otLogLevel mLogLevel;
 #endif
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION

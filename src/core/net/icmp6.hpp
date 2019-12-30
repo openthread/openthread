@@ -39,6 +39,7 @@
 #include <openthread/icmp6.h>
 
 #include "common/encoding.hpp"
+#include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "net/ip6_headers.hpp"
 
@@ -83,9 +84,11 @@ public:
      */
     enum Type
     {
-        kTypeDstUnreach  = OT_ICMP6_TYPE_DST_UNREACH,  ///< Destination Unreachable
-        kTypeEchoRequest = OT_ICMP6_TYPE_ECHO_REQUEST, ///< Echo Request
-        kTypeEchoReply   = OT_ICMP6_TYPE_ECHO_REPLY,   ///< Echo Reply
+        kTypeDstUnreach   = OT_ICMP6_TYPE_DST_UNREACH,   ///< Destination Unreachable
+        kTypePacketToBig  = OT_ICMP6_TYPE_PACKET_TO_BIG, ///< Packet To Big
+        kTypeTimeExceeded = OT_ICMP6_TYPE_TIME_EXCEEDED, ///< Time Exceeded
+        kTypeEchoRequest  = OT_ICMP6_TYPE_ECHO_REQUEST,  ///< Echo Request
+        kTypeEchoReply    = OT_ICMP6_TYPE_ECHO_REPLY,    ///< Echo Reply
     };
 
     /**
@@ -95,6 +98,7 @@ public:
     enum Code
     {
         kCodeDstUnreachNoRoute = OT_ICMP6_CODE_DST_UNREACH_NO_ROUTE, ///< Destination Unreachable No Route
+        kCodeFragmReasTimeEx   = OT_ICMP6_CODE_FRAGM_REAS_TIME_EX,   ///< Fragment Reassembly Time Exceeded
     };
 
     /**
@@ -198,7 +202,7 @@ public:
  * This class implements ICMPv6 message handlers.
  *
  */
-class IcmpHandler : public otIcmp6Handler
+class IcmpHandler : public otIcmp6Handler, public LinkedListEntry<IcmpHandler>
 {
     friend class Icmp;
 
@@ -222,8 +226,6 @@ private:
     {
         mReceiveCallback(mContext, &aMessage, &aMessageInfo, &aIcmp6Header);
     }
-
-    IcmpHandler *GetNext(void) { return static_cast<IcmpHandler *>(mNext); }
 };
 
 /**
@@ -344,7 +346,7 @@ public:
 private:
     otError HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo);
 
-    IcmpHandler *mHandlers;
+    LinkedList<IcmpHandler> mHandlers;
 
     uint16_t        mEchoSequence;
     otIcmp6EchoMode mEchoMode;

@@ -87,6 +87,7 @@
 #endif
   .extern _vectors
   .extern nRFInitialize
+  .global afterInitialize
 
   .section .init, "ax"
   .thumb_func
@@ -101,8 +102,8 @@
 Reset_Handler:
 
   /* Perform prestart tasks. */
-  ldr r0, =nRFInitialize
-  blx r0
+  b nRFInitialize
+afterInitialize:
   
 #ifndef NO_STACK_INIT
   /* Initialise main stack */

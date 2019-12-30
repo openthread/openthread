@@ -56,6 +56,10 @@
 #define FILE_NAME __FILE__
 #endif
 
+#ifdef assert
+#undef assert
+#endif
+
 #define assert(cond)                               \
     do                                             \
     {                                              \
@@ -69,6 +73,10 @@
     } while (0)
 
 #else
+
+#ifdef assert
+#undef assert
+#endif
 
 #define assert(cond)  \
     do                \

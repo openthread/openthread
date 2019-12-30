@@ -57,11 +57,11 @@ Dhcp6Server::Dhcp6Server(Instance &aInstance)
 
 otError Dhcp6Server::UpdateService(void)
 {
-    otError               error  = OT_ERROR_NONE;
-    uint16_t              rloc16 = Get<Mle::MleRouter>().GetRloc16();
-    otNetworkDataIterator iterator;
-    otBorderRouterConfig  config;
-    Lowpan::Context       lowpanContext;
+    otError                         error  = OT_ERROR_NONE;
+    uint16_t                        rloc16 = Get<Mle::MleRouter>().GetRloc16();
+    NetworkData::Iterator           iterator;
+    NetworkData::OnMeshPrefixConfig config;
+    Lowpan::Context                 lowpanContext;
 
     // remove dhcp agent aloc and prefix delegation
     for (int i = 0; i < OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES; i++)
@@ -73,9 +73,9 @@ otError Dhcp6Server::UpdateService(void)
             continue;
         }
 
-        iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+        iterator = NetworkData::kIteratorInit;
 
-        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(&iterator, rloc16, &config) == OT_ERROR_NONE)
+        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, rloc16, config) == OT_ERROR_NONE)
         {
             if (!config.mDhcp)
             {
@@ -100,9 +100,9 @@ otError Dhcp6Server::UpdateService(void)
     }
 
     // add dhcp agent aloc and prefix delegation
-    iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    iterator = NetworkData::kIteratorInit;
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(&iterator, rloc16, &config) == OT_ERROR_NONE)
+    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, rloc16, config) == OT_ERROR_NONE)
     {
         if (!config.mDhcp)
         {

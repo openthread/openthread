@@ -98,12 +98,24 @@ static void UpdateUnicast(otInstance *aInstance, const otIp6Address &aAddress, u
     ifr6.ifr6_ifindex   = static_cast<int>(sTunIndex);
     ifr6.ifr6_prefixlen = aPrefixLength;
 
-    VerifyOrExit(ioctl(sIpFd, (aIsAdded ? SIOCSIFADDR : SIOCDIFADDR), &ifr6) == 0, perror("ioctl");
-                 error = OT_ERROR_FAILED);
+    if (aIsAdded)
+    {
+        VerifyOrDie(ioctl(sIpFd, SIOCSIFADDR, &ifr6) == 0, OT_EXIT_ERROR_ERRNO);
+    }
+    else
+    {
+        VerifyOrExit(ioctl(sIpFd, SIOCDIFADDR, &ifr6) == 0, perror("ioctl"); error = OT_ERROR_FAILED);
+    }
 
 exit:
-    SuccessOrDie(error);
-    otLogInfoPlat("%s: %s", __func__, otThreadErrorToString(error));
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnPlat("%s: %s", __func__, otThreadErrorToString(error));
+    }
+    else
+    {
+        otLogInfoPlat("%s: %s", __func__, otThreadErrorToString(error));
+    }
 }
 
 static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress, bool aIsAdded)
@@ -398,13 +410,8 @@ void platformNetifInit(otInstance *aInstance)
 
     VerifyOrExit(ioctl(sTunFd, TUNSETIFF, static_cast<void *>(&ifr)) == 0,
                  otLogCritPlat("Unable to configure tun device %s", OPENTHREAD_POSIX_TUN_DEVICE));
-#if defined(ARPHRD_6LOWPAN)
-    VerifyOrExit(ioctl(sTunFd, TUNSETLINK, ARPHRD_6LOWPAN) == 0,
+    VerifyOrExit(ioctl(sTunFd, TUNSETLINK, ARPHRD_VOID) == 0,
                  otLogCritPlat("Unable to set link type of tun device %s", OPENTHREAD_POSIX_TUN_DEVICE));
-#else
-    VerifyOrExit(ioctl(sTunFd, TUNSETLINK, ARPHRD_ETHER) == 0,
-                 otLogCritPlat("Unable to set link type of tun device %s", OPENTHREAD_POSIX_TUN_DEVICE));
-#endif
 
     sTunIndex = if_nametoindex(ifr.ifr_name);
     VerifyOrExit(sTunIndex > 0);

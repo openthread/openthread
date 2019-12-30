@@ -109,6 +109,20 @@
 #define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
 
 /**
+ * @def OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+ *
+ * Enable support for using interrupt-driven radio reception.  This allows
+ * for a single frame to be received whilst the CPU is busy processing some
+ * other code.
+ *
+ * To disable interrupts and just rely on polling, set this to 0.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+#define OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_CC2538_WITH_CC2592
  *
  * Enable support for the CC2592 range-extender front-end.

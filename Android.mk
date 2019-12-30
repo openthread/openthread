@@ -30,8 +30,11 @@ LOCAL_PATH := $(call my-dir)
 
 OPENTHREAD_DEFAULT_VERSION := $(shell cat $(LOCAL_PATH)/.default-version)
 OPENTHREAD_SOURCE_VERSION := $(shell git -C $(LOCAL_PATH) describe --always --match "[0-9].*" 2> /dev/null)
+OPENTHREAD_PROJECT_CFLAGS ?= -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"
 
 OPENTHREAD_COMMON_FLAGS                                          := \
+    -DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1                  \
+    -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                         \
     -DPACKAGE=\"openthread\"                                        \
     -DPACKAGE_BUGREPORT=\"openthread-devel@googlegroups.com\"       \
     -DPACKAGE_NAME=\"OPENTHREAD\"                                   \
@@ -77,6 +80,7 @@ LOCAL_MODULE := ot-core
 LOCAL_MODULE_TAGS := eng
 
 LOCAL_C_INCLUDES                                         := \
+    $(OPENTHREAD_PROJECT_INCLUDES)                          \
     $(LOCAL_PATH)/include                                   \
     $(LOCAL_PATH)/src                                       \
     $(LOCAL_PATH)/src/cli                                   \
@@ -96,6 +100,7 @@ LOCAL_CFLAGS                                                                := \
     -DOPENTHREAD_FTD=1                                                         \
     -DOPENTHREAD_POSIX=1                                                       \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                             \
+    $(OPENTHREAD_PROJECT_CFLAGS)                                               \
     $(NULL)
 
 LOCAL_CPPFLAGS                                                              := \
@@ -159,6 +164,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/mac/mac.cpp                                    \
     src/core/mac/mac_filter.cpp                             \
     src/core/mac/mac_frame.cpp                              \
+    src/core/mac/mac_types.cpp                              \
     src/core/mac/sub_mac.cpp                                \
     src/core/mac/sub_mac_callbacks.cpp                      \
     src/core/meshcop/announce_begin_client.cpp              \
@@ -263,15 +269,8 @@ LOCAL_SRC_FILES                                          := \
     third_party/mbedtls/repo/library/ssl_tls.c              \
     third_party/mbedtls/repo/library/aes.c                  \
     third_party/mbedtls/repo/library/ecp.c                  \
+    $(OPENTHREAD_PROJECT_SRC_FILES)                         \
     $(NULL)
-
-include $(OT_EXTRA_BUILD_CONFIG)
-
-ifeq ($(filter -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=%,$(LOCAL_CFLAGS)),)
-LOCAL_CFLAGS                                                                += \
-    -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"   \
-    $(NULL)
-endif
 
 include $(BUILD_STATIC_LIBRARY)
 
@@ -281,6 +280,7 @@ LOCAL_MODULE := ot-cli
 LOCAL_MODULE_TAGS := eng
 
 LOCAL_C_INCLUDES                                         := \
+    $(OPENTHREAD_PROJECT_INCLUDES)                          \
     $(LOCAL_PATH)/include                                   \
     $(LOCAL_PATH)/src                                       \
     $(LOCAL_PATH)/src/cli                                   \
@@ -300,6 +300,7 @@ LOCAL_CFLAGS                                                                := \
     -DOPENTHREAD_POSIX=1                                                       \
     -DOPENTHREAD_POSIX_APP_TYPE=2                                              \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                             \
+    $(OPENTHREAD_PROJECT_CFLAGS)                                               \
     $(NULL)
 
 LOCAL_CPPFLAGS                                                              := \
@@ -322,14 +323,6 @@ LOCAL_SRC_FILES                            := \
     src/posix/main.c                          \
     $(NULL)
 
-include $(OT_EXTRA_BUILD_CONFIG)
-
-ifeq ($(filter -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=%,$(LOCAL_CFLAGS)),)
-LOCAL_CFLAGS                                                                += \
-    -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"   \
-    $(NULL)
-endif
-
 LOCAL_STATIC_LIBRARIES = ot-core
 include $(BUILD_EXECUTABLE)
 
@@ -339,6 +332,7 @@ LOCAL_MODULE := ot-ncp
 LOCAL_MODULE_TAGS := eng
 
 LOCAL_C_INCLUDES                                         := \
+    $(OPENTHREAD_PROJECT_INCLUDES)                          \
     $(LOCAL_PATH)/include                                   \
     $(LOCAL_PATH)/src                                       \
     $(LOCAL_PATH)/src/core                                  \
@@ -357,6 +351,7 @@ LOCAL_CFLAGS                                                                := \
     -DOPENTHREAD_POSIX=1                                                       \
     -DOPENTHREAD_POSIX_APP_TYPE=1                                              \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                             \
+    $(OPENTHREAD_PROJECT_CFLAGS)                                               \
     $(NULL)
 
 LOCAL_CPPFLAGS                                                              := \
@@ -376,14 +371,6 @@ LOCAL_SRC_FILES                            := \
     src/ncp/ncp_uart.cpp                      \
     src/posix/main.c                          \
     $(NULL)
-
-include $(OT_EXTRA_BUILD_CONFIG)
-
-ifeq ($(filter -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=%,$(LOCAL_CFLAGS)),)
-LOCAL_CFLAGS                                                                += \
-    -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"   \
-    $(NULL)
-endif
 
 LOCAL_STATIC_LIBRARIES = ot-core
 include $(BUILD_EXECUTABLE)

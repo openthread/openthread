@@ -36,11 +36,12 @@
 
 #include "openthread-core-config.h"
 
+#include <stdint.h>
+
 #include <openthread/error.h>
 
 #include "common/debug.hpp"
 #include "common/random_manager.hpp"
-#include "utils/wrap_stdint.h"
 
 namespace ot {
 namespace Random {
@@ -159,7 +160,7 @@ inline uint32_t AddJitter(uint32_t aValue, uint16_t aJitter)
 
 } // namespace NonCrypto
 
-#ifndef OPENTHREAD_RADIO
+#if !OPENTHREAD_RADIO
 
 namespace Crypto {
 

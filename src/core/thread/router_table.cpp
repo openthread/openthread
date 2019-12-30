@@ -101,7 +101,7 @@ void RouterTable::ClearNeighbors(void)
     {
         Router &router = mRouters[index];
 
-        if (router.GetState() == Neighbor::kStateValid)
+        if (router.IsStateValid())
         {
             Get<Mle::MleRouter>().Signal(OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED, router);
         }
@@ -183,7 +183,7 @@ void RouterTable::UpdateAllocation(void)
 
             if (router.GetRouterId() != routerId)
             {
-                memset(&router, 0, sizeof(router));
+                router.Clear();
                 router.SetRloc16(Mle::Mle::GetRloc16(routerId));
                 router.SetNextHop(Mle::kInvalidRouterId);
             }
@@ -194,7 +194,7 @@ void RouterTable::UpdateAllocation(void)
     for (uint8_t index = mActiveRouterCount; index < Mle::kMaxRouters; index++)
     {
         Router &router = mRouters[index];
-        memset(&router, 0, sizeof(router));
+        router.Clear();
         router.SetRloc16(0xffff);
     }
 }
@@ -335,7 +335,7 @@ uint8_t RouterTable::GetActiveLinkCount(void) const
 
     for (const Router *router = GetFirstEntry(); router != NULL; router = GetNextEntry(router))
     {
-        if (router->GetState() == Neighbor::kStateValid)
+        if (router->IsStateValid())
         {
             activeLinks++;
         }
@@ -352,7 +352,7 @@ Router *RouterTable::GetNeighbor(uint16_t aRloc16)
 
     for (router = GetFirstEntry(); router != NULL; router = GetNextEntry(router))
     {
-        if (router->GetState() == Neighbor::kStateValid && router->GetRloc16() == aRloc16)
+        if (router->IsStateValid() && router->GetRloc16() == aRloc16)
         {
             ExitNow();
         }
@@ -370,7 +370,7 @@ Router *RouterTable::GetNeighbor(const Mac::ExtAddress &aExtAddress)
 
     for (router = GetFirstEntry(); router != NULL; router = GetNextEntry(router))
     {
-        if (router->GetState() == Neighbor::kStateValid && router->GetExtAddress() == aExtAddress)
+        if (router->IsStateValid() && router->GetExtAddress() == aExtAddress)
         {
             ExitNow();
         }
@@ -437,11 +437,11 @@ otError RouterTable::GetRouterInfo(uint16_t aRouterId, otRouterInfo &aRouterInfo
     aRouterInfo.mExtAddress      = router->GetExtAddress();
     aRouterInfo.mAllocated       = true;
     aRouterInfo.mNextHop         = router->GetNextHop();
-    aRouterInfo.mLinkEstablished = router->GetState() == Neighbor::kStateValid;
+    aRouterInfo.mLinkEstablished = router->IsStateValid();
     aRouterInfo.mPathCost        = router->GetCost();
     aRouterInfo.mLinkQualityIn   = router->GetLinkInfo().GetLinkQuality();
     aRouterInfo.mLinkQualityOut  = router->GetLinkQualityOut();
-    aRouterInfo.mAge = static_cast<uint8_t>(TimerMilli::MsecToSec(TimerMilli::Elapsed(router->GetLastHeard())));
+    aRouterInfo.mAge             = static_cast<uint8_t>(Time::MsecToSec(TimerMilli::GetNow() - router->GetLastHeard()));
 
 exit:
     return error;
@@ -454,8 +454,7 @@ Router *RouterTable::GetLeader(void)
 
 uint32_t RouterTable::GetLeaderAge(void) const
 {
-    return (mActiveRouterCount > 0) ? TimerMilli::MsecToSec(TimerMilli::Elapsed(mRouterIdSequenceLastUpdated))
-                                    : 0xffffffff;
+    return (mActiveRouterCount > 0) ? Time::MsecToSec(TimerMilli::GetNow() - mRouterIdSequenceLastUpdated) : 0xffffffff;
 }
 
 uint8_t RouterTable::GetNeighborCount(void) const
@@ -464,7 +463,7 @@ uint8_t RouterTable::GetNeighborCount(void) const
 
     for (const Router *router = GetFirstEntry(); router != NULL; router = GetNextEntry(router))
     {
-        if (router->GetState() == Neighbor::kStateValid)
+        if (router->IsStateValid())
         {
             count++;
         }
@@ -477,8 +476,7 @@ uint8_t RouterTable::GetLinkCost(Router &aRouter)
 {
     uint8_t rval = Mle::kMaxRouteCost;
 
-    VerifyOrExit(aRouter.GetRloc16() != Get<Mle::MleRouter>().GetRloc16() &&
-                 aRouter.GetState() == Neighbor::kStateValid);
+    VerifyOrExit(aRouter.GetRloc16() != Get<Mle::MleRouter>().GetRloc16() && aRouter.IsStateValid());
 
     rval = aRouter.GetLinkInfo().GetLinkQuality();
 

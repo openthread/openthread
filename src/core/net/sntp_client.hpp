@@ -60,13 +60,7 @@ public:
      * Default constructor for SNTP Header.
      *
      */
-    Header(void)
-    {
-        memset(this, 0, sizeof(*this));
-
-        // Set default value of flags field.
-        SetFlags(kNtpVersion << kVersionOffset | kModeClient << kModeOffset);
-    }
+    Header(void);
 
     /**
      * Defines supported SNTP modes.
@@ -421,7 +415,6 @@ private:
  * This class implements metadata required for SNTP retransmission.
  *
  */
-OT_TOOL_PACKED_BEGIN
 class QueryMetadata
 {
     friend class Client;
@@ -431,7 +424,7 @@ public:
      * Default constructor for the object.
      *
      */
-    QueryMetadata(void) { memset(this, 0, sizeof(*this)); }
+    QueryMetadata(void);
 
     /**
      * This constructor initializes the object with specific values.
@@ -440,12 +433,7 @@ public:
      * @param[in]  aContext  Context for the handler function.
      *
      */
-    QueryMetadata(otSntpResponseHandler aHandler, void *aContext)
-    {
-        memset(this, 0, sizeof(*this));
-        mResponseHandler = aHandler;
-        mResponseContext = aContext;
-    }
+    QueryMetadata(otSntpResponseHandler aHandler, void *aContext);
 
     /**
      * This method appends request data to the message.
@@ -484,36 +472,16 @@ public:
         return aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
     }
 
-    /**
-     * This method checks if the message shall be sent before the given time.
-     *
-     * @param[in]  aTime  A time to compare.
-     *
-     * @retval TRUE   If the message shall be sent before the given time.
-     * @retval FALSE  Otherwise.
-     */
-    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mTransmissionTime) > 0); }
-
-    /**
-     * This method checks if the message shall be sent after the given time.
-     *
-     * @param[in]  aTime  A time to compare.
-     *
-     * @retval TRUE   If the message shall be sent after the given time.
-     * @retval FALSE  Otherwise.
-     */
-    bool IsLater(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mTransmissionTime) < 0); }
-
 private:
     uint32_t              mTransmitTimestamp;   ///< Time at the client when the request departed for the server.
     otSntpResponseHandler mResponseHandler;     ///< A function pointer that is called on response reception.
     void *                mResponseContext;     ///< A pointer to arbitrary context information.
-    uint32_t              mTransmissionTime;    ///< Time when the timer should shoot for this message.
+    TimeMilli             mTransmissionTime;    ///< Time when the timer should shoot for this message.
     Ip6::Address          mSourceAddress;       ///< IPv6 address of the message source.
     Ip6::Address          mDestinationAddress;  ///< IPv6 address of the message destination.
     uint16_t              mDestinationPort;     ///< UDP port of the message destination.
     uint8_t               mRetransmissionCount; ///< Number of retransmissions.
-} OT_TOOL_PACKED_END;
+};
 
 /**
  * This class implements SNTP client.

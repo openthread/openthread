@@ -110,10 +110,12 @@ check_PROGRAMS                                                     += \
     test-hmac-sha256                                                  \
     test-ip6-address                                                  \
     test-link-quality                                                 \
+    test-linked-list                                                  \
     test-lowpan                                                       \
     test-mac-frame                                                    \
     test-message                                                      \
     test-message-queue                                                \
+    test-netif                                                        \
     test-network-data                                                 \
     test-priority-queue                                               \
     test-pskc                                                         \
@@ -158,58 +160,66 @@ TESTS_ENVIRONMENT                                                   = \
     top_srcdir='$(top_srcdir)'                                        \
     $(NULL)
 
+COMMON_SOURCES               = test_platform.cpp test_util.cpp
+
 # Source, compiler, and linker options for test programs.
 
 test_aes_LDADD               = $(COMMON_LDADD)
-test_aes_SOURCES             = test_platform.cpp test_aes.cpp
+test_aes_SOURCES             = $(COMMON_SOURCES) test_aes.cpp
 
 test_child_LDADD             = $(COMMON_LDADD)
-test_child_SOURCES           = test_platform.cpp test_child.cpp
+test_child_SOURCES           = $(COMMON_SOURCES) test_child.cpp
 
 test_child_table_LDADD       = $(COMMON_LDADD)
-test_child_table_SOURCES     = test_platform.cpp test_child_table.cpp
+test_child_table_SOURCES     = $(COMMON_SOURCES) test_child_table.cpp
 
 test_hdlc_LDADD              = $(COMMON_LDADD)
-test_hdlc_SOURCES            = test_platform.cpp test_hdlc.cpp
+test_hdlc_SOURCES            = $(COMMON_SOURCES) test_hdlc.cpp
 
 test_heap_LDADD              = $(COMMON_LDADD)
-test_heap_SOURCES            = test_platform.cpp test_heap.cpp
+test_heap_SOURCES            = $(COMMON_SOURCES) test_heap.cpp
 
 test_hmac_sha256_LDADD       = $(COMMON_LDADD)
-test_hmac_sha256_SOURCES     = test_platform.cpp test_hmac_sha256.cpp
+test_hmac_sha256_SOURCES     = $(COMMON_SOURCES) test_hmac_sha256.cpp
 
 test_ip6_address_LDADD       = $(COMMON_LDADD)
-test_ip6_address_SOURCES     = test_platform.cpp test_ip6_address.cpp
+test_ip6_address_SOURCES     = $(COMMON_SOURCES) test_ip6_address.cpp
 
 test_link_quality_LDADD      = $(COMMON_LDADD)
-test_link_quality_SOURCES    = test_platform.cpp test_link_quality.cpp
+test_link_quality_SOURCES    = $(COMMON_SOURCES) test_link_quality.cpp
+
+test_linked_list_LDADD       = $(COMMON_LDADD)
+test_linked_list_SOURCES     = $(COMMON_SOURCES) test_linked_list.cpp
 
 test_lowpan_LDADD            = $(COMMON_LDADD)
-test_lowpan_SOURCES          = test_platform.cpp test_lowpan.cpp test_util.cpp
+test_lowpan_SOURCES          = $(COMMON_SOURCES) test_lowpan.cpp
 
 test_mac_frame_LDADD         = $(COMMON_LDADD)
-test_mac_frame_SOURCES       = test_platform.cpp test_mac_frame.cpp
+test_mac_frame_SOURCES       = $(COMMON_SOURCES) test_mac_frame.cpp
 
 test_message_LDADD           = $(COMMON_LDADD)
-test_message_SOURCES         = test_platform.cpp test_message.cpp
+test_message_SOURCES         = $(COMMON_SOURCES) test_message.cpp
 
 test_message_queue_LDADD     = $(COMMON_LDADD)
-test_message_queue_SOURCES   = test_platform.cpp test_message_queue.cpp
+test_message_queue_SOURCES   = $(COMMON_SOURCES) test_message_queue.cpp
 
 test_ncp_buffer_LDADD        = $(COMMON_LDADD)
-test_ncp_buffer_SOURCES      = test_platform.cpp test_ncp_buffer.cpp
+test_ncp_buffer_SOURCES      = $(COMMON_SOURCES) test_ncp_buffer.cpp
+
+test_netif_LDADD             = $(COMMON_LDADD)
+test_netif_SOURCES           = $(COMMON_SOURCES) test_netif.cpp
 
 test_network_data_LDADD      = $(COMMON_LDADD)
-test_network_data_SOURCES    = test_platform.cpp test_network_data.cpp
+test_network_data_SOURCES    = $(COMMON_SOURCES) test_network_data.cpp
 
 test_priority_queue_LDADD    = $(COMMON_LDADD)
-test_priority_queue_SOURCES  = test_platform.cpp test_priority_queue.cpp
+test_priority_queue_SOURCES  = $(COMMON_SOURCES) test_priority_queue.cpp
 
 test_pskc_LDADD              = $(COMMON_LDADD)
-test_pskc_SOURCES            = test_platform.cpp test_pskc.cpp
+test_pskc_SOURCES            = $(COMMON_SOURCES) test_pskc.cpp
 
 test_string_LDADD            = $(COMMON_LDADD)
-test_string_SOURCES          = test_platform.cpp test_string.cpp
+test_string_SOURCES          = $(COMMON_SOURCES) test_string.cpp
 
 test_strlcat_LDADD           = $(COMMON_LDADD)
 test_strlcat_SOURCES         = test_strlcat.c
@@ -221,13 +231,13 @@ test_strnlen_LDADD           = $(COMMON_LDADD)
 test_strnlen_SOURCES         = test_strnlen.c
 
 test_spinel_decoder_LDADD    = $(COMMON_LDADD)
-test_spinel_decoder_SOURCES  = test_platform.cpp test_spinel_decoder.cpp
+test_spinel_decoder_SOURCES  = $(COMMON_SOURCES) test_spinel_decoder.cpp
 
 test_spinel_encoder_LDADD    = $(COMMON_LDADD)
-test_spinel_encoder_SOURCES  = test_platform.cpp test_spinel_encoder.cpp
+test_spinel_encoder_SOURCES  = $(COMMON_SOURCES) test_spinel_encoder.cpp
 
 test_timer_LDADD             = $(COMMON_LDADD)
-test_timer_SOURCES           = test_platform.cpp test_timer.cpp
+test_timer_SOURCES           = $(COMMON_SOURCES) test_timer.cpp
 
 test_toolchain_LDADD         = $(NULL)
 test_toolchain_SOURCES       = test_toolchain.cpp test_toolchain_c.c
@@ -242,11 +252,13 @@ PRETTY_FILES                                                        = \
     $(test_heap_SOURCES)                                              \
     $(test_hmac_sha256_SOURCES)                                       \
     $(test_link_quality_SOURCES)                                      \
+    $(test_linked_list_SOURCES)                                       \
     $(test_lowpan_SOURCES)                                            \
     $(test_mac_frame_SOURCES)                                         \
     $(test_message_queue_SOURCES)                                     \
     $(test_message_SOURCES)                                           \
     $(test_ncp_buffer_SOURCES)                                        \
+    $(test_netif_SOURCES)                                             \
     $(test_network_data_SOURCES)                                      \
     $(test_priority_queue_SOURCES)                                    \
     $(test_pskc_SOURCES)                                              \

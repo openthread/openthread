@@ -41,11 +41,15 @@
 #include <nrf_clock.h>
 
 #include "nrf_802154_config.h"
+#include "nrf_802154_utils.h"
 
 void nrf_802154_clock_init(void)
 {
     nrf_clock_lf_src_set(NRF_802154_CLOCK_LFCLK_SOURCE);
 
+#if !NRF_IS_IRQ_PRIORITY_ALLOWED(NRF_802154_CLOCK_IRQ_PRIORITY)
+#error NRF_802154_CLOCK_IRQ_PRIORITY value out of the allowed range.
+#endif
     NVIC_SetPriority(POWER_CLOCK_IRQn, NRF_802154_CLOCK_IRQ_PRIORITY);
     NVIC_ClearPendingIRQ(POWER_CLOCK_IRQn);
     NVIC_EnableIRQ(POWER_CLOCK_IRQn);

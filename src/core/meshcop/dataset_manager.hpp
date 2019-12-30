@@ -391,7 +391,8 @@ public:
     /**
      * This method generate a default Active Operational Dataset.
      *
-     * @retval OT_ERROR_NONE  Successfully generated an Active Operational Dataset.
+     * @retval OT_ERROR_NONE           Successfully generated an Active Operational Dataset.
+     * @retval OT_ERROR_ALREADY        A valid Active Operational Dataset already exists.
      * @retval OT_ERROR_INVALID_STATE  Device is not currently attached to a network.
      *
      */

@@ -42,7 +42,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "thread/mesh_forwarder.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
@@ -84,7 +84,7 @@ otError AddressResolver::GetEntry(uint8_t aIndex, otEidCacheEntry &aEntry) const
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aIndex < kCacheEntries, error = OT_ERROR_INVALID_ARGS);
-    memcpy(&aEntry.mTarget, &mCache[aIndex].mTarget, sizeof(aEntry.mTarget));
+    aEntry.mTarget = mCache[aIndex].mTarget;
     aEntry.mRloc16 = mCache[aIndex].mRloc16;
     aEntry.mAge    = mCache[aIndex].mAge;
     aEntry.mValid  = mCache[aIndex].mState == Cache::kStateCached;
@@ -112,6 +112,20 @@ void AddressResolver::Remove(uint16_t aRloc16)
         {
             InvalidateCacheEntry(mCache[i], kReasonRemovingRloc16);
         }
+    }
+}
+
+void AddressResolver::Remove(const Ip6::Address &aEid)
+{
+    for (int i = 0; i < kCacheEntries; i++)
+    {
+        if (mCache[i].mState == Cache::kStateInvalid || mCache[i].mTarget != aEid)
+        {
+            continue;
+        }
+
+        InvalidateCacheEntry(mCache[i], kReasonRemovingEid);
+        break;
     }
 }
 
@@ -174,6 +188,10 @@ const char *AddressResolver::ConvertInvalidationReasonToString(InvalidationReaso
     case kReasonEvictingForNewEntry:
         str = "evicting for new entry";
         break;
+
+    case kReasonRemovingEid:
+        str = "removing eid";
+        break;
     }
 
     return str;
@@ -212,8 +230,10 @@ void AddressResolver::InvalidateCacheEntry(Cache &aEntry, InvalidationReason aRe
     aEntry.mState = Cache::kStateInvalid;
 }
 
-void AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
+otError AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
 {
+    otError error = OT_ERROR_NOT_FOUND;
+
     for (int i = 0; i < kCacheEntries; i++)
     {
         if (mCache[i].mState == Cache::kStateInvalid || mCache[i].mTarget != aEid)
@@ -240,11 +260,48 @@ void AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddre
             otLogNoteArp("Cache entry updated (snoop): %s, 0x%04x", aEid.ToString().AsCString(), aRloc16);
         }
 
-        ExitNow();
+        error = OT_ERROR_NONE;
     }
 
+    return error;
+}
+
+otError AddressResolver::AddCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
+{
+    otError error = OT_ERROR_NONE;
+    Cache * entry = NewCacheEntry();
+
+    VerifyOrExit(entry != NULL, error = OT_ERROR_NO_BUFS);
+
+    entry->mTarget   = aEid;
+    entry->mRloc16   = aRloc16;
+    entry->mTimeout  = 0;
+    entry->mFailures = 0;
+    entry->mState    = Cache::kStateCached;
+
+    MarkCacheEntryAsUsed(*entry);
+
 exit:
-    return;
+    return error;
+}
+
+void AddressResolver::RestartAddressQueries(void)
+{
+    for (int i = 0; i < kCacheEntries; i++)
+    {
+        Cache &entry = mCache[i];
+
+        if (entry.mState != Cache::kStateQuery)
+        {
+            continue;
+        }
+
+        SendAddressQuery(entry.mTarget);
+
+        entry.mTimeout      = kAddressQueryTimeout;
+        entry.mFailures     = 0;
+        entry.mRetryTimeout = kAddressQueryInitialRetryDelay;
+    }
 }
 
 otError AddressResolver::Resolve(const Ip6::Address &aEid, uint16_t &aRloc16)
@@ -473,7 +530,7 @@ otError AddressResolver::SendAddressError(const ThreadTargetTlv &      aTarget,
     }
     else
     {
-        memcpy(&messageInfo.GetPeerAddr(), aDestination, sizeof(messageInfo.GetPeerAddr()));
+        messageInfo.SetPeerAddr(*aDestination);
     }
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
@@ -540,10 +597,10 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
         }
     }
 
-    memcpy(&macAddr, mlIidTlv.GetIid(), sizeof(macAddr));
-    macAddr.m8[0] ^= 0x2;
+    macAddr.Set(mlIidTlv.GetIid());
+    macAddr.ToggleLocal();
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValid); !iter.IsDone(); iter++)
     {
         Child &child = *iter.GetChild();
 
@@ -559,7 +616,7 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
 
             if (child.RemoveIp6Address(GetInstance(), targetTlv.GetTarget()) == OT_ERROR_NONE)
             {
-                memset(&destination, 0, sizeof(destination));
+                destination.Clear();
                 destination.mFields.m16[0] = HostSwap16(0xfe80);
                 destination.SetIid(child.GetExtAddress());
 
@@ -609,7 +666,7 @@ void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::Mes
         ExitNow();
     }
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValid); !iter.IsDone(); iter++)
     {
         Child &child = *iter.GetChild();
 
@@ -621,7 +678,7 @@ void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::Mes
         if (child.HasIp6Address(GetInstance(), targetTlv.GetTarget()))
         {
             mlIidTlv.SetIid(child.GetExtAddress());
-            lastTransactionTimeTlv.SetTime(TimerMilli::Elapsed(child.GetLastHeard()));
+            lastTransactionTimeTlv.SetTime(TimerMilli::GetNow() - child.GetLastHeard());
             SendAddressQueryResponse(targetTlv, mlIidTlv, &lastTransactionTimeTlv, aMessageInfo.GetPeerAddr());
             ExitNow();
         }

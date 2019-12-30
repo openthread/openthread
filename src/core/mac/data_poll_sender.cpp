@@ -62,6 +62,13 @@ DataPollSender::DataPollSender(Instance &aInstance)
 {
 }
 
+const Neighbor &DataPollSender::GetParent(void) const
+{
+    const Neighbor &parentCandidate = Get<Mle::MleRouter>().GetParentCandidate();
+
+    return parentCandidate.IsStateValid() ? parentCandidate : Get<Mle::MleRouter>().GetParent();
+}
+
 otError DataPollSender::StartPolling(void)
 {
     otError error = OT_ERROR_NONE;
@@ -90,14 +97,12 @@ void DataPollSender::StopPolling(void)
 
 otError DataPollSender::SendDataPoll(void)
 {
-    otError   error;
-    Neighbor *parent;
+    otError error;
 
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(!Get<Mac::Mac>().GetRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
 
-    parent = Get<Mle::MleRouter>().GetParentCandidate();
-    VerifyOrExit((parent != NULL) && parent->IsStateValidOrRestoring(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(GetParent().IsStateValidOrRestoring(), error = OT_ERROR_INVALID_STATE);
 
     mTimer.Stop();
 
@@ -133,18 +138,20 @@ exit:
 
 otError DataPollSender::GetPollDestinationAddress(Mac::Address &aDest) const
 {
-    otError   error  = OT_ERROR_NONE;
-    Neighbor *parent = Get<Mle::MleRouter>().GetParentCandidate();
+    otError         error  = OT_ERROR_NONE;
+    const Neighbor &parent = GetParent();
 
-    VerifyOrExit((parent != NULL) && parent->IsStateValidOrRestoring(), error = OT_ERROR_ABORT);
+    VerifyOrExit(parent.IsStateValidOrRestoring(), error = OT_ERROR_ABORT);
 
-    if ((Get<Mac::Mac>().GetShortAddress() == Mac::kShortAddrInvalid) || (parent != Get<Mle::MleRouter>().GetParent()))
+    // Use extended address attaching to a new parent (i.e. parent is the parent candidate).
+    if ((Get<Mac::Mac>().GetShortAddress() == Mac::kShortAddrInvalid) ||
+        (&parent == &Get<Mle::MleRouter>().GetParentCandidate()))
     {
-        aDest.SetExtended(parent->GetExtAddress());
+        aDest.SetExtended(parent.GetExtAddress());
     }
     else
     {
-        aDest.SetShort(parent->GetRloc16());
+        aDest.SetShort(parent.GetRloc16());
     }
 
 exit:
@@ -182,15 +189,11 @@ exit:
 
 uint32_t DataPollSender::GetKeepAlivePollPeriod(void) const
 {
-    uint32_t period = 0;
+    uint32_t period = GetDefaultPollPeriod();
 
     if (mExternalPollPeriod != 0)
     {
-        period = mExternalPollPeriod;
-    }
-    else
-    {
-        period = GetDefaultPollPeriod();
+        UpdateIfLarger(period, mExternalPollPeriod);
     }
 
     return period;
@@ -203,10 +206,13 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, otError aError)
 
     VerifyOrExit(mEnabled);
 
-    aFrame.GetDstAddr(macDest);
-    Get<MeshForwarder>().UpdateNeighborOnSentFrame(aFrame, aError, macDest);
+    if (!aFrame.IsEmpty())
+    {
+        aFrame.GetDstAddr(macDest);
+        Get<MeshForwarder>().UpdateNeighborOnSentFrame(aFrame, aError, macDest);
+    }
 
-    if (Get<Mle::MleRouter>().GetParentCandidate()->GetState() == Neighbor::kStateInvalid)
+    if (GetParent().IsStateInvalid())
     {
         StopPolling();
         Get<Mle::MleRouter>().BecomeDetached();
@@ -390,8 +396,8 @@ exit:
 
 void DataPollSender::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
 {
-    uint32_t now;
-    uint32_t oldPeriod = mPollPeriod;
+    TimeMilli now;
+    uint32_t  oldPeriod = mPollPeriod;
 
     if (aPollPeriodSelector == kRecalculatePollPeriod)
     {
@@ -412,7 +418,8 @@ void DataPollSender::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
             // a switch to a shorter poll interval, the first data poll
             // will not be sent too quickly (and possibly before the
             // response is available/prepared on the parent node).
-            if (TimerScheduler::IsStrictlyBefore(mTimerStartTime + mPollPeriod, now + kMinPollPeriod))
+
+            if (mTimerStartTime + mPollPeriod < now + kMinPollPeriod)
             {
                 mTimer.StartAt(now, kMinPollPeriod);
             }
@@ -430,47 +437,41 @@ void DataPollSender::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
     }
 }
 
+void DataPollSender::UpdateIfLarger(uint32_t &aPeriod, uint32_t aNewPeriod)
+{
+    if (aPeriod > aNewPeriod)
+    {
+        aPeriod = aNewPeriod;
+    }
+}
+
 uint32_t DataPollSender::CalculatePollPeriod(void) const
 {
-    uint32_t period = 0;
+    uint32_t period = GetDefaultPollPeriod();
 
     if (mAttachMode)
     {
-        period = kAttachDataPollPeriod;
+        UpdateIfLarger(period, kAttachDataPollPeriod);
     }
 
     if (mRetxMode)
     {
-        if ((period == 0) || (period > kRetxPollPeriod))
-        {
-            period = kRetxPollPeriod;
-        }
+        UpdateIfLarger(period, kRetxPollPeriod);
     }
 
     if (mRemainingFastPolls != 0)
     {
-        if ((period == 0) || (period > kFastPollPeriod))
-        {
-            period = kFastPollPeriod;
-        }
+        UpdateIfLarger(period, kFastPollPeriod);
     }
 
     if (mExternalPollPeriod != 0)
     {
-        if ((period == 0) || (period > mExternalPollPeriod))
-        {
-            period = mExternalPollPeriod;
-        }
+        UpdateIfLarger(period, mExternalPollPeriod);
     }
 
     if (period == 0)
     {
-        period = GetDefaultPollPeriod();
-
-        if (period == 0)
-        {
-            period = kMinPollPeriod;
-        }
+        period = kMinPollPeriod;
     }
 
     return period;
@@ -483,7 +484,7 @@ void DataPollSender::HandlePollTimer(Timer &aTimer)
 
 uint32_t DataPollSender::GetDefaultPollPeriod(void) const
 {
-    return TimerMilli::SecToMsec(Get<Mle::MleRouter>().GetTimeout()) -
+    return Time::SecToMsec(Get<Mle::MleRouter>().GetTimeout()) -
            static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;
 }
 

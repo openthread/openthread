@@ -332,6 +332,11 @@ bool nrf_802154_frame_parser_ie_present_bit_is_set(const uint8_t * p_frame)
     return (p_frame[IE_PRESENT_OFFSET] & IE_PRESENT_BIT) ? true : false;
 }
 
+bool nrf_802154_frame_parser_ar_bit_is_set(const uint8_t * p_frame)
+{
+    return (p_frame[ACK_REQUEST_OFFSET] & ACK_REQUEST_BIT) ? true : false;
+}
+
 /***************************************************************************************************
  * @section Offset functions
  **************************************************************************************************/

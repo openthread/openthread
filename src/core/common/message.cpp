@@ -404,7 +404,11 @@ exit:
 
 otError Message::AppendTlv(const Tlv &aTlv)
 {
-    return Append(&aTlv, aTlv.GetSize());
+    uint32_t size = aTlv.GetSize();
+
+    assert(size <= UINT16_MAX);
+
+    return Append(&aTlv, static_cast<uint16_t>(size));
 }
 
 otError Message::Prepend(const void *aBuf, uint16_t aLength)
@@ -665,19 +669,19 @@ exit:
     return messageCopy;
 }
 
-bool Message::GetChildMask(uint8_t aChildIndex) const
+bool Message::GetChildMask(uint16_t aChildIndex) const
 {
     assert(aChildIndex < sizeof(mBuffer.mHead.mInfo.mChildMask) * 8);
     return (mBuffer.mHead.mInfo.mChildMask[aChildIndex / 8] & (0x80 >> (aChildIndex % 8))) != 0;
 }
 
-void Message::ClearChildMask(uint8_t aChildIndex)
+void Message::ClearChildMask(uint16_t aChildIndex)
 {
     assert(aChildIndex < sizeof(mBuffer.mHead.mInfo.mChildMask) * 8);
     mBuffer.mHead.mInfo.mChildMask[aChildIndex / 8] &= ~(0x80 >> (aChildIndex % 8));
 }
 
-void Message::SetChildMask(uint8_t aChildIndex)
+void Message::SetChildMask(uint16_t aChildIndex)
 {
     assert(aChildIndex < sizeof(mBuffer.mHead.mInfo.mChildMask) * 8);
     mBuffer.mHead.mInfo.mChildMask[aChildIndex / 8] |= 0x80 >> (aChildIndex % 8);

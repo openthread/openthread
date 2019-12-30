@@ -41,7 +41,6 @@
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "mac/mac.hpp"
-#include "mac/mac_frame.hpp"
 #include "net/netif.hpp"
 #include "thread/mesh_forwarder.hpp"
 #include "thread/mle_router.hpp"
@@ -147,21 +146,21 @@ void NetworkDiagnostic::HandleDiagnosticGetResponse(void *               aContex
                                                     otError              aResult)
 {
     static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetResponse(
-        *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
+        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
 }
 
-void NetworkDiagnostic::HandleDiagnosticGetResponse(Coap::Message &         aMessage,
-                                                    const Ip6::MessageInfo &aMessageInfo,
+void NetworkDiagnostic::HandleDiagnosticGetResponse(Coap::Message *         aMessage,
+                                                    const Ip6::MessageInfo *aMessageInfo,
                                                     otError                 aResult)
 {
     VerifyOrExit(aResult == OT_ERROR_NONE);
-    VerifyOrExit(aMessage.GetCode() == OT_COAP_CODE_CHANGED);
+    VerifyOrExit(aMessage && aMessage->GetCode() == OT_COAP_CODE_CHANGED);
 
     otLogInfoNetDiag("Received diagnostic get response");
 
     if (mReceiveDiagnosticGetCallback)
     {
-        mReceiveDiagnosticGetCallback(&aMessage, &aMessageInfo, mReceiveDiagnosticGetCallbackContext);
+        mReceiveDiagnosticGetCallback(aMessage, aMessageInfo, mReceiveDiagnosticGetCallbackContext);
     }
 
 exit:
@@ -224,20 +223,32 @@ exit:
 otError NetworkDiagnostic::AppendChildTable(Message &aMessage)
 {
     otError         error   = OT_ERROR_NONE;
-    uint8_t         count   = 0;
+    uint16_t        count   = 0;
     uint8_t         timeout = 0;
     ChildTableTlv   tlv;
     ChildTableEntry entry;
 
     tlv.Init();
 
-    count = Get<ChildTable>().GetNumChildren(ChildTable::kInStateValid);
-    tlv.SetLength(count * sizeof(ChildTableEntry));
+    count = Get<ChildTable>().GetNumChildren(Child::kInStateValid);
+
+    // The length of the Child Table TLV may exceed the outgoing link's MTU (1280B).
+    // As a workaround we limit the number of entries in the Child Table TLV,
+    // also to avoid using extended TLV format. The issue is processed by the
+    // Thread Group (SPEC-894).
+    if (count > (Tlv::kBaseTlvMaxLength / sizeof(ChildTableEntry)))
+    {
+        count = Tlv::kBaseTlvMaxLength / sizeof(ChildTableEntry);
+    }
+
+    tlv.SetLength(static_cast<uint8_t>(count * sizeof(ChildTableEntry)));
 
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(ChildTableTlv)));
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValid); !iter.IsDone(); iter++)
     {
+        VerifyOrExit(count--);
+
         Child &child = *iter.GetChild();
 
         timeout = 0;
@@ -330,7 +341,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             {
                 TimeoutTlv tlv;
                 tlv.Init();
-                tlv.SetTimeout(TimerMilli::MsecToSec(Get<DataPollSender>().GetKeepAlivePollPeriod()));
+                tlv.SetTimeout(Get<Mle::MleRouter>().GetTimeout());
                 SuccessOrExit(error = aResponse.AppendTlv(tlv));
             }
 

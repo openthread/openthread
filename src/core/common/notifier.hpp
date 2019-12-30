@@ -36,13 +36,13 @@
 
 #include "openthread-core-config.h"
 
+#include <stdbool.h>
 #include <stdint.h>
-
-#include "utils/wrap_stdbool.h"
 
 #include <openthread/instance.h>
 #include <openthread/platform/toolchain.h>
 
+#include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"
 
@@ -80,9 +80,10 @@ public:
      * This class defines a `Notifier` callback instance.
      *
      */
-    class Callback : public OwnerLocator
+    class Callback : public OwnerLocator, public LinkedListEntry<Callback>
     {
         friend class Notifier;
+        friend class LinkedListEntry<Callback>;
 
     public:
         /**
@@ -177,6 +178,40 @@ public:
      */
     bool HasSignaled(otChangedFlags aFlags) const { return (mSignaledFlags & aFlags) == aFlags; }
 
+    /**
+     * This template method updates a variable of a type `Type` with a new value and signals the given changed flags.
+     *
+     * If the variable is already set to the same value, this method returns `OT_ERROR_ALREADY` and the changed flags
+     * is signaled using `SignalIfFirst()` (i.e. signal is scheduled only if the flag has not been signaled before).
+     *
+     * The template `Type` should support comparison operator `==` and assignment operator `=`.
+     *
+     * @param[inout] aVariable    A reference to the variable to update.
+     * @param[in]    aNewValue    The new value.
+     * @param[in]    aFlags       The changed flags to signal.
+     *
+     * @retval OT_ERROR_NONE      The variable was update successfully and @p aFlags was signaled.
+     * @retval OT_ERROR_ALREADY   The variable was already set to the same value.
+     *
+     */
+    template <typename Type> otError Update(Type &aVariable, const Type &aNewValue, otChangedFlags aFlags)
+    {
+        otError error = OT_ERROR_NONE;
+
+        if (aVariable == aNewValue)
+        {
+            SignalIfFirst(aFlags);
+            error = OT_ERROR_ALREADY;
+        }
+        else
+        {
+            aVariable = aNewValue;
+            Signal(aFlags);
+        }
+
+        return error;
+    }
+
 private:
     enum
     {
@@ -199,11 +234,11 @@ private:
     void        LogChangedFlags(otChangedFlags aFlags) const;
     const char *FlagToString(otChangedFlags aFlag) const;
 
-    otChangedFlags   mFlagsToSignal;
-    otChangedFlags   mSignaledFlags;
-    Tasklet          mTask;
-    Callback *       mCallbacks;
-    ExternalCallback mExternalCallbacks[kMaxExternalHandlers];
+    otChangedFlags       mFlagsToSignal;
+    otChangedFlags       mSignaledFlags;
+    Tasklet              mTask;
+    LinkedList<Callback> mCallbacks;
+    ExternalCallback     mExternalCallbacks[kMaxExternalHandlers];
 };
 
 /**

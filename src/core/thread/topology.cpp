@@ -41,12 +41,7 @@
 
 namespace ot {
 
-void Neighbor::GenerateChallenge(void)
-{
-    Random::NonCrypto::FillBuffer(mValidPending.mPending.mChallenge, sizeof(mValidPending.mPending.mChallenge));
-}
-
-bool Child::IsStateValidOrAttaching(void) const
+bool Neighbor::IsStateValidOrAttaching(void) const
 {
     bool rval = false;
 
@@ -67,6 +62,51 @@ bool Child::IsStateValidOrAttaching(void) const
     }
 
     return rval;
+}
+
+bool Neighbor::MatchesFilter(StateFilter aFilter) const
+{
+    bool matches = false;
+
+    switch (aFilter)
+    {
+    case kInStateValid:
+        matches = IsStateValid();
+        break;
+
+    case kInStateValidOrRestoring:
+        matches = IsStateValidOrRestoring();
+        break;
+
+    case kInStateChildIdRequest:
+        matches = IsStateChildIdRequest();
+        break;
+
+    case kInStateValidOrAttaching:
+        matches = IsStateValidOrAttaching();
+        break;
+
+    case kInStateAnyExceptInvalid:
+        matches = !IsStateInvalid();
+        break;
+
+    case kInStateAnyExceptValidOrRestoring:
+        matches = !IsStateValidOrRestoring();
+        break;
+    }
+
+    return matches;
+}
+
+void Neighbor::GenerateChallenge(void)
+{
+    Random::Crypto::FillBuffer(mValidPending.mPending.mChallenge, sizeof(mValidPending.mPending.mChallenge));
+}
+
+void Child::Clear(void)
+{
+    memset(reinterpret_cast<void *>(this), 0, sizeof(Child));
+    SetState(kStateInvalid);
 }
 
 void Child::ClearIp6Addresses(void)
@@ -237,7 +277,13 @@ exit:
 
 void Child::GenerateChallenge(void)
 {
-    Random::NonCrypto::FillBuffer(mAttachChallenge, sizeof(mAttachChallenge));
+    Random::Crypto::FillBuffer(mAttachChallenge, sizeof(mAttachChallenge));
+}
+
+void Router::Clear(void)
+{
+    memset(reinterpret_cast<void *>(this), 0, sizeof(Router));
+    SetState(kStateInvalid);
 }
 
 } // namespace ot

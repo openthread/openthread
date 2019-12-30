@@ -78,18 +78,29 @@ typedef enum
  * @brief Function for activating a DPPI task.
  *
  * @param[in] p_reg     Pointer to the structure of registers of the peripheral.
- * @param[in] dppi_task Task to activate.
+ * @param[in] dppi_task Task to be activated.
  */
 __STATIC_INLINE void nrf_dppi_task_trigger(NRF_DPPIC_Type * p_reg, nrf_dppi_task_t dppi_task);
+
+/**
+ * @brief Function for getting the address of the specified DPPI task register.
+ *
+ * @param[in] p_reg Pointer to the structure of registers of the peripheral.
+ * @param[in] task  Requested task.
+ *
+ * @return Address of the specified task register.
+ */
+__STATIC_INLINE uint32_t nrf_dppi_task_address_get(NRF_DPPIC_Type const * p_reg,
+                                                   nrf_dppi_task_t        task);
 
 /**
  * @brief Function for checking the state of a specific DPPI channel.
  *
  * @param[in] p_reg   Pointer to the structure of registers of the peripheral.
- * @param[in] channel Channel to check.
+ * @param[in] channel Channel to be checked.
  *
- * @retval true  If the channel is enabled.
- * @retval false If the channel is not enabled.
+ * @retval true  The channel is enabled.
+ * @retval false The channel is not enabled.
  */
 __STATIC_INLINE bool nrf_dppi_channel_check(NRF_DPPIC_Type const * p_reg, uint8_t channel);
 
@@ -200,12 +211,36 @@ __STATIC_INLINE void nrf_dppi_group_enable(NRF_DPPIC_Type *         p_reg,
 __STATIC_INLINE void nrf_dppi_group_disable(NRF_DPPIC_Type *         p_reg,
                                             nrf_dppi_channel_group_t group);
 
+/**
+ * @brief Function for getting the ENABLE task associated with the specified channel group.
+ *
+ * @param[in] index Channel group index.
+ *
+ * @return Requested ENABLE task.
+ */
+__STATIC_INLINE nrf_dppi_task_t nrf_dppi_group_enable_task_get(uint8_t index);
+
+/**
+ * @brief Function for getting the DISABLE task associated with the specified channel group.
+ *
+ * @param[in] index Channel group index.
+ *
+ * @return Requested DISABLE task.
+ */
+__STATIC_INLINE nrf_dppi_task_t nrf_dppi_group_disable_task_get(uint8_t index);
+
 
 #ifndef SUPPRESS_INLINE_IMPLEMENTATION
 
 __STATIC_INLINE void nrf_dppi_task_trigger(NRF_DPPIC_Type * p_reg, nrf_dppi_task_t dppi_task)
 {
     *((volatile uint32_t *) ((uint8_t *) p_reg + (uint32_t) dppi_task)) = 1;
+}
+
+__STATIC_INLINE uint32_t nrf_dppi_task_address_get(NRF_DPPIC_Type const * p_reg,
+                                                   nrf_dppi_task_t        task)
+{
+    return (uint32_t) ((uint8_t *) p_reg + (uint32_t ) task);
 }
 
 __STATIC_INLINE bool nrf_dppi_channel_check(NRF_DPPIC_Type const * p_reg, uint8_t channel)
@@ -272,6 +307,18 @@ __STATIC_INLINE void nrf_dppi_group_disable(NRF_DPPIC_Type *         p_reg,
                                             nrf_dppi_channel_group_t group)
 {
     p_reg->TASKS_CHG[(uint32_t) group].DIS = 1;
+}
+
+__STATIC_INLINE nrf_dppi_task_t nrf_dppi_group_enable_task_get(uint8_t index)
+{
+    NRFX_ASSERT(index < NRFX_ARRAY_SIZE(NRF_DPPIC->TASKS_CHG));
+    return (nrf_dppi_task_t)NRFX_OFFSETOF(NRF_DPPIC_Type, TASKS_CHG[index].EN);
+}
+
+__STATIC_INLINE nrf_dppi_task_t nrf_dppi_group_disable_task_get(uint8_t index)
+{
+    NRFX_ASSERT(index < NRFX_ARRAY_SIZE(NRF_DPPIC->TASKS_CHG));
+    return (nrf_dppi_task_t)NRFX_OFFSETOF(NRF_DPPIC_Type, TASKS_CHG[index].DIS);
 }
 
 #endif // SUPPRESS_INLINE_IMPLEMENTATION

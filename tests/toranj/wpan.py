@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2018, The OpenThread Authors.
 #  All rights reserved.
@@ -65,6 +65,11 @@ WPAN_IP6_MESH_LOCAL_ADDRESS = "IPv6:MeshLocalAddress"
 WPAN_IP6_MESH_LOCAL_PREFIX = "IPv6:MeshLocalPrefix"
 WPAN_IP6_ALL_ADDRESSES = "IPv6:AllAddresses"
 WPAN_IP6_MULTICAST_ADDRESSES = "IPv6:MulticastAddresses"
+WPAN_IP6_INTERFACE_ROUTES = "IPv6:Routes"
+
+WPAN_DAEMON_OFF_MESH_ROUTE_AUTO_ADD_ON_INTERFACE = "Daemon:OffMeshRoute:AutoAddOnInterface"
+WPAN_DAEMON_OFF_MESH_ROUTE_FILTER_SELF_AUTO_ADDED = "Daemon:OffMeshRoute:FilterSelfAutoAdded"
+WPAN_DAEMON_ON_MESH_PREFIX_AUTO_ADD_AS_INTERFACE_ROUTE = "Daemon:OnMeshPrefix:AutoAddAsInterfaceRoute"
 
 WPAN_THREAD_RLOC16 = "Thread:RLOC16"
 WPAN_THREAD_ROUTER_ID = "Thread:RouterID"
@@ -121,6 +126,10 @@ WPAN_MAC_WHITELIST_ENTRIES_ASVALMAP = "MAC:Whitelist:Entries:AsValMap"
 WPAN_MAC_BLACKLIST_ENABLED = "MAC:Blacklist:Enabled"
 WPAN_MAC_BLACKLIST_ENTRIES = "MAC:Blacklist:Entries"
 WPAN_MAC_BLACKLIST_ENTRIES_ASVALMAP = "MAC:Blacklist:Entries:AsValMap"
+
+WPAN_MAC_FILTER_FIXED_RSSI = "MAC:Filter:FixedRssi"
+WPAN_MAC_FILTER_ENTRIES = "MAC:Filter:Entries"
+WPAN_MAC_FILTER_ENTRIES_ASVALMAP = "MAC:Filter:Entries:AsValMap"
 
 WPAN_CHILD_SUPERVISION_INTERVAL = "ChildSupervision:Interval"
 WPAN_CHILD_SUPERVISION_CHECK_TIMEOUT = "ChildSupervision:CheckTimeout"
@@ -1565,3 +1574,49 @@ def parse_address_cache_table_result(addr_cache_table_list):
     """ Parses address cache table list string and returns an array of `AddressCacheEntry` objects"""
     return [AddressCacheEntry(item)
             for item in addr_cache_table_list.split('\n')[1:-1]]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+class InterfaceRoute(object):
+    """ This object encapsulates an interface route entry"""
+
+    def __init__(self, text):
+
+        # Example of expected text:
+        #
+        # '\t"fd00:abba::/64             metric:256   "'
+        #
+
+        # We get rid of the first two chars `\t"' and last char '"', split the rest using whitespace as separator.
+        # Then remove any ',' at end of items in the list.
+        items = [
+            item[:-1] if item[-1] == ',' else item
+            for item in text[2:-1].split()
+        ]
+
+        # First item in the extended address
+        self._route_prefix = items[0].split('/')[0]
+        self._prefix_len = int(items[0].split('/')[1], 0)
+        self._metric = int(items[1].split(':')[1], 0)
+
+    @property
+    def route_prefix(self):
+        return self._route_prefix
+
+    @property
+    def prefix_len(self):
+        return self._prefix_len
+
+    @property
+    def metric(self):
+        return self._metric
+
+    def __repr__(self):
+        return 'InterfaceRoute({})'.format(self.__dict__)
+
+
+def parse_interface_routes_result(interface_routes_list):
+    """ Parses interface routes list string and returns an array of `InterfaceRoute` objects"""
+    return [InterfaceRoute(item)
+            for item in interface_routes_list.split('\n')[1:-1]]

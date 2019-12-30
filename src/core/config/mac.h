@@ -60,27 +60,63 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT
+ * @def OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT
  *
- * The maximum number of retries allowed after a transmission failure for direct transmissions.
+ * The default maximum number of retries allowed after a transmission failure for direct transmissions.
  *
  * Equivalent to macMaxFrameRetries, default value is 3.
  *
  */
-#ifndef OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT
-#define OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_DIRECT 3
+#ifndef OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT
+#define OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT 3
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT
+ * @def OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT
  *
- * The maximum number of retries allowed after a transmission failure for indirect transmissions.
+ * The default maximum number of retries allowed after a transmission failure for indirect transmissions.
  *
  * Equivalent to macMaxFrameRetries, default value is 0.
  *
  */
-#ifndef OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT
-#define OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT 0
+#ifndef OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT
+#define OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+ *
+ * Define to 1 to enable MAC retry packets histogram analysis.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+#define OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT
+ *
+ * The default size of MAC histogram array for success message retry direct transmission.
+ *
+ * Default value is (OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT + 1).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT
+#define OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT \
+    (OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT + 1)
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT
+ *
+ * The default size of MAC histogram array for success message retry direct transmission.
+ *
+ * Default value is (OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT + 1).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT
+#define OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT \
+    (OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT + 1)
 #endif
 
 /**
@@ -94,7 +130,7 @@
  * Takes the place of macTransactionPersistenceTime. The time period is specified in units of IEEE 802.15.4 Data
  * Request receptions, rather than being governed by macBeaconOrder.
  *
- * @sa OPENTHREAD_CONFIG_MAC_MAX_FRAME_RETRIES_INDIRECT
+ * @sa OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT
  *
  */
 #ifndef OPENTHREAD_CONFIG_MAC_MAX_TX_ATTEMPTS_INDIRECT_POLLS

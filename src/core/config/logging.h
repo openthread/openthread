@@ -74,9 +74,8 @@
 /**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
  *
- * The log level (used at compile time). If `OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL`
- * is set, this defines the most verbose log level possible. See
- *`OPENTHREAD_CONFIG_INITIAL_LOG_LEVEL` to set the initial log level.
+ * The log level (used at compile time). If `OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE` is set, this defines the most
+ * verbose log level possible. See `OPENTHREAD_CONFIG_LOG_LEVEL_INIT` to set the initial log level.
  *
  */
 #ifndef OPENTHREAD_CONFIG_LOG_LEVEL
@@ -84,7 +83,7 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+ * @def OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
  *
  * Define as 1 to enable dynamic log level control.
  *
@@ -93,18 +92,18 @@
  * decreasing the log level from the compile time value.
  *
  */
-#ifndef OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-#define OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL 0
+#ifndef OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+#define OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE 0
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_INITIAL_LOG_LEVEL
+ * @def OPENTHREAD_CONFIG_LOG_LEVEL_INIT
  *
  * The initial log level used when OpenThread is initialized. See
- * `OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL`.
+ * `OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE`.
  */
-#ifndef OPENTHREAD_CONFIG_INITIAL_LOG_LEVEL
-#define OPENTHREAD_CONFIG_INITIAL_LOG_LEVEL OPENTHREAD_CONFIG_LOG_LEVEL
+#ifndef OPENTHREAD_CONFIG_LOG_LEVEL_INIT
+#define OPENTHREAD_CONFIG_LOG_LEVEL_INIT OPENTHREAD_CONFIG_LOG_LEVEL
 #endif
 
 /**

@@ -7,6 +7,7 @@
 #include "../nrf_802154_debug.h"
 #include "nrf_802154_priority_drop.h"
 #include "platform/clock/nrf_802154_clock.h"
+#include "platform/coex/nrf_802154_wifi_coex.h"
 #include "raal/nrf_raal_api.h"
 #include "timer_scheduler/nrf_802154_timer_sched.h"
 
@@ -227,6 +228,9 @@ static inline void all_prec_update(void)
                 nrf_802154_clock_hfclk_start();
                 nrf_raal_continuous_mode_enter();
             }
+
+            nrf_802154_wifi_coex_prio_request(new_prio);
+            prec_approved_prio_set(RSCH_PREC_COEX, new_prio);
         }
 
         mutex_unlock(&m_req_mutex);
@@ -328,6 +332,7 @@ static void delayed_timeslot_start(void * p_context)
     p_dly_ts->prio = RSCH_PRIO_IDLE;
 
     all_prec_update();
+    notify_core();
 
     nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RSCH_TIMER_DELAYED_START);
 }
@@ -362,6 +367,7 @@ static void delayed_timeslot_prec_request(void * p_context)
 void nrf_802154_rsch_init(void)
 {
     nrf_raal_init();
+    nrf_802154_wifi_coex_init();
 
     m_ntf_mutex          = 0;
     m_req_mutex          = 0;
@@ -384,9 +390,10 @@ void nrf_802154_rsch_uninit(void)
 {
     for (uint32_t i = 0; i < RSCH_DLY_TS_NUM; i++)
     {
-        nrf_802154_timer_sched_remove(&m_dly_ts[i].timer);
+        nrf_802154_timer_sched_remove(&m_dly_ts[i].timer, NULL);
     }
 
+    nrf_802154_wifi_coex_uninit();
     nrf_raal_uninit();
 }
 
@@ -400,11 +407,6 @@ void nrf_802154_rsch_continuous_mode_priority_set(rsch_prio_t prio)
 
     all_prec_update();
     notify_core();
-
-    if (prio == RSCH_PRIO_IDLE)
-    {
-        m_last_notified_prio = RSCH_PRIO_IDLE;
-    }
 
     nrf_802154_log(EVENT_TRACE_EXIT, (prio > RSCH_PRIO_IDLE) ? FUNCTION_RSCH_CONTINUOUS_ENTER :
                    FUNCTION_RSCH_CONTINUOUS_EXIT);
@@ -477,6 +479,28 @@ bool nrf_802154_rsch_delayed_timeslot_request(uint32_t         t0,
     }
 
     nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RSCH_DELAYED_TIMESLOT_REQ);
+
+    return result;
+}
+
+bool nrf_802154_rsch_delayed_timeslot_cancel(rsch_dly_ts_id_t dly_ts_id)
+{
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_RSCH_DELAYED_TIMESLOT_CANCEL);
+    assert(dly_ts_id < RSCH_DLY_TS_NUM);
+
+    bool       result   = false;
+    dly_ts_t * p_dly_ts = &m_dly_ts[dly_ts_id];
+    bool       was_running;
+
+    nrf_802154_timer_sched_remove(&p_dly_ts->timer, &was_running);
+
+    p_dly_ts->prio = RSCH_PRIO_IDLE;
+    all_prec_update();
+    notify_core();
+
+    result = was_running;
+
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RSCH_DELAYED_TIMESLOT_CANCEL);
 
     return result;
 }

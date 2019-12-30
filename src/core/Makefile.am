@@ -115,6 +115,7 @@ SOURCES_COMMON                             = \
     api/diags_api.cpp                        \
     api/dns_api.cpp                          \
     api/entropy_api.cpp                      \
+    api/heap_api.cpp                         \
     api/icmp6_api.cpp                        \
     api/instance_api.cpp                     \
     api/ip6_api.cpp                          \
@@ -164,6 +165,7 @@ SOURCES_COMMON                             = \
     mac/mac.cpp                              \
     mac/mac_filter.cpp                       \
     mac/mac_frame.cpp                        \
+    mac/mac_types.cpp                        \
     mac/sub_mac.cpp                          \
     mac/sub_mac_callbacks.cpp                \
     meshcop/announce_begin_client.cpp        \
@@ -240,6 +242,7 @@ EXTRA_DIST                                 = \
 
 libopenthread_radio_a_SOURCES              = \
     api/diags_api.cpp                        \
+    api/heap_api.cpp                         \
     api/instance_api.cpp                     \
     api/link_raw_api.cpp                     \
     api/logging_api.cpp                      \
@@ -254,6 +257,7 @@ libopenthread_radio_a_SOURCES              = \
     diags/factory_diags.cpp                  \
     mac/link_raw.cpp                         \
     mac/mac_frame.cpp                        \
+    mac/mac_types.cpp                        \
     mac/sub_mac.cpp                          \
     mac/sub_mac_callbacks.cpp                \
     radio/radio_callbacks.cpp                \
@@ -306,6 +310,7 @@ HEADERS_COMMON                             = \
     common/encoding.hpp                      \
     common/extension.hpp                     \
     common/instance.hpp                      \
+    common/linked_list.hpp                   \
     common/locator.hpp                       \
     common/locator-getters.hpp               \
     common/logging.hpp                       \
@@ -317,6 +322,7 @@ HEADERS_COMMON                             = \
     common/settings.hpp                      \
     common/string.hpp                        \
     common/tasklet.hpp                       \
+    common/time.hpp                          \
     common/timer.hpp                         \
     common/tlvs.hpp                          \
     common/trickle_timer.hpp                 \
@@ -360,6 +366,7 @@ HEADERS_COMMON                             = \
     mac/mac.hpp                              \
     mac/mac_filter.hpp                       \
     mac/mac_frame.hpp                        \
+    mac/mac_types.hpp                        \
     mac/sub_mac.hpp                          \
     meshcop/announce_begin_client.hpp        \
     meshcop/border_agent.hpp                 \
@@ -434,8 +441,6 @@ HEADERS_COMMON                             = \
     utils/parse_cmdline.hpp                  \
     utils/slaac_address.hpp                  \
     utils/static_assert.hpp                  \
-    utils/wrap_stdbool.h                     \
-    utils/wrap_stdint.h                      \
     utils/wrap_string.h                      \
     $(NULL)
 

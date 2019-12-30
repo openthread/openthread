@@ -34,6 +34,7 @@
 
 #include <stddef.h>
 
+#include "openthread-system.h"
 #include <openthread/platform/uart.h>
 
 #include "utils/code_utils.h"
@@ -106,11 +107,13 @@ static void receiveDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aDat
     }
 
     UARTDRV_Receive(aHandle, aData, 1, receiveDone);
+    otSysEventSignalPending();
 }
 
 static void transmitDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aData, UARTDRV_Count_t aCount)
 {
     sTransmitLength = 0;
+    otSysEventSignalPending();
 }
 
 static void processReceive(void)

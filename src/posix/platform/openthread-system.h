@@ -90,12 +90,12 @@ enum
  */
 typedef struct otPlatformConfig
 {
-    uint64_t    mNodeId;        /// Unique node ID.
-    const char *mInterfaceName; /// Thread network interface name.
-    const char *mRadioFile;     /// Radio file path.
-    const char *mRadioConfig;   /// Radio configurations.
-    uint32_t    mSpeedUpFactor; /// Speed up factor.
-    bool        mResetRadio;    /// Whether to reset RCP when initializing.
+    uint64_t    mNodeId;        ///< Unique node ID.
+    uint32_t    mSpeedUpFactor; ///< Speed up factor.
+    const char *mInterfaceName; ///< Thread network interface name.
+    const char *mRadioFile;     ///< Radio file path.
+    const char *mRadioConfig;   ///< Radio configurations.
+    bool        mResetRadio;    ///< Whether to reset RCP when initializing.
 } otPlatformConfig;
 
 /**
@@ -104,7 +104,7 @@ typedef struct otPlatformConfig
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
  *       when initialization of OpenThread's drivers is most appropriate.
  *
- * @param[in]  aPlatformConfig  Argument vector.
+ * @param[in]  aPlatformConfig  Platform configuration structure.
  *
  * @returns A pointer to the OpenThread instance.
  *

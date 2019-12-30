@@ -147,22 +147,6 @@ public:
          */
         void HandleEnergyScanDone(int8_t aMaxRssi);
 
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-        /**
-         * This callback method handles a "Frame Updated" event from radio platform.
-         *
-         * This is called to notify OpenThread to process transmit security for the frame, this happens when the frame
-         * includes Header IE(s) that were updated before transmission. It is called from `otPlatRadioFrameUpdated()`.
-         *
-         * @note This method can be called from interrupt context and it would only read/write data passed in
-         *       via @p aFrame, but would not read/write any state within OpenThread.
-         *
-         * @param[in]  aFrame      The frame which needs to process transmit security.
-         *
-         */
-        void HandleFrameUpdated(Mac::TxFrame &aFrame);
-#endif
-
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
         /**
          * This callback method handles a "Receive Done" event from radio platform when diagnostics mode is enabled.
@@ -289,6 +273,34 @@ public:
     otError SetTransmitPower(int8_t aPower) { return otPlatRadioSetTransmitPower(GetInstance(), aPower); }
 
     /**
+     * This method gets the radio's CCA ED threshold in dBm.
+     *
+     * @param[in] aThreshold    The CCA ED threshold in dBm.
+     *
+     * @retval OT_ERROR_NONE             A reference to output the CCA ED threshold in dBm.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  CCA ED threshold configuration via dBm is not implemented.
+     *
+     */
+    otError GetCcaEnergyDetectThreshold(int8_t &aThreshold)
+    {
+        return otPlatRadioGetCcaEnergyDetectThreshold(GetInstance(), &aThreshold);
+    }
+
+    /**
+     * This method sets the radio's CCA ED threshold in dBm.
+     *
+     * @param[in] aThreshold    The CCA ED threshold in dBm.
+     *
+     * @retval OT_ERROR_NONE             Successfully set the CCA ED threshold.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  CCA ED threshold configuration via dBm is not implemented.
+     *
+     */
+    otError SetCcaEnergyDetectThreshold(int8_t aThreshold)
+    {
+        return otPlatRadioSetCcaEnergyDetectThreshold(GetInstance(), aThreshold);
+    }
+
+    /**
      * This method gets the status of promiscuous mode.
      *
      * @retval TRUE   Promiscuous mode is enabled.
@@ -304,6 +316,18 @@ public:
      *
      */
     void SetPromiscuous(bool aEnable) { otPlatRadioSetPromiscuous(GetInstance(), aEnable); }
+
+    /**
+     * This method returns the current state of the radio.
+     *
+     * This function is not required by OpenThread. It may be used for debugging and/or application-specific purposes.
+     *
+     * @note This function may be not implemented. In this case it always returns OT_RADIO_STATE_INVALID state.
+     *
+     * @return  Current state of the radio.
+     *
+     */
+    otRadioState GetState(void) { return otPlatRadioGetState(GetInstance()); }
 
     /**
      * This method enables the radio.

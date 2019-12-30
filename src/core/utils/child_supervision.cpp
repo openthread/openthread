@@ -63,8 +63,8 @@ void ChildSupervisor::SetSupervisionInterval(uint16_t aInterval)
 
 Child *ChildSupervisor::GetDestination(const Message &aMessage) const
 {
-    Child * child = NULL;
-    uint8_t childIndex;
+    Child *  child = NULL;
+    uint16_t childIndex;
 
     VerifyOrExit(aMessage.GetType() == Message::kTypeSupervision);
 
@@ -78,7 +78,7 @@ exit:
 void ChildSupervisor::SendMessage(Child &aChild)
 {
     Message *message = NULL;
-    uint8_t  childIndex;
+    uint16_t childIndex;
 
     VerifyOrExit(aChild.GetIndirectMessageCount() == 0);
 
@@ -120,7 +120,7 @@ void ChildSupervisor::HandleTimer(void)
 {
     VerifyOrExit(mSupervisionInterval != 0);
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValid); !iter.IsDone(); iter++)
     {
         Child &child = *iter.GetChild();
 
@@ -147,7 +147,7 @@ void ChildSupervisor::CheckState(void)
     // "valid" child in the child table.
 
     shouldRun = ((mSupervisionInterval != 0) && (Get<Mle::MleRouter>().GetRole() != OT_DEVICE_ROLE_DISABLED) &&
-                 Get<ChildTable>().HasChildren(ChildTable::kInStateValid));
+                 Get<ChildTable>().HasChildren(Child::kInStateValid));
 
     if (shouldRun && !mTimer.IsRunning())
     {
@@ -209,7 +209,7 @@ void SupervisionListener::UpdateOnReceive(const Mac::Address &aSourceAddress, bo
     // If listener is enabled and device is a child and it received a secure frame from its parent, restart the timer.
 
     VerifyOrExit(mTimer.IsRunning() && aIsSecure && (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_CHILD) &&
-                 (Get<Mle::MleRouter>().GetNeighbor(aSourceAddress) == Get<Mle::MleRouter>().GetParent()));
+                 (Get<Mle::MleRouter>().GetNeighbor(aSourceAddress) == &Get<Mle::MleRouter>().GetParent()));
 
     RestartTimer();
 
@@ -222,7 +222,7 @@ void SupervisionListener::RestartTimer(void)
     if ((mTimeout != 0) && (Get<Mle::MleRouter>().GetRole() != OT_DEVICE_ROLE_DISABLED) &&
         !Get<MeshForwarder>().GetRxOnWhenIdle())
     {
-        mTimer.Start(TimerMilli::SecToMsec(mTimeout));
+        mTimer.Start(Time::SecToMsec(mTimeout));
     }
     else
     {

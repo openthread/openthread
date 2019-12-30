@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+/* Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,30 +50,30 @@ extern "C" {
  */
 
 /**
- * @brief Initialize request module.
+ * @brief Initializes the request module.
  */
 void nrf_802154_request_init(void);
 
 /**
- * @brief Request entering sleep state.
+ * @brief Requests entering the @ref RADIO_STATE_SLEEP state for the driver.
  *
  * @param[in]  term_lvl  Termination level of this request. Selects procedures to abort.
  *
  * @retval  true   The driver will enter sleep state.
- * @retval  false  The driver cannot enter sleep state due to ongoing operation.
+ * @retval  false  The driver cannot enter the sleep state due to an ongoing operation.
  */
 bool nrf_802154_request_sleep(nrf_802154_term_t term_lvl);
 
 /**
- * @brief Request entering receive state.
+ * @brief Requests entering the @ref RADIO_STATE_RX state for the driver.
  *
  * @param[in]  term_lvl         Termination level of this request. Selects procedures to abort.
  * @param[in]  req_orig         Module that originates this request.
- * @param[in]  notify_function  Function called to notify status of this procedure. May be NULL.
- * @param[in]  notify_abort     If abort notification should be triggered automatically.
+ * @param[in]  notify_function  Function called to notify the status of this procedure. May be NULL.
+ * @param[in]  notify_abort     If the abort notification is to be triggered automatically.
  *
- * @retval  true   The driver will enter receive state.
- * @retval  false  The driver cannot enter receive state due to ongoing operation.
+ * @retval  true   The driver will enter the receive state.
+ * @retval  false  The driver cannot enter the receive state due to ongoing operation.
  */
 bool nrf_802154_request_receive(nrf_802154_term_t              term_lvl,
                                 req_originator_t               req_orig,
@@ -81,19 +81,19 @@ bool nrf_802154_request_receive(nrf_802154_term_t              term_lvl,
                                 bool                           notify_abort);
 
 /**
- * @brief Request entering transmit state.
+ * @brief Request entering the @ref RADIO_STATE_TX state for the driver.
  *
  * @param[in]  term_lvl         Termination level of this request. Selects procedures to abort.
  * @param[in]  req_orig         Module that originates this request.
  * @param[in]  p_data           Pointer to the frame to transmit.
- * @param[in]  cca              If the driver should perform CCA procedure before transmission.
- * @param[in]  immediate        If true, the driver schedules transmission immediately or never;
- *                              if false transmission may be postponed until tx preconditions are
- *                              met.
- * @param[in]  notify_function  Function called to notify status of this procedure. May be NULL.
+ * @param[in]  cca              If the driver is to perform the CCA procedure before transmission.
+ * @param[in]  immediate        If true, the driver schedules transmission immediately or never.
+ *                              If false, the transmission can be postponed until the TX
+ *                              preconditions are met.
+ * @param[in]  notify_function  Function called to notify the status of this procedure. May be NULL.
  *
- * @retval  true   The driver will enter transmit state.
- * @retval  false  The driver cannot enter transmit state due to ongoing operation.
+ * @retval  true   The driver will enter the transmit state.
+ * @retval  false  The driver cannot enter the transmit state due to an ongoing operation.
  */
 bool nrf_802154_request_transmit(nrf_802154_term_t              term_lvl,
                                  req_originator_t               req_orig,
@@ -103,52 +103,62 @@ bool nrf_802154_request_transmit(nrf_802154_term_t              term_lvl,
                                  nrf_802154_notification_func_t notify_function);
 
 /**
- * @brief Request entering energy detection state.
+ * @brief Requests entering the @ref RADIO_STATE_ED state.
  *
  * @param[in]  term_lvl  Termination level of this request. Selects procedures to abort.
- * @param[in]  time_us   Requested duration of energy detection procedure.
+ * @param[in]  time_us   Requested duration of the energy detection procedure.
  *
  * @retval  true   The driver will enter energy detection state.
- * @retval  false  The driver cannot enter energy detection state due to ongoing operation.
+ * @retval  false  The driver cannot enter the energy detection state due to an ongoing operation.
  */
 bool nrf_802154_request_energy_detection(nrf_802154_term_t term_lvl, uint32_t time_us);
 
 /**
- * @brief Request entering CCA state.
+ * @brief Requests entering the @ref RADIO_STATE_CCA state.
  *
  * @param[in]  term_lvl  Termination level of this request. Selects procedures to abort.
  *
- * @retval  true   The driver will enter CCA state.
- * @retval  false  The driver cannot enter CCA state due to ongoing operation.
+ * @retval  true   The driver will enter the CCA state.
+ * @retval  false  The driver cannot enter the CCA state due to an ongoing operation.
  */
 bool nrf_802154_request_cca(nrf_802154_term_t term_lvl);
 
 /**
- * @brief Request entering continuous carrier state.
+ * @brief Requests entering the @ref RADIO_STATE_CONTINUOUS_CARRIER state.
  *
  * @param[in]  term_lvl  Termination level of this request. Selects procedures to abort.
  *
- * @retval  true   The driver will enter continuous carrier state.
- * @retval  false  The driver cannot enter continuous carrier state due to ongoing operation.
+ * @retval  true   The driver will enter the continuous carrier state.
+ * @retval  false  The driver cannot enter the continuous carrier state due to an ongoing operation.
  */
 bool nrf_802154_request_continuous_carrier(nrf_802154_term_t term_lvl);
 
 /**
- * @brief Request the driver to free given buffer.
+ * @brief Requests the driver to free the given buffer.
  *
- * @param[in]  p_data  Pointer to the buffer to free.
+ * @param[in]  p_data  Pointer to the buffer to be freed.
  */
 bool nrf_802154_request_buffer_free(uint8_t * p_data);
 
 /**
- * @brief Request the driver to update channel number used by the RADIO peripheral.
+ * @brief Requests the driver to update the channel number used by the RADIO peripheral.
  */
 bool nrf_802154_request_channel_update(void);
 
 /**
- * @brief Request the driver to update CCA configuration used by the RADIO peripheral.
+ * @brief Requests the driver to update the CCA configuration used by the RADIO peripheral.
  */
 bool nrf_802154_request_cca_cfg_update(void);
+
+/**
+ * @brief Requests the RSSI measurement.
+ */
+bool nrf_802154_request_rssi_measure(void);
+
+/**
+ * @brief Requests getting the last RSSI measurement result.
+ */
+bool nrf_802154_request_rssi_measurement_get(int8_t * p_rssi);
 
 /**
  *@}

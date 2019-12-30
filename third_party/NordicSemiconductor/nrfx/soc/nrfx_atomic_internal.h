@@ -45,12 +45,13 @@ extern "C" {
 
 #if defined ( __CC_ARM )
 static __asm uint32_t nrfx_atomic_internal_mov(nrfx_atomic_u32_t * p_ptr,
-                                               uint32_t value,
-                                               uint32_t * p_new)
+                                               uint32_t            value,
+                                               uint32_t *          p_new)
 {
-    /* The base standard specifies that arguments are passed in core registers r0-r3 and on the stack.
-     * Registers r4 and r5 must be saved on the stack. Note that only even number of register pushes are
-     * allowed. This is a requirement of the Procedure Call Standard for the ARM Architecture [AAPCS].
+    /* The base standard specifies that arguments are passed in the core registers
+     * r0-r3 and on the stack. Registers r4 and r5 must be saved on the stack.
+     * Only even number of register pushes are allowed. This is a requirement
+     * of the Procedure Call Standard for the ARM Architecture [AAPCS].
      */
     push  {r4, r5}
     mov   r4, r0
@@ -69,8 +70,8 @@ loop_mov
 
 
 static __asm uint32_t nrfx_atomic_internal_orr(nrfx_atomic_u32_t * p_ptr,
-                                              uint32_t value,
-                                              uint32_t * p_new)
+                                               uint32_t            value,
+                                               uint32_t *          p_new)
 {
     push  {r4, r5}
     mov   r4, r0
@@ -88,8 +89,8 @@ loop_orr
 }
 
 static __asm uint32_t nrfx_atomic_internal_and(nrfx_atomic_u32_t * p_ptr,
-                                              uint32_t value,
-                                              uint32_t * p_new)
+                                               uint32_t            value,
+                                               uint32_t *          p_new)
 {
     push  {r4, r5}
     mov   r4, r0
@@ -107,8 +108,8 @@ loop_and
 }
 
 static __asm uint32_t nrfx_atomic_internal_eor(nrfx_atomic_u32_t * p_ptr,
-                                              uint32_t value,
-                                              uint32_t * p_new)
+                                               uint32_t            value,
+                                               uint32_t *          p_new)
 {
     push  {r4, r5}
     mov   r4, r0
@@ -126,8 +127,8 @@ loop_eor
 }
 
 static __asm uint32_t nrfx_atomic_internal_add(nrfx_atomic_u32_t * p_ptr,
-                                              uint32_t value,
-                                              uint32_t * p_new)
+                                               uint32_t            value,
+                                               uint32_t *          p_new)
 {
     push  {r4, r5}
     mov   r4, r0
@@ -145,8 +146,8 @@ loop_add
 }
 
 static __asm uint32_t nrfx_atomic_internal_sub(nrfx_atomic_u32_t * p_ptr,
-                                              uint32_t value,
-                                              uint32_t * p_new)
+                                               uint32_t            value,
+                                               uint32_t *          p_new)
 {
     push  {r4, r5}
     mov   r4, r0
@@ -164,8 +165,8 @@ loop_sub
 }
 
 static __asm bool nrfx_atomic_internal_cmp_exch(nrfx_atomic_u32_t * p_data,
-                                               uint32_t *         p_expected,
-                                               uint32_t           value)
+                                                uint32_t *          p_expected,
+                                                uint32_t            value)
 {
 #define RET_REG  r0
 #define P_EXPC   r1
@@ -206,8 +207,8 @@ loop_cmp_exch
 }
 
 static __asm uint32_t nrfx_atomic_internal_sub_hs(nrfx_atomic_u32_t * p_ptr,
-                                                 uint32_t value,
-                                                 uint32_t * p_new)
+                                                  uint32_t            value,
+                                                  uint32_t *          p_new)
 {
     push  {r4, r5}
     mov   r4, r0
@@ -236,10 +237,10 @@ loop_sub_ge
 /**
  * @brief Atomic operation generic macro.
  *
- * @param[in]  asm_op   Operation: mov, orr, and, eor, add, sub.
- * @param[out] old_val  Atomic object output (uint32_t), value before operation.
- * @param[out] new_val  Atomic object output (uint32_t), value after operation.
- * @param[in]  value    Atomic operation operand.
+ * @param[in]  asm_op  Operation: mov, orr, and, eor, add, sub.
+ * @param[out] old_val Atomic object output (uint32_t); value before operation.
+ * @param[out] new_val Atomic object output (uint32_t); value after operation.
+ * @param[in]  value   Atomic operation operand.
  */
 #define NRFX_ATOMIC_OP(asm_op, old_val, new_val, ptr, value)    \
 {                                                               \
@@ -274,8 +275,8 @@ loop_sub_ge
     "movlo %["#new_val"], %["#old_val"]\n"
 
 static inline bool nrfx_atomic_internal_cmp_exch(nrfx_atomic_u32_t * p_data,
-                                                uint32_t *         p_expected,
-                                                uint32_t           value)
+                                                 uint32_t *          p_expected,
+                                                 uint32_t            value)
 {
     bool res = false;
     /* Temporary register used in the inline asm code for getting the result

@@ -47,9 +47,11 @@
 #include "common/encoding.hpp"
 #include "common/message.hpp"
 #include "common/tlvs.hpp"
+#include "mac/mac_types.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
 #include "radio/radio.hpp"
+#include "thread/key_manager.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -76,7 +78,7 @@ public:
         kPanId                   = OT_MESHCOP_TLV_PANID,                    ///< PAN ID TLV
         kExtendedPanId           = OT_MESHCOP_TLV_EXTPANID,                 ///< Extended PAN ID TLV
         kNetworkName             = OT_MESHCOP_TLV_NETWORKNAME,              ///< Network Name TLV
-        kPSKc                    = OT_MESHCOP_TLV_PSKC,                     ///< PSKc TLV
+        kPskc                    = OT_MESHCOP_TLV_PSKC,                     ///< PSKc TLV
         kNetworkMasterKey        = OT_MESHCOP_TLV_MASTERKEY,                ///< Network Master Key TLV
         kNetworkKeySequence      = OT_MESHCOP_TLV_NETWORK_KEY_SEQUENCE,     ///< Network Key Sequence TLV
         kMeshLocalPrefix         = OT_MESHCOP_TLV_MESHLOCALPREFIX,          ///< Mesh Local Prefix TLV
@@ -361,18 +363,18 @@ public:
      * @returns The Extended PAN ID value.
      *
      */
-    const otExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
+    const Mac::ExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
 
     /**
      * This method sets the Extended PAN ID value.
      *
-     * @param[in]  aExtendedPanId  A pointer to the Extended PAN ID value.
+     * @param[in]  aExtendedPanId  An Extended PAN ID value.
      *
      */
-    void SetExtendedPanId(const otExtendedPanId &aExtendedPanId) { mExtendedPanId = aExtendedPanId; }
+    void SetExtendedPanId(const Mac::ExtendedPanId &aExtendedPanId) { mExtendedPanId = aExtendedPanId; }
 
 private:
-    otExtendedPanId mExtendedPanId;
+    Mac::ExtendedPanId mExtendedPanId;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -403,39 +405,23 @@ public:
     bool IsValid(void) const { return true; }
 
     /**
-     * This method returns the Network Name length.
+     * This method gets the Network Name value.
      *
-     * @returns The Network Name length.
-     *
-     */
-    uint8_t GetNetworkNameLength(void) const
-    {
-        return GetLength() <= sizeof(mNetworkName) ? GetLength() : sizeof(mNetworkName);
-    }
-
-    /**
-     * This method returns the Network Name value.
-     *
-     * @returns The Network Name value.
+     * @returns The Network Name value (as `NetworkName::Data`).
      *
      */
-    const char *GetNetworkName(void) const { return mNetworkName; }
+    Mac::NetworkName::Data GetNetworkName(void) const;
 
     /**
      * This method sets the Network Name value.
      *
-     * @param[in]  aNetworkName  A pointer to the Network Name value.
+     * @param[in] aNameData   A Network Name value (as `NetworkName::Data`).
      *
      */
-    void SetNetworkName(const char *aNetworkName)
-    {
-        size_t length = strnlen(aNetworkName, sizeof(mNetworkName));
-        memcpy(mNetworkName, aNetworkName, length);
-        SetLength(static_cast<uint8_t>(length));
-    }
+    void SetNetworkName(const Mac::NetworkName::Data &aNameData);
 
 private:
-    char mNetworkName[OT_NETWORK_NAME_MAX_SIZE];
+    char mNetworkName[Mac::NetworkName::kMaxSize];
 } OT_TOOL_PACKED_END;
 
 /**
@@ -443,7 +429,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class PSKcTlv : public Tlv
+class PskcTlv : public Tlv
 {
 public:
     /**
@@ -452,7 +438,7 @@ public:
      */
     void Init(void)
     {
-        SetType(kPSKc);
+        SetType(kPskc);
         SetLength(sizeof(*this) - sizeof(Tlv));
     }
 
@@ -471,18 +457,18 @@ public:
      * @returns The PSKc value.
      *
      */
-    const otPSKc &GetPSKc(void) const { return mPSKc; }
+    const Pskc &GetPskc(void) const { return mPskc; }
 
     /**
      * This method sets the PSKc value.
      *
-     * @param[in]  aPSKc  A pointer to the PSKc value.
+     * @param[in]  aPskc  A pointer to the PSKc value.
      *
      */
-    void SetPSKc(const otPSKc &aPSKc) { mPSKc = aPSKc; }
+    void SetPskc(const Pskc &aPskc) { mPskc = aPskc; }
 
 private:
-    otPSKc mPSKc;
+    Pskc mPskc;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -518,18 +504,18 @@ public:
      * @returns The Network Master Key value.
      *
      */
-    const otMasterKey &GetNetworkMasterKey(void) const { return mNetworkMasterKey; }
+    const MasterKey &GetNetworkMasterKey(void) const { return mNetworkMasterKey; }
 
     /**
      * This method sets the Network Master Key value.
      *
-     * @param[in]  aNetworkMasterKey  A pointer to the Network Master Key value.
+     * @param[in]  aMasterKey  The Network Master Key.
      *
      */
-    void SetNetworkMasterKey(const otMasterKey &aNetworkMasterKey) { mNetworkMasterKey = aNetworkMasterKey; }
+    void SetNetworkMasterKey(const MasterKey &aMasterKey) { mNetworkMasterKey = aMasterKey; }
 
 private:
-    otMasterKey mNetworkMasterKey;
+    MasterKey mNetworkMasterKey;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -822,6 +808,11 @@ OT_TOOL_PACKED_BEGIN
 class CommissionerIdTlv : public Tlv
 {
 public:
+    enum
+    {
+        kMaxLength = 64, ///< maximum length (bytes)
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -865,11 +856,6 @@ public:
     }
 
 private:
-    enum
-    {
-        kMaxLength = 64,
-    };
-
     char mCommissionerId[kMaxLength];
 } OT_TOOL_PACKED_END;
 
@@ -1846,7 +1832,7 @@ class ProvisioningUrlTlv : public Tlv
 public:
     enum
     {
-        kMaxLength = 64, // Maximum number of chars in the Provisioning URL string.
+        kMaxLength = OT_PROVISIONING_URL_MAX_SIZE, // Maximum number of chars in the Provisioning URL string.
     };
 
     /**

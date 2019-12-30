@@ -39,8 +39,13 @@ set -x
 cd /tmp || die
 
 [ $TRAVIS_OS_NAME != linux ] || {
-    (cd /etc/apt/sources.list.d && sudo rm -rf cassandra.list* couchdb.list* mongodb-3.4.list* rabbitmq_rabbitmq-server.list* chris-lea-redis-server.list* github_git-lfs.list*)
+    (cd /etc/apt/sources.list.d && sudo rm -rf cassandra.list* couchdb.list* mongodb-3.4.list* rabbitmq_rabbitmq-server.list* chris-lea-redis-server.list* github_git-lfs.list* pgdg.list)
     sudo apt-get update || die
+
+    sudo apt-get install ninja-build
+
+    pip3 install --upgrade pip
+    pip3 install cmake
 
     [ $BUILD_TARGET != posix-distcheck -a $BUILD_TARGET != posix-32-bit -a $BUILD_TARGET != posix-app-cli -a $BUILD_TARGET != posix-mtd -a $BUILD_TARGET != posix-ncp -a $BUILD_TARGET != posix-app-ncp ] || {
         pip install --upgrade pip || die
@@ -58,6 +63,27 @@ cd /tmp || die
         wget https://dl.google.com/android/repository/android-ndk-r17c-linux-x86_64.zip
         unzip android-ndk-r17c-linux-x86_64.zip > /dev/null
         mv android-ndk-r17c ndk-bundle
+        ) || die
+    }
+
+    [ $BUILD_TARGET != gn-build ] || {
+        # Install ninja
+        (
+        cd $HOME
+        wget -O ninja.zip https://chrome-infra-packages.appspot.com/dl/infra/ninja/linux-amd64/+/latest
+        unzip -o ninja.zip
+        chmod a+x ninja && mkdir -p bin && mv -f ninja bin/ && export PATH=${HOME}/bin:$PATH
+        ninja --version
+        ) || die
+
+
+        # Get latest gn
+        (
+        cd $HOME
+        wget -O gn.zip https://chrome-infra-packages.appspot.com/dl/gn/gn/linux-amd64/+/latest
+        unzip -o gn.zip
+        chmod a+x gn && mv -f gn bin/
+        gn --version
         ) || die
     }
 
@@ -112,6 +138,13 @@ cd /tmp || die
         wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/8-2018q4/gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2 || die
         tar xjf gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2 || die
         export PATH=/tmp/gcc-arm-none-eabi-8-2018-q4-major/bin:$PATH || die
+        arm-none-eabi-gcc --version || die
+    }
+
+    [ $BUILD_TARGET != arm-gcc-9 ] || {
+        wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2019q4/RC2.1/gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2 || die
+        tar xjf gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2 || die
+        export PATH=/tmp/gcc-arm-none-eabi-9-2019-q4-major/bin:$PATH || die
         arm-none-eabi-gcc --version || die
     }
 

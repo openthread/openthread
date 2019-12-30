@@ -44,9 +44,20 @@ namespace ot {
 #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 // Define the raw storage used for OpenThread instance (in single-instance case).
-otDEFINE_ALIGNED_VAR(gInstanceRaw, sizeof(Instance), uint64_t);
+OT_DEFINE_ALIGNED_VAR(gInstanceRaw, sizeof(Instance), uint64_t);
 
 #endif
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+
+otHeapFreeFn   ot::Instance::mFree   = NULL;
+otHeapCAllocFn ot::Instance::mCAlloc = NULL;
+
+#endif // OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 Instance::Instance(void)
     : mTaskletScheduler()
@@ -55,7 +66,7 @@ Instance::Instance(void)
     , mTimerMicroScheduler(*this)
 #endif
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     , mHeap()
 #endif
     , mMbedTls()
@@ -91,8 +102,8 @@ Instance::Instance(void)
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     , mLinkRaw(*this)
 #endif
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    , mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_INITIAL_LOG_LEVEL))
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+    , mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL_INIT))
 #endif
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     , mExtension(Extension::ExtensionBase::Init(*this))

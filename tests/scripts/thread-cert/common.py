@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -28,7 +28,6 @@
 #
 
 import struct
-import sys
 
 from binascii import hexlify
 from enum import IntEnum
@@ -68,9 +67,6 @@ class MessageInfo(object):
     def _convert_value_to_ip_address(self, value):
         if isinstance(value, bytearray):
             value = bytes(value)
-
-        elif isinstance(value, str) and sys.version_info[0] == 2:
-            value = value.decode("utf-8")
 
         return ipaddress.ip_address(value)
 

@@ -79,7 +79,7 @@ DataPollHandler::DataPollHandler(Instance &aInstance)
 
 void DataPollHandler::Clear(void)
 {
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
     {
         Child &child = *iter.GetChild();
         child.SetDataPollPending(false);
@@ -134,7 +134,7 @@ void DataPollHandler::HandleDataPoll(Mac::RxFrame &aFrame)
     VerifyOrExit(Get<Mle::MleRouter>().GetRole() != OT_DEVICE_ROLE_DETACHED);
 
     SuccessOrExit(aFrame.GetSrcAddr(macSource));
-    child = Get<ChildTable>().FindChild(macSource, ChildTable::kInStateValidOrRestoring);
+    child = Get<ChildTable>().FindChild(macSource, Child::kInStateValidOrRestoring);
     VerifyOrExit(child != NULL);
 
     child->SetLastHeard(TimerMilli::GetNow());
@@ -153,8 +153,6 @@ void DataPollHandler::HandleDataPoll(Mac::RxFrame &aFrame)
 
         ExitNow();
     }
-
-    VerifyOrExit(!Get<SourceMatchController>().IsEnabled() || (indirectMsgCount > 0));
 
     if (mIndirectTxChild == NULL)
     {
@@ -252,7 +250,7 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError
             ExitNow();
         }
 
-        if (aChild.GetIndirectTxAttempts() < kMaxPollTriggeredTxAttempts)
+        if ((aChild.GetIndirectTxAttempts() < kMaxPollTriggeredTxAttempts) && !aFrame.IsEmpty())
         {
             // We save the frame counter, key id, and data sequence number of
             // current frame so we use the same values for the retransmission
@@ -291,7 +289,7 @@ exit:
 
 void DataPollHandler::ProcessPendingPolls(void)
 {
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValidOrRestoring); !iter.IsDone(); iter++)
     {
         Child *child = iter.GetChild();
 
@@ -302,8 +300,7 @@ void DataPollHandler::ProcessPendingPolls(void)
 
         // Find the child with earliest poll receive time.
 
-        if ((mIndirectTxChild == NULL) ||
-            TimerScheduler::IsStrictlyBefore(child->GetLastHeard(), mIndirectTxChild->GetLastHeard()))
+        if ((mIndirectTxChild == NULL) || (child->GetLastHeard() < mIndirectTxChild->GetLastHeard()))
         {
             mIndirectTxChild = child;
         }

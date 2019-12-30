@@ -64,7 +64,7 @@ namespace Ncp {
 
 #if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK == 0
 
-static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpUart), uint64_t);
+static OT_DEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpUart), uint64_t);
 
 extern "C" void otNcpInit(otInstance *aInstance)
 {

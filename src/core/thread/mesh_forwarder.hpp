@@ -297,6 +297,12 @@ public:
      */
     const otIpCounters &GetCounters(void) const { return mIpCounters; }
 
+    /**
+     * This method resets the IP level counters.
+     *
+     */
+    void ResetCounters(void) { memset(&mIpCounters, 0, sizeof(mIpCounters)); }
+
 #if OPENTHREAD_FTD
     /**
      * This method returns a reference to the resolving queue.
@@ -513,7 +519,6 @@ private:
 
     Mac::ChannelMask mScanChannels;
     uint8_t          mScanChannel;
-    uint16_t         mMacRadioAcquisitionId;
     uint16_t         mRestorePanId;
     bool             mScanning;
 

@@ -232,7 +232,7 @@ AC_PATH_PROG(CMP, cmp)
 #   -Wall                        CC, CXX
 #
 
-PROSPECTIVE_CFLAGS="-Wall -Wextra -Wshadow -Werror -std=c99 -pedantic-errors"
+PROSPECTIVE_CFLAGS="-Wall -Wextra -Wshadow -Werror -std=c99 -pedantic-errors -Wno-gnu-zero-variadic-macro-arguments"
 PROSPECTIVE_CXXFLAGS="-Wall -Wextra -Wshadow -Werror -std=gnu++98 -Wno-c++14-compat -fno-exceptions"
 
 AC_CACHE_CHECK([whether $CC is Clang],
@@ -405,14 +405,13 @@ if test "$enable_builtin_mbedtls" = "yes" -a ! "${MBEDTLS_CPPFLAGS}"; then
 fi
 
 if test "$enable_builtin_mbedtls" = "yes"; then
-    OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=1
+    CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=1"
 else
-    OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=0
+    CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=0"
 fi
 
 AC_MSG_CHECKING([whether mbed TLS should be enabled])
 AC_MSG_RESULT(${enable_builtin_mbedtls})
-AC_DEFINE_UNQUOTED([OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS], [${OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS}], [Define to 1 if you want to enable support for bultin-mbedtls.])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_BUILTIN_MBEDTLS], [test "${enable_builtin_mbedtls}" = "yes"])
 
 #
@@ -437,15 +436,13 @@ AC_ARG_ENABLE(posix-app,
     [enable_posix_app=no])
 
 if test "$enable_posix_app" = "yes"; then
-    OPENTHREAD_PLATFORM_POSIX_APP=1
+    CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_PLATFORM_POSIX_APP=1"
 else
-    OPENTHREAD_PLATFORM_POSIX_APP=0
+    CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_PLATFORM_POSIX_APP=0"
 fi
 
 AC_MSG_RESULT(${enable_posix_app})
-AC_SUBST(OPENTHREAD_PLATFORM_POSIX_APP)
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_POSIX_APP], [test "${enable_posix_app}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_PLATFORM_POSIX_APP], [${OPENTHREAD_PLATFORM_POSIX_APP}], [Define to 1 to build posix application.])
 
 #
 # POSIX Daemon
@@ -469,15 +466,13 @@ AC_ARG_ENABLE(posix-app-daemon,
     [enable_posix_app_daemon=no])
 
 if test "$enable_posix_app_daemon" = "yes"; then
-    OPENTHREAD_ENABLE_POSIX_APP_DAEMON=1
+    CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_ENABLE_POSIX_APP_DAEMON=1"
 else
-    OPENTHREAD_ENABLE_POSIX_APP_DAEMON=0
+    CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_ENABLE_POSIX_APP_DAEMON=0"
 fi
 
 AC_MSG_RESULT(${enable_posix_app_daemon})
-AC_SUBST(OPENTHREAD_ENABLE_POSIX_APP_DAEMON)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_POSIX_APP_DAEMON], [test "${enable_posix_app_daemon}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_POSIX_APP_DAEMON], [${OPENTHREAD_ENABLE_POSIX_APP_DAEMON}], [Define to 1 to build posix application in daemon mode.])
 
 #
 # FTD Library
@@ -500,16 +495,8 @@ AC_ARG_ENABLE(ftd,
     ],
     [enable_ftd=no])
 
-if test "$enable_ftd" = "yes"; then
-    OPENTHREAD_ENABLE_FTD=1
-else
-    OPENTHREAD_ENABLE_FTD=0
-fi
-
 AC_MSG_RESULT(${enable_ftd})
-AC_SUBST(OPENTHREAD_ENABLE_FTD)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_FTD], [test "${enable_ftd}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_FTD], [${OPENTHREAD_ENABLE_FTD}], [Define to 1 to build FTD library.])
 
 #
 # MTD Library
@@ -532,16 +519,8 @@ AC_ARG_ENABLE(mtd,
     ],
     [enable_mtd=no])
 
-if test "$enable_mtd" = "yes"; then
-    OPENTHREAD_ENABLE_MTD=1
-else
-    OPENTHREAD_ENABLE_MTD=0
-fi
-
 AC_MSG_RESULT(${enable_mtd})
-AC_SUBST(OPENTHREAD_ENABLE_MTD)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_MTD], [test "${enable_mtd}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_MTD], [${OPENTHREAD_ENABLE_MTD}], [Define to 1 to build MTD library.])
 
 #
 # Radio Library
@@ -564,16 +543,8 @@ AC_ARG_ENABLE(radio-only,
     ],
     [enable_radio_only=no])
 
-if test "$enable_radio_only" = "yes"; then
-    OPENTHREAD_ENABLE_RADIO_ONLY=1
-else
-    OPENTHREAD_ENABLE_RADIO_ONLY=0
-fi
-
 AC_MSG_RESULT(${enable_radio_only})
-AC_SUBST(OPENTHREAD_ENABLE_RADIO_ONLY)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_RADIO_ONLY], [test "${enable_radio_only}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_RADIO_ONLY], [${OPENTHREAD_ENABLE_RADIO_ONLY}], [Define to 1 to build radio-only library.])
 
 #
 # whether to build executables
@@ -596,16 +567,8 @@ AC_ARG_ENABLE(executable,
     ],
     [enable_executable=yes])
 
-if test "$enable_executable" = "yes"; then
-    OPENTHREAD_ENABLE_EXECUTABLE=1
-else
-    OPENTHREAD_ENABLE_EXECUTABLE=0
-fi
-
 AC_MSG_RESULT(${enable_executable})
-AC_SUBST(OPENTHREAD_ENABLE_EXECUTABLE)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_EXECUTABLE], [test "${enable_executable}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_EXECUTABLE], [${OPENTHREAD_ENABLE_EXECUTABLE}], [Define to 1 to build executables.])
 
 #
 # CLI Library
@@ -628,16 +591,8 @@ AC_ARG_ENABLE(cli,
     ],
     [enable_cli=no])
 
-if test "$enable_cli" = "yes"; then
-    OPENTHREAD_ENABLE_CLI=1
-else
-    OPENTHREAD_ENABLE_CLI=0
-fi
-
 AC_MSG_RESULT(${enable_cli})
-AC_SUBST(OPENTHREAD_ENABLE_CLI)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI], [test "${enable_cli}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_CLI], [${OPENTHREAD_ENABLE_CLI}], [Define to 1 to build CLI library.])
 
 #
 # NCP Library
@@ -660,16 +615,8 @@ AC_ARG_ENABLE(ncp,
     ],
     [enable_ncp=no])
 
-if test "$enable_ncp" = "yes"; then
-    OPENTHREAD_ENABLE_NCP=1
-else
-    OPENTHREAD_ENABLE_NCP=0
-fi
-
 AC_MSG_RESULT(${enable_ncp})
-AC_SUBST(OPENTHREAD_ENABLE_NCP)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP], [test "${enable_ncp}" = "yes"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP], [${OPENTHREAD_ENABLE_NCP}], [Define to 1 to build NCP library.])
 
 #
 # Readline - readline library to use for POSIX CLI
@@ -677,12 +624,12 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP], [${OPENTHREAD_ENABLE_NCP}], [Define 
 
 AC_ARG_WITH(
     [readline],
-    [AS_HELP_STRING([--with-readline],[Specify the readline library (none|readline|edit) @<:@default=none@:>@.])],
+    [AS_HELP_STRING([--with-readline],[Specify the readline library (no|readline|edit) @<:@default=no@:>@.])],
     [],
-    [with_readline=none])
+    [with_readline=no])
 
 case "${with_readline}" in
-"none")
+"no")
     ;;
 "readline")
     # Prefer GNU readline installed by Homebrew.
@@ -707,7 +654,7 @@ esac
 
 AC_ARG_WITH(
     [vendor-extension],
-    [AS_HELP_STRING([--with-vendor-extension=<VENDOR_EXT.CPP>],[Specify a C++ source file built as part of OpenThread core library. @<:@default=none@:>@.])],
+    [AS_HELP_STRING([--with-vendor-extension=<VENDOR_EXT.CPP>],[Specify a C++ source file built as part of OpenThread core library. @<:@default=no@:>@.])],
     [
         if test "${withval}" = "no"
         then OPENTHREAD_ENABLE_VENDOR_EXTENSION=0
@@ -722,13 +669,13 @@ AC_ARG_WITH(
     ],
     [
         OPENTHREAD_ENABLE_VENDOR_EXTENSION=0
-        with_vendor_extension=none
+        with_vendor_extension=no
     ])
 
+CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_ENABLE_VENDOR_EXTENSION=${OPENTHREAD_ENABLE_VENDOR_EXTENSION}"
 AC_MSG_CHECKING([for vendor extension])
-AC_MSG_RESULT(${OPENTHREAD_VENDOR_EXTENSION_SOURCE-none})
+AC_MSG_RESULT(${OPENTHREAD_VENDOR_EXTENSION_SOURCE-no})
 AC_SUBST(OPENTHREAD_VENDOR_EXTENSION_SOURCE)
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_VENDOR_EXTENSION],[${OPENTHREAD_ENABLE_VENDOR_EXTENSION}],[Define to 1 if using vendor extension])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_VENDOR_EXTENSION], [test "${OPENTHREAD_ENABLE_VENDOR_EXTENSION}" = "1"])
 
 #
@@ -737,7 +684,7 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_VENDOR_EXTENSION], [test "${OPENTHREAD_ENABLE_
 
 AC_ARG_WITH(
     [ncp-vendor-hook-source],
-    [AS_HELP_STRING([--with-ncp-vendor-hook-source=<VENDOR_HOOK.CPP>],[Specify a C++ file that implements the NCP vendor hook. @<:@default=none@:>@.])],
+    [AS_HELP_STRING([--with-ncp-vendor-hook-source=<VENDOR_HOOK.CPP>],[Specify a C++ file that implements the NCP vendor hook. @<:@default=no@:>@.])],
     [
         if test "${withval}" = "no"
         then OPENTHREAD_ENABLE_NCP_VENDOR_HOOK=0
@@ -745,6 +692,7 @@ AC_ARG_WITH(
         then AC_MSG_ERROR([Can't open ${withval} for --with-ncp-vendor-hook-source])
         else
             OPENTHREAD_ENABLE_NCP_VENDOR_HOOK=1
+            CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_ENABLE_NCP_VENDOR_HOOK=1"
 
             # Get the absolute path.
             OPENTHREAD_NCP_VENDOR_HOOK_SOURCE=$(cd `dirname ${withval}` && pwd)/$(basename ${withval})
@@ -752,13 +700,12 @@ AC_ARG_WITH(
     ],
     [
         OPENTHREAD_ENABLE_NCP_VENDOR_HOOK=0
-        with_ncp_vendor_hook_source=none
+        with_ncp_vendor_hook_source=no
     ])
 
 AC_MSG_CHECKING([for NCP vendor hook source])
-AC_MSG_RESULT(${OPENTHREAD_NCP_VENDOR_HOOK_SOURCE-none})
+AC_MSG_RESULT(${OPENTHREAD_NCP_VENDOR_HOOK_SOURCE-no})
 AC_SUBST(OPENTHREAD_NCP_VENDOR_HOOK_SOURCE)
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_VENDOR_HOOK],[${OPENTHREAD_ENABLE_NCP_VENDOR_HOOK}],[Define to 1 if using NCP vendor hook])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_VENDOR_HOOK], [test "${OPENTHREAD_ENABLE_NCP_VENDOR_HOOK}" = "1"])
 
 #
@@ -767,7 +714,7 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_VENDOR_HOOK], [test "${OPENTHREAD_ENABLE_N
 
 AC_ARG_WITH(
     [ncp-spinel-encrypter-libs],
-    [AS_HELP_STRING([--with-ncp-spinel-encrypter-libs=<LIBSPINEL_ENCRYPTER.A>],[Specify library files (absolute paths) implementing the NCP Spinel Encrypter. @<:@default=none@:>@.])],
+    [AS_HELP_STRING([--with-ncp-spinel-encrypter-libs=<LIBSPINEL_ENCRYPTER.A>],[Specify library files (absolute paths) implementing the NCP Spinel Encrypter. @<:@default=no@:>@.])],
     [
         if test "${withval}" = "no"
         then OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER=0
@@ -778,13 +725,13 @@ AC_ARG_WITH(
     ],
     [
         OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER=0
-        with_ncp_spinel_encrypter_libs=none
+        with_ncp_spinel_encrypter_libs=no
     ])
 
+CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER=${OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER}"
 AC_MSG_CHECKING([for NCP Spinel Encrypter])
-AC_MSG_RESULT(${OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS-none})
+AC_MSG_RESULT(${OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS-no})
 AC_SUBST(OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS)
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER],[${OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER}],[Define to 1 if using NCP Spinel Encrypter])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER], [test "${OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER}" = "1"])
 
 #
@@ -817,7 +764,7 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_LINKER_MAP], [test "${enable_linker_map}" = "y
 
 AC_ARG_WITH(
     [custom-linker-file],
-    [AS_HELP_STRING([--with-custom-linker-file=<linkerfile.ld>],[Specify custom linker file (absolute path). @<:@default=none@:>@.])],
+    [AS_HELP_STRING([--with-custom-linker-file=<linkerfile.ld>],[Specify custom linker file (absolute path). @<:@default=no@:>@.])],
     [
         with_custom_linker_file=yes
         OPENTHREAD_CUSTOM_LINKER_FILE=${withval}
@@ -835,14 +782,14 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_CUSTOM_LINKER_FILE], [test "${with_custom_link
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: none, posix, cc1352, cc2538, cc2650, cc2652, efr32mg12, efr32mg21, gp712, kw41z, nrf52811, nrf52840, qpg6095, samr21 @<:@default=none@:>@.])],
+        [Specify the examples from one of: no, posix, cc1352, cc2538, cc2650, cc2652, efr32mg12, efr32mg21, gp712, kw41z, nrf52811, nrf52833, nrf52840, qpg6095, samr21 @<:@default=no@:>@.])],
     [
         case "${with_examples}" in
-        none)
+        no)
             ;;
-        posix|cc1352|cc2538|cc2650|cc2652|efr32mg12|efr32mg21|gp712|kw41z|nrf52811|nrf52840|qpg6095|samr21)
+        posix|cc1352|cc2538|cc2650|cc2652|efr32mg12|efr32mg21|gp712|kw41z|nrf52811|nrf52833|nrf52840|qpg6095|samr21)
             if test ${enable_posix_app} = "yes"; then
-                AC_MSG_ERROR([--with-examples must be none when POSIX apps are enabled by --enable-posix-app])
+                AC_MSG_ERROR([--with-examples must be no when POSIX apps are enabled by --enable-posix-app])
             fi
             ;;
         *)
@@ -850,125 +797,31 @@ AC_ARG_WITH(examples,
             ;;
         esac
     ],
-    [with_examples=none])
+    [with_examples=no])
 
-OPENTHREAD_ENABLE_EXAMPLES=${with_examples}
+AM_CONDITIONAL([OPENTHREAD_ENABLE_EXAMPLES], [test ${with_examples} != "no"])
 
-case ${with_examples} in
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_POSIX],     [test "${with_examples}" = "posix"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC1352],    [test "${with_examples}" = "cc1352"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2538],    [test "${with_examples}" = "cc2538"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2650],    [test "${with_examples}" = "cc2650"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2652],    [test "${with_examples}" = "cc2652"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32MG12], [test "${with_examples}" = "efr32mg12"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32MG21], [test "${with_examples}" = "efr32mg21"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_GP712],     [test "${with_examples}" = "gp712"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_KW41Z],     [test "${with_examples}" = "kw41z"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52811],  [test "${with_examples}" = "nrf52811"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52833],  [test "${with_examples}" = "nrf52833"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52840],  [test "${with_examples}" = "nrf52840"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_QPG6095],   [test "${with_examples}" = "qpg6095"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_SAMR21],    [test "${with_examples}" = "samr21"])
 
-    posix)
-        OPENTHREAD_EXAMPLES_POSIX=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_POSIX],[${OPENTHREAD_EXAMPLES_POSIX}],[Define to 1 if you want to use posix examples])
-        ;;
-
-    cc1352)
-        OPENTHREAD_EXAMPLES_CC1352=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC1352],[${OPENTHREAD_EXAMPLES_CC1352}],[Define to 1 if you want to use cc1352 examples])
-        ;;
-
-    cc2538)
-        OPENTHREAD_EXAMPLES_CC2538=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2538],[${OPENTHREAD_EXAMPLES_CC2538}],[Define to 1 if you want to use cc2538 examples])
-        ;;
-
-    cc2650)
-        OPENTHREAD_EXAMPLES_CC2650=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2650],[${OPENTHREAD_EXAMPLES_CC2650}],[Define to 1 if you want to use cc2650 examples])
-        ;;
-
-    cc2652)
-        OPENTHREAD_EXAMPLES_CC2652=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2652],[${OPENTHREAD_EXAMPLES_CC2652}],[Define to 1 if you want to use cc2652 examples])
-        ;;
-
-    efr32mg12)
-        OPENTHREAD_EXAMPLES_EFR32MG12=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_EFR32MG12],[${OPENTHREAD_EXAMPLES_EFR32MG12}],[Define to 1 if you want to use efr32mg12 examples])
-        ;;
-
-    efr32mg21)
-        OPENTHREAD_EXAMPLES_EFR32MG21=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_EFR32MG21],[${OPENTHREAD_EXAMPLES_EFR32MG21}],[Define to 1 if you want to use efr32mg21 examples])
-        ;;
-
-    gp712)
-        OPENTHREAD_EXAMPLES_GP712=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_GP712],[${OPENTHREAD_EXAMPLES_GP712}],[Define to 1 if you want to use gp712 examples])
-        ;;
-
-    kw41z)
-        OPENTHREAD_EXAMPLES_KW41Z=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_KW41Z],[${OPENTHREAD_EXAMPLES_KW41Z}],[Define to 1 if you want to use kw41z examples])
-        ;;
-
-    nrf52811)
-        OPENTHREAD_EXAMPLES_NRF52811=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_NRF52811],[${OPENTHREAD_EXAMPLES_NRF52811}],[Define to 1 if you want to use nrf52811 examples])
-        ;;
-
-    nrf52840)
-        OPENTHREAD_EXAMPLES_NRF52840=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_NRF52840],[${OPENTHREAD_EXAMPLES_NRF52840}],[Define to 1 if you want to use nrf52840 examples])
-        ;;
-
-    qpg6095)
-        OPENTHREAD_EXAMPLES_QPG6095=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_QPG6095],[${OPENTHREAD_EXAMPLES_QPG6095}],[Define to 1 if you want to use qpg6095 examples])
-        ;;
-
-    samr21)
-        OPENTHREAD_EXAMPLES_SAMR21=1
-        AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_SAMR21],[${OPENTHREAD_EXAMPLES_SAMR21}],[Define to 1 if you want to use samr21 examples])
-        ;;
-
-esac
+AM_COND_IF([OPENTHREAD_EXAMPLES_POSIX], CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_EXAMPLES_POSIX=1")
 
 AC_MSG_CHECKING([whether to enable examples])
-AC_MSG_RESULT(${OPENTHREAD_EXAMPLES})
+AC_MSG_RESULT(${with_examples})
 
-AC_SUBST(OPENTHREAD_ENABLE_EXAMPLES)
-AM_CONDITIONAL([OPENTHREAD_ENABLE_EXAMPLES], [test ${with_examples} != "none"])
-AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_EXAMPLES],[${OPENTHREAD_ENABLE_EXAMPLES}],[OpenThread examples])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_POSIX)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_POSIX], [test "${with_examples}" = "posix"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_CC1352)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC1352], [test "${with_examples}" = "cc1352"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_CC2538)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2538], [test "${with_examples}" = "cc2538"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_CC2650)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2650], [test "${with_examples}" = "cc2650"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_CC2652)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2652], [test "${with_examples}" = "cc2652"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_EFR32MG12)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32MG12], [test "${with_examples}" = "efr32mg12"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_EFR32MG21)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32MG21], [test "${with_examples}" = "efr32mg21"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_GP712)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_GP712], [test "${with_examples}" = "gp712"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_KW41Z)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_KW41Z], [test "${with_examples}" = "kw41z"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_NRF52811)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52811], [test "${with_examples}" = "nrf52811"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_NRF52840)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52840], [test "${with_examples}" = "nrf52840"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_QPG6095)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_QPG6095], [test "${with_examples}" = "qpg6095"])
-
-AC_SUBST(OPENTHREAD_EXAMPLES_SAMR21)
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_SAMR21], [test "${with_examples}" = "samr21"])
-
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF528XX], [test OPENTHREAD_EXAMPLES_NRF52811 || test OPENTHREAD_EXAMPLES_NRF52833 || test OPENTHREAD_EXAMPLES_NRF52840])
 #
 # Tools
 #
@@ -1005,7 +858,7 @@ NL_ENABLE_DOCS([auto],[NO])
 
 AM_CONDITIONAL(OPENTHREAD_BUILD_DOCS, [test "${nl_cv_build_docs}" = "yes"])
 
-AM_CONDITIONAL(OPENTHREAD_POSIX, [test "${OPENTHREAD_PLATFORM_POSIX_APP}" = "1" -o "${OPENTHREAD_EXAMPLES_POSIX}" = "1"])
+AM_CONDITIONAL(OPENTHREAD_POSIX, [test "${enable_posix_app}" = "yes" -o "${with_examples}" = "posix"])
 
 #
 # Checks for libraries and packages.
@@ -1123,10 +976,12 @@ examples/platforms/efr32mg12/sleepy-demo/Makefile
 examples/platforms/efr32mg12/sleepy-demo/sleepy-demo-ftd/Makefile
 examples/platforms/efr32mg12/sleepy-demo/sleepy-demo-mtd/Makefile
 examples/platforms/efr32mg21/Makefile
+examples/platforms/efr32mg21/sleepy-demo/Makefile
+examples/platforms/efr32mg21/sleepy-demo/sleepy-demo-ftd/Makefile
+examples/platforms/efr32mg21/sleepy-demo/sleepy-demo-mtd/Makefile
 examples/platforms/gp712/Makefile
 examples/platforms/kw41z/Makefile
-examples/platforms/nrf52811/Makefile
-examples/platforms/nrf52840/Makefile
+examples/platforms/nrf528xx/Makefile
 examples/platforms/qpg6095/Makefile
 examples/platforms/samr21/Makefile
 examples/platforms/posix/Makefile

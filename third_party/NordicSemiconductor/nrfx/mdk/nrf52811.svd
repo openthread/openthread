@@ -225,6 +225,11 @@ POSSIBILITY OF SUCH DAMAGE.\n
                     <value>0x52811</value>
                   </enumeratedValue>
                   <enumeratedValue>
+                    <name>N52832</name>
+                    <description>nRF52832</description>
+                    <value>0x52832</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
                     <name>Unspecified</name>
                     <description>Unspecified</description>
                     <value>0xFFFFFFFF</value>
@@ -317,6 +322,11 @@ POSSIBILITY OF SUCH DAMAGE.\n
                     <name>QC</name>
                     <description>QCxx - 32-pin QFN</description>
                     <value>0x2003</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>CA</name>
+                    <description>CAxx - WLCSP</description>
+                    <value>0x2004</value>
                   </enumeratedValue>
                   <enumeratedValue>
                     <name>Unspecified</name>
@@ -659,7 +669,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
       <size>0x20</size>
       <registers>
         <register>
-          <dim>0xF</dim>
+          <dim>0xD</dim>
           <dimIncrement>0x4</dimIncrement>
           <name>NRFFW[%s]</name>
           <description>Description collection: Reserved for Nordic firmware design</description>
@@ -2472,13 +2482,13 @@ POSSIBILITY OF SUCH DAMAGE.\n
       <registers>
         <register>
           <name>TASKS_CONSTLAT</name>
-          <description>Enable constant latency mode</description>
+          <description>Enable Constant Latency mode</description>
           <addressOffset>0x078</addressOffset>
           <access>write-only</access>
           <fields>
             <field>
               <name>TASKS_CONSTLAT</name>
-              <description>Enable constant latency mode</description>
+              <description>Enable Constant Latency mode</description>
               <lsb>0</lsb>
               <msb>0</msb>
               <enumeratedValues>
@@ -2493,13 +2503,13 @@ POSSIBILITY OF SUCH DAMAGE.\n
         </register>
         <register>
           <name>TASKS_LOWPWR</name>
-          <description>Enable low power mode (variable latency)</description>
+          <description>Enable Low-power mode (variable latency)</description>
           <addressOffset>0x07C</addressOffset>
           <access>write-only</access>
           <fields>
             <field>
               <name>TASKS_LOWPWR</name>
-              <description>Enable low power mode (variable latency)</description>
+              <description>Enable Low-power mode (variable latency)</description>
               <lsb>0</lsb>
               <msb>0</msb>
               <enumeratedValues>
@@ -9880,13 +9890,13 @@ POSSIBILITY OF SUCH DAMAGE.\n
         </register>
         <register>
           <name>EVENTS_EDEND</name>
-          <description>Sampling of energy detection complete. A new ED sample is ready for readout from the RADIO.EDSAMPLE register.</description>
+          <description>Sampling of energy detection complete. A new ED sample is ready for readout from the RADIO.EDSAMPLE register</description>
           <addressOffset>0x13C</addressOffset>
           <access>read-write</access>
           <fields>
             <field>
               <name>EVENTS_EDEND</name>
-              <description>Sampling of energy detection complete. A new ED sample is ready for readout from the RADIO.EDSAMPLE register.</description>
+              <description>Sampling of energy detection complete. A new ED sample is ready for readout from the RADIO.EDSAMPLE register</description>
               <lsb>0</lsb>
               <msb>0</msb>
               <enumeratedValues>
@@ -10114,13 +10124,39 @@ POSSIBILITY OF SUCH DAMAGE.\n
         </register>
         <register>
           <name>EVENTS_PHYEND</name>
-          <description>Generated in Ble_LR125Kbit, Ble_LR500Kbit and Ieee802154_250Kbit modes when last bit is sent on air.</description>
+          <description>Generated when last bit is sent on air</description>
           <addressOffset>0x16C</addressOffset>
           <access>read-write</access>
           <fields>
             <field>
               <name>EVENTS_PHYEND</name>
-              <description>Generated in Ble_LR125Kbit, Ble_LR500Kbit and Ieee802154_250Kbit modes when last bit is sent on air.</description>
+              <description>Generated when last bit is sent on air</description>
+              <lsb>0</lsb>
+              <msb>0</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>NotGenerated</name>
+                  <description>Event not generated</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Generated</name>
+                  <description>Event generated</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>EVENTS_CTEPRESENT</name>
+          <description>CTE is present (early warning right after receiving CTEInfo byte)</description>
+          <addressOffset>0x170</addressOffset>
+          <access>read-write</access>
+          <fields>
+            <field>
+              <name>EVENTS_CTEPRESENT</name>
+              <description>CTE is present (early warning right after receiving CTEInfo byte)</description>
               <lsb>0</lsb>
               <msb>0</msb>
               <enumeratedValues>
@@ -11088,6 +11124,33 @@ POSSIBILITY OF SUCH DAMAGE.\n
                 </enumeratedValue>
               </enumeratedValues>
             </field>
+            <field>
+              <name>CTEPRESENT</name>
+              <description>Write '1' to enable interrupt for event CTEPRESENT</description>
+              <lsb>28</lsb>
+              <msb>28</msb>
+              <enumeratedValues>
+                <usage>read</usage>
+                <enumeratedValue>
+                  <name>Disabled</name>
+                  <description>Read: Disabled</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Enabled</name>
+                  <description>Read: Enabled</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+              <enumeratedValues>
+                <usage>write</usage>
+                <enumeratedValue>
+                  <name>Set</name>
+                  <description>Enable</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
           </fields>
         </register>
         <register>
@@ -11690,6 +11753,33 @@ POSSIBILITY OF SUCH DAMAGE.\n
                 </enumeratedValue>
               </enumeratedValues>
             </field>
+            <field>
+              <name>CTEPRESENT</name>
+              <description>Write '1' to disable interrupt for event CTEPRESENT</description>
+              <lsb>28</lsb>
+              <msb>28</msb>
+              <enumeratedValues>
+                <usage>read</usage>
+                <enumeratedValue>
+                  <name>Disabled</name>
+                  <description>Read: Disabled</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Enabled</name>
+                  <description>Read: Enabled</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+              <enumeratedValues>
+                <usage>write</usage>
+                <enumeratedValue>
+                  <name>Clear</name>
+                  <description>Disable</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
           </fields>
         </register>
         <register>
@@ -11798,6 +11888,96 @@ POSSIBILITY OF SUCH DAMAGE.\n
                 <enumeratedValue>
                   <name>LR500kbit</name>
                   <description>Frame is received at 500kbps</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>CTESTATUS</name>
+          <description>CTEInfo parsed from received packet</description>
+          <addressOffset>0x44C</addressOffset>
+          <access>read-only</access>
+          <fields>
+            <field>
+              <name>CTETIME</name>
+              <description>CTETime parsed from packet</description>
+              <lsb>0</lsb>
+              <msb>4</msb>
+            </field>
+            <field>
+              <name>RFU</name>
+              <description>RFU parsed from packet</description>
+              <lsb>5</lsb>
+              <msb>5</msb>
+            </field>
+            <field>
+              <name>CTETYPE</name>
+              <description>CTEType parsed from packet</description>
+              <lsb>6</lsb>
+              <msb>7</msb>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>DFESTATUS</name>
+          <description>DFE status information</description>
+          <addressOffset>0x458</addressOffset>
+          <access>read-only</access>
+          <fields>
+            <field>
+              <name>SWITCHINGSTATE</name>
+              <description>Internal state of switching state machine</description>
+              <lsb>0</lsb>
+              <msb>2</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Idle</name>
+                  <description>Switching state Idle</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Offset</name>
+                  <description>Switching state Offset</description>
+                  <value>1</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Guard</name>
+                  <description>Switching state Guard</description>
+                  <value>2</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Ref</name>
+                  <description>Switching state Ref</description>
+                  <value>3</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Switching</name>
+                  <description>Switching state Switching</description>
+                  <value>4</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Ending</name>
+                  <description>Switching state Ending</description>
+                  <value>5</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>SAMPLINGSTATE</name>
+              <description>Internal state of sampling state machine</description>
+              <lsb>4</lsb>
+              <msb>4</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Idle</name>
+                  <description>Sampling state Idle</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Sampling</name>
+                  <description>Sampling state Sampling</description>
                   <value>1</value>
                 </enumeratedValue>
               </enumeratedValues>
@@ -11932,37 +12112,37 @@ POSSIBILITY OF SUCH DAMAGE.\n
               <enumeratedValues>
                 <enumeratedValue>
                   <name>Nrf_1Mbit</name>
-                  <description>1 Mbit/s Nordic proprietary radio mode</description>
+                  <description>1 Mbps Nordic proprietary radio mode</description>
                   <value>0</value>
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>Nrf_2Mbit</name>
-                  <description>2 Mbit/s Nordic proprietary radio mode</description>
+                  <description>2 Mbps Nordic proprietary radio mode</description>
                   <value>1</value>
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>Ble_1Mbit</name>
-                  <description>1 Mbit/s BLE</description>
+                  <description>1 Mbps BLE</description>
                   <value>3</value>
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>Ble_2Mbit</name>
-                  <description>2 Mbit/s BLE</description>
+                  <description>2 Mbps BLE</description>
                   <value>4</value>
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>Ble_LR125Kbit</name>
-                  <description>Long range 125 kbit/s TX, 125 kbit/s and 500 kbit/s RX</description>
+                  <description>Long range 125 kbps TX, 125 kbps and 500 kbps RX</description>
                   <value>5</value>
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>Ble_LR500Kbit</name>
-                  <description>Long range 500 kbit/s TX, 125 kbit/s and 500 kbit/s RX</description>
+                  <description>Long range 500 kbps TX, 125 kbps and 500 kbps RX</description>
                   <value>6</value>
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>Ieee802154_250Kbit</name>
-                  <description>IEEE 802.15.4-2006 250 kbit/s</description>
+                  <description>IEEE 802.15.4-2006 250 kbps</description>
                   <value>15</value>
                 </enumeratedValue>
               </enumeratedValues>
@@ -12097,7 +12277,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
             </field>
             <field>
               <name>ENDIAN</name>
-              <description>On air endianness of packet, this applies to the S0, LENGTH, S1 and the PAYLOAD fields.</description>
+              <description>On-air endianness of packet, this applies to the S0, LENGTH, S1, and the PAYLOAD fields.</description>
               <lsb>24</lsb>
               <msb>24</msb>
               <enumeratedValues>
@@ -12577,7 +12757,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
           <fields>
             <field>
               <name>DATAWHITEIV</name>
-              <description>Data whitening initial value. Bit 6 is hard-wired to '1', writing '0' to it has no effect, and it will always be read back and used by the device as '1'.</description>
+              <description>Data whitening initial value. Bit 6 is hardwired to '1', writing '0' to it has no effect, and it will always be read back and used by the device as '1'.</description>
               <lsb>0</lsb>
               <msb>6</msb>
             </field>
@@ -13000,7 +13180,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
             </field>
             <field>
               <name>CCACORRTHRES</name>
-              <description>CCA correlator busy threshold. Only relevant to CarrierMode, CarrierAndEdMode and CarrierOrEdMode.</description>
+              <description>CCA correlator busy threshold. Only relevant to CarrierMode, CarrierAndEdMode, and CarrierOrEdMode.</description>
               <lsb>16</lsb>
               <msb>23</msb>
             </field>
@@ -13012,6 +13192,525 @@ POSSIBILITY OF SUCH DAMAGE.\n
             </field>
           </fields>
         </register>
+        <register>
+          <name>DFEMODE</name>
+          <description>Whether to use Angle-of-Arrival (AOA) or Angle-of-Departure (AOD)</description>
+          <addressOffset>0x900</addressOffset>
+          <access>read-write</access>
+          <resetValue>0x00000000</resetValue>
+          <fields>
+            <field>
+              <name>DFEOPMODE</name>
+              <description>Direction finding operation mode</description>
+              <lsb>0</lsb>
+              <msb>1</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Disabled</name>
+                  <description>Direction finding mode disabled</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>AoD</name>
+                  <description>Direction finding mode set to AoD</description>
+                  <value>2</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>AoA</name>
+                  <description>Direction finding mode set to AoA</description>
+                  <value>3</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>CTEINLINECONF</name>
+          <description>Configuration for CTE inline mode</description>
+          <addressOffset>0x904</addressOffset>
+          <access>read-write</access>
+          <resetValue>0x00002800</resetValue>
+          <fields>
+            <field>
+              <name>CTEINLINECTRLEN</name>
+              <description>Enable parsing of CTEInfo from received packet in BLE modes</description>
+              <lsb>0</lsb>
+              <msb>0</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Enabled</name>
+                  <description>Parsing of CTEInfo is enabled</description>
+                  <value>1</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Disabled</name>
+                  <description>Parsing of CTEInfo is disabled</description>
+                  <value>0</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>CTEINFOINS1</name>
+              <description>CTEInfo is S1 byte or not</description>
+              <lsb>3</lsb>
+              <msb>3</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>InS1</name>
+                  <description>CTEInfo is in S1 byte (data PDU)</description>
+                  <value>1</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>NotInS1</name>
+                  <description>CTEInfo is NOT in S1 byte (advertising PDU)</description>
+                  <value>0</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>CTEERRORHANDLING</name>
+              <description>Sampling/switching if CRC is not OK</description>
+              <lsb>4</lsb>
+              <msb>4</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Yes</name>
+                  <description>Sampling and antenna switching also when CRC is not OK</description>
+                  <value>1</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>No</name>
+                  <description>No sampling and antenna switching when CRC is not OK</description>
+                  <value>0</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>CTETIMEVALIDRANGE</name>
+              <description>Max range of CTETime</description>
+              <lsb>6</lsb>
+              <msb>7</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>20</name>
+                  <description>20 in 8us unit (default) Set to 20 if parsed CTETime is larger han 20</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>31</name>
+                  <description>31 in 8us unit</description>
+                  <value>1</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>63</name>
+                  <description>63 in 8us unit</description>
+                  <value>2</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>CTEINLINERXMODE1US</name>
+              <description>Spacing between samples for the samples in the SWITCHING period when CTEINLINEMODE is set</description>
+              <lsb>10</lsb>
+              <msb>12</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>4us</name>
+                  <description>4us</description>
+                  <value>1</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>2us</name>
+                  <description>2us</description>
+                  <value>2</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>1us</name>
+                  <description>1us</description>
+                  <value>3</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>500ns</name>
+                  <description>0.5us</description>
+                  <value>4</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>250ns</name>
+                  <description>0.25us</description>
+                  <value>5</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>125ns</name>
+                  <description>0.125us</description>
+                  <value>6</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>CTEINLINERXMODE2US</name>
+              <description>Spacing between samples for the samples in the SWITCHING period when CTEINLINEMODE is set</description>
+              <lsb>13</lsb>
+              <msb>15</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>4us</name>
+                  <description>4us</description>
+                  <value>1</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>2us</name>
+                  <description>2us</description>
+                  <value>2</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>1us</name>
+                  <description>1us</description>
+                  <value>3</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>500ns</name>
+                  <description>0.5us</description>
+                  <value>4</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>250ns</name>
+                  <description>0.25us</description>
+                  <value>5</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>125ns</name>
+                  <description>0.125us</description>
+                  <value>6</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>S0CONF</name>
+              <description>S0 bit pattern to match</description>
+              <lsb>16</lsb>
+              <msb>23</msb>
+            </field>
+            <field>
+              <name>S0MASK</name>
+              <description>S0 bit mask to set which bit to match</description>
+              <lsb>24</lsb>
+              <msb>31</msb>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>DFECTRL1</name>
+          <description>Various configuration for Direction finding</description>
+          <addressOffset>0x910</addressOffset>
+          <access>read-write</access>
+          <resetValue>0x00023282</resetValue>
+          <fields>
+            <field>
+              <name>NUMBEROF8US</name>
+              <description>Length of the AoA/AoD procedure in number of 8 us units</description>
+              <lsb>0</lsb>
+              <msb>5</msb>
+            </field>
+            <field>
+              <name>DFEINEXTENSION</name>
+              <description>Add CTE extension and do antenna switching/sampling in this extension</description>
+              <lsb>7</lsb>
+              <msb>7</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>CRC</name>
+                  <description>AoA/AoD procedure triggered at end of CRC</description>
+                  <value>1</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Payload</name>
+                  <description>Antenna switching/sampling is done in the packet payload</description>
+                  <value>0</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>TSWITCHSPACING</name>
+              <description>Interval between every time the antenna is changed in the SWITCHING state</description>
+              <lsb>8</lsb>
+              <msb>10</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>4us</name>
+                  <description>4us</description>
+                  <value>1</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>2us</name>
+                  <description>2us</description>
+                  <value>2</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>1us</name>
+                  <description>1us</description>
+                  <value>3</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>TSAMPLESPACINGREF</name>
+              <description>Interval between samples in the REFERENCE period</description>
+              <lsb>12</lsb>
+              <msb>14</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>4us</name>
+                  <description>4us</description>
+                  <value>1</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>2us</name>
+                  <description>2us</description>
+                  <value>2</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>1us</name>
+                  <description>1us</description>
+                  <value>3</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>500ns</name>
+                  <description>0.5us</description>
+                  <value>4</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>250ns</name>
+                  <description>0.25us</description>
+                  <value>5</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>125ns</name>
+                  <description>0.125us</description>
+                  <value>6</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>SAMPLETYPE</name>
+              <description>Whether to sample I/Q or magnitude/phase</description>
+              <lsb>15</lsb>
+              <msb>15</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>IQ</name>
+                  <description>Complex samples in I and Q</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>MagPhase</name>
+                  <description>Complex samples as magnitude and phase</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>TSAMPLESPACING</name>
+              <description>Interval between samples in the SWITCHING period when CTEINLINECTRLEN is 0</description>
+              <lsb>16</lsb>
+              <msb>18</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>4us</name>
+                  <description>4us</description>
+                  <value>1</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>2us</name>
+                  <description>2us</description>
+                  <value>2</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>1us</name>
+                  <description>1us</description>
+                  <value>3</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>500ns</name>
+                  <description>0.5us</description>
+                  <value>4</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>250ns</name>
+                  <description>0.25us</description>
+                  <value>5</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>125ns</name>
+                  <description>0.125us</description>
+                  <value>6</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>AGCBACKOFFGAIN</name>
+              <description>Gain will be lowered by the specified number of gain steps at the start of CTE</description>
+              <lsb>24</lsb>
+              <msb>27</msb>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>DFECTRL2</name>
+          <description>Start offset for Direction finding</description>
+          <addressOffset>0x914</addressOffset>
+          <access>read-write</access>
+          <resetValue>0x00000000</resetValue>
+          <fields>
+            <field>
+              <name>TSWITCHOFFSET</name>
+              <description>Signed value offset after the end of the CRC before starting switching in number of 16M cycles</description>
+              <lsb>0</lsb>
+              <msb>12</msb>
+            </field>
+            <field>
+              <name>TSAMPLEOFFSET</name>
+              <description>Signed value offset before starting sampling in number of 16M cycles relative to the beginning of the REFERENCE state - 12 us after switching start</description>
+              <lsb>16</lsb>
+              <msb>27</msb>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>SWITCHPATTERN</name>
+          <description>GPIO patterns to be used for each antenna</description>
+          <addressOffset>0x928</addressOffset>
+          <access>read-write</access>
+          <resetValue>0x00000000</resetValue>
+          <fields>
+            <field>
+              <name>SWITCHPATTERN</name>
+              <description>Fill array of GPIO patterns for antenna control</description>
+              <lsb>0</lsb>
+              <msb>7</msb>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>CLEARPATTERN</name>
+          <description>Clear the GPIO pattern array for antenna control</description>
+          <addressOffset>0x92C</addressOffset>
+          <access>read-write</access>
+          <fields>
+            <field>
+              <name>CLEARPATTERN</name>
+              <description>Clears GPIO pattern array for antenna control</description>
+              <lsb>0</lsb>
+              <msb>0</msb>
+              <modifiedWriteValues>oneToClear</modifiedWriteValues>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Clear</name>
+                  <description>Clear the GPIO pattern</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        <cluster>
+          <name>PSEL</name>
+          <description>Unspecified</description>
+          <headerStructName>RADIO_PSEL</headerStructName>
+          <access>read-write</access>
+          <addressOffset>0x930</addressOffset>
+          <register>
+            <dim>0x8</dim>
+            <dimIncrement>0x4</dimIncrement>
+            <name>DFEGPIO[%s]</name>
+            <description>Description collection: Pin select for DFE pin n</description>
+            <addressOffset>0x000</addressOffset>
+            <access>read-write</access>
+            <resetValue>0xFFFFFFFF</resetValue>
+            <fields>
+              <field>
+                <name>PIN</name>
+                <description>Pin number</description>
+                <lsb>0</lsb>
+                <msb>4</msb>
+              </field>
+              <field>
+                <name>PORT</name>
+                <description>Port number</description>
+                <lsb>5</lsb>
+                <msb>5</msb>
+              </field>
+              <field>
+                <name>CONNECT</name>
+                <description>Connection</description>
+                <lsb>31</lsb>
+                <msb>31</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Disconnected</name>
+                    <description>Disconnect</description>
+                    <value>1</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Connected</name>
+                    <description>Connect</description>
+                    <value>0</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+            </fields>
+          </register>
+        </cluster>
+        <cluster>
+          <name>DFEPACKET</name>
+          <description>DFE packet EasyDMA channel</description>
+          <headerStructName>RADIO_DFEPACKET</headerStructName>
+          <access>read-write</access>
+          <addressOffset>0x950</addressOffset>
+          <register>
+            <name>PTR</name>
+            <description>Data pointer</description>
+            <addressOffset>0x000</addressOffset>
+            <access>read-write</access>
+            <resetValue>0x00000000</resetValue>
+            <fields>
+              <field>
+                <name>PTR</name>
+                <description>Data pointer</description>
+                <lsb>0</lsb>
+                <msb>31</msb>
+              </field>
+            </fields>
+          </register>
+          <register>
+            <name>MAXCNT</name>
+            <description>Maximum number of buffer words to transfer</description>
+            <addressOffset>0x004</addressOffset>
+            <access>read-write</access>
+            <resetValue>0x00001000</resetValue>
+            <fields>
+              <field>
+                <name>MAXCNT</name>
+                <description>Maximum number of buffer words to transfer</description>
+                <lsb>0</lsb>
+                <msb>12</msb>
+              </field>
+            </fields>
+          </register>
+          <register>
+            <name>AMOUNT</name>
+            <description>Number of samples transferred in the last transaction</description>
+            <addressOffset>0x008</addressOffset>
+            <access>read-only</access>
+            <fields>
+              <field>
+                <name>AMOUNT</name>
+                <description>Number of samples transferred in the last transaction</description>
+                <lsb>0</lsb>
+                <msb>15</msb>
+              </field>
+            </fields>
+          </register>
+        </cluster>
         <register>
           <name>POWER</name>
           <description>Peripheral power control</description>
@@ -27996,7 +28695,7 @@ POSSIBILITY OF SUCH DAMAGE.\n
           <fields>
             <field>
               <name>SCRATCHPTR</name>
-              <description>Pointer to a scratch data area used for temporary storage during resolution.A space of minimum 3 bytes must be reserved.</description>
+              <description>Pointer to a scratch data area used for temporary storage during resolution. A space of minimum 3 bytes must be reserved.</description>
               <lsb>0</lsb>
               <msb>31</msb>
             </field>

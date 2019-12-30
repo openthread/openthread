@@ -33,9 +33,203 @@
 #include "radio/radio.hpp"
 #include "utils/wrap_string.h"
 
+#include "test_platform.h"
 #include "test_util.h"
 
 namespace ot {
+
+bool CompareReversed(const uint8_t *aFirst, const uint8_t *aSecond, uint16_t aLength)
+{
+    bool matches = true;
+
+    for (uint16_t i = 0; i < aLength; i++)
+    {
+        if (aFirst[i] != aSecond[aLength - 1 - i])
+        {
+            matches = false;
+            break;
+        }
+    }
+
+    return matches;
+}
+
+void TestMacAddress(void)
+{
+    const uint8_t           kExtAddr[OT_EXT_ADDRESS_SIZE] = {0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0};
+    const Mac::ShortAddress kShortAddr                    = 0x1234;
+
+    ot::Instance *  instance;
+    Mac::Address    addr;
+    Mac::ExtAddress extAddr;
+    uint8_t         buffer[OT_EXT_ADDRESS_SIZE];
+
+    instance = testInitInstance();
+    VerifyOrQuit(instance != NULL, "NULL instance\n");
+
+    // Mac::ExtAddress
+
+    extAddr.GenerateRandom();
+    VerifyOrQuit(extAddr.IsLocal(), "Random Extended Address should have its Local bit set");
+    VerifyOrQuit(!extAddr.IsGroup(), "Random Extended Address should not have its Group bit set");
+
+    extAddr.CopyTo(buffer);
+    VerifyOrQuit(memcmp(extAddr.m8, buffer, OT_EXT_ADDRESS_SIZE) == 0, "ExtAddress::CopyTo() failed");
+
+    extAddr.CopyTo(buffer, Mac::ExtAddress::kReverseByteOrder);
+    VerifyOrQuit(CompareReversed(extAddr.m8, buffer, OT_EXT_ADDRESS_SIZE), "ExtAddress::CopyTo() failed");
+
+    extAddr.Set(kExtAddr);
+    VerifyOrQuit(memcmp(extAddr.m8, kExtAddr, OT_EXT_ADDRESS_SIZE) == 0, "ExtAddress::Set() failed");
+
+    extAddr.Set(kExtAddr, Mac::ExtAddress::kReverseByteOrder);
+    VerifyOrQuit(CompareReversed(extAddr.m8, kExtAddr, OT_EXT_ADDRESS_SIZE), "ExtAddress::Set() failed");
+
+    extAddr.SetLocal(true);
+    VerifyOrQuit(extAddr.IsLocal(), "ExtAddress::SetLocal() failed");
+    extAddr.SetLocal(false);
+    VerifyOrQuit(!extAddr.IsLocal(), "ExtAddress::SetLocal() failed");
+    extAddr.ToggleLocal();
+    VerifyOrQuit(extAddr.IsLocal(), "ExtAddress::SetLocal() failed");
+    extAddr.ToggleLocal();
+    VerifyOrQuit(!extAddr.IsLocal(), "ExtAddress::SetLocal() failed");
+
+    extAddr.SetGroup(true);
+    VerifyOrQuit(extAddr.IsGroup(), "ExtAddress::SetGroup() failed");
+    extAddr.SetGroup(false);
+    VerifyOrQuit(!extAddr.IsGroup(), "ExtAddress::SetGroup() failed");
+    extAddr.ToggleGroup();
+    VerifyOrQuit(extAddr.IsGroup(), "ExtAddress::SetGroup() failed");
+    extAddr.ToggleGroup();
+    VerifyOrQuit(!extAddr.IsGroup(), "ExtAddress::SetGroup() failed");
+
+    // Mac::Address
+
+    VerifyOrQuit(addr.IsNone(), "Address constructor failed");
+    VerifyOrQuit(addr.GetType() == Mac::Address::kTypeNone, "Address::GetType() failed");
+
+    addr.SetShort(kShortAddr);
+    VerifyOrQuit(addr.GetType() == Mac::Address::kTypeShort, "Address::GetType() failed");
+    VerifyOrQuit(addr.IsShort(), "Address::SetShort() failed");
+    VerifyOrQuit(!addr.IsExtended(), "Address::SetShort() failed");
+    VerifyOrQuit(addr.GetShort() == kShortAddr, "Address::GetShort() failed");
+
+    addr.SetExtended(extAddr);
+    VerifyOrQuit(addr.GetType() == Mac::Address::kTypeExtended, "Address::GetType() failed");
+    VerifyOrQuit(!addr.IsShort(), "Address::SetExtended() failed");
+    VerifyOrQuit(addr.IsExtended(), "Address::SetExtended() failed");
+    VerifyOrQuit(addr.GetExtended() == extAddr, "Address::GetExtended() failed");
+
+    addr.SetExtended(extAddr.m8, Mac::ExtAddress::kReverseByteOrder);
+    VerifyOrQuit(addr.GetType() == Mac::Address::kTypeExtended, "Address::GetType() failed");
+    VerifyOrQuit(!addr.IsShort(), "Address::SetExtended() failed");
+    VerifyOrQuit(addr.IsExtended(), "Address::SetExtended() failed");
+    VerifyOrQuit(CompareReversed(addr.GetExtended().m8, extAddr.m8, OT_EXT_ADDRESS_SIZE),
+                 "Address::SetExtended() reverse byte order failed");
+
+    addr.SetNone();
+    VerifyOrQuit(addr.GetType() == Mac::Address::kTypeNone, "Address::GetType() failed");
+    VerifyOrQuit(addr.IsNone(), "Address:SetNone() failed");
+    VerifyOrQuit(!addr.IsShort(), "Address::SetNone() failed");
+    VerifyOrQuit(!addr.IsExtended(), "Address::SetNone() failed");
+
+    VerifyOrQuit(!addr.IsBroadcast(), "Address:IsBroadcast() failed");
+    VerifyOrQuit(!addr.IsShortAddrInvalid(), "Address:IsShortAddrInvalid() failed");
+
+    addr.SetExtended(extAddr);
+    VerifyOrQuit(!addr.IsBroadcast(), "Address:IsBroadcast() failed");
+    VerifyOrQuit(!addr.IsShortAddrInvalid(), "Address:IsShortAddrInvalid() failed");
+
+    addr.SetShort(kShortAddr);
+    VerifyOrQuit(!addr.IsBroadcast(), "Address:IsBroadcast() failed");
+    VerifyOrQuit(!addr.IsShortAddrInvalid(), "Address:IsShortAddrInvalid() failed");
+
+    addr.SetShort(Mac::kShortAddrBroadcast);
+    VerifyOrQuit(addr.IsBroadcast(), "Address:IsBroadcast() failed");
+    VerifyOrQuit(!addr.IsShortAddrInvalid(), "Address:IsShortAddrInvalid() failed");
+
+    addr.SetShort(Mac::kShortAddrInvalid);
+    VerifyOrQuit(!addr.IsBroadcast(), "Address:IsBroadcast() failed");
+    VerifyOrQuit(addr.IsShortAddrInvalid(), "Address:IsShortAddrInvalid() failed");
+
+    testFreeInstance(instance);
+}
+
+void CompareNetworkName(const Mac::NetworkName &aNetworkName, const char *aNameString)
+{
+    uint8_t len = static_cast<uint8_t>(strlen(aNameString));
+
+    VerifyOrQuit(strcmp(aNetworkName.GetAsCString(), aNameString) == 0, "NetworkName does not match expected value");
+
+    VerifyOrQuit(aNetworkName.GetAsData().GetLength() == len, "NetworkName:GetAsData().GetLength() is incorrect");
+    VerifyOrQuit(memcmp(aNetworkName.GetAsData().GetBuffer(), aNameString, len) == 0,
+                 "NetworkName:GetAsData().GetBuffer() is incorrect");
+}
+
+void TestMacNetworkName(void)
+{
+    const char kEmptyName[]   = "";
+    const char kName1[]       = "network";
+    const char kName2[]       = "network-name";
+    const char kLongName[]    = "0123456789abcdef";
+    const char kTooLongName[] = "0123456789abcdef0";
+
+    char             buffer[sizeof(kTooLongName) + 2];
+    uint8_t          len;
+    Mac::NetworkName networkName;
+
+    CompareNetworkName(networkName, kEmptyName);
+
+    SuccessOrQuit(networkName.Set(Mac::NetworkName::Data(kName1, sizeof(kName1))), "NetworkName::Set() failed");
+    CompareNetworkName(networkName, kName1);
+
+    VerifyOrQuit(networkName.Set(Mac::NetworkName::Data(kName1, sizeof(kName1))) == OT_ERROR_ALREADY,
+                 "NetworkName::Set() accepted same name without returning OT_ERROR_ALREADY");
+    CompareNetworkName(networkName, kName1);
+
+    VerifyOrQuit(networkName.Set(Mac::NetworkName::Data(kName1, sizeof(kName1) - 1)) == OT_ERROR_ALREADY,
+                 "NetworkName::Set() accepted same name without returning OT_ERROR_ALREADY");
+
+    SuccessOrQuit(networkName.Set(Mac::NetworkName::Data(kName2, sizeof(kName2))), "NetworkName::Set() failed");
+    CompareNetworkName(networkName, kName2);
+
+    SuccessOrQuit(networkName.Set(Mac::NetworkName::Data(kEmptyName, 0)), "NetworkName::Set() failed");
+    CompareNetworkName(networkName, kEmptyName);
+
+    SuccessOrQuit(networkName.Set(Mac::NetworkName::Data(kLongName, sizeof(kLongName))), "NetworkName::Set() failed");
+    CompareNetworkName(networkName, kLongName);
+
+    VerifyOrQuit(networkName.Set(Mac::NetworkName::Data(kLongName, sizeof(kLongName) - 1)) == OT_ERROR_ALREADY,
+                 "NetworkName::Set() accepted same name without returning OT_ERROR_ALREADY");
+
+    SuccessOrQuit(networkName.Set(Mac::NetworkName::Data(NULL, 0)), "NetworkName::Set() failed");
+    CompareNetworkName(networkName, kEmptyName);
+
+    SuccessOrQuit(networkName.Set(Mac::NetworkName::Data(kName1, sizeof(kName1))), "NetworkName::Set() failed");
+
+    VerifyOrQuit(networkName.Set(Mac::NetworkName::Data(kTooLongName, sizeof(kTooLongName))) == OT_ERROR_INVALID_ARGS,
+                 "NetworkName::Set() accepted an invalid (too long) name");
+
+    CompareNetworkName(networkName, kName1);
+
+    memset(buffer, 'a', sizeof(buffer));
+    len = networkName.GetAsData().CopyTo(buffer, 1);
+    VerifyOrQuit(len == 1, "NetworkName::Data::CopyTo() failed");
+    VerifyOrQuit(buffer[0] == kName1[0], "NetworkName::Data::CopyTo() failed");
+    VerifyOrQuit(buffer[1] == 'a', "NetworkName::Data::CopyTo() failed");
+
+    memset(buffer, 'a', sizeof(buffer));
+    len = networkName.GetAsData().CopyTo(buffer, sizeof(kName1) - 1);
+    VerifyOrQuit(len == sizeof(kName1) - 1, "NetworkName::Data::CopyTo() failed");
+    VerifyOrQuit(memcmp(buffer, kName1, sizeof(kName1) - 1) == 0, "NetworkName::Data::CopyTo() failed");
+    VerifyOrQuit(buffer[sizeof(kName1)] == 'a', "NetworkName::Data::CopyTo() failed");
+
+    memset(buffer, 'a', sizeof(buffer));
+    len = networkName.GetAsData().CopyTo(buffer, sizeof(buffer));
+    VerifyOrQuit(len == sizeof(kName1) - 1, "NetworkName::Data::CopyTo() failed");
+    VerifyOrQuit(memcmp(buffer, kName1, sizeof(kName1) - 1) == 0, "NetworkName::Data::CopyTo() failed");
+    VerifyOrQuit(buffer[sizeof(kName1)] == 0, "NetworkName::Data::CopyTo() failed");
+}
 
 void TestMacHeader(void)
 {
@@ -78,14 +272,14 @@ void TestMacHeader(void)
 
     for (unsigned i = 0; i < OT_ARRAY_LENGTH(tests); i++)
     {
-        uint8_t      psdu[Mac::Frame::kMTU];
+        uint8_t      psdu[Mac::Frame::kMtu];
         Mac::TxFrame frame;
 
         frame.mPsdu = psdu;
 
         frame.InitMacHeader(tests[i].fcf, tests[i].secCtl);
         printf("%d\n", frame.GetHeaderLength());
-        VerifyOrQuit(frame.GetHeaderLength() == tests[i].headerLength, "MacHeader test failed\n");
+        VerifyOrQuit(frame.GetHeaderLength() == tests[i].headerLength, "MacHeader test failed");
     }
 }
 
@@ -101,11 +295,11 @@ void VerifyChannelMaskContent(const Mac::ChannelMask &aMask, uint8_t *aChannels,
             if (channel == aChannels[index])
             {
                 index++;
-                VerifyOrQuit(aMask.ContainsChannel(channel), "ChannelMask.ContainsChannel() failed\n");
+                VerifyOrQuit(aMask.ContainsChannel(channel), "ChannelMask.ContainsChannel() failed");
             }
             else
             {
-                VerifyOrQuit(!aMask.ContainsChannel(channel), "ChannelMask.ContainsChannel() failed\n");
+                VerifyOrQuit(!aMask.ContainsChannel(channel), "ChannelMask.ContainsChannel() failed");
             }
         }
     }
@@ -115,21 +309,21 @@ void VerifyChannelMaskContent(const Mac::ChannelMask &aMask, uint8_t *aChannels,
 
     while (aMask.GetNextChannel(channel) == OT_ERROR_NONE)
     {
-        VerifyOrQuit(channel == aChannels[index++], "ChannelMask.GetNextChannel() failed\n");
+        VerifyOrQuit(channel == aChannels[index++], "ChannelMask.GetNextChannel() failed");
     }
 
-    VerifyOrQuit(index == aLength, "ChannelMask.GetNextChannel() failed\n");
+    VerifyOrQuit(index == aLength, "ChannelMask.GetNextChannel() failed");
 
     if (aLength == 1)
     {
-        VerifyOrQuit(aMask.IsSingleChannel(), "ChannelMask.IsSingleChannel() failed\n");
+        VerifyOrQuit(aMask.IsSingleChannel(), "ChannelMask.IsSingleChannel() failed");
     }
     else
     {
-        VerifyOrQuit(!aMask.IsSingleChannel(), "ChannelMask.IsSingleChannel() failed\n");
+        VerifyOrQuit(!aMask.IsSingleChannel(), "ChannelMask.IsSingleChannel() failed");
     }
 
-    VerifyOrQuit(aLength == aMask.GetNumberOfChannels(), "ChannelMask.GetNumberOfChannels() failed\n");
+    VerifyOrQuit(aLength == aMask.GetNumberOfChannels(), "ChannelMask.GetNumberOfChannels() failed");
 }
 
 void TestMacChannelMask(void)
@@ -145,16 +339,16 @@ void TestMacChannelMask(void)
 
     printf("Testing Mac::ChannelMask\n");
 
-    VerifyOrQuit(mask1.IsEmpty(), "ChannelMask.IsEmpty failed\n");
+    VerifyOrQuit(mask1.IsEmpty(), "ChannelMask.IsEmpty failed");
     printf("empty = %s\n", mask1.ToString().AsCString());
 
-    VerifyOrQuit(!mask2.IsEmpty(), "ChannelMask.IsEmpty failed\n");
-    VerifyOrQuit(mask2.GetMask() == Radio::kSupportedChannels, "ChannelMask.GetMask() failed\n");
+    VerifyOrQuit(!mask2.IsEmpty(), "ChannelMask.IsEmpty failed");
+    VerifyOrQuit(mask2.GetMask() == Radio::kSupportedChannels, "ChannelMask.GetMask() failed");
     printf("all_channels = %s\n", mask2.ToString().AsCString());
 
     mask1.SetMask(Radio::kSupportedChannels);
-    VerifyOrQuit(!mask1.IsEmpty(), "ChannelMask.IsEmpty failed\n");
-    VerifyOrQuit(mask1.GetMask() == Radio::kSupportedChannels, "ChannelMask.GetMask() failed\n");
+    VerifyOrQuit(!mask1.IsEmpty(), "ChannelMask.IsEmpty failed");
+    VerifyOrQuit(mask1.GetMask() == Radio::kSupportedChannels, "ChannelMask.GetMask() failed");
 
     VerifyChannelMaskContent(mask1, all_channels, sizeof(all_channels));
 
@@ -166,7 +360,7 @@ void TestMacChannelMask(void)
     }
 
     mask1.Clear();
-    VerifyOrQuit(mask1.IsEmpty(), "ChannelMask.IsEmpty failed\n");
+    VerifyOrQuit(mask1.IsEmpty(), "ChannelMask.IsEmpty failed");
     VerifyChannelMaskContent(mask1, NULL, 0);
 
     for (uint16_t index = 0; index < sizeof(channels1); index++)
@@ -176,7 +370,7 @@ void TestMacChannelMask(void)
 
     printf("channels1 = %s\n", mask1.ToString().AsCString());
 
-    VerifyOrQuit(!mask1.IsEmpty(), "ChannelMask.IsEmpty failed\n");
+    VerifyOrQuit(!mask1.IsEmpty(), "ChannelMask.IsEmpty failed");
     VerifyChannelMaskContent(mask1, channels1, sizeof(channels1));
 
     mask2.Clear();
@@ -188,7 +382,7 @@ void TestMacChannelMask(void)
 
     printf("channels2 = %s\n", mask2.ToString().AsCString());
 
-    VerifyOrQuit(!mask2.IsEmpty(), "ChannelMask.IsEmpty failed\n");
+    VerifyOrQuit(!mask2.IsEmpty(), "ChannelMask.IsEmpty failed");
     VerifyChannelMaskContent(mask2, channels2, sizeof(channels2));
 
     mask1.Intersect(mask2);
@@ -202,24 +396,24 @@ void TestMacChannelMask(void)
 
     mask1.Clear();
     mask2.Clear();
-    VerifyOrQuit(mask1 == mask2, "ChannelMask.operator== failed\n");
+    VerifyOrQuit(mask1 == mask2, "ChannelMask.operator== failed");
 
     mask1.SetMask(Radio::kSupportedChannels);
     mask2.SetMask(Radio::kSupportedChannels);
-    VerifyOrQuit(mask1 == mask2, "ChannelMask.operator== failed\n");
+    VerifyOrQuit(mask1 == mask2, "ChannelMask.operator== failed");
 
     mask1.Clear();
-    VerifyOrQuit(mask1 != mask2, "ChannelMask.operator== failed\n");
+    VerifyOrQuit(mask1 != mask2, "ChannelMask.operator== failed");
 }
 
 } // namespace ot
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
+    ot::TestMacAddress();
+    ot::TestMacNetworkName();
     ot::TestMacHeader();
     ot::TestMacChannelMask();
     printf("All tests passed\n");
     return 0;
 }
-#endif

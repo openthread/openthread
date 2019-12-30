@@ -230,6 +230,7 @@ typedef enum otRadioState
     OT_RADIO_STATE_SLEEP    = 1,
     OT_RADIO_STATE_RECEIVE  = 2,
     OT_RADIO_STATE_TRANSMIT = 3,
+    OT_RADIO_STATE_INVALID  = 255,
 } otRadioState;
 
 /**
@@ -244,6 +245,32 @@ typedef enum otRadioState
  *                                    (Radio OFF)                 or
  *                                                        signal TransmitDone
  */
+
+/**
+ * This structure represents radio coexistence metrics.
+ */
+typedef struct otRadioCoexMetrics
+{
+    uint32_t mNumGrantGlitch;          ///< Number of grant glitches.
+    uint32_t mNumTxRequest;            ///< Number of tx requests.
+    uint32_t mNumTxGrantImmediate;     ///< Number of tx requests while grant was active.
+    uint32_t mNumTxGrantWait;          ///< Number of tx requests while grant was inactive.
+    uint32_t mNumTxGrantWaitActivated; ///< Number of tx requests while grant was inactive that were ultimately granted.
+    uint32_t mNumTxGrantWaitTimeout;   ///< Number of tx requests while grant was inactive that timed out.
+    uint32_t mNumTxGrantDeactivatedDuringRequest; ///< Number of tx that were in progress when grant was deactivated.
+    uint32_t mNumTxDelayedGrant;                  ///< Number of tx requests that were not granted within 50us.
+    uint32_t mAvgTxRequestToGrantTime;            ///< Average time in usec from tx request to grant.
+    uint32_t mNumRxRequest;                       ///< Number of rx requests.
+    uint32_t mNumRxGrantImmediate;                ///< Number of rx requests while grant was active.
+    uint32_t mNumRxGrantWait;                     ///< Number of rx requests while grant was inactive.
+    uint32_t mNumRxGrantWaitActivated; ///< Number of rx requests while grant was inactive that were ultimately granted.
+    uint32_t mNumRxGrantWaitTimeout;   ///< Number of rx requests while grant was inactive that timed out.
+    uint32_t mNumRxGrantDeactivatedDuringRequest; ///< Number of rx that were in progress when grant was deactivated.
+    uint32_t mNumRxDelayedGrant;                  ///< Number of rx requests that were not granted within 50us.
+    uint32_t mAvgRxRequestToGrantTime;            ///< Average time in usec from rx request to grant.
+    uint32_t mNumRxGrantNone;                     ///< Number of rx requests that completed without receiving grant.
+    bool     mStopped;                            ///< Stats collection stopped due to saturation.
+} otRadioCoexMetrics;
 
 /**
  * @}
@@ -354,6 +381,32 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower);
  *
  */
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower);
+
+/**
+ * Get the radio's CCA ED threshold in dBm.
+ *
+ * @param[in] aInstance    The OpenThread instance structure.
+ * @param[out] aThreshold  The CCA ED threshold in dBm.
+ *
+ * @retval OT_ERROR_NONE             Successfully retrieved the CCA ED threshold.
+ * @retval OT_ERROR_INVALID_ARGS     @p aThreshold was NULL.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  CCA ED threshold configuration via dBm is not implemented.
+ *
+ */
+otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold);
+
+/**
+ * Set the radio's CCA ED threshold in dBm.
+ *
+ * @param[in] aInstance   The OpenThread instance structure.
+ * @param[in] aThreshold  The CCA ED threshold in dBm.
+ *
+ * @retval OT_ERROR_NONE             Successfully set the transmit power.
+ * @retval OT_ERROR_INVALID_ARGS     Given threshold is out of range.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  CCA ED threshold configuration via dBm is not implemented.
+ *
+ */
+otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold);
 
 /**
  * Get the status of promiscuous mode.
@@ -559,21 +612,6 @@ extern void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRad
 extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
 /**
- * The radio driver calls this method to notify OpenThread to process transmit security for the frame,
- * this happens when the frame includes Header IE(s) that were updated before transmission.
- *
- * This function is used when feature `OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT` is enabled.
- *
- * @note This function can be called from interrupt context and it would only read/write data passed in
- *       via @p aFrame, but would not read/write any state within OpenThread.
- *
- * @param[in]  aInstance   The OpenThread instance structure.
- * @param[in]  aFrame      The radio frame which needs to process transmit security.
- *
- */
-extern void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFrame);
-
-/**
  * Get the most recent RSSI measurement.
  *
  * @param[in] aInstance  The OpenThread instance structure.
@@ -706,12 +744,51 @@ uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance);
 /**
  * Get the radio preferred channel mask that the device prefers to form on.
  *
- * @param[in]  aInstance   The OpenThread instance strucyyture.
+ * @param[in]  aInstance   The OpenThread instance structure.
  *
  * @returns The radio preferred channel mask.
  *
  */
 uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance);
+
+/**
+ * Enable the radio coex.
+ *
+ * This function is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ * @param[in] aEnabled   TRUE to enable the radio coex, FALSE otherwise.
+ *
+ * @retval OT_ERROR_NONE     Successfully enabled.
+ * @retval OT_ERROR_FAILED   The radio coex could not be enabled.
+ *
+ */
+otError otPlatRadioSetCoexEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * Check whether radio coex is enabled or not.
+ *
+ * This function is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ *
+ * @returns TRUE if the radio coex is enabled, FALSE otherwise.
+ *
+ */
+bool otPlatRadioIsCoexEnabled(otInstance *aInstance);
+
+/**
+ * Get the radio coexistence metrics.
+ *
+ * This function is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
+ *
+ * @param[in]  aInstance     The OpenThread instance structure.
+ * @param[out] aCoexMetrics  A pointer to the coexistence metrics structure.
+ *
+ * @retval OT_ERROR_NONE          Successfully retrieved the coex metrics.
+ * @retval OT_ERROR_INVALID_ARGS  @p aCoexMetrics was NULL.
+ */
+otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCoexMetrics);
 
 /**
  * @}

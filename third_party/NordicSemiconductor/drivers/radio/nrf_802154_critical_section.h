@@ -46,51 +46,49 @@ extern "C" {
  */
 
 /**
- * @brief Initialize critical section module.
+ * @brief Initializes the critical section module.
  */
 void nrf_802154_critical_section_init(void);
 
 /**
- * @brief Enter critical section in the 802.15.4 driver.
+ * @brief Function for entering a critical section in the 802.15.4 driver.
  *
- * @note Entering critical section may be prohibited at given time. If critical section is not
- *       entered, request should not be proceeded.
- *
- * @retval true   Entered critical section.
- * @retval false  Could not enter critical section.
+ * @retval true   The critical section is entered.
+ * @retval false  The critical section could not be entered.
  */
 bool nrf_802154_critical_section_enter(void);
 
 /**
- * @brief Exit critical section in the 802.15.4 driver.
+ * @brief Function for exiting a critical section in the 802.15.4 driver.
  */
 void nrf_802154_critical_section_exit(void);
 
 /**
- * @brief Forcefully enter critical section in the 802.15.4 driver.
+ * @brief Function for forcefully entering a critical section in the 802.15.4 driver.
  *
- * This function enters critical section regardless critical sections is already entered.
+ * With this function, the critical section is entered regardless of whether
+ * it has been already entered before.
  *
- * This function is intended to be used by RADIO IRQ handler and RAAL notifications handlers to
+ * This function is intended to be used by RADIO IRQ handler and RSCH notifications handlers to
  * prevent interrupting of these procedures by FSM requests from higher priority IRQ handlers.
  */
 void nrf_802154_critical_section_forcefully_enter(void);
 
 /**
- * @brief Allow entering nested critical section.
+ * @brief Allows entry to a nested critical section.
  *
- * This function is intended to be used with notification module in order to allow processing
- * requests called from notification context.
+ * This function is intended to be used with the notification module to allow processing
+ * requests called from the notification context.
  */
 void nrf_802154_critical_section_nesting_allow(void);
 
 /**
- * @brief Disallow entering nested critical section.
+ * @brief Denies entry to a nested critical section.
  */
 void nrf_802154_critical_section_nesting_deny(void);
 
 /**
- * @brief Check if critical section is nested.
+ * @brief Checks if the critical section is nested.
  *
  * @retval true   Critical section is nested.
  * @retval false  Critical section is not nested.
@@ -98,24 +96,24 @@ void nrf_802154_critical_section_nesting_deny(void);
 bool nrf_802154_critical_section_is_nested(void);
 
 /**
- * @brief Get current IRQ priority.
+ * @brief Gets the current IRQ priority.
  *
- * @return IRQ priority
+ * @returns IRQ priority
  */
 uint32_t nrf_802154_critical_section_active_vector_priority_get(void);
 
 /**
- * @brief Function called to enter critical section in the RSCH module.
+ * @brief Function for entering a critical section in the RSCH module.
  */
 extern void nrf_802154_critical_section_rsch_enter(void);
 
 /**
- * @brief Function called to exit critical section in the RSCH module.
+ * @brief Function for exiting a critical section in the RSCH module.
  */
 extern void nrf_802154_critical_section_rsch_exit(void);
 
 /**
- * @brief Check if there is pending event in the RSCH critical section.
+ * @brief Checks if there is a pending event in the RSCH critical section.
  */
 extern bool nrf_802154_critical_section_rsch_event_is_pending(void);
 

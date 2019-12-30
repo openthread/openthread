@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2017-2018, The OpenThread Authors.
 #  All rights reserved.
@@ -28,7 +28,6 @@
 #
 
 import binascii
-import sys
 
 import ipv6
 import network_data
@@ -70,8 +69,6 @@ def check_address_query(command_msg, source_node, destination_address):
 
     if isinstance(destination_address, bytearray):
         destination_address = bytes(destination_address)
-    elif isinstance(destination_address, str) and sys.version_info[0] == 2:
-        destination_address = destination_address.decode("utf-8")
 
     assert (
         ipv6.ip_address(destination_address)
@@ -124,8 +121,6 @@ def check_address_error_notification(
 
     if isinstance(destination_address, bytearray):
         destination_address = bytes(destination_address)
-    elif isinstance(destination_address, str) and sys.version_info[0] == 2:
-        destination_address = destination_address.decode("utf-8")
 
     assert (
         ipv6.ip_address(destination_address)

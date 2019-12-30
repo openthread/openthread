@@ -76,11 +76,11 @@ void JoinerRouter::HandleStateChanged(otChangedFlags aFlags)
     VerifyOrExit(Get<Mle::MleRouter>().IsFullThreadDevice());
     VerifyOrExit(aFlags & OT_CHANGED_THREAD_NETDATA);
 
-    Get<Ip6::Filter>().RemoveUnsecurePort(mSocket.GetSockName().mPort);
-
     if (Get<NetworkData::Leader>().IsJoiningEnabled())
     {
         Ip6::SockAddr sockaddr;
+
+        VerifyOrExit(!mSocket.IsBound());
 
         sockaddr.mPort = GetJoinerUdpPort();
 
@@ -91,6 +91,8 @@ void JoinerRouter::HandleStateChanged(otChangedFlags aFlags)
     }
     else
     {
+        Get<Ip6::Filter>().RemoveUnsecurePort(mSocket.GetSockName().mPort);
+
         mSocket.Close();
     }
 
@@ -220,23 +222,7 @@ void JoinerRouter::HandleRelayTransmit(Coap::Message &aMessage, const Ip6::Messa
 
     VerifyOrExit((message = mSocket.NewMessage(0, &settings)) != NULL, error = OT_ERROR_NO_BUFS);
 
-    while (length)
-    {
-        uint16_t copyLength = length;
-        uint8_t  tmp[16];
-
-        if (copyLength >= sizeof(tmp))
-        {
-            copyLength = sizeof(tmp);
-        }
-
-        aMessage.Read(offset, copyLength, tmp);
-        SuccessOrExit(error = message->Append(tmp, copyLength));
-
-        offset += copyLength;
-        length -= copyLength;
-    }
-
+    SuccessOrExit(error = message->SetLength(length));
     aMessage.CopyTo(offset, 0, length, *message);
 
     messageInfo.mPeerAddr.mFields.m16[0] = HostSwap16(0xfe80);
@@ -295,7 +281,7 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
     SuccessOrExit(error = message->AppendTlv(extendedPanId));
 
     networkName.Init();
-    networkName.SetNetworkName(Get<Mac::Mac>().GetNetworkName());
+    networkName.SetNetworkName(Get<Mac::Mac>().GetNetworkName().GetAsData());
     SuccessOrExit(error = message->AppendTlv(networkName));
 
     Get<ActiveDataset>().Read(dataset);
@@ -322,13 +308,13 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
         SuccessOrExit(error = message->AppendTlv(channelMask));
     }
 
-    if ((tlv = dataset.Get(Tlv::kPSKc)) != NULL)
+    if ((tlv = dataset.Get(Tlv::kPskc)) != NULL)
     {
         SuccessOrExit(error = message->AppendTlv(*tlv));
     }
     else
     {
-        PSKcTlv pskc;
+        PskcTlv pskc;
         pskc.Init();
         SuccessOrExit(error = message->AppendTlv(pskc));
     }
@@ -385,7 +371,6 @@ void JoinerRouter::SendDelayedJoinerEntrust(void)
 {
     DelayedJoinEntHeader delayedJoinEnt;
     Coap::Message *      message = static_cast<Coap::Message *>(mDelayedJoinEnts.GetHead());
-    uint32_t             now     = TimerMilli::GetNow();
     Ip6::MessageInfo     messageInfo;
 
     VerifyOrExit(message != NULL);
@@ -397,9 +382,9 @@ void JoinerRouter::SendDelayedJoinerEntrust(void)
     VerifyOrExit(!mExpectJoinEntRsp ||
                  memcmp(Get<KeyManager>().GetKek(), delayedJoinEnt.GetKek(), KeyManager::kMaxKeyLength) == 0);
 
-    if (delayedJoinEnt.IsLater(now))
+    if (TimerMilli::GetNow() < delayedJoinEnt.GetSendTime())
     {
-        mTimer.Start(delayedJoinEnt.GetSendTime() - now);
+        mTimer.FireAt(delayedJoinEnt.GetSendTime());
     }
     else
     {

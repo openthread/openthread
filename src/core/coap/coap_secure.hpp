@@ -151,7 +151,7 @@ public:
     /**
      * This method sets the PSK.
      *
-     * @param[in]  aPSK        A pointer to the PSK.
+     * @param[in]  aPsk        A pointer to the PSK.
      * @param[in]  aPskLength  The PSK length.
      *
      * @retval OT_ERROR_NONE          Successfully set the PSK.
@@ -164,8 +164,8 @@ public:
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     /**
-     * This method sets the Pre-Shared Key (PSK) for DTLS sessions
-     * identified by a PSK.
+     * This method sets the Pre-Shared Key (PSK) for DTLS sessions identified by a PSK.
+     *
      * DTLS mode "TLS with AES 128 CCM 8" for Application CoAPS.
      *
      * @param[in]  aPsk          A pointer to the PSK.
@@ -173,13 +173,11 @@ public:
      * @param[in]  aPskIdentity  The Identity Name for the PSK.
      * @param[in]  aPskIdLength  The PSK Identity Length.
      *
-     * @retval OT_ERROR_NONE  Successfully set the PSK.
-     *
      */
-    otError SetPreSharedKey(const uint8_t *aPsk,
-                            uint16_t       aPskLength,
-                            const uint8_t *aPskIdentity,
-                            uint16_t       aPskIdLength);
+    void SetPreSharedKey(const uint8_t *aPsk, uint16_t aPskLength, const uint8_t *aPskIdentity, uint16_t aPskIdLength)
+    {
+        mDtls.SetPreSharedKey(aPsk, aPskLength, aPskIdentity, aPskIdLength);
+    }
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -193,27 +191,22 @@ public:
      * @param[in]  aPrivateKey        A pointer to the PEM formatted private key.
      * @param[in]  aPrivateKeyLength  The length of the private key.
      *
-     * @retval OT_ERROR_NONE  Successfully set the x509 certificate with his private key.
-     *
      */
-    otError SetCertificate(const uint8_t *aX509Cert,
-                           uint32_t       aX509Length,
-                           const uint8_t *aPrivateKey,
-                           uint32_t       aPrivateKeyLength);
+    void SetCertificate(const uint8_t *aX509Cert,
+                        uint32_t       aX509Length,
+                        const uint8_t *aPrivateKey,
+                        uint32_t       aPrivateKeyLength);
 
     /**
-     * This method sets the trusted top level CAs. It is needed for validate the
-     * certificate of the peer.
+     * This method sets the trusted top level CAs. It is needed for validate the certificate of the peer.
      *
      * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
      *
      * @param[in]  aX509CaCertificateChain  A pointer to the PEM formatted X509 CA chain.
      * @param[in]  aX509CaCertChainLength   The length of chain.
      *
-     * @retval OT_ERROR_NONE  Successfully set the trusted top level CAs.
-     *
      */
-    otError SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength);
+    void SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength);
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
 #ifdef MBEDTLS_BASE64_C
@@ -234,21 +227,19 @@ public:
 #endif // MBEDTLS_BASE64_C
 
     /**
-     * This method sets the connected callback to indicate, when
-     * a Client connect to the CoAP Secure server.
+     * This method sets the connected callback to indicate, when a Client connect to the CoAP Secure server.
      *
-     * @param[in]  aCallback     A pointer to a function that will be called once DTLS connection is
-     * established.
+     * @param[in]  aCallback     A pointer to a function that will be called once DTLS connection is established.
      * @param[in]  aContext      A pointer to arbitrary context information.
      *
      */
     void SetClientConnectedCallback(ConnectedCallback aCallback, void *aContext);
 
     /**
-     * This method set the authentication mode for the coap secure connection.
-     * Disable or enable the verification of peer certificate.
+     * This method sets the authentication mode for the CoAP secure connection. It disables or enables the verification
+     * of peer certificate.
      *
-     * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should verify.
+     * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should be verified
      *
      */
     void SetSslAuthMode(bool aVerifyPeerCertificate);
@@ -297,7 +288,6 @@ public:
 
     /**
      * This method is used to pass UDP messages to the secure CoAP server.
-     * It can be used when messages are received other way that via server's socket.
      *
      * @param[in]  aMessage      A reference to the received message.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.

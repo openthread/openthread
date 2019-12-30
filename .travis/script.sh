@@ -59,6 +59,7 @@ python --version || die
         -DOPENTHREAD_CONFIG_DIAG_ENABLE=1                 \
         -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1           \
         -DOPENTHREAD_CONFIG_ECDSA_ENABLE=1                \
+        -DOPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE=1    \
         -DOPENTHREAD_CONFIG_LEGACY_ENABLE=1               \
         -DOPENTHREAD_CONFIG_JAM_DETECTION_ENABLE=1        \
         -DOPENTHREAD_CONFIG_JOINER_ENABLE=1               \
@@ -101,6 +102,10 @@ python --version || die
     (cd .. && ${TRAVIS_BUILD_DIR}/.travis/check-android-build) || die
 }
 
+[ $BUILD_TARGET != gn-build ] || {
+    (cd ${TRAVIS_BUILD_DIR} && .travis/check-gn-build) || die
+}
+
 build_cc1352() {
     git checkout -- . || die
     git clean -xfd || die
@@ -113,6 +118,13 @@ build_cc1352() {
 }
 
 build_cc2538() {
+    git checkout -- . || die
+    git clean -xfd || die
+    mkdir build && cd build || die
+    cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=examples/platforms/cc2538/arm-none-eabi.cmake -DOT_PLATFORM=cc2538 .. || die
+    ninja || die
+    cd .. || die
+
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
@@ -182,9 +194,51 @@ build_nrf52811() {
     DISABLE_TRANSPORTS=1 make -f examples/Makefile-nrf52811 || die
 }
 
+build_nrf52833() {
+    # Default OpenThread switches for nRF52833 platform
+    OPENTHREAD_FLAGS="BORDER_AGENT=1 BORDER_ROUTER=1 COAP=1 COAPS=1 COMMISSIONER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 ECDSA=1 FULL_LOGS=1 IP6_FRAGM=1 JOINER=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 SLAAC=1 SNTP_CLIENT=1 UDP_FORWARD=1"
+
+    # UART transport
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    make -f examples/Makefile-nrf52833 $OPENTHREAD_FLAGS || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-ncp-mtd || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-rcp || die
+
+    # USB transport
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    USB=1 make -f examples/Makefile-nrf52833 $OPENTHREAD_FLAGS || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-ncp-mtd || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-rcp || die
+
+    # SPI transport for NCP
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    NCP_SPI=1 make -f examples/Makefile-nrf52833 $OPENTHREAD_FLAGS || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-ncp-mtd || die
+    arm-none-eabi-size  output/nrf52833/bin/ot-rcp || die
+
+    # Build without transport (no CLI or NCP applications)
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    DISABLE_TRANSPORTS=1 make -f examples/Makefile-nrf52833 $OPENTHREAD_FLAGS || die
+}
+
 build_nrf52840() {
     # Default OpenThread switches for nRF52840 platform
-    OPENTHREAD_FLAGS="BORDER_AGENT=1 BORDER_ROUTER=1 COAP=1 COAPS=1 COMMISSIONER=1 SLAAC=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 ECDSA=1 FULL_LOGS=1 JOINER=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 SNTP_CLIENT=1 UDP_FORWARD=1"
+    OPENTHREAD_FLAGS="BORDER_AGENT=1 BORDER_ROUTER=1 COAP=1 COAPS=1 COMMISSIONER=1 DEBUG=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 ECDSA=1 FULL_LOGS=1 IP6_FRAGM=1 JOINER=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 SLAAC=1 SNTP_CLIENT=1 UDP_FORWARD=1"
 
     # UART transport
     git checkout -- . || die
@@ -222,6 +276,28 @@ build_nrf52840() {
     git clean -xfd || die
     ./bootstrap || die
     DISABLE_TRANSPORTS=1 make -f examples/Makefile-nrf52840 $OPENTHREAD_FLAGS || die
+
+    # Software cryptography
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    DISABLE_BUILTIN_MBEDTLS=0 make -f examples/Makefile-nrf52840 $OPENTHREAD_FLAGS || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-mtd || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-rcp || die
+
+    # Software cryptography with threading support
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    DISABLE_BUILTIN_MBEDTLS=0 MBEDTLS_THREADING=1 make -f examples/Makefile-nrf52840 $OPENTHREAD_FLAGS || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-cli-ftd || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-cli-mtd || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-ftd || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-ncp-mtd || die
+    arm-none-eabi-size  output/nrf52840/bin/ot-rcp || die
 }
 
 build_qpg6095() {
@@ -258,6 +334,7 @@ build_samr21() {
     build_cc2652
     build_kw41z
     build_nrf52811
+    build_nrf52833
     build_nrf52840
     build_qpg6095
     build_samr21
@@ -272,6 +349,7 @@ build_samr21() {
     build_cc2652
     build_kw41z
     build_nrf52811
+    build_nrf52833
     build_nrf52840
     build_qpg6095
     build_samr21
@@ -286,6 +364,7 @@ build_samr21() {
     build_cc2652
     build_kw41z
     build_nrf52811
+    build_nrf52833
     build_nrf52840
     build_qpg6095
     build_samr21
@@ -300,6 +379,7 @@ build_samr21() {
     build_cc2652
     build_kw41z
     build_nrf52811
+    build_nrf52833
     build_nrf52840
     build_qpg6095
     build_samr21
@@ -314,12 +394,35 @@ build_samr21() {
     build_cc2652
     build_kw41z
     build_nrf52811
+    build_nrf52833
+    build_nrf52840
+    build_qpg6095
+    build_samr21
+}
+
+[ $BUILD_TARGET != arm-gcc-9 ] || {
+    export PATH=/tmp/gcc-arm-none-eabi-9-2019-q4-major/bin:$PATH || die
+
+    build_cc1352
+    build_cc2538
+    build_cc2650
+    build_cc2652
+    build_kw41z
+    build_nrf52811
+    build_nrf52833
     build_nrf52840
     build_qpg6095
     build_samr21
 }
 
 [ $BUILD_TARGET != posix ] || {
+    git checkout -- . || die
+    git clean -xfd || die
+    mkdir build && cd build || die
+    cmake -GNinja -DOT_PLATFORM=posix .. || die
+    ninja || die
+    cd .. || die
+
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
@@ -329,6 +432,52 @@ build_samr21() {
     git clean -xfd || die
     ./bootstrap || die
     CPPFLAGS=-DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG make -f examples/Makefile-posix || die
+
+    export CPPFLAGS="                                             \
+        -DOPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE=1              \
+        -DOPENTHREAD_CONFIG_BORDER_AGENT_ENABLE=1                 \
+        -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1                \
+        -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1              \
+        -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1              \
+        -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1            \
+        -DOPENTHREAD_CONFIG_COAP_API_ENABLE=1                     \
+        -DOPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1              \
+        -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1                 \
+        -DOPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE=1                 \
+        -DOPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE=1                 \
+        -DOPENTHREAD_CONFIG_DIAG_ENABLE=1                         \
+        -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1                   \
+        -DOPENTHREAD_CONFIG_ECDSA_ENABLE=1                        \
+        -DOPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE=1            \
+        -DOPENTHREAD_CONFIG_IP6_SLAAC_ENABLE=1                    \
+        -DOPENTHREAD_CONFIG_LEGACY_ENABLE=1                       \
+        -DOPENTHREAD_CONFIG_MAC_BEACON_RSP_WHEN_JOINABLE_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE=1           \
+        -DOPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE=1    \
+        -DOPENTHREAD_CONFIG_MPL_DYNAMIC_INTERVAL_ENABLE           \
+        -DOPENTHREAD_CONFIG_JAM_DETECTION_ENABLE=1                \
+        -DOPENTHREAD_CONFIG_JOINER_ENABLE=1                       \
+        -DOPENTHREAD_CONFIG_LINK_RAW_ENABLE=1                     \
+        -DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1            \
+        -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                   \
+        -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1                     \
+        -DOPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE=1               \
+        -DOPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE=1          \
+        -DOPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE=1          \
+        -DOPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE=1             \
+        -DOPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE=1                  \
+        -DOPENTHREAD_CONFIG_SOFTWARE_ACK_TIMEOUT_ENABLE=1         \
+        -DOPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE=1        \
+        -DOPENTHREAD_CONFIG_SOFTWARE_ENERGY_SCAN_ENABLE=1         \
+        -DOPENTHREAD_CONFIG_SOFTWARE_RETRANSMIT_ENABLE=1          \
+        -DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1          \
+        -DOPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE=1         \
+        -DOPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1"
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    make -f examples/Makefile-posix || die
 
     export CPPFLAGS="                                    \
         -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1       \
@@ -341,6 +490,16 @@ build_samr21() {
         -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1          \
         -DOPENTHREAD_CONFIG_NCP_SPI_ENABLE=1             \
         -DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1"
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    CPPFLAGS=-DOPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE=1 make -f examples/Makefile-posix || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    CPPFLAGS=-DOPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE=1 make -f examples/Makefile-posix || die
 
     git checkout -- . || die
     git clean -xfd || die
@@ -382,6 +541,22 @@ build_samr21() {
         --enable-radio-only                 \
         --with-examples=posix || die
     make -j 8 || die
+
+    export CPPFLAGS="                               \
+        -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    ./configure                             \
+        --enable-ncp                        \
+        --enable-ftd                        \
+        --enable-mtd                        \
+        --with-examples=posix               \
+        --disable-docs                      \
+        --disable-tests                     \
+        --with-ncp-vendor-hook-source=./src/ncp/example_vendor_hook.cpp || die
+    make -j 8 || die
 }
 
 [ $BUILD_TARGET != posix-distcheck ] || {
@@ -407,6 +582,21 @@ build_samr21() {
 }
 
 [ $BUILD_TARGET != posix-app-pty ] || {
+    # check daemon mode
+    git checkout -- . || die
+    git clean -xfd || die
+    mkdir build && cd build || die
+    cmake -GNinja -DOT_PLATFORM=posix-host -DOT_DAEMON=ON .. || die
+    ninja || die
+    cd .. || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    mkdir build && cd build || die
+    cmake -GNinja -DOT_PLATFORM=posix-host .. || die
+    ninja || die
+    cd .. || die
+
     ./bootstrap
     .travis/check-posix-app-pty || die
 }

@@ -31,7 +31,7 @@
 
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "thread/mle_constants.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/topology.hpp"
@@ -290,7 +290,7 @@ public:
      * @returns The local time when the Router ID Sequence was last updated.
      *
      */
-    uint32_t GetRouterIdSequenceLastUpdated(void) const { return mRouterIdSequenceLastUpdated; }
+    TimeMilli GetRouterIdSequenceLastUpdated(void) const { return mRouterIdSequenceLastUpdated; }
 
     /**
      * This method returns the number of neighbor links.
@@ -356,7 +356,7 @@ private:
     Router      mRouters[Mle::kMaxRouters];
     RouterIdSet mAllocatedRouterIds;
     uint8_t     mRouterIdReuseDelay[Mle::kMaxRouterId + 1];
-    uint32_t    mRouterIdSequenceLastUpdated;
+    TimeMilli   mRouterIdSequenceLastUpdated;
     uint8_t     mRouterIdSequence;
     uint8_t     mActiveRouterCount;
 };

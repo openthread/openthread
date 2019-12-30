@@ -39,7 +39,7 @@
 #include <stdint.h>
 
 #include "common/string.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 
 namespace ot {
 namespace Ip6 {
@@ -365,7 +365,7 @@ public:
      * @retval FALSE  If the IPv6 addresses do not differ.
      *
      */
-    bool operator!=(const Address &aOther) const;
+    bool operator!=(const Address &aOther) const { return !(*this == aOther); }
 
     /**
      * This method converts an IPv6 address string to binary.

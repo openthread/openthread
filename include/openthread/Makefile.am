@@ -64,6 +64,7 @@ openthread_headers                      = \
     dns.h                                 \
     entropy.h                             \
     error.h                               \
+    heap.h                                \
     icmp6.h                               \
     instance.h                            \
     ip6.h                                 \

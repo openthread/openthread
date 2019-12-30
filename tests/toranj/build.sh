@@ -39,9 +39,11 @@ display_usage() {
     echo "        ncp        : Build OpenThread NCP FTD mode with POSIX platform"
     echo "        rcp        : Build OpenThread RCP (NCP in radio mode) with POSIX platform"
     echo "        posix-app  : Build OpenThread POSIX App NCP"
+    echo "        cmake      : Configure and build OpenThread using cmake/ninja (RCP and NCP) only"
     echo ""
     echo "Options:"
     echo "        -c/--enable-coverage  Enable code coverage"
+    echo "        -t/--enable-tests     Enable tests"
     echo ""
 }
 
@@ -51,12 +53,17 @@ die() {
 }
 
 coverage=no
+tests=no
 
 while [ $# -ge 2 ]
 do
     case $1 in
         -c|--enable-coverage)
             coverage=yes
+            shift
+            ;;
+        -t|--enable-tests)
+            tests=yes
             shift
             ;;
         *)
@@ -76,7 +83,7 @@ build_config=$1
 
 configure_options="                \
     --disable-docs                 \
-    --disable-tests                \
+    --enable-tests=$tests          \
     --enable-coverage=$coverage    \
     --enable-ftd                   \
     --enable-ncp                   \
@@ -109,7 +116,7 @@ case ${build_config} in
             --enable-radio-only                 \
             --with-examples=posix               \
             --disable-docs                      \
-            --disable-tests || die
+            --enable-tests=$tests || die
         make -j 8 || die
         ;;
 
@@ -123,6 +130,14 @@ case ${build_config} in
             --enable-posix-app                  \
             $configure_options || die
         make -j 8 || die
+        ;;
+
+    cmake)
+        echo "===================================================================================================="
+        echo "Building OpenThread (NCP/CLI for FTD/MTD/RCP mode) with POSIX platform using cmake"
+        echo "===================================================================================================="
+        cmake -GNinja -DOT_PLATFORM=posix -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config.h . || die
+        ninja || die
         ;;
 
     *)

@@ -80,7 +80,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
                     ip6Header.GetDestination() == mle.GetRealmLocalAllThreadNodesAddress())
                 {
                     // destined for all sleepy children
-                    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone();
+                    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValidOrRestoring); !iter.IsDone();
                          iter++)
                     {
                         Child &child = *iter.GetChild();
@@ -94,7 +94,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
                 else
                 {
                     // destined for some sleepy children which subscribed the multicast address.
-                    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone();
+                    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValidOrRestoring); !iter.IsDone();
                          iter++)
                     {
                         Child &child = *iter.GetChild();
@@ -296,7 +296,7 @@ void MeshForwarder::RemoveDataResponseMessages(void)
 
         if (!(ip6Header.GetDestination().IsMulticast()))
         {
-            for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
+            for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
             {
                 IgnoreReturnValue(mIndirectSender.RemoveMessageFromSleepyChild(*message, *iter.GetChild()));
             }
@@ -395,8 +395,6 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
         {
             SuccessOrExit(error = MeshCoP::GetBorderAgentRloc(Get<ThreadNetif>(), mMeshDest));
         }
-
-#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE || OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
         else if (aloc16 <= Mle::kAloc16DhcpAgentEnd)
         {
             uint16_t agentRloc16;
@@ -418,15 +416,11 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
                 mMeshDest = Mle::Mle::GetRloc16(routerId);
             }
         }
-
-#endif // OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE || OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
         else if ((aloc16 >= Mle::kAloc16ServiceStart) && (aloc16 <= Mle::kAloc16ServiceEnd))
         {
             SuccessOrExit(error = GetDestinationRlocByServiceAloc(aloc16, mMeshDest));
         }
 
-#endif
         else
         {
             // TODO: support for Neighbor Discovery Agent ALOC
@@ -593,7 +587,23 @@ void MeshForwarder::UpdateRoutes(uint8_t *           aFrame,
     VerifyOrExit(!aMeshDest.IsBroadcast() && aMeshSource.IsShort());
     SuccessOrExit(GetIp6Header(aFrame, aFrameLength, aMeshSource, aMeshDest, ip6Header));
 
-    Get<AddressResolver>().UpdateCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort());
+    if (!ip6Header.GetSource().IsRoutingLocator() && !ip6Header.GetSource().IsAnycastRoutingLocator() &&
+        Get<NetworkData::Leader>().IsOnMesh(ip6Header.GetSource()) /* only for on mesh address which may require AQ */)
+    {
+        if (Get<AddressResolver>().UpdateCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort()) ==
+            OT_ERROR_NOT_FOUND)
+        {
+            // Thread 1.1 Specification 5.5.2.2:
+            // FTDs MAY add/update EID-to-RLOC Map Cache entries by inspecting packets being received.
+            if ((Get<Mle::MleRouter>().IsFullThreadDevice() /* only for FTD */ &&
+                 !Get<Mle::MleRouter>().IsMinimalChild(aMeshSource.GetShort()) /* Exclude MTD child source */) &&
+                (aMeshDest.GetShort() == Get<Mac::Mac>().GetShortAddress() ||
+                 Get<Mle::MleRouter>().IsMinimalChild(aMeshDest.GetShort())) /* Received for itself or its MTD child */)
+            {
+                Get<AddressResolver>().AddCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort());
+            }
+        }
+    }
 
     neighbor = Get<Mle::MleRouter>().GetNeighbor(ip6Header.GetSource());
     VerifyOrExit(neighbor != NULL && !neighbor->IsFullThreadDevice());
@@ -756,7 +766,6 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 otError MeshForwarder::GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest)
 {
     otError                  error      = OT_ERROR_NONE;
@@ -814,7 +823,6 @@ otError MeshForwarder::GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, ui
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 // LCOV_EXCL_START
 

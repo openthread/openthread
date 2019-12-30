@@ -44,32 +44,32 @@
 
 using namespace ot;
 
-uint8_t otThreadGetMaxAllowedChildren(otInstance *aInstance)
+uint16_t otThreadGetMaxAllowedChildren(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.Get<ChildTable>().GetMaxChildrenAllowed();
 }
 
-otError otThreadSetMaxAllowedChildren(otInstance *aInstance, uint8_t aMaxChildren)
+otError otThreadSetMaxAllowedChildren(otInstance *aInstance, uint16_t aMaxChildren)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.Get<ChildTable>().SetMaxChildrenAllowed(aMaxChildren);
 }
 
-bool otThreadIsRouterRoleEnabled(otInstance *aInstance)
+bool otThreadIsRouterEligible(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::MleRouter>().IsRouterRoleEnabled();
+    return instance.Get<Mle::MleRouter>().IsRouterEligible();
 }
 
-void otThreadSetRouterRoleEnabled(otInstance *aInstance, bool aEnabled)
+otError otThreadSetRouterEligible(otInstance *aInstance, bool aEligible)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.Get<Mle::MleRouter>().SetRouterRoleEnabled(aEnabled);
+    return instance.Get<Mle::MleRouter>().SetRouterEligible(aEligible);
 }
 
 otError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId)
@@ -239,32 +239,24 @@ void otThreadSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRouterJitt
 
 otError otThreadGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChildInfo *aChildInfo)
 {
-    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aChildInfo != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aChildInfo != NULL);
 
-    error = instance.Get<Mle::MleRouter>().GetChildInfoById(aChildId, *aChildInfo);
-
-exit:
-    return error;
+    return instance.Get<Mle::MleRouter>().GetChildInfoById(aChildId, *aChildInfo);
 }
 
-otError otThreadGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex, otChildInfo *aChildInfo)
+otError otThreadGetChildInfoByIndex(otInstance *aInstance, uint16_t aChildIndex, otChildInfo *aChildInfo)
 {
-    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aChildInfo != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aChildInfo != NULL);
 
-    error = instance.Get<Mle::MleRouter>().GetChildInfoByIndex(aChildIndex, *aChildInfo);
-
-exit:
-    return error;
+    return instance.Get<Mle::MleRouter>().GetChildInfoByIndex(aChildIndex, *aChildInfo);
 }
 
 otError otThreadGetChildNextIp6Address(otInstance *               aInstance,
-                                       uint8_t                    aChildIndex,
+                                       uint16_t                   aChildIndex,
                                        otChildIp6AddressIterator *aIterator,
                                        otIp6Address *             aAddress)
 {
@@ -273,7 +265,7 @@ otError otThreadGetChildNextIp6Address(otInstance *               aInstance,
     Child::Ip6AddressIterator iterator;
     Ip6::Address *            address;
 
-    VerifyOrExit(aIterator != NULL && aAddress != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aIterator != NULL && aAddress != NULL);
 
     address = static_cast<Ip6::Address *>(aAddress);
     iterator.Set(*aIterator);
@@ -301,62 +293,45 @@ uint8_t otThreadGetMaxRouterId(otInstance *aInstance)
 
 otError otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRouterInfo *aRouterInfo)
 {
-    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aRouterInfo != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aRouterInfo != NULL);
 
-    error = instance.Get<RouterTable>().GetRouterInfo(aRouterId, *aRouterInfo);
-
-exit:
-    return error;
+    return instance.Get<RouterTable>().GetRouterInfo(aRouterId, *aRouterInfo);
 }
 
 otError otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIndex, otEidCacheEntry *aEntry)
 {
-    otError   error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aEntry != NULL, error = OT_ERROR_INVALID_ARGS);
-    error = instance.Get<AddressResolver>().GetEntry(aIndex, *aEntry);
-
-exit:
-    return error;
+    assert(aEntry != NULL);
+    return instance.Get<AddressResolver>().GetEntry(aIndex, *aEntry);
 }
-
-otError otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtAddress)
-{
-    otError error;
 
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    error = instance.Get<Mle::MleRouter>().SetSteeringData(static_cast<const Mac::ExtAddress *>(aExtAddress));
-#else
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aExtAddress);
-
-    error = OT_ERROR_DISABLED_FEATURE;
-#endif
-
-    return error;
-}
-
-const otPSKc *otThreadGetPSKc(otInstance *aInstance)
+void otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return &instance.Get<KeyManager>().GetPSKc();
+    instance.Get<Mle::MleRouter>().SetSteeringData(static_cast<const Mac::ExtAddress *>(aExtAddress));
+}
+#endif
+
+const otPskc *otThreadGetPskc(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return &instance.Get<KeyManager>().GetPskc();
 }
 
-otError otThreadSetPSKc(otInstance *aInstance, const otPSKc *aPSKc)
+otError otThreadSetPskc(otInstance *aInstance, const otPskc *aPskc)
 {
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
-    instance.Get<KeyManager>().SetPSKc(*aPSKc);
+    instance.Get<KeyManager>().SetPskc(*static_cast<const Pskc *>(aPskc));
     instance.Get<MeshCoP::ActiveDataset>().Clear();
     instance.Get<MeshCoP::PendingDataset>().Clear();
 

@@ -202,10 +202,11 @@ Dummy_Handler:
 
   .extern Reset_Handler
   .global nRFInitialize
+  .extern afterInitialize
 
   .thumb_func
 nRFInitialize:
-  bx lr
+  b afterInitialize
  
  
 /************************************************************************************

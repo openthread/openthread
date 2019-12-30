@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -30,7 +30,6 @@
 import io
 import ipaddress
 import struct
-import sys
 
 import common
 import ipv6
@@ -320,9 +319,6 @@ class LowpanUdpHeaderFactory:
 class Context:
     def __init__(self, prefix, prefix_length=None):
         if isinstance(prefix, str):
-            if sys.version_info[0] == 2:
-                prefix = prefix.decode("utf-8")
-
             prefix, prefix_length = prefix.split("/")
             prefix_length = int(prefix_length)
 

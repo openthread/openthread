@@ -44,7 +44,10 @@ DHCP6_SERVER        ?= 0
 DIAGNOSTIC          ?= 0
 DISABLE_DOC         ?= 0
 DNS_CLIENT          ?= 0
+DYNAMIC_LOG_LEVEL   ?= 0
 ECDSA               ?= 0
+EXTERNAL_HEAP       ?= 0
+IP6_FRAGM           ?= 0
 JAM_DETECTION       ?= 0
 JOINER              ?= 0
 LEGACY              ?= 0
@@ -129,8 +132,20 @@ ifeq ($(DNS_CLIENT),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1
 endif
 
+ifeq ($(DYNAMIC_LOG_LEVEL),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1
+endif
+
 ifeq ($(ECDSA),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ECDSA_ENABLE=1
+endif
+
+ifeq ($(EXTERNAL_HEAP),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE=1
+endif
+
+ifeq ($(IP6_FRAGM),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE=1
 endif
 
 ifeq ($(JAM_DETECTION),1)
@@ -234,4 +249,3 @@ endif
 
 CFLAGS += ${LOG_FLAGS}
 CXXFLAGS += ${LOG_FLAGS}
-

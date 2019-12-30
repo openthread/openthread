@@ -121,9 +121,6 @@ public:
      * @param[in] aAllowPeekDelegate      Delegate function pointer for peek operation.
      * @param[in] aAllowPokeDelegate      Delegate function pointer for poke operation.
      *
-     * @retval OT_ERROR_NONE              Successfully registered delegate functions.
-     * @retval OT_ERROR_DISABLED_FEATURE  Peek/Poke feature is disabled (by a build-time configuration option).
-     *
      */
     void RegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
                                    otNcpDelegateAllowPeekPoke aAllowPokeDelegate);
@@ -205,14 +202,27 @@ protected:
         uint32_t     mPropKeyOrStatus : 24; ///< 3 bytes for either property key or spinel status.
     };
 
+    struct HandlerEntry
+    {
+        spinel_prop_key_t        mKey;
+        NcpBase::PropertyHandler mHandler;
+    };
+
     NcpFrameBuffer::FrameTag GetLastOutboundFrameTag(void);
 
     otError HandleCommand(uint8_t aHeader);
 
-    PropertyHandler FindGetPropertyHandler(spinel_prop_key_t aKey);
-    PropertyHandler FindSetPropertyHandler(spinel_prop_key_t aKey);
-    PropertyHandler FindInsertPropertyHandler(spinel_prop_key_t aKey);
-    PropertyHandler FindRemovePropertyHandler(spinel_prop_key_t aKey);
+#if __cplusplus >= 201103L
+    static constexpr bool AreHandlerEntriesSorted(const HandlerEntry *aHandlerEntries, size_t aSize);
+#endif
+
+    static PropertyHandler FindPropertyHandler(const HandlerEntry *aHandlerEntries,
+                                               size_t              aSize,
+                                               spinel_prop_key_t   aKey);
+    static PropertyHandler FindGetPropertyHandler(spinel_prop_key_t aKey);
+    static PropertyHandler FindSetPropertyHandler(spinel_prop_key_t aKey);
+    static PropertyHandler FindInsertPropertyHandler(spinel_prop_key_t aKey);
+    static PropertyHandler FindRemovePropertyHandler(spinel_prop_key_t aKey);
 
     bool    HandlePropertySetForSpecialProperties(uint8_t aHeader, spinel_prop_key_t aKey, otError &aError);
     otError HandleCommandPropertySet(uint8_t aHeader, spinel_prop_key_t aKey);
@@ -416,6 +426,7 @@ protected:
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+    otError HandlePropertySet_SPINEL_PROP_MESHCOP_COMMISSIONER_GENERATE_PSKC(uint8_t aHeader);
     otError HandlePropertySet_SPINEL_PROP_THREAD_COMMISSIONER_ENABLED(uint8_t aHeader);
 #endif // OPENTHREAD_FTD
 
@@ -423,6 +434,8 @@ protected:
     otError DecodeStreamRawTxRequest(otRadioFrame &aFrame);
     otError HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader);
 #endif
+
+    void ResetCounters(void);
 
 #if OPENTHREAD_CONFIG_LEGACY_ENABLE
     void StartLegacy(void);

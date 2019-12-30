@@ -44,7 +44,6 @@
 #include "common/locator-getters.hpp"
 #include "radio/radio.hpp"
 #include "utils/parse_cmdline.hpp"
-#include "utils/wrap_string.h"
 
 namespace ot {
 namespace FactoryDiags {
@@ -74,8 +73,7 @@ void Diags::ProcessChannel(int aArgCount, char *aArgVector[], char *aOutput, siz
     SuccessOrExit(error = ParseLong(aArgVector[0], value));
     VerifyOrExit(value >= Radio::kChannelMin && value <= Radio::kChannelMax, error = OT_ERROR_INVALID_ARGS);
 
-    mChannel = static_cast<uint8_t>(value);
-    otPlatDiagChannelSet(mChannel);
+    otPlatDiagChannelSet(static_cast<uint8_t>(value));
 
 exit:
     AppendErrorResult(error, aOutput, aOutputMaxLen);
@@ -90,8 +88,7 @@ void Diags::ProcessPower(int aArgCount, char *aArgVector[], char *aOutput, size_
 
     SuccessOrExit(error = ParseLong(aArgVector[0], value));
 
-    mTxPower = static_cast<int8_t>(value);
-    otPlatDiagTxPowerSet(mTxPower);
+    otPlatDiagTxPowerSet(static_cast<int8_t>(value));
 
 exit:
     AppendErrorResult(error, aOutput, aOutputMaxLen);
@@ -132,15 +129,15 @@ const struct Diags::Command Diags::sCommands[] = {
 
 Diags::Diags(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTxPower(0)
-    , mChannel(20)
-    , mTxLen(0)
+    , mTxPacket(&Get<Radio>().GetTransmitBuffer())
     , mTxPeriod(0)
     , mTxPackets(0)
-    , mTxPacket(&Get<Radio>().GetTransmitBuffer())
+    , mChannel(20)
+    , mTxPower(0)
+    , mTxLen(0)
     , mRepeatActive(false)
 {
-    memset(&mStats, 0, sizeof(mStats));
+    mStats.Clear();
 
     otPlatDiagChannelSet(mChannel);
     otPlatDiagTxPowerSet(mTxPower);
@@ -274,7 +271,7 @@ void Diags::ProcessStart(int aArgCount, char *aArgVector[], char *aOutput, size_
     SuccessOrExit(error = Get<Radio>().Receive(mChannel));
     SuccessOrExit(error = Get<Radio>().SetTransmitPower(mTxPower));
     otPlatDiagModeSet(true);
-    memset(&mStats, 0, sizeof(mStats));
+    mStats.Clear();
     snprintf(aOutput, aOutputMaxLen, "start diagnostics mode\r\nstatus 0x%02x\r\n", error);
 
 exit:
@@ -289,7 +286,7 @@ void Diags::ProcessStats(int aArgCount, char *aArgVector[], char *aOutput, size_
 
     if ((aArgCount == 1) && (strcmp(aArgVector[0], "clear") == 0))
     {
-        memset(&mStats, 0, sizeof(mStats));
+        mStats.Clear();
         snprintf(aOutput, aOutputMaxLen, "stats cleared\r\n");
     }
     else
@@ -369,6 +366,35 @@ void Diags::ProcessRadio(int aArgCount, char *aArgVector[], char *aOutput, size_
         snprintf(aOutput, aOutputMaxLen, "set radio from sleep to receive on channel %d\r\nstatus 0x%02x\r\n", mChannel,
                  error);
     }
+    else if (strcmp(aArgVector[0], "state") == 0)
+    {
+        otRadioState state = Get<Radio>().GetState();
+
+        error = OT_ERROR_NONE;
+
+        switch (state)
+        {
+        case OT_RADIO_STATE_DISABLED:
+            snprintf(aOutput, aOutputMaxLen, "disabled\r\n");
+            break;
+
+        case OT_RADIO_STATE_SLEEP:
+            snprintf(aOutput, aOutputMaxLen, "sleep\r\n");
+            break;
+
+        case OT_RADIO_STATE_RECEIVE:
+            snprintf(aOutput, aOutputMaxLen, "receive\r\n");
+            break;
+
+        case OT_RADIO_STATE_TRANSMIT:
+            snprintf(aOutput, aOutputMaxLen, "transmit\r\n");
+            break;
+
+        default:
+            snprintf(aOutput, aOutputMaxLen, "invalid\r\n");
+            break;
+        }
+    }
 
 exit:
     AppendErrorResult(error, aOutput, aOutputMaxLen);
@@ -425,13 +451,18 @@ void Diags::TransmitDone(otError aError)
         if (mTxPackets > 1)
         {
             mTxPackets--;
-            TransmitPacket();
+        }
+        else
+        {
+            ExitNow();
         }
     }
-    else
-    {
-        TransmitPacket();
-    }
+
+    VerifyOrExit(!mRepeatActive);
+    TransmitPacket();
+
+exit:
+    return;
 }
 
 #endif // OPENTHREAD_RADIO

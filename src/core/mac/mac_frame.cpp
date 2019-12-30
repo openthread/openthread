@@ -34,60 +34,14 @@
 #include "mac_frame.hpp"
 
 #include <stdio.h>
-#include "utils/wrap_string.h"
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/instance.hpp"
-#include "common/random.hpp"
+#include "crypto/aes_ccm.hpp"
+#include "thread/key_manager.hpp"
 
 namespace ot {
 namespace Mac {
-
-void ExtAddress::GenerateRandom(void)
-{
-    Random::NonCrypto::FillBuffer(m8, sizeof(ExtAddress));
-    SetGroup(false);
-    SetLocal(true);
-}
-
-bool ExtAddress::operator==(const ExtAddress &aOther) const
-{
-    return memcmp(m8, aOther.m8, sizeof(ExtAddress)) == 0;
-}
-
-bool ExtAddress::operator!=(const ExtAddress &aOther) const
-{
-    return memcmp(m8, aOther.m8, sizeof(ExtAddress)) != 0;
-}
-
-ExtAddress::InfoString ExtAddress::ToString(void) const
-{
-    return InfoString("%02x%02x%02x%02x%02x%02x%02x%02x", m8[0], m8[1], m8[2], m8[3], m8[4], m8[5], m8[6], m8[7]);
-}
-
-void Address::SetExtended(const uint8_t *aBuffer, bool aReverse)
-{
-    mType = kTypeExtended;
-
-    if (aReverse)
-    {
-        for (unsigned int i = 0; i < sizeof(ExtAddress); i++)
-        {
-            mShared.mExtAddress.m8[i] = aBuffer[sizeof(ExtAddress) - 1 - i];
-        }
-    }
-    else
-    {
-        memcpy(mShared.mExtAddress.m8, aBuffer, sizeof(ExtAddress));
-    }
-}
-
-Address::InfoString Address::ToString(void) const
-{
-    return (mType == kTypeExtended) ? GetExtended().ToString()
-                                    : (mType == kTypeNone ? InfoString("None") : InfoString("0x%04x", GetShort()));
-}
 
 void Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
 {
@@ -275,7 +229,7 @@ otError Frame::GetDstAddr(Address &aAddress) const
         break;
 
     case kFcfDstAddrExt:
-        aAddress.SetExtended(GetPsdu() + index, /* reverse */ true);
+        aAddress.SetExtended(GetPsdu() + index, ExtAddress::kReverseByteOrder);
         break;
 
     default:
@@ -295,16 +249,12 @@ void Frame::SetDstAddr(ShortAddress aShortAddress)
 
 void Frame::SetDstAddr(const ExtAddress &aExtAddress)
 {
-    uint8_t  index = FindDstAddrIndex();
-    uint8_t *buf   = GetPsdu() + index;
+    uint8_t index = FindDstAddrIndex();
 
     assert((GetFrameControlField() & kFcfDstAddrMask) == kFcfDstAddrExt);
     assert(index != kInvalidIndex);
 
-    for (unsigned int i = 0; i < sizeof(ExtAddress); i++)
-    {
-        buf[i] = aExtAddress.m8[sizeof(ExtAddress) - 1 - i];
-    }
+    aExtAddress.CopyTo(GetPsdu() + index, ExtAddress::kReverseByteOrder);
 }
 
 void Frame::SetDstAddr(const Address &aAddress)
@@ -447,7 +397,7 @@ otError Frame::GetSrcAddr(Address &aAddress) const
         break;
 
     case kFcfSrcAddrExt:
-        aAddress.SetExtended(GetPsdu() + index, /* reverse */ true);
+        aAddress.SetExtended(GetPsdu() + index, ExtAddress::kReverseByteOrder);
         break;
 
     default:
@@ -471,16 +421,12 @@ void Frame::SetSrcAddr(ShortAddress aShortAddress)
 
 void Frame::SetSrcAddr(const ExtAddress &aExtAddress)
 {
-    uint8_t  index = FindSrcAddrIndex();
-    uint8_t *buf   = GetPsdu() + index;
+    uint8_t index = FindSrcAddrIndex();
 
     assert((GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrExt);
     assert(index != kInvalidIndex);
 
-    for (unsigned int i = 0; i < sizeof(aExtAddress); i++)
-    {
-        buf[i] = aExtAddress.m8[sizeof(aExtAddress) - 1 - i];
-    }
+    aExtAddress.CopyTo(GetPsdu() + index, ExtAddress::kReverseByteOrder);
 }
 
 void Frame::SetSrcAddr(const Address &aAddress)
@@ -1054,14 +1000,38 @@ void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 #endif
 }
 
-uint16_t Frame::GetMtu(void) const
+void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 {
-    return kMTU;
-}
+#if OPENTHREAD_RADIO
+    OT_UNUSED_VARIABLE(aExtAddress);
+#else
+    uint32_t       frameCounter = 0;
+    uint8_t        securityLevel;
+    uint8_t        nonce[KeyManager::kNonceSize];
+    uint8_t        tagLength;
+    Crypto::AesCcm aesCcm;
+    otError        error;
 
-uint16_t Frame::GetFcsSize(void) const
-{
-    return kFcsSize;
+    VerifyOrExit(GetSecurityEnabled());
+
+    SuccessOrExit(error = GetSecurityLevel(securityLevel));
+    SuccessOrExit(error = GetFrameCounter(frameCounter));
+
+    KeyManager::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
+
+    aesCcm.SetKey(GetAesKey(), 16);
+    tagLength = GetFooterLength() - Frame::kFcsSize;
+
+    error = aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, nonce, sizeof(nonce));
+    assert(error == OT_ERROR_NONE);
+
+    aesCcm.Header(GetHeader(), GetHeaderLength());
+    aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), true);
+    aesCcm.Finalize(GetFooter(), &tagLength);
+
+exit:
+    return;
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 }
 
 // LCOV_EXCL_START
@@ -1131,15 +1101,13 @@ Frame::InfoString Frame::ToInfoString(void) const
 
 BeaconPayload::InfoString BeaconPayload::ToInfoString(void) const
 {
-    const uint8_t *xpanid = GetExtendedPanId();
-    otNetworkName  networkname;
+    NetworkName name;
 
-    strlcpy(networkname.m8, GetNetworkName(), sizeof(networkname.m8));
+    name.Set(GetNetworkName());
 
-    return InfoString("name:%s, xpanid:%02x%02x%02x%02x%02x%02x%02x%02x, id:%d ver:%d, joinable:%s, native:%s",
-                      networkname.m8, xpanid[0], xpanid[1], xpanid[2], xpanid[3], xpanid[4], xpanid[5], xpanid[6],
-                      xpanid[7], GetProtocolId(), GetProtocolVersion(), IsJoiningPermitted() ? "yes" : "no",
-                      IsNative() ? "yes" : "no");
+    return InfoString("name:%s, xpanid:%s, id:%d, ver:%d, joinable:%s, native:%s", name.GetAsCString(),
+                      mExtendedPanId.ToString().AsCString(), GetProtocolId(), GetProtocolVersion(),
+                      IsJoiningPermitted() ? "yes" : "no", IsNative() ? "yes" : "no");
 }
 
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)

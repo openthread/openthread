@@ -39,7 +39,6 @@
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
-#include "mac/mac_frame.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
@@ -169,19 +168,22 @@ void Address::SetIid(const uint8_t *aIid)
 
 void Address::SetIid(const Mac::ExtAddress &aExtAddress)
 {
-    memcpy(mFields.m8 + kInterfaceIdentifierOffset, aExtAddress.m8, kInterfaceIdentifierSize);
-    mFields.m8[kInterfaceIdentifierOffset] ^= 0x02;
+    Mac::ExtAddress addr;
+
+    addr = aExtAddress;
+    addr.ToggleLocal();
+    addr.CopyTo(mFields.m8 + kInterfaceIdentifierOffset);
 }
 
 void Address::ToExtAddress(Mac::ExtAddress &aExtAddress) const
 {
-    memcpy(aExtAddress.m8, mFields.m8 + kInterfaceIdentifierOffset, sizeof(aExtAddress.m8));
+    aExtAddress.Set(mFields.m8 + kInterfaceIdentifierOffset);
     aExtAddress.ToggleLocal();
 }
 
 void Address::ToExtAddress(Mac::Address &aMacAddress) const
 {
-    aMacAddress.SetExtended(mFields.m8 + kInterfaceIdentifierOffset, /* reverse */ false);
+    aMacAddress.SetExtended(mFields.m8 + kInterfaceIdentifierOffset);
     aMacAddress.GetExtended().ToggleLocal();
 }
 
@@ -252,11 +254,6 @@ bool Address::operator==(const Address &aOther) const
     return memcmp(mFields.m8, aOther.mFields.m8, sizeof(mFields.m8)) == 0;
 }
 
-bool Address::operator!=(const Address &aOther) const
-{
-    return memcmp(mFields.m8, aOther.mFields.m8, sizeof(mFields.m8)) != 0;
-}
-
 otError Address::FromString(const char *aBuf)
 {
     otError     error  = OT_ERROR_NONE;
@@ -271,7 +268,7 @@ otError Address::FromString(const char *aBuf)
     char        ch;
     uint8_t     d;
 
-    memset(mFields.m8, 0, 16);
+    Clear();
 
     dst--;
 

@@ -65,18 +65,8 @@ extern "C" {
     #define NRFX_PRS_BOX_1_ADDR     NRF_SPIM0
     // UART0, UARTE0
     #define NRFX_PRS_BOX_2_ADDR     NRF_UART0
-#elif defined(NRF52832_XXAA) || defined (NRF52832_XXAB)
-    // SPIM0, SPIS0, TWIM0, TWIS0, SPI0, TWI0
-    #define NRFX_PRS_BOX_0_ADDR     NRF_SPIM0
-    // SPIM1, SPIS1, TWIM1, TWIS1, SPI1, TWI1
-    #define NRFX_PRS_BOX_1_ADDR     NRF_SPIM1
-    // SPIM2, SPIS2, SPI2
-    #define NRFX_PRS_BOX_2_ADDR     NRF_SPIM2
-    // COMP, LPCOMP
-    #define NRFX_PRS_BOX_3_ADDR     NRF_COMP
-    // UARTE0, UART0
-    #define NRFX_PRS_BOX_4_ADDR     NRF_UARTE0
-#elif defined(NRF52840_XXAA)
+#elif defined(NRF52832_XXAA) || defined(NRF52832_XXAB) || \
+      defined(NRF52833_XXAA) || defined(NRF52840_XXAA)
     // SPIM0, SPIS0, TWIM0, TWIS0, SPI0, TWI0
     #define NRFX_PRS_BOX_0_ADDR     NRF_SPIM0
     // SPIM1, SPIS1, TWIM1, TWIS1, SPI1, TWI1
@@ -133,6 +123,7 @@ nrfx_err_t nrfx_prs_acquire(void       const * p_base_addr,
  */
 void nrfx_prs_release(void const * p_base_addr);
 
+/** @} */
 
 void nrfx_prs_box_0_irq_handler(void);
 void nrfx_prs_box_1_irq_handler(void);
@@ -140,7 +131,6 @@ void nrfx_prs_box_2_irq_handler(void);
 void nrfx_prs_box_3_irq_handler(void);
 void nrfx_prs_box_4_irq_handler(void);
 
-/** @} */
 
 #ifdef __cplusplus
 }

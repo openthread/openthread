@@ -36,7 +36,6 @@ libopenthread_posix_a_CPPFLAGS            = \
     -I$(top_srcdir)/src/core                \
     -I$(top_srcdir)/src/posix/platform      \
     -D_GNU_SOURCE                           \
-    $(OPENTHREAD_TARGET_DEFINES)            \
     $(NULL)
 
 libopenthread_posix_a_SOURCES             = \
@@ -58,6 +57,7 @@ noinst_HEADERS                            = \
     platform-posix.h                        \
     hdlc_interface.hpp                      \
     radio_spinel.hpp                        \
+    spinel_interface.hpp                    \
     $(NULL)
 
 openthread_HEADERS                        = \
@@ -81,6 +81,7 @@ check_PROGRAMS = test-settings
 test_settings_CPPFLAGS                    = \
     -I$(top_srcdir)/include                 \
     -I$(top_srcdir)/src/core                \
+    -DOPENTHREAD_CONFIG_LOG_PLATFORM=0      \
     -DSELF_TEST                             \
     $(NULL)
 

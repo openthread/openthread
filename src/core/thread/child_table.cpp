@@ -41,7 +41,7 @@ namespace ot {
 
 #if OPENTHREAD_FTD
 
-ChildTable::Iterator::Iterator(Instance &aInstance, StateFilter aFilter)
+ChildTable::Iterator::Iterator(Instance &aInstance, Child::StateFilter aFilter)
     : InstanceLocator(aInstance)
     , mFilter(aFilter)
     , mStart(NULL)
@@ -50,7 +50,7 @@ ChildTable::Iterator::Iterator(Instance &aInstance, StateFilter aFilter)
     Reset();
 }
 
-ChildTable::Iterator::Iterator(Instance &aInstance, StateFilter aFilter, Child *aStartingChild)
+ChildTable::Iterator::Iterator(Instance &aInstance, Child::StateFilter aFilter, Child *aStartingChild)
     : InstanceLocator(aInstance)
     , mFilter(aFilter)
     , mStart(aStartingChild)
@@ -68,7 +68,7 @@ void ChildTable::Iterator::Reset(void)
 
     mChild = mStart;
 
-    if (!MatchesFilter(*mChild, mFilter))
+    if (!mChild->MatchesFilter(mFilter))
     {
         Advance();
     }
@@ -92,7 +92,7 @@ void ChildTable::Iterator::Advance(void)
         }
 
         VerifyOrExit(mChild != mStart, mChild = NULL);
-    } while (!MatchesFilter(*mChild, mFilter));
+    } while (!mChild->MatchesFilter(mFilter));
 
 exit:
     return;
@@ -102,10 +102,18 @@ ChildTable::ChildTable(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mMaxChildrenAllowed(kMaxChildren)
 {
-    memset(mChildren, 0, sizeof(mChildren));
+    Clear();
 }
 
-Child *ChildTable::GetChildAtIndex(uint8_t aChildIndex)
+void ChildTable::Clear(void)
+{
+    for (Child *child = &mChildren[0]; child < OT_ARRAY_END(mChildren); child++)
+    {
+        child->Clear();
+    }
+}
+
+Child *ChildTable::GetChildAtIndex(uint16_t aChildIndex)
 {
     Child *child = NULL;
 
@@ -122,9 +130,9 @@ Child *ChildTable::GetNewChild(void)
 
     for (uint16_t num = mMaxChildrenAllowed; num != 0; num--, child++)
     {
-        if (child->GetState() == Child::kStateInvalid)
+        if (child->IsStateInvalid())
         {
-            memset(child, 0, sizeof(Child));
+            child->Clear();
             ExitNow();
         }
     }
@@ -135,13 +143,13 @@ exit:
     return child;
 }
 
-Child *ChildTable::FindChild(uint16_t aRloc16, StateFilter aFilter)
+Child *ChildTable::FindChild(uint16_t aRloc16, Child::StateFilter aFilter)
 {
     Child *child = mChildren;
 
     for (uint16_t num = mMaxChildrenAllowed; num != 0; num--, child++)
     {
-        if (MatchesFilter(*child, aFilter) && (child->GetRloc16() == aRloc16))
+        if (child->MatchesFilter(aFilter) && (child->GetRloc16() == aRloc16))
         {
             ExitNow();
         }
@@ -153,13 +161,13 @@ exit:
     return child;
 }
 
-Child *ChildTable::FindChild(const Mac::ExtAddress &aAddress, StateFilter aFilter)
+Child *ChildTable::FindChild(const Mac::ExtAddress &aAddress, Child::StateFilter aFilter)
 {
     Child *child = mChildren;
 
     for (uint16_t num = mMaxChildrenAllowed; num != 0; num--, child++)
     {
-        if (MatchesFilter(*child, aFilter) && (child->GetExtAddress() == aAddress))
+        if (child->MatchesFilter(aFilter) && (child->GetExtAddress() == aAddress))
         {
             ExitNow();
         }
@@ -171,7 +179,7 @@ exit:
     return child;
 }
 
-Child *ChildTable::FindChild(const Mac::Address &aAddress, StateFilter aFilter)
+Child *ChildTable::FindChild(const Mac::Address &aAddress, Child::StateFilter aFilter)
 {
     Child *child = NULL;
 
@@ -192,14 +200,14 @@ Child *ChildTable::FindChild(const Mac::Address &aAddress, StateFilter aFilter)
     return child;
 }
 
-bool ChildTable::HasChildren(StateFilter aFilter) const
+bool ChildTable::HasChildren(Child::StateFilter aFilter) const
 {
     bool         rval  = false;
     const Child *child = mChildren;
 
     for (uint16_t num = mMaxChildrenAllowed; num != 0; num--, child++)
     {
-        if (MatchesFilter(*child, aFilter))
+        if (child->MatchesFilter(aFilter))
         {
             ExitNow(rval = true);
         }
@@ -209,14 +217,14 @@ exit:
     return rval;
 }
 
-uint8_t ChildTable::GetNumChildren(StateFilter aFilter) const
+uint16_t ChildTable::GetNumChildren(Child::StateFilter aFilter) const
 {
-    uint8_t      numChildren = 0;
+    uint16_t     numChildren = 0;
     const Child *child       = mChildren;
 
     for (uint16_t num = mMaxChildrenAllowed; num != 0; num--, child++)
     {
-        if (MatchesFilter(*child, aFilter))
+        if (child->MatchesFilter(aFilter))
         {
             numChildren++;
         }
@@ -225,51 +233,17 @@ uint8_t ChildTable::GetNumChildren(StateFilter aFilter) const
     return numChildren;
 }
 
-otError ChildTable::SetMaxChildrenAllowed(uint8_t aMaxChildren)
+otError ChildTable::SetMaxChildrenAllowed(uint16_t aMaxChildren)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aMaxChildren > 0 && aMaxChildren <= kMaxChildren, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(!HasChildren(kInStateAnyExceptInvalid), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!HasChildren(Child::kInStateAnyExceptInvalid), error = OT_ERROR_INVALID_STATE);
 
     mMaxChildrenAllowed = aMaxChildren;
 
 exit:
     return error;
-}
-
-bool ChildTable::MatchesFilter(const Child &aChild, StateFilter aFilter)
-{
-    bool rval = false;
-
-    switch (aFilter)
-    {
-    case kInStateValid:
-        rval = (aChild.GetState() == Child::kStateValid);
-        break;
-
-    case kInStateValidOrRestoring:
-        rval = aChild.IsStateValidOrRestoring();
-        break;
-
-    case kInStateChildIdRequest:
-        rval = (aChild.GetState() == Child::kStateChildIdRequest);
-        break;
-
-    case kInStateValidOrAttaching:
-        rval = aChild.IsStateValidOrAttaching();
-        break;
-
-    case kInStateAnyExceptInvalid:
-        rval = (aChild.GetState() != Child::kStateInvalid);
-        break;
-
-    case kInStateAnyExceptValidOrRestoring:
-        rval = !aChild.IsStateValidOrRestoring();
-        break;
-    }
-
-    return rval;
 }
 
 #endif // OPENTHREAD_FTD

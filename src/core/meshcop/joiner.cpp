@@ -41,7 +41,6 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "mac/mac_frame.hpp"
 #include "meshcop/meshcop.hpp"
 #include "radio/radio.hpp"
 #include "thread/thread_netif.hpp"
@@ -85,7 +84,7 @@ exit:
     return;
 }
 
-otError Joiner::Start(const char *     aPSKd,
+otError Joiner::Start(const char *     aPskd,
                       const char *     aProvisioningUrl,
                       const char *     aVendorName,
                       const char *     aVendorModel,
@@ -107,8 +106,8 @@ otError Joiner::Start(const char *     aPSKd,
     Get<Mle::MleRouter>().UpdateLinkLocalAddress();
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().Start(kJoinerUdpPort));
-    SuccessOrExit(error = Get<Coap::CoapSecure>().SetPsk(reinterpret_cast<const uint8_t *>(aPSKd),
-                                                         static_cast<uint8_t>(strlen(aPSKd))));
+    SuccessOrExit(error = Get<Coap::CoapSecure>().SetPsk(reinterpret_cast<const uint8_t *>(aPskd),
+                                                         static_cast<uint8_t>(strlen(aPskd))));
 
     for (JoinerRouter *router = &mJoinerRouters[0]; router < OT_ARRAY_END(mJoinerRouters); router++)
     {
@@ -520,13 +519,9 @@ void Joiner::HandleJoinerEntrust(void *aContext, otMessage *aMessage, const otMe
 
 void Joiner::HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    otError               error;
-    NetworkMasterKeyTlv   masterKey;
-    MeshLocalPrefixTlv    meshLocalPrefix;
-    ExtendedPanIdTlv      extendedPanId;
-    NetworkNameTlv        networkName;
-    ActiveTimestampTlv    activeTimestamp;
-    NetworkKeySequenceTlv networkKeySeq;
+    otError              error;
+    NetworkMasterKeyTlv  masterKey;
+    otOperationalDataset dataset;
 
     VerifyOrExit(mState == OT_JOINER_STATE_ENTRUST && aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE &&
                      aMessage.GetCode() == OT_COAP_CODE_POST,
@@ -538,26 +533,18 @@ void Joiner::HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkMasterKey, sizeof(masterKey), masterKey));
     VerifyOrExit(masterKey.IsValid(), error = OT_ERROR_PARSE);
 
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kMeshLocalPrefix, sizeof(meshLocalPrefix), meshLocalPrefix));
-    VerifyOrExit(meshLocalPrefix.IsValid(), error = OT_ERROR_PARSE);
+    memset(&dataset, 0, sizeof(dataset));
 
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kExtendedPanId, sizeof(extendedPanId), extendedPanId));
-    VerifyOrExit(extendedPanId.IsValid(), error = OT_ERROR_PARSE);
+    dataset.mMasterKey                      = masterKey.GetNetworkMasterKey();
+    dataset.mComponents.mIsMasterKeyPresent = true;
 
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkName, sizeof(networkName), networkName));
+    dataset.mChannel                      = Get<Mac::Mac>().GetPanChannel();
+    dataset.mComponents.mIsChannelPresent = true;
 
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp));
-    VerifyOrExit(activeTimestamp.IsValid(), error = OT_ERROR_PARSE);
+    dataset.mPanId                      = Get<Mac::Mac>().GetPanId();
+    dataset.mComponents.mIsPanIdPresent = true;
 
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkKeySequence, sizeof(networkKeySeq), networkKeySeq));
-    VerifyOrExit(networkKeySeq.IsValid(), error = OT_ERROR_PARSE);
-
-    Get<KeyManager>().SetMasterKey(masterKey.GetNetworkMasterKey());
-    Get<KeyManager>().SetCurrentKeySequence(networkKeySeq.GetNetworkKeySequence());
-    Get<Mle::MleRouter>().SetMeshLocalPrefix(meshLocalPrefix.GetMeshLocalPrefix());
-    Get<Mac::Mac>().SetExtendedPanId(extendedPanId.GetExtendedPanId());
-
-    Get<Mac::Mac>().SetNetworkName(networkName.GetNetworkName(), networkName.GetNetworkNameLength());
+    Get<MeshCoP::ActiveDataset>().Save(dataset);
 
     otLogInfoMeshCoP("Joiner successful!");
 
@@ -584,7 +571,7 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6:
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
-    memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
+    responseInfo.GetSockAddr().Clear();
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, responseInfo));
 
     SetState(OT_JOINER_STATE_JOINED);

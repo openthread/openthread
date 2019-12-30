@@ -34,18 +34,23 @@
 
 #include <string.h>
 
+#include "openthread-system.h"
 #include <openthread/platform/uart.h>
 
 #include "common/logging.hpp"
 
 #include "bsp.h"
 #include "em_chip.h"
+#include "em_core.h"
+#include "em_emu.h"
+#include "em_system.h"
+#include "hal-config.h"
 #include "hal_common.h"
+#include "rail.h"
+#include "rtcdriver.h"
 
 #include "openthread-core-efr32-config.h"
 #include "platform-efr32.h"
-
-#include "hal-config.h"
 
 #if (HAL_FEM_ENABLE)
 #include "fem-control.h"
@@ -58,22 +63,35 @@
 void halInitChipSpecific(void);
 
 otInstance *sInstance;
+static bool (*sCanSleepCallback)(void);
+static void (*sDeviceOutOfSleepCb)(void);
 
 void otSysInit(int argc, char *argv[])
 {
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
+    __disable_irq();
+
+#undef FIXED_EXCEPTION
+#define FIXED_EXCEPTION(vectorNumber, functionName, deviceIrqn, deviceIrqHandler)
+#define EXCEPTION(vectorNumber, functionName, deviceIrqn, deviceIrqHandler, priorityLevel, subpriority) \
+    NVIC_SetPriority(deviceIrqn, NVIC_EncodePriority(PRIGROUP_POSITION - 1, priorityLevel, subpriority));
+#include NVIC_CONFIG
+#undef EXCEPTION
+
+    NVIC_SetPriorityGrouping(PRIGROUP_POSITION - 1);
     CHIP_Init();
-
     halInitChipSpecific();
-
     BSP_Init(BSP_INIT_BCC);
+    RTCDRV_Init();
 
 #if (HAL_FEM_ENABLE)
     initFem();
     wakeupFem();
 #endif
+
+    __enable_irq();
 
 #if USE_EFR32_LOG
     efr32LogInit();
@@ -97,6 +115,51 @@ void otSysDeinit(void)
 #endif
 }
 
+void efr32SetSleepCallback(bool (*aCallback)(void), void (*aCallbackWake)(void))
+{
+    sCanSleepCallback   = aCallback;
+    sDeviceOutOfSleepCb = aCallbackWake;
+}
+
+void efr32Sleep(void)
+{
+    bool canDeepSleep      = false;
+    int  wakeupProcessTime = 1000;
+    CORE_DECLARE_IRQ_STATE;
+
+    if (RAIL_Sleep(wakeupProcessTime, &canDeepSleep) == RAIL_STATUS_NO_ERROR)
+    {
+        if (canDeepSleep)
+        {
+            CORE_ENTER_ATOMIC();
+            if (sCanSleepCallback != NULL && sCanSleepCallback())
+            {
+                EMU_EnterEM2(true);
+            }
+            CORE_EXIT_ATOMIC();
+            // TODO OT will handle an interrupt here and it mustn't call any RAIL APIs
+
+            while (RAIL_Wake(0) != RAIL_STATUS_NO_ERROR)
+            {
+            }
+
+            if (sDeviceOutOfSleepCb != NULL)
+            {
+                sDeviceOutOfSleepCb();
+            }
+        }
+        else
+        {
+            CORE_ENTER_ATOMIC();
+            if (sCanSleepCallback != NULL && sCanSleepCallback())
+            {
+                EMU_EnterEM1();
+            }
+            CORE_EXIT_ATOMIC();
+        }
+    }
+}
+
 void otSysProcessDrivers(otInstance *aInstance)
 {
     sInstance = aInstance;
@@ -106,4 +169,9 @@ void otSysProcessDrivers(otInstance *aInstance)
     efr32UartProcess();
     efr32RadioProcess(aInstance);
     efr32AlarmProcess(aInstance);
+}
+
+__WEAK void otSysEventSignalPending(void)
+{
+    // Intentionally empty
 }

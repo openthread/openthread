@@ -46,6 +46,9 @@ extern "C" {
 /**
  * @addtogroup api-thread-general
  *
+ * @note
+ *   The functions in this module require `OPENTHREAD_FTD=1` or `OPENTHREAD_MTD=1`.
+ *
  * @{
  *
  */
@@ -71,7 +74,6 @@ typedef enum
 /**
  * This structure represents an MLE Link Mode configuration.
  */
-OT_TOOL_ALIGN(4)
 typedef struct otLinkModeConfig
 {
     bool mRxOnWhenIdle : 1;       ///< 1, if the sender has its receiver on when not transmitting. 0, otherwise.
@@ -82,9 +84,6 @@ typedef struct otLinkModeConfig
 
 /**
  * This structure holds diagnostic information for a neighboring Thread node
- *
- * `mFrameErrorRate` and `mMessageErrorRate` require `OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING` feature to be
- * enabled.
  *
  */
 typedef struct
@@ -127,7 +126,6 @@ typedef struct otLeaderData
  * This structure holds diagnostic information for a Thread Router
  *
  */
-OT_TOOL_ALIGN(4)
 typedef struct
 {
     otExtAddress mExtAddress;          ///< IEEE 802.15.4 Extended Address
@@ -212,6 +210,14 @@ typedef struct otThreadParentResponseInfo
  *
  */
 otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * This function gets the Thread protocol version.
+ *
+ * @returns the Thread protocol version.
+ *
+ */
+uint16_t otThreadGetVersion(void);
 
 /**
  * This function indicates whether a node is the only router on the network.
@@ -720,6 +726,14 @@ otError otThreadSendDiagnosticReset(otInstance *        aInstance,
 const otIpCounters *otThreadGetIp6Counters(otInstance *aInstance);
 
 /**
+ * Reset the IPv6 counters.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ */
+void otThreadResetIp6Counters(otInstance *aInstance);
+
+/**
  * Get the Thread MLE counters.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
@@ -753,13 +767,10 @@ typedef void (*otThreadParentResponseCallback)(otThreadParentResponseInfo *aInfo
  * @param[in]  aCallback  A pointer to a function that is called upon receiving an MLE Parent Response message.
  * @param[in]  aContext   A pointer to callback client-specific context.
  *
- * @retval OT_ERROR_NONE              On successful registration
- * @retval OT_ERROR_DISABLED_FEATURE  If the feature is not supported
- *
  */
-otError otThreadRegisterParentResponseCallback(otInstance *                   aInstance,
-                                               otThreadParentResponseCallback aCallback,
-                                               void *                         aContext);
+void otThreadRegisterParentResponseCallback(otInstance *                   aInstance,
+                                            otThreadParentResponseCallback aCallback,
+                                            void *                         aContext);
 
 /**
  * @}

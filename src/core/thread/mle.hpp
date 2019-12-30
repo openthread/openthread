@@ -360,7 +360,6 @@ private:
  * This class implements functionality required for delaying MLE responses.
  *
  */
-OT_TOOL_PACKED_BEGIN
 class DelayedResponseHeader
 {
 public:
@@ -368,7 +367,12 @@ public:
      * Default constructor for the object.
      *
      */
-    DelayedResponseHeader(void) { memset(this, 0, sizeof(*this)); }
+    DelayedResponseHeader(void)
+        : mDestination()
+        , mSendTime(0)
+    {
+        mDestination.Clear();
+    }
 
     /**
      * This constructor initializes the object with specific values.
@@ -377,10 +381,10 @@ public:
      * @param[in]  aDestination  IPv6 address of the message destination.
      *
      */
-    DelayedResponseHeader(uint32_t aSendTime, const Ip6::Address &aDestination)
+    DelayedResponseHeader(TimeMilli aSendTime, const Ip6::Address &aDestination)
+        : mDestination(aDestination)
+        , mSendTime(aSendTime)
     {
-        mSendTime    = aSendTime;
-        mDestination = aDestination;
     }
 
     /**
@@ -426,7 +430,7 @@ public:
      * @returns  A time when the message shall be sent.
      *
      */
-    uint32_t GetSendTime(void) const { return mSendTime; }
+    TimeMilli GetSendTime(void) const { return mSendTime; }
 
     /**
      * This method returns a destination of the delayed message.
@@ -436,30 +440,10 @@ public:
      */
     const Ip6::Address &GetDestination(void) const { return mDestination; }
 
-    /**
-     * This method checks if the message shall be sent before the given time.
-     *
-     * @param[in]  aTime  A time to compare.
-     *
-     * @retval TRUE   If the message shall be sent before the given time.
-     * @retval FALSE  Otherwise.
-     */
-    bool IsEarlier(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) > 0); }
-
-    /**
-     * This method checks if the message shall be sent after the given time.
-     *
-     * @param[in]  aTime  A time to compare.
-     *
-     * @retval TRUE   If the message shall be sent after the given time.
-     * @retval FALSE  Otherwise.
-     */
-    bool IsLater(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) < 0); }
-
 private:
     Ip6::Address mDestination; ///< IPv6 address of the message destination.
-    uint32_t     mSendTime;    ///< Time when the message shall be sent.
-} OT_TOOL_PACKED_END;
+    TimeMilli    mSendTime;    ///< Time when the message shall be sent.
+};
 
 /**
  * This class implements MLE functionality required by the Thread EndDevices, Router, and Leader roles.
@@ -619,6 +603,19 @@ public:
     bool IsAttached(void) const;
 
     /**
+     * This method indicates whether device is currently attaching or not.
+     *
+     * Note that an already attached device may also be in attaching state. Examples of this include a leader/router
+     * trying to attach to a better partition, or a child trying to find a better parent (when feature
+     * `OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE` is enabled).
+     *
+     * @retval TRUE   Device is currently trying to attach.
+     * @retval FALSE  Device is not in middle of attach process.
+     *
+     */
+    bool IsAttaching(void) const { return (mAttachState != kAttachStateIdle); }
+
+    /**
      * This method returns the current Thread interface state.
      *
      * @returns The current Thread interface state.
@@ -750,23 +747,20 @@ public:
     }
 
     /**
-     * This method returns a pointer to the parent when operating in End Device mode.
+     * This method gets the parent when operating in End Device mode.
      *
-     * @returns A pointer to the parent.
+     * @returns A reference to the parent.
      *
      */
-    Router *GetParent(void);
+    Router &GetParent(void) { return mParent; }
 
     /**
-     * This method returns a pointer to the parent candidate or parent.
+     * This method get the parent candidate.
      *
-     * This method is useful when sending IEEE 802.15.4 Data Request frames while attempting to attach to a new parent.
-     *
-     * If attempting to attach to a new parent, this method returns the parent candidate.
-     * If not attempting to attach, this method returns the parent.
+     * The parent candidate is valid when attempting to attach to a new parent.
      *
      */
-    Router *GetParentCandidate(void);
+    Router &GetParentCandidate(void) { return mParentCandidate; }
 
     /**
      * This method indicates whether or not an IPv6 address is an RLOC.
@@ -880,7 +874,6 @@ public:
         return GetAlocAddress(aAddress, GetCommissionerAloc16FromId(aSessionId));
     }
 
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     /**
      * This method retrieves the Service ALOC for given Service ID.
      *
@@ -892,7 +885,6 @@ public:
      *
      */
     otError GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const;
-#endif
 
     /**
      * This method adds Leader's ALOC to its Thread interface.
@@ -1700,11 +1692,19 @@ private:
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void        ScheduleMessageTransmissionTimer(void);
 
-    otError HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError HandleChildIdResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError HandleChildUpdateResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    otError HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
+    otError HandleChildIdResponse(const Message &         aMessage,
+                                  const Ip6::MessageInfo &aMessageInfo,
+                                  const Neighbor *        aNeighbor);
+    otError HandleChildUpdateRequest(const Message &         aMessage,
+                                     const Ip6::MessageInfo &aMessageInfo,
+                                     Neighbor *              aNeighbor);
+    otError HandleChildUpdateResponse(const Message &         aMessage,
+                                      const Ip6::MessageInfo &aMessageInfo,
+                                      const Neighbor *        aNeighbor);
+    otError HandleDataResponse(const Message &         aMessage,
+                               const Ip6::MessageInfo &aMessageInfo,
+                               const Neighbor *        aNeighbor);
     otError HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence);
     otError HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -1721,6 +1721,7 @@ private:
     uint32_t Reattach(void);
 
     bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, uint8_t aLinkMargin, ConnectivityTlv &aConnectivityTlv);
+    bool IsNetworkDataNewer(const LeaderDataTlv &aLeaderData);
     void ResetParentCandidate(void);
 
     otError GetAlocAddress(Ip6::Address &aAddress, uint16_t aAloc16) const;
@@ -1794,7 +1795,7 @@ private:
     bool       mParentSearchIsInBackoff : 1;
     bool       mParentSearchBackoffWasCanceled : 1;
     bool       mParentSearchRecentlyDetached : 1;
-    uint32_t   mParentSearchBackoffCancelTime;
+    TimeMilli  mParentSearchBackoffCancelTime;
     TimerMilli mParentSearchTimer;
 #endif
 

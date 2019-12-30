@@ -61,18 +61,19 @@ Dhcp6Client::Dhcp6Client(Instance &aInstance)
     memset(mIdentityAssociations, 0, sizeof(mIdentityAssociations));
 }
 
-bool Dhcp6Client::MatchNetifAddressWithPrefix(const otNetifAddress &aNetifAddress, const otIp6Prefix &aIp6Prefix)
+bool Dhcp6Client::MatchNetifAddressWithPrefix(const Ip6::NetifUnicastAddress &aNetifAddress,
+                                              const otIp6Prefix &             aIp6Prefix)
 {
-    return aIp6Prefix.mLength == aNetifAddress.mPrefixLength &&
-           otIp6PrefixMatch(&aNetifAddress.mAddress, &aIp6Prefix.mPrefix) >= aIp6Prefix.mLength;
+    return (aIp6Prefix.mLength == aNetifAddress.mPrefixLength) &&
+           (aNetifAddress.GetAddress().PrefixMatch(aIp6Prefix.mPrefix) >= aIp6Prefix.mLength);
 }
 
 void Dhcp6Client::UpdateAddresses(void)
 {
-    bool                  found    = false;
-    bool                  newAgent = false;
-    otNetworkDataIterator iterator;
-    otBorderRouterConfig  config;
+    bool                            found    = false;
+    bool                            newAgent = false;
+    NetworkData::Iterator           iterator;
+    NetworkData::OnMeshPrefixConfig config;
 
     // remove addresses directly if prefix not valid in network data
     for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); i++)
@@ -85,9 +86,9 @@ void Dhcp6Client::UpdateAddresses(void)
         }
 
         found    = false;
-        iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+        iterator = NetworkData::kIteratorInit;
 
-        while ((otNetDataGetNextOnMeshPrefix(&GetInstance(), &iterator, &config)) == OT_ERROR_NONE)
+        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == OT_ERROR_NONE)
         {
             if (!config.mDhcp)
             {
@@ -103,15 +104,15 @@ void Dhcp6Client::UpdateAddresses(void)
 
         if (!found)
         {
-            Get<ThreadNetif>().RemoveUnicastAddress(*static_cast<Ip6::NetifUnicastAddress *>(&ia.mNetifAddress));
+            Get<ThreadNetif>().RemoveUnicastAddress(ia.mNetifAddress);
             mIdentityAssociations[i].mStatus = kIaStatusInvalid;
         }
     }
 
     // add IdentityAssociation for new configured prefix
-    iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    iterator = NetworkData::kIteratorInit;
 
-    while (otNetDataGetNextOnMeshPrefix(&GetInstance(), &iterator, &config) == OT_ERROR_NONE)
+    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == OT_ERROR_NONE)
     {
         IdentityAssociation *ia = NULL;
 
@@ -204,7 +205,7 @@ bool Dhcp6Client::ProcessNextIdentityAssociation()
 
         mIdentityAssociationCurrent = &mIdentityAssociations[i];
 
-        mTrickleTimer.Start(TimerMilli::SecToMsec(kTrickleTimerImin), TimerMilli::SecToMsec(kTrickleTimerImax),
+        mTrickleTimer.Start(Time::SecToMsec(kTrickleTimerImin), Time::SecToMsec(kTrickleTimerImax),
                             TrickleTimer::kModeNormal);
 
         mTrickleTimer.IndicateInconsistent();
@@ -317,7 +318,7 @@ otError Dhcp6Client::AppendElapsedTime(Message &aMessage)
     ElapsedTime option;
 
     option.Init();
-    option.SetElapsedTime(static_cast<uint16_t>(TimerMilli::MsecToSec(TimerMilli::Elapsed(mStartTime))));
+    option.SetElapsedTime(static_cast<uint16_t>(Time::MsecToSec(TimerMilli::GetNow() - mStartTime)));
     return aMessage.Append(&option, sizeof(option));
 }
 
@@ -584,7 +585,7 @@ otError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
             continue;
         }
 
-        if (otIp6PrefixMatch(&ia.mNetifAddress.mAddress, &option.GetAddress()) >= ia.mNetifAddress.mPrefixLength)
+        if (ia.mNetifAddress.GetAddress().PrefixMatch(option.GetAddress()) >= ia.mNetifAddress.mPrefixLength)
         {
             mIdentityAssociations[i].mNetifAddress.mAddress   = option.GetAddress();
             mIdentityAssociations[i].mPreferredLifetime       = option.GetPreferredLifetime();
@@ -592,7 +593,7 @@ otError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
             mIdentityAssociations[i].mNetifAddress.mPreferred = option.GetPreferredLifetime() != 0;
             mIdentityAssociations[i].mNetifAddress.mValid     = option.GetValidLifetime() != 0;
             mIdentityAssociations[i].mStatus                  = kIaStatusSolicitReplied;
-            Get<ThreadNetif>().AddUnicastAddress(*static_cast<Ip6::NetifUnicastAddress *>(&ia.mNetifAddress));
+            Get<ThreadNetif>().AddUnicastAddress(ia.mNetifAddress);
             break;
         }
     }

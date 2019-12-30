@@ -167,20 +167,6 @@ public:
          *
          */
         void EnergyScanDone(int8_t aMaxRssi);
-
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-        /**
-         * The method notifies user of `SubMac` to process transmit security for the frame, which  happens when the
-         * frame includes Header IE(s) that were updated before transmission.
-         *
-         * @note This function can be called from interrupt context and it would only read/write data passed in
-         *       via @p aFrame, but would not read/write any state within OpenThread.
-         *
-         * @param[in]  aFrame      The frame which needs to process transmit security.
-         *
-         */
-        void FrameUpdated(TxFrame &aFrame);
-#endif
     };
 
     /**
@@ -325,6 +311,14 @@ public:
     otError Send(void);
 
     /**
+     * This method gets the number of transmit retries of last transmit packet.
+     *
+     * @returns Number of transmit retries.
+     *
+     */
+    uint8_t GetTransmitRetries(void) const { return mTransmitRetries; }
+
+    /**
      * This method gets the most recent RSSI measurement.
      *
      * @returns The RSSI in dBm when it is valid. `kInvalidRssiValue` when RSSI is invalid.
@@ -393,9 +387,6 @@ private:
     void HandleTransmitStarted(TxFrame &aFrame);
     void HandleTransmitDone(TxFrame &aTxFrame, RxFrame *aAckFrame, otError aError);
     void HandleEnergyScanDone(int8_t aMaxRssi);
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    void HandleFrameUpdated(TxFrame &aFrame);
-#endif
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
@@ -411,7 +402,7 @@ private:
     ExtAddress         mExtAddress;
     bool               mRxOnWhenBackoff;
     int8_t             mEnergyScanMaxRssi;
-    uint32_t           mEnergyScanEndTime;
+    TimeMilli          mEnergyScanEndTime;
     TxFrame &          mTransmitFrame;
     Callbacks          mCallbacks;
     otLinkPcapCallback mPcapCallback;

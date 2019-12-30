@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief This module contains an acknowledgement generator for 802.15.4 radio driver.
+ * @brief Module that contains an acknowledgement generator for the 802.15.4 radio driver.
  *
  */
 
@@ -38,15 +38,16 @@
 
 #include <stdint.h>
 
-/** Initialize the ACK generator module. */
+/** Initializes the ACK generator module. */
 void nrf_802154_ack_generator_init(void);
 
-/** Create an ACK in response to provided frame and insert it into an appropriate radio buffer.
+/** Creates an ACK in response to the provided frame and inserts it into a radio buffer.
  *
- * @param [in]  p_frame  Pointer to a buffer containing PHR and PSDU of the frame to respond to.
+ * @param [in]  p_frame  Pointer to the buffer that contains PHR and PSDU of the frame
+ *                       to respond to.
  *
- * @returns  Pointer to a constant buffer containing PHR and PSDU of the created ACK frame,
- *           or NULL in case of an invalid frame.
+ * @returns  Either pointer to a constant buffer that contains PHR and PSDU
+ *           of the created ACK frame, or NULL in case of an invalid frame.
  */
 const uint8_t * nrf_802154_ack_generator_create(const uint8_t * p_frame);
 

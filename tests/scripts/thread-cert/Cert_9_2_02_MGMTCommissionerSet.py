@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2019, The OpenThread Authors.
 #  All rights reserved.
@@ -119,7 +119,7 @@ class Cert_9_2_02_MGMTCommissionerSet(unittest.TestCase):
             COMMISSIONER
         )
         msg = commissioner_messages.next_coap_message('0.02', uri_path='/c/cs')
-        rloc = ip_address(self.nodes[LEADER].get_addr_rloc())
+        rloc = ip_address(self.nodes[LEADER].get_rloc())
         leader_aloc = ip_address(self.nodes[LEADER].get_addr_leader_aloc())
         command.check_coap_message(
             msg,
@@ -220,7 +220,7 @@ class Cert_9_2_02_MGMTCommissionerSet(unittest.TestCase):
         )
 
         # Step 15 - Send ICMPv6 Echo Request to Leader
-        leader_rloc = self.nodes[LEADER].get_addr_rloc()
+        leader_rloc = self.nodes[LEADER].get_rloc()
         self.assertTrue(self.nodes[COMMISSIONER].ping(leader_rloc))
 
 

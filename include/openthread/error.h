@@ -123,11 +123,20 @@ extern "C" {
  * @defgroup api-crypto              Crypto
  * @defgroup api-entropy             Entropy Source
  * @defgroup api-factory-diagnostics Factory Diagnostics
+ * @defgroup api-heap                Heap
  * @defgroup api-jam-detection       Jam Detection
  * @defgroup api-logging             Logging
  * @defgroup api-ncp                 Network Co-Processor
  * @defgroup api-network-time        Network Time Synchronization
- * @defgroup api-random              Random Number Generator
+ * @defgroup api-random-group        Random Number Generator
+ *
+ * @{
+ *
+ * @defgroup api-random-crypto       RNG Cryptographic
+ * @defgroup api-random-non-crypto   RNG Non-cryptographic
+ *
+ * @}
+ *
  * @defgroup api-sntp                SNTP
  *
  * @}
@@ -338,11 +347,6 @@ typedef enum otError
      * Received a non-lowpan data frame.
      */
     OT_ERROR_NOT_LOWPAN_DATA_FRAME = 32,
-
-    /**
-     * A feature/functionality disabled by build-time configuration options.
-     */
-    OT_ERROR_DISABLED_FEATURE = 33,
 
     /**
      * The link margin was too low.

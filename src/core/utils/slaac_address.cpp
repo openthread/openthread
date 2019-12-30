@@ -142,17 +142,17 @@ exit:
 
 void Slaac::Update(UpdateMode aMode)
 {
-    otNetworkDataIterator     iterator;
-    otBorderRouterConfig      config;
-    Ip6::NetifUnicastAddress *slaacAddr;
-    bool                      found;
+    NetworkData::Iterator           iterator;
+    NetworkData::OnMeshPrefixConfig config;
+    Ip6::NetifUnicastAddress *      slaacAddr;
+    bool                            found;
 
     if (aMode & kModeRemove)
     {
         // If enabled, remove any SLAAC addresses with no matching on-mesh prefix,
         // otherwise (when disabled) remove all previously added SLAAC addresses.
 
-        for (slaacAddr = &mAddresses[0]; slaacAddr < &mAddresses[OT_ARRAY_LENGTH(mAddresses)]; slaacAddr++)
+        for (slaacAddr = &mAddresses[0]; slaacAddr < OT_ARRAY_END(mAddresses); slaacAddr++)
         {
             if (!slaacAddr->mValid)
             {
@@ -163,9 +163,9 @@ void Slaac::Update(UpdateMode aMode)
 
             if (mEnabled)
             {
-                iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+                iterator = NetworkData::kIteratorInit;
 
-                while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(&iterator, &config) == OT_ERROR_NONE)
+                while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == OT_ERROR_NONE)
                 {
                     otIp6Prefix &prefix = config.mPrefix;
 
@@ -192,9 +192,9 @@ void Slaac::Update(UpdateMode aMode)
     {
         // Generate and add SLAAC addresses for any newly added on-mesh prefixes.
 
-        iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+        iterator = NetworkData::kIteratorInit;
 
-        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(&iterator, &config) == OT_ERROR_NONE)
+        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == OT_ERROR_NONE)
         {
             otIp6Prefix &prefix = config.mPrefix;
 
@@ -220,14 +220,14 @@ void Slaac::Update(UpdateMode aMode)
             {
                 bool added = false;
 
-                for (slaacAddr = &mAddresses[0]; slaacAddr < &mAddresses[OT_ARRAY_LENGTH(mAddresses)]; slaacAddr++)
+                for (slaacAddr = &mAddresses[0]; slaacAddr < OT_ARRAY_END(mAddresses); slaacAddr++)
                 {
                     if (slaacAddr->mValid)
                     {
                         continue;
                     }
 
-                    memset(slaacAddr, 0, sizeof(*slaacAddr));
+                    slaacAddr->Clear();
                     memcpy(&slaacAddr->mAddress, &prefix.mPrefix, BitVectorBytes(prefix.mLength));
 
                     slaacAddr->mPrefixLength = prefix.mLength;

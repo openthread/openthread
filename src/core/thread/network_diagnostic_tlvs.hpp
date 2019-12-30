@@ -43,7 +43,6 @@
 #include "common/encoding.hpp"
 #include "common/message.hpp"
 #include "common/tlvs.hpp"
-#include "meshcop/meshcop_tlvs.hpp"
 #include "net/ip6_address.hpp"
 #include "radio/radio.hpp"
 #include "thread/device_mode.hpp"
@@ -1343,9 +1342,29 @@ public:
      *
      * @returns  A reference to the Child Table entry.
      */
-    ChildTableEntry &GetEntry(uint8_t aIndex)
+    ChildTableEntry &GetEntry(uint16_t aIndex)
     {
         return *reinterpret_cast<ChildTableEntry *>(GetValue() + (aIndex * sizeof(ChildTableEntry)));
+    }
+
+    /**
+     * This method reads the Child Table entry at @p aIndex.
+     *
+     * @param[out]  aEntry      A reference to a ChildTableEntry.
+     * @param[in]   aMessage    A reference to the message.
+     * @param[in]   aOffset     The offset of the ChildTableTLV in aMessage.
+     * @param[in]   aIndex      The index into the Child Table list.
+     *
+     * @retval  OT_ERROR_NOT_FOUND  No such entry is found.
+     * @retval  OT_ERROR_NONE       Successfully read the entry.
+     */
+    otError ReadEntry(ChildTableEntry &aEntry, Message &aMessage, uint16_t aOffset, uint8_t aIndex) const
+    {
+        return (aIndex < GetNumEntries() &&
+                aMessage.Read(aOffset + sizeof(ChildTableTlv) + (aIndex * sizeof(ChildTableEntry)),
+                              sizeof(ChildTableEntry), &aEntry) == sizeof(ChildTableEntry))
+                   ? OT_ERROR_NONE
+                   : OT_ERROR_INVALID_ARGS;
     }
 
 } OT_TOOL_PACKED_END;

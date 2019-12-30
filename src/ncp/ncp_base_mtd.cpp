@@ -213,25 +213,21 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_EXTENDED_ADDR>(vo
     return mEncoder.WriteEui64(*otLinkGetExtendedAddress(mInstance));
 }
 
-template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_FREQ>(void)
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_MAX_RETRY_NUMBER_DIRECT>(void)
 {
-    uint32_t      freq_khz(0);
-    const uint8_t chan(otLinkGetChannel(mInstance));
+    return mEncoder.WriteUint8(otLinkGetMaxFrameRetriesDirect(mInstance));
+}
 
-    if (chan == 0)
-    {
-        freq_khz = 868300;
-    }
-    else if (chan < 11)
-    {
-        freq_khz = 906000 - (2000 * 1) + 2000 * (chan);
-    }
-    else if (chan < 26)
-    {
-        freq_khz = 2405000 - (5000 * 11) + 5000 * (chan);
-    }
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_MAX_RETRY_NUMBER_DIRECT>(void)
+{
+    uint8_t maxFrameRetriesDirect;
+    otError error = OT_ERROR_NONE;
 
-    return mEncoder.WriteUint32(freq_khz);
+    SuccessOrExit(error = mDecoder.ReadUint8(maxFrameRetriesDirect));
+    otLinkSetMaxFrameRetriesDirect(mInstance, maxFrameRetriesDirect);
+
+exit:
+    return error;
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CHAN_SUPPORTED>(void)
@@ -614,8 +610,6 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
-
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NEIGHBOR_TABLE_ERROR_RATES>(void)
 {
     otError                error = OT_ERROR_NONE;
@@ -639,8 +633,6 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NEIGHBOR_TABLE
 exit:
     return error;
 }
-
-#endif // OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_ASSISTING_PORTS>(void)
 {
@@ -933,6 +925,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_SERVICES>(void
 exit:
     return error;
 }
+#endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_LEADER_SERVICES>(void)
 {
@@ -940,7 +933,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_LEADER_SERVICE
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otServiceConfig       cfg;
 
-    while (otServerGetNextLeaderService(mInstance, &iterator, &cfg) == OT_ERROR_NONE)
+    while (otNetDataGetNextService(mInstance, &iterator, &cfg) == OT_ERROR_NONE)
     {
         SuccessOrExit(error = mEncoder.OpenStruct());
 
@@ -957,8 +950,6 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_LEADER_SERVICE
 exit:
     return error;
 }
-
-#endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_DISCOVERY_SCAN_JOINER_FLAG>(void)
 {
@@ -1078,11 +1069,11 @@ otError NcpBase::EncodeOperationalDataset(const otOperationalDataset &aDataset)
         SuccessOrExit(mEncoder.CloseStruct());
     }
 
-    if (aDataset.mComponents.mIsPSKcPresent)
+    if (aDataset.mComponents.mIsPskcPresent)
     {
         SuccessOrExit(mEncoder.OpenStruct());
         SuccessOrExit(mEncoder.WriteUintPacked(SPINEL_PROP_NET_PSKC));
-        SuccessOrExit(mEncoder.WriteData(aDataset.mPSKc.m8, sizeof(spinel_net_pskc_t)));
+        SuccessOrExit(mEncoder.WriteData(aDataset.mPskc.m8, sizeof(spinel_net_pskc_t)));
         SuccessOrExit(mEncoder.CloseStruct());
     }
 
@@ -1281,10 +1272,10 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
                 SuccessOrExit(error = mDecoder.ReadData(psk, len));
                 VerifyOrExit(len == OT_PSKC_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
-                memcpy(aDataset.mPSKc.m8, psk, OT_PSKC_MAX_SIZE);
+                memcpy(aDataset.mPskc.m8, psk, OT_PSKC_MAX_SIZE);
             }
 
-            aDataset.mComponents.mIsPSKcPresent = true;
+            aDataset.mComponents.mIsPskcPresent = true;
             break;
 
         case SPINEL_PROP_DATASET_SECURITY_POLICY:
@@ -1493,7 +1484,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_JOINER_COMMIS
 
     if (action == false)
     {
-        error = otJoinerStop(mInstance);
+        otJoinerStop(mInstance);
         ExitNow();
     }
 
@@ -2431,11 +2422,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_ALL_MAC_COUNTERS
     otError              error    = OT_ERROR_NONE;
     const otMacCounters *counters = otLinkGetCounters(mInstance);
 
-    if (counters == NULL)
-    {
-        error = mEncoder.OverwriteWithLastStatusError(SPINEL_STATUS_INVALID_COMMAND_FOR_PROP);
-        ExitNow();
-    }
+    assert(counters != NULL);
 
     // Encode Tx related counters
     SuccessOrExit(error = mEncoder.OpenStruct());
@@ -2454,6 +2441,8 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_ALL_MAC_COUNTERS
     SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxErrCca));
     SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxErrAbort));
     SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxErrBusyChannel));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxDirectMaxRetryExpiry));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxIndirectMaxRetryExpiry));
     SuccessOrExit(error = mEncoder.CloseStruct());
 
     // Encode Rx related counters
@@ -2481,16 +2470,19 @@ exit:
     return error;
 }
 
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_CNTR_ALL_MAC_COUNTERS>(void)
+{
+    otLinkResetCounters(mInstance);
+
+    return OT_ERROR_NONE;
+}
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_MLE_COUNTERS>(void)
 {
     otError              error    = OT_ERROR_NONE;
     const otMleCounters *counters = otThreadGetMleCounters(mInstance);
 
-    if (counters == NULL)
-    {
-        error = mEncoder.OverwriteWithLastStatusError(SPINEL_STATUS_INVALID_COMMAND_FOR_PROP);
-        ExitNow();
-    }
+    assert(counters != NULL);
 
     SuccessOrExit(error = mEncoder.WriteUint16(counters->mDisabledRole));
     SuccessOrExit(error = mEncoder.WriteUint16(counters->mDetachedRole));
@@ -2504,6 +2496,86 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_MLE_COUNTERS>(vo
 
 exit:
     return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_CNTR_MLE_COUNTERS>(void)
+{
+    otThreadResetMleCounters(mInstance);
+
+    return OT_ERROR_NONE;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_ALL_IP_COUNTERS>(void)
+{
+    otError             error    = OT_ERROR_NONE;
+    const otIpCounters *counters = otThreadGetIp6Counters(mInstance);
+
+    assert(counters != NULL);
+
+    // Encode Tx related counters
+    SuccessOrExit(error = mEncoder.OpenStruct());
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxSuccess));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxFailure));
+    SuccessOrExit(error = mEncoder.CloseStruct());
+
+    // Encode Rx related counters
+    SuccessOrExit(error = mEncoder.OpenStruct());
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxSuccess));
+    SuccessOrExit(error = mEncoder.WriteUint32(counters->mRxFailure));
+    SuccessOrExit(error = mEncoder.CloseStruct());
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_MAC_RETRY_HISTOGRAM>(void)
+{
+    otError         error = OT_ERROR_NONE;
+    const uint32_t *histogramDirect;
+    const uint32_t *histogramIndirect;
+    uint8_t         histogramDirectEntries;
+    uint8_t         histogramIndirectEntries;
+
+    histogramDirect   = otLinkGetTxDirectRetrySuccessHistogram(mInstance, &histogramDirectEntries);
+    histogramIndirect = otLinkGetTxIndirectRetrySuccessHistogram(mInstance, &histogramIndirectEntries);
+
+    assert((histogramDirectEntries == 0) || (histogramDirect != NULL));
+    assert((histogramIndirectEntries == 0) || (histogramIndirect != NULL));
+
+    // Encode direct message retries histogram
+    SuccessOrExit(error = mEncoder.OpenStruct());
+    for (uint8_t i = 0; i < histogramDirectEntries; i++)
+    {
+        SuccessOrExit(error = mEncoder.WriteUint32(histogramDirect[i]));
+    }
+    SuccessOrExit(error = mEncoder.CloseStruct());
+
+    // Encode indirect message retries histogram
+    SuccessOrExit(error = mEncoder.OpenStruct());
+    for (uint8_t i = 0; i < histogramIndirectEntries; i++)
+    {
+        SuccessOrExit(error = mEncoder.WriteUint32(histogramIndirect[i]));
+    }
+    SuccessOrExit(error = mEncoder.CloseStruct());
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_CNTR_MAC_RETRY_HISTOGRAM>(void)
+{
+    otLinkResetTxRetrySuccessHistogram(mInstance);
+
+    return OT_ERROR_NONE;
+}
+#endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_CNTR_ALL_IP_COUNTERS>(void)
+{
+    otThreadResetIp6Counters(mInstance);
+
+    return OT_ERROR_NONE;
 }
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
@@ -2868,18 +2940,15 @@ exit:
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_CNTR_RESET>(void)
 {
-    uint8_t value = 0;
-    otError error = OT_ERROR_NONE;
+    otLinkResetCounters(mInstance);
+#if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+    otLinkResetTxRetrySuccessHistogram(mInstance);
+#endif
+    otThreadResetIp6Counters(mInstance);
+    otThreadResetMleCounters(mInstance);
+    ResetCounters();
 
-    SuccessOrExit(error = mDecoder.ReadUint8(value));
-
-    VerifyOrExit(value == 1, error = OT_ERROR_INVALID_ARGS);
-
-    // TODO: Implement counter reset!
-    error = OT_ERROR_NOT_IMPLEMENTED;
-
-exit:
-    return error;
+    return OT_ERROR_NONE;
 }
 
 template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_ASSISTING_PORTS>(void)
@@ -3613,8 +3682,8 @@ void NcpBase::ProcessThreadChangedFlags(void)
         {OT_CHANGED_THREAD_NETDATA, SPINEL_PROP_THREAD_LEADER_NETWORK_DATA},
         {OT_CHANGED_THREAD_CHILD_ADDED, SPINEL_PROP_THREAD_CHILD_TABLE},
         {OT_CHANGED_THREAD_CHILD_REMOVED, SPINEL_PROP_THREAD_CHILD_TABLE},
-        {OT_CHANGED_IP6_MULTICAST_SUBSRCRIBED, SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE},
-        {OT_CHANGED_IP6_MULTICAST_UNSUBSRCRIBED, SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE},
+        {OT_CHANGED_IP6_MULTICAST_SUBSCRIBED, SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE},
+        {OT_CHANGED_IP6_MULTICAST_UNSUBSCRIBED, SPINEL_PROP_IPV6_MULTICAST_ADDRESS_TABLE},
         {OT_CHANGED_THREAD_CHANNEL, SPINEL_PROP_PHY_CHAN},
         {OT_CHANGED_THREAD_PANID, SPINEL_PROP_MAC_15_4_PANID},
         {OT_CHANGED_THREAD_NETWORK_NAME, SPINEL_PROP_NET_NETWORK_NAME},

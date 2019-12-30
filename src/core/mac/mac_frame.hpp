@@ -41,11 +41,8 @@
 
 #include "utils/wrap_string.h"
 
-#include <openthread/link.h>
-#include <openthread/platform/radio.h>
-
 #include "common/encoding.hpp"
-#include "common/string.hpp"
+#include "mac/mac_types.hpp"
 
 namespace ot {
 
@@ -57,332 +54,6 @@ namespace Mac {
  * @{
  *
  */
-
-enum
-{
-    kShortAddrBroadcast = 0xffff,
-    kShortAddrInvalid   = 0xfffe,
-    kPanIdBroadcast     = 0xffff,
-};
-
-/**
- * This type represents the IEEE 802.15.4 PAN ID.
- *
- */
-typedef otPanId PanId;
-
-/**
- * This type represents the IEEE 802.15.4 Short Address.
- *
- */
-typedef otShortAddress ShortAddress;
-
-/**
- * This structure represents an IEEE 802.15.4 Extended Address.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class ExtAddress : public otExtAddress
-{
-public:
-    enum
-    {
-        kInfoStringSize = 17, // Max chars for the info string (`ToString()`).
-    };
-
-    /**
-     * This type defines the fixed-length `String` object returned from `ToString()`.
-     *
-     */
-    typedef String<kInfoStringSize> InfoString;
-
-    /**
-     * This method generates a random IEEE 802.15.4 Extended Address.
-     *
-     */
-    void GenerateRandom(void);
-
-    /**
-     * This method indicates whether or not the Group bit is set.
-     *
-     * @retval TRUE   If the group bit is set.
-     * @retval FALSE  If the group bit is not set.
-     *
-     */
-    bool IsGroup(void) const { return (m8[0] & kGroupFlag) != 0; }
-
-    /**
-     * This method sets the Group bit.
-     *
-     * @param[in]  aGroup  TRUE if group address, FALSE otherwise.
-     *
-     */
-    void SetGroup(bool aGroup)
-    {
-        if (aGroup)
-        {
-            m8[0] |= kGroupFlag;
-        }
-        else
-        {
-            m8[0] &= ~kGroupFlag;
-        }
-    }
-
-    /**
-     * This method toggles the Group bit.
-     *
-     */
-    void ToggleGroup(void) { m8[0] ^= kGroupFlag; }
-
-    /**
-     * This method indicates whether or not the Local bit is set.
-     *
-     * @retval TRUE   If the local bit is set.
-     * @retval FALSE  If the local bit is not set.
-     *
-     */
-    bool IsLocal(void) const { return (m8[0] & kLocalFlag) != 0; }
-
-    /**
-     * This method sets the Local bit.
-     *
-     * @param[in]  aLocal  TRUE if locally administered, FALSE otherwise.
-     *
-     */
-    void SetLocal(bool aLocal)
-    {
-        if (aLocal)
-        {
-            m8[0] |= kLocalFlag;
-        }
-        else
-        {
-            m8[0] &= ~kLocalFlag;
-        }
-    }
-
-    /**
-     * This method toggles the Local bit.
-     *
-     */
-    void ToggleLocal(void) { m8[0] ^= kLocalFlag; }
-
-    /**
-     * This method evaluates whether or not the Extended Addresses match.
-     *
-     * @param[in]  aOther  The Extended Address to compare.
-     *
-     * @retval TRUE   If the Extended Addresses match.
-     * @retval FALSE  If the Extended Addresses do not match.
-     *
-     */
-    bool operator==(const ExtAddress &aOther) const;
-
-    /**
-     * This method evaluates whether or not the Extended Addresses match.
-     *
-     * @param[in]  aOther  The Extended Address to compare.
-     *
-     * @retval TRUE   If the Extended Addresses do not match.
-     * @retval FALSE  If the Extended Addresses match.
-     *
-     */
-    bool operator!=(const ExtAddress &aOther) const;
-
-    /**
-     * This method converts an address to a string.
-     *
-     * @returns An `InfoString` containing the string representation of the Extended Address.
-     *
-     */
-    InfoString ToString(void) const;
-
-private:
-    enum
-    {
-        kGroupFlag = 1 << 0,
-        kLocalFlag = 1 << 1,
-    };
-} OT_TOOL_PACKED_END;
-
-/**
- * This class represents an IEEE 802.15.4 Short or Extended Address.
- *
- */
-class Address
-{
-public:
-    /**
-     * This type defines the fixed-length `String` object returned from `ToString()`.
-     *
-     */
-    typedef ExtAddress::InfoString InfoString;
-
-    /**
-     * This enumeration specifies the IEEE 802.15.4 Address type.
-     *
-     */
-    enum Type
-    {
-        kTypeNone,     ///< No address.
-        kTypeShort,    ///< IEEE 802.15.4 Short Address.
-        kTypeExtended, ///< IEEE 802.15.4 Extended Address.
-    };
-
-    /**
-     * This constructor initializes an Address.
-     *
-     */
-    Address(void)
-        : mType(kTypeNone)
-    {
-    }
-
-    /**
-     * This method gets the address type (Short Address, Extended Address, or none).
-     *
-     * @returns The address type.
-     *
-     */
-    Type GetType(void) const { return mType; }
-
-    /**
-     * This method indicates whether or not there is an address.
-     *
-     * @returns TRUE if there is no address (i.e. address type is `kTypeNone`), FALSE otherwise.
-     *
-     */
-    bool IsNone(void) const { return (mType == kTypeNone); }
-
-    /**
-     * This method indicates whether or not the Address is a Short Address.
-     *
-     * @returns TRUE if it is a Short Address, FALSE otherwise.
-     *
-     */
-    bool IsShort(void) const { return (mType == kTypeShort); }
-
-    /**
-     * This method indicates whether or not the Address is an Extended Address.
-     *
-     * @returns TRUE if it is an Extended Address, FALSE otherwise.
-     *
-     */
-    bool IsExtended(void) const { return (mType == kTypeExtended); }
-
-    /**
-     * This method gets the address as a Short Address.
-     *
-     * This method MUST be used only if the address type is Short Address.
-     *
-     * @returns The Short Address.
-     *
-     */
-    ShortAddress GetShort(void) const { return mShared.mShortAddress; }
-
-    /**
-     * This method gets the address as an Extended Address.
-     *
-     * This method MUST be used only if the address type is Extended Address.
-     *
-     * @returns A constant reference to the Extended Address.
-     *
-     */
-    const ExtAddress &GetExtended(void) const { return mShared.mExtAddress; }
-
-    /**
-     * This method gets the address as an Extended Address.
-     *
-     * This method MUST be used only if the address type is Extended Address.
-     *
-     * @returns A reference to the Extended Address.
-     *
-     */
-    ExtAddress &GetExtended(void) { return mShared.mExtAddress; }
-
-    /**
-     * This method sets the address to none (i.e., clears the address).
-     *
-     * Address type will be updated to `kTypeNone`.
-     *
-     */
-    void SetNone(void) { mType = kTypeNone; }
-
-    /**
-     * This method sets the address with a Short Address.
-     *
-     * The type is also updated to indicate that address is Short.
-     *
-     * @param[in]  aShortAddress  A Short Address
-     *
-     */
-    void SetShort(ShortAddress aShortAddress)
-    {
-        mShared.mShortAddress = aShortAddress;
-        mType                 = kTypeShort;
-    }
-
-    /**
-     * This method sets the address with an Extended Address.
-     *
-     * The type is also updated to indicate that the address is Extended.
-     *
-     * @param[in]  aExtAddress  An Extended Address
-     *
-     */
-    void SetExtended(const ExtAddress &aExtAddress)
-    {
-        mShared.mExtAddress = aExtAddress;
-        mType               = kTypeExtended;
-    }
-
-    /**
-     * This method sets the address with an Extended Address given as byte array.
-     *
-     * The type is also updated to indicate that the address is Extended.
-     *
-     * @param[in]  aBuffer   Pointer to a array containing the Extended Address. `OT_EXT_ADDRESS_SIZE` bytes from buffer
-     *                       are copied to form the Extended Address.
-     * @param[in]  aReverse  If `true` then `OT_EXT_ADDRESS_SIZE` bytes from @p aBuffer are copied in reverse order,
-     *                       otherwise they are copied as provided.
-     *
-     */
-    void SetExtended(const uint8_t *aBuffer, bool aReverse);
-
-    /**
-     * This method indicates whether or not the address is a Short Broadcast Address.
-     *
-     * @returns TRUE if address is Short Broadcast Address, FALSE otherwise.
-     *
-     */
-    bool IsBroadcast(void) const { return ((mType == kTypeShort) && (GetShort() == kShortAddrBroadcast)); }
-
-    /**
-     * This method indicates whether or not the address is a Short Invalid Address.
-     *
-     * @returns TRUE if address is Short Invalid Address, FALSE otherwise.
-     *
-     */
-    bool IsShortAddrInvalid(void) const { return ((mType == kTypeShort) && (GetShort() == kShortAddrInvalid)); }
-
-    /**
-     * This method converts an address to a null-terminated string
-     *
-     * @returns A `String` representing the address.
-     *
-     */
-    InfoString ToString(void) const;
-
-private:
-    union
-    {
-        ShortAddress mShortAddress; ///< The IEEE 802.15.4 Short Address.
-        ExtAddress   mExtAddress;   ///< The IEEE 802.15.4 Extended Address.
-    } mShared;
-
-    Type mType; ///< The address type (Short, Extended, or none).
-};
 
 /**
  * This class implements IEEE 802.15.4 IE (Information Element) generation and parsing.
@@ -575,7 +246,7 @@ class Frame : public otRadioFrame
 public:
     enum
     {
-        kMTU                 = 127,
+        kMtu                 = OT_RADIO_FRAME_MAX_SIZE,
         kFcfSize             = sizeof(uint16_t),
         kDsnSize             = sizeof(uint8_t),
         kSecurityControlSize = sizeof(uint8_t),
@@ -655,6 +326,15 @@ public:
      *
      */
     typedef String<kInfoStringSize> InfoString;
+
+    /**
+     * This method indicates whether the frame is empty (no payload).
+     *
+     * @retval TRUE  The frame is empty (no PSDU payload).
+     * @retval FALSE The frame is not empty.
+     *
+     */
+    bool IsEmpty(void) const { return (mLength == 0); }
 
     /**
      * This method initializes the MAC header.
@@ -764,6 +444,7 @@ public:
      * @param[out]  aPanId  The Destination PAN Identifier.
      *
      * @retval OT_ERROR_NONE   Successfully retrieved the Destination PAN Identifier.
+     * @retval OT_ERROR_PARSE  Failed to parse the PAN Identifier.
      *
      */
     otError GetDstPanId(PanId &aPanId) const;
@@ -1184,7 +865,7 @@ public:
      * @returns The maximum transmission unit (MTU).
      *
      */
-    uint16_t GetMtu(void) const;
+    uint16_t GetMtu(void) const { return kMtu; }
 
     /**
      * This method returns the FCS size.
@@ -1192,7 +873,7 @@ public:
      * @returns This method returns the FCS size.
      *
      */
-    uint16_t GetFcsSize(void) const;
+    uint16_t GetFcsSize(void) const { return kFcsSize; }
 
     /**
      * This method returns information about the frame object as an `InfoString` object.
@@ -1414,6 +1095,14 @@ public:
      */
     void CopyFrom(const TxFrame &aFromFrame);
 
+    /**
+     * This method performs AES CCM on the frame which is going to be sent.
+     *
+     * @param[in]  aExtAddress  A reference to the extended address, which will be used to generate nonce
+     *                          for AES CCM computation.
+     *
+     */
+    void ProcessTransmitAesCcm(const ExtAddress &aExtAddress);
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * This method sets the Time IE offset.
@@ -1500,10 +1189,8 @@ class BeaconPayload
 public:
     enum
     {
-        kProtocolId      = 3,  ///< Thread Protocol ID.
-        kNetworkNameSize = 16, ///< Size of Thread Network Name (bytes).
-        kExtPanIdSize    = 8,  ///< Size of Thread Extended PAN ID.
-        kInfoStringSize  = 92, ///< Max chars for the info string (@sa ToInfoString()).
+        kProtocolId     = 3,  ///< Thread Protocol ID.
+        kInfoStringSize = 92, ///< Max chars for the info string (@sa ToInfoString()).
     };
 
     enum
@@ -1607,41 +1294,36 @@ public:
     }
 
     /**
-     * This method returns a pointer to the Network Name field.
+     * This method gets the Network Name field.
      *
-     * @returns A pointer to the network name field.
+     * @returns The Network Name field as `NetworkName::Data`.
      *
      */
-    const char *GetNetworkName(void) const { return mNetworkName; }
+    NetworkName::Data GetNetworkName(void) const { return NetworkName::Data(mNetworkName, sizeof(mNetworkName)); }
 
     /**
      * This method sets the Network Name field.
      *
-     * @param[in]  aNetworkName  A pointer to the Network Name.
+     * @param[in]  aNameData  The Network Name (as a `NetworkName::Data`).
      *
      */
-    void SetNetworkName(const char *aNetworkName)
-    {
-        size_t length = strnlen(aNetworkName, sizeof(mNetworkName));
-        memset(mNetworkName, 0, sizeof(mNetworkName));
-        memcpy(mNetworkName, aNetworkName, length);
-    }
+    void SetNetworkName(const NetworkName::Data &aNameData) { aNameData.CopyTo(mNetworkName, sizeof(mNetworkName)); }
 
     /**
-     * This method returns a pointer to the Extended PAN ID field.
+     * This method returns the Extended PAN ID field.
      *
-     * @returns A pointer to the Extended PAN ID field.
+     * @returns The Extended PAN ID field.
      *
      */
-    const uint8_t *GetExtendedPanId(void) const { return mExtendedPanId; }
+    const ExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
 
     /**
      * This method sets the Extended PAN ID field.
      *
-     * @param[in]  aExtPanId  A pointer to the Extended PAN ID.
+     * @param[in]  aExtPanId  An Extended PAN ID.
      *
      */
-    void SetExtendedPanId(const uint8_t *aExtPanId) { memcpy(mExtendedPanId, aExtPanId, sizeof(mExtendedPanId)); }
+    void SetExtendedPanId(const ExtendedPanId &aExtPanId) { mExtendedPanId = aExtPanId; }
 
     /**
      * This method returns information about the Beacon as a `InfoString`.
@@ -1652,10 +1334,10 @@ public:
     InfoString ToInfoString(void) const;
 
 private:
-    uint8_t mProtocolId;
-    uint8_t mFlags;
-    char    mNetworkName[kNetworkNameSize];
-    uint8_t mExtendedPanId[kExtPanIdSize];
+    uint8_t       mProtocolId;
+    uint8_t       mFlags;
+    char          mNetworkName[NetworkName::kMaxSize];
+    ExtendedPanId mExtendedPanId;
 } OT_TOOL_PACKED_END;
 
 /**

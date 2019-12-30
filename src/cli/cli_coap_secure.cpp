@@ -47,12 +47,17 @@ namespace ot {
 namespace Cli {
 
 const struct CoapSecure::Command CoapSecure::sCommands[] = {
-    {"help", &CoapSecure::ProcessHelp},         {"connect", &CoapSecure::ProcessConnect},
-    {"delete", &CoapSecure::ProcessRequest},    {"disconnect", &CoapSecure::ProcessDisconnect},
-    {"get", &CoapSecure::ProcessRequest},       {"post", &CoapSecure::ProcessRequest},
-    {"psk", &CoapSecure::ProcessPsk},           {"put", &CoapSecure::ProcessRequest},
-    {"resource", &CoapSecure::ProcessResource}, {"start", &CoapSecure::ProcessStart},
-    {"stop", &CoapSecure::ProcessStop},         {"x509", &CoapSecure::ProcessX509},
+    {"help", &CoapSecure::ProcessHelp},      {"connect", &CoapSecure::ProcessConnect},
+    {"delete", &CoapSecure::ProcessRequest}, {"disconnect", &CoapSecure::ProcessDisconnect},
+    {"get", &CoapSecure::ProcessRequest},    {"post", &CoapSecure::ProcessRequest},
+    {"put", &CoapSecure::ProcessRequest},    {"resource", &CoapSecure::ProcessResource},
+    {"start", &CoapSecure::ProcessStart},    {"stop", &CoapSecure::ProcessStop},
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+    {"psk", &CoapSecure::ProcessPsk},
+#endif
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+    {"x509", &CoapSecure::ProcessX509},
+#endif
 };
 
 CoapSecure::CoapSecure(Interpreter &aInterpreter)
@@ -338,9 +343,10 @@ otError CoapSecure::ProcessDisconnect(int argc, char *argv[])
     return OT_ERROR_NONE;
 }
 
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 otError CoapSecure::ProcessPsk(int argc, char *argv[])
 {
-    otError error;
+    otError error = OT_ERROR_NONE;
     size_t  length;
 
     VerifyOrExit(argc > 2, error = OT_ERROR_INVALID_ARGS);
@@ -355,36 +361,31 @@ otError CoapSecure::ProcessPsk(int argc, char *argv[])
     mPskIdLength = static_cast<uint8_t>(length);
     memcpy(mPskId, argv[2], mPskIdLength);
 
-    SuccessOrExit(error = otCoapSecureSetPsk(mInterpreter.mInstance, mPsk, mPskLength, mPskId, mPskIdLength));
+    otCoapSecureSetPsk(mInterpreter.mInstance, mPsk, mPskLength, mPskId, mPskIdLength);
     mUseCertificate = false;
 
 exit:
     return error;
 }
+#endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 otError CoapSecure::ProcessX509(int argc, char *argv[])
 {
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
-#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-    otError error;
+    otCoapSecureSetCertificate(mInterpreter.mInstance, (const uint8_t *)OT_CLI_COAPS_X509_CERT,
+                               sizeof(OT_CLI_COAPS_X509_CERT), (const uint8_t *)OT_CLI_COAPS_PRIV_KEY,
+                               sizeof(OT_CLI_COAPS_PRIV_KEY));
 
-    SuccessOrExit(error = otCoapSecureSetCertificate(
-                      mInterpreter.mInstance, (const uint8_t *)OT_CLI_COAPS_X509_CERT, sizeof(OT_CLI_COAPS_X509_CERT),
-                      (const uint8_t *)OT_CLI_COAPS_PRIV_KEY, sizeof(OT_CLI_COAPS_PRIV_KEY)));
-
-    SuccessOrExit(error = otCoapSecureSetCaCertificateChain(mInterpreter.mInstance,
-                                                            (const uint8_t *)OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE,
-                                                            sizeof(OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE)));
+    otCoapSecureSetCaCertificateChain(mInterpreter.mInstance, (const uint8_t *)OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE,
+                                      sizeof(OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE));
     mUseCertificate = true;
 
-exit:
-    return error;
-#else
-    return OT_ERROR_DISABLED_FEATURE;
-#endif
+    return OT_ERROR_NONE;
 }
+#endif
 
 otError CoapSecure::Process(int argc, char *argv[])
 {
@@ -495,10 +496,8 @@ void CoapSecure::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessag
         responseMessage = otCoapNewMessage(mInterpreter.mInstance, NULL);
         VerifyOrExit(responseMessage != NULL, error = OT_ERROR_NO_BUFS);
 
-        otCoapMessageInit(responseMessage, OT_COAP_TYPE_ACKNOWLEDGMENT, responseCode);
-        otCoapMessageSetMessageId(responseMessage, otCoapMessageGetMessageId(aMessage));
-        SuccessOrExit(error = otCoapMessageSetToken(responseMessage, otCoapMessageGetToken(aMessage),
-                                                    otCoapMessageGetTokenLength(aMessage)));
+        SuccessOrExit(
+            error = otCoapMessageInitResponse(responseMessage, aMessage, OT_COAP_TYPE_ACKNOWLEDGMENT, responseCode));
 
         if (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET)
         {
@@ -561,8 +560,8 @@ void CoapSecure::DefaultHandler(void *aContext, otMessage *aMessage, const otMes
 
 void CoapSecure::DefaultHandler(otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    otError    error = OT_ERROR_NONE;
-    otMessage *responseMessage;
+    otError    error           = OT_ERROR_NONE;
+    otMessage *responseMessage = NULL;
 
     if ((otCoapMessageGetType(aMessage) == OT_COAP_TYPE_CONFIRMABLE) ||
         (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET))
@@ -570,16 +569,17 @@ void CoapSecure::DefaultHandler(otMessage *aMessage, const otMessageInfo *aMessa
         responseMessage = otCoapNewMessage(mInterpreter.mInstance, NULL);
         VerifyOrExit(responseMessage != NULL, error = OT_ERROR_NO_BUFS);
 
-        otCoapMessageInit(responseMessage, OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_NOT_FOUND);
-        otCoapMessageSetMessageId(responseMessage, otCoapMessageGetMessageId(aMessage));
-        SuccessOrExit(error = otCoapMessageSetToken(responseMessage, otCoapMessageGetToken(aMessage),
-                                                    otCoapMessageGetTokenLength(aMessage)));
+        SuccessOrExit(error = otCoapMessageInitResponse(responseMessage, aMessage, OT_COAP_TYPE_NON_CONFIRMABLE,
+                                                        OT_COAP_CODE_NOT_FOUND));
 
         SuccessOrExit(error = otCoapSecureSendResponse(mInterpreter.mInstance, responseMessage, aMessageInfo));
     }
 
 exit:
-    return;
+    if (error != OT_ERROR_NONE && responseMessage != NULL)
+    {
+        otMessageFree(responseMessage);
+    }
 }
 #endif // CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 

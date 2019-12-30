@@ -61,7 +61,7 @@ SubMac::SubMac(Instance &aInstance)
     , mPcapCallbackContext(NULL)
     , mTimer(aInstance, &SubMac::HandleTimer, this)
 {
-    memset(mExtAddress.m8, 0, sizeof(mExtAddress));
+    mExtAddress.Clear();
 }
 
 otRadioCaps SubMac::GetCaps(void) const
@@ -109,13 +109,13 @@ void SubMac::SetShortAddress(ShortAddress aShortAddress)
 
 void SubMac::SetExtAddress(const ExtAddress &aExtAddress)
 {
-    Address address;
+    ExtAddress address;
 
     mExtAddress = aExtAddress;
 
     // Reverse the byte order before setting on radio.
-    address.SetExtended(aExtAddress.m8, /* aReverse */ true);
-    Get<Radio>().SetExtendedAddress(address.GetExtended());
+    address.Set(aExtAddress.m8, ExtAddress::kReverseByteOrder);
+    Get<Radio>().SetExtendedAddress(address);
 
     otLogDebgMac("RadioExtAddress: %s", mExtAddress.ToString().AsCString());
 }
@@ -286,15 +286,15 @@ void SubMac::BeginTransmit(void)
     error = Get<Radio>().Receive(mTransmitFrame.GetChannel());
     assert(error == OT_ERROR_NONE);
 
-    error = Get<Radio>().Transmit(mTransmitFrame);
-    assert(error == OT_ERROR_NONE);
-
     SetState(kStateTransmit);
 
     if (mPcapCallback)
     {
         mPcapCallback(&mTransmitFrame, true, mPcapCallbackContext);
     }
+
+    error = Get<Radio>().Transmit(mTransmitFrame);
+    assert(error == OT_ERROR_NONE);
 
 exit:
     return;
@@ -370,11 +370,10 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aEr
     if (shouldRetx)
     {
         mTransmitRetries++;
+        aFrame.SetIsARetransmission(true);
         StartCsmaBackoff();
         ExitNow();
     }
-
-    mTransmitRetries = 0;
 
     SetState(kStateReceive);
 
@@ -418,7 +417,7 @@ otError SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
 
         SetState(kStateEnergyScan);
         mEnergyScanMaxRssi = kInvalidRssiValue;
-        mEnergyScanEndTime = TimerMilli::GetNow() + aScanDuration;
+        mEnergyScanEndTime = TimerMilli::GetNow() + static_cast<uint32_t>(aScanDuration);
         mTimer.Start(0);
     }
     else
@@ -442,7 +441,7 @@ void SubMac::SampleRssi(void)
         }
     }
 
-    if (TimerMilliScheduler::IsStrictlyBefore(TimerMilli::GetNow(), mEnergyScanEndTime))
+    if (TimerMilli::GetNow() < mEnergyScanEndTime)
     {
         mTimer.StartAt(mTimer.GetFireTime(), kEnergyScanRssiSampleInterval);
     }
@@ -557,13 +556,6 @@ bool SubMac::ShouldHandleEnergyScan(void) const
 exit:
     return swEnergyScan;
 }
-
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-void SubMac::HandleFrameUpdated(TxFrame &aFrame)
-{
-    mCallbacks.FrameUpdated(aFrame);
-}
-#endif
 
 void SubMac::SetState(State aState)
 {

@@ -97,4 +97,14 @@
 #define OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+ *
+ * Define to 1 if you want to enable radio coexistence implemented in platform.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+#define OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE 0
+#endif
+
 #endif // CONFIG_PLATFORM_H_

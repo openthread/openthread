@@ -53,6 +53,8 @@ static const size_t kMaxFileNameSize = sizeof(OPENTHREAD_CONFIG_POSIX_SETTINGS_P
 
 static int sSettingsFd = -1;
 
+static otError platformSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex, int *aSwapFd);
+
 static void getSettingsFileName(char aFileName[kMaxFileNameSize], bool aSwap)
 {
     const char *offset = getenv("PORT_OFFSET");
@@ -109,8 +111,8 @@ static void swapPersist(int aFd)
     getSettingsFileName(dataFile, false);
 
     VerifyOrDie(0 == close(sSettingsFd), OT_EXIT_ERROR_ERRNO);
-    VerifyOrDie(0 == rename(swapFile, dataFile), OT_EXIT_ERROR_ERRNO);
     VerifyOrDie(0 == fsync(aFd), OT_EXIT_ERROR_ERRNO);
+    VerifyOrDie(0 == rename(swapFile, dataFile), OT_EXIT_ERROR_ERRNO);
 
     sSettingsFd = aFd;
 }
@@ -238,8 +240,27 @@ exit:
 
 otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
-    otPlatSettingsDelete(aInstance, aKey, -1);
-    return otPlatSettingsAdd(aInstance, aKey, aValue, aValueLength);
+    int swapFd = -1;
+
+    switch (platformSettingsDelete(aInstance, aKey, -1, &swapFd))
+    {
+    case OT_ERROR_NONE:
+    case OT_ERROR_NOT_FOUND:
+        break;
+
+    default:
+        assert(false);
+        break;
+    }
+
+    VerifyOrDie(write(swapFd, &aKey, sizeof(aKey)) == sizeof(aKey) &&
+                    write(swapFd, &aValueLength, sizeof(aValueLength)) == sizeof(aValueLength) &&
+                    write(swapFd, aValue, aValueLength) == aValueLength,
+                OT_EXIT_FAILURE);
+
+    swapPersist(swapFd);
+
+    return OT_ERROR_NONE;
 }
 
 otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
@@ -266,6 +287,27 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
 }
 
 otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
+{
+    return platformSettingsDelete(aInstance, aKey, aIndex, NULL);
+}
+
+/**
+ * This function removes a setting either from swap file or persisted file.
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ * @param[in]  aKey       The key associated with the requested setting.
+ * @param[in]  aIndex     The index of the value to be removed. If set to -1, all values for this aKey will be removed.
+ * @param[out] aSwapFd    A optional pointer to receive file descriptor of the generated swap file descriptor.
+ *
+ * @note
+ *   If @p aSwapFd is null, operate deleting on the setting file.
+ *   If @p aSwapFd is not null, operate on the swap file, and aSwapFd will point to the swap file descriptor.
+ *
+ * @retval OT_ERROR_NONE        The given key and index was found and removed successfully.
+ * @retval OT_ERROR_NOT_FOUND   The given key or index was not found in the setting store.
+ *
+ */
+static otError platformSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex, int *aSwapFd)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -327,7 +369,11 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 exit:
     VerifyOrDie(error != OT_ERROR_PARSE, OT_EXIT_FAILURE);
 
-    if (error == OT_ERROR_NONE)
+    if (aSwapFd != NULL)
+    {
+        *aSwapFd = swapFd;
+    }
+    else if (error == OT_ERROR_NONE)
     {
         swapPersist(swapFd);
     }
@@ -349,18 +395,12 @@ void otPlatSettingsWipe(otInstance *aInstance)
 
 uint64_t gNodeId = 1;
 
-const char *otExitCodeToString(uint8_t aExitCode)
-{
-    OT_UNUSED_VARIABLE(aExitCode);
-    return "SELF_TEST";
-}
-
 int main()
 {
     otInstance *instance = NULL;
     uint8_t     data[60];
 
-    for (size_t i = 0; i < sizeof(data); ++i)
+    for (uint8_t i = 0; i < sizeof(data); ++i)
     {
         data[i] = i;
     }

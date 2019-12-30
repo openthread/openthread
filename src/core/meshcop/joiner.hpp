@@ -44,7 +44,7 @@
 #include "common/locator.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "meshcop/dtls.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 
@@ -66,7 +66,7 @@ public:
     /**
      * This method starts the Joiner service.
      *
-     * @param[in]  aPSKd             A pointer to the PSKd.
+     * @param[in]  aPskd             A pointer to the PSKd.
      * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
      * @param[in]  aVendorName       A pointer to the Vendor Name (may be NULL).
      * @param[in]  aVendorModel      A pointer to the Vendor Model (may be NULL).
@@ -78,7 +78,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully started the Joiner service.
      *
      */
-    otError Start(const char *     aPSKd,
+    otError Start(const char *     aPskd,
                   const char *     aProvisioningUrl,
                   const char *     aVendorName,
                   const char *     aVendorModel,

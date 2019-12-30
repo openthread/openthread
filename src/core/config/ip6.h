@@ -76,6 +76,38 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION
+ *
+ * Define as 1 to enable IPv6 Fragmentation support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+#define OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_IP6_MAX_ASSEMBLED_DATAGRAM
+ *
+ * This setting configures the max datagram length of a unfragmented IPv6 packet.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_IP6_MAX_ASSEMBLED_DATAGRAM
+#define OPENTHREAD_CONFIG_IP6_MAX_ASSEMBLED_DATAGRAM 2000
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT
+ *
+ * This setting configures the reassembly timeout for IPv6 in seconds.
+ *
+ * RFC 2460 \> 60 seconds
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT
+#define OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT 60
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
  *
  * Define as 1 to enable support for adding of auto-configured SLAAC addresses by OpenThread.

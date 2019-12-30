@@ -35,7 +35,7 @@
 #include "ncp/ncp_buffer.hpp"
 
 #include "test_platform.h"
-#include "test_util.h"
+#include "test_util.hpp"
 
 namespace ot {
 namespace Ncp {
@@ -157,47 +157,6 @@ void FrameRemovedCallback(void *                   aContext,
     VerifyAndRemoveTagFromHistory(aTag, aPriority);
 
     callbackContext->mFrameRemovedCount++;
-}
-
-// Dump the buffer content to screen.
-void DumpBuffer(const char *aTextMessage, uint8_t *aBuffer, uint16_t aBufferLength)
-{
-    enum
-    {
-        kBytesPerLine = 32, // Number of bytes per line.
-    };
-
-    char     charBuff[kBytesPerLine + 1];
-    uint16_t counter;
-    uint8_t  byte;
-
-    printf("\n%s - len = %u\n    ", aTextMessage, aBufferLength);
-
-    counter = 0;
-
-    while (aBufferLength--)
-    {
-        byte = *aBuffer++;
-        printf("%02X ", byte);
-        charBuff[counter] = isprint(byte) ? static_cast<char>(byte) : '.';
-        counter++;
-
-        if (counter == kBytesPerLine)
-        {
-            charBuff[counter] = 0;
-            printf("    %s\n    ", charBuff);
-            counter = 0;
-        }
-    }
-
-    charBuff[counter] = 0;
-
-    while (counter++ < kBytesPerLine)
-    {
-        printf("   ");
-    }
-
-    printf("    %s\n", charBuff);
 }
 
 // Reads bytes from the ncp buffer, and verifies that it matches with the given content buffer.
@@ -1098,7 +1057,6 @@ void TestFuzzNcpFrameBuffer(void)
 } // namespace Ncp
 } // namespace ot
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     ot::Ncp::TestNcpFrameBuffer();
@@ -1106,4 +1064,3 @@ int main(void)
     printf("\nAll tests passed.\n");
     return 0;
 }
-#endif

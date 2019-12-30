@@ -76,26 +76,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
- *
- * Define to 1 to enable the Border Agent service.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-#define OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE 0
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
- *
- * Define to 1 to enable the Border Router service.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-#define OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE 0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_ECDSA_ENABLE
  *
  * Define to 1 to enable ECDSA support.
@@ -261,27 +241,27 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_HEAP_SIZE
+ * @def OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE
  *
  * The size of heap buffer when DTLS is enabled.
  *
  */
-#ifndef OPENTHREAD_CONFIG_HEAP_SIZE
+#ifndef OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
-#define OPENTHREAD_CONFIG_HEAP_SIZE (3072 * sizeof(void *))
+#define OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE (3072 * sizeof(void *))
 #else
-#define OPENTHREAD_CONFIG_HEAP_SIZE (1536 * sizeof(void *))
+#define OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE (1568 * sizeof(void *))
 #endif
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS
+ * @def OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE_NO_DTLS
  *
  * The size of heap buffer when DTLS is disabled.
  *
  */
-#ifndef OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS
-#define OPENTHREAD_CONFIG_HEAP_SIZE_NO_DTLS 384
+#ifndef OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE_NO_DTLS
+#define OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE_NO_DTLS 384
 #endif
 
 /**

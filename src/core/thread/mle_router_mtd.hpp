@@ -60,7 +60,7 @@ public:
     {
     }
 
-    bool IsRouterRoleEnabled(void) const { return false; }
+    bool IsRouterEligible(void) const { return false; }
 
     bool IsSingleton(void) const { return false; }
 
@@ -129,23 +129,32 @@ public:
 private:
     void    HandleDetachStart(void) {}
     otError HandleChildStart(AttachMode) { return OT_ERROR_NONE; }
-    otError HandleLinkRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
-    otError HandleLinkAccept(const Message &, const Ip6::MessageInfo &, uint32_t) { return OT_ERROR_DROP; }
-    otError HandleLinkAccept(const Message &, const Ip6::MessageInfo &, uint32_t, bool) { return OT_ERROR_DROP; }
-    otError HandleLinkAcceptAndRequest(const Message &, const Ip6::MessageInfo &, uint32_t) { return OT_ERROR_DROP; }
-    otError HandleAdvertisement(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
+    otError HandleLinkRequest(const Message &, const Ip6::MessageInfo &, Neighbor *) { return OT_ERROR_DROP; }
+    otError HandleLinkAccept(const Message &, const Ip6::MessageInfo &, uint32_t, Neighbor *) { return OT_ERROR_DROP; }
+    otError HandleLinkAccept(const Message &, const Ip6::MessageInfo &, uint32_t, Neighbor *, bool)
+    {
+        return OT_ERROR_DROP;
+    }
+    otError HandleLinkAcceptAndRequest(const Message &, const Ip6::MessageInfo &, uint32_t, Neighbor *)
+    {
+        return OT_ERROR_DROP;
+    }
+    otError HandleAdvertisement(const Message &, const Ip6::MessageInfo &, Neighbor *) { return OT_ERROR_DROP; }
     otError HandleParentRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
     otError HandleChildIdRequest(const Message &, const Ip6::MessageInfo &, uint32_t) { return OT_ERROR_DROP; }
     otError HandleChildUpdateRequest(const Message &, const Ip6::MessageInfo &, uint32_t) { return OT_ERROR_DROP; }
-    otError HandleChildUpdateResponse(const Message &, const Ip6::MessageInfo &, uint32_t) { return OT_ERROR_DROP; }
-    otError HandleDataRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
+    otError HandleChildUpdateResponse(const Message &, const Ip6::MessageInfo &, uint32_t, Neighbor *)
+    {
+        return OT_ERROR_DROP;
+    }
+    otError HandleDataRequest(const Message &, const Ip6::MessageInfo &, const Neighbor *) { return OT_ERROR_DROP; }
     void    HandleNetworkDataUpdateRouter(void) {}
     otError HandleDiscoveryRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
     void    HandlePartitionChange(void) {}
     void    StopAdvertiseTimer(void) {}
     otError ProcessRouteTlv(const RouteTlv &) { return OT_ERROR_NONE; }
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    otError HandleTimeSync(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
+    otError HandleTimeSync(const Message &, const Ip6::MessageInfo &, const Neighbor *) { return OT_ERROR_DROP; }
 #endif
 
     ChildTable  mChildTable;

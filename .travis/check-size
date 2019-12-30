@@ -60,7 +60,7 @@ size_nrf52840()
     make -f examples/Makefile-nrf52840 ${OPENTHREAD_FLAGS}
     mv output/nrf52840 ../output/nrf52840-b
 
-    git checkout ${MERGE_BASE_SHA}
+    git checkout -f ${MERGE_BASE_SHA}
     git submodule update --init
 
     # base branch
@@ -80,6 +80,15 @@ size_nrf52840()
     ./size-report size ../output/nrf52840-a/bin/ot-ncp-ftd ../output/nrf52840-b/bin/ot-ncp-ftd
     ./size-report size ../output/nrf52840-a/bin/ot-ncp-mtd ../output/nrf52840-b/bin/ot-ncp-mtd
     ./size-report size ../output/nrf52840-a/bin/ot-rcp     ../output/nrf52840-b/bin/ot-rcp
+
+    ./size-report size ../output/nrf52840-a/lib/libopenthread-cli-ftd.a ../output/nrf52840-b/lib/libopenthread-cli-ftd.a
+    ./size-report size ../output/nrf52840-a/lib/libopenthread-cli-mtd.a ../output/nrf52840-b/lib/libopenthread-cli-mtd.a
+    ./size-report size ../output/nrf52840-a/lib/libopenthread-ftd.a     ../output/nrf52840-b/lib/libopenthread-ftd.a
+    ./size-report size ../output/nrf52840-a/lib/libopenthread-mtd.a     ../output/nrf52840-b/lib/libopenthread-mtd.a
+    ./size-report size ../output/nrf52840-a/lib/libopenthread-ncp-ftd.a ../output/nrf52840-b/lib/libopenthread-ncp-ftd.a
+    ./size-report size ../output/nrf52840-a/lib/libopenthread-ncp-mtd.a ../output/nrf52840-b/lib/libopenthread-ncp-mtd.a
+    ./size-report size ../output/nrf52840-a/lib/libopenthread-rcp.a     ../output/nrf52840-b/lib/libopenthread-rcp.a
+    ./size-report size ../output/nrf52840-a/lib/libopenthread-radio.a   ../output/nrf52840-b/lib/libopenthread-radio.a
 
     ./size-report post
 }

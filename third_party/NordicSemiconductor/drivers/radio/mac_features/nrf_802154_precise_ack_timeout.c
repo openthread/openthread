@@ -118,7 +118,7 @@ static void timeout_timer_stop(void)
     // this function.
     __DMB();
 
-    nrf_802154_timer_sched_remove(&m_timer);
+    nrf_802154_timer_sched_remove(&m_timer, NULL);
 }
 
 void nrf_802154_ack_timeout_time_set(uint32_t time)

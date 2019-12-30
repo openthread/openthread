@@ -65,16 +65,16 @@ RandomManager::RandomManager(void)
 
 #ifndef OPENTHREAD_RADIO
     sEntropy.Init();
-#endif
+    sCtrDrbg.Init();
 
+    error = Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&seed), sizeof(seed));
+    assert(error == OT_ERROR_NONE);
+#else
     error = otPlatEntropyGet(reinterpret_cast<uint8_t *>(&seed), sizeof(seed));
     assert(error == OT_ERROR_NONE);
+#endif
 
     sPrng.Init(seed);
-
-#ifndef OPENTHREAD_RADIO
-    sCtrDrbg.Init();
-#endif
 
 exit:
     sInitCount++;
@@ -149,14 +149,19 @@ uint32_t RandomManager::NonCryptoPrng::GetNext(void)
 void RandomManager::Entropy::Init(void)
 {
     mbedtls_entropy_init(&mEntropyContext);
+
+#ifndef OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
     mbedtls_entropy_add_source(&mEntropyContext, &RandomManager::Entropy::HandleMbedtlsEntropyPoll, NULL,
                                MBEDTLS_ENTROPY_MIN_HARDWARE, MBEDTLS_ENTROPY_SOURCE_STRONG);
+#endif // OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
 }
 
 void RandomManager::Entropy::Deinit(void)
 {
     mbedtls_entropy_free(&mEntropyContext);
 }
+
+#ifndef OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
 
 int RandomManager::Entropy::HandleMbedtlsEntropyPoll(void *         aData,
                                                      unsigned char *aOutput,
@@ -175,6 +180,8 @@ exit:
     OT_UNUSED_VARIABLE(aData);
     return rval;
 }
+
+#endif // OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
 
 //-------------------------------------------------------------------
 // CryptoCtrDrbg

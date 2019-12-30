@@ -29,18 +29,18 @@
 #ifndef TEST_UTIL_HPP
 #define TEST_UTIL_HPP
 
+#include <stdint.h>
+
 #include "test_util.h"
 
-// STL is okay in unit tests.
-#include <string>
-#include <vector>
-
-void otTestHexToVector(std::string &aHex, std::vector<uint8_t> &aOutBytes);
-
-void otTestPrintHex(uint8_t *aBuffer, int aLength);
-
-void otTestPrintHex(std::vector<uint8_t> &aBytes);
-
-void otTestPrintHex(std::string &aString);
+/**
+ * This function prints the content of a given buffer to screen as a hex dump along with ASCII text translation.
+ *
+ * @param[in] aTextMessag    A text message to describe the buffer content (printed before the buffer content)
+ * @param[in] aBuffer        A pointer to the buffer
+ * @param[in] aBufferLength  Number of bytes in the buffer.
+ *
+ */
+void DumpBuffer(const char *aTextMessage, uint8_t *aBuffer, uint16_t aBufferLength);
 
 #endif

@@ -80,7 +80,7 @@ public:
         kMinHeaderLength    = 4,   ///< Minimum header length
         kMaxHeaderLength    = 512, ///< Maximum header length
         kDefaultTokenLength = 2,   ///< Default token length
-        kTypeOffset         = 4,   ///< The type offset in the first byte of a coap header
+        kTypeOffset         = 4,   ///< The type offset in the first byte of a CoAP header
     };
 
     /**
@@ -257,9 +257,9 @@ public:
     otError SetToken(uint8_t aTokenLength);
 
     /**
-     *  This method checks if Tokens in two CoAP headers are equal.
+     * This method checks if Tokens in two CoAP headers are equal.
      *
-     *  @param[in]  aMessage  A header to compare.
+     * @param[in]  aMessage  A header to compare.
      *
      * @retval TRUE   If two Tokens are equal.
      * @retval FALSE  If Tokens differ in length or value.
@@ -585,6 +585,9 @@ private:
      */
     struct HelpData
     {
+        void Clear(void) { memset(this, 0, sizeof(*this)); }
+        void ClearOption(void) { memset(&mOption, 0, sizeof(mOption)); }
+
         Header       mHeader;
         otCoapOption mOption;
         uint16_t     mNextOptionOffset; ///< The byte offset for the next CoAP Option
@@ -598,7 +601,7 @@ private:
         OT_STATIC_ASSERT(sizeof(mBuffer.mHead.mInfo) + sizeof(HelpData) + kHelpDataAlignment <= sizeof(mBuffer),
                          "Insufficient buffer size for CoAP processing!");
 
-        return *static_cast<const HelpData *>(otALIGN(mBuffer.mHead.mData, kHelpDataAlignment));
+        return *static_cast<const HelpData *>(OT_ALIGN(mBuffer.mHead.mData, kHelpDataAlignment));
     }
 
     HelpData &GetHelpData(void) { return const_cast<HelpData &>(static_cast<const Message *>(this)->GetHelpData()); }

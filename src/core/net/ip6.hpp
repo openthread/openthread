@@ -44,6 +44,7 @@
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/timer.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip6_address.hpp"
 #include "net/ip6_headers.hpp"
@@ -104,8 +105,12 @@ class Ip6 : public InstanceLocator
 public:
     enum
     {
-        kDefaultHopLimit   = OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT,
-        kMaxDatagramLength = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH,
+        kDefaultHopLimit            = OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT,
+        kMaxDatagramLength          = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH,
+        kMaxAssembledDatagramLength = OPENTHREAD_CONFIG_IP6_MAX_ASSEMBLED_DATAGRAM,
+        kIp6ReassemblyTimeout       = OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT,
+        kMinimalMtu                 = 1280,
+        kStateUpdatePeriod          = 1000,
     };
 
     /**
@@ -177,7 +182,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffer to add the IPv6 headers.
      *
      */
-    otError SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto aIpProto);
+    otError SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
 
     /**
      * This method sends a raw IPv6 datagram with a fully formed IPv6 header.
@@ -245,7 +250,7 @@ public:
     static uint16_t ComputePseudoheaderChecksum(const Address &aSource,
                                                 const Address &aDestination,
                                                 uint16_t       aLength,
-                                                IpProto        aProto);
+                                                uint8_t        aProto);
 
     /**
      * This method registers a callback to provide received raw IPv6 datagrams.
@@ -327,7 +332,7 @@ public:
      * @returns The string representation of an IP protocol enumeration.
      *
      */
-    static const char *IpProtoToString(IpProto aIpProto);
+    static const char *IpProtoToString(uint8_t aIpProto);
 
 private:
     enum
@@ -344,12 +349,23 @@ private:
                                    const MessageInfo &aMessageInfo,
                                    uint8_t            aIpProto,
                                    bool               aFromNcpHost);
-    otError HandleExtensionHeaders(Message &aMessage,
-                                   Header & aHeader,
-                                   uint8_t &aNextHeader,
-                                   bool     aForward,
-                                   bool     aReceive);
-    otError HandleFragment(Message &aMessage);
+    otError HandleExtensionHeaders(Message &    aMessage,
+                                   Netif *      aNetif,
+                                   MessageInfo &aMessageInfo,
+                                   Header &     aHeader,
+                                   uint8_t &    aNextHeader,
+                                   bool         aForward,
+                                   bool         aFromNcpHost,
+                                   bool         aReceive);
+    otError FragmentDatagram(Message &aMessage, uint8_t aIpProto);
+    otError HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromNcpHost);
+#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+    void        CleanupFragmentationBuffer(void);
+    void        HandleUpdateTimer(void);
+    void        UpdateReassemblyList(void);
+    otError     SendIcmpError(Message &aMessage, IcmpHeader::Type aIcmpType, IcmpHeader::Code aIcmpCode);
+    static void HandleTimer(Timer &aTimer);
+#endif
     otError AddMplOption(Message &aMessage, Header &aHeader);
     otError AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
     otError InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
@@ -370,6 +386,11 @@ private:
     Icmp mIcmp;
     Udp  mUdp;
     Mpl  mMpl;
+
+#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+    TimerMilli   mTimer;
+    MessageQueue mReassemblyList;
+#endif
 };
 
 /**

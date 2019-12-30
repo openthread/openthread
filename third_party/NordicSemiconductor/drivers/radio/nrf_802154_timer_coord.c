@@ -42,7 +42,7 @@
 
 #include "nrf_802154_config.h"
 #include "nrf_802154_debug.h"
-#include "nrf_ppi.h"
+#include "nrf_802154_peripherals.h"
 #include "platform/hp_timer/nrf_802154_hp_timer.h"
 #include "platform/lp_timer/nrf_802154_lp_timer.h"
 
@@ -57,13 +57,9 @@
 #define RESYNC_TIME              (4 * TIME_BASE) ///< Delay of following resynchronizations.
 #define EWMA_COEF                (8)             ///< Weight used in the EWMA algorithm.
 
-#define PPI_CH0                  NRF_PPI_CHANNEL13
-#define PPI_CH1                  NRF_PPI_CHANNEL14
-#define PPI_CHGRP0               NRF_PPI_CHANNEL_GROUP1
-
-#define PPI_SYNC                 PPI_CH0
-#define PPI_TIMESTAMP            PPI_CH1
-#define PPI_TIMESTAMP_GROUP      PPI_CHGRP0
+#define PPI_SYNC                 NRF_802154_PPI_RTC_COMPARE_TO_TIMER_CAPTURE
+#define PPI_TIMESTAMP            NRF_802154_PPI_TIMESTAMP_EVENT_TO_TIMER_CAPTURE
+#define PPI_TIMESTAMP_GROUP      NRF_802154_PPI_TIMESTAMP_GROUP
 
 #if NRF_802154_FRAME_TIMESTAMP_ENABLED
 // Structure holding common timepoint from both timers.

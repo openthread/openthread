@@ -64,8 +64,8 @@ bool Tlv::IsValid(const Tlv &aTlv)
         rval = static_cast<const NetworkMasterKeyTlv &>(aTlv).IsValid();
         break;
 
-    case Tlv::kPSKc:
-        rval = static_cast<const PSKcTlv &>(aTlv).IsValid();
+    case Tlv::kPskc:
+        rval = static_cast<const PskcTlv &>(aTlv).IsValid();
         break;
 
     case Tlv::kMeshLocalPrefix:
@@ -81,6 +81,26 @@ bool Tlv::IsValid(const Tlv &aTlv)
     }
 
     return rval;
+}
+
+Mac::NetworkName::Data NetworkNameTlv::GetNetworkName(void) const
+{
+    uint8_t len = GetLength();
+
+    if (len > sizeof(mNetworkName))
+    {
+        len = sizeof(mNetworkName);
+    }
+
+    return Mac::NetworkName::Data(mNetworkName, len);
+}
+
+void NetworkNameTlv::SetNetworkName(const Mac::NetworkName::Data &aNameData)
+{
+    uint8_t len;
+
+    len = aNameData.CopyTo(mNetworkName, sizeof(mNetworkName));
+    SetLength(len);
 }
 
 bool SteeringDataTlv::IsCleared(void) const

@@ -40,7 +40,8 @@
 
 #include "common/message.hpp"
 #include "common/random.hpp"
-#include "mac/mac_frame.hpp"
+#include "common/timer.hpp"
+#include "mac/mac_types.hpp"
 #include "net/ip6.hpp"
 #include "thread/device_mode.hpp"
 #include "thread/indirect_sender.hpp"
@@ -75,6 +76,22 @@ public:
     };
 
     /**
+     * This enumeration defines state filters used for finding a neighbor or iterating through the child/neighbor table.
+     *
+     * Each filter definition accepts a subset of `State` values.
+     *
+     */
+    enum StateFilter
+    {
+        kInStateValid,                     ///< Accept child only in `kStateValid`.
+        kInStateValidOrRestoring,          ///< Accept child with `IsStateValidOrRestoring()` being `true`.
+        kInStateChildIdRequest,            ///< Accept child only in `Child:kStateChildIdRequest`.
+        kInStateValidOrAttaching,          ///< Accept child with `IsStateValidOrAttaching()` being `true`.
+        kInStateAnyExceptInvalid,          ///< Accept child in any state except `kStateInvalid`.
+        kInStateAnyExceptValidOrRestoring, ///< Accept child in any state except `IsStateValidOrRestoring()`.
+    };
+
+    /**
      * This method returns the current state.
      *
      * @returns The current state.
@@ -91,7 +108,39 @@ public:
     void SetState(State aState) { mState = static_cast<uint8_t>(aState); }
 
     /**
-     * This method indicates whether the neighbor/child is being restored.
+     * This method indicates whether the neighbor is in the Invalid state.
+     *
+     * @returns TRUE if the neighbor is in the Invalid state, FALSE otherwise.
+     *
+     */
+    bool IsStateInvalid(void) const { return (mState == kStateInvalid); }
+
+    /**
+     * This method indicates whether the neighbor is in the Child ID Request state.
+     *
+     * @returns TRUE if the neighbor is in the Child ID Request state, FALSE otherwise.
+     *
+     */
+    bool IsStateChildIdRequest(void) const { return (mState == kStateChildIdRequest); }
+
+    /**
+     * This method indicates whether the neighbor is in the Link Request state.
+     *
+     * @returns TRUE if the neighbor is in the Link Request state, FALSE otherwise.
+     *
+     */
+    bool IsStateLinkRequest(void) const { return (mState == kStateLinkRequest); }
+
+    /**
+     * This method indicates whether the neighbor is in the Parent Response state.
+     *
+     * @returns TRUE if the neighbor is in the Parent Response state, FALSE otherwise.
+     *
+     */
+    bool IsStateParentResponse(void) const { return (mState == kStateParentResponse); }
+
+    /**
+     * This method indicates whether the neighbor is being restored.
      *
      * @returns TRUE if the neighbor is being restored, FALSE otherwise.
      *
@@ -99,14 +148,51 @@ public:
     bool IsStateRestoring(void) const { return (mState == kStateRestored) || (mState == kStateChildUpdateRequest); }
 
     /**
-     * This method indicates whether the neighbor/child is in valid state or if it is being restored.
+     * This method indicates whether the neighbor is in the Restored state.
      *
-     * When in these states messages can be sent to and/or received from the neighbor/child.
+     * @returns TRUE if the neighbor is in the Restored state, FALSE otherwise.
+     *
+     */
+    bool IsStateRestored(void) const { return (mState == kStateRestored); }
+
+    /**
+     * This method indicates whether the neighbor is valid (frame counters are synchronized).
+     *
+     * @returns TRUE if the neighbor is valid, FALSE otherwise.
+     *
+     */
+    bool IsStateValid(void) const { return (mState == kStateValid); }
+
+    /**
+     * This method indicates whether the neighbor is in valid state or if it is being restored.
+     *
+     * When in these states messages can be sent to and/or received from the neighbor.
      *
      * @returns TRUE if the neighbor is in valid, restored, or being restored states, FALSE otherwise.
      *
      */
     bool IsStateValidOrRestoring(void) const { return (mState == kStateValid) || IsStateRestoring(); }
+
+    /**
+     * This method indicates if the neighbor state is valid, attaching, or restored.
+     *
+     * The states `kStateRestored`, `kStateChildIdRequest`, `kStateChildUpdateRequest`, `kStateValid`, and
+     * `kStateLinkRequest` are considered as valid, attaching, or restored.
+     *
+     * @returns TRUE if the neighbor state is valid, attaching, or restored, FALSE otherwise.
+     *
+     */
+    bool IsStateValidOrAttaching(void) const;
+
+    /**
+     * This method indicates whether neighbor state matches a given state filter.
+     *
+     * @param[in] aFilter   A state filter (`StateFilter` enumeration) to match against.
+     *
+     * @returns TRUE if the neighbor state matches the filter, FALSE otherwise.
+     *
+     */
+    bool MatchesFilter(StateFilter aFilter) const;
 
     /**
      * This method gets the device mode flags.
@@ -168,14 +254,6 @@ public:
      * @returns A reference to the Extended Address.
      *
      */
-    Mac::ExtAddress &GetExtAddress(void) { return mMacAddr; }
-
-    /**
-     * This method returns the Extended Address.
-     *
-     * @returns A reference to the Extended Address.
-     *
-     */
     const Mac::ExtAddress &GetExtAddress(void) const { return mMacAddr; }
 
     /**
@@ -208,7 +286,7 @@ public:
      * @returns The last heard time.
      *
      */
-    uint32_t GetLastHeard(void) const { return mLastHeard; }
+    TimeMilli GetLastHeard(void) const { return mLastHeard; }
 
     /**
      * This method sets the last heard time.
@@ -216,7 +294,7 @@ public:
      * @param[in]  aLastHeard  The last heard time.
      *
      */
-    void SetLastHeard(uint32_t aLastHeard) { mLastHeard = aLastHeard; }
+    void SetLastHeard(TimeMilli aLastHeard) { mLastHeard = aLastHeard; }
 
     /**
      * This method gets the link frame counter value.
@@ -344,7 +422,7 @@ public:
 
 private:
     Mac::ExtAddress mMacAddr;   ///< The IEEE 802.15.4 Extended Address
-    uint32_t        mLastHeard; ///< Time when last heard.
+    TimeMilli       mLastHeard; ///< Time when last heard.
     union
     {
         struct
@@ -434,15 +512,10 @@ public:
     };
 
     /**
-     * This method indicates if the child state is valid or being attached or being restored.
-     *
-     * The states `kStateRestored`, `kStateChildIdRequest`, `kStateChildUpdateRequest`, `kStateValid`, (and
-     * `kStateLinkRequest) are considered as attached or being restored.
-     *
-     * @returns TRUE if the child is attached or being restored.
+     * This method clears the child entry.
      *
      */
-    bool IsStateValidOrAttaching(void) const;
+    void Clear(void);
 
     /**
      * This method clears the IPv6 address list for the child.
@@ -653,6 +726,12 @@ private:
 class Router : public Neighbor
 {
 public:
+    /**
+     * This method clears the router entry.
+     *
+     */
+    void Clear(void);
+
     /**
      * This method gets the router ID of the next hop to this router.
      *

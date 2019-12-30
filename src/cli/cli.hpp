@@ -147,13 +147,16 @@ public:
     /**
      * This method converts a hex string to binary.
      *
-     * @param[in]   aHex        A pointer to the hex string.
-     * @param[out]  aBin        A pointer to where the binary representation is placed.
-     * @param[in]   aBinLength  Maximum length of the binary representation.
+     * @param[in]   aHex            A pointer to the hex string.
+     * @param[out]  aBin            A pointer to where the binary representation is placed.
+     * @param[in]   aBinLength      Maximum length of the binary representation.
+     * @param[in]   aAllowTruncate  TRUE if @p aBinLength may be less than what is required
+     *                              to convert @p aHex to binary representation, FALSE otherwise.
+     *
      *
      * @returns The number of bytes in the binary representation.
      */
-    static int Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength);
+    static int Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength, bool aAllowTruncate = false);
 
     /**
      * Write error code the CLI console
@@ -208,6 +211,9 @@ private:
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     void ProcessCoapSecure(int argc, char *argv[]);
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+    void ProcessCoexMetrics(int argc, char *argv[]);
+#endif
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     void ProcessCommissioner(int argc, char *argv[]);
 #endif
@@ -266,8 +272,8 @@ private:
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     void ProcessNetworkDataRegister(int argc, char *argv[]);
 #endif
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     void ProcessNetworkDataShow(int argc, char *argv[]);
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     void ProcessService(int argc, char *argv[]);
 #endif
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
@@ -295,7 +301,7 @@ private:
 #endif
     void ProcessPromiscuous(int argc, char *argv[]);
 #if OPENTHREAD_FTD
-    void ProcessPSKc(int argc, char *argv[]);
+    void ProcessPskc(int argc, char *argv[]);
     void ProcessReleaseRouterId(int argc, char *argv[]);
 #endif
     void ProcessReset(int argc, char *argv[]);
@@ -308,7 +314,7 @@ private:
 #if OPENTHREAD_FTD
     void ProcessRouter(int argc, char *argv[]);
     void ProcessRouterDowngradeThreshold(int argc, char *argv[]);
-    void ProcessRouterRole(int argc, char *argv[]);
+    void ProcessRouterEligible(int argc, char *argv[]);
     void ProcessRouterSelectionJitter(int argc, char *argv[]);
     void ProcessRouterUpgradeThreshold(int argc, char *argv[]);
 #endif
@@ -330,6 +336,8 @@ private:
     otError ProcessMacFilterAddress(int argc, char *argv[]);
     otError ProcessMacFilterRss(int argc, char *argv[]);
 #endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+    void    ProcessMac(int argc, char *argv[]);
+    otError ProcessMacRetries(int argc, char *argv[]);
 
     static void HandleIcmpReceive(void *               aContext,
                                   otMessage *          aMessage,
@@ -342,11 +350,11 @@ private:
     static void HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext);
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    static void HandleDnsResponse(void *        aContext,
-                                  const char *  aHostname,
-                                  otIp6Address *aAddress,
-                                  uint32_t      aTtl,
-                                  otError       aResult);
+    static void HandleDnsResponse(void *              aContext,
+                                  const char *        aHostname,
+                                  const otIp6Address *aAddress,
+                                  uint32_t            aTtl,
+                                  otError             aResult);
 #endif
 
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
@@ -360,7 +368,7 @@ private:
     void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx);
     void HandleDiagnosticGetResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    void HandleDnsResponse(const char *aHostname, Ip6::Address &aAddress, uint32_t aTtl, otError aResult);
+    void HandleDnsResponse(const char *aHostname, const Ip6::Address *aAddress, uint32_t aTtl, otError aResult);
 #endif
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     void HandleSntpResponse(uint64_t aTime, otError aResult);

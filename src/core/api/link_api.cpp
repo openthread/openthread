@@ -119,7 +119,7 @@ otError otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExt
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aExtAddress != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aExtAddress != NULL);
     VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
     instance.Get<Mac::Mac>().SetExtAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
@@ -187,6 +187,38 @@ otShortAddress otLinkGetShortAddress(otInstance *aInstance)
     return instance.Get<Mac::Mac>().GetShortAddress();
 }
 
+uint8_t otLinkGetMaxFrameRetriesDirect(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Mac::Mac>().GetMaxFrameRetriesDirect();
+}
+
+void otLinkSetMaxFrameRetriesDirect(otInstance *aInstance, uint8_t aMaxFrameRetriesDirect)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Mac::Mac>().SetMaxFrameRetriesDirect(aMaxFrameRetriesDirect);
+}
+
+#if OPENTHREAD_FTD
+
+uint8_t otLinkGetMaxFrameRetriesIndirect(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Mac::Mac>().GetMaxFrameRetriesIndirect();
+}
+
+void otLinkSetMaxFrameRetriesIndirect(otInstance *aInstance, uint8_t aMaxFrameRetriesIndirect)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Mac::Mac>().SetMaxFrameRetriesIndirect(aMaxFrameRetriesIndirect);
+}
+
+#endif // OPENTHREAD_FTD
+
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
 otMacFilterAddressMode otLinkFilterGetAddressMode(otInstance *aInstance)
@@ -205,28 +237,20 @@ otError otLinkFilterSetAddressMode(otInstance *aInstance, otMacFilterAddressMode
 
 otError otLinkFilterAddAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aExtAddress != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aExtAddress != NULL);
 
-    error = instance.Get<Mac::Filter>().AddAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
-
-exit:
-    return error;
+    return instance.Get<Mac::Filter>().AddAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
 }
 
 otError otLinkFilterRemoveAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aExtAddress != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aExtAddress != NULL);
 
-    error = instance.Get<Mac::Filter>().RemoveAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
-
-exit:
-    return error;
+    return instance.Get<Mac::Filter>().RemoveAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
 }
 
 void otLinkFilterClearAddresses(otInstance *aInstance)
@@ -238,15 +262,11 @@ void otLinkFilterClearAddresses(otInstance *aInstance)
 
 otError otLinkFilterGetNextAddress(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry)
 {
-    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aIterator != NULL && aEntry != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aIterator != NULL && aEntry != NULL);
 
-    error = instance.Get<Mac::Filter>().GetNextAddress(*aIterator, *aEntry);
-
-exit:
-    return error;
+    return instance.Get<Mac::Filter>().GetNextAddress(*aIterator, *aEntry);
 }
 
 otError otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddress *aExtAddress, int8_t aRss)
@@ -272,15 +292,11 @@ void otLinkFilterClearRssIn(otInstance *aInstance)
 
 otError otLinkFilterGetNextRssIn(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry)
 {
-    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aIterator != NULL && aEntry != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aIterator != NULL && aEntry != NULL);
 
-    error = instance.Get<Mac::Filter>().GetNextRssIn(*aIterator, *aEntry);
-
-exit:
-    return error;
+    return instance.Get<Mac::Filter>().GetNextRssIn(*aIterator, *aEntry);
 }
 
 uint8_t otLinkConvertRssToLinkQuality(otInstance *aInstance, int8_t aRss)
@@ -298,6 +314,38 @@ int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality
 }
 
 #endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+
+#if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+const uint32_t *otLinkGetTxDirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Mac::Mac>().GetDirectRetrySuccessHistogram(*aNumberOfEntries);
+}
+
+const uint32_t *otLinkGetTxIndirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries)
+{
+    const uint32_t *histogram = NULL;
+
+#if OPENTHREAD_FTD
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    histogram = instance.Get<Mac::Mac>().GetIndirectRetrySuccessHistogram(*aNumberOfEntries);
+#else
+    OT_UNUSED_VARIABLE(aInstance);
+    *aNumberOfEntries = 0;
+#endif
+
+    return histogram;
+}
+
+void otLinkResetTxRetrySuccessHistogram(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Mac::Mac>().ResetRetrySuccessHistogram();
+}
+#endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 
 void otLinkSetPcapCallback(otInstance *aInstance, otLinkPcapCallback aPcapCallback, void *aCallbackContext)
 {
@@ -353,6 +401,13 @@ const otMacCounters *otLinkGetCounters(otInstance *aInstance)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return &instance.Get<Mac::Mac>().GetCounters();
+}
+
+void otLinkResetCounters(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Mac::Mac>().ResetCounters();
 }
 
 otError otLinkActiveScan(otInstance *             aInstance,

@@ -63,19 +63,17 @@ otError Joiner::ProcessHelp(int argc, char *argv[])
 
 otError Joiner::ProcessId(int argc, char *argv[])
 {
-    otError      error;
-    otExtAddress joinerId;
-
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
-    SuccessOrExit(error = otJoinerGetId(mInterpreter.mInstance, &joinerId));
+    otExtAddress joinerId;
+
+    otJoinerGetId(mInterpreter.mInstance, &joinerId);
 
     mInterpreter.OutputBytes(joinerId.m8, sizeof(joinerId));
     mInterpreter.mServer->OutputFormat("\r\n");
 
-exit:
-    return error;
+    return OT_ERROR_NONE;
 }
 
 otError Joiner::ProcessStart(int argc, char *argv[])
@@ -102,7 +100,9 @@ otError Joiner::ProcessStop(int argc, char *argv[])
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
-    return otJoinerStop(mInterpreter.mInstance);
+    otJoinerStop(mInterpreter.mInstance);
+
+    return OT_ERROR_NONE;
 }
 
 otError Joiner::Process(int argc, char *argv[])

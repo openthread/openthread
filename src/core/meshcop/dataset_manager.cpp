@@ -470,7 +470,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     {
         NetworkMasterKeyTlv masterkey;
         masterkey.Init();
-        masterkey.SetNetworkMasterKey(aDataset.mMasterKey);
+        masterkey.SetNetworkMasterKey(static_cast<const MasterKey &>(aDataset.mMasterKey));
         SuccessOrExit(error = message->AppendTlv(masterkey));
     }
 
@@ -478,7 +478,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     {
         NetworkNameTlv networkname;
         networkname.Init();
-        networkname.SetNetworkName(aDataset.mNetworkName.m8);
+        networkname.SetNetworkName(static_cast<const Mac::NetworkName &>(aDataset.mNetworkName).GetAsData());
         SuccessOrExit(error = message->AppendTlv(networkname));
     }
 
@@ -486,7 +486,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     {
         ExtendedPanIdTlv extpanid;
         extpanid.Init();
-        extpanid.SetExtendedPanId(aDataset.mExtendedPanId);
+        extpanid.SetExtendedPanId(static_cast<const Mac::ExtendedPanId &>(aDataset.mExtendedPanId));
         SuccessOrExit(error = message->AppendTlv(extpanid));
     }
 
@@ -528,6 +528,23 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         channelMask.Init();
         channelMask.SetChannelMask(aDataset.mChannelMask);
         SuccessOrExit(error = message->AppendTlv(channelMask));
+    }
+
+    if (aDataset.mComponents.mIsPskcPresent)
+    {
+        PskcTlv pskc;
+        pskc.Init();
+        pskc.SetPskc(static_cast<const Pskc &>(aDataset.mPskc));
+        SuccessOrExit(error = message->AppendTlv(pskc));
+    }
+
+    if (aDataset.mComponents.mIsSecurityPolicyPresent)
+    {
+        SecurityPolicyTlv securityPolicy;
+        securityPolicy.Init();
+        securityPolicy.SetRotationTime(aDataset.mSecurityPolicy.mRotationTime);
+        securityPolicy.SetFlags(aDataset.mSecurityPolicy.mFlags);
+        SuccessOrExit(error = message->AppendTlv(securityPolicy));
     }
 
     if (aLength > 0)
@@ -617,9 +634,9 @@ otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDa
         datasetTlvs[length++] = Tlv::kChannel;
     }
 
-    if (aDatasetComponents.mIsPSKcPresent)
+    if (aDatasetComponents.mIsPskcPresent)
     {
-        datasetTlvs[length++] = Tlv::kPSKc;
+        datasetTlvs[length++] = Tlv::kPskc;
     }
 
     if (aDatasetComponents.mIsSecurityPolicyPresent)
@@ -800,9 +817,9 @@ void PendingDataset::StartDelayTimer(void)
         uint32_t delay = delayTimer->GetDelayTimer();
 
         // the Timer implementation does not support the full 32 bit range
-        if (delay > Timer::kMaxDt)
+        if (delay > Timer::kMaxDelay)
         {
-            delay = Timer::kMaxDt;
+            delay = Timer::kMaxDelay;
         }
 
         mDelayTimer.StartAt(dataset.GetUpdateTime(), delay);

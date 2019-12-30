@@ -52,7 +52,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     platformSimInit();
 #endif
     platformAlarmInit(aPlatformConfig->mSpeedUpFactor);
-    platformRadioInit(aPlatformConfig->mRadioFile, aPlatformConfig->mRadioConfig, aPlatformConfig->mResetRadio);
+    platformRadioInit(aPlatformConfig);
     platformRandomInit();
 
     instance = otInstanceInitSingle();

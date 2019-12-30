@@ -39,7 +39,7 @@
 #include "common/debug.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "net/ip6.hpp"
 #include "net/ip6_address.hpp"
 
@@ -379,7 +379,7 @@ private:
 
     int     DecompressExtensionHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength);
     int     DecompressUdpHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength, uint16_t aDatagramLength);
-    otError DispatchToNextHeader(uint8_t aDispatch, Ip6::IpProto &aNextHeader);
+    otError DispatchToNextHeader(uint8_t aDispatch, uint8_t &aNextHeader);
 
     static void    CopyContext(const Context &aContext, Ip6::Address &aAddress);
     static otError ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, Ip6::Address &aIpAddress);

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -60,10 +60,7 @@ class Node:
             self.__init_sim(nodeid, mode)
 
         if self.verbose:
-            if sys.version_info[0] == 2:
-                self.pexpect.logfile_read = sys.stdout
-            else:
-                self.pexpect.logfile_read = sys.stdout.buffer
+            self.pexpect.logfile_read = sys.stdout.buffer
 
         self._initialized = True
 
@@ -536,6 +533,36 @@ class Node:
 
         return addrs
 
+    def get_mleid(self):
+        addr = None
+        cmd = 'ipaddr mleid'
+        self.send_command(cmd)
+        i = self._expect(r'(\S+(:\S*)+)\r?\n')
+        if i == 0:
+            addr = self.pexpect.match.groups()[0].decode("utf-8")
+        self._expect('Done')
+        return addr
+
+    def get_linklocal(self):
+        addr = None
+        cmd = 'ipaddr linklocal'
+        self.send_command(cmd)
+        i = self._expect(r'(\S+(:\S*)+)\r?\n')
+        if i == 0:
+            addr = self.pexpect.match.groups()[0].decode("utf-8")
+        self._expect('Done')
+        return addr
+
+    def get_rloc(self):
+        addr = None
+        cmd = 'ipaddr rloc'
+        self.send_command(cmd)
+        i = self._expect(r'(\S+(:\S*)+)\r?\n')
+        if i == 0:
+            addr = self.pexpect.match.groups()[0].decode("utf-8")
+        self._expect('Done')
+        return addr
+
     def get_addr(self, prefix):
         network = ipaddress.ip_network(u'%s' % str(prefix))
         addrs = self.get_addrs()
@@ -543,25 +570,10 @@ class Node:
         for addr in addrs:
             if isinstance(addr, bytearray):
                 addr = bytes(addr)
-            elif isinstance(addr, str) and sys.version_info[0] == 2:
-                addr = addr.decode("utf-8")
             ipv6_address = ipaddress.ip_address(addr)
             if ipv6_address in network:
                 return ipv6_address.exploded
 
-        return None
-
-    def get_addr_rloc(self):
-        addrs = self.get_addrs()
-        for addr in addrs:
-            segs = addr.split(':')
-            if (
-                segs[4] == '0'
-                and segs[5] == 'ff'
-                and segs[6] == 'fe00'
-                and segs[7] != 'fc00'
-            ):
-                return addr
         return None
 
     def get_addr_leader_aloc(self):
@@ -1051,6 +1063,94 @@ class Node:
         for tlv in tlvs:
             payload += tlv.to_hex()
         self.commissioner_mgmtset(self.bytes_to_hex_str(payload))
+
+    def udp_start(self, local_ipaddr, local_port):
+        cmd = 'udp open'
+        self.send_command(cmd)
+        self._expect('Done')
+
+        cmd = 'udp bind %s %s' % (local_ipaddr, local_port)
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def udp_stop(self):
+        cmd = 'udp close'
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def udp_send(self, bytes, ipaddr, port, success=True):
+        cmd = 'udp send %s %d -s %d ' % (ipaddr, port, bytes)
+        self.send_command(cmd)
+        if success:
+            self._expect('Done')
+        else:
+            self._expect('Error')
+
+    def udp_check_rx(self, bytes_should_rx):
+        self._expect('%d bytes' % bytes_should_rx)
+
+    def router_list(self):
+        cmd = 'router list'
+        self.send_command(cmd)
+        self._expect([r'(\d+)((\s\d+)*)'])
+
+        g = self.pexpect.match.groups()
+        router_list = g[0] + ' ' + g[1]
+        router_list = [int(x) for x in router_list.split()]
+        self._expect('Done')
+        return router_list
+
+    def router_table(self):
+        cmd = 'router table'
+        self.send_command(cmd)
+
+        self._expect(r'(.*)Done')
+        g = self.pexpect.match.groups()
+        output = g[0]
+        lines = output.strip().split('\n')
+        lines = [l.strip() for l in lines]
+        router_table = {}
+        for i, line in enumerate(lines):
+            if not line.startswith('|') or not line.endswith('|'):
+                if i not in (0, 2):
+                    # should not happen
+                    print("unexpected line %d: %s" % (i, line))
+
+                continue
+
+            line = line[1:][:-1]
+            line = [x.strip() for x in line.split('|')]
+            if len(line) != 8:
+                print("unexpected line %d: %s" % (i, line))
+                continue
+
+            try:
+                int(line[0])
+            except ValueError:
+                if i != 1:
+                    print("unexpected line %d: %s" % (i, line))
+                continue
+
+            id = int(line[0])
+            rloc16 = int(line[1], 16)
+            nexthop = int(line[2])
+            pathcost = int(line[3])
+            lqin = int(line[4])
+            lqout = int(line[5])
+            age = int(line[6])
+            emac = str(line[7])
+
+            router_table[id] = {
+                'rloc16': rloc16,
+                'nexthop': nexthop,
+                'pathcost': pathcost,
+                'lqin': lqin,
+                'lqout': lqout,
+                'age': age,
+                'emac': emac,
+            }
+
+        return router_table
 
 
 if __name__ == '__main__':

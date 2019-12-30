@@ -40,6 +40,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
+#include "mac/mac_types.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/mle_tlvs.hpp"
 
@@ -190,8 +191,7 @@ void Dataset::Get(otOperationalDataset &aDataset) const
         case Tlv::kNetworkName:
         {
             const NetworkNameTlv *tlv = static_cast<const NetworkNameTlv *>(cur);
-            memcpy(aDataset.mNetworkName.m8, tlv->GetNetworkName(), tlv->GetLength());
-            aDataset.mNetworkName.m8[tlv->GetLength()] = '\0';
+            static_cast<Mac::NetworkName &>(aDataset.mNetworkName).Set(tlv->GetNetworkName());
             aDataset.mComponents.mIsNetworkNamePresent = true;
             break;
         }
@@ -212,11 +212,11 @@ void Dataset::Get(otOperationalDataset &aDataset) const
             break;
         }
 
-        case Tlv::kPSKc:
+        case Tlv::kPskc:
         {
-            const PSKcTlv *tlv                  = static_cast<const PSKcTlv *>(cur);
-            aDataset.mPSKc                      = tlv->GetPSKc();
-            aDataset.mComponents.mIsPSKcPresent = true;
+            const PskcTlv *tlv                  = static_cast<const PskcTlv *>(cur);
+            aDataset.mPskc                      = tlv->GetPskc();
+            aDataset.mComponents.mIsPskcPresent = true;
             break;
         }
 
@@ -303,7 +303,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
     {
         MeshCoP::ExtendedPanIdTlv tlv;
         tlv.Init();
-        tlv.SetExtendedPanId(aDataset.mExtendedPanId);
+        tlv.SetExtendedPanId(static_cast<const Mac::ExtendedPanId &>(aDataset.mExtendedPanId));
         Set(tlv);
     }
 
@@ -319,7 +319,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
     {
         MeshCoP::NetworkMasterKeyTlv tlv;
         tlv.Init();
-        tlv.SetNetworkMasterKey(aDataset.mMasterKey);
+        tlv.SetNetworkMasterKey(static_cast<const MasterKey &>(aDataset.mMasterKey));
         Set(tlv);
     }
 
@@ -327,7 +327,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
     {
         MeshCoP::NetworkNameTlv tlv;
         tlv.Init();
-        tlv.SetNetworkName(aDataset.mNetworkName.m8);
+        tlv.SetNetworkName(static_cast<const Mac::NetworkName &>(aDataset.mNetworkName).GetAsData());
         Set(tlv);
     }
 
@@ -339,11 +339,11 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         Set(tlv);
     }
 
-    if (aDataset.mComponents.mIsPSKcPresent)
+    if (aDataset.mComponents.mIsPskcPresent)
     {
-        MeshCoP::PSKcTlv tlv;
+        MeshCoP::PskcTlv tlv;
         tlv.Init();
-        tlv.SetPSKc(aDataset.mPSKc);
+        tlv.SetPskc(static_cast<const Pskc &>(aDataset.mPskc));
         Set(tlv);
     }
 
@@ -477,7 +477,7 @@ otError Dataset::AppendMleDatasetTlv(Message &aMessage) const
         }
         else if (cur->GetType() == Tlv::kDelayTimer)
         {
-            uint32_t      elapsed = TimerMilli::Elapsed(mUpdateTime);
+            uint32_t      elapsed = TimerMilli::GetNow() - mUpdateTime;
             DelayTimerTlv delayTimer(static_cast<const DelayTimerTlv &>(*cur));
 
             if (delayTimer.GetDelayTimer() > elapsed)
@@ -555,7 +555,7 @@ otError Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdat
         case Tlv::kNetworkName:
         {
             const NetworkNameTlv *name = static_cast<const NetworkNameTlv *>(cur);
-            mac.SetNetworkName(name->GetNetworkName(), name->GetLength());
+            mac.SetNetworkName(name->GetNetworkName());
             break;
         }
 
@@ -563,8 +563,7 @@ otError Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdat
         {
             const NetworkMasterKeyTlv *key = static_cast<const NetworkMasterKeyTlv *>(cur);
 
-            if (aIsMasterKeyUpdated &&
-                memcmp(&key->GetNetworkMasterKey(), &keyManager.GetMasterKey(), OT_MASTER_KEY_SIZE))
+            if (aIsMasterKeyUpdated && (key->GetNetworkMasterKey() != keyManager.GetMasterKey()))
             {
                 *aIsMasterKeyUpdated = true;
             }
@@ -575,10 +574,10 @@ otError Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdat
 
 #if OPENTHREAD_FTD
 
-        case Tlv::kPSKc:
+        case Tlv::kPskc:
         {
-            const PSKcTlv *pskc = static_cast<const PSKcTlv *>(cur);
-            keyManager.SetPSKc(pskc->GetPSKc());
+            const PskcTlv *pskc = static_cast<const PskcTlv *>(cur);
+            keyManager.SetPskc(pskc->GetPskc());
             break;
         }
 

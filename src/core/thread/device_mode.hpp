@@ -36,10 +36,11 @@
 
 #include "openthread-core-config.h"
 
+#include <stdint.h>
+
 #include <openthread/thread.h>
 
 #include "common/string.hpp"
-#include "utils/wrap_stdint.h"
 
 namespace ot {
 namespace Mle {
@@ -220,7 +221,7 @@ public:
      * @retval FALSE  If the device modes are equal.
      *
      */
-    bool operator!=(const DeviceMode &aOther) const { return (mMode != aOther.mMode); }
+    bool operator!=(const DeviceMode &aOther) const { return !(*this == aOther); }
 
     /**
      * This method converts the device mode into a human-readable string.

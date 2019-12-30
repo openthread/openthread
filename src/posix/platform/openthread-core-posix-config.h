@@ -35,6 +35,16 @@
 #define OPENTHREAD_CORE_POSIX_CONFIG_H_
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_PLATFORM
+ *
+ * Define to enable platform region logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_PLATFORM
+#define OPENTHREAD_CONFIG_LOG_PLATFORM 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_PLATFORM_INFO
  *
  * The platform-specific string to insert into the OpenThread version string.
@@ -62,4 +72,13 @@
  */
 #define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
 
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+ *
+ * Define to 1 if you want to enable radio coexistence implemented in platform.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+#define OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE 1
+#endif
 #endif // OPENTHREAD_CORE_POSIX_CONFIG_H_

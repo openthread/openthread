@@ -45,6 +45,7 @@
 
 #include "platform/clock/nrf_802154_clock.h"
 #include "nrf_802154_config.h"
+#include "nrf_802154_peripherals.h"
 #include "nrf_802154_utils.h"
 
 #define RTC_LP_TIMER_COMPARE_CHANNEL    0
@@ -405,6 +406,9 @@ void nrf_802154_lp_timer_init(void)
     }
 
     // Setup RTC timer.
+#if !NRF_IS_IRQ_PRIORITY_ALLOWED(NRF_802154_RTC_IRQ_PRIORITY)
+#error NRF_802154_RTC_IRQ_PRIORITY value out of the allowed range.
+#endif
     NVIC_SetPriority(NRF_802154_RTC_IRQN, NRF_802154_RTC_IRQ_PRIORITY);
     NVIC_ClearPendingIRQ(NRF_802154_RTC_IRQN);
     NVIC_EnableIRQ(NRF_802154_RTC_IRQN);

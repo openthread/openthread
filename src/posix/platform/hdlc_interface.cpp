@@ -40,7 +40,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
-#ifdef OPENTHREAD_TARGET_DARWIN
+#ifdef __APPLE__
 #include <util.h>
 #else
 #include <pty.h>
@@ -123,38 +123,37 @@ namespace ot {
 namespace PosixApp {
 
 HdlcInterface::HdlcInterface(Callbacks &aCallbacks)
-    : mCallbacks(aCallbacks)
+    : SpinelInterface()
+    , mCallbacks(aCallbacks)
     , mSockFd(-1)
-    , mIsDecoding(false)
-    , mRxFrameBuffer()
     , mHdlcDecoder(mRxFrameBuffer, HandleHdlcFrame, this)
 {
 }
 
-otError HdlcInterface::Init(const char *aRadioFile, const char *aRadioConfig)
+otError HdlcInterface::Init(const otPlatformConfig &aPlatformConfig)
 {
     otError     error = OT_ERROR_NONE;
     struct stat st;
 
     VerifyOrExit(mSockFd == -1, error = OT_ERROR_ALREADY);
 
-    VerifyOrExit(stat(aRadioFile, &st) == 0, perror("stat ncp file failed"); error = OT_ERROR_INVALID_ARGS);
+    VerifyOrDie(stat(aPlatformConfig.mRadioFile, &st) == 0, OT_EXIT_INVALID_ARGUMENTS);
 
     if (S_ISCHR(st.st_mode))
     {
-        mSockFd = OpenFile(aRadioFile, aRadioConfig);
+        mSockFd = OpenFile(aPlatformConfig.mRadioFile, aPlatformConfig.mRadioConfig);
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     }
 #if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
     else if (S_ISREG(st.st_mode))
     {
-        mSockFd = ForkPty(aRadioFile, aRadioConfig);
+        mSockFd = ForkPty(aPlatformConfig.mRadioFile, aPlatformConfig.mRadioConfig);
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     }
 #endif // OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
     else
     {
-        otLogCritPlat("Radio file '%s' not supported", aRadioFile);
+        otLogCritPlat("Radio file '%s' not supported", aPlatformConfig.mRadioFile);
         ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
@@ -199,9 +198,7 @@ void HdlcInterface::Read(void)
 
 void HdlcInterface::Decode(const uint8_t *aBuffer, uint16_t aLength)
 {
-    mIsDecoding = true;
     mHdlcDecoder.Decode(aBuffer, aLength);
-    mIsDecoding = false;
 }
 
 otError HdlcInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
@@ -250,6 +247,94 @@ exit:
     return error;
 }
 
+otError HdlcInterface::WaitForFrame(struct timeval &aTimeout)
+{
+    otError error = OT_ERROR_NONE;
+
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+    struct Event event;
+
+    platformSimSendSleepEvent(&aTimeout);
+    platformSimReceiveEvent(&event);
+
+    switch (event.mEvent)
+    {
+    case OT_SIM_EVENT_RADIO_SPINEL_WRITE:
+        Decode(event.mData, event.mDataLength);
+        break;
+
+    case OT_SIM_EVENT_ALARM_FIRED:
+        ExitNow(error = OT_ERROR_RESPONSE_TIMEOUT);
+        break;
+
+    default:
+        assert(false);
+        break;
+    }
+#else  // OPENTHREAD_POSIX_VIRTUAL_TIME
+    fd_set read_fds;
+    fd_set error_fds;
+    int rval;
+
+    FD_ZERO(&read_fds);
+    FD_ZERO(&error_fds);
+    FD_SET(mSockFd, &read_fds);
+    FD_SET(mSockFd, &error_fds);
+
+    rval = select(mSockFd + 1, &read_fds, NULL, &error_fds, &aTimeout);
+
+    if (rval > 0)
+    {
+        if (FD_ISSET(mSockFd, &read_fds))
+        {
+            Read();
+        }
+        else if (FD_ISSET(mSockFd, &error_fds))
+        {
+            DieNowWithMessage("NCP error", OT_EXIT_FAILURE);
+        }
+        else
+        {
+            DieNow(OT_EXIT_FAILURE);
+        }
+    }
+    else if (rval == 0)
+    {
+        ExitNow(error = OT_ERROR_RESPONSE_TIMEOUT);
+    }
+    else if (errno != EINTR)
+    {
+        DieNowWithMessage("wait response", OT_EXIT_FAILURE);
+    }
+#endif // OPENTHREAD_POSIX_VIRTUAL_TIME
+
+exit:
+    return error;
+}
+
+void HdlcInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout)
+{
+    OT_UNUSED_VARIABLE(aWriteFdSet);
+    OT_UNUSED_VARIABLE(aTimeout);
+
+    FD_SET(mSockFd, &aReadFdSet);
+
+    if (aMaxFd < mSockFd)
+    {
+        aMaxFd = mSockFd;
+    }
+}
+
+void HdlcInterface::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
+{
+    OT_UNUSED_VARIABLE(aWriteFdSet);
+
+    if (FD_ISSET(mSockFd, &aReadFdSet))
+    {
+        Read();
+    }
+}
+
 otError HdlcInterface::WaitForWritable(void)
 {
     otError        error   = OT_ERROR_NONE;
@@ -277,11 +362,11 @@ otError HdlcInterface::WaitForWritable(void)
             }
             else if (FD_ISSET(mSockFd, &errorFds))
             {
-                DieNowWithMessage("socket error", OT_EXIT_FAILURE);
+                DieNow(OT_EXIT_FAILURE);
             }
             else
             {
-                DieNowWithMessage("select error", OT_EXIT_FAILURE);
+                assert(false);
             }
         }
         else if ((rval < 0) && (errno != EINTR))
@@ -527,7 +612,7 @@ void HdlcInterface::HandleHdlcFrame(otError aError)
 {
     if (aError == OT_ERROR_NONE)
     {
-        mCallbacks.HandleReceivedFrame(*this);
+        mCallbacks.HandleReceivedFrame();
     }
     else
     {

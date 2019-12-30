@@ -39,6 +39,7 @@
 #include <openthread/platform/radio.h>
 
 #include "common/locator.hpp"
+#include "utils/wrap_string.h"
 
 namespace ot {
 namespace FactoryDiags {
@@ -122,6 +123,8 @@ private:
 
     struct Stats
     {
+        void Clear(void) { memset(this, 0, sizeof(*this)); }
+
         uint32_t mReceivedPackets;
         uint32_t mSentPackets;
         int8_t   mFirstRssi;
@@ -145,15 +148,18 @@ private:
     static otError ParseLong(char *aString, long &aLong);
 
     static const struct Command sCommands[];
-    struct Stats                mStats;
 
-    int8_t        mTxPower;
-    uint8_t       mChannel;
-    uint8_t       mTxLen;
+#if !OPENTHREAD_RADIO
+    Stats mStats;
+
+    otRadioFrame *mTxPacket;
     uint32_t      mTxPeriod;
     uint32_t      mTxPackets;
-    otRadioFrame *mTxPacket;
+    uint8_t       mChannel;
+    int8_t        mTxPower;
+    uint8_t       mTxLen;
     bool          mRepeatActive;
+#endif
 };
 
 #endif // #if OPENTHREAD_CONFIG_DIAG_ENABLE

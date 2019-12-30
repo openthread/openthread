@@ -81,6 +81,8 @@ typedef enum otCommissionerJoinerEvent
 #define OT_COMMISSIONING_PASSPHRASE_MIN_SIZE 6   ///< Minimum size of the Commissioning Passphrase
 #define OT_COMMISSIONING_PASSPHRASE_MAX_SIZE 255 ///< Maximum size of the Commissioning Passphrase
 
+#define OT_PROVISIONING_URL_MAX_SIZE 64 ///< Max size (number of chars) in Provisioning URL string (excludes null char).
+
 #define OT_STEERING_DATA_MAX_LENGTH 16 ///< Max steering data length (bytes)
 
 /**
@@ -109,6 +111,21 @@ typedef struct otCommissioningDataset
     bool mIsSteeringDataSet : 1;  ///< TRUE if Steering Data is set, FALSE otherwise.
     bool mIsJoinerUdpPortSet : 1; ///< TRUE if Joiner UDP Port is set, FALSE otherwise.
 } otCommissioningDataset;
+
+#define OT_PSKD_MAX_SIZE 32 ///< Size of a Joiner PSKd (bytes)
+
+/**
+ * This structure represents a Joiner Info.
+ *
+ */
+typedef struct otJoinerInfo
+{
+    otExtAddress mEui64;                     ///< Joiner eui64
+    char         mPsk[OT_PSKD_MAX_SIZE + 1]; ///< Joiner pskd
+    uint32_t     mExpirationTime;            ///< Joiner expiration time in msec
+
+    bool mAny : 1; /// TRUE if eui64 isn't set, FALSE otherwise.
+} otJoinerInfo;
 
 /**
  * This function pointer is called whenever the commissioner state changes.
@@ -166,12 +183,12 @@ otError otCommissionerStop(otInstance *aInstance);
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aEui64             A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.
- * @param[in]  aPSKd              A pointer to the PSKd.
+ * @param[in]  aPskd              A pointer to the PSKd.
  * @param[in]  aTimeout           A time after which a Joiner is automatically removed, in seconds.
  *
  * @retval OT_ERROR_NONE          Successfully added the Joiner.
  * @retval OT_ERROR_NO_BUFS       No buffers available to add the Joiner.
- * @retval OT_ERROR_INVALID_ARGS  @p aEui64 or @p aPSKd is invalid.
+ * @retval OT_ERROR_INVALID_ARGS  @p aEui64 or @p aPskd is invalid.
  * @retval OT_ERROR_INVALID_STATE The commissioner is not active.
  *
  * @note Only use this after successfully starting the Commissioner role with otCommissionerStart().
@@ -179,8 +196,21 @@ otError otCommissionerStop(otInstance *aInstance);
  */
 otError otCommissionerAddJoiner(otInstance *        aInstance,
                                 const otExtAddress *aEui64,
-                                const char *        aPSKd,
+                                const char *        aPskd,
                                 uint32_t            aTimeout);
+
+/**
+ * This method get joiner info at aIterator position.
+ *
+ * @param[in]      aInstance   A pointer to instance.
+ * @param[inout]   aIterator   A pointer to the Joiner Info iterator context.
+ * @param[out]     aJoiner     A reference to Joiner info.
+ *
+ * @retval OT_ERROR_NONE       Successfully get the Joiner info.
+ * @retval OT_ERROR_NOT_FOUND  Not found next Joiner.
+ *
+ */
+otError otCommissionerGetNextJoinerInfo(otInstance *aInstance, uint16_t *aIterator, otJoinerInfo *aJoiner);
 
 /**
  * This function removes a Joiner entry.
@@ -202,23 +232,20 @@ otError otCommissionerRemoveJoiner(otInstance *aInstance, const otExtAddress *aE
  * This function gets the Provisioning URL.
  *
  * @param[in]    aInstance       A pointer to an OpenThread instance.
- * @param[out]   aLength         A pointer to `uint16_t` to return the length (number of chars) in the URL string.
  *
- * Note that the returned URL string buffer is not necessarily null-terminated.
- *
- * @returns A pointer to char buffer containing the URL string, or NULL if @p aLength is NULL.
+ * @returns A pointer to the URL string.
  *
  */
-const char *otCommissionerGetProvisioningUrl(otInstance *aInstance, uint16_t *aLength);
+const char *otCommissionerGetProvisioningUrl(otInstance *aInstance);
 
 /**
  * This function sets the Provisioning URL.
  *
  * @param[in]  aInstance             A pointer to an OpenThread instance.
- * @param[in]  aProvisioningUrl      A pointer to the Provisioning URL (may be NULL).
+ * @param[in]  aProvisioningUrl      A pointer to the Provisioning URL (may be NULL to set as empty string).
  *
  * @retval OT_ERROR_NONE          Successfully set the Provisioning URL.
- * @retval OT_ERROR_INVALID_ARGS  @p aProvisioningUrl is invalid.
+ * @retval OT_ERROR_INVALID_ARGS  @p aProvisioningUrl is invalid (too long).
  *
  */
 otError otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *aProvisioningUrl);
@@ -376,25 +403,23 @@ uint16_t otCommissionerGetSessionId(otInstance *aInstance);
 otCommissionerState otCommissionerGetState(otInstance *aInstance);
 
 /**
- * This method generates PSKc.
+ * This helper function generates PSKc from a given pass-phrase, network name, and extended PAN Id.
  *
  * PSKc is used to establish the Commissioner Session.
  *
- * @param[in]  aInstance     A pointer to an OpenThread instance.
- * @param[in]  aPassPhrase   The commissioning passphrase.
+ * @param[in]  aPassPhrase   The commissioning pass-phrase.
  * @param[in]  aNetworkName  The network name for PSKc computation.
- * @param[in]  aExtPanId     The extended pan id for PSKc computation.
- * @param[out] aPSKc         A pointer to the generated PSKc.
+ * @param[in]  aExtPanId     The extended PAN ID for PSKc computation.
+ * @param[out] aPskc         A pointer to variable to output the generated PSKc.
  *
  * @retval OT_ERROR_NONE          Successfully generate PSKc.
  * @retval OT_ERROR_INVALID_ARGS  If any of the input arguments is invalid.
  *
  */
-otError otCommissionerGeneratePSKc(otInstance *           aInstance,
-                                   const char *           aPassPhrase,
+otError otCommissionerGeneratePskc(const char *           aPassPhrase,
                                    const char *           aNetworkName,
                                    const otExtendedPanId *aExtPanId,
-                                   uint8_t *              aPSKc);
+                                   otPskc *               aPskc);
 
 /**
  * @}

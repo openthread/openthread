@@ -80,8 +80,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Thread Harness Automation'
-copyright = u'2016, Yakun Xu'
-author = u'Yakun Xu'
+copyright = u'2019, OpenThread'
+author = u'OpenThread'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -293,7 +293,7 @@ latex_documents = [
         master_doc,
         'ThreadHarnessAutomation.tex',
         u'Thread Harness Automation Documentation',
-        u'Yakun Xu',
+        u'OpenThread',
         'manual',
     )
 ]

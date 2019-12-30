@@ -87,7 +87,7 @@ install_packages_brew()
     CLANG_FORMAT_VERSION="clang-format version 6.0"
     which clang-format-6.0 || (which clang-format && (clang-format --version | grep -q "${CLANG_FORMAT_VERSION}")) || {
         brew install llvm@6
-        sudo ln -s "$(brew --repo)/opt/llvm@6/bin/clang-format" /usr/local/bin/clang-format-6.0
+        sudo ln -s "$(brew --prefix llvm@6)/bin/clang-format" /usr/local/bin/clang-format-6.0
     }
 }
 

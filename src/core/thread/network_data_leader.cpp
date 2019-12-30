@@ -43,7 +43,7 @@
 #include "common/message.hpp"
 #include "common/random.hpp"
 #include "common/timer.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "thread/lowpan.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
@@ -163,7 +163,6 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE || OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 otError LeaderBase::GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16)
 {
     otError         error = OT_ERROR_NOT_FOUND;
@@ -171,10 +170,10 @@ otError LeaderBase::GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16)
 
     if ((GetContext(aContextId, lowpanContext)) == OT_ERROR_NONE)
     {
-        otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
-        otBorderRouterConfig  config;
+        Iterator           iterator = kIteratorInit;
+        OnMeshPrefixConfig config;
 
-        while (GetNextOnMeshPrefix(&iterator, &config) == OT_ERROR_NONE)
+        while (GetNextOnMeshPrefix(iterator, config) == OT_ERROR_NONE)
         {
             if (otIp6PrefixMatch(&(config.mPrefix.mPrefix), reinterpret_cast<const otIp6Address *>(
                                                                 lowpanContext.mPrefix)) >= config.mPrefix.mLength)
@@ -188,7 +187,6 @@ otError LeaderBase::GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16)
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE || OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 
 bool LeaderBase::IsOnMesh(const Ip6::Address &aAddress)
 {

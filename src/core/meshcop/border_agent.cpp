@@ -118,7 +118,10 @@ public:
             aMessage.Init(OT_COAP_TYPE_ACKNOWLEDGMENT, aCode);
         }
 
-        aMessage.SetMessageId(mSeparate ? 0 : mMessageId);
+        if (!mSeparate)
+        {
+            aMessage.SetMessageId(mMessageId);
+        }
 
         return aMessage.SetToken(mToken, mTokenLength);
     }
@@ -199,7 +202,11 @@ static void SendErrorMessage(Coap::CoapSecure &   aCoapSecure,
         message->Init(OT_COAP_TYPE_ACKNOWLEDGMENT, CoapCodeFromError(aError));
     }
 
-    message->SetMessageId(aSeparate ? 0 : aRequest.GetMessageId());
+    if (!aSeparate)
+    {
+        message->SetMessageId(aRequest.GetMessageId());
+    }
+
     SuccessOrExit(error = message->SetToken(aRequest.GetToken(), aRequest.GetTokenLength()));
 
     SuccessOrExit(error = aCoapSecure.SendMessage(*message, aCoapSecure.GetPeerAddress()));
@@ -278,7 +285,7 @@ exit:
         SendErrorMessage(instance.Get<Coap::CoapSecure>(), forwardContext, error);
     }
 
-    instance.GetHeap().Free(&forwardContext);
+    instance.HeapFree(&forwardContext);
 }
 
 template <>
@@ -348,6 +355,7 @@ BorderAgent::BorderAgent(Instance &aInstance)
     , mTimer(aInstance, HandleTimeout, this)
     , mState(OT_BORDER_AGENT_STATE_STOPPED)
 {
+    mCommissionerAloc.Clear();
     mCommissionerAloc.mPrefixLength       = 64;
     mCommissionerAloc.mPreferred          = true;
     mCommissionerAloc.mValid              = true;
@@ -424,7 +432,7 @@ bool BorderAgent::HandleUdpReceive(const Message &aMessage, const Ip6::MessageIn
         tlv.SetSourcePort(aMessageInfo.GetPeerPort());
         tlv.SetDestinationPort(aMessageInfo.GetSockPort());
         tlv.SetUdpLength(udpLength);
-        SuccessOrExit(error = message->AppendTlv(tlv));
+        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
 
         offset = message->GetLength();
         SuccessOrExit(error = message->SetLength(offset + udpLength));
@@ -578,7 +586,7 @@ otError BorderAgent::ForwardToLeader(const Coap::Message &   aMessage,
         SuccessOrExit(error = Get<Coap::CoapSecure>().SendAck(aMessage, aMessageInfo));
     }
 
-    forwardContext = static_cast<ForwardContext *>(GetInstance().GetHeap().CAlloc(1, sizeof(ForwardContext)));
+    forwardContext = static_cast<ForwardContext *>(GetInstance().HeapCAlloc(1, sizeof(ForwardContext)));
     VerifyOrExit(forwardContext != NULL, error = OT_ERROR_NO_BUFS);
 
     forwardContext = new (forwardContext) ForwardContext(*this, aMessage, aPetition, aSeparate);
@@ -612,7 +620,7 @@ exit:
     {
         if (forwardContext != NULL)
         {
-            GetInstance().GetHeap().Free(forwardContext);
+            GetInstance().HeapFree(forwardContext);
         }
 
         if (message != NULL)
@@ -652,7 +660,7 @@ otError BorderAgent::Start(void)
     VerifyOrExit(mState == OT_BORDER_AGENT_STATE_STOPPED, error = OT_ERROR_ALREADY);
 
     SuccessOrExit(error = coaps.Start(kBorderAgentUdpPort));
-    SuccessOrExit(error = coaps.SetPsk(Get<KeyManager>().GetPSKc().m8, OT_PSKC_MAX_SIZE));
+    SuccessOrExit(error = coaps.SetPsk(Get<KeyManager>().GetPskc().m8, OT_PSKC_MAX_SIZE));
     coaps.SetConnectedCallback(HandleConnected, this);
 
     coaps.AddResource(mActiveGet);

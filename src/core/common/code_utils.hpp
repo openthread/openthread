@@ -36,8 +36,9 @@
 
 #include "openthread-core-config.h"
 
+#include <stdbool.h>
+
 #include "utils/static_assert.hpp"
-#include "utils/wrap_stdbool.h"
 
 /**
  * This macro calculates the number of elements in an array.
@@ -71,21 +72,21 @@
  * @returns The aligned pointer.
  *
  */
-#define otALIGN(aPointer, aAlignment) \
+#define OT_ALIGN(aPointer, aAlignment) \
     ((void *)(((uintptr_t)(aPointer) + (aAlignment)-1UL) & ~((uintptr_t)(aAlignment)-1UL)))
 
 // Calculates the aligned variable size.
-#define otALIGNED_VAR_SIZE(size, align_type) (((size) + (sizeof(align_type) - 1)) / sizeof(align_type))
+#define OT_ALIGNED_VAR_SIZE(size, align_type) (((size) + (sizeof(align_type) - 1)) / sizeof(align_type))
 
 // Allocate the structure using "raw" storage.
-#define otDEFINE_ALIGNED_VAR(name, size, align_type) \
+#define OT_DEFINE_ALIGNED_VAR(name, size, align_type) \
     align_type name[(((size) + (sizeof(align_type) - 1)) / sizeof(align_type))]
 
 /**
  * This macro checks for the specified status, which is expected to commonly be successful, and branches to the local
  * label 'exit' if the status is unsuccessful.
  *
- *  @param[in]  aStatus     A scalar status to be evaluated against zero (0).
+ * @param[in]  aStatus     A scalar status to be evaluated against zero (0).
  *
  */
 #define SuccessOrExit(aStatus) \
@@ -101,8 +102,8 @@
  * This macro checks for the specified condition, which is expected to commonly be true, and both executes @a ... and
  * branches to the local label 'exit' if the condition is false.
  *
- *  @param[in]  aCondition  A Boolean expression to be evaluated.
- *  @param[in]  ...         An expression or block to execute when the assertion fails.
+ * @param[in]  aCondition  A Boolean expression to be evaluated.
+ * @param[in]  ...         An expression or block to execute when the assertion fails.
  *
  */
 #define VerifyOrExit(aCondition, ...) \

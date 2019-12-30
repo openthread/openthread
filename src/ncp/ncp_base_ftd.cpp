@@ -201,11 +201,11 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CHILD_TABLE>(v
 {
     otError     error = OT_ERROR_NONE;
     otChildInfo childInfo;
-    uint8_t     maxChildren;
+    uint16_t    maxChildren;
 
     maxChildren = otThreadGetMaxAllowedChildren(mInstance);
 
-    for (uint8_t index = 0; index < maxChildren; index++)
+    for (uint16_t index = 0; index < maxChildren; index++)
     {
         if ((otThreadGetChildInfoByIndex(mInstance, index, &childInfo) != OT_ERROR_NONE) || childInfo.mIsStateRestoring)
         {
@@ -259,13 +259,13 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CHILD_TABLE_AD
 {
     otError                   error = OT_ERROR_NONE;
     otChildInfo               childInfo;
-    uint8_t                   maxChildren;
+    uint16_t                  maxChildren;
     otIp6Address              ip6Address;
     otChildIp6AddressIterator iterator = OT_CHILD_IP6_ADDRESS_ITERATOR_INIT;
 
     maxChildren = otThreadGetMaxAllowedChildren(mInstance);
 
-    for (uint8_t childIndex = 0; childIndex < maxChildren; childIndex++)
+    for (uint16_t childIndex = 0; childIndex < maxChildren; childIndex++)
     {
         if ((otThreadGetChildInfoByIndex(mInstance, childIndex, &childInfo) != OT_ERROR_NONE) ||
             childInfo.mIsStateRestoring)
@@ -294,17 +294,34 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED>(void)
 {
-    return mEncoder.WriteBool(otThreadIsRouterRoleEnabled(mInstance));
+    return mEncoder.WriteBool(otThreadIsRouterEligible(mInstance));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED>(void)
 {
-    bool    enabled;
+    bool    eligible;
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = mDecoder.ReadBool(enabled));
+    SuccessOrExit(error = mDecoder.ReadBool(eligible));
 
-    otThreadSetRouterRoleEnabled(mInstance, enabled);
+    error = otThreadSetRouterEligible(mInstance, eligible);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_MAX_RETRY_NUMBER_INDIRECT>(void)
+{
+    return mEncoder.WriteUint8(otLinkGetMaxFrameRetriesIndirect(mInstance));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_MAX_RETRY_NUMBER_INDIRECT>(void)
+{
+    uint8_t maxFrameRetriesIndirect;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(maxFrameRetriesIndirect));
+    otLinkSetMaxFrameRetriesIndirect(mInstance, maxFrameRetriesIndirect);
 
 exit:
     return error;
@@ -312,7 +329,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_PSKC>(void)
 {
-    return mEncoder.WriteData(otThreadGetPSKc(mInstance)->m8, sizeof(spinel_net_pskc_t));
+    return mEncoder.WriteData(otThreadGetPskc(mInstance)->m8, sizeof(spinel_net_pskc_t));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PSKC>(void)
@@ -325,7 +342,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PSKC>(void)
 
     VerifyOrExit(len == sizeof(spinel_net_pskc_t), error = OT_ERROR_PARSE);
 
-    error = otThreadSetPSKc(mInstance, reinterpret_cast<const otPSKc *>(ptr));
+    error = otThreadSetPskc(mInstance, reinterpret_cast<const otPskc *>(ptr));
 
 exit:
     return error;
@@ -346,7 +363,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CHILD_COUNT_MAX>(void)
 {
-    return mEncoder.WriteUint8(otThreadGetMaxAllowedChildren(mInstance));
+    return mEncoder.WriteUint8(static_cast<uint8_t>(otThreadGetMaxAllowedChildren(mInstance)));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CHILD_COUNT_MAX>(void)
@@ -578,19 +595,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MESHCOP_COMMISSIONER_PROVISIONING_URL>(void)
 {
-    otError     error  = OT_ERROR_NONE;
-    uint16_t    length = 0;
-    const char *url    = otCommissionerGetProvisioningUrl(mInstance, &length);
-
-    if (url != NULL && length > 0)
-    {
-        SuccessOrExit(error = mEncoder.WriteData(reinterpret_cast<const uint8_t *>(url), length));
-    }
-
-    SuccessOrExit(error = mEncoder.WriteUint8(0));
-
-exit:
-    return error;
+    return mEncoder.WriteUtf8(otCommissionerGetProvisioningUrl(mInstance));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_PROVISIONING_URL>(void)
@@ -754,6 +759,32 @@ exit:
     return error;
 }
 
+otError NcpBase::HandlePropertySet_SPINEL_PROP_MESHCOP_COMMISSIONER_GENERATE_PSKC(uint8_t aHeader)
+{
+    otError        error = OT_ERROR_NONE;
+    const char *   passPhrase;
+    const char *   networkName;
+    const uint8_t *extPanIdData;
+    uint16_t       length;
+    otPskc         pskc;
+
+    SuccessOrExit(error = mDecoder.ReadUtf8(passPhrase));
+    SuccessOrExit(error = mDecoder.ReadUtf8(networkName));
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(extPanIdData, length));
+    VerifyOrExit(length == sizeof(spinel_net_xpanid_t), error = OT_ERROR_PARSE);
+
+    SuccessOrExit(error = otCommissionerGeneratePskc(passPhrase, networkName,
+                                                     reinterpret_cast<const otExtendedPanId *>(extPanIdData), &pskc));
+
+    SuccessOrExit(
+        error = mEncoder.BeginFrame(aHeader, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_MESHCOP_COMMISSIONER_GENERATE_PSKC));
+    SuccessOrExit(error = mEncoder.WriteData(pskc.m8, sizeof(pskc)));
+    SuccessOrExit(error = mEncoder.EndFrame());
+
+exit:
+    return error;
+}
+
 // SPINEL_PROP_THREAD_COMMISSIONER_ENABLED is replaced by SPINEL_PROP_MESHCOP_COMMISSIONER_STATE. Please use the new
 // property. The old property/implementation remains for backward compatibility.
 
@@ -789,10 +820,10 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_JOINERS>(vo
 {
     otError             error         = OT_ERROR_NONE;
     const otExtAddress *eui64         = NULL;
-    const char *        aPSKd         = NULL;
+    const char *        pskd          = NULL;
     uint32_t            joinerTimeout = 0;
 
-    SuccessOrExit(error = mDecoder.ReadUtf8(aPSKd));
+    SuccessOrExit(error = mDecoder.ReadUtf8(pskd));
     SuccessOrExit(error = mDecoder.ReadUint32(joinerTimeout));
 
     if (mDecoder.ReadEui64(eui64) != OT_ERROR_NONE)
@@ -800,7 +831,7 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_JOINERS>(vo
         eui64 = NULL;
     }
 
-    error = otCommissionerAddJoiner(mInstance, eui64, aPSKd, joinerTimeout);
+    error = otCommissionerAddJoiner(mInstance, eui64, pskd, joinerTimeout);
 
 exit:
     return error;
@@ -833,7 +864,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_STEERING_DATA>
 
     SuccessOrExit(error = mDecoder.ReadEui64(mSteeringDataAddress));
 
-    SuccessOrExit(error = otThreadSetSteeringData(mInstance, &mSteeringDataAddress));
+    otThreadSetSteeringData(mInstance, &mSteeringDataAddress);
 
 exit:
     return error;

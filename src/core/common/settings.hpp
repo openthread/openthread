@@ -37,7 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "common/locator.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "thread/mle.hpp"
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 #include "utils/slaac_address.hpp"
@@ -86,6 +86,12 @@ public:
      */
     struct NetworkInfo
     {
+        /**
+         * This method clears the struct object (setting all the fields to zero).
+         *
+         */
+        void Clear(void) { memset(this, 0, sizeof(*this)); }
+
         uint8_t         mRole;                   ///< Current Thread role.
         uint8_t         mDeviceMode;             ///< Device mode setting.
         uint16_t        mRloc16;                 ///< RLOC16
@@ -103,6 +109,12 @@ public:
      */
     struct ParentInfo
     {
+        /**
+         * This method clears the struct object (setting all the fields to zero).
+         *
+         */
+        void Clear(void) { memset(this, 0, sizeof(*this)); }
+
         Mac::ExtAddress mExtAddress; ///< Extended Address
     };
 
@@ -112,6 +124,12 @@ public:
      */
     struct ChildInfo
     {
+        /**
+         * This method clears the struct object (setting all the fields to zero).
+         *
+         */
+        void Clear(void) { memset(this, 0, sizeof(*this)); }
+
         Mac::ExtAddress mExtAddress; ///< Extended Address
         uint32_t        mTimeout;    ///< Timeout
         uint16_t        mRloc16;     ///< RLOC16

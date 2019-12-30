@@ -517,7 +517,7 @@ void TestEncoderDecoder(void)
 
 uint32_t GetRandom(uint32_t max)
 {
-    return rand() % max;
+    return static_cast<uint32_t>(rand()) % max;
 }
 
 void TestFuzzEncoderDecoder(void)
@@ -571,7 +571,6 @@ void TestFuzzEncoderDecoder(void)
 } // namespace Ncp
 } // namespace ot
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     ot::Ncp::TestHdlcFrameBuffer();
@@ -581,4 +580,3 @@ int main(void)
     printf("\nAll tests passed.\n");
     return 0;
 }
-#endif

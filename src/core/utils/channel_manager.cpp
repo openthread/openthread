@@ -98,7 +98,7 @@ void ChannelManager::PreparePendingDataset(void)
 {
     uint64_t             pendingTimestamp       = 0;
     uint64_t             pendingActiveTimestamp = 0;
-    uint32_t             delayInMs              = TimerMilli::SecToMsec(static_cast<uint32_t>(mDelay));
+    uint32_t             delayInMs              = Time::SecToMsec(static_cast<uint32_t>(mDelay));
     otOperationalDataset dataset;
     otError              error;
 
@@ -216,7 +216,7 @@ void ChannelManager::PreparePendingDataset(void)
     else
     {
         otLogInfoUtil("ChannelManager: %s error in dataset update (channel change %d), retry in %d sec",
-                      otThreadErrorToString(error), mChannel, TimerMilli::MsecToSec(kPendingDatasetTxRetryInterval));
+                      otThreadErrorToString(error), mChannel, Time::MsecToSec(kPendingDatasetTxRetryInterval));
 
         mTimer.Start(kPendingDatasetTxRetryInterval);
     }
@@ -385,15 +385,6 @@ exit:
 
     return error;
 }
-
-#else // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
-
-otError ChannelManager::RequestChannelSelect(bool)
-{
-    otLogInfoUtil("ChannelManager: ChannelMonitor feature is disabled - cannot select channel");
-    return OT_ERROR_DISABLED_FEATURE;
-}
-
 #endif // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 void ChannelManager::StartAutoSelectTimer(void)
@@ -402,7 +393,7 @@ void ChannelManager::StartAutoSelectTimer(void)
 
     if (mAutoSelectEnabled)
     {
-        mTimer.Start(TimerMilli::SecToMsec(mAutoSelectInterval));
+        mTimer.Start(Time::SecToMsec(mAutoSelectInterval));
     }
     else
     {
@@ -428,14 +419,13 @@ otError ChannelManager::SetAutoChannelSelectionInterval(uint32_t aInterval)
     otError  error        = OT_ERROR_NONE;
     uint32_t prevInterval = mAutoSelectInterval;
 
-    VerifyOrExit((aInterval != 0) && (aInterval <= TimerMilli::MsecToSec(Timer::kMaxDt)),
-                 error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit((aInterval != 0) && (aInterval <= Time::MsecToSec(Timer::kMaxDelay)), error = OT_ERROR_INVALID_ARGS);
 
     mAutoSelectInterval = aInterval;
 
     if (mAutoSelectEnabled && (mState == kStateIdle) && mTimer.IsRunning() && (prevInterval != aInterval))
     {
-        mTimer.StartAt(mTimer.GetFireTime() - TimerMilli::SecToMsec(prevInterval), TimerMilli::SecToMsec(aInterval));
+        mTimer.StartAt(mTimer.GetFireTime() - Time::SecToMsec(prevInterval), Time::SecToMsec(aInterval));
     }
 
 exit:

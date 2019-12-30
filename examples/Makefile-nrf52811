@@ -39,7 +39,6 @@ NM                              = arm-none-eabi-nm
 RANLIB                          = arm-none-eabi-ranlib
 OBJCOPY                         = arm-none-eabi-objcopy
 
-BuildJobs                      ?= 10
 GCCVersion                      = $(shell expr `$(CC) -dumpversion | cut -f1 -d.`)
 
 configure_OPTIONS                                 = \
@@ -62,14 +61,14 @@ NRF52811_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls
 NRF52811_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include
 NRF52811_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include/mbedtls
 NRF52811_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/libraries/crypto
-NRF52811_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/libraries/nrf_cc310/include
+NRF52811_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/libraries/nrf_security/mbedtls_plat_config
 NRF52811_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/nrfx/mdk
 NRF52811_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/cmsis
 NRF52811_MBEDTLS_CPPFLAGS += -DNRF52811_XXAA
 
 NRF52811_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-nrf52811-config.h\"'
 NRF52811_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-nrf52811-config-check.h\"'
-NRF52811_CONFIG_FILE_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/nrf52811/
+NRF52811_CONFIG_FILE_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/nrf528xx/nrf52811
 
 COMMONCFLAGS                      := \
     -fdata-sections                  \

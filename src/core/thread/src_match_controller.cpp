@@ -38,7 +38,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "radio/radio.hpp"
 #include "thread/mesh_forwarder.hpp"
 #include "thread/thread_netif.hpp"
@@ -153,10 +153,10 @@ otError SourceMatchController::AddAddress(const Child &aChild)
     }
     else
     {
-        Mac::Address address;
+        Mac::ExtAddress address;
 
-        address.SetExtended(aChild.GetExtAddress().m8, /* aReverse */ true);
-        error = Get<Radio>().AddSrcMatchExtEntry(address.GetExtended());
+        address.Set(aChild.GetExtAddress().m8, Mac::ExtAddress::kReverseByteOrder);
+        error = Get<Radio>().AddSrcMatchExtEntry(address);
 
         otLogDebgMac("SrcAddrMatch - Adding addr: %s -- %s (%d)", aChild.GetExtAddress().ToString().AsCString(),
                      otThreadErrorToString(error), error);
@@ -185,10 +185,10 @@ void SourceMatchController::ClearEntry(Child &aChild)
     }
     else
     {
-        Mac::Address address;
+        Mac::ExtAddress address;
 
-        address.SetExtended(aChild.GetExtAddress().m8, /* aReverse */ true);
-        error = Get<Radio>().ClearSrcMatchExtEntry(address.GetExtended());
+        address.Set(aChild.GetExtAddress().m8, Mac::ExtAddress::kReverseByteOrder);
+        error = Get<Radio>().ClearSrcMatchExtEntry(address);
 
         otLogDebgMac("SrcAddrMatch - Clearing addr: %s -- %s (%d)", aChild.GetExtAddress().ToString().AsCString(),
                      otThreadErrorToString(error), error);
@@ -210,7 +210,7 @@ otError SourceMatchController::AddPendingEntries(void)
 {
     otError error = OT_ERROR_NONE;
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValidOrRestoring); !iter.IsDone(); iter++)
     {
         if (iter.GetChild()->IsIndirectSourceMatchPending())
         {

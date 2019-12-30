@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -110,7 +110,7 @@ static ret_code_t setup_req_std_in(app_usbd_class_inst_t const * p_inst,
     /* Only Get Descriptor standard IN request is supported by DFU class */
     if ((app_usbd_setup_req_rec(p_setup_ev->setup.bmRequestType) == APP_USBD_SETUP_REQREC_INTERFACE)
         &&
-        (p_setup_ev->setup.bmRequest == APP_USBD_SETUP_STDREQ_GET_DESCRIPTOR))
+        (p_setup_ev->setup.bRequest == APP_USBD_SETUP_STDREQ_GET_DESCRIPTOR))
     {
         size_t dsc_len = 0;
         size_t max_size;
@@ -146,7 +146,7 @@ static ret_code_t setup_req_std_out(app_usbd_class_inst_t const * p_inst,
                                     app_usbd_setup_evt_t const *  p_setup_ev)
 {
 
-    switch (p_setup_ev->setup.bmRequest)
+    switch (p_setup_ev->setup.bRequest)
     {
     default:
         break;
@@ -185,7 +185,7 @@ static ret_code_t setup_req_class_in(app_usbd_class_inst_t const * p_inst,
 {
     app_usbd_nrf_dfu_trigger_t const * p_dfu = nrf_dfu_trigger_get(p_inst);
 
-    switch (p_setup_ev->setup.bmRequest)
+    switch (p_setup_ev->setup.bRequest)
     {
         case APP_USBD_NRF_DFU_TRIGGER_REQ_NORDIC_INFO:
             if (p_setup_ev->setup.wLength.w != sizeof(app_usbd_nrf_dfu_trigger_nordic_info_t))
@@ -224,7 +224,7 @@ static ret_code_t setup_req_class_out(app_usbd_class_inst_t const * p_inst,
     app_usbd_nrf_dfu_trigger_t const * p_dfu     = nrf_dfu_trigger_get(p_inst);
     app_usbd_nrf_dfu_trigger_ctx_t *   p_dfu_ctx = nrf_dfu_trigger_ctx_get(p_dfu);
 
-    switch (p_setup_ev->setup.bmRequest)
+    switch (p_setup_ev->setup.bRequest)
     {
         case APP_USBD_NRF_DFU_TRIGGER_REQ_DETACH:
         {
@@ -370,4 +370,5 @@ const app_usbd_class_methods_t app_usbd_nrf_dfu_trigger_class_methods = {
         .feed_descriptors = nrf_dfu_trigger_feed_descriptors,
 };
 
-#endif /* NRF_MODULE_ENABLED(APP_USBD_NRF_DFU_TRIGGER) */
+
+#endif //NRF_MODULE_ENABLED(APP_USBD_NRF_DFU_TRIGGER)

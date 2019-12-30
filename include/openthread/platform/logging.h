@@ -110,7 +110,7 @@ extern "C" {
  * This type represents the log level.
  *
  */
-typedef uint8_t otLogLevel;
+typedef int otLogLevel;
 
 /**
  * This enumeration represents log regions.
@@ -146,17 +146,6 @@ typedef enum otLogRegion
  *
  */
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...);
-
-/**
- * This function outputs logs.
- *
- * @param[in]  aLogLevel   The log level.
- * @param[in]  aLogRegion  The log region.
- * @param[in]  aFormat     A pointer to the format string.
- * @param[in]  ap          va_list matching information for aFormat
- *
- */
-void otPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list ap);
 
 /**
  * @}
