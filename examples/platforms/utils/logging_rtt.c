@@ -58,8 +58,11 @@
 #define RTT_COLOR_CODE_CYAN ""
 #endif // LOG_RTT_COLOR_ENABLE == 1
 
-static bool    sLogInitialized = false;
+static bool sLogInitialized = false;
+
+#if LOG_RTT_BUFFER_INDEX != 0
 static uint8_t sLogBuffer[LOG_RTT_BUFFER_SIZE];
+#endif
 
 /**
  * Function for getting color of a given level log.
@@ -119,8 +122,13 @@ static inline int logLevel(char *aLogString, uint16_t aMaxSize, otLogLevel aLogL
 
 void utilsLogRttInit(void)
 {
+#if LOG_RTT_BUFFER_INDEX != 0
     int res = SEGGER_RTT_ConfigUpBuffer(LOG_RTT_BUFFER_INDEX, LOG_RTT_BUFFER_NAME, sLogBuffer, LOG_RTT_BUFFER_SIZE,
                                         SEGGER_RTT_MODE_NO_BLOCK_TRIM);
+#else
+    int res = SEGGER_RTT_SetFlagsUpBuffer(LOG_RTT_BUFFER_INDEX, SEGGER_RTT_MODE_NO_BLOCK_TRIM);
+#endif
+
     otEXPECT(res >= 0);
 
     sLogInitialized = true;
