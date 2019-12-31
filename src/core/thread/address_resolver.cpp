@@ -384,7 +384,7 @@ otError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
 
     targetTlv.Init();
     targetTlv.SetTarget(aEid);
-    SuccessOrExit(error = message->AppendTlv(targetTlv));
+    SuccessOrExit(error = targetTlv.AppendTo(*message));
 
     messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xff03);
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(0x0002);
@@ -520,8 +520,8 @@ otError AddressResolver::SendAddressError(const ThreadTargetTlv &      aTarget,
     SuccessOrExit(error = message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_ERROR));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    SuccessOrExit(error = message->AppendTlv(aTarget));
-    SuccessOrExit(error = message->AppendTlv(aEid));
+    SuccessOrExit(error = aTarget.AppendTo(*message));
+    SuccessOrExit(error = aEid.AppendTo(*message));
 
     if (aDestination == NULL)
     {
@@ -704,16 +704,16 @@ void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &          
     SuccessOrExit(error = message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_NOTIFY));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    SuccessOrExit(error = message->AppendTlv(aTargetTlv));
-    SuccessOrExit(error = message->AppendTlv(aMlEidTlv));
+    SuccessOrExit(error = aTargetTlv.AppendTo(*message));
+    SuccessOrExit(error = aMlEidTlv.AppendTo(*message));
 
     rloc16Tlv.Init();
     rloc16Tlv.SetRloc16(Get<Mle::MleRouter>().GetRloc16());
-    SuccessOrExit(error = message->AppendTlv(rloc16Tlv));
+    SuccessOrExit(error = rloc16Tlv.AppendTo(*message));
 
     if (aLastTransactionTimeTlv != NULL)
     {
-        SuccessOrExit(error = message->AppendTlv(*aLastTransactionTimeTlv));
+        SuccessOrExit(error = aLastTransactionTimeTlv->AppendTo(*message));
     }
 
     messageInfo.SetPeerAddr(aDestination);

@@ -77,19 +77,19 @@ otError AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
 
     sessionId.Init();
     sessionId.SetCommissionerSessionId(Get<MeshCoP::Commissioner>().GetSessionId());
-    SuccessOrExit(error = message->AppendTlv(sessionId));
+    SuccessOrExit(error = sessionId.AppendTo(*message));
 
     channelMask.Init();
     channelMask.SetChannelMask(aChannelMask);
-    SuccessOrExit(error = message->AppendTlv(channelMask));
+    SuccessOrExit(error = channelMask.AppendTo(*message));
 
     count.Init();
     count.SetCount(aCount);
-    SuccessOrExit(error = message->AppendTlv(count));
+    SuccessOrExit(error = count.AppendTo(*message));
 
     period.Init();
     period.SetPeriod(aPeriod);
-    SuccessOrExit(error = message->AppendTlv(period));
+    SuccessOrExit(error = period.AppendTo(*message));
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(aAddress);

@@ -297,7 +297,7 @@ void DatasetManager::SendSetResponse(const Coap::Message &   aRequest,
 
     state.Init();
     state.SetState(aState);
-    SuccessOrExit(error = message->AppendTlv(state));
+    SuccessOrExit(error = state.AppendTo(*message));
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
 

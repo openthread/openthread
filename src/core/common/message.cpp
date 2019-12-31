@@ -402,15 +402,6 @@ exit:
     return error;
 }
 
-otError Message::AppendTlv(const Tlv &aTlv)
-{
-    uint32_t size = aTlv.GetSize();
-
-    assert(size <= UINT16_MAX);
-
-    return Append(&aTlv, static_cast<uint16_t>(size));
-}
-
 otError Message::Prepend(const void *aBuf, uint16_t aLength)
 {
     otError error     = OT_ERROR_NONE;

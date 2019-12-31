@@ -187,7 +187,7 @@ otError EnergyScanServer::SendReport(void)
 
     channelMask.Init();
     channelMask.SetChannelMask(mChannelMask);
-    SuccessOrExit(error = message->AppendTlv(channelMask));
+    SuccessOrExit(error = channelMask.AppendTo(*message));
 
     energyList.Init();
     energyList.SetLength(mScanResultsLength);
