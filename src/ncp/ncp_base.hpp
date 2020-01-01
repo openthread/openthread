@@ -609,7 +609,7 @@ protected:
 
     bool mDidInitialUpdates;
 
-    uint64_t mLogTimestampBase;             // Timestamp base used for logging
+    uint64_t mLogTimestampBase; // Timestamp base used for logging
 };
 
 } // namespace Ncp

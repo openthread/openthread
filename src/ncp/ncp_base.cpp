@@ -2262,7 +2262,7 @@ exit:
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_LOG_TIMESTAMP_BASE>(void)
 {
     uint64_t timestampBase = 0;
-    otError  error = OT_ERROR_NONE; 
+    otError  error         = OT_ERROR_NONE;
 
     SuccessOrExit(error = mDecoder.ReadUint64(timestampBase));
 
