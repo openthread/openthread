@@ -366,15 +366,12 @@ otError Local::SendServerDataNotification(void)
 
     UpdateRloc();
 
-    VerifyOrExit(
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-        !IsOnMeshPrefixConsistent() || !IsExternalRouteConsistent()
+    VerifyOrExit(!IsOnMeshPrefixConsistent() || !IsExternalRouteConsistent(), ClearResubmitDelayTimer());
 #endif
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-            || !IsServiceConsistent()
+    VerifyOrExit(!IsServiceConsistent(), ClearResubmitDelayTimer());
 #endif
-            ,
-        ClearResubmitDelayTimer());
 
     if (mOldRloc == rloc)
     {
