@@ -209,6 +209,10 @@ ifeq ($(DISABLE_BUILTIN_MBEDTLS),1)
 configure_OPTIONS              += --disable-builtin-mbedtls
 endif
 
+ifdef BUILTIN_MBEDTLS_MANAGEMENT
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT=$(BUILTIN_MBEDTLS_MANAGEMENT)
+endif
+
 ifeq ($(DISABLE_EXECUTABLE),1)
 configure_OPTIONS              += --enable-executable=no
 endif
