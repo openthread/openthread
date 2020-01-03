@@ -519,6 +519,13 @@ public:
      */
     void HandleReceivedFrame(void);
 
+    /**
+     * This function get dataset from NCP radio and save it.
+     *
+     * @retval  OT_ERROR_NONE               Succeeded.
+     * @retval  OT_ERROR_FAILED             Failed.
+     */
+    otError GetSaveNcpDataset(void);
 private:
     enum
     {
@@ -636,6 +643,7 @@ private:
     void HandleResponse(const uint8_t *aBuffer, uint16_t aLength);
     void HandleTransmitDone(uint32_t aCommand, spinel_prop_key_t aKey, const uint8_t *aBuffer, uint16_t aLength);
     void HandleWaitingResponse(uint32_t aCommand, spinel_prop_key_t aKey, const uint8_t *aBuffer, uint16_t aLength);
+    otError ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLength, spinel_prop_key_t aKey);
 
     void RadioReceive(void);
 
@@ -676,6 +684,7 @@ private:
     bool  mIsPromiscuous : 1;     ///< Promiscuous mode.
     bool  mIsReady : 1;           ///< NCP ready.
     bool  mSupportsLogStream : 1; ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
+    bool  mIsRcp : 1;             ///< Radio firmware is running RCP.
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     bool   mDiagMode;
