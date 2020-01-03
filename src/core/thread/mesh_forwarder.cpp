@@ -389,18 +389,6 @@ void MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::
     }
 }
 
-otError MeshForwarder::GetMeshHeader(const uint8_t *&aFrame, uint16_t &aFrameLength, Lowpan::MeshHeader &aMeshHeader)
-{
-    otError error;
-
-    VerifyOrExit(aFrameLength >= 1 && reinterpret_cast<const Lowpan::MeshHeader *>(aFrame)->IsMeshHeader(),
-                 error = OT_ERROR_NOT_FOUND);
-    SuccessOrExit(error = aMeshHeader.Init(aFrame, aFrameLength));
-
-exit:
-    return error;
-}
-
 otError MeshForwarder::SkipMeshHeader(const uint8_t *&aFrame, uint16_t &aFrameLength)
 {
     otError            error = OT_ERROR_NONE;
