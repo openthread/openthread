@@ -507,8 +507,7 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
     Mac::Address       meshSource;
     Lowpan::MeshHeader meshHeader;
 
-    // Check the mesh header
-    VerifyOrExit(meshHeader.Init(aFrame, aFrameLength) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = meshHeader.Init(aFrame, aFrameLength));
 
     // Security Check: only process Mesh Header frames that had security enabled.
     VerifyOrExit(aLinkInfo.mLinkSecurity && meshHeader.IsValid(), error = OT_ERROR_SECURITY);
@@ -593,12 +592,16 @@ void MeshForwarder::UpdateRoutes(uint8_t *           aFrame,
         if (Get<AddressResolver>().UpdateCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort()) ==
             OT_ERROR_NOT_FOUND)
         {
-            // Thread 1.1 Specification 5.5.2.2:
-            // FTDs MAY add/update EID-to-RLOC Map Cache entries by inspecting packets being received.
-            if ((Get<Mle::MleRouter>().IsFullThreadDevice() /* only for FTD */ &&
-                 !Get<Mle::MleRouter>().IsMinimalChild(aMeshSource.GetShort()) /* Exclude MTD child source */) &&
+            // Thread 1.1 Specification 5.5.2.2: FTDs MAY add/update
+            // EID-to-RLOC Map Cache entries by inspecting packets
+            // being received. We exclude frames from an MTD child
+            // source and verify that the destination is the device
+            // itself or an MTD child of the device.
+
+            if (Get<Mle::MleRouter>().IsFullThreadDevice() &&
+                !Get<Mle::MleRouter>().IsMinimalChild(aMeshSource.GetShort()) &&
                 (aMeshDest.GetShort() == Get<Mac::Mac>().GetShortAddress() ||
-                 Get<Mle::MleRouter>().IsMinimalChild(aMeshDest.GetShort())) /* Received for itself or its MTD child */)
+                 Get<Mle::MleRouter>().IsMinimalChild(aMeshDest.GetShort())))
             {
                 Get<AddressResolver>().AddCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort());
             }
