@@ -345,7 +345,6 @@ private:
                          const Mac::Address &aMeshSource,
                          const Mac::Address &aMeshDest);
 
-    otError  GetMeshHeader(const uint8_t *&aFrame, uint16_t &aFrameLength, Lowpan::MeshHeader &aMeshHeader);
     otError  SkipMeshHeader(const uint8_t *&aFrame, uint16_t &aFrameLength);
     otError  DecompressIp6Header(const uint8_t *     aFrame,
                                  uint16_t            aFrameLength,
@@ -425,8 +424,8 @@ private:
     otError GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader, uint16_t aSrcRloc16, uint8_t &aPriority);
     otError GetForwardFramePriority(const uint8_t *     aFrame,
                                     uint16_t            aFrameLength,
-                                    const Mac::Address &aMacDest,
-                                    const Mac::Address &aMacSource,
+                                    const Mac::Address &aMeshSource,
+                                    const Mac::Address &aMeshDest,
                                     uint8_t &           aPriority);
 
     FragmentPriorityEntry *FindFragmentPriorityEntry(uint16_t aTag, uint16_t aSrcRloc16);
