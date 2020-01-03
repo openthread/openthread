@@ -31,9 +31,9 @@
  *   This file implements the spinel based radio transceiver.
  */
 
-#include "ncp/spinel_decoder.hpp"
 #include "openthread-core-config.h"
 #include "platform-posix.h"
+#include "ncp/spinel_decoder.hpp"
 
 #include "radio_spinel.hpp"
 
@@ -56,8 +56,8 @@
 #include <openthread/dataset.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
-#include <openthread/platform/settings.h>
 #include <openthread/platform/radio.h>
+#include <openthread/platform/settings.h>
 
 #ifndef TX_WAIT_US
 #define TX_WAIT_US (5 * US_PER_S)
@@ -313,7 +313,7 @@ exit:
 
 otError RadioSpinel::GetSaveNcpDataset(void)
 {
-    otError      error = OT_ERROR_NONE;
+    otError error = OT_ERROR_NONE;
 
     VerifyOrExit(!mIsRcp);
 
@@ -478,9 +478,9 @@ exit:
 
 otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLength, spinel_prop_key_t aKey)
 {
-    otError error = OT_ERROR_NONE;
+    otError              error = OT_ERROR_NONE;
     otOperationalDataset dataset;
-    Ncp::SpinelDecoder decoder;
+    Ncp::SpinelDecoder   decoder;
 
     memset(&dataset, 0, sizeof(otOperationalDataset));
     decoder.Init(aBuffer, aLength);
@@ -542,7 +542,6 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
             memcpy(dataset.mMeshLocalPrefix.m8, addr, OT_MESH_LOCAL_PREFIX_SIZE);
             dataset.mComponents.mIsMeshLocalPrefixPresent = true;
             break;
-
         }
 
         case SPINEL_PROP_DATASET_DELAY_TIMER:
@@ -564,7 +563,7 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
             uint8_t channel;
 
             SuccessOrExit(error = decoder.ReadUint8(channel));
-            dataset.mChannel = channel;
+            dataset.mChannel                      = channel;
             dataset.mComponents.mIsChannelPresent = true;
             break;
         }
@@ -612,7 +611,7 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
         SuccessOrExit(error = decoder.CloseStruct());
     }
 
-    dataset.mActiveTimestamp = 0;
+    dataset.mActiveTimestamp                      = 0;
     dataset.mComponents.mIsActiveTimestampPresent = true;
 
     if (aKey == SPINEL_PROP_THREAD_ACTIVE_DATASET)
@@ -664,8 +663,7 @@ void RadioSpinel::HandleWaitingResponse(uint32_t          aCommand,
         }
         else
         {
-            if (aKey == SPINEL_PROP_THREAD_ACTIVE_DATASET ||
-                    aKey == SPINEL_PROP_THREAD_PENDING_DATASET)
+            if (aKey == SPINEL_PROP_THREAD_ACTIVE_DATASET || aKey == SPINEL_PROP_THREAD_PENDING_DATASET)
             {
                 mError = ThreadDatasetHandler(aBuffer, aLength, aKey);
             }
@@ -1508,7 +1506,7 @@ otError RadioSpinel::Enable(otInstance *aInstance)
     VerifyOrExit(!IsEnabled());
 
     mInstance = aInstance;
-    mState = kStateSleep;
+    mState    = kStateSleep;
 
     VerifyOrExit(mIsRcp);
 
