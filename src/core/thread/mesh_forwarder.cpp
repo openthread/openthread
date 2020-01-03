@@ -283,13 +283,10 @@ otError MeshForwarder::UpdateIp6Route(Message &aMessage)
 
     VerifyOrExit(!ip6Header.GetSource().IsMulticast(), error = OT_ERROR_DROP);
 
-    // 1. Choose correct MAC Source Address.
     GetMacSourceAddress(ip6Header.GetSource(), mMacSource);
 
-    // 2. Choose correct MAC Destination Address.
     if (mle.GetRole() == OT_DEVICE_ROLE_DISABLED || mle.GetRole() == OT_DEVICE_ROLE_DETACHED)
     {
-        // Allow only for link-local unicasts and multicasts.
         if (ip6Header.GetDestination().IsLinkLocal() || ip6Header.GetDestination().IsLinkLocalMulticast())
         {
             GetMacDestinationAddress(ip6Header.GetDestination(), mMacDest);
@@ -304,8 +301,10 @@ otError MeshForwarder::UpdateIp6Route(Message &aMessage)
 
     if (ip6Header.GetDestination().IsMulticast())
     {
-        // With the exception of MLE multicasts, a Thread End Device transmits multicasts,
-        // as IEEE 802.15.4 unicasts to its parent.
+        // With the exception of MLE multicasts, an End Device
+        // transmits multicasts, as IEEE 802.15.4 unicasts to its
+        // parent.
+
         if (mle.GetRole() == OT_DEVICE_ROLE_CHILD && !aMessage.IsSubTypeMle())
         {
             mMacDest.SetShort(mle.GetNextHop(Mac::kShortAddrBroadcast));
@@ -631,7 +630,8 @@ start:
     if (dstpan == Get<Mac::Mac>().GetPanId())
     {
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-        // Handle a special case in IEEE 802.15.4-2015, when Pan ID Compression is 0, but Src Pan ID is not present:
+        // Handle a special case in IEEE 802.15.4-2015, when PAN ID
+        // Compression is 0, but Src PAN ID is not present:
         //  Dest Address:       Extended
         //  Src Address:        Extended
         //  Dest Pan ID:        Present
@@ -709,8 +709,8 @@ start:
             }
         }
 
-        // The hopsLft field MUST be incremented by one if the destination RLOC16
-        // is not that of an active Router.
+        // The hopsLft field MUST be incremented by one if the
+        // destination RLOC16 is not that of an active Router.
         if (!Mle::Mle::IsActiveRouter(aMeshDest))
         {
             hopsLeft += 1;
@@ -1123,20 +1123,22 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
     otError                error = OT_ERROR_NONE;
     Lowpan::FragmentHeader fragmentHeader;
     Message *              message = NULL;
-    int                    headerLength;
 
     // Check the fragment header
-    VerifyOrExit(fragmentHeader.Init(aFrame, aFrameLength) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = fragmentHeader.Init(aFrame, aFrameLength));
     aFrame += fragmentHeader.GetHeaderLength();
     aFrameLength -= fragmentHeader.GetHeaderLength();
 
     if (fragmentHeader.GetDatagramOffset() == 0)
     {
         uint8_t priority;
+        int     headerLength;
 
         SuccessOrExit(error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, priority));
-        VerifyOrExit((message = Get<MessagePool>().New(Message::kTypeIp6, 0, priority)) != NULL,
-                     error = OT_ERROR_NO_BUFS);
+
+        message = Get<MessagePool>().New(Message::kTypeIp6, 0, priority);
+        VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
+
         message->SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);
         message->SetPanId(aLinkInfo.mPanId);
         message->AddRss(aLinkInfo.mRss);
@@ -1157,8 +1159,6 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
 
         message->SetDatagramTag(fragmentHeader.GetDatagramTag());
         message->SetTimeout(kReassemblyTimeout);
-
-        // copy Fragment
         message->Write(message->GetOffset(), aFrameLength, aFrame);
         message->MoveOffset(aFrameLength);
 
@@ -1181,7 +1181,7 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
             mUpdateTimer.Start(kStateUpdatePeriod);
         }
     }
-    else
+    else // Received frame is a "next fragment".
     {
         for (message = mReassemblyList.GetHead(); message; message = message->GetNext())
         {
@@ -1202,17 +1202,13 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
         // message with a new tag. In either case, we can safely clear any
         // remaining fragments stored in the reassembly list.
 
-        if (!GetRxOnWhenIdle())
+        if (!GetRxOnWhenIdle() && (message == NULL) && aLinkInfo.mLinkSecurity)
         {
-            if ((message == NULL) && (aLinkInfo.mLinkSecurity))
-            {
-                ClearReassemblyList();
-            }
+            ClearReassemblyList();
         }
 
         VerifyOrExit(message != NULL, error = OT_ERROR_DROP);
 
-        // copy Fragment
         message->Write(message->GetOffset(), aFrameLength, aFrame);
         message->MoveOffset(aFrameLength);
         message->AddRss(aLinkInfo.mRss);
