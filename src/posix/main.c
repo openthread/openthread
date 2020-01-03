@@ -61,7 +61,6 @@
 #error "Unknown posix app type!"
 #endif
 #include <openthread-system.h>
-#include <platform-posix.h>
 
 typedef struct PosixConfig
 {
@@ -70,7 +69,6 @@ typedef struct PosixConfig
     bool             mIsDryRun;          ///< Dry run.
     bool             mPrintRadioVersion; ///< Whether to print radio firmware version.
     bool             mIsVerbose;         ///< Whether to print log to stderr.
-    bool             mGetNcpDataset;     ///< Whether to retrieve dataset from NCP and save to file.
 } PosixConfig;
 
 static jmp_buf gResetJump;
@@ -169,7 +167,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             }
             else if (!strcmp(kOptions[index].name, "ncp-dataset"))
             {
-                aConfig->mGetNcpDataset = true;
+                aConfig->mPlatformConfig.mGetNcpDataset = true;
             }
             break;
         case '?':
@@ -210,13 +208,6 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
     if (config.mPrintRadioVersion)
     {
         printf("%s\n", otPlatRadioGetVersionString(instance));
-    }
-
-    if (config.mGetNcpDataset)
-    {
-        uint8_t error = OT_EXIT_SUCCESS;
-        error = ((platformGetSaveNcpDataset() == OT_ERROR_NONE) ? OT_EXIT_SUCCESS : OT_EXIT_FAILURE);
-        exit(error);
     }
 
     if (config.mIsDryRun)

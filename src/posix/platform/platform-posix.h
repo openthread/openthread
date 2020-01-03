@@ -416,7 +416,7 @@ void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMax
  * @retval  OT_ERROR_NONE               Succeeded.
  * @retval  OT_ERROR_FAILED             Failed.
  */
-otError platformGetSaveNcpDataset(void);
+otError platformRestoreDatasetFromNcp(void);
 
 /**
  * This function creates a socket with SOCK_CLOEXEC flag set.

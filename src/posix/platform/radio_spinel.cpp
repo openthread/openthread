@@ -311,15 +311,15 @@ exit:
     return error;
 }
 
-otError RadioSpinel::GetSaveNcpDataset(void)
+otError RadioSpinel::RestoreDatasetFromNcp(void)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(!mIsRcp);
 
     otLogInfoPlat("Trying to get saved dataset from NCP");
-    SuccessOrExit(error = Get(SPINEL_PROP_THREAD_ACTIVE_DATASET, NULL));
-    SuccessOrExit(error = Get(SPINEL_PROP_THREAD_PENDING_DATASET, NULL));
+    SuccessOrExit(error = Get(SPINEL_PROP_THREAD_ACTIVE_DATASET, SPINEL_DATATYPE_VOID_S, &RadioSpinel::ThreadDatasetHandler));
+    SuccessOrExit(error = Get(SPINEL_PROP_THREAD_PENDING_DATASET, SPINEL_DATATYPE_VOID_S, &RadioSpinel::ThreadDatasetHandler));
 
 exit:
     return error;
@@ -476,7 +476,7 @@ exit:
     LogIfFail("Error processing response", error);
 }
 
-otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLength, spinel_prop_key_t aKey)
+otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLength)
 {
     otError              error = OT_ERROR_NONE;
     otOperationalDataset dataset;
@@ -614,11 +614,11 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
     dataset.mActiveTimestamp                      = 0;
     dataset.mComponents.mIsActiveTimestampPresent = true;
 
-    if (aKey == SPINEL_PROP_THREAD_ACTIVE_DATASET)
+    if (mWaitingKey == SPINEL_PROP_THREAD_ACTIVE_DATASET)
     {
         SuccessOrExit(otDatasetSetActive(mInstance, &dataset));
     }
-    else if (aKey == SPINEL_PROP_THREAD_PENDING_DATASET)
+    else if (mWaitingKey == SPINEL_PROP_THREAD_PENDING_DATASET)
     {
         SuccessOrExit(otDatasetSetPending(mInstance, &dataset));
     }
@@ -655,19 +655,32 @@ void RadioSpinel::HandleWaitingResponse(uint32_t          aCommand,
     {
         if (mPropertyFormat)
         {
-            spinel_ssize_t unpacked =
-                spinel_datatype_vunpack_in_place(aBuffer, aLength, mPropertyFormat, mPropertyArgs);
+            if ((spinel_datatype_t)mPropertyFormat[0] == SPINEL_DATATYPE_VOID_C)
+            {
+                // reserved SPINEL_DATATYPE_VOID_C indicate caller want to parse the spinel response itself
+                ResponseHandler handler = va_arg(mPropertyArgs, ResponseHandler);
 
-            VerifyOrExit(unpacked > 0, mError = OT_ERROR_PARSE);
-            mError = OT_ERROR_NONE;
+                if (handler != NULL)
+                {
+                    mError = (this->*handler)(aBuffer, aLength);
+                }
+                else
+                {
+                    mError = OT_ERROR_FAILED;
+                }
+            }
+            else
+            {
+                spinel_ssize_t unpacked =
+                    spinel_datatype_vunpack_in_place(aBuffer, aLength, mPropertyFormat, mPropertyArgs);
+
+                VerifyOrExit(unpacked > 0, mError = OT_ERROR_PARSE);
+                mError = OT_ERROR_NONE;
+            }
         }
         else
         {
-            if (aKey == SPINEL_PROP_THREAD_ACTIVE_DATASET || aKey == SPINEL_PROP_THREAD_PENDING_DATASET)
-            {
-                mError = ThreadDatasetHandler(aBuffer, aLength, aKey);
-            }
-            else if (aCommand == mExpectedCommand)
+            if (aCommand == mExpectedCommand)
             {
                 mError = OT_ERROR_NONE;
             }
@@ -1637,9 +1650,9 @@ void platformRadioDeinit(void)
     sRadioSpinel.Deinit();
 }
 
-otError platformGetSaveNcpDataset(void)
+otError platformRestoreDatasetFromNcp(void)
 {
-    return sRadioSpinel.GetSaveNcpDataset();
+    return sRadioSpinel.RestoreDatasetFromNcp();
 }
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)

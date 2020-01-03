@@ -64,6 +64,14 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     platformUdpInit(aPlatformConfig->mInterfaceName);
 #endif
 
+    if (aPlatformConfig->mGetNcpDataset)
+    {
+        uint8_t error = OT_EXIT_SUCCESS;
+
+        error = ((platformRestoreDatasetFromNcp() == OT_ERROR_NONE) ? OT_EXIT_SUCCESS : OT_EXIT_FAILURE);
+        exit(error);
+    }
+
     return instance;
 }
 

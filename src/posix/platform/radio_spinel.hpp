@@ -525,7 +525,8 @@ public:
      * @retval  OT_ERROR_NONE               Succeeded.
      * @retval  OT_ERROR_FAILED             Failed.
      */
-    otError GetSaveNcpDataset(void);
+    otError RestoreDatasetFromNcp(void);
+
 private:
     enum
     {
@@ -544,6 +545,8 @@ private:
         kStateTransmitting, ///< Frame passed to radio for transmission, waiting for done event from radio.
         kStateTransmitDone, ///< Radio indicated frame transmission is done.
     };
+
+    typedef otError (RadioSpinel::*ResponseHandler)(const uint8_t *aBuffer, uint16_t aLength);
 
     otError CheckSpinelVersion(void);
     otError CheckCapabilities(void);
@@ -619,6 +622,7 @@ private:
                         const char *      pack_format,
                         va_list           args);
     otError ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffer, uint16_t aLength);
+    otError ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLength);
 
     /**
      * This method returns if the property changed event is safe to be handled now.
@@ -643,7 +647,6 @@ private:
     void HandleResponse(const uint8_t *aBuffer, uint16_t aLength);
     void HandleTransmitDone(uint32_t aCommand, spinel_prop_key_t aKey, const uint8_t *aBuffer, uint16_t aLength);
     void HandleWaitingResponse(uint32_t aCommand, spinel_prop_key_t aKey, const uint8_t *aBuffer, uint16_t aLength);
-    otError ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLength, spinel_prop_key_t aKey);
 
     void RadioReceive(void);
 

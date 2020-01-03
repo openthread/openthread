@@ -96,6 +96,7 @@ typedef struct otPlatformConfig
     const char *mRadioFile;     ///< Radio file path.
     const char *mRadioConfig;   ///< Radio configurations.
     bool        mResetRadio;    ///< Whether to reset RCP when initializing.
+    bool        mGetNcpDataset; ///< Whether to retrieve dataset from NCP and save to file.
 } otPlatformConfig;
 
 /**
