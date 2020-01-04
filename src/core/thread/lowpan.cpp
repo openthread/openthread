@@ -45,6 +45,7 @@
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::ReadUint16;
+using ot::Encoding::BigEndian::WriteUint16;
 
 namespace ot {
 namespace Lowpan {
@@ -1206,58 +1207,116 @@ exit:
     return (error == OT_ERROR_NONE) ? static_cast<int>(compressedLength) : -1;
 }
 
-otError MeshHeader::Init(const uint8_t *aFrame, uint16_t aFrameLength)
+//---------------------------------------------------------------------------------------------------------------------
+// MeshHeader
+
+void MeshHeader::Init(uint16_t aSource, uint16_t aDestination, uint8_t aHopsLeft)
 {
-    otError error = OT_ERROR_NONE;
+    mSource      = aSource;
+    mDestination = aDestination;
+    mHopsLeft    = aHopsLeft;
+}
 
-    VerifyOrExit(aFrameLength >= 1, error = OT_ERROR_PARSE);
-    mDispatchHopsLeft = *aFrame++;
-    aFrameLength--;
+bool MeshHeader::IsMeshHeader(const uint8_t *aFrame, uint16_t aFrameLength)
+{
+    return (aFrameLength >= kMinHeaderLength) && ((*aFrame & kDispatchMask) == kDispatch);
+}
 
-    if (IsDeepHopsLeftField())
+otError MeshHeader::ParseFrom(const uint8_t *aFrame, uint16_t aFrameLength, uint16_t &aHeaderLength)
+{
+    otError error = OT_ERROR_PARSE;
+    uint8_t dispatch;
+
+    VerifyOrExit(aFrameLength >= kMinHeaderLength);
+    dispatch = *aFrame++;
+
+    VerifyOrExit((dispatch & (kDispatchMask | kSourceShort | kDestShort)) == (kDispatch | kSourceShort | kDestShort));
+
+    mHopsLeft = (dispatch & kHopsLeftMask);
+
+    if (mHopsLeft == kDeepHopsLeft)
     {
-        VerifyOrExit(aFrameLength >= 1, error = OT_ERROR_PARSE);
-        mDeepHopsLeft = *aFrame++;
-        aFrameLength--;
+        VerifyOrExit(aFrameLength >= kDeepHopsHeaderLength);
+        mHopsLeft     = *aFrame++;
+        aHeaderLength = kDeepHopsHeaderLength;
     }
     else
     {
-        mDeepHopsLeft = 0;
+        aHeaderLength = kMinHeaderLength;
     }
 
-    VerifyOrExit(aFrameLength >= sizeof(mAddress), error = OT_ERROR_PARSE);
-    memcpy(&mAddress, aFrame, sizeof(mAddress));
+    mSource      = ReadUint16(aFrame);
+    mDestination = ReadUint16(aFrame + 2);
+
+    error = OT_ERROR_NONE;
 
 exit:
     return error;
 }
 
-otError MeshHeader::Init(const Message &aMessage)
+otError MeshHeader::ParseFrom(const Message &aMessage)
 {
-    otError  error  = OT_ERROR_NONE;
-    uint16_t offset = 0;
-    uint16_t bytesRead;
+    uint16_t headerLength;
 
-    bytesRead = aMessage.Read(offset, sizeof(mDispatchHopsLeft), &mDispatchHopsLeft);
-    VerifyOrExit(bytesRead == sizeof(mDispatchHopsLeft), error = OT_ERROR_PARSE);
-    offset += bytesRead;
+    return ParseFrom(aMessage, headerLength);
+}
 
-    if (IsDeepHopsLeftField())
+otError MeshHeader::ParseFrom(const Message &aMessage, uint16_t &aHeaderLength)
+{
+    uint8_t  frame[kDeepHopsHeaderLength];
+    uint16_t frameLength;
+
+    frameLength = aMessage.Read(/* aOffset */ 0, sizeof(frame), frame);
+
+    return ParseFrom(frame, frameLength, aHeaderLength);
+}
+
+uint16_t MeshHeader::GetHeaderLength(void) const
+{
+    return (mHopsLeft >= kDeepHopsLeft) ? kDeepHopsHeaderLength : kMinHeaderLength;
+}
+
+void MeshHeader::DecrementHopsLeft(void)
+{
+    if (mHopsLeft > 0)
     {
-        bytesRead = aMessage.Read(offset, sizeof(mDeepHopsLeft), &mDeepHopsLeft);
-        VerifyOrExit(bytesRead == sizeof(mDeepHopsLeft), error = OT_ERROR_PARSE);
-        offset += bytesRead;
+        mHopsLeft--;
+    }
+}
+
+uint16_t MeshHeader::WriteTo(uint8_t *aFrame) const
+{
+    uint8_t *cur      = aFrame;
+    uint8_t  dispatch = (kDispatch | kSourceShort | kDestShort);
+
+    if (mHopsLeft < kDeepHopsLeft)
+    {
+        *cur++ = (dispatch | mHopsLeft);
     }
     else
     {
-        mDeepHopsLeft = 0;
+        *cur++ = (dispatch | kDeepHopsLeft);
+        *cur++ = mHopsLeft;
     }
 
-    bytesRead = aMessage.Read(offset, sizeof(mAddress), &mAddress);
-    VerifyOrExit(bytesRead == sizeof(mAddress), error = OT_ERROR_PARSE);
+    WriteUint16(mSource, cur);
+    cur += sizeof(uint16_t);
 
-exit:
-    return error;
+    WriteUint16(mDestination, cur);
+    cur += sizeof(uint16_t);
+
+    return static_cast<uint16_t>(cur - aFrame);
+}
+
+uint16_t MeshHeader::WriteTo(Message &aMessage, uint16_t aOffset) const
+{
+    uint8_t  frame[kDeepHopsHeaderLength];
+    uint16_t headerLength;
+
+    headerLength = WriteTo(frame);
+    aMessage.Write(aOffset, headerLength, frame);
+
+    return headerLength;
 }
 
 otError FragmentHeader::Init(const uint8_t *aFrame, uint16_t aFrameLength)

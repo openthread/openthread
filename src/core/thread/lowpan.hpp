@@ -389,7 +389,6 @@ private:
  * This class implements Mesh Header generation and processing.
  *
  */
-OT_TOOL_PACKED_BEGIN
 class MeshHeader
 {
 public:
@@ -399,74 +398,79 @@ public:
     };
 
     /**
-     * Default constructor for the object.
+     * This method initializes the Mesh Header with a given Mesh Source, Mesh Destination and Hops Left value.
+     *
+     * @param[in]  aSource       The Mesh Source address.
+     * @param[in]  aDestination  The Mesh Destination address.
+     * @param[in]  aHopsLeft     The Hops Left value.
      *
      */
-    MeshHeader(void) { memset(this, 0, sizeof(*this)); }
+    void Init(uint16_t aSource, uint16_t aDestination, uint8_t aHopsLeft);
 
     /**
-     * This method initializes the header.
+     * This static method indicates whether or not the header (in a given frame) is a Mesh Header.
      *
-     */
-    void Init(void) { mDispatchHopsLeft = kDispatch | kSourceShort | kDestinationShort; }
-
-    /**
-     * This method initializes the mesh header from a frame @p aFrame.
-     *
-     * @param[in]  aFrame        The pointer to the frame.
-     * @param[in]  aFrameLength  The length of the frame.
-     *
-     * @retval OT_ERROR_NONE     Mesh Header initialized successfully.
-     * @retval OT_ERROR_PARSE    Mesh Header could not be parsed from @p aFrame.
-     *
-     */
-    otError Init(const uint8_t *aFrame, uint16_t aFrameLength);
-
-    /**
-     * This method initializes the mesh header from a message object @p aMessage.
-     *
-     * @param[in]  aMessage  The message object.
-     *
-     * @retval OT_ERROR_NONE   Mesh Header initialized successfully.
-     * @retval OT_ERROR_PARSE  Mesh Header could not be parsed from @p aMessage.
-     *
-     */
-    otError Init(const Message &aMessage);
-
-    /**
-     * This method indicates whether or not the header is a Mesh Header.
+     * @note This method checks whether the first byte in header/frame (dispatch byte) matches the Mesh Header dispatch
+     * It does not fully parse and validate the Mesh Header. `ParseFrom()` method can be used to fully parse and
+     * validate the header.
      *
      * @retval TRUE   If the header matches the Mesh Header dispatch value.
      * @retval FALSE  If the header does not match the Mesh Header dispatch value.
      *
      */
-    bool IsMeshHeader(void) const { return (mDispatchHopsLeft & kDispatchMask) == kDispatch; }
+    static bool IsMeshHeader(const uint8_t *aFrame, uint16_t aFrameLength);
 
     /**
-     * This method indicates whether or not the Mesh Header appears to be well-formed.
+     * This method parses the Mesh Header from a frame @p aFrame.
      *
-     * @retval TRUE   If the header appears to be well-formed.
-     * @retval FALSE  If the header does not appear to be well-formed.
+     * @param[in]  aFrame        The pointer to the frame.
+     * @param[in]  aFrameLength  The length of the frame.
+     * @param[out] aHeaderLength A reference to a variable to output the parsed header length (on success).
+     *
+     * @retval OT_ERROR_NONE     Mesh Header parsed successfully.
+     * @retval OT_ERROR_PARSE    Mesh Header could not be parsed.
      *
      */
-    bool IsValid(void) const { return (mDispatchHopsLeft & kSourceShort) && (mDispatchHopsLeft & kDestinationShort); }
+    otError ParseFrom(const uint8_t *aFrame, uint16_t aFrameLength, uint16_t &aHeaderLength);
 
     /**
-     * This method indicates whether or not the header contains Deep Hops Left field.
+     * This method parses the Mesh Header from a given message.
      *
-     * @retval TRUE   If the header does contain Deep Hops Left field.
-     * @retval FALSE  If the header does not contain Deep Hops Left field.
+     * @note The Mesh Header is read from offset zero within the @p aMessage.
+     *
+     * @param[in]  aMessage    The message to read from.
+     *
+     * @retval OT_ERROR_NONE   Mesh Header parsed successfully.
+     * @retval OT_ERROR_PARSE  Mesh Header could not be parsed.
      *
      */
-    bool IsDeepHopsLeftField(void) const { return (mDispatchHopsLeft & kHopsLeftMask) == kDeepHopsLeft; }
+    otError ParseFrom(const Message &aMessage);
 
     /**
-     * This static method returns the size of the Mesh Header in bytes.
+     * This method parses the Mesh Header from a given message.
      *
-     * @returns The size of the Mesh Header in bytes.
+     * @note The Mesh Header is read from offset zero within the @p aMessage.
+     *
+     * @param[in]  aMessage       The message to read from.
+     * @param[out] aHeaderLength  A reference to a variable to output the parsed header length (on success).
+     *
+     * @retval OT_ERROR_NONE   Mesh Header parsed successfully.
+     * @retval OT_ERROR_PARSE  Mesh Header could not be parsed.
      *
      */
-    uint8_t GetHeaderLength(void) const { return sizeof(*this) - (IsDeepHopsLeftField() ? 0 : sizeof(mDeepHopsLeft)); }
+    otError ParseFrom(const Message &aMessage, uint16_t &aHeaderLength);
+
+    /**
+     * This method returns the the Mesh Header length when written to a frame.
+     *
+     * @note The returned value from this method gives the header length (number of bytes) when the header is written
+     * to a frame or message. This should not be used to determine the parsed length (number of bytes read) when the
+     * Mesh Header is parsed from a frame/message (using `ParseFrom()` methods).
+     *
+     * @returns The length of the Mesh Header (in bytes) when written to a frame.
+     *
+     */
+    uint16_t GetHeaderLength(void) const;
 
     /**
      * This method returns the Hops Left value.
@@ -474,29 +478,13 @@ public:
      * @returns The Hops Left value.
      *
      */
-    uint8_t GetHopsLeft(void) const
-    {
-        return IsDeepHopsLeftField() ? mDeepHopsLeft : mDispatchHopsLeft & kHopsLeftMask;
-    }
+    uint8_t GetHopsLeft(void) const { return mHopsLeft; }
 
     /**
-     * This method sets the Hops Left value.
-     *
-     * @param[in]  aHops  The Hops Left value.
+     * This method decrements the Hops Left value (if it is not zero).
      *
      */
-    void SetHopsLeft(uint8_t aHops)
-    {
-        if (aHops < kDeepHopsLeft && !IsDeepHopsLeftField())
-        {
-            mDispatchHopsLeft = (mDispatchHopsLeft & ~kHopsLeftMask) | aHops;
-        }
-        else
-        {
-            mDispatchHopsLeft = (mDispatchHopsLeft & ~kHopsLeftMask) | kDeepHopsLeft;
-            mDeepHopsLeft     = aHops;
-        }
-    }
+    void DecrementHopsLeft(void);
 
     /**
      * This method returns the Mesh Source address.
@@ -504,15 +492,7 @@ public:
      * @returns The Mesh Source address.
      *
      */
-    uint16_t GetSource(void) const { return HostSwap16(mAddress.mSource); }
-
-    /**
-     * This method sets the Mesh Source address.
-     *
-     * @param[in]  aSource  The Mesh Source address.
-     *
-     */
-    void SetSource(uint16_t aSource) { mAddress.mSource = HostSwap16(aSource); }
+    uint16_t GetSource(void) const { return mSource; }
 
     /**
      * This method returns the Mesh Destination address.
@@ -520,53 +500,51 @@ public:
      * @returns The Mesh Destination address.
      *
      */
-    uint16_t GetDestination(void) const { return HostSwap16(mAddress.mDestination); }
+    uint16_t GetDestination(void) const { return mDestination; }
 
     /**
-     * This method sets the Mesh Destination address.
+     * This method writes the Mesh Header into a given frame.
      *
-     * @param[in]  aDestination  The Mesh Destination address.
+     * @note This method expects the frame buffer to have enough space for the entire Mesh Header.
+     *
+     * @param[out]  aFrame  The pointer to the frame buffer to write to.
+     *
+     * @returns The header length (number of bytes written).
      *
      */
-    void SetDestination(uint16_t aDestination) { mAddress.mDestination = HostSwap16(aDestination); }
+    uint16_t WriteTo(uint8_t *aFrame) const;
 
     /**
-     * This method appends Mesh Header to the @p aFrame frame.
+     * This method writes the Mesh Header to a message at a given offset.
      *
-     * @param[in]  aFrame  The pointer to the frame.
+     * @note This method expects the @p aMessage length to be already set such that there is enough space for the
+     * entire Mesh Header to be written.
+     *
+     * @param[out] aMessage  A message to write the Mesh Header into.
+     * @param[in]  aOffset   The offset at which to write the header.
+     *
+     * @returns The header length (number of bytes written).
      *
      */
-    void AppendTo(uint8_t *aFrame) const
-    {
-        *aFrame++ = mDispatchHopsLeft;
-
-        if (IsDeepHopsLeftField())
-        {
-            *aFrame++ = mDeepHopsLeft;
-        }
-
-        memcpy(aFrame, &mAddress, sizeof(mAddress));
-    }
+    uint16_t WriteTo(Message &aMessage, uint16_t aOffset) const;
 
 private:
     enum
     {
-        kDispatch         = 2 << 6,
-        kDispatchMask     = 3 << 6,
-        kHopsLeftMask     = 0x0f,
-        kSourceShort      = 1 << 5,
-        kDestinationShort = 1 << 4,
-        kDeepHopsLeft     = 0x0f
+        kDispatch             = 2 << 6,
+        kDispatchMask         = 3 << 6,
+        kHopsLeftMask         = 0x0f,
+        kSourceShort          = 1 << 5,
+        kDestShort            = 1 << 4,
+        kDeepHopsLeft         = 0x0f,
+        kMinHeaderLength      = sizeof(uint8_t) + sizeof(uint16_t) + sizeof(uint16_t), // dispatch byte + src + dest
+        kDeepHopsHeaderLength = kMinHeaderLength + sizeof(uint8_t),                    // min header + deep hops
     };
 
-    uint8_t mDispatchHopsLeft;
-    uint8_t mDeepHopsLeft;
-    struct OT_TOOL_PACKED_FIELD
-    {
-        uint16_t mSource;
-        uint16_t mDestination;
-    } mAddress;
-} OT_TOOL_PACKED_END;
+    uint16_t mSource;
+    uint16_t mDestination;
+    uint8_t  mHopsLeft;
+};
 
 /**
  * This class implements Fragment Header generation and parsing.
