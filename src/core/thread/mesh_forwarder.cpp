@@ -393,12 +393,12 @@ otError MeshForwarder::SkipMeshHeader(const uint8_t *&aFrame, uint16_t &aFrameLe
 {
     otError            error = OT_ERROR_NONE;
     Lowpan::MeshHeader meshHeader;
+    uint16_t           headerLength;
 
-    VerifyOrExit(aFrameLength >= 1 && reinterpret_cast<const Lowpan::MeshHeader *>(aFrame)->IsMeshHeader());
-
-    SuccessOrExit(error = meshHeader.Init(aFrame, aFrameLength));
-    aFrame += meshHeader.GetHeaderLength();
-    aFrameLength -= meshHeader.GetHeaderLength();
+    VerifyOrExit(Lowpan::MeshHeader::IsMeshHeader(aFrame, aFrameLength));
+    SuccessOrExit(error = meshHeader.ParseFrom(aFrame, aFrameLength, headerLength));
+    aFrame += headerLength;
+    aFrameLength -= headerLength;
 
 exit:
     return error;
@@ -674,6 +674,7 @@ start:
     {
         Mle::MleRouter &   mle = Get<Mle::MleRouter>();
         Lowpan::MeshHeader meshHeader;
+        uint16_t           meshHeaderLength;
         uint8_t            hopsLeft;
 
         if (mle.GetRole() == OT_DEVICE_ROLE_CHILD)
@@ -704,13 +705,10 @@ start:
             hopsLeft += 1;
         }
 
-        meshHeader.Init();
-        meshHeader.SetHopsLeft(hopsLeft + Lowpan::MeshHeader::kAdditionalHopsLeft);
-        meshHeader.SetSource(aMeshSource);
-        meshHeader.SetDestination(aMeshDest);
-        meshHeader.AppendTo(payload);
-        payload += meshHeader.GetHeaderLength();
-        headerLength += meshHeader.GetHeaderLength();
+        meshHeader.Init(aMeshSource, aMeshDest, hopsLeft + Lowpan::MeshHeader::kAdditionalHopsLeft);
+        meshHeaderLength = meshHeader.WriteTo(payload);
+        payload += meshHeaderLength;
+        headerLength += meshHeaderLength;
     }
 
 #endif
@@ -1061,8 +1059,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::RxFrame &aFrame)
     switch (aFrame.GetType())
     {
     case Mac::Frame::kFcfFrameData:
-        if (payloadLength >= sizeof(Lowpan::MeshHeader) &&
-            reinterpret_cast<Lowpan::MeshHeader *>(payload)->IsMeshHeader())
+        if (Lowpan::MeshHeader::IsMeshHeader(payload, payloadLength))
         {
 #if OPENTHREAD_FTD
             HandleMesh(payload, payloadLength, macSource, linkInfo);
