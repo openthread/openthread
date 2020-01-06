@@ -106,7 +106,7 @@ otError MleRouter::SetRouterEligible(bool aEligible)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(IsFullThreadDevice(), error = OT_ERROR_NOT_CAPABLE);
+    VerifyOrExit(IsFullThreadDevice() || !aEligible, error = OT_ERROR_NOT_CAPABLE);
 
     mRouterEligible = aEligible;
 
