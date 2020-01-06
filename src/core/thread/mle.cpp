@@ -201,10 +201,6 @@ Mle::Mle(Instance &aInstance)
 
     // `SetMeshLocalPrefix()` also adds the Mesh-Local EID and subscribes
     // to the Link- and Realm-Local All Thread Nodes multicast addresses.
-
-#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
-    StartParentSearchTimer();
-#endif
 }
 
 otError Mle::Enable(void)
@@ -217,6 +213,9 @@ otError Mle::Enable(void)
     SuccessOrExit(error = mSocket.Open(&Mle::HandleUdpReceive, this));
     SuccessOrExit(error = mSocket.Bind(sockaddr));
 
+#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
+    StartParentSearchTimer();
+#endif
 exit:
     return error;
 }
@@ -4057,7 +4056,7 @@ void Mle::HandleParentSearchTimer(void)
 
     VerifyOrExit(mRole == OT_DEVICE_ROLE_CHILD);
 
-    parentRss = GetParent()->GetLinkInfo().GetAverageRss();
+    parentRss = GetParent().GetLinkInfo().GetAverageRss();
     otLogInfoMle("PeriodicParentSearch: Parent RSS %d", parentRss);
     VerifyOrExit(parentRss != OT_RADIO_RSSI_INVALID);
 
