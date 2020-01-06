@@ -601,6 +601,26 @@ build_samr21() {
     .travis/check-posix-app-pty || die
 }
 
+[ $BUILD_TARGET != posix-app-migrate ] || {
+    # check daemon mode
+    git checkout -- . || die
+    git clean -xfd || die
+    mkdir build && cd build || die
+    cmake -GNinja -DOT_PLATFORM=posix-host -DOT_DAEMON=ON .. || die
+    ninja || die
+    cd .. || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    mkdir build && cd build || die
+    cmake -GNinja -DOT_PLATFORM=posix-host .. || die
+    ninja || die
+    cd .. || die
+
+    ./bootstrap
+    .travis/check-ncp-rcp-migrate || die
+}
+
 [ $BUILD_TARGET != posix-mtd ] || {
     ./bootstrap || die
     REFERENCE_DEVICE=1 COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 USE_MTD=1 make -f examples/Makefile-posix check || die
