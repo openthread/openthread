@@ -571,7 +571,7 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
     }
     else
     {
-        *aPower = sDefaultTxPower;
+        *aPower = nrf_802154_tx_power_get();
     }
 
     return error;
