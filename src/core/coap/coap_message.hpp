@@ -67,12 +67,16 @@ using ot::Encoding::BigEndian::HostSwap16;
  *
  */
 
+class OptionIterator;
+
 /**
  * This class implements CoAP message generation and parsing.
  *
  */
 class Message : public ot::Message
 {
+    friend class OptionIterator;
+
 public:
     enum
     {
