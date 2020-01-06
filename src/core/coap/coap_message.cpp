@@ -389,10 +389,26 @@ const char *Message::CodeToString(void) const
 }
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
 
-void OptionIterator::Init(const Message *aMessage)
+otError OptionIterator::Init(const Message *aMessage)
 {
+    otError err = OT_ERROR_NONE;
+
+    /*
+     * Check that:
+     *   Length - Offset: the length of the payload
+     * is greater than
+     *   Start position of optionsa
+     *
+     * → Assert options start before the message ends
+     */
+    VerifyOrExit(aMessage->GetLength() - aMessage->GetHelpData().mHeaderOffset >= aMessage->GetOptionStart(),
+                 err = OT_ERROR_PARSE);
+
     mMessage = aMessage;
     GetFirstOption();
+
+exit:
+    return err;
 }
 
 const otCoapOption *OptionIterator::GetFirstOption(void)
@@ -402,8 +418,6 @@ const otCoapOption *OptionIterator::GetFirstOption(void)
 
     ClearOption();
 
-    VerifyOrExit(message.GetLength() - message.GetHelpData().mHeaderOffset >= message.GetOptionStart());
-
     mNextOptionOffset = message.GetHelpData().mHeaderOffset + message.GetOptionStart();
 
     if (mNextOptionOffset < message.GetLength())
@@ -411,7 +425,6 @@ const otCoapOption *OptionIterator::GetFirstOption(void)
         option = GetNextOption();
     }
 
-exit:
     return option;
 }
 

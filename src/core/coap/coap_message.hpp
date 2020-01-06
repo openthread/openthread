@@ -593,8 +593,11 @@ public:
     /**
      * Initialise the state of the iterator to iterate over the given message.
      *
+     * @retval  OT_ERROR_NONE   Successfully initialised
+     * @retval  OT_ERROR_PARSE  Message state is inconsistent
+     *
      */
-    void Init(const Message *aMessage);
+    otError Init(const Message *aMessage);
 
     /**
      * This method returns a pointer to the first option.

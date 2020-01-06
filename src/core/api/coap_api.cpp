@@ -160,9 +160,9 @@ const uint8_t *otCoapMessageGetToken(const otMessage *aMessage)
     return static_cast<const Coap::Message *>(aMessage)->GetToken();
 }
 
-void otCoapOptionIteratorInit(otCoapOptionIterator *aIterator, const otMessage *aMessage)
+otError otCoapOptionIteratorInit(otCoapOptionIterator *aIterator, const otMessage *aMessage)
 {
-    static_cast<Coap::OptionIterator *>(aIterator)->Init(static_cast<const Coap::Message *>(aMessage));
+    return static_cast<Coap::OptionIterator *>(aIterator)->Init(static_cast<const Coap::Message *>(aMessage));
 }
 
 const otCoapOption *otCoapOptionIteratorGetFirstOption(otCoapOptionIterator *aIterator)
