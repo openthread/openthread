@@ -489,11 +489,11 @@ otError Dataset::AppendMleDatasetTlv(Message &aMessage) const
                 delayTimer.SetDelayTimer(0);
             }
 
-            SuccessOrExit(error = aMessage.AppendTlv(delayTimer));
+            SuccessOrExit(error = delayTimer.AppendTo(aMessage));
         }
         else
         {
-            SuccessOrExit(error = aMessage.AppendTlv(*cur));
+            SuccessOrExit(error = cur->AppendTo(aMessage));
         }
 
         cur = cur->GetNext();

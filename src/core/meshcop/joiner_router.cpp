@@ -153,15 +153,15 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
 
     udpPort.Init();
     udpPort.SetUdpPort(aMessageInfo.GetPeerPort());
-    SuccessOrExit(error = message->AppendTlv(udpPort));
+    SuccessOrExit(error = udpPort.AppendTo(*message));
 
     iid.Init();
     iid.SetIid(aMessageInfo.GetPeerAddr().mFields.m8 + 8);
-    SuccessOrExit(error = message->AppendTlv(iid));
+    SuccessOrExit(error = iid.AppendTo(*message));
 
     rloc.Init();
     rloc.SetJoinerRouterLocator(Get<Mle::MleRouter>().GetRloc16());
-    SuccessOrExit(error = message->AppendTlv(rloc));
+    SuccessOrExit(error = rloc.AppendTo(*message));
 
     tlv.SetType(Tlv::kJoinerDtlsEncapsulation);
     tlv.SetLength(aMessage.GetLength() - aMessage.GetOffset());
@@ -270,69 +270,69 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
 
     masterKey.Init();
     masterKey.SetNetworkMasterKey(Get<KeyManager>().GetMasterKey());
-    SuccessOrExit(error = message->AppendTlv(masterKey));
+    SuccessOrExit(error = masterKey.AppendTo(*message));
 
     meshLocalPrefix.Init();
     meshLocalPrefix.SetMeshLocalPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-    SuccessOrExit(error = message->AppendTlv(meshLocalPrefix));
+    SuccessOrExit(error = meshLocalPrefix.AppendTo(*message));
 
     extendedPanId.Init();
     extendedPanId.SetExtendedPanId(Get<Mac::Mac>().GetExtendedPanId());
-    SuccessOrExit(error = message->AppendTlv(extendedPanId));
+    SuccessOrExit(error = extendedPanId.AppendTo(*message));
 
     networkName.Init();
     networkName.SetNetworkName(Get<Mac::Mac>().GetNetworkName().GetAsData());
-    SuccessOrExit(error = message->AppendTlv(networkName));
+    SuccessOrExit(error = networkName.AppendTo(*message));
 
     Get<ActiveDataset>().Read(dataset);
 
     if ((tlv = dataset.Get(Tlv::kActiveTimestamp)) != NULL)
     {
-        SuccessOrExit(error = message->AppendTlv(*tlv));
+        SuccessOrExit(error = tlv->AppendTo(*message));
     }
     else
     {
         ActiveTimestampTlv activeTimestamp;
         activeTimestamp.Init();
-        SuccessOrExit(error = message->AppendTlv(activeTimestamp));
+        SuccessOrExit(error = activeTimestamp.AppendTo(*message));
     }
 
     if ((tlv = dataset.Get(Tlv::kChannelMask)) != NULL)
     {
-        SuccessOrExit(error = message->AppendTlv(*tlv));
+        SuccessOrExit(error = tlv->AppendTo(*message));
     }
     else
     {
         ChannelMaskBaseTlv channelMask;
         channelMask.Init();
-        SuccessOrExit(error = message->AppendTlv(channelMask));
+        SuccessOrExit(error = channelMask.AppendTo(*message));
     }
 
     if ((tlv = dataset.Get(Tlv::kPskc)) != NULL)
     {
-        SuccessOrExit(error = message->AppendTlv(*tlv));
+        SuccessOrExit(error = tlv->AppendTo(*message));
     }
     else
     {
         PskcTlv pskc;
         pskc.Init();
-        SuccessOrExit(error = message->AppendTlv(pskc));
+        SuccessOrExit(error = pskc.AppendTo(*message));
     }
 
     if ((tlv = dataset.Get(Tlv::kSecurityPolicy)) != NULL)
     {
-        SuccessOrExit(error = message->AppendTlv(*tlv));
+        SuccessOrExit(error = tlv->AppendTo(*message));
     }
     else
     {
         SecurityPolicyTlv securityPolicy;
         securityPolicy.Init();
-        SuccessOrExit(error = message->AppendTlv(securityPolicy));
+        SuccessOrExit(error = securityPolicy.AppendTo(*message));
     }
 
     networkKeySequence.Init();
     networkKeySequence.SetNetworkKeySequence(Get<KeyManager>().GetCurrentKeySequence());
-    SuccessOrExit(error = message->AppendTlv(networkKeySequence));
+    SuccessOrExit(error = networkKeySequence.AppendTo(*message));
 
     messageInfo = aMessageInfo;
     messageInfo.SetPeerPort(kCoapUdpPort);

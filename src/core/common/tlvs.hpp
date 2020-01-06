@@ -212,6 +212,19 @@ public:
      */
     static otError GetValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset, uint16_t &aLength);
 
+    /**
+     * This method appends a TLV to the end of the message.
+     *
+     * On success, this method grows the message by the size of the TLV.
+     *
+     * @param[in]  aMessage      A reference to the message to append to.
+     *
+     * @retval OT_ERROR_NONE     Successfully appended the TLV to the message.
+     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
+     *
+     */
+    otError AppendTo(Message &aMessage) const;
+
 protected:
     enum
     {
