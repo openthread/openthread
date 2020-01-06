@@ -516,14 +516,14 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
     meshSource.SetShort(meshHeader.GetSource());
     meshDest.SetShort(meshHeader.GetDestination());
 
+    aFrame += headerLength;
+    aFrameLength -= headerLength;
+
     UpdateRoutes(aFrame, aFrameLength, meshSource, meshDest);
 
     if (meshDest.GetShort() == Get<Mac::Mac>().GetShortAddress() ||
         Get<Mle::MleRouter>().IsMinimalChild(meshDest.GetShort()))
     {
-        aFrame += headerLength;
-        aFrameLength -= headerLength;
-
         if (reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader())
         {
             HandleFragment(aFrame, aFrameLength, meshSource, meshDest, aLinkInfo);
@@ -547,9 +547,6 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
         SuccessOrExit(error = CheckReachability(aFrame, aFrameLength, meshSource, meshDest));
 
         meshHeader.DecrementHopsLeft();
-
-        aFrame += headerLength;
-        aFrameLength -= headerLength;
 
         GetForwardFramePriority(aFrame, aFrameLength, meshSource, meshDest, priority);
         message = Get<MessagePool>().New(Message::kType6lowpan, priority);
