@@ -345,7 +345,6 @@ private:
                          const Mac::Address &aMeshSource,
                          const Mac::Address &aMeshDest);
 
-    otError  SkipMeshHeader(const uint8_t *&aFrame, uint16_t &aFrameLength);
     otError  DecompressIp6Header(const uint8_t *     aFrame,
                                  uint16_t            aFrameLength,
                                  const Mac::Address &aMacSource,
