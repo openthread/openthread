@@ -318,8 +318,10 @@ otError RadioSpinel::RestoreDatasetFromNcp(void)
     VerifyOrExit(!mIsRcp);
 
     otLogInfoPlat("Trying to get saved dataset from NCP");
-    SuccessOrExit(error = Get(SPINEL_PROP_THREAD_ACTIVE_DATASET, SPINEL_DATATYPE_VOID_S, &RadioSpinel::ThreadDatasetHandler));
-    SuccessOrExit(error = Get(SPINEL_PROP_THREAD_PENDING_DATASET, SPINEL_DATATYPE_VOID_S, &RadioSpinel::ThreadDatasetHandler));
+    SuccessOrExit(
+        error = Get(SPINEL_PROP_THREAD_ACTIVE_DATASET, SPINEL_DATATYPE_VOID_S, &RadioSpinel::ThreadDatasetHandler));
+    SuccessOrExit(
+        error = Get(SPINEL_PROP_THREAD_PENDING_DATASET, SPINEL_DATATYPE_VOID_S, &RadioSpinel::ThreadDatasetHandler));
 
 exit:
     return error;
