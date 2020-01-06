@@ -237,7 +237,7 @@ otError Message::ParseHeader(void)
     GetHelpData().mHeaderOffset = GetOffset();
     Read(GetHelpData().mHeaderOffset, sizeof(GetHelpData().mHeader), &GetHelpData().mHeader);
 
-    iterator.Init(this);
+    SuccessOrExit(error = iterator.Init(this));
     for (const otCoapOption *option = iterator.GetFirstOption(); option != NULL; option = iterator.GetNextOption())
     {
     }

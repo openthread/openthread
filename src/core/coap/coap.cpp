@@ -562,7 +562,7 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
         break;
     }
 
-    iterator.Init(&aMessage);
+    SuccessOrExit(error = iterator.Init(&aMessage));
     for (const otCoapOption *option = iterator.GetFirstOption(); option != NULL; option = iterator.GetNextOption())
     {
         switch (option->mNumber)
