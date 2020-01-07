@@ -327,7 +327,9 @@ public:
 private:
     enum : uint8_t
     {
-        kReassemblyTimeout = OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT, // Reassembly timeout (in seconds).
+        kReassemblyTimeout      = OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT, // Reassembly timeout (in seconds).
+        kMeshHeaderFrameMtu     = OT_RADIO_FRAME_MAX_SIZE, // Max. MTU allowed when generating a Mesh Header frame.
+        kMeshHeaderFrameFcsSize = sizeof(uint16_t),        // Frame FCS size for Mesh Header frame.
     };
 
     enum MessageAction ///< Defines the action parameter in `LogMessageInfo()` method.

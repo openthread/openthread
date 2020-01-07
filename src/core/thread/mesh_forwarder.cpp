@@ -579,6 +579,7 @@ uint16_t MeshForwarder::PrepareDataFrame(Mac::TxFrame &      aFrame,
     uint16_t fcf;
     uint8_t *payload;
     uint8_t  headerLength;
+    uint16_t maxPayloadLength;
     uint16_t payloadLength;
     uint16_t fragmentLength;
     uint16_t dstpan;
@@ -665,7 +666,8 @@ start:
     IgnoreError(Get<Mac::Mac>().AppendHeaderIe(aMessage.IsTimeSync(), aFrame));
 #endif
 
-    payload = aFrame.GetPayload();
+    payload          = aFrame.GetPayload();
+    maxPayloadLength = aFrame.GetMaxPayloadLength();
 
     headerLength = 0;
 
@@ -678,6 +680,24 @@ start:
         Lowpan::MeshHeader meshHeader;
         uint16_t           meshHeaderLength;
         uint8_t            hopsLeft;
+
+        // Mesh Header frames are forwarded by routers over multiple
+        // hops to reach a final destination. The forwarding path can
+        // have routers supporting different radio links with varying
+        // MTU sizes. Since the originator of the frame does not know the
+        // path and the MTU sizes of supported radio links by the routers
+        // in the path, we limit the max payload length of a Mesh Header
+        // frame to a fixed minimum value (derived from 15.4 radio)
+        // ensuring it can be handled by any radio link.
+        //
+        // Maximum payload length is calculated by subtracting the frame
+        // header and footer lengths from the MTU size. The footer
+        // length is derived by removing the `aFrame.GetFcsSize()` and
+        // then adding the fixed `kMeshHeaderFrameFcsSize` instead
+        // (updating the FCS size in the calculation of footer length).
+
+        maxPayloadLength = kMeshHeaderFrameMtu - aFrame.GetHeaderLength() -
+                           (aFrame.GetFooterLength() - aFrame.GetFcsSize() + kMeshHeaderFrameFcsSize);
 
         if (mle.IsChild())
         {
@@ -718,8 +738,8 @@ start:
     // Compress IPv6 Header
     if (aMessage.GetOffset() == 0)
     {
-        Lowpan::BufferWriter buffer(payload, aFrame.GetMaxPayloadLength() - headerLength -
-                                                 Lowpan::FragmentHeader::kFirstFragmentHeaderSize);
+        Lowpan::BufferWriter buffer(payload,
+                                    maxPayloadLength - headerLength - Lowpan::FragmentHeader::kFirstFragmentHeaderSize);
         uint8_t              hcLength;
         Mac::Address         meshSource, meshDest;
         otError              error;
@@ -743,7 +763,7 @@ start:
         hcLength = static_cast<uint8_t>(buffer.GetWritePointer() - payload);
         headerLength += hcLength;
         payloadLength  = aMessage.GetLength() - aMessage.GetOffset();
-        fragmentLength = aFrame.GetMaxPayloadLength() - headerLength;
+        fragmentLength = maxPayloadLength - headerLength;
 
         if ((payloadLength > fragmentLength) || aAddFragHeader)
         {
@@ -777,7 +797,7 @@ start:
             payload += Lowpan::FragmentHeader::kFirstFragmentHeaderSize;
             headerLength += Lowpan::FragmentHeader::kFirstFragmentHeaderSize;
 
-            fragmentLength = aFrame.GetMaxPayloadLength() - headerLength;
+            fragmentLength = maxPayloadLength - headerLength;
 
             if (payloadLength > fragmentLength)
             {
@@ -809,7 +829,7 @@ start:
         payload += fragmentHeaderLength;
         headerLength += fragmentHeaderLength;
 
-        fragmentLength = aFrame.GetMaxPayloadLength() - headerLength;
+        fragmentLength = maxPayloadLength - headerLength;
 
         if (payloadLength > fragmentLength)
         {
