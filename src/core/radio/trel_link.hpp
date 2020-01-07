@@ -75,8 +75,8 @@ class Link : public InstanceLocator
 public:
     enum
     {
-        kMtuSize = OT_RADIO_FRAME_MAX_SIZE, ///< MTU size for TREL frame.
-        kFcsSize = 2,                       ///< FCS size for TREL frame.
+        kMtuSize = 1280 - 48 - sizeof(Header), ///< MTU size for TREL frame.
+        kFcsSize = 0,                          ///< FCS size for TREL frame.
     };
 
     /**
