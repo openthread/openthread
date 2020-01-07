@@ -39,11 +39,9 @@ at_exit() {
     EXIT_CODE=$?
 
     killall expect || true
-    killall ot-ctl || true
-    killall ot-daemon || true
     killall ot-cli-ftd || true
     killall ot-cli || true
-    killall socat || true
+    killall ot-rcp || true
 
     exit $EXIT_CODE
 }
