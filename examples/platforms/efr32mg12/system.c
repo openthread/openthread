@@ -74,8 +74,6 @@ void otSysInit(int argc, char *argv[])
     OT_UNUSED_VARIABLE(argv);
     sl_status_t status;
 
-    sl_mpu_disable_execute_from_ram();
-
     __disable_irq();
 
 #undef FIXED_EXCEPTION
