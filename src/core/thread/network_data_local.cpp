@@ -350,8 +350,9 @@ void Local::UpdateRloc(void)
 
 otError Local::SendServerDataNotification(void)
 {
-    otError  error = OT_ERROR_NONE;
-    uint16_t rloc  = Get<Mle::MleRouter>().GetRloc16();
+    otError  error        = OT_ERROR_NONE;
+    uint16_t rloc         = Get<Mle::MleRouter>().GetRloc16();
+    bool     isConsistent = true;
 
 #if OPENTHREAD_FTD
 
@@ -367,11 +368,13 @@ otError Local::SendServerDataNotification(void)
     UpdateRloc();
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-    VerifyOrExit(!IsOnMeshPrefixConsistent() || !IsExternalRouteConsistent(), ClearResubmitDelayTimer());
+    isConsistent = isConsistent && IsOnMeshPrefixConsistent() && IsExternalRouteConsistent();
 #endif
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    VerifyOrExit(!IsServiceConsistent(), ClearResubmitDelayTimer());
+    isConsistent = isConsistent && IsServiceConsistent();
 #endif
+
+    VerifyOrExit(!isConsistent, ClearResubmitDelayTimer());
 
     if (mOldRloc == rloc)
     {
