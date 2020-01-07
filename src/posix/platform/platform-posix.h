@@ -411,7 +411,7 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadSet);
 void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMaxFd);
 
 /**
- * This function get dataset from NCP radio and save it.
+ * This function gets dataset from NCP radio and saves it.
  *
  * @retval  OT_ERROR_NONE               Succeeded.
  * @retval  OT_ERROR_FAILED             Failed.

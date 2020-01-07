@@ -520,7 +520,7 @@ public:
     void HandleReceivedFrame(void);
 
     /**
-     * This function get dataset from NCP radio and save it.
+     * This function gets dataset from NCP radio and saves it.
      *
      * @retval  OT_ERROR_NONE               Succeeded.
      * @retval  OT_ERROR_FAILED             Failed.

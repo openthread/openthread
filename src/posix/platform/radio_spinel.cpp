@@ -514,8 +514,7 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
             size_t      len;
 
             SuccessOrExit(error = decoder.ReadUtf8(name));
-            len = strlen(name);
-            VerifyOrExit(len <= OT_NETWORK_NAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
+            len = strnlen(name, OT_NETWORK_NAME_MAX_SIZE + 1);
             memcpy(dataset.mNetworkName.m8, name, len + 1);
             dataset.mComponents.mIsNetworkNamePresent = true;
             break;
@@ -613,6 +612,10 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
         SuccessOrExit(error = decoder.CloseStruct());
     }
 
+    /*
+     * Initially set Active Timestamp to 0. This is to allow the node to join the network
+     * yet retrieve the full Active Dataset from a neighboring device if one exists.
+     */
     dataset.mActiveTimestamp                      = 0;
     dataset.mComponents.mIsActiveTimestampPresent = true;
 
