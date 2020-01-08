@@ -190,7 +190,7 @@ RadioSpinel::RadioSpinel(void)
 void RadioSpinel::Init(const otPlatformConfig &aPlatformConfig)
 {
     otError error = OT_ERROR_NONE;
-    bool isRcp;
+    bool    isRcp;
 
     SuccessOrExit(error = mHdlcInterface.Init(aPlatformConfig));
 
