@@ -602,12 +602,14 @@ public:
     /**
      * This method returns a pointer to the first option.
      *
+     * @returns A pointer to the first option. If no option is present NULL pointer is returned.
      */
     const otCoapOption *GetFirstOption(void);
 
     /**
      * This method returns a pointer to the next option.
      *
+     * @returns A pointer to the next option. If no more options are present NULL pointer is returned.
      */
     const otCoapOption *GetNextOption(void);
 
@@ -615,7 +617,7 @@ public:
      * This function fills current option value into @p aValue.
      *
      * @retval  OT_ERROR_NONE       Successfully filled value.
-     * @retval  OT_ERROR_NOT_FOUND  No more options, aIterator->mNextOptionOffset is set to offset of payload.
+     * @retval  OT_ERROR_NOT_FOUND  No more options, mNextOptionOffset is set to offset of payload.
      *
      */
     otError GetOptionValue(void *aValue) const;
