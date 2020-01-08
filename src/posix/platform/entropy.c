@@ -44,6 +44,10 @@
 
 #include <openthread/error.h>
 
+#ifndef __SANITIZE_ADDRESS__
+#define __SANITIZE_ADDRESS__ 0
+#endif
+
 #if __SANITIZE_ADDRESS__ != 0
 
 static uint32_t sState = 1;

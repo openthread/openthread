@@ -55,4 +55,14 @@
 #define OPENTHREAD_POSIX_APP_SOCKET_BASENAME "/tmp/openthread"
 #endif
 
+/**
+ * @def OPENTHREAD_POSIX_VIRTUAL_TIME
+ *
+ * This setting configures whether to use virtual time.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_VIRTUAL_TIME
+#define OPENTHREAD_POSIX_VIRTUAL_TIME 0
+#endif
+
 #endif // OPENTHREAD_PLATFORM_CONFIG_H_
