@@ -1319,19 +1319,40 @@ uint16_t MeshHeader::WriteTo(Message &aMessage, uint16_t aOffset) const
     return headerLength;
 }
 
-otError FragmentHeader::Init(const uint8_t *aFrame, uint16_t aFrameLength)
+//---------------------------------------------------------------------------------------------------------------------
+// FragmentHeader
+
+void FragmentHeader::Init(uint16_t aSize, uint16_t aTag, uint16_t aOffset)
+{
+    mSize   = (aSize & kSizeMask);
+    mTag    = aTag;
+    mOffset = (aOffset & kOffsetMask);
+}
+
+bool FragmentHeader::IsFragmentHeader(const uint8_t *aFrame, uint16_t aFrameLength)
+{
+    return (aFrameLength >= kFirstFragmentHeaderSize) && ((*aFrame & kDispatchMask) == kDispatch);
+}
+
+otError FragmentHeader::ParseFrom(const uint8_t *aFrame, uint16_t aFrameLength, uint16_t &aHeaderLength)
 {
     otError error = OT_ERROR_PARSE;
 
-    VerifyOrExit(aFrameLength >= sizeof(mDispatchSize) + sizeof(mTag));
-    memcpy(reinterpret_cast<uint8_t *>(&mDispatchSize), aFrame, sizeof(mDispatchSize) + sizeof(mTag));
-    aFrame += sizeof(mDispatchSize) + sizeof(mTag);
-    aFrameLength -= sizeof(mDispatchSize) + sizeof(mTag);
+    VerifyOrExit(IsFragmentHeader(aFrame, aFrameLength));
 
-    if (IsOffsetPresent())
+    mSize = ReadUint16(aFrame + kSizeIndex) & kSizeMask;
+    mTag  = ReadUint16(aFrame + kTagIndex);
+
+    if ((*aFrame & kOffsetFlag) == kOffsetFlag)
     {
-        VerifyOrExit(aFrameLength >= sizeof(mOffset));
-        mOffset = *aFrame++;
+        VerifyOrExit(aFrameLength >= kSubsequentFragmentHeaderSize);
+        mOffset       = aFrame[kOffsetIndex] * 8;
+        aHeaderLength = kSubsequentFragmentHeaderSize;
+    }
+    else
+    {
+        mOffset       = 0;
+        aHeaderLength = kFirstFragmentHeaderSize;
     }
 
     error = OT_ERROR_NONE;
@@ -1340,29 +1361,33 @@ exit:
     return error;
 }
 
-otError FragmentHeader::Init(const Message &aMessage, uint16_t aOffset)
+otError FragmentHeader::ParseFrom(const Message &aMessage, uint16_t aOffset, uint16_t &aHeaderLength)
 {
-    otError  error = OT_ERROR_NONE;
-    uint16_t bytesRead;
+    uint8_t  frame[kSubsequentFragmentHeaderSize];
+    uint16_t frameLength;
 
-    bytesRead = aMessage.Read(aOffset, sizeof(mDispatchSize), reinterpret_cast<void *>(&mDispatchSize));
-    VerifyOrExit(bytesRead == sizeof(mDispatchSize), error = OT_ERROR_PARSE);
-    aOffset += bytesRead;
+    frameLength = aMessage.Read(aOffset, sizeof(frame), frame);
 
-    VerifyOrExit(IsFragmentHeader(), error = OT_ERROR_PARSE);
+    return ParseFrom(frame, frameLength, aHeaderLength);
+}
 
-    bytesRead = aMessage.Read(aOffset, sizeof(mTag), reinterpret_cast<void *>(&mTag));
-    VerifyOrExit(bytesRead == sizeof(mTag), error = OT_ERROR_PARSE);
-    aOffset += bytesRead;
+uint16_t FragmentHeader::WriteTo(uint8_t *aFrame) const
+{
+    uint8_t *cur = aFrame;
 
-    if (IsOffsetPresent())
+    WriteUint16((kDispatch << 8) + mSize, cur);
+    cur += sizeof(uint16_t);
+
+    WriteUint16(mTag, cur);
+    cur += sizeof(uint16_t);
+
+    if (mOffset != 0)
     {
-        bytesRead = aMessage.Read(aOffset, sizeof(mOffset), &mOffset);
-        VerifyOrExit(bytesRead == sizeof(mOffset), error = OT_ERROR_PARSE);
+        *aFrame |= kOffsetFlag;
+        *cur++ = static_cast<uint8_t>(mOffset >> 3);
     }
 
-exit:
-    return error;
+    return static_cast<uint16_t>(cur - aFrame);
 }
 
 } // namespace Lowpan

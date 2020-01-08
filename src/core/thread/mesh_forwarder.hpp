@@ -375,11 +375,6 @@ private:
                             const Mac::Address &    aMacSource,
                             const Mac::Address &    aMacDest,
                             const otThreadLinkInfo &aLinkInfo);
-
-    static otError GetFragmentHeader(const uint8_t *         aFrame,
-                                     uint16_t                aFrameLength,
-                                     Lowpan::FragmentHeader &aFragmentHeader);
-
     uint16_t PrepareDataFrame(Mac::TxFrame &      aFrame,
                               Message &           aMessage,
                               const Mac::Address &aMacSource,

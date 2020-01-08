@@ -524,7 +524,7 @@ void MeshForwarder::HandleMesh(uint8_t *               aFrame,
     if (meshDest.GetShort() == Get<Mac::Mac>().GetShortAddress() ||
         Get<Mle::MleRouter>().IsMinimalChild(meshDest.GetShort()))
     {
-        if (reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader())
+        if (Lowpan::FragmentHeader::IsFragmentHeader(aFrame, aFrameLength))
         {
             HandleFragment(aFrame, aFrameLength, meshSource, meshDest, aLinkInfo);
         }
@@ -740,12 +740,13 @@ otError MeshForwarder::GetForwardFramePriority(const uint8_t *     aFrame,
     otError                error      = OT_ERROR_NONE;
     bool                   isFragment = false;
     Lowpan::FragmentHeader fragmentHeader;
+    uint16_t               fragmentHeaderLength;
 
-    if (GetFragmentHeader(aFrame, aFrameLength, fragmentHeader) == OT_ERROR_NONE)
+    if (fragmentHeader.ParseFrom(aFrame, aFrameLength, fragmentHeaderLength) == OT_ERROR_NONE)
     {
         isFragment = true;
-        aFrame += fragmentHeader.GetHeaderLength();
-        aFrameLength -= fragmentHeader.GetHeaderLength();
+        aFrame += fragmentHeaderLength;
+        aFrameLength -= fragmentHeaderLength;
 
         if (fragmentHeader.GetDatagramOffset() > 0)
         {
@@ -848,19 +849,19 @@ otError MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
     bool                   shouldLogRss;
     Lowpan::MeshHeader     meshHeader;
     Lowpan::FragmentHeader fragmentHeader;
-    uint16_t               meshHeaderLength;
+    uint16_t               headerLength;
 
-    SuccessOrExit(meshHeader.ParseFrom(aMessage, meshHeaderLength));
+    SuccessOrExit(meshHeader.ParseFrom(aMessage, headerLength));
 
     aMeshSource.SetShort(meshHeader.GetSource());
     aMeshDest.SetShort(meshHeader.GetDestination());
 
-    aOffset = meshHeaderLength;
+    aOffset = headerLength;
 
-    if (fragmentHeader.Init(aMessage, aOffset) == OT_ERROR_NONE)
+    if (fragmentHeader.ParseFrom(aMessage, aOffset, headerLength) == OT_ERROR_NONE)
     {
         hasFragmentHeader = true;
-        aOffset += fragmentHeader.GetHeaderLength();
+        aOffset += headerLength;
     }
 
     shouldLogRss = (aAction == kMessageReceive) || (aAction == kMessageReassemblyDrop);
