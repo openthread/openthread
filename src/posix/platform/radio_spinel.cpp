@@ -256,6 +256,8 @@ otError RadioSpinel::CheckCapabilities(bool &aIsRcp)
 
     SuccessOrExit(error = Get(SPINEL_PROP_CAPS, SPINEL_DATATYPE_DATA_S, capsBuffer, &capsLength));
 
+    aIsRcp = false;
+
     while (capsLength > 0)
     {
         unsigned int   capability;
