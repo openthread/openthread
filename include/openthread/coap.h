@@ -583,8 +583,8 @@ const uint8_t *otCoapMessageGetToken(const otMessage *aMessage);
  * @param[inout]  aIterator A pointer to the CoAP message option iterator.
  * @param[in]     aMessage  A pointer to the CoAP message.
  *
- * @retval  OT_ERROR_NONE   Successfully initialised
- * @retval  OT_ERROR_PARSE  Message state is inconsistent
+ * @retval  OT_ERROR_NONE   Successfully initialised.
+ * @retval  OT_ERROR_PARSE  Message state is inconsistent.
  *
  */
 otError otCoapOptionIteratorInit(otCoapOptionIterator *aIterator, const otMessage *aMessage);
