@@ -203,7 +203,7 @@ void RadioSpinel::Init(const otPlatformConfig &aPlatformConfig)
     VerifyOrExit(mIsReady, error = OT_ERROR_FAILED);
 
     SuccessOrExit(error = CheckSpinelVersion());
-    SuccessOrExit(error = CheckCapabilities(&isRcp));
+    SuccessOrExit(error = CheckCapabilities(isRcp));
     SuccessOrExit(error = Get(SPINEL_PROP_NCP_VERSION, SPINEL_DATATYPE_UTF8_S, mVersion, sizeof(mVersion)));
     SuccessOrExit(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_UINT64_S, &gNodeId));
 
@@ -246,7 +246,7 @@ exit:
     return error;
 }
 
-otError RadioSpinel::CheckCapabilities(bool *aIsRcp)
+otError RadioSpinel::CheckCapabilities(bool &aIsRcp)
 {
     otError        error = OT_ERROR_NONE;
     uint8_t        capsBuffer[kCapsBufferSize];
@@ -276,14 +276,14 @@ otError RadioSpinel::CheckCapabilities(bool *aIsRcp)
 
         if (capability == SPINEL_CAP_CONFIG_RADIO)
         {
-            *aIsRcp = true;
+            aIsRcp = true;
         }
 
         capsData += unpacked;
         capsLength -= static_cast<spinel_size_t>(unpacked);
     }
 
-    if (!supportsRawRadio && *aIsRcp)
+    if (!supportsRawRadio && aIsRcp)
     {
         otLogCritPlat("RCP capability list does not include support for radio/raw mode");
         DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);

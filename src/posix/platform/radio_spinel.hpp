@@ -519,14 +519,6 @@ public:
      */
     void HandleReceivedFrame(void);
 
-    /**
-     * This function gets dataset from NCP radio and saves it.
-     *
-     * @retval  OT_ERROR_NONE               Succeeded.
-     * @retval  OT_ERROR_FAILED             Failed.
-     */
-    otError RestoreDatasetFromNcp(void);
-
 private:
     enum
     {
@@ -549,7 +541,7 @@ private:
     typedef otError (RadioSpinel::*ResponseHandler)(const uint8_t *aBuffer, uint16_t aLength);
 
     otError CheckSpinelVersion(void);
-    otError CheckCapabilities(bool *aIsRcp);
+    otError CheckCapabilities(bool &aIsRcp);
     otError CheckRadioCapabilities(void);
     void    ProcessFrameQueue(void);
 
@@ -651,6 +643,14 @@ private:
     void RadioReceive(void);
 
     void TransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
+
+    /**
+     * This method gets dataset from NCP radio and saves it.
+     *
+     * @retval  OT_ERROR_NONE               Succeeded.
+     * @retval  OT_ERROR_FAILED             Failed.
+     */
+    otError RestoreDatasetFromNcp(void);
 
     otInstance *mInstance;
 
