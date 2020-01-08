@@ -167,7 +167,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             }
             else if (!strcmp(kOptions[index].name, "ncp-dataset"))
             {
-                aConfig->mPlatformConfig.mGetNcpDataset = true;
+                aConfig->mPlatformConfig.mRestoreDatasetFromNcp = true;
             }
             break;
         case '?':

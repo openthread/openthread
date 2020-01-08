@@ -30,11 +30,6 @@
 set -e
 set -x
 
-die() {
-	echo " *** ERROR: " $*
-	exit 1
-}
-
 at_exit() {
     EXIT_CODE=$?
 
@@ -130,7 +125,7 @@ EOF
 }
 
 main() {
-    case $1 in
+    case "$1" in
         check)
             check
             ;;

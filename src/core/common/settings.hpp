@@ -136,7 +136,6 @@ public:
         uint8_t         mMode;       ///< The MLE device mode
     };
 
-protected:
     /**
      * This enumeration defines the keys of settings.
      *
@@ -152,6 +151,7 @@ protected:
         kKeySlaacIidSecretKey = 0x0007, ///< Secret key used by SLAAC module for generating semantically opaque IID
     };
 
+protected:
     explicit SettingsBase(Instance &aInstance)
         : InstanceLocator(aInstance)
     {

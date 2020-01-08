@@ -53,6 +53,9 @@
 #include <common/encoding.hpp>
 #include <common/logging.hpp>
 #include <common/new.hpp>
+#include <common/settings.hpp>
+#include <meshcop/dataset.hpp>
+#include <meshcop/meshcop_tlvs.hpp>
 #include <openthread/dataset.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
@@ -174,7 +177,6 @@ RadioSpinel::RadioSpinel(void)
     , mIsPromiscuous(false)
     , mIsReady(false)
     , mSupportsLogStream(false)
-    , mIsRcp(false)
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     , mDiagMode(false)
     , mDiagOutput(NULL)
@@ -188,6 +190,7 @@ RadioSpinel::RadioSpinel(void)
 void RadioSpinel::Init(const otPlatformConfig &aPlatformConfig)
 {
     otError error = OT_ERROR_NONE;
+    bool isRcp;
 
     SuccessOrExit(error = mHdlcInterface.Init(aPlatformConfig));
 
@@ -200,13 +203,18 @@ void RadioSpinel::Init(const otPlatformConfig &aPlatformConfig)
     VerifyOrExit(mIsReady, error = OT_ERROR_FAILED);
 
     SuccessOrExit(error = CheckSpinelVersion());
-    SuccessOrExit(error = CheckCapabilities());
-    SuccessOrExit(error = CheckRadioCapabilities());
-
+    SuccessOrExit(error = CheckCapabilities(&isRcp));
     SuccessOrExit(error = Get(SPINEL_PROP_NCP_VERSION, SPINEL_DATATYPE_UTF8_S, mVersion, sizeof(mVersion)));
     SuccessOrExit(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_UINT64_S, &gNodeId));
 
     gNodeId = ot::Encoding::BigEndian::HostSwap64(gNodeId);
+
+    if (aPlatformConfig.mRestoreDatasetFromNcp && !isRcp)
+    {
+        DieNow((RestoreDatasetFromNcp() == OT_ERROR_NONE) ? OT_EXIT_SUCCESS : OT_EXIT_FAILURE);
+    }
+
+    SuccessOrExit(error = CheckRadioCapabilities());
 
     mRxRadioFrame.mPsdu  = mRxPsdu;
     mTxRadioFrame.mPsdu  = mTxPsdu;
@@ -238,7 +246,7 @@ exit:
     return error;
 }
 
-otError RadioSpinel::CheckCapabilities(void)
+otError RadioSpinel::CheckCapabilities(bool *aIsRcp)
 {
     otError        error = OT_ERROR_NONE;
     uint8_t        capsBuffer[kCapsBufferSize];
@@ -268,14 +276,14 @@ otError RadioSpinel::CheckCapabilities(void)
 
         if (capability == SPINEL_CAP_CONFIG_RADIO)
         {
-            mIsRcp = true;
+            *aIsRcp = true;
         }
 
         capsData += unpacked;
         capsLength -= static_cast<spinel_size_t>(unpacked);
     }
 
-    if (!supportsRawRadio && mIsRcp)
+    if (!supportsRawRadio && *aIsRcp)
     {
         otLogCritPlat("RCP capability list does not include support for radio/raw mode");
         DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
@@ -293,7 +301,6 @@ otError RadioSpinel::CheckRadioCapabilities(void)
     otError      error = OT_ERROR_NONE;
     unsigned int caps;
 
-    VerifyOrExit(mIsRcp);
     SuccessOrExit(error = Get(SPINEL_PROP_RADIO_CAPS, SPINEL_DATATYPE_UINT_PACKED_S, &caps));
     mRadioCaps = static_cast<otRadioCaps>(caps);
 
@@ -315,7 +322,7 @@ otError RadioSpinel::RestoreDatasetFromNcp(void)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(!mIsRcp);
+    otPlatSettingsInit(mInstance);
 
     otLogInfoPlat("Trying to get saved dataset from NCP");
     SuccessOrExit(
@@ -324,6 +331,7 @@ otError RadioSpinel::RestoreDatasetFromNcp(void)
         error = Get(SPINEL_PROP_THREAD_PENDING_DATASET, SPINEL_DATATYPE_VOID_S, &RadioSpinel::ThreadDatasetHandler));
 
 exit:
+    otPlatSettingsDeinit(mInstance);
     return error;
 }
 
@@ -481,10 +489,12 @@ exit:
 otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLength)
 {
     otError              error = OT_ERROR_NONE;
-    otOperationalDataset dataset;
+    otOperationalDataset opDataset;
     Ncp::SpinelDecoder   decoder;
+    MeshCoP::Dataset     dataset((mWaitingKey == SPINEL_PROP_THREAD_ACTIVE_DATASET) ? MeshCoP::Tlv::kActiveTimestamp
+                                                                                : MeshCoP::Tlv::kPendingTimestamp);
 
-    memset(&dataset, 0, sizeof(otOperationalDataset));
+    memset(&opDataset, 0, sizeof(otOperationalDataset));
     decoder.Init(aBuffer, aLength);
 
     while (!decoder.IsAllReadInStruct())
@@ -503,8 +513,8 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
 
             SuccessOrExit(error = decoder.ReadData(key, len));
             VerifyOrExit(len == OT_MASTER_KEY_SIZE, error = OT_ERROR_INVALID_ARGS);
-            memcpy(dataset.mMasterKey.m8, key, len);
-            dataset.mComponents.mIsMasterKeyPresent = true;
+            memcpy(opDataset.mMasterKey.m8, key, len);
+            opDataset.mComponents.mIsMasterKeyPresent = true;
             break;
         }
 
@@ -515,8 +525,8 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
 
             SuccessOrExit(error = decoder.ReadUtf8(name));
             len = strnlen(name, OT_NETWORK_NAME_MAX_SIZE + 1);
-            memcpy(dataset.mNetworkName.m8, name, len + 1);
-            dataset.mComponents.mIsNetworkNamePresent = true;
+            memcpy(opDataset.mNetworkName.m8, name, len + 1);
+            opDataset.mComponents.mIsNetworkNamePresent = true;
             break;
         }
 
@@ -527,8 +537,8 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
 
             SuccessOrExit(error = decoder.ReadData(xpanid, len));
             VerifyOrExit(len == OT_EXT_PAN_ID_SIZE, error = OT_ERROR_INVALID_ARGS);
-            memcpy(dataset.mExtendedPanId.m8, xpanid, len);
-            dataset.mComponents.mIsExtendedPanIdPresent = true;
+            memcpy(opDataset.mExtendedPanId.m8, xpanid, len);
+            opDataset.mComponents.mIsExtendedPanIdPresent = true;
             break;
         }
 
@@ -540,22 +550,22 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
             SuccessOrExit(error = decoder.ReadIp6Address(addr));
             SuccessOrExit(error = decoder.ReadUint8(prefixLen));
             VerifyOrExit(prefixLen == 64, error = OT_ERROR_INVALID_ARGS);
-            memcpy(dataset.mMeshLocalPrefix.m8, addr, OT_MESH_LOCAL_PREFIX_SIZE);
-            dataset.mComponents.mIsMeshLocalPrefixPresent = true;
+            memcpy(opDataset.mMeshLocalPrefix.m8, addr, OT_MESH_LOCAL_PREFIX_SIZE);
+            opDataset.mComponents.mIsMeshLocalPrefixPresent = true;
             break;
         }
 
         case SPINEL_PROP_DATASET_DELAY_TIMER:
         {
-            SuccessOrExit(error = decoder.ReadUint32(dataset.mDelay));
-            dataset.mComponents.mIsDelayPresent = true;
+            SuccessOrExit(error = decoder.ReadUint32(opDataset.mDelay));
+            opDataset.mComponents.mIsDelayPresent = true;
             break;
         }
 
         case SPINEL_PROP_MAC_15_4_PANID:
         {
-            SuccessOrExit(error = decoder.ReadUint16(dataset.mPanId));
-            dataset.mComponents.mIsPanIdPresent = true;
+            SuccessOrExit(error = decoder.ReadUint16(opDataset.mPanId));
+            opDataset.mComponents.mIsPanIdPresent = true;
             break;
         }
 
@@ -564,8 +574,8 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
             uint8_t channel;
 
             SuccessOrExit(error = decoder.ReadUint8(channel));
-            dataset.mChannel                      = channel;
-            dataset.mComponents.mIsChannelPresent = true;
+            opDataset.mChannel                      = channel;
+            opDataset.mComponents.mIsChannelPresent = true;
             break;
         }
 
@@ -576,16 +586,16 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
 
             SuccessOrExit(error = decoder.ReadData(psk, len));
             VerifyOrExit(len == OT_PSKC_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
-            memcpy(dataset.mPskc.m8, psk, OT_PSKC_MAX_SIZE);
-            dataset.mComponents.mIsPskcPresent = true;
+            memcpy(opDataset.mPskc.m8, psk, OT_PSKC_MAX_SIZE);
+            opDataset.mComponents.mIsPskcPresent = true;
             break;
         }
 
         case SPINEL_PROP_DATASET_SECURITY_POLICY:
         {
-            SuccessOrExit(error = decoder.ReadUint16(dataset.mSecurityPolicy.mRotationTime));
-            SuccessOrExit(error = decoder.ReadUint8(dataset.mSecurityPolicy.mFlags));
-            dataset.mComponents.mIsSecurityPolicyPresent = true;
+            SuccessOrExit(error = decoder.ReadUint16(opDataset.mSecurityPolicy.mRotationTime));
+            SuccessOrExit(error = decoder.ReadUint8(opDataset.mSecurityPolicy.mFlags));
+            opDataset.mComponents.mIsSecurityPolicyPresent = true;
             break;
         }
 
@@ -593,15 +603,15 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
         {
             uint8_t channel;
 
-            dataset.mChannelMask = 0;
+            opDataset.mChannelMask = 0;
 
             while (!decoder.IsAllReadInStruct())
             {
                 SuccessOrExit(error = decoder.ReadUint8(channel));
                 VerifyOrExit(channel <= 31, error = OT_ERROR_INVALID_ARGS);
-                dataset.mChannelMask |= (1UL << channel);
+                opDataset.mChannelMask |= (1UL << channel);
             }
-            dataset.mComponents.mIsChannelMaskPresent = true;
+            opDataset.mComponents.mIsChannelMaskPresent = true;
             break;
         }
 
@@ -616,17 +626,15 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
      * Initially set Active Timestamp to 0. This is to allow the node to join the network
      * yet retrieve the full Active Dataset from a neighboring device if one exists.
      */
-    dataset.mActiveTimestamp                      = 0;
-    dataset.mComponents.mIsActiveTimestampPresent = true;
+    opDataset.mActiveTimestamp                      = 0;
+    opDataset.mComponents.mIsActiveTimestampPresent = true;
 
-    if (mWaitingKey == SPINEL_PROP_THREAD_ACTIVE_DATASET)
-    {
-        SuccessOrExit(otDatasetSetActive(mInstance, &dataset));
-    }
-    else if (mWaitingKey == SPINEL_PROP_THREAD_PENDING_DATASET)
-    {
-        SuccessOrExit(otDatasetSetPending(mInstance, &dataset));
-    }
+    SuccessOrExit(error = dataset.Set(opDataset));
+    SuccessOrExit(error = otPlatSettingsSet(mInstance,
+                                            (mWaitingKey == SPINEL_PROP_THREAD_ACTIVE_DATASET)
+                                                ? SettingsBase::kKeyActiveDataset
+                                                : SettingsBase::kKeyPendingDataset,
+                                            dataset.GetBytes(), dataset.GetSize()));
 
 exit:
     return error;
@@ -986,7 +994,7 @@ otError RadioSpinel::SetShortAddress(uint16_t aAddress)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mIsRcp && mShortAddress != aAddress);
+    VerifyOrExit(mShortAddress != aAddress);
     SuccessOrExit(error = sRadioSpinel.Set(SPINEL_PROP_MAC_15_4_SADDR, SPINEL_DATATYPE_UINT16_S, aAddress));
     mShortAddress = aAddress;
 
@@ -1001,9 +1009,7 @@ otError RadioSpinel::GetIeeeEui64(uint8_t *aIeeeEui64)
 
 otError RadioSpinel::SetExtendedAddress(const otExtAddress &aExtAddress)
 {
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(mIsRcp);
+    otError error;
 
     SuccessOrExit(error = Set(SPINEL_PROP_MAC_15_4_LADDR, SPINEL_DATATYPE_EUI64_S, aExtAddress.m8));
     mExtendedAddress = aExtAddress;
@@ -1016,7 +1022,7 @@ otError RadioSpinel::SetPanId(uint16_t aPanId)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mIsRcp && mPanId != aPanId);
+    VerifyOrExit(mPanId != aPanId);
     SuccessOrExit(error = Set(SPINEL_PROP_MAC_15_4_PANID, SPINEL_DATATYPE_UINT16_S, aPanId));
     mPanId = aPanId;
 
@@ -1051,24 +1057,12 @@ otError RadioSpinel::ClearSrcMatchExtEntry(const otExtAddress &aExtAddress)
 
 otError RadioSpinel::ClearSrcMatchShortEntries(void)
 {
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(mIsRcp);
-    error = Set(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, NULL);
-
-exit:
-    return error;
+    return Set(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, NULL);
 }
 
 otError RadioSpinel::ClearSrcMatchExtEntries(void)
 {
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(mIsRcp);
-    error = Set(SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, NULL);
-
-exit:
-    return error;
+    return Set(SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, NULL);
 }
 
 otError RadioSpinel::GetTransmitPower(int8_t &aPower)
@@ -1524,14 +1518,13 @@ otError RadioSpinel::Enable(otInstance *aInstance)
     VerifyOrExit(!IsEnabled());
 
     mInstance = aInstance;
-    mState    = kStateSleep;
-
-    VerifyOrExit(mIsRcp);
 
     SuccessOrExit(error = Set(SPINEL_PROP_PHY_ENABLED, SPINEL_DATATYPE_BOOL_S, true));
     SuccessOrExit(error = Set(SPINEL_PROP_MAC_15_4_PANID, SPINEL_DATATYPE_UINT16_S, mPanId));
     SuccessOrExit(error = Set(SPINEL_PROP_MAC_15_4_SADDR, SPINEL_DATATYPE_UINT16_S, mShortAddress));
     SuccessOrExit(error = Get(SPINEL_PROP_PHY_RX_SENSITIVITY, SPINEL_DATATYPE_INT8_S, &mRxSensitivity));
+
+    mState = kStateSleep;
 
 exit:
     if (error != OT_ERROR_NONE)
@@ -1653,11 +1646,6 @@ void platformRadioInit(const otPlatformConfig *aPlatformConfig)
 void platformRadioDeinit(void)
 {
     sRadioSpinel.Deinit();
-}
-
-otError platformRestoreDatasetFromNcp(void)
-{
-    return sRadioSpinel.RestoreDatasetFromNcp();
 }
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)

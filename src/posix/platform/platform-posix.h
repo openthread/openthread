@@ -411,14 +411,6 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadSet);
 void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMaxFd);
 
 /**
- * This function gets dataset from NCP radio and saves it.
- *
- * @retval  OT_ERROR_NONE               Succeeded.
- * @retval  OT_ERROR_FAILED             Failed.
- */
-otError platformRestoreDatasetFromNcp(void);
-
-/**
  * This function creates a socket with SOCK_CLOEXEC flag set.
  *
  * @param[in]   aDomain     The communication domain.

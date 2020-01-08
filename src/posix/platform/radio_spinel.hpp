@@ -549,7 +549,7 @@ private:
     typedef otError (RadioSpinel::*ResponseHandler)(const uint8_t *aBuffer, uint16_t aLength);
 
     otError CheckSpinelVersion(void);
-    otError CheckCapabilities(void);
+    otError CheckCapabilities(bool *aIsRcp);
     otError CheckRadioCapabilities(void);
     void    ProcessFrameQueue(void);
 
@@ -687,7 +687,6 @@ private:
     bool  mIsPromiscuous : 1;     ///< Promiscuous mode.
     bool  mIsReady : 1;           ///< NCP ready.
     bool  mSupportsLogStream : 1; ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
-    bool  mIsRcp : 1;             ///< Radio firmware is running RCP.
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     bool   mDiagMode;
