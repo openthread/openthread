@@ -38,7 +38,6 @@
 
 #include "common/locator.hpp"
 #include "mac/mac_types.hpp"
-#include "thread/mle.hpp"
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 #include "utils/slaac_address.hpp"
 #endif
