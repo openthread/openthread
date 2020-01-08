@@ -396,10 +396,11 @@ otError OptionIterator::Init(const Message *aMessage)
     /*
      * Check that:
      *   Length - Offset: the length of the payload
-     * is greater than
-     *   Start position of optionsa
+     * is greater than:
+     *   Start position of options
      *
-     * → Assert options start before the message ends
+     * → Check options start before the message ends, or bail ::Init with
+     *   OT_ERROR_PARSE as the reason.
      */
     VerifyOrExit(aMessage->GetLength() - aMessage->GetHelpData().mHeaderOffset >= aMessage->GetOptionStart(),
                  err = OT_ERROR_PARSE);
