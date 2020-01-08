@@ -134,13 +134,13 @@ void AnnounceSender::CheckState(void)
     {
     case OT_DEVICE_ROLE_ROUTER:
     case OT_DEVICE_ROLE_LEADER:
-        period = kRouterTxInterval;
+        interval = kRouterTxInterval;
         break;
 
     case OT_DEVICE_ROLE_CHILD:
         if (mle.IsRouterEligible() && mle.IsRxOnWhenIdle())
         {
-            period = kReedTxInterval;
+            interval = kReedTxInterval;
             break;
         }
 
