@@ -602,13 +602,6 @@ build_samr21() {
 }
 
 [ $BUILD_TARGET != posix-app-migrate ] || {
-    git checkout -- . || die
-    git clean -xfd || die
-    mkdir build && cd build || die
-    cmake -GNinja -DOT_PLATFORM=posix-host .. || die
-    ninja || die
-    cd .. || die
-
     ./bootstrap
     .travis/check-ncp-rcp-migrate || die
 }
