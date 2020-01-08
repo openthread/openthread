@@ -42,6 +42,14 @@
 #include <sys/prctl.h>
 #endif
 
+#ifndef HAVE_LIBEDIT
+#define HAVE_LIBEDIT 0
+#endif
+
+#ifndef HAVE_LIBREADLINE
+#define HAVE_LIBREADLINE 0
+#endif
+
 #define OPENTHREAD_POSIX_APP_TYPE_NCP 1
 #define OPENTHREAD_POSIX_APP_TYPE_CLI 2
 
@@ -51,11 +59,14 @@
 #include <openthread/platform/radio.h>
 #if OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_NCP
 #include <openthread/ncp.h>
+#define OPENTHREAD_USE_CONSOLE 0
 #elif OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_CLI
 #include <openthread/cli.h>
 #if (HAVE_LIBEDIT || HAVE_LIBREADLINE) && !OPENTHREAD_ENABLE_POSIX_APP_DAEMON
 #define OPENTHREAD_USE_CONSOLE 1
 #include "console_cli.h"
+#else
+#define OPENTHREAD_USE_CONSOLE 0
 #endif
 #else
 #error "Unknown posix app type!"
