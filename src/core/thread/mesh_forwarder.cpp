@@ -389,21 +389,6 @@ void MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::
     }
 }
 
-otError MeshForwarder::GetFragmentHeader(const uint8_t *         aFrame,
-                                         uint16_t                aFrameLength,
-                                         Lowpan::FragmentHeader &aFragmentHeader)
-{
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(aFrameLength >= 1 && reinterpret_cast<const Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader(),
-                 error = OT_ERROR_NOT_FOUND);
-
-    SuccessOrExit(error = aFragmentHeader.Init(aFrame, aFrameLength));
-
-exit:
-    return error;
-}
-
 otError MeshForwarder::DecompressIp6Header(const uint8_t *     aFrame,
                                            uint16_t            aFrameLength,
                                            const Mac::Address &aMacSource,
@@ -415,14 +400,15 @@ otError MeshForwarder::DecompressIp6Header(const uint8_t *     aFrame,
     otError                error = OT_ERROR_NONE;
     const uint8_t *        start = aFrame;
     Lowpan::FragmentHeader fragmentHeader;
+    uint16_t               fragmentHeaderLength;
     int                    headerLength;
 
-    if (GetFragmentHeader(aFrame, aFrameLength, fragmentHeader) == OT_ERROR_NONE)
+    if (fragmentHeader.ParseFrom(aFrame, aFrameLength, fragmentHeaderLength) == OT_ERROR_NONE)
     {
-        // only the first fragment header is followed by a LOWPAN_IPHC header
+        // Only the first fragment header is followed by a LOWPAN_IPHC header
         VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0, error = OT_ERROR_NOT_FOUND);
-        aFrame += fragmentHeader.GetHeaderLength();
-        aFrameLength -= fragmentHeader.GetHeaderLength();
+        aFrame += fragmentHeaderLength;
+        aFrameLength -= fragmentHeaderLength;
     }
 
     VerifyOrExit(aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame), error = OT_ERROR_NOT_FOUND);
@@ -700,7 +686,7 @@ start:
     if (aMessage.GetOffset() == 0)
     {
         Lowpan::BufferWriter buffer(payload, aFrame.GetMaxPayloadLength() - headerLength -
-                                                 Lowpan::FragmentHeader::kInitialHeaderSize);
+                                                 Lowpan::FragmentHeader::kFirstFragmentHeaderSize);
         uint8_t              hcLength;
         Mac::Address         meshSource, meshDest;
         otError              error;
@@ -712,8 +698,8 @@ start:
         }
         else
         {
-            meshDest   = aMacDest;
             meshSource = aMacSource;
+            meshDest   = aMacDest;
         }
 
         error = Get<Lowpan::Lowpan>().Compress(aMessage, meshSource, meshDest, buffer);
@@ -726,7 +712,7 @@ start:
 
         if (payloadLength > fragmentLength)
         {
-            Lowpan::FragmentHeader *fragmentHeader;
+            Lowpan::FragmentHeader fragmentHeader;
 
             if ((!aMessage.IsLinkSecurityEnabled()) && aMessage.IsSubTypeMle())
             {
@@ -748,16 +734,13 @@ start:
                 aMessage.SetDatagramTag(mFragTag++);
             }
 
-            memmove(payload + Lowpan::FragmentHeader::kInitialHeaderSize, payload, hcLength);
+            memmove(payload + Lowpan::FragmentHeader::kFirstFragmentHeaderSize, payload, hcLength);
 
-            fragmentHeader = reinterpret_cast<Lowpan::FragmentHeader *>(payload);
-            fragmentHeader->Init();
-            fragmentHeader->SetDatagramSize(aMessage.GetLength());
-            fragmentHeader->SetDatagramTag(static_cast<uint16_t>(aMessage.GetDatagramTag()));
-            fragmentHeader->SetDatagramOffset(0);
+            fragmentHeader.InitFirstFragment(aMessage.GetLength(), static_cast<uint16_t>(aMessage.GetDatagramTag()));
+            fragmentHeader.WriteTo(payload);
 
-            payload += fragmentHeader->GetHeaderLength();
-            headerLength += fragmentHeader->GetHeaderLength();
+            payload += Lowpan::FragmentHeader::kFirstFragmentHeaderSize;
+            headerLength += Lowpan::FragmentHeader::kFirstFragmentHeaderSize;
             payloadLength = (aFrame.GetMaxPayloadLength() - headerLength) & ~0x7;
         }
 
@@ -772,19 +755,18 @@ start:
     }
     else
     {
-        Lowpan::FragmentHeader *fragmentHeader;
+        Lowpan::FragmentHeader fragmentHeader;
+        uint16_t               fragmentHeaderLength;
 
         payloadLength = aMessage.GetLength() - aMessage.GetOffset();
 
         // Write Fragment header
-        fragmentHeader = reinterpret_cast<Lowpan::FragmentHeader *>(payload);
-        fragmentHeader->Init();
-        fragmentHeader->SetDatagramSize(aMessage.GetLength());
-        fragmentHeader->SetDatagramTag(static_cast<uint16_t>(aMessage.GetDatagramTag()));
-        fragmentHeader->SetDatagramOffset(aMessage.GetOffset());
+        fragmentHeader.Init(aMessage.GetLength(), static_cast<uint16_t>(aMessage.GetDatagramTag()),
+                            aMessage.GetOffset());
+        fragmentHeaderLength = fragmentHeader.WriteTo(payload);
 
-        payload += fragmentHeader->GetHeaderLength();
-        headerLength += fragmentHeader->GetHeaderLength();
+        payload += fragmentHeaderLength;
+        headerLength += fragmentHeaderLength;
 
         fragmentLength = (aFrame.GetMaxPayloadLength() - headerLength) & ~0x7;
 
@@ -1048,8 +1030,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::RxFrame &aFrame)
             HandleMesh(payload, payloadLength, macSource, linkInfo);
 #endif
         }
-        else if (payloadLength >= sizeof(Lowpan::FragmentHeader) &&
-                 reinterpret_cast<Lowpan::FragmentHeader *>(payload)->IsFragmentHeader())
+        else if (Lowpan::FragmentHeader::IsFragmentHeader(payload, payloadLength))
         {
             HandleFragment(payload, payloadLength, macSource, macDest, linkInfo);
         }
@@ -1090,12 +1071,13 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
 {
     otError                error = OT_ERROR_NONE;
     Lowpan::FragmentHeader fragmentHeader;
+    uint16_t               fragmentHeaderLength;
     Message *              message = NULL;
 
     // Check the fragment header
-    SuccessOrExit(error = fragmentHeader.Init(aFrame, aFrameLength));
-    aFrame += fragmentHeader.GetHeaderLength();
-    aFrameLength -= fragmentHeader.GetHeaderLength();
+    SuccessOrExit(error = fragmentHeader.ParseFrom(aFrame, aFrameLength, fragmentHeaderLength));
+    aFrame += fragmentHeaderLength;
+    aFrameLength -= fragmentHeaderLength;
 
     if (fragmentHeader.GetDatagramOffset() == 0)
     {

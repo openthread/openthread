@@ -550,81 +550,76 @@ private:
  * This class implements Fragment Header generation and parsing.
  *
  */
-OT_TOOL_PACKED_BEGIN
 class FragmentHeader
 {
 public:
     enum
     {
-        kInitialHeaderSize    = 4, ///< Initial fragment header size in octets.
-        kSubsequentHeaderSize = 5, ///< Subsequent fragment header size in octets.
+        kFirstFragmentHeaderSize      = 4, ///< First fragment header size in octets.
+        kSubsequentFragmentHeaderSize = 5, ///< Subsequent fragment header size in octets.
     };
 
     /**
-     * This constructor initializes the Fragment Header.
+     * This method initializes the Fragment Header as a first fragment.
+     *
+     * A first fragment header starts at offset zero.
+     *
+     * @param[in] aSize   The Datagram Size value.
+     * @param[in] aTage   The Datagram Tag value.
      *
      */
-    FragmentHeader(void)
-    {
-        mDispatchSize = HostSwap16(kDispatch);
-        mTag          = 0;
-        mOffset       = 0;
-    }
+    void InitFirstFragment(uint16_t aSize, uint16_t aTag) { Init(aSize, aTag, 0); }
 
     /**
      * This method initializes the Fragment Header.
      *
-     */
-    void Init(void) { mDispatchSize = HostSwap16(kDispatch); }
-
-    /**
-     * This method initializes the fragment header from a frame @p aFrame.
+     * The @p aOffset value will be truncated to become a multiple of 8.
      *
-     * @param[in]  aFrame        The pointer to the frame.
-     * @param[in]  aFrameLength  The length of the frame.
-     *
-     * @retval OT_ERROR_NONE     Fragment Header initialized successfully.
-     * @retval OT_ERROR_PARSE    Fragment header could not be parsed from @p aFrame.
+     * @param[in] aSize   The Datagram Size value.
+     * @param[in] aTage   The Datagram Tag value.
+     * @param[in] aOffset The Datagram Offset value.
      *
      */
-    otError Init(const uint8_t *aFrame, uint16_t aFrameLength);
+    void Init(uint16_t aSize, uint16_t aTag, uint16_t aOffset);
 
     /**
-     * This method initializes the fragment header from a message @p aMessage.
+     * This static method indicates whether or not the header (in a given frame) is a Fragment Header.
      *
-     * @param[in]  aMessage      The message object.
-     * @param[in]  aOffset       An offset into the message to read the header.
-     *
-     * @retval OT_ERROR_NONE     Fragment Header initialized successfully.
-     * @retval OT_ERROR_PARSE    Fragment header could not be parsed from @p aMessage.
-     *
-     */
-    otError Init(const Message &aMessage, uint16_t aOffset);
-
-    /**
-     * This method indicates whether or not the header is a Fragment Header.
+     * @note This method checks whether the frame has the minimum required length and that the first byte in
+     * header (dispatch byte) matches the Fragment Header dispatch value. It does not fully parse and validate the
+     * Fragment Header. `ParseFrom()` method can be used to fully parse and validate the header.
      *
      * @retval TRUE   If the header matches the Fragment Header dispatch value.
      * @retval FALSE  If the header does not match the Fragment Header dispatch value.
      *
      */
-    bool IsFragmentHeader(void) const { return (HostSwap16(mDispatchSize) & kDispatchMask) == kDispatch; }
+    static bool IsFragmentHeader(const uint8_t *aFrame, uint16_t aFrameLength);
 
     /**
-     * This method returns the Fragment Header length.
+     * This method parses the Fragment Header from a frame @p aFrame.
      *
-     * @returns The Fragment Header length in bytes.
+     * @param[in]  aFrame          The pointer to the frame.
+     * @param[in]  aFrameLength    The length of the frame.
+     * @param[out] aHeaderLength   A reference to a variable to output the parsed header length (on success).
+     *
+     * @retval OT_ERROR_NONE     Fragment Header parsed successfully.
+     * @retval OT_ERROR_PARSE    Fragment header could not be parsed from @p aFrame.
      *
      */
-    uint8_t GetHeaderLength(void) const { return IsOffsetPresent() ? sizeof(*this) : sizeof(*this) - sizeof(mOffset); }
+    otError ParseFrom(const uint8_t *aFrame, uint16_t aFrameLength, uint16_t &aHeaderLength);
 
     /**
-     * This method indicates whether or not the Offset field is present.
+     * This method parses the Fragment Header from a message.
      *
-     * @returns TRUE if the Offset field is present, FALSE otherwise.
+     * @param[in]  aMessage      The message to read from.
+     * @param[in]  aOffset       The offset within the message to start reading from.
+     * @param[out] aHeaderLength A reference to a variable to output the parsed header length (on success).
+     *
+     * @retval OT_ERROR_NONE     Fragment Header parsed successfully.
+     * @retval OT_ERROR_PARSE    Fragment header could not be parsed from @p aFrame.
      *
      */
-    bool IsOffsetPresent(void) const { return (HostSwap16(mDispatchSize) & kOffset) != 0; }
+    otError ParseFrom(const Message &aMessage, uint16_t aOffset, uint16_t &aHeaderLength);
 
     /**
      * This method returns the Datagram Size value.
@@ -632,18 +627,7 @@ public:
      * @returns The Datagram Size value.
      *
      */
-    uint16_t GetDatagramSize(void) const { return HostSwap16(mDispatchSize) & kSizeMask; }
-
-    /**
-     * This method sets the Datagram Size value.
-     *
-     * @param[in]  aSize  The Datagram Size value.
-     *
-     */
-    void SetDatagramSize(uint16_t aSize)
-    {
-        mDispatchSize = HostSwap16((HostSwap16(mDispatchSize) & ~kSizeMask) | (aSize & kSizeMask));
-    }
+    uint16_t GetDatagramSize(void) const { return mSize; }
 
     /**
      * This method returns the Datagram Tag value.
@@ -651,57 +635,47 @@ public:
      * @returns The Datagram Tag value.
      *
      */
-    uint16_t GetDatagramTag(void) const { return HostSwap16(mTag); }
-
-    /**
-     * This method sets the Datagram Tag value.
-     *
-     * @param[in]  aTag  The Datagram Tag value.
-     *
-     */
-    void SetDatagramTag(uint16_t aTag) { mTag = HostSwap16(aTag); }
+    uint16_t GetDatagramTag(void) const { return mTag; }
 
     /**
      * This method returns the Datagram Offset value.
      *
-     * @returns The Datagram Offset value.
+     * The returned offset value is always multiple of 8.
+     *
+     * @returns The Datagram Offset value (multiple of 8).
      *
      */
-    uint16_t GetDatagramOffset(void) const { return IsOffsetPresent() ? static_cast<uint16_t>(mOffset) * 8 : 0; }
+    uint16_t GetDatagramOffset(void) const { return mOffset; }
 
     /**
-     * This method sets the Datagram Offset value.
+     * This method writes the Fragment Header into a given frame.
      *
-     * @param[in]  aOffset  The Datagram Offset value.
+     * @note This method expects the frame buffer to have enough space for the entire Fragment Header
+     *
+     * @param[out]  aFrame  The pointer to the frame buffer to write to.
+     *
+     * @returns The header length (number of bytes written).
      *
      */
-    void SetDatagramOffset(uint16_t aOffset)
-    {
-        if (aOffset == 0)
-        {
-            mDispatchSize = HostSwap16(HostSwap16(mDispatchSize) & ~kOffset);
-        }
-        else
-        {
-            mDispatchSize = HostSwap16(HostSwap16(mDispatchSize) | kOffset);
-            mOffset       = (aOffset >> 3) & kOffsetMask;
-        }
-    }
+    uint16_t WriteTo(uint8_t *aFrame) const;
 
 private:
     enum
     {
-        kDispatch     = 3 << 14,
-        kOffset       = 1 << 13,
-        kDispatchMask = 0xd800, ///< Accept FRAG1 and FRAGN only.
-        kSizeMask     = 0x7ff,
-        kOffsetMask   = 0xff,
+        kDispatch     = 0xc0,   // 0b1100_0000
+        kDispatchMask = 0xd8,   // 0b1101_1000 which accepts first frag (0b1100_0xxx) and next frag (0b1110_0xxx).
+        kOffsetFlag   = 1 << 5, // Dispatch flag to indicate first (no offset) vs. next (offset is present) fragment.
+        kSizeMask     = 0x7ff,  // 0b0111_1111_1111 (first 11 bits).
+        kOffsetMask   = 0xfff8, // Clears the last 3 bits to ensure offset is a multiple of 8.
+        kSizeIndex    = 0,      // Start index of Size field in the Fragment Header byte sequence.
+        kTagIndex     = 2,      // Start index of Tag field in the Fragment Header byte sequence.
+        kOffsetIndex  = 4,      // Start index of Offset field in the Fragment Header byte sequence.
     };
 
-    uint16_t mDispatchSize;
+    uint16_t mSize;
     uint16_t mTag;
-    uint8_t  mOffset;
-} OT_TOOL_PACKED_END;
+    uint16_t mOffset;
+};
 
 /**
  * @}
