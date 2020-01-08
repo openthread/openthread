@@ -33,6 +33,10 @@ lib_LIBRARIES = libopenthread-samr21.a
 override CFLAGS                              := $(filter-out -pedantic-errors,$(CFLAGS))
 override CXXFLAGS                            := $(filter-out -pedantic-errors,$(CXXFLAGS))
 
+# Do not enable -Wundef for this platform
+override CFLAGS                              := $(filter-out -Wundef,$(CFLAGS))
+override CXXFLAGS                            := $(filter-out -Wundef,$(CXXFLAGS))
+
 libopenthread_samr21_a_CPPFLAGS                                                                              = \
     -D ARM_MATH_CM0PLUS=true                                                                                   \
     -D PHY_AT86RF233                                                                                           \

@@ -38,9 +38,9 @@
 #include "ncp/hdlc.hpp"
 #include "ncp/ncp_base.hpp"
 
-#if OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
+#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 #include "spinel_encrypter.hpp"
-#endif // OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
 namespace ot {
 namespace Ncp {
@@ -85,7 +85,7 @@ private:
         kFinalizingFrame, // Finalizing a frame.
     };
 
-#if OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
+#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
     /**
      * Wraps NcpFrameBuffer allowing to read data through spinel encrypter.
      * Creates additional buffers to allow transforming of the whole spinel frames.
@@ -112,7 +112,7 @@ private:
         size_t          mDataBufferReadIndex;
         size_t          mOutputDataLength;
     };
-#endif // OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
     void EncodeAndSendToUart(void);
     void HandleFrame(otError aError);
@@ -136,9 +136,9 @@ private:
     bool                                 mUartSendImmediate;
     Tasklet                              mUartSendTask;
 
-#if OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
+#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
     NcpFrameBufferEncrypterReader mTxFrameBufferEncrypterReader;
-#endif // OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 };
 
 } // namespace Ncp

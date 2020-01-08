@@ -1287,7 +1287,7 @@ public:
     {
         mFlags |= kJoiningFlag;
 
-#if OPENTHREAD_CONFIG_MAC_JOIN_BEACON_VERSION != kProtocolVersion
+#if OPENTHREAD_CONFIG_MAC_JOIN_BEACON_VERSION != 2 // check against kProtocolVersion
         mFlags &= ~kVersionMask;
         mFlags |= OPENTHREAD_CONFIG_MAC_JOIN_BEACON_VERSION << kVersionOffset;
 #endif

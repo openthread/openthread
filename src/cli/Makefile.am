@@ -129,15 +129,23 @@ if OPENTHREAD_POSIX
 CPPFLAGS_COMMON +=                    \
     -DOPENTHREAD_POSIX=1              \
     $(NULL)
+else
+CPPFLAGS_COMMON +=                    \
+    -DOPENTHREAD_POSIX=0              \
+    $(NULL)
 endif
 
 libopenthread_cli_mtd_a_CPPFLAGS =    \
     -DOPENTHREAD_MTD=1                \
+    -DOPENTHREAD_FTD=0                \
+    -DOPENTHREAD_RADIO=0              \
     $(CPPFLAGS_COMMON)                \
     $(NULL)
 
 libopenthread_cli_ftd_a_CPPFLAGS =    \
+    -DOPENTHREAD_MTD=0                \
     -DOPENTHREAD_FTD=1                \
+    -DOPENTHREAD_RADIO=0              \
     $(CPPFLAGS_COMMON)                \
     $(NULL)
 

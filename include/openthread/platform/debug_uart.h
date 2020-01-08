@@ -56,7 +56,7 @@
  * intended to be present, or used in production system.
  */
 
-#if __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -188,7 +188,7 @@ otError otPlatDebugUart_logfile(const char *filename);
  *
  */
 
-#if __cplusplus
+#ifdef __cplusplus
 } // extern "C"
 #endif
 

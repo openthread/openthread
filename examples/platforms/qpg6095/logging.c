@@ -26,6 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "openthread-core-config.h"
+
 #include "platform_qorvo.h"
 
 #include <ctype.h>

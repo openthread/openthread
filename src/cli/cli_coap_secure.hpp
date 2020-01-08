@@ -41,6 +41,10 @@
 #include "coap/coap_message.hpp"
 #include "coap/coap_secure.hpp"
 
+#ifndef CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
+#define CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER 0
+#endif
+
 namespace ot {
 namespace Cli {
 
