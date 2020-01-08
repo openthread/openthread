@@ -45,6 +45,7 @@ libopenthread_platform_utils_a_SOURCES  = \
     logging_rtt.h                         \
     mac_frame.cpp                         \
     mac_frame.h                           \
+    settings.h                            \
     settings_ram.c                        \
     settings_flash.c                      \
     soft_source_match_table.c             \

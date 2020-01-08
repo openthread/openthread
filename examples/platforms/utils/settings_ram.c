@@ -32,7 +32,7 @@
  *
  */
 
-#include <openthread-core-config.h>
+#include "settings.h"
 
 #include <assert.h>
 #include <stddef.h>
