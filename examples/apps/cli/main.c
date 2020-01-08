@@ -46,6 +46,10 @@ jmp_buf gResetJump;
 void __gcov_flush();
 #endif
 
+#ifndef OPENTHREAD_ENABLE_COVERAGE
+#define OPENTHREAD_ENABLE_COVERAGE 0
+#endif
+
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 void *otPlatCAlloc(size_t aNum, size_t aSize)
 {

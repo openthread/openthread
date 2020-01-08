@@ -62,6 +62,10 @@
 #endif
 #include <openthread-system.h>
 
+#ifndef OPENTHREAD_ENABLE_COVERAGE
+#define OPENTHREAD_ENABLE_COVERAGE 0
+#endif
+
 typedef struct PosixConfig
 {
     otPlatformConfig mPlatformConfig;    ///< Platform configuration.
