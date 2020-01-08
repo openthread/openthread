@@ -237,8 +237,6 @@ exit:
     {
         otLogNotePlat("SPI interface falls back to polling mode.");
     }
-
-    return;
 }
 
 void SpiInterface::SpiDevInit(const char *aPath, uint8_t aMode, uint32_t aSpeed)
