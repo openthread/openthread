@@ -36,11 +36,11 @@
 
 #include <openthread/platform/radio.h>
 
-#if OPENTHREAD_POSIX_NCP_UART_ENABLE
+#if OPENTHREAD_POSIX_RCP_UART_ENABLE
 #include "hdlc_interface.hpp"
 #endif
 
-#if OPENTHREAD_POSIX_NCP_SPI_ENABLE
+#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
 #include "spi_interface.hpp"
 #endif
 
@@ -650,11 +650,13 @@ private:
 
     otInstance *mInstance;
 
-#if OPENTHREAD_POSIX_NCP_UART_ENABLE
+    SpinelInterface::RxFrameBuffer mRxFrameBuffer;
+
+#if OPENTHREAD_POSIX_RCP_UART_ENABLE
     HdlcInterface mSpinelInterface;
 #endif
 
-#if OPENTHREAD_POSIX_NCP_SPI_ENABLE
+#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
     SpiInterface mSpinelInterface;
 #endif
 

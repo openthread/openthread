@@ -99,7 +99,7 @@ LOCAL_CFLAGS                                                                := \
     -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1                          \
     -DOPENTHREAD_FTD=1                                                         \
     -DOPENTHREAD_POSIX=1                                                       \
-    -DOPENTHREAD_POSIX_NCP_UART_ENABLE=1                                       \
+    -DOPENTHREAD_POSIX_RCP_UART_ENABLE=1                                       \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                             \
     $(OPENTHREAD_PROJECT_CFLAGS)                                               \
     $(NULL)
@@ -301,7 +301,7 @@ LOCAL_CFLAGS                                                                := \
     -DOPENTHREAD_FTD=1                                                         \
     -DOPENTHREAD_POSIX=1                                                       \
     -DOPENTHREAD_POSIX_APP_TYPE=2                                              \
-    -DOPENTHREAD_POSIX_NCP_UART_ENABLE=1                                       \
+    -DOPENTHREAD_POSIX_RCP_UART_ENABLE=1                                       \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                             \
     $(OPENTHREAD_PROJECT_CFLAGS)                                               \
     $(NULL)
@@ -353,7 +353,7 @@ LOCAL_CFLAGS                                                                := \
     -DOPENTHREAD_FTD=1                                                         \
     -DOPENTHREAD_POSIX=1                                                       \
     -DOPENTHREAD_POSIX_APP_TYPE=1                                              \
-    -DOPENTHREAD_POSIX_NCP_UART_ENABLE=1                                       \
+    -DOPENTHREAD_POSIX_RCP_UART_ENABLE=1                                       \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                             \
     $(OPENTHREAD_PROJECT_CFLAGS)                                               \
     $(NULL)

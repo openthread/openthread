@@ -119,16 +119,16 @@
 
 #endif // __APPLE__
 
-#if OPENTHREAD_POSIX_NCP_UART_ENABLE
+#if OPENTHREAD_POSIX_RCP_UART_ENABLE
 
 namespace ot {
 namespace PosixApp {
 
-HdlcInterface::HdlcInterface(Callbacks &aCallbacks)
-    : SpinelInterface()
-    , mCallbacks(aCallbacks)
+HdlcInterface::HdlcInterface(SpinelInterface::Callbacks &aCallback, SpinelInterface::RxFrameBuffer &aFrameBuffer)
+    : mCallbacks(aCallback)
+    , mRxFrameBuffer(aFrameBuffer)
     , mSockFd(-1)
-    , mHdlcDecoder(mRxFrameBuffer, HandleHdlcFrame, this)
+    , mHdlcDecoder(aFrameBuffer, HandleHdlcFrame, this)
 {
 }
 
@@ -625,4 +625,4 @@ void HdlcInterface::HandleHdlcFrame(otError aError)
 
 } // namespace PosixApp
 } // namespace ot
-#endif // OPENTHREAD_POSIX_NCP_UART_ENABLE
+#endif // OPENTHREAD_POSIX_RCP_UART_ENABLE

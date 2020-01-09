@@ -39,7 +39,7 @@
 
 #include <openthread-system.h>
 
-#if OPENTHREAD_POSIX_NCP_SPI_ENABLE
+#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
 
 #include "ncp/ncp_spi.hpp"
 
@@ -50,7 +50,7 @@ namespace PosixApp {
  * This class defines an SPI interface to the Radio Co-processor (RCP)
  *
  */
-class SpiInterface : public SpinelInterface
+class SpiInterface
 {
 public:
     /**
@@ -59,7 +59,7 @@ public:
      * @param[in] aCallback   A reference to a `Callback` object.
      *
      */
-    explicit SpiInterface(Callbacks &aCallbacks);
+    SpiInterface(SpinelInterface::Callbacks &aCallback, SpinelInterface::RxFrameBuffer &aFrameBuffer);
 
     /**
      * This destructor deinitializes the object.
@@ -90,15 +90,13 @@ public:
     /**
      * This method encodes and sends a spinel frame to Radio Co-processor (RCP) over the socket.
      *
-     * This is blocking call, i.e., if the socket is not writable, this method waits for it to become writable for
-     * up to `kMaxWaitTime` interval.
-     *
      * @param[in] aFrame     A pointer to buffer containing the spinel frame to send.
      * @param[in] aLength    The length (number of bytes) in the frame.
      *
      * @retval OT_ERROR_NONE     Successfully encoded and sent the spinel frame.
+     * @retval OT_ERROR_BUSY     Failed due to another operation is on going.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to encode the frame.
-     * @retval OT_ERROR_FAILED   Failed to send due to socket not becoming writable within `kMaxWaitTime`.
+     * @retval OT_ERROR_FAILED   Failed to call the SPI driver to send the frame.
      *
      */
     otError SendFrame(const uint8_t *aFrame, uint16_t aLength);
@@ -160,6 +158,9 @@ private:
         kSpiModeMax              = 3,
         kSpiAlignAllowanceMax    = 16,
         kSpiFrameHeaderSize      = 5,
+        kSpiBitsPerWord          = 8,
+        kSpiTxRefuseWarnCount    = 30,
+        kSpiTxRefuseExitCount    = 100,
         kImmediateRetryTimeoutMs = 1,
         kFastRetryTimeoutMs      = 10,
         kSlowRetryTimeoutMs      = 33,
@@ -174,10 +175,18 @@ private:
     {
         kMsecPerSec      = 1000,
         kUsecPerMsec     = 1000,
-        kSpiPollPeriodMs = (kMsecPerSec / 30),
+        kSpiPollPeriodMs = kMsecPerSec / 30,
+        kMsecPerDay      = kMsecPerSec * 60 * 60 * 24,
+        kResetHoldOnUsec = kUsecPerMsec * 10;
     };
 
-    Callbacks &mCallbacks;
+    enum
+    {
+        kMaxFrameSize = SpinelInterface::kMaxFrameSize,
+    };
+
+    SpinelInterface::Callbacks &    mCallbacks;
+    SpinelInterface::RxFrameBuffer &mRxFrameBuffer;
 
     int mSpiDevFd;
     int mResetGpioValueFd;
@@ -214,5 +223,5 @@ private:
 } // namespace PosixApp
 } // namespace ot
 
-#endif // OPENTHREAD_POSIX_NCP_SPI_ENABLE
+#endif // OPENTHREAD_POSIX_RCP_SPI_ENABLE
 #endif // POSIX_APP_SPI_INTERFACE_HPP_

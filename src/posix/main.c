@@ -103,7 +103,7 @@ static const struct option kOptions[] = {{"debug-level", required_argument, NULL
                                          {"radio-version", no_argument, NULL, ARG_PRINT_RADIO_VERSION},
                                          {"time-speed", required_argument, NULL, 's'},
                                          {"verbose", no_argument, NULL, 'v'},
-#if OPENTHREAD_POSIX_NCP_SPI_ENABLE
+#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
                                          {"gpio-int-dev", required_argument, NULL, ARG_SPI_GPIO_INT_DEV},
                                          {"gpio-int-line", required_argument, NULL, ARG_SPI_GPIO_INT_LINE},
                                          {"gpio-reset-dev", required_argument, NULL, ARG_SPI_GPIO_RESET_DEV},
@@ -130,7 +130,7 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "        --radio-version           Print radio firmware version\n"
             "    -s  --time-speed factor       Time speed up factor.\n"
             "    -v  --verbose                 Also log to stderr.\n"
-#if OPENTHREAD_POSIX_NCP_SPI_ENABLE
+#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
             "        --gpio-int-dev[=gpio-device-path]\n"
             "                                  Specify a path to the Linux sysfs-exported GPIO device for the\n"
             "                                  `I̅N̅T̅` pin. If not specified, `SPI` interface will fall back to\n"
@@ -220,7 +220,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         case ARG_NO_RADIO_RESET:
             aConfig->mPlatformConfig.mResetRadio = false;
             break;
-#if OPENTHREAD_POSIX_NCP_SPI_ENABLE
+#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
         case ARG_SPI_GPIO_INT_DEV:
             aConfig->mPlatformConfig.mSpiGpioIntDevice = optarg;
             break;

@@ -54,7 +54,7 @@
 #include <sys/types.h>
 #include <sys/ucontext.h>
 
-#if OPENTHREAD_POSIX_NCP_SPI_ENABLE
+#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
 #include <linux/gpio.h>
 #include <linux/ioctl.h>
 #include <linux/spi/spidev.h>
@@ -62,9 +62,9 @@
 namespace ot {
 namespace PosixApp {
 
-SpiInterface::SpiInterface(Callbacks &aCallbacks)
-    : SpinelInterface()
-    , mCallbacks(aCallbacks)
+SpiInterface::SpiInterface(SpinelInterface::Callbacks &aCallback, SpinelInterface::RxFrameBuffer &aFrameBuffer)
+    : mCallbacks(aCallback)
+    , mRxFrameBuffer(aFrameBuffer)
     , mSpiDevFd(-1)
     , mResetGpioValueFd(-1)
     , mIntGpioValueFd(-1)
@@ -242,7 +242,7 @@ exit:
 void SpiInterface::SpiDevInit(const char *aPath, uint8_t aMode, uint32_t aSpeed)
 {
     int           fd       = -1;
-    const uint8_t wordBits = 8;
+    const uint8_t wordBits = kSpiBitsPerWord;
 
     VerifyOrDie((aPath != NULL) && (aMode <= kSpiModeMax), OT_EXIT_FAILURE);
 
@@ -273,7 +273,7 @@ void SpiInterface::TrigerReset(void)
     // Set Reset pin to low level.
     SetGpioValue(mResetGpioValueFd, 0);
 
-    usleep(10 * kUsecPerMsec);
+    usleep(kResetHoldOnUsec);
 
     // Set Reset pin to high level.
     SetGpioValue(mResetGpioValueFd, 1);
@@ -312,7 +312,7 @@ otError SpiInterface::DoSpiXfer(int aLength)
     xfer[0].len           = 0;
     xfer[0].speed_hz      = (uint32_t)mSpiSpeedHz;
     xfer[0].delay_usecs   = (uint16_t)mSpiCsDelayUs;
-    xfer[0].bits_per_word = 8;
+    xfer[0].bits_per_word = kSpiBitsPerWord;
     xfer[0].cs_change     = false;
 
     // This part is the actual SPI transfer.
@@ -321,7 +321,7 @@ otError SpiInterface::DoSpiXfer(int aLength)
     xfer[1].len           = (uint32_t)(aLength + kSpiFrameHeaderSize + mSpiAlignAllowance);
     xfer[1].speed_hz      = (uint32_t)mSpiSpeedHz;
     xfer[1].delay_usecs   = 0;
-    xfer[1].bits_per_word = 8;
+    xfer[1].bits_per_word = kSpiBitsPerWord;
     xfer[1].cs_change     = false;
 
     if (mSpiCsDelayUs > 0)
@@ -555,7 +555,7 @@ bool SpiInterface::CheckInterrupt(void)
 
 void SpiInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout)
 {
-    int timeout = kMsecPerSec * 60 * 60 * 24; // 24 hours
+    int timeout = kMsecPerDay;
 
     OT_UNUSED_VARIABLE(aWriteFdSet);
 
@@ -624,13 +624,13 @@ void SpiInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMa
             mDidPrintRateLimitLog = true;
         }
 
-        if (mSpiTxRefusedCount == 30)
+        if (mSpiTxRefusedCount == kSpiTxRefuseWarnCount)
         {
             // Ua-oh. The slave hasn't given us a chance to send it anything for over thirty frames. If this ever
             // happens, print out a warning to the logs.
-            otLogNotePlat("Slave seems stuck.");
+            otLogWarnPlat("Slave seems stuck.");
         }
-        else if (mSpiTxRefusedCount == 100)
+        else if (mSpiTxRefusedCount == kSpiTxRefuseExitCount)
         {
             // Double ua-oh. The slave hasn't given us a chance to send it anything for over a hundred frames.
             // This almost certainly means that the slave has locked up or gotten into an unrecoverable state.
@@ -676,7 +676,7 @@ void SpiInterface::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
 otError SpiInterface::WaitForFrame(struct timeval &aTimeout)
 {
     otError  error   = OT_ERROR_NONE;
-    uint32_t timeout = kMsecPerSec * 60 * 60 * 24; // 24 hours
+    uint32_t timeout = kMsecPerDay;
     fd_set   readFdSet;
     int      ret;
 
@@ -759,9 +759,9 @@ void SpiInterface::HandleReceivedFrame(Ncp::SpiFrame &aSpiFrame)
 
     for (uint16_t i = 0; i < aSpiFrame.GetHeaderDataLen(); i++)
     {
-        if (GetRxFrameBuffer().WriteByte(spinelFrame[i]) != OT_ERROR_NONE)
+        if (mRxFrameBuffer.WriteByte(spinelFrame[i]) != OT_ERROR_NONE)
         {
-            GetRxFrameBuffer().DiscardFrame();
+            mRxFrameBuffer.DiscardFrame();
             otLogNotePlat("No enough memory buffers, drop packet");
             ExitNow();
         }
@@ -830,4 +830,4 @@ void SpiInterface::LogBuffer(const char *aDesc, const uint8_t *aBuffer, int aLen
 } // namespace PosixApp
 } // namespace ot
 
-#endif // OPENTHREAD_POSIX_NCP_SPI_ENABLE
+#endif // OPENTHREAD_POSIX_RCP_SPI_ENABLE
