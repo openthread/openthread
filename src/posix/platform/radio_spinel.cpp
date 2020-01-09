@@ -674,7 +674,7 @@ void RadioSpinel::HandleWaitingResponse(uint32_t          aCommand,
                 // reserved SPINEL_DATATYPE_VOID_C indicate caller want to parse the spinel response itself
                 ResponseHandler handler = va_arg(mPropertyArgs, ResponseHandler);
 
-                VerifyOrExit(handler != NULL, mError = OT_ERROR_FAILED);
+                assert(handler != NULL);
                 mError = (this->*handler)(aBuffer, aLength);
             }
             else
