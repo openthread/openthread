@@ -526,9 +526,9 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
             size_t      len;
 
             SuccessOrExit(error = decoder.ReadUtf8(name));
-            len = strlen(name);
-            VerifyOrExit(len <= OT_NETWORK_NAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
-            memcpy(opDataset.mNetworkName.m8, name, len + 1);
+            len = strnlen(name, OT_NETWORK_NAME_MAX_SIZE);
+            memcpy(opDataset.mNetworkName.m8, name, len);
+            opDataset.mNetworkName.m8[len]              = '\0';
             opDataset.mComponents.mIsNetworkNamePresent = true;
             break;
         }
