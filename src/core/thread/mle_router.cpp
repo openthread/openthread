@@ -3447,7 +3447,7 @@ uint8_t MleRouter::GetCost(uint16_t aRloc16)
 
     VerifyOrExit(router != NULL && mRouterTable.GetRouter(router->GetNextHop()) != NULL);
 
-    routeCost = GetRouteCost(aRloc16) + GetLinkCost(mRouterTable.GetRouter(routerId)->GetNextHop());
+    routeCost = GetRouteCost(aRloc16) + GetLinkCost(router->GetNextHop());
 
     if (cost > routeCost)
     {
