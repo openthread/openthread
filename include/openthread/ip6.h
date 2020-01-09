@@ -52,9 +52,10 @@ extern "C" {
  *
  */
 
-#define OT_IP6_PREFIX_SIZE 8   ///< Size of an IPv6 prefix (bytes)
-#define OT_IP6_IID_SIZE 8      ///< Size of an IPv6 Interface Identifier (bytes)
-#define OT_IP6_ADDRESS_SIZE 16 ///< Size of an IPv6 address (bytes)
+#define OT_IP6_PREFIX_SIZE 8                           ///< Size of an IPv6 prefix (bytes)
+#define OT_IP6_PREFIX_BITSIZE (OT_IP6_PREFIX_SIZE * 8) ///< Size of an IPv6 prefix (bits)
+#define OT_IP6_IID_SIZE 8                              ///< Size of an IPv6 Interface Identifier (bytes)
+#define OT_IP6_ADDRESS_SIZE 16                         ///< Size of an IPv6 address (bytes)
 
 /**
  * @struct otIp6Address

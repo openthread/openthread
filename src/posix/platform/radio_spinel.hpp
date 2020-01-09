@@ -647,8 +647,11 @@ private:
     /**
      * This method gets dataset from NCP radio and saves it.
      *
-     * @retval  OT_ERROR_NONE               Succeeded.
-     * @retval  OT_ERROR_FAILED             Failed.
+     * @retval  OT_ERROR_NONE               Successfully restore dataset.
+     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
+     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
+     * @retval  OT_ERROR_NOT_FOUND          Failed due to spinel property not supported in radio.
+     * @retval  OT_ERROR_FAILED             Failed due to other reasons.
      */
     otError RestoreDatasetFromNcp(void);
 

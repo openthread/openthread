@@ -492,9 +492,9 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
 {
     otError              error = OT_ERROR_NONE;
     otOperationalDataset opDataset;
+    bool                 isActive = ((mWaitingKey == SPINEL_PROP_THREAD_ACTIVE_DATASET) ? true : false);
     Ncp::SpinelDecoder   decoder;
-    MeshCoP::Dataset     dataset((mWaitingKey == SPINEL_PROP_THREAD_ACTIVE_DATASET) ? MeshCoP::Tlv::kActiveTimestamp
-                                                                                : MeshCoP::Tlv::kPendingTimestamp);
+    MeshCoP::Dataset     dataset(isActive ? MeshCoP::Tlv::kActiveTimestamp : MeshCoP::Tlv::kPendingTimestamp);
 
     memset(&opDataset, 0, sizeof(otOperationalDataset));
     decoder.Init(aBuffer, aLength);
@@ -526,7 +526,8 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
             size_t      len;
 
             SuccessOrExit(error = decoder.ReadUtf8(name));
-            len = strnlen(name, OT_NETWORK_NAME_MAX_SIZE + 1);
+            len = strlen(name);
+            VerifyOrExit(len <= OT_NETWORK_NAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
             memcpy(opDataset.mNetworkName.m8, name, len + 1);
             opDataset.mComponents.mIsNetworkNamePresent = true;
             break;
@@ -551,7 +552,7 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
 
             SuccessOrExit(error = decoder.ReadIp6Address(addr));
             SuccessOrExit(error = decoder.ReadUint8(prefixLen));
-            VerifyOrExit(prefixLen == 64, error = OT_ERROR_INVALID_ARGS);
+            VerifyOrExit(prefixLen == OT_IP6_PREFIX_BITSIZE, error = OT_ERROR_INVALID_ARGS);
             memcpy(opDataset.mMeshLocalPrefix.m8, addr, OT_MESH_LOCAL_PREFIX_SIZE);
             opDataset.mComponents.mIsMeshLocalPrefixPresent = true;
             break;
@@ -632,11 +633,9 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
     opDataset.mComponents.mIsActiveTimestampPresent = true;
 
     SuccessOrExit(error = dataset.Set(opDataset));
-    SuccessOrExit(error = otPlatSettingsSet(mInstance,
-                                            (mWaitingKey == SPINEL_PROP_THREAD_ACTIVE_DATASET)
-                                                ? SettingsBase::kKeyActiveDataset
-                                                : SettingsBase::kKeyPendingDataset,
-                                            dataset.GetBytes(), dataset.GetSize()));
+    SuccessOrExit(error = otPlatSettingsSet(
+                      mInstance, isActive ? SettingsBase::kKeyActiveDataset : SettingsBase::kKeyPendingDataset,
+                      dataset.GetBytes(), dataset.GetSize()));
 
 exit:
     return error;
@@ -670,19 +669,13 @@ void RadioSpinel::HandleWaitingResponse(uint32_t          aCommand,
     {
         if (mPropertyFormat)
         {
-            if ((spinel_datatype_t)mPropertyFormat[0] == SPINEL_DATATYPE_VOID_C)
+            if (static_cast<spinel_datatype_t>(mPropertyFormat[0]) == SPINEL_DATATYPE_VOID_C)
             {
                 // reserved SPINEL_DATATYPE_VOID_C indicate caller want to parse the spinel response itself
                 ResponseHandler handler = va_arg(mPropertyArgs, ResponseHandler);
 
-                if (handler != NULL)
-                {
-                    mError = (this->*handler)(aBuffer, aLength);
-                }
-                else
-                {
-                    mError = OT_ERROR_FAILED;
-                }
+                VerifyOrExit(handler != NULL, mError = OT_ERROR_FAILED);
+                mError = (this->*handler)(aBuffer, aLength);
             }
             else
             {
