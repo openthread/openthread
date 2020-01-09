@@ -102,7 +102,7 @@ otError SpiInterface::Init(const otPlatformConfig &aPlatformConfig)
     TrigerReset();
 
     // Waiting for the RCP chip starts up.
-    usleep((useconds_t)aPlatformConfig.mSpiResetDelay * kUsecPerMsec);
+    usleep(static_cast<useconds_t>(aPlatformConfig.mSpiResetDelay) * kUsecPerMsec);
 
     return OT_ERROR_NONE;
 }
@@ -642,8 +642,8 @@ void SpiInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMa
         mDidPrintRateLimitLog = false;
     }
 
-    if (static_cast<uint64_t>(timeout * US_PER_MS) <
-        static_cast<uint64_t>(aTimeout.tv_sec * US_PER_S + aTimeout.tv_usec))
+    if (static_cast<uint64_t>(timeout) * US_PER_MS <
+        static_cast<uint64_t>(aTimeout.tv_sec) * US_PER_S + aTimeout.tv_usec)
     {
         aTimeout.tv_sec  = static_cast<time_t>(timeout / kMsecPerSec);
         aTimeout.tv_usec = static_cast<suseconds_t>((timeout % kMsecPerSec) * kUsecPerMsec);
@@ -703,8 +703,8 @@ otError SpiInterface::WaitForFrame(struct timeval &aTimeout)
         timeout = kSpiPollPeriodMs;
     }
 
-    if (static_cast<uint64_t>(timeout * US_PER_MS) <
-        static_cast<uint64_t>(aTimeout.tv_sec * US_PER_S + aTimeout.tv_usec))
+    if (static_cast<uint64_t>(timeout) * US_PER_MS <
+        static_cast<uint64_t>(aTimeout.tv_sec) * US_PER_S + aTimeout.tv_usec)
     {
         aTimeout.tv_sec  = static_cast<time_t>(timeout / kMsecPerSec);
         aTimeout.tv_usec = static_cast<suseconds_t>((timeout % kMsecPerSec) * kUsecPerMsec);

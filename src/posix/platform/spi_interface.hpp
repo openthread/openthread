@@ -177,7 +177,7 @@ private:
         kUsecPerMsec     = 1000,
         kSpiPollPeriodMs = kMsecPerSec / 30,
         kMsecPerDay      = kMsecPerSec * 60 * 60 * 24,
-        kResetHoldOnUsec = kUsecPerMsec * 10;
+        kResetHoldOnUsec = kUsecPerMsec * 10,
     };
 
     enum
