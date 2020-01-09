@@ -232,6 +232,9 @@ Interpreter::Interpreter(Instance *aInstance)
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     , mResolvingInProgress(0)
 #endif
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
+    , mSntpQueryingInProgress(false)
+#endif
     , mUdp(*this)
     , mDataset(*this)
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
