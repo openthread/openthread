@@ -54,7 +54,7 @@ class OT_Sniffer(ISniffer):
         for line in p_discover.stdout.readlines():
             if line.startswith('interface'):
                 try:
-                    # e.g. interface {value=COM10}{display=OpenThread Sniffer COM10}
+                    # e.g. interface {value=COM10:460800}{display=OpenThread Sniffer COM10}
                     interface_port = line[line.index('value=') + 6 : line.index('}{display')]
                     sniffers.append(OT_Sniffer(addressofDevice=interface_port, channel=ModuleHelper.Default_Channel))
                 except Exception as e:
