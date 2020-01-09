@@ -668,17 +668,16 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
     NetworkData::Leader &networkData = Get<NetworkData::Leader>();
     otError              error       = OT_ERROR_PARSE;
     const uint8_t *      cur         = aBuf;
-    uint16_t             remaining   = aBufLength;
+    const uint8_t *      end         = aBuf + aBufLength;
     uint16_t             hcCtl;
     Context              srcContext, dstContext;
     bool                 srcContextValid = true, dstContextValid = true;
     uint8_t              nextHeader;
     uint8_t *            bytes;
 
-    VerifyOrExit(remaining >= 2);
+    VerifyOrExit(cur + 2 <= end);
     hcCtl = ReadUint16(cur);
     cur += 2;
-    remaining -= 2;
 
     // check Dispatch bits
     VerifyOrExit((hcCtl & kHcDispatchMask) == kHcDispatch);
@@ -689,7 +688,7 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
 
     if ((hcCtl & kHcContextId) != 0)
     {
-        VerifyOrExit(remaining >= 1);
+        VerifyOrExit(cur < end);
 
         if (networkData.GetContext(cur[0] >> 4, srcContext) != OT_ERROR_NONE)
         {
@@ -702,7 +701,6 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
         }
 
         cur++;
-        remaining--;
     }
     else
     {
@@ -716,7 +714,7 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
     // Traffic Class and Flow Label
     if ((hcCtl & kHcTrafficFlowMask) != kHcTrafficFlow)
     {
-        VerifyOrExit(remaining >= 1);
+        VerifyOrExit(cur < end);
 
         bytes = reinterpret_cast<uint8_t *>(&aIp6Header);
         bytes[1] |= (cur[0] & 0xc0) >> 2;
@@ -726,27 +724,24 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
             bytes[0] |= (cur[0] >> 2) & 0x0f;
             bytes[1] |= (cur[0] << 6) & 0xc0;
             cur++;
-            remaining--;
         }
 
         if ((hcCtl & kHcFlowLabel) == 0)
         {
-            VerifyOrExit(remaining >= 3);
+            VerifyOrExit(cur + 3 <= end);
             bytes[1] |= cur[0] & 0x0f;
             bytes[2] |= cur[1];
             bytes[3] |= cur[2];
             cur += 3;
-            remaining -= 3;
         }
     }
 
     // Next Header
     if ((hcCtl & kHcNextHeader) == 0)
     {
-        VerifyOrExit(remaining >= 1);
+        VerifyOrExit(cur < end);
         aIp6Header.SetNextHeader(cur[0]);
         cur++;
-        remaining--;
         aCompressedNextHeader = false;
     }
     else
@@ -770,10 +765,9 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
         break;
 
     default:
-        VerifyOrExit(remaining >= 1);
+        VerifyOrExit(cur < end);
         aIp6Header.SetHopLimit(cur[0]);
         cur++;
-        remaining--;
         break;
     }
 
@@ -783,28 +777,25 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
     case kHcSrcAddrMode0:
         if ((hcCtl & kHcSrcAddrContext) == 0)
         {
-            VerifyOrExit(remaining >= sizeof(Ip6::Address));
+            VerifyOrExit(cur + sizeof(Ip6::Address) <= end);
             memcpy(&aIp6Header.GetSource(), cur, sizeof(aIp6Header.GetSource()));
             cur += sizeof(Ip6::Address);
-            remaining -= sizeof(Ip6::Address);
         }
 
         break;
 
     case kHcSrcAddrMode1:
-        VerifyOrExit(remaining >= Ip6::Address::kInterfaceIdentifierSize);
+        VerifyOrExit(cur + Ip6::Address::kInterfaceIdentifierSize <= end);
         aIp6Header.GetSource().SetIid(cur);
         cur += Ip6::Address::kInterfaceIdentifierSize;
-        remaining -= Ip6::Address::kInterfaceIdentifierSize;
         break;
 
     case kHcSrcAddrMode2:
-        VerifyOrExit(remaining >= 2);
+        VerifyOrExit(cur + 2 <= end);
         aIp6Header.GetSource().mFields.m8[11] = 0xff;
         aIp6Header.GetSource().mFields.m8[12] = 0xfe;
         memcpy(aIp6Header.GetSource().mFields.m8 + 14, cur, 2);
         cur += 2;
-        remaining -= 2;
         break;
 
     case kHcSrcAddrMode3:
@@ -833,26 +824,23 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
         {
         case kHcDstAddrMode0:
             VerifyOrExit((hcCtl & kHcDstAddrContext) == 0);
-            VerifyOrExit(remaining >= sizeof(Ip6::Address));
+            VerifyOrExit(cur + sizeof(Ip6::Address) <= end);
             memcpy(&aIp6Header.GetDestination(), cur, sizeof(aIp6Header.GetDestination()));
             cur += sizeof(Ip6::Address);
-            remaining -= sizeof(Ip6::Address);
             break;
 
         case kHcDstAddrMode1:
-            VerifyOrExit(remaining >= Ip6::Address::kInterfaceIdentifierSize);
+            VerifyOrExit(cur + Ip6::Address::kInterfaceIdentifierSize <= end);
             aIp6Header.GetDestination().SetIid(cur);
             cur += Ip6::Address::kInterfaceIdentifierSize;
-            remaining -= Ip6::Address::kInterfaceIdentifierSize;
             break;
 
         case kHcDstAddrMode2:
-            VerifyOrExit(remaining >= 2);
+            VerifyOrExit(cur + 2 <= end);
             aIp6Header.GetDestination().mFields.m8[11] = 0xff;
             aIp6Header.GetDestination().mFields.m8[12] = 0xfe;
             memcpy(aIp6Header.GetDestination().mFields.m8 + 14, cur, 2);
             cur += 2;
-            remaining -= 2;
             break;
 
         case kHcDstAddrMode3:
@@ -884,34 +872,30 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
             switch (hcCtl & kHcDstAddrModeMask)
             {
             case kHcDstAddrMode0:
-                VerifyOrExit(remaining >= sizeof(Ip6::Address));
+                VerifyOrExit(cur + sizeof(Ip6::Address) <= end);
                 memcpy(aIp6Header.GetDestination().mFields.m8, cur, sizeof(Ip6::Address));
                 cur += sizeof(Ip6::Address);
-                remaining -= sizeof(Ip6::Address);
                 break;
 
             case kHcDstAddrMode1:
-                VerifyOrExit(remaining >= 6);
+                VerifyOrExit(cur + 6 <= end);
                 aIp6Header.GetDestination().mFields.m8[1] = cur[0];
                 memcpy(aIp6Header.GetDestination().mFields.m8 + 11, cur + 1, 5);
                 cur += 6;
-                remaining -= 6;
                 break;
 
             case kHcDstAddrMode2:
-                VerifyOrExit(remaining >= 4);
+                VerifyOrExit(cur + 4 <= end);
                 aIp6Header.GetDestination().mFields.m8[1] = cur[0];
                 memcpy(aIp6Header.GetDestination().mFields.m8 + 13, cur + 1, 3);
                 cur += 4;
-                remaining -= 4;
                 break;
 
             case kHcDstAddrMode3:
-                VerifyOrExit(remaining >= 1);
+                VerifyOrExit(cur < end);
                 aIp6Header.GetDestination().mFields.m8[1]  = 0x02;
                 aIp6Header.GetDestination().mFields.m8[15] = cur[0];
                 cur++;
-                remaining--;
                 break;
             }
         }
@@ -920,7 +904,7 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
             switch (hcCtl & kHcDstAddrModeMask)
             {
             case 0:
-                VerifyOrExit(remaining >= 6);
+                VerifyOrExit(cur + 6 <= end);
                 VerifyOrExit(dstContextValid);
                 aIp6Header.GetDestination().mFields.m8[1] = cur[0];
                 aIp6Header.GetDestination().mFields.m8[2] = cur[1];
@@ -928,7 +912,6 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
                 memcpy(aIp6Header.GetDestination().mFields.m8 + 4, dstContext.mPrefix, 8);
                 memcpy(aIp6Header.GetDestination().mFields.m8 + 12, cur + 2, 4);
                 cur += 6;
-                remaining -= 6;
                 break;
 
             default:
@@ -939,7 +922,7 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
 
     if ((hcCtl & kHcNextHeader) != 0)
     {
-        VerifyOrExit(remaining >= 1);
+        VerifyOrExit(cur < end);
         SuccessOrExit(DispatchToNextHeader(cur[0], nextHeader));
         aIp6Header.SetNextHeader(nextHeader);
     }
@@ -952,9 +935,9 @@ exit:
 
 int Lowpan::DecompressExtensionHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength)
 {
-    otError         error     = OT_ERROR_PARSE;
-    const uint8_t * cur       = aBuf;
-    uint16_t        remaining = aBufLength;
+    otError         error = OT_ERROR_PARSE;
+    const uint8_t * cur   = aBuf;
+    const uint8_t * end   = aBuf + aBufLength;
     uint8_t         hdr[2];
     uint8_t         len;
     uint8_t         nextHeader;
@@ -963,33 +946,30 @@ int Lowpan::DecompressExtensionHeader(Message &aMessage, const uint8_t *aBuf, ui
     Ip6::OptionPad1 optionPad1;
     Ip6::OptionPadN optionPadN;
 
-    VerifyOrExit(remaining >= 1);
+    VerifyOrExit(cur < end);
     cur++;
-    remaining--;
 
     // next header
     if (ctl & kExtHdrNextHeader)
     {
-        VerifyOrExit(remaining >= 1);
+        VerifyOrExit(cur < end);
 
         len = cur[0];
         cur++;
-        remaining--;
 
-        VerifyOrExit(remaining >= len);
+        VerifyOrExit(cur + len <= end);
         SuccessOrExit(DispatchToNextHeader(cur[len], nextHeader));
         hdr[0] = static_cast<uint8_t>(nextHeader);
     }
     else
     {
-        VerifyOrExit(remaining >= 2);
+        VerifyOrExit(cur + 2 <= end);
 
         hdr[0] = cur[0];
         len    = cur[1];
         cur += 2;
-        remaining -= 2;
 
-        VerifyOrExit(remaining >= len);
+        VerifyOrExit(cur + len <= end);
     }
 
     // length
@@ -1032,15 +1012,14 @@ exit:
 
 int Lowpan::DecompressUdpHeader(Ip6::UdpHeader &aUdpHeader, const uint8_t *aBuf, uint16_t aBufLength)
 {
-    otError        error     = OT_ERROR_PARSE;
-    const uint8_t *cur       = aBuf;
-    uint16_t       remaining = aBufLength;
+    otError        error = OT_ERROR_PARSE;
+    const uint8_t *cur   = aBuf;
+    const uint8_t *end   = aBuf + aBufLength;
     uint8_t        udpCtl;
 
-    VerifyOrExit(remaining >= 1);
+    VerifyOrExit(cur < end);
     udpCtl = cur[0];
     cur++;
-    remaining--;
 
     VerifyOrExit((udpCtl & kUdpDispatchMask) == kUdpDispatch);
 
@@ -1050,35 +1029,31 @@ int Lowpan::DecompressUdpHeader(Ip6::UdpHeader &aUdpHeader, const uint8_t *aBuf,
     switch (udpCtl & kUdpPortMask)
     {
     case 0:
-        VerifyOrExit(remaining >= 4);
+        VerifyOrExit(cur + 4 <= end);
         aUdpHeader.SetSourcePort(ReadUint16(cur));
         aUdpHeader.SetDestinationPort(ReadUint16(cur + 2));
         cur += 4;
-        remaining -= 4;
         break;
 
     case 1:
-        VerifyOrExit(remaining >= 3);
+        VerifyOrExit(cur + 3 <= end);
         aUdpHeader.SetSourcePort(ReadUint16(cur));
         aUdpHeader.SetDestinationPort(0xf000 | cur[2]);
         cur += 3;
-        remaining -= 3;
         break;
 
     case 2:
-        VerifyOrExit(remaining >= 3);
+        VerifyOrExit(cur + 3 <= end);
         aUdpHeader.SetSourcePort(0xf000 | cur[0]);
         aUdpHeader.SetDestinationPort(ReadUint16(cur + 1));
         cur += 3;
-        remaining -= 3;
         break;
 
     case 3:
-        VerifyOrExit(remaining >= 1);
+        VerifyOrExit(cur < end);
         aUdpHeader.SetSourcePort(0xf0b0 | (cur[0] >> 4));
         aUdpHeader.SetDestinationPort(0xf0b0 | (cur[0] & 0xf));
-        cur += 1;
-        remaining -= 1;
+        cur++;
         break;
     }
 
@@ -1089,7 +1064,7 @@ int Lowpan::DecompressUdpHeader(Ip6::UdpHeader &aUdpHeader, const uint8_t *aBuf,
     }
     else
     {
-        VerifyOrExit(remaining >= 2);
+        VerifyOrExit(cur + 2 <= end);
         aUdpHeader.SetChecksum(ReadUint16(cur));
         cur += 2;
     }

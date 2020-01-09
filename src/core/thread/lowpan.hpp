@@ -92,9 +92,9 @@ public:
      *
      */
     BufferWriter(uint8_t *aBuf, uint16_t aLength)
+        : mWritePointer(aBuf)
+        , mEndPointer(aBuf + aLength)
     {
-        mWritePointer    = aBuf;
-        mRemainingLength = aLength;
     }
 
     /**
@@ -106,7 +106,7 @@ public:
      * @retval  FALSE  Insufficient buffer space to write the requested number of bytes.
      *
      */
-    bool CanWrite(uint8_t aLength) const { return mRemainingLength >= aLength; }
+    bool CanWrite(uint8_t aLength) const { return (mWritePointer + aLength) <= mEndPointer; }
 
     /**
      * This method returns the current write pointer value.
@@ -121,8 +121,8 @@ public:
      *
      * @param[in]  aLength  Number of bytes to advance.
      *
-     * @retval  TRUE   Enough buffer space is available to advance the requested number of bytes.
-     * @retval  FALSE  Insufficient buffer space to advance the requested number of bytes.
+     * @retval OT_ERROR_NONE     Enough buffer space is available to advance the requested number of bytes.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space to advance the requested number of bytes.
      *
      */
     otError Advance(uint8_t aLength)
@@ -130,9 +130,7 @@ public:
         otError error = OT_ERROR_NONE;
 
         VerifyOrExit(CanWrite(aLength), error = OT_ERROR_NO_BUFS);
-
         mWritePointer += aLength;
-        mRemainingLength -= aLength;
 
     exit:
         return error;
@@ -154,7 +152,6 @@ public:
         VerifyOrExit(CanWrite(sizeof(aByte)), error = OT_ERROR_NO_BUFS);
 
         *mWritePointer++ = aByte;
-        mRemainingLength--;
 
     exit:
         return error;
@@ -178,7 +175,6 @@ public:
 
         memcpy(mWritePointer, aBuf, aLength);
         mWritePointer += aLength;
-        mRemainingLength -= aLength;
 
     exit:
         return error;
@@ -207,7 +203,6 @@ public:
         assert(rval == aLength);
 
         mWritePointer += aLength;
-        mRemainingLength -= aLength;
 
     exit:
         return error;
@@ -215,7 +210,7 @@ public:
 
 private:
     uint8_t *mWritePointer;
-    uint16_t mRemainingLength;
+    uint8_t *mEndPointer;
 };
 
 /**
