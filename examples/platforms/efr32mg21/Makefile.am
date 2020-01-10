@@ -44,7 +44,7 @@ override CXXFLAGS                            := $(filter-out -Wundef,$(CXXFLAGS)
 
 EFR32_BOARD_DIR                               = $(shell echo $(BOARD) | tr A-Z a-z)
 
-EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/$(SDKVERSION)
+EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.7
 
 libopenthread_efr32mg21_a_CPPFLAGS                                            = \
     -DEFR32_SERIES2_CONFIG1_MICRO                                               \
