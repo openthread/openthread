@@ -42,6 +42,8 @@ DEFAULT_PARAMS = {
 }
 """Default configurations when creating nodes."""
 
+EXTENDED_ADDRESS_BASE = 0x166e0a0000000000
+"""Extended address base to keep U/L bit 1. The value is borrowed from Thread Test Harness."""
 
 class TestCase(unittest.TestCase):
     """The base class for all thread certification test cases.
@@ -67,7 +69,7 @@ class TestCase(unittest.TestCase):
             self.nodes[i] = Node(i, params['is_mtd'], simulator=self.simulator)
             self.nodes[i].set_panid(params['panid'])
             self.nodes[i].set_mode(params['mode'])
-            self.nodes[i].set_addr64(format(0x166e0a0000000000 + i, '016x'))
+            self.nodes[i].set_addr64(format(EXTENDED_ADDRESS_BASE + i, '016x'))
 
         # we have to add whitelist after nodes are all created
         for i, params in initial_topology.items():
