@@ -33,6 +33,7 @@
 
 #include "openthread-core-config.h"
 #include "platform-posix.h"
+#include "ncp/spinel_decoder.hpp"
 
 #include "radio_spinel.hpp"
 
@@ -52,9 +53,14 @@
 #include <common/encoding.hpp>
 #include <common/logging.hpp>
 #include <common/new.hpp>
+#include <common/settings.hpp>
+#include <meshcop/dataset.hpp>
+#include <meshcop/meshcop_tlvs.hpp>
+#include <openthread/dataset.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
+#include <openthread/platform/settings.h>
 
 #ifndef TX_WAIT_US
 #define TX_WAIT_US (5 * US_PER_S)
@@ -184,6 +190,7 @@ RadioSpinel::RadioSpinel(void)
 void RadioSpinel::Init(const otPlatformConfig &aPlatformConfig)
 {
     otError error = OT_ERROR_NONE;
+    bool    isRcp;
 
     SuccessOrExit(error = mHdlcInterface.Init(aPlatformConfig));
 
@@ -196,13 +203,18 @@ void RadioSpinel::Init(const otPlatformConfig &aPlatformConfig)
     VerifyOrExit(mIsReady, error = OT_ERROR_FAILED);
 
     SuccessOrExit(error = CheckSpinelVersion());
-    SuccessOrExit(error = CheckCapabilities());
-    SuccessOrExit(error = CheckRadioCapabilities());
-
+    SuccessOrExit(error = CheckCapabilities(isRcp));
     SuccessOrExit(error = Get(SPINEL_PROP_NCP_VERSION, SPINEL_DATATYPE_UTF8_S, mVersion, sizeof(mVersion)));
     SuccessOrExit(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_UINT64_S, &gNodeId));
 
     gNodeId = ot::Encoding::BigEndian::HostSwap64(gNodeId);
+
+    if (aPlatformConfig.mRestoreDatasetFromNcp && !isRcp)
+    {
+        DieNow((RestoreDatasetFromNcp() == OT_ERROR_NONE) ? OT_EXIT_SUCCESS : OT_EXIT_FAILURE);
+    }
+
+    SuccessOrExit(error = CheckRadioCapabilities());
 
     mRxRadioFrame.mPsdu  = mRxPsdu;
     mTxRadioFrame.mPsdu  = mTxPsdu;
@@ -234,7 +246,7 @@ exit:
     return error;
 }
 
-otError RadioSpinel::CheckCapabilities(void)
+otError RadioSpinel::CheckCapabilities(bool &aIsRcp)
 {
     otError        error = OT_ERROR_NONE;
     uint8_t        capsBuffer[kCapsBufferSize];
@@ -243,6 +255,8 @@ otError RadioSpinel::CheckCapabilities(void)
     bool           supportsRawRadio = false;
 
     SuccessOrExit(error = Get(SPINEL_PROP_CAPS, SPINEL_DATATYPE_DATA_S, capsBuffer, &capsLength));
+
+    aIsRcp = false;
 
     while (capsLength > 0)
     {
@@ -262,11 +276,16 @@ otError RadioSpinel::CheckCapabilities(void)
             supportsRawRadio = true;
         }
 
+        if (capability == SPINEL_CAP_CONFIG_RADIO)
+        {
+            aIsRcp = true;
+        }
+
         capsData += unpacked;
         capsLength -= static_cast<spinel_size_t>(unpacked);
     }
 
-    if (!supportsRawRadio)
+    if (!supportsRawRadio && aIsRcp)
     {
         otLogCritPlat("RCP capability list does not include support for radio/raw mode");
         DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
@@ -298,6 +317,23 @@ otError RadioSpinel::CheckRadioCapabilities(void)
     }
 
 exit:
+    return error;
+}
+
+otError RadioSpinel::RestoreDatasetFromNcp(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    otPlatSettingsInit(mInstance);
+
+    otLogInfoPlat("Trying to get saved dataset from NCP");
+    SuccessOrExit(
+        error = Get(SPINEL_PROP_THREAD_ACTIVE_DATASET, SPINEL_DATATYPE_VOID_S, &RadioSpinel::ThreadDatasetHandler));
+    SuccessOrExit(
+        error = Get(SPINEL_PROP_THREAD_PENDING_DATASET, SPINEL_DATATYPE_VOID_S, &RadioSpinel::ThreadDatasetHandler));
+
+exit:
+    otPlatSettingsDeinit(mInstance);
     return error;
 }
 
@@ -452,6 +488,159 @@ exit:
     LogIfFail("Error processing response", error);
 }
 
+otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLength)
+{
+    otError              error = OT_ERROR_NONE;
+    otOperationalDataset opDataset;
+    bool                 isActive = ((mWaitingKey == SPINEL_PROP_THREAD_ACTIVE_DATASET) ? true : false);
+    Ncp::SpinelDecoder   decoder;
+    MeshCoP::Dataset     dataset(isActive ? MeshCoP::Tlv::kActiveTimestamp : MeshCoP::Tlv::kPendingTimestamp);
+
+    memset(&opDataset, 0, sizeof(otOperationalDataset));
+    decoder.Init(aBuffer, aLength);
+
+    while (!decoder.IsAllReadInStruct())
+    {
+        unsigned int propKey;
+
+        SuccessOrExit(error = decoder.OpenStruct());
+        SuccessOrExit(error = decoder.ReadUintPacked(propKey));
+
+        switch (static_cast<spinel_prop_key_t>(propKey))
+        {
+        case SPINEL_PROP_NET_MASTER_KEY:
+        {
+            const uint8_t *key;
+            uint16_t       len;
+
+            SuccessOrExit(error = decoder.ReadData(key, len));
+            VerifyOrExit(len == OT_MASTER_KEY_SIZE, error = OT_ERROR_INVALID_ARGS);
+            memcpy(opDataset.mMasterKey.m8, key, len);
+            opDataset.mComponents.mIsMasterKeyPresent = true;
+            break;
+        }
+
+        case SPINEL_PROP_NET_NETWORK_NAME:
+        {
+            const char *name;
+            size_t      len;
+
+            SuccessOrExit(error = decoder.ReadUtf8(name));
+            len = strnlen(name, OT_NETWORK_NAME_MAX_SIZE);
+            memcpy(opDataset.mNetworkName.m8, name, len);
+            opDataset.mNetworkName.m8[len]              = '\0';
+            opDataset.mComponents.mIsNetworkNamePresent = true;
+            break;
+        }
+
+        case SPINEL_PROP_NET_XPANID:
+        {
+            const uint8_t *xpanid;
+            uint16_t       len;
+
+            SuccessOrExit(error = decoder.ReadData(xpanid, len));
+            VerifyOrExit(len == OT_EXT_PAN_ID_SIZE, error = OT_ERROR_INVALID_ARGS);
+            memcpy(opDataset.mExtendedPanId.m8, xpanid, len);
+            opDataset.mComponents.mIsExtendedPanIdPresent = true;
+            break;
+        }
+
+        case SPINEL_PROP_IPV6_ML_PREFIX:
+        {
+            const otIp6Address *addr;
+            uint8_t             prefixLen;
+
+            SuccessOrExit(error = decoder.ReadIp6Address(addr));
+            SuccessOrExit(error = decoder.ReadUint8(prefixLen));
+            VerifyOrExit(prefixLen == OT_IP6_PREFIX_BITSIZE, error = OT_ERROR_INVALID_ARGS);
+            memcpy(opDataset.mMeshLocalPrefix.m8, addr, OT_MESH_LOCAL_PREFIX_SIZE);
+            opDataset.mComponents.mIsMeshLocalPrefixPresent = true;
+            break;
+        }
+
+        case SPINEL_PROP_DATASET_DELAY_TIMER:
+        {
+            SuccessOrExit(error = decoder.ReadUint32(opDataset.mDelay));
+            opDataset.mComponents.mIsDelayPresent = true;
+            break;
+        }
+
+        case SPINEL_PROP_MAC_15_4_PANID:
+        {
+            SuccessOrExit(error = decoder.ReadUint16(opDataset.mPanId));
+            opDataset.mComponents.mIsPanIdPresent = true;
+            break;
+        }
+
+        case SPINEL_PROP_PHY_CHAN:
+        {
+            uint8_t channel;
+
+            SuccessOrExit(error = decoder.ReadUint8(channel));
+            opDataset.mChannel                      = channel;
+            opDataset.mComponents.mIsChannelPresent = true;
+            break;
+        }
+
+        case SPINEL_PROP_NET_PSKC:
+        {
+            const uint8_t *psk;
+            uint16_t       len;
+
+            SuccessOrExit(error = decoder.ReadData(psk, len));
+            VerifyOrExit(len == OT_PSKC_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
+            memcpy(opDataset.mPskc.m8, psk, OT_PSKC_MAX_SIZE);
+            opDataset.mComponents.mIsPskcPresent = true;
+            break;
+        }
+
+        case SPINEL_PROP_DATASET_SECURITY_POLICY:
+        {
+            SuccessOrExit(error = decoder.ReadUint16(opDataset.mSecurityPolicy.mRotationTime));
+            SuccessOrExit(error = decoder.ReadUint8(opDataset.mSecurityPolicy.mFlags));
+            opDataset.mComponents.mIsSecurityPolicyPresent = true;
+            break;
+        }
+
+        case SPINEL_PROP_PHY_CHAN_SUPPORTED:
+        {
+            uint8_t channel;
+
+            opDataset.mChannelMask = 0;
+
+            while (!decoder.IsAllReadInStruct())
+            {
+                SuccessOrExit(error = decoder.ReadUint8(channel));
+                VerifyOrExit(channel <= 31, error = OT_ERROR_INVALID_ARGS);
+                opDataset.mChannelMask |= (1UL << channel);
+            }
+            opDataset.mComponents.mIsChannelMaskPresent = true;
+            break;
+        }
+
+        default:
+            break;
+        }
+
+        SuccessOrExit(error = decoder.CloseStruct());
+    }
+
+    /*
+     * Initially set Active Timestamp to 0. This is to allow the node to join the network
+     * yet retrieve the full Active Dataset from a neighboring device if one exists.
+     */
+    opDataset.mActiveTimestamp                      = 0;
+    opDataset.mComponents.mIsActiveTimestampPresent = true;
+
+    SuccessOrExit(error = dataset.Set(opDataset));
+    SuccessOrExit(error = otPlatSettingsSet(
+                      mInstance, isActive ? SettingsBase::kKeyActiveDataset : SettingsBase::kKeyPendingDataset,
+                      dataset.GetBytes(), dataset.GetSize()));
+
+exit:
+    return error;
+}
+
 void RadioSpinel::HandleWaitingResponse(uint32_t          aCommand,
                                         spinel_prop_key_t aKey,
                                         const uint8_t *   aBuffer,
@@ -480,11 +669,22 @@ void RadioSpinel::HandleWaitingResponse(uint32_t          aCommand,
     {
         if (mPropertyFormat)
         {
-            spinel_ssize_t unpacked =
-                spinel_datatype_vunpack_in_place(aBuffer, aLength, mPropertyFormat, mPropertyArgs);
+            if (static_cast<spinel_datatype_t>(mPropertyFormat[0]) == SPINEL_DATATYPE_VOID_C)
+            {
+                // reserved SPINEL_DATATYPE_VOID_C indicate caller want to parse the spinel response itself
+                ResponseHandler handler = va_arg(mPropertyArgs, ResponseHandler);
 
-            VerifyOrExit(unpacked > 0, mError = OT_ERROR_PARSE);
-            mError = OT_ERROR_NONE;
+                assert(handler != NULL);
+                mError = (this->*handler)(aBuffer, aLength);
+            }
+            else
+            {
+                spinel_ssize_t unpacked =
+                    spinel_datatype_vunpack_in_place(aBuffer, aLength, mPropertyFormat, mPropertyArgs);
+
+                VerifyOrExit(unpacked > 0, mError = OT_ERROR_PARSE);
+                mError = OT_ERROR_NONE;
+            }
         }
         else
         {

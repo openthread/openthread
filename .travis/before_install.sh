@@ -104,6 +104,10 @@ cd /tmp || die
         ) || die
     }
 
+    [ $BUILD_TARGET != posix-app-migrate ] || {
+        sudo apt-get install expect || die
+    }
+
     [ $BUILD_TARGET != arm-gcc-4 ] || {
         sudo apt-get install lib32z1 || die
         wget https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q3-update/+download/gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2 || die

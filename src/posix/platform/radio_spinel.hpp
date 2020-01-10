@@ -538,8 +538,10 @@ private:
         kStateTransmitDone, ///< Radio indicated frame transmission is done.
     };
 
+    typedef otError (RadioSpinel::*ResponseHandler)(const uint8_t *aBuffer, uint16_t aLength);
+
     otError CheckSpinelVersion(void);
-    otError CheckCapabilities(void);
+    otError CheckCapabilities(bool &aIsRcp);
     otError CheckRadioCapabilities(void);
     void    ProcessFrameQueue(void);
 
@@ -612,6 +614,7 @@ private:
                         const char *      pack_format,
                         va_list           args);
     otError ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffer, uint16_t aLength);
+    otError ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLength);
 
     /**
      * This method returns if the property changed event is safe to be handled now.
@@ -640,6 +643,17 @@ private:
     void RadioReceive(void);
 
     void TransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
+
+    /**
+     * This method gets dataset from NCP radio and saves it.
+     *
+     * @retval  OT_ERROR_NONE               Successfully restore dataset.
+     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
+     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
+     * @retval  OT_ERROR_NOT_FOUND          Failed due to spinel property not supported in radio.
+     * @retval  OT_ERROR_FAILED             Failed due to other reasons.
+     */
+    otError RestoreDatasetFromNcp(void);
 
     otInstance *mInstance;
 

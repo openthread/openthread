@@ -98,6 +98,7 @@ static const struct option kOptions[] = {{"debug-level", required_argument, NULL
                                          {"radio-version", no_argument, NULL, 0},
                                          {"time-speed", required_argument, NULL, 's'},
                                          {"verbose", no_argument, NULL, 'v'},
+                                         {"ncp-dataset", no_argument, NULL, 0},
                                          {0, 0, 0, 0}};
 
 static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
@@ -111,6 +112,7 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    -n  --dry-run               Just verify if arguments is valid and radio spinel is compatible.\n"
             "        --no-reset              Do not reset RCP on initialization\n"
             "        --radio-version         Print radio firmware version\n"
+            "        --ncp-dataset           Retrieve and save NCP dataset to file\n"
             "    -s  --time-speed factor     Time speed up factor.\n"
             "    -v  --verbose               Also log to stderr.\n"
             "    -h  --help                  Display this usage information.\n",
@@ -177,6 +179,10 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             else if (!strcmp(kOptions[index].name, "no-reset"))
             {
                 aConfig->mPlatformConfig.mResetRadio = false;
+            }
+            else if (!strcmp(kOptions[index].name, "ncp-dataset"))
+            {
+                aConfig->mPlatformConfig.mRestoreDatasetFromNcp = true;
             }
             break;
         case '?':
