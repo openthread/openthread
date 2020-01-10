@@ -37,7 +37,7 @@ from ISniffer import ISniffer
 class OT_Sniffer(ISniffer):
     def __init__(self, **kwargs):
         try:
-            self.channel = kwargs.get('channel')
+            self.channel = kwargs.get('channel', 11)
             self.port = kwargs.get('addressofDevice')
             self.subprocess = None
             self.is_active = False
