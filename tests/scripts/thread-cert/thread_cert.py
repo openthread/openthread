@@ -45,6 +45,7 @@ DEFAULT_PARAMS = {
 EXTENDED_ADDRESS_BASE = 0x166e0a0000000000
 """Extended address base to keep U/L bit 1. The value is borrowed from Thread Test Harness."""
 
+
 class TestCase(unittest.TestCase):
     """The base class for all thread certification test cases.
 
