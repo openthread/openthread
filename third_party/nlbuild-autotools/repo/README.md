@@ -1,6 +1,11 @@
 Nest Labs Build - GNU Autotools
 ===============================
 
+[![Build Status][nlbuild-autotools-travis-svg]][nlbuild-autotools-travis]
+
+[nlbuild-autotools-travis]: https://travis-ci.org/nestlabs/nlbuild-autotools
+[nlbuild-autotools-travis-svg]: https://travis-ci.org/nestlabs/nlbuild-autotools.svg?branch=master
+
 # Introduction
 
 The Nest Labs Build - GNU Autotools (nlbuild-autotools) provides a
