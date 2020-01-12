@@ -45,6 +45,7 @@ override CXXFLAGS                                    := $(filter-out -Wundef,$(C
 COMMONCPPFLAGS                                                                                             = \
     -DCONFIG_GPIO_AS_PINRESET                                                                                \
     -DNRF52833_XXAA                                                                                          \
+    -DUSE_APP_CONFIG=1                                                                                       \
     -I$(srcdir)                                                                                              \
     -I$(top_srcdir)/include                                                                                  \
     -I$(top_srcdir)/examples/platforms                                                                       \
@@ -57,8 +58,10 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/mac_features/ack_generator                 \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch                                       \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch/raal                                  \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch/raal/softdevice                       \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/lp_timer                          \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/temperature                       \
+    -Wno-unused-parameter                                                                                    \
     $(NULL)
 
 # Only reference the SDK header files included in third_party/NordicSemiconductor
@@ -72,7 +75,10 @@ COMMONCPPFLAGS                                                                  
 # built using the sources in third_party/NordicSemiconductor/drivers/radio.
 if OPENTHREAD_ENABLE_EXAMPLES
 COMMONCPPFLAGS                                                                                            += \
+    -I$(top_srcdir)/third_party/NordicSemiconductor                                                          \
     -I$(top_srcdir)/third_party/NordicSemiconductor/cmsis                                                    \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/config                                                   \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/config/nrf52833/config                                   \
     -I$(top_srcdir)/third_party/NordicSemiconductor/dependencies                                             \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/clock                                            \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/common                                           \
@@ -97,6 +103,7 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/soc                                                 \
     -I$(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers                                  \
     -I$(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf52                            \
+    -Wno-unused-parameter                                                                                    \
     $(NULL)
 endif
 
@@ -126,8 +133,6 @@ SOFTDEVICE_SOURCES                                                              
     $(NULL)
 
 SOFTDEVICE_CPPFLAGS                                                                                        = \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch/raal/softdevice                       \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers                                  \
     -DSOFTDEVICE_PRESENT                                                                                     \
     -DS140                                                                                                   \
     $(NULL)
