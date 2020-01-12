@@ -38,16 +38,18 @@ lib_LIBRARIES                                                                   
     libnordicsemi-nrf52811-radio-driver.a                                                                                 \
     $(NULL)
 endif
-if OPENTHREAD_PLATFORM_NRF52840
-lib_LIBRARIES                                                                                                          += \
-    libnordicsemi-nrf52840-radio-driver.a                                                                                 \
-    libnordicsemi-nrf52840-radio-driver-softdevice.a                                                                      \
-    $(NULL)
-endif
+
 if OPENTHREAD_PLATFORM_NRF52833
 lib_LIBRARIES                                                                                                          += \
     libnordicsemi-nrf52833-radio-driver.a                                                                                 \
     libnordicsemi-nrf52833-radio-driver-softdevice.a                                                                      \
+    $(NULL)
+endif
+
+if OPENTHREAD_PLATFORM_NRF52840
+lib_LIBRARIES                                                                                                          += \
+    libnordicsemi-nrf52840-radio-driver.a                                                                                 \
+    libnordicsemi-nrf52840-radio-driver-softdevice.a                                                                      \
     $(NULL)
 endif
 
@@ -57,14 +59,16 @@ lib_LIBRARIES                                                                   
     libnordicsemi-nrf52811-sdk.a                                                                                          \
     $(NULL)
 endif
-if OPENTHREAD_EXAMPLES_NRF52840
-lib_LIBRARIES                                                                                                          += \
-    libnordicsemi-nrf52840-sdk.a                                                                                          \
-    $(NULL)
-endif
+
 if OPENTHREAD_EXAMPLES_NRF52833
 lib_LIBRARIES                                                                                                          += \
     libnordicsemi-nrf52833-sdk.a                                                                                          \
+    $(NULL)
+endif
+
+if OPENTHREAD_EXAMPLES_NRF52840
+lib_LIBRARIES                                                                                                          += \
+    libnordicsemi-nrf52840-sdk.a                                                                                          \
     $(NULL)
 endif
 
@@ -79,6 +83,7 @@ override CXXFLAGS := $(filter-out -Wundef,$(CXXFLAGS))
 COMMONCPPFLAGS                                                                                                          = \
     -DCONFIG_GPIO_AS_PINRESET                                                                                             \
     -DENABLE_FEM=1                                                                                                        \
+    -DUSE_APP_CONFIG=1                                                                                                    \
     -I$(srcdir)                                                                                                           \
     -I$(top_srcdir)/include                                                                                               \
     -I$(top_srcdir)/src/core                                                                                              \
@@ -104,7 +109,9 @@ COMMONCPPFLAGS                                                                  
 # using the sources in third_party/NordicSemiconductor/drivers/radio.
 if OPENTHREAD_ENABLE_EXAMPLES
 COMMONCPPFLAGS                                                                                                         += \
+    -I$(top_srcdir)/third_party/NordicSemiconductor                                                                       \
     -I$(top_srcdir)/third_party/NordicSemiconductor/cmsis                                                                 \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/config                                                                \
     -I$(top_srcdir)/third_party/NordicSemiconductor/dependencies                                                          \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/clock                                                         \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/common                                                        \
@@ -129,19 +136,7 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/soc                                                              \
     -I$(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers                                               \
     -I$(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf52                                         \
-    $(NULL)
-endif
-
-NRF52833_CPPFLAGS                                                                                                       = \
-    -DNRF52833_XXAA                                                                                                       \
-    -DNRF_802154_PROJECT_CONFIG=\"platform-config.h\"                                                                     \
-    -I$(top_srcdir)/examples/platforms/nrf52833                                                                           \
-    $(NULL)
-
-NRF52840_CPPFLAGS                                                                                                       = \
-    -DNRF52840_XXAA                                                                                                       \
-    -DNRF_802154_PROJECT_CONFIG=\"platform-config.h\"                                                                     \
-    -I$(top_srcdir)/examples/platforms/nrf528xx/nrf52840/                                                                 \
+    -Wno-unused-parameter                                                                                                 \
     $(NULL)
 
 NRF52811_CPPFLAGS                                                                                                       = \
@@ -150,6 +145,22 @@ NRF52811_CPPFLAGS                                                               
     -D__HEAP_SIZE=0                                                                                                       \
     -D__STACK_SIZE=2048                                                                                                   \
     -I$(top_srcdir)/examples/platforms/nrf528xx/nrf52811                                                                  \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/config/nrf52811/config                                                \
+    $(NULL)
+endif
+
+NRF52833_CPPFLAGS                                                                                                       = \
+    -DNRF52833_XXAA                                                                                                       \
+    -DNRF_802154_PROJECT_CONFIG=\"platform-config.h\"                                                                     \
+    -I$(top_srcdir)/examples/platforms/nrf52833                                                                           \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/config/nrf52833/config                                                \
+    $(NULL)
+
+NRF52840_CPPFLAGS                                                                                                       = \
+    -DNRF52840_XXAA                                                                                                       \
+    -DNRF_802154_PROJECT_CONFIG=\"platform-config.h\"                                                                     \
+    -I$(top_srcdir)/examples/platforms/nrf528xx/nrf52840/                                                                 \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/config/nrf52840/config                                                \
     $(NULL)
 
 NORDICSEMI_COMMON_SOURCES                                                                                               = \
@@ -180,6 +191,11 @@ NORDICSEMI_USB_SOURCES                                                          
     libraries/usb/class/cdc/acm/app_usbd_cdc_acm.c                                                                        \
     $(NULL)
 
+NORDICSEMI_NRF52811_SOURCES                                                                                             = \
+    nrfx/mdk/gcc_startup_nrf52811.S                                                                                       \
+    nrfx/mdk/system_nrf52811.c                                                                                            \
+    $(NULL)
+
 NORDICSEMI_NRF52833_SOURCES                                                                                             = \
     nrfx/mdk/gcc_startup_nrf52833.S                                                                                       \
     nrfx/mdk/system_nrf52833.c                                                                                            \
@@ -188,11 +204,6 @@ NORDICSEMI_NRF52833_SOURCES                                                     
 NORDICSEMI_NRF52840_SOURCES                                                                                             = \
     nrfx/mdk/gcc_startup_nrf52840.S                                                                                       \
     nrfx/mdk/system_nrf52840.c                                                                                            \
-    $(NULL)
-
-NORDICSEMI_NRF52811_SOURCES                                                                                             = \
-    nrfx/mdk/gcc_startup_nrf52811.S                                                                                       \
-    nrfx/mdk/system_nrf52811.c                                                                                            \
     $(NULL)
 
 RADIO_DRIVER_SOURCES                                                                                                    = \
@@ -253,38 +264,25 @@ SOFTDEVICE_CPPFLAGS                                                             
     -DRAAL_SOFTDEVICE=1                                                                                                   \
     $(NULL)
 
-libnordicsemi_nrf52840_sdk_a_CPPFLAGS                                                                                   = \
+libnordicsemi_nrf52811_sdk_a_CPPFLAGS                                                                                   = \
     $(COMMONCPPFLAGS)                                                                                                     \
-    $(NRF52840_CPPFLAGS)                                                                                                  \
+    $(NRF52811_CPPFLAGS)                                                                                                  \
     $(NULL)
 
-libnordicsemi_nrf52840_sdk_a_SOURCES                                                                                    = \
+libnordicsemi_nrf52811_sdk_a_SOURCES                                                                                    = \
     $(NORDICSEMI_COMMON_SOURCES)                                                                                          \
-    $(NORDICSEMI_USB_SOURCES)                                                                                             \
-    $(NORDICSEMI_NRF52840_SOURCES)                                                                                        \
+    $(NORDICSEMI_NRF52811_SOURCES)                                                                                        \
     $(NULL)
 
-libnordicsemi_nrf52840_radio_driver_a_CPPFLAGS                                                                          = \
+libnordicsemi_nrf52811_radio_driver_a_CPPFLAGS                                                                          = \
     $(COMMONCPPFLAGS)                                                                                                     \
-    $(NRF52840_CPPFLAGS)                                                                                                  \
+    $(NRF52811_CPPFLAGS)                                                                                                  \
     $(RADIO_DRIVER_SINGLE_PHY_CPPFLAGS)                                                                                   \
     $(NULL)
 
-libnordicsemi_nrf52840_radio_driver_a_SOURCES                                                                           = \
+libnordicsemi_nrf52811_radio_driver_a_SOURCES                                                                           = \
     $(RADIO_DRIVER_SOURCES)                                                                                               \
     $(RADIO_DRIVER_SINGLE_PHY_SOURCES)                                                                                    \
-    $(NULL)
-
-libnordicsemi_nrf52840_radio_driver_softdevice_a_CPPFLAGS                                                               = \
-    $(COMMONCPPFLAGS)                                                                                                     \
-    $(NRF52840_CPPFLAGS)                                                                                                  \
-    $(SOFTDEVICE_CPPFLAGS)                                                                                                \
-    $(RADIO_DRIVER_SOFTDEVICE_CPPFLAGS)                                                                                   \
-    $(NULL)
-
-libnordicsemi_nrf52840_radio_driver_softdevice_a_SOURCES                                                                = \
-    $(RADIO_DRIVER_SOURCES)                                                                                               \
-    $(RADIO_DRIVER_SOFTDEVICE_SOURCES)                                                                                    \
     $(NULL)
 
 libnordicsemi_nrf52833_sdk_a_CPPFLAGS                                                                                   = \
@@ -321,25 +319,38 @@ libnordicsemi_nrf52833_radio_driver_softdevice_a_SOURCES                        
     $(RADIO_DRIVER_SOFTDEVICE_SOURCES)                                                                                    \
     $(NULL)
 
-libnordicsemi_nrf52811_sdk_a_CPPFLAGS                                                                                   = \
+libnordicsemi_nrf52840_sdk_a_CPPFLAGS                                                                                   = \
     $(COMMONCPPFLAGS)                                                                                                     \
-    $(NRF52811_CPPFLAGS)                                                                                                  \
+    $(NRF52840_CPPFLAGS)                                                                                                  \
     $(NULL)
 
-libnordicsemi_nrf52811_sdk_a_SOURCES                                                                                    = \
+libnordicsemi_nrf52840_sdk_a_SOURCES                                                                                    = \
     $(NORDICSEMI_COMMON_SOURCES)                                                                                          \
-    $(NORDICSEMI_NRF52811_SOURCES)                                                                                        \
+    $(NORDICSEMI_USB_SOURCES)                                                                                             \
+    $(NORDICSEMI_NRF52840_SOURCES)                                                                                        \
     $(NULL)
 
-libnordicsemi_nrf52811_radio_driver_a_CPPFLAGS                                                                          = \
+libnordicsemi_nrf52840_radio_driver_a_CPPFLAGS                                                                          = \
     $(COMMONCPPFLAGS)                                                                                                     \
-    $(NRF52811_CPPFLAGS)                                                                                                  \
+    $(NRF52840_CPPFLAGS)                                                                                                  \
     $(RADIO_DRIVER_SINGLE_PHY_CPPFLAGS)                                                                                   \
     $(NULL)
 
-libnordicsemi_nrf52811_radio_driver_a_SOURCES                                                                           = \
+libnordicsemi_nrf52840_radio_driver_a_SOURCES                                                                           = \
     $(RADIO_DRIVER_SOURCES)                                                                                               \
     $(RADIO_DRIVER_SINGLE_PHY_SOURCES)                                                                                    \
+    $(NULL)
+
+libnordicsemi_nrf52840_radio_driver_softdevice_a_CPPFLAGS                                                               = \
+    $(COMMONCPPFLAGS)                                                                                                     \
+    $(NRF52840_CPPFLAGS)                                                                                                  \
+    $(SOFTDEVICE_CPPFLAGS)                                                                                                \
+    $(RADIO_DRIVER_SOFTDEVICE_CPPFLAGS)                                                                                   \
+    $(NULL)
+
+libnordicsemi_nrf52840_radio_driver_softdevice_a_SOURCES                                                                = \
+    $(RADIO_DRIVER_SOURCES)                                                                                               \
+    $(RADIO_DRIVER_SOFTDEVICE_SOURCES)                                                                                    \
     $(NULL)
 
 noinst_HEADERS                                                                                                          = \
@@ -351,6 +362,10 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/NordicSemiconductor/cmsis/core_cmFunc.h                                                     \
     $(top_srcdir)/third_party/NordicSemiconductor/cmsis/core_cmInstr.h                                                    \
     $(top_srcdir)/third_party/NordicSemiconductor/cmsis/core_cmSimd.h                                                     \
+    $(top_srcdir)/third_party/NordicSemiconductor/config/app_config.h                                                     \
+    $(top_srcdir)/third_party/NordicSemiconductor/config/nrf52811/config/sdk_config.h                                     \
+    $(top_srcdir)/third_party/NordicSemiconductor/config/nrf52833/config/sdk_config.h                                     \
+    $(top_srcdir)/third_party/NordicSemiconductor/config/nrf52840/config/sdk_config.h                                     \
     $(top_srcdir)/third_party/NordicSemiconductor/dependencies/app_util_platform.h                                        \
     $(top_srcdir)/third_party/NordicSemiconductor/dependencies/app_util.h                                                 \
     $(top_srcdir)/third_party/NordicSemiconductor/dependencies/legacy/apply_old_config.h                                  \
@@ -368,7 +383,6 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrfx_glue.h                                                \
     $(top_srcdir)/third_party/NordicSemiconductor/dependencies/nrfx_log.h                                                 \
     $(top_srcdir)/third_party/NordicSemiconductor/dependencies/sdk_common.h                                               \
-    $(top_srcdir)/third_party/NordicSemiconductor/dependencies/sdk_config.h                                               \
     $(top_srcdir)/third_party/NordicSemiconductor/dependencies/sdk_errors.h                                               \
     $(top_srcdir)/third_party/NordicSemiconductor/dependencies/sdk_macros.h                                               \
     $(top_srcdir)/third_party/NordicSemiconductor/dependencies/sdk_os.h                                                   \
