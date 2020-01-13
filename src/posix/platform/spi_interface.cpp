@@ -310,16 +310,16 @@ otError SpiInterface::DoSpiXfer(int aLength)
     xfer[0].tx_buf        = 0;
     xfer[0].rx_buf        = 0;
     xfer[0].len           = 0;
-    xfer[0].speed_hz      = (uint32_t)mSpiSpeedHz;
-    xfer[0].delay_usecs   = (uint16_t)mSpiCsDelayUs;
+    xfer[0].speed_hz      = static_cast<uint32_t>(mSpiSpeedHz);
+    xfer[0].delay_usecs   = static_cast<uint16_t>(mSpiCsDelayUs);
     xfer[0].bits_per_word = kSpiBitsPerWord;
     xfer[0].cs_change     = false;
 
     // This part is the actual SPI transfer.
-    xfer[1].tx_buf        = (unsigned long)mSpiTxFrameBuffer;
-    xfer[1].rx_buf        = (unsigned long)mSpiRxFrameBuffer;
-    xfer[1].len           = (uint32_t)(aLength + kSpiFrameHeaderSize + mSpiAlignAllowance);
-    xfer[1].speed_hz      = (uint32_t)mSpiSpeedHz;
+    xfer[1].tx_buf        = reinterpret_cast<unsigned long>(mSpiTxFrameBuffer);
+    xfer[1].rx_buf        = reinterpret_cast<unsigned long>(mSpiRxFrameBuffer);
+    xfer[1].len           = static_cast<uint32_t>(aLength + kSpiFrameHeaderSize + mSpiAlignAllowance);
+    xfer[1].speed_hz      = static_cast<uint32_t>(mSpiSpeedHz);
     xfer[1].delay_usecs   = 0;
     xfer[1].bits_per_word = kSpiBitsPerWord;
     xfer[1].cs_change     = false;
@@ -337,8 +337,8 @@ otError SpiInterface::DoSpiXfer(int aLength)
 
     if (ret != -1)
     {
-        LogBuffer("SPI-TX", mSpiTxFrameBuffer, (int)xfer[1].len, false);
-        LogBuffer("SPI-RX", mSpiRxFrameBuffer, (int)xfer[1].len, false);
+        otDumpDebg(OT_LOG_REGION_PLATFORM, "SPI-TX", mSpiTxFrameBuffer, xfer[1].len);
+        otDumpDebg(OT_LOG_REGION_PLATFORM, "SPI-RX", mSpiRxFrameBuffer, xfer[1].len);
 
         mSpiFrameCount++;
     }
@@ -461,10 +461,10 @@ otError SpiInterface::PushPullSpi(void)
 
                 otLogWarnPlat("Garbage in header : %02X %02X %02X %02X %02X", spiRxFrameBuffer[0], spiRxFrameBuffer[1],
                               spiRxFrameBuffer[2], spiRxFrameBuffer[3], spiRxFrameBuffer[4]);
-                LogBuffer("SPI-TX", mSpiTxFrameBuffer, (int)spiXferBytes + kSpiFrameHeaderSize + mSpiAlignAllowance,
-                          true);
-                LogBuffer("SPI-RX", mSpiRxFrameBuffer, (int)spiXferBytes + kSpiFrameHeaderSize + mSpiAlignAllowance,
-                          true);
+                otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-TX", mSpiTxFrameBuffer,
+                           spiXferBytes + kSpiFrameHeaderSize + mSpiAlignAllowance);
+                otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-RX", mSpiRxFrameBuffer,
+                           spiXferBytes + kSpiFrameHeaderSize + mSpiAlignAllowance);
             }
 
             mSpiTxRefusedCount++;
@@ -482,8 +482,10 @@ otError SpiInterface::PushPullSpi(void)
 
             otLogWarnPlat("Garbage in header : %02X %02X %02X %02X %02X", spiRxFrameBuffer[0], spiRxFrameBuffer[1],
                           spiRxFrameBuffer[2], spiRxFrameBuffer[3], spiRxFrameBuffer[4]);
-            LogBuffer("SPI-TX", mSpiTxFrameBuffer, (int)spiXferBytes + kSpiFrameHeaderSize + mSpiAlignAllowance, true);
-            LogBuffer("SPI-RX", mSpiRxFrameBuffer, (int)spiXferBytes + kSpiFrameHeaderSize + mSpiAlignAllowance, true);
+            otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-TX", mSpiTxFrameBuffer,
+                       spiXferBytes + kSpiFrameHeaderSize + mSpiAlignAllowance);
+            otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-RX", mSpiRxFrameBuffer,
+                       spiXferBytes + kSpiFrameHeaderSize + mSpiAlignAllowance);
 
             ExitNow();
         }
@@ -494,7 +496,7 @@ otError SpiInterface::PushPullSpi(void)
         {
             mSlaveResetCount++;
 
-            otLogNotePlat("Slave did reset (%llu resets so far)", (unsigned long long)mSlaveResetCount);
+            otLogNotePlat("Slave did reset (%" PRIu64 " resets so far)", mSlaveResetCount);
             LogStats();
         }
 
@@ -775,58 +777,22 @@ exit:
 
 void SpiInterface::LogError(const char *aString)
 {
-    fprintf(stderr, "%s: %s", aString, strerror(errno));
     otLogCritPlat("%s: %s", aString, strerror(errno));
 }
 
 void SpiInterface::LogStats(void)
 {
-    otLogInfoPlat("INFO: mSlaveResetCount=%llu", (unsigned long long)mSlaveResetCount);
-    otLogInfoPlat("INFO: mSpiFrameCount=%llu", (unsigned long long)mSpiFrameCount);
-    otLogInfoPlat("INFO: mSpiValidFrameCount=%llu", (unsigned long long)mSpiValidFrameCount);
-    otLogInfoPlat("INFO: mSpiDuplexFrameCount=%llu", (unsigned long long)mSpiDuplexFrameCount);
-    otLogInfoPlat("INFO: mSpiUnresponsiveFrameCount=%llu", (unsigned long long)mSpiUnresponsiveFrameCount);
-    otLogInfoPlat("INFO: mSpiGarbageFrameCount=%llu", (unsigned long long)mSpiGarbageFrameCount);
-    otLogInfoPlat("INFO: mSpiRxFrameCount=%llu", (unsigned long long)mSpiRxFrameCount);
-    otLogInfoPlat("INFO: mSpiRxFrameByteCount=%llu", (unsigned long long)mSpiRxFrameByteCount);
-    otLogInfoPlat("INFO: mSpiTxFrameCount=%llu", (unsigned long long)mSpiTxFrameCount);
-    otLogInfoPlat("INFO: mSpiTxFrameByteCount=%llu", (unsigned long long)mSpiTxFrameByteCount);
+    otLogInfoPlat("INFO: mSlaveResetCount=%" PRIu64, mSlaveResetCount);
+    otLogInfoPlat("INFO: mSpiFrameCount=%" PRIu64, mSpiFrameCount);
+    otLogInfoPlat("INFO: mSpiValidFrameCount=%" PRIu64, mSpiValidFrameCount);
+    otLogInfoPlat("INFO: mSpiDuplexFrameCount=%" PRIu64, mSpiDuplexFrameCount);
+    otLogInfoPlat("INFO: mSpiUnresponsiveFrameCount=%" PRIu64, mSpiUnresponsiveFrameCount);
+    otLogInfoPlat("INFO: mSpiGarbageFrameCount=%" PRIu64, mSpiGarbageFrameCount);
+    otLogInfoPlat("INFO: mSpiRxFrameCount=%" PRIu64, mSpiRxFrameCount);
+    otLogInfoPlat("INFO: mSpiRxFrameByteCount=%" PRIu64, mSpiRxFrameByteCount);
+    otLogInfoPlat("INFO: mSpiTxFrameCount=%" PRIu64, mSpiTxFrameCount);
+    otLogInfoPlat("INFO: mSpiTxFrameByteCount=%" PRIu64, mSpiTxFrameByteCount);
 }
-
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN
-void SpiInterface::LogBuffer(const char *aDesc, const uint8_t *aBuffer, int aLength, bool aForce)
-{
-    int i = 0;
-
-    while (i < aLength)
-    {
-        int  j;
-        char dumpString[kDebugBytesPerLine * 3 + 1];
-
-        for (j = 0; i < aLength && j < kDebugBytesPerLine; i++, j++)
-        {
-            sprintf(dumpString + j * 3, "%02X ", aBuffer[i]);
-        }
-
-        if (aForce)
-        {
-            otLogWarnPlat("%s: %s%s", aDesc, dumpString, (i < aLength) ? " ..." : "");
-        }
-        else
-        {
-            otLogDebgPlat("%s: %s%s", aDesc, dumpString, (i < aLength) ? " ..." : "");
-        }
-    }
-}
-#else
-void SpiInterface::LogBuffer(const char *aDesc, const uint8_t *aBuffer, int aLength, bool aForce)
-{
-    OT_UNUSED_VARIABLE(aDesc);
-    OT_UNUSED_VARIABLE(aBuffer);
-    OT_UNUSED_VARIABLE(aLength);
-    OT_UNUSED_VARIABLE(aForce);
-}
-#endif
 } // namespace PosixApp
 } // namespace ot
 

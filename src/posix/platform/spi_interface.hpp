@@ -151,7 +151,7 @@ private:
     void HandleReceivedFrame(Ncp::SpiFrame &aSpiFrame);
     void LogStats(void);
     void LogError(const char * aString);
-    void LogBuffer(const char *aDesc, const uint8_t *aBuffer, int aLength, bool aForce);
+    void LogBuffer(const char *aDesc, const uint8_t *aBuffer, uint16_t aLength, bool aForce);
 
     enum
     {
