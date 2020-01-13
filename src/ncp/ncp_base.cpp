@@ -2263,13 +2263,20 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_LOG_TIMESTAMP_B
 {
     uint64_t timestampBase = 0;
     otError  error         = OT_ERROR_NONE;
+    uint32_t currentTime   = otPlatAlarmMilliGetNow();
 
     SuccessOrExit(error = mDecoder.ReadUint64(timestampBase));
+    VerifyOrExit(timestampBase >= currentTime, error = OT_ERROR_INVALID_ARGS);
 
-    mLogTimestampBase = timestampBase - otPlatAlarmMilliGetNow();
+    mLogTimestampBase = timestampBase - currentTime;
 
 exit:
     return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_LOG_TIMESTAMP_BASE>(void)
+{
+    return mEncoder.WriteUint64(mLogTimestampBase);
 }
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_SUPPORTED>(void)
