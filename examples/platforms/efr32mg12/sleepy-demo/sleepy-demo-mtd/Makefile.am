@@ -33,7 +33,7 @@ override CFLAGS                              := $(filter-out -Wconversion,$(CFLA
 override CXXFLAGS                            := $(filter-out -Wconversion,$(CXXFLAGS))
 
 EFR32_BOARD_DIR                               = $(shell echo $(BOARD) | tr A-Z a-z)
-EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/$(SDKVERSION)
+EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.7
 
 $(top_builddir)/examples/platforms/efr32mg12/libopenthread-efr32mg12.a:
 	(cd $(top_builddir)/examples/platforms/efr32mg12/ && $(MAKE) $(AM_MAKEFLAGS) libopenthread-efr32mg12.a )
