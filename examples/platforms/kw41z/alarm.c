@@ -37,9 +37,8 @@
 #include "fsl_pit.h"
 #include <stdint.h>
 
-#include "openthread/openthread.h"
-#include "openthread/platform/alarm-milli.h"
-#include "openthread/platform/diag.h"
+#include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/diag.h>
 
 static volatile uint32_t sTime      = 0;
 static uint32_t          sAlarmTime = 0;
@@ -64,7 +63,7 @@ void kw41zAlarmProcess(otInstance *aInstance)
     if ((sAlarmTime != 0) && (sTime >= sAlarmTime))
     {
         sAlarmTime = 0;
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
         if (otPlatDiagModeGet())
         {
@@ -80,13 +79,15 @@ void kw41zAlarmProcess(otInstance *aInstance)
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     sAlarmTime = aT0 + aDt;
 }
 
 void otPlatAlarmMilliStop(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     sAlarmTime = 0;
 }
 

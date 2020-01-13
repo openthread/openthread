@@ -37,7 +37,9 @@
 
 #include <stdarg.h>
 #include <stdint.h>
-#include <openthread/types.h>
+
+#include <openthread/instance.h>
+#include <openthread/platform/logging.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -108,7 +110,7 @@ void otCliUartInit(otInstance *aInstance);
  * @param[in]  aUserCommands  A pointer to an array with user commands.
  * @param[in]  aLength        @p aUserCommands length.
  */
-void otCliUartSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength);
+void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength);
 
 /**
  * Write a number of bytes to the CLI console as a hex string.
@@ -116,22 +118,30 @@ void otCliUartSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength
  * @param[in]  aBytes   A pointer to data which should be printed.
  * @param[in]  aLength  @p aBytes length.
  */
-void otCliUartOutputBytes(const uint8_t *aBytes, uint8_t aLength);
+void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength);
 
 /**
- * Write formatted string the CLI console
+ * Write formatted string to the CLI console
  *
  * @param[in]  aFmt   A pointer to the format string.
  * @param[in]  ...    A matching list of arguments.
  */
-void otCliUartOutputFormat(const char *aFmt, ...);
+void otCliOutputFormat(const char *aFmt, ...);
 
 /**
- * Write error code the CLI console
+ * Write string to the CLI console
+ *
+ * @param[in]  aString  A pointer to the string, which may not be null-terminated.
+ * @param[in]  aLength  Number of bytes.
+ */
+void otCliOutput(const char *aString, uint16_t aLength);
+
+/**
+ * Write error code to the CLI console
  *
  * @param[in]  aError Error code value.
  */
-void otCliUartAppendResult(otError aError);
+void otCliAppendResult(otError aError);
 
 /**
  * Callback to write the OpenThread Log to the CLI console

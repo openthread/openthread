@@ -27,25 +27,44 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-CLANG_FORMAT_VERSION="clang-format version 5.0"
+CLANG_FORMAT_VERSION="clang-format version 6.0"
 
 die() {
     echo " *** ERROR: " $*
     exit 1
 }
 
-if which clang-format > /dev/null; then
+if which clang-format-6.0 > /dev/null; then
+    alias clang-format=clang-format-6.0
+elif which clang-format > /dev/null; then
     case "$(clang-format --version)" in
         "$CLANG_FORMAT_VERSION"*)
             ;;
         *)
-            die "clang-format 5.0 required"
+            die "$(clang-format --version); clang-format 6.0 required"
             ;;
     esac
-elif which clang-format-5.0 > /dev/null; then
-    alias clang-format=clang-format-5.0
 else
-    die "clang-format 5.0 required"
+    die "clang-format 6.0 required"
 fi
 
-clang-format $@
+clang-format $@ || die
+
+# ensure EOF newline
+REPLACE=no
+for arg
+do
+    case $arg in
+        -i)
+            REPLACE=yes
+            ;;
+    esac
+done
+
+file=$arg
+
+[ $REPLACE != yes ] || {
+    [ -n "$(tail -c1 $file)" ] && echo >> $file
+}
+
+exit 0

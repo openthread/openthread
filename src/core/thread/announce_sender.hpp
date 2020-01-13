@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-
 #include "common/locator.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
@@ -46,7 +44,7 @@
 namespace ot {
 
 /**
- * This class implements the base class for an `AnnounceSender` and `AnnoucneBeginSever`.
+ * This class implements the base class for an `AnnounceSender` and `AnnounceBeginSever`.
  *
  * This class provides APIs to schedule periodic transmission of MLE Announcement messages for a given number
  * transmissions per channel.
@@ -132,7 +130,7 @@ private:
     TimerMilli       mTimer;
 };
 
-#if OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+#if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
 
 /**
  * This class implements an AnnounceSender.
@@ -158,17 +156,16 @@ private:
         kMaxJitter        = 500,  // in ms
     };
 
-    otError     GetActiveDatasetChannelMask(Mac::ChannelMask &aMask) const;
     void        CheckState(void);
     void        Stop(void);
     static void HandleTimer(Timer &aTimer);
-    static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags);
-    void        HandleStateChanged(uint32_t aFlags);
+    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
+    void        HandleStateChanged(otChangedFlags aFlags);
 
     Notifier::Callback mNotifierCallback;
 };
 
-#endif // OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+#endif // OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
 
 /**
  * @}

@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *   This file includes the (posix or windows) platform-specific initializers.
+ *   This file includes the platform-specific initializers.
  */
 
 #ifndef PLATFORM_POSIX_H_
@@ -44,49 +44,29 @@
 #include <string.h>
 #include <time.h>
 
-#if _WIN32
-#include <WS2tcpip.h>
-#include <WinSock2.h>
-#include <windows.h>
-#define POLL WSAPoll
-#define ssize_t int
-#include <time.h>
-#define localtime _localtime32
-// In user mode, define some Linux functions
-__forceinline int gettimeofday(struct timeval *tv, struct timezone *tz)
-{
-    (void)tz;
-    tv->tv_sec  = _time32(NULL);
-    tv->tv_usec = 0;
-    return 0;
-}
-__forceinline void timersub(struct timeval *a, struct timeval *b, struct timeval *res)
-{
-    res->tv_sec  = (long)_difftime32(a->tv_sec, b->tv_sec);
-    res->tv_usec = 0;
-}
-#else
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <poll.h>
+#include <signal.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <unistd.h>
-#define POLL poll
-#endif
 
-#include <openthread/openthread.h>
+#include <openthread/instance.h>
 
 #include "openthread-core-config.h"
+#include "platform-config.h"
 
 enum
 {
-    OT_SIM_EVENT_ALARM_FIRED    = 0,
-    OT_SIM_EVENT_RADIO_RECEIVED = 1,
-    OT_EVENT_DATA_MAX_SIZE      = 1024,
+    OT_SIM_EVENT_ALARM_FIRED        = 0,
+    OT_SIM_EVENT_RADIO_RECEIVED     = 1,
+    OT_SIM_EVENT_UART_WRITE         = 2,
+    OT_SIM_EVENT_RADIO_SPINEL_WRITE = 3,
+    OT_EVENT_DATA_MAX_SIZE          = 1024,
 };
 
 OT_TOOL_PACKED_BEGIN
@@ -98,17 +78,16 @@ struct Event
     uint8_t  mData[OT_EVENT_DATA_MAX_SIZE];
 } OT_TOOL_PACKED_END;
 
+enum
+{
+    WELLKNOWN_NODE_ID = 34, ///< Well-known Unique ID used by a simulated radio that supports promiscuous mode.
+};
+
 /**
  * Unique node ID.
  *
  */
-extern uint32_t NODE_ID;
-
-/**
- * Well-known Unique ID used by a simulated radio that supports promiscuous mode.
- *
- */
-extern uint32_t WELLKNOWN_NODE_ID;
+extern uint32_t gNodeId;
 
 /**
  * This function initializes the alarm service used by OpenThread.
@@ -191,10 +170,12 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
 /**
  * This function performs radio driver processing.
  *
- * @param[in]  aInstance  The OpenThread instance structure.
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[in]  aReadFdSet   A pointer to the read file descriptors.
+ * @param[in]  aWriteFdSet  A pointer to the write file descriptors.
  *
  */
-void platformRadioProcess(otInstance *aInstance);
+void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet);
 
 /**
  * This function initializes the random number service used by OpenThread.
@@ -223,5 +204,30 @@ void platformUartProcess(void);
  *
  */
 void platformUartRestore(void);
+
+/**
+ * This function sends a simulation event.
+ *
+ * @param[in]   aEvent  A pointer to the simulation event to send
+ *
+ */
+void otSimSendEvent(const struct Event *aEvent);
+
+/**
+ * This function sends Uart data through simulation.
+ *
+ * @param[in]   aData       A pointer to the UART data.
+ * @param[in]   aLength     Length of UART data.
+ *
+ */
+void otSimSendUartWriteEvent(const uint8_t *aData, uint16_t aLength);
+
+/**
+ * This function checks if radio transmitting is pending.
+ *
+ * @returns Whether radio transmitting is pending.
+ *
+ */
+bool platformRadioIsTransmitPending(void);
 
 #endif // PLATFORM_POSIX_H_

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -42,21 +41,26 @@ LEADER1 = 1
 LEADER2 = 2
 ED1 = 3
 
+
 class Cert_9_2_17_Orphan(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,4):
+        for i in range(1, 4):
             self.nodes[i] = node.Node(i, (i == ED1), simulator=self.simulator)
 
-        self.nodes[LEADER1].set_active_dataset(10, channel=CHANNEL1, panid=PANID_INIT, channel_mask=CHANNEL_MASK)
+        self.nodes[LEADER1].set_active_dataset(
+            10, channel=CHANNEL1, panid=PANID_INIT, channel_mask=CHANNEL_MASK
+        )
         self.nodes[LEADER1].set_mode('rsdn')
         self.nodes[LEADER1].add_whitelist(self.nodes[ED1].get_addr64())
         self.nodes[LEADER1].enable_whitelist()
         self.nodes[LEADER1].set_router_selection_jitter(1)
 
-        self.nodes[LEADER2].set_active_dataset(20, channel=CHANNEL2, panid=PANID_INIT, channel_mask=CHANNEL_MASK)
+        self.nodes[LEADER2].set_active_dataset(
+            20, channel=CHANNEL2, panid=PANID_INIT, channel_mask=CHANNEL_MASK
+        )
         self.nodes[LEADER2].set_mode('rsdn')
         self.nodes[LEADER2].enable_whitelist()
         self.nodes[LEADER2].set_router_selection_jitter(1)
@@ -66,13 +70,13 @@ class Cert_9_2_17_Orphan(unittest.TestCase):
         self.nodes[ED1].set_panid(PANID_INIT)
         self.nodes[ED1].add_whitelist(self.nodes[LEADER1].get_addr64())
         self.nodes[ED1].enable_whitelist()
-        self.nodes[ED1].set_timeout(3)
+        self.nodes[ED1].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
+        self.simulator.stop()
 
     def test(self):
         self.nodes[LEADER1].start()
@@ -94,6 +98,7 @@ class Cert_9_2_17_Orphan(unittest.TestCase):
 
         self.assertEqual(self.nodes[ED1].get_state(), 'child')
         self.assertEqual(self.nodes[ED1].get_channel(), CHANNEL2)
+
 
 if __name__ == '__main__':
     unittest.main()

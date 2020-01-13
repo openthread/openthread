@@ -26,10 +26,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "openthread-core-config.h"
+
 #include <driverlib/aon_rtc.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <openthread/types.h>
 
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
@@ -74,7 +75,8 @@ uint32_t otPlatAlarmMilliGetNow(void)
  */
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     sTime0     = aT0;
     sAlarmTime = aDt;
     sIsRunning = true;
@@ -85,7 +87,7 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
  */
 void otPlatAlarmMilliStop(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     sIsRunning = false;
 }
 
@@ -104,14 +106,14 @@ void cc2650AlarmProcess(otInstance *aInstance)
         if (sAlarmTime <= offsetTime)
         {
             sIsRunning = false;
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
             if (otPlatDiagModeGet())
             {
                 otPlatDiagAlarmFired(aInstance);
             }
             else
-#endif /* OPENTHREAD_ENABLE_DIAG */
+#endif /* OPENTHREAD_CONFIG_DIAG_ENABLE */
             {
                 otPlatAlarmMilliFired(aInstance);
             }

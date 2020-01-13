@@ -40,18 +40,22 @@ libopenthread_gp712_a_CPPFLAGS            = \
 
 PLATFORM_SOURCES                          = \
     alarm.c                                 \
+    alarm_qorvo.h                           \
     diag.c                                  \
-    misc.c                                  \
-    logging.c                               \
-    platform.c                              \
-    radio.c                                 \
-    random.c                                \
-    uart-posix.c                            \
+    entropy.c                               \
     flash.c                                 \
+    logging.c                               \
+    misc.c                                  \
+    openthread-core-gp712-config.h          \
+    openthread-core-gp712-config-check.h    \
+    platform_qorvo.h                        \
+    radio.c                                 \
+    radio_qorvo.h                           \
+    random_qorvo.h                          \
+    system.c                                \
+    uart-posix.c                            \
+    uart_qorvo.h                            \
     $(NULL)
-
-#    uart-socket.c                          \
-#
 
 Dash                                      = -
 libopenthread_gp712_a_LIBADD              = \

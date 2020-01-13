@@ -36,15 +36,17 @@
 
 #include "openthread-core-config.h"
 
-#include "utils/wrap_stdint.h"
+#include <stdint.h>
+
 #include "utils/wrap_string.h"
 
 #include <openthread/message.h>
 #include <openthread/platform/messagepool.h>
 
 #include "common/code_utils.hpp"
+#include "common/encoding.hpp"
 #include "common/locator.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "thread/link_quality.hpp"
 
 namespace ot {
@@ -61,8 +63,9 @@ namespace ot {
 
 enum
 {
-    kNumBuffers = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS,
-    kBufferSize = OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE,
+    kNumBuffers     = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS,
+    kBufferSize     = OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE,
+    kChildMaskBytes = BitVectorBytes(OPENTHREAD_CONFIG_MLE_MAX_CHILDREN),
 };
 
 class Message;
@@ -76,31 +79,24 @@ class PriorityQueue;
  */
 struct MessageInfo
 {
-    enum
-    {
-        kListAll       = 0, ///< Identifies the all messages list (maintained by the MessagePool).
-        kListInterface = 1, ///< Identifies the list for per-interface message queue.
-        kNumLists      = 2, ///< Number of lists.
-    };
-
-    Message *    mNext[kNumLists]; ///< A pointer to the next Message in a doubly linked list.
-    Message *    mPrev[kNumLists]; ///< A pointer to the previous Message in a doubly linked list.
-    MessagePool *mMessagePool;     ///< Identifies the message pool for this message.
+    Message *    mNext;        ///< A pointer to the next Message in a doubly linked list.
+    Message *    mPrev;        ///< A pointer to the previous Message in a doubly linked list.
+    MessagePool *mMessagePool; ///< Identifies the message pool for this message.
     union
     {
         MessageQueue * mMessage;  ///< Identifies the message queue (if any) where this message is queued.
         PriorityQueue *mPriority; ///< Identifies the priority queue (if any) where this message is queued.
     } mQueue;                     ///< Identifies the queue (if any) where this message is queued.
 
+    uint32_t mDatagramTag;    ///< The datagram tag used for 6LoWPAN fragmentation or identification used for IPv6
+                              ///< fragmentation.
     uint16_t    mReserved;    ///< Number of header bytes reserved for the message.
     uint16_t    mLength;      ///< Number of bytes within the message.
     uint16_t    mOffset;      ///< A byte offset within the message.
-    uint16_t    mDatagramTag; ///< The datagram tag used for 6LoWPAN fragmentation.
     RssAverager mRssAverager; ///< The averager maintaining the received signal strength (RSS) average.
 
-    uint8_t mChildMask[8]; ///< A bit-vector to indicate which sleepy children need to receive this.
-    uint8_t mTimeout;      ///< Seconds remaining before dropping the message.
-    int8_t  mInterfaceId;  ///< The interface ID.
+    uint8_t mChildMask[kChildMaskBytes]; ///< A bit-vector to indicate which sleepy children need to receive this.
+    uint8_t mTimeout;                    ///< Seconds remaining before dropping the message.
     union
     {
         uint16_t mPanId;   ///< Used for MLE Discover Request and Response messages.
@@ -114,6 +110,12 @@ struct MessageInfo
     uint8_t mPriority : 2;     ///< Identifies the message priority level (lower value is higher priority).
     bool    mInPriorityQ : 1;  ///< Indicates whether the message is queued in normal or priority queue.
     bool    mTxSuccess : 1;    ///< Indicates whether the direct tx of the message was successful.
+    bool    mDoNotEvict : 1;   ///< Indicates whether or not this message may be evicted.
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    bool    mTimeSync : 1;      ///< Indicates whether the message is also used for time sync purpose.
+    uint8_t mTimeSyncSeq;       ///< The time sync sequence.
+    int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time, in microseconds.
+#endif
 };
 
 /**
@@ -178,6 +180,7 @@ private:
         kHeadBufferDataSize = kBufferDataSize - sizeof(struct MessageInfo),
     };
 
+protected:
     union
     {
         struct
@@ -204,30 +207,30 @@ public:
     {
         kTypeIp6         = 0, ///< A full uncompressed IPv6 packet
         kType6lowpan     = 1, ///< A 6lowpan frame
-        kTypeMacDataPoll = 2, ///< A MAC data poll message
-        kTypeSupervision = 3, ///< A child supervision frame.
+        kTypeSupervision = 2, ///< A child supervision frame.
     };
 
     enum
     {
-        kSubTypeNone                   = 0, ///< None
-        kSubTypeMleAnnounce            = 1, ///< MLE Announce
-        kSubTypeMleDiscoverRequest     = 2, ///< MLE Discover Request
-        kSubTypeMleDiscoverResponse    = 3, ///< MLE Discover Response
-        kSubTypeJoinerEntrust          = 4, ///< Joiner Entrust
-        kSubTypeMplRetransmission      = 5, ///< MPL next retransmission message
-        kSubTypeMleGeneral             = 6, ///< General MLE
-        kSubTypeJoinerFinalizeResponse = 7, ///< Joiner Finalize Response
-        kSubTypeMleChildUpdateRequest  = 8, ///< MLE Child Update Request
-        kSubTypeMleDataResponse        = 9, ///< MLE Data Response
+        kSubTypeNone                   = 0,  ///< None
+        kSubTypeMleAnnounce            = 1,  ///< MLE Announce
+        kSubTypeMleDiscoverRequest     = 2,  ///< MLE Discover Request
+        kSubTypeMleDiscoverResponse    = 3,  ///< MLE Discover Response
+        kSubTypeJoinerEntrust          = 4,  ///< Joiner Entrust
+        kSubTypeMplRetransmission      = 5,  ///< MPL next retransmission message
+        kSubTypeMleGeneral             = 6,  ///< General MLE
+        kSubTypeJoinerFinalizeResponse = 7,  ///< Joiner Finalize Response
+        kSubTypeMleChildUpdateRequest  = 8,  ///< MLE Child Update Request
+        kSubTypeMleDataResponse        = 9,  ///< MLE Data Response
+        kSubTypeMleChildIdRequest      = 10, ///< MLE Child ID Request
     };
 
     enum
     {
-        kPriorityHigh    = 0, ///< High priority level.
-        kPriorityMedium  = 1, ///< Medium priority level.
-        kPriorityLow     = 2, ///< Low priority level.
-        kPriorityVeryLow = 3, ///< Very low priority level.
+        kPriorityLow    = OT_MESSAGE_PRIORITY_LOW,      ///< Low priority level.
+        kPriorityNormal = OT_MESSAGE_PRIORITY_NORMAL,   ///< Normal priority level.
+        kPriorityHigh   = OT_MESSAGE_PRIORITY_HIGH,     ///< High priority level.
+        kPriorityNet    = OT_MESSAGE_PRIORITY_HIGH + 1, ///< Network Control priority level.
 
         kNumPriorities = 4, ///< Number of priority levels.
     };
@@ -239,9 +242,9 @@ public:
     void Free(void);
 
     /**
-     * This method returns a pointer to the next message in the same interface list.
+     * This method returns a pointer to the next message.
      *
-     * @returns A pointer to the next message in the same interface list or NULL if at the end of the list.
+     * @returns A pointer to the next message in the list or NULL if at the end of the list.
      *
      */
     Message *GetNext(void) const;
@@ -354,7 +357,7 @@ public:
      * If the message is already queued in a priority queue, changing the priority ensures to
      * update the message in the associated queue.
      *
-     * @param[in]  aPrority  The message priority level.
+     * @param[in]  aPriority  The message priority level.
      *
      * @retval OT_ERROR_NONE           Successfully set the priority for the message.
      * @retval OT_ERROR_INVALID_ARGS   Priority level is not invalid.
@@ -381,10 +384,8 @@ public:
      *
      * @param[in]  aLength  Number of header bytes to remove.
      *
-     * @retval OT_ERROR_NONE  Successfully removed header bytes from the message.
-     *
      */
-    otError RemoveHeader(uint16_t aLength);
+    void RemoveHeader(uint16_t aLength);
 
     /**
      * This method appends bytes to the end of the message.
@@ -438,33 +439,39 @@ public:
     int CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_t aLength, Message &aMessage) const;
 
     /**
-     * This method creates a copy of the current Message. It allocates the new one
-     * from the same Message Poll as the original Message and copies @p aLength octets of a payload.
+     * This method creates a copy of the message.
      *
-     * The `Type`, `SubType`, `LinkSecurity` and `Priority` fields on the cloned message are also
-     * copied from the original one.
+     * It allocates the new message from the same message pool as the original one and copies @p aLength octets
+     * of the payload. The `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the
+     * cloned message are also copied from the original one.
      *
      * @param[in] aLength  Number of payload bytes to copy.
      *
      * @returns A pointer to the message or NULL if insufficient message buffers are available.
+     *
      */
     Message *Clone(uint16_t aLength) const;
 
     /**
-     * This method creates a copy of the current Message. It allocates the new one
-     * from the same Message Poll as the original Message and copies a full payload.
+     * This method creates a copy of the message.
+     *
+     * It allocates the new message from the same message pool as the original one and copies the entire payload. The
+     * `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the cloned message are also
+     * copied from the original one.
      *
      * @returns A pointer to the message or NULL if insufficient message buffers are available.
+     *
      */
-    Message *Clone(void) const { return Clone(GetLength()); };
+    Message *Clone(void) const { return Clone(GetLength()); }
 
     /**
-     * This method returns the datagram tag used for 6LoWPAN fragmentation.
+     * This method returns the datagram tag used for 6LoWPAN fragmentation or the identification used for IPv6
+     * fragmentation.
      *
-     * @returns The 6LoWPAN datagram tag.
+     * @returns The 6LoWPAN datagram tag or the IPv6 fragment identification.
      *
      */
-    uint16_t GetDatagramTag(void) const { return mBuffer.mHead.mInfo.mDatagramTag; }
+    uint32_t GetDatagramTag(void) const { return mBuffer.mHead.mInfo.mDatagramTag; }
 
     /**
      * This method sets the datagram tag used for 6LoWPAN fragmentation.
@@ -472,7 +479,7 @@ public:
      * @param[in]  aTag  The 6LoWPAN datagram tag.
      *
      */
-    void SetDatagramTag(uint16_t aTag) { mBuffer.mHead.mInfo.mDatagramTag = aTag; }
+    void SetDatagramTag(uint32_t aTag) { mBuffer.mHead.mInfo.mDatagramTag = aTag; }
 
     /**
      * This method returns whether or not the message forwarding is scheduled for the child.
@@ -483,7 +490,7 @@ public:
      * @retval FALSE  If the message is not scheduled to be forwarded to the child.
      *
      */
-    bool GetChildMask(uint8_t aChildIndex) const;
+    bool GetChildMask(uint16_t aChildIndex) const;
 
     /**
      * This method unschedules forwarding of the message to the child.
@@ -491,7 +498,7 @@ public:
      * @param[in]  aChildIndex  The index into the child table.
      *
      */
-    void ClearChildMask(uint8_t aChildIndex);
+    void ClearChildMask(uint16_t aChildIndex);
 
     /**
      * This method schedules forwarding of the message to the child.
@@ -499,7 +506,7 @@ public:
      * @param[in]  aChildIndex  The index into the child table.
      *
      */
-    void SetChildMask(uint8_t aChildIndex);
+    void SetChildMask(uint16_t aChildIndex);
 
     /**
      * This method returns whether or not the message forwarding is scheduled for at least one child.
@@ -567,20 +574,10 @@ public:
     void SetTimeout(uint8_t aTimeout) { mBuffer.mHead.mInfo.mTimeout = aTimeout; }
 
     /**
-     * This method returns the interface ID.
-     *
-     * @returns The interface ID.
+     * This method decrements the timeout.
      *
      */
-    int8_t GetInterfaceId(void) const { return mBuffer.mHead.mInfo.mInterfaceId; }
-
-    /**
-     * This method sets the interface ID.
-     *
-     * @param[in]  aInterfaceId  The interface ID value.
-     *
-     */
-    void SetInterfaceId(int8_t aInterfaceId) { mBuffer.mHead.mInfo.mInterfaceId = aInterfaceId; }
+    void DecrementTimeout(void) { mBuffer.mHead.mInfo.mTimeout--; }
 
     /**
      * This method returns whether or not message forwarding is scheduled for direct transmission.
@@ -604,7 +601,7 @@ public:
     void SetDirectTransmission(void) { mBuffer.mHead.mInfo.mDirectTx = true; }
 
     /**
-     * This methods indicates whether the direct transmission of message was successful.
+     * This method indicates whether the direct transmission of message was successful.
      *
      * @retval TRUE   If direct transmission of message was successful (all fragments were delivered and acked).
      * @retval FALSE  If direct transmission of message failed (at least one fragment failed).
@@ -613,13 +610,30 @@ public:
     bool GetTxSuccess(void) const { return mBuffer.mHead.mInfo.mTxSuccess; }
 
     /**
-     * This methods sets whether the direct transmission of message was successful.
+     * This method sets whether the direct transmission of message was successful.
      *
      * @param[in] aTxSuccess   TRUE if the direct transmission is successful, FALSE otherwise (i.e., at least one
      *                         fragment transmission failed).
      *
      */
     void SetTxSuccess(bool aTxSuccess) { mBuffer.mHead.mInfo.mTxSuccess = aTxSuccess; }
+
+    /**
+     * This method indicates whether the message may be evicted.
+     *
+     * @retval TRUE   If the message must not be evicted.
+     * @retval FALSE  If the message may be evicted.
+     *
+     */
+    bool GetDoNotEvict(void) const { return mBuffer.mHead.mInfo.mDoNotEvict; }
+
+    /**
+     * This method sets whether the message may be evicted.
+     *
+     * @param[in]  aDoNotEvict  TRUE if the message may not be evicted, FALSE otherwise.
+     *
+     */
+    void SetDoNotEvict(bool aDoNotEvict) { mBuffer.mHead.mInfo.mDoNotEvict = aDoNotEvict; }
 
     /**
      * This method indicates whether or not link security is enabled for the message.
@@ -710,6 +724,60 @@ public:
         return (!mBuffer.mHead.mInfo.mInPriorityQ) ? mBuffer.mHead.mInfo.mQueue.mMessage : NULL;
     }
 
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    /**
+     * This method indicates whether or not the message is also used for time sync purpose.
+     *
+     * @retval TRUE   If the message is also used for time sync purpose.
+     * @retval FALSE  If the message is not used for time sync purpose.
+     *
+     */
+    bool IsTimeSync(void) const { return mBuffer.mHead.mInfo.mTimeSync; }
+
+    /**
+     * This method sets whether or not the message is also used for time sync purpose.
+     *
+     * @param[in]  aEnabled  TRUE if the message is also used for time sync purpose, FALSE otherwise.
+     *
+     */
+    void SetTimeSync(bool aEnabled) { mBuffer.mHead.mInfo.mTimeSync = aEnabled; }
+
+    /**
+     * This method sets the offset to network time.
+     *
+     * @param[in]  aNetworkTimeOffset  The offset to network time.
+     *
+     */
+    void SetNetworkTimeOffset(int64_t aNetworkTimeOffset)
+    {
+        mBuffer.mHead.mInfo.mNetworkTimeOffset = aNetworkTimeOffset;
+    }
+
+    /**
+     * This method gets the offset to network time.
+     *
+     * @returns  The offset to network time.
+     *
+     */
+    int64_t GetNetworkTimeOffset(void) const { return mBuffer.mHead.mInfo.mNetworkTimeOffset; }
+
+    /**
+     * This method sets the time sync sequence.
+     *
+     * @param[in]  aTimeSyncSeq  The time sync sequence.
+     *
+     */
+    void SetTimeSyncSeq(uint8_t aTimeSyncSeq) { mBuffer.mHead.mInfo.mTimeSyncSeq = aTimeSyncSeq; }
+
+    /**
+     * This method gets the time sync sequence.
+     *
+     * @returns  The time sync sequence.
+     *
+     */
+    uint8_t GetTimeSyncSeq(void) const { return mBuffer.mHead.mInfo.mTimeSyncSeq; }
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
 private:
     /**
      * This method returns a pointer to the message pool to which this message belongs
@@ -763,34 +831,29 @@ private:
     void SetPriorityQueue(PriorityQueue *aPriorityQueue);
 
     /**
-     * This method returns a reference to the `mNext` pointer for a given list.
+     * This method returns a reference to the `mNext` pointer.
      *
-     * @param[in]  aList  The index to the message list.
-     *
-     * @returns A reference to the mNext pointer for the specified list.
+     * @returns A reference to the mNext pointer.
      *
      */
-    Message *&Next(uint8_t aList) { return mBuffer.mHead.mInfo.mNext[aList]; }
+    Message *&Next(void) { return mBuffer.mHead.mInfo.mNext; }
 
     /**
-     * This method returns a const reference to the `mNext` pointer for a given list.
+     * This method returns a reference to the `mNext` pointer (const pointer).
      *
-     * @param[in]  aList  The index to the message list.
      *
-     * @returns A const reference to the mNext pointer for the specified list.
+     * @returns A reference to the mNext pointer.
      *
      */
-    Message *const &Next(uint8_t aList) const { return mBuffer.mHead.mInfo.mNext[aList]; }
+    Message *const &Next(void) const { return mBuffer.mHead.mInfo.mNext; }
 
     /**
-     * This method returns a reference to the `mPrev` pointer for a given list.
+     * This method returns a reference to the `mPrev` pointer.
      *
-     * @param[in]  aList  The index to the message list.
-     *
-     * @returns A reference to the mPrev pointer for the specified list.
+     * @returns A reference to the mPrev pointer.
      *
      */
-    Message *&Prev(uint8_t aList) { return mBuffer.mHead.mInfo.mPrev[aList]; }
+    Message *&Prev(void) { return mBuffer.mHead.mInfo.mPrev; }
 
     /**
      * This method returns the number of reserved header bytes.
@@ -914,34 +977,6 @@ private:
      *
      */
     void SetTail(Message *aMessage) { mData = aMessage; }
-
-    /**
-     * This method adds a message to the end of the list.
-     *
-     * @param[in]  aListId   The list to add @p aMessage to.
-     * @param[in]  aMessage  The message to add to @p aListId.
-     *
-     */
-    void AddToList(uint8_t aListId, Message &aMessage) { AddToList(aListId, aMessage, kQueuePositionTail); }
-
-    /**
-     * This method adds a message at a give position (head or tail) of the list.
-     *
-     * @param[in]  aListId   The list to add @p aMessage to.
-     * @param[in]  aMessage  The message to add to @p aListId.
-     * @param[in]  aPosition The position where to add the message.
-     *
-     */
-    void AddToList(uint8_t aListId, Message &aMessage, QueuePosition aPosition);
-
-    /**
-     * This method removes a message from a list.
-     *
-     * @param[in]  aListId   The list to add @p aMessage to.
-     * @param[in]  aMessage  The message to add to @p aListId.
-     *
-     */
-    void RemoveFromList(uint8_t aListId, Message &aMessage);
 };
 
 /**
@@ -1011,7 +1046,6 @@ public:
      */
     void GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const;
 
-private:
     /**
      * This method returns the tail of the list (last message in the list)
      *
@@ -1020,40 +1054,23 @@ private:
      */
     Message *GetTail(void) const;
 
+private:
     /**
-     * This method adds a message to a list.
-     *
-     * @param[in]  aListId   The list to add @p aMessage to.
-     * @param[in]  aMessage  The message to add to @p aListId.
-     *
-     */
-    void AddToList(uint8_t aListId, Message &aMessage);
-
-    /**
-     * This method removes a message from a list.
-     *
-     * @param[in]  aListId   The list to add @p aMessage to.
-     * @param[in]  aMessage  The message to add to @p aListId.
-     *
-     */
-    void RemoveFromList(uint8_t aListId, Message &aMessage);
-
-    /**
-     * This method decreases (moves back) the given priority while ensuring to wrap from
-     * priority value 0 back to `kNumPriorities` -1.
+     * This method increases (moves forward) the given priority while ensuring to wrap from
+     * priority value `kNumPriorities` -1 back to 0.
      *
      * @param[in] aPriority  A given priority level
      *
-     * @returns Decreased/Moved back priority level
+     * @returns Increased/Moved forward priority level
      */
     uint8_t PrevPriority(uint8_t aPriority) const
     {
-        return (aPriority == 0) ? (Message::kNumPriorities - 1) : (aPriority - 1);
+        return (aPriority == Message::kNumPriorities - 1) ? 0 : (aPriority + 1);
     }
 
     /**
-     * This private method finds the first non-NULL tail starting from the given priority level and moving back.
-     * It wraps from priority value 0 back to `kNumPriorities` -1.
+     * This private method finds the first non-NULL tail starting from the given priority level and moving forward.
+     * It wraps from priority value `kNumPriorities` -1 back to 0.
      *
      * aStartPriorityLevel  Starting priority level.
      *
@@ -1078,96 +1095,6 @@ class MessagePool : public InstanceLocator
 
 public:
     /**
-     * This class represents an iterator for iterating through all queued message from this pool.
-     *
-     */
-    class Iterator
-    {
-        friend class MessagePool;
-
-    public:
-        /**
-         * This constructor initializes an empty iterator.
-         */
-        Iterator(void)
-            : mMessage(NULL)
-        {
-        }
-
-        /**
-         * This method returns the associated message with the iterator.
-         *
-         * @returns A pointer to associated message with this iterator.
-         *
-         */
-        Message *GetMessage(void) const { return mMessage; }
-
-        /**
-         * This method returns `true` if the iterator is empty (i.e., associated with a NULL message)
-         *
-         * @returns `true` if the iterator is empty, `false` otherwise.
-         */
-        bool IsEmpty(void) const { return (mMessage == NULL); }
-
-        /**
-         * This method returns `true` if the iterator has ended (beyond the last message on list).
-         *
-         * @returns `true` if the iterator has ended , `false` otherwise.
-         */
-        bool HasEnded(void) const { return IsEmpty(); }
-
-        /**
-         * This method returns a new iterator corresponding to next message on the list.
-         *
-         * @returns An iterator corresponding to next message on the list.
-         *
-         */
-        Iterator GetNext(void) const { return Iterator(Next()); }
-
-        /**
-         * This method returns a new iterator corresponding to previous message on the list.
-         *
-         * @returns An iterator corresponding to previous message on the list.
-         *
-         */
-        Iterator GetPrev(void) const { return Iterator(Prev()); }
-
-        /**
-         * This method moves the current iterator to the next message on the list.
-         *
-         * @returns A reference to current iterator.
-         *
-         */
-        Iterator &GoToNext(void)
-        {
-            mMessage = Next();
-            return *this;
-        }
-
-        /**
-         * This method moves the current iterator to the previous message on the list.
-         *
-         * @returns A reference to current iterator.
-         *
-         */
-        Iterator &GoToPrev(void)
-        {
-            mMessage = Prev();
-            return *this;
-        }
-
-    private:
-        Iterator(Message *aMessage)
-            : mMessage(aMessage)
-        {
-        }
-        Message *Next(void) const;
-        Message *Prev(void) const;
-
-        Message *mMessage;
-    };
-
-    /**
      * This constructor initializes the object.
      *
      */
@@ -1179,11 +1106,27 @@ public:
      *
      * @param[in]  aType           The message type.
      * @param[in]  aReserveHeader  The number of header bytes to reserve.
+     * @param[in]  aPriority       The priority level of the message.
      *
      * @returns A pointer to the message or NULL if no message buffers are available.
      *
      */
-    Message *New(uint8_t aType, uint16_t aReserveHeader);
+    Message *New(uint8_t aType, uint16_t aReserveHeader, uint8_t aPriority = kDefaultMessagePriority);
+
+    /**
+     * This method is used to obtain a new message with specified settings.
+     *
+     * @note If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to
+     * OT_MESSAGE_PRIORITY_NORMAL by default.
+     *
+     * @param[in]  aType           The message type.
+     * @param[in]  aReserveHeader  The number of header bytes to reserve.
+     * @param[in]  aSettings       A pointer to the message settings or NULL to set default settings.
+     *
+     * @returns A pointer to the message or NULL if no message buffers are available.
+     *
+     */
+    Message *New(uint8_t aType, uint16_t aReserveHeader, const otMessageSettings *aSettings);
 
     /**
      * This method is used to free a message and return all message buffers to the buffer pool.
@@ -1194,53 +1137,28 @@ public:
     void Free(Message *aMessage);
 
     /**
-     * This method returns a pointer to the first message (head) in the all-messages list.
-     * Messages are sorted based on their priority (head with highest priority) and order by which they are enqueued.
+     * This method returns the number of free buffers.
      *
-     * @returns A pointer to the first message.
-     *
-     */
-    Iterator GetAllMessagesHead(void) const;
-
-    /**
-     * This method returns a pointer to the last message (head) in the all-messages list.
-     * Messages are sorted based on their priority (head with highest priority) and order by which they are enqueued.
-     *
-     * @returns A pointer to the last message.
+     * @returns The number of free buffers.
      *
      */
-    Iterator GetAllMessagesTail(void) const { return Iterator(mAllQueue.GetTail()); }
-
-        /**
-         * This method returns the number of free buffers.
-         *
-         * @returns The number of free buffers.
-         *
-         */
-#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
     uint16_t GetFreeBufferCount(void) const;
-#else
-    uint16_t GetFreeBufferCount(void) const { return mNumFreeBuffers; }
-#endif
 
 private:
     enum
     {
-        kDefaultMessagePriority = Message::kPriorityLow,
+        kDefaultMessagePriority = Message::kPriorityNormal,
     };
 
-    Buffer *       NewBuffer(void);
-    void           FreeBuffers(Buffer *aBuffer);
-    otError        ReclaimBuffers(int aNumBuffers);
-    PriorityQueue *GetAllMessagesQueue(void) { return &mAllQueue; }
+    Buffer *NewBuffer(uint8_t aPriority);
+    void    FreeBuffers(Buffer *aBuffer);
+    otError ReclaimBuffers(int aNumBuffers, uint8_t aPriority);
 
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT == 0
     uint16_t mNumFreeBuffers;
     Buffer   mBuffers[kNumBuffers];
     Buffer * mFreeBuffers;
 #endif
-
-    PriorityQueue mAllQueue;
 };
 
 /**

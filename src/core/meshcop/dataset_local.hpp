@@ -54,7 +54,7 @@ public:
      * @param[in]  aType      The type of the dataset, active or pending.
      *
      */
-    DatasetLocal(Instance &aInstance, const Tlv::Type aType);
+    DatasetLocal(Instance &aInstance, Tlv::Type aType);
 
     /**
      * This method indicates whether this is an Active or Pending Dataset.
@@ -70,6 +70,24 @@ public:
      *
      */
     void Clear(void);
+
+    /**
+     * This method indicates whether an Active or Pending Dataset is saved in non-volatile memory.
+     *
+     * @retval TRUE  if an Active or Pending Dataset is saved in non-volatile memory.
+     * @retval FALSE if an Active or Pending Dataset is not saved in non-volatile memory.
+     *
+     */
+    bool IsSaved(void) const { return mSaved; }
+
+    /**
+     * This method indicates whether an Active (Pending) Timestamp is present in the Active (Pending) Dataset.
+     *
+     * @retval TRUE  if an Active/Pending Timestamp is present.
+     * @retval FALSE if an Active/Pending Timestamp is not present.
+     *
+     */
+    bool IsTimestampPresent(void) const { return mTimestampPresent; }
 
     /**
      * This method restores and retrieves the dataset from non-volatile memory.
@@ -93,7 +111,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    otError Get(Dataset &aDataset) const;
+    otError Read(Dataset &aDataset) const;
 
     /**
      * This method retrieves the dataset from non-volatile memory.
@@ -104,7 +122,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    otError Get(otOperationalDataset &aDataset) const;
+    otError Read(otOperationalDataset &aDataset) const;
 
     /**
      * This method returns the local time this dataset was last updated or restored.
@@ -112,17 +130,7 @@ public:
      * @returns The local time this dataset was last updated or restored.
      *
      */
-    uint32_t GetUpdateTime(void) const { return mUpdateTime; }
-
-#if OPENTHREAD_FTD
-    /**
-     * This method stores the dataset into non-volatile memory.
-     *
-     * @retval OT_ERROR_NONE  Successfully stored the dataset.
-     *
-     */
-    otError Set(const otOperationalDataset &aDataset);
-#endif
+    TimeMilli GetUpdateTime(void) const { return mUpdateTime; }
 
     /**
      * This method stores the dataset into non-volatile memory.
@@ -130,7 +138,15 @@ public:
      * @retval OT_ERROR_NONE  Successfully stored the dataset.
      *
      */
-    otError Set(const Dataset &aDataset);
+    otError Save(const otOperationalDataset &aDataset);
+
+    /**
+     * This method stores the dataset into non-volatile memory.
+     *
+     * @retval OT_ERROR_NONE  Successfully stored the dataset.
+     *
+     */
+    otError Save(const Dataset &aDataset);
 
     /**
      * This method compares this dataset to another based on the timestamp.
@@ -149,9 +165,10 @@ private:
     void SetTimestamp(const Dataset &aDataset);
 
     Timestamp mTimestamp;            ///< Active or Pending Timestamp
-    uint32_t  mUpdateTime;           ///< Local time last updated
+    TimeMilli mUpdateTime;           ///< Local time last updated
     Tlv::Type mType;                 ///< Active or Pending
-    bool      mTimestampPresent : 1; ///< Whether or not timestamp is present
+    bool      mTimestampPresent : 1; ///< Whether a timestamp is present
+    bool      mSaved : 1;            ///< Whether a dataset is saved in non-volatile
 };
 
 } // namespace MeshCoP

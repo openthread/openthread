@@ -34,10 +34,10 @@
 
 #include "heap.hpp"
 
-#include <assert.h>
 #include <string.h>
 
 #include "common/code_utils.hpp"
+#include "common/debug.hpp"
 
 namespace ot {
 namespace Utils {

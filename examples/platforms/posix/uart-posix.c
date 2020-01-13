@@ -43,6 +43,7 @@
 
 #include "utils/code_utils.h"
 
+#if OPENTHREAD_POSIX_VIRTUAL_TIME_UART == 0
 #ifdef OPENTHREAD_TARGET_LINUX
 #include <sys/prctl.h>
 int   posix_openpt(int oflag);
@@ -127,7 +128,8 @@ otError otPlatUartEnable(void)
         termios.c_cc[VTIME] = 0;
 
         // configure baud rate
-        otEXPECT_ACTION(cfsetispeed(&termios, B115200) == 0, perror("cfsetispeed"); error = OT_ERROR_GENERIC);
+        otEXPECT_ACTION(cfsetispeed(&termios, OPENTHREAD_POSIX_UART_BAUDRATE) == 0, perror("cfsetispeed");
+                        error = OT_ERROR_GENERIC);
 
         // set configuration
         otEXPECT_ACTION(tcsetattr(s_in_fd, TCSANOW, &termios) == 0, perror("tcsetattr"); error = OT_ERROR_GENERIC);
@@ -149,7 +151,8 @@ otError otPlatUartEnable(void)
         termios.c_cflag |= HUPCL | CREAD | CLOCAL;
 
         // configure baud rate
-        otEXPECT_ACTION(cfsetospeed(&termios, B115200) == 0, perror("cfsetospeed"); error = OT_ERROR_GENERIC);
+        otEXPECT_ACTION(cfsetospeed(&termios, OPENTHREAD_POSIX_UART_BAUDRATE) == 0, perror("cfsetospeed");
+                        error = OT_ERROR_GENERIC);
 
         // set configuration
         otEXPECT_ACTION(tcsetattr(s_out_fd, TCSANOW, &termios) == 0, perror("tcsetattr"); error = OT_ERROR_GENERIC);
@@ -219,6 +222,33 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
     }
 }
 
+otError otPlatUartFlush(void)
+{
+    otError error = OT_ERROR_NONE;
+    ssize_t count;
+
+    otEXPECT_ACTION(s_write_buffer != NULL && s_write_length > 0, error = OT_ERROR_INVALID_STATE);
+
+    while ((count = write(s_out_fd, s_write_buffer, s_write_length)) > 0 && (s_write_length -= count) > 0)
+    {
+        s_write_buffer += count;
+    }
+
+    if (count != -1)
+    {
+        assert(s_write_length == 0);
+        s_write_buffer = NULL;
+    }
+    else
+    {
+        perror("write(UART)");
+        exit(EXIT_FAILURE);
+    }
+
+exit:
+    return error;
+}
+
 void platformUartProcess(void)
 {
     ssize_t       rval;
@@ -269,22 +299,25 @@ void platformUartProcess(void)
         {
             rval = write(s_out_fd, s_write_buffer, s_write_length);
 
-            if (rval <= 0)
+            if (rval >= 0)
+            {
+                s_write_buffer += (uint16_t)rval;
+                s_write_length -= (uint16_t)rval;
+
+                if (s_write_length == 0)
+                {
+                    otPlatUartSendDone();
+                }
+            }
+            else if (errno != EINTR)
             {
                 perror("write");
                 exit(EXIT_FAILURE);
             }
-
-            s_write_buffer += (uint16_t)rval;
-            s_write_length -= (uint16_t)rval;
-
-            if (s_write_length == 0)
-            {
-                otPlatUartSendDone();
-            }
         }
     }
 }
+#endif // OPENTHREAD_POSIX_VIRTUAL_TIME_UART == 0
 
 #if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART && (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART)
 
@@ -305,7 +338,7 @@ void otPlatDebugUart_putchar_raw(int c)
      * in some/many cases duplicate cr because in
      * some cases the log function {ie: Mbed} already
      * includes the CR or LF... but other log functions
-     * do not include cr/lf and expect it appened
+     * do not include cr/lf and expect it appended
      */
     fp = posix_logfile;
 

@@ -33,10 +33,14 @@ AUTO_DUT = True
 
 DUT_DEVICE = ('COM16', 'OpenThread')
 """(str, str): The first element is serial port of the DUT, and the second is
-the device type. This must be set if AUTO_DUT=False."""
+the device type."""
+
+DUT2_DEVICE = ('COM18', 'OpenThread')
+"""(str, str): The first element is serial port of the DUT, and the second is
+the device type. DUT in RF-box for RF-shield needed cases."""
 
 DUT_VERSION = 'g12345'
-"""str: Version of DUT, must be set if AUTO_DUT=False."""
+"""str: Version of DUT"""
 
 DUT_MANUFACTURER = 'Open Thread'
 """str: Manufacturer of the DUT"""
@@ -60,7 +64,7 @@ THREAD_SED_POLLING_INTERVAL = 0
 """int: SED polling interval in seconds. Set to 0 to use Harness's default value."""
 
 HARNESS_HOME = 'C:\\GRL\\Thread1.1'
-"""str: Harness installation path, e.g. ``C:\GRL\Thread1.1``"""
+"""str: Harness installation path, e.g. 'C:\\GRL\\Thread1.1'"""
 
 HARNESS_URL = 'http://127.0.0.1:8000'
 """str: Harness front-end url"""
@@ -72,16 +76,36 @@ TESTER_REMARKS = 'OpenThread is great'
 """str: Any comments in the final PDF"""
 
 GOLDEN_DEVICES = []
-"""[(str, str)]: devices list.
+"""[(str, str)]: golden device list.
+It is a port and vendor pair list like [('COM1', 'OpenThread'), ('COM2', 'ARM')] for over-the-air golden devices
+connected to Windows. For OpenThread golden devices, ser2net is also supported by using IP:PORT as the port
+like ('192.168.1.2:5001', 'OpenThread').
+"""
 
-It should be something like [('COM1', 'OpenThread'), ('COM2', 'ARM')] for devices connected to Windows.
+SHIELD_GOLDEN_DEVICES = []
+"""[(str, str)]: shielded golden device list.
+It is a port and vendor pair list like [('COM1', 'OpenThread'), ('COM2', 'ARM')] for shielded golden devices
+connected to Windows. For OpenThread golden devices, ser2net is also supported by using IP:PORT as the port
+like ('192.168.1.2:5001', 'OpenThread').
 
-For OpenThread golden devices, ser2net is also supported, just use IP:PORT for the name. For example,
-('192.168.1.2:5001', 'OpenThread').
+For current topology, maximal common Leader and Commissioner devices for case 9.2.9 and 9.2.10 should be put
+into the RF-box besides DUT2_DEVICE.
+
+Example for CV testbed, 2 conformance devices should be put into the RF-box and listed here.
+
+Example for IV testbed using TopologyConfig_20180907b.txt, 1 OpenThread, 1 ARM and 1 SiLabs devices should be
+put into the RF-box and listed here.
+
+Example for IV testbed using TopologyConfig_20180907cK.txt, 1 OpenThread and 2 ARM devices should be put into
+the RF-box and listed here.
+
 """
 
 MIXED_DEVICE_TYPE = True
-"""bool: Whether golden devices are mixed-type. Must put TopologyConfig.txt under HARNESS_HOME\Thread_Harness\TestScripts before testing if True"""
+r"""bool: Whether golden devices are mixed-type. Must put
+        TopologyConfig.txt under
+        HARNESS_HOME\Thread_Harness\TestScripts before testing if True
+"""
 
 OUTPUT_PATH = '.\\output'
 """str: Path to store results and logs, MUST be writable."""

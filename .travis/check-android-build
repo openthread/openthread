@@ -1,0 +1,109 @@
+#!/bin/sh
+#
+#  Copyright (c) 2018, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+#
+# Run this command on parent directory of openthread
+#
+
+set -e
+set -x
+
+#######################################
+# Prepare android build system
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   None
+#######################################
+android_prepare_build_system()
+{
+    # Android build system
+    (mkdir build && cd build && git init && git pull --depth 1 https://android.googlesource.com/platform/build 2db32730e79cafcf13e1f898a7bee7f82b0449d6)
+    ln -s build/core/main.mk Makefile
+
+    # Workarounds for java checking
+    export ANDROID_JAVA_HOME=/usr/lib/jvm/java-8-oracle
+    mkdir bin
+    cat > bin/java <<EOF
+#!/bin/sh
+echo java version \"1.6\"
+EOF
+
+    cat > bin/javac <<EOF
+echo javac \"1.6\"
+EOF
+    chmod a+x bin/java bin/javac
+    export PATH=$(pwd)/bin:$PATH
+
+    # Files for building ndk
+    mkdir -p system/core/include/arch/linux-arm
+    touch system/core/include/arch/linux-arm/AndroidConfig.h
+
+    mkdir -p system/core/include/arch/linux-x86
+    touch system/core/include/arch/linux-x86/AndroidConfig.h
+
+    ANDROID_NDK_PATH=$HOME/ndk-bundle
+    mkdir -p bionic/libc/
+    cp -r $ANDROID_NDK_PATH/sysroot/usr/include bionic/libc/include
+    mv bionic/libc/include/arm-linux-androideabi/asm bionic/libc/include/asm
+
+    mkdir -p out/target/product/generic/obj/
+    cp -r $ANDROID_NDK_PATH/platforms/android-27/arch-arm/usr/lib out/target/product/generic/obj/
+
+    mkdir -p bionic/libstdc++
+    cp -r $ANDROID_NDK_PATH/sources/cxx-stl/gnu-libstdc++/4.9/include bionic/libstdc++
+    cp -r $ANDROID_NDK_PATH/sources/cxx-stl/gnu-libstdc++/4.9/libs/armeabi-v7a/include/* bionic/libstdc++/include
+    # The default libstdc++.so does not contain full stl implementation, see https://developer.android.com/ndk/guides/cpp-support
+    cp -r $ANDROID_NDK_PATH/sources/cxx-stl/gnu-libstdc++/4.9/libs/armeabi-v7a/libgnustl_shared.so out/target/product/generic/obj/lib/libstdc++.so
+
+    # Build spec
+    cat > buildspec.mk <<EOF
+TARGET_PRODUCT := generic
+TARGET_BUILD_VARIANT := eng
+TARGET_BUILD_TYPE := release
+TARGET_TOOLS_PREFIX := $ANDROID_NDK_PATH/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin/arm-linux-androideabi-
+EOF
+}
+
+main() {
+    android_prepare_build_system
+
+    make showcommands ot-core
+    make showcommands ot-cli
+    make showcommands ot-ncp
+    make showcommands spi-hdlc-adapter
+
+    test -x out/target/product/generic/system/bin/ot-cli
+    test -x out/target/product/generic/system/bin/ot-ncp
+    test -x out/target/product/generic/system/bin/spi-hdlc-adapter
+}
+
+main "$@"

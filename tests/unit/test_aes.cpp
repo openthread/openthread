@@ -27,7 +27,6 @@
  */
 
 #include <openthread/config.h>
-#include <openthread/openthread.h>
 
 #include "common/debug.hpp"
 #include "crypto/aes_ccm.hpp"
@@ -135,7 +134,6 @@ void TestMacCommandFrame()
     VerifyOrQuit(memcmp(test, decrypted, sizeof(decrypted)) == 0, "TestMacCommandFrame decrypt failed\n");
 }
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestMacBeaconFrame();
@@ -143,4 +141,3 @@ int main(void)
     printf("All tests passed\n");
     return 0;
 }
-#endif

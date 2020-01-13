@@ -36,33 +36,34 @@ extern "C" {
 #endif
 
 /**
- * @defgroup nrf_802154_priority_drop 802.15.4 driver procedures with lower priority.
+ * @defgroup nrf_802154_priority_drop 802.15.4 driver procedures with lower priority
  * @{
  * @ingroup nrf_802154
- * @brief Internal procedures of 802.15.4 driver that should be called with lower priority than
+ * @brief Internal procedures of the 802.15.4 driver that should be called with lower priority than
  *        the caller's priority.
  */
 
 /**
- * @brief Initialize notification module.
+ * @brief Initializes the notification module.
  */
 void nrf_802154_priority_drop_init(void);
 
 /**
- * @brief Request discarding of the timeslot.
+ * @brief Requests the stop of the high frequency clock.
  *
- * @note This function should be called through this module to prevent calling it from arbiter context.
+ * @note This function must be called through this module to prevent calling it from the arbiter
+ *       context.
  */
-void nrf_802154_priority_drop_timeslot_exit(void);
+void nrf_802154_priority_drop_hfclk_stop(void);
 
 /**
- * @brief Terminate requesting of timeslot discarding.
+ * @brief Terminates the requesting of the high frequency clock stop procedure.
  *
- * Function used to to terminate timeslot exit procedure requested by previous call to
- * @rev nrf_802154_priority_drop_timeslot_exit. Timeslot discarding is terminated only if it has
+ * Function used to to terminate the HFClk stop procedure requested by the previous call to
+ * @rev nrf_802154_priority_drop_hfclk_stop. The HFClk stop procedure is terminated only if it has
  * not been started.
  */
-void nrf_802154_priority_drop_timeslot_exit_terminate(void);
+void nrf_802154_priority_drop_hfclk_stop_terminate(void);
 
 /**
  *@}
@@ -73,4 +74,3 @@ void nrf_802154_priority_drop_timeslot_exit_terminate(void);
 #endif
 
 #endif // NRF_802154_PRIORITY_DROP_H__
-

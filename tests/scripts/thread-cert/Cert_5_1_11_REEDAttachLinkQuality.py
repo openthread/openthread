@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -41,7 +40,6 @@ ROUTER1 = 4
 
 
 class Cert_5_1_11_REEDAttachLinkQuality(unittest.TestCase):
-
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -65,22 +63,24 @@ class Cert_5_1_11_REEDAttachLinkQuality(unittest.TestCase):
         self.nodes[ROUTER2].set_panid(0xface)
         self.nodes[ROUTER2].set_mode('rsdn')
         self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER2].add_whitelist(self.nodes[ROUTER1].get_addr64(), rssi=-85)
+        self.nodes[ROUTER2].add_whitelist(
+            self.nodes[ROUTER1].get_addr64(), rssi=-85
+        )
         self.nodes[ROUTER2].enable_whitelist()
         self.nodes[ROUTER2].set_router_selection_jitter(1)
 
         self.nodes[ROUTER1].set_panid(0xface)
         self.nodes[ROUTER1].set_mode('rsdn')
         self.nodes[ROUTER1].add_whitelist(self.nodes[REED].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[ROUTER2].get_addr64(), rssi=-85)
+        self.nodes[ROUTER1].add_whitelist(self.nodes[ROUTER2].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
         self.nodes[ROUTER1].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
+        self.simulator.stop()
 
     def test(self):
         self.nodes[LEADER].start()
@@ -125,7 +125,6 @@ class Cert_5_1_11_REEDAttachLinkQuality(unittest.TestCase):
 
         msg = leader_messages.next_coap_message("2.04")
 
-        reed_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
         router2_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
 
         # 3 - Router1
@@ -142,7 +141,9 @@ class Cert_5_1_11_REEDAttachLinkQuality(unittest.TestCase):
         self.assertEqual(0, scan_mask_tlv.end_device)
 
         # 4 - Router2
-        msg = router2_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+        msg = router2_messages.next_mle_message(
+            mle.CommandType.PARENT_RESPONSE
+        )
         msg.assertSentToNode(self.nodes[ROUTER1])
 
         # 5 - Router1
@@ -157,6 +158,23 @@ class Cert_5_1_11_REEDAttachLinkQuality(unittest.TestCase):
         scan_mask_tlv = msg.get_mle_message_tlv(mle.ScanMask)
         self.assertEqual(1, scan_mask_tlv.router)
         self.assertEqual(1, scan_mask_tlv.end_device)
+
+        # 6 - Router1
+        msg = router1_messages.next_mle_message(
+            mle.CommandType.CHILD_ID_REQUEST
+        )
+        msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
+        msg.assertMleMessageContainsTlv(mle.Mode)
+        msg.assertMleMessageContainsTlv(mle.Response)
+        msg.assertMleMessageContainsTlv(mle.Timeout)
+        msg.assertMleMessageContainsTlv(mle.TlvRequest)
+        msg.assertMleMessageContainsTlv(mle.Version)
+        msg.assertMleMessageContainsOptionalTlv(mle.MleFrameCounter)
+        msg.assertMleMessageDoesNotContainTlv(mle.AddressRegistration)
+        msg.assertSentToNode(self.nodes[REED])
+
+        msg = reed_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        msg.assertSentToNode(self.nodes[ROUTER1])
 
 
 if __name__ == '__main__':

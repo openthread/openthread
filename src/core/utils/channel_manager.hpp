@@ -36,7 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
 #include <openthread/platform/radio.h>
 
 #include "common/locator.hpp"
@@ -56,7 +55,7 @@ namespace Utils {
  * @{
  */
 
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 
 #if OPENTHREAD_FTD
 
@@ -156,7 +155,6 @@ public:
      * @retval OT_ERROR_NONE               Channel selection finished successfully.
      * @retval OT_ERROR_NOT_FOUND          Supported channels is empty, therefore could not select a channel.
      * @retval OT_ERROR_INVALID_STATE      Thread is not enabled or not enough data to select new channel.
-     * @retval OT_ERROR_DISABLED_FEATURE   `ChannelMonintor` feature is disabled by build-time configuration options.
      *
      */
     otError RequestChannelSelect(bool aSkipQualityCheck);
@@ -197,7 +195,7 @@ public:
      * @returns The interval (in seconds).
      *
      */
-    uint32_t GetAutoChannelSelectionInterval(void) { return mAutoSelectInterval; }
+    uint32_t GetAutoChannelSelectionInterval(void) const { return mAutoSelectInterval; }
 
     /**
      * This method gets the supported channel mask.
@@ -273,14 +271,14 @@ private:
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
-    static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aChangedFlags);
-    void        HandleStateChanged(uint32_t aChangedFlags);
+    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aChangedFlags);
+    void        HandleStateChanged(otChangedFlags aChangedFlags);
     void        PreparePendingDataset(void);
     void        StartAutoSelectTimer(void);
 
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     otError FindBetterChannel(uint8_t &aNewChannel, uint16_t &aOccupancy);
-    bool    ShouldAttamptChannelChange(void);
+    bool    ShouldAttemptChannelChange(void);
 #endif
 
     Mac::ChannelMask   mSupportedChannelMask;
@@ -305,7 +303,7 @@ public:
 
 #endif // OPENTHREAD_FTD
 
-#endif // OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 /**
  * @}
  *

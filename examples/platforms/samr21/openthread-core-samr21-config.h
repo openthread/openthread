@@ -46,7 +46,7 @@ extern uint32_t __d_nv_mem_end;
  * The platform-specific string to insert into the OpenThread version string.
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_INFO                         "SAMR21"
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "SAMR21"
 
 /**
  * @def SETTINGS_CONFIG_BASE_ADDRESS
@@ -54,7 +54,7 @@ extern uint32_t __d_nv_mem_end;
  * The base address of settings.
  *
  */
-#define SETTINGS_CONFIG_BASE_ADDRESS                            ((uint32_t)&__d_nv_mem_start)
+#define SETTINGS_CONFIG_BASE_ADDRESS ((uint32_t)&__d_nv_mem_start)
 
 /**
  * @def SETTINGS_CONFIG_PAGE_SIZE
@@ -62,15 +62,22 @@ extern uint32_t __d_nv_mem_end;
  * The page size of settings.
  *
  */
-#define SETTINGS_CONFIG_PAGE_SIZE                               0x100
+#define SETTINGS_CONFIG_PAGE_SIZE 0x100
 
 /**
  * @def SETTINGS_CONFIG_PAGE_NUM
  *
  * The page number of settings.
  *
+ * This value should not exceeds:
+ *     (((uint32_t)&__d_nv_mem_end - (uint32_t)&__d_nv_mem_start) / SETTINGS_CONFIG_PAGE_SIZE)
+ *
+ * __d_nv_mem_start and __d_nv_mem_end is defined in linker script.
+ * The size of NVRAM region is 4k. Page size is 256 bytes. Maximum SETTINGS_CONFIG_PAGE_NUM
+ * should be equal or less than 16.
+ *
  */
-#define SETTINGS_CONFIG_PAGE_NUM                                (((uint32_t)&__d_nv_mem_end - (uint32_t)&__d_nv_mem_start) / SETTINGS_CONFIG_PAGE_SIZE)
+#define SETTINGS_CONFIG_PAGE_NUM 16
 
 /**
  * @def RADIO_CONFIG_SRC_MATCH_ENTRY_NUM
@@ -78,7 +85,7 @@ extern uint32_t __d_nv_mem_end;
  * The number of source address table entries.
  *
  */
-#define RADIO_CONFIG_SRC_MATCH_ENTRY_NUM                        128
+#define RADIO_CONFIG_SRC_MATCH_ENTRY_NUM 128
 
 /**
  * @def OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER
@@ -86,7 +93,14 @@ extern uint32_t __d_nv_mem_end;
  * The default IEEE 802.15.4 transmit power (dBm)
  *
  */
-#define OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER                5
+#define OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER 5
 
+/**
+ * @def OPENTHREAD_CONFIG_NCP_UART_ENABLE
+ *
+ * Define to 1 to enable NCP UART support.
+ *
+ */
+#define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
 
-#endif  // OPENTHREAD_CORE_SAMR21_CONFIG_H_
+#endif // OPENTHREAD_CORE_SAMR21_CONFIG_H_

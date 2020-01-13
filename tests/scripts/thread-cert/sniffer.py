@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -30,7 +30,10 @@
 import collections
 import io
 import logging
+import os
+import pcap
 import threading
+import traceback
 
 try:
     import Queue
@@ -43,34 +46,33 @@ import sniffer_transport
 
 class Sniffer:
 
-    """ Class representing the Sniffing node, whose main task is listening and logging message exchange performed by other nodes. """
+    """ Class representing the Sniffing node, whose main task is listening
+        and logging message exchange performed by other nodes.
+    """
 
     logger = logging.getLogger("sniffer.Sniffer")
 
     RECV_BUFFER_SIZE = 4096
 
-    def __init__(self, nodeid, message_factory):
+    def __init__(self, message_factory):
         """
         Args:
-            nodeid (int): Node identifier
             message_factory (MessageFactory): Class producing messages from data bytes.
         """
 
-        self.nodeid = nodeid
         self._message_factory = message_factory
+
+        self._pcap = pcap.PcapCodec(os.getenv('TEST_NAME', 'current'))
 
         # Create transport
         transport_factory = sniffer_transport.SnifferTransportFactory()
-        self._transport = transport_factory.create_transport(nodeid)
+        self._transport = transport_factory.create_transport()
 
         self._thread = None
         self._thread_alive = threading.Event()
         self._thread_alive.clear()
 
         self._buckets = collections.defaultdict(Queue.Queue)
-
-    def __del__(self):
-        del self._transport
 
     def _sniffer_main_loop(self):
         """ Sniffer main loop. """
@@ -80,18 +82,19 @@ class Sniffer:
         while self._thread_alive.is_set():
             data, nodeid = self._transport.recv(self.RECV_BUFFER_SIZE)
 
+            self._pcap.append(data)
+
             # Ignore any exceptions
             try:
-                msg = self._message_factory.create(io.BytesIO(data))
-
-                if msg is not None:
-                    self.logger.debug("Received message: {}".format(msg))
+                messages = self._message_factory.create(io.BytesIO(data))
+                self.logger.debug("Received messages: {}".format(messages))
+                for msg in messages:
                     self._buckets[nodeid].put(msg)
 
             except Exception as e:
                 # Just print the exception to the console
                 print("EXCEPTION: %s" % e)
-                pass
+                traceback.print_exc()
 
         self.logger.debug("Sniffer stopped.")
 
@@ -112,7 +115,7 @@ class Sniffer:
         self._thread_alive.clear()
 
         self._transport.close()
-        
+
         self._thread.join()
         self._thread = None
 
@@ -122,7 +125,8 @@ class Sniffer:
     def get_messages_sent_by(self, nodeid):
         """ Get sniffed messages.
 
-        Note! This method flushes the message queue so calling this method again will return only the newly logged messages.
+        Note! This method flushes the message queue so calling this
+        method again will return only the newly logged messages.
 
         Args:
             nodeid (int): node id

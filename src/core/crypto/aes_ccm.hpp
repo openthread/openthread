@@ -36,9 +36,9 @@
 
 #include "openthread-core-config.h"
 
-#include "utils/wrap_stdint.h"
+#include <stdint.h>
 
-#include <openthread/types.h>
+#include <openthread/error.h>
 
 #include "crypto/aes_ecb.hpp"
 
@@ -66,7 +66,7 @@ public:
      * @param[in]  aKeyLength  Length of the key in bytes.
      *
      */
-    otError SetKey(const uint8_t *aKey, uint16_t aKeyLength);
+    void SetKey(const uint8_t *aKey, uint16_t aKeyLength);
 
     /**
      * This method initializes the AES CCM computation.

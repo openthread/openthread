@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -37,12 +36,13 @@ LEADER = 1
 ROUTER = 2
 REED = 3
 
+
 class Cert_5_6_7_NetworkDataRequestREED(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,4):
+        for i in range(1, 4):
             self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -64,10 +64,10 @@ class Cert_5_6_7_NetworkDataRequestREED(unittest.TestCase):
         self.nodes[REED].set_router_upgrade_threshold(0)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
+        self.simulator.stop()
 
     def test(self):
         self.nodes[LEADER].start()
@@ -88,6 +88,9 @@ class Cert_5_6_7_NetworkDataRequestREED(unittest.TestCase):
         self.nodes[ROUTER].add_prefix('2001:2:0:3::/64', 'paros')
         self.nodes[ROUTER].register_netdata()
 
+        # Set lowpan context of sniffer
+        self.simulator.set_lowpan_context(1, '2001:2:0:3::/64')
+
         self.simulator.go(2)
 
         self.nodes[LEADER].add_whitelist(self.nodes[REED].get_addr64())
@@ -100,6 +103,7 @@ class Cert_5_6_7_NetworkDataRequestREED(unittest.TestCase):
         for addr in addrs:
             if addr[0:10] == '2001:2:0:3':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
+
 
 if __name__ == '__main__':
     unittest.main()

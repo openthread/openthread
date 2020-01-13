@@ -1,30 +1,30 @@
 /**
- * Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
- * 
+ * Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
+ *
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form, except as embedded into a Nordic
  *    Semiconductor ASA integrated circuit in a product or a software update for
  *    such product, must reproduce the above copyright notice, this list of
  *    conditions and the following disclaimer in the documentation and/or other
  *    materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
- * 
+ *
  * 4. This software, with or without modification, must only be used with a
  *    Nordic Semiconductor ASA integrated circuit.
- * 
+ *
  * 5. Any software provided in binary form under this license must not be reverse
  *    engineered, decompiled, modified and/or disassembled.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -35,7 +35,7 @@
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef NRFX_GLUE_H__
@@ -54,7 +54,7 @@ extern "C" {
  *        the needs of the host environment into which @em nrfx is integrated.
  */
 
-#include <apply_old_config.h>
+#include <legacy/apply_old_config.h>
 
 #include <soc/nrfx_irqs.h>
 
@@ -116,7 +116,6 @@ static inline void _NRFX_IRQ_PRIORITY_SET(IRQn_Type irq_number,
 #define NRFX_IRQ_ENABLE(irq_number)  _NRFX_IRQ_ENABLE(irq_number)
 static inline void _NRFX_IRQ_ENABLE(IRQn_Type irq_number)
 {
-    NVIC_ClearPendingIRQ(irq_number);
     NVIC_EnableIRQ(irq_number);
 }
 
@@ -207,6 +206,76 @@ static inline bool _NRFX_IRQ_IS_PENDING(IRQn_Type irq_number)
 
 //------------------------------------------------------------------------------
 
+#include <soc/nrfx_atomic.h>
+
+/**
+ * @brief Atomic 32 bit unsigned type.
+ */
+#define nrfx_atomic_t               nrfx_atomic_u32_t
+
+/**
+ * @brief Stores value to an atomic object and returns previously stored value.
+ *
+ * @param[in] p_data  Atomic memory pointer.
+ * @param[in] value   Value to store.
+ *
+ * @return Old value stored into atomic object.
+ */
+#define NRFX_ATOMIC_FETCH_STORE(p_data, value) nrfx_atomic_u32_fetch_store(p_data, value)
+
+/**
+ * @brief Performs logical OR operation on an atomic object and returns previously stored value.
+ *
+ * @param[in] p_data  Atomic memory pointer.
+ * @param[in] value   Value of second operand of OR operation.
+ *
+ * @return Old value stored into atomic object.
+ */
+#define NRFX_ATOMIC_FETCH_OR(p_data, value)   nrfx_atomic_u32_fetch_or(p_data, value)
+
+/**
+ * @brief Performs logical AND operation on an atomic object and returns previously stored value.
+ *
+ * @param[in] p_data  Atomic memory pointer.
+ * @param[in] value   Value of second operand of AND operation.
+ *
+ * @return Old value stored into atomic object.
+ */
+#define NRFX_ATOMIC_FETCH_AND(p_data, value)   nrfx_atomic_u32_fetch_and(p_data, value)
+
+/**
+ * @brief Performs logical XOR operation on an atomic object and returns previously stored value.
+ *
+ * @param[in] p_data  Atomic memory pointer.
+ * @param[in] value   Value of second operand of XOR operation.
+ *
+ * @return Old value stored into atomic object.
+ */
+#define NRFX_ATOMIC_FETCH_XOR(p_data, value)   nrfx_atomic_u32_fetch_xor(p_data, value)
+
+/**
+ * @brief Performs logical ADD operation on an atomic object and returns previously stored value.
+ *
+ * @param[in] p_data  Atomic memory pointer.
+ * @param[in] value   Value of second operand of ADD operation.
+ *
+ * @return Old value stored into atomic object.
+ */
+#define NRFX_ATOMIC_FETCH_ADD(p_data, value)   nrfx_atomic_u32_fetch_add(p_data, value)
+
+/**
+ * @brief Performs logical SUB operation on an atomic object and returns previously stored value.
+ *
+ * @param[in] p_data  Atomic memory pointer.
+ * @param[in] value   Value of second operand of SUB operation.
+ *
+ * @return Old value stored into atomic object.
+ */
+#define NRFX_ATOMIC_FETCH_SUB(p_data, value)   nrfx_atomic_u32_fetch_sub(p_data, value)
+
+//------------------------------------------------------------------------------
+#ifndef NRFX_CUSTOM_ERROR_CODES
+
 #include <sdk_errors.h>
 /**
  * @brief When set to a non-zero value, this macro specifies that the
@@ -236,6 +305,7 @@ typedef ret_code_t nrfx_err_t;
 #define NRFX_ERROR_DRV_TWI_ERR_ANACK    NRF_ERROR_DRV_TWI_ERR_ANACK
 #define NRFX_ERROR_DRV_TWI_ERR_DNACK    NRF_ERROR_DRV_TWI_ERR_DNACK
 
+#endif // NRFX_CUSTOM_ERROR_CODES
 //------------------------------------------------------------------------------
 
 #include <sdk_resources.h>

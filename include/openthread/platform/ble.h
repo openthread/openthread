@@ -28,7 +28,9 @@
 
 /**
  * @file
+ * @brief
  *   This file defines a generic OpenThread BLE driver HOST interface.
+ *
  */
 
 #ifndef OT_PLATFORM_BLE_H_
@@ -40,11 +42,11 @@ extern "C" {
 
 #include <stdint.h>
 
-#include <openthread/types.h>
+#include <openthread/error.h>
+#include <openthread/instance.h>
 
 /**
- * @defgroup ble BLE Host
- * @ingroup platform
+ * @addtogroup plat-ble
  *
  * @brief
  *   This module includes the platform abstraction for BLE Host communication.
@@ -198,11 +200,15 @@ enum
 
 };
 
+/// Convert the advertising interval from [ms] to [ble symbol times].
+#define OT_BLE_MS_TO_TICKS(x) (((x)*1000) / OT_BLE_ADV_INTERVAL_UNIT)
+
 /**
  * This enum represents BLE Device Address types.
  *
  */
-typedef enum otPlatBleAddressType {
+typedef enum otPlatBleAddressType
+{
     OT_BLE_ADDRESS_TYPE_PUBLIC                        = 0, ///< Bluetooth public device address.
     OT_BLE_ADDRESS_TYPE_RANDOM_STATIC                 = 1, ///< Bluetooth random static address.
     OT_BLE_ADDRESS_TYPE_RANDOM_PRIVATE_RESOLVABLE     = 2, ///< Bluetooth random private resolvable address.
@@ -215,7 +221,8 @@ typedef enum otPlatBleAddressType {
  *
  * See v4.2 [Vol 3, Part G] 3.3.1.1 Characteristic Properties - Table 3.5
  */
-typedef enum otPlatBleCccdFlags {
+typedef enum otPlatBleCccdFlags
+{
     /**
      * If set, permits broadcasts of the Characteristic Value using Characteristic Configuration Descriptor.
      */
@@ -272,7 +279,8 @@ typedef struct otPlatBleDeviceAddr
  * This enumeration defines flags for BLE advertisement mode.
  *
  */
-typedef enum otPlatBleAdvMode {
+typedef enum otPlatBleAdvMode
+{
     /**
      * If set, advertising device will allow connections to be initiated.
      */
@@ -320,10 +328,12 @@ typedef struct otPlatBleGapConnParams
  * This enumeration represents BLE UUID value.
  *
  */
-typedef enum otPlatBleUuidType {
-    OT_BLE_UUID_TYPE_16  = 0, ///< UUID represented by 16-bit value.
-    OT_BLE_UUID_TYPE_32  = 1, ///< UUID represented by 32-bit value.
-    OT_BLE_UUID_TYPE_128 = 2, ///< UUID represented by 128-bit value.
+typedef enum otPlatBleUuidType
+{
+    OT_BLE_UUID_TYPE_NONE = 0, ///< UUID uninitialized value.
+    OT_BLE_UUID_TYPE_16   = 1, ///< UUID represented by 16-bit value.
+    OT_BLE_UUID_TYPE_32   = 2, ///< UUID represented by 32-bit value.
+    OT_BLE_UUID_TYPE_128  = 3, ///< UUID represented by 128-bit value.
 } otPlatBleUuidType;
 
 /**
@@ -370,6 +380,31 @@ typedef struct otPlatBleGattDescriptor
 } otPlatBleGattDescriptor;
 
 /**
+ * Registration descriptor for a GATT service.
+ *
+ */
+typedef struct otPlatBleGattService
+{
+    /**
+     * Pointer to service UUID; use BLE_UUIDxx_DECLARE macros to declare
+     * proper UUID; NULL if there are no more characteristics in the service.
+     */
+    const otPlatBleUuid mUuid;
+
+    /**
+     * Handle of service; written to by stack after call to
+     * otPlatBleGattServerServicesRegister.
+     */
+    uint16_t mHandle;
+
+    /**
+     * Array of characteristic definitions corresponding to characteristics
+     * belonging to this service.
+     */
+    otPlatBleGattCharacteristic *mCharacteristics;
+} otPlatBleGattService;
+
+/**
  * This structure represents an BLE packet.
  *
  */
@@ -379,6 +414,18 @@ typedef struct otBleRadioPacket
     uint16_t mLength; ///< Length of the @p mValue.
     int8_t   mPower;  ///< Transmit/receive power in dBm.
 } otBleRadioPacket;
+
+/**
+ * The enum indicates the outcome of the L2CAP connection request procedure.
+ * See Bluetooth v5.0 | Vol 3, Part A, 4.23, Table 4.20.
+ */
+typedef enum otPlatBleL2capError
+{
+    OT_BLE_L2C_ERROR_NONE           = 0x00, ///< Connection successful.
+    OT_BLE_L2C_ERROR_INVALID_PSM    = 0x02, ///< Connection refused – LE_PSM not supported.
+    OT_BLE_L2C_ERROR_NO_MEM         = 0x04, ///< Connection refused – no resources available.
+    OT_BLE_L2C_ERROR_INVALID_PARAMS = 0x0b, ///< Connection refused – unacceptable parameters.
+} otPlatBleL2capError;
 
 /*******************************************************************************
  * @section Bluetooth Low Energy management.
@@ -413,6 +460,16 @@ otError otPlatBleEnable(otInstance *aInstance);
 otError otPlatBleDisable(otInstance *aInstance);
 
 /**
+ * Reset the Bluetooth Low Energy subsystem.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ *
+ * @retval ::OT_ERROR_NONE        Successfully reset.
+ * @retval ::OT_ERROR_FAILED      The BLE stack could not be reset.
+ */
+otError otPlatBleReset(otInstance *aInstance);
+
+/**
  * Check whether Bluetooth Low Energy radio is enabled or not.
  *
  * @param[in] aInstance  The OpenThread instance structure.
@@ -421,6 +478,13 @@ otError otPlatBleDisable(otInstance *aInstance);
  * @retval ::false  Bluetooth Low Energy radio is disabled.
  */
 bool otPlatBleIsEnabled(otInstance *aInstance);
+
+/**
+ * Callback sent when Bluetooth Low Energy is ready after being enabled.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ */
+extern void otPlatBleOnEnabled(otInstance *aInstance);
 
 /****************************************************************************
  * @section Bluetooth Low Energy GAP.
@@ -850,9 +914,9 @@ otError otPlatBleGattClientCharacteristicsDiscover(otInstance *aInstance, uint16
  * The BLE driver calls this method to notify OpenThread that GATT Characteristic
  * Discovery of a service has been done.
  *
- * @note This function shall be used only for GATT Client.
- *
  * In case of success, all elements inside @p aChars should have a valid mHandleValue value.
+ *
+ * @note This function shall be used only for GATT Client.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aChars     A pointer to discovered characteristic list.
@@ -939,42 +1003,21 @@ extern void otPlatBleGattClientOnMtuExchangeResponse(otInstance *aInstance, uint
  ******************************************************************************/
 
 /**
- * Registers GATT Service.
+ * Registers a list of GATT Services and their enclosed Characteristics.
+ * The generated handles will be written back into this structure when the
+ * BLE stack is enabled.
  *
  * @note This function shall be used only for GATT Server.
  *
  * @param[in]   aInstance  The OpenThread instance structure.
- * @param[in]   aUuid      The UUID of a service.
- * @param[out]  aHandle    The start handle of a service.
+ * @param[in]   aServices  Null terminated array of service structures to register.
  *
  * @retval ::OT_ERROR_NONE           Service has been successfully registered.
  * @retval ::OT_ERROR_INVALID_STATE  BLE Device is in invalid state.
  * @retval ::OT_ERROR_INVALID_ARGS   Invalid service UUID has been provided.
  * @retval ::OT_ERROR_NO_BUFS        No available internal buffer found.
  */
-otError otPlatBleGattServerServiceRegister(otInstance *aInstance, const otPlatBleUuid *aUuid, uint16_t *aHandle);
-
-/**
- * Registers GATT Characteristic with maximum length of 128 octets.
- *
- * @note This function shall be used only for GATT Server.
- *
- * @param[in]     aInstance       The OpenThread instance structure.
- * @param[in]     aServiceHandle  The start handle of a service.
- * @param[inout]  aChar           As an input parameter the valid mUuid and mProperties have to be provided.
- *                                In case of success, the value of mValueHandle is filled.
- * @param[in]     aCccd           If set, method has to create Client Characteristic Configuration Descriptor
- *                                and put its handle into mHandleCccd parameter of @p aChar.
- *
- * @retval ::OT_ERROR_NONE           Characteristic has been successfully registered.
- * @retval ::OT_ERROR_INVALID_STATE  BLE Device is in invalid state.
- * @retval ::OT_ERROR_INVALID_ARGS   Invalid service handle or characteristic UUID has been provided.
- * @retval ::OT_ERROR_NO_BUFS        No available internal buffer found.
- */
-otError otPlatBleGattServerCharacteristicRegister(otInstance *                 aInstance,
-                                                  uint16_t                     aServiceHandle,
-                                                  otPlatBleGattCharacteristic *aChar,
-                                                  bool                         aCccd);
+otError otPlatBleGattServerServicesRegister(otInstance *aInstance, otPlatBleGattService *aServices);
 
 /**
  * Sends ATT Handle Value Indication.
@@ -1020,6 +1063,19 @@ extern void otPlatBleGattServerOnIndicationConfirmation(otInstance *aInstance, u
 extern void otPlatBleGattServerOnWriteRequest(otInstance *aInstance, uint16_t aHandle, otBleRadioPacket *aPacket);
 
 /**
+ * The BLE driver calls this method to notify OpenThread that an ATT Read Request
+ * packet has been received.
+ *
+ * @note This function shall be used only for GATT Server.
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ * @param[in]  aHandle    The handle of the attribute to be read.
+ * @param[out] aPacket    A pointer to the packet to be filled with pointers to attribute data to be read.
+ *
+ */
+extern void otPlatBleGattServerOnReadRequest(otInstance *aInstance, uint16_t aHandle, otBleRadioPacket *aPacket);
+
+/**
  * The BLE driver calls this method to notify OpenThread that an ATT Subscription
  * Request packet has been received.
  *
@@ -1031,6 +1087,156 @@ extern void otPlatBleGattServerOnWriteRequest(otInstance *aInstance, uint16_t aH
  *
  */
 extern void otPlatBleGattServerOnSubscribeRequest(otInstance *aInstance, uint16_t aHandle, bool aSubscribing);
+
+/****************************************************************************
+ * @section Bluetooth Low Energy L2CAP Connection Oriented Channels.
+ ***************************************************************************/
+
+/**
+ * Sends LE Credit Based Connection Request.
+ *
+ * @note Platform layer is responsible for credits management and segmentation (MPS).
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ * @param[in]  aPsm       The value of LE Protocol/Service Multiplexer.
+ * @param[in]  aMtu       The value specifies the maximum SDU size (in octets) that the L2CAP
+ *                        layer entity sending the LE Credit Based Connection Request can receive
+ *                        on this channel.
+ * @param[out] aCid       The source CID represents a channel endpoint on the device.
+ *
+ * @retval ::OT_ERROR_NONE           LE Credit Based Connection Request has been sent.
+ * @retval ::OT_ERROR_INVALID_STATE  BLE Device is in invalid state e.g. not in the GAP connection.
+ * @retval ::OT_ERROR_INVALID_ARGS   Invalid parameters has been supplied.
+ * @retval ::OT_ERROR_NO_BUFS        No available internal buffer found.
+ *
+ */
+otError otPlatBleL2capConnectionRequest(otInstance *aInstance, uint16_t aPsm, uint16_t aMtu, uint16_t *aCid);
+
+/**
+ * The BLE driver calls this method to notify OpenThread that an LE Credit Based Connection
+ * Request packet has been received.
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ * @param[in]  aPsm       The value of LE Protocol/Service Multiplexer.
+ * @param[in]  aMtu       The value specifies the maximum SDU size (in octets) that the L2CAP
+ *                        layer entity sending the LE Credit Based Connection Request can receive
+ *                        on this channel.
+ * @param[in]  aPeerCid   The CID represents a channel endpoint on the peer device.
+ *
+ */
+extern void otPlatBleL2capOnConnectionRequest(otInstance *aInstance, uint16_t aPsm, uint16_t aMtu, uint16_t aPeerCid);
+
+/**
+ * Sends LE Credit Based Connection Response.
+ *
+ * @note Platform layer is responsible for credits management and segmentation (MPS).
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ * @param[in]  aError     The error value indicates the outcome of the connection request.
+ * @param[in]  aMtu       The value specifies the maximum SDU size (in octets) that the L2CAP
+ *                        layer entity sending the LE Credit Based Connection Response can receive
+ *                        on this channel.
+ * @param[out] aCid       The source CID represents a channel endpoint on the device. If @p aResult
+ *                        value is different from @p OT_BLE_L2C_ERROR_NONE, this variable is
+ *                        unused and should be set to NULL.
+ *
+ * @retval ::OT_ERROR_NONE           LE Credit Based Connection Response has been sent.
+ * @retval ::OT_ERROR_INVALID_STATE  BLE Device is in invalid state e.g. not in the GAP connection.
+ * @retval ::OT_ERROR_INVALID_ARGS   Invalid parameters has been supplied.
+ * @retval ::OT_ERROR_NO_BUFS        No available internal buffer found.
+ *
+ */
+otError otPlatBleL2capConnectionResponse(otInstance *        aInstance,
+                                         otPlatBleL2capError aError,
+                                         uint16_t            aMtu,
+                                         uint16_t *          aCid);
+
+/**
+ * The BLE driver calls this method to notify OpenThread that an LE Credit Based Connection
+ * Response packet has been received.
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ * @param[in]  aError     The error value indicates the outcome of the connection request.
+ * @param[in]  aMtu       The value specifies the maximum SDU size (in octets) that the L2CAP
+ *                        layer entity sending the LE Credit Based Connection Response can receive
+ *                        on this channel.
+ * @param[in]  aPeerCid   The CID represents a channel endpoint on the peer device.
+ *
+ */
+extern void otPlatBleL2capOnConnectionResponse(otInstance *        aInstance,
+                                               otPlatBleL2capError aError,
+                                               uint16_t            aMtu,
+                                               uint16_t            aPeerCid);
+
+/**
+ * Sends an SDU on an L2CAP channel.
+ *
+ * @note Platform layer is responsible for credits management and segmentation (MPS).
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ * @param[in] aLocalCid  The local channel endpoint ID value.
+ * @param[in] aPeerCid   The peer channel endpoint ID value.
+ * @param[in] aPacket    A pointer to the packet containing SDU.
+ *
+ * @retval ::OT_ERROR_NONE           LE Credit Based Connection Request has been sent.
+ * @retval ::OT_ERROR_INVALID_STATE  BLE Device is in invalid state e.g. not in the GAP connection.
+ * @retval ::OT_ERROR_INVALID_ARGS   Invalid parameters has been supplied.
+ * @retval ::OT_ERROR_NO_BUFS        No available internal buffer found.
+ *
+ */
+otError otPlatBleL2capSduSend(otInstance *aInstance, uint16_t aLocalCid, uint16_t aPeerCid, otBleRadioPacket *aPacket);
+
+/**
+ * The BLE driver calls this method to notify OpenThread that an L2CAP SDU has been received.
+ *
+ * @note Platform layer is responsible for credits management and segmentation (MPS).
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ * @param[in] aLocalCid  The local channel endpoint ID value.
+ * @param[in] aPeerCid   The peer channel endpoint ID value.
+ * @param[in] aPacket    A pointer to the packet containing SDU.
+ *
+ */
+extern void otPlatBleL2capOnSduReceived(otInstance *      aInstance,
+                                        uint16_t          aLocalCid,
+                                        uint16_t          aPeerCid,
+                                        otBleRadioPacket *aPacket);
+
+/**
+ * The BLE driver calls this method to notify OpenThread that an L2CAP SDU has been sent.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ *
+ */
+extern void otPlatBleL2capOnSduSent(otInstance *aInstance);
+
+/**
+ * Sends an L2CAP Disconnection Request.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ * @param[in] aLocalCid  The local channel endpoint ID value.
+ * @param[in] aPeerCid   The peer channel endpoint ID value.
+ *
+ * @retval ::OT_ERROR_NONE           L2CAP Disconnection Request has been sent.
+ * @retval ::OT_ERROR_INVALID_STATE  BLE Device is in invalid state e.g. not in the GAP connection.
+ * @retval ::OT_ERROR_INVALID_ARGS   Invalid parameters has been supplied.
+ * @retval ::OT_ERROR_NO_BUFS        No available internal buffer found.
+ *
+ */
+otError otPlatBleL2capDisconnect(otInstance *aInstance, uint16_t aLocalCid, uint16_t aPeerCid);
+
+/**
+ * The BLE driver calls this method to notify OpenThread that an L2CAP Disconnection Request has been
+ * received.
+ *
+ * @note Platform layer is responsible to response with L2CAP Disconnection Response internally.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ * @param[in] aLocalCid  The local channel endpoint ID value.
+ * @param[in] aPeerCid   The peer channel endpoint ID value.
+ *
+ */
+extern void otPlatBleL2capOnDisconnect(otInstance *aInstance, uint16_t aLocalCid, uint16_t aPeerCid);
 
 /**
  * @}

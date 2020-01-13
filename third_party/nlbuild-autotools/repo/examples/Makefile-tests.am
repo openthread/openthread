@@ -90,10 +90,10 @@ if @PACKAGE_SHORT_UPPER@_BUILD_COVERAGE_REPORTS
 $(@PACKAGE_SHORT_UPPER@_COVERAGE_BUNDLE):
 	$(call create-directory)
 
-$(@PACKAGE_SHORT_UPPER@_COVERAGE_INFO): check | $(@PACKAGE_SHORT_UPPER@_COVERAGE_BUNDLE)
+$(@PACKAGE_SHORT_UPPER@_COVERAGE_INFO): check-local | $(@PACKAGE_SHORT_UPPER@_COVERAGE_BUNDLE)
 	$(call generate-coverage-report,${top_builddir})
 
-coverage: $(@PACKAGE_SHORT_UPPER@_COVERAGE_INFO)
+coverage-local: $(@PACKAGE_SHORT_UPPER@_COVERAGE_INFO)
 
 clean-local: clean-local-coverage
 

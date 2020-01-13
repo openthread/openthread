@@ -35,7 +35,7 @@
 #ifndef OPENTHREAD_JOINER_H_
 #define OPENTHREAD_JOINER_H_
 
-#include <openthread/types.h>
+#include <openthread/platform/radio.h>
 #include <openthread/platform/toolchain.h>
 
 #ifdef __cplusplus
@@ -48,6 +48,9 @@ extern "C" {
  * @brief
  *   This module includes functions for the Thread Joiner role.
  *
+ * @note
+ *   The functions in this module require `OPENTHREAD_CONFIG_JOINER_ENABLE=1`.
+ *
  * @{
  *
  */
@@ -56,7 +59,8 @@ extern "C" {
  * This enumeration defines the Joiner State.
  *
  */
-typedef enum otJoinerState {
+typedef enum otJoinerState
+{
     OT_JOINER_STATE_IDLE      = 0,
     OT_JOINER_STATE_DISCOVER  = 1,
     OT_JOINER_STATE_CONNECT   = 2,
@@ -75,46 +79,42 @@ typedef enum otJoinerState {
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void(OTCALL *otJoinerCallback)(otError aError, void *aContext);
+typedef void (*otJoinerCallback)(otError aError, void *aContext);
 
 /**
  * This function enables the Thread Joiner role.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aPSKd             A pointer to the PSKd.
+ * @param[in]  aPskd             A pointer to the PSKd.
  * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
- * @param[in]  aVendorName       A pointer to the Vendor Name (must be static).
- * @param[in]  aVendorModel      A pointer to the Vendor Model (must be static).
- * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version (must be static).
- * @param[in]  aVendorData       A pointer to the Vendor Data (must be static).
+ * @param[in]  aVendorName       A pointer to the Vendor Name (may be NULL).
+ * @param[in]  aVendorModel      A pointer to the Vendor Model (may be NULL).
+ * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version (may be NULL).
+ * @param[in]  aVendorData       A pointer to the Vendor Data (may be NULL).
  * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
  * @param[in]  aContext          A pointer to application-specific context.
  *
  * @retval OT_ERROR_NONE              Successfully started the Commissioner role.
- * @retval OT_ERROR_INVALID_ARGS      @p aPSKd or @p aProvisioningUrl is invalid.
- * @retval OT_ERROR_DISABLED_FEATURE  The Joiner feature is not enabled in this build.
+ * @retval OT_ERROR_INVALID_ARGS      @p aPskd or @p aProvisioningUrl is invalid.
  *
  */
-OTAPI otError OTCALL otJoinerStart(otInstance *     aInstance,
-                                   const char *     aPSKd,
-                                   const char *     aProvisioningUrl,
-                                   const char *     aVendorName,
-                                   const char *     aVendorModel,
-                                   const char *     aVendorSwVersion,
-                                   const char *     aVendorData,
-                                   otJoinerCallback aCallback,
-                                   void *           aContext);
+otError otJoinerStart(otInstance *     aInstance,
+                      const char *     aPskd,
+                      const char *     aProvisioningUrl,
+                      const char *     aVendorName,
+                      const char *     aVendorModel,
+                      const char *     aVendorSwVersion,
+                      const char *     aVendorData,
+                      otJoinerCallback aCallback,
+                      void *           aContext);
 
 /**
  * This function disables the Thread Joiner role.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
- * @retval OT_ERROR_NONE              Successfully disabled the Joiner role.
- * @retval OT_ERROR_DISABLED_FEATURE  The Joiner feature is not enabled in this build.
- *
  */
-OTAPI otError OTCALL otJoinerStop(otInstance *aInstance);
+void otJoinerStop(otInstance *aInstance);
 
 /**
  * This function returns the Joiner State.
@@ -129,7 +129,7 @@ OTAPI otError OTCALL otJoinerStop(otInstance *aInstance);
  * @retval OT_JOINER_STATE_JOINED
  *
  */
-OTAPI otJoinerState OTCALL otJoinerGetState(otInstance *aInstance);
+otJoinerState otJoinerGetState(otInstance *aInstance);
 
 /**
  * Get the Joiner ID.
@@ -140,11 +140,8 @@ OTAPI otJoinerState OTCALL otJoinerGetState(otInstance *aInstance);
  * @param[in]   aInstance  A pointer to the OpenThread instance.
  * @param[out]  aJoinerId  A pointer to where the Joiner ID is placed.
  *
- * @retval OT_ERROR_NONE              Successfully retrieved the Joiner ID.
- * @retval OT_ERROR_DISABLED_FEATURE  The Joiner feature is not enabled in this build.
- *
  */
-OTAPI otError OTCALL otJoinerGetId(otInstance *aInstance, otExtAddress *aJoinerId);
+void otJoinerGetId(otInstance *aInstance, otExtAddress *aJoinerId);
 
 /**
  * @}

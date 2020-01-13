@@ -38,7 +38,6 @@
 #include <stdint.h>
 
 #include <openthread/message.h>
-#include <openthread/types.h>
 
 /**
  * @addtogroup plat-messagepool

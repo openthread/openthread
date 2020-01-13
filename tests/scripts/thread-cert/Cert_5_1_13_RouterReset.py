@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -39,7 +38,6 @@ ROUTER = 2
 
 
 class Cert_5_1_13_RouterReset(unittest.TestCase):
-
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -62,10 +60,10 @@ class Cert_5_1_13_RouterReset(unittest.TestCase):
         self.nodes[ROUTER].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
+        self.simulator.stop()
 
     def test(self):
         self.nodes[LEADER].start()
@@ -105,8 +103,10 @@ class Cert_5_1_13_RouterReset(unittest.TestCase):
         msg = leader_messages.next_coap_message("2.04")
 
         router1_messages.next_mle_message(mle.CommandType.LINK_REQUEST)
-        msg = leader_messages.next_mle_message_of_one_of_command_types(mle.CommandType.LINK_ACCEPT_AND_REQUEST,
-                                                                       mle.CommandType.LINK_ACCEPT)
+        msg = leader_messages.next_mle_message_of_one_of_command_types(
+            mle.CommandType.LINK_ACCEPT_AND_REQUEST,
+            mle.CommandType.LINK_ACCEPT,
+        )
         self.assertIsNotNone(msg)
 
         # 2 - Router1 / Leader

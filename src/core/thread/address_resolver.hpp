@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "common/timer.hpp"
@@ -80,10 +78,10 @@ public:
      * This method gets an EID cache entry.
      *
      * @param[in]   aIndex  An index into the EID cache table.
-     * @param[out]  aEntry  A pointer to where the EID information is placed.
+     * @param[out]  aEntry  A reference to where the EID information is placed.
      *
      * @retval OT_ERROR_NONE          Successfully retrieved the EID cache entry.
-     * @retval OT_ERROR_INVALID_ARGS  @p aIndex was out of bounds or @p aEntry was NULL.
+     * @retval OT_ERROR_INVALID_ARGS  @p aIndex was out of bounds.
      *
      */
     otError GetEntry(uint8_t aIndex, otEidCacheEntry &aEntry) const;
@@ -97,7 +95,7 @@ public:
     void Remove(uint16_t aRloc16);
 
     /**
-     * This method removes all EID-to-RLOC cache entries assossiated with a Router ID.
+     * This method removes all EID-to-RLOC cache entries associated with a Router ID.
      *
      * @param[in]  aRouterId  The Router ID.
      *
@@ -105,13 +103,36 @@ public:
     void Remove(uint8_t aRouterId);
 
     /**
-     * This method updates an existing cache entry for the EID, if one exists.
+     * This method removes the cache entry for the EID.
      *
-     * @param[in]  aEid     A reference to the EID.
-     * @param[in]  aRloc16  The RLOC16 corresponding to @p aEid.
+     * @param[in]  aEid               A reference to the EID.
      *
      */
-    void UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
+    void Remove(const Ip6::Address &aEid);
+
+    /**
+     * This method updates an existing cache entry for the EID.
+     *
+     * @param[in]  aEid               A reference to the EID.
+     * @param[in]  aRloc16            The RLOC16 corresponding to @p aEid.
+     *
+     * @retval OT_ERROR_NONE           Successfully updates an existing cache entry.
+     * @retval OT_ERROR_NOT_FOUND      No cache entry with @p aEid.
+     *
+     */
+    otError UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
+
+    /**
+     * This method adds one cache entry for the EID.
+     *
+     * @param[in]  aEid               A reference to the EID.
+     * @param[in]  aRloc16            The RLOC16 corresponding to @p aEid.
+     *
+     * @retval OT_ERROR_NONE           Successfully adds one cache entry.
+     * @retval OT_ERROR_NO_BUFS        Insufficient buffer space available to add one cache entry.
+     *
+     */
+    otError AddCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
 
     /**
      * This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not known.
@@ -121,15 +142,24 @@ public:
      *
      * @retval OT_ERROR_NONE           Successfully provided the RLOC16.
      * @retval OT_ERROR_ADDRESS_QUERY  Initiated an Address Query.
+     * @retval OT_ERROR_DROP           Earlier Address Query for the EID timed out. In retry timeout interval.
      * @retval OT_ERROR_NO_BUFS        Insufficient buffer space available to send Address Query.
      *
      */
     otError Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16);
 
+    /**
+     * This method restarts any ongoing address queries.
+     *
+     * Any existing address queries will be restarted as if they are being sent for the first time.
+     *
+     */
+    void RestartAddressQueries(void);
+
 private:
     enum
     {
-        kCacheEntries      = OPENTHREAD_CONFIG_ADDRESS_CACHE_ENTRIES,
+        kCacheEntries      = OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES,
         kStateUpdatePeriod = 1000u, ///< State update period in milliseconds.
     };
 
@@ -139,9 +169,9 @@ private:
      */
     enum
     {
-        kAddressQueryTimeout           = OPENTHREAD_CONFIG_ADDRESS_QUERY_TIMEOUT,             // in seconds
-        kAddressQueryInitialRetryDelay = OPENTHREAD_CONFIG_ADDRESS_QUERY_INITIAL_RETRY_DELAY, // in seconds
-        kAddressQueryMaxRetryDelay     = OPENTHREAD_CONFIG_ADDRESS_QUERY_MAX_RETRY_DELAY,     // in seconds
+        kAddressQueryTimeout           = OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_TIMEOUT,             // in seconds
+        kAddressQueryInitialRetryDelay = OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_INITIAL_RETRY_DELAY, // in seconds
+        kAddressQueryMaxRetryDelay     = OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_MAX_RETRY_DELAY,     // in seconds
     };
 
     enum
@@ -151,6 +181,13 @@ private:
 
     struct Cache
     {
+        enum State
+        {
+            kStateInvalid,
+            kStateQuery,
+            kStateCached,
+        };
+
         Ip6::Address      mTarget;
         uint8_t           mMeshLocalIid[Ip6::Address::kInterfaceIdentifierSize];
         uint32_t          mLastTransactionTime;
@@ -159,14 +196,7 @@ private:
         uint8_t           mTimeout;
         uint8_t           mFailures;
         uint8_t           mAge;
-
-        enum State
-        {
-            kStateInvalid,
-            kStateQuery,
-            kStateCached,
-        };
-        State mState;
+        State             mState;
     };
 
     enum InvalidationReason
@@ -175,6 +205,7 @@ private:
         kReasonRemovingRloc16,
         kReasonReceivedIcmpDstUnreachNoRoute,
         kReasonEvictingForNewEntry,
+        kReasonRemovingEid,
     };
 
     static const char *ConvertInvalidationReasonToString(InvalidationReason aReason);
@@ -194,23 +225,14 @@ private:
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
-    static void HandleAddressError(void *               aContext,
-                                   otCoapHeader *       aHeader,
-                                   otMessage *          aMessage,
-                                   const otMessageInfo *aMessageInfo);
-    void        HandleAddressError(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleAddressError(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleAddressError(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleAddressQuery(void *               aContext,
-                                   otCoapHeader *       aHeader,
-                                   otMessage *          aMessage,
-                                   const otMessageInfo *aMessageInfo);
-    void        HandleAddressQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleAddressQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleAddressQuery(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleAddressNotification(void *               aContext,
-                                          otCoapHeader *       aHeader,
-                                          otMessage *          aMessage,
-                                          const otMessageInfo *aMessageInfo);
-    void HandleAddressNotification(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleAddressNotification(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleAddressNotification(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleIcmpReceive(void *               aContext,
                                   otMessage *          aMessage,

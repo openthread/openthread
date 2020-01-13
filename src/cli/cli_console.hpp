@@ -57,7 +57,7 @@ public:
      * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    Console(Instance *aInstance);
+    explicit Console(Instance *aInstance);
 
     /**
      * This method delivers raw characters to the client.
@@ -69,17 +69,6 @@ public:
      *
      */
     virtual int Output(const char *aBuf, uint16_t aBufLength);
-
-    /**
-     * This method delivers formatted output to the client.
-     *
-     * @param[in]  aFmt  A pointer to the format string.
-     * @param[in]  ...   A variable list of arguments to format.
-     *
-     * @returns The number of bytes placed in the output queue.
-     *
-     */
-    virtual int OutputFormat(const char *fmt, ...);
 
     /**
      * This method sets a callback that is called when console has some output.
@@ -100,15 +89,8 @@ public:
     void ReceiveTask(char *aBuf, uint16_t aBufLength);
 
 private:
-    enum
-    {
-        kMaxLineLength = 128,
-    };
-
     otCliConsoleOutputCallback mCallback;
     void *                     mContext;
-
-    Interpreter mInterpreter;
 };
 
 } // namespace Cli

@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_aux_aiodio_h
-*  Revised:        2017-01-31 09:37:48 +0100 (Tue, 31 Jan 2017)
-*  Revision:       48345
+*  Revised:        2017-05-16 19:35:21 +0200 (Tue, 16 May 2017)
+*  Revision:       49005
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.
@@ -43,7 +43,7 @@
 // AUX_AIODIO component
 //
 //*****************************************************************************
-// General Purpose Input/Output Data Out
+// General Purpose Input Output Data Out
 #define AUX_AIODIO_O_GPIODOUT                                       0x00000000
 
 // Input Output Mode
@@ -61,7 +61,7 @@
 // General Purpose Input Output Data Out Toggle
 #define AUX_AIODIO_O_GPIODOUTTGL                                    0x00000014
 
-// General Purpose Input Output Input Enable
+// General Purpose Input Output Digital Input Enable
 #define AUX_AIODIO_O_GPIODIE                                        0x00000018
 
 //*****************************************************************************
@@ -71,8 +71,8 @@
 //*****************************************************************************
 // Field:   [7:0] IO7_0
 //
-// Output values for AUXIO0 through AUXIO7 (for AIODIO0) or AUXIO8 through
-// AUXIO15 (for AIODIO1).
+// Write 1 to bit index n in this bit vector to set AUXIO[8i+n].
+// Write 0 to bit index n in this bit vector to clear AUXIO[8i+n].
 #define AUX_AIODIO_GPIODOUT_IO7_0_W                                          8
 #define AUX_AIODIO_GPIODOUT_IO7_0_M                                 0x000000FF
 #define AUX_AIODIO_GPIODOUT_IO7_0_S                                          0
@@ -84,20 +84,36 @@
 //*****************************************************************************
 // Field: [15:14] IO7
 //
-// Selects mode for AUXIO7 (for AIODIO0) or AUXIO15 (for AIODIO1).
+// Select mode for AUXIO[8i+7].
 // ENUMs:
-// OPEN_SOURCE              Open-source: The pin is driven high when the
-//                          corresponding GPIODOUT bit is 1, and otherwise
-//                          tri-stated or pulled depending on the
-//                          corresponding IOC configuration.
-// OPEN_DRAIN               Open-drain: The pin is driven low when the
-//                          corresponding GPIODOUT bit is 0, and otherwise
-//                          tri-stated or pulled depending on the
-//                          corresponding IOC configuration.
-// IN                       Digital input with GPIODIE bit 7 = 1
-//                          Analog input/output with
-//                          GPIODIE bit 7 = 0
-// OUT                      Output
+// OPEN_SOURCE              Open-Source Mode:
+//
+//                          When GPIODOUT bit 7 is 0:
+//                          AUXIO[8i+7] is tri-stated or pulled. This
+//                          depends on IOC:IOCFGn.PULL_CTL.
+//
+//                          When GPIODOUT bit 7 is 1:
+//                          AUXIO[8i+7] is driven high.
+// OPEN_DRAIN               Open-Drain Mode:
+//
+//                          When GPIODOUT bit 7 is 0:
+//                          AUXIO[8i+7] is driven low.
+//
+//                          When GPIODOUT bit 7 is 1:
+//                          AUXIO[8i+7] is tri-stated or pulled. This
+//                          depends on IOC:IOCFGn.PULL_CTL.
+// IN                       Input Mode:
+//
+//                          When GPIODIE bit 7 is 0:
+//                          AUXIO[8i+7] is enabled for analog signal
+//                          transfer.
+//
+//                          When GPIODIE bit 7 is 1:
+//                          AUXIO[8i+7] is enabled for digital input.
+// OUT                      Output Mode:
+//
+//                          GPIODOUT bit 7 drives
+//                          AUXIO[8i+7].
 #define AUX_AIODIO_IOMODE_IO7_W                                              2
 #define AUX_AIODIO_IOMODE_IO7_M                                     0x0000C000
 #define AUX_AIODIO_IOMODE_IO7_S                                             14
@@ -108,20 +124,36 @@
 
 // Field: [13:12] IO6
 //
-// Selects mode for AUXIO6 (for AIODIO0) or AUXIO14 (for AIODIO1).
+// Select mode for AUXIO[8i+6].
 // ENUMs:
-// OPEN_SOURCE              Open-source: The pin is driven high when the
-//                          corresponding GPIODOUT bit is 1, and otherwise
-//                          tri-stated or pulled depending on the
-//                          corresponding IOC configuration.
-// OPEN_DRAIN               Open-drain: The pin is driven low when the
-//                          corresponding GPIODOUT bit is 0, and otherwise
-//                          tri-stated or pulled depending on the
-//                          corresponding IOC configuration.
-// IN                       Digital input with GPIODIE bit 6 = 1
-//                          Analog input/output with
-//                          GPIODIE bit 6 = 0
-// OUT                      Output
+// OPEN_SOURCE              Open-Source Mode:
+//
+//                          When GPIODOUT bit 6 is 0:
+//                          AUXIO[8i+6] is tri-stated or pulled. This
+//                          depends on IOC:IOCFGn.PULL_CTL.
+//
+//                          When GPIODOUT bit 6 is 1:
+//                          AUXIO[8i+6] is driven high.
+// OPEN_DRAIN               Open-Drain Mode:
+//
+//                          When GPIODOUT bit 6 is 0:
+//                          AUXIO[8i+6] is driven low.
+//
+//                          When GPIODOUT bit 6 is 1:
+//                          AUXIO[8i+6] is tri-stated or pulled. This
+//                          depends on IOC:IOCFGn.PULL_CTL.
+// IN                       Input Mode:
+//
+//                          When GPIODIE bit 6 is 0:
+//                          AUXIO[8i+6] is enabled for analog signal
+//                          transfer.
+//
+//                          When GPIODIE bit 6 is 1:
+//                          AUXIO[8i+6] is enabled for digital input.
+// OUT                      Output Mode:
+//
+//                          GPIODOUT bit 6 drives
+//                          AUXIO[8i+6].
 #define AUX_AIODIO_IOMODE_IO6_W                                              2
 #define AUX_AIODIO_IOMODE_IO6_M                                     0x00003000
 #define AUX_AIODIO_IOMODE_IO6_S                                             12
@@ -132,20 +164,36 @@
 
 // Field: [11:10] IO5
 //
-// Selects mode for AUXIO5 (for AIODIO0) or AUXIO13 (for AIODIO1).
+// Select mode for AUXIO[8i+5].
 // ENUMs:
-// OPEN_SOURCE              Open-source: The pin is driven high when the
-//                          corresponding GPIODOUT bit is 1, and otherwise
-//                          tri-stated or pulled depending on the
-//                          corresponding IOC configuration.
-// OPEN_DRAIN               Open-drain: The pin is driven low when the
-//                          corresponding GPIODOUT bit is 0, and otherwise
-//                          tri-stated or pulled depending on the
-//                          corresponding IOC configuration.
-// IN                       Digital input with GPIODIE bit 5 = 1
-//                          Analog input/output with
-//                          GPIODIE bit 5 = 0
-// OUT                      Output
+// OPEN_SOURCE              Open-Source Mode:
+//
+//                          When GPIODOUT bit 5 is 0:
+//                          AUXIO[8i+5] is tri-stated or pulled. This
+//                          depends on IOC:IOCFGn.PULL_CTL.
+//
+//                          When GPIODOUT bit 5 is 1:
+//                          AUXIO[8i+5] is driven high.
+// OPEN_DRAIN               Open-Drain Mode:
+//
+//                          When GPIODOUT bit 5 is 0:
+//                          AUXIO[8i+5] is driven low.
+//
+//                          When GPIODOUT bit 5 is 1:
+//                          AUXIO[8i+5] is tri-stated or pulled. This
+//                          depends on IOC:IOCFGn.PULL_CTL.
+// IN                       Input Mode:
+//
+//                          When GPIODIE bit 5 is 0:
+//                          AUXIO[8i+5] is enabled for analog signal
+//                          transfer.
+//
+//                          When GPIODIE bit 5 is 1:
+//                          AUXIO[8i+5] is enabled for digital input.
+// OUT                      Output Mode:
+//
+//                          GPIODOUT bit 5 drives
+//                          AUXIO[8i+5].
 #define AUX_AIODIO_IOMODE_IO5_W                                              2
 #define AUX_AIODIO_IOMODE_IO5_M                                     0x00000C00
 #define AUX_AIODIO_IOMODE_IO5_S                                             10
@@ -156,20 +204,36 @@
 
 // Field:   [9:8] IO4
 //
-// Selects mode for AUXIO4 (for AIODIO0) or AUXIO12 (for AIODIO1).
+// Select mode for AUXIO[8i+4].
 // ENUMs:
-// OPEN_SOURCE              Open-source: The pin is driven high when the
-//                          corresponding GPIODOUT bit is 1, and otherwise
-//                          tri-stated or pulled depending on the
-//                          corresponding IOC configuration.
-// OPEN_DRAIN               Open-drain: The pin is driven low when the
-//                          corresponding GPIODOUT bit is 0, and otherwise
-//                          tri-stated or pulled depending on the
-//                          corresponding IOC configuration.
-// IN                       Digital input with GPIODIE bit 4 = 1
-//                          Analog input/output with
-//                          GPIODIE bit 4 = 0
-// OUT                      Output
+// OPEN_SOURCE              Open-Source Mode:
+//
+//                          When GPIODOUT bit 4 is 0:
+//                          AUXIO[8i+4] is tri-stated or pulled. This
+//                          depends on IOC:IOCFGn.PULL_CTL.
+//
+//                          When GPIODOUT bit 4 is 1:
+//                          AUXIO[8i+4] is driven high.
+// OPEN_DRAIN               Open-Drain Mode:
+//
+//                          When GPIODOUT bit 4 is 0:
+//                          AUXIO[8i+4] is driven low.
+//
+//                          When GPIODOUT bit 4 is 1:
+//                          AUXIO[8i+4] is tri-stated or pulled. This
+//                          depends on IOC:IOCFGn.PULL_CTL.
+// IN                       Input Mode:
+//
+//                          When GPIODIE bit 4 is 0:
+//                          AUXIO[8i+4] is enabled for analog signal
+//                          transfer.
+//
+//                          When GPIODIE bit 4 is 1:
+//                          AUXIO[8i+4] is enabled for digital input.
+// OUT                      Output Mode:
+//
+//                          GPIODOUT bit 4 drives
+//                          AUXIO[8i+4].
 #define AUX_AIODIO_IOMODE_IO4_W                                              2
 #define AUX_AIODIO_IOMODE_IO4_M                                     0x00000300
 #define AUX_AIODIO_IOMODE_IO4_S                                              8
@@ -180,20 +244,36 @@
 
 // Field:   [7:6] IO3
 //
-// Selects mode for AUXIO3 (for AIODIO0) or AUXIO11 (for AIODIO1).
+// Select mode for AUXIO[8i+3].
 // ENUMs:
-// OPEN_SOURCE              Open-source: The pin is driven high when the
-//                          corresponding GPIODOUT bit is 1, and otherwise
-//                          tri-stated or pulled depending on the
-//                          corresponding IOC configuration.
-// OPEN_DRAIN               Open-drain: The pin is driven low when the
-//                          corresponding GPIODOUT bit is 0, and otherwise
-//                          tri-stated or pulled depending on the
-//                          corresponding IOC configuration.
-// IN                       Digital input with GPIODIE bit 3 = 1
-//                          Analog input/output with
-//                          GPIODIE bit 3 = 0
-// OUT                      Output
+// OPEN_SOURCE              Open-Source Mode:
+//
+//                          When GPIODOUT bit 3 is 0:
+//                          AUXIO[8i+3] is tri-stated or pulled. This
+//                          depends on IOC:IOCFGn.PULL_CTL.
+//
+//                          When GPIODOUT bit 3 is 1:
+//                          AUXIO[8i+3] is driven high.
+// OPEN_DRAIN               Open-Drain Mode:
+//
+//                          When GPIODOUT bit 3 is 0:
+//                          AUXIO[8i+3] is driven low.
+//
+//                          When GPIODOUT bit 3 is 1:
+//                          AUXIO[8i+3] is tri-stated or pulled. This
+//                          depends on IOC:IOCFGn.PULL_CTL.
+// IN                       Input Mode:
+//
+//                          When GPIODIE bit 3 is 0:
+//                          AUXIO[8i+3] is enabled for analog signal
+//                          transfer.
+//
+//                          When GPIODIE bit 3 is 1:
+//                          AUXIO[8i+3] is enabled for digital input.
+// OUT                      Output Mode:
+//
+//                          GPIODOUT bit 3 drives
+//                          AUXIO[8i+3].
 #define AUX_AIODIO_IOMODE_IO3_W                                              2
 #define AUX_AIODIO_IOMODE_IO3_M                                     0x000000C0
 #define AUX_AIODIO_IOMODE_IO3_S                                              6
@@ -204,20 +284,36 @@
 
 // Field:   [5:4] IO2
 //
-// Selects mode for AUXIO2 (for AIODIO0) or AUXIO10 (for AIODIO1).
+// Select mode for AUXIO[8i+2].
 // ENUMs:
-// OPEN_SOURCE              Open-source: The pin is driven high when the
-//                          corresponding GPIODOUT bit is 1, and otherwise
-//                          tri-stated or pulled depending on the
-//                          corresponding IOC configuration.
-// OPEN_DRAIN               Open-drain: The pin is driven low when the
-//                          corresponding GPIODOUT bit is 0, and otherwise
-//                          tri-stated or pulled depending on the
-//                          corresponding IOC configuration.
-// IN                       Digital input with GPIODIE bit 2 = 1
-//                          Analog input/output with
-//                          GPIODIE bit 2 = 0
-// OUT                      Output
+// OPEN_SOURCE              Open-Source Mode:
+//
+//                          When GPIODOUT bit 2 is 0:
+//                          AUXIO[8i+2] is tri-stated or pulled. This
+//                          depends on IOC:IOCFGn.PULL_CTL.
+//
+//                          When GPIODOUT bit 2 is 1:
+//                          AUXIO[8i+2] is driven high.
+// OPEN_DRAIN               Open-Drain Mode:
+//
+//                          When GPIODOUT bit 2 is 0:
+//                          AUXIO[8i+2] is driven low.
+//
+//                          When GPIODOUT bit 2 is 1:
+//                          AUXIO[8i+2] is tri-stated or pulled. This
+//                          depends on IOC:IOCFGn.PULL_CTL.
+// IN                       Input Mode:
+//
+//                          When GPIODIE bit 2 is 0:
+//                          AUXIO[8i+2] is enabled for analog signal
+//                          transfer.
+//
+//                          When GPIODIE bit 2 is 1:
+//                          AUXIO[8i+2] is enabled for digital input.
+// OUT                      Output Mode:
+//
+//                          GPIODOUT bit 2 drives
+//                          AUXIO[8i+2].
 #define AUX_AIODIO_IOMODE_IO2_W                                              2
 #define AUX_AIODIO_IOMODE_IO2_M                                     0x00000030
 #define AUX_AIODIO_IOMODE_IO2_S                                              4
@@ -228,20 +324,36 @@
 
 // Field:   [3:2] IO1
 //
-// Selects mode for AUXIO1 (for AIODIO0) or AUXIO9 (for AIODIO1).
+// Select mode for AUXIO[8i+1].
 // ENUMs:
-// OPEN_SOURCE              Open-source: The pin is driven high when the
-//                          corresponding GPIODOUT bit is 1, and otherwise
-//                          tri-stated or pulled depending on the
-//                          corresponding IOC configuration.
-// OPEN_DRAIN               Open-drain: The pin is driven low when the
-//                          corresponding GPIODOUT bit is 0, and otherwise
-//                          tri-stated or pulled depending on the
-//                          corresponding IOC configuration.
-// IN                       Digital input with GPIODIE bit 1 = 1
-//                          Analog input/output with
-//                          GPIODIE bit 1 = 0
-// OUT                      Output
+// OPEN_SOURCE              Open-Source Mode:
+//
+//                          When GPIODOUT bit 1 is 0:
+//                          AUXIO[8i+1] is tri-stated or pulled. This
+//                          depends on IOC:IOCFGn.PULL_CTL.
+//
+//                          When GPIODOUT bit 1 is 1:
+//                          AUXIO[8i+1] is driven high.
+// OPEN_DRAIN               Open-Drain Mode:
+//
+//                          When GPIODOUT bit 1 is 0:
+//                          AUXIO[8i+1] is driven low.
+//
+//                          When GPIODOUT bit 1 is 1:
+//                          AUXIO[8i+1] is tri-stated or pulled. This
+//                          depends on IOC:IOCFGn.PULL_CTL.
+// IN                       Input Mode:
+//
+//                          When GPIODIE bit 1 is 0:
+//                          AUXIO[8i+1] is enabled for analog signal
+//                          transfer.
+//
+//                          When GPIODIE bit 1 is 1:
+//                          AUXIO[8i+1] is enabled for digital input.
+// OUT                      Output Mode:
+//
+//                          GPIODOUT bit 1 drives
+//                          AUXIO[8i+1].
 #define AUX_AIODIO_IOMODE_IO1_W                                              2
 #define AUX_AIODIO_IOMODE_IO1_M                                     0x0000000C
 #define AUX_AIODIO_IOMODE_IO1_S                                              2
@@ -252,20 +364,36 @@
 
 // Field:   [1:0] IO0
 //
-// Selects mode for AUXIO0 (for AIODIO0) or AUXIO8 (for AIODIO1).
+// Select mode for AUXIO[8i+0].
 // ENUMs:
-// OPEN_SOURCE              Open-source: The pin is driven high when the
-//                          corresponding GPIODOUT bit is 1, and otherwise
-//                          tri-stated or pulled depending on the
-//                          corresponding IOC configuration.
-// OPEN_DRAIN               Open-drain: The pin is driven low when the
-//                          corresponding GPIODOUT bit is 0, and otherwise
-//                          tri-stated or pulled depending on the
-//                          corresponding IOC configuration.
-// IN                       Digital input with GPIODIE bit 0 = 1
-//                          Analog input/output with
-//                          GPIODIE bit 0 = 0
-// OUT                      Output
+// OPEN_SOURCE              Open-Source Mode:
+//
+//                          When GPIODOUT bit 0 is 0:
+//                          AUXIO[8i+0] is tri-stated or pulled. This
+//                          depends on IOC:IOCFGn.PULL_CTL.
+//
+//                          When GPIODOUT bit 0 is 1:
+//                          AUXIO[8i+0] is driven high.
+// OPEN_DRAIN               Open-Drain Mode:
+//
+//                          When GPIODOUT bit 0 is 0:
+//                          AUXIO[8i+0] is driven low.
+//
+//                          When GPIODOUT bit 0 is 1:
+//                          AUXIO[8i+0] is tri-stated or pulled. This
+//                          depends on IOC:IOCFGn.PULL_CTL.
+// IN                       Input Mode:
+//
+//                          When GPIODIE bit 0 is 0:
+//                          AUXIO[8i+0] is enabled for analog signal
+//                          transfer.
+//
+//                          When GPIODIE bit 0 is 1:
+//                          AUXIO[8i+0] is enabled for digital input.
+// OUT                      Output Mode:
+//
+//                          GPIODOUT bit 0 drives
+//                          AUXIO[8i+0].
 #define AUX_AIODIO_IOMODE_IO0_W                                              2
 #define AUX_AIODIO_IOMODE_IO0_M                                     0x00000003
 #define AUX_AIODIO_IOMODE_IO0_S                                              0
@@ -281,8 +409,8 @@
 //*****************************************************************************
 // Field:   [7:0] IO7_0
 //
-// Input values for AUXIO0 through AUXIO7 (for AIODIO0) or AUXIO8 through
-// AUXIO15 (for AIODIO1).
+// Bit n in this bit vector contains the value for AUXIO[8i+n] when GPIODIE bit
+// n is set. Otherwise, bit n value is old.
 #define AUX_AIODIO_GPIODIN_IO7_0_W                                           8
 #define AUX_AIODIO_GPIODIN_IO7_0_M                                  0x000000FF
 #define AUX_AIODIO_GPIODIN_IO7_0_S                                           0
@@ -294,10 +422,9 @@
 //*****************************************************************************
 // Field:   [7:0] IO7_0
 //
-// Writing 1(s) to one or more bit positions sets the corresponding bit(s) in
-// GPIODOUT.
+// Write 1 to bit index n in this bit vector to set GPIODOUT bit n.
 //
-// Read value is 0x00.
+// Read value is 0.
 #define AUX_AIODIO_GPIODOUTSET_IO7_0_W                                       8
 #define AUX_AIODIO_GPIODOUTSET_IO7_0_M                              0x000000FF
 #define AUX_AIODIO_GPIODOUTSET_IO7_0_S                                       0
@@ -309,10 +436,9 @@
 //*****************************************************************************
 // Field:   [7:0] IO7_0
 //
-// Writing 1(s) to one or more bit positions clears the corresponding bit(s) in
-// GPIODOUT.
+// Write 1 to bit index n in this bit vector to clear GPIODOUT bit n.
 //
-// Read value is 0x00.
+// Read value is 0.
 #define AUX_AIODIO_GPIODOUTCLR_IO7_0_W                                       8
 #define AUX_AIODIO_GPIODOUTCLR_IO7_0_M                              0x000000FF
 #define AUX_AIODIO_GPIODOUTCLR_IO7_0_S                                       0
@@ -324,10 +450,9 @@
 //*****************************************************************************
 // Field:   [7:0] IO7_0
 //
-// Writing 1(s) to one or more bit positions toggles the corresponding bit(s)
-// in GPIODOUT.
+// Write 1 to bit index n in this bit vector to toggle GPIODOUT bit n.
 //
-// Read value is 0x00.
+// Read value is 0.
 #define AUX_AIODIO_GPIODOUTTGL_IO7_0_W                                       8
 #define AUX_AIODIO_GPIODOUTTGL_IO7_0_M                              0x000000FF
 #define AUX_AIODIO_GPIODOUTTGL_IO7_0_S                                       0
@@ -339,12 +464,15 @@
 //*****************************************************************************
 // Field:   [7:0] IO7_0
 //
-// Enables (1) or disables (0) digital input buffers for each AUX I/O pin.
+// Write 1 to bit index n in this bit vector to enable digital input buffer for
+// AUXIO[8i+n].
+// Write 0 to bit index n in this bit vector to disable digital input buffer
+// for AUXIO[8i+n].
 //
-// Input buffers must be enabled to allow reading pin values through GPIODIN.
-//
-// Input buffers must be disabled for analog input or floating pins to avoid
-// current leakage.
+// You must enable the digital input buffer for AUXIO[8i+n] to read the pin
+// value in GPIODIN.
+// You must disable the digital input buffer for analog input or pins that
+// float to avoid current leakage.
 #define AUX_AIODIO_GPIODIE_IO7_0_W                                           8
 #define AUX_AIODIO_GPIODIE_IO7_0_M                                  0x000000FF
 #define AUX_AIODIO_GPIODIE_IO7_0_S                                           0

@@ -40,30 +40,26 @@ libopenthread_posix_a_CPPFLAGS            = \
 PLATFORM_SOURCES                          = \
     alarm.c                                 \
     diag.c                                  \
-    misc.c                                  \
-    logging.c                               \
-    platform.c                              \
-    radio.c                                 \
-    random.c                                \
-    uart-posix.c                            \
+    entropy.c                               \
     flash.c                                 \
+    logging.c                               \
+    misc.c                                  \
+    openthread-core-posix-config.h          \
+    platform-posix.h                        \
+    radio.c                                 \
     spi-stubs.c                             \
+    system.c                                \
+    uart-posix.c                            \
     sim/alarm-sim.c                         \
     sim/platform-sim.c                      \
-    sim/radio-sim.c                         \
     $(NULL)
 
 libopenthread_posix_a_SOURCES             = \
-     $(PLATFORM_SOURCES)                    \
-    $(NULL)
-
-noinst_HEADERS                            = \
-    platform-posix.h                        \
+    $(PLATFORM_SOURCES)                     \
     $(NULL)
 
 PRETTY_FILES                              = \
     $(PLATFORM_SOURCES)                     \
-    $(noinst_HEADERS)                       \
     $(NULL)
 
 Dash                                      = -
@@ -71,6 +67,10 @@ libopenthread_posix_a_LIBADD              = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 if OPENTHREAD_BUILD_COVERAGE
+libopenthread_posix_a_CPPFLAGS           += \
+    -DOPENTHREAD_ENABLE_COVERAGE            \
+    $(NULL)
+
 CLEANFILES                                = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
 

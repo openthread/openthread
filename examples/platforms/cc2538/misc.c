@@ -26,20 +26,19 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/types.h>
 #include <openthread/platform/misc.h>
 
 #include "platform-cc2538.h"
 
 void otPlatReset(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     HWREG(SYS_CTRL_PWRDBG) = SYS_CTRL_PWRDBG_FORCE_WARM_RESET;
 }
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     // TODO: Write me!
     return OT_PLAT_RESET_REASON_POWER_ON;
 }

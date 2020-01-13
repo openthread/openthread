@@ -40,12 +40,14 @@ DIST_SUBDIRS                            = \
 SUBDIRS                                 = \
     $(NULL)
 
+if OPENTHREAD_ENABLE_EXECUTABLE
 if OPENTHREAD_ENABLE_CLI
 SUBDIRS                                += cli
 endif
 
 if OPENTHREAD_ENABLE_NCP
 SUBDIRS                                += ncp
+endif
 endif
 
 # Always pretty (e.g. for 'make pretty') these subdirectories.

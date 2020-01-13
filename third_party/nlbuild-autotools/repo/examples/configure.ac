@@ -292,14 +292,14 @@ AC_PATH_PROG([PKG_CONFIG],[pkg-config])
 # 	    # configured nor built, so the normal checks we undertake for an
 # 	    # external package cannot be run here. Simply set the appropriate
 # 	    # variables and trust all will be well.
-# 
+#
 #             NLUNIT_TEST_CPPFLAGS="-I\${abs_top_srcdir}/third_party/nlunit-test/repo/src"
 #             NLUNIT_TEST_LDFLAGS="-L${ac_pwd}/third_party/nlunit-test/repo/src"
 #             NLUNIT_TEST_LIBS="-lnlunit-test"
 #         ],
 #         [
 #             # Check for required nlunit-test headers.
-# 
+#
 #             AC_CHECK_HEADERS([nlunit-test.h],
 #             [],
 #             [
@@ -312,7 +312,7 @@ AC_PATH_PROG([PKG_CONFIG],[pkg-config])
 # # location, its directory stem within this package needs to be set
 # # accordingly. In addition, if the location is internal, then we need
 # # to attempt to pull it down using the bootstrap makefile.
-# 
+#
 # if test "${nl_with_nlunit_test}" = "internal"; then
 #     maybe_nlunit_test_dirstem="nlunit-test/repo"
 #     nlunit_test_dirstem="third_party/${maybe_nlunit_test_dirstem}"
@@ -364,7 +364,7 @@ fi
 # this, as needed.
 
 # # Add any nlunit-test CPPFLAGS, LDFLAGS, and LIBS
-# 
+#
 # CPPFLAGS="${CPPFLAGS} ${NLUNIT_TEST_CPPFLAGS}"
 # LDFLAGS="${LDFLAGS} ${NLUNIT_TEST_LDFLAGS}"
 # LIBS="${LIBS} ${NLUNIT_TEST_LIBS}"
@@ -373,6 +373,7 @@ fi
 
 CPPFLAGS="${CPPFLAGS} ${NL_COVERAGE_CPPFLAGS}"
 LIBS="${LIBS} ${NL_COVERAGE_LIBS}"
+LDFLAGS="${LDFLAGS} ${NL_COVERAGE_LDFLAGS}"
 
 # At this point, we can restore the compiler flags to whatever the
 # user passed in, now that we're clear of any -Werror issues by

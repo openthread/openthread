@@ -44,7 +44,6 @@ logger = logging.getLogger(__name__)
 
 
 class PduController(object):
-
     def open(self, **params):
         """Open PDU controller connection"""
         raise NotImplementedError
@@ -72,7 +71,6 @@ class DummyPduController(PduController):
 
 
 class ApcPduController(PduController):
-
     def __init__(self):
         self.tn = None
 
@@ -170,7 +168,6 @@ class ApcPduController(PduController):
 
 
 class NordicBoardPduController(PduController):
-
     def open(self, **params):
         pass
 
@@ -189,7 +186,6 @@ class NordicBoardPduController(PduController):
 
 
 class IpPowerSocketPduController(PduController):
-
     def open(self, **params):
         self._base_url = 'http://{}/outs.cgi?out'.format(params['ip'])
         password_manager = HTTPPasswordMgrWithDefaultRealm()
@@ -220,12 +216,11 @@ class IpPowerSocketPduController(PduController):
 
 
 class ManualPduController(PduController):
-
     def open(self, **kwargs):
         pass
 
     def reboot(self, **kwargs):
-        raw_input('Reset all devices and press enter to continue..')
+        input('Reset all devices and press enter to continue..')
 
     def close(self):
         pass

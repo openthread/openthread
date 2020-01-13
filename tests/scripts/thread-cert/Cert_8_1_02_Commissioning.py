@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -36,27 +35,30 @@ import node
 COMMISSIONER = 1
 JOINER = 2
 
+
 class Cert_8_1_02_Commissioning(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,3):
-            self.nodes[i] = node.Node(i)
+        for i in range(1, 3):
+            self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[COMMISSIONER].set_panid(0xface)
         self.nodes[COMMISSIONER].set_mode('rsdn')
-        self.nodes[COMMISSIONER].set_masterkey('deadbeefdeadbeefdeadbeefdeadbeef')
+        self.nodes[COMMISSIONER].set_masterkey(
+            'deadbeefdeadbeefdeadbeefdeadbeef'
+        )
 
         self.nodes[JOINER].set_mode('rsdn')
         self.nodes[JOINER].set_masterkey('00112233445566778899aabbccddeeff')
         self.nodes[JOINER].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
+        self.simulator.stop()
 
     def test(self):
         self.nodes[COMMISSIONER].interface_up()
@@ -65,12 +67,18 @@ class Cert_8_1_02_Commissioning(unittest.TestCase):
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'leader')
         self.nodes[COMMISSIONER].commissioner_start()
         self.simulator.go(3)
-        self.nodes[COMMISSIONER].commissioner_add_joiner(self.nodes[JOINER].get_eui64(), 'OPENTHREAD')
+        self.nodes[COMMISSIONER].commissioner_add_joiner(
+            self.nodes[JOINER].get_eui64(), 'OPENTHREAD'
+        )
 
         self.nodes[JOINER].interface_up()
         self.nodes[JOINER].joiner_start('DAERHTNEPO')
         self.simulator.go(10)
-        self.assertNotEqual(self.nodes[JOINER].get_masterkey(), self.nodes[COMMISSIONER].get_masterkey())
+        self.assertNotEqual(
+            self.nodes[JOINER].get_masterkey(),
+            self.nodes[COMMISSIONER].get_masterkey(),
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

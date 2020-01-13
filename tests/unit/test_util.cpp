@@ -26,53 +26,46 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "test_util.h"
+#include "test_util.hpp"
 
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
+#include <ctype.h>
 
-void otTestHexToVector(std::string &aHex, std::vector<uint8_t> &aOutBytes)
+void DumpBuffer(const char *aTextMessage, uint8_t *aBuffer, uint16_t aBufferLength)
 {
-    std::istringstream ss(aHex);
-    std::string        word;
-
-    while (ss >> word)
+    enum
     {
-        uint8_t n = static_cast<uint8_t>(strtol(word.data(), NULL, 16));
-        aOutBytes.push_back(n);
-    }
-}
+        kBytesPerLine = 16, // Number of bytes per line.
+    };
 
-void otTestPrintHex(uint8_t *aBuffer, int aLength)
-{
-    int i;
+    char     charBuff[kBytesPerLine + 1];
+    uint16_t counter;
+    uint8_t  byte;
 
-    for (i = 0; i < aLength; i++)
+    printf("\n%s - len = %u\n    ", aTextMessage ? aTextMessage : "Buffer", aBufferLength);
+
+    counter = 0;
+
+    while (aBufferLength--)
     {
-        printf("%02x ", aBuffer[i]);
+        byte = *aBuffer++;
+        printf("%02X ", byte);
+        charBuff[counter] = isprint(byte) ? static_cast<char>(byte) : '.';
+        counter++;
 
-        if (i % 16 == 7)
+        if (counter == kBytesPerLine)
         {
-            printf(" ");
-        }
-
-        if (i % 16 == 15 && aLength != i + 1)
-        {
-            printf("\n");
+            charBuff[counter] = 0;
+            printf("    %s\n    ", charBuff);
+            counter = 0;
         }
     }
 
-    printf("\n");
-}
+    charBuff[counter] = 0;
 
-void otTestPrintHex(std::string &aString)
-{
-    otTestPrintHex((uint8_t *)aString.data(), static_cast<int>(aString.size()));
-}
+    while (counter++ < kBytesPerLine)
+    {
+        printf("   ");
+    }
 
-void otTestPrintHex(std::vector<uint8_t> &aBytes)
-{
-    otTestPrintHex((uint8_t *)&aBytes[0], static_cast<int>(aBytes.size()));
+    printf("    %s\n", charBuff);
 }

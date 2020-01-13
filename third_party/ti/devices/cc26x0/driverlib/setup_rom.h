@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       setup_rom.h
-*  Revised:        2017-04-04 12:19:11 +0200 (Tue, 04 Apr 2017)
-*  Revision:       48771
+*  Revised:        2017-06-05 12:13:49 +0200 (Mon, 05 Jun 2017)
+*  Revision:       49096
 *
 *  Description:    Prototypes and defines for the setup API.
 *

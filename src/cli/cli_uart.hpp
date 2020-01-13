@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-
 #include "cli/cli.hpp"
 #include "cli/cli_server.hpp"
 #include "common/instance.hpp"
@@ -59,7 +57,7 @@ public:
      * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    Uart(Instance *aInstance);
+    explicit Uart(Instance *aInstance);
 
     /**
      * This method delivers raw characters to the client.
@@ -72,47 +70,14 @@ public:
      */
     virtual int Output(const char *aBuf, uint16_t aBufLength);
 
-    /**
-     * This method delivers formatted output to the client.
-     *
-     * @param[in]  aFmt  A pointer to the format string.
-     * @param[in]  ...   A variable list of arguments to format.
-     *
-     * @returns The number of bytes placed in the output queue.
-     *
-     */
-    virtual int OutputFormat(const char *fmt, ...);
-
-    /**
-     * This method delivers formatted output to the client.
-     *
-     * @param[in]  aFmt  A pointer to the format string.
-     * @param[in]  aAp   A variable list of arguments for format.
-     *
-     * @returns The number of bytes placed in the output queue.
-     *
-     */
-    int OutputFormatV(const char *aFmt, va_list aAp);
-
-    /**
-     * This method returns a reference to the interpreter object.
-     *
-     * @returns A reference to the interpreter object.
-     *
-     */
-    Interpreter &GetInterpreter(void) { return mInterpreter; }
-
     void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength);
     void SendDoneTask(void);
-
-    static Uart *sUartServer;
 
 private:
     enum
     {
-        kRxBufferSize  = OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE,
-        kTxBufferSize  = OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE,
-        kMaxLineLength = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
+        kRxBufferSize = OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE,
+        kTxBufferSize = OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE,
     };
 
     otError ProcessCommand(void);
@@ -126,8 +91,6 @@ private:
     uint16_t mTxLength;
 
     uint16_t mSendLength;
-
-    Interpreter mInterpreter;
 
     friend class Interpreter;
 };

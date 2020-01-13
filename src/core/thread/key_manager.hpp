@@ -36,13 +36,15 @@
 
 #include "openthread-core-config.h"
 
-#include "utils/wrap_stdint.h"
+#include <stdint.h>
 
-#include <openthread/types.h>
+#include <openthread/dataset.h>
 
 #include "common/locator.hpp"
+#include "common/random.hpp"
 #include "common/timer.hpp"
 #include "crypto/hmac_sha256.hpp"
+#include "mac/mac_types.hpp"
 
 namespace ot {
 
@@ -55,12 +57,97 @@ namespace ot {
  * @{
  */
 
+/**
+ * This class represents a Thread Master Key.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class MasterKey : public otMasterKey
+{
+public:
+    /**
+     * This method evaluates whether or not the Thread Master Keys match.
+     *
+     * @param[in]  aOther  The Thread Master Key to compare.
+     *
+     * @retval TRUE   If the Thread Master Keys match.
+     * @retval FALSE  If the Thread Master Keys do not match.
+     *
+     */
+    bool operator==(const MasterKey &aOther) const { return memcmp(m8, aOther.m8, sizeof(MasterKey)) == 0; }
+
+    /**
+     * This method evaluates whether or not the Thread Master Keys match.
+     *
+     * @param[in]  aOther  The Thread Master Key to compare.
+     *
+     * @retval TRUE   If the Thread Master Keys do not match.
+     * @retval FALSE  If the Thread Master Keys match.
+     *
+     */
+    bool operator!=(const MasterKey &aOther) const { return !(*this == aOther); }
+
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class represents a Thread Pre-Shared Key for the Commissioner (PSKc).
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class Pskc : public otPskc
+{
+public:
+    /**
+     * This method clears the PSKc (sets all bytes to zero).
+     *
+     */
+    void Clear(void) { memset(this, 0, sizeof(*this)); }
+
+    /**
+     * This method evaluates whether or not the Thread PSKc values match.
+     *
+     * @param[in]  aOther  The Thread PSKc to compare.
+     *
+     * @retval TRUE   If the Thread PSKc values match.
+     * @retval FALSE  If the Thread PSKc values do not match.
+     *
+     */
+    bool operator==(const Pskc &aOther) const { return memcmp(m8, aOther.m8, sizeof(Pskc)) == 0; }
+
+    /**
+     * This method evaluates whether or not the Thread PSKc values match.
+     *
+     * @param[in]  aOther  The Thread PSKc to compare.
+     *
+     * @retval TRUE   If the Thread PSKc values do not match.
+     * @retval FALSE  If the Thread PSKc values match.
+     *
+     */
+    bool operator!=(const Pskc &aOther) const { return !(*this == aOther); }
+
+#if !OPENTHREAD_RADIO
+    /**
+     * This method generates a cryptographically secure random sequence to populate the Thread PSKc.
+     *
+     * @retval OT_ERROR_NONE  Successfully generated a random Thread PSKc.
+     *
+     */
+    otError GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, sizeof(Pskc)); }
+#endif
+
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class defines Thread Key Manager.
+ *
+ */
 class KeyManager : public InstanceLocator
 {
 public:
     enum
     {
         kMaxKeyLength = 16,
+        kNonceSize    = 13, ///< Size of IEEE 802.15.4 Nonce (bytes).
     };
 
     /**
@@ -84,39 +171,52 @@ public:
     void Stop(void);
 
     /**
-     * This method returns a reference to the Thread Master Key
+     * This method returns the Thread Master Key.
      *
-     * @returns A reference to the Thread Master Key.
+     * @returns The Thread Master Key.
      *
      */
-    const otMasterKey &GetMasterKey(void) const;
+    const MasterKey &GetMasterKey(void) const { return mMasterKey; }
 
     /**
      * This method sets the Thread Master Key.
      *
-     * @param[in]  aKey        A reference to the Thread Master Key.
+     * @param[in]  aKey        A Thread Master Key.
      *
      * @retval OT_ERROR_NONE          Successfully set the Thread Master Key.
      * @retval OT_ERROR_INVALID_ARGS  The @p aKeyLength value was invalid.
      *
      */
-    otError SetMasterKey(const otMasterKey &aKey);
+    otError SetMasterKey(const MasterKey &aKey);
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+    /**
+     * This method indicates whether the PSKc is configured.
+     *
+     * A value of all zeros indicates that the PSKc is not configured.
+     *
+     * @retval TRUE  if the PSKc is configured.
+     * @retval FALSE if the PSKc is not not configured.
+     *
+     */
+    bool IsPskcSet(void) const { return mIsPskcSet; }
 
     /**
      * This method returns a pointer to the PSKc.
      *
-     * @returns A pointer to the PSKc.
+     * @returns A reference to the PSKc.
      *
      */
-    const uint8_t *GetPSKc(void) const;
+    const Pskc &GetPskc(void) const { return mPskc; }
 
     /**
      * This method sets the PSKc.
      *
-     * @param[in]  aPSKc    A pointer to the PSKc.
+     * @param[in]  aPskc    A reference to the PSKc.
      *
      */
-    void SetPSKc(const uint8_t *aPSKc);
+    void SetPskc(const Pskc &aPskc);
+#endif
 
     /**
      * This method returns the current key sequence value.
@@ -325,6 +425,20 @@ public:
      */
     void SetSecurityPolicyFlags(uint8_t aSecurityPolicyFlags);
 
+    /**
+     * This static method generates IEEE 802.15.4 nonce byte sequence.
+     *
+     * @param[in]  aAddress        An extended address.
+     * @param[in]  aFrameCounter   A frame counter.
+     * @param[in]  aSecurityLevel  A security level.
+     * @param[out] aNonce          A buffer (with `kNonceSize` bytes) to place the generated nonce.
+     *
+     */
+    static void GenerateNonce(const Mac::ExtAddress &aAddress,
+                              uint32_t               aFrameCounter,
+                              uint8_t                aSecurityLevel,
+                              uint8_t *              aNonce);
+
 private:
     enum
     {
@@ -335,13 +449,16 @@ private:
         kOneHourIntervalInMsec     = 3600u * 1000u,
     };
 
-    otError ComputeKey(uint32_t aKeySequence, uint8_t *aKey);
+    void ComputeKey(uint32_t aKeySequence, uint8_t *aKey);
 
     void        StartKeyRotationTimer(void);
     static void HandleKeyRotationTimer(Timer &aTimer);
     void        HandleKeyRotationTimer(void);
 
-    otMasterKey mMasterKey;
+    static const uint8_t     kThreadString[];
+    static const otMasterKey kDefaultMasterKey;
+
+    MasterKey mMasterKey;
 
     uint32_t mKeySequence;
     uint8_t  mKey[Crypto::HmacSha256::kHashSize];
@@ -359,13 +476,14 @@ private:
     bool       mKeySwitchGuardEnabled;
     TimerMilli mKeyRotationTimer;
 
-#if OPENTHREAD_FTD
-    uint8_t mPSKc[kMaxKeyLength];
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    Pskc mPskc;
 #endif
     uint8_t  mKek[kMaxKeyLength];
     uint32_t mKekFrameCounter;
 
     uint8_t mSecurityPolicyFlags;
+    bool    mIsPskcSet : 1;
 };
 
 /**

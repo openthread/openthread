@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -42,12 +41,13 @@ ED3 = 6
 
 MTDS = [ED1, ED2, ED3]
 
+
 class Cert_5_5_3_SplitMergeChildren(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,7):
+        for i in range(1, 7):
             self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -91,10 +91,10 @@ class Cert_5_5_3_SplitMergeChildren(unittest.TestCase):
         self.nodes[LEADER].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
+        self.simulator.stop()
 
     def test(self):
         self.nodes[LEADER].start()
@@ -141,6 +141,7 @@ class Cert_5_5_3_SplitMergeChildren(unittest.TestCase):
         for addr in addrs:
             if addr[0:4] != 'fe80':
                 self.assertTrue(self.nodes[ROUTER2].ping(addr))
+
 
 if __name__ == '__main__':
     unittest.main()

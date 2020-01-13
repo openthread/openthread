@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "common/notifier.hpp"
@@ -68,20 +66,17 @@ private:
         kReportDelay = 500,  ///< Delay before sending a report (milliseconds)
     };
 
-    static void HandleRequest(void *               aContext,
-                              otCoapHeader *       aHeader,
-                              otMessage *          aMessage,
-                              const otMessageInfo *aMessageInfo);
-    void        HandleRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleRequest(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleScanResult(void *aContext, otEnergyScanResult *aResult);
+    static void HandleScanResult(Instance &aInstance, otEnergyScanResult *aResult);
     void        HandleScanResult(otEnergyScanResult *aResult);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags);
-    void        HandleStateChanged(uint32_t aFlags);
+    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
+    void        HandleStateChanged(otChangedFlags aFlags);
 
     otError SendReport(void);
 
@@ -93,7 +88,7 @@ private:
     uint8_t      mCount;
     bool         mActive;
 
-    int8_t  mScanResults[OPENTHREAD_CONFIG_MAX_ENERGY_RESULTS];
+    int8_t  mScanResults[OPENTHREAD_CONFIG_TMF_ENERGY_SCAN_MAX_RESULTS];
     uint8_t mScanResultsLength;
 
     TimerMilli mTimer;

@@ -29,21 +29,14 @@
 #ifndef TEST_PLATFORM_H
 #define TEST_PLATFORM_H
 
-#if _WIN32
-#define _CRT_SECURE_NO_WARNINGS
-#include <time.h>
-#include <windows.h>
-#endif
-
 #include <string.h>
 
 #include <openthread/config.h>
-#include <openthread/openthread.h>
 #include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/entropy.h>
 #include <openthread/platform/logging.h>
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
-#include <openthread/platform/random.h>
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"

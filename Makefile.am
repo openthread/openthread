@@ -32,26 +32,18 @@ AM_MAKEFLAGS                        = --no-print-directory
 
 AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-address-sanitizer        \
-    --enable-application-coap         \
-    --enable-border-router            \
-    --enable-cli-app=all              \
-    --enable-commissioner             \
-    --enable-dhcp6-client             \
-    --enable-dhcp6-server             \
-    --enable-diag                     \
-    --enable-dns-client               \
-    --enable-joiner                   \
-    --enable-mac-filter               \
-    --enable-ncp-app=all              \
-    --enable-service                  \
+    --enable-cli                      \
+    --enable-ftd                      \
+    --enable-mtd                      \
+    --enable-ncp                      \
+    --enable-radio-only               \
     --with-examples=posix             \
-    --with-ncp-bus=uart               \
     $(NULL)
 
 SUBDIRS                             = \
     include                           \
-    src                               \
     third_party                       \
+    src                               \
     examples                          \
     tests                             \
     tools                             \

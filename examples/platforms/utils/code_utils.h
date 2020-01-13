@@ -71,4 +71,14 @@
         }                                    \
     } while (0)
 
+/**
+ * This macro calculates the number of elements in an array.
+ *
+ * @param[in] aArray  Name of the array variable.
+ *
+ * @returns Number of elements in the array.
+ *
+ */
+#define otARRAY_LENGTH(aArray) (sizeof(aArray) / sizeof(aArray[0]))
+
 #endif // CODE_UTILS_H

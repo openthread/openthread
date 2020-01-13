@@ -41,12 +41,12 @@
 #include "common/encoding.hpp"
 #include "net/ip6_address.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 #define THREAD_ENTERPRISE_NUMBER 44970
 
 namespace ot {
 namespace NetworkData {
+
+using ot::Encoding::BigEndian::HostSwap16;
 
 /**
  * @addtogroup core-netdata-tlvs
@@ -223,8 +223,18 @@ public:
      */
     void SetPreference(int8_t aPrf)
     {
-        mFlags = (mFlags & ~kPreferenceMask) | ((aPrf << kPreferenceOffset) & kPreferenceMask);
+        assert((aPrf == OT_ROUTE_PREFERENCE_LOW) || (aPrf == OT_ROUTE_PREFERENCE_MED) ||
+               (aPrf == OT_ROUTE_PREFERENCE_HIGH));
+        mFlags = (mFlags & ~kPreferenceMask) | ((static_cast<uint8_t>(aPrf) << kPreferenceOffset) & kPreferenceMask);
     }
+
+    /**
+     * This method returns a pointer to the next HasRouteEntry.
+     *
+     * @returns A pointer to the next HasRouteEntry.
+     *
+     */
+    HasRouteEntry *GetNext(void) { return (this + 1); }
 
 private:
     enum
@@ -276,6 +286,27 @@ public:
     {
         return reinterpret_cast<HasRouteEntry *>(GetValue() + (i * sizeof(HasRouteEntry)));
     }
+
+    /**
+     * This method returns a pointer to the first HasRouteEntry (at index 0'th).
+     *
+     * @returns A pointer to the first HasRouteEntry.
+     *
+     */
+    HasRouteEntry *GetFirstEntry(void) { return reinterpret_cast<HasRouteEntry *>(GetValue()); }
+
+    /**
+     * This method returns a pointer to the last HasRouteEntry.
+     *
+     * If there are no entries the pointer will be invalid but guaranteed to be before the `GetFirstEntry()` pointer.
+     *
+     * @returns A pointer to the last HasRouteEntry.
+     *
+     */
+    HasRouteEntry *GetLastEntry(void)
+    {
+        return reinterpret_cast<HasRouteEntry *>(GetValue() + GetLength() - sizeof(HasRouteEntry));
+    }
 } OT_TOOL_PACKED_END;
 
 /**
@@ -314,7 +345,8 @@ public:
     bool IsValid(void) const
     {
         return ((GetLength() >= sizeof(*this) - sizeof(NetworkDataTlv)) &&
-                (GetLength() >= BitVectorBytes(mPrefixLength) + sizeof(*this) - sizeof(NetworkDataTlv)));
+                (GetLength() >= BitVectorBytes(mPrefixLength) + sizeof(*this) - sizeof(NetworkDataTlv)) &&
+                (BitVectorBytes(mPrefixLength) <= sizeof(Ip6::Address)));
     }
 
     /**
@@ -457,7 +489,7 @@ public:
      */
     void SetPreference(int8_t aPrf)
     {
-        mFlags = (mFlags & ~kPreferenceMask) | ((aPrf << kPreferenceOffset) & kPreferenceMask);
+        mFlags = (mFlags & ~kPreferenceMask) | ((static_cast<uint8_t>(aPrf) << kPreferenceOffset) & kPreferenceMask);
     }
 
     /**
@@ -586,6 +618,14 @@ public:
      */
     void SetOnMesh(void) { mFlags |= kOnMeshFlag; }
 
+    /**
+     * This method returns a pointer to the next BorderRouterEntry
+     *
+     * @returns A pointer to the next BorderRouterEntry.
+     *
+     */
+    BorderRouterEntry *GetNext(void) { return (this + 1); }
+
 private:
     uint16_t mRloc;
     uint8_t  mFlags;
@@ -630,6 +670,27 @@ public:
     BorderRouterEntry *GetEntry(uint8_t i)
     {
         return reinterpret_cast<BorderRouterEntry *>(GetValue() + (i * sizeof(BorderRouterEntry)));
+    }
+
+    /**
+     * This method returns a pointer to the first BorderRouterEntry (at index 0'th).
+     *
+     * @returns A pointer to the first BorderRouterEntry.
+     *
+     */
+    BorderRouterEntry *GetFirstEntry(void) { return reinterpret_cast<BorderRouterEntry *>(GetValue()); }
+
+    /**
+     * This method returns a pointer to the last BorderRouterEntry.
+     *
+     * If there are no entries the pointer will be invalid but guaranteed to be before the `GetFirstEntry()` pointer.
+     *
+     * @returns A pointer to the last BorderRouterEntry.
+     *
+     */
+    BorderRouterEntry *GetLastEntry(void)
+    {
+        return reinterpret_cast<BorderRouterEntry *>(GetValue() + GetLength() - sizeof(BorderRouterEntry));
     }
 } OT_TOOL_PACKED_END;
 

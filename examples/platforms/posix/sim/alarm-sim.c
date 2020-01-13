@@ -40,7 +40,7 @@
 
 #define US_PER_MS 1000
 
-static uint64_t sNow = 0; // microseconds
+extern uint64_t sNow; // microseconds
 
 static bool     sIsMsRunning = false;
 static uint32_t sMsAlarm     = 0;
@@ -50,7 +50,8 @@ static uint32_t sUsAlarm     = 0;
 
 void platformAlarmInit(uint32_t aSpeedUpFactor)
 {
-    (void)aSpeedUpFactor;
+    OT_UNUSED_VARIABLE(aSpeedUpFactor);
+
     sNow = 0;
 }
 
@@ -71,14 +72,16 @@ uint32_t otPlatAlarmMilliGetNow(void)
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     sMsAlarm     = aT0 + aDt;
     sIsMsRunning = true;
 }
 
 void otPlatAlarmMilliStop(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     sIsMsRunning = false;
 }
 
@@ -89,14 +92,16 @@ uint32_t otPlatAlarmMicroGetNow(void)
 
 void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     sUsAlarm     = aT0 + aDt;
     sIsUsRunning = true;
 }
 
 void otPlatAlarmMicroStop(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     sIsUsRunning = false;
 }
 
@@ -109,9 +114,14 @@ int32_t platformAlarmGetNext(void)
         int32_t milli = (int32_t)(sMsAlarm - otPlatAlarmMilliGetNow());
 
         remaining = milli * US_PER_MS;
+
+        if (remaining < 0 && milli > 0)
+        {
+            remaining = INT32_MAX;
+        }
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
     if (sIsUsRunning)
     {
@@ -123,7 +133,7 @@ int32_t platformAlarmGetNext(void)
         }
     }
 
-#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
     return remaining;
 }
@@ -140,7 +150,7 @@ void platformAlarmProcess(otInstance *aInstance)
         {
             sIsMsRunning = false;
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
             if (otPlatDiagModeGet())
             {
@@ -154,7 +164,7 @@ void platformAlarmProcess(otInstance *aInstance)
         }
     }
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
     if (sIsUsRunning)
     {
@@ -168,7 +178,19 @@ void platformAlarmProcess(otInstance *aInstance)
         }
     }
 
-#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 }
+
+uint64_t otPlatTimeGet(void)
+{
+    return platformAlarmGetNow();
+}
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+uint16_t otPlatTimeGetXtalAccuracy(void)
+{
+    return 0;
+}
+#endif
 
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME

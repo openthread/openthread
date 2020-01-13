@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       sys_ctrl.h
-*  Revised:        2017-01-31 10:31:33 +0100 (Tue, 31 Jan 2017)
-*  Revision:       48347
+*  Revised:        2017-08-02 14:52:20 +0200 (Wed, 02 Aug 2017)
+*  Revision:       49471
 *
 *  Description:    Defines and prototypes for the System Controller.
 *
@@ -234,7 +234,7 @@ SysCtrlAonUpdate(void)
 extern void SysCtrlSetRechargeBeforePowerDown( uint32_t xoscPowerMode );
 
 
-//*****************************************************************************
+///*****************************************************************************
 //
 //! \brief Adjust Recharge calculations to be used next.
 //!
@@ -245,6 +245,9 @@ extern void SysCtrlSetRechargeBeforePowerDown( uint32_t xoscPowerMode );
 //! optimal recharge controller settings next time (When
 //! \ref SysCtrlSetRechargeBeforePowerDown() is called next time).
 //!
+//! \param vddrRechargeMargin margin in SCLK_LF periods to subtract from
+//! previous longest recharge period experienced while in standby.
+//!
 //! \note
 //! Special care must be taken to make sure that the AON registers read are
 //! updated after the wakeup. Writing to an AON register and then calling
@@ -253,7 +256,7 @@ extern void SysCtrlSetRechargeBeforePowerDown( uint32_t xoscPowerMode );
 //! \return None
 //
 //*****************************************************************************
-extern void SysCtrlAdjustRechargeAfterPowerDown( void );
+extern void SysCtrlAdjustRechargeAfterPowerDown( uint32_t vddrRechargeMargin );
 
 
 //*****************************************************************************
@@ -281,7 +284,6 @@ extern void SysCtrl_DCDC_VoltageConditionalControl( void );
 #define RSTSRC_PWR_ON               (( AON_SYSCTL_RESETCTL_RESET_SRC_PWR_ON    ) >> ( AON_SYSCTL_RESETCTL_RESET_SRC_S ))
 #define RSTSRC_PIN_RESET            (( AON_SYSCTL_RESETCTL_RESET_SRC_PIN_RESET ) >> ( AON_SYSCTL_RESETCTL_RESET_SRC_S ))
 #define RSTSRC_VDDS_LOSS            (( AON_SYSCTL_RESETCTL_RESET_SRC_VDDS_LOSS ) >> ( AON_SYSCTL_RESETCTL_RESET_SRC_S ))
-#define RSTSRC_VDD_LOSS             (( AON_SYSCTL_RESETCTL_RESET_SRC_VDD_LOSS  ) >> ( AON_SYSCTL_RESETCTL_RESET_SRC_S ))
 #define RSTSRC_VDDR_LOSS            (( AON_SYSCTL_RESETCTL_RESET_SRC_VDDR_LOSS ) >> ( AON_SYSCTL_RESETCTL_RESET_SRC_S ))
 #define RSTSRC_CLK_LOSS             (( AON_SYSCTL_RESETCTL_RESET_SRC_CLK_LOSS  ) >> ( AON_SYSCTL_RESETCTL_RESET_SRC_S ))
 #define RSTSRC_SYSRESET             (( AON_SYSCTL_RESETCTL_RESET_SRC_SYSRESET  ) >> ( AON_SYSCTL_RESETCTL_RESET_SRC_S ))

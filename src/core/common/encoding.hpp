@@ -36,8 +36,12 @@
 
 #include "openthread-core-config.h"
 
+#ifndef BYTE_ORDER_BIG_ENDIAN
+#define BYTE_ORDER_BIG_ENDIAN 0
+#endif
+
 #include <limits.h>
-#include "utils/wrap_stdint.h"
+#include <stdint.h>
 
 namespace ot {
 namespace Encoding {
@@ -76,7 +80,7 @@ inline uint32_t Reverse32(uint32_t v)
     return v;
 }
 
-#define BitVectorBytes(x) (((x) + (CHAR_BIT - 1)) / CHAR_BIT)
+#define BitVectorBytes(x) static_cast<uint8_t>(((x) + (CHAR_BIT - 1)) / CHAR_BIT)
 
 namespace BigEndian {
 

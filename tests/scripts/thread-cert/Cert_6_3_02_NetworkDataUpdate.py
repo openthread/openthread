@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -36,12 +35,13 @@ import node
 LEADER = 1
 ED = 2
 
-class Cert_5_6_2_NetworkDataUpdate(unittest.TestCase):
+
+class Cert_6_3_2_NetworkDataUpdate(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,3):
+        for i in range(1, 3):
             self.nodes[i] = node.Node(i, (i == ED), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -56,10 +56,10 @@ class Cert_5_6_2_NetworkDataUpdate(unittest.TestCase):
         self.nodes[ED].set_timeout(10)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
+        self.simulator.stop()
 
     def test(self):
         self.nodes[LEADER].start()
@@ -72,6 +72,10 @@ class Cert_5_6_2_NetworkDataUpdate(unittest.TestCase):
 
         self.nodes[LEADER].add_prefix('2001:2:0:1::/64', 'paros')
         self.nodes[LEADER].register_netdata()
+
+        # Set lowpan context of sniffer
+        self.simulator.set_lowpan_context(1, '2001:2:0:1::/64')
+
         self.simulator.go(5)
 
         addrs = self.nodes[ED].get_addrs()
@@ -85,6 +89,10 @@ class Cert_5_6_2_NetworkDataUpdate(unittest.TestCase):
 
         self.nodes[LEADER].add_prefix('2001:2:0:2::/64', 'paros')
         self.nodes[LEADER].register_netdata()
+
+        # Set lowpan context of sniffer
+        self.simulator.set_lowpan_context(2, '2001:2:0:2::/64')
+
         self.simulator.go(5)
 
         self.nodes[LEADER].add_whitelist(self.nodes[ED].get_addr64())
@@ -97,6 +105,7 @@ class Cert_5_6_2_NetworkDataUpdate(unittest.TestCase):
         for addr in addrs:
             if addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
+
 
 if __name__ == '__main__':
     unittest.main()

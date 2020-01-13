@@ -37,8 +37,10 @@
 #include "openthread-core-config.h"
 
 #include "common/locator.hpp"
-#include "mac/mac_frame.hpp"
-#include "thread/mle.hpp"
+#include "mac/mac_types.hpp"
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
+#include "utils/slaac_address.hpp"
+#endif
 
 namespace ot {
 
@@ -83,6 +85,12 @@ public:
      */
     struct NetworkInfo
     {
+        /**
+         * This method clears the struct object (setting all the fields to zero).
+         *
+         */
+        void Clear(void) { memset(this, 0, sizeof(*this)); }
+
         uint8_t         mRole;                   ///< Current Thread role.
         uint8_t         mDeviceMode;             ///< Device mode setting.
         uint16_t        mRloc16;                 ///< RLOC16
@@ -100,6 +108,12 @@ public:
      */
     struct ParentInfo
     {
+        /**
+         * This method clears the struct object (setting all the fields to zero).
+         *
+         */
+        void Clear(void) { memset(this, 0, sizeof(*this)); }
+
         Mac::ExtAddress mExtAddress; ///< Extended Address
     };
 
@@ -109,27 +123,34 @@ public:
      */
     struct ChildInfo
     {
+        /**
+         * This method clears the struct object (setting all the fields to zero).
+         *
+         */
+        void Clear(void) { memset(this, 0, sizeof(*this)); }
+
         Mac::ExtAddress mExtAddress; ///< Extended Address
         uint32_t        mTimeout;    ///< Timeout
         uint16_t        mRloc16;     ///< RLOC16
         uint8_t         mMode;       ///< The MLE device mode
     };
 
-protected:
     /**
      * This enumeration defines the keys of settings.
      *
      */
     enum Key
     {
-        kKeyActiveDataset   = 0x0001, ///< Active Operational Dataset
-        kKeyPendingDataset  = 0x0002, ///< Pending Operational Dataset
-        kKeyNetworkInfo     = 0x0003, ///< Thread network information
-        kKeyParentInfo      = 0x0004, ///< Parent information
-        kKeyChildInfo       = 0x0005, ///< Child information
-        kKeyThreadAutoStart = 0x0006, ///< Auto-start information
+        kKeyActiveDataset     = 0x0001, ///< Active Operational Dataset
+        kKeyPendingDataset    = 0x0002, ///< Pending Operational Dataset
+        kKeyNetworkInfo       = 0x0003, ///< Thread network information
+        kKeyParentInfo        = 0x0004, ///< Parent information
+        kKeyChildInfo         = 0x0005, ///< Child information
+        kKeyReserved          = 0x0006, ///< Reserved (previously auto-start)
+        kKeySlaacIidSecretKey = 0x0007, ///< Secret key used by SLAAC module for generating semantically opaque IID
     };
 
+protected:
     explicit SettingsBase(Instance &aInstance)
         : InstanceLocator(aInstance)
     {
@@ -146,9 +167,9 @@ protected:
 #endif
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_UTIL != 0)
-    void LogFailure(otError aError, const char *aAction) const;
+    void LogFailure(otError aError, const char *aAction, bool aIsDelete) const;
 #else
-    void LogFailure(otError, const char *) const {}
+    void LogFailure(otError, const char *, bool) const {}
 #endif
 };
 
@@ -177,6 +198,14 @@ public:
      *
      */
     void Init(void);
+
+    /**
+     * This method de-initializes the platform settings (non-volatile) module.
+     *
+     * This method should be called when OpenThread instance is no longer in use.
+     *
+     */
+    void Deinit(void);
 
     /**
      * This method removes all settings from the non-volatile store.
@@ -284,40 +313,47 @@ public:
      */
     otError DeleteParentInfo(void);
 
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
+
     /**
-     * This method saves ThreadAutoStart.
+     * This method saves the SLAAC IID secret key.
      *
-     * @param[in]   aAutoStart            A value to be saved (0 or 1).
+     * @param[in]   aKey                  The SLAAC IID secret key.
      *
      * @retval OT_ERROR_NONE              Successfully saved the value.
      * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
      *
      */
-    otError SaveThreadAutoStart(uint8_t aAutoStart) { return Save(kKeyThreadAutoStart, &aAutoStart, sizeof(uint8_t)); }
+    otError SaveSlaacIidSecretKey(const Utils::Slaac::IidSecretKey &aKey)
+    {
+        return Save(kKeySlaacIidSecretKey, &aKey, sizeof(Utils::Slaac::IidSecretKey));
+    }
 
     /**
-     * This method reads ThreadAutoStart .
+     * This method reads the SLAAC IID secret key.
      *
-     * @param[out]   aAutoStart          A reference to a `uint8_t` to output the read value
+     * @param[out]   aKey          A reference to a SLAAC IID secret key to output the read value.
      *
      * @retval OT_ERROR_NONE              Successfully read the value.
      * @retval OT_ERROR_NOT_FOUND         No corresponding value in the setting store.
      * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
      *
      */
-    otError ReadThreadAutoStart(uint8_t &aAutoStart) const
+    otError ReadSlaacIidSecretKey(Utils::Slaac::IidSecretKey &aKey)
     {
-        return ReadFixedSize(kKeyThreadAutoStart, &aAutoStart, sizeof(uint8_t));
+        return ReadFixedSize(kKeySlaacIidSecretKey, &aKey, sizeof(Utils::Slaac::IidSecretKey));
     }
 
     /**
-     * This method deletes ThreadAutoStart value from settings.
+     * This method deletes the SLAAC IID secret key value from settings.
      *
      * @retval OT_ERROR_NONE             Successfully deleted the value.
      * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
      *
      */
-    otError DeleteThreadAutoStart(void) { return Delete(kKeyThreadAutoStart); }
+    otError DeleteSlaacIidSecretKey(void) { return Delete(kKeySlaacIidSecretKey); }
+
+#endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
     /**
      * This method adds a Child Info entry to settings.
@@ -356,7 +392,7 @@ public:
          * @param[in]  aInstance  A reference to the OpenThread instance.
          *
          */
-        ChildInfoIterator(Instance &aInstance);
+        explicit ChildInfoIterator(Instance &aInstance);
 
         /**
          * This method resets the iterator to start from the first Child Info entry in the list.
@@ -372,13 +408,27 @@ public:
          * @retval FALSE  The current entry is valid.
          *
          */
-        bool IsDone(void) { return mIsDone; }
+        bool IsDone(void) const { return mIsDone; }
 
         /**
          * This method advances the iterator to move to the next Child Info entry in the list (if any).
          *
          */
         void Advance(void);
+
+        /**
+         * This method overloads operator `++` (pre-increment) to advance the iterator to move to the next Child Info
+         * entry in the list (if any).
+         *
+         */
+        void operator++(void) { Advance(); }
+
+        /**
+         * This method overloads operator `++` (post-increment) to advance the iterator to move to the next Child Info
+         * entry in the list (if any).
+         *
+         */
+        void operator++(int) { Advance(); }
 
         /**
          * This method gets the Child Info corresponding to the current iterator entry in the list.
@@ -410,7 +460,7 @@ public:
     };
 
 private:
-    otError ReadFixedSize(Key aKey, void *aBuffer, uint16_t aExpectedLength) const;
+    otError ReadFixedSize(Key aKey, void *aBuffer, uint16_t aExpectedSize) const;
     otError Read(Key aKey, void *aBuffer, uint16_t aMaxBufferSize, uint16_t &aReadSize) const;
     otError Save(Key aKey, const void *aValue, uint16_t aSize);
     otError Add(Key aKey, const void *aValue, uint16_t aSize);

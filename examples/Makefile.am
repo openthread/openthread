@@ -35,17 +35,13 @@ DIST_SUBDIRS                            = \
     apps                                  \
     $(NULL)
 
-EXTRA_DIST                              = \
-    drivers                               \
-    $(NULL)
-
 # Always build (e.g. for 'make all') these subdirectories.
 
 SUBDIRS                                 = \
     platforms                             \
     $(NULL)
 
-if OPENTHREAD_EXAMPLES
+if OPENTHREAD_ENABLE_EXAMPLES
 SUBDIRS                                += \
     apps                                  \
     $(NULL)

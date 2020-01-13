@@ -36,12 +36,12 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-
+#include <openthread/error.h>
 #include "common/locator.hpp"
-#include "thread/topology.hpp"
 
 namespace ot {
+
+class Child;
 
 /**
  * @addtogroup core-source-match-controller

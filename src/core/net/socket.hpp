@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/openthread.h>
-
 #include "net/ip6_address.hpp"
 
 namespace ot {
@@ -62,6 +60,14 @@ public:
      *
      */
     MessageInfo(void) { memset(this, 0, sizeof(*this)); }
+
+    /**
+     * This method returns a reference to the local socket address.
+     *
+     * @returns A reference to the local socket address.
+     *
+     */
+    Address &GetSockAddr(void) { return *static_cast<Address *>(&mSockAddr); }
 
     /**
      * This method returns a reference to the local socket address.
@@ -136,22 +142,6 @@ public:
     void SetPeerPort(uint16_t aPort) { mPeerPort = aPort; }
 
     /**
-     * This method gets the Interface ID.
-     *
-     * @returns The Interface ID.
-     *
-     */
-    int8_t GetInterfaceId(void) const { return mInterfaceId; }
-
-    /**
-     * This method sets the Interface ID.
-     *
-     * @param[in]  aInterfaceId  The Interface ID.
-     *
-     */
-    void SetInterfaceId(int8_t aInterfaceId) { mInterfaceId = aInterfaceId; }
-
-    /**
      * This method gets the Hop Limit.
      *
      * @returns The Hop Limit.
@@ -170,7 +160,7 @@ public:
     /**
      * This method returns a pointer to the Link Info.
      *
-     * @returns A poitner to the Link Info.
+     * @returns A pointer to the Link Info.
      *
      */
     const void *GetLinkInfo(void) const { return mLinkInfo; }
@@ -182,6 +172,32 @@ public:
      *
      */
     void SetLinkInfo(const void *aLinkInfo) { mLinkInfo = aLinkInfo; }
+
+    /**
+     * This method indicates whether peer is via the host interface.
+     *
+     * @retval TRUE if the peer is via the host interface.
+     * @retval FALSE if the peer is via the Thread interface.
+     *
+     */
+    bool IsHostInterface(void) const { return mIsHostInterface; }
+
+    /**
+     * This method indicates whether or not to apply hop limit 0.
+     *
+     * @retval TRUE  if applying hop limit 0 when `mHopLimit` field is 0.
+     * @retval FALSE if applying default `OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT` when `mHopLimit` field is 0.
+     *
+     */
+    bool ShouldAllowZeroHopLimit(void) const { return mAllowZeroHopLimit; }
+
+    /**
+     * This method sets whether the peer is via the host interface.
+     *
+     * @param[in]  aIsHost  TRUE if the peer is via the host interface, FALSE otherwise.
+     *
+     */
+    void SetIsHostInterface(bool aIsHost) { mIsHostInterface = aIsHost; }
 };
 
 /**
@@ -195,7 +211,13 @@ public:
      * This constructor initializes the object.
      *
      */
-    SockAddr(void) { memset(&mAddress, 0, sizeof(mAddress)), mPort = 0, mScopeId = 0; }
+    SockAddr(void) { Clear(); }
+
+    /**
+     * This method clears the object (sets all fields to zero).
+     *
+     */
+    void Clear(void) { memset(this, 0, sizeof(*this)); }
 
     /**
      * This method returns a reference to the IPv6 address.

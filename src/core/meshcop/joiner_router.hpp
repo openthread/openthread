@@ -36,15 +36,13 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-
 #include "coap/coap.hpp"
-#include "coap/coap_header.hpp"
+#include "coap/coap_message.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "net/udp6.hpp"
 #include "thread/key_manager.hpp"
@@ -77,10 +75,8 @@ public:
      *
      * @param[in]  The Joiner UDP Port number.
      *
-     * @retval OT_ERROR_NONE    Successfully set the Joiner UDP Port.
-     *
      */
-    otError SetJoinerUdpPort(uint16_t aJoinerUdpPort);
+    void SetJoinerUdpPort(uint16_t aJoinerUdpPort);
 
 private:
     enum
@@ -88,36 +84,27 @@ private:
         kDelayJoinEnt = 50, ///< milliseconds
     };
 
-    static void HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags);
-    void        HandleStateChanged(uint32_t aFlags);
+    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
+    void        HandleStateChanged(otChangedFlags aFlags);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleRelayTransmit(void *               aContext,
-                                    otCoapHeader *       aHeader,
-                                    otMessage *          aMessage,
-                                    const otMessageInfo *aMessageInfo);
-    void        HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleRelayTransmit(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleRelayTransmit(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleJoinerEntrustResponse(void *               aContext,
-                                            otCoapHeader *       aHeader,
                                             otMessage *          aMessage,
                                             const otMessageInfo *aMessageInfo,
-                                            otError              result);
-    void        HandleJoinerEntrustResponse(Coap::Header *          aHeader,
-                                            Message *               aMessage,
-                                            const Ip6::MessageInfo *aMessageInfo,
-                                            otError                 result);
+                                            otError              aResult);
+    void HandleJoinerEntrustResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError aResult);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
     otError DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const JoinerRouterKekTlv &aKek);
     void    SendDelayedJoinerEntrust(void);
-    otError SendJoinerEntrust(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    otError GetBorderAgentRloc(uint16_t &aRloc);
+    otError SendJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     Ip6::UdpSocket mSocket;
     Coap::Resource mRelayTransmit;
@@ -141,19 +128,14 @@ class DelayedJoinEntHeader
 {
 public:
     /**
-     * Default constructor for the object.
-     *
-     */
-    DelayedJoinEntHeader(void) { memset(this, 0, sizeof(*this)); }
-
-    /**
-     * This constructor initializes the object with specific values.
+     * This method initializes the object with specific values.
      *
      * @param[in]  aSendTime     Time when the message shall be sent.
-     * @param[in]  aDestination  IPv6 address of the message destination.
+     * @param[in]  aMessageInfo  IPv6 address of the message destination.
+     * @param[in]  aKek          A pointer to the KEK.
      *
      */
-    DelayedJoinEntHeader(uint32_t aSendTime, Ip6::MessageInfo &aMessageInfo, const uint8_t *aKek)
+    void Init(TimeMilli aSendTime, Ip6::MessageInfo &aMessageInfo, const uint8_t *aKek)
     {
         mSendTime    = aSendTime;
         mMessageInfo = aMessageInfo;
@@ -176,12 +158,12 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @returns The number of bytes read.
-     *
      */
-    uint16_t ReadFrom(Message &aMessage)
+    void ReadFrom(const Message &aMessage)
     {
-        return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+        uint16_t length = aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+        assert(length == sizeof(*this));
+        OT_UNUSED_VARIABLE(length);
     }
 
     /**
@@ -189,12 +171,12 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE  Successfully removed the header.
-     *
      */
-    static otError RemoveFrom(Message &aMessage)
+    static void RemoveFrom(Message &aMessage)
     {
-        return aMessage.SetLength(aMessage.GetLength() - sizeof(DelayedJoinEntHeader));
+        otError error = aMessage.SetLength(aMessage.GetLength() - sizeof(DelayedJoinEntHeader));
+        assert(error == OT_ERROR_NONE);
+        OT_UNUSED_VARIABLE(error);
     }
 
     /**
@@ -203,7 +185,7 @@ public:
      * @returns  A time when the message shall be sent.
      *
      */
-    uint32_t GetSendTime(void) const { return mSendTime; }
+    TimeMilli GetSendTime(void) const { return mSendTime; }
 
     /**
      * This method returns a destination of the delayed message.
@@ -221,29 +203,9 @@ public:
      */
     const uint8_t *GetKek(void) const { return mKek; }
 
-    /**
-     * This method checks if the message shall be sent before the given time.
-     *
-     * @param[in]  aTime  A time to compare.
-     *
-     * @retval TRUE   If the message shall be sent before the given time.
-     * @retval FALSE  Otherwise.
-     */
-    bool IsEarlier(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) > 0); }
-
-    /**
-     * This method checks if the message shall be sent after the given time.
-     *
-     * @param[in]  aTime  A time to compare.
-     *
-     * @retval TRUE   If the message shall be sent after the given time.
-     * @retval FALSE  Otherwise.
-     */
-    bool IsLater(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) < 0); }
-
 private:
     Ip6::MessageInfo mMessageInfo;                    ///< Message info of the message to send.
-    uint32_t         mSendTime;                       ///< Time when the message shall be sent.
+    TimeMilli        mSendTime;                       ///< Time when the message shall be sent.
     uint8_t          mKek[KeyManager::kMaxKeyLength]; ///< KEK used by MAC layer to encode this message.
 };
 

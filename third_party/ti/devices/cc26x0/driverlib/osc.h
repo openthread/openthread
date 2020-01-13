@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       osc.h
-*  Revised:        2017-02-18 20:04:02 +0100 (Sat, 18 Feb 2017)
-*  Revision:       48484
+*  Revised:        2017-07-19 09:17:50 +0200 (Wed, 19 Jul 2017)
+*  Revision:       49354
 *
 *  Description:    Defines and prototypes for the system oscillator control.
 *

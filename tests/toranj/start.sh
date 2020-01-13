@@ -34,7 +34,7 @@ die() {
 
 cleanup() {
     # Clear logs and flash files
-    sudo rm tmp/*.flash > /dev/null 2>&1
+    sudo rm tmp/*.flash tmp/*.data tmp/*.swap > /dev/null 2>&1
     sudo rm *.log > /dev/null 2>&1
 
     # Clear any wpantund instances
@@ -53,7 +53,7 @@ run() {
     counter=0
     while true; do
 
-        if sudo python $1; then
+        if sudo -E python $1; then
             cleanup
             return
         fi
@@ -76,40 +76,30 @@ run() {
 }
 
 cd $(dirname $0)
-cd ../..
 
-# Build OpenThread posix mode with required configuration
-
+# On Travis CI, the $BUILD_TARGET is defined as "toranj-test-framework".
 if [ "$BUILD_TARGET" = "toranj-test-framework" ]; then
-    coverage=yes
+    coverage_option="--enable-coverage"
 else
-    coverage=no
+    coverage_option=""
 fi
 
-./bootstrap || die
-./configure                             \
-    CPPFLAGS='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config.h\"' \
-    --enable-coverage=${coverage}       \
-    --enable-ncp-app=all                \
-    --with-ncp-bus=uart                 \
-    --with-examples=posix               \
-    --enable-border-router              \
-    --enable-child-supervision          \
-    --enable-diag                       \
-    --enable-jam-detection              \
-    --enable-legacy                     \
-    --enable-mac-filter                 \
-    --enable-service                    \
-    --enable-channel-monitor            \
-    --enable-channel-manager            \
-    --disable-docs                      \
-    --disable-test || die
+case $TORANJ_POSIX_APP_RCP_MODEL in
+    1|yes)
+        use_posix_app_with_rcp=yes
+        ;;
+    *)
+        use_posix_app_with_rcp=no
+        ;;
+esac
 
-make -j 8 || die
+if [ "$use_posix_app_with_rcp" = "no" ]; then
+    ./build.sh ${coverage_option} ncp || die
 
-# Run all the tests
-
-cd tests/toranj
+else
+    ./build.sh ${coverage_option} rcp || die
+    ./build.sh ${coverage_option} posix-app || die
+fi
 
 cleanup
 
@@ -123,6 +113,34 @@ run test-007-traffic-router-sleepy.py
 run test-008-permit-join.py
 run test-009-insecure-traffic-join.py
 run test-010-on-mesh-prefix-config-gateway.py
+run test-011-child-table.py
+run test-012-multi-hop-traffic.py
+run test-013-off-mesh-route-traffic.py
+run test-014-ip6-address-add.py
+run test-015-same-prefix-on-multiple-nodes.py
+run test-016-neighbor-table.py
+run test-017-parent-reset-child-recovery.py
+run test-018-child-supervision.py
+run test-019-inform-previous-parent.py
+run test-020-router-table.py
+run test-021-address-cache-table.py
+run test-022-multicast-ip6-address.py
+run test-023-multicast-traffic.py
+run test-024-partition-merge.py
+run test-025-network-data-timeout.py
+run test-026-slaac-address-wpantund.py
+run test-027-child-mode-change.py
+run test-028-router-leader-reset-recovery.py
+run test-029-data-poll-interval.py
+run test-030-slaac-address-ncp.py
+run test-031-meshcop-joiner-commissioner.py
+run test-032-child-attach-with-multiple-ip-addresses.py
+run test-033-mesh-local-prefix-change.py
+run test-034-poor-link-parent-child-attach.py
+run test-035-child-timeout-large-data-poll.py
+run test-036-wpantund-host-route-management.py
+run test-037-wpantund-auto-add-route-for-on-mesh-prefix.py
+run test-038-clear-address-cache-for-sed.py
 run test-100-mcu-power-state.py
 run test-600-channel-manager-properties.py
 run test-601-channel-manager-channel-change.py

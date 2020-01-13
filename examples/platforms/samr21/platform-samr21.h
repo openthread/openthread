@@ -37,7 +37,7 @@
 
 #include <stdint.h>
 
-#include "openthread/types.h"
+#include <openthread/instance.h>
 
 // Global OpenThread instance structure
 extern otInstance *sInstance;
@@ -100,4 +100,10 @@ void samr21UartProcess(void);
  */
 void samr21GetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64);
 
-#endif  // PLATFORM_SAMR21_H_
+/**
+ * Initialization of Logger driver.
+ *
+ */
+void samr21LogInit(void);
+
+#endif // PLATFORM_SAMR21_H_

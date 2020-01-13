@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/timer.hpp"
@@ -127,7 +125,7 @@ public:
      * @retval FALSE  If the MPL M flag is not set.
      *
      */
-    bool IsMaxFlagSet(void) { return (mControl & kMaxFlag) != 0; }
+    bool IsMaxFlagSet(void) const { return (mControl & kMaxFlag) != 0; }
 
     /**
      * This method clears the MPL M flag.
@@ -249,7 +247,6 @@ private:
  * This class represents metadata required for MPL retransmissions.
  *
  */
-OT_TOOL_PACKED_BEGIN
 class MplBufferedMessageMetadata
 {
 public:
@@ -273,33 +270,36 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
-    otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); };
+    otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
 
     /**
      * This method reads request data from the message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @returns The number of bytes that have been read.
-     *
      */
-    uint16_t ReadFrom(const Message &aMessage)
+    void ReadFrom(const Message &aMessage)
     {
-        return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-    };
+        uint16_t length = aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+        assert(length == sizeof(*this));
+        OT_UNUSED_VARIABLE(length);
+    }
 
     /**
-     * This method removes MPL Buffered Messsage metadata from the message.
+     * This method removes MPL Buffered Message metadata from the message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE  Successfully removed the header.
-     *
      */
-    otError RemoveFrom(Message &aMessage) { return aMessage.SetLength(aMessage.GetLength() - sizeof(*this)); };
+    static void RemoveFrom(Message &aMessage)
+    {
+        otError error = aMessage.SetLength(aMessage.GetLength() - sizeof(MplBufferedMessageMetadata));
+        assert(error == OT_ERROR_NONE);
+        OT_UNUSED_VARIABLE(error);
+    }
 
     /**
-     * This method updates MPL Buffered Messsage metadata in the message.
+     * This method updates MPL Buffered Message metadata in the message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
@@ -310,26 +310,6 @@ public:
     {
         return aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
     }
-
-    /**
-     * This method checks if the message shall be sent before the given time.
-     *
-     * @param[in]  aTime  A time to compare.
-     *
-     * @retval TRUE   If the message shall be sent before the given time.
-     * @retval FALSE  Otherwise.
-     */
-    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mTransmissionTime) > 0); };
-
-    /**
-     * This method checks if the message shall be sent after the given time.
-     *
-     * @param[in]  aTime  A time to compare.
-     *
-     * @retval TRUE   If the message shall be sent after the given time.
-     * @retval FALSE  Otherwise.
-     */
-    bool IsLater(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mTransmissionTime) < 0); };
 
     /**
      * This method returns the MPL Seed Id value.
@@ -385,7 +365,7 @@ public:
      * @returns The transmission timestamp of the message.
      *
      */
-    uint32_t GetTransmissionTime(void) const { return mTransmissionTime; }
+    TimeMilli GetTransmissionTime(void) const { return mTransmissionTime; }
 
     /**
      * This method sets the transmission timestamp of the message.
@@ -393,7 +373,7 @@ public:
      * @param[in]  aTransmissionTime  The transmission timestamp of the message.
      *
      */
-    void SetTransmissionTime(uint32_t aTransmissionTime) { mTransmissionTime = aTransmissionTime; }
+    void SetTransmissionTime(TimeMilli aTransmissionTime) { mTransmissionTime = aTransmissionTime; }
 
     /**
      * This method returns the offset from the transmission time to the end of trickle interval.
@@ -417,15 +397,15 @@ public:
      * @param[in] aCurrentTime Current time (in milliseconds).
      * @param[in] aInterval    The current interval size (in milliseconds).
      */
-    void GenerateNextTransmissionTime(uint32_t aCurrentTime, uint8_t aInterval);
+    void GenerateNextTransmissionTime(TimeMilli aCurrentTime, uint8_t aInterval);
 
 private:
-    uint16_t mSeedId;
-    uint8_t  mSequence;
-    uint8_t  mTransmissionCount;
-    uint32_t mTransmissionTime;
-    uint8_t  mIntervalOffset;
-} OT_TOOL_PACKED_END;
+    uint16_t  mSeedId;
+    uint8_t   mSequence;
+    uint8_t   mTransmissionCount;
+    TimeMilli mTransmissionTime;
+    uint8_t   mIntervalOffset;
+};
 
 /**
  * This class implements MPL message processing.
@@ -557,4 +537,4 @@ private:
 } // namespace Ip6
 } // namespace ot
 
-#endif // NET_IP6_MPL_HPP_
+#endif // IP6_MPL_HPP_

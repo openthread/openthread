@@ -58,6 +58,18 @@ WRAP_EXTERN_C size_t missing_strnlen(const char *s, size_t maxlen);
 
 #undef WRAP_EXTERN_C
 
+#ifndef HAVE_STRNLEN
+#define HAVE_STRNLEN 0
+#endif
+
+#ifndef HAVE_STRLCPY
+#define HAVE_STRLCPY 0
+#endif
+
+#ifndef HAVE_STRLCAT
+#define HAVE_STRLCAT 0
+#endif
+
 #if (!HAVE_STRNLEN)
 #define strnlen(S, N) missing_strnlen(S, N)
 #endif

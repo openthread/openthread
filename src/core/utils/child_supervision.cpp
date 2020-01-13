@@ -33,19 +33,17 @@
 
 #include "child_supervision.hpp"
 
-#include <openthread/openthread.h>
-
 #include "openthread-core-config.h"
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "common/owner-locator.hpp"
 #include "thread/thread_netif.hpp"
 
 namespace ot {
 namespace Utils {
 
-#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 #if OPENTHREAD_FTD
 
@@ -53,9 +51,8 @@ ChildSupervisor::ChildSupervisor(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSupervisionInterval(kDefaultSupervisionInterval)
     , mTimer(aInstance, &ChildSupervisor::HandleTimer, this)
-    , mNotifierCallback(&ChildSupervisor::HandleStateChanged, this)
+    , mNotifierCallback(aInstance, &ChildSupervisor::HandleStateChanged, this)
 {
-    aInstance.GetNotifier().RegisterCallback(mNotifierCallback);
 }
 
 void ChildSupervisor::SetSupervisionInterval(uint16_t aInterval)
@@ -66,13 +63,13 @@ void ChildSupervisor::SetSupervisionInterval(uint16_t aInterval)
 
 Child *ChildSupervisor::GetDestination(const Message &aMessage) const
 {
-    Child * child = NULL;
-    uint8_t childIndex;
+    Child *  child = NULL;
+    uint16_t childIndex;
 
     VerifyOrExit(aMessage.GetType() == Message::kTypeSupervision);
 
     aMessage.Read(0, sizeof(childIndex), &childIndex);
-    child = GetNetif().GetMle().GetChildTable().GetChildAtIndex(childIndex);
+    child = Get<ChildTable>().GetChildAtIndex(childIndex);
 
 exit:
     return child;
@@ -80,13 +77,12 @@ exit:
 
 void ChildSupervisor::SendMessage(Child &aChild)
 {
-    ThreadNetif &netif   = GetNetif();
-    Message *    message = NULL;
-    uint8_t      childIndex;
+    Message *message = NULL;
+    uint16_t childIndex;
 
     VerifyOrExit(aChild.GetIndirectMessageCount() == 0);
 
-    message = netif.GetInstance().GetMessagePool().New(Message::kTypeSupervision, sizeof(uint8_t));
+    message = Get<MessagePool>().New(Message::kTypeSupervision, sizeof(uint8_t));
     VerifyOrExit(message != NULL);
 
     // Supervision message is an empty payload 15.4 data frame.
@@ -94,13 +90,13 @@ void ChildSupervisor::SendMessage(Child &aChild)
     // the destination of the message to be later retrieved using
     // `ChildSupervisor::GetDestination(message)`.
 
-    childIndex = netif.GetMle().GetChildTable().GetChildIndex(aChild);
+    childIndex = Get<ChildTable>().GetChildIndex(aChild);
     SuccessOrExit(message->Append(&childIndex, sizeof(childIndex)));
 
-    SuccessOrExit(netif.SendMessage(*message));
+    SuccessOrExit(Get<ThreadNetif>().SendMessage(*message));
     message = NULL;
 
-    otLogInfoUtil(GetInstance(), "Sending supervision message to child 0x%04x", aChild.GetRloc16());
+    otLogInfoUtil("Sending supervision message to child 0x%04x", aChild.GetRloc16());
 
 exit:
 
@@ -124,13 +120,13 @@ void ChildSupervisor::HandleTimer(void)
 {
     VerifyOrExit(mSupervisionInterval != 0);
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter.Advance())
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValid); !iter.IsDone(); iter++)
     {
         Child &child = *iter.GetChild();
 
         child.IncrementSecondsSinceLastSupervision();
 
-        if ((child.GetSecondsSinceLastSupervision() >= mSupervisionInterval) && (child.IsRxOnWhenIdle() == false))
+        if ((child.GetSecondsSinceLastSupervision() >= mSupervisionInterval) && !child.IsRxOnWhenIdle())
         {
             SendMessage(child);
         }
@@ -144,35 +140,34 @@ exit:
 
 void ChildSupervisor::CheckState(void)
 {
-    bool            shouldRun = false;
-    Mle::MleRouter &mle       = GetInstance().Get<Mle::MleRouter>();
+    bool shouldRun = false;
 
     // Child Supervision should run if `mSupervisionInterval` is not
     // zero, Thread MLE operation is enabled, and there is at least one
     // "valid" child in the child table.
 
-    shouldRun = ((mSupervisionInterval != 0) && (mle.GetRole() != OT_DEVICE_ROLE_DISABLED) &&
-                 mle.GetChildTable().HasChildren(ChildTable::kInStateValid));
+    shouldRun = ((mSupervisionInterval != 0) && (Get<Mle::MleRouter>().GetRole() != OT_DEVICE_ROLE_DISABLED) &&
+                 Get<ChildTable>().HasChildren(Child::kInStateValid));
 
     if (shouldRun && !mTimer.IsRunning())
     {
         mTimer.Start(kOneSecond);
-        otLogInfoUtil(GetInstance(), "Starting Child Supervision");
+        otLogInfoUtil("Starting Child Supervision");
     }
 
     if (!shouldRun && mTimer.IsRunning())
     {
         mTimer.Stop();
-        otLogInfoUtil(GetInstance(), "Stopping Child Supervision");
+        otLogInfoUtil("Stopping Child Supervision");
     }
 }
 
-void ChildSupervisor::HandleStateChanged(Notifier::Callback &aCallback, uint32_t aFlags)
+void ChildSupervisor::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
 {
     aCallback.GetOwner<ChildSupervisor>().HandleStateChanged(aFlags);
 }
 
-void ChildSupervisor::HandleStateChanged(uint32_t aFlags)
+void ChildSupervisor::HandleStateChanged(otChangedFlags aFlags)
 {
     if ((aFlags & (OT_CHANGED_THREAD_ROLE | OT_CHANGED_THREAD_CHILD_ADDED | OT_CHANGED_THREAD_CHILD_REMOVED)) != 0)
     {
@@ -211,12 +206,10 @@ void SupervisionListener::SetTimeout(uint16_t aTimeout)
 
 void SupervisionListener::UpdateOnReceive(const Mac::Address &aSourceAddress, bool aIsSecure)
 {
-    ThreadNetif &netif = GetNetif();
-
     // If listener is enabled and device is a child and it received a secure frame from its parent, restart the timer.
 
-    VerifyOrExit(mTimer.IsRunning() && aIsSecure && (netif.GetMle().GetRole() == OT_DEVICE_ROLE_CHILD) &&
-                 (netif.GetMle().GetNeighbor(aSourceAddress) == netif.GetMle().GetParent()));
+    VerifyOrExit(mTimer.IsRunning() && aIsSecure && (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_CHILD) &&
+                 (Get<Mle::MleRouter>().GetNeighbor(aSourceAddress) == &Get<Mle::MleRouter>().GetParent()));
 
     RestartTimer();
 
@@ -226,12 +219,10 @@ exit:
 
 void SupervisionListener::RestartTimer(void)
 {
-    ThreadNetif &netif = GetNetif();
-
-    if ((mTimeout != 0) && (netif.GetMle().GetRole() != OT_DEVICE_ROLE_DISABLED) &&
-        (netif.GetMeshForwarder().GetRxOnWhenIdle() == false))
+    if ((mTimeout != 0) && (Get<Mle::MleRouter>().GetRole() != OT_DEVICE_ROLE_DISABLED) &&
+        !Get<MeshForwarder>().GetRxOnWhenIdle())
     {
-        mTimer.Start(TimerMilli::SecToMsec(mTimeout));
+        mTimer.Start(Time::SecToMsec(mTimeout));
     }
     else
     {
@@ -246,20 +237,17 @@ void SupervisionListener::HandleTimer(Timer &aTimer)
 
 void SupervisionListener::HandleTimer(void)
 {
-    ThreadNetif &netif = GetNetif();
+    VerifyOrExit((Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_CHILD) && !Get<MeshForwarder>().GetRxOnWhenIdle());
 
-    VerifyOrExit((netif.GetMle().GetRole() == OT_DEVICE_ROLE_CHILD) &&
-                 (netif.GetMeshForwarder().GetRxOnWhenIdle() == false));
+    otLogWarnUtil("Supervision timeout. No frame from parent in %d sec", mTimeout);
 
-    otLogWarnUtil(netif.GetInstance(), "Supervision timeout. No frame from parent in %d sec", mTimeout);
-
-    netif.GetMle().SendChildUpdateRequest();
+    Get<Mle::MleRouter>().SendChildUpdateRequest();
 
 exit:
     RestartTimer();
 }
 
-#endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 } // namespace Utils
 } // namespace ot

@@ -36,20 +36,17 @@
 #include <openthread/netdata.h>
 
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 
 using namespace ot;
 
 otError otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
 {
-    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aData != NULL && aDataLength != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aData != NULL && aDataLength != NULL);
 
-    error = instance.GetThreadNetif().GetNetworkDataLeader().GetNetworkData(aStable, aData, *aDataLength);
-
-exit:
-    return error;
+    return instance.Get<NetworkData::Leader>().GetNetworkData(aStable, aData, *aDataLength);
 }
 
 otError otNetDataGetNextOnMeshPrefix(otInstance *           aInstance,
@@ -61,7 +58,7 @@ otError otNetDataGetNextOnMeshPrefix(otInstance *           aInstance,
 
     VerifyOrExit(aIterator && aConfig, error = OT_ERROR_INVALID_ARGS);
 
-    error = instance.GetThreadNetif().GetNetworkDataLeader().GetNextOnMeshPrefix(aIterator, aConfig);
+    error = instance.Get<NetworkData::Leader>().GetNextOnMeshPrefix(*aIterator, *aConfig);
 
 exit:
     return error;
@@ -74,7 +71,20 @@ otError otNetDataGetNextRoute(otInstance *aInstance, otNetworkDataIterator *aIte
 
     VerifyOrExit(aIterator && aConfig, error = OT_ERROR_INVALID_ARGS);
 
-    error = instance.GetThreadNetif().GetNetworkDataLeader().GetNextExternalRoute(aIterator, aConfig);
+    error = instance.Get<NetworkData::Leader>().GetNextExternalRoute(*aIterator, *aConfig);
+
+exit:
+    return error;
+}
+
+otError otNetDataGetNextService(otInstance *aInstance, otNetworkDataIterator *aIterator, otServiceConfig *aConfig)
+{
+    otError   error    = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    VerifyOrExit(aIterator && aConfig, error = OT_ERROR_INVALID_ARGS);
+
+    error = instance.Get<NetworkData::Leader>().GetNextService(*aIterator, *aConfig);
 
 exit:
     return error;
@@ -84,12 +94,12 @@ uint8_t otNetDataGetVersion(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetMle().GetLeaderDataTlv().GetDataVersion();
+    return instance.Get<Mle::MleRouter>().GetLeaderDataTlv().GetDataVersion();
 }
 
 uint8_t otNetDataGetStableVersion(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetThreadNetif().GetMle().GetLeaderDataTlv().GetStableDataVersion();
+    return instance.Get<Mle::MleRouter>().GetLeaderDataTlv().GetStableDataVersion();
 }

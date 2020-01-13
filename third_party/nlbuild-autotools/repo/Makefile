@@ -1,5 +1,6 @@
 #
-#    Copyright 2017 Nest Labs Inc. All Rights Reserved.
+#    Copyright (c) 2017-2018 Nest Labs Inc. All Rights Reserved.
+#    Copyright (c) 2018 Google LLC. All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -67,9 +68,24 @@ DISTFILES        := $(shell $(CAT) MANIFEST)
 # .dist-version second, and the .default-version last.
 #
 
+# VERSION_FILE should be and is intentionally an immediate (:=) rather
+# than a deferred (=) variable to ensure the value binds once and only once
+# for a given MAKELEVEL even as .local-version and .dist-version are created
+# during makefile execution.
+
 VERSION_FILE                      := $(if $(wildcard $(builddir)/.local-version),$(builddir)/.local-version,$(if $(wildcard $(srcdir)/.dist-version),$(srcdir)/.dist-version,$(srcdir)/.default-version))
 
-PACKAGE_VERSION                   ?= $(shell $(CAT) $(VERSION_FILE) 2> /dev/null)
+#
+# The two-level variables and the check against MAKELEVEL ensures that
+# not only can the package version be overridden from the command line
+# but also when the version is NOT overridden that we bind the version
+# once and only once across potential sub-makes to prevent the version
+# from flapping as VERSION_FILE changes.
+#
+
+export MAYBE_PACKAGE_VERSION      := $(if $(filter 0,$(MAKELEVEL)),$(shell cat $(VERSION_FILE) 2> /dev/null),$(MAYBE_PACKAGE_VERSION))
+
+PACKAGE_VERSION                   ?= $(MAYBE_PACKAGE_VERSION)
 
 VERSION                            = $(PACKAGE_VERSION)
 

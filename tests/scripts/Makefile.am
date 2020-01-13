@@ -39,7 +39,7 @@ DIST_SUBDIRS                            = \
 SUBDIRS                                 = \
     $(NULL)
 
-if OPENTHREAD_EXAMPLES_POSIX
+if OPENTHREAD_POSIX
 if OPENTHREAD_ENABLE_CLI
 SUBDIRS                                += \
     thread-cert                           \

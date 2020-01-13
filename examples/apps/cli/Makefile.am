@@ -57,13 +57,7 @@ LDADD_COMMON                                                          += \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
-if OPENTHREAD_ENABLE_DIAG
-LDADD_COMMON                                                          += \
-    $(top_builddir)/src/diag/libopenthread-diag.a                        \
-    $(NULL)
-endif # OPENTHREAD_ENABLE_DIAG
-
-if OPENTHREAD_ENABLE_CLI_FTD
+if OPENTHREAD_ENABLE_FTD
 bin_PROGRAMS                                                          += \
     ot-cli-ftd                                                           \
     $(NULL)
@@ -93,7 +87,7 @@ ot_cli_ftd_SOURCES                                                     = \
     $(SOURCES_COMMON)                                                    \
     $(NULL)
 
-if OPENTHREAD_ENABLE_CLI_MTD
+if OPENTHREAD_ENABLE_MTD
 bin_PROGRAMS                                                          += \
     ot-cli-mtd                                                           \
     $(NULL)
@@ -129,6 +123,10 @@ ot_cli_mtd_LDFLAGS                                                    += -Wl,-Ma
 endif
 
 if OPENTHREAD_BUILD_COVERAGE
+CPPFLAGS_COMMON                                                       += \
+    -DOPENTHREAD_ENABLE_COVERAGE                                         \
+    $(NULL)
+
 CLEANFILES                                                             = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
 

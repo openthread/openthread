@@ -40,14 +40,18 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "../nrf_802154_debug.h"
 #include "nrf_802154_notification.h"
 #include "nrf_802154_request.h"
 #include "timer_scheduler/nrf_802154_timer_sched.h"
 
+#define RETRY_DELAY     500     ///< Procedure is delayed by this time if cannot be performed at the moment.
+#define MAX_RETRY_DELAY 1000000 ///< Maximal allowed delay of procedure retry.
+
 static void timeout_timer_retry(void);
 
-static uint32_t           m_timeout = NRF_802154_ACK_TIMEOUT_DEFAULT_TIMEOUT;  ///< ACK timeout in us.
-static nrf_802154_timer_t m_timer;                                             ///< Timer used to notify when we are waiting too long for ACK.
+static uint32_t           m_timeout = NRF_802154_ACK_TIMEOUT_DEFAULT_TIMEOUT; ///< ACK timeout in us.
+static nrf_802154_timer_t m_timer;                                            ///< Timer used to notify when we are waiting too long for ACK.
 static volatile bool      m_procedure_is_active;
 static const uint8_t    * mp_frame;
 
@@ -61,27 +65,32 @@ static void notify_tx_error(bool result)
 
 static void timeout_timer_fired(void * p_context)
 {
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_ACK_TIMEOUT_FIRED);
+
     (void)p_context;
 
     if (m_procedure_is_active)
     {
-        if (!nrf_802154_request_receive(NRF_802154_TERM_802154,
-                                        REQ_ORIG_ACK_TIMEOUT,
-                                        notify_tx_error))
+        if (nrf_802154_request_receive(NRF_802154_TERM_802154,
+                                       REQ_ORIG_ACK_TIMEOUT,
+                                       notify_tx_error,
+                                       false))
+        {
+            m_procedure_is_active = false;
+        }
+        else
         {
             timeout_timer_retry();
         }
     }
+
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_ACK_TIMEOUT_FIRED);
 }
 
 static void timeout_timer_retry(void)
 {
-    /* 
-     * Fire on next timer tick. dt value will be rounded up to nearest timer granularity
-     * by call to nrf_802154_timer_sched_add this will prevent potential infinite
-     * recursion when short delays are called from same context as nrf_802154_timer_sched_add.
-     */
-    m_timer.dt++;
+    m_timer.dt += RETRY_DELAY;
+    assert(m_timer.dt <= MAX_RETRY_DELAY);
 
     nrf_802154_timer_sched_add(&m_timer, true);
 }
@@ -101,6 +110,12 @@ static void timeout_timer_start(void)
 static void timeout_timer_stop(void)
 {
     m_procedure_is_active = false;
+
+    // To make sure `timeout_timer_fired()` detects that procedure is being stopped if it preempts
+    // this function.
+    __DMB();
+
+    nrf_802154_timer_sched_remove(&m_timer);
 }
 
 void nrf_802154_ack_timeout_time_set(uint32_t time)
@@ -118,14 +133,26 @@ bool nrf_802154_ack_timeout_tx_started_hook(const uint8_t * p_frame)
 
 bool nrf_802154_ack_timeout_abort(nrf_802154_term_t term_lvl, req_originator_t req_orig)
 {
-    (void)term_lvl;
+    bool result;
 
-    if (req_orig != REQ_ORIG_ACK_TIMEOUT)
+    if (!m_procedure_is_active || req_orig == REQ_ORIG_ACK_TIMEOUT)
     {
+        // Ignore if procedure is not running or self-request.
+        result = true;
+    }
+    else if (term_lvl >= NRF_802154_TERM_802154)
+    {
+        // Stop procedure only if termination level is high enough.
         timeout_timer_stop();
+
+        result = true;
+    }
+    else
+    {
+        result = false;
     }
 
-    return true;
+    return result;
 }
 
 void nrf_802154_ack_timeout_transmitted_hook(const uint8_t * p_frame)

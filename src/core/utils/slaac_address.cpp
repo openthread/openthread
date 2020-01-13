@@ -35,199 +35,304 @@
 
 #include "utils/wrap_string.h"
 
-#include <openthread/openthread.h>
-
 #include "common/code_utils.hpp"
-#include "common/debug.hpp"
+#include "common/instance.hpp"
+#include "common/locator-getters.hpp"
+#include "common/logging.hpp"
 #include "common/random.hpp"
+#include "common/settings.hpp"
 #include "crypto/sha256.hpp"
-#include "mac/mac.hpp"
 #include "net/ip6_address.hpp"
+
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
 namespace ot {
 namespace Utils {
 
-void Slaac::UpdateAddresses(otInstance *    aInstance,
-                            otNetifAddress *aAddresses,
-                            uint32_t        aNumAddresses,
-                            IidCreator      aIidCreator,
-                            void *          aContext)
+Slaac::Slaac(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mEnabled(true)
+    , mFilter(NULL)
+    , mNotifierCallback(aInstance, &Slaac::HandleStateChanged, this)
 {
-    otNetworkDataIterator iterator;
-    otBorderRouterConfig  config;
-
-    // remove addresses
-    for (size_t i = 0; i < aNumAddresses; i++)
-    {
-        otNetifAddress *address = &aAddresses[i];
-        bool            found   = false;
-
-        if (!address->mValid)
-        {
-            continue;
-        }
-
-        iterator = OT_NETWORK_DATA_ITERATOR_INIT;
-
-        while (otNetDataGetNextOnMeshPrefix(aInstance, &iterator, &config) == OT_ERROR_NONE)
-        {
-            if (config.mSlaac == false)
-            {
-                continue;
-            }
-
-            if (otIp6PrefixMatch(&config.mPrefix.mPrefix, &address->mAddress) >= config.mPrefix.mLength &&
-                config.mPrefix.mLength == address->mPrefixLength)
-            {
-                found = true;
-                break;
-            }
-        }
-
-        if (!found)
-        {
-            otIp6RemoveUnicastAddress(aInstance, &address->mAddress);
-            address->mValid = false;
-        }
-    }
-
-    // add addresses
-    iterator = OT_NETWORK_DATA_ITERATOR_INIT;
-
-    while (otNetDataGetNextOnMeshPrefix(aInstance, &iterator, &config) == OT_ERROR_NONE)
-    {
-        bool found = false;
-
-        if (config.mSlaac == false)
-        {
-            continue;
-        }
-
-        for (size_t i = 0; i < aNumAddresses; i++)
-        {
-            otNetifAddress *address = &aAddresses[i];
-
-            if (!address->mValid)
-            {
-                continue;
-            }
-
-            if (otIp6PrefixMatch(&config.mPrefix.mPrefix, &address->mAddress) >= config.mPrefix.mLength &&
-                config.mPrefix.mLength == address->mPrefixLength)
-            {
-                found = true;
-                break;
-            }
-        }
-
-        if (!found)
-        {
-            for (size_t i = 0; i < aNumAddresses; i++)
-            {
-                otNetifAddress *address = &aAddresses[i];
-
-                if (address->mValid)
-                {
-                    continue;
-                }
-
-                memset(address, 0, sizeof(*address));
-                memcpy(&address->mAddress, &config.mPrefix.mPrefix, 8);
-
-                address->mPrefixLength = config.mPrefix.mLength;
-                address->mPreferred    = config.mPreferred;
-                address->mValid        = true;
-
-                if (aIidCreator(aInstance, address, aContext) != OT_ERROR_NONE)
-                {
-                    CreateRandomIid(aInstance, address, aContext);
-                }
-
-                otIp6AddUnicastAddress(aInstance, address);
-                break;
-            }
-        }
-    }
+    memset(mAddresses, 0, sizeof(mAddresses));
 }
 
-otError Slaac::CreateRandomIid(otInstance *, otNetifAddress *aAddress, void *)
+void Slaac::Enable(void)
 {
-    Random::FillBuffer(aAddress->mAddress.mFields.m8 + OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE, OT_IP6_IID_SIZE);
-    return OT_ERROR_NONE;
+    VerifyOrExit(!mEnabled);
+
+    otLogInfoUtil("SLAAC:: Enabling");
+    mEnabled = true;
+    Update(kModeAdd);
+
+exit:
+    return;
 }
 
-otError SemanticallyOpaqueIidGenerator::CreateIid(otInstance *aInstance, otNetifAddress *aAddress)
+void Slaac::Disable(void)
 {
-    otError error = OT_ERROR_NONE;
+    VerifyOrExit(mEnabled);
 
-    for (uint32_t i = 0; i <= kMaxRetries; i++)
+    otLogInfoUtil("SLAAC:: Disabling");
+    mEnabled = false;
+    Update(kModeRemove);
+
+exit:
+    return;
+}
+
+void Slaac::SetFilter(otIp6SlaacPrefixFilter aFilter)
+{
+    VerifyOrExit(aFilter != mFilter);
+
+    mFilter = aFilter;
+    otLogInfoUtil("SLAAC: Filter %s", (mFilter != NULL) ? "updated" : "disabled");
+
+    VerifyOrExit(mEnabled);
+    Update(kModeAdd | kModeRemove);
+
+exit:
+    return;
+}
+
+bool Slaac::ShouldFilter(const otIp6Prefix &aPrefix) const
+{
+    return (mFilter != NULL) && mFilter(&GetInstance(), &aPrefix);
+}
+
+void Slaac::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
+{
+    aCallback.GetOwner<Slaac>().HandleStateChanged(aFlags);
+}
+
+void Slaac::HandleStateChanged(otChangedFlags aFlags)
+{
+    UpdateMode mode = kModeNone;
+
+    VerifyOrExit(mEnabled);
+
+    if (aFlags & OT_CHANGED_THREAD_NETDATA)
     {
-        error = CreateIidOnce(aInstance, aAddress);
-        VerifyOrExit(error == OT_ERROR_IP6_ADDRESS_CREATION_FAILURE);
+        mode |= kModeAdd | kModeRemove;
+    }
 
-        mDadCounter++;
+    if (aFlags & OT_CHANGED_IP6_ADDRESS_REMOVED)
+    {
+        // When an IPv6 address is removed, we ensure to check if a SLAAC address
+        // needs to be added (replacing the removed address).
+        //
+        // Note that if an address matching a newly added on-mesh prefix (with
+        // SLAAC flag) is already present (e.g., user previously added an address
+        // with same prefix), the SLAAC module will not add a SLAAC address with same
+        // prefix. So on IPv6 address removal event, we check if SLAAC module need
+        // to add any addresses.
+
+        mode |= kModeAdd;
+    }
+
+    if (mode != kModeNone)
+    {
+        Update(mode);
     }
 
 exit:
-    return error;
+    return;
 }
 
-otError SemanticallyOpaqueIidGenerator::CreateIidOnce(otInstance *aInstance, otNetifAddress *aAddress)
+void Slaac::Update(UpdateMode aMode)
 {
-    otError        error = OT_ERROR_NONE;
+    NetworkData::Iterator           iterator;
+    NetworkData::OnMeshPrefixConfig config;
+    Ip6::NetifUnicastAddress *      slaacAddr;
+    bool                            found;
+
+    if (aMode & kModeRemove)
+    {
+        // If enabled, remove any SLAAC addresses with no matching on-mesh prefix,
+        // otherwise (when disabled) remove all previously added SLAAC addresses.
+
+        for (slaacAddr = &mAddresses[0]; slaacAddr < OT_ARRAY_END(mAddresses); slaacAddr++)
+        {
+            if (!slaacAddr->mValid)
+            {
+                continue;
+            }
+
+            found = false;
+
+            if (mEnabled)
+            {
+                iterator = NetworkData::kIteratorInit;
+
+                while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == OT_ERROR_NONE)
+                {
+                    otIp6Prefix &prefix = config.mPrefix;
+
+                    if (config.mSlaac && !ShouldFilter(prefix) && (prefix.mLength == slaacAddr->mPrefixLength) &&
+                        (slaacAddr->GetAddress().PrefixMatch(prefix.mPrefix) >= prefix.mLength))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!found)
+            {
+                otLogInfoUtil("SLAAC: Removing address %s", slaacAddr->GetAddress().ToString().AsCString());
+
+                Get<ThreadNetif>().RemoveUnicastAddress(*slaacAddr);
+                slaacAddr->mValid = false;
+            }
+        }
+    }
+
+    if ((aMode & kModeAdd) && mEnabled)
+    {
+        // Generate and add SLAAC addresses for any newly added on-mesh prefixes.
+
+        iterator = NetworkData::kIteratorInit;
+
+        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == OT_ERROR_NONE)
+        {
+            otIp6Prefix &prefix = config.mPrefix;
+
+            if (!config.mSlaac || ShouldFilter(prefix))
+            {
+                continue;
+            }
+
+            found = false;
+
+            for (const Ip6::NetifUnicastAddress *netifAddr = Get<ThreadNetif>().GetUnicastAddresses();
+                 netifAddr != NULL; netifAddr              = netifAddr->GetNext())
+            {
+                if ((netifAddr->mPrefixLength == prefix.mLength) &&
+                    (netifAddr->GetAddress().PrefixMatch(prefix.mPrefix) >= prefix.mLength))
+                {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                bool added = false;
+
+                for (slaacAddr = &mAddresses[0]; slaacAddr < OT_ARRAY_END(mAddresses); slaacAddr++)
+                {
+                    if (slaacAddr->mValid)
+                    {
+                        continue;
+                    }
+
+                    slaacAddr->Clear();
+                    memcpy(&slaacAddr->mAddress, &prefix.mPrefix, BitVectorBytes(prefix.mLength));
+
+                    slaacAddr->mPrefixLength = prefix.mLength;
+                    slaacAddr->mPreferred    = config.mPreferred;
+                    slaacAddr->mValid        = true;
+
+                    GenerateIid(*slaacAddr);
+
+                    otLogInfoUtil("SLAAC: Adding address %s", slaacAddr->GetAddress().ToString().AsCString());
+
+                    Get<ThreadNetif>().AddUnicastAddress(*slaacAddr);
+
+                    added = true;
+                    break;
+                }
+
+                if (!added)
+                {
+                    otLogWarnUtil("SLAAC: Failed to add - max %d addresses supported and already in use",
+                                  OT_ARRAY_LENGTH(mAddresses));
+                }
+            }
+        }
+    }
+}
+
+void Slaac::GenerateIid(Ip6::NetifUnicastAddress &aAddress) const
+{
+    /*
+     *  This method generates a semantically opaque IID per RFC 7217.
+     *
+     * RID = F(Prefix, Net_Iface, Network_ID, DAD_Counter, secret_key)
+     *
+     *  - RID is random (but stable) Identifier.
+     *  - For pseudo-random function `F()` SHA-256 is used in this method.
+     *  - `Net_Iface` is set to constant string "wpan".
+     *  - `Network_ID` is not used (optional per RF-7217).
+     *  - The `secret_key` is randomly generated on first use (using true
+     *    random number generator) and saved in non-volatile settings for
+     *    future use.
+     *
+     */
+
+    const uint8_t  netIface[] = {'w', 'p', 'a', 'n'};
+    uint16_t       dadCounter;
+    IidSecretKey   secretKey;
     Crypto::Sha256 sha256;
     uint8_t        hash[Crypto::Sha256::kHashSize];
-    Ip6::Address * address = static_cast<Ip6::Address *>(&aAddress->mAddress);
 
-    sha256.Start();
+    OT_STATIC_ASSERT(sizeof(hash) >= Ip6::Address::kInterfaceIdentifierSize,
+                     "SHA-256 hash size is too small to use as IPv6 address IID");
 
-    sha256.Update(aAddress->mAddress.mFields.m8, aAddress->mPrefixLength / 8);
+    GetIidSecretKey(secretKey);
 
-    VerifyOrExit(mInterfaceId != NULL, error = OT_ERROR_INVALID_ARGS);
-    sha256.Update(mInterfaceId, mInterfaceIdLength);
-
-    if (mNetworkIdLength)
+    for (dadCounter = 0; dadCounter < kMaxIidCreationAttempts; dadCounter++)
     {
-        VerifyOrExit(mNetworkId != NULL, error = OT_ERROR_INVALID_ARGS);
-        sha256.Update(mNetworkId, mNetworkIdLength);
+        sha256.Start();
+        sha256.Update(aAddress.mAddress.mFields.m8, BitVectorBytes(aAddress.mPrefixLength));
+        sha256.Update(netIface, sizeof(netIface));
+        sha256.Update(reinterpret_cast<uint8_t *>(&dadCounter), sizeof(dadCounter));
+        sha256.Update(secretKey.m8, sizeof(IidSecretKey));
+        sha256.Finish(hash);
+
+        aAddress.GetAddress().SetIid(&hash[0]);
+
+        // Exit and return the address if the IID is not reserved,
+        // otherwise, try again with a new dadCounter
+
+        VerifyOrExit(aAddress.GetAddress().IsIidReserved());
     }
 
-    sha256.Update(static_cast<uint8_t *>(&mDadCounter), sizeof(mDadCounter));
-
-    VerifyOrExit(mSecretKey != NULL, error = OT_ERROR_INVALID_ARGS);
-    sha256.Update(mSecretKey, mSecretKeyLength);
-
-    sha256.Finish(hash);
-
-    memcpy(&aAddress->mAddress.mFields.m8[OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE], &hash[sizeof(hash) - OT_IP6_IID_SIZE],
-           OT_IP6_IID_SIZE);
-
-    VerifyOrExit(!IsAddressRegistered(aInstance, aAddress), error = OT_ERROR_IP6_ADDRESS_CREATION_FAILURE);
-    VerifyOrExit(!address->IsIidReserved(), error = OT_ERROR_IP6_ADDRESS_CREATION_FAILURE);
+    otLogWarnUtil("SLAAC: Failed to generate a non-reserved IID after %d attempts", dadCounter);
+    Random::NonCrypto::FillBuffer(hash, Ip6::Address::kInterfaceIdentifierSize);
+    aAddress.GetAddress().SetIid(&hash[0]);
 
 exit:
-    return error;
+    return;
 }
 
-bool SemanticallyOpaqueIidGenerator::IsAddressRegistered(otInstance *aInstance, otNetifAddress *aCreatedAddress)
+void Slaac::GetIidSecretKey(IidSecretKey &aKey) const
 {
-    bool                  result  = false;
-    const otNetifAddress *address = otIp6GetUnicastAddresses(aInstance);
+    otError error;
 
-    while (address != NULL)
+    error = Get<Settings>().ReadSlaacIidSecretKey(aKey);
+    VerifyOrExit(error != OT_ERROR_NONE);
+
+    // If there is no previously saved secret key, generate
+    // a random one and save it.
+
+    error = Random::Crypto::FillBuffer(aKey.m8, sizeof(IidSecretKey));
+
+    if (error != OT_ERROR_NONE)
     {
-        if (0 == memcmp(aCreatedAddress->mAddress.mFields.m8, address->mAddress.mFields.m8,
-                        sizeof(address->mAddress.mFields)))
-        {
-            ExitNow(result = true);
-        }
-
-        address = address->mNext;
+        Random::NonCrypto::FillBuffer(aKey.m8, sizeof(IidSecretKey));
     }
 
+    Get<Settings>().SaveSlaacIidSecretKey(aKey);
+
+    otLogInfoUtil("SLAAC: Generated and saved secret key");
+
 exit:
-    return result;
+    return;
 }
 
 } // namespace Utils
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE

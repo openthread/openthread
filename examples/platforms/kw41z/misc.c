@@ -29,11 +29,11 @@
 #include "openthread/platform/misc.h"
 #include "fsl_device_registers.h"
 #include <stdint.h>
-#include "openthread/types.h"
 
 void otPlatReset(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     NVIC_SystemReset();
 
     while (1)
@@ -43,7 +43,8 @@ void otPlatReset(otInstance *aInstance)
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
     otPlatResetReason reason;
 
     if (RCM->SRS0 & RCM_SRS0_POR_MASK)
@@ -82,8 +83,8 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 
 void otPlatAssertFail(const char *aFilename, int aLineNumber)
 {
-    (void)aFilename;
-    (void)aLineNumber;
+    OT_UNUSED_VARIABLE(aFilename);
+    OT_UNUSED_VARIABLE(aLineNumber);
 }
 
 void otPlatWakeHost(void)

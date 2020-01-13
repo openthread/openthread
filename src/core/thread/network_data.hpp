@@ -36,10 +36,12 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
+#include <openthread/border_router.h>
+#include <openthread/server.h>
 
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
+#include "common/timer.hpp"
 #include "net/udp6.hpp"
 #include "thread/lowpan.hpp"
 #include "thread/mle_router.hpp"
@@ -82,6 +84,35 @@ namespace NetworkData {
  *
  */
 
+enum
+{
+    kIteratorInit = OT_NETWORK_DATA_ITERATOR_INIT, ///< Initializer for `Iterator` type.
+};
+
+/**
+ * This type represents a Iterator used to iterate through Network Data info (e.g., see `GetNextOnMeshPrefix()`)
+ *
+ */
+typedef otNetworkDataIterator Iterator;
+
+/**
+ * This type represents an On Mesh Prefix (Border Router) configuration.
+ *
+ */
+typedef otBorderRouterConfig OnMeshPrefixConfig;
+
+/**
+ * This type represents an External Route configuration.
+ *
+ */
+typedef otExternalRouteConfig ExternalRouteConfig;
+
+/**
+ * This type represents a Service configuration.
+ *
+ */
+typedef otServiceConfig ServiceConfig;
+
 /**
  * This class implements Network Data processing.
  *
@@ -91,17 +122,27 @@ class NetworkData : public InstanceLocator
 public:
     enum
     {
-        kMaxSize = 255, ///< Maximum size of Thread Network Data in bytes.
+        kMaxSize = 254, ///< Maximum size of Thread Network Data in bytes.
+    };
+
+    /**
+     * This enumeration specifies the type of Network Data (local or leader).
+     *
+     */
+    enum Type
+    {
+        kTypeLocal,  ///< Local Network Data.
+        kTypeLeader, ///< Leader Network Data.
     };
 
     /**
      * This constructor initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     * @param[in]  aLocal        TRUE if this represents local network data, FALSE otherwise.
+     * @param[in]  aType         Network data type
      *
      */
-    NetworkData(Instance &aInstance, bool aLocal);
+    NetworkData(Instance &aInstance, Type aType);
 
     /**
      * This method clears the network data.
@@ -126,92 +167,90 @@ public:
     /**
      * This method provides the next On Mesh prefix in the Thread Network Data.
      *
-     * @param[inout]  aIterator  A pointer to the Network Data iterator context.
-     * @param[out]    aConfig    A pointer to where the On Mesh Prefix information will be placed.
+     * @param[inout]  aIterator  A reference to the Network Data iterator.
+     * @param[out]    aConfig    A reference to a config variable where the On Mesh Prefix information will be placed.
      *
      * @retval OT_ERROR_NONE       Successfully found the next On Mesh prefix.
      * @retval OT_ERROR_NOT_FOUND  No subsequent On Mesh prefix exists in the Thread Network Data.
      *
      */
-    otError GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig);
+    otError GetNextOnMeshPrefix(Iterator &aIterator, OnMeshPrefixConfig &aConfig);
 
     /**
      * This method provides the next On Mesh prefix in the Thread Network Data for a given RLOC16.
      *
-     * @param[inout]  aIterator  A pointer to the Network Data iterator context.
+     * @param[inout]  aIterator  A reference to the Network Data iterator.
      * @param[in]     aRloc16    The RLOC16 value.
-     * @param[out]    aConfig    A pointer to where the On Mesh Prefix information will be placed.
+     * @param[out]    aConfig    A reference to a config variable where the On Mesh Prefix information will be placed.
      *
      * @retval OT_ERROR_NONE       Successfully found the next On Mesh prefix.
      * @retval OT_ERROR_NOT_FOUND  No subsequent On Mesh prefix exists in the Thread Network Data.
      *
      */
-    otError GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, uint16_t aRloc16, otBorderRouterConfig *aConfig);
+    otError GetNextOnMeshPrefix(Iterator &aIterator, uint16_t aRloc16, OnMeshPrefixConfig &aConfig);
 
     /**
      * This method provides the next external route in the Thread Network Data.
      *
-     * @param[inout]  aIterator  A pointer to the Network Data iterator context.
-     * @param[out]    aConfig    A pointer to where the external route information will be placed.
+     * @param[inout]  aIterator  A reference to the Network Data iterator.
+     * @param[out]    aConfig    A reference to a config variable where the external route information will be placed.
      *
      * @retval OT_ERROR_NONE       Successfully found the next external route.
      * @retval OT_ERROR_NOT_FOUND  No subsequent external route exists in the Thread Network Data.
      *
      */
-    otError GetNextExternalRoute(otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig);
+    otError GetNextExternalRoute(Iterator &aIterator, ExternalRouteConfig &aConfig);
 
     /**
      * This method provides the next external route in the Thread Network Data for a given RLOC16.
      *
-     * @param[inout]  aIterator  A pointer to the Network Data iterator context.
+     * @param[inout]  aIterator  A reference to the Network Data iterator.
      * @param[in]     aRloc16    The RLOC16 value.
-     * @param[out]    aConfig    A pointer to where the external route information will be placed.
+     * @param[out]    aConfig    A reference to a config variable where the external route information will be placed.
      *
      * @retval OT_ERROR_NONE       Successfully found the next external route.
      * @retval OT_ERROR_NOT_FOUND  No subsequent external route exists in the Thread Network Data.
      *
      */
-    otError GetNextExternalRoute(otNetworkDataIterator *aIterator, uint16_t aRloc16, otExternalRouteConfig *aConfig);
+    otError GetNextExternalRoute(Iterator &aIterator, uint16_t aRloc16, ExternalRouteConfig &aConfig);
 
-#if OPENTHREAD_ENABLE_SERVICE
     /**
      * This method provides the next service in the Thread Network Data.
      *
-     * @param[inout]  aIterator  A pointer to the Network Data iterator context.
-     * @param[out]    aConfig    A pointer to where the service information will be placed.
+     * @param[inout]  aIterator  A reference to the Network Data iterator.
+     * @param[out]    aConfig    A reference to a config variable where the service information will be placed.
      *
      * @retval OT_ERROR_NONE       Successfully found the next service.
      * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the Thread Network Data.
      *
      */
-    otError GetNextService(otNetworkDataIterator *aIterator, otServiceConfig *aConfig);
+    otError GetNextService(Iterator &aIterator, ServiceConfig &aConfig);
 
     /**
      * This method provides the next service in the Thread Network Data for a given RLOC16.
      *
-     * @param[inout]  aIterator  A pointer to the Network Data iterator context.
+     * @param[inout]  aIterator  A reference to the Network Data iterator.
      * @param[in]     aRloc16    The RLOC16 value.
-     * @param[out]    aConfig    A pointer to where the service information will be placed.
+     * @param[out]    aConfig    A reference to a config variable where the service information will be placed.
      *
      * @retval OT_ERROR_NONE       Successfully found the next service.
      * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the Thread Network Data.
      *
      */
-    otError GetNextService(otNetworkDataIterator *aIterator, uint16_t aRloc16, otServiceConfig *aConfig);
+    otError GetNextService(Iterator &aIterator, uint16_t aRloc16, ServiceConfig &aConfig);
 
     /**
      * This method provides the next service ID in the Thread Network Data for a given RLOC16.
      *
-     * @param[inout]  aIterator  A pointer to the Network Data iterator context.
+     * @param[inout]  aIterator  A reference to the Network Data iterator.
      * @param[in]     aRloc16    The RLOC16 value.
-     * @param[out]    aServiceID A pointer to where the service ID will be placed.
+     * @param[out]    aServiceID A reference to variable where the service ID will be placed.
      *
      * @retval OT_ERROR_NONE       Successfully found the next service.
      * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the Thread Network Data.
      *
      */
-    otError GetNextServiceId(otNetworkDataIterator *aIterator, uint16_t aRloc16, uint8_t *aServiceId);
-#endif
+    otError GetNextServiceId(Iterator &aIterator, uint16_t aRloc16, uint8_t &aServiceId);
 
     /**
      * This method indicates whether or not the Thread Network Data contains all of the on mesh prefix information
@@ -239,7 +278,6 @@ public:
      */
     bool ContainsExternalRoutes(NetworkData &aCompare, uint16_t aRloc16);
 
-#if OPENTHREAD_ENABLE_SERVICE
     /**
      * This method indicates whether or not the Thread Network Data contains all of the service information
      * in @p aCompare associated with @p aRloc16.
@@ -265,7 +303,6 @@ public:
      *
      */
     bool ContainsService(uint8_t aServiceId, uint16_t aRloc16);
-#endif
 
     /**
      * This method cancels the data resubmit delay timer.
@@ -350,7 +387,6 @@ protected:
      */
     PrefixTlv *FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, uint8_t *aTlvs, uint8_t aTlvsLength);
 
-#if OPENTHREAD_ENABLE_SERVICE
     /**
      * This method returns a pointer to a matching Service TLV.
      *
@@ -380,7 +416,6 @@ protected:
                             uint8_t        aServiceDataLength,
                             uint8_t *      aTlvs,
                             uint8_t        aTlvsLength);
-#endif
 
     /**
      * This method inserts bytes into the Network Data.
@@ -388,11 +423,8 @@ protected:
      * @param[in]  aStart   A pointer to the beginning of the insertion.
      * @param[in]  aLength  The number of bytes to insert.
      *
-     * @retval OT_ERROR_NONE          Successfully inserted bytes.
-     * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to insert bytes.
-     *
      */
-    otError Insert(uint8_t *aStart, uint8_t aLength);
+    void Insert(uint8_t *aStart, uint8_t aLength);
 
     /**
      * This method removes bytes from the Network Data.
@@ -400,10 +432,8 @@ protected:
      * @param[in]  aStart   A pointer to the beginning of the removal.
      * @param[in]  aLength  The number of bytes to remove.
      *
-     * @retval OT_ERROR_NONE    Successfully removed bytes.
-     *
      */
-    otError Remove(uint8_t *aStart, uint8_t aLength);
+    void Remove(uint8_t *aStart, uint8_t aLength);
 
     /**
      * This method strips non-stable data from the Thread Network Data.
@@ -426,7 +456,6 @@ protected:
      */
     void RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, PrefixTlv &aPrefix);
 
-#if OPENTHREAD_ENABLE_SERVICE
     /**
      * This method strips non-stable Sub-TLVs from a Service TLV.
      *
@@ -437,7 +466,6 @@ protected:
      *
      */
     void RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, ServiceTlv &aService);
-#endif
 
     /**
      * This method computes the number of IPv6 Prefix bits that match.
@@ -473,17 +501,9 @@ private:
 
     class NetworkDataIterator
     {
-    private:
-        enum
-        {
-            kTlvPosition    = 0,
-            kSubTlvPosition = 1,
-            kEntryPosition  = 2,
-        };
-
     public:
-        NetworkDataIterator(otNetworkDataIterator *aIterator)
-            : mIteratorBuffer(reinterpret_cast<uint8_t *>(aIterator))
+        explicit NetworkDataIterator(Iterator &aIterator)
+            : mIteratorBuffer(reinterpret_cast<uint8_t *>(&aIterator))
         {
         }
 
@@ -506,12 +526,19 @@ private:
         }
 
     private:
+        enum
+        {
+            kTlvPosition    = 0,
+            kSubTlvPosition = 1,
+            kEntryPosition  = 2,
+        };
+
         uint8_t *mIteratorBuffer;
     };
 
-    const bool mLocal;
+    const Type mType;
     bool       mLastAttemptWait;
-    uint32_t   mLastAttempt;
+    TimeMilli  mLastAttempt;
 };
 
 } // namespace NetworkData

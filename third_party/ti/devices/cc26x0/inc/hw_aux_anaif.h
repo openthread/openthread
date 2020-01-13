@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_aux_anaif_h
-*  Revised:        2017-01-31 09:37:48 +0100 (Tue, 31 Jan 2017)
-*  Revision:       48345
+*  Revised:        2017-05-30 11:42:02 +0200 (Tue, 30 May 2017)
+*  Revision:       49074
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.
@@ -65,10 +65,10 @@
 //*****************************************************************************
 // Field:    [13] START_POL
 //
-// Selected active edge for start event / Selected polarity for start event
+// Select active polarity for START_SRC event.
 // ENUMs:
-// FALL                     Start on falling edge of event
-// RISE                     Start on rising edge of event
+// FALL                     Set ADC trigger on falling edge of event source.
+// RISE                     Set ADC trigger on rising edge of event source.
 #define AUX_ANAIF_ADCCTL_START_POL                                  0x00002000
 #define AUX_ANAIF_ADCCTL_START_POL_BITN                                     13
 #define AUX_ANAIF_ADCCTL_START_POL_M                                0x00002000
@@ -78,43 +78,43 @@
 
 // Field:  [12:8] START_SRC
 //
-// Selected source for ADC conversion start event. The start source selected by
-// this field is OR'ed with any trigger coming from writes to ADCTRIG.START. If
-// it is desired to only trigger ADC conversions by writes to ADCTRIG.START one
-// should select NO_EVENT<n> here
+// Select ADC trigger event source from the asynchronous AUX event bus.
+//
+// Set START_SRC to NO_EVENT<n> if you want to trigger the ADC manually through
+// ADCTRIG.START.
 // ENUMs:
-// ADC_IRQ                  Selects ADC_IRQ as start signal
-// MCU_EV                   Selects MCU_EV as start signal
-// ACLK_REF                 Selects ACLK_REF as start signal
-// AUXIO15                  Selects AUXIO15 as start signal
-// AUXIO14                  Selects AUXIO14 as start signal
-// AUXIO13                  Selects AUXIO13 as start signal
-// AUXIO12                  Selects AUXIO12 as start signal
-// AUXIO11                  Selects AUXIO11 as start signal
-// AUXIO10                  Selects AUXIO10 as start signal
-// AUXIO9                   Selects AUXIO9 as start signal
-// AUXIO8                   Selects AUXIO8 as start signal
-// AUXIO7                   Selects AUXIO7 as start signal
-// AUXIO6                   Selects AUXIO6 as start signal
-// AUXIO5                   Selects AUXIO5 as start signal
-// AUXIO4                   Selects AUXIO4 as start signal
-// AUXIO3                   Selects AUXIO3 as start signal
-// AUXIO2                   Selects AUXIO2 as start signal
-// AUXIO1                   Selects AUXIO1 as start signal
-// AUXIO0                   Selects AUXIO0 as start signal
-// AON_PROG_WU              Selects AON_PROG_WU as start signal
-// AON_SW                   Selects AON_SW as start signal
-// NO_EVENT1                No event selected
-// NO_EVENT0                No event selected
-// RESERVED1                Reserved do not use
-// RESERVED0                Reserved do not use
-// SMPH_AUTOTAKE_DONE       Selects SMPH_AUTOTAKE_DONE as start signal
-// TIMER1_EV                Selects TIMER1_EV as start signal
-// TIMER0_EV                Selects TIMER0_EV as start signal
-// TDC_DONE                 Selects TDC_DONE as start signal
-// AUX_COMPB                Selects AUX_COMPB as start signal
-// AUX_COMPA                Selects AUX_COMPA as start signal
-// RTC_CH2_EV               Selects RTC_CH2_EV as start signal
+// ADC_IRQ                  AUX_EVCTL:EVSTAT1.ADC_IRQ
+// MCU_EV                   AUX_EVCTL:EVSTAT1.MCU_EV
+// ACLK_REF                 AUX_EVCTL:EVSTAT1.ACLK_REF
+// AUXIO15                  AUX_EVCTL:EVSTAT1.AUXIO15
+// AUXIO14                  AUX_EVCTL:EVSTAT1.AUXIO14
+// AUXIO13                  AUX_EVCTL:EVSTAT1.AUXIO13
+// AUXIO12                  AUX_EVCTL:EVSTAT1.AUXIO12
+// AUXIO11                  AUX_EVCTL:EVSTAT1.AUXIO11
+// AUXIO10                  AUX_EVCTL:EVSTAT1.AUXIO10
+// AUXIO9                   AUX_EVCTL:EVSTAT1.AUXIO9
+// AUXIO8                   AUX_EVCTL:EVSTAT1.AUXIO8
+// AUXIO7                   AUX_EVCTL:EVSTAT1.AUXIO7
+// AUXIO6                   AUX_EVCTL:EVSTAT1.AUXIO6
+// AUXIO5                   AUX_EVCTL:EVSTAT1.AUXIO5
+// AUXIO4                   AUX_EVCTL:EVSTAT1.AUXIO4
+// AUXIO3                   AUX_EVCTL:EVSTAT1.AUXIO3
+// AUXIO2                   AUX_EVCTL:EVSTAT0.AUXIO2
+// AUXIO1                   AUX_EVCTL:EVSTAT0.AUXIO1
+// AUXIO0                   AUX_EVCTL:EVSTAT0.AUXIO0
+// AON_PROG_WU              AUX_EVCTL:EVSTAT0.AON_PROG_WU
+// AON_SW                   AUX_EVCTL:EVSTAT0.AON_SW
+// NO_EVENT1                No event.
+// NO_EVENT0                No event.
+// RESERVED1                Reserved - Do not use.
+// RESERVED0                Reserved - Do not use.
+// SMPH_AUTOTAKE_DONE       AUX_EVCTL:EVSTAT0.SMPH_AUTOTAKE_DONE
+// TIMER1_EV                AUX_EVCTL:EVSTAT0.TIMER1_EV
+// TIMER0_EV                AUX_EVCTL:EVSTAT0.TIMER0_EV
+// TDC_DONE                 AUX_EVCTL:EVSTAT0.TDC_DONE
+// AUX_COMPB                AUX_EVCTL:EVSTAT0.AUX_COMPB
+// AUX_COMPA                AUX_EVCTL:EVSTAT0.AUX_COMPA
+// RTC_CH2_EV               AUX_EVCTL:EVSTAT0.AON_RTC_CH2
 #define AUX_ANAIF_ADCCTL_START_SRC_W                                         5
 #define AUX_ANAIF_ADCCTL_START_SRC_M                                0x00001F00
 #define AUX_ANAIF_ADCCTL_START_SRC_S                                         8
@@ -153,14 +153,20 @@
 
 // Field:   [1:0] CMD
 //
-// ADC interface control command
+// ADC interface command.
+//
+// Non-enumerated values are not supported. The written value is returned when
+// read.
 // ENUMs:
-// FLUSH                    ADC FIFO flush. Note that CMD needs to be set to
-//                          'EN' again for FIFO to be functional after a
-//                          flush. A flush takes two clock periods on the
-//                          AUX clock to finish.
-// EN                       ADC interface enabled
-// DIS                      ADC interface disabled
+// FLUSH                    Flush ADC FIFO.
+//
+//                          You must set CMD to EN or
+//                          DIS after flush.
+//
+//                          System CPU must wait two
+//                          clock cycles before it sets CMD to EN or DIS.
+// EN                       Enable ADC interface.
+// DIS                      Disable ADC interface.
 #define AUX_ANAIF_ADCCTL_CMD_W                                               2
 #define AUX_ANAIF_ADCCTL_CMD_M                                      0x00000003
 #define AUX_ANAIF_ADCCTL_CMD_S                                               0
@@ -178,7 +184,10 @@
 // FIFO overflow flag.
 //
 // 0: FIFO has not overflowed.
-// 1: FIFO has overflowed, this flag is sticky until FIFO is flushed.
+// 1: FIFO has overflowed, this flag is sticky until you flush the FIFO.
+//
+// When the flag is set, the ADC FIFO write pointer is static. It is not
+// possible to add more samples to the ADC FIFO. Flush FIFO to clear the flag.
 #define AUX_ANAIF_ADCFIFOSTAT_OVERFLOW                              0x00000010
 #define AUX_ANAIF_ADCFIFOSTAT_OVERFLOW_BITN                                  4
 #define AUX_ANAIF_ADCFIFOSTAT_OVERFLOW_M                            0x00000010
@@ -188,8 +197,11 @@
 //
 // FIFO underflow flag.
 //
-// 0: FIFO has not underflowed
-// 1: FIFO has underflowed, this flag is sticky until the FIFO is flushed
+// 0: FIFO has not underflowed.
+// 1: FIFO has underflowed, this flag is sticky until you flush the FIFO.
+//
+// When the flag is set, the ADC FIFO read pointer is static. Read returns the
+// previous sample that was read. Flush FIFO to clear the flag.
 #define AUX_ANAIF_ADCFIFOSTAT_UNDERFLOW                             0x00000008
 #define AUX_ANAIF_ADCFIFOSTAT_UNDERFLOW_BITN                                 3
 #define AUX_ANAIF_ADCFIFOSTAT_UNDERFLOW_M                           0x00000008
@@ -199,8 +211,11 @@
 //
 // FIFO full flag.
 //
-// 0: FIFO is not full, i.e. there is less than 4 samples in the FIFO.
-// 1: FIFO is full, i.e. there are 4 samples in the FIFO
+// 0: FIFO is not full, there is less than 4 samples in the FIFO.
+// 1: FIFO is full, there are 4 samples in the FIFO.
+//
+// When the flag is set, it is not possible to add more samples to the ADC
+// FIFO. An attempt to add samples sets the OVERFLOW flag.
 #define AUX_ANAIF_ADCFIFOSTAT_FULL                                  0x00000004
 #define AUX_ANAIF_ADCFIFOSTAT_FULL_BITN                                      2
 #define AUX_ANAIF_ADCFIFOSTAT_FULL_M                                0x00000004
@@ -210,9 +225,9 @@
 //
 // FIFO almost full flag.
 //
-// 0: There is less than 3 samples in the FIFO, or the FIFO is full in which
-// case the FULL flag is asserted
-// 1: There are 3 samples in the FIFO, i.e. there is room for one more sample
+// 0: There are less than 3 samples in the FIFO, or the FIFO is full. The FULL
+// flag is also asserted in the latter case.
+// 1: There are 3 samples in the FIFO, there is room for one more sample.
 #define AUX_ANAIF_ADCFIFOSTAT_ALMOST_FULL                           0x00000002
 #define AUX_ANAIF_ADCFIFOSTAT_ALMOST_FULL_BITN                               1
 #define AUX_ANAIF_ADCFIFOSTAT_ALMOST_FULL_M                         0x00000002
@@ -222,8 +237,11 @@
 //
 // FIFO empty flag.
 //
-// 0: FIFO contains one or more samples
-// 1: FIFO is empty
+// 0: FIFO contains one or more samples.
+// 1: FIFO is empty.
+//
+// When the flag is set, read returns the previous sample that was read and
+// sets the UNDERFLOW flag.
 #define AUX_ANAIF_ADCFIFOSTAT_EMPTY                                 0x00000001
 #define AUX_ANAIF_ADCFIFOSTAT_EMPTY_BITN                                     0
 #define AUX_ANAIF_ADCFIFOSTAT_EMPTY_M                               0x00000001
@@ -236,8 +254,14 @@
 //*****************************************************************************
 // Field:  [11:0] DATA
 //
-// FIFO is popped when read. Data is pushed into FIFO when written. Writing is
-// intended for debugging/code development purposes
+// FIFO data.
+//
+// Read:
+// Get oldest ADC sample from FIFO.
+//
+// Write:
+// Write dummy sample to FIFO. This is useful for code development when you do
+// not have real ADC samples.
 #define AUX_ANAIF_ADCFIFO_DATA_W                                            12
 #define AUX_ANAIF_ADCFIFO_DATA_M                                    0x00000FFF
 #define AUX_ANAIF_ADCFIFO_DATA_S                                             0
@@ -249,9 +273,13 @@
 //*****************************************************************************
 // Field:     [0] START
 //
-// Writing to this register will trigger an ADC conversion given that
-// ADCCTL.START_SRC is set to NO_EVENT0 or NO_EVENT1. If other setting is used
-// in ADCCTL.START_SRC behavior can be unpredictable
+// Manual ADC trigger.
+//
+// 0: No effect.
+// 1: Single ADC trigger.
+//
+// To manually trigger the ADC, you must set ADCCTL.START_SRC to NO_EVENT<n> to
+// avoid conflict with event-driven ADC trigger.
 #define AUX_ANAIF_ADCTRIG_START                                     0x00000001
 #define AUX_ANAIF_ADCTRIG_START_BITN                                         0
 #define AUX_ANAIF_ADCTRIG_START_M                                   0x00000001
@@ -264,10 +292,10 @@
 //*****************************************************************************
 // Field:     [0] RESET_N
 //
-// Current source control
+// ISRC reset control.
 //
-// 0: Current source is clamped
-// 1: Current source is active/charging
+// 0: ISRC drives 0 uA.
+// 1: ISRC drives current ADI_4_AUX:ISRC.TRIM to COMPA_IN.
 #define AUX_ANAIF_ISRCCTL_RESET_N                                   0x00000001
 #define AUX_ANAIF_ISRCCTL_RESET_N_BITN                                       0
 #define AUX_ANAIF_ISRCCTL_RESET_N_M                                 0x00000001

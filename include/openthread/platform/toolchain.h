@@ -57,6 +57,8 @@
 #ifndef OPENTHREAD_PLATFORM_TOOLCHAIN_H_
 #define OPENTHREAD_PLATFORM_TOOLCHAIN_H_
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -84,30 +86,9 @@ extern "C" {
  */
 
 /**
- * @def OT_TOOL_ALIGN
- *
- * Compiler-specific alignment modifier.
- *
- */
-
-/**
  * @def OT_TOOL_WEAK
  *
  * Compiler-specific weak symbol modifier.
- *
- */
-
-/**
- * @def OT_CALL
- *
- * Compiler-specific function modifier, ie: Win DLL support
- *
- */
-
-/**
- * @def OT_CDECL
- *
- * Compiler-specific function modifier, ie: Win DLL support
  *
  */
 
@@ -123,8 +104,6 @@ extern "C" {
 #define OT_TOOL_PACKED_END __attribute__((packed))
 #define OT_TOOL_WEAK __attribute__((weak))
 
-#define OT_TOOL_ALIGN(X)
-
 #elif defined(__ICCARM__) || defined(__ICC8051__)
 
 // http://supp.iar.com/FilesPublic/UPDINFO/004916/arm/doc/EWARM_DevelopmentGuide.ENU.pdf
@@ -136,17 +115,6 @@ extern "C" {
 #define OT_TOOL_PACKED_END
 #define OT_TOOL_WEAK __weak
 
-#define OT_TOOL_ALIGN(X)
-
-#elif defined(_MSC_VER)
-
-#define OT_TOOL_PACKED_BEGIN __pragma(pack(push, 1))
-#define OT_TOOL_PACKED_FIELD
-#define OT_TOOL_PACKED_END __pragma(pack(pop))
-#define OT_TOOL_WEAK
-
-#define OT_TOOL_ALIGN(X) __declspec(align(4))
-
 #elif defined(__SDCC)
 
 // Structures are packed by default in sdcc, as it primarily targets 8-bit MCUs.
@@ -155,8 +123,6 @@ extern "C" {
 #define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END
 #define OT_TOOL_WEAK
-
-#define OT_TOOL_ALIGN(X)
 
 #else
 
@@ -169,50 +135,9 @@ extern "C" {
 #define OT_TOOL_PACKED_END
 #define OT_TOOL_WEAK
 
-#define OT_TOOL_ALIGN(X)
-
 #endif
 
 // =========== TOOLCHAIN SELECTION : END ===========
-
-/**
- * @def OTAPI
- *
- * Compiler-specific modifier for public API declarations.
- *
- */
-
-/**
- * @def OTCALL
- *
- * Compiler-specific modifier to export functions in a DLL.
- *
- */
-
-#ifdef _MSC_VER
-
-#ifdef _WIN64
-#define OT_CDECL
-#else
-#define OT_CDECL __cdecl
-#endif
-
-#else
-
-#define OT_CALL
-#define OT_CDECL
-
-#endif
-
-#ifdef OTDLL
-#ifndef OTAPI
-#define OTAPI __declspec(dllimport)
-#endif
-#define OTCALL WINAPI
-#else
-#define OTAPI
-#define OTCALL
-#endif
 
 /**
  * @def OT_UNUSED_VARIABLE
@@ -258,6 +183,25 @@ extern "C" {
 
 #define OT_UNREACHABLE_CODE(CODE) CODE
 
+#elif defined(__TI_ARM__)
+
+#include <stddef.h>
+
+#define OT_UNUSED_VARIABLE(VARIABLE) \
+    do                               \
+    {                                \
+        if (&VARIABLE == NULL)       \
+        {                            \
+        }                            \
+    } while (false)
+
+/*
+ * #112-D statement is unreachable
+ * #129-D loop is not reachable
+ */
+#define OT_UNREACHABLE_CODE(CODE) \
+    _Pragma("diag_push") _Pragma("diag_suppress 112") _Pragma("diag_suppress 129") CODE _Pragma("diag_pop")
+
 #else
 
 #define OT_UNUSED_VARIABLE(VARIABLE) \
@@ -268,6 +212,23 @@ extern "C" {
 
 #define OT_UNREACHABLE_CODE(CODE) CODE
 
+#endif
+
+/*
+ * Keil and IAR compiler doesn't provide type limits for C++.
+ */
+#ifdef __cplusplus
+#if defined(__CC_ARM) || defined(__ICCARM__)
+
+#ifndef UINT8_MAX
+#define UINT8_MAX 0xff
+#endif
+
+#ifndef UINT16_MAX
+#define UINT16_MAX 0xffff
+#endif
+
+#endif
 #endif
 
 /**

@@ -26,8 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/openthread.h>
-
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/message.hpp"
@@ -47,29 +45,27 @@ void TestMessage(void)
     instance = static_cast<ot::Instance *>(testInitInstance());
     VerifyOrQuit(instance != NULL, "Null OpenThread instance\n");
 
-    messagePool = &instance->GetMessagePool();
+    messagePool = &instance->Get<ot::MessagePool>();
 
     for (unsigned i = 0; i < sizeof(writeBuffer); i++)
     {
         writeBuffer[i] = static_cast<uint8_t>(random());
     }
 
-    VerifyOrQuit((message = messagePool->New(ot::Message::kTypeIp6, 0)) != NULL, "Message::New failed\n");
-    SuccessOrQuit(message->SetLength(sizeof(writeBuffer)), "Message::SetLength failed\n");
-    VerifyOrQuit(message->Write(0, sizeof(writeBuffer), writeBuffer) == sizeof(writeBuffer), "Message::Write failed\n");
-    VerifyOrQuit(message->Read(0, sizeof(readBuffer), readBuffer) == sizeof(readBuffer), "Message::Read failed\n");
-    VerifyOrQuit(memcmp(writeBuffer, readBuffer, sizeof(writeBuffer)) == 0, "Message compare failed\n");
-    VerifyOrQuit(message->GetLength() == 1024, "Message::GetLength failed\n");
+    VerifyOrQuit((message = messagePool->New(ot::Message::kTypeIp6, 0)) != NULL, "Message::New failed");
+    SuccessOrQuit(message->SetLength(sizeof(writeBuffer)), "Message::SetLength failed");
+    VerifyOrQuit(message->Write(0, sizeof(writeBuffer), writeBuffer) == sizeof(writeBuffer), "Message::Write failed");
+    VerifyOrQuit(message->Read(0, sizeof(readBuffer), readBuffer) == sizeof(readBuffer), "Message::Read failed");
+    VerifyOrQuit(memcmp(writeBuffer, readBuffer, sizeof(writeBuffer)) == 0, "Message compare failed");
+    VerifyOrQuit(message->GetLength() == 1024, "Message::GetLength failed");
     message->Free();
 
     testFreeInstance(instance);
 }
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestMessage();
     printf("All tests passed\n");
     return 0;
 }
-#endif

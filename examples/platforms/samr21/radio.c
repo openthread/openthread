@@ -46,8 +46,12 @@
 
 enum
 {
-    IEEE802154_ACK_LENGTH = 5,
-    IEEE802154_FCS_SIZE   = 2
+    IEEE802154_FRAME_TYPE_ACK = 0x2,
+    IEEE802154_DSN_OFFSET     = 2,
+    IEEE802154_FRAME_PENDING  = 1 << 4,
+    IEEE802154_ACK_REQUEST    = 1 << 5,
+    IEEE802154_ACK_LENGTH     = 5,
+    IEEE802154_FCS_SIZE       = 2
 };
 
 enum
@@ -56,7 +60,7 @@ enum
 };
 
 static otRadioFrame sTransmitFrame;
-static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE];
+static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE + 1];
 
 static otRadioFrame sReceiveFrame;
 
@@ -64,7 +68,7 @@ static bool         sSleep       = false;
 static bool         sRxEnable    = false;
 static bool         sTxDone      = false;
 static bool         sRxDone      = false;
-static otError      sTxStatus    = OT_ERROR_NONE;
+static uint8_t      sTxStatus    = PHY_STATUS_SUCCESS;
 static int8_t       sPower       = OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER;
 static otRadioState sState       = OT_RADIO_STATE_DISABLED;
 static bool         sPromiscuous = false;
@@ -156,7 +160,7 @@ static void setTxPower(uint8_t aPower)
             }
         }
 
-        otLogDebgPlat(sInstance, "Radio set tx power: %d, %d", aPower, i);
+        otLogDebgPlat("Radio set tx power: %d, %d", aPower, i);
 
         radioTrxOff();
 
@@ -172,7 +176,7 @@ static void setChannel(uint8_t aChannel)
 {
     if (aChannel != sChannel)
     {
-        otLogDebgPlat(sInstance, "Radio set channel: %d", aChannel);
+        otLogDebgPlat("Radio set channel: %d", aChannel);
 
         radioTrxOff();
 
@@ -214,13 +218,21 @@ static void handleRx(void)
     {
         sRxDone = false;
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-        // Timestamp
-        sReceiveFrame.mMsec = otPlatAlarmMilliGetNow();
-        sReceiveFrame.mUsec = 0; // Don't support microsecond timer for now.
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#error Time sync requires the timestamp of SFD rather than that of rx done!
+#else
+        if (otPlatRadioGetPromiscuous(sInstance))
 #endif
+        {
+            // The current driver only supports milliseconds resolution.
+            sReceiveFrame.mInfo.mRxInfo.mTimestamp = otPlatAlarmMilliGetNow() * 1000;
+        }
 
-#if OPENTHREAD_ENABLE_DIAG
+        // TODO Set this flag only when the packet is really acknowledged with frame pending set.
+        // See https://github.com/openthread/openthread/pull/3785
+        sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
+
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
         if (otPlatDiagModeGet())
         {
@@ -233,7 +245,7 @@ static void handleRx(void)
             // otherwise only signal MAC layer for non-ACK frame
             if (sPromiscuous || sReceiveFrame.mLength > IEEE802154_ACK_LENGTH)
             {
-                otLogDebgPlat(sInstance, "Radio receive done, rssi: %d", sReceiveFrame.mRssi);
+                otLogDebgPlat("Radio receive done, rssi: %d", sReceiveFrame.mInfo.mRxInfo.mRssi);
 
                 otPlatRadioReceiveDone(sInstance, &sReceiveFrame, OT_ERROR_NONE);
             }
@@ -243,22 +255,69 @@ static void handleRx(void)
 
 static void handleTx(void)
 {
+    otError      otStatus;
+    otRadioFrame ackFrame;
+    uint8_t      psdu[IEEE802154_ACK_LENGTH];
+
     if (sTxDone)
     {
         sTxDone = false;
 
-#if OPENTHREAD_ENABLE_DIAG
+        // SAMR21 RF doesn't provide ACK frame, generate it manually
+        ackFrame.mPsdu    = psdu;
+        ackFrame.mLength  = IEEE802154_ACK_LENGTH;
+        ackFrame.mPsdu[0] = IEEE802154_FRAME_TYPE_ACK;
+        ackFrame.mPsdu[1] = 0;
+        ackFrame.mPsdu[2] = sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET];
 
+        switch (sTxStatus)
+        {
+        // This is WA to handle pending bit in ACK.
+        // SAMR21 phy driver doesn't provide pending status and returns
+        // PHY_STATUS_ERROR. This status is returned also RF transaction not yet
+        // finished. This situation should not happens. Currently PHY_STATUS_ERROR
+        // is only way to detect pending bit.
+        case PHY_STATUS_ERROR:
+            ackFrame.mPsdu[0] |= IEEE802154_FRAME_PENDING;
+            // fall through
+
+        case PHY_STATUS_SUCCESS:
+            otStatus = OT_ERROR_NONE;
+            break;
+
+        case PHY_STATUS_CHANNEL_ACCESS_FAILURE:
+            otStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
+            break;
+
+        case PHY_STATUS_NO_ACK:
+            otStatus = OT_ERROR_NO_ACK;
+            break;
+
+        default:
+            otStatus = OT_ERROR_ABORT;
+            break;
+        }
+
+        sState = OT_RADIO_STATE_RECEIVE;
+
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
         if (otPlatDiagModeGet())
         {
-            otPlatDiagRadioTransmitDone(sInstance, &sTransmitFrame, sTxStatus);
+            otPlatDiagRadioTransmitDone(sInstance, &sTransmitFrame, otStatus);
         }
         else
 #endif
         {
-            otLogDebgPlat(sInstance, "Radio transmit done, status: %d", sTxStatus);
+            otLogDebgPlat("Radio transmit done, status: %d", otStatus);
 
-            otPlatRadioTxDone(sInstance, &sTransmitFrame, NULL, sTxStatus);
+            otRadioFrame *ackFramePtr = &ackFrame;
+
+            if (((sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0) || (otStatus != OT_ERROR_NONE))
+            {
+                ackFramePtr = NULL;
+            }
+
+            otPlatRadioTxDone(sInstance, &sTransmitFrame, ackFramePtr, otStatus);
         }
     }
 }
@@ -269,35 +328,17 @@ static void handleTx(void)
 
 void PHY_DataInd(PHY_DataInd_t *ind)
 {
-    sReceiveFrame.mPsdu   = ind->data;
-    sReceiveFrame.mLength = ind->size + IEEE802154_FCS_SIZE;
-    sReceiveFrame.mRssi   = ind->rssi;
+    sReceiveFrame.mPsdu               = ind->data;
+    sReceiveFrame.mLength             = ind->size + IEEE802154_FCS_SIZE;
+    sReceiveFrame.mInfo.mRxInfo.mRssi = ind->rssi;
 
     sRxDone = true;
 }
 
 void PHY_DataConf(uint8_t status)
 {
-    switch (status)
-    {
-    case PHY_STATUS_SUCCESS:
-        sTxStatus = OT_ERROR_NONE;
-        break;
-
-    case PHY_STATUS_CHANNEL_ACCESS_FAILURE:
-        sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
-        break;
-
-    case PHY_STATUS_NO_ACK:
-        sTxStatus = OT_ERROR_NO_ACK;
-        break;
-
-    default:
-        sTxStatus = OT_ERROR_ABORT;
-        break;
-    }
-
-    sTxDone = true;
+    sTxStatus = status;
+    sTxDone   = true;
 }
 
 /*******************************************************************************
@@ -306,17 +347,19 @@ void PHY_DataConf(uint8_t status)
 void samr21RadioInit(void)
 {
     sTransmitFrame.mLength = 0;
-    sTransmitFrame.mPsdu   = sTransmitPsdu;
+    sTransmitFrame.mPsdu   = sTransmitPsdu + 1;
 
     sReceiveFrame.mLength = 0;
     sReceiveFrame.mPsdu   = NULL;
 
     PHY_Init();
+
+    sal_init();
 }
 
 void samr21RadioProcess(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     PHY_TaskHandler();
 
@@ -361,7 +404,7 @@ void samr21RadioRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
  ******************************************************************************/
 otRadioState otPlatRadioGetState(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     return sState;
 }
@@ -373,9 +416,9 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
-    otLogDebgPlat(sInstance, "Set Pan ID: 0x%04X", aPanId);
+    otLogDebgPlat("Set Pan ID: 0x%04X", aPanId);
 
     radioTrxOff();
 
@@ -386,7 +429,7 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aAddress)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     radioTrxOff();
 
@@ -397,7 +440,7 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aA
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     radioTrxOff();
 
@@ -408,14 +451,14 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aAddress)
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     return (sState != OT_RADIO_STATE_DISABLED);
 }
 
 otError otPlatRadioEnable(otInstance *aInstance)
 {
-    otLogDebgPlat(sInstance, "Radio enable");
+    otLogDebgPlat("Radio enable");
 
     if (!otPlatRadioIsEnabled(aInstance))
     {
@@ -429,7 +472,7 @@ otError otPlatRadioEnable(otInstance *aInstance)
 
 otError otPlatRadioDisable(otInstance *aInstance)
 {
-    otLogDebgPlat(sInstance, "Radio disable");
+    otLogDebgPlat("Radio disable");
 
     if (otPlatRadioIsEnabled(aInstance))
     {
@@ -443,9 +486,9 @@ otError otPlatRadioDisable(otInstance *aInstance)
 
 otError otPlatRadioSleep(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
-    otLogDebgPlat(sInstance, "Radio sleep");
+    otLogDebgPlat("Radio sleep");
 
     otError error = OT_ERROR_NONE;
 
@@ -462,9 +505,9 @@ exit:
 
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
-    otLogDebgPlat(sInstance, "Radio receive, channel: %d", aChannel);
+    otLogDebgPlat("Radio receive, channel: %d", aChannel);
 
     otError error = OT_ERROR_NONE;
 
@@ -483,22 +526,19 @@ exit:
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    (void)aInstance;
-
-    otLogDebgPlat(sInstance, "Radio transmit");
-
     otError error = OT_ERROR_NONE;
+
+    OT_UNUSED_VARIABLE(aInstance);
+
+    otLogDebgPlat("Radio transmit");
 
     otEXPECT_ACTION(sState == OT_RADIO_STATE_RECEIVE, error = OT_ERROR_INVALID_STATE);
 
-    uint8_t frame[OT_RADIO_FRAME_MAX_SIZE + 1];
-
     setChannel(aFrame->mChannel);
 
-    frame[0] = aFrame->mLength - IEEE802154_FCS_SIZE;
-    memcpy(frame + 1, aFrame->mPsdu, aFrame->mLength);
+    aFrame->mPsdu[-1] = aFrame->mLength - IEEE802154_FCS_SIZE;
 
-    PHY_DataReq(frame);
+    PHY_DataReq(&aFrame->mPsdu[-1]);
 
     otPlatRadioTxStarted(aInstance, aFrame);
 
@@ -511,7 +551,7 @@ exit:
 
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     return &sTransmitFrame;
 }
@@ -528,22 +568,22 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     return sPromiscuous;
 }
 
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     sPromiscuous = aEnable;
 }
 
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 {
-    (void)aInstance;
-    (void)aEnable;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
 }
 
 otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
@@ -568,17 +608,17 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddre
 
 void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
 void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     sScanStartTime = otPlatAlarmMilliGetNow();
     sScanDuration  = aScanDuration;
@@ -603,18 +643,34 @@ exit:
 
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
-    otLogDebgPlat(sInstance, "Radio set default TX power: %d", aPower);
+    otLogDebgPlat("Radio set default TX power: %d", aPower);
 
     setTxPower(aPower);
 
     return OT_ERROR_NONE;
 }
 
+otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aThreshold);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aThreshold);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 
     return SAMR21_RECEIVE_SENSITIVITY;
 }

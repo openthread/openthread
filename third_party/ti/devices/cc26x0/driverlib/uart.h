@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       uart.h
-*  Revised:        2016-11-21 13:43:38 +0100 (Mon, 21 Nov 2016)
-*  Revision:       47731
+*  Revised:        2017-06-05 12:13:49 +0200 (Mon, 05 Jun 2017)
+*  Revision:       49096
 *
 *  Description:    Defines and prototypes for the UART.
 *
@@ -673,14 +673,17 @@ UARTBreakCtl(uint32_t ui32Base, bool bBreakState)
 
 //*****************************************************************************
 //
-//! \brief Registers an interrupt handler for a UART interrupt.
+//! \brief Registers an interrupt handler for a UART interrupt in the dynamic interrupt table.
 //!
-//! This function does the actual registering of the interrupt handler.  This
-//! function enables the global interrupt in the interrupt controller; specific
-//! UART interrupts must be enabled via \ref UARTIntEnable(). It is the interrupt
-//! handler's responsibility to clear the interrupt source.
+//! \note Only use this function if you want to use the dynamic vector table (in SRAM)!
 //!
-//! \param ui32Base is the base address of the UART port.
+//! This function registers a function as the interrupt handler for a specific
+//! interrupt and enables the corresponding interrupt in the interrupt controller.
+//!
+//! Specific UART interrupts must be enabled via \ref UARTIntEnable(). It is the
+//! interrupt handler's responsibility to clear the interrupt source.
+//!
+//! \param ui32Base is the base address of the UART module.
 //! \param pfnHandler is a pointer to the function to be called when the
 //! UART interrupt occurs.
 //!
@@ -694,14 +697,14 @@ extern void UARTIntRegister(uint32_t ui32Base, void (*pfnHandler)(void));
 
 //*****************************************************************************
 //
-//! \brief Unregisters an interrupt handler for a UART interrupt.
+//! \brief Unregisters an interrupt handler for a UART interrupt in the dynamic interrupt table.
 //!
 //! This function does the actual unregistering of the interrupt handler. It
 //! clears the handler to be called when a UART interrupt occurs.  This
 //! function also masks off the interrupt in the interrupt controller so that
 //! the interrupt handler no longer is called.
 //!
-//! \param ui32Base is the base address of the UART port.
+//! \param ui32Base is the base address of the UART module.
 //!
 //! \return None
 //!

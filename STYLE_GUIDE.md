@@ -75,6 +75,8 @@
   - The symbol used for the guard should be the file name, converted to all uppercase, with any spaces (“ “) or dots (“.”) converted to underscores (“_”).
 - Function and Method Prototypes
   - All void functions or methods shall explicitly declare and specify the void type keyword.
+- Unused parameters
+  - All unused parameters shall be declared as such using the `OT_UNUSED_VARIABLE` macro at the top of a function or method before all local variable declarations.
 
 ### C
 
@@ -114,7 +116,7 @@
 
 - OpenThread uses the `make pretty` build target to reformat code and enforce code format and style.  The `make pretty-check` build target is included in OpenThread's continuous integration and must pass before a pull request is merged.
 
-- The `make pretty` and `make pretty-check` build targets require [clang-format v5.0.1](http://releases.llvm.org/download.html#5.0.1).
+- The `make pretty` and `make pretty-check` build targets require [clang-format v6.0.0](http://releases.llvm.org/download.html#6.0.0).
 
 ### File Names
 - File names should match the names and types of what is described in the file.  If a file contains many declarations and definitions, the author should choose the one that predominantly describes or that makes the most sense.
@@ -127,8 +129,7 @@
 - Names shall not give any idea of type, such as is done with System Hungarian notation.
 - Case
   - C preprocessor symbols should be all uppercase.
-  - All OpenThread names in the C language shall be in *snake case*.
-  - All OpenThread class, namespace, structure, method, function, enumeration, and type names in the C++ language shall be in *upper camel case*.  Exception: the top level OpenThread namespace 'ot'.
+  - All OpenThread class, namespace, structure, method, function, enumeration, and type names in the C/C++ language shall be in *upper camel case*.  Exception: the top level OpenThread namespace 'ot'.
   - All OpenThread instantiated names of instances of classes, namespaces, structures, methods, functions, enumerations, and types as well as method and function parameters in the C++ language shall be in *lower camel case*.
 - Symbol Qualification
   - All OpenThread C public data types and free functions should have `ot` prepended to their name.
@@ -176,7 +177,7 @@
 
 ## Standards
 
-- OpenThread uses and enforces both Python 2 and Python 3.  Support for Python 2 is a result of the fact that some current Linux distributions and Macs are still using 2.x as default.
+- OpenThread uses and enforces Python 3.
 
 ## Conventions and Best Practices
 

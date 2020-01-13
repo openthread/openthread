@@ -39,7 +39,6 @@ logger = logging.getLogger(__name__)
 
 
 class RfShieldController(ABC):
-
     @abc.abstractmethod
     def shield(self):
         pass
@@ -58,7 +57,6 @@ class RfShieldController(ABC):
 
 
 class RfSwitchController(RfShieldController):
-
     def __init__(self, channel, port):
         self._channel = channel
         self._port = port
@@ -76,7 +74,7 @@ class RfSwitchController(RfShieldController):
         return self._conn.write('{}\r\n'.format(data))
 
     def _display_string(self, string):
-        self._write('DIAGNOSTIC:DISPLAY \"{}\"'.format(string))
+        self._write('DIAGNOSTIC:DISPLAY "{}"'.format(string))
 
     def __enter__(self):
         self._conn = serial.Serial(self._port, 9600)
@@ -92,9 +90,7 @@ class RfSwitchController(RfShieldController):
             self._conn = None
 
 
-CONTROLLERS = {
-    'RF_SWITCH': RfSwitchController,
-}
+CONTROLLERS = {'RF_SWITCH': RfSwitchController}
 
 
 def get_rf_shield_controller(shield_type, params):

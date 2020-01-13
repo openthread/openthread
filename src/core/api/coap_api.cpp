@@ -35,118 +35,149 @@
 
 #include <openthread/coap.h>
 
-#include "coap/coap_header.hpp"
+#include "coap/coap_message.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
 
 using namespace ot;
 
-void otCoapHeaderInit(otCoapHeader *aHeader, otCoapType aType, otCoapCode aCode)
-{
-    Coap::Header *header = static_cast<Coap::Header *>(aHeader);
-    header->Init(aType, aCode);
-}
-
-void otCoapHeaderSetToken(otCoapHeader *aHeader, const uint8_t *aToken, uint8_t aTokenLength)
-{
-    static_cast<Coap::Header *>(aHeader)->SetToken(aToken, aTokenLength);
-}
-
-void otCoapHeaderGenerateToken(otCoapHeader *aHeader, uint8_t aTokenLength)
-{
-    static_cast<Coap::Header *>(aHeader)->SetToken(aTokenLength);
-}
-
-otError otCoapHeaderAppendContentFormatOption(otCoapHeader *aHeader, otCoapOptionContentFormat aContentFormat)
-{
-    return static_cast<Coap::Header *>(aHeader)->AppendContentFormatOption(aContentFormat);
-}
-
-otError otCoapHeaderAppendOption(otCoapHeader *aHeader, const otCoapOption *aOption)
-{
-    return static_cast<Coap::Header *>(aHeader)->AppendOption(*static_cast<const Coap::Header::Option *>(aOption));
-}
-
-otError otCoapHeaderAppendUintOption(otCoapHeader *aHeader, uint16_t aNumber, uint32_t aValue)
-{
-    return static_cast<Coap::Header *>(aHeader)->AppendUintOption(aNumber, aValue);
-}
-
-otError otCoapHeaderAppendObserveOption(otCoapHeader *aHeader, uint32_t aObserve)
-{
-    return static_cast<Coap::Header *>(aHeader)->AppendObserveOption(aObserve);
-}
-
-otError otCoapHeaderAppendUriPathOptions(otCoapHeader *aHeader, const char *aUriPath)
-{
-    return static_cast<Coap::Header *>(aHeader)->AppendUriPathOptions(aUriPath);
-}
-
-otError otCoapHeaderAppendMaxAgeOption(otCoapHeader *aHeader, uint32_t aMaxAge)
-{
-    return static_cast<Coap::Header *>(aHeader)->AppendMaxAgeOption(aMaxAge);
-}
-
-otError otCoapHeaderAppendUriQueryOption(otCoapHeader *aHeader, const char *aUriQuery)
-{
-    return static_cast<Coap::Header *>(aHeader)->AppendUriQueryOption(aUriQuery);
-}
-
-void otCoapHeaderSetPayloadMarker(otCoapHeader *aHeader)
-{
-    static_cast<Coap::Header *>(aHeader)->SetPayloadMarker();
-}
-
-void otCoapHeaderSetMessageId(otCoapHeader *aHeader, uint16_t aMessageId)
-{
-    return static_cast<Coap::Header *>(aHeader)->SetMessageId(aMessageId);
-}
-
-otCoapType otCoapHeaderGetType(const otCoapHeader *aHeader)
-{
-    return static_cast<const Coap::Header *>(aHeader)->GetType();
-}
-
-otCoapCode otCoapHeaderGetCode(const otCoapHeader *aHeader)
-{
-    return static_cast<const Coap::Header *>(aHeader)->GetCode();
-}
-
-uint16_t otCoapHeaderGetMessageId(const otCoapHeader *aHeader)
-{
-    return static_cast<const Coap::Header *>(aHeader)->GetMessageId();
-}
-
-uint8_t otCoapHeaderGetTokenLength(const otCoapHeader *aHeader)
-{
-    return static_cast<const Coap::Header *>(aHeader)->GetTokenLength();
-}
-
-const uint8_t *otCoapHeaderGetToken(const otCoapHeader *aHeader)
-{
-    return static_cast<const Coap::Header *>(aHeader)->GetToken();
-}
-
-const otCoapOption *otCoapHeaderGetFirstOption(otCoapHeader *aHeader)
-{
-    return static_cast<const otCoapOption *>(static_cast<Coap::Header *>(aHeader)->GetFirstOption());
-}
-
-const otCoapOption *otCoapHeaderGetNextOption(otCoapHeader *aHeader)
-{
-    return static_cast<const otCoapOption *>(static_cast<Coap::Header *>(aHeader)->GetNextOption());
-}
-
-otMessage *otCoapNewMessage(otInstance *aInstance, const otCoapHeader *aHeader)
+otMessage *otCoapNewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
 {
     Message * message;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aHeader != NULL, message = NULL);
-    message = instance.GetApplicationCoap().NewMessage(*(static_cast<const Coap::Header *>(aHeader)));
+    if (aSettings != NULL)
+    {
+        VerifyOrExit(aSettings->mPriority <= OT_MESSAGE_PRIORITY_HIGH, message = NULL);
+    }
+
+    message = instance.GetApplicationCoap().NewMessage(aSettings);
+
 exit:
     return message;
+}
+
+void otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode)
+{
+    static_cast<Coap::Message *>(aMessage)->Init(aType, aCode);
+}
+
+otError otCoapMessageInitResponse(otMessage *aResponse, const otMessage *aRequest, otCoapType aType, otCoapCode aCode)
+{
+    Coap::Message &      response = *static_cast<Coap::Message *>(aResponse);
+    const Coap::Message &request  = *static_cast<const Coap::Message *>(aRequest);
+
+    response.Init(aType, aCode);
+    response.SetMessageId(request.GetMessageId());
+
+    return response.SetToken(request.GetToken(), request.GetTokenLength());
+}
+
+otError otCoapMessageSetToken(otMessage *aMessage, const uint8_t *aToken, uint8_t aTokenLength)
+{
+    return static_cast<Coap::Message *>(aMessage)->SetToken(aToken, aTokenLength);
+}
+
+void otCoapMessageGenerateToken(otMessage *aMessage, uint8_t aTokenLength)
+{
+    static_cast<Coap::Message *>(aMessage)->SetToken(aTokenLength);
+}
+
+otError otCoapMessageAppendContentFormatOption(otMessage *aMessage, otCoapOptionContentFormat aContentFormat)
+{
+    return static_cast<Coap::Message *>(aMessage)->AppendContentFormatOption(aContentFormat);
+}
+
+otError otCoapMessageAppendOption(otMessage *aMessage, uint16_t aNumber, uint16_t aLength, const void *aValue)
+{
+    return static_cast<Coap::Message *>(aMessage)->AppendOption(aNumber, aLength, aValue);
+}
+
+otError otCoapMessageAppendUintOption(otMessage *aMessage, uint16_t aNumber, uint32_t aValue)
+{
+    return static_cast<Coap::Message *>(aMessage)->AppendUintOption(aNumber, aValue);
+}
+
+otError otCoapMessageAppendObserveOption(otMessage *aMessage, uint32_t aObserve)
+{
+    return static_cast<Coap::Message *>(aMessage)->AppendObserveOption(aObserve);
+}
+
+otError otCoapMessageAppendUriPathOptions(otMessage *aMessage, const char *aUriPath)
+{
+    return static_cast<Coap::Message *>(aMessage)->AppendUriPathOptions(aUriPath);
+}
+
+otError otCoapMessageAppendProxyUriOption(otMessage *aMessage, const char *aUriPath)
+{
+    return static_cast<Coap::Message *>(aMessage)->AppendProxyUriOption(aUriPath);
+}
+
+otError otCoapMessageAppendMaxAgeOption(otMessage *aMessage, uint32_t aMaxAge)
+{
+    return static_cast<Coap::Message *>(aMessage)->AppendMaxAgeOption(aMaxAge);
+}
+
+otError otCoapMessageAppendUriQueryOption(otMessage *aMessage, const char *aUriQuery)
+{
+    return static_cast<Coap::Message *>(aMessage)->AppendUriQueryOption(aUriQuery);
+}
+
+otError otCoapMessageSetPayloadMarker(otMessage *aMessage)
+{
+    return static_cast<Coap::Message *>(aMessage)->SetPayloadMarker();
+}
+
+otCoapType otCoapMessageGetType(const otMessage *aMessage)
+{
+    return static_cast<const Coap::Message *>(aMessage)->GetType();
+}
+
+otCoapCode otCoapMessageGetCode(const otMessage *aMessage)
+{
+    return static_cast<const Coap::Message *>(aMessage)->GetCode();
+}
+
+const char *otCoapMessageCodeToString(const otMessage *aMessage)
+{
+    return static_cast<const Coap::Message *>(aMessage)->CodeToString();
+}
+
+uint16_t otCoapMessageGetMessageId(const otMessage *aMessage)
+{
+    return static_cast<const Coap::Message *>(aMessage)->GetMessageId();
+}
+
+uint8_t otCoapMessageGetTokenLength(const otMessage *aMessage)
+{
+    return static_cast<const Coap::Message *>(aMessage)->GetTokenLength();
+}
+
+const uint8_t *otCoapMessageGetToken(const otMessage *aMessage)
+{
+    return static_cast<const Coap::Message *>(aMessage)->GetToken();
+}
+
+otError otCoapOptionIteratorInit(otCoapOptionIterator *aIterator, const otMessage *aMessage)
+{
+    return static_cast<Coap::OptionIterator *>(aIterator)->Init(static_cast<const Coap::Message *>(aMessage));
+}
+
+const otCoapOption *otCoapOptionIteratorGetFirstOption(otCoapOptionIterator *aIterator)
+{
+    return static_cast<Coap::OptionIterator *>(aIterator)->GetFirstOption();
+}
+
+const otCoapOption *otCoapOptionIteratorGetNextOption(otCoapOptionIterator *aIterator)
+{
+    return static_cast<Coap::OptionIterator *>(aIterator)->GetNextOption();
+}
+
+otError otCoapOptionIteratorGetOptionValue(otCoapOptionIterator *aIterator, void *aValue)
+{
+    return static_cast<Coap::OptionIterator *>(aIterator)->GetOptionValue(aValue);
 }
 
 otError otCoapSendRequest(otInstance *          aInstance,
@@ -157,8 +188,9 @@ otError otCoapSendRequest(otInstance *          aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoap().SendMessage(
-        *static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo), aHandler, aContext);
+    return instance.GetApplicationCoap().SendMessage(*static_cast<Coap::Message *>(aMessage),
+                                                     *static_cast<const Ip6::MessageInfo *>(aMessageInfo), aHandler,
+                                                     aContext);
 }
 
 otError otCoapStart(otInstance *aInstance, uint16_t aPort)
@@ -200,8 +232,8 @@ otError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const otM
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoap().SendMessage(*static_cast<Message *>(aMessage),
+    return instance.GetApplicationCoap().SendMessage(*static_cast<Coap::Message *>(aMessage),
                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
+#endif // OPENTHREAD_CONFIG_COAP_API_ENABLE

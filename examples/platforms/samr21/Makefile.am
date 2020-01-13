@@ -33,16 +33,12 @@ lib_LIBRARIES = libopenthread-samr21.a
 override CFLAGS                              := $(filter-out -pedantic-errors,$(CFLAGS))
 override CXXFLAGS                            := $(filter-out -pedantic-errors,$(CXXFLAGS))
 
-#SAMR21_BOARD=USER_BOARD
-#SAMR21_CPU=__SAMR21E18A__
-
-SAMR21_BOARD=SAMR21_XPLAINED_PRO
-SAMR21_CPU=__SAMR21G18A__
+# Do not enable -Wundef for this platform
+override CFLAGS                              := $(filter-out -Wundef,$(CFLAGS))
+override CXXFLAGS                            := $(filter-out -Wundef,$(CXXFLAGS))
 
 libopenthread_samr21_a_CPPFLAGS                                                                              = \
     -D ARM_MATH_CM0PLUS=true                                                                                   \
-    -D BOARD=$(SAMR21_BOARD)                                                                                   \
-    -D $(SAMR21_CPU)                                                                                           \
     -D PHY_AT86RF233                                                                                           \
     -D SAL_TYPE=AT86RF2xx                                                                                      \
     -D USART_CALLBACK_MODE=true                                                                                \
@@ -78,7 +74,6 @@ libopenthread_samr21_a_CPPFLAGS                                                 
     -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/sercom/i2c/i2c_sam0                                 \
     -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/sercom/spi                                          \
     -I$(top_srcdir)/third_party/microchip/asf/sam0/drivers/sercom/usart                                        \
-    -I$(top_srcdir)/third_party/microchip/asf/sam0/utils                                                       \
     -I$(top_srcdir)/third_party/microchip/asf/sam0/utils/cmsis/samr21/include                                  \
     -I$(top_srcdir)/third_party/microchip/asf/sam0/utils/cmsis/samr21/source                                   \
     -I$(top_srcdir)/third_party/microchip/asf/sam0/utils/header_files                                          \
@@ -96,16 +91,21 @@ libopenthread_samr21_a_CPPFLAGS                                                 
     $(NULL)
 
 PLATFORM_SOURCES                                                                                             = \
+    crypto/aes_alt.c                                                                                           \
     alarm.c                                                                                                    \
-    diag.c                                                                                                     \
     cxx_helpers.c                                                                                              \
+    diag.c                                                                                                     \
+    entropy.c                                                                                                  \
     flash.c                                                                                                    \
     logging.c                                                                                                  \
     misc.c                                                                                                     \
-    platform.c                                                                                                 \
+    openthread-core-samr21-config.h                                                                            \
+    openthread-core-samr21-config-check.h                                                                      \
+    platform-samr21.h                                                                                          \
     radio.c                                                                                                    \
-    random.c                                                                                                   \
+    system.c                                                                                                   \
     uart.c                                                                                                     \
+    user_row.h                                                                                                 \
     $(NULL)
 
 libopenthread_samr21_a_SOURCES                                                                               = \
@@ -135,9 +135,6 @@ nodist_libopenthread_samr21_a_SOURCES                                           
     @top_builddir@/third_party/microchip/asf/thirdparty/wireless/avr2130_lwmesh/source/phy/at86rf233/src/phy.c \
     @top_builddir@/third_party/microchip/asf/thirdparty/wireless/services/sal/at86rf2xx/src/sal.c              \
     @top_builddir@/third_party/microchip/asf/thirdparty/wireless/services/trx_access/trx_access.c              \
-    $(NULL)
-
-noinst_HEADERS                                                                                               = \
     $(NULL)
 
 PRETTY_FILES                                                                                                 = \

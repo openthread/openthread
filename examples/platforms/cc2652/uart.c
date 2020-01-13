@@ -39,7 +39,6 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include <openthread/types.h>
 #include <openthread/platform/debug_uart.h>
 #include <openthread/platform/logging.h>
 #include <openthread/platform/uart.h>
@@ -82,7 +81,7 @@ static void uart_power_control(uint32_t who_base, int turnon)
     {
         /* UART0 is in the SERIAL domain
          * UART1 is in the PERIPH domain.
-         * See: ti/devices/cc26x2/driverlib/pcrm.h, line: 658
+         * See: ti/devices/cc13x2_cc26x2/driverlib/pcrm.h, line: 658
          */
         value = (who_base == UART0_BASE) ? PRCM_DOMAIN_SERIAL : PRCM_DOMAIN_PERIPH;
         PRCMPowerDomainOn(value);
@@ -193,10 +192,7 @@ static void processReceive(void)
     }
 }
 
-/**
- * @brief process the transmit side of the buffers
- */
-static void processTransmit(void)
+otError otPlatUartFlush(void)
 {
     otEXPECT(sSendBuffer != NULL);
 
@@ -208,10 +204,20 @@ static void processTransmit(void)
 
     sSendBuffer = NULL;
     sSendLen    = 0;
-    otPlatUartSendDone();
+
+    return OT_ERROR_NONE;
 
 exit:
-    return;
+    return OT_ERROR_INVALID_STATE;
+}
+
+/**
+ * @brief process the transmit side of the buffers
+ */
+static void processTransmit(void)
+{
+    otPlatUartFlush();
+    otPlatUartSendDone();
 }
 
 /**

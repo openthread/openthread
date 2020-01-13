@@ -1,21 +1,21 @@
-/**
- * Copyright (c) 2015 - 2018, Nordic Semiconductor ASA
+/*
+ * Copyright (c) 2015 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -44,6 +44,14 @@
     (event == NRF_I2S_EVENT_TXPTRUPD ? "NRF_I2S_EVENT_TXPTRUPD" : \
     (event == NRF_I2S_EVENT_STOPPED  ? "NRF_I2S_EVENT_STOPPED"  : \
                                        "UNKNOWN EVENT")))
+
+#if !defined(USE_WORKAROUND_FOR_I2S_STOP_ANOMALY) &&                               \
+    (defined(NRF52832_XXAA) || defined(NRF52832_XXAB) || defined(NRF52840_XXAA) || \
+     defined(NRF9160_XXAA))
+// Enable workaround for nRF52832 and nRF52840 anomaly 194 / nrf9160 anomaly 1
+// (STOP task does not switch off all resources).
+#define USE_WORKAROUND_FOR_I2S_STOP_ANOMALY 1
+#endif
 
 // Control block - driver instance local data.
 typedef struct
@@ -200,6 +208,12 @@ nrfx_err_t nrfx_i2s_start(nrfx_i2s_buffers_t const * p_initial_buffers,
     NRFX_ASSERT(p_initial_buffers != NULL);
     NRFX_ASSERT(p_initial_buffers->p_rx_buffer != NULL ||
                 p_initial_buffers->p_tx_buffer != NULL);
+    NRFX_ASSERT((p_initial_buffers->p_rx_buffer == NULL) ||
+                (nrfx_is_in_ram(p_initial_buffers->p_rx_buffer) &&
+                 nrfx_is_word_aligned(p_initial_buffers->p_rx_buffer)));
+    NRFX_ASSERT((p_initial_buffers->p_tx_buffer == NULL) ||
+                (nrfx_is_in_ram(p_initial_buffers->p_tx_buffer) &&
+                 nrfx_is_word_aligned(p_initial_buffers->p_tx_buffer)));
     NRFX_ASSERT(buffer_size != 0);
     (void)(flags);
 
@@ -267,6 +281,12 @@ nrfx_err_t nrfx_i2s_next_buffers_set(nrfx_i2s_buffers_t const * p_buffers)
 {
     NRFX_ASSERT(m_cb.state == NRFX_DRV_STATE_POWERED_ON);
     NRFX_ASSERT(p_buffers);
+    NRFX_ASSERT((p_buffers->p_rx_buffer == NULL) ||
+                (nrfx_is_in_ram(p_buffers->p_rx_buffer) &&
+                 nrfx_is_word_aligned(p_buffers->p_rx_buffer)));
+    NRFX_ASSERT((p_buffers->p_tx_buffer == NULL) ||
+                (nrfx_is_in_ram(p_buffers->p_tx_buffer) &&
+                 nrfx_is_word_aligned(p_buffers->p_tx_buffer)));
 
     nrfx_err_t err_code;
 
@@ -321,6 +341,11 @@ void nrfx_i2s_stop(void)
     nrf_i2s_int_disable(NRF_I2S, NRF_I2S_INT_RXPTRUPD_MASK |
                                  NRF_I2S_INT_TXPTRUPD_MASK);
     nrf_i2s_task_trigger(NRF_I2S, NRF_I2S_TASK_STOP);
+
+#if NRFX_CHECK(USE_WORKAROUND_FOR_I2S_STOP_ANOMALY)
+    *((volatile uint32_t *)(((uint32_t)NRF_I2S) + 0x38)) = 1;
+    *((volatile uint32_t *)(((uint32_t)NRF_I2S) + 0x3C)) = 1;
+#endif
 }
 
 

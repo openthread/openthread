@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -33,6 +33,7 @@ import struct
 
 from binascii import hexlify
 from enum import IntEnum
+from tlvs_parsing import SubTlvsFactory
 
 import common
 
@@ -47,15 +48,7 @@ class TlvType(IntEnum):
     SERVER = 6
 
 
-class MeshcopTlvType(IntEnum):
-    STEERING_DATA = 8
-    BORDER_AGENT_LOCATOR = 9
-    COMMISSIONER_SESSION_ID = 11
-    COMMISSIONER_UDP_PORT = 15
-
-
 class NetworkData(object):
-
     def __init__(self, stable):
         self._stable = stable
 
@@ -64,38 +57,7 @@ class NetworkData(object):
         return self._stable
 
 
-class SubTlvsFactory(object):
-
-    def __init__(self, sub_tlvs_factories):
-        self._sub_tlvs_factories = sub_tlvs_factories
-
-    def _get_factory(self, _type):
-        try:
-            return self._sub_tlvs_factories[_type]
-        except KeyError:
-            raise RuntimeError("Could not find factory. Factory type = {}.".format(_type))
-
-    def parse(self, data, message_info):
-        sub_tlvs = []
-
-        while data.tell() < len(data.getvalue()):
-            _type = ord(data.read(1))
-
-            length = ord(data.read(1))
-            value = data.read(length)
-
-            factory = self._get_factory(_type)
-
-            message_info.length = length
-            tlv = factory.parse(io.BytesIO(value), message_info)
-
-            sub_tlvs.append(tlv)
-
-        return sub_tlvs
-
-
 class NetworkDataSubTlvsFactory(SubTlvsFactory):
-
     def parse(self, data, message_info):
         sub_tlvs = []
 
@@ -103,7 +65,7 @@ class NetworkDataSubTlvsFactory(SubTlvsFactory):
             data_byte = ord(data.read(1))
 
             stable = data_byte & 0x01
-            _type = (data_byte >> 1) & 0x7f
+            _type = (data_byte >> 1) & 0x7F
 
             length = ord(data.read(1))
             value = data.read(length)
@@ -119,7 +81,6 @@ class NetworkDataSubTlvsFactory(SubTlvsFactory):
 
 
 class Route(object):
-
     def __init__(self, border_router_16, prf):
         self._border_router_16 = border_router_16
         self._prf = prf
@@ -135,14 +96,18 @@ class Route(object):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return self.border_router_16 == other.border_router_16 and self.prf == other.prf
+        return (
+            self.border_router_16 == other.border_router_16
+            and self.prf == other.prf
+        )
 
     def __repr__(self):
-        return "Route(border_router_16={}, prf={})".format(self.border_router_16, self.prf)
+        return "Route(border_router_16={}, prf={})".format(
+            self.border_router_16, self.prf
+        )
 
 
 class RouteFactory(object):
-
     def parse(self, data, message_info):
         border_router_16 = struct.unpack(">H", data.read(2))[0]
 
@@ -153,7 +118,6 @@ class RouteFactory(object):
 
 
 class RoutesFactory(object):
-
     def __init__(self, route_factory):
         self._route_factory = route_factory
 
@@ -169,7 +133,6 @@ class RoutesFactory(object):
 
 
 class HasRoute(NetworkData):
-
     def __init__(self, routes, stable):
         super(HasRoute, self).__init__(stable)
         self._routes = routes
@@ -185,11 +148,12 @@ class HasRoute(NetworkData):
 
     def __repr__(self):
         routes_str = ", ".join(["{}".format(route) for route in self.routes])
-        return "HasRoute(stable={}, routes=[{}])".format(self.stable, routes_str)
+        return "HasRoute(stable={}, routes=[{}])".format(
+            self.stable, routes_str
+        )
 
 
 class HasRouteFactory(object):
-
     def __init__(self, routes_factory):
         self._routes_factory = routes_factory
 
@@ -200,7 +164,6 @@ class HasRouteFactory(object):
 
 
 class Prefix(NetworkData):
-
     def __init__(self, domain_id, prefix_length, prefix, sub_tlvs, stable):
         super(Prefix, self).__init__(stable)
         self._domain_id = domain_id
@@ -227,25 +190,25 @@ class Prefix(NetworkData):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return self.domain_id == other.domain_id and \
-            self.prefix_length == other.prefix_length and \
-            self.prefix == other.prefix and \
-            self.sub_tlvs == other.sub_tlvs
+        return (
+            self.domain_id == other.domain_id
+            and self.prefix_length == other.prefix_length
+            and self.prefix == other.prefix
+            and self.sub_tlvs == other.sub_tlvs
+        )
 
     def __repr__(self):
         sub_tlvs_str = ", ".join(["{}".format(tlv) for tlv in self.sub_tlvs])
         return "Prefix(stable={}, domain_id={}, prefix_length={}, prefix={}, sub_tlvs=[{}])".format(
-            self.stable, self.domain_id, self.prefix_length, hexlify(self.prefix), sub_tlvs_str)
+            self.stable, self.domain_id, self.prefix_length, hexlify(self.prefix), sub_tlvs_str, )
 
 
 class PrefixSubTlvsFactory(NetworkDataSubTlvsFactory):
-
     def __init__(self, sub_tlvs_factories):
         super(PrefixSubTlvsFactory, self).__init__(sub_tlvs_factories)
 
 
 class PrefixFactory(object):
-
     def __init__(self, sub_tlvs_factory):
         self._sub_tlvs_factory = sub_tlvs_factory
 
@@ -259,13 +222,16 @@ class PrefixFactory(object):
 
         prefix = bytearray(data.read(self._bits_to_bytes(prefix_length)))
 
-        sub_tlvs = self._sub_tlvs_factory.parse(io.BytesIO(data.read()), message_info)
+        sub_tlvs = self._sub_tlvs_factory.parse(
+            io.BytesIO(data.read()), message_info
+        )
 
-        return Prefix(domain_id, prefix_length, prefix, sub_tlvs, message_info.stable)
+        return Prefix(
+            domain_id, prefix_length, prefix, sub_tlvs, message_info.stable
+        )
 
 
 class BorderRouter(NetworkData):
-
     def __init__(self, border_router_16, prf, p, s, d, c, r, o, n, stable):
         super(BorderRouter, self).__init__(stable)
         self._border_router_16 = border_router_16
@@ -317,28 +283,29 @@ class BorderRouter(NetworkData):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return  self.border_router_16 == other.border_router_16 and \
-            self.prf == other.prf and \
-            self.p == other.p and \
-            self.s == other.s and \
-            self.d == other.d and \
-            self.c == other.c and \
-            self.r == other.r and \
-            self.o == other.o and \
-            self.n == other.n
+        return (
+            self.border_router_16 == other.border_router_16
+            and self.prf == other.prf
+            and self.p == other.p
+            and self.s == other.s
+            and self.d == other.d
+            and self.c == other.c
+            and self.r == other.r
+            and self.o == other.o
+            and self.n == other.n
+        )
 
     def __repr__(self):
         return "BorderRouter(stable={}, border_router_16={}, prf={}, p={}, s={}, d={}, c={}, r={}, o={}, n={})".format(
-            self.stable, self.border_router_16, self.prf, self.p, self.s, self.d, self.c, self.r, self.o, self.n)
+            self.stable, self.border_router_16, self.prf, self.p, self.s, self.d, self.c, self.r, self.o, self.n, )
 
 
 class BorderRouterFactory(object):
-
     def parse(self, data, message_info):
         border_router_16 = struct.unpack(">H", data.read(2))[0]
 
         data_byte = ord(data.read(1))
-        o = (data_byte & 0x01)
+        o = data_byte & 0x01
         r = (data_byte >> 1) & 0x01
         c = (data_byte >> 2) & 0x01
         d = (data_byte >> 3) & 0x01
@@ -349,11 +316,12 @@ class BorderRouterFactory(object):
         data_byte = ord(data.read(1))
         n = (data_byte >> 7) & 0x01
 
-        return BorderRouter(border_router_16, prf, p, s, d, c, r, o, n, message_info.stable)
+        return BorderRouter(
+            border_router_16, prf, p, s, d, c, r, o, n, message_info.stable
+        )
 
 
 class LowpanId(NetworkData):
-
     def __init__(self, c, cid, context_length, stable):
         super(LowpanId, self).__init__(stable)
         self._c = c
@@ -375,21 +343,23 @@ class LowpanId(NetworkData):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return  self.c == other.c and \
-            self.cid == other.cid and \
-            self.context_length == other.context_length
+        return (
+            self.c == other.c
+            and self.cid == other.cid
+            and self.context_length == other.context_length
+        )
 
     def __repr__(self):
         return "LowpanId(stable={}, c={}, cid={}, context_length={})".format(
-            self.stable, self.c, self.cid, self.context_length)
+            self.stable, self.c, self.cid, self.context_length
+        )
 
 
 class LowpanIdFactory(object):
-
     def parse(self, data, message_info):
         data_byte = ord(data.read(1))
 
-        cid = (data_byte & 0x0f)
+        cid = data_byte & 0x0F
         c = (data_byte >> 4) & 0x01
 
         context_length = ord(data.read(1))
@@ -398,7 +368,6 @@ class LowpanIdFactory(object):
 
 
 class CommissioningData(NetworkData):
-
     def __init__(self, sub_tlvs, stable):
         super(CommissioningData, self).__init__(stable)
         self._sub_tlvs = sub_tlvs
@@ -410,134 +379,47 @@ class CommissioningData(NetworkData):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return  self.sub_tlvs == other.sub_tlvs
+        return self.sub_tlvs == other.sub_tlvs
 
     def __repr__(self):
-        sub_tlvs_str = ", ".format(["{}".format(tlv) for tlv in self._sub_tlvs])
+        sub_tlvs_str = ", ".format(
+            ["{}".format(tlv) for tlv in self._sub_tlvs]
+        )
         return "CommissioningData(stable={}, sub_tlvs=[{}])".format(
-            self._stable, sub_tlvs_str)
+            self._stable, sub_tlvs_str
+        )
 
 
 class CommissioningDataSubTlvsFactory(SubTlvsFactory):
-
     def __init__(self, sub_tlvs_factories):
-        super(CommissioningDataSubTlvsFactory, self).__init__(sub_tlvs_factories)
+        super(CommissioningDataSubTlvsFactory, self).__init__(
+            sub_tlvs_factories
+        )
 
 
 class CommissioningDataFactory(object):
-
     def __init__(self, sub_tlvs_factory):
         self._sub_tlvs_factory = sub_tlvs_factory
 
     def parse(self, data, message_info):
-        sub_tlvs = self._sub_tlvs_factory.parse(io.BytesIO(data.read()), message_info)
+        sub_tlvs = self._sub_tlvs_factory.parse(
+            io.BytesIO(data.read()), message_info
+        )
 
         return CommissioningData(sub_tlvs, message_info.stable)
 
 
-class SteeringData(object):
-
-    def __init__(self, bloom_filter):
-        self._bloom_filter = bloom_filter
-
-    @property
-    def bloom_filter(self):
-        return self._bloom_filter
-
-    def __eq__(self, other):
-        common.expect_the_same_class(self, other)
-
-        return self._bloom_filter == other._bloom_filter
-
-    def __repr__(self):
-        return "SteeringData(bloom_filter={})".format(hexlify(self._bloom_filter))
-
-
-class SteeringDataFactory:
-
-    def parse(self, data, message_info):
-        bloom_filter = data.read(message_info.length)
-        return SteeringData(bloom_filter)
-
-
-class BorderAgentLocator(object):
-
-    def __init__(self, address):
-        self._udp_port = address
-
-    @property
-    def udp_port(self):
-        return self._udp_port
-
-    def __eq__(self, other):
-        common.expect_the_same_class(self, other)
-
-        return self._udp_port == other._udp_port
-
-    def __repr__(self):
-        return "BorderAgentLocator(rloc16={})".format(hex(self._udp_port))
-
-
-class BorderAgentLocatorFactory:
-
-    def parse(self, data, message_info):
-        border_agent_locator = struct.unpack(">H", data.read(2))[0]
-        return BorderAgentLocator(border_agent_locator)
-
-
-class CommissionerSessionId(object):
-
-    def __init__(self, commissioner_session_id):
-        self._udp_port = commissioner_session_id
-
-    @property
-    def udp_port(self):
-        return self._udp_port
-
-    def __eq__(self, other):
-        common.expect_the_same_class(self, other)
-
-        return self._udp_port == other._udp_port
-
-    def __repr__(self):
-        return "CommissionerSessionId(id={})".format(hex(self._udp_port))
-
-
-class CommissionerSessionIdFactory:
-
-    def parse(self, data, message_info):
-        session_id = struct.unpack(">H", data.read(2))[0]
-        return CommissionerSessionId(session_id)
-
-
-class CommissionerUdpPort(object):
-
-    def __init__(self, udp_port):
-        self._udp_port = udp_port
-
-    @property
-    def udp_port(self):
-        return self._udp_port
-
-    def __eq__(self, other):
-        common.expect_the_same_class(self, other)
-
-        return self._udp_port == other._udp_port
-
-    def __repr__(self):
-        return "CommissionerUdpPort(udp_port={})".format(self._udp_port)
-
-
-class CommissionerUdpPortFactory:
-
-    def parse(self, data, message_info):
-        udp_port = struct.unpack(">H", data.read(2))[0]
-        return CommissionerUdpPort(udp_port)
-
-
 class Service(NetworkData):
-
-    def __init__(self, t, _id, enterprise_number, service_data_length, service_data, sub_tlvs, stable):
+    def __init__(
+        self,
+        t,
+        _id,
+        enterprise_number,
+        service_data_length,
+        service_data,
+        sub_tlvs,
+        stable,
+    ):
         super(Service, self).__init__(stable)
         self._t = t
         self._id = _id
@@ -573,46 +455,57 @@ class Service(NetworkData):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return  self.t == other.t and \
-            self.id == other.id and \
-            self.enterprise_number == other.enterprise_number and \
-            self.service_data_length == other.service_data_length and \
-            self.service_data == other.service_data and \
-            self.sub_tlvs == other.sub_tlvs
+        return (
+            self.t == other.t
+            and self.id == other.id
+            and self.enterprise_number == other.enterprise_number
+            and self.service_data_length == other.service_data_length
+            and self.service_data == other.service_data
+            and self.sub_tlvs == other.sub_tlvs
+        )
 
     def __repr__(self):
         sub_tlvs_str = ", ".format(["{}".format(tlv) for tlv in self.sub_tlvs])
-        return "LowpanId(stable={}, t={}, id={}, enterprise_number={}, service_data_length={}, service_data={}, sub_tlvs=[{}])".format(
-            self.stable, self.t, self.id, self.enterprise_number, self.service_data_length, self.service_data, sub_tlvs_str)
+        return ("LowpanId(stable={}, t={}, id={}, enterprise_number={}, service_data_length={}, service_data={},",
+                "sub_tlvs=[{}])").format(
+            self.stable, self.t, self.id, self.enterprise_number, self.service_data_length, self.service_data,
+            sub_tlvs_str, )
 
 
 class ServiceSubTlvsFactory(NetworkDataSubTlvsFactory):
-
     def __init__(self, sub_tlvs_factories):
         super(ServiceSubTlvsFactory, self).__init__(sub_tlvs_factories)
 
 
 class ServiceFactory(object):
-
     def __init__(self, sub_tlvs_factory):
         self._sub_tlvs_factory = sub_tlvs_factory
 
     def parse(self, data, message_info):
         data_byte = ord(data.read(1))
         t = (data_byte >> 7) & 0x01
-        _id = (data_byte & 0x0f)
+        _id = data_byte & 0x0F
 
         enterprise_number = struct.unpack(">L", data.read(4))[0]
         service_data_length = ord(data.read(1))
         service_data = data.read(service_data_length)
 
-        sub_tlvs = self._sub_tlvs_factory.parse(io.BytesIO(data.read()), message_info)
+        sub_tlvs = self._sub_tlvs_factory.parse(
+            io.BytesIO(data.read()), message_info
+        )
 
-        return Service(t, _id, enterprise_number, service_data_length, service_data, sub_tlvs, message_info.stable)
+        return Service(
+            t,
+            _id,
+            enterprise_number,
+            service_data_length,
+            service_data,
+            sub_tlvs,
+            message_info.stable,
+        )
 
 
 class Server(NetworkData):
-
     def __init__(self, server_16, server_data, stable):
         super(Server, self).__init__(stable)
         self._server_16 = server_16
@@ -629,16 +522,18 @@ class Server(NetworkData):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return self.server_16 == other.server_16 and \
-            self.server_data == other.server_data
+        return (
+            self.server_16 == other.server_16
+            and self.server_data == other.server_data
+        )
 
     def __repr__(self):
         return "LowpanId(stable={}, server_16={}, server_data=b'{}')".format(
-            self.stable, self.server_16, hexlify(self.server_data))
+            self.stable, self.server_16, hexlify(self.server_data)
+        )
 
 
 class ServerFactory(object):
-
     def parse(self, data, message_info):
         server_16 = struct.unpack(">H", data.read(2))[0]
         server_data = bytearray(data.read())
@@ -647,6 +542,5 @@ class ServerFactory(object):
 
 
 class NetworkDataTlvsFactory(NetworkDataSubTlvsFactory):
-
     def __init__(self, sub_tlvs_factories):
         super(NetworkDataTlvsFactory, self).__init__(sub_tlvs_factories)

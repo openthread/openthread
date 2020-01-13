@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2018, The OpenThread Authors.
 #  All rights reserved.
@@ -28,26 +28,28 @@
 
 from wpan import verify
 import wpan
-import time
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test description: forming a Thread network
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
-print '-' * 120
-print 'Starting \'{}\''.format(test_name)
+print('-' * 120)
+print('Starting \'{}\''.format(test_name))
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
+
+speedup = 4
+wpan.Node.set_time_speedup_factor(speedup)
 
 node = wpan.Node()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Init all nodes
 
 wpan.Node.init_all_nodes()
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
 # default values after reset
@@ -89,7 +91,7 @@ verify(node.get(wpan.WPAN_XPANID) != DEFAULT_XPANID)
 node.leave()
 verify(node.get(wpan.WPAN_STATE) == wpan.STATE_OFFLINE)
 
-# Form a network with a specific panid, xpanid and key.
+# Form a network with a specific panid, xpanid and key specified separately
 
 node.set(wpan.WPAN_PANID, '0x1977')
 node.set(wpan.WPAN_XPANID, '1020031510006016', binary_data=True)
@@ -103,9 +105,42 @@ verify(node.get(wpan.WPAN_KEY) == '[0123456789ABCDEFFECDBA9876543210]')
 verify(node.get(wpan.WPAN_PANID) == '0x1977')
 verify(node.get(wpan.WPAN_XPANID) == '0x1020031510006016')
 
+node.leave()
+verify(node.get(wpan.WPAN_STATE) == wpan.STATE_OFFLINE)
 
-#-----------------------------------------------------------------------------------------------------------------------
+# Form a network with all parameters given as part of `form` command itself
+
+node.form(
+    'vahman',
+    channel_mask='15,20-24',
+    panid='0x1977',
+    xpanid='1020031510006016',
+    key='0123456789abcdeffecdba9876543210',
+    key_index='1',
+    mesh_local_prefix='fd00:cafe::',
+)
+
+verify(node.get(wpan.WPAN_STATE) == wpan.STATE_ASSOCIATED)
+verify(node.get(wpan.WPAN_NAME) == '"vahman"')
+channel = int(node.get(wpan.WPAN_CHANNEL), 0)
+verify(channel == 15 or (20 <= channel <= 24))
+verify(node.get(wpan.WPAN_KEY) == '[0123456789ABCDEFFECDBA9876543210]')
+verify(node.get(wpan.WPAN_KEY_INDEX) == '1')
+verify(node.get(wpan.WPAN_PANID) == '0x1977')
+verify(node.get(wpan.WPAN_XPANID) == '0x1020031510006016')
+verify(node.get(wpan.WPAN_IP6_MESH_LOCAL_PREFIX) == '"fd00:cafe::/64"')
+
+# Verify behavior when commands are issued immediately after a `reset`
+
+node.reset()
+node.leave()
+
+node.reset()
+node.form('net-after-reset')
+
+# -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
-print '\'{}\' passed.'.format(test_name)
+wpan.Node.finalize_all_nodes()
 
+print('\'{}\' passed.'.format(test_name))

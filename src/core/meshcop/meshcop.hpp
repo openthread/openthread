@@ -37,25 +37,29 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/instance.h>
+
 #include "coap/coap.hpp"
 #include "common/message.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 
 namespace ot {
 namespace MeshCoP {
 
 enum
 {
-    kMeshCoPMessagePriority = Message::kPriorityHigh, // The priority for MeshCoP message
+    kMeshCoPMessagePriority = Message::kPriorityNet, ///< The priority for MeshCoP message
+    kBorderAgentUdpPort     = 49191,                 ///< UDP port of border agent service.
 };
 
 /**
  * This function create Message for MeshCoP
  *
  */
-inline Message *NewMeshCoPMessage(Coap::CoapBase &aCoap, const Coap::Header &aHeader)
+inline Coap::Message *NewMeshCoPMessage(Coap::CoapBase &aCoap)
 {
-    return aCoap.NewMessage(aHeader, kMeshCoPMessagePriority);
+    otMessageSettings settings = {true, static_cast<otMessagePriority>(kMeshCoPMessagePriority)};
+    return aCoap.NewMessage(&settings);
 }
 
 /**
@@ -66,6 +70,18 @@ inline Message *NewMeshCoPMessage(Coap::CoapBase &aCoap, const Coap::Header &aHe
  *
  */
 void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId);
+
+/**
+ * This function gets the border agent RLOC.
+ *
+ * @param[in]   aNetif  A reference to the thread interface.
+ * @param[out]  aRloc   Border agent RLOC.
+ *
+ * @retval OT_ERROR_NONE        Successfully got the Border Agent Rloc.
+ * @retval OT_ERROR_NOT_FOUND   Border agent is not available.
+ *
+ */
+otError GetBorderAgentRloc(ThreadNetif &aNetIf, uint16_t &aRloc);
 
 } // namespace MeshCoP
 

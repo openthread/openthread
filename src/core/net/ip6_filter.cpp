@@ -37,6 +37,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "meshcop/meshcop.hpp"
 #include "net/ip6.hpp"
 #include "net/tcp.hpp"
 #include "net/udp6.hpp"
@@ -46,6 +47,7 @@ namespace ot {
 namespace Ip6 {
 
 Filter::Filter(void)
+    : mAllowNativeCommissioner(true)
 {
     memset(mUnsecurePorts, 0, sizeof(mUnsecurePorts));
 }
@@ -84,6 +86,11 @@ bool Filter::Accept(Message &aMessage) const
             ExitNow(rval = true);
         }
 
+        // Allow native commissioner traffic
+        if (mAllowNativeCommissioner && dstport == MeshCoP::kBorderAgentUdpPort)
+        {
+            ExitNow(rval = true);
+        }
         break;
 
     case kProtoTcp:
@@ -164,6 +171,11 @@ otError Filter::RemoveUnsecurePort(uint16_t aPort)
 
 exit:
     return error;
+}
+
+void Filter::RemoveAllUnsecurePorts(void)
+{
+    memset(mUnsecurePorts, 0, sizeof(mUnsecurePorts));
 }
 
 const uint16_t *Filter::GetUnsecurePorts(uint8_t &aNumEntries) const

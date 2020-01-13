@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -42,7 +41,6 @@ ROUTER4 = 5
 
 
 class Cert_5_1_08_RouterAttachConnectivity(unittest.TestCase):
-
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -87,10 +85,10 @@ class Cert_5_1_08_RouterAttachConnectivity(unittest.TestCase):
         self.nodes[ROUTER4].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
+        self.simulator.stop()
 
     def test(self):
         self.nodes[LEADER].start()
@@ -137,14 +135,20 @@ class Cert_5_1_08_RouterAttachConnectivity(unittest.TestCase):
         self.assertEqual(0, scan_mask_tlv.end_device)
 
         # 3 - Router2, Router3
-        msg = router2_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+        msg = router2_messages.next_mle_message(
+            mle.CommandType.PARENT_RESPONSE
+        )
         msg.assertSentToNode(self.nodes[ROUTER4])
 
-        msg = router3_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+        msg = router3_messages.next_mle_message(
+            mle.CommandType.PARENT_RESPONSE
+        )
         msg.assertSentToNode(self.nodes[ROUTER4])
 
         # 4 - Router4
-        msg = router4_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        msg = router4_messages.next_mle_message(
+            mle.CommandType.CHILD_ID_REQUEST
+        )
         msg.assertSentToNode(self.nodes[ROUTER3])
         msg.assertMleMessageContainsTlv(mle.Response)
         msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)

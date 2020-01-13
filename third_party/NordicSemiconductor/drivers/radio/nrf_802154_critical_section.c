@@ -41,18 +41,23 @@
 
 #include "nrf_802154_config.h"
 #include "nrf_802154_debug.h"
-#include "hal/nrf_radio.h"
-#include "platform/timer/nrf_802154_timer.h"
-#include "raal/nrf_raal_api.h"
+#include "nrf_radio.h"
+#include "rsch/nrf_802154_rsch.h"
+#include "platform/lp_timer/nrf_802154_lp_timer.h"
 
 #include <nrf.h>
 
-#define CMSIS_IRQ_NUM_VECTACTIVE_DIFF 16
+#define CMSIS_IRQ_NUM_VECTACTIVE_DIFF                 16
 
 #define NESTED_CRITICAL_SECTION_ALLOWED_PRIORITY_NONE (-1)
 
-static volatile uint8_t m_nested_critical_section_counter;           ///< Counter of nested critical sections
-static volatile int8_t  m_nested_critical_section_allowed_priority;  ///< Indicator if nested critical sections are currently allowed
+static volatile uint8_t m_critical_section_monitor;                 ///< Monitors each critical section enter operation
+static volatile uint8_t m_nested_critical_section_counter;          ///< Counter of nested critical sections
+static volatile int8_t  m_nested_critical_section_allowed_priority; ///< Indicator if nested critical sections are currently allowed
+
+/***************************************************************************************************
+ * @section Critical sections management
+ **************************************************************************************************/
 
 /** @brief Enter critical section for RADIO peripheral
  *
@@ -61,11 +66,9 @@ static volatile int8_t  m_nested_critical_section_allowed_priority;  ///< Indica
  */
 static void radio_critical_section_enter(void)
 {
-    if (nrf_raal_timeslot_is_granted())
+    if (nrf_802154_rsch_prec_is_approved(RSCH_PREC_RAAL, RSCH_PRIO_MIN_APPROVED))
     {
         NVIC_DisableIRQ(RADIO_IRQn);
-        __DSB();
-        __ISB();
     }
 }
 
@@ -76,7 +79,7 @@ static void radio_critical_section_enter(void)
  */
 static void radio_critical_section_exit(void)
 {
-    if (nrf_raal_timeslot_is_granted())
+    if (nrf_802154_rsch_prec_is_approved(RSCH_PREC_RAAL, RSCH_PRIO_MIN_APPROVED))
     {
         NVIC_EnableIRQ(RADIO_IRQn);
     }
@@ -101,38 +104,101 @@ static int8_t active_priority_convert(uint32_t active_priority)
 static bool nested_critical_section_is_allowed_in_this_context(void)
 {
     return m_nested_critical_section_allowed_priority ==
-            active_priority_convert(
-                    nrf_802154_critical_section_active_vector_priority_get());
+           active_priority_convert(nrf_802154_critical_section_active_vector_priority_get());
 }
 
 static bool critical_section_enter(bool forced)
 {
-    bool    result = true;
+    bool    result = false;
     uint8_t cnt;
 
-    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_CRIT_SECT_ENTER);
+    if (forced ||
+        (m_nested_critical_section_counter == 0) ||
+        nested_critical_section_is_allowed_in_this_context())
+    {
+        do
+        {
+            cnt = __LDREXB(&m_nested_critical_section_counter);
+
+            assert(cnt < UINT8_MAX);
+        }
+        while (__STREXB(cnt + 1, &m_nested_critical_section_counter));
+
+        nrf_802154_critical_section_rsch_enter();
+        nrf_802154_lp_timer_critical_section_enter();
+        radio_critical_section_enter();
+        __DSB();
+        __ISB();
+
+        m_critical_section_monitor++;
+
+        result = true;
+    }
+
+    return result;
+}
+
+static void critical_section_exit(void)
+{
+    uint8_t     cnt = m_nested_critical_section_counter;
+    uint8_t     monitor;
+    uint8_t     atomic_cnt;
+    static bool exiting_crit_sect;
+    bool        result;
+
+    assert(cnt > 0);
 
     do
     {
-        cnt = __LDREXB(&m_nested_critical_section_counter);
+        monitor = m_critical_section_monitor;
 
-        assert(cnt < UINT8_MAX);
-
-        if (!forced && cnt > 0 && !nested_critical_section_is_allowed_in_this_context())
+        // If critical section is not nested exit critical section
+        if (cnt == 1)
         {
-            __CLREX();
-            result = false;
-            break;
+            assert(!exiting_crit_sect);
+            (void)exiting_crit_sect;
+            exiting_crit_sect = true;
+
+            nrf_802154_critical_section_rsch_exit();
+            radio_critical_section_exit();
+            nrf_802154_lp_timer_critical_section_exit();
+
+            exiting_crit_sect = false;
         }
 
-        radio_critical_section_enter();
-        nrf_raal_critical_section_enter();
-    }
-    while (__STREXB(cnt + 1, &m_nested_critical_section_counter));
+        do
+        {
+            atomic_cnt = __LDREXB(&m_nested_critical_section_counter);
+            assert(atomic_cnt == cnt);
+        }
+        while (__STREXB(atomic_cnt - 1, &m_nested_critical_section_counter));
 
-    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_CRIT_SECT_ENTER);
-    return result;
+        // If critical section is not nested verify if during exit procedure RSCH notified
+        // change of state or critical section was visited by higher priority IRQ meantime.
+        if (cnt == 1)
+        {
+            // Check if critical section must be exited again.
+            if (nrf_802154_critical_section_rsch_event_is_pending() ||
+                (monitor != m_critical_section_monitor))
+            {
+                result = critical_section_enter(false);
+                assert(result);
+                (void)result;
+
+                continue;
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+    while (cnt == 1);
 }
+
+/***************************************************************************************************
+ * @section API functions
+ **************************************************************************************************/
 
 void nrf_802154_critical_section_init(void)
 {
@@ -142,44 +208,35 @@ void nrf_802154_critical_section_init(void)
 
 bool nrf_802154_critical_section_enter(void)
 {
-    return critical_section_enter(false);
+    bool result;
+
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_CRIT_SECT_ENTER);
+
+    result = critical_section_enter(false);
+
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_CRIT_SECT_ENTER);
+
+    return result;
 }
 
 void nrf_802154_critical_section_forcefully_enter(void)
 {
-    bool critical_section_entered = critical_section_enter(true);
+    bool critical_section_entered;
+
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_CRIT_SECT_ENTER);
+
+    critical_section_entered = critical_section_enter(true);
     assert(critical_section_entered);
     (void)critical_section_entered;
+
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_CRIT_SECT_ENTER);
 }
 
 void nrf_802154_critical_section_exit(void)
 {
-    uint8_t     cnt;
-    static bool exiting_crit_sect;
-
     nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_CRIT_SECT_EXIT);
 
-    do
-    {
-        cnt = __LDREXB(&m_nested_critical_section_counter);
-
-        assert(cnt > 0);
-
-        if (cnt == 1)
-        {
-            assert(!exiting_crit_sect);
-            (void)exiting_crit_sect;
-            exiting_crit_sect = true;
-
-            // RAAL critical section shall be exited before RADIO IRQ handler is enabled. In other
-            // case RADIO IRQ handler may be called out of timeslot.
-            nrf_raal_critical_section_exit();
-            radio_critical_section_exit();
-
-            exiting_crit_sect = false;
-        }
-    }
-    while (__STREXB(cnt - 1, &m_nested_critical_section_counter));
+    critical_section_exit();
 
     nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_CRIT_SECT_EXIT);
 }
@@ -187,17 +244,24 @@ void nrf_802154_critical_section_exit(void)
 void nrf_802154_critical_section_nesting_allow(void)
 {
     assert(m_nested_critical_section_allowed_priority ==
-            NESTED_CRITICAL_SECTION_ALLOWED_PRIORITY_NONE);
+           NESTED_CRITICAL_SECTION_ALLOWED_PRIORITY_NONE);
+    assert(m_nested_critical_section_counter >= 1);
 
     m_nested_critical_section_allowed_priority = active_priority_convert(
-            nrf_802154_critical_section_active_vector_priority_get());
+        nrf_802154_critical_section_active_vector_priority_get());
 }
 
 void nrf_802154_critical_section_nesting_deny(void)
 {
     assert(m_nested_critical_section_allowed_priority >= 0);
+    assert(m_nested_critical_section_counter >= 1);
 
     m_nested_critical_section_allowed_priority = NESTED_CRITICAL_SECTION_ALLOWED_PRIORITY_NONE;
+}
+
+bool nrf_802154_critical_section_is_nested(void)
+{
+    return m_nested_critical_section_counter > 1;
 }
 
 uint32_t nrf_802154_critical_section_active_vector_priority_get(void)
@@ -219,4 +283,3 @@ uint32_t nrf_802154_critical_section_active_vector_priority_get(void)
 
     return active_priority;
 }
-

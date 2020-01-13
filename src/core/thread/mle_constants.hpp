@@ -46,9 +46,9 @@ namespace Mle {
 
 enum
 {
-    kMaxChildren               = OPENTHREAD_CONFIG_MAX_CHILDREN,
+    kMaxChildren               = OPENTHREAD_CONFIG_MLE_MAX_CHILDREN,
     kMaxChildKeepAliveAttempts = 4, ///< Maximum keep alive attempts before attempting to reattach to a new Parent
-    kFailedChildTransmissions  = 4, ///< FAILED_CHILD_TRANSMISSIONS
+    kFailedChildTransmissions  = OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS, ///< FAILED_CHILD_TRANSMISSIONS
 };
 
 /**
@@ -57,23 +57,31 @@ enum
  */
 enum
 {
-    kVersion                       = 2,     ///< MLE Version
-    kUdpPort                       = 19788, ///< MLE UDP Port
-    kParentRequestRouterTimeout    = 750,   ///< Router Parent Request timeout
-    kParentRequestReedTimeout      = 1250,  ///< Router and REEDs Parent Request timeout
-    kParentRequestJitter           = 50,    ///< Maximum jitter time added to Parent Request timeout
-    kAnnounceProcessTimeout        = 250,   ///< Timeout after receiving Announcement before channel/pan-id change
-    kAnnounceTimeout               = 1400,  ///< Total timeout used for sending Announcement messages
-    kMinAnnounceDelay              = 80,    ///< Minimum delay between Announcement messages
-    kParentResponseMaxDelayRouters = 500,   ///< Maximum delay for response for Parent Request sent to routers only
-    kParentResponseMaxDelayAll     = 1000,  ///< Maximum delay for response for Parent Request sent to all devices
-    kUnicastRetransmissionDelay    = 1000,  ///< Base delay before retransmitting an MLE unicast.
-    kMaxTransmissionCount          = 3,     ///< Maximum number of times an MLE message may be transmitted.
-    kMaxResponseDelay              = 1000,  ///< Maximum delay before responding to a multicast request
-    kMaxChildIdRequestTimeout      = 5000,  ///< Maximum delay for receiving a Child ID Request
-    kMaxChildUpdateResponseTimeout = 2000,  ///< Maximum delay for receiving a Child Update Response
-    kMaxLinkRequestTimeout         = 2000,  ///< Maximum delay for receiving a Link Accept
-    kMinTimeout = (((kMaxChildKeepAliveAttempts + 1) * kUnicastRetransmissionDelay) / 1000), ///< Minimum timeout(s)
+    kThreadVersion                  = OPENTHREAD_THREAD_VERSION, ///< Thread Version
+    kUdpPort                        = 19788,                     ///< MLE UDP Port
+    kParentRequestRouterTimeout     = 750,                       ///< Router Parent Request timeout
+    kParentRequestDuplicateMargin   = 50,                        ///< Margin for duplicate parent request
+    kParentRequestReedTimeout       = 1250,                      ///< Router and REEDs Parent Request timeout
+    kAttachStartJitter              = 50,                        ///< Maximum jitter time added to start of attach.
+    kAnnounceProcessTimeout         = 250,  ///< Timeout after receiving Announcement before channel/pan-id change
+    kAnnounceTimeout                = 1400, ///< Total timeout used for sending Announcement messages
+    kMinAnnounceDelay               = 80,   ///< Minimum delay between Announcement messages
+    kParentResponseMaxDelayRouters  = 500,  ///< Maximum delay for response for Parent Request sent to routers only
+    kParentResponseMaxDelayAll      = 1000, ///< Maximum delay for response for Parent Request sent to all devices
+    kUnicastRetransmissionDelay     = 1000, ///< Base delay before retransmitting an MLE unicast.
+    kChildUpdateRequestPendingDelay = 100,  ///< Delay (in ms) for aggregating Child Update Request.
+    kMaxTransmissionCount           = 3,    ///< Maximum number of times an MLE message may be transmitted.
+    kMaxResponseDelay               = 1000, ///< Maximum delay before responding to a multicast request
+    kMaxChildIdRequestTimeout       = 5000, ///< Maximum delay for receiving a Child ID Request
+    kMaxChildUpdateResponseTimeout  = 2000, ///< Maximum delay for receiving a Child Update Response
+    kMaxLinkRequestTimeout          = 2000, ///< Maximum delay for receiving a Link Accept
+    kMinTimeoutKeepAlive            = (((kMaxChildKeepAliveAttempts + 1) * kUnicastRetransmissionDelay) /
+                            1000), ///< Minimum timeout(s) for keep alive
+    kMinTimeoutDataPoll             = (OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD +
+                           OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS * OPENTHREAD_CONFIG_MAC_RETX_POLL_PERIOD) /
+                          1000, ///< Minimum timeout(s) for data poll
+    kMinTimeout = (kMinTimeoutKeepAlive >= kMinTimeoutDataPoll ? kMinTimeoutKeepAlive
+                                                               : kMinTimeoutDataPoll), ///< Minimum timeout(s)
 };
 
 enum
@@ -90,27 +98,36 @@ enum
  */
 enum
 {
-    kAdvertiseIntervalMin       = 1,                                       ///< ADVERTISEMENT_I_MIN (sec)
-    kAdvertiseIntervalMax       = 32,                                      ///< ADVERTISEMENT_I_MAX (sec)
-    kFailedRouterTransmissions  = 4,                                       ///< FAILED_ROUTER_TRANSMISSIONS
-    kRouterIdReuseDelay         = 100,                                     ///< ID_REUSE_DELAY (sec)
-    kRouterIdSequencePeriod     = 10,                                      ///< ID_SEQUENCE_PERIOD (sec)
-    kMaxNeighborAge             = 100,                                     ///< MAX_NEIGHBOR_AGE (sec)
-    kMaxRouteCost               = 16,                                      ///< MAX_ROUTE_COST
-    kMaxRouterId                = 62,                                      ///< MAX_ROUTER_ID
-    kInvalidRouterId            = kMaxRouterId + 1,                        ///< Value indicating incorrect Router Id
-    kMaxRouters                 = OPENTHREAD_CONFIG_MAX_ROUTERS,           ///< MAX_ROUTERS
-    kMinDowngradeNeighbors      = 7,                                       ///< MIN_DOWNGRADE_NEIGHBORS
-    kNetworkIdTimeout           = 120,                                     ///< NETWORK_ID_TIMEOUT (sec)
-    kParentRouteToLeaderTimeout = 20,                                      ///< PARENT_ROUTE_TO_LEADER_TIMEOUT (sec)
-    kRouterSelectionJitter      = 120,                                     ///< ROUTER_SELECTION_JITTER (sec)
-    kRouterDowngradeThreshold   = 23,                                      ///< ROUTER_DOWNGRADE_THRESHOLD (routers)
-    kRouterUpgradeThreshold     = 16,                                      ///< ROUTER_UPGRADE_THRESHOLD (routers)
-    kMaxLeaderToRouterTimeout   = 90,                                      ///< INFINITE_COST_TIMEOUT (sec)
-    kReedAdvertiseInterval      = 570,                                     ///< REED_ADVERTISEMENT_INTERVAL (sec)
-    kReedAdvertiseJitter        = 60,                                      ///< REED_ADVERTISEMENT_JITTER (sec)
-    kLeaderWeight               = 64,                                      ///< Default leader weight
-    kMleEndDeviceTimeout        = OPENTHREAD_CONFIG_DEFAULT_CHILD_TIMEOUT, ///< MLE_END_DEVICE_TIMEOUT (sec)
+    kAdvertiseIntervalMin = 1, ///< ADVERTISEMENT_I_MIN (sec)
+#if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+    kAdvertiseIntervalMax = 5, ///< ADVERTISEMENT_I_MAX (sec) proposal
+#else
+    kAdvertiseIntervalMax = 32, ///< ADVERTISEMENT_I_MAX (sec)
+#endif
+    kFailedRouterTransmissions = 4,   ///< FAILED_ROUTER_TRANSMISSIONS
+    kRouterIdReuseDelay        = 100, ///< ID_REUSE_DELAY (sec)
+    kRouterIdSequencePeriod    = 10,  ///< ID_SEQUENCE_PERIOD (sec)
+    kMaxNeighborAge            = 100, ///< MAX_NEIGHBOR_AGE (sec)
+#if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+    kMaxRouteCost = 127, ///< MAX_ROUTE_COST proposal
+#else
+    kMaxRouteCost         = 16, ///< MAX_ROUTE_COST
+#endif
+    kMaxRouterId                = 62,                                          ///< MAX_ROUTER_ID
+    kInvalidRouterId            = kMaxRouterId + 1,                            ///< Value indicating incorrect Router Id
+    kMaxRouters                 = OPENTHREAD_CONFIG_MLE_MAX_ROUTERS,           ///< MAX_ROUTERS
+    kMinDowngradeNeighbors      = 7,                                           ///< MIN_DOWNGRADE_NEIGHBORS
+    kNetworkIdTimeout           = 120,                                         ///< NETWORK_ID_TIMEOUT (sec)
+    kParentRouteToLeaderTimeout = 20,                                          ///< PARENT_ROUTE_TO_LEADER_TIMEOUT (sec)
+    kRouterSelectionJitter      = 120,                                         ///< ROUTER_SELECTION_JITTER (sec)
+    kRouterDowngradeThreshold   = 23,                                          ///< ROUTER_DOWNGRADE_THRESHOLD (routers)
+    kRouterUpgradeThreshold     = 16,                                          ///< ROUTER_UPGRADE_THRESHOLD (routers)
+    kMaxLeaderToRouterTimeout   = 90,                                          ///< INFINITE_COST_TIMEOUT (sec)
+    kReedAdvertiseInterval      = 570,                                         ///< REED_ADVERTISEMENT_INTERVAL (sec)
+    kReedAdvertiseJitter        = 60,                                          ///< REED_ADVERTISEMENT_JITTER (sec)
+    kLeaderWeight               = 64,                                          ///< Default leader weight
+    kMleEndDeviceTimeout        = OPENTHREAD_CONFIG_MLE_CHILD_TIMEOUT_DEFAULT, ///< MLE_END_DEVICE_TIMEOUT (sec)
+    kMeshLocalPrefixContextId   = 0,                                           ///< 0 is reserved for Mesh Local Prefix
 };
 
 /**
@@ -127,10 +144,10 @@ enum
 
 enum
 {
-    kLinkQuality3LinkCost = 1,  ///< Link Cost for Link Quality 3
-    kLinkQuality2LinkCost = 2,  ///< Link Cost for Link Quality 2
-    kLinkQuality1LinkCost = 4,  ///< Link Cost for Link Quality 1
-    kLinkQuality0LinkCost = 16, ///< Link Cost for Link Quality 0
+    kLinkQuality3LinkCost = 1,             ///< Link Cost for Link Quality 3
+    kLinkQuality2LinkCost = 2,             ///< Link Cost for Link Quality 2
+    kLinkQuality1LinkCost = 4,             ///< Link Cost for Link Quality 1
+    kLinkQuality0LinkCost = kMaxRouteCost, ///< Link Cost for Link Quality 0
 };
 
 /**

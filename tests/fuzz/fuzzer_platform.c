@@ -28,256 +28,347 @@
 
 #include <string.h>
 
+#include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/diag.h>
 #include <openthread/platform/logging.h>
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
-#include <openthread/platform/random.h>
 #include <openthread/platform/settings.h>
+#include <openthread/platform/uart.h>
 
-static uint32_t sRandomState = 1;
+typedef struct AlarmState
+{
+    uint32_t fire;
+    bool     isRunning;
+} AlarmState;
+
+static uint32_t     sAlarmNow;
+static AlarmState   sAlarmMilli;
+static AlarmState   sAlarmMicro;
+static uint32_t     sRandomState = 1;
+static uint8_t      sRadioTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE];
+static otRadioFrame sRadioTransmitFrame = {.mPsdu = sRadioTransmitPsdu};
+static bool         sResetWasRequested  = false;
 
 void FuzzerPlatformInit(void)
 {
     sRandomState = 1;
+    sAlarmNow    = 0;
+    memset(&sAlarmMilli, 0, sizeof(sAlarmMilli));
+    memset(&sAlarmMicro, 0, sizeof(sAlarmMicro));
+}
+
+void FuzzerPlatformProcess(otInstance *aInstance)
+{
+    if (sAlarmMilli.isRunning || sAlarmMicro.isRunning)
+    {
+        uint32_t fire = UINT32_MAX;
+
+        if (sAlarmMilli.isRunning && fire > sAlarmMilli.fire)
+        {
+            fire = sAlarmMilli.fire;
+        }
+
+        if (sAlarmMicro.isRunning && fire > sAlarmMicro.fire)
+        {
+            fire = sAlarmMicro.fire;
+        }
+
+        sAlarmNow = fire;
+
+        if (sAlarmMilli.isRunning && sAlarmNow >= sAlarmMilli.fire)
+        {
+            sAlarmMilli.isRunning = false;
+            otPlatAlarmMilliFired(aInstance);
+        }
+
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+        if (sAlarmMicro.isRunning && sAlarmNow >= sAlarmMicro.fire)
+        {
+            sAlarmMicro.isRunning = false;
+            otPlatAlarmMicroFired(aInstance);
+        }
+#endif
+    }
+}
+
+bool FuzzerPlatformResetWasRequested(void)
+{
+    return sResetWasRequested;
 }
 
 uint32_t otPlatAlarmMilliGetNow(void)
 {
-    return 0;
+    return sAlarmNow / 1000;
 }
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
-    (void)aInstance;
-    (void)aT0;
-    (void)aDt;
+    OT_UNUSED_VARIABLE(aInstance);
+
+    sAlarmMilli.fire      = (aT0 + aDt) * 1000;
+    sAlarmMilli.isRunning = true;
 }
 
 void otPlatAlarmMilliStop(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
+    sAlarmMilli.isRunning = false;
 }
 
 uint32_t otPlatAlarmMicroGetNow(void)
 {
-    return 0;
+    return sAlarmNow;
 }
 
 void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
-    (void)aInstance;
-    (void)aT0;
-    (void)aDt;
+    OT_UNUSED_VARIABLE(aInstance);
+
+    sAlarmMicro.fire      = aT0 + aDt;
+    sAlarmMicro.isRunning = true;
 }
 
 void otPlatAlarmMicroStop(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
+    sAlarmMicro.isRunning = false;
+}
+
+bool otDiagIsEnabled(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return false;
+}
+
+void otDiagProcessCmd(otInstance *aInstance, int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aArgCount);
+    OT_UNUSED_VARIABLE(aArgVector);
+    OT_UNUSED_VARIABLE(aOutput);
+    OT_UNUSED_VARIABLE(aOutputMaxLen);
+}
+
+void otDiagProcessCmdLine(otInstance *aInstance, const char *aString, char *aOutput, size_t aOutputMaxLen)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aString);
+    OT_UNUSED_VARIABLE(aOutput);
+    OT_UNUSED_VARIABLE(aOutputMaxLen);
 }
 
 void otPlatReset(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+
+    sResetWasRequested = true;
 }
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return OT_PLAT_RESET_REASON_POWER_ON;
 }
 
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
-    (void)aLogLevel;
-    (void)aLogRegion;
-    (void)aFormat;
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aLogRegion);
+    OT_UNUSED_VARIABLE(aFormat);
+}
+
+void otPlatWakeHost(void)
+{
 }
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
-    (void)aInstance;
-    (void)aIeeeEui64;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aIeeeEui64);
 }
 
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 {
-    (void)aInstance;
-    (void)aPanId;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aPanId);
 }
 
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddr)
 {
-    (void)aInstance;
-    (void)aExtAddr;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aExtAddr);
 }
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddr)
 {
-    (void)aInstance;
-    (void)aShortAddr;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aShortAddr);
 }
 
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnabled)
 {
-    (void)aInstance;
-    (void)aEnabled;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnabled);
 }
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return true;
 }
 
 otError otPlatRadioEnable(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return OT_ERROR_NONE;
 }
 
 otError otPlatRadioDisable(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return OT_ERROR_NONE;
 }
 
 otError otPlatRadioSleep(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return OT_ERROR_NONE;
 }
 
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
-    (void)aInstance;
-    (void)aChannel;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aChannel);
     return OT_ERROR_NONE;
 }
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    (void)aInstance;
-    (void)aFrame;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aFrame);
+    return OT_ERROR_NONE;
+}
+
+otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aPower);
     return OT_ERROR_NONE;
 }
 
 otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
-    (void)aInstance;
-    return NULL;
+    OT_UNUSED_VARIABLE(aInstance);
+    return &sRadioTransmitFrame;
 }
 
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return 0;
 }
 
 otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return OT_RADIO_CAPS_NONE;
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return false;
 }
 
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 {
-    (void)aInstance;
-    (void)aEnable;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
 }
 
 otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
-    (void)aInstance;
-    (void)aShortAddress;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aShortAddress);
     return OT_ERROR_NONE;
 }
 
 otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    (void)aInstance;
-    (void)aExtAddress;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aExtAddress);
     return OT_ERROR_NONE;
 }
 
 otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
 {
-    (void)aInstance;
-    (void)aShortAddress;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aShortAddress);
     return OT_ERROR_NONE;
 }
 
 otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    (void)aInstance;
-    (void)aExtAddress;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aExtAddress);
     return OT_ERROR_NONE;
 }
 
 void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
 void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
-    (void)aInstance;
-    (void)aScanChannel;
-    (void)aScanDuration;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aScanChannel);
+    OT_UNUSED_VARIABLE(aScanDuration);
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
-    (void)aInstance;
-    (void)aPower;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aPower);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aThreshold);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aThreshold);
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
     return 0;
 }
 
-uint32_t otPlatRandomGet(void)
-{
-    uint32_t mlcg, p, q;
-    uint64_t tmpstate;
-
-    tmpstate = (uint64_t)33614 * (uint64_t)sRandomState;
-    q        = tmpstate & 0xffffffff;
-    q        = q >> 1;
-    p        = tmpstate >> 32;
-    mlcg     = p + q;
-
-    if (mlcg & 0x80000000)
-    {
-        mlcg &= 0x7fffffff;
-        mlcg++;
-    }
-
-    sRandomState = mlcg;
-
-    return mlcg;
-}
-
-otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
+otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
     for (uint16_t length = 0; length < aOutputLength; length++)
     {
-        aOutput[length] = (uint8_t)otPlatRandomGet();
+        aOutput[length] = (uint8_t)rand();
     }
 
     return OT_ERROR_NONE;
@@ -285,64 +376,114 @@ otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 
 void otPlatSettingsInit(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
-otError otPlatSettingsBeginChange(otInstance *aInstance)
+void otPlatSettingsDeinit(otInstance *aInstance)
 {
-    (void)aInstance;
-    return OT_ERROR_NONE;
-}
-
-otError otPlatSettingsCommitChange(otInstance *aInstance)
-{
-    (void)aInstance;
-    return OT_ERROR_NONE;
-}
-
-otError otPlatSettingsAbandonChange(otInstance *aInstance)
-{
-    (void)aInstance;
-    return OT_ERROR_NONE;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
 otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
 {
-    (void)aInstance;
-    (void)aKey;
-    (void)aIndex;
-    (void)aValue;
-    (void)aValueLength;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aKey);
+    OT_UNUSED_VARIABLE(aIndex);
+    OT_UNUSED_VARIABLE(aValue);
+    OT_UNUSED_VARIABLE(aValueLength);
     return OT_ERROR_NOT_FOUND;
 }
 
 otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
-    (void)aInstance;
-    (void)aKey;
-    (void)aValue;
-    (void)aValueLength;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aKey);
+    OT_UNUSED_VARIABLE(aValue);
+    OT_UNUSED_VARIABLE(aValueLength);
     return OT_ERROR_NONE;
 }
 
 otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
-    (void)aInstance;
-    (void)aKey;
-    (void)aValue;
-    (void)aValueLength;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aKey);
+    OT_UNUSED_VARIABLE(aValue);
+    OT_UNUSED_VARIABLE(aValueLength);
     return OT_ERROR_NONE;
 }
 
 otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 {
-    (void)aInstance;
-    (void)aKey;
-    (void)aIndex;
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aKey);
+    OT_UNUSED_VARIABLE(aIndex);
     return OT_ERROR_NONE;
 }
 
 void otPlatSettingsWipe(otInstance *aInstance)
 {
-    (void)aInstance;
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+otError otPlatUartEnable(void)
+{
+    return OT_ERROR_NONE;
+}
+
+otError otPlatUartDisable(void)
+{
+    return OT_ERROR_NONE;
+}
+
+otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
+{
+    OT_UNUSED_VARIABLE(aBuf);
+    OT_UNUSED_VARIABLE(aBufLength);
+    return OT_ERROR_NONE;
+}
+
+otError otPlatUartFlush(void)
+{
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+    OT_UNUSED_VARIABLE(aOutput);
+    OT_UNUSED_VARIABLE(aOutputMaxLen);
+}
+
+void otPlatDiagModeSet(bool aMode)
+{
+    OT_UNUSED_VARIABLE(aMode);
+}
+
+bool otPlatDiagModeGet(void)
+{
+    return false;
+}
+
+void otPlatDiagChannelSet(uint8_t aChannel)
+{
+    OT_UNUSED_VARIABLE(aChannel);
+}
+
+void otPlatDiagTxPowerSet(int8_t aTxPower)
+{
+    OT_UNUSED_VARIABLE(aTxPower);
+}
+
+void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aFrame);
+    OT_UNUSED_VARIABLE(aError);
+}
+
+void otPlatDiagAlarmCallback(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
 }

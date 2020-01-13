@@ -31,25 +31,31 @@
 #      example compilation and programming.
 #
 
-# Establish some key directories
-
-srcdir=`dirname ${0}`
-abs_srcdir=`pwd`
-abs_top_srcdir="${abs_srcdir}"
+die()
+{
+    echo " *** ERROR: " $*
+    exit 1
+}
 
 install_packages_apt()
 {
     # apt update and install dependencies
-    sudo apt-get update
-    sudo apt-get install automake g++ libtool make
+    sudo apt-get update || die
+    sudo apt-get -y install automake g++ libtool lsb-release make || die
 
-    # add gcc-arm-embedded ppa
-    sudo add-apt-repository -y ppa:team-gcc-arm-embedded/ppa
-    sudo apt-get update
-    sudo apt-get install gcc-arm-embedded
+    PLATFORM=$(lsb_release -is)
+
+    if [ $PLATFORM = "Raspbian" ]; then
+        sudo apt-get -y install binutils-arm-none-eabi gcc-arm-none-eabi gdb-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib || die
+    else
+        # add gcc-arm-embedded ppa
+        sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa || die
+        sudo apt-get update || die
+        sudo apt-get -y install gcc-arm-embedded || die
+    fi
 
     # add clang-format for pretty
-    sudo apt-get install clang-format-5.0
+    sudo apt-get -y install clang-format-6.0
 }
 
 install_packages_opkg()
@@ -76,6 +82,13 @@ install_packages_brew()
         echo 'warning: clang/gcc needed for posix examples'
         echo 'warning: please install Command Line Tools from https://developer.apple.com/download/more/'
     fi
+
+    # add clang-format for pretty
+    CLANG_FORMAT_VERSION="clang-format version 6.0"
+    which clang-format-6.0 || (which clang-format && (clang-format --version | grep -q "${CLANG_FORMAT_VERSION}")) || {
+        brew install llvm@6
+        sudo ln -s "$(brew --prefix llvm@6)/bin/clang-format" /usr/local/bin/clang-format-6.0
+    }
 }
 
 install_packages_source()

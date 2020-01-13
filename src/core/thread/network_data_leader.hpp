@@ -36,7 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#include "utils/wrap_stdint.h"
+#include <stdint.h>
 
 #include "coap/coap.hpp"
 #include "common/timer.hpp"
@@ -217,7 +217,6 @@ public:
      */
     otError SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength);
 
-#if OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
     /**
      * This method gets the Rloc of Dhcp Agent of specified contextId.
      *
@@ -229,7 +228,6 @@ public:
      *
      */
     otError GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16);
-#endif // OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
 
 protected:
     uint8_t mStableVersion;
@@ -253,7 +251,11 @@ private:
 } // namespace ot
 
 #if OPENTHREAD_MTD
-#include "network_data_leader_mtd.hpp"
+namespace ot {
+namespace NetworkData {
+typedef class LeaderBase Leader;
+} // namespace NetworkData
+} // namespace ot
 #elif OPENTHREAD_FTD
 #include "network_data_leader_ftd.hpp"
 #else

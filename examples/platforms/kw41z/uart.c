@@ -38,7 +38,6 @@
 
 #include <utils/code_utils.h>
 #include "openthread/platform/uart.h"
-#include "openthread/types.h"
 
 #include "fsl_clock.h"
 #include "fsl_lpuart.h"
@@ -119,6 +118,11 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 
 exit:
     return error;
+}
+
+otError otPlatUartFlush(void)
+{
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 static void processTransmit(void)

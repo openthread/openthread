@@ -30,20 +30,26 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES                           = libopenthread-platform-utils.a
 
-libopenthread_platform_utils_a_CPPFLAGS = \
-    -I$(top_srcdir)/include               \
-    -I$(top_srcdir)/examples/platforms    \
-    -I$(top_srcdir)/src/core              \
+libopenthread_platform_utils_a_CPPFLAGS                 = \
+    -I$(top_srcdir)/include                               \
+    -I$(top_srcdir)/examples/platforms                    \
+    -I$(top_srcdir)/src/core                              \
+    -I$(top_srcdir)/third_party/jlink/SEGGER_RTT_V640/RTT \
     $(NULL)
 
 libopenthread_platform_utils_a_SOURCES  = \
-    debug_uart.c                          \
-    settings.cpp                          \
-    $(NULL)
-
-noinst_HEADERS                          = \
     code_utils.h                          \
+    debug_uart.c                          \
     flash.h                               \
+    logging_rtt.c                         \
+    logging_rtt.h                         \
+    mac_frame.cpp                         \
+    mac_frame.h                           \
+    settings.h                            \
+    settings_ram.c                        \
+    settings_flash.c                      \
+    soft_source_match_table.c             \
+    soft_source_match_table.h             \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

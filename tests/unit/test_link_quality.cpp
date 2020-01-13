@@ -26,8 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread/openthread.h>
-
+#include "common/code_utils.hpp"
 #include "thread/link_quality.hpp"
 #include "utils/wrap_string.h"
 
@@ -82,14 +81,7 @@ void VerifyRawRssValue(int8_t aAverage, uint16_t aRawValue)
 // This function prints the values in the passed in link info instance. It is invoked as the final step in test-case.
 void PrintOutcome(LinkQualityInfo &aLinkInfo)
 {
-    char stringBuf[LinkQualityInfo::kInfoStringSize];
-
-    VerifyOrQuit(aLinkInfo.ToInfoString(stringBuf, sizeof(stringBuf)) != NULL, "ToInfoString() returned NULL");
-
-    printf("%s", stringBuf);
-
-    // This test-case succeeded.
-    printf(" -> PASS\n");
+    printf("%s -> PASS \n", aLinkInfo.ToInfoString().AsCString());
 }
 
 void TestLinkQualityData(RssTestData aRssData)
@@ -99,6 +91,7 @@ void TestLinkQualityData(RssTestData aRssData)
     size_t          i;
 
     printf("- - - - - - - - - - - - - - - - - -\n");
+    linkInfo.Clear();
     min = kMinRssValue;
     max = kMaxRssValue;
 
@@ -138,24 +131,18 @@ void VerifyRawRssValue(RssAverager &aRssAverager)
     }
 }
 
-// This function prints the values in the passed in link info instance. It is invoked as the final step in test-case.
+// This function prints the values in the passed link info instance. It is invoked as the final step in test-case.
 void PrintOutcome(RssAverager &aRssAverager)
 {
-    char stringBuf[RssAverager::kStringSize];
-
-    VerifyOrQuit(aRssAverager.ToString(stringBuf, sizeof(stringBuf)) != NULL, "ToString() returned NULL");
-    printf("%s", stringBuf);
-
-    // This test-case succeeded.
-    printf(" -> PASS\n");
+    printf("%s -> PASS\n", aRssAverager.ToString().AsCString());
 }
 
 int8_t GetRandomRss(void)
 {
     uint32_t value;
 
-    value = otPlatRandomGet() % 128;
-    return static_cast<int8_t>(-value);
+    value = rand() % 128;
+    return -static_cast<int8_t>(value);
 }
 
 void TestRssAveraging(void)
@@ -399,6 +386,8 @@ void TestSuccessRateTracker(void)
 
     printf("\nTesting SuccessRateTracker\n");
 
+    rateTracker.Reset();
+
     VerifyOrQuit(rateTracker.GetSuccessRate() == kMaxRate, "SuccessRateTracker: Initial value incorrect");
     VerifyOrQuit(rateTracker.GetFailureRate() == 0, "SuccessRateTracker: Initial value incorrect");
 
@@ -427,7 +416,7 @@ void TestSuccessRateTracker(void)
 
     // Adding success/failure at different rates and checking the RateTracker rate for every sample
 
-    for (uint16_t testRound = 0; testRound < sizeof(kWeightLimit) / sizeof(kWeightLimit[0]) * 2; testRound++)
+    for (uint16_t testRound = 0; testRound < OT_ARRAY_LENGTH(kWeightLimit) * 2; testRound++)
     {
         uint16_t weightLimit;
         bool     reverseLogic;
@@ -497,7 +486,6 @@ void TestSuccessRateTracker(void)
 
 } // namespace ot
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     ot::TestRssAveraging();
@@ -506,4 +494,3 @@ int main(void)
     printf("\nAll tests passed\n");
     return 0;
 }
-#endif

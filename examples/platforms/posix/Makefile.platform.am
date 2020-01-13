@@ -32,5 +32,10 @@
 
 LDADD_COMMON                                                          += \
     $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \
-    -lstdc++                                                             \
     $(NULL)
+
+if OPENTHREAD_TARGET_LINUX
+LDADD_COMMON                                                          += \
+    -lrt                                                                 \
+    $(NULL)
+endif

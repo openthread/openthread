@@ -35,7 +35,8 @@
 #ifndef OPENTHREAD_LINK_H_
 #define OPENTHREAD_LINK_H_
 
-#include <openthread/types.h>
+#include <openthread/commissioner.h>
+#include <openthread/dataset.h>
 #include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
@@ -53,6 +54,350 @@ extern "C" {
  */
 
 /**
+ * This structure represents link-specific information for messages received from the Thread radio.
+ *
+ */
+typedef struct otThreadLinkInfo
+{
+    uint16_t mPanId;        ///< Source PAN ID
+    uint8_t  mChannel;      ///< 802.15.4 Channel
+    int8_t   mRss;          ///< Received Signal Strength in dBm.
+    uint8_t  mLqi;          ///< Link Quality Indicator for a received message.
+    bool     mLinkSecurity; ///< Indicates whether or not link security is enabled.
+
+    // Applicable/Required only when time sync feature (`OPENTHREAD_CONFIG_TIME_SYNC_ENABLE`) is enabled.
+    uint8_t mTimeSyncSeq;       ///< The time sync sequence.
+    int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time, in microseconds.
+} otThreadLinkInfo;
+
+/**
+ * Used to indicate no fixed received signal strength was set
+ *
+ */
+#define OT_MAC_FILTER_FIXED_RSS_DISABLED 127
+
+#define OT_MAC_FILTER_ITERATOR_INIT 0 ///< Initializer for otMacFilterIterator.
+
+typedef uint8_t otMacFilterIterator; ///< Used to iterate through mac filter entries.
+
+/**
+ * Defines address mode of the mac filter.
+ *
+ */
+typedef enum otMacFilterAddressMode
+{
+    OT_MAC_FILTER_ADDRESS_MODE_DISABLED,  ///< Address filter is disabled.
+    OT_MAC_FILTER_ADDRESS_MODE_WHITELIST, ///< Whitelist address filter mode is enabled.
+    OT_MAC_FILTER_ADDRESS_MODE_BLACKLIST, ///< Blacklist address filter mode is enabled.
+} otMacFilterAddressMode;
+
+/**
+ * This structure represents a Mac Filter entry.
+ *
+ */
+typedef struct otMacFilterEntry
+{
+    otExtAddress mExtAddress; ///< IEEE 802.15.4 Extended Address
+    int8_t       mRssIn;      ///< Received signal strength
+} otMacFilterEntry;
+
+/**
+ * This structure represents the MAC layer counters.
+ *
+ */
+typedef struct otMacCounters
+{
+    /**
+     * The total number of unique MAC frame transmission requests.
+     *
+     * Note that this counter is incremented for each MAC transmission request only by one,
+     * regardless of the amount of CCA failures, CSMA-CA attempts, or retransmissions.
+     *
+     * This incrementation rule applies to the following counters:
+     *   @p mTxUnicast
+     *   @p mTxBroadcast
+     *   @p mTxAckRequested
+     *   @p mTxNoAckRequested
+     *   @p mTxData
+     *   @p mTxDataPoll
+     *   @p mTxBeacon
+     *   @p mTxBeaconRequest
+     *   @p mTxOther
+     *   @p mTxErrAbort
+     *   @p mTxErrBusyChannel
+     *
+     * The following equations are valid:
+     *     @p mTxTotal = @p mTxUnicast + @p mTxBroadcast
+     *     @p mTxTotal = @p mTxAckRequested + @p mTxNoAckRequested
+     *     @p mTxTotal = @p mTxData + @p mTxDataPoll + @p mTxBeacon + @p mTxBeaconRequest + @p mTxOther
+     *
+     */
+    uint32_t mTxTotal;
+
+    /**
+     * The total number of unique unicast MAC frame transmission requests.
+     *
+     */
+    uint32_t mTxUnicast;
+
+    /**
+     * The total number of unique broadcast MAC frame transmission requests.
+     *
+     */
+    uint32_t mTxBroadcast;
+
+    /**
+     * The total number of unique MAC frame transmission requests with requested acknowledgment.
+     *
+     */
+    uint32_t mTxAckRequested;
+
+    /**
+     * The total number of unique MAC frame transmission requests that were acked.
+     *
+     */
+    uint32_t mTxAcked;
+
+    /**
+     * The total number of unique MAC frame transmission requests without requested acknowledgment.
+     *
+     */
+    uint32_t mTxNoAckRequested;
+
+    /**
+     * The total number of unique MAC Data frame transmission requests.
+     *
+     */
+    uint32_t mTxData;
+
+    /**
+     * The total number of unique MAC Data Poll frame transmission requests.
+     *
+     */
+    uint32_t mTxDataPoll;
+
+    /**
+     * The total number of unique MAC Beacon frame transmission requests.
+     *
+     */
+    uint32_t mTxBeacon;
+
+    /**
+     * The total number of unique MAC Beacon Request frame transmission requests.
+     *
+     */
+    uint32_t mTxBeaconRequest;
+
+    /**
+     * The total number of unique other MAC frame transmission requests.
+     *
+     * This counter is currently unused.
+     *
+     */
+    uint32_t mTxOther;
+
+    /**
+     * The total number of MAC retransmission attempts.
+     *
+     * Note that this counter is incremented by one for each retransmission attempt that may be
+     * triggered by lack of acknowledgement, CSMA/CA failure, or other type of transmission error.
+     * The @p mTxRetry counter is incremented both for unicast and broadcast MAC frames.
+     *
+     * Check the following configuration parameters to control the amount of retransmissions in the system:
+     *   @sa OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT
+     *   @sa OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT
+     *   @sa OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST
+     *   @sa OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT
+     *   @sa OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT
+     *
+     * Currently, this counter is invalid if the platform's radio driver capability includes
+     * @sa OT_RADIO_CAPS_TRANSMIT_RETRIES.
+     *
+     */
+    uint32_t mTxRetry;
+
+    /**
+     * The total number of unique MAC transmission packets that meet maximal retry limit for direct packets.
+     *
+     */
+    uint32_t mTxDirectMaxRetryExpiry;
+
+    /**
+     * The total number of unique MAC transmission packets that meet maximal retry limit for indirect packets.
+     *
+     */
+    uint32_t mTxIndirectMaxRetryExpiry;
+
+    /**
+     * The total number of CCA failures.
+     *
+     * The meaning of this counter can be different and it depends on the platform's radio driver capabilities.
+     *
+     * If @sa OT_RADIO_CAPS_CSMA_BACKOFF is enabled, this counter represents the total number of full CSMA/CA
+     * failed attempts and it is incremented by one also for each retransmission (in case of a CSMA/CA fail).
+     *
+     * If @sa OT_RADIO_CAPS_TRANSMIT_RETRIES is enabled, this counter represents the total number of full CSMA/CA
+     * failed attempts and it is incremented by one for each individual data frame request (regardless of the amount of
+     * retransmissions).
+     *
+     */
+    uint32_t mTxErrCca;
+
+    /**
+     * The total number of unique MAC transmission request failures cause by an abort error.
+     *
+     */
+    uint32_t mTxErrAbort;
+
+    /**
+     * The total number of unique MAC transmission requests failures caused by a busy channel (a CSMA/CA fail).
+     *
+     */
+    uint32_t mTxErrBusyChannel;
+
+    /**
+     * The total number of received frames.
+     *
+     * This counter counts all frames reported by the platform's radio driver, including frames
+     * that were dropped, for example because of an FCS error.
+     *
+     */
+    uint32_t mRxTotal;
+
+    /**
+     * The total number of unicast frames received.
+     *
+     */
+    uint32_t mRxUnicast;
+
+    /**
+     * The total number of broadcast frames received.
+     *
+     */
+    uint32_t mRxBroadcast;
+
+    /**
+     * The total number of MAC Data frames received.
+     *
+     */
+    uint32_t mRxData;
+
+    /**
+     * The total number of MAC Data Poll frames received.
+     *
+     */
+    uint32_t mRxDataPoll;
+
+    /**
+     * The total number of MAC Beacon frames received.
+     *
+     */
+    uint32_t mRxBeacon;
+
+    /**
+     * The total number of MAC Beacon Request frames received.
+     *
+     */
+    uint32_t mRxBeaconRequest;
+
+    /**
+     * The total number of other types of frames received.
+     *
+     */
+    uint32_t mRxOther;
+
+    /**
+     * The total number of frames dropped by MAC Filter module, for example received from blacklisted node.
+     *
+     */
+    uint32_t mRxAddressFiltered;
+
+    /**
+     * The total number of frames dropped by destination address check, for example received frame for other node.
+     *
+     */
+    uint32_t mRxDestAddrFiltered;
+
+    /**
+     * The total number of frames dropped due to duplication, that is when the frame has been already received.
+     *
+     * This counter may be incremented, for example when ACK frame generated by the receiver hasn't reached
+     * transmitter node which performed retransmission.
+     *
+     */
+    uint32_t mRxDuplicated;
+
+    /**
+     * The total number of frames dropped because of missing or malformed content.
+     *
+     */
+    uint32_t mRxErrNoFrame;
+
+    /**
+     * The total number of frames dropped due to unknown neighbor.
+     *
+     */
+    uint32_t mRxErrUnknownNeighbor;
+
+    /**
+     * The total number of frames dropped due to invalid source address.
+     *
+     */
+    uint32_t mRxErrInvalidSrcAddr;
+
+    /**
+     * The total number of frames dropped due to security error.
+     *
+     * This counter may be incremented, for example when lower than expected Frame Counter is used
+     * to encrypt the frame.
+     *
+     */
+    uint32_t mRxErrSec;
+
+    /**
+     * The total number of frames dropped due to invalid FCS.
+     *
+     */
+    uint32_t mRxErrFcs;
+
+    /**
+     * The total number of frames dropped due to other error.
+     *
+     */
+    uint32_t mRxErrOther;
+} otMacCounters;
+
+/**
+ * This structure represents a received IEEE 802.15.4 Beacon.
+ *
+ */
+typedef struct otActiveScanResult
+{
+    otExtAddress    mExtAddress;     ///< IEEE 802.15.4 Extended Address
+    otNetworkName   mNetworkName;    ///< Thread Network Name
+    otExtendedPanId mExtendedPanId;  ///< Thread Extended PAN ID
+    otSteeringData  mSteeringData;   ///< Steering Data
+    uint16_t        mPanId;          ///< IEEE 802.15.4 PAN ID
+    uint16_t        mJoinerUdpPort;  ///< Joiner UDP Port
+    uint8_t         mChannel;        ///< IEEE 802.15.4 Channel
+    int8_t          mRssi;           ///< RSSI (dBm)
+    uint8_t         mLqi;            ///< LQI
+    unsigned int    mVersion : 4;    ///< Version
+    bool            mIsNative : 1;   ///< Native Commissioner flag
+    bool            mIsJoinable : 1; ///< Joining Permitted flag
+} otActiveScanResult;
+
+/**
+ * This structure represents an energy scan result.
+ *
+ */
+typedef struct otEnergyScanResult
+{
+    uint8_t mChannel; ///< IEEE 802.15.4 Channel
+    int8_t  mMaxRssi; ///< The max RSSI (dBm)
+} otEnergyScanResult;
+
+/**
  * This function pointer is called during an IEEE 802.15.4 Active Scan when an IEEE 802.15.4 Beacon is received or
  * the scan completes.
  *
@@ -60,7 +405,7 @@ extern "C" {
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void(OTCALL *otHandleActiveScanResult)(otActiveScanResult *aResult, void *aContext);
+typedef void (*otHandleActiveScanResult)(otActiveScanResult *aResult, void *aContext);
 
 /**
  * This function starts an IEEE 802.15.4 Active Scan
@@ -75,11 +420,11 @@ typedef void(OTCALL *otHandleActiveScanResult)(otActiveScanResult *aResult, void
  * @retval OT_ERROR_BUSY  Already performing an Active Scan.
  *
  */
-OTAPI otError OTCALL otLinkActiveScan(otInstance *             aInstance,
-                                      uint32_t                 aScanChannels,
-                                      uint16_t                 aScanDuration,
-                                      otHandleActiveScanResult aCallback,
-                                      void *                   aCallbackContext);
+otError otLinkActiveScan(otInstance *             aInstance,
+                         uint32_t                 aScanChannels,
+                         uint16_t                 aScanDuration,
+                         otHandleActiveScanResult aCallback,
+                         void *                   aCallbackContext);
 
 /**
  * This function indicates whether or not an IEEE 802.15.4 Active Scan is currently in progress.
@@ -88,7 +433,7 @@ OTAPI otError OTCALL otLinkActiveScan(otInstance *             aInstance,
  *
  * @returns true if an IEEE 802.15.4 Active Scan is in progress, false otherwise.
  */
-OTAPI bool OTCALL otLinkIsActiveScanInProgress(otInstance *aInstance);
+bool otLinkIsActiveScanInProgress(otInstance *aInstance);
 
 /**
  * This function pointer is called during an IEEE 802.15.4 Energy Scan when the result for a channel is ready or the
@@ -98,7 +443,7 @@ OTAPI bool OTCALL otLinkIsActiveScanInProgress(otInstance *aInstance);
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void(OTCALL *otHandleEnergyScanResult)(otEnergyScanResult *aResult, void *aContext);
+typedef void (*otHandleEnergyScanResult)(otEnergyScanResult *aResult, void *aContext);
 
 /**
  * This function starts an IEEE 802.15.4 Energy Scan
@@ -113,11 +458,11 @@ typedef void(OTCALL *otHandleEnergyScanResult)(otEnergyScanResult *aResult, void
  * @retval OT_ERROR_BUSY  Could not start the energy scan.
  *
  */
-OTAPI otError OTCALL otLinkEnergyScan(otInstance *             aInstance,
-                                      uint32_t                 aScanChannels,
-                                      uint16_t                 aScanDuration,
-                                      otHandleEnergyScanResult aCallback,
-                                      void *                   aCallbackContext);
+otError otLinkEnergyScan(otInstance *             aInstance,
+                         uint32_t                 aScanChannels,
+                         uint16_t                 aScanDuration,
+                         otHandleEnergyScanResult aCallback,
+                         void *                   aCallbackContext);
 
 /**
  * This function indicates whether or not an IEEE 802.15.4 Energy Scan is currently in progress.
@@ -127,7 +472,7 @@ OTAPI otError OTCALL otLinkEnergyScan(otInstance *             aInstance,
  * @returns true if an IEEE 802.15.4 Energy Scan is in progress, false otherwise.
  *
  */
-OTAPI bool OTCALL otLinkIsEnergyScanInProgress(otInstance *aInstance);
+bool otLinkIsEnergyScanInProgress(otInstance *aInstance);
 
 /**
  * This function enqueues an IEEE 802.15.4 Data Request message for transmission.
@@ -140,7 +485,7 @@ OTAPI bool OTCALL otLinkIsEnergyScanInProgress(otInstance *aInstance);
  * @retval OT_ERROR_NO_BUFS        Insufficient message buffers available.
  *
  */
-OTAPI otError OTCALL otLinkSendDataRequest(otInstance *aInstance);
+otError otLinkSendDataRequest(otInstance *aInstance);
 
 /**
  * This function indicates whether or not an IEEE 802.15.4 MAC is in the transmit state.
@@ -154,19 +499,23 @@ OTAPI otError OTCALL otLinkSendDataRequest(otInstance *aInstance);
  * @returns true if an IEEE 802.15.4 MAC is in the transmit state, false otherwise.
  *
  */
-OTAPI bool OTCALL otLinkIsInTransmitState(otInstance *aInstance);
+bool otLinkIsInTransmitState(otInstance *aInstance);
 
 /**
  * This function enqueues an IEEE 802.15.4 out of band Frame for transmission.
  *
+ * An Out of Band frame is one that was generated outside of OpenThread.
+ *
  * @param[in] aInstance  A pointer to an OpenThread instance.
  * @param[in] aOobFrame  A pointer to the frame to transmit.
  *
- * @retval OT_ERROR_NONE           Successfully enqueued an IEEE 802.15.4 Data Request message.
- * @retval OT_ERROR_ALREADY        An IEEE 802.15.4 out of band frame is already enqueued.
+ * @retval OT_ERROR_NONE           Successfully scheduled the frame transmission.
+ * @retval OT_ERROR_ALREADY        MAC layer is busy sending a previously requested frame.
+ * @retval OT_ERROR_INVALID_STATE  The MAC layer is not enabled.
+ * @retval OT_ERROR_INVALID_ARGS   The argument @p aOobFrame is NULL.
  *
  */
-OTAPI otError OTCALL otLinkOutOfBandTransmitRequest(otInstance *aInstance, otRadioFrame *aOobFrame);
+otError otLinkOutOfBandTransmitRequest(otInstance *aInstance, otRadioFrame *aOobFrame);
 
 /**
  * Get the IEEE 802.15.4 channel.
@@ -176,26 +525,51 @@ OTAPI otError OTCALL otLinkOutOfBandTransmitRequest(otInstance *aInstance, otRad
  * @returns The IEEE 802.15.4 channel.
  *
  * @sa otLinkSetChannel
+ *
  */
-OTAPI uint8_t OTCALL otLinkGetChannel(otInstance *aInstance);
+uint8_t otLinkGetChannel(otInstance *aInstance);
 
 /**
  * Set the IEEE 802.15.4 channel
  *
- * This function succeeds only when Thread protocols are disabled.  A successful
- * call to this function invalidates the Active and Pending Operational Datasets in
- * non-volatile memory.
+ * This function succeeds only when Thread protocols are disabled.  A successful call to this function invalidates the
+ * Active and Pending Operational Datasets in non-volatile memory.
  *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aChannel  The IEEE 802.15.4 channel.
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aChannel    The IEEE 802.15.4 channel.
  *
  * @retval  OT_ERROR_NONE           Successfully set the channel.
- * @retval  OT_ERROR_INVALID_ARGS   If @p aChnanel is not in the range [11, 26].
+ * @retval  OT_ERROR_INVALID_ARGS   If @p aChannel is not in the range [11, 26] or is not in the supported channel mask.
  * @retval  OT_ERROR_INVALID_STATE  Thread protocols are enabled.
  *
  * @sa otLinkGetChannel
+ *
  */
-OTAPI otError OTCALL otLinkSetChannel(otInstance *aInstance, uint8_t aChannel);
+otError otLinkSetChannel(otInstance *aInstance, uint8_t aChannel);
+
+/**
+ * Get the supported channel mask of MAC layer.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The supported channel mask as `uint32_t` with bit 0 (lsb) mapping to channel 0, bit 1 to channel 1, so on.
+ *
+ */
+uint32_t otLinkGetSupportedChannelMask(otInstance *aInstance);
+
+/**
+ * Set the supported channel mask of MAC layer.
+ *
+ * This function succeeds only when Thread protocols are disabled.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aChannelMask  The supported channel mask (bit 0 or lsb mapping to channel 0, and so on).
+ *
+ * @retval  OT_ERROR_NONE           Successfully set the supported channel mask.
+ * @retval  OT_ERROR_INVALID_STATE  Thread protocols are enabled.
+ *
+ */
+otError otLinkSetSupportedChannelMask(otInstance *aInstance, uint32_t aChannelMask);
 
 /**
  * Get the IEEE 802.15.4 Extended Address.
@@ -203,13 +577,14 @@ OTAPI otError OTCALL otLinkSetChannel(otInstance *aInstance, uint8_t aChannel);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns A pointer to the IEEE 802.15.4 Extended Address.
+ *
  */
-OTAPI const otExtAddress *OTCALL otLinkGetExtendedAddress(otInstance *aInstance);
+const otExtAddress *otLinkGetExtendedAddress(otInstance *aInstance);
 
 /**
  * This function sets the IEEE 802.15.4 Extended Address.
  *
- * This function succeedsm only when Thread protocols are disabled.
+ * This function succeeds only when Thread protocols are disabled.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aExtAddress  A pointer to the IEEE 802.15.4 Extended Address.
@@ -219,7 +594,7 @@ OTAPI const otExtAddress *OTCALL otLinkGetExtendedAddress(otInstance *aInstance)
  * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
  *
  */
-OTAPI otError OTCALL otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
+otError otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
  * Get the factory-assigned IEEE EUI-64.
@@ -228,7 +603,7 @@ OTAPI otError OTCALL otLinkSetExtendedAddress(otInstance *aInstance, const otExt
  * @param[out]  aEui64     A pointer to where the factory-assigned IEEE EUI-64 is placed.
  *
  */
-OTAPI void OTCALL otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui64);
+void otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui64);
 
 /**
  * Get the IEEE 802.15.4 PAN ID.
@@ -238,26 +613,27 @@ OTAPI void OTCALL otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExt
  * @returns The IEEE 802.15.4 PAN ID.
  *
  * @sa otLinkSetPanId
+ *
  */
-OTAPI otPanId OTCALL otLinkGetPanId(otInstance *aInstance);
+otPanId otLinkGetPanId(otInstance *aInstance);
 
 /**
  * Set the IEEE 802.15.4 PAN ID.
  *
- * This function succeeds only when Thread protocols are disabled.  A successful
- * call to this function also invalidates the Active and Pending Operational Datasets in
- * non-volatile memory.
+ * This function succeeds only when Thread protocols are disabled.  A successful call to this function also invalidates
+ * the Active and Pending Operational Datasets in non-volatile memory.
  *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aPanId    The IEEE 802.15.4 PAN ID.
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ * @param[in]  aPanId       The IEEE 802.15.4 PAN ID.
  *
  * @retval OT_ERROR_NONE           Successfully set the PAN ID.
  * @retval OT_ERROR_INVALID_ARGS   If aPanId is not in the range [0, 65534].
  * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
  *
  * @sa otLinkGetPanId
+ *
  */
-OTAPI otError OTCALL otLinkSetPanId(otInstance *aInstance, otPanId aPanId);
+otError otLinkSetPanId(otInstance *aInstance, otPanId aPanId);
 
 /**
  * Get the data poll period of sleepy end device.
@@ -267,21 +643,32 @@ OTAPI otError OTCALL otLinkSetPanId(otInstance *aInstance, otPanId aPanId);
  * @returns  The data poll period of sleepy end device in milliseconds.
  *
  * @sa otLinkSetPollPeriod
+ *
  */
-OTAPI uint32_t OTCALL otLinkGetPollPeriod(otInstance *aInstance);
+uint32_t otLinkGetPollPeriod(otInstance *aInstance);
 
 /**
- * Set the data poll period for sleepy end device.
+ * Set/clear user-specified/external data poll period for sleepy end device.
  *
  * @note This function updates only poll period of sleepy end device. To update child timeout the function
- *       otSetChildTimeout() shall be called.
+ *       `otThreadSetChildTimeout()` shall be called.
+ *
+ * @note Minimal non-zero value should be `OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD` (10ms).
+ *       Or zero to clear user-specified poll period.
+ *
+ * @note User-specified value should be no more than the maximal value 0x3FFFFFF ((1 << 26) - 1) allowed,
+ * otherwise it would be clipped by the maximal value.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aPollPeriod  data poll period in milliseconds.
  *
+ * @retval OT_ERROR_NONE           Successfully set/cleared user-specified poll period.
+ * @retval OT_ERROR_INVALID_ARGS   If aPollPeriod is invalid.
+ *
  * @sa otLinkGetPollPeriod
+ *
  */
-OTAPI void OTCALL otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod);
+otError otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod);
 
 /**
  * Get the IEEE 802.15.4 Short Address.
@@ -289,20 +676,47 @@ OTAPI void OTCALL otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPerio
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns A pointer to the IEEE 802.15.4 Short Address.
+ *
  */
-OTAPI otShortAddress OTCALL otLinkGetShortAddress(otInstance *aInstance);
+otShortAddress otLinkGetShortAddress(otInstance *aInstance);
 
 /**
- * Set the Short Address for address filtering.
+ * This method returns the maximum number of frame retries during direct transmission.
  *
- * @param[in] aInstance      A pointer to an OpenThread instance.
- * @param[in] aShortAddress  The IEEE 802.15.4 Short Address.
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @retval OT_ERROR_NONE             If successful.
- * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+ * @returns The maximum number of retries during direct transmission.
  *
  */
-OTAPI otError OTCALL otLinkSetShortAddress(otInstance *aInstance, uint16_t aShortAddress);
+uint8_t otLinkGetMaxFrameRetriesDirect(otInstance *aInstance);
+
+/**
+ * This method sets the maximum number of frame retries during direct transmission.
+ *
+ * @param[in]  aInstance               A pointer to an OpenThread instance.
+ * @param[in]  aMaxFrameRetriesDirect  The maximum number of retries during direct transmission.
+ *
+ */
+void otLinkSetMaxFrameRetriesDirect(otInstance *aInstance, uint8_t aMaxFrameRetriesDirect);
+
+/**
+ * This method returns the maximum number of frame retries during indirect transmission.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The maximum number of retries during indirect transmission.
+ *
+ */
+uint8_t otLinkGetMaxFrameRetriesIndirect(otInstance *aInstance);
+
+/**
+ * This method sets the maximum number of frame retries during indirect transmission.
+ *
+ * @param[in]  aInstance                 A pointer to an OpenThread instance.
+ * @param[in]  aMaxFrameRetriesIndirect  The maximum number of retries during indirect transmission.
+ *
+ */
+void otLinkSetMaxFrameRetriesIndirect(otInstance *aInstance, uint8_t aMaxFrameRetriesIndirect);
 
 /**
  * This function gets the address mode of MAC filter.
@@ -322,7 +736,7 @@ OTAPI otError OTCALL otLinkSetShortAddress(otInstance *aInstance, uint16_t aShor
  * @sa otLinkFilterGetNextRssIn
  *
  */
-OTAPI otMacFilterAddressMode OTCALL otLinkFilterGetAddressMode(otInstance *aInstance);
+otMacFilterAddressMode otLinkFilterGetAddressMode(otInstance *aInstance);
 
 /**
  * This function sets the address mode of MAC filter.
@@ -344,7 +758,7 @@ OTAPI otMacFilterAddressMode OTCALL otLinkFilterGetAddressMode(otInstance *aInst
  * @sa otLinkFilterGetNextRssIn
  *
  */
-OTAPI otError OTCALL otLinkFilterSetAddressMode(otInstance *aInstance, otMacFilterAddressMode aMode);
+otError otLinkFilterSetAddressMode(otInstance *aInstance, otMacFilterAddressMode aMode);
 
 /**
  * This method adds an Extended Address to MAC filter.
@@ -368,7 +782,7 @@ OTAPI otError OTCALL otLinkFilterSetAddressMode(otInstance *aInstance, otMacFilt
  * @sa otLinkFilterGetNextRssIn
  *
  */
-OTAPI otError OTCALL otLinkFilterAddAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
+otError otLinkFilterAddAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
  * This method removes an Extended Address from MAC filter.
@@ -391,7 +805,7 @@ OTAPI otError OTCALL otLinkFilterAddAddress(otInstance *aInstance, const otExtAd
  * @sa otLinkFilterGetNextRssIn
  *
  */
-OTAPI otError OTCALL otLinkFilterRemoveAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
+otError otLinkFilterRemoveAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
  * This method clears all the Extended Addresses from MAC filter.
@@ -409,7 +823,7 @@ OTAPI otError OTCALL otLinkFilterRemoveAddress(otInstance *aInstance, const otEx
  * @sa otLinkFilterGetNextRssIn
  *
  */
-OTAPI void OTCALL otLinkFilterClearAddresses(otInstance *aInstance);
+void otLinkFilterClearAddresses(otInstance *aInstance);
 
 /**
  * This method gets an in-use address filter entry.
@@ -434,9 +848,7 @@ OTAPI void OTCALL otLinkFilterClearAddresses(otInstance *aInstance);
  * @sa otLinkFilterGetNextRssIn
  *
  */
-OTAPI otError OTCALL otLinkFilterGetNextAddress(otInstance *         aInstance,
-                                                otMacFilterIterator *aIterator,
-                                                otMacFilterEntry *   aEntry);
+otError otLinkFilterGetNextAddress(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry);
 
 /**
  * This method sets the received signal strength (in dBm) for the messages from the Extended Address.
@@ -462,7 +874,7 @@ OTAPI otError OTCALL otLinkFilterGetNextAddress(otInstance *         aInstance,
  * @sa otLinkFilterGetNextRssIn
  *
  */
-OTAPI otError OTCALL otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddress *aExtAddress, int8_t aRss);
+otError otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddress *aExtAddress, int8_t aRss);
 
 /**
  * This method removes the received signal strength setting for the received messages from the Extended Address or
@@ -487,7 +899,7 @@ OTAPI otError OTCALL otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddr
  * @sa otLinkFilterGetNextRssIn
  *
  */
-OTAPI otError OTCALL otLinkFilterRemoveRssIn(otInstance *aInstance, const otExtAddress *aExtAddress);
+otError otLinkFilterRemoveRssIn(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
  * This method clears all the received signal strength settings.
@@ -505,7 +917,7 @@ OTAPI otError OTCALL otLinkFilterRemoveRssIn(otInstance *aInstance, const otExtA
  * @sa otLinkFilterGetNextRssIn
  *
  */
-OTAPI void OTCALL otLinkFilterClearRssIn(otInstance *aInstance);
+void otLinkFilterClearRssIn(otInstance *aInstance);
 
 /**
  * This method gets an in-use RssIn filter entry.
@@ -531,9 +943,7 @@ OTAPI void OTCALL otLinkFilterClearRssIn(otInstance *aInstance);
  * @sa otLinkFilterClearRssIn
  *
  */
-OTAPI otError OTCALL otLinkFilterGetNextRssIn(otInstance *         aInstance,
-                                              otMacFilterIterator *aIterator,
-                                              otMacFilterEntry *   aEntry);
+otError otLinkFilterGetNextRssIn(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry);
 
 /**
  * This method converts received signal strength to link quality.
@@ -558,27 +968,73 @@ uint8_t otLinkConvertRssToLinkQuality(otInstance *aInstance, int8_t aRss);
 int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality);
 
 /**
+ * This method gets histogram of retries for a single direct packet until success.
+ *
+ * This function is valid when OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE configuration is enabled.
+ *
+ * @param[in]   aInstance          A pointer to an OpenThread instance.
+ * @param[out]  aNumberOfEntries   A pointer to where the size of returned histogram array is placed.
+ *
+ * @returns     A pointer to the histogram of retries (in a form of an array).
+ *              The n-th element indicates that the packet has been sent with n-th retry.
+ */
+const uint32_t *otLinkGetTxDirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries);
+
+/**
+ * This method gets histogram of retries for a single indirect packet until success.
+ *
+ * This function is valid when OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE configuration is enabled.
+ *
+ * @param[in]   aInstance          A pointer to an OpenThread instance.
+ * @param[out]  aNumberOfEntries   A pointer to where the size of returned histogram array is placed.
+ *
+ * @returns     A pointer to the histogram of retries (in a form of an array).
+ *              The n-th element indicates that the packet has been sent with n-th retry.
+ *
+ */
+const uint32_t *otLinkGetTxIndirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries);
+
+/**
+ * This method clears histogram statistics for direct and indirect transmissions.
+ *
+ * This function is valid when OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE configuration is enabled.
+ *
+ * @param[in]   aInstance          A pointer to an OpenThread instance.
+ *
+ */
+void otLinkResetTxRetrySuccessHistogram(otInstance *aInstance);
+
+/**
  * Get the MAC layer counters.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns A pointer to the MAC layer counters.
+ *
  */
-OTAPI const otMacCounters *OTCALL otLinkGetCounters(otInstance *aInstance);
+const otMacCounters *otLinkGetCounters(otInstance *aInstance);
+
+/**
+ * Reset the MAC layer counters.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ */
+void otLinkResetCounters(otInstance *aInstance);
 
 /**
  * This function pointer is called when an IEEE 802.15.4 frame is received.
  *
  * @note This callback is called after FCS processing and @p aFrame may not contain the actual FCS that was received.
  *
- * @note This callback is called before IEEE 802.15.4 security processing and mSecurityValid in @p aFrame will
- * always be false.
+ * @note This callback is called before IEEE 802.15.4 security processing.
  *
  * @param[in]  aFrame    A pointer to the received IEEE 802.15.4 frame.
+ * @param[in]  aIsTx     Whether this frame is transmitted, not received.
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void (*otLinkPcapCallback)(const otRadioFrame *aFrame, void *aContext);
+typedef void (*otLinkPcapCallback)(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
 
 /**
  * This function registers a callback to provide received raw IEEE 802.15.4 frames.

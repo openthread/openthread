@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       rf_patch_mce_ieee_s.h
-*  Revised:        $Date$
-*  Revision:       $Revision$
+*  Revised:        $Date: 2017-08-24 11:43:33 +0200 (Thu, 24 Aug 2017) $
+*  Revision:       $Revision: 17889 $
 *
 *  Description: RF core patch for CC26x0 IEEE 802.15.4 Single Ended Output
 *

@@ -38,16 +38,11 @@
 
 #include <stddef.h>
 
-#include <openthread/types.h>
-
 #include "common/encoding.hpp"
 #include "common/message.hpp"
 #include "net/ip6_address.hpp"
 #include "net/netif.hpp"
 #include "net/socket.hpp"
-
-using ot::Encoding::BigEndian::HostSwap16;
-using ot::Encoding::BigEndian::HostSwap32;
 
 namespace ot {
 
@@ -59,6 +54,9 @@ namespace ot {
  *
  */
 namespace Ip6 {
+
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
 /**
  * @addtogroup core-ipv6
@@ -90,7 +88,7 @@ namespace Ip6 {
 /**
  * Internet Protocol Numbers
  */
-enum IpProto
+enum
 {
     kProtoHopOpts  = 0,  ///< IPv6 Hop-by-Hop Option
     kProtoTcp      = 6,  ///< Transmission Control Protocol
@@ -101,6 +99,22 @@ enum IpProto
     kProtoIcmp6    = 58, ///< ICMP for IPv6
     kProtoNone     = 59, ///< No Next Header for IPv6
     kProtoDstOpts  = 60, ///< Destination Options for IPv6
+};
+
+/**
+ * Class Selectors
+ */
+enum IpDscpCs
+{
+    kDscpCs0    = 0,    ///< Class selector codepoint 0
+    kDscpCs1    = 8,    ///< Class selector codepoint 8
+    kDscpCs2    = 16,   ///< Class selector codepoint 16
+    kDscpCs3    = 24,   ///< Class selector codepoint 24
+    kDscpCs4    = 32,   ///< Class selector codepoint 32
+    kDscpCs5    = 40,   ///< Class selector codepoint 40
+    kDscpCs6    = 48,   ///< Class selector codepoint 48
+    kDscpCs7    = 56,   ///< Class selector codepoint 56
+    kDscpCsMask = 0x38, ///< Class selector mask
 };
 
 enum
@@ -164,6 +178,15 @@ public:
     otError Init(const Message &aMessage);
 
     /**
+     * This method indicates whether or not the header appears to be well-formed.
+     *
+     * @retval TRUE  if the header appears to be well-formed.
+     * @retval FALSE if the header does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const;
+
+    /**
      * This method indicates whether or not the IPv6 Version is set to 6.
      *
      * @retval TRUE   If the IPv6 Version is set to 6.
@@ -173,12 +196,36 @@ public:
     bool IsVersion6(void) const { return (mVersionClassFlow.m8[0] & kVersionMask) == kVersion6; }
 
     /**
+     * This method returns the IPv6 DSCP value.
+     *
+     * @returns The IPv6 DSCP value.
+     *
+     */
+    uint8_t GetDscp(void) const
+    {
+        return static_cast<uint8_t>((HostSwap32(mVersionClassFlow.m32[0]) & kDscpMask) >> kDscpOffset);
+    }
+
+    /**
+     * This method sets the IPv6 DSCP value.
+     *
+     * @param[in]  aDscp  The IPv6 DSCP value.
+     *
+     */
+    void SetDscp(uint8_t aDscp)
+    {
+        uint32_t tmp = HostSwap32(mVersionClassFlow.m32[0]);
+        tmp = (tmp & static_cast<uint32_t>(~kDscpMask)) | ((static_cast<uint32_t>(aDscp) << kDscpOffset) & kDscpMask);
+        mVersionClassFlow.m32[0] = HostSwap32(tmp);
+    }
+
+    /**
      * This method returns the IPv6 Payload Length value.
      *
      * @returns The IPv6 Payload Length value.
      *
      */
-    uint16_t GetPayloadLength(void) { return HostSwap16(mPayloadLength); }
+    uint16_t GetPayloadLength(void) const { return HostSwap16(mPayloadLength); }
 
     /**
      * This method sets the IPv6 Payload Length value.
@@ -194,7 +241,7 @@ public:
      * @returns The IPv6 Next Header value.
      *
      */
-    IpProto GetNextHeader(void) const { return static_cast<IpProto>(mNextHeader); }
+    uint8_t GetNextHeader(void) const { return mNextHeader; }
 
     /**
      * This method sets the IPv6 Next Header value.
@@ -202,7 +249,7 @@ public:
      * @param[in]  aNextHeader  The IPv6 Next Header value.
      *
      */
-    void SetNextHeader(IpProto aNextHeader) { mNextHeader = static_cast<uint8_t>(aNextHeader); }
+    void SetNextHeader(uint8_t aNextHeader) { mNextHeader = aNextHeader; }
 
     /**
      * This method returns the IPv6 Hop Limit value.
@@ -289,6 +336,8 @@ private:
     {
         kVersion6    = 0x60,
         kVersionMask = 0xf0,
+        kDscpOffset  = 22,
+        kDscpMask    = 0xfc00000,
     };
 } OT_TOOL_PACKED_END;
 
@@ -306,7 +355,7 @@ public:
      * @returns The IPv6 Next Header value.
      *
      */
-    IpProto GetNextHeader(void) const { return static_cast<IpProto>(mNextHeader); }
+    uint8_t GetNextHeader(void) const { return mNextHeader; }
 
     /**
      * This method sets the IPv6 Next Header value.
@@ -314,7 +363,7 @@ public:
      * @param[in]  aNextHeader  The IPv6 Next Header value.
      *
      */
-    void SetNextHeader(IpProto aNextHeader) { mNextHeader = static_cast<uint8_t>(aNextHeader); }
+    void SetNextHeader(uint8_t aNextHeader) { mNextHeader = aNextHeader; }
 
     /**
      * This method returns the IPv6 Header Extension Length value.
@@ -465,8 +514,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements IPv6 Pad1 Option generation and parsing. Pad1 does not
- * followdefault option header structure.
+ * This class implements IPv6 Pad1 Option generation and parsing. Pad1 does not follow default option header structure.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -503,6 +551,7 @@ public:
     void Init(void)
     {
         mReserved       = 0;
+        mOffsetMore     = 0;
         mIdentification = 0;
     }
 
@@ -512,7 +561,7 @@ public:
      * @returns The IPv6 Next Header value.
      *
      */
-    IpProto GetNextHeader(void) const { return static_cast<IpProto>(mNextHeader); }
+    uint8_t GetNextHeader(void) const { return mNextHeader; }
 
     /**
      * This method sets the IPv6 Next Header value.
@@ -520,7 +569,7 @@ public:
      * @param[in]  aNextHeader  The IPv6 Next Header value.
      *
      */
-    void SetNextHeader(IpProto aNextHeader) { mNextHeader = static_cast<uint8_t>(aNextHeader); }
+    void SetNextHeader(uint8_t aNextHeader) { mNextHeader = aNextHeader; }
 
     /**
      * This method returns the Fragment Offset value.
@@ -528,7 +577,7 @@ public:
      * @returns The Fragment Offset value.
      *
      */
-    uint16_t GetOffset(void) { return (HostSwap16(mOffsetMore) & kOffsetMask) >> kOffsetOffset; }
+    uint16_t GetOffset(void) const { return (HostSwap16(mOffsetMore) & kOffsetMask) >> kOffsetOffset; }
 
     /**
      * This method sets the Fragment Offset value.
@@ -548,7 +597,7 @@ public:
      * @returns The M flag value.
      *
      */
-    bool IsMoreFlagSet(void) { return HostSwap16(mOffsetMore) & kMoreFlag; }
+    bool IsMoreFlagSet(void) const { return HostSwap16(mOffsetMore) & kMoreFlag; }
 
     /**
      * This method clears the M flag value.
@@ -561,6 +610,50 @@ public:
      *
      */
     void SetMoreFlag(void) { mOffsetMore = HostSwap16(HostSwap16(mOffsetMore) | kMoreFlag); }
+
+    /**
+     * This method returns the frame identification.
+     *
+     * @returns The frame identification.
+     *
+     */
+    uint32_t GetIdentification(void) const { return mIdentification; }
+
+    /**
+     * This method sets the frame identification.
+     *
+     * @param[in]  aIdentification  The fragment identification value.
+     */
+    void SetIdentification(uint32_t aIdentification) { mIdentification = aIdentification; }
+
+    /**
+     * This method returns the next valid payload length for a fragment.
+     *
+     * @param[in]  aLength  The payload length to be validated for a fragment.
+     *
+     * @returns Valid IPv6 fragment payload length.
+     *
+     */
+    static inline uint16_t MakeDivisibleByEight(uint16_t aLength) { return aLength & 0xfff8; }
+
+    /**
+     * This method converts the fragment offset of 8-octet units into bytes.
+     *
+     * @param[in]  aOffset  The fragment offset in 8-octet units.
+     *
+     * @returns The fragment offset in bytes.
+     *
+     */
+    static inline uint16_t FragmentOffsetToBytes(uint16_t aOffset) { return static_cast<uint16_t>(aOffset << 3); }
+
+    /**
+     * This method converts a fragment offset in bytes into a fragment offset in 8-octet units.
+     *
+     * @param[in]  aOffset  The fragment offset in bytes.
+     *
+     * @returns The fragment offset in 8-octet units.
+     */
+    static inline uint16_t BytesToFragmentOffset(uint16_t aOffset) { return aOffset >> 3; }
 
 private:
     uint8_t mNextHeader;
@@ -584,4 +677,4 @@ private:
 } // namespace Ip6
 } // namespace ot
 
-#endif // NET_IP6_HEADERS_HPP_
+#endif // IP6_HEADERS_HPP_

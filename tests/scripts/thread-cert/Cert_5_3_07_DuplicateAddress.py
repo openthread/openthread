@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import node
@@ -44,12 +43,13 @@ MED3 = 6
 
 MTDS = [MED1, SED1, MED3]
 
+
 class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,7):
+        for i in range(1, 7):
             self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
 
         self.nodes[DUT_LEADER].set_panid(0xface)
@@ -89,10 +89,10 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
         self.nodes[MED3].enable_whitelist()
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
+        self.simulator.stop()
 
     def test(self):
         # 1
@@ -120,28 +120,39 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
         self.nodes[ROUTER2].add_prefix('2001:2:0:1::/64', 'paros')
         self.nodes[ROUTER2].register_netdata()
 
+        # Set lowpan context of sniffer
+        self.simulator.set_lowpan_context(1, '2001:2:0:1::/64')
+
         self.nodes[MED1].add_ipaddr('2001:2:0:1::1234')
         self.nodes[SED1].add_ipaddr('2001:2:0:1::1234')
 
         self.simulator.go(5)
 
         # 4
-        # Flush the message queue to avoid possible impact on follow-up verification.
+        # Flush the message queue to avoid possible impact on follow-up
+        # verification.
         self.simulator.get_messages_sent_by(DUT_LEADER)
 
         self.nodes[MED3].ping('2001:2:0:1::1234')
 
-        # Verify DUT_LEADER sent an Address Query Request to the Realm local address.
+        # Verify DUT_LEADER sent an Address Query Request to the Realm local
+        # address.
         dut_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
         msg = dut_messages.next_coap_message('0.02', '/a/aq')
-        command.check_address_query(msg, self.nodes[DUT_LEADER], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
+        command.check_address_query(
+            msg, self.nodes[DUT_LEADER], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS
+        )
 
         # 5 & 6
-        # Verify DUT_LEADER sent an Address Error Notification to the Realm local address.
+        # Verify DUT_LEADER sent an Address Error Notification to the Realm
+        # local address.
         self.simulator.go(5)
         dut_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
         msg = dut_messages.next_coap_message('0.02', '/a/ae')
-        command.check_address_error_notification(msg, self.nodes[DUT_LEADER], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
+        command.check_address_error_notification(
+            msg, self.nodes[DUT_LEADER], config.REALM_LOCAL_ALL_ROUTERS_ADDRESS
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

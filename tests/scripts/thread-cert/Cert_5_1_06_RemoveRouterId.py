@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,12 +27,12 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
+import command
+from command import CheckType
 import config
 import mle
-import network_layer
 import node
 
 LEADER = 1
@@ -40,7 +40,6 @@ ROUTER1 = 2
 
 
 class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
-
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -60,10 +59,10 @@ class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
         self.nodes[ROUTER1].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
+        self.simulator.stop()
 
     def test(self):
         self.nodes[LEADER].start()
@@ -82,9 +81,6 @@ class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
-        for addr in self.nodes[ROUTER1].get_addrs():
-            self.assertTrue(self.nodes[LEADER].ping(addr))
-
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         router1_messages = self.simulator.get_messages_sent_by(ROUTER1)
 
@@ -100,26 +96,32 @@ class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
         msg = router1_messages.next_coap_message("0.02")
         msg.assertCoapMessageRequestUriPath("/a/as")
 
-        msg = leader_messages.next_coap_message("2.04")
+        leader_messages.next_coap_message("2.04")
+
+        # 2 - N/A
 
         # 3 - Router1
-        router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+        msg = router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        command.check_parent_request(msg, is_first_request=True)
 
-        router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
-        msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
-        msg.assertSentToNode(self.nodes[ROUTER1])
-            
-        msg = router1_messages.next_coap_message(code="0.02", uri_path="/a/as")
-        msg.assertCoapMessageContainsTlv(network_layer.MacExtendedAddress)
-        msg.assertCoapMessageContainsTlv(network_layer.Status)
+        msg = router1_messages.next_mle_message(
+            mle.CommandType.CHILD_ID_REQUEST, sent_to_node=self.nodes[LEADER]
+        )
+        command.check_child_id_request(
+            msg,
+            tlv_request=CheckType.CONTAIN,
+            mle_frame_counter=CheckType.OPTIONAL,
+            address_registration=CheckType.NOT_CONTAIN,
+            active_timestamp=CheckType.OPTIONAL,
+            pending_timestamp=CheckType.OPTIONAL,
+        )
 
-        msg = leader_messages.next_coap_message("2.04")
-        msg.assertCoapMessageContainsTlv(network_layer.Status)
-        msg.assertCoapMessageContainsOptionalTlv(network_layer.RouterMask)
+        msg = router1_messages.next_coap_message(code="0.02")
+        command.check_address_solicit(msg, was_router=True)
 
-        status_tlv = msg.get_coap_message_tlv(network_layer.Status)
-        self.assertEqual(network_layer.StatusValues.SUCCESS, status_tlv.status)
+        # 4 - Router1
+        for addr in self.nodes[ROUTER1].get_addrs():
+            self.assertTrue(self.nodes[LEADER].ping(addr))
 
 
 if __name__ == '__main__':

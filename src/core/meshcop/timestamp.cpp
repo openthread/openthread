@@ -35,8 +35,6 @@
 
 #include "utils/wrap_string.h"
 
-#include <openthread/types.h>
-
 namespace ot {
 namespace MeshCoP {
 

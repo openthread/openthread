@@ -36,11 +36,10 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/types.h>
-
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "common/timer.hpp"
+#include "mac/mac_frame.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
 
@@ -65,14 +64,11 @@ private:
         kScanDelay = 1000, ///< SCAN_DELAY (milliseconds)
     };
 
-    static void HandleQuery(void *               aContext,
-                            otCoapHeader *       aHeader,
-                            otMessage *          aMessage,
-                            const otMessageInfo *aMessageInfo);
-    void        HandleQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleQuery(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleScanResult(void *aContext, Mac::Frame *aFrame);
-    void        HandleScanResult(Mac::Frame *aFrame);
+    static void HandleScanResult(Instance &aInstance, Mac::RxFrame *aFrame);
+    void        HandleScanResult(Mac::RxFrame *aFrame);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);

@@ -27,17 +27,17 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
+
 class FailError(Exception):
     """This error class is the base for all errors that cause the current test case fails.
     """
-    pass
+
 
 class FatalError(FailError):
     """This error class is the base for all errors that cause the whole test procedure stops.
     """
-    pass
+
 
 class GoldenDeviceNotEnoughError(FailError):
     """Raised when no more golden devices are available for trying.
     """
-    pass

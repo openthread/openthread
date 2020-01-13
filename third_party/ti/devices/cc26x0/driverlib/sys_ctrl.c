@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       sys_ctrl.c
-*  Revised:        2017-04-26 18:27:45 +0200 (Wed, 26 Apr 2017)
-*  Revision:       48852
+*  Revised:        2017-08-02 14:52:20 +0200 (Wed, 02 Aug 2017)
+*  Revision:       49471
 *
 *  Description:    Driver for the System Control.
 *
@@ -295,7 +295,7 @@ SysCtrlSetRechargeBeforePowerDown( uint32_t xoscPowerMode )
 //
 //*****************************************************************************
 void
-SysCtrlAdjustRechargeAfterPowerDown( void )
+SysCtrlAdjustRechargeAfterPowerDown( uint32_t vddrRechargeMargin )
 {
    int32_t     curTemp                 ;
    uint32_t    longestRechargePeriod   ;
@@ -315,6 +315,17 @@ SysCtrlAdjustRechargeAfterPowerDown( void )
             curTemp = -128;
          }
          powerQualGlobals.pdTemp = curTemp;
+      }
+
+      // Add some margin between the longest previous recharge period and the
+      // next initial recharge period. Since it is a fixed margin, it will have a
+      // higher impact as a fraction of the converged recharge period at higher temperatures
+      // where it is needed more due to higher leakage.
+      if (longestRechargePeriod > vddrRechargeMargin) {
+         longestRechargePeriod -= vddrRechargeMargin;
+      }
+      else {
+         longestRechargePeriod = 1;
       }
 
       //--- Spec. point 4 ---

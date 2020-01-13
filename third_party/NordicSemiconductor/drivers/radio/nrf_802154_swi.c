@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+/* Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,39 +43,40 @@
 #include "nrf_802154.h"
 #include "nrf_802154_config.h"
 #include "nrf_802154_core.h"
-#include "nrf_802154_critical_section.h"
+#include "nrf_802154_peripherals.h"
 #include "nrf_802154_rx_buffer.h"
-#include "hal/nrf_egu.h"
-#include "raal/nrf_raal_api.h"
-
+#include "nrf_802154_utils.h"
+#include "nrf_egu.h"
+#include "platform/clock/nrf_802154_clock.h"
 
 /** Size of notification queue.
  *
  * One slot for each receive buffer, one for transmission, one for busy channel and one for energy
  * detection.
  */
-#define NTF_QUEUE_SIZE (NRF_802154_RX_BUFFERS + 3)
+#define NTF_QUEUE_SIZE     (NRF_802154_RX_BUFFERS + 3)
+
 /** Size of requests queue.
  *
  * Two is minimal queue size. It is not expected in current implementation to queue a few requests.
  */
-#define REQ_QUEUE_SIZE 2
+#define REQ_QUEUE_SIZE     2
 
-#define SWI_EGU        NRF_802154_SWI_EGU_INSTANCE    ///< Label of SWI peripheral.
-#define SWI_IRQn       NRF_802154_SWI_IRQN            ///< Symbol of SWI IRQ number.
-#define SWI_IRQHandler NRF_802154_SWI_IRQ_HANDLER     ///< Symbol of SWI IRQ handler.
+#define SWI_EGU            NRF_802154_SWI_EGU_INSTANCE ///< Label of SWI peripheral.
+#define SWI_IRQn           NRF_802154_SWI_IRQN         ///< Symbol of SWI IRQ number.
+#define SWI_IRQHandler     NRF_802154_SWI_IRQ_HANDLER  ///< Symbol of SWI IRQ handler.
 
-#define NTF_INT   NRF_EGU_INT_TRIGGERED0              ///< Label of notification interrupt.
-#define NTF_TASK  NRF_EGU_TASK_TRIGGER0               ///< Label of notification task.
-#define NTF_EVENT NRF_EGU_EVENT_TRIGGERED0            ///< Label of notification event.
+#define NTF_INT            NRF_EGU_INT_TRIGGERED0      ///< Label of notification interrupt.
+#define NTF_TASK           NRF_EGU_TASK_TRIGGER0       ///< Label of notification task.
+#define NTF_EVENT          NRF_EGU_EVENT_TRIGGERED0    ///< Label of notification event.
 
-#define TIMESLOT_EXIT_INT   NRF_EGU_INT_TRIGGERED1    ///< Label of timeslot exit interrupt.
-#define TIMESLOT_EXIT_TASK  NRF_EGU_TASK_TRIGGER1     ///< Label of timeslot exit task.
-#define TIMESLOT_EXIT_EVENT NRF_EGU_EVENT_TRIGGERED1  ///< Label of timeslot exit event.
+#define HFCLK_STOP_INT     NRF_EGU_INT_TRIGGERED1      ///< Label of HFClk stop interrupt.
+#define HFCLK_STOP_TASK    NRF_EGU_TASK_TRIGGER1       ///< Label of HFClk stop task.
+#define HFCLK_STOP_EVENT   NRF_EGU_EVENT_TRIGGERED1    ///< Label of HFClk stop event.
 
-#define REQ_INT   NRF_EGU_INT_TRIGGERED2              ///< Label of request interrupt.
-#define REQ_TASK  NRF_EGU_TASK_TRIGGER2               ///< Label of request task.
-#define REQ_EVENT NRF_EGU_EVENT_TRIGGERED2            ///< Label of request event.
+#define REQ_INT            NRF_EGU_INT_TRIGGERED2      ///< Label of request interrupt.
+#define REQ_TASK           NRF_EGU_TASK_TRIGGER2       ///< Label of request task.
+#define REQ_EVENT          NRF_EGU_EVENT_TRIGGERED2    ///< Label of request event.
 
 #define RAW_LENGTH_OFFSET  0
 #define RAW_PAYLOAD_OFFSET 1
@@ -83,68 +84,69 @@
 /// Types of notifications in notification queue.
 typedef enum
 {
-    NTF_TYPE_RECEIVED,                 ///< Frame received
-    NTF_TYPE_RECEIVE_FAILED,           ///< Frame reception failed
-    NTF_TYPE_TRANSMITTED,              ///< Frame transmitted
-    NTF_TYPE_TRANSMIT_FAILED,          ///< Frame transmission failure
-    NTF_TYPE_ENERGY_DETECTED,          ///< Energy detection procedure ended
-    NTF_TYPE_ENERGY_DETECTION_FAILED,  ///< Energy detection procedure failed
-    NTF_TYPE_CCA,                      ///< CCA procedure ended
-    NTF_TYPE_CCA_FAILED,               ///< CCA procedure failed
+    NTF_TYPE_RECEIVED,                ///< Frame received
+    NTF_TYPE_RECEIVE_FAILED,          ///< Frame reception failed
+    NTF_TYPE_TRANSMITTED,             ///< Frame transmitted
+    NTF_TYPE_TRANSMIT_FAILED,         ///< Frame transmission failure
+    NTF_TYPE_ENERGY_DETECTED,         ///< Energy detection procedure ended
+    NTF_TYPE_ENERGY_DETECTION_FAILED, ///< Energy detection procedure failed
+    NTF_TYPE_CCA,                     ///< CCA procedure ended
+    NTF_TYPE_CCA_FAILED,              ///< CCA procedure failed
 } nrf_802154_ntf_type_t;
 
 /// Notification data in the notification queue.
 typedef struct
 {
-    nrf_802154_ntf_type_t type;  ///< Notification type.
+    nrf_802154_ntf_type_t type; ///< Notification type.
+
     union
     {
         struct
         {
-            uint8_t              * p_psdu;   ///< Pointer to received frame PSDU.
-            int8_t                 power;    ///< RSSI of received frame.
-            int8_t                 lqi;      ///< LQI of received frame.
-        } received;                          ///< Received frame details.
+            uint8_t * p_data; ///< Pointer to a buffer containing PHR and PSDU of the received frame.
+            int8_t    power;  ///< RSSI of received frame.
+            uint8_t   lqi;    ///< LQI of received frame.
+        } received;           ///< Received frame details.
 
         struct
         {
-            nrf_802154_rx_error_t  error;    ///< An error code that indicates reason of the failure.
+            nrf_802154_rx_error_t error; ///< An error code that indicates reason of the failure.
         } receive_failed;
 
         struct
         {
-            const uint8_t        * p_frame;  ///< Pointer to frame that was transmitted.
-            uint8_t              * p_psdu;   ///< Pointer to received ACK PSDU or NULL.
-            int8_t                 power;    ///< RSSI of received ACK or 0.
-            int8_t                 lqi;      ///< LQI of received ACK or 0.
-        } transmitted;                       ///< Transmitted frame details.
+            const uint8_t * p_frame; ///< Pointer to frame that was transmitted.
+            uint8_t       * p_data;  ///< Pointer to a buffer containing PHR and PSDU of the received ACK or NULL.
+            int8_t          power;   ///< RSSI of received ACK or 0.
+            uint8_t         lqi;     ///< LQI of received ACK or 0.
+        } transmitted;               ///< Transmitted frame details.
 
         struct
         {
-            const uint8_t        * p_frame;  ///< Pointer to frame that was requested to be transmitted, but failed.
-            nrf_802154_tx_error_t  error;    ///< An error code that indicates reason of the failure.
+            const uint8_t       * p_frame; ///< Pointer to frame that was requested to be transmitted, but failed.
+            nrf_802154_tx_error_t error;   ///< An error code that indicates reason of the failure.
         } transmit_failed;
 
         struct
         {
-            int8_t                 result;   ///< Energy detection result.
-        } energy_detected;                   ///< Energy detection details.
+            int8_t result; ///< Energy detection result.
+        } energy_detected; ///< Energy detection details.
 
         struct
         {
-            nrf_802154_ed_error_t  error;    ///< An error code that indicates reason of the failure.
-        } energy_detection_failed;           ///< Energy detection failure details.
+            nrf_802154_ed_error_t error; ///< An error code that indicates reason of the failure.
+        } energy_detection_failed;       ///< Energy detection failure details.
 
         struct
         {
-            bool                   result;   ///< CCA result.
-        } cca;                               ///< CCA details.
+            bool result; ///< CCA result.
+        } cca;           ///< CCA details.
 
         struct
         {
-            nrf_802154_cca_error_t error;    ///< An error code that indicates reason of the failure.
-        } cca_failed;                        ///< CCA failure details.
-    } data;                                  ///< Notification data depending on it's type.
+            nrf_802154_cca_error_t error; ///< An error code that indicates reason of the failure.
+        } cca_failed;                     ///< CCA failure details.
+    } data;                               ///< Notification data depending on it's type.
 } nrf_802154_ntf_data_t;
 
 /// Type of requests in request queue.
@@ -158,83 +160,99 @@ typedef enum
     REQ_TYPE_CONTINUOUS_CARRIER,
     REQ_TYPE_BUFFER_FREE,
     REQ_TYPE_CHANNEL_UPDATE,
-    REQ_TYPE_CCA_CFG_UPDATE
+    REQ_TYPE_CCA_CFG_UPDATE,
+    REQ_TYPE_RSSI_MEASURE,
+    REQ_TYPE_RSSI_GET,
 } nrf_802154_req_type_t;
 
 /// Request data in request queue.
 typedef struct
 {
-    nrf_802154_req_type_t type;  ///< Type of the request.
+    nrf_802154_req_type_t type; ///< Type of the request.
+
     union
     {
         struct
         {
-            nrf_802154_term_t term_lvl;                 ///< Request priority.
-            bool            * p_result;                 ///< Sleep request result.
-        } sleep;                                        ///< Sleep request details.
+            nrf_802154_term_t term_lvl; ///< Request priority.
+            bool            * p_result; ///< Sleep request result.
+        } sleep;                        ///< Sleep request details.
 
         struct
         {
             nrf_802154_notification_func_t notif_func;  ///< Error notified in case of success.
             nrf_802154_term_t              term_lvl;    ///< Request priority.
             req_originator_t               req_orig;    ///< Request originator.
+            bool                           notif_abort; ///< If function termination should be notified.
             bool                         * p_result;    ///< Receive request result.
         } receive;                                      ///< Receive request details.
 
         struct
         {
-            nrf_802154_notification_func_t notif_func;  ///< Error notified in case of success.
-            nrf_802154_term_t              term_lvl;    ///< Request priority.
-            req_originator_t               req_orig;    ///< Request originator.
-            const uint8_t                * p_data;      ///< Pointer to PSDU to transmit.
-            bool                           cca;         ///< If CCA was requested prior to transmission.
-            bool                         * p_result;    ///< Transmit request result.
-        } transmit;                                     ///< Transmit request details.
+            nrf_802154_notification_func_t notif_func; ///< Error notified in case of success.
+            nrf_802154_term_t              term_lvl;   ///< Request priority.
+            req_originator_t               req_orig;   ///< Request originator.
+            const uint8_t                * p_data;     ///< Pointer to a buffer containing PHR and PSDU of the frame to transmit.
+            bool                           cca;        ///< If CCA was requested prior to transmission.
+            bool                           immediate;  ///< If TX procedure must be performed immediately.
+            bool                         * p_result;   ///< Transmit request result.
+        } transmit;                                    ///< Transmit request details.
 
         struct
         {
-            nrf_802154_term_t term_lvl;                 ///< Request priority.
-            bool            * p_result;                 ///< Energy detection request result.
-            uint32_t          time_us;                  ///< Requested time of energy detection procedure.
-        } energy_detection;                             ///< Energy detection request details.
+            nrf_802154_term_t term_lvl; ///< Request priority.
+            bool            * p_result; ///< Energy detection request result.
+            uint32_t          time_us;  ///< Requested time of energy detection procedure.
+        } energy_detection;             ///< Energy detection request details.
 
         struct
         {
-            nrf_802154_term_t term_lvl;                 ///< Request priority.
-            bool            * p_result;                 ///< CCA request result.
-        } cca;                                          ///< CCA request details.
+            nrf_802154_term_t term_lvl; ///< Request priority.
+            bool            * p_result; ///< CCA request result.
+        } cca;                          ///< CCA request details.
 
         struct
         {
-            nrf_802154_term_t term_lvl;                 ///< Request priority.
-            bool            * p_result;                 ///< Continuous carrier request result.
-        } continuous_carrier;                           ///< Continuous carrier request details.
+            nrf_802154_term_t term_lvl; ///< Request priority.
+            bool            * p_result; ///< Continuous carrier request result.
+        } continuous_carrier;           ///< Continuous carrier request details.
 
         struct
         {
-            uint8_t * p_data;                                    ///< Pointer to receive buffer to free.
-            bool    * p_result;                                  ///< Buffer free request result.
-        } buffer_free;                                           ///< Buffer free request details.
+            uint8_t * p_data;   ///< Pointer to receive buffer to free.
+            bool    * p_result; ///< Buffer free request result.
+        } buffer_free;          ///< Buffer free request details.
 
         struct
         {
-            bool * p_result;                                     ///< Channel update request result.
-        } channel_update;                                        ///< Channel update request details.
+            bool * p_result; ///< Channel update request result.
+        } channel_update;    ///< Channel update request details.
 
         struct
         {
-            bool * p_result;                                     ///< CCA config update request result.
-        } cca_cfg_update;                                        ///< CCA config update request details.
-    } data;                                                      ///< Request data depending on it's type.
+            bool * p_result; ///< CCA config update request result.
+        } cca_cfg_update;    ///< CCA config update request details.
+
+        struct
+        {
+            bool * p_result; ///< RSSI measurement request result.
+        } rssi_measure;      ///< RSSI measurement request details.
+
+        struct
+        {
+            int8_t * p_rssi;                              ///< RSSI measurement result.
+            bool   * p_result;                            ///< RSSI measurement status.
+        } rssi_get;                                       ///< Details of the getter that retrieves the RSSI measurement result.
+    } data;                                               ///< Request data depending on its type.
 } nrf_802154_req_data_t;
 
-static nrf_802154_ntf_data_t m_ntf_queue[NTF_QUEUE_SIZE];  ///< Notification queue.
-static uint8_t               m_ntf_r_ptr;                  ///< Notification queue read index.
-static uint8_t               m_ntf_w_ptr;                  ///< Notification queue write index.
+static nrf_802154_ntf_data_t m_ntf_queue[NTF_QUEUE_SIZE]; ///< Notification queue.
+static uint8_t               m_ntf_r_ptr;                 ///< Notification queue read index.
+static uint8_t               m_ntf_w_ptr;                 ///< Notification queue write index.
 
-static nrf_802154_req_data_t m_req_queue[REQ_QUEUE_SIZE];  ///< Request queue.
-static uint8_t               m_req_r_ptr;                  ///< Request queue read index.
-static uint8_t               m_req_w_ptr;                  ///< Request queue write index.
+static nrf_802154_req_data_t m_req_queue[REQ_QUEUE_SIZE]; ///< Request queue.
+static uint8_t               m_req_r_ptr;                 ///< Request queue read index.
+static uint8_t               m_req_w_ptr;                 ///< Request queue write index.
 
 /**
  * Increment given index for any queue.
@@ -322,6 +340,41 @@ static bool ntf_queue_is_empty(void)
 }
 
 /**
+ * Enter notify block.
+ *
+ * This is a helper function used in all notification functions to atomically
+ * find an empty slot in the notification queue and allow atomic slot update.
+ *
+ * @return Pointer to an empty slot in the notification queue.
+ */
+static nrf_802154_ntf_data_t * ntf_enter(void)
+{
+    __disable_irq();
+    __DSB();
+    __ISB();
+
+    assert(!ntf_queue_is_full());
+    (void)ntf_queue_is_full();
+
+    return &m_ntf_queue[m_ntf_w_ptr];
+}
+
+/**
+ * Exit notify block.
+ *
+ * This is a helper function used in all notification functions to end atomic slot update
+ * and trigger SWI to process the notification from the slot.
+ */
+static void ntf_exit(void)
+{
+    ntf_queue_ptr_increment(&m_ntf_w_ptr);
+
+    nrf_egu_task_trigger(SWI_EGU, NTF_TASK);
+
+    __enable_irq();
+}
+
+/**
  * Increment given index associated with request queue.
  *
  * @param[inout]  p_ptr  Pointer to the index to increment.
@@ -395,145 +448,115 @@ void nrf_802154_swi_init(void)
     m_ntf_r_ptr = 0;
     m_ntf_w_ptr = 0;
 
-    nrf_egu_int_enable(SWI_EGU, NTF_INT | TIMESLOT_EXIT_INT |  REQ_INT);
+    nrf_egu_int_enable(SWI_EGU, NTF_INT | HFCLK_STOP_INT | REQ_INT);
 
+#if !NRF_IS_IRQ_PRIORITY_ALLOWED(NRF_802154_SWI_PRIORITY)
+#error NRF_802154_SWI_PRIORITY value out of the allowed range.
+#endif
     NVIC_SetPriority(SWI_IRQn, NRF_802154_SWI_PRIORITY);
     NVIC_ClearPendingIRQ(SWI_IRQn);
     NVIC_EnableIRQ(SWI_IRQn);
 }
 
-void nrf_802154_swi_notify_received(uint8_t * p_data, int8_t power, int8_t lqi)
+void nrf_802154_swi_notify_received(uint8_t * p_data, int8_t power, uint8_t lqi)
 {
-    assert(!ntf_queue_is_full());
-
-    nrf_802154_ntf_data_t * p_slot = &m_ntf_queue[m_ntf_w_ptr];
+    nrf_802154_ntf_data_t * p_slot = ntf_enter();
 
     p_slot->type                 = NTF_TYPE_RECEIVED;
-    p_slot->data.received.p_psdu = p_data;
+    p_slot->data.received.p_data = p_data;
     p_slot->data.received.power  = power;
     p_slot->data.received.lqi    = lqi;
 
-    ntf_queue_ptr_increment(&m_ntf_w_ptr);
-
-    nrf_egu_task_trigger(SWI_EGU, NTF_TASK);
+    ntf_exit();
 }
 
 void nrf_802154_swi_notify_receive_failed(nrf_802154_rx_error_t error)
 {
-    assert(!ntf_queue_is_full());
-
-    nrf_802154_ntf_data_t * p_slot = &m_ntf_queue[m_ntf_w_ptr];
+    nrf_802154_ntf_data_t * p_slot = ntf_enter();
 
     p_slot->type                      = NTF_TYPE_RECEIVE_FAILED;
     p_slot->data.receive_failed.error = error;
 
-    ntf_queue_ptr_increment(&m_ntf_w_ptr);
-
-    nrf_egu_task_trigger(SWI_EGU, NTF_TASK);
+    ntf_exit();
 }
 
 void nrf_802154_swi_notify_transmitted(const uint8_t * p_frame,
                                        uint8_t       * p_data,
                                        int8_t          power,
-                                       int8_t          lqi)
+                                       uint8_t         lqi)
 {
-    assert(!ntf_queue_is_full());
-
-    nrf_802154_ntf_data_t * p_slot = &m_ntf_queue[m_ntf_w_ptr];
+    nrf_802154_ntf_data_t * p_slot = ntf_enter();
 
     p_slot->type                     = NTF_TYPE_TRANSMITTED;
     p_slot->data.transmitted.p_frame = p_frame;
-    p_slot->data.transmitted.p_psdu  = p_data;
+    p_slot->data.transmitted.p_data  = p_data;
     p_slot->data.transmitted.power   = power;
     p_slot->data.transmitted.lqi     = lqi;
 
-    ntf_queue_ptr_increment(&m_ntf_w_ptr);
-
-    nrf_egu_task_trigger(SWI_EGU, NTF_TASK);
+    ntf_exit();
 }
 
 void nrf_802154_swi_notify_transmit_failed(const uint8_t * p_frame, nrf_802154_tx_error_t error)
 {
-    assert(!ntf_queue_is_full());
-
-    nrf_802154_ntf_data_t * p_slot = &m_ntf_queue[m_ntf_w_ptr];
+    nrf_802154_ntf_data_t * p_slot = ntf_enter();
 
     p_slot->type                         = NTF_TYPE_TRANSMIT_FAILED;
     p_slot->data.transmit_failed.p_frame = p_frame;
     p_slot->data.transmit_failed.error   = error;
 
-    ntf_queue_ptr_increment(&m_ntf_w_ptr);
-
-    nrf_egu_task_trigger(SWI_EGU, NTF_TASK);
+    ntf_exit();
 }
 
 void nrf_802154_swi_notify_energy_detected(uint8_t result)
 {
-    assert(!ntf_queue_is_full());
-
-    nrf_802154_ntf_data_t * p_slot = &m_ntf_queue[m_ntf_w_ptr];
+    nrf_802154_ntf_data_t * p_slot = ntf_enter();
 
     p_slot->type                        = NTF_TYPE_ENERGY_DETECTED;
     p_slot->data.energy_detected.result = result;
 
-    ntf_queue_ptr_increment(&m_ntf_w_ptr);
-
-    nrf_egu_task_trigger(SWI_EGU, NTF_TASK);
+    ntf_exit();
 }
 
 void nrf_802154_swi_notify_energy_detection_failed(nrf_802154_ed_error_t error)
 {
-    assert(!ntf_queue_is_full());
-
-    nrf_802154_ntf_data_t * p_slot = &m_ntf_queue[m_ntf_w_ptr];
+    nrf_802154_ntf_data_t * p_slot = ntf_enter();
 
     p_slot->type                               = NTF_TYPE_ENERGY_DETECTION_FAILED;
     p_slot->data.energy_detection_failed.error = error;
 
-    ntf_queue_ptr_increment(&m_ntf_w_ptr);
-
-    nrf_egu_task_trigger(SWI_EGU, NTF_TASK);
+    ntf_exit();
 }
 
 void nrf_802154_swi_notify_cca(bool channel_free)
 {
-    assert(!ntf_queue_is_full());
-
-    nrf_802154_ntf_data_t * p_slot = &m_ntf_queue[m_ntf_w_ptr];
+    nrf_802154_ntf_data_t * p_slot = ntf_enter();
 
     p_slot->type            = NTF_TYPE_CCA;
     p_slot->data.cca.result = channel_free;
 
-    ntf_queue_ptr_increment(&m_ntf_w_ptr);
-
-    nrf_egu_task_trigger(SWI_EGU, NTF_TASK);
+    ntf_exit();
 }
 
 void nrf_802154_swi_notify_cca_failed(nrf_802154_cca_error_t error)
 {
-    assert(!ntf_queue_is_full());
-    (void)ntf_queue_is_full();
-
-    nrf_802154_ntf_data_t * p_slot = &m_ntf_queue[m_ntf_w_ptr];
+    nrf_802154_ntf_data_t * p_slot = ntf_enter();
 
     p_slot->type                  = NTF_TYPE_CCA_FAILED;
     p_slot->data.cca_failed.error = error;
 
-    ntf_queue_ptr_increment(&m_ntf_w_ptr);
-
-    nrf_egu_task_trigger(SWI_EGU, NTF_TASK);
+    ntf_exit();
 }
 
-void nrf_802154_swi_timeslot_exit(void)
+void nrf_802154_swi_hfclk_stop(void)
 {
-    assert(!nrf_egu_event_check(SWI_EGU, TIMESLOT_EXIT_EVENT));
+    assert(!nrf_egu_event_check(SWI_EGU, HFCLK_STOP_EVENT));
 
-    nrf_egu_task_trigger(SWI_EGU, TIMESLOT_EXIT_TASK);
+    nrf_egu_task_trigger(SWI_EGU, HFCLK_STOP_TASK);
 }
 
-void nrf_802154_swi_timeslot_exit_terminate(void)
+void nrf_802154_swi_hfclk_stop_terminate(void)
 {
-    nrf_egu_event_clear(SWI_EGU, TIMESLOT_EXIT_EVENT);
+    nrf_egu_event_clear(SWI_EGU, HFCLK_STOP_EVENT);
 }
 
 void nrf_802154_swi_sleep(nrf_802154_term_t term_lvl, bool * p_result)
@@ -550,15 +573,17 @@ void nrf_802154_swi_sleep(nrf_802154_term_t term_lvl, bool * p_result)
 void nrf_802154_swi_receive(nrf_802154_term_t              term_lvl,
                             req_originator_t               req_orig,
                             nrf_802154_notification_func_t notify_function,
+                            bool                           notify_abort,
                             bool                         * p_result)
 {
     nrf_802154_req_data_t * p_slot = req_enter();
 
-    p_slot->type                    = REQ_TYPE_RECEIVE;
-    p_slot->data.receive.term_lvl   = term_lvl;
-    p_slot->data.receive.req_orig   = req_orig;
-    p_slot->data.receive.notif_func = notify_function;
-    p_slot->data.receive.p_result   = p_result;
+    p_slot->type                     = REQ_TYPE_RECEIVE;
+    p_slot->data.receive.term_lvl    = term_lvl;
+    p_slot->data.receive.req_orig    = req_orig;
+    p_slot->data.receive.notif_func  = notify_function;
+    p_slot->data.receive.notif_abort = notify_abort;
+    p_slot->data.receive.p_result    = p_result;
 
     req_exit();
 }
@@ -567,6 +592,7 @@ void nrf_802154_swi_transmit(nrf_802154_term_t              term_lvl,
                              req_originator_t               req_orig,
                              const uint8_t                * p_data,
                              bool                           cca,
+                             bool                           immediate,
                              nrf_802154_notification_func_t notify_function,
                              bool                         * p_result)
 {
@@ -577,6 +603,7 @@ void nrf_802154_swi_transmit(nrf_802154_term_t              term_lvl,
     p_slot->data.transmit.req_orig   = req_orig;
     p_slot->data.transmit.p_data     = p_data;
     p_slot->data.transmit.cca        = cca;
+    p_slot->data.transmit.immediate  = immediate;
     p_slot->data.transmit.notif_func = notify_function;
     p_slot->data.transmit.p_result   = p_result;
 
@@ -650,6 +677,27 @@ void nrf_802154_swi_cca_cfg_update(bool * p_result)
     req_exit();
 }
 
+void nrf_802154_swi_rssi_measure(bool * p_result)
+{
+    nrf_802154_req_data_t * p_slot = req_enter();
+
+    p_slot->type                       = REQ_TYPE_RSSI_MEASURE;
+    p_slot->data.rssi_measure.p_result = p_result;
+
+    req_exit();
+}
+
+void nrf_802154_swi_rssi_measurement_get(int8_t * p_rssi, bool * p_result)
+{
+    nrf_802154_req_data_t * p_slot = req_enter();
+
+    p_slot->type                   = REQ_TYPE_RSSI_GET;
+    p_slot->data.rssi_get.p_rssi   = p_rssi;
+    p_slot->data.rssi_get.p_result = p_result;
+
+    req_exit();
+}
+
 void SWI_IRQHandler(void)
 {
     if (nrf_egu_event_check(SWI_EGU, NTF_EVENT))
@@ -664,12 +712,12 @@ void SWI_IRQHandler(void)
             {
                 case NTF_TYPE_RECEIVED:
 #if NRF_802154_USE_RAW_API
-                    nrf_802154_received_raw(p_slot->data.received.p_psdu,
+                    nrf_802154_received_raw(p_slot->data.received.p_data,
                                             p_slot->data.received.power,
                                             p_slot->data.received.lqi);
 #else // NRF_802154_USE_RAW_API
-                    nrf_802154_received(p_slot->data.received.p_psdu + RAW_PAYLOAD_OFFSET,
-                                        p_slot->data.received.p_psdu[RAW_LENGTH_OFFSET],
+                    nrf_802154_received(p_slot->data.received.p_data + RAW_PAYLOAD_OFFSET,
+                                        p_slot->data.received.p_data[RAW_LENGTH_OFFSET],
                                         p_slot->data.received.power,
                                         p_slot->data.received.lqi);
 #endif
@@ -682,13 +730,14 @@ void SWI_IRQHandler(void)
                 case NTF_TYPE_TRANSMITTED:
 #if NRF_802154_USE_RAW_API
                     nrf_802154_transmitted_raw(p_slot->data.transmitted.p_frame,
-                                               p_slot->data.transmitted.p_psdu,
+                                               p_slot->data.transmitted.p_data,
                                                p_slot->data.transmitted.power,
                                                p_slot->data.transmitted.lqi);
 #else // NRF_802154_USE_RAW_API
                     nrf_802154_transmitted(p_slot->data.transmitted.p_frame + RAW_PAYLOAD_OFFSET,
-                                           p_slot->data.transmitted.p_psdu + RAW_PAYLOAD_OFFSET,
-                                           p_slot->data.transmitted.p_psdu[RAW_LENGTH_OFFSET],
+                                           p_slot->data.transmitted.p_data == NULL ? NULL :
+                                           p_slot->data.transmitted.p_data + RAW_PAYLOAD_OFFSET,
+                                           p_slot->data.transmitted.p_data[RAW_LENGTH_OFFSET],
                                            p_slot->data.transmitted.power,
                                            p_slot->data.transmitted.lqi);
 #endif
@@ -699,8 +748,9 @@ void SWI_IRQHandler(void)
                     nrf_802154_transmit_failed(p_slot->data.transmit_failed.p_frame,
                                                p_slot->data.transmit_failed.error);
 #else // NRF_802154_USE_RAW_API
-                    nrf_802154_transmit_failed(p_slot->data.transmit_failed.p_frame + RAW_PAYLOAD_OFFSET,
-                                               p_slot->data.transmit_failed.error);
+                    nrf_802154_transmit_failed(
+                        p_slot->data.transmit_failed.p_frame + RAW_PAYLOAD_OFFSET,
+                        p_slot->data.transmit_failed.error);
 #endif
                     break;
 
@@ -710,7 +760,7 @@ void SWI_IRQHandler(void)
 
                 case NTF_TYPE_ENERGY_DETECTION_FAILED:
                     nrf_802154_energy_detection_failed(
-                            p_slot->data.energy_detection_failed.error);
+                        p_slot->data.energy_detection_failed.error);
                     break;
 
                 case NTF_TYPE_CCA:
@@ -729,11 +779,11 @@ void SWI_IRQHandler(void)
         }
     }
 
-    if (nrf_egu_event_check(SWI_EGU, TIMESLOT_EXIT_EVENT))
+    if (nrf_egu_event_check(SWI_EGU, HFCLK_STOP_EVENT))
     {
-        nrf_raal_continuous_mode_exit();
+        nrf_802154_clock_hfclk_stop();
 
-        nrf_egu_event_clear(SWI_EGU, TIMESLOT_EXIT_EVENT);
+        nrf_egu_event_clear(SWI_EGU, HFCLK_STOP_EVENT);
     }
 
     if (nrf_egu_event_check(SWI_EGU, REQ_EVENT))
@@ -743,95 +793,73 @@ void SWI_IRQHandler(void)
         while (!req_queue_is_empty())
         {
             nrf_802154_req_data_t * p_slot = &m_req_queue[m_req_r_ptr];
-            bool                    in_crit_sect;
-
-            in_crit_sect = nrf_802154_critical_section_enter();
 
             switch (p_slot->type)
             {
                 case REQ_TYPE_SLEEP:
-                    *(p_slot->data.sleep.p_result) = in_crit_sect ?
-                            nrf_802154_core_sleep(p_slot->data.sleep.term_lvl) :
-                            false;
+                    *(p_slot->data.sleep.p_result) =
+                        nrf_802154_core_sleep(p_slot->data.sleep.term_lvl);
                     break;
 
                 case REQ_TYPE_RECEIVE:
-                    *(p_slot->data.receive.p_result) = in_crit_sect ?
-                            nrf_802154_core_receive(p_slot->data.receive.term_lvl,
-                                                    p_slot->data.receive.req_orig,
-                                                    p_slot->data.receive.notif_func) :
-                            false;
-
-                    if (!in_crit_sect)
-                    {
-                        p_slot->data.receive.notif_func(false);
-                    }
-
+                    *(p_slot->data.receive.p_result) =
+                        nrf_802154_core_receive(p_slot->data.receive.term_lvl,
+                                                p_slot->data.receive.req_orig,
+                                                p_slot->data.receive.notif_func,
+                                                p_slot->data.receive.notif_abort);
                     break;
 
                 case REQ_TYPE_TRANSMIT:
-                    *(p_slot->data.transmit.p_result) = in_crit_sect ?
-                            nrf_802154_core_transmit(p_slot->data.transmit.term_lvl,
-                                                     p_slot->data.transmit.req_orig,
-                                                     p_slot->data.transmit.p_data,
-                                                     p_slot->data.transmit.cca,
-                                                     p_slot->data.transmit.notif_func) :
-                            false;
-
-                    if (!in_crit_sect)
-                    {
-                        p_slot->data.transmit.notif_func(false);
-                    }
-
+                    *(p_slot->data.transmit.p_result) =
+                        nrf_802154_core_transmit(p_slot->data.transmit.term_lvl,
+                                                 p_slot->data.transmit.req_orig,
+                                                 p_slot->data.transmit.p_data,
+                                                 p_slot->data.transmit.cca,
+                                                 p_slot->data.transmit.immediate,
+                                                 p_slot->data.transmit.notif_func);
                     break;
 
                 case REQ_TYPE_ENERGY_DETECTION:
-                    *(p_slot->data.energy_detection.p_result) = in_crit_sect ?
-                            nrf_802154_core_energy_detection(
-                                    p_slot->data.energy_detection.term_lvl,
-                                    p_slot->data.energy_detection.time_us) :
-                            false;
+                    *(p_slot->data.energy_detection.p_result) =
+                        nrf_802154_core_energy_detection(
+                            p_slot->data.energy_detection.term_lvl,
+                            p_slot->data.energy_detection.time_us);
                     break;
 
                 case REQ_TYPE_CCA:
-                    *(p_slot->data.cca.p_result) = in_crit_sect ?
-                            nrf_802154_core_cca(p_slot->data.cca.term_lvl) :
-                            false;
+                    *(p_slot->data.cca.p_result) = nrf_802154_core_cca(p_slot->data.cca.term_lvl);
                     break;
 
                 case REQ_TYPE_CONTINUOUS_CARRIER:
-                    *(p_slot->data.continuous_carrier.p_result) = in_crit_sect ?
-                            nrf_802154_core_continuous_carrier(
-                                    p_slot->data.continuous_carrier.term_lvl) :
-                            false;
+                    *(p_slot->data.continuous_carrier.p_result) =
+                        nrf_802154_core_continuous_carrier(
+                            p_slot->data.continuous_carrier.term_lvl);
                     break;
 
                 case REQ_TYPE_BUFFER_FREE:
-                    *(p_slot->data.buffer_free.p_result) = in_crit_sect ?
-                            nrf_802154_core_notify_buffer_free(
-                                    p_slot->data.buffer_free.p_data):
-                            false;
+                    *(p_slot->data.buffer_free.p_result) =
+                        nrf_802154_core_notify_buffer_free(p_slot->data.buffer_free.p_data);
                     break;
 
                 case REQ_TYPE_CHANNEL_UPDATE:
-                    *(p_slot->data.channel_update.p_result) = in_crit_sect ?
-                            nrf_802154_core_channel_update() :
-                            false;
+                    *(p_slot->data.channel_update.p_result) = nrf_802154_core_channel_update();
                     break;
 
                 case REQ_TYPE_CCA_CFG_UPDATE:
-                    *(p_slot->data.cca_cfg_update.p_result) = in_crit_sect ?
-                            nrf_802154_core_cca_cfg_update() :
-                            false;
+                    *(p_slot->data.cca_cfg_update.p_result) = nrf_802154_core_cca_cfg_update();
+                    break;
+
+                case REQ_TYPE_RSSI_MEASURE:
+                    *(p_slot->data.rssi_measure.p_result) = nrf_802154_core_rssi_measure();
+                    break;
+
+                case REQ_TYPE_RSSI_GET:
+                    *(p_slot->data.rssi_get.p_result) =
+                        nrf_802154_core_last_rssi_measurement_get(p_slot->data.rssi_get.p_rssi);
                     break;
 
                 default:
                     assert(false);
-            }
-
-            if (in_crit_sect)
-            {
-                nrf_802154_critical_section_exit();
             }
 
             req_queue_ptr_increment(&m_req_r_ptr);

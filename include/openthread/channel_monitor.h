@@ -35,7 +35,7 @@
 #ifndef OPENTHREAD_CHANNEL_MONITOR_H_
 #define OPENTHREAD_CHANNEL_MONITOR_H_
 
-#include "openthread/types.h"
+#include <openthread/instance.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,8 +47,8 @@ extern "C" {
  * @brief
  *   This module includes functions for channel monitoring feature.
  *
- *   The functions in this module are available when channel monitor feature (`OPENTHREAD_ENABLE_CHANNEL_MONITOR`)
- *   is enabled.
+ *   The functions in this module are available when channel monitor feature
+ *   (`OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE`) is enabled.
  *
  *   Channel monitoring will periodically monitor all channels to help determine the cleaner channels (channels
  *   with less interference).

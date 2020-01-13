@@ -38,6 +38,8 @@
 
 #include "thread/network_data.hpp"
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+
 namespace ot {
 
 /**
@@ -66,6 +68,7 @@ public:
      */
     explicit Local(Instance &aInstance);
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     /**
      * This method adds a Border Router entry to the Thread Network Data.
      *
@@ -119,8 +122,9 @@ public:
      *
      */
     otError RemoveHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength);
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     /**
      * This method adds a Service entry to the Thread Network local data.
      *
@@ -166,18 +170,18 @@ public:
     otError SendServerDataNotification(void);
 
 private:
-    otError UpdateRloc(void);
-    otError UpdateRloc(PrefixTlv &aPrefix);
-    otError UpdateRloc(HasRouteTlv &aHasRoute);
-    otError UpdateRloc(BorderRouterTlv &aBorderRouter);
-#if OPENTHREAD_ENABLE_SERVICE
-    otError UpdateRloc(ServiceTlv &aService);
-    otError UpdateRloc(ServerTlv &aService);
-#endif
-
+    void UpdateRloc(void);
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+    void UpdateRloc(PrefixTlv &aPrefix);
+    void UpdateRloc(HasRouteTlv &aHasRoute);
+    void UpdateRloc(BorderRouterTlv &aBorderRouter);
     bool IsOnMeshPrefixConsistent(void);
     bool IsExternalRouteConsistent(void);
-#if OPENTHREAD_ENABLE_SERVICE
+#endif
+
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+    void UpdateRloc(ServiceTlv &aService);
+    void UpdateRloc(ServerTlv &aServer);
     bool IsServiceConsistent(void);
 #endif
 
@@ -191,5 +195,7 @@ private:
  */
 
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 #endif // NETWORK_DATA_LOCAL_HPP_

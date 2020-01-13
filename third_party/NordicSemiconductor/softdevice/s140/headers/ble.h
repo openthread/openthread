@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2012 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -73,7 +73,7 @@ enum BLE_COMMON_SVCS
 {
   SD_BLE_ENABLE = BLE_SVC_BASE,         /**< Enable and initialize the BLE stack */
   SD_BLE_EVT_GET,                       /**< Get an event from the pending events queue. */
-  SD_BLE_UUID_VS_ADD,                   /**< Add a Vendor Specific UUID. */
+  SD_BLE_UUID_VS_ADD,                   /**< Add a Vendor Specific base UUID. */
   SD_BLE_UUID_DECODE,                   /**< Decode UUID bytes. */
   SD_BLE_UUID_ENCODE,                   /**< Encode UUID bytes. */
   SD_BLE_VERSION_GET,                   /**< Get the local version information (company ID, Link Layer Version, Link Layer Subversion). */
@@ -81,6 +81,7 @@ enum BLE_COMMON_SVCS
   SD_BLE_OPT_SET,                       /**< Set a BLE option. */
   SD_BLE_OPT_GET,                       /**< Get a BLE option. */
   SD_BLE_CFG_SET,                       /**< Add a configuration to the BLE stack. */
+  SD_BLE_UUID_VS_REMOVE,                /**< Remove a Vendor Specific base UUID. */
 };
 
 /**
@@ -111,7 +112,7 @@ enum BLE_CONN_CFGS
  */
 enum BLE_COMMON_CFGS
 {
-  BLE_COMMON_CFG_VS_UUID = BLE_CFG_BASE, /**< Vendor specific UUID configuration */
+  BLE_COMMON_CFG_VS_UUID = BLE_CFG_BASE, /**< Vendor specific base UUID configuration */
 };
 
 /**@brief Common Option IDs.
@@ -119,8 +120,9 @@ enum BLE_COMMON_CFGS
  */
 enum BLE_COMMON_OPTS
 {
-  BLE_COMMON_OPT_PA_LNA       = BLE_OPT_BASE + 0, /**< PA and LNA options */
-  BLE_COMMON_OPT_CONN_EVT_EXT = BLE_OPT_BASE + 1, /**< Extended connection events option */
+  BLE_COMMON_OPT_PA_LNA          = BLE_OPT_BASE + 0, /**< PA and LNA options */
+  BLE_COMMON_OPT_CONN_EVT_EXT    = BLE_OPT_BASE + 1, /**< Extended connection events option */
+  BLE_COMMON_OPT_EXTENDED_RC_CAL = BLE_OPT_BASE + 2, /**< Extended RC calibration option */
 };
 
 /** @} */
@@ -150,7 +152,7 @@ enum BLE_COMMON_OPTS
 #define BLE_USER_MEM_TYPE_GATTS_QUEUED_WRITES   0x01  /**< User Memory for GATTS queued writes. */
 /** @} */
 
-/** @defgroup BLE_UUID_VS_COUNTS Vendor Specific UUID counts
+/** @defgroup BLE_UUID_VS_COUNTS Vendor Specific base UUID counts
  * @{
  */
 #define BLE_UUID_VS_COUNT_DEFAULT 10  /**< Default VS UUID count. */
@@ -281,11 +283,32 @@ typedef struct
    uint8_t enable : 1; /**< Enable extended BLE connection events, disabled by default. */
 } ble_common_opt_conn_evt_ext_t;
 
+/**
+ * @brief Enable/disable extended RC calibration.
+ *
+ * If extended RC calibration is enabled and the internal RC oscillator (@ref NRF_CLOCK_LF_SRC_RC) is used as the SoftDevice
+ * LFCLK source, the SoftDevice as a peripheral will by default try to increase the receive window if two consecutive packets
+ * are not received. If it turns out that the packets were not received due to clock drift, the RC calibration is started.
+ * This calibration comes in addition to the periodic calibration that is configured by @ref sd_softdevice_enable(). When
+ * using only peripheral connections, the periodic calibration can therefore be configured with a much longer interval as the
+ * peripheral will be able to detect and adjust automatically to clock drift, and calibrate on demand.
+ *
+ * If extended RC calibration is disabled and the internal RC oscillator is used as the SoftDevice LFCLK source, the
+ * RC oscillator is calibrated periodically as configured by @ref sd_softdevice_enable().
+ *
+ * @note @ref sd_ble_opt_get is not supported for this option.
+ */
+typedef struct
+{
+   uint8_t enable : 1; /**< Enable extended RC calibration, enabled by default. */
+} ble_common_opt_extended_rc_cal_t;
+
 /**@brief Option structure for common options. */
 typedef union
 {
-  ble_common_opt_pa_lna_t       pa_lna;        /**< Parameters for controlling PA and LNA pin toggling. */
-  ble_common_opt_conn_evt_ext_t conn_evt_ext;  /**< Parameters for enabling extended connection events. */
+  ble_common_opt_pa_lna_t          pa_lna;          /**< Parameters for controlling PA and LNA pin toggling. */
+  ble_common_opt_conn_evt_ext_t    conn_evt_ext;    /**< Parameters for enabling extended connection events. */
+  ble_common_opt_extended_rc_cal_t extended_rc_cal; /**< Parameters for enabling extended RC calibration. */
 } ble_common_opt_t;
 
 /**@brief Common BLE Option type, wrapping the module specific options. */
@@ -328,13 +351,13 @@ typedef struct
 } ble_conn_cfg_t;
 
 /**
- * @brief Configuration of Vendor Specific UUIDs, set with @ref sd_ble_cfg_set.
+ * @brief Configuration of Vendor Specific base UUIDs, set with @ref sd_ble_cfg_set.
  *
  * @retval ::NRF_ERROR_INVALID_PARAM Too many UUIDs configured.
  */
 typedef struct
 {
-  uint8_t vs_uuid_count; /**< Number of 128-bit Vendor Specific UUID bases to allocate memory for.
+  uint8_t vs_uuid_count; /**< Number of 128-bit Vendor Specific base UUID bases to allocate memory for.
                               Default value is @ref BLE_UUID_VS_COUNT_DEFAULT. Maximum value is
                               @ref BLE_UUID_VS_COUNT_MAX. */
 } ble_common_cfg_vs_uuid_t;
@@ -342,7 +365,7 @@ typedef struct
 /**@brief Common BLE Configuration type, wrapping the common configurations. */
 typedef union
 {
-  ble_common_cfg_vs_uuid_t  vs_uuid_cfg;  /**< Vendor specific UUID configuration, cfg_id is @ref BLE_COMMON_CFG_VS_UUID. */
+  ble_common_cfg_vs_uuid_t  vs_uuid_cfg;  /**< Vendor Specific base UUID configuration, cfg_id is @ref BLE_COMMON_CFG_VS_UUID. */
 } ble_common_cfg_t;
 
 /**@brief BLE Configuration type, wrapping the module specific configurations. */
@@ -369,10 +392,6 @@ typedef union
  * @note The memory requirement for a specific configuration will not increase between SoftDevices
  *       with the same major version number.
  *
- * @note The value of *p_app_ram_base when the app has done no custom configuration of the
- *       SoftDevice, i.e. the app has not called @ref sd_ble_cfg_set before @ref sd_ble_enable, can
- *       be found in the release notes.
- *
  * @note At runtime the IC's RAM is split into 2 regions: The SoftDevice RAM region is located
  *       between 0x20000000 and APP_RAM_BASE-1 and the application's RAM region is located between
  *       APP_RAM_BASE and the start of the call stack.
@@ -387,9 +406,13 @@ typedef union
  * @retval ::NRF_SUCCESS              The BLE stack has been initialized successfully.
  * @retval ::NRF_ERROR_INVALID_STATE  The BLE stack had already been initialized and cannot be reinitialized.
  * @retval ::NRF_ERROR_INVALID_ADDR   Invalid or not sufficiently aligned pointer supplied.
- * @retval ::NRF_ERROR_NO_MEM         The amount of memory assigned to the SoftDevice by *p_app_ram_base is not
- *                                    large enough to fit this configuration's memory requirement. Check *p_app_ram_base
- *                                    and set the start address of the application RAM region accordingly.
+ * @retval ::NRF_ERROR_NO_MEM         One or more of the following is true:
+ *                                    - The amount of memory assigned to the SoftDevice by *p_app_ram_base is not
+ *                                      large enough to fit this configuration's memory requirement. Check *p_app_ram_base
+ *                                      and set the start address of the application RAM region accordingly.
+ *                                    - Dynamic part of the SoftDevice RAM region is larger then 64 kB which
+ *                                      is currently not supported.
+ * @retval ::NRF_ERROR_RESOURCES      The total number of L2CAP Channels configured using @ref sd_ble_cfg_set is too large.
  */
 SVCALL(SD_BLE_ENABLE, uint32_t, sd_ble_enable(uint32_t * p_app_ram_base));
 
@@ -470,7 +493,7 @@ SVCALL(SD_BLE_EVT_GET, uint32_t, sd_ble_evt_get(uint8_t *p_dest, uint16_t *p_len
 
 /**@brief Add a Vendor Specific base UUID.
  *
- * @details This call enables the application to add a vendor specific base UUID to the BLE stack's table, for later
+ * @details This call enables the application to add a Vendor Specific base UUID to the BLE stack's table, for later
  * use with all other modules and APIs. This then allows the application to use the shorter, 24-bit @ref ble_uuid_t
  * format when dealing with both 16-bit and 128-bit UUIDs without having to check for lengths and having split code
  * paths. This is accomplished by extending the grouping mechanism that the Bluetooth SIG standard base UUID uses
@@ -486,21 +509,42 @@ SVCALL(SD_BLE_EVT_GET, uint32_t, sd_ble_evt_get(uint8_t *p_dest, uint16_t *p_len
  * @note If a UUID is already present in the BLE stack's internal table, the corresponding index will be returned in
  * p_uuid_type along with an @ref NRF_SUCCESS error code.
  *
- * @param[in]  p_vs_uuid    Pointer to a 16-octet (128-bit) little endian Vendor Specific UUID disregarding
+ * @param[in]  p_vs_uuid    Pointer to a 16-octet (128-bit) little endian Vendor Specific base UUID disregarding
  *                          bytes 12 and 13.
  * @param[out] p_uuid_type  Pointer to a uint8_t where the type field in @ref ble_uuid_t corresponding to this UUID will be stored.
  *
- * @retval ::NRF_SUCCESS Successfully added the Vendor Specific UUID.
+ * @retval ::NRF_SUCCESS Successfully added the Vendor Specific base UUID.
  * @retval ::NRF_ERROR_INVALID_ADDR If p_vs_uuid or p_uuid_type is NULL or invalid.
  * @retval ::NRF_ERROR_NO_MEM If there are no more free slots for VS UUIDs.
  */
 SVCALL(SD_BLE_UUID_VS_ADD, uint32_t, sd_ble_uuid_vs_add(ble_uuid128_t const *p_vs_uuid, uint8_t *p_uuid_type));
 
 
+/**@brief Remove a Vendor Specific base UUID.
+ * 
+ * @details This call removes a Vendor Specific base UUID that has been added with @ref sd_ble_uuid_vs_add. This function allows
+ * the application to reuse memory allocated for Vendor Specific base UUIDs.
+ *
+ * @note Currently this function can only be called with a p_uuid_type set to @ref BLE_UUID_TYPE_UNKNOWN or the last added UUID type.
+ *
+ * @param[inout] p_uuid_type Pointer to a uint8_t where its value matches the UUID type in @ref ble_uuid_t::type to be removed.
+ *                           If the type is set to @ref BLE_UUID_TYPE_UNKNOWN, or the pointer is NULL, the last Vendor Specific
+ *                           base UUID will be removed. If the function returns successfully, the UUID type that was removed will
+ *                           be written back to @p p_uuid_type. If function returns with a failure, it contains the last type that
+ *                           is in use by the ATT Server.
+ *
+ * @retval ::NRF_SUCCESS Successfully removed the Vendor Specific base UUID.
+ * @retval ::NRF_ERROR_INVALID_ADDR If p_uuid_type is invalid.
+ * @retval ::NRF_ERROR_INVALID_PARAM If p_uuid_type points to a non-valid UUID type.
+ * @retval ::NRF_ERROR_FORBIDDEN If the Vendor Specific base UUID is in use by the ATT Server.
+ */
+SVCALL(SD_BLE_UUID_VS_REMOVE, uint32_t, sd_ble_uuid_vs_remove(uint8_t *p_uuid_type));
+
+
 /** @brief Decode little endian raw UUID bytes (16-bit or 128-bit) into a 24 bit @ref ble_uuid_t structure.
  *
  * @details The raw UUID bytes excluding bytes 12 and 13 (i.e. bytes 0-11 and 14-15) of p_uuid_le are compared
- * to the corresponding ones in each entry of the table of vendor specific UUIDs populated with @ref sd_ble_uuid_vs_add
+ * to the corresponding ones in each entry of the table of Vendor Specific base UUIDs populated with @ref sd_ble_uuid_vs_add
  * to look for a match. If there is such a match, bytes 12 and 13 are returned as p_uuid->uuid and the index
  * relative to @ref BLE_UUID_TYPE_VENDOR_BEGIN as p_uuid->type.
  *
@@ -574,10 +618,6 @@ SVCALL(SD_BLE_USER_MEM_REPLY, uint32_t, sd_ble_user_mem_reply(uint16_t conn_hand
 /**@brief Set a BLE option.
  *
  * @details This call allows the application to set the value of an option.
- *
- * @mscs
- * @mmsc{@ref BLE_GAP_PERIPH_BONDING_STATIC_PK_MSC}
- * @endmscs
  *
  * @param[in] opt_id Option ID, see @ref BLE_COMMON_OPTS and @ref BLE_GAP_OPTS.
  * @param[in] p_opt Pointer to a ble_opt_t structure containing the option value.

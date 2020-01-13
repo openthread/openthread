@@ -36,11 +36,13 @@
 #include <openthread/joiner.h>
 
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 
 using namespace ot;
 
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
 otError otJoinerStart(otInstance *     aInstance,
-                      const char *     aPSKd,
+                      const char *     aPskd,
                       const char *     aProvisioningUrl,
                       const char *     aVendorName,
                       const char *     aVendorModel,
@@ -49,70 +51,30 @@ otError otJoinerStart(otInstance *     aInstance,
                       otJoinerCallback aCallback,
                       void *           aContext)
 {
-    otError error = OT_ERROR_DISABLED_FEATURE;
-#if OPENTHREAD_ENABLE_JOINER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = instance.GetThreadNetif().GetJoiner().Start(aPSKd, aProvisioningUrl, aVendorName, aVendorModel,
-                                                        aVendorSwVersion, aVendorData, aCallback, aContext);
-#else
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aPSKd);
-    OT_UNUSED_VARIABLE(aProvisioningUrl);
-    OT_UNUSED_VARIABLE(aVendorName);
-    OT_UNUSED_VARIABLE(aVendorModel);
-    OT_UNUSED_VARIABLE(aVendorSwVersion);
-    OT_UNUSED_VARIABLE(aVendorData);
-    OT_UNUSED_VARIABLE(aCallback);
-    OT_UNUSED_VARIABLE(aContext);
-#endif
-
-    return error;
+    return instance.Get<MeshCoP::Joiner>().Start(aPskd, aProvisioningUrl, aVendorName, aVendorModel, aVendorSwVersion,
+                                                 aVendorData, aCallback, aContext);
 }
 
-otError otJoinerStop(otInstance *aInstance)
+void otJoinerStop(otInstance *aInstance)
 {
-    otError error = OT_ERROR_DISABLED_FEATURE;
-
-#if OPENTHREAD_ENABLE_JOINER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = instance.GetThreadNetif().GetJoiner().Stop();
-#else
-    OT_UNUSED_VARIABLE(aInstance);
-#endif
-
-    return error;
+    instance.Get<MeshCoP::Joiner>().Stop();
 }
 
 otJoinerState otJoinerGetState(otInstance *aInstance)
 {
-    otJoinerState state = OT_JOINER_STATE_IDLE;
-
-#if OPENTHREAD_ENABLE_JOINER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    state = instance.GetThreadNetif().GetJoiner().GetState();
-#else
-    OT_UNUSED_VARIABLE(aInstance);
-#endif
-
-    return state;
+    return instance.Get<MeshCoP::Joiner>().GetState();
 }
 
-otError otJoinerGetId(otInstance *aInstance, otExtAddress *aJoinerId)
+void otJoinerGetId(otInstance *aInstance, otExtAddress *aJoinerId)
 {
-    otError error = OT_ERROR_DISABLED_FEATURE;
-
-#if OPENTHREAD_ENABLE_JOINER
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.GetThreadNetif().GetJoiner().GetJoinerId(*static_cast<Mac::ExtAddress *>(aJoinerId));
-    error = OT_ERROR_NONE;
-#else
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aJoinerId);
-#endif
-
-    return error;
+    instance.Get<MeshCoP::Joiner>().GetJoinerId(*static_cast<Mac::ExtAddress *>(aJoinerId));
 }
+#endif // OPENTHREAD_CONFIG_JOINER_ENABLE

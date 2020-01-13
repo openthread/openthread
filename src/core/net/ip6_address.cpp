@@ -39,7 +39,6 @@
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
-#include "mac/mac_frame.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
@@ -130,6 +129,12 @@ bool Address::IsAnycastRoutingLocator(void) const
             mFields.m16[6] == HostSwap16(0xfe00) && mFields.m8[14] == kAloc16Mask);
 }
 
+bool Address::IsAnycastServiceLocator(void) const
+{
+    return IsAnycastRoutingLocator() && (mFields.m16[7] >= HostSwap16(Mle::kAloc16ServiceStart)) &&
+           (mFields.m16[7] <= HostSwap16(Mle::kAloc16ServiceEnd));
+}
+
 bool Address::IsSubnetRouterAnycast(void) const
 {
     return (mFields.m32[2] == 0 && mFields.m32[3] == 0);
@@ -161,40 +166,49 @@ void Address::SetIid(const uint8_t *aIid)
     memcpy(mFields.m8 + kInterfaceIdentifierOffset, aIid, kInterfaceIdentifierSize);
 }
 
-void Address::SetIid(const Mac::ExtAddress &aEui64)
+void Address::SetIid(const Mac::ExtAddress &aExtAddress)
 {
-    memcpy(mFields.m8 + kInterfaceIdentifierOffset, aEui64.m8, kInterfaceIdentifierSize);
-    mFields.m8[kInterfaceIdentifierOffset] ^= 0x02;
+    Mac::ExtAddress addr;
+
+    addr = aExtAddress;
+    addr.ToggleLocal();
+    addr.CopyTo(mFields.m8 + kInterfaceIdentifierOffset);
 }
 
 void Address::ToExtAddress(Mac::ExtAddress &aExtAddress) const
 {
-    memcpy(aExtAddress.m8, mFields.m8 + kInterfaceIdentifierOffset, sizeof(aExtAddress.m8));
+    aExtAddress.Set(mFields.m8 + kInterfaceIdentifierOffset);
     aExtAddress.ToggleLocal();
 }
 
 void Address::ToExtAddress(Mac::Address &aMacAddress) const
 {
-    aMacAddress.SetExtended(mFields.m8 + kInterfaceIdentifierOffset, /* reverse */ false);
+    aMacAddress.SetExtended(mFields.m8 + kInterfaceIdentifierOffset);
     aMacAddress.GetExtended().ToggleLocal();
 }
 
 uint8_t Address::GetScope(void) const
 {
+    uint8_t rval;
+
     if (IsMulticast())
     {
-        return mFields.m8[1] & 0xf;
+        rval = mFields.m8[1] & 0xf;
     }
     else if (IsLinkLocal())
     {
-        return kLinkLocalScope;
+        rval = kLinkLocalScope;
     }
     else if (IsLoopback())
     {
-        return kNodeLocalScope;
+        rval = kNodeLocalScope;
+    }
+    else
+    {
+        rval = kGlobalScope;
     }
 
-    return kGlobalScope;
+    return rval;
 }
 
 uint8_t Address::PrefixMatch(const uint8_t *aPrefixA, const uint8_t *aPrefixB, uint8_t aMaxLength)
@@ -230,7 +244,7 @@ uint8_t Address::PrefixMatch(const uint8_t *aPrefixA, const uint8_t *aPrefixB, u
     return rval;
 }
 
-uint8_t Address::PrefixMatch(const Address &aOther) const
+uint8_t Address::PrefixMatch(const otIp6Address &aOther) const
 {
     return PrefixMatch(mFields.m8, aOther.mFields.m8, sizeof(Address));
 }
@@ -240,24 +254,21 @@ bool Address::operator==(const Address &aOther) const
     return memcmp(mFields.m8, aOther.mFields.m8, sizeof(mFields.m8)) == 0;
 }
 
-bool Address::operator!=(const Address &aOther) const
-{
-    return memcmp(mFields.m8, aOther.mFields.m8, sizeof(mFields.m8)) != 0;
-}
-
 otError Address::FromString(const char *aBuf)
 {
-    otError  error  = OT_ERROR_NONE;
-    uint8_t *dst    = reinterpret_cast<uint8_t *>(mFields.m8);
-    uint8_t *endp   = reinterpret_cast<uint8_t *>(mFields.m8 + 15);
-    uint8_t *colonp = NULL;
-    uint16_t val    = 0;
-    uint8_t  count  = 0;
-    bool     first  = true;
-    char     ch;
-    uint8_t  d;
+    otError     error  = OT_ERROR_NONE;
+    uint8_t *   dst    = reinterpret_cast<uint8_t *>(mFields.m8);
+    uint8_t *   endp   = reinterpret_cast<uint8_t *>(mFields.m8 + 15);
+    uint8_t *   colonp = NULL;
+    const char *colonc = NULL;
+    uint16_t    val    = 0;
+    uint8_t     count  = 0;
+    bool        first  = true;
+    bool        hasIp4 = false;
+    char        ch;
+    uint8_t     d;
 
-    memset(mFields.m8, 0, 16);
+    Clear();
 
     dst--;
 
@@ -292,7 +303,20 @@ otError Address::FromString(const char *aBuf)
                 break;
             }
 
+            colonc = aBuf;
+
             continue;
+        }
+        else if (ch == '.')
+        {
+            hasIp4 = true;
+
+            // Do not count bytes of the embedded IPv4 address.
+            endp -= kIp4AddressSize;
+
+            VerifyOrExit(dst <= endp, error = OT_ERROR_PARSE);
+
+            break;
         }
         else
         {
@@ -304,6 +328,8 @@ otError Address::FromString(const char *aBuf)
         VerifyOrExit(++count <= 4, error = OT_ERROR_PARSE);
     }
 
+    VerifyOrExit(colonp || dst == endp, error = OT_ERROR_PARSE);
+
     while (colonp && dst > colonp)
     {
         *endp-- = *dst--;
@@ -314,17 +340,53 @@ otError Address::FromString(const char *aBuf)
         *endp-- = 0;
     }
 
+    if (hasIp4)
+    {
+        val = 0;
+
+        // Reset the start and end pointers.
+        dst  = reinterpret_cast<uint8_t *>(mFields.m8 + 12);
+        endp = reinterpret_cast<uint8_t *>(mFields.m8 + 15);
+
+        for (;;)
+        {
+            ch = *colonc++;
+
+            if (ch == '.' || ch == '\0' || ch == ' ')
+            {
+                VerifyOrExit(dst <= endp, error = OT_ERROR_PARSE);
+
+                *dst++ = static_cast<uint8_t>(val);
+                val    = 0;
+
+                if (ch == '\0' || ch == ' ')
+                {
+                    // Check if embedded IPv4 address had exactly four parts.
+                    VerifyOrExit(dst == endp + 1, error = OT_ERROR_PARSE);
+                    break;
+                }
+            }
+            else
+            {
+                VerifyOrExit('0' <= ch && ch <= '9', error = OT_ERROR_PARSE);
+
+                val = (10 * val) + (ch & 0xf);
+
+                // Single part of IPv4 address has to fit in one byte.
+                VerifyOrExit(val <= 0xff, error = OT_ERROR_PARSE);
+            }
+        }
+    }
+
 exit:
     return error;
 }
 
-const char *Address::ToString(char *aBuf, uint16_t aSize) const
+Address::InfoString Address::ToString(void) const
 {
-    snprintf(aBuf, aSize, "%x:%x:%x:%x:%x:%x:%x:%x", HostSwap16(mFields.m16[0]), HostSwap16(mFields.m16[1]),
-             HostSwap16(mFields.m16[2]), HostSwap16(mFields.m16[3]), HostSwap16(mFields.m16[4]),
-             HostSwap16(mFields.m16[5]), HostSwap16(mFields.m16[6]), HostSwap16(mFields.m16[7]));
-
-    return aBuf;
+    return InfoString("%x:%x:%x:%x:%x:%x:%x:%x", HostSwap16(mFields.m16[0]), HostSwap16(mFields.m16[1]),
+                      HostSwap16(mFields.m16[2]), HostSwap16(mFields.m16[3]), HostSwap16(mFields.m16[4]),
+                      HostSwap16(mFields.m16[5]), HostSwap16(mFields.m16[6]), HostSwap16(mFields.m16[7]));
 }
 
 } // namespace Ip6

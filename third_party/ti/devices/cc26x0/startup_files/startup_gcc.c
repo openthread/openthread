@@ -1,6 +1,6 @@
 /******************************************************************************
 *  Filename:       startup_gcc.c
-*  Revised:        $Date: 2017-05-03 09:38:30 +0200 (on, 03 mai 2017) $
+*  Revised:        $Date: 2017-05-03 09:38:30 +0200 (Wed, 03 May 2017) $
 *  Revision:       $Revision: 17770 $
 *
 *  Description:    Startup code for CC26x0 rev2 device family for use with GCC.

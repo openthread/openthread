@@ -51,17 +51,20 @@ openthread_headers                      = \
     channel_monitor.h                     \
     child_supervision.h                   \
     cli.h                                 \
+    coap_secure.h                         \
     coap.h                                \
     commissioner.h                        \
     config.h                              \
     crypto.h                              \
+    border_agent.h                        \
     border_router.h                       \
     dataset.h                             \
     dataset_ftd.h                         \
     diag.h                                \
-    dhcp6_client.h                        \
-    dhcp6_server.h                        \
     dns.h                                 \
+    entropy.h                             \
+    error.h                               \
+    heap.h                                \
     icmp6.h                               \
     instance.h                            \
     ip6.h                                 \
@@ -69,16 +72,18 @@ openthread_headers                      = \
     joiner.h                              \
     link.h                                \
     link_raw.h                            \
+    logging.h                             \
     message.h                             \
     ncp.h                                 \
     netdata.h                             \
-    openthread.h                          \
+    network_time.h                        \
+    random_crypto.h                       \
+    random_noncrypto.h                    \
     server.h                              \
+    sntp.h                                \
     tasklet.h                             \
     thread.h                              \
     thread_ftd.h                          \
-    tmf_proxy.h                           \
-    types.h                               \
     udp.h                                 \
     $(NULL)
 

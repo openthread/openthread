@@ -29,8 +29,10 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 bin_PROGRAMS                                              = \
+    cli-uart-received-fuzzer                                \
     ip6-send-fuzzer                                         \
     radio-receive-done-fuzzer                               \
+    ncp-uart-received-fuzzer                                \
     $(NULL)
 
 AM_CPPFLAGS                                               = \
@@ -44,10 +46,47 @@ COMMON_LDADD                                              = \
     $(LIB_FUZZING_ENGINE)                                   \
     $(NULL)
 
-ip6_send_fuzzer_LDADD                                     = $(COMMON_LDADD)
-ip6_send_fuzzer_SOURCES                                   = ip6_send.cpp fuzzer_platform.c
+COMMON_SOURCES                                            = \
+    fuzzer_platform.c                                       \
+    fuzzer_platform.h                                       \
+    $(NULL)
 
-radio_receive_done_fuzzer_LDADD                           = $(COMMON_LDADD)
-radio_receive_done_fuzzer_SOURCES                         = radio_receive_done.cpp fuzzer_platform.c
+cli_uart_received_fuzzer_LDADD                            = \
+    $(top_builddir)/src/cli/libopenthread-cli-ftd.a         \
+    $(COMMON_LDADD)                                         \
+    $(NULL)
+
+cli_uart_received_fuzzer_SOURCES                          = \
+    $(COMMON_SOURCES)                                       \
+    cli_uart_received.cpp                                   \
+    $(NULL)
+
+ip6_send_fuzzer_LDADD                                     = \
+    $(COMMON_LDADD)                                         \
+    $(NULL)
+
+ip6_send_fuzzer_SOURCES                                   = \
+    $(COMMON_SOURCES)                                       \
+    ip6_send.cpp                                            \
+    $(NULL)
+
+radio_receive_done_fuzzer_LDADD                           = \
+    $(COMMON_LDADD)                                         \
+    $(NULL)
+
+radio_receive_done_fuzzer_SOURCES                         = \
+    $(COMMON_SOURCES)                                       \
+    radio_receive_done.cpp                                  \
+    $(NULL)
+
+ncp_uart_received_fuzzer_LDADD                            = \
+    $(top_builddir)/src/ncp/libopenthread-ncp-ftd.a         \
+    $(COMMON_LDADD)                                         \
+    $(NULL)
+
+ncp_uart_received_fuzzer_SOURCES                          = \
+    $(COMMON_SOURCES)                                       \
+    ncp_uart_received.cpp                                   \
+    $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

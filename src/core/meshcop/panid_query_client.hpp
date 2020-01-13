@@ -78,11 +78,8 @@ public:
                       void *                              aContext);
 
 private:
-    static void HandleConflict(void *               aContext,
-                               otCoapHeader *       aHeader,
-                               otMessage *          aMessage,
-                               const otMessageInfo *aMessageInfo);
-    void        HandleConflict(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleConflict(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleConflict(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     otCommissionerPanIdConflictCallback mCallback;
     void *                              mContext;

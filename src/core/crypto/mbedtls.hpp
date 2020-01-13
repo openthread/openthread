@@ -36,7 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#include <openthread/instance.h>
 
 namespace ot {
 namespace Crypto {
@@ -60,6 +60,11 @@ public:
      *
      */
     MbedTls(void);
+
+    /**
+     * This method converts from MbedTls error to OpenThread error.
+     */
+    static otError MapError(int rval);
 };
 
 /**
@@ -69,7 +74,5 @@ public:
 
 } // namespace Crypto
 } // namespace ot
-
-#endif // #if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 
 #endif // OT_MBEDTLS_HPP_

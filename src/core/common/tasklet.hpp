@@ -76,7 +76,7 @@ public:
     /**
      * This constructor creates a tasklet instance.
      *
-     * @param[in]  aInstance   A reference to the instance object.
+     * @param[in]  aInstance   A reference to the OpenThread instance object.
      * @param[in]  aHandler    A pointer to a function that is called when the tasklet is run.
      * @param[in]  aOwner      A pointer to owner of this `Tasklet` object.
      *
@@ -84,10 +84,19 @@ public:
     Tasklet(Instance &aInstance, Handler aHandler, void *aOwner);
 
     /**
-     * This method puts the tasklet on the run queue.
+     * This method puts the tasklet on the tasklet scheduler run queue.
      *
      */
     otError Post(void);
+
+    /**
+     * This method indicates whether the tasklet is posted or not.
+     *
+     * @retval TRUE  The tasklet is posted.
+     * @retval FALSE The tasklet is not posted.
+     *
+     */
+    bool IsPosted(void) const { return (mNext != NULL); }
 
 private:
     void RunTask(void) { mHandler(*this); }
@@ -97,11 +106,51 @@ private:
 };
 
 /**
+ * This class defines a tasklet that also maintains a user context pointer.
+ *
+ * In typical `Tasklet` use, in the handler callback, the owner of the tasklet is determined using `GetOwner<Type>`
+ * method. This method works if there is a single instance of `Type` within OpenThread instance hierarchy. The
+ * `TaskletContext` is intended for cases where there may be multiple instances of the same class/type using a `Tasklet`
+ * object. `TaskletContext` will store a context `void *` information.
+ *
+ */
+class TaskletContext : public Tasklet
+{
+public:
+    /**
+     * This constructor creates a tasklet instance.
+     *
+     * @param[in]  aInstance   A reference to the OpenThread instance.
+     * @param[in]  aHandler    A pointer to a function that is called when the tasklet is run.
+     * @param[in]  aContext    A pointer to an arbitrary context information.
+     *
+     */
+    TaskletContext(Instance &aInstance, Handler aHandler, void *aContext)
+        : Tasklet(aInstance, aHandler, aContext)
+        , mContext(aContext)
+    {
+    }
+
+    /**
+     * This method returns the pointer to the arbitrary context information.
+     *
+     * @returns Pointer to the arbitrary context information.
+     *
+     */
+    void *GetContext(void) { return mContext; }
+
+private:
+    void *mContext;
+};
+
+/**
  * This class implements the tasklet scheduler.
  *
  */
 class TaskletScheduler
 {
+    friend class Tasklet;
+
 public:
     /**
      * This constructor initializes the object.
@@ -110,23 +159,13 @@ public:
     TaskletScheduler(void);
 
     /**
-     * This method enqueues a tasklet into the run queue.
-     *
-     * @param[in]  aTasklet  A reference to the tasklet to enqueue.
-     *
-     * @retval OT_ERROR_NONE     Successfully enqueued the tasklet.
-     * @retval OT_ERROR_ALREADY  The tasklet was already enqueued.
-     */
-    otError Post(Tasklet &aTasklet);
-
-    /**
      * This method indicates whether or not there are tasklets pending.
      *
      * @retval TRUE   If there are tasklets pending.
      * @retval FALSE  If there are no tasklets pending.
      *
      */
-    bool AreTaskletsPending(void) { return mHead != NULL; }
+    bool AreTaskletsPending(void) const { return mTail != NULL; }
 
     /**
      * This method processes all tasklets queued when this is called.
@@ -135,9 +174,9 @@ public:
     void ProcessQueuedTasklets(void);
 
 private:
-    Tasklet *PopTasklet(void);
-    Tasklet *mHead;
-    Tasklet *mTail;
+    void PostTasklet(Tasklet &aTasklet);
+
+    Tasklet *mTail; // A circular singly linked-list
 };
 
 /**

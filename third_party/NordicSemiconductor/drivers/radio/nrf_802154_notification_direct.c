@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+/* Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,13 +50,13 @@ void nrf_802154_notification_init(void)
     // Intentionally empty
 }
 
-void nrf_802154_notify_received(uint8_t * p_data, int8_t power, int8_t lqi)
+void nrf_802154_notify_received(uint8_t * p_data, int8_t power, uint8_t lqi)
 {
 #if NRF_802154_USE_RAW_API
     nrf_802154_received_raw(p_data, power, lqi);
 #else // NRF_802154_USE_RAW_API
     nrf_802154_received(p_data + RAW_PAYLOAD_OFFSET, p_data[RAW_LENGTH_OFFSET], power, lqi);
-#endif // NRF_802154_USE_RAW_API
+#endif  // NRF_802154_USE_RAW_API
 }
 
 void nrf_802154_notify_receive_failed(nrf_802154_rx_error_t error)
@@ -67,13 +67,13 @@ void nrf_802154_notify_receive_failed(nrf_802154_rx_error_t error)
 void nrf_802154_notify_transmitted(const uint8_t * p_frame,
                                    uint8_t       * p_ack,
                                    int8_t          power,
-                                   int8_t          lqi)
+                                   uint8_t         lqi)
 {
 #if NRF_802154_USE_RAW_API
     nrf_802154_transmitted_raw(p_frame, p_ack, power, lqi);
 #else // NRF_802154_USE_RAW_API
     nrf_802154_transmitted(p_frame + RAW_PAYLOAD_OFFSET,
-                           p_ack + RAW_PAYLOAD_OFFSET,
+                           p_ack == NULL ? NULL : p_ack + RAW_PAYLOAD_OFFSET,
                            p_ack[RAW_LENGTH_OFFSET],
                            power,
                            lqi);
@@ -86,7 +86,7 @@ void nrf_802154_notify_transmit_failed(const uint8_t * p_frame, nrf_802154_tx_er
     nrf_802154_transmit_failed(p_frame, error);
 #else // NRF_802154_USE_RAW_API
     nrf_802154_transmit_failed(p_frame + RAW_PAYLOAD_OFFSET, error);
-#endif // NRF_802154_USE_RAW_API
+#endif  // NRF_802154_USE_RAW_API
 }
 
 void nrf_802154_notify_energy_detected(uint8_t result)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -41,8 +40,8 @@ SED = 4
 
 MTDS = [ED, SED]
 
-class Cert_5_1_02_ChildAddressTimeout(unittest.TestCase):
 
+class Cert_5_1_02_ChildAddressTimeout(unittest.TestCase):
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -65,21 +64,21 @@ class Cert_5_1_02_ChildAddressTimeout(unittest.TestCase):
 
         self.nodes[ED].set_panid(0xface)
         self.nodes[ED].set_mode('rsn')
-        self.nodes[ED].set_timeout(3)
+        self.nodes[ED].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
         self.nodes[ED].add_whitelist(self.nodes[ROUTER].get_addr64())
         self.nodes[ED].enable_whitelist()
 
         self.nodes[SED].set_panid(0xface)
         self.nodes[SED].set_mode('sn')
-        self.nodes[SED].set_timeout(3)
+        self.nodes[SED].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
         self.nodes[SED].add_whitelist(self.nodes[ROUTER].get_addr64())
         self.nodes[SED].enable_whitelist()
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
-        del self.simulator
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
+        self.simulator.stop()
 
     def test(self):
         self.nodes[LEADER].start()

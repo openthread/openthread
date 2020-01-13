@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2015 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -71,10 +71,10 @@ extern "C" {
 #define NRF_RADIO_MINIMUM_TIMESLOT_LENGTH_EXTENSION_TIME_US (200)
 
 /**@brief The maximum processing time to handle a timeslot extension. */
-#define NRF_RADIO_MAX_EXTENSION_PROCESSING_TIME_US           (17)
+#define NRF_RADIO_MAX_EXTENSION_PROCESSING_TIME_US           (20)
 
 /**@brief The latest time before the end of a timeslot the timeslot can be extended. */
-#define NRF_RADIO_MIN_EXTENSION_MARGIN_US                    (79)
+#define NRF_RADIO_MIN_EXTENSION_MARGIN_US                    (82)
 
 #define SOC_ECB_KEY_LENGTH                (16)                       /**< ECB key length. */
 #define SOC_ECB_CLEARTEXT_LENGTH          (16)                       /**< ECB cleartext length. */
@@ -82,10 +82,10 @@ extern "C" {
 
 #define SD_EVT_IRQn                       (SWI2_IRQn)        /**< SoftDevice Event IRQ number. Used for both protocol events and SoC events. */
 #define SD_EVT_IRQHandler                 (SWI2_IRQHandler)  /**< SoftDevice Event IRQ handler. Used for both protocol events and SoC events.
-                                                                       The default interrupt priority for this handler is set to 4 */
+                                                                       The default interrupt priority for this handler is set to 6 */
 #define RADIO_NOTIFICATION_IRQn           (SWI1_IRQn)        /**< The radio notification IRQ number. */
 #define RADIO_NOTIFICATION_IRQHandler     (SWI1_IRQHandler)  /**< The radio notification IRQ handler.
-                                                                       The default interrupt priority for this handler is set to 4 */
+                                                                       The default interrupt priority for this handler is set to 6 */
 #define NRF_RADIO_LENGTH_MIN_US           (100)               /**< The shortest allowed radio timeslot, in microseconds. */
 #define NRF_RADIO_LENGTH_MAX_US           (100000)            /**< The longest allowed radio timeslot, in microseconds. */
 
@@ -94,6 +94,37 @@ extern "C" {
 #define NRF_RADIO_EARLIEST_TIMEOUT_MAX_US (128000000UL - 1UL) /**< The longest timeout, in microseconds, allowed when requesting the earliest possible timeslot. */
 
 #define NRF_RADIO_START_JITTER_US         (2)                 /**< The maximum jitter in @ref NRF_RADIO_CALLBACK_SIGNAL_TYPE_START relative to the requested start time. */
+
+/**@brief Mask of PPI channels reserved by the SoftDevice when the SoftDevice is disabled. */
+#define NRF_SOC_SD_PPI_CHANNELS_SD_DISABLED_MSK ((uint32_t)(0))
+
+/**@brief Mask of PPI channels reserved by the SoftDevice when the SoftDevice is enabled. */
+#define NRF_SOC_SD_PPI_CHANNELS_SD_ENABLED_MSK  ((uint32_t)( \
+      (1U << 17) \
+    | (1U << 18) \
+    | (1U << 19) \
+    | (1U << 20) \
+    | (1U << 21) \
+    | (1U << 22) \
+    | (1U << 23) \
+    | (1U << 24) \
+    | (1U << 25) \
+    | (1U << 26) \
+    | (1U << 27) \
+    | (1U << 28) \
+    | (1U << 29) \
+    | (1U << 30) \
+    | (1U << 31) \
+  ))
+
+/**@brief Mask of PPI groups reserved by the SoftDevice when the SoftDevice is disabled. */
+#define NRF_SOC_SD_PPI_GROUPS_SD_DISABLED_MSK    ((uint32_t)(0))
+
+/**@brief Mask of PPI groups reserved by the SoftDevice when the SoftDevice is enabled. */
+#define NRF_SOC_SD_PPI_GROUPS_SD_ENABLED_MSK     ((uint32_t)( \
+      (1U << 4) \
+    | (1U << 5) \
+  ))
 
 /**@} */
 
@@ -512,6 +543,8 @@ SVCALL(SD_POWER_POF_ENABLE, uint32_t, sd_power_pof_enable(uint8_t pof_enable));
  *
  * @param[in] usbpwrrdy_enable    True if the power ready event should be enabled, false if it should be disabled.
  *
+ * @note Calling this function on a chip without USBD peripheral will result in undefined behaviour.
+ *
  * @retval ::NRF_SUCCESS
  */
 SVCALL(SD_POWER_USBPWRRDY_ENABLE, uint32_t, sd_power_usbpwrrdy_enable(uint8_t usbpwrrdy_enable));
@@ -522,6 +555,8 @@ SVCALL(SD_POWER_USBPWRRDY_ENABLE, uint32_t, sd_power_usbpwrrdy_enable(uint8_t us
  * The event can be retrieved with sd_evt_get();
  *
  * @param[in] usbdetected_enable    True if the power ready event should be enabled, false if it should be disabled.
+ *
+ * @note Calling this function on a chip without USBD peripheral will result in undefined behaviour.
  *
  * @retval ::NRF_SUCCESS
  */
@@ -534,6 +569,8 @@ SVCALL(SD_POWER_USBDETECTED_ENABLE, uint32_t, sd_power_usbdetected_enable(uint8_
  *
  * @param[in] usbremoved_enable    True if the power ready event should be enabled, false if it should be disabled.
  *
+ * @note Calling this function on a chip without USBD peripheral will result in undefined behaviour.
+ *
  * @retval ::NRF_SUCCESS
  */
 SVCALL(SD_POWER_USBREMOVED_ENABLE, uint32_t, sd_power_usbremoved_enable(uint8_t usbremoved_enable));
@@ -541,6 +578,8 @@ SVCALL(SD_POWER_USBREMOVED_ENABLE, uint32_t, sd_power_usbremoved_enable(uint8_t 
 /**@brief Get USB supply status register content.
  *
  * @param[out] usbregstatus    The content of USBREGSTATUS register.
+ *
+ * @note Calling this function on a chip without USBD peripheral will result in undefined behaviour.
  *
  * @retval ::NRF_SUCCESS
  */
@@ -998,7 +1037,12 @@ SVCALL(SD_FLASH_PAGE_ERASE, uint32_t, sd_flash_page_erase(uint32_t page_number))
  *
  * @param[in] p_request Pointer to the request parameters.
  *
- * @retval ::NRF_ERROR_FORBIDDEN If session not opened or the session is not IDLE.
+ * @retval ::NRF_ERROR_FORBIDDEN Either:
+ *                                - The session is not open.
+ *                                - The session is not IDLE.
+ *                                - This is the first request and its type is not @ref NRF_RADIO_REQ_TYPE_EARLIEST.
+ *                                - The request type was set to @ref NRF_RADIO_REQ_TYPE_NORMAL after a
+ *                                  @ref NRF_RADIO_REQ_TYPE_EARLIEST request was blocked.
  * @retval ::NRF_ERROR_INVALID_ADDR If the p_request pointer is invalid.
  * @retval ::NRF_ERROR_INVALID_PARAM If the parameters of p_request are not valid.
  * @retval ::NRF_SUCCESS Otherwise.

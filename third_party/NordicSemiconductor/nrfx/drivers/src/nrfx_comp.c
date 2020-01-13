@@ -1,21 +1,21 @@
-/**
- * Copyright (c) 2015 - 2018, Nordic Semiconductor ASA
+/*
+ * Copyright (c) 2015 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived from this
  *    software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -133,8 +133,8 @@ nrfx_err_t nrfx_comp_init(nrfx_comp_config_t const * p_config,
 
     nrf_comp_input_select(p_config->input);
 
-    NRFX_IRQ_PRIORITY_SET(COMP_LPCOMP_IRQn, p_config->interrupt_priority);
-    NRFX_IRQ_ENABLE(COMP_LPCOMP_IRQn);
+    NRFX_IRQ_PRIORITY_SET(nrfx_get_irq_number(NRF_COMP), p_config->interrupt_priority);
+    NRFX_IRQ_ENABLE(nrfx_get_irq_number(NRF_COMP));
 
     m_state = NRFX_DRV_STATE_INITIALIZED;
 
@@ -146,7 +146,7 @@ nrfx_err_t nrfx_comp_init(nrfx_comp_config_t const * p_config,
 void nrfx_comp_uninit(void)
 {
     NRFX_ASSERT(m_state != NRFX_DRV_STATE_UNINITIALIZED);
-    NRFX_IRQ_DISABLE(COMP_LPCOMP_IRQn);
+    NRFX_IRQ_DISABLE(nrfx_get_irq_number(NRF_COMP));
     nrf_comp_disable();
 #if NRFX_CHECK(NRFX_PRS_ENABLED)
     nrfx_prs_release(NRF_COMP);

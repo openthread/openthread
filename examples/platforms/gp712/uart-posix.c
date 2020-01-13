@@ -72,12 +72,13 @@ static void restore_stdout_termios(void)
 
 void platformDummy(void *dummyPointer)
 {
-    (void)dummyPointer;
+    OT_UNUSED_VARIABLE(dummyPointer);
 }
 
 static void cbKeyPressed(uint8_t Param)
 {
-    (void)Param;
+    OT_UNUSED_VARIABLE(Param);
+
     qorvoAlarmScheduleEventArg(0, platformDummy, (void *)&s_in_fd);
 }
 
@@ -204,6 +205,11 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 
 exit:
     return error;
+}
+
+otError otPlatUartFlush(void)
+{
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 void platformUartProcess(void)

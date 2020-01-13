@@ -31,14 +31,13 @@
  *   This file implements the OpenThread Tasklet API.
  */
 
-#define WPP_NAME "tasklet_api.tmh"
-
 #include "openthread-core-config.h"
 
 #include <openthread/tasklet.h>
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 
 using namespace ot;
@@ -48,7 +47,7 @@ void otTaskletsProcess(otInstance *aInstance)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(otInstanceIsInitialized(aInstance));
-    instance.GetTaskletScheduler().ProcessQueuedTasklets();
+    instance.Get<TaskletScheduler>().ProcessQueuedTasklets();
 
 exit:
     return;
@@ -60,14 +59,12 @@ bool otTaskletsArePending(otInstance *aInstance)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(otInstanceIsInitialized(aInstance));
-    retval = instance.GetTaskletScheduler().AreTaskletsPending();
+    retval = instance.Get<TaskletScheduler>().AreTaskletsPending();
 
 exit:
     return retval;
 }
 
-#ifndef _MSC_VER
 OT_TOOL_WEAK void otTaskletsSignalPending(otInstance *)
 {
 }
-#endif

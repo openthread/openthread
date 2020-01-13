@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       interrupt_doc.h
-*  Revised:        2016-03-30 13:03:59 +0200 (Wed, 30 Mar 2016)
-*  Revision:       45971
+*  Revised:        2017-05-23 15:04:30 +0200 (Tue, 23 May 2017)
+*  Revision:       49052
 *
 *  Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 *  All rights reserved.
@@ -38,7 +38,7 @@
 //! \section sec_interrupt Introduction
 //!
 //! The interrupt controller API provides a set of functions for dealing with the
-//! nested vectored interrupt controller (NVIC). Functions are provided to enable
+//! Nested Vectored Interrupt Controller (NVIC). Functions are provided to enable
 //! and disable interrupts, register interrupt handlers, and set the priority of
 //! interrupts.
 //!
@@ -47,43 +47,35 @@
 //! except one which is programmable. For more information about the MCU event fabric, see the
 //! [MCU event fabric API](\ref event_api).
 //!
-//! The NVIC provides global interrupt masking, prioritization, and handler
-//! dispatching. Devices within the \ti_device family support 34
-//! interrupt lines and 8 priority levels from 0 to 7 with 0 being the highest priority.
-//! Individual interrupt sources can
-//! be masked, and the processor interrupt can be globally masked as well (without
-//! affecting the individual source masks).
+//! \section sec_interrupt_api API
 //!
-//! The NVIC is tightly coupled with the System CPU. When the
-//! processor responds to an interrupt, the NVIC supplies the address of the
-//! function to handle the interrupt directly to the processor.
-//!
-//! Each interrupt source can be individually enabled and disabled through:
+//! Each interrupt can be individually enabled and disabled through:
 //! - \ref IntEnable()
 //! - \ref IntDisable()
 //!
-//! The global processor interrupt can be enabled and disabled with the following functions:
+//! The global CPU interrupt can be enabled and disabled with the following functions:
 //! - \ref IntMasterEnable()
 //! - \ref IntMasterDisable()
 //!
-//! This does not affect the individual
-//! interrupt enable states. Masking of the processor interrupt can be used as
-//! a simple critical section (only an NMI can interrupt the processor while the
-//! processor interrupt is disabled), although masking the processor interrupt can
-//! have adverse effects on the interrupt response time.
+//! This does not affect the individual interrupt enable states. Masking of the CPU
+//! interrupt can be used as a simple critical section (only an NMI can interrupt the
+//! CPU while the CPU interrupt is disabled), although masking the CPU
+//! interrupt can increase the interrupt response time.
 //!
 //! It is possible to access the NVIC to see if any interrupts are pending and manually
 //! clear pending interrupts which have not yet been serviced or set a specific interrupt as
 //! pending to be handled based on its priority. Pending interrupts are cleared automatically
-//! when the interrupt is accepted and becomes active (being executed). The functions to read,
-//! clear, and set pending interrupts are:
+//! when the interrupt is accepted and executed. However, the event source which caused the
+//! interrupt might need to be cleared manually to avoid re-triggering the corresponding interrupt.
+//! The functions to read, clear, and set pending interrupts are:
 //! - \ref IntPendGet()
 //! - \ref IntPendClear()
 //! - \ref IntPendSet()
 //!
 //! The interrupt prioritization in the NVIC allows handling of higher priority interrupts
-//! before lower priority interrupts, as well as allowing preemption of
-//! lower priority interrupt handlers by higher priority interrupts.
+//! before lower priority interrupts, as well as allowing preemption of lower priority interrupt
+//! handlers by higher priority interrupts.
+//! The device supports eight priority levels from 0 to 7 with 0 being the highest priority.
 //! The priority of each interrupt source can be set and examined using:
 //! - \ref IntPrioritySet()
 //! - \ref IntPriorityGet()
@@ -93,54 +85,78 @@
 //! - \ref IntPriorityMaskSet()
 //! - \ref IntPriorityMaskGet()
 //!
-//! Subprioritization is also possible; instead of having 3 bits of preemptable
-//! prioritization (8 levels), the NVIC can be configured for 3 - M bits of
+//! Subprioritization is also possible. Instead of having three bits of preemptable
+//! prioritization (eight levels), the NVIC can be configured for 3 - M bits of
 //! preemptable prioritization and M bits of subpriority. In this scheme, two
 //! interrupts with the same preemptable prioritization but different subpriorities
-//! do not cause a preemption; instead tail chaining is used to process
+//! do not cause a preemption. Instead, tail chaining is used to process
 //! the two interrupts back-to-back.
 //! If two interrupts with the same priority (and subpriority if so configured) are
 //! asserted at the same time, the one with the lower interrupt number is
-//! processed first. Subprioritization is handled by:
+//! processed first.
+//! Subprioritization is handled by:
 //! - \ref IntPriorityGroupingSet()
 //! - \ref IntPriorityGroupingGet()
 //!
-//! Interrupt handlers can be configured in one of two ways; statically at compile
-//! time or dynamically at run time. Static configuration of interrupt handlers is
-//! accomplished by editing the interrupt handler table in the startup code of the application.
-//! When statically configured, the interrupts must be explicitly
-//! enabled in the NVIC through \ref IntEnable() before the processor can respond to the
-//! interrupt (in addition to any interrupt enabling required within the peripheral).
-//! Statically configuring the interrupt table provides the fastest
-//! interrupt response time because the stacking operation (a write to SRAM) can be
-//! performed in parallel with the interrupt handler table fetch (a read from
-//! Flash), as well as the prefetch of the interrupt handler (assuming it is
-//! also in Flash).
+//! \section sec_interrupt_table Interrupt Vector Table
 //!
-//! Alternatively, interrupts can be configured at runtime using (or the corresponding in each individual module API):
-//! - \ref IntRegister()
-//! - \ref IntUnregister()
+//! The interrupt vector table can be configured in one of two ways:
+//! - Statically (at compile time): Vector table is placed in Flash and each entry has a fixed
+//!   pointer to an interrupt handler (ISR).
+//! - Dynamically (at runtime): Vector table is placed in SRAM and each entry can be changed
+//!   (registered or unregistered) at runtime. This allows a single interrupt to trigger different
+//!   interrupt handlers (ISRs) depending on which interrupt handler is registered at the time the
+//!   System CPU responds to the interrupt.
 //!
-//! Registering an interrupt handler is a simple matter of inserting the handler address into the
-//! table. By default, the table is filled with pointers to an internal handler
-//! that loops forever; it is an error for an interrupt to occur when there is no
-//! interrupt handler registered to process it. Therefore, interrupt sources
-//! should not be enabled before a handler has been registered, and interrupt
-//! sources should be disabled before a handler is unregistered.
-//! When using \ref IntRegister(), the interrupt
-//! must also be enabled as before; when using the function in each individual
-//! function API, \ref IntEnable() is called by the driver and does not need to be called by
-//! the application.
-//! Run-time configuration of interrupts adds a small latency to the interrupt
-//! response time because the stacking operation (a write to SRAM) and the
-//! interrupt handler table fetch (a read from SRAM) must be performed
+//! When configured, the interrupts must be explicitly enabled in the NVIC through \ref IntEnable()
+//! before the CPU can respond to the interrupt (in addition to any interrupt enabling required
+//! within the peripheral).
+//!
+//! \subsection sec_interrupt_table_static Static Vector Table
+//!
+//! Static registration of interrupt handlers is accomplished by editing the interrupt handler
+//! table in the startup code of the application. Texas Instruments provides startup files for
+//! each supported compiler ( \ti_code{startup_<compiler>.c} ) and these startup files include
+//! a default static interrupt vector table.
+//! All entries, except ResetISR, are declared as \c extern with weak assignment to a default
+//! interrupt handler. This allows the user to declare and define a function (in the user's code)
+//! with the same name as an entry in the vector table. At compile time, the linker then replaces
+//! the pointer to the default interrupt handler in the vector table with the pointer to the
+//! interrupt handler defined by the user.
+//!
+//! Statically configuring the interrupt table provides the fastest interrupt response time
+//! because the stacking operation (a write to SRAM on the data bus) is performed in parallel
+//! with the interrupt handler table fetch (a read from Flash on the instruction bus), as well
+//! as the prefetch of the interrupt handler (assuming it is also in Flash).
+//!
+//! \subsection sec_interrupt_table_dynamic Dynamic Vector Table
+//!
+//! Alternatively, interrupts can be registered in the vector table at runtime, thus dynamically.
+//! The dynamic vector table is placed in SRAM and the code can then modify the pointers to
+//! interrupt handlers throughout the application.
+//!
+//! DriverLib uses these two functions to modify the dynamic vector table:
+//! - \ref IntRegister() : Write a pointer to an interrupt handler into the vector table.
+//! - \ref IntUnregister() : Write pointer to default interrupt handler into the vector table.
+//!
+//! \note First call to \ref IntRegister() initializes the vector table in SRAM by copying the
+//! static vector table from Flash and forcing the NVIC to use the dynamic vector table from
+//! this point forward. If using the dynamic vector table it is highly recommended to
+//! initialize it during the setup phase of the application. The NVIC uses the static vector
+//! table in Flash until the application initializes the dynamic vector table in SRAM.
+//!
+//! Runtime configuration of interrupts adds a small latency to the interrupt response time
+//! because the stacking operation (a write to SRAM on the data bus) and the interrupt handler
+//! fetch from the vector table (a read from SRAM on the instruction bus) must be performed
 //! sequentially.
 //!
-//! Run-time configuration of interrupt handlers requires that the interrupt
-//! handler table is placed on a 1-kB boundary in SRAM (typically, this is
+//! The dynamic vector table, \ref g_pfnRAMVectors, is placed in SRAM in the section called
+//! \c vtable_ram which is a section defined in the linker file. By default the linker file
+//! places this section at the start of the SRAM but this is configurable by the user.
+//!
+//! \warning Runtime configuration of interrupt handlers requires that the interrupt
+//! handler table is placed on a 256-byte boundary in SRAM (typically, this is
 //! at the beginning of SRAM). Failure to do so results in an incorrect vector
-//! address being fetched in response to an interrupt. The vector table is in a
-//! section called \ti_code{vtable} and should be placed appropriately with a linker
-//! script.
+//! address being fetched in response to an interrupt.
 //!
 //! @}
