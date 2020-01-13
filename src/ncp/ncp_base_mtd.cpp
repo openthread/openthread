@@ -1959,17 +1959,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET>(void)
 
     error = otIp6Send(mInstance, message);
 
-    // `otIp6Send()` takes ownership of `message` (in both success or
-    // failure cases). `message` is set to NULL so it is not freed at
-    // exit.
-    message = NULL;
-
 exit:
-
-    if (message != NULL)
-    {
-        otMessageFree(message);
-    }
 
     if (error == OT_ERROR_NONE)
     {
