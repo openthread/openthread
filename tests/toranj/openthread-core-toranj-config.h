@@ -34,6 +34,10 @@
  *
  */
 
+#ifndef OPENTHREAD_RADIO
+#define OPENTHREAD_RADIO 0
+#endif
+
 /**
  * @def OPENTHREAD_CONFIG_PLATFORM_INFO
  *

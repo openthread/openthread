@@ -32,11 +32,11 @@
  *
  */
 
+#include "settings.h"
+
 #include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
-
-#include <openthread-core-config.h>
 
 #include <openthread/instance.h>
 #include <openthread/platform/settings.h>
@@ -66,36 +66,6 @@ struct settingsBlock
     uint16_t length;
     uint16_t reserved;
 } OT_TOOL_PACKED_END;
-
-/**
- * @def SETTINGS_CONFIG_BASE_ADDRESS
- *
- * The base address of settings.
- *
- */
-#ifndef SETTINGS_CONFIG_BASE_ADDRESS
-#define SETTINGS_CONFIG_BASE_ADDRESS 0x39000
-#endif // SETTINGS_CONFIG_BASE_ADDRESS
-
-/**
- * @def SETTINGS_CONFIG_PAGE_SIZE
- *
- * The page size of settings.
- *
- */
-#ifndef SETTINGS_CONFIG_PAGE_SIZE
-#define SETTINGS_CONFIG_PAGE_SIZE 0x800
-#endif // SETTINGS_CONFIG_PAGE_SIZE
-
-/**
- * @def SETTINGS_CONFIG_PAGE_NUM
- *
- * The page number of settings.
- *
- */
-#ifndef SETTINGS_CONFIG_PAGE_NUM
-#define SETTINGS_CONFIG_PAGE_NUM 2
-#endif // SETTINGS_CONFIG_PAGE_NUM
 
 #if (SETTINGS_CONFIG_PAGE_NUM <= 1)
 #error "Invalid value for `SETTINGS_CONFIG_PAGE_NUM` (should be >= 2)"

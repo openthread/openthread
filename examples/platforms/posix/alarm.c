@@ -36,6 +36,10 @@
 
 #include "utils/code_utils.h"
 
+#ifndef __linux__
+#define __linux__ 0
+#endif
+
 // linux microsecond timer
 #if __linux__
 

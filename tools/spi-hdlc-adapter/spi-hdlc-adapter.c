@@ -27,6 +27,10 @@
 
 #define _GNU_SOURCE 1
 
+#ifndef HAVE_CONFIG_H
+#define HAVE_CONFIG_H 0
+#endif
+
 #if HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -53,16 +57,32 @@
 #include <linux/ioctl.h>
 #include <linux/spi/spidev.h>
 
+#ifndef HAVE_EXECINFO_H
+#define HAVE_EXECINFO_H 0
+#endif
+
 #if HAVE_EXECINFO_H
 #include <execinfo.h>
+#endif
+
+#ifndef HAVE_PTY_H
+#define HAVE_PTY_H 0
 #endif
 
 #if HAVE_PTY_H
 #include <pty.h>
 #endif
 
+#ifndef HAVE_UTIL_H
+#define HAVE_UTIL_H 0
+#endif
+
 #if HAVE_UTIL_H
 #include <util.h>
+#endif
+
+#ifndef HAVE_OPENPTY
+#define HAVE_OPENPTY 0
 #endif
 
 /* ------------------------------------------------------------------------- */

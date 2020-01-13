@@ -42,6 +42,14 @@
 #include <sys/prctl.h>
 #endif
 
+#ifndef HAVE_LIBEDIT
+#define HAVE_LIBEDIT 0
+#endif
+
+#ifndef HAVE_LIBREADLINE
+#define HAVE_LIBREADLINE 0
+#endif
+
 #define OPENTHREAD_POSIX_APP_TYPE_NCP 1
 #define OPENTHREAD_POSIX_APP_TYPE_CLI 2
 
@@ -51,16 +59,23 @@
 #include <openthread/platform/radio.h>
 #if OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_NCP
 #include <openthread/ncp.h>
+#define OPENTHREAD_USE_CONSOLE 0
 #elif OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_CLI
 #include <openthread/cli.h>
 #if (HAVE_LIBEDIT || HAVE_LIBREADLINE) && !OPENTHREAD_ENABLE_POSIX_APP_DAEMON
 #define OPENTHREAD_USE_CONSOLE 1
 #include "console_cli.h"
+#else
+#define OPENTHREAD_USE_CONSOLE 0
 #endif
 #else
 #error "Unknown posix app type!"
 #endif
 #include <openthread-system.h>
+
+#ifndef OPENTHREAD_ENABLE_COVERAGE
+#define OPENTHREAD_ENABLE_COVERAGE 0
+#endif
 
 typedef struct PosixConfig
 {
@@ -83,16 +98,17 @@ enum
 {
     ARG_PRINT_RADIO_VERSION = 1001,
     ARG_NO_RADIO_RESET      = 1002,
-    ARG_SPI_GPIO_INT_DEV    = 1003,
-    ARG_SPI_GPIO_INT_LINE   = 1004,
-    ARG_SPI_GPIO_RESET_DEV  = 1005,
-    ARG_SPI_GPIO_RESET_LINE = 1006,
-    ARG_SPI_MODE            = 1007,
-    ARG_SPI_SPEED           = 1008,
-    ARG_SPI_CS_DELAY        = 1009,
-    ARG_SPI_RESET_DELAY     = 1010,
-    ARG_SPI_ALIGN_ALLOWANCE = 1011,
-    ARG_SPI_SMALL_PACKET    = 1012,
+    ARG_RESTORE_NCP_DATASET = 1003,
+    ARG_SPI_GPIO_INT_DEV    = 1011,
+    ARG_SPI_GPIO_INT_LINE   = 1012,
+    ARG_SPI_GPIO_RESET_DEV  = 1013,
+    ARG_SPI_GPIO_RESET_LINE = 1014,
+    ARG_SPI_MODE            = 1015,
+    ARG_SPI_SPEED           = 1016,
+    ARG_SPI_CS_DELAY        = 1017,
+    ARG_SPI_RESET_DELAY     = 1018,
+    ARG_SPI_ALIGN_ALLOWANCE = 1019,
+    ARG_SPI_SMALL_PACKET    = 1020,
 };
 
 static const struct option kOptions[] = {{"debug-level", required_argument, NULL, 'd'},
@@ -101,6 +117,7 @@ static const struct option kOptions[] = {{"debug-level", required_argument, NULL
                                          {"interface-name", required_argument, NULL, 'I'},
                                          {"no-reset", no_argument, NULL, ARG_NO_RADIO_RESET},
                                          {"radio-version", no_argument, NULL, ARG_PRINT_RADIO_VERSION},
+                                         {"ncp-dataset", no_argument, NULL, ARG_RESTORE_NCP_DATASET},
                                          {"time-speed", required_argument, NULL, 's'},
                                          {"verbose", no_argument, NULL, 'v'},
 #if OPENTHREAD_POSIX_RCP_SPI_ENABLE
@@ -128,6 +145,7 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    -n  --dry-run                 Just verify if arguments is valid and radio spinel is compatible.\n"
             "        --no-reset                Do not reset RCP on initialization\n"
             "        --radio-version           Print radio firmware version\n"
+            "        --ncp-dataset           Retrieve and save NCP dataset to file\n"
             "    -s  --time-speed factor       Time speed up factor.\n"
             "    -v  --verbose                 Also log to stderr.\n"
 #if OPENTHREAD_POSIX_RCP_SPI_ENABLE
@@ -219,6 +237,9 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             break;
         case ARG_NO_RADIO_RESET:
             aConfig->mPlatformConfig.mResetRadio = false;
+            break;
+        case ARG_RESTORE_NCP_DATASET:
+            aConfig->mPlatformConfig.mRestoreDatasetFromNcp = true;
             break;
 #if OPENTHREAD_POSIX_RCP_SPI_ENABLE
         case ARG_SPI_GPIO_INT_DEV:

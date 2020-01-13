@@ -1397,8 +1397,8 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
         router = mRouterTable.GetRouter(routerId);
         VerifyOrExit(router != NULL);
 
-        // Send link request if no link to router
-        if (!router->IsStateValid() && !router->IsStateLinkRequest() &&
+        // Send unicast link request if no link to router and no unicast/multicast link request in progress
+        if (!router->IsStateValid() && !router->IsStateLinkRequest() && (mChallengeTimeout == 0) &&
             (linkMargin >= OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN))
         {
             router->SetExtAddress(macAddr);

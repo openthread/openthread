@@ -62,7 +62,7 @@
  * Define to 1 if you want to enable physical layer to support OQPSK modulation in 2.4GHz band.
  *
  */
-#ifdef RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT
+#if RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT
 #define OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT 1
 #else
 #define OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT 0

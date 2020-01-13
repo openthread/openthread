@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2016-2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,43 +26,55 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_PLATFORM_CONFIG_H_
-#define OPENTHREAD_PLATFORM_CONFIG_H_
-
 /**
  * @file
- * @brief
- *   This file includes the POSIX platform-specific configurations.
+ *   This file defines the configuration options for platform abstraction of non-volatile storage of settings.
+ *
  */
 
+#ifndef UTILS_SETTINGS_H_
+#define UTILS_SETTINGS_H_
+
+#include <openthread-core-config.h>
+
 /**
- * @def OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
+ * @def SETTINGS_CONFIG_BASE_ADDRESS
  *
- * Define as 1 to enable PTY device support in POSIX app.
+ * The base address of settings.
  *
  */
-#ifndef OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
-#define OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE 1
+#ifndef SETTINGS_CONFIG_BASE_ADDRESS
+#define SETTINGS_CONFIG_BASE_ADDRESS 0x39000
 #endif
 
 /**
- * @def OPENTHREAD_POSIX_APP_SOCKET_BASENAME
+ * @def SETTINGS_CONFIG_PAGE_SIZE
  *
- * Define socket basename used by POSIX app daemon.
+ * The page size of settings.
  *
  */
-#ifndef OPENTHREAD_POSIX_APP_SOCKET_BASENAME
-#define OPENTHREAD_POSIX_APP_SOCKET_BASENAME "/tmp/openthread"
+#ifndef SETTINGS_CONFIG_PAGE_SIZE
+#define SETTINGS_CONFIG_PAGE_SIZE 0x800
 #endif
 
 /**
- * @def OPENTHREAD_POSIX_VIRTUAL_TIME
+ * @def SETTINGS_CONFIG_PAGE_NUM
  *
- * This setting configures whether to use virtual time.
+ * The page number of settings.
  *
  */
-#ifndef OPENTHREAD_POSIX_VIRTUAL_TIME
-#define OPENTHREAD_POSIX_VIRTUAL_TIME 0
+#ifndef SETTINGS_CONFIG_PAGE_NUM
+#define SETTINGS_CONFIG_PAGE_NUM 2
 #endif
 
-#endif // OPENTHREAD_PLATFORM_CONFIG_H_
+/**
+ * @def OPENTHREAD_SETTINGS_RAM
+ *
+ * Define as 1 to enable saving the settings in RAM instead of flash.
+ *
+ */
+#ifndef OPENTHREAD_SETTINGS_RAM
+#define OPENTHREAD_SETTINGS_RAM 0
+#endif
+
+#endif // UTILS_SETTINGS_H_

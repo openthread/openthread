@@ -28,6 +28,10 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
+# Do not enable -Wundef for jlink library
+override CFLAGS                                      := $(filter-out -Wundef,$(CFLAGS))
+override CXXFLAGS                                    := $(filter-out -Wundef,$(CXXFLAGS))
+
 lib_LIBRARIES                                             = libjlinkrtt.a
 
 libjlinkrtt_a_CPPFLAGS                                    = \

@@ -3561,7 +3561,7 @@ otError Interpreter::ProcessMacRetries(int argc, char *argv[])
             otLinkSetMaxFrameRetriesDirect(mInstance, static_cast<uint8_t>(value));
         }
     }
-#ifdef OPENTHREAD_FTD
+#if OPENTHREAD_FTD
     else if (strcmp(argv[0], "indirect") == 0)
     {
         if (argc == 1)

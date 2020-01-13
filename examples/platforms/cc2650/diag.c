@@ -26,6 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "openthread-core-config.h"
 #include <openthread/config.h>
 
 #include <stdbool.h>

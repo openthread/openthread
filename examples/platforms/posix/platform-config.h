@@ -35,9 +35,49 @@
 /**
  * @def OPENTHREAD_POSIX_UART_BAUDRATE
  *
- * This setting configures the baudrate of the UART.
+ * This setting configures the baud rate of the UART.
  *
  */
 #ifndef OPENTHREAD_POSIX_UART_BAUDRATE
 #define OPENTHREAD_POSIX_UART_BAUDRATE B115200
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_VIRTUAL_TIME
+ *
+ * This setting configures whether to use virtual time (used for simulation) in POSIX platform.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_VIRTUAL_TIME
+#define OPENTHREAD_POSIX_VIRTUAL_TIME 0
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_VIRTUAL_TIME_UART
+ *
+ * This setting configures whether to use virtual time for UART.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_VIRTUAL_TIME_UART
+#define OPENTHREAD_POSIX_VIRTUAL_TIME_UART 0
+#endif
+
+/**
+ * @def OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+ *
+ * Define as 1 to enable pseudo-reset.
+ *
+ */
+#ifndef OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+#define OPENTHREAD_PLATFORM_USE_PSEUDO_RESET 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_NCP_SPI_ENABLE
+ *
+ * Define as 1 to enable SPI NCP interface.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NCP_SPI_ENABLE
+#define OPENTHREAD_CONFIG_NCP_SPI_ENABLE 0
 #endif

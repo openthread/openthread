@@ -391,6 +391,10 @@ void otPlatSettingsWipe(otInstance *aInstance)
     VerifyOrDie(0 == ftruncate(sSettingsFd, 0), OT_EXIT_ERROR_ERRNO);
 }
 
+#ifndef SELF_TEST
+#define SELF_TEST 0
+#endif
+
 #if SELF_TEST
 
 uint64_t gNodeId = 1;
