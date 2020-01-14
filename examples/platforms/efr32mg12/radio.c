@@ -698,11 +698,11 @@ static void processNextRxPacket(otInstance *aInstance)
 
     length = packetInfo.packetBytes + 1;
 
-    // check the length in recv packet info structure
-    otEXPECT(length == packetInfo.firstPortionData[0]);
+    // check the length in recv packet info structure; RAIL should take care of this.
+    assert(length == packetInfo.firstPortionData[0]);
 
-    // check the length validity of recv packet
-    otEXPECT(length >= IEEE802154_MIN_LENGTH && length <= IEEE802154_MAX_LENGTH);
+    // check the length validity of recv packet; RAIL should take care of this.
+    assert(length >= IEEE802154_MIN_LENGTH && length <= IEEE802154_MAX_LENGTH);
 
     otLogInfoPlat("Received data:%d", length);
 
