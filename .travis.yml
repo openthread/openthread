@@ -69,6 +69,10 @@ jobs:
       os: linux
       compiler: gcc
       script: .travis/script.sh
+    - env: BUILD_TARGET="posix-app-migrate" VERBOSE=1 COVERAGE=1
+      os: linux
+      compiler: clang
+      script: .travis/script.sh
     - env: BUILD_TARGET="android-build" VERBOSE=1
       os: linux
       dist: trusty

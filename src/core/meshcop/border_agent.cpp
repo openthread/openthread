@@ -444,7 +444,7 @@ bool BorderAgent::HandleUdpReceive(const Message &aMessage, const Ip6::MessageIn
 
         tlv.Init();
         tlv.SetAddress(aMessageInfo.GetPeerAddr());
-        SuccessOrExit(error = message->AppendTlv(tlv));
+        SuccessOrExit(error = tlv.AppendTo(*message));
     }
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().SendMessage(*message, Get<Coap::CoapSecure>().GetPeerAddress()));

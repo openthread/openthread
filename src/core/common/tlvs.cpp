@@ -34,6 +34,7 @@
 #include "tlvs.hpp"
 
 #include "common/code_utils.hpp"
+#include "common/debug.hpp"
 #include "common/message.hpp"
 
 namespace ot {
@@ -162,6 +163,15 @@ otError Tlv::Find(const Message &aMessage, uint8_t aType, uint16_t *aOffset, uin
 
 exit:
     return error;
+}
+
+otError Tlv::AppendTo(Message &aMessage) const
+{
+    uint32_t size = GetSize();
+
+    assert(size <= UINT16_MAX);
+
+    return aMessage.Append(this, static_cast<uint16_t>(size));
 }
 
 } // namespace ot

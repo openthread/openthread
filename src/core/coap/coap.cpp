@@ -535,10 +535,11 @@ exit:
 
 void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    char     uriPath[Resource::kMaxReceivedUriPath];
-    char *   curUriPath     = uriPath;
-    Message *cachedResponse = NULL;
-    otError  error          = OT_ERROR_NOT_FOUND;
+    char           uriPath[Resource::kMaxReceivedUriPath];
+    char *         curUriPath     = uriPath;
+    Message *      cachedResponse = NULL;
+    otError        error          = OT_ERROR_NOT_FOUND;
+    OptionIterator iterator;
 
     if (mInterceptor != NULL)
     {
@@ -561,7 +562,8 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
         break;
     }
 
-    for (const otCoapOption *option = aMessage.GetFirstOption(); option != NULL; option = aMessage.GetNextOption())
+    SuccessOrExit(error = iterator.Init(&aMessage));
+    for (const otCoapOption *option = iterator.GetFirstOption(); option != NULL; option = iterator.GetNextOption())
     {
         switch (option->mNumber)
         {
@@ -573,7 +575,7 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
 
             VerifyOrExit(option->mLength < sizeof(uriPath) - static_cast<size_t>(curUriPath + 1 - uriPath));
 
-            aMessage.GetOptionValue(curUriPath);
+            iterator.GetOptionValue(curUriPath);
             curUriPath += option->mLength;
             break;
 

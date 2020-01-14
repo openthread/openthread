@@ -341,7 +341,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
             {
                 if (cur->GetType() == type)
                 {
-                    SuccessOrExit(error = message->AppendTlv(*cur));
+                    SuccessOrExit(error = cur->AppendTo(*message));
                     break;
                 }
             }
@@ -381,7 +381,7 @@ void Leader::SendCommissioningSetResponse(const Coap::Message &    aRequest,
 
     state.Init();
     state.SetState(aState);
-    SuccessOrExit(error = message->AppendTlv(state));
+    SuccessOrExit(error = state.AppendTo(*message));
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
 

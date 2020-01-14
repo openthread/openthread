@@ -42,6 +42,14 @@
 #include <sys/prctl.h>
 #endif
 
+#ifndef HAVE_LIBEDIT
+#define HAVE_LIBEDIT 0
+#endif
+
+#ifndef HAVE_LIBREADLINE
+#define HAVE_LIBREADLINE 0
+#endif
+
 #define OPENTHREAD_POSIX_APP_TYPE_NCP 1
 #define OPENTHREAD_POSIX_APP_TYPE_CLI 2
 
@@ -51,16 +59,23 @@
 #include <openthread/platform/radio.h>
 #if OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_NCP
 #include <openthread/ncp.h>
+#define OPENTHREAD_USE_CONSOLE 0
 #elif OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_CLI
 #include <openthread/cli.h>
 #if (HAVE_LIBEDIT || HAVE_LIBREADLINE) && !OPENTHREAD_ENABLE_POSIX_APP_DAEMON
 #define OPENTHREAD_USE_CONSOLE 1
 #include "console_cli.h"
+#else
+#define OPENTHREAD_USE_CONSOLE 0
 #endif
 #else
 #error "Unknown posix app type!"
 #endif
 #include <openthread-system.h>
+
+#ifndef OPENTHREAD_ENABLE_COVERAGE
+#define OPENTHREAD_ENABLE_COVERAGE 0
+#endif
 
 typedef struct PosixConfig
 {
@@ -83,6 +98,7 @@ static const struct option kOptions[] = {{"debug-level", required_argument, NULL
                                          {"radio-version", no_argument, NULL, 0},
                                          {"time-speed", required_argument, NULL, 's'},
                                          {"verbose", no_argument, NULL, 'v'},
+                                         {"ncp-dataset", no_argument, NULL, 0},
                                          {0, 0, 0, 0}};
 
 static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
@@ -96,6 +112,7 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    -n  --dry-run               Just verify if arguments is valid and radio spinel is compatible.\n"
             "        --no-reset              Do not reset RCP on initialization\n"
             "        --radio-version         Print radio firmware version\n"
+            "        --ncp-dataset           Retrieve and save NCP dataset to file\n"
             "    -s  --time-speed factor     Time speed up factor.\n"
             "    -v  --verbose               Also log to stderr.\n"
             "    -h  --help                  Display this usage information.\n",
@@ -162,6 +179,10 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             else if (!strcmp(kOptions[index].name, "no-reset"))
             {
                 aConfig->mPlatformConfig.mResetRadio = false;
+            }
+            else if (!strcmp(kOptions[index].name, "ncp-dataset"))
+            {
+                aConfig->mPlatformConfig.mRestoreDatasetFromNcp = true;
             }
             break;
         case '?':

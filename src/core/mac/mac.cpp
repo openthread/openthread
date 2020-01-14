@@ -83,6 +83,7 @@ Mac::Mac(Instance &aInstance)
     , mPendingWaitingForData(false)
     , mShouldTxPollBeforeData(false)
     , mRxOnWhenIdle(false)
+    , mPromiscuous(false)
     , mBeaconsEnabled(false)
     , mUsingTemporaryChannel(false)
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS

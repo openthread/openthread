@@ -150,6 +150,17 @@ typedef struct otCoapOption
 } otCoapOption;
 
 /**
+ * This structure acts as an iterator for CoAP options
+ *
+ */
+typedef struct otCoapOptionIterator
+{
+    const otMessage *mMessage;          ///< CoAP message
+    otCoapOption     mOption;           ///< CoAP message option
+    uint16_t         mNextOptionOffset; ///< Byte offset of next option
+} otCoapOptionIterator;
+
+/**
  * CoAP Content Format codes.  The full list is documented at
  * https://www.iana.org/assignments/core-parameters/core-parameters.xhtml#content-formats
  */
@@ -567,36 +578,48 @@ uint8_t otCoapMessageGetTokenLength(const otMessage *aMessage);
 const uint8_t *otCoapMessageGetToken(const otMessage *aMessage);
 
 /**
+ * This function initialises an iterator for the options in the given message.
+ *
+ * @param[inout]  aIterator A pointer to the CoAP message option iterator.
+ * @param[in]     aMessage  A pointer to the CoAP message.
+ *
+ * @retval  OT_ERROR_NONE   Successfully initialised.
+ * @retval  OT_ERROR_PARSE  Message state is inconsistent.
+ *
+ */
+otError otCoapOptionIteratorInit(otCoapOptionIterator *aIterator, const otMessage *aMessage);
+
+/**
  * This function returns a pointer to the first option.
  *
- * @param[in]  aMessage  A pointer to the CoAP message.
+ * @param[inout]  aIterator A pointer to the CoAP message option iterator.
  *
  * @returns A pointer to the first option. If no option is present NULL pointer is returned.
  *
  */
-const otCoapOption *otCoapMessageGetFirstOption(otMessage *aMessage);
+const otCoapOption *otCoapOptionIteratorGetFirstOption(otCoapOptionIterator *aIterator);
 
 /**
  * This function returns a pointer to the next option.
  *
- * @param[in]  aMessage  A pointer to the CoAP message.
+ * @param[inout]  aIterator A pointer to the CoAP message option iterator.
  *
  * @returns A pointer to the next option. If no more options are present NULL pointer is returned.
  *
  */
-const otCoapOption *otCoapMessageGetNextOption(otMessage *aMessage);
+const otCoapOption *otCoapOptionIteratorGetNextOption(otCoapOptionIterator *aIterator);
 
 /**
  * This function fills current option value into @p aValue.
  *
- * @param[in]  aMessage  A pointer to the CoAP message.
- * @param[out] aValue    A pointer to a buffer to receive the option value.
+ * @param[inout]  aIterator A pointer to the CoAP message option iterator.
+ * @param[out]    aValue    A pointer to a buffer to receive the option value.
  *
  * @retval  OT_ERROR_NONE       Successfully filled value.
  * @retval  OT_ERROR_NOT_FOUND  No current option.
  *
  */
-otError otCoapMessageGetOptionValue(otMessage *aMessage, void *aValue);
+otError otCoapOptionIteratorGetOptionValue(otCoapOptionIterator *aIterator, void *aValue);
 
 /**
  * This function creates a new CoAP message.

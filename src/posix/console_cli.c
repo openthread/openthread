@@ -35,6 +35,14 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifndef HAVE_LIBEDIT
+#define HAVE_LIBEDIT 0
+#endif
+
+#ifndef HAVE_LIBREADLINE
+#define HAVE_LIBREADLINE 0
+#endif
+
 #if HAVE_LIBEDIT || HAVE_LIBREADLINE
 #if HAVE_LIBEDIT
 #include <editline/readline.h>

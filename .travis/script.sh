@@ -607,6 +607,11 @@ build_samr21() {
     .travis/check-posix-app-pty || die
 }
 
+[ $BUILD_TARGET != posix-app-migrate ] || {
+    ./bootstrap
+    .travis/check-ncp-rcp-migrate || die
+}
+
 [ $BUILD_TARGET != posix-mtd ] || {
     ./bootstrap || die
     REFERENCE_DEVICE=1 COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 USE_MTD=1 make -f examples/Makefile-posix check || die

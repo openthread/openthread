@@ -38,7 +38,6 @@
 
 #include "common/locator.hpp"
 #include "mac/mac_types.hpp"
-#include "thread/mle.hpp"
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 #include "utils/slaac_address.hpp"
 #endif
@@ -139,7 +138,6 @@ public:
         uint16_t        mVersion;    ///< Version
     };
 
-protected:
     /**
      * This enumeration defines the keys of settings.
      *
@@ -155,6 +153,7 @@ protected:
         kKeySlaacIidSecretKey = 0x0007, ///< Secret key used by SLAAC module for generating semantically opaque IID
     };
 
+protected:
     explicit SettingsBase(Instance &aInstance)
         : InstanceLocator(aInstance)
     {

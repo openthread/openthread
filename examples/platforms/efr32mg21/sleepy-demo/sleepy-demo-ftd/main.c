@@ -33,7 +33,6 @@
 #include "hal-config-board.h"
 #include "hal_common.h"
 #include "openthread-system.h"
-#include "rtcdriver.h"
 #include <assert.h>
 #include <common/logging.hpp>
 #include <openthread-core-config.h>

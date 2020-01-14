@@ -364,7 +364,7 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
             if (cur->GetType() != Tlv::kNetworkMasterKey ||
                 (Get<KeyManager>().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY))
             {
-                SuccessOrExit(error = message->AppendTlv(*cur));
+                SuccessOrExit(error = cur->AppendTo(*message));
             }
 
             cur = cur->GetNext();
@@ -384,7 +384,7 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
 
             if ((tlv = dataset.Get(static_cast<Tlv::Type>(aTlvs[index]))) != NULL)
             {
-                SuccessOrExit(error = message->AppendTlv(*tlv));
+                SuccessOrExit(error = tlv->AppendTo(*message));
             }
         }
     }
@@ -442,7 +442,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
             CommissionerSessionIdTlv sessionId;
             sessionId.Init();
             sessionId.SetCommissionerSessionId(Get<Commissioner>().GetSessionId());
-            SuccessOrExit(error = message->AppendTlv(sessionId));
+            SuccessOrExit(error = sessionId.AppendTo(*message));
         }
     }
 
@@ -454,7 +454,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         timestamp.Init();
         static_cast<Timestamp *>(&timestamp)->SetSeconds(aDataset.mActiveTimestamp);
         static_cast<Timestamp *>(&timestamp)->SetTicks(0);
-        SuccessOrExit(error = message->AppendTlv(timestamp));
+        SuccessOrExit(error = timestamp.AppendTo(*message));
     }
 
     if (aDataset.mComponents.mIsPendingTimestampPresent)
@@ -463,7 +463,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         timestamp.Init();
         static_cast<Timestamp *>(&timestamp)->SetSeconds(aDataset.mPendingTimestamp);
         static_cast<Timestamp *>(&timestamp)->SetTicks(0);
-        SuccessOrExit(error = message->AppendTlv(timestamp));
+        SuccessOrExit(error = timestamp.AppendTo(*message));
     }
 
     if (aDataset.mComponents.mIsMasterKeyPresent)
@@ -471,7 +471,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         NetworkMasterKeyTlv masterkey;
         masterkey.Init();
         masterkey.SetNetworkMasterKey(static_cast<const MasterKey &>(aDataset.mMasterKey));
-        SuccessOrExit(error = message->AppendTlv(masterkey));
+        SuccessOrExit(error = masterkey.AppendTo(*message));
     }
 
     if (aDataset.mComponents.mIsNetworkNamePresent)
@@ -479,7 +479,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         NetworkNameTlv networkname;
         networkname.Init();
         networkname.SetNetworkName(static_cast<const Mac::NetworkName &>(aDataset.mNetworkName).GetAsData());
-        SuccessOrExit(error = message->AppendTlv(networkname));
+        SuccessOrExit(error = networkname.AppendTo(*message));
     }
 
     if (aDataset.mComponents.mIsExtendedPanIdPresent)
@@ -487,7 +487,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         ExtendedPanIdTlv extpanid;
         extpanid.Init();
         extpanid.SetExtendedPanId(static_cast<const Mac::ExtendedPanId &>(aDataset.mExtendedPanId));
-        SuccessOrExit(error = message->AppendTlv(extpanid));
+        SuccessOrExit(error = extpanid.AppendTo(*message));
     }
 
     if (aDataset.mComponents.mIsMeshLocalPrefixPresent)
@@ -495,7 +495,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         MeshLocalPrefixTlv localprefix;
         localprefix.Init();
         localprefix.SetMeshLocalPrefix(aDataset.mMeshLocalPrefix);
-        SuccessOrExit(error = message->AppendTlv(localprefix));
+        SuccessOrExit(error = localprefix.AppendTo(*message));
     }
 
     if (aDataset.mComponents.mIsDelayPresent)
@@ -503,7 +503,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         DelayTimerTlv delaytimer;
         delaytimer.Init();
         delaytimer.SetDelayTimer(aDataset.mDelay);
-        SuccessOrExit(error = message->AppendTlv(delaytimer));
+        SuccessOrExit(error = delaytimer.AppendTo(*message));
     }
 
     if (aDataset.mComponents.mIsPanIdPresent)
@@ -511,7 +511,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         PanIdTlv panid;
         panid.Init();
         panid.SetPanId(aDataset.mPanId);
-        SuccessOrExit(error = message->AppendTlv(panid));
+        SuccessOrExit(error = panid.AppendTo(*message));
     }
 
     if (aDataset.mComponents.mIsChannelPresent)
@@ -519,7 +519,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         ChannelTlv channel;
         channel.Init();
         channel.SetChannel(aDataset.mChannel);
-        SuccessOrExit(error = message->AppendTlv(channel));
+        SuccessOrExit(error = channel.AppendTo(*message));
     }
 
     if (aDataset.mComponents.mIsChannelMaskPresent)
@@ -527,7 +527,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         ChannelMaskTlv channelMask;
         channelMask.Init();
         channelMask.SetChannelMask(aDataset.mChannelMask);
-        SuccessOrExit(error = message->AppendTlv(channelMask));
+        SuccessOrExit(error = channelMask.AppendTo(*message));
     }
 
     if (aDataset.mComponents.mIsPskcPresent)
@@ -535,7 +535,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         PskcTlv pskc;
         pskc.Init();
         pskc.SetPskc(static_cast<const Pskc &>(aDataset.mPskc));
-        SuccessOrExit(error = message->AppendTlv(pskc));
+        SuccessOrExit(error = pskc.AppendTo(*message));
     }
 
     if (aDataset.mComponents.mIsSecurityPolicyPresent)
@@ -544,7 +544,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         securityPolicy.Init();
         securityPolicy.SetRotationTime(aDataset.mSecurityPolicy.mRotationTime);
         securityPolicy.SetFlags(aDataset.mSecurityPolicy.mFlags);
-        SuccessOrExit(error = message->AppendTlv(securityPolicy));
+        SuccessOrExit(error = securityPolicy.AppendTo(*message));
     }
 
     if (aLength > 0)

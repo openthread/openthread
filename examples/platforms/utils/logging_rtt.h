@@ -59,7 +59,8 @@ extern "C" {
 /**
  * @def LOG_RTT_BUFFER_NAME
  *
- * RTT's name.
+ * RTT's name. Only used if LOG_RTT_BUFFER_INDEX is not 0. Otherwise,
+ * the buffer name is fixed to "Terminal".
  *
  */
 #ifndef LOG_RTT_BUFFER_NAME
@@ -69,7 +70,9 @@ extern "C" {
 /**
  * @def LOG_RTT_BUFFER_SIZE
  *
- * LOG RTT's buffer size.
+ * LOG RTT's buffer size. Only used if LOG_RTT_BUFFER_INDEX is not 0. To
+ * configure buffer #0 size, check the BUFFER_SIZE_UP definition in
+ * SEGGER_RTT_Conf.h
  *
  */
 #ifndef LOG_RTT_BUFFER_SIZE

@@ -35,7 +35,6 @@
 #include <openthread-core-config.h>
 
 #include <stdbool.h>
-#include "common/settings.hpp"
 #include "openthread/platform/settings.h"
 
 #include <utils/code_utils.h>

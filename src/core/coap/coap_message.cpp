@@ -207,121 +207,6 @@ otError Message::AppendUriQueryOption(const char *aUriQuery)
     return AppendStringOption(OT_COAP_OPTION_URI_QUERY, aUriQuery);
 }
 
-const otCoapOption *Message::GetFirstOption(void)
-{
-    const otCoapOption *option = NULL;
-
-    GetHelpData().ClearOption();
-
-    VerifyOrExit(GetLength() - GetHelpData().mHeaderOffset >= GetOptionStart());
-
-    GetHelpData().mNextOptionOffset = GetHelpData().mHeaderOffset + GetOptionStart();
-
-    if (GetHelpData().mNextOptionOffset < GetLength())
-    {
-        option = GetNextOption();
-    }
-
-exit:
-    return option;
-}
-
-const otCoapOption *Message::GetNextOption(void)
-{
-    otError       error = OT_ERROR_NONE;
-    uint16_t      optionDelta;
-    uint16_t      optionLength;
-    uint8_t       buf[kMaxOptionHeaderSize];
-    uint8_t *     cur  = buf + 1;
-    otCoapOption *rval = NULL;
-
-    VerifyOrExit(GetHelpData().mNextOptionOffset < GetLength(), error = OT_ERROR_NOT_FOUND);
-
-    Read(GetHelpData().mNextOptionOffset, sizeof(buf), buf);
-
-    optionDelta  = buf[0] >> 4;
-    optionLength = buf[0] & 0xf;
-    GetHelpData().mNextOptionOffset += sizeof(uint8_t);
-
-    if (optionDelta < kOption1ByteExtension)
-    {
-        // do nothing
-    }
-    else if (optionDelta == kOption1ByteExtension)
-    {
-        optionDelta = kOption1ByteExtensionOffset + cur[0];
-        GetHelpData().mNextOptionOffset += sizeof(uint8_t);
-        cur++;
-    }
-    else if (optionDelta == kOption2ByteExtension)
-    {
-        optionDelta = kOption2ByteExtensionOffset + static_cast<uint16_t>((cur[0] << 8) | cur[1]);
-        GetHelpData().mNextOptionOffset += sizeof(uint16_t);
-        cur += 2;
-    }
-    else
-    {
-        // RFC7252 (Section 3):
-        // Reserved for payload marker.
-        VerifyOrExit(optionLength == 0xf, error = OT_ERROR_PARSE);
-
-        // The presence of a marker followed by a zero-length payload MUST be processed
-        // as a message format error.
-        VerifyOrExit(GetHelpData().mNextOptionOffset < GetLength(), error = OT_ERROR_PARSE);
-
-        ExitNow(error = OT_ERROR_NOT_FOUND);
-    }
-
-    if (optionLength < kOption1ByteExtension)
-    {
-        // do nothing
-    }
-    else if (optionLength == kOption1ByteExtension)
-    {
-        optionLength = kOption1ByteExtensionOffset + cur[0];
-        GetHelpData().mNextOptionOffset += sizeof(uint8_t);
-    }
-    else if (optionLength == kOption2ByteExtension)
-    {
-        optionLength = kOption2ByteExtensionOffset + static_cast<uint16_t>((cur[0] << 8) | cur[1]);
-        GetHelpData().mNextOptionOffset += sizeof(uint16_t);
-    }
-    else
-    {
-        ExitNow(error = OT_ERROR_PARSE);
-    }
-
-    VerifyOrExit(optionLength <= GetLength() - GetHelpData().mNextOptionOffset, error = OT_ERROR_PARSE);
-
-    rval = &GetHelpData().mOption;
-    rval->mNumber += optionDelta;
-    rval->mLength = optionLength;
-
-    GetHelpData().mNextOptionOffset += optionLength;
-
-exit:
-    if (error == OT_ERROR_PARSE)
-    {
-        GetHelpData().mNextOptionOffset = 0;
-    }
-
-    return rval;
-}
-
-otError Message::GetOptionValue(void *aValue) const
-{
-    otError             error  = OT_ERROR_NONE;
-    const otCoapOption &option = GetHelpData().mOption;
-
-    VerifyOrExit(GetHelpData().mNextOptionOffset > 0, error = OT_ERROR_NOT_FOUND);
-
-    VerifyOrExit(Read(GetHelpData().mNextOptionOffset - option.mLength, option.mLength, aValue) == option.mLength,
-                 error = OT_ERROR_PARSE);
-
-exit:
-    return error;
-}
-
 otError Message::SetPayloadMarker(void)
 {
     otError error  = OT_ERROR_NONE;
@@ -340,7 +225,8 @@ exit:
 
 otError Message::ParseHeader(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError        error = OT_ERROR_NONE;
+    OptionIterator iterator;
 
     assert(mBuffer.mHead.mInfo.mReserved >=
            sizeof(GetHelpData()) +
@@ -351,12 +237,13 @@ otError Message::ParseHeader(void)
     GetHelpData().mHeaderOffset = GetOffset();
     Read(GetHelpData().mHeaderOffset, sizeof(GetHelpData().mHeader), &GetHelpData().mHeader);
 
-    for (const otCoapOption *option = GetFirstOption(); option != NULL; option = GetNextOption())
+    SuccessOrExit(error = iterator.Init(this));
+    for (const otCoapOption *option = iterator.GetFirstOption(); option != NULL; option = iterator.GetNextOption())
     {
     }
 
-    VerifyOrExit(GetHelpData().mNextOptionOffset > 0, error = OT_ERROR_PARSE);
-    GetHelpData().mHeaderLength = GetHelpData().mNextOptionOffset - GetHelpData().mHeaderOffset;
+    VerifyOrExit(iterator.mNextOptionOffset > 0, error = OT_ERROR_PARSE);
+    GetHelpData().mHeaderLength = iterator.mNextOptionOffset - GetHelpData().mHeaderOffset;
     MoveOffset(GetHelpData().mHeaderLength);
 
 exit:
@@ -501,6 +388,142 @@ const char *Message::CodeToString(void) const
     return codeString;
 }
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
+
+otError OptionIterator::Init(const Message *aMessage)
+{
+    otError err = OT_ERROR_NONE;
+
+    /*
+     * Check that:
+     *   Length - Offset: the length of the payload
+     * is greater than:
+     *   Start position of options
+     *
+     * → Check options start before the message ends, or bail ::Init with
+     *   OT_ERROR_PARSE as the reason.
+     */
+    VerifyOrExit(aMessage->GetLength() - aMessage->GetHelpData().mHeaderOffset >= aMessage->GetOptionStart(),
+                 err = OT_ERROR_PARSE);
+
+    mMessage = aMessage;
+    GetFirstOption();
+
+exit:
+    return err;
+}
+
+const otCoapOption *OptionIterator::GetFirstOption(void)
+{
+    const otCoapOption *option  = NULL;
+    const Message &     message = GetMessage();
+
+    ClearOption();
+
+    mNextOptionOffset = message.GetHelpData().mHeaderOffset + message.GetOptionStart();
+
+    if (mNextOptionOffset < message.GetLength())
+    {
+        option = GetNextOption();
+    }
+
+    return option;
+}
+
+const otCoapOption *OptionIterator::GetNextOption(void)
+{
+    otError        error = OT_ERROR_NONE;
+    uint16_t       optionDelta;
+    uint16_t       optionLength;
+    uint8_t        buf[Message::kMaxOptionHeaderSize];
+    uint8_t *      cur     = buf + 1;
+    otCoapOption * rval    = NULL;
+    const Message &message = GetMessage();
+
+    VerifyOrExit(mNextOptionOffset < message.GetLength(), error = OT_ERROR_NOT_FOUND);
+
+    message.Read(mNextOptionOffset, sizeof(buf), buf);
+
+    optionDelta  = buf[0] >> 4;
+    optionLength = buf[0] & 0xf;
+    mNextOptionOffset += sizeof(uint8_t);
+
+    if (optionDelta < Message::kOption1ByteExtension)
+    {
+        // do nothing
+    }
+    else if (optionDelta == Message::kOption1ByteExtension)
+    {
+        optionDelta = Message::kOption1ByteExtensionOffset + cur[0];
+        mNextOptionOffset += sizeof(uint8_t);
+        cur++;
+    }
+    else if (optionDelta == Message::kOption2ByteExtension)
+    {
+        optionDelta = Message::kOption2ByteExtensionOffset + static_cast<uint16_t>((cur[0] << 8) | cur[1]);
+        mNextOptionOffset += sizeof(uint16_t);
+        cur += 2;
+    }
+    else
+    {
+        // RFC7252 (Section 3):
+        // Reserved for payload marker.
+        VerifyOrExit(optionLength == 0xf, error = OT_ERROR_PARSE);
+
+        // The presence of a marker followed by a zero-length payload MUST be processed
+        // as a message format error.
+        VerifyOrExit(mNextOptionOffset < message.GetLength(), error = OT_ERROR_PARSE);
+
+        ExitNow(error = OT_ERROR_NOT_FOUND);
+    }
+
+    if (optionLength < Message::kOption1ByteExtension)
+    {
+        // do nothing
+    }
+    else if (optionLength == Message::kOption1ByteExtension)
+    {
+        optionLength = Message::kOption1ByteExtensionOffset + cur[0];
+        mNextOptionOffset += sizeof(uint8_t);
+    }
+    else if (optionLength == Message::kOption2ByteExtension)
+    {
+        optionLength = Message::kOption2ByteExtensionOffset + static_cast<uint16_t>((cur[0] << 8) | cur[1]);
+        mNextOptionOffset += sizeof(uint16_t);
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_PARSE);
+    }
+
+    VerifyOrExit(optionLength <= message.GetLength() - mNextOptionOffset, error = OT_ERROR_PARSE);
+
+    rval = &mOption;
+    rval->mNumber += optionDelta;
+    rval->mLength = optionLength;
+
+    mNextOptionOffset += optionLength;
+
+exit:
+    if (error == OT_ERROR_PARSE)
+    {
+        mNextOptionOffset = 0;
+    }
+
+    return rval;
+}
+
+otError OptionIterator::GetOptionValue(void *aValue) const
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(mNextOptionOffset > 0, error = OT_ERROR_NOT_FOUND);
+
+    VerifyOrExit(GetMessage().Read(mNextOptionOffset - mOption.mLength, mOption.mLength, aValue) == mOption.mLength,
+                 error = OT_ERROR_PARSE);
+
+exit:
+    return error;
+}
 
 } // namespace Coap
 } // namespace ot

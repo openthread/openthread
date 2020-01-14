@@ -313,7 +313,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             ExtMacAddressTlv tlv;
             tlv.Init();
             tlv.SetMacAddr(Get<Mac::Mac>().GetExtAddress());
-            SuccessOrExit(error = aResponse.AppendTlv(tlv));
+            SuccessOrExit(error = tlv.AppendTo(aResponse));
             break;
         }
 
@@ -322,7 +322,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             Address16Tlv tlv;
             tlv.Init();
             tlv.SetRloc16(Get<Mle::MleRouter>().GetRloc16());
-            SuccessOrExit(error = aResponse.AppendTlv(tlv));
+            SuccessOrExit(error = tlv.AppendTo(aResponse));
             break;
         }
 
@@ -331,7 +331,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             ModeTlv tlv;
             tlv.Init();
             tlv.SetMode(Get<Mle::MleRouter>().GetDeviceMode());
-            SuccessOrExit(error = aResponse.AppendTlv(tlv));
+            SuccessOrExit(error = tlv.AppendTo(aResponse));
             break;
         }
 
@@ -342,7 +342,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
                 TimeoutTlv tlv;
                 tlv.Init();
                 tlv.SetTimeout(Get<Mle::MleRouter>().GetTimeout());
-                SuccessOrExit(error = aResponse.AppendTlv(tlv));
+                SuccessOrExit(error = tlv.AppendTo(aResponse));
             }
 
             break;
@@ -353,7 +353,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             ConnectivityTlv tlv;
             tlv.Init();
             Get<Mle::MleRouter>().FillConnectivityTlv(reinterpret_cast<Mle::ConnectivityTlv &>(tlv));
-            SuccessOrExit(error = aResponse.AppendTlv(tlv));
+            SuccessOrExit(error = tlv.AppendTo(aResponse));
             break;
         }
 
@@ -363,7 +363,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             RouteTlv tlv;
             tlv.Init();
             Get<Mle::MleRouter>().FillRouteTlv(reinterpret_cast<Mle::RouteTlv &>(tlv));
-            SuccessOrExit(error = aResponse.AppendTlv(tlv));
+            SuccessOrExit(error = tlv.AppendTo(aResponse));
             break;
         }
 #endif
@@ -372,7 +372,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
         {
             LeaderDataTlv tlv(reinterpret_cast<const LeaderDataTlv &>(Get<Mle::MleRouter>().GetLeaderDataTlv()));
             tlv.Init();
-            SuccessOrExit(error = aResponse.AppendTlv(tlv));
+            SuccessOrExit(error = tlv.AppendTo(aResponse));
             break;
         }
 
@@ -382,7 +382,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             tlv.Init();
 
             Get<Mle::MleRouter>().FillNetworkDataTlv((reinterpret_cast<Mle::NetworkDataTlv &>(tlv)), false);
-            SuccessOrExit(error = aResponse.AppendTlv(tlv));
+            SuccessOrExit(error = tlv.AppendTo(aResponse));
             break;
         }
 
@@ -398,7 +398,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             memset(&tlv, 0, sizeof(tlv));
             tlv.Init();
             FillMacCountersTlv(tlv);
-            SuccessOrExit(error = aResponse.AppendTlv(tlv));
+            SuccessOrExit(error = tlv.AppendTo(aResponse));
             break;
         }
 
@@ -446,7 +446,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             }
 
             tlv.SetLength(length);
-            SuccessOrExit(error = aResponse.AppendTlv(tlv));
+            SuccessOrExit(error = tlv.AppendTo(aResponse));
             break;
         }
 
@@ -459,7 +459,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
                 MaxChildTimeoutTlv tlv;
                 tlv.Init();
                 tlv.SetTimeout(maxTimeout);
-                SuccessOrExit(error = aResponse.AppendTlv(tlv));
+                SuccessOrExit(error = tlv.AppendTo(aResponse));
             }
 
             break;

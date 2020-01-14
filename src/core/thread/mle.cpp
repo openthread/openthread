@@ -201,10 +201,6 @@ Mle::Mle(Instance &aInstance)
 
     // `SetMeshLocalPrefix()` also adds the Mesh-Local EID and subscribes
     // to the Link- and Realm-Local All Thread Nodes multicast addresses.
-
-#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
-    StartParentSearchTimer();
-#endif
 }
 
 otError Mle::Enable(void)
@@ -217,6 +213,9 @@ otError Mle::Enable(void)
     SuccessOrExit(error = mSocket.Open(&Mle::HandleUdpReceive, this));
     SuccessOrExit(error = mSocket.Bind(sockaddr));
 
+#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
+    StartParentSearchTimer();
+#endif
 exit:
     return error;
 }
@@ -559,7 +558,7 @@ otError Mle::Discover(const Mac::ChannelMask &aScanChannels,
     discoveryRequest.Init();
     discoveryRequest.SetVersion(kThreadVersion);
     discoveryRequest.SetJoiner(aJoiner);
-    SuccessOrExit(error = message->AppendTlv(discoveryRequest));
+    SuccessOrExit(error = discoveryRequest.AppendTo(*message));
 
     tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
     message->Write(startOffset - sizeof(tlv), sizeof(tlv), &tlv);
@@ -975,7 +974,7 @@ void Mle::SetRloc16(uint16_t aRloc16)
         // mesh-local 16
         mMeshLocal16.GetAddress().mFields.m16[7] = HostSwap16(aRloc16);
         Get<ThreadNetif>().AddUnicastAddress(mMeshLocal16);
-#ifdef OPENTHREAD_FTD
+#if OPENTHREAD_FTD
         Get<AddressResolver>().RestartAddressQueries();
 #endif
     }
@@ -1128,7 +1127,7 @@ otError Mle::AppendSourceAddress(Message &aMessage)
     tlv.Init();
     tlv.SetRloc16(GetRloc16());
 
-    return aMessage.AppendTlv(tlv);
+    return tlv.AppendTo(aMessage);
 }
 
 otError Mle::AppendStatus(Message &aMessage, StatusTlv::Status aStatus)
@@ -1138,7 +1137,7 @@ otError Mle::AppendStatus(Message &aMessage, StatusTlv::Status aStatus)
     tlv.Init();
     tlv.SetStatus(aStatus);
 
-    return aMessage.AppendTlv(tlv);
+    return tlv.AppendTo(aMessage);
 }
 
 otError Mle::AppendMode(Message &aMessage, DeviceMode aMode)
@@ -1148,7 +1147,7 @@ otError Mle::AppendMode(Message &aMessage, DeviceMode aMode)
     tlv.Init();
     tlv.SetMode(aMode);
 
-    return aMessage.AppendTlv(tlv);
+    return tlv.AppendTo(aMessage);
 }
 
 otError Mle::AppendTimeout(Message &aMessage, uint32_t aTimeout)
@@ -1158,7 +1157,7 @@ otError Mle::AppendTimeout(Message &aMessage, uint32_t aTimeout)
     tlv.Init();
     tlv.SetTimeout(aTimeout);
 
-    return aMessage.AppendTlv(tlv);
+    return tlv.AppendTo(aMessage);
 }
 
 otError Mle::AppendChallenge(Message &aMessage, const uint8_t *aChallenge, uint8_t aChallengeLength)
@@ -1197,7 +1196,7 @@ otError Mle::AppendLinkFrameCounter(Message &aMessage)
     tlv.Init();
     tlv.SetFrameCounter(Get<KeyManager>().GetMacFrameCounter());
 
-    return aMessage.AppendTlv(tlv);
+    return tlv.AppendTo(aMessage);
 }
 
 otError Mle::AppendMleFrameCounter(Message &aMessage)
@@ -1207,7 +1206,7 @@ otError Mle::AppendMleFrameCounter(Message &aMessage)
     tlv.Init();
     tlv.SetFrameCounter(Get<KeyManager>().GetMleFrameCounter());
 
-    return aMessage.AppendTlv(tlv);
+    return tlv.AppendTo(aMessage);
 }
 
 otError Mle::AppendAddress16(Message &aMessage, uint16_t aRloc16)
@@ -1217,7 +1216,7 @@ otError Mle::AppendAddress16(Message &aMessage, uint16_t aRloc16)
     tlv.Init();
     tlv.SetRloc16(aRloc16);
 
-    return aMessage.AppendTlv(tlv);
+    return tlv.AppendTo(aMessage);
 }
 
 otError Mle::AppendLeaderData(Message &aMessage)
@@ -1226,7 +1225,7 @@ otError Mle::AppendLeaderData(Message &aMessage)
     mLeaderData.SetDataVersion(Get<NetworkData::Leader>().GetVersion());
     mLeaderData.SetStableDataVersion(Get<NetworkData::Leader>().GetStableVersion());
 
-    return aMessage.AppendTlv(mLeaderData);
+    return mLeaderData.AppendTo(aMessage);
 }
 
 void Mle::FillNetworkDataTlv(NetworkDataTlv &aTlv, bool aStableOnly)
@@ -1248,7 +1247,7 @@ otError Mle::AppendNetworkData(Message &aMessage, bool aStableOnly)
     tlv.Init();
     FillNetworkDataTlv(tlv, aStableOnly);
 
-    error = aMessage.AppendTlv(tlv);
+    error = tlv.AppendTo(aMessage);
 
 exit:
     return error;
@@ -1276,7 +1275,7 @@ otError Mle::AppendScanMask(Message &aMessage, uint8_t aScanMask)
     tlv.Init();
     tlv.SetMask(aScanMask);
 
-    return aMessage.AppendTlv(tlv);
+    return tlv.AppendTo(aMessage);
 }
 
 otError Mle::AppendLinkMargin(Message &aMessage, uint8_t aLinkMargin)
@@ -1286,7 +1285,7 @@ otError Mle::AppendLinkMargin(Message &aMessage, uint8_t aLinkMargin)
     tlv.Init();
     tlv.SetLinkMargin(aLinkMargin);
 
-    return aMessage.AppendTlv(tlv);
+    return tlv.AppendTo(aMessage);
 }
 
 otError Mle::AppendVersion(Message &aMessage)
@@ -1296,7 +1295,7 @@ otError Mle::AppendVersion(Message &aMessage)
     tlv.Init();
     tlv.SetVersion(kThreadVersion);
 
-    return aMessage.AppendTlv(tlv);
+    return tlv.AppendTo(aMessage);
 }
 
 bool Mle::HasUnregisteredAddress(void)
@@ -1419,7 +1418,7 @@ otError Mle::AppendTimeRequest(Message &aMessage)
 
     tlv.Init();
 
-    return aMessage.AppendTlv(tlv);
+    return tlv.AppendTo(aMessage);
 }
 
 otError Mle::AppendTimeParameter(Message &aMessage)
@@ -1430,7 +1429,7 @@ otError Mle::AppendTimeParameter(Message &aMessage)
     tlv.SetTimeSyncPeriod(Get<TimeSync>().GetTimeSyncPeriod());
     tlv.SetXtalThreshold(Get<TimeSync>().GetXtalThreshold());
 
-    return aMessage.AppendTlv(tlv);
+    return tlv.AppendTo(aMessage);
 }
 
 otError Mle::AppendXtalAccuracy(Message &aMessage)
@@ -1440,7 +1439,7 @@ otError Mle::AppendXtalAccuracy(Message &aMessage)
     tlv.Init();
     tlv.SetXtalAccuracy(otPlatTimeGetXtalAccuracy());
 
-    return aMessage.AppendTlv(tlv);
+    return tlv.AppendTo(aMessage);
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
@@ -1455,7 +1454,7 @@ otError Mle::AppendActiveTimestamp(Message &aMessage)
 
     timestampTlv.Init();
     *static_cast<MeshCoP::Timestamp *>(&timestampTlv) = *timestamp;
-    error                                             = aMessage.AppendTlv(timestampTlv);
+    error                                             = timestampTlv.AppendTo(aMessage);
 
 exit:
     return error;
@@ -1472,7 +1471,7 @@ otError Mle::AppendPendingTimestamp(Message &aMessage)
 
     timestampTlv.Init();
     *static_cast<MeshCoP::Timestamp *>(&timestampTlv) = *timestamp;
-    error                                             = aMessage.AppendTlv(timestampTlv);
+    error                                             = timestampTlv.AppendTo(aMessage);
 
 exit:
     return error;
@@ -2437,7 +2436,7 @@ otError Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Add
 
     channel.Init();
     channel.SetChannel(Get<Mac::Mac>().GetPanChannel());
-    SuccessOrExit(error = message->AppendTlv(channel));
+    SuccessOrExit(error = channel.AppendTo(*message));
 
     if (aOrphanAnnounce)
     {
@@ -2446,7 +2445,7 @@ otError Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Add
         activeTimestamp.SetTicks(0);
         activeTimestamp.SetAuthoritative(true);
 
-        SuccessOrExit(error = message->AppendTlv(activeTimestamp));
+        SuccessOrExit(error = activeTimestamp.AppendTo(*message));
     }
     else
     {
@@ -2455,7 +2454,7 @@ otError Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Add
 
     panid.Init();
     panid.SetPanId(Get<Mac::Mac>().GetPanId());
-    SuccessOrExit(error = message->AppendTlv(panid));
+    SuccessOrExit(error = panid.AppendTo(*message));
     SuccessOrExit(error = SendMessage(*message, aDestination));
 
     otLogInfoMle("Send Announce on channel %d", aChannel);
@@ -4065,7 +4064,7 @@ void Mle::HandleParentSearchTimer(void)
 
     VerifyOrExit(mRole == OT_DEVICE_ROLE_CHILD);
 
-    parentRss = GetParent()->GetLinkInfo().GetAverageRss();
+    parentRss = GetParent().GetLinkInfo().GetAverageRss();
     otLogInfoMle("PeriodicParentSearch: Parent RSS %d", parentRss);
     VerifyOrExit(parentRss != OT_RADIO_RSSI_INVALID);
 

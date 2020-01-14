@@ -40,9 +40,9 @@ fi )
 LDADD_COMMON                                                                  += \
     $(top_builddir)/examples/platforms/efr32mg12/libopenthread-efr32mg12.a       \
     $(top_builddir)/third_party/silabs/libsilabs-efr32mg12-sdk.a                 \
-    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.6/platform/radio/rail_lib/autogen/librail_release/$(LIBRAIL) \
+    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.7/platform/radio/rail_lib/autogen/librail_release/$(LIBRAIL) \
     $(NULL)
 
 LDFLAGS_COMMON                                                                += \
-    -T $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.6/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/efr32mg12p.ld \
+    -T $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.7/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/efr32mg12p.ld \
     $(NULL)

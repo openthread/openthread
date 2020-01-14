@@ -571,7 +571,7 @@ otError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDatase
         MeshCoP::BorderAgentLocatorTlv locator;
         locator.Init();
         locator.SetBorderAgentLocator(aDataset.mLocator);
-        SuccessOrExit(error = message->AppendTlv(locator));
+        SuccessOrExit(error = locator.AppendTo(*message));
     }
 
     if (aDataset.mIsSessionIdSet)
@@ -579,7 +579,7 @@ otError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDatase
         MeshCoP::CommissionerSessionIdTlv sessionId;
         sessionId.Init();
         sessionId.SetCommissionerSessionId(aDataset.mSessionId);
-        SuccessOrExit(error = message->AppendTlv(sessionId));
+        SuccessOrExit(error = sessionId.AppendTo(*message));
     }
 
     if (aDataset.mIsSteeringDataSet)
@@ -596,7 +596,7 @@ otError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDatase
         MeshCoP::JoinerUdpPortTlv joinerUdpPort;
         joinerUdpPort.Init();
         joinerUdpPort.SetUdpPort(aDataset.mJoinerUdpPort);
-        SuccessOrExit(error = message->AppendTlv(joinerUdpPort));
+        SuccessOrExit(error = joinerUdpPort.AppendTo(*message));
     }
 
     if (aLength > 0)
@@ -667,7 +667,7 @@ otError Commissioner::SendPetition(void)
     commissionerId.Init();
     commissionerId.SetCommissionerId("OpenThread Commissioner");
 
-    SuccessOrExit(error = message->AppendTlv(commissionerId));
+    SuccessOrExit(error = commissionerId.AppendTo(*message));
 
     SuccessOrExit(error = Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
     messageInfo.SetPeerPort(kCoapUdpPort);
@@ -759,11 +759,11 @@ otError Commissioner::SendKeepAlive(void)
 
     state.Init();
     state.SetState(mState == OT_COMMISSIONER_STATE_ACTIVE ? StateTlv::kAccept : StateTlv::kReject);
-    SuccessOrExit(error = message->AppendTlv(state));
+    SuccessOrExit(error = state.AppendTo(*message));
 
     sessionId.Init();
     sessionId.SetCommissionerSessionId(mSessionId);
-    SuccessOrExit(error = message->AppendTlv(sessionId));
+    SuccessOrExit(error = sessionId.AppendTo(*message));
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     SuccessOrExit(error = Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
@@ -994,7 +994,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
 
     stateTlv.Init();
     stateTlv.SetState(aState);
-    SuccessOrExit(error = message->AppendTlv(stateTlv));
+    SuccessOrExit(error = stateTlv.AppendTo(*message));
 
     joinerMessageInfo.SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocal64());
     joinerMessageInfo.GetPeerAddr().SetIid(mJoinerIid);
@@ -1056,22 +1056,22 @@ otError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInf
 
     udpPort.Init();
     udpPort.SetUdpPort(mJoinerPort);
-    SuccessOrExit(error = message->AppendTlv(udpPort));
+    SuccessOrExit(error = udpPort.AppendTo(*message));
 
     iid.Init();
     iid.SetIid(mJoinerIid);
-    SuccessOrExit(error = message->AppendTlv(iid));
+    SuccessOrExit(error = iid.AppendTo(*message));
 
     rloc.Init();
     rloc.SetJoinerRouterLocator(mJoinerRloc);
-    SuccessOrExit(error = message->AppendTlv(rloc));
+    SuccessOrExit(error = rloc.AppendTo(*message));
 
     if (aMessage.GetSubType() == Message::kSubTypeJoinerFinalizeResponse)
     {
         JoinerRouterKekTlv kek;
         kek.Init();
         kek.SetKek(Get<KeyManager>().GetKek());
-        SuccessOrExit(error = message->AppendTlv(kek));
+        SuccessOrExit(error = kek.AppendTo(*message));
     }
 
     tlv.SetType(Tlv::kJoinerDtlsEncapsulation);

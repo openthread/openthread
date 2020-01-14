@@ -222,6 +222,11 @@ AC_PROG_LN_S
 
 AC_PATH_PROG(CMP, cmp)
 
+# Check for and initialize libtool
+
+LT_INIT
+AC_PROG_LIBTOOL
+
 #
 # Checks for specific compiler characteristics
 #
@@ -232,8 +237,8 @@ AC_PATH_PROG(CMP, cmp)
 #   -Wall                        CC, CXX
 #
 
-PROSPECTIVE_CFLAGS="-Wall -Wextra -Wshadow -Werror -std=c99 -pedantic-errors -Wno-gnu-zero-variadic-macro-arguments"
-PROSPECTIVE_CXXFLAGS="-Wall -Wextra -Wshadow -Werror -std=gnu++98 -Wno-c++14-compat -fno-exceptions"
+PROSPECTIVE_CFLAGS="-Wall -Wextra -Wshadow -Wundef -Werror -Wno-error=undef -std=c99 -pedantic-errors"
+PROSPECTIVE_CXXFLAGS="-Wall -Wextra -Wshadow -Wundef -Werror -Wno-error=undef -std=gnu++98 -Wno-c++14-compat -fno-exceptions"
 
 AC_CACHE_CHECK([whether $CC is Clang],
     [nl_cv_clang],
@@ -250,17 +255,60 @@ AC_CACHE_CHECK([whether $CC is Clang],
     ])
 
 if test "${nl_cv_clang}" = "yes"; then
-    PROSPECTIVE_CFLAGS="${PROSPECTIVE_CFLAGS} -Wconversion"
+    PROSPECTIVE_CFLAGS="${PROSPECTIVE_CFLAGS} -Wconversion -Wno-gnu-zero-variadic-macro-arguments"
     PROSPECTIVE_CXXFLAGS="${PROSPECTIVE_CXXFLAGS} -Wconversion"
 fi
 
-AX_CHECK_COMPILER_OPTIONS([C],   ${PROSPECTIVE_CFLAGS})
-AX_CHECK_COMPILER_OPTIONS([C++], ${PROSPECTIVE_CXXFLAGS})
+function convert_warning_flags_to_positive() {
+    flags_to_check=""
+    warning_flag_backup=""
+    for option in ${1}; do
+        case "$option"
+        in
+           -Wno-*)
+                flags_to_check="${flags_to_check} -W${option##-Wno-}"
+                warning_flag_backup="${warning_flag_backup} ${option##-Wno-}";;
+            *)
+                flags_to_check="${flags_to_check} ${option}";;
+        esac
+    done
+}
 
-# Check for and initialize libtool
+function restore_negative_form_of_warning_flags() {
+    final_flags=${1}
+    for positive_option in ${warning_flag_backup}; do
+        final_flags=$(echo $ECHO_N $final_flags | $SED "s|-W${positive_option}|-Wno-${positive_option}|g")
+    done
+    unset flags_to_check
+    unset warning_flag_backup
+}
 
-LT_INIT
-AC_PROG_LIBTOOL
+function check_prospective_CFLAGS() {
+    if test "${nl_cv_clang}" = "yes"; then
+        AX_CHECK_COMPILER_OPTIONS([C], ${PROSPECTIVE_CFLAGS})
+    else
+        convert_warning_flags_to_positive "${PROSPECTIVE_CFLAGS}"
+        AX_CHECK_COMPILER_OPTIONS([C], ${flags_to_check})
+        restore_negative_form_of_warning_flags "${CFLAGS}"
+        CFLAGS=${final_flags}
+        unset final_flags
+    fi
+}
+
+function check_prospective_CXXFLAGS() {
+    if test "${nl_cv_clang}" = "yes"; then
+        AX_CHECK_COMPILER_OPTIONS([C++], ${PROSPECTIVE_CXXFLAGS})
+    else
+        convert_warning_flags_to_positive "${PROSPECTIVE_CXXFLAGS}"
+        AX_CHECK_COMPILER_OPTIONS([C++], ${flags_to_check})
+        restore_negative_form_of_warning_flags "${CXXFLAGS}"
+        CXXFLAGS=${final_flags}
+        unset final_flags
+    fi
+}
+
+check_prospective_CFLAGS
+check_prospective_CXXFLAGS
 
 # Disable building shared libraries by default (can be enabled with --enable-shared)
 
@@ -322,7 +370,7 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_FUZZ_TARGETS], [test "${enable_fuzz_targets}" 
 
 if test "${enable_fuzz_targets}" = "no" ; then
     PROSPECTIVE_CXXFLAGS="-fno-rtti"
-    AX_CHECK_COMPILER_OPTIONS([C++], ${PROSPECTIVE_CXXFLAGS})
+    check_prospective_CXXFLAGS
 fi
 
 # Address Sanitizer
@@ -351,11 +399,11 @@ AM_CONDITIONAL([OPENTHREAD_WITH_ADDRESS_SANITIZER], [test "${enable_address_sani
 if test "${enable_address_sanitizer}" = "yes" ; then
 
     PROSPECTIVE_CFLAGS="-fsanitize=address"
+    PROSPECTIVE_CXXFLAGS="-fsanitize=address"
 
     # Check if the compilers support address sanitizer
-    AX_CHECK_COMPILER_OPTIONS([C],   ${PROSPECTIVE_CFLAGS})
-    AX_CHECK_COMPILER_OPTIONS([C++], ${PROSPECTIVE_CFLAGS})
-
+    check_prospective_CFLAGS
+    check_prospective_CXXFLAGS
 fi
 
 #
@@ -816,7 +864,7 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52840],  [test "${with_examples}" = "nrf5
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_QPG6095],   [test "${with_examples}" = "qpg6095"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_SAMR21],    [test "${with_examples}" = "samr21"])
 
-AM_COND_IF([OPENTHREAD_EXAMPLES_POSIX], CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_EXAMPLES_POSIX=1")
+AM_COND_IF([OPENTHREAD_EXAMPLES_POSIX], CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_EXAMPLES_POSIX=1", CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_EXAMPLES_POSIX=0")
 
 AC_MSG_CHECKING([whether to enable examples])
 AC_MSG_RESULT(${with_examples})
