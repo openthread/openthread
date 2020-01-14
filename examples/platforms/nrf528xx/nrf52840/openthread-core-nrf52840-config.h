@@ -258,6 +258,14 @@
 #define RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW
+ *
+ * The CSL sample window in 10 symbols.
+ *
+ */
+#define OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW 40
+
 /*
  * Suppress the ARMCC warning on unreachable statement,
  * e.g. break after assert(false) or ExitNow() macro.

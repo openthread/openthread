@@ -289,6 +289,7 @@ public:
         kMic64Size  = 64 / CHAR_BIT,
         kMic128Size = 128 / CHAR_BIT,
         kMaxMicSize = kMic128Size,
+        kCrcSize    = 2,
 
         kKeyIdMode0    = 0 << 3,
         kKeyIdMode1    = 1 << 3,
@@ -314,9 +315,12 @@ public:
         kMacCmdGtsRequest                 = 9,
 
         kHeaderIeVendor       = 0x00,
+        kHeaderIeCsl          = 0x1a,
         kHeaderIeTermination2 = 0x7f,
 
         kInfoStringSize = 110, ///< Max chars needed for the info string representation (@sa ToInfoString()).
+
+        kImmAckLength = 5,
     };
 
     /**
@@ -376,6 +380,14 @@ public:
      *
      */
     uint16_t GetVersion(void) const { return GetFrameControlField() & kFcfFrameVersionMask; }
+
+    /**
+     * This method returns if the IEEE 802.15.4 frame's version is 2015.
+     *
+     * @returns true if version is 2015 and false otherwise.
+     *
+     */
+    bool IsVersion2015(void) const { return (GetFrameControlField() & kFcfFrameVersionMask) == kFcfFrameVersion2015; }
 
     /**
      * This method indicates whether or not security is enabled.
@@ -446,6 +458,14 @@ public:
     void SetSequence(uint8_t aSequence) { GetPsdu()[kSequenceIndex] = aSequence; }
 
     /**
+     * This method indicates whether or not the Dst PanId is present.
+     *
+     * @returns TRUE if the Dst PanId is present, FALSE otherwise.
+     *
+     */
+    static bool IsDstPanIdPresent(uint16_t aFcf);
+
+    /**
      * This method gets the Destination PAN Identifier.
      *
      * @param[out]  aPanId  The Destination PAN Identifier.
@@ -463,6 +483,24 @@ public:
      *
      */
     void SetDstPanId(PanId aPanId);
+
+    /**
+     * This method indicates whether or not the Destination Address is present.
+     *
+     * @paran[in]  aFcf  The frame control field
+     *
+     * @retval TRUE if the Destination Address is present, FALSE otherwise.
+     *
+     */
+    static bool IsDstAddrPresent(uint16_t aFcf) { return (aFcf & kFcfDstAddrMask) != kFcfDstAddrNone; }
+
+    /**
+     * This method indicates whether or not the Destination Address is present for this object.
+     *
+     * @retval TRUE if the Destination Address is present, FALSE otherwise.
+     *
+     */
+    bool IsDstAddrPresent() { return IsDstAddrPresent(GetFrameControlField()); }
 
     /**
      * This method gets the Destination Address.
@@ -504,7 +542,7 @@ public:
      * @returns TRUE if the Src PanId is present, FALSE otherwise.
      *
      */
-    bool IsSrcPanIdPresent(uint16_t aFcf) const;
+    static bool IsSrcPanIdPresent(uint16_t aFcf);
 
     /**
      * This method gets the Source PAN Identifier.
@@ -525,6 +563,25 @@ public:
      *
      */
     otError SetSrcPanId(PanId aPanId);
+
+    /**
+     *
+     * This method indicates whether or not the Source Address is present.
+     *
+     * @paran[in]  aFcf  The frame control field
+     *
+     * @retval TRUE if the Source Address is present, FALSE otherwise.
+     *
+     */
+    static bool IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone; }
+
+    /**
+     * This method indicates whether or not the Source Address is present for this object.
+     *
+     * @retval TRUE if the Source Address is present, FALSE otherwise.
+     *
+     */
+    bool IsSrcAddrPresent() { return IsSrcAddrPresent(GetFrameControlField()); }
 
     /**
      * This method gets the Source Address.
@@ -559,6 +616,24 @@ public:
      *
      */
     void SetSrcAddr(const Address &aAddress);
+
+    /**
+     * This method gets the Security Control Field.
+     *
+     * @param[out]  aSecurityControlField  The Security Control Field.
+     *
+     * @retval OT_ERROR_NONE  Successfully retrieved the Security Level Identifier.
+     *
+     */
+    otError GetSecurityControlField(uint8_t &aSecurityControlField) const;
+
+    /**
+     * This method sets the Security Control Field.
+     *
+     * @param[in]  aSecurityControlField  The Security Control Field.
+     *
+     */
+    void SetSecurityControlField(uint8_t aSecurityControlField);
 
     /**
      * This method gets the Security Level Identifier.
@@ -864,6 +939,20 @@ public:
      *
      */
     const uint8_t *GetHeaderIe(uint8_t aIeId) const;
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    /**
+     * This method finds CSL IE into the frame and modify its content.
+     *
+     * @param[in] aCslPeriod  CSL Period in CSL IE.
+     * @param[in] aCslPhase   CSL Phase in CSL IE.
+     *
+     * @retval  OT_ERROR_NONE   Successfully modify CSL IE into the frame.
+     * @retval  OT_ERROR_PARSE  CSL IE is not found into the frame.
+     */
+    otError SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase);
+#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
     /**
@@ -890,6 +979,26 @@ public:
      */
     InfoString ToInfoString(void) const;
 
+    /**
+     * Generate Imm-Ack in this frame object.
+     *
+     * @param[in]    aFrame             A pointer to the incoming frame.
+     * @param[in]    aIsFramePending    If the ACK's frame pending bit should be set.
+     *
+     */
+    void GenerateImmAck(const Frame *aFrame, bool aIsFramePending);
+
+    /**
+     * Generate Enh-Ack in this frame object.
+     *
+     * @param[in]    aFrame             A pointer to the frame.
+     * @param[in]    aIsFramePending    If the ACK's frame pending bit should be set.
+     * @param[in]    aIeData            A pointer to the IE data pattern of the ACK to be sent.
+     * @param[in]    aIeLength          The length of IE data pattern of the ACK to be sent.
+     *
+     */
+    void GenerateEnhAck(const Frame *aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength);
+
 private:
     enum
     {
@@ -903,8 +1012,19 @@ private:
     uint8_t  FindSrcPanIdIndex(void) const;
     uint8_t  FindSrcAddrIndex(void) const;
     uint8_t  FindSecurityHeaderIndex(void) const;
+    uint8_t  SkipAddrField(const uint16_t &fcf) const;
     uint8_t  SkipSecurityHeaderIndex(void) const;
+    uint8_t  GetSecurityHeaderLength(uint8_t securityControl) const;
     uint8_t  FindPayloadIndex(void) const;
+
+    void    SetFrameControlFieldForAck(const Frame *aFrame,
+                                       bool         aIsFramePending,
+                                       uint8_t      aIeLength,
+                                       Frame *      aAckFrame) const;
+    otError SetDstPanIdAndAddrForAck(const Frame *aFrame, Frame *aAckFrame) const;
+    otError SetSecurityHeaderForAck(const Frame *aFrame, Frame *aAckFrame) const;
+    uint8_t CalculateFrameLength() const;
+
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     uint8_t FindHeaderIeIndex(void) const;
 #endif
@@ -1138,6 +1258,11 @@ public:
      */
     void SetTimeSyncSeq(uint8_t aTimeSyncSeq) { mInfo.mTxInfo.mIeInfo->mTimeSyncSeq = aTimeSyncSeq; }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    void SetTxPhase(uint16_t aPhase) { mInfo.mTxInfo.mPhase = aPhase; }
+    void SetTxPeriod(uint16_t aPeriod) { mInfo.mTxInfo.mPeriod = aPeriod; }
+#endif
 };
 
 OT_TOOL_PACKED_BEGIN
@@ -1354,6 +1479,51 @@ private:
     uint8_t       mFlags;
     char          mNetworkName[NetworkName::kMaxSize];
     ExtendedPanId mExtendedPanId;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements CSL IE generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class CslIe
+{
+public:
+    /**
+     * This method returns the CSL Period.
+     *
+     * @returns the CSL Period.
+     *
+     */
+    uint16_t GetPeriod(void) const { return mPeriod; }
+
+    /**
+     * This method sets the CSL Period.
+     *
+     * @param[in]  aPeriod  The CSL Period.
+     *
+     */
+    void SetPeriod(uint16_t aPeriod) { mPeriod = aPeriod; }
+
+    /**
+     * This method returns the CSL Phase.
+     *
+     * @returns the CSL Phase.
+     *
+     */
+    uint16_t GetPhase(void) const { return mPhase; }
+
+    /**
+     * This method sets the CSL Phase.
+     *
+     * @param[in]  aPhase  The CSL Phase.
+     *
+     */
+    void SetPhase(uint16_t aPhase) { mPhase = aPhase; }
+
+private:
+    uint16_t mPhase;
+    uint16_t mPeriod;
 } OT_TOOL_PACKED_END;
 
 /**

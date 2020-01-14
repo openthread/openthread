@@ -107,6 +107,22 @@ void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi)
     }
 }
 
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+void SubMac::Callbacks::FrameUpdated(TxFrame &aFrame)
+{
+    /**
+     * This function will be called from interrupt context, it should only read/write data passed in
+     * via @p aFrame, but should not read/write any state within OpenThread.
+     *
+     */
+
+    if (aFrame.GetSecurityEnabled())
+    {
+        aFrame.ProcessTransmitAesCcm(Get<Mac>().GetExtAddress());
+    }
+}
+#endif
+
 #elif OPENTHREAD_RADIO
 
 void SubMac::Callbacks::ReceiveDone(RxFrame *aFrame, otError aError)
@@ -136,6 +152,19 @@ void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi)
 {
     Get<LinkRaw>().InvokeEnergyScanDone(aMaxRssi);
 }
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+void SubMac::Callbacks::FrameUpdated(TxFrame &)
+{
+    /**
+     * This function will be called from interrupt context, it should only read/write data passed in
+     * via @p aFrame, but should not read/write any state within OpenThread.
+     *
+     */
+
+    // For now this functionality is not supported in Radio Only mode.
+}
+#endif
 
 #endif // OPENTHREAD_RADIO
 

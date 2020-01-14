@@ -98,6 +98,9 @@ otError IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChil
     mSourceMatchController.IncrementMessageCount(aChild);
 
     RequestMessageUpdate(aChild);
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    mDataPollHandler.UpdateCslChild(aChild);
+#endif
 
 exit:
     return error;

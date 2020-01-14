@@ -985,6 +985,12 @@ public:
      */
     otError GetLocatorAddress(Ip6::Address &aAddress, uint16_t aLocator) const;
 
+    /**
+     * This method schedules a Child Update Request.
+     *
+     */
+    void ScheduleChildUpdateRequest(void);
+
 protected:
     /**
      * States during attach (when searching for a parent).
@@ -1406,6 +1412,41 @@ protected:
      */
     otError AppendXtalAccuracy(Message &aMessage);
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    /**
+     * This method appends a CSL Channel TLV to a message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval OT_ERROR_NONE     Successfully appended the Thread Discovery TLV.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Address Registration TLV.
+     *
+     */
+    otError AppendCslChannel(Message &aMessage);
+
+    /**
+     * This method appends a CSL Accuracy TLV to a message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval OT_ERROR_NONE     Successfully appended the Thread Discovery TLV.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Address Registration TLV.
+     *
+     */
+    otError AppendCslAccuracy(Message &aMessage);
+
+    /**
+     * This method appends a CSL Sync Timeout TLV to a message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval OT_ERROR_NONE     Successfully appended the Thread Discovery TLV.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Address Registration TLV.
+     *
+     */
+    otError AppendCslTimeout(Message &aMessage);
+#endif // OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
 
     /**
      * This method appends a Active Timestamp TLV to a message.

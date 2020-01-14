@@ -247,6 +247,12 @@ exit:
     return error;
 }
 
+void Mle::ScheduleChildUpdateRequest(void)
+{
+    mChildUpdateRequestState = kChildUpdateRequestPending;
+    ScheduleMessageTransmissionTimer();
+}
+
 otError Mle::Disable(void)
 {
     otError error = OT_ERROR_NONE;
@@ -839,6 +845,10 @@ void Mle::SetStateChild(uint16_t aRloc16)
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
     InformPreviousParent();
     mPreviousParentRloc = mParent.GetRloc16();
+#endif
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    Get<Mac::Mac>().StartCsl();
 #endif
 }
 
@@ -1534,6 +1544,40 @@ otError Mle::AppendPendingTimestamp(Message &aMessage)
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+otError Mle::AppendCslChannel(Message &aMessage)
+{
+    otError       error = OT_ERROR_NONE;
+    CslChannelTlv cslChannel;
+
+    VerifyOrExit(Get<Mac::Mac>().GetPanChannel() != Get<Mac::Mac>().GetCslChannel());
+
+    cslChannel.Init();
+    cslChannel.SetChannelPage(0);
+    cslChannel.SetChannel(Get<Mac::Mac>().GetCslChannel());
+
+    SuccessOrExit(error = aMessage.Append(&cslChannel, sizeof(CslChannelTlv)));
+
+exit:
+    return error;
+}
+
+otError Mle::AppendCslTimeout(Message &aMessage)
+{
+    otError       error;
+    CslTimeoutTlv cslTimeout;
+
+    OT_ASSERT(Get<Mac::Mac>().IsCslStarted());
+
+    cslTimeout.Init();
+    cslTimeout.SetTimeout(Get<Mac::Mac>().GetCslTimeout() == 0 ? mTimeout : Get<Mac::Mac>().GetCslTimeout());
+
+    error = aMessage.Append(&cslTimeout, sizeof(CslTimeoutTlv));
+
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
 
 void Mle::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
 {
@@ -2253,7 +2297,18 @@ void Mle::ScheduleMessageTransmissionTimer(void)
         ExitNow(interval = kChildUpdateRequestPendingDelay);
 
     case kChildUpdateRequestActive:
-        ExitNow(interval = kUnicastRetransmissionDelay);
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+        // CSL transmitter may respond in next CSL cycle.
+        if (Get<Mac::Mac>().IsCslStarted())
+        {
+            ExitNow(interval = Get<Mac::Mac>().GetCslPeriod() * OT_US_PER_TEN_SYMBOLS / 1000 +
+                               static_cast<uint32_t>(kUnicastRetransmissionDelay));
+        }
+        else
+#endif
+        {
+            ExitNow(interval = kUnicastRetransmissionDelay);
+        }
     }
 
     switch (mDataRequestState)
@@ -2387,6 +2442,13 @@ otError Mle::SendChildUpdateRequest(void)
         SuccessOrExit(error = AppendSourceAddress(*message));
         SuccessOrExit(error = AppendLeaderData(*message));
         SuccessOrExit(error = AppendTimeout(*message, mTimeout));
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+        if (Get<Mac::Mac>().IsCslStarted())
+        {
+            SuccessOrExit(error = AppendCslChannel(*message));
+            SuccessOrExit(error = AppendCslTimeout(*message));
+        }
+#endif
         break;
 
     case kRoleDisabled:
@@ -2405,7 +2467,11 @@ otError Mle::SendChildUpdateRequest(void)
 
     if (!IsRxOnWhenIdle())
     {
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+        Get<DataPollSender>().SetAttachMode(!Get<Mac::Mac>().IsCslStarted());
+#else
         Get<DataPollSender>().SetAttachMode(true);
+#endif
         Get<MeshForwarder>().SetRxOnWhenIdle(false);
     }
     else

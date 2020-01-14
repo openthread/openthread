@@ -463,3 +463,66 @@ uint16_t otLinkGetCcaFailureRate(otInstance *aInstance)
 
     return instance.Get<Mac::Mac>().GetCcaFailureRate();
 }
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+uint8_t otLinkCslGetChannel(otInstance *aInstance)
+{
+    return static_cast<Instance *>(aInstance)->Get<Mac::Mac>().GetCslChannel();
+}
+
+otError otLinkCslSetChannel(otInstance *aInstance, uint8_t aChannel)
+{
+    otError   error    = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    VerifyOrExit((Radio::kChannelMin <= aChannel) && (aChannel <= Radio::kChannelMax), error = OT_ERROR_INVALID_ARGS);
+
+    instance.Get<Mac::Mac>().SetCslChannel(aChannel);
+
+exit:
+    return error;
+}
+
+uint16_t otLinkCslGetPeriod(otInstance *aInstance)
+{
+    return static_cast<Instance *>(aInstance)->Get<Mac::Mac>().GetCslPeriod();
+}
+
+otError otLinkCslSetPeriod(otInstance *aInstance, uint16_t aPeriod)
+{
+    otError   error    = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Mac::Mac>().SetCslPeriod(aPeriod);
+
+    return error;
+}
+
+uint32_t otLinkCslGetTimeout(otInstance *aInstance)
+{
+    return static_cast<Instance *>(aInstance)->Get<Mac::Mac>().GetCslTimeout();
+}
+
+otError otLinkCslSetTimeout(otInstance *aInstance, uint32_t aTimeout)
+{
+    otError   error    = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Mac::Mac>().SetCslTimeout(aTimeout);
+
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+otError otLinkCslIeSuppress(otInstance *aInstance, bool aSuppress)
+{
+    otError   error    = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Mac::Mac>().SuppressCslIe(aSuppress);
+
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
+#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE

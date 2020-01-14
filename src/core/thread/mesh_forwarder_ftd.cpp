@@ -360,6 +360,21 @@ void MeshForwarder::SendMesh(Message &aMessage, Mac::TxFrame &aFrame)
     aFrame.SetDstAddr(mMacDest.GetShort());
     aFrame.SetSrcAddr(mMacSource.GetShort());
 
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    if (Get<Mac::Mac>().ShouldIncludeCslIe())
+    {
+        Mac::HeaderIe ieList[2]; // CSL + Termination
+
+        ieList[0].Init();
+        ieList[0].SetId(Mac::Frame::kHeaderIeCsl);
+        ieList[0].SetLength(sizeof(Mac::CslIe));
+        ieList[1].Init();
+        ieList[1].SetId(Mac::Frame::kHeaderIeTermination2);
+        ieList[1].SetLength(0);
+        aFrame.AppendHeaderIe(ieList, 2);
+    }
+#endif
+
     // write payload
     OT_ASSERT(aMessage.GetLength() <= aFrame.GetMaxPayloadLength());
     aMessage.Read(0, aMessage.GetLength(), aFrame.GetPayload());

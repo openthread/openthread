@@ -53,6 +53,8 @@ extern "C" {
  *
  */
 
+#define OT_US_PER_TEN_SYMBOLS 160 ///< The microseconds per 10 symbols.
+
 /**
  * This structure represents link-specific information for messages received from the Thread radio.
  *
@@ -1073,6 +1075,113 @@ bool otLinkIsPromiscuous(otInstance *aInstance);
  *
  */
 otError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous);
+
+/**
+ * This function gets the CSL accuracy.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ *
+ * @returns The CSL accuracy in ppm.
+ *
+ */
+uint8_t otLinkCslGetAccuracy(otInstance *aInstance);
+
+/**
+ * This function sets the CSL accuray.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aAccuracy      The accuracy of the clock that is used by the device, in units of ppm.
+ *
+ * @retval OT_ERROR_NONE           Successfully set the CSL parameters.
+ * @retval OT_ERROR_INVALID_ARGS   Invalid value for @p aAccuracy.
+ * @retval OT_ERROR_INVALID_STATE  Invalid state to change this parameter.
+ *
+ */
+otError otLinkCslSetAccuracy(otInstance *aInstance, uint8_t aAccuracy);
+
+/**
+ * This function gets the CSL channel.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ *
+ * @returns The CSL channel.
+ *
+ */
+uint8_t otLinkCslGetChannel(otInstance *aInstance);
+
+/**
+ * This function sets the CSL channel.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aChannel       The CSL sample channel.
+ *
+ * @retval OT_ERROR_NONE           Successfully set the CSL parameters.
+ * @retval OT_ERROR_INVALID_ARGS   Invalid @p aChannel.
+ * @retval OT_ERROR_INVALID_STATE  Invalid state to change this parameter.
+ *
+ */
+otError otLinkCslSetChannel(otInstance *aInstance, uint8_t aChannel);
+
+/**
+ * This function gets the CSL period.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ *
+ * @returns The CSL period in units of 10 symbols.
+ *
+ */
+uint16_t otLinkCslGetPeriod(otInstance *aInstance);
+
+/**
+ * This function sets the CSL period.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aPeriod        The CSL period in units of 10 symbols.
+ *
+ * @retval OT_ERROR_NONE           Successfully set the CSL period.
+ * @retval OT_ERROR_INVALID_ARGS   Invalid CSL period.
+ * @retval OT_ERROR_INVALID_STATE  Invalid state to change this parameter.
+ *
+ */
+otError otLinkCslSetPeriod(otInstance *aInstance, uint16_t aPeriod);
+
+/**
+ * This function gets the CSL timeout.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ *
+ * @returns The CSL timeout in seconds.
+ *
+ */
+uint32_t otLinkCslGetTimeout(otInstance *aInstance);
+
+/**
+ * This function sets the CSL timeout.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aTimeout       The CSL timeout in seconds.
+ *
+ * @retval OT_ERROR_NONE           Successfully set the CSL timeout.
+ * @retval OT_ERROR_INVALID_ARGS   Invalid CSL timeout.
+ * @retval OT_ERROR_INVALID_STATE  Invalid state to change this parameter.
+ *
+ */
+otError otLinkCslSetTimeout(otInstance *aInstance, uint32_t aTimeout);
+
+/**
+ * This function enables or disables CSL IE suppression for SSED devices to include CSL IE into frame.
+ *
+ * This function is available only if feature `OPENTHREAD_ENABLE_CSL_RECEIVER` and
+ * `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` are enabled. This feature is only for certification test purpose and used
+ * to suppress/exclude the CSL IE for the frame transmitted, without impacting the periodic sample.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aSuppress      True to suppress CSL IE transmission, false otherwise.
+ *
+ * @retval OT_ERROR_NONE      Successfully enabled or disabled CSL IE suppression for SSED devices.
+ *
+ */
+otError otLinkCslIeSuppress(otInstance *aInstance, bool aSuppress);
 
 /**
  * This function returns the current CCA (Clear Channel Assessment) failure rate.

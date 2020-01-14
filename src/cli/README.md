@@ -486,6 +486,54 @@ Done
 Done
 ```
 
+### csl
+
+Get the CSL configuration.
+
+```bash
+> csl
+CSL Channel: 11
+CSL Period: 1000 (in units of 10 symbols)
+CSL Synchronized Timeout: 1000s
+Done
+```
+
+### csl channel \<channel\>
+Set CSL channel.
+
+```bash
+> csl channel 20
+Done
+```
+
+### csl period \<period\>
+
+Set CSL period in units of 10 symbols. Disable CSL by setting this parameter to `0`.
+
+```bash
+> csl period 3000
+Done
+```
+
+### csl timeout \<timeout\>
+Set the CSL timeout in seconds.
+
+```bash
+> csl timeout 10
+Done
+```
+
+### csl headerie disable | enable
+
+Disable or enable the SSED device to include CSL IE in header.
+
+`OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE` and `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` are required. This feature is only for certification test purpose and used to suppress/exclude the CSL IE for the frame transmitted, without impacting the periodic sample.
+
+```bash
+> csl headerie enable
+Done
+```
+
 ### networktime
 
 Get the Thread network time and the time sync parameters.

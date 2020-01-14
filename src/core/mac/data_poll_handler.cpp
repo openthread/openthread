@@ -74,6 +74,10 @@ DataPollHandler::DataPollHandler(Instance &aInstance)
     , mIndirectTxChild(NULL)
     , mFrameContext()
     , mCallbacks(aInstance)
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    , mCslTxChild(NULL)
+    , mCslTimer(aInstance, &DataPollHandler::HandleCslTimer, this)
+#endif
 {
 }
 
@@ -211,6 +215,9 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError
 
 exit:
     ProcessPendingPolls();
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    UpdateCslTimer();
+#endif
 }
 
 void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError, Child &aChild)
@@ -313,6 +320,129 @@ void DataPollHandler::ProcessPendingPolls(void)
     }
 }
 
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+otError DataPollHandler::HandleCslFrameRequest(Mac::TxFrame &aFrame)
+{
+    otError error = OT_ERROR_NONE;
+    Child & child = *mCslTxChild;
+
+    VerifyOrExit(child.IsCslSynchronized(), error = OT_ERROR_ABORT);
+
+    OT_ASSERT(mIndirectTxChild == NULL);
+
+    // If this message is fragmented, the SSED may use data poll to request those fragments.
+    mIndirectTxChild = mCslTxChild;
+    SuccessOrExit(error = HandleFrameRequest(aFrame));
+
+    aFrame.SetChannel(child.GetCslChannel());
+    aFrame.SetTxPhase(child.GetCslPhase());
+    aFrame.SetTxPeriod(child.GetCslPeriod());
+
+exit:
+    // No matter this attempt succeeds or fails, the sender have to wait for the next period.
+    mCslTxChild = NULL;
+    return error;
+}
+
+uint32_t DataPollHandler::GetNextCslTransmitRequestDelay(const Child &aChild, uint64_t aRadioNow)
+{
+    uint32_t delay;
+    uint16_t phase = (aRadioNow / OT_US_PER_TEN_SYMBOLS) % aChild.GetCslPeriod();
+    int16_t  diff  = static_cast<int16_t>(aChild.GetCslPhase() - phase);
+
+    if (diff > kCslMaxFrameRequestAhead)
+    {
+        delay = static_cast<uint16_t>(aChild.GetCslPhase() - phase - kCslMaxFrameRequestAhead) * OT_US_PER_TEN_SYMBOLS;
+    }
+    else if (diff > kCslMinFrameRequestAhead)
+    {
+        delay = 0;
+    }
+    else
+    {
+        delay = static_cast<uint16_t>(aChild.GetCslPeriod() + aChild.GetCslPhase() - phase - kCslMaxFrameRequestAhead) *
+                OT_US_PER_TEN_SYMBOLS;
+    }
+
+    return delay;
+}
+
+void DataPollHandler::UpdateCslChild(Child &aChild)
+{
+    if (aChild.IsCslSynchronized() && aChild.GetIndirectMessageCount() > 0 && mCslTxChild != &aChild)
+    {
+        uint64_t  radioNow = otPlatRadioGetNow();
+        TimeMicro now      = TimerMicro::GetNow();
+        uint32_t  delay    = GetNextCslTransmitRequestDelay(aChild, radioNow);
+
+        // replace the last CSL transmit request with the closer one
+        if (!mCslTimer.IsRunning() || mCslTimer.GetFireTime() - now > delay)
+        {
+            mCslTxChild = &aChild;
+            mCslTimer.StartAt(now, delay);
+        }
+    }
+}
+
+void DataPollHandler::HandleCslTimer(Timer &aTimer)
+{
+    aTimer.GetOwner<DataPollHandler>().HandleCslTimer();
+}
+
+void DataPollHandler::UpdateCslTimer(void)
+{
+    uint64_t  radioNow;
+    uint32_t  nextDelay;
+    TimeMicro now;
+
+    VerifyOrExit(mCslTxChild == NULL && !mCslTimer.IsRunning());
+
+    now       = TimerMicro::GetNow();
+    radioNow  = otPlatRadioGetNow();
+    nextDelay = TimeMicro::kMaxDuration;
+
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
+    {
+        Child &  child = *iter.GetChild();
+        uint32_t delay;
+
+        if (!child.IsCslSynchronized() || child.GetIndirectMessageCount() == 0)
+        {
+            continue;
+        }
+
+        delay = GetNextCslTransmitRequestDelay(child, radioNow);
+
+        if (delay < nextDelay)
+        {
+            nextDelay   = delay;
+            mCslTxChild = &child;
+
+            if (nextDelay == 0)
+            {
+                break;
+            }
+        }
+    }
+
+    VerifyOrExit(nextDelay < TimeMicro::kMaxDuration);
+
+    mCslTimer.StartAt(now, nextDelay);
+    otLogDebgMac("Next CSL Transmit request in %u us", nextDelay);
+
+exit:
+    return;
+}
+
+void DataPollHandler::HandleCslTimer(void)
+{
+    otError error;
+
+    OT_ASSERT(mCslTxChild != NULL);
+    error = Get<Mac::Mac>().RequestCslFrameTransmission();
+    OT_ASSERT(error != OT_ERROR_INVALID_STATE);
+}
+#endif // OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
 } // namespace ot
 
 #endif // #if OPENTHREAD_FTD

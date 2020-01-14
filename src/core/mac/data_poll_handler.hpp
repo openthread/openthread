@@ -257,6 +257,11 @@ public:
      */
     void RequestFrameChange(FrameChange aChange, Child &aChild);
 
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    void    UpdateCslChild(Child &aChild);
+    otError HandleCslFrameRequest(Mac::TxFrame &aFrame);
+#endif
+
 private:
     // Callbacks from MAC
     void    HandleDataPoll(Mac::RxFrame &aFrame);
@@ -275,6 +280,29 @@ private:
     Child *                 mIndirectTxChild;
     Callbacks::FrameContext mFrameContext;
     Callbacks               mCallbacks;
+
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    static const uint16_t kCslMaxFrameRequestAhead = 50; ///< 8ms, in units of 10 symbols.
+
+    /**
+     * The minimal allowed time in units of 10 symbols before CSL transmission to request CSL transmission.
+     *
+     * This aims to leave enough preparation time so that the transmitting can happen exactly at SSED's sample time.
+     *
+     */
+    static const uint16_t kCslMinFrameRequestAhead = 1; // 160us
+
+    void        UpdateCslTimer(void);
+    static void HandleCslTimer(Timer &aTimer);
+    void        HandleCslTimer(void);
+
+    /// Compute the delay in us to request CSL transmit for the child based on its transmit phase and the radio time.
+    static uint32_t GetNextCslTransmitRequestDelay(const Child &aChild, uint64_t aRadioNow);
+
+    Child *    mCslTxChild;
+    TimerMicro mCslTimer; ///< The max CSL period is about 10s, the current micro timer supports that delay.
+
+#endif // OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE && OPENTHREAD_FTD
 };
 
 /**

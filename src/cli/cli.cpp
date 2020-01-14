@@ -130,6 +130,9 @@ const struct Command Interpreter::sCommands[] = {
     {"contextreusedelay", &Interpreter::ProcessContextIdReuseDelay},
 #endif
     {"counters", &Interpreter::ProcessCounters},
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    {"csl", &Interpreter::ProcessCsl},
+#endif
     {"dataset", &Interpreter::ProcessDataset},
 #if OPENTHREAD_FTD
     {"delaytimermin", &Interpreter::ProcessDelayTimerMin},
@@ -1152,6 +1155,68 @@ void Interpreter::ProcessCounters(uint8_t aArgsLength, char *aArgs[])
 exit:
     AppendResult(error);
 }
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+void Interpreter::ProcessCsl(uint8_t aArgsLength, char *argv[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgsLength == 0)
+    {
+        mServer->OutputFormat("CSL Channel: %u\r\n", otLinkCslGetChannel(mInstance));
+        mServer->OutputFormat("CSL Period: %u (in units of 10 symbols)\r\n", otLinkCslGetPeriod(mInstance));
+        mServer->OutputFormat("CSL Synchronized Timeout: %us\r\n", otLinkCslGetTimeout(mInstance));
+    }
+    else if (aArgsLength == 2)
+    {
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        if (strcmp(argv[0], "headerie") == 0)
+        {
+            if (strcmp(argv[1], "disable") == 0)
+            {
+                SuccessOrExit(error = otLinkCslIeSuppress(mInstance, true));
+            }
+            else if (strcmp(argv[1], "enable") == 0)
+            {
+                SuccessOrExit(error = otLinkCslIeSuppress(mInstance, false));
+            }
+            else
+            {
+                ExitNow(error = OT_ERROR_INVALID_ARGS);
+            }
+            ExitNow(error = OT_ERROR_NONE);
+        }
+#endif
+        long value;
+
+        SuccessOrExit(error = ParseLong(argv[1], value));
+
+        if (strcmp(argv[0], "channel") == 0)
+        {
+            SuccessOrExit(error = otLinkCslSetChannel(mInstance, static_cast<uint8_t>(value)));
+        }
+        else if (strcmp(argv[0], "period") == 0)
+        {
+            SuccessOrExit(error = otLinkCslSetPeriod(mInstance, static_cast<uint16_t>(value)));
+        }
+        else if (strcmp(argv[0], "timeout") == 0)
+        {
+            SuccessOrExit(error = otLinkCslSetTimeout(mInstance, static_cast<uint32_t>(value)));
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+
+exit:
+    AppendResult(error);
+}
+#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessDelayTimerMin(uint8_t aArgsLength, char *aArgs[])

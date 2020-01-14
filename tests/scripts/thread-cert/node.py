@@ -646,6 +646,18 @@ class Node:
         self.send_command('pollperiod %d' % pollperiod)
         self._expect('Done')
 
+    def set_csl_channel(self, csl_channel):
+        self.send_command('csl channel %d' % csl_channel)
+        self._expect('Done')
+
+    def set_csl_period(self, csl_period):
+        self.send_command('csl period %d' % csl_period)
+        self._expect('Done')
+
+    def set_csl_timeout(self, csl_timeout):
+        self.send_command('csl timeout %d' % csl_timeout)
+        self._expect('Done')
+
     def set_router_upgrade_threshold(self, threshold):
         cmd = 'routerupgradethreshold %d' % threshold
         self.send_command(cmd)

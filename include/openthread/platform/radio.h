@@ -192,10 +192,13 @@ typedef struct otRadioFrame
         {
             const uint8_t *mAesKey;            ///< The key used for AES-CCM frame security.
             otRadioIeInfo *mIeInfo;            ///< The pointer to the Header IE(s) related information.
+            uint16_t       mPeriod;            ///< The transmit time period.
+            uint16_t       mPhase;             ///< The transmit time phase.
             uint8_t        mMaxCsmaBackoffs;   ///< Maximum number of backoffs attempts before declaring CCA failure.
             uint8_t        mMaxFrameRetries;   ///< Maximum number of retries allowed after a transmission failure.
             bool           mIsARetx : 1;       ///< True if this frame is a retransmission (ignored by radio driver).
             bool           mCsmaCaEnabled : 1; ///< Set to true to enable CSMA-CA for this packet, false otherwise.
+            bool           mCslPresent : 1;    ///< Set to true to if Csl header ie is present.
         } mTxInfo;
 
         /**
@@ -619,6 +622,21 @@ extern void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRad
 extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
 /**
+ * The radio driver calls this method to notify OpenThread to process transmit security for the frame,
+ * this happens when the frame includes Header IE(s) that were updated before transmission.
+ *
+ * This function is used when feature `OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT` is enabled.
+ *
+ * @note This function can be called from interrupt context and it would only read/write data passed in
+ *       via @p aFrame, but would not read/write any state within OpenThread.
+ *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ * @param[in]  aFrame      The radio frame which needs to process transmit security.
+ *
+ */
+extern void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFrame);
+
+/**
  * Get the most recent RSSI measurement.
  *
  * @param[in] aInstance  The OpenThread instance structure.
@@ -796,6 +814,67 @@ bool otPlatRadioIsCoexEnabled(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_ARGS  @p aCoexMetrics was NULL.
  */
 otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCoexMetrics);
+
+/**
+ * Get the current time (64bits width) of the radio chip.
+ *
+ * @returns The current time in microseconds.
+ *
+ */
+uint64_t otPlatRadioGetNow(void);
+
+/**
+ * Enable or disable CSL receiver.
+ *
+ * @param[in]  aInstance     The OpenThread instance structure.
+ * @param[in]  aCslPeriod    CSL period, 0 for disabling CSL.
+ * @param[in]  aExtAddr      The extended source address of incoming frame, ack to which needs CSL.(request by NRF
+ * 52840)
+ *
+ * @retval  OT_ERROR_NOT_SUPPORTED  Radio driver doesn't support CSL.
+ * @retval  OT_ERROR_NONE           Successfully enabled or disabled CSL.
+ *
+ */
+otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const otExtAddress *aExtAddr);
+
+/**
+ * Update CSL sample time in radio driver. Sample time is stored in radio driver as a copy to calculate phase when
+ * sending ACK with CSL IE.
+ *
+ * @param[in]  aCslSampleTime    The latest sample time.
+ *
+ */
+void otPlatRadioUpdateCslSampleTime(uint32_t aCslSampleTime);
+
+/**
+ * The radio driver calls this method to notify OpenThread that an ACK is
+ * about to be transmitted, so that CSL IE could be updated and MIC could
+ * be recalculated IEEE 802.15.4 IEs can be filled.
+ *
+ * @param[in]   aInstance   The OpenThread instance structure.
+ * @param[in]   aFrame      A pointer to the first byte of the ACK frame.
+ * @param[in]   aLength     The length of the ACK frame.
+ *
+ */
+void otPlatRadioTxAckStarted(otInstance *aInstance, uint8_t *aFrame, uint16_t aLength);
+
+/**
+ * Enable or disable link metrics.
+ *
+ * @param[in]   aInstance            The OpenThread instance structure.
+ * @param[in]   aEnabled             Whether to enable the link metrics
+ *                                   feature.
+ * @param[in]   aTypeIdFlag          The Metric Type ID Flag when using
+ *                                   using enhanced-ack link metrics.
+ *
+ * @retval  OT_ERROR_NOT_SUPPORTED   Radio driver doesn't support link
+ *                                   metrics.
+ * @retval  OT_ERROR_NONE            Successfully enabled or disabled link
+ *                                   metrics.
+ * @retval  OT_ERROR_INVALID_ARGS    The parameters are not valid.
+ *
+ */
+otError otPlatRadioEnableEnhAckLinkMetrics(otInstance *aInstance, bool aEnabled, uint8_t aTypeIdFlag);
 
 /**
  * @}

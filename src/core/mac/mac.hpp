@@ -40,6 +40,7 @@
 #include <openthread/platform/time.h>
 
 #include "common/locator.hpp"
+#include "common/message.hpp"
 #include "common/tasklet.hpp"
 #include "common/timer.hpp"
 #include "mac/channel_mask.hpp"
@@ -81,12 +82,18 @@ enum
         OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT, ///< macMaxCsmaBackoffs for direct transmissions
     kMaxCsmaBackoffsIndirect =
         OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT, ///< macMaxCsmaBackoffs for indirect transmissions
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    kMaxCsmaBackoffsCsl = 0, ///< macMaxCsmaBackoffs for CSL transmissions
+#endif
 
     kDefaultMaxFrameRetriesDirect =
         OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT, ///< macDefaultMaxFrameRetries for direct transmissions
     kDefaultMaxFrameRetriesIndirect =
         OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT, ///< macDefaultMaxFrameRetries for indirect
-                                                                  ///< transmissions
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    kMaxFrameRetriesCsl = 0, ///< macMaxFrameRetries for CSL transmissions
+#endif
+                             ///< transmissions
 
     kTxNumBcast = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST ///< Number of times each broadcast frame is transmitted
 };
@@ -223,6 +230,10 @@ public:
      *
      */
     otError RequestIndirectFrameTransmission(void);
+
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    otError RequestCslFrameTransmission(void);
+#endif
 #endif
 
     /**
@@ -639,6 +650,163 @@ public:
      */
     bool IsEnabled(void) const { return mEnabled; }
 
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    /**
+     * This method sets the CSL accuracy.
+     *
+     * @returns CSL accuracy(ppm).
+     *
+     */
+    uint8_t GetCslAccuracy(void) const { return mSubMac.GetCslAccuracy(); }
+
+    /**
+     * This method sets the CSL accurary.
+     *
+     * @param[in]  aAccuracy  CSL accuracy(ppm).
+     *
+     */
+    void SetCslAccuracy(uint8_t aAccuracy) { mSubMac.SetCslAccuracy(aAccuracy); }
+
+    /**
+     * This method gets the CSL channel.
+     *
+     * @returns CSL channel.
+     *
+     */
+    uint8_t GetCslChannel(void) const { return mSubMac.GetCslChannel(); }
+
+    /**
+     * This method sets the CSL channel.
+     *
+     * @param[in]  aChannel  The CSL channel.
+     *
+     */
+    void SetCslChannel(uint8_t aChannel);
+
+    /**
+     * This method gets the CSL period.
+     *
+     * @returns CSL period in units of 10 symbols.
+     *
+     */
+    uint16_t GetCslPeriod(void) const { return mSubMac.GetCslPeriod(); }
+
+    /**
+     * This method sets the CSL period.
+     *
+     * @param[in]  aPeriod  The CSL period in 10 symbols.
+     *
+     */
+    void SetCslPeriod(uint16_t aPeriod);
+
+    /**
+     * This method gets the CSL timeout.
+     *
+     * @returns CSL timeout in seconds.
+     *
+     */
+    uint32_t GetCslTimeout(void) const { return mSubMac.GetCslTimeout(); }
+
+    /**
+     * This method sets the CSL timeout.
+     *
+     * @param[in]  aTimeout  The CSL timeout in seconds.
+     *
+     */
+    void SetCslTimeout(uint32_t aTimeout);
+
+    /**
+     * This indicates whether CSL IEs should be included in transmitted frames.
+     *
+     * @retval TRUE if CSL IEs should be included in transmitted frames.
+     * @retval FALSE if CSL IEs should not be included in transmitted frames.
+     *
+     */
+    bool ShouldIncludeCslIe(void) const;
+
+    /**
+     * This method starts CSL sample.
+     *
+     * @retval OT_ERROR_NONE           Successfully started CSL.
+     * @retval OT_ERROR_ALREADY        CSL Receiver has already been started.
+     * @retval OT_ERROR_NOT_CAPABLE    The parent does not support CSL transmitter role.
+     * @retval OT_ERROR_INVALID_ARGS   CSL period is 0.
+     * @retval OT_ERROR_INVALID_STATE  RxOnWhenIdle is true or not in Child role.
+     *
+     */
+    otError StartCsl(void);
+
+    /**
+     * This method stops CSL sample.
+     *
+     */
+    void StopCsl(void);
+
+    /**
+     * This method indicates whether or not CSL receiver is started.
+     *
+     * @retval true   CSL is started.
+     * @retval false  CSL is not started.
+     *
+     */
+    bool IsCslStarted(void) const { return mSubMac.IsCslStarted(); }
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    /**
+     * This method indicates whether CSL IE supperssion is enabled.
+     *
+     * @retval TRUE  if CSL IE suppression is enabled.
+     * @retval FALSE if CSL IE suppression is disabled.
+     *
+     */
+    bool IsCslIeSuppressed(void) const { return mCslIeSuppressed; }
+
+    /**
+     * This method suppresses or un-suppresses CSL IE for SSED.
+     *
+     * @param[in]  aSuppress  `true` to enable suppression, `false` to disable suppression.
+     *
+     */
+    void SuppressCslIe(bool aSuppress) { mCslIeSuppressed = aSuppress; }
+#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    /**
+     * This method appends header IEs to a TX-frame according to its
+     * frame control field and if time sync is enabled.
+     *
+     * @param[in]  aFrame       A reference to the TX-frame to which the IEs will be appended.
+     * @param[in]  aIsTimeSync  A boolean represents if time sync is enabled.
+     */
+    otError AppendHeaderIe(TxFrame &aFrame, bool aIsTimeSync) const;
+
+    /**
+     * This method updates frame control field according to the destination
+     * device and the message to send. Specifically, modify frame version and
+     * IE Present bit.
+     *
+     * @param[in]   aNeighbor  A pointer to the destination device, could be `NULL`.
+     * @param[in]   aMessage   A pointer to the message to send, could be `NULL`.
+     * @param[out]  aFcf       A reference to the frame control field to set.
+     *
+     */
+    void UpdateFcfForHeaderIe(Neighbor *aNeighbor, Message *aMessage, uint16_t &aFcf) const;
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+
+    /**
+     * This method processes transmit security on the frame which is going to be sent.
+     *
+     * This method prepares the frame, fills Mac auxiliary header, and perform AES CCM immediately in most cases
+     * (depends on @p aProcessAesCcm). If aProcessAesCcm is False, it probably means that some content in the frame
+     * will be updated just before transmission, so AES CCM will be performed after that (before transmission).
+     *
+     * @param[in]  aFrame          A reference to the MAC frame buffer which is going to be sent.
+     * @param[in]  aProcessAesCcm  TRUE to perform AES CCM immediately, FALSE otherwise.
+     *
+     */
+    void ProcessTransmitSecurity(TxFrame &aFrame, bool aProcessAesCcm);
+
 private:
     enum
     {
@@ -656,6 +824,9 @@ private:
         kOperationTransmitDataDirect,
 #if OPENTHREAD_FTD
         kOperationTransmitDataIndirect,
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+        kOperationTransmitDataCsl,
+#endif
 #endif
         kOperationTransmitPoll,
         kOperationWaitingForData,
@@ -684,19 +855,6 @@ private:
         uint32_t mTxIndirectRetrySuccess[OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT];
     };
 #endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
-
-    /**
-     * This method processes transmit security on the frame which is going to be sent.
-     *
-     * This method prepares the frame, fills Mac auxiliary header, and perform AES CCM immediately in most cases
-     * (depends on @p aProcessAesCcm). If aProcessAesCcm is False, it probably means that some content in the frame
-     * will be updated just before transmission, so AES CCM will be performed after that (before transmission).
-     *
-     * @param[in]  aFrame          A reference to the MAC frame buffer which is going to be sent.
-     * @param[in]  aProcessAesCcm  TRUE to perform AES CCM immediately, FALSE otherwise.
-     *
-     */
-    void ProcessTransmitSecurity(TxFrame &aFrame, bool aProcessAesCcm);
 
     otError ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
     void    UpdateIdleMode(void);
@@ -727,10 +885,17 @@ private:
     void LogFrameTxFailure(const TxFrame &aFrame, otError aError, uint8_t aRetryCount, bool aWillRetx) const;
     void LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const;
 
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    bool mCslIeSuppressed;
+#endif
+
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     uint8_t GetTimeIeOffset(const Frame &aFrame);
 #endif
 
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    void ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr);
+#endif
     static const char *OperationToString(Operation aOperation);
 
     static const uint8_t         sMode2Key[];
@@ -745,6 +910,9 @@ private:
     bool mPendingTransmitDataDirect : 1;
 #if OPENTHREAD_FTD
     bool mPendingTransmitDataIndirect : 1;
+#endif
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    bool mPendingTransmitDataCsl : 1;
 #endif
     bool mPendingTransmitPoll : 1;
     bool mPendingTransmitOobFrame : 1;
