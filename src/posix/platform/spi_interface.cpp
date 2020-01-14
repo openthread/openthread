@@ -94,9 +94,15 @@ otError SpiInterface::Init(const otPlatformConfig &aPlatformConfig)
     mSpiSmallPacketSize = aPlatformConfig.mSpiSmallPacketSize;
     mSpiAlignAllowance  = aPlatformConfig.mSpiAlignAllowance;
 
-    ResetPinInit(aPlatformConfig.mSpiGpioResetDevice, aPlatformConfig.mSpiGpioResetLine);
-    IntPinInit(aPlatformConfig.mSpiGpioIntDevice, aPlatformConfig.mSpiGpioIntLine);
-    SpiDevInit(aPlatformConfig.mRadioFile, aPlatformConfig.mSpiMode, aPlatformConfig.mSpiSpeed);
+    if (aPlatformConfig.mSpiGpioIntDevice != NULL)
+    {
+        // If the interrupt pin is not set, SPI interface will use polling mode.
+        InitIntPin(aPlatformConfig.mSpiGpioIntDevice, aPlatformConfig.mSpiGpioIntLine);
+        otLogNotePlat("SPI interface enters polling mode.");
+    }
+
+    InitResetPin(aPlatformConfig.mSpiGpioResetDevice, aPlatformConfig.mSpiGpioResetLine);
+    InitSpiDev(aPlatformConfig.mRadioFile, aPlatformConfig.mSpiMode, aPlatformConfig.mSpiSpeed);
 
     // Reset RCP chip.
     TrigerReset();
@@ -117,21 +123,20 @@ void SpiInterface::Deinit(void)
     if (mSpiDevFd >= 0)
     {
         close(mSpiDevFd);
+        mSpiDevFd = -1;
     }
 
     if (mResetGpioValueFd >= 0)
     {
         close(mResetGpioValueFd);
+        mResetGpioValueFd = -1;
     }
 
     if (mIntGpioValueFd >= 0)
     {
         close(mIntGpioValueFd);
+        mIntGpioValueFd = -1;
     }
-
-    mSpiDevFd         = -1;
-    mResetGpioValueFd = -1;
-    mIntGpioValueFd   = -1;
 
     return;
 }
@@ -141,17 +146,18 @@ int SpiInterface::SetupGpioHandle(int aFd, uint8_t aLine, uint32_t aHandleFlags,
     struct gpiohandle_request req;
     int                       ret;
 
+    assert(strlen(aLabel) < sizeof(req.consumer_label));
+
     req.flags             = aHandleFlags;
     req.lines             = 1;
     req.lineoffsets[0]    = aLine;
     req.default_values[0] = 1;
+
     snprintf(req.consumer_label, sizeof(req.consumer_label), "%s", aLabel);
 
-    VerifyOrExit((ret = ioctl(aFd, GPIO_GET_LINEHANDLE_IOCTL, &req)) != -1,
-                 LogError("ioctl(GPIO_GET_LINEHANDLE_IOCTL)"));
+    VerifyOrDie((ret = ioctl(aFd, GPIO_GET_LINEHANDLE_IOCTL, &req)) != -1, OT_EXIT_ERROR_ERRNO);
 
-exit:
-    return ret >= 0 ? req.fd : -1;
+    return req.fd;
 }
 
 int SpiInterface::SetupGpioEvent(int         aFd,
@@ -163,15 +169,16 @@ int SpiInterface::SetupGpioEvent(int         aFd,
     struct gpioevent_request req;
     int                      ret;
 
+    assert(strlen(aLabel) < sizeof(req.consumer_label));
+
     req.lineoffset  = aLine;
     req.handleflags = aHandleFlags;
     req.eventflags  = aEventFlags;
     snprintf(req.consumer_label, sizeof(req.consumer_label), "%s", aLabel);
 
-    VerifyOrExit((ret = ioctl(aFd, GPIO_GET_LINEEVENT_IOCTL, &req)) != -1, LogError("ioctl(GPIO_GET_LINEEVENT_IOCTL)"));
+    VerifyOrDie((ret = ioctl(aFd, GPIO_GET_LINEEVENT_IOCTL, &req)) != -1, OT_EXIT_ERROR_ERRNO);
 
-exit:
-    return ret >= 0 ? req.fd : -1;
+    return req.fd;
 }
 
 void SpiInterface::SetGpioValue(int aFd, uint8_t aValue)
@@ -190,65 +197,44 @@ uint8_t SpiInterface::GetGpioValue(int aFd)
     return data.values[0];
 }
 
-void SpiInterface::ResetPinInit(const char *aCharDev, uint8_t aLine)
+void SpiInterface::InitResetPin(const char *aCharDev, uint8_t aLine)
 {
-    int  fd      = -1;
     char label[] = "SOC_THREAD_RESET";
+    int  fd;
 
-    VerifyOrExit((aCharDev != NULL) && (aLine < GPIOHANDLES_MAX));
+    otLogDebgPlat("InitResetPin: charDev=%s, line=%" PRIu8, aCharDev, aLine);
 
-    otLogDebgPlat("Reset Pin: charDev=%s, line=%d", aCharDev, aLine);
+    VerifyOrDie((aCharDev != NULL) && (aLine < GPIOHANDLES_MAX), OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie((fd = open(aCharDev, O_RDWR)) != -1, OT_EXIT_ERROR_ERRNO);
+    mResetGpioValueFd = SetupGpioHandle(fd, aLine, GPIOHANDLE_REQUEST_OUTPUT, label);
 
-    VerifyOrExit((fd = open(aCharDev, O_RDWR)) != -1);
-    VerifyOrExit((mResetGpioValueFd = SetupGpioHandle(fd, aLine, GPIOHANDLE_REQUEST_OUTPUT, label)) >= 0);
-
-exit:
-    if (fd >= 0)
-    {
-        close(fd);
-    }
-
-    if (mResetGpioValueFd == -1)
-    {
-        DieNowWithMessage("Initialize the Reset Pin failed !", OT_EXIT_INVALID_ARGUMENTS);
-    }
+    close(fd);
 }
 
-void SpiInterface::IntPinInit(const char *aCharDev, uint8_t aLine)
+void SpiInterface::InitIntPin(const char *aCharDev, uint8_t aLine)
 {
-    int  fd      = -1;
     char label[] = "THREAD_SOC_INT";
+    int  fd;
 
-    VerifyOrExit((aCharDev != NULL) && (aLine < GPIOHANDLES_MAX));
+    otLogDebgPlat("InitIntPin: charDev=%s, line=%" PRIu8, aCharDev, aLine);
 
-    otLogDebgPlat("Interrupt Pin: charDev=%s, line=%d", aCharDev, aLine);
-
-    VerifyOrExit((fd = open(aCharDev, O_RDWR)) != -1);
+    VerifyOrDie((aCharDev != NULL) && (aLine < GPIOHANDLES_MAX), OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie((fd = open(aCharDev, O_RDWR)) != -1, OT_EXIT_ERROR_ERRNO);
 
     mIntGpioValueFd = SetupGpioEvent(fd, aLine, GPIOHANDLE_REQUEST_INPUT, GPIOEVENT_REQUEST_FALLING_EDGE, label);
 
-exit:
-    if (fd >= 0)
-    {
-        close(fd);
-    }
-
-    if (mIntGpioValueFd == -1)
-    {
-        otLogNotePlat("SPI interface falls back to polling mode.");
-    }
+    close(fd);
 }
 
-void SpiInterface::SpiDevInit(const char *aPath, uint8_t aMode, uint32_t aSpeed)
+void SpiInterface::InitSpiDev(const char *aPath, uint8_t aMode, uint32_t aSpeed)
 {
-    int           fd       = -1;
     const uint8_t wordBits = kSpiBitsPerWord;
+    int           fd;
 
-    VerifyOrDie((aPath != NULL) && (aMode <= kSpiModeMax), OT_EXIT_FAILURE);
+    otLogDebgPlat("InitSpiDev: path=%s, mode=%" PRIu8 ", speed=%" PRIu32, aPath, aMode, aSpeed);
 
-    otLogDebgPlat("SPI device: path=%s, mode=%d, speed=%d", aPath, aMode, aSpeed);
-
-    VerifyOrExit((fd = open(aPath, O_RDWR | O_CLOEXEC)) != -1, LogError("open_spi_dev_path"));
+    VerifyOrDie((aPath != NULL) && (aMode <= kSpiModeMax), OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie((fd = open(aPath, O_RDWR | O_CLOEXEC)) != -1, OT_EXIT_ERROR_ERRNO);
     VerifyOrExit(ioctl(fd, SPI_IOC_WR_MODE, &aMode) != -1, LogError("ioctl(SPI_IOC_WR_MODE)"));
     VerifyOrExit(ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &aSpeed) != -1, LogError("ioctl(SPI_IOC_WR_MAX_SPEED_HZ)"));
     VerifyOrExit(ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &wordBits) != -1, LogError("ioctl(SPI_IOC_WR_BITS_PER_WORD)"));
@@ -264,8 +250,6 @@ exit:
     {
         close(fd);
     }
-
-    VerifyOrDie(mSpiDevFd >= 0, OT_EXIT_FAILURE);
 }
 
 void SpiInterface::TrigerReset(void)
@@ -283,17 +267,11 @@ void SpiInterface::TrigerReset(void)
 
 uint8_t *SpiInterface::GetRealRxFrameStart(void)
 {
-    uint8_t *ret = mSpiRxFrameBuffer;
-    int      i   = 0;
+    uint8_t *      ret = mSpiRxFrameBuffer;
+    const uint8_t *end = mSpiRxFrameBuffer + mSpiAlignAllowance;
 
-    for (i = 0; i < mSpiAlignAllowance; i++)
-    {
-        if (ret[0] != 0xFF)
-        {
-            break;
-        }
-        ret++;
-    }
+    for (; ret != end && ret[0] == 0xff; ret++)
+        ;
 
     return ret;
 }
@@ -413,7 +391,7 @@ otError SpiInterface::PushPullSpi(void)
 
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("PushPullSpi:DoSpiXfer: errno=%d (%s)", errno, strerror(errno));
+        otLogCritPlat("PushPullSpi:DoSpiXfer: errno=%s", strerror(errno));
 
         // Print out a helpful error message for a common error.
         if ((mSpiCsDelayUs != 0) && (errno == EINVAL))
@@ -431,9 +409,9 @@ otError SpiInterface::PushPullSpi(void)
     {
         Ncp::SpiFrame rxFrame(spiRxFrameBuffer);
 
-        otLogDebgPlat("spi_xfer TX: H:%02X ACCEPT:%d DATA:%d", txFrame.GetHeaderFlagByte(),
+        otLogDebgPlat("spi_xfer TX: H:%02X ACCEPT:%" PRIu16 " DATA:%" PRIu16, txFrame.GetHeaderFlagByte(),
                       txFrame.GetHeaderAcceptLen(), txFrame.GetHeaderDataLen());
-        otLogDebgPlat("spi_xfer RX: H:%02X ACCEPT:%d DATA:%d", rxFrame.GetHeaderFlagByte(),
+        otLogDebgPlat("spi_xfer RX: H:%02X ACCEPT:%" PRIu16 " DATA:%" PRIu16, rxFrame.GetHeaderFlagByte(),
                       rxFrame.GetHeaderAcceptLen(), rxFrame.GetHeaderDataLen());
 
         slaveHeader = rxFrame.GetHeaderFlagByte();
@@ -557,14 +535,16 @@ bool SpiInterface::CheckInterrupt(void)
 
 void SpiInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout)
 {
-    int timeout = kMsecPerDay;
+    struct timeval timeout        = {kSecPerDay, 0};
+    struct timeval pollingTimeout = {0, kSpiPollPeriodUs};
 
     OT_UNUSED_VARIABLE(aWriteFdSet);
 
     if (mSpiTxIsReady)
     {
         // We have data to send to the slave.
-        timeout = 0;
+        timeout.tv_sec  = 0;
+        timeout.tv_usec = 0;
     }
 
     if (mIntGpioValueFd >= 0)
@@ -577,8 +557,9 @@ void SpiInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMa
         if (CheckInterrupt())
         {
             // Interrupt pin is asserted, set the timeout to be 0.
-            timeout = 0;
-            otLogDebgPlat("Interrupt.");
+            timeout.tv_sec  = 0;
+            timeout.tv_usec = 0;
+            otLogDebgPlat("UpdateFdSet(): Interrupt.");
         }
         else
         {
@@ -587,32 +568,32 @@ void SpiInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMa
             FD_SET(mIntGpioValueFd, &aReadFdSet);
         }
     }
-    else if (timeout > kSpiPollPeriodMs)
+    else if (timercmp(&pollingTimeout, &timeout, <))
     {
         // In this case we don't have an interrupt, so we revert to SPI polling.
-        timeout = kSpiPollPeriodMs;
+        timeout = pollingTimeout;
     }
 
     if (mSpiTxRefusedCount)
     {
-        int minTimeout = 0;
+        struct timeval minTimeout = {0, 0};
 
         // We are being rate-limited by the slave. This is fairly normal behavior. Based on number of times slave has
         // refused a transmission, we apply a minimum timeout.
         if (mSpiTxRefusedCount < kImmediateRetryCount)
         {
-            minTimeout = kImmediateRetryTimeoutMs;
+            minTimeout.tv_usec = kImmediateRetryTimeoutUs;
         }
         else if (mSpiTxRefusedCount < kFastRetryCount)
         {
-            minTimeout = kFastRetryTimeoutMs;
+            minTimeout.tv_usec = kFastRetryTimeoutUs;
         }
         else
         {
-            minTimeout = kSlowRetryTimeoutMs;
+            minTimeout.tv_usec = kSlowRetryTimeoutUs;
         }
 
-        if (timeout < minTimeout)
+        if (timercmp(&timeout, &minTimeout, <))
         {
             timeout = minTimeout;
         }
@@ -644,11 +625,9 @@ void SpiInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMa
         mDidPrintRateLimitLog = false;
     }
 
-    if (static_cast<uint64_t>(timeout) * US_PER_MS <
-        static_cast<uint64_t>(aTimeout.tv_sec) * US_PER_S + aTimeout.tv_usec)
+    if (timercmp(&timeout, &aTimeout, <))
     {
-        aTimeout.tv_sec  = static_cast<time_t>(timeout / kMsecPerSec);
-        aTimeout.tv_usec = static_cast<suseconds_t>((timeout % kMsecPerSec) * kUsecPerMsec);
+        aTimeout = timeout;
     }
 }
 
@@ -661,10 +640,10 @@ void SpiInterface::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
     {
         struct gpioevent_data event;
 
-        otLogDebgPlat("Interrupt.");
+        otLogDebgPlat("Process(): Interrupt.");
 
         // Read event data to clear interrupt.
-        VerifyOrDie(read(mIntGpioValueFd, &event, sizeof(event)) != -1, OT_EXIT_FAILURE);
+        VerifyOrDie(read(mIntGpioValueFd, &event, sizeof(event)) != -1, OT_EXIT_ERROR_ERRNO);
     }
 
     // Service the SPI port if we can receive a packet or we have a packet to be sent.
@@ -677,10 +656,10 @@ void SpiInterface::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
 
 otError SpiInterface::WaitForFrame(struct timeval &aTimeout)
 {
-    otError  error   = OT_ERROR_NONE;
-    uint32_t timeout = kMsecPerDay;
-    fd_set   readFdSet;
-    int      ret;
+    otError        error   = OT_ERROR_NONE;
+    struct timeval timeout = {kSecPerDay, 0};
+    fd_set         readFdSet;
+    int            ret;
 
     FD_ZERO(&readFdSet);
 
@@ -689,8 +668,8 @@ otError SpiInterface::WaitForFrame(struct timeval &aTimeout)
         if (CheckInterrupt())
         {
             // Interrupt pin is asserted, set the timeout to be 0.
-            timeout = 0;
-            otLogDebgPlat("Interrupt.");
+            timeout.tv_sec  = 0;
+            timeout.tv_usec = 0;
         }
         else
         {
@@ -699,17 +678,16 @@ otError SpiInterface::WaitForFrame(struct timeval &aTimeout)
             FD_SET(mIntGpioValueFd, &readFdSet);
         }
     }
-    else if (timeout > kSpiPollPeriodMs)
+    else
     {
         // In this case we don't have an interrupt, so we revert to SPI polling.
-        timeout = kSpiPollPeriodMs;
+        timeout.tv_sec  = 0;
+        timeout.tv_usec = kSpiPollPeriodUs;
     }
 
-    if (static_cast<uint64_t>(timeout) * US_PER_MS <
-        static_cast<uint64_t>(aTimeout.tv_sec) * US_PER_S + aTimeout.tv_usec)
+    if (timercmp(&timeout, &aTimeout, <))
     {
-        aTimeout.tv_sec  = static_cast<time_t>(timeout / kMsecPerSec);
-        aTimeout.tv_usec = static_cast<suseconds_t>((timeout % kMsecPerSec) * kUsecPerMsec);
+        aTimeout = timeout;
     }
 
     ret = select(mIntGpioValueFd + 1, &readFdSet, NULL, NULL, &aTimeout);
@@ -722,8 +700,6 @@ otError SpiInterface::WaitForFrame(struct timeval &aTimeout)
     {
         struct gpioevent_data event;
 
-        otLogDebgPlat("Interrupt.");
-
         // Read event data to clear interrupt.
         VerifyOrDie(read(mIntGpioValueFd, &event, sizeof(event)) != -1, OT_EXIT_FAILURE);
     }
@@ -731,6 +707,7 @@ otError SpiInterface::WaitForFrame(struct timeval &aTimeout)
     // If we can receive a packet.
     if (CheckInterrupt())
     {
+        otLogDebgPlat("WaitForFrame(): Interrupt.");
         PushPullSpi();
     }
 
@@ -777,7 +754,8 @@ exit:
 
 void SpiInterface::LogError(const char *aString)
 {
-    otLogCritPlat("%s: %s", aString, strerror(errno));
+    OT_UNUSED_VARIABLE(aString);
+    otLogWarnPlat("%s: %s", aString, strerror(errno));
 }
 
 void SpiInterface::LogStats(void)

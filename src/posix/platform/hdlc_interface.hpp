@@ -53,7 +53,8 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in] aCallback   A reference to a `Callback` object.
+     * @param[in] aCallback     A reference to a `Callback` object.
+     * @param[in] aFrameBuffer  A reference to a `RxFrameBuffer` object.
      *
      */
     HdlcInterface(SpinelInterface::Callbacks &aCallback, SpinelInterface::RxFrameBuffer &aFrameBuffer);

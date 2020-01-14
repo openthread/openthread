@@ -143,9 +143,9 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    -I  --interface-name name     Thread network interface name.\n"
             "    -d  --debug-level             Debug level of logging.\n"
             "    -n  --dry-run                 Just verify if arguments is valid and radio spinel is compatible.\n"
-            "        --no-reset                Do not reset RCP on initialization\n"
-            "        --radio-version           Print radio firmware version\n"
-            "        --ncp-dataset           Retrieve and save NCP dataset to file\n"
+            "        --no-reset                Do not send Spinel reset command to RCP on initialization.\n"
+            "        --radio-version           Print radio firmware version.\n"
+            "        --ncp-dataset             Retrieve and save NCP dataset to file.\n"
             "    -s  --time-speed factor       Time speed up factor.\n"
             "    -v  --verbose                 Also log to stderr.\n"
 #if OPENTHREAD_POSIX_RCP_SPI_ENABLE
@@ -164,14 +164,14 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "                                  The offset index of `R̅E̅S̅` pin for the associated GPIO device.\n"
             "        --spi-mode[=mode]         Specify the SPI mode to use (0-3).\n"
             "        --spi-speed[=hertz]       Specify the SPI speed in hertz.\n"
-            "        --spi-cs-delay[=usec]     Specify the delay after C̅S̅ assertion, in µsec\n"
-            "        --spi-reset-delay[=ms]    Specify the delay after R̅E̅S̅E̅T̅ assertion, in milliseconds\n"
+            "        --spi-cs-delay[=usec]     Specify the delay after C̅S̅ assertion, in µsec.\n"
+            "        --spi-reset-delay[=ms]    Specify the delay after R̅E̅S̅E̅T̅ assertion, in milliseconds.\n"
             "        --spi-align-allowance[=n] Specify the maximum number of 0xFF bytes to clip from start of\n"
             "                                  MISO frame. Max value is 16.\n"
-            "        --spi-small-packet=[n]    Specify the smallest packet we can receive in a single transaction\n"
+            "        --spi-small-packet=[n]    Specify the smallest packet we can receive in a single transaction.\n"
             "                                  (larger packets will require two transactions). Default value is 32.\n"
 #endif
-            "    -h  --help                  Display this usage information.\n",
+            "    -h  --help                    Display this usage information.\n",
             aProgramName);
     exit(aExitCode);
 }
@@ -246,16 +246,16 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             aConfig->mPlatformConfig.mSpiGpioIntDevice = optarg;
             break;
         case ARG_SPI_GPIO_INT_LINE:
-            aConfig->mPlatformConfig.mSpiGpioIntLine = (uint8_t)(atoi(optarg));
+            aConfig->mPlatformConfig.mSpiGpioIntLine = (uint8_t)atoi(optarg);
             break;
         case ARG_SPI_GPIO_RESET_DEV:
             aConfig->mPlatformConfig.mSpiGpioResetDevice = optarg;
             break;
         case ARG_SPI_GPIO_RESET_LINE:
-            aConfig->mPlatformConfig.mSpiGpioResetLine = (uint8_t)(atoi(optarg));
+            aConfig->mPlatformConfig.mSpiGpioResetLine = (uint8_t)atoi(optarg);
             break;
         case ARG_SPI_MODE:
-            aConfig->mPlatformConfig.mSpiMode = (uint8_t)(atoi(optarg));
+            aConfig->mPlatformConfig.mSpiMode = (uint8_t)atoi(optarg);
             break;
         case ARG_SPI_SPEED:
             aConfig->mPlatformConfig.mSpiSpeed = atoi(optarg);
@@ -272,7 +272,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         case ARG_SPI_SMALL_PACKET:
             aConfig->mPlatformConfig.mSpiSmallPacketSize = atoi(optarg);
             break;
-#endif
+#endif // OPENTHREAD_POSIX_RCP_SPI_ENABLE
         case '?':
             PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
             break;

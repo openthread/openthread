@@ -56,7 +56,8 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in] aCallback   A reference to a `Callback` object.
+     * @param[in] aCallback     A reference to a `Callback` object.
+     * @param[in] aFrameBuffer  A reference to a `RxFrameBuffer` object.
      *
      */
     SpiInterface(SpinelInterface::Callbacks &aCallback, SpinelInterface::RxFrameBuffer &aFrameBuffer);
@@ -104,7 +105,7 @@ public:
     /**
      * This method waits for receiving part or all of spinel frame within specified interval.
      *
-     * @param[in]  aTimeout  A reference to the timeout.
+     * @param[inout]  aTimeout  A reference to the timeout.
      *
      * @retval OT_ERROR_NONE             Part or all of spinel frame is received.
      * @retval OT_ERROR_RESPONSE_TIMEOUT No spinel frame is received within @p aTimeout.
@@ -138,9 +139,9 @@ private:
     void    SetGpioValue(int aFd, uint8_t aValue);
     uint8_t GetGpioValue(int aFd);
 
-    void ResetPinInit(const char *aCharDev, uint8_t aLine);
-    void IntPinInit(const char *aCharDev, uint8_t aLine);
-    void SpiDevInit(const char *aPath, uint8_t aMode, uint32_t aSpeed);
+    void InitResetPin(const char *aCharDev, uint8_t aLine);
+    void InitIntPin(const char *aCharDev, uint8_t aLine);
+    void InitSpiDev(const char *aPath, uint8_t aMode, uint32_t aSpeed);
     void TrigerReset(void);
 
     uint8_t *GetRealRxFrameStart(void);
@@ -161,9 +162,6 @@ private:
         kSpiBitsPerWord          = 8,
         kSpiTxRefuseWarnCount    = 30,
         kSpiTxRefuseExitCount    = 100,
-        kImmediateRetryTimeoutMs = 1,
-        kFastRetryTimeoutMs      = 10,
-        kSlowRetryTimeoutMs      = 33,
         kImmediateRetryCount     = 5,
         kFastRetryCount          = 15,
         kDebugBytesPerLine       = 16, 
@@ -173,11 +171,14 @@ private:
 
     enum
     {
-        kMsecPerSec      = 1000,
-        kUsecPerMsec     = 1000,
-        kSpiPollPeriodMs = kMsecPerSec / 30,
-        kMsecPerDay      = kMsecPerSec * 60 * 60 * 24,
-        kResetHoldOnUsec = kUsecPerMsec * 10,
+        kMsecPerSec              = 1000,
+        kUsecPerMsec             = 1000,
+        kSpiPollPeriodUs         = kMsecPerSec * kUsecPerMsec / 30,
+        kSecPerDay               = 60 * 60 * 24,
+        kResetHoldOnUsec         = 10 * kUsecPerMsec,
+        kImmediateRetryTimeoutUs = 1 * kUsecPerMsec,
+        kFastRetryTimeoutUs      = 10 * kUsecPerMsec,
+        kSlowRetryTimeoutUs      = 33 * kUsecPerMsec,
     };
 
     enum
