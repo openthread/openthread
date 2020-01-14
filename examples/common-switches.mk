@@ -110,6 +110,16 @@ ifeq ($(CHILD_SUPERVISION),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1
 endif
 
+ifeq ($(CSL_RECEIVER),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE=1
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT=1
+endif
+
+ifeq ($(CSL_TRANSMITTER),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE=1
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT=1
+endif
+
 ifeq ($(DEBUG),1)
 configure_OPTIONS              += --enable-debug --disable-optimization
 endif

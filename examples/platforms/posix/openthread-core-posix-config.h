@@ -132,6 +132,16 @@
 #define CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER 1
 
 /**
+ * @def OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW
+ *
+ * The CSL sample window in 10 symbols.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW
+#define OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW 20
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
  *
  * Define to 1 if you want to enable radio coexistence implemented in platform.

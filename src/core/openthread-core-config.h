@@ -50,6 +50,9 @@
 #define OPENTHREAD_THREAD_VERSION OPENTHREAD_THREAD_VERSION_1_1
 #endif
 
+// Need to include this file for definitions used in header files
+#include "openthread-thread_v1_2-core-default-config.h"
+
 #include "config/openthread-core-default-config.h"
 
 #include "config/announce_sender.h"
