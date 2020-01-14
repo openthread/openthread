@@ -739,7 +739,9 @@ static void processNextRxPacket(otInstance *aInstance)
     }
     else
     {
-        otEXPECT(length != IEEE802154_ACK_LENGTH);
+        // signal MAC layer for each received frame if promiscous is enabled
+        // otherwise only signal MAC layer for non-ACK frame
+        otEXPECT(sPromiscuous || (length != IEEE802154_ACK_LENGTH));
 
         sReceiveError = OT_ERROR_NONE;
 
@@ -763,16 +765,11 @@ static void processNextRxPacket(otInstance *aInstance)
         else
 #endif
         {
-            // signal MAC layer for each received frame if promiscous is enabled
-            // otherwise only signal MAC layer for non-ACK frame
-            if (sPromiscuous || sReceiveFrame.mLength > IEEE802154_ACK_LENGTH)
-            {
-                otLogInfoPlat("Received %d bytes", sReceiveFrame.mLength);
-                otPlatRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
+            otLogInfoPlat("Received %d bytes", sReceiveFrame.mLength);
+            otPlatRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
 #if RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
-                sRailDebugCounters.mRailPlatRadioReceiveDoneCbCount++;
+            sRailDebugCounters.mRailPlatRadioReceiveDoneCbCount++;
 #endif
-            }
         }
     }
 
