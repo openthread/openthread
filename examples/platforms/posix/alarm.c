@@ -309,7 +309,8 @@ uint64_t otPlatTimeGet(void)
     return platformGetNow();
 }
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE || OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE || \
+    OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
 uint16_t otPlatTimeGetXtalAccuracy(void)
 {
     return 0;

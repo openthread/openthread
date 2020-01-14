@@ -791,6 +791,14 @@ bool otPlatRadioIsCoexEnabled(otInstance *aInstance);
 otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCoexMetrics);
 
 /**
+ * Get the current time (64bits width) of the radio chip.
+ *
+ * @returns The current time in microseconds.
+ *
+ */
+uint64_t otPlatRadioGetNow(void);
+
+/**
  * Enable or disable CSL receiver.
  *
  * @param[in]  aInstance     The OpenThread instance structure.

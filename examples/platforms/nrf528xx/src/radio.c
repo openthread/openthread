@@ -971,6 +971,11 @@ uint32_t nrf_802154_random_get(void)
     return otRandomNonCryptoGetUint32();
 }
 
+uint64_t otPlatRadioGetNow(void)
+{
+    return otPlatTimeGet();
+}
+
 #if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
 otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const otExtAddress *aExtAddr)
 {

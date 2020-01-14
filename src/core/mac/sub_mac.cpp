@@ -35,6 +35,8 @@
 
 #include <stdio.h>
 
+#include <openthread/platform/time.h>
+
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"

@@ -888,6 +888,11 @@ exit:
 }
 #endif
 
+uint64_t otPlatRadioGetNow(void)
+{
+    return otPlatTimeGet();
+}
+
 #if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
 otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const otExtAddress *aExtAddr)
 {
