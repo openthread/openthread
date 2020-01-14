@@ -213,6 +213,9 @@ otError SubMac::Send(void)
     {
     case kStateDisabled:
     case kStateCsmaBackoff:
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    case kStateCslTransmit:
+#endif
     case kStateTransmit:
     case kStateEnergyScan:
         ExitNow(error = OT_ERROR_INVALID_STATE);
@@ -236,6 +239,32 @@ void SubMac::StartCsmaBackoff(void)
     uint32_t backoff;
     uint32_t backoffExponent = kMinBE + mTransmitRetries + mCsmaBackoffs;
 
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    if (mTransmitFrame.mInfo.mTxInfo.mPeriod != 0)
+    {
+        uint32_t phaseNow     = (otPlatTimeGet() / OT_US_PER_TEN_SYMBOLS) % mTransmitFrame.mInfo.mTxInfo.mPeriod;
+        uint32_t phaseDesired = mTransmitFrame.mInfo.mTxInfo.mPhase;
+
+        mTransmitFrame.SetCsmaCaEnabled(false);
+
+        SetState(kStateCslTransmit);
+
+        if (phaseNow < phaseDesired)
+        {
+            mTimer.Start((phaseDesired - phaseNow) * OT_US_PER_TEN_SYMBOLS);
+        }
+        else if (phaseNow > phaseDesired)
+        {
+            mTimer.Start((mTransmitFrame.mInfo.mTxInfo.mPeriod + phaseDesired - phaseNow) * OT_US_PER_TEN_SYMBOLS);
+        }
+        else
+        {
+            BeginTransmit();
+        }
+
+        ExitNow();
+    }
+#endif // OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
     SetState(kStateCsmaBackoff);
 
     VerifyOrExit(ShouldHandleCsmaBackOff(), BeginTransmit());
@@ -279,7 +308,11 @@ void SubMac::BeginTransmit(void)
 {
     otError error;
 
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    VerifyOrExit(mState == kStateCsmaBackoff || mState == kStateCslTransmit);
+#else
     VerifyOrExit(mState == kStateCsmaBackoff);
+#endif
 
 #if OPENTHREAD_CONFIG_MAC_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
     if ((mTransmitRetries > 0) && (mTransmitRetries == mTransmitFrame.GetMaxFrameRetries()))
@@ -406,6 +439,9 @@ otError SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
     case kStateDisabled:
     case kStateCsmaBackoff:
     case kStateTransmit:
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    case kStateCslTransmit:
+#endif
     case kStateEnergyScan:
         ExitNow(error = OT_ERROR_INVALID_STATE);
 
@@ -481,6 +517,11 @@ void SubMac::HandleTimer(void)
 {
     switch (mState)
     {
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    case kStateCslTransmit:
+        BeginTransmit();
+        break;
+#endif
     case kStateCsmaBackoff:
         BeginTransmit();
         break;
@@ -595,6 +636,11 @@ const char *SubMac::StateToString(State aState)
     case kStateSleep:
         str = "Sleep";
         break;
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    case kStateCslTransmit:
+        str = "CslTransmit";
+        break;
+#endif
     case kStateReceive:
         str = "Receive";
         break;

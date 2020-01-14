@@ -469,9 +469,12 @@ private:
 
     enum State
     {
-        kStateDisabled,    ///< Radio is disabled.
-        kStateSleep,       ///< Radio is in sleep.
-        kStateReceive,     ///< Radio in in receive.
+        kStateDisabled, ///< Radio is disabled.
+        kStateSleep,    ///< Radio is in sleep.
+        kStateReceive,  ///< Radio in in receive.
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+        kStateCslTransmit, ///< CSL transmission.
+#endif
         kStateCsmaBackoff, ///< CSMA backoff before transmission.
         kStateTransmit,    ///< Radio is transmitting.
         kStateEnergyScan,  ///< Energy scan.

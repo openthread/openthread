@@ -81,12 +81,18 @@ enum
         OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT, ///< macMaxCsmaBackoffs for direct transmissions
     kMaxCsmaBackoffsIndirect =
         OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT, ///< macMaxCsmaBackoffs for indirect transmissions
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    kMaxCsmaBackoffsCsl = 0, ///< macMaxCsmaBackoffs for CSL transmissions
+#endif
 
     kDefaultMaxFrameRetriesDirect =
         OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT, ///< macDefaultMaxFrameRetries for direct transmissions
     kDefaultMaxFrameRetriesIndirect =
         OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT, ///< macDefaultMaxFrameRetries for indirect
-                                                                  ///< transmissions
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    kMaxFrameRetriesCsl = 0, ///< macMaxFrameRetries for CSL transmissions
+#endif
+                             ///< transmissions
 
     kTxNumBcast = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST ///< Number of times each broadcast frame is transmitted
 };
@@ -223,6 +229,10 @@ public:
      *
      */
     otError RequestIndirectFrameTransmission(void);
+
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    otError RequestCslFrameTransmission(void);
+#endif
 #endif
 
     /**
@@ -777,6 +787,9 @@ private:
         kOperationTransmitDataDirect,
 #if OPENTHREAD_FTD
         kOperationTransmitDataIndirect,
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+        kOperationTransmitDataCsl,
+#endif
 #endif
         kOperationTransmitPoll,
         kOperationWaitingForData,
@@ -870,6 +883,9 @@ private:
     bool mPendingTransmitDataDirect : 1;
 #if OPENTHREAD_FTD
     bool mPendingTransmitDataIndirect : 1;
+#endif
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    bool mPendingTransmitDataCsl : 1;
 #endif
     bool mPendingTransmitPoll : 1;
     bool mPendingTransmitOobFrame : 1;

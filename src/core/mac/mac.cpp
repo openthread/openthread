@@ -198,6 +198,9 @@ bool Mac::IsInTransmitState(void) const
     case kOperationTransmitDataDirect:
 #if OPENTHREAD_FTD
     case kOperationTransmitDataIndirect:
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    case kOperationTransmitDataCsl:
+#endif
 #endif
     case kOperationTransmitBeacon:
     case kOperationTransmitPoll:
@@ -527,7 +530,22 @@ otError Mac::RequestIndirectFrameTransmission(void)
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+otError Mac::RequestCslFrameTransmission(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!mPendingTransmitDataCsl && (mOperation != kOperationTransmitDataCsl), error = OT_ERROR_ALREADY);
+
+    StartOperation(kOperationTransmitDataCsl);
+
+exit:
+    return error;
+}
 #endif
+#endif // OPENTHREAD_FTD
 
 otError Mac::RequestOutOfBandFrameTransmission(otRadioFrame *aOobFrame)
 {
@@ -643,6 +661,12 @@ void Mac::StartOperation(Operation aOperation)
     case kOperationTransmitDataIndirect:
         mPendingTransmitDataIndirect = true;
         break;
+
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    case kOperationTransmitDataCsl:
+        mPendingTransmitDataCsl = true;
+        break;
+#endif
 #endif
 
     case kOperationTransmitPoll:
@@ -683,6 +707,9 @@ void Mac::PerformNextOperation(void)
         mPendingTransmitDataDirect = false;
 #if OPENTHREAD_FTD
         mPendingTransmitDataIndirect = false;
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+        mPendingTransmitDataCsl = false;
+#endif
 #endif
         mPendingTransmitPoll = false;
         mTimer.Stop();
@@ -727,7 +754,14 @@ void Mac::PerformNextOperation(void)
         mPendingTransmitDataIndirect = false;
         mOperation                   = kOperationTransmitDataIndirect;
     }
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    else if (mPendingTransmitDataCsl)
+    {
+        mPendingTransmitDataCsl = false;
+        mOperation              = kOperationTransmitDataCsl;
+    }
 #endif
+#endif // OPENTHREAD_FTD
     else if (mPendingTransmitPoll && (!mPendingTransmitDataDirect || mShouldTxPollBeforeData))
     {
         mPendingTransmitPoll = false;
@@ -769,6 +803,9 @@ void Mac::PerformNextOperation(void)
     case kOperationTransmitDataDirect:
 #if OPENTHREAD_FTD
     case kOperationTransmitDataIndirect:
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    case kOperationTransmitDataCsl:
+#endif
 #endif
     case kOperationTransmitPoll:
     case kOperationTransmitOutOfBandFrame:
@@ -1039,7 +1076,23 @@ void Mac::BeginTransmit(void)
             sendFrame.SetSequence(mDataSequence++);
         }
         break;
-#endif
+
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    case kOperationTransmitDataCsl:
+    {
+        SuccessOrExit(error = Get<DataPollHandler>().HandleCslFrameRequest(sendFrame));
+        sendFrame.SetMaxCsmaBackoffs(kMaxCsmaBackoffsCsl);
+        sendFrame.SetMaxFrameRetries(kMaxFrameRetriesCsl);
+        // If the frame is marked as a retransmission, then data sequence number is already set.
+        if (!sendFrame.IsARetransmission())
+        {
+            sendFrame.SetSequence(mDataSequence++);
+        }
+
+        break;
+    }
+#endif // OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+#endif // OPENTHREAD_FTD
 
     case kOperationTransmitOutOfBandFrame:
         sendFrame.CopyFrom(*mOobFrame);
@@ -1064,6 +1117,14 @@ void Mac::BeginTransmit(void)
             sendFrame.SetTimeSyncSeq(Get<TimeSync>().GetTimeSyncSeq());
             sendFrame.SetNetworkTimeOffset(Get<TimeSync>().GetNetworkTimeOffset());
         }
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    if (sendFrame.mInfo.mTxInfo.mCslPresent)
+    {
+        // Transmit security will be processed after CSL IE content is updated.
+        processTransmitAesCcm = false;
     }
 #endif
 
@@ -1317,6 +1378,9 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
         break;
 
 #if OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    case kOperationTransmitDataCsl:
+#endif
     case kOperationTransmitDataIndirect:
         mCounters.mTxData++;
 

@@ -449,7 +449,12 @@ otError MeshForwarder::HandleFrameRequest(Mac::TxFrame &aFrame)
                 Get<Mac::Mac>().SetPanId(Mac::GenerateRandomPanId());
             }
         }
-
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+        if (Get<Mac::Mac>().ShouldIncludeCslIe() && mSendMessage->IsSubTypeMle())
+        {
+            mSendMessage->SetLinkSecurityEnabled(true);
+        }
+#endif
         mMessageNextOffset =
             PrepareDataFrame(aFrame, *mSendMessage, mMacSource, mMacDest, mAddMeshHeader, mMeshSource, mMeshDest);
 

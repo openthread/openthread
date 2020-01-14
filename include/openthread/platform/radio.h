@@ -191,10 +191,13 @@ typedef struct otRadioFrame
         {
             const uint8_t *mAesKey;            ///< The key used for AES-CCM frame security.
             otRadioIeInfo *mIeInfo;            ///< The pointer to the Header IE(s) related information.
+            uint16_t       mPeriod;            ///< The transmit time period.
+            uint16_t       mPhase;             ///< The transmit time phase.
             uint8_t        mMaxCsmaBackoffs;   ///< Maximum number of backoffs attempts before declaring CCA failure.
             uint8_t        mMaxFrameRetries;   ///< Maximum number of retries allowed after a transmission failure.
             bool           mIsARetx : 1;       ///< True if this frame is a retransmission (ignored by radio driver).
             bool           mCsmaCaEnabled : 1; ///< Set to true to enable CSMA-CA for this packet, false otherwise.
+            bool           mCslPresent : 1;    ///< Set to true to if Csl header ie is present.
         } mTxInfo;
 
         /**
