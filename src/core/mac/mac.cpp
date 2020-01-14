@@ -69,6 +69,9 @@ const char Mac::sNetworkNameInit[] = "OpenThread";
 
 Mac::Mac(Instance &aInstance)
     : InstanceLocator(aInstance)
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE && OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    , mCslIeSuppressed(false)
+#endif
     , mEnabled(true)
     , mPendingActiveScan(false)
     , mPendingEnergyScan(false)
@@ -2018,6 +2021,102 @@ exit:
     return offset;
 }
 #endif
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+void Mac::SetCslChannel(uint8_t aChannel)
+{
+    VerifyOrExit(GetCslChannel() != aChannel);
+
+    mSubMac.SetCslChannel(aChannel);
+
+    if (mSubMac.IsCslStarted())
+    {
+        Get<Mle::Mle>().ScheduleChildUpdateRequest();
+    }
+exit:
+    return;
+}
+
+void Mac::SetCslPeriod(uint16_t aPeriod)
+{
+    VerifyOrExit(GetCslPeriod() != aPeriod);
+
+    mSubMac.SetCslPeriod(aPeriod);
+
+    if (aPeriod == 0)
+    {
+        StopCsl();
+    }
+    else if (mSubMac.IsCslStarted())
+    {
+        Get<Mle::Mle>().ScheduleChildUpdateRequest();
+    }
+    else
+    {
+        StartCsl();
+    }
+
+exit:
+    return;
+}
+
+void Mac::SetCslTimeout(uint32_t aTimeout)
+{
+    VerifyOrExit(GetCslTimeout() != aTimeout);
+
+    mSubMac.SetCslTimeout(aTimeout);
+
+    if (mSubMac.IsCslStarted())
+    {
+        Get<Mle::Mle>().ScheduleChildUpdateRequest();
+    }
+exit:
+    return;
+}
+
+bool Mac::ShouldIncludeCslIe(void) const
+{
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    return mSubMac.IsCslStarted() && !IsCslIeSuppressed() &&
+           !Get<Mle::Mle>().IsRxOnWhenIdle(); // Only for certification
+#else
+    return mSubMac.IsCslStarted() && !Get<Mle::Mle>().IsRxOnWhenIdle();
+#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+}
+
+otError Mac::StartCsl(void)
+{
+    otError   error  = OT_ERROR_NONE;
+    Neighbor *parent = &Get<Mle::Mle>().GetParent();
+
+    VerifyOrExit(!mRxOnWhenIdle && Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_CHILD,
+                 error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(parent->IsSupportEnhancedFramePending(), error = OT_ERROR_NOT_CAPABLE);
+
+    otPlatRadioEnableCsl(&GetInstance(), mSubMac.GetCslPeriod(), &parent->GetExtAddress());
+
+    SuccessOrExit(error = mSubMac.StartCsl());
+
+    Get<Mle::Mle>().ScheduleChildUpdateRequest();
+
+exit:
+    return error;
+}
+
+void Mac::StopCsl(void)
+{
+    Neighbor *parent = &Get<Mle::Mle>().GetParent();
+
+    mSubMac.StopCsl();
+
+    VerifyOrExit(parent != NULL);
+
+    otPlatRadioEnableCsl(&GetInstance(), 0, &parent->GetExtAddress());
+
+exit:
+    return;
+}
+#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
 
 } // namespace Mac
 } // namespace ot

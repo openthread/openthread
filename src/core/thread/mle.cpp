@@ -220,6 +220,12 @@ exit:
     return error;
 }
 
+void Mle::ScheduleChildUpdateRequest(void)
+{
+    mChildUpdateRequestState = kChildUpdateRequestPending;
+    ScheduleMessageTransmissionTimer();
+}
+
 otError Mle::Disable(void)
 {
     otError error = OT_ERROR_NONE;

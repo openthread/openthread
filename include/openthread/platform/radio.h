@@ -791,6 +791,29 @@ bool otPlatRadioIsCoexEnabled(otInstance *aInstance);
 otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCoexMetrics);
 
 /**
+ * Enable or disable CSL receiver.
+ *
+ * @param[in]  aInstance     The OpenThread instance structure.
+ * @param[in]  aCslPeriod    CSL period, 0 for disabling CSL.
+ * @param[in]  aExtAddr      The extended source address of incoming frame, ack to which needs CSL.(request by NRF
+ * 52840)
+ *
+ * @retval  OT_ERROR_NOT_SUPPORTED  Radio driver doesn't support CSL.
+ * @retval  OT_ERROR_NONE           Successfully enabled or disabled CSL.
+ *
+ */
+otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const otExtAddress *aExtAddr);
+
+/**
+ * Update CSL sample time in radio driver. Sample time is stored in radio driver as a copy to calculate phase when
+ * sending ACK with CSL IE.
+ *
+ * @param[in]  aCslSampleTime    The latest sample time.
+ *
+ */
+void otPlatRadioUpdateCslSampleTime(uint32_t aCslSampleTime);
+
+/**
  * @}
  *
  */

@@ -970,3 +970,21 @@ uint32_t nrf_802154_random_get(void)
 {
     return otRandomNonCryptoGetUint32();
 }
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const otExtAddress *aExtAddr)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aCslPeriod);
+    OT_UNUSED_VARIABLE(aExtAddr);
+
+    otError error = OT_ERROR_NONE;
+
+    return error;
+}
+
+void otPlatRadioUpdateCslSampleTime(uint32_t aCslSampleTime)
+{
+    OT_UNUSED_VARIABLE(aCslSampleTime);
+}
+#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE

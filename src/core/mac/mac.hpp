@@ -639,6 +639,127 @@ public:
      */
     bool IsEnabled(void) const { return mEnabled; }
 
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    /**
+     * This method sets the CSL accuracy.
+     *
+     * @returns CSL accuracy(ppm).
+     *
+     */
+    uint8_t GetCslAccuracy(void) const { return mSubMac.GetCslAccuracy(); }
+
+    /**
+     * This method sets the CSL accurary.
+     *
+     * @param[in]  aAccuracy  CSL accuracy(ppm).
+     *
+     */
+    void SetCslAccuracy(uint8_t aAccuracy) { mSubMac.SetCslAccuracy(aAccuracy); }
+
+    /**
+     * This method gets the CSL channel.
+     *
+     * @returns CSL channel.
+     *
+     */
+    uint8_t GetCslChannel(void) const { return mSubMac.GetCslChannel(); }
+
+    /**
+     * This method sets the CSL channel.
+     *
+     * @param[in]  aChannel  The CSL channel.
+     *
+     */
+    void SetCslChannel(uint8_t aChannel);
+
+    /**
+     * This method gets the CSL period.
+     *
+     * @returns CSL period in units of 10 symbols.
+     *
+     */
+    uint16_t GetCslPeriod(void) const { return mSubMac.GetCslPeriod(); }
+
+    /**
+     * This method sets the CSL period.
+     *
+     * @param[in]  aPeriod  The CSL period in 10 symbols.
+     *
+     */
+    void SetCslPeriod(uint16_t aPeriod);
+
+    /**
+     * This method gets the CSL timeout.
+     *
+     * @returns CSL timeout in seconds.
+     *
+     */
+    uint32_t GetCslTimeout(void) const { return mSubMac.GetCslTimeout(); }
+
+    /**
+     * This method sets the CSL timeout.
+     *
+     * @param[in]  aTimeout  The CSL timeout in seconds.
+     *
+     */
+    void SetCslTimeout(uint32_t aTimeout);
+
+    /**
+     * This indicates whether CSL IEs should be included in transmitted frames.
+     *
+     * @retval TRUE if CSL IEs should be included in transmitted frames.
+     * @retval FALSE if CSL IEs should not be included in transmitted frames.
+     *
+     */
+    bool ShouldIncludeCslIe(void) const;
+
+    /**
+     * This method starts CSL sample.
+     *
+     * @retval OT_ERROR_NONE           Successfully started CSL.
+     * @retval OT_ERROR_ALREADY        CSL Receiver has already been started.
+     * @retval OT_ERROR_NOT_CAPABLE    The parent does not support CSL transmitter role.
+     * @retval OT_ERROR_INVALID_ARGS   CSL period is 0.
+     * @retval OT_ERROR_INVALID_STATE  RxOnWhenIdle is true or not in Child role.
+     *
+     */
+    otError StartCsl(void);
+
+    /**
+     * This method stops CSL sample.
+     *
+     */
+    void StopCsl(void);
+
+    /**
+     * This method indicates whether or not CSL receiver is started.
+     *
+     * @retval true   CSL is started.
+     * @retval false  CSL is not started.
+     *
+     */
+    bool IsCslStarted(void) const { return mSubMac.IsCslStarted(); }
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    /**
+     * This method indicates whether CSL IE supperssion is enabled.
+     *
+     * @retval TRUE  if CSL IE suppression is enabled.
+     * @retval FALSE if CSL IE suppression is disabled.
+     *
+     */
+    bool IsCslIeSuppressed(void) const { return mCslIeSuppressed; }
+
+    /**
+     * This method suppresses or un-suppresses CSL IE for SSED.
+     *
+     * @param[in]  aSuppress  `true` to enable suppression, `false` to disable suppression.
+     *
+     */
+    void SuppressCslIe(bool aSuppress) { mCslIeSuppressed = aSuppress; }
+#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+
 private:
     enum
     {
@@ -726,6 +847,10 @@ private:
     void LogFrameRxFailure(const RxFrame *aFrame, otError aError) const;
     void LogFrameTxFailure(const TxFrame &aFrame, otError aError, uint8_t aRetryCount, bool aWillRetx) const;
     void LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const;
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    bool mCslIeSuppressed;
+#endif
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     uint8_t GetTimeIeOffset(const Frame &aFrame);

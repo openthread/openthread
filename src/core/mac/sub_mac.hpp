@@ -339,7 +339,119 @@ public:
      */
     otError EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration);
 
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    /**
+     * This method indicates whether or not CSL is enabled.
+     *
+     * @retval true     CSL is enabled.
+     * @retval false    CSL is disabled.
+     *
+     */
+    bool IsCslEnabled(void) const { return mCslPeriod > 0; }
+
+    /**
+     * This method indicates whether or not CSL receiver is started.
+     *
+     * @retval true   CSL is started.
+     * @retval false  CSL is not started.
+     *
+     */
+    bool IsCslStarted(void) const { return mCslState != kCslIdle; }
+
+    /**
+     * This method starts CSL sample.
+     *
+     * @retval OT_ERROR_NONE           Successfully started CSL.
+     * @retval OT_ERROR_INVALID_ARGS   CSL period is 0.
+     * @retval OT_ERROR_ALREADY        CSL Receiver has already been started.
+     *
+     */
+    otError StartCsl(void);
+
+    /**
+     * This method stops CSL sample.
+     *
+     */
+    void StopCsl(void);
+
+    /**
+     * This method gets the CSL accuracy.
+     *
+     * @returns CSL accuracy.
+     *
+     */
+    uint8_t GetCslAccuracy(void) const { return mCslAccuracy; }
+
+    /**
+     * This method sets the CSL accurary.
+     *
+     */
+    void SetCslAccuracy(uint8_t aAccuracy) { mCslAccuracy = aAccuracy; }
+
+    /**
+     * This method gets the CSL channel.
+     *
+     * @returns CSL channel.
+     *
+     */
+    uint8_t GetCslChannel(void) const { return mCslChannel; }
+
+    /**
+     * This method sets the CSL channel.
+     *
+     * @param[in]  aChannel  The CSL channel.
+     *
+     */
+    void SetCslChannel(uint8_t aChannel);
+
+    /**
+     * This method gets the CSL period.
+     *
+     * @returns CSL period.
+     *
+     */
+    uint16_t GetCslPeriod(void) const { return mCslPeriod; }
+
+    /**
+     * This method sets the CSL period.
+     *
+     * @param[in]  aPeriod  The CSL period in 10 symbols.
+     *
+     */
+    void SetCslPeriod(uint16_t aPeriod);
+
+    /**
+     * This method gets the CSL timeout.
+     *
+     * @returns CSL timeout
+     *
+     */
+    uint32_t GetCslTimeout(void) const { return mCslTimeout; }
+
+    /**
+     * This method sets the CSL timeout.
+     *
+     * @param[in]  aTimeout  The CSL timeout in seconds.
+     *
+     */
+    void SetCslTimeout(uint32_t aTimeout);
+
+    /**
+     * This method fills the CSL parameter to the frame.
+     *
+     * @param[inout]    aFrame  A reference to the frame to fill CSL parameter.
+     *
+     */
+    void FillCsl(Frame &aFrame);
+#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+
 private:
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    static void HandleCslTimer(Timer &aTimer);
+    void        HandleCslTimer(void);
+    uint16_t    GetCslPhase(void) const;
+#endif
+
     enum
     {
         kMinBE             = 3,  ///< macMinBE (IEEE 802.15.4-2006).
@@ -412,6 +524,39 @@ private:
 #else
     TimerMilli mTimer;
 #endif
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    /**
+     * The SSED sample window in units of 10 symbols.
+     *
+     */
+    static const uint32_t kCslSampleWindow = OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW;
+
+    /**
+     * The minimum SSED sample window in units of 10 symbols.
+     *
+     * No official definition found in Thread or 802.15.4 specifications. From how CSL works,
+     * this window should be no less than the `macCslInterval` whose minimal value is 1.
+     *
+     */
+    static const uint32_t kCslMinSampleWindow = 1;
+
+    enum CslState{
+        kCslIdle = 0, ///< CSL receiver is not started.
+        kCslSample,   ///< Sampling CSL channel.
+        kCslSleep,    ///< Radio in sleep.
+    };
+
+    uint32_t  mCslTimeout;    ///< The CSL synchronized timeout in seconds.
+    TimeMicro mCslSampleTime; ///< The CSL sample time of the current period.
+    uint16_t  mCslPeriod;     ///< The CSL sample period, in units of 10 symbols (160 microseconds).
+    uint8_t   mCslAccuracy;   ///< The accuracy of the clock that is used by the device, in units of ppm.
+    uint8_t   mCslChannel;    ///< The CSL sample channel.
+
+    CslState mCslState;
+
+    TimerMicro mCslTimer;
+#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
 };
 
 /**

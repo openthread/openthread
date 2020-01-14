@@ -53,6 +53,8 @@ extern "C" {
  *
  */
 
+#define OT_US_PER_TEN_SYMBOLS 160 ///< The microseconds per 10 symbols.
+
 /**
  * This structure represents link-specific information for messages received from the Thread radio.
  *

@@ -1071,6 +1071,12 @@ public:
      */
     void RequestShorterChildIdRequest(void);
 
+    /**
+     * This method schedules a Child Update Request.
+     *
+     */
+    void ScheduleChildUpdateRequest(void);
+
 protected:
     /**
      * States during attach (when searching for a parent).
