@@ -3639,6 +3639,7 @@ otError MleRouter::StoreChild(const Child &aChild)
     childInfo.mTimeout    = aChild.GetTimeout();
     childInfo.mRloc16     = aChild.GetRloc16();
     childInfo.mMode       = aChild.GetDeviceMode().Get();
+    childInfo.mVersion    = aChild.GetVersion();
 
     return Get<Settings>().AddChildInfo(childInfo);
 }

@@ -101,6 +101,7 @@ public:
         uint32_t        mPreviousPartitionId;    ///< PartitionId
         Mac::ExtAddress mExtAddress;             ///< Extended Address
         uint8_t         mMlIid[OT_IP6_IID_SIZE]; ///< IID from ML-EID
+        uint16_t        mVersion;                ///< Version
     };
 
     /**
@@ -135,6 +136,7 @@ public:
         uint32_t        mTimeout;    ///< Timeout
         uint16_t        mRloc16;     ///< RLOC16
         uint8_t         mMode;       ///< The MLE device mode
+        uint16_t        mVersion;    ///< Version
     };
 
 protected:
