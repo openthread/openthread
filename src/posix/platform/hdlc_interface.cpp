@@ -249,14 +249,15 @@ exit:
     return error;
 }
 
-otError HdlcInterface::WaitForFrame(struct timeval &aTimeout)
+otError HdlcInterface::WaitForFrame(const struct timeval &aTimeout)
 {
-    otError error = OT_ERROR_NONE;
+    otError        error   = OT_ERROR_NONE;
+    struct timeval timeout = aTimeout;
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     struct Event event;
 
-    platformSimSendSleepEvent(&aTimeout);
+    platformSimSendSleepEvent(&timeout);
     platformSimReceiveEvent(&event);
 
     switch (event.mEvent)
@@ -283,7 +284,7 @@ otError HdlcInterface::WaitForFrame(struct timeval &aTimeout)
     FD_SET(mSockFd, &read_fds);
     FD_SET(mSockFd, &error_fds);
 
-    rval = select(mSockFd + 1, &read_fds, NULL, &error_fds, &aTimeout);
+    rval = select(mSockFd + 1, &read_fds, NULL, &error_fds, &timeout);
 
     if (rval > 0)
     {

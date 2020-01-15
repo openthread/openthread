@@ -654,7 +654,7 @@ void SpiInterface::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
     }
 }
 
-otError SpiInterface::WaitForFrame(struct timeval &aTimeout)
+otError SpiInterface::WaitForFrame(const struct timeval &aTimeout)
 {
     otError        error   = OT_ERROR_NONE;
     struct timeval timeout = {kSecPerDay, 0};
@@ -685,32 +685,39 @@ otError SpiInterface::WaitForFrame(struct timeval &aTimeout)
         timeout.tv_usec = kSpiPollPeriodUs;
     }
 
-    if (timercmp(&timeout, &aTimeout, <))
+    if (timercmp(&aTimeout, &timeout, <))
     {
-        aTimeout = timeout;
+        timeout = aTimeout;
     }
 
-    ret = select(mIntGpioValueFd + 1, &readFdSet, NULL, NULL, &aTimeout);
-    if ((ret < 0) && (errno != EINTR))
+    ret = select(mIntGpioValueFd + 1, &readFdSet, NULL, NULL, &timeout);
+    if (ret > 0)
+    {
+        if (FD_ISSET(mIntGpioValueFd, &readFdSet))
+        {
+            struct gpioevent_data event;
+
+            // Read event data to clear interrupt.
+            VerifyOrDie(read(mIntGpioValueFd, &event, sizeof(event)) != -1, OT_EXIT_FAILURE);
+        }
+
+        // If we can receive a packet.
+        if (CheckInterrupt())
+        {
+            otLogDebgPlat("WaitForFrame(): Interrupt.");
+            PushPullSpi();
+        }
+    }
+    else if (ret == 0)
+    {
+        ExitNow(error = OT_ERROR_RESPONSE_TIMEOUT);
+    }
+    else if (errno != EINTR)
     {
         DieNow(OT_EXIT_ERROR_ERRNO);
     }
 
-    if (FD_ISSET(mIntGpioValueFd, &readFdSet))
-    {
-        struct gpioevent_data event;
-
-        // Read event data to clear interrupt.
-        VerifyOrDie(read(mIntGpioValueFd, &event, sizeof(event)) != -1, OT_EXIT_FAILURE);
-    }
-
-    // If we can receive a packet.
-    if (CheckInterrupt())
-    {
-        otLogDebgPlat("WaitForFrame(): Interrupt.");
-        PushPullSpi();
-    }
-
+exit:
     return error;
 }
 

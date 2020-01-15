@@ -110,7 +110,7 @@ public:
      * @retval OT_ERROR_RESPONSE_TIMEOUT No spinel frame is received within @p aTimeout.
      *
      */
-    otError WaitForFrame(struct timeval &aTimeout);
+    otError WaitForFrame(const struct timeval &aTimeout);
 
     /**
      * This method updates the file descriptor sets with file descriptors used by the radio driver.
