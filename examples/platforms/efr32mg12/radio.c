@@ -805,9 +805,7 @@ static void processNextRxPacket(otInstance *aInstance)
     packetInfo.packetBytes--;
 
     // read packet
-    memcpy(sReceiveFrame.mPsdu, packetInfo.firstPortionData, packetInfo.firstPortionBytes);
-    memcpy(sReceiveFrame.mPsdu + packetInfo.firstPortionBytes, packetInfo.lastPortionData,
-           packetInfo.packetBytes - packetInfo.firstPortionBytes);
+    RAIL_CopyRxPacket(sReceiveFrame.mPsdu, &packetInfo);
 
     status = RAIL_ReleaseRxPacket(gRailHandle, packetHandle);
     if (status == RAIL_STATUS_NO_ERROR)
