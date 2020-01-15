@@ -36,6 +36,18 @@ include("${PROJECT_SOURCE_DIR}/etc/cmake/checks.cmake")
 include("${PROJECT_SOURCE_DIR}/etc/cmake/options.cmake")
 include("${PROJECT_SOURCE_DIR}/etc/cmake/functions.cmake")
 
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
+    option(OT_COMPILE_WARNING_AS_ERROR "whether to include -Werror with gcc-compatible compilers")
+    if (OT_COMPILE_WARNING_AS_ERROR)
+        set(OT_CFLAGS -Werror)
+    endif()
+
+    set(OT_CFLAGS
+        $<$<COMPILE_LANGUAGE:C>:${OT_CFLAGS} -Wall -Wextra -Wshadow -Werror -pedantic-errors>
+        $<$<COMPILE_LANGUAGE:CXX>:${OT_FLAGS} -Wall -Wextra -Wshadow -Wno-c++14-compat -fno-exceptions>
+    )
+endif()
+
 file(READ .default-version OT_DEFAULT_VERSION)
 execute_process(
     COMMAND bash "-c" "third_party/nlbuild-autotools/repo/scripts/mkversion -b ${OT_DEFAULT_VERSION}"
