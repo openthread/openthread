@@ -375,6 +375,9 @@ otError Mle::Restore(void)
 
     SuccessOrExit(error = Get<Settings>().ReadNetworkInfo(networkInfo));
 
+    // force re-attach when version mismatch.
+    VerifyOrExit(networkInfo.mVersion == kThreadVersion);
+
     Get<KeyManager>().SetCurrentKeySequence(networkInfo.mKeySequence);
     Get<KeyManager>().SetMleFrameCounter(networkInfo.mMleFrameCounter);
     Get<KeyManager>().SetMacFrameCounter(networkInfo.mMacFrameCounter);
@@ -460,6 +463,7 @@ otError Mle::Store(void)
         networkInfo.mPreviousPartitionId = mLeaderData.GetPartitionId();
         networkInfo.mExtAddress          = Get<Mac::Mac>().GetExtAddress();
         memcpy(networkInfo.mMlIid, &mMeshLocal64.GetAddress().mFields.m8[OT_IP6_PREFIX_SIZE], OT_IP6_IID_SIZE);
+        networkInfo.mVersion = kThreadVersion;
 
         if (mRole == OT_DEVICE_ROLE_CHILD)
         {

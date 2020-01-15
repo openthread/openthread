@@ -3052,10 +3052,6 @@ void MleRouter::SendChildUpdateResponse(Child *                 aChild,
     {
         switch (aTlvs[i])
         {
-        case Tlv::kVersion:
-            SuccessOrExit(error = AppendVersion(*message));
-            break;
-
         case Tlv::kStatus:
             SuccessOrExit(error = AppendStatus(*message, StatusTlv::kError));
             break;
@@ -3593,6 +3589,7 @@ void MleRouter::RestoreChildren(void)
         child->SetDeviceMode(DeviceMode(childInfo.mMode));
         child->SetState(Neighbor::kStateRestored);
         child->SetLastHeard(TimerMilli::GetNow());
+        child->SetVersion(static_cast<uint8_t>(childInfo.mVersion));
         Get<IndirectSender>().SetChildUseShortAddress(*child, true);
         numChildren++;
     }
