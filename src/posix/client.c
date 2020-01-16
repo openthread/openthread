@@ -55,6 +55,8 @@
 #include <unistd.h>
 
 #include "code_utils.h"
+#include "common/code_utils.hpp"
+
 #include "platform-posix.h"
 
 static int sSessionFd = -1;
@@ -154,7 +156,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                write(STDOUT_FILENO, buffer, rval);
+                IgnoreReturnValue(write(STDOUT_FILENO, buffer, rval));
             }
         }
     }
