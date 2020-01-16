@@ -35,7 +35,7 @@
 #include "spinel_decoder.hpp"
 
 #include "common/code_utils.hpp"
-#include "utils/wrap_string.h"
+#include "common/string.hpp"
 
 namespace ot {
 namespace Ncp {
@@ -299,7 +299,7 @@ otError SpinelDecoder::ReadUtf8(const char *&aUtf8)
     // Ensure there is at least one byte (for null character).
     VerifyOrExit(mIndex + sizeof(uint8_t) <= mEnd, error = OT_ERROR_PARSE);
 
-    len = strnlen(reinterpret_cast<const char *>(&mFrame[mIndex]), mEnd - mIndex);
+    len = StringLength(reinterpret_cast<const char *>(&mFrame[mIndex]), mEnd - mIndex);
     VerifyOrExit(len < static_cast<uint16_t>(mEnd - mIndex), error = OT_ERROR_PARSE);
 
     aUtf8 = reinterpret_cast<const char *>(&mFrame[mIndex]);

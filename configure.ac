@@ -170,10 +170,6 @@ if test "${enable_no_executables_hack}" = "yes"
 then
     AC_MSG_RESULT([yes])
     AC_NO_EXECUTABLES
-    # Here we guess conservative values for tests that require link checks
-    # to test for these features. This will prevent these checks from
-    # being performed later in the configuration process.
-    ac_cv_func_strnlen=${ac_cv_func_strnlen-no}
 else
     AC_MSG_RESULT([no])
 fi
@@ -945,11 +941,6 @@ AC_HEADER_STDC
 
 AC_CHECK_HEADERS([stdint.h])
 AC_CHECK_HEADERS([string.h])
-
-#
-# Missing Functions
-#
-AC_CHECK_FUNC([strnlen], [AC_DEFINE([HAVE_STRNLEN], [1], [Define if strnlen exists.])])
 
 #
 # Check for types and structures

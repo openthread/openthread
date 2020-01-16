@@ -850,7 +850,7 @@ public:
      */
     void SetCommissionerId(const char *aCommissionerId)
     {
-        size_t length = strnlen(aCommissionerId, sizeof(mCommissionerId));
+        uint16_t length = StringLength(aCommissionerId, sizeof(mCommissionerId));
         memcpy(mCommissionerId, aCommissionerId, length);
         SetLength(static_cast<uint8_t>(length));
     }
@@ -1872,7 +1872,7 @@ public:
      */
     void SetProvisioningUrl(const char *aProvisioningUrl)
     {
-        size_t len = aProvisioningUrl ? strnlen(aProvisioningUrl, kMaxLength) : 0;
+        uint16_t len = aProvisioningUrl ? StringLength(aProvisioningUrl, kMaxLength) : 0;
 
         SetLength(static_cast<uint8_t>(len));
 
@@ -1931,7 +1931,7 @@ public:
      */
     void SetVendorName(const char *aVendorName)
     {
-        size_t len = (aVendorName == NULL) ? 0 : strnlen(aVendorName, sizeof(mVendorName));
+        uint16_t len = (aVendorName == NULL) ? 0 : StringLength(aVendorName, sizeof(mVendorName));
 
         SetLength(static_cast<uint8_t>(len));
 
@@ -1995,7 +1995,7 @@ public:
      */
     void SetVendorModel(const char *aVendorModel)
     {
-        size_t len = (aVendorModel == NULL) ? 0 : strnlen(aVendorModel, sizeof(mVendorModel));
+        uint16_t len = (aVendorModel == NULL) ? 0 : StringLength(aVendorModel, sizeof(mVendorModel));
 
         SetLength(static_cast<uint8_t>(len));
 
@@ -2059,7 +2059,7 @@ public:
      */
     void SetVendorSwVersion(const char *aVendorSwVersion)
     {
-        size_t len = (aVendorSwVersion == NULL) ? 0 : strnlen(aVendorSwVersion, sizeof(mVendorSwVersion));
+        uint16_t len = (aVendorSwVersion == NULL) ? 0 : StringLength(aVendorSwVersion, sizeof(mVendorSwVersion));
 
         SetLength(static_cast<uint8_t>(len));
 
@@ -2123,7 +2123,7 @@ public:
      */
     void SetVendorData(const char *aVendorData)
     {
-        size_t len = (aVendorData == NULL) ? 0 : strnlen(aVendorData, sizeof(mVendorData));
+        uint16_t len = (aVendorData == NULL) ? 0 : StringLength(aVendorData, sizeof(mVendorData));
 
         SetLength(static_cast<uint8_t>(len));
 
