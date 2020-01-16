@@ -375,13 +375,13 @@ otError Mle::Restore(void)
 
     SuccessOrExit(error = Get<Settings>().ReadNetworkInfo(networkInfo));
 
-    // force re-attach when version mismatch.
-    VerifyOrExit(networkInfo.mVersion == kThreadVersion);
-
     Get<KeyManager>().SetCurrentKeySequence(networkInfo.mKeySequence);
     Get<KeyManager>().SetMleFrameCounter(networkInfo.mMleFrameCounter);
     Get<KeyManager>().SetMacFrameCounter(networkInfo.mMacFrameCounter);
     mDeviceMode.Set(networkInfo.mDeviceMode);
+
+    // force re-attach when version mismatch.
+    VerifyOrExit(networkInfo.mVersion == kThreadVersion);
 
     switch (networkInfo.mRole)
     {

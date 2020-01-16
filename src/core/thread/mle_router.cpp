@@ -2418,7 +2418,6 @@ otError MleRouter::HandleChildUpdateResponse(const Message &         aMessage,
 {
     otError                 error    = OT_ERROR_NONE;
     const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
-    VersionTlv              version;
     SourceAddressTlv        sourceAddress;
     TimeoutTlv              timeout;
     ResponseTlv             response;
@@ -2450,13 +2449,6 @@ otError MleRouter::HandleChildUpdateResponse(const Message &         aMessage,
     }
 
     LogMleMessage("Receive Child Update Response from child", aMessageInfo.GetPeerAddr(), child->GetRloc16());
-
-    // Version
-    if (Tlv::GetTlv(aMessage, Tlv::kVersion, sizeof(version), version) == OT_ERROR_NONE)
-    {
-        VerifyOrExit(version.IsValid(), error = OT_ERROR_PARSE);
-        child->SetVersion(static_cast<uint8_t>(version.GetVersion()));
-    }
 
     // Source Address
     if (Tlv::GetTlv(aMessage, Tlv::kSourceAddress, sizeof(sourceAddress), sourceAddress) == OT_ERROR_NONE)

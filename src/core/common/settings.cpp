@@ -52,10 +52,11 @@ namespace ot {
 
 void SettingsBase::LogNetworkInfo(const char *aAction, const NetworkInfo &aNetworkInfo) const
 {
-    otLogInfoCore("Non-volatile: %s NetworkInfo {rloc:0x%04x, extaddr:%s, role:%s, mode:0x%02x, keyseq:0x%x, ...",
-                  aAction, aNetworkInfo.mRloc16, aNetworkInfo.mExtAddress.ToString().AsCString(),
-                  Mle::Mle::RoleToString(static_cast<otDeviceRole>(aNetworkInfo.mRole)), aNetworkInfo.mDeviceMode,
-                  aNetworkInfo.mKeySequence);
+    otLogInfoCore(
+        "Non-volatile: %s NetworkInfo {rloc:0x%04x, extaddr:%s, role:%s, mode:0x%02x, version: %hu, keyseq:0x%x, ...",
+        aAction, aNetworkInfo.mRloc16, aNetworkInfo.mExtAddress.ToString().AsCString(),
+        Mle::Mle::RoleToString(static_cast<otDeviceRole>(aNetworkInfo.mRole)), aNetworkInfo.mDeviceMode,
+        aNetworkInfo.mVersion, aNetworkInfo.mKeySequence);
 
     otLogInfoCore("Non-volatile: ... pid:0x%x, mlecntr:0x%x, maccntr:0x%x, mliid:%02x%02x%02x%02x%02x%02x%02x%02x}",
                   aNetworkInfo.mPreviousPartitionId, aNetworkInfo.mMleFrameCounter, aNetworkInfo.mMacFrameCounter,
@@ -71,8 +72,8 @@ void SettingsBase::LogParentInfo(const char *aAction, const ParentInfo &aParentI
 
 void SettingsBase::LogChildInfo(const char *aAction, const ChildInfo &aChildInfo) const
 {
-    otLogInfoCore("Non-volatile: %s ChildInfo {rloc:0x%04x, extaddr:%s, timeout:%u, mode:0x%02x, version:0x%hu}",
-                  aAction, aChildInfo.mRloc16, aChildInfo.mExtAddress.ToString().AsCString(), aChildInfo.mTimeout,
+    otLogInfoCore("Non-volatile: %s ChildInfo {rloc:0x%04x, extaddr:%s, timeout:%u, mode:0x%02x, version:%hu}", aAction,
+                  aChildInfo.mRloc16, aChildInfo.mExtAddress.ToString().AsCString(), aChildInfo.mTimeout,
                   aChildInfo.mMode, aChildInfo.mVersion);
 }
 
