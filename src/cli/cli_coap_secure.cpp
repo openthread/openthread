@@ -123,7 +123,7 @@ otError CoapSecure::ProcessResource(int argc, char *argv[])
         mResource.mContext = this;
         mResource.mHandler = &CoapSecure::HandleRequest;
 
-        strlcpy(mUriPath, argv[1], kMaxUriLength);
+        strncpy(mUriPath, argv[1], sizeof(mUriPath) - 1);
         SuccessOrExit(error = otCoapSecureAddResource(mInterpreter.mInstance, &mResource));
     }
     else
@@ -247,7 +247,7 @@ otError CoapSecure::ProcessRequest(int argc, char *argv[])
     // CoAP-URI
     if (argc > (2 - indexShifter))
     {
-        strlcpy(coapUri, argv[2 - indexShifter], kMaxUriLength);
+        strncpy(coapUri, argv[2 - indexShifter], sizeof(coapUri) - 1);
     }
 
     // CoAP-Type
