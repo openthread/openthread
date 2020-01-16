@@ -28,26 +28,43 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-if OPENTHREAD_EXAMPLES_NRF52811
+
 lib_LIBRARIES                                                                                                           = \
-    libnordicsemi-nrf52811-sdk.a                                                                                          \
+    $(NULL)
+
+# Build radio drivers when building platform libraries.
+if OPENTHREAD_PLATFORM_NRF52811
+lib_LIBRARIES                                                                                                          += \
     libnordicsemi-nrf52811-radio-driver.a                                                                                 \
     $(NULL)
 endif
-
-if OPENTHREAD_EXAMPLES_NRF52840
-lib_LIBRARIES                                                                                                           = \
-    libnordicsemi-nrf52840-sdk.a                                                                                          \
+if OPENTHREAD_PLATFORM_NRF52840
+lib_LIBRARIES                                                                                                          += \
     libnordicsemi-nrf52840-radio-driver.a                                                                                 \
     libnordicsemi-nrf52840-radio-driver-softdevice.a                                                                      \
     $(NULL)
 endif
-
-if OPENTHREAD_EXAMPLES_NRF52833
-lib_LIBRARIES                                                                                                           = \
-    libnordicsemi-nrf52833-sdk.a                                                                                          \
+if OPENTHREAD_PLATFORM_NRF52833
+lib_LIBRARIES                                                                                                          += \
     libnordicsemi-nrf52833-radio-driver.a                                                                                 \
     libnordicsemi-nrf52833-radio-driver-softdevice.a                                                                      \
+    $(NULL)
+endif
+
+# Only build the SDK library when building the example applications.
+if OPENTHREAD_EXAMPLES_NRF52811
+lib_LIBRARIES                                                                                                          += \
+    libnordicsemi-nrf52811-sdk.a                                                                                          \
+    $(NULL)
+endif
+if OPENTHREAD_EXAMPLES_NRF52840
+lib_LIBRARIES                                                                                                          += \
+    libnordicsemi-nrf52840-sdk.a                                                                                          \
+    $(NULL)
+endif
+if OPENTHREAD_EXAMPLES_NRF52833
+lib_LIBRARIES                                                                                                          += \
+    libnordicsemi-nrf52833-sdk.a                                                                                          \
     $(NULL)
 endif
 
@@ -65,11 +82,6 @@ COMMONCPPFLAGS                                                                  
     -I$(srcdir)                                                                                                           \
     -I$(top_srcdir)/include                                                                                               \
     -I$(top_srcdir)/src/core                                                                                              \
-    -I$(top_srcdir)/third_party/NordicSemiconductor                                                                       \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/cmsis                                                                 \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/dependencies                                                          \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/clock                                                         \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/common                                                        \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio                                                         \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/fem                                                     \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/fem/three_pin_gpio                                      \
@@ -79,6 +91,23 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch/raal/softdevice                                    \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/mac_features                                            \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/mac_features/ack_generator                              \
+    $(NULL)
+
+# Only reference the SDK header files included in third_party/NordicSemiconductor
+# when building the example applications.
+#
+# When building just the platform libraries, the caller of configure is expected
+# to provide the correct -I arguments to locate the necessary header files in an
+# external copy of the Nordic nRF5 SDK.
+#
+# Note that an exception is made for the 802.15.4 radio driver, which is always built
+# using the sources in third_party/NordicSemiconductor/drivers/radio.
+if OPENTHREAD_ENABLE_EXAMPLES
+COMMONCPPFLAGS                                                                                                         += \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/cmsis                                                                 \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/dependencies                                                          \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/clock                                                         \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/common                                                        \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/power                                                         \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/systick                                                       \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/usbd                                                          \
@@ -101,6 +130,7 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers                                               \
     -I$(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf52                                         \
     $(NULL)
+endif
 
 NRF52833_CPPFLAGS                                                                                                       = \
     -DNRF52833_XXAA                                                                                                       \
