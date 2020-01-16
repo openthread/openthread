@@ -254,7 +254,7 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64, const char *aPskd
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
 
-    VerifyOrExit(strnlen(aPskd, Dtls::kPskMaxLength + 1) <= Dtls::kPskMaxLength, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(StringLength(aPskd, Dtls::kPskMaxLength + 1) <= Dtls::kPskMaxLength, error = OT_ERROR_INVALID_ARGS);
 
     RemoveJoiner(aEui64, 0); // remove immediately
 
@@ -387,7 +387,7 @@ otError Commissioner::SetProvisioningUrl(const char *aProvisioningUrl)
         ExitNow();
     }
 
-    len = static_cast<uint8_t>(strnlen(aProvisioningUrl, sizeof(mProvisioningUrl)));
+    len = static_cast<uint8_t>(StringLength(aProvisioningUrl, sizeof(mProvisioningUrl)));
 
     VerifyOrExit(len < sizeof(mProvisioningUrl), error = OT_ERROR_INVALID_ARGS);
 
@@ -953,7 +953,7 @@ void Commissioner::HandleJoinerFinalize(Coap::Message &aMessage, const Ip6::Mess
 
     if (Tlv::GetTlv(aMessage, Tlv::kProvisioningUrl, sizeof(provisioningUrl), provisioningUrl) == OT_ERROR_NONE)
     {
-        uint8_t len = static_cast<uint8_t>(strnlen(mProvisioningUrl, sizeof(mProvisioningUrl)));
+        uint8_t len = static_cast<uint8_t>(StringLength(mProvisioningUrl, sizeof(mProvisioningUrl)));
 
         if ((provisioningUrl.GetProvisioningUrlLength() != len) ||
             !memcmp(provisioningUrl.GetProvisioningUrl(), mProvisioningUrl, len))
@@ -1110,8 +1110,8 @@ otError Commissioner::GeneratePskc(const char *              aPassPhrase,
     uint16_t   passphraseLen;
     uint8_t    networkNameLen;
 
-    passphraseLen  = static_cast<uint16_t>(strnlen(aPassPhrase, OT_COMMISSIONING_PASSPHRASE_MAX_SIZE + 1));
-    networkNameLen = static_cast<uint8_t>(strnlen(aNetworkName, OT_NETWORK_NAME_MAX_SIZE + 1));
+    passphraseLen  = static_cast<uint16_t>(StringLength(aPassPhrase, OT_COMMISSIONING_PASSPHRASE_MAX_SIZE + 1));
+    networkNameLen = static_cast<uint8_t>(StringLength(aNetworkName, OT_NETWORK_NAME_MAX_SIZE + 1));
 
     VerifyOrExit((passphraseLen >= OT_COMMISSIONING_PASSPHRASE_MIN_SIZE) &&
                      (passphraseLen <= OT_COMMISSIONING_PASSPHRASE_MAX_SIZE) &&

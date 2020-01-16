@@ -49,17 +49,6 @@
 
 /* Prototypes for our missing function replacements */
 
-/* See: https://www.freebsd.org/cgi/man.cgi?query=strnlen */
-WRAP_EXTERN_C size_t missing_strnlen(const char *s, size_t maxlen);
-
 #undef WRAP_EXTERN_C
-
-#ifndef HAVE_STRNLEN
-#define HAVE_STRNLEN 0
-#endif
-
-#if (!HAVE_STRNLEN)
-#define strnlen(S, N) missing_strnlen(S, N)
-#endif
 
 #endif // WRAP_STRING_H

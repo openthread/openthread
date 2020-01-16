@@ -147,6 +147,20 @@ static int spinel_errno_workaround_;
 #define require(c, l) require_action(c, l, {})
 #endif
 
+#ifndef strnlen
+size_t strnlen(const char *s, size_t maxlen)
+{
+    size_t ret;
+
+    for (ret = 0; (ret < maxlen) && (s[ret] != 0); ret++)
+    {
+        // Empty loop.
+    }
+
+    return ret;
+}
+#endif
+
 typedef struct
 {
     va_list obj;

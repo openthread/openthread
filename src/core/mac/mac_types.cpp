@@ -123,7 +123,7 @@ uint8_t NetworkName::Data::CopyTo(char *aBuffer, uint8_t aMaxSize) const
 
 NetworkName::Data NetworkName::GetAsData(void) const
 {
-    uint8_t len = static_cast<uint8_t>(strnlen(m8, kMaxSize + 1));
+    uint8_t len = static_cast<uint8_t>(StringLength(m8, kMaxSize + 1));
 
     return Data(m8, len);
 }
@@ -131,7 +131,7 @@ NetworkName::Data NetworkName::GetAsData(void) const
 otError NetworkName::Set(const Data &aNameData)
 {
     otError error  = OT_ERROR_NONE;
-    uint8_t newLen = static_cast<uint8_t>(strnlen(aNameData.GetBuffer(), aNameData.GetLength()));
+    uint8_t newLen = static_cast<uint8_t>(StringLength(aNameData.GetBuffer(), aNameData.GetLength()));
 
     VerifyOrExit(newLen <= kMaxSize, error = OT_ERROR_INVALID_ARGS);
 

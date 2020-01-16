@@ -495,7 +495,7 @@ void Diags::ProcessLine(const char *aString, char *aOutput, size_t aOutputMaxLen
     char *  argVector[kMaxArgs];
     uint8_t argCount = 0;
 
-    VerifyOrExit(strnlen(aString, kMaxCommandBuffer) < kMaxCommandBuffer, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(StringLength(aString, kMaxCommandBuffer) < kMaxCommandBuffer, error = OT_ERROR_NO_BUFS);
 
     strcpy(buffer, aString);
     error = ot::Utils::CmdLineParser::ParseCmd(buffer, argCount, argVector, kMaxArgs);
