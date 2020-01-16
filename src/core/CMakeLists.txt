@@ -178,7 +178,6 @@ set(COMMON_SOURCES
     utils/child_supervision.cpp
     utils/heap.cpp
     utils/jam_detector.cpp
-    utils/missing_strlcat.c
     utils/missing_strlcpy.c
     utils/missing_strnlen.c
     utils/parse_cmdline.cpp

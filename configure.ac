@@ -173,7 +173,6 @@ then
     # Here we guess conservative values for tests that require link checks
     # to test for these features. This will prevent these checks from
     # being performed later in the configuration process.
-    ac_cv_func_strlcat=${ac_cv_func_strlcat-no}
     ac_cv_func_strlcpy=${ac_cv_func_strlcpy-no}
     ac_cv_func_strnlen=${ac_cv_func_strnlen-no}
 else
@@ -952,7 +951,6 @@ AC_CHECK_HEADERS([string.h])
 # Missing Functions
 #
 AC_CHECK_FUNC([strlcpy], [AC_DEFINE([HAVE_STRLCPY], [1], [Define if strlcpy exists.])])
-AC_CHECK_FUNC([strlcat], [AC_DEFINE([HAVE_STRLCAT], [1], [Define if strlcat exists.])])
 AC_CHECK_FUNC([strnlen], [AC_DEFINE([HAVE_STRNLEN], [1], [Define if strnlen exists.])])
 
 #
