@@ -45,38 +45,29 @@ DIST_SUBDIRS                            = \
 
 SUBDIRS =
 
-if OPENTHREAD_EXAMPLES_EFR32MG12
+if OPENTHREAD_PLATFORM_EFR32MG12
 SUBDIRS                                += \
     silabs                                \
     jlink                                 \
     $(NULL)
 endif
 
-if OPENTHREAD_EXAMPLES_EFR32MG21
+if OPENTHREAD_PLATFORM_EFR32MG21
 SUBDIRS                                += \
     silabs                                \
     jlink                                 \
     $(NULL)
 endif
 
-if OPENTHREAD_EXAMPLES_NRF52840
+if OPENTHREAD_PLATFORM_NRF528XX
 SUBDIRS                                += \
-    jlink                                 \
     NordicSemiconductor                   \
     $(NULL)
 endif
 
-if OPENTHREAD_EXAMPLES_NRF52833
+if OPENTHREAD_EXAMPLES_NRF528XX
 SUBDIRS                                += \
     jlink                                 \
-    NordicSemiconductor                   \
-    $(NULL)
-endif
-
-if OPENTHREAD_EXAMPLES_NRF52811
-SUBDIRS                                += \
-    jlink                                 \
-    NordicSemiconductor                   \
     $(NULL)
 endif
 
