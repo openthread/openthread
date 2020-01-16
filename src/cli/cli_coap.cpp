@@ -107,7 +107,7 @@ otError Coap::ProcessResource(int argc, char *argv[])
         mResource.mContext = this;
         mResource.mHandler = &Coap::HandleRequest;
 
-        strlcpy(mUriPath, argv[1], kMaxUriLength);
+        strncpy(mUriPath, argv[1], sizeof(mUriPath) - 1);
         SuccessOrExit(error = otCoapAddResource(mInterpreter.mInstance, &mResource));
     }
     else
@@ -188,7 +188,7 @@ otError Coap::ProcessRequest(int argc, char *argv[])
     if (argc > 2)
     {
         VerifyOrExit(strlen(argv[2]) < kMaxUriLength, error = OT_ERROR_INVALID_ARGS);
-        strlcpy(coapUri, argv[2], kMaxUriLength);
+        strncpy(coapUri, argv[2], sizeof(coapUri) - 1);
     }
     else
     {

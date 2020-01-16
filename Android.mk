@@ -227,7 +227,6 @@ LOCAL_SRC_FILES                                          := \
     src/core/utils/child_supervision.cpp                    \
     src/core/utils/heap.cpp                                 \
     src/core/utils/jam_detector.cpp                         \
-    src/core/utils/missing_strlcpy.c                        \
     src/core/utils/missing_strnlen.c                        \
     src/core/utils/parse_cmdline.cpp                        \
     src/core/utils/slaac_address.cpp                        \

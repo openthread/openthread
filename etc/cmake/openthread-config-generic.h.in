@@ -26,8 +26,5 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Define if strlcpy exists. */
-#cmakedefine01 HAVE_STRLCPY
-
 /* Define if strnlen exists. */
 #cmakedefine01 HAVE_STRNLEN

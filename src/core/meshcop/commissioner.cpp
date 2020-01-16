@@ -275,7 +275,7 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64, const char *aPskd
             joiner->mAny = true;
         }
 
-        (void)strlcpy(joiner->mPsk, aPskd, sizeof(joiner->mPsk));
+        strncpy(joiner->mPsk, aPskd, sizeof(joiner->mPsk) - 1);
         joiner->mValid          = true;
         joiner->mExpirationTime = TimerMilli::GetNow() + Time::SecToMsec(aTimeout);
 
@@ -308,7 +308,7 @@ otError Commissioner::GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoin
 
         aJoiner.mAny   = mJoiners[index].mAny;
         aJoiner.mEui64 = mJoiners[index].mEui64;
-        strlcpy(aJoiner.mPsk, mJoiners[index].mPsk, sizeof(aJoiner.mPsk));
+        strncpy(aJoiner.mPsk, mJoiners[index].mPsk, sizeof(aJoiner.mPsk) - 1);
         aJoiner.mExpirationTime = mJoiners[index].mExpirationTime - TimerMilli::GetNow();
         aIterator               = static_cast<uint16_t>(index) + 1;
         ExitNow();
