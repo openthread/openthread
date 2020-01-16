@@ -405,6 +405,18 @@ exit:
     return;
 }
 
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+otError Mle::AppendCslAccuracy(Message &aMessage)
+{
+    CslAccuracyTlv cslAccuracy;
+
+    cslAccuracy.Init();
+    cslAccuracy.SetAccuracy(static_cast<uint8_t>(otPlatTimeGetXtalAccuracy()));
+
+    return aMessage.Append(&cslAccuracy, sizeof(CslAccuracyTlv));
+}
+#endif // OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+
 otError MleRouter::SendAdvertisement(void)
 {
     otError      error = OT_ERROR_NONE;
@@ -2371,6 +2383,31 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
         }
     }
 
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    // CSL
+    if (child->IsCslSynchronized())
+    {
+        CslChannelTlv cslChannel;
+        CslTimeoutTlv cslTimeout;
+
+        if (Tlv::GetTlv(aMessage, Tlv::kCslTimeout, sizeof(cslTimeout), cslTimeout) == OT_ERROR_NONE)
+        {
+            child->SetCslSyncTimeout(cslTimeout.GetTimeout());
+        }
+
+        if (Tlv::GetTlv(aMessage, Tlv::kCslChannel, sizeof(cslChannel), cslChannel) == OT_ERROR_NONE)
+        {
+            child->SetCslChannel(static_cast<uint8_t>(cslChannel.GetChannel()));
+        }
+        else
+        {
+            child->SetCslChannel(Get<Mac::Mac>().GetPanChannel());
+        }
+
+        tlvs[tlvslength++] = Tlv::kSourceAddress;
+    }
+#endif // OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+
     child->SetLastHeard(TimerMilli::GetNow());
 
     if (oldMode != child->GetDeviceMode())
@@ -3087,6 +3124,12 @@ void MleRouter::SendChildUpdateResponse(Child *                 aChild,
         case Tlv::kLinkFrameCounter:
             SuccessOrExit(error = AppendLinkFrameCounter(*message));
             break;
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+        case Tlv::kCslAccuracy:
+            SuccessOrExit(error = AppendCslAccuracy(*message));
+            break;
+#endif
         }
     }
 

@@ -106,6 +106,9 @@ public:
         kActiveDataset       = 24, ///< Active Operational Dataset TLV
         kPendingDataset      = 25, ///< Pending Operational Dataset TLV
         kDiscovery           = 26, ///< Thread Discovery TLV
+        kCslChannel          = 80, ///< CSL Channel TLV
+        kCslTimeout          = 85, ///< CSL Timeout TLV
+        kCslAccuracy         = 86, ///< CSL Accuracy TLV
 
         /**
          * Applicable/Required only when time synchronization service
@@ -2064,6 +2067,166 @@ public:
      */
     bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 } OT_TOOL_PACKED_END;
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+/**
+ * This class implements CSL Channel TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class CslChannelTlv : public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(kCslChannel);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the Channel Page value.
+     *
+     * @returns The Channel Page value.
+     *
+     */
+    uint8_t GetChannelPage(void) const { return mChannelPage; }
+
+    /**
+     * This method sets the Channel Page value.
+     *
+     * @param[in]  aChannelPage  The Channel Page value.
+     *
+     */
+    void SetChannelPage(uint8_t aChannelPage) { mChannelPage = aChannelPage; }
+
+    /**
+     * This method returns the Channel value.
+     *
+     * @returns The Channel value.
+     *
+     */
+    uint16_t GetChannel(void) const { return HostSwap16(mChannel); }
+
+    /**
+     * This method sets the Channel value.
+     *
+     * @param[in]  aChannel  The Channel value.
+     *
+     */
+    void SetChannel(uint16_t aChannel) { mChannel = HostSwap16(aChannel); }
+
+private:
+    uint8_t  mChannelPage;
+    uint16_t mChannel;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements CSL Accuracy TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class CslAccuracyTlv : public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(kCslAccuracy);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the Accuracy value.
+     *
+     * @returns The Accuracy value.
+     *
+     */
+    uint8_t GetAccuracy(void) const { return mAccuracy; }
+
+    /**
+     * This method sets the Accuracy value.
+     *
+     * @param[in]  aAccuracy  The Accuracy value.
+     *
+     */
+    void SetAccuracy(uint8_t aAccuracy) { mAccuracy = aAccuracy; }
+
+private:
+    uint8_t mAccuracy;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements CSL Timeout TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class CslTimeoutTlv : public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(kCslTimeout);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the Timeout value.
+     *
+     * @returns The Timeout value.
+     *
+     */
+    uint32_t GetTimeout(void) const { return HostSwap32(mTimeout); }
+
+    /**
+     * This method sets the Timeout value.
+     *
+     * @param[in]  aTimeout  The Timeout value.
+     *
+     */
+    void SetTimeout(uint32_t aTimeout) { mTimeout = HostSwap32(aTimeout); }
+
+private:
+    uint32_t mTimeout;
+} OT_TOOL_PACKED_END;
+#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
 
 /**
  * @}

@@ -396,6 +396,19 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 #endif
     }
 
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    if (mRxOnWhenIdle)
+    {
+        // Shut down CSL when the device's role is CSL receiver and its mode is Rx-On
+        StopCsl();
+    }
+    else
+    {
+        // Try start CSL receiver.
+        StartCsl();
+    }
+#endif
+
     mSubMac.SetRxOnWhenBackoff(mRxOnWhenIdle || mPromiscuous);
     UpdateIdleMode();
 
@@ -416,6 +429,19 @@ otError Mac::SetPanChannel(uint8_t aChannel)
     VerifyOrExit(!mUsingTemporaryChannel);
 
     mRadioChannel = mPanChannel;
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    if (mRxOnWhenIdle)
+    {
+        // Shut down CSL when the device's role is CSL receiver and its mode is Rx-On
+        StopCsl();
+    }
+    else
+    {
+        // Try start CSL receiver.
+        StartCsl();
+    }
+#endif
 
     UpdateIdleMode();
 
