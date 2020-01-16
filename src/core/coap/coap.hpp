@@ -65,24 +65,32 @@ namespace Coap {
  */
 enum
 {
-    kAckTimeout                 = OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT,
-    kAckRandomFactorNumerator   = OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_NUMERATOR,
-    kAckRandomFactorDenominator = OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_DENOMINATOR,
-    kMaxRetransmit              = OPENTHREAD_CONFIG_COAP_MAX_RETRANSMIT,
-    kNStart                     = 1,
-    kDefaultLeisure             = 5,
-    kProbingRate                = 1,
+    kDefaultAckTimeout                 = OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT_MILLIS,
+    kDefaultAckRandomFactorNumerator   = OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_NUMERATOR,
+    kDefaultAckRandomFactorDenominator = OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_DENOMINATOR,
+    kDefaultMaxRetransmit              = OPENTHREAD_CONFIG_COAP_MAX_RETRANSMIT,
+    kDefaultNStart                     = 1,
+    kDefaultLeisure                    = 5,
+    kDefaultProbingRate                = 1,
 
     // Note that 2 << (kMaxRetransmit - 1) is equal to kMaxRetransmit power of 2
-    kMaxTransmitSpan =
-        kAckTimeout * ((2 << (kMaxRetransmit - 1)) - 1) * kAckRandomFactorNumerator / kAckRandomFactorDenominator,
-    kMaxTransmitWait =
-        kAckTimeout * ((2 << kMaxRetransmit) - 1) * kAckRandomFactorNumerator / kAckRandomFactorDenominator,
-    kMaxLatency       = 100,
-    kProcessingDelay  = kAckTimeout,
-    kMaxRtt           = 2 * kMaxLatency + kProcessingDelay,
-    kExchangeLifetime = kMaxTransmitSpan + 2 * (kMaxLatency) + kProcessingDelay,
-    kNonLifetime      = kMaxTransmitSpan + kMaxLatency
+    kDefaultMaxTransmitSpan = kDefaultAckTimeout * ((2 << (kDefaultMaxRetransmit - 1)) - 1) *
+                              kDefaultAckRandomFactorNumerator / kDefaultAckRandomFactorDenominator,
+    kDefaultMaxTransmitWait = kDefaultAckTimeout * ((2 << kDefaultMaxRetransmit) - 1) *
+                              kDefaultAckRandomFactorNumerator / kDefaultAckRandomFactorDenominator,
+    kDefaultMaxLatency       = 100,
+    kDefaultProcessingDelay  = kDefaultAckTimeout,
+    kDefaultMaxRtt           = 2 * kDefaultMaxLatency + kDefaultProcessingDelay,
+    kDefaultExchangeLifetime = kDefaultMaxTransmitSpan + 2 * (kDefaultMaxLatency) + kDefaultProcessingDelay,
+    kDefaultNonLifetime      = kDefaultMaxTransmitSpan + kDefaultMaxLatency
+};
+
+class CoapTransmissionParameters : public otCoapTransmissionParameters
+{
+public:
+    uint32_t CalculateInitialRetransmissionTimeout(void) const;
+    uint32_t CalculateExchangeLifetime(void) const;
+    uint32_t CalculateMaxTransmitWait(void) const;
 };
 
 /**
@@ -104,23 +112,25 @@ public:
         , mResponseContext(NULL)
         , mNextTimerShot(0)
         , mRetransmissionTimeout(0)
-        , mRetransmissionCount(0)
+        , mRetransmissionsRemaining(0)
         , mAcknowledged(false)
         , mConfirmable(false){};
 
     /**
      * This constructor initializes the object with specific values.
      *
-     * @param[in]  aConfirmable  Information if the request is confirmable or not.
-     * @param[in]  aMessageInfo  Addressing information.
-     * @param[in]  aHandler      Pointer to a handler function for the response.
-     * @param[in]  aContext      Context for the handler function.
+     * @param[in]  aConfirmable             Information if the request is confirmable or not.
+     * @param[in]  aMessageInfo             Addressing information.
+     * @param[in]  aHandler                 Pointer to a handler function for the response.
+     * @param[in]  aContext                 Context for the handler function.
+     * @param[in]  aTransmissionParameters  Transmission parameters.
      *
      */
-    CoapMetadata(bool                    aConfirmable,
-                 const Ip6::MessageInfo &aMessageInfo,
-                 otCoapResponseHandler   aHandler,
-                 void *                  aContext);
+    CoapMetadata(bool                              aConfirmable,
+                 const Ip6::MessageInfo &          aMessageInfo,
+                 otCoapResponseHandler             aHandler,
+                 void *                            aContext,
+                 const CoapTransmissionParameters &aTransmissionParameters);
 
     /**
      * This method appends request data to the message.
@@ -160,16 +170,16 @@ public:
     }
 
 private:
-    Ip6::Address          mSourceAddress;         ///< IPv6 address of the message source.
-    Ip6::Address          mDestinationAddress;    ///< IPv6 address of the message destination.
-    uint16_t              mDestinationPort;       ///< UDP port of the message destination.
-    otCoapResponseHandler mResponseHandler;       ///< A function pointer that is called on response reception.
-    void *                mResponseContext;       ///< A pointer to arbitrary context information.
-    TimeMilli             mNextTimerShot;         ///< Time when the timer should shoot for this message.
-    uint32_t              mRetransmissionTimeout; ///< Delay that is applied to next retransmission.
-    uint8_t               mRetransmissionCount;   ///< Number of retransmissions.
-    bool                  mAcknowledged : 1;      ///< Information that request was acknowledged.
-    bool                  mConfirmable : 1;       ///< Information that message is confirmable.
+    Ip6::Address          mSourceAddress;            ///< IPv6 address of the message source.
+    Ip6::Address          mDestinationAddress;       ///< IPv6 address of the message destination.
+    uint16_t              mDestinationPort;          ///< UDP port of the message destination.
+    otCoapResponseHandler mResponseHandler;          ///< A function pointer that is called on response reception.
+    void *                mResponseContext;          ///< A pointer to arbitrary context information.
+    TimeMilli             mNextTimerShot;            ///< Time when the timer should shoot for this message.
+    uint32_t              mRetransmissionTimeout;    ///< Delay that is applied to next retransmission.
+    uint8_t               mRetransmissionsRemaining; ///< Number of retransmissions remaining.
+    bool                  mAcknowledged : 1;         ///< Information that request was acknowledged.
+    bool                  mConfirmable : 1;          ///< Information that message is confirmable.
 };
 
 /**
@@ -241,8 +251,8 @@ public:
      * @param[in]  aMessageInfo  The message info containing source endpoint identification.
      *
      */
-    explicit EnqueuedResponseHeader(const Ip6::MessageInfo &aMessageInfo)
-        : mDequeueTime(TimerMilli::GetNow() + Time::SecToMsec(kExchangeLifetime))
+    explicit EnqueuedResponseHeader(TimeMilli aDequeueTime, const Ip6::MessageInfo &aMessageInfo)
+        : mDequeueTime(aDequeueTime)
         , mMessageInfo(aMessageInfo)
     {
     }
@@ -314,11 +324,14 @@ public:
      *
      * The CoAP response is copied before it is added to the cache.
      *
-     * @param[in]  aMessage      The CoAP response to add to the cache.
-     * @param[in]  aMessageInfo  The message info corresponding to @p aMessage.
+     * @param[in]  aMessage                 The CoAP response to add to the cache.
+     * @param[in]  aMessageInfo             The message info corresponding to @p aMessage.
+     * @param[in]  aTransmissionParameters  Transmission parameters.
      *
      */
-    void EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void EnqueueResponse(Message &                         aMessage,
+                         const Ip6::MessageInfo &          aMessageInfo,
+                         const CoapTransmissionParameters &aTransmissionParameters);
 
     /**
      * This method removes the oldest response from the cache.
@@ -475,19 +488,21 @@ public:
      * If no response is expected, these arguments should be NULL pointers.
      * If Message Id was not set in the header (equal to 0), this function will assign unique Message Id to the message.
      *
-     * @param[in]  aMessage      A reference to the message to send.
-     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
-     * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
-     * @param[in]  aContext      A pointer to arbitrary context information.
+     * @param[in]  aMessage                 A reference to the message to send.
+     * @param[in]  aMessageInfo             A reference to the message info associated with @p aMessage.
+     * @param[in]  aHandler                 A function pointer that shall be called on response reception or time-out.
+     * @param[in]  aContext                 A pointer to arbitrary context information.
+     * @param[in]  aTransmissionParameters  A pointer to transmission parameters for this message. Use NULL for default.
      *
      * @retval OT_ERROR_NONE     Successfully sent CoAP message.
      * @retval OT_ERROR_NO_BUFS  Failed to allocate retransmission data.
      *
      */
-    otError SendMessage(Message &               aMessage,
-                        const Ip6::MessageInfo &aMessageInfo,
-                        otCoapResponseHandler   aHandler = NULL,
-                        void *                  aContext = NULL);
+    otError SendMessage(Message &                           aMessage,
+                        const Ip6::MessageInfo &            aMessageInfo,
+                        otCoapResponseHandler               aHandler                = NULL,
+                        void *                              aContext                = NULL,
+                        const otCoapTransmissionParameters *aTransmissionParameters = NULL);
 
     /**
      * This method sends a CoAP reset message.
@@ -681,6 +696,8 @@ private:
     void *               mDefaultHandlerContext;
 
     Sender mSender;
+
+    static const otCoapTransmissionParameters mDefaultTransmissionParameters;
 };
 
 /**

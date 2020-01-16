@@ -85,6 +85,7 @@ private:
     void PrintPayload(otMessage *aMessage) const;
 
     otError ProcessHelp(int argc, char *argv[]);
+    otError ProcessParameters(int argc, char *argv[]);
     otError ProcessRequest(int argc, char *argv[]);
     otError ProcessResource(int argc, char *argv[]);
     otError ProcessStart(int argc, char *argv[]);
@@ -96,8 +97,38 @@ private:
     static void HandleResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
     void        HandleResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
 
+    const otCoapTransmissionParameters *GetRequestTransmissionParameters(void)
+    {
+        if (mUseDefaultRequestTransmissionParameters)
+        {
+            return NULL;
+        }
+        else
+        {
+            return &mRequestTransmissionParameters;
+        }
+    }
+
+    const otCoapTransmissionParameters *GetResponseTransmissionParameters(void)
+    {
+        if (mUseDefaultResponseTransmissionParameters)
+        {
+            return NULL;
+        }
+        else
+        {
+            return &mResponseTransmissionParameters;
+        }
+    }
+
     static const Command sCommands[];
     Interpreter &        mInterpreter;
+
+    bool mUseDefaultRequestTransmissionParameters;
+    bool mUseDefaultResponseTransmissionParameters;
+
+    otCoapTransmissionParameters mRequestTransmissionParameters;
+    otCoapTransmissionParameters mResponseTransmissionParameters;
 
     otCoapResource mResource;
     char           mUriPath[kMaxUriLength];
