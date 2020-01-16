@@ -40,7 +40,7 @@
 #include "openthread-system.h"
 #include "platform-fem.h"
 #include "platform-nrf5.h"
-#include <drivers/clock/nrf_drv_clock.h>
+#include <nrf_drv_clock.h>
 #include <nrf.h>
 
 #include <openthread/config.h>

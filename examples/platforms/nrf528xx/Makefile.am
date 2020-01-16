@@ -31,15 +31,15 @@
 # created only once which leads to errors when auto-generated Makefile tries
 # to remove .Po files that were already removed
 
-if OPENTHREAD_EXAMPLES_NRF52811
+if OPENTHREAD_PLATFORM_NRF52811
 include nrf52811/Makefile.am
 endif
 
-if OPENTHREAD_EXAMPLES_NRF52833
+if OPENTHREAD_PLATFORM_NRF52833
 include nrf52833/Makefile.am
 endif
 
-if OPENTHREAD_EXAMPLES_NRF52840
+if OPENTHREAD_PLATFORM_NRF52840
 include nrf52840/Makefile.am
 endif
 

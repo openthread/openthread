@@ -37,7 +37,7 @@
 
 #include "nrf.h"
 #include "nrf_peripherals.h"
-#include "drivers/clock/nrf_drv_clock.h"
+#include "nrf_drv_clock.h"
 #include "hal/nrf_radio.h"
 #include "hal/nrf_uart.h"
 
