@@ -30,7 +30,6 @@
 
 #include "common/debug.hpp"
 #include "crypto/hmac_sha256.hpp"
-#include "utils/wrap_string.h"
 
 #include "test_platform.h"
 #include "test_util.h"

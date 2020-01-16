@@ -37,8 +37,7 @@
 #include "openthread-core-config.h"
 
 #include <stdint.h>
-
-#include "utils/wrap_string.h"
+#include <string.h>
 
 #include <openthread/link.h>
 

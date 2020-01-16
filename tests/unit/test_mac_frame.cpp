@@ -31,7 +31,6 @@
 #include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
 #include "radio/radio.hpp"
-#include "utils/wrap_string.h"
 
 #include "test_platform.h"
 #include "test_util.h"

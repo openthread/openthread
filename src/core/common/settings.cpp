@@ -35,8 +35,6 @@
 
 #include <openthread/platform/settings.h>
 
-#include "utils/wrap_string.h"
-
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/logging.hpp"

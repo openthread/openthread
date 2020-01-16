@@ -56,7 +56,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "utils/wrap_string.h"
+#include <string.h>
 
 #endif // SPINEL_PLATFORM_OPENTHREAD_H_

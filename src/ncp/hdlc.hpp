@@ -42,7 +42,6 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
-#include "utils/wrap_string.h"
 
 namespace ot {
 
