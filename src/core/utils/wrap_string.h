@@ -51,8 +51,6 @@
 
 /* See: https://www.freebsd.org/cgi/man.cgi?query=strlcpy */
 WRAP_EXTERN_C size_t missing_strlcpy(char *dst, const char *src, size_t dstsize);
-/* See: https://www.freebsd.org/cgi/man.cgi?query=strlcat */
-WRAP_EXTERN_C size_t missing_strlcat(char *dst, const char *src, size_t dstsize);
 /* See: https://www.freebsd.org/cgi/man.cgi?query=strnlen */
 WRAP_EXTERN_C size_t missing_strnlen(const char *s, size_t maxlen);
 
@@ -66,20 +64,12 @@ WRAP_EXTERN_C size_t missing_strnlen(const char *s, size_t maxlen);
 #define HAVE_STRLCPY 0
 #endif
 
-#ifndef HAVE_STRLCAT
-#define HAVE_STRLCAT 0
-#endif
-
 #if (!HAVE_STRNLEN)
 #define strnlen(S, N) missing_strnlen(S, N)
 #endif
 
 #if (!HAVE_STRLCPY)
 #define strlcpy(D, S, N) missing_strlcpy(D, S, N)
-#endif
-
-#if (!HAVE_STRLCAT)
-#define strlcat(D, S, N) missing_strlcat(D, S, N)
 #endif
 
 #endif // WRAP_STRING_H

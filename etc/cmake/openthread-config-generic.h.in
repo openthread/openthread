@@ -26,9 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Define if strlcat exists. */
-#cmakedefine01 HAVE_STRLCAT
-
 /* Define if strlcpy exists. */
 #cmakedefine01 HAVE_STRLCPY
 
