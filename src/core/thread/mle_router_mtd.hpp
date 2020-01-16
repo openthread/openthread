@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include "utils/wrap_string.h"
-
 #include "thread/child_table.hpp"
 #include "thread/mle.hpp"
 #include "thread/mle_tlvs.hpp"

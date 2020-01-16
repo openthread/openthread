@@ -39,7 +39,6 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
-#include "utils/wrap_string.h"
 
 #include <openthread/error.h>
 

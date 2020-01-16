@@ -27,7 +27,6 @@
  */
 
 #include "net/ip6_address.hpp"
-#include "utils/wrap_string.h"
 
 #include "test_util.h"
 

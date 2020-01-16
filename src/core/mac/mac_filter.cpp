@@ -33,8 +33,6 @@
 
 #include "mac_filter.hpp"
 
-#include "utils/wrap_string.h"
-
 #include "common/code_utils.hpp"
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE

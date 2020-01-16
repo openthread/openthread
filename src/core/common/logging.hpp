@@ -38,7 +38,6 @@
 
 #include <ctype.h>
 #include <stdio.h>
-#include "utils/wrap_string.h"
 
 #include <openthread/logging.h>
 #include <openthread/platform/logging.h>

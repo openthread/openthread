@@ -37,7 +37,6 @@
 #include <stdlib.h>
 #include "mac/channel_mask.hpp"
 #include "utils/parse_cmdline.hpp"
-#include "utils/wrap_string.h"
 
 #include <openthread/icmp6.h>
 #include <openthread/link.h>
@@ -83,6 +82,7 @@
 
 #include "cli_server.hpp"
 #include "common/encoding.hpp"
+#include "common/string.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;

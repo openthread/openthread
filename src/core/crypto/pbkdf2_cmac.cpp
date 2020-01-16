@@ -33,8 +33,9 @@
 
 #include "pbkdf2_cmac.h"
 
+#include <string.h>
+
 #include "common/debug.hpp"
-#include "utils/wrap_string.h"
 
 #include <mbedtls/cmac.h>
 

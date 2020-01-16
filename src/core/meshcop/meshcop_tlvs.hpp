@@ -37,8 +37,6 @@
 
 #include "openthread-core-config.h"
 
-#include "utils/wrap_string.h"
-
 #include <openthread/commissioner.h>
 #include <openthread/dataset.h>
 #include <openthread/platform/radio.h>
@@ -46,6 +44,7 @@
 #include "common/crc16.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
+#include "common/string.hpp"
 #include "common/tlvs.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/timestamp.hpp"

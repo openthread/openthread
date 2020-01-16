@@ -39,8 +39,6 @@
 #include <limits.h>
 #include <stdint.h>
 
-#include "utils/wrap_string.h"
-
 #include "common/encoding.hpp"
 #include "mac/mac_types.hpp"
 

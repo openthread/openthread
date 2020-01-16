@@ -34,7 +34,6 @@
 #include "ip6_address.hpp"
 
 #include <stdio.h>
-#include "utils/wrap_string.h"
 
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"

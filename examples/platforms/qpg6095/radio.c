@@ -33,6 +33,9 @@
  */
 
 #include "radio_qorvo.h"
+
+#include <string.h>
+
 #include <common/logging.hpp>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>

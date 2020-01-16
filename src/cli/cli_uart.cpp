@@ -48,7 +48,6 @@
 #include "common/new.hpp"
 #include "common/tasklet.hpp"
 #include "utils/static_assert.hpp"
-#include "utils/wrap_string.h"
 
 #if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
 #include <openthread/platform/debug_uart.h>

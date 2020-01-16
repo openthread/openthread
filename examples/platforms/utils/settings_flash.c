@@ -37,12 +37,12 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <openthread/instance.h>
 #include <openthread/platform/settings.h>
 
 #include "utils/code_utils.h"
-#include "utils/wrap_string.h"
 
 #include "flash.h"
 

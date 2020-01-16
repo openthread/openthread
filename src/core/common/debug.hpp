@@ -38,7 +38,6 @@
 
 #include <ctype.h>
 #include <stdio.h>
-#include "utils/wrap_string.h"
 
 #if defined(OPENTHREAD_TARGET_DARWIN) || defined(OPENTHREAD_TARGET_LINUX)
 

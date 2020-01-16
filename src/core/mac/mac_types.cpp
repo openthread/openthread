@@ -34,10 +34,10 @@
 #include "mac_types.hpp"
 
 #include <stdio.h>
-#include "utils/wrap_string.h"
 
 #include "common/code_utils.hpp"
 #include "common/random.hpp"
+#include "common/string.hpp"
 
 namespace ot {
 namespace Mac {
