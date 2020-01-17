@@ -3821,6 +3821,11 @@ otError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, I
         {
             ExitNow();
         }
+        else if (IsAnycastLocator(aIp6Header.GetDestination()))
+        {
+            // Proactively notify Leader of the expired child to de-register the stale service if any.
+            Get<NetworkData::Leader>().SendServerDataNotification(aMeshDest);
+        }
     }
     else if (GetNextHop(aMeshDest) != Mac::kShortAddrInvalid)
     {
