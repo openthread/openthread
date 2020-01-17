@@ -716,7 +716,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Serv
             case NetworkDataTlv::kTypeServer:
             {
                 server = static_cast<ServerTlv *>(cur);
-                server->SetServer16(Mle::Mle::GetServiceAlocFromId(aService.GetServiceID()));
+                server->SetServer16(Mle::Mle::ServiceAlocFromId(aService.GetServiceID()));
                 break;
             }
 

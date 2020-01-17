@@ -1042,7 +1042,7 @@ otError Mle::GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
     aAddress.mFields.m16[4] = HostSwap16(0x0000);
     aAddress.mFields.m16[5] = HostSwap16(0x00ff);
     aAddress.mFields.m16[6] = HostSwap16(0xfe00);
-    aAddress.mFields.m16[7] = HostSwap16(GetServiceAlocFromId(aServiceId));
+    aAddress.mFields.m16[7] = HostSwap16(ServiceAlocFromId(aServiceId));
 
 exit:
     return error;
@@ -1601,7 +1601,7 @@ void Mle::UpdateServiceAlocs(void)
         serviceAloc = HostSwap16(mServiceAlocs[i].GetAddress().mFields.m16[7]);
 
         if ((serviceAloc != Mac::kShortAddrInvalid) &&
-            (!Get<NetworkData::Leader>().ContainsService(Mle::GetServiceIdFromAloc(serviceAloc), rloc)))
+            (!Get<NetworkData::Leader>().ContainsService(Mle::ServiceIdFromAloc(serviceAloc), rloc)))
         {
             Get<ThreadNetif>().RemoveUnicastAddress(mServiceAlocs[i]);
             mServiceAlocs[i].GetAddress().mFields.m16[7] = HostSwap16(Mac::kShortAddrInvalid);
@@ -1615,7 +1615,7 @@ void Mle::UpdateServiceAlocs(void)
         {
             serviceAloc = HostSwap16(mServiceAlocs[i].GetAddress().mFields.m16[7]);
 
-            if ((serviceAloc != Mac::kShortAddrInvalid) && (Mle::GetServiceIdFromAloc(serviceAloc) == serviceId))
+            if ((serviceAloc != Mac::kShortAddrInvalid) && (Mle::ServiceIdFromAloc(serviceAloc) == serviceId))
             {
                 break;
             }

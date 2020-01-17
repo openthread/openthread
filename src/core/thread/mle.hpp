@@ -871,7 +871,7 @@ public:
      */
     otError GetCommissionerAloc(Ip6::Address &aAddress, uint16_t aSessionId) const
     {
-        return GetAlocAddress(aAddress, GetCommissionerAloc16FromId(aSessionId));
+        return GetAlocAddress(aAddress, CommissionerAloc16FromId(aSessionId));
     }
 
     /**
@@ -957,10 +957,7 @@ public:
      * @returns The Service ID corresponding to given ALOC16.
      *
      */
-    static uint8_t GetServiceIdFromAloc(uint16_t aAloc16)
-    {
-        return static_cast<uint8_t>(aAloc16 - kAloc16ServiceStart);
-    }
+    static uint8_t ServiceIdFromAloc(uint16_t aAloc16) { return static_cast<uint8_t>(aAloc16 - kAloc16ServiceStart); }
 
     /**
      * This method returns the Service Aloc corresponding to a Service ID.
@@ -970,7 +967,7 @@ public:
      * @returns The Service ALOC16 corresponding to given ID.
      *
      */
-    static uint16_t GetServiceAlocFromId(uint8_t aServiceId)
+    static uint16_t ServiceAlocFromId(uint8_t aServiceId)
     {
         return static_cast<uint16_t>(aServiceId + kAloc16ServiceStart);
     }
@@ -983,7 +980,7 @@ public:
      * @returns The Commissioner ALOC16 corresponding to given ID.
      *
      */
-    static uint16_t GetCommissionerAloc16FromId(uint16_t aSessionId)
+    static uint16_t CommissionerAloc16FromId(uint16_t aSessionId)
     {
         return static_cast<uint16_t>((aSessionId & kAloc16CommissionerMask) + kAloc16CommissionerStart);
     }
