@@ -776,7 +776,7 @@ exit:
 otError MeshForwarder::GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest)
 {
     otError                  error      = OT_ERROR_NONE;
-    uint8_t                  serviceId  = Mle::Mle::GetServiceIdFromAloc(aServiceAloc);
+    uint8_t                  serviceId  = Mle::Mle::ServiceIdFromAloc(aServiceAloc);
     NetworkData::ServiceTlv *serviceTlv = Get<NetworkData::Leader>().FindServiceById(serviceId);
 
     if (serviceTlv != NULL)
