@@ -828,16 +828,16 @@ uint32_t CoapTransmissionParameters::CalculateInitialRetransmissionTimeout(void)
 
 uint32_t CoapTransmissionParameters::CalculateExchangeLifetime(void) const
 {
-    uint32_t maxTransmitSpan =
-        mAckTimeout * (((uint64_t)1 << mMaxRetransmit) - 1) * mAckRandomFactorNumerator / mAckRandomFactorDenominator;
+    uint32_t maxTransmitSpan = (uint32_t)(mAckTimeout * (((uint64_t)1 << mMaxRetransmit) - 1) *
+                                          mAckRandomFactorNumerator / mAckRandomFactorDenominator);
     uint32_t processingDelay = mAckTimeout;
     return maxTransmitSpan + 2 * kDefaultMaxLatency + processingDelay;
 }
 
 uint32_t CoapTransmissionParameters::CalculateMaxTransmitWait(void) const
 {
-    return mAckTimeout * (((uint64_t)2 << mMaxRetransmit) - 1) * mAckRandomFactorNumerator /
-           mAckRandomFactorDenominator;
+    return (uint32_t)(mAckTimeout * (((uint64_t)2 << mMaxRetransmit) - 1) * mAckRandomFactorNumerator /
+                      mAckRandomFactorDenominator);
 }
 
 const otCoapTransmissionParameters CoapBase::mDefaultTransmissionParameters = {
