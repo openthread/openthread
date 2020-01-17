@@ -197,7 +197,7 @@ otError MleRouter::BecomeLeader(void)
     Get<NetworkData::Leader>().Reset();
     Get<MeshCoP::Leader>().SetEmptyCommissionerData();
 
-    SetStateLeader(GetRloc16(leaderId));
+    SetStateLeader(Rloc16FromRouterId(leaderId));
 
 exit:
     return error;
@@ -1529,7 +1529,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
         Router &router = *iter.GetRouter();
 
         otLogInfoMle("    %04x -> %04x, cost:%d %d, lqin:%d, lqout:%d, link:%s", router.GetRloc16(),
-                     (router.GetNextHop() == kInvalidRouterId) ? 0xffff : GetRloc16(router.GetNextHop()),
+                     (router.GetNextHop() == kInvalidRouterId) ? 0xffff : Rloc16FromRouterId(router.GetNextHop()),
                      router.GetCost(), mRouterTable.GetLinkCost(router), router.GetLinkInfo().GetLinkQuality(),
                      router.GetLinkQualityOut(),
                      router.GetRloc16() == GetRloc16() ? "device" : (router.IsStateValid() ? "yes" : "no"));
@@ -3429,11 +3429,11 @@ uint16_t MleRouter::GetNextHop(uint16_t aDestination)
         nextHop = mRouterTable.GetRouter(router->GetNextHop());
         VerifyOrExit(nextHop != NULL && !nextHop->IsStateInvalid());
 
-        rval = GetRloc16(router->GetNextHop());
+        rval = Rloc16FromRouterId(router->GetNextHop());
     }
     else if (linkCost < kMaxRouteCost)
     {
-        rval = GetRloc16(destinationId);
+        rval = Rloc16FromRouterId(destinationId);
     }
 
 exit:
@@ -3846,7 +3846,7 @@ otError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
     if (IsRouterIdValid(mPreviousRouterId))
     {
         rlocTlv.Init();
-        rlocTlv.SetRloc16(GetRloc16(mPreviousRouterId));
+        rlocTlv.SetRloc16(Rloc16FromRouterId(mPreviousRouterId));
         SuccessOrExit(error = rlocTlv.AppendTo(*message));
     }
 
@@ -3892,7 +3892,7 @@ otError MleRouter::SendAddressRelease(void)
     SuccessOrExit(error = message->SetPayloadMarker());
 
     rlocTlv.Init();
-    rlocTlv.SetRloc16(GetRloc16(mRouterId));
+    rlocTlv.SetRloc16(Rloc16FromRouterId(mRouterId));
     SuccessOrExit(error = rlocTlv.AppendTo(*message));
 
     macAddr64Tlv.Init();
@@ -3974,7 +3974,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
     // assign short address
     SetRouterId(routerId);
 
-    SetStateRouter(GetRloc16(mRouterId));
+    SetStateRouter(Rloc16FromRouterId(mRouterId));
     mRouterTable.Clear();
     mRouterTable.ProcessTlv(routerMaskTlv);
 
