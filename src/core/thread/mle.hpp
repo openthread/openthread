@@ -916,14 +916,14 @@ public:
     otError GetLeaderData(otLeaderData &aLeaderData);
 
     /**
-     * This method returns the Child ID portion of an RLOC16.
+     * This method derives the Child ID from a given RLOC16.
      *
      * @param[in]  aRloc16  The RLOC16 value.
      *
      * @returns The Child ID portion of an RLOC16.
      *
      */
-    static uint16_t GetChildId(uint16_t aRloc16) { return aRloc16 & kMaxChildId; }
+    static uint16_t ChildIdFromRloc16(uint16_t aRloc16) { return aRloc16 & kMaxChildId; }
 
     /**
      * This method derives the Router ID portion from a given RLOC16.
@@ -1010,7 +1010,7 @@ public:
      * @retval FALSE  If @p aRloc16 does not refer to an active router.
      *
      */
-    static bool IsActiveRouter(uint16_t aRloc16) { return GetChildId(aRloc16) == 0; }
+    static bool IsActiveRouter(uint16_t aRloc16) { return ChildIdFromRloc16(aRloc16) == 0; }
 
     /**
      * This method fills the NetworkDataTlv.

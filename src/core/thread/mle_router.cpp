@@ -3501,7 +3501,7 @@ otError MleRouter::GetChildInfoById(uint16_t aChildId, otChildInfo &aChildInfo)
 
     if ((aChildId & ~kMaxChildId) != 0)
     {
-        aChildId = GetChildId(aChildId);
+        aChildId = ChildIdFromRloc16(aChildId);
     }
 
     rloc16 = Get<Mac::Mac>().GetShortAddress() | aChildId;
@@ -3652,7 +3652,7 @@ otError MleRouter::GetChildInfo(Child &aChild, otChildInfo &aChildInfo)
     aChildInfo.mExtAddress         = aChild.GetExtAddress();
     aChildInfo.mTimeout            = aChild.GetTimeout();
     aChildInfo.mRloc16             = aChild.GetRloc16();
-    aChildInfo.mChildId            = GetChildId(aChild.GetRloc16());
+    aChildInfo.mChildId            = ChildIdFromRloc16(aChild.GetRloc16());
     aChildInfo.mNetworkDataVersion = aChild.GetNetworkDataVersion();
     aChildInfo.mAge                = Time::MsecToSec(TimerMilli::GetNow() - aChild.GetLastHeard());
     aChildInfo.mLinkQualityIn      = aChild.GetLinkInfo().GetLinkQuality();
