@@ -389,7 +389,7 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
 
         if (aloc16 == Mle::kAloc16Leader)
         {
-            mMeshDest = Mle::Mle::GetRloc16(mle.GetLeaderId());
+            mMeshDest = Mle::Mle::Rloc16FromRouterId(mle.GetLeaderId());
         }
         else if ((aloc16 >= Mle::kAloc16CommissionerStart) && (aloc16 <= Mle::kAloc16CommissionerEnd))
         {
@@ -406,14 +406,14 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
             routerId = Mle::Mle::GetRouterId(agentRloc16);
 
             // if agent is active router or the child of the device
-            if ((Mle::Mle::IsActiveRouter(agentRloc16)) || (Mle::Mle::GetRloc16(routerId) == mle.GetRloc16()))
+            if ((Mle::Mle::IsActiveRouter(agentRloc16)) || (Mle::Mle::Rloc16FromRouterId(routerId) == mle.GetRloc16()))
             {
                 mMeshDest = agentRloc16;
             }
             else
             {
                 // use the parent of the ED Agent as Dest
-                mMeshDest = Mle::Mle::GetRloc16(routerId);
+                mMeshDest = Mle::Mle::Rloc16FromRouterId(routerId);
             }
         }
         else if ((aloc16 >= Mle::kAloc16ServiceStart) && (aloc16 <= Mle::kAloc16ServiceEnd))

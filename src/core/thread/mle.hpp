@@ -989,14 +989,17 @@ public:
     }
 
     /**
-     * This method returns the RLOC16 of a given Router ID.
+     * This method derives RLOC16 from a given Router ID.
      *
      * @param[in]  aRouterId  The Router ID value.
      *
-     * @returns The RLOC16 of the given Router ID.
+     * @returns The RLOC16 corresponding to the given Router ID.
      *
      */
-    static uint16_t GetRloc16(uint8_t aRouterId) { return static_cast<uint16_t>(aRouterId << kRouterIdOffset); }
+    static uint16_t Rloc16FromRouterId(uint8_t aRouterId)
+    {
+        return static_cast<uint16_t>(aRouterId << kRouterIdOffset);
+    }
 
     /**
      * This method indicates whether or not @p aRloc16 refers to an active router.

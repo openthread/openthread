@@ -423,7 +423,7 @@ otError Mle::Restore(void)
         mParent.SetExtAddress(*static_cast<Mac::ExtAddress *>(&parentInfo.mExtAddress));
         mParent.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                          DeviceMode::kModeFullNetworkData | DeviceMode::kModeSecureDataRequest));
-        mParent.SetRloc16(GetRloc16(GetRouterId(networkInfo.mRloc16)));
+        mParent.SetRloc16(Rloc16FromRouterId(GetRouterId(networkInfo.mRloc16)));
         mParent.SetState(Neighbor::kStateRestored);
 
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
@@ -1013,7 +1013,7 @@ otError Mle::GetLeaderAddress(Ip6::Address &aAddress) const
     aAddress.mFields.m16[4] = HostSwap16(0x0000);
     aAddress.mFields.m16[5] = HostSwap16(0x00ff);
     aAddress.mFields.m16[6] = HostSwap16(0xfe00);
-    aAddress.mFields.m16[7] = HostSwap16(GetRloc16(mLeaderData.GetLeaderRouterId()));
+    aAddress.mFields.m16[7] = HostSwap16(Rloc16FromRouterId(mLeaderData.GetLeaderRouterId()));
 
 exit:
     return error;
