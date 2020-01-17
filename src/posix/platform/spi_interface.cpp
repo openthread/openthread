@@ -31,9 +31,10 @@
  *   This file includes the implementation for the SPI interface to radio (RCP).
  */
 
-#include "spi_interface.hpp"
 #include "openthread-core-config.h"
+
 #include "platform-posix.h"
+#include "spi_interface.hpp"
 
 #include <assert.h>
 #include <errno.h>
@@ -137,8 +138,6 @@ void SpiInterface::Deinit(void)
         close(mIntGpioValueFd);
         mIntGpioValueFd = -1;
     }
-
-    return;
 }
 
 int SpiInterface::SetupGpioHandle(int aFd, uint8_t aLine, uint32_t aHandleFlags, const char *aLabel)
@@ -276,47 +275,47 @@ uint8_t *SpiInterface::GetRealRxFrameStart(void)
     return ret;
 }
 
-otError SpiInterface::DoSpiXfer(int aLength)
+otError SpiInterface::DoSpiTransfer(int aLength)
 {
     int                     ret;
-    struct spi_ioc_transfer xfer[2];
+    struct spi_ioc_transfer transfer[2];
 
-    memset(&xfer[0], 0, sizeof(xfer));
+    memset(&transfer[0], 0, sizeof(transfer));
 
     // This part is the delay between C̅S̅ being asserted and the SPI clock
     // starting. This is not supported by all Linux SPI drivers.
-    xfer[0].tx_buf        = 0;
-    xfer[0].rx_buf        = 0;
-    xfer[0].len           = 0;
-    xfer[0].speed_hz      = static_cast<uint32_t>(mSpiSpeedHz);
-    xfer[0].delay_usecs   = static_cast<uint16_t>(mSpiCsDelayUs);
-    xfer[0].bits_per_word = kSpiBitsPerWord;
-    xfer[0].cs_change     = false;
+    transfer[0].tx_buf        = 0;
+    transfer[0].rx_buf        = 0;
+    transfer[0].len           = 0;
+    transfer[0].speed_hz      = static_cast<uint32_t>(mSpiSpeedHz);
+    transfer[0].delay_usecs   = static_cast<uint16_t>(mSpiCsDelayUs);
+    transfer[0].bits_per_word = kSpiBitsPerWord;
+    transfer[0].cs_change     = false;
 
     // This part is the actual SPI transfer.
-    xfer[1].tx_buf        = reinterpret_cast<unsigned long>(mSpiTxFrameBuffer);
-    xfer[1].rx_buf        = reinterpret_cast<unsigned long>(mSpiRxFrameBuffer);
-    xfer[1].len           = static_cast<uint32_t>(aLength + kSpiFrameHeaderSize + mSpiAlignAllowance);
-    xfer[1].speed_hz      = static_cast<uint32_t>(mSpiSpeedHz);
-    xfer[1].delay_usecs   = 0;
-    xfer[1].bits_per_word = kSpiBitsPerWord;
-    xfer[1].cs_change     = false;
+    transfer[1].tx_buf        = reinterpret_cast<unsigned long>(mSpiTxFrameBuffer);
+    transfer[1].rx_buf        = reinterpret_cast<unsigned long>(mSpiRxFrameBuffer);
+    transfer[1].len           = static_cast<uint32_t>(aLength + kSpiFrameHeaderSize + mSpiAlignAllowance);
+    transfer[1].speed_hz      = static_cast<uint32_t>(mSpiSpeedHz);
+    transfer[1].delay_usecs   = 0;
+    transfer[1].bits_per_word = kSpiBitsPerWord;
+    transfer[1].cs_change     = false;
 
     if (mSpiCsDelayUs > 0)
     {
         // A C̅S̅ delay has been specified. Start transactions with both parts.
-        ret = ioctl(mSpiDevFd, SPI_IOC_MESSAGE(2), &xfer[0]);
+        ret = ioctl(mSpiDevFd, SPI_IOC_MESSAGE(2), &transfer[0]);
     }
     else
     {
         // No C̅S̅ delay has been specified, so we skip the first part because it causes some SPI drivers to croak.
-        ret = ioctl(mSpiDevFd, SPI_IOC_MESSAGE(1), &xfer[1]);
+        ret = ioctl(mSpiDevFd, SPI_IOC_MESSAGE(1), &transfer[1]);
     }
 
     if (ret != -1)
     {
-        otDumpDebg(OT_LOG_REGION_PLATFORM, "SPI-TX", mSpiTxFrameBuffer, xfer[1].len);
-        otDumpDebg(OT_LOG_REGION_PLATFORM, "SPI-RX", mSpiRxFrameBuffer, xfer[1].len);
+        otDumpDebg(OT_LOG_REGION_PLATFORM, "SPI-TX", mSpiTxFrameBuffer, transfer[1].len);
+        otDumpDebg(OT_LOG_REGION_PLATFORM, "SPI-RX", mSpiRxFrameBuffer, transfer[1].len);
 
         mSpiFrameCount++;
     }
@@ -328,7 +327,7 @@ otError SpiInterface::PushPullSpi(void)
 {
     otError       error;
     uint8_t *     spiRxFrameBuffer    = NULL;
-    uint16_t      spiXferBytes        = 0;
+    uint16_t      spiTransferBytes    = 0;
     uint8_t       successfulExchanges = 0;
     uint8_t       slaveHeader;
     uint16_t      slaveAcceptLen;
@@ -359,9 +358,9 @@ otError SpiInterface::PushPullSpi(void)
         // Go ahead and try to immediately send a frame if we have it queued up.
         txFrame.SetHeaderDataLen(mSpiTxPayloadSize);
 
-        if (mSpiTxPayloadSize > spiXferBytes)
+        if (mSpiTxPayloadSize > spiTransferBytes)
         {
-            spiXferBytes = mSpiTxPayloadSize;
+            spiTransferBytes = mSpiTxPayloadSize;
         }
     }
 
@@ -369,29 +368,29 @@ otError SpiInterface::PushPullSpi(void)
     {
         // In a previous transaction the slave indicated it had something to send us. Make sure our transaction
         // is large enough to handle it.
-        if (mSpiSlaveDataLen > spiXferBytes)
+        if (mSpiSlaveDataLen > spiTransferBytes)
         {
-            spiXferBytes = mSpiSlaveDataLen;
+            spiTransferBytes = mSpiSlaveDataLen;
         }
     }
     else
     {
         // Set up a minimum transfer size to allow small frames the slave wants to send us to be handled in a
         // single transaction.
-        if (spiXferBytes < mSpiSmallPacketSize)
+        if (spiTransferBytes < mSpiSmallPacketSize)
         {
-            spiXferBytes = mSpiSmallPacketSize;
+            spiTransferBytes = mSpiSmallPacketSize;
         }
     }
 
-    txFrame.SetHeaderAcceptLen(spiXferBytes);
+    txFrame.SetHeaderAcceptLen(spiTransferBytes);
 
     // Perform the SPI transaction.
-    error = DoSpiXfer(spiXferBytes);
+    error = DoSpiTransfer(spiTransferBytes);
 
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("PushPullSpi:DoSpiXfer: errno=%s", strerror(errno));
+        otLogCritPlat("PushPullSpi:DoSpiTransfer: errno=%s", strerror(errno));
 
         // Print out a helpful error message for a common error.
         if ((mSpiCsDelayUs != 0) && (errno == EINVAL))
@@ -409,9 +408,9 @@ otError SpiInterface::PushPullSpi(void)
     {
         Ncp::SpiFrame rxFrame(spiRxFrameBuffer);
 
-        otLogDebgPlat("spi_xfer TX: H:%02X ACCEPT:%" PRIu16 " DATA:%" PRIu16, txFrame.GetHeaderFlagByte(),
+        otLogDebgPlat("spi_transfer TX: H:%02X ACCEPT:%" PRIu16 " DATA:%" PRIu16, txFrame.GetHeaderFlagByte(),
                       txFrame.GetHeaderAcceptLen(), txFrame.GetHeaderDataLen());
-        otLogDebgPlat("spi_xfer RX: H:%02X ACCEPT:%" PRIu16 " DATA:%" PRIu16, rxFrame.GetHeaderFlagByte(),
+        otLogDebgPlat("spi_transfer RX: H:%02X ACCEPT:%" PRIu16 " DATA:%" PRIu16, rxFrame.GetHeaderFlagByte(),
                       rxFrame.GetHeaderAcceptLen(), rxFrame.GetHeaderDataLen());
 
         slaveHeader = rxFrame.GetHeaderFlagByte();
@@ -440,9 +439,9 @@ otError SpiInterface::PushPullSpi(void)
                 otLogWarnPlat("Garbage in header : %02X %02X %02X %02X %02X", spiRxFrameBuffer[0], spiRxFrameBuffer[1],
                               spiRxFrameBuffer[2], spiRxFrameBuffer[3], spiRxFrameBuffer[4]);
                 otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-TX", mSpiTxFrameBuffer,
-                           spiXferBytes + kSpiFrameHeaderSize + mSpiAlignAllowance);
+                           spiTransferBytes + kSpiFrameHeaderSize + mSpiAlignAllowance);
                 otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-RX", mSpiRxFrameBuffer,
-                           spiXferBytes + kSpiFrameHeaderSize + mSpiAlignAllowance);
+                           spiTransferBytes + kSpiFrameHeaderSize + mSpiAlignAllowance);
             }
 
             mSpiTxRefusedCount++;
@@ -461,9 +460,9 @@ otError SpiInterface::PushPullSpi(void)
             otLogWarnPlat("Garbage in header : %02X %02X %02X %02X %02X", spiRxFrameBuffer[0], spiRxFrameBuffer[1],
                           spiRxFrameBuffer[2], spiRxFrameBuffer[3], spiRxFrameBuffer[4]);
             otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-TX", mSpiTxFrameBuffer,
-                       spiXferBytes + kSpiFrameHeaderSize + mSpiAlignAllowance);
+                       spiTransferBytes + kSpiFrameHeaderSize + mSpiAlignAllowance);
             otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-RX", mSpiRxFrameBuffer,
-                       spiXferBytes + kSpiFrameHeaderSize + mSpiAlignAllowance);
+                       spiTransferBytes + kSpiFrameHeaderSize + mSpiAlignAllowance);
 
             ExitNow();
         }
@@ -633,7 +632,6 @@ void SpiInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMa
 
 void SpiInterface::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
 {
-    OT_UNUSED_VARIABLE(aReadFdSet);
     OT_UNUSED_VARIABLE(aWriteFdSet);
 
     if (FD_ISSET(mIntGpioValueFd, &aReadFdSet))

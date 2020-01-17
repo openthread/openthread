@@ -182,12 +182,12 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
 
     aConfig->mPlatformConfig.mSpeedUpFactor      = 1;
     aConfig->mPlatformConfig.mResetRadio         = true;
-    aConfig->mPlatformConfig.mSpiSpeed           = OT_PLATFORM_CONFIG_SPI_DEFAILT_SPEED_HZ;
-    aConfig->mPlatformConfig.mSpiCsDelay         = OT_PLATFORM_CONFIG_SPI_DEFAILT_CS_DELAY_US;
-    aConfig->mPlatformConfig.mSpiResetDelay      = OT_PLATFORM_CONFIG_SPI_DEFAILT_RESET_DELAY_MS;
-    aConfig->mPlatformConfig.mSpiAlignAllowance  = OT_PLATFORM_CONFIG_SPI_DEFAILT_ALIGN_ALLOWANCE;
-    aConfig->mPlatformConfig.mSpiSmallPacketSize = OT_PLATFORM_CONFIG_SPI_DEFAILT_SMALL_PACKET_SIZE;
-    aConfig->mPlatformConfig.mSpiMode            = OT_PLATFORM_CONFIG_SPI_DEFAILT_MODE;
+    aConfig->mPlatformConfig.mSpiSpeed           = OT_PLATFORM_CONFIG_SPI_DEFAULT_SPEED_HZ;
+    aConfig->mPlatformConfig.mSpiCsDelay         = OT_PLATFORM_CONFIG_SPI_DEFAULT_CS_DELAY_US;
+    aConfig->mPlatformConfig.mSpiResetDelay      = OT_PLATFORM_CONFIG_SPI_DEFAULT_RESET_DELAY_MS;
+    aConfig->mPlatformConfig.mSpiAlignAllowance  = OT_PLATFORM_CONFIG_SPI_DEFAULT_ALIGN_ALLOWANCE;
+    aConfig->mPlatformConfig.mSpiSmallPacketSize = OT_PLATFORM_CONFIG_SPI_DEFAULT_SMALL_PACKET_SIZE;
+    aConfig->mPlatformConfig.mSpiMode            = OT_PLATFORM_CONFIG_SPI_DEFAULT_MODE;
     aConfig->mLogLevel                           = OT_LOG_LEVEL_CRIT;
 
     optind = 1;

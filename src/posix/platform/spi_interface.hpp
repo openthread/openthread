@@ -47,7 +47,7 @@ namespace ot {
 namespace PosixApp {
 
 /**
- * This class defines an SPI interface to the Radio Co-processor (RCP)
+ * This class defines an SPI interface to the Radio Co-processor (RCP).
  *
  */
 class SpiInterface
@@ -69,13 +69,13 @@ public:
     ~SpiInterface(void);
 
     /**
-     * This method initializes the interface to the Radio Co-processor (RCP)
+     * This method initializes the interface to the Radio Co-processor (RCP).
      *
      * @note This method should be called before reading and sending spinel frames to the interface.
      *
      * @param[in]  aPlatformConfig  Platform configuration structure.
      *
-     * @retval OT_ERROR_NONE          The interface is initialized successfully
+     * @retval OT_ERROR_NONE          The interface is initialized successfully.
      * @retval OT_ERROR_ALREADY       The interface is already initialized.
      * @retval OT_ERROR_INVALID_ARGS  The UART device or executable cannot be found or failed to open/run.
      *
@@ -145,7 +145,7 @@ private:
     void TrigerReset(void);
 
     uint8_t *GetRealRxFrameStart(void);
-    otError  DoSpiXfer(int len);
+    otError  DoSpiTransfer(int len);
     otError  PushPullSpi(void);
 
     bool CheckInterrupt(void);
