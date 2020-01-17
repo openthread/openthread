@@ -614,8 +614,7 @@ void MeshForwarder::UpdateRoutes(uint8_t *           aFrame,
     neighbor = Get<Mle::MleRouter>().GetNeighbor(ip6Header.GetSource());
     VerifyOrExit(neighbor != NULL && !neighbor->IsFullThreadDevice());
 
-    if (Mle::Mle::RouterIdFromRloc16(aMeshSource.GetShort()) !=
-        Mle::Mle::RouterIdFromRloc16(Get<Mac::Mac>().GetShortAddress()))
+    if (!Mle::Mle::RouterIdMatch(aMeshSource.GetShort(), Get<Mac::Mac>().GetShortAddress()))
     {
         Get<Mle::MleRouter>().RemoveNeighbor(*neighbor);
     }
