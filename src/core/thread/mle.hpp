@@ -946,7 +946,7 @@ public:
      */
     static bool RouterIdMatch(uint16_t aRloc16A, uint16_t aRloc16B)
     {
-        return ((aRloc16A >> kRouterIdOffset) == (aRloc16B >> kRouterIdOffset));
+        return RouterIdFromRloc16(aRloc16A) == RouterIdFromRloc16(aRloc16B);
     }
 
     /**
