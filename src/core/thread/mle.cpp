@@ -962,6 +962,13 @@ uint16_t Mle::GetRloc16(void) const
 
 void Mle::SetRloc16(uint16_t aRloc16)
 {
+    uint16_t oldRloc16 = GetRloc16();
+
+    if (aRloc16 != oldRloc16)
+    {
+        otLogNoteMle("RLOC16 %04x -> %04x", oldRloc16, aRloc16);
+    }
+
     Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal16);
 
     Get<Mac::Mac>().SetShortAddress(aRloc16);
