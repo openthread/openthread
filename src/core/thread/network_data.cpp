@@ -50,7 +50,6 @@ namespace NetworkData {
 NetworkData::NetworkData(Instance &aInstance, Type aType)
     : InstanceLocator(aInstance)
     , mType(aType)
-    , mLastAttemptWait(false)
     , mLastAttempt(0)
 {
     mLength = 0;
@@ -978,7 +977,7 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
     Coap::Message *  message = NULL;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit(!mLastAttemptWait || (TimerMilli::GetNow() - mLastAttempt < kDataResubmitDelay),
+    VerifyOrExit(mLastAttempt.GetValue() == 0 || ((TimerMilli::GetNow() - mLastAttempt) < kDataResubmitDelay),
                  error = OT_ERROR_ALREADY);
 
     VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
@@ -1010,8 +1009,14 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
 
     if (mType == kTypeLocal)
     {
-        mLastAttempt     = TimerMilli::GetNow();
-        mLastAttemptWait = true;
+        mLastAttempt = TimerMilli::GetNow();
+
+        // `0` is a special value to indicate no delay limitation on sending SRV_DATA.ntf.
+        // Here avoids possible impact in rate limitation of SRV_DATA.ntf in case of wrap.
+        if (mLastAttempt.GetValue() == 0)
+        {
+            mLastAttempt.SetValue(1);
+        }
     }
 
     otLogInfoNetData("Sent server data notification");
@@ -1028,7 +1033,7 @@ exit:
 
 void NetworkData::ClearResubmitDelayTimer(void)
 {
-    mLastAttemptWait = false;
+    mLastAttempt.SetValue(0);
 }
 
 } // namespace NetworkData

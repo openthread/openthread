@@ -537,7 +537,6 @@ private:
     };
 
     const Type mType;
-    bool       mLastAttemptWait;
     TimeMilli  mLastAttempt;
 };
 
