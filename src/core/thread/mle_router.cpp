@@ -321,7 +321,7 @@ void MleRouter::SetStateRouter(uint16_t aRloc16)
     // remove children that do not have matching RLOC16
     for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValidOrRestoring); !iter.IsDone(); iter++)
     {
-        if (GetRouterId(iter.GetChild()->GetRloc16()) != mRouterId)
+        if (RouterIdFromRloc16(iter.GetChild()->GetRloc16()) != mRouterId)
         {
             RemoveNeighbor(*iter.GetChild());
         }
@@ -358,7 +358,7 @@ void MleRouter::SetStateLeader(uint16_t aRloc16)
     // remove children that do not have matching RLOC16
     for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValidOrRestoring); !iter.IsDone(); iter++)
     {
-        if (GetRouterId(iter.GetChild()->GetRloc16()) != mRouterId)
+        if (RouterIdFromRloc16(iter.GetChild()->GetRloc16()) != mRouterId)
         {
             RemoveNeighbor(*iter.GetChild());
         }
@@ -605,7 +605,7 @@ otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Message
 
             aMessageInfo.GetPeerAddr().ToExtAddress(macAddr);
 
-            neighbor = mRouterTable.GetRouter(GetRouterId(rloc16));
+            neighbor = mRouterTable.GetRouter(RouterIdFromRloc16(rloc16));
             VerifyOrExit(neighbor != NULL, error = OT_ERROR_PARSE);
             VerifyOrExit(!neighbor->IsStateLinkRequest(), error = OT_ERROR_ALREADY);
 
@@ -828,7 +828,7 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
 
     VerifyOrExit(IsActiveRouter(sourceAddress.GetRloc16()), error = OT_ERROR_PARSE);
 
-    routerId      = GetRouterId(sourceAddress.GetRloc16());
+    routerId      = RouterIdFromRloc16(sourceAddress.GetRloc16());
     router        = mRouterTable.GetRouter(routerId);
     neighborState = (router != NULL) ? router->GetState() : Neighbor::kStateInvalid;
 
@@ -918,7 +918,7 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
         router = mRouterTable.GetRouter(routerId);
         VerifyOrExit(router != NULL);
 
-        if (mLeaderData.GetLeaderRouterId() == GetRouterId(GetRloc16()))
+        if (mLeaderData.GetLeaderRouterId() == RouterIdFromRloc16(GetRloc16()))
         {
             SetStateLeader(GetRloc16());
         }
@@ -1236,7 +1236,7 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
     }
 
     VerifyOrExit(IsActiveRouter(sourceAddress.GetRloc16()) && route.IsValid());
-    routerId = GetRouterId(sourceAddress.GetRloc16());
+    routerId = RouterIdFromRloc16(sourceAddress.GetRloc16());
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     Get<TimeSync>().HandleTimeSyncMessage(aMessage);
@@ -1552,7 +1552,7 @@ bool MleRouter::UpdateLinkQualityOut(const RouteTlv &aRoute, Router &aNeighbor, 
     uint8_t oldLinkCost;
     Router *nextHop;
 
-    myRouterId = GetRouterId(GetRloc16());
+    myRouterId = RouterIdFromRloc16(GetRloc16());
     VerifyOrExit(aRoute.IsRouterIdSet(myRouterId));
 
     myRouteCount = 0;
@@ -3178,7 +3178,7 @@ bool MleRouter::IsMinimalChild(uint16_t aRloc16)
 {
     bool rval = false;
 
-    if (GetRouterId(aRloc16) == GetRouterId(Get<Mac::Mac>().GetShortAddress()))
+    if (RouterIdFromRloc16(aRloc16) == RouterIdFromRloc16(Get<Mac::Mac>().GetShortAddress()))
     {
         Neighbor *neighbor;
 
@@ -3400,7 +3400,7 @@ exit:
 
 uint16_t MleRouter::GetNextHop(uint16_t aDestination)
 {
-    uint8_t       destinationId = GetRouterId(aDestination);
+    uint8_t       destinationId = RouterIdFromRloc16(aDestination);
     uint8_t       routeCost;
     uint8_t       linkCost;
     uint16_t      rval = Mac::kShortAddrInvalid;
@@ -3442,7 +3442,7 @@ exit:
 
 uint8_t MleRouter::GetCost(uint16_t aRloc16)
 {
-    uint8_t routerId = GetRouterId(aRloc16);
+    uint8_t routerId = RouterIdFromRloc16(aRloc16);
     uint8_t cost     = GetLinkCost(routerId);
     Router *router   = mRouterTable.GetRouter(routerId);
     uint8_t routeCost;
@@ -3465,7 +3465,7 @@ uint8_t MleRouter::GetRouteCost(uint16_t aRloc16) const
     uint8_t       rval = kMaxRouteCost;
     const Router *router;
 
-    router = mRouterTable.GetRouter(GetRouterId(aRloc16));
+    router = mRouterTable.GetRouter(RouterIdFromRloc16(aRloc16));
     VerifyOrExit(router != NULL && mRouterTable.GetRouter(router->GetNextHop()) != NULL);
 
     rval = router->GetCost();
@@ -3761,7 +3761,7 @@ void MleRouter::ResolveRoutingLoops(uint16_t aSourceMac, uint16_t aDestRloc16)
     }
 
     // loop exists
-    router = mRouterTable.GetRouter(GetRouterId(aDestRloc16));
+    router = mRouterTable.GetRouter(RouterIdFromRloc16(aDestRloc16));
     VerifyOrExit(router != NULL);
 
     // invalidate next hop
@@ -3797,7 +3797,7 @@ otError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, I
             ExitNow();
         }
     }
-    else if (GetRouterId(aMeshDest) == mRouterId)
+    else if (RouterIdFromRloc16(aMeshDest) == mRouterId)
     {
         // mesh destination is a child of this device
         if (mChildTable.FindChild(aMeshDest, Child::kInStateValidOrRestoring))
@@ -3966,7 +3966,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
 
     SuccessOrExit(ThreadTlv::GetTlv(*aMessage, ThreadTlv::kRloc16, sizeof(rlocTlv), rlocTlv));
     VerifyOrExit(rlocTlv.IsValid());
-    routerId = GetRouterId(rlocTlv.GetRloc16());
+    routerId = RouterIdFromRloc16(rlocTlv.GetRloc16());
 
     SuccessOrExit(ThreadTlv::GetTlv(*aMessage, ThreadTlv::kRouterMask, sizeof(routerMaskTlv), routerMaskTlv));
     VerifyOrExit(routerMaskTlv.IsValid());
@@ -3999,7 +3999,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
     {
         // Keep route path to the Leader reported by the parent before it is updated.
         leader->SetCost(mParentLeaderCost);
-        leader->SetNextHop(GetRouterId(mParent.GetRloc16()));
+        leader->SetNextHop(RouterIdFromRloc16(mParent.GetRloc16()));
     }
 
     // send link request
@@ -4081,7 +4081,7 @@ void MleRouter::HandleAddressSolicit(Coap::Message &aMessage, const Ip6::Message
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rlocTlv), rlocTlv) == OT_ERROR_NONE)
     {
         VerifyOrExit(rlocTlv.IsValid(), error = OT_ERROR_PARSE);
-        router = mRouterTable.Allocate(GetRouterId(rlocTlv.GetRloc16()));
+        router = mRouterTable.Allocate(RouterIdFromRloc16(rlocTlv.GetRloc16()));
     }
 
     // allocate new router id
@@ -4186,7 +4186,7 @@ void MleRouter::HandleAddressRelease(Coap::Message &aMessage, const Ip6::Message
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kExtMacAddress, sizeof(macAddr64Tlv), macAddr64Tlv));
     VerifyOrExit(macAddr64Tlv.IsValid());
 
-    routerId = GetRouterId(rlocTlv.GetRloc16());
+    routerId = RouterIdFromRloc16(rlocTlv.GetRloc16());
     router   = mRouterTable.GetRouter(routerId);
 
     VerifyOrExit(router != NULL && router->GetExtAddress() == macAddr64Tlv.GetMacAddr());

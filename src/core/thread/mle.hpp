@@ -926,14 +926,14 @@ public:
     static uint16_t GetChildId(uint16_t aRloc16) { return aRloc16 & kMaxChildId; }
 
     /**
-     * This method returns the Router ID portion of an RLOC16.
+     * This method derives the Router ID portion from a given RLOC16.
      *
      * @param[in]  aRloc16  The RLOC16 value.
      *
      * @returns The Router ID portion of an RLOC16.
      *
      */
-    static uint8_t GetRouterId(uint16_t aRloc16) { return aRloc16 >> kRouterIdOffset; }
+    static uint8_t RouterIdFromRloc16(uint16_t aRloc16) { return aRloc16 >> kRouterIdOffset; }
 
     /**
      * This method returns whether the two RLOC16 have the same Router ID.
