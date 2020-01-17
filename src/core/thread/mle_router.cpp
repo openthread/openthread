@@ -1139,9 +1139,9 @@ bool MleRouter::IsSingleton(const RouteTlv &aRouteTlv)
     }
 
     // Check if 2 or more active routers
-    for (uint8_t i = 0; i <= kMaxRouterId; i++)
+    for (uint8_t routerId = 0; routerId <= kMaxRouterId; routerId++)
     {
-        if (aRouteTlv.IsRouterIdSet(i) && (++count >= 2))
+        if (aRouteTlv.IsRouterIdSet(routerId) && (++count >= 2))
         {
             ExitNow(rval = false);
         }
@@ -1316,14 +1316,14 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
 
                 if (leader != NULL)
                 {
-                    for (uint8_t i = 0, routeCount = 0; i <= kMaxRouterId; i++)
+                    for (uint8_t id = 0, routeCount = 0; id <= kMaxRouterId; id++)
                     {
-                        if (!route.IsRouterIdSet(i))
+                        if (!route.IsRouterIdSet(id))
                         {
                             continue;
                         }
 
-                        if (i != GetLeaderId())
+                        if (id != GetLeaderId())
                         {
                             routeCount++;
                             continue;
@@ -1331,7 +1331,7 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
 
                         if (route.GetRouteCost(routeCount) > 0)
                         {
-                            leader->SetNextHop(routerId);
+                            leader->SetNextHop(id);
                             leader->SetCost(route.GetRouteCost(routeCount));
                         }
                         else
@@ -1376,9 +1376,9 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
         // check current active router number
         routerCount = 0;
 
-        for (uint8_t i = 0; i <= kMaxRouterId; i++)
+        for (uint8_t id = 0; id <= kMaxRouterId; id++)
         {
-            if (route.IsRouterIdSet(i))
+            if (route.IsRouterIdSet(id))
             {
                 routerCount++;
             }
@@ -1440,19 +1440,19 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
     changed = UpdateLinkQualityOut(aRoute, *neighbor, resetAdvInterval);
 
     // update routes
-    for (uint8_t i = 0, routeCount = 0; i <= kMaxRouterId; i++)
+    for (uint8_t routerId = 0, routeCount = 0; routerId <= kMaxRouterId; routerId++)
     {
         Router *router;
         Router *nextHop;
         uint8_t oldNextHop;
         uint8_t cost;
 
-        if (!aRoute.IsRouterIdSet(i))
+        if (!aRoute.IsRouterIdSet(routerId))
         {
             continue;
         }
 
-        router = mRouterTable.GetRouter(i);
+        router = mRouterTable.GetRouter(routerId);
 
         if (router == NULL || router->GetRloc16() == GetRloc16() || router == neighbor)
         {
@@ -1556,9 +1556,9 @@ bool MleRouter::UpdateLinkQualityOut(const RouteTlv &aRoute, Router &aNeighbor, 
     VerifyOrExit(aRoute.IsRouterIdSet(myRouterId));
 
     myRouteCount = 0;
-    for (uint8_t i = 0; i < myRouterId; i++)
+    for (uint8_t routerId = 0; routerId < myRouterId; routerId++)
     {
-        myRouteCount += aRoute.IsRouterIdSet(i);
+        myRouteCount += aRoute.IsRouterIdSet(routerId);
     }
 
     linkQuality = aRoute.GetLinkQualityIn(myRouteCount);
@@ -4140,11 +4140,11 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message &   aRequest,
         routerMaskTlv.SetIdSequence(mRouterTable.GetRouterIdSequence());
         routerMaskTlv.ClearAssignedRouterIdMask();
 
-        for (uint8_t i = 0; i <= kMaxRouterId; i++)
+        for (uint8_t routerId = 0; routerId <= kMaxRouterId; routerId++)
         {
-            if (mRouterTable.IsAllocated(i))
+            if (mRouterTable.IsAllocated(routerId))
             {
-                routerMaskTlv.SetAssignedRouterId(i);
+                routerMaskTlv.SetAssignedRouterId(routerId);
             }
         }
 
