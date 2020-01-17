@@ -73,12 +73,11 @@ enum
     kDefaultLeisure                    = 5,
     kDefaultProbingRate                = 1,
 
-    // Note that 2 << (kMaxRetransmit - 1) is equal to kMaxRetransmit power of 2
-    kDefaultMaxTransmitSpan = kDefaultAckTimeout * ((2 << (kDefaultMaxRetransmit - 1)) - 1) *
+    kDefaultMaxTransmitSpan = kDefaultAckTimeout * (((uint64_t)1 << kDefaultMaxRetransmit) - 1) *
                               kDefaultAckRandomFactorNumerator / kDefaultAckRandomFactorDenominator,
-    kDefaultMaxTransmitWait = kDefaultAckTimeout * ((2 << kDefaultMaxRetransmit) - 1) *
+    kDefaultMaxTransmitWait = kDefaultAckTimeout * (((uint64_t)2 << kDefaultMaxRetransmit) - 1) *
                               kDefaultAckRandomFactorNumerator / kDefaultAckRandomFactorDenominator,
-    kDefaultMaxLatency       = 100,
+    kDefaultMaxLatency       = 100000, // in milliseconds
     kDefaultProcessingDelay  = kDefaultAckTimeout,
     kDefaultMaxRtt           = 2 * kDefaultMaxLatency + kDefaultProcessingDelay,
     kDefaultExchangeLifetime = kDefaultMaxTransmitSpan + 2 * (kDefaultMaxLatency) + kDefaultProcessingDelay,
