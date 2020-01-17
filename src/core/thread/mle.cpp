@@ -423,7 +423,7 @@ otError Mle::Restore(void)
         mParent.SetExtAddress(*static_cast<Mac::ExtAddress *>(&parentInfo.mExtAddress));
         mParent.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                          DeviceMode::kModeFullNetworkData | DeviceMode::kModeSecureDataRequest));
-        mParent.SetRloc16(Rloc16FromRouterId(GetRouterId(networkInfo.mRloc16)));
+        mParent.SetRloc16(Rloc16FromRouterId(RouterIdFromRloc16(networkInfo.mRloc16)));
         mParent.SetState(Neighbor::kStateRestored);
 
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
@@ -432,7 +432,7 @@ otError Mle::Restore(void)
     }
     else
     {
-        Get<MleRouter>().SetRouterId(GetRouterId(GetRloc16()));
+        Get<MleRouter>().SetRouterId(RouterIdFromRloc16(GetRloc16()));
         Get<MleRouter>().SetPreviousPartitionId(networkInfo.mPreviousPartitionId);
         Get<MleRouter>().RestoreChildren();
     }
@@ -3642,7 +3642,7 @@ otError Mle::HandleChildUpdateResponse(const Message &         aMessage,
         SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kSourceAddress, sizeof(sourceAddress), sourceAddress));
         VerifyOrExit(sourceAddress.IsValid(), error = OT_ERROR_PARSE);
 
-        if (GetRouterId(sourceAddress.GetRloc16()) != GetRouterId(GetRloc16()))
+        if (RouterIdFromRloc16(sourceAddress.GetRloc16()) != RouterIdFromRloc16(GetRloc16()))
         {
             BecomeDetached();
             ExitNow();

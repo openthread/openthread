@@ -658,12 +658,12 @@ start:
 
             if (hopsLeft != Mle::kMaxRouteCost)
             {
-                hopsLeft += mle.GetLinkCost(Mle::Mle::GetRouterId(mle.GetNextHop(aMeshDest)));
+                hopsLeft += mle.GetLinkCost(Mle::Mle::RouterIdFromRloc16(mle.GetNextHop(aMeshDest)));
             }
             else
             {
                 // In case there is no route to the destination router (only link).
-                hopsLeft = mle.GetLinkCost(Mle::Mle::GetRouterId(aMeshDest));
+                hopsLeft = mle.GetLinkCost(Mle::Mle::RouterIdFromRloc16(aMeshDest));
             }
         }
 
