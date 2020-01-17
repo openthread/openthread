@@ -969,6 +969,12 @@ void Mle::SetRloc16(uint16_t aRloc16)
     if (aRloc16 != oldRloc16)
     {
         otLogNoteMle("RLOC16 %04x -> %04x", oldRloc16, aRloc16);
+
+        // Clear cached CoAP with old RLOC source
+        if (oldRloc16 != Mac::kShortAddrInvalid)
+        {
+            Get<Coap::Coap>().ClearRequests(mMeshLocal16.GetAddress());
+        }
     }
 
     Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal16);
