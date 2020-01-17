@@ -275,7 +275,7 @@ uint8_t *SpiInterface::GetRealRxFrameStart(void)
     return ret;
 }
 
-otError SpiInterface::DoSpiTransfer(int aLength)
+otError SpiInterface::DoSpiTransfer(uint32_t aLength)
 {
     int                     ret;
     struct spi_ioc_transfer transfer[2];
@@ -287,16 +287,16 @@ otError SpiInterface::DoSpiTransfer(int aLength)
     transfer[0].tx_buf        = 0;
     transfer[0].rx_buf        = 0;
     transfer[0].len           = 0;
-    transfer[0].speed_hz      = static_cast<uint32_t>(mSpiSpeedHz);
-    transfer[0].delay_usecs   = static_cast<uint16_t>(mSpiCsDelayUs);
+    transfer[0].speed_hz      = mSpiSpeedHz;
+    transfer[0].delay_usecs   = mSpiCsDelayUs;
     transfer[0].bits_per_word = kSpiBitsPerWord;
     transfer[0].cs_change     = false;
 
     // This part is the actual SPI transfer.
-    transfer[1].tx_buf        = reinterpret_cast<unsigned long>(mSpiTxFrameBuffer);
-    transfer[1].rx_buf        = reinterpret_cast<unsigned long>(mSpiRxFrameBuffer);
-    transfer[1].len           = static_cast<uint32_t>(aLength + kSpiFrameHeaderSize + mSpiAlignAllowance);
-    transfer[1].speed_hz      = static_cast<uint32_t>(mSpiSpeedHz);
+    transfer[1].tx_buf        = reinterpret_cast<uintptr_t>(mSpiTxFrameBuffer);
+    transfer[1].rx_buf        = reinterpret_cast<uintptr_t>(mSpiRxFrameBuffer);
+    transfer[1].len           = aLength + kSpiFrameHeaderSize + mSpiAlignAllowance;
+    transfer[1].speed_hz      = mSpiSpeedHz;
     transfer[1].delay_usecs   = 0;
     transfer[1].bits_per_word = kSpiBitsPerWord;
     transfer[1].cs_change     = false;

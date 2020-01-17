@@ -145,7 +145,7 @@ private:
     void TrigerReset(void);
 
     uint8_t *GetRealRxFrameStart(void);
-    otError  DoSpiTransfer(int len);
+    otError  DoSpiTransfer(uint32_t aLength);
     otError  PushPullSpi(void);
 
     bool CheckInterrupt(void);
@@ -194,10 +194,10 @@ private:
     int mIntGpioValueFd;
 
     uint8_t  mSpiMode;
-    uint32_t mSpiSpeedHz;
-    uint32_t mSpiCsDelayUs;
     uint8_t  mSpiAlignAllowance;
+    uint16_t mSpiCsDelayUs;
     uint16_t mSpiSmallPacketSize;
+    uint32_t mSpiSpeedHz;
 
     uint64_t mSlaveResetCount;
     uint64_t mSpiFrameCount;
