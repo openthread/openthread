@@ -1528,9 +1528,11 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
     {
         Router &router = *iter.GetRouter();
 
-        otLogInfoMle("    %04x -> %04x, cost:%d %d, lqin:%d, lqout:%d", router.GetRloc16(),
-                     GetRloc16(router.GetNextHop()), router.GetCost(), mRouterTable.GetLinkCost(router),
-                     router.GetLinkInfo().GetLinkQuality(), router.GetLinkQualityOut());
+        otLogInfoMle("    %04x -> %04x, cost:%d %d, lqin:%d, lqout:%d, link:%s", router.GetRloc16(),
+                     (router.GetNextHop() == kInvalidRouterId) ? 0xffff : GetRloc16(router.GetNextHop()),
+                     router.GetCost(), mRouterTable.GetLinkCost(router), router.GetLinkInfo().GetLinkQuality(),
+                     router.GetLinkQualityOut(),
+                     router.GetRloc16() == GetRloc16() ? "device" : (router.IsStateValid() ? "yes" : "no"));
     }
 
 #else
