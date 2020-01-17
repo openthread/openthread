@@ -454,6 +454,14 @@ public:
     void ClearRequestsAndResponses(void);
 
     /**
+     * This method clears requests with specified source address used by this CoAP agent.
+     *
+     * @param[in]  aAddress A reference to the specified address.
+     *
+     */
+    void ClearRequests(const Ip6::Address &aAddress);
+
+    /**
      * This method adds a resource to the CoAP server.
      *
      * @param[in]  aResource  A reference to the resource.

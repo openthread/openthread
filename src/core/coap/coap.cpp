@@ -79,6 +79,24 @@ void CoapBase::ClearRequestsAndResponses(void)
     mResponsesQueue.DequeueAllResponses();
 }
 
+void CoapBase::ClearRequests(const Ip6::Address &aAddress)
+{
+    Message *nextMessage;
+
+    // Remove pending messages with the specified source.
+    for (Message *message = static_cast<Message *>(mPendingRequests.GetHead()); message != NULL; message = nextMessage)
+    {
+        CoapMetadata coapMetadata;
+        nextMessage = static_cast<Message *>(message->GetNext());
+        coapMetadata.ReadFrom(*message);
+
+        if (coapMetadata.mSourceAddress == aAddress)
+        {
+            FinalizeCoapTransaction(*message, coapMetadata, NULL, NULL, OT_ERROR_ABORT);
+        }
+    }
+}
+
 otError CoapBase::AddResource(Resource &aResource)
 {
     return mResources.Add(aResource);
