@@ -208,7 +208,7 @@ private:
         kReasonRemovingEid,
     };
 
-    static const char *ConvertInvalidationReasonToString(InvalidationReason aReason);
+    static const char *InvalidationReasonToString(InvalidationReason aReason);
 
     Cache *NewCacheEntry(void);
     void   MarkCacheEntryAsUsed(Cache &aEntry);
