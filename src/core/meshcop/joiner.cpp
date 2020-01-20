@@ -129,7 +129,10 @@ exit:
     if (error != OT_ERROR_NONE)
     {
         otLogInfoMeshCoP("Error %s while starting joiner", otThreadErrorToString(error));
-        FreeJoinerFinalizeMessage();
+        if (mState == OT_JOINER_STATE_IDLE)
+        {
+            FreeJoinerFinalizeMessage();
+        }
     }
 
     return error;
