@@ -225,6 +225,9 @@ private:
     void ProcessContextIdReuseDelay(int argc, char *argv[]);
 #endif
     void ProcessCounters(int argc, char *argv[]);
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    void ProcessCsl(int argc, char *argv[]);
+#endif
 #if OPENTHREAD_FTD
     void ProcessDelayTimerMin(int argc, char *argv[]);
 #endif
