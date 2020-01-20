@@ -525,16 +525,9 @@ start:
     // Initialize MAC header
     fcf = Mac::Frame::kFcfFrameData;
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if (aMessage.IsTimeSync())
-    {
-        fcf |= Mac::Frame::kFcfFrameVersion2015 | Mac::Frame::kFcfIePresent;
-    }
-    else
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    Get<Mac::Mac>().UpdateFcfForHeaderIe(Get<Mle::MleRouter>().GetNeighbor(aMacDest), &aMessage, fcf);
 #endif
-    {
-        fcf |= Mac::Frame::kFcfFrameVersion2006;
-    }
 
     fcf |= (aMacDest.IsShort()) ? Mac::Frame::kFcfDstAddrShort : Mac::Frame::kFcfDstAddrExt;
     fcf |= (aMacSource.IsShort()) ? Mac::Frame::kFcfSrcAddrShort : Mac::Frame::kFcfSrcAddrExt;
@@ -615,26 +608,12 @@ start:
     aFrame.SetDstAddr(aMacDest);
     aFrame.SetSrcAddr(aMacSource);
 
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if (aMessage.IsTimeSync())
-    {
-        Mac::TimeIe * ie;
-        uint8_t *     cur = NULL;
-        Mac::HeaderIe ieList[2];
-
-        ieList[0].Init();
-        ieList[0].SetId(Mac::Frame::kHeaderIeVendor);
-        ieList[0].SetLength(sizeof(Mac::TimeIe));
-        ieList[1].Init();
-        ieList[1].SetId(Mac::Frame::kHeaderIeTermination2);
-        ieList[1].SetLength(0);
-        aFrame.AppendHeaderIe(ieList, 2);
-
-        cur = aFrame.GetHeaderIe(Mac::Frame::kHeaderIeVendor);
-        ie  = reinterpret_cast<Mac::TimeIe *>(cur + sizeof(Mac::HeaderIe));
-        ie->Init();
-    }
-
+    Get<Mac::Mac>().AppendHeaderIe(aFrame, aMessage.IsTimeSync());
+#else
+    Get<Mac::Mac>().AppendHeaderIe(aFrame, false);
+#endif
 #endif
 
     payload = aFrame.GetPayload();

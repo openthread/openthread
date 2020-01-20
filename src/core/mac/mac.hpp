@@ -40,6 +40,7 @@
 #include <openthread/platform/time.h>
 
 #include "common/locator.hpp"
+#include "common/message.hpp"
 #include "common/tasklet.hpp"
 #include "common/timer.hpp"
 #include "mac/channel_mask.hpp"
@@ -770,6 +771,29 @@ public:
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 #endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
 
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    /**
+     * This method appends header IEs to a TX-frame according to its
+     * frame control field and if time sync is enabled.
+     *
+     * @param[in]  aFrame       A reference to the TX-frame to which the IEs will be appended.
+     * @param[in]  aIsTimeSync  A boolean represents if time sync is enabled.
+     */
+    otError AppendHeaderIe(TxFrame &aFrame, bool aIsTimeSync) const;
+
+    /**
+     * This method updates frame control field according to the destination
+     * device and the message to send. Specifically, modify frame version and
+     * IE Present bit.
+     *
+     * @param[in]   aNeighbor  A pointer to the destination device, could be `NULL`.
+     * @param[in]   aMessage   A pointer to the message to send, could be `NULL`.
+     * @param[out]  aFcf       A reference to the frame control field to set.
+     *
+     */
+    void UpdateFcfForHeaderIe(Neighbor *aNeighbor, Message *aMessage, uint16_t &aFcf) const;
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+
 private:
     enum
     {
@@ -869,6 +893,7 @@ private:
     uint8_t GetTimeIeOffset(const Frame &aFrame);
 #endif
 
+    void               ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr);
     static const char *OperationToString(Operation aOperation);
 
     static const uint8_t         sMode2Key[];

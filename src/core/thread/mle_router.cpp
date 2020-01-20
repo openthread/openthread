@@ -1833,6 +1833,15 @@ void MleRouter::HandleStateUpdateTimer(void)
             break;
         }
 
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+        if (child.IsCslSynchronized() &&
+            TimerMilli::GetNow() - child.GetCslLastHeard() >= Time::SecToMsec(child.GetCslSyncTimeout()))
+        {
+            otLogInfoMle("Child CSL synchronization expired");
+            child.SetCslSynchronized(false);
+        }
+#endif
+
         if (TimerMilli::GetNow() - child.GetLastHeard() >= timeout)
         {
             otLogInfoMle("Child timeout expired");

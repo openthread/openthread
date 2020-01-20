@@ -882,6 +882,10 @@ otError Mac::PrepareDataRequest(TxFrame &aFrame)
     aFrame.SetDstAddr(dst);
     aFrame.SetCommandId(Frame::kMacCmdDataRequest);
 
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    AppendHeaderIe(aFrame, false);
+#endif
+
 exit:
     return error;
 }
@@ -1272,6 +1276,12 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
     if ((aError == OT_ERROR_NONE) && ackRequested && (aAckFrame != NULL) && (neighbor != NULL))
     {
         neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), aAckFrame->GetRssi());
+        if (aAckFrame->GetVersion() == Frame::kFcfFrameVersion2015)
+        {
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+            ProcessCsl(*aAckFrame, dstAddr);
+#endif
+        }
     }
 
     // Update MAC counters.
@@ -1716,6 +1726,12 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
     error = ProcessReceiveSecurity(*aFrame, srcaddr, neighbor);
 
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+    if (aFrame->GetVersion() == Frame::kFcfFrameVersion2015)
+    {
+        ProcessCsl(*aFrame, srcaddr);
+    }
+#endif
     switch (error)
     {
     case OT_ERROR_DUPLICATED:
@@ -2207,6 +2223,128 @@ exit:
     return;
 }
 #endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
+{
+    const uint8_t *cur   = aFrame.GetHeaderIe(Frame::kHeaderIeCsl);
+    Child *        child = Get<ChildTable>().FindChild(aSrcAddr, Child::kInStateAnyExceptInvalid);
+    const CslIe *  csl   = reinterpret_cast<const CslIe *>(cur + sizeof(HeaderIe));
+
+    VerifyOrExit(cur != NULL && child != NULL && aFrame.GetSecurityEnabled());
+
+    child->SetCslPeriod(csl->GetPeriod());
+    // Use ceiling to ensure the the time diff will be within OT_US_PER_TEN_SYMBOLS
+    child->SetCslPhase(((aFrame.GetTimestamp() + OT_US_PER_TEN_SYMBOLS - 1) / OT_US_PER_TEN_SYMBOLS + csl->GetPhase()) %
+                       csl->GetPeriod());
+    child->SetCslSynchronized(true);
+    child->SetCslLastHeard(TimerMilli::GetNow());
+    otLogDebgMac("Timestamp=%lu Sequence=%u CslPeriod=%hu CslPhase=%hu TransmitPhase=%hu",
+                 static_cast<uint32_t>(aFrame.GetTimestamp()), aFrame.GetSequence(), csl->GetPeriod(), csl->GetPhase(),
+                 child->GetCslPhase());
+
+exit:
+    return;
+}
+#endif // OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+otError Mac::AppendHeaderIe(TxFrame &aFrame, bool aIsTimeSync) const
+{
+    OT_UNUSED_VARIABLE(aFrame);
+    OT_UNUSED_VARIABLE(aIsTimeSync);
+
+    const size_t kMaxNumHeaderIe = 3; // TimeSync + Csl + Termination2
+    HeaderIe     ieList[kMaxNumHeaderIe];
+    otError      error   = OT_ERROR_NONE;
+    uint8_t      ieCount = 0;
+
+    VerifyOrExit(aFrame.IsIePresent());
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    if (aIsTimeSync)
+    {
+        ieList[ieCount].Init();
+        ieList[ieCount].SetId(Frame::kHeaderIeVendor);
+        ieList[ieCount].SetLength(sizeof(TimeIe));
+        ieCount++;
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    if (ShouldIncludeCslIe())
+    {
+        assert(aFrame.GetSecurityEnabled());
+
+        aFrame.mInfo.mTxInfo.mCslPresent = true;
+        ieList[ieCount].Init();
+        ieList[ieCount].SetId(Frame::kHeaderIeCsl);
+        ieList[ieCount].SetLength(sizeof(CslIe));
+        ieCount++;
+    }
+    else
+#endif
+    {
+        aFrame.mInfo.mTxInfo.mCslPresent = false;
+    }
+
+    if (ieCount > 0)
+    {
+        ieList[ieCount].Init();
+        ieList[ieCount].SetId(Frame::kHeaderIeTermination2);
+        ieList[ieCount].SetLength(0);
+
+        SuccessOrExit(error = aFrame.AppendHeaderIe(ieList, ++ieCount));
+    }
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    if (aIsTimeSync)
+    {
+        uint8_t *cur = aFrame.GetHeaderIe(Frame::kHeaderIeVendor);
+        TimeIe * ie  = reinterpret_cast<TimeIe *>(cur + sizeof(HeaderIe));
+
+        ie->Init();
+    }
+#endif
+
+    ExitNow();
+
+exit:
+    return error;
+}
+
+void Mac::UpdateFcfForHeaderIe(Neighbor *aNeighbor, Message *aMessage, uint16_t &aFcf) const
+{
+    OT_UNUSED_VARIABLE(aNeighbor);
+    OT_UNUSED_VARIABLE(aMessage);
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    if (aMessage != NULL && aMessage->IsTimeSync())
+    {
+        aFcf |= Frame::kFcfFrameVersion2015 | Frame::kFcfIePresent;
+    }
+    else
+#endif
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+        if (ShouldIncludeCslIe())
+    {
+        aFcf |= Frame::kFcfFrameVersion2015 | Frame::kFcfIePresent;
+    }
+    else
+#endif
+#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+        if (aNeighbor != NULL && !Get<Mle::MleRouter>().IsActiveRouter(aNeighbor->GetRloc16()) &&
+            static_cast<Child *>(aNeighbor)->IsCslSynchronized())
+    {
+        aFcf |= Frame::kFcfFrameVersion2015;
+    }
+    else
+#endif
+    {
+        aFcf |= Frame::kFcfFrameVersion2006;
+    }
+}
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
 } // namespace Mac
 } // namespace ot

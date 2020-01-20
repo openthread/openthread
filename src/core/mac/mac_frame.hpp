@@ -314,6 +314,7 @@ public:
         kMacCmdGtsRequest                 = 9,
 
         kHeaderIeVendor       = 0x00,
+        kHeaderIeCsl          = 0x1a,
         kHeaderIeTermination2 = 0x7f,
 
         kInfoStringSize = 110, ///< Max chars needed for the info string representation (@sa ToInfoString()).
@@ -1350,6 +1351,51 @@ private:
     uint8_t       mFlags;
     char          mNetworkName[NetworkName::kMaxSize];
     ExtendedPanId mExtendedPanId;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements CSL IE generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class CslIe
+{
+public:
+    /**
+     * This method returns the CSL Period.
+     *
+     * @returns the CSL Period.
+     *
+     */
+    uint16_t GetPeriod(void) const { return mPeriod; }
+
+    /**
+     * This method sets the CSL Period.
+     *
+     * @param[in]  aPeriod  The CSL Period.
+     *
+     */
+    void SetPeriod(uint16_t aPeriod) { mPeriod = aPeriod; }
+
+    /**
+     * This method returns the CSL Phase.
+     *
+     * @returns the CSL Phase.
+     *
+     */
+    uint16_t GetPhase(void) const { return mPhase; }
+
+    /**
+     * This method sets the CSL Phase.
+     *
+     * @param[in]  aPhase  The CSL Phase.
+     *
+     */
+    void SetPhase(uint16_t aPhase) { mPhase = aPhase; }
+
+private:
+    uint16_t mPhase;
+    uint16_t mPeriod;
 } OT_TOOL_PACKED_END;
 
 /**
