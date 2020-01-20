@@ -167,6 +167,20 @@ public:
          *
          */
         void EnergyScanDone(int8_t aMaxRssi);
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+        /**
+         * The method notifies user of `SubMac` to process transmit security for the frame, which  happens when the
+         * frame includes Header IE(s) that were updated before transmission.
+         *
+         * @note This function can be called from interrupt context and it would only read/write data passed in
+         *       via @p aFrame, but would not read/write any state within OpenThread.
+         *
+         * @param[in]  aFrame      The frame which needs to process transmit security.
+         *
+         */
+        void FrameUpdated(TxFrame &aFrame);
+#endif
     };
 
     /**
@@ -502,6 +516,22 @@ private:
     void HandleTransmitStarted(TxFrame &aFrame);
     void HandleTransmitDone(TxFrame &aTxFrame, RxFrame *aAckFrame, otError aError);
     void HandleEnergyScanDone(int8_t aMaxRssi);
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    /**
+     * This method handles a "Frame Updated" event from radio platform.
+     *
+     * This is called to notify OpenThread to process transmit security for the frame, this happens when the frame
+     * includes Header IE(s) that were updated before transmission. It is called from `otPlatRadioFrameUpdated()`.
+     *
+     * @note This method can be called from interrupt context and it would only read/write data passed in
+     *       via @p aFrame, but would not read/write any state within OpenThread.
+     *
+     * @param[in]  aFrame      The frame which needs to process transmit security.
+     *
+     */
+    void HandleFrameUpdated(TxFrame &aFrame);
+#endif
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);

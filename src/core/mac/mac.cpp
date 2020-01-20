@@ -858,12 +858,20 @@ otError Mac::PrepareDataRequest(TxFrame &aFrame)
     otError  error = OT_ERROR_NONE;
     Address  src, dst;
     uint16_t fcf;
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    Neighbor *parent = &Get<Mle::MleRouter>().GetParentCandidate();
+#endif
 
     SuccessOrExit(error = Get<DataPollSender>().GetPollDestinationAddress(dst));
     VerifyOrExit(!dst.IsNone(), error = OT_ERROR_ABORT);
 
     fcf = Frame::kFcfFrameMacCmd | Frame::kFcfPanidCompression | Frame::kFcfFrameVersion2006 | Frame::kFcfAckRequest |
           Frame::kFcfSecurityEnabled;
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    UpdateFcfForHeaderIe(parent, NULL, fcf);
+#else
+    fcf |= Frame::kFcfFrameVersion2006;
+#endif
 
     if (dst.IsExtended())
     {

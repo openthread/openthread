@@ -37,6 +37,7 @@
 
 #include <openthread/platform/time.h>
 
+#include "mac_frame.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -613,6 +614,16 @@ exit:
     return swEnergyScan;
 }
 
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+void SubMac::HandleFrameUpdated(TxFrame &aFrame)
+{
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    FillCsl(aFrame);
+#endif
+    mCallbacks.FrameUpdated(aFrame);
+}
+#endif
+
 void SubMac::SetState(State aState)
 {
     if (mState != aState)
@@ -677,6 +688,23 @@ void SubMac::SetCslPeriod(uint16_t aPeriod)
 void SubMac::SetCslTimeout(uint32_t aTimeout)
 {
     mCslTimeout = aTimeout;
+}
+
+void SubMac::FillCsl(Frame &aFrame)
+{
+    uint8_t *cur = aFrame.GetHeaderIe(Frame::kHeaderIeCsl);
+
+    if (cur != NULL)
+    {
+        CslIe *csl = reinterpret_cast<CslIe *>(cur + sizeof(HeaderIe));
+
+        csl->SetPeriod(mCslPeriod);
+        csl->SetPhase(GetCslPhase());
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+        otLogDebgMac("%10lu:%s seq=%u phase=%hu", static_cast<uint32_t>(otPlatTimeGet()), __func__,
+                     aFrame.GetSequence(), csl->GetPhase());
+#endif
+    }
 }
 
 void SubMac::HandleCslTimer(Timer &aTimer)

@@ -31,6 +31,7 @@
 #include <errno.h>
 
 #include <openthread/dataset.h>
+#include <openthread/link.h>
 #include <openthread/random_noncrypto.h>
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
@@ -79,6 +80,17 @@ enum
     POSIX_RADIO_CHANNEL_MAX = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX,
 };
 
+enum
+{
+    ACK_IE_MAX_SIZE = 16,
+};
+
+enum
+{
+    IE_HEADER_SIZE = 2, // Size of IE header in bytes
+    CSL_IE_SIZE    = 4, // Size of CSL IE content in bytes
+};
+
 OT_TOOL_PACKED_BEGIN
 struct RadioMessage
 {
@@ -88,7 +100,7 @@ struct RadioMessage
 
 static void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFrame);
 static void radioSendMessage(otInstance *aInstance);
-static void radioSendAck(void);
+static void radioSendAck(otInstance *aInstance);
 static void radioProcessFrame(otInstance *aInstance);
 
 static otRadioState        sState = OT_RADIO_STATE_DISABLED;
@@ -113,6 +125,22 @@ static int8_t         sCcaEdThresh = -74;
 
 static bool sSrcMatchEnabled = false;
 
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+static struct IeState
+{
+    uint8_t mCslEnabled : 1;
+    uint8_t mLinkMetricsEnabled : 1;
+} sIeState;
+static uint8_t sAckIeData[ACK_IE_MAX_SIZE];
+static uint8_t sAckIeDataLength = 0;
+#endif
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+static uint8_t  sCslIeHeader[IE_HEADER_SIZE] = {0x04, 0x0d};
+static uint32_t sCslSampleTime;
+static uint32_t sCslPeriod;
+#endif
+
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 static bool sRadioCoexEnabled = true;
 #endif
@@ -125,7 +153,7 @@ static void ReverseExtAddress(otExtAddress *aReversed, const otExtAddress *aOrig
     }
 }
 
-static bool HasFramePending(const otRadioFrame *aFrame)
+static bool hasFramePending(const otRadioFrame *aFrame)
 {
     bool         rval = false;
     otMacAddress src;
@@ -521,7 +549,7 @@ static void radioComputeCrc(struct RadioMessage *aMessage, uint16_t aLength)
 void radioSendMessage(otInstance *aInstance)
 {
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    bool notifyFrameUpdated = false;
+    bool notifyFrameUpdated = sTransmitFrame.mInfo.mTxInfo.mCslPresent;
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0)
@@ -544,7 +572,7 @@ void radioSendMessage(otInstance *aInstance)
 
     if (notifyFrameUpdated)
     {
-        otMacFrameProcessTransmitAesCcm(&sTransmitFrame, &sExtAddress);
+        otPlatRadioFrameUpdated(aInstance, &sTransmitFrame);
     }
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
@@ -709,26 +737,58 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0
 }
 
-void radioSendAck(void)
+void radioGenerateAck(void)
 {
-    sAckFrame.mLength    = IEEE802154_ACK_LENGTH;
-    sAckMessage.mPsdu[0] = IEEE802154_FRAME_TYPE_ACK;
-
+    // Determine if frame pending should be set
     if (
 #if OPENTHREAD_THREAD_VERSION >= OPENTHREAD_THREAD_VERSION_1_2
         (otMacFrameIsData(&sReceiveFrame) || otMacFrameIsDataRequest(&sReceiveFrame))
 #else
         otMacFrameIsDataRequest(&sReceiveFrame)
 #endif
-        && HasFramePending(&sReceiveFrame))
+        && hasFramePending(&sReceiveFrame))
     {
-        sAckMessage.mPsdu[0] |= IEEE802154_FRAME_PENDING;
         sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
     }
 
-    sAckMessage.mPsdu[1] = 0;
-    sAckMessage.mPsdu[2] = otMacFrameGetSequence(&sReceiveFrame);
+#if OPENTHREAD_THREAD_VERSION >= OPENTHREAD_THREAD_VERSION_1_2
+    if (otMacFrameIsVersion2015(&sReceiveFrame))
+    {
+        otMacFrameGenerateEnhAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending, sAckIeData,
+                                 sAckIeDataLength, &sAckFrame);
+    }
+    else
+#endif
+    {
+        otMacFrameGenerateImmAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending, &sAckFrame);
+    }
+}
 
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+uint16_t getCslPhase()
+{
+    uint32_t curTime       = otPlatAlarmMicroGetNow();
+    uint32_t cslPeriodInUs = sCslPeriod * OT_US_PER_TEN_SYMBOLS;
+    uint32_t diff = ((sCslSampleTime % cslPeriodInUs) - (curTime % cslPeriodInUs) + cslPeriodInUs) % cslPeriodInUs;
+
+    return (uint16_t)(diff / OT_US_PER_TEN_SYMBOLS);
+}
+#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+
+void radioSendAck(otInstance *aInstance)
+{
+    radioGenerateAck();
+    // Set CSL IE if the ACK is version 2015
+    if (otMacFrameIsVersion2015(&sAckFrame))
+    {
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+        if (sCslPeriod > 0)
+        {
+            otMacFrameSetCslIe(&sAckFrame, (uint16_t)sCslPeriod, getCslPhase());
+        }
+#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    }
+    otPlatRadioTxAckStarted(aInstance, sAckFrame.mPsdu, sAckFrame.mLength);
     sAckMessage.mChannel = sReceiveFrame.mChannel;
 
     radioComputeCrc(&sAckMessage, sAckFrame.mLength);
@@ -752,7 +812,7 @@ void radioProcessFrame(otInstance *aInstance)
     // generate acknowledgment
     if (otMacFrameIsAckRequested(&sReceiveFrame))
     {
-        radioSendAck();
+        radioSendAck(aInstance);
     }
 
 exit:
@@ -894,19 +954,43 @@ uint64_t otPlatRadioGetNow(void)
 }
 
 #if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+static void updateIeData(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    uint8_t offset = 0;
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    if (sCslPeriod > 0)
+    {
+        memcpy(sAckIeData, sCslIeHeader, IE_HEADER_SIZE);
+        offset += IE_HEADER_SIZE + CSL_IE_SIZE; // reserve space for CSL IE
+    }
+#endif
+    if (sIeState.mLinkMetricsEnabled)
+    {
+        // TODO
+    }
+    sAckIeDataLength = offset;
+}
+#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
 otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const otExtAddress *aExtAddr)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aCslPeriod);
     OT_UNUSED_VARIABLE(aExtAddr);
 
     otError error = OT_ERROR_NONE;
+
+    sCslPeriod = aCslPeriod;
+
+    updateIeData(aInstance);
 
     return error;
 }
 
 void otPlatRadioUpdateCslSampleTime(uint32_t aCslSampleTime)
 {
-    OT_UNUSED_VARIABLE(aCslSampleTime);
+    sCslSampleTime = aCslSampleTime;
 }
 #endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
