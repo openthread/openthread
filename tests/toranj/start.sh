@@ -147,4 +147,7 @@ run test-601-channel-manager-channel-change.py
 run test-602-channel-manager-channel-select.py
 run test-603-channel-manager-announce-recovery.py
 
+# Tests especially for code coverage
+run test-900-get-set.py
+
 exit 0

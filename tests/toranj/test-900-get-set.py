@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-#  Copyright (c) 2018, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,11 +26,13 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 
+import time
+
 from wpan import verify
 import wpan
 
 # -----------------------------------------------------------------------------------------------------------------------
-# Test description: simple wpanctl get and set commands
+# Test description: joining (as router, end-device, sleepy) - two node network
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
 print('-' * 120)
@@ -39,7 +41,11 @@ print('Starting \'{}\''.format(test_name))
 # -----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
 
-node = wpan.Node()
+speedup = 4
+wpan.Node.set_time_speedup_factor(speedup)
+
+node1 = wpan.Node()
+node2 = wpan.Node()
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Init all nodes
@@ -49,60 +55,54 @@ wpan.Node.init_all_nodes()
 # -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
-verify(node.get(wpan.WPAN_STATE) == wpan.STATE_OFFLINE)
+# Form a network on node1
+node1.form('PAN-aB71n')
+verify(node1.get(wpan.WPAN_STATE) == wpan.STATE_ASSOCIATED)
+verify(node1.get(wpan.WPAN_NODE_TYPE) == wpan.NODE_TYPE_LEADER)
 
-# set some of properties and check and verify that the value is indeed
-# changed...
+# Join from node2 as an end-device
+node2.join_node(node1, node_type=wpan.JOIN_TYPE_END_DEVICE)
+verify(node2.get(wpan.WPAN_STATE) == wpan.STATE_ASSOCIATED)
+verify(node2.get(wpan.WPAN_NAME) == node1.get(wpan.WPAN_NAME))
+verify(node2.get(wpan.WPAN_PANID) == node1.get(wpan.WPAN_PANID))
+verify(node2.get(wpan.WPAN_XPANID) == node1.get(wpan.WPAN_XPANID))
+verify(node2.get(wpan.WPAN_KEY) == node1.get(wpan.WPAN_KEY))
+node2.get(wpan.WPAN_THREAD_PARENT)
 
-node.set(wpan.WPAN_NAME, 'test-network')
-verify(node.get(wpan.WPAN_NAME) == '"test-network"')
+node2.leave()
 
-node.set(wpan.WPAN_NAME, 'a')
-verify(node.get(wpan.WPAN_NAME) == '"a"')
+# Join from node2 as a router
+node2.join_node(node1, node_type=wpan.JOIN_TYPE_ROUTER)
+verify(node2.get(wpan.WPAN_STATE) == wpan.STATE_ASSOCIATED)
+verify(node2.get(wpan.WPAN_NAME) == node1.get(wpan.WPAN_NAME))
+verify(node2.get(wpan.WPAN_PANID) == node1.get(wpan.WPAN_PANID))
+verify(node2.get(wpan.WPAN_XPANID) == node1.get(wpan.WPAN_XPANID))
+verify(node2.get(wpan.WPAN_KEY) == node1.get(wpan.WPAN_KEY))
 
-node.set(wpan.WPAN_PANID, '0xABBA')
-verify(node.get(wpan.WPAN_PANID) == '0xABBA')
+# Cover setting detached role
+node2.set(wpan.WPAN_ROLE, '0')
+time.sleep(1)
 
-node.set(wpan.WPAN_XPANID, '1020031510006016', binary_data=True)
-verify(node.get(wpan.WPAN_XPANID) == '0x1020031510006016')
+# Cover setting child role
+node2.set(wpan.WPAN_ROLE, '1')
+time.sleep(1)
 
-node.set(wpan.WPAN_KEY, '0123456789abcdeffecdba9876543210', binary_data=True)
-verify(node.get(wpan.WPAN_KEY) == '[0123456789ABCDEFFECDBA9876543210]')
+# Cover setting router role
+node2.set(wpan.WPAN_ROLE, '2')
+time.sleep(1)
 
-node.set(wpan.WPAN_MAC_WHITELIST_ENABLED, '1')
-verify(node.get(wpan.WPAN_MAC_WHITELIST_ENABLED) == 'true')
+# Cover setting leader role
+node2.set(wpan.WPAN_ROLE, '3')
+time.sleep(1)
 
-node.set(wpan.WPAN_MAC_WHITELIST_ENABLED, '0')
-verify(node.get(wpan.WPAN_MAC_WHITELIST_ENABLED) == 'false')
-
-node.set(wpan.WPAN_MAC_WHITELIST_ENABLED, 'true')
-verify(node.get(wpan.WPAN_MAC_WHITELIST_ENABLED) == 'true')
-
-node.set(wpan.WPAN_THREAD_ROUTER_UPGRADE_THRESHOLD, '100')
-verify(int(node.get(wpan.WPAN_THREAD_ROUTER_UPGRADE_THRESHOLD), 0) == 100)
-
-node.set(wpan.WPAN_THREAD_ROUTER_DOWNGRADE_THRESHOLD, '40')
-verify(int(node.get(wpan.WPAN_THREAD_ROUTER_DOWNGRADE_THRESHOLD), 0) == 40)
-
-verify(int(node.get(wpan.WPAN_THREAD_ROUTER_DOWNGRADE_THRESHOLD), 0) == 40)
-
-all_posix_app_gettable_props = [wpan.WPAN_RCP_VERSION]
-
-# note: partitionid only takes effect after forming one Thread network.
-node.set(wpan.WPAN_PARTITION_ID, '12345678')
-
-node.form('get-set')
-
-# verify that partitionid property is indeed changed.
-verify(int(node.get(wpan.WPAN_PARTITION_ID), 0) == 12345678)
+# Wait for the network become stable
+time.sleep(5)
 
 # Ensure `get` is successful with all gettable properties
 for prop in wpan.ALL_GETTABLE_PROPS:
-    node.get(prop)
+    node2.get(prop)
 
-if node.using_posix_app_with_rcp:
-    for prop in all_posix_app_gettable_props:
-        node.get(prop)
+node2.leave()
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished
