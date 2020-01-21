@@ -437,12 +437,42 @@ void TestSwapBlock(void)
     otPlatSettingsDeinit(NULL);
 }
 
+// This test verifies read smaller than saved length
+void TestReadSmaller(void)
+{
+    const uint16_t kTestKey = 1;
+    otError        error;
+
+    uint8_t  value[] = {1, 2, 3, 4};
+    uint16_t len     = sizeof(value) / 2;
+
+    otPlatSettingsInit(NULL);
+
+    error = otPlatSettingsSet(NULL, kTestKey, value, sizeof(value));
+    assert(error == OT_ERROR_NONE);
+
+    memset(value, 0, sizeof(value));
+
+    error = otPlatSettingsGet(NULL, kTestKey, 0, value, &len);
+    assert(error == OT_ERROR_NONE);
+
+    assert(value[0] == 1);
+    assert(value[1] == 2);
+    assert(value[2] == 0);
+    assert(value[3] == 0);
+
+    otPlatSettingsDeinit(NULL);
+}
+
 int main()
 {
     TestSwapBlock();
 
+    TestReadSmaller();
+
     return 0;
 }
+
 #endif // SELF_TEST
 
 #endif /* OPENTHREAD_SETTINGS_RAM */
