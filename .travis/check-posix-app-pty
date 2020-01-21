@@ -81,7 +81,7 @@ check() {
     fi
 
     if [[ "${DAEMON}" = 1 ]]; then
-        sudo ${OT_CLI_CMD} panid 0xface | grep 'Done' || die 'failed to get panid with ot-ctl'
+        sudo ${OT_CLI_CMD} panid 0xface | grep 'Done' || die 'failed to set panid with ot-ctl'
     fi
 
     sudo expect <<EOF > "${OT_OUTPUT}" &
