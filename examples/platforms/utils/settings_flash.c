@@ -290,8 +290,10 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
     while (address < (sSettingsBaseAddress + sSettingsUsedSize))
     {
         struct settingsBlock block;
+        uint32_t             rval;
 
-        utilsFlashRead(address, (uint8_t *)(&block), sizeof(block));
+        rval = utilsFlashRead(address, (uint8_t *)(&block), sizeof(block));
+        assert(rval == sizeof(block));
 
         if (block.key == aKey)
         {
@@ -315,7 +317,8 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
                             readLength = *aValueLength;
                         }
 
-                        utilsFlashRead(address + sizeof(struct settingsBlock), aValue, readLength);
+                        rval = utilsFlashRead(address + sizeof(struct settingsBlock), aValue, readLength);
+                        assert(rval == readLength);
                     }
 
                     valueLength = block.length;
@@ -402,5 +405,44 @@ void otPlatSettingsWipe(otInstance *aInstance)
     initSettings(sSettingsBaseAddress, (uint32_t)OT_SETTINGS_IN_USE);
     otPlatSettingsInit(aInstance);
 }
+
+#if SELF_TEST
+uint32_t gNodeId = 1;
+
+#include "posix/flash.c"
+
+// This test verifies swapping block works as expected.
+void TestSwapBlock(void)
+{
+    const uint16_t kTestKey          = 1;
+    const uint32_t kSettingsTestSize = (SETTINGS_CONFIG_PAGE_SIZE * SETTINGS_CONFIG_PAGE_NUM / 2);
+
+    otPlatSettingsInit(NULL);
+
+    // Setting number of iterations larger enough to trigger swapping block.
+    for (uint32_t i = 0; i < kSettingsTestSize + 1; ++i)
+    {
+        uint32_t j   = i - 1;
+        uint16_t len = sizeof(j);
+        otError  error;
+
+        error = otPlatSettingsSet(NULL, kTestKey, (const uint8_t *)&i, sizeof(i));
+        assert(error == OT_ERROR_NONE);
+
+        error = otPlatSettingsGet(NULL, kTestKey, 0, (uint8_t *)&j, &len);
+        assert(error == OT_ERROR_NONE);
+        assert(j == i);
+    }
+
+    otPlatSettingsDeinit(NULL);
+}
+
+int main()
+{
+    TestSwapBlock();
+
+    return 0;
+}
+#endif // SELF_TEST
 
 #endif /* OPENTHREAD_SETTINGS_RAM */

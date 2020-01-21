@@ -52,4 +52,21 @@ libopenthread_platform_utils_a_SOURCES  = \
     soft_source_match_table.h             \
     $(NULL)
 
+check_PROGRAMS = test-settings-flash
+
+test_settings_flash_SOURCES = \
+    settings_flash.c          \
+    $(NULL)
+
+test_settings_flash_CPPFLAGS           = \
+    -I$(top_srcdir)/include              \
+    -I$(top_srcdir)/examples/platforms   \
+    -I$(top_srcdir)/src/core             \
+    -DSELF_TEST=1                        \
+    $(NULL)
+
+TESTS                        = \
+    test-settings-flash        \
+    $(NULL)
+
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
