@@ -77,8 +77,7 @@ run() {
 
 cd $(dirname $0)
 
-# On Travis CI, the $BUILD_TARGET is defined as "toranj-test-framework".
-if [ "$BUILD_TARGET" = "toranj-test-framework" ]; then
+if [ "$COVERAGE" = 1 ]; then
     coverage_option="--enable-coverage"
 else
     coverage_option=""
