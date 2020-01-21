@@ -79,6 +79,6 @@ PRETTY_FILES                                          = \
     $(NULL)
 
 libopenthread_cc2650_a_LIBADD                         = \
-    $(addprefix $(top_builddir)/examples/platforms/utils/,$(shell $(AR) t $(top_builddir)/examples/platforms/utils/libopenthread-platform-utils.a))
+    $(addprefix $(top_builddir)/examples/platforms/utils/,$(filter %.o,$(shell $(AR) t $(top_builddir)/examples/platforms/utils/libopenthread-platform-utils.a)))
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

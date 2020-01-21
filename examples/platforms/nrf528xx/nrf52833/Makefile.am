@@ -155,12 +155,12 @@ Dash                                                                            
 
 libopenthread_nrf52833_a_LIBADD                                                                            = \
     $(shell find $(top_builddir)/third_party/jlink/SEGGER_RTT_V640/RTT $(Dash)type f $(Dash)name "*.o")      \
-    $(addprefix $(top_builddir)/examples/platforms/utils/,$(shell $(AR) t $(top_builddir)/examples/platforms/utils/libopenthread-platform-utils.a))
+    $(addprefix $(top_builddir)/examples/platforms/utils/,$(filter %.o,$(shell $(AR) t $(top_builddir)/examples/platforms/utils/libopenthread-platform-utils.a)))
 
 libopenthread_nrf52833_sdk_a_LIBADD                                                                        = \
-    $(addprefix $(top_builddir)/examples/platforms/utils/,$(shell $(AR) t $(top_builddir)/examples/platforms/utils/libopenthread-platform-utils.a))
+    $(addprefix $(top_builddir)/examples/platforms/utils/,$(filter %.o,$(shell $(AR) t $(top_builddir)/examples/platforms/utils/libopenthread-platform-utils.a)))
 
 libopenthread_nrf52833_softdevice_sdk_a_LIBADD                                                             = \
-    $(addprefix $(top_builddir)/examples/platforms/utils/,$(shell $(AR) t $(top_builddir)/examples/platforms/utils/libopenthread-platform-utils.a))
+    $(addprefix $(top_builddir)/examples/platforms/utils/,$(filter %.o,$(shell $(AR) t $(top_builddir)/examples/platforms/utils/libopenthread-platform-utils.a)))
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

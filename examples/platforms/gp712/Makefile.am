@@ -58,7 +58,7 @@ PLATFORM_SOURCES                          = \
     $(NULL)
 
 libopenthread_gp712_a_LIBADD              = \
-    $(addprefix $(top_builddir)/examples/platforms/utils/,$(shell $(AR) t $(top_builddir)/examples/platforms/utils/libopenthread-platform-utils.a))
+    $(addprefix $(top_builddir)/examples/platforms/utils/,$(filter %.o,$(shell $(AR) t $(top_builddir)/examples/platforms/utils/libopenthread-platform-utils.a)))
 
 libopenthread_gp712_a_SOURCES             = \
     $(PLATFORM_SOURCES)                     \

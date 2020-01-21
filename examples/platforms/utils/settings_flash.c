@@ -406,7 +406,7 @@ void otPlatSettingsWipe(otInstance *aInstance)
     otPlatSettingsInit(aInstance);
 }
 
-#if SELF_TEST
+#if defined(SELF_TEST) && SELF_TEST
 uint32_t gNodeId = 1;
 
 #include "posix/flash.c"
