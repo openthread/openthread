@@ -57,9 +57,8 @@ PLATFORM_SOURCES                          = \
     uart_qorvo.h                            \
     $(NULL)
 
-Dash                                      = -
 libopenthread_gp712_a_LIBADD              = \
-    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
+    $(addprefix $(top_builddir)/examples/platforms/utils/,$(shell $(AR) t $(top_builddir)/examples/platforms/utils/libopenthread-platform-utils.a))
 
 libopenthread_gp712_a_SOURCES             = \
     $(PLATFORM_SOURCES)                     \

@@ -141,8 +141,7 @@ PRETTY_FILES                                                                    
     $(PLATFORM_SOURCES)                                                                                        \
     $(NULL)
 
-Dash                                                                                                         = -
 libopenthread_samr21_a_LIBADD                                                                                = \
-    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
+    $(addprefix $(top_builddir)/examples/platforms/utils/,$(shell $(AR) t $(top_builddir)/examples/platforms/utils/libopenthread-platform-utils.a))
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

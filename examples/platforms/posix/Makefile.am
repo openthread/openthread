@@ -62,9 +62,8 @@ PRETTY_FILES                              = \
     $(PLATFORM_SOURCES)                     \
     $(NULL)
 
-Dash                                      = -
 libopenthread_posix_a_LIBADD              = \
-    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
+    $(addprefix $(top_builddir)/examples/platforms/utils/,$(shell $(AR) t $(top_builddir)/examples/platforms/utils/libopenthread-platform-utils.a))
 
 if OPENTHREAD_BUILD_COVERAGE
 libopenthread_posix_a_CPPFLAGS           += \
