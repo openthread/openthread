@@ -129,7 +129,7 @@ static uint8_t ExternalRoutePreferenceToFlagByte(int aPreference)
         break;
 
     default:
-        flags = SPINEL_ROUTE_PREFERENCE_MEDIUM;
+        assert(false);
         break;
     }
 
@@ -242,19 +242,9 @@ exit:
     return error;
 }
 
-otError NcpBase::CommandHandler_NET_SAVE(uint8_t aHeader)
-{
-    return PrepareLastStatusResponse(aHeader, SPINEL_STATUS_UNIMPLEMENTED);
-}
-
 otError NcpBase::CommandHandler_NET_CLEAR(uint8_t aHeader)
 {
     return PrepareLastStatusResponse(aHeader, ThreadErrorToSpinelStatus(otInstanceErasePersistentInfo(mInstance)));
-}
-
-otError NcpBase::CommandHandler_NET_RECALL(uint8_t aHeader)
-{
-    return PrepareLastStatusResponse(aHeader, SPINEL_STATUS_UNIMPLEMENTED);
 }
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_SAVED>(void)
