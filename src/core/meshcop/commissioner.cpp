@@ -181,7 +181,6 @@ otError Commissioner::Stop(void)
     mTransmitAttempts = 0;
 
     mTimer.Stop();
-    Get<Coap::CoapSecure>().Stop();
 
     SetState(OT_COMMISSIONER_STATE_DISABLED);
 
