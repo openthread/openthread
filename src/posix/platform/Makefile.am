@@ -51,6 +51,7 @@ libopenthread_posix_a_SOURCES             = \
     radio_spinel.cpp                        \
     settings.cpp                            \
     sim.c                                   \
+    spi_interface.cpp                       \
     system.c                                \
     uart.c                                  \
     udp.cpp                                 \
@@ -73,6 +74,7 @@ dist_openthread_HEADERS = $(openthread_headers)
 PRETTY_FILES                              = \
     $(libopenthread_posix_a_SOURCES)        \
     $(noinst_HEADERS)                       \
+    $(openthread_HEADERS)                   \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE

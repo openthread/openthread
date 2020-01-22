@@ -156,9 +156,15 @@ static void LogIfFail(const char *aText, otError aError)
     }
 }
 
+void SpinelInterface::Callbacks::HandleReceivedFrame(void)
+{
+    static_cast<RadioSpinel *>(this)->HandleReceivedFrame();
+}
+
 RadioSpinel::RadioSpinel(void)
     : mInstance(NULL)
-    , mHdlcInterface(*this)
+    , mRxFrameBuffer()
+    , mSpinelInterface(*this, mRxFrameBuffer)
     , mCmdTidsInUse(0)
     , mCmdNextTid(1)
     , mTxRadioTid(0)
@@ -192,7 +198,7 @@ void RadioSpinel::Init(const otPlatformConfig &aPlatformConfig)
     otError error = OT_ERROR_NONE;
     bool    isRcp;
 
-    SuccessOrExit(error = mHdlcInterface.Init(aPlatformConfig));
+    SuccessOrExit(error = mSpinelInterface.Init(aPlatformConfig));
 
     if (aPlatformConfig.mResetRadio)
     {
@@ -339,19 +345,18 @@ exit:
 
 void RadioSpinel::Deinit(void)
 {
-    mHdlcInterface.Deinit();
+    mSpinelInterface.Deinit();
     // This allows implementing pseudo reset.
     new (this) RadioSpinel();
 }
 
 void RadioSpinel::HandleReceivedFrame(void)
 {
-    otError                         error       = OT_ERROR_NONE;
-    SpinelInterface::RxFrameBuffer &frameBuffer = mHdlcInterface.GetRxFrameBuffer();
-    uint8_t                         header;
-    spinel_ssize_t                  unpacked;
+    otError        error = OT_ERROR_NONE;
+    uint8_t        header;
+    spinel_ssize_t unpacked;
 
-    unpacked = spinel_datatype_unpack(frameBuffer.GetFrame(), frameBuffer.GetLength(), "C", &header);
+    unpacked = spinel_datatype_unpack(mRxFrameBuffer.GetFrame(), mRxFrameBuffer.GetLength(), "C", &header);
 
     VerifyOrExit(unpacked > 0 && (header & SPINEL_HEADER_FLAG) == SPINEL_HEADER_FLAG &&
                      SPINEL_HEADER_GET_IID(header) == 0,
@@ -359,23 +364,23 @@ void RadioSpinel::HandleReceivedFrame(void)
 
     if (SPINEL_HEADER_GET_TID(header) == 0)
     {
-        HandleNotification(frameBuffer);
+        HandleNotification(mRxFrameBuffer);
     }
     else
     {
-        HandleResponse(frameBuffer.GetFrame(), frameBuffer.GetLength());
-        frameBuffer.DiscardFrame();
+        HandleResponse(mRxFrameBuffer.GetFrame(), mRxFrameBuffer.GetLength());
+        mRxFrameBuffer.DiscardFrame();
     }
 
 exit:
     if (error != OT_ERROR_NONE)
     {
-        frameBuffer.DiscardFrame();
+        mRxFrameBuffer.DiscardFrame();
         otLogWarnPlat("Error handling hdlc frame: %s", otThreadErrorToString(error));
     }
 }
 
-void RadioSpinel::HandleNotification(HdlcInterface::RxFrameBuffer &aFrameBuffer)
+void RadioSpinel::HandleNotification(SpinelInterface::RxFrameBuffer &aFrameBuffer)
 {
     spinel_prop_key_t key;
     spinel_size_t     len = 0;
@@ -858,12 +863,12 @@ void RadioSpinel::ProcessFrameQueue(void)
     uint8_t *frame = NULL;
     uint16_t length;
 
-    while (mHdlcInterface.GetRxFrameBuffer().GetNextSavedFrame(frame, length) == OT_ERROR_NONE)
+    while (mRxFrameBuffer.GetNextSavedFrame(frame, length) == OT_ERROR_NONE)
     {
         HandleNotification(frame, length);
     }
 
-    mHdlcInterface.GetRxFrameBuffer().ClearSavedFrames();
+    mRxFrameBuffer.ClearSavedFrames();
 }
 
 void RadioSpinel::RadioReceive(void)
@@ -914,7 +919,7 @@ void RadioSpinel::TransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, ot
 
 void RadioSpinel::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout)
 {
-    mHdlcInterface.UpdateFdSet(aReadFdSet, aWriteFdSet, aMaxFd, aTimeout);
+    mSpinelInterface.UpdateFdSet(aReadFdSet, aWriteFdSet, aMaxFd, aTimeout);
 
     if (mState == kStateTransmitting)
     {
@@ -937,7 +942,7 @@ void RadioSpinel::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMax
         }
     }
 
-    if (mHdlcInterface.GetRxFrameBuffer().HasSavedFrame() || (mState == kStateTransmitDone))
+    if (mRxFrameBuffer.HasSavedFrame() || (mState == kStateTransmitDone))
     {
         aTimeout.tv_sec  = 0;
         aTimeout.tv_usec = 0;
@@ -946,15 +951,15 @@ void RadioSpinel::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMax
 
 void RadioSpinel::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
 {
-    if (mHdlcInterface.GetRxFrameBuffer().HasSavedFrame())
+    if (mRxFrameBuffer.HasSavedFrame())
     {
         // Handle frames received and saved during `WaitResponse()`
         ProcessFrameQueue();
     }
 
-    mHdlcInterface.Process(aReadFdSet, aWriteFdSet);
+    mSpinelInterface.Process(aReadFdSet, aWriteFdSet);
 
-    if (mHdlcInterface.GetRxFrameBuffer().HasSavedFrame())
+    if (mRxFrameBuffer.HasSavedFrame())
     {
         ProcessFrameQueue();
     }
@@ -1236,7 +1241,7 @@ otError RadioSpinel::WaitResponse(void)
 
     do
     {
-        if (mHdlcInterface.WaitForFrame(timeout) == OT_ERROR_RESPONSE_TIMEOUT)
+        if (mSpinelInterface.WaitForFrame(timeout) == OT_ERROR_RESPONSE_TIMEOUT)
         {
             FreeTid(mWaitingTid);
             mWaitingTid = 0;
@@ -1292,7 +1297,7 @@ otError RadioSpinel::SendReset(void)
 
     VerifyOrExit(packed > 0 && static_cast<size_t>(packed) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = mHdlcInterface.SendFrame(buffer, static_cast<uint16_t>(packed)));
+    SuccessOrExit(error = mSpinelInterface.SendFrame(buffer, static_cast<uint16_t>(packed)));
 
     sleep(0);
 
@@ -1328,7 +1333,7 @@ otError RadioSpinel::SendCommand(uint32_t          aCommand,
         offset += static_cast<uint16_t>(packed);
     }
 
-    error = mHdlcInterface.SendFrame(buffer, offset);
+    error = mSpinelInterface.SendFrame(buffer, offset);
 
 exit:
     return error;
@@ -1844,7 +1849,7 @@ exit:
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
 void ot::PosixApp::RadioSpinel::Process(const Event &aEvent)
 {
-    if (mHdlcInterface.GetRxFrameBuffer().HasSavedFrame())
+    if (mRxFrameBuffer.HasSavedFrame())
     {
         ProcessFrameQueue();
     }
@@ -1852,10 +1857,10 @@ void ot::PosixApp::RadioSpinel::Process(const Event &aEvent)
     // The current event can be other event types
     if (aEvent.mEvent == OT_SIM_EVENT_RADIO_SPINEL_WRITE)
     {
-        mHdlcInterface.ProcessReadData(aEvent.mData, aEvent.mDataLength);
+        mSpinelInterface.ProcessReadData(aEvent.mData, aEvent.mDataLength);
     }
 
-    if (mHdlcInterface.GetRxFrameBuffer().HasSavedFrame())
+    if (mRxFrameBuffer.HasSavedFrame())
     {
         ProcessFrameQueue();
     }
@@ -1957,18 +1962,4 @@ uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return sRadioSpinel.GetRadioChannelMask(true);
-}
-
-/*
- * Calling a pure virtual function is illegal. If the code calls a pure virtual function, then the compiler
- * calls the function "__cxa_pure_virtual()" to handle it. The call to this function should never happen in
- * the normal application run. If it happens it means there is a bug.
- *
- * This function is defined here to avoid that some libraries don't define it when COVERAGE is set to 1.
- *
- */
-extern "C" void __cxa_pure_virtual()
-{
-    otLogCritPlat("__cxa_pure_virtual() is called");
-    exit(OT_EXIT_FAILURE);
 }
