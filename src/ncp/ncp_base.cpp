@@ -884,15 +884,12 @@ otError NcpBase::HandleCommand(uint8_t aHeader)
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     case SPINEL_CMD_NET_SAVE:
-        error = CommandHandler_NET_SAVE(aHeader);
+    case SPINEL_CMD_NET_RECALL:
+        error = OT_ERROR_NOT_IMPLEMENTED;
         break;
 
     case SPINEL_CMD_NET_CLEAR:
         error = CommandHandler_NET_CLEAR(aHeader);
-        break;
-
-    case SPINEL_CMD_NET_RECALL:
-        error = CommandHandler_NET_RECALL(aHeader);
         break;
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
