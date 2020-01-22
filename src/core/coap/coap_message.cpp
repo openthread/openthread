@@ -435,6 +435,7 @@ exit:
 const otCoapOption *OptionIterator::GetFirstOptionMatching(otCoapOptionType aOption)
 {
     const otCoapOption *rval = NULL;
+
     for (const otCoapOption *option = GetFirstOption(); option != NULL; option = GetNextOption())
     {
         if (option->mNumber == aOption)
@@ -468,6 +469,7 @@ const otCoapOption *OptionIterator::GetFirstOption(void)
 const otCoapOption *OptionIterator::GetNextOptionMatching(otCoapOptionType aOption)
 {
     const otCoapOption *rval = NULL;
+
     for (const otCoapOption *option = GetNextOption(); option != NULL; option = GetNextOption())
     {
         if (option->mNumber == aOption)
