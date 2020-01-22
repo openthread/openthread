@@ -628,7 +628,6 @@ build_samr21() {
 
 [ $BUILD_TARGET != posix-app-spi ] || {
     ./bootstrap || die
-    # enable code coverage for OpenThread posix radio
     REFERENCE_DEVICE=1 READLINE=readline RCP_SPI=1 make -f src/posix/Makefile-posix || die
 }
 
