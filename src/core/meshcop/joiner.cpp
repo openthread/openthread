@@ -129,10 +129,7 @@ exit:
     if (error != OT_ERROR_NONE)
     {
         otLogInfoMeshCoP("Error %s while starting joiner", otThreadErrorToString(error));
-        if (mState == OT_JOINER_STATE_IDLE)
-        {
-            FreeJoinerFinalizeMessage();
-        }
+        FreeJoinerFinalizeMessage();
     }
 
     return error;
@@ -166,11 +163,11 @@ void Joiner::Finish(otError aError)
 
     case OT_JOINER_STATE_DISCOVER:
         Get<Coap::CoapSecure>().Stop();
-        FreeJoinerFinalizeMessage();
         break;
     }
 
     SetState(OT_JOINER_STATE_IDLE);
+    FreeJoinerFinalizeMessage();
 
     if (mCallback)
     {
@@ -453,11 +450,16 @@ exit:
 
 void Joiner::FreeJoinerFinalizeMessage(void)
 {
+    VerifyOrExit(mState == OT_JOINER_STATE_IDLE);
+
     if (mFinalizeMessage != NULL)
     {
         mFinalizeMessage->Free();
         mFinalizeMessage = NULL;
     }
+
+exit:
+    return;
 }
 
 void Joiner::SendJoinerFinalize(void)
