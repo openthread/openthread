@@ -641,8 +641,13 @@ public:
 
     /**
      * This method returns a pointer to the first option matching the given option number.
+     * The internal option pointer is advanced until matching option is seen, if no matching
+     * option is seen, the iterator will advance to the end of the options block.
      *
      * @param[in]   aOption         Option number to look for.
+     *
+     * @returns A pointer to the first matching option. If no option matching @p aOption is seen, NULL pointer is
+     * returned.
      */
     const otCoapOption *GetFirstOptionMatching(otCoapOptionType aOption);
 
@@ -655,8 +660,13 @@ public:
 
     /**
      * This method returns a pointer to the next option matching the given option number.
+     * The internal option pointer is advanced until matching option is seen, if no matching
+     * option is seen, the iterator will advance to the end of the options block.
      *
      * @param[in]   aOption         Option number to look for.
+     *
+     * @returns A pointer to the next matching option (relative to current iterator position). If no option matching @p
+     * aOption is seen, NULL pointer is returned.
      */
     const otCoapOption *GetNextOptionMatching(otCoapOptionType aOption);
 
@@ -670,6 +680,8 @@ public:
     /**
      * This function fills current option value into @p aValue.  The option is assumed to be an unsigned integer.
      *
+     * @param[out]  aValue	    Buffer to store the option value.
+     *
      * @retval  OT_ERROR_NONE       Successfully filled value.
      * @retval  OT_ERROR_NOT_FOUND  No more options, aIterator->mNextOptionOffset is set to offset of payload.
      * @retval  OT_ERROR_NO_BUFS    Value is too long to fit in a uint64_t.
@@ -679,6 +691,9 @@ public:
 
     /**
      * This function fills current option value into @p aValue.
+     *
+     * @param[out]  aValue	    Buffer to store the option value.  This buffer is assumed to be sufficiently large (see
+     * @ref otCoapOption::mLength).
      *
      * @retval  OT_ERROR_NONE       Successfully filled value.
      * @retval  OT_ERROR_NOT_FOUND  No more options, mNextOptionOffset is set to offset of payload.
