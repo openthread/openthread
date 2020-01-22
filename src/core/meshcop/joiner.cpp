@@ -450,13 +450,10 @@ exit:
 
 void Joiner::FreeJoinerFinalizeMessage(void)
 {
-    VerifyOrExit(mState == OT_JOINER_STATE_IDLE);
+    VerifyOrExit(mState == OT_JOINER_STATE_IDLE && mFinalizeMessage != NULL);
 
-    if (mFinalizeMessage != NULL)
-    {
-        mFinalizeMessage->Free();
-        mFinalizeMessage = NULL;
-    }
+    mFinalizeMessage->Free();
+    mFinalizeMessage = NULL;
 
 exit:
     return;
