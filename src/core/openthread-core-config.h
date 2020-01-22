@@ -36,6 +36,7 @@
 
 #include <openthread/config.h>
 
+#define OPENTHREAD_THREAD_VERSION_INVALID 0
 #define OPENTHREAD_THREAD_VERSION_1_1 2
 #define OPENTHREAD_THREAD_VERSION_1_2 3
 

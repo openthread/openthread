@@ -358,7 +358,10 @@ public:
      * @returns TRUE if Enhanced Keep-Alive is supported, FALSE otherwise.
      *
      */
-    bool IsEnhancedKeepAliveSupported(void) const { return mVersion >= OPENTHREAD_THREAD_VERSION_1_2; }
+    bool IsEnhancedKeepAliveSupported(void) const
+    {
+        return mState != kStateValid && mVersion >= OPENTHREAD_THREAD_VERSION_1_2;
+    }
 
     /**
      * This method gets the device MLE version.

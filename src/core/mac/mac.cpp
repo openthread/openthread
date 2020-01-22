@@ -1275,7 +1275,8 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
         FinishOperation();
         Get<MeshForwarder>().HandleSentFrame(aFrame, aError);
 #if OPENTHREAD_THREAD_VERSION >= OPENTHREAD_THREAD_VERSION_1_2
-        if (aFrame.GetSecurityEnabled() && aError == OT_ERROR_NONE && aAckFrame != NULL)
+        if (aError == OT_ERROR_NONE && Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported() &&
+            aFrame.GetSecurityEnabled() && aAckFrame != NULL)
         {
             Get<DataPollSender>().ResetKeepAliveTimer();
         }
