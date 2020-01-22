@@ -226,7 +226,7 @@ otError Coap::ProcessSet(int argc, char *argv[])
     }
 
 exit:
-    return OT_ERROR_NONE;
+    return error;
 }
 
 otError Coap::ProcessStart(int argc, char *argv[])
