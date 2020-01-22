@@ -57,6 +57,10 @@ Coap::Coap(Interpreter &aInterpreter)
     : mInterpreter(aInterpreter)
     , mUseDefaultRequestTxParameters(true)
     , mUseDefaultResponseTxParameters(true)
+    , mObserveSerial(0)
+    , mRequestTokenLength(0)
+    , mSubscriberTokenLength(0)
+    , mSubscriberConfirmableNotifications(false)
 {
     memset(&mResource, 0, sizeof(mResource));
     memset(&mRequestAddr, 0, sizeof(mRequestAddr));
@@ -66,9 +70,6 @@ Coap::Coap(Interpreter &aInterpreter)
     memset(&mUriPath, 0, sizeof(mUriPath));
     memset(&mRequestUri, 0, sizeof(mRequestUri));
     strlcpy(mResourceContent, "0", kMaxBufferSize);
-    mRequestTokenLength    = 0;
-    mSubscriberTokenLength = 0;
-    mObserveSerial         = 0;
 }
 
 otError Coap::CancelResourceSubscription(void)
