@@ -572,6 +572,14 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
                     mSubscriberTokenLength   = otCoapMessageGetTokenLength(aMessage);
                     memcpy(mSubscriberToken, otCoapMessageGetToken(aMessage), mSubscriberTokenLength);
 
+                    /*
+                     * Implementer note.
+                     *
+                     * Here, we try to match a confirmable GET request with confirmable
+                     * notifications, however this is not a requirement of RFC7641:
+                     * the server can send notifications of either type regardless of
+                     * what the client used to subscribe initially.
+                     */
                     mSubscriberConfirmableNotifications = (otCoapMessageGetType(aMessage) == OT_COAP_TYPE_CONFIRMABLE);
                 }
                 else if (observe == 1)
