@@ -100,6 +100,12 @@ otError Coap::CancelResourceSubscription(void)
     mRequestTokenLength = 0;
 
 exit:
+
+    if ((error != OT_ERROR_NONE) && (message != NULL))
+    {
+        otMessageFree(message);
+    }
+
     return error;
 }
 
