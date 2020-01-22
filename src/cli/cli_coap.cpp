@@ -508,7 +508,7 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
     {
     case OT_COAP_CODE_GET:
         mInterpreter.mServer->OutputFormat("GET");
-        otCoapOptionIteratorInit(&iterator, aMessage);
+        SuccessOrExit(error = otCoapOptionIteratorInit(&iterator, aMessage));
         if (otCoapOptionIteratorGetFirstOptionMatching(&iterator, OT_COAP_OPTION_OBSERVE) != NULL)
         {
             SuccessOrExit(error = otCoapOptionIteratorGetOptionUintValue(&iterator, &observe));
@@ -661,26 +661,28 @@ void Coap::HandleResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo
     }
     else if ((aMessageInfo != NULL) && (aMessage != NULL))
     {
-        const otCoapOption * observeOpt;
         otCoapOptionIterator iterator;
 
-        otCoapOptionIteratorInit(&iterator, aMessage);
-        observeOpt = otCoapOptionIteratorGetFirstOptionMatching(&iterator, OT_COAP_OPTION_OBSERVE);
-
-        mInterpreter.mServer->OutputFormat("coap response from ");
-        mInterpreter.OutputIp6Address(aMessageInfo->mPeerAddr);
-
-        if (observeOpt != NULL)
+        if (otCoapOptionIteratorInit(&iterator, aMessage) == OT_ERROR_NONE)
         {
-            uint64_t observeVal = 0;
-            otError  error      = otCoapOptionIteratorGetOptionUintValue(&iterator, &observeVal);
-            if (error == OT_ERROR_NONE)
-            {
-                mInterpreter.mServer->OutputFormat(" Obs=%u", observeVal);
-            }
-        }
+            const otCoapOption *observeOpt =
+                otCoapOptionIteratorGetFirstOptionMatching(&iterator, OT_COAP_OPTION_OBSERVE);
 
-        PrintPayload(aMessage);
+            mInterpreter.mServer->OutputFormat("coap response from ");
+            mInterpreter.OutputIp6Address(aMessageInfo->mPeerAddr);
+
+            if (observeOpt != NULL)
+            {
+                uint64_t observeVal = 0;
+                otError  error      = otCoapOptionIteratorGetOptionUintValue(&iterator, &observeVal);
+                if (error == OT_ERROR_NONE)
+                {
+                    mInterpreter.mServer->OutputFormat(" Obs=%u", observeVal);
+                }
+            }
+
+            PrintPayload(aMessage);
+        }
     }
 }
 
