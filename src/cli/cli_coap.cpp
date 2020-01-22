@@ -69,7 +69,7 @@ Coap::Coap(Interpreter &aInterpreter)
     memset(&mSubscriberToken, 0, sizeof(mSubscriberToken));
     memset(&mUriPath, 0, sizeof(mUriPath));
     memset(&mRequestUri, 0, sizeof(mRequestUri));
-    strlcpy(mResourceContent, "0", kMaxBufferSize);
+    strncpy(mResourceContent, "0", sizeof(mResourceContent) - 1);
 }
 
 otError Coap::CancelResourceSubscription(void)
@@ -189,7 +189,7 @@ otError Coap::ProcessSet(int argc, char *argv[])
     if (argc > 1)
     {
         VerifyOrExit(strlen(argv[1]) < (kMaxBufferSize - 1), error = OT_ERROR_INVALID_ARGS);
-        strlcpy(mResourceContent, argv[1], kMaxBufferSize);
+        strncpy(mResourceContent, argv[1], sizeof(mResourceContent) - 1);
 
         if (mSubscriberTokenLength > 0)
         {
@@ -439,7 +439,7 @@ otError Coap::ProcessRequest(int argc, char *argv[])
         memcpy(&mRequestAddr, &coapDestinationIp, sizeof(mRequestAddr));
         mRequestTokenLength = otCoapMessageGetTokenLength(message);
         memcpy(mRequestToken, otCoapMessageGetToken(message), mRequestTokenLength);
-        strlcpy(mRequestUri, coapUri, kMaxUriLength);
+        strncpy(mRequestUri, coapUri, sizeof(mRequestUri) - 1);
     }
 
     if ((coapType == OT_COAP_TYPE_CONFIRMABLE) || (coapCode == OT_COAP_CODE_GET))
