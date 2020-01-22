@@ -696,6 +696,7 @@ void Coap::HandleResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo
             {
                 uint64_t observeVal = 0;
                 otError  error      = otCoapOptionIteratorGetOptionUintValue(&iterator, &observeVal);
+
                 if (error == OT_ERROR_NONE)
                 {
                     mInterpreter.mServer->OutputFormat(" Obs=%u", observeVal);
