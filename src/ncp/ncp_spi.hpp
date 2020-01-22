@@ -164,12 +164,28 @@ public:
     bool IsValid(void) const { return ((mBuffer[kIndexFlagByte] & kFlagPatternMask) == kFlagPattern); }
 
     /**
+     * This method indicates whether or not the "RST" bit is set.
+     *
+     * @returns TRUE if the "RST" bit is set, FALSE otherwise.
+     *
+     */
+    bool IsResetFlagSet(void) const { return ((mBuffer[kIndexFlagByte] & kFlagReset) == kFlagReset); }
+
+    /**
      * This method sets the "flag byte" field in the SPI frame header.
      *
      * @param[in] aResetFlag     The status of reset flag (TRUE to set the flag, FALSE to clear flag).
      *
      */
     void SetHeaderFlagByte(bool aResetFlag) { mBuffer[kIndexFlagByte] = kFlagPattern | (aResetFlag ? kFlagReset : 0); }
+
+    /**
+     * This method gets the "flag byte" field in the SPI frame header.
+     *
+     * @returns  The flag byte.
+     *
+     */
+    uint8_t GetHeaderFlagByte(void) const { return mBuffer[kIndexFlagByte]; }
 
     /**
      * This method sets the "accept len" field in the SPI frame header.
