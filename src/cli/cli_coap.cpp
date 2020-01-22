@@ -226,6 +226,12 @@ otError Coap::ProcessSet(int argc, char *argv[])
     }
 
 exit:
+
+    if ((error != OT_ERROR_NONE) && (message != NULL))
+    {
+        otMessageFree(message);
+    }
+
     return error;
 }
 
