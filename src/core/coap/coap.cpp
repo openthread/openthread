@@ -173,7 +173,7 @@ otError CoapBase::SendMessage(Message &               aMessage,
         OptionIterator iterator;
         bool           observe;
 
-        iterator.Init(&aMessage);
+        SuccessOrExit(error = iterator.Init(&aMessage));
         observe = (iterator.GetFirstOptionMatching(OT_COAP_OPTION_OBSERVE) != NULL);
 
         // Special case, if we're sending a GET with Observe=1, that is a cancellation.
@@ -549,7 +549,7 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
         // We sent Observe in our request, see if we received Observe in the response too.
         OptionIterator iterator;
 
-        iterator.Init(&aMessage);
+        SuccessOrExit(error = iterator.Init(&aMessage));
         responseObserve = (iterator.GetFirstOptionMatching(OT_COAP_OPTION_OBSERVE) != NULL);
     }
 
