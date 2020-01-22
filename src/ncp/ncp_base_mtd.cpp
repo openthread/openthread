@@ -120,16 +120,15 @@ static uint8_t ExternalRoutePreferenceToFlagByte(int aPreference)
         flags = SPINEL_ROUTE_PREFERENCE_LOW;
         break;
 
-    case OT_ROUTE_PREFERENCE_MED:
-        flags = SPINEL_ROUTE_PREFERENCE_MEDIUM;
-        break;
-
     case OT_ROUTE_PREFERENCE_HIGH:
         flags = SPINEL_ROUTE_PREFERENCE_HIGH;
         break;
 
+    case OT_ROUTE_PREFERENCE_MED:
+        // fall through
+
     default:
-        assert(false);
+        flags = SPINEL_ROUTE_PREFERENCE_MEDIUM;
         break;
     }
 
