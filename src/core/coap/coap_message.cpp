@@ -572,7 +572,7 @@ otError OptionIterator::GetOptionValue(uint64_t &aValue) const
     uint8_t value[sizeof(aValue)];
     uint8_t pos = 0;
 
-    VerifyOrExit(mOption.mLength < sizeof(aValue), error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(mOption.mLength <= sizeof(aValue), error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = GetOptionValue(value));
 
     aValue = 0;
