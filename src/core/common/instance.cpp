@@ -77,10 +77,6 @@ Instance::Instance(void)
     , mNotifier(*this)
     , mSettings(*this)
     , mMessagePool(*this)
-    , mActiveScanCallback(NULL)
-    , mActiveScanCallbackContext(NULL)
-    , mEnergyScanCallback(NULL)
-    , mEnergyScanCallbackContext(NULL)
     , mIp6(*this)
     , mThreadNetif(*this)
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
@@ -229,33 +225,6 @@ exit:
     return error;
 }
 
-void Instance::RegisterActiveScanCallback(otHandleActiveScanResult aCallback, void *aContext)
-{
-    mActiveScanCallback        = aCallback;
-    mActiveScanCallbackContext = aContext;
-}
-
-void Instance::InvokeActiveScanCallback(otActiveScanResult *aResult) const
-{
-    if (mActiveScanCallback != NULL)
-    {
-        mActiveScanCallback(aResult, mActiveScanCallbackContext);
-    }
-}
-
-void Instance::RegisterEnergyScanCallback(otHandleEnergyScanResult aCallback, void *aContext)
-{
-    mEnergyScanCallback        = aCallback;
-    mEnergyScanCallbackContext = aContext;
-}
-
-void Instance::InvokeEnergyScanCallback(otEnergyScanResult *aResult) const
-{
-    if (mEnergyScanCallback != NULL)
-    {
-        mEnergyScanCallback(aResult, mEnergyScanCallbackContext);
-    }
-}
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 } // namespace ot

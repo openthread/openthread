@@ -39,7 +39,7 @@
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "common/timer.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
 
@@ -67,8 +67,8 @@ private:
     static void HandleQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleQuery(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleScanResult(Instance &aInstance, Mac::RxFrame *aFrame);
-    void        HandleScanResult(Mac::RxFrame *aFrame);
+    static void HandleScanResult(Mac::ActiveScanResult *aScanResult, void *aContext);
+    void        HandleScanResult(Mac::ActiveScanResult *aScanResult);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
