@@ -57,20 +57,16 @@ namespace ot {
 
 MeshForwarder::MeshForwarder(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mDiscoverTimer(aInstance, MeshForwarder::HandleDiscoverTimer, this)
     , mUpdateTimer(aInstance, MeshForwarder::HandleUpdateTimer, this)
     , mMessageNextOffset(0)
     , mSendMessage(NULL)
     , mMeshSource()
     , mMeshDest()
     , mAddMeshHeader(false)
+    , mEnabled(false)
+    , mTxPaused(false)
     , mSendBusy(false)
     , mScheduleTransmissionTask(aInstance, ScheduleTransmissionTask, this)
-    , mEnabled(false)
-    , mScanChannels(0)
-    , mScanChannel(0)
-    , mRestorePanId(Mac::kPanIdBroadcast)
-    , mScanning(false)
 #if OPENTHREAD_FTD
     , mIndirectSender(aInstance)
 #endif
@@ -106,11 +102,7 @@ void MeshForwarder::Stop(void)
 
     mDataPollSender.StopPolling();
     mUpdateTimer.Stop();
-
-    if (mScanning)
-    {
-        HandleDiscoverComplete();
-    }
+    Get<Mle::DiscoverScanner>().Stop();
 
     while ((message = mSendQueue.GetHead()) != NULL)
     {
@@ -163,6 +155,15 @@ void MeshForwarder::RemoveMessage(Message &aMessage)
     aMessage.Free();
 }
 
+void MeshForwarder::ResumeMessageTransmissions(void)
+{
+    if (mTxPaused)
+    {
+        mTxPaused = false;
+        mScheduleTransmissionTask.Post();
+    }
+}
+
 void MeshForwarder::ScheduleTransmissionTask(Tasklet &aTasklet)
 {
     aTasklet.GetOwner<MeshForwarder>().ScheduleTransmissionTask();
@@ -170,7 +171,7 @@ void MeshForwarder::ScheduleTransmissionTask(Tasklet &aTasklet)
 
 void MeshForwarder::ScheduleTransmissionTask(void)
 {
-    VerifyOrExit(!mSendBusy, OT_NOOP);
+    VerifyOrExit(!mSendBusy && !mTxPaused, OT_NOOP);
 
     mSendMessage = GetDirectTransmission();
     VerifyOrExit(mSendMessage != NULL, OT_NOOP);
@@ -184,27 +185,6 @@ void MeshForwarder::ScheduleTransmissionTask(void)
 
 exit:
     return;
-}
-
-otError MeshForwarder::PrepareDiscoverRequest(void)
-{
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(!mScanning, OT_NOOP);
-
-    mScanChannel  = Mac::ChannelMask::kChannelIteratorFirst;
-    mRestorePanId = Get<Mac::Mac>().GetPanId();
-
-    mScanning = true;
-
-    if (mScanChannels.GetNextChannel(mScanChannel) != OT_ERROR_NONE)
-    {
-        HandleDiscoverComplete();
-        ExitNow(error = OT_ERROR_DROP);
-    }
-
-exit:
-    return error;
 }
 
 Message *MeshForwarder::GetDirectTransmission(void)
@@ -226,12 +206,6 @@ Message *MeshForwarder::GetDirectTransmission(void)
         {
         case Message::kTypeIp6:
             error = UpdateIp6Route(*curMessage);
-
-            if (curMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest)
-            {
-                error = PrepareDiscoverRequest();
-            }
-
             break;
 
 #if OPENTHREAD_FTD
@@ -436,18 +410,7 @@ otError MeshForwarder::HandleFrameRequest(Mac::TxFrame &aFrame)
     case Message::kTypeIp6:
         if (mSendMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest)
         {
-            SuccessOrExit(error = Get<Mac::Mac>().SetTemporaryChannel(mScanChannel));
-
-            aFrame.SetChannel(mScanChannel);
-
-            // In case a specific PAN ID of a Thread Network to be discovered is not known, Discovery
-            // Request messages MUST have the Destination PAN ID in the IEEE 802.15.4 MAC header set
-            // to be the Broadcast PAN ID (0xFFFF) and the Source PAN ID set to a randomly generated
-            // value.
-            if (mSendMessage->GetPanId() == Mac::kPanIdBroadcast && Get<Mac::Mac>().GetPanId() == Mac::kPanIdBroadcast)
-            {
-                Get<Mac::Mac>().SetPanId(Mac::GenerateRandomPanId());
-            }
+            SuccessOrExit(error = Get<Mle::DiscoverScanner>().PrepareDiscoveryRequestFrame(aFrame));
         }
 
         mMessageNextOffset =
@@ -887,9 +850,7 @@ void MeshForwarder::HandleSentFrame(Mac::TxFrame &aFrame, otError aError)
 
     if (mSendMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest)
     {
-        mSendBusy = true;
-        mDiscoverTimer.Start(static_cast<uint16_t>(Mac::kScanDurationDefault));
-        ExitNow();
+        Get<Mle::DiscoverScanner>().HandleDiscoveryRequestFrameTxDone(*mSendMessage);
     }
 
     if (!mSendMessage->GetDirectTransmission() && !mSendMessage->IsChildPending())
@@ -918,50 +879,6 @@ exit:
     {
         mScheduleTransmissionTask.Post();
     }
-}
-
-void MeshForwarder::SetDiscoverParameters(const Mac::ChannelMask &aScanChannels)
-{
-    uint32_t mask;
-    uint32_t supportedMask = Get<Mac::Mac>().GetSupportedChannelMask().GetMask();
-
-    mask = aScanChannels.IsEmpty() ? supportedMask : aScanChannels.GetMask();
-    mScanChannels.SetMask(mask & supportedMask);
-}
-
-void MeshForwarder::HandleDiscoverTimer(Timer &aTimer)
-{
-    aTimer.GetOwner<MeshForwarder>().HandleDiscoverTimer();
-}
-
-void MeshForwarder::HandleDiscoverTimer(void)
-{
-    if (mScanChannels.GetNextChannel(mScanChannel) != OT_ERROR_NONE)
-    {
-        mSendQueue.Dequeue(*mSendMessage);
-        mSendMessage->Free();
-        mSendMessage = NULL;
-
-        HandleDiscoverComplete();
-        ExitNow();
-    }
-
-    mSendMessage->SetDirectTransmission();
-
-exit:
-    mSendBusy = false;
-    mScheduleTransmissionTask.Post();
-}
-
-void MeshForwarder::HandleDiscoverComplete(void)
-{
-    OT_ASSERT(mScanning);
-
-    Get<Mac::Mac>().ClearTemporaryChannel();
-    Get<Mac::Mac>().SetPanId(mRestorePanId);
-    mScanning = false;
-    Get<Mle::MleRouter>().HandleDiscoverComplete();
-    mDiscoverTimer.Stop();
 }
 
 void MeshForwarder::HandleReceivedFrame(Mac::RxFrame &aFrame)

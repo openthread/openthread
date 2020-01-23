@@ -457,15 +457,15 @@ otError otThreadDiscover(otInstance *             aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::MleRouter>().Discover(static_cast<Mac::ChannelMask>(aScanChannels), aPanId, aJoiner,
-                                                   aEnableEui64Filtering, aCallback, aCallbackContext);
+    return instance.Get<Mle::DiscoverScanner>().Discover(static_cast<Mac::ChannelMask>(aScanChannels), aPanId, aJoiner,
+                                                         aEnableEui64Filtering, aCallback, aCallbackContext);
 }
 
 bool otThreadIsDiscoverInProgress(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::MleRouter>().IsDiscoverInProgress();
+    return instance.Get<Mle::DiscoverScanner>().IsInProgress();
 }
 
 const otIpCounters *otThreadGetIp6Counters(otInstance *aInstance)

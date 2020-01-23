@@ -438,6 +438,11 @@ template <> inline Mle::MleRouter &Instance::Get(void)
     return mThreadNetif.mMleRouter;
 }
 
+template <> inline Mle::DiscoverScanner &Instance::Get(void)
+{
+    return mThreadNetif.mDiscoverScanner;
+}
+
 #if OPENTHREAD_FTD
 template <> inline ChildTable &Instance::Get(void)
 {
