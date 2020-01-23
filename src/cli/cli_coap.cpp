@@ -233,9 +233,9 @@ otError Coap::ProcessSet(int argc, char *argv[])
 
 exit:
 
-    if ((error != OT_ERROR_NONE) && (message != NULL))
+    if ((error != OT_ERROR_NONE) && (notificationMessage != NULL))
     {
-        otMessageFree(message);
+        otMessageFree(notificationMessage);
     }
 
     return error;
