@@ -88,26 +88,21 @@ def verify_prefix(
     """
     for node in node_list:
         prefixes = wpan.parse_on_mesh_prefix_result(
-            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES)
-        )
+            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
         for p in prefixes:
             if p.prefix == prefix:
-                if (
-                    int(p.prefix_len) == prefix_len
-                    and p.is_stable() == stable
-                    and p.is_on_mesh() == on_mesh
-                    and p.is_def_route() == default_route
-                    and p.is_slaac() == slaac
-                    and p.is_dhcp() == dhcp
-                    and p.is_config() == configure
-                    and p.is_preferred() == preferred
-                    and p.priority == priority
-                ):
+                if (int(p.prefix_len) == prefix_len and
+                        p.is_stable() == stable and
+                        p.is_on_mesh() == on_mesh and
+                        p.is_def_route() == default_route and
+                        p.is_slaac() == slaac and p.is_dhcp() == dhcp and
+                        p.is_config() == configure and
+                        p.is_preferred() == preferred and
+                        p.priority == priority):
                     break
         else:
-            raise wpan.VerifyError(
-                "Did not find prefix {} on node {}".format(prefix, node)
-            )
+            raise wpan.VerifyError("Did not find prefix {} on node {}".format(
+                prefix, node))
 
 
 def verify_no_prefix(node_list, prefix):
@@ -116,8 +111,7 @@ def verify_no_prefix(node_list, prefix):
     """
     for node in node_list:
         prefixes = wpan.parse_on_mesh_prefix_result(
-            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES)
-        )
+            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
         for p in prefixes:
             verify(not p.prefix == prefix)
 
@@ -191,10 +185,8 @@ slaac_addrs = [node.find_ip6_address_with_prefix(PREFIX) for node in all_nodes]
 
 r1.reset()
 wpan.verify_within(check_prefix_and_slaac_address_are_added, WAIT_INTERVAL)
-verify(
-    [node.find_ip6_address_with_prefix(PREFIX) for node in all_nodes]
-    == slaac_addrs
-)
+verify([node.find_ip6_address_with_prefix(PREFIX)
+        for node in all_nodes] == slaac_addrs)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Remove the prefix on r1 and verify that the address and prefix are
@@ -217,28 +209,22 @@ wpan.verify_within(check_prefix_and_slaac_address_are_removed, WAIT_INTERVAL)
 # Add prefix on r2
 r2.add_prefix(PREFIX, stable=True, on_mesh=True, slaac=True)
 wpan.verify_within(check_prefix_and_slaac_address_are_added, WAIT_INTERVAL)
-verify(
-    [node.find_ip6_address_with_prefix(PREFIX) for node in all_nodes]
-    == slaac_addrs
-)
+verify([node.find_ip6_address_with_prefix(PREFIX)
+        for node in all_nodes] == slaac_addrs)
 
 # Add same prefix on r1 and verify prefix and addresses stay as before
 r1.add_prefix(PREFIX, stable=True, on_mesh=True, slaac=True)
 wpan.verify_within(check_prefix_and_slaac_address_are_added, WAIT_INTERVAL)
-verify(
-    [node.find_ip6_address_with_prefix(PREFIX) for node in all_nodes]
-    == slaac_addrs
-)
+verify([node.find_ip6_address_with_prefix(PREFIX)
+        for node in all_nodes] == slaac_addrs)
 
 # Remove on r1, addresses and prefixes should stay as before (r2 still has
 # the same prefix)
 r1.remove_prefix(PREFIX)
 time.sleep(0.5)
 wpan.verify_within(check_prefix_and_slaac_address_are_added, WAIT_INTERVAL)
-verify(
-    [node.find_ip6_address_with_prefix(PREFIX) for node in all_nodes]
-    == slaac_addrs
-)
+verify([node.find_ip6_address_with_prefix(PREFIX)
+        for node in all_nodes] == slaac_addrs)
 
 # Remove the prefix on r2 and verify that the address and prefix are now
 # removed on all nodes.
@@ -252,10 +238,8 @@ wpan.verify_within(check_prefix_and_slaac_address_are_removed, WAIT_INTERVAL)
 r1.add_prefix(PREFIX, stable=True, on_mesh=True, slaac=False)
 r2.add_prefix(PREFIX, stable=True, on_mesh=True, slaac=True)
 wpan.verify_within(check_prefix_and_slaac_address_are_added, WAIT_INTERVAL)
-verify(
-    [node.find_ip6_address_with_prefix(PREFIX) for node in all_nodes]
-    == slaac_addrs
-)
+verify([node.find_ip6_address_with_prefix(PREFIX)
+        for node in all_nodes] == slaac_addrs)
 
 # Now remove the prefix on r2 and verify that SLAAC address is removed
 r2.remove_prefix(PREFIX)
@@ -297,10 +281,8 @@ verify(all([not addr.startswith(PREFIX[:-1]) for addr in r1_addrs]))
 
 r1.remove_ip6_address_on_interface(IP_ADDRESS)
 wpan.verify_within(check_prefix_and_slaac_address_are_added, WAIT_INTERVAL)
-verify(
-    [node.find_ip6_address_with_prefix(PREFIX) for node in all_nodes]
-    == slaac_addrs
-)
+verify([node.find_ip6_address_with_prefix(PREFIX)
+        for node in all_nodes] == slaac_addrs)
 
 # Re-add the address
 r1.add_ip6_address_on_interface(IP_ADDRESS)
@@ -329,10 +311,8 @@ r1.remove_ip6_address_on_interface(IP_ADDRESS)
 
 r1.add_prefix(PREFIX, stable=True, on_mesh=True, slaac=True)
 wpan.verify_within(check_prefix_and_slaac_address_are_added, WAIT_INTERVAL)
-verify(
-    [node.find_ip6_address_with_prefix(PREFIX) for node in all_nodes]
-    == slaac_addrs
-)
+verify([node.find_ip6_address_with_prefix(PREFIX)
+        for node in all_nodes] == slaac_addrs)
 
 for node in all_nodes:
     node.set(wpan.WPAN_OT_SLAAC_ENABLED, 'false')
@@ -342,10 +322,8 @@ wpan.verify_within(check_slaac_address_is_removed, WAIT_INTERVAL)
 for node in all_nodes:
     node.set(wpan.WPAN_OT_SLAAC_ENABLED, 'true')
 wpan.verify_within(check_prefix_and_slaac_address_are_added, WAIT_INTERVAL)
-verify(
-    [node.find_ip6_address_with_prefix(PREFIX) for node in all_nodes]
-    == slaac_addrs
-)
+verify([node.find_ip6_address_with_prefix(PREFIX)
+        for node in all_nodes] == slaac_addrs)
 
 r1.remove_prefix(PREFIX)
 wpan.verify_within(check_prefix_and_slaac_address_are_removed, WAIT_INTERVAL)
@@ -364,10 +342,8 @@ wpan.verify_within(check_slaac_address_is_removed, WAIT_INTERVAL)
 for node in all_nodes:
     node.set(wpan.WPAN_OT_SLAAC_ENABLED, 'true')
 wpan.verify_within(check_prefix_and_slaac_address_are_added, WAIT_INTERVAL)
-verify(
-    [node.find_ip6_address_with_prefix(PREFIX) for node in all_nodes]
-    == slaac_addrs
-)
+verify([node.find_ip6_address_with_prefix(PREFIX)
+        for node in all_nodes] == slaac_addrs)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished

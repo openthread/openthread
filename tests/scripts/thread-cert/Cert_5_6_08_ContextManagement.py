@@ -38,6 +38,7 @@ ED = 3
 
 
 class Cert_5_6_8_ContextManagement(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 

@@ -45,7 +45,6 @@ import sniffer_transport
 
 
 class Sniffer:
-
     """ Class representing the Sniffing node, whose main task is listening
         and logging message exchange performed by other nodes.
     """

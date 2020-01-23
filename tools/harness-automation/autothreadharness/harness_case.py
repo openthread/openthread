@@ -154,7 +154,8 @@ class HarnessCase(unittest.TestCase):
     auto_dut = settings.AUTO_DUT
     """bool: whether use harness auto dut feature"""
 
-    timeout = hasattr(settings, 'TIMEOUT') and settings.TIMEOUT or DEFAULT_TIMEOUT
+    timeout = hasattr(settings,
+                      'TIMEOUT') and settings.TIMEOUT or DEFAULT_TIMEOUT
     """number: timeout in seconds to stop running this test case"""
 
     started = 0
@@ -170,17 +171,19 @@ class HarnessCase(unittest.TestCase):
         self.dut = None
         self._browser = None
         self._hc = None
-        self.result_dir = '%s\\%s' % (settings.OUTPUT_PATH, self.__class__.__name__)
+        self.result_dir = '%s\\%s' % (settings.OUTPUT_PATH,
+                                      self.__class__.__name__)
         self.history = HistoryHelper()
         self.add_all_devices = False
         self.new_th = False
 
         harness_info = ConfigParser.ConfigParser()
         harness_info.read('%s\\info.ini' % settings.HARNESS_HOME)
-        if harness_info.has_option('Thread_Harness_Info', 'Version') and harness_info.has_option(
-            'Thread_Harness_Info', 'Mode'
-        ):
-            harness_version = harness_info.get('Thread_Harness_Info', 'Version').rsplit(' ', 1)[1]
+        if harness_info.has_option('Thread_Harness_Info',
+                                   'Version') and harness_info.has_option(
+                                       'Thread_Harness_Info', 'Mode'):
+            harness_version = harness_info.get('Thread_Harness_Info',
+                                               'Version').rsplit(' ', 1)[1]
             harness_mode = harness_info.get('Thread_Harness_Info', 'Mode')
 
             if harness_mode == 'External' and harness_version > '1.4.0':
@@ -218,7 +221,8 @@ class HarnessCase(unittest.TestCase):
 
         while True:
             try:
-                pdu = pdu_factory.create_pdu_controller(settings.PDU_CONTROLLER_TYPE)
+                pdu = pdu_factory.create_pdu_controller(
+                    settings.PDU_CONTROLLER_TYPE)
                 pdu.open(**settings.PDU_CONTROLLER_OPEN_PARAMS)
             except EOFError:
                 logger.warning('Failed to connect to telnet')
@@ -248,18 +252,25 @@ class HarnessCase(unittest.TestCase):
         time.sleep(2)
 
         harness_config = ConfigParser.ConfigParser()
-        harness_config.read('%s\\Config\\Configuration.ini' % settings.HARNESS_HOME)
-        if harness_config.has_option('THREAD_HARNESS_CONFIG', 'BrowserAutoNavigate') and harness_config.getboolean(
-            'THREAD_HARNESS_CONFIG', 'BrowserAutoNavigate'
-        ):
-            logger.error('BrowserAutoNavigate in Configuration.ini should be False')
-            raise FailError('BrowserAutoNavigate in Configuration.ini should be False')
+        harness_config.read('%s\\Config\\Configuration.ini' %
+                            settings.HARNESS_HOME)
+        if harness_config.has_option(
+                'THREAD_HARNESS_CONFIG',
+                'BrowserAutoNavigate') and harness_config.getboolean(
+                    'THREAD_HARNESS_CONFIG', 'BrowserAutoNavigate'):
+            logger.error(
+                'BrowserAutoNavigate in Configuration.ini should be False')
+            raise FailError(
+                'BrowserAutoNavigate in Configuration.ini should be False')
         if settings.MIXED_DEVICE_TYPE:
             if harness_config.has_option(
-                'THREAD_HARNESS_CONFIG', 'EnableDeviceSelection'
-            ) and not harness_config.getboolean('THREAD_HARNESS_CONFIG', 'EnableDeviceSelection'):
-                logger.error('EnableDeviceSelection in Configuration.ini should be True')
-                raise FailError('EnableDeviceSelection in Configuration.ini should be True')
+                    'THREAD_HARNESS_CONFIG',
+                    'EnableDeviceSelection') and not harness_config.getboolean(
+                        'THREAD_HARNESS_CONFIG', 'EnableDeviceSelection'):
+                logger.error(
+                    'EnableDeviceSelection in Configuration.ini should be True')
+                raise FailError(
+                    'EnableDeviceSelection in Configuration.ini should be True')
 
     def _destroy_harness(self):
         """Stop harness backend service
@@ -299,8 +310,8 @@ class HarnessCase(unittest.TestCase):
             chrome_options.add_argument('--disable-infobars')
             chrome_options.add_argument('--ignore-certificate-errors')
             chrome_options.add_experimental_option(
-                'prefs', {'profile.managed_default_content_settings.notifications': 1}
-            )
+                'prefs',
+                {'profile.managed_default_content_settings.notifications': 1})
 
             browser = webdriver.Chrome(chrome_options=chrome_options)
             browser.set_page_load_timeout(20)
@@ -323,10 +334,11 @@ class HarnessCase(unittest.TestCase):
         self._browser = None
 
     def _init_rf_shield(self):
-        if getattr(settings, 'SHIELD_CONTROLLER_TYPE', None) and getattr(settings, 'SHIELD_CONTROLLER_PARAMS', None):
+        if getattr(settings, 'SHIELD_CONTROLLER_TYPE', None) and getattr(
+                settings, 'SHIELD_CONTROLLER_PARAMS', None):
             self.rf_shield = get_rf_shield_controller(
-                shield_type=settings.SHIELD_CONTROLLER_TYPE, params=settings.SHIELD_CONTROLLER_PARAMS
-            )
+                shield_type=settings.SHIELD_CONTROLLER_TYPE,
+                params=settings.SHIELD_CONTROLLER_PARAMS)
         else:
             self.rf_shield = None
 
@@ -355,7 +367,8 @@ class HarnessCase(unittest.TestCase):
             os.system('del /q "%s\\Reports\\*.*"' % settings.HARNESS_HOME)
         else:
             logger.info('Empty files in temps')
-            os.system('del /q "%s\\Thread_Harness\\temp\\*.*"' % settings.HARNESS_HOME)
+            os.system('del /q "%s\\Thread_Harness\\temp\\*.*"' %
+                      settings.HARNESS_HOME)
 
         # create directory
         os.system('mkdir %s' % self.result_dir)
@@ -393,16 +406,19 @@ class HarnessCase(unittest.TestCase):
             if dialog and dialog.get_attribute('aria-hidden') == 'false':
                 times = 100
                 while times:
-                    status = dialog.find_element_by_class_name('status-notify').text
+                    status = dialog.find_element_by_class_name(
+                        'status-notify').text
                     if 'Searching' in status:
                         logger.info('Still detecting..')
                     elif 'Not' in status:
                         logger.warning('Sniffer device not verified!')
-                        button = dialog.find_element_by_id('snifferAutoDetectBtn')
+                        button = dialog.find_element_by_id(
+                            'snifferAutoDetectBtn')
                         button.click()
                     elif 'Verified' in status:
                         logger.info('Verified!')
-                        button = dialog.find_element_by_id('saveCaptureSettings')
+                        button = dialog.find_element_by_id(
+                            'saveCaptureSettings')
                         button.click()
                         break
                     else:
@@ -446,12 +462,14 @@ class HarnessCase(unittest.TestCase):
                 if dialog.get_attribute('aria-hidden') != 'false':
                     raise Exception('Missing General Setup dialog')
 
-                field = dialog.find_element_by_id('inp_general_child_update_wait_time')
+                field = dialog.find_element_by_id(
+                    'inp_general_child_update_wait_time')
                 field.clear()
                 if self.child_timeout:
                     field.send_keys(str(self.child_timeout))
 
-                field = dialog.find_element_by_id('inp_general_sed_polling_rate')
+                field = dialog.find_element_by_id(
+                    'inp_general_sed_polling_rate')
                 field.clear()
                 if self.sed_polling_interval:
                     field.send_keys(str(self.sed_polling_interval))
@@ -508,31 +526,33 @@ class HarnessCase(unittest.TestCase):
         selected_hw_num = len(selected_hw_set)
 
         while selected_hw_num:
-            remove_button = selected_hw_set[selected_hw_num - 1].find_element_by_class_name('removeSelectedDevice')
+            remove_button = selected_hw_set[selected_hw_num -
+                                            1].find_element_by_class_name(
+                                                'removeSelectedDevice')
             remove_button.click()
             selected_hw_num = selected_hw_num - 1
 
         devices = [
-            device
-            for device in settings.GOLDEN_DEVICES
-            if not self.history.is_bad_golden_device(device[0])
-            and not (settings.DUT_DEVICE and device[0] == settings.DUT_DEVICE[0])
+            device for device in settings.GOLDEN_DEVICES
+            if not self.history.is_bad_golden_device(device[0]) and
+            not (settings.DUT_DEVICE and device[0] == settings.DUT_DEVICE[0])
         ]
-        logger.info('Available golden devices: %s', json.dumps(devices, indent=2))
+        logger.info('Available golden devices: %s', json.dumps(devices,
+                                                               indent=2))
 
         shield_devices = [
-            shield_device
-            for shield_device in settings.SHIELD_GOLDEN_DEVICES
-            if not self.history.is_bad_golden_device(shield_device[0])
-            and not (settings.DUT2_DEVICE and shield_device[0] == settings.DUT2_DEVICE[0])
+            shield_device for shield_device in settings.SHIELD_GOLDEN_DEVICES
+            if not self.history.is_bad_golden_device(shield_device[0]) and
+            not (settings.DUT2_DEVICE and
+                 shield_device[0] == settings.DUT2_DEVICE[0])
         ]
-        logger.info('Available shield golden devices: %s', json.dumps(shield_devices, indent=2))
+        logger.info('Available shield golden devices: %s',
+                    json.dumps(shield_devices, indent=2))
         golden_devices_required = self.golden_devices_required
 
         dut_device = ()
         if settings.DUT_DEVICE:
             dut_device = settings.DUT_DEVICE
-
         """check if test case needs to use RF-shield box and its device order in Testbed page
         Two parameters case_need_shield & device_order should be set in the case script
         according to the requires: https://openthread.io/certification/test-cases#rf_shielding
@@ -562,9 +582,11 @@ class HarnessCase(unittest.TestCase):
                 logger.info('Must set DUT2_DEVICE')
                 raise FailError('DUT2_DEVICE must be set in settings.py')
             if isinstance(self.device_order, list) and self.device_order:
-                logger.info('case %s devices ordered by %s ', self.case, self.device_order)
+                logger.info('case %s devices ordered by %s ', self.case,
+                            self.device_order)
             else:
-                logger.info('case %s uses %s as DUT', self.case, settings.DUT2_DEVICE)
+                logger.info('case %s uses %s as DUT', self.case,
+                            settings.DUT2_DEVICE)
 
         # for test bed with multi-vendor devices
         if settings.MIXED_DEVICE_TYPE:
@@ -586,7 +608,8 @@ class HarnessCase(unittest.TestCase):
                     case_id = match_line.group(1)
 
                     if re.sub(r'\.', ' ', case_id) == self.case:
-                        logger.info('Get line by case %s: %s', case_id, topo_line)
+                        logger.info('Get line by case %s: %s', case_id,
+                                    topo_line)
                         topo_device_list = re.split(',', match_line.group(2))
                         for i in range(len(topo_device_list)):
                             topo_device = re.split(':', topo_device_list[i])
@@ -595,9 +618,12 @@ class HarnessCase(unittest.TestCase):
                     else:
                         continue
             except Exception as e:
-                logger.info('Get devices from topology config file error: %s', e)
+                logger.info('Get devices from topology config file error: %s',
+                            e)
                 raise GoldenDeviceNotEnoughError()
-            logger.info('Golden devices in topology config file for case %s: %s', case_id, topo_mixed_devices)
+            logger.info(
+                'Golden devices in topology config file for case %s: %s',
+                case_id, topo_mixed_devices)
             f_topo.close()
             golden_device_candidates = []
             missing_golden_devices = topo_mixed_devices[:]
@@ -611,16 +637,16 @@ class HarnessCase(unittest.TestCase):
                         # mapping device in device_order which needs to be shielded
                         if device_order_item[1]:
                             if 'DUT' in device_order_item[0]:
-                                golden_device_candidates.append(settings.DUT2_DEVICE)
+                                golden_device_candidates.append(
+                                    settings.DUT2_DEVICE)
                                 dut_device = settings.DUT2_DEVICE
                                 matched_dut = True
                                 matched = True
                                 break
                             for device_item in shield_devices:
-                                if (
-                                    device_order_item[0] == mixed_device_item[0]
-                                    and mixed_device_item[1] == device_item[1]
-                                ):
+                                if (device_order_item[0] == mixed_device_item[0]
+                                        and
+                                        mixed_device_item[1] == device_item[1]):
                                     golden_device_candidates.append(device_item)
                                     shield_devices.remove(device_item)
                                     matched = True
@@ -628,21 +654,22 @@ class HarnessCase(unittest.TestCase):
                         # mapping device in device_order which does not need to be shielded
                         else:
                             if 'DUT' in device_order_item[0]:
-                                golden_device_candidates.append(settings.DUT_DEVICE)
+                                golden_device_candidates.append(
+                                    settings.DUT_DEVICE)
                                 matched_dut = True
                                 matched = True
                                 break
                             for device_item in devices:
-                                if (
-                                    device_order_item[0] == mixed_device_item[0]
-                                    and mixed_device_item[1] == device_item[1]
-                                ):
+                                if (device_order_item[0] == mixed_device_item[0]
+                                        and
+                                        mixed_device_item[1] == device_item[1]):
                                     golden_device_candidates.append(device_item)
                                     devices.remove(device_item)
                                     matched = True
                                     break
                     if not matched:
-                        logger.info('Golden device not enough in : no %s', device_order_item)
+                        logger.info('Golden device not enough in : no %s',
+                                    device_order_item)
                         raise GoldenDeviceNotEnoughError()
                 if not matched_dut:
                     raise FailError('Failed to find DUT in device_order')
@@ -656,7 +683,9 @@ class HarnessCase(unittest.TestCase):
                             devices.remove(device_item)
                             missing_golden_devices.remove(mixed_device_item)
                             break
-                logger.info('Golden devices in topology config file mapped in settings : %s', golden_device_candidates)
+                logger.info(
+                    'Golden devices in topology config file mapped in settings : %s',
+                    golden_device_candidates)
                 if len(topo_mixed_devices) != len(golden_device_candidates):
                     device_dict = dict()
                     for missing_device in missing_golden_devices:
@@ -669,7 +698,8 @@ class HarnessCase(unittest.TestCase):
                 else:
                     devices = golden_device_candidates
                     golden_devices_required = len(devices)
-                    logger.info('All case-needed golden devices: %s', json.dumps(devices, indent=2))
+                    logger.info('All case-needed golden devices: %s',
+                                json.dumps(devices, indent=2))
         # for test bed with single vendor devices
         else:
             golden_device_candidates = []
@@ -680,7 +710,8 @@ class HarnessCase(unittest.TestCase):
                     # choose device which needs to be shielded
                     if device_order_item[1]:
                         if 'DUT' in device_order_item[0]:
-                            golden_device_candidates.append(settings.DUT2_DEVICE)
+                            golden_device_candidates.append(
+                                settings.DUT2_DEVICE)
                             dut_device = settings.DUT2_DEVICE
                             matched_dut = True
                             matched = True
@@ -703,7 +734,8 @@ class HarnessCase(unittest.TestCase):
                                 matched = True
                                 break
                     if not matched:
-                        logger.info('Golden device not enough in : no %s', device_order_item)
+                        logger.info('Golden device not enough in : no %s',
+                                    device_order_item)
                         raise GoldenDeviceNotEnoughError()
                 if not matched_dut:
                     raise FailError('Failed to find DUT in device_order')
@@ -720,7 +752,8 @@ class HarnessCase(unittest.TestCase):
             raise GoldenDeviceNotEnoughError()
 
         # add golden devices
-        number_of_devices_to_add = len(devices) if self.add_all_devices else golden_devices_required
+        number_of_devices_to_add = len(
+            devices) if self.add_all_devices else golden_devices_required
         for i in range(number_of_devices_to_add):
             self._add_device(*devices.pop())
 
@@ -734,24 +767,29 @@ class HarnessCase(unittest.TestCase):
 
         # enable AUTO DUT
         if self.auto_dut:
-            checkbox_auto_dut = browser.find_element_by_id('EnableAutoDutSelection')
+            checkbox_auto_dut = browser.find_element_by_id(
+                'EnableAutoDutSelection')
             if not checkbox_auto_dut.is_selected():
                 checkbox_auto_dut.click()
                 time.sleep(1)
 
             if settings.DUT_DEVICE:
-                radio_auto_dut = browser.find_element_by_class_name('AutoDUT_RadBtns')
+                radio_auto_dut = browser.find_element_by_class_name(
+                    'AutoDUT_RadBtns')
                 if not radio_auto_dut.is_selected() and not self.device_order:
                     radio_auto_dut.click()
 
                 if self.device_order:
-                    selected_hw_set = test_bed.find_elements_by_class_name('selected-hw')
+                    selected_hw_set = test_bed.find_elements_by_class_name(
+                        'selected-hw')
                     for selected_hw in selected_hw_set:
-                        form_inputs = selected_hw.find_elements_by_tag_name('input')
+                        form_inputs = selected_hw.find_elements_by_tag_name(
+                            'input')
                         form_port = form_inputs[0]
                         port = form_port.get_attribute('value').encode('utf8')
                         if port == dut_device[0]:
-                            radio_auto_dut = selected_hw.find_element_by_class_name('AutoDUT_RadBtns')
+                            radio_auto_dut = selected_hw.find_element_by_class_name(
+                                'AutoDUT_RadBtns')
                             if not radio_auto_dut.is_selected():
                                 radio_auto_dut.click()
 
@@ -760,19 +798,23 @@ class HarnessCase(unittest.TestCase):
                 self._connect_devices()
                 button_next = browser.find_element_by_id('nextBtn')
                 if not wait_until(
-                    lambda: 'disabled' not in button_next.get_attribute('class'),
-                    times=(30 + 4 * number_of_devices_to_add),
+                        lambda: 'disabled' not in button_next.get_attribute(
+                            'class'),
+                        times=(30 + 4 * number_of_devices_to_add),
                 ):
                     bad_ones = []
-                    selected_hw_set = test_bed.find_elements_by_class_name('selected-hw')
+                    selected_hw_set = test_bed.find_elements_by_class_name(
+                        'selected-hw')
                     for selected_hw in selected_hw_set:
-                        form_inputs = selected_hw.find_elements_by_tag_name('input')
+                        form_inputs = selected_hw.find_elements_by_tag_name(
+                            'input')
                         form_port = form_inputs[0]
                         if form_port.is_enabled():
                             bad_ones.append(selected_hw)
 
                     for selected_hw in bad_ones:
-                        form_inputs = selected_hw.find_elements_by_tag_name('input')
+                        form_inputs = selected_hw.find_elements_by_tag_name(
+                            'input')
                         form_port = form_inputs[0]
                         port = form_port.get_attribute('value').encode('utf8')
                         if port == dut_device[0]:
@@ -788,7 +830,8 @@ class HarnessCase(unittest.TestCase):
                             self.history.mark_bad_golden_device(port)
 
                         # remove the bad one
-                        selected_hw.find_element_by_class_name('removeSelectedDevice').click()
+                        selected_hw.find_element_by_class_name(
+                            'removeSelectedDevice').click()
                         time.sleep(0.1)
 
                         if len(devices):
@@ -804,14 +847,17 @@ class HarnessCase(unittest.TestCase):
                         continue
 
                 if self.auto_dut and not settings.DUT_DEVICE:
-                    radio_auto_dut = browser.find_element_by_class_name('AutoDUT_RadBtns')
+                    radio_auto_dut = browser.find_element_by_class_name(
+                        'AutoDUT_RadBtns')
                     if not radio_auto_dut.is_selected():
                         radio_auto_dut.click()
 
                     time.sleep(5)
 
                 button_next.click()
-                if not wait_until(lambda: self._browser.current_url.endswith('TestExecution.html'), 20):
+                if not wait_until(
+                        lambda: self._browser.current_url.endswith(
+                            'TestExecution.html'), 20):
                     raise Exception('Failed to load TestExecution page')
             except FailError:
                 raise
@@ -829,8 +875,10 @@ class HarnessCase(unittest.TestCase):
         time.sleep(1)
 
         checkbox = None
-        wait_until(lambda: self._browser.find_elements_by_css_selector('.tree-node .tree-title') and True)
-        elems = self._browser.find_elements_by_css_selector('.tree-node .tree-title')
+        wait_until(lambda: self._browser.find_elements_by_css_selector(
+            '.tree-node .tree-title') and True)
+        elems = self._browser.find_elements_by_css_selector(
+            '.tree-node .tree-title')
         finder = re.compile(r'.*\b' + case + r'\b')
         finder_dotted = re.compile(r'.*\b' + case.replace(' ', r'\.') + r'\b')
         for elem in elems:
@@ -853,7 +901,9 @@ class HarnessCase(unittest.TestCase):
 
         elem = self._browser.find_element_by_id('runTest')
         elem.click()
-        if not wait_until(lambda: self._browser.find_element_by_id('stopTest') and True, 10):
+        if not wait_until(
+                lambda: self._browser.find_element_by_id('stopTest') and True,
+                10):
             raise Exception('Failed to start test case')
 
     def _collect_result(self):
@@ -863,11 +913,14 @@ class HarnessCase(unittest.TestCase):
         """
 
         if self.new_th:
-            os.system('copy "%s\\Reports\\*.*" "%s"' % (settings.HARNESS_HOME, self.result_dir))
+            os.system('copy "%s\\Reports\\*.*" "%s"' %
+                      (settings.HARNESS_HOME, self.result_dir))
         else:
-            os.system('copy "%s\\Thread_Harness\\temp\\*.*" "%s"' % (settings.HARNESS_HOME, self.result_dir))
+            os.system('copy "%s\\Thread_Harness\\temp\\*.*" "%s"' %
+                      (settings.HARNESS_HOME, self.result_dir))
 
-        os.system('copy "%s\\Captures\\*.pcapng" %s\\' % (settings.HARNESS_HOME, self.result_dir))
+        os.system('copy "%s\\Captures\\*.pcapng" %s\\' %
+                  (settings.HARNESS_HOME, self.result_dir))
 
     def _wait_dialog(self):
         """Wait for dialogs and handle them until done.
@@ -884,7 +937,8 @@ class HarnessCase(unittest.TestCase):
                 logger.exception('Failed to get dialog.')
             else:
                 if dialog and dialog.get_attribute('aria-hidden') == 'false':
-                    title = dialog.find_element_by_class_name('modal-title').text
+                    title = dialog.find_element_by_class_name(
+                        'modal-title').text
                     time.sleep(1)
                     logger.info('Handling dialog[%s]', title)
 
@@ -918,15 +972,21 @@ class HarnessCase(unittest.TestCase):
             if self.timeout % 10 == 0:
                 lines = self._hc.tail()
                 if 'SUCCESS: The process "dumpcap.exe" with PID ' in lines:
-                    logger.info('Tshark should be ended now, lets wait at most 30 seconds.')
-                    if not wait_until(lambda: 'tshark.exe' not in subprocess.check_output('tasklist'), 30):
+                    logger.info(
+                        'Tshark should be ended now, lets wait at most 30 seconds.'
+                    )
+                    if not wait_until(
+                            lambda: 'tshark.exe' not in subprocess.check_output(
+                                'tasklist'), 30):
                         res = subprocess.check_output(
-                            'taskkill /t /f /im tshark.exe', stderr=subprocess.STDOUT, shell=True
-                        )
+                            'taskkill /t /f /im tshark.exe',
+                            stderr=subprocess.STDOUT,
+                            shell=True)
                         logger.info(res)
 
         # Wait until case really stopped
-        wait_until(lambda: self._browser.find_element_by_id('runTest') and True, 30)
+        wait_until(lambda: self._browser.find_element_by_id('runTest') and True,
+                   30)
 
         if error:
             raise FailError('Fail for previous exceptions')
@@ -963,7 +1023,8 @@ class HarnessCase(unittest.TestCase):
             self.dut.extpanid = settings.THREAD_EXTPANID
             self.dut.start()
 
-        elif title.startswith('MAC Address Required') or title.startswith('DUT Random Extended MAC Address Required'):
+        elif title.startswith('MAC Address Required') or title.startswith(
+                'DUT Random Extended MAC Address Required'):
             mac = self.dut.mac
             inp = dialog.find_element_by_id('cnfrmInpText')
             inp.clear()
@@ -973,7 +1034,8 @@ class HarnessCase(unittest.TestCase):
             ll64 = None
             for addr in self.dut.addrs:
                 addr = addr.lower()
-                if addr.startswith('fe80') and not re.match('.+ff:fe00:[0-9a-f]{0,4}$', addr):
+                if addr.startswith('fe80') and not re.match(
+                        '.+ff:fe00:[0-9a-f]{0,4}$', addr):
                     ll64 = addr
                     break
 
@@ -1006,7 +1068,8 @@ class HarnessCase(unittest.TestCase):
         elif title.startswith('ML64 Address'):
             ml64 = None
             for addr in self.dut.addrs:
-                if addr.startswith('fd') and not re.match('.+ff:fe00:[0-9a-f]{0,4}$', addr):
+                if addr.startswith('fd') and not re.match(
+                        '.+ff:fe00:[0-9a-f]{0,4}$', addr):
                     ml64 = addr
                     break
 
@@ -1018,18 +1081,21 @@ class HarnessCase(unittest.TestCase):
             inp.clear()
             inp.send_keys(ml64)
 
-        elif title.startswith('Shield Devices') or title.startswith('Shield DUT'):
+        elif title.startswith('Shield Devices') or title.startswith(
+                'Shield DUT'):
             time.sleep(2)
             if self.rf_shield:
                 logger.info('Shielding devices')
                 with self.rf_shield:
                     self.rf_shield.shield()
             elif self.dut and settings.SHIELD_SIMULATION:
-                self.dut.channel = (self.channel == THREAD_CHANNEL_MAX and THREAD_CHANNEL_MIN) or (self.channel + 1)
+                self.dut.channel = (self.channel == THREAD_CHANNEL_MAX and
+                                    THREAD_CHANNEL_MIN) or (self.channel + 1)
             else:
                 input('Shield DUT and press enter to continue..')
 
-        elif title.startswith('Unshield Devices') or title.startswith('Bring DUT back to network'):
+        elif title.startswith('Unshield Devices') or title.startswith(
+                'Bring DUT back to network'):
             time.sleep(5)
             if self.rf_shield:
                 logger.info('Unshielding devices')
@@ -1044,7 +1110,8 @@ class HarnessCase(unittest.TestCase):
             body = dialog.find_element_by_id('cnfrmMsg').text
             body = body.split(': ')[1]
             params = reduce(
-                lambda params, param: params.update(((param[0].strip(' '), param[1]),)) or params,
+                lambda params, param: params.update(
+                    ((param[0].strip(' '), param[1]),)) or params,
                 [it.split('=') for it in body.split(', ')],
                 {},
             )

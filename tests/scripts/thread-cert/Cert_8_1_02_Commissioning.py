@@ -37,6 +37,7 @@ JOINER = 2
 
 
 class Cert_8_1_02_Commissioning(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -47,8 +48,7 @@ class Cert_8_1_02_Commissioning(unittest.TestCase):
         self.nodes[COMMISSIONER].set_panid(0xface)
         self.nodes[COMMISSIONER].set_mode('rsdn')
         self.nodes[COMMISSIONER].set_masterkey(
-            'deadbeefdeadbeefdeadbeefdeadbeef'
-        )
+            'deadbeefdeadbeefdeadbeefdeadbeef')
 
         self.nodes[JOINER].set_mode('rsdn')
         self.nodes[JOINER].set_masterkey('00112233445566778899aabbccddeeff')
@@ -68,8 +68,7 @@ class Cert_8_1_02_Commissioning(unittest.TestCase):
         self.nodes[COMMISSIONER].commissioner_start()
         self.simulator.go(3)
         self.nodes[COMMISSIONER].commissioner_add_joiner(
-            self.nodes[JOINER].get_eui64(), 'OPENTHREAD'
-        )
+            self.nodes[JOINER].get_eui64(), 'OPENTHREAD')
 
         self.nodes[JOINER].interface_up()
         self.nodes[JOINER].joiner_start('DAERHTNEPO')

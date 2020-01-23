@@ -40,6 +40,7 @@ ED1 = 5
 
 
 class Cert_5_5_8_SplitRoutersLostLeader(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 

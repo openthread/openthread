@@ -50,7 +50,6 @@ from wpan import verify
 # - Verifies Mesh Header frame forwarding over multiple routers.
 # - Verifies forwarding of large IPv6 messages (1000 bytes) requiring lowpan fragmentation.
 
-
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
 print('-' * 120)
 print('Starting \'{}\''.format(test_name))
@@ -115,14 +114,12 @@ sed_children[0].set(wpan.WPAN_POLL_INTERVAL, '500')
 
 for index in range(1, NUM_ROUTERS):
     routers[index].join_node(routers[index - 1], wpan.JOIN_TYPE_ROUTER)
-    sed_children[index].join_node(
-        routers[index], wpan.JOIN_TYPE_SLEEPY_END_DEVICE
-    )
+    sed_children[index].join_node(routers[index],
+                                  wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
     sed_children[index].set(wpan.WPAN_POLL_INTERVAL, '500')
 
 fed_children[0].join_node(routers[0], wpan.JOIN_TYPE_END_DEVICE)
 fed_children[-1].join_node(routers[-1], wpan.JOIN_TYPE_END_DEVICE)
-
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test implementation

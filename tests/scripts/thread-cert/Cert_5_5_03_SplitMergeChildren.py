@@ -43,6 +43,7 @@ MTDS = [ED1, ED2, ED3]
 
 
 class Cert_5_5_3_SplitMergeChildren(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 

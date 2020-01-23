@@ -40,6 +40,7 @@ ROUTER3 = 5
 
 
 class Cert_6_1_7_EDSynchronization(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 

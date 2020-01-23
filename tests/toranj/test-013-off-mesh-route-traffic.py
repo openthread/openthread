@@ -87,7 +87,6 @@ for node in all_nodes:
 #   |       |
 #  fed1    sed2
 
-
 r1.whitelist_node(r2)
 r2.whitelist_node(r1)
 

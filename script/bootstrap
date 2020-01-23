@@ -56,6 +56,9 @@ install_packages_apt()
 
     # add clang-format for pretty
     sudo apt-get -y install clang-format-6.0
+
+    # add yapf for pretty
+    python3 -m pip install yapf
 }
 
 install_packages_opkg()
@@ -89,6 +92,9 @@ install_packages_brew()
         brew install llvm@6
         sudo ln -s "$(brew --prefix llvm@6)/bin/clang-format" /usr/local/bin/clang-format-6.0
     }
+
+    # add yapf for pretty
+    python3 -m pip install yapf
 }
 
 install_packages_source()

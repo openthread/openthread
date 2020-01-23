@@ -39,7 +39,6 @@ test_name = __file__[:-3] if __file__.endswith('.py') else __file__
 print('-' * 120)
 print('Starting \'{}\''.format(test_name))
 
-
 # -----------------------------------------------------------------------------------------------------------------------
 # Creating `wpan.Nodes` instances
 
