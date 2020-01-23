@@ -1143,21 +1143,33 @@ class Node:
         return source
 
     def coap_set_resource_path(self, path):
+        """
+        Set the path for the CoAP resource.
+        """
         cmd = 'coap resource %s' % path
         self.send_command(cmd)
         self._expect('Done')
 
     def coap_set_content(self, content):
+        """
+        Set the content of the CoAP resource.
+        """
         cmd = 'coap set %s' % content
         self.send_command(cmd)
         self._expect('Done')
 
     def coap_start(self):
+        """
+        Start the CoAP service.
+        """
         cmd = 'coap start'
         self.send_command(cmd)
         self._expect('Done')
 
     def coap_stop(self):
+        """
+        Stop the CoAP service.
+        """
         cmd = 'coap stop'
         self.send_command(cmd)
 
