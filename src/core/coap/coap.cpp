@@ -169,6 +169,7 @@ otError CoapBase::SendMessage(Message &               aMessage,
     {
         Metadata metadata;
 
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         // Whether or not to turn on special "Observe" handling.
         OptionIterator iterator;
         bool           observe;
@@ -199,6 +200,7 @@ otError CoapBase::SendMessage(Message &               aMessage,
                 }
             }
         }
+#endif // OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
 
         // Enqueue and send
         metadata.Init(aMessage.IsConfirmable(),
