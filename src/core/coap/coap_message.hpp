@@ -694,8 +694,8 @@ public:
     /**
      * This function fills current option value into @p aValue.
      *
-     * @param[out]  aValue          Buffer to store the option value.  This buffer is assumed to be sufficiently large (see
-     *                              @ref otCoapOption::mLength).
+     * @param[out]  aValue          Buffer to store the option value.  This buffer is assumed to be sufficiently large
+     *                              (see @ref otCoapOption::mLength).
      *
      * @retval  OT_ERROR_NONE       Successfully filled value.
      * @retval  OT_ERROR_NOT_FOUND  No more options, mNextOptionOffset is set to offset of payload.
