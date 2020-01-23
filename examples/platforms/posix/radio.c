@@ -826,6 +826,13 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
     return POSIX_RECEIVE_SENSITIVITY;
 }
 
+otRadioState otPlatRadioGetState(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return sState;
+}
+
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 otError otPlatRadioSetCoexEnabled(otInstance *aInstance, bool aEnabled)
 {
