@@ -485,6 +485,7 @@ otError Coap::ProcessRequest(int argc, char *argv[])
         mRequestTokenLength = otCoapMessageGetTokenLength(message);
         memcpy(mRequestToken, otCoapMessageGetToken(message), mRequestTokenLength);
         strncpy(mRequestUri, coapUri, sizeof(mRequestUri) - 1);
+        mRequestUri[sizeof(mRequestUri) - 1] = '\0'; // Fix gcc-9.2 warning
     }
 #endif
 
