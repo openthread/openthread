@@ -525,8 +525,10 @@ protected:
 private:
     struct Metadata
     {
-        void Init(bool                    aConfirmable,
-                  bool                    aObserve,
+        void Init(bool aConfirmable,
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+                  bool aObserve,
+#endif
                   const Ip6::MessageInfo &aMessageInfo,
                   ResponseHandler         aHandler,
                   void *                  aContext,
@@ -546,7 +548,9 @@ private:
         uint8_t         mRetransmissionsRemaining; // Number of retransmissions remaining.
         bool            mAcknowledged : 1;         // Information that request was acknowledged.
         bool            mConfirmable : 1;          // Information that message is confirmable.
-        bool            mObserve : 1;              // Information that this request involves Observations.
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+        bool mObserve : 1; // Information that this request involves Observations.
+#endif
     };
 
     static void HandleRetransmissionTimer(Timer &aTimer);

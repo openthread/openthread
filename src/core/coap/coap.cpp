@@ -201,7 +201,11 @@ otError CoapBase::SendMessage(Message &               aMessage,
         }
 
         // Enqueue and send
-        metadata.Init(aMessage.IsConfirmable(), observe, aMessageInfo, aHandler, aContext, aTxParameters);
+        metadata.Init(aMessage.IsConfirmable(),
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+                      observe,
+#endif
+                      aMessageInfo, aHandler, aContext, aTxParameters);
         storedCopy = CopyAndEnqueueMessage(aMessage, copyLength, metadata);
         VerifyOrExit(storedCopy != NULL, error = OT_ERROR_NO_BUFS);
     }
@@ -332,11 +336,13 @@ void CoapBase::HandleRetransmissionTimer(void)
 
         if (now >= metadata.mNextTimerShot)
         {
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
             if (message->IsRequest() && metadata.mObserve && metadata.mAcknowledged)
             {
                 // This is a RFC7641 subscription.  Do not time out.
                 continue;
             }
+#endif
 
             if (!metadata.mConfirmable || (metadata.mRetransmissionsRemaining == 0))
             {
@@ -537,13 +543,16 @@ void CoapBase::Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageIn
 void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Metadata metadata;
-    Message *request         = NULL;
-    otError  error           = OT_ERROR_NONE;
-    bool     responseObserve = false;
+    Message *request = NULL;
+    otError  error   = OT_ERROR_NONE;
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    bool responseObserve = false;
+#endif
 
     request = FindRelatedRequest(aMessage, aMessageInfo, metadata);
     VerifyOrExit(request != NULL);
 
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     if (metadata.mObserve && request->IsRequest())
     {
         // We sent Observe in our request, see if we received Observe in the response too.
@@ -552,6 +561,7 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
         SuccessOrExit(error = iterator.Init(&aMessage));
         responseObserve = (iterator.GetFirstOptionMatching(OT_COAP_OPTION_OBSERVE) != NULL);
     }
+#endif
 
     switch (aMessage.GetType())
     {
@@ -568,6 +578,7 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
         if (aMessage.IsEmpty())
         {
             // Empty acknowledgment.
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
             if (metadata.mObserve && !request->IsRequest())
             {
                 // This is the ACK to our RFC7641 notification.  There will be no
@@ -576,6 +587,7 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
                 FinalizeCoapTransaction(*request, metadata, &aMessage, &aMessageInfo, OT_ERROR_NONE);
             }
             else
+#endif
             {
                 // This is not related to RFC7641 or the outgoing "request" was not a
                 // notification.
@@ -599,6 +611,7 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
             // request and response, and we have a response handler; then we're
             // dealing with RFC7641 rules here.
             // (If there is no response handler, then we're wasting our time!)
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
             if (metadata.mObserve && responseObserve && (metadata.mResponseHandler != NULL))
             {
                 // This is a RFC7641 notification.  The request is *not* done!
@@ -609,6 +622,7 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
                 metadata.UpdateIn(*request);
             }
             else
+#endif
             {
                 FinalizeCoapTransaction(*request, metadata, &aMessage, &aMessageInfo, OT_ERROR_NONE);
             }
@@ -627,8 +641,11 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
         // Separate response or observation notification.  If the request was to a multicast
         // address, OR both the request and response carry Observe options, then this is NOT
         // the final message, we may see multiples.
-        if ((metadata.mResponseHandler != NULL) &&
-            (metadata.mDestinationAddress.IsMulticast() || (metadata.mObserve && responseObserve)))
+        if ((metadata.mResponseHandler != NULL) && (metadata.mDestinationAddress.IsMulticast()
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+                                                    || (metadata.mObserve && responseObserve)
+#endif
+                                                        ))
         {
             // If multicast non-confirmable request, allow multiple responses
             metadata.mResponseHandler(metadata.mResponseContext, &aMessage, &aMessageInfo, OT_ERROR_NONE);
@@ -741,8 +758,10 @@ exit:
     }
 }
 
-void CoapBase::Metadata::Init(bool                    aConfirmable,
-                              bool                    aObserve,
+void CoapBase::Metadata::Init(bool aConfirmable,
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+                              bool aObserve,
+#endif
                               const Ip6::MessageInfo &aMessageInfo,
                               ResponseHandler         aHandler,
                               void *                  aContext,
@@ -757,7 +776,9 @@ void CoapBase::Metadata::Init(bool                    aConfirmable,
     mRetransmissionTimeout    = aTxParameters.CalculateInitialRetransmissionTimeout();
     mAcknowledged             = false;
     mConfirmable              = aConfirmable;
-    mObserve                  = aObserve;
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    mObserve = aObserve;
+#endif
     mNextTimerShot =
         TimerMilli::GetNow() + (aConfirmable ? mRetransmissionTimeout : aTxParameters.CalculateMaxTransmitWait());
 }
