@@ -227,6 +227,14 @@ public:
      */
     int8_t GetReceiveSensitivity(void) const { return mRxSensitivity; }
 
+    /**
+     * This method gets current state of the radio.
+     *
+     * @return  Current state of the radio.
+     *
+     */
+    otRadioState GetState(void) const;
+
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
     /**
      * Enable the radio coex.

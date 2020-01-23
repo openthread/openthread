@@ -1598,6 +1598,16 @@ exit:
     return channelMask;
 }
 
+otRadioState RadioSpinel::GetState(void) const
+{
+    static const otRadioState sOtRadioStateMap[] = {
+        OT_RADIO_STATE_DISABLED, OT_RADIO_STATE_SLEEP,    OT_RADIO_STATE_RECEIVE,
+        OT_RADIO_STATE_TRANSMIT, OT_RADIO_STATE_TRANSMIT,
+    };
+
+    return sOtRadioStateMap[mState];
+}
+
 } // namespace PosixApp
 } // namespace ot
 
@@ -1962,4 +1972,10 @@ uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return sRadioSpinel.GetRadioChannelMask(true);
+}
+
+otRadioState otPlatRadioGetState(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return sRadioSpinel.GetState();
 }
