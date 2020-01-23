@@ -243,6 +243,20 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT
+ *
+ * Define as 1 to enable bultin mbedtls management.
+ *
+ * OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT determines whether to manage mbedTLS memory
+ * allocation and debug config internally.  If not configured, the default is to enable builtin
+ * management if builtin mbedtls is enabled and disable it otherwise.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT
+#define OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE
  *
  * The size of heap buffer when DTLS is enabled.
