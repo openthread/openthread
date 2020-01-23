@@ -36,7 +36,12 @@ LEADER = 1
 SED_1 = 2
 
 CHILD_TIMEOUT = 30
-POLL_PERIOD = CHILD_TIMEOUT // 3
+
+DEFAULT_POLL_PERIOD = CHILD_TIMEOUT - 4
+"""The default poll period calculated by ot::Mac::DataPollSender::GetDefaultPollPeriod()."""
+
+USER_POLL_PERIOD = CHILD_TIMEOUT // 3
+"""The poll period explicitly set by this test for verifying enhanced keep-alive."""
 
 
 class SED_EnhancedKeepAlive(thread_cert.TestCase):
@@ -50,7 +55,7 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
 
     def test(self):
         self.nodes[SED_1].set_timeout(CHILD_TIMEOUT)
-        self.nodes[SED_1].set_pollperiod(POLL_PERIOD * 1000)
+        self.nodes[SED_1].set_pollperiod(USER_POLL_PERIOD * 1000)
 
         self.nodes[LEADER].start()
         self.simulator.go(5)
@@ -122,7 +127,7 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
         msg.assertMleMessageContainsOptionalTlv(mle.AddressRegistration)
 
         leader_aloc = self.nodes[LEADER].get_addr_leader_aloc()
-        self.assertTrue(self.nodes[SED_1].ping(leader_aloc, timeout=POLL_PERIOD * 2))
+        self.assertTrue(self.nodes[SED_1].ping(leader_aloc, timeout=USER_POLL_PERIOD * 2))
 
         # 6 - Timeout Child
         self.nodes[LEADER].enable_whitelist()
@@ -130,10 +135,11 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
         self.nodes[SED_1].set_pollperiod(CHILD_TIMEOUT * 1000 * 2)
         self.simulator.go(CHILD_TIMEOUT)
         self.assertEqual(self.nodes[SED_1].get_state(), 'child')
-        self.nodes[SED_1].set_pollperiod(POLL_PERIOD * 1000)
+        self.nodes[SED_1].set_pollperiod(USER_POLL_PERIOD * 1000)
         self.nodes[LEADER].disable_whitelist()
         self.nodes[SED_1].disable_whitelist()
-        self.assertFalse(self.nodes[SED_1].ping(leader_aloc, timeout=POLL_PERIOD * 2))
+        self.assertFalse(self.nodes[SED_1].ping(leader_aloc, timeout=USER_POLL_PERIOD * 2))
+        self.flush_all()
 
         # 7 - Wait SED_1 to re-attach
         self.simulator.go(240)
@@ -146,7 +152,8 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
         msg.assertMleMessageContainsOptionalTlv(mle.NetworkData)
         msg.assertMleMessageContainsOptionalTlv(mle.Route64)
         msg.assertMleMessageContainsOptionalTlv(mle.AddressRegistration)
-        self.assertTrue(self.nodes[SED_1].ping(leader_aloc, timeout=POLL_PERIOD * 2))
+        self.assertTrue(self.nodes[SED_1].ping(leader_aloc, timeout=USER_POLL_PERIOD * 2))
+        self.flush_all()
 
         # 8 - Verify enhanced keep-alive works
         self.nodes[LEADER].enable_whitelist()
@@ -163,8 +170,17 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
         self.simulator.go(CHILD_TIMEOUT // 2)
         self.nodes[LEADER].disable_whitelist()
         self.nodes[SED_1].disable_whitelist()
-        self.nodes[SED_1].set_pollperiod(POLL_PERIOD * 1000)
-        self.assertTrue(self.nodes[SED_1].ping(leader_aloc, timeout=POLL_PERIOD * 2))
+        self.nodes[SED_1].set_pollperiod(USER_POLL_PERIOD * 1000)
+        self.assertTrue(self.nodes[SED_1].ping(leader_aloc, timeout=USER_POLL_PERIOD * 2))
+
+        # 9 - Verify child resets keep-alive timer
+        self.nodes[SED_1].set_pollperiod(DEFAULT_POLL_PERIOD * 1000)
+        self.simulator.go(DEFAULT_POLL_PERIOD // 3 * 2)
+        self.flush_all()
+        self.nodes[SED_1].ping(leader_aloc, timeout=1)
+        self.simulator.go(DEFAULT_POLL_PERIOD // 3 * 2)
+        sed_messages = self.simulator.get_messages_sent_by(SED_1)
+        self.assertEqual(sed_messages.next_data_poll(), None)
 
 
 if __name__ == '__main__':

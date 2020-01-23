@@ -371,6 +371,10 @@ class Message(object):
         )
         return self.ipv6_packet.upper_layer_protocol.header.dst_port
 
+    def is_data_poll(self):
+        return self._type == MessageType.COMMAND and \
+            self._mac_header.command_type == mac802154.MacHeader.CommandIdentifier.DATA_REQUEST
+
     def __repr__(self):
         if (
             self.type == MessageType.DTLS
@@ -392,6 +396,14 @@ class MessagesSet(object):
     @property
     def commissioning_messages(self):
         return self._commissioning_messages
+
+    def next_data_poll(self):
+        while True:
+            message = self.next_message_of(MessageType.COMMAND, False)
+            if not message:
+                break
+            elif message.is_data_poll():
+                return message
 
     def next_coap_message(self, code, uri_path=None, assert_enabled=True):
         message = None

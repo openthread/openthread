@@ -94,3 +94,9 @@ class TestCase(unittest.TestCase):
             node.stop()
             node.destroy()
         self.simulator.stop()
+
+    def flush_all(self):
+        """Flush away all captured messages of all nodes.
+        """
+        for i in list(self.nodes.keys()):
+            self.simulator.get_messages_sent_by(i)
