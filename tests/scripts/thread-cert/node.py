@@ -1075,7 +1075,9 @@ class Node:
         else:
             timeout = 5
 
-        self._expect(r'coap response from ([\da-f:]+)(?: OBS=(\d+))?(?: with payload: ([\da-f]+))?\b', timeout=timeout)
+        self._expect(
+                r'coap response from ([\da-f:]+)(?: OBS=(\d+))?'
+                r'(?: with payload: ([\da-f]+))?\b', timeout=timeout)
         (source, observe, payload) = self.pexpect.match.groups()
 
         if observe is not None:
@@ -1097,7 +1099,9 @@ class Node:
         else:
             timeout = 5
 
-        self._expect(r'coap request from ([\da-f:]+)(?: OBS=(\d+))?(?: with payload: ([\da-f]+))?\b', timeout=timeout)
+        self._expect(
+                r'coap request from ([\da-f:]+)(?: OBS=(\d+))?'
+                r'(?: with payload: ([\da-f]+))?\b', timeout=timeout)
         (source, observe, payload) = self.pexpect.match.groups()
 
         if observe is not None:
@@ -1131,7 +1135,9 @@ class Node:
         else:
             timeout = 5
 
-        self._expect(r'Received ACK in reply to notification from ([\da-f:]+)\b', timeout=timeout)
+        self._expect(
+                r'Received ACK in reply to notification '
+                r'from ([\da-f:]+)\b', timeout=timeout)
         (source, ) = self.pexpect.match.groups()
 
         return source
