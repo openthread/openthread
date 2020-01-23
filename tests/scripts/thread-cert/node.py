@@ -38,6 +38,7 @@ import simulator
 import socket
 import time
 import unittest
+import binascii
 
 
 class Node:
@@ -1021,19 +1022,19 @@ class Node:
         self._expect('Done')
 
     def coap_delete(self, ipaddr, uri, con=False, payload=None):
-        self._coap_rq('delete', ipaddr, uri, con, payload)
+        return self._coap_rq('delete', ipaddr, uri, con, payload)
 
     def coap_get(self, ipaddr, uri, con=False, payload=None):
-        self._coap_rq('get', ipaddr, uri, con, payload)
+        return self._coap_rq('get', ipaddr, uri, con, payload)
 
     def coap_observe(self, ipaddr, uri, con=False, payload=None):
-        self._coap_rq('observe', ipaddr, uri, con, payload)
+        return self._coap_rq('observe', ipaddr, uri, con, payload)
 
     def coap_post(self, ipaddr, uri, con=False, payload=None):
-        self._coap_rq('post', ipaddr, uri, con, payload)
+        return self._coap_rq('post', ipaddr, uri, con, payload)
 
     def coap_put(self, ipaddr, uri, con=False, payload=None):
-        self._coap_rq('put', ipaddr, uri, con, payload)
+        return self._coap_rq('put', ipaddr, uri, con, payload)
 
     def _coap_rq(self, method, ipaddr, uri, con=False, payload=None):
         """
@@ -1056,7 +1057,39 @@ class Node:
         else:
             timeout = 5
 
-        self._expect('coap response', timeout=timeout)
+        self._expect(r'coap response from ([\da-f:]+)(?: Obs=(\d+))?(?: with payload: ([\da-f]+))?\b', timeout=timeout)
+        (source, observe, payload) = self.pexpect.match.groups()
+
+        if observe is not None:
+            observe = int(observe, base=10)
+
+        if payload is not None:
+            payload = binascii.a2b_hex(payload).decode('UTF-8')
+
+        # Return the values received
+        return dict(source=source, observe=observe, payload=payload)
+
+    def coap_wait_request(self):
+        """
+        Wait for a CoAP request to be made.
+        """
+        if isinstance(self.simulator, simulator.VirtualTime):
+            self.simulator.go(5)
+            timeout = 1
+        else:
+            timeout = 5
+
+        self._expect(r'coap request from ([\da-f:]+)(?: OBS=(\d+))?(?: with payload: ([\da-f]+))?\b', timeout=timeout)
+        (source, observe, payload) = self.pexpect.match.groups()
+
+        if observe is not None:
+            observe = int(observe, base=10)
+
+        if payload is not None:
+            payload = binascii.a2b_hex(payload).decode('UTF-8')
+
+        # Return the values received
+        return dict(source=source, observe=observe, payload=payload)
 
     def coap_set_resource_path(self, path):
         cmd = 'coap resource %s' % path
