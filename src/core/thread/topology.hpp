@@ -360,7 +360,7 @@ public:
      */
     bool IsEnhancedKeepAliveSupported(void) const
     {
-        return mState != kStateValid && mVersion >= OPENTHREAD_THREAD_VERSION_1_2;
+        return mState != kStateInvalid && mVersion >= OPENTHREAD_THREAD_VERSION_1_2;
     }
 
     /**

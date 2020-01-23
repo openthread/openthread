@@ -33,7 +33,7 @@ import thread_cert
 import mle
 
 LEADER = 1
-SED_1 = 3
+SED_1 = 2
 
 CHILD_TIMEOUT = 30
 POLL_PERIOD = CHILD_TIMEOUT // 3
@@ -79,7 +79,7 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
         msg.assertMleMessageContainsTlv(mle.Challenge)
         msg.assertMleMessageContainsTlv(mle.ScanMask)
         msg.assertMleMessageContainsTlv(mle.Version)
-        assert msg.get_mle_message_tlv(mle.Version).version == 3
+        self.assertEqual(msg.get_mle_message_tlv(mle.Version).version, 3)
 
         scan_mask_tlv = msg.get_mle_message_tlv(mle.ScanMask)
         self.assertEqual(1, scan_mask_tlv.router)
@@ -97,7 +97,7 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
         msg.assertMleMessageContainsTlv(mle.LinkMargin)
         msg.assertMleMessageContainsTlv(mle.Connectivity)
         msg.assertMleMessageContainsTlv(mle.Version)
-        assert msg.get_mle_message_tlv(mle.Version).version == 3
+        self.assertEqual(msg.get_mle_message_tlv(mle.Version).version, 3)
 
         # 4 - SED_1 receives the MLE Parent Response and sends a Child ID Request
         msg = sed_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
@@ -109,7 +109,7 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
         msg.assertMleMessageContainsTlv(mle.Timeout)
         msg.assertMleMessageContainsTlv(mle.Version)
         msg.assertMleMessageContainsTlv(mle.TlvRequest)
-        assert msg.get_mle_message_tlv(mle.Version).version == 3
+        self.assertEqual(msg.get_mle_message_tlv(mle.Version).version, 3)
 
         # 5 - Leader responds with a Child ID Response
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
