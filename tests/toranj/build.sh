@@ -106,7 +106,7 @@ case ${build_config} in
         echo "==================================================================================================="
         ./bootstrap || die
         cd "${top_builddir}"
-        ${top_srcdir}/configure              \
+        ${top_srcdir}/configure                 \
             CPPFLAGS="$cppflags_config"         \
             --with-examples=posix               \
             $configure_options || die
@@ -119,7 +119,7 @@ case ${build_config} in
         echo "===================================================================================================="
         ./bootstrap || die
         cd "${top_builddir}"
-        ${top_srcdir}/configure              \
+        ${top_srcdir}/configure                 \
             CPPFLAGS="$cppflags_config"         \
             --enable-coverage=${coverage}       \
             --enable-ncp                        \
@@ -136,7 +136,7 @@ case ${build_config} in
         echo "===================================================================================================="
         ./bootstrap || die
         cd "${top_builddir}"
-        ${top_srcdir}/configure              \
+        ${top_srcdir}/configure                 \
             CPPFLAGS="$cppflags_config -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1 -DOPENTHREAD_POSIX_RCP_UART_ENABLE=1" \
             --enable-posix-app                  \
             $configure_options || die
