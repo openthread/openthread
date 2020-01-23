@@ -746,7 +746,7 @@ void Coap::HandleResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo
 
                 if (error == OT_ERROR_NONE)
                 {
-                    mInterpreter.mServer->OutputFormat(" Obs=%u", observeVal);
+                    mInterpreter.mServer->OutputFormat(" OBS=%u", observeVal);
                 }
             }
 
