@@ -45,13 +45,11 @@ endif
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-PRETTY_FILES                  = \
-    src/platform-fem.h          \
-    src/platform-nrf5.h         \
-    $(wildcard src/*.c)         \
-    $(wildcard nrf52811/*.h)    \
-    $(wildcard nrf52833/*.h)    \
-    $(wildcard nrf52840/*.h)    \
+PRETTY_FILES                            = \
+    src/platform-fem.h                    \
+    src/platform-nrf5.h                   \
+    $(wildcard $(srcdir)/**/*.c)          \
+    $(wildcard $(srcdir)/**/*.h)          \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
