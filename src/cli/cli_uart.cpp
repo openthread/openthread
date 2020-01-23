@@ -36,6 +36,10 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#if OPENTHREAD_POSIX
+#include <signal.h>
+#include <sys/types.h>
+#endif
 
 #include <openthread/cli.h>
 #include <openthread/platform/logging.h>
@@ -155,6 +159,10 @@ void Uart::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
 
 #if !OPENTHREAD_CONFIG_UART_CLI_RAW
 #if OPENTHREAD_POSIX
+
+        case 0x03: // ASCII for Ctrl-C
+            kill(0, SIGINT);
+            break;
 
         case 0x04: // ASCII for Ctrl-D
             exit(EXIT_SUCCESS);
