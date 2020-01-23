@@ -45,33 +45,48 @@ namespace ot {
 namespace Cli {
 
 const struct Coap::Command Coap::sCommands[] = {
-    {"help", &Coap::ProcessHelp},         {"cancel", &Coap::ProcessCancel},
-    {"delete", &Coap::ProcessRequest},    {"get", &Coap::ProcessRequest},
-    {"observe", &Coap::ProcessRequest},   {"parameters", &Coap::ProcessParameters},
-    {"post", &Coap::ProcessRequest},      {"put", &Coap::ProcessRequest},
-    {"resource", &Coap::ProcessResource}, {"set", &Coap::ProcessSet},
-    {"start", &Coap::ProcessStart},       {"stop", &Coap::ProcessStop},
+    {"help", &Coap::ProcessHelp},
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    {"cancel", &Coap::ProcessCancel},
+#endif
+    {"delete", &Coap::ProcessRequest},
+    {"get", &Coap::ProcessRequest},
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    {"observe", &Coap::ProcessRequest},
+#endif
+    {"parameters", &Coap::ProcessParameters},
+    {"post", &Coap::ProcessRequest},
+    {"put", &Coap::ProcessRequest},
+    {"resource", &Coap::ProcessResource},
+    {"set", &Coap::ProcessSet},
+    {"start", &Coap::ProcessStart},
+    {"stop", &Coap::ProcessStop},
 };
 
 Coap::Coap(Interpreter &aInterpreter)
     : mInterpreter(aInterpreter)
     , mUseDefaultRequestTxParameters(true)
     , mUseDefaultResponseTxParameters(true)
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     , mObserveSerial(0)
     , mRequestTokenLength(0)
     , mSubscriberTokenLength(0)
     , mSubscriberConfirmableNotifications(false)
+#endif
 {
     memset(&mResource, 0, sizeof(mResource));
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     memset(&mRequestAddr, 0, sizeof(mRequestAddr));
     memset(&mSubscriberSock, 0, sizeof(mSubscriberSock));
     memset(&mRequestToken, 0, sizeof(mRequestToken));
     memset(&mSubscriberToken, 0, sizeof(mSubscriberToken));
-    memset(&mUriPath, 0, sizeof(mUriPath));
     memset(&mRequestUri, 0, sizeof(mRequestUri));
+#endif
+    memset(&mUriPath, 0, sizeof(mUriPath));
     strncpy(mResourceContent, "0", sizeof(mResourceContent) - 1);
 }
 
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
 otError Coap::CancelResourceSubscription(void)
 {
     otError       error   = OT_ERROR_NONE;
@@ -114,6 +129,7 @@ void Coap::CancelSubscriber(void)
     memset(&mSubscriberSock, 0, sizeof(mSubscriberSock));
     mSubscriberTokenLength = 0;
 }
+#endif // OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
 
 void Coap::PrintPayload(otMessage *aMessage) const
 {
@@ -141,6 +157,7 @@ void Coap::PrintPayload(otMessage *aMessage) const
     mInterpreter.mServer->OutputFormat("\r\n");
 }
 
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
 otError Coap::ProcessCancel(int argc, char *argv[])
 {
     OT_UNUSED_VARIABLE(argc);
@@ -148,6 +165,7 @@ otError Coap::ProcessCancel(int argc, char *argv[])
 
     return CancelResourceSubscription();
 }
+#endif
 
 otError Coap::ProcessHelp(int argc, char *argv[])
 {
@@ -188,15 +206,18 @@ exit:
 
 otError Coap::ProcessSet(int argc, char *argv[])
 {
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     otMessage *   notificationMessage = NULL;
     otMessageInfo messageInfo;
-    otError       error = OT_ERROR_NONE;
+#endif
+    otError error = OT_ERROR_NONE;
 
     if (argc > 1)
     {
         VerifyOrExit(strlen(argv[1]) < (kMaxBufferSize - 1), error = OT_ERROR_INVALID_ARGS);
         strncpy(mResourceContent, argv[1], sizeof(mResourceContent) - 1);
 
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         if (mSubscriberTokenLength > 0)
         {
             // Notify the subscriber
@@ -225,6 +246,7 @@ otError Coap::ProcessSet(int argc, char *argv[])
             SuccessOrExit(error = otCoapSendRequest(mInterpreter.mInstance, notificationMessage, &messageInfo,
                                                     &Coap::HandleNotificationResponse, this));
         }
+#endif // OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     }
     else
     {
@@ -233,10 +255,12 @@ otError Coap::ProcessSet(int argc, char *argv[])
 
 exit:
 
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     if ((error != OT_ERROR_NONE) && (notificationMessage != NULL))
     {
         otMessageFree(notificationMessage);
     }
+#endif
 
     return error;
 }
@@ -344,7 +368,9 @@ otError Coap::ProcessRequest(int argc, char *argv[])
     otCoapType   coapType               = OT_COAP_TYPE_NON_CONFIRMABLE;
     otCoapCode   coapCode               = OT_COAP_CODE_GET;
     otIp6Address coapDestinationIp;
-    bool         coapObserve = false;
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    bool coapObserve = false;
+#endif
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
@@ -353,12 +379,14 @@ otError Coap::ProcessRequest(int argc, char *argv[])
     {
         coapCode = OT_COAP_CODE_GET;
     }
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     else if (strcmp(argv[0], "observe") == 0)
     {
         // Observe request.  This is a GET with Observe=0
         coapCode    = OT_COAP_CODE_GET;
         coapObserve = true;
     }
+#endif
     else if (strcmp(argv[0], "post") == 0)
     {
         coapCode = OT_COAP_CODE_POST;
@@ -406,11 +434,13 @@ otError Coap::ProcessRequest(int argc, char *argv[])
         }
     }
 
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     if (coapObserve && mRequestTokenLength)
     {
         // New observe request, cancel any existing observation
         SuccessOrExit(error = CancelResourceSubscription());
     }
+#endif
 
     message = otCoapNewMessage(mInterpreter.mInstance, NULL);
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
@@ -418,10 +448,12 @@ otError Coap::ProcessRequest(int argc, char *argv[])
     otCoapMessageInit(message, coapType, coapCode);
     otCoapMessageGenerateToken(message, ot::Coap::Message::kDefaultTokenLength);
 
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     if (coapObserve)
     {
         SuccessOrExit(error = otCoapMessageAppendObserveOption(message, 0));
     }
+#endif
 
     SuccessOrExit(error = otCoapMessageAppendUriPathOptions(message, coapUri));
 
@@ -445,6 +477,7 @@ otError Coap::ProcessRequest(int argc, char *argv[])
     messageInfo.mPeerAddr = coapDestinationIp;
     messageInfo.mPeerPort = OT_DEFAULT_COAP_PORT;
 
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     if (coapObserve)
     {
         // Make a note of the message details for later so we can cancel it later.
@@ -453,6 +486,7 @@ otError Coap::ProcessRequest(int argc, char *argv[])
         memcpy(mRequestToken, otCoapMessageGetToken(message), mRequestTokenLength);
         strncpy(mRequestUri, coapUri, sizeof(mRequestUri) - 1);
     }
+#endif
 
     if ((coapType == OT_COAP_TYPE_CONFIRMABLE) || (coapCode == OT_COAP_CODE_GET))
     {
@@ -506,11 +540,13 @@ void Coap::HandleRequest(void *aContext, otMessage *aMessage, const otMessageInf
 
 void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    otError              error           = OT_ERROR_NONE;
-    otMessage *          responseMessage = NULL;
-    otCoapCode           responseCode    = OT_COAP_CODE_EMPTY;
-    uint64_t             observe         = 0;
-    bool                 observePresent  = false;
+    otError    error           = OT_ERROR_NONE;
+    otMessage *responseMessage = NULL;
+    otCoapCode responseCode    = OT_COAP_CODE_EMPTY;
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    uint64_t observe        = 0;
+    bool     observePresent = false;
+#endif
     otCoapOptionIterator iterator;
 
     mInterpreter.mServer->OutputFormat("coap request from ");
@@ -522,6 +558,7 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
     case OT_COAP_CODE_GET:
         mInterpreter.mServer->OutputFormat("GET");
         SuccessOrExit(error = otCoapOptionIteratorInit(&iterator, aMessage));
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         if (otCoapOptionIteratorGetFirstOptionMatching(&iterator, OT_COAP_OPTION_OBSERVE) != NULL)
         {
             SuccessOrExit(error = otCoapOptionIteratorGetOptionUintValue(&iterator, &observe));
@@ -529,6 +566,7 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
 
             mInterpreter.mServer->OutputFormat(" OBS=%lu", static_cast<uint32_t>(observe));
         }
+#endif
         break;
 
     case OT_COAP_CODE_DELETE:
@@ -553,14 +591,18 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
     if (otCoapMessageGetType(aMessage) == OT_COAP_TYPE_CONFIRMABLE ||
         otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET)
     {
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         if (observePresent && (mSubscriberTokenLength > 0) && (observe == 0))
         {
             // There is already a subscriber
             responseCode = OT_COAP_CODE_SERVICE_UNAVAILABLE;
         }
-        else if (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET)
+        else
+#endif
+            if (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET)
         {
             responseCode = OT_COAP_CODE_CONTENT;
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
             if (observePresent)
             {
                 if (observe == 0)
@@ -593,6 +635,7 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
                     }
                 }
             }
+#endif // OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         }
         else
         {
@@ -607,10 +650,12 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
 
         if (responseCode == OT_COAP_CODE_CONTENT)
         {
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
             if (observePresent && (observe == 0))
             {
                 SuccessOrExit(error = otCoapMessageAppendObserveOption(responseMessage, mObserveSerial++));
             }
+#endif
             SuccessOrExit(error = otCoapMessageSetPayloadMarker(responseMessage));
             SuccessOrExit(error = otMessageAppend(responseMessage, mResourceContent,
                                                   static_cast<uint16_t>(strlen(mResourceContent))));
@@ -637,6 +682,7 @@ exit:
     }
 }
 
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
 void Coap::HandleNotificationResponse(void *               aContext,
                                       otMessage *          aMessage,
                                       const otMessageInfo *aMessageInfo,
@@ -667,6 +713,7 @@ void Coap::HandleNotificationResponse(otMessage *aMessage, const otMessageInfo *
         break;
     }
 }
+#endif // OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
 
 void Coap::HandleResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError)
 {
