@@ -1017,28 +1017,46 @@ class Node:
         self._expect('Done')
 
     def coap_cancel(self):
+        """
+        Cancel a CoAP subscription.
+        """
         cmd = 'coap cancel'
         self.send_command(cmd)
         self._expect('Done')
 
     def coap_delete(self, ipaddr, uri, con=False, payload=None):
+        """
+        Send a DELETE request via CoAP.
+        """
         return self._coap_rq('delete', ipaddr, uri, con, payload)
 
     def coap_get(self, ipaddr, uri, con=False, payload=None):
+        """
+        Send a GET request via CoAP.
+        """
         return self._coap_rq('get', ipaddr, uri, con, payload)
 
     def coap_observe(self, ipaddr, uri, con=False, payload=None):
+        """
+        Send a GET request via CoAP with Observe set.
+        """
         return self._coap_rq('observe', ipaddr, uri, con, payload)
 
     def coap_post(self, ipaddr, uri, con=False, payload=None):
+        """
+        Send a POST request via CoAP.
+        """
         return self._coap_rq('post', ipaddr, uri, con, payload)
 
     def coap_put(self, ipaddr, uri, con=False, payload=None):
+        """
+        Send a PUT request via CoAP.
+        """
         return self._coap_rq('put', ipaddr, uri, con, payload)
 
     def _coap_rq(self, method, ipaddr, uri, con=False, payload=None):
         """
-        Issue a GET/POST/PUT/DELETE/OBSERVE request.
+        Issue a GET/POST/PUT/DELETE/GET OBSERVE request.
         """
         cmd = 'coap %s %s %s' % (method, ipaddr, uri)
         if con:
@@ -1057,7 +1075,7 @@ class Node:
         else:
             timeout = 5
 
-        self._expect(r'coap response from ([\da-f:]+)(?: Obs=(\d+))?(?: with payload: ([\da-f]+))?\b', timeout=timeout)
+        self._expect(r'coap response from ([\da-f:]+)(?: OBS=(\d+))?(?: with payload: ([\da-f]+))?\b', timeout=timeout)
         (source, observe, payload) = self.pexpect.match.groups()
 
         if observe is not None:
@@ -1090,6 +1108,33 @@ class Node:
 
         # Return the values received
         return dict(source=source, observe=observe, payload=payload)
+
+    def coap_wait_subscribe(self):
+        """
+        Wait for a CoAP client to be subscribed.
+        """
+        if isinstance(self.simulator, simulator.VirtualTime):
+            self.simulator.go(5)
+            timeout = 1
+        else:
+            timeout = 5
+
+        self._expect(r'Subscribing client\b', timeout=timeout)
+
+    def coap_wait_ack(self):
+        """
+        Wait for a CoAP notification ACK.
+        """
+        if isinstance(self.simulator, simulator.VirtualTime):
+            self.simulator.go(5)
+            timeout = 1
+        else:
+            timeout = 5
+
+        self._expect(r'Received ACK in reply to notification from ([\da-f:]+)\b', timeout=timeout)
+        (source, ) = self.pexpect.match.groups()
+
+        return source
 
     def coap_set_resource_path(self, path):
         cmd = 'coap resource %s' % path
