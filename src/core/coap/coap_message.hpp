@@ -336,6 +336,21 @@ public:
     otError AppendUriPathOptions(const char *aUriPath);
 
     /**
+     * This method appends a Block option
+     *
+     * @param[in]  aType              Type of block option, 1 or 2.
+     * @param[in]  aNum               Current block number.
+     * @param[in]  aMore              Boolean to indicate more blocks are to be sent.
+     * @param[in]  aSize              Maximum block size.
+     *
+     * @retval OT_ERROR_NONE          Successfully appended the option.
+     * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     *
+     */
+    otError AppendBlockOption(const uint8_t aType, const uint32_t aNum, const bool aMore, const uint16_t aSize);
+
+    /**
      * This method appends a Proxy-Uri option.
      *
      * @param[in]  aProxyUri          A pointer to a NULL-terminated string.

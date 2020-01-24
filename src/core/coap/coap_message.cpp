@@ -187,6 +187,74 @@ exit:
     return error;
 }
 
+otError Message::AppendBlockOption(const uint8_t  aType,
+                                   const uint32_t aNum,
+                                   const bool     aMore,
+                                   const uint16_t aSizeExponent)
+{
+    otError  error   = OT_ERROR_NONE;
+    uint32_t encoded = 0;
+
+    if ((aNum > 0xFFFFF))
+    {
+        SuccessOrExit(error = OT_ERROR_INVALID_ARGS);
+    }
+
+    switch (aSizeExponent)
+    {
+    case 16:
+        encoded = 0;
+        break;
+
+    case 32:
+        encoded = 1;
+        break;
+
+    case 64:
+        encoded = 2;
+        break;
+
+    case 128:
+        encoded = 3;
+        break;
+
+    case 256:
+        encoded = 4;
+        break;
+
+    case 512:
+        encoded = 5;
+        break;
+
+    case 1024:
+        encoded = 6;
+        break;
+
+    case 2048:
+    default:
+        SuccessOrExit(OT_ERROR_INVALID_ARGS);
+    }
+
+    encoded |= (aMore) << 3;
+    encoded |= (aNum) << 4;
+
+    if (aType == 1)
+    {
+        SuccessOrExit(error = AppendUintOption(OT_COAP_OPTION_BLOCK1, encoded));
+    }
+    else if (aType == 2)
+    {
+        SuccessOrExit(error = AppendUintOption(OT_COAP_OPTION_BLOCK2, encoded));
+    }
+    else
+    {
+        SuccessOrExit(error = OT_ERROR_INVALID_ARGS);
+    }
+
+exit:
+    return error;
+}
+
 otError Message::AppendProxyUriOption(const char *aProxyUri)
 {
     return AppendStringOption(OT_COAP_OPTION_PROXY_URI, aProxyUri);
