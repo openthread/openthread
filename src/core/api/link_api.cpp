@@ -42,9 +42,6 @@
 
 using namespace ot;
 
-static void HandleActiveScanResult(Instance &aInstance, Mac::RxFrame *aFrame);
-static void HandleEnergyScanResult(Instance &aInstance, otEnergyScanResult *aResult);
-
 uint8_t otLinkGetChannel(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -418,8 +415,7 @@ otError otLinkActiveScan(otInstance *             aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.RegisterActiveScanCallback(aCallback, aCallbackContext);
-    return instance.Get<Mac::Mac>().ActiveScan(aScanChannels, aScanDuration, &HandleActiveScanResult);
+    return instance.Get<Mac::Mac>().ActiveScan(aScanChannels, aScanDuration, aCallback, aCallbackContext);
 }
 
 bool otLinkIsActiveScanInProgress(otInstance *aInstance)
@@ -427,21 +423,6 @@ bool otLinkIsActiveScanInProgress(otInstance *aInstance)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.Get<Mac::Mac>().IsActiveScanInProgress();
-}
-
-void HandleActiveScanResult(Instance &aInstance, Mac::RxFrame *aFrame)
-{
-    if (aFrame == NULL)
-    {
-        aInstance.InvokeActiveScanCallback(NULL);
-    }
-    else
-    {
-        otActiveScanResult result;
-
-        aInstance.Get<Mac::Mac>().ConvertBeaconToActiveScanResult(aFrame, result);
-        aInstance.InvokeActiveScanCallback(&result);
-    }
 }
 
 otError otLinkEnergyScan(otInstance *             aInstance,
@@ -452,13 +433,7 @@ otError otLinkEnergyScan(otInstance *             aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.RegisterEnergyScanCallback(aCallback, aCallbackContext);
-    return instance.Get<Mac::Mac>().EnergyScan(aScanChannels, aScanDuration, &HandleEnergyScanResult);
-}
-
-void HandleEnergyScanResult(Instance &aInstance, otEnergyScanResult *aResult)
-{
-    aInstance.InvokeEnergyScanCallback(aResult);
+    return instance.Get<Mac::Mac>().EnergyScan(aScanChannels, aScanDuration, aCallback, aCallbackContext);
 }
 
 bool otLinkIsEnergyScanInProgress(otInstance *aInstance)
