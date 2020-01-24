@@ -1068,7 +1068,7 @@ class Node:
             cmd += ' %s' % payload
 
         self.send_command(cmd)
-        self.coap_wait_response()
+        return self.coap_wait_response()
 
     def coap_wait_response(self):
         """
