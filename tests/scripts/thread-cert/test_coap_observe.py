@@ -37,7 +37,13 @@ ROUTER = 2
 
 
 class TestCoapObserve(unittest.TestCase):
+    """
+    Test suite for CoAP Observations (RFC7641).
+    """
     def setUp(self):
+        """
+        Start up two nodes and get them on the virtual network.
+        """
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
@@ -56,12 +62,18 @@ class TestCoapObserve(unittest.TestCase):
         self.nodes[ROUTER].set_router_selection_jitter(1)
 
     def tearDown(self):
+        """
+        Tear down the nodes created.
+        """
         for n in list(self.nodes.values()):
             n.stop()
             n.destroy()
         self.simulator.stop()
 
     def test_con(self):
+        """
+        Test notification using CON messages.
+        """
         self.nodes[LEADER].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
@@ -79,7 +91,8 @@ class TestCoapObserve(unittest.TestCase):
         self.nodes[ROUTER].coap_start()
         response = self.nodes[ROUTER].coap_observe(mleid, 'test', con=True)
 
-        self.assertEqual(response['observe'], 0)
+        first_observe = response['observe']
+        self.assertIsNotNone(first_observe)
         self.assertEqual(response['payload'], 'Test123')
         self.assertEqual(response['source'], mleid)
 
@@ -91,9 +104,56 @@ class TestCoapObserve(unittest.TestCase):
         self.nodes[LEADER].coap_set_content('Test321')
 
         response = self.nodes[ROUTER].coap_wait_response()
-        self.assertEqual(response['observe'], 0)
+        self.assertGreater(response['observe'], first_observe)
         self.assertEqual(response['payload'], 'Test321')
         self.assertEqual(response['source'], mleid)
+
+        # Stop subscription
+        self.nodes[ROUTER].coap_cancel()
+
+        self.nodes[ROUTER].coap_stop()
+        self.nodes[LEADER].coap_stop()
+
+    def test_non(self):
+        """
+        Test notification using NON messages.
+        """
+        self.nodes[LEADER].start()
+        self.simulator.go(5)
+        self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
+
+        self.nodes[ROUTER].start()
+        self.simulator.go(5)
+        self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
+
+        mleid = self.nodes[LEADER].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+
+        self.nodes[LEADER].coap_start()
+        self.nodes[LEADER].coap_set_resource_path('test')
+        self.nodes[LEADER].coap_set_content('Test123')
+
+        self.nodes[ROUTER].coap_start()
+        response = self.nodes[ROUTER].coap_observe(mleid, 'test', con=True)
+
+        first_observe = response['observe']
+        self.assertIsNotNone(first_observe)
+        self.assertEqual(response['payload'], 'Test123')
+        self.assertEqual(response['source'], mleid)
+
+        # This should have been emitted already, so should return immediately
+        self.nodes[LEADER].coap_wait_subscribe()
+
+        # Now change the content on the leader and wait for it to show up
+        # on the router.
+        self.nodes[LEADER].coap_set_content('Test321')
+
+        response = self.nodes[ROUTER].coap_wait_response()
+        self.assertGreater(response['observe'], first_observe)
+        self.assertEqual(response['payload'], 'Test321')
+        self.assertEqual(response['source'], mleid)
+
+        # Stop subscription
+        self.nodes[ROUTER].coap_cancel()
 
         self.nodes[ROUTER].coap_stop()
         self.nodes[LEADER].coap_stop()
