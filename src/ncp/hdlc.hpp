@@ -37,6 +37,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <openthread/error.h>
 #include "common/code_utils.hpp"
