@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "openthread-core-config.h"
+#include "platform/openthread-posix-config.h"
 
 #include <openthread/platform/toolchain.h>
 

@@ -29,6 +29,8 @@
 #ifndef OPENTHREAD_PLATFORM_CONFIG_H_
 #define OPENTHREAD_PLATFORM_CONFIG_H_
 
+#include "openthread-core-config.h"
+
 /**
  * @file
  * @brief

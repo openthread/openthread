@@ -35,6 +35,8 @@
 #ifndef PLATFORM_POSIX_H_
 #define PLATFORM_POSIX_H_
 
+#include "openthread-posix-config.h"
+
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -45,7 +47,6 @@
 #include <openthread/error.h>
 #include <openthread/instance.h>
 
-#include "platform-config.h"
 #include "common/logging.hpp"
 
 /**

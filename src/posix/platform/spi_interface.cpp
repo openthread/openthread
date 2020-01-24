@@ -31,10 +31,9 @@
  *   This file includes the implementation for the SPI interface to radio (RCP).
  */
 
-#include "openthread-core-config.h"
+#include "spi_interface.hpp"
 
 #include "platform-posix.h"
-#include "spi_interface.hpp"
 
 #include <assert.h>
 #include <errno.h>

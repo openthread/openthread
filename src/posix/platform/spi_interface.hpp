@@ -34,6 +34,8 @@
 #ifndef POSIX_APP_SPI_INTERFACE_HPP_
 #define POSIX_APP_SPI_INTERFACE_HPP_
 
+#include "openthread-posix-config.h"
+
 #include "spinel_interface.hpp"
 #include "ncp/hdlc.hpp"
 
@@ -164,7 +166,7 @@ private:
         kSpiTxRefuseExitCount    = 100,
         kImmediateRetryCount     = 5,
         kFastRetryCount          = 15,
-        kDebugBytesPerLine       = 16, 
+        kDebugBytesPerLine       = 16,
         kGpioIntAssertState      = 0,
         kGpioResetAssertState    = 0,
     };
