@@ -58,7 +58,8 @@ install_packages_apt()
     sudo apt-get -y install clang-format-6.0
 
     # add yapf for pretty
-    python3 -m pip install yapf
+    python3 -m pip install yapf || echo 'Failed to install python code formatter yapf. Install it manually if you need.'
+    
 }
 
 install_packages_opkg()
