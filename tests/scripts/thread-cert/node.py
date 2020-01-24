@@ -1068,7 +1068,12 @@ class Node:
             cmd += ' %s' % payload
 
         self.send_command(cmd)
+        self.coap_wait_response()
 
+    def coap_wait_response(self):
+        """
+        Wait for a CoAP response, and return it.
+        """
         if isinstance(self.simulator, simulator.VirtualTime):
             self.simulator.go(5)
             timeout = 1
