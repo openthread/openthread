@@ -46,6 +46,10 @@
 #include "spi_interface.hpp"
 #endif
 
+#if !OPENTHREAD_POSIX_RCP_UART_ENABLE && !OPENTHREAD_POSIX_RCP_SPI_ENABLE
+#error "Please enable either OPENTHREAD_POSIX_RCP_UART_ENABLE or OPENTHREAD_POSIX_RCP_SPI_ENABLE."
+#endif
+
 #include "spinel_interface.hpp"
 #include "ncp/ncp_config.h"
 #include "ncp/spinel.h"
