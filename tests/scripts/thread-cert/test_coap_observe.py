@@ -133,7 +133,7 @@ class TestCoapObserve(unittest.TestCase):
         self.nodes[LEADER].coap_set_content('Test123')
 
         self.nodes[ROUTER].coap_start()
-        response = self.nodes[ROUTER].coap_observe(mleid, 'test', con=True)
+        response = self.nodes[ROUTER].coap_observe(mleid, 'test', con=False)
 
         first_observe = response['observe']
         self.assertIsNotNone(first_observe)
