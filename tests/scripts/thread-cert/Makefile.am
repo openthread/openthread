@@ -143,6 +143,7 @@ EXTRA_DIST                                                         = \
     sniffer.py                                                       \
     sniffer_transport.py                                             \
     test_coap.py                                                     \
+    test_coap_observe.py                                             \
     test_coaps.py                                                    \
     test_common.py                                                   \
     test_crypto.py                                                   \
@@ -164,6 +165,7 @@ check_PROGRAMS                                                     = \
 
 check_SCRIPTS                                                      = \
     test_coap.py                                                     \
+    test_coap_observe.py                                             \
     test_coaps.py                                                    \
     test_common.py                                                   \
     test_crypto.py                                                   \
