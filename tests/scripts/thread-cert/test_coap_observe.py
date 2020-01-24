@@ -29,6 +29,7 @@
 
 import unittest
 
+import pexpect
 import config
 import node
 
@@ -100,16 +101,35 @@ class TestCoapObserve(unittest.TestCase):
         self.nodes[LEADER].coap_wait_subscribe()
 
         # Now change the content on the leader and wait for it to show up
-        # on the router.
-        self.nodes[LEADER].coap_set_content('Test321')
+        # on the router.  We will do this a few times with a short delay.
+        for n in range(0, 5):
+            content = 'msg%d' % n
 
-        response = self.nodes[ROUTER].coap_wait_response()
-        self.assertGreater(response['observe'], first_observe)
-        self.assertEqual(response['payload'], 'Test321')
-        self.assertEqual(response['source'], mleid)
+            self.nodes[LEADER].coap_set_content(content)
+
+            response = self.nodes[ROUTER].coap_wait_response()
+            self.assertGreater(response['observe'], first_observe)
+            self.assertEqual(response['payload'], content)
+            self.assertEqual(response['source'], mleid)
 
         # Stop subscription
         self.nodes[ROUTER].coap_cancel()
+
+        # We should see the response, but with no Observe option
+        response = self.nodes[ROUTER].coap_wait_response()
+        self.assertIsNone(response['observe'])
+        # Content won't have changed.
+        self.assertEqual(response['payload'], content)
+
+        # Make another change, no notification should be sent
+        self.nodes[LEADER].coap_set_content('LastNote')
+
+        # This should time out!
+        try:
+            self.nodes[ROUTER].coap_wait_response()
+            self.fail('Should not have received notification')
+        except pexpect.exceptions.TIMEOUT:
+            pass
 
         self.nodes[ROUTER].coap_stop()
         self.nodes[LEADER].coap_stop()
@@ -144,16 +164,35 @@ class TestCoapObserve(unittest.TestCase):
         self.nodes[LEADER].coap_wait_subscribe()
 
         # Now change the content on the leader and wait for it to show up
-        # on the router.
-        self.nodes[LEADER].coap_set_content('Test321')
+        # on the router.  We will do this a few times with a short delay.
+        for n in range(0, 5):
+            content = 'msg%d' % n
 
-        response = self.nodes[ROUTER].coap_wait_response()
-        self.assertGreater(response['observe'], first_observe)
-        self.assertEqual(response['payload'], 'Test321')
-        self.assertEqual(response['source'], mleid)
+            self.nodes[LEADER].coap_set_content(content)
+
+            response = self.nodes[ROUTER].coap_wait_response()
+            self.assertGreater(response['observe'], first_observe)
+            self.assertEqual(response['payload'], content)
+            self.assertEqual(response['source'], mleid)
 
         # Stop subscription
         self.nodes[ROUTER].coap_cancel()
+
+        # We should see the response, but with no Observe option
+        response = self.nodes[ROUTER].coap_wait_response()
+        self.assertIsNone(response['observe'])
+        # Content won't have changed.
+        self.assertEqual(response['payload'], content)
+
+        # Make another change, no notification should be sent
+        self.nodes[LEADER].coap_set_content('LastNote')
+
+        # This should time out!
+        try:
+            self.nodes[ROUTER].coap_wait_response()
+            self.fail('Should not have received notification')
+        except pexpect.exceptions.TIMEOUT:
+            pass
 
         self.nodes[ROUTER].coap_stop()
         self.nodes[LEADER].coap_stop()
