@@ -637,7 +637,7 @@ build_samr21() {
 }
 
 [ $BUILD_TARGET != toranj-test-framework ] || {
-    ./tests/toranj/start.sh || die
+    top_builddir=$(pwd)/build/toranj ./tests/toranj/start.sh || die
 }
 
 [ $BUILD_TARGET != osx ] || {

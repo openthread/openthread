@@ -182,11 +182,11 @@ jobs:
       os: linux
       compiler: gcc
       script: .travis/script.sh
-    - env: BUILD_TARGET="toranj-test-framework" VERBOSE=1
+    - env: BUILD_TARGET="toranj-test-framework" COVERAGE=1 VERBOSE=1
       os: linux
       compiler: gcc
       script: .travis/script.sh
-    - env: BUILD_TARGET="toranj-test-framework" VERBOSE=1 TORANJ_POSIX_APP_RCP_MODEL=1
+    - env: BUILD_TARGET="toranj-test-framework" COVERAGE=1 VERBOSE=1 TORANJ_POSIX_APP_RCP_MODEL=1
       os: linux
       compiler: gcc
       script: .travis/script.sh
