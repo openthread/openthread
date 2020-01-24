@@ -29,6 +29,8 @@
 #ifndef OPENTHREAD_CONSOLE_CLI_H_
 #define OPENTHREAD_CONSOLE_CLI_H_
 
+#include "platform/openthread-posix-config.h"
+
 #include <stdint.h>
 
 #include "openthread-system.h"

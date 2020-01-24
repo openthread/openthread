@@ -34,7 +34,8 @@
 #ifndef POSIX_APP_HDLC_INTERFACE_HPP_
 #define POSIX_APP_HDLC_INTERFACE_HPP_
 
-#include "platform-config.h"
+#include "openthread-posix-config.h"
+#include "platform-posix.h"
 #include "spinel_interface.hpp"
 #include "ncp/hdlc.hpp"
 

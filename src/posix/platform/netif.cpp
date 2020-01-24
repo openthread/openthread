@@ -30,7 +30,8 @@
  * @file
  *   This file implements the platform network on Linux.
  */
-#include "openthread-core-config.h"
+
+#include "openthread-posix-config.h"
 #include "platform-posix.h"
 
 #include <arpa/inet.h>

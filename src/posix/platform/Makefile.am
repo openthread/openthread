@@ -58,6 +58,7 @@ libopenthread_posix_a_SOURCES             = \
     $(NULL)
 
 noinst_HEADERS                            = \
+    openthread-posix-config.h               \
     platform-posix.h                        \
     hdlc_interface.hpp                      \
     radio_spinel.hpp                        \

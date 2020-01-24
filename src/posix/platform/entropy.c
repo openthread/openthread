@@ -32,9 +32,9 @@
  *
  */
 
-#include <openthread/platform/entropy.h>
+#include "openthread-posix-config.h"
 
-#include "openthread-core-config.h"
+#include <openthread/platform/entropy.h>
 
 #include <assert.h>
 #include <stdio.h>
