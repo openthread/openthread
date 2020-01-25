@@ -286,6 +286,7 @@ TESTS                                                              = \
 
 XFAIL_NCP_TESTS                                                    = \
     test_coaps.py                                                    \
+    test_coap_observe.py                                             \
     test_diag.py                                                     \
     test_ipv6_fragmentation.py                                       \
     test_ipv6_source_selection.py                                    \
