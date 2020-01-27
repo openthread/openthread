@@ -13,7 +13,7 @@ For setting up the build environment refer to [examples/platforms/efr32mg13/READ
 ```bash
 $ cd <path-to-openthread>
 $ ./bootstrap
-$ make -f examples/Makefile-efr32mg13 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 BOARD=BRD4161A
+$ make -f examples/Makefile-efr32mg13 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 BOARD=BRD4168A
 ```
 
 Convert the resulting executables into S-Record format and append a s37 suffix.
