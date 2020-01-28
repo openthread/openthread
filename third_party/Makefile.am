@@ -66,13 +66,37 @@ SUBDIRS                                += \
     $(NULL)
 endif
 
-if OPENTHREAD_PLATFORM_NRF528XX
+if OPENTHREAD_PLATFORM_NRF52811
 SUBDIRS                                += \
     NordicSemiconductor                   \
     $(NULL)
 endif
 
-if OPENTHREAD_EXAMPLES_NRF528XX
+if OPENTHREAD_EXAMPLES_NRF52811
+SUBDIRS                                += \
+    jlink                                 \
+    $(NULL)
+endif
+
+if OPENTHREAD_PLATFORM_NRF52833
+SUBDIRS                                += \
+    NordicSemiconductor                   \
+    $(NULL)
+endif
+
+if OPENTHREAD_EXAMPLES_NRF52833
+SUBDIRS                                += \
+    jlink                                 \
+    $(NULL)
+endif
+
+if OPENTHREAD_PLATFORM_NRF52840
+SUBDIRS                                += \
+    NordicSemiconductor                   \
+    $(NULL)
+endif
+
+if OPENTHREAD_EXAMPLES_NRF52840
 SUBDIRS                                += \
     jlink                                 \
     $(NULL)
