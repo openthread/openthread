@@ -186,7 +186,11 @@ static const RAIL_IEEE802154_Config_t sRailIeee802154Config = {
     .isPanCoordinator = false,
 };
 
+#if RADIO_CONFIG_PA_USES_DCDC
+RAIL_DECLARE_TX_POWER_DCDC_CURVES(piecewiseSegments, curvesSg, curves24Hp, curves24Lp);
+#else
 RAIL_DECLARE_TX_POWER_VBAT_CURVES(piecewiseSegments, curvesSg, curves24Hp, curves24Lp);
+#endif
 
 static int8_t sTxPowerDbm = OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER;
 
