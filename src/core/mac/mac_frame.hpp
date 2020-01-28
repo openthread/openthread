@@ -1131,6 +1131,7 @@ public:
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 };
 
+OT_TOOL_PACKED_BEGIN
 class Beacon
 {
 public:
