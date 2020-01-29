@@ -235,7 +235,7 @@ otError Message::AppendBlockOption(const uint8_t  aType,
         SuccessOrExit(OT_ERROR_INVALID_ARGS);
     }
 
-    encoded |= (aMore) << 3;
+    encoded |= static_cast<uint32_t>((aMore) << 3);
     encoded |= (aNum) << 4;
 
     if (aType == 1)
