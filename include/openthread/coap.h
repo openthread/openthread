@@ -134,8 +134,8 @@ typedef enum otCoapOptionType
     OT_COAP_OPTION_URI_QUERY      = 15, ///< Uri-Query
     OT_COAP_OPTION_ACCEPT         = 17, ///< Accept
     OT_COAP_OPTION_LOCATION_QUERY = 20, ///< Location-Query
-    OT_COAP_OPTION_BLOCK2         = 23, ///< Block1 (RFC7959)
-    OT_COAP_OPTION_BLOCK1         = 27, ///< Block2 (RFC7959)
+    OT_COAP_OPTION_BLOCK2         = 23, ///< Block2 (RFC7959)
+    OT_COAP_OPTION_BLOCK1         = 27, ///< Block1 (RFC7959)
     OT_COAP_OPTION_PROXY_URI      = 35, ///< Proxy-Uri
     OT_COAP_OPTION_PROXY_SCHEME   = 39, ///< Proxy-Scheme
     OT_COAP_OPTION_SIZE1          = 60, ///< Size1
@@ -498,7 +498,7 @@ otError otCoapMessageAppendBlock2Option(otMessage *aMessage, uint32_t aNum, bool
  * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
  *
  */
-otError otCoapMessageAppendBlock1Option(otMessage *aMessage, uint32_t aNum, bool aMore, uint16_t aSizeExponent);
+otError otCoapMessageAppendBlock1Option(otMessage *aMessage, uint32_t aNum, bool aMore, uint16_t aSize);
 
 /**
  * This function appends a Proxy-Uri option.
