@@ -130,6 +130,26 @@ fed_children[-1].join_node(routers[-1], wpan.JOIN_TYPE_END_DEVICE)
 NUM_MSGS = 3
 MSG_LENS = [40, 100, 400, 800, 1000]
 
+# Wait till first router has either established a link or
+# has a valid "next hop" towards all other routers.
+
+ROUTER_TABLE_WAIT_TIME = 60 / speedup + 5
+INVALID_ROUTER_ID = 63
+
+r1_rloc = int(routers[0].get(wpan.WPAN_THREAD_RLOC16), 16)
+
+
+def check_r1_router_table():
+    router_table = wpan.parse_router_table_result(
+        routers[0].get(wpan.WPAN_THREAD_ROUTER_TABLE)
+    )
+    verify(len(router_table) == NUM_ROUTERS)
+    for entry in router_table:
+        verify(entry.rloc16 == r1_rloc or entry.is_link_established or entry.next_hop != INVALID_ROUTER_ID)
+
+
+wpan.verify_within(check_r1_router_table, ROUTER_TABLE_WAIT_TIME)
+
 # Send from the first router in the chain to the last one.
 
 src = routers[0].get(wpan.WPAN_IP6_MESH_LOCAL_ADDRESS)[1:-1]
