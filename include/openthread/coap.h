@@ -471,6 +471,36 @@ otError otCoapMessageAppendObserveOption(otMessage *aMessage, uint32_t aObserve)
 otError otCoapMessageAppendUriPathOptions(otMessage *aMessage, const char *aUriPath);
 
 /**
+ * This function appends a Block2 option
+ *
+ * @param[inout]  aMessage  A pointer to the CoAP message.
+ * @param[in]     aNum      Current block number.
+ * @param[in]     aMore     Boolean to indicate more blocks are to be sent.
+ * @param[in]     aSize     Maximum block size.
+ *
+ * @retval OT_ERROR_NONE          Successfully appended the option.
+ * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+ * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+ *
+ */
+otError otCoapMessageAppendBlock2Option(otMessage *aMessage, uint32_t aNum, bool aMore, uint16_t aSize);
+
+/**
+ * This function appends a Block1 option
+ *
+ * @param[inout]  aMessage  A pointer to the CoAP message.
+ * @param[in]     aNum      Current block number.
+ * @param[in]     aMore     Boolean to indicate more blocks are to be sent.
+ * @param[in]     aSize     Maximum block size.
+ *
+ * @retval OT_ERROR_NONE          Successfully appended the option.
+ * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+ * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+ *
+ */
+otError otCoapMessageAppendBlock1Option(otMessage *aMessage, uint32_t aNum, bool aMore, uint16_t aSizeExponent);
+
+/**
  * This function appends a Proxy-Uri option.
  *
  * @param[inout]  aMessage  A pointer to the CoAP message.

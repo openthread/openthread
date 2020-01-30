@@ -187,10 +187,7 @@ exit:
     return error;
 }
 
-otError Message::AppendBlockOption(const uint8_t  aType,
-                                   const uint32_t aNum,
-                                   const bool     aMore,
-                                   const uint16_t aSizeExponent)
+otError Message::AppendBlockOption(const uint8_t aType, const uint32_t aNum, const bool aMore, const uint16_t aSize)
 {
     otError  error   = OT_ERROR_NONE;
     uint32_t encoded = 0;
@@ -200,7 +197,7 @@ otError Message::AppendBlockOption(const uint8_t  aType,
         SuccessOrExit(error = OT_ERROR_INVALID_ARGS);
     }
 
-    switch (aSizeExponent)
+    switch (aSize)
     {
     case 16:
         encoded = 0;

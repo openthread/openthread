@@ -110,14 +110,14 @@ otError otCoapMessageAppendUriPathOptions(otMessage *aMessage, const char *aUriP
     return static_cast<Coap::Message *>(aMessage)->AppendUriPathOptions(aUriPath);
 }
 
-otError otCoapMessageAppendBlock2Option(otMessage *aMessage, uint32_t aNum, bool aMore, uint8_t aSizeExponent)
+otError otCoapMessageAppendBlock2Option(otMessage *aMessage, uint32_t aNum, bool aMore, uint16_t aSize)
 {
-    return static_cast<Coap::Message *>(aMessage)->AppendBlockOption(1, aNum, aMore, aSizeExponent);
+    return static_cast<Coap::Message *>(aMessage)->AppendBlockOption(1, aNum, aMore, aSize);
 }
 
-otError otCoapMessageAppendBlock1Option(otMessage *aMessage, uint32_t aNum, bool aMore, uint8_t aSizeExponent)
+otError otCoapMessageAppendBlock1Option(otMessage *aMessage, uint32_t aNum, bool aMore, uint16_t aSize)
 {
-    return static_cast<Coap::Message *>(aMessage)->AppendBlockOption(2, aNum, aMore, aSizeExponent);
+    return static_cast<Coap::Message *>(aMessage)->AppendBlockOption(2, aNum, aMore, aSize);
 }
 
 otError otCoapMessageAppendProxyUriOption(otMessage *aMessage, const char *aUriPath)
