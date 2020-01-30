@@ -164,7 +164,7 @@ static void SendBlockingCommand(int aArgc, char *aArgv[])
         ssize_t rval = read(sSessionFd, buffer, sizeof(buffer));
 
         VerifyOrExit(rval >= 0);
-        write(STDOUT_FILENO, buffer, static_cast<size_t>(rval));
+        IgnoreReturnValue(write(STDOUT_FILENO, buffer, static_cast<size_t>(rval)));
         for (ssize_t i = 0; i < rval; i++)
         {
             if (FindDone(&doneState, buffer[i]) || FindError(&errorState, buffer[i]))
