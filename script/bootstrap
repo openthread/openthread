@@ -74,8 +74,8 @@ install_packages_brew()
     brew install automake libtool
 
     # add ARM toolchain
-    brew tap PX4/homebrew-px4
-    brew install gcc-arm-none-eabi
+    brew tap ArmMbed/homebrew-formulae
+    brew install arm-none-eabi-gcc
 
     # check for gcc for posix examples
     if ! which gcc; then
