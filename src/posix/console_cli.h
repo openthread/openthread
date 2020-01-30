@@ -31,7 +31,7 @@
 
 #include <stdint.h>
 
-#include "openthread-system.h"
+#include "openthread-posix.h"
 
 /**
  * This function initializes CLI console.
@@ -53,7 +53,7 @@ void otxConsoleDeinit(void);
  * @param[inout]    aMainloop   A pointer to the mainloop context.
  *
  */
-void otxConsoleUpdate(otSysMainloopContext *aMainloop);
+void otxConsoleUpdate(otPosixMainloopContext *aMainloop);
 
 /**
  * This function performs console driver processing.
@@ -61,6 +61,6 @@ void otxConsoleUpdate(otSysMainloopContext *aMainloop);
  * @param[in]    aMainloop      A pointer to the mainloop context.
  *
  */
-void otxConsoleProcess(const otSysMainloopContext *aMainloop);
+void otxConsoleProcess(const otPosixMainloopContext *aMainloop);
 
 #endif // OPENTHREAD_CONSOLE_CLI_H_

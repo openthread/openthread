@@ -65,8 +65,8 @@ noinst_HEADERS                            = \
     $(NULL)
 
 openthread_HEADERS                        = \
-    openthread-system.h                     \
-    $(NULL)
+    openthread-posix.h                      \
+    $(NULL) 
 
 openthreaddir = $(includedir)/openthread
 dist_openthread_HEADERS = $(openthread_headers)

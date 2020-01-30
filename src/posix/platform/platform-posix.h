@@ -41,7 +41,7 @@
 #include <sys/select.h>
 #include <sys/time.h>
 
-#include <openthread-system.h>
+#include <openthread-posix.h>
 #include <openthread/error.h>
 #include <openthread/instance.h>
 
