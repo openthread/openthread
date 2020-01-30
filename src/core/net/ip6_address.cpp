@@ -62,7 +62,7 @@ bool Address::IsLoopback(void) const
 
 bool Address::IsLinkLocal(void) const
 {
-    return (mFields.m8[0] == 0xfe) && ((mFields.m8[1] & 0xc0) == 0x80);
+    return (mFields.m16[0] & HostSwap16(0xffc0)) == HostSwap16(0xfe80);
 }
 
 bool Address::IsMulticast(void) const
@@ -117,15 +117,14 @@ bool Address::IsRealmLocalAllMplForwarders(void) const
 
 bool Address::IsRoutingLocator(void) const
 {
-    return (mFields.m16[4] == HostSwap16(0x0000) && mFields.m16[5] == HostSwap16(0x00ff) &&
-            mFields.m16[6] == HostSwap16(0xfe00) && mFields.m8[14] < kAloc16Mask &&
-            (mFields.m8[14] & kRloc16ReservedBitMask) == 0);
+    return (mFields.m32[2] == HostSwap32(0x000000ff) && mFields.m16[6] == HostSwap16(0xfe00) &&
+            mFields.m8[14] < kAloc16Mask && (mFields.m8[14] & kRloc16ReservedBitMask) == 0);
 }
 
 bool Address::IsAnycastRoutingLocator(void) const
 {
-    return (mFields.m16[4] == HostSwap16(0x0000) && mFields.m16[5] == HostSwap16(0x00ff) &&
-            mFields.m16[6] == HostSwap16(0xfe00) && mFields.m8[14] == kAloc16Mask);
+    return (mFields.m32[2] == HostSwap32(0x000000ff) && mFields.m16[6] == HostSwap16(0xfe00) &&
+            mFields.m8[14] == kAloc16Mask);
 }
 
 bool Address::IsAnycastServiceLocator(void) const
