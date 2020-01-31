@@ -404,7 +404,6 @@ private:
     LinkedList<NetifUnicastAddress>   mUnicastAddresses;
     LinkedList<NetifMulticastAddress> mMulticastAddresses;
     bool                              mMulticastPromiscuous;
-    Netif *                           mNext;
 
     otIp6AddressCallback mAddressCallback;
     void *               mAddressCallbackContext;

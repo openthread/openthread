@@ -85,7 +85,6 @@ Netif::Netif(Instance &aInstance)
     , mUnicastAddresses()
     , mMulticastAddresses()
     , mMulticastPromiscuous(false)
-    , mNext(NULL)
     , mAddressCallback(NULL)
     , mAddressCallbackContext(NULL)
 {
