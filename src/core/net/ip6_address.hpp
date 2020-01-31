@@ -127,15 +127,6 @@ public:
     bool IsLoopback(void) const;
 
     /**
-     * This method indicates whether or not the IPv6 address scope is Interface-Local.
-     *
-     * @retval TRUE   If the IPv6 address scope is Interface-Local.
-     * @retval FALSE  If the IPv6 address scope is not Interface-Local.
-     *
-     */
-    bool IsInterfaceLocal(void) const;
-
-    /**
      * This method indicates whether or not the IPv6 address scope is Link-Local.
      *
      * @retval TRUE   If the IPv6 address scope is Link-Local.
