@@ -443,7 +443,6 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
             break;
         default:
             // not supported
-            assert(false);
             DieNow(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
@@ -457,7 +456,6 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
             tios.c_cflag |= CSTOPB;
             break;
         default:
-            assert(false);
             DieNow(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
@@ -545,7 +543,6 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
             break;
 #endif
         default:
-            assert(false);
             DieNow(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
@@ -559,7 +556,6 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
             break;
         default:
             // not supported
-            assert(false);
             DieNow(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
