@@ -65,11 +65,6 @@ bool Address::IsLinkLocal(void) const
     return (mFields.m16[0] & HostSwap16(0xffc0)) == HostSwap16(0xfe80);
 }
 
-bool Address::IsMulticast(void) const
-{
-    return mFields.m8[0] == 0xff;
-}
-
 bool Address::IsLinkLocalMulticast(void) const
 {
     return IsMulticast() && (GetScope() == kLinkLocalScope);
@@ -147,16 +142,6 @@ bool Address::IsReservedSubnetAnycast(void) const
 bool Address::IsIidReserved(void) const
 {
     return IsSubnetRouterAnycast() || IsReservedSubnetAnycast() || IsAnycastRoutingLocator();
-}
-
-const uint8_t *Address::GetIid(void) const
-{
-    return mFields.m8 + kInterfaceIdentifierOffset;
-}
-
-uint8_t *Address::GetIid(void)
-{
-    return mFields.m8 + kInterfaceIdentifierOffset;
 }
 
 void Address::SetIid(const uint8_t *aIid)

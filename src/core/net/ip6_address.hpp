@@ -142,7 +142,7 @@ public:
      * @retval FALSE  If the IPv6 address scope is not a multicast address.
      *
      */
-    bool IsMulticast(void) const;
+    bool IsMulticast(void) const { return mFields.m8[0] == 0xff; }
 
     /**
      * This method indicates whether or not the IPv6 address is a link-local multicast address.
@@ -276,7 +276,7 @@ public:
      * @returns A pointer to the Interface Identifier.
      *
      */
-    const uint8_t *GetIid(void) const;
+    const uint8_t *GetIid(void) const { return mFields.m8 + kInterfaceIdentifierOffset; }
 
     /**
      * This method returns a pointer to the Interface Identifier.
@@ -284,7 +284,7 @@ public:
      * @returns A pointer to the Interface Identifier.
      *
      */
-    uint8_t *GetIid(void);
+    uint8_t *GetIid(void) { return mFields.m8 + kInterfaceIdentifierOffset; }
 
     /**
      * This method sets the Interface Identifier.
