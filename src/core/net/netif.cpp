@@ -378,16 +378,14 @@ otError Netif::SubscribeExternalMulticast(const Address &aAddress)
     {
         if (!entry->IsInUse())
         {
-            break;
+            entry->mAddress = aAddress;
+            mMulticastAddresses.Push(*entry);
+            Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSCRIBED);
+            ExitNow();
         }
     }
 
-    VerifyOrExit(entry < OT_ARRAY_END(mExtMulticastAddresses), error = OT_ERROR_NO_BUFS);
-
-    // Copy the address into the available entry and add it to the list.
-    entry->mAddress = aAddress;
-    mMulticastAddresses.Push(*entry);
-    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSCRIBED);
+    error = OT_ERROR_NO_BUFS;
 
 exit:
     return error;
@@ -504,17 +502,14 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
     {
         if (!entry->IsInUse())
         {
-            break;
+            *entry = aAddress;
+            mUnicastAddresses.Push(*entry);
+            Get<Notifier>().Signal(OT_CHANGED_IP6_ADDRESS_ADDED);
+            ExitNow();
         }
     }
 
-    VerifyOrExit(entry < OT_ARRAY_END(mExtUnicastAddresses), error = OT_ERROR_NO_BUFS);
-
-    // Copy the new address into the available entry and insert it in linked-list.
-    *entry = aAddress;
-    mUnicastAddresses.Push(*entry);
-
-    Get<Notifier>().Signal(OT_CHANGED_IP6_ADDRESS_ADDED);
+    error = OT_ERROR_NO_BUFS;
 
 exit:
     return error;
