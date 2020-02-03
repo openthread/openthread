@@ -637,7 +637,7 @@ otError Mle::BecomeChild(AttachMode aMode)
         }
     }
 
-    ResetParentCandidate();
+    mParentCandidate.Clear();
     SetAttachState(kAttachStateStart);
     mParentRequestMode = aMode;
 
@@ -1765,7 +1765,7 @@ void Mle::HandleAttachTimer(void)
 
     case kAttachStateChildIdRequest:
         SetAttachState(kAttachStateIdle);
-        ResetParentCandidate();
+        mParentCandidate.Clear();
         delay = Reattach();
         break;
     }
@@ -3145,11 +3145,6 @@ exit:
     return rval;
 }
 
-void Mle::ResetParentCandidate(void)
-{
-    mParentCandidate.Clear();
-}
-
 otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence)
 {
     otError                 error    = OT_ERROR_NONE;
@@ -3459,7 +3454,7 @@ otError Mle::HandleChildIdResponse(const Message &         aMessage,
     }
 
     mParent = mParentCandidate;
-    ResetParentCandidate();
+    mParentCandidate.Clear();
 
     mParent.SetRloc16(sourceAddress.GetRloc16());
 
