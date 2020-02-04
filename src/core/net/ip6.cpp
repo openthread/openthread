@@ -76,13 +76,15 @@ Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength, const otMes
 {
     otMessageSettings settings = {true, OT_MESSAGE_PRIORITY_NORMAL};
     Message *         message  = NULL;
+    uint8_t           priority;
 
     if (aSettings != NULL)
     {
         settings = *aSettings;
     }
 
-    SuccessOrExit(GetDatagramPriority(aData, aDataLength, *reinterpret_cast<uint8_t *>(&settings.mPriority)));
+    SuccessOrExit(GetDatagramPriority(aData, aDataLength, priority));
+    settings.mPriority = static_cast<otMessagePriority>(priority);
     VerifyOrExit((message = Get<MessagePool>().New(Message::kTypeIp6, 0, &settings)) != NULL);
 
     if (message->Append(aData, aDataLength) != OT_ERROR_NONE)
