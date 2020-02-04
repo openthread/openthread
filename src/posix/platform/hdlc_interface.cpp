@@ -417,6 +417,7 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
         int  speed  = 115200;
         int  cstopb = 1;
         char parity = 'N';
+        char flow   = 'N';
 
         VerifyOrExit((rval = tcgetattr(fd, &tios)) == 0);
 
@@ -424,10 +425,10 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
 
         tios.c_cflag = CS8 | HUPCL | CREAD | CLOCAL;
 
-        // example: 115200N1
+        // example: 115200N1H
         if (aConfig != NULL)
         {
-            sscanf(aConfig, "%u%c%d", &speed, &parity, &cstopb);
+            sscanf(aConfig, "%u%c%d%c", &speed, &parity, &cstopb, &flow);
         }
 
         switch (parity)
@@ -442,7 +443,6 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
             break;
         default:
             // not supported
-            assert(false);
             DieNow(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
@@ -456,7 +456,6 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
             tios.c_cflag |= CSTOPB;
             break;
         default:
-            assert(false);
             DieNow(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
@@ -544,7 +543,19 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
             break;
 #endif
         default:
-            assert(false);
+            DieNow(OT_EXIT_INVALID_ARGUMENTS);
+            break;
+        }
+
+        switch (flow)
+        {
+        case 'N':
+            break;
+        case 'H':
+            tios.c_cflag |= CRTSCTS;
+            break;
+        default:
+            // not supported
             DieNow(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
