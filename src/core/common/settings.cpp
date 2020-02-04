@@ -51,26 +51,29 @@ namespace ot {
 void SettingsBase::LogNetworkInfo(const char *aAction, const NetworkInfo &aNetworkInfo) const
 {
     otLogInfoCore("Non-volatile: %s NetworkInfo {rloc:0x%04x, extaddr:%s, role:%s, mode:0x%02x, keyseq:0x%x, ...",
-                  aAction, aNetworkInfo.mRloc16, aNetworkInfo.mExtAddress.ToString().AsCString(),
-                  Mle::Mle::RoleToString(static_cast<otDeviceRole>(aNetworkInfo.mRole)), aNetworkInfo.mDeviceMode,
-                  aNetworkInfo.mKeySequence);
+                  aAction, aNetworkInfo.GetRloc16(), aNetworkInfo.GetExtAddress().ToString().AsCString(),
+                  Mle::Mle::RoleToString(static_cast<otDeviceRole>(aNetworkInfo.GetRole())),
+                  aNetworkInfo.GetDeviceMode(), aNetworkInfo.GetKeySequence());
 
-    otLogInfoCore("Non-volatile: ... pid:0x%x, mlecntr:0x%x, maccntr:0x%x, mliid:%02x%02x%02x%02x%02x%02x%02x%02x}",
-                  aNetworkInfo.mPreviousPartitionId, aNetworkInfo.mMleFrameCounter, aNetworkInfo.mMacFrameCounter,
-                  aNetworkInfo.mMlIid[0], aNetworkInfo.mMlIid[1], aNetworkInfo.mMlIid[2], aNetworkInfo.mMlIid[3],
-                  aNetworkInfo.mMlIid[4], aNetworkInfo.mMlIid[5], aNetworkInfo.mMlIid[6], aNetworkInfo.mMlIid[7]);
+    otLogInfoCore(
+        "Non-volatile: ... pid:0x%x, mlecntr:0x%x, maccntr:0x%x, mliid:%02x%02x%02x%02x%02x%02x%02x%02x}",
+        aNetworkInfo.GetPreviousPartitionId(), aNetworkInfo.GetMleFrameCounter(), aNetworkInfo.GetMacFrameCounter(),
+        aNetworkInfo.GetMeshLocalIid()[0], aNetworkInfo.GetMeshLocalIid()[1], aNetworkInfo.GetMeshLocalIid()[2],
+        aNetworkInfo.GetMeshLocalIid()[3], aNetworkInfo.GetMeshLocalIid()[4], aNetworkInfo.GetMeshLocalIid()[5],
+        aNetworkInfo.GetMeshLocalIid()[6], aNetworkInfo.GetMeshLocalIid()[7]);
 }
 
 void SettingsBase::LogParentInfo(const char *aAction, const ParentInfo &aParentInfo) const
 {
-    otLogInfoCore("Non-volatile: %s ParentInfo {extaddr:%s}", aAction, aParentInfo.mExtAddress.ToString().AsCString());
+    otLogInfoCore("Non-volatile: %s ParentInfo {extaddr:%s}", aAction,
+                  aParentInfo.GetExtAddress().ToString().AsCString());
 }
 
 void SettingsBase::LogChildInfo(const char *aAction, const ChildInfo &aChildInfo) const
 {
     otLogInfoCore("Non-volatile: %s ChildInfo {rloc:0x%04x, extaddr:%s, timeout:%u, mode:0x%02x}", aAction,
-                  aChildInfo.mRloc16, aChildInfo.mExtAddress.ToString().AsCString(), aChildInfo.mTimeout,
-                  aChildInfo.mMode);
+                  aChildInfo.GetRloc16(), aChildInfo.GetExtAddress().ToString().AsCString(), aChildInfo.GetTimeout(),
+                  aChildInfo.GetMode());
 }
 
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
