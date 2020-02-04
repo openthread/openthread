@@ -83,6 +83,7 @@ public:
      * This structure represents the device's own network information for settings storage.
      *
      */
+    OT_TOOL_PACKED_BEGIN
     struct NetworkInfo
     {
         /**
@@ -100,12 +101,13 @@ public:
         uint32_t        mPreviousPartitionId;    ///< PartitionId
         Mac::ExtAddress mExtAddress;             ///< Extended Address
         uint8_t         mMlIid[OT_IP6_IID_SIZE]; ///< IID from ML-EID
-    };
+    } OT_TOOL_PACKED_END;
 
     /**
      * This structure represents the parent information for settings storage.
      *
      */
+    OT_TOOL_PACKED_BEGIN
     struct ParentInfo
     {
         /**
@@ -115,12 +117,13 @@ public:
         void Clear(void) { memset(this, 0, sizeof(*this)); }
 
         Mac::ExtAddress mExtAddress; ///< Extended Address
-    };
+    } OT_TOOL_PACKED_END;
 
     /**
      * This structure represents the child information for settings storage.
      *
      */
+    OT_TOOL_PACKED_BEGIN
     struct ChildInfo
     {
         /**
@@ -133,7 +136,7 @@ public:
         uint32_t        mTimeout;    ///< Timeout
         uint16_t        mRloc16;     ///< RLOC16
         uint8_t         mMode;       ///< The MLE device mode
-    };
+    } OT_TOOL_PACKED_END;
 
     /**
      * This enumeration defines the keys of settings.
