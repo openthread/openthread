@@ -141,6 +141,17 @@ typedef enum otCoapOptionType
     OT_COAP_OPTION_SIZE1          = 60, ///< Size1
 } otCoapOptionType;
 
+typedef enum otCoapBlockSize
+{
+    OT_COAP_BLOCK_SIZE_16   = 0,
+    OT_COAP_BLOCK_SIZE_32   = 1,
+    OT_COAP_BLOCK_SIZE_64   = 2,
+    OT_COAP_BLOCK_SIZE_128  = 3,
+    OT_COAP_BLOCK_SIZE_256  = 4,
+    OT_COAP_BLOCK_SIZE_512  = 5,
+    OT_COAP_BLOCK_SIZE_1024 = 6,
+} otCoapBlockSize;
+
 /**
  * This structure represents a CoAP option.
  *
@@ -483,7 +494,7 @@ otError otCoapMessageAppendUriPathOptions(otMessage *aMessage, const char *aUriP
  * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
  *
  */
-otError otCoapMessageAppendBlock2Option(otMessage *aMessage, uint32_t aNum, bool aMore, uint16_t aSize);
+otError otCoapMessageAppendBlock2Option(otMessage *aMessage, uint32_t aNum, bool aMore, otCoapBlockSize aSize);
 
 /**
  * This function appends a Block1 option
@@ -498,7 +509,7 @@ otError otCoapMessageAppendBlock2Option(otMessage *aMessage, uint32_t aNum, bool
  * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
  *
  */
-otError otCoapMessageAppendBlock1Option(otMessage *aMessage, uint32_t aNum, bool aMore, uint16_t aSize);
+otError otCoapMessageAppendBlock1Option(otMessage *aMessage, uint32_t aNum, bool aMore, otCoapBlockSize aSize);
 
 /**
  * This function appends a Proxy-Uri option.

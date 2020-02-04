@@ -187,46 +187,12 @@ exit:
     return error;
 }
 
-otError Message::AppendBlockOption(const uint8_t aType, const uint32_t aNum, const bool aMore, const uint16_t aSize)
+otError Message::AppendBlockOption(uint8_t aType, uint32_t aNum, bool aMore, otCoapBlockSize aSize)
 {
     otError  error   = OT_ERROR_NONE;
-    uint32_t encoded = 0;
+    uint32_t encoded = aSize;
 
     VerifyOrExit(aNum < 0xFFFFF, error = OT_ERROR_INVALID_ARGS);
-
-    switch (aSize)
-    {
-    case 16:
-        encoded = 0;
-        break;
-
-    case 32:
-        encoded = 1;
-        break;
-
-    case 64:
-        encoded = 2;
-        break;
-
-    case 128:
-        encoded = 3;
-        break;
-
-    case 256:
-        encoded = 4;
-        break;
-
-    case 512:
-        encoded = 5;
-        break;
-
-    case 1024:
-        encoded = 6;
-        break;
-
-    default:
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
-    }
 
     encoded |= static_cast<uint32_t>((aMore) << 3);
     encoded |= (aNum) << 4;
