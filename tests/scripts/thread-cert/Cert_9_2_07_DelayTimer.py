@@ -48,6 +48,7 @@ COMMISSIONER_PENDING_PANID = 0xafce
 
 
 class Cert_9_2_7_DelayTimer(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -70,9 +71,8 @@ class Cert_9_2_7_DelayTimer(unittest.TestCase):
         self.nodes[LEADER].set_router_selection_jitter(1)
 
         self.nodes[ROUTER].set_active_dataset(ROUTER_ACTIVE_TIMESTAMP)
-        self.nodes[ROUTER].set_pending_dataset(
-            ROUTER_PENDING_TIMESTAMP, ROUTER_PENDING_ACTIVE_TIMESTAMP
-        )
+        self.nodes[ROUTER].set_pending_dataset(ROUTER_PENDING_TIMESTAMP,
+                                               ROUTER_PENDING_ACTIVE_TIMESTAMP)
         self.nodes[ROUTER].set_mode('rsdn')
         self.nodes[ROUTER].set_panid(PANID_INIT)
         self.nodes[ROUTER].set_partition_id(0x1)
@@ -122,26 +122,21 @@ class Cert_9_2_7_DelayTimer(unittest.TestCase):
             panid=COMMISSIONER_PENDING_PANID,
         )
         self.simulator.go(40)
-        self.assertEqual(
-            self.nodes[LEADER].get_panid(), COMMISSIONER_PENDING_PANID
-        )
-        self.assertEqual(
-            self.nodes[COMMISSIONER].get_panid(), COMMISSIONER_PENDING_PANID
-        )
-        self.assertEqual(
-            self.nodes[ROUTER].get_panid(), COMMISSIONER_PENDING_PANID
-        )
+        self.assertEqual(self.nodes[LEADER].get_panid(),
+                         COMMISSIONER_PENDING_PANID)
+        self.assertEqual(self.nodes[COMMISSIONER].get_panid(),
+                         COMMISSIONER_PENDING_PANID)
+        self.assertEqual(self.nodes[ROUTER].get_panid(),
+                         COMMISSIONER_PENDING_PANID)
 
-        self.assertEqual(
-            self.nodes[LEADER].get_channel(), COMMISSIONER_PENDING_CHANNEL
-        )
+        self.assertEqual(self.nodes[LEADER].get_channel(),
+                         COMMISSIONER_PENDING_CHANNEL)
         self.assertEqual(
             self.nodes[COMMISSIONER].get_channel(),
             COMMISSIONER_PENDING_CHANNEL,
         )
-        self.assertEqual(
-            self.nodes[ROUTER].get_channel(), COMMISSIONER_PENDING_CHANNEL
-        )
+        self.assertEqual(self.nodes[ROUTER].get_channel(),
+                         COMMISSIONER_PENDING_CHANNEL)
 
         ipaddrs = self.nodes[ROUTER].get_addrs()
         for ipaddr in ipaddrs:

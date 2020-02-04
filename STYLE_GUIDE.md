@@ -185,4 +185,4 @@
 
 ## Format and Style
 
-- All code should adhere to [PEP 8](https://www.python.org/dev/peps/pep-0008/).
+- All code should adhere to [Google Python Style Guide](http://google.github.io/styleguide/pyguide.html).

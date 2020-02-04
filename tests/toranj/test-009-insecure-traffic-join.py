@@ -90,9 +90,8 @@ node2.permit_join(duration_sec='100', port=str(rx_port))
 
 # Send insecure reply from node1 to node2
 
-sender2 = node1.prepare_tx(
-    (ll1, insecure_port), (ll2, rx_port), "Hi back! (insecure)", NUM_MSGS
-)
+sender2 = node1.prepare_tx((ll1, insecure_port), (ll2, rx_port),
+                           "Hi back! (insecure)", NUM_MSGS)
 recver2 = node2.prepare_rx(sender2)
 wpan.Node.perform_async_tx_rx()
 verify(sender2.was_successful)
@@ -106,9 +105,8 @@ verify(node2.is_associated())
 
 node1.permit_join('0')
 
-sender = node2.prepare_tx(
-    ll2, (ll1, insecure_port), "Hi (now secure)", NUM_MSGS
-)
+sender = node2.prepare_tx(ll2, (ll1, insecure_port), "Hi (now secure)",
+                          NUM_MSGS)
 recver = node1.prepare_rx(sender)
 wpan.Node.perform_async_tx_rx()
 verify(sender.was_successful)
@@ -116,9 +114,8 @@ verify(recver.was_successful)
 
 node2.permit_join('0')
 
-sender2 = node1.prepare_tx(
-    (ll1, insecure_port), (ll2, rx_port), "Hi back! (secure now)", NUM_MSGS
-)
+sender2 = node1.prepare_tx((ll1, insecure_port), (ll2, rx_port),
+                           "Hi back! (secure now)", NUM_MSGS)
 recver2 = node2.prepare_rx(sender2)
 wpan.Node.perform_async_tx_rx()
 verify(sender2.was_successful)

@@ -41,6 +41,7 @@ MTDS = [ED2, SED2]
 
 
 class Cert_7_1_5_BorderRouterAsRouter(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -127,11 +128,8 @@ class Cert_7_1_5_BorderRouterAsRouter(unittest.TestCase):
         self.assertTrue(any('2001:2:0:2' in addr[0:10] for addr in addrs))
         self.assertTrue(any('2001:2:0:3' in addr[0:10] for addr in addrs))
         for addr in addrs:
-            if (
-                addr[0:10] == '2001:2:0:1'
-                or addr[0:10] == '2001:2:0:2'
-                or addr[0:10] == '2001:2:0:3'
-            ):
+            if (addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2' or
+                    addr[0:10] == '2001:2:0:3'):
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
         addrs = self.nodes[SED2].get_addrs()
@@ -139,11 +137,8 @@ class Cert_7_1_5_BorderRouterAsRouter(unittest.TestCase):
         self.assertFalse(any('2001:2:0:2' in addr[0:10] for addr in addrs))
         self.assertTrue(any('2001:2:0:3' in addr[0:10] for addr in addrs))
         for addr in addrs:
-            if (
-                addr[0:10] == '2001:2:0:1'
-                or addr[0:10] == '2001:2:0:2'
-                or addr[0:10] == '2001:2:0:3'
-            ):
+            if (addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2' or
+                    addr[0:10] == '2001:2:0:3'):
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
 

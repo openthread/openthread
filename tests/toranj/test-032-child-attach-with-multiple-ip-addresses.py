@@ -121,9 +121,8 @@ def check_addresses_on_child():
 wpan.verify_within(check_addresses_on_child, WAIT_TIME)
 
 # Remove child from parent's white-list
-parent.remove(
-    wpan.WPAN_MAC_WHITELIST_ENTRIES, child.get(wpan.WPAN_EXT_ADDRESS)[1:-1]
-)
+parent.remove(wpan.WPAN_MAC_WHITELIST_ENTRIES,
+              child.get(wpan.WPAN_EXT_ADDRESS)[1:-1])
 
 # Enable supervision check on child, this ensures that child is detached soon.
 child.set(

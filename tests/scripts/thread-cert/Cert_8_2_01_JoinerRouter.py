@@ -38,6 +38,7 @@ JOINER = 3
 
 
 class Cert_8_2_01_JoinerRouter(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -48,15 +49,13 @@ class Cert_8_2_01_JoinerRouter(unittest.TestCase):
         self.nodes[COMMISSIONER].set_panid(0xface)
         self.nodes[COMMISSIONER].set_mode('rsdn')
         self.nodes[COMMISSIONER].set_masterkey(
-            'deadbeefdeadbeefdeadbeefdeadbeef'
-        )
+            'deadbeefdeadbeefdeadbeefdeadbeef')
         self.nodes[COMMISSIONER].enable_whitelist()
         self.nodes[COMMISSIONER].set_router_selection_jitter(1)
 
         self.nodes[JOINER_ROUTER].set_mode('rsdn')
         self.nodes[JOINER_ROUTER].set_masterkey(
-            '00112233445566778899aabbccddeeff'
-        )
+            '00112233445566778899aabbccddeeff')
         self.nodes[JOINER_ROUTER].enable_whitelist()
         self.nodes[JOINER_ROUTER].set_router_selection_jitter(1)
 
@@ -80,19 +79,15 @@ class Cert_8_2_01_JoinerRouter(unittest.TestCase):
         self.nodes[COMMISSIONER].commissioner_start()
         self.simulator.go(5)
         self.nodes[COMMISSIONER].commissioner_add_joiner(
-            self.nodes[JOINER_ROUTER].get_eui64(), 'OPENTHREAD'
-        )
+            self.nodes[JOINER_ROUTER].get_eui64(), 'OPENTHREAD')
         self.nodes[COMMISSIONER].commissioner_add_joiner(
-            self.nodes[JOINER].get_eui64(), 'OPENTHREAD2'
-        )
+            self.nodes[JOINER].get_eui64(), 'OPENTHREAD2')
         self.simulator.go(5)
 
         self.nodes[COMMISSIONER].add_whitelist(
-            self.nodes[JOINER_ROUTER].get_joiner_id()
-        )
+            self.nodes[JOINER_ROUTER].get_joiner_id())
         self.nodes[JOINER_ROUTER].add_whitelist(
-            self.nodes[COMMISSIONER].get_addr64()
-        )
+            self.nodes[COMMISSIONER].get_addr64())
 
         self.nodes[JOINER_ROUTER].interface_up()
         self.nodes[JOINER_ROUTER].joiner_start('OPENTHREAD')
@@ -103,19 +98,15 @@ class Cert_8_2_01_JoinerRouter(unittest.TestCase):
         )
 
         self.nodes[COMMISSIONER].add_whitelist(
-            self.nodes[JOINER_ROUTER].get_addr64()
-        )
+            self.nodes[JOINER_ROUTER].get_addr64())
 
         self.nodes[JOINER_ROUTER].thread_start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[JOINER_ROUTER].get_state(), 'router')
 
         self.nodes[JOINER_ROUTER].add_whitelist(
-            self.nodes[JOINER].get_joiner_id()
-        )
-        self.nodes[JOINER].add_whitelist(
-            self.nodes[JOINER_ROUTER].get_addr64()
-        )
+            self.nodes[JOINER].get_joiner_id())
+        self.nodes[JOINER].add_whitelist(self.nodes[JOINER_ROUTER].get_addr64())
 
         self.nodes[JOINER].interface_up()
         self.nodes[JOINER].joiner_start('OPENTHREAD2')
@@ -125,9 +116,7 @@ class Cert_8_2_01_JoinerRouter(unittest.TestCase):
             self.nodes[COMMISSIONER].get_masterkey(),
         )
 
-        self.nodes[JOINER_ROUTER].add_whitelist(
-            self.nodes[JOINER].get_addr64()
-        )
+        self.nodes[JOINER_ROUTER].add_whitelist(self.nodes[JOINER].get_addr64())
 
         self.nodes[JOINER].thread_start()
         self.simulator.go(5)

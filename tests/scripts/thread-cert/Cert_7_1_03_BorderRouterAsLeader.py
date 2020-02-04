@@ -51,6 +51,7 @@ MTDS = [SED1, MED1]
 
 
 class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -143,24 +144,19 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
         msg = leader_messages.next_mle_message(mle.CommandType.DATA_RESPONSE)
         check_data_response(
             msg,
-            network_data_check=NetworkDataCheck(
-                prefixes_check=PrefixesCheck(
-                    prefix_check_list=[
-                        SinglePrefixCheck(b'2001000200000001'),
-                        SinglePrefixCheck(b'2001000200000002'),
-                    ]
-                )
-            ),
+            network_data_check=NetworkDataCheck(prefixes_check=PrefixesCheck(
+                prefix_check_list=[
+                    SinglePrefixCheck(b'2001000200000001'),
+                    SinglePrefixCheck(b'2001000200000002'),
+                ])),
         )
 
         # 4 - N/A
         # Get addresses registered by MED1
         msg = med1_messages.next_mle_message(
-            mle.CommandType.CHILD_UPDATE_REQUEST
-        )
+            mle.CommandType.CHILD_UPDATE_REQUEST)
         check_child_update_request_from_child(
-            msg, address_registration=CheckType.CONTAIN, CIDs=[0, 1, 2]
-        )
+            msg, address_registration=CheckType.CONTAIN, CIDs=[0, 1, 2])
 
         # 5 - Leader
         # Make a copy of leader's messages to ensure that we don't miss
@@ -170,9 +166,9 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
             mle.CommandType.CHILD_UPDATE_RESPONSE,
             sent_to_node=self.nodes[MED1],
         )
-        check_child_update_response(
-            msg, address_registration=CheckType.CONTAIN, CIDs=[1, 2]
-        )
+        check_child_update_response(msg,
+                                    address_registration=CheckType.CONTAIN,
+                                    CIDs=[1, 2])
 
         # 6A & 6B - Leader
         if config.LEADER_NOTIFY_SED_BY_CHILD_UPDATE_REQUEST:
@@ -188,27 +184,24 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
             )
         else:
             msg = leader_messages.next_mle_message(
-                mle.CommandType.DATA_RESPONSE, sent_to_node=self.nodes[SED1]
-            )
+                mle.CommandType.DATA_RESPONSE, sent_to_node=self.nodes[SED1])
             check_data_response(msg, network_data_check=NetworkDataCheck())
 
         # 7 - N/A
         # Get addresses registered by SED1
         msg = sed1_messages.next_mle_message(
-            mle.CommandType.CHILD_UPDATE_REQUEST
-        )
+            mle.CommandType.CHILD_UPDATE_REQUEST)
         check_child_update_request_from_child(
-            msg, address_registration=CheckType.CONTAIN, CIDs=[0, 1]
-        )
+            msg, address_registration=CheckType.CONTAIN, CIDs=[0, 1])
 
         # 8 - Leader
         msg = leader_messages.next_mle_message(
             mle.CommandType.CHILD_UPDATE_RESPONSE,
             sent_to_node=self.nodes[SED1],
         )
-        check_child_update_response(
-            msg, address_registration=CheckType.CONTAIN, CIDs=[1]
-        )
+        check_child_update_response(msg,
+                                    address_registration=CheckType.CONTAIN,
+                                    CIDs=[1])
 
 
 if __name__ == '__main__':

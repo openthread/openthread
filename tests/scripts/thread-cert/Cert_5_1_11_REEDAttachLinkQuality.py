@@ -40,6 +40,7 @@ ROUTER1 = 4
 
 
 class Cert_5_1_11_REEDAttachLinkQuality(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -63,9 +64,8 @@ class Cert_5_1_11_REEDAttachLinkQuality(unittest.TestCase):
         self.nodes[ROUTER2].set_panid(0xface)
         self.nodes[ROUTER2].set_mode('rsdn')
         self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER2].add_whitelist(
-            self.nodes[ROUTER1].get_addr64(), rssi=-85
-        )
+        self.nodes[ROUTER2].add_whitelist(self.nodes[ROUTER1].get_addr64(),
+                                          rssi=-85)
         self.nodes[ROUTER2].enable_whitelist()
         self.nodes[ROUTER2].set_router_selection_jitter(1)
 
@@ -141,9 +141,7 @@ class Cert_5_1_11_REEDAttachLinkQuality(unittest.TestCase):
         self.assertEqual(0, scan_mask_tlv.end_device)
 
         # 4 - Router2
-        msg = router2_messages.next_mle_message(
-            mle.CommandType.PARENT_RESPONSE
-        )
+        msg = router2_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
         msg.assertSentToNode(self.nodes[ROUTER1])
 
         # 5 - Router1
@@ -161,8 +159,7 @@ class Cert_5_1_11_REEDAttachLinkQuality(unittest.TestCase):
 
         # 6 - Router1
         msg = router1_messages.next_mle_message(
-            mle.CommandType.CHILD_ID_REQUEST
-        )
+            mle.CommandType.CHILD_ID_REQUEST)
         msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
         msg.assertMleMessageContainsTlv(mle.Mode)
         msg.assertMleMessageContainsTlv(mle.Response)

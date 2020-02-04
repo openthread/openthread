@@ -39,6 +39,7 @@ ED = 4
 
 
 class Cert_6_2_2_NewPartition(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 

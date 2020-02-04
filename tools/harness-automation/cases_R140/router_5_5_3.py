@@ -27,7 +27,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-
 from autothreadharness.harness_case import HarnessCase
 import unittest
 

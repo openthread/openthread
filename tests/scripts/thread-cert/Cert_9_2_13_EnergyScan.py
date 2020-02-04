@@ -39,6 +39,7 @@ ED1 = 4
 
 
 class Cert_9_2_13_EnergyScan(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -101,9 +102,7 @@ class Cert_9_2_13_EnergyScan(unittest.TestCase):
                 break
 
         self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
-        self.nodes[COMMISSIONER].energy_scan(
-            0x50000, 0x02, 0x20, 0x3E8, ipaddr
-        )
+        self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3E8, ipaddr)
 
         ipaddrs = self.nodes[ED1].get_addrs()
         for ipaddr in ipaddrs:
@@ -111,13 +110,10 @@ class Cert_9_2_13_EnergyScan(unittest.TestCase):
                 break
 
         self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
-        self.nodes[COMMISSIONER].energy_scan(
-            0x50000, 0x02, 0x20, 0x3E8, ipaddr
-        )
+        self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3E8, ipaddr)
 
-        self.nodes[COMMISSIONER].energy_scan(
-            0x50000, 0x02, 0x20, 0x3E8, 'ff33:0040:fdde:ad00:beef:0:0:1'
-        )
+        self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3E8,
+                                             'ff33:0040:fdde:ad00:beef:0:0:1')
 
         self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
 
