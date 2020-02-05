@@ -69,6 +69,7 @@ OPENTHREAD_COMMON_FLAGS                                          += \
     -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1                         \
     -DOPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE=0                   \
     -DOPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE=1               \
+    -DOPENTHREAD_POSIX_RCP_UART_ENABLE=1                            \
     $(NULL)
 endif
 
@@ -100,7 +101,6 @@ LOCAL_C_INCLUDES                                         := \
 
 LOCAL_CFLAGS                                                                := \
     $(OPENTHREAD_COMMON_FLAGS)                                                 \
-    -DOPENTHREAD_POSIX_RCP_UART_ENABLE                                         \
     $(OPENTHREAD_PROJECT_CFLAGS)                                               \
     $(NULL)
 
