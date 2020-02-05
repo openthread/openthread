@@ -1168,7 +1168,7 @@
  *
  * Uncomment to enable the smaller implementation of SHA256.
  */
-#define MBEDTLS_SHA256_SMALLER
+/* #undef MBEDTLS_SHA256_SMALLER */
 
 /**
  * \def MBEDTLS_SSL_ALL_ALERT_MESSAGES
@@ -2489,7 +2489,7 @@
  *
  * Uncomment to enable generic public key write functions.
  */
-/* #undef MBEDTLS_PK_WRITE_C */
+#define MBEDTLS_PK_WRITE_C
 
 /**
  * \def MBEDTLS_PKCS5_C
@@ -3190,6 +3190,13 @@ it is (2^48 - 1), our restriction is :  (int - 0xFFFF - 0xF).*/
  * on non-glued functionality.
  */
 /* #undef MBEDTLS_AES_256_CMAC_C */
+
+/*
+ * Nordic added. Ensure there is a definition of mbedtls_ecp_restart_ctx
+ */
+#if defined(MBEDTLS_ECP_ALT) && !defined(MBEDTLS_ECP_RESTARTABLE)
+typedef void mbedtls_ecp_restart_ctx;
+#endif
 
 
 
