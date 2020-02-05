@@ -59,6 +59,10 @@ OPENTHREAD_COMMON_FLAGS                                          += \
     $(NULL)
 endif
 
+ifneq ($(USE_OTBR_DAEMON), 1)
+OPENTHREAD_COMMON_FLAGS  += -DOPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1
+endif
+
 # Enable all optional features for CI tests.
 ifeq ($(TARGET_PRODUCT),generic)
 OPENTHREAD_COMMON_FLAGS                                          += \
@@ -238,13 +242,13 @@ LOCAL_SRC_FILES                                          := \
     src/posix/platform/hdlc_interface.cpp                   \
     src/posix/platform/logging.c                            \
     src/posix/platform/misc.c                               \
+    src/posix/platform/netif.cpp                            \
     src/posix/platform/radio_spinel.cpp                     \
     src/posix/platform/settings.cpp                         \
     src/posix/platform/spi_interface.cpp                    \
     src/posix/platform/system.c                             \
     src/posix/platform/uart.c                               \
     src/posix/platform/udp.cpp                              \
-    src/posix/platform/netif.cpp                            \
     third_party/mbedtls/repo/library/md.c                   \
     third_party/mbedtls/repo/library/md_wrap.c              \
     third_party/mbedtls/repo/library/memory_buffer_alloc.c  \
@@ -351,7 +355,7 @@ LOCAL_SRC_FILES                            := \
     src/posix/main.c                          \
     $(NULL)
 
-LOCAL_STATIC_LIBRARIES = ot-core libopenthread-cli
+LOCAL_STATIC_LIBRARIES = libopenthread-cli ot-core
 include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
@@ -425,6 +429,6 @@ LOCAL_SRC_FILES                            := \
 LOCAL_LDLIBS                               := \
     -lutil
 
-LOCAL_STATIC_LIBRARIES = ot-core libopenthread-cli
+LOCAL_STATIC_LIBRARIES = libopenthread-ncp ot-core
 
 include $(BUILD_EXECUTABLE)
