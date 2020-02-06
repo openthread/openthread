@@ -1994,6 +1994,7 @@ void Interpreter::HandleIcmpReceive(Message &               aMessage,
 {
     uint32_t timestamp = 0;
 
+    VerifyOrExit(mServer != NULL);
     VerifyOrExit(aIcmpHeader.mType == OT_ICMP6_TYPE_ECHO_REPLY);
 
     mServer->OutputFormat("%u bytes from ",
@@ -3716,6 +3717,8 @@ void Interpreter::HandleDiagnosticGetResponse(Message &aMessage, const Ip6::Mess
     uint16_t bytesPrinted = 0;
     uint16_t length       = aMessage.GetLength() - aMessage.GetOffset();
 
+    VerifyOrExit(mServer != NULL);
+
     mServer->OutputFormat("DIAG_GET.rsp/ans: ");
 
     while (length > 0)
@@ -3730,6 +3733,9 @@ void Interpreter::HandleDiagnosticGetResponse(Message &aMessage, const Ip6::Mess
     }
 
     mServer->OutputFormat("\r\n");
+
+exit:
+    return;
 }
 
 void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength)
