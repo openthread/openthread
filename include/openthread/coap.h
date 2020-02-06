@@ -90,12 +90,13 @@ typedef enum otCoapCode
     OT_COAP_CODE_PUT    = OT_COAP_CODE(0, 3), ///< Put
     OT_COAP_CODE_DELETE = OT_COAP_CODE(0, 4), ///< Delete
 
-    OT_COAP_CODE_RESPONSE_MIN = OT_COAP_CODE(2, 0), ///< 2.00
-    OT_COAP_CODE_CREATED      = OT_COAP_CODE(2, 1), ///< Created
-    OT_COAP_CODE_DELETED      = OT_COAP_CODE(2, 2), ///< Deleted
-    OT_COAP_CODE_VALID        = OT_COAP_CODE(2, 3), ///< Valid
-    OT_COAP_CODE_CHANGED      = OT_COAP_CODE(2, 4), ///< Changed
-    OT_COAP_CODE_CONTENT      = OT_COAP_CODE(2, 5), ///< Content
+    OT_COAP_CODE_RESPONSE_MIN = OT_COAP_CODE(2, 0),  ///< 2.00
+    OT_COAP_CODE_CREATED      = OT_COAP_CODE(2, 1),  ///< Created
+    OT_COAP_CODE_DELETED      = OT_COAP_CODE(2, 2),  ///< Deleted
+    OT_COAP_CODE_VALID        = OT_COAP_CODE(2, 3),  ///< Valid
+    OT_COAP_CODE_CHANGED      = OT_COAP_CODE(2, 4),  ///< Changed
+    OT_COAP_CODE_CONTENT      = OT_COAP_CODE(2, 5),  ///< Content
+    OT_COAP_CODE_CONTINUE     = OT_COAP_CODE(2, 31), ///< RFC7959 Continue
 
     OT_COAP_CODE_BAD_REQUEST         = OT_COAP_CODE(4, 0),  ///< Bad Request
     OT_COAP_CODE_UNAUTHORIZED        = OT_COAP_CODE(4, 1),  ///< Unauthorized
@@ -104,6 +105,7 @@ typedef enum otCoapCode
     OT_COAP_CODE_NOT_FOUND           = OT_COAP_CODE(4, 4),  ///< Not Found
     OT_COAP_CODE_METHOD_NOT_ALLOWED  = OT_COAP_CODE(4, 5),  ///< Method Not Allowed
     OT_COAP_CODE_NOT_ACCEPTABLE      = OT_COAP_CODE(4, 6),  ///< Not Acceptable
+    OT_COAP_CODE_REQUEST_INCOMPLETE  = OT_COAP_CODE(4, 8),  ///< RFC7959 Request Entity Incomplete
     OT_COAP_CODE_PRECONDITION_FAILED = OT_COAP_CODE(4, 12), ///< Precondition Failed
     OT_COAP_CODE_REQUEST_TOO_LARGE   = OT_COAP_CODE(4, 13), ///< Request Entity Too Large
     OT_COAP_CODE_UNSUPPORTED_FORMAT  = OT_COAP_CODE(4, 15), ///< Unsupported Content-Format
