@@ -465,19 +465,4 @@
 
 //---------------------------------------------------------------------------------------------------------------------
 
-#if (OPENTHREAD_THREAD_VERSION == OPENTHREAD_THREAD_VERSION_1_2)
-
-#if OPENTHREAD_FTD
-#ifndef OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
-#error "OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE is required for 1.2 Router-capable devices"
-#endif
-#endif // OPENTHREAD_FTD
-
-#elif (OPENTHREAD_THREAD_VERSION == OPENTHREAD_THREAD_VERSION_1_1)
-#if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
-#error \
-    "OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE should not be enabled for Thread 1.1"
-#endif
-#endif // OPENTHREAD_THREAD_VERSION
-
 #endif // OPENTHREAD_CORE_CONFIG_CHECK_H_
