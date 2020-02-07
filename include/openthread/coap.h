@@ -496,12 +496,22 @@ otError otCoapMessageAppendObserveOption(otMessage *aMessage, uint32_t aObserve)
 otError otCoapMessageAppendUriPathOptions(otMessage *aMessage, const char *aUriPath);
 
 /**
+ * This function converts a CoAP Block option SZX field to the actual block size
+ *
+ * @param[in]     aSize     Block size exponent.
+ *
+ * @returns The actual size exponent value.
+ *
+ */
+uint16_t otCoapBlockSizeFromExponent(otCoapBlockSize aSize);
+
+/**
  * This function appends a Block2 option
  *
  * @param[inout]  aMessage  A pointer to the CoAP message.
  * @param[in]     aNum      Current block number.
  * @param[in]     aMore     Boolean to indicate more blocks are to be sent.
- * @param[in]     aSize     Maximum block size.
+ * @param[in]     aSize     Block Size Exponent.
  *
  * @retval OT_ERROR_NONE          Successfully appended the option.
  * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
@@ -516,7 +526,7 @@ otError otCoapMessageAppendBlock2Option(otMessage *aMessage, uint32_t aNum, bool
  * @param[inout]  aMessage  A pointer to the CoAP message.
  * @param[in]     aNum      Current block number.
  * @param[in]     aMore     Boolean to indicate more blocks are to be sent.
- * @param[in]     aSize     Maximum block size.
+ * @param[in]     aSize     Block Size Exponent.
  *
  * @retval OT_ERROR_NONE          Successfully appended the option.
  * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
