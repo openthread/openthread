@@ -107,9 +107,9 @@ case ${build_config} in
         echo "==================================================================================================="
         ./bootstrap || die
         cd "${top_builddir}"
-        ${top_srcdir}/configure                 \
-            CPPFLAGS="$cppflags_config"         \
-            --with-examples=simulation          \
+        ${top_srcdir}/configure                                                         \
+            CPPFLAGS="$cppflags_config -DOPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE=1" \
+            --with-examples=simulation                                                  \
             $configure_options || die
         make -j 8 || die
         ;;
@@ -120,13 +120,13 @@ case ${build_config} in
         echo "===================================================================================================="
         ./bootstrap || die
         cd "${top_builddir}"
-        ${top_srcdir}/configure                 \
-            CPPFLAGS="$cppflags_config"         \
-            --enable-coverage=${coverage}       \
-            --enable-ncp                        \
-            --enable-radio-only                 \
-            --with-examples=simulation          \
-            --disable-docs                      \
+        ${top_srcdir}/configure                                                         \
+            CPPFLAGS="$cppflags_config -DOPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE=1" \
+            --enable-coverage=${coverage}                                               \
+            --enable-ncp                                                                \
+            --enable-radio-only                                                         \
+            --with-examples=simulation                                                  \
+            --disable-docs                                                              \
             --enable-tests=$tests || die
         make -j 8 || die
         ;;
