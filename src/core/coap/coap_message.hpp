@@ -98,6 +98,16 @@ public:
     typedef otCoapCode Code;
 
     /**
+     * CoAP Block1/Block2 Types
+     *
+     */
+    typedef enum otCoapBlockType
+    {
+        OT_COAP_BLOCK_TYPE_1 = 1,
+        OT_COAP_BLOCK_TYPE_2 = 2,
+    } otCoapBlockType;
+
+    /**
      * This method initializes the CoAP header.
      *
      */

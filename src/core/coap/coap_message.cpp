@@ -187,7 +187,7 @@ exit:
     return error;
 }
 
-otError Message::AppendBlockOption(otCoapBlockType aType, uint32_t aNum, bool aMore, otCoapBlockSize aSize)
+otError Message::AppendBlockOption(Message::otCoapBlockType aType, uint32_t aNum, bool aMore, otCoapBlockSize aSize)
 {
     otError  error   = OT_ERROR_NONE;
     uint32_t encoded = aSize;
