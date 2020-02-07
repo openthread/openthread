@@ -26,15 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread-core-config.h>
-#include <openthread/config.h>
-
-#include <assert.h>
 #include <stdint.h>
-#include <string.h>
-
-#include <utils/code_utils.h>
-#include <utils/flash.h>
 
 #include "platform-nrf5.h"
 #include "drivers/include/nrfx_nvmc.h"

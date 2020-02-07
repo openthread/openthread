@@ -36,7 +36,6 @@
 #include <openthread/platform/alarm-milli.h>
 
 #include <utils/code_utils.h>
-#include <utils/flash.h>
 
 #include "platform-nrf5.h"
 #include "softdevice.h"
