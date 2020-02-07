@@ -143,6 +143,18 @@ typedef enum otCoapOptionType
     OT_COAP_OPTION_SIZE1          = 60, ///< Size1
 } otCoapOptionType;
 
+/**
+ * CoAP Block1/Block2 Types
+ */
+typedef enum otCoapBlockType
+{
+    OT_COAP_BLOCK_TYPE_1 = 1,
+    OT_COAP_BLOCK_TYPE_2 = 2,
+} otCoapBlockType;
+
+/**
+ * CoAP Block Size Exponents
+ */
 typedef enum otCoapBlockSize
 {
     OT_COAP_BLOCK_SIZE_16   = 0,

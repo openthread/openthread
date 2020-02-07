@@ -348,7 +348,7 @@ public:
      * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
      *
      */
-    otError AppendBlockOption(uint8_t aType, uint32_t aNum, bool aMore, otCoapBlockSize aSize);
+    otError AppendBlockOption(otCoapBlockType aType, uint32_t aNum, bool aMore, otCoapBlockSize aSize);
 
     /**
      * This method appends a Proxy-Uri option.

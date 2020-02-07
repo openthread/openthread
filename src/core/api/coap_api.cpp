@@ -112,12 +112,12 @@ otError otCoapMessageAppendUriPathOptions(otMessage *aMessage, const char *aUriP
 
 otError otCoapMessageAppendBlock2Option(otMessage *aMessage, uint32_t aNum, bool aMore, otCoapBlockSize aSize)
 {
-    return static_cast<Coap::Message *>(aMessage)->AppendBlockOption(2, aNum, aMore, aSize);
+    return static_cast<Coap::Message *>(aMessage)->AppendBlockOption(OT_COAP_BLOCK_TYPE_2, aNum, aMore, aSize);
 }
 
 otError otCoapMessageAppendBlock1Option(otMessage *aMessage, uint32_t aNum, bool aMore, otCoapBlockSize aSize)
 {
-    return static_cast<Coap::Message *>(aMessage)->AppendBlockOption(1, aNum, aMore, aSize);
+    return static_cast<Coap::Message *>(aMessage)->AppendBlockOption(OT_COAP_BLOCK_TYPE_1, aNum, aMore, aSize);
 }
 
 otError otCoapMessageAppendProxyUriOption(otMessage *aMessage, const char *aUriPath)
