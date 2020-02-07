@@ -195,6 +195,7 @@ set(COMMON_SOURCES
     utils/channel_manager.cpp
     utils/channel_monitor.cpp
     utils/child_supervision.cpp
+    utils/flash.cpp
     utils/heap.cpp
     utils/jam_detector.cpp
     utils/parse_cmdline.cpp

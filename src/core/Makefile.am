@@ -233,6 +233,7 @@ SOURCES_COMMON                             = \
     utils/channel_manager.cpp                \
     utils/channel_monitor.cpp                \
     utils/child_supervision.cpp              \
+    utils/flash.cpp                          \
     utils/heap.cpp                           \
     utils/jam_detector.cpp                   \
     utils/parse_cmdline.cpp                  \
@@ -435,6 +436,7 @@ HEADERS_COMMON                             = \
     utils/channel_manager.hpp                \
     utils/channel_monitor.hpp                \
     utils/child_supervision.hpp              \
+    utils/flash.hpp                          \
     utils/heap.hpp                           \
     utils/jam_detector.hpp                   \
     utils/parse_cmdline.hpp                  \
