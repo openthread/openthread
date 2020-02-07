@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,7 @@
 
 #include "platform-simulation.h"
 
+#include <assert.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,24 +37,19 @@
 #include <unistd.h>
 
 #include <openthread/config.h>
-
-#include "utils/code_utils.h"
-#include "utils/flash.h"
+#include <openthread/platform/flash.h>
 
 static int sFlashFd = -1;
-uint32_t   sEraseAddress;
 
 enum
 {
-    FLASH_SIZE      = 0x40000,
-    FLASH_PAGE_SIZE = 0x800,
-    FLASH_PAGE_NUM  = 128,
+    SWAP_SIZE = 2048,
+    SWAP_NUM  = 2,
 };
 
-otError utilsFlashInit(void)
+void otPlatFlashInit(otInstance *aInstance)
 {
-    otError     error = OT_ERROR_NONE;
-    const char *path  = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
+    const char *path = OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH;
     char        fileName[sizeof(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH) + 32];
     struct stat st;
     bool        create = false;
@@ -81,84 +77,78 @@ otError utilsFlashInit(void)
     sFlashFd = open(fileName, O_RDWR | O_CREAT | O_CLOEXEC, 0600);
     lseek(sFlashFd, 0, SEEK_SET);
 
-    otEXPECT_ACTION(sFlashFd >= 0, error = OT_ERROR_FAILED);
+    assert(sFlashFd >= 0);
 
     if (create)
     {
-        for (uint16_t index = 0; index < FLASH_PAGE_NUM; index++)
+        for (uint8_t index = 0; index < SWAP_NUM; index++)
         {
-            error = utilsFlashErasePage(index * FLASH_PAGE_SIZE);
-            otEXPECT(error == OT_ERROR_NONE);
+            otPlatFlashErase(aInstance, index);
         }
     }
-
-exit:
-    return error;
 }
 
-uint32_t utilsFlashGetSize(void)
+uint32_t otPlatFlashGetSwapSize(otInstance *aInstance)
 {
-    return FLASH_SIZE;
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return SWAP_SIZE;
 }
 
-otError utilsFlashErasePage(uint32_t aAddress)
+void otPlatFlashErase(otInstance *aInstance, uint8_t aSwapIndex)
 {
-    otError  error = OT_ERROR_NONE;
+    OT_UNUSED_VARIABLE(aInstance);
+
+    uint8_t  buffer[SWAP_SIZE];
     uint32_t address;
-    uint8_t  dummyPage[FLASH_SIZE];
+    ssize_t  rval;
 
-    otEXPECT_ACTION(sFlashFd >= 0, error = OT_ERROR_FAILED);
-    otEXPECT_ACTION(aAddress < FLASH_SIZE, error = OT_ERROR_INVALID_ARGS);
+    assert((sFlashFd >= 0) && (aSwapIndex < SWAP_NUM));
 
-    // Get start address of the flash page that includes aAddress
-    address = aAddress & (~(uint32_t)(FLASH_PAGE_SIZE - 1));
+    address = aSwapIndex ? SWAP_SIZE : 0;
+    memset(buffer, 0xff, sizeof(buffer));
 
-    // set the page to the erased state.
-    memset((void *)(&dummyPage[0]), 0xff, FLASH_PAGE_SIZE);
-
-    // Write the page
-    ssize_t r;
-    r = pwrite(sFlashFd, &(dummyPage[0]), FLASH_PAGE_SIZE, (off_t)address);
-    otEXPECT_ACTION(((int)r) == ((int)(FLASH_PAGE_SIZE)), error = OT_ERROR_FAILED);
-
-exit:
-    return error;
+    rval = pwrite(sFlashFd, buffer, sizeof(buffer), (off_t)address);
+    assert(rval == SWAP_SIZE);
 }
 
-otError utilsFlashStatusWait(uint32_t aTimeout)
+void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, void *aData, uint32_t aSize)
 {
-    OT_UNUSED_VARIABLE(aTimeout);
+    OT_UNUSED_VARIABLE(aInstance);
 
-    return OT_ERROR_NONE;
+    uint32_t address;
+    ssize_t  rval;
+
+    assert((sFlashFd >= 0) && (aSwapIndex < SWAP_NUM) && (aSize <= SWAP_SIZE) && (aOffset <= (SWAP_SIZE - aSize)));
+
+    address = aSwapIndex ? SWAP_SIZE : 0;
+
+    rval = pread(sFlashFd, aData, aSize, (off_t)(address + aOffset));
+    assert((uint32_t)rval == aSize);
 }
 
-uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, const void *aData, uint32_t aSize)
 {
-    uint32_t ret   = 0;
-    uint32_t index = 0;
+    OT_UNUSED_VARIABLE(aInstance);
+
+    uint32_t address;
     uint8_t  byte;
+    ssize_t  rval;
 
-    otEXPECT(sFlashFd >= 0 && aAddress < FLASH_SIZE);
+    assert((sFlashFd >= 0) && (aSwapIndex < SWAP_NUM) && (aSize <= SWAP_SIZE) && (aOffset <= (SWAP_SIZE - aSize)));
 
-    for (index = 0; index < aSize; index++)
+    address = aSwapIndex ? SWAP_SIZE : 0;
+    address += aOffset;
+
+    for (uint32_t offset = 0; offset < aSize; offset++)
     {
-        otEXPECT((ret = utilsFlashRead(aAddress + index, &byte, 1)) == 1);
+        rval = pread(sFlashFd, &byte, sizeof(byte), (off_t)(address + offset));
+        assert(rval == sizeof(byte));
+
         // Use bitwise AND to emulate the behavior of flash memory
-        byte &= aData[index];
-        otEXPECT((ret = (uint32_t)pwrite(sFlashFd, &byte, 1, (off_t)(aAddress + index))) == 1);
+        byte &= ((uint8_t *)aData)[offset];
+
+        rval = pwrite(sFlashFd, &byte, sizeof(byte), (off_t)(address + offset));
+        assert(rval == sizeof(byte));
     }
-
-exit:
-    return index;
-}
-
-uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
-{
-    uint32_t ret = 0;
-
-    otEXPECT(sFlashFd >= 0 && aAddress < FLASH_SIZE);
-    ret = (uint32_t)pread(sFlashFd, aData, aSize, (off_t)aAddress);
-
-exit:
-    return ret;
 }
