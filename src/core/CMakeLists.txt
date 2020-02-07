@@ -30,6 +30,13 @@ add_library(openthread-ftd)
 add_library(openthread-mtd)
 add_library(openthread-radio)
 
+set_target_properties(
+    openthread-ftd openthread-mtd openthread-radio
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 98
+)
+
 target_compile_definitions(openthread-ftd PRIVATE
     ${OT_PRIVATE_DEFINES}
     OPENTHREAD_FTD=1
@@ -43,6 +50,18 @@ target_compile_definitions(openthread-mtd PRIVATE
 target_compile_definitions(openthread-radio PRIVATE
     ${OT_PRIVATE_DEFINES}
     OPENTHREAD_RADIO=1
+)
+
+target_compile_options(openthread-ftd PRIVATE
+    ${OT_CFLAGS}
+)
+
+target_compile_options(openthread-mtd PRIVATE
+    ${OT_CFLAGS}
+)
+
+target_compile_options(openthread-radio PRIVATE
+    ${OT_CFLAGS}
 )
 
 set(COMMON_INCLUDES

@@ -64,6 +64,10 @@ target_link_libraries(openthread-posix PUBLIC
 
 target_compile_definitions(openthread-posix PUBLIC ${OT_PLATFORM_DEFINES})
 
+target_compile_options(openthread-posix PRIVATE
+    ${OT_CFLAGS}
+)
+
 target_include_directories(openthread-posix PRIVATE
     ${OT_PUBLIC_INCLUDES}
     ${OT_PRIVATE_INCLUDES}
