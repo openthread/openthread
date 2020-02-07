@@ -109,6 +109,7 @@ check_PROGRAMS                                                     += \
     test-aes                                                          \
     test-child                                                        \
     test-child-table                                                  \
+    test-flash                                                        \
     test-heap                                                         \
     test-hmac-sha256                                                  \
     test-ip6-address                                                  \
@@ -172,6 +173,9 @@ test_child_SOURCES           = $(COMMON_SOURCES) test_child.cpp
 
 test_child_table_LDADD       = $(COMMON_LDADD)
 test_child_table_SOURCES     = $(COMMON_SOURCES) test_child_table.cpp
+
+test_flash_LDADD             = $(COMMON_LDADD)
+test_flash_SOURCES           = $(COMMON_SOURCES) test_flash.cpp
 
 test_hdlc_LDADD              = $(COMMON_LDADD)
 test_hdlc_SOURCES            = $(COMMON_SOURCES) test_hdlc.cpp
