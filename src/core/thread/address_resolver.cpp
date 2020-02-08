@@ -564,8 +564,7 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
     Mac::ExtAddress       macAddr;
     Ip6::Address          destination;
 
-    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST,
-                 error = OT_ERROR_DROP);
+    VerifyOrExit(aMessage.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_DROP);
 
     otLogInfoArp("Received address error notification");
 
