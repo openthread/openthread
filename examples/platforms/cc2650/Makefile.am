@@ -50,7 +50,6 @@ PLATFORM_SOURCES                                      = \
     cc2650_radio.h                                      \
     diag.c                                              \
     entropy.c                                           \
-    flash.c                                             \
     misc.c                                              \
     logging.c                                           \
     openthread-core-cc2650-config.h                     \
