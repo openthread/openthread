@@ -101,11 +101,11 @@ public:
      * CoAP Block1/Block2 Types
      *
      */
-    typedef enum otCoapBlockType
+    enum BlockType
     {
-        OT_COAP_BLOCK_TYPE_1 = 1,
-        OT_COAP_BLOCK_TYPE_2 = 2,
-    } otCoapBlockType;
+        kBlockType1 = 1,
+        kBlockType2 = 2,
+    };
 
     /**
      * This method initializes the CoAP header.
@@ -358,7 +358,7 @@ public:
      * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
      *
      */
-    otError AppendBlockOption(otCoapBlockType aType, uint32_t aNum, bool aMore, otCoapBlockSize aSize);
+    otError AppendBlockOption(BlockType aType, uint32_t aNum, bool aMore, otCoapBlockSize aSize);
 
     /**
      * This method appends a Proxy-Uri option.

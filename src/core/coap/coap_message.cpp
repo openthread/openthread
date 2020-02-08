@@ -187,7 +187,7 @@ exit:
     return error;
 }
 
-otError Message::AppendBlockOption(Message::otCoapBlockType aType, uint32_t aNum, bool aMore, otCoapBlockSize aSize)
+otError Message::AppendBlockOption(Message::BlockType aType, uint32_t aNum, bool aMore, otCoapBlockSize aSize)
 {
     otError  error   = OT_ERROR_NONE;
     uint32_t encoded = aSize;
@@ -197,8 +197,8 @@ otError Message::AppendBlockOption(Message::otCoapBlockType aType, uint32_t aNum
     encoded |= static_cast<uint32_t>((aMore) << 3);
     encoded |= (aNum) << 4;
 
-    VerifyOrExit(aType == OT_COAP_BLOCK_TYPE_1 || aType == OT_COAP_BLOCK_TYPE_2, error = OT_ERROR_INVALID_ARGS);
-    error = AppendUintOption((aType == 1) ? OT_COAP_OPTION_BLOCK1 : OT_COAP_OPTION_BLOCK2, encoded);
+    VerifyOrExit(aType == kBlockType1 || aType == kBlockType2, error = OT_ERROR_INVALID_ARGS);
+    error = AppendUintOption((aType == kBlockType1) ? OT_COAP_OPTION_BLOCK1 : OT_COAP_OPTION_BLOCK2, encoded);
 
 exit:
     return error;
