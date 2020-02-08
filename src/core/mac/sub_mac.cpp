@@ -431,6 +431,8 @@ exit:
 
 void SubMac::SampleRssi(void)
 {
+    assert(!RadioSupportsEnergyScan());
+
     int8_t rssi = GetRssi();
 
     if (rssi != kInvalidRssiValue)
@@ -443,7 +445,11 @@ void SubMac::SampleRssi(void)
 
     if (TimerMilli::GetNow() < mEnergyScanEndTime)
     {
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+        mTimer.StartAt(mTimer.GetFireTime(), kEnergyScanRssiSampleInterval * 1000UL);
+#else
         mTimer.StartAt(mTimer.GetFireTime(), kEnergyScanRssiSampleInterval);
+#endif
     }
     else
     {
