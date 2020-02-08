@@ -108,11 +108,36 @@ The IEEE EUI-64 address consists of two parts:
  - 24 bits of MA-L (MAC Address Block Large), formerly called OUI (Organizationally Unique Identifier)
  - 40-bit device unique identifier
 
-By default, the device uses Nordic Semiconductor's MA-L (f4-ce-36). You can modify it by overwriting the `OPENTHREAD_CONFIG_STACK_VENDOR_OUI` define, located in the `openthread-core-nrf52811-config.h` file. This value must be publicly registered by the IEEE Registration Authority.
+The IEEE EUI-64 address of the device is obtained by calling the `otPlatRadioGetIeeeEui64` function declared in the `include/openthread/platform/radio.h` file.
+By default, the address consists of Nordic Semiconductor's MA-L (f4-ce-36) and of the identifier stored in the read-only non-volatile memory of the device.
+You can modify the IEEE EUI-64 address returned by the `otPlatRadioGetIeeeEui64` function in the following ways:
 
-You can also provide the full IEEE EUI-64 address by providing a custom `otPlatRadioGetIeeeEui64` function. To do this, define the flag `OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE`.
+ - Use your own OUI.
+ - Use the EUI-64 address stored in the UICR registers.
+ - Use a custom `otPlatRadioGetIeeeEui64` function implementation.
+
+Each of these options is discussed in the following sections.
 
 After the Thread Network security credentials have been successfully obtained, the device uses randomly generated extended MAC address.
+
+#### Use your own OUI
+
+To use your own OUI, overwrite the value of the `OPENTHREAD_CONFIG_STACK_VENDOR_OUI` define, located in the `openthread-core-nrf52811-config.h` file.
+Note that this value must be publicly registered by the IEEE Registration Authority.
+
+#### Use EUI-64 stored in the UICR registers
+
+When using this feature, the `otPlatRadioGetIeeeEui64` function first looks for the EUI-64 address in the specified UICR CUSTOMER registers. Since the UICR registers have size of 32 bits, the EUI-64 address is stored in two 32-bit parts.
+
+To enable this feature:
+  1. Define the `OPENTHREAD_CONFIG_PLATFORM_EUI64_UICR_ENABLE` flag.
+  2. Specify the chosen UICR registers by defining the following elements:
+      - `OPENTHREAD_CONFIG_PLATFORM_EUI64_UICR_REG1=<UICR_REGISTER_NUMBER>`
+      - `OPENTHREAD_CONFIG_PLATFORM_EUI64_UICR_REG2=<UICR_REGISTER_NUMBER>`.
+
+#### Use custom otPlatRadioGetIeeeEui64 function implementation
+
+To use the custom function implementations, define the flag `OPENTHREAD_CONFIG_PLATFORM_EUI64_CUSTOM_SOURCE_ENABLE`.
 
 ## Flashing binaries
 

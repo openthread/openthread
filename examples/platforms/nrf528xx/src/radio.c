@@ -189,7 +189,7 @@ static inline void clearPendingEvents(void)
     } while (__STREXW(pendingEvents, (uint32_t *)&sPendingEvents));
 }
 
-#if !OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE
+#if !OPENTHREAD_CONFIG_PLATFORM_EUI64_CUSTOM_SOURCE_ENABLE
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -197,17 +197,30 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
     uint64_t factoryAddress;
     uint32_t index = 0;
 
-    // Set the MAC Address Block Larger (MA-L) formerly called OUI.
-    aIeeeEui64[index++] = (OPENTHREAD_CONFIG_STACK_VENDOR_OUI >> 16) & 0xff;
-    aIeeeEui64[index++] = (OPENTHREAD_CONFIG_STACK_VENDOR_OUI >> 8) & 0xff;
-    aIeeeEui64[index++] = OPENTHREAD_CONFIG_STACK_VENDOR_OUI & 0xff;
+#if OPENTHREAD_CONFIG_PLATFORM_EUI64_UICR_ENABLE
+    // Read Factory Assigned Mac Address only if its UICR register is not set to default value.
+    if ((NRF_UICR->CUSTOMER[OPENTHREAD_CONFIG_PLATFORM_EUI64_UICR_REG1] != 0xffffffff) ||
+        (NRF_UICR->CUSTOMER[OPENTHREAD_CONFIG_PLATFORM_EUI64_UICR_REG2] != 0xffffffff))
+    {
+        factoryAddress = (uint64_t)(NRF_UICR->CUSTOMER[OPENTHREAD_CONFIG_PLATFORM_EUI64_UICR_REG1]) << 32;
+        factoryAddress |= NRF_UICR->CUSTOMER[OPENTHREAD_CONFIG_PLATFORM_EUI64_UICR_REG2];
+        memcpy(aIeeeEui64, &factoryAddress, sizeof(factoryAddress));
+    }
+    else
+#endif // OPENTHREAD_CONFIG_PLATFORM_EUI64_UICR_ENABLE
+    {
+        // Set the MAC Address Block Larger (MA-L) formerly called OUI.
+        aIeeeEui64[index++] = (OPENTHREAD_CONFIG_STACK_VENDOR_OUI >> 16) & 0xff;
+        aIeeeEui64[index++] = (OPENTHREAD_CONFIG_STACK_VENDOR_OUI >> 8) & 0xff;
+        aIeeeEui64[index++] = OPENTHREAD_CONFIG_STACK_VENDOR_OUI & 0xff;
 
-    // Use device identifier assigned during the production.
-    factoryAddress = (uint64_t)NRF_FICR->DEVICEID[0] << 32;
-    factoryAddress |= NRF_FICR->DEVICEID[1];
-    memcpy(aIeeeEui64 + index, &factoryAddress, sizeof(factoryAddress) - index);
+        // Use device identifier assigned during the production.
+        factoryAddress = (uint64_t)NRF_FICR->DEVICEID[0] << 32;
+        factoryAddress |= NRF_FICR->DEVICEID[1];
+        memcpy(aIeeeEui64 + index, &factoryAddress, sizeof(factoryAddress) - index);
+    }
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_PLATFORM_EUI64_CUSTOM_SOURCE
+#endif // OPENTHREAD_CONFIG_PLATFORM_EUI64_CUSTOM_SOURCE_ENABLE
 
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 {

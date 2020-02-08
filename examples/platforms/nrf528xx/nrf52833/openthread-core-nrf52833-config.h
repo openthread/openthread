@@ -276,6 +276,46 @@
 #define RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM 0
 #endif
 
+/**
+ * @def #define OPENTHREAD_CONFIG_PLATFORM_EUI64_CUSTOM_SOURCE_ENABLE
+ *
+ * Define to 1 to enable custom otPlatRadioGetIeeeEui64 function implementation.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_EUI64_CUSTOM_SOURCE_ENABLE
+#define OPENTHREAD_CONFIG_PLATFORM_EUI64_CUSTOM_SOURCE_ENABLE 0
+#endif
+
+/**
+ * @def #define OPENTHREAD_CONFIG_PLATFORM_EUI64_UICR_ENABLE
+ *
+ * Define to 1 to enable reading the IEEE EUI-64 address from the UICR.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_EUI64_UICR_ENABLE
+#define OPENTHREAD_CONFIG_PLATFORM_EUI64_UICR_ENABLE 0
+#endif
+
+/**
+ * @def #define OPENTHREAD_CONFIG_PLATFORM_EUI64_UICR_REG1
+ *
+ * Define the number of the UICR CUSTOMER register that stores the first part of the factory-assigned EUI64.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_EUI64_UICR_REG1
+#define OPENTHREAD_CONFIG_PLATFORM_EUI64_UICR_REG1 0
+#endif
+
+/**
+ * @def #define OPENTHREAD_CONFIG_PLATFORM_EUI64_UICR_REG2
+ *
+ * Define the number of the UICR CUSTOMER register that stores the second part of the factory-assigned EUI64.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_EUI64_UICR_REG2
+#define OPENTHREAD_CONFIG_PLATFORM_EUI64_UICR_REG2 1
+#endif
+
 /*
  * Suppress the ARMCC warning on unreachable statement,
  * e.g. break after assert(false) or ExitNow() macro.
