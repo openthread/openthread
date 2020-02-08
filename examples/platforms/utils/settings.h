@@ -38,36 +38,6 @@
 #include <openthread-core-config.h>
 
 /**
- * @def SETTINGS_CONFIG_BASE_ADDRESS
- *
- * The base address of settings.
- *
- */
-#ifndef SETTINGS_CONFIG_BASE_ADDRESS
-#define SETTINGS_CONFIG_BASE_ADDRESS 0x39000
-#endif
-
-/**
- * @def SETTINGS_CONFIG_PAGE_SIZE
- *
- * The page size of settings.
- *
- */
-#ifndef SETTINGS_CONFIG_PAGE_SIZE
-#define SETTINGS_CONFIG_PAGE_SIZE 0x800
-#endif
-
-/**
- * @def SETTINGS_CONFIG_PAGE_NUM
- *
- * The page number of settings.
- *
- */
-#ifndef SETTINGS_CONFIG_PAGE_NUM
-#define SETTINGS_CONFIG_PAGE_NUM 2
-#endif
-
-/**
  * @def OPENTHREAD_SETTINGS_RAM
  *
  * Define as 1 to enable saving the settings in RAM instead of flash.
