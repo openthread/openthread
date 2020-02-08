@@ -248,8 +248,8 @@ otError AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAd
 
             if (mCache[i].mState != Cache::kStateCached)
             {
-                mCache[i].mRetryTimeout        = 0;
                 mCache[i].mLastTransactionTime = static_cast<uint32_t>(kLastTransactionTimeInvalid);
+                mCache[i].mRetryTimeout        = 0;
                 mCache[i].mTimeout             = 0;
                 mCache[i].mFailures            = 0;
                 mCache[i].mState               = Cache::kStateCached;
@@ -273,11 +273,13 @@ otError AddressResolver::AddCacheEntry(const Ip6::Address &aEid, Mac::ShortAddre
 
     VerifyOrExit(entry != NULL, error = OT_ERROR_NO_BUFS);
 
-    entry->mTarget   = aEid;
-    entry->mRloc16   = aRloc16;
-    entry->mTimeout  = 0;
-    entry->mFailures = 0;
-    entry->mState    = Cache::kStateCached;
+    entry->mTarget              = aEid;
+    entry->mLastTransactionTime = static_cast<uint32_t>(kLastTransactionTimeInvalid);
+    entry->mRloc16              = aRloc16;
+    entry->mRetryTimeout        = 0;
+    entry->mTimeout             = 0;
+    entry->mFailures            = 0;
+    entry->mState               = Cache::kStateCached;
 
     MarkCacheEntryAsUsed(*entry);
 
