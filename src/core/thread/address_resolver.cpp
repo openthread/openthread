@@ -170,17 +170,71 @@ AddressResolver::Cache *AddressResolver::NewCacheEntry(void)
     return rval;
 }
 
-void AddressResolver::MarkCacheEntryAsUsed(Cache &aEntry)
+void AddressResolver::MoveCacheEntryAt(Cache &aEntry, uint8_t aAge)
 {
-    for (int i = 0; i < kCacheEntries; i++)
+    VerifyOrExit(aEntry.mAge != aAge);
+
+    if (aEntry.mAge > aAge)
     {
-        if (mCache[i].mAge < aEntry.mAge)
+        for (int i = 0; i < kCacheEntries; i++)
         {
-            mCache[i].mAge++;
+            if (mCache[i].mAge >= aAge && mCache[i].mAge < aEntry.mAge)
+            {
+                mCache[i].mAge++;
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0; i < kCacheEntries; i++)
+        {
+            if (mCache[i].mAge > aEntry.mAge && mCache[i].mAge <= aAge)
+            {
+                mCache[i].mAge--;
+            }
         }
     }
 
-    aEntry.mAge = 0;
+    aEntry.mAge = aAge;
+
+exit:
+    return;
+}
+
+void AddressResolver::MoveCacheEntryBehindCached(Cache &aEntry)
+{
+    bool    found             = false;
+    uint8_t lastInCachedState = 0;
+
+    for (int i = 0; i < kCacheEntries; i++)
+    {
+        if (mCache[i].mState != Cache::kStateCached || mCache[i].mAge == aEntry.mAge)
+        {
+            continue;
+        }
+
+        if (mCache[i].mAge >= lastInCachedState)
+        {
+            found             = true;
+            lastInCachedState = mCache[i].mAge;
+        }
+    }
+
+    if (!found)
+    {
+        MoveCacheEntryAt(aEntry, 0);
+    }
+    else
+    {
+        uint8_t newAge = lastInCachedState + 1;
+
+        if (newAge == kCacheEntries)
+        {
+            newAge = kCacheEntries - 1;
+        }
+
+        MoveCacheEntryAt(aEntry, newAge);
+    }
 }
 
 const char *AddressResolver::InvalidationReasonToString(InvalidationReason aReason)
@@ -217,14 +271,6 @@ void AddressResolver::InvalidateCacheEntry(Cache &aEntry, InvalidationReason aRe
 {
     OT_UNUSED_VARIABLE(aReason);
 
-    for (int i = 0; i < kCacheEntries; i++)
-    {
-        if (mCache[i].mAge > aEntry.mAge)
-        {
-            mCache[i].mAge--;
-        }
-    }
-
     switch (aEntry.mState)
     {
     case Cache::kStateCached:
@@ -244,8 +290,8 @@ void AddressResolver::InvalidateCacheEntry(Cache &aEntry, InvalidationReason aRe
         break;
     }
 
-    aEntry.mAge   = kCacheEntries - 1;
     aEntry.mState = Cache::kStateInvalid;
+    MoveCacheEntryAtBack(aEntry);
 }
 
 otError AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
@@ -271,6 +317,7 @@ otError AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAd
                 mCache[i].mTimeout             = 0;
                 mCache[i].mFailures            = 0;
                 mCache[i].mState               = Cache::kStateCached;
+                MoveCacheEntryAtFront(mCache[i]);
 
                 Get<MeshForwarder>().HandleResolved(aEid, OT_ERROR_NONE);
             }
@@ -299,7 +346,7 @@ otError AddressResolver::AddCacheEntry(const Ip6::Address &aEid, Mac::ShortAddre
     entry->mFailures            = 0;
     entry->mState               = Cache::kStateCached;
 
-    MarkCacheEntryAsUsed(*entry);
+    MoveCacheEntryBehindCached(*entry);
 
 exit:
     return error;
@@ -381,7 +428,7 @@ otError AddressResolver::Resolve(const Ip6::Address &aEid, uint16_t &aRloc16)
 
     case Cache::kStateCached:
         aRloc16 = entry->mRloc16;
-        MarkCacheEntryAsUsed(*entry);
+        MoveCacheEntryAtFront(*entry);
         break;
     }
 
@@ -507,7 +554,7 @@ void AddressResolver::HandleAddressNotification(Coap::Message &aMessage, const I
             mCache[i].mTimeout             = 0;
             mCache[i].mFailures            = 0;
             mCache[i].mState               = Cache::kStateCached;
-            MarkCacheEntryAsUsed(mCache[i]);
+            MoveCacheEntryAtFront(mCache[i]);
 
             otLogNoteArp("Cache entry updated (notification): %s, 0x%04x, lastTrans:%d",
                          targetTlv.GetTarget().ToString().AsCString(), rloc16Tlv.GetRloc16(), lastTransactionTime);
