@@ -209,7 +209,7 @@ void MleRouter::StopLeader(void)
     Get<Coap::Coap>().RemoveResource(mAddressRelease);
     Get<MeshCoP::ActiveDataset>().StopLeader();
     Get<MeshCoP::PendingDataset>().StopLeader();
-    mAdvertiseTimer.Stop();
+    StopAdvertiseTimer();
     Get<NetworkData::Leader>().Stop();
     Get<ThreadNetif>().UnsubscribeAllRoutersMulticast();
 }
@@ -308,7 +308,7 @@ void MleRouter::SetStateRouter(uint16_t aRloc16)
     mAttachCounter = 0;
     mAttachTimer.Stop();
     mMessageTransmissionTimer.Stop();
-    mAdvertiseTimer.Stop();
+    StopAdvertiseTimer();
     ResetAdvertiseInterval();
 
     Get<ThreadNetif>().SubscribeAllRoutersMulticast();
@@ -337,7 +337,7 @@ void MleRouter::SetStateLeader(uint16_t aRloc16)
     mAttachCounter = 0;
     mAttachTimer.Stop();
     mMessageTransmissionTimer.Stop();
-    mAdvertiseTimer.Stop();
+    StopAdvertiseTimer();
     ResetAdvertiseInterval();
     AddLeaderAloc();
 
