@@ -210,6 +210,7 @@ private:
 
     static const char *InvalidationReasonToString(InvalidationReason aReason);
 
+    void   Init(void);
     Cache *NewCacheEntry(void);
     void   MarkCacheEntryAsUsed(Cache &aEntry);
     void   InvalidateCacheEntry(Cache &aEntry, InvalidationReason aReason);

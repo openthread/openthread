@@ -60,7 +60,7 @@ AddressResolver::AddressResolver(Instance &aInstance)
     , mIcmpHandler(&AddressResolver::HandleIcmpReceive, this)
     , mTimer(aInstance, &AddressResolver::HandleTimer, this)
 {
-    Clear();
+    Init();
 
     Get<Coap::Coap>().AddResource(mAddressError);
     Get<Coap::Coap>().AddResource(mAddressQuery);
@@ -69,7 +69,7 @@ AddressResolver::AddressResolver(Instance &aInstance)
     Get<Ip6::Icmp>().RegisterHandler(mIcmpHandler);
 }
 
-void AddressResolver::Clear(void)
+void AddressResolver::Init(void)
 {
     memset(&mCache, 0, sizeof(mCache));
 
@@ -79,11 +79,27 @@ void AddressResolver::Clear(void)
     }
 }
 
+void AddressResolver::Clear(void)
+{
+    for (uint8_t i = 0; i < kCacheEntries; i++)
+    {
+        if (mCache[i].mState != Cache::kStateQuery)
+        {
+            continue;
+        }
+
+        Get<MeshForwarder>().HandleResolved(mCache[i].mTarget, OT_ERROR_DROP);
+    }
+
+    Init();
+}
+
 otError AddressResolver::GetEntry(uint8_t aIndex, otEidCacheEntry &aEntry) const
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aIndex < kCacheEntries, error = OT_ERROR_INVALID_ARGS);
+
     aEntry.mTarget = mCache[aIndex].mTarget;
     aEntry.mRloc16 = mCache[aIndex].mRloc16;
     aEntry.mAge    = mCache[aIndex].mAge;
@@ -220,6 +236,8 @@ void AddressResolver::InvalidateCacheEntry(Cache &aEntry, InvalidationReason aRe
         otLogNoteArp("Cache entry (query mode) removed: %s, timeout:%d, retry:%d - %s",
                      aEntry.mTarget.ToString().AsCString(), aEntry.mTimeout, aEntry.mRetryTimeout,
                      InvalidationReasonToString(aReason));
+
+        Get<MeshForwarder>().HandleResolved(aEntry.mTarget, OT_ERROR_DROP);
         break;
 
     default:
