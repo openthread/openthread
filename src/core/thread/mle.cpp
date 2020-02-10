@@ -446,7 +446,7 @@ otError Mle::Store(void)
     otError               error = OT_ERROR_NONE;
     Settings::NetworkInfo networkInfo;
 
-    networkInfo.Clear();
+    networkInfo.Init();
 
     if (IsAttached())
     {
@@ -464,7 +464,7 @@ otError Mle::Store(void)
         {
             Settings::ParentInfo parentInfo;
 
-            parentInfo.Clear();
+            parentInfo.Init();
             parentInfo.SetExtAddress(mParent.GetExtAddress());
 
             SuccessOrExit(error = Get<Settings>().SaveParentInfo(parentInfo));

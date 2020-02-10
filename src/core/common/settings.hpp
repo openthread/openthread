@@ -92,7 +92,7 @@ public:
          * This method clears the struct object (setting all the fields to zero).
          *
          */
-        void Clear(void) { memset(this, 0, sizeof(*this)); }
+        void Init(void) { memset(this, 0, sizeof(*this)); }
 
         /**
          * This method returns the Thread role.
@@ -271,7 +271,7 @@ public:
          * This method clears the struct object (setting all the fields to zero).
          *
          */
-        void Clear(void) { memset(this, 0, sizeof(*this)); }
+        void Init(void) { memset(this, 0, sizeof(*this)); }
 
         /**
          * This method returns the extended address.
@@ -305,7 +305,7 @@ public:
          * This method clears the struct object (setting all the fields to zero).
          *
          */
-        void Clear(void) { memset(this, 0, sizeof(*this)); }
+        void Init(void) { memset(this, 0, sizeof(*this)); }
 
         /**
          * This method returns the extended address.

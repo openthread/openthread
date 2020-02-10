@@ -143,6 +143,7 @@ otError Settings::ReadNetworkInfo(NetworkInfo &aNetworkInfo) const
 {
     otError error;
 
+    aNetworkInfo.Init();
     SuccessOrExit(error = ReadFixedSize(kKeyNetworkInfo, &aNetworkInfo, sizeof(NetworkInfo)));
     LogNetworkInfo("Read", aNetworkInfo);
 
@@ -186,6 +187,7 @@ otError Settings::ReadParentInfo(ParentInfo &aParentInfo) const
 {
     otError error;
 
+    aParentInfo.Init();
     SuccessOrExit(error = ReadFixedSize(kKeyParentInfo, &aParentInfo, sizeof(ParentInfo)));
     LogParentInfo("Read", aParentInfo);
 
@@ -291,6 +293,7 @@ void Settings::ChildInfoIterator::Read(void)
     uint16_t size = sizeof(ChildInfo);
     otError  error;
 
+    mChildInfo.Init();
     SuccessOrExit(error = otPlatSettingsGet(&GetInstance(), kKeyChildInfo, mIndex,
                                             reinterpret_cast<uint8_t *>(&mChildInfo), &size));
     VerifyOrExit(size >= sizeof(ChildInfo), error = OT_ERROR_NOT_FOUND);
