@@ -43,6 +43,7 @@ DHCP6_CLIENT        ?= 0
 DHCP6_SERVER        ?= 0
 DIAGNOSTIC          ?= 0
 DISABLE_DOC         ?= 0
+DISABLE_TOOLS       ?= 0
 DNS_CLIENT          ?= 0
 DYNAMIC_LOG_LEVEL   ?= 0
 ECDSA               ?= 0
@@ -126,6 +127,10 @@ endif
 
 ifeq ($(DISABLE_DOC),1)
 configure_OPTIONS              += --disable-docs
+endif
+
+ifeq ($(DISABLE_TOOLS),1)
+configure_OPTIONS              += --disable-tools
 endif
 
 ifeq ($(DNS_CLIENT),1)
