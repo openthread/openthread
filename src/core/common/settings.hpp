@@ -584,7 +584,9 @@ public:
      */
     otError ReadSlaacIidSecretKey(Utils::Slaac::IidSecretKey &aKey)
     {
-        return ReadFixedSize(kKeySlaacIidSecretKey, &aKey, sizeof(Utils::Slaac::IidSecretKey));
+        uint16_t length = sizeof(aKey);
+
+        return Read(kKeySlaacIidSecretKey, &aKey, length);
     }
 
     /**
@@ -703,8 +705,7 @@ public:
     };
 
 private:
-    otError ReadFixedSize(Key aKey, void *aBuffer, uint16_t aExpectedSize) const;
-    otError Read(Key aKey, void *aBuffer, uint16_t aMaxBufferSize, uint16_t &aReadSize) const;
+    otError Read(Key aKey, void *aBuffer, uint16_t &aSize) const;
     otError Save(Key aKey, const void *aValue, uint16_t aSize);
     otError Add(Key aKey, const void *aValue, uint16_t aSize);
     otError Delete(Key aKey);
