@@ -345,8 +345,9 @@ otError AddressResolver::AddCacheEntry(const Ip6::Address &aEid, Mac::ShortAddre
     entry->mTimeout             = 0;
     entry->mFailures            = 0;
     entry->mState               = Cache::kStateCached;
-
     MoveCacheEntryBehindCached(*entry);
+
+    otLogNoteArp("Cache entry added (snoop): %s, 0x%04x", aEid.ToString().AsCString(), aRloc16);
 
 exit:
     return error;
