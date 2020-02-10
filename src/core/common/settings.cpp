@@ -119,11 +119,12 @@ otError Settings::SaveOperationalDataset(bool aIsActive, const MeshCoP::Dataset 
 
 otError Settings::ReadOperationalDataset(bool aIsActive, MeshCoP::Dataset &aDataset) const
 {
-    otError  error = OT_ERROR_NONE;
-    uint16_t length;
+    otError  error  = OT_ERROR_NONE;
+    uint16_t length = MeshCoP::Dataset::kMaxSize;
 
-    SuccessOrExit(error = Read(aIsActive ? kKeyActiveDataset : kKeyPendingDataset, aDataset.GetBytes(),
-                               MeshCoP::Dataset::kMaxSize, length));
+    SuccessOrExit(error = Read(aIsActive ? kKeyActiveDataset : kKeyPendingDataset, aDataset.GetBytes(), length));
+    VerifyOrExit(length <= MeshCoP::Dataset::kMaxSize, error = OT_ERROR_NOT_FOUND);
+
     aDataset.SetSize(length);
 
 exit:
@@ -141,10 +142,11 @@ otError Settings::DeleteOperationalDataset(bool aIsActive)
 
 otError Settings::ReadNetworkInfo(NetworkInfo &aNetworkInfo) const
 {
-    otError error;
+    otError  error;
+    uint16_t length = sizeof(NetworkInfo);
 
     aNetworkInfo.Init();
-    SuccessOrExit(error = ReadFixedSize(kKeyNetworkInfo, &aNetworkInfo, sizeof(NetworkInfo)));
+    SuccessOrExit(error = Read(kKeyNetworkInfo, &aNetworkInfo, length));
     LogNetworkInfo("Read", aNetworkInfo);
 
 exit:
@@ -155,8 +157,9 @@ otError Settings::SaveNetworkInfo(const NetworkInfo &aNetworkInfo)
 {
     otError     error = OT_ERROR_NONE;
     NetworkInfo prevNetworkInfo;
+    uint16_t    length = sizeof(prevNetworkInfo);
 
-    if ((ReadFixedSize(kKeyNetworkInfo, &prevNetworkInfo, sizeof(NetworkInfo)) == OT_ERROR_NONE) &&
+    if ((Read(kKeyNetworkInfo, &prevNetworkInfo, length) == OT_ERROR_NONE) && (length == sizeof(NetworkInfo)) &&
         (memcmp(&prevNetworkInfo, &aNetworkInfo, sizeof(NetworkInfo)) == 0))
     {
         LogNetworkInfo("Re-saved", aNetworkInfo);
@@ -185,10 +188,11 @@ exit:
 
 otError Settings::ReadParentInfo(ParentInfo &aParentInfo) const
 {
-    otError error;
+    otError  error;
+    uint16_t length = sizeof(ParentInfo);
 
     aParentInfo.Init();
-    SuccessOrExit(error = ReadFixedSize(kKeyParentInfo, &aParentInfo, sizeof(ParentInfo)));
+    SuccessOrExit(error = Read(kKeyParentInfo, &aParentInfo, length));
     LogParentInfo("Read", aParentInfo);
 
 exit:
@@ -199,8 +203,9 @@ otError Settings::SaveParentInfo(const ParentInfo &aParentInfo)
 {
     otError    error = OT_ERROR_NONE;
     ParentInfo prevParentInfo;
+    uint16_t   length = sizeof(ParentInfo);
 
-    if ((ReadFixedSize(kKeyParentInfo, &prevParentInfo, sizeof(ParentInfo)) == OT_ERROR_NONE) &&
+    if ((Read(kKeyParentInfo, &prevParentInfo, length) == OT_ERROR_NONE) && (length == sizeof(ParentInfo)) &&
         (memcmp(&prevParentInfo, &aParentInfo, sizeof(ParentInfo)) == 0))
     {
         LogParentInfo("Re-saved", aParentInfo);
@@ -290,38 +295,23 @@ exit:
 
 void Settings::ChildInfoIterator::Read(void)
 {
-    uint16_t size = sizeof(ChildInfo);
+    uint16_t length = sizeof(ChildInfo);
     otError  error;
 
     mChildInfo.Init();
     SuccessOrExit(error = otPlatSettingsGet(&GetInstance(), kKeyChildInfo, mIndex,
-                                            reinterpret_cast<uint8_t *>(&mChildInfo), &size));
-    VerifyOrExit(size >= sizeof(ChildInfo), error = OT_ERROR_NOT_FOUND);
+                                            reinterpret_cast<uint8_t *>(&mChildInfo), &length));
     LogChildInfo("Read", mChildInfo);
 
 exit:
     mIsDone = (error != OT_ERROR_NONE);
 }
 
-otError Settings::ReadFixedSize(Key aKey, void *aBuffer, uint16_t aExpectedSize) const
+otError Settings::Read(Key aKey, void *aBuffer, uint16_t &aSize) const
 {
-    uint16_t size = aExpectedSize;
-    otError  error;
+    otError error;
 
-    SuccessOrExit(error = otPlatSettingsGet(&GetInstance(), aKey, 0, reinterpret_cast<uint8_t *>(aBuffer), &size));
-    VerifyOrExit(size >= aExpectedSize, error = OT_ERROR_NOT_FOUND);
-
-exit:
-    return error;
-}
-
-otError Settings::Read(Key aKey, void *aBuffer, uint16_t aMaxBufferSize, uint16_t &aReadSize) const
-{
-    uint16_t size = aMaxBufferSize;
-    otError  error;
-
-    SuccessOrExit(error = otPlatSettingsGet(&GetInstance(), aKey, 0, reinterpret_cast<uint8_t *>(aBuffer), &size));
-    aReadSize = (size <= aMaxBufferSize) ? size : aMaxBufferSize;
+    SuccessOrExit(error = otPlatSettingsGet(&GetInstance(), aKey, 0, reinterpret_cast<uint8_t *>(aBuffer), &aSize));
 
 exit:
     return error;
