@@ -107,6 +107,11 @@ public:
         kBlockType2 = 2,
     };
 
+    enum
+    {
+        kBlockSzxBase = 4,
+    };
+
     /**
      * This method initializes the CoAP header.
      *
@@ -570,6 +575,18 @@ private:
         kOption2ByteExtensionOffset = 269, ///< Delta/Length offset as specified (RFC 7252).
 
         kHelpDataAlignment = sizeof(uint16_t), ///< Alignment of help data.
+    };
+
+    enum
+    {
+        kBlockSzxOffset = 0,
+        kBlockMOffset   = 3,
+        kBlockNumOffset = 4,
+    };
+
+    enum
+    {
+        kBlockNumMax = 0xFFFFF,
     };
 
     /**
