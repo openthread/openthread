@@ -33,6 +33,7 @@
  */
 
 #include "openthread-posix-config.h"
+#include "platform-posix.h"
 
 #include <assert.h>
 #include <stdio.h>
