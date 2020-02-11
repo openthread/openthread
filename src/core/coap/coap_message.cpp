@@ -187,6 +187,24 @@ exit:
     return error;
 }
 
+otError Message::AppendBlockOption(Message::BlockType aType, uint32_t aNum, bool aMore, otCoapBlockSize aSize)
+{
+    otError  error   = OT_ERROR_NONE;
+    uint32_t encoded = aSize;
+
+    VerifyOrExit(aType == kBlockType1 || aType == kBlockType2, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aSize < OT_COAP_BLOCK_SIZE_32 || aSize > OT_COAP_BLOCK_SIZE_1024, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aNum < kBlockNumMax, error = OT_ERROR_INVALID_ARGS);
+
+    encoded |= static_cast<uint32_t>(aMore << kBlockMOffset);
+    encoded |= aNum << kBlockNumOffset;
+
+    error = AppendUintOption((aType == kBlockType1) ? OT_COAP_OPTION_BLOCK1 : OT_COAP_OPTION_BLOCK2, encoded);
+
+exit:
+    return error;
+}
+
 otError Message::AppendProxyUriOption(const char *aProxyUri)
 {
     return AppendStringOption(OT_COAP_OPTION_PROXY_URI, aProxyUri);
