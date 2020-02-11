@@ -33,23 +33,23 @@ OPENTHREAD_SOURCE_VERSION := $(shell git -C $(LOCAL_PATH) describe --always --ma
 OPENTHREAD_PROJECT_CFLAGS ?= -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"
 
 OPENTHREAD_COMMON_FLAGS                                          := \
+    -DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"                      \
+    -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>        \
     -DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1                  \
-    -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                         \
-    -DPACKAGE=\"openthread\"                                        \
-    -DPACKAGE_BUGREPORT=\"openthread-devel@googlegroups.com\"       \
-    -DPACKAGE_NAME=\"OPENTHREAD\"                                   \
-    -DPACKAGE_STRING=\"OPENTHREAD\ $(OPENTHREAD_DEFAULT_VERSION)\"  \
-    -DPACKAGE_VERSION=\"$(OPENTHREAD_SOURCE_VERSION)\"              \
-    -DPACKAGE_TARNAME=\"openthread\"                                \
-    -DVERSION=\"$(OPENTHREAD_DEFAULT_VERSION)\"                     \
-    -DPACKAGE_URL=\"http://github.com/openthread/openthread\"       \
     -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                         \
     -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1               \
     -DOPENTHREAD_FTD=1                                              \
     -DOPENTHREAD_POSIX=1                                            \
-    -DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"                      \
-    -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>        \
+    -DOPENTHREAD_POSIX_RCP_UART_ENABLE=1                            \
+    -DPACKAGE=\"openthread\"                                        \
+    -DPACKAGE_BUGREPORT=\"openthread-devel@googlegroups.com\"       \
+    -DPACKAGE_NAME=\"OPENTHREAD\"                                   \
+    -DPACKAGE_STRING=\"OPENTHREAD\ $(OPENTHREAD_DEFAULT_VERSION)\"  \
+    -DPACKAGE_TARNAME=\"openthread\"                                \
+    -DPACKAGE_URL=\"http://github.com/openthread/openthread\"       \
+    -DPACKAGE_VERSION=\"$(OPENTHREAD_SOURCE_VERSION)\"              \
     -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"                  \
+    -DVERSION=\"$(OPENTHREAD_DEFAULT_VERSION)\"                     \
     $(NULL)
 
 # Enable required features for on-device tests.
@@ -73,7 +73,6 @@ OPENTHREAD_COMMON_FLAGS                                          += \
     -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1                         \
     -DOPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE=0                   \
     -DOPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE=1               \
-    -DOPENTHREAD_POSIX_RCP_UART_ENABLE=1                            \
     $(NULL)
 endif
 
