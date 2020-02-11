@@ -202,6 +202,8 @@ AC_PROG_CXX_C_O
 
 AM_PROG_AS
 
+AC_C_BIGENDIAN
+
 # Check for other compiler toolchain tools.
 
 AC_CHECK_TOOL(AR, ar)
