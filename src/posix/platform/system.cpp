@@ -49,7 +49,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     otInstance *instance = NULL;
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    platformSimInit();
+    virtualTimeInit();
 #endif
     platformAlarmInit(aPlatformConfig->mSpeedUpFactor);
     platformRadioInit(aPlatformConfig);
@@ -70,7 +70,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 void otSysDeinit(void)
 {
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    platformSimDeinit();
+    virtualTimeDeinit();
 #endif
     platformRadioDeinit();
 }
@@ -121,7 +121,7 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
                              &aMainloop->mMaxFd);
 #endif
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    platformSimUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet, &aMainloop->mMaxFd,
+    virtualTimeUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet, &aMainloop->mMaxFd,
                            &aMainloop->mTimeout);
 #else
     platformRadioUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mMaxFd, &aMainloop->mTimeout);
@@ -160,7 +160,7 @@ int otSysMainloopPoll(otSysMainloopContext *aMainloop)
 
             if (noWrite)
             {
-                platformSimSendSleepEvent(&aMainloop->mTimeout);
+                virtualTimeSendSleepEvent(&aMainloop->mTimeout);
             }
 
             rval = select(aMainloop->mMaxFd + 1, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet,
@@ -180,7 +180,7 @@ int otSysMainloopPoll(otSysMainloopContext *aMainloop)
 void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMainloop)
 {
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    platformSimProcess(aInstance, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
+    virtualTimeProcess(aInstance, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
 #else
     platformRadioProcess(aInstance, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet);
 #endif

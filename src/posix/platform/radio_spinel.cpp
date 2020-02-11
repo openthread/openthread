@@ -1889,7 +1889,7 @@ void ot::PosixApp::RadioSpinel::Process(const Event &aEvent)
     }
 }
 
-void platformSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent)
+void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent)
 {
     sRadioSpinel.Process(*aEvent);
     OT_UNUSED_VARIABLE(aInstance);
