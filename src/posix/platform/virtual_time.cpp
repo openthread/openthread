@@ -185,7 +185,9 @@ void virtualTimeProcess(otInstance *  aInstance,
                         const fd_set *aWriteFdSet,
                         const fd_set *aErrorFdSet)
 {
-    struct Event event = {0};
+    struct Event event;
+
+    memset(&event, 0, sizeof(event));
 
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aWriteFdSet);
