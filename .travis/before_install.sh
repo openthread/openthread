@@ -47,10 +47,10 @@ cd /tmp || die
     pip3 install --upgrade pip
     pip3 install cmake
 
-    [ $BUILD_TARGET != posix-distcheck -a $BUILD_TARGET != posix-32-bit -a $BUILD_TARGET != posix-app-cli -a $BUILD_TARGET != posix-mtd -a $BUILD_TARGET != posix-ncp -a $BUILD_TARGET != posix-app-ncp ] || {
+    [ $BUILD_TARGET != sim-distcheck -a $BUILD_TARGET != sim-32-bit -a $BUILD_TARGET != posix-app-cli -a $BUILD_TARGET != sim-mtd -a $BUILD_TARGET != sim-ncp -a $BUILD_TARGET != posix-app-ncp ] || {
         pip install --upgrade pip || die
         pip install -r $TRAVIS_BUILD_DIR/tests/scripts/thread-cert/requirements.txt || die
-        [ $BUILD_TARGET != posix-ncp -a $BUILD_TARGET != posix-app-ncp ] || {
+        [ $BUILD_TARGET != sim-ncp -a $BUILD_TARGET != posix-app-ncp ] || {
             # Packages used by ncp tools.
             pip install git+https://github.com/openthread/pyspinel || die
         }
@@ -152,11 +152,11 @@ cd /tmp || die
         arm-none-eabi-gcc --version || die
     }
 
-    [ $BUILD_TARGET != posix-32-bit -a $BUILD_TARGET != posix-mtd ] || {
+    [ $BUILD_TARGET != sim-32-bit -a $BUILD_TARGET != sim-mtd ] || {
         sudo apt-get install g++-multilib || die
     }
 
-    [ $BUILD_TARGET != posix-distcheck ] || {
+    [ $BUILD_TARGET != sim-distcheck ] || {
         sudo apt-get install llvm-runtime || die
     }
 

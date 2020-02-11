@@ -36,8 +36,8 @@ display_usage() {
     echo ""
     echo "Usage: $(basename $0) [options] <config>"
     echo "    <config> can be:"
-    echo "        ncp        : Build OpenThread NCP FTD mode with POSIX platform"
-    echo "        rcp        : Build OpenThread RCP (NCP in radio mode) with POSIX platform"
+    echo "        ncp        : Build OpenThread NCP FTD mode with simulation platform"
+    echo "        rcp        : Build OpenThread RCP (NCP in radio mode) with simulation platform"
     echo "        posix-app  : Build OpenThread POSIX App NCP"
     echo "        cmake      : Configure and build OpenThread using cmake/ninja (RCP and NCP) only"
     echo ""
@@ -108,7 +108,7 @@ case ${build_config} in
         cd "${top_builddir}"
         ${top_srcdir}/configure                 \
             CPPFLAGS="$cppflags_config"         \
-            --with-examples=posix               \
+            --with-examples=sim                 \
             $configure_options || die
         make -j 8 || die
         ;;
@@ -124,7 +124,7 @@ case ${build_config} in
             --enable-coverage=${coverage}       \
             --enable-ncp                        \
             --enable-radio-only                 \
-            --with-examples=posix               \
+            --with-examples=sim                 \
             --disable-docs                      \
             --enable-tests=$tests || die
         make -j 8 || die
@@ -145,9 +145,9 @@ case ${build_config} in
 
     cmake)
         echo "===================================================================================================="
-        echo "Building OpenThread (NCP/CLI for FTD/MTD/RCP mode) with POSIX platform using cmake"
+        echo "Building OpenThread (NCP/CLI for FTD/MTD/RCP mode) with simulation platform using cmake"
         echo "===================================================================================================="
-        cmake -GNinja -DOT_PLATFORM=posix -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config.h . || die
+        cmake -GNinja -DOT_PLATFORM=sim -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config.h . || die
         ninja || die
         ;;
 

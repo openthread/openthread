@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes posix compile-time configuration constants
+ *   This file includes simulation compile-time configuration constants
  *   for OpenThread.
  */
 

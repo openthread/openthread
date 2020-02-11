@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-posix.h"
+#include "platform-sim.h"
 
 #include <errno.h>
 
@@ -63,7 +63,7 @@ enum
     POSIX_HIGH_RSSI_PROB_INC_PER_CHANNEL = 5,
 };
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME
+#if OPENTHREAD_SIM_VIRTUAL_TIME
 extern int      sSockFd;
 extern uint16_t sPortOffset;
 #else
@@ -226,7 +226,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     sPromiscuous = aEnable;
 }
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#if OPENTHREAD_SIM_VIRTUAL_TIME == 0
 static void initFds(void)
 {
     int                fd;
@@ -290,11 +290,11 @@ exit:
         exit(EXIT_FAILURE);
     }
 }
-#endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#endif // OPENTHREAD_SIM_VIRTUAL_TIME == 0
 
 void platformRadioInit(void)
 {
-#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#if OPENTHREAD_SIM_VIRTUAL_TIME == 0
     char *offset;
 
     offset = getenv("PORT_OFFSET");
@@ -315,7 +315,7 @@ void platformRadioInit(void)
     }
 
     initFds();
-#endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#endif // OPENTHREAD_SIM_VIRTUAL_TIME == 0
 
     sReceiveFrame.mPsdu  = sReceiveMessage.mPsdu;
     sTransmitFrame.mPsdu = sTransmitMessage.mPsdu;
@@ -469,7 +469,7 @@ static void radioReceive(otInstance *aInstance)
         {
             isTxDone = isAck && otMacFrameGetSequence(&sReceiveFrame) == otMacFrameGetSequence(&sTransmitFrame);
         }
-#if OPENTHREAD_POSIX_VIRTUAL_TIME
+#if OPENTHREAD_SIM_VIRTUAL_TIME
         // Simulate tx done when receiving the echo frame.
         else
         {
@@ -555,7 +555,7 @@ void radioSendMessage(otInstance *aInstance)
     radioComputeCrc(&sTransmitMessage, sTransmitFrame.mLength);
     radioTransmit(&sTransmitMessage, &sTransmitFrame);
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#if OPENTHREAD_SIM_VIRTUAL_TIME == 0
     sTxWait = otMacFrameIsAckRequested(&sTransmitFrame);
 
     if (!sTxWait)
@@ -577,7 +577,7 @@ void radioSendMessage(otInstance *aInstance)
 #else
     // Wait for echo radio in virtual time mode.
     sTxWait = true;
-#endif // OPENTHREAD_POSIX_VIRTUAL_TIME
+#endif // OPENTHREAD_SIM_VIRTUAL_TIME
 }
 
 bool platformRadioIsTransmitPending(void)
@@ -585,7 +585,7 @@ bool platformRadioIsTransmitPending(void)
     return sState == OT_RADIO_STATE_TRANSMIT && !sTxWait;
 }
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME
+#if OPENTHREAD_SIM_VIRTUAL_TIME
 void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength)
 {
     assert(sizeof(sReceiveMessage) >= aBufLength);
@@ -633,14 +633,14 @@ void platformRadioDeinit(void)
         close(sTxFd);
     }
 }
-#endif // OPENTHREAD_POSIX_VIRTUAL_TIME
+#endif // OPENTHREAD_SIM_VIRTUAL_TIME
 
 void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
 {
     OT_UNUSED_VARIABLE(aReadFdSet);
     OT_UNUSED_VARIABLE(aWriteFdSet);
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#if OPENTHREAD_SIM_VIRTUAL_TIME == 0
     if (FD_ISSET(sRxFd, aReadFdSet))
     {
         struct sockaddr_in sockaddr;
@@ -681,7 +681,7 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
 
 void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFrame)
 {
-#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#if OPENTHREAD_SIM_VIRTUAL_TIME == 0
     ssize_t            rval;
     struct sockaddr_in sockaddr;
 
@@ -698,7 +698,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
         perror("sendto(sTxFd)");
         exit(EXIT_FAILURE);
     }
-#else  // OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#else  // OPENTHREAD_SIM_VIRTUAL_TIME == 0
     struct Event event;
 
     event.mDelay      = 1; // 1us for now
@@ -707,7 +707,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
     memcpy(event.mData, aMessage, event.mDataLength);
 
     otSimSendEvent(&event);
-#endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#endif // OPENTHREAD_SIM_VIRTUAL_TIME == 0
 }
 
 void radioSendAck(void)

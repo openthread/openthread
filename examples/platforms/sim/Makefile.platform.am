@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2017, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,58 +26,16 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(OT_PLATFORM_LIB "openthread-posix" PARENT_SCOPE)
+#
+# Simulation platform-specific Makefile
+#
 
-if(NOT OT_CONFIG)
-    set(OT_CONFIG "openthread-core-posix-config.h")
-    set(OT_CONFIG ${OT_CONFIG} PARENT_SCOPE)
-endif()
+LDADD_COMMON                                                          += \
+    $(top_builddir)/examples/platforms/sim/libopenthread-sim.a           \
+    $(NULL)
 
-list(APPEND OT_PLATFORM_DEFINES
-    "_BSD_SOURCE=1"
-    "_DEFAULT_SOURCE=1"
-    "OPENTHREAD_EXAMPLES_POSIX=1"
-    "OPENTHREAD_POSIX=1"
-    "OPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
-)
-set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
-
-list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
-
-add_library(openthread-posix
-    alarm.c
-    diag.c
-    entropy.c
-    flash.c
-    logging.c
-    misc.c
-    radio.c
-    spi-stubs.c
-    system.c
-    uart-posix.c
-    sim/alarm-sim.c
-    sim/platform-sim.c
-    $<TARGET_OBJECTS:openthread-platform-utils>
-)
-
-set_property(TARGET openthread-posix PROPERTY C_STANDARD 99)
-
-find_library(LIBRT rt)
-if(LIBRT)
-    target_link_libraries(openthread-posix PRIVATE ${LIBRT})
-endif()
-
-target_link_libraries(openthread-posix PRIVATE openthread-platform-utils)
-
-target_compile_definitions(openthread-posix PUBLIC ${OT_PLATFORM_DEFINES})
-
-target_compile_options(openthread-posix PRIVATE
-    ${OT_CFLAGS}
-)
-
-target_include_directories(openthread-posix PRIVATE
-    ${OT_PUBLIC_INCLUDES}
-    ${OT_PRIVATE_INCLUDES}
-    ${PROJECT_SOURCE_DIR}/examples/platforms
-    ${PROJECT_SOURCE_DIR}/src/core
-)
+if OPENTHREAD_TARGET_LINUX
+LDADD_COMMON                                                          += \
+    -lrt                                                                 \
+    $(NULL)
+endif

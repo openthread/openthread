@@ -26,55 +26,64 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-posix.h"
-#include <openthread-core-config.h>
-#include <openthread/config.h>
+#include "platform-sim.h"
 
-#include <ctype.h>
-#include <inttypes.h>
-#include <stdarg.h>
-#include <stdint.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <syslog.h>
+#include <sys/time.h>
 
-#include <openthread/platform/logging.h>
-#include <openthread/platform/toolchain.h>
+#include <openthread/config.h>
+#include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/radio.h>
 
-#include "utils/code_utils.h"
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
-// Macro to append content to end of the log string.
+/**
+ * Diagnostics mode variables.
+ *
+ */
+static bool sDiagMode = false;
 
-#define LOG_PRINTF(...)                                                                   \
-    charsWritten = snprintf(&logString[offset], sizeof(logString) - offset, __VA_ARGS__); \
-    otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);                            \
-    offset += (unsigned int)charsWritten;                                                 \
-    otEXPECT_ACTION(offset < sizeof(logString), logString[sizeof(logString) - 1] = 0)
-
-#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED) || \
-    (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
-OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
-    OT_UNUSED_VARIABLE(aLogLevel);
-    OT_UNUSED_VARIABLE(aLogRegion);
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(argc);
 
-    char         logString[512];
-    unsigned int offset;
-    int          charsWritten;
-    va_list      args;
-
-    offset = 0;
-
-    LOG_PRINTF("[%d] ", gNodeId);
-
-    va_start(args, aFormat);
-    charsWritten = vsnprintf(&logString[offset], sizeof(logString) - offset, aFormat, args);
-    va_end(args);
-
-    otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);
-
-exit:
-    syslog(LOG_CRIT, "%s", logString);
+    // Add more platform specific diagnostics features here.
+    snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
 }
 
-#endif // #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
+void otPlatDiagModeSet(bool aMode)
+{
+    sDiagMode = aMode;
+}
+
+bool otPlatDiagModeGet()
+{
+    return sDiagMode;
+}
+
+void otPlatDiagChannelSet(uint8_t aChannel)
+{
+    OT_UNUSED_VARIABLE(aChannel);
+}
+
+void otPlatDiagTxPowerSet(int8_t aTxPower)
+{
+    OT_UNUSED_VARIABLE(aTxPower);
+}
+
+void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aFrame);
+    OT_UNUSED_VARIABLE(aError);
+}
+
+void otPlatDiagAlarmCallback(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+#endif // OPENTHREAD_CONFIG_DIAG_ENABLE

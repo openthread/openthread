@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-posix.h"
+#include "platform-sim.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,7 +47,7 @@ otError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aComplete
     OT_UNUSED_VARIABLE(aProcessCallback);
     OT_UNUSED_VARIABLE(aContext);
 
-    fprintf(stderr, "\nNo SPI support for posix platform.");
+    fprintf(stderr, "\nNo SPI support for simulation platform.");
     exit(0);
 
     return OT_ERROR_NOT_IMPLEMENTED;

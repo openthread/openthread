@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-posix.h"
+#include "platform-sim.h"
 
 #include <setjmp.h>
 #include <unistd.h>

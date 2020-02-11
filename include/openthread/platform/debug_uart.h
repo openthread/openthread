@@ -173,7 +173,7 @@ void otPlatDebugUart_write_bytes(const uint8_t *pBytes, int nBytes);
 void otPlatDebugUart_puts_no_nl(const char *s);
 
 /**
- * Some platforms (posix) can log to a file.
+ * Some platforms (simulation) can log to a file.
  *
  * @returns OT_ERROR_NONE
  * @returns OT_ERROR_FAILED

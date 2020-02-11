@@ -32,7 +32,7 @@
  *
  */
 
-#include "platform-posix.h"
+#include "platform-sim.h"
 
 #include <assert.h>
 #include <stdio.h>
