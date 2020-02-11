@@ -52,6 +52,13 @@ SUBDIRS                                += \
     $(NULL)
 endif
 
+if OPENTHREAD_EXAMPLES_EFR32MG13
+SUBDIRS                                += \
+    silabs                                \
+    jlink                                 \
+    $(NULL)
+endif
+
 if OPENTHREAD_EXAMPLES_EFR32MG21
 SUBDIRS                                += \
     silabs                                \

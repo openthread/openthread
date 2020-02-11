@@ -80,6 +80,10 @@ check() {
         OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli) ${OT_NCP_PATH} ${CORE_PTY}"
     fi
 
+    if [[ "${DAEMON}" = 1 ]]; then
+        sudo ${OT_CLI_CMD} panid 0xface | grep 'Done' || die 'failed to set panid with ot-ctl'
+    fi
+
     sudo expect <<EOF > "${OT_OUTPUT}" &
 spawn ${OT_CLI_CMD}
 send "panid 0xface\r\n"

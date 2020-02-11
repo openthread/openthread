@@ -35,6 +35,8 @@
 #ifndef POSIX_APP_SPINEL_INTERFACE_HPP_
 #define POSIX_APP_SPINEL_INTERFACE_HPP_
 
+#include "openthread-posix-config.h"
+
 #include "ncp/hdlc.hpp"
 
 namespace ot {
@@ -45,7 +47,6 @@ class SpinelInterface
 public:
     enum
     {
-        kMaxWaitTime  = 2000, ///< Maximum wait time in Milliseconds for socket to become writable (see `SendFrame`).
         kMaxFrameSize = 2048, ///< Maximum frame size (number of bytes).
     };
 
@@ -74,106 +75,9 @@ public:
          * processed later.
          *
          */
-        virtual void HandleReceivedFrame(void) = 0;
+        void HandleReceivedFrame(void);
     };
-
-    /**
-     * This constructor initializes the object.
-     *
-     */
-    SpinelInterface()
-        : mRxFrameBuffer()
-    {
-    }
-
-    /**
-     * This method gets the `RxFrameBuffer`.
-     *
-     * The receive frame buffer is an `Hdlc::MultiFrameBuffer` and therefore it is capable of storing multiple
-     * spinel frames in a FIFO queue manner. The `RxFrameBuffer` contains the received spinel frames.
-     *
-     * When during `Process()` or `WaitForFrame()` the `Callbacks::HandleReceivedFrame()` is invoked, the newly
-     * received spinel frame is available in the receive frame buffer. The callback is expected to either process
-     * and then discard the frame (using `RxFrameBuffer::DiscardFrame()` method) or save the frame
-     * (using `RxFrameBuffer::SaveFrame()` so that it can be read later.
-     *
-     * @returns A reference to receive frame buffer containing newly received spinel frame or previously saved spinel
-     *          frames.
-     *
-     */
-    RxFrameBuffer &GetRxFrameBuffer(void) { return mRxFrameBuffer; }
-
-    /**
-     * This method initializes the interface to the Radio Co-processor (RCP)
-     *
-     * @note This method should be called before reading and sending spinel frames to the interface.
-     *
-     * @param[in]  aPlatformConfig  Platform configuration structure.
-     *
-     * @retval OT_ERROR_NONE          The interface is initialized successfully
-     * @retval OT_ERROR_ALREADY       The interface is already initialized.
-     * @retval OT_ERROR_INVALID_ARGS  The device or executable cannot be found or failed to open/run.
-     *
-     */
-    virtual otError Init(const otPlatformConfig &aPlatformConfig) = 0;
-
-    /**
-     * This method deinitializes the interface to the Radio Co-processor (RCP).
-     *
-     */
-    virtual void Deinit(void) = 0;
-
-    /**
-     * This method encodes and sends a spinel frame to Radio Co-processor (RCP) over the socket.
-     *
-     * This is blocking call, i.e., if the socket is not writable, this method waits for it to become writable for
-     * up to `kMaxWaitTime` interval.
-     *
-     * @param[in] aFrame     A pointer to buffer containing the spinel frame to send.
-     * @param[in] aLength    The length (number of bytes) in the frame.
-     *
-     * @retval OT_ERROR_NONE     Successfully encoded and sent the spinel frame.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to encode the frame.
-     * @retval OT_ERROR_FAILED   Failed to send due to socket not becoming writable within `kMaxWaitTime`.
-     *
-     */
-    virtual otError SendFrame(const uint8_t *aFrame, uint16_t aLength) = 0;
-
-    /**
-     * This method waits for receiving part or all of spinel frame within specified interval.
-     *
-     * @param[in]  aTimeout  A reference to the timeout.
-     *
-     * @retval OT_ERROR_NONE             Part or all of spinel frame is received.
-     * @retval OT_ERROR_RESPONSE_TIMEOUT No spinel frame is received within @p aTimeout.
-     *
-     */
-    virtual otError WaitForFrame(struct timeval &aTimeout) = 0;
-
-    /**
-     * This method updates the file descriptor sets with file descriptors used by the radio driver.
-     *
-     * @param[inout]  aReadFdSet   A reference to the read file descriptors.
-     * @param[inout]  aWriteFdSet  A reference to the write file descriptors.
-     * @param[inout]  aMaxFd       A reference to the max file descriptor.
-     * @param[inout]  aTimeout     A reference to the timeout.
-     *
-     */
-    virtual void UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout) = 0;
-
-    /**
-     * This method performs radio driver processing.
-     *
-     * @param[in]   aReadFdSet      A reference to the read file descriptors.
-     * @param[in]   aWriteFdSet     A reference to the write file descriptors.
-     *
-     */
-    virtual void Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet) = 0;
-
-protected:
-    RxFrameBuffer mRxFrameBuffer;
 };
-
 } // namespace PosixApp
 } // namespace ot
 

@@ -61,6 +61,10 @@ if OPENTHREAD_EXAMPLES_EFR32MG12
 include $(top_srcdir)/examples/platforms/efr32mg12/Makefile.platform.am
 endif
 
+if OPENTHREAD_EXAMPLES_EFR32MG13
+include $(top_srcdir)/examples/platforms/efr32mg13/Makefile.platform.am
+endif
+
 if OPENTHREAD_EXAMPLES_EFR32MG21
 include $(top_srcdir)/examples/platforms/efr32mg21/Makefile.platform.am
 endif

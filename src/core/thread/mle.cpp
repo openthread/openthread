@@ -375,15 +375,15 @@ otError Mle::Restore(void)
 
     SuccessOrExit(error = Get<Settings>().ReadNetworkInfo(networkInfo));
 
-    Get<KeyManager>().SetCurrentKeySequence(networkInfo.mKeySequence);
-    Get<KeyManager>().SetMleFrameCounter(networkInfo.mMleFrameCounter);
-    Get<KeyManager>().SetMacFrameCounter(networkInfo.mMacFrameCounter);
-    mDeviceMode.Set(networkInfo.mDeviceMode);
+    Get<KeyManager>().SetCurrentKeySequence(networkInfo.GetKeySequence());
+    Get<KeyManager>().SetMleFrameCounter(networkInfo.GetMleFrameCounter());
+    Get<KeyManager>().SetMacFrameCounter(networkInfo.GetMacFrameCounter());
+    mDeviceMode.Set(networkInfo.GetDeviceMode());
 
     // force re-attach when version mismatch.
-    VerifyOrExit(networkInfo.mVersion == kThreadVersion);
+    VerifyOrExit(networkInfo.GetVersion() == kThreadVersion);
 
-    switch (networkInfo.mRole)
+    switch (networkInfo.GetRole())
     {
     case OT_DEVICE_ROLE_CHILD:
     case OT_DEVICE_ROLE_ROUTER:
@@ -394,18 +394,18 @@ otError Mle::Restore(void)
         ExitNow();
     }
 
-    Get<Mac::Mac>().SetShortAddress(networkInfo.mRloc16);
-    Get<Mac::Mac>().SetExtAddress(networkInfo.mExtAddress);
+    Get<Mac::Mac>().SetShortAddress(networkInfo.GetRloc16());
+    Get<Mac::Mac>().SetExtAddress(networkInfo.GetExtAddress());
 
-    memcpy(&mMeshLocal64.GetAddress().mFields.m8[OT_IP6_PREFIX_SIZE], networkInfo.mMlIid,
+    memcpy(&mMeshLocal64.GetAddress().mFields.m8[OT_IP6_PREFIX_SIZE], networkInfo.GetMeshLocalIid(),
            OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE);
 
-    if (networkInfo.mRloc16 == Mac::kShortAddrInvalid)
+    if (networkInfo.GetRloc16() == Mac::kShortAddrInvalid)
     {
         ExitNow();
     }
 
-    if (!IsActiveRouter(networkInfo.mRloc16))
+    if (!IsActiveRouter(networkInfo.GetRloc16()))
     {
         error = Get<Settings>().ReadParentInfo(parentInfo);
 
@@ -418,16 +418,16 @@ otError Mle::Restore(void)
             // exchange) and going through the full attach process.
 
             otLogWarnMle("Invalid settings - no saved parent info with valid end-device RLOC16 0x%04x",
-                         networkInfo.mRloc16);
+                         networkInfo.GetRloc16());
             ExitNow();
         }
 
         mParent.Clear();
-        mParent.SetExtAddress(*static_cast<Mac::ExtAddress *>(&parentInfo.mExtAddress));
-        mParent.SetVersion(static_cast<uint8_t>(parentInfo.mVersion));
+        mParent.SetExtAddress(parentInfo.GetExtAddress());
+        mParent.SetVersion(static_cast<uint8_t>(parentInfo.GetVersion()));
         mParent.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                          DeviceMode::kModeFullNetworkData | DeviceMode::kModeSecureDataRequest));
-        mParent.SetRloc16(GetRloc16(GetRouterId(networkInfo.mRloc16)));
+        mParent.SetRloc16(Rloc16FromRouterId(RouterIdFromRloc16(networkInfo.GetRloc16())));
         mParent.SetState(Neighbor::kStateRestored);
 
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
@@ -436,8 +436,8 @@ otError Mle::Restore(void)
     }
     else
     {
-        Get<MleRouter>().SetRouterId(GetRouterId(GetRloc16()));
-        Get<MleRouter>().SetPreviousPartitionId(networkInfo.mPreviousPartitionId);
+        Get<MleRouter>().SetRouterId(RouterIdFromRloc16(GetRloc16()));
+        Get<MleRouter>().SetPreviousPartitionId(networkInfo.GetPreviousPartitionId());
         Get<MleRouter>().RestoreChildren();
     }
 
@@ -450,7 +450,7 @@ otError Mle::Store(void)
     otError               error = OT_ERROR_NONE;
     Settings::NetworkInfo networkInfo;
 
-    networkInfo.Clear();
+    networkInfo.Init();
 
     if (IsAttached())
     {
@@ -458,20 +458,20 @@ otError Mle::Store(void)
         // avoid losing/overwriting previous information when a reboot
         // occurs after a message is sent but before attaching.
 
-        networkInfo.mRole                = mRole;
-        networkInfo.mRloc16              = GetRloc16();
-        networkInfo.mPreviousPartitionId = mLeaderData.GetPartitionId();
-        networkInfo.mExtAddress          = Get<Mac::Mac>().GetExtAddress();
-        memcpy(networkInfo.mMlIid, &mMeshLocal64.GetAddress().mFields.m8[OT_IP6_PREFIX_SIZE], OT_IP6_IID_SIZE);
-        networkInfo.mVersion = kThreadVersion;
+        networkInfo.SetRole(mRole);
+        networkInfo.SetRloc16(GetRloc16());
+        networkInfo.SetPreviousPartitionId(mLeaderData.GetPartitionId());
+        networkInfo.SetExtAddress(Get<Mac::Mac>().GetExtAddress());
+        networkInfo.SetMeshLocalIid(&mMeshLocal64.GetAddress().mFields.m8[OT_IP6_PREFIX_SIZE]);
+        networkInfo.SetVersion(kThreadVersion);
 
         if (mRole == OT_DEVICE_ROLE_CHILD)
         {
             Settings::ParentInfo parentInfo;
 
-            parentInfo.Clear();
-            parentInfo.mExtAddress = mParent.GetExtAddress();
-            parentInfo.mVersion    = mParent.GetVersion();
+            parentInfo.Init();
+            parentInfo.SetExtAddress(mParent.GetExtAddress());
+            parentInfo.SetVersion(mParent.GetVersion());
 
             SuccessOrExit(error = Get<Settings>().SaveParentInfo(parentInfo));
         }
@@ -489,15 +489,17 @@ otError Mle::Store(void)
         SuccessOrExit(Get<Settings>().ReadNetworkInfo(networkInfo));
     }
 
-    networkInfo.mKeySequence     = Get<KeyManager>().GetCurrentKeySequence();
-    networkInfo.mMleFrameCounter = Get<KeyManager>().GetMleFrameCounter() + OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
-    networkInfo.mMacFrameCounter = Get<KeyManager>().GetMacFrameCounter() + OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
-    networkInfo.mDeviceMode      = mDeviceMode.Get();
+    networkInfo.SetKeySequence(Get<KeyManager>().GetCurrentKeySequence());
+    networkInfo.SetMleFrameCounter(Get<KeyManager>().GetMleFrameCounter() +
+                                   OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD);
+    networkInfo.SetMacFrameCounter(Get<KeyManager>().GetMacFrameCounter() +
+                                   OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD);
+    networkInfo.SetDeviceMode(mDeviceMode.Get());
 
     SuccessOrExit(error = Get<Settings>().SaveNetworkInfo(networkInfo));
 
-    Get<KeyManager>().SetStoredMleFrameCounter(networkInfo.mMleFrameCounter);
-    Get<KeyManager>().SetStoredMacFrameCounter(networkInfo.mMacFrameCounter);
+    Get<KeyManager>().SetStoredMleFrameCounter(networkInfo.GetMleFrameCounter());
+    Get<KeyManager>().SetStoredMacFrameCounter(networkInfo.GetMacFrameCounter());
 
     otLogDebgMle("Store Network Information");
 
@@ -643,7 +645,7 @@ otError Mle::BecomeChild(AttachMode aMode)
         }
     }
 
-    ResetParentCandidate();
+    mParentCandidate.Clear();
     SetAttachState(kAttachStateStart);
     mParentRequestMode = aMode;
 
@@ -968,6 +970,13 @@ uint16_t Mle::GetRloc16(void) const
 
 void Mle::SetRloc16(uint16_t aRloc16)
 {
+    uint16_t oldRloc16 = GetRloc16();
+
+    if (aRloc16 != oldRloc16)
+    {
+        otLogNoteMle("RLOC16 %04x -> %04x", oldRloc16, aRloc16);
+    }
+
     Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal16);
 
     Get<Mac::Mac>().SetShortAddress(aRloc16);
@@ -1012,7 +1021,7 @@ otError Mle::GetLeaderAddress(Ip6::Address &aAddress) const
     aAddress.mFields.m16[4] = HostSwap16(0x0000);
     aAddress.mFields.m16[5] = HostSwap16(0x00ff);
     aAddress.mFields.m16[6] = HostSwap16(0xfe00);
-    aAddress.mFields.m16[7] = HostSwap16(GetRloc16(mLeaderData.GetLeaderRouterId()));
+    aAddress.mFields.m16[7] = HostSwap16(Rloc16FromRouterId(mLeaderData.GetLeaderRouterId()));
 
 exit:
     return error;
@@ -1041,7 +1050,7 @@ otError Mle::GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
     aAddress.mFields.m16[4] = HostSwap16(0x0000);
     aAddress.mFields.m16[5] = HostSwap16(0x00ff);
     aAddress.mFields.m16[6] = HostSwap16(0xfe00);
-    aAddress.mFields.m16[7] = HostSwap16(GetServiceAlocFromId(aServiceId));
+    aAddress.mFields.m16[7] = HostSwap16(ServiceAlocFromId(aServiceId));
 
 exit:
     return error;
@@ -1600,7 +1609,7 @@ void Mle::UpdateServiceAlocs(void)
         serviceAloc = HostSwap16(mServiceAlocs[i].GetAddress().mFields.m16[7]);
 
         if ((serviceAloc != Mac::kShortAddrInvalid) &&
-            (!Get<NetworkData::Leader>().ContainsService(Mle::GetServiceIdFromAloc(serviceAloc), rloc)))
+            (!Get<NetworkData::Leader>().ContainsService(Mle::ServiceIdFromAloc(serviceAloc), rloc)))
         {
             Get<ThreadNetif>().RemoveUnicastAddress(mServiceAlocs[i]);
             mServiceAlocs[i].GetAddress().mFields.m16[7] = HostSwap16(Mac::kShortAddrInvalid);
@@ -1614,7 +1623,7 @@ void Mle::UpdateServiceAlocs(void)
         {
             serviceAloc = HostSwap16(mServiceAlocs[i].GetAddress().mFields.m16[7]);
 
-            if ((serviceAloc != Mac::kShortAddrInvalid) && (Mle::GetServiceIdFromAloc(serviceAloc) == serviceId))
+            if ((serviceAloc != Mac::kShortAddrInvalid) && (Mle::ServiceIdFromAloc(serviceAloc) == serviceId))
             {
                 break;
             }
@@ -1764,7 +1773,7 @@ void Mle::HandleAttachTimer(void)
 
     case kAttachStateChildIdRequest:
         SetAttachState(kAttachStateIdle);
-        ResetParentCandidate();
+        mParentCandidate.Clear();
         delay = Reattach();
         break;
     }
@@ -3144,11 +3153,6 @@ exit:
     return rval;
 }
 
-void Mle::ResetParentCandidate(void)
-{
-    mParentCandidate.Clear();
-}
-
 otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence)
 {
     otError                 error    = OT_ERROR_NONE;
@@ -3464,7 +3468,7 @@ otError Mle::HandleChildIdResponse(const Message &         aMessage,
     }
 
     mParent = mParentCandidate;
-    ResetParentCandidate();
+    mParentCandidate.Clear();
 
     mParent.SetRloc16(sourceAddress.GetRloc16());
 
@@ -3647,7 +3651,7 @@ otError Mle::HandleChildUpdateResponse(const Message &         aMessage,
         SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kSourceAddress, sizeof(sourceAddress), sourceAddress));
         VerifyOrExit(sourceAddress.IsValid(), error = OT_ERROR_PARSE);
 
-        if (GetRouterId(sourceAddress.GetRloc16()) != GetRouterId(GetRloc16()))
+        if (RouterIdFromRloc16(sourceAddress.GetRloc16()) != RouterIdFromRloc16(GetRloc16()))
         {
             BecomeDetached();
             ExitNow();

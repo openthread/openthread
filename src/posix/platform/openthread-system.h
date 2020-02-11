@@ -85,6 +85,22 @@ enum
 };
 
 /**
+ * This enumeration represents default parameters for the SPI interface.
+ *
+ */
+enum
+{
+    OT_PLATFORM_CONFIG_SPI_DEFAULT_MODE           = 0,       ///< Default SPI Mode: CPOL=0, CPHA=0.
+    OT_PLATFORM_CONFIG_SPI_DEFAULT_SPEED_HZ       = 1000000, ///< Default SPI speed in hertz.
+    OT_PLATFORM_CONFIG_SPI_DEFAULT_CS_DELAY_US    = 20,      ///< Default delay after SPI C̅S̅ assertion, in µsec.
+    OT_PLATFORM_CONFIG_SPI_DEFAULT_RESET_DELAY_MS = 0, ///< Default delay after R̅E̅S̅E̅T̅ assertion, in miliseconds.
+    OT_PLATFORM_CONFIG_SPI_DEFAULT_ALIGN_ALLOWANCE =
+        16, ///< Default maximum number of 0xFF bytes to clip from start of MISO frame.
+    OT_PLATFORM_CONFIG_SPI_DEFAULT_SMALL_PACKET_SIZE =
+        32, ///< Default smallest SPI packet size we can receive in a single transaction.
+};
+
+/**
  * This structure represents platform specific configurations.
  *
  */
@@ -97,6 +113,17 @@ typedef struct otPlatformConfig
     const char *mRadioConfig;           ///< Radio configurations.
     bool        mResetRadio;            ///< Whether to reset RCP when initializing.
     bool        mRestoreDatasetFromNcp; ///< Whether to retrieve dataset from NCP and save to file.
+
+    char *   mSpiGpioIntDevice;   ///< Path to the Linux GPIO character device for the `I̅N̅T̅` pin.
+    char *   mSpiGpioResetDevice; ///< Path to the Linux GPIO character device for the `R̅E̅S̅E̅T̅` pin.
+    uint8_t  mSpiGpioIntLine;     ///< Line index of the `I̅N̅T̅` pin for the associated GPIO character device.
+    uint8_t  mSpiGpioResetLine;   ///< Line index of the `R̅E̅S̅E̅T̅` pin for the associated GPIO character device.
+    uint8_t  mSpiMode;            ///< SPI mode to use (0-3).
+    uint32_t mSpiSpeed;           ///< SPI speed in hertz.
+    uint32_t mSpiResetDelay;      ///< The delay after R̅E̅S̅E̅T̅ assertion, in miliseconds.
+    uint16_t mSpiCsDelay;         ///< The delay after SPI C̅S̅ assertion, in µsec.
+    uint8_t  mSpiAlignAllowance;  ///< Maximum number of 0xFF bytes to clip from start of MISO frame.
+    uint8_t  mSpiSmallPacketSize; ///< Smallest SPI packet size we can receive in a single transaction.
 } otPlatformConfig;
 
 /**

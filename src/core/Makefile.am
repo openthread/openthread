@@ -235,9 +235,6 @@ SOURCES_COMMON                             = \
     utils/child_supervision.cpp              \
     utils/heap.cpp                           \
     utils/jam_detector.cpp                   \
-    utils/missing_strlcat.c                  \
-    utils/missing_strlcpy.c                  \
-    utils/missing_strnlen.c                  \
     utils/parse_cmdline.cpp                  \
     utils/slaac_address.cpp                  \
     $(NULL)
@@ -269,9 +266,6 @@ libopenthread_radio_a_SOURCES              = \
     radio/radio_callbacks.cpp                \
     radio/radio_platform.cpp                 \
     thread/link_quality.cpp                  \
-    utils/missing_strlcat.c                  \
-    utils/missing_strlcpy.c                  \
-    utils/missing_strnlen.c                  \
     utils/parse_cmdline.cpp                  \
     $(NULL)
 
@@ -447,7 +441,6 @@ HEADERS_COMMON                             = \
     utils/parse_cmdline.hpp                  \
     utils/slaac_address.hpp                  \
     utils/static_assert.hpp                  \
-    utils/wrap_string.h                      \
     $(NULL)
 
 noinst_HEADERS                             = \

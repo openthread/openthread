@@ -48,7 +48,7 @@ struct Entry : public EntryBase, ot::LinkedListEntry<Entry>
 };
 
 // This function verifies the content of the linked list matches a given list of entries.
-void VerifyLinkedListContent(const ot::LinkedList<Entry> &aList, ...)
+void VerifyLinkedListContent(const ot::LinkedList<Entry> *aList, ...)
 {
     va_list args;
     Entry * argEntry;
@@ -56,16 +56,16 @@ void VerifyLinkedListContent(const ot::LinkedList<Entry> &aList, ...)
 
     va_start(args, aList);
 
-    for (const Entry *entry = aList.GetHead(); entry; entry = entry->GetNext())
+    for (const Entry *entry = aList->GetHead(); entry; entry = entry->GetNext())
     {
         Entry *prev;
 
         argEntry = va_arg(args, Entry *);
         VerifyOrQuit(argEntry != NULL, "List contains more entries than expected");
         VerifyOrQuit(argEntry == entry, "List does not contain the same entry");
-        VerifyOrQuit(aList.Contains(*argEntry), "List::Contains() failed");
+        VerifyOrQuit(aList->Contains(*argEntry), "List::Contains() failed");
 
-        SuccessOrQuit(aList.Find(*argEntry, prev), "List::Find() failed");
+        SuccessOrQuit(aList->Find(*argEntry, prev), "List::Find() failed");
         VerifyOrQuit(prev == argPrev, "List::Find() returned prev entry is incorrect");
 
         argPrev = argEntry;
@@ -74,7 +74,7 @@ void VerifyLinkedListContent(const ot::LinkedList<Entry> &aList, ...)
     argEntry = va_arg(args, Entry *);
     VerifyOrQuit(argEntry == NULL, "List contains less entries than expected");
 
-    VerifyOrQuit(aList.GetTail() == argPrev, "List::GetTail() failed");
+    VerifyOrQuit(aList->GetTail() == argPrev, "List::GetTail() failed");
 }
 
 void TestLinkedList(void)
@@ -86,23 +86,23 @@ void TestLinkedList(void)
     VerifyOrQuit(list.GetHead() == NULL, "LinkedList::GetHead() failed after init");
     VerifyOrQuit(list.Pop() == NULL, "LinkedList::Pop() failed when empty");
 
-    VerifyLinkedListContent(list, NULL);
+    VerifyLinkedListContent(&list, NULL);
 
     list.Push(a);
     VerifyOrQuit(!list.IsEmpty(), "LinkedList::IsEmpty() failed");
-    VerifyLinkedListContent(list, &a, NULL);
+    VerifyLinkedListContent(&list, &a, NULL);
 
     SuccessOrQuit(list.Add(b), "LinkedList::Add() failed");
-    VerifyLinkedListContent(list, &b, &a, NULL);
+    VerifyLinkedListContent(&list, &b, &a, NULL);
 
     list.Push(c);
-    VerifyLinkedListContent(list, &c, &b, &a, NULL);
+    VerifyLinkedListContent(&list, &c, &b, &a, NULL);
 
     SuccessOrQuit(list.Add(d), "LinkedList::Add() failed");
-    VerifyLinkedListContent(list, &d, &c, &b, &a, NULL);
+    VerifyLinkedListContent(&list, &d, &c, &b, &a, NULL);
 
     SuccessOrQuit(list.Add(e), "LinkedList::Add() failed");
-    VerifyLinkedListContent(list, &e, &d, &c, &b, &a, NULL);
+    VerifyLinkedListContent(&list, &e, &d, &c, &b, &a, NULL);
 
     VerifyOrQuit(list.Add(a) == OT_ERROR_ALREADY, "LinkedList::Add() did not detect duplicate");
     VerifyOrQuit(list.Add(b) == OT_ERROR_ALREADY, "LinkedList::Add() did not detect duplicate");
@@ -110,46 +110,46 @@ void TestLinkedList(void)
     VerifyOrQuit(list.Add(e) == OT_ERROR_ALREADY, "LinkedList::Add() did not detect duplicate");
 
     VerifyOrQuit(list.Pop() == &e, "LinkedList::Pop() failed");
-    VerifyLinkedListContent(list, &d, &c, &b, &a, NULL);
+    VerifyLinkedListContent(&list, &d, &c, &b, &a, NULL);
 
     list.SetHead(&e);
-    VerifyLinkedListContent(list, &e, &d, &c, &b, &a, NULL);
+    VerifyLinkedListContent(&list, &e, &d, &c, &b, &a, NULL);
 
     SuccessOrQuit(list.Remove(c), "LinkedList::Remove() failed");
-    VerifyLinkedListContent(list, &e, &d, &b, &a, NULL);
+    VerifyLinkedListContent(&list, &e, &d, &b, &a, NULL);
 
     VerifyOrQuit(list.Remove(c) == OT_ERROR_NOT_FOUND, "LinkedList::Remove() failed");
-    VerifyLinkedListContent(list, &e, &d, &b, &a, NULL);
+    VerifyLinkedListContent(&list, &e, &d, &b, &a, NULL);
 
     SuccessOrQuit(list.Remove(e), "LinkedList::Remove() failed");
-    VerifyLinkedListContent(list, &d, &b, &a, NULL);
+    VerifyLinkedListContent(&list, &d, &b, &a, NULL);
 
     SuccessOrQuit(list.Remove(a), "LinkedList::Remove() failed");
-    VerifyLinkedListContent(list, &d, &b, NULL);
+    VerifyLinkedListContent(&list, &d, &b, NULL);
 
     list.Push(a);
     list.Push(c);
     list.Push(e);
-    VerifyLinkedListContent(list, &e, &c, &a, &d, &b, NULL);
+    VerifyLinkedListContent(&list, &e, &c, &a, &d, &b, NULL);
 
     VerifyOrQuit(list.PopAfter(a) == &d, "LinkedList::PopAfter() failed");
-    VerifyLinkedListContent(list, &e, &c, &a, &b, NULL);
+    VerifyLinkedListContent(&list, &e, &c, &a, &b, NULL);
 
     VerifyOrQuit(list.PopAfter(b) == NULL, "LinkedList::PopAfter() failed");
-    VerifyLinkedListContent(list, &e, &c, &a, &b, NULL);
+    VerifyLinkedListContent(&list, &e, &c, &a, &b, NULL);
 
     VerifyOrQuit(list.PopAfter(e) == &c, "LinkedList::PopAfter() failed");
-    VerifyLinkedListContent(list, &e, &a, &b, NULL);
+    VerifyLinkedListContent(&list, &e, &a, &b, NULL);
 
     list.PushAfter(c, b);
-    VerifyLinkedListContent(list, &e, &a, &b, &c, NULL);
+    VerifyLinkedListContent(&list, &e, &a, &b, &c, NULL);
 
     list.PushAfter(d, a);
-    VerifyLinkedListContent(list, &e, &a, &d, &b, &c, NULL);
+    VerifyLinkedListContent(&list, &e, &a, &d, &b, &c, NULL);
 
     list.Clear();
     VerifyOrQuit(list.IsEmpty(), "LinkedList::IsEmpty() failed after Clear()");
-    VerifyLinkedListContent(list, NULL);
+    VerifyLinkedListContent(&list, NULL);
 }
 
 int main(void)

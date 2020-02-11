@@ -70,12 +70,12 @@ const otNetifMulticastAddress Netif::kLinkLocalAllNodesMulticastAddress = {
     {{{0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}}},
     &Netif::kRealmLocalAllNodesMulticastAddress};
 
-// "ff03:02"
+// "ff03::02"
 const otNetifMulticastAddress Netif::kRealmLocalAllRoutersMulticastAddress = {
     {{{0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02}}},
     &Netif::kLinkLocalAllNodesMulticastAddress};
 
-// "ff02:02"
+// "ff02::02"
 const otNetifMulticastAddress Netif::kLinkLocalAllRoutersMulticastAddress = {
     {{{0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02}}},
     &Netif::kRealmLocalAllRoutersMulticastAddress};
@@ -85,21 +85,18 @@ Netif::Netif(Instance &aInstance)
     , mUnicastAddresses()
     , mMulticastAddresses()
     , mMulticastPromiscuous(false)
-    , mNext(NULL)
     , mAddressCallback(NULL)
     , mAddressCallbackContext(NULL)
 {
     for (NetifUnicastAddress *entry = &mExtUnicastAddresses[0]; entry < OT_ARRAY_END(mExtUnicastAddresses); entry++)
     {
-        // To mark the address as unused/available, set the `mNext` to point back to itself.
-        entry->mNext = entry;
+        entry->MarkAsNotInUse();
     }
 
     for (NetifMulticastAddress *entry = &mExtMulticastAddresses[0]; entry < OT_ARRAY_END(mExtMulticastAddresses);
          entry++)
     {
-        // To mark the address as unused/available, set the `mNext` to point back to itself.
-        entry->mNext = entry;
+        entry->MarkAsNotInUse();
     }
 }
 
@@ -343,13 +340,11 @@ otError Netif::GetNextExternalMulticast(uint8_t &aIterator, Address &aAddress) c
 
     VerifyOrExit(aIterator < num);
 
-    // Find an available entry in the `mExtMulticastAddresses` array.
     for (uint8_t i = aIterator; i < num; i++)
     {
         const NetifMulticastAddress &entry = mExtMulticastAddresses[i];
 
-        // In an unused/available entry, `mNext` points back to the entry itself.
-        if (entry.mNext != &entry)
+        if (entry.IsInUse())
         {
             aAddress  = entry.GetAddress();
             aIterator = i + 1;
@@ -379,22 +374,18 @@ otError Netif::SubscribeExternalMulticast(const Address &aAddress)
 
     VerifyOrExit(!IsMulticastSubscribed(aAddress), error = OT_ERROR_ALREADY);
 
-    // Find an available entry in the `mExtMulticastAddresses` array.
     for (entry = &mExtMulticastAddresses[0]; entry < OT_ARRAY_END(mExtMulticastAddresses); entry++)
     {
-        // In an unused/available entry, `mNext` points back to the entry itself.
-        if (entry->mNext == entry)
+        if (!entry->IsInUse())
         {
-            break;
+            entry->mAddress = aAddress;
+            mMulticastAddresses.Push(*entry);
+            Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSCRIBED);
+            ExitNow();
         }
     }
 
-    VerifyOrExit(entry < OT_ARRAY_END(mExtMulticastAddresses), error = OT_ERROR_NO_BUFS);
-
-    // Copy the address into the available entry and add it to the list.
-    entry->mAddress = aAddress;
-    mMulticastAddresses.Push(*entry);
-    Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_SUBSCRIBED);
+    error = OT_ERROR_NO_BUFS;
 
 exit:
     return error;
@@ -430,8 +421,7 @@ otError Netif::UnsubscribeExternalMulticast(const Address &aAddress)
 
     VerifyOrExit(entry != NULL, error = OT_ERROR_NOT_FOUND);
 
-    // To mark the address entry as unused/available, set the `mNext` pointer back to the entry itself.
-    entry->mNext = entry;
+    entry->MarkAsNotInUse();
 
     Get<Notifier>().Signal(OT_CHANGED_IP6_MULTICAST_UNSUBSCRIBED);
 
@@ -444,8 +434,7 @@ void Netif::UnsubscribeAllExternalMulticastAddresses(void)
     for (NetifMulticastAddress *entry = &mExtMulticastAddresses[0]; entry < OT_ARRAY_END(mExtMulticastAddresses);
          entry++)
     {
-        // In unused entries, the `mNext` points back to the entry itself.
-        if (entry->mNext != entry)
+        if (entry->IsInUse())
         {
             UnsubscribeExternalMulticast(entry->GetAddress());
         }
@@ -509,23 +498,18 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
         }
     }
 
-    // Find an available entry in the `mExtUnicastAddresses` array.
     for (entry = &mExtUnicastAddresses[0]; entry < OT_ARRAY_END(mExtUnicastAddresses); entry++)
     {
-        // In an unused/available entry, `mNext` points back to the entry itself.
-        if (entry->mNext == entry)
+        if (!entry->IsInUse())
         {
-            break;
+            *entry = aAddress;
+            mUnicastAddresses.Push(*entry);
+            Get<Notifier>().Signal(OT_CHANGED_IP6_ADDRESS_ADDED);
+            ExitNow();
         }
     }
 
-    VerifyOrExit(entry < OT_ARRAY_END(mExtUnicastAddresses), error = OT_ERROR_NO_BUFS);
-
-    // Copy the new address into the available entry and insert it in linked-list.
-    *entry = aAddress;
-    mUnicastAddresses.Push(*entry);
-
-    Get<Notifier>().Signal(OT_CHANGED_IP6_ADDRESS_ADDED);
+    error = OT_ERROR_NO_BUFS;
 
 exit:
     return error;
@@ -561,8 +545,7 @@ otError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
 
     VerifyOrExit(entry != NULL, error = OT_ERROR_NOT_FOUND);
 
-    // To mark the address entry as unused/available, set the `mNext` pointer back to the entry itself.
-    entry->mNext = entry;
+    entry->MarkAsNotInUse();
 
     Get<Notifier>().Signal(OT_CHANGED_IP6_ADDRESS_REMOVED);
 
@@ -574,8 +557,7 @@ void Netif::RemoveAllExternalUnicastAddresses(void)
 {
     for (NetifUnicastAddress *entry = &mExtUnicastAddresses[0]; entry < OT_ARRAY_END(mExtUnicastAddresses); entry++)
     {
-        // In unused entries, the `mNext` points back to the entry itself.
-        if (entry->mNext != entry)
+        if (entry->IsInUse())
         {
             RemoveExternalUnicastAddress(entry->GetAddress());
         }

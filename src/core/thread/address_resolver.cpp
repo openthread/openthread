@@ -97,7 +97,7 @@ void AddressResolver::Remove(uint8_t aRouterId)
 {
     for (int i = 0; i < kCacheEntries; i++)
     {
-        if (Mle::Mle::GetRouterId(mCache[i].mRloc16) == aRouterId)
+        if (Mle::Mle::RouterIdFromRloc16(mCache[i].mRloc16) == aRouterId)
         {
             InvalidateCacheEntry(mCache[i], kReasonRemovingRouterId);
         }
@@ -167,7 +167,7 @@ void AddressResolver::MarkCacheEntryAsUsed(Cache &aEntry)
     aEntry.mAge = 0;
 }
 
-const char *AddressResolver::ConvertInvalidationReasonToString(InvalidationReason aReason)
+const char *AddressResolver::InvalidationReasonToString(InvalidationReason aReason)
 {
     const char *str = "";
 
@@ -213,13 +213,13 @@ void AddressResolver::InvalidateCacheEntry(Cache &aEntry, InvalidationReason aRe
     {
     case Cache::kStateCached:
         otLogNoteArp("Cache entry removed: %s, 0x%04x - %s", aEntry.mTarget.ToString().AsCString(), aEntry.mRloc16,
-                     ConvertInvalidationReasonToString(aReason));
+                     InvalidationReasonToString(aReason));
         break;
 
     case Cache::kStateQuery:
         otLogNoteArp("Cache entry (query mode) removed: %s, timeout:%d, retry:%d - %s",
                      aEntry.mTarget.ToString().AsCString(), aEntry.mTimeout, aEntry.mRetryTimeout,
-                     ConvertInvalidationReasonToString(aReason));
+                     InvalidationReasonToString(aReason));
         break;
 
     default:

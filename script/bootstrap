@@ -49,13 +49,17 @@ install_packages_apt()
         sudo apt-get -y install binutils-arm-none-eabi gcc-arm-none-eabi gdb-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib || die
     else
         # add gcc-arm-embedded ppa
-        sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa || die
+        sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa -y || die
         sudo apt-get update || die
         sudo apt-get -y install gcc-arm-embedded || die
     fi
 
     # add clang-format for pretty
     sudo apt-get -y install clang-format-6.0
+
+    # add yapf for pretty
+    python3 -m pip install yapf || echo 'Failed to install python code formatter yapf. Install it manually if you need.'
+    
 }
 
 install_packages_opkg()
@@ -74,8 +78,8 @@ install_packages_brew()
     brew install automake libtool
 
     # add ARM toolchain
-    brew tap PX4/homebrew-px4
-    brew install gcc-arm-none-eabi
+    brew tap ArmMbed/homebrew-formulae
+    brew install arm-none-eabi-gcc
 
     # check for gcc for posix examples
     if ! which gcc; then
@@ -89,6 +93,9 @@ install_packages_brew()
         brew install llvm@6
         sudo ln -s "$(brew --prefix llvm@6)/bin/clang-format" /usr/local/bin/clang-format-6.0
     }
+
+    # add yapf for pretty
+    python3 -m pip install yapf || echo 'Failed to install python code formatter yapf. Install it manually if you need.'
 }
 
 install_packages_source()

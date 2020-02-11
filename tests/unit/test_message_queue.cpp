@@ -35,7 +35,6 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/message.hpp"
-#include "utils/wrap_string.h"
 
 #include "test_util.h"
 

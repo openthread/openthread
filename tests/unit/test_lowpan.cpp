@@ -218,7 +218,7 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
                    iphcLength - static_cast<uint16_t>(decompressedBytes));
 
             DumpBuffer("Resulted IPv6 uncompressed packet", result,
-                       message->GetLength() + iphcLength - decompressedBytes);
+                       message->GetLength() + iphcLength - static_cast<uint16_t>(decompressedBytes));
 
             VerifyOrQuit(decompressedBytes == aVector.mIphcHeader.mLength, "6lo: Lowpan::Decompress failed");
             VerifyOrQuit(message->GetOffset() == aVector.mPayloadOffset, "6lo: Lowpan::Decompress failed");

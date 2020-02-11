@@ -422,5 +422,24 @@
 #define OPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE          1
 #endif // OPENTHREAD_RADIO
 
+//--------------------------------------------------------------------------------------------------------------------
+// POSIX-App configurations
+
+/**
+ * @def OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
+ *
+ * Define as 1 to enable PTY device support in POSIX app.
+ *
+ */
+#define OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE 1
+
+/**
+ * @def OPENTHREAD_POSIX_RCP_UART_ENABLE
+ *
+ * Define as 1 to enable UART interface to RCP.
+ *
+ */
+#define OPENTHREAD_POSIX_RCP_UART_ENABLE 1
+
 #endif /* OPENTHREAD_CORE_TORANJ_CONFIG_H_ */
 

@@ -75,41 +75,33 @@ node.set(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_ENABLED, '0')
 verify(node.get(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_ENABLED) == 'false')
 
 node.set(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL, '1000')
-verify(
-    int(node.get(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL), 0) == 1000
-)
+verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL), 0) == 1000)
 
 all_channls_mask = int('0x7fff800', 0)
 chan_11_mask = int('0x800', 0)
 chan_11_to_13_mask = int('0x3800', 0)
 
-node.set(
-    wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK, str(all_channls_mask)
-)
+node.set(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK,
+         str(all_channls_mask))
 verify(
-    int(node.get(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK), 0)
-    == all_channls_mask
-)
+    int(node.get(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK), 0) ==
+    all_channls_mask)
 
 node.set(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK, str(chan_11_mask))
 verify(
-    int(node.get(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK), 0)
-    == chan_11_mask
-)
+    int(node.get(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK), 0) ==
+    chan_11_mask)
 
-node.set(
-    wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK, str(chan_11_to_13_mask)
-)
+node.set(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK,
+         str(chan_11_to_13_mask))
 verify(
-    int(node.get(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK), 0)
-    == chan_11_to_13_mask
-)
+    int(node.get(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK), 0) ==
+    chan_11_to_13_mask)
 
 node.set(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK, str(all_channls_mask))
 verify(
-    int(node.get(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK), 0)
-    == all_channls_mask
-)
+    int(node.get(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK), 0) ==
+    all_channls_mask)
 
 node.set(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_ENABLED, '1')
 verify(node.get(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_ENABLED) == 'true')
@@ -123,26 +115,19 @@ wait_time = 20
 
 while node.get(wpan.WPAN_STATE) != wpan.STATE_ASSOCIATED:
     if time.time() - start_time > wait_time:
-        print(
-            'Took too long to restore after reset ({}>{} sec)'.format(
-                time.time() - start_time, wait_time
-            )
-        )
+        print('Took too long to restore after reset ({}>{} sec)'.format(
+            time.time() - start_time, wait_time))
         exit(1)
     time.sleep(2)
 
 verify(node.get(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_ENABLED) == 'true')
 verify(
-    int(node.get(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK), 0)
-    == all_channls_mask
-)
+    int(node.get(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK), 0) ==
+    all_channls_mask)
 verify(
-    int(node.get(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK), 0)
-    == chan_11_to_13_mask
-)
-verify(
-    int(node.get(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL), 0) == 1000
-)
+    int(node.get(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK), 0) ==
+    chan_11_to_13_mask)
+verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL), 0) == 1000)
 verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_DELAY), 0) == 180)
 
 # -----------------------------------------------------------------------------------------------------------------------

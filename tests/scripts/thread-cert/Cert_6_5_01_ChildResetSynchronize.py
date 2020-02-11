@@ -37,6 +37,7 @@ ED = 2
 
 
 class Cert_6_5_1_ChildResetSynchronize(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 

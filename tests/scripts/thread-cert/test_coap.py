@@ -106,8 +106,9 @@ def any_uri_path():
 
 
 class TestCoapMessageOptionHeader(unittest.TestCase):
+
     def test_should_return_passed_on_value_when_read_extended_value_is_called_with_value_different_than_13_and_14(
-            self):
+        self):
         # GIVEN
         value = any_4bits_value_different_than_13_and_14()
 
@@ -118,7 +119,7 @@ class TestCoapMessageOptionHeader(unittest.TestCase):
         self.assertEqual(value, actual_value)
 
     def test_should_return_value_stored_in_first_byte_plus_13_when_read_extended_value_is_called_with_value_equal_13(
-            self):
+        self):
         # GIVEN
         value = 13
         extended_value = any_value()
@@ -132,7 +133,7 @@ class TestCoapMessageOptionHeader(unittest.TestCase):
         self.assertEqual(extended_value + 13, actual_value)
 
     def test_should_return_value_stored_in_first_byte_plus_269_when_read_extended_value_is_called_with_value_equal_14(
-            self):
+        self):
         # GIVEN
         value = 14
         extended_value = any_value()
@@ -146,7 +147,7 @@ class TestCoapMessageOptionHeader(unittest.TestCase):
         self.assertEqual(extended_value + 269, actual_value)
 
     def test_should_create_CoapOptionHeader_when_from_bytes_classmethod_is_called(
-            self):
+        self):
         # GIVEN
         delta = any_4bits_value_different_than_13_and_14()
         length = any_4bits_value_different_than_13_and_14()
@@ -161,7 +162,7 @@ class TestCoapMessageOptionHeader(unittest.TestCase):
         self.assertEqual(length, option_header.length)
 
     def test_should_return_True_when_is_payload_marker_property_called_with_delta_and_length_equal_15(
-            self):
+        self):
         # GIVEN
         delta = 15
         length = 15
@@ -176,6 +177,7 @@ class TestCoapMessageOptionHeader(unittest.TestCase):
 
 
 class TestCoapOption(unittest.TestCase):
+
     def test_should_return_type_value_when_type_property_is_called(self):
         # GIVEN
         _type = any_coap_option_type()
@@ -202,8 +204,9 @@ class TestCoapOption(unittest.TestCase):
 
 
 class TestCoapOptionsFactory(unittest.TestCase):
+
     def test_should_create_list_of_CoapOption_from_bytearray_when_parse_method_is_called(
-            self):
+        self):
         # GIVEN
         delta = any_4bits_value_lower_or_equal_than_12()
         length = any_4bits_value_lower_or_equal_than_12()
@@ -223,6 +226,7 @@ class TestCoapOptionsFactory(unittest.TestCase):
 
 
 class TestCoapCode(unittest.TestCase):
+
     def test_should_return_code_value_when_code_property_is_called(self):
         # GIVEN
         code = any_code()
@@ -273,7 +277,7 @@ class TestCoapCode(unittest.TestCase):
         self.assertEqual(code, (int(_class) << 5) | int(detail))
 
     def test_should_create_CoapCode_when_from_class_and_detail_classmethod_is_called(
-            self):
+        self):
         # GIVEN
         code = any_code()
 
@@ -287,7 +291,7 @@ class TestCoapCode(unittest.TestCase):
         self.assertEqual(code, actual_coap_obj.code)
 
     def test_should_create_CoapCode_when_from_dotted_string_classmethod_is_called(
-            self):
+        self):
         # GIVEN
         code = any_code()
 
@@ -301,6 +305,7 @@ class TestCoapCode(unittest.TestCase):
 
 
 class TestCoapMessage(unittest.TestCase):
+
     def test_should_return_version_value_when_version_property_is_called(self):
         # GIVEN
         version = any_version()
@@ -362,8 +367,7 @@ class TestCoapMessage(unittest.TestCase):
         self.assertEqual(code, actual_code)
 
     def test_should_return_message_id_value_when_message_id_property_is_called(
-        self
-    ):
+        self):
         # GIVEN
         message_id = any_message_id()
 
@@ -464,8 +468,7 @@ class TestCoapMessage(unittest.TestCase):
         self.assertEqual(payload, actual_payload)
 
     def test_should_return_uri_path_value_when_uri_path_property_is_called(
-        self
-    ):
+        self):
         # GIVEN
         uri_path = any_uri_path()
 
@@ -488,8 +491,9 @@ class TestCoapMessage(unittest.TestCase):
 
 
 class TestCoapMessageIdToUriPathBinder(unittest.TestCase):
+
     def test_should_add_uri_path_to_binds_when_add_uri_path_for_method_is_called(
-            self):
+        self):
         # GIVEN
         message_id = any_message_id()
         token = any_token()
@@ -504,7 +508,7 @@ class TestCoapMessageIdToUriPathBinder(unittest.TestCase):
         self.assertEqual(uri_path, binder.get_uri_path_for(message_id, token))
 
     def test_should_raise_KeyError_when_get_uri_path_for_is_called_but_it_is_not_present_in_database(
-            self):
+        self):
         # GIVEN
         message_id = any_message_id()
         token = any_token()
@@ -513,14 +517,16 @@ class TestCoapMessageIdToUriPathBinder(unittest.TestCase):
         binder = coap.CoapMessageIdToUriPathBinder()
 
         # THEN
-        self.assertRaises(
-            RuntimeError, binder.get_uri_path_for, message_id, token
-        )
+        self.assertRaises(RuntimeError, binder.get_uri_path_for, message_id,
+                          token)
 
 
 class TestCoapMessageFactory(unittest.TestCase):
+
     def _create_dummy_payload_factory(self):
+
         class DummyPayloadFactory:
+
             def parse(self, data, message_info):
                 return data.read()
 
@@ -536,16 +542,35 @@ class TestCoapMessageFactory(unittest.TestCase):
         )
 
     def test_should_create_CoapMessage_from_solicit_request_data_when_parse_method_is_called(
-            self):
+        self):
         # GIVEN
-        data = bytearray(
-            [
-                0x42, 0x02, 0x00, 0xBD, 0x65, 0xee, 0xB1, 0x61,
-                0x02, 0x61, 0x73, 0xff, 0x01, 0x08, 0x16, 0x6E,
-                0x0A, 0x00, 0x00, 0x00, 0x00, 0x02, 0x04, 0x01,
-                0x02,
-            ]
-        )
+        data = bytearray([
+            0x42,
+            0x02,
+            0x00,
+            0xBD,
+            0x65,
+            0xee,
+            0xB1,
+            0x61,
+            0x02,
+            0x61,
+            0x73,
+            0xff,
+            0x01,
+            0x08,
+            0x16,
+            0x6E,
+            0x0A,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x02,
+            0x04,
+            0x01,
+            0x02,
+        ])
 
         factory = self._create_coap_message_factory()
 
@@ -563,26 +588,54 @@ class TestCoapMessageFactory(unittest.TestCase):
         self.assertEqual("as", coap_message.options[1].value.decode("utf-8"))
         self.assertEqual("/a/as", coap_message.uri_path)
         self.assertEqual(
-            bytearray(
-                [
-                    0x01, 0x08, 0x16, 0x6E, 0x0A, 0x00, 0x00, 0x00,
-                    0x00, 0x02, 0x04, 0x01, 0x02,
-                ]
-            ),
+            bytearray([
+                0x01,
+                0x08,
+                0x16,
+                0x6E,
+                0x0A,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x02,
+                0x04,
+                0x01,
+                0x02,
+            ]),
             coap_message.payload,
         )
 
     def test_should_create_CoapMessage_from_solicit_response_data_when_parse_method_is_called(
-            self):
+        self):
         # GIVEN
-        data = bytearray(
-            [
-                0x62, 0x44, 0x00, 0xBD, 0x65, 0xee, 0xff, 0x04,
-                0x01, 0x00, 0x02, 0x02, 0x00, 0x00, 0x07, 0x09,
-                0x76, 0x80, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
-                0x00,
-            ]
-        )
+        data = bytearray([
+            0x62,
+            0x44,
+            0x00,
+            0xBD,
+            0x65,
+            0xee,
+            0xff,
+            0x04,
+            0x01,
+            0x00,
+            0x02,
+            0x02,
+            0x00,
+            0x00,
+            0x07,
+            0x09,
+            0x76,
+            0x80,
+            0x00,
+            0x01,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+        ])
 
         mid_binder = coap.CoapMessageIdToUriPathBinder()
         mid_binder.add_uri_path_for(189, bytearray([0x65, 0xee]), "/a/as")
@@ -607,13 +660,26 @@ class TestCoapMessageFactory(unittest.TestCase):
         self.assertEqual(bytearray([0x65, 0xee]), coap_message.token)
         self.assertEqual(None, coap_message.uri_path)
         self.assertEqual(
-            bytearray(
-                [
-                    0x04, 0x01, 0x00, 0x02, 0x02, 0x00, 0x00, 0x07,
-                    0x09, 0x76, 0x80, 0x00, 0x01, 0x00, 0x00, 0x00,
-                    0x00, 0x00,
-                ]
-            ),
+            bytearray([
+                0x04,
+                0x01,
+                0x00,
+                0x02,
+                0x02,
+                0x00,
+                0x00,
+                0x07,
+                0x09,
+                0x76,
+                0x80,
+                0x00,
+                0x01,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+            ]),
             coap_message.payload,
         )
 

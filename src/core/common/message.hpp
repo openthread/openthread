@@ -38,8 +38,6 @@
 
 #include <stdint.h>
 
-#include "utils/wrap_string.h"
-
 #include <openthread/message.h>
 #include <openthread/platform/messagepool.h>
 

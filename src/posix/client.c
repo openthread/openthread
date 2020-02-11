@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "openthread-core-config.h"
+#include "platform/openthread-posix-config.h"
 
 #include <openthread/platform/toolchain.h>
 
@@ -55,6 +55,8 @@
 #include <unistd.h>
 
 #include "code_utils.h"
+#include "common/code_utils.hpp"
+
 #include "platform-posix.h"
 
 static int sSessionFd = -1;
@@ -74,6 +76,107 @@ static void InputCallback(char *aLine)
     }
 }
 #endif // OPENTHREAD_USE_READLINE
+
+static bool FindDone(int *aDoneState, char aNowCharacter)
+{
+    switch (aNowCharacter)
+    {
+    case 'D':
+        *aDoneState = *aDoneState == 0 ? 1 : -1;
+        break;
+    case 'o':
+        *aDoneState = *aDoneState == 1 ? 2 : -1;
+        break;
+    case 'n':
+        *aDoneState = *aDoneState == 2 ? 3 : -1;
+        break;
+    case 'e':
+        *aDoneState = *aDoneState == 3 ? 4 : -1;
+        break;
+    case '\r':
+    case '\n':
+        if (*aDoneState == 4)
+        {
+            *aDoneState = 5;
+        }
+        else
+        {
+            *aDoneState = 0;
+        }
+        break;
+    default:
+        *aDoneState = -1;
+        break;
+    }
+
+    return *aDoneState == 5;
+}
+
+static bool FindError(int *aErrorState, char aNowCharacter)
+{
+    switch (aNowCharacter)
+    {
+    case 'E':
+        *aErrorState = *aErrorState == 0 ? 1 : -1;
+        break;
+    case 'r':
+        if (*aErrorState == 1 || *aErrorState == 2 || *aErrorState == 4)
+        {
+            (*aErrorState)++;
+        }
+        else
+        {
+            *aErrorState = -1;
+        }
+        break;
+    case 'o':
+        *aErrorState = *aErrorState == 3 ? 4 : -1;
+        break;
+    case ' ':
+        *aErrorState = *aErrorState == 5 ? 6 : -1;
+        break;
+    case '\r':
+    case '\n':
+        *aErrorState = 0;
+        break;
+    default:
+        *aErrorState = -1;
+        break;
+    }
+
+    return *aErrorState == 6;
+}
+
+static void SendBlockingCommand(int aArgc, char *aArgv[])
+{
+    char buffer[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
+    int  doneState  = 0;
+    int  errorState = 0;
+
+    for (int i = 0; i < aArgc; i++)
+    {
+        otEXPECT_ACTION(write(sSessionFd, aArgv[i], strlen(aArgv[i])) >= 0, perror("Failed to send command"));
+        otEXPECT_ACTION(write(sSessionFd, " ", 1) >= 0, perror("Failed to send command"));
+    }
+    otEXPECT_ACTION(write(sSessionFd, "\n", 1) >= 0, perror("Failed to send command"));
+
+    while (true)
+    {
+        ssize_t rval = read(sSessionFd, buffer, sizeof(buffer));
+
+        otEXPECT(rval >= 0);
+        write(STDOUT_FILENO, buffer, rval);
+        for (ssize_t i = 0; i < rval; i++)
+        {
+            if (FindDone(&doneState, buffer[i]) || FindError(&errorState, buffer[i]))
+            {
+                otEXIT_NOW();
+            }
+        }
+    }
+exit:
+    return;
+}
 
 int main(int argc, char *argv[])
 {
@@ -107,6 +210,12 @@ int main(int argc, char *argv[])
         rl_callback_handler_install("> ", InputCallback);
         rl_already_prompted = 1;
 #endif
+    }
+
+    if (argc > 1)
+    {
+        SendBlockingCommand(argc - 1, &argv[1]);
+        otEXIT_NOW(ret = 0);
     }
 
     while (1)
@@ -154,7 +263,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                write(STDOUT_FILENO, buffer, rval);
+                IgnoreReturnValue(write(STDOUT_FILENO, buffer, rval));
             }
         }
     }

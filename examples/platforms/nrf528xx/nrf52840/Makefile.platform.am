@@ -46,7 +46,7 @@ LDADD_COMMON                                                                    
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_tls_vanilla.a        \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_x509_vanilla.a       \
     $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_base_vanilla.a       \
-    $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libnrf_cc310_platform_0.9.1.a   \
+    $(top_srcdir)/third_party/NordicSemiconductor/libraries/nrf_security/lib/libnrf_cc310_platform_0.9.2.a   \
     $(NULL)
 endif
 

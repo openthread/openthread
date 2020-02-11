@@ -91,13 +91,22 @@ configure_options="                \
 
 cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config.h\"'
 
+if [ -n "${top_builddir}" ]; then
+    top_srcdir=$(pwd)
+    mkdir -p "${top_builddir}"
+else
+    top_srcdir=.
+    top_builddir=.
+fi
+
 case ${build_config} in
     ncp)
         echo "==================================================================================================="
         echo "Building OpenThread NCP FTD mode with POSIX platform"
         echo "==================================================================================================="
         ./bootstrap || die
-        ./configure                             \
+        cd "${top_builddir}"
+        ${top_srcdir}/configure                 \
             CPPFLAGS="$cppflags_config"         \
             --with-examples=posix               \
             $configure_options || die
@@ -109,7 +118,8 @@ case ${build_config} in
         echo "Building OpenThread RCP (NCP in radio mode) with POSIX platform"
         echo "===================================================================================================="
         ./bootstrap || die
-        ./configure                             \
+        cd "${top_builddir}"
+        ${top_srcdir}/configure                 \
             CPPFLAGS="$cppflags_config"         \
             --enable-coverage=${coverage}       \
             --enable-ncp                        \
@@ -125,8 +135,9 @@ case ${build_config} in
         echo "Building OpenThread POSIX App NCP"
         echo "===================================================================================================="
         ./bootstrap || die
-        ./configure                             \
-            CPPFLAGS="$cppflags_config -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1" \
+        cd "${top_builddir}"
+        ${top_srcdir}/configure                 \
+            CPPFLAGS="$cppflags_config"         \
             --enable-posix-app                  \
             $configure_options || die
         make -j 8 || die

@@ -29,6 +29,8 @@
 #ifndef NRF52840_MBEDTLS_CONFIG_H_
 #define NRF52840_MBEDTLS_CONFIG_H_
 
+#define MBEDTLS_PK_WRITE_C
+
 #include <openthread/config.h>
 
 #if defined(__ICCARM__)

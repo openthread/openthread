@@ -871,7 +871,7 @@ public:
      */
     otError GetCommissionerAloc(Ip6::Address &aAddress, uint16_t aSessionId) const
     {
-        return GetAlocAddress(aAddress, GetCommissionerAloc16FromId(aSessionId));
+        return GetAlocAddress(aAddress, CommissionerAloc16FromId(aSessionId));
     }
 
     /**
@@ -916,24 +916,24 @@ public:
     otError GetLeaderData(otLeaderData &aLeaderData);
 
     /**
-     * This method returns the Child ID portion of an RLOC16.
+     * This method derives the Child ID from a given RLOC16.
      *
      * @param[in]  aRloc16  The RLOC16 value.
      *
      * @returns The Child ID portion of an RLOC16.
      *
      */
-    static uint16_t GetChildId(uint16_t aRloc16) { return aRloc16 & kMaxChildId; }
+    static uint16_t ChildIdFromRloc16(uint16_t aRloc16) { return aRloc16 & kMaxChildId; }
 
     /**
-     * This method returns the Router ID portion of an RLOC16.
+     * This method derives the Router ID portion from a given RLOC16.
      *
      * @param[in]  aRloc16  The RLOC16 value.
      *
      * @returns The Router ID portion of an RLOC16.
      *
      */
-    static uint8_t GetRouterId(uint16_t aRloc16) { return aRloc16 >> kRouterIdOffset; }
+    static uint8_t RouterIdFromRloc16(uint16_t aRloc16) { return aRloc16 >> kRouterIdOffset; }
 
     /**
      * This method returns whether the two RLOC16 have the same Router ID.
@@ -946,7 +946,7 @@ public:
      */
     static bool RouterIdMatch(uint16_t aRloc16A, uint16_t aRloc16B)
     {
-        return ((aRloc16A >> kRouterIdOffset) == (aRloc16B >> kRouterIdOffset));
+        return RouterIdFromRloc16(aRloc16A) == RouterIdFromRloc16(aRloc16B);
     }
 
     /**
@@ -957,10 +957,7 @@ public:
      * @returns The Service ID corresponding to given ALOC16.
      *
      */
-    static uint8_t GetServiceIdFromAloc(uint16_t aAloc16)
-    {
-        return static_cast<uint8_t>(aAloc16 - kAloc16ServiceStart);
-    }
+    static uint8_t ServiceIdFromAloc(uint16_t aAloc16) { return static_cast<uint8_t>(aAloc16 - kAloc16ServiceStart); }
 
     /**
      * This method returns the Service Aloc corresponding to a Service ID.
@@ -970,7 +967,7 @@ public:
      * @returns The Service ALOC16 corresponding to given ID.
      *
      */
-    static uint16_t GetServiceAlocFromId(uint8_t aServiceId)
+    static uint16_t ServiceAlocFromId(uint8_t aServiceId)
     {
         return static_cast<uint16_t>(aServiceId + kAloc16ServiceStart);
     }
@@ -983,20 +980,23 @@ public:
      * @returns The Commissioner ALOC16 corresponding to given ID.
      *
      */
-    static uint16_t GetCommissionerAloc16FromId(uint16_t aSessionId)
+    static uint16_t CommissionerAloc16FromId(uint16_t aSessionId)
     {
         return static_cast<uint16_t>((aSessionId & kAloc16CommissionerMask) + kAloc16CommissionerStart);
     }
 
     /**
-     * This method returns the RLOC16 of a given Router ID.
+     * This method derives RLOC16 from a given Router ID.
      *
      * @param[in]  aRouterId  The Router ID value.
      *
-     * @returns The RLOC16 of the given Router ID.
+     * @returns The RLOC16 corresponding to the given Router ID.
      *
      */
-    static uint16_t GetRloc16(uint8_t aRouterId) { return static_cast<uint16_t>(aRouterId << kRouterIdOffset); }
+    static uint16_t Rloc16FromRouterId(uint8_t aRouterId)
+    {
+        return static_cast<uint16_t>(aRouterId << kRouterIdOffset);
+    }
 
     /**
      * This method indicates whether or not @p aRloc16 refers to an active router.
@@ -1007,7 +1007,7 @@ public:
      * @retval FALSE  If @p aRloc16 does not refer to an active router.
      *
      */
-    static bool IsActiveRouter(uint16_t aRloc16) { return GetChildId(aRloc16) == 0; }
+    static bool IsActiveRouter(uint16_t aRloc16) { return ChildIdFromRloc16(aRloc16) == 0; }
 
     /**
      * This method fills the NetworkDataTlv.
@@ -1722,7 +1722,6 @@ private:
 
     bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, uint8_t aLinkMargin, ConnectivityTlv &aConnectivityTlv);
     bool IsNetworkDataNewer(const LeaderDataTlv &aLeaderData);
-    void ResetParentCandidate(void);
 
     otError GetAlocAddress(Ip6::Address &aAddress, uint16_t aAloc16) const;
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE

@@ -34,6 +34,8 @@ if(NOT OT_CONFIG)
 endif()
 
 list(APPEND OT_PLATFORM_DEFINES
+    "_BSD_SOURCE=1"
+    "_DEFAULT_SOURCE=1"
     "OPENTHREAD_EXAMPLES_POSIX=1"
     "OPENTHREAD_POSIX=1"
     "OPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
@@ -58,6 +60,8 @@ add_library(openthread-posix
     $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
+set_property(TARGET openthread-posix PROPERTY C_STANDARD 99)
+
 find_library(LIBRT rt)
 if(LIBRT)
     target_link_libraries(openthread-posix PRIVATE ${LIBRT})
@@ -66,6 +70,10 @@ endif()
 target_link_libraries(openthread-posix PRIVATE openthread-platform-utils)
 
 target_compile_definitions(openthread-posix PUBLIC ${OT_PLATFORM_DEFINES})
+
+target_compile_options(openthread-posix PRIVATE
+    ${OT_CFLAGS}
+)
 
 target_include_directories(openthread-posix PRIVATE
     ${OT_PUBLIC_INCLUDES}

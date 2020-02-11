@@ -36,6 +36,7 @@
 
 #include "openthread-core-config.h"
 
+#include "common/encoding.hpp"
 #include "common/locator.hpp"
 #include "mac/mac_types.hpp"
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
@@ -83,14 +84,170 @@ public:
      * This structure represents the device's own network information for settings storage.
      *
      */
-    struct NetworkInfo
+    OT_TOOL_PACKED_BEGIN
+    class NetworkInfo
     {
+    public:
         /**
          * This method clears the struct object (setting all the fields to zero).
          *
          */
-        void Clear(void) { memset(this, 0, sizeof(*this)); }
+        void Init(void) { memset(this, 0, sizeof(*this)); }
 
+        /**
+         * This method returns the Thread role.
+         *
+         * @returns The Thread role.
+         *
+         */
+        uint8_t GetRole(void) const { return mRole; }
+
+        /**
+         * This method sets the Thread role.
+         *
+         * @param[in] aRole  The Thread Role.
+         *
+         */
+        void SetRole(uint8_t aRole) { mRole = aRole; }
+
+        /**
+         * This method returns the Thread device mode.
+         *
+         * @returns the Thread device mode.
+         *
+         */
+        uint8_t GetDeviceMode(void) const { return mDeviceMode; }
+
+        /**
+         * This method sets the Thread device mode.
+         *
+         * @param[in] aDeviceMode  The Thread device mode.
+         *
+         */
+        void SetDeviceMode(uint8_t aDeviceMode) { mDeviceMode = aDeviceMode; }
+
+        /**
+         * This method returns the RLOC16.
+         *
+         * @returns The RLOC16.
+         *
+         */
+        uint16_t GetRloc16(void) const { return Encoding::LittleEndian::HostSwap16(mRloc16); }
+
+        /**
+         * This method sets the RLOC16.
+         *
+         * @param[in] aRloc16  The RLOC16.
+         *
+         */
+        void SetRloc16(uint16_t aRloc16) { mRloc16 = Encoding::LittleEndian::HostSwap16(aRloc16); }
+
+        /**
+         * This method returns the key sequence.
+         *
+         * @returns The key sequence.
+         *
+         */
+        uint32_t GetKeySequence(void) const { return Encoding::LittleEndian::HostSwap32(mKeySequence); }
+
+        /**
+         * This method sets the key sequence.
+         *
+         * @param[in] aKeySequence  The key sequence.
+         *
+         */
+        void SetKeySequence(uint32_t aKeySequence) { mKeySequence = Encoding::LittleEndian::HostSwap32(aKeySequence); }
+
+        /**
+         * This method returns the MLE frame counter.
+         *
+         * @returns The MLE frame counter.
+         *
+         */
+        uint32_t GetMleFrameCounter(void) const { return Encoding::LittleEndian::HostSwap32(mMleFrameCounter); }
+
+        /**
+         * This method sets the MLE frame counter.
+         *
+         * @param[in] aMleFrameCounter  The MLE frame counter.
+         *
+         */
+        void SetMleFrameCounter(uint32_t aMleFrameCounter)
+        {
+            mMleFrameCounter = Encoding::LittleEndian::HostSwap32(aMleFrameCounter);
+        }
+
+        /**
+         * This method returns the MAC frame counter.
+         *
+         * @returns The MAC frame counter.
+         *
+         */
+        uint32_t GetMacFrameCounter(void) const { return Encoding::LittleEndian::HostSwap32(mMacFrameCounter); }
+
+        /**
+         * This method sets the MAC frame counter.
+         *
+         * @param[in] aMacFrameCounter  The MAC frame counter.
+         *
+         */
+        void SetMacFrameCounter(uint32_t aMacFrameCounter)
+        {
+            mMacFrameCounter = Encoding::LittleEndian::HostSwap32(aMacFrameCounter);
+        }
+
+        /**
+         * This method returns the previous partition ID.
+         *
+         * @returns The previous partition ID.
+         *
+         */
+        uint32_t GetPreviousPartitionId(void) const { return Encoding::LittleEndian::HostSwap32(mPreviousPartitionId); }
+
+        /**
+         * This method sets the previous partition id.
+         *
+         * @param[in] aPreviousPartitionId  The previous partition ID.
+         *
+         */
+        void SetPreviousPartitionId(uint32_t aPreviousPartitionId)
+        {
+            mPreviousPartitionId = Encoding::LittleEndian::HostSwap32(aPreviousPartitionId);
+        }
+
+        /**
+         * This method returns the extended address.
+         *
+         * @returns The extended address.
+         *
+         */
+        const Mac::ExtAddress &GetExtAddress(void) const { return mExtAddress; }
+
+        /**
+         * This method sets the extended address.
+         *
+         * @param[in] aExtAddress  The extended address.
+         *
+         */
+        void SetExtAddress(const Mac::ExtAddress &aExtAddress) { mExtAddress = aExtAddress; }
+
+        /**
+         * This method returns the Mesh Local Interface Identifier.
+         *
+         * @returns The Mesh Local Interface Identifier.
+         *
+         */
+        const uint8_t *GetMeshLocalIid(void) const { return mMlIid; }
+
+        /**
+         * This method sets the Mesh Local Interface Identifier.
+         *
+         * @param[in] aMeshLocalIid  The Mesh Local Interface Identifier.
+         *
+         */
+        void SetMeshLocalIid(const uint8_t *aMeshLocalIid) { memcpy(mMlIid, aMeshLocalIid, sizeof(mMlIid)); }
+
+    private:
         uint8_t         mRole;                   ///< Current Thread role.
         uint8_t         mDeviceMode;             ///< Device mode setting.
         uint16_t        mRloc16;                 ///< RLOC16
@@ -101,42 +258,128 @@ public:
         Mac::ExtAddress mExtAddress;             ///< Extended Address
         uint8_t         mMlIid[OT_IP6_IID_SIZE]; ///< IID from ML-EID
         uint16_t        mVersion;                ///< Version
-    };
+    } OT_TOOL_PACKED_END;
 
     /**
      * This structure represents the parent information for settings storage.
      *
      */
-    struct ParentInfo
+    OT_TOOL_PACKED_BEGIN
+    class ParentInfo
     {
+    public:
         /**
          * This method clears the struct object (setting all the fields to zero).
          *
          */
-        void Clear(void) { memset(this, 0, sizeof(*this)); }
+        void Init(void) { memset(this, 0, sizeof(*this)); }
 
+        /**
+         * This method returns the extended address.
+         *
+         * @returns The extended address.
+         *
+         */
+        const Mac::ExtAddress &GetExtAddress(void) const { return mExtAddress; }
+
+        /**
+         * This method sets the extended address.
+         *
+         * @param[in] aExtAddress  The extended address.
+         *
+         */
+        void SetExtAddress(const Mac::ExtAddress &aExtAddress) { mExtAddress = aExtAddress; }
+
+    private:
         Mac::ExtAddress mExtAddress; ///< Extended Address
         uint16_t        mVersion;    ///< Version
-    };
+    } OT_TOOL_PACKED_END;
 
     /**
      * This structure represents the child information for settings storage.
      *
      */
-    struct ChildInfo
+    OT_TOOL_PACKED_BEGIN
+    class ChildInfo
     {
+    public:
         /**
          * This method clears the struct object (setting all the fields to zero).
          *
          */
-        void Clear(void) { memset(this, 0, sizeof(*this)); }
+        void Init(void) { memset(this, 0, sizeof(*this)); }
 
+        /**
+         * This method returns the extended address.
+         *
+         * @returns The extended address.
+         *
+         */
+        const Mac::ExtAddress &GetExtAddress(void) const { return mExtAddress; }
+
+        /**
+         * This method sets the extended address.
+         *
+         * @param[in] aExtAddress  The extended address.
+         *
+         */
+        void SetExtAddress(const Mac::ExtAddress &aExtAddress) { mExtAddress = aExtAddress; }
+
+        /**
+         * This method returns the child timeout.
+         *
+         * @returns The child timeout.
+         *
+         */
+        uint32_t GetTimeout(void) const { return Encoding::LittleEndian::HostSwap32(mTimeout); }
+
+        /**
+         * This method sets the child timeout.
+         *
+         * @param[in] aTimeout  The child timeout.
+         *
+         */
+        void SetTimeout(uint32_t aTimeout) { mTimeout = Encoding::LittleEndian::HostSwap32(aTimeout); }
+
+        /**
+         * This method returns the RLOC16.
+         *
+         * @returns The RLOC16.
+         *
+         */
+        uint16_t GetRloc16(void) const { return Encoding::LittleEndian::HostSwap16(mRloc16); }
+
+        /**
+         * This method sets the RLOC16.
+         *
+         * @param[in] aRloc16  The RLOC16.
+         *
+         */
+        void SetRloc16(uint16_t aRloc16) { mRloc16 = Encoding::LittleEndian::HostSwap16(aRloc16); }
+
+        /**
+         * This method returns the Thread device mode.
+         *
+         * @returns The Thread device mode.
+         *
+         */
+        uint8_t GetMode(void) const { return mMode; }
+
+        /**
+         * This method sets the Thread device mode.
+         *
+         * @param[in] aRloc16  The Thread device mode.
+         *
+         */
+        void SetMode(uint8_t aMode) { mMode = aMode; }
+
+    private:
         Mac::ExtAddress mExtAddress; ///< Extended Address
         uint32_t        mTimeout;    ///< Timeout
         uint16_t        mRloc16;     ///< RLOC16
         uint8_t         mMode;       ///< The MLE device mode
         uint16_t        mVersion;    ///< Version
-    };
+    } OT_TOOL_PACKED_END;
 
     /**
      * This enumeration defines the keys of settings.
@@ -344,7 +587,9 @@ public:
      */
     otError ReadSlaacIidSecretKey(Utils::Slaac::IidSecretKey &aKey)
     {
-        return ReadFixedSize(kKeySlaacIidSecretKey, &aKey, sizeof(Utils::Slaac::IidSecretKey));
+        uint16_t length = sizeof(aKey);
+
+        return Read(kKeySlaacIidSecretKey, &aKey, length);
     }
 
     /**
@@ -463,8 +708,7 @@ public:
     };
 
 private:
-    otError ReadFixedSize(Key aKey, void *aBuffer, uint16_t aExpectedSize) const;
-    otError Read(Key aKey, void *aBuffer, uint16_t aMaxBufferSize, uint16_t &aReadSize) const;
+    otError Read(Key aKey, void *aBuffer, uint16_t &aSize) const;
     otError Save(Key aKey, const void *aValue, uint16_t aSize);
     otError Add(Key aKey, const void *aValue, uint16_t aSize);
     otError Delete(Key aKey);

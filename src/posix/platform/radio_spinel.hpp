@@ -34,9 +34,22 @@
 #ifndef RADIO_SPINEL_HPP_
 #define RADIO_SPINEL_HPP_
 
+#include "openthread-posix-config.h"
+
 #include <openthread/platform/radio.h>
 
+#if OPENTHREAD_POSIX_RCP_UART_ENABLE
 #include "hdlc_interface.hpp"
+#endif
+
+#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
+#include "spi_interface.hpp"
+#endif
+
+#if !OPENTHREAD_POSIX_RCP_UART_ENABLE && !OPENTHREAD_POSIX_RCP_SPI_ENABLE
+#error "Please enable either OPENTHREAD_POSIX_RCP_UART_ENABLE or OPENTHREAD_POSIX_RCP_SPI_ENABLE."
+#endif
+
 #include "spinel_interface.hpp"
 #include "ncp/ncp_config.h"
 #include "ncp/spinel.h"
@@ -219,6 +232,14 @@ public:
      *
      */
     int8_t GetReceiveSensitivity(void) const { return mRxSensitivity; }
+
+    /**
+     * This method gets current state of the radio.
+     *
+     * @return  Current state of the radio.
+     *
+     */
+    otRadioState GetState(void) const;
 
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
     /**
@@ -522,7 +543,7 @@ public:
 private:
     enum
     {
-        kMaxSpinelFrame        = HdlcInterface::kMaxFrameSize,
+        kMaxSpinelFrame        = SpinelInterface::kMaxFrameSize,
         kMaxWaitTime           = 2000, ///< Max time to wait for response in milliseconds.
         kVersionStringSize     = 128,  ///< Max size of version string.
         kCapsBufferSize        = 100,  ///< Max buffer size used to store `SPINEL_PROP_CAPS` value.
@@ -632,7 +653,7 @@ private:
         return !(aKey == SPINEL_PROP_STREAM_RAW || aKey == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT);
     }
 
-    void HandleNotification(HdlcInterface::RxFrameBuffer &aFrameBuffer);
+    void HandleNotification(SpinelInterface::RxFrameBuffer &aFrameBuffer);
     void HandleNotification(const uint8_t *aBuffer, uint16_t aLength);
     void HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, uint16_t aLength);
 
@@ -657,7 +678,15 @@ private:
 
     otInstance *mInstance;
 
-    HdlcInterface mHdlcInterface;
+    SpinelInterface::RxFrameBuffer mRxFrameBuffer;
+
+#if OPENTHREAD_POSIX_RCP_UART_ENABLE
+    HdlcInterface mSpinelInterface;
+#endif
+
+#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
+    SpiInterface mSpinelInterface;
+#endif
 
     uint16_t          mCmdTidsInUse;    ///< Used transaction ids.
     spinel_tid_t      mCmdNextTid;      ///< Next available transaction id.

@@ -39,8 +39,6 @@
 #include <limits.h>
 #include <stdint.h>
 
-#include "utils/wrap_string.h"
-
 #include "common/encoding.hpp"
 #include "mac/mac_types.hpp"
 
@@ -1133,6 +1131,7 @@ public:
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 };
 
+OT_TOOL_PACKED_BEGIN
 class Beacon
 {
 public:
@@ -1166,12 +1165,20 @@ public:
     }
 
     /**
-     * This method returns the pointer to the beacon payload address.
+     * This method returns the pointer to the beacon payload.
      *
-     * @retval A pointer to the beacon payload address.
+     * @returns A pointer to the beacon payload.
      *
      */
     uint8_t *GetPayload(void) { return reinterpret_cast<uint8_t *>(this) + sizeof(*this); }
+
+    /**
+     * This method returns the pointer to the beacon payload.
+     *
+     * @returns A pointer to the beacon payload.
+     *
+     */
+    const uint8_t *GetPayload(void) const { return reinterpret_cast<const uint8_t *>(this) + sizeof(*this); }
 
 private:
     uint16_t mSuperframeSpec;

@@ -39,6 +39,7 @@ ROUTER3 = 4
 
 
 class Cert_5_5_7_SplitMergeThreeWay(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 

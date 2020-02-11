@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include "utils/wrap_string.h"
-
 #include <openthread/thread_ftd.h>
 
 #include "coap/coap.hpp"

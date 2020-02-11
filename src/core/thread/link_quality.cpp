@@ -37,7 +37,6 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "utils/wrap_string.h"
 
 namespace ot {
 

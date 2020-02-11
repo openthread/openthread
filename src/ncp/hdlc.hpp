@@ -37,12 +37,12 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <openthread/error.h>
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
-#include "utils/wrap_string.h"
 
 namespace ot {
 

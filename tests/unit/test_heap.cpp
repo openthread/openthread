@@ -34,7 +34,6 @@
 
 #include "common/debug.hpp"
 #include "crypto/aes_ccm.hpp"
-#include "utils/wrap_string.h"
 
 #include "test_platform.h"
 #include "test_util.h"

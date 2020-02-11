@@ -36,6 +36,7 @@ DIST_SUBDIRS                            = \
     cc2650                                \
     cc2652                                \
     efr32mg12                             \
+    efr32mg13                             \
     efr32mg21                             \
     gp712                                 \
     kw41z                                 \
@@ -70,6 +71,10 @@ endif
 
 if OPENTHREAD_EXAMPLES_EFR32MG12
 SUBDIRS                                += efr32mg12
+endif
+
+if OPENTHREAD_EXAMPLES_EFR32MG13
+SUBDIRS                                += efr32mg13
 endif
 
 if OPENTHREAD_EXAMPLES_EFR32MG21
@@ -112,6 +117,7 @@ PRETTY_SUBDIRS                          = \
     cc2650                                \
     cc2652                                \
     efr32mg12                             \
+    efr32mg13                             \
     efr32mg21                             \
     gp712                                 \
     kw41z                                 \

@@ -38,21 +38,24 @@
 #include <stdint.h>
 
 /** @brief RAAL Softdevice default parameters. */
-#define PLATFORM_SOFTDEVICE_RAAL_TIMESLOT_DEFAULT_LENGTH       6400
-#define PLATFORM_SOFTDEVICE_RAAL_TIMESLOT_DEFAULT_ALLOC_ITERS  5
-#define PLATFORM_SOFTDEVICE_RAAL_TIMESLOT_DEFAULT_SAFE_MARGIN  126
-#define PLATFORM_SOFTDEVICE_RAAL_TIMESLOT_DEFAULT_TIMEOUT      6400
-#define PLATFORM_SOFTDEVICE_RAAL_TIMESLOT_DEFAULT_MAX_LENGTH   120000000
-#define PLATFORM_SOFTDEVICE_RAAL_DEFAULT_LF_CLK_ACCURACY_PPM   500
+#define PLATFORM_SOFTDEVICE_RAAL_TIMESLOT_DEFAULT_LENGTH 6400
+#define PLATFORM_SOFTDEVICE_RAAL_TIMESLOT_DEFAULT_ALLOC_ITERS 5
+#define PLATFORM_SOFTDEVICE_RAAL_TIMESLOT_DEFAULT_SAFE_MARGIN 126
+#define PLATFORM_SOFTDEVICE_RAAL_TIMESLOT_DEFAULT_TIMEOUT 6400
+#define PLATFORM_SOFTDEVICE_RAAL_TIMESLOT_DEFAULT_MAX_LENGTH 120000000
+#define PLATFORM_SOFTDEVICE_RAAL_DEFAULT_LF_CLK_ACCURACY_PPM 500
 
 /** @brief RAAL Softdevice configuration parameters. */
 typedef struct
 {
-    uint32_t timeslotLength;     /**< Timeslot length requested by the module in microseconds. */
-    uint32_t timeslotTimeout;    /**< Longest acceptable delay until the start of the requested timeslot in microseconds. */
+    uint32_t timeslotLength; /**< Timeslot length requested by the module in microseconds. */
+    uint32_t
+             timeslotTimeout; /**< Longest acceptable delay until the start of the requested timeslot in microseconds. */
     uint32_t timeslotMaxLength;  /**< Maximum single timeslot length created by extension processing in microseconds. */
-    uint16_t timeslotAllocIters; /**< Maximum number of iteration of dividing timeslot_length by factor of 2 performed by arbiter. */
-    uint16_t timeslotSafeMargin; /**< Safe margin before timeslot is finished and nrf_raal_timeslot_ended should be called in microseconds. */
+    uint16_t timeslotAllocIters; /**< Maximum number of iteration of dividing timeslot_length by factor of 2 performed
+                                    by arbiter. */
+    uint16_t timeslotSafeMargin; /**< Safe margin before timeslot is finished and nrf_raal_timeslot_ended should be
+                                    called in microseconds. */
     uint16_t lfClkAccuracyPpm;   /**< Clock accuracy in ppm unit. */
 } otSysSoftdeviceRaalConfigParams;
 
@@ -68,4 +71,4 @@ void otSysSoftdeviceSocEvtHandler(uint32_t aEvtId);
  */
 void otSysSoftdeviceRaalConfig(const otSysSoftdeviceRaalConfigParams *aConfig);
 
-#endif  // PLATFORM_SOFTDEVICE_H_
+#endif // PLATFORM_SOFTDEVICE_H_

@@ -59,22 +59,102 @@ def any_network_data():
 
 
 mode_map = {
-    0x00: {"receiver": 0, "secure": 0, "device_type": 0, "network_data": 0},
-    0x08: {"receiver": 1, "secure": 0, "device_type": 0, "network_data": 0},
-    0x04: {"receiver": 0, "secure": 1, "device_type": 0, "network_data": 0},
-    0x0C: {"receiver": 1, "secure": 1, "device_type": 0, "network_data": 0},
-    0x02: {"receiver": 0, "secure": 0, "device_type": 1, "network_data": 0},
-    0x0A: {"receiver": 1, "secure": 0, "device_type": 1, "network_data": 0},
-    0x06: {"receiver": 0, "secure": 1, "device_type": 1, "network_data": 0},
-    0x0E: {"receiver": 1, "secure": 1, "device_type": 1, "network_data": 0},
-    0x01: {"receiver": 0, "secure": 0, "device_type": 0, "network_data": 1},
-    0x09: {"receiver": 1, "secure": 0, "device_type": 0, "network_data": 1},
-    0x05: {"receiver": 0, "secure": 1, "device_type": 0, "network_data": 1},
-    0x0D: {"receiver": 1, "secure": 1, "device_type": 0, "network_data": 1},
-    0x03: {"receiver": 0, "secure": 0, "device_type": 1, "network_data": 1},
-    0x0B: {"receiver": 1, "secure": 0, "device_type": 1, "network_data": 1},
-    0x07: {"receiver": 0, "secure": 1, "device_type": 1, "network_data": 1},
-    0x0F: {"receiver": 1, "secure": 1, "device_type": 1, "network_data": 1}
+    0x00: {
+        "receiver": 0,
+        "secure": 0,
+        "device_type": 0,
+        "network_data": 0
+    },
+    0x08: {
+        "receiver": 1,
+        "secure": 0,
+        "device_type": 0,
+        "network_data": 0
+    },
+    0x04: {
+        "receiver": 0,
+        "secure": 1,
+        "device_type": 0,
+        "network_data": 0
+    },
+    0x0C: {
+        "receiver": 1,
+        "secure": 1,
+        "device_type": 0,
+        "network_data": 0
+    },
+    0x02: {
+        "receiver": 0,
+        "secure": 0,
+        "device_type": 1,
+        "network_data": 0
+    },
+    0x0A: {
+        "receiver": 1,
+        "secure": 0,
+        "device_type": 1,
+        "network_data": 0
+    },
+    0x06: {
+        "receiver": 0,
+        "secure": 1,
+        "device_type": 1,
+        "network_data": 0
+    },
+    0x0E: {
+        "receiver": 1,
+        "secure": 1,
+        "device_type": 1,
+        "network_data": 0
+    },
+    0x01: {
+        "receiver": 0,
+        "secure": 0,
+        "device_type": 0,
+        "network_data": 1
+    },
+    0x09: {
+        "receiver": 1,
+        "secure": 0,
+        "device_type": 0,
+        "network_data": 1
+    },
+    0x05: {
+        "receiver": 0,
+        "secure": 1,
+        "device_type": 0,
+        "network_data": 1
+    },
+    0x0D: {
+        "receiver": 1,
+        "secure": 1,
+        "device_type": 0,
+        "network_data": 1
+    },
+    0x03: {
+        "receiver": 0,
+        "secure": 0,
+        "device_type": 1,
+        "network_data": 1
+    },
+    0x0B: {
+        "receiver": 1,
+        "secure": 0,
+        "device_type": 1,
+        "network_data": 1
+    },
+    0x07: {
+        "receiver": 0,
+        "secure": 1,
+        "device_type": 1,
+        "network_data": 1
+    },
+    0x0F: {
+        "receiver": 1,
+        "secure": 1,
+        "device_type": 1,
+        "network_data": 1
+    }
 }
 
 
@@ -146,10 +226,22 @@ def any_leader_router_id():
 
 
 scan_mask_map = {
-    0x00: {"router": 0, "end_device": 0},
-    0x40: {"router": 0, "end_device": 1},
-    0x80: {"router": 1, "end_device": 0},
-    0xC0: {"router": 1, "end_device": 1},
+    0x00: {
+        "router": 0,
+        "end_device": 0
+    },
+    0x40: {
+        "router": 0,
+        "end_device": 1
+    },
+    0x80: {
+        "router": 1,
+        "end_device": 0
+    },
+    0xC0: {
+        "router": 1,
+        "end_device": 1
+    },
 }
 
 
@@ -311,7 +403,8 @@ class TestSourceAddress(unittest.TestCase):
 
 class TestSourceAddressFactory(unittest.TestCase):
 
-    def test_should_create_SourceAddress_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_SourceAddress_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         address = any_address()
 
@@ -329,11 +422,13 @@ class TestSourceAddressFactory(unittest.TestCase):
 
 class TestMode(unittest.TestCase):
 
-    def test_should_return_receiver_value_when_receiver_property_is_called(self):
+    def test_should_return_receiver_value_when_receiver_property_is_called(
+        self):
         # GIVEN
         receiver = any_receiver()
 
-        mode = mle.Mode(receiver, any_secure(), any_device_type(), any_network_data())
+        mode = mle.Mode(receiver, any_secure(), any_device_type(),
+                        any_network_data())
 
         # WHEN
         actual_receiver = mode.receiver
@@ -345,7 +440,8 @@ class TestMode(unittest.TestCase):
         # GIVEN
         secure = any_secure()
 
-        mode = mle.Mode(any_receiver(), secure, any_device_type(), any_network_data())
+        mode = mle.Mode(any_receiver(), secure, any_device_type(),
+                        any_network_data())
 
         # WHEN
         actual_secure = mode.secure
@@ -353,11 +449,13 @@ class TestMode(unittest.TestCase):
         # THEN
         self.assertEqual(secure, actual_secure)
 
-    def test_should_return_device_type_value_when_device_type_property_is_called(self):
+    def test_should_return_device_type_value_when_device_type_property_is_called(
+        self):
         # GIVEN
         device_type = any_device_type()
 
-        mode = mle.Mode(any_receiver(), any_secure(), device_type, any_network_data())
+        mode = mle.Mode(any_receiver(), any_secure(), device_type,
+                        any_network_data())
 
         # WHEN
         actual_device_type = mode.device_type
@@ -365,11 +463,13 @@ class TestMode(unittest.TestCase):
         # THEN
         self.assertEqual(device_type, actual_device_type)
 
-    def test_should_return_network_data_value_when_network_data_property_is_called(self):
+    def test_should_return_network_data_value_when_network_data_property_is_called(
+        self):
         # GIVEN
         network_data = any_network_data()
 
-        mode = mle.Mode(any_receiver(), any_secure(), any_device_type(), network_data)
+        mode = mle.Mode(any_receiver(), any_secure(), any_device_type(),
+                        network_data)
 
         # WHEN
         actual_network_data = mode.network_data
@@ -380,7 +480,8 @@ class TestMode(unittest.TestCase):
 
 class TestModeFactory(unittest.TestCase):
 
-    def test_should_create_Mode_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_Mode_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         mode = any_mode()
 
@@ -396,7 +497,8 @@ class TestModeFactory(unittest.TestCase):
         self.assertEqual(mode_map[mode]["receiver"], actual_mode.receiver)
         self.assertEqual(mode_map[mode]["secure"], actual_mode.secure)
         self.assertEqual(mode_map[mode]["device_type"], actual_mode.device_type)
-        self.assertEqual(mode_map[mode]["network_data"], actual_mode.network_data)
+        self.assertEqual(mode_map[mode]["network_data"],
+                         actual_mode.network_data)
 
 
 class TestTimeout(unittest.TestCase):
@@ -416,7 +518,8 @@ class TestTimeout(unittest.TestCase):
 
 class TestTimeoutFactory(unittest.TestCase):
 
-    def test_should_create_Timeout_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_Timeout_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         timeout = any_timeout()
 
@@ -434,7 +537,8 @@ class TestTimeoutFactory(unittest.TestCase):
 
 class TestChallenge(unittest.TestCase):
 
-    def test_should_return_challenge_value_when_challenge_property_is_called(self):
+    def test_should_return_challenge_value_when_challenge_property_is_called(
+        self):
         # GIVEN
         challenge = any_challenge()
 
@@ -449,7 +553,8 @@ class TestChallenge(unittest.TestCase):
 
 class TestChallengeFactory(unittest.TestCase):
 
-    def test_should_create_Challenge_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_Challenge_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         challenge = any_challenge()
 
@@ -467,7 +572,8 @@ class TestChallengeFactory(unittest.TestCase):
 
 class TestResponse(unittest.TestCase):
 
-    def test_should_return_response_value_when_response_property_is_called(self):
+    def test_should_return_response_value_when_response_property_is_called(
+        self):
         # GIVEN
         response = any_response()
 
@@ -482,7 +588,8 @@ class TestResponse(unittest.TestCase):
 
 class TestResponseFactory(unittest.TestCase):
 
-    def test_should_create_Challenge_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_Challenge_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         response = any_response()
 
@@ -500,22 +607,26 @@ class TestResponseFactory(unittest.TestCase):
 
 class TestLinkLayerFrameCounter(unittest.TestCase):
 
-    def test_should_return_frame_counter_value_when_frame_counter_property_is_called(self):
+    def test_should_return_frame_counter_value_when_frame_counter_property_is_called(
+        self):
         # GIVEN
         link_layer_frame_counter = any_link_layer_frame_counter()
 
-        link_layer_frame_counter_obj = mle.LinkLayerFrameCounter(link_layer_frame_counter)
+        link_layer_frame_counter_obj = mle.LinkLayerFrameCounter(
+            link_layer_frame_counter)
 
         # WHEN
         actual_link_layer_frame_counter = link_layer_frame_counter_obj.frame_counter
 
         # THEN
-        self.assertEqual(link_layer_frame_counter, actual_link_layer_frame_counter)
+        self.assertEqual(link_layer_frame_counter,
+                         actual_link_layer_frame_counter)
 
 
 class TestLinkLayerFrameCounterFactory(unittest.TestCase):
 
-    def test_should_create_LinkLayerFrameCounter_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_LinkLayerFrameCounter_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         link_layer_frame_counter = any_link_layer_frame_counter()
 
@@ -524,16 +635,21 @@ class TestLinkLayerFrameCounterFactory(unittest.TestCase):
         data = struct.pack(">I", link_layer_frame_counter)
 
         # WHEN
-        actual_link_layer_frame_counter = factory.parse(io.BytesIO(data), dict())
+        actual_link_layer_frame_counter = factory.parse(io.BytesIO(data),
+                                                        dict())
 
         # THEN
-        self.assertTrue(isinstance(actual_link_layer_frame_counter, mle.LinkLayerFrameCounter))
-        self.assertEqual(link_layer_frame_counter, actual_link_layer_frame_counter.frame_counter)
+        self.assertTrue(
+            isinstance(actual_link_layer_frame_counter,
+                       mle.LinkLayerFrameCounter))
+        self.assertEqual(link_layer_frame_counter,
+                         actual_link_layer_frame_counter.frame_counter)
 
 
 class TestMleFrameCounter(unittest.TestCase):
 
-    def test_should_return_frame_counter_value_when_frame_counter_property_is_called(self):
+    def test_should_return_frame_counter_value_when_frame_counter_property_is_called(
+        self):
         # GIVEN
         mle_frame_counter = any_mle_frame_counter()
 
@@ -548,7 +664,8 @@ class TestMleFrameCounter(unittest.TestCase):
 
 class TestMleFrameCounterFactory(unittest.TestCase):
 
-    def test_should_create_MleFrameCounter_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_MleFrameCounter_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         mle_frame_counter = any_mle_frame_counter()
 
@@ -560,8 +677,10 @@ class TestMleFrameCounterFactory(unittest.TestCase):
         actual_mle_frame_counter = factory.parse(io.BytesIO(data), dict())
 
         # THEN
-        self.assertTrue(isinstance(actual_mle_frame_counter, mle.MleFrameCounter))
-        self.assertEqual(mle_frame_counter, actual_mle_frame_counter.frame_counter)
+        self.assertTrue(
+            isinstance(actual_mle_frame_counter, mle.MleFrameCounter))
+        self.assertEqual(mle_frame_counter,
+                         actual_mle_frame_counter.frame_counter)
 
 
 class TestLinkQualityAndRouteData(unittest.TestCase):
@@ -605,7 +724,8 @@ class TestLinkQualityAndRouteData(unittest.TestCase):
 
 class TestLinkQualityAndRouteDataFactory(unittest.TestCase):
 
-    def test_should_create_LinkQualityAndRouteData_from_well_known_byte_when_parse_method_is_called(self):
+    def test_should_create_LinkQualityAndRouteData_from_well_known_byte_when_parse_method_is_called(
+        self):
         # GIVEN
         factory = mle.LinkQualityAndRouteDataFactory()
 
@@ -619,7 +739,8 @@ class TestLinkQualityAndRouteDataFactory(unittest.TestCase):
         self.assertEqual(2, actual_lqrd.input)
         self.assertEqual(6, actual_lqrd.route)
 
-    def test_should_create_LinkQualityAndRouteData_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_LinkQualityAndRouteData_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         output = any_output()
         _input = any_input()
@@ -643,11 +764,13 @@ class TestLinkQualityAndRouteDataFactory(unittest.TestCase):
 
 class TestRoute64(unittest.TestCase):
 
-    def test_should_return_id_sequence_value_when_id_sequence_property_is_called(self):
+    def test_should_return_id_sequence_value_when_id_sequence_property_is_called(
+        self):
         # GIVEN
         id_sequence = any_id_sequence()
 
-        route64_obj = mle.Route64(id_sequence, any_router_id_mask(), any_link_quality_and_route_data())
+        route64_obj = mle.Route64(id_sequence, any_router_id_mask(),
+                                  any_link_quality_and_route_data())
 
         # WHEN
         actual_id_sequence = route64_obj.id_sequence
@@ -655,11 +778,13 @@ class TestRoute64(unittest.TestCase):
         # THEN
         self.assertEqual(id_sequence, actual_id_sequence)
 
-    def test_should_return_router_id_mask_value_when_router_id_mask_property_is_called(self):
+    def test_should_return_router_id_mask_value_when_router_id_mask_property_is_called(
+        self):
         # GIVEN
         router_id_mask = any_router_id_mask()
 
-        route64_obj = mle.Route64(any_id_sequence(), router_id_mask, any_link_quality_and_route_data())
+        route64_obj = mle.Route64(any_id_sequence(), router_id_mask,
+                                  any_link_quality_and_route_data())
 
         # WHEN
         actual_router_id_mask = route64_obj.router_id_mask
@@ -667,22 +792,26 @@ class TestRoute64(unittest.TestCase):
         # THEN
         self.assertEqual(router_id_mask, actual_router_id_mask)
 
-    def test_should_return_link_quality_and_route_data_value_when_link_quality_and_route_data_property_is_called(self):
+    def test_should_return_link_quality_and_route_data_value_when_link_quality_and_route_data_property_is_called(
+        self):
         # GIVEN
         link_quality_and_route_data = any_link_quality_and_route_data()
 
-        route64_obj = mle.Route64(any_id_sequence(), any_router_id_mask(), link_quality_and_route_data)
+        route64_obj = mle.Route64(any_id_sequence(), any_router_id_mask(),
+                                  link_quality_and_route_data)
 
         # WHEN
         actual_link_quality_and_route_data = route64_obj.link_quality_and_route_data
 
         # THEN
-        self.assertEqual(link_quality_and_route_data, actual_link_quality_and_route_data)
+        self.assertEqual(link_quality_and_route_data,
+                         actual_link_quality_and_route_data)
 
 
 class TestRoute64Factory(unittest.TestCase):
 
-    def test_should_create_Route64_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_Route64_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         class DummyLQRDFactory:
 
@@ -696,11 +825,13 @@ class TestRoute64Factory(unittest.TestCase):
         for i in range(64):
             router_count += (router_id_mask >> i) & 0x01
 
-        link_quality_and_route_data = any_link_quality_and_route_data(router_count)
+        link_quality_and_route_data = any_link_quality_and_route_data(
+            router_count)
 
         factory = mle.Route64Factory(DummyLQRDFactory())
 
-        data = bytearray([id_sequence]) + struct.pack(">Q", router_id_mask) + bytearray(link_quality_and_route_data)
+        data = bytearray([id_sequence]) + struct.pack(
+            ">Q", router_id_mask) + bytearray(link_quality_and_route_data)
 
         # WHEN
         actual_route64 = factory.parse(io.BytesIO(data), dict())
@@ -709,7 +840,8 @@ class TestRoute64Factory(unittest.TestCase):
         self.assertTrue(isinstance(actual_route64, mle.Route64))
         self.assertEqual(id_sequence, actual_route64.id_sequence)
         self.assertEqual(router_id_mask, actual_route64.router_id_mask)
-        self.assertEqual([b for b in link_quality_and_route_data], actual_route64.link_quality_and_route_data)
+        self.assertEqual([b for b in link_quality_and_route_data],
+                         actual_route64.link_quality_and_route_data)
 
 
 class TestAddress16(unittest.TestCase):
@@ -729,7 +861,8 @@ class TestAddress16(unittest.TestCase):
 
 class TestAddress16Factory(unittest.TestCase):
 
-    def test_should_create_Address16_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_Address16_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         address = any_address()
 
@@ -747,12 +880,15 @@ class TestAddress16Factory(unittest.TestCase):
 
 class TestLeaderData(unittest.TestCase):
 
-    def test_should_return_partition_id_value_when_partition_id_property_is_called(self):
+    def test_should_return_partition_id_value_when_partition_id_property_is_called(
+        self):
         # GIVEN
         partition_id = any_partition_id()
 
-        leader_data = mle.LeaderData(partition_id, any_weighting(), any_data_version(),
-                                     any_stable_data_version(), any_leader_router_id())
+        leader_data = mle.LeaderData(partition_id, any_weighting(),
+                                     any_data_version(),
+                                     any_stable_data_version(),
+                                     any_leader_router_id())
 
         # WHEN
         actual_partition_id = leader_data.partition_id
@@ -760,12 +896,15 @@ class TestLeaderData(unittest.TestCase):
         # THEN
         self.assertEqual(partition_id, actual_partition_id)
 
-    def test_should_return_weighting_value_when_weighting_property_is_called(self):
+    def test_should_return_weighting_value_when_weighting_property_is_called(
+        self):
         # GIVEN
         weighting = any_weighting()
 
-        leader_data = mle.LeaderData(any_partition_id(), weighting, any_data_version(),
-                                     any_stable_data_version(), any_leader_router_id())
+        leader_data = mle.LeaderData(any_partition_id(), weighting,
+                                     any_data_version(),
+                                     any_stable_data_version(),
+                                     any_leader_router_id())
 
         # WHEN
         actual_weighting = leader_data.weighting
@@ -773,12 +912,14 @@ class TestLeaderData(unittest.TestCase):
         # THEN
         self.assertEqual(weighting, actual_weighting)
 
-    def test_should_return_data_version_value_when_data_version_property_is_called(self):
+    def test_should_return_data_version_value_when_data_version_property_is_called(
+        self):
         # GIVEN
         data_version = any_data_version()
 
-        leader_data = mle.LeaderData(any_partition_id(), any_weighting(), data_version,
-                                     any_stable_data_version(), any_leader_router_id())
+        leader_data = mle.LeaderData(any_partition_id(), any_weighting(),
+                                     data_version, any_stable_data_version(),
+                                     any_leader_router_id())
 
         # WHEN
         actual_data_version = leader_data.data_version
@@ -786,12 +927,14 @@ class TestLeaderData(unittest.TestCase):
         # THEN
         self.assertEqual(data_version, actual_data_version)
 
-    def test_should_return_stable_data_version_value_when_stable_data_version_property_is_called(self):
+    def test_should_return_stable_data_version_value_when_stable_data_version_property_is_called(
+        self):
         # GIVEN
         stable_data_version = any_stable_data_version()
 
-        leader_data = mle.LeaderData(any_partition_id(), any_weighting(), any_data_version(),
-                                     stable_data_version, any_leader_router_id())
+        leader_data = mle.LeaderData(any_partition_id(), any_weighting(),
+                                     any_data_version(), stable_data_version,
+                                     any_leader_router_id())
 
         # WHEN
         actual_stable_data_version = leader_data.stable_data_version
@@ -799,12 +942,15 @@ class TestLeaderData(unittest.TestCase):
         # THEN
         self.assertEqual(stable_data_version, actual_stable_data_version)
 
-    def test_should_return_leader_router_id_value_when_leader_router_id_property_is_called(self):
+    def test_should_return_leader_router_id_value_when_leader_router_id_property_is_called(
+        self):
         # GIVEN
         leader_router_id = any_leader_router_id()
 
-        leader_data = mle.LeaderData(any_partition_id(), any_weighting(), any_data_version(),
-                                     any_stable_data_version(), leader_router_id)
+        leader_data = mle.LeaderData(any_partition_id(), any_weighting(),
+                                     any_data_version(),
+                                     any_stable_data_version(),
+                                     leader_router_id)
 
         # WHEN
         actual_leader_router_id = leader_data.leader_router_id
@@ -815,7 +961,8 @@ class TestLeaderData(unittest.TestCase):
 
 class TestLeaderDataFactory(unittest.TestCase):
 
-    def test_should_create_Address16_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_Address16_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         partition_id = any_partition_id()
         weighting = any_weighting()
@@ -836,7 +983,8 @@ class TestLeaderDataFactory(unittest.TestCase):
         self.assertEqual(partition_id, actual_leader_data.partition_id)
         self.assertEqual(weighting, actual_leader_data.weighting)
         self.assertEqual(data_version, actual_leader_data.data_version)
-        self.assertEqual(stable_data_version, actual_leader_data.stable_data_version)
+        self.assertEqual(stable_data_version,
+                         actual_leader_data.stable_data_version)
         self.assertEqual(leader_router_id, actual_leader_data.leader_router_id)
 
 
@@ -857,7 +1005,8 @@ class TestNetworkData(unittest.TestCase):
 
 class TestNetworkDataFactory(unittest.TestCase):
 
-    def test_should_create_TlvRequest_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_TlvRequest_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         class DummyNetworkTlvsFactory:
 
@@ -895,7 +1044,8 @@ class TestTlvRequest(unittest.TestCase):
 
 class TestTlvRequestFactory(unittest.TestCase):
 
-    def test_should_create_TlvRequest_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_TlvRequest_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         tlvs = any_tlvs()
 
@@ -925,7 +1075,8 @@ class TestScanMask(unittest.TestCase):
         # THEN
         self.assertEqual(router, actual_router)
 
-    def test_should_return_end_device_value_when_end_device_property_is_called(self):
+    def test_should_return_end_device_value_when_end_device_property_is_called(
+        self):
         # GIVEN
         end_device = any_scan_mask_end_device()
 
@@ -940,7 +1091,8 @@ class TestScanMask(unittest.TestCase):
 
 class TestScanMaskFactory(unittest.TestCase):
 
-    def test_should_create_ScanMask_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_ScanMask_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         scan_mask = any_scan_mask()
 
@@ -953,8 +1105,10 @@ class TestScanMaskFactory(unittest.TestCase):
 
         # THEN
         self.assertTrue(isinstance(actual_scan_mask, mle.ScanMask))
-        self.assertEqual(scan_mask_map[scan_mask]["router"], actual_scan_mask.router)
-        self.assertEqual(scan_mask_map[scan_mask]["end_device"], actual_scan_mask.end_device)
+        self.assertEqual(scan_mask_map[scan_mask]["router"],
+                         actual_scan_mask.router)
+        self.assertEqual(scan_mask_map[scan_mask]["end_device"],
+                         actual_scan_mask.end_device)
 
 
 class TestConnectivity(unittest.TestCase):
@@ -963,8 +1117,7 @@ class TestConnectivity(unittest.TestCase):
         # GIVEN
         pp = any_pp()
 
-        connectivity_obj = mle.Connectivity(pp,
-                                            any_link_quality_3(),
+        connectivity_obj = mle.Connectivity(pp, any_link_quality_3(),
                                             any_link_quality_2(),
                                             any_link_quality_1(),
                                             any_leader_cost(),
@@ -979,12 +1132,12 @@ class TestConnectivity(unittest.TestCase):
         # THEN
         self.assertEqual(pp, actual_pp)
 
-    def test_should_return_link_quality_3_value_when_link_quality_3_property_is_called(self):
+    def test_should_return_link_quality_3_value_when_link_quality_3_property_is_called(
+        self):
         # GIVEN
         link_quality_3 = any_link_quality_3()
 
-        connectivity_obj = mle.Connectivity(any_pp(),
-                                            link_quality_3,
+        connectivity_obj = mle.Connectivity(any_pp(), link_quality_3,
                                             any_link_quality_2(),
                                             any_link_quality_1(),
                                             any_leader_cost(),
@@ -999,12 +1152,12 @@ class TestConnectivity(unittest.TestCase):
         # THEN
         self.assertEqual(link_quality_3, actual_link_quality_3)
 
-    def test_should_return_link_quality_2_value_when_link_quality_2_property_is_called(self):
+    def test_should_return_link_quality_2_value_when_link_quality_2_property_is_called(
+        self):
         # GIVEN
         link_quality_2 = any_link_quality_2()
 
-        connectivity_obj = mle.Connectivity(any_pp(),
-                                            any_link_quality_3(),
+        connectivity_obj = mle.Connectivity(any_pp(), any_link_quality_3(),
                                             link_quality_2,
                                             any_link_quality_1(),
                                             any_leader_cost(),
@@ -1019,15 +1172,14 @@ class TestConnectivity(unittest.TestCase):
         # THEN
         self.assertEqual(link_quality_2, actual_link_quality_2)
 
-    def test_should_return_link_quality_1_value_when_link_quality_1_property_is_called(self):
+    def test_should_return_link_quality_1_value_when_link_quality_1_property_is_called(
+        self):
         # GIVEN
         link_quality_1 = any_link_quality_1()
 
-        connectivity_obj = mle.Connectivity(any_pp(),
-                                            any_link_quality_3(),
+        connectivity_obj = mle.Connectivity(any_pp(), any_link_quality_3(),
                                             any_link_quality_2(),
-                                            link_quality_1,
-                                            any_leader_cost(),
+                                            link_quality_1, any_leader_cost(),
                                             any_id_sequence(),
                                             any_active_routers(),
                                             any_sed_buffer_size(),
@@ -1039,15 +1191,14 @@ class TestConnectivity(unittest.TestCase):
         # THEN
         self.assertEqual(link_quality_1, actual_link_quality_1)
 
-    def test_should_return_leader_cost_value_when_leader_cost_property_is_called(self):
+    def test_should_return_leader_cost_value_when_leader_cost_property_is_called(
+        self):
         # GIVEN
         leader_cost = any_leader_cost()
 
-        connectivity_obj = mle.Connectivity(any_pp(),
-                                            any_link_quality_3(),
+        connectivity_obj = mle.Connectivity(any_pp(), any_link_quality_3(),
                                             any_link_quality_2(),
-                                            any_link_quality_1(),
-                                            leader_cost,
+                                            any_link_quality_1(), leader_cost,
                                             any_id_sequence(),
                                             any_active_routers(),
                                             any_sed_buffer_size(),
@@ -1059,16 +1210,15 @@ class TestConnectivity(unittest.TestCase):
         # THEN
         self.assertEqual(leader_cost, actual_leader_cost)
 
-    def test_should_return_id_sequence_value_when_id_sequence_property_is_called(self):
+    def test_should_return_id_sequence_value_when_id_sequence_property_is_called(
+        self):
         # GIVEN
         id_sequence = any_id_sequence()
 
-        connectivity_obj = mle.Connectivity(any_pp(),
-                                            any_link_quality_3(),
+        connectivity_obj = mle.Connectivity(any_pp(), any_link_quality_3(),
                                             any_link_quality_2(),
                                             any_link_quality_1(),
-                                            any_leader_cost(),
-                                            id_sequence,
+                                            any_leader_cost(), id_sequence,
                                             any_active_routers(),
                                             any_sed_buffer_size(),
                                             any_sed_datagram_count())
@@ -1079,17 +1229,16 @@ class TestConnectivity(unittest.TestCase):
         # THEN
         self.assertEqual(id_sequence, actual_id_sequence)
 
-    def test_should_return_active_routers_value_when_active_routers_property_is_called(self):
+    def test_should_return_active_routers_value_when_active_routers_property_is_called(
+        self):
         # GIVEN
         active_routers = any_active_routers()
 
-        connectivity_obj = mle.Connectivity(any_pp(),
-                                            any_link_quality_3(),
+        connectivity_obj = mle.Connectivity(any_pp(), any_link_quality_3(),
                                             any_link_quality_2(),
                                             any_link_quality_1(),
                                             any_leader_cost(),
-                                            any_id_sequence(),
-                                            active_routers,
+                                            any_id_sequence(), active_routers,
                                             any_sed_buffer_size(),
                                             any_sed_datagram_count())
 
@@ -1099,12 +1248,12 @@ class TestConnectivity(unittest.TestCase):
         # THEN
         self.assertEqual(active_routers, actual_active_routers)
 
-    def test_should_return_sed_buffer_size_value_when_sed_buffer_size_property_is_called(self):
+    def test_should_return_sed_buffer_size_value_when_sed_buffer_size_property_is_called(
+        self):
         # GIVEN
         sed_buffer_size = any_sed_buffer_size()
 
-        connectivity_obj = mle.Connectivity(any_pp(),
-                                            any_link_quality_3(),
+        connectivity_obj = mle.Connectivity(any_pp(), any_link_quality_3(),
                                             any_link_quality_2(),
                                             any_link_quality_1(),
                                             any_leader_cost(),
@@ -1119,12 +1268,12 @@ class TestConnectivity(unittest.TestCase):
         # THEN
         self.assertEqual(sed_buffer_size, actual_sed_buffer_size)
 
-    def test_should_return_sed_datagram_count_value_when_sed_datagram_count_property_is_called(self):
+    def test_should_return_sed_datagram_count_value_when_sed_datagram_count_property_is_called(
+        self):
         # GIVEN
         sed_datagram_count = any_sed_datagram_count()
 
-        connectivity_obj = mle.Connectivity(any_pp(),
-                                            any_link_quality_3(),
+        connectivity_obj = mle.Connectivity(any_pp(), any_link_quality_3(),
                                             any_link_quality_2(),
                                             any_link_quality_1(),
                                             any_leader_cost(),
@@ -1142,7 +1291,8 @@ class TestConnectivity(unittest.TestCase):
 
 class TestConnectivityFactory(unittest.TestCase):
 
-    def test_should_create_Connectivity_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_Connectivity_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         pp = any_pp()
         link_quality_3 = any_link_quality_3()
@@ -1156,8 +1306,11 @@ class TestConnectivityFactory(unittest.TestCase):
 
         factory = mle.ConnectivityFactory()
 
-        data = bytearray([pp, link_quality_3, link_quality_2, link_quality_1, leader_cost, id_sequence,
-                          active_routers]) + struct.pack(">H", sed_buffer_size) + bytearray([sed_datagram_count])
+        data = bytearray([
+            pp, link_quality_3, link_quality_2, link_quality_1, leader_cost,
+            id_sequence, active_routers
+        ]) + struct.pack(">H", sed_buffer_size) + bytearray(
+            [sed_datagram_count])
 
         # WHEN
         actual_connectivity = factory.parse(io.BytesIO(data), dict())
@@ -1172,9 +1325,11 @@ class TestConnectivityFactory(unittest.TestCase):
         self.assertEqual(id_sequence, actual_connectivity.id_sequence)
         self.assertEqual(active_routers, actual_connectivity.active_routers)
         self.assertEqual(sed_buffer_size, actual_connectivity.sed_buffer_size)
-        self.assertEqual(sed_datagram_count, actual_connectivity.sed_datagram_count)
+        self.assertEqual(sed_datagram_count,
+                         actual_connectivity.sed_datagram_count)
 
-    def test_should_create_Connectivity_without_sed_data_when_parse_method_is_called(self):
+    def test_should_create_Connectivity_without_sed_data_when_parse_method_is_called(
+        self):
         # GIVEN
         pp = any_pp()
         link_quality_3 = any_link_quality_3()
@@ -1188,8 +1343,10 @@ class TestConnectivityFactory(unittest.TestCase):
 
         factory = mle.ConnectivityFactory()
 
-        data = bytearray([pp, link_quality_3, link_quality_2, link_quality_1, leader_cost, id_sequence,
-                          active_routers])
+        data = bytearray([
+            pp, link_quality_3, link_quality_2, link_quality_1, leader_cost,
+            id_sequence, active_routers
+        ])
 
         # WHEN
         actual_connectivity = factory.parse(io.BytesIO(data), dict())
@@ -1209,7 +1366,8 @@ class TestConnectivityFactory(unittest.TestCase):
 
 class TestLinkMargin(unittest.TestCase):
 
-    def test_should_return_link_margin_value_when_link_margin_property_is_called(self):
+    def test_should_return_link_margin_value_when_link_margin_property_is_called(
+        self):
         # GIVEN
         link_margin = any_link_margin()
 
@@ -1224,7 +1382,8 @@ class TestLinkMargin(unittest.TestCase):
 
 class TestLinkMarginFactory(unittest.TestCase):
 
-    def test_should_create_LinkMargin_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_LinkMargin_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         link_margin = any_link_margin()
 
@@ -1257,7 +1416,8 @@ class TestStatus(unittest.TestCase):
 
 class TestStatusFactory(unittest.TestCase):
 
-    def test_should_create_Status_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_Status_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         status = any_status()
 
@@ -1290,7 +1450,8 @@ class TestVersion(unittest.TestCase):
 
 class TestVersionFactory(unittest.TestCase):
 
-    def test_should_create_Version_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_Version_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         version = any_version()
 
@@ -1308,7 +1469,8 @@ class TestVersionFactory(unittest.TestCase):
 
 class TestAddressRegistrationFull(unittest.TestCase):
 
-    def test_should_return_ipv6_address_value_when_ipv6_address_property_is_called(self):
+    def test_should_return_ipv6_address_value_when_ipv6_address_property_is_called(
+        self):
         # GIVEN
         ipv6_address = any_ipv6_address()
 
@@ -1323,7 +1485,8 @@ class TestAddressRegistrationFull(unittest.TestCase):
 
 class TestAddressRegistrationFullFactory(unittest.TestCase):
 
-    def test_should_create_AddressFull_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_AddressFull_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         ipv6_address = any_ipv6_address()
 
@@ -1368,7 +1531,8 @@ class TestAddressRegistrationCompressed(unittest.TestCase):
 
 class TestAddressRegistrationCompressedFactory(unittest.TestCase):
 
-    def test_should_create_AddressRegistrationCompressed_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_AddressRegistrationCompressed_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         cid = any_cid()
         iid = any_iid()
@@ -1381,14 +1545,16 @@ class TestAddressRegistrationCompressedFactory(unittest.TestCase):
         actual_addr_reg_compressed = factory.parse(io.BytesIO(data), dict())
 
         # THEN
-        self.assertTrue(isinstance(actual_addr_reg_compressed, mle.AddressCompressed))
+        self.assertTrue(
+            isinstance(actual_addr_reg_compressed, mle.AddressCompressed))
         self.assertEqual(cid, actual_addr_reg_compressed.cid)
         self.assertEqual(iid, actual_addr_reg_compressed.iid)
 
 
 class TestAddressRegistration(unittest.TestCase):
 
-    def test_should_return_addresses_value_when_addresses_property_is_called(self):
+    def test_should_return_addresses_value_when_addresses_property_is_called(
+        self):
         # GIVEN
         addresses = any_addresses()
 
@@ -1403,7 +1569,8 @@ class TestAddressRegistration(unittest.TestCase):
 
 class TestAddressRegistrationFactory(unittest.TestCase):
 
-    def test_should_create_AddressRegistration_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_AddressRegistration_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         cid = any_cid()
         iid = any_iid()
@@ -1426,12 +1593,14 @@ class TestAddressRegistrationFactory(unittest.TestCase):
         self.assertTrue(isinstance(actual_addr_reg, mle.AddressRegistration))
         self.assertEqual(addresses[0].cid, actual_addr_reg.addresses[0].cid)
         self.assertEqual(addresses[0].iid, actual_addr_reg.addresses[0].iid)
-        self.assertEqual(addresses[1].ipv6_address, actual_addr_reg.addresses[1].ipv6_address)
+        self.assertEqual(addresses[1].ipv6_address,
+                         actual_addr_reg.addresses[1].ipv6_address)
 
 
 class TestChannel(unittest.TestCase):
 
-    def test_should_return_channel_page_value_when_channel_page_property_is_called(self):
+    def test_should_return_channel_page_value_when_channel_page_property_is_called(
+        self):
         # GIVEN
         channel_page = any_channel_page()
 
@@ -1458,7 +1627,8 @@ class TestChannel(unittest.TestCase):
 
 class TestChannelFactory(unittest.TestCase):
 
-    def test_should_create_Channel_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_Channel_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         channel_page = any_channel_page()
         channel = any_channel()
@@ -1493,7 +1663,8 @@ class TestPanId(unittest.TestCase):
 
 class TestPanIdFactory(unittest.TestCase):
 
-    def test_should_create_PanId_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_PanId_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         pan_id = any_pan_id()
 
@@ -1511,11 +1682,14 @@ class TestPanIdFactory(unittest.TestCase):
 
 class TestActiveTimestamp(unittest.TestCase):
 
-    def test_should_return_timestamp_seconds_value_when_timestamp_seconds_property_is_called(self):
+    def test_should_return_timestamp_seconds_value_when_timestamp_seconds_property_is_called(
+        self):
         # GIVEN
         timestamp_seconds = any_timestamp_seconds()
 
-        active_timestamp_obj = mle.ActiveTimestamp(timestamp_seconds, any_timestamp_ticks(), any_u())
+        active_timestamp_obj = mle.ActiveTimestamp(timestamp_seconds,
+                                                   any_timestamp_ticks(),
+                                                   any_u())
 
         # WHEN
         actual_timestamp_seconds = active_timestamp_obj.timestamp_seconds
@@ -1523,11 +1697,13 @@ class TestActiveTimestamp(unittest.TestCase):
         # THEN
         self.assertEqual(timestamp_seconds, actual_timestamp_seconds)
 
-    def test_should_return_timestamp_ticks_value_when_timestamp_ticks_property_is_called(self):
+    def test_should_return_timestamp_ticks_value_when_timestamp_ticks_property_is_called(
+        self):
         # GIVEN
         timestamp_ticks = any_timestamp_ticks()
 
-        active_timestamp_obj = mle.ActiveTimestamp(any_timestamp_seconds(), timestamp_ticks, any_u())
+        active_timestamp_obj = mle.ActiveTimestamp(any_timestamp_seconds(),
+                                                   timestamp_ticks, any_u())
 
         # WHEN
         actual_timestamp_ticks = active_timestamp_obj.timestamp_ticks
@@ -1539,7 +1715,8 @@ class TestActiveTimestamp(unittest.TestCase):
         # GIVEN
         u = any_u()
 
-        active_timestamp_obj = mle.ActiveTimestamp(any_timestamp_seconds(), any_timestamp_ticks(), u)
+        active_timestamp_obj = mle.ActiveTimestamp(any_timestamp_seconds(),
+                                                   any_timestamp_ticks(), u)
 
         # WHEN
         actual_u = active_timestamp_obj.u
@@ -1550,7 +1727,8 @@ class TestActiveTimestamp(unittest.TestCase):
 
 class TestActiveTimestampFactory(unittest.TestCase):
 
-    def test_should_create_ActiveTimestamp_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_ActiveTimestamp_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         timestamp_seconds = any_timestamp_seconds()
         timestamp_ticks = any_timestamp_ticks()
@@ -1558,7 +1736,8 @@ class TestActiveTimestampFactory(unittest.TestCase):
 
         factory = mle.ActiveTimestampFactory()
 
-        data = struct.pack(">Q", timestamp_seconds)[2:] + struct.pack(">H", (timestamp_ticks << 1) | u)
+        data = struct.pack(">Q", timestamp_seconds)[2:] + struct.pack(
+            ">H", (timestamp_ticks << 1) | u)
 
         # WHEN
         active_timestamp = factory.parse(io.BytesIO(data), dict())
@@ -1572,11 +1751,14 @@ class TestActiveTimestampFactory(unittest.TestCase):
 
 class TestPendingTimestamp(unittest.TestCase):
 
-    def test_should_return_timestamp_seconds_value_when_timestamp_seconds_property_is_called(self):
+    def test_should_return_timestamp_seconds_value_when_timestamp_seconds_property_is_called(
+        self):
         # GIVEN
         timestamp_seconds = any_timestamp_seconds()
 
-        pending_timestamp_obj = mle.PendingTimestamp(timestamp_seconds, any_timestamp_ticks(), any_u())
+        pending_timestamp_obj = mle.PendingTimestamp(timestamp_seconds,
+                                                     any_timestamp_ticks(),
+                                                     any_u())
 
         # WHEN
         actual_timestamp_seconds = pending_timestamp_obj.timestamp_seconds
@@ -1584,11 +1766,13 @@ class TestPendingTimestamp(unittest.TestCase):
         # THEN
         self.assertEqual(timestamp_seconds, actual_timestamp_seconds)
 
-    def test_should_return_timestamp_ticks_value_when_timestamp_ticks_property_is_called(self):
+    def test_should_return_timestamp_ticks_value_when_timestamp_ticks_property_is_called(
+        self):
         # GIVEN
         timestamp_ticks = any_timestamp_ticks()
 
-        pending_timestamp_obj = mle.PendingTimestamp(any_timestamp_seconds(), timestamp_ticks, any_u())
+        pending_timestamp_obj = mle.PendingTimestamp(any_timestamp_seconds(),
+                                                     timestamp_ticks, any_u())
 
         # WHEN
         actual_timestamp_ticks = pending_timestamp_obj.timestamp_ticks
@@ -1600,7 +1784,8 @@ class TestPendingTimestamp(unittest.TestCase):
         # GIVEN
         u = any_u()
 
-        pending_timestamp_obj = mle.PendingTimestamp(any_timestamp_seconds(), any_timestamp_ticks(), u)
+        pending_timestamp_obj = mle.PendingTimestamp(any_timestamp_seconds(),
+                                                     any_timestamp_ticks(), u)
 
         # WHEN
         actual_u = pending_timestamp_obj.u
@@ -1611,7 +1796,8 @@ class TestPendingTimestamp(unittest.TestCase):
 
 class TestPendingTimestampFactory(unittest.TestCase):
 
-    def test_should_create_PendingTimestamp_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_PendingTimestamp_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         timestamp_seconds = any_timestamp_seconds()
         timestamp_ticks = any_timestamp_ticks()
@@ -1619,7 +1805,8 @@ class TestPendingTimestampFactory(unittest.TestCase):
 
         factory = mle.PendingTimestampFactory()
 
-        data = struct.pack(">Q", timestamp_seconds)[2:] + struct.pack(">H", (timestamp_ticks << 1) | u)
+        data = struct.pack(">Q", timestamp_seconds)[2:] + struct.pack(
+            ">H", (timestamp_ticks << 1) | u)
 
         # WHEN
         pending_timestamp = factory.parse(io.BytesIO(data), dict())
@@ -1633,16 +1820,18 @@ class TestPendingTimestampFactory(unittest.TestCase):
 
 class TestMleCommandFactory(unittest.TestCase):
 
-    def test_should_create_MleCommand_from_bytearray_when_parse_method_is_called(self):
-        data = bytearray([0x0b, 0x04, 0x08, 0xa5, 0xf2, 0x9b, 0xde, 0xe3,
-                          0xd8, 0xbe, 0xb9, 0x05, 0x04, 0x00, 0x00, 0x00,
-                          0x00, 0x08, 0x04, 0x00, 0x00, 0x00, 0x01, 0x01,
-                          0x01, 0x0d, 0x02, 0x04, 0x00, 0x00, 0x00, 0xf0,
-                          0x12, 0x02, 0x00, 0x02, 0x13, 0x09, 0x80, 0x86,
-                          0xa2, 0x1b, 0x81, 0x6d, 0xb8, 0xb5, 0xe8, 0x0d,
-                          0x03, 0x0a, 0x0c, 0x09])
+    def test_should_create_MleCommand_from_bytearray_when_parse_method_is_called(
+        self):
+        data = bytearray([
+            0x0b, 0x04, 0x08, 0xa5, 0xf2, 0x9b, 0xde, 0xe3, 0xd8, 0xbe, 0xb9,
+            0x05, 0x04, 0x00, 0x00, 0x00, 0x00, 0x08, 0x04, 0x00, 0x00, 0x00,
+            0x01, 0x01, 0x01, 0x0d, 0x02, 0x04, 0x00, 0x00, 0x00, 0xf0, 0x12,
+            0x02, 0x00, 0x02, 0x13, 0x09, 0x80, 0x86, 0xa2, 0x1b, 0x81, 0x6d,
+            0xb8, 0xb5, 0xe8, 0x0d, 0x03, 0x0a, 0x0c, 0x09
+        ])
 
-        factory = mle.MleCommandFactory(config.create_default_mle_tlvs_factories())
+        factory = mle.MleCommandFactory(
+            config.create_default_mle_tlvs_factories())
 
         # WHEN
         actual_mle_command = factory.parse(io.BytesIO(data), None)
@@ -1652,30 +1841,40 @@ class TestMleCommandFactory(unittest.TestCase):
 
         self.assertEqual(11, actual_mle_command.type)
 
-        self.assertEqual(mle.Response(bytearray([0xa5, 0xf2, 0x9b, 0xde, 0xe3, 0xd8, 0xbe, 0xb9])),
-                         actual_mle_command.tlvs[0])
+        self.assertEqual(
+            mle.Response(
+                bytearray([0xa5, 0xf2, 0x9b, 0xde, 0xe3, 0xd8, 0xbe, 0xb9])),
+            actual_mle_command.tlvs[0])
 
-        self.assertEqual(mle.LinkLayerFrameCounter(0), actual_mle_command.tlvs[1])
+        self.assertEqual(mle.LinkLayerFrameCounter(0),
+                         actual_mle_command.tlvs[1])
 
         self.assertEqual(mle.MleFrameCounter(1), actual_mle_command.tlvs[2])
 
-        self.assertEqual(mle.Mode(receiver=1, secure=1, device_type=0, network_data=1),
-                         actual_mle_command.tlvs[3])
+        self.assertEqual(
+            mle.Mode(receiver=1, secure=1, device_type=0, network_data=1),
+            actual_mle_command.tlvs[3])
 
         self.assertEqual(mle.Timeout(240), actual_mle_command.tlvs[4])
 
         self.assertEqual(mle.Version(2), actual_mle_command.tlvs[5])
 
-        self.assertEqual(mle.AddressRegistration(addresses=[
-            mle.AddressCompressed(cid=0, iid=bytearray([0x86, 0xa2, 0x1b, 0x81, 0x6d, 0xb8, 0xb5, 0xe8]))]),
-            actual_mle_command.tlvs[6])
+        self.assertEqual(
+            mle.AddressRegistration(addresses=[
+                mle.AddressCompressed(
+                    cid=0,
+                    iid=bytearray(
+                        [0x86, 0xa2, 0x1b, 0x81, 0x6d, 0xb8, 0xb5, 0xe8]))
+            ]), actual_mle_command.tlvs[6])
 
-        self.assertEqual(mle.TlvRequest(tlvs=[10, 12, 9]), actual_mle_command.tlvs[7])
+        self.assertEqual(mle.TlvRequest(tlvs=[10, 12, 9]),
+                         actual_mle_command.tlvs[7])
 
 
 class TestMleMessageFactory(unittest.TestCase):
 
-    def test_should_create_MleMessageSecured_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_MleMessageSecured_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         message_info = common.MessageInfo()
         message_info.source_ipv6 = "fe80::10cf:d38b:3b61:5558"
@@ -1686,17 +1885,18 @@ class TestMleMessageFactory(unittest.TestCase):
         message_info.destination_mac_address = common.MacAddress.from_eui64(
             bytearray([0x3a, 0x3e, 0x9e, 0xed, 0x7a, 0x01, 0x36, 0xa5]))
 
-        data = bytearray([0x00, 0x15, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                          0x00, 0x01, 0x14, 0x03, 0xe3, 0x72, 0x50, 0x4f,
-                          0x8c, 0x5c, 0x42, 0x81, 0x68, 0xe2, 0x11, 0xfc,
-                          0xf5, 0x8c, 0x62, 0x8e, 0x83, 0x99, 0xe7, 0x26,
-                          0x86, 0x34, 0x3b, 0xa7, 0x68, 0xc7, 0x93, 0xfb,
-                          0x72, 0xd9, 0xcc, 0x13, 0x5e, 0x5b, 0x96, 0x0e,
-                          0xf1, 0x80, 0x03, 0x55, 0x4f, 0x27, 0xc2, 0x96,
-                          0xf4, 0x9c, 0x65, 0x82, 0x97, 0xcf, 0x97, 0x35,
-                          0x89, 0xc2])
+        data = bytearray([
+            0x00, 0x15, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+            0x14, 0x03, 0xe3, 0x72, 0x50, 0x4f, 0x8c, 0x5c, 0x42, 0x81, 0x68,
+            0xe2, 0x11, 0xfc, 0xf5, 0x8c, 0x62, 0x8e, 0x83, 0x99, 0xe7, 0x26,
+            0x86, 0x34, 0x3b, 0xa7, 0x68, 0xc7, 0x93, 0xfb, 0x72, 0xd9, 0xcc,
+            0x13, 0x5e, 0x5b, 0x96, 0x0e, 0xf1, 0x80, 0x03, 0x55, 0x4f, 0x27,
+            0xc2, 0x96, 0xf4, 0x9c, 0x65, 0x82, 0x97, 0xcf, 0x97, 0x35, 0x89,
+            0xc2
+        ])
 
-        factory = config.create_default_mle_message_factory(master_key=config.DEFAULT_MASTER_KEY)
+        factory = config.create_default_mle_message_factory(
+            master_key=config.DEFAULT_MASTER_KEY)
 
         # WHEN
         actual_mle_message = factory.parse(io.BytesIO(data), message_info)
@@ -1706,29 +1906,40 @@ class TestMleMessageFactory(unittest.TestCase):
 
         self.assertEqual(11, actual_mle_message.command.type)
 
-        self.assertEqual(mle.Response(bytearray([0xa5, 0xf2, 0x9b, 0xde, 0xe3, 0xd8, 0xbe, 0xb9])),
-                         actual_mle_message.command.tlvs[0])
+        self.assertEqual(
+            mle.Response(
+                bytearray([0xa5, 0xf2, 0x9b, 0xde, 0xe3, 0xd8, 0xbe, 0xb9])),
+            actual_mle_message.command.tlvs[0])
 
-        self.assertEqual(mle.LinkLayerFrameCounter(0), actual_mle_message.command.tlvs[1])
+        self.assertEqual(mle.LinkLayerFrameCounter(0),
+                         actual_mle_message.command.tlvs[1])
 
-        self.assertEqual(mle.MleFrameCounter(1), actual_mle_message.command.tlvs[2])
+        self.assertEqual(mle.MleFrameCounter(1),
+                         actual_mle_message.command.tlvs[2])
 
-        self.assertEqual(mle.Mode(receiver=1, secure=1, device_type=0, network_data=1),
-                         actual_mle_message.command.tlvs[3])
+        self.assertEqual(
+            mle.Mode(receiver=1, secure=1, device_type=0, network_data=1),
+            actual_mle_message.command.tlvs[3])
 
         self.assertEqual(mle.Timeout(240), actual_mle_message.command.tlvs[4])
 
         self.assertEqual(mle.Version(2), actual_mle_message.command.tlvs[5])
 
-        self.assertEqual(mle.AddressRegistration(addresses=[
-            mle.AddressCompressed(cid=0, iid=bytearray([0x86, 0xa2, 0x1b, 0x81, 0x6d, 0xb8, 0xb5, 0xe8]))]),
-            actual_mle_message.command.tlvs[6])
+        self.assertEqual(
+            mle.AddressRegistration(addresses=[
+                mle.AddressCompressed(
+                    cid=0,
+                    iid=bytearray(
+                        [0x86, 0xa2, 0x1b, 0x81, 0x6d, 0xb8, 0xb5, 0xe8]))
+            ]), actual_mle_message.command.tlvs[6])
 
-        self.assertEqual(mle.TlvRequest(tlvs=[10, 12, 9]), actual_mle_message.command.tlvs[7])
+        self.assertEqual(mle.TlvRequest(tlvs=[10, 12, 9]),
+                         actual_mle_message.command.tlvs[7])
 
         self.assertEqual(bytearray(data[-4:]), actual_mle_message.mic)
 
-    def test_should_create_MleMessageSecured_with_MLE_Data_Response_from_bytearray_when_parse_method_is_called(self):
+    def test_should_create_MleMessageSecured_with_MLE_Data_Response_from_bytearray_when_parse_method_is_called(
+        self):
         # GIVEN
         message_info = common.MessageInfo()
         message_info.source_ipv6 = "fe80::241c:b11b:7b62:caf1"
@@ -1739,15 +1950,16 @@ class TestMleMessageFactory(unittest.TestCase):
         message_info.destination_mac_address = common.MacAddress.from_eui64(
             bytearray([0x3a, 0xba, 0xad, 0xca, 0xfe, 0xde, 0xff, 0xa5]))
 
-        data = bytearray([0x00, 0x15, 0x15, 0x00, 0x00, 0x00, 0x00, 0x00,
-                          0x00, 0x00, 0x01, 0xca, 0xd3, 0x45, 0xe2, 0x35,
-                          0x1d, 0x00, 0x2d, 0x72, 0x71, 0xb1, 0x19, 0xaf,
-                          0x8b, 0x05, 0xd9, 0x52, 0x74, 0xce, 0xe6, 0x36,
-                          0x53, 0xeb, 0xc6, 0x25, 0x94, 0x01, 0x6d, 0x20,
-                          0xdf, 0x30, 0x82, 0xf8, 0xbb, 0x34, 0x47, 0x42,
-                          0x50, 0xe9, 0x41, 0xa7, 0x33, 0xa5])
+        data = bytearray([
+            0x00, 0x15, 0x15, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+            0xca, 0xd3, 0x45, 0xe2, 0x35, 0x1d, 0x00, 0x2d, 0x72, 0x71, 0xb1,
+            0x19, 0xaf, 0x8b, 0x05, 0xd9, 0x52, 0x74, 0xce, 0xe6, 0x36, 0x53,
+            0xeb, 0xc6, 0x25, 0x94, 0x01, 0x6d, 0x20, 0xdf, 0x30, 0x82, 0xf8,
+            0xbb, 0x34, 0x47, 0x42, 0x50, 0xe9, 0x41, 0xa7, 0x33, 0xa5
+        ])
 
-        factory = config.create_default_mle_message_factory(master_key=config.DEFAULT_MASTER_KEY)
+        factory = config.create_default_mle_message_factory(
+            master_key=config.DEFAULT_MASTER_KEY)
 
         # WHEN
         actual_mle_message = factory.parse(io.BytesIO(data), message_info)
@@ -1757,29 +1969,40 @@ class TestMleMessageFactory(unittest.TestCase):
 
         self.assertEqual(8, actual_mle_message.command.type)
 
-        self.assertEqual(mle.SourceAddress(address=0x9400), actual_mle_message.command.tlvs[0])
+        self.assertEqual(mle.SourceAddress(address=0x9400),
+                         actual_mle_message.command.tlvs[0])
 
-        self.assertEqual(mle.LeaderData(
-            partition_id=0x06d014ca,
-            weighting=64,
-            data_version=131,
-            stable_data_version=168,
-            leader_router_id=37
-        ), actual_mle_message.command.tlvs[1])
+        self.assertEqual(
+            mle.LeaderData(partition_id=0x06d014ca,
+                           weighting=64,
+                           data_version=131,
+                           stable_data_version=168,
+                           leader_router_id=37),
+            actual_mle_message.command.tlvs[1])
 
-        self.assertEqual(mle.NetworkData(tlvs=[
-            network_data.Prefix(
-                domain_id=0,
-                prefix_length=64,
-                prefix=bytearray([0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34]),
-                sub_tlvs=[
-                    network_data.LowpanId(c=1, cid=1, context_length=64, stable=1),
-                    network_data.BorderRouter(border_router_16=37888, prf=0, p=1,
-                                              s=1, d=0, c=0, r=1, o=1, n=0, stable=1)
-                ],
-                stable=1
-            )
-        ]), actual_mle_message.command.tlvs[2])
+        self.assertEqual(
+            mle.NetworkData(tlvs=[
+                network_data.Prefix(
+                    domain_id=0,
+                    prefix_length=64,
+                    prefix=bytearray(
+                        [0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34]),
+                    sub_tlvs=[
+                        network_data.LowpanId(
+                            c=1, cid=1, context_length=64, stable=1),
+                        network_data.BorderRouter(border_router_16=37888,
+                                                  prf=0,
+                                                  p=1,
+                                                  s=1,
+                                                  d=0,
+                                                  c=0,
+                                                  r=1,
+                                                  o=1,
+                                                  n=0,
+                                                  stable=1)
+                    ],
+                    stable=1)
+            ]), actual_mle_message.command.tlvs[2])
 
         self.assertEqual(bytearray(data[-4:]), actual_mle_message.mic)
 

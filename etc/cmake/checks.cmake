@@ -26,10 +26,4 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-include(CheckFunctionExists)
-
-check_function_exists("strlcat" HAVE_STRLCAT)
-check_function_exists("strlcpy" HAVE_STRLCPY)
-check_function_exists("strnlen" HAVE_STRNLEN)
-
 configure_file(${PROJECT_SOURCE_DIR}/etc/cmake/openthread-config-generic.h.in ${PROJECT_BINARY_DIR}/etc/cmake/openthread-config-generic.h)

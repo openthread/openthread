@@ -39,6 +39,7 @@ LEADER2 = 4
 
 
 class Cert_9_2_14_PanIdQuery(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -48,17 +49,13 @@ class Cert_9_2_14_PanIdQuery(unittest.TestCase):
 
         self.nodes[COMMISSIONER].set_panid(0xface)
         self.nodes[COMMISSIONER].set_mode('rsdn')
-        self.nodes[COMMISSIONER].add_whitelist(
-            self.nodes[LEADER1].get_addr64()
-        )
+        self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER1].get_addr64())
         self.nodes[COMMISSIONER].enable_whitelist()
         self.nodes[COMMISSIONER].set_router_selection_jitter(1)
 
         self.nodes[LEADER1].set_panid(0xface)
         self.nodes[LEADER1].set_mode('rsdn')
-        self.nodes[LEADER1].add_whitelist(
-            self.nodes[COMMISSIONER].get_addr64()
-        )
+        self.nodes[LEADER1].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
         self.nodes[LEADER1].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[LEADER1].enable_whitelist()
 
@@ -106,9 +103,8 @@ class Cert_9_2_14_PanIdQuery(unittest.TestCase):
 
         self.nodes[COMMISSIONER].panid_query(0xdead, 0xffffffff, ipaddr)
 
-        self.nodes[COMMISSIONER].panid_query(
-            0xdead, 0xffffffff, 'ff33:0040:fdde:ad00:beef:0:0:1'
-        )
+        self.nodes[COMMISSIONER].panid_query(0xdead, 0xffffffff,
+                                             'ff33:0040:fdde:ad00:beef:0:0:1')
 
         self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
 

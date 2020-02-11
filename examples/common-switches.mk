@@ -43,6 +43,7 @@ DHCP6_CLIENT        ?= 0
 DHCP6_SERVER        ?= 0
 DIAGNOSTIC          ?= 0
 DISABLE_DOC         ?= 0
+DISABLE_TOOLS       ?= 0
 DNS_CLIENT          ?= 0
 DYNAMIC_LOG_LEVEL   ?= 0
 ECDSA               ?= 0
@@ -129,6 +130,10 @@ ifeq ($(DISABLE_DOC),1)
 configure_OPTIONS              += --disable-docs
 endif
 
+ifeq ($(DISABLE_TOOLS),1)
+configure_OPTIONS              += --disable-tools
+endif
+
 ifeq ($(DNS_CLIENT),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1
 endif
@@ -205,7 +210,7 @@ COMMONCFLAGS                   += -DOPENTHREAD_THREAD_VERSION=3
 endif
 
 ifeq ($(TIME_SYNC),1)
-COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_TIME_SYNC_ENABLE=1 -DOPENTHREAD_MAC_CONFIG_HEADER_IE_SUPPORT=1
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_TIME_SYNC_ENABLE=1 -DOPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT=1
 endif
 
 ifeq ($(UDP_FORWARD),1)
@@ -214,6 +219,10 @@ endif
 
 ifeq ($(DISABLE_BUILTIN_MBEDTLS),1)
 configure_OPTIONS              += --disable-builtin-mbedtls
+endif
+
+ifneq ($(BUILTIN_MBEDTLS_MANAGEMENT),)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT=$(BUILTIN_MBEDTLS_MANAGEMENT)
 endif
 
 ifeq ($(DISABLE_EXECUTABLE),1)

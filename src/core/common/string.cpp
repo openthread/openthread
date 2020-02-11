@@ -35,6 +35,18 @@
 
 namespace ot {
 
+uint16_t StringLength(const char *aString, uint16_t aMaxLength)
+{
+    uint16_t ret;
+
+    for (ret = 0; (ret < aMaxLength) && (aString[ret] != 0); ret++)
+    {
+        // Empty loop.
+    }
+
+    return ret;
+}
+
 otError StringBase::Write(char *aBuffer, uint16_t aSize, uint16_t &aLength, const char *aFormat, va_list aArgs)
 {
     otError error = OT_ERROR_NONE;

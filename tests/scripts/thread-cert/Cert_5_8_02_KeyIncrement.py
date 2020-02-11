@@ -37,6 +37,7 @@ ROUTER = 2
 
 
 class Cert_5_8_2_KeyIncrement(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 

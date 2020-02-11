@@ -41,6 +41,7 @@ REED1 = 17
 
 
 class Cert_5_5_5_SplitMergeREED(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 

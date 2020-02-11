@@ -32,8 +32,9 @@
 
 #include "spinel_encoder.hpp"
 
+#include <string.h>
+
 #include "common/code_utils.hpp"
-#include "utils/wrap_string.h"
 
 namespace ot {
 namespace Ncp {
