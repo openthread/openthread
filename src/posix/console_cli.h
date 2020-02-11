@@ -35,6 +35,10 @@
 
 #include "openthread-system.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * This function initializes CLI console.
  *
@@ -64,5 +68,9 @@ void otxConsoleUpdate(otSysMainloopContext *aMainloop);
  *
  */
 void otxConsoleProcess(const otSysMainloopContext *aMainloop);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // OPENTHREAD_CONSOLE_CLI_H_
