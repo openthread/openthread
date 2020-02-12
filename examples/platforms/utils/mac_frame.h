@@ -84,8 +84,8 @@ bool otMacFrameIsAck(const otRadioFrame *aFrame);
  *
  * @param[in]   aFrame          A pointer to the frame.
  *
- * @retval  true    It is an Data frame.
- * @retval  false   It is not an Data frame.
+ * @retval  true    It is a Data frame.
+ * @retval  false   It is not a Data frame.
  *
  */
 bool otMacFrameIsData(const otRadioFrame *aFrame);
