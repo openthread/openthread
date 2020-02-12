@@ -45,6 +45,7 @@ PLATFORM_SOURCES                          = \
     logging.c                               \
     misc.c                                  \
     openthread-core-sim-config.h            \
+    platform-config.h                       \
     platform-sim.h                          \
     radio.c                                 \
     spi-stubs.c                             \
