@@ -823,10 +823,8 @@ exit:
     return neighbor;
 }
 
-void MeshForwarder::HandleSentFrame(Mac::TxFrame &aFrame, Mac::RxFrame *aAckFrame, otError aError)
+void MeshForwarder::HandleSentFrame(Mac::TxFrame &aFrame, otError aError)
 {
-    OT_UNUSED_VARIABLE(aAckFrame);
-
     Neighbor *   neighbor = NULL;
     Mac::Address macDest;
 
@@ -862,19 +860,6 @@ void MeshForwarder::HandleSentFrame(Mac::TxFrame &aFrame, Mac::RxFrame *aAckFram
         mMessageNextOffset = mSendMessage->GetLength();
 #endif
     }
-#if OPENTHREAD_THREAD_VERSION >= OPENTHREAD_THREAD_VERSION_1_2
-    else if (aAckFrame != NULL)
-    {
-        if (aAckFrame->GetFramePending())
-        {
-            mDataPollSender.SendDataPoll();
-        }
-        else
-        {
-            mDataPollSender.ResetKeepAliveTimer();
-        }
-    }
-#endif
 
     if (mMessageNextOffset < mSendMessage->GetLength())
     {

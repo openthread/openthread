@@ -1302,12 +1302,19 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
 
         otDumpDebgMac("TX", aFrame.GetHeader(), aFrame.GetLength());
         FinishOperation();
-        Get<MeshForwarder>().HandleSentFrame(aFrame, aAckFrame, aError);
+        Get<MeshForwarder>().HandleSentFrame(aFrame, aError);
 #if OPENTHREAD_THREAD_VERSION >= OPENTHREAD_THREAD_VERSION_1_2
         if (aError == OT_ERROR_NONE && Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported() &&
             aFrame.GetSecurityEnabled() && aAckFrame != NULL)
         {
-            Get<DataPollSender>().ResetKeepAliveTimer();
+            if (aAckFrame->GetFramePending())
+            {
+                Get<DataPollSender>().SendDataPoll();
+            }
+            else
+            {
+                Get<DataPollSender>().ResetKeepAliveTimer();
+            }
         }
 #endif
         PerformNextOperation();
