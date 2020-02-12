@@ -716,7 +716,7 @@ void radioSendAck(void)
 
     if (
 #if OPENTHREAD_THREAD_VERSION >= OPENTHREAD_THREAD_VERSION_1_2
-        (otMacFrameIsDataRequest(&sReceiveFrame) || otMacFrameIsDataRequest(&sReceiveFrame))
+        (otMacFrameIsData(&sReceiveFrame) || otMacFrameIsDataRequest(&sReceiveFrame))
 #else
         otMacFrameIsDataRequest(&sReceiveFrame)
 #endif
