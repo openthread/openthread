@@ -193,7 +193,7 @@ otError Message::AppendBlockOption(Message::BlockType aType, uint32_t aNum, bool
     uint32_t encoded = aSize;
 
     VerifyOrExit(aType == kBlockType1 || aType == kBlockType2, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(aSize < OT_COAP_BLOCK_SIZE_32 || aSize > OT_COAP_BLOCK_SIZE_1024, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aSize <= OT_COAP_BLOCK_SIZE_1024, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aNum < kBlockNumMax, error = OT_ERROR_INVALID_ARGS);
 
     encoded |= static_cast<uint32_t>(aMore << kBlockMOffset);
