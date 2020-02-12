@@ -51,6 +51,7 @@ class TestCase(unittest.TestCase):
 
     The `topology` member of sub-class is used to create test topology.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.simulator = config.create_default_simulator()

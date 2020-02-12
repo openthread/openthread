@@ -3582,7 +3582,7 @@ void MleRouter::RestoreChildren(void)
         child->SetDeviceMode(DeviceMode(childInfo.GetMode()));
         child->SetState(Neighbor::kStateRestored);
         child->SetLastHeard(TimerMilli::GetNow());
-        child->SetVersion(static_cast<uint8_t>(childInfo.mVersion));
+        child->SetVersion(static_cast<uint8_t>(childInfo.GetVersion()));
         Get<IndirectSender>().SetChildUseShortAddress(*child, true);
         numChildren++;
     }
