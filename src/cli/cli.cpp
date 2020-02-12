@@ -430,6 +430,8 @@ void Interpreter::ProcessHelp(int argc, char *argv[])
     {
         mServer->OutputFormat("%s\r\n", mUserCommands[i].mName);
     }
+
+    AppendResult(OT_ERROR_NONE);
 }
 
 void Interpreter::ProcessBufferInfo(int argc, char *argv[])
@@ -1023,10 +1025,11 @@ void Interpreter::ProcessDiscover(int argc, char *argv[])
     mServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
     mServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
 
-    return;
-
 exit:
-    AppendResult(error);
+    if (error != OT_ERROR_NONE)
+    {
+        AppendResult(error);
+    }
 }
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
@@ -1106,10 +1109,8 @@ void Interpreter::HandleDnsResponse(const char *aHostname, const Ip6::Address *a
         }
         mServer->OutputFormat(" TTL: %d\r\n", aTtl);
     }
-    else
-    {
-        AppendResult(aResult);
-    }
+
+    AppendResult(aResult);
 
     mResolvingInProgress = false;
 }
@@ -2087,10 +2088,7 @@ void Interpreter::ProcessPing(int argc, char *argv[])
     SendPing();
 
 exit:
-    if (error != OT_ERROR_NONE)
-    {
-        AppendResult(error);
-    }
+    AppendResult(error);
 }
 
 void Interpreter::HandlePingTimer(Timer &aTimer)
@@ -2511,7 +2509,7 @@ void Interpreter::ProcessRloc16(int argc, char *argv[])
     OT_UNUSED_VARIABLE(argv);
 
     mServer->OutputFormat("%04x\r\n", otThreadGetRloc16(mInstance));
-    mServer->OutputFormat("Done\r\n");
+    AppendResult(OT_ERROR_NONE);
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -2918,7 +2916,7 @@ void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
 {
     if (aResult == NULL)
     {
-        mServer->OutputFormat("Done\r\n");
+        AppendResult(OT_ERROR_NONE);
         ExitNow();
     }
 
@@ -2949,7 +2947,7 @@ void Interpreter::HandleEnergyScanResult(otEnergyScanResult *aResult)
 {
     if (aResult == NULL)
     {
-        mServer->OutputFormat("Done\r\n");
+        AppendResult(OT_ERROR_NONE);
         ExitNow();
     }
 
@@ -3047,6 +3045,8 @@ void Interpreter::HandleSntpResponse(uint64_t aTime, otError aResult)
     }
 
     mSntpQueryingInProgress = false;
+
+    AppendResult(OT_ERROR_NONE);
 }
 #endif
 
@@ -3602,12 +3602,16 @@ exit:
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 void Interpreter::ProcessDiag(int argc, char *argv[])
 {
-    char output[OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE];
+    otError error;
+    char    output[OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE];
 
     // all diagnostics related features are processed within diagnostics module
+    output[0]                  = '\0';
     output[sizeof(output) - 1] = '\0';
-    otDiagProcessCmd(mInstance, argc, argv, output, sizeof(output) - 1);
+
+    error = otDiagProcessCmd(mInstance, argc, argv, output, sizeof(output) - 1);
     mServer->Output(output, static_cast<uint16_t>(strlen(output)));
+    AppendResult(error);
 }
 #endif
 
@@ -3738,6 +3742,8 @@ void Interpreter::HandleDiagnosticGetResponse(Message &aMessage, const Ip6::Mess
     }
 
     mServer->OutputFormat("\r\n");
+
+    AppendResult(OT_ERROR_NONE);
 }
 
 void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength)
