@@ -170,6 +170,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/link_raw_api.cpp                           \
     src/core/api/logging_api.cpp                            \
     src/core/api/message_api.cpp                            \
+    src/core/api/multi_radio_api.cpp                        \
     src/core/api/netdata_api.cpp                            \
     src/core/api/netdiag_api.cpp                            \
     src/core/api/random_crypto_api.cpp                      \
