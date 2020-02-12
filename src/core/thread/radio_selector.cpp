@@ -59,6 +59,27 @@ RadioSelector::RadioSelector(Instance &aInstance)
 {
 }
 
+void RadioSelector::NeighborInfo::PopulateMultiRadioInfo(MultiRadioInfo &aInfo)
+{
+    memset(&aInfo, 0, sizeof(MultiRadioInfo));
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    if (GetSupportedRadioTypes().Contains(Mac::kRadioTypeIeee802154))
+    {
+        aInfo.mSupportsIeee802154         = true;
+        aInfo.mIeee802154Info.mPreference = GetRadioPreference(Mac::kRadioTypeIeee802154);
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    if (GetSupportedRadioTypes().Contains(Mac::kRadioTypeTrel))
+    {
+        aInfo.mSupportsTrelUdp6         = true;
+        aInfo.mTrelUdp6Info.mPreference = GetRadioPreference(Mac::kRadioTypeTrel);
+    }
+#endif
+}
+
 otLogLevel RadioSelector::UpdatePreference(Neighbor &aNeighbor, Mac::RadioType aRadioType, int16_t aDifference)
 {
     uint8_t old        = aNeighbor.GetRadioPreference(aRadioType);

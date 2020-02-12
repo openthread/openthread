@@ -135,6 +135,7 @@ SOURCES_COMMON                                  = \
     api/link_raw_api.cpp                          \
     api/logging_api.cpp                           \
     api/message_api.cpp                           \
+    api/multi_radio_api.cpp                       \
     api/netdata_api.cpp                           \
     api/netdiag_api.cpp                           \
     api/network_time_api.cpp                      \

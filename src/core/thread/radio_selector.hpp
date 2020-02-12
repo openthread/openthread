@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/multi_radio.h>
+
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "mac/mac_frame.hpp"
@@ -71,6 +73,13 @@ public:
     {
         friend class RadioSelector;
 
+    public:
+        /**
+         * This type represents multi radio information associated with a neighbor.
+         *
+         */
+        typedef otMultiRadioNeighborInfo MultiRadioInfo;
+
         /**
          * This method returns the supported radio types by the neighbor.
          *
@@ -78,6 +87,14 @@ public:
          *
          */
         Mac::RadioTypes GetSupportedRadioTypes(void) const { return mSupportedRadioTypes; }
+
+        /**
+         * This method retrieves the multi radio information `otMultiRadioNeighborInfo` associated with the neighbor.
+         *
+         * @param[out] aInfo  A reference to `MultiRadioInfo` to populate with neighbor info.
+         *
+         */
+        void PopulateMultiRadioInfo(MultiRadioInfo &aInfo);
 
     private:
         void AddSupportedRadioType(Mac::RadioType aType) { mSupportedRadioTypes.Add(aType); }
