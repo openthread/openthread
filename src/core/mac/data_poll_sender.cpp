@@ -307,7 +307,7 @@ exit:
     return;
 }
 
-void DataPollSender::CheckFramePending(Mac::RxFrame &aFrame)
+void DataPollSender::CheckFramePending(Mac::RxFrame &aFrame, bool aIsAck)
 {
     VerifyOrExit(mEnabled);
 
@@ -316,6 +316,12 @@ void DataPollSender::CheckFramePending(Mac::RxFrame &aFrame)
     if (aFrame.GetFramePending())
     {
         SendDataPoll();
+    }
+    else if (aIsAck)
+    {
+#if OPENTHREAD_THREAD_VERSION >= OPENTHREAD_THREAD_VERSION_1_2
+        ResetKeepAliveTimer();
+#endif
     }
 
 exit:

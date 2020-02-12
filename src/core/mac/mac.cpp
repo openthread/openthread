@@ -1307,14 +1307,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
         if (aError == OT_ERROR_NONE && Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported() &&
             aFrame.GetSecurityEnabled() && aAckFrame != NULL)
         {
-            if (aAckFrame->GetFramePending())
-            {
-                Get<DataPollSender>().SendDataPoll();
-            }
-            else
-            {
-                Get<DataPollSender>().ResetKeepAliveTimer();
-            }
+            Get<DataPollSender>().CheckFramePending(*aAckFrame, true);
         }
 #endif
         PerformNextOperation();

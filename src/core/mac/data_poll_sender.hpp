@@ -172,7 +172,7 @@ public:
      * pending frame.
      *
      */
-    void CheckFramePending(Mac::RxFrame &aFrame);
+    void CheckFramePending(Mac::RxFrame &aFrame, bool aIsAck = false);
 
     /**
      * This method asks the data poll sender to recalculate the poll period.
