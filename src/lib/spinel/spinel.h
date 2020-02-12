@@ -709,6 +709,12 @@ enum
     SPINEL_ADDRESS_CACHE_ENTRY_STATE_RETRY_QUERY = 3, // Entry is in retry mode (a prior query did not  a response).
 };
 
+enum
+{
+    SPINEL_RADIO_LINK_IEEE_802_15_4 = 0,
+    SPINEL_RADIO_LINK_TREL_UDP6     = 1,
+};
+
 typedef struct
 {
     uint8_t bytes[8];
@@ -1143,6 +1149,7 @@ enum
     SPINEL_CAP_SLAAC                   = (SPINEL_CAP_OPENTHREAD__BEGIN + 10),
     SPINEL_CAP_RADIO_COEX              = (SPINEL_CAP_OPENTHREAD__BEGIN + 11),
     SPINEL_CAP_MAC_RETRY_HISTOGRAM     = (SPINEL_CAP_OPENTHREAD__BEGIN + 12),
+    SPINEL_CAP_MULTI_RADIO             = (SPINEL_CAP_OPENTHREAD__BEGIN + 13),
     SPINEL_CAP_OPENTHREAD__END         = 640,
 
     SPINEL_CAP_THREAD__BEGIN        = 1024,
@@ -3592,6 +3599,34 @@ enum
      */
     SPINEL_PROP_SLAAC_ENABLED = SPINEL_PROP_OPENTHREAD__BEGIN + 14,
 
+    // Supported Radio Links (by device)
+    /**
+     * Format `A(i)` - Read only
+     *
+     * This property returns list of supported radio links by the device itself. Enumeration `SPINEL_RADIO_LINK_{TYPE}`
+     * values indicate different radio link types.
+     *
+     */
+    SPINEL_PROP_SUPPORTED_RADIO_LINKS = SPINEL_PROP_OPENTHREAD__BEGIN + 15,
+
+    /// Neighbor Table Multi Radio Link Info
+    /** Format: `A(t(ESA(t(iC))))` - Read only
+     * Required capability: `SPINEL_CAP_MULTI_RADIO`.
+     *
+     * Each item represents info about a neighbor:
+     *
+     *  `E`: Neighbor's Extended Address
+     *  `S`: Neighbor's RLOC16
+     *
+     *  This is then followed by an array of radio link info structures indicating which radio links are supported by
+     *  the neighbor:
+     *
+     *    `i` : Radio link type (enumeration `SPINEL_RADIO_LINK_{TYPE}`).
+     *    `C` : Preference value associated with radio link.
+     *
+     */
+    SPINEL_PROP_NEIGHBOR_TABLE_MULTI_RADIO_INFO = SPINEL_PROP_OPENTHREAD__BEGIN + 16,
+
     SPINEL_PROP_OPENTHREAD__END = 0x2000,
 
     SPINEL_PROP_SERVER__BEGIN = 0xA0,
@@ -4137,6 +4172,18 @@ enum
      */
     SPINEL_PROP_DEBUG_LOG_TIMESTAMP_BASE = SPINEL_PROP_DEBUG__BEGIN + 3,
 
+    /// TREL Radio Link - test mode enable
+    /** Format `b` (read-write)
+     *
+     * This property is intended for testing TREL (Thread Radio Encapsulation Link) radio type only (during simulation).
+     * It allows the TREL interface to be temporarily disabled and (re)enabled.  While disabled all traffic through
+     * TREL interface is dropped silently (to emulate a radio/interface down scenario).
+     *
+     * This property is only available when the TREL radio link type is supported.
+     *
+     */
+    SPINEL_PROP_DEBUG_TREL_TEST_MODE_ENABLE = SPINEL_PROP_DEBUG__BEGIN + 4,
+
     SPINEL_PROP_DEBUG__END = 0x4400,
 
     SPINEL_PROP_EXPERIMENTAL__BEGIN = 2000000,
@@ -4327,6 +4374,8 @@ SPINEL_API_EXTERN const char *spinel_mcu_power_state_to_cstr(uint8_t mcu_power_s
 SPINEL_API_EXTERN const char *spinel_status_to_cstr(spinel_status_t status);
 
 SPINEL_API_EXTERN const char *spinel_capability_to_cstr(spinel_capability_t capability);
+
+SPINEL_API_EXTERN const char *spinel_radio_link_to_cstr(uint32_t radio);
 
 // ----------------------------------------------------------------------------
 
