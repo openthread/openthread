@@ -41,6 +41,7 @@ class TestCoapObserve(unittest.TestCase):
     """
     Test suite for CoAP Observations (RFC7641).
     """
+
     def setUp(self):
         """
         Start up two nodes and get them on the virtual network.

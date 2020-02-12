@@ -1082,7 +1082,8 @@ class Node:
 
         self._expect(
             r'coap response from ([\da-f:]+)(?: OBS=(\d+))?'
-            r'(?: with payload: ([\da-f]+))?\b', timeout=timeout)
+            r'(?: with payload: ([\da-f]+))?\b',
+            timeout=timeout)
         (source, observe, payload) = self.pexpect.match.groups()
         source = source.decode('UTF-8')
 
@@ -1107,7 +1108,8 @@ class Node:
 
         self._expect(
             r'coap request from ([\da-f:]+)(?: OBS=(\d+))?'
-            r'(?: with payload: ([\da-f]+))?\b', timeout=timeout)
+            r'(?: with payload: ([\da-f]+))?\b',
+            timeout=timeout)
         (source, observe, payload) = self.pexpect.match.groups()
         source = source.decode('UTF-8')
 
@@ -1144,8 +1146,9 @@ class Node:
 
         self._expect(
             r'Received ACK in reply to notification '
-            r'from ([\da-f:]+)\b', timeout=timeout)
-        (source, ) = self.pexpect.match.groups()
+            r'from ([\da-f:]+)\b',
+            timeout=timeout)
+        (source,) = self.pexpect.match.groups()
         source = source.decode('UTF-8')
 
         return source
