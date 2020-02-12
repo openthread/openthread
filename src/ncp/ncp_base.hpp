@@ -47,6 +47,9 @@
 #endif
 #include <openthread/message.h>
 #include <openthread/ncp.h>
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+#include <openthread/multi_radio.h>
+#endif
 
 #include "changed_props_set.hpp"
 #include "common/instance.hpp"
@@ -340,6 +343,9 @@ protected:
                                      bool                  aAllowEmptyValues = false);
 
     otError EncodeNeighborInfo(const otNeighborInfo &aNeighborInfo);
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    otError EncodeNeighborMultiRadioInfo(uint32_t aSpinelRadioLink, const otRadioLinkInfo &aInfo);
+#endif
 
 #if OPENTHREAD_FTD
     otError EncodeChildInfo(const otChildInfo &aChildInfo);
@@ -602,6 +608,10 @@ protected:
     uint32_t mTxSpinelFrameCounter;         // Number of sent (outbound) spinel frames.
 
     bool mDidInitialUpdates;
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    bool mTrelTestModeEnable;
+#endif
 
     uint64_t mLogTimestampBase; // Timestamp base used for logging
 };
