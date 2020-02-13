@@ -53,10 +53,10 @@ public:
     /**
      * This constructor initializes a `SpinelEncoder` object.
      *
-     * @param[in] aNcpBuffer   A reference to a `NcpFrameBuffer` where the frames are written.
+     * @param[in] aNcpBuffer   A reference to a `SpinelBuffer` where the frames are written.
      *
      */
-    explicit SpinelEncoder(NcpFrameBuffer &aNcpBuffer)
+    explicit SpinelEncoder(SpinelBuffer &aNcpBuffer)
         : mNcpBuffer(aNcpBuffer)
         , mNumOpenStructs(0)
         , mSavedNumOpenStructs(0)
@@ -76,7 +76,7 @@ public:
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to start a new frame.
      *
      */
-    otError BeginFrame(NcpFrameBuffer::Priority aPriority);
+    otError BeginFrame(SpinelBuffer::Priority aPriority);
 
     /**
      * This method begins a new spinel command frame to be added/written to the frame buffer.
@@ -548,10 +548,10 @@ public:
      * If no buffer space is available, this method will discard and clear the frame and return error status
      * `OT_ERROR_NO_BUFS`.
      *
-     * The ownership of the passed-in message @p aMessage changes to underlying `NcpFrameBuffer` ONLY when the entire
+     * The ownership of the passed-in message @p aMessage changes to underlying `SpinelBuffer` ONLY when the entire
      * frame is successfully finished (i.e., with a successful call to `EndFrame()` for the current frame being
      * written), and in this case the `otMessage` instance will be freed once the frame is removed from the
-     * `NcpFrameBuffer`. However, if the frame gets discarded before it is finished (e.g., running out of buffer space),
+     * `SpinelBuffer`. However, if the frame gets discarded before it is finished (e.g., running out of buffer space),
      * the  `otMessage` instance remains unchanged.
      *
      * @param[in] aMessage              A message to be added to current frame.
@@ -682,12 +682,12 @@ private:
         kMaxNestedStructs     = 4,  ///< Maximum number of nested structs.
     };
 
-    NcpFrameBuffer &              mNcpBuffer;
-    NcpFrameBuffer::WritePosition mStructPosition[kMaxNestedStructs];
-    uint8_t                       mNumOpenStructs;
+    SpinelBuffer &              mNcpBuffer;
+    SpinelBuffer::WritePosition mStructPosition[kMaxNestedStructs];
+    uint8_t                     mNumOpenStructs;
 
-    uint8_t                       mSavedNumOpenStructs;
-    NcpFrameBuffer::WritePosition mSavedPosition;
+    uint8_t                     mSavedNumOpenStructs;
+    SpinelBuffer::WritePosition mSavedPosition;
 };
 
 } // namespace Utils

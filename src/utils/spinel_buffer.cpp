@@ -38,9 +38,9 @@
 namespace ot {
 namespace Utils {
 
-const NcpFrameBuffer::FrameTag NcpFrameBuffer::kInvalidTag = NULL;
+const SpinelBuffer::FrameTag SpinelBuffer::kInvalidTag = NULL;
 
-NcpFrameBuffer::NcpFrameBuffer(uint8_t *aBuffer, uint16_t aBufferLength)
+SpinelBuffer::SpinelBuffer(uint8_t *aBuffer, uint16_t aBufferLength)
     : mBuffer(aBuffer)
     , mBufferEnd(aBuffer + aBufferLength)
     , mBufferLength(aBufferLength)
@@ -59,7 +59,7 @@ NcpFrameBuffer::NcpFrameBuffer(uint8_t *aBuffer, uint16_t aBufferLength)
     Clear();
 }
 
-void NcpFrameBuffer::Clear(void)
+void SpinelBuffer::Clear(void)
 {
 #if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
     otMessage *message;
@@ -96,7 +96,7 @@ void NcpFrameBuffer::Clear(void)
         otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
 
         // Note that messages associated with current (unfinished) input frame
-        // are not yet owned by the `NcpFrameBuffer` and therefore should not
+        // are not yet owned by the `SpinelBuffer` and therefore should not
         // be freed.
     }
 
@@ -111,13 +111,13 @@ void NcpFrameBuffer::Clear(void)
 #endif
 }
 
-void NcpFrameBuffer::SetFrameAddedCallback(BufferCallback aFrameAddedCallback, void *aFrameAddedContext)
+void SpinelBuffer::SetFrameAddedCallback(BufferCallback aFrameAddedCallback, void *aFrameAddedContext)
 {
     mFrameAddedCallback = aFrameAddedCallback;
     mFrameAddedContext  = aFrameAddedContext;
 }
 
-void NcpFrameBuffer::SetFrameRemovedCallback(BufferCallback aFrameRemovedCallback, void *aFrameRemovedContext)
+void SpinelBuffer::SetFrameRemovedCallback(BufferCallback aFrameRemovedCallback, void *aFrameRemovedContext)
 {
     mFrameRemovedCallback = aFrameRemovedCallback;
     mFrameRemovedContext  = aFrameRemovedContext;
@@ -125,7 +125,7 @@ void NcpFrameBuffer::SetFrameRemovedCallback(BufferCallback aFrameRemovedCallbac
 
 // Returns an updated buffer pointer by moving forward/backward (based on `aDirection`) from `aBufPtr` by a given
 // offset. The resulting buffer pointer is ensured to stay within the `mBuffer` boundaries.
-uint8_t *NcpFrameBuffer::GetUpdatedBufPtr(uint8_t *aBufPtr, uint16_t aOffset, Direction aDirection) const
+uint8_t *SpinelBuffer::GetUpdatedBufPtr(uint8_t *aBufPtr, uint16_t aOffset, Direction aDirection) const
 {
     uint8_t *ptr = aBufPtr;
 
@@ -160,7 +160,7 @@ uint8_t *NcpFrameBuffer::GetUpdatedBufPtr(uint8_t *aBufPtr, uint16_t aOffset, Di
 }
 
 // Gets the distance between two buffer pointers (adjusts for the wrap-around) given a direction (forward or backward).
-uint16_t NcpFrameBuffer::GetDistance(const uint8_t *aStartPtr, const uint8_t *aEndPtr, Direction aDirection) const
+uint16_t SpinelBuffer::GetDistance(const uint8_t *aStartPtr, const uint8_t *aEndPtr, Direction aDirection) const
 {
     size_t distance = 0;
 
@@ -203,14 +203,14 @@ uint16_t NcpFrameBuffer::GetDistance(const uint8_t *aStartPtr, const uint8_t *aE
 }
 
 // Writes a uint16 value at the given buffer pointer (big-endian style).
-void NcpFrameBuffer::WriteUint16At(uint8_t *aBufPtr, uint16_t aValue, Direction aDirection)
+void SpinelBuffer::WriteUint16At(uint8_t *aBufPtr, uint16_t aValue, Direction aDirection)
 {
     *aBufPtr                                  = (aValue >> 8);
     *GetUpdatedBufPtr(aBufPtr, 1, aDirection) = (aValue & 0xff);
 }
 
 // Reads a uint16 value at the given buffer pointer (big-endian style).
-uint16_t NcpFrameBuffer::ReadUint16At(uint8_t *aBufPtr, Direction aDirection)
+uint16_t SpinelBuffer::ReadUint16At(uint8_t *aBufPtr, Direction aDirection)
 {
     uint16_t value;
 
@@ -221,7 +221,7 @@ uint16_t NcpFrameBuffer::ReadUint16At(uint8_t *aBufPtr, Direction aDirection)
 }
 
 // Appends a byte at the write tail and updates the tail, discards the frame if buffer gets full.
-otError NcpFrameBuffer::InFrameAppend(uint8_t aByte)
+otError SpinelBuffer::InFrameAppend(uint8_t aByte)
 {
     otError  error = OT_ERROR_NONE;
     uint8_t *newTail;
@@ -246,7 +246,7 @@ otError NcpFrameBuffer::InFrameAppend(uint8_t aByte)
 }
 
 // This method begins a new segment (if one is not already open).
-otError NcpFrameBuffer::InFrameBeginSegment(void)
+otError SpinelBuffer::InFrameBeginSegment(void)
 {
     otError  error       = OT_ERROR_NONE;
     uint16_t headerFlags = kSegmentHeaderNoFlag;
@@ -274,7 +274,7 @@ exit:
 }
 
 // This function closes/ends the current segment.
-void NcpFrameBuffer::InFrameEndSegment(uint16_t aSegmentHeaderFlags)
+void SpinelBuffer::InFrameEndSegment(uint16_t aSegmentHeaderFlags)
 {
     uint16_t segmentLength;
     uint16_t header;
@@ -303,7 +303,7 @@ void NcpFrameBuffer::InFrameEndSegment(uint16_t aSegmentHeaderFlags)
 }
 
 // This method discards the current frame being written.
-void NcpFrameBuffer::InFrameDiscard(void)
+void SpinelBuffer::InFrameDiscard(void)
 {
 #if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
     otMessage *message;
@@ -320,7 +320,7 @@ void NcpFrameBuffer::InFrameDiscard(void)
         otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
 
         // Note that messages associated with current (unfinished) input frame
-        // being discarded, are not yet owned by the `NcpFrameBuffer` and
+        // being discarded, are not yet owned by the `SpinelBuffer` and
         // therefore should not be freed.
     }
 #endif
@@ -332,12 +332,12 @@ exit:
 }
 
 // Returns `true` if in middle of writing a frame with given priority.
-bool NcpFrameBuffer::InFrameIsWriting(Priority aPriority) const
+bool SpinelBuffer::InFrameIsWriting(Priority aPriority) const
 {
     return (mWriteDirection == static_cast<Direction>(aPriority));
 }
 
-void NcpFrameBuffer::InFrameBegin(Priority aPriority)
+void SpinelBuffer::InFrameBegin(Priority aPriority)
 {
     // Discard any previous unfinished frame.
     InFrameDiscard();
@@ -357,7 +357,7 @@ void NcpFrameBuffer::InFrameBegin(Priority aPriority)
     mWriteSegmentHead = mWriteSegmentTail = mWriteFrameStart[mWriteDirection];
 }
 
-otError NcpFrameBuffer::InFrameFeedByte(uint8_t aByte)
+otError SpinelBuffer::InFrameFeedByte(uint8_t aByte)
 {
     otError error = OT_ERROR_NONE;
 
@@ -372,7 +372,7 @@ exit:
     return error;
 }
 
-otError NcpFrameBuffer::InFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength)
+otError SpinelBuffer::InFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength)
 {
     otError error = OT_ERROR_NONE;
 
@@ -392,7 +392,7 @@ exit:
 }
 
 #if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
-otError NcpFrameBuffer::InFrameFeedMessage(otMessage *aMessage)
+otError SpinelBuffer::InFrameFeedMessage(otMessage *aMessage)
 {
     otError error = OT_ERROR_NONE;
 
@@ -413,7 +413,7 @@ exit:
 }
 #endif
 
-otError NcpFrameBuffer::InFrameGetPosition(WritePosition &aPosition)
+otError SpinelBuffer::InFrameGetPosition(WritePosition &aPosition)
 {
     otError error = OT_ERROR_NONE;
 
@@ -429,9 +429,9 @@ exit:
     return error;
 }
 
-otError NcpFrameBuffer::InFrameOverwrite(const WritePosition &aPosition,
-                                         const uint8_t *      aDataBuffer,
-                                         uint16_t             aDataBufferLength)
+otError SpinelBuffer::InFrameOverwrite(const WritePosition &aPosition,
+                                       const uint8_t *      aDataBuffer,
+                                       uint16_t             aDataBufferLength)
 {
     otError  error = OT_ERROR_NONE;
     uint8_t *bufPtr;
@@ -462,7 +462,7 @@ exit:
     return error;
 }
 
-uint16_t NcpFrameBuffer::InFrameGetDistance(const WritePosition &aPosition) const
+uint16_t SpinelBuffer::InFrameGetDistance(const WritePosition &aPosition) const
 {
     uint16_t distance = 0;
     uint16_t segmentLength;
@@ -481,7 +481,7 @@ exit:
     return distance;
 }
 
-otError NcpFrameBuffer::InFrameReset(const WritePosition &aPosition)
+otError SpinelBuffer::InFrameReset(const WritePosition &aPosition)
 {
     otError  error = OT_ERROR_NONE;
     uint16_t segmentLength;
@@ -500,7 +500,7 @@ exit:
     return error;
 }
 
-otError NcpFrameBuffer::InFrameEnd(void)
+otError SpinelBuffer::InFrameEnd(void)
 {
 #if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
     otMessage *message;
@@ -538,22 +538,22 @@ exit:
     return error;
 }
 
-NcpFrameBuffer::FrameTag NcpFrameBuffer::InFrameGetLastTag(void) const
+SpinelBuffer::FrameTag SpinelBuffer::InFrameGetLastTag(void) const
 {
     return mWriteFrameTag;
 }
 
-bool NcpFrameBuffer::HasFrame(Priority aPriority) const
+bool SpinelBuffer::HasFrame(Priority aPriority) const
 {
     return mReadFrameStart[aPriority] != mWriteFrameStart[aPriority];
 }
 
-bool NcpFrameBuffer::IsEmpty(void) const
+bool SpinelBuffer::IsEmpty(void) const
 {
     return !HasFrame(kPriorityHigh) && !HasFrame(kPriorityLow);
 }
 
-void NcpFrameBuffer::OutFrameSelectReadDirection(void)
+void SpinelBuffer::OutFrameSelectReadDirection(void)
 {
     if (mReadState == kReadStateNotActive)
     {
@@ -562,7 +562,7 @@ void NcpFrameBuffer::OutFrameSelectReadDirection(void)
 }
 
 // Start/Prepare a new segment for reading.
-otError NcpFrameBuffer::OutFramePrepareSegment(void)
+otError SpinelBuffer::OutFramePrepareSegment(void)
 {
     otError  error = OT_ERROR_NONE;
     uint16_t header;
@@ -625,7 +625,7 @@ exit:
 #if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
 // This method prepares an associated message in current segment and fills the message buffer. It returns
 // ThreadError_NotFound if there is no message or if the message has no content.
-otError NcpFrameBuffer::OutFramePrepareMessage(void)
+otError SpinelBuffer::OutFramePrepareMessage(void)
 {
     otError  error = OT_ERROR_NONE;
     uint16_t header;
@@ -657,7 +657,7 @@ exit:
 
 // This method fills content from current message into the message buffer. It returns OT_ERROR_NOT_FOUND if no more
 // content in the current message.
-otError NcpFrameBuffer::OutFrameFillMessageBuffer(void)
+otError SpinelBuffer::OutFrameFillMessageBuffer(void)
 {
     otError error = OT_ERROR_NONE;
     int     readLength;
@@ -684,7 +684,7 @@ exit:
 }
 #endif // #if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
 
-otError NcpFrameBuffer::OutFrameBegin(void)
+otError SpinelBuffer::OutFrameBegin(void)
 {
     otError error = OT_ERROR_NONE;
 
@@ -706,12 +706,12 @@ exit:
     return error;
 }
 
-bool NcpFrameBuffer::OutFrameHasEnded(void)
+bool SpinelBuffer::OutFrameHasEnded(void)
 {
     return (mReadState == kReadStateDone) || (mReadState == kReadStateNotActive);
 }
 
-uint8_t NcpFrameBuffer::OutFrameReadByte(void)
+uint8_t SpinelBuffer::OutFrameReadByte(void)
 {
     otError error;
     uint8_t retval = kReadByteAfterFrameHasEnded;
@@ -778,7 +778,7 @@ uint8_t NcpFrameBuffer::OutFrameReadByte(void)
     return retval;
 }
 
-uint16_t NcpFrameBuffer::OutFrameRead(uint16_t aReadLength, uint8_t *aDataBuffer)
+uint16_t SpinelBuffer::OutFrameRead(uint16_t aReadLength, uint8_t *aDataBuffer)
 {
     uint16_t bytesRead = 0;
 
@@ -790,7 +790,7 @@ uint16_t NcpFrameBuffer::OutFrameRead(uint16_t aReadLength, uint8_t *aDataBuffer
     return bytesRead;
 }
 
-otError NcpFrameBuffer::OutFrameRemove(void)
+otError SpinelBuffer::OutFrameRemove(void)
 {
     otError  error = OT_ERROR_NONE;
     uint8_t *bufPtr;
@@ -865,7 +865,7 @@ exit:
     return error;
 }
 
-void NcpFrameBuffer::UpdateReadWriteStartPointers(void)
+void SpinelBuffer::UpdateReadWriteStartPointers(void)
 {
     // If there is no fully written high priority frame, and not in middle of writing a new frame either.
     if (!HasFrame(kPriorityHigh) && !InFrameIsWriting(kPriorityHigh))
@@ -888,7 +888,7 @@ exit:
     return;
 }
 
-uint16_t NcpFrameBuffer::OutFrameGetLength(void)
+uint16_t SpinelBuffer::OutFrameGetLength(void)
 {
     uint16_t frameLength = 0;
     uint16_t header;
@@ -962,7 +962,7 @@ exit:
     return frameLength;
 }
 
-NcpFrameBuffer::FrameTag NcpFrameBuffer::OutFrameGetTag(void)
+SpinelBuffer::FrameTag SpinelBuffer::OutFrameGetTag(void)
 {
     OutFrameSelectReadDirection();
 

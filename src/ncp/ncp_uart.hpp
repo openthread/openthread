@@ -87,17 +87,17 @@ private:
 
 #if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
     /**
-     * Wraps NcpFrameBuffer allowing to read data through spinel encrypter.
+     * Wraps SpinelBuffer allowing to read data through spinel encrypter.
      * Creates additional buffers to allow transforming of the whole spinel frames.
      */
-    class NcpFrameBufferEncrypterReader
+    class SpinelBufferEncrypterReader
     {
     public:
         /**
          * C-tor.
-         * Takes a reference to NcpFrameBuffer in order to read spinel frames.
+         * Takes a reference to SpinelBuffer in order to read spinel frames.
          */
-        explicit NcpFrameBufferEncrypterReader(ot::Utils::NcpFrameBuffer &aTxFrameBuffer);
+        explicit SpinelBufferEncrypterReader(ot::Utils::SpinelBuffer &aTxFrameBuffer);
         bool    IsEmpty(void) const;
         otError OutFrameBegin(void);
         bool    OutFrameHasEnded(void);
@@ -107,10 +107,10 @@ private:
     private:
         void Reset(void);
 
-        ot::Utils::NcpFrameBuffer &mTxFrameBuffer;
-        uint8_t                    mDataBuffer[kRxBufferSize];
-        size_t                     mDataBufferReadIndex;
-        size_t                     mOutputDataLength;
+        ot::Utils::SpinelBuffer &mTxFrameBuffer;
+        uint8_t                  mDataBuffer[kRxBufferSize];
+        size_t                   mDataBufferReadIndex;
+        size_t                   mOutputDataLength;
     };
 #endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
@@ -122,10 +122,10 @@ private:
 
     static void EncodeAndSendToUart(Tasklet &aTasklet);
     static void HandleFrame(void *aContext, otError aError);
-    static void HandleFrameAddedToNcpBuffer(void *                              aContext,
-                                            ot::Utils::NcpFrameBuffer::FrameTag aTag,
-                                            ot::Utils::NcpFrameBuffer::Priority aPriority,
-                                            ot::Utils::NcpFrameBuffer *         aNcpFrameBuffer);
+    static void HandleFrameAddedToNcpBuffer(void *                            aContext,
+                                            ot::Utils::SpinelBuffer::FrameTag aTag,
+                                            ot::Utils::SpinelBuffer::Priority aPriority,
+                                            ot::Utils::SpinelBuffer *         aSpinelBuffer);
 
     Hdlc::Encoder                        mFrameEncoder;
     Hdlc::Decoder                        mFrameDecoder;
@@ -137,7 +137,7 @@ private:
     Tasklet                              mUartSendTask;
 
 #if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
-    NcpFrameBufferEncrypterReader mTxFrameBufferEncrypterReader;
+    SpinelBufferEncrypterReader mTxFrameBufferEncrypterReader;
 #endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 };
 

@@ -211,7 +211,7 @@ NcpBase::NcpBase(Instance *aInstance)
     , mThreadChangedFlags(0)
     , mChangedPropsSet()
     , mHostPowerState(SPINEL_HOST_POWER_STATE_ONLINE)
-    , mHostPowerReplyFrameTag(NcpFrameBuffer::kInvalidTag)
+    , mHostPowerReplyFrameTag(SpinelBuffer::kInvalidTag)
     , mHostPowerStateHeader(0)
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
     , mAllowPeekDelegate(NULL)
@@ -320,7 +320,7 @@ void NcpBase::ResetCounters(void)
 // MARK: Serial Traffic Glue
 // ----------------------------------------------------------------------------
 
-NcpFrameBuffer::FrameTag NcpBase::GetLastOutboundFrameTag(void)
+SpinelBuffer::FrameTag NcpBase::GetLastOutboundFrameTag(void)
 {
     return mTxFrameBuffer.InFrameGetLastTag();
 }
@@ -388,10 +388,10 @@ exit:
     mDisableStreamWrite = false;
 }
 
-void NcpBase::HandleFrameRemovedFromNcpBuffer(void *                   aContext,
-                                              NcpFrameBuffer::FrameTag aFrameTag,
-                                              NcpFrameBuffer::Priority aPriority,
-                                              NcpFrameBuffer *         aNcpBuffer)
+void NcpBase::HandleFrameRemovedFromNcpBuffer(void *                 aContext,
+                                              SpinelBuffer::FrameTag aFrameTag,
+                                              SpinelBuffer::Priority aPriority,
+                                              SpinelBuffer *         aNcpBuffer)
 {
     OT_UNUSED_VARIABLE(aNcpBuffer);
     OT_UNUSED_VARIABLE(aPriority);
@@ -399,7 +399,7 @@ void NcpBase::HandleFrameRemovedFromNcpBuffer(void *                   aContext,
     static_cast<NcpBase *>(aContext)->HandleFrameRemovedFromNcpBuffer(aFrameTag);
 }
 
-void NcpBase::HandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag)
+void NcpBase::HandleFrameRemovedFromNcpBuffer(SpinelBuffer::FrameTag aFrameTag)
 {
     if (mHostPowerStateInProgress)
     {
@@ -2042,7 +2042,7 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_HOST_POWER_STATE(uint8_t aHeader)
             }
             else
             {
-                mHostPowerReplyFrameTag = NcpFrameBuffer::kInvalidTag;
+                mHostPowerReplyFrameTag = SpinelBuffer::kInvalidTag;
             }
 
             mHostPowerStateInProgress = true;

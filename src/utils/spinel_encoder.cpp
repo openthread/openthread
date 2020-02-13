@@ -39,7 +39,7 @@
 namespace ot {
 namespace Utils {
 
-otError SpinelEncoder::BeginFrame(NcpFrameBuffer::Priority aPriority)
+otError SpinelEncoder::BeginFrame(SpinelBuffer::Priority aPriority)
 {
     mNumOpenStructs = 0;
     mNcpBuffer.InFrameBegin(aPriority);
@@ -54,11 +54,11 @@ otError SpinelEncoder::BeginFrame(uint8_t aHeader, unsigned int aCommand)
 
     if (SPINEL_HEADER_GET_TID(aHeader) != 0)
     {
-        SuccessOrExit(error = BeginFrame(NcpFrameBuffer::kPriorityHigh));
+        SuccessOrExit(error = BeginFrame(SpinelBuffer::kPriorityHigh));
     }
     else
     {
-        SuccessOrExit(error = BeginFrame(NcpFrameBuffer::kPriorityLow));
+        SuccessOrExit(error = BeginFrame(SpinelBuffer::kPriorityLow));
     }
 
     SuccessOrExit(error = WriteUint8(aHeader));

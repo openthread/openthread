@@ -40,7 +40,7 @@ enum
     kTestBufferSize = 800,
 };
 
-otError ReadFrame(NcpFrameBuffer &aNcpBuffer, uint8_t *aFrame, uint16_t &aFrameLen)
+otError ReadFrame(SpinelBuffer &aNcpBuffer, uint8_t *aFrame, uint16_t &aFrameLen)
 {
     otError error = OT_ERROR_NONE;
 
@@ -55,9 +55,9 @@ exit:
 
 void TestSpinelEncoder(void)
 {
-    uint8_t        buffer[kTestBufferSize];
-    NcpFrameBuffer ncpBuffer(buffer, kTestBufferSize);
-    SpinelEncoder  encoder(ncpBuffer);
+    uint8_t       buffer[kTestBufferSize];
+    SpinelBuffer  ncpBuffer(buffer, kTestBufferSize);
+    SpinelEncoder encoder(ncpBuffer);
 
     uint8_t        frame[kTestBufferSize];
     uint16_t       frameLen;
@@ -117,7 +117,7 @@ void TestSpinelEncoder(void)
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\nTest 1: Encoding of simple types");
 
-    SuccessOrQuit(encoder.BeginFrame(NcpFrameBuffer::kPriorityLow), "BeginFrame() failed.");
+    SuccessOrQuit(encoder.BeginFrame(SpinelBuffer::kPriorityLow), "BeginFrame() failed.");
     SuccessOrQuit(encoder.WriteBool(kBool_1), "WriteBool() failed.");
     SuccessOrQuit(encoder.WriteBool(kBool_2), "WriteBool() failed.");
     SuccessOrQuit(encoder.WriteUint8(kUint8), "WriteUint8() failed.");
@@ -183,7 +183,7 @@ void TestSpinelEncoder(void)
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\nTest 2: Test a single simple struct.");
 
-    SuccessOrQuit(encoder.BeginFrame(NcpFrameBuffer::kPriorityLow), "BeginFrame() failed.");
+    SuccessOrQuit(encoder.BeginFrame(SpinelBuffer::kPriorityLow), "BeginFrame() failed.");
     SuccessOrQuit(encoder.WriteUint8(kUint8), "WriteUint8() failed.");
     SuccessOrQuit(encoder.OpenStruct(), "OpenStruct() failed.");
     {
@@ -230,7 +230,7 @@ void TestSpinelEncoder(void)
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\nTest 3: Test multiple structs and struct within struct.");
 
-    SuccessOrQuit(encoder.BeginFrame(NcpFrameBuffer::kPriorityLow), "BeginFrame() failed.");
+    SuccessOrQuit(encoder.BeginFrame(SpinelBuffer::kPriorityLow), "BeginFrame() failed.");
     SuccessOrQuit(encoder.OpenStruct(), "OpenStruct() failed.");
     {
         SuccessOrQuit(encoder.WriteUint8(kUint8), "WriteUint8() failed.");
@@ -279,7 +279,7 @@ void TestSpinelEncoder(void)
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\nTest 4: Test unclosed struct.");
 
-    SuccessOrQuit(encoder.BeginFrame(NcpFrameBuffer::kPriorityLow), "BeginFrame() failed.");
+    SuccessOrQuit(encoder.BeginFrame(SpinelBuffer::kPriorityLow), "BeginFrame() failed.");
     SuccessOrQuit(encoder.WriteUint8(kUint8), "WriteUint8() failed.");
     SuccessOrQuit(encoder.OpenStruct(), "OpenStruct() failed.");
     {
@@ -312,7 +312,7 @@ void TestSpinelEncoder(void)
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\nTest 5: Test saving position and reseting back to a saved position");
 
-    SuccessOrQuit(encoder.BeginFrame(NcpFrameBuffer::kPriorityLow), "BeginFrame() failed.");
+    SuccessOrQuit(encoder.BeginFrame(SpinelBuffer::kPriorityLow), "BeginFrame() failed.");
     SuccessOrQuit(encoder.WriteUint8(kUint8), "WriteUint8() failed.");
     SuccessOrQuit(encoder.OpenStruct(), "OpenStruct() failed.");
     {

@@ -40,7 +40,7 @@
 namespace ot {
 namespace Utils {
 
-// This module implements unit-test for NcpFrameBuffer class.
+// This module implements unit-test for SpinelBuffer class.
 
 // Test related constants:
 enum
@@ -78,10 +78,10 @@ enum
     kTestFrame4Size = sizeof(sOpenThreadText),
 };
 
-NcpFrameBuffer::FrameTag sTagHistoryArray[kNumPrios][kTagArraySize];
-uint32_t                 sTagHistoryHead[kNumPrios] = {0};
-uint32_t                 sTagHistoryTail[kNumPrios] = {0};
-NcpFrameBuffer::FrameTag sExpectedRemovedTag        = NcpFrameBuffer::kInvalidTag;
+SpinelBuffer::FrameTag sTagHistoryArray[kNumPrios][kTagArraySize];
+uint32_t               sTagHistoryHead[kNumPrios] = {0};
+uint32_t               sTagHistoryTail[kNumPrios] = {0};
+SpinelBuffer::FrameTag sExpectedRemovedTag        = SpinelBuffer::kInvalidTag;
 
 void ClearTagHistory(void)
 {
@@ -91,7 +91,7 @@ void ClearTagHistory(void)
     }
 }
 
-void AddTagToHistory(NcpFrameBuffer::FrameTag aTag, NcpFrameBuffer::Priority aPriority)
+void AddTagToHistory(SpinelBuffer::FrameTag aTag, SpinelBuffer::Priority aPriority)
 {
     uint8_t priority = static_cast<uint8_t>(aPriority);
 
@@ -106,7 +106,7 @@ void AddTagToHistory(NcpFrameBuffer::FrameTag aTag, NcpFrameBuffer::Priority aPr
                  "Ran out of space in `TagHistoryArray`, increase its size.");
 }
 
-void VerifyAndRemoveTagFromHistory(NcpFrameBuffer::FrameTag aTag, NcpFrameBuffer::Priority aPriority)
+void VerifyAndRemoveTagFromHistory(SpinelBuffer::FrameTag aTag, SpinelBuffer::Priority aPriority)
 {
     uint8_t priority = static_cast<uint8_t>(aPriority);
 
@@ -119,23 +119,23 @@ void VerifyAndRemoveTagFromHistory(NcpFrameBuffer::FrameTag aTag, NcpFrameBuffer
         sTagHistoryHead[priority] = 0;
     }
 
-    if (sExpectedRemovedTag != NcpFrameBuffer::kInvalidTag)
+    if (sExpectedRemovedTag != SpinelBuffer::kInvalidTag)
     {
         VerifyOrQuit(sExpectedRemovedTag == aTag, "Removed tag does match the previous OutFrameGetTag()");
-        sExpectedRemovedTag = NcpFrameBuffer::kInvalidTag;
+        sExpectedRemovedTag = SpinelBuffer::kInvalidTag;
     }
 }
 
-void FrameAddedCallback(void *                   aContext,
-                        NcpFrameBuffer::FrameTag aTag,
-                        NcpFrameBuffer::Priority aPriority,
-                        NcpFrameBuffer *         aNcpBuffer)
+void FrameAddedCallback(void *                 aContext,
+                        SpinelBuffer::FrameTag aTag,
+                        SpinelBuffer::Priority aPriority,
+                        SpinelBuffer *         aNcpBuffer)
 {
     CallbackContext *callbackContext = reinterpret_cast<CallbackContext *>(aContext);
 
-    VerifyOrQuit(aNcpBuffer != NULL, "Null NcpFrameBuffer in the callback");
+    VerifyOrQuit(aNcpBuffer != NULL, "Null SpinelBuffer in the callback");
     VerifyOrQuit(callbackContext != NULL, "Null context in the callback");
-    VerifyOrQuit(aTag != NcpFrameBuffer::kInvalidTag, "Invalid tag in the callback");
+    VerifyOrQuit(aTag != SpinelBuffer::kInvalidTag, "Invalid tag in the callback");
     VerifyOrQuit(aTag == aNcpBuffer->InFrameGetLastTag(), "InFrameGetLastTag() does not match the tag from callback");
 
     AddTagToHistory(aTag, aPriority);
@@ -143,16 +143,16 @@ void FrameAddedCallback(void *                   aContext,
     callbackContext->mFrameAddedCount++;
 }
 
-void FrameRemovedCallback(void *                   aContext,
-                          NcpFrameBuffer::FrameTag aTag,
-                          NcpFrameBuffer::Priority aPriority,
-                          NcpFrameBuffer *         aNcpBuffer)
+void FrameRemovedCallback(void *                 aContext,
+                          SpinelBuffer::FrameTag aTag,
+                          SpinelBuffer::Priority aPriority,
+                          SpinelBuffer *         aNcpBuffer)
 {
     CallbackContext *callbackContext = reinterpret_cast<CallbackContext *>(aContext);
 
-    VerifyOrQuit(aNcpBuffer != NULL, "Null NcpFrameBuffer in the callback");
+    VerifyOrQuit(aNcpBuffer != NULL, "Null SpinelBuffer in the callback");
     VerifyOrQuit(callbackContext != NULL, "Null context in the callback");
-    VerifyOrQuit(aTag != NcpFrameBuffer::kInvalidTag, "Invalid tag in the callback");
+    VerifyOrQuit(aTag != SpinelBuffer::kInvalidTag, "Invalid tag in the callback");
 
     VerifyAndRemoveTagFromHistory(aTag, aPriority);
 
@@ -160,7 +160,7 @@ void FrameRemovedCallback(void *                   aContext,
 }
 
 // Reads bytes from the ncp buffer, and verifies that it matches with the given content buffer.
-void ReadAndVerifyContent(NcpFrameBuffer &aNcpBuffer, const uint8_t *aContentBuffer, uint16_t aBufferLength)
+void ReadAndVerifyContent(SpinelBuffer &aNcpBuffer, const uint8_t *aContentBuffer, uint16_t aBufferLength)
 {
     while (aBufferLength--)
     {
@@ -171,7 +171,7 @@ void ReadAndVerifyContent(NcpFrameBuffer &aNcpBuffer, const uint8_t *aContentBuf
     }
 }
 
-void WriteTestFrame1(NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPriority)
+void WriteTestFrame1(SpinelBuffer &aNcpBuffer, SpinelBuffer::Priority aPriority)
 {
     Message *       message;
     CallbackContext oldContext;
@@ -192,7 +192,7 @@ void WriteTestFrame1(NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPrior
     VerifyOrQuit(oldContext.mFrameRemovedCount == sContext.mFrameRemovedCount, "FrameRemovedCallback failed.");
 }
 
-void VerifyAndRemoveFrame1(NcpFrameBuffer &aNcpBuffer)
+void VerifyAndRemoveFrame1(SpinelBuffer &aNcpBuffer)
 {
     CallbackContext oldContext = sContext;
 
@@ -214,7 +214,7 @@ void VerifyAndRemoveFrame1(NcpFrameBuffer &aNcpBuffer)
     VerifyOrQuit(oldContext.mFrameRemovedCount + 1 == sContext.mFrameRemovedCount, "FrameRemovedCallback failed.");
 }
 
-void WriteTestFrame2(NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPriority)
+void WriteTestFrame2(SpinelBuffer &aNcpBuffer, SpinelBuffer::Priority aPriority)
 {
     Message *       message1;
     Message *       message2;
@@ -240,7 +240,7 @@ void WriteTestFrame2(NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPrior
     VerifyOrQuit(oldContext.mFrameRemovedCount == sContext.mFrameRemovedCount, "FrameRemovedCallback failed.");
 }
 
-void VerifyAndRemoveFrame2(NcpFrameBuffer &aNcpBuffer)
+void VerifyAndRemoveFrame2(SpinelBuffer &aNcpBuffer)
 {
     CallbackContext oldContext = sContext;
 
@@ -260,7 +260,7 @@ void VerifyAndRemoveFrame2(NcpFrameBuffer &aNcpBuffer)
     VerifyOrQuit(oldContext.mFrameRemovedCount + 1 == sContext.mFrameRemovedCount, "FrameRemovedCallback failed.");
 }
 
-void WriteTestFrame3(NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPriority)
+void WriteTestFrame3(SpinelBuffer &aNcpBuffer, SpinelBuffer::Priority aPriority)
 {
     Message *       message1;
     CallbackContext oldContext = sContext;
@@ -280,7 +280,7 @@ void WriteTestFrame3(NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPrior
     VerifyOrQuit(oldContext.mFrameRemovedCount == sContext.mFrameRemovedCount, "FrameRemovedCallback failed.");
 }
 
-void VerifyAndRemoveFrame3(NcpFrameBuffer &aNcpBuffer)
+void VerifyAndRemoveFrame3(SpinelBuffer &aNcpBuffer)
 {
     CallbackContext oldContext = sContext;
 
@@ -298,7 +298,7 @@ void VerifyAndRemoveFrame3(NcpFrameBuffer &aNcpBuffer)
     VerifyOrQuit(oldContext.mFrameRemovedCount + 1 == sContext.mFrameRemovedCount, "FrameRemovedCallback failed.");
 }
 
-void WriteTestFrame4(NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPriority)
+void WriteTestFrame4(SpinelBuffer &aNcpBuffer, SpinelBuffer::Priority aPriority)
 {
     CallbackContext oldContext = sContext;
 
@@ -310,7 +310,7 @@ void WriteTestFrame4(NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPrior
     VerifyOrQuit(oldContext.mFrameRemovedCount == sContext.mFrameRemovedCount, "FrameRemovedCallback failed.");
 }
 
-void VerifyAndRemoveFrame4(NcpFrameBuffer &aNcpBuffer)
+void VerifyAndRemoveFrame4(SpinelBuffer &aNcpBuffer)
 {
     CallbackContext oldContext = sContext;
 
@@ -328,17 +328,17 @@ void VerifyAndRemoveFrame4(NcpFrameBuffer &aNcpBuffer)
     VerifyOrQuit(oldContext.mFrameRemovedCount + 1 == sContext.mFrameRemovedCount, "FrameRemovedCallback failed.");
 }
 
-// This function implements the NcpFrameBuffer tests
-void TestNcpFrameBuffer(void)
+// This function implements the SpinelBuffer tests
+void TestSpinelBuffer(void)
 {
-    unsigned       i, j;
-    uint8_t        buffer[kTestBufferSize];
-    NcpFrameBuffer ncpBuffer(buffer, kTestBufferSize);
+    unsigned     i, j;
+    uint8_t      buffer[kTestBufferSize];
+    SpinelBuffer ncpBuffer(buffer, kTestBufferSize);
 
-    Message *                     message;
-    uint8_t                       readBuffer[16];
-    uint16_t                      readLen, readOffset;
-    NcpFrameBuffer::WritePosition pos1, pos2;
+    Message *                   message;
+    uint8_t                     readBuffer[16];
+    uint16_t                    readLen, readOffset;
+    SpinelBuffer::WritePosition pos1, pos2;
 
     sInstance    = testInitInstance();
     sMessagePool = &sInstance->Get<MessagePool>();
@@ -360,18 +360,18 @@ void TestNcpFrameBuffer(void)
     printf("\nTest 1: Check initial buffer state");
 
     VerifyOrQuit(ncpBuffer.IsEmpty() == true, "Not empty after init.");
-    VerifyOrQuit(ncpBuffer.InFrameGetLastTag() == NcpFrameBuffer::kInvalidTag, "Incorrect tag after init.");
-    VerifyOrQuit(ncpBuffer.OutFrameGetTag() == NcpFrameBuffer::kInvalidTag, "Incorrect OutFrameTag after init.");
+    VerifyOrQuit(ncpBuffer.InFrameGetLastTag() == SpinelBuffer::kInvalidTag, "Incorrect tag after init.");
+    VerifyOrQuit(ncpBuffer.OutFrameGetTag() == SpinelBuffer::kInvalidTag, "Incorrect OutFrameTag after init.");
 
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\nTest 2: Write and read a single frame");
 
-    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityLow);
     DumpBuffer("\nBuffer after frame1 (low priority)", buffer, kTestBufferSize);
     printf("\nFrameLen is %u", ncpBuffer.OutFrameGetLength());
     VerifyAndRemoveFrame1(ncpBuffer);
 
-    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityHigh);
     DumpBuffer("\nBuffer after frame1 (high priority)", buffer, kTestBufferSize);
     printf("\nFrameLen is %u", ncpBuffer.OutFrameGetLength());
     VerifyAndRemoveFrame1(ncpBuffer);
@@ -382,7 +382,7 @@ void TestNcpFrameBuffer(void)
     for (j = 0; j < kTestIterationAttemps; j++)
     {
         printf("*");
-        WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+        WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityLow);
         VerifyOrQuit(ncpBuffer.IsEmpty() == false, "IsEmpty() is incorrect when buffer is non-empty");
 
         VerifyAndRemoveFrame1(ncpBuffer);
@@ -393,7 +393,7 @@ void TestNcpFrameBuffer(void)
     for (j = 0; j < kTestIterationAttemps; j++)
     {
         printf("*");
-        WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+        WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityHigh);
         VerifyOrQuit(ncpBuffer.IsEmpty() == false, "IsEmpty() is incorrect when buffer is non-empty");
 
         VerifyAndRemoveFrame1(ncpBuffer);
@@ -404,7 +404,7 @@ void TestNcpFrameBuffer(void)
     for (j = 0; j < kTestIterationAttemps; j++)
     {
         printf("*");
-        WriteTestFrame1(ncpBuffer, ((j % 5) == 0) ? NcpFrameBuffer::kPriorityHigh : NcpFrameBuffer::kPriorityLow);
+        WriteTestFrame1(ncpBuffer, ((j % 5) == 0) ? SpinelBuffer::kPriorityHigh : SpinelBuffer::kPriorityLow);
         VerifyOrQuit(ncpBuffer.IsEmpty() == false, "IsEmpty() is incorrect when buffer is non-empty");
 
         VerifyAndRemoveFrame1(ncpBuffer);
@@ -416,10 +416,10 @@ void TestNcpFrameBuffer(void)
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\nTest 3: Multiple frames write and read (same priority)");
 
-    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame2(ncpBuffer, SpinelBuffer::kPriorityLow);
+    WriteTestFrame3(ncpBuffer, SpinelBuffer::kPriorityLow);
+    WriteTestFrame2(ncpBuffer, SpinelBuffer::kPriorityLow);
+    WriteTestFrame2(ncpBuffer, SpinelBuffer::kPriorityLow);
 
     DumpBuffer("\nBuffer after multiple frames", buffer, kTestBufferSize);
 
@@ -435,15 +435,15 @@ void TestNcpFrameBuffer(void)
     {
         printf("*");
 
-        WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-        WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-        WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+        WriteTestFrame2(ncpBuffer, SpinelBuffer::kPriorityLow);
+        WriteTestFrame3(ncpBuffer, SpinelBuffer::kPriorityLow);
+        WriteTestFrame2(ncpBuffer, SpinelBuffer::kPriorityLow);
 
         VerifyAndRemoveFrame2(ncpBuffer);
         VerifyAndRemoveFrame3(ncpBuffer);
 
-        WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-        WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+        WriteTestFrame2(ncpBuffer, SpinelBuffer::kPriorityLow);
+        WriteTestFrame3(ncpBuffer, SpinelBuffer::kPriorityLow);
 
         VerifyAndRemoveFrame2(ncpBuffer);
         VerifyAndRemoveFrame2(ncpBuffer);
@@ -457,52 +457,52 @@ void TestNcpFrameBuffer(void)
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\nTest 4: Multiple frames write and read (mixed priority)");
 
-    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame2(ncpBuffer, SpinelBuffer::kPriorityLow);
+    WriteTestFrame3(ncpBuffer, SpinelBuffer::kPriorityHigh);
     VerifyAndRemoveFrame3(ncpBuffer);
     VerifyAndRemoveFrame2(ncpBuffer);
 
-    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
-    WriteTestFrame4(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityLow);
+    WriteTestFrame2(ncpBuffer, SpinelBuffer::kPriorityLow);
+    WriteTestFrame3(ncpBuffer, SpinelBuffer::kPriorityHigh);
+    WriteTestFrame4(ncpBuffer, SpinelBuffer::kPriorityHigh);
     VerifyAndRemoveFrame3(ncpBuffer);
     VerifyAndRemoveFrame4(ncpBuffer);
     VerifyAndRemoveFrame1(ncpBuffer);
     VerifyAndRemoveFrame2(ncpBuffer);
 
-    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
-    WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    WriteTestFrame4(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityLow);
+    WriteTestFrame2(ncpBuffer, SpinelBuffer::kPriorityHigh);
+    WriteTestFrame3(ncpBuffer, SpinelBuffer::kPriorityLow);
+    WriteTestFrame4(ncpBuffer, SpinelBuffer::kPriorityHigh);
     VerifyAndRemoveFrame2(ncpBuffer);
     VerifyAndRemoveFrame4(ncpBuffer);
     VerifyAndRemoveFrame1(ncpBuffer);
     VerifyAndRemoveFrame3(ncpBuffer);
 
-    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
-    WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    WriteTestFrame4(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityLow);
+    WriteTestFrame2(ncpBuffer, SpinelBuffer::kPriorityHigh);
+    WriteTestFrame3(ncpBuffer, SpinelBuffer::kPriorityLow);
+    WriteTestFrame4(ncpBuffer, SpinelBuffer::kPriorityHigh);
     VerifyAndRemoveFrame2(ncpBuffer);
     VerifyAndRemoveFrame4(ncpBuffer);
     VerifyAndRemoveFrame1(ncpBuffer);
     VerifyAndRemoveFrame3(ncpBuffer);
 
-    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
-    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
-    WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    WriteTestFrame4(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityHigh);
+    WriteTestFrame2(ncpBuffer, SpinelBuffer::kPriorityHigh);
+    WriteTestFrame3(ncpBuffer, SpinelBuffer::kPriorityLow);
+    WriteTestFrame4(ncpBuffer, SpinelBuffer::kPriorityLow);
     VerifyAndRemoveFrame1(ncpBuffer);
     VerifyAndRemoveFrame2(ncpBuffer);
     VerifyAndRemoveFrame3(ncpBuffer);
     VerifyAndRemoveFrame4(ncpBuffer);
 
-    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
-    WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityLow);
+    WriteTestFrame2(ncpBuffer, SpinelBuffer::kPriorityHigh);
+    WriteTestFrame3(ncpBuffer, SpinelBuffer::kPriorityHigh);
     VerifyAndRemoveFrame2(ncpBuffer);
-    WriteTestFrame4(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame4(ncpBuffer, SpinelBuffer::kPriorityHigh);
     VerifyAndRemoveFrame3(ncpBuffer);
     VerifyAndRemoveFrame4(ncpBuffer);
     VerifyAndRemoveFrame1(ncpBuffer);
@@ -520,10 +520,10 @@ void TestNcpFrameBuffer(void)
 
         printf("*");
 
-        WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-        WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+        WriteTestFrame2(ncpBuffer, SpinelBuffer::kPriorityLow);
+        WriteTestFrame3(ncpBuffer, SpinelBuffer::kPriorityHigh);
 
-        ncpBuffer.InFrameBegin((j % 2) == 0 ? NcpFrameBuffer::kPriorityHigh : NcpFrameBuffer::kPriorityLow);
+        ncpBuffer.InFrameBegin((j % 2) == 0 ? SpinelBuffer::kPriorityHigh : SpinelBuffer::kPriorityLow);
         ncpBuffer.InFrameFeedData(sHelloText, sizeof(sHelloText));
 
         message = sMessagePool->New(Message::kTypeIp6, 0);
@@ -534,7 +534,7 @@ void TestNcpFrameBuffer(void)
         ncpBuffer.InFrameFeedMessage(message);
 
         // Start writing a new frame in middle of an unfinished frame. Ensure the first one is discarded.
-        WriteTestFrame1(ncpBuffer, frame1IsHighPriority ? NcpFrameBuffer::kPriorityHigh : NcpFrameBuffer::kPriorityLow);
+        WriteTestFrame1(ncpBuffer, frame1IsHighPriority ? SpinelBuffer::kPriorityHigh : SpinelBuffer::kPriorityLow);
 
         // Note that message will not be freed by the NCP buffer since the frame associated with it was discarded and
         // not yet finished/ended.
@@ -568,13 +568,13 @@ void TestNcpFrameBuffer(void)
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\nTest 6: Clear() and empty buffer method tests");
 
-    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityLow);
 
     ncpBuffer.Clear();
     ClearTagHistory();
 
-    VerifyOrQuit(ncpBuffer.InFrameGetLastTag() == NcpFrameBuffer::kInvalidTag, "Incorrect last tag after Clear().");
-    VerifyOrQuit(ncpBuffer.OutFrameGetTag() == NcpFrameBuffer::kInvalidTag, "Incorrect OutFrameTag after Clear().");
+    VerifyOrQuit(ncpBuffer.InFrameGetLastTag() == SpinelBuffer::kInvalidTag, "Incorrect last tag after Clear().");
+    VerifyOrQuit(ncpBuffer.OutFrameGetTag() == SpinelBuffer::kInvalidTag, "Incorrect OutFrameTag after Clear().");
     VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty() is incorrect when buffer is empty.");
     VerifyOrQuit(ncpBuffer.OutFrameHasEnded() == true, "OutFrameHasEnded() is incorrect when no data in buffer.");
     VerifyOrQuit(ncpBuffer.OutFrameRemove() == OT_ERROR_NOT_FOUND,
@@ -582,7 +582,7 @@ void TestNcpFrameBuffer(void)
     VerifyOrQuit(ncpBuffer.OutFrameGetLength() == 0,
                  "OutFrameGetLength() returned non-zero length when buffer is empty.");
 
-    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityLow);
     VerifyAndRemoveFrame1(ncpBuffer);
 
     VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty() is incorrect when buffer is empty.");
@@ -597,7 +597,7 @@ void TestNcpFrameBuffer(void)
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\nTest 7: OutFrameRead() in parts\n");
 
-    ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityLow);
+    ncpBuffer.InFrameBegin(SpinelBuffer::kPriorityLow);
     ncpBuffer.InFrameFeedData(sMottoText, sizeof(sMottoText));
     ncpBuffer.InFrameEnd();
 
@@ -623,8 +623,8 @@ void TestNcpFrameBuffer(void)
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\nTest 8: Remove a frame without reading it first");
 
-    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityLow);
+    WriteTestFrame2(ncpBuffer, SpinelBuffer::kPriorityLow);
     VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
     SuccessOrQuit(ncpBuffer.OutFrameRemove(), "Remove() failed.");
     VerifyAndRemoveFrame2(ncpBuffer);
@@ -632,9 +632,9 @@ void TestNcpFrameBuffer(void)
 
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\nTest 9: Check length when front frame gets changed (a higher priority frame is added)");
-    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityLow);
     VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
-    WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame3(ncpBuffer, SpinelBuffer::kPriorityHigh);
     VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame3Size, "GetLength() is incorrect.");
     VerifyAndRemoveFrame3(ncpBuffer);
     VerifyAndRemoveFrame1(ncpBuffer);
@@ -642,12 +642,12 @@ void TestNcpFrameBuffer(void)
 
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\nTest 10: Active out frame remaining unchanged when a higher priority frame is written while reading it");
-    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityLow);
     VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
     SuccessOrQuit(ncpBuffer.OutFrameBegin(), "OutFrameBegin() failed unexpectedly.");
     VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
     ReadAndVerifyContent(ncpBuffer, sMottoText, sizeof(sMottoText));
-    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame2(ncpBuffer, SpinelBuffer::kPriorityHigh);
     VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
     ReadAndVerifyContent(ncpBuffer, sMysteryText, sizeof(sMysteryText));
     SuccessOrQuit(ncpBuffer.OutFrameBegin(), "OutFrameBegin() failed unexpectedly.");
@@ -657,20 +657,20 @@ void TestNcpFrameBuffer(void)
     ReadAndVerifyContent(ncpBuffer, sMottoText, sizeof(sMottoText));
     ReadAndVerifyContent(ncpBuffer, sHelloText, sizeof(sHelloText));
     VerifyOrQuit(ncpBuffer.OutFrameHasEnded() == true, "Frame longer than expected.");
-    WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
-    WriteTestFrame4(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame3(ncpBuffer, SpinelBuffer::kPriorityHigh);
+    WriteTestFrame4(ncpBuffer, SpinelBuffer::kPriorityLow);
     VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
     VerifyAndRemoveFrame1(ncpBuffer);
     VerifyAndRemoveFrame2(ncpBuffer);
     VerifyAndRemoveFrame3(ncpBuffer);
     VerifyAndRemoveFrame4(ncpBuffer);
     // Repeat test reversing frame priority orders.
-    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityHigh);
     VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
     SuccessOrQuit(ncpBuffer.OutFrameBegin(), "OutFrameBegin() failed unexpectedly.");
     VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
     ReadAndVerifyContent(ncpBuffer, sMottoText, sizeof(sMottoText));
-    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame2(ncpBuffer, SpinelBuffer::kPriorityLow);
     VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
     ReadAndVerifyContent(ncpBuffer, sMysteryText, sizeof(sMysteryText));
     SuccessOrQuit(ncpBuffer.OutFrameBegin(), "OutFrameBegin() failed unexpectedly.");
@@ -680,8 +680,8 @@ void TestNcpFrameBuffer(void)
     ReadAndVerifyContent(ncpBuffer, sMottoText, sizeof(sMottoText));
     ReadAndVerifyContent(ncpBuffer, sHelloText, sizeof(sHelloText));
     VerifyOrQuit(ncpBuffer.OutFrameHasEnded() == true, "Frame longer than expected.");
-    WriteTestFrame3(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
-    WriteTestFrame4(ncpBuffer, NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame3(ncpBuffer, SpinelBuffer::kPriorityHigh);
+    WriteTestFrame4(ncpBuffer, SpinelBuffer::kPriorityLow);
     VerifyOrQuit(ncpBuffer.OutFrameGetLength() == kTestFrame1Size, "GetLength() is incorrect.");
     VerifyAndRemoveFrame1(ncpBuffer);
     VerifyAndRemoveFrame3(ncpBuffer);
@@ -691,24 +691,24 @@ void TestNcpFrameBuffer(void)
 
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\n Test 11: Read and remove in middle of an active input frame write");
-    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityLow);
+    ncpBuffer.InFrameBegin(SpinelBuffer::kPriorityHigh);
     SuccessOrQuit(ncpBuffer.InFrameFeedData(sOpenThreadText, sizeof(sOpenThreadText)), "InFrameFeedData() failed.");
     VerifyAndRemoveFrame1(ncpBuffer);
     VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty() failed.");
     SuccessOrQuit(ncpBuffer.InFrameEnd(), "InFrameEnd() failed.");
     VerifyAndRemoveFrame4(ncpBuffer);
     // Repeat the test reversing priorities
-    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
-    ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityHigh);
+    ncpBuffer.InFrameBegin(SpinelBuffer::kPriorityLow);
     SuccessOrQuit(ncpBuffer.InFrameFeedData(sOpenThreadText, sizeof(sOpenThreadText)), "InFrameFeedData() failed.");
     VerifyAndRemoveFrame1(ncpBuffer);
     VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty() failed.");
     SuccessOrQuit(ncpBuffer.InFrameEnd(), "InFrameEnd() failed.");
     VerifyAndRemoveFrame4(ncpBuffer);
     // Repeat the test with same priorities
-    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
-    ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityHigh);
+    ncpBuffer.InFrameBegin(SpinelBuffer::kPriorityHigh);
     SuccessOrQuit(ncpBuffer.InFrameFeedData(sOpenThreadText, sizeof(sOpenThreadText)), "InFrameFeedData() failed.");
     VerifyAndRemoveFrame1(ncpBuffer);
     VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty() failed.");
@@ -718,14 +718,14 @@ void TestNcpFrameBuffer(void)
 
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\n Test 12: Check returned error status");
-    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityLow);
+    ncpBuffer.InFrameBegin(SpinelBuffer::kPriorityHigh);
     VerifyOrQuit(ncpBuffer.InFrameFeedData(buffer, sizeof(buffer)) == OT_ERROR_NO_BUFS, "Incorrect error status");
     VerifyAndRemoveFrame1(ncpBuffer);
     VerifyOrQuit(ncpBuffer.IsEmpty() == true, "IsEmpty() failed.");
 
-    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityLow);
+    WriteTestFrame2(ncpBuffer, SpinelBuffer::kPriorityHigh);
     // Ensure writes with starting `InFrameBegin()` fail
     VerifyOrQuit(ncpBuffer.InFrameFeedData(sOpenThreadText, 1) == OT_ERROR_INVALID_STATE, "Incorrect error status");
     VerifyOrQuit(ncpBuffer.InFrameFeedData(sOpenThreadText, 0) == OT_ERROR_INVALID_STATE, "Incorrect error status");
@@ -742,25 +742,25 @@ void TestNcpFrameBuffer(void)
     VerifyAndRemoveFrame1(ncpBuffer);
     VerifyOrQuit(ncpBuffer.IsEmpty(), "IsEmpty() failed");
     VerifyOrQuit(ncpBuffer.OutFrameBegin() == OT_ERROR_NOT_FOUND, "OutFrameBegin() failed on empty queue");
-    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityHigh);
     VerifyAndRemoveFrame1(ncpBuffer);
     VerifyOrQuit(ncpBuffer.IsEmpty(), "IsEmpty() failed");
     printf(" -- PASS\n");
 
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\n Test 13: Ensure we can utilize the full buffer size when frames removed during write");
-    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
-    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityHigh);
+    WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityHigh);
+    WriteTestFrame2(ncpBuffer, SpinelBuffer::kPriorityLow);
+    ncpBuffer.InFrameBegin(SpinelBuffer::kPriorityHigh);
     VerifyAndRemoveFrame1(ncpBuffer);
     VerifyAndRemoveFrame2(ncpBuffer);
     SuccessOrQuit(ncpBuffer.InFrameFeedData(buffer, sizeof(buffer) - 4), "InFrameFeedData() failed.");
     SuccessOrQuit(ncpBuffer.InFrameEnd(), "InFrameEnd() failed.");
     SuccessOrQuit(ncpBuffer.OutFrameRemove(), "OutFrameRemove() failed.");
     // Repeat the test with a low priority buffer write
-    WriteTestFrame1(ncpBuffer, NcpFrameBuffer::kPriorityHigh);
-    WriteTestFrame2(ncpBuffer, NcpFrameBuffer::kPriorityLow);
-    ncpBuffer.InFrameBegin(NcpFrameBuffer::kPriorityLow);
+    WriteTestFrame1(ncpBuffer, SpinelBuffer::kPriorityHigh);
+    WriteTestFrame2(ncpBuffer, SpinelBuffer::kPriorityLow);
+    ncpBuffer.InFrameBegin(SpinelBuffer::kPriorityLow);
     VerifyAndRemoveFrame1(ncpBuffer);
     VerifyAndRemoveFrame2(ncpBuffer);
     SuccessOrQuit(ncpBuffer.InFrameFeedData(buffer, sizeof(buffer) - 4), "InFrameFeedData() failed.");
@@ -774,12 +774,12 @@ void TestNcpFrameBuffer(void)
 
     for (j = 0; j < kTestIterationAttemps; j++)
     {
-        uint16_t                 index;
-        bool                     addExtra = ((j % 7) != 0);
-        NcpFrameBuffer::Priority priority;
+        uint16_t               index;
+        bool                   addExtra = ((j % 7) != 0);
+        SpinelBuffer::Priority priority;
 
         printf("*");
-        priority = ((j % 3) == 0) ? NcpFrameBuffer::kPriorityHigh : NcpFrameBuffer::kPriorityLow;
+        priority = ((j % 3) == 0) ? SpinelBuffer::kPriorityHigh : SpinelBuffer::kPriorityLow;
         index    = static_cast<uint16_t>(j % sizeof(sHexText));
         ncpBuffer.InFrameBegin(priority);
         SuccessOrQuit(ncpBuffer.InFrameFeedData(sHexText, index), "InFrameFeedData() failed.");
@@ -820,12 +820,12 @@ void TestNcpFrameBuffer(void)
 
     for (j = 0; j < kTestIterationAttemps; j++)
     {
-        uint16_t                 index;
-        bool                     addExtra = ((j % 7) != 0);
-        NcpFrameBuffer::Priority priority;
+        uint16_t               index;
+        bool                   addExtra = ((j % 7) != 0);
+        SpinelBuffer::Priority priority;
 
         printf("*");
-        priority = ((j % 3) == 0) ? NcpFrameBuffer::kPriorityHigh : NcpFrameBuffer::kPriorityLow;
+        priority = ((j % 3) == 0) ? SpinelBuffer::kPriorityHigh : SpinelBuffer::kPriorityLow;
         index    = static_cast<uint16_t>(j % sizeof(sHexText));
         ncpBuffer.InFrameBegin(priority);
         SuccessOrQuit(ncpBuffer.InFrameFeedData(sHexText, index), "InFrameFeedData() failed.");
@@ -903,7 +903,7 @@ uint32_t GetRandom(uint32_t max)
     return value % max;
 }
 
-otError WriteRandomFrame(uint32_t aLength, NcpFrameBuffer &aNcpBuffer, NcpFrameBuffer::Priority aPriority)
+otError WriteRandomFrame(uint32_t aLength, SpinelBuffer &aNcpBuffer, SpinelBuffer::Priority aPriority)
 {
     otError         error;
     uint8_t         byte;
@@ -932,7 +932,7 @@ exit:
     return error;
 }
 
-otError ReadRandomFrame(uint32_t aLength, NcpFrameBuffer &aNcpBuffer, uint8_t priority)
+otError ReadRandomFrame(uint32_t aLength, SpinelBuffer &aNcpBuffer, uint8_t priority)
 {
     CallbackContext oldContext = sContext;
 
@@ -956,10 +956,10 @@ otError ReadRandomFrame(uint32_t aLength, NcpFrameBuffer &aNcpBuffer, uint8_t pr
 }
 
 // This runs a fuzz test of NCP buffer
-void TestFuzzNcpFrameBuffer(void)
+void TestFuzzSpinelBuffer(void)
 {
-    uint8_t        buffer[kFuzTestBufferSize];
-    NcpFrameBuffer ncpBuffer(buffer, kFuzTestBufferSize);
+    uint8_t      buffer[kFuzTestBufferSize];
+    SpinelBuffer ncpBuffer(buffer, kFuzTestBufferSize);
 
     uint32_t lensArray[kNumPrios][kLensArraySize]; // Keeps track of length of written frames so far
     uint32_t lensArrayStart[kNumPrios];
@@ -1004,29 +1004,29 @@ void TestFuzzNcpFrameBuffer(void)
             uint32_t len;
             uint8_t  priority;
 
-            priority = (lensArrayCount[NcpFrameBuffer::kPriorityHigh] != 0) ? NcpFrameBuffer::kPriorityHigh
-                                                                            : NcpFrameBuffer::kPriorityLow;
+            priority = (lensArrayCount[SpinelBuffer::kPriorityHigh] != 0) ? SpinelBuffer::kPriorityHigh
+                                                                          : SpinelBuffer::kPriorityLow;
 
             len                      = lensArray[priority][lensArrayStart[priority]];
             lensArrayStart[priority] = (lensArrayStart[priority] + 1) % kLensArraySize;
             lensArrayCount[priority]--;
 
-            printf("R%c%d ", priority == NcpFrameBuffer::kPriorityHigh ? 'H' : 'L', len);
+            printf("R%c%d ", priority == SpinelBuffer::kPriorityHigh ? 'H' : 'L', len);
 
             SuccessOrQuit(ReadRandomFrame(len, ncpBuffer, priority), "Failed to read random frame.");
         }
         else
         {
-            uint32_t                 len = GetRandom(kMaxFrameLen) + 1;
-            NcpFrameBuffer::Priority priority;
+            uint32_t               len = GetRandom(kMaxFrameLen) + 1;
+            SpinelBuffer::Priority priority;
 
             if (GetRandom(100) < kHighPriorityProbablity)
             {
-                priority = NcpFrameBuffer::kPriorityHigh;
+                priority = SpinelBuffer::kPriorityHigh;
             }
             else
             {
-                priority = NcpFrameBuffer::kPriorityLow;
+                priority = SpinelBuffer::kPriorityLow;
             }
 
             if (WriteRandomFrame(len, ncpBuffer, priority) == OT_ERROR_NONE)
@@ -1034,7 +1034,7 @@ void TestFuzzNcpFrameBuffer(void)
                 lensArray[priority][(lensArrayStart[priority] + lensArrayCount[priority]) % kLensArraySize] = len;
                 lensArrayCount[priority]++;
 
-                printf("W%c%d ", priority == NcpFrameBuffer::kPriorityHigh ? 'H' : 'L', len);
+                printf("W%c%d ", priority == SpinelBuffer::kPriorityHigh ? 'H' : 'L', len);
             }
             else
             {
@@ -1059,8 +1059,8 @@ void TestFuzzNcpFrameBuffer(void)
 
 int main(void)
 {
-    ot::Utils::TestNcpFrameBuffer();
-    ot::Utils::TestFuzzNcpFrameBuffer();
+    ot::Utils::TestSpinelBuffer();
+    ot::Utils::TestFuzzSpinelBuffer();
     printf("\nAll tests passed.\n");
     return 0;
 }
