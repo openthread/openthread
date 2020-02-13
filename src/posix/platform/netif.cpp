@@ -38,7 +38,7 @@
 #include <assert.h>
 #include <fcntl.h>
 #include <ifaddrs.h>
-#if __linux__
+#ifdef __linux__
 #include <linux/if_tun.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>

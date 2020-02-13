@@ -58,7 +58,7 @@ if(OT_DAEMON)
     )
 
     add_executable(ot-ctl
-        client.c
+        client.cpp
     )
 
     target_compile_options(ot-ctl PRIVATE
