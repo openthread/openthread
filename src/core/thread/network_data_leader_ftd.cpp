@@ -119,8 +119,8 @@ void Leader::SetContextIdReuseDelay(uint32_t aDelay)
 
 void Leader::RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode)
 {
-    bool rlocIn     = false;
-    bool rlocStable = false;
+    bool rlocIn;
+    bool rlocStable;
 
     RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength, aMatchMode);
     VerifyOrExit(rlocIn);
@@ -434,6 +434,9 @@ otError Leader::RlocLookup(uint16_t  aRloc16,
     ServiceTlv *       service;
     ServerTlv *        server;
 
+    aIn     = false;
+    aStable = false;
+
     while (cur < end)
     {
         VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
@@ -720,9 +723,9 @@ exit:
 otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLength)
 {
     otError error         = OT_ERROR_NONE;
-    bool    rlocIn        = false;
-    bool    rlocStable    = false;
     bool    stableUpdated = false;
+    bool    rlocIn;
+    bool    rlocStable;
     bool    unused;
     uint8_t oldTlvs[NetworkData::kMaxSize];
     uint8_t oldTlvsLength = NetworkData::kMaxSize;
@@ -1187,9 +1190,9 @@ void Leader::StopContextReuseTimer(uint8_t aContextId)
 
 otError Leader::SendServerDataNotification(uint16_t aRloc16)
 {
-    otError error      = OT_ERROR_NONE;
-    bool    rlocIn     = false;
-    bool    rlocStable = false;
+    otError error = OT_ERROR_NONE;
+    bool    rlocIn;
+    bool    rlocStable;
 
     RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength, kMatchModeRloc16);
 
