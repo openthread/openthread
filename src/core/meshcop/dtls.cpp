@@ -109,8 +109,11 @@ Dtls::Dtls(Instance &aInstance, bool aLayerTwoSecurity)
 
 void Dtls::FreeMbedtls(void)
 {
-#ifdef MBEDTLS_SSL_COOKIE_C
-    mbedtls_ssl_cookie_free(&mCookieCtx);
+#if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
+    if (mConf.endpoint != MBEDTLS_SSL_IS_CLIENT)
+    {
+        mbedtls_ssl_cookie_free(&mCookieCtx);
+    }
 #endif
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -287,7 +290,7 @@ otError Dtls::Setup(bool aClient)
     mbedtls_ssl_conf_handshake_timeout(&mConf, 8000, 60000);
     mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, this);
 
-#ifdef MBEDTLS_SSL_SRV_C
+#if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
     if (!aClient)
     {
         mbedtls_ssl_cookie_init(&mCookieCtx);
