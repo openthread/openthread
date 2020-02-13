@@ -41,7 +41,7 @@
 #include "spinel_buffer.hpp"
 
 namespace ot {
-namespace Ncp {
+namespace Utils {
 
 /**
  * This class defines a spinel encoder.
@@ -690,7 +690,7 @@ private:
     NcpFrameBuffer::WritePosition mSavedPosition;
 };
 
-} // namespace Ncp
+} // namespace Utils
 } // namespace ot
 
 #endif // SPINEL_ENCODER_HPP_

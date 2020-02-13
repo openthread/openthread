@@ -39,7 +39,7 @@
 #include "spinel.h"
 
 namespace ot {
-namespace Ncp {
+namespace Utils {
 
 /**
  * This class defines a spinel decoder.
@@ -583,7 +583,7 @@ private:
     uint16_t mPrevEnd[kMaxNestedStructs];
 };
 
-} // namespace Ncp
+} // namespace Utils
 } // namespace ot
 
 #endif // SPINEL_DECODER_HPP_

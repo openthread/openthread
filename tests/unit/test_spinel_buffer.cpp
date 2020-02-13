@@ -38,7 +38,7 @@
 #include "test_util.hpp"
 
 namespace ot {
-namespace Ncp {
+namespace Utils {
 
 // This module implements unit-test for NcpFrameBuffer class.
 
@@ -1054,13 +1054,13 @@ void TestFuzzNcpFrameBuffer(void)
     testFreeInstance(sInstance);
 }
 
-} // namespace Ncp
+} // namespace Utils
 } // namespace ot
 
 int main(void)
 {
-    ot::Ncp::TestNcpFrameBuffer();
-    ot::Ncp::TestFuzzNcpFrameBuffer();
+    ot::Utils::TestNcpFrameBuffer();
+    ot::Utils::TestFuzzNcpFrameBuffer();
     printf("\nAll tests passed.\n");
     return 0;
 }

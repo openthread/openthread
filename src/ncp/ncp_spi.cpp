@@ -44,6 +44,8 @@
 #include "net/ip6.hpp"
 #include "utils/static_assert.hpp"
 
+using namespace ot::Utils;
+
 #if OPENTHREAD_CONFIG_NCP_SPI_ENABLE
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE

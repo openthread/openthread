@@ -37,7 +37,7 @@
 #include "common/code_utils.hpp"
 
 namespace ot {
-namespace Ncp {
+namespace Utils {
 
 otError SpinelEncoder::BeginFrame(NcpFrameBuffer::Priority aPriority)
 {
@@ -291,5 +291,5 @@ exit:
     return error;
 }
 
-} // namespace Ncp
+} // namespace Utils
 } // namespace ot

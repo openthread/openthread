@@ -33,7 +33,7 @@
 #include "test_util.hpp"
 
 namespace ot {
-namespace Ncp {
+namespace Utils {
 
 enum
 {
@@ -357,12 +357,12 @@ void TestSpinelEncoder(void)
     printf(" -- PASS\n");
 }
 
-} // namespace Ncp
+} // namespace Utils
 } // namespace ot
 
 int main(void)
 {
-    ot::Ncp::TestSpinelEncoder();
+    ot::Utils::TestSpinelEncoder();
     printf("\nAll tests passed.\n");
     return 0;
 }

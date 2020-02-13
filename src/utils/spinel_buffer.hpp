@@ -36,7 +36,7 @@
 #include <openthread/message.h>
 
 namespace ot {
-namespace Ncp {
+namespace Utils {
 
 /**
  * This class implements a buffer/queue for storing Ncp frames.
@@ -652,7 +652,7 @@ private:
 #endif
 };
 
-} // namespace Ncp
+} // namespace Utils
 } // namespace ot
 
 #endif // NCP_FRAME_BUFFER_HPP_

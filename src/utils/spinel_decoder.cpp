@@ -36,7 +36,7 @@
 #include "common/string.hpp"
 
 namespace ot {
-namespace Ncp {
+namespace Utils {
 
 SpinelDecoder::SpinelDecoder(void)
     : mFrame(NULL)
@@ -392,5 +392,5 @@ exit:
     return error;
 }
 
-} // namespace Ncp
+} // namespace Utils
 } // namespace ot

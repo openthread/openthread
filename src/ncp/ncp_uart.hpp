@@ -97,7 +97,7 @@ private:
          * C-tor.
          * Takes a reference to NcpFrameBuffer in order to read spinel frames.
          */
-        explicit NcpFrameBufferEncrypterReader(NcpFrameBuffer &aTxFrameBuffer);
+        explicit NcpFrameBufferEncrypterReader(ot::Utils::NcpFrameBuffer &aTxFrameBuffer);
         bool    IsEmpty(void) const;
         otError OutFrameBegin(void);
         bool    OutFrameHasEnded(void);
@@ -107,10 +107,10 @@ private:
     private:
         void Reset(void);
 
-        NcpFrameBuffer &mTxFrameBuffer;
-        uint8_t         mDataBuffer[kRxBufferSize];
-        size_t          mDataBufferReadIndex;
-        size_t          mOutputDataLength;
+        ot::Utils::NcpFrameBuffer &mTxFrameBuffer;
+        uint8_t                    mDataBuffer[kRxBufferSize];
+        size_t                     mDataBufferReadIndex;
+        size_t                     mOutputDataLength;
     };
 #endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
@@ -122,10 +122,10 @@ private:
 
     static void EncodeAndSendToUart(Tasklet &aTasklet);
     static void HandleFrame(void *aContext, otError aError);
-    static void HandleFrameAddedToNcpBuffer(void *                   aContext,
-                                            NcpFrameBuffer::FrameTag aTag,
-                                            NcpFrameBuffer::Priority aPriority,
-                                            NcpFrameBuffer *         aNcpFrameBuffer);
+    static void HandleFrameAddedToNcpBuffer(void *                              aContext,
+                                            ot::Utils::NcpFrameBuffer::FrameTag aTag,
+                                            ot::Utils::NcpFrameBuffer::Priority aPriority,
+                                            ot::Utils::NcpFrameBuffer *         aNcpFrameBuffer);
 
     Hdlc::Encoder                        mFrameEncoder;
     Hdlc::Decoder                        mFrameDecoder;

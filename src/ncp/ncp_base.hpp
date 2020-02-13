@@ -207,7 +207,7 @@ protected:
         NcpBase::PropertyHandler mHandler;
     };
 
-    NcpFrameBuffer::FrameTag GetLastOutboundFrameTag(void);
+    ot::Utils::NcpFrameBuffer::FrameTag GetLastOutboundFrameTag(void);
 
     otError HandleCommand(uint8_t aHeader);
 
@@ -257,11 +257,11 @@ protected:
     static void UpdateChangedProps(Tasklet &aTasklet);
     void        UpdateChangedProps(void);
 
-    static void HandleFrameRemovedFromNcpBuffer(void *                   aContext,
-                                                NcpFrameBuffer::FrameTag aFrameTag,
-                                                NcpFrameBuffer::Priority aPriority,
-                                                NcpFrameBuffer *         aNcpBuffer);
-    void        HandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag);
+    static void HandleFrameRemovedFromNcpBuffer(void *                              aContext,
+                                                ot::Utils::NcpFrameBuffer::FrameTag aFrameTag,
+                                                ot::Utils::NcpFrameBuffer::Priority aPriority,
+                                                ot::Utils::NcpFrameBuffer *         aNcpBuffer);
+    void        HandleFrameRemovedFromNcpBuffer(ot::Utils::NcpFrameBuffer::FrameTag aFrameTag);
 
     otError EncodeChannelMask(uint32_t aChannelMask);
     otError DecodeChannelMask(uint32_t &aChannelMask);
@@ -471,7 +471,7 @@ protected:
      * @param[in] aFrameTag    The tag of the frame removed from NCP buffer.
      *
      */
-    void VendorHandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag);
+    void VendorHandleFrameRemovedFromNcpBuffer(ot::Utils::NcpFrameBuffer::FrameTag aFrameTag);
 
     /**
      * This method defines a vendor "get property handler" hook to process vendor spinel properties.
@@ -512,17 +512,17 @@ protected:
 #endif // OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
 
 protected:
-    static NcpBase *       sNcpInstance;
-    static spinel_status_t ThreadErrorToSpinelStatus(otError aError);
-    static uint8_t         LinkFlagsToFlagByte(bool aRxOnWhenIdle,
-                                               bool aSecureDataRequests,
-                                               bool aDeviceType,
-                                               bool aNetworkData);
-    Instance *             mInstance;
-    NcpFrameBuffer         mTxFrameBuffer;
-    SpinelEncoder          mEncoder;
-    SpinelDecoder          mDecoder;
-    bool                   mHostPowerStateInProgress;
+    static NcpBase *          sNcpInstance;
+    static spinel_status_t    ThreadErrorToSpinelStatus(otError aError);
+    static uint8_t            LinkFlagsToFlagByte(bool aRxOnWhenIdle,
+                                                  bool aSecureDataRequests,
+                                                  bool aDeviceType,
+                                                  bool aNetworkData);
+    Instance *                mInstance;
+    ot::Utils::NcpFrameBuffer mTxFrameBuffer;
+    ot::Utils::SpinelEncoder  mEncoder;
+    ot::Utils::SpinelDecoder  mDecoder;
+    bool                      mHostPowerStateInProgress;
 
     enum
     {
@@ -542,9 +542,9 @@ protected:
     uint32_t        mThreadChangedFlags;
     ChangedPropsSet mChangedPropsSet;
 
-    spinel_host_power_state_t mHostPowerState;
-    NcpFrameBuffer::FrameTag  mHostPowerReplyFrameTag;
-    uint8_t                   mHostPowerStateHeader;
+    spinel_host_power_state_t           mHostPowerState;
+    ot::Utils::NcpFrameBuffer::FrameTag mHostPowerReplyFrameTag;
+    uint8_t                             mHostPowerStateHeader;
 
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
     otNcpDelegateAllowPeekPoke mAllowPeekDelegate;

@@ -36,7 +36,7 @@
 #include "common/debug.hpp"
 
 namespace ot {
-namespace Ncp {
+namespace Utils {
 
 const NcpFrameBuffer::FrameTag NcpFrameBuffer::kInvalidTag = NULL;
 
@@ -972,5 +972,5 @@ NcpFrameBuffer::FrameTag NcpFrameBuffer::OutFrameGetTag(void)
     return IsEmpty() ? kInvalidTag : mReadFrameStart[mReadDirection];
 }
 
-} // namespace Ncp
+} // namespace Utils
 } // namespace ot

@@ -59,6 +59,8 @@ OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE <= OPENTHREAD_CONFI
                  "diag command line should be smaller than NCP UART rx buffer");
 #endif
 
+using namespace ot::Utils;
+
 namespace ot {
 namespace Ncp {
 

@@ -48,6 +48,8 @@
 #include "common/debug.hpp"
 #include "radio/radio.hpp"
 
+using namespace ot::Utils;
+
 namespace ot {
 namespace Ncp {
 

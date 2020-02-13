@@ -293,10 +293,10 @@ private:
     static void SpiTransactionProcess(void *aContext);
     void        SpiTransactionProcess(void);
 
-    static void HandleFrameAddedToTxBuffer(void *                   aContext,
-                                           NcpFrameBuffer::FrameTag aFrameTag,
-                                           NcpFrameBuffer::Priority aPriority,
-                                           NcpFrameBuffer *         aNcpFrameBuffer);
+    static void HandleFrameAddedToTxBuffer(void *                              aContext,
+                                           ot::Utils::NcpFrameBuffer::FrameTag aFrameTag,
+                                           ot::Utils::NcpFrameBuffer::Priority aPriority,
+                                           ot::Utils::NcpFrameBuffer *         aNcpFrameBuffer);
 
     static void PrepareTxFrame(Tasklet &aTasklet);
     void        PrepareTxFrame(void);
