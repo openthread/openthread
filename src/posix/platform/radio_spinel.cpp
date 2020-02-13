@@ -34,7 +34,7 @@
 #include "radio_spinel.hpp"
 
 #include "platform-posix.h"
-#include "ncp/spinel_decoder.hpp"
+#include "utils/spinel_decoder.hpp"
 
 #include <assert.h>
 #include <errno.h>

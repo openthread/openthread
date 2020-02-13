@@ -33,15 +33,12 @@
 #ifndef SPINEL_ENCODER_HPP_
 #define SPINEL_ENCODER_HPP_
 
-#include "openthread-core-config.h"
-
 #include <openthread/ip6.h>
 #include <openthread/message.h>
 #include <openthread/ncp.h>
 
-#include "openthread-core-config.h"
-#include "ncp/ncp_buffer.hpp"
-#include "ncp/spinel.h"
+#include "spinel.h"
+#include "spinel_buffer.hpp"
 
 namespace ot {
 namespace Ncp {
@@ -541,7 +538,7 @@ public:
      */
     otError WriteDataWithLen(const uint8_t *aData, uint16_t aDataLen);
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
     /**
      * This method adds a message to the current input frame.
      *

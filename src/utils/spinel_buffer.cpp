@@ -30,7 +30,7 @@
  *   This file implements NCP frame buffer class.
  */
 
-#include "ncp_buffer.hpp"
+#include "spinel_buffer.hpp"
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -45,7 +45,7 @@ NcpFrameBuffer::NcpFrameBuffer(uint8_t *aBuffer, uint16_t aBufferLength)
     , mBufferEnd(aBuffer + aBufferLength)
     , mBufferLength(aBufferLength)
 {
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
     for (uint8_t priority = 0; priority < kNumPrios; priority++)
     {
         otMessageQueueInit(&mMessageQueue[priority]);
@@ -61,7 +61,7 @@ NcpFrameBuffer::NcpFrameBuffer(uint8_t *aBuffer, uint16_t aBufferLength)
 
 void NcpFrameBuffer::Clear(void)
 {
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
     otMessage *message;
 #endif
 
@@ -84,7 +84,7 @@ void NcpFrameBuffer::Clear(void)
     mReadSegmentTail               = mBuffer;
     mReadPointer                   = mBuffer;
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
     mReadMessage       = NULL;
     mReadMessageOffset = 0;
     mReadMessageTail   = mMessageBuffer;
@@ -305,7 +305,7 @@ void NcpFrameBuffer::InFrameEndSegment(uint16_t aSegmentHeaderFlags)
 // This method discards the current frame being written.
 void NcpFrameBuffer::InFrameDiscard(void)
 {
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
     otMessage *message;
 #endif
 
@@ -314,7 +314,7 @@ void NcpFrameBuffer::InFrameDiscard(void)
     // Move the write segment head and tail pointers back to frame start.
     mWriteSegmentHead = mWriteSegmentTail = mWriteFrameStart[mWriteDirection];
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
     while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
         otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
@@ -391,7 +391,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
 otError NcpFrameBuffer::InFrameFeedMessage(otMessage *aMessage)
 {
     otError error = OT_ERROR_NONE;
@@ -502,7 +502,7 @@ exit:
 
 otError NcpFrameBuffer::InFrameEnd(void)
 {
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
     otMessage *message;
 #endif
     otError error = OT_ERROR_NONE;
@@ -518,7 +518,7 @@ otError NcpFrameBuffer::InFrameEnd(void)
     // Update the frame start pointer to current segment head to be ready for next frame.
     mWriteFrameStart[mWriteDirection] = mWriteSegmentHead;
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
     // Move all the messages from the frame queue to the main queue.
     while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
@@ -601,7 +601,7 @@ otError NcpFrameBuffer::OutFramePrepareSegment(void)
             ExitNow();
         }
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
         // No data in this segment,  prepare any appended/associated message of this segment.
         if (OutFramePrepareMessage() == OT_ERROR_NONE)
         {
@@ -622,7 +622,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
 // This method prepares an associated message in current segment and fills the message buffer. It returns
 // ThreadError_NotFound if there is no message or if the message has no content.
 otError NcpFrameBuffer::OutFramePrepareMessage(void)
@@ -682,7 +682,7 @@ otError NcpFrameBuffer::OutFrameFillMessageBuffer(void)
 exit:
     return error;
 }
-#endif // #if OPENTHREAD_MTD || OPENTHREAD_FTD
+#endif // #if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
 
 otError NcpFrameBuffer::OutFrameBegin(void)
 {
@@ -695,7 +695,7 @@ otError NcpFrameBuffer::OutFrameBegin(void)
     // Move the segment head and tail to start of frame.
     mReadSegmentHead = mReadSegmentTail = mReadFrameStart[mReadDirection];
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
     mReadMessage = NULL;
 #endif
 
@@ -737,7 +737,7 @@ uint8_t NcpFrameBuffer::OutFrameReadByte(void)
         // Check if at end of current segment.
         if (mReadPointer == mReadSegmentTail)
         {
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
             // Prepare any message associated with this segment.
             error = OutFramePrepareMessage();
 #else
@@ -754,7 +754,7 @@ uint8_t NcpFrameBuffer::OutFrameReadByte(void)
         break;
 
     case kReadStateInMessage:
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
         // Read a byte from current read pointer and move the read pointer by 1 byte.
         retval = *mReadPointer;
         mReadPointer++;
@@ -825,7 +825,7 @@ otError NcpFrameBuffer::OutFrameRemove(void)
             }
         }
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
         // If current segment has an appended message, remove it from message queue and free it.
         if (header & kSegmentHeaderMessageIndicatorFlag)
         {
@@ -894,7 +894,7 @@ uint16_t NcpFrameBuffer::OutFrameGetLength(void)
     uint16_t header;
     uint8_t *bufPtr;
     uint8_t  numSegments;
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
     otMessage *message = NULL;
 #endif
 
@@ -925,7 +925,7 @@ uint16_t NcpFrameBuffer::OutFrameGetLength(void)
             }
         }
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
         // If current segment has an associated message, add its length to frame length.
         if (header & kSegmentHeaderMessageIndicatorFlag)
         {

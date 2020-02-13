@@ -38,6 +38,7 @@ OPENTHREAD_COMMON_FLAGS                                          := \
     -DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1                  \
     -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                         \
     -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1               \
+    -DOPENTHREAD_MESSAGE_IN_SPINEL_BUFFER=1                         \
     -DOPENTHREAD_FTD=1                                              \
     -DOPENTHREAD_POSIX=1                                            \
     -DOPENTHREAD_POSIX_RCP_UART_ENABLE=1                            \
@@ -233,9 +234,9 @@ LOCAL_SRC_FILES                                          := \
     src/core/utils/parse_cmdline.cpp                        \
     src/core/utils/slaac_address.cpp                        \
     src/ncp/hdlc.cpp                                        \
-    src/ncp/spinel.c                                        \
-    src/ncp/spinel_decoder.cpp                              \
-    src/ncp/spinel_encoder.cpp                              \
+    src/utils/spinel.c                                      \
+    src/utils/spinel_decoder.cpp                            \
+    src/utils/spinel_encoder.cpp                            \
     src/posix/platform/alarm.c                              \
     src/posix/platform/entropy.c                            \
     src/posix/platform/hdlc_interface.cpp                   \
@@ -389,7 +390,7 @@ LOCAL_SRC_FILES                            := \
     src/ncp/ncp_base_mtd.cpp                  \
     src/ncp/ncp_base_ftd.cpp                  \
     src/ncp/ncp_base_dispatcher.cpp           \
-    src/ncp/ncp_buffer.cpp                    \
+    src/utils/spinel_buffer.cpp               \
     src/ncp/ncp_uart.cpp                      \
     $(NULL)
 

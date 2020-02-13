@@ -51,12 +51,11 @@
 #include "changed_props_set.hpp"
 #include "common/instance.hpp"
 #include "common/tasklet.hpp"
-#include "ncp/ncp_buffer.hpp"
-#include "ncp/spinel_decoder.hpp"
-#include "ncp/spinel_encoder.hpp"
+#include "utils/spinel.h"
+#include "utils/spinel_buffer.hpp"
+#include "utils/spinel_decoder.hpp"
+#include "utils/spinel_encoder.hpp"
 #include "utils/static_assert.hpp"
-
-#include "spinel.h"
 
 namespace ot {
 namespace Ncp {

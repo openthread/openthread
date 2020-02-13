@@ -30,8 +30,6 @@
  *   This file implements a spinel decoder.
  */
 
-#include <openthread/config.h>
-
 #include "spinel_decoder.hpp"
 
 #include "common/code_utils.hpp"

@@ -33,15 +33,13 @@
 #ifndef NCP_FRAME_BUFFER_HPP_
 #define NCP_FRAME_BUFFER_HPP_
 
-#include "openthread-core-config.h"
-
 #include <openthread/message.h>
 
 namespace ot {
 namespace Ncp {
 
 /**
- * This class implements a buffer/queue for storing NCP frames.
+ * This class implements a buffer/queue for storing Ncp frames.
  *
  * A frame can consist of a sequence of data bytes and/or the content of an `otMessage` or a combination of the two.
  * `NcpFrameBuffer` implements priority FIFO logic for storing and reading frames. Two priority levels of high and low
@@ -201,7 +199,7 @@ public:
      */
     otError InFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength);
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
     /**
      * This method adds a message to the current input frame.
      *
@@ -615,7 +613,7 @@ private:
     otError OutFramePrepareSegment(void);
     void    OutFrameMoveToNextSegment(void);
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
     otError OutFramePrepareMessage(void);
     otError OutFrameFillMessageBuffer(void);
 #endif
@@ -644,7 +642,7 @@ private:
     uint8_t *mReadSegmentTail;           // Pointer to end of current segment in the frame being read.
     uint8_t *mReadPointer;               // Pointer to next byte to read (either in segment or in msg buffer).
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
     otMessageQueue mWriteFrameMessageQueue;                // Message queue for the current frame being written.
     otMessageQueue mMessageQueue[kNumPrios];               // Main message queues.
     otMessage *    mReadMessage;                           // Current Message in the frame being read.

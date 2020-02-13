@@ -33,13 +33,10 @@
 #ifndef SPINEL_DECODER_HPP_
 #define SPINEL_DECODER_HPP_
 
-#include <openthread/config.h>
-
 #include <openthread/ip6.h>
 #include <openthread/ncp.h>
 
-#include "openthread-core-config.h"
-#include "ncp/spinel.h"
+#include "spinel.h"
 
 namespace ot {
 namespace Ncp {

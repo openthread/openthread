@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,45 +26,46 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+add_library(openthread-spinel-ncp)
+add_library(openthread-spinel-rcp)
 
-# Always package (e.g. for 'make dist') these subdirectories.
+target_compile_definitions(openthread-spinel-ncp PRIVATE
+    ${OT_PRIVATE_DEFINES}
+    OPENTHREAD_FTD=1
+    OPENTHREAD_CONFIG_NCP_UART_ENABLE=1
+    PUBLIC OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER=1
+)
 
-DIST_SUBDIRS                            = \
-    core                                  \
-    cli                                   \
-    ncp                                   \
-    posix                                 \
-    utils                                 \
-    $(NULL)
+target_compile_definitions(openthread-spinel-rcp PRIVATE
+    ${OT_PRIVATE_DEFINES}
+    OPENTHREAD_RADIO=1
+    OPENTHREAD_CONFIG_NCP_UART_ENABLE=1
+    PUBLIC OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER=0
+)
 
-# Always build (e.g. for 'make all') these subdirectories.
+target_compile_options(openthread-spinel-ncp PRIVATE
+    ${OT_CFLAGS}
+)
 
-SUBDIRS                                 = \
-    core                                  \
-    utils                                 \
-    $(NULL)
+target_compile_options(openthread-spinel-rcp PRIVATE
+    ${OT_CFLAGS}
+)
 
-if OPENTHREAD_ENABLE_CLI
-SUBDIRS                                += cli
-endif
+set(COMMON_INCLUDES
+    ${OT_PRIVATE_INCLUDES}
+    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/src/core
+)
 
-if OPENTHREAD_ENABLE_NCP
-SUBDIRS                                += ncp
-endif
+set(COMMON_SOURCES
+    spinel.c
+    spinel_buffer.cpp
+    spinel_decoder.cpp
+    spinel_encoder.cpp
+)
 
-if OPENTHREAD_PLATFORM_POSIX_APP
-SUBDIRS                                += posix
-endif
+target_include_directories(openthread-spinel-ncp PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
+target_include_directories(openthread-spinel-rcp PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    cli                                   \
-    core                                  \
-    ncp                                   \
-    posix                                 \
-    utils                                 \
-    $(NULL)
-
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am
+target_sources(openthread-spinel-ncp PRIVATE ${COMMON_SOURCES})
+target_sources(openthread-spinel-rcp PRIVATE ${COMMON_SOURCES})

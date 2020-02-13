@@ -32,7 +32,7 @@
 #include "common/instance.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
-#include "ncp/ncp_buffer.hpp"
+#include "utils/spinel_buffer.hpp"
 
 #include "test_platform.h"
 #include "test_util.hpp"
