@@ -108,9 +108,9 @@ private:
         void Reset(void);
 
         ot::Spinel::Buffer &mTxFrameBuffer;
-        uint8_t                  mDataBuffer[kRxBufferSize];
-        size_t                   mDataBufferReadIndex;
-        size_t                   mOutputDataLength;
+        uint8_t             mDataBuffer[kRxBufferSize];
+        size_t              mDataBufferReadIndex;
+        size_t              mOutputDataLength;
     };
 #endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
@@ -122,7 +122,7 @@ private:
 
     static void EncodeAndSendToUart(Tasklet &aTasklet);
     static void HandleFrame(void *aContext, otError aError);
-    static void HandleFrameAddedToNcpBuffer(void *                            aContext,
+    static void HandleFrameAddedToNcpBuffer(void *                       aContext,
                                             ot::Spinel::Buffer::FrameTag aTag,
                                             ot::Spinel::Buffer::Priority aPriority,
                                             ot::Spinel::Buffer *         aBuffer);

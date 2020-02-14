@@ -257,7 +257,7 @@ protected:
     static void UpdateChangedProps(Tasklet &aTasklet);
     void        UpdateChangedProps(void);
 
-    static void HandleFrameRemovedFromNcpBuffer(void *                            aContext,
+    static void HandleFrameRemovedFromNcpBuffer(void *                       aContext,
                                                 ot::Spinel::Buffer::FrameTag aFrameTag,
                                                 ot::Spinel::Buffer::Priority aPriority,
                                                 ot::Spinel::Buffer *         aNcpBuffer);
@@ -512,17 +512,17 @@ protected:
 #endif // OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
 
 protected:
-    static NcpBase *         sNcpInstance;
-    static spinel_status_t   ThreadErrorToSpinelStatus(otError aError);
-    static uint8_t           LinkFlagsToFlagByte(bool aRxOnWhenIdle,
-                                                 bool aSecureDataRequests,
-                                                 bool aDeviceType,
-                                                 bool aNetworkData);
-    Instance *               mInstance;
-    ot::Spinel::Buffer  mTxFrameBuffer;
-    ot::Spinel::Encoder mEncoder;
-    ot::Spinel::Decoder mDecoder;
-    bool                     mHostPowerStateInProgress;
+    static NcpBase *       sNcpInstance;
+    static spinel_status_t ThreadErrorToSpinelStatus(otError aError);
+    static uint8_t         LinkFlagsToFlagByte(bool aRxOnWhenIdle,
+                                               bool aSecureDataRequests,
+                                               bool aDeviceType,
+                                               bool aNetworkData);
+    Instance *             mInstance;
+    ot::Spinel::Buffer     mTxFrameBuffer;
+    ot::Spinel::Encoder    mEncoder;
+    ot::Spinel::Decoder    mDecoder;
+    bool                   mHostPowerStateInProgress;
 
     enum
     {
@@ -542,9 +542,9 @@ protected:
     uint32_t        mThreadChangedFlags;
     ChangedPropsSet mChangedPropsSet;
 
-    spinel_host_power_state_t         mHostPowerState;
+    spinel_host_power_state_t    mHostPowerState;
     ot::Spinel::Buffer::FrameTag mHostPowerReplyFrameTag;
-    uint8_t                           mHostPowerStateHeader;
+    uint8_t                      mHostPowerStateHeader;
 
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
     otNcpDelegateAllowPeekPoke mAllowPeekDelegate;

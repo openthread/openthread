@@ -293,7 +293,7 @@ private:
     static void SpiTransactionProcess(void *aContext);
     void        SpiTransactionProcess(void);
 
-    static void HandleFrameAddedToTxBuffer(void *                            aContext,
+    static void HandleFrameAddedToTxBuffer(void *                       aContext,
                                            ot::Spinel::Buffer::FrameTag aFrameTag,
                                            ot::Spinel::Buffer::Priority aPriority,
                                            ot::Spinel::Buffer *         aBuffer);
