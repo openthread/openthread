@@ -31,12 +31,12 @@ set -e -x -o pipefail
 
 setup_python()
 {
-  python -m pip install flake8
+  python3 -m pip install yapf
 }
 
 check_python()
 {
-  flake8 --config=script/pystyle.cfg tests tools
+  python3 -m yapf --style google -dpr tests tools
 }
 
 check_clang()

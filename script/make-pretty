@@ -53,6 +53,7 @@ main()
 {
     trap at_exit INT TERM EXIT
     make_pretty
+    python3 -m yapf --style google -ipr "${SRC_DIR}/tests" "${SRC_DIR}/tools"
 }
 
 main "$@"

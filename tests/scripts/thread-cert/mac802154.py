@@ -26,7 +26,6 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
-
 """
     This module provides simple 802.15.4 MAC parser.
 """
@@ -44,7 +43,6 @@ from net_crypto import (
 
 
 class DeviceDescriptors:
-
     """Class representing 802.15.4 Device Descriptors."""
 
     device_descriptors = {}
@@ -67,8 +65,8 @@ class DeviceDescriptors:
 
 
 class InformationElement:
-
     """Class representing 802.15.4 MAC Information Element."""
+
     def __init__(self, id, length, content):
         self._id = id
         self._length = length
@@ -88,7 +86,6 @@ class InformationElement:
 
 
 class MacHeader:
-
     """Class representing 802.15.4 MAC header."""
 
     class FrameType:
@@ -141,7 +138,6 @@ class MacHeader:
 
 
 class MacPayload:
-
     """Class representing 802.15.4 MAC payload."""
 
     def __init__(self, data):
@@ -149,7 +145,6 @@ class MacPayload:
 
 
 class MacFrame:
-
     """Class representing 802.15.4 MAC frame."""
 
     IEEE802154_HEADER_IE_TYPE_MASK = 0x8000
@@ -259,9 +254,8 @@ class MacFrame:
 
         data.seek(fcs_start)
         if aux_sec_header and aux_sec_header.security_level:
-            mic, payload_end = self._parse_mic(
-                data, aux_sec_header.security_level
-            )
+            mic, payload_end = self._parse_mic(data,
+                                               aux_sec_header.security_level)
         else:
             payload_end = fcs_start
             mic = None
@@ -272,22 +266,18 @@ class MacFrame:
         data.seek(cur_pos)
         while ie_present and cur_pos + 2 < payload_end:
             header_ie = struct.unpack("<H", data.read(2))[0]
-            id = (
-                header_ie & MacFrame.IEEE802154_HEADER_IE_ID_MASK
-            ) >> 7
+            id = (header_ie & MacFrame.IEEE802154_HEADER_IE_ID_MASK) >> 7
             # Currently, payload IE doesn't exist in the code. So only HT2 is required.
             # TODO: support HT1 when there are Payload IEs in our code
             assert id != MacFrame.IEEE802154_HEADER_IE_HT1, \
                 'Currently there should be no HT1!'
-            header_ie_length = (
-                header_ie & MacFrame.IEEE802154_HEADER_IE_LENGTH_MASK
-            )
+            header_ie_length = (header_ie &
+                                MacFrame.IEEE802154_HEADER_IE_LENGTH_MASK)
             assert cur_pos + 2 + header_ie_length <= payload_end, \
                 'Parsing Header IE error, IE id:{} length:{}'.format(id, header_ie_length)
             header_ie_content = data.read(header_ie_length)
             header_ie_list.append(
-                InformationElement(id, header_ie_length, header_ie_content)
-            )
+                InformationElement(id, header_ie_length, header_ie_content))
             cur_pos += 2 + header_ie_length
             if id == MacFrame.IEEE802154_HEADER_IE_HT2:
                 break
@@ -310,9 +300,7 @@ class MacFrame:
 
             if ie_present:
                 data.seek(header_ie_start)
-                extra_open_fields += data.read(
-                    header_ie_end - header_ie_start
-                )
+                extra_open_fields += data.read(header_ie_end - header_ie_start)
 
             message_info = MessageInfo()
             message_info.aux_sec_hdr = aux_sec_header
@@ -338,12 +326,10 @@ class MacFrame:
                 message_info.source_mac_address = src_address.mac_address
 
             sec_obj = CryptoEngine(
-                MacCryptoMaterialCreator(config.DEFAULT_MASTER_KEY)
-            )
+                MacCryptoMaterialCreator(config.DEFAULT_MASTER_KEY))
             self.payload = MacPayload(
-                bytearray(open_payload)
-                + sec_obj.decrypt(private_payload, mic, message_info)
-            )
+                bytearray(open_payload) +
+                sec_obj.decrypt(private_payload, mic, message_info))
 
         else:
             self.payload = MacPayload(payload)
@@ -372,14 +358,14 @@ class MacFrame:
 
     def _parse_address(self, data, mode):
         if mode == MacHeader.AddressMode.SHORT:
-            return MacAddress(
-                data.read(2), MacAddressType.SHORT, big_endian=False
-            )
+            return MacAddress(data.read(2),
+                              MacAddressType.SHORT,
+                              big_endian=False)
 
         if mode == MacHeader.AddressMode.EXTENDED:
-            return MacAddress(
-                data.read(8), MacAddressType.LONG, big_endian=False
-            )
+            return MacAddress(data.read(8),
+                              MacAddressType.LONG,
+                              big_endian=False)
 
         else:
             return None

@@ -46,4 +46,6 @@
 #define RADIO_CONFIG_DMP_SUPPORT 0            /// Set to 1 to enable Dynamic Multi-Protocol support in radio.c
 #endif
 
+#define RADIO_CONFIG_PA_USES_DCDC 0           /// The PA(s) is(are) fed from VBAT
+
 #endif // __BOARD_CONFIG_H__

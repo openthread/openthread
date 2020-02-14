@@ -29,6 +29,8 @@
 #ifndef NRF52833_MBEDTLS_CONFIG_H_
 #define NRF52833_MBEDTLS_CONFIG_H_
 
+#define MBEDTLS_PK_WRITE_C
+
 #if defined(__ICCARM__)
     _Pragma("diag_suppress=Pe550")
 #endif

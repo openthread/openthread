@@ -27,7 +27,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-
 AUTO_DUT = True
 """bool: Whether use the auto DUT feature of thread harness."""
 

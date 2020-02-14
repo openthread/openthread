@@ -41,6 +41,7 @@ import unittest
 
 
 class Node:
+
     def __init__(self, nodeid, is_mtd=False, simulator=None):
         self.nodeid = nodeid
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
@@ -147,8 +148,7 @@ class Node:
 
         serialPort = '/dev/ttyUSB%d' % ((nodeid - 1) * 2)
         self.pexpect = fdpexpect.fdspawn(
-            os.open(serialPort, os.O_RDWR | os.O_NONBLOCK | os.O_NOCTTY)
-        )
+            os.open(serialPort, os.O_RDWR | os.O_NONBLOCK | os.O_NOCTTY))
 
     def __del__(self):
         self.destroy()
@@ -157,12 +157,9 @@ class Node:
         if not self._initialized:
             return
 
-        if (
-            hasattr(self.pexpect, 'proc')
-            and self.pexpect.proc.poll() is None
-            or not hasattr(self.pexpect, 'proc')
-            and self.pexpect.isalive()
-        ):
+        if (hasattr(self.pexpect, 'proc') and self.pexpect.proc.poll() is None
+                or
+                not hasattr(self.pexpect, 'proc') and self.pexpect.isalive()):
             print("%d: exit" % self.nodeid)
             self.pexpect.send('exit\n')
             self.pexpect.expect(pexpect.EOF)
@@ -178,17 +175,8 @@ class Node:
         dummy_format_str = br"\[THCI\].*?type=%s.*?"
         join_ent_ntf = dummy_format_str % br"JOIN_ENT\.ntf"
         join_ent_rsp = dummy_format_str % br"JOIN_ENT\.rsp"
-        pattern = (
-            b"("
-            + join_fin_req
-            + b")|("
-            + join_fin_rsp
-            + b")|("
-            + join_ent_ntf
-            + b")|("
-            + join_ent_rsp
-            + b")"
-        )
+        pattern = (b"(" + join_fin_req + b")|(" + join_fin_rsp + b")|(" +
+                   join_ent_ntf + b")|(" + join_ent_rsp + b")")
 
         messages = []
         # There are at most 4 cert messages both for joiner and commissioner
@@ -580,12 +568,8 @@ class Node:
         addrs = self.get_addrs()
         for addr in addrs:
             segs = addr.split(':')
-            if (
-                segs[4] == '0'
-                and segs[5] == 'ff'
-                and segs[6] == 'fe00'
-                and segs[7] == 'fc00'
-            ):
+            if (segs[4] == '0' and segs[5] == 'ff' and segs[6] == 'fe00' and
+                    segs[7] == 'fc00'):
                 return addr
         return None
 
@@ -628,47 +612,32 @@ class Node:
     def __getGlobalAddress(self):
         global_address = []
         for ip6Addr in self.get_addrs():
-            if (
-                (not re.match(config.LINK_LOCAL_REGEX_PATTERN, ip6Addr, re.I))
-                and (
-                    not re.match(
-                        config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I
-                    )
-                )
-                and (
-                    not re.match(
-                        config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I
-                    )
-                )
-            ):
+            if ((not re.match(config.LINK_LOCAL_REGEX_PATTERN, ip6Addr, re.I))
+                    and (not re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN,
+                                      ip6Addr, re.I)) and
+                (not re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr,
+                              re.I))):
                 global_address.append(ip6Addr)
 
         return global_address
 
     def __getRloc(self):
         for ip6Addr in self.get_addrs():
-            if (
-                re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I)
-                and re.match(
-                    config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I
-                )
-                and not (
-                    re.match(config.ALOC_FLAG_REGEX_PATTERN, ip6Addr, re.I)
-                )
-            ):
+            if (re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I)
+                    and re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr,
+                                 re.I) and
+                    not (re.match(config.ALOC_FLAG_REGEX_PATTERN, ip6Addr,
+                                  re.I))):
                 return ip6Addr
         return None
 
     def __getAloc(self):
         aloc = []
         for ip6Addr in self.get_addrs():
-            if (
-                re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I)
-                and re.match(
-                    config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I
-                )
-                and re.match(config.ALOC_FLAG_REGEX_PATTERN, ip6Addr, re.I)
-            ):
+            if (re.match(config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I)
+                    and re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr,
+                                 re.I) and
+                    re.match(config.ALOC_FLAG_REGEX_PATTERN, ip6Addr, re.I)):
                 aloc.append(ip6Addr)
 
         return aloc
@@ -676,10 +645,9 @@ class Node:
     def __getMleid(self):
         for ip6Addr in self.get_addrs():
             if re.match(
-                config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr, re.I
-            ) and not (
-                re.match(config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I)
-            ):
+                    config.MESH_LOCAL_PREFIX_REGEX_PATTERN, ip6Addr,
+                    re.I) and not (re.match(
+                        config.ROUTING_LOCATOR_REGEX_PATTERN, ip6Addr, re.I)):
                 return ip6Addr
 
         return None
@@ -780,12 +748,10 @@ class Node:
 
         results = []
         while True:
-            i = self._expect(
-                [
-                    r'\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)\r?\n',
-                    'Done',
-                ]
-            )
+            i = self._expect([
+                r'\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)\r?\n',
+                'Done',
+            ])
             if i == 0:
                 results.append(self.pexpect.match.groups())
             else:
@@ -865,9 +831,11 @@ class Node:
         self.send_command('dataset commit active')
         self._expect('Done')
 
-    def set_pending_dataset(
-        self, pendingtimestamp, activetimestamp, panid=None, channel=None
-    ):
+    def set_pending_dataset(self,
+                            pendingtimestamp,
+                            activetimestamp,
+                            panid=None,
+                            channel=None):
         self.send_command('dataset clear')
         self._expect('Done')
 

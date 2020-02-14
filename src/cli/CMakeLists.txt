@@ -29,6 +29,13 @@
 add_library(openthread-cli-ftd)
 add_library(openthread-cli-mtd)
 
+set_target_properties(
+    openthread-cli-ftd openthread-cli-mtd
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 98
+)
+
 target_compile_definitions(openthread-cli-ftd PRIVATE
     ${OT_PRIVATE_DEFINES}
     OPENTHREAD_FTD=1
@@ -37,6 +44,14 @@ target_compile_definitions(openthread-cli-ftd PRIVATE
 target_compile_definitions(openthread-cli-mtd PRIVATE
     ${OT_PRIVATE_DEFINES}
     OPENTHREAD_MTD=1
+)
+
+target_compile_options(openthread-cli-ftd PRIVATE
+    ${OT_CFLAGS}
+)
+
+target_compile_options(openthread-cli-mtd PRIVATE
+    ${OT_CFLAGS}
 )
 
 set(COMMON_INCLUDES

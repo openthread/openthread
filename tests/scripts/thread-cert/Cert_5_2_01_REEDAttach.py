@@ -34,7 +34,6 @@ import mle
 import config
 import command
 
-
 LEADER = 1
 DUT_ROUTER1 = 2
 REED1 = 3
@@ -42,6 +41,7 @@ MED1 = 4
 
 
 class Cert_5_2_01_REEDAttach(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -102,16 +102,13 @@ class Cert_5_2_01_REEDAttach(unittest.TestCase):
 
         # 3 DUT_ROUTER1: Verify MLE Parent Response
         router1_messages = self.simulator.get_messages_sent_by(DUT_ROUTER1)
-        msg = router1_messages.next_mle_message(
-            mle.CommandType.PARENT_RESPONSE
-        )
+        msg = router1_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
         msg.assertSentToNode(self.nodes[REED1])
         command.check_parent_response(msg)
 
         # 4 DUT_ROUTER1: Verify MLE Child ID Response
         msg = router1_messages.next_mle_message(
-            mle.CommandType.CHILD_ID_RESPONSE
-        )
+            mle.CommandType.CHILD_ID_RESPONSE)
         msg.assertSentToNode(self.nodes[REED1])
         command.check_child_id_response(msg)
 
@@ -126,8 +123,7 @@ class Cert_5_2_01_REEDAttach(unittest.TestCase):
         reed1_messages = self.simulator.get_messages_sent_by(REED1)
         msg = reed1_messages.next_coap_message('0.02')
         reed1_ipv6_address = (
-            msg.ipv6_packet.ipv6_header.source_address.compressed
-        )
+            msg.ipv6_packet.ipv6_header.source_address.compressed)
         msg.assertSentToNode(self.nodes[DUT_ROUTER1])
         msg.assertCoapMessageRequestUriPath('/a/as')
 

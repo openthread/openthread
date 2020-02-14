@@ -35,6 +35,7 @@ import config
 
 
 class TestDiag(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
         self.node = node.Node(1, False, simulator=self.simulator)
@@ -45,54 +46,51 @@ class TestDiag(unittest.TestCase):
 
     def test(self):
         cases = [
-            ('diag\n',
-             'diagnostics mode is disabled\r\n'),
-            ('diag send 10 100\n',
-             'failed\r\nstatus 0xd\r\n'),
-            ('diag start\n',
-             'start diagnostics mode\r\nstatus 0x00\r\n'),
+            ('diag\n', 'diagnostics mode is disabled\r\n'),
+            ('diag send 10 100\n', 'failed\r\nstatus 0xd\r\n'),
+            ('diag start\n', 'start diagnostics mode\r\nstatus 0x00\r\n'),
             ('diag invalid test\n',
              'diag feature \'invalid\' is not supported'),
-            ('diag',
-             'diagnostics mode is enabled\r\n'),
-            ('diag channel 10\n',
-             'failed\r\nstatus 0x7\r\n'),
-            ('diag channel 11\n',
-             'set channel to 11\r\nstatus 0x00\r\n'),
-            ('diag channel\n',
-             'channel: 11\r\n'),
-            ('diag power -10\n',
-             'set tx power to -10 dBm\r\nstatus 0x00\r\n'),
-            ('diag power\n',
-             'tx power: -10 dBm\r\n'),
-            ('diag stats\n',
+            ('diag', 'diagnostics mode is enabled\r\n'),
+            ('diag channel 10\n', 'failed\r\nstatus 0x7\r\n'),
+            ('diag channel 11\n', 'set channel to 11\r\nstatus 0x00\r\n'),
+            ('diag channel\n', 'channel: 11\r\n'),
+            ('diag power -10\n', 'set tx power to -10 dBm\r\nstatus 0x00\r\n'),
+            ('diag power\n', 'tx power: -10 dBm\r\n'),
+            (
+                'diag stats\n',
                 'received packets: 0\r\nsent packets: 0\r\n'
                 'first received packet: rssi=0, lqi=0\r\n'
                 'last received packet: rssi=0, lqi=0\r\n',
-             ),
-            ('diag send 20 100\n',
+            ),
+            (
+                'diag send 20 100\n',
                 r'sending 0x14 packet\(s\), length 0x64\r\nstatus 0x00\r\n',
-             ),
-            ('  diag \t send    \t 20\t100',
+            ),
+            (
+                '  diag \t send    \t 20\t100',
                 r'sending 0x14 packet\(s\), length 0x64\r\nstatus 0x00\r\n',
-             ),
-            ('diag repeat 100 100\n',
+            ),
+            (
+                'diag repeat 100 100\n',
                 'sending packets of length 0x64 at the delay of 0x64 ms\r\nstatus 0x00\r\n',
-             ),
-            ('diag repeat stop\n',
+            ),
+            (
+                'diag repeat stop\n',
                 'repeated packet transmission is stopped\r\nstatus 0x00\r\n',
-             ),
-            ('diag stop\n',
+            ),
+            (
+                'diag stop\n',
                 r'received packets: 0\r\nsent packets: ([1-9]\d*)\r\n'
                 'first received packet: rssi=0, lqi=0\r\n'
                 'last received packet: rssi=0, lqi=0\r\n\n'
                 r'stop diagnostics mode\r\nstatus 0x00\r\n',
-             ),
-            ('diag',
-             'diagnostics mode is disabled\r\n'),
-            ('diag 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32',
+            ),
+            ('diag', 'diagnostics mode is disabled\r\n'),
+            (
+                'diag 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32',
                 r'Error: too many args \(max 32\)\r\n',
-             ),
+            ),
         ]
 
         for case in cases:

@@ -31,10 +31,9 @@
  *   This file includes the implementation for the HDLC interface to radio (RCP).
  */
 
-#include "openthread-core-config.h"
-#include "platform-posix.h"
-
 #include "hdlc_interface.hpp"
+
+#include "platform-posix.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -56,8 +55,8 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include <common/code_utils.hpp>
-#include <common/logging.hpp>
+#include "common/code_utils.hpp"
+#include "common/logging.hpp"
 
 #ifndef SOCKET_UTILS_DEFAULT_SHELL
 #define SOCKET_UTILS_DEFAULT_SHELL "/bin/sh"
@@ -223,7 +222,7 @@ otError HdlcInterface::Write(const uint8_t *aFrame, uint16_t aLength)
 {
     otError error = OT_ERROR_NONE;
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    platformSimSendRadioSpinelWriteEvent(aFrame, aLength);
+    virtualTimeSendRadioSpinelWriteEvent(aFrame, aLength);
 #else
     while (aLength)
     {
@@ -257,8 +256,8 @@ otError HdlcInterface::WaitForFrame(const struct timeval &aTimeout)
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     struct Event event;
 
-    platformSimSendSleepEvent(&timeout);
-    platformSimReceiveEvent(&event);
+    virtualTimeSendSleepEvent(&timeout);
+    virtualTimeReceiveEvent(&event);
 
     switch (event.mEvent)
     {
@@ -417,6 +416,7 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
         int  speed  = 115200;
         int  cstopb = 1;
         char parity = 'N';
+        char flow   = 'N';
 
         VerifyOrExit((rval = tcgetattr(fd, &tios)) == 0);
 
@@ -424,10 +424,10 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
 
         tios.c_cflag = CS8 | HUPCL | CREAD | CLOCAL;
 
-        // example: 115200N1
+        // example: 115200N1H
         if (aConfig != NULL)
         {
-            sscanf(aConfig, "%u%c%d", &speed, &parity, &cstopb);
+            sscanf(aConfig, "%u%c%d%c", &speed, &parity, &cstopb, &flow);
         }
 
         switch (parity)
@@ -442,7 +442,6 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
             break;
         default:
             // not supported
-            assert(false);
             DieNow(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
@@ -456,7 +455,6 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
             tios.c_cflag |= CSTOPB;
             break;
         default:
-            assert(false);
             DieNow(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
@@ -544,7 +542,19 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
             break;
 #endif
         default:
-            assert(false);
+            DieNow(OT_EXIT_INVALID_ARGUMENTS);
+            break;
+        }
+
+        switch (flow)
+        {
+        case 'N':
+            break;
+        case 'H':
+            tios.c_cflag |= CRTSCTS;
+            break;
+        default:
+            // not supported
             DieNow(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }

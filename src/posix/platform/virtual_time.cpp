@@ -32,7 +32,7 @@
  *   This file implements the posix simulation.
  */
 
-#include "openthread-core-config.h"
+#include "openthread-posix-config.h"
 #include "platform-posix.h"
 
 #include <arpa/inet.h>
@@ -53,7 +53,7 @@ static int      sSockFd     = -1; ///< Socket used to communicating with simulat
 static uint16_t sPortOffset = 0;  ///< Port offset for simulation.
 static int      sNodeId     = 0;  ///< Node id of this simulated device.
 
-void platformSimInit(void)
+void virtualTimeInit(void)
 {
     struct sockaddr_in sockaddr;
     char *             offset;
@@ -100,7 +100,7 @@ void platformSimInit(void)
     }
 }
 
-void platformSimDeinit(void)
+void virtualTimeDeinit(void)
 {
     if (sSockFd != -1)
     {
@@ -109,7 +109,7 @@ void platformSimDeinit(void)
     }
 }
 
-static void platformSimSendEvent(struct Event *aEvent, size_t aLength)
+static void virtualTimeSendEvent(struct Event *aEvent, size_t aLength)
 {
     ssize_t            rval;
     struct sockaddr_in sockaddr;
@@ -127,7 +127,7 @@ static void platformSimSendEvent(struct Event *aEvent, size_t aLength)
     }
 }
 
-void platformSimReceiveEvent(struct Event *aEvent)
+void virtualTimeReceiveEvent(struct Event *aEvent)
 {
     ssize_t rval = recvfrom(sSockFd, aEvent, sizeof(*aEvent), 0, NULL, NULL);
 
@@ -139,7 +139,7 @@ void platformSimReceiveEvent(struct Event *aEvent)
     sNow += aEvent->mDelay;
 }
 
-void platformSimSendSleepEvent(const struct timeval *aTimeout)
+void virtualTimeSendSleepEvent(const struct timeval *aTimeout)
 {
     struct Event event;
 
@@ -147,10 +147,10 @@ void platformSimSendSleepEvent(const struct timeval *aTimeout)
     event.mEvent      = OT_SIM_EVENT_ALARM_FIRED;
     event.mDataLength = 0;
 
-    platformSimSendEvent(&event, offsetof(struct Event, mData));
+    virtualTimeSendEvent(&event, offsetof(struct Event, mData));
 }
 
-void platformSimSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength)
+void virtualTimeSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength)
 {
     struct Event event;
 
@@ -160,10 +160,10 @@ void platformSimSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength
 
     memcpy(event.mData, aData, aLength);
 
-    platformSimSendEvent(&event, offsetof(struct Event, mData) + event.mDataLength);
+    virtualTimeSendEvent(&event, offsetof(struct Event, mData) + event.mDataLength);
 }
 
-void platformSimUpdateFdSet(fd_set *        aReadFdSet,
+void virtualTimeUpdateFdSet(fd_set *        aReadFdSet,
                             fd_set *        aWriteFdSet,
                             fd_set *        aErrorFdSet,
                             int *           aMaxFd,
@@ -180,12 +180,14 @@ void platformSimUpdateFdSet(fd_set *        aReadFdSet,
     }
 }
 
-void platformSimProcess(otInstance *  aInstance,
+void virtualTimeProcess(otInstance *  aInstance,
                         const fd_set *aReadFdSet,
                         const fd_set *aWriteFdSet,
                         const fd_set *aErrorFdSet)
 {
-    struct Event event = {0};
+    struct Event event;
+
+    memset(&event, 0, sizeof(event));
 
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aWriteFdSet);
@@ -193,10 +195,10 @@ void platformSimProcess(otInstance *  aInstance,
 
     if (FD_ISSET(sSockFd, aReadFdSet))
     {
-        platformSimReceiveEvent(&event);
+        virtualTimeReceiveEvent(&event);
     }
 
-    platformSimRadioSpinelProcess(aInstance, &event);
+    virtualTimeRadioSpinelProcess(aInstance, &event);
 }
 
 uint64_t platformGetTime(void)

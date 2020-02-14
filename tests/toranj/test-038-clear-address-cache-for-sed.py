@@ -119,7 +119,6 @@ recver = c.prepare_rx(sender)
 wpan.Node.perform_async_tx_rx()
 verify(sender.was_successful and recver.was_successful)
 
-
 # Force c to switch its parent from r2 to r1
 #
 #   r3 ---- r1 ---- r2
@@ -132,7 +131,8 @@ PARENT_SUPERVISION_INTERVAL = 1
 
 REATTACH_WAIT_TIME = CHILD_SUPERVISION_CHECK_TIMEOUT / speedup + 6
 
-c.set(wpan.WPAN_CHILD_SUPERVISION_CHECK_TIMEOUT, str(CHILD_SUPERVISION_CHECK_TIMEOUT))
+c.set(wpan.WPAN_CHILD_SUPERVISION_CHECK_TIMEOUT,
+      str(CHILD_SUPERVISION_CHECK_TIMEOUT))
 r2.set(wpan.WPAN_CHILD_SUPERVISION_INTERVAL, str(PARENT_SUPERVISION_INTERVAL))
 r1.set(wpan.WPAN_CHILD_SUPERVISION_INTERVAL, str(PARENT_SUPERVISION_INTERVAL))
 r3.set(wpan.WPAN_CHILD_SUPERVISION_INTERVAL, str(PARENT_SUPERVISION_INTERVAL))
@@ -164,7 +164,6 @@ recver = c.prepare_rx(sender)
 wpan.Node.perform_async_tx_rx()
 verify(sender.was_successful and recver.was_successful)
 
-
 # Force c to switch its parent from r1 to r3
 #
 #   r3 ---- r1 ---- r2
@@ -186,7 +185,6 @@ def check_c_is_removed_from_r1_child_table():
 
 wpan.verify_within(check_c_is_removed_from_r1_child_table, REATTACH_WAIT_TIME)
 
-
 # check that c is now a child of r3 (r3 should have two child, c and c3)
 child_table = wpan.parse_list(r3.get(wpan.WPAN_THREAD_CHILD_TABLE))
 verify(len(child_table) == 2)
@@ -197,12 +195,10 @@ verify(len(child_table) == 2)
 # r1 will still have an entry pointing to r2, and r2 will have an entry
 # pointing to r1, thus creating a loop (the msg will not be delivered to r3)
 
-
 sender = r1.prepare_tx(r1_address, c_address, "Hi from r1 to c")
 recver = c.prepare_rx(sender)
 wpan.Node.perform_async_tx_rx()
 verify(sender.was_successful and recver.was_successful)
-
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished

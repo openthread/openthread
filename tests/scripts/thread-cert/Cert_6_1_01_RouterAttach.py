@@ -38,6 +38,7 @@ ED = 2
 
 
 class Cert_6_1_1_RouterAttach(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -109,8 +110,7 @@ class Cert_6_1_1_RouterAttach(unittest.TestCase):
 
         # 5 - leader
         msg = leader_messages.next_mle_message(
-            mle.CommandType.CHILD_ID_RESPONSE
-        )
+            mle.CommandType.CHILD_ID_RESPONSE)
         msg.assertSentToNode(self.nodes[ED])
 
         # 6 - leader

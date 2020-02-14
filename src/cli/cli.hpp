@@ -193,6 +193,10 @@ private:
     {
         kMaxArgs          = 32,
         kMaxAutoAddresses = 8,
+
+        kDefaultPingInterval = 1000, // (in mses)
+        kDefaultPingLength   = 8,    // (in bytes)
+        kDefaultPingCount    = 1,
     };
 
     otError ParsePingInterval(const char *aString, uint32_t &aInterval);
@@ -361,8 +365,8 @@ private:
     static void HandleSntpResponse(void *aContext, uint64_t aTime, otError aResult);
 #endif
 
-    void HandleIcmpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const otIcmp6Header &aIcmpHeader);
-    void HandlePingTimer();
+    void HandleIcmpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo, const otIcmp6Header *aIcmpHeader);
+    void SendPing(void);
     void HandleActiveScanResult(otActiveScanResult *aResult);
     void HandleEnergyScanResult(otEnergyScanResult *aResult);
     void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx);
@@ -379,10 +383,13 @@ private:
     const otCliCommand *        mUserCommands;
     uint8_t                     mUserCommandsLength;
     Server *                    mServer;
-    Ip6::MessageInfo            mMessageInfo;
-    uint16_t                    mLength;
-    uint16_t                    mCount;
-    uint32_t                    mInterval;
+    uint16_t                    mPingLength;
+    uint16_t                    mPingCount;
+    uint32_t                    mPingInterval;
+    uint8_t                     mPingHopLimit;
+    bool                        mPingAllowZeroHopLimit;
+    uint16_t                    mPingIdentifier;
+    otIp6Address                mPingDestAddress;
     TimerMilli                  mPingTimer;
     otIcmp6Handler              mIcmpHandler;
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE

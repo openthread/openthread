@@ -30,6 +30,14 @@ add_library(openthread-ncp-ftd)
 add_library(openthread-ncp-mtd)
 add_library(openthread-rcp)
 
+# We depend on C++11 to validate that NCP handlers are sorted.
+set_target_properties(
+    openthread-ncp-mtd openthread-rcp
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 98
+)
+
 target_compile_definitions(openthread-ncp-ftd PRIVATE
     ${OT_PRIVATE_DEFINES}
     OPENTHREAD_FTD=1
@@ -46,6 +54,18 @@ target_compile_definitions(openthread-rcp PRIVATE
     ${OT_PRIVATE_DEFINES}
     OPENTHREAD_RADIO=1
     OPENTHREAD_CONFIG_NCP_UART_ENABLE=1
+)
+
+target_compile_options(openthread-ncp-ftd PRIVATE
+    ${OT_CFLAGS}
+)
+
+target_compile_options(openthread-ncp-mtd PRIVATE
+    ${OT_CFLAGS}
+)
+
+target_compile_options(openthread-rcp PRIVATE
+    ${OT_CFLAGS}
 )
 
 set(COMMON_INCLUDES

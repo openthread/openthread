@@ -37,6 +37,7 @@ ED = 2
 
 
 class Cert_6_4_1_LinkLocal(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 

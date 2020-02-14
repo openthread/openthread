@@ -72,7 +72,7 @@ file core_cm33.h:
 core_cm33.h can be found at:
 
 ```
-<path-to-Simplicity-Studio>/developer/sdks/gecko_sdk_suite/v2.6/platform/CMSIS/Include
+<path-to-Simplicity-Studio>/developer/sdks/gecko_sdk_suite/v2.7/platform/CMSIS/Include
 ```
 
 4. Build OpenThread Firmware (CLI example) on EFR32 platform.

@@ -35,6 +35,8 @@
 #ifndef PLATFORM_POSIX_H_
 #define PLATFORM_POSIX_H_
 
+#include "openthread-posix-config.h"
+
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -45,7 +47,6 @@
 #include <openthread/error.h>
 #include <openthread/instance.h>
 
-#include "platform-config.h"
 #include "common/logging.hpp"
 
 /**
@@ -304,13 +305,13 @@ void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, c
  * This function initialize virtual time simulation.
  *
  */
-void platformSimInit(void);
+void virtualTimeInit(void);
 
 /**
  * This function deinitialize virtual time simulation.
  *
  */
-void platformSimDeinit(void);
+void virtualTimeDeinit(void);
 
 /**
  * This function performs virtual time simulation processing.
@@ -320,7 +321,7 @@ void platformSimDeinit(void);
  * @param[in]   aWriteFdSet     A pointer to the write file descriptors.
  *
  */
-void platformSimProcess(otInstance *  aInstance,
+void virtualTimeProcess(otInstance *  aInstance,
                         const fd_set *aReadFdSet,
                         const fd_set *aWriteFdSet,
                         const fd_set *aErrorFdSet);
@@ -336,7 +337,7 @@ void platformSimProcess(otInstance *  aInstance,
  * @param[inout]  aTimeout     A pointer to the timeout.
  *
  */
-void platformSimUpdateFdSet(fd_set *        aReadFdSet,
+void virtualTimeUpdateFdSet(fd_set *        aReadFdSet,
                             fd_set *        aWriteFdSet,
                             fd_set *        aErrorFdSet,
                             int *           aMaxFd,
@@ -349,7 +350,7 @@ void platformSimUpdateFdSet(fd_set *        aReadFdSet,
  * @param[in] aLength   Length of the spinel frame.
  *
  */
-void platformSimSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength);
+void virtualTimeSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength);
 
 /**
  * This function receives an event of virtual time simulation.
@@ -357,7 +358,7 @@ void platformSimSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength
  * @param[out]  aEvent  A pointer to the event receiving the event.
  *
  */
-void platformSimReceiveEvent(struct Event *aEvent);
+void virtualTimeReceiveEvent(struct Event *aEvent);
 
 /**
  * This function sends sleep event through virtual time simulation.
@@ -365,7 +366,7 @@ void platformSimReceiveEvent(struct Event *aEvent);
  * @param[in]   aTimeout    A pointer to the time sleeping.
  *
  */
-void platformSimSendSleepEvent(const struct timeval *aTimeout);
+void virtualTimeSendSleepEvent(const struct timeval *aTimeout);
 
 /**
  * This function performs radio spinel processing of virtual time simulation.
@@ -374,7 +375,7 @@ void platformSimSendSleepEvent(const struct timeval *aTimeout);
  * @param[in]   aEvent      A pointer to the current event.
  *
  */
-void platformSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent);
+void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent);
 
 /**
  * This function gets system time in microseconds without applying speed up factor.

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,50 +26,23 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "openthread-core-config.h"
-#include "platform-posix.h"
+/**
+ * @file
+ *   This file includes dev borad compile-time configuration constants for efr32.
+ *
+ */
 
-#include <assert.h>
-#include <stdarg.h>
-#include <syslog.h>
+#ifndef __BOARD_CONFIG_H__
+#define __BOARD_CONFIG_H__
 
-#include <openthread/platform/logging.h>
+#define RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT 1   /// Dev board suppports OQPSK modulation in 2.4GHz band.
 
-#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
-void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
-{
-    OT_UNUSED_VARIABLE(aLogRegion);
+#ifndef RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
+#define RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT 0 /// Set to 1 to enable debug counters in radio.c
+#endif
 
-    va_list args;
+#ifndef RADIO_CONFIG_DMP_SUPPORT
+#define RADIO_CONFIG_DMP_SUPPORT 0            /// Set to 1 to enable Dynamic Multi-Protocol support in radio.c
+#endif
 
-    switch (aLogLevel)
-    {
-    case OT_LOG_LEVEL_NONE:
-        aLogLevel = LOG_ALERT;
-        break;
-    case OT_LOG_LEVEL_CRIT:
-        aLogLevel = LOG_CRIT;
-        break;
-    case OT_LOG_LEVEL_WARN:
-        aLogLevel = LOG_WARNING;
-        break;
-    case OT_LOG_LEVEL_NOTE:
-        aLogLevel = LOG_NOTICE;
-        break;
-    case OT_LOG_LEVEL_INFO:
-        aLogLevel = LOG_INFO;
-        break;
-    case OT_LOG_LEVEL_DEBG:
-        aLogLevel = LOG_DEBUG;
-        break;
-    default:
-        assert(false);
-        aLogLevel = LOG_DEBUG;
-        break;
-    }
-
-    va_start(args, aFormat);
-    vsyslog(aLogLevel, aFormat, args);
-    va_end(args);
-}
-#endif // OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+#endif // __BOARD_CONFIG_H__

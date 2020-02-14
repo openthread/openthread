@@ -727,6 +727,8 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aT
     uint8_t oldTlvs[NetworkData::kMaxSize];
     uint8_t oldTlvsLength = NetworkData::kMaxSize;
 
+    VerifyOrExit(Get<RouterTable>().IsAllocated(Mle::Mle::RouterIdFromRloc16(aRloc16)), error = OT_ERROR_NO_ROUTE);
+
     // Verify that `aTlvs` only contains entries matching `aRloc16`.
     SuccessOrExit(error = RlocLookup(aRloc16, rlocIn, rlocStable, aTlvs, aTlvsLength, kMatchModeRloc16,
                                      /* aAllowOtherEntries */ false));

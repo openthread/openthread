@@ -93,27 +93,18 @@ r2.add_ip6_address_on_interface(IP6_ADDR_2, prefix_len=64)
 def check_prefix():
     for node in [r1, r2]:
         prefixes = wpan.parse_on_mesh_prefix_result(
-            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES)
-        )
+            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
         for p in prefixes:
             if p.prefix == IP6_PREFIX:
-                if (
-                    p.origin == 'ncp'
-                    and p.prefix_len == '64'
-                    and p.is_stable()
-                    and p.is_on_mesh()
-                    and p.is_preferred()
-                    and not p.is_def_route()
-                    and not p.is_slaac()
-                    and not p.is_dhcp()
-                    and not p.is_config()
-                    and p.priority == "med"
-                ):
+                if (p.origin == 'ncp' and p.prefix_len == '64' and
+                        p.is_stable() and p.is_on_mesh() and
+                        p.is_preferred() and not p.is_def_route() and
+                        not p.is_slaac() and not p.is_dhcp() and
+                        not p.is_config() and p.priority == "med"):
                     break
         else:  # `for` loop finished without finding the prefix.
-            raise wpan.VerifyError(
-                'Did not find prefix {} on node {}'.format(IP6_PREFIX, r1)
-            )
+            raise wpan.VerifyError('Did not find prefix {} on node {}'.format(
+                IP6_PREFIX, r1))
 
 
 wpan.verify_within(check_prefix, 5)
@@ -141,8 +132,7 @@ r1.remove_ip6_address_on_interface(IP6_ADDR_1, prefix_len=64)
 def check_empty_prefix_list():
     for node in [r1, r2]:
         prefixes = wpan.parse_on_mesh_prefix_result(
-            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES)
-        )
+            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
         verify(len(prefixes) == 0)
 
 

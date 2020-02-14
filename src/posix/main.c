@@ -26,6 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "platform/openthread-posix-config.h"
+
 #include <openthread/config.h>
 
 #include <assert.h>

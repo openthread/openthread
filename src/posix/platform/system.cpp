@@ -32,7 +32,7 @@
  *   This file includes the platform-specific initializers.
  */
 
-#include "openthread-core-config.h"
+#include "openthread-posix-config.h"
 #include "platform-posix.h"
 
 #include <assert.h>
@@ -49,7 +49,7 @@ otInstance *otPosixInit(otPlatformConfig *aPlatformConfig)
     otInstance *instance = NULL;
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    platformSimInit();
+    virtualTimeInit();
 #endif
     platformAlarmInit(aPlatformConfig->mSpeedUpFactor);
     platformRadioInit(aPlatformConfig);
@@ -70,7 +70,7 @@ otInstance *otPosixInit(otPlatformConfig *aPlatformConfig)
 void otPosixDeinit(void)
 {
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    platformSimDeinit();
+    virtualTimeDeinit();
 #endif
     platformRadioDeinit();
 }
@@ -121,7 +121,7 @@ void otPosixMainloopUpdate(otInstance *aInstance, otPosixMainloopContext *aMainl
                              &aMainloop->mMaxFd);
 #endif
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    platformSimUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet, &aMainloop->mMaxFd,
+    virtualTimeUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet, &aMainloop->mMaxFd,
                            &aMainloop->mTimeout);
 #else
     platformRadioUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mMaxFd, &aMainloop->mTimeout);
@@ -160,7 +160,7 @@ int otPosixMainloopPoll(otPosixMainloopContext *aMainloop)
 
             if (noWrite)
             {
-                platformSimSendSleepEvent(&aMainloop->mTimeout);
+                virtualTimeSendSleepEvent(&aMainloop->mTimeout);
             }
 
             rval = select(aMainloop->mMaxFd + 1, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet,
@@ -180,7 +180,7 @@ int otPosixMainloopPoll(otPosixMainloopContext *aMainloop)
 void otPosixMainloopProcess(otInstance *aInstance, const otPosixMainloopContext *aMainloop)
 {
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    platformSimProcess(aInstance, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
+    virtualTimeProcess(aInstance, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
 #else
     platformRadioProcess(aInstance, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet);
 #endif

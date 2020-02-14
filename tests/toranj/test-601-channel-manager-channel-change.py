@@ -45,18 +45,13 @@ def verify_channel(nodes, new_channel, wait_time=20):
     """
     start_time = time.time()
 
-    while not all(
-        [
-            (new_channel == int(node.get(wpan.WPAN_CHANNEL), 0))
-            for node in nodes
-        ]
-    ):
+    while not all([
+        (new_channel == int(node.get(wpan.WPAN_CHANNEL), 0)) for node in nodes
+    ]):
         if time.time() - start_time > wait_time:
-            print(
-                'Took too long to switch to channel {} ({}>{} sec)'.format(
-                    new_channel, time.time() - start_time, wait_time
-                )
-            )
+            print('Took too long to switch to channel {} ({}>{} sec)'.format(
+                new_channel,
+                time.time() - start_time, wait_time))
             exit(1)
         time.sleep(0.1)
 
@@ -142,9 +137,8 @@ verify_channel(all_nodes, 16)
 
 # Request different channels from two routers (r1 and r2)
 
-r1.set(
-    wpan.WPAN_CHANNEL_MANAGER_DELAY, '20'
-)  # increase the time to ensure r1 change is in process
+r1.set(wpan.WPAN_CHANNEL_MANAGER_DELAY,
+       '20')  # increase the time to ensure r1 change is in process
 r1.set(wpan.WPAN_CHANNEL_MANAGER_NEW_CHANNEL, '17')
 time.sleep(10.5 / speedup)
 verify_channel(all_nodes, 16)

@@ -31,11 +31,10 @@
  *   This file implements the spinel based radio transceiver.
  */
 
-#include "openthread-core-config.h"
+#include "radio_spinel.hpp"
+
 #include "platform-posix.h"
 #include "ncp/spinel_decoder.hpp"
-
-#include "radio_spinel.hpp"
 
 #include <assert.h>
 #include <errno.h>
@@ -49,18 +48,19 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include <common/code_utils.hpp>
-#include <common/encoding.hpp>
-#include <common/logging.hpp>
-#include <common/new.hpp>
-#include <common/settings.hpp>
-#include <meshcop/dataset.hpp>
-#include <meshcop/meshcop_tlvs.hpp>
 #include <openthread/dataset.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/settings.h>
+
+#include "common/code_utils.hpp"
+#include "common/encoding.hpp"
+#include "common/logging.hpp"
+#include "common/new.hpp"
+#include "common/settings.hpp"
+#include "meshcop/dataset.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
 
 #ifndef TX_WAIT_US
 #define TX_WAIT_US (5 * US_PER_S)
@@ -1889,7 +1889,7 @@ void ot::PosixApp::RadioSpinel::Process(const Event &aEvent)
     }
 }
 
-void platformSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent)
+void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent)
 {
     sRadioSpinel.Process(*aEvent);
     OT_UNUSED_VARIABLE(aInstance);

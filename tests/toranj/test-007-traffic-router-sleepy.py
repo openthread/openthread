@@ -97,9 +97,8 @@ for poll_interval in [10, 100, 300]:
 
         s1 = node1.prepare_tx((src, PORT), (dst, PORT), 'Hi there!', NUM_MSGS)
         r1 = node2.prepare_rx(s1)
-        s2 = node2.prepare_tx(
-            (dst, PORT), (src, PORT), 'Hello back to you!', NUM_MSGS
-        )
+        s2 = node2.prepare_tx((dst, PORT), (src, PORT), 'Hello back to you!',
+                              NUM_MSGS)
         r2 = node1.prepare_rx(s2)
 
         wpan.Node.perform_async_tx_rx()

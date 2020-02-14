@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,43 +26,50 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_PLATFORM_CONFIG_H_
-#define OPENTHREAD_PLATFORM_CONFIG_H_
+#include "openthread-posix-config.h"
+#include "platform-posix.h"
 
-/**
- * @file
- * @brief
- *   This file includes the POSIX platform-specific configurations.
- */
+#include <assert.h>
+#include <stdarg.h>
+#include <syslog.h>
 
-/**
- * @def OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
- *
- * Define as 1 to enable PTY device support in POSIX app.
- *
- */
-#ifndef OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
-#define OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE 1
-#endif
+#include <openthread/platform/logging.h>
 
-/**
- * @def OPENTHREAD_POSIX_APP_SOCKET_BASENAME
- *
- * Define socket basename used by POSIX app daemon.
- *
- */
-#ifndef OPENTHREAD_POSIX_APP_SOCKET_BASENAME
-#define OPENTHREAD_POSIX_APP_SOCKET_BASENAME "/tmp/openthread"
-#endif
+#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+{
+    OT_UNUSED_VARIABLE(aLogRegion);
 
-/**
- * @def OPENTHREAD_POSIX_VIRTUAL_TIME
- *
- * This setting configures whether to use virtual time.
- *
- */
-#ifndef OPENTHREAD_POSIX_VIRTUAL_TIME
-#define OPENTHREAD_POSIX_VIRTUAL_TIME 0
-#endif
+    va_list args;
 
-#endif // OPENTHREAD_PLATFORM_CONFIG_H_
+    switch (aLogLevel)
+    {
+    case OT_LOG_LEVEL_NONE:
+        aLogLevel = LOG_ALERT;
+        break;
+    case OT_LOG_LEVEL_CRIT:
+        aLogLevel = LOG_CRIT;
+        break;
+    case OT_LOG_LEVEL_WARN:
+        aLogLevel = LOG_WARNING;
+        break;
+    case OT_LOG_LEVEL_NOTE:
+        aLogLevel = LOG_NOTICE;
+        break;
+    case OT_LOG_LEVEL_INFO:
+        aLogLevel = LOG_INFO;
+        break;
+    case OT_LOG_LEVEL_DEBG:
+        aLogLevel = LOG_DEBUG;
+        break;
+    default:
+        assert(false);
+        aLogLevel = LOG_DEBUG;
+        break;
+    }
+
+    va_start(args, aFormat);
+    vsyslog(aLogLevel, aFormat, args);
+    va_end(args);
+}
+#endif // OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED

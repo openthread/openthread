@@ -40,6 +40,7 @@ ROUTER2 = 3
 
 
 class Cert_5_1_03_RouterAddressReallocation(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -124,8 +125,7 @@ class Cert_5_1_03_RouterAddressReallocation(unittest.TestCase):
 
         # Leader or Router1 can be parent of Router2
         if leader_messages.contains_mle_message(
-            mle.CommandType.CHILD_ID_RESPONSE
-        ):
+                mle.CommandType.CHILD_ID_RESPONSE):
             leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
 
             msg = router2_messages.next_coap_message("0.02")
@@ -134,11 +134,8 @@ class Cert_5_1_03_RouterAddressReallocation(unittest.TestCase):
             msg = leader_messages.next_coap_message("2.04")
 
         elif router1_messages.contains_mle_message(
-            mle.CommandType.CHILD_ID_RESPONSE
-        ):
-            router1_messages.next_mle_message(
-                mle.CommandType.CHILD_ID_RESPONSE
-            )
+                mle.CommandType.CHILD_ID_RESPONSE):
+            router1_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
 
             msg = router2_messages.next_coap_message("0.02")
             msg.assertCoapMessageRequestUriPath("/a/as")
@@ -154,8 +151,7 @@ class Cert_5_1_03_RouterAddressReallocation(unittest.TestCase):
         # Router1 make two attempts to reconnect to its current Partition.
         for _ in range(4):
             msg = router1_messages.next_mle_message(
-                mle.CommandType.PARENT_REQUEST
-            )
+                mle.CommandType.PARENT_REQUEST)
             msg.assertSentWithHopLimit(255)
             msg.assertSentToDestinationAddress("ff02::2")
             msg.assertMleMessageContainsTlv(mle.Mode)
@@ -182,8 +178,7 @@ class Cert_5_1_03_RouterAddressReallocation(unittest.TestCase):
 
         # 7 - Router1
         msg = router1_messages.next_mle_message(
-            mle.CommandType.CHILD_ID_REQUEST
-        )
+            mle.CommandType.CHILD_ID_REQUEST)
         msg.assertSentToNode(self.nodes[ROUTER2])
         msg.assertMleMessageContainsTlv(mle.Response)
         msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
