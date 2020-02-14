@@ -2901,10 +2901,11 @@ void Interpreter::ProcessScan(int argc, char *argv[])
                                                &Interpreter::HandleActiveScanResult, this));
     }
 
-    return;
-
 exit:
-    AppendResult(error);
+    if (error != OT_ERROR_NONE)
+    {
+        AppendResult(error);
+    }
 }
 
 void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult, void *aContext)
