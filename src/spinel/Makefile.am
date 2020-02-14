@@ -54,28 +54,36 @@ COMMON_CPPFLAGS                                   = \
 
 COMMON_SOURCES                                    = \
     spinel.c                                        \
-    spinel.h                                        \
     spinel_buffer.cpp                               \
-    spinel_buffer.hpp                               \
     spinel_decoder.cpp                              \
-    spinel_decoder.hpp                              \
     spinel_encoder.cpp                              \
-    spinel_encoder.hpp                              \
-    spinel_platform.h                               \
     $(NULL)
 
-libopenthread_spinel_ncp_a_CPPFLAGS               = \
-    -DOPENTHREAD_MESSAGE_IN_SPINEL_BUFFER=1         \
-    $(COMMON_CPPFLAGS)                              \
+
+include_HEADERS                                   = \
+    spinel.h                                        \
+    $(NULL)
+
+noinst_HEADERS                                    = \
+    spinel_buffer.hpp                               \
+    spinel_decoder.hpp                              \
+    spinel_encoder.hpp                              \
+    spinel_platform.h                               \
+    openthread-spinel-config.h                      \
+    $(NULL)
+
+libopenthread_spinel_ncp_a_CPPFLAGS                      = \
+    -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1 \
+    $(COMMON_CPPFLAGS)                                     \
     $(NULL)
 
 libopenthread_spinel_ncp_a_SOURCES                = \
     $(COMMON_SOURCES)                               \
     $(NULL)
 
-libopenthread_spinel_rcp_a_CPPFLAGS               = \
-    -DOPENTHREAD_MESSAGE_IN_SPINEL_BUFFER=0         \
-    $(COMMON_CPPFLAGS)                              \
+libopenthread_spinel_rcp_a_CPPFLAGS                      = \
+    -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=0 \
+    $(COMMON_CPPFLAGS)                                     \
     $(NULL)
 
 libopenthread_spinel_rcp_a_SOURCES                = \

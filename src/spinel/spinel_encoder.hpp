@@ -33,6 +33,8 @@
 #ifndef SPINEL_ENCODER_HPP_
 #define SPINEL_ENCODER_HPP_
 
+#include "openthread-spinel-config.h"
+
 #include <openthread/ip6.h>
 #include <openthread/message.h>
 #include <openthread/ncp.h>
@@ -538,7 +540,7 @@ public:
      */
     otError WriteDataWithLen(const uint8_t *aData, uint16_t aDataLen);
 
-#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     /**
      * This method adds a message to the current input frame.
      *

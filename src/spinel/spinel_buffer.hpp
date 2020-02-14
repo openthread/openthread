@@ -33,6 +33,8 @@
 #ifndef NCP_FRAME_BUFFER_HPP_
 #define NCP_FRAME_BUFFER_HPP_
 
+#include "openthread-spinel-config.h"
+
 #include <openthread/message.h>
 
 namespace ot {
@@ -199,7 +201,7 @@ public:
      */
     otError InFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength);
 
-#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     /**
      * This method adds a message to the current input frame.
      *
@@ -613,7 +615,7 @@ private:
     otError OutFramePrepareSegment(void);
     void    OutFrameMoveToNextSegment(void);
 
-#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     otError OutFramePrepareMessage(void);
     otError OutFrameFillMessageBuffer(void);
 #endif
@@ -642,7 +644,7 @@ private:
     uint8_t *mReadSegmentTail;           // Pointer to end of current segment in the frame being read.
     uint8_t *mReadPointer;               // Pointer to next byte to read (either in segment or in msg buffer).
 
-#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     otMessageQueue mWriteFrameMessageQueue;                // Message queue for the current frame being written.
     otMessageQueue mMessageQueue[kNumPrios];               // Main message queues.
     otMessage *    mReadMessage;                           // Current Message in the frame being read.

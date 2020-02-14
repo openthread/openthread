@@ -45,7 +45,7 @@ Buffer::Buffer(uint8_t *aBuffer, uint16_t aBufferLength)
     , mBufferEnd(aBuffer + aBufferLength)
     , mBufferLength(aBufferLength)
 {
-#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     for (uint8_t priority = 0; priority < kNumPrios; priority++)
     {
         otMessageQueueInit(&mMessageQueue[priority]);
@@ -61,7 +61,7 @@ Buffer::Buffer(uint8_t *aBuffer, uint16_t aBufferLength)
 
 void Buffer::Clear(void)
 {
-#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     otMessage *message;
 #endif
 
@@ -84,7 +84,7 @@ void Buffer::Clear(void)
     mReadSegmentTail               = mBuffer;
     mReadPointer                   = mBuffer;
 
-#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     mReadMessage       = NULL;
     mReadMessageOffset = 0;
     mReadMessageTail   = mMessageBuffer;
@@ -305,7 +305,7 @@ void Buffer::InFrameEndSegment(uint16_t aSegmentHeaderFlags)
 // This method discards the current frame being written.
 void Buffer::InFrameDiscard(void)
 {
-#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     otMessage *message;
 #endif
 
@@ -314,7 +314,7 @@ void Buffer::InFrameDiscard(void)
     // Move the write segment head and tail pointers back to frame start.
     mWriteSegmentHead = mWriteSegmentTail = mWriteFrameStart[mWriteDirection];
 
-#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
         otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
@@ -391,7 +391,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
 otError Buffer::InFrameFeedMessage(otMessage *aMessage)
 {
     otError error = OT_ERROR_NONE;
@@ -500,7 +500,7 @@ exit:
 
 otError Buffer::InFrameEnd(void)
 {
-#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     otMessage *message;
 #endif
     otError error = OT_ERROR_NONE;
@@ -516,7 +516,7 @@ otError Buffer::InFrameEnd(void)
     // Update the frame start pointer to current segment head to be ready for next frame.
     mWriteFrameStart[mWriteDirection] = mWriteSegmentHead;
 
-#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     // Move all the messages from the frame queue to the main queue.
     while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
@@ -599,7 +599,7 @@ otError Buffer::OutFramePrepareSegment(void)
             ExitNow();
         }
 
-#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
         // No data in this segment,  prepare any appended/associated message of this segment.
         if (OutFramePrepareMessage() == OT_ERROR_NONE)
         {
@@ -620,7 +620,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
 // This method prepares an associated message in current segment and fills the message buffer. It returns
 // ThreadError_NotFound if there is no message or if the message has no content.
 otError Buffer::OutFramePrepareMessage(void)
@@ -680,7 +680,7 @@ otError Buffer::OutFrameFillMessageBuffer(void)
 exit:
     return error;
 }
-#endif // #if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
+#endif // #if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
 
 otError Buffer::OutFrameBegin(void)
 {
@@ -693,7 +693,7 @@ otError Buffer::OutFrameBegin(void)
     // Move the segment head and tail to start of frame.
     mReadSegmentHead = mReadSegmentTail = mReadFrameStart[mReadDirection];
 
-#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     mReadMessage = NULL;
 #endif
 
@@ -735,7 +735,7 @@ uint8_t Buffer::OutFrameReadByte(void)
         // Check if at end of current segment.
         if (mReadPointer == mReadSegmentTail)
         {
-#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
             // Prepare any message associated with this segment.
             error = OutFramePrepareMessage();
 #else
@@ -752,7 +752,7 @@ uint8_t Buffer::OutFrameReadByte(void)
         break;
 
     case kReadStateInMessage:
-#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
         // Read a byte from current read pointer and move the read pointer by 1 byte.
         retval = *mReadPointer;
         mReadPointer++;
@@ -823,7 +823,7 @@ otError Buffer::OutFrameRemove(void)
             }
         }
 
-#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
         // If current segment has an appended message, remove it from message queue and free it.
         if (header & kSegmentHeaderMessageIndicatorFlag)
         {
@@ -892,7 +892,7 @@ uint16_t Buffer::OutFrameGetLength(void)
     uint16_t header;
     uint8_t *bufPtr;
     uint8_t  numSegments;
-#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     otMessage *message = NULL;
 #endif
 
@@ -923,7 +923,7 @@ uint16_t Buffer::OutFrameGetLength(void)
             }
         }
 
-#if OPENTHREAD_MESSAGE_IN_SPINEL_BUFFER
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
         // If current segment has an associated message, add its length to frame length.
         if (header & kSegmentHeaderMessageIndicatorFlag)
         {

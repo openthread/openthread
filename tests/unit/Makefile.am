@@ -53,7 +53,7 @@ AM_CPPFLAGS                                                         = \
     -DOPENTHREAD_FTD=1                                                \
     -DOPENTHREAD_MTD=0                                                \
     -DOPENTHREAD_RADIO=0                                              \
-    -DOPENTHREAD_MESSAGE_IN_SPINEL_BUFFER=1                           \
+    -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1            \
     -I$(top_srcdir)/include                                           \
     -I$(top_srcdir)/src                                               \
     -I$(top_srcdir)/src/core                                          \

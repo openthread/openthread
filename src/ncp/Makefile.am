@@ -58,28 +58,28 @@ COMMON_CPPFLAGS                                   = \
     $(OPENTHREAD_TARGET_DEFINES)                    \
     $(NULL)
 
-libopenthread_ncp_mtd_a_CPPFLAGS                  = \
-    -DOPENTHREAD_RADIO=0                            \
-    -DOPENTHREAD_FTD=0                              \
-    -DOPENTHREAD_MTD=1                              \
-    -DOPENTHREAD_MESSAGE_IN_SPINEL_BUFFER=1         \
-    $(COMMON_CPPFLAGS)                              \
+libopenthread_ncp_mtd_a_CPPFLAGS                         = \
+    -DOPENTHREAD_RADIO=0                                   \
+    -DOPENTHREAD_FTD=0                                     \
+    -DOPENTHREAD_MTD=1                                     \
+    -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1 \
+    $(COMMON_CPPFLAGS)                                     \
     $(NULL)
 
-libopenthread_ncp_ftd_a_CPPFLAGS                  = \
-    -DOPENTHREAD_RADIO=0                            \
-    -DOPENTHREAD_FTD=1                              \
-    -DOPENTHREAD_MTD=0                              \
-    -DOPENTHREAD_MESSAGE_IN_SPINEL_BUFFER=1         \
-    $(COMMON_CPPFLAGS)                              \
+libopenthread_ncp_ftd_a_CPPFLAGS                         = \
+    -DOPENTHREAD_RADIO=0                                   \
+    -DOPENTHREAD_FTD=1                                     \
+    -DOPENTHREAD_MTD=0                                     \
+    -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1 \
+    $(COMMON_CPPFLAGS)                                     \
     $(NULL)
 
-libopenthread_rcp_a_CPPFLAGS                      = \
-    -DOPENTHREAD_RADIO=1                            \
-    -DOPENTHREAD_FTD=0                              \
-    -DOPENTHREAD_MTD=0                              \
-    -DOPENTHREAD_MESSAGE_IN_SPINEL_BUFFER=0         \
-    $(COMMON_CPPFLAGS)                              \
+libopenthread_rcp_a_CPPFLAGS                             = \
+    -DOPENTHREAD_RADIO=1                                   \
+    -DOPENTHREAD_FTD=0                                     \
+    -DOPENTHREAD_MTD=0                                     \
+    -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=0 \
+    $(COMMON_CPPFLAGS)                                     \
     $(NULL)
 
 libopenthread_ncp_mtd_a_LIBADD                    = \
