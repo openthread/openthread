@@ -41,22 +41,22 @@
 #include "spinel_buffer.hpp"
 
 namespace ot {
-namespace Utils {
+namespace Spinel {
 
 /**
  * This class defines a spinel encoder.
  *
  */
-class SpinelEncoder
+class Encoder
 {
 public:
     /**
-     * This constructor initializes a `SpinelEncoder` object.
+     * This constructor initializes a `Encoder` object.
      *
-     * @param[in] aNcpBuffer   A reference to a `SpinelBuffer` where the frames are written.
+     * @param[in] aNcpBuffer   A reference to a `Spinel::Buffer` where the frames are written.
      *
      */
-    explicit SpinelEncoder(SpinelBuffer &aNcpBuffer)
+    explicit Encoder(Spinel::Buffer &aNcpBuffer)
         : mNcpBuffer(aNcpBuffer)
         , mNumOpenStructs(0)
         , mSavedNumOpenStructs(0)
@@ -76,7 +76,7 @@ public:
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to start a new frame.
      *
      */
-    otError BeginFrame(SpinelBuffer::Priority aPriority);
+    otError BeginFrame(Spinel::Buffer::Priority aPriority);
 
     /**
      * This method begins a new spinel command frame to be added/written to the frame buffer.
@@ -548,10 +548,10 @@ public:
      * If no buffer space is available, this method will discard and clear the frame and return error status
      * `OT_ERROR_NO_BUFS`.
      *
-     * The ownership of the passed-in message @p aMessage changes to underlying `SpinelBuffer` ONLY when the entire
+     * The ownership of the passed-in message @p aMessage changes to underlying `Spinel::Buffer` ONLY when the entire
      * frame is successfully finished (i.e., with a successful call to `EndFrame()` for the current frame being
      * written), and in this case the `otMessage` instance will be freed once the frame is removed from the
-     * `SpinelBuffer`. However, if the frame gets discarded before it is finished (e.g., running out of buffer space),
+     * `Spinel::Buffer`. However, if the frame gets discarded before it is finished (e.g., running out of buffer space),
      * the  `otMessage` instance remains unchanged.
      *
      * @param[in] aMessage              A message to be added to current frame.
@@ -682,15 +682,15 @@ private:
         kMaxNestedStructs     = 4,  ///< Maximum number of nested structs.
     };
 
-    SpinelBuffer &              mNcpBuffer;
-    SpinelBuffer::WritePosition mStructPosition[kMaxNestedStructs];
-    uint8_t                     mNumOpenStructs;
+    Spinel::Buffer &              mNcpBuffer;
+    Spinel::Buffer::WritePosition mStructPosition[kMaxNestedStructs];
+    uint8_t                       mNumOpenStructs;
 
-    uint8_t                     mSavedNumOpenStructs;
-    SpinelBuffer::WritePosition mSavedPosition;
+    uint8_t                       mSavedNumOpenStructs;
+    Spinel::Buffer::WritePosition mSavedPosition;
 };
 
-} // namespace Utils
+} // namespace Spinel
 } // namespace ot
 
 #endif // SPINEL_ENCODER_HPP_

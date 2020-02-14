@@ -44,8 +44,6 @@
 #include "net/ip6.hpp"
 #include "utils/static_assert.hpp"
 
-using namespace ot::Utils;
-
 #if OPENTHREAD_CONFIG_NCP_SPI_ENABLE
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
@@ -242,12 +240,12 @@ void NcpSpi::SpiTransactionProcess(void)
     }
 }
 
-void NcpSpi::HandleFrameAddedToTxBuffer(void *                 aContext,
-                                        SpinelBuffer::FrameTag aTag,
-                                        SpinelBuffer::Priority aPriority,
-                                        SpinelBuffer *         aSpinelBuffer)
+void NcpSpi::HandleFrameAddedToTxBuffer(void *                   aContext,
+                                        Spinel::Buffer::FrameTag aTag,
+                                        Spinel::Buffer::Priority aPriority,
+                                        Spinel::Buffer *         aBuffer)
 {
-    OT_UNUSED_VARIABLE(aSpinelBuffer);
+    OT_UNUSED_VARIABLE(aBuffer);
     OT_UNUSED_VARIABLE(aTag);
     OT_UNUSED_VARIABLE(aPriority);
 

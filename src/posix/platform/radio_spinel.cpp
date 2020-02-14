@@ -66,7 +66,7 @@
 #define TX_WAIT_US (5 * US_PER_S)
 #endif
 
-using ot::Utils::SpinelDecoder;
+using ot::Spinel::Decoder;
 
 static ot::PosixApp::RadioSpinel sRadioSpinel;
 
@@ -500,7 +500,7 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
     otError              error = OT_ERROR_NONE;
     otOperationalDataset opDataset;
     bool                 isActive = ((mWaitingKey == SPINEL_PROP_THREAD_ACTIVE_DATASET) ? true : false);
-    SpinelDecoder        decoder;
+    Spinel::Decoder        decoder;
     MeshCoP::Dataset     dataset(isActive ? MeshCoP::Tlv::kActiveTimestamp : MeshCoP::Tlv::kPendingTimestamp);
 
     memset(&opDataset, 0, sizeof(otOperationalDataset));

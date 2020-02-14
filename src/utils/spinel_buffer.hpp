@@ -36,20 +36,20 @@
 #include <openthread/message.h>
 
 namespace ot {
-namespace Utils {
+namespace Spinel {
 
 /**
  * This class implements a buffer/queue for storing Ncp frames.
  *
  * A frame can consist of a sequence of data bytes and/or the content of an `otMessage` or a combination of the two.
- * `SpinelBuffer` implements priority FIFO logic for storing and reading frames. Two priority levels of high and low
+ * `Buffer` implements priority FIFO logic for storing and reading frames. Two priority levels of high and low
  * are supported. Within same priority level first-in-first-out order is preserved. High priority frames are read
  * ahead of any low priority ones.
  *
  */
-class SpinelBuffer
+class Buffer
 {
-    friend class SpinelEncoder;
+    friend class Encoder;
 
 public:
     /**
@@ -65,7 +65,7 @@ public:
 
     /**
      * Defines the (abstract) frame tag type. The tag is a unique value (within currently queued frames) associated
-     * with a frame in the `SpinelBuffer`. Frame tags can be compared with one another using operator `==`.
+     * with a frame in the `Buffer`. Frame tags can be compared with one another using operator `==`.
      *
      */
     typedef const void *FrameTag;
@@ -79,7 +79,7 @@ public:
     /**
      * Defines the structure to hold a write position for an input frame (frame being written).
      *
-     * It should be considered as an opaque data structure to users of `SpinelBuffer`.
+     * It should be considered as an opaque data structure to users of `Buffer`.
      *
      */
     struct WritePosition
@@ -99,20 +99,20 @@ public:
         uint8_t *mPosition;    //< Pointer into buffer corresponding to saved write position.
         uint8_t *mSegmentHead; //< Pointer to segment head.
 
-        friend class SpinelBuffer;
+        friend class Buffer;
     };
 
     /**
-     * Defines a function pointer callback which is invoked to inform a change in `SpinelBuffer` either when a new
-     * frame is added/written to `SpinelBuffer` or when a frame is removed from `SpinelBuffer`.
+     * Defines a function pointer callback which is invoked to inform a change in `Buffer` either when a new
+     * frame is added/written to `Buffer` or when a frame is removed from `SpinelBuffer`.
      *
      * @param[in] aContext              A pointer to arbitrary context information.
      * @param[in] aTag                  The tag associated with the frame which is added or removed.
      * @param[in] aPriority             The priority of frame.
-     * @param[in] aSpinelBuffer         A pointer to the `SpinelBuffer`.
+     * @param[in] aBuffer         A pointer to the `SpinelBuffer`.
      *
      */
-    typedef void (*BufferCallback)(void *aContext, FrameTag aTag, Priority aPriority, SpinelBuffer *aSpinelBuffer);
+    typedef void (*BufferCallback)(void *aContext, FrameTag aTag, Priority aPriority, Buffer *aBuffer);
 
     /**
      * This constructor initializes an NCP frame buffer.
@@ -121,7 +121,7 @@ public:
      * @param[in] aBufferLength         The buffer size (in bytes).
      *
      */
-    SpinelBuffer(uint8_t *aBuffer, uint16_t aBufferLength);
+    Buffer(uint8_t *aBuffer, uint16_t aBufferLength);
 
     /**
      * This method clears the NCP frame buffer. All the frames are cleared/removed.
@@ -209,7 +209,7 @@ public:
      * If no buffer space is available, this method will discard and clear the frame and return error status
      * `OT_ERROR_NO_BUFS`.
      *
-     * The ownership of the passed-in message @p aMessage changes to `SpinelBuffer` ONLY when the entire frame is
+     * The ownership of the passed-in message @p aMessage changes to `Buffer` ONLY when the entire frame is
      * successfully finished (i.e., with a successful call to `InFrameEnd()` for the current input frame), and in this
      * case the `otMessage` instance will be freed once the frame is removed (using `OutFrameRemove()`) from NCP buffer.
      * However, if the input frame gets discarded before it is finished (e.g., running out of buffer space), the
@@ -316,7 +316,7 @@ public:
     /**
      * This method returns the tag assigned to last successfully written/added frame to NcpBuffer (i.e., last input
      * frame for which `InFrameEnd()` was called and returned success status). The tag is a unique value (within
-     * currently queued frames) associated with a frame in the `SpinelBuffer`. The tag can be used to identify the
+     * currently queued frames) associated with a frame in the `Buffer`. The tag can be used to identify the
      * same frame when it is read and removed from the NcpBuffer. Tags can be compared using operator `==`.
      *
      * @returns The tag of the last successfully written frame, or `kInvalidTag` if no frame is written so far.
@@ -443,10 +443,10 @@ public:
 
 private:
     /*
-     * `SpinelBuffer` Implementation
+     * `Buffer` Implementation
      * -------------------------------
      *
-     * `SpinelBuffer` internally stores a frame as a sequence of data segments. Each segment stores a portion of
+     * `Buffer` internally stores a frame as a sequence of data segments. Each segment stores a portion of
      * frame. The data segments are stored in the main buffer `mBuffer`. `mBuffer` is utilized as a circular buffer.
 
      * The content of messages (which are added using `InFrameFeedMessage()`) are not directly copied in the `mBuffer`
@@ -489,7 +489,7 @@ private:
      *   Segment #1 Header                                                      Segment #2 Header
      *
      *
-     * `SpinelBuffer` uses the `mBuffer` as a circular/ring buffer. To support two frame priorities the buffer is
+     * `Buffer` uses the `mBuffer` as a circular/ring buffer. To support two frame priorities the buffer is
      * divided into two high-priority and low-priority regions. The high priority frames are stored in buffer in
      * backward direction while the low-priority frames use the buffer in forward direction. This model ensures the
      * available buffer space is utilized efficiently between all frame types.
@@ -513,7 +513,7 @@ private:
      * When frames are removed, if possible, the `mReadFrameStart` and `mWriteFrameStart` pointers of the two priority
      * levels are moved closer to avoid gaps.
      *
-     * For an output frame (frame being read), SpinelBuffer maintains a `ReadState` along with a set of pointers
+     * For an output frame (frame being read), Buffer maintains a `ReadState` along with a set of pointers
      * into the buffer:
      *
      *             mReadFrameStart[priority]: Start of the current/front frame.
@@ -652,7 +652,7 @@ private:
 #endif
 };
 
-} // namespace Utils
+} // namespace Spinel
 } // namespace ot
 
 #endif // NCP_FRAME_BUFFER_HPP_

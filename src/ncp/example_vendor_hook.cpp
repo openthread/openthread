@@ -54,7 +54,7 @@ otError NcpBase::VendorCommandHandler(uint8_t aHeader, unsigned int aCommand)
     return error;
 }
 
-void NcpBase::VendorHandleFrameRemovedFromNcpBuffer(SpinelBuffer::FrameTag aFrameTag)
+void NcpBase::VendorHandleFrameRemovedFromNcpBuffer(Spinel::Buffer::FrameTag aFrameTag)
 {
     // This method is a callback which mirrors `NcpBase::HandleFrameRemovedFromNcpBuffer()`.
     // It is called when a spinel frame is sent and removed from NCP buffer.

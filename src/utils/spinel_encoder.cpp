@@ -37,16 +37,16 @@
 #include "common/code_utils.hpp"
 
 namespace ot {
-namespace Utils {
+namespace Spinel {
 
-otError SpinelEncoder::BeginFrame(SpinelBuffer::Priority aPriority)
+otError Encoder::BeginFrame(Spinel::Buffer::Priority aPriority)
 {
     mNumOpenStructs = 0;
     mNcpBuffer.InFrameBegin(aPriority);
     return OT_ERROR_NONE;
 }
 
-otError SpinelEncoder::BeginFrame(uint8_t aHeader, unsigned int aCommand)
+otError Encoder::BeginFrame(uint8_t aHeader, unsigned int aCommand)
 {
     otError error = OT_ERROR_NONE;
 
@@ -54,11 +54,11 @@ otError SpinelEncoder::BeginFrame(uint8_t aHeader, unsigned int aCommand)
 
     if (SPINEL_HEADER_GET_TID(aHeader) != 0)
     {
-        SuccessOrExit(error = BeginFrame(SpinelBuffer::kPriorityHigh));
+        SuccessOrExit(error = BeginFrame(Spinel::Buffer::kPriorityHigh));
     }
     else
     {
-        SuccessOrExit(error = BeginFrame(SpinelBuffer::kPriorityLow));
+        SuccessOrExit(error = BeginFrame(Spinel::Buffer::kPriorityLow));
     }
 
     SuccessOrExit(error = WriteUint8(aHeader));
@@ -68,7 +68,7 @@ exit:
     return error;
 }
 
-otError SpinelEncoder::BeginFrame(uint8_t aHeader, unsigned int aCommand, spinel_prop_key_t aKey)
+otError Encoder::BeginFrame(uint8_t aHeader, unsigned int aCommand, spinel_prop_key_t aKey)
 {
     otError error = OT_ERROR_NONE;
 
@@ -87,7 +87,7 @@ exit:
     return error;
 }
 
-otError SpinelEncoder::OverwriteWithLastStatusError(spinel_status_t aStatus)
+otError Encoder::OverwriteWithLastStatusError(spinel_status_t aStatus)
 {
     otError error = OT_ERROR_NONE;
 
@@ -99,7 +99,7 @@ exit:
     return error;
 }
 
-otError SpinelEncoder::EndFrame(void)
+otError Encoder::EndFrame(void)
 {
     otError error = OT_ERROR_NONE;
 
@@ -114,7 +114,7 @@ exit:
     return error;
 }
 
-otError SpinelEncoder::WriteUint16(uint16_t aUint16)
+otError Encoder::WriteUint16(uint16_t aUint16)
 {
     otError error = OT_ERROR_NONE;
 
@@ -125,7 +125,7 @@ exit:
     return error;
 }
 
-otError SpinelEncoder::WriteUint32(uint32_t aUint32)
+otError Encoder::WriteUint32(uint32_t aUint32)
 {
     otError error = OT_ERROR_NONE;
 
@@ -138,7 +138,7 @@ exit:
     return error;
 }
 
-otError SpinelEncoder::WriteUint64(uint64_t aUint64)
+otError Encoder::WriteUint64(uint64_t aUint64)
 {
     otError error = OT_ERROR_NONE;
 
@@ -155,7 +155,7 @@ exit:
     return error;
 }
 
-otError SpinelEncoder::WriteUintPacked(unsigned int aUint)
+otError Encoder::WriteUintPacked(unsigned int aUint)
 {
     uint8_t        buffer[6];
     spinel_ssize_t len;
@@ -165,7 +165,7 @@ otError SpinelEncoder::WriteUintPacked(unsigned int aUint)
     return WriteData(buffer, static_cast<uint16_t>(len));
 }
 
-otError SpinelEncoder::WriteDataWithLen(const uint8_t *aData, uint16_t aDataLen)
+otError Encoder::WriteDataWithLen(const uint8_t *aData, uint16_t aDataLen)
 {
     otError error = OT_ERROR_NONE;
 
@@ -176,7 +176,7 @@ exit:
     return error;
 }
 
-otError SpinelEncoder::WriteUtf8(const char *aUtf8)
+otError Encoder::WriteUtf8(const char *aUtf8)
 {
     otError error;
     size_t  len = strlen(aUtf8);
@@ -193,7 +193,7 @@ exit:
     return error;
 }
 
-otError SpinelEncoder::OpenStruct(void)
+otError Encoder::OpenStruct(void)
 {
     otError error = OT_ERROR_NONE;
 
@@ -210,7 +210,7 @@ exit:
     return error;
 }
 
-otError SpinelEncoder::CloseStruct(void)
+otError Encoder::CloseStruct(void)
 {
     otError  error = OT_ERROR_NONE;
     uint16_t len;
@@ -234,7 +234,7 @@ exit:
     return error;
 }
 
-otError SpinelEncoder::SavePosition(void)
+otError Encoder::SavePosition(void)
 {
     otError error = OT_ERROR_NONE;
 
@@ -245,7 +245,7 @@ exit:
     return error;
 }
 
-otError SpinelEncoder::ResetToSaved(void)
+otError Encoder::ResetToSaved(void)
 {
     otError error = OT_ERROR_NONE;
 
@@ -256,7 +256,7 @@ exit:
     return error;
 }
 
-otError SpinelEncoder::WritePacked(const char *aPackFormat, ...)
+otError Encoder::WritePacked(const char *aPackFormat, ...)
 {
     uint8_t        buf[kPackFormatBufferSize];
     otError        error = OT_ERROR_NONE;
@@ -276,7 +276,7 @@ exit:
     return error;
 }
 
-otError SpinelEncoder::WriteVPacked(const char *aPackFormat, va_list aArgs)
+otError Encoder::WriteVPacked(const char *aPackFormat, va_list aArgs)
 {
     uint8_t        buf[kPackFormatBufferSize];
     otError        error = OT_ERROR_NONE;
@@ -291,5 +291,5 @@ exit:
     return error;
 }
 
-} // namespace Utils
+} // namespace Spinel
 } // namespace ot

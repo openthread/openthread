@@ -48,8 +48,6 @@
 #include "common/debug.hpp"
 #include "radio/radio.hpp"
 
-using namespace ot::Utils;
-
 namespace ot {
 namespace Ncp {
 
@@ -211,7 +209,7 @@ NcpBase::NcpBase(Instance *aInstance)
     , mThreadChangedFlags(0)
     , mChangedPropsSet()
     , mHostPowerState(SPINEL_HOST_POWER_STATE_ONLINE)
-    , mHostPowerReplyFrameTag(SpinelBuffer::kInvalidTag)
+    , mHostPowerReplyFrameTag(Spinel::Buffer::kInvalidTag)
     , mHostPowerStateHeader(0)
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
     , mAllowPeekDelegate(NULL)
@@ -320,7 +318,7 @@ void NcpBase::ResetCounters(void)
 // MARK: Serial Traffic Glue
 // ----------------------------------------------------------------------------
 
-SpinelBuffer::FrameTag NcpBase::GetLastOutboundFrameTag(void)
+Spinel::Buffer::FrameTag NcpBase::GetLastOutboundFrameTag(void)
 {
     return mTxFrameBuffer.InFrameGetLastTag();
 }
@@ -388,10 +386,10 @@ exit:
     mDisableStreamWrite = false;
 }
 
-void NcpBase::HandleFrameRemovedFromNcpBuffer(void *                 aContext,
-                                              SpinelBuffer::FrameTag aFrameTag,
-                                              SpinelBuffer::Priority aPriority,
-                                              SpinelBuffer *         aNcpBuffer)
+void NcpBase::HandleFrameRemovedFromNcpBuffer(void *                   aContext,
+                                              Spinel::Buffer::FrameTag aFrameTag,
+                                              Spinel::Buffer::Priority aPriority,
+                                              Spinel::Buffer *         aNcpBuffer)
 {
     OT_UNUSED_VARIABLE(aNcpBuffer);
     OT_UNUSED_VARIABLE(aPriority);
@@ -399,7 +397,7 @@ void NcpBase::HandleFrameRemovedFromNcpBuffer(void *                 aContext,
     static_cast<NcpBase *>(aContext)->HandleFrameRemovedFromNcpBuffer(aFrameTag);
 }
 
-void NcpBase::HandleFrameRemovedFromNcpBuffer(SpinelBuffer::FrameTag aFrameTag)
+void NcpBase::HandleFrameRemovedFromNcpBuffer(Spinel::Buffer::FrameTag aFrameTag)
 {
     if (mHostPowerStateInProgress)
     {
@@ -2042,7 +2040,7 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_HOST_POWER_STATE(uint8_t aHeader)
             }
             else
             {
-                mHostPowerReplyFrameTag = SpinelBuffer::kInvalidTag;
+                mHostPowerReplyFrameTag = Spinel::Buffer::kInvalidTag;
             }
 
             mHostPowerStateInProgress = true;

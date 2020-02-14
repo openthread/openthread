@@ -294,9 +294,9 @@ private:
     void        SpiTransactionProcess(void);
 
     static void HandleFrameAddedToTxBuffer(void *                            aContext,
-                                           ot::Utils::SpinelBuffer::FrameTag aFrameTag,
-                                           ot::Utils::SpinelBuffer::Priority aPriority,
-                                           ot::Utils::SpinelBuffer *         aSpinelBuffer);
+                                           ot::Spinel::Buffer::FrameTag aFrameTag,
+                                           ot::Spinel::Buffer::Priority aPriority,
+                                           ot::Spinel::Buffer *         aBuffer);
 
     static void PrepareTxFrame(Tasklet &aTasklet);
     void        PrepareTxFrame(void);

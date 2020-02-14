@@ -33,17 +33,17 @@
 #include "test_util.hpp"
 
 namespace ot {
-namespace Utils {
+namespace Spinel {
 
 enum
 {
     kTestBufferSize = 800,
 };
 
-void TestSpinelDecoder(void)
+void TestDecoder(void)
 {
-    uint8_t       buffer[kTestBufferSize];
-    SpinelDecoder decoder;
+    uint8_t         buffer[kTestBufferSize];
+    Spinel::Decoder decoder;
 
     spinel_ssize_t frameLen;
 
@@ -638,12 +638,12 @@ void TestSpinelDecoder(void)
     printf(" -- PASS\n");
 }
 
-} // namespace Utils
+} // namespace Spinel
 } // namespace ot
 
 int main(void)
 {
-    ot::Utils::TestSpinelDecoder();
+    ot::Spinel::Decoder();
     printf("\nAll tests passed.\n");
     return 0;
 }

@@ -39,13 +39,13 @@
 #include "spinel.h"
 
 namespace ot {
-namespace Utils {
+namespace Spinel {
 
 /**
  * This class defines a spinel decoder.
  *
  */
-class SpinelDecoder
+class Decoder
 {
 public:
     enum
@@ -54,10 +54,10 @@ public:
     };
 
     /**
-     * This constructor initializes a `SpinelDecoder` object.
+     * This constructor initializes a `Decoder` object.
      *
      */
-    SpinelDecoder(void);
+    Decoder(void);
 
     /**
      * This method initializes the decoder to start decoding a new frame.
@@ -583,7 +583,7 @@ private:
     uint16_t mPrevEnd[kMaxNestedStructs];
 };
 
-} // namespace Utils
+} // namespace Spinel
 } // namespace ot
 
 #endif // SPINEL_DECODER_HPP_
