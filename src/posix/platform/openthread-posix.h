@@ -32,8 +32,8 @@
  *   This file defines the platform-specific functions needed by OpenThread's example applications.
  */
 
-#ifndef OPENTHREAD_SYSTEM_H_
-#define OPENTHREAD_SYSTEM_H_
+#ifndef OPENTHREAD_POSIX_H_
+#define OPENTHREAD_POSIX_H_
 
 #include <setjmp.h>
 #include <stdbool.h>
@@ -196,4 +196,4 @@ void otPosixMainloopProcess(otInstance *aInstance, const otPosixMainloopContext 
 } // end of extern "C"
 #endif
 
-#endif // OPENTHREAD_SYSTEM_H_
+#endif // OPENTHREAD_POSIX_H_
