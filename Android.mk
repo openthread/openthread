@@ -234,9 +234,9 @@ LOCAL_SRC_FILES                                          := \
     src/core/utils/parse_cmdline.cpp                        \
     src/core/utils/slaac_address.cpp                        \
     src/ncp/hdlc.cpp                                        \
-    src/utils/spinel.c                                      \
-    src/utils/spinel_decoder.cpp                            \
-    src/utils/spinel_encoder.cpp                            \
+    src/spinel/spinel.c                                     \
+    src/spinel/spinel_decoder.cpp                           \
+    src/spinel/spinel_encoder.cpp                           \
     src/posix/platform/alarm.cpp                            \
     src/posix/platform/entropy.cpp                          \
     src/posix/platform/hdlc_interface.cpp                   \
@@ -390,7 +390,7 @@ LOCAL_SRC_FILES                            := \
     src/ncp/ncp_base_mtd.cpp                  \
     src/ncp/ncp_base_ftd.cpp                  \
     src/ncp/ncp_base_dispatcher.cpp           \
-    src/utils/spinel_buffer.cpp               \
+    src/spinel/spinel_buffer.cpp              \
     src/ncp/ncp_uart.cpp                      \
     $(NULL)
 

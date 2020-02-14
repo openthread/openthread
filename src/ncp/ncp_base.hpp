@@ -51,10 +51,10 @@
 #include "changed_props_set.hpp"
 #include "common/instance.hpp"
 #include "common/tasklet.hpp"
-#include "utils/spinel.h"
-#include "utils/spinel_buffer.hpp"
-#include "utils/spinel_decoder.hpp"
-#include "utils/spinel_encoder.hpp"
+#include "spinel/spinel.h"
+#include "spinel/spinel_buffer.hpp"
+#include "spinel/spinel_decoder.hpp"
+#include "spinel/spinel_encoder.hpp"
 #include "utils/static_assert.hpp"
 
 namespace ot {

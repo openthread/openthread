@@ -28,7 +28,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "utils/spinel_encoder.hpp"
+#include "spinel/spinel_encoder.hpp"
 
 #include "test_util.hpp"
 
