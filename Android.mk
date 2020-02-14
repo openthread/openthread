@@ -237,17 +237,17 @@ LOCAL_SRC_FILES                                          := \
     src/utils/spinel.c                                      \
     src/utils/spinel_decoder.cpp                            \
     src/utils/spinel_encoder.cpp                            \
-    src/posix/platform/alarm.c                              \
-    src/posix/platform/entropy.c                            \
+    src/posix/platform/alarm.cpp                            \
+    src/posix/platform/entropy.cpp                          \
     src/posix/platform/hdlc_interface.cpp                   \
-    src/posix/platform/logging.c                            \
-    src/posix/platform/misc.c                               \
+    src/posix/platform/logging.cpp                          \
+    src/posix/platform/misc.cpp                             \
     src/posix/platform/netif.cpp                            \
     src/posix/platform/radio_spinel.cpp                     \
     src/posix/platform/settings.cpp                         \
     src/posix/platform/spi_interface.cpp                    \
-    src/posix/platform/system.c                             \
-    src/posix/platform/uart.c                               \
+    src/posix/platform/system.cpp                           \
+    src/posix/platform/uart.cpp                             \
     src/posix/platform/udp.cpp                              \
     third_party/mbedtls/repo/library/md.c                   \
     third_party/mbedtls/repo/library/md_wrap.c              \

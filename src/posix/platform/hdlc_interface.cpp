@@ -55,8 +55,8 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include <common/code_utils.hpp>
-#include <common/logging.hpp>
+#include "common/code_utils.hpp"
+#include "common/logging.hpp"
 
 #ifndef SOCKET_UTILS_DEFAULT_SHELL
 #define SOCKET_UTILS_DEFAULT_SHELL "/bin/sh"
@@ -222,7 +222,7 @@ otError HdlcInterface::Write(const uint8_t *aFrame, uint16_t aLength)
 {
     otError error = OT_ERROR_NONE;
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    platformSimSendRadioSpinelWriteEvent(aFrame, aLength);
+    virtualTimeSendRadioSpinelWriteEvent(aFrame, aLength);
 #else
     while (aLength)
     {
@@ -256,8 +256,8 @@ otError HdlcInterface::WaitForFrame(const struct timeval &aTimeout)
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     struct Event event;
 
-    platformSimSendSleepEvent(&timeout);
-    platformSimReceiveEvent(&event);
+    virtualTimeSendSleepEvent(&timeout);
+    virtualTimeReceiveEvent(&event);
 
     switch (event.mEvent)
     {

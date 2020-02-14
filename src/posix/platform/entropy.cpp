@@ -33,16 +33,15 @@
  */
 
 #include "openthread-posix-config.h"
-
-#include <openthread/platform/entropy.h>
+#include "platform-posix.h"
 
 #include <assert.h>
 #include <stdio.h>
 
-#include "code_utils.h"
-#include "platform-posix.h"
-
 #include <openthread/error.h>
+#include <openthread/platform/entropy.h>
+
+#include "common/code_utils.hpp"
 
 #ifndef __SANITIZE_ADDRESS__
 #define __SANITIZE_ADDRESS__ 0
@@ -99,13 +98,13 @@ otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
     FILE * file = NULL;
     size_t readLength;
 
-    otEXPECT_ACTION(aOutput && aOutputLength, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aOutput && aOutputLength, error = OT_ERROR_INVALID_ARGS);
 
     file = fopen("/dev/urandom", "rb");
-    otEXPECT_ACTION(file != NULL, error = OT_ERROR_FAILED);
+    VerifyOrExit(file != NULL, error = OT_ERROR_FAILED);
 
     readLength = fread(aOutput, 1, aOutputLength, file);
-    otEXPECT_ACTION(readLength == aOutputLength, error = OT_ERROR_FAILED);
+    VerifyOrExit(readLength == aOutputLength, error = OT_ERROR_FAILED);
 
 exit:
 
@@ -124,7 +123,7 @@ exit:
      * implementation below is only used to enable continuous
      * integration checks with Address Sanitizer enabled.
      */
-    otEXPECT_ACTION(aOutput && aOutputLength, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aOutput && aOutputLength, error = OT_ERROR_INVALID_ARGS);
 
     for (uint16_t length = 0; length < aOutputLength; length++)
     {
