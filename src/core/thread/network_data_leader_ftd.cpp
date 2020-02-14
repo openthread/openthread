@@ -722,8 +722,7 @@ exit:
 
 otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLength)
 {
-    otError error         = OT_ERROR_NONE;
-    bool    stableUpdated = false;
+    otError error = OT_ERROR_NONE;
     bool    rlocIn;
     bool    rlocStable;
     bool    unused;
@@ -742,33 +741,27 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aT
     {
         if (IsStableUpdated(aTlvs, aTlvsLength, mTlvs, mLength) || IsStableUpdated(mTlvs, mLength, aTlvs, aTlvsLength))
         {
-            stableUpdated = true;
+            rlocStable = true;
         }
 
         // Store old Service IDs for given rloc16, so updates to server will reuse the same Service ID
         SuccessOrExit(error = GetNetworkData(false, oldTlvs, oldTlvsLength));
 
         RemoveRloc(aRloc16, kMatchModeRloc16);
-        SuccessOrExit(error = AddNetworkData(aTlvs, aTlvsLength, oldTlvs, oldTlvsLength));
-
-        mVersion++;
-
-        if (stableUpdated)
-        {
-            mStableVersion++;
-        }
     }
     else
     {
         // No old data to be preserved, lets avoid memcpy() & FindService calls.
-        SuccessOrExit(error = AddNetworkData(aTlvs, aTlvsLength, oldTlvs, 0));
+        oldTlvsLength = 0;
+    }
 
-        mVersion++;
+    SuccessOrExit(error = AddNetworkData(aTlvs, aTlvsLength, oldTlvs, oldTlvsLength));
 
-        if (rlocStable)
-        {
-            mStableVersion++;
-        }
+    mVersion++;
+
+    if (rlocStable)
+    {
+        mStableVersion++;
     }
 
     Get<Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
