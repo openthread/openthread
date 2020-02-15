@@ -97,38 +97,24 @@ private:
     static void HandleResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
     void        HandleResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
 
-    const otCoapTransmissionParameters *GetRequestTransmissionParameters(void)
+    const otCoapTxParameters *GetRequestTxParameters(void) const
     {
-        if (mUseDefaultRequestTransmissionParameters)
-        {
-            return NULL;
-        }
-        else
-        {
-            return &mRequestTransmissionParameters;
-        }
+        return mUseDefaultRequestTxParameters ? NULL : &mRequestTxParameters;
     }
 
-    const otCoapTransmissionParameters *GetResponseTransmissionParameters(void)
+    const otCoapTxParameters *GetResponseTxParameters(void) const
     {
-        if (mUseDefaultResponseTransmissionParameters)
-        {
-            return NULL;
-        }
-        else
-        {
-            return &mResponseTransmissionParameters;
-        }
+        return mUseDefaultResponseTxParameters ? NULL : &mResponseTxParameters;
     }
 
     static const Command sCommands[];
     Interpreter &        mInterpreter;
 
-    bool mUseDefaultRequestTransmissionParameters;
-    bool mUseDefaultResponseTransmissionParameters;
+    bool mUseDefaultRequestTxParameters;
+    bool mUseDefaultResponseTxParameters;
 
-    otCoapTransmissionParameters mRequestTransmissionParameters;
-    otCoapTransmissionParameters mResponseTransmissionParameters;
+    otCoapTxParameters mRequestTxParameters;
+    otCoapTxParameters mResponseTxParameters;
 
     otCoapResource mResource;
     char           mUriPath[kMaxUriLength];

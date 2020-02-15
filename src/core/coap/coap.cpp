@@ -107,27 +107,20 @@ exit:
     return message;
 }
 
-otError CoapBase::SendMessage(Message &                           aMessage,
-                              const Ip6::MessageInfo &            aMessageInfo,
-                              otCoapResponseHandler               aHandler,
-                              void *                              aContext,
-                              const otCoapTransmissionParameters *aTransmissionParameters)
+otError CoapBase::SendMessage(Message &               aMessage,
+                              const Ip6::MessageInfo &aMessageInfo,
+                              const CoapTxParameters &aTxParameters,
+                              otCoapResponseHandler   aHandler,
+                              void *                  aContext)
 {
     otError  error;
     Message *storedCopy = NULL;
     uint16_t copyLength = 0;
 
-    if (aTransmissionParameters == NULL)
-    {
-        aTransmissionParameters = &mDefaultTransmissionParameters;
-    }
-    const CoapTransmissionParameters &transmissionParameters =
-        *static_cast<const CoapTransmissionParameters *>(aTransmissionParameters);
-
     switch (aMessage.GetType())
     {
     case OT_COAP_TYPE_ACKNOWLEDGMENT:
-        mResponsesQueue.EnqueueResponse(aMessage, aMessageInfo, transmissionParameters);
+        mResponsesQueue.EnqueueResponse(aMessage, aMessageInfo, aTxParameters);
         break;
     case OT_COAP_TYPE_RESET:
         assert(aMessage.GetCode() == OT_COAP_CODE_EMPTY);
@@ -153,7 +146,7 @@ otError CoapBase::SendMessage(Message &                           aMessage,
     if (copyLength > 0)
     {
         CoapMetadata coapMetadata =
-            CoapMetadata(aMessage.IsConfirmable(), aMessageInfo, aHandler, aContext, transmissionParameters);
+            CoapMetadata(aMessage.IsConfirmable(), aMessageInfo, aHandler, aContext, aTxParameters);
         VerifyOrExit((storedCopy = CopyAndEnqueueMessage(aMessage, copyLength, coapMetadata)) != NULL,
                      error = OT_ERROR_NO_BUFS);
     }
@@ -628,19 +621,19 @@ exit:
     }
 }
 
-CoapMetadata::CoapMetadata(bool                              aConfirmable,
-                           const Ip6::MessageInfo &          aMessageInfo,
-                           otCoapResponseHandler             aHandler,
-                           void *                            aContext,
-                           const CoapTransmissionParameters &aTransmissionParameters)
+CoapMetadata::CoapMetadata(bool                    aConfirmable,
+                           const Ip6::MessageInfo &aMessageInfo,
+                           otCoapResponseHandler   aHandler,
+                           void *                  aContext,
+                           const CoapTxParameters &aTxParameters)
 {
     mSourceAddress            = aMessageInfo.GetSockAddr();
     mDestinationPort          = aMessageInfo.GetPeerPort();
     mDestinationAddress       = aMessageInfo.GetPeerAddr();
     mResponseHandler          = aHandler;
     mResponseContext          = aContext;
-    mRetransmissionsRemaining = aTransmissionParameters.mMaxRetransmit;
-    mRetransmissionTimeout    = aTransmissionParameters.CalculateInitialRetransmissionTimeout();
+    mRetransmissionsRemaining = aTxParameters.mMaxRetransmit;
+    mRetransmissionTimeout    = aTxParameters.CalculateInitialRetransmissionTimeout();
 
     if (aConfirmable)
     {
@@ -650,7 +643,7 @@ CoapMetadata::CoapMetadata(bool                              aConfirmable,
     else
     {
         // Set overall response timeout.
-        mNextTimerShot = TimerMilli::GetNow() + aTransmissionParameters.CalculateMaxTransmitWait();
+        mNextTimerShot = TimerMilli::GetNow() + aTxParameters.CalculateMaxTransmitWait();
     }
 
     mAcknowledged = false;
@@ -717,16 +710,15 @@ exit:
     return matchedResponse;
 }
 
-void ResponsesQueue::EnqueueResponse(Message &                         aMessage,
-                                     const Ip6::MessageInfo &          aMessageInfo,
-                                     const CoapTransmissionParameters &aTransmissionParameters)
+void ResponsesQueue::EnqueueResponse(Message &               aMessage,
+                                     const Ip6::MessageInfo &aMessageInfo,
+                                     const CoapTxParameters &aTxParameters)
 {
-    otError  error        = OT_ERROR_NONE;
-    Message *responseCopy = NULL;
-    uint16_t messageCount;
-    uint16_t bufferCount;
-
-    uint32_t               exchangeLifetime = aTransmissionParameters.CalculateExchangeLifetime();
+    otError                error        = OT_ERROR_NONE;
+    Message *              responseCopy = NULL;
+    uint16_t               messageCount;
+    uint16_t               bufferCount;
+    uint32_t               exchangeLifetime = aTxParameters.CalculateExchangeLifetime();
     TimeMilli              dequeueTime      = TimerMilli::GetNow() + exchangeLifetime;
     EnqueuedResponseHeader enqueuedResponseHeader(dequeueTime, aMessageInfo);
 
@@ -820,27 +812,27 @@ uint32_t EnqueuedResponseHeader::GetRemainingTime(void) const
     return remainingTime;
 }
 
-uint32_t CoapTransmissionParameters::CalculateInitialRetransmissionTimeout(void) const
+uint32_t CoapTxParameters::CalculateInitialRetransmissionTimeout(void) const
 {
     return Random::NonCrypto::GetUint32InRange(
         mAckTimeout, mAckTimeout * mAckRandomFactorNumerator / mAckRandomFactorDenominator + 1);
 }
 
-uint32_t CoapTransmissionParameters::CalculateExchangeLifetime(void) const
+uint32_t CoapTxParameters::CalculateExchangeLifetime(void) const
 {
-    uint32_t maxTransmitSpan = static_cast<uint32_t>(mAckTimeout * ((static_cast<uint64_t>(1) << mMaxRetransmit) - 1) *
+    uint32_t maxTransmitSpan = static_cast<uint32_t>(mAckTimeout * ((1ULL << mMaxRetransmit) - 1) *
                                                      mAckRandomFactorNumerator / mAckRandomFactorDenominator);
     uint32_t processingDelay = mAckTimeout;
     return maxTransmitSpan + 2 * kDefaultMaxLatency + processingDelay;
 }
 
-uint32_t CoapTransmissionParameters::CalculateMaxTransmitWait(void) const
+uint32_t CoapTxParameters::CalculateMaxTransmitWait(void) const
 {
-    return static_cast<uint32_t>(mAckTimeout * ((static_cast<uint64_t>(2) << mMaxRetransmit) - 1) *
-                                 mAckRandomFactorNumerator / mAckRandomFactorDenominator);
+    return static_cast<uint32_t>(mAckTimeout * ((2ULL << mMaxRetransmit) - 1) * mAckRandomFactorNumerator /
+                                 mAckRandomFactorDenominator);
 }
 
-const otCoapTransmissionParameters CoapBase::mDefaultTransmissionParameters = {
+const otCoapTxParameters CoapTxParameters::kDefaultTxParameters = {
     kDefaultAckTimeout,
     kDefaultAckRandomFactorNumerator,
     kDefaultAckRandomFactorDenominator,

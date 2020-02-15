@@ -45,15 +45,17 @@ namespace ot {
 namespace Cli {
 
 const struct Coap::Command Coap::sCommands[] = {
-    {"help", &Coap::ProcessHelp},    {"delete", &Coap::ProcessRequest}, {"get", &Coap::ProcessRequest},
-    {"post", &Coap::ProcessRequest}, {"put", &Coap::ProcessRequest},    {"resource", &Coap::ProcessResource},
-    {"start", &Coap::ProcessStart},  {"stop", &Coap::ProcessStop},      {"parameters", &Coap::ProcessParameters},
+    {"help", &Coap::ProcessHelp},         {"delete", &Coap::ProcessRequest},
+    {"get", &Coap::ProcessRequest},       {"parameters", &Coap::ProcessParameters},
+    {"post", &Coap::ProcessRequest},      {"put", &Coap::ProcessRequest},
+    {"resource", &Coap::ProcessResource}, {"start", &Coap::ProcessStart},
+    {"stop", &Coap::ProcessStop},
 };
 
 Coap::Coap(Interpreter &aInterpreter)
     : mInterpreter(aInterpreter)
-    , mUseDefaultRequestTransmissionParameters(true)
-    , mUseDefaultResponseTransmissionParameters(true)
+    , mUseDefaultRequestTxParameters(true)
+    , mUseDefaultResponseTxParameters(true)
 {
     memset(&mResource, 0, sizeof(mResource));
 }
@@ -145,18 +147,18 @@ otError Coap::ProcessParameters(int argc, char *argv[])
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
-    bool *                        defaultTransmissionParameters;
-    otCoapTransmissionParameters *transmissionParameters;
+    bool *              defaultTxParameters;
+    otCoapTxParameters *txParameters;
 
     if (strcmp(argv[1], "request") == 0)
     {
-        transmissionParameters        = &mRequestTransmissionParameters;
-        defaultTransmissionParameters = &mUseDefaultRequestTransmissionParameters;
+        txParameters        = &mRequestTxParameters;
+        defaultTxParameters = &mUseDefaultRequestTxParameters;
     }
     else if (strcmp(argv[1], "response") == 0)
     {
-        transmissionParameters        = &mResponseTransmissionParameters;
-        defaultTransmissionParameters = &mUseDefaultResponseTransmissionParameters;
+        txParameters        = &mResponseTxParameters;
+        defaultTxParameters = &mUseDefaultResponseTxParameters;
     }
     else
     {
@@ -167,7 +169,7 @@ otError Coap::ProcessParameters(int argc, char *argv[])
     {
         if (strcmp(argv[2], "default") == 0)
         {
-            *defaultTransmissionParameters = true;
+            *defaultTxParameters = true;
         }
         else
         {
@@ -176,39 +178,37 @@ otError Coap::ProcessParameters(int argc, char *argv[])
             VerifyOrExit(argc >= 6, error = OT_ERROR_INVALID_ARGS);
 
             SuccessOrExit(error = mInterpreter.ParseUnsignedLong(argv[2], value));
-            transmissionParameters->mAckTimeout = static_cast<uint32_t>(value);
+            txParameters->mAckTimeout = static_cast<uint32_t>(value);
 
             SuccessOrExit(error = mInterpreter.ParseUnsignedLong(argv[3], value));
             VerifyOrExit(value <= 255, error = OT_ERROR_INVALID_ARGS);
-            transmissionParameters->mAckRandomFactorNumerator = static_cast<uint8_t>(value);
+            txParameters->mAckRandomFactorNumerator = static_cast<uint8_t>(value);
 
             SuccessOrExit(error = mInterpreter.ParseUnsignedLong(argv[4], value));
             VerifyOrExit(value <= 255, error = OT_ERROR_INVALID_ARGS);
-            transmissionParameters->mAckRandomFactorDenominator = static_cast<uint8_t>(value);
+            txParameters->mAckRandomFactorDenominator = static_cast<uint8_t>(value);
 
             SuccessOrExit(error = mInterpreter.ParseUnsignedLong(argv[5], value));
             VerifyOrExit(value <= 255, error = OT_ERROR_INVALID_ARGS);
-            transmissionParameters->mMaxRetransmit = static_cast<uint8_t>(value);
+            txParameters->mMaxRetransmit = static_cast<uint8_t>(value);
 
-            VerifyOrExit(transmissionParameters->mAckRandomFactorNumerator >
-                             transmissionParameters->mAckRandomFactorDenominator,
+            VerifyOrExit(txParameters->mAckRandomFactorNumerator > txParameters->mAckRandomFactorDenominator,
                          error = OT_ERROR_INVALID_ARGS);
 
-            *defaultTransmissionParameters = false;
+            *defaultTxParameters = false;
         }
     }
 
     mInterpreter.mServer->OutputFormat("Transmission parameters for %s:\r\n", argv[1]);
-    if (*defaultTransmissionParameters)
+    if (*defaultTxParameters)
     {
-        mInterpreter.mServer->OutputFormat("default.\r\n");
+        mInterpreter.mServer->OutputFormat("default\r\n");
     }
     else
     {
-        mInterpreter.mServer->OutputFormat(
-            "ACK_TIMEOUT=%u ms, ACK_RANDOM_FACTOR=%u/%u, MAX_RETRANSMIT=%u\r\n", transmissionParameters->mAckTimeout,
-            transmissionParameters->mAckRandomFactorNumerator, transmissionParameters->mAckRandomFactorDenominator,
-            transmissionParameters->mMaxRetransmit);
+        mInterpreter.mServer->OutputFormat("ACK_TIMEOUT=%u ms, ACK_RANDOM_FACTOR=%u/%u, MAX_RETRANSMIT=%u\r\n",
+                                           txParameters->mAckTimeout, txParameters->mAckRandomFactorNumerator,
+                                           txParameters->mAckRandomFactorDenominator, txParameters->mMaxRetransmit);
     }
 
 exit:
@@ -311,13 +311,13 @@ otError Coap::ProcessRequest(int argc, char *argv[])
 
     if ((coapType == OT_COAP_TYPE_CONFIRMABLE) || (coapCode == OT_COAP_CODE_GET))
     {
-        error = otCoapSendRequest(mInterpreter.mInstance, message, &messageInfo, &Coap::HandleResponse, this,
-                                  GetRequestTransmissionParameters());
+        error = otCoapSendRequestWithParameters(mInterpreter.mInstance, message, &messageInfo, &Coap::HandleResponse,
+                                                this, GetRequestTxParameters());
     }
     else
     {
-        error = otCoapSendRequest(mInterpreter.mInstance, message, &messageInfo, NULL, NULL,
-                                  GetResponseTransmissionParameters());
+        error = otCoapSendRequestWithParameters(mInterpreter.mInstance, message, &messageInfo, NULL, NULL,
+                                                GetResponseTxParameters());
     }
 
 exit:
@@ -419,8 +419,8 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
             SuccessOrExit(error = otMessageAppend(responseMessage, &responseContent, sizeof(responseContent)));
         }
 
-        SuccessOrExit(error = otCoapSendResponse(mInterpreter.mInstance, responseMessage, aMessageInfo,
-                                                 GetResponseTransmissionParameters()));
+        SuccessOrExit(error = otCoapSendResponseWithParameters(mInterpreter.mInstance, responseMessage, aMessageInfo,
+                                                               GetResponseTxParameters()));
     }
 
 exit:
