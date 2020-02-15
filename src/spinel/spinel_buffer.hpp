@@ -106,12 +106,12 @@ public:
 
     /**
      * Defines a function pointer callback which is invoked to inform a change in `Buffer` either when a new
-     * frame is added/written to `Buffer` or when a frame is removed from `SpinelBuffer`.
+     * frame is added/written to `Buffer` or when a frame is removed from `Buffer`.
      *
      * @param[in] aContext              A pointer to arbitrary context information.
      * @param[in] aTag                  The tag associated with the frame which is added or removed.
      * @param[in] aPriority             The priority of frame.
-     * @param[in] aBuffer         A pointer to the `SpinelBuffer`.
+     * @param[in] aBuffer               A pointer to the `Buffer`.
      *
      */
     typedef void (*BufferCallback)(void *aContext, FrameTag aTag, Priority aPriority, Buffer *aBuffer);

@@ -207,7 +207,7 @@ protected:
         NcpBase::PropertyHandler mHandler;
     };
 
-    ot::Spinel::Buffer::FrameTag GetLastOutboundFrameTag(void);
+    Spinel::Buffer::FrameTag GetLastOutboundFrameTag(void);
 
     otError HandleCommand(uint8_t aHeader);
 
@@ -257,11 +257,11 @@ protected:
     static void UpdateChangedProps(Tasklet &aTasklet);
     void        UpdateChangedProps(void);
 
-    static void HandleFrameRemovedFromNcpBuffer(void *                       aContext,
-                                                ot::Spinel::Buffer::FrameTag aFrameTag,
-                                                ot::Spinel::Buffer::Priority aPriority,
-                                                ot::Spinel::Buffer *         aNcpBuffer);
-    void        HandleFrameRemovedFromNcpBuffer(ot::Spinel::Buffer::FrameTag aFrameTag);
+    static void HandleFrameRemovedFromNcpBuffer(void *                   aContext,
+                                                Spinel::Buffer::FrameTag aFrameTag,
+                                                Spinel::Buffer::Priority aPriority,
+                                                Spinel::Buffer *         aNcpBuffer);
+    void        HandleFrameRemovedFromNcpBuffer(Spinel::Buffer::FrameTag aFrameTag);
 
     otError EncodeChannelMask(uint32_t aChannelMask);
     otError DecodeChannelMask(uint32_t &aChannelMask);
@@ -471,7 +471,7 @@ protected:
      * @param[in] aFrameTag    The tag of the frame removed from NCP buffer.
      *
      */
-    void VendorHandleFrameRemovedFromNcpBuffer(ot::Spinel::Buffer::FrameTag aFrameTag);
+    void VendorHandleFrameRemovedFromNcpBuffer(Spinel::Buffer::FrameTag aFrameTag);
 
     /**
      * This method defines a vendor "get property handler" hook to process vendor spinel properties.
@@ -519,9 +519,9 @@ protected:
                                                bool aDeviceType,
                                                bool aNetworkData);
     Instance *             mInstance;
-    ot::Spinel::Buffer     mTxFrameBuffer;
-    ot::Spinel::Encoder    mEncoder;
-    ot::Spinel::Decoder    mDecoder;
+    Spinel::Buffer         mTxFrameBuffer;
+    Spinel::Encoder        mEncoder;
+    Spinel::Decoder        mDecoder;
     bool                   mHostPowerStateInProgress;
 
     enum
@@ -542,9 +542,9 @@ protected:
     uint32_t        mThreadChangedFlags;
     ChangedPropsSet mChangedPropsSet;
 
-    spinel_host_power_state_t    mHostPowerState;
-    ot::Spinel::Buffer::FrameTag mHostPowerReplyFrameTag;
-    uint8_t                      mHostPowerStateHeader;
+    spinel_host_power_state_t mHostPowerState;
+    Spinel::Buffer::FrameTag  mHostPowerReplyFrameTag;
+    uint8_t                   mHostPowerStateHeader;
 
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
     otNcpDelegateAllowPeekPoke mAllowPeekDelegate;
