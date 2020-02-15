@@ -2872,6 +2872,20 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         HandleAnnounce(aMessage, aMessageInfo);
         break;
 
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+    case Header::kCommandLinkProbe:
+        Get<LinkProbing::LinkProbing>().HandleLinkProbe(aMessage, aMessageInfo);
+        break;
+
+    case Header::kCommandLinkMetricsManagementRequest:
+        Get<LinkProbing::LinkProbing>().HandleLinkMetricsManagementRequest(aMessage, aMessageInfo);
+        break;
+
+    case Header::kCommandLinkMetricsManagementResponse:
+        Get<LinkProbing::LinkProbing>().HandleLinkMetricsManagementResponse(aMessage, aMessageInfo);
+        break;
+#endif
+
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     case Header::kCommandTimeSync:
         Get<MleRouter>().HandleTimeSync(aMessage, aMessageInfo, neighbor);
@@ -2984,6 +2998,19 @@ otError Mle::HandleDataResponse(const Message &         aMessage,
     otError error;
 
     LogMleMessage("Receive Data Response", aMessageInfo.GetPeerAddr());
+
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+    Tlv      tlv;
+    uint16_t metricsReportOffset;
+
+    // Metrics Report
+    if (Tlv::GetOffset(aMessage, Tlv::kLinkMetricsReport, metricsReportOffset) == OT_ERROR_NONE)
+    {
+        aMessage.Read(metricsReportOffset, sizeof(tlv), &tlv);
+        Get<LinkProbing::LinkProbing>().HandleLinkMetricsReport(aMessageInfo, aMessage,
+                                                                metricsReportOffset + sizeof(tlv), tlv.GetLength());
+    }
+#endif // OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
 
     VerifyOrExit(aNeighbor && aNeighbor->IsStateValid(), error = OT_ERROR_SECURITY);
 

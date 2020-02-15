@@ -627,6 +627,9 @@ otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Message
 
                 neighbor->SetExtAddress(macAddr);
                 neighbor->GetLinkInfo().Clear();
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+                neighbor->GetLinkMetricsInfo().Clear();
+#endif // OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
                 neighbor->GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
                 neighbor->ResetLinkFailures();
                 neighbor->SetLastHeard(TimerMilli::GetNow());
@@ -993,6 +996,9 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
     router->SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                      DeviceMode::kModeFullNetworkData));
     router->GetLinkInfo().Clear();
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+    router->GetLinkMetricsInfo().Clear();
+#endif // OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
     router->GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
     router->SetLinkQualityOut(LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin.GetLinkMargin()));
     router->ResetLinkFailures();
@@ -1368,6 +1374,9 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
             {
                 router->SetExtAddress(macAddr);
                 router->GetLinkInfo().Clear();
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+                router->GetLinkMetricsInfo().Clear();
+#endif // OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
                 router->GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
                 router->ResetLinkFailures();
                 router->SetLastHeard(TimerMilli::GetNow());
@@ -1415,6 +1424,9 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
         {
             router->SetExtAddress(macAddr);
             router->GetLinkInfo().Clear();
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+            router->GetLinkMetricsInfo().Clear();
+#endif // OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
             router->GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
             router->ResetLinkFailures();
             router->SetLastHeard(TimerMilli::GetNow());
@@ -1672,6 +1684,9 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
         // MAC Address
         child->SetExtAddress(macAddr);
         child->GetLinkInfo().Clear();
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+        child->GetLinkMetricsInfo().Clear();
+#endif // OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
         child->GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
         child->ResetLinkFailures();
         child->SetState(Neighbor::kStateParentRequest);
@@ -2589,6 +2604,9 @@ otError MleRouter::HandleDataRequest(const Message &         aMessage,
     PendingTimestampTlv pendingTimestamp;
     uint8_t             tlvs[4];
     uint8_t             numTlvs;
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+    LinkMetricsQueryTlv linkMetricsQuery;
+#endif
 
     LogMleMessage("Receive Data Request", aMessageInfo.GetPeerAddr());
 
@@ -2628,7 +2646,19 @@ otError MleRouter::HandleDataRequest(const Message &         aMessage,
         tlvs[numTlvs++] = Tlv::kPendingDataset;
     }
 
-    SendDataResponse(aMessageInfo.GetPeerAddr(), tlvs, numTlvs, 0);
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+    // Link Metrics Query
+    if (Tlv::GetTlv(aMessage, Tlv::kLinkMetricsQuery, sizeof(linkMetricsQuery), linkMetricsQuery) == OT_ERROR_NONE)
+    {
+        VerifyOrExit(linkMetricsQuery.IsValid(), error = OT_ERROR_PARSE);
+        SendDataResponse(aMessageInfo.GetPeerAddr(), tlvs, numTlvs, 0, &linkMetricsQuery,
+                         static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo()));
+    }
+    else
+#endif
+    {
+        SendDataResponse(aMessageInfo.GetPeerAddr(), tlvs, numTlvs, 0, NULL, NULL);
+    }
 
 exit:
 
@@ -2654,7 +2684,7 @@ void MleRouter::HandleNetworkDataUpdateRouter(void)
 
     delay =
         (mRole == OT_DEVICE_ROLE_LEADER) ? 0 : Random::NonCrypto::GetUint16InRange(0, kUnsolicitedDataResponseJitter);
-    SendDataResponse(destination, tlvs, sizeof(tlvs), delay);
+    SendDataResponse(destination, tlvs, sizeof(tlvs), delay, NULL, NULL);
 
     SynchronizeChildNetworkData();
 
@@ -3161,10 +3191,12 @@ exit:
     }
 }
 
-otError MleRouter::SendDataResponse(const Ip6::Address &aDestination,
-                                    const uint8_t *     aTlvs,
-                                    uint8_t             aTlvsLength,
-                                    uint16_t            aDelay)
+otError MleRouter::SendDataResponse(const Ip6::Address &       aDestination,
+                                    const uint8_t *            aTlvs,
+                                    uint8_t                    aTlvsLength,
+                                    uint16_t                   aDelay,
+                                    const LinkMetricsQueryTlv *aLinkMetricsQuery,
+                                    const otThreadLinkInfo *   aLinkInfo)
 {
     otError   error   = OT_ERROR_NONE;
     Message * message = NULL;
@@ -3201,6 +3233,15 @@ otError MleRouter::SendDataResponse(const Ip6::Address &aDestination,
 
         case Tlv::kPendingDataset:
             SuccessOrExit(error = AppendPendingDataset(*message));
+            break;
+        case Tlv::kLinkMetricsReport:
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+            SuccessOrExit(error = Get<LinkProbing::LinkProbing>().AppendLinkMetricsReport(
+                              *message, aDestination, aLinkMetricsQuery, aLinkInfo));
+#else
+            OT_UNUSED_VARIABLE(aLinkMetricsQuery);
+            OT_UNUSED_VARIABLE(aLinkInfo);
+#endif
             break;
         }
     }
@@ -3282,6 +3323,9 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
     }
 
     aNeighbor.GetLinkInfo().Clear();
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+    aNeighbor.GetLinkMetricsInfo().Clear();
+#endif // OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
     aNeighbor.SetState(Neighbor::kStateInvalid);
 }
 
@@ -3629,6 +3673,9 @@ void MleRouter::RestoreChildren(void)
 
         child->SetExtAddress(childInfo.GetExtAddress());
         child->GetLinkInfo().Clear();
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+        child->GetLinkMetricsInfo().Clear();
+#endif // OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
         child->SetRloc16(childInfo.GetRloc16());
         child->SetTimeout(childInfo.GetTimeout());
         child->SetDeviceMode(DeviceMode(childInfo.GetMode()));

@@ -71,6 +71,7 @@ openthread_headers                      = \
     jam_detection.h                       \
     joiner.h                              \
     link.h                                \
+	link_probing.h                        \
     link_raw.h                            \
     logging.h                             \
     message.h                             \

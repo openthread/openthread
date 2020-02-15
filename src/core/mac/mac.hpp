@@ -48,6 +48,10 @@
 #include "mac/mac_frame.hpp"
 #include "mac/mac_types.hpp"
 #include "mac/sub_mac.hpp"
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+#include "thread/link_metrics_tlvs.hpp"
+#include "thread/link_probing.hpp"
+#endif
 #include "thread/key_manager.hpp"
 #include "thread/link_quality.hpp"
 
@@ -807,6 +811,10 @@ public:
      */
     void ProcessTransmitSecurity(TxFrame &aFrame, bool aProcessAesCcm);
 
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+    void FillVendorIe(TxFrame &aFrame);
+#endif // OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+
 private:
     enum
     {
@@ -894,6 +902,7 @@ private:
 #endif
 
     void               ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr);
+    void               ProcessLinkMetrics(const Frame &aFrame, const Address &aSrcAddr);
     static const char *OperationToString(Operation aOperation);
 
     static const uint8_t         sMode2Key[];

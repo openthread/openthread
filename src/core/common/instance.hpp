@@ -435,6 +435,13 @@ template <> inline Mac::Mac &Instance::Get(void)
     return mThreadNetif.mMac;
 }
 
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+template <> inline LinkProbing::LinkProbing &Instance::Get(void)
+{
+    return mThreadNetif.mLinkProbing;
+}
+#endif // OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+
 template <> inline Mac::SubMac &Instance::Get(void)
 {
     return mThreadNetif.mMac.mSubMac;

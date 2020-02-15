@@ -153,7 +153,7 @@ public:
      * @retval OT_ERROR_INVALID_ARGS  Value of @p aRss is OT_RADIO_RSSI_INVALID.
      *
      */
-    otError Add(int8_t aRss);
+    otError Add(int16_t aRss);
 
     /**
      * This method returns the current average signal strength value maintained by the averager.
@@ -162,6 +162,14 @@ public:
      *
      */
     int8_t GetAverage(void) const;
+
+    /**
+     * This method returns the number of RSS values added to averager.
+     *
+     * @returns The number of RSS values added to averager.
+     *
+     */
+    uint8_t GetCount(void) const { return mCount; }
 
     /**
      * This method returns an raw/encoded version of current average signal strength value. The raw value is the
@@ -208,6 +216,45 @@ private:
 
     uint16_t mAverage : 11; // The raw average signal strength value (stored as RSS times precision multiple).
     uint16_t mCount : 5;    // Number of RSS values added to averager so far (limited to 2^kCoeffBitShift-1).
+};
+
+/**
+ * This class implements a LinkQuality Indicator (LQI) averager.
+ *
+ * It maintains the exponential moving average value of LQI.
+ *
+ */
+class LqiAverager
+{
+public:
+    /**
+     * This method reset the averager and clears the average value.
+     *
+     */
+    void Reset(void);
+
+    /**
+     * This method adds a link quality indicator (LQI) value to the average.
+     *
+     * @param[in] aLqi                Link Quality Indicator value to be added to the average.
+     *
+     * @retval OT_ERROR_NONE          New LQI value added to average successfully.
+     * @retval OT_ERROR_INVALID_ARGS  Value of @p aLqi is invalid.
+     *
+     */
+    void Add(uint8_t aLqi);
+
+    /**
+     * This method returns the current average link quality value maintained by the averager.
+     *
+     * @returns The current average value.
+     *
+     */
+    uint8_t GetAverage(void) { return mAverage; }
+
+private:
+    uint8_t mAverage; // The average link quality indicator value.
+    uint8_t mCount;   // Number of LQI values added to averager so far.
 };
 
 /**
@@ -260,6 +307,14 @@ public:
      *
      */
     uint16_t GetAverageRssRaw(void) const { return mRssAverager.GetRaw(); }
+
+    /**
+     * Returns the number of samples collected so far.
+     *
+     * @returns The number of samples collected so far.
+     *
+     */
+    uint8_t GetCount(void) { return mRssAverager.GetCount(); };
 
     /**
      * This method converts the link quality info to info/debug human-readable string.

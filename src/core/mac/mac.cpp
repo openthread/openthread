@@ -1056,6 +1056,33 @@ exit:
     return;
 }
 
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+void Mac::FillVendorIe(TxFrame &aFrame)
+{
+    Address   dstAddr;
+    Neighbor *neighbor;
+    uint8_t * cur = aFrame.GetHeaderIe(Frame::kHeaderIeVendor);
+
+    aFrame.GetDstAddr(dstAddr);
+    neighbor = Get<Mle::MleRouter>().GetNeighbor(dstAddr);
+    VerifyOrExit(neighbor != NULL);
+
+    if (cur != NULL)
+    {
+        uint8_t                       ieContent[2];
+        uint8_t                       metricsCount    = 0;
+        LinkProbing::LinkMetricsInfo &linkMetricsInfo = neighbor->GetLinkMetricsInfo();
+        linkMetricsInfo.GetEnhancedAckMetricsValue(GetNoiseFloor(), ieContent, metricsCount);
+
+        VendorIeLinkMetrics *linkMetricsIe = reinterpret_cast<VendorIeLinkMetrics *>(cur + sizeof(HeaderIe));
+        linkMetricsIe->SetContent(ieContent, metricsCount);
+    }
+
+exit:
+    return;
+}
+#endif // OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+
 void Mac::BeginTransmit(void)
 {
     otError  error                 = OT_ERROR_NONE;
@@ -1284,10 +1311,18 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
     if ((aError == OT_ERROR_NONE) && ackRequested && (aAckFrame != NULL) && (neighbor != NULL))
     {
         neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), aAckFrame->GetRssi());
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+        neighbor->GetLinkMetricsInfo().AggregateLinkMetrics(aAckFrame->GetType(), aAckFrame->GetLqi(),
+                                                            aAckFrame->GetRssi());
+#endif // OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+
         if (aAckFrame->GetVersion() == Frame::kFcfFrameVersion2015)
         {
 #if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
             ProcessCsl(*aAckFrame, dstAddr);
+#endif
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+            ProcessLinkMetrics(*aAckFrame, dstAddr);
 #endif
         }
     }
@@ -1773,6 +1808,9 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
     if (neighbor != NULL)
     {
         neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), aFrame->GetRssi());
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+        neighbor->GetLinkMetricsInfo().AggregateLinkMetrics(aFrame->GetType(), aFrame->GetLqi(), aFrame->GetRssi());
+#endif // OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
 
         if (aFrame->GetSecurityEnabled())
         {
@@ -2257,6 +2295,16 @@ exit:
     return;
 }
 #endif // OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+void Mac::ProcessLinkMetrics(const Frame &aFrame, const Address &aSrcAddr)
+{
+    OT_UNUSED_VARIABLE(aFrame);
+    OT_UNUSED_VARIABLE(aSrcAddr);
+    // Do nothing for now.
+    return;
+}
+#endif // OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 otError Mac::AppendHeaderIe(TxFrame &aFrame, bool aIsTimeSync) const

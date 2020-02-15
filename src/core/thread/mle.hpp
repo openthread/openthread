@@ -284,24 +284,27 @@ public:
      */
     enum Command
     {
-        kCommandLinkRequest          = 0,  ///< Link Reject
-        kCommandLinkAccept           = 1,  ///< Link Accept
-        kCommandLinkAcceptAndRequest = 2,  ///< Link Accept and Reject
-        kCommandLinkReject           = 3,  ///< Link Reject
-        kCommandAdvertisement        = 4,  ///< Advertisement
-        kCommandUpdate               = 5,  ///< Update
-        kCommandUpdateRequest        = 6,  ///< Update Request
-        kCommandDataRequest          = 7,  ///< Data Request
-        kCommandDataResponse         = 8,  ///< Data Response
-        kCommandParentRequest        = 9,  ///< Parent Request
-        kCommandParentResponse       = 10, ///< Parent Response
-        kCommandChildIdRequest       = 11, ///< Child ID Request
-        kCommandChildIdResponse      = 12, ///< Child ID Response
-        kCommandChildUpdateRequest   = 13, ///< Child Update Request
-        kCommandChildUpdateResponse  = 14, ///< Child Update Response
-        kCommandAnnounce             = 15, ///< Announce
-        kCommandDiscoveryRequest     = 16, ///< Discovery Request
-        kCommandDiscoveryResponse    = 17, ///< Discovery Response
+        kCommandLinkRequest                   = 0,  ///< Link Reject
+        kCommandLinkAccept                    = 1,  ///< Link Accept
+        kCommandLinkAcceptAndRequest          = 2,  ///< Link Accept and Reject
+        kCommandLinkReject                    = 3,  ///< Link Reject
+        kCommandAdvertisement                 = 4,  ///< Advertisement
+        kCommandUpdate                        = 5,  ///< Update
+        kCommandUpdateRequest                 = 6,  ///< Update Request
+        kCommandDataRequest                   = 7,  ///< Data Request
+        kCommandDataResponse                  = 8,  ///< Data Response
+        kCommandParentRequest                 = 9,  ///< Parent Request
+        kCommandParentResponse                = 10, ///< Parent Response
+        kCommandChildIdRequest                = 11, ///< Child ID Request
+        kCommandChildIdResponse               = 12, ///< Child ID Response
+        kCommandChildUpdateRequest            = 13, ///< Child Update Request
+        kCommandChildUpdateResponse           = 14, ///< Child Update Response
+        kCommandAnnounce                      = 15, ///< Announce
+        kCommandDiscoveryRequest              = 16, ///< Discovery Request
+        kCommandDiscoveryResponse             = 17, ///< Discovery Response
+        kCommandLinkMetricsManagementRequest  = 18, ///< Link Metrics Management Requestv
+        kCommandLinkMetricsManagementResponse = 19, ///< Link Metrics Management Response
+        kCommandLinkProbe                     = 20, ///< Link Probe
 
         /**
          * Applicable/Required only when time synchronization service
@@ -451,6 +454,10 @@ private:
  */
 class Mle : public InstanceLocator
 {
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+    friend class ot::LinkProbing::LinkProbing;
+#endif
+
 public:
     /**
      * This constructor initializes the MLE object.
@@ -1076,6 +1083,19 @@ public:
      *
      */
     void ScheduleChildUpdateRequest(void);
+
+    /**
+     * This method appends a Link Probe TLV to a message.
+     *
+     * @param[in]  aMessage    A reference to the message.
+     * @param[in]  aSeriesID   The link probing series ID.
+     * @param[in]  aDataLegnth Specify the length of data in the Link Probe TLV
+     *
+     * @retval OT_ERROR_NONE     Successfully appended the Link Probe TLV.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Link Probe TLV.
+     *
+     */
+    otError AppendLinkProbe(Message &aMessage, uint8_t aSeriesID, uint8_t aDataLength);
 
 protected:
     /**

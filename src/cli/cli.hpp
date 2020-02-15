@@ -271,6 +271,10 @@ private:
     void ProcessLeaderPartitionId(int argc, char *argv[]);
     void ProcessLeaderWeight(int argc, char *argv[]);
 #endif
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+    void ProcessLinkProbing(int argc, char *argv[]);
+    void ProcessLinkMetrics(int argc, char *argv[]);
+#endif
     void ProcessMasterKey(int argc, char *argv[]);
     void ProcessMode(int argc, char *argv[]);
 #if OPENTHREAD_FTD
@@ -362,6 +366,15 @@ private:
                                   const otIp6Address *aAddress,
                                   uint32_t            aTtl,
                                   otError             aResult);
+#endif
+
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+    static void HandleLinkMetricsReport(const otIp6Address *aAddress,
+                                        otLinkMetric *      aMetrics,
+                                        uint8_t             aMetricsNum,
+                                        void *              aContext);
+
+    void HandleLinkMetricsReport(const Ip6::Address &aAddress, otLinkMetric *aMetrics, uint8_t aMetricsNum);
 #endif
 
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE

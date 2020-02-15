@@ -72,6 +72,9 @@ void Radio::Callbacks::HandleTransmitAckStarted(uint8_t *aFrame, uint16_t aLengt
     frame.mLength = aLength;
 
 #if !OPENTHREAD_RADIO
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+    Get<Mac::Mac>().FillVendorIe(frame);
+#endif // OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
     Get<Mac::Mac>().ProcessTransmitSecurity(frame, true);
 #endif
 }

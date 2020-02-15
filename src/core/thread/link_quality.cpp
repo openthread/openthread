@@ -63,7 +63,7 @@ void RssAverager::Reset(void)
     mCount   = 0;
 }
 
-otError RssAverager::Add(int8_t aRss)
+otError RssAverager::Add(int16_t aRss)
 {
     otError  error = OT_ERROR_NONE;
     uint16_t newValue;
@@ -137,6 +137,26 @@ RssAverager::InfoString RssAverager::ToString(void) const
 
 exit:
     return string;
+}
+
+void LqiAverager::Reset(void)
+{
+    mCount   = 0;
+    mAverage = 0;
+}
+
+void LqiAverager::Add(uint8_t aLqi)
+{
+    uint16_t oldAverage = mAverage;
+    if (mCount == 0)
+    {
+        mAverage = aLqi;
+    }
+    else
+    {
+        mAverage = (uint8_t)(((oldAverage << 3) - oldAverage + aLqi) >> 3); // 7/8 * old value + 1/8 * new value
+    }
+    mCount++;
 }
 
 void LinkQualityInfo::Clear(void)

@@ -123,7 +123,7 @@ private:
     uint16_t mHeaderIe;
 } OT_TOOL_PACKED_END;
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE || OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
 /**
  * This class implements vendor specific Header IE generation and parsing.
  *
@@ -134,9 +134,10 @@ class VendorIeHeader
 public:
     enum
     {
-        kVendorOuiNest = 0x18b430,
-        kVendorOuiSize = 3,
-        kVendorIeTime  = 0x01,
+        kVendorOuiNest       = 0x18b430,
+        kVendorOuiSize       = 3,
+        kVendorIeTime        = 0x01,
+        kVendorIeLinkMetrics = 0x00,
     };
 
     /**
@@ -233,7 +234,74 @@ private:
     uint8_t  mSequence;
     uint64_t mTime;
 } OT_TOOL_PACKED_END;
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+/**
+ * This class implements vendor specific Header IE Link Metrics generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class VendorIeLinkMetrics
+{
+public:
+    enum
+    {
+        kMaxEnhancedAckTypeIdFlagsCount = 2,
+    };
+
+    /**
+     * This method initializes the duty cycle phase IE.
+     *
+     */
+    void Init(void)
+    {
+        uint8_t oui[3] = {VendorIeHeader::kVendorOuiNest & 0xff, (VendorIeHeader::kVendorOuiNest >> 8) & 0xff,
+                          (VendorIeHeader::kVendorOuiNest >> 16) & 0xff};
+
+        SetVendorOui(oui);
+        SetSubType(VendorIeHeader::kVendorIeLinkMetrics);
+    }
+
+    /**
+     * This method returns the Vender OUI.
+     *
+     * @returns the Vendor OUI.
+     *
+     */
+    const uint8_t *GetVendorOui(void) const { return mVendorOui; }
+
+    /**
+     * This method sets the Vendor OUI.
+     *
+     * @param[in]  aVendor  A pointer to the Vendor OUI.
+     *
+     */
+    void SetVendorOui(uint8_t *aVendorOui) { memcpy(mVendorOui, aVendorOui, VendorIeHeader::kVendorOuiSize); }
+
+    /**
+     * This method returns the Vendor IE sub-type.
+     *
+     * @returns the Vendor IE sub-type.
+     *
+     */
+    uint8_t GetSubType(void) const { return mSubType; }
+
+    /**
+     * This method sets the Vendor IE sub-type.
+     *
+     * @param[in] the Vendor IE sub-type.
+     *
+     */
+    void SetSubType(uint8_t aSubType) { mSubType = aSubType; }
+
+    void SetContent(uint8_t *aContent, uint8_t aLength) { memcpy(mContent, aContent, aLength); }
+
+private:
+    uint8_t mVendorOui[VendorIeHeader::kVendorOuiSize];
+    uint8_t mSubType;
+    uint8_t mContent[kMaxEnhancedAckTypeIdFlagsCount];
+
+} OT_TOOL_PACKED_END;
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE || OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
 
 /**
  * This class implements IEEE 802.15.4 MAC frame generation and parsing.

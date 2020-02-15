@@ -45,6 +45,9 @@
 #include "net/ip6.hpp"
 #include "thread/device_mode.hpp"
 #include "thread/indirect_sender.hpp"
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+#include "thread/link_probing.hpp"
+#endif
 #include "thread/link_quality.hpp"
 #include "thread/mle_tlvs.hpp"
 
@@ -413,6 +416,15 @@ public:
      */
     LinkQualityInfo &GetLinkInfo(void) { return mLinkInfo; }
 
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+    /**
+     * This method returns the LinkMetricsInfo object, which contains all
+     * information about link metrics with neighboring nodes.
+     *
+     */
+    LinkProbing::LinkMetricsInfo &GetLinkMetricsInfo(void) { return mLinkMetricsInfo; }
+#endif
+
     /**
      * This method generates a new challenge value for MLE Link Request/Response exchanges.
      *
@@ -481,6 +493,10 @@ private:
 #endif
     uint8_t         mVersion;  ///< The MLE version
     LinkQualityInfo mLinkInfo; ///< Link quality info (contains average RSS, link margin and link quality)
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+    LinkProbing::LinkMetricsInfo
+        mLinkMetricsInfo; ///< Link metrics info, the data for forwarding tracking series and enhanced ACK based probing
+#endif
 };
 
 /**

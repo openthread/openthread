@@ -87,8 +87,9 @@ enum
 
 enum
 {
-    IE_HEADER_SIZE = 2, // Size of IE header in bytes
-    CSL_IE_SIZE    = 4, // Size of CSL IE content in bytes
+    IE_HEADER_SIZE           = 2, // Size of IE header in bytes
+    CSL_IE_SIZE              = 4, // Size of CSL IE content in bytes
+    MAX_LINK_METRICS_SUBJECT = 5, // Max number of link metrics subject supported in implementation
 };
 
 OT_TOOL_PACKED_BEGIN
@@ -125,15 +126,18 @@ static int8_t         sCcaEdThresh = -74;
 
 static bool sSrcMatchEnabled = false;
 
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
-static struct IeState
-{
-    uint8_t mCslEnabled : 1;
-    uint8_t mLinkMetricsEnabled : 1;
-} sIeState;
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
 static uint8_t sAckIeData[ACK_IE_MAX_SIZE];
 static uint8_t sAckIeDataLength = 0;
-#endif
+
+static struct VendorIeState
+{
+    otExtAddress mExtAddr;
+    uint8_t      mVendorIeLen;
+} sVendorIeStates[MAX_LINK_METRICS_SUBJECT];
+
+static uint8_t sVendorIe[7] = {0x00, 0x00, 0x30, 0xb4, 0x18, 0x55, 0x00};
+#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
 
 #if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
 static uint8_t  sCslIeHeader[IE_HEADER_SIZE] = {0x04, 0x0d};
@@ -953,11 +957,56 @@ uint64_t otPlatRadioGetNow(void)
     return otPlatTimeGet();
 }
 
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
-static void updateIeData(otInstance *aInstance)
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+bool cmpExtAddress(const otExtAddress *aExtAddrLhs, const otExtAddress *aExtAddrRhs)
+{
+    bool result = true;
+    for (uint8_t i = 0; i < OT_EXT_ADDRESS_SIZE; i++)
+    {
+        if (aExtAddrLhs->m8[i] != aExtAddrRhs->m8[i])
+        {
+            result = false;
+            break;
+        }
+    }
+    return result;
+}
+
+uint8_t findAddrIndexEnhAckLinkMetrics(const otExtAddress *aExtAddr)
+{
+    uint8_t index = MAX_LINK_METRICS_SUBJECT;
+    for (uint8_t i = 0; i < MAX_LINK_METRICS_SUBJECT; i++)
+    {
+        if (cmpExtAddress(aExtAddr, &sVendorIeStates[i].mExtAddr))
+        {
+            index = i;
+            break;
+        }
+    }
+    return index;
+}
+
+uint8_t findEmptyAddrIndexAckLinkMetrics()
+{
+    uint8_t index = MAX_LINK_METRICS_SUBJECT;
+    for (uint8_t i = 0; i < MAX_LINK_METRICS_SUBJECT; i++)
+    {
+        if (sVendorIeStates[i].mVendorIeLen == 0)
+        {
+            index = i;
+            break;
+        }
+    }
+    return index;
+}
+#endif // OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+static void updateIeData(otInstance *aInstance, const otExtAddress *aExtAddr)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    uint8_t offset = 0;
+    uint8_t offset           = 0;
+    uint8_t indexLinkMetrics = findAddrIndexEnhAckLinkMetrics(aExtAddr);
 
 #if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
     if (sCslPeriod > 0)
@@ -966,25 +1015,28 @@ static void updateIeData(otInstance *aInstance)
         offset += IE_HEADER_SIZE + CSL_IE_SIZE; // reserve space for CSL IE
     }
 #endif
-    if (sIeState.mLinkMetricsEnabled)
+
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+    // See if the ack needs include link metrics IE
+    if (indexLinkMetrics != MAX_LINK_METRICS_SUBJECT)
     {
-        // TODO
+        memcpy(sAckIeData + offset, sVendorIe, 7);
+        sAckIeData[offset] |= sVendorIeStates[indexLinkMetrics].mVendorIeLen; // 6 bit for length of IE
+        offset += IE_HEADER_SIZE + sVendorIeStates[indexLinkMetrics].mVendorIeLen;
     }
+#endif
+
     sAckIeDataLength = offset;
 }
-#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
 
 #if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
 otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const otExtAddress *aExtAddr)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aExtAddr);
-
     otError error = OT_ERROR_NONE;
 
     sCslPeriod = aCslPeriod;
-
-    updateIeData(aInstance);
+    updateIeData(aInstance, aExtAddr);
 
     return error;
 }
@@ -994,3 +1046,38 @@ void otPlatRadioUpdateCslSampleTime(uint32_t aCslSampleTime)
     sCslSampleTime = aCslSampleTime;
 }
 #endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+otError otPlatRadioEnableEnhAckLinkMetrics(otInstance *          aInstance,
+                                           bool                  aEnabled,
+                                           uint8_t               aMetricsCount,
+                                           const otShortAddress *aShortAddress,
+                                           const otExtAddress *  aExtAddress)
+{
+    OT_UNUSED_VARIABLE(aShortAddress);
+
+    otError error = OT_ERROR_NONE;
+    uint8_t index = findAddrIndexEnhAckLinkMetrics(aExtAddress);
+
+    if (aEnabled)
+    {
+        if (index == MAX_LINK_METRICS_SUBJECT)
+        {
+            index = findEmptyAddrIndexAckLinkMetrics();
+            otEXPECT_ACTION(index != MAX_LINK_METRICS_SUBJECT, error = OT_ERROR_NO_BUFS);
+            memcpy(&sVendorIeStates[index].mExtAddr, aExtAddress, sizeof(otExtAddress));
+        }
+        sVendorIeStates[index].mVendorIeLen = 4 + aMetricsCount;
+    }
+    else
+    {
+        otEXPECT_ACTION(index != MAX_LINK_METRICS_SUBJECT, error = OT_ERROR_NOT_FOUND);
+        memset(&sVendorIeStates[index], 0, sizeof(sVendorIeStates[index]));
+    }
+
+    updateIeData(aInstance, aExtAddress);
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_LINK_PROBE_ENABLE

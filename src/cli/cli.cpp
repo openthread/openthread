@@ -163,6 +163,10 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     {"macfilter", &Interpreter::ProcessMacFilter},
 #endif
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+    {"linkprobing", &Interpreter::ProcessLinkProbing},
+    {"linkmetrics", &Interpreter::ProcessLinkMetrics},
+#endif // OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
     {"masterkey", &Interpreter::ProcessMasterKey},
     {"mode", &Interpreter::ProcessMode},
 #if OPENTHREAD_FTD
@@ -259,6 +263,9 @@ Interpreter::Interpreter(Instance *aInstance)
 {
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     otThreadSetReceiveDiagnosticGetCallback(mInstance, &Interpreter::HandleDiagnosticGetResponse, this);
+#endif
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+    otLinkProbingSetReportCallback(mInstance, &Interpreter::HandleLinkMetricsReport, this);
 #endif
 
     mIcmpHandler.mReceiveCallback = Interpreter::HandleIcmpReceive;
@@ -1612,6 +1619,179 @@ exit:
     AppendResult(error);
 }
 #endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+void Interpreter::HandleLinkMetricsReport(const otIp6Address *aAddress,
+                                          otLinkMetric *      aMetrics,
+                                          uint8_t             aMetricsNum,
+                                          void *              aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleLinkMetricsReport(*static_cast<const Ip6::Address *>(aAddress),
+                                                                  aMetrics, aMetricsNum);
+}
+
+void Interpreter::HandleLinkMetricsReport(const Ip6::Address &aAddress, otLinkMetric *aMetrics, uint8_t aMetricsNum)
+{
+    otLinkMetricTypeId linkMetricTypeId;
+    uint8_t            index = 0;
+
+    mServer->OutputFormat("Received Link Metrics Report from: ");
+    mServer->OutputFormat(
+        "%x:%x:%x:%x:%x:%x:%x:%x\r\n", HostSwap16(aAddress.mFields.m16[0]), HostSwap16(aAddress.mFields.m16[1]),
+        HostSwap16(aAddress.mFields.m16[2]), HostSwap16(aAddress.mFields.m16[3]), HostSwap16(aAddress.mFields.m16[4]),
+        HostSwap16(aAddress.mFields.m16[5]), HostSwap16(aAddress.mFields.m16[6]), HostSwap16(aAddress.mFields.m16[7]));
+    mServer->OutputFormat("\r\n Link Metrics details:\r\n");
+
+    while (index < aMetricsNum)
+    {
+        linkMetricTypeId = aMetrics[index].mLinkMetricTypeId;
+        int32_t value    = linkMetricTypeId.mLinkMetricFlagL ? (int32_t)aMetrics[index].mLinkMetricValue.m32
+                                                          : aMetrics[index].mLinkMetricValue.m8;
+
+        switch (linkMetricTypeId.mLinkMetricId)
+        {
+        case OT_LINK_PDU_COUNT:
+            mServer->OutputFormat(" - PDU Counter: %d", value);
+            break;
+
+        case OT_LINK_LQI:
+            mServer->OutputFormat(" - LQI: %d", value);
+            break;
+
+        case OT_LINK_MARGIN:
+            mServer->OutputFormat(" - Margin: %d", value);
+            break;
+
+        case OT_LINK_RSSI:
+            mServer->OutputFormat(" - RSSI: %d", value);
+            break;
+
+        default:
+            break;
+        }
+
+        switch (linkMetricTypeId.mLinkMetricType)
+        {
+        case OT_LINK_METRIC_COUNT_SUMMATION:
+            mServer->OutputFormat(" (Count/Summation)\r\n");
+            break;
+
+        case OT_LINK_METRIC_EXPONENTIAL_MOVING_AVERAGE:
+            mServer->OutputFormat(" (Exponential Moving Average)\r\n");
+            break;
+
+        default:
+            mServer->OutputFormat("\r\n");
+            break;
+        }
+
+        index++;
+    }
+}
+
+void Interpreter::ProcessLinkProbing(int argc, char *argv[])
+{
+    otError      error = OT_ERROR_NONE;
+    otIp6Address address;
+    long         seriesId                                     = 0;
+    uint8_t      typeIdFlags[LinkProbing::kLinkMetricsMaxNum] = {0};
+    int          typeIdFlagsCount                             = 0;
+
+    VerifyOrExit(argc >= 2, error = OT_ERROR_PARSE);
+
+    SuccessOrExit(error = otIp6AddressFromString(argv[0], &address));
+
+    if (strcmp(argv[1], "single") == 0)
+    {
+        VerifyOrExit(argc == 3, error = OT_ERROR_PARSE);
+
+        typeIdFlagsCount = Hex2Bin(argv[2], typeIdFlags, sizeof(typeIdFlags));
+        VerifyOrExit(typeIdFlagsCount > 0, error = OT_ERROR_PARSE);
+
+        error = otLinkProbingQuery(mInstance, &address, static_cast<uint8_t>(seriesId), typeIdFlags,
+                                   static_cast<uint8_t>(typeIdFlagsCount));
+    }
+    else if (strcmp(argv[1], "forward") == 0)
+    {
+        VerifyOrExit(argc == 3, error = OT_ERROR_PARSE);
+        SuccessOrExit(error = ParseLong(argv[2], seriesId));
+        error = otLinkProbingQuery(mInstance, &address, static_cast<uint8_t>(seriesId), NULL, 0);
+    }
+    else
+    {
+        error = OT_ERROR_PARSE;
+    }
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessLinkMetrics(int argc, char *argv[])
+{
+    otError      error = OT_ERROR_NONE;
+    otIp6Address address;
+
+    VerifyOrExit(argc >= 2, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = otIp6AddressFromString(argv[1], &address));
+
+    if (strcmp(argv[0], "mgmt") == 0)
+    {
+        uint8_t typeIdFlags[LinkProbing::kLinkMetricsMaxNum] = {0};
+        int     typeIdFlagsCount                             = 0;
+
+        if (strcmp(argv[2], "forward") == 0)
+        {
+            unsigned long seriesId;
+            uint8_t       seriesFlags;
+
+            VerifyOrExit(argc >= 6, error = OT_ERROR_PARSE);
+            SuccessOrExit(error = ParseUnsignedLong(argv[3], seriesId));
+            VerifyOrExit(1 == Hex2Bin(argv[4], &seriesFlags, sizeof(seriesFlags)), error = OT_ERROR_PARSE);
+            if (seriesFlags != 0)
+            {
+                typeIdFlagsCount = Hex2Bin(argv[5], typeIdFlags, sizeof(typeIdFlags));
+                VerifyOrExit(typeIdFlagsCount > 0, error = OT_ERROR_PARSE);
+            }
+            error = otLinkProbingMgmtForward(mInstance, &address, static_cast<uint8_t>(seriesId),
+                                             static_cast<uint8_t>(seriesFlags), typeIdFlags,
+                                             static_cast<uint8_t>(typeIdFlagsCount));
+        }
+        else if (strcmp(argv[2], "enhanced-ack") == 0)
+        {
+            uint8_t enhAckFlags;
+            VerifyOrExit(argc >= 5, error = OT_ERROR_PARSE);
+
+            VerifyOrExit(1 == Hex2Bin(argv[3], &enhAckFlags, sizeof(enhAckFlags)), error = OT_ERROR_PARSE);
+            typeIdFlagsCount = Hex2Bin(argv[4], typeIdFlags, sizeof(typeIdFlags));
+            VerifyOrExit(typeIdFlagsCount > 0, error = OT_ERROR_PARSE);
+            error = otLinkProbingMgmtEnhancedAck(mInstance, &address, enhAckFlags, typeIdFlags,
+                                                 static_cast<uint8_t>(typeIdFlagsCount));
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_PARSE);
+        }
+    }
+    else if (strcmp(argv[0], "probe") == 0)
+    {
+        unsigned long dataLength = 4; // 4 bytes as default
+        VerifyOrExit(argc >= 2, error = OT_ERROR_PARSE);
+
+        if (argc == 3)
+        {
+            SuccessOrExit(error = ParseUnsignedLong(argv[2], dataLength));
+        }
+        error = otLinkProbingSendLinkProbe(mInstance, &address, static_cast<uint8_t>(dataLength));
+    }
+    else
+    {
+        error = OT_ERROR_PARSE;
+    }
+
+exit:
+    AppendResult(error);
+}
+#endif // OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
 
 #if OPENTHREAD_FTD
 void Interpreter::ProcessPskc(int argc, char *argv[])

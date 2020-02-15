@@ -1148,6 +1148,56 @@ class Node:
 
         return router_table
 
+    def send_mac_data(self):
+        cmd = 'mac data'
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def poll_period(self, period):
+        cmd = 'pollperiod %d' % period
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def tx_power(self, level):
+        cmd = 'txpower '
+        if level == 'HIGH':
+            cmd += '127'
+        elif level == 'MEDIUM':
+            cmd += '0'
+        elif level == 'LOW':
+            cmd += '-128'
+        else:
+            print('wrong Tx Power level')
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def link_metrics_mgmt_req(self,
+                              dst_addr,
+                              type_,
+                              series_flag,
+                              typeid_flags,
+                              series_id=0):
+        cmd = 'linkmetrics mgmt %s ' % dst_addr
+        if type_ == 'FWD':
+            cmd += 'forward %d %x %x' % (series_id, series_flag, typeid_flags)
+        elif type_ == 'ENH':
+            cmd += 'enhanced-ack %x %x' % (series_flag, typeid_flags)
+        print(cmd)
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def link_metrics_single_probe(self, dst_addr, typeid_flags):
+        cmd = 'linkprobing %s single %x' % (dst_addr, typeid_flags)
+        print(cmd)
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def link_metrics_single_probe_forward(self, dst_addr, series_id):
+        cmd = 'linkprobing %s forward %d' % (dst_addr, series_id)
+        print(cmd)
+        self.send_command(cmd)
+        self._expect('Done')
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -857,8 +857,12 @@ void otPlatRadioTxAckStarted(otInstance *aInstance, uint8_t *aFrame, uint16_t aL
  * @param[in]   aInstance            The OpenThread instance structure.
  * @param[in]   aEnabled             Whether to enable the link metrics
  *                                   feature.
- * @param[in]   aTypeIdFlag          The Metric Type ID Flag when using
- *                                   using enhanced-ack link metrics.
+ * @param[in]   aMetricsCount        The count of metrics that will be
+ *                                   included into the Vendor IE in ack.
+ * @param[in]   aShortAddr           The short source address of incoming
+ *                                   frame.
+ * @param[in]   aExtAddr             The extended source address of incoming
+ *                                   frame.(requested by NRF 52840)
  *
  * @retval  OT_ERROR_NOT_SUPPORTED   Radio driver doesn't support link
  *                                   metrics.
@@ -867,7 +871,11 @@ void otPlatRadioTxAckStarted(otInstance *aInstance, uint8_t *aFrame, uint16_t aL
  * @retval  OT_ERROR_INVALID_ARGS    The parameters are not valid.
  *
  */
-otError otPlatRadioEnableEnhAckLinkMetrics(otInstance *aInstance, bool aEnabled, uint8_t aTypeIdFlag);
+otError otPlatRadioEnableEnhAckLinkMetrics(otInstance *          aInstance,
+                                           bool                  aEnabled,
+                                           uint8_t               aMetricsCount,
+                                           const otShortAddress *aShortAddress,
+                                           const otExtAddress *  aExtAddress);
 
 /**
  * @}

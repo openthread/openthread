@@ -230,6 +230,9 @@ private:
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     TimeSync mTimeSync;
 #endif
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+    LinkProbing::LinkProbing mLinkProbing;
+#endif
 };
 
 /**

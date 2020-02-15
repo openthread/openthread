@@ -109,6 +109,10 @@ public:
         kCslChannel          = 80, ///< CSL Channel TLV
         kCslTimeout          = 85, ///< CSL Timeout TLV
         kCslAccuracy         = 86, ///< CSL Accuracy TLV
+        kLinkMetricsQuery    = 87, ///< Link Metrics Query TLV
+        kLinkMetricsMGMT     = 88, ///< Link Metrics Management TLV
+        kLinkMetricsReport   = 89, ///< Link Metrics Report TLV
+        kLinkProbe           = 90, ///< Link Probe TLV
 
         /**
          * Applicable/Required only when time synchronization service
@@ -2067,6 +2071,126 @@ public:
      */
     bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 } OT_TOOL_PACKED_END;
+
+#if OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
+/**
+ * This class implements Link Metrics Query TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class LinkMetricsQueryTlv : public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(kLinkMetricsQuery);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the link metrics query Id tlv.
+     *
+     * @returns The link metrics query Id tlv.
+     *
+     */
+    const LinkProbing::LinkMetricsQueryId *GetQueryId(void) const { return &mQueryId; }
+
+    /**
+     * This method sets link metrics query Id tlv.
+     *
+     * @param[in]  aQueryId  The link metrics query Id tlv.
+     *
+     */
+    void SetQueryId(LinkProbing::LinkMetricsQueryId &aQueryId) { mQueryId = aQueryId; }
+
+    /**
+     * This method returns the link metrics query options tlv.
+     *
+     * @returns The link metrics query options tlv.
+     *
+     */
+    const LinkProbing::LinkMetricsQueryOptions *GetQueryOptions(void) const { return &mQueryOptions; }
+
+    /**
+     * This method sets link metrics query options tlv.
+     *
+     * @param[in]  aQueryOptions  The link metrics query options tlv.
+     *
+     */
+    void SetQueryOptions(LinkProbing::LinkMetricsQueryOptions &aQueryOptions)
+    {
+        mQueryOptions = aQueryOptions;
+        SetLength(sizeof(LinkProbing::LinkMetricsQueryId) + sizeof(Tlv) + aQueryOptions.GetLength());
+    }
+
+private:
+    LinkProbing::LinkMetricsQueryId      mQueryId;
+    LinkProbing::LinkMetricsQueryOptions mQueryOptions;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Link Probe TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class LinkProbeTlv : public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(kLinkProbe);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the link probing series Id.
+     *
+     * @returns The link probing series Id.
+     *
+     */
+    uint8_t GetSeriesId(void) const { return mSeriesId; }
+
+    /**
+     * This method sets link probing series Id.
+     *
+     * @param[in]  aSeriesId  The link probing series Id.
+     *
+     */
+    void SetSeriesId(uint8_t aSeriesId) { mSeriesId = aSeriesId; }
+
+private:
+    uint8_t mSeriesId;
+} OT_TOOL_PACKED_END;
+#else
+// Declaration only for MleRouter::SendDataResponse
+class LinkMetricsQueryTlv;
+#endif // OPENTHREAD_CONFIG_LINK_PROBE_ENABLE
 
 #if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
 /**
