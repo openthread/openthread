@@ -214,44 +214,6 @@ public:
      */
     otError ErasePersistentInfo(void);
 
-    /**
-     * This method registers the active scan callback.
-     *
-     * Subsequent calls to this method will overwrite the previous callback handler.
-     *
-     * @param[in]  aCallback   A pointer to the callback function pointer.
-     * @param[in]  aContext    A pointer to application-specific context.
-     *
-     */
-    void RegisterActiveScanCallback(otHandleActiveScanResult aCallback, void *aContext);
-
-    /**
-     * This method invokes the previously registered active scan callback with a given scan result.
-     *
-     * @param[in]  aResult     A pointer to active scan result.
-     *
-     */
-    void InvokeActiveScanCallback(otActiveScanResult *aResult) const;
-
-    /**
-     * This method registers the energy scan callback.
-     *
-     * Subsequent calls to this method will overwrite the previous callback handler.
-     *
-     * @param[in]  aCallback   A pointer to the callback function pointer.
-     * @param[in]  aContext    A pointer to application-specific context.
-     *
-     */
-    void RegisterEnergyScanCallback(otHandleEnergyScanResult aCallback, void *aContext);
-
-    /**
-     * This method invokes the previously registered energy scan callback with a given result.
-     *
-     * @param[in]  aResult     A pointer to energy scan result.
-     *
-     */
-    void InvokeEnergyScanCallback(otEnergyScanResult *aResult) const;
-
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     void HeapFree(void *aPointer)
     {
@@ -364,11 +326,6 @@ private:
     Notifier    mNotifier;
     Settings    mSettings;
     MessagePool mMessagePool;
-
-    otHandleActiveScanResult mActiveScanCallback;
-    void *                   mActiveScanCallbackContext;
-    otHandleEnergyScanResult mEnergyScanCallback;
-    void *                   mEnergyScanCallbackContext;
 
     Ip6::Ip6    mIp6;
     ThreadNetif mThreadNetif;

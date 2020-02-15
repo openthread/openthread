@@ -36,10 +36,11 @@
 
 #include "openthread-core-config.h"
 
+#include <string.h>
+
 #include <openthread/platform/radio.h>
 
 #include "common/locator.hpp"
-#include "utils/wrap_string.h"
 
 namespace ot {
 namespace FactoryDiags {

@@ -315,7 +315,7 @@ otError otThreadGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
 
     aParentInfo->mExtAddress     = parent->GetExtAddress();
     aParentInfo->mRloc16         = parent->GetRloc16();
-    aParentInfo->mRouterId       = Mle::Mle::GetRouterId(parent->GetRloc16());
+    aParentInfo->mRouterId       = Mle::Mle::RouterIdFromRloc16(parent->GetRloc16());
     aParentInfo->mNextHop        = parent->GetNextHop();
     aParentInfo->mPathCost       = parent->GetCost();
     aParentInfo->mLinkQualityIn  = parent->GetLinkInfo().GetLinkQuality();

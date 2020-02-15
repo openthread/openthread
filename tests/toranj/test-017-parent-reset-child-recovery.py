@@ -157,10 +157,8 @@ wpan.verify_within(check_child_table, 9)
 # Verify that number of state changes on all children stays as before
 # (indicating they did not get detached).
 for i in range(len(all_children)):
-    verify(
-        child_num_state_changes[i]
-        == len(wpan.parse_list(all_children[i].get("stat:ncp")))
-    )
+    verify(child_num_state_changes[i] == len(
+        wpan.parse_list(all_children[i].get("stat:ncp"))))
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished

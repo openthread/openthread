@@ -59,7 +59,7 @@ wpan.Node.init_all_nodes()
 
 parent.form("poll-timeout")
 
-TIMEOUT = 5   # Child timeout in seconds
+TIMEOUT = 5  # Child timeout in seconds
 
 child.set(wpan.WPAN_THREAD_CHILD_TIMEOUT, str(TIMEOUT))
 

@@ -34,7 +34,6 @@
 #include "mac.hpp"
 
 #include <stdio.h>
-#include "utils/wrap_string.h"
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -83,6 +82,7 @@ Mac::Mac(Instance &aInstance)
     , mPendingWaitingForData(false)
     , mShouldTxPollBeforeData(false)
     , mRxOnWhenIdle(false)
+    , mPromiscuous(false)
     , mBeaconsEnabled(false)
     , mUsingTemporaryChannel(false)
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
@@ -106,6 +106,7 @@ Mac::Mac(Instance &aInstance)
     , mMaxFrameRetriesIndirect(kDefaultMaxFrameRetriesIndirect)
 #endif
     , mActiveScanHandler(NULL) // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
+    , mScanHandlerContext(NULL)
     , mSubMac(aInstance)
     , mOperationTask(aInstance, &Mac::HandleOperationTask, this)
     , mTimer(aInstance, &Mac::HandleTimer, this)
@@ -133,14 +134,15 @@ Mac::Mac(Instance &aInstance)
     SetShortAddress(GetShortAddress());
 }
 
-otError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler)
+otError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(!IsActiveScanInProgress() && !IsEnergyScanInProgress(), error = OT_ERROR_BUSY);
 
-    mActiveScanHandler = aHandler;
+    mActiveScanHandler  = aHandler;
+    mScanHandlerContext = aContext;
 
     if (aScanDuration == 0)
     {
@@ -153,14 +155,15 @@ exit:
     return error;
 }
 
-otError Mac::EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergyScanHandler aHandler)
+otError Mac::EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergyScanHandler aHandler, void *aContext)
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(!IsActiveScanInProgress() && !IsEnergyScanInProgress(), error = OT_ERROR_BUSY);
 
-    mEnergyScanHandler = aHandler;
+    mEnergyScanHandler  = aHandler;
+    mScanHandlerContext = aContext;
 
     Scan(kOperationEnergyScan, aScanChannels, aScanDuration);
 
@@ -210,15 +213,15 @@ bool Mac::IsInTransmitState(void) const
     return retval;
 }
 
-otError Mac::ConvertBeaconToActiveScanResult(RxFrame *aBeaconFrame, otActiveScanResult &aResult)
+otError Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveScanResult &aResult)
 {
-    otError        error = OT_ERROR_NONE;
-    Address        address;
-    Beacon *       beacon        = NULL;
-    BeaconPayload *beaconPayload = NULL;
-    uint16_t       payloadLength;
+    otError              error = OT_ERROR_NONE;
+    Address              address;
+    const Beacon *       beacon        = NULL;
+    const BeaconPayload *beaconPayload = NULL;
+    uint16_t             payloadLength;
 
-    memset(&aResult, 0, sizeof(otActiveScanResult));
+    memset(&aResult, 0, sizeof(ActiveScanResult));
 
     VerifyOrExit(aBeaconFrame != NULL, error = OT_ERROR_INVALID_ARGS);
 
@@ -234,8 +237,8 @@ otError Mac::ConvertBeaconToActiveScanResult(RxFrame *aBeaconFrame, otActiveScan
 
     payloadLength = aBeaconFrame->GetPayloadLength();
 
-    beacon        = reinterpret_cast<Beacon *>(aBeaconFrame->GetPayload());
-    beaconPayload = reinterpret_cast<BeaconPayload *>(beacon->GetPayload());
+    beacon        = reinterpret_cast<const Beacon *>(aBeaconFrame->GetPayload());
+    beaconPayload = reinterpret_cast<const BeaconPayload *>(beacon->GetPayload());
 
     if ((payloadLength >= (sizeof(*beacon) + sizeof(*beaconPayload))) && beacon->IsValid() && beaconPayload->IsValid())
     {
@@ -275,9 +278,29 @@ void Mac::PerformActiveScan(void)
     {
         mSubMac.SetPanId(mPanId);
         FinishOperation();
-        mActiveScanHandler(GetInstance(), NULL);
+        ReportActiveScanResult(NULL);
         PerformNextOperation();
     }
+}
+
+void Mac::ReportActiveScanResult(const RxFrame *aBeaconFrame)
+{
+    VerifyOrExit(mActiveScanHandler != NULL);
+
+    if (aBeaconFrame == NULL)
+    {
+        mActiveScanHandler(NULL, mScanHandlerContext);
+    }
+    else
+    {
+        ActiveScanResult result;
+
+        SuccessOrExit(ConvertBeaconToActiveScanResult(aBeaconFrame, result));
+        mActiveScanHandler(&result, mScanHandlerContext);
+    }
+
+exit:
+    return;
 }
 
 void Mac::PerformEnergyScan(void)
@@ -305,22 +328,29 @@ exit:
     if (error != OT_ERROR_NONE)
     {
         FinishOperation();
-        mEnergyScanHandler(GetInstance(), NULL);
+
+        if (mEnergyScanHandler != NULL)
+        {
+            mEnergyScanHandler(NULL, mScanHandlerContext);
+        }
+
         PerformNextOperation();
     }
 }
 
 void Mac::ReportEnergyScanResult(int8_t aRssi)
 {
-    if (aRssi != kInvalidRssiValue)
-    {
-        otEnergyScanResult result;
+    EnergyScanResult result;
 
-        result.mChannel = mScanChannel;
-        result.mMaxRssi = aRssi;
+    VerifyOrExit((mEnergyScanHandler != NULL) && (aRssi != kInvalidRssiValue));
 
-        mEnergyScanHandler(GetInstance(), &result);
-    }
+    result.mChannel = mScanChannel;
+    result.mMaxRssi = aRssi;
+
+    mEnergyScanHandler(&result, mScanHandlerContext);
+
+exit:
+    return;
 }
 
 void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
@@ -1647,7 +1677,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
         if (aFrame->GetType() == Frame::kFcfFrameBeacon)
         {
             mCounters.mRxBeacon++;
-            mActiveScanHandler(GetInstance(), aFrame);
+            ReportActiveScanResult(aFrame);
             ExitNow();
         }
 

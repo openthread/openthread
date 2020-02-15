@@ -38,7 +38,6 @@ EXTRA_DIST                                      = \
     $(srcdir)/images/ot-contrib-google.png        \
     $(srcdir)/images/ot-contrib-nordic.png        \
     $(srcdir)/images/ot-contrib-nxp.png           \
-    $(srcdir)/images/ot-contrib-particle.png      \
     $(srcdir)/images/ot-contrib-qc.png            \
     $(srcdir)/images/ot-contrib-qorvo.png         \
     $(srcdir)/images/ot-contrib-samsung.png       \
@@ -47,6 +46,7 @@ EXTRA_DIST                                      = \
     $(srcdir)/images/ot-contrib-synopsys.png      \
     $(srcdir)/images/ot-contrib-ti.png            \
     $(srcdir)/images/ot-contrib-zephyr.png        \
+    $(srcdir)/ot_api_doc.h                        \
     $(NULL)
 
 #
@@ -76,6 +76,9 @@ CLEANFILES                                      = \
     $(NULL)
 
 if OPENTHREAD_BUILD_DOCS
+
+openthreaddir = $(includedir)/openthread
+dist_openthread_HEADERS = ot_api_doc.h
 
 all-local: html/index.html
 

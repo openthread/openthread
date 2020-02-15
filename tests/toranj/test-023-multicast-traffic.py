@@ -74,9 +74,10 @@ def send_mcast(
     Verify that the message is received on all nodes in `recving_nodes` list and that it is not received on all
     nodes in `non_recving_nodes` list.
     """
-    sender = src_node.prepare_tx(
-        src_addr, mcast_addr, msg_len, mcast_hops=mcast_hops
-    )
+    sender = src_node.prepare_tx(src_addr,
+                                 mcast_addr,
+                                 msg_len,
+                                 mcast_hops=mcast_hops)
     recvers = [node.prepare_rx(sender) for node in recving_nodes]
     listeners = [
         node.prepare_listener(sender.dst_port, timeout=0.5)
@@ -91,15 +92,10 @@ def send_mcast(
     for lsnr in listeners:
         # `all_rx_msg` contains a list of (msg_content, (src_addr, src_port)).
         verify(
-            len(lsnr.all_rx_msg) == 0
-            or all(
-                [
-                    msg[1][0] != sender.src_addr
-                    and msg[1][1] != sender.src_port
-                    for msg in lsnr.all_rx_msg
-                ]
-            )
-        )
+            len(lsnr.all_rx_msg) == 0 or all([
+                msg[1][0] != sender.src_addr and msg[1][1] != sender.src_port
+                for msg in lsnr.all_rx_msg
+            ]))
 
 
 # -----------------------------------------------------------------------------------------------------------------------
@@ -252,9 +248,10 @@ send_mcast(
 )
 
 # r1 =>> mesh-local all-thread (four hops)
-send_mcast(
-    r1, ml1, ml_all_thread_nodes_addr, [r1, r2, fed, r3, r4, sed], mcast_hops=4
-)
+send_mcast(r1,
+           ml1,
+           ml_all_thread_nodes_addr, [r1, r2, fed, r3, r4, sed],
+           mcast_hops=4)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Subscribe to a specific multicast address on r2 and sed

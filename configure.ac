@@ -170,12 +170,6 @@ if test "${enable_no_executables_hack}" = "yes"
 then
     AC_MSG_RESULT([yes])
     AC_NO_EXECUTABLES
-    # Here we guess conservative values for tests that require link checks
-    # to test for these features. This will prevent these checks from
-    # being performed later in the configuration process.
-    ac_cv_func_strlcat=${ac_cv_func_strlcat-no}
-    ac_cv_func_strlcpy=${ac_cv_func_strlcpy-no}
-    ac_cv_func_strnlen=${ac_cv_func_strnlen-no}
 else
     AC_MSG_RESULT([no])
 fi
@@ -207,6 +201,8 @@ AC_PROG_CXX
 AC_PROG_CXX_C_O
 
 AM_PROG_AS
+
+AC_C_BIGENDIAN
 
 # Check for other compiler toolchain tools.
 
@@ -828,20 +824,27 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_CUSTOM_LINKER_FILE], [test "${with_custom_link
 # Examples
 #
 
+AC_MSG_CHECKING([whether to build examples])
+
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: no, posix, cc1352, cc2538, cc2650, cc2652, efr32mg12, efr32mg21, gp712, kw41z, nrf52811, nrf52833, nrf52840, qpg6095, samr21 @<:@default=no@:>@.])],
+        [Build example applications for one of: posix, cc1352, cc2538, cc2650, cc2652, efr32mg12, efr32mg13, efr32mg21,
+         gp712, kw41z, nrf52811, nrf52833, nrf52840, qpg6095, samr21 @<:@default=no@:>@.
+         Note that building example applications also builds the associated OpenThread platform libraries
+         and any third_party libraries needed to support the examples.])],
     [
         case "${with_examples}" in
         no)
             ;;
-        posix|cc1352|cc2538|cc2650|cc2652|efr32mg12|efr32mg21|gp712|kw41z|nrf52811|nrf52833|nrf52840|qpg6095|samr21)
+        posix|cc1352|cc2538|cc2650|cc2652|efr32mg12|efr32mg13|efr32mg21|gp712|kw41z|nrf52811|nrf52833|nrf52840|qpg6095|samr21)
             if test ${enable_posix_app} = "yes"; then
+                AC_MSG_RESULT(ERROR)
                 AC_MSG_ERROR([--with-examples must be no when POSIX apps are enabled by --enable-posix-app])
             fi
             ;;
         *)
-            AC_MSG_ERROR([Invalid value ${with_examples} for --with-examples])
+            AC_MSG_RESULT(ERROR)
+            AC_MSG_ERROR([Invalid value given for --with-examples: ${with_examples}])
             ;;
         esac
     ],
@@ -855,6 +858,7 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2538],    [test "${with_examples}" = "cc25
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2650],    [test "${with_examples}" = "cc2650"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2652],    [test "${with_examples}" = "cc2652"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32MG12], [test "${with_examples}" = "efr32mg12"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32MG13], [test "${with_examples}" = "efr32mg13"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_EFR32MG21], [test "${with_examples}" = "efr32mg21"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_GP712],     [test "${with_examples}" = "gp712"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_KW41Z],     [test "${with_examples}" = "kw41z"])
@@ -866,10 +870,88 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_SAMR21],    [test "${with_examples}" = "samr
 
 AM_COND_IF([OPENTHREAD_EXAMPLES_POSIX], CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_EXAMPLES_POSIX=1", CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_EXAMPLES_POSIX=0")
 
-AC_MSG_CHECKING([whether to enable examples])
-AC_MSG_RESULT(${with_examples})
-
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF528XX], [test OPENTHREAD_EXAMPLES_NRF52811 || test OPENTHREAD_EXAMPLES_NRF52833 || test OPENTHREAD_EXAMPLES_NRF52840])
+
+case ${with_examples} in
+    no)
+        AC_MSG_RESULT([no])
+        ;;
+    *)
+        AC_MSG_RESULT([yes (${with_examples})])
+        ;;
+esac
+
+#
+# Platform
+#
+
+AC_MSG_CHECKING([whether to build platform libraries])
+
+AC_ARG_WITH(platform,
+    [AS_HELP_STRING([--with-platform=TARGET],
+        [Build OpenThread platform libraries for one of: posix, cc1352, cc2538, cc2650, cc2652,
+         efr32mg12, efr32mg13, efr32mg21, gp712, kw41z, nrf52811, nrf52833, nrf52840, qpg6095, samr21 @<:@default=no@:>@.])],
+    [
+        # Make sure the given target is valid.
+        case "${with_platform}" in
+        no|posix|cc1352|cc2538|cc2650|cc2652|efr32mg12|efr32mg13|efr32mg21|gp712|kw41z|nrf52811|nrf52833|nrf52840|qpg6095|samr21)
+            ;;
+        *)
+            AC_MSG_RESULT(ERROR)
+            AC_MSG_ERROR([Invalid value given for --with-platform: ${with_platform}])
+            ;;
+        esac
+
+        # If both --with-platform and --with-examples are specified, make sure the targets match.
+        case "${with_examples}" in
+        no)
+            ;;
+        ${with_platform})
+            ;;
+        *)
+            AC_MSG_RESULT(ERROR)
+            AC_MSG_ERROR([Invalid value given for --with-platform: The targets for --with-examples and --with-platform must match.])
+            ;;
+        esac
+
+    ],
+    [
+        # If --with-platform is NOT specified, but --with-examples is, automatically build the
+        # corresponding platform libraries. (Essentially, --with-examples implies --with-platform).
+        with_platform=${with_examples}
+    ])
+
+AM_CONDITIONAL([OPENTHREAD_ENABLE_PLATFORM], [test ${with_platform} != "no"])
+
+OPENTHREAD_ENABLE_PLATFORM=${with_platform}
+
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_POSIX],     [test "${with_platform}" = "posix"])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_CC1352],    [test "${with_platform}" = "cc1352"])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_CC2538],    [test "${with_platform}" = "cc2538"])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_CC2650],    [test "${with_platform}" = "cc2650"])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_CC2652],    [test "${with_platform}" = "cc2652"])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_EFR32MG12], [test "${with_platform}" = "efr32mg12"])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_EFR32MG13], [test "${with_platform}" = "efr32mg13"])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_EFR32MG21], [test "${with_platform}" = "efr32mg21"])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_GP712],     [test "${with_platform}" = "gp712"])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_KW41Z],     [test "${with_platform}" = "kw41z"])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_NRF52811],  [test "${with_platform}" = "nrf52811"])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_NRF52833],  [test "${with_platform}" = "nrf52833"])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_NRF52840],  [test "${with_platform}" = "nrf52840"])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_QPG6095],   [test "${with_platform}" = "qpg6095"])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_SAMR21],    [test "${with_platform}" = "samr21"])
+
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_NRF528XX], [test OPENTHREAD_PLATFORM_NRF52811 || test OPENTHREAD_PLATFORM_NRF52833 || test OPENTHREAD_PLATFORM_NRF52840])
+
+case ${with_platform} in
+    no)
+        AC_MSG_RESULT([no])
+        ;;
+    *)
+        AC_MSG_RESULT([yes (${with_platform})])
+        ;;
+esac
+
 #
 # Tools
 #
@@ -924,21 +1006,6 @@ AC_MSG_NOTICE([checking required package dependencies])
 # Check for headers
 #
 
-#---------------------------------------------------
-# Enable BSD Security Features
-# This enables strlcpy() and other friends in GNU land.
-# While the references below generally speak of: "glibc"
-# The ARM Embedded platform uses the nano instance of NEWLIB
-# Which greatly follows and mirrors glibc.
-# --------------------------------------------------
-#
-# References:
-# 1) http://stackoverflow.com/questions/29201515/what-does-d-default-source-do
-# 2) http://man7.org/linux/man-pages/man7/feature_test_macros.7.html
-#
-CFLAGS="${CFLAGS} -D_BSD_SOURCE=1 -D_DEFAULT_SOURCE=1"
-CXXFLAGS="${CXXFLAGS} -D_BSD_SOURCE=1 -D_DEFAULT_SOURCE=1"
-
 OLD_CFLAGS="${CFLAGS}"
 CFLAGS="${CFLAGS} -Wno-error=address"
 AC_HEADER_STDBOOL
@@ -947,13 +1014,6 @@ AC_HEADER_STDC
 
 AC_CHECK_HEADERS([stdint.h])
 AC_CHECK_HEADERS([string.h])
-
-#
-# Missing Functions
-#
-AC_CHECK_FUNC([strlcpy], [AC_DEFINE([HAVE_STRLCPY], [1], [Define if strlcpy exists.])])
-AC_CHECK_FUNC([strlcat], [AC_DEFINE([HAVE_STRLCAT], [1], [Define if strlcat exists.])])
-AC_CHECK_FUNC([strnlen], [AC_DEFINE([HAVE_STRNLEN], [1], [Define if strnlen exists.])])
 
 #
 # Check for types and structures
@@ -1023,6 +1083,10 @@ examples/platforms/efr32mg12/Makefile
 examples/platforms/efr32mg12/sleepy-demo/Makefile
 examples/platforms/efr32mg12/sleepy-demo/sleepy-demo-ftd/Makefile
 examples/platforms/efr32mg12/sleepy-demo/sleepy-demo-mtd/Makefile
+examples/platforms/efr32mg13/Makefile
+examples/platforms/efr32mg13/sleepy-demo/Makefile
+examples/platforms/efr32mg13/sleepy-demo/sleepy-demo-ftd/Makefile
+examples/platforms/efr32mg13/sleepy-demo/sleepy-demo-mtd/Makefile
 examples/platforms/efr32mg21/Makefile
 examples/platforms/efr32mg21/sleepy-demo/Makefile
 examples/platforms/efr32mg21/sleepy-demo/sleepy-demo-ftd/Makefile
@@ -1114,6 +1178,7 @@ AC_MSG_NOTICE([
   OpenThread Vendor Extension Source        : ${with_vendor_extension}
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
   OpenThread Examples                       : ${with_examples}
+  OpenThread Platform Libraries             : ${with_platform}
   OpenThread POSIX Application              : ${enable_posix_app}
 
 ])

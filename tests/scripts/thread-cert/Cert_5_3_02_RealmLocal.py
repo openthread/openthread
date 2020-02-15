@@ -39,6 +39,7 @@ SED1 = 4
 
 
 class Cert_5_3_2_RealmLocal(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -97,15 +98,14 @@ class Cert_5_3_2_RealmLocal(unittest.TestCase):
 
         # 2 & 3
         mleid = self.nodes[DUT_ROUTER2].get_ip6_address(
-            config.ADDRESS_TYPE.ML_EID
-        )
+            config.ADDRESS_TYPE.ML_EID)
         self.assertTrue(self.nodes[LEADER].ping(mleid, size=256))
         self.assertTrue(self.nodes[LEADER].ping(mleid))
 
         # 4 & 5
-        self.assertTrue(
-            self.nodes[LEADER].ping('ff03::1', num_responses=2, size=256)
-        )
+        self.assertTrue(self.nodes[LEADER].ping('ff03::1',
+                                                num_responses=2,
+                                                size=256))
         sed_messages = self.simulator.get_messages_sent_by(SED1)
         self.assertFalse(sed_messages.contains_icmp_message())
 
@@ -114,9 +114,9 @@ class Cert_5_3_2_RealmLocal(unittest.TestCase):
         self.assertFalse(sed_messages.contains_icmp_message())
 
         # 6 & 7
-        self.assertTrue(
-            self.nodes[LEADER].ping('ff03::2', num_responses=2, size=256)
-        )
+        self.assertTrue(self.nodes[LEADER].ping('ff03::2',
+                                                num_responses=2,
+                                                size=256))
         sed_messages = self.simulator.get_messages_sent_by(SED1)
         self.assertFalse(sed_messages.contains_icmp_message())
 
@@ -125,23 +125,19 @@ class Cert_5_3_2_RealmLocal(unittest.TestCase):
         self.assertFalse(sed_messages.contains_icmp_message())
 
         # 8
-        self.assertTrue(
-            self.nodes[LEADER].ping(
-                config.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS,
-                num_responses=3,
-                size=256,
-            )
-        )
+        self.assertTrue(self.nodes[LEADER].ping(
+            config.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS,
+            num_responses=3,
+            size=256,
+        ))
         self.simulator.go(2)
         sed_messages = self.simulator.get_messages_sent_by(SED1)
         self.assertTrue(sed_messages.contains_icmp_message())
 
-        self.assertTrue(
-            self.nodes[LEADER].ping(
-                config.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS,
-                num_responses=3,
-            )
-        )
+        self.assertTrue(self.nodes[LEADER].ping(
+            config.REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS,
+            num_responses=3,
+        ))
         self.simulator.go(2)
         sed_messages = self.simulator.get_messages_sent_by(SED1)
         self.assertTrue(sed_messages.contains_icmp_message())

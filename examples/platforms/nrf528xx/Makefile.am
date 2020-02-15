@@ -31,27 +31,25 @@
 # created only once which leads to errors when auto-generated Makefile tries
 # to remove .Po files that were already removed
 
-if OPENTHREAD_EXAMPLES_NRF52811
+if OPENTHREAD_PLATFORM_NRF52811
 include nrf52811/Makefile.am
 endif
 
-if OPENTHREAD_EXAMPLES_NRF52833
+if OPENTHREAD_PLATFORM_NRF52833
 include nrf52833/Makefile.am
 endif
 
-if OPENTHREAD_EXAMPLES_NRF52840
+if OPENTHREAD_PLATFORM_NRF52840
 include nrf52840/Makefile.am
 endif
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-PRETTY_FILES                  = \
-    src/platform-fem.h          \
-    src/platform-nrf5.h         \
-    $(wildcard src/*.c)         \
-    $(wildcard nrf52811/*.h)    \
-    $(wildcard nrf52833/*.h)    \
-    $(wildcard nrf52840/*.h)    \
+PRETTY_FILES                            = \
+    src/platform-fem.h                    \
+    src/platform-nrf5.h                   \
+    $(wildcard $(srcdir)/**/*.c)          \
+    $(wildcard $(srcdir)/**/*.h)          \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

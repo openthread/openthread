@@ -38,6 +38,7 @@ ROUTER2 = 3
 
 
 class Cert_5_3_6_RouterIdMask(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 

@@ -53,6 +53,7 @@ DatasetLocal::DatasetLocal(Instance &aInstance, Tlv::Type aType)
     , mUpdateTime(0)
     , mType(aType)
     , mTimestampPresent(false)
+    , mSaved(false)
 {
     mTimestamp.Init();
 }

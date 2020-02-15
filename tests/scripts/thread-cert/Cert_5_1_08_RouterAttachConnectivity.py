@@ -41,6 +41,7 @@ ROUTER4 = 5
 
 
 class Cert_5_1_08_RouterAttachConnectivity(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -135,20 +136,15 @@ class Cert_5_1_08_RouterAttachConnectivity(unittest.TestCase):
         self.assertEqual(0, scan_mask_tlv.end_device)
 
         # 3 - Router2, Router3
-        msg = router2_messages.next_mle_message(
-            mle.CommandType.PARENT_RESPONSE
-        )
+        msg = router2_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
         msg.assertSentToNode(self.nodes[ROUTER4])
 
-        msg = router3_messages.next_mle_message(
-            mle.CommandType.PARENT_RESPONSE
-        )
+        msg = router3_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
         msg.assertSentToNode(self.nodes[ROUTER4])
 
         # 4 - Router4
         msg = router4_messages.next_mle_message(
-            mle.CommandType.CHILD_ID_REQUEST
-        )
+            mle.CommandType.CHILD_ID_REQUEST)
         msg.assertSentToNode(self.nodes[ROUTER3])
         msg.assertMleMessageContainsTlv(mle.Response)
         msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)

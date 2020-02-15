@@ -1,3 +1,7 @@
+1.6.16 (2020-01-23)
+
+        * Allow absolute paths in PRETTY_FILES.
+
 1.6.15 (2019-12-06)
 
         * Remove redundant libtool m4 libraries.

@@ -365,9 +365,7 @@ protected:
     otError CommandHandler_POKE(uint8_t aHeader);
 #endif
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    otError CommandHandler_NET_SAVE(uint8_t aHeader);
     otError CommandHandler_NET_CLEAR(uint8_t aHeader);
-    otError CommandHandler_NET_RECALL(uint8_t aHeader);
 #endif
 
     // ----------------------------------------------------------------------------
@@ -608,6 +606,8 @@ protected:
     uint32_t mTxSpinelFrameCounter;         // Number of sent (outbound) spinel frames.
 
     bool mDidInitialUpdates;
+
+    uint64_t mLogTimestampBase; // Timestamp base used for logging
 };
 
 } // namespace Ncp

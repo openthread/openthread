@@ -31,10 +31,9 @@
  *   This file includes the implementation for the HDLC interface to radio (RCP).
  */
 
-#include "openthread-core-config.h"
-#include "platform-posix.h"
-
 #include "hdlc_interface.hpp"
+
+#include "platform-posix.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -56,8 +55,8 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include <common/code_utils.hpp>
-#include <common/logging.hpp>
+#include "common/code_utils.hpp"
+#include "common/logging.hpp"
 
 #ifndef SOCKET_UTILS_DEFAULT_SHELL
 #define SOCKET_UTILS_DEFAULT_SHELL "/bin/sh"
@@ -119,14 +118,16 @@
 
 #endif // __APPLE__
 
+#if OPENTHREAD_POSIX_RCP_UART_ENABLE
+
 namespace ot {
 namespace PosixApp {
 
-HdlcInterface::HdlcInterface(Callbacks &aCallbacks)
-    : SpinelInterface()
-    , mCallbacks(aCallbacks)
+HdlcInterface::HdlcInterface(SpinelInterface::Callbacks &aCallback, SpinelInterface::RxFrameBuffer &aFrameBuffer)
+    : mCallbacks(aCallback)
+    , mRxFrameBuffer(aFrameBuffer)
     , mSockFd(-1)
-    , mHdlcDecoder(mRxFrameBuffer, HandleHdlcFrame, this)
+    , mHdlcDecoder(aFrameBuffer, HandleHdlcFrame, this)
 {
 }
 
@@ -221,7 +222,7 @@ otError HdlcInterface::Write(const uint8_t *aFrame, uint16_t aLength)
 {
     otError error = OT_ERROR_NONE;
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    platformSimSendRadioSpinelWriteEvent(aFrame, aLength);
+    virtualTimeSendRadioSpinelWriteEvent(aFrame, aLength);
 #else
     while (aLength)
     {
@@ -247,15 +248,16 @@ exit:
     return error;
 }
 
-otError HdlcInterface::WaitForFrame(struct timeval &aTimeout)
+otError HdlcInterface::WaitForFrame(const struct timeval &aTimeout)
 {
-    otError error = OT_ERROR_NONE;
+    otError        error   = OT_ERROR_NONE;
+    struct timeval timeout = aTimeout;
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     struct Event event;
 
-    platformSimSendSleepEvent(&aTimeout);
-    platformSimReceiveEvent(&event);
+    virtualTimeSendSleepEvent(&timeout);
+    virtualTimeReceiveEvent(&event);
 
     switch (event.mEvent)
     {
@@ -281,7 +283,7 @@ otError HdlcInterface::WaitForFrame(struct timeval &aTimeout)
     FD_SET(mSockFd, &read_fds);
     FD_SET(mSockFd, &error_fds);
 
-    rval = select(mSockFd + 1, &read_fds, NULL, &error_fds, &aTimeout);
+    rval = select(mSockFd + 1, &read_fds, NULL, &error_fds, &timeout);
 
     if (rval > 0)
     {
@@ -414,6 +416,7 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
         int  speed  = 115200;
         int  cstopb = 1;
         char parity = 'N';
+        char flow   = 'N';
 
         VerifyOrExit((rval = tcgetattr(fd, &tios)) == 0);
 
@@ -421,10 +424,10 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
 
         tios.c_cflag = CS8 | HUPCL | CREAD | CLOCAL;
 
-        // example: 115200N1
+        // example: 115200N1H
         if (aConfig != NULL)
         {
-            sscanf(aConfig, "%u%c%d", &speed, &parity, &cstopb);
+            sscanf(aConfig, "%u%c%d%c", &speed, &parity, &cstopb, &flow);
         }
 
         switch (parity)
@@ -439,7 +442,6 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
             break;
         default:
             // not supported
-            assert(false);
             DieNow(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
@@ -453,7 +455,6 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
             tios.c_cflag |= CSTOPB;
             break;
         default:
-            assert(false);
             DieNow(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
@@ -541,7 +542,19 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
             break;
 #endif
         default:
-            assert(false);
+            DieNow(OT_EXIT_INVALID_ARGUMENTS);
+            break;
+        }
+
+        switch (flow)
+        {
+        case 'N':
+            break;
+        case 'H':
+            tios.c_cflag |= CRTSCTS;
+            break;
+        default:
+            // not supported
             DieNow(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
@@ -623,3 +636,4 @@ void HdlcInterface::HandleHdlcFrame(otError aError)
 
 } // namespace PosixApp
 } // namespace ot
+#endif // OPENTHREAD_POSIX_RCP_UART_ENABLE

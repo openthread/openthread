@@ -49,6 +49,7 @@ MTDS = [ED, SED]
 
 
 class Cert_9_2_8_PersistentDatasets(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -56,17 +57,17 @@ class Cert_9_2_8_PersistentDatasets(unittest.TestCase):
         for i in range(1, 6):
             self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
 
-        self.nodes[COMMISSIONER].set_active_dataset(
-            LEADER_ACTIVE_TIMESTAMP, panid=PANID_INIT, channel=CHANNEL_INIT
-        )
+        self.nodes[COMMISSIONER].set_active_dataset(LEADER_ACTIVE_TIMESTAMP,
+                                                    panid=PANID_INIT,
+                                                    channel=CHANNEL_INIT)
         self.nodes[COMMISSIONER].set_mode('rsdn')
         self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[COMMISSIONER].enable_whitelist()
         self.nodes[COMMISSIONER].set_router_selection_jitter(1)
 
-        self.nodes[LEADER].set_active_dataset(
-            LEADER_ACTIVE_TIMESTAMP, panid=PANID_INIT, channel=CHANNEL_INIT
-        )
+        self.nodes[LEADER].set_active_dataset(LEADER_ACTIVE_TIMESTAMP,
+                                              panid=PANID_INIT,
+                                              channel=CHANNEL_INIT)
         self.nodes[LEADER].set_mode('rsdn')
         self.nodes[LEADER].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
         self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
@@ -74,9 +75,9 @@ class Cert_9_2_8_PersistentDatasets(unittest.TestCase):
         self.nodes[LEADER].add_whitelist(self.nodes[SED].get_addr64())
         self.nodes[LEADER].enable_whitelist()
 
-        self.nodes[ROUTER].set_active_dataset(
-            LEADER_ACTIVE_TIMESTAMP, panid=PANID_INIT, channel=CHANNEL_INIT
-        )
+        self.nodes[ROUTER].set_active_dataset(LEADER_ACTIVE_TIMESTAMP,
+                                              panid=PANID_INIT,
+                                              channel=CHANNEL_INIT)
         self.nodes[ROUTER].set_mode('rsdn')
         self._setUpRouter()
 
@@ -149,16 +150,13 @@ class Cert_9_2_8_PersistentDatasets(unittest.TestCase):
 
         self.simulator.go(60)
 
-        self.assertEqual(
-            self.nodes[LEADER].get_panid(), COMMISSIONER_PENDING_PANID
-        )
-        self.assertEqual(
-            self.nodes[COMMISSIONER].get_panid(), COMMISSIONER_PENDING_PANID
-        )
+        self.assertEqual(self.nodes[LEADER].get_panid(),
+                         COMMISSIONER_PENDING_PANID)
+        self.assertEqual(self.nodes[COMMISSIONER].get_panid(),
+                         COMMISSIONER_PENDING_PANID)
 
-        self.assertEqual(
-            self.nodes[LEADER].get_channel(), COMMISSIONER_PENDING_CHANNEL
-        )
+        self.assertEqual(self.nodes[LEADER].get_channel(),
+                         COMMISSIONER_PENDING_CHANNEL)
         self.assertEqual(
             self.nodes[COMMISSIONER].get_channel(),
             COMMISSIONER_PENDING_CHANNEL,
@@ -186,25 +184,18 @@ class Cert_9_2_8_PersistentDatasets(unittest.TestCase):
 
         self.simulator.go(10)
 
-        self.assertEqual(
-            self.nodes[ROUTER].get_panid(), COMMISSIONER_PENDING_PANID
-        )
-        self.assertEqual(
-            self.nodes[ED].get_panid(), COMMISSIONER_PENDING_PANID
-        )
-        self.assertEqual(
-            self.nodes[SED].get_panid(), COMMISSIONER_PENDING_PANID
-        )
+        self.assertEqual(self.nodes[ROUTER].get_panid(),
+                         COMMISSIONER_PENDING_PANID)
+        self.assertEqual(self.nodes[ED].get_panid(), COMMISSIONER_PENDING_PANID)
+        self.assertEqual(self.nodes[SED].get_panid(),
+                         COMMISSIONER_PENDING_PANID)
 
-        self.assertEqual(
-            self.nodes[ROUTER].get_channel(), COMMISSIONER_PENDING_CHANNEL
-        )
-        self.assertEqual(
-            self.nodes[ED].get_channel(), COMMISSIONER_PENDING_CHANNEL
-        )
-        self.assertEqual(
-            self.nodes[SED].get_channel(), COMMISSIONER_PENDING_CHANNEL
-        )
+        self.assertEqual(self.nodes[ROUTER].get_channel(),
+                         COMMISSIONER_PENDING_CHANNEL)
+        self.assertEqual(self.nodes[ED].get_channel(),
+                         COMMISSIONER_PENDING_CHANNEL)
+        self.assertEqual(self.nodes[SED].get_channel(),
+                         COMMISSIONER_PENDING_CHANNEL)
 
         self.simulator.go(5)
 

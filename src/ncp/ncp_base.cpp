@@ -248,6 +248,7 @@ NcpBase::NcpBase(Instance *aInstance)
     , mRxSpinelOutOfOrderTidCounter(0)
     , mTxSpinelFrameCounter(0)
     , mDidInitialUpdates(false)
+    , mLogTimestampBase(0)
 {
     assert(mInstance != NULL);
 
@@ -630,6 +631,7 @@ void NcpBase::Log(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aLog
     SuccessOrExit(error = mEncoder.WriteUtf8(aLogString));
     SuccessOrExit(error = mEncoder.WriteUint8(ConvertLogLevel(aLogLevel)));
     SuccessOrExit(error = mEncoder.WriteUintPacked(ConvertLogRegion(aLogRegion)));
+    SuccessOrExit(error = mEncoder.WriteUint64(mLogTimestampBase + otPlatAlarmMilliGetNow()));
     SuccessOrExit(error = mEncoder.EndFrame());
 
 exit:
@@ -882,15 +884,12 @@ otError NcpBase::HandleCommand(uint8_t aHeader)
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     case SPINEL_CMD_NET_SAVE:
-        error = CommandHandler_NET_SAVE(aHeader);
+    case SPINEL_CMD_NET_RECALL:
+        error = OT_ERROR_NOT_IMPLEMENTED;
         break;
 
     case SPINEL_CMD_NET_CLEAR:
         error = CommandHandler_NET_CLEAR(aHeader);
-        break;
-
-    case SPINEL_CMD_NET_RECALL:
-        error = CommandHandler_NET_RECALL(aHeader);
         break;
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
@@ -2256,6 +2255,26 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_LOG_TIMESTAMP_BASE>(void)
+{
+    uint64_t timestampBase = 0;
+    otError  error         = OT_ERROR_NONE;
+    uint32_t currentTime   = otPlatAlarmMilliGetNow();
+
+    SuccessOrExit(error = mDecoder.ReadUint64(timestampBase));
+    VerifyOrExit(timestampBase >= currentTime, error = OT_ERROR_INVALID_ARGS);
+
+    mLogTimestampBase = timestampBase - currentTime;
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_LOG_TIMESTAMP_BASE>(void)
+{
+    return mEncoder.WriteUint64(mLogTimestampBase);
+}
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_CHAN_SUPPORTED>(void)
 {

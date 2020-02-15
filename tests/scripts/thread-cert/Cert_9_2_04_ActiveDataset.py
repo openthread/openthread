@@ -37,6 +37,7 @@ LEADER = 2
 
 
 class Cert_9_2_04_ActiveDataset(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -45,14 +46,12 @@ class Cert_9_2_04_ActiveDataset(unittest.TestCase):
             self.nodes[i] = node.Node(i, simulator=self.simulator)
 
         self.nodes[COMMISSIONER].set_active_dataset(
-            10, panid=0xface, master_key='000102030405060708090a0b0c0d0e0f'
-        )
+            10, panid=0xface, master_key='000102030405060708090a0b0c0d0e0f')
         self.nodes[COMMISSIONER].set_mode('rsdn')
         self.nodes[COMMISSIONER].set_router_selection_jitter(1)
 
         self.nodes[LEADER].set_active_dataset(
-            10, panid=0xface, master_key='000102030405060708090a0b0c0d0e0f'
-        )
+            10, panid=0xface, master_key='000102030405060708090a0b0c0d0e0f')
         self.nodes[LEADER].set_mode('rsdn')
         self.nodes[LEADER].set_router_selection_jitter(1)
 

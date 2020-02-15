@@ -74,14 +74,10 @@ def verify_prefix(
     """
     for node in node_list:
         prefixes = wpan.parse_on_mesh_prefix_result(
-            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES)
-        )
+            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
         for p in prefixes:
-            if (
-                p.prefix == prefix
-                and p.origin == "ncp"
-                and int(p.rloc16(), 0) == rloc16
-            ):
+            if (p.prefix == prefix and p.origin == "ncp" and
+                    int(p.rloc16(), 0) == rloc16):
                 verify(int(p.prefix_len) == prefix_len)
                 verify(p.is_stable() == stable)
                 verify(p.is_on_mesh() == on_mesh)
@@ -93,9 +89,8 @@ def verify_prefix(
                 verify(p.priority == priority)
                 break
         else:
-            raise wpan.VerifyError(
-                "Did not find prefix {} on node {}".format(prefix, node)
-            )
+            raise wpan.VerifyError("Did not find prefix {} on node {}".format(
+                prefix, node))
 
 
 def verify_no_prefix(node_list, prefix, rloc16):
@@ -105,19 +100,13 @@ def verify_no_prefix(node_list, prefix, rloc16):
     """
     for node in node_list:
         prefixes = wpan.parse_on_mesh_prefix_result(
-            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES)
-        )
+            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
         for p in prefixes:
-            if (
-                p.prefix == prefix
-                and p.origin == "ncp"
-                and int(p.rloc16(), 0) == rloc16
-            ):
+            if (p.prefix == prefix and p.origin == "ncp" and
+                    int(p.rloc16(), 0) == rloc16):
                 raise wpan.VerifyError(
                     "Did find prefix {} with rloc {} on node {}".format(
-                        prefix, hex(rloc16), node
-                    )
-                )
+                        prefix, hex(rloc16), node))
 
 
 # -----------------------------------------------------------------------------------------------------------------------
@@ -246,9 +235,12 @@ r2.leave()
 
 def check_prefixes_on_r1_after_r2_leave():
     # Verify that entries added by r1 are still present
-    verify_prefix(
-        [r1], prefix1, r1_rloc, on_mesh=True, preferred=True, stable=True
-    )
+    verify_prefix([r1],
+                  prefix1,
+                  r1_rloc,
+                  on_mesh=True,
+                  preferred=True,
+                  stable=True)
     verify_prefix(
         [r1],
         common_prefix,

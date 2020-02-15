@@ -37,6 +37,7 @@
 #include "utils/soft_source_match_table.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "common/logging.hpp"
 #include "utils/code_utils.h"

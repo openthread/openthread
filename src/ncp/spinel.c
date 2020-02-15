@@ -147,6 +147,22 @@ static int spinel_errno_workaround_;
 #define require(c, l) require_action(c, l, {})
 #endif
 
+#ifndef strnlen
+static size_t spinel_strnlen(const char *s, size_t maxlen)
+{
+    size_t ret;
+
+    for (ret = 0; (ret < maxlen) && (s[ret] != 0); ret++)
+    {
+        // Empty loop.
+    }
+
+    return ret;
+}
+#else
+#define spinel_strnlen strnlen
+#endif
+
 typedef struct
 {
     va_list obj;
@@ -538,7 +554,7 @@ static spinel_ssize_t spinel_datatype_vunpack_(bool           in_place,
             // Add 1 for zero termination. If not zero terminated,
             // len will then be data_len+1, which we will detect
             // in the next check.
-            len = strnlen((const char *)data_in, data_len) + 1;
+            len = spinel_strnlen((const char *)data_in, data_len) + 1;
 
             // Verify that the string is zero terminated.
             require_action(len <= data_len, bail, (ret = -1, errno = EOVERFLOW));

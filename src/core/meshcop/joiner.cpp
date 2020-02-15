@@ -163,11 +163,11 @@ void Joiner::Finish(otError aError)
 
     case OT_JOINER_STATE_DISCOVER:
         Get<Coap::CoapSecure>().Stop();
-        FreeJoinerFinalizeMessage();
         break;
     }
 
     SetState(OT_JOINER_STATE_IDLE);
+    FreeJoinerFinalizeMessage();
 
     if (mCallback)
     {
@@ -450,11 +450,13 @@ exit:
 
 void Joiner::FreeJoinerFinalizeMessage(void)
 {
-    if (mFinalizeMessage != NULL)
-    {
-        mFinalizeMessage->Free();
-        mFinalizeMessage = NULL;
-    }
+    VerifyOrExit(mState == OT_JOINER_STATE_IDLE && mFinalizeMessage != NULL);
+
+    mFinalizeMessage->Free();
+    mFinalizeMessage = NULL;
+
+exit:
+    return;
 }
 
 void Joiner::SendJoinerFinalize(void)

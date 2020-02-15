@@ -117,11 +117,34 @@ void TestString(void)
     printf(" -- PASS\n");
 }
 
+void TestStringLength(void)
+{
+    char string_a[5] = "\0foo";
+    char string_b[8] = "foo\0bar";
+
+    printf("\nTest 4: String::StringLength() method\n");
+
+    VerifyOrQuit(StringLength(string_a, 0) == 0, "StringLength() 0len 0 fails");
+    VerifyOrQuit(StringLength(string_a, 1) == 0, "StringLength() 0len 1 fails");
+    VerifyOrQuit(StringLength(string_a, 2) == 0, "StringLength() 0len 2 fails");
+
+    VerifyOrQuit(StringLength(string_b, 0) == 0, "StringLength() 3len 0 fails");
+    VerifyOrQuit(StringLength(string_b, 1) == 1, "StringLength() 3len 1 fails");
+    VerifyOrQuit(StringLength(string_b, 2) == 2, "StringLength() 3len 2 fails");
+    VerifyOrQuit(StringLength(string_b, 3) == 3, "StringLength() 3len 3 fails");
+    VerifyOrQuit(StringLength(string_b, 4) == 3, "StringLength() 3len 4 fails");
+    VerifyOrQuit(StringLength(string_b, 5) == 3, "StringLength() 3len 5 fails");
+    VerifyOrQuit(StringLength(string_b, 6) == 3, "StringLength() 3len 6 fails");
+
+    printf(" -- PASS\n");
+}
+
 } // namespace ot
 
 int main(void)
 {
     ot::TestString();
+    ot::TestStringLength();
     printf("\nAll tests passed.\n");
     return 0;
 }

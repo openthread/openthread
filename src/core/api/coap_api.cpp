@@ -110,6 +110,21 @@ otError otCoapMessageAppendUriPathOptions(otMessage *aMessage, const char *aUriP
     return static_cast<Coap::Message *>(aMessage)->AppendUriPathOptions(aUriPath);
 }
 
+uint16_t otCoapBlockSizeFromExponent(otCoapBlockSize aSize)
+{
+    return static_cast<uint16_t>(1 << (aSize + Coap::Message::kBlockSzxBase));
+}
+
+otError otCoapMessageAppendBlock2Option(otMessage *aMessage, uint32_t aNum, bool aMore, otCoapBlockSize aSize)
+{
+    return static_cast<Coap::Message *>(aMessage)->AppendBlockOption(Coap::Message::kBlockType2, aNum, aMore, aSize);
+}
+
+otError otCoapMessageAppendBlock1Option(otMessage *aMessage, uint32_t aNum, bool aMore, otCoapBlockSize aSize)
+{
+    return static_cast<Coap::Message *>(aMessage)->AppendBlockOption(Coap::Message::kBlockType1, aNum, aMore, aSize);
+}
+
 otError otCoapMessageAppendProxyUriOption(otMessage *aMessage, const char *aUriPath)
 {
     return static_cast<Coap::Message *>(aMessage)->AppendProxyUriOption(aUriPath);

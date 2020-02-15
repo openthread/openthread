@@ -35,6 +35,7 @@
 #ifndef SOFTDEVICE_H_
 #define SOFTDEVICE_H_
 
+// clang-format off
 #if defined(__GNUC__)
     _Pragma("GCC diagnostic push")
     _Pragma("GCC diagnostic ignored \"-Wreturn-type\"")
@@ -53,7 +54,7 @@
 
 /*******************************************************************************
  * @section nRF SoftDevice Handler declarations.
- * 
+ *
  * @note Definitions for below functions are placed in nRF5 SDK.
  ******************************************************************************/
 
@@ -77,4 +78,5 @@ void nrf_sdh_resume(void);
  */
 void nrf_sdh_evts_poll(void);
 
-#endif  // SOFTDEVICE_H_
+// clang-format on
+#endif // SOFTDEVICE_H_

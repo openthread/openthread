@@ -34,7 +34,6 @@
 #include "ip6_address.hpp"
 
 #include <stdio.h>
-#include "utils/wrap_string.h"
 
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
@@ -63,12 +62,7 @@ bool Address::IsLoopback(void) const
 
 bool Address::IsLinkLocal(void) const
 {
-    return (mFields.m8[0] == 0xfe) && ((mFields.m8[1] & 0xc0) == 0x80);
-}
-
-bool Address::IsMulticast(void) const
-{
-    return mFields.m8[0] == 0xff;
+    return (mFields.m16[0] & HostSwap16(0xffc0)) == HostSwap16(0xfe80);
 }
 
 bool Address::IsLinkLocalMulticast(void) const
@@ -118,21 +112,20 @@ bool Address::IsRealmLocalAllMplForwarders(void) const
 
 bool Address::IsRoutingLocator(void) const
 {
-    return (mFields.m16[4] == HostSwap16(0x0000) && mFields.m16[5] == HostSwap16(0x00ff) &&
-            mFields.m16[6] == HostSwap16(0xfe00) && mFields.m8[14] < kAloc16Mask &&
-            (mFields.m8[14] & kRloc16ReservedBitMask) == 0);
+    return (mFields.m32[2] == HostSwap32(0x000000ff) && mFields.m16[6] == HostSwap16(0xfe00) &&
+            mFields.m8[14] < kAloc16Mask && (mFields.m8[14] & kRloc16ReservedBitMask) == 0);
 }
 
 bool Address::IsAnycastRoutingLocator(void) const
 {
-    return (mFields.m16[4] == HostSwap16(0x0000) && mFields.m16[5] == HostSwap16(0x00ff) &&
-            mFields.m16[6] == HostSwap16(0xfe00) && mFields.m8[14] == kAloc16Mask);
+    return (mFields.m32[2] == HostSwap32(0x000000ff) && mFields.m16[6] == HostSwap16(0xfe00) &&
+            mFields.m8[14] == kAloc16Mask);
 }
 
 bool Address::IsAnycastServiceLocator(void) const
 {
-    return IsAnycastRoutingLocator() && (mFields.m16[7] >= HostSwap16(Mle::kAloc16ServiceStart)) &&
-           (mFields.m16[7] <= HostSwap16(Mle::kAloc16ServiceEnd));
+    return IsAnycastRoutingLocator() && (mFields.m8[15] >= (Mle::kAloc16ServiceStart & 0xff)) &&
+           (mFields.m8[15] <= (Mle::kAloc16ServiceEnd & 0xff));
 }
 
 bool Address::IsSubnetRouterAnycast(void) const
@@ -149,16 +142,6 @@ bool Address::IsReservedSubnetAnycast(void) const
 bool Address::IsIidReserved(void) const
 {
     return IsSubnetRouterAnycast() || IsReservedSubnetAnycast() || IsAnycastRoutingLocator();
-}
-
-const uint8_t *Address::GetIid(void) const
-{
-    return mFields.m8 + kInterfaceIdentifierOffset;
-}
-
-uint8_t *Address::GetIid(void)
-{
-    return mFields.m8 + kInterfaceIdentifierOffset;
 }
 
 void Address::SetIid(const uint8_t *aIid)

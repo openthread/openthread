@@ -67,6 +67,7 @@ libmbedcrypto_a_SOURCES                       = \
     repo/library/pk.c                           \
     repo/library/pk_wrap.c                      \
     repo/library/pkparse.c                      \
+    repo/library/pkwrite.c                      \
     repo/library/platform.c                     \
     repo/library/platform_util.c                \
     repo/library/sha256.c                       \

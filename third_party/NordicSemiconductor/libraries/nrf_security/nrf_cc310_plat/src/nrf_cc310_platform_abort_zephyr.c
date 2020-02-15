@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: LicenseRef-BSD-5-Clause-Nordic
  */
 #include <kernel.h>
-#include <misc/reboot.h>
+#include <power/reboot.h>
 //#include <logging/log.h>
 //LOG_MODULE_DECLARE(cc310_platform);
 

@@ -38,6 +38,7 @@ SED1 = 7
 
 
 class Cert_5_1_07_MaxChildCount(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 

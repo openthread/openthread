@@ -48,6 +48,7 @@ DATASET2_PANID = 0xafce
 
 
 class Cert_9_2_12_Announce(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -55,34 +56,34 @@ class Cert_9_2_12_Announce(unittest.TestCase):
         for i in range(1, 6):
             self.nodes[i] = node.Node(i, (i == MED), simulator=self.simulator)
 
-        self.nodes[LEADER1].set_active_dataset(
-            DATASET1_TIMESTAMP, channel=DATASET1_CHANNEL, panid=DATASET1_PANID
-        )
+        self.nodes[LEADER1].set_active_dataset(DATASET1_TIMESTAMP,
+                                               channel=DATASET1_CHANNEL,
+                                               panid=DATASET1_PANID)
         self.nodes[LEADER1].set_mode('rsdn')
         self.nodes[LEADER1].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[LEADER1].enable_whitelist()
 
-        self.nodes[ROUTER1].set_active_dataset(
-            DATASET1_TIMESTAMP, channel=DATASET1_CHANNEL, panid=DATASET1_PANID
-        )
+        self.nodes[ROUTER1].set_active_dataset(DATASET1_TIMESTAMP,
+                                               channel=DATASET1_CHANNEL,
+                                               panid=DATASET1_PANID)
         self.nodes[ROUTER1].set_mode('rsdn')
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER1].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER2].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
         self.nodes[ROUTER1].set_router_selection_jitter(1)
 
-        self.nodes[LEADER2].set_active_dataset(
-            DATASET2_TIMESTAMP, channel=DATASET2_CHANNEL, panid=DATASET2_PANID
-        )
+        self.nodes[LEADER2].set_active_dataset(DATASET2_TIMESTAMP,
+                                               channel=DATASET2_CHANNEL,
+                                               panid=DATASET2_PANID)
         self.nodes[LEADER2].set_mode('rsdn')
         self.nodes[LEADER2].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[LEADER2].add_whitelist(self.nodes[ROUTER2].get_addr64())
         self.nodes[LEADER2].enable_whitelist()
         self.nodes[LEADER2].set_router_selection_jitter(1)
 
-        self.nodes[ROUTER2].set_active_dataset(
-            DATASET2_TIMESTAMP, channel=DATASET2_CHANNEL, panid=DATASET2_PANID
-        )
+        self.nodes[ROUTER2].set_active_dataset(DATASET2_TIMESTAMP,
+                                               channel=DATASET2_CHANNEL,
+                                               panid=DATASET2_PANID)
         self.nodes[ROUTER2].set_mode('rsdn')
         self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER2].get_addr64())
         self.nodes[ROUTER2].add_whitelist(self.nodes[MED].get_addr64())

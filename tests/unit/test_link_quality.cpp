@@ -28,7 +28,6 @@
 
 #include "common/code_utils.hpp"
 #include "thread/link_quality.hpp"
-#include "utils/wrap_string.h"
 
 #include "test_platform.h"
 #include "test_util.h"

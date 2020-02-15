@@ -46,8 +46,7 @@ def verify_neighbor_table(node, neighbors):
     This function verifies that the neighbor table of a given `node` contains the node in the `neighbors` list.
     """
     neighbor_table = wpan.parse_neighbor_table_result(
-        node.get(wpan.WPAN_THREAD_NEIGHBOR_TABLE)
-    )
+        node.get(wpan.WPAN_THREAD_NEIGHBOR_TABLE))
     for neighbor in neighbors:
         ext_addr = neighbor.get(wpan.WPAN_EXT_ADDRESS)[1:-1]
         for entry in neighbor_table:
@@ -55,10 +54,8 @@ def verify_neighbor_table(node, neighbors):
                 break
         else:
             raise wpan.VerifyError(
-                'Failed to find a neighbor entry for extended address {} in table'.format(
-                    ext_addr
-                )
-            )
+                'Failed to find a neighbor entry for extended address {} in table'
+                .format(ext_addr))
 
 
 # -----------------------------------------------------------------------------------------------------------------------
@@ -122,7 +119,6 @@ def check_r2_neighbor_table():
 wpan.verify_within(check_r2_neighbor_table, WAIT_INTERVAL)
 verify(r1.get(wpan.WPAN_NODE_TYPE) == wpan.NODE_TYPE_LEADER)
 verify(r2.get(wpan.WPAN_NODE_TYPE) == wpan.NODE_TYPE_ROUTER)
-
 
 # Now reset r1 and check that everything recover correctly.
 r1.reset()

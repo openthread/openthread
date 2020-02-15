@@ -35,6 +35,7 @@ LEADER = 1
 
 
 class Cert_Cli(unittest.TestCase):
+
     def setUp(self):
         self.nodes = {}
         self.nodes[LEADER] = node.Node(LEADER)

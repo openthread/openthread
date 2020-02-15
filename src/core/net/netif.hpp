@@ -100,6 +100,12 @@ public:
     {
         return mScopeOverrideValid ? static_cast<uint8_t>(mScopeOverride) : GetAddress().GetScope();
     }
+
+private:
+    // In an unused/available entry (i.e., entry not present in a linked
+    // list), the next pointer is set to point back to the entry itself.
+    bool IsInUse(void) const { return GetNext() != this; }
+    void MarkAsNotInUse(void) { SetNext(this); }
 };
 
 /**
@@ -151,6 +157,12 @@ public:
     {
         return static_cast<NetifMulticastAddress *>(const_cast<otNetifMulticastAddress *>(mNext));
     }
+
+private:
+    // In an unused/available entry (i.e., entry not present in a linked
+    // list), the next pointer is set to point back to the entry itself.
+    bool IsInUse(void) const { return GetNext() != this; }
+    void MarkAsNotInUse(void) { mNext = this; }
 };
 
 /**
@@ -404,7 +416,6 @@ private:
     LinkedList<NetifUnicastAddress>   mUnicastAddresses;
     LinkedList<NetifMulticastAddress> mMulticastAddresses;
     bool                              mMulticastPromiscuous;
-    Netif *                           mNext;
 
     otIp6AddressCallback mAddressCallback;
     void *               mAddressCallbackContext;

@@ -26,6 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "platform/openthread-posix-config.h"
+
 #include <openthread/config.h>
 
 #include <assert.h>
@@ -90,15 +92,48 @@ static jmp_buf gResetJump;
 
 void __gcov_flush();
 
+/**
+ * This enumeration defines the argument return values.
+ *
+ */
+enum
+{
+    ARG_PRINT_RADIO_VERSION = 1001,
+    ARG_NO_RADIO_RESET      = 1002,
+    ARG_RESTORE_NCP_DATASET = 1003,
+    ARG_SPI_GPIO_INT_DEV    = 1011,
+    ARG_SPI_GPIO_INT_LINE   = 1012,
+    ARG_SPI_GPIO_RESET_DEV  = 1013,
+    ARG_SPI_GPIO_RESET_LINE = 1014,
+    ARG_SPI_MODE            = 1015,
+    ARG_SPI_SPEED           = 1016,
+    ARG_SPI_CS_DELAY        = 1017,
+    ARG_SPI_RESET_DELAY     = 1018,
+    ARG_SPI_ALIGN_ALLOWANCE = 1019,
+    ARG_SPI_SMALL_PACKET    = 1020,
+};
+
 static const struct option kOptions[] = {{"debug-level", required_argument, NULL, 'd'},
                                          {"dry-run", no_argument, NULL, 'n'},
                                          {"help", no_argument, NULL, 'h'},
                                          {"interface-name", required_argument, NULL, 'I'},
-                                         {"no-reset", no_argument, NULL, 0},
-                                         {"radio-version", no_argument, NULL, 0},
+                                         {"no-reset", no_argument, NULL, ARG_NO_RADIO_RESET},
+                                         {"radio-version", no_argument, NULL, ARG_PRINT_RADIO_VERSION},
+                                         {"ncp-dataset", no_argument, NULL, ARG_RESTORE_NCP_DATASET},
                                          {"time-speed", required_argument, NULL, 's'},
                                          {"verbose", no_argument, NULL, 'v'},
-                                         {"ncp-dataset", no_argument, NULL, 0},
+#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
+                                         {"gpio-int-dev", required_argument, NULL, ARG_SPI_GPIO_INT_DEV},
+                                         {"gpio-int-line", required_argument, NULL, ARG_SPI_GPIO_INT_LINE},
+                                         {"gpio-reset-dev", required_argument, NULL, ARG_SPI_GPIO_RESET_DEV},
+                                         {"gpio-reset-line", required_argument, NULL, ARG_SPI_GPIO_RESET_LINE},
+                                         {"spi-mode", required_argument, NULL, ARG_SPI_MODE},
+                                         {"spi-speed", required_argument, NULL, ARG_SPI_SPEED},
+                                         {"spi-cs-delay", required_argument, NULL, ARG_SPI_CS_DELAY},
+                                         {"spi-reset-delay", required_argument, NULL, ARG_SPI_RESET_DELAY},
+                                         {"spi-align-allowance", required_argument, NULL, ARG_SPI_ALIGN_ALLOWANCE},
+                                         {"spi-small-packet", required_argument, NULL, ARG_SPI_SMALL_PACKET},
+#endif
                                          {0, 0, 0, 0}};
 
 static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
@@ -107,15 +142,38 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "Syntax:\n"
             "    %s [Options] NodeId|Device|Command [DeviceConfig|CommandArgs]\n"
             "Options:\n"
-            "    -I  --interface-name name   Thread network interface name.\n"
-            "    -d  --debug-level           Debug level of logging.\n"
-            "    -n  --dry-run               Just verify if arguments is valid and radio spinel is compatible.\n"
-            "        --no-reset              Do not reset RCP on initialization\n"
-            "        --radio-version         Print radio firmware version\n"
-            "        --ncp-dataset           Retrieve and save NCP dataset to file\n"
-            "    -s  --time-speed factor     Time speed up factor.\n"
-            "    -v  --verbose               Also log to stderr.\n"
-            "    -h  --help                  Display this usage information.\n",
+            "    -I  --interface-name name     Thread network interface name.\n"
+            "    -d  --debug-level             Debug level of logging.\n"
+            "    -n  --dry-run                 Just verify if arguments is valid and radio spinel is compatible.\n"
+            "        --no-reset                Do not send Spinel reset command to RCP on initialization.\n"
+            "        --radio-version           Print radio firmware version.\n"
+            "        --ncp-dataset             Retrieve and save NCP dataset to file.\n"
+            "    -s  --time-speed factor       Time speed up factor.\n"
+            "    -v  --verbose                 Also log to stderr.\n"
+#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
+            "        --gpio-int-dev[=gpio-device-path]\n"
+            "                                  Specify a path to the Linux sysfs-exported GPIO device for the\n"
+            "                                  `I̅N̅T̅` pin. If not specified, `SPI` interface will fall back to\n"
+            "                                  polling, which is inefficient.\n"
+            "        --gpio-int-line[=line-offset]\n"
+            "                                  The offset index of `I̅N̅T̅` pin for the associated GPIO device.\n"
+            "                                  If not specified, `SPI` interface will fall back to polling,\n"
+            "                                  which is inefficient.\n"
+            "        --gpio-reset-dev[=gpio-device-path]\n"
+            "                                  Specify a path to the Linux sysfs-exported GPIO device for the\n"
+            "                                  `R̅E̅S̅` pin.\n"
+            "        --gpio-reset-line[=line-offset]"
+            "                                  The offset index of `R̅E̅S̅` pin for the associated GPIO device.\n"
+            "        --spi-mode[=mode]         Specify the SPI mode to use (0-3).\n"
+            "        --spi-speed[=hertz]       Specify the SPI speed in hertz.\n"
+            "        --spi-cs-delay[=usec]     Specify the delay after C̅S̅ assertion, in µsec.\n"
+            "        --spi-reset-delay[=ms]    Specify the delay after R̅E̅S̅E̅T̅ assertion, in milliseconds.\n"
+            "        --spi-align-allowance[=n] Specify the maximum number of 0xFF bytes to clip from start of\n"
+            "                                  MISO frame. Max value is 16.\n"
+            "        --spi-small-packet=[n]    Specify the smallest packet we can receive in a single transaction.\n"
+            "                                  (larger packets will require two transactions). Default value is 32.\n"
+#endif
+            "    -h  --help                    Display this usage information.\n",
             aProgramName);
     exit(aExitCode);
 }
@@ -124,9 +182,15 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
 {
     memset(aConfig, 0, sizeof(PosixConfig));
 
-    aConfig->mPlatformConfig.mSpeedUpFactor = 1;
-    aConfig->mPlatformConfig.mResetRadio    = true;
-    aConfig->mLogLevel                      = OT_LOG_LEVEL_CRIT;
+    aConfig->mPlatformConfig.mSpeedUpFactor      = 1;
+    aConfig->mPlatformConfig.mResetRadio         = true;
+    aConfig->mPlatformConfig.mSpiSpeed           = OT_PLATFORM_CONFIG_SPI_DEFAULT_SPEED_HZ;
+    aConfig->mPlatformConfig.mSpiCsDelay         = OT_PLATFORM_CONFIG_SPI_DEFAULT_CS_DELAY_US;
+    aConfig->mPlatformConfig.mSpiResetDelay      = OT_PLATFORM_CONFIG_SPI_DEFAULT_RESET_DELAY_MS;
+    aConfig->mPlatformConfig.mSpiAlignAllowance  = OT_PLATFORM_CONFIG_SPI_DEFAULT_ALIGN_ALLOWANCE;
+    aConfig->mPlatformConfig.mSpiSmallPacketSize = OT_PLATFORM_CONFIG_SPI_DEFAULT_SMALL_PACKET_SIZE;
+    aConfig->mPlatformConfig.mSpiMode            = OT_PLATFORM_CONFIG_SPI_DEFAULT_MODE;
+    aConfig->mLogLevel                           = OT_LOG_LEVEL_CRIT;
 
     optind = 1;
 
@@ -170,21 +234,47 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         case 'v':
             aConfig->mIsVerbose = true;
             break;
-
-        case 0:
-            if (!strcmp(kOptions[index].name, "radio-version"))
-            {
-                aConfig->mPrintRadioVersion = true;
-            }
-            else if (!strcmp(kOptions[index].name, "no-reset"))
-            {
-                aConfig->mPlatformConfig.mResetRadio = false;
-            }
-            else if (!strcmp(kOptions[index].name, "ncp-dataset"))
-            {
-                aConfig->mPlatformConfig.mRestoreDatasetFromNcp = true;
-            }
+        case ARG_PRINT_RADIO_VERSION:
+            aConfig->mPrintRadioVersion = true;
             break;
+        case ARG_NO_RADIO_RESET:
+            aConfig->mPlatformConfig.mResetRadio = false;
+            break;
+        case ARG_RESTORE_NCP_DATASET:
+            aConfig->mPlatformConfig.mRestoreDatasetFromNcp = true;
+            break;
+#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
+        case ARG_SPI_GPIO_INT_DEV:
+            aConfig->mPlatformConfig.mSpiGpioIntDevice = optarg;
+            break;
+        case ARG_SPI_GPIO_INT_LINE:
+            aConfig->mPlatformConfig.mSpiGpioIntLine = (uint8_t)atoi(optarg);
+            break;
+        case ARG_SPI_GPIO_RESET_DEV:
+            aConfig->mPlatformConfig.mSpiGpioResetDevice = optarg;
+            break;
+        case ARG_SPI_GPIO_RESET_LINE:
+            aConfig->mPlatformConfig.mSpiGpioResetLine = (uint8_t)atoi(optarg);
+            break;
+        case ARG_SPI_MODE:
+            aConfig->mPlatformConfig.mSpiMode = (uint8_t)atoi(optarg);
+            break;
+        case ARG_SPI_SPEED:
+            aConfig->mPlatformConfig.mSpiSpeed = atoi(optarg);
+            break;
+        case ARG_SPI_CS_DELAY:
+            aConfig->mPlatformConfig.mSpiCsDelay = atoi(optarg);
+            break;
+        case ARG_SPI_RESET_DELAY:
+            aConfig->mPlatformConfig.mSpiResetDelay = atoi(optarg);
+            break;
+        case ARG_SPI_ALIGN_ALLOWANCE:
+            aConfig->mPlatformConfig.mSpiAlignAllowance = atoi(optarg);
+            break;
+        case ARG_SPI_SMALL_PACKET:
+            aConfig->mPlatformConfig.mSpiSmallPacketSize = atoi(optarg);
+            break;
+#endif // OPENTHREAD_POSIX_RCP_SPI_ENABLE
         case '?':
             PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
             break;

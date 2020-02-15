@@ -40,6 +40,7 @@ ED = 5
 
 
 class Cert_6_1_4_REEDAttachConnectivity(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 

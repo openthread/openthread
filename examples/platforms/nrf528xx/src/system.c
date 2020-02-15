@@ -40,12 +40,12 @@
 #include "openthread-system.h"
 #include "platform-fem.h"
 #include "platform-nrf5.h"
-#include <drivers/clock/nrf_drv_clock.h>
 #include <nrf.h>
+#include <nrf_drv_clock.h>
 
 #include <openthread/config.h>
 
-#if !OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS && PLATFORM_OPENTHREAD_VANILLA
+#if !OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT && PLATFORM_OPENTHREAD_VANILLA
 
 #include <mbedtls/platform.h>
 #include <mbedtls/threading.h>
@@ -79,7 +79,7 @@ void otSysInit(int argc, char *argv[])
     NRF_POWER->DCDCEN = 1;
 #endif
 
-#if !OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS && PLATFORM_OPENTHREAD_VANILLA
+#if !OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT && PLATFORM_OPENTHREAD_VANILLA
     mbedtls_platform_set_calloc_free(otHeapCAlloc, otHeapFree);
     mbedtls_platform_setup(NULL);
 #endif
@@ -146,7 +146,7 @@ void otSysDeinit(void)
     nrf5LogDeinit();
 #endif
 
-#if !OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS && PLATFORM_OPENTHREAD_VANILLA
+#if !OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT && PLATFORM_OPENTHREAD_VANILLA
     mbedtls_platform_teardown(NULL);
 #endif
 }
