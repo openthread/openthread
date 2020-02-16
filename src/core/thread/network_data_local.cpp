@@ -344,8 +344,6 @@ void Local::UpdateRloc(void)
             break;
         }
     }
-
-    ClearResubmitDelayTimer();
 }
 
 otError Local::SendServerDataNotification(void)
