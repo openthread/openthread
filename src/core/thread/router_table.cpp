@@ -383,7 +383,12 @@ exit:
 const Router *RouterTable::GetRouter(uint8_t aRouterId) const
 {
     const Router *router = NULL;
-    uint16_t      rloc16 = Mle::Mle::Rloc16FromRouterId(aRouterId);
+    uint16_t      rloc16;
+
+    // Skip if invalid router id is passed.
+    VerifyOrExit(aRouterId < Mle::kInvalidRouterId);
+
+    rloc16 = Mle::Mle::Rloc16FromRouterId(aRouterId);
 
     for (router = GetFirstEntry(); router != NULL; router = GetNextEntry(router))
     {
@@ -393,6 +398,7 @@ const Router *RouterTable::GetRouter(uint8_t aRouterId) const
         }
     }
 
+exit:
     return router;
 }
 
