@@ -41,6 +41,12 @@
 
 namespace ot {
 
+void Neighbor::Init(Instance &aInstance)
+{
+    InstanceLocatorInit::Init(aInstance);
+    SetState(kStateInvalid);
+}
+
 bool Neighbor::IsStateValidOrAttaching(void) const
 {
     bool rval = false;
@@ -105,8 +111,10 @@ void Neighbor::GenerateChallenge(void)
 
 void Child::Clear(void)
 {
+    Instance &instance = GetInstance();
+
     memset(reinterpret_cast<void *>(this), 0, sizeof(Child));
-    SetState(kStateInvalid);
+    Init(instance);
 }
 
 void Child::ClearIp6Addresses(void)
@@ -282,8 +290,10 @@ void Child::GenerateChallenge(void)
 
 void Router::Clear(void)
 {
+    Instance &instance = GetInstance();
+
     memset(reinterpret_cast<void *>(this), 0, sizeof(Router));
-    SetState(kStateInvalid);
+    Init(instance);
 }
 
 } // namespace ot

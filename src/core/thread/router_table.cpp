@@ -65,6 +65,11 @@ RouterTable::RouterTable(Instance &aInstance)
     , mRouterIdSequence(Random::NonCrypto::GetUint8())
     , mActiveRouterCount(0)
 {
+    for (uint8_t index = 0; index < Mle::kMaxRouters; index++)
+    {
+        mRouters[index].Init(aInstance);
+    }
+
     Clear();
 }
 

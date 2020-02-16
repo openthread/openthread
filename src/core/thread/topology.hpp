@@ -38,6 +38,7 @@
 
 #include <openthread/thread_ftd.h>
 
+#include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
 #include "common/timer.hpp"
@@ -50,13 +51,11 @@
 
 namespace ot {
 
-class Instance;
-
 /**
  * This class represents a Thread neighbor.
  *
  */
-class Neighbor
+class Neighbor : public InstanceLocatorInit
 {
 public:
     /**
@@ -420,6 +419,15 @@ public:
     void SetTimeSyncEnabled(bool aEnabled) { mTimeSyncEnabled = aEnabled; }
 #endif
 
+protected:
+    /**
+     * This method initializes the `Neighbor` object.
+     *
+     * @param[in] aInstance  A reference to OpenThread instance.
+     *
+     */
+    void Init(Instance &aInstance);
+
 private:
     Mac::ExtAddress mMacAddr;   ///< The IEEE 802.15.4 Extended Address
     TimeMilli       mLastHeard; ///< Time when last heard.
@@ -510,6 +518,14 @@ public:
 
         otChildIp6AddressIterator mIndex;
     };
+
+    /**
+     * This method initializes the `Child` object.
+     *
+     * @param[in] aInstance  A reference to OpenThread instance.
+     *
+     */
+    void Init(Instance &aInstance) { Neighbor::Init(aInstance); }
 
     /**
      * This method clears the child entry.
@@ -726,6 +742,14 @@ private:
 class Router : public Neighbor
 {
 public:
+    /**
+     * This method initializes the `Router` object.
+     *
+     * @param[in] aInstance  A reference to OpenThread instance.
+     *
+     */
+    void Init(Instance &aInstance) { Neighbor::Init(aInstance); }
+
     /**
      * This method clears the router entry.
      *

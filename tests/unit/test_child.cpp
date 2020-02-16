@@ -120,6 +120,8 @@ void TestChildIp6Address(void)
     sInstance = testInitInstance();
     VerifyOrQuit(sInstance != NULL, "Null instance");
 
+    child.Init(*sInstance);
+
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     printf("\nConverting IPv6 addresses from string");
