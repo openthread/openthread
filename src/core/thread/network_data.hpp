@@ -305,6 +305,18 @@ public:
     bool ContainsService(uint8_t aServiceId, uint16_t aRloc16);
 
     /**
+     * This method provides the next server RLOC16 in the Thread Network Data.
+     *
+     * @param[inout]  aIterator  A reference to the Network Data iterator.
+     * @param[out]    aRloc16    The RLOC16 value.
+     *
+     * @retval OT_ERROR_NONE       Successfully found the next server.
+     * @retval OT_ERROR_NOT_FOUND  No subsequent server exists in the Thread Network Data.
+     *
+     */
+    otError GetNextServer(Iterator &aIterator, uint16_t &aRloc16);
+
+    /**
      * This method cancels the data resubmit delay timer.
      *
      */
