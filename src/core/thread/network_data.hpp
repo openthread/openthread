@@ -496,7 +496,9 @@ protected:
 private:
     enum
     {
-        kDataResubmitDelay = 300000, ///< DATA_RESUBMIT_DELAY (milliseconds)
+        kDataResubmitDelay  = 300000, ///< DATA_RESUBMIT_DELAY (milliseconds) if the device itself is the server.
+        kProxyResubmitDelay = 5000,   ///< Resubmit delay (milliseconds) if deregister as the child server proxy.
+
     };
 
     class NetworkDataIterator
