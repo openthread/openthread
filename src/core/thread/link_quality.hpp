@@ -247,11 +247,10 @@ public:
     /**
      * This method adds a new received signal strength (RSS) value to the average.
      *
-     * @param[in] aNoiseFloor  The noise floor value (in dBm).
      * @param[in] aRss         A new received signal strength value (in dBm) to be added to the average.
      *
      */
-    void AddRss(int8_t aNoiseFloor, int8_t aRss);
+    void AddRss(int8_t aRss);
 
     /**
      * This method returns the current average received signal strength value.
@@ -282,12 +281,10 @@ public:
      * This method returns the link margin. The link margin is calculated using the link's current average received
      * signal strength (RSS) and average noise floor.
      *
-     * @param[in]  aNoiseFloor  The noise floor value (in dBm).
-     *
      * @returns Link margin derived from average received signal strength and average noise floor.
      *
      */
-    uint8_t GetLinkMargin(int8_t aNoiseFloor) const { return ConvertRssToLinkMargin(aNoiseFloor, GetAverageRss()); }
+    uint8_t GetLinkMargin(void) const;
 
     /**
      * Returns the current one-way link quality value. The link quality value is a number 0-3.
@@ -299,8 +296,6 @@ public:
      * In order to ensure that a link margin near the boundary of two different link quality values does not cause
      * frequent changes, a hysteresis of 2 dB is applied when determining the link quality. For example, the average
      * link margin must be at least 12 dB to change a quality 1 link to a quality 2 link.
-     *
-     * @param[in]  aNoiseFloor  The noise floor value (in dBm).
      *
      * @returns The current link quality value (value 0-3 as per Thread specification).
      *

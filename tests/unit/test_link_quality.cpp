@@ -105,7 +105,7 @@ void TestLinkQualityData(RssTestData aRssData)
         rss = aRssData.mRssList[i];
         min = MIN_RSS(rss, min);
         max = MAX_RSS(rss, max);
-        linkInfo.AddRss(sNoiseFloor, rss);
+        linkInfo.AddRss(rss);
         VerifyOrQuit(linkInfo.GetLastRss() == rss, "TestLinkQualityInfo failed - GetLastRss() is incorrect");
         ave = linkInfo.GetAverageRss();
         VerifyOrQuit(ave >= min, "TestLinkQualityInfo failed - GetAverageRss() is smaller than min value.");
