@@ -681,7 +681,7 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
             // Mesh Local EID differs, so check whether Target EID
             // matches a child address and if so remove it.
 
-            if (child.RemoveIp6Address(GetInstance(), targetTlv.GetTarget()) == OT_ERROR_NONE)
+            if (child.RemoveIp6Address(targetTlv.GetTarget()) == OT_ERROR_NONE)
             {
                 destination.Clear();
                 destination.mFields.m16[0] = HostSwap16(0xfe80);
@@ -742,7 +742,7 @@ void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::Mes
             continue;
         }
 
-        if (child.HasIp6Address(GetInstance(), targetTlv.GetTarget()))
+        if (child.HasIp6Address(targetTlv.GetTarget()))
         {
             mlIidTlv.SetIid(child.GetExtAddress());
             lastTransactionTimeTlv.SetTime(TimerMilli::GetNow() - child.GetLastHeard());

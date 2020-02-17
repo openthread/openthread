@@ -542,19 +542,17 @@ public:
     /**
      * This method gets the mesh-local IPv6 address.
      *
-     * @param[in]    aInstance           A reference to the OpenThread instance.
      * @param[out]   aAddress            A reference to an IPv6 address to provide address (if any).
      *
      * @retval       OT_ERROR_NONE       Successfully found the mesh-local address and updated @p aAddress.
      * @retval       OT_ERROR_NOT_FOUND  No mesh-local IPv6 address in the IPv6 address list.
      *
      */
-    otError GetMeshLocalIp6Address(Instance &aInstance, Ip6::Address &aAddress) const;
+    otError GetMeshLocalIp6Address(Ip6::Address &aAddress) const;
 
     /**
      * This method gets the next IPv6 address in the list.
      *
-     * @param[in]    aInstance           A reference to the OpenThread instance.
      * @param[inout] aIterator           A reference to an IPv6 address iterator.
      * @param[out]   aAddress            A reference to an IPv6 address to provide the next address (if any).
      *
@@ -562,12 +560,11 @@ public:
      * @retval       OT_ERROR_NOT_FOUND  No subsequent IPv6 address exists in the IPv6 address list.
      *
      */
-    otError GetNextIp6Address(Instance &aInstance, Ip6AddressIterator &aIterator, Ip6::Address &aAddress) const;
+    otError GetNextIp6Address(Ip6AddressIterator &aIterator, Ip6::Address &aAddress) const;
 
     /**
      * This method adds an IPv6 address to the list.
      *
-     * @param[in]  aInstance          A reference to the OpenThread instance.
      * @param[in]  aAddress           A reference to IPv6 address to be added.
      *
      * @retval OT_ERROR_NONE          Successfully added the new address.
@@ -576,12 +573,11 @@ public:
      * @retval OT_ERROR_INVALID_ARGS  Address is invalid (it is the Unspecified Address).
      *
      */
-    otError AddIp6Address(Instance &aInstance, const Ip6::Address &aAddress);
+    otError AddIp6Address(const Ip6::Address &aAddress);
 
     /**
      * This method removes an IPv6 address from the list.
      *
-     * @param[in]  aInstance              A reference to the OpenThread instance.
      * @param[in]  aAddress               A reference to IPv6 address to be removed.
      *
      * @retval OT_ERROR_NONE              Successfully removed the address.
@@ -589,19 +585,18 @@ public:
      * @retval OT_ERROR_INVALID_ARGS      Address is invalid (it is the Unspecified Address).
      *
      */
-    otError RemoveIp6Address(Instance &aInstance, const Ip6::Address &aAddress);
+    otError RemoveIp6Address(const Ip6::Address &aAddress);
 
     /**
      * This method indicates whether an IPv6 address is in the list of IPv6 addresses of the child.
      *
-     * @param[in]  aInstance  A reference to the OpenThread instance.
      * @param[in]  aAddress   A reference to IPv6 address.
      *
      * @retval TRUE           The address exists on the list.
      * @retval FALSE          Address was not found in the list.
      *
      */
-    bool HasIp6Address(Instance &aInstance, const Ip6::Address &aAddress) const;
+    bool HasIp6Address(const Ip6::Address &aAddress) const;
 
     /**
      * This method gets the child timeout.
