@@ -90,8 +90,7 @@ void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, co
 
         if (sInstance->Get<Mle::MleRouter>().IsMeshLocalAddress(aAddressList[index]))
         {
-            SuccessOrQuit(aChild.GetMeshLocalIp6Address(address),
-                          "Child::GetMeshLocalIp6Address() failed\n");
+            SuccessOrQuit(aChild.GetMeshLocalIp6Address(address), "Child::GetMeshLocalIp6Address() failed\n");
             VerifyOrQuit(address == aAddressList[index], "GetMeshLocalIp6Address() did not return expected address");
             hasMeshLocal = true;
         }

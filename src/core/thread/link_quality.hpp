@@ -38,6 +38,7 @@
 
 #include <openthread/platform/radio.h>
 
+#include "common/locator.hpp"
 #include "common/string.hpp"
 
 namespace ot {
@@ -215,7 +216,7 @@ private:
  * strength (RSS), last RSS, link margin, and link quality.
  *
  */
-class LinkQualityInfo
+class LinkQualityInfo : public InstanceLocatorInit
 {
 public:
     enum
@@ -228,6 +229,14 @@ public:
      *
      */
     typedef String<kInfoStringSize> InfoString;
+
+    /**
+     * This method initializes the `LinkQualityInfo` object.
+     *
+     * @param[in] aInstance  A reference to the OpenThread instance.
+     *
+     */
+    void Init(Instance &aInstance) { InstanceLocatorInit::Init(aInstance); }
 
     /**
      * This method clears the all the data in the object.
