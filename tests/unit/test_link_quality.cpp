@@ -34,6 +34,8 @@
 
 namespace ot {
 
+static ot::Instance *sInstance;
+
 enum
 {
     kMaxRssValue = 0,
@@ -88,6 +90,10 @@ void TestLinkQualityData(RssTestData aRssData)
     LinkQualityInfo linkInfo;
     int8_t          rss, ave, min, max;
     size_t          i;
+
+    sInstance = testInitInstance();
+    VerifyOrQuit(sInstance != NULL, "Null instance");
+    linkInfo.Init(*sInstance);
 
     printf("- - - - - - - - - - - - - - - - - -\n");
     linkInfo.Clear();

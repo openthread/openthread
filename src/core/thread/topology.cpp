@@ -44,6 +44,7 @@ namespace ot {
 void Neighbor::Init(Instance &aInstance)
 {
     InstanceLocatorInit::Init(aInstance);
+    mLinkInfo.Init(aInstance);
     SetState(kStateInvalid);
 }
 
