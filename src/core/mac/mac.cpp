@@ -2220,10 +2220,12 @@ exit:
 void Mac::StopCsl(void)
 {
     Neighbor *parent = &Get<Mle::Mle>().GetParent();
+    VerifyOrExit(parent != NULL);
+
+    VerifyOrExit(mSubMac.IsCslStarted()); // This is required to avoid StopCsl is called during initialization and call
+                                          // otPlatRadioEnableCsl
 
     mSubMac.StopCsl();
-
-    VerifyOrExit(parent != NULL);
 
     otPlatRadioEnableCsl(&GetInstance(), 0, &parent->GetExtAddress());
 
