@@ -609,7 +609,7 @@ public:
      * @returns The noise floor value in dBm.
      *
      */
-    int8_t GetNoiseFloor(void);
+    int8_t GetNoiseFloor(void) { return mSubMac.GetNoiseFloor(); }
 
     /**
      * This method returns the current CCA (Clear Channel Assessment) failure rate.

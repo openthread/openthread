@@ -339,6 +339,14 @@ public:
      */
     otError EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration);
 
+    /**
+     * This method returns the noise floor value (currently use the radio receive sensitivity value).
+     *
+     * @returns The noise floor value in dBm.
+     *
+     */
+    int8_t GetNoiseFloor(void);
+
 private:
     enum
     {
