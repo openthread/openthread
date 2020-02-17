@@ -2021,7 +2021,7 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
         // We try to accept/add as many IPv6 addresses as possible.
         // "Child ID/Update Response" will indicate the accepted
         // addresses.
-        error = aChild.AddIp6Address(GetInstance(), address);
+        error = aChild.AddIp6Address(address);
 
         if (error == OT_ERROR_NONE)
         {
@@ -2057,7 +2057,7 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
                 continue;
             }
 
-            IgnoreReturnValue(iter.GetChild()->RemoveIp6Address(GetInstance(), address));
+            IgnoreReturnValue(iter.GetChild()->RemoveIp6Address(address));
         }
 
         // Clear EID-to-RLOC cache for the unicast address registered by the child.
@@ -3356,7 +3356,7 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
             ExitNow(rval = child);
         }
 
-        if (child->HasIp6Address(GetInstance(), aAddress))
+        if (child->HasIp6Address(aAddress))
         {
             ExitNow(rval = child);
         }
@@ -3539,7 +3539,7 @@ otError MleRouter::GetChildNextIp6Address(uint16_t                   aChildIndex
     VerifyOrExit(child != NULL, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(child->IsStateValidOrRestoring(), error = OT_ERROR_INVALID_ARGS);
 
-    error = child->GetNextIp6Address(GetInstance(), aIterator, aAddress);
+    error = child->GetNextIp6Address(aIterator, aAddress);
 
 exit:
     return error;
@@ -4352,7 +4352,7 @@ otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
     tlv.SetType(Tlv::kAddressRegistration);
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
 
-    while (aChild.GetNextIp6Address(GetInstance(), iterator, address) == OT_ERROR_NONE)
+    while (aChild.GetNextIp6Address(iterator, address) == OT_ERROR_NONE)
     {
         if (address.IsMulticast() || Get<NetworkData::Leader>().GetContext(address, context) != OT_ERROR_NONE)
         {
@@ -4705,8 +4705,7 @@ exit:
 
 bool MleRouter::IsSleepyChildSubscribed(const Ip6::Address &aAddress, Child &aChild)
 {
-    return aChild.IsStateValidOrRestoring() && !aChild.IsRxOnWhenIdle() &&
-           aChild.HasIp6Address(GetInstance(), aAddress);
+    return aChild.IsStateValidOrRestoring() && !aChild.IsRxOnWhenIdle() && aChild.HasIp6Address(aAddress);
 }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
