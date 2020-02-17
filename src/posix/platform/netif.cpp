@@ -68,6 +68,8 @@
 #define OPENTHREAD_POSIX_TUN_DEVICE "/dev/net/tun"
 #endif // OPENTHREAD_TUN_DEVICE
 
+// Some platforms will include linux/ipv6.h in netinet/in.h
+#if !defined(_IPV6_H) && !defined(_UAPI_IPV6_H)
 // from linux/ipv6.h
 struct in6_ifreq
 {
@@ -75,6 +77,7 @@ struct in6_ifreq
     __u32           ifr6_prefixlen;
     int             ifr6_ifindex;
 };
+#endif
 
 static otInstance * sInstance  = NULL;
 static int          sTunFd     = -1; ///< Used to exchange IPv6 packets.
