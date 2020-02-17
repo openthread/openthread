@@ -1198,6 +1198,12 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
+    def link_metrics_send_link_probe(self, dst_addr, data_len):
+        cmd = 'linkmetrics probe %s %d' % (dst_addr, data_len)
+        print(cmd)
+        self.send_command(cmd)
+        self._expect('Done')
+
 
 if __name__ == '__main__':
     unittest.main()

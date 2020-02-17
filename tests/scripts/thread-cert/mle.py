@@ -87,6 +87,10 @@ class TlvType(IntEnum):
     ACTIVE_OPERATIONAL_DATASET = 24
     PENDING_OPERATIONAL_DATASET = 25
     THREAD_DISCOVERY = 26
+    LINK_METRICS_QUERY = 0x57
+    LINK_METRICS_MANAGEMENT = 0x58
+    LINK_METRICS_REPORT = 0x59
+    LINK_METRICS_PROBE = 0x5A
     TIME_REQUEST = 252
     TIME_PARAMETER = 253
 
@@ -1096,6 +1100,58 @@ class TimeParameterFactory:
 
     def parse(self, data, message_info):
         return TimeParameter()
+
+
+class LinkMetricsQuery:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("LinkMetricsQuery is not implemented yet.")
+
+
+class LinkMetricsQueryFactory:
+
+    def parse(self, data, message_info):
+        return LinkMetricsQuery()
+
+
+class LinkMetricsManagement:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("LinkMetricsManagement is not implemented yet.")
+
+
+class LinkMetricsManagementFactory:
+
+    def parse(self, data, message_info):
+        return LinkMetricsManagement()
+
+
+class LinkMetricsReport:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("LinkMetricsReport is not implemented yet.")
+
+
+class LinkMetricsReportFactory:
+
+    def parse(self, data, message_info):
+        return LinkMetricsReport()
+
+
+class LinkMetricsProbe:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("LinkMetricsReport is not implemented yet.")
+
+
+class LinkMetricsProbeFactory:
+
+    def parse(self, data, message_info):
+        return LinkMetricsProbe()
 
 
 class MleCommand(object):
