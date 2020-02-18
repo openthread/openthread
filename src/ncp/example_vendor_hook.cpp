@@ -34,8 +34,6 @@
 
 #include "ncp_base.hpp"
 
-using namespace ot::Utils;
-
 namespace ot {
 namespace Ncp {
 
