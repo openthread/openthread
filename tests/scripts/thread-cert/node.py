@@ -67,9 +67,9 @@ class Node:
 
     def __init_sim(self, nodeid, mode):
         """ Initialize a simulation node. """
-        if 'OT_CLI_PATH' in os.environ.keys():
+        if 'OT_CLI_PATH' in os.environ:
             cmd = os.environ['OT_CLI_PATH']
-        elif 'top_builddir' in os.environ.keys():
+        elif 'top_builddir' in os.environ:
             srcdir = os.environ['top_builddir']
             cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
         else:
@@ -102,12 +102,12 @@ class Node:
         else:
             args = ''
 
-        if 'OT_NCP_PATH' in os.environ.keys():
+        if 'OT_NCP_PATH' in os.environ:
             cmd = 'spinel-cli.py -p "%s%s" -n' % (
                 os.environ['OT_NCP_PATH'],
                 args,
             )
-        elif "top_builddir" in os.environ.keys():
+        elif "top_builddir" in os.environ:
             builddir = os.environ['top_builddir']
             cmd = 'spinel-cli.py -p "%s/examples/apps/ncp/ot-ncp-%s%s" -n' % (
                 builddir,
