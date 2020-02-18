@@ -339,6 +339,12 @@ void Mle::SetRole(otDeviceRole aRole)
         break;
     }
 
+    // If the previous state is disabled, the parent can be in kStateRestored.
+    if (mRole != OT_DEVICE_ROLE_CHILD && oldRole != OT_DEVICE_ROLE_DISABLED)
+    {
+        mParent.SetState(Neighbor::kStateInvalid);
+    }
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     if (IsAttached())
     {
