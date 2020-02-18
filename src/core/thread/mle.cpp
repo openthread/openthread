@@ -339,7 +339,8 @@ void Mle::SetRole(otDeviceRole aRole)
         break;
     }
 
-    if (mRole != OT_DEVICE_ROLE_CHILD)
+    // If the previous state is disabled, the parent can be in kStateRestored.
+    if (mRole != OT_DEVICE_ROLE_CHILD && oldRole != OT_DEVICE_ROLE_DISABLED)
     {
         mParent.SetState(Neighbor::kStateInvalid);
     }
