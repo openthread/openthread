@@ -138,23 +138,23 @@ otError HdlcInterface::Init(const otPlatformConfig &aPlatformConfig)
 
     VerifyOrExit(mSockFd == -1, error = OT_ERROR_ALREADY);
 
-    VerifyOrDie(stat(aPlatformConfig.mRadioFile, &st) == 0, OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(stat(aPlatformConfig.mRadioUrl.mDevice, &st) == 0, OT_EXIT_INVALID_ARGUMENTS);
 
     if (S_ISCHR(st.st_mode))
     {
-        mSockFd = OpenFile(aPlatformConfig.mRadioFile, aPlatformConfig.mRadioConfig);
+        mSockFd = OpenFile(aPlatformConfig.mRadioUrl.mDevice, aPlatformConfig.mRadioUrl.mArgument);
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     }
 #if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
     else if (S_ISREG(st.st_mode))
     {
-        mSockFd = ForkPty(aPlatformConfig.mRadioFile, aPlatformConfig.mRadioConfig);
+        mSockFd = ForkPty(aPlatformConfig.mRadioUrl.mDevice, aPlatformConfig.mRadioUrl.mArgument);
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     }
 #endif // OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
     else
     {
-        otLogCritPlat("Radio file '%s' not supported", aPlatformConfig.mRadioFile);
+        otLogCritPlat("Radio file '%s' not supported", aPlatformConfig.mRadioUrl.mDevice);
         ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 

@@ -54,9 +54,6 @@
 
 #define OPENTHREAD_POSIX_APP_TYPE_NCP 1
 #define OPENTHREAD_POSIX_APP_TYPE_CLI 2
-#define MAX_SUPPORT_PROTOCOL 3
-#define MAX_SUPPORT_PARAMETER 3
-#define DEVICE_FILE_LEN 20
 
 #include <openthread/diag.h>
 #include <openthread/logging.h>
@@ -91,16 +88,7 @@ typedef struct PosixConfig
     bool             mIsVerbose;         ///< Whether to print log to stderr.
 } PosixConfig;
 
-const char *sProtocol[]    = {"hdlc", "spi", "spinel", "uart", "forkpty"};
-const char *sConnectPara[] = {"baudrate", "parity", "flowcontrol", "forkpty-arg"};
-
-typedef struct RadioUrl
-{
-    const char *sProtocol[MAX_SUPPORT_PROTOCOL];
-    char        device[DEVICE_FILE_LEN];
-    const char *sParameter[MAX_SUPPORT_PARAMETER];
-    char        sValue[DEVICE_FILE_LEN];
-} RadioUrl;
+const char *aProtocols[] = {"hdlc", "spi", "spinel", "uart", "forkpty"};
 
 static jmp_buf gResetJump;
 
@@ -156,8 +144,8 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "Syntax:\n"
             "    %s [Options] RadioURL\n"
             "    RadioURL: URL of the device and method for Thread core and RCP communication.\n"
-            "              'protocols://device-file?connection-parameter1=value1&connection-parameter2=value2'\n"
-            "              e.g. 'spinel+hdlc+uart:///dev/ttyUSB0?baudrate=115200'\n"
+            "              'protocols://device-file?arg=value'\n"
+            "              e.g. 'spinel+hdlc+uart:///dev/ttyUSB0?arg=115200N1'\n"
             "Options:\n"
             "    -d  --debug-level             Debug level of logging.\n"
             "    -h  --help                    Display this usage information.\n"
@@ -196,17 +184,14 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
     exit(aExitCode);
 }
 
-static int ParseUrl(RadioUrl *info, char *url)
+static int ParseUrl(otRadioUrl *aRadioUrl, char *url)
 {
     char *deviceInfo = strstr(url, "://");
     char *pStart     = url;
     char *pEnd       = NULL;
-    char *pMid       = NULL;
     int   i          = 0;
     int   j          = 0;
-    int   cProtocol  = sizeof(sProtocol) / sizeof(sProtocol[0]);
-    // int cParameter = sizeof(sConnectPara) / sizeof(sConnectPara[0]);
-    memset(info, 0, sizeof(RadioUrl));
+    int   cProtocol  = sizeof(aProtocols) / sizeof(aProtocols[0]);
 
     if (!deviceInfo)
     {
@@ -222,9 +207,9 @@ static int ParseUrl(RadioUrl *info, char *url)
         }
         for (i = 0; i < cProtocol; i++)
         {
-            if (strncmp(pStart, sProtocol[i], (int)(pEnd - pStart)) == 0)
+            if (strncmp(pStart, aProtocols[i], (int)(pEnd - pStart)) == 0)
             {
-                info->sProtocol[j] = sProtocol[i];
+                aRadioUrl->mProtocols[j] = aProtocols[i];
                 j++;
             }
         }
@@ -232,30 +217,14 @@ static int ParseUrl(RadioUrl *info, char *url)
         pStart = pEnd + 1;
     }
 
-    pStart = deviceInfo + 3;
-    pEnd   = strstr(pStart, "?");
-    if (pEnd)
-    {
-        strncpy(info->device, pStart, pEnd - pStart);
-    }
-    else
+    if (!sscanf(deviceInfo, "://%99[^?]?arg=%99[^\n]", aRadioUrl->mDevice, aRadioUrl->mArgument))
     {
         return -1;
     }
-
-    pStart = pEnd + 1;
-    while (pStart)
+    else
     {
-        pEnd = strstr(pStart, "&");
-        pMid = strstr(pStart, "=");
-        if (!pEnd)
-        {
-            strcpy(info->sValue, pMid + 1);
-            break;
-        }
-        pStart = pEnd + 1;
+        return 0;
     }
-    return 0;
 }
 
 static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
@@ -362,12 +331,10 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         }
     }
 
-    if (ParseUrl(&aUrl, aArgVector[optind]) < 0)
+    if (ParseUrl(&(aConfig->mPlatformConfig.mRadioUrl), aArgVector[optind]) < 0)
     {
         PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
     }
-    aConfig->mPlatformConfig.mRadioFile   = aUrl.device;
-    aConfig->mPlatformConfig.mRadioConfig = aUrl.sValue;
     if (optind >= aArgCount)
     {
         PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
