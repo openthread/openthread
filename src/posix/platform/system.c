@@ -59,7 +59,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     assert(instance != NULL);
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
-    platformNetifInit(instance);
+    platformNetifInit(instance, aPlatformConfig->mInterfaceName);
 #elif OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     platformUdpInit(aPlatformConfig->mInterfaceName);
 #endif

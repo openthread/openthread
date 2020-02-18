@@ -380,7 +380,7 @@ exit:
     return;
 }
 
-void platformNetifInit(otInstance *aInstance)
+void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
 {
     struct ifreq ifr;
 
@@ -406,7 +406,17 @@ void platformNetifInit(otInstance *aInstance)
 
     memset(&ifr, 0, sizeof(ifr));
     ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
-    strncpy(ifr.ifr_name, "wpan%d", IFNAMSIZ);
+
+    if (aInterfaceName)
+    {
+        VerifyOrDie(strlen(aInterfaceName) < IFNAMSIZ, OT_EXIT_INVALID_ARGUMENTS);
+
+        strncpy(ifr.ifr_name, aInterfaceName, IFNAMSIZ);
+    }
+    else
+    {
+        strncpy(ifr.ifr_name, "wpan%d", IFNAMSIZ);
+    }
 
     VerifyOrExit(ioctl(sTunFd, TUNSETIFF, static_cast<void *>(&ifr)) == 0,
                  otLogCritPlat("Unable to configure tun device %s", OPENTHREAD_POSIX_TUN_DEVICE));
