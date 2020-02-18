@@ -339,6 +339,11 @@ void Mle::SetRole(otDeviceRole aRole)
         break;
     }
 
+    if (mRole != OT_DEVICE_ROLE_CHILD)
+    {
+        mParent.SetState(Neighbor::kStateInvalid);
+    }
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     if (IsAttached())
     {
