@@ -41,6 +41,7 @@ MTDS = [SED2, ED2]
 
 
 class Cert_7_1_4_BorderRouterAsRouter(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 

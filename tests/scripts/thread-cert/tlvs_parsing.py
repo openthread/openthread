@@ -30,6 +30,7 @@ import io
 
 
 class SubTlvsFactory(object):
+
     def __init__(self, sub_tlvs_factories):
         self._sub_tlvs_factories = sub_tlvs_factories
 
@@ -38,8 +39,7 @@ class SubTlvsFactory(object):
             return self._sub_tlvs_factories[_type]
         except KeyError:
             raise RuntimeError(
-                "Could not find factory. Factory type = {}.".format(_type)
-            )
+                "Could not find factory. Factory type = {}.".format(_type))
 
     def parse(self, data, message_info):
         sub_tlvs = []

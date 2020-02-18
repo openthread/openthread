@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "openthread-core-config.h"
+#include "openthread-posix-config.h"
 #include "platform-posix.h"
 
 #if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
@@ -45,7 +45,6 @@
 
 #include <openthread/platform/uart.h>
 
-#include "code_utils.h"
 #include "common/code_utils.hpp"
 
 #define OPENTHREAD_POSIX_APP_SOCKET_LOCK OPENTHREAD_POSIX_APP_SOCKET_BASENAME ".lock"
@@ -68,7 +67,7 @@ otError otPlatUartEnable(void)
     int                ret;
 
     // This allows implementing pseudo reset.
-    otEXPECT(sUartSocket == -1);
+    VerifyOrExit(sUartSocket == -1);
 
     sUartSocket = SocketWithCloseExec(AF_UNIX, SOCK_STREAM, 0);
 
@@ -154,7 +153,7 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
     otError error = OT_ERROR_NONE;
 
     assert(sEnabled);
-    otEXPECT_ACTION(sWriteLength == 0, error = OT_ERROR_BUSY);
+    VerifyOrExit(sWriteLength == 0, error = OT_ERROR_BUSY);
 
     sWriteBuffer = aBuf;
     sWriteLength = aBufLength;
@@ -170,7 +169,7 @@ otError otPlatUartFlush(void)
 
 void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd)
 {
-    otEXPECT(sEnabled);
+    VerifyOrExit(sEnabled);
 
     if (aReadFdSet != NULL)
     {
@@ -222,7 +221,7 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
     ssize_t rval;
     int     fd;
 
-    otEXPECT(sEnabled);
+    VerifyOrExit(sEnabled);
 #if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
     if (FD_ISSET(sUartSocket, aErrorFdSet))
     {
@@ -241,7 +240,7 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
         otPlatUartSendDone();
     }
 
-    otEXPECT(sSessionSocket != -1);
+    VerifyOrExit(sSessionSocket != -1);
 
     if (FD_ISSET(sSessionSocket, aErrorFdSet))
     {
@@ -249,7 +248,7 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
         sSessionSocket = -1;
     }
 
-    otEXPECT(sSessionSocket != -1);
+    VerifyOrExit(sSessionSocket != -1);
 
     fd = sSessionSocket;
 #else  // OPENTHREAD_ENABLE_POSIX_APP_DAEMON
@@ -285,7 +284,7 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
             }
             close(sSessionSocket);
             sSessionSocket = -1;
-            otEXIT_NOW();
+            ExitNow();
 #else
             DieNowWithMessage("UART read", (rval < 0) ? OT_EXIT_ERROR_ERRNO : OT_EXIT_FAILURE);
 #endif
@@ -306,13 +305,13 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
             perror("UART write");
             close(sSessionSocket);
             sSessionSocket = -1;
-            otEXIT_NOW();
+            ExitNow();
 #else
             DieNowWithMessage("UART write", OT_EXIT_ERROR_ERRNO);
 #endif
         }
 
-        otEXPECT(rval > 0);
+        VerifyOrExit(rval > 0);
 
         sWriteBuffer += (uint16_t)rval;
         sWriteLength -= (uint16_t)rval;

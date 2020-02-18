@@ -52,18 +52,19 @@ def verify_interface_routes(node, route_list):
     This function verifies that node has the same interface routes as given by `route_list` which is an array of
     tuples of (route, prefix_len, metric).
     """
-    node_routes = wpan.parse_interface_routes_result(node.get(wpan.WPAN_IP6_INTERFACE_ROUTES))
+    node_routes = wpan.parse_interface_routes_result(
+        node.get(wpan.WPAN_IP6_INTERFACE_ROUTES))
 
     verify(len(route_list) == len(node_routes))
 
     for route in route_list:
         for node_route in node_routes:
-            if (node_route.route_prefix, node_route.prefix_len, node_route.metric) == route:
+            if (node_route.route_prefix, node_route.prefix_len,
+                    node_route.metric) == route:
                 break
         else:
-            raise wpan.VerifyError(
-                'Did not find route {} on node {}'.format(route, node)
-            )
+            raise wpan.VerifyError('Did not find route {} on node {}'.format(
+                route, node))
 
 
 # -----------------------------------------------------------------------------------------------------------------------
@@ -120,7 +121,9 @@ MEDIUM_PRIORITY = 0
 WAIT_TIME = 10
 
 # Verify the default daemon configuration
-verify(r1.get(wpan.WPAN_DAEMON_ON_MESH_PREFIX_AUTO_ADD_AS_INTERFACE_ROUTE) == 'true')
+verify(
+    r1.get(wpan.WPAN_DAEMON_ON_MESH_PREFIX_AUTO_ADD_AS_INTERFACE_ROUTE) ==
+    'true')
 
 r1.set(wpan.WPAN_DAEMON_OFF_MESH_ROUTE_AUTO_ADD_ON_INTERFACE, 'false')
 verify(r1.get(wpan.WPAN_DAEMON_OFF_MESH_ROUTE_AUTO_ADD_ON_INTERFACE) == 'false')
@@ -134,7 +137,8 @@ r2.add_route(ROUTE5, prefix_len=LEN5, priority=MEDIUM_PRIORITY)
 
 # We expect to only see routes associated the first two (which are on-mesh) on r1.
 def check_routes_on_r1_is_prefix1_and_prefix2():
-    verify_interface_routes(r1, [(PREFIX1, LEN1, MEDIUM_METRIC), (PREFIX2, LEN2, MEDIUM_METRIC)])
+    verify_interface_routes(r1, [(PREFIX1, LEN1, MEDIUM_METRIC),
+                                 (PREFIX2, LEN2, MEDIUM_METRIC)])
 
 
 wpan.verify_within(check_routes_on_r1_is_prefix1_and_prefix2, WAIT_TIME)
@@ -179,14 +183,14 @@ wpan.verify_within(check_routes_on_r1_is_empty, WAIT_TIME)
 r1.set(wpan.WPAN_DAEMON_OFF_MESH_ROUTE_AUTO_ADD_ON_INTERFACE, 'true')
 verify(r1.get(wpan.WPAN_DAEMON_OFF_MESH_ROUTE_AUTO_ADD_ON_INTERFACE) == 'true')
 
-
 r2.add_route(ROUTE5, prefix_len=LEN5, priority=MEDIUM_PRIORITY)
 r2.add_route(ROUTE4, prefix_len=LEN4, priority=MEDIUM_PRIORITY)
 r1.add_prefix(PREFIX3, prefix_len=LEN3, on_mesh=True, slaac=False)
 
 
 def check_routes_on_r1_is_prefix3_route4_and_route5():
-    route_list = [(PREFIX3, LEN3, MEDIUM_METRIC), (ROUTE4, LEN4, MEDIUM_METRIC), (ROUTE5, LEN5, MEDIUM_METRIC)]
+    route_list = [(PREFIX3, LEN3, MEDIUM_METRIC), (ROUTE4, LEN4, MEDIUM_METRIC),
+                  (ROUTE5, LEN5, MEDIUM_METRIC)]
     verify_interface_routes(r1, route_list)
 
 
@@ -206,7 +210,9 @@ wpan.verify_within(check_routes_on_r1_is_only_route4, WAIT_TIME)
 # Test behavior when feature is disabled
 
 r1.set(wpan.WPAN_DAEMON_ON_MESH_PREFIX_AUTO_ADD_AS_INTERFACE_ROUTE, 'false')
-verify(r1.get(wpan.WPAN_DAEMON_ON_MESH_PREFIX_AUTO_ADD_AS_INTERFACE_ROUTE) == 'false')
+verify(
+    r1.get(wpan.WPAN_DAEMON_ON_MESH_PREFIX_AUTO_ADD_AS_INTERFACE_ROUTE) ==
+    'false')
 
 r1.add_prefix(PREFIX3, prefix_len=LEN3, on_mesh=True, slaac=False)
 wpan.verify_within(check_routes_on_r1_is_only_route4, WAIT_TIME)

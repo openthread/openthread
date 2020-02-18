@@ -41,14 +41,13 @@ ROUTER_32 = 33
 
 
 class Cert_5_2_3_LeaderReject2Hops(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
 
-        self.nodes[DUT_LEADER] = node.Node(
-            DUT_LEADER, simulator=self.simulator
-        )
+        self.nodes[DUT_LEADER] = node.Node(DUT_LEADER, simulator=self.simulator)
         self.nodes[DUT_LEADER].set_panid(0xface)
         self.nodes[DUT_LEADER].set_mode('rsdn')
         self.nodes[DUT_LEADER].enable_whitelist()
@@ -126,9 +125,8 @@ class Cert_5_2_3_LeaderReject2Hops(unittest.TestCase):
         msg.assertCoapMessageContainsTlv(network_layer.Status)
 
         status_tlv = msg.get_coap_message_tlv(network_layer.Status)
-        self.assertEqual(
-            network_layer.StatusValues.NO_ADDRESS_AVAILABLE, status_tlv.status
-        )
+        self.assertEqual(network_layer.StatusValues.NO_ADDRESS_AVAILABLE,
+                         status_tlv.status)
 
 
 if __name__ == '__main__':

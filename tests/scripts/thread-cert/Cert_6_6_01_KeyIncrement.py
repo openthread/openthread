@@ -37,6 +37,7 @@ ED = 2
 
 
 class Cert_6_6_1_KeyIncrement(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 

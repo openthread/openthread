@@ -62,9 +62,6 @@
 /* Define to 1 if you want to enable Service */
 #define OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE 1
 
-/* Define to 1 to enable the UDP forward feature. */
-#define OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE 1
-
 /* OpenThread examples */
 #define OPENTHREAD_EXAMPLES none
 

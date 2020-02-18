@@ -74,7 +74,6 @@ verify(node.get(wpan.WPAN_KEY) != DEFAULT_KEY)
 verify(node.get(wpan.WPAN_PANID) != DEFAULT_PANID)
 verify(node.get(wpan.WPAN_XPANID) != DEFAULT_XPANID)
 
-
 node.leave()
 verify(node.get(wpan.WPAN_STATE) == wpan.STATE_OFFLINE)
 

@@ -49,11 +49,10 @@
 
 #include "platform-config.h"
 #include "platform-nrf5.h"
-#include "cmsis/core_cmFunc.h"
 
-#include <drivers/clock/nrf_drv_clock.h>
-#include <drivers/radio/nrf_802154_utils.h>
-#include <drivers/radio/platform/lp_timer/nrf_802154_lp_timer.h>
+#include <nrf_802154_lp_timer.h>
+#include <nrf_802154_utils.h>
+#include <nrf_drv_clock.h>
 
 #include <hal/nrf_rtc.h>
 

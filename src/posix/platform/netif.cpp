@@ -30,14 +30,15 @@
  * @file
  *   This file implements the platform network on Linux.
  */
-#include "openthread-core-config.h"
+
+#include "openthread-posix-config.h"
 #include "platform-posix.h"
 
 #include <arpa/inet.h>
 #include <assert.h>
 #include <fcntl.h>
 #include <ifaddrs.h>
-#if __linux__
+#ifdef __linux__
 #include <linux/if_tun.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>

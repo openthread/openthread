@@ -27,7 +27,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-
 import logging
 import re
 import socket
@@ -107,7 +106,10 @@ class OpenThreadController(threading.Thread):
             self.handle.setblocking(0)
             self._is_net = True
         else:
-            self.handle = serial.Serial(self.port, 115200, timeout=0, xonxoff=True)
+            self.handle = serial.Serial(self.port,
+                                        115200,
+                                        timeout=0,
+                                        xonxoff=True)
             self._is_net = False
 
     def _read(self, size=512):

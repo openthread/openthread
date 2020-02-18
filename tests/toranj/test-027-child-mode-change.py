@@ -47,8 +47,7 @@ def verify_child_table(parent, children):
     table entry's mode value matches the children Thread mode.
     """
     child_table = wpan.parse_child_table_result(
-        parent.get(wpan.WPAN_THREAD_CHILD_TABLE)
-    )
+        parent.get(wpan.WPAN_THREAD_CHILD_TABLE))
     verify(len(child_table) == len(children))
     for child in children:
         ext_addr = child.get(wpan.WPAN_EXT_ADDRESS)[1:-1]
@@ -57,33 +56,22 @@ def verify_child_table(parent, children):
                 break
         else:
             raise wpan.VerifyError(
-                'Failed to find a child entry for extended address {} in table'.format(
-                    ext_addr
-                )
-            )
+                'Failed to find a child entry for extended address {} in table'.
+                format(ext_addr))
             exit(1)
 
         verify(
-            int(entry.rloc16, 16)
-            == int(child.get(wpan.WPAN_THREAD_RLOC16), 16)
-        )
+            int(entry.rloc16, 16) == int(child.get(wpan.WPAN_THREAD_RLOC16),
+                                         16))
         mode = int(child.get(wpan.WPAN_THREAD_DEVICE_MODE), 0)
-        verify(
-            entry.is_rx_on_when_idle()
-            == (mode & wpan.THREAD_MODE_FLAG_RX_ON_WHEN_IDLE != 0)
-        )
-        verify(
-            entry.is_ftd()
-            == (mode & wpan.THREAD_MODE_FLAG_FULL_THREAD_DEV != 0)
-        )
-        verify(
-            entry.is_full_net_data()
-            == (mode & wpan.THREAD_MODE_FLAG_FULL_NETWORK_DATA != 0)
-        )
-        verify(
-            entry.is_sec_data_req()
-            == (mode & wpan.THREAD_MODE_FLAG_SECURE_DATA_REQUEST != 0)
-        )
+        verify(entry.is_rx_on_when_idle() == (
+            mode & wpan.THREAD_MODE_FLAG_RX_ON_WHEN_IDLE != 0))
+        verify(entry.is_ftd() == (
+            mode & wpan.THREAD_MODE_FLAG_FULL_THREAD_DEV != 0))
+        verify(entry.is_full_net_data() == (
+            mode & wpan.THREAD_MODE_FLAG_FULL_NETWORK_DATA != 0))
+        verify(entry.is_sec_data_req() == (
+            mode & wpan.THREAD_MODE_FLAG_SECURE_DATA_REQUEST != 0))
 
 
 # -----------------------------------------------------------------------------------------------------------------------
@@ -121,16 +109,12 @@ children = [child1, child2]
 WAIT_INTERVAL = 6
 
 # Thread Mode for end-device and sleepy end-device
-DEVICE_MODE_SLEEPY_END_DEVICE = (
-    wpan.THREAD_MODE_FLAG_FULL_NETWORK_DATA
-    | wpan.THREAD_MODE_FLAG_SECURE_DATA_REQUEST
-)
-DEVICE_MODE_END_DEVICE = (
-    wpan.THREAD_MODE_FLAG_FULL_NETWORK_DATA
-    | wpan.THREAD_MODE_FLAG_FULL_THREAD_DEV
-    | wpan.THREAD_MODE_FLAG_SECURE_DATA_REQUEST
-    | wpan.THREAD_MODE_FLAG_RX_ON_WHEN_IDLE
-)
+DEVICE_MODE_SLEEPY_END_DEVICE = (wpan.THREAD_MODE_FLAG_FULL_NETWORK_DATA |
+                                 wpan.THREAD_MODE_FLAG_SECURE_DATA_REQUEST)
+DEVICE_MODE_END_DEVICE = (wpan.THREAD_MODE_FLAG_FULL_NETWORK_DATA |
+                          wpan.THREAD_MODE_FLAG_FULL_THREAD_DEV |
+                          wpan.THREAD_MODE_FLAG_SECURE_DATA_REQUEST |
+                          wpan.THREAD_MODE_FLAG_RX_ON_WHEN_IDLE)
 
 # Disable child supervision on all devices
 parent.set(wpan.WPAN_CHILD_SUPERVISION_INTERVAL, '0')
@@ -139,12 +123,10 @@ child2.set(wpan.WPAN_CHILD_SUPERVISION_CHECK_TIMEOUT, '0')
 
 # Verify Thread Device Mode on both children
 verify(
-    int(child1.get(wpan.WPAN_THREAD_DEVICE_MODE), 0) == DEVICE_MODE_END_DEVICE
-)
+    int(child1.get(wpan.WPAN_THREAD_DEVICE_MODE), 0) == DEVICE_MODE_END_DEVICE)
 verify(
-    int(child2.get(wpan.WPAN_THREAD_DEVICE_MODE), 0)
-    == DEVICE_MODE_SLEEPY_END_DEVICE
-)
+    int(child2.get(wpan.WPAN_THREAD_DEVICE_MODE), 0) ==
+    DEVICE_MODE_SLEEPY_END_DEVICE)
 
 
 def check_child_table():
@@ -171,14 +153,12 @@ verify(sender.was_successful)
 
 child1.set(wpan.WPAN_THREAD_DEVICE_MODE, str(DEVICE_MODE_SLEEPY_END_DEVICE))
 verify(
-    int(child1.get(wpan.WPAN_THREAD_DEVICE_MODE), 0)
-    == DEVICE_MODE_SLEEPY_END_DEVICE
-)
+    int(child1.get(wpan.WPAN_THREAD_DEVICE_MODE), 0) ==
+    DEVICE_MODE_SLEEPY_END_DEVICE)
 
 child2.set(wpan.WPAN_THREAD_DEVICE_MODE, str(DEVICE_MODE_END_DEVICE))
 verify(
-    int(child2.get(wpan.WPAN_THREAD_DEVICE_MODE), 0) == DEVICE_MODE_END_DEVICE
-)
+    int(child2.get(wpan.WPAN_THREAD_DEVICE_MODE), 0) == DEVICE_MODE_END_DEVICE)
 
 # Verify that the child table on parent is also updated
 wpan.verify_within(check_child_table, WAIT_INTERVAL)
@@ -186,9 +166,8 @@ wpan.verify_within(check_child_table, WAIT_INTERVAL)
 
 def check_child2_received_msg():
     verify(
-        int(child2.get(wpan.WPAN_NCP_COUNTER_RX_IP_SEC_TOTAL), 0)
-        >= child2_rx_ip_counter + NUM_MSGS
-    )
+        int(child2.get(wpan.WPAN_NCP_COUNTER_RX_IP_SEC_TOTAL), 0) >=
+        child2_rx_ip_counter + NUM_MSGS)
 
 
 wpan.verify_within(check_child2_received_msg, WAIT_INTERVAL)

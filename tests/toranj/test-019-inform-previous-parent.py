@@ -119,9 +119,8 @@ child.set(
     wpan.WPAN_CHILD_SUPERVISION_CHECK_TIMEOUT,
     str(CHILD_SUPERVISION_CHECK_TIMEOUT),
 )
-parent1.set(
-    wpan.WPAN_CHILD_SUPERVISION_INTERVAL, str(PARENT_SUPERVISION_INTERVAL)
-)
+parent1.set(wpan.WPAN_CHILD_SUPERVISION_INTERVAL,
+            str(PARENT_SUPERVISION_INTERVAL))
 
 # Since child supervision is not enabled on `parent2` and the `child` is
 # removed from whitelist on `parent2`, after the supervision check timeout
@@ -138,14 +137,12 @@ child_num_state_changes = len(wpan.parse_list(child.get("stat:ncp")))
 
 def check_child_is_reattached():
     verify(
-        len(wpan.parse_list(child.get("stat:ncp"))) > child_num_state_changes
-    )
+        len(wpan.parse_list(child.get("stat:ncp"))) > child_num_state_changes)
     verify(child.is_associated())
 
 
-wpan.verify_within(
-    check_child_is_reattached, CHILD_SUPERVISION_CHECK_TIMEOUT / speedup + 5
-)
+wpan.verify_within(check_child_is_reattached,
+                   CHILD_SUPERVISION_CHECK_TIMEOUT / speedup + 5)
 
 # Verify that the `child` is now attached to `parent1`
 child_table = wpan.parse_list(parent1.get(wpan.WPAN_THREAD_CHILD_TABLE))

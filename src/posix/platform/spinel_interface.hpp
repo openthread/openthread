@@ -35,6 +35,8 @@
 #ifndef POSIX_APP_SPINEL_INTERFACE_HPP_
 #define POSIX_APP_SPINEL_INTERFACE_HPP_
 
+#include "openthread-posix-config.h"
+
 #include "ncp/hdlc.hpp"
 
 namespace ot {

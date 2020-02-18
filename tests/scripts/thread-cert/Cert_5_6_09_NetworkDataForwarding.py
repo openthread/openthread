@@ -42,6 +42,7 @@ MTDS = [ED, SED]
 
 
 class Cert_5_6_9_NetworkDataForwarding(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 

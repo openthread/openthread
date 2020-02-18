@@ -209,7 +209,7 @@ void MleRouter::StopLeader(void)
     Get<Coap::Coap>().RemoveResource(mAddressRelease);
     Get<MeshCoP::ActiveDataset>().StopLeader();
     Get<MeshCoP::PendingDataset>().StopLeader();
-    mAdvertiseTimer.Stop();
+    StopAdvertiseTimer();
     Get<NetworkData::Leader>().Stop();
     Get<ThreadNetif>().UnsubscribeAllRoutersMulticast();
 }
@@ -308,7 +308,7 @@ void MleRouter::SetStateRouter(uint16_t aRloc16)
     mAttachCounter = 0;
     mAttachTimer.Stop();
     mMessageTransmissionTimer.Stop();
-    mAdvertiseTimer.Stop();
+    StopAdvertiseTimer();
     ResetAdvertiseInterval();
 
     Get<ThreadNetif>().SubscribeAllRoutersMulticast();
@@ -337,7 +337,7 @@ void MleRouter::SetStateLeader(uint16_t aRloc16)
     mAttachCounter = 0;
     mAttachTimer.Stop();
     mMessageTransmissionTimer.Stop();
-    mAdvertiseTimer.Stop();
+    StopAdvertiseTimer();
     ResetAdvertiseInterval();
     AddLeaderAloc();
 
@@ -3556,8 +3556,7 @@ void MleRouter::RestoreChildren(void)
         Child *                    child;
         const Settings::ChildInfo &childInfo = iter.GetChildInfo();
 
-        child = mChildTable.FindChild(*static_cast<const Mac::ExtAddress *>(&childInfo.mExtAddress),
-                                      Child::kInStateAnyExceptInvalid);
+        child = mChildTable.FindChild(childInfo.GetExtAddress(), Child::kInStateAnyExceptInvalid);
 
         if (child == NULL)
         {
@@ -3570,11 +3569,11 @@ void MleRouter::RestoreChildren(void)
 
         child->Clear();
 
-        child->SetExtAddress(*static_cast<const Mac::ExtAddress *>(&childInfo.mExtAddress));
+        child->SetExtAddress(childInfo.GetExtAddress());
         child->GetLinkInfo().Clear();
-        child->SetRloc16(childInfo.mRloc16);
-        child->SetTimeout(childInfo.mTimeout);
-        child->SetDeviceMode(DeviceMode(childInfo.mMode));
+        child->SetRloc16(childInfo.GetRloc16());
+        child->SetTimeout(childInfo.GetTimeout());
+        child->SetDeviceMode(DeviceMode(childInfo.GetMode()));
         child->SetState(Neighbor::kStateRestored);
         child->SetLastHeard(TimerMilli::GetNow());
         Get<IndirectSender>().SetChildUseShortAddress(*child, true);
@@ -3601,7 +3600,7 @@ otError MleRouter::RemoveStoredChild(uint16_t aChildRloc16)
 
     for (Settings::ChildInfoIterator iter(GetInstance()); !iter.IsDone(); iter++)
     {
-        if (iter.GetChildInfo().mRloc16 == aChildRloc16)
+        if (iter.GetChildInfo().GetRloc16() == aChildRloc16)
         {
             error = iter.Delete();
             ExitNow();
@@ -3618,11 +3617,11 @@ otError MleRouter::StoreChild(const Child &aChild)
 
     IgnoreReturnValue(RemoveStoredChild(aChild.GetRloc16()));
 
-    childInfo.Clear();
-    childInfo.mExtAddress = aChild.GetExtAddress();
-    childInfo.mTimeout    = aChild.GetTimeout();
-    childInfo.mRloc16     = aChild.GetRloc16();
-    childInfo.mMode       = aChild.GetDeviceMode().Get();
+    childInfo.Init();
+    childInfo.SetExtAddress(aChild.GetExtAddress());
+    childInfo.SetTimeout(aChild.GetTimeout());
+    childInfo.SetRloc16(aChild.GetRloc16());
+    childInfo.SetMode(aChild.GetDeviceMode().Get());
 
     return Get<Settings>().AddChildInfo(childInfo);
 }

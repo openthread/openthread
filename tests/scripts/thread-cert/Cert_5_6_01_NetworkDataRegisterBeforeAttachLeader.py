@@ -41,6 +41,7 @@ MTDS = [ED1, SED1]
 
 
 class Cert_5_6_1_NetworkDataLeaderAsBr(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 

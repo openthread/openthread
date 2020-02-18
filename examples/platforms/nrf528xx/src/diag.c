@@ -46,7 +46,7 @@
 #include <openthread/platform/toolchain.h>
 
 #include <common/logging.hpp>
-#include <drivers/radio/nrf_802154.h>
+#include <nrf_802154.h>
 #include <utils/code_utils.h>
 
 typedef enum

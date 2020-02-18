@@ -123,8 +123,7 @@ INVALID_ROUTER_ID = 63
 
 def check_r1_router_table():
     router_table = wpan.parse_router_table_result(
-        r1.get(wpan.WPAN_THREAD_ROUTER_TABLE)
-    )
+        r1.get(wpan.WPAN_THREAD_ROUTER_TABLE))
     verify(len(router_table) == 4)
     for entry in router_table:
         if entry.rloc16 == r1_rloc:
@@ -150,8 +149,7 @@ wpan.verify_within(check_r1_router_table, WAIT_TIME)
 
 def check_r3_router_table():
     router_table = wpan.parse_router_table_result(
-        r3.get(wpan.WPAN_THREAD_ROUTER_TABLE)
-    )
+        r3.get(wpan.WPAN_THREAD_ROUTER_TABLE))
     verify(len(router_table) == 4)
     for entry in router_table:
         if entry.rloc16 == r1_rloc:
@@ -177,8 +175,7 @@ wpan.verify_within(check_r3_router_table, WAIT_TIME)
 
 def check_r4_router_table():
     router_table = wpan.parse_router_table_result(
-        r4.get(wpan.WPAN_THREAD_ROUTER_TABLE)
-    )
+        r4.get(wpan.WPAN_THREAD_ROUTER_TABLE))
     verify(len(router_table) == 4)
     for entry in router_table:
         if entry.rloc16 == r1_rloc:

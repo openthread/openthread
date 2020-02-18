@@ -39,6 +39,7 @@ ED = 4
 
 
 class Cert_6_1_5_RouterAttachLinkQuality(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -62,9 +63,7 @@ class Cert_6_1_5_RouterAttachLinkQuality(unittest.TestCase):
         self.nodes[ROUTER2].set_panid(0xface)
         self.nodes[ROUTER2].set_mode('rsdn')
         self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER2].add_whitelist(
-            self.nodes[ED].get_addr64(), rssi=-85
-        )
+        self.nodes[ROUTER2].add_whitelist(self.nodes[ED].get_addr64(), rssi=-85)
         self.nodes[ROUTER2].enable_whitelist()
         self.nodes[ROUTER2].set_router_selection_jitter(1)
 

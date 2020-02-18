@@ -43,19 +43,19 @@ list(APPEND OT_PLATFORM_DEFINES
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
 add_library(openthread-posix
-    alarm.c
-    entropy.c
+    alarm.cpp
+    entropy.cpp
     hdlc_interface.cpp
-    logging.c
-    misc.c
+    logging.cpp
+    misc.cpp
     netif.cpp
     radio_spinel.cpp
     settings.cpp
-    sim.c
     spi_interface.cpp
-    system.c
-    uart.c
+    system.cpp
+    uart.cpp
     udp.cpp
+    virtual_time.cpp
 )
 
 target_link_libraries(openthread-posix PUBLIC
@@ -63,6 +63,10 @@ target_link_libraries(openthread-posix PUBLIC
 )
 
 target_compile_definitions(openthread-posix PUBLIC ${OT_PLATFORM_DEFINES})
+
+target_compile_options(openthread-posix PRIVATE
+    ${OT_CFLAGS}
+)
 
 target_include_directories(openthread-posix PRIVATE
     ${OT_PUBLIC_INCLUDES}

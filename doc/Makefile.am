@@ -38,7 +38,6 @@ EXTRA_DIST                                      = \
     $(srcdir)/images/ot-contrib-google.png        \
     $(srcdir)/images/ot-contrib-nordic.png        \
     $(srcdir)/images/ot-contrib-nxp.png           \
-    $(srcdir)/images/ot-contrib-particle.png      \
     $(srcdir)/images/ot-contrib-qc.png            \
     $(srcdir)/images/ot-contrib-qorvo.png         \
     $(srcdir)/images/ot-contrib-samsung.png       \

@@ -27,7 +27,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-
 import unittest
 
 from autothreadharness.harness_case import HarnessCase
@@ -38,7 +37,8 @@ class SED_9_2_10(HarnessCase):
     case = '9 2 10'
     golden_devices_required = 4
     case_need_shield = True
-    device_order = [('DUT', False), ('MED_1', False), ('Router_1', False), ('Commissioner', True), ('Leader', True)]
+    device_order = [('DUT', False), ('MED_1', False), ('Router_1', False),
+                    ('Commissioner', True), ('Leader', True)]
 
     def on_dialog(self, dialog, title):
         pass

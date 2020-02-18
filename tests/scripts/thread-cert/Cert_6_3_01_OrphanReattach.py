@@ -38,6 +38,7 @@ ED = 3
 
 
 class Cert_6_3_1_OrphanReattach(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 

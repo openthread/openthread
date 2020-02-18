@@ -109,9 +109,8 @@ for router in routers[1:]:
     verify(router.get(wpan.WPAN_NODE_TYPE) == wpan.NODE_TYPE_ROUTER)
 
 # Get and parse the neighbor table on routers[0].
-neighbor_table = wpan.parse_neighbor_table_result(
-    routers[0].get(wpan.WPAN_THREAD_NEIGHBOR_TABLE)
-)
+neighbor_table = wpan.parse_neighbor_table_result(routers[0].get(
+    wpan.WPAN_THREAD_NEIGHBOR_TABLE))
 
 verify(len(neighbor_table) == NUM_ROUTERS - 1 + NUM_CHILDREN)
 
@@ -123,14 +122,10 @@ for child in children:
             break
     else:
         raise wpan.VerifyError(
-            'Failed to find a child entry for extended address {} in table'.format(
-                ext_addr
-            )
-        )
+            'Failed to find a child entry for extended address {} in table'.
+            format(ext_addr))
 
-    verify(
-        int(entry.rloc16, 16) == int(child.get(wpan.WPAN_THREAD_RLOC16), 16)
-    )
+    verify(int(entry.rloc16, 16) == int(child.get(wpan.WPAN_THREAD_RLOC16), 16))
     verify(entry.is_rx_on_when_idle() is False)
     verify(entry.is_ftd() is False)
     verify(entry.is_child())
@@ -143,18 +138,14 @@ for router in routers[1:]:
             break
     else:
         raise wpan.VerifyError(
-            'Failed to find a router entry for extended address {} in table'.format(
-                ext_addr
-            )
-        )
+            'Failed to find a router entry for extended address {} in table'.
+            format(ext_addr))
 
     verify(
-        int(entry.rloc16, 16) == int(router.get(wpan.WPAN_THREAD_RLOC16), 16)
-    )
+        int(entry.rloc16, 16) == int(router.get(wpan.WPAN_THREAD_RLOC16), 16))
     verify(entry.is_rx_on_when_idle())
     verify(entry.is_ftd())
     verify(entry.is_child() is False)
-
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished

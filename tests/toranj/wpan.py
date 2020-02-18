@@ -264,6 +264,7 @@ def _log(text, new_line=True, flush=True):
     if flush:
         sys.stdout.flush()
 
+
 # -----------------------------------------------------------------------------------------------------------------------
 # Node class
 
@@ -273,7 +274,7 @@ class Node(object):
 
     # defines the default verbosity setting (can be changed per `Node`)
     _VERBOSE = False
-    _SPEED_UP_FACTOR = 1    # defines the default time speed up factor
+    _SPEED_UP_FACTOR = 1  # defines the default time speed up factor
 
     # path to `wpantund`, `wpanctl`, `ot-ncp-ftd`,`ot-ncp` and `ot-rcp`
     _WPANTUND = '%s/sbin/wpantund' % _WPANTUND_PREFIX
@@ -321,10 +322,11 @@ class Node(object):
 
         if self._use_posix_app_with_rcp:
             ncp_socket_path = 'system:{} -s {} {} {}'.format(
-                self._OT_NCP_FTD_POSIX_APP, self._SPEED_UP_FACTOR, self._OT_RCP, index)
+                self._OT_NCP_FTD_POSIX_APP, self._SPEED_UP_FACTOR, self._OT_RCP,
+                index)
         else:
-            ncp_socket_path = 'system:{} {} {}'.format(
-                self._OT_NCP_FTD, index, self._SPEED_UP_FACTOR)
+            ncp_socket_path = 'system:{} {} {}'.format(self._OT_NCP_FTD, index,
+                                                       self._SPEED_UP_FACTOR)
 
         cmd = self._WPANTUND + \
             ' -o Config:NCP:SocketPath \"{}\"'.format(ncp_socket_path) + \
@@ -341,8 +343,9 @@ class Node(object):
         if self._verbose:
             _log('$ Node{}.__init__() cmd: {}'.format(index, cmd))
 
-        self._wpantund_process = subprocess.Popen(
-            cmd, shell=True, stderr=self._tund_log_file)
+        self._wpantund_process = subprocess.Popen(cmd,
+                                                  shell=True,
+                                                  stderr=self._tund_log_file)
 
         self._wpanctl_cmd = self._WPANCTL + ' -I ' + self._interface_name + ' '
 
@@ -383,19 +386,15 @@ class Node(object):
         """ Runs a wpanctl command on the given wpantund/OT-NCP instance and returns the output """
 
         if self._verbose:
-            _log(
-                '$ Node{}.wpanctl(\'{}\')'.format(
-                    self._index,
-                    cmd),
-                new_line=False)
+            _log('$ Node{}.wpanctl(\'{}\')'.format(self._index, cmd),
+                 new_line=False)
 
-        result = subprocess.check_output(
-            self._wpanctl_cmd + cmd,
-            shell=True,
-            stderr=subprocess.STDOUT)
+        result = subprocess.check_output(self._wpanctl_cmd + cmd,
+                                         shell=True,
+                                         stderr=subprocess.STDOUT)
 
-        if len(
-                result) >= 1 and result[-1] == '\n':  # remove the last char if it is '\n',
+        if len(result) >= 1 and result[
+                -1] == '\n':  # remove the last char if it is '\n',
             result = result[:-1]
 
         if self._verbose:
@@ -424,8 +423,9 @@ class Node(object):
         return self._update_prop('remove', prop_name, value, binary_data)
 
     def _update_prop(self, action, prop_name, value, binary_data):
-        return self.wpanctl(action + ' ' + prop_name + ' ' + ('-d ' if binary_data else '')
-                            + '-v ' + value)  # use -v to handle values starting with `-`.
+        return self.wpanctl(action + ' ' + prop_name + ' ' +
+                            ('-d ' if binary_data else '') + '-v ' +
+                            value)  # use -v to handle values starting with `-`.
 
     def reset(self):
         return self.wpanctl('reset')
@@ -436,64 +436,65 @@ class Node(object):
     def leave(self):
         return self.wpanctl('leave')
 
-    def form(
-            self,
-            name,
-            channel=None,
-            channel_mask=None,
-            panid=None,
-            xpanid=None,
-            key=None,
-            key_index=None,
-            node_type=None,
-            mesh_local_prefix=None,
-            legacy_prefix=None):
-        return self.wpanctl('form \"' + name + '\"'
-                            + (' -c {}'.format(channel) if channel is not None else '')
-                            + (' -m {}'.format(channel_mask) if channel_mask is not None else '')
-                            + (' -p {}'.format(panid) if panid is not None else '')
-                            + (' -x {}'.format(xpanid) if xpanid is not None else '')
-                            + (' -k {}'.format(key) if key is not None else '')
-                            + (' -i {}'.format(key_index) if key_index is not None else '')
-                            + (' -T {}'.format(node_type) if node_type is not None else '')
-                            + (' -M {}'.format(mesh_local_prefix) if mesh_local_prefix is not None else '')
-                            + (' -L {}'.format(legacy_prefix) if legacy_prefix is not None else ''))
+    def form(self,
+             name,
+             channel=None,
+             channel_mask=None,
+             panid=None,
+             xpanid=None,
+             key=None,
+             key_index=None,
+             node_type=None,
+             mesh_local_prefix=None,
+             legacy_prefix=None):
+        return self.wpanctl(
+            'form \"' + name + '\"' +
+            (' -c {}'.format(channel) if channel is not None else '') +
+            (' -m {}'.format(channel_mask) if channel_mask is not None else ''
+            ) + (' -p {}'.format(panid) if panid is not None else '') +
+            (' -x {}'.format(xpanid) if xpanid is not None else '') +
+            (' -k {}'.format(key) if key is not None else '') +
+            (' -i {}'.format(key_index) if key_index is not None else '') +
+            (' -T {}'.format(node_type) if node_type is not None else '') +
+            (' -M {}'.format(mesh_local_prefix
+                            ) if mesh_local_prefix is not None else '') +
+            (' -L {}'.format(legacy_prefix) if legacy_prefix is not None else ''
+            ))
 
-    def join(
-            self,
-            name,
-            channel=None,
-            node_type=None,
-            panid=None,
-            xpanid=None,
-            key=None):
-        return self.wpanctl('join \"' + name + '\"'
-                            + (' -c {}'.format(channel) if channel is not None else '')
-                            + (' -T {}'.format(node_type) if node_type is not None else '')
-                            + (' -p {}'.format(panid) if panid is not None else '')
-                            + (' -x {}'.format(xpanid) if xpanid is not None else '')
-                            + (' -k {}'.format(key) if key is not None else '')
-                            + (' -n'))
+    def join(self,
+             name,
+             channel=None,
+             node_type=None,
+             panid=None,
+             xpanid=None,
+             key=None):
+        return self.wpanctl(
+            'join \"' + name + '\"' +
+            (' -c {}'.format(channel) if channel is not None else '') +
+            (' -T {}'.format(node_type) if node_type is not None else '') +
+            (' -p {}'.format(panid) if panid is not None else '') +
+            (' -x {}'.format(xpanid) if xpanid is not None else '') +
+            (' -k {}'.format(key) if key is not None else '') + (' -n'))
 
     def active_scan(self, channel=None):
         return self.wpanctl(
             'scan' + (' -c {}'.format(channel) if channel is not None else ''))
 
     def energy_scan(self, channel=None):
-        return self.wpanctl(
-            'scan -e' + (' -c {}'.format(channel) if channel is not None else ''))
+        return self.wpanctl('scan -e' + (
+            ' -c {}'.format(channel) if channel is not None else ''))
 
-    def discover_scan(
-            self,
-            channel=None,
-            joiner_only=False,
-            enable_filtering=False,
-            panid_filter=None):
-        return self.wpanctl('scan -d'
-                            + (' -c {}'.format(channel) if channel is not None else '')
-                            + (' -j' if joiner_only else '')
-                            + (' -e' if enable_filtering else '')
-                            + (' -p {}'.format(panid_filter) if panid_filter is not None else ''))
+    def discover_scan(self,
+                      channel=None,
+                      joiner_only=False,
+                      enable_filtering=False,
+                      panid_filter=None):
+        return self.wpanctl(
+            'scan -d' +
+            (' -c {}'.format(channel) if channel is not None else '') +
+            (' -j' if joiner_only else '') +
+            (' -e' if enable_filtering else '') +
+            (' -p {}'.format(panid_filter) if panid_filter is not None else ''))
 
     def permit_join(self, duration_sec=None, port=None, udp=True, tcp=True):
         if not udp and not tcp:  # incorrect use!
@@ -506,72 +507,69 @@ class Node(object):
         if port is not None and duration_sec is None:
             duration_sec = '240'
 
-        return self.wpanctl('permit-join'
-                            + (' {}'.format(duration_sec) if duration_sec is not None else '')
-                            + (' {}'.format(port) if port is not None else '')
-                            + traffic_type)
+        return self.wpanctl(
+            'permit-join' +
+            (' {}'.format(duration_sec) if duration_sec is not None else '') +
+            (' {}'.format(port) if port is not None else '') + traffic_type)
 
     def config_gateway(self, prefix, default_route=False, priority=None):
-        return self.wpanctl('config-gateway ' + prefix
-                            + (' -d' if default_route else '')
-                            + (' -P {}'.format(priority) if priority is not None else ''))
+        return self.wpanctl(
+            'config-gateway ' + prefix + (' -d' if default_route else '') +
+            (' -P {}'.format(priority) if priority is not None else ''))
 
-    def add_prefix(
-            self,
-            prefix,
-            prefix_len=None,
-            priority=None,
-            stable=True,
-            on_mesh=False,
-            slaac=False,
-            dhcp=False,
-            configure=False,
-            default_route=False,
-            preferred=False):
-        return self.wpanctl('add-prefix ' + prefix
-                            + (' -l {}'.format(prefix_len) if prefix_len is not None else '')
-                            + (' -P {}'.format(priority) if priority is not None else '')
-                            + (' -s' if stable else '')
-                            + (' -f' if preferred else '')
-                            + (' -a' if slaac else '')
-                            + (' -d' if dhcp else '')
-                            + (' -c' if configure else '')
-                            + (' -r' if default_route else '')
-                            + (' -o' if on_mesh else ''))
+    def add_prefix(self,
+                   prefix,
+                   prefix_len=None,
+                   priority=None,
+                   stable=True,
+                   on_mesh=False,
+                   slaac=False,
+                   dhcp=False,
+                   configure=False,
+                   default_route=False,
+                   preferred=False):
+        return self.wpanctl(
+            'add-prefix ' + prefix +
+            (' -l {}'.format(prefix_len) if prefix_len is not None else '') +
+            (' -P {}'.format(priority) if priority is not None else '') +
+            (' -s' if stable else '') + (' -f' if preferred else '') +
+            (' -a' if slaac else '') + (' -d' if dhcp else '') +
+            (' -c' if configure else '') + (' -r' if default_route else '') +
+            (' -o' if on_mesh else ''))
 
     def remove_prefix(self, prefix, prefix_len=None):
-        return self.wpanctl('remove-prefix ' + prefix
-                            + (' -l {}'.format(prefix_len) if prefix_len is not None else ''))
+        return self.wpanctl('remove-prefix ' + prefix + (
+            ' -l {}'.format(prefix_len) if prefix_len is not None else ''))
 
-    def add_route(
-            self,
-            route_prefix,
-            prefix_len=None,
-            priority=None,
-            stable=True):
+    def add_route(self,
+                  route_prefix,
+                  prefix_len=None,
+                  priority=None,
+                  stable=True):
         """route priority [(>0 for high, 0 for medium, <0 for low)]"""
-        return self.wpanctl('add-route ' + route_prefix
-                            + (' -l {}'.format(prefix_len) if prefix_len is not None else '')
-                            + (' -p {}'.format(priority) if priority is not None else '')
-                            + ('' if stable else '-n'))
+        return self.wpanctl(
+            'add-route ' + route_prefix +
+            (' -l {}'.format(prefix_len) if prefix_len is not None else '') +
+            (' -p {}'.format(priority) if priority is not None else '') +
+            ('' if stable else '-n'))
 
-    def remove_route(
-            self,
-            route_prefix,
-            prefix_len=None,
-            priority=None,
-            stable=True):
+    def remove_route(self,
+                     route_prefix,
+                     prefix_len=None,
+                     priority=None,
+                     stable=True):
         """route priority [(>0 for high, 0 for medium, <0 for low)]"""
-        return self.wpanctl('remove-route ' + route_prefix
-                            + (' -l {}'.format(prefix_len) if prefix_len is not None else '')
-                            + (' -p {}'.format(priority) if priority is not None else ''))
+        return self.wpanctl(
+            'remove-route ' + route_prefix +
+            (' -l {}'.format(prefix_len) if prefix_len is not None else '') +
+            (' -p {}'.format(priority) if priority is not None else ''))
 
     def commissioner_start(self):
         return self.wpanctl('commissioner start')
 
     def commissioner_add_joiner(self, eui64, pskd, timeout='100'):
-        return self.wpanctl(
-            'commissioner joiner-add {} {} {}'.format(eui64, timeout, pskd))
+        return self.wpanctl('commissioner joiner-add {} {} {}'.format(
+            eui64, timeout, pskd))
 
     def joiner_join(self, pskd):
         return self.wpanctl('joiner --join {}'.format(pskd))
@@ -607,10 +605,8 @@ class Node(object):
 
     def un_whitelist_node(self, node):
         """Removes a given node (of node `Node) from the whitelist"""
-        self.remove(
-            WPAN_MAC_WHITELIST_ENTRIES,
-            node.get(WPAN_EXT_ADDRESS)[
-                1:-1])
+        self.remove(WPAN_MAC_WHITELIST_ENTRIES,
+                    node.get(WPAN_EXT_ADDRESS)[1:-1])
 
     def is_in_scan_result(self, scan_result):
         """Checks if node is in the scan results
@@ -624,15 +620,13 @@ class Node(object):
         ext_address = self.get(WPAN_EXT_ADDRESS)[1:-1]
 
         for item in scan_result:
-            if all(
-                [
-                    item.network_name == name,
-                    item.panid == panid,
-                    item.xpanid == xpanid,
-                    item.channel == channel,
+            if all([
+                    item.network_name == name, item.panid == panid,
+                    item.xpanid == xpanid, item.channel == channel,
                     item.ext_address == ext_address,
-                    (item.type == ScanResult.TYPE_DISCOVERY_SCAN) or (
-                        item.joinable == joinable)]):
+                (item.type == ScanResult.TYPE_DISCOVERY_SCAN) or
+                (item.joinable == joinable)
+            ]):
                 return True
 
         return False
@@ -659,8 +653,9 @@ class Node(object):
         if self._verbose:
             _log('$ Node{} \'{}\')'.format(self._index, cmd))
 
-        result = subprocess.check_output(
-            cmd, shell=True, stderr=subprocess.STDOUT)
+        result = subprocess.check_output(cmd,
+                                         shell=True,
+                                         stderr=subprocess.STDOUT)
         return result
 
     def remove_ip6_address_on_interface(self, address, prefix_len=64):
@@ -674,8 +669,9 @@ class Node(object):
         if self._verbose:
             _log('$ Node{} \'{}\')'.format(self._index, cmd))
 
-        result = subprocess.check_output(
-            cmd, shell=True, stderr=subprocess.STDOUT)
+        result = subprocess.check_output(cmd,
+                                         shell=True,
+                                         stderr=subprocess.STDOUT)
         return result
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -692,16 +688,21 @@ class Node(object):
                 try:
                     node._wpantund_process.poll()
                     if node._wpantund_process.returncode is not None:
-                        print('Node {} wpantund instance has terminated unexpectedly'.format(node))
+                        print(
+                            'Node {} wpantund instance has terminated unexpectedly'
+                            .format(node))
                     if disable_logs:
                         node.set(WPAN_OT_LOG_LEVEL, '0')
                     node.leave()
                 except subprocess.CalledProcessError as e:
                     if (node._verbose):
-                        _log(' -> \'{}\' exit code: {}'.format(e.output, e.returncode))
+                        _log(' -> \'{}\' exit code: {}'.format(
+                            e.output, e.returncode))
                     interval = time.time() - start_time
                     if interval > wait_time:
-                        print('Took too long to init node {} ({}>{} sec)'.format(node, interval, wait_time))
+                        print(
+                            'Took too long to init node {} ({}>{} sec)'.format(
+                                node, interval, wait_time))
                         raise
                 except BaseException:
                     raise
@@ -721,7 +722,8 @@ class Node(object):
         """Sets up the time speed up factor - should be set before creating any `Node` objects"""
         if len(Node._all_nodes) != 0:
             raise Node._NodeError(
-                'set_time_speedup_factor() cannot be called after creating a `Node`')
+                'set_time_speedup_factor() cannot be called after creating a `Node`'
+            )
         Node._SPEED_UP_FACTOR = factor
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -764,15 +766,8 @@ class Node(object):
         else:
             msg = data
 
-        return AsyncSender(
-            self,
-            src_addr,
-            src_port,
-            dst_addr,
-            dst_port,
-            msg,
-            count,
-            mcast_hops)
+        return AsyncSender(self, src_addr, src_port, dst_addr, dst_port, msg,
+                           count, mcast_hops)
 
     def _get_receiver(self, local_port):
         # Gets or creates a receiver (an `AsyncReceiver`) tied to given port
@@ -794,11 +789,8 @@ class Node(object):
     def prepare_rx(self, sender):
         """Prepare to receive messages from a sender (an `AsyncSender`)"""
         receiver = self._get_receiver(sender.dst_port)
-        receiver._add_sender(
-            sender.src_addr,
-            sender.src_port,
-            sender.msg,
-            sender.count)
+        receiver._add_sender(sender.src_addr, sender.src_port, sender.msg,
+                             sender.count)
         return receiver
 
     def prepare_listener(self, local_port, timeout=1):
@@ -815,7 +807,8 @@ class Node(object):
             while asyncore.socket_map:
                 elapsed_time = time.time() - start_time
                 if elapsed_time > timeout:
-                    print('Performing aysnc tx/tx took too long ({}>{} sec)'.format(elapsed_time, timeout))
+                    print('Performing aysnc tx/tx took too long ({}>{} sec)'.
+                          format(elapsed_time, timeout))
                     raise Node._NodeError(
                         'perform_tx_rx timed out ({}>{} sec)'.format(
                             elapsed_time, timeout))
@@ -825,9 +818,9 @@ class Node(object):
             print('Failed to perform async rx/tx')
             raise
 
+
 # -----------------------------------------------------------------------------------------------------------------------
 # `AsyncSender` and `AsyncReceiver classes
-
 
 _SO_BINDTODEVICE = 25
 
@@ -847,16 +840,15 @@ def _create_socket_address(ip_address, port):
 class AsyncSender(asyncore.dispatcher):
     """ An IPv6 async message sender - use `Node.prepare_tx()` to create one"""
 
-    def __init__(
-            self,
-            node,
-            src_addr,
-            src_port,
-            dst_addr,
-            dst_port,
-            msg,
-            count,
-            mcast_hops=None):
+    def __init__(self,
+                 node,
+                 src_addr,
+                 src_port,
+                 dst_addr,
+                 dst_port,
+                 msg,
+                 count,
+                 mcast_hops=None):
         self._node = node
         self._src_addr = src_addr
         self._src_port = src_port
@@ -870,18 +862,14 @@ class AsyncSender(asyncore.dispatcher):
 
         # Create a socket, bind it to the node's interface
         sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-        sock.setsockopt(
-            socket.SOL_SOCKET,
-            _SO_BINDTODEVICE,
-            node.interface_name + '\0')
+        sock.setsockopt(socket.SOL_SOCKET, _SO_BINDTODEVICE,
+                        node.interface_name + '\0')
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
         # Set the IPV6_MULTICAST_HOPS
         if mcast_hops is not None:
-            sock.setsockopt(
-                socket.IPPROTO_IPV6,
-                socket.IPV6_MULTICAST_HOPS,
-                mcast_hops)
+            sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_MULTICAST_HOPS,
+                            mcast_hops)
 
         # Bind the socket to the given src address
         if _is_ipv6_addr_link_local(src_addr):
@@ -943,18 +931,13 @@ class AsyncSender(asyncore.dispatcher):
 
         if self._node._verbose:
             if sent_len < 30:
-                info_text = '{} bytes ("{}")'.format(
-                    sent_len, self._tx_buffer[:sent_len])
+                info_text = '{} bytes ("{}")'.format(sent_len,
+                                                     self._tx_buffer[:sent_len])
             else:
                 info_text = '{} bytes'.format(sent_len)
-            _log(
-                '- Node{} sent {} to [{}]:{} from [{}]:{}'.format(
-                    self._node._index,
-                    info_text,
-                    self._dst_addr,
-                    self._dst_port,
-                    self._src_addr,
-                    self._src_port))
+            _log('- Node{} sent {} to [{}]:{} from [{}]:{}'.format(
+                self._node._index, info_text, self._dst_addr, self._dst_port,
+                self._src_addr, self._src_port))
 
         self._tx_buffer = self._tx_buffer[sent_len:]
 
@@ -968,6 +951,7 @@ class AsyncSender(asyncore.dispatcher):
     def handle_close(self):
         self.close()
 
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -977,6 +961,7 @@ class AsyncReceiver(asyncore.dispatcher):
     _MAX_RECV_SIZE = 2048
 
     class _SenderInfo(object):
+
         def __init__(self, sender_addr, sender_port, msg, count):
             self._sender_addr = sender_addr
             self._sender_port = sender_port
@@ -995,20 +980,18 @@ class AsyncReceiver(asyncore.dispatcher):
     def __init__(self, node, local_port):
         self._node = node
         self._local_port = local_port
-        self._senders = []        # list of `_SenderInfo` objects
+        self._senders = []  # list of `_SenderInfo` objects
         # contains all received messages as a list of (pkt, (src_addr,
         # src_port))
         self._all_rx = []
-        self._timeout = 0         # listen timeout (zero means forever)
+        self._timeout = 0  # listen timeout (zero means forever)
         self._started = False
         self._start_time = 0
 
         # Create a socket, bind it to the node's interface
         sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-        sock.setsockopt(
-            socket.SOL_SOCKET,
-            _SO_BINDTODEVICE,
-            node.interface_name + '\0')
+        sock.setsockopt(socket.SOL_SOCKET, _SO_BINDTODEVICE,
+                        node.interface_name + '\0')
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
         # Bind the socket to any IPv6 address with the given local port
@@ -1019,8 +1002,7 @@ class AsyncReceiver(asyncore.dispatcher):
 
     def _add_sender(self, sender_addr, sender_port, msg, count):
         self._senders.append(
-            AsyncReceiver._SenderInfo(
-                sender_addr, sender_port, msg, count))
+            AsyncReceiver._SenderInfo(sender_addr, sender_port, msg, count))
 
     def _set_listen_timeout(self, timeout):
         self._timeout = timeout
@@ -1052,11 +1034,14 @@ class AsyncReceiver(asyncore.dispatcher):
         if not self._started:
             self._start_time = time.time()
             self._started = True
-        if self._timeout != 0 and time.time() - self._start_time >= self._timeout:
+        if self._timeout != 0 and time.time(
+        ) - self._start_time >= self._timeout:
             self.handle_close()
             if self._node._verbose:
-                _log('- Node{} finished listening on port {} for {} sec, received {} msg(s)'.format(
-                    self._node._index, self._local_port, self._timeout, len(self._all_rx)))
+                _log(
+                    '- Node{} finished listening on port {} for {} sec, received {} msg(s)'
+                    .format(self._node._index, self._local_port, self._timeout,
+                            len(self._all_rx)))
             return False
         return True
 
@@ -1078,24 +1063,23 @@ class AsyncReceiver(asyncore.dispatcher):
                 info_text = '{} bytes ("{}")'.format(len(msg), msg)
             else:
                 info_text = '{} bytes'.format(len(msg))
-            _log(
-                '- Node{} received {} on port {} from [{}]:{}'.format(
-                    self._node._index,
-                    info_text,
-                    self._local_port,
-                    src_addr,
-                    src_port))
+            _log('- Node{} received {} on port {} from [{}]:{}'.format(
+                self._node._index, info_text, self._local_port, src_addr,
+                src_port))
 
         self._all_rx.append((msg, (src_addr, src_port)))
 
-        if all([sender._check_received(msg, src_addr, src_port)
-                for sender in self._senders]):
+        if all([
+                sender._check_received(msg, src_addr, src_port)
+                for sender in self._senders
+        ]):
             self.handle_close()
 
     def handle_close(self):
         self.close()
         # remove the receiver from the node once the socket is closed
         self._node._remove_recver(self)
+
 
 # -----------------------------------------------------------------------------------------------------------------------
 
@@ -1133,7 +1117,8 @@ def verify_within(condition_checker_func, wait_time, delay_time=0.1):
             condition_checker_func()
         except VerifyError as e:
             if time.time() - start_time > wait_time:
-                print('Took too long to pass the condition ({}>{} sec)'.format(time.time() - start_time, wait_time))
+                print('Took too long to pass the condition ({}>{} sec)'.format(
+                    time.time() - start_time, wait_time))
                 print(e.message)
                 raise e
         except BaseException:
@@ -1143,6 +1128,7 @@ def verify_within(condition_checker_func, wait_time, delay_time=0.1):
         if delay_time != 0:
             time.sleep(delay_time)
     _is_in_verify_within = old_is_in_verify_within
+
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Parsing `wpanctl` output
@@ -1186,7 +1172,8 @@ class ScanResult(object):
             self._rssi = items[1]
         else:
             raise ValueError(
-                '"{}" does not seem to be a valid scan result string'.result_text)
+                '"{}" does not seem to be a valid scan result string'.
+                result_text)
 
     @property
     def type(self):
@@ -1226,8 +1213,8 @@ class ScanResult(object):
 
 def parse_scan_result(scan_result):
     """ Parses scan result string and returns an array of `ScanResult` objects"""
-    return [ScanResult(item) for item in scan_result.split(
-        '\n')[2:]]  # skip first two lines which are table headers
+    return [ScanResult(item) for item in scan_result.split('\n')[2:]
+           ]  # skip first two lines which are table headers
 
 
 def parse_list(list_string):
@@ -1249,6 +1236,7 @@ def parse_list(list_string):
     #
     return [line[2:-1].split()[0] for line in list_string.split('\n')[1:-1]]
 
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -1264,9 +1252,9 @@ class OnMeshPrefix(object):
 
         m = re.match(
             r'\t"([0-9a-fA-F:]+)\s*prefix_len:(\d+)\s+origin:(\w*)\s+stable:(\w*).* \['
-            + r'on-mesh:(\d)\s+def-route:(\d)\s+config:(\d)\s+dhcp:(\d)\s+slaac:(\d)\s+pref:(\d)\s+prio:(\w*)\]'
-            + r'\s+rloc:(0x[0-9a-fA-F]+)',
-            text)
+            +
+            r'on-mesh:(\d)\s+def-route:(\d)\s+config:(\d)\s+dhcp:(\d)\s+slaac:(\d)\s+pref:(\d)\s+prio:(\w*)\]'
+            + r'\s+rloc:(0x[0-9a-fA-F]+)', text)
         verify(m is not None)
         data = m.groups()
 
@@ -1329,8 +1317,10 @@ class OnMeshPrefix(object):
 
 def parse_on_mesh_prefix_result(on_mesh_prefix_list):
     """ Parses on-mesh prefix list string and returns an array of `OnMeshPrefix` objects"""
-    return [OnMeshPrefix(item)
-            for item in on_mesh_prefix_list.split('\n')[1:-1]]
+    return [
+        OnMeshPrefix(item) for item in on_mesh_prefix_list.split('\n')[1:-1]
+    ]
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1399,6 +1389,7 @@ def parse_child_table_result(child_table_list):
     """ Parses child table list string and returns an array of `ChildEntry` objects"""
     return [ChildEntry(item) for item in child_table_list.split('\n')[1:-1]]
 
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -1455,8 +1446,10 @@ class NeighborEntry(object):
 
 def parse_neighbor_table_result(neighbor_table_list):
     """ Parses neighbor table list string and returns an array of `NeighborEntry` objects"""
-    return [NeighborEntry(item)
-            for item in neighbor_table_list.split('\n')[1:-1]]
+    return [
+        NeighborEntry(item) for item in neighbor_table_list.split('\n')[1:-1]
+    ]
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1521,8 +1514,10 @@ class RouterTableEntry(object):
 
 def parse_router_table_result(router_table_list):
     """ Parses router table list string and returns an array of `RouterTableEntry` objects"""
-    return [RouterTableEntry(item)
-            for item in router_table_list.split('\n')[1:-1]]
+    return [
+        RouterTableEntry(item) for item in router_table_list.split('\n')[1:-1]
+    ]
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1572,8 +1567,11 @@ class AddressCacheEntry(object):
 
 def parse_address_cache_table_result(addr_cache_table_list):
     """ Parses address cache table list string and returns an array of `AddressCacheEntry` objects"""
-    return [AddressCacheEntry(item)
-            for item in addr_cache_table_list.split('\n')[1:-1]]
+    return [
+        AddressCacheEntry(item)
+        for item in addr_cache_table_list.split('\n')[1:-1]
+    ]
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1618,5 +1616,6 @@ class InterfaceRoute(object):
 
 def parse_interface_routes_result(interface_routes_list):
     """ Parses interface routes list string and returns an array of `InterfaceRoute` objects"""
-    return [InterfaceRoute(item)
-            for item in interface_routes_list.split('\n')[1:-1]]
+    return [
+        InterfaceRoute(item) for item in interface_routes_list.split('\n')[1:-1]
+    ]

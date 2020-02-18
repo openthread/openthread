@@ -29,6 +29,8 @@
 #ifndef OPENTHREAD_PLATFORM_CONFIG_H_
 #define OPENTHREAD_PLATFORM_CONFIG_H_
 
+#include "openthread-core-config.h"
+
 /**
  * @file
  * @brief
@@ -63,6 +65,26 @@
  */
 #ifndef OPENTHREAD_POSIX_VIRTUAL_TIME
 #define OPENTHREAD_POSIX_VIRTUAL_TIME 0
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_RCP_UART_ENABLE
+ *
+ * Define as 1 to enable UART interface to RCP.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_RCP_UART_ENABLE
+#define OPENTHREAD_POSIX_RCP_UART_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_RCP_SPI_ENABLE
+ *
+ * Define as 1 to enable SPI interface to RCP.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_RCP_SPI_ENABLE
+#define OPENTHREAD_POSIX_RCP_SPI_ENABLE 0
 #endif
 
 #endif // OPENTHREAD_PLATFORM_CONFIG_H_

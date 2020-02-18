@@ -50,7 +50,6 @@ from wpan import verify
 # - Verifies Mesh Header frame forwarding over multiple routers.
 # - Verifies forwarding of large IPv6 messages (1000 bytes) requiring lowpan fragmentation.
 
-
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
 print('-' * 120)
 print('Starting \'{}\''.format(test_name))
@@ -115,14 +114,12 @@ sed_children[0].set(wpan.WPAN_POLL_INTERVAL, '500')
 
 for index in range(1, NUM_ROUTERS):
     routers[index].join_node(routers[index - 1], wpan.JOIN_TYPE_ROUTER)
-    sed_children[index].join_node(
-        routers[index], wpan.JOIN_TYPE_SLEEPY_END_DEVICE
-    )
+    sed_children[index].join_node(routers[index],
+                                  wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
     sed_children[index].set(wpan.WPAN_POLL_INTERVAL, '500')
 
 fed_children[0].join_node(routers[0], wpan.JOIN_TYPE_END_DEVICE)
 fed_children[-1].join_node(routers[-1], wpan.JOIN_TYPE_END_DEVICE)
-
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
@@ -140,12 +137,12 @@ r1_rloc = int(routers[0].get(wpan.WPAN_THREAD_RLOC16), 16)
 
 
 def check_r1_router_table():
-    router_table = wpan.parse_router_table_result(
-        routers[0].get(wpan.WPAN_THREAD_ROUTER_TABLE)
-    )
+    router_table = wpan.parse_router_table_result(routers[0].get(
+        wpan.WPAN_THREAD_ROUTER_TABLE))
     verify(len(router_table) == NUM_ROUTERS)
     for entry in router_table:
-        verify(entry.rloc16 == r1_rloc or entry.is_link_established or entry.next_hop != INVALID_ROUTER_ID)
+        verify(entry.rloc16 == r1_rloc or entry.is_link_established() or
+               entry.next_hop != INVALID_ROUTER_ID)
 
 
 wpan.verify_within(check_r1_router_table, ROUTER_TABLE_WAIT_TIME)

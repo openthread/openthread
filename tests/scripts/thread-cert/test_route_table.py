@@ -42,6 +42,7 @@ ROUTER2 = 3
 
 
 class TestRouteTable(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -92,7 +93,7 @@ class TestRouteTable(unittest.TestCase):
 
         for _node in self.nodes.values():
             router_table = _node.router_table()
-            self.assertEqual(set(router_table.keys()), router_ids)
+            self.assertEqual(set(router_table), router_ids)
 
 
 if __name__ == '__main__':

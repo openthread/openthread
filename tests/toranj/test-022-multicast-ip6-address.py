@@ -98,7 +98,6 @@ ml_prefix = router.get(wpan.WPAN_IP6_MESH_LOCAL_PREFIX)[1:-1].split('/')[0]
 ll_all_thread_nodes_addr = 'ff32:40:' + ml_prefix + '1'
 rl_all_thread_nodes_addr = 'ff33:40:' + ml_prefix + '1'
 
-
 # List of multicast addresses subscribed by all nodes
 mcast_addrs = [
     "ff02::1",  # All nodes link-local

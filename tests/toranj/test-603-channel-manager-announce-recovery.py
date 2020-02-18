@@ -45,18 +45,13 @@ def verify_channel(nodes, new_channel, wait_time=20):
     """
     start_time = time.time()
 
-    while not all(
-        [
-            (new_channel == int(node.get(wpan.WPAN_CHANNEL), 0))
-            for node in nodes
-        ]
-    ):
+    while not all([
+        (new_channel == int(node.get(wpan.WPAN_CHANNEL), 0)) for node in nodes
+    ]):
         if time.time() - start_time > wait_time:
-            print(
-                'Took too long to switch to channel {} ({}>{} sec)'.format(
-                    new_channel, time.time() - start_time, wait_time
-                )
-            )
+            print('Took too long to switch to channel {} ({}>{} sec)'.format(
+                new_channel,
+                time.time() - start_time, wait_time))
             exit(1)
         time.sleep(0.1)
 

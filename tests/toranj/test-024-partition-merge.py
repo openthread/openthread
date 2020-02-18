@@ -49,7 +49,6 @@ from wpan import verify
 #   merge the info in combined.
 #
 
-
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
 print('-' * 120)
 print('Starting \'{}\''.format(test_name))
@@ -76,8 +75,7 @@ def verify_prefix(
     """
     for node in node_list:
         prefixes = wpan.parse_on_mesh_prefix_result(
-            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES)
-        )
+            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
         for p in prefixes:
             if p.prefix == prefix:
                 verify(int(p.prefix_len) == prefix_len)
@@ -91,9 +89,8 @@ def verify_prefix(
                 verify(p.priority == priority)
                 break
         else:
-            raise wpan.VerifyError(
-                "Did not find prefix {} on node {}".format(prefix, node)
-            )
+            raise wpan.VerifyError("Did not find prefix {} on node {}".format(
+                prefix, node))
 
 
 # -----------------------------------------------------------------------------------------------------------------------
@@ -183,12 +180,9 @@ def check_r1_r2_roles():
     r1_type = r1.get(wpan.WPAN_NODE_TYPE)
     r2_type = r2.get(wpan.WPAN_NODE_TYPE)
     verify(
-        (r1_type == wpan.NODE_TYPE_LEADER and r2_type == wpan.NODE_TYPE_ROUTER)
-        or (
-            r2_type == wpan.NODE_TYPE_LEADER
-            and r1_type == wpan.NODE_TYPE_ROUTER
-        )
-    )
+        (r1_type == wpan.NODE_TYPE_LEADER and
+         r2_type == wpan.NODE_TYPE_ROUTER) or
+        (r2_type == wpan.NODE_TYPE_LEADER and r1_type == wpan.NODE_TYPE_ROUTER))
 
 
 wpan.verify_within(check_r1_r2_roles, short_wait)

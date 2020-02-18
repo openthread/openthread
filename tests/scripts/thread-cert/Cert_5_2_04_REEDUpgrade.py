@@ -46,6 +46,7 @@ ROUTER_SELECTION_JITTER = 1
 
 
 class Cert_5_2_4_REEDUpgrade(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -115,9 +116,8 @@ class Cert_5_2_4_REEDUpgrade(unittest.TestCase):
         msg.assertMleMessageDoesNotContainTlv(mle.Route64)
 
         # 4 Wait for DUT_REED to send the second packet.
-        self.simulator.go(
-            REED_ADVERTISEMENT_INTERVAL + REED_ADVERTISEMENT_MAX_JITTER
-        )
+        self.simulator.go(REED_ADVERTISEMENT_INTERVAL +
+                          REED_ADVERTISEMENT_MAX_JITTER)
 
         # 5 DUT_REED: Verify the second MLE Advertisement.
         reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
@@ -166,10 +166,8 @@ class Cert_5_2_4_REEDUpgrade(unittest.TestCase):
         # Leader.
         mleid = None
         for addr in self.nodes[LEADER].get_addrs():
-            if (
-                addr.find(MESH_LOCAL_PREFIX) != -1
-                and addr.find(ROUTING_LACATOR) == -1
-            ):
+            if (addr.find(MESH_LOCAL_PREFIX) != -1 and
+                    addr.find(ROUTING_LACATOR) == -1):
                 mleid = addr
                 break
 

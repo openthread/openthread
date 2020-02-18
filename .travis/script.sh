@@ -121,7 +121,7 @@ build_cc2538() {
     git checkout -- . || die
     git clean -xfd || die
     mkdir build && cd build || die
-    cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=examples/platforms/cc2538/arm-none-eabi.cmake -DOT_PLATFORM=cc2538 .. || die
+    cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=examples/platforms/cc2538/arm-none-eabi.cmake -DOT_PLATFORM=cc2538 -DOT_COMPILE_WARNING_AS_ERROR=ON .. || die
     ninja || die
     cd .. || die
 
@@ -419,7 +419,7 @@ build_samr21() {
     git checkout -- . || die
     git clean -xfd || die
     mkdir build && cd build || die
-    cmake -GNinja -DOT_PLATFORM=posix .. || die
+    cmake -GNinja -DOT_PLATFORM=posix -DOT_COMPILE_WARNING_AS_ERROR=ON .. || die
     ninja || die
     cd .. || die
 
@@ -586,14 +586,14 @@ build_samr21() {
     git checkout -- . || die
     git clean -xfd || die
     mkdir build && cd build || die
-    cmake -GNinja -DOT_PLATFORM=posix-host -DOT_DAEMON=ON .. || die
+    cmake -GNinja -DOT_PLATFORM=posix-host -DOT_DAEMON=ON -DCOMPILE_WARNING_AS_ERROR=ON .. || die
     ninja || die
     cd .. || die
 
     git checkout -- . || die
     git clean -xfd || die
     mkdir build && cd build || die
-    cmake -GNinja -DOT_PLATFORM=posix-host .. || die
+    cmake -GNinja -DOT_PLATFORM=posix-host -DCOMPILE_WARNING_AS_ERROR=ON .. || die
     ninja || die
     cd .. || die
 

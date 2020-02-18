@@ -39,6 +39,7 @@ ROUTER1 = 2
 
 
 class Cert_5_1_05_RouterAddressTimeout(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 

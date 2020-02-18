@@ -40,6 +40,7 @@ ROUTER1 = 2
 
 
 class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -105,8 +106,7 @@ class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
         command.check_parent_request(msg, is_first_request=True)
 
         msg = router1_messages.next_mle_message(
-            mle.CommandType.CHILD_ID_REQUEST, sent_to_node=self.nodes[LEADER]
-        )
+            mle.CommandType.CHILD_ID_REQUEST, sent_to_node=self.nodes[LEADER])
         command.check_child_id_request(
             msg,
             tlv_request=CheckType.CONTAIN,
