@@ -84,8 +84,15 @@
 
 // Platform udp and platform netif is necessary for daemon mode to work.
 #if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+
+#ifndef OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE 
 #define OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE 1
+#endif
+
+#ifndef OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE 
 #define OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE 1
+#endif
+
 #endif
 
 #endif // OPENTHREAD_CORE_POSIX_CONFIG_H_
