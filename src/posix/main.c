@@ -268,7 +268,8 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         case 'n':
             aConfig->mIsDryRun = true;
             break;
-        case 's': {
+        case 's':
+        {
             char *endptr = NULL;
 
             aConfig->mPlatformConfig.mSpeedUpFactor = (uint32_t)strtol(optarg, &endptr, 0);
