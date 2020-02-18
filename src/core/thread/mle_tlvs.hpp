@@ -1631,8 +1631,8 @@ public:
     /**
      * This method indicates whether or not the TLV appears to be well-formed and valid version.
      *
-     * @retval TRUE   If the TLV appears to be well-formed and valid version.
-     * @retval FALSE  If the TLV does not appear to be well-formed or invalid version.
+     * @retval TRUE   If the TLV appears to be well-formed and with valid version.
+     * @retval FALSE  If the TLV does not appear to be well-formed or with invalid version.
      *
      */
     bool IsValid(void) const
