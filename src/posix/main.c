@@ -162,7 +162,7 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "                                  If not specified, `SPI` interface will fall back to polling,\n"
             "                                  which is inefficient.\n"
             "        --gpio-reset\n"
-            "                                  Just reset the GPIO device. Do not start.\n"
+            "                                  Just reset the RCP chip. Do not start.\n"
             "        --gpio-reset-dev[=gpio-device-path]\n"
             "                                  Specify a path to the Linux sysfs-exported GPIO device for the\n"
             "                                  `R̅E̅S̅` pin.\n"

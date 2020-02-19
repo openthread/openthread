@@ -114,7 +114,7 @@ typedef struct otPlatformConfig
     bool        mResetRadio;            ///< Whether to reset RCP when initializing.
     bool        mRestoreDatasetFromNcp; ///< Whether to retrieve dataset from NCP and save to file.
 
-    bool     mSpiGpioReset;       ///< Whether to reset GPIO device only.
+    bool     mSpiGpioReset;       ///< Whether to use Reset Pin to reset RCP only.
     char *   mSpiGpioIntDevice;   ///< Path to the Linux GPIO character device for the `I̅N̅T̅` pin.
     char *   mSpiGpioResetDevice; ///< Path to the Linux GPIO character device for the `R̅E̅S̅E̅T̅` pin.
     uint8_t  mSpiGpioIntLine;     ///< Line index of the `I̅N̅T̅` pin for the associated GPIO character device.

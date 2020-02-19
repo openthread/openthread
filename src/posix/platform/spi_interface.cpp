@@ -107,7 +107,7 @@ otError SpiInterface::Init(const otPlatformConfig &aPlatformConfig)
     // Reset RCP chip.
     TrigerReset();
 
-    // Exit if only to reset GPIO device.
+    // Exit if only to reset RCP chip.
     if (aPlatformConfig.mSpiGpioReset)
     {
         exit(OT_EXIT_SUCCESS);
