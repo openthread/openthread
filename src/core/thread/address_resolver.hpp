@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "coap/coap.hpp"
+#include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
@@ -92,7 +93,7 @@ public:
      * @param[in]  aRloc16  The RLOC16 address.
      *
      */
-    void Remove(uint16_t aRloc16);
+    void Remove(Mac::ShortAddress aRloc16);
 
     /**
      * This method removes all EID-to-RLOC cache entries associated with a Router ID.
@@ -123,16 +124,19 @@ public:
     otError UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
 
     /**
-     * This method adds one cache entry for the EID.
+     * This method adds a snooped cache entry for a given EID.
+     *
+     * The method is intended to add an entry for snoop optimization (inspection of a received message to create a
+     * cache entry mapping an EID to a RLOC).
      *
      * @param[in]  aEid               A reference to the EID.
      * @param[in]  aRloc16            The RLOC16 corresponding to @p aEid.
      *
-     * @retval OT_ERROR_NONE           Successfully adds one cache entry.
+     * @retval OT_ERROR_NONE           Successfully adds the cache entry.
      * @retval OT_ERROR_NO_BUFS        Insufficient buffer space available to add one cache entry.
      *
      */
-    otError AddCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
+    otError AddSnoopedCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
 
     /**
      * This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not known.
@@ -159,47 +163,81 @@ public:
 private:
     enum
     {
-        kCacheEntries      = OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES,
-        kStateUpdatePeriod = 1000u, ///< State update period in milliseconds.
-    };
-
-    /**
-     * Thread Protocol Parameters and Constants
-     *
-     */
-    enum
-    {
+        kCacheEntries                  = OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES,
+        kMaxNonEvictableSnoopedEntries = OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_MAX_SNOOP_ENTRIES,
         kAddressQueryTimeout           = OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_TIMEOUT,             // in seconds
         kAddressQueryInitialRetryDelay = OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_INITIAL_RETRY_DELAY, // in seconds
         kAddressQueryMaxRetryDelay     = OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_MAX_RETRY_DELAY,     // in seconds
+        kSnoopBlockEvictionTimeout     = OPENTHREAD_CONFIG_TMF_SNOOP_CACHE_ENTRY_TIMEOUT,         // in seconds
+        kStateUpdatePeriod             = 1000u,                                                   // in milliseconds
     };
 
-    enum
+    class CacheEntry : public InstanceLocatorInit
     {
-        kLastTransactionTimeInvalid = 0xffffffff, ///< Used when entry is populated using forwarded data message.
-    };
+    public:
+        void Init(Instance &aInstance);
 
-    struct Cache
-    {
-        enum State
+        CacheEntry *      GetNext(void);
+        const CacheEntry *GetNext(void) const;
+        void              SetNext(CacheEntry *aEntry);
+
+        const Ip6::Address &GetTarget(void) const { return mTarget; }
+        void                SetTarget(const Ip6::Address &aTarget) { mTarget = aTarget; }
+
+        Mac::ShortAddress GetRloc16(void) const { return mRloc16; }
+        void              SetRloc16(Mac::ShortAddress aRloc16) { mRloc16 = aRloc16; }
+
+        const uint8_t *GetMeshLocalIid(void) const { return mInfo.mCached.mMeshLocalIid; }
+        bool           HasMeshLocalIid(const uint8_t *aIid) const;
+        void           SetMeshLocalIid(const uint8_t *aIid);
+
+        uint32_t GetLastTransactionTime(void) const { return mInfo.mCached.mLastTransactionTime; }
+        void     SetLastTransactionTime(uint32_t aTime) { mInfo.mCached.mLastTransactionTime = aTime; }
+        bool     IsLastTransactionTimeValid(void) const { return GetLastTransactionTime() != kInvalidLastTransTime; }
+        void     MarkLastTransactionTimeAsInvalid(void) { SetLastTransactionTime(kInvalidLastTransTime); }
+
+        void     DecrementTimeout(void) { mInfo.mOther.mTimeout--; }
+        bool     IsTimeoutZero(void) const { return mInfo.mOther.mTimeout == 0; }
+        uint16_t GetTimeout(void) const { return mInfo.mOther.mTimeout; }
+        void     SetTimeout(uint16_t aTimeout) { mInfo.mOther.mTimeout = aTimeout; }
+
+        uint16_t GetRetryDelay(void) const { return mInfo.mOther.mRetryDelay; }
+        void     SetRetryDelay(uint16_t aDelay) { mInfo.mOther.mRetryDelay = aDelay; }
+
+        bool CanEvict(void) const { return mInfo.mOther.mCanEvict; }
+        void SetCanEvict(bool aCanEvict) { mInfo.mOther.mCanEvict = aCanEvict; }
+
+    private:
+        enum
         {
-            kStateInvalid,
-            kStateQuery,
-            kStateCached,
+            kNoNextIndex          = 0xffff,     // mNextIndex value when at end of list.
+            kInvalidLastTransTime = 0xffffffff, // Value indicating mLastTransactionTime is invalid.
         };
 
         Ip6::Address      mTarget;
-        uint8_t           mMeshLocalIid[Ip6::Address::kInterfaceIdentifierSize];
-        uint32_t          mLastTransactionTime;
         Mac::ShortAddress mRloc16;
-        uint16_t          mRetryTimeout;
-        uint8_t           mTimeout;
-        uint8_t           mFailures;
-        uint8_t           mAge;
-        State             mState;
+        uint16_t          mNextIndex;
+        union
+        {
+            struct
+            {
+                uint32_t mLastTransactionTime;
+                uint8_t  mMeshLocalIid[Ip6::Address::kInterfaceIdentifierSize];
+            } mCached;
+
+            struct
+            {
+                uint16_t mTimeout;
+                uint16_t mRetryDelay;
+                bool     mCanEvict;
+            } mOther;
+
+        } mInfo;
     };
 
-    enum InvalidationReason
+    typedef LinkedList<CacheEntry> CacheEntryList;
+
+    enum Reason
     {
         kReasonRemovingRouterId,
         kReasonRemovingRloc16,
@@ -208,17 +246,12 @@ private:
         kReasonRemovingEid,
     };
 
-    static const char *InvalidationReasonToString(InvalidationReason aReason);
-
-    void   Init(void);
-    Cache *NewCacheEntry(void);
-
-    void MoveCacheEntryAt(Cache &aEntry, uint8_t aAge);
-    void MoveCacheEntryAtFront(Cache &aEntry) { MoveCacheEntryAt(aEntry, 0); }
-    void MoveCacheEntryAtBack(Cache &aEntry) { MoveCacheEntryAt(aEntry, kCacheEntries - 1); }
-    void MoveCacheEntryBehindCached(Cache &aEntry);
-
-    void InvalidateCacheEntry(Cache &aEntry, InvalidationReason aReason);
+    void        Remove(Mac::ShortAddress aRloc16, bool aMatchRouterId);
+    void        Remove(const Ip6::Address &aEid, Reason aReason);
+    CacheEntry *FindCacheEntryInList(CacheEntryList &aList, const Ip6::Address &aEid, CacheEntry *&aPrevEntry);
+    CacheEntry *FindCacheEntry(const Ip6::Address &aEid, CacheEntryList *&aList, CacheEntry *&aPrevEntry);
+    CacheEntry *NewCacheEntry(bool aSnoopedEntry);
+    void        RemoveCacheEntry(CacheEntry &aEntry, CacheEntryList &aList, CacheEntry *aPrevEntry, Reason aReason);
 
     otError SendAddressQuery(const Ip6::Address &aEid);
     otError SendAddressError(const Ip6::Address &aTarget,
@@ -249,10 +282,20 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    Coap::Resource   mAddressError;
-    Coap::Resource   mAddressQuery;
-    Coap::Resource   mAddressNotification;
-    Cache            mCache[kCacheEntries];
+    const char *       ListToString(const CacheEntryList &aList) const;
+    static const char *ReasonToString(Reason aReason);
+
+    Coap::Resource mAddressError;
+    Coap::Resource mAddressQuery;
+    Coap::Resource mAddressNotification;
+
+    CacheEntry     mCacheEntries[kCacheEntries];
+    CacheEntryList mCachedList;
+    CacheEntryList mSnoopedList;
+    CacheEntryList mQueryList;
+    CacheEntryList mQueryRetryList;
+    CacheEntryList mUnusedList;
+
     Ip6::IcmpHandler mIcmpHandler;
     TimerMilli       mTimer;
 };
