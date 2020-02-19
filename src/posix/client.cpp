@@ -146,6 +146,28 @@ static bool FindError(int *aErrorState, char aNowCharacter)
     return *aErrorState == 6;
 }
 
+static bool DoWrite(int aFile, const void *aBuffer, size_t aSize)
+{
+    bool ret = true;
+
+    while (aSize)
+    {
+        ssize_t rval = write(aFile, aBuffer, aSize);
+        if (rval <= 0)
+        {
+            VerifyOrExit(errno == EINTR, perror("write failed"); ret = false);
+        }
+        else
+        {
+            aBuffer = reinterpret_cast<const uint8_t *>(aBuffer) + rval;
+            aSize -= rval;
+        }
+    }
+
+exit:
+    return ret;
+}
+
 static void SendBlockingCommand(int aArgc, char *aArgv[])
 {
     char buffer[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
@@ -154,17 +176,17 @@ static void SendBlockingCommand(int aArgc, char *aArgv[])
 
     for (int i = 0; i < aArgc; i++)
     {
-        VerifyOrExit(write(sSessionFd, aArgv[i], strlen(aArgv[i])) >= 0, perror("Failed to send command"));
-        VerifyOrExit(write(sSessionFd, " ", 1) >= 0, perror("Failed to send command"));
+        VerifyOrExit(DoWrite(sSessionFd, aArgv[i], strlen(aArgv[i])), perror("Failed to send command"));
+        VerifyOrExit(DoWrite(sSessionFd, " ", 1), perror("Failed to send command"));
     }
-    VerifyOrExit(write(sSessionFd, "\n", 1) >= 0, perror("Failed to send command"));
+    VerifyOrExit(DoWrite(sSessionFd, "\n", 1), perror("Failed to send command"));
 
     while (true)
     {
         ssize_t rval = read(sSessionFd, buffer, sizeof(buffer));
 
         VerifyOrExit(rval >= 0);
-        IgnoreReturnValue(write(STDOUT_FILENO, buffer, static_cast<size_t>(rval)));
+        VerifyOrExit(DoWrite(STDOUT_FILENO, buffer, static_cast<size_t>(rval)));
         for (ssize_t i = 0; i < rval; i++)
         {
             if (FindDone(&doneState, buffer[i]) || FindError(&errorState, buffer[i]))
@@ -219,10 +241,9 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-        fd_set  readFdSet;
-        char    buffer[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
-        ssize_t rval;
-        int     maxFd = sSessionFd > STDIN_FILENO ? sSessionFd : STDIN_FILENO;
+        fd_set readFdSet;
+        char   buffer[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
+        int    maxFd = sSessionFd > STDIN_FILENO ? sSessionFd : STDIN_FILENO;
 
         FD_ZERO(&readFdSet);
 
@@ -245,14 +266,13 @@ int main(int argc, char *argv[])
 #else
             VerifyOrExit(fgets(buffer, sizeof(buffer), stdin) != NULL, ret = OT_EXIT_FAILURE);
 
-            rval = write(sSessionFd, buffer, strlen(buffer));
-            VerifyOrExit(rval != -1, perror("write"); ret = OT_EXIT_FAILURE);
+            VerifyOrExit(DoWrite(sSessionFd, buffer, strlen(buffer)), ret = OT_EXIT_FAILURE);
 #endif
         }
 
         if (FD_ISSET(sSessionFd, &readFdSet))
         {
-            rval = read(sSessionFd, buffer, sizeof(buffer));
+            ssize_t rval = read(sSessionFd, buffer, sizeof(buffer));
             VerifyOrExit(rval != -1, perror("read"); ret = OT_EXIT_FAILURE);
 
             if (rval == 0)
@@ -262,7 +282,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                IgnoreReturnValue(write(STDOUT_FILENO, buffer, static_cast<size_t>(rval)));
+                VerifyOrExit(DoWrite(STDOUT_FILENO, buffer, static_cast<size_t>(rval)), ret = OT_EXIT_FAILURE);
             }
         }
     }
