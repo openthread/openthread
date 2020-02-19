@@ -206,7 +206,7 @@ void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageI
     {
         MeshCoP::Tlv::Type type;
 
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+        VerifyOrExit(((cur + 1) <= end) && !cur->IsExtended() && (cur->GetNext() <= end));
 
         type = cur->GetType();
 
