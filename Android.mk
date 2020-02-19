@@ -60,8 +60,14 @@ OPENTHREAD_COMMON_FLAGS                                          += \
     $(NULL)
 endif
 
-ifneq ($(USE_OTBR_DAEMON), 1)
-OPENTHREAD_COMMON_FLAGS  += -DOPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1
+ifeq ($(USE_OTBR_DAEMON), 1)
+OPENTHREAD_COMMON_FLAGS                                          += \
+    -DOPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE=1                     \
+    -DOPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE=1                       \
+    -DOPENTHREAD_ENABLE_POSIX_APP_DAEMON                            \
+    $(NULL)
+else
+OPENTHREAD_COMMON_FLAGS += -DOPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1
 endif
 
 # Enable all optional features for CI tests.
@@ -432,3 +438,25 @@ LOCAL_LDLIBS                               := \
 LOCAL_STATIC_LIBRARIES = libopenthread-ncp ot-core
 
 include $(BUILD_EXECUTABLE)
+
+ifeq ($(USE_OTBR_DAEMON), 1)
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := ot-ctl
+LOCAL_MODULE_TAGS := eng
+
+LOCAL_CFLAGS                                               := \
+    -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>  \
+    $(NULL)
+
+LOCAL_C_INCLUDES                   := \
+    $(OPENTHREAD_PROJECT_INCLUDES)    \
+    $(LOCAL_PATH)/include             \
+    $(LOCAL_PATH)/src/core            \
+    $(LOCAL_PATH)/src/posix/platform  \
+    $(NULL)
+
+LOCAL_SRC_FILES := src/posix/client.cpp
+
+include $(BUILD_EXECUTABLE)
+endif # ($(USE_OTBR_DAEMON), 1)
