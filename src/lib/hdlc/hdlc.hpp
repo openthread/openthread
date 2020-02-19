@@ -99,6 +99,23 @@ public:
     }
 
     /**
+     * This method writes bytes into the buffer and updates the write pointer (if space is available).
+     *
+     * param[in] aBytes     A pointer to bytes to write.
+     * param[in] aLength    Number of bytes to write.
+     *
+     * @retval OT_ERROR_NONE     Successfully wrote the bytes and updated the pointer.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space to write the bytes.
+     *
+     */
+    otError WriteBytes(const uint8_t *aBytes, uint16_t aLength)
+    {
+        return CanWrite(aLength) ? (memcpy(mWritePointer, aBytes, aLength), mWritePointer += aLength,
+                                    mRemainingLength -= aLength, OT_ERROR_NONE)
+                                 : OT_ERROR_NO_BUFS;
+    }
+
+    /**
      * This method undoes the last @p aUndoLength writes, removing them from frame.
      *
      * @note Caller should ensure that @p aUndoLength is less than or equal to the number of previously written bytes

@@ -54,11 +54,10 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in] aCallback     A reference to a `Callback` object.
-     * @param[in] aFrameBuffer  A reference to a `RxFrameBuffer` object.
+     * @param[in] aCallback  A reference to a `Callback` object.
      *
      */
-    HdlcInterface(SpinelInterface::Callbacks &aCallback, SpinelInterface::RxFrameBuffer &aFrameBuffer);
+    HdlcInterface(SpinelInterface::Callbacks &aCallback);
 
     /**
      * This destructor deinitializes the object.
@@ -208,8 +207,8 @@ private:
         kMaxWaitTime  = 2000, ///< Maximum wait time in Milliseconds for socket to become writable (see `SendFrame`).
     };
 
-    SpinelInterface::Callbacks &    mCallbacks;
-    SpinelInterface::RxFrameBuffer &mRxFrameBuffer;
+    SpinelInterface::Callbacks &                      mCallbacks;
+    Hdlc::FrameBuffer<SpinelInterface::kMaxFrameSize> mRxFrameBuffer;
 
     int           mSockFd;
     Hdlc::Decoder mHdlcDecoder;

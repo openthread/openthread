@@ -62,9 +62,8 @@
 namespace ot {
 namespace PosixApp {
 
-SpiInterface::SpiInterface(SpinelInterface::Callbacks &aCallback, SpinelInterface::RxFrameBuffer &aFrameBuffer)
+SpiInterface::SpiInterface(SpinelInterface::Callbacks &aCallback)
     : mCallbacks(aCallback)
-    , mRxFrameBuffer(aFrameBuffer)
     , mSpiDevFd(-1)
     , mResetGpioValueFd(-1)
     , mIntGpioValueFd(-1)
@@ -487,7 +486,7 @@ otError SpiInterface::PushPullSpi(void)
             mSpiRxFrameCount++;
             successfulExchanges++;
 
-            HandleReceivedFrame(rxFrame);
+            mCallbacks.HandleReceivedFrame(rxFrame.GetData(), rxFrame.GetHeaderDataLen());
         }
     }
 
@@ -735,26 +734,6 @@ otError SpiInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
 
 exit:
     return error;
-}
-
-void SpiInterface::HandleReceivedFrame(Ncp::SpiFrame &aSpiFrame)
-{
-    const uint8_t *spinelFrame = aSpiFrame.GetData();
-
-    for (uint16_t i = 0; i < aSpiFrame.GetHeaderDataLen(); i++)
-    {
-        if (mRxFrameBuffer.WriteByte(spinelFrame[i]) != OT_ERROR_NONE)
-        {
-            mRxFrameBuffer.DiscardFrame();
-            otLogNotePlat("No enough memory buffers, drop packet");
-            ExitNow();
-        }
-    }
-
-    mCallbacks.HandleReceivedFrame();
-
-exit:
-    return;
 }
 
 void SpiInterface::LogError(const char *aString)

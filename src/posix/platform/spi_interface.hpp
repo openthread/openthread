@@ -58,11 +58,10 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in] aCallback     A reference to a `Callback` object.
-     * @param[in] aFrameBuffer  A reference to a `RxFrameBuffer` object.
+     * @param[in] aCallback  A reference to a `Callback` object.
      *
      */
-    SpiInterface(SpinelInterface::Callbacks &aCallback, SpinelInterface::RxFrameBuffer &aFrameBuffer);
+    SpiInterface(SpinelInterface::Callbacks &aCallback);
 
     /**
      * This destructor deinitializes the object.
@@ -151,7 +150,6 @@ private:
     otError  PushPullSpi(void);
 
     bool CheckInterrupt(void);
-    void HandleReceivedFrame(Ncp::SpiFrame &aSpiFrame);
     void LogStats(void);
     void LogError(const char *aString);
     void LogBuffer(const char *aDesc, const uint8_t *aBuffer, uint16_t aLength, bool aForce);
@@ -188,8 +186,7 @@ private:
         kMaxFrameSize = SpinelInterface::kMaxFrameSize,
     };
 
-    SpinelInterface::Callbacks &    mCallbacks;
-    SpinelInterface::RxFrameBuffer &mRxFrameBuffer;
+    SpinelInterface::Callbacks &mCallbacks;
 
     int mSpiDevFd;
     int mResetGpioValueFd;
