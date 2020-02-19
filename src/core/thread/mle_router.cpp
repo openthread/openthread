@@ -3988,6 +3988,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
 
     // Keep link to the parent in order to respond to Parent Requests before new link is established.
     *router = mParent;
+    router->SetState(Neighbor::kStateValid);
     router->SetNextHop(kInvalidRouterId);
     router->SetCost(0);
 
