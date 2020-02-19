@@ -54,7 +54,6 @@ openthread_headers                      = \
     coap_secure.h                         \
     coap.h                                \
     commissioner.h                        \
-    config.h                              \
     crypto.h                              \
     border_agent.h                        \
     border_router.h                       \
@@ -91,6 +90,10 @@ openthreaddir = $(includedir)/openthread
 dist_openthread_HEADERS = $(openthread_headers)
 
 include_HEADERS                         = \
+    $(NULL)
+
+noinst_HEADERS                          = \
+    config.h                              \
     $(NULL)
 
 install-headers: install-includeHEADERS
