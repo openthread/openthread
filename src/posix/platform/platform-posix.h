@@ -276,9 +276,10 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
  * This function initializes platform netif.
  *
  * @param[in]   aInstance       A pointer to the OpenThread instance.
+ * @param[in]   aInterfaceName  A pointer to Thread network interface name.
  *
  */
-void platformNetifInit(otInstance *aInstance);
+void platformNetifInit(otInstance *aInstance, const char *aInterfaceName);
 
 /**
  * This function updates the file descriptor sets with file descriptors used by platform netif module.
