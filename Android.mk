@@ -41,6 +41,7 @@ OPENTHREAD_COMMON_FLAGS                                          := \
     -DOPENTHREAD_FTD=1                                              \
     -DOPENTHREAD_POSIX=1                                            \
     -DOPENTHREAD_POSIX_RCP_UART_ENABLE=1                            \
+    -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1          \
     -DPACKAGE=\"openthread\"                                        \
     -DPACKAGE_BUGREPORT=\"openthread-devel@googlegroups.com\"       \
     -DPACKAGE_NAME=\"OPENTHREAD\"                                   \
@@ -233,9 +234,6 @@ LOCAL_SRC_FILES                                          := \
     src/core/utils/parse_cmdline.cpp                        \
     src/core/utils/slaac_address.cpp                        \
     src/ncp/hdlc.cpp                                        \
-    src/ncp/spinel.c                                        \
-    src/ncp/spinel_decoder.cpp                              \
-    src/ncp/spinel_encoder.cpp                              \
     src/posix/platform/alarm.cpp                            \
     src/posix/platform/entropy.cpp                          \
     src/posix/platform/hdlc_interface.cpp                   \
@@ -248,6 +246,9 @@ LOCAL_SRC_FILES                                          := \
     src/posix/platform/system.cpp                           \
     src/posix/platform/uart.cpp                             \
     src/posix/platform/udp.cpp                              \
+    src/spinel/spinel.c                                     \
+    src/spinel/spinel_decoder.cpp                           \
+    src/spinel/spinel_encoder.cpp                           \
     third_party/mbedtls/repo/library/md.c                   \
     third_party/mbedtls/repo/library/md_wrap.c              \
     third_party/mbedtls/repo/library/memory_buffer_alloc.c  \
@@ -389,8 +390,8 @@ LOCAL_SRC_FILES                            := \
     src/ncp/ncp_base_mtd.cpp                  \
     src/ncp/ncp_base_ftd.cpp                  \
     src/ncp/ncp_base_dispatcher.cpp           \
-    src/ncp/ncp_buffer.cpp                    \
     src/ncp/ncp_uart.cpp                      \
+    src/spinel/spinel_buffer.cpp              \
     $(NULL)
 
 include $(BUILD_STATIC_LIBRARY)

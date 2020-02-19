@@ -34,7 +34,7 @@
 #include "radio_spinel.hpp"
 
 #include "platform-posix.h"
-#include "ncp/spinel_decoder.hpp"
+#include "spinel/spinel_decoder.hpp"
 
 #include <assert.h>
 #include <errno.h>
@@ -65,6 +65,8 @@
 #ifndef TX_WAIT_US
 #define TX_WAIT_US (5 * US_PER_S)
 #endif
+
+using ot::Spinel::Decoder;
 
 static ot::PosixApp::RadioSpinel sRadioSpinel;
 
@@ -498,7 +500,7 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
     otError              error = OT_ERROR_NONE;
     otOperationalDataset opDataset;
     bool                 isActive = ((mWaitingKey == SPINEL_PROP_THREAD_ACTIVE_DATASET) ? true : false);
-    Ncp::SpinelDecoder   decoder;
+    Spinel::Decoder      decoder;
     MeshCoP::Dataset     dataset(isActive ? MeshCoP::Tlv::kActiveTimestamp : MeshCoP::Tlv::kPendingTimestamp);
 
     memset(&opDataset, 0, sizeof(otOperationalDataset));

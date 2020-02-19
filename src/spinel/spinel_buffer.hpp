@@ -33,25 +33,25 @@
 #ifndef NCP_FRAME_BUFFER_HPP_
 #define NCP_FRAME_BUFFER_HPP_
 
-#include "openthread-core-config.h"
+#include "openthread-spinel-config.h"
 
 #include <openthread/message.h>
 
 namespace ot {
-namespace Ncp {
+namespace Spinel {
 
 /**
- * This class implements a buffer/queue for storing NCP frames.
+ * This class implements a buffer/queue for storing Ncp frames.
  *
  * A frame can consist of a sequence of data bytes and/or the content of an `otMessage` or a combination of the two.
- * `NcpFrameBuffer` implements priority FIFO logic for storing and reading frames. Two priority levels of high and low
+ * `Buffer` implements priority FIFO logic for storing and reading frames. Two priority levels of high and low
  * are supported. Within same priority level first-in-first-out order is preserved. High priority frames are read
  * ahead of any low priority ones.
  *
  */
-class NcpFrameBuffer
+class Buffer
 {
-    friend class SpinelEncoder;
+    friend class Encoder;
 
 public:
     /**
@@ -67,7 +67,7 @@ public:
 
     /**
      * Defines the (abstract) frame tag type. The tag is a unique value (within currently queued frames) associated
-     * with a frame in the `NcpFrameBuffer`. Frame tags can be compared with one another using operator `==`.
+     * with a frame in the `Buffer`. Frame tags can be compared with one another using operator `==`.
      *
      */
     typedef const void *FrameTag;
@@ -81,7 +81,7 @@ public:
     /**
      * Defines the structure to hold a write position for an input frame (frame being written).
      *
-     * It should be considered as an opaque data structure to users of `NcpFrameBuffer`.
+     * It should be considered as an opaque data structure to users of `Buffer`.
      *
      */
     struct WritePosition
@@ -101,20 +101,20 @@ public:
         uint8_t *mPosition;    //< Pointer into buffer corresponding to saved write position.
         uint8_t *mSegmentHead; //< Pointer to segment head.
 
-        friend class NcpFrameBuffer;
+        friend class Buffer;
     };
 
     /**
-     * Defines a function pointer callback which is invoked to inform a change in `NcpFrameBuffer` either when a new
-     * frame is added/written to `NcpFrameBuffer` or when a frame is removed from `NcpFrameBuffer`.
+     * Defines a function pointer callback which is invoked to inform a change in `Buffer` either when a new
+     * frame is added/written to `Buffer` or when a frame is removed from `Buffer`.
      *
      * @param[in] aContext              A pointer to arbitrary context information.
      * @param[in] aTag                  The tag associated with the frame which is added or removed.
      * @param[in] aPriority             The priority of frame.
-     * @param[in] aNcpFrameBuffer       A pointer to the `NcpFrameBuffer`.
+     * @param[in] aBuffer               A pointer to the `Buffer`.
      *
      */
-    typedef void (*BufferCallback)(void *aContext, FrameTag aTag, Priority aPriority, NcpFrameBuffer *aNcpFrameBuffer);
+    typedef void (*BufferCallback)(void *aContext, FrameTag aTag, Priority aPriority, Buffer *aBuffer);
 
     /**
      * This constructor initializes an NCP frame buffer.
@@ -123,7 +123,7 @@ public:
      * @param[in] aBufferLength         The buffer size (in bytes).
      *
      */
-    NcpFrameBuffer(uint8_t *aBuffer, uint16_t aBufferLength);
+    Buffer(uint8_t *aBuffer, uint16_t aBufferLength);
 
     /**
      * This method clears the NCP frame buffer. All the frames are cleared/removed.
@@ -201,7 +201,7 @@ public:
      */
     otError InFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength);
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     /**
      * This method adds a message to the current input frame.
      *
@@ -211,7 +211,7 @@ public:
      * If no buffer space is available, this method will discard and clear the frame and return error status
      * `OT_ERROR_NO_BUFS`.
      *
-     * The ownership of the passed-in message @p aMessage changes to `NcpFrameBuffer` ONLY when the entire frame is
+     * The ownership of the passed-in message @p aMessage changes to `Buffer` ONLY when the entire frame is
      * successfully finished (i.e., with a successful call to `InFrameEnd()` for the current input frame), and in this
      * case the `otMessage` instance will be freed once the frame is removed (using `OutFrameRemove()`) from NCP buffer.
      * However, if the input frame gets discarded before it is finished (e.g., running out of buffer space), the
@@ -318,7 +318,7 @@ public:
     /**
      * This method returns the tag assigned to last successfully written/added frame to NcpBuffer (i.e., last input
      * frame for which `InFrameEnd()` was called and returned success status). The tag is a unique value (within
-     * currently queued frames) associated with a frame in the `NcpFrameBuffer`. The tag can be used to identify the
+     * currently queued frames) associated with a frame in the `Buffer`. The tag can be used to identify the
      * same frame when it is read and removed from the NcpBuffer. Tags can be compared using operator `==`.
      *
      * @returns The tag of the last successfully written frame, or `kInvalidTag` if no frame is written so far.
@@ -445,10 +445,10 @@ public:
 
 private:
     /*
-     * `NcpFrameBuffer` Implementation
+     * `Buffer` Implementation
      * -------------------------------
      *
-     * `NcpFrameBuffer` internally stores a frame as a sequence of data segments. Each segment stores a portion of
+     * `Buffer` internally stores a frame as a sequence of data segments. Each segment stores a portion of
      * frame. The data segments are stored in the main buffer `mBuffer`. `mBuffer` is utilized as a circular buffer.
 
      * The content of messages (which are added using `InFrameFeedMessage()`) are not directly copied in the `mBuffer`
@@ -491,7 +491,7 @@ private:
      *   Segment #1 Header                                                      Segment #2 Header
      *
      *
-     * `NcpFrameBuffer` uses the `mBuffer` as a circular/ring buffer. To support two frame priorities the buffer is
+     * `Buffer` uses the `mBuffer` as a circular/ring buffer. To support two frame priorities the buffer is
      * divided into two high-priority and low-priority regions. The high priority frames are stored in buffer in
      * backward direction while the low-priority frames use the buffer in forward direction. This model ensures the
      * available buffer space is utilized efficiently between all frame types.
@@ -515,7 +515,7 @@ private:
      * When frames are removed, if possible, the `mReadFrameStart` and `mWriteFrameStart` pointers of the two priority
      * levels are moved closer to avoid gaps.
      *
-     * For an output frame (frame being read), NcpFrameBuffer maintains a `ReadState` along with a set of pointers
+     * For an output frame (frame being read), Buffer maintains a `ReadState` along with a set of pointers
      * into the buffer:
      *
      *             mReadFrameStart[priority]: Start of the current/front frame.
@@ -615,7 +615,7 @@ private:
     otError OutFramePrepareSegment(void);
     void    OutFrameMoveToNextSegment(void);
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     otError OutFramePrepareMessage(void);
     otError OutFrameFillMessageBuffer(void);
 #endif
@@ -644,7 +644,7 @@ private:
     uint8_t *mReadSegmentTail;           // Pointer to end of current segment in the frame being read.
     uint8_t *mReadPointer;               // Pointer to next byte to read (either in segment or in msg buffer).
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
+#if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     otMessageQueue mWriteFrameMessageQueue;                // Message queue for the current frame being written.
     otMessageQueue mMessageQueue[kNumPrios];               // Main message queues.
     otMessage *    mReadMessage;                           // Current Message in the frame being read.
@@ -654,7 +654,7 @@ private:
 #endif
 };
 
-} // namespace Ncp
+} // namespace Spinel
 } // namespace ot
 
 #endif // NCP_FRAME_BUFFER_HPP_

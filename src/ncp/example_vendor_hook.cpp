@@ -43,8 +43,7 @@ otError NcpBase::VendorCommandHandler(uint8_t aHeader, unsigned int aCommand)
 
     switch (aCommand)
     {
-
-    // TODO: Implement your command handlers here.
+        // TODO: Implement your command handlers here.
 
     default:
         error = PrepareLastStatusResponse(aHeader, SPINEL_STATUS_INVALID_COMMAND);
@@ -53,7 +52,7 @@ otError NcpBase::VendorCommandHandler(uint8_t aHeader, unsigned int aCommand)
     return error;
 }
 
-void NcpBase::VendorHandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag)
+void NcpBase::VendorHandleFrameRemovedFromNcpBuffer(Spinel::Buffer::FrameTag aFrameTag)
 {
     // This method is a callback which mirrors `NcpBase::HandleFrameRemovedFromNcpBuffer()`.
     // It is called when a spinel frame is sent and removed from NCP buffer.
@@ -75,13 +74,12 @@ otError NcpBase::VendorGetPropertyHandler(spinel_prop_key_t aPropKey)
 
     switch (aPropKey)
     {
-
-    // TODO: Implement your property get handlers here.
-    //
-    // Get handler should retrieve the property value and then encode and write the
-    // value into the NCP buffer. If the "get" operation itself fails, handler should
-    // write a `LAST_STATUS` with the error status into the NCP buffer. `OT_ERROR_NO_BUFS`
-    // should be returned if NCP buffer is full and response cannot be written.
+        // TODO: Implement your property get handlers here.
+        //
+        // Get handler should retrieve the property value and then encode and write the
+        // value into the NCP buffer. If the "get" operation itself fails, handler should
+        // write a `LAST_STATUS` with the error status into the NCP buffer. `OT_ERROR_NO_BUFS`
+        // should be returned if NCP buffer is full and response cannot be written.
 
     default:
         error = OT_ERROR_NOT_FOUND;
@@ -97,16 +95,15 @@ otError NcpBase::VendorSetPropertyHandler(spinel_prop_key_t aPropKey)
 
     switch (aPropKey)
     {
-
-    // TODO: Implement your property set handlers here.
-    //
-    // Set handler should first decode the value from the input Spinel frame and then
-    // perform the corresponding set operation. The handler should not prepare the
-    // spinel response and therefore should not write anything to the NCP buffer.
-    // The error returned from handler (other than `OT_ERROR_NOT_FOUND`) indicates the
-    // error in either parsing of the input or the error of the set operation. In case
-    // of a successful "set", `NcpBase` set command handler will invoke the
-    // `VendorGetPropertyHandler()` for the same property key to prepare the response.
+        // TODO: Implement your property set handlers here.
+        //
+        // Set handler should first decode the value from the input Spinel frame and then
+        // perform the corresponding set operation. The handler should not prepare the
+        // spinel response and therefore should not write anything to the NCP buffer.
+        // The error returned from handler (other than `OT_ERROR_NOT_FOUND`) indicates the
+        // error in either parsing of the input or the error of the set operation. In case
+        // of a successful "set", `NcpBase` set command handler will invoke the
+        // `VendorGetPropertyHandler()` for the same property key to prepare the response.
 
     default:
         error = OT_ERROR_NOT_FOUND;
@@ -116,8 +113,8 @@ otError NcpBase::VendorSetPropertyHandler(spinel_prop_key_t aPropKey)
     return error;
 }
 
-}  // namespace Ncp
-}  // namespace ot
+} // namespace Ncp
+} // namespace ot
 
 //-------------------------------------------------------------------------------------------------------------------
 // When OPENTHREAD_ENABLE_NCP_VENDOR_HOOK is enabled, vendor code is
@@ -135,7 +132,8 @@ class NcpVendorUart : public ot::Ncp::NcpUart
 public:
     NcpVendorUart(ot::Instance *aInstance)
         : ot::Ncp::NcpUart(aInstance)
-    {}
+    {
+    }
 
     // Add public/private methods or member variables
 };

@@ -294,9 +294,9 @@ private:
     void        SpiTransactionProcess(void);
 
     static void HandleFrameAddedToTxBuffer(void *                   aContext,
-                                           NcpFrameBuffer::FrameTag aFrameTag,
-                                           NcpFrameBuffer::Priority aPriority,
-                                           NcpFrameBuffer *         aNcpFrameBuffer);
+                                           Spinel::Buffer::FrameTag aFrameTag,
+                                           Spinel::Buffer::Priority aPriority,
+                                           Spinel::Buffer *         aBuffer);
 
     static void PrepareTxFrame(Tasklet &aTasklet);
     void        PrepareTxFrame(void);
