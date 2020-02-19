@@ -76,8 +76,12 @@ public:
      * @param[out]  aOutput        The diagnostics execution result.
      * @param[in]   aOutputMaxLen  The output buffer size.
      *
+     * @retval  OT_ERROR_INVALID_ARGS       The command is supported but invalid arugments provided.
+     * @retval  OT_ERROR_NONE               The command is successfully process.
+     * @retval  OT_ERROR_NOT_IMPLEMENTED    The command is not supported.
+     *
      */
-    void ProcessCmd(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessCmd(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
 
     /**
      * This method indicates whether or not the factory diagnostics mode is enabled.
@@ -119,7 +123,7 @@ private:
     struct Command
     {
         const char *mName;
-        void (Diags::*mCommand)(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+        otError (Diags::*mCommand)(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
     };
 
     struct Stats
@@ -134,14 +138,14 @@ private:
         uint8_t  mLastLqi;
     };
 
-    void ProcessChannel(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
-    void ProcessPower(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
-    void ProcessRadio(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
-    void ProcessRepeat(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
-    void ProcessSend(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
-    void ProcessStart(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
-    void ProcessStats(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
-    void ProcessStop(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessChannel(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessPower(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessRadio(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessRepeat(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessSend(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessStart(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessStats(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessStop(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
 
     void TransmitPacket(void);
 

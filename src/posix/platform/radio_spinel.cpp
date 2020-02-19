@@ -1897,7 +1897,7 @@ void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct Event *aE
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+otError otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
     // deliver the platform specific diags commands to radio only ncp.
     OT_UNUSED_VARIABLE(aInstance);
@@ -1910,7 +1910,7 @@ void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOut
         cur += snprintf(cur, static_cast<size_t>(end - cur), "%s ", argv[index]);
     }
 
-    sRadioSpinel.PlatDiagProcess(cmd, aOutput, aOutputMaxLen);
+    return sRadioSpinel.PlatDiagProcess(cmd, aOutput, aOutputMaxLen);
 }
 
 void otPlatDiagModeSet(bool aMode)

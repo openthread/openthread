@@ -49,11 +49,11 @@ void otDiagProcessCmdLine(otInstance *aInstance, const char *aString, char *aOut
     instance.Get<FactoryDiags::Diags>().ProcessLine(aString, aOutput, aOutputMaxLen);
 }
 
-void otDiagProcessCmd(otInstance *aInstance, int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen)
+otError otDiagProcessCmd(otInstance *aInstance, int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.Get<FactoryDiags::Diags>().ProcessCmd(aArgCount, aArgVector, aOutput, aOutputMaxLen);
+    return instance.Get<FactoryDiags::Diags>().ProcessCmd(aArgCount, aArgVector, aOutput, aOutputMaxLen);
 }
 
 bool otDiagIsEnabled(otInstance *aInstance)
