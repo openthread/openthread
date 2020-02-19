@@ -307,6 +307,7 @@ class Node(object):
 
         index = Node._cur_index
         Node._cur_index += 1
+        rcp_url = 'spinel+hdlc+forkpty://%s?arg=%d' % (_OT_RCP, index)
 
         self._index = index
         self._interface_name = self._INTFC_NAME_PREFIX + str(index)
@@ -321,9 +322,8 @@ class Node(object):
             self._use_posix_app_with_rcp = False
 
         if self._use_posix_app_with_rcp:
-            ncp_socket_path = 'system:{} -s {} {} {}'.format(
-                self._OT_NCP_FTD_POSIX_APP, self._SPEED_UP_FACTOR, self._OT_RCP,
-                index)
+            ncp_socket_path = 'system:{} -s {} {}'.format(
+                self._OT_NCP_FTD_POSIX_APP, self._SPEED_UP_FACTOR, rcp_url)
         else:
             ncp_socket_path = 'system:{} {} {}'.format(self._OT_NCP_FTD, index,
                                                        self._SPEED_UP_FACTOR)

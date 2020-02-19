@@ -91,10 +91,10 @@ class Node:
             cmd = '%s/ot-cli-%s' % (self.version, mode)
 
         if 'RADIO_DEVICE' in os.environ:
-            cmd += ' -v %s' % os.environ['RADIO_DEVICE']
+          cmd += ' -v spinel+hdlc+forkpty://%s?arg=' % os.environ['RADIO_DEVICE']
             os.environ['NODE_ID'] = str(nodeid)
 
-        cmd += ' %d' % nodeid
+        cmd += '%d' % nodeid
         print("%s" % cmd)
 
         self.pexpect = pexpect.popen_spawn.PopenSpawn(cmd, timeout=4)

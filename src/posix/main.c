@@ -207,7 +207,7 @@ static int ParseUrl(otRadioUrl *aRadioUrl, char *url)
         }
         for (i = 0; i < cProtocol; i++)
         {
-            if (strncmp(pStart, aProtocols[i], (int)(pEnd - pStart)) == 0)
+          if (strncmp(pStart, aProtocols[i], (size_t)(pEnd - pStart)) == 0)
             {
                 aRadioUrl->mProtocols[j] = aProtocols[i];
                 j++;

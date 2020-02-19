@@ -105,7 +105,7 @@ otError SpiInterface::Init(const otPlatformConfig &aPlatformConfig)
     }
 
     InitResetPin(aPlatformConfig.mSpiGpioResetDevice, aPlatformConfig.mSpiGpioResetLine);
-    InitSpiDev(aPlatformConfig.mRadioFile, aPlatformConfig.mSpiMode, aPlatformConfig.mSpiSpeed);
+    InitSpiDev(aPlatformConfig.mRadioUrl.mDevice, aPlatformConfig.mSpiMode, aPlatformConfig.mSpiSpeed);
 
     // Reset RCP chip.
     TrigerReset();
