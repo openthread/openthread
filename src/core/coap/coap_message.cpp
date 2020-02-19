@@ -255,6 +255,8 @@ otError Message::ParseHeader(void)
     GetHelpData().mHeaderOffset = GetOffset();
     Read(GetHelpData().mHeaderOffset, sizeof(GetHelpData().mHeader), &GetHelpData().mHeader);
 
+    VerifyOrExit(GetTokenLength() <= kMaxTokenLength, error = OT_ERROR_PARSE);
+
     SuccessOrExit(error = iterator.Init(this));
     for (const otCoapOption *option = iterator.GetFirstOption(); option != NULL; option = iterator.GetNextOption())
     {

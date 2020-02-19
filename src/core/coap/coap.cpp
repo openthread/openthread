@@ -438,6 +438,11 @@ void CoapBase::Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageIn
     if (message.ParseHeader() != OT_ERROR_NONE)
     {
         otLogDebgCoap("Failed to parse CoAP header");
+
+        if (!aMessageInfo.GetSockAddr().IsMulticast() && message.IsConfirmable())
+        {
+            SendReset(message, aMessageInfo);
+        }
     }
     else if (message.IsRequest())
     {
