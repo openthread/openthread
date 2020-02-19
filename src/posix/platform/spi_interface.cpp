@@ -107,6 +107,12 @@ otError SpiInterface::Init(const otPlatformConfig &aPlatformConfig)
     // Reset RCP chip.
     TrigerReset();
 
+    // Exit if only to reset GPIO device.
+    if (aPlatformConfig.mSpiGpioReset)
+    {
+        exit(OT_EXIT_SUCCESS);
+    }
+
     // Waiting for the RCP chip starts up.
     usleep(static_cast<useconds_t>(aPlatformConfig.mSpiResetDelay) * kUsecPerMsec);
 

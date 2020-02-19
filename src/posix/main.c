@@ -111,6 +111,7 @@ enum
     ARG_SPI_RESET_DELAY     = 1018,
     ARG_SPI_ALIGN_ALLOWANCE = 1019,
     ARG_SPI_SMALL_PACKET    = 1020,
+    ARG_SPI_GPIO_RESET      = 1021,
 };
 
 static const struct option kOptions[] = {{"debug-level", required_argument, NULL, 'd'},
@@ -125,6 +126,7 @@ static const struct option kOptions[] = {{"debug-level", required_argument, NULL
 #if OPENTHREAD_POSIX_RCP_SPI_ENABLE
                                          {"gpio-int-dev", required_argument, NULL, ARG_SPI_GPIO_INT_DEV},
                                          {"gpio-int-line", required_argument, NULL, ARG_SPI_GPIO_INT_LINE},
+                                         {"gpio-reset", no_argument, NULL, ARG_SPI_GPIO_RESET},
                                          {"gpio-reset-dev", required_argument, NULL, ARG_SPI_GPIO_RESET_DEV},
                                          {"gpio-reset-line", required_argument, NULL, ARG_SPI_GPIO_RESET_LINE},
                                          {"spi-mode", required_argument, NULL, ARG_SPI_MODE},
@@ -159,6 +161,8 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "                                  The offset index of `I̅N̅T̅` pin for the associated GPIO device.\n"
             "                                  If not specified, `SPI` interface will fall back to polling,\n"
             "                                  which is inefficient.\n"
+            "        --gpio-reset\n"
+            "                                  Just reset the GPIO device. Do not start.\n"
             "        --gpio-reset-dev[=gpio-device-path]\n"
             "                                  Specify a path to the Linux sysfs-exported GPIO device for the\n"
             "                                  `R̅E̅S̅` pin.\n"
@@ -249,6 +253,9 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             break;
         case ARG_SPI_GPIO_INT_LINE:
             aConfig->mPlatformConfig.mSpiGpioIntLine = (uint8_t)atoi(optarg);
+            break;
+        case ARG_SPI_GPIO_RESET:
+            aConfig->mPlatformConfig.mSpiGpioReset = true;
             break;
         case ARG_SPI_GPIO_RESET_DEV:
             aConfig->mPlatformConfig.mSpiGpioResetDevice = optarg;
