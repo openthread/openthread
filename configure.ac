@@ -1065,6 +1065,7 @@ src/ncp/Makefile
 src/core/Makefile
 src/posix/Makefile
 src/posix/platform/Makefile
+src/spinel/Makefile
 third_party/Makefile
 third_party/jlink/Makefile
 third_party/mbedtls/Makefile

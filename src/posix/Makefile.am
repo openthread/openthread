@@ -118,7 +118,7 @@ endif
 endif # OPENTHREAD_ENABLE_POSIX_APP_DAEMON
 
 ot_ctl_SOURCES                                                         = \
-    client.c                                                             \
+    client.cpp                                                           \
     $(NULL)
 
 ot_ctl_CPPFLAGS                                                        = \
@@ -160,7 +160,7 @@ ot_cli_CPPFLAGS                                                        = \
 
 ot_cli_SOURCES                                                         = \
     main.c                                                               \
-    console_cli.c                                                        \
+    console_cli.cpp                                                      \
     $(NULL)
 
 ot_cli_LDADD                                                           = \

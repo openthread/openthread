@@ -30,7 +30,6 @@
 #include "platform-posix.h"
 
 #include <assert.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -39,7 +38,7 @@
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 
-#include "code_utils.h"
+#include "common/code_utils.hpp"
 
 static bool     sIsMsRunning = false;
 static uint32_t sMsAlarm     = 0;
@@ -128,7 +127,7 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
     if (sIsMsRunning)
     {
         remaining = (int32_t)(sMsAlarm - (uint32_t)(now / US_PER_MS));
-        otEXPECT(remaining > 0);
+        VerifyOrExit(remaining > 0);
         remaining *= US_PER_MS;
         remaining -= (now % US_PER_MS);
     }

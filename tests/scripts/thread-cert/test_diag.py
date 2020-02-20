@@ -47,8 +47,8 @@ class TestDiag(unittest.TestCase):
     def test(self):
         cases = [
             ('diag\n', 'diagnostics mode is disabled\r\n'),
-            ('diag send 10 100\n', 'failed\r\nstatus 0xd\r\n'),
-            ('diag start\n', 'start diagnostics mode\r\nstatus 0x00\r\n'),
+            ('diag send 10 100\n', 'Error 13: InvalidState\r\n'),
+            ('diag start\n', 'Done\r\n'),
             ('diag invalid test\n',
              'diag feature \'invalid\' is not supported'),
             ('diag', 'diagnostics mode is enabled\r\n'),

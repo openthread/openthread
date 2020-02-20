@@ -28,22 +28,22 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "ncp/spinel_decoder.hpp"
+#include "spinel/spinel_decoder.hpp"
 
 #include "test_util.hpp"
 
 namespace ot {
-namespace Ncp {
+namespace Spinel {
 
 enum
 {
     kTestBufferSize = 800,
 };
 
-void TestSpinelDecoder(void)
+void TestDecoder(void)
 {
-    uint8_t       buffer[kTestBufferSize];
-    SpinelDecoder decoder;
+    uint8_t         buffer[kTestBufferSize];
+    Spinel::Decoder decoder;
 
     spinel_ssize_t frameLen;
 
@@ -638,12 +638,12 @@ void TestSpinelDecoder(void)
     printf(" -- PASS\n");
 }
 
-} // namespace Ncp
+} // namespace Spinel
 } // namespace ot
 
 int main(void)
 {
-    ot::Ncp::TestSpinelDecoder();
+    ot::Spinel::Decoder();
     printf("\nAll tests passed.\n");
     return 0;
 }

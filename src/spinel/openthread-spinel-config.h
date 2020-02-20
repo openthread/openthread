@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,57 +28,20 @@
 
 /**
  * @file
- *   This file implements the OpenThread platform abstraction for the diagnostics.
- *
+ *   This file includes compile-time configuration constants for OpenThread.
  */
 
-#include "fsl_device_registers.h"
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-
-#include <openthread/config.h>
-#include <openthread/platform/alarm-milli.h>
-#include <openthread/platform/radio.h>
-
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
+#ifndef OPENTHREAD_SPINEL_CONFIG_H_
+#define OPENTHREAD_SPINEL_CONFIG_H_
 
 /**
- * Diagnostics mode variables.
+ * @def OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
+ *
+ * Define 1 to enable feeding an OpenThread message to encoder/decoder.
  *
  */
-static bool sDiagMode = false;
+#ifndef OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
+#define OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE 0
+#endif
 
-void otPlatDiagModeSet(bool aMode)
-{
-    sDiagMode = aMode;
-}
-
-bool otPlatDiagModeGet()
-{
-    return sDiagMode;
-}
-
-void otPlatDiagChannelSet(uint8_t aChannel)
-{
-    OT_UNUSED_VARIABLE(aChannel);
-}
-
-void otPlatDiagTxPowerSet(int8_t aTxPower)
-{
-    OT_UNUSED_VARIABLE(aTxPower);
-}
-
-void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aFrame);
-    OT_UNUSED_VARIABLE(aError);
-}
-
-void otPlatDiagAlarmCallback(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-}
-
-#endif // OPENTHREAD_CONFIG_DIAG_ENABLE
+#endif // OPENTHREAD_SPINEL_CONFIG_H_

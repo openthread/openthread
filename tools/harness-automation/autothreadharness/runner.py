@@ -285,7 +285,7 @@ def discover(
                     continue
 
                 # skip cases
-                if case_name in log.keys():
+                if case_name in log:
                     if ((log[case_name]['passed'] and ('p' in skip)) or
                         (log[case_name]['passed'] is False and ('f' in skip)) or
                         (log[case_name]['passed'] is None and ('e' in skip))):

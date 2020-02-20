@@ -241,11 +241,11 @@ void NcpSpi::SpiTransactionProcess(void)
 }
 
 void NcpSpi::HandleFrameAddedToTxBuffer(void *                   aContext,
-                                        NcpFrameBuffer::FrameTag aTag,
-                                        NcpFrameBuffer::Priority aPriority,
-                                        NcpFrameBuffer *         aNcpFrameBuffer)
+                                        Spinel::Buffer::FrameTag aTag,
+                                        Spinel::Buffer::Priority aPriority,
+                                        Spinel::Buffer *         aBuffer)
 {
-    OT_UNUSED_VARIABLE(aNcpFrameBuffer);
+    OT_UNUSED_VARIABLE(aBuffer);
     OT_UNUSED_VARIABLE(aTag);
     OT_UNUSED_VARIABLE(aPriority);
 

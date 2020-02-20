@@ -38,7 +38,7 @@
 #include <assert.h>
 #include <fcntl.h>
 #include <ifaddrs.h>
-#if __linux__
+#ifdef __linux__
 #include <linux/if_tun.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
@@ -68,6 +68,8 @@
 #define OPENTHREAD_POSIX_TUN_DEVICE "/dev/net/tun"
 #endif // OPENTHREAD_TUN_DEVICE
 
+// Some platforms will include linux/ipv6.h in netinet/in.h
+#if !defined(_IPV6_H) && !defined(_UAPI_IPV6_H)
 // from linux/ipv6.h
 struct in6_ifreq
 {
@@ -75,6 +77,7 @@ struct in6_ifreq
     __u32           ifr6_prefixlen;
     int             ifr6_ifindex;
 };
+#endif
 
 static otInstance * sInstance  = NULL;
 static int          sTunFd     = -1; ///< Used to exchange IPv6 packets.
@@ -381,7 +384,7 @@ exit:
     return;
 }
 
-void platformNetifInit(otInstance *aInstance)
+void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
 {
     struct ifreq ifr;
 
@@ -407,7 +410,17 @@ void platformNetifInit(otInstance *aInstance)
 
     memset(&ifr, 0, sizeof(ifr));
     ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
-    strncpy(ifr.ifr_name, "wpan%d", IFNAMSIZ);
+
+    if (aInterfaceName)
+    {
+        VerifyOrDie(strlen(aInterfaceName) < IFNAMSIZ, OT_EXIT_INVALID_ARGUMENTS);
+
+        strncpy(ifr.ifr_name, aInterfaceName, IFNAMSIZ);
+    }
+    else
+    {
+        strncpy(ifr.ifr_name, "wpan%d", IFNAMSIZ);
+    }
 
     VerifyOrExit(ioctl(sTunFd, TUNSETIFF, static_cast<void *>(&ifr)) == 0,
                  otLogCritPlat("Unable to configure tun device %s", OPENTHREAD_POSIX_TUN_DEVICE));

@@ -53,6 +53,7 @@ AM_CPPFLAGS                                                         = \
     -DOPENTHREAD_FTD=1                                                \
     -DOPENTHREAD_MTD=0                                                \
     -DOPENTHREAD_RADIO=0                                              \
+    -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1            \
     -I$(top_srcdir)/include                                           \
     -I$(top_srcdir)/src                                               \
     -I$(top_srcdir)/src/core                                          \
@@ -128,7 +129,7 @@ check_PROGRAMS                                                     += \
 if OPENTHREAD_ENABLE_NCP
 check_PROGRAMS                                                     += \
     test-hdlc                                                         \
-    test-ncp-buffer                                                   \
+    test-spinel-buffer                                                \
     test-spinel-decoder                                               \
     test-spinel-encoder                                               \
     $(NULL)
@@ -202,8 +203,8 @@ test_message_SOURCES         = $(COMMON_SOURCES) test_message.cpp
 test_message_queue_LDADD     = $(COMMON_LDADD)
 test_message_queue_SOURCES   = $(COMMON_SOURCES) test_message_queue.cpp
 
-test_ncp_buffer_LDADD        = $(COMMON_LDADD)
-test_ncp_buffer_SOURCES      = $(COMMON_SOURCES) test_ncp_buffer.cpp
+test_spinel_buffer_LDADD        = $(COMMON_LDADD)
+test_spinel_buffer_SOURCES      = $(COMMON_SOURCES) test_spinel_buffer.cpp
 
 test_netif_LDADD             = $(COMMON_LDADD)
 test_netif_SOURCES           = $(COMMON_SOURCES) test_netif.cpp
@@ -247,7 +248,7 @@ PRETTY_FILES                                                        = \
     $(test_mac_frame_SOURCES)                                         \
     $(test_message_queue_SOURCES)                                     \
     $(test_message_SOURCES)                                           \
-    $(test_ncp_buffer_SOURCES)                                        \
+    $(test_spinel_buffer_SOURCES)                                     \
     $(test_netif_SOURCES)                                             \
     $(test_network_data_SOURCES)                                      \
     $(test_priority_queue_SOURCES)                                    \
