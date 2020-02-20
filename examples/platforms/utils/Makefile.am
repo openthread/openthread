@@ -47,7 +47,9 @@ libopenthread_platform_utils_a_SOURCES  = \
     mac_frame.h                           \
     settings.h                            \
     settings_ram.c                        \
-    settings_flash.c                      \
+    settings_flash_api.cpp                \
+    settings_flash.cpp                    \
+    settings_flash.hpp                    \
     soft_source_match_table.c             \
     soft_source_match_table.h             \
     $(NULL)
