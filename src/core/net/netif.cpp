@@ -404,15 +404,7 @@ otError Netif::UnsubscribeExternalMulticast(const Address &aAddress)
             VerifyOrExit((entry >= &mExtMulticastAddresses[0]) && (entry < OT_ARRAY_END(mExtMulticastAddresses)),
                          error = OT_ERROR_INVALID_ARGS);
 
-            if (last)
-            {
-                mMulticastAddresses.PopAfter(*last);
-            }
-            else
-            {
-                mMulticastAddresses.Pop();
-            }
-
+            mMulticastAddresses.PopAfter(last);
             break;
         }
 
@@ -528,15 +520,7 @@ otError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
             VerifyOrExit((entry >= &mExtUnicastAddresses[0]) && (entry < OT_ARRAY_END(mExtUnicastAddresses)),
                          error = OT_ERROR_INVALID_ARGS);
 
-            if (last)
-            {
-                mUnicastAddresses.PopAfter(*last);
-            }
-            else
-            {
-                mUnicastAddresses.Pop();
-            }
-
+            mUnicastAddresses.PopAfter(last);
             break;
         }
 
