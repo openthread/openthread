@@ -155,7 +155,7 @@ static bool DoWrite(int aFile, const void *aBuffer, size_t aSize)
         ssize_t rval = write(aFile, aBuffer, aSize);
         if (rval <= 0)
         {
-            VerifyOrExit(errno == EINTR, perror("write failed"); ret = false);
+            VerifyOrExit((rval == -1) && (errno == EINTR), perror("write"); ret = false);
         }
         else
         {
@@ -176,10 +176,10 @@ static void SendBlockingCommand(int aArgc, char *aArgv[])
 
     for (int i = 0; i < aArgc; i++)
     {
-        VerifyOrExit(DoWrite(sSessionFd, aArgv[i], strlen(aArgv[i])), perror("Failed to send command"));
-        VerifyOrExit(DoWrite(sSessionFd, " ", 1), perror("Failed to send command"));
+        VerifyOrExit(DoWrite(sSessionFd, aArgv[i], strlen(aArgv[i])));
+        VerifyOrExit(DoWrite(sSessionFd, " ", 1));
     }
-    VerifyOrExit(DoWrite(sSessionFd, "\n", 1), perror("Failed to send command"));
+    VerifyOrExit(DoWrite(sSessionFd, "\n", 1));
 
     while (true)
     {
