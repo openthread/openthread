@@ -112,7 +112,7 @@ otError otCoapMessageAppendUriPathOptions(otMessage *aMessage, const char *aUriP
 
 uint16_t otCoapBlockSizeFromExponent(otCoapBlockSize aSize)
 {
-    return static_cast<uint16_t>(1 << (aSize + Coap::Message::kBlockSzxBase));
+    return static_cast<uint16_t>(1 << (static_cast<int>(aSize) + static_cast<int>(Coap::Message::kBlockSzxBase)));
 }
 
 otError otCoapMessageAppendBlock2Option(otMessage *aMessage, uint32_t aNum, bool aMore, otCoapBlockSize aSize)
