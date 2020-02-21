@@ -297,8 +297,6 @@ void AddressResolver::RemoveCacheEntry(CacheEntry &    aEntry,
                                        CacheEntry *    aPrevEntry,
                                        Reason          aReason)
 {
-    OT_UNUSED_VARIABLE(aReason);
-
     aList.PopAfter(aPrevEntry);
 
     if (&aList == &mQueryList)
@@ -306,8 +304,7 @@ void AddressResolver::RemoveCacheEntry(CacheEntry &    aEntry,
         Get<MeshForwarder>().HandleResolved(aEntry.GetTarget(), OT_ERROR_DROP);
     }
 
-    otLogNoteArp("Cache entry removed: %s, 0x%04x (%s) - %s", aEntry.GetTarget().ToString().AsCString(),
-                 aEntry.GetRloc16(), ListToString(aList), ReasonToString(aReason));
+    LogCacheEntryChange(kEntryRemoved, aReason, aEntry, &aList);
 }
 
 otError AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
@@ -340,7 +337,7 @@ otError AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAd
         Get<MeshForwarder>().HandleResolved(aEid, OT_ERROR_NONE);
     }
 
-    otLogNoteArp("Cache entry updated (snoop): %s, 0x%04x", aEid.ToString().AsCString(), aRloc16);
+    LogCacheEntryChange(kEntryUpdated, kReasonSnoop, *entry);
 
 exit:
     return error;
@@ -384,7 +381,7 @@ otError AddressResolver::AddSnoopedCacheEntry(const Ip6::Address &aEid, Mac::Sho
 
     mSnoopedList.Push(*entry);
 
-    otLogNoteArp("Cache entry added (snoop): %s, 0x%04x", aEid.ToString().AsCString(), aRloc16);
+    LogCacheEntryChange(kEntryAdded, kReasonSnoop, *entry);
 
 exit:
     return error;
@@ -483,6 +480,11 @@ otError AddressResolver::Resolve(const Ip6::Address &aEid, uint16_t &aRloc16)
 
     error = SendAddressQuery(aEid);
     VerifyOrExit(error == OT_ERROR_NONE, mUnusedList.Push(*entry));
+
+    if (list == NULL)
+    {
+        LogCacheEntryChange(kEntryAdded, kReasonQueryRequest, *entry);
+    }
 
     mQueryList.Push(*entry);
     error = OT_ERROR_ADDRESS_QUERY;
@@ -590,8 +592,7 @@ void AddressResolver::HandleAddressNotification(Coap::Message &aMessage, const I
     list->PopAfter(prev);
     mCachedList.Push(*entry);
 
-    otLogNoteArp("Cache entry updated (notification): %s, 0x%04x, lastTrans:%d", target.ToString().AsCString(), rloc16,
-                 lastTransactionTime);
+    LogCacheEntryChange(kEntryUpdated, kReasonReceivedNotification, *entry);
 
     if (Get<Coap::Coap>().SendEmptyAck(aMessage, aMessageInfo) == OT_ERROR_NONE)
     {
@@ -932,49 +933,81 @@ exit:
 
 // LCOV_EXCL_START
 
-const char *AddressResolver::ReasonToString(Reason aReason)
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_ARP == 1)
+
+void AddressResolver::LogCacheEntryChange(EntryChange       aChange,
+                                          Reason            aReason,
+                                          const CacheEntry &aEntry,
+                                          CacheEntryList *  aList)
 {
-    const char *str = "";
+    const char *change = "";
+    const char *reason = "";
 
-    switch (aReason)
+    switch (aChange)
     {
-    case kReasonRemovingRouterId:
-        str = "removing router id";
+    case kEntryAdded:
+        change = "added";
         break;
-
-    case kReasonRemovingRloc16:
-        str = "removing rloc16";
+    case kEntryUpdated:
+        change = "updated";
         break;
-
-    case kReasonReceivedIcmpDstUnreachNoRoute:
-        str = "received icmp no route";
-        break;
-
-    case kReasonEvictingForNewEntry:
-        str = "evicting for new entry";
-        break;
-
-    case kReasonRemovingEid:
-        str = "removing eid";
+    case kEntryRemoved:
+        change = "removed";
         break;
     }
 
-    return str;
+    switch (aReason)
+    {
+    case kReasonQueryRequest:
+        reason = "query request";
+        break;
+    case kReasonSnoop:
+        reason = "snoop";
+        break;
+    case kReasonReceivedNotification:
+        reason = "rx notification";
+        break;
+    case kReasonRemovingRouterId:
+        reason = "removing router id";
+        break;
+    case kReasonRemovingRloc16:
+        reason = "removing rloc16";
+        break;
+    case kReasonReceivedIcmpDstUnreachNoRoute:
+        reason = "rx icmp no route";
+        break;
+    case kReasonEvictingForNewEntry:
+        reason = "evicting for new entry";
+        break;
+    case kReasonRemovingEid:
+        reason = "removing eid";
+        break;
+    }
+
+    otLogNoteArp("Cache entry %s: %s, 0x%04x%s%s - %s", change, aEntry.GetTarget().ToString().AsCString(),
+                 aEntry.GetRloc16(), (aList == NULL) ? "" : ", list:", ListToString(aList), reason);
 }
 
-const char *AddressResolver::ListToString(const CacheEntryList &aList) const
+const char *AddressResolver::ListToString(const CacheEntryList *aList) const
 {
-    const char *str;
+    const char *str = "";
 
-    VerifyOrExit(&aList != &mCachedList, str = "cached");
-    VerifyOrExit(&aList != &mSnoopedList, str = "snooped");
-    VerifyOrExit(&aList != &mQueryList, str = "query");
-    VerifyOrExit(&aList != &mQueryRetryList, str = "query-retry");
-    str = "unused";
+    VerifyOrExit(aList != &mCachedList, str = "cached");
+    VerifyOrExit(aList != &mSnoopedList, str = "snooped");
+    VerifyOrExit(aList != &mQueryList, str = "query");
+    VerifyOrExit(aList != &mQueryRetryList, str = "query-retry");
 
 exit:
     return str;
 }
+
+#else // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_ARP == 1)
+
+void AddressResolver::LogCacheEntryChange(EntryChange, Reason, const CacheEntry &, CacheEntryList *)
+{
+}
+
+#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_ARP == 1)
 
 // LCOV_EXCL_STOP
 
