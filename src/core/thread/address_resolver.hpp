@@ -237,8 +237,18 @@ private:
 
     typedef LinkedList<CacheEntry> CacheEntryList;
 
+    enum EntryChange
+    {
+        kEntryAdded,
+        kEntryUpdated,
+        kEntryRemoved,
+    };
+
     enum Reason
     {
+        kReasonQueryRequest,
+        kReasonSnoop,
+        kReasonReceivedNotification,
         kReasonRemovingRouterId,
         kReasonRemovingRloc16,
         kReasonReceivedIcmpDstUnreachNoRoute,
@@ -282,8 +292,12 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    const char *       ListToString(const CacheEntryList &aList) const;
-    static const char *ReasonToString(Reason aReason);
+    void LogCacheEntryChange(EntryChange       aChange,
+                             Reason            aReason,
+                             const CacheEntry &aEntry,
+                             CacheEntryList *  aList = NULL);
+
+    const char *ListToString(const CacheEntryList *aList) const;
 
     Coap::Resource mAddressError;
     Coap::Resource mAddressQuery;
