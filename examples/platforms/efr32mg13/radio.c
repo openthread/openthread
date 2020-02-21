@@ -476,7 +476,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
     otLogInfoPlat("State=OT_RADIO_STATE_SLEEP", NULL);
 
-    RAIL_Idle(gRailHandle, RAIL_IDLE_ABORT, true); // abort packages under reception
+    RAIL_Idle(gRailHandle, RAIL_IDLE, true);
     sState = OT_RADIO_STATE_SLEEP;
 
 exit:
@@ -497,7 +497,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
     if (sCurrentBandConfig != config)
     {
-        RAIL_Idle(gRailHandle, RAIL_IDLE_ABORT, true);
+        RAIL_Idle(gRailHandle, RAIL_IDLE, true);
         efr32RailConfigLoad(config);
         sCurrentBandConfig = config;
     }
@@ -545,7 +545,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     if (sCurrentBandConfig != config)
     {
-        RAIL_Idle(gRailHandle, RAIL_IDLE_ABORT, true);
+        RAIL_Idle(gRailHandle, RAIL_IDLE, true);
         efr32RailConfigLoad(config);
         sCurrentBandConfig = config;
     }
