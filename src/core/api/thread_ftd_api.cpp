@@ -316,12 +316,13 @@ otError otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRoute
     return instance.Get<RouterTable>().GetRouterInfo(aRouterId, *aRouterInfo);
 }
 
-otError otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIndex, otEidCacheEntry *aEntry)
+otError otThreadGetNextCacheEntry(otInstance *aInstance, otCacheEntryInfo *aEntryInfo, otCacheEntryIterator *aIterator)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aEntry != NULL);
-    return instance.Get<AddressResolver>().GetEntry(aIndex, *aEntry);
+    OT_ASSERT((aIterator != NULL) && (aEntryInfo != NULL));
+
+    return instance.Get<AddressResolver>().GetNextCacheEntry(*aEntryInfo, *aIterator);
 }
 
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE

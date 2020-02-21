@@ -911,22 +911,20 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_ADDRESS_CACHE_TABLE>(void)
 {
-    otError         error = OT_ERROR_NONE;
-    otEidCacheEntry entry;
+    otError              error = OT_ERROR_NONE;
+    otCacheEntryIterator iterator;
+    otCacheEntryInfo     entry;
+
+    memset(&iterator, 0, sizeof(iterator));
 
     for (uint8_t index = 0;; index++)
     {
-        SuccessOrExit(otThreadGetEidCacheEntry(mInstance, index, &entry));
-
-        if (!entry.mValid)
-        {
-            continue;
-        }
+        SuccessOrExit(otThreadGetNextCacheEntry(mInstance, &entry, &iterator));
 
         SuccessOrExit(error = mEncoder.OpenStruct());
         SuccessOrExit(error = mEncoder.WriteIp6Address(entry.mTarget));
         SuccessOrExit(error = mEncoder.WriteUint16(entry.mRloc16));
-        SuccessOrExit(error = mEncoder.WriteUint8(entry.mAge));
+        SuccessOrExit(error = mEncoder.WriteUint8(index));
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
