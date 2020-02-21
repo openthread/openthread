@@ -788,10 +788,14 @@ class Node:
         result = True
         try:
             responders = {}
-            while len(responders) < num_responses:
-                i = self._expect([r'from (\S+):'])
+            # ncp-sim doesn't print Done
+            done = (self.node_type == 'ncp-sim')
+            while len(responders) < num_responses or not done:
+                i = self._expect([r'from (\S+):', 'Done'])
                 if i == 0:
                     responders[self.pexpect.match.groups()[0]] = 1
+                elif i == 1:
+                    done = True
             self._expect('\n')
         except (pexpect.TIMEOUT, socket.timeout):
             result = False
