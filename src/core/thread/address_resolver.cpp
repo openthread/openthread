@@ -99,30 +99,81 @@ void AddressResolver::Clear(void)
     }
 }
 
-otError AddressResolver::GetEntry(uint8_t aIndex, otEidCacheEntry &aEntry) const
+otError AddressResolver::GetNextCacheEntry(EntryInfo &aInfo, Iterator &aIterator) const
 {
-    otError               error   = OT_ERROR_NONE;
-    uint8_t               age     = aIndex;
-    const CacheEntryList *lists[] = {&mCachedList, &mSnoopedList};
+    otError               error = OT_ERROR_NONE;
+    const CacheEntryList *list;
     const CacheEntry *    entry;
 
-    for (uint8_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
-    {
-        for (entry = lists[index]->GetHead(); (aIndex != 0) && (entry != NULL); aIndex--, entry = entry->GetNext())
-            ;
+    list  = reinterpret_cast<const CacheEntryList *>(aIterator.mData[kIteratorListIndex]);
+    entry = reinterpret_cast<const CacheEntry *>(aIterator.mData[kIteratorEntryIndex]);
 
-        if (entry != NULL)
+    while (entry == NULL)
+    {
+        if (list == NULL)
         {
-            break;
+            list = &mCachedList;
         }
+        else if (list == &mCachedList)
+        {
+            list = &mSnoopedList;
+        }
+        else if (list == &mSnoopedList)
+        {
+            list = &mQueryList;
+        }
+        else if (list == &mQueryList)
+        {
+            list = &mQueryRetryList;
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_NOT_FOUND);
+        }
+
+        entry = list->GetHead();
     }
 
-    VerifyOrExit(entry != NULL, error = OT_ERROR_NOT_FOUND);
+    // Update the iterator then populate the `aInfo`.
 
-    aEntry.mTarget = entry->GetTarget();
-    aEntry.mRloc16 = entry->GetRloc16();
-    aEntry.mAge    = age;
-    aEntry.mValid  = true;
+    aIterator.mData[kIteratorEntryIndex] = entry->GetNext();
+    aIterator.mData[kIteratorListIndex]  = list;
+
+    memset(&aInfo, 0, sizeof(aInfo));
+    aInfo.mTarget = entry->GetTarget();
+    aInfo.mRloc16 = entry->GetRloc16();
+
+    if (list == &mCachedList)
+    {
+        aInfo.mState          = OT_CACHE_ENTRY_STATE_CACHED;
+        aInfo.mCanEvict       = true;
+        aInfo.mValidLastTrans = entry->IsLastTransactionTimeValid();
+
+        VerifyOrExit(entry->IsLastTransactionTimeValid());
+
+        aInfo.mLastTransTime = entry->GetLastTransactionTime();
+        static_cast<Ip6::Address &>(aInfo.mMeshLocalEid).SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+        static_cast<Ip6::Address &>(aInfo.mMeshLocalEid).SetIid(entry->GetMeshLocalIid());
+
+        ExitNow();
+    }
+
+    if (list == &mSnoopedList)
+    {
+        aInfo.mState = OT_CACHE_ENTRY_STATE_SNOOPED;
+    }
+    else if (list == &mQueryList)
+    {
+        aInfo.mState = OT_CACHE_ENTRY_STATE_QUERY;
+    }
+    else
+    {
+        aInfo.mState = OT_CACHE_ENTRY_STATE_RETRY_QUERY;
+    }
+
+    aInfo.mCanEvict   = entry->CanEvict();
+    aInfo.mTimeout    = entry->GetTimeout();
+    aInfo.mRetryDelay = entry->GetRetryDelay();
 
 exit:
     return error;

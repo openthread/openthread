@@ -1294,16 +1294,14 @@ void Interpreter::ProcessEidCache(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    otEidCacheEntry entry;
+    otCacheEntryIterator iterator;
+    otCacheEntryInfo     entry;
+
+    memset(&iterator, 0, sizeof(iterator));
 
     for (uint8_t i = 0;; i++)
     {
-        SuccessOrExit(otThreadGetEidCacheEntry(mInstance, i, &entry));
-
-        if (!entry.mValid)
-        {
-            continue;
-        }
+        SuccessOrExit(otThreadGetNextCacheEntry(mInstance, &entry, &iterator));
 
         OutputIp6Address(entry.mTarget);
         mServer->OutputFormat(" %04x\r\n", entry.mRloc16);

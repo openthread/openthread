@@ -64,6 +64,18 @@ class AddressResolver : public InstanceLocator
 {
 public:
     /**
+     * This type represents an iterator used for iterating through the EID cache table entries.
+     *
+     */
+    typedef otCacheEntryIterator Iterator;
+
+    /**
+     * This type represents an EID cache entry.
+     *
+     */
+    typedef otCacheEntryInfo EntryInfo;
+
+    /**
      * This constructor initializes the object.
      *
      */
@@ -76,16 +88,18 @@ public:
     void Clear(void);
 
     /**
-     * This method gets an EID cache entry.
+     * This method gets the information about the next EID cache entry (using an iterator).
      *
-     * @param[in]   aIndex  An index into the EID cache table.
-     * @param[out]  aEntry  A reference to where the EID information is placed.
+     * @param[out]   aInfo       An `EntryInfo` where the EID cache entry information is placed.
+     * @param[inout] aIterator   An iterator. It will be updated to point to the next entry on success.
+     *                           To get the first entry, initialize the iterator by setting all its fields to zero.
+     *                           e.g., `memset` the the iterator structure to zero.
      *
-     * @retval OT_ERROR_NONE          Successfully retrieved the EID cache entry.
-     * @retval OT_ERROR_INVALID_ARGS  @p aIndex was out of bounds.
+     * @retval OT_ERROR_NONE       Successfully populated @p aInfo with the info for the next EID cache entry.
+     * @retval OT_ERROR_NOT_FOUND  No more entries in the address cache table.
      *
      */
-    otError GetEntry(uint8_t aIndex, otEidCacheEntry &aEntry) const;
+    otError GetNextCacheEntry(EntryInfo &aInfo, Iterator &aIterator) const;
 
     /**
      * This method removes the EID-to-RLOC cache entries corresponding to an RLOC16.
@@ -170,6 +184,8 @@ private:
         kAddressQueryMaxRetryDelay     = OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_MAX_RETRY_DELAY,     // in seconds
         kSnoopBlockEvictionTimeout     = OPENTHREAD_CONFIG_TMF_SNOOP_CACHE_ENTRY_TIMEOUT,         // in seconds
         kStateUpdatePeriod             = 1000u,                                                   // in milliseconds
+        kIteratorListIndex             = 0,
+        kIteratorEntryIndex            = 1,
     };
 
     class CacheEntry : public InstanceLocatorInit
