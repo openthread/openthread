@@ -60,7 +60,7 @@ public:
      */
     TestIphcVector(const char *aTestName)
     {
-        memset(this, 0, sizeof(*this));
+        memset(reinterpret_cast<void *>(this), 0, sizeof(TestIphcVector));
         mTestName              = aTestName;
         mSrcContext.mContextId = kContextUnused;
         mDstContext.mContextId = kContextUnused;

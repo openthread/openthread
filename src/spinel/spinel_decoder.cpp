@@ -30,17 +30,15 @@
  *   This file implements a spinel decoder.
  */
 
-#include <openthread/config.h>
-
 #include "spinel_decoder.hpp"
 
 #include "common/code_utils.hpp"
 #include "common/string.hpp"
 
 namespace ot {
-namespace Ncp {
+namespace Spinel {
 
-SpinelDecoder::SpinelDecoder(void)
+Decoder::Decoder(void)
     : mFrame(NULL)
     , mLength(0)
     , mIndex(0)
@@ -52,7 +50,7 @@ SpinelDecoder::SpinelDecoder(void)
 {
 }
 
-void SpinelDecoder::Init(const uint8_t *aFrame, uint16_t aLength)
+void Decoder::Init(const uint8_t *aFrame, uint16_t aLength)
 {
     mFrame  = aFrame;
     mLength = (mFrame != NULL) ? aLength : 0;
@@ -61,7 +59,7 @@ void SpinelDecoder::Init(const uint8_t *aFrame, uint16_t aLength)
     ClearSavedPosition();
 }
 
-void SpinelDecoder::Reset(void)
+void Decoder::Reset(void)
 {
     mIndex          = 0;
     mEnd            = mLength;
@@ -69,7 +67,7 @@ void SpinelDecoder::Reset(void)
     ClearSavedPosition();
 }
 
-otError SpinelDecoder::ReadBool(bool &aBool)
+otError Decoder::ReadBool(bool &aBool)
 {
     otError error = OT_ERROR_NONE;
     uint8_t byte;
@@ -94,7 +92,7 @@ exit:
     return error;
 }
 
-otError SpinelDecoder::ReadUint8(uint8_t &aUint8)
+otError Decoder::ReadUint8(uint8_t &aUint8)
 {
     otError error = OT_ERROR_NONE;
 
@@ -106,7 +104,7 @@ exit:
     return error;
 }
 
-otError SpinelDecoder::ReadInt8(int8_t &aInt8)
+otError Decoder::ReadInt8(int8_t &aInt8)
 {
     otError error = OT_ERROR_NONE;
     uint8_t byte;
@@ -118,7 +116,7 @@ exit:
     return error;
 }
 
-otError SpinelDecoder::ReadUint16(uint16_t &aUint16)
+otError Decoder::ReadUint16(uint16_t &aUint16)
 {
     otError error = OT_ERROR_NONE;
 
@@ -132,7 +130,7 @@ exit:
     return error;
 }
 
-otError SpinelDecoder::ReadInt16(int16_t &aInt16)
+otError Decoder::ReadInt16(int16_t &aInt16)
 {
     otError  error = OT_ERROR_NONE;
     uint16_t u16;
@@ -144,7 +142,7 @@ exit:
     return error;
 }
 
-otError SpinelDecoder::ReadUint32(uint32_t &aUint32)
+otError Decoder::ReadUint32(uint32_t &aUint32)
 {
     otError error = OT_ERROR_NONE;
 
@@ -159,7 +157,7 @@ exit:
     return error;
 }
 
-otError SpinelDecoder::ReadInt32(int32_t &aInt32)
+otError Decoder::ReadInt32(int32_t &aInt32)
 {
     otError  error = OT_ERROR_NONE;
     uint32_t u32;
@@ -171,7 +169,7 @@ exit:
     return error;
 }
 
-otError SpinelDecoder::ReadUint64(uint64_t &aUint64)
+otError Decoder::ReadUint64(uint64_t &aUint64)
 {
     otError error = OT_ERROR_NONE;
 
@@ -188,7 +186,7 @@ exit:
     return error;
 }
 
-otError SpinelDecoder::ReadInt64(int64_t &aInt64)
+otError Decoder::ReadInt64(int64_t &aInt64)
 {
     otError  error = OT_ERROR_NONE;
     uint64_t u64;
@@ -200,7 +198,7 @@ exit:
     return error;
 }
 
-otError SpinelDecoder::ReadUintPacked(unsigned int &aUint)
+otError Decoder::ReadUintPacked(unsigned int &aUint)
 {
     otError        error = OT_ERROR_NONE;
     spinel_ssize_t parsedLen;
@@ -217,7 +215,7 @@ exit:
 }
 
 // Reads an item of given size and updates the pointer `aPtr`.
-otError SpinelDecoder::ReadItem(const uint8_t **aPtr, uint16_t aSize)
+otError Decoder::ReadItem(const uint8_t **aPtr, uint16_t aSize)
 {
     otError error = OT_ERROR_NONE;
 
@@ -231,7 +229,7 @@ exit:
     return error;
 }
 
-otError SpinelDecoder::ReadIp6Address(spinel_ipv6addr_t &aIp6Addr)
+otError Decoder::ReadIp6Address(spinel_ipv6addr_t &aIp6Addr)
 {
     otError                  error = OT_ERROR_NONE;
     const spinel_ipv6addr_t *ipv6AddrPtr;
@@ -243,7 +241,7 @@ exit:
     return error;
 }
 
-otError SpinelDecoder::ReadIp6Address(otIp6Address &aIp6Addr)
+otError Decoder::ReadIp6Address(otIp6Address &aIp6Addr)
 {
     otError             error = OT_ERROR_NONE;
     const otIp6Address *ipv6AddrPtr;
@@ -255,7 +253,7 @@ exit:
     return error;
 }
 
-otError SpinelDecoder::ReadEui64(spinel_eui64_t &aEui64)
+otError Decoder::ReadEui64(spinel_eui64_t &aEui64)
 {
     otError               error = OT_ERROR_NONE;
     const spinel_eui64_t *eui64Ptr;
@@ -267,7 +265,7 @@ exit:
     return error;
 }
 
-otError SpinelDecoder::ReadEui64(otExtAddress &aEui64)
+otError Decoder::ReadEui64(otExtAddress &aEui64)
 {
     otError             error = OT_ERROR_NONE;
     const otExtAddress *eui64Ptr;
@@ -279,7 +277,7 @@ exit:
     return error;
 }
 
-otError SpinelDecoder::ReadEui48(spinel_eui48_t &aEui48)
+otError Decoder::ReadEui48(spinel_eui48_t &aEui48)
 {
     otError               error = OT_ERROR_NONE;
     const spinel_eui48_t *eui48Ptr;
@@ -291,7 +289,7 @@ exit:
     return error;
 }
 
-otError SpinelDecoder::ReadUtf8(const char *&aUtf8)
+otError Decoder::ReadUtf8(const char *&aUtf8)
 {
     otError error = OT_ERROR_NONE;
     size_t  len;
@@ -311,14 +309,14 @@ exit:
     return error;
 }
 
-otError SpinelDecoder::ReadData(const uint8_t *&aData, uint16_t &aDataLen)
+otError Decoder::ReadData(const uint8_t *&aData, uint16_t &aDataLen)
 {
     aDataLen = mEnd - mIndex;
 
     return ReadItem(&aData, aDataLen);
 }
 
-otError SpinelDecoder::ReadDataWithLen(const uint8_t *&aData, uint16_t &aDataLen)
+otError Decoder::ReadDataWithLen(const uint8_t *&aData, uint16_t &aDataLen)
 {
     otError  error = OT_ERROR_NONE;
     uint16_t len;
@@ -331,7 +329,7 @@ exit:
     return error;
 }
 
-otError SpinelDecoder::OpenStruct(void)
+otError Decoder::OpenStruct(void)
 {
     otError  error = OT_ERROR_NONE;
     uint16_t structLen;
@@ -349,7 +347,7 @@ exit:
     return error;
 }
 
-otError SpinelDecoder::CloseStruct(void)
+otError Decoder::CloseStruct(void)
 {
     otError error = OT_ERROR_NONE;
 
@@ -373,14 +371,14 @@ exit:
     return error;
 }
 
-void SpinelDecoder::SavePosition(void)
+void Decoder::SavePosition(void)
 {
     mSavedIndex          = mIndex;
     mSavedEnd            = mEnd;
     mSavedNumOpenStructs = mNumOpenStructs;
 }
 
-otError SpinelDecoder::ResetToSaved(void)
+otError Decoder::ResetToSaved(void)
 {
     otError error = OT_ERROR_NONE;
 
@@ -394,5 +392,5 @@ exit:
     return error;
 }
 
-} // namespace Ncp
+} // namespace Spinel
 } // namespace ot

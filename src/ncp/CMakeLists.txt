@@ -82,12 +82,8 @@ set(COMMON_SOURCES
     ncp_base_mtd.cpp
     ncp_base_radio.cpp
     ncp_base_dispatcher.cpp
-    ncp_buffer.cpp
     ncp_spi.cpp
     ncp_uart.cpp
-    spinel.c
-    spinel_decoder.cpp
-    spinel_encoder.cpp
 )
 
 target_include_directories(openthread-ncp-ftd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
@@ -97,3 +93,7 @@ target_include_directories(openthread-rcp PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE $
 target_sources(openthread-ncp-ftd PRIVATE ${COMMON_SOURCES})
 target_sources(openthread-ncp-mtd PRIVATE ${COMMON_SOURCES})
 target_sources(openthread-rcp PRIVATE ${COMMON_SOURCES})
+
+target_link_libraries(openthread-ncp-ftd openthread-spinel-ncp)
+target_link_libraries(openthread-ncp-mtd openthread-spinel-ncp)
+target_link_libraries(openthread-rcp openthread-spinel-rcp)

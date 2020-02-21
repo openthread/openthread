@@ -42,25 +42,25 @@ libopenthread_posix_a_CPPFLAGS            = \
     $(NULL)
 
 libopenthread_posix_a_SOURCES             = \
-    alarm.c                                 \
-    entropy.c                               \
+    alarm.cpp                               \
+    entropy.cpp                             \
     hdlc_interface.cpp                      \
-    logging.c                               \
-    misc.c                                  \
+    logging.cpp                             \
+    misc.cpp                                \
     netif.cpp                               \
     radio_spinel.cpp                        \
     settings.cpp                            \
-    sim.c                                   \
     spi_interface.cpp                       \
-    system.c                                \
-    uart.c                                  \
+    system.cpp                              \
+    uart.cpp                                \
     udp.cpp                                 \
+    virtual_time.cpp                        \
     $(NULL)
 
 noinst_HEADERS                            = \
+    hdlc_interface.hpp                      \
     openthread-posix-config.h               \
     platform-posix.h                        \
-    hdlc_interface.hpp                      \
     radio_spinel.hpp                        \
     spinel_interface.hpp                    \
     $(NULL)

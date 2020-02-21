@@ -34,7 +34,7 @@
 #include "radio_spinel.hpp"
 
 #include "platform-posix.h"
-#include "ncp/spinel_decoder.hpp"
+#include "spinel/spinel_decoder.hpp"
 
 #include <assert.h>
 #include <errno.h>
@@ -48,22 +48,25 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include <common/code_utils.hpp>
-#include <common/encoding.hpp>
-#include <common/logging.hpp>
-#include <common/new.hpp>
-#include <common/settings.hpp>
-#include <meshcop/dataset.hpp>
-#include <meshcop/meshcop_tlvs.hpp>
 #include <openthread/dataset.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/settings.h>
 
+#include "common/code_utils.hpp"
+#include "common/encoding.hpp"
+#include "common/logging.hpp"
+#include "common/new.hpp"
+#include "common/settings.hpp"
+#include "meshcop/dataset.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+
 #ifndef TX_WAIT_US
 #define TX_WAIT_US (5 * US_PER_S)
 #endif
+
+using ot::Spinel::Decoder;
 
 static ot::PosixApp::RadioSpinel sRadioSpinel;
 
@@ -497,7 +500,7 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
     otError              error = OT_ERROR_NONE;
     otOperationalDataset opDataset;
     bool                 isActive = ((mWaitingKey == SPINEL_PROP_THREAD_ACTIVE_DATASET) ? true : false);
-    Ncp::SpinelDecoder   decoder;
+    Spinel::Decoder      decoder;
     MeshCoP::Dataset     dataset(isActive ? MeshCoP::Tlv::kActiveTimestamp : MeshCoP::Tlv::kPendingTimestamp);
 
     memset(&opDataset, 0, sizeof(otOperationalDataset));
@@ -1888,7 +1891,7 @@ void ot::PosixApp::RadioSpinel::Process(const Event &aEvent)
     }
 }
 
-void platformSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent)
+void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent)
 {
     sRadioSpinel.Process(*aEvent);
     OT_UNUSED_VARIABLE(aInstance);
@@ -1896,7 +1899,7 @@ void platformSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aE
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+otError otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
     // deliver the platform specific diags commands to radio only ncp.
     OT_UNUSED_VARIABLE(aInstance);
@@ -1909,7 +1912,7 @@ void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOut
         cur += snprintf(cur, static_cast<size_t>(end - cur), "%s ", argv[index]);
     }
 
-    sRadioSpinel.PlatDiagProcess(cmd, aOutput, aOutputMaxLen);
+    return sRadioSpinel.PlatDiagProcess(cmd, aOutput, aOutputMaxLen);
 }
 
 void otPlatDiagModeSet(bool aMode)

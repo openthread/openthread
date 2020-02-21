@@ -51,12 +51,11 @@
 #include "changed_props_set.hpp"
 #include "common/instance.hpp"
 #include "common/tasklet.hpp"
-#include "ncp/ncp_buffer.hpp"
-#include "ncp/spinel_decoder.hpp"
-#include "ncp/spinel_encoder.hpp"
+#include "spinel/spinel.h"
+#include "spinel/spinel_buffer.hpp"
+#include "spinel/spinel_decoder.hpp"
+#include "spinel/spinel_encoder.hpp"
 #include "utils/static_assert.hpp"
-
-#include "spinel.h"
 
 namespace ot {
 namespace Ncp {
@@ -208,7 +207,7 @@ protected:
         NcpBase::PropertyHandler mHandler;
     };
 
-    NcpFrameBuffer::FrameTag GetLastOutboundFrameTag(void);
+    Spinel::Buffer::FrameTag GetLastOutboundFrameTag(void);
 
     otError HandleCommand(uint8_t aHeader);
 
@@ -259,10 +258,10 @@ protected:
     void        UpdateChangedProps(void);
 
     static void HandleFrameRemovedFromNcpBuffer(void *                   aContext,
-                                                NcpFrameBuffer::FrameTag aFrameTag,
-                                                NcpFrameBuffer::Priority aPriority,
-                                                NcpFrameBuffer *         aNcpBuffer);
-    void        HandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag);
+                                                Spinel::Buffer::FrameTag aFrameTag,
+                                                Spinel::Buffer::Priority aPriority,
+                                                Spinel::Buffer *         aNcpBuffer);
+    void        HandleFrameRemovedFromNcpBuffer(Spinel::Buffer::FrameTag aFrameTag);
 
     otError EncodeChannelMask(uint32_t aChannelMask);
     otError DecodeChannelMask(uint32_t &aChannelMask);
@@ -472,7 +471,7 @@ protected:
      * @param[in] aFrameTag    The tag of the frame removed from NCP buffer.
      *
      */
-    void VendorHandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag);
+    void VendorHandleFrameRemovedFromNcpBuffer(Spinel::Buffer::FrameTag aFrameTag);
 
     /**
      * This method defines a vendor "get property handler" hook to process vendor spinel properties.
@@ -520,9 +519,9 @@ protected:
                                                bool aDeviceType,
                                                bool aNetworkData);
     Instance *             mInstance;
-    NcpFrameBuffer         mTxFrameBuffer;
-    SpinelEncoder          mEncoder;
-    SpinelDecoder          mDecoder;
+    Spinel::Buffer         mTxFrameBuffer;
+    Spinel::Encoder        mEncoder;
+    Spinel::Decoder        mDecoder;
     bool                   mHostPowerStateInProgress;
 
     enum
@@ -544,7 +543,7 @@ protected:
     ChangedPropsSet mChangedPropsSet;
 
     spinel_host_power_state_t mHostPowerState;
-    NcpFrameBuffer::FrameTag  mHostPowerReplyFrameTag;
+    Spinel::Buffer::FrameTag  mHostPowerReplyFrameTag;
     uint8_t                   mHostPowerStateHeader;
 
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE

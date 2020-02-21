@@ -52,7 +52,7 @@
 
 #include "spinel_interface.hpp"
 #include "ncp/ncp_config.h"
-#include "ncp/spinel.h"
+#include "spinel/spinel.h"
 
 namespace ot {
 namespace PosixApp {

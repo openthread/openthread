@@ -114,6 +114,9 @@ Mle::Mle(Instance &aInstance)
 {
     otMeshLocalPrefix meshLocalPrefix;
 
+    mParent.Init(aInstance);
+    mParentCandidate.Init(aInstance);
+
     mLeaderData.Clear();
     mParentLeaderData.Clear();
     mParent.Clear();
@@ -337,6 +340,12 @@ void Mle::SetRole(otDeviceRole aRole)
     case OT_DEVICE_ROLE_LEADER:
         mCounters.mLeaderRole++;
         break;
+    }
+
+    // If the previous state is disabled, the parent can be in kStateRestored.
+    if (mRole != OT_DEVICE_ROLE_CHILD && oldRole != OT_DEVICE_ROLE_DISABLED)
+    {
+        mParent.SetState(Neighbor::kStateInvalid);
     }
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
@@ -3337,7 +3346,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     mParentCandidate.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                               DeviceMode::kModeFullNetworkData | DeviceMode::kModeSecureDataRequest));
     mParentCandidate.GetLinkInfo().Clear();
-    mParentCandidate.GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
+    mParentCandidate.GetLinkInfo().AddRss(linkInfo->mRss);
     mParentCandidate.ResetLinkFailures();
     mParentCandidate.SetLinkQualityOut(LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMarginTlv.GetLinkMargin()));
     mParentCandidate.SetState(Neighbor::kStateParentResponse);

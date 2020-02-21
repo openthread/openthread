@@ -90,12 +90,13 @@ typedef enum otCoapCode
     OT_COAP_CODE_PUT    = OT_COAP_CODE(0, 3), ///< Put
     OT_COAP_CODE_DELETE = OT_COAP_CODE(0, 4), ///< Delete
 
-    OT_COAP_CODE_RESPONSE_MIN = OT_COAP_CODE(2, 0), ///< 2.00
-    OT_COAP_CODE_CREATED      = OT_COAP_CODE(2, 1), ///< Created
-    OT_COAP_CODE_DELETED      = OT_COAP_CODE(2, 2), ///< Deleted
-    OT_COAP_CODE_VALID        = OT_COAP_CODE(2, 3), ///< Valid
-    OT_COAP_CODE_CHANGED      = OT_COAP_CODE(2, 4), ///< Changed
-    OT_COAP_CODE_CONTENT      = OT_COAP_CODE(2, 5), ///< Content
+    OT_COAP_CODE_RESPONSE_MIN = OT_COAP_CODE(2, 0),  ///< 2.00
+    OT_COAP_CODE_CREATED      = OT_COAP_CODE(2, 1),  ///< Created
+    OT_COAP_CODE_DELETED      = OT_COAP_CODE(2, 2),  ///< Deleted
+    OT_COAP_CODE_VALID        = OT_COAP_CODE(2, 3),  ///< Valid
+    OT_COAP_CODE_CHANGED      = OT_COAP_CODE(2, 4),  ///< Changed
+    OT_COAP_CODE_CONTENT      = OT_COAP_CODE(2, 5),  ///< Content
+    OT_COAP_CODE_CONTINUE     = OT_COAP_CODE(2, 31), ///< RFC7959 Continue
 
     OT_COAP_CODE_BAD_REQUEST         = OT_COAP_CODE(4, 0),  ///< Bad Request
     OT_COAP_CODE_UNAUTHORIZED        = OT_COAP_CODE(4, 1),  ///< Unauthorized
@@ -104,6 +105,7 @@ typedef enum otCoapCode
     OT_COAP_CODE_NOT_FOUND           = OT_COAP_CODE(4, 4),  ///< Not Found
     OT_COAP_CODE_METHOD_NOT_ALLOWED  = OT_COAP_CODE(4, 5),  ///< Method Not Allowed
     OT_COAP_CODE_NOT_ACCEPTABLE      = OT_COAP_CODE(4, 6),  ///< Not Acceptable
+    OT_COAP_CODE_REQUEST_INCOMPLETE  = OT_COAP_CODE(4, 8),  ///< RFC7959 Request Entity Incomplete
     OT_COAP_CODE_PRECONDITION_FAILED = OT_COAP_CODE(4, 12), ///< Precondition Failed
     OT_COAP_CODE_REQUEST_TOO_LARGE   = OT_COAP_CODE(4, 13), ///< Request Entity Too Large
     OT_COAP_CODE_UNSUPPORTED_FORMAT  = OT_COAP_CODE(4, 15), ///< Unsupported Content-Format
@@ -134,10 +136,26 @@ typedef enum otCoapOptionType
     OT_COAP_OPTION_URI_QUERY      = 15, ///< Uri-Query
     OT_COAP_OPTION_ACCEPT         = 17, ///< Accept
     OT_COAP_OPTION_LOCATION_QUERY = 20, ///< Location-Query
+    OT_COAP_OPTION_BLOCK2         = 23, ///< Block2 (RFC7959)
+    OT_COAP_OPTION_BLOCK1         = 27, ///< Block1 (RFC7959)
     OT_COAP_OPTION_PROXY_URI      = 35, ///< Proxy-Uri
     OT_COAP_OPTION_PROXY_SCHEME   = 39, ///< Proxy-Scheme
     OT_COAP_OPTION_SIZE1          = 60, ///< Size1
 } otCoapOptionType;
+
+/**
+ * CoAP Block Size Exponents
+ */
+typedef enum otCoapBlockSize
+{
+    OT_COAP_BLOCK_SIZE_16   = 0,
+    OT_COAP_BLOCK_SIZE_32   = 1,
+    OT_COAP_BLOCK_SIZE_64   = 2,
+    OT_COAP_BLOCK_SIZE_128  = 3,
+    OT_COAP_BLOCK_SIZE_256  = 4,
+    OT_COAP_BLOCK_SIZE_512  = 5,
+    OT_COAP_BLOCK_SIZE_1024 = 6,
+} otCoapBlockSize;
 
 /**
  * This structure represents a CoAP option.
@@ -467,6 +485,46 @@ otError otCoapMessageAppendObserveOption(otMessage *aMessage, uint32_t aObserve)
  *
  */
 otError otCoapMessageAppendUriPathOptions(otMessage *aMessage, const char *aUriPath);
+
+/**
+ * This function converts a CoAP Block option SZX field to the actual block size
+ *
+ * @param[in]     aSize     Block size exponent.
+ *
+ * @returns The actual size exponent value.
+ *
+ */
+uint16_t otCoapBlockSizeFromExponent(otCoapBlockSize aSize);
+
+/**
+ * This function appends a Block2 option
+ *
+ * @param[inout]  aMessage  A pointer to the CoAP message.
+ * @param[in]     aNum      Current block number.
+ * @param[in]     aMore     Boolean to indicate more blocks are to be sent.
+ * @param[in]     aSize     Block Size Exponent.
+ *
+ * @retval OT_ERROR_NONE          Successfully appended the option.
+ * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+ * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+ *
+ */
+otError otCoapMessageAppendBlock2Option(otMessage *aMessage, uint32_t aNum, bool aMore, otCoapBlockSize aSize);
+
+/**
+ * This function appends a Block1 option
+ *
+ * @param[inout]  aMessage  A pointer to the CoAP message.
+ * @param[in]     aNum      Current block number.
+ * @param[in]     aMore     Boolean to indicate more blocks are to be sent.
+ * @param[in]     aSize     Block Size Exponent.
+ *
+ * @retval OT_ERROR_NONE          Successfully appended the option.
+ * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
+ * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+ *
+ */
+otError otCoapMessageAppendBlock1Option(otMessage *aMessage, uint32_t aNum, bool aMore, otCoapBlockSize aSize);
 
 /**
  * This function appends a Proxy-Uri option.

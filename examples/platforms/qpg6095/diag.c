@@ -42,14 +42,6 @@
  */
 static bool sDiagMode = false;
 
-void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
-{
-    // Add more plarform specific diagnostics features here.
-    snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(aInstance);
-}
-
 void otPlatDiagModeSet(bool aMode)
 {
     sDiagMode = aMode;

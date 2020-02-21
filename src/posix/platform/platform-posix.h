@@ -276,9 +276,10 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
  * This function initializes platform netif.
  *
  * @param[in]   aInstance       A pointer to the OpenThread instance.
+ * @param[in]   aInterfaceName  A pointer to Thread network interface name.
  *
  */
-void platformNetifInit(otInstance *aInstance);
+void platformNetifInit(otInstance *aInstance, const char *aInterfaceName);
 
 /**
  * This function updates the file descriptor sets with file descriptors used by platform netif module.
@@ -305,13 +306,13 @@ void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, c
  * This function initialize virtual time simulation.
  *
  */
-void platformSimInit(void);
+void virtualTimeInit(void);
 
 /**
  * This function deinitialize virtual time simulation.
  *
  */
-void platformSimDeinit(void);
+void virtualTimeDeinit(void);
 
 /**
  * This function performs virtual time simulation processing.
@@ -321,7 +322,7 @@ void platformSimDeinit(void);
  * @param[in]   aWriteFdSet     A pointer to the write file descriptors.
  *
  */
-void platformSimProcess(otInstance *  aInstance,
+void virtualTimeProcess(otInstance *  aInstance,
                         const fd_set *aReadFdSet,
                         const fd_set *aWriteFdSet,
                         const fd_set *aErrorFdSet);
@@ -337,7 +338,7 @@ void platformSimProcess(otInstance *  aInstance,
  * @param[inout]  aTimeout     A pointer to the timeout.
  *
  */
-void platformSimUpdateFdSet(fd_set *        aReadFdSet,
+void virtualTimeUpdateFdSet(fd_set *        aReadFdSet,
                             fd_set *        aWriteFdSet,
                             fd_set *        aErrorFdSet,
                             int *           aMaxFd,
@@ -350,7 +351,7 @@ void platformSimUpdateFdSet(fd_set *        aReadFdSet,
  * @param[in] aLength   Length of the spinel frame.
  *
  */
-void platformSimSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength);
+void virtualTimeSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength);
 
 /**
  * This function receives an event of virtual time simulation.
@@ -358,7 +359,7 @@ void platformSimSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength
  * @param[out]  aEvent  A pointer to the event receiving the event.
  *
  */
-void platformSimReceiveEvent(struct Event *aEvent);
+void virtualTimeReceiveEvent(struct Event *aEvent);
 
 /**
  * This function sends sleep event through virtual time simulation.
@@ -366,7 +367,7 @@ void platformSimReceiveEvent(struct Event *aEvent);
  * @param[in]   aTimeout    A pointer to the time sleeping.
  *
  */
-void platformSimSendSleepEvent(const struct timeval *aTimeout);
+void virtualTimeSendSleepEvent(const struct timeval *aTimeout);
 
 /**
  * This function performs radio spinel processing of virtual time simulation.
@@ -375,7 +376,7 @@ void platformSimSendSleepEvent(const struct timeval *aTimeout);
  * @param[in]   aEvent      A pointer to the current event.
  *
  */
-void platformSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent);
+void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent);
 
 /**
  * This function gets system time in microseconds without applying speed up factor.
