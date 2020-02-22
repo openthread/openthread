@@ -133,28 +133,36 @@ HdlcInterface::HdlcInterface(SpinelInterface::Callbacks &aCallback, SpinelInterf
 
 otError HdlcInterface::Init(const otPlatformConfig &aPlatformConfig)
 {
-    otError     error = OT_ERROR_NONE;
-    struct stat st;
+    otError           error = OT_ERROR_NONE;
+    struct stat       st;
+    const otRadioUrl *aRadioUrl = &(aPlatformConfig.mRadioUrl);
+    int               i         = 0;
 
     VerifyOrExit(mSockFd == -1, error = OT_ERROR_ALREADY);
 
     VerifyOrDie(stat(aPlatformConfig.mRadioUrl.mDevice, &st) == 0, OT_EXIT_INVALID_ARGUMENTS);
 
-    if (S_ISCHR(st.st_mode))
+    for (i = OT_PLATFORM_CONFIG_URL_MAX_PROTOCOLS - 1; i >= 0; i--)
     {
-        mSockFd = OpenFile(aPlatformConfig.mRadioUrl.mDevice, aPlatformConfig.mRadioUrl.mArgument);
+        if (aRadioUrl->mProtocols[i])
+        {
+            break;
+        }
+    }
+
+    if (strcmp(aRadioUrl->mProtocols[i], "uart") == 0)
+    {
+        mSockFd = OpenFile(aRadioUrl);
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     }
-#if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
-    else if (S_ISREG(st.st_mode))
+    else if (strcmp(aRadioUrl->mProtocols[i], "forkpty") == 0)
     {
-        mSockFd = ForkPty(aPlatformConfig.mRadioUrl.mDevice, aPlatformConfig.mRadioUrl.mArgument);
+        mSockFd = ForkPty(aRadioUrl);
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     }
-#endif // OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
     else
     {
-        otLogCritPlat("Radio file '%s' not supported", aPlatformConfig.mRadioUrl.mDevice);
+        fprintf(stderr, "Invalid bottom layer protocol: %s\n", aRadioUrl->mProtocols[i]);
         ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
@@ -398,12 +406,12 @@ exit:
     return error;
 }
 
-int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
+int HdlcInterface::OpenFile(const otRadioUrl *aRadioUrl)
 {
     int fd   = -1;
     int rval = 0;
 
-    fd = open(aFile, O_RDWR | O_NOCTTY | O_NONBLOCK | O_CLOEXEC);
+    fd = open(aRadioUrl->mDevice, O_RDWR | O_NOCTTY | O_NONBLOCK | O_CLOEXEC);
     if (fd == -1)
     {
         perror("open uart failed");
@@ -425,10 +433,32 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
 
         tios.c_cflag = CS8 | HUPCL | CREAD | CLOCAL;
 
-        // example: 115200N1H
-        if (aConfig != NULL)
+        for (int i = 0; i < OT_PLATFORM_CONFIG_URL_MAX_ARGS; i++)
         {
-            sscanf(aConfig, "%u%c%d%c", &speed, &parity, &cstopb, &flow);
+            if (strlen(aRadioUrl->mArgValue[i]) > 0)
+            {
+                if (!strcmp(aRadioUrl->mArgName[i], "speed"))
+                {
+                    sscanf(aRadioUrl->mArgValue[i], "%u", &speed);
+                }
+                else if (!strcmp(aRadioUrl->mArgName[i], "parity"))
+                {
+                    sscanf(aRadioUrl->mArgValue[i], "%c", &parity);
+                }
+                else if (!strcmp(aRadioUrl->mArgName[i], "cstopb"))
+                {
+                    sscanf(aRadioUrl->mArgValue[i], "%d", &cstopb);
+                }
+                else if (!strcmp(aRadioUrl->mArgName[i], "flow"))
+                {
+                    sscanf(aRadioUrl->mArgValue[i], "%c", &flow);
+                }
+                else
+                {
+                    fprintf(stderr, "Invalid UART argument: %s\n", aRadioUrl->mArgName[i]);
+                    DieNow(OT_EXIT_INVALID_ARGUMENTS);
+                }
+            }
         }
 
         switch (parity)
@@ -443,6 +473,7 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
             break;
         default:
             // not supported
+            fprintf(stderr, "Invalid parity value: %c\n", parity);
             DieNow(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
@@ -456,6 +487,7 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
             tios.c_cflag |= CSTOPB;
             break;
         default:
+            fprintf(stderr, "Invalid cstopb value: %d\n", cstopb);
             DieNow(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
@@ -543,6 +575,7 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
             break;
 #endif
         default:
+            fprintf(stderr, "Invalid speed value: %u\n", speed);
             DieNow(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
@@ -556,6 +589,7 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
             break;
         default:
             // not supported
+            fprintf(stderr, "Invalid flow value: %c\n", flow);
             DieNow(OT_EXIT_INVALID_ARGUMENTS);
             break;
         }
@@ -575,11 +609,21 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
-int HdlcInterface::ForkPty(const char *aCommand, const char *aArguments)
+int HdlcInterface::ForkPty(const otRadioUrl *aRadioUrl)
 {
     int fd   = -1;
     int pid  = -1;
     int rval = -1;
+
+    for (int i = 0; i < OT_PLATFORM_CONFIG_URL_MAX_ARGS; i++)
+    {
+        if ((aRadioUrl->mArgName[i]) && (strcmp(aRadioUrl->mArgName[i], "arg") != 0) &&
+            (strlen(aRadioUrl->mArgValue[i]) > 0))
+        {
+            fprintf(stderr, "Invalid argument name: %s\n", aRadioUrl->mArgName[i]);
+            DieNow(OT_EXIT_INVALID_ARGUMENTS);
+        }
+    }
 
     {
         struct termios tios;
@@ -596,7 +640,14 @@ int HdlcInterface::ForkPty(const char *aCommand, const char *aArguments)
         const int kMaxCommand = 255;
         char      cmd[kMaxCommand];
 
-        rval = snprintf(cmd, sizeof(cmd), "exec %s %s", aCommand, aArguments);
+        rval = snprintf(cmd, sizeof(cmd), "exec %s ", aRadioUrl->mDevice);
+        for (int i = 0; i < OT_PLATFORM_CONFIG_URL_MAX_ARGS; i++)
+        {
+            if (strlen(aRadioUrl->mArgValue[i]) > 0)
+            {
+                strcat(strcat(cmd, " "), aRadioUrl->mArgValue[i]);
+            }
+        }
         VerifyOrExit(rval > 0 && static_cast<size_t>(rval) < sizeof(cmd),
                      fprintf(stderr, "NCP file and configuration is too long!");
                      rval = -1);

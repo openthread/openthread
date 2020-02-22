@@ -88,7 +88,10 @@ typedef struct PosixConfig
     bool             mIsVerbose;         ///< Whether to print log to stderr.
 } PosixConfig;
 
-const char *aProtocols[] = {"hdlc", "spi", "spinel", "uart", "forkpty"};
+const char *aUrlProtocols[] = {"hdlc", "spi", "spinel", "uart", "forkpty"};
+const char *aUrlArgs[] = {"speed",           "cstopb",         "parity",          "flow", "arg",      "gpio-int-dev",
+                          "gpio-int-line",   "gpio-reset-dev", "gpio-reset-line", "mode", "cs-delay", "reset-delay",
+                          "align-allowance", "small-packet"};
 
 static jmp_buf gResetJump;
 
@@ -103,16 +106,6 @@ enum
     ARG_PRINT_RADIO_VERSION = 1001,
     ARG_NO_RADIO_RESET      = 1002,
     ARG_RESTORE_NCP_DATASET = 1003,
-    ARG_SPI_GPIO_INT_DEV    = 1011,
-    ARG_SPI_GPIO_INT_LINE   = 1012,
-    ARG_SPI_GPIO_RESET_DEV  = 1013,
-    ARG_SPI_GPIO_RESET_LINE = 1014,
-    ARG_SPI_MODE            = 1015,
-    ARG_SPI_SPEED           = 1016,
-    ARG_SPI_CS_DELAY        = 1017,
-    ARG_SPI_RESET_DELAY     = 1018,
-    ARG_SPI_ALIGN_ALLOWANCE = 1019,
-    ARG_SPI_SMALL_PACKET    = 1020,
 };
 
 static const struct option kOptions[] = {{"debug-level", required_argument, NULL, 'd'},
@@ -124,18 +117,6 @@ static const struct option kOptions[] = {{"debug-level", required_argument, NULL
                                          {"ncp-dataset", no_argument, NULL, ARG_RESTORE_NCP_DATASET},
                                          {"time-speed", required_argument, NULL, 's'},
                                          {"verbose", no_argument, NULL, 'v'},
-#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
-                                         {"gpio-int-dev", required_argument, NULL, ARG_SPI_GPIO_INT_DEV},
-                                         {"gpio-int-line", required_argument, NULL, ARG_SPI_GPIO_INT_LINE},
-                                         {"gpio-reset-dev", required_argument, NULL, ARG_SPI_GPIO_RESET_DEV},
-                                         {"gpio-reset-line", required_argument, NULL, ARG_SPI_GPIO_RESET_LINE},
-                                         {"spi-mode", required_argument, NULL, ARG_SPI_MODE},
-                                         {"spi-speed", required_argument, NULL, ARG_SPI_SPEED},
-                                         {"spi-cs-delay", required_argument, NULL, ARG_SPI_CS_DELAY},
-                                         {"spi-reset-delay", required_argument, NULL, ARG_SPI_RESET_DELAY},
-                                         {"spi-align-allowance", required_argument, NULL, ARG_SPI_ALIGN_ALLOWANCE},
-                                         {"spi-small-packet", required_argument, NULL, ARG_SPI_SMALL_PACKET},
-#endif
                                          {0, 0, 0, 0}};
 
 static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
@@ -144,8 +125,8 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "Syntax:\n"
             "    %s [Options] RadioURL\n"
             "    RadioURL: URL of the device and method for Thread core and RCP communication.\n"
-            "              'protocols://device-file?arg=value'\n"
-            "              e.g. 'spinel+hdlc+uart:///dev/ttyUSB0?arg=115200N1'\n"
+            "              'protocols://device-file?arg1=value1&arg=value2'\n"
+            "              e.g. 'spinel+hdlc+uart:///dev/ttyUSB0?speed=115200&parity=N'\n"
             "Options:\n"
             "    -d  --debug-level             Debug level of logging.\n"
             "    -h  --help                    Display this usage information.\n"
@@ -155,43 +136,57 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "        --radio-version           Print radio firmware version.\n"
             "        --ncp-dataset             Retrieve and save NCP dataset to file.\n"
             "    -s  --time-speed factor       Time speed up factor.\n"
-            "    -v  --verbose                 Also log to stderr.\n",
-            aProgramName);
+            "    -v  --verbose                 Also log to stderr.\n"
+            "    -h  --help                    Display this usage information.\n"
+            "URL Arguments:\n"
 #if OPENTHREAD_POSIX_RCP_SPI_ENABLE
-    fprintf(aStream,
-            "        --gpio-int-dev[=gpio-device-path]\n"
+            "    SPI Required:\n"
+            "        gpio-int-dev=gpio-device-path\n"
             "                                  Specify a path to the Linux sysfs-exported GPIO device for the\n"
             "                                  `I̅N̅T̅` pin. If not specified, `SPI` interface will fall back to\n"
             "                                  polling, which is inefficient.\n"
-            "        --gpio-int-line[=line-offset]\n"
+            "        gpio-int-line=line-offset\n"
             "                                  The offset index of `I̅N̅T̅` pin for the associated GPIO device.\n"
             "                                  If not specified, `SPI` interface will fall back to polling,\n"
             "                                  which is inefficient.\n"
-            "        --gpio-reset-dev[=gpio-device-path]\n"
+            "        gpio-reset-dev=gpio-device-path\n"
             "                                  Specify a path to the Linux sysfs-exported GPIO device for the\n"
             "                                  `R̅E̅S̅` pin.\n"
-            "        --gpio-reset-line[=line-offset]"
+            "        gpio-reset-line=line-offset\n"
             "                                  The offset index of `R̅E̅S̅` pin for the associated GPIO device.\n"
-            "        --spi-mode[=mode]         Specify the SPI mode to use (0-3).\n"
-            "        --spi-speed[=hertz]       Specify the SPI speed in hertz.\n"
-            "        --spi-cs-delay[=usec]     Specify the delay after C̅S̅ assertion, in µsec.\n"
-            "        --spi-reset-delay[=ms]    Specify the delay after R̅E̅S̅E̅T̅ assertion, in milliseconds.\n"
-            "        --spi-align-allowance[=n] Specify the maximum number of 0xFF bytes to clip from start of\n"
-            "                                  MISO frame. Max value is 16.\n"
-            "        --spi-small-packet=[n]    Specify the smallest packet we can receive in a single transaction.\n"
-            "                                  (larger packets will require two transactions). Default value is 32.\n");
+            "    SPI Optional:\n"
+            "        mode=mode             Specify the SPI mode to use (0-3). Default value is 0\n"
+            "        speed=hertz           Specify the SPI speed in hertz. Default value is 1000000\n"
+            "        cs-delay=usec         Specify the delay after C̅S̅ assertion, in µsec. Default value 20\n"
+            "        reset-delay=ms        Specify the delay after R̅E̅S̅E̅T̅ assertion, in milliseconds. Default value "
+            "is 0\n"
+            "        align-allowance=n     Specify the maximum number of 0xFF bytes to clip from start of\n"
+            "                                  MISO frame. Max value is 16. Default value is 16\n"
+            "        small-packet=n        Specify the smallest packet we can receive in a single transaction.\n"
+            "                                  (larger packets will require two transactions). Default value is 32.\n",
+#else
+            "    UART Optional:\n"
+            "        speed=bps             Specify the UART input and output speed in bps. Default value is 115200\n"
+            "        parity=N|E|O          Specify the parity option. Default value is N\n"
+            "        cstopb=1|2            Specify the stop bits. Default value is 1\n"
+            "        flow=N|H              Specify the flow control in milliseconds. Default value is N\n"
+            "    ForkPty:\n"
+            "        arg=value             Specify arguments for forkpty. Default value is arg=1\n",
 #endif
+            aProgramName);
     exit(aExitCode);
 }
 
-static int ParseUrl(otRadioUrl *aRadioUrl, char *url)
+int ParseUrl(otRadioUrl *aRadioUrl, char *url)
 {
-    char *deviceInfo = strstr(url, "://");
-    char *pStart     = url;
-    char *pEnd       = NULL;
-    int   i          = 0;
-    int   j          = 0;
-    int   cProtocol  = sizeof(aProtocols) / sizeof(aProtocols[0]);
+    char *deviceInfo    = strstr(url, "://");
+    char *pStart        = url;
+    char *pEnd          = NULL;
+    int   i             = 0;
+    int   j             = 0;
+    int   cUrlProtocols = sizeof(aUrlProtocols) / sizeof(aUrlProtocols[0]);
+    int   cUrlArgs      = sizeof(aUrlArgs) / sizeof(aUrlArgs[0]);
+    char  aArgName[OT_PLATFORM_CONFIG_URL_DEVICE_FILE_LEN];
 
     if (!deviceInfo)
     {
@@ -205,26 +200,69 @@ static int ParseUrl(otRadioUrl *aRadioUrl, char *url)
         {
             pEnd = deviceInfo;
         }
-        for (i = 0; i < cProtocol; i++)
+        for (i = 0; i < cUrlProtocols; i++)
         {
-          if (strncmp(pStart, aProtocols[i], (size_t)(pEnd - pStart)) == 0)
+            if (strncmp(pStart, aUrlProtocols[i], (size_t)strlen(aUrlProtocols[i])) == 0)
             {
-                aRadioUrl->mProtocols[j] = aProtocols[i];
-                j++;
+                aRadioUrl->mProtocols[j] = aUrlProtocols[i];
+                break;
             }
         }
+        if (!aRadioUrl->mProtocols[j])
+        {
+            fprintf(stderr, "Invalid protocol\n\n");
+            return -1;
+        }
+        j++;
 
         pStart = pEnd + 1;
     }
 
-    if (!sscanf(deviceInfo, "://%99[^?]?arg=%99[^\n]", aRadioUrl->mDevice, aRadioUrl->mArgument))
+    if (sscanf(deviceInfo, "://%99[^?]", aRadioUrl->mDevice) != 1)
     {
+        fprintf(stderr, "Invalid device format:%s\n\n", deviceInfo);
         return -1;
     }
-    else
+
+    deviceInfo += 3 + strlen(aRadioUrl->mDevice);
+    if (*deviceInfo != '?')
     {
         return 0;
     }
+    deviceInfo += 1;
+
+    for (i = 0; i < OT_PLATFORM_CONFIG_URL_MAX_ARGS; i++)
+    {
+        memset(aArgName, 0, sizeof(aArgName));
+        if (sscanf(deviceInfo, "%99[^=]=%99[^&]", aArgName, aRadioUrl->mArgValue[i]) == 2)
+        {
+            for (j = 0; j < cUrlArgs; j++)
+            {
+                if (!strcmp(aArgName, aUrlArgs[j]))
+                {
+                    aRadioUrl->mArgName[i] = aUrlArgs[j];
+                    break;
+                }
+            }
+            if (!aRadioUrl->mArgName[i])
+            {
+                fprintf(stderr, "Invalid Argument Name: %s\n\n", aArgName);
+                return -1;
+            }
+            deviceInfo += strlen(aArgName) + strlen(aRadioUrl->mArgValue[i]) + 1;
+            if (*deviceInfo == '\0')
+            {
+                break;
+            }
+            deviceInfo += 1;
+        }
+        else
+        {
+            fprintf(stderr, "Invalid Argument Format: %s\n\n", deviceInfo);
+            return -1;
+        }
+    }
+    return 0;
 }
 
 static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
@@ -232,15 +270,9 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     memset(aConfig, 0, sizeof(*aConfig));
     RadioUrl aUrl;
 
-    aConfig->mPlatformConfig.mSpeedUpFactor      = 1;
-    aConfig->mPlatformConfig.mResetRadio         = true;
-    aConfig->mPlatformConfig.mSpiSpeed           = OT_PLATFORM_CONFIG_SPI_DEFAULT_SPEED_HZ;
-    aConfig->mPlatformConfig.mSpiCsDelay         = OT_PLATFORM_CONFIG_SPI_DEFAULT_CS_DELAY_US;
-    aConfig->mPlatformConfig.mSpiResetDelay      = OT_PLATFORM_CONFIG_SPI_DEFAULT_RESET_DELAY_MS;
-    aConfig->mPlatformConfig.mSpiAlignAllowance  = OT_PLATFORM_CONFIG_SPI_DEFAULT_ALIGN_ALLOWANCE;
-    aConfig->mPlatformConfig.mSpiSmallPacketSize = OT_PLATFORM_CONFIG_SPI_DEFAULT_SMALL_PACKET_SIZE;
-    aConfig->mPlatformConfig.mSpiMode            = OT_PLATFORM_CONFIG_SPI_DEFAULT_MODE;
-    aConfig->mLogLevel                           = OT_LOG_LEVEL_CRIT;
+    aConfig->mPlatformConfig.mSpeedUpFactor = 1;
+    aConfig->mPlatformConfig.mResetRadio    = true;
+    aConfig->mLogLevel                      = OT_LOG_LEVEL_CRIT;
 
     optind = 1;
 
@@ -268,8 +300,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         case 'n':
             aConfig->mIsDryRun = true;
             break;
-        case 's':
-        {
+        case 's': {
             char *endptr = NULL;
 
             aConfig->mPlatformConfig.mSpeedUpFactor = (uint32_t)strtol(optarg, &endptr, 0);
@@ -292,36 +323,6 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             break;
         case ARG_RESTORE_NCP_DATASET:
             aConfig->mPlatformConfig.mRestoreDatasetFromNcp = true;
-            break;
-        case ARG_SPI_GPIO_INT_DEV:
-            aConfig->mPlatformConfig.mSpiGpioIntDevice = optarg;
-            break;
-        case ARG_SPI_GPIO_INT_LINE:
-            aConfig->mPlatformConfig.mSpiGpioIntLine = (uint8_t)atoi(optarg);
-            break;
-        case ARG_SPI_GPIO_RESET_DEV:
-            aConfig->mPlatformConfig.mSpiGpioResetDevice = optarg;
-            break;
-        case ARG_SPI_GPIO_RESET_LINE:
-            aConfig->mPlatformConfig.mSpiGpioResetLine = (uint8_t)atoi(optarg);
-            break;
-        case ARG_SPI_MODE:
-            aConfig->mPlatformConfig.mSpiMode = (uint8_t)atoi(optarg);
-            break;
-        case ARG_SPI_SPEED:
-            aConfig->mPlatformConfig.mSpiSpeed = (uint32_t)atoi(optarg);
-            break;
-        case ARG_SPI_CS_DELAY:
-            aConfig->mPlatformConfig.mSpiCsDelay = (uint16_t)atoi(optarg);
-            break;
-        case ARG_SPI_RESET_DELAY:
-            aConfig->mPlatformConfig.mSpiResetDelay = (uint32_t)atoi(optarg);
-            break;
-        case ARG_SPI_ALIGN_ALLOWANCE:
-            aConfig->mPlatformConfig.mSpiAlignAllowance = (uint8_t)atoi(optarg);
-            break;
-        case ARG_SPI_SMALL_PACKET:
-            aConfig->mPlatformConfig.mSpiSmallPacketSize = (uint8_t)atoi(optarg);
             break;
         case '?':
             PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);

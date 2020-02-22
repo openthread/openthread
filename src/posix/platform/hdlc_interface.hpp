@@ -197,9 +197,9 @@ private:
     static void HandleHdlcFrame(void *aContext, otError aError);
     void        HandleHdlcFrame(otError aError);
 
-    static int OpenFile(const char *aFile, const char *aConfig);
+    static int OpenFile(const otRadioUrl *aRadioUrl);
 #if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
-    static int ForkPty(const char *aCommand, const char *aArguments);
+    static int ForkPty(const otRadioUrl *aRadioUrl);
 #endif
 
     enum

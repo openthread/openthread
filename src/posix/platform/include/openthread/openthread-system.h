@@ -35,10 +35,6 @@
 #ifndef OPENTHREAD_SYSTEM_H_
 #define OPENTHREAD_SYSTEM_H_
 
-#define MAX_SUPPORT_PROTOCOL 3
-#define DEVICE_ARG_LEN 10
-#define DEVICE_FILE_LEN 50
-
 #include <setjmp.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -93,13 +89,6 @@ enum
     OT_EXIT_RADIO_SPINEL_NO_RESPONSE = 6,
 };
 
-typedef struct otRadioUrl
-{
-    const char *mProtocols[MAX_SUPPORT_PROTOCOL];
-    char        mDevice[DEVICE_FILE_LEN];
-    char        mArgument[DEVICE_ARG_LEN];
-} otRadioUrl;
-
 /**
  * This enumeration represents default parameters for the SPI interface.
  *
@@ -117,6 +106,30 @@ enum
 };
 
 /**
+ * This enumeration represents lengh definition for otRadioUrl.
+ *
+ */
+enum
+{
+    OT_PLATFORM_CONFIG_URL_MAX_PROTOCOLS   = 3,  ///< Max supported protocols like spinel+hdlc+uart
+    OT_PLATFORM_CONFIG_URL_DEVICE_FILE_LEN = 50, ///< Device file max length
+    OT_PLATFORM_CONFIG_URL_MAX_ARGS        = 10, ///< Max supported device arguments
+    OT_PLATFORM_CONFIG_URL_ARG_VALUE_LEN   = 20, ///< Device arguments max length
+};
+
+/**
+ * This structure represents radio url specific configurations.
+ *
+ */
+typedef struct otRadioUrl
+{
+    const char *mProtocols[OT_PLATFORM_CONFIG_URL_MAX_PROTOCOLS];                                 ///< URL Protols
+    char        mDevice[OT_PLATFORM_CONFIG_URL_DEVICE_FILE_LEN];                                  ///< Device file
+    const char *mArgName[OT_PLATFORM_CONFIG_URL_MAX_ARGS];                                        ///< Argument name
+    char        mArgValue[OT_PLATFORM_CONFIG_URL_MAX_ARGS][OT_PLATFORM_CONFIG_URL_ARG_VALUE_LEN]; ///< Argument value
+} otRadioUrl;
+
+/**
  * This structure represents platform specific configurations.
  *
  */
@@ -127,18 +140,7 @@ typedef struct otPlatformConfig
     const char *mInterfaceName;         ///< Thread network interface name.
     bool        mResetRadio;            ///< Whether to reset RCP when initializing.
     bool        mRestoreDatasetFromNcp; ///< Whether to retrieve dataset from NCP and save to file.
-
-    char *     mSpiGpioIntDevice;   ///< Path to the Linux GPIO character device for the `I̅N̅T̅` pin.
-    char *     mSpiGpioResetDevice; ///< Path to the Linux GPIO character device for the `R̅E̅S̅E̅T̅` pin.
-    uint8_t    mSpiGpioIntLine;     ///< Line index of the `I̅N̅T̅` pin for the associated GPIO character device.
-    uint8_t    mSpiGpioResetLine; ///< Line index of the `R̅E̅S̅E̅T̅` pin for the associated GPIO character device.
-    uint8_t    mSpiMode;          ///< SPI mode to use (0-3).
-    uint32_t   mSpiSpeed;         ///< SPI speed in hertz.
-    uint32_t   mSpiResetDelay;    ///< The delay after R̅E̅S̅E̅T̅ assertion, in miliseconds.
-    uint16_t   mSpiCsDelay;       ///< The delay after SPI C̅S̅ assertion, in µsec.
-    uint8_t    mSpiAlignAllowance;  ///< Maximum number of 0xFF bytes to clip from start of MISO frame.
-    uint8_t    mSpiSmallPacketSize; ///< Smallest SPI packet size we can receive in a single transaction.
-    otRadioUrl mRadioUrl;           ///< Parsed Radio URL struct
+    otRadioUrl  mRadioUrl;              ///< Parsed Radio URL struct
 } otPlatformConfig;
 
 /**
