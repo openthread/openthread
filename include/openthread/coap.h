@@ -362,6 +362,40 @@ typedef struct otCoapResource
 } otCoapResource;
 
 /**
+ * This structure represents the CoAP transmission parameters.
+ *
+ */
+typedef struct otCoapTxParameters
+{
+    /**
+     * Minimum spacing before first retransmission when ACK is not received, in milliseconds (RFC7252 default value is
+     * 2000ms).
+     *
+     */
+    uint32_t mAckTimeout;
+
+    /**
+     * Numerator of ACK_RANDOM_FACTOR used to calculate maximum spacing before first retransmission when ACK is not
+     * received (RFC7252 default value of ACK_RANDOM_FACTOR is 1.5; must not be decreased below 1).
+     *
+     */
+    uint8_t mAckRandomFactorNumerator;
+
+    /**
+     * Denominator of ACK_RANDOM_FACTOR used to calculate maximum spacing before first retransmission when ACK is not
+     * received (RFC7252 default value of ACK_RANDOM_FACTOR is 1.5; must not be decreased below 1).
+     *
+     */
+    uint8_t mAckRandomFactorDenominator;
+
+    /**
+     * Maximum number of retransmissions for CoAP Confirmable messages (RFC7252 default value is 4).
+     *
+     */
+    uint8_t mMaxRetransmit;
+} otCoapTxParameters;
+
+/**
  * This function initializes the CoAP header.
  *
  * @param[inout] aMessage   A pointer to the CoAP message to initialize.
@@ -694,6 +728,30 @@ otError otCoapOptionIteratorGetOptionValue(otCoapOptionIterator *aIterator, void
 otMessage *otCoapNewMessage(otInstance *aInstance, const otMessageSettings *aSettings);
 
 /**
+ * This function sends a CoAP request with custom transmission parameters.
+ *
+ * If a response for a request is expected, respective function and context information should be provided.
+ * If no response is expected, these arguments should be NULL pointers.
+ *
+ * @param[in]  aInstance        A pointer to an OpenThread instance.
+ * @param[in]  aMessage         A pointer to the message to send.
+ * @param[in]  aMessageInfo     A pointer to the message info associated with @p aMessage.
+ * @param[in]  aHandler         A function pointer that shall be called on response reception or timeout.
+ * @param[in]  aContext         A pointer to arbitrary context information. May be NULL if not used.
+ * @param[in]  aTxParameters    A pointer to transmission parameters for this request. Use NULL for defaults.
+ *
+ * @retval OT_ERROR_NONE    Successfully sent CoAP message.
+ * @retval OT_ERROR_NO_BUFS Failed to allocate retransmission data.
+ *
+ */
+otError otCoapSendRequestWithParameters(otInstance *              aInstance,
+                                        otMessage *               aMessage,
+                                        const otMessageInfo *     aMessageInfo,
+                                        otCoapResponseHandler     aHandler,
+                                        void *                    aContext,
+                                        const otCoapTxParameters *aTxParameters);
+
+/**
  * This function sends a CoAP request.
  *
  * If a response for a request is expected, respective function and context information should be provided.
@@ -709,11 +767,14 @@ otMessage *otCoapNewMessage(otInstance *aInstance, const otMessageSettings *aSet
  * @retval OT_ERROR_NO_BUFS Failed to allocate retransmission data.
  *
  */
-otError otCoapSendRequest(otInstance *          aInstance,
-                          otMessage *           aMessage,
-                          const otMessageInfo * aMessageInfo,
-                          otCoapResponseHandler aHandler,
-                          void *                aContext);
+static inline otError otCoapSendRequest(otInstance *          aInstance,
+                                        otMessage *           aMessage,
+                                        const otMessageInfo * aMessageInfo,
+                                        otCoapResponseHandler aHandler,
+                                        void *                aContext)
+{
+    return otCoapSendRequestWithParameters(aInstance, aMessage, aMessageInfo, aHandler, aContext, NULL);
+}
 
 /**
  * This function starts the CoAP server.
@@ -768,6 +829,23 @@ void otCoapRemoveResource(otInstance *aInstance, otCoapResource *aResource);
 void otCoapSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandler, void *aContext);
 
 /**
+ * This function sends a CoAP response from the server with custom transmission parameters.
+ *
+ * @param[in]  aInstance        A pointer to an OpenThread instance.
+ * @param[in]  aMessage         A pointer to the CoAP response to send.
+ * @param[in]  aMessageInfo     A pointer to the message info associated with @p aMessage.
+ * @param[in]  aTxParameters    A pointer to transmission parameters for this response. Use NULL for defaults.
+ *
+ * @retval OT_ERROR_NONE     Successfully enqueued the CoAP response message.
+ * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to send the CoAP response.
+ *
+ */
+otError otCoapSendResponseWithParameters(otInstance *              aInstance,
+                                         otMessage *               aMessage,
+                                         const otMessageInfo *     aMessageInfo,
+                                         const otCoapTxParameters *aTxParameters);
+
+/**
  * This function sends a CoAP response from the server.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
@@ -778,7 +856,10 @@ void otCoapSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandle
  * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to send the CoAP response.
  *
  */
-otError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+static inline otError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+{
+    return otCoapSendResponseWithParameters(aInstance, aMessage, aMessageInfo, NULL);
+}
 
 /**
  * @}

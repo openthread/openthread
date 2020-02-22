@@ -36,13 +36,14 @@
 #define CONFIG_COAP_H_
 
 /**
- * @def OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT
+ * @def OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT_MILLIS
  *
- * Minimum spacing before first retransmission when ACK is not received (RFC7252 default value is 2).
+ * Minimum spacing before first retransmission when ACK is not received, in milliseconds (RFC7252 default value
+ * is 2000).
  *
  */
-#ifndef OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT
-#define OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT 2
+#ifndef OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT_MILLIS
+#define OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT_MILLIS 2000
 #endif
 
 /**
