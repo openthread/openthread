@@ -925,6 +925,45 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_ADDRESS_CACHE_
         SuccessOrExit(error = mEncoder.WriteIp6Address(entry.mTarget));
         SuccessOrExit(error = mEncoder.WriteUint16(entry.mRloc16));
         SuccessOrExit(error = mEncoder.WriteUint8(index));
+
+        switch (entry.mState)
+        {
+        case OT_CACHE_ENTRY_STATE_CACHED:
+            SuccessOrExit(error = mEncoder.WriteUint8(SPINEL_ADDRESS_CACHE_ENTRY_STATE_CACHED));
+            break;
+        case OT_CACHE_ENTRY_STATE_SNOOPED:
+            SuccessOrExit(error = mEncoder.WriteUint8(SPINEL_ADDRESS_CACHE_ENTRY_STATE_SNOOPED));
+            break;
+        case OT_CACHE_ENTRY_STATE_QUERY:
+            SuccessOrExit(error = mEncoder.WriteUint8(SPINEL_ADDRESS_CACHE_ENTRY_STATE_QUERY));
+            break;
+        case OT_CACHE_ENTRY_STATE_RETRY_QUERY:
+            SuccessOrExit(error = mEncoder.WriteUint8(SPINEL_ADDRESS_CACHE_ENTRY_STATE_RETRY_QUERY));
+            break;
+        }
+
+        SuccessOrExit(error = mEncoder.OpenStruct());
+
+        if (entry.mState == OT_CACHE_ENTRY_STATE_CACHED)
+        {
+            SuccessOrExit(error = mEncoder.WriteBool(entry.mValidLastTrans));
+            SuccessOrExit(error = mEncoder.WriteUint32(entry.mLastTransTime));
+            SuccessOrExit(error = mEncoder.WriteIp6Address(entry.mMeshLocalEid));
+        }
+
+        SuccessOrExit(error = mEncoder.CloseStruct());
+
+        SuccessOrExit(error = mEncoder.OpenStruct());
+
+        if (entry.mState != OT_CACHE_ENTRY_STATE_CACHED)
+        {
+            SuccessOrExit(error = mEncoder.WriteBool(entry.mCanEvict));
+            SuccessOrExit(error = mEncoder.WriteUint16(entry.mTimeout));
+            SuccessOrExit(error = mEncoder.WriteUint16(entry.mRetryDelay));
+        }
+
+        SuccessOrExit(error = mEncoder.CloseStruct());
+
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
