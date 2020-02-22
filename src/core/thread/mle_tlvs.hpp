@@ -1637,7 +1637,7 @@ public:
      */
     bool IsValid(void) const
     {
-        return (GetLength() >= sizeof(*this) - sizeof(Tlv)) && mVersion >= OPENTHREAD_THREAD_VERSION_1_1;
+        return (GetLength() >= sizeof(*this) - sizeof(Tlv)) && mVersion >= OT_THREAD_VERSION_1_1;
     }
 
     /**
