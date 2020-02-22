@@ -45,7 +45,7 @@
 /**
  * @def OPENTHREAD_SIM_VIRTUAL_TIME
  *
- * This setting configures whether to use virtual time (used for simulation) in POSIX platform.
+ * This setting configures whether to use virtual time (used for simulation) in simulation platform.
  *
  */
 #ifndef OPENTHREAD_SIM_VIRTUAL_TIME

@@ -56,11 +56,11 @@ enum
 
 enum
 {
-    POSIX_RECEIVE_SENSITIVITY = -100, // dBm
+    SIM_RECEIVE_SENSITIVITY = -100, // dBm
 
-    POSIX_HIGH_RSSI_SAMPLE               = -30, // dBm
-    POSIX_LOW_RSSI_SAMPLE                = -98, // dBm
-    POSIX_HIGH_RSSI_PROB_INC_PER_CHANNEL = 5,
+    SIM_HIGH_RSSI_SAMPLE               = -30, // dBm
+    SIM_LOW_RSSI_SAMPLE                = -98, // dBm
+    SIM_HIGH_RSSI_PROB_INC_PER_CHANNEL = 5,
 };
 
 #if OPENTHREAD_SIM_VIRTUAL_TIME
@@ -75,8 +75,8 @@ static uint16_t sPort       = 0;
 
 enum
 {
-    POSIX_RADIO_CHANNEL_MIN = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN,
-    POSIX_RADIO_CHANNEL_MAX = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX,
+    SIM_RADIO_CHANNEL_MIN = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN,
+    SIM_RADIO_CHANNEL_MAX = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX,
 };
 
 OT_TOOL_PACKED_BEGIN
@@ -417,21 +417,21 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
     assert(aInstance != NULL);
 
-    int8_t   rssi    = POSIX_LOW_RSSI_SAMPLE;
+    int8_t   rssi    = SIM_LOW_RSSI_SAMPLE;
     uint8_t  channel = sReceiveFrame.mChannel;
     uint32_t probabilityThreshold;
 
-    otEXPECT((POSIX_RADIO_CHANNEL_MIN <= channel) && channel <= (POSIX_RADIO_CHANNEL_MAX));
+    otEXPECT((SIM_RADIO_CHANNEL_MIN <= channel) && channel <= (SIM_RADIO_CHANNEL_MAX));
 
     // To emulate a simple interference model, we return either a high or
     // a low  RSSI value with a fixed probability per each channel. The
     // probability is increased per channel by a constant.
 
-    probabilityThreshold = (channel - POSIX_RADIO_CHANNEL_MIN) * POSIX_HIGH_RSSI_PROB_INC_PER_CHANNEL;
+    probabilityThreshold = (channel - SIM_RADIO_CHANNEL_MIN) * SIM_HIGH_RSSI_PROB_INC_PER_CHANNEL;
 
     if (otRandomNonCryptoGetUint16() < (probabilityThreshold * 0xffff / 100))
     {
-        rssi = POSIX_HIGH_RSSI_SAMPLE;
+        rssi = SIM_HIGH_RSSI_SAMPLE;
     }
 
 exit:
@@ -777,7 +777,7 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
     assert(aInstance != NULL);
-    assert(aScanChannel >= POSIX_RADIO_CHANNEL_MIN && aScanChannel <= POSIX_RADIO_CHANNEL_MAX);
+    assert(aScanChannel >= SIM_RADIO_CHANNEL_MIN && aScanChannel <= SIM_RADIO_CHANNEL_MAX);
     assert(aScanDuration > 0);
 
     return OT_ERROR_NOT_IMPLEMENTED;
@@ -823,7 +823,7 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
     assert(aInstance != NULL);
 
-    return POSIX_RECEIVE_SENSITIVITY;
+    return SIM_RECEIVE_SENSITIVITY;
 }
 
 otRadioState otPlatRadioGetState(otInstance *aInstance)
