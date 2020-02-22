@@ -54,11 +54,11 @@
 #define BSP_CLK_LFXO_PRESENT                  (1)
 #define BSP_CLK_HFXO_PRESENT                  (1)
 #define BSP_CLK_LFXO_INIT                      CMU_LFXOINIT_DEFAULT
-#define BSP_CLK_LFXO_CTUNE                    (0)
-#define BSP_CLK_LFXO_FREQ                     (32768)
+#define BSP_CLK_LFXO_CTUNE                    (32U)
+#define BSP_CLK_LFXO_FREQ                     (32768U)
 #define HAL_CLK_LFACLK_SOURCE                 (HAL_CLK_LFCLK_SOURCE_LFRCO)
-#define BSP_CLK_HFXO_FREQ                     (38400000)
-#define BSP_CLK_HFXO_CTUNE                    (338)
+#define BSP_CLK_HFXO_FREQ                     (38400000UL)
+#define BSP_CLK_HFXO_CTUNE                    (332)
 #define BSP_CLK_HFXO_INIT                      CMU_HFXOINIT_DEFAULT
 #define BSP_CLK_HFXO_CTUNE_TOKEN              (0)
 #define HAL_CLK_HFXO_AUTOSTART                (HAL_CLK_HFXO_AUTOSTART_NONE)

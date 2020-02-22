@@ -114,6 +114,9 @@ Mle::Mle(Instance &aInstance)
 {
     otMeshLocalPrefix meshLocalPrefix;
 
+    mParent.Init(aInstance);
+    mParentCandidate.Init(aInstance);
+
     mLeaderData.Clear();
     mParentLeaderData.Clear();
     mParent.Clear();
@@ -3331,7 +3334,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     mParentCandidate.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                               DeviceMode::kModeFullNetworkData | DeviceMode::kModeSecureDataRequest));
     mParentCandidate.GetLinkInfo().Clear();
-    mParentCandidate.GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
+    mParentCandidate.GetLinkInfo().AddRss(linkInfo->mRss);
     mParentCandidate.ResetLinkFailures();
     mParentCandidate.SetLinkQualityOut(LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMarginTlv.GetLinkMargin()));
     mParentCandidate.SetState(Neighbor::kStateParentResponse);

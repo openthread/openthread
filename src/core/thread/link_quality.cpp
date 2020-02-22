@@ -37,6 +37,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 
 namespace ot {
 
@@ -149,7 +150,7 @@ void LinkQualityInfo::Clear(void)
     mMessageErrorRate.Reset();
 }
 
-void LinkQualityInfo::AddRss(int8_t aNoiseFloor, int8_t aRss)
+void LinkQualityInfo::AddRss(int8_t aRss)
 {
     uint8_t oldLinkQuality = kNoLinkQuality;
 
@@ -164,10 +165,15 @@ void LinkQualityInfo::AddRss(int8_t aNoiseFloor, int8_t aRss)
 
     SuccessOrExit(mRssAverager.Add(aRss));
 
-    SetLinkQuality(CalculateLinkQuality(GetLinkMargin(aNoiseFloor), oldLinkQuality));
+    SetLinkQuality(CalculateLinkQuality(GetLinkMargin(), oldLinkQuality));
 
 exit:
     return;
+}
+
+uint8_t LinkQualityInfo::GetLinkMargin(void) const
+{
+    return ConvertRssToLinkMargin(Get<Mac::SubMac>().GetNoiseFloor(), GetAverageRss());
 }
 
 LinkQualityInfo::InfoString LinkQualityInfo::ToInfoString(void) const

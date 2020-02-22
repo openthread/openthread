@@ -82,14 +82,19 @@ libopenthread_rcp_a_CPPFLAGS                             = \
     $(COMMON_CPPFLAGS)                                     \
     $(NULL)
 
-libopenthread_ncp_mtd_a_LIBADD                    = \
-    $(addprefix $(top_builddir)/src/spinel/,$(filter %.o,$(shell $(AR) t $(top_builddir)/src/spinel/libopenthread-spinel-ncp.a)))
+list_objects = $(addprefix $(dir $(1)),$(filter %.o,$(shell $(AR) t $(1))))
 
-libopenthread_ncp_ftd_a_LIBADD                    = \
-    $(addprefix $(top_builddir)/src/spinel/,$(filter %.o,$(shell $(AR) t $(top_builddir)/src/spinel/libopenthread-spinel-ncp.a)))
+libopenthread_ncp_mtd_a_LIBADD                                               = \
+    $(call list_objects,$(top_builddir)/src/spinel/libopenthread-spinel-ncp.a) \
+    $(NULL)
 
-libopenthread_rcp_a_LIBADD                        = \
-    $(addprefix $(top_builddir)/src/spinel/,$(filter %.o,$(shell $(AR) t $(top_builddir)/src/spinel/libopenthread-spinel-rcp.a)))
+libopenthread_ncp_ftd_a_LIBADD                                               = \
+    $(call list_objects,$(top_builddir)/src/spinel/libopenthread-spinel-ncp.a) \
+    $(NULL)
+
+libopenthread_rcp_a_LIBADD                                                   = \
+    $(call list_objects,$(top_builddir)/src/spinel/libopenthread-spinel-rcp.a) \
+    $(NULL)
 
 COMMON_SOURCES                                    = \
     changed_props_set.cpp                           \

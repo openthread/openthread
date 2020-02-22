@@ -392,7 +392,7 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return 0;
+    return -100;
 }
 //
 // Random

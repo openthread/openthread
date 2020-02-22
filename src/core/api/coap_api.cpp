@@ -195,17 +195,18 @@ otError otCoapOptionIteratorGetOptionValue(otCoapOptionIterator *aIterator, void
     return static_cast<Coap::OptionIterator *>(aIterator)->GetOptionValue(aValue);
 }
 
-otError otCoapSendRequest(otInstance *          aInstance,
-                          otMessage *           aMessage,
-                          const otMessageInfo * aMessageInfo,
-                          otCoapResponseHandler aHandler,
-                          void *                aContext)
+otError otCoapSendRequestWithParameters(otInstance *              aInstance,
+                                        otMessage *               aMessage,
+                                        const otMessageInfo *     aMessageInfo,
+                                        otCoapResponseHandler     aHandler,
+                                        void *                    aContext,
+                                        const otCoapTxParameters *aTxParameters)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.GetApplicationCoap().SendMessage(*static_cast<Coap::Message *>(aMessage),
-                                                     *static_cast<const Ip6::MessageInfo *>(aMessageInfo), aHandler,
-                                                     aContext);
+                                                     *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
+                                                     Coap::CoapTxParameters::From(aTxParameters), aHandler, aContext);
 }
 
 otError otCoapStart(otInstance *aInstance, uint16_t aPort)
@@ -243,12 +244,16 @@ void otCoapSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandle
     instance.GetApplicationCoap().SetDefaultHandler(aHandler, aContext);
 }
 
-otError otCoapSendResponse(otInstance *aInstance, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+otError otCoapSendResponseWithParameters(otInstance *              aInstance,
+                                         otMessage *               aMessage,
+                                         const otMessageInfo *     aMessageInfo,
+                                         const otCoapTxParameters *aTxParameters)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.GetApplicationCoap().SendMessage(*static_cast<Coap::Message *>(aMessage),
-                                                     *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+                                                     *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
+                                                     Coap::CoapTxParameters::From(aTxParameters), NULL, NULL);
 }
 
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE

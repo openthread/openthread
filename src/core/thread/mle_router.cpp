@@ -615,7 +615,7 @@ otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Message
 
                 neighbor->SetExtAddress(macAddr);
                 neighbor->GetLinkInfo().Clear();
-                neighbor->GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
+                neighbor->GetLinkInfo().AddRss(linkInfo->mRss);
                 neighbor->ResetLinkFailures();
                 neighbor->SetLastHeard(TimerMilli::GetNow());
                 neighbor->SetState(Neighbor::kStateLinkRequest);
@@ -981,7 +981,7 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
     router->SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                      DeviceMode::kModeFullNetworkData));
     router->GetLinkInfo().Clear();
-    router->GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
+    router->GetLinkInfo().AddRss(linkInfo->mRss);
     router->SetLinkQualityOut(LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin.GetLinkMargin()));
     router->ResetLinkFailures();
     router->SetState(Neighbor::kStateValid);
@@ -1356,7 +1356,7 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
             {
                 router->SetExtAddress(macAddr);
                 router->GetLinkInfo().Clear();
-                router->GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
+                router->GetLinkInfo().AddRss(linkInfo->mRss);
                 router->ResetLinkFailures();
                 router->SetLastHeard(TimerMilli::GetNow());
                 router->SetState(Neighbor::kStateLinkRequest);
@@ -1403,7 +1403,7 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
         {
             router->SetExtAddress(macAddr);
             router->GetLinkInfo().Clear();
-            router->GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
+            router->GetLinkInfo().AddRss(linkInfo->mRss);
             router->ResetLinkFailures();
             router->SetLastHeard(TimerMilli::GetNow());
             router->SetState(Neighbor::kStateLinkRequest);
@@ -1660,7 +1660,7 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
         // MAC Address
         child->SetExtAddress(macAddr);
         child->GetLinkInfo().Clear();
-        child->GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
+        child->GetLinkInfo().AddRss(linkInfo->mRss);
         child->ResetLinkFailures();
         child->SetState(Neighbor::kStateParentRequest);
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -1937,7 +1937,7 @@ void MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &aChallenge
     aChild->GenerateChallenge();
 
     SuccessOrExit(error = AppendChallenge(*message, aChild->GetChallenge(), aChild->GetChallengeSize()));
-    error = AppendLinkMargin(*message, aChild->GetLinkInfo().GetLinkMargin(Get<Mac::Mac>().GetNoiseFloor()));
+    error = AppendLinkMargin(*message, aChild->GetLinkInfo().GetLinkMargin());
     SuccessOrExit(error);
 
     SuccessOrExit(error = AppendConnectivity(*message));
@@ -2021,7 +2021,7 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
         // We try to accept/add as many IPv6 addresses as possible.
         // "Child ID/Update Response" will indicate the accepted
         // addresses.
-        error = aChild.AddIp6Address(GetInstance(), address);
+        error = aChild.AddIp6Address(address);
 
         if (error == OT_ERROR_NONE)
         {
@@ -2057,7 +2057,7 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
                 continue;
             }
 
-            IgnoreReturnValue(iter.GetChild()->RemoveIp6Address(GetInstance(), address));
+            IgnoreReturnValue(iter.GetChild()->RemoveIp6Address(address));
         }
 
         // Clear EID-to-RLOC cache for the unicast address registered by the child.
@@ -2194,7 +2194,7 @@ otError MleRouter::HandleChildIdRequest(const Message &         aMessage,
     child->SetMleFrameCounter(mleFrameCounter.GetFrameCounter());
     child->SetKeySequence(aKeySequence);
     child->SetDeviceMode(mode.GetMode());
-    child->GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
+    child->GetLinkInfo().AddRss(linkInfo->mRss);
     child->SetTimeout(timeout.GetTimeout());
 
     if (mode.GetMode().IsFullNetworkData())
@@ -2515,7 +2515,7 @@ otError MleRouter::HandleChildUpdateResponse(const Message &         aMessage,
     SetChildStateToValid(*child);
     child->SetLastHeard(TimerMilli::GetNow());
     child->SetKeySequence(aKeySequence);
-    child->GetLinkInfo().AddRss(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
+    child->GetLinkInfo().AddRss(linkInfo->mRss);
 
 exit:
 
@@ -3356,7 +3356,7 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
             ExitNow(rval = child);
         }
 
-        if (child->HasIp6Address(GetInstance(), aAddress))
+        if (child->HasIp6Address(aAddress))
         {
             ExitNow(rval = child);
         }
@@ -3539,7 +3539,7 @@ otError MleRouter::GetChildNextIp6Address(uint16_t                   aChildIndex
     VerifyOrExit(child != NULL, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(child->IsStateValidOrRestoring(), error = OT_ERROR_INVALID_ARGS);
 
-    error = child->GetNextIp6Address(GetInstance(), aIterator, aAddress);
+    error = child->GetNextIp6Address(aIterator, aAddress);
 
 exit:
     return error;
@@ -3988,6 +3988,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
 
     // Keep link to the parent in order to respond to Parent Requests before new link is established.
     *router = mParent;
+    router->SetState(Neighbor::kStateValid);
     router->SetNextHop(kInvalidRouterId);
     router->SetCost(0);
 
@@ -4351,7 +4352,7 @@ otError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
     tlv.SetType(Tlv::kAddressRegistration);
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
 
-    while (aChild.GetNextIp6Address(GetInstance(), iterator, address) == OT_ERROR_NONE)
+    while (aChild.GetNextIp6Address(iterator, address) == OT_ERROR_NONE)
     {
         if (address.IsMulticast() || Get<NetworkData::Leader>().GetContext(address, context) != OT_ERROR_NONE)
         {
@@ -4704,8 +4705,7 @@ exit:
 
 bool MleRouter::IsSleepyChildSubscribed(const Ip6::Address &aAddress, Child &aChild)
 {
-    return aChild.IsStateValidOrRestoring() && !aChild.IsRxOnWhenIdle() &&
-           aChild.HasIp6Address(GetInstance(), aAddress);
+    return aChild.IsStateValidOrRestoring() && !aChild.IsRxOnWhenIdle() && aChild.HasIp6Address(aAddress);
 }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE

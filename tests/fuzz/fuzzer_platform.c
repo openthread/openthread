@@ -26,6 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "openthread-core-config.h"
+
 #include <string.h>
 
 #include <openthread/platform/alarm-micro.h>
@@ -152,6 +154,8 @@ otError otDiagProcessCmd(otInstance *aInstance, int aArgCount, char *aArgVector[
     OT_UNUSED_VARIABLE(aArgVector);
     OT_UNUSED_VARIABLE(aOutput);
     OT_UNUSED_VARIABLE(aOutputMaxLen);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 void otDiagProcessCmdLine(otInstance *aInstance, const char *aString, char *aOutput, size_t aOutputMaxLen)
