@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,56 +26,11 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(OT_PLATFORM_LIB "openthread-posix" PARENT_SCOPE)
+include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-option(OT_DAEMON "Enable daemon mode" OFF)
-if(OT_DAEMON)
-    list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_ENABLE_POSIX_APP_DAEMON=1")
-endif()
+SUBDIRS                                 = \
+    hdlc                                  \
+    spinel                                \
+    $(NULL)
 
-list(APPEND OT_PLATFORM_DEFINES
-    "OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1"
-    "OPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
-    "OPENTHREAD_POSIX=1"
-    "OPENTHREAD_POSIX_RCP_UART_ENABLE=1"
-    "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\""
-)
-set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
-
-add_library(openthread-posix
-    alarm.cpp
-    entropy.cpp
-    hdlc_interface.cpp
-    logging.cpp
-    misc.cpp
-    netif.cpp
-    radio_spinel.cpp
-    settings.cpp
-    spi_interface.cpp
-    system.cpp
-    uart.cpp
-    udp.cpp
-    virtual_time.cpp
-)
-
-target_link_libraries(openthread-posix PUBLIC
-    util
-)
-
-target_compile_definitions(openthread-posix
-    PUBLIC ${OT_PLATFORM_DEFINES}
-    PRIVATE ${OT_PRIVATE_DEFINES}
-)
-
-target_compile_options(openthread-posix PRIVATE
-    ${OT_CFLAGS}
-)
-
-target_include_directories(openthread-posix PRIVATE
-    ${OT_PUBLIC_INCLUDES}
-    ${OT_PRIVATE_INCLUDES}
-    ${PROJECT_SOURCE_DIR}/src
-    ${PROJECT_SOURCE_DIR}/src/core
-    ${PROJECT_SOURCE_DIR}/src/posix/platform
-    ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
-)
+include $(abs_top_nlbuild_autotools_dir)/automake/post.am

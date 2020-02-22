@@ -33,13 +33,12 @@
 #ifndef HDLC_HPP_
 #define HDLC_HPP_
 
-#include "openthread-core-config.h"
-
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <openthread/error.h>
+
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"

@@ -239,7 +239,10 @@ LOCAL_SRC_FILES                                          := \
     src/core/utils/jam_detector.cpp                         \
     src/core/utils/parse_cmdline.cpp                        \
     src/core/utils/slaac_address.cpp                        \
-    src/ncp/hdlc.cpp                                        \
+    src/lib/hdlc/hdlc.cpp                                   \
+    src/lib/spinel/spinel.c                                 \
+    src/lib/spinel/spinel_decoder.cpp                       \
+    src/lib/spinel/spinel_encoder.cpp                       \
     src/posix/platform/alarm.cpp                            \
     src/posix/platform/entropy.cpp                          \
     src/posix/platform/hdlc_interface.cpp                   \
@@ -252,9 +255,6 @@ LOCAL_SRC_FILES                                          := \
     src/posix/platform/system.cpp                           \
     src/posix/platform/uart.cpp                             \
     src/posix/platform/udp.cpp                              \
-    src/spinel/spinel.c                                     \
-    src/spinel/spinel_decoder.cpp                           \
-    src/spinel/spinel_encoder.cpp                           \
     third_party/mbedtls/repo/library/md.c                   \
     third_party/mbedtls/repo/library/md_wrap.c              \
     third_party/mbedtls/repo/library/memory_buffer_alloc.c  \
@@ -397,7 +397,7 @@ LOCAL_SRC_FILES                            := \
     src/ncp/ncp_base_ftd.cpp                  \
     src/ncp/ncp_base_dispatcher.cpp           \
     src/ncp/ncp_uart.cpp                      \
-    src/spinel/spinel_buffer.cpp              \
+    src/lib/spinel/spinel_buffer.cpp          \
     $(NULL)
 
 include $(BUILD_STATIC_LIBRARY)
