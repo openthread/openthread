@@ -28,14 +28,23 @@
 
 add_library(mbedcrypto)
 
-target_compile_definitions(mbedcrypto PRIVATE
-    ${OT_PRIVATE_DEFINES}
+set(OT_MBEDTLS_CONFIG_FILE "\"mbedtls-config.h\"" CACHE STRING "The mbedTLS config file")
+
+target_compile_definitions(mbedcrypto
+    PUBLIC
+        "MBEDTLS_CONFIG_FILE=${OT_MBEDTLS_CONFIG_FILE}"
+    PRIVATE
+        ${OT_PRIVATE_DEFINES}
 )
 
-target_include_directories(mbedcrypto PRIVATE
-    ${OT_PUBLIC_INCLUDES}
-    ${OT_PRIVATE_INCLUDES}
-    ${PROJECT_SOURCE_DIR}/src/core
+target_include_directories(mbedcrypto
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}/third_party/mbedtls
+        ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
+    PRIVATE
+        ${OT_PUBLIC_INCLUDES}
+        ${OT_PRIVATE_INCLUDES}
+        ${PROJECT_SOURCE_DIR}/src/core
 )
 
 target_sources(mbedcrypto PRIVATE
@@ -75,6 +84,7 @@ target_sources(mbedcrypto PRIVATE
     repo/library/ssl_ticket.c
     repo/library/ssl_tls.c
     repo/library/threading.c
+    repo/library/timing.c
     repo/library/x509.c
     repo/library/x509_crt.c
 )

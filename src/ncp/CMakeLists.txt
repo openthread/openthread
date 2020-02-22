@@ -94,6 +94,23 @@ target_sources(openthread-ncp-ftd PRIVATE ${COMMON_SOURCES})
 target_sources(openthread-ncp-mtd PRIVATE ${COMMON_SOURCES})
 target_sources(openthread-rcp PRIVATE ${COMMON_SOURCES})
 
-target_link_libraries(openthread-ncp-ftd openthread-spinel-ncp)
-target_link_libraries(openthread-ncp-mtd openthread-spinel-ncp)
-target_link_libraries(openthread-rcp openthread-spinel-rcp)
+target_link_libraries(openthread-ncp-ftd
+    PRIVATE
+        openthread-spinel-ncp
+    PUBLIC
+        openthread-ftd
+)
+
+target_link_libraries(openthread-ncp-mtd
+    PRIVATE
+        openthread-spinel-ncp
+    PUBLIC
+        openthread-mtd
+)
+
+target_link_libraries(openthread-rcp
+    PRIVATE
+        openthread-spinel-rcp
+    PUBLIC
+        openthread-radio
+)

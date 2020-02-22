@@ -37,8 +37,11 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 #include "crypto/aes_ccm.hpp"
 #include "thread/key_manager.hpp"
+#endif
 
 namespace ot {
 namespace Mac {

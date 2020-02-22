@@ -37,7 +37,6 @@
 
 #include "common/logging.hpp"
 #include "common/new.hpp"
-#include "thread/router_table.hpp"
 
 namespace ot {
 
