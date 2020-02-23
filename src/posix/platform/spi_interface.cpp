@@ -88,8 +88,8 @@ SpiInterface::SpiInterface(SpinelInterface::Callbacks &aCallback, SpinelInterfac
 
 otError SpiInterface::Init(const otPlatformConfig &aPlatformConfig)
 {
-    int               aIntDeviceIndex;
-    int               aResetDeviceIndex;
+    int               aIntDeviceIndex   = -1;
+    int               aResetDeviceIndex = -1;
     uint8_t           aSpiGpioIntLine;
     uint8_t           aSpiGpioResetLine;
     uint8_t           aSpiSpeed           = (uint8_t)OT_PLATFORM_CONFIG_SPI_DEFAULT_SPEED_HZ;
@@ -110,7 +110,7 @@ otError SpiInterface::Init(const otPlatformConfig &aPlatformConfig)
             }
             else if (!strcmp(aRadioUrl->mArgName[i], "gpio-int-line"))
             {
-                sscanf(aRadioUrl->mArgValue[i], "%c", &aSpiGpioResetLine);
+                sscanf(aRadioUrl->mArgValue[i], "%c", &aSpiGpioIntLine);
             }
             else if (!strcmp(aRadioUrl->mArgName[i], "gpio-reset-dev"))
             {
@@ -151,9 +151,20 @@ otError SpiInterface::Init(const otPlatformConfig &aPlatformConfig)
             }
         }
     }
+
+    if (aIntDeviceIndex < 0)
+    {
+        fprintf(stderr, "Must specify gpio-int-dev\n");
+        DieNow(OT_EXIT_INVALID_ARGUMENTS);
+    }
+
+    if (aResetDeviceIndex < 0)
+    {
+        fprintf(stderr, "Must specify gpio-reset-dev\n");
+        DieNow(OT_EXIT_INVALID_ARGUMENTS);
+    }
+
     VerifyOrDie(aSpiAlignAllowance <= kSpiAlignAllowanceMax, OT_EXIT_FAILURE);
-    VerifyOrDie(aIntDeviceIndex < 0, OT_EXIT_FAILURE);
-    VerifyOrDie(aResetDeviceIndex < 0, OT_EXIT_FAILURE);
 
     mSpiCsDelayUs       = aSpiCsDelay;
     mSpiSmallPacketSize = aSpiSmallPacketSize;

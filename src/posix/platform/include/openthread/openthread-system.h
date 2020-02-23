@@ -111,10 +111,10 @@ enum
  */
 enum
 {
-    OT_PLATFORM_CONFIG_URL_MAX_PROTOCOLS   = 3,  ///< Max supported protocols like spinel+hdlc+uart
-    OT_PLATFORM_CONFIG_URL_DEVICE_FILE_LEN = 50, ///< Device file max length
-    OT_PLATFORM_CONFIG_URL_MAX_ARGS        = 10, ///< Max supported device arguments
-    OT_PLATFORM_CONFIG_URL_ARG_VALUE_LEN   = 20, ///< Device arguments max length
+    OT_PLATFORM_CONFIG_URL_MAX_PROTOCOLS   = 3,   ///< Max supported protocols like spinel+hdlc+uart
+    OT_PLATFORM_CONFIG_URL_DEVICE_FILE_LEN = 100, ///< Device file max length
+    OT_PLATFORM_CONFIG_URL_MAX_ARGS        = 10,  ///< Max supported device arguments
+    OT_PLATFORM_CONFIG_URL_ARG_VALUE_LEN   = 20,  ///< Device arguments max length
 };
 
 /**

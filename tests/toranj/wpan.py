@@ -307,7 +307,7 @@ class Node(object):
 
         index = Node._cur_index
         Node._cur_index += 1
-        rcp_url = 'spinel+hdlc+forkpty://%s?arg=%d' % (_OT_RCP, index)
+        rcp_url = 'spinel+hdlc+forkpty://%s?arg=%d' % (self._OT_RCP, index)
 
         self._index = index
         self._interface_name = self._INTFC_NAME_PREFIX + str(index)

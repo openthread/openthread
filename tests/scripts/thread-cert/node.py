@@ -86,12 +86,12 @@ class Node:
                 cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
         elif ('top_builddir') in os.environ:
             srcdir = os.environ['top_builddir']
-            cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
+            cmd = '%s/examples/apps/cli/ot-cli-%s ' % (srcdir, mode)
         else:
             cmd = '%s/ot-cli-%s' % (self.version, mode)
 
         if 'RADIO_DEVICE' in os.environ:
-            cmd += ' -v spinel+hdlc+forkpty://%s?arg=' % os.environ[
+            cmd += '-v spinel+hdlc+forkpty://%s?arg=' % os.environ[
                 'RADIO_DEVICE']
             os.environ['NODE_ID'] = str(nodeid)
 
@@ -113,13 +113,13 @@ class Node:
     def __init_ncp_sim(self, nodeid, mode):
         """ Initialize an NCP simulation node. """
         if 'RADIO_DEVICE' in os.environ:
-            args = ' %s' % os.environ['RADIO_DEVICE']
+            args = '%s' % os.environ['RADIO_DEVICE']
             os.environ['NODE_ID'] = str(nodeid)
         else:
             args = ''
 
         if 'OT_NCP_PATH' in os.environ:
-            cmd = 'spinel-cli.py -p "%s%s" -n' % (
+            cmd = 'spinel-cli.py -p "%s" -n spinel+hdlc+forkpty://%s?arg=' % (
                 os.environ['OT_NCP_PATH'],
                 args,
             )
@@ -132,25 +132,25 @@ class Node:
             elif ('top_builddir_1_1') in os.environ:
                 srcdir = os.environ['top_builddir_1_1']
                 cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
-                cmd = 'spinel-cli.py -p "%s%s" -n' % (
+                cmd = 'spinel-cli.py -p "%s%s" -n ' % (
                     cmd,
                     args,
                 )
         elif ('top_builddir') in os.environ:
             srcdir = os.environ['top_builddir']
             cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
-            cmd = 'spinel-cli.py -p "%s%s" -n' % (
+            cmd = 'spinel-cli.py -p "%s%s" -n ' % (
                 cmd,
                 args,
             )
         else:
-            cmd = 'spinel-cli.py -p "%s/ot-ncp-%s%s" -n' % (
+            cmd = 'spinel-cli.py -p "%s/ot-ncp-%s%s" -n ' % (
                 self.version,
                 mode,
                 args,
             )
 
-        cmd += ' %d' % nodeid
+        cmd += '%d' % nodeid
         print("%s" % cmd)
 
         self.pexpect = pexpect.spawn(cmd, timeout=4)
@@ -259,7 +259,7 @@ class Node:
         print("%d: %s" % (self.nodeid, cmd))
         self.pexpect.send(cmd + '\n')
         if go:
-            self.simulator.go(0, nodeid=self.nodeid)
+            self.simulator.go(1, nodeid=self.nodeid)
         sys.stdout.flush()
 
     def get_commands(self):
