@@ -34,82 +34,12 @@ set(COMMON_INCLUDES
 )
 
 if(OT_DAEMON)
-    add_executable(ot-daemon
-        main.c
-    )
-
-    target_include_directories(ot-daemon PRIVATE ${COMMON_INCLUDES})
-
-    target_compile_definitions(ot-daemon PRIVATE
-        OPENTHREAD_POSIX_APP_TYPE=2
-    )
-
-    target_compile_options(ot-daemon PRIVATE
-        ${OT_CFLAGS}
-    )
-
-    target_link_libraries(ot-daemon PRIVATE
-        openthread-cli-ftd
-        ${OT_PLATFORM_LIB}
-        openthread-ftd
-        ${OT_PLATFORM_LIB}
-        openthread-ncp-ftd
-        mbedcrypto
-    )
-
-    add_executable(ot-ctl
-        client.cpp
-    )
-
-    target_compile_options(ot-ctl PRIVATE
-        ${OT_CFLAGS}
-    )
-
-    target_include_directories(ot-ctl PRIVATE ${COMMON_INCLUDES})
+    include(daemon.cmake)
 else()
-    add_executable(ot-cli
-        main.c
-    )
-
-    target_include_directories(ot-cli PRIVATE ${COMMON_INCLUDES})
-
-    target_compile_definitions(ot-cli PRIVATE
-        OPENTHREAD_POSIX_APP_TYPE=2
-    )
-
-    target_compile_options(ot-cli PRIVATE
-        ${OT_CFLAGS}
-    )
-
-    target_link_libraries(ot-cli
-        openthread-cli-ftd
-        ${OT_PLATFORM_LIB}
-        openthread-ftd
-        ${OT_PLATFORM_LIB}
-        mbedcrypto
-        openthread-ncp-ftd
-    )
-
-    add_executable(ot-ncp
-        main.c
-    )
-
-    target_include_directories(ot-ncp PRIVATE ${COMMON_INCLUDES})
-
-    target_compile_definitions(ot-ncp PRIVATE
-        OPENTHREAD_POSIX_APP_TYPE=1
-    )
-
-    target_compile_options(ot-ncp PRIVATE
-        ${OT_CFLAGS}
-    )
-
-    target_link_libraries(ot-ncp
-        openthread-ncp-ftd
-        ${OT_PLATFORM_LIB}
-        openthread-ftd
-        ${OT_PLATFORM_LIB}
-        mbedcrypto
-        openthread-ncp-ftd
-    )
+    include(standalone.cmake)
 endif()
+
+set(CPACK_GENERATOR "DEB")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "OpenThread Authors <openthread-users@googlegroups.com")
+set(CPACK_PACKAGE_CONTACT "OpenThread Authors <openthread-users@googlegroups.com")
+include(CPack)

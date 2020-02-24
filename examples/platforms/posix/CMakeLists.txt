@@ -81,3 +81,9 @@ target_include_directories(openthread-posix PRIVATE
     ${PROJECT_SOURCE_DIR}/examples/platforms
     ${PROJECT_SOURCE_DIR}/src/core
 )
+
+set(CPACK_PACKAGE_NAME "openthread-simulation")
+set(CPACK_GENERATOR "DEB")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "OpenThread Authors <openthread-users@googlegroups.com")
+set(CPACK_PACKAGE_CONTACT "OpenThread Authors <openthread-users@googlegroups.com")
+include(CPack)

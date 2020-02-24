@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,51 +26,42 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_executable(ot-ncp-ftd
+add_executable(ot-daemon
     main.c
 )
 
-add_executable(ot-ncp-mtd
-    main.c
+target_include_directories(ot-daemon PRIVATE ${COMMON_INCLUDES})
+
+target_compile_definitions(ot-daemon PRIVATE
+    OPENTHREAD_POSIX_APP_TYPE=2
 )
 
-add_executable(ot-rcp
-    main.c
+target_compile_options(ot-daemon PRIVATE
+    ${OT_CFLAGS}
 )
 
-set(COMMON_INCLUDES
-    ${OT_PUBLIC_INCLUDES}
-    ${OT_PRIVATE_INCLUDES}
-    ${PROJECT_SOURCE_DIR}/examples/platforms
-    ${PROJECT_SOURCE_DIR}/src/core
-)
-
-target_include_directories(ot-ncp-ftd PRIVATE ${COMMON_INCLUDES})
-target_include_directories(ot-ncp-mtd PRIVATE ${COMMON_INCLUDES})
-target_include_directories(ot-rcp PRIVATE ${COMMON_INCLUDES})
-
-target_link_libraries(ot-ncp-ftd
-    openthread-ncp-ftd
+target_link_libraries(ot-daemon PRIVATE
+    openthread-cli-ftd
     ${OT_PLATFORM_LIB}
     openthread-ftd
     ${OT_PLATFORM_LIB}
+    openthread-ncp-ftd
     mbedcrypto
 )
 
-target_link_libraries(ot-ncp-mtd
-    openthread-ncp-mtd
-    ${OT_PLATFORM_LIB}
-    openthread-mtd
-    ${OT_PLATFORM_LIB}
-    mbedcrypto
+add_executable(ot-ctl
+    client.cpp
 )
 
-target_link_libraries(ot-rcp
-    openthread-rcp
-    ${OT_PLATFORM_LIB}
-    openthread-radio
-    ${OT_PLATFORM_LIB}
+target_compile_options(ot-ctl PRIVATE
+    ${OT_CFLAGS}
 )
 
-install(TARGETS ot-rcp ot-ncp-ftd ot-ncp-mtd
+target_include_directories(ot-ctl PRIVATE ${COMMON_INCLUDES})
+
+install(TARGETS ot-daemon
+    DESTINATION sbin)
+install(TARGETS ot-ctl
     DESTINATION bin)
+
+set(CPACK_PACKAGE_NAME "openthread-daemon")
