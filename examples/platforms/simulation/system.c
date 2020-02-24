@@ -32,9 +32,9 @@
  *   This file includes the platform-specific initializers.
  */
 
-#include "platform-sim.h"
+#include "platform-simulation.h"
 
-#if OPENTHREAD_SIM_VIRTUAL_TIME == 0
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
 
 #include <assert.h>
 #include <errno.h>
@@ -162,4 +162,4 @@ void otSysProcessDrivers(otInstance *aInstance)
     }
 }
 
-#endif // OPENTHREAD_SIM_VIRTUAL_TIME == 0
+#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0

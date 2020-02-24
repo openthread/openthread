@@ -9,7 +9,7 @@ This directory contains example platform drivers for simulation on POSIX.
 ```bash
 $ cd <path-to-openthread>
 $ ./bootstrap
-$ make -f examples/Makefile-sim
+$ make -f examples/Makefile-simulation
 ```
 
 After a successful build, the `elf` files are found in:
@@ -21,7 +21,7 @@ After a successful build, the `elf` files are found in:
 ```bash
 $ cd <path-to-openthread>
 $ mkdir build && cd build
-$ cmake -GNinja -DOT_PLATFORM=sim ..
+$ cmake -GNinja -DOT_PLATFORM=simulation ..
 $ ninja
 ```
 

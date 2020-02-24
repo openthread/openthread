@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-sim.h"
+#include "platform-simulation.h"
 #include <openthread-core-config.h>
 #include <openthread/config.h>
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,58 +26,55 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file includes the platform-specific configuration.
- *
- */
+#include "platform-simulation.h"
+
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/time.h>
+
+#include <openthread/config.h>
+#include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/radio.h>
+
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
 /**
- * @def OPENTHREAD_SIM_UART_BAUDRATE
- *
- * This setting configures the baud rate of the UART.
+ * Diagnostics mode variables.
  *
  */
-#ifndef OPENTHREAD_SIM_UART_BAUDRATE
-#define OPENTHREAD_SIM_UART_BAUDRATE B115200
-#endif
+static bool sDiagMode = false;
 
-/**
- * @def OPENTHREAD_SIM_VIRTUAL_TIME
- *
- * This setting configures whether to use virtual time (used for simulation) in simulation platform.
- *
- */
-#ifndef OPENTHREAD_SIM_VIRTUAL_TIME
-#define OPENTHREAD_SIM_VIRTUAL_TIME 0
-#endif
+void otPlatDiagModeSet(bool aMode)
+{
+    sDiagMode = aMode;
+}
 
-/**
- * @def OPENTHREAD_SIM_VIRTUAL_TIME_UART
- *
- * This setting configures whether to use virtual time for UART.
- *
- */
-#ifndef OPENTHREAD_SIM_VIRTUAL_TIME_UART
-#define OPENTHREAD_SIM_VIRTUAL_TIME_UART 0
-#endif
+bool otPlatDiagModeGet()
+{
+    return sDiagMode;
+}
 
-/**
- * @def OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
- *
- * Define as 1 to enable pseudo-reset.
- *
- */
-#ifndef OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
-#define OPENTHREAD_PLATFORM_USE_PSEUDO_RESET 0
-#endif
+void otPlatDiagChannelSet(uint8_t aChannel)
+{
+    OT_UNUSED_VARIABLE(aChannel);
+}
 
-/**
- * @def OPENTHREAD_CONFIG_NCP_SPI_ENABLE
- *
- * Define as 1 to enable SPI NCP interface.
- *
- */
-#ifndef OPENTHREAD_CONFIG_NCP_SPI_ENABLE
-#define OPENTHREAD_CONFIG_NCP_SPI_ENABLE 0
-#endif
+void otPlatDiagTxPowerSet(int8_t aTxPower)
+{
+    OT_UNUSED_VARIABLE(aTxPower);
+}
+
+void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aFrame);
+    OT_UNUSED_VARIABLE(aError);
+}
+
+void otPlatDiagAlarmCallback(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+#endif // OPENTHREAD_CONFIG_DIAG_ENABLE

@@ -97,6 +97,6 @@ if OPENTHREAD_EXAMPLES_SAMR21
 include $(top_srcdir)/examples/platforms/samr21/Makefile.platform.am
 endif # OPENTHREAD_EXAMPLES_SAMR21
 
-if OPENTHREAD_EXAMPLES_SIM
-include $(top_srcdir)/examples/platforms/sim/Makefile.platform.am
+if OPENTHREAD_EXAMPLES_SIMULATION
+include $(top_srcdir)/examples/platforms/simulation/Makefile.platform.am
 endif

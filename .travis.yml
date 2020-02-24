@@ -86,23 +86,23 @@ jobs:
     - env: BUILD_TARGET="gn-build" VERBOSE=1
       os: linux
       script: .travis/script.sh
-    - env: BUILD_TARGET="sim-distcheck" VERBOSE=1 VIRTUAL_TIME=1
+    - env: BUILD_TARGET="simulation-distcheck" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: clang
       script: .travis/script.sh
-    - env: BUILD_TARGET="sim-32-bit" VERBOSE=1 VIRTUAL_TIME=1
+    - env: BUILD_TARGET="simulation-32-bit" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
       script: .travis/script.sh
-    - env: BUILD_TARGET="sim-32-bit" VERBOSE=1 VIRTUAL_TIME=1 TIME_SYNC=1
+    - env: BUILD_TARGET="simulation-32-bit" VERBOSE=1 VIRTUAL_TIME=1 TIME_SYNC=1
       os: linux
       compiler: gcc
       script: .travis/script.sh
-    - env: BUILD_TARGET="sim-ncp" VERBOSE=1 VIRTUAL_TIME=1
+    - env: BUILD_TARGET="simulation-ncp" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
       script: .travis/script.sh
-    - env: BUILD_TARGET="sim-mtd" VERBOSE=1 VIRTUAL_TIME=1
+    - env: BUILD_TARGET="simulation-mtd" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
       script: .travis/script.sh
@@ -136,7 +136,7 @@ jobs:
       os: linux
       compiler: gcc
       script: .travis/script.sh
-    - env: BUILD_TARGET="sim" CC="gcc-5" CXX="g++-5"
+    - env: BUILD_TARGET="simulation" CC="gcc-5" CXX="g++-5"
       os: linux
       compiler: gcc
       addons:
@@ -145,7 +145,7 @@ jobs:
             - gcc-5
             - g++-5
       script: .travis/script.sh
-    - env: BUILD_TARGET="sim" CC="gcc-6" CXX="g++-6"
+    - env: BUILD_TARGET="simulation" CC="gcc-6" CXX="g++-6"
       os: linux
       compiler: gcc
       addons:
@@ -154,7 +154,7 @@ jobs:
             - gcc-6
             - g++-6
       script: .travis/script.sh
-    - env: BUILD_TARGET="sim" CC="gcc-7" CXX="g++-7"
+    - env: BUILD_TARGET="simulation" CC="gcc-7" CXX="g++-7"
       os: linux
       compiler: gcc
       addons:
@@ -163,7 +163,7 @@ jobs:
             - gcc-7
             - g++-7
       script: .travis/script.sh
-    - env: BUILD_TARGET="sim" CC="gcc-8" CXX="g++-8"
+    - env: BUILD_TARGET="simulation" CC="gcc-8" CXX="g++-8"
       os: linux
       compiler: gcc
       addons:
@@ -172,7 +172,7 @@ jobs:
             - gcc-8
             - g++-8
       script: .travis/script.sh
-    - env: BUILD_TARGET="sim" CC="gcc-9" CXX="g++-9"
+    - env: BUILD_TARGET="simulation" CC="gcc-9" CXX="g++-9"
       os: linux
       compiler: gcc
       addons:
@@ -183,7 +183,7 @@ jobs:
             - gcc-9
             - g++-9
       script: .travis/script.sh
-    - env: BUILD_TARGET="sim-ncp-spi" VERBOSE=1
+    - env: BUILD_TARGET="simulation-ncp-spi" VERBOSE=1
       os: linux
       compiler: gcc
       script: .travis/script.sh

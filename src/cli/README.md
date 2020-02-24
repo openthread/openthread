@@ -718,7 +718,7 @@ Done
 
 ### logfilename \<filename\>
 
-- Note: Simulation Only, ie: `OPENTHREAD_EXAMPLES_SIM`
+- Note: Simulation Only, ie: `OPENTHREAD_EXAMPLES_SIMULATION`
 - Requires `OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART`
 
 Specifies filename to capture otPlatLog() messages, useful when

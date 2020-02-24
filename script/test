@@ -38,9 +38,9 @@ export top_builddir="build/${SYSTEM_TRIPLET}"
 
 do_build() {
     if [[ -n "${RADIO_DEVICE}" && "${VIRTUAL_TIME}" = 1 ]]; then
-        VIRTUAL_TIME_UART=1 make -f examples/Makefile-sim
+        VIRTUAL_TIME_UART=1 make -f examples/Makefile-simulation
     else
-        make -f examples/Makefile-sim
+        make -f examples/Makefile-simulation
     fi
 
     if [[ -n "${RADIO_DEVICE}" ]]; then

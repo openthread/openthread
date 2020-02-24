@@ -108,7 +108,7 @@ case ${build_config} in
         cd "${top_builddir}"
         ${top_srcdir}/configure                 \
             CPPFLAGS="$cppflags_config"         \
-            --with-examples=sim                 \
+            --with-examples=simulation          \
             $configure_options || die
         make -j 8 || die
         ;;
@@ -124,7 +124,7 @@ case ${build_config} in
             --enable-coverage=${coverage}       \
             --enable-ncp                        \
             --enable-radio-only                 \
-            --with-examples=sim                 \
+            --with-examples=simulation          \
             --disable-docs                      \
             --enable-tests=$tests || die
         make -j 8 || die
@@ -147,7 +147,7 @@ case ${build_config} in
         echo "===================================================================================================="
         echo "Building OpenThread (NCP/CLI for FTD/MTD/RCP mode) with simulation platform using cmake"
         echo "===================================================================================================="
-        cmake -GNinja -DOT_PLATFORM=sim -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config.h . || die
+        cmake -GNinja -DOT_PLATFORM=simulation -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config.h . || die
         ninja || die
         ;;
 

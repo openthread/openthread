@@ -26,76 +26,62 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-sim.h"
+#include "platform-simulation.h"
 
-#include <setjmp.h>
-#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include <openthread/platform/misc.h>
+#include <openthread/config.h>
+#include <openthread/platform/spi-slave.h>
+#include <openthread/platform/uart.h>
 
-#include "openthread-system.h"
+#if OPENTHREAD_CONFIG_NCP_SPI_ENABLE
 
-extern jmp_buf gResetJump;
+// Spi-slave stubs
 
-static otPlatResetReason   sPlatResetReason = OT_PLAT_RESET_REASON_POWER_ON;
-bool                       gPlatformPseudoResetWasRequested;
-static otPlatMcuPowerState gPlatMcuPowerState = OT_PLAT_MCU_POWER_STATE_ON;
-
-void otPlatReset(otInstance *aInstance)
+otError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aCompleteCallback,
+                             otPlatSpiSlaveTransactionProcessCallback  aProcessCallback,
+                             void *                                    aContext)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aCompleteCallback);
+    OT_UNUSED_VARIABLE(aProcessCallback);
+    OT_UNUSED_VARIABLE(aContext);
 
-#if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
-    gPlatformPseudoResetWasRequested = true;
-    sPlatResetReason                 = OT_PLAT_RESET_REASON_SOFTWARE;
+    fprintf(stderr, "\nNo SPI support for simulation platform.");
+    exit(0);
 
-#else // OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
-    // Restart the process using execvp.
-    otSysDeinit();
-    platformUartRestore();
-
-    longjmp(gResetJump, 1);
-    assert(false);
-
-#endif // OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
+void otPlatSpiSlaveDisable(void)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
-    return sPlatResetReason;
 }
 
-void otPlatWakeHost(void)
+otError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf,
+                                         uint16_t aOutputBufLen,
+                                         uint8_t *aInputBuf,
+                                         uint16_t aInputBufLen,
+                                         bool     aRequestTransactionFlag)
 {
-    // TODO: implement an operation to wake the host from sleep state.
+    OT_UNUSED_VARIABLE(aOutputBuf);
+    OT_UNUSED_VARIABLE(aOutputBufLen);
+    OT_UNUSED_VARIABLE(aInputBuf);
+    OT_UNUSED_VARIABLE(aInputBufLen);
+    OT_UNUSED_VARIABLE(aRequestTransactionFlag);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState)
+// Uart
+
+void otPlatUartSendDone(void)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
-    otError error = OT_ERROR_NONE;
-
-    switch (aState)
-    {
-    case OT_PLAT_MCU_POWER_STATE_ON:
-    case OT_PLAT_MCU_POWER_STATE_LOW_POWER:
-        gPlatMcuPowerState = aState;
-        break;
-
-    default:
-        error = OT_ERROR_FAILED;
-        break;
-    }
-
-    return error;
 }
 
-otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance)
+void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
-    return gPlatMcuPowerState;
+    OT_UNUSED_VARIABLE(aBuf);
+    OT_UNUSED_VARIABLE(aBufLength);
 }
+
+#endif // OPENTHREAD_CONFIG_NCP_SPI_ENABLE

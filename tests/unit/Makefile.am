@@ -59,7 +59,7 @@ AM_CPPFLAGS                                                         = \
     -I$(top_srcdir)/src/core                                          \
     $(NULL)
 
-if OPENTHREAD_EXAMPLES_SIM
+if OPENTHREAD_EXAMPLES_SIMULATION
 AM_CPPFLAGS                                                        += \
     -I$(top_srcdir)/examples/platforms                                \
     $(NULL)

@@ -828,7 +828,7 @@ AC_MSG_CHECKING([whether to build examples])
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Build example applications for one of: sim, cc1352, cc2538, cc2650, cc2652, efr32mg12, efr32mg13, efr32mg21,
+        [Build example applications for one of: simulation, cc1352, cc2538, cc2650, cc2652, efr32mg12, efr32mg13, efr32mg21,
          gp712, kw41z, nrf52811, nrf52833, nrf52840, qpg6095, samr21 @<:@default=no@:>@.
          Note that building example applications also builds the associated OpenThread platform libraries
          and any third_party libraries needed to support the examples.])],
@@ -836,7 +836,7 @@ AC_ARG_WITH(examples,
         case "${with_examples}" in
         no)
             ;;
-        sim|cc1352|cc2538|cc2650|cc2652|efr32mg12|efr32mg13|efr32mg21|gp712|kw41z|nrf52811|nrf52833|nrf52840|qpg6095|samr21)
+        simulation|cc1352|cc2538|cc2650|cc2652|efr32mg12|efr32mg13|efr32mg21|gp712|kw41z|nrf52811|nrf52833|nrf52840|qpg6095|samr21)
             if test ${enable_posix_app} = "yes"; then
                 AC_MSG_RESULT(ERROR)
                 AC_MSG_ERROR([--with-examples must be no when POSIX apps are enabled by --enable-posix-app])
@@ -852,7 +852,7 @@ AC_ARG_WITH(examples,
 
 AM_CONDITIONAL([OPENTHREAD_ENABLE_EXAMPLES], [test ${with_examples} != "no"])
 
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_SIM],       [test "${with_examples}" = "sim"])
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_SIMULATION],[test "${with_examples}" = "simulation"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC1352],    [test "${with_examples}" = "cc1352"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2538],    [test "${with_examples}" = "cc2538"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2650],    [test "${with_examples}" = "cc2650"])
@@ -868,7 +868,7 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF52840],  [test "${with_examples}" = "nrf5
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_QPG6095],   [test "${with_examples}" = "qpg6095"])
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_SAMR21],    [test "${with_examples}" = "samr21"])
 
-AM_COND_IF([OPENTHREAD_EXAMPLES_SIM], CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_EXAMPLES_SIM=1", CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_EXAMPLES_SIM=0")
+AM_COND_IF([OPENTHREAD_EXAMPLES_SIMULATION], CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_EXAMPLES_SIMULATION=1", CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_EXAMPLES_SIMULATION=0")
 
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_NRF528XX], [test OPENTHREAD_EXAMPLES_NRF52811 || test OPENTHREAD_EXAMPLES_NRF52833 || test OPENTHREAD_EXAMPLES_NRF52840])
 
@@ -925,7 +925,7 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_PLATFORM], [test ${with_platform} != "no"])
 
 OPENTHREAD_ENABLE_PLATFORM=${with_platform}
 
-AM_CONDITIONAL([OPENTHREAD_PLATFORM_SIM],       [test "${with_platform}" = "sim"])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_SIMULATION],[test "${with_platform}" = "simulation"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_CC1352],    [test "${with_platform}" = "cc1352"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_CC2538],    [test "${with_platform}" = "cc2538"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_CC2650],    [test "${with_platform}" = "cc2650"])
@@ -988,7 +988,7 @@ NL_ENABLE_DOCS([auto],[NO])
 
 AM_CONDITIONAL(OPENTHREAD_BUILD_DOCS, [test "${nl_cv_build_docs}" = "yes"])
 
-AM_CONDITIONAL(OPENTHREAD_POSIX, [test "${enable_posix_app}" = "yes" -o "${with_examples}" = "sim"])
+AM_CONDITIONAL(OPENTHREAD_POSIX, [test "${enable_posix_app}" = "yes" -o "${with_examples}" = "simulation"])
 
 #
 # Checks for libraries and packages.
@@ -1097,7 +1097,7 @@ examples/platforms/kw41z/Makefile
 examples/platforms/nrf528xx/Makefile
 examples/platforms/qpg6095/Makefile
 examples/platforms/samr21/Makefile
-examples/platforms/sim/Makefile
+examples/platforms/simulation/Makefile
 examples/platforms/utils/Makefile
 tools/Makefile
 tools/harness-automation/Makefile

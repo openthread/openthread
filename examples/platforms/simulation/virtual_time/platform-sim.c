@@ -32,9 +32,9 @@
  *   This file includes the platform-specific initializers.
  */
 
-#include "platform-sim.h"
+#include "platform-simulation.h"
 
-#if OPENTHREAD_SIM_VIRTUAL_TIME
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME
 
 #include <assert.h>
 #include <errno.h>
@@ -133,7 +133,7 @@ static void platformSendSleepEvent(void)
     otSimSendEvent(&event);
 }
 
-#if OPENTHREAD_SIM_VIRTUAL_TIME_UART
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART
 void platformUartRestore(void)
 {
 }
@@ -170,7 +170,7 @@ otError otPlatUartFlush(void)
 {
     return OT_ERROR_NOT_IMPLEMENTED;
 }
-#endif // OPENTHREAD_SIM_VIRTUAL_TIME_UART
+#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART
 
 static void socket_init(void)
 {
@@ -283,7 +283,7 @@ void otSysProcessDrivers(otInstance *aInstance)
     FD_SET(sSockFd, &read_fds);
     max_fd = sSockFd;
 
-#if OPENTHREAD_SIM_VIRTUAL_TIME_UART == 0
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART == 0
     platformUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
 #endif
 
@@ -307,9 +307,9 @@ void otSysProcessDrivers(otInstance *aInstance)
 
     platformAlarmProcess(aInstance);
     platformRadioProcess(aInstance, &read_fds, &write_fds);
-#if OPENTHREAD_SIM_VIRTUAL_TIME_UART == 0
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART == 0
     platformUartProcess();
 #endif
 }
 
-#endif // OPENTHREAD_SIM_VIRTUAL_TIME
+#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME

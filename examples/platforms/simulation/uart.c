@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-sim.h"
+#include "platform-simulation.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -43,7 +43,7 @@
 
 #include "utils/code_utils.h"
 
-#if OPENTHREAD_SIM_VIRTUAL_TIME_UART == 0
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART == 0
 #ifdef OPENTHREAD_TARGET_LINUX
 #include <sys/prctl.h>
 int   posix_openpt(int oflag);
@@ -128,7 +128,7 @@ otError otPlatUartEnable(void)
         termios.c_cc[VTIME] = 0;
 
         // configure baud rate
-        otEXPECT_ACTION(cfsetispeed(&termios, OPENTHREAD_SIM_UART_BAUDRATE) == 0, perror("cfsetispeed");
+        otEXPECT_ACTION(cfsetispeed(&termios, OPENTHREAD_SIMULATION_UART_BAUDRATE) == 0, perror("cfsetispeed");
                         error = OT_ERROR_GENERIC);
 
         // set configuration
@@ -151,7 +151,7 @@ otError otPlatUartEnable(void)
         termios.c_cflag |= HUPCL | CREAD | CLOCAL;
 
         // configure baud rate
-        otEXPECT_ACTION(cfsetospeed(&termios, OPENTHREAD_SIM_UART_BAUDRATE) == 0, perror("cfsetospeed");
+        otEXPECT_ACTION(cfsetospeed(&termios, OPENTHREAD_SIMULATION_UART_BAUDRATE) == 0, perror("cfsetospeed");
                         error = OT_ERROR_GENERIC);
 
         // set configuration
@@ -317,7 +317,7 @@ void platformUartProcess(void)
         }
     }
 }
-#endif // OPENTHREAD_SIM_VIRTUAL_TIME_UART == 0
+#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART == 0
 
 #if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART && (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART)
 

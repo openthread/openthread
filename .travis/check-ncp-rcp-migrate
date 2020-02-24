@@ -42,7 +42,7 @@ at_exit() {
 }
 
 build() {
-    make -f examples/Makefile-sim
+    make -f examples/Makefile-simulation
     make -f src/posix/Makefile-posix
 }
 
