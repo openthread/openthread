@@ -50,7 +50,8 @@ static uint32_t sUsAlarm     = 0;
 
 static uint32_t sSpeedUpFactor = 1;
 
-uint64_t platformGetRealTime(void)
+#if !OPENTHREAD_POSIX_VIRTUAL_TIME
+uint64_t platformGetTime(void)
 {
     struct timespec now;
 
@@ -61,12 +62,6 @@ uint64_t platformGetRealTime(void)
 #endif
 
     return (uint64_t)now.tv_sec * US_PER_S + (uint64_t)now.tv_nsec / NS_PER_US;
-}
-
-#if !OPENTHREAD_POSIX_VIRTUAL_TIME
-uint64_t platformGetTime(void)
-{
-    return platformGetRealTime();
 }
 #endif // !OPENTHREAD_POSIX_VIRTUAL_TIME
 

@@ -1237,7 +1237,7 @@ otError RadioSpinel::Remove(spinel_prop_key_t aKey, const char *aFormat, ...)
 
 otError RadioSpinel::WaitResponse(void)
 {
-    uint64_t end = platformGetRealTime() + kMaxWaitTime * US_PER_MS;
+    uint64_t end = platformGetTime() + kMaxWaitTime * US_PER_MS;
 
     otLogInfoPlat("Wait response: tid=%u key=%u", mWaitingTid, mWaitingKey);
 
@@ -1247,7 +1247,7 @@ otError RadioSpinel::WaitResponse(void)
         uint64_t       remain;
         struct timeval timeout;
 
-        now = platformGetRealTime();
+        now = platformGetTime();
         VerifyOrDie(end > now, OT_EXIT_RADIO_SPINEL_NO_RESPONSE);
         remain = end - now;
 
