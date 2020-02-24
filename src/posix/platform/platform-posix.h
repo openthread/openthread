@@ -384,6 +384,16 @@ void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct Event *aE
  * @returns System time in microseconds.
  *
  */
+uint64_t platformGetRealTime(void);
+
+/**
+ * This function gets time for OpenThread scheduler in microseconds without applying speed up factor.
+ *
+ * @note In virtual time mode, this is virtual time. Otherwise, this is the same as platformGetRealTime().
+ *
+ * @returns the time in microseconds.
+ *
+ */
 uint64_t platformGetTime(void);
 
 /**
