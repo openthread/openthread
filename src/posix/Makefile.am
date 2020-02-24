@@ -50,6 +50,7 @@ CPPFLAGS_COMMON                                                        = \
     -I$(top_srcdir)/include                                              \
     -I$(top_srcdir)/src/core                                             \
     -I$(top_srcdir)/src/posix/platform                                   \
+    -I$(top_srcdir)/src/posix/platform/include                           \
     -D_GNU_SOURCE                                                        \
     -DOPENTHREAD_FTD=1                                                   \
     -DOPENTHREAD_MTD=0                                                   \
