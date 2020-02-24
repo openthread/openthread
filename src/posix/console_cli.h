@@ -33,7 +33,7 @@
 
 #include <stdint.h>
 
-#include "openthread-system.h"
+#include <openthread/openthread-system.h>
 
 #ifdef __cplusplus
 extern "C" {
