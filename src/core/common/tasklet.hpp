@@ -84,10 +84,19 @@ public:
     Tasklet(Instance &aInstance, Handler aHandler, void *aOwner);
 
     /**
-     * This method puts the tasklet on the run queue.
+     * This method puts the tasklet on the tasklet scheduler run queue.
      *
      */
     otError Post(void);
+
+    /**
+     * This method indicates whether the tasklet is posted or not.
+     *
+     * @retval TRUE  The tasklet is posted.
+     * @retval FALSE The tasklet is not posted.
+     *
+     */
+    bool IsPosted(void) const { return (mNext != NULL); }
 
 private:
     void RunTask(void) { mHandler(*this); }
@@ -140,6 +149,8 @@ private:
  */
 class TaskletScheduler
 {
+    friend class Tasklet;
+
 public:
     /**
      * This constructor initializes the object.
@@ -148,23 +159,13 @@ public:
     TaskletScheduler(void);
 
     /**
-     * This method enqueues a tasklet into the run queue.
-     *
-     * @param[in]  aTasklet  A reference to the tasklet to enqueue.
-     *
-     * @retval OT_ERROR_NONE     Successfully enqueued the tasklet.
-     * @retval OT_ERROR_ALREADY  The tasklet was already enqueued.
-     */
-    otError Post(Tasklet &aTasklet);
-
-    /**
      * This method indicates whether or not there are tasklets pending.
      *
      * @retval TRUE   If there are tasklets pending.
      * @retval FALSE  If there are no tasklets pending.
      *
      */
-    bool AreTaskletsPending(void) { return mHead != NULL; }
+    bool AreTaskletsPending(void) const { return mTail != NULL; }
 
     /**
      * This method processes all tasklets queued when this is called.
@@ -173,9 +174,9 @@ public:
     void ProcessQueuedTasklets(void);
 
 private:
-    Tasklet *PopTasklet(void);
-    Tasklet *mHead;
-    Tasklet *mTail;
+    void PostTasklet(Tasklet &aTasklet);
+
+    Tasklet *mTail; // A circular singly linked-list
 };
 
 /**

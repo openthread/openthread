@@ -40,7 +40,7 @@
 
 using namespace ot;
 
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 
 void otChannelManagerRequestChannelChange(otInstance *aInstance, uint8_t aChannel)
 {
@@ -70,12 +70,14 @@ otError otChannelManagerSetDelay(otInstance *aInstance, uint16_t aDelay)
     return instance.Get<Utils::ChannelManager>().SetDelay(aDelay);
 }
 
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 otError otChannelManagerRequestChannelSelect(otInstance *aInstance, bool aSkipQualityCheck)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.Get<Utils::ChannelManager>().RequestChannelSelect(aSkipQualityCheck);
 }
+#endif
 
 void otChannelManagerSetAutoChannelSelectionEnabled(otInstance *aInstance, bool aEnabled)
 {
@@ -133,4 +135,4 @@ void otChannelManagerSetFavoredChannels(otInstance *aInstance, uint32_t aChannel
     return instance.Get<Utils::ChannelManager>().SetFavoredChannels(aChannelMask);
 }
 
-#endif // OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD
+#endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD

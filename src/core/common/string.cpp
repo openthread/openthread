@@ -35,16 +35,17 @@
 
 namespace ot {
 
-#if OT_STRING_WINDOWS_WORKAROUND
-
-otError StringBase::Write(char *, uint16_t, uint16_t &, const char *, va_list)
+uint16_t StringLength(const char *aString, uint16_t aMaxLength)
 {
-    // This temporarily works around the windows `openthread_k` build failure
-    // "unresolved external symbol vsnprintf"
-    return OT_ERROR_NOT_IMPLEMENTED;
-}
+    uint16_t ret;
 
-#else
+    for (ret = 0; (ret < aMaxLength) && (aString[ret] != 0); ret++)
+    {
+        // Empty loop.
+    }
+
+    return ret;
+}
 
 otError StringBase::Write(char *aBuffer, uint16_t aSize, uint16_t &aLength, const char *aFormat, va_list aArgs)
 {
@@ -70,8 +71,6 @@ otError StringBase::Write(char *aBuffer, uint16_t aSize, uint16_t &aLength, cons
     }
 
     return error;
-};
-
-#endif // OT_STRING_WINDOWS_WORKAROUND
+}
 
 } // namespace ot

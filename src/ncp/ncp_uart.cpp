@@ -47,9 +47,14 @@
 #include "net/ip6.hpp"
 #include "utils/static_assert.hpp"
 
-#if OPENTHREAD_ENABLE_NCP_UART
+#if OPENTHREAD_CONFIG_NCP_UART_ENABLE
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <= OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE -
+                                                                  ot::Ncp::NcpBase::kSpinelCmdHeaderSize -
+                                                                  ot::Ncp::NcpBase::kSpinelPropIdSize,
+                 "diag output should be smaller than NCP UART rx buffer");
+
 OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE <= OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE,
                  "diag command line should be smaller than NCP UART rx buffer");
 #endif
@@ -59,7 +64,7 @@ namespace Ncp {
 
 #if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK == 0
 
-static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpUart), uint64_t);
+static OT_DEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpUart), uint64_t);
 
 extern "C" void otNcpInit(otInstance *aInstance)
 {
@@ -74,7 +79,7 @@ extern "C" void otNcpInit(otInstance *aInstance)
     }
 }
 
-#endif // OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT == 0
+#endif // OPENTHREAD_ENABLE_NCP_VENDOR_HOOK == 0
 
 NcpUart::NcpUart(Instance *aInstance)
     : NcpBase(aInstance)
@@ -96,11 +101,11 @@ NcpUart::NcpUart(Instance *aInstance)
 }
 
 void NcpUart::HandleFrameAddedToNcpBuffer(void *                   aContext,
-                                          NcpFrameBuffer::FrameTag aTag,
-                                          NcpFrameBuffer::Priority aPriority,
-                                          NcpFrameBuffer *         aNcpFrameBuffer)
+                                          Spinel::Buffer::FrameTag aTag,
+                                          Spinel::Buffer::Priority aPriority,
+                                          Spinel::Buffer *         aBuffer)
 {
-    OT_UNUSED_VARIABLE(aNcpFrameBuffer);
+    OT_UNUSED_VARIABLE(aBuffer);
     OT_UNUSED_VARIABLE(aTag);
     OT_UNUSED_VARIABLE(aPriority);
 
@@ -129,9 +134,9 @@ void NcpUart::EncodeAndSendToUart(void)
     uint16_t len;
     bool     prevHostPowerState;
 #if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
-    NcpFrameBufferEncrypterReader &txFrameBuffer = mTxFrameBufferEncrypterReader;
+    Spinel::BufferEncrypterReader &txFrameBuffer = mTxFrameBufferEncrypterReader;
 #else
-    NcpFrameBuffer &txFrameBuffer = mTxFrameBuffer;
+    Spinel::Buffer &txFrameBuffer = mTxFrameBuffer;
 #endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
     while (!txFrameBuffer.IsEmpty() || (mState == kFinalizingFrame))
@@ -145,7 +150,7 @@ void NcpUart::EncodeAndSendToUart(void)
                 otPlatWakeHost();
             }
 
-            VerifyOrExit(super_t::ShouldDeferHostSend() == false);
+            VerifyOrExit(!super_t::ShouldDeferHostSend());
             SuccessOrExit(mFrameEncoder.BeginFrame());
 
             txFrameBuffer.OutFrameBegin();
@@ -305,19 +310,19 @@ void NcpUart::HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength)
 
 #if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
-NcpUart::NcpFrameBufferEncrypterReader::NcpFrameBufferEncrypterReader(NcpFrameBuffer &aTxFrameBuffer)
+NcpUart::Spinel::BufferEncrypterReader::SpinelBufferEncrypterReader(Spinel::Buffer &aTxFrameBuffer)
     : mTxFrameBuffer(aTxFrameBuffer)
     , mDataBufferReadIndex(0)
     , mOutputDataLength(0)
 {
 }
 
-bool NcpUart::NcpFrameBufferEncrypterReader::IsEmpty(void) const
+bool NcpUart::Spinel::BufferEncrypterReader::IsEmpty(void) const
 {
     return mTxFrameBuffer.IsEmpty() && !mOutputDataLength;
 }
 
-otError NcpUart::NcpFrameBufferEncrypterReader::OutFrameBegin(void)
+otError NcpUart::Spinel::BufferEncrypterReader::OutFrameBegin(void)
 {
     otError status = OT_ERROR_FAILED;
 
@@ -347,22 +352,22 @@ otError NcpUart::NcpFrameBufferEncrypterReader::OutFrameBegin(void)
     return status;
 }
 
-bool NcpUart::NcpFrameBufferEncrypterReader::OutFrameHasEnded(void)
+bool NcpUart::Spinel::BufferEncrypterReader::OutFrameHasEnded(void)
 {
     return (mDataBufferReadIndex >= mOutputDataLength);
 }
 
-uint8_t NcpUart::NcpFrameBufferEncrypterReader::OutFrameReadByte(void)
+uint8_t NcpUart::Spinel::BufferEncrypterReader::OutFrameReadByte(void)
 {
     return mDataBuffer[mDataBufferReadIndex++];
 }
 
-otError NcpUart::NcpFrameBufferEncrypterReader::OutFrameRemove(void)
+otError NcpUart::Spinel::BufferEncrypterReader::OutFrameRemove(void)
 {
     return mTxFrameBuffer.OutFrameRemove();
 }
 
-void NcpUart::NcpFrameBufferEncrypterReader::Reset(void)
+void NcpUart::Spinel::BufferEncrypterReader::Reset(void)
 {
     mOutputDataLength    = 0;
     mDataBufferReadIndex = 0;
@@ -373,4 +378,4 @@ void NcpUart::NcpFrameBufferEncrypterReader::Reset(void)
 } // namespace Ncp
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_NCP_UART
+#endif // OPENTHREAD_CONFIG_NCP_UART_ENABLE

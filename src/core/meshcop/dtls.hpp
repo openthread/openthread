@@ -37,15 +37,11 @@
 #include "openthread-core-config.h"
 
 #include <mbedtls/certs.h>
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/entropy.h>
-#include <mbedtls/entropy_poll.h>
-#include <mbedtls/error.h>
 #include <mbedtls/net_sockets.h>
 #include <mbedtls/ssl.h>
 #include <mbedtls/ssl_cookie.h>
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #include <mbedtls/base64.h>
 #include <mbedtls/x509.h>
@@ -53,10 +49,11 @@
 #include <mbedtls/x509_crt.h>
 #include <mbedtls/x509_csr.h>
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/random.hpp"
 #include "common/timer.hpp"
 #include "crypto/sha256.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -74,11 +71,11 @@ public:
     {
         kPskMaxLength                = 32,
         kGuardTimeNewConnectionMilli = 2000,
-#if !OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if !OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
         kApplicationDataMaxLength = 512,
 #else
         kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH,
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     };
 
     enum State
@@ -242,7 +239,7 @@ public:
     /**
      * This method sets the PSK.
      *
-     * @param[in]  aPSK  A pointer to the PSK.
+     * @param[in]  aPsk  A pointer to the PSK.
      *
      * @retval OT_ERROR_NONE          Successfully set the PSK.
      * @retval OT_ERROR_INVALID_ARGS  The PSK is invalid.
@@ -250,7 +247,7 @@ public:
      */
     otError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     /**
      * This method sets the Pre-Shared Key (PSK) for DTLS sessions-
@@ -266,15 +263,11 @@ public:
      * @retval OT_ERROR_NONE  Successfully set the PSK.
      *
      */
-    otError SetPreSharedKey(const uint8_t *aPsk,
-                            uint16_t       aPskLength,
-                            const uint8_t *aPskIdentity,
-                            uint16_t       aPskIdLength);
+    void SetPreSharedKey(const uint8_t *aPsk, uint16_t aPskLength, const uint8_t *aPskIdentity, uint16_t aPskIdLength);
 
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-
     /**
      * This method sets a reference to the own x509 certificate with corresponding private key.
      *
@@ -285,13 +278,11 @@ public:
      * @param[in]  aPrivateKey        A pointer to the PEM formatted private key.
      * @param[in]  aPrivateKeyLength  The length of the private key.
      *
-     * @retval OT_ERROR_NONE  Successfully set the x509 certificate with his private key.
-     *
      */
-    otError SetCertificate(const uint8_t *aX509Certificate,
-                           uint32_t       aX509CertLength,
-                           const uint8_t *aPrivateKey,
-                           uint32_t       aPrivateKeyLength);
+    void SetCertificate(const uint8_t *aX509Certificate,
+                        uint32_t       aX509CertLength,
+                        const uint8_t *aPrivateKey,
+                        uint32_t       aPrivateKeyLength);
 
     /**
      * This method sets the trusted top level CAs. It is needed for validate the
@@ -302,11 +293,8 @@ public:
      * @param[in]  aX509CaCertificateChain  A pointer to the PEM formatted X509 CA chain.
      * @param[in]  aX509CaCertChainLength   The length of chain.
      *
-     * @retval OT_ERROR_NONE  Successfully set the trusted top level CAs.
-     *
      */
-    otError SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength);
-
+    void SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength);
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
 #ifdef MBEDTLS_BASE64_C
@@ -319,8 +307,9 @@ public:
      * @param[out]  aCertLength      The length of the base64 encoded peer certificate.
      * @param[in]   aCertBufferSize  The buffer size of aPeerCert.
      *
-     * @retval OT_ERROR_NONE     Successfully get the peer certificate.
-     * @retval OT_ERROR_NO_BUFS  Can't allocate memory for certificate.
+     * @retval OT_ERROR_INVALID_STATE   Not connected yet.
+     * @retval OT_ERROR_NONE            Successfully get the peer certificate.
+     * @retval OT_ERROR_NO_BUFS         Can't allocate memory for certificate.
      *
      */
     otError GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize);
@@ -336,9 +325,9 @@ public:
      *
      */
     void SetSslAuthMode(bool aVerifyPeerCertificate);
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
-#if OPENTHREAD_ENABLE_BORDER_AGENT || OPENTHREAD_ENABLE_COMMISSIONER
+#ifdef MBEDTLS_SSL_SRV_C
     /**
      * This method sets the Client ID used for generating the Hello Cookie.
      *
@@ -349,7 +338,7 @@ public:
      *
      */
     otError SetClientId(const uint8_t *aClientId, uint8_t aLength);
-#endif // OPENTHREAD_ENABLE_BORDER_AGENT || OPENTHREAD_ENABLE_COMMISSIONER
+#endif
 
     /**
      * This method sends data within the DTLS session.
@@ -367,11 +356,9 @@ public:
      * This method provides a received DTLS message to the DTLS object.
      *
      * @param[in]  aMessage  A reference to the message.
-     * @param[in]  aOffset   The offset within @p aMessage where the DTLS message starts.
-     * @param[in]  aLength   The size of the DTLS message (bytes).
      *
      */
-    void Receive(Message &aMessage, uint16_t aOffset, uint16_t aLength);
+    void Receive(Message &aMessage);
 
     /**
      * This method sets the default message sub-type that will be used for all messages without defined
@@ -390,21 +377,13 @@ public:
      */
     const Ip6::MessageInfo &GetPeerAddress(void) const { return mPeerAddress; }
 
-    /**
-     * The provisioning URL is placed here so that both the Commissioner and Joiner can share the same object.
-     *
-     */
-    ProvisioningUrlTlv mProvisioningUrl;
-
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
     void    FreeMbedtls(void);
     otError Setup(bool aClient);
 
-    static otError MapError(int rval);
-
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     /**
      * Set keys and/or certificates for dtls session dependent of used cipher suite.
      *
@@ -412,7 +391,7 @@ private:
      *
      */
     int SetApplicationCoapSecureKeys(void);
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
     static void HandleMbedtlsDebug(void *ctx, int level, const char *file, int line, const char *str);
 
@@ -451,8 +430,6 @@ private:
     static void HandleUdpTransmit(Tasklet &aTasklet);
     void        HandleUdpTransmit(void);
 
-    static int HandleMbedtlsEntropyPoll(void *aData, unsigned char *aOutput, size_t aInLen, size_t *aOutLen);
-
     void Process(void);
 
     State mState;
@@ -461,7 +438,7 @@ private:
     uint8_t mPsk[kPskMaxLength];
     uint8_t mPskLength;
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
     const uint8_t *    mCaChainSrc;
@@ -481,14 +458,12 @@ private:
     uint16_t       mPreSharedKeyLength;
     uint16_t       mPreSharedKeyIdLength;
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
     bool mVerifyPeerCertificate;
 
-    mbedtls_entropy_context  mEntropy;
-    mbedtls_ctr_drbg_context mCtrDrbg;
-    mbedtls_ssl_context      mSsl;
-    mbedtls_ssl_config       mConf;
+    mbedtls_ssl_context mSsl;
+    mbedtls_ssl_config  mConf;
 
 #ifdef MBEDTLS_SSL_COOKIE_C
     mbedtls_ssl_cookie_ctx mCookieCtx;
@@ -496,15 +471,12 @@ private:
 
     TimerMilliContext mTimer;
 
-    uint32_t mTimerIntermediate;
-    bool     mTimerSet : 1;
+    TimeMilli mTimerIntermediate;
+    bool      mTimerSet : 1;
 
     bool mLayerTwoSecurity : 1;
 
-    const Message *mReceiveMessage;
-
-    uint16_t mReceiveOffset;
-    uint16_t mReceiveLength;
+    Message *mReceiveMessage;
 
     ConnectedHandler mConnectedHandler;
     ReceiveHandler   mReceiveHandler;

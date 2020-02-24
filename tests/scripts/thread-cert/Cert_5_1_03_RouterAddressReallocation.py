@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -70,9 +69,9 @@ class Cert_5_1_03_RouterAddressReallocation(unittest.TestCase):
         self.nodes[ROUTER2].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -125,7 +124,8 @@ class Cert_5_1_03_RouterAddressReallocation(unittest.TestCase):
         router2_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
 
         # Leader or Router1 can be parent of Router2
-        if leader_messages.contains_mle_message(mle.CommandType.CHILD_ID_RESPONSE):
+        if leader_messages.contains_mle_message(
+                mle.CommandType.CHILD_ID_RESPONSE):
             leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
 
             msg = router2_messages.next_coap_message("0.02")
@@ -133,7 +133,8 @@ class Cert_5_1_03_RouterAddressReallocation(unittest.TestCase):
 
             msg = leader_messages.next_coap_message("2.04")
 
-        elif router1_messages.contains_mle_message(mle.CommandType.CHILD_ID_RESPONSE):
+        elif router1_messages.contains_mle_message(
+                mle.CommandType.CHILD_ID_RESPONSE):
             router1_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
 
             msg = router2_messages.next_coap_message("0.02")
@@ -149,7 +150,8 @@ class Cert_5_1_03_RouterAddressReallocation(unittest.TestCase):
         # 5 - Router1
         # Router1 make two attempts to reconnect to its current Partition.
         for _ in range(4):
-            msg = router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+            msg = router1_messages.next_mle_message(
+                mle.CommandType.PARENT_REQUEST)
             msg.assertSentWithHopLimit(255)
             msg.assertSentToDestinationAddress("ff02::2")
             msg.assertMleMessageContainsTlv(mle.Mode)
@@ -175,7 +177,8 @@ class Cert_5_1_03_RouterAddressReallocation(unittest.TestCase):
         self.assertEqual(0, scan_mask_tlv.end_device)
 
         # 7 - Router1
-        msg = router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        msg = router1_messages.next_mle_message(
+            mle.CommandType.CHILD_ID_REQUEST)
         msg.assertSentToNode(self.nodes[ROUTER2])
         msg.assertMleMessageContainsTlv(mle.Response)
         msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)

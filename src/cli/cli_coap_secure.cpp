@@ -33,7 +33,7 @@
 
 #include "cli_coap_secure.hpp"
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
 #include <mbedtls/debug.h>
 #include <openthread/ip6.h>
@@ -47,12 +47,17 @@ namespace ot {
 namespace Cli {
 
 const struct CoapSecure::Command CoapSecure::sCommands[] = {
-    {"help", &CoapSecure::ProcessHelp},         {"connect", &CoapSecure::ProcessConnect},
-    {"delete", &CoapSecure::ProcessRequest},    {"disconnect", &CoapSecure::ProcessDisconnect},
-    {"get", &CoapSecure::ProcessRequest},       {"post", &CoapSecure::ProcessRequest},
-    {"psk", &CoapSecure::ProcessPsk},           {"put", &CoapSecure::ProcessRequest},
-    {"resource", &CoapSecure::ProcessResource}, {"start", &CoapSecure::ProcessStart},
-    {"stop", &CoapSecure::ProcessStop},         {"x509", &CoapSecure::ProcessX509},
+    {"help", &CoapSecure::ProcessHelp},      {"connect", &CoapSecure::ProcessConnect},
+    {"delete", &CoapSecure::ProcessRequest}, {"disconnect", &CoapSecure::ProcessDisconnect},
+    {"get", &CoapSecure::ProcessRequest},    {"post", &CoapSecure::ProcessRequest},
+    {"put", &CoapSecure::ProcessRequest},    {"resource", &CoapSecure::ProcessResource},
+    {"start", &CoapSecure::ProcessStart},    {"stop", &CoapSecure::ProcessStop},
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+    {"psk", &CoapSecure::ProcessPsk},
+#endif
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+    {"x509", &CoapSecure::ProcessX509},
+#endif
 };
 
 CoapSecure::CoapSecure(Interpreter &aInterpreter)
@@ -118,7 +123,7 @@ otError CoapSecure::ProcessResource(int argc, char *argv[])
         mResource.mContext = this;
         mResource.mHandler = &CoapSecure::HandleRequest;
 
-        strlcpy(mUriPath, argv[1], kMaxUriLength);
+        strncpy(mUriPath, argv[1], sizeof(mUriPath) - 1);
         SuccessOrExit(error = otCoapSecureAddResource(mInterpreter.mInstance, &mResource));
     }
     else
@@ -242,7 +247,7 @@ otError CoapSecure::ProcessRequest(int argc, char *argv[])
     // CoAP-URI
     if (argc > (2 - indexShifter))
     {
-        strlcpy(coapUri, argv[2 - indexShifter], kMaxUriLength);
+        strncpy(coapUri, argv[2 - indexShifter], sizeof(coapUri) - 1);
     }
 
     // CoAP-Type
@@ -267,7 +272,7 @@ otError CoapSecure::ProcessRequest(int argc, char *argv[])
 
         if (payloadLength > 0)
         {
-            otCoapMessageSetPayloadMarker(message);
+            SuccessOrExit(error = otCoapMessageSetPayloadMarker(message));
         }
     }
 
@@ -278,9 +283,8 @@ otError CoapSecure::ProcessRequest(int argc, char *argv[])
     }
 
     memset(&messageInfo, 0, sizeof(messageInfo));
-    messageInfo.mPeerAddr    = coapDestinationIp;
-    messageInfo.mPeerPort    = OT_DEFAULT_COAP_PORT;
-    messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
+    messageInfo.mPeerAddr = coapDestinationIp;
+    messageInfo.mPeerPort = OT_DEFAULT_COAP_PORT;
 
     if ((coapType == OT_COAP_TYPE_CONFIRMABLE) || (coapCode == OT_COAP_CODE_GET))
     {
@@ -311,8 +315,7 @@ otError CoapSecure::ProcessConnect(int argc, char *argv[])
     // Destination IPv6 address
     memset(&sockaddr, 0, sizeof(sockaddr));
     SuccessOrExit(error = otIp6AddressFromString(argv[1], &sockaddr.mAddress));
-    sockaddr.mPort    = OT_DEFAULT_COAP_SECURE_PORT;
-    sockaddr.mScopeId = OT_NETIF_INTERFACE_ID_THREAD;
+    sockaddr.mPort = OT_DEFAULT_COAP_SECURE_PORT;
 
     // check for port specification
     if (argc > 2)
@@ -340,9 +343,10 @@ otError CoapSecure::ProcessDisconnect(int argc, char *argv[])
     return OT_ERROR_NONE;
 }
 
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 otError CoapSecure::ProcessPsk(int argc, char *argv[])
 {
-    otError error;
+    otError error = OT_ERROR_NONE;
     size_t  length;
 
     VerifyOrExit(argc > 2, error = OT_ERROR_INVALID_ARGS);
@@ -357,36 +361,31 @@ otError CoapSecure::ProcessPsk(int argc, char *argv[])
     mPskIdLength = static_cast<uint8_t>(length);
     memcpy(mPskId, argv[2], mPskIdLength);
 
-    SuccessOrExit(error = otCoapSecureSetPsk(mInterpreter.mInstance, mPsk, mPskLength, mPskId, mPskIdLength));
+    otCoapSecureSetPsk(mInterpreter.mInstance, mPsk, mPskLength, mPskId, mPskIdLength);
     mUseCertificate = false;
 
 exit:
     return error;
 }
+#endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 otError CoapSecure::ProcessX509(int argc, char *argv[])
 {
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
 
-#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-    otError error;
+    otCoapSecureSetCertificate(mInterpreter.mInstance, (const uint8_t *)OT_CLI_COAPS_X509_CERT,
+                               sizeof(OT_CLI_COAPS_X509_CERT), (const uint8_t *)OT_CLI_COAPS_PRIV_KEY,
+                               sizeof(OT_CLI_COAPS_PRIV_KEY));
 
-    SuccessOrExit(error = otCoapSecureSetCertificate(
-                      mInterpreter.mInstance, (const uint8_t *)OT_CLI_COAPS_X509_CERT, sizeof(OT_CLI_COAPS_X509_CERT),
-                      (const uint8_t *)OT_CLI_COAPS_PRIV_KEY, sizeof(OT_CLI_COAPS_PRIV_KEY)));
-
-    SuccessOrExit(error = otCoapSecureSetCaCertificateChain(mInterpreter.mInstance,
-                                                            (const uint8_t *)OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE,
-                                                            sizeof(OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE)));
+    otCoapSecureSetCaCertificateChain(mInterpreter.mInstance, (const uint8_t *)OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE,
+                                      sizeof(OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE));
     mUseCertificate = true;
 
-exit:
-    return error;
-#else
-    return OT_ERROR_DISABLED_FEATURE
-#endif
+    return OT_ERROR_NONE;
 }
+#endif
 
 otError CoapSecure::Process(int argc, char *argv[])
 {
@@ -453,12 +452,9 @@ void CoapSecure::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessag
     otCoapCode responseCode      = OT_COAP_CODE_EMPTY;
     char       responseContent[] = "helloWorld";
 
-    mInterpreter.mServer->OutputFormat(
-        "coaps request from [%x:%x:%x:%x:%x:%x:%x:%x] ", HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[0]),
-        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[1]), HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[2]),
-        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[3]), HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[4]),
-        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[5]), HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[6]),
-        HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[7]));
+    mInterpreter.mServer->OutputFormat("coaps request from ");
+    mInterpreter.OutputIp6Address(aMessageInfo->mPeerAddr);
+    mInterpreter.mServer->OutputFormat(" ");
 
     switch (otCoapMessageGetCode(aMessage))
     {
@@ -500,13 +496,12 @@ void CoapSecure::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessag
         responseMessage = otCoapNewMessage(mInterpreter.mInstance, NULL);
         VerifyOrExit(responseMessage != NULL, error = OT_ERROR_NO_BUFS);
 
-        otCoapMessageInit(responseMessage, OT_COAP_TYPE_ACKNOWLEDGMENT, responseCode);
-        otCoapMessageSetMessageId(responseMessage, otCoapMessageGetMessageId(aMessage));
-        otCoapMessageSetToken(responseMessage, otCoapMessageGetToken(aMessage), otCoapMessageGetTokenLength(aMessage));
+        SuccessOrExit(
+            error = otCoapMessageInitResponse(responseMessage, aMessage, OT_COAP_TYPE_ACKNOWLEDGMENT, responseCode));
 
         if (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET)
         {
-            otCoapMessageSetPayloadMarker(responseMessage);
+            SuccessOrExit(error = otCoapMessageSetPayloadMarker(responseMessage));
         }
 
         if (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET)
@@ -550,12 +545,8 @@ void CoapSecure::HandleResponse(otMessage *aMessage, const otMessageInfo *aMessa
     }
     else
     {
-        mInterpreter.mServer->OutputFormat(
-            "coaps response from [%x:%x:%x:%x:%x:%x:%x:%x]", HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[0]),
-            HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[1]), HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[2]),
-            HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[3]), HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[4]),
-            HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[5]), HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[6]),
-            HostSwap16(aMessageInfo->mPeerAddr.mFields.m16[7]));
+        mInterpreter.mServer->OutputFormat("coaps response from ");
+        mInterpreter.OutputIp6Address(aMessageInfo->mPeerAddr);
 
         PrintPayload(aMessage);
     }
@@ -569,8 +560,8 @@ void CoapSecure::DefaultHandler(void *aContext, otMessage *aMessage, const otMes
 
 void CoapSecure::DefaultHandler(otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    otError    error = OT_ERROR_NONE;
-    otMessage *responseMessage;
+    otError    error           = OT_ERROR_NONE;
+    otMessage *responseMessage = NULL;
 
     if ((otCoapMessageGetType(aMessage) == OT_COAP_TYPE_CONFIRMABLE) ||
         (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET))
@@ -578,19 +569,21 @@ void CoapSecure::DefaultHandler(otMessage *aMessage, const otMessageInfo *aMessa
         responseMessage = otCoapNewMessage(mInterpreter.mInstance, NULL);
         VerifyOrExit(responseMessage != NULL, error = OT_ERROR_NO_BUFS);
 
-        otCoapMessageInit(responseMessage, OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_NOT_FOUND);
-        otCoapMessageSetMessageId(responseMessage, otCoapMessageGetMessageId(aMessage));
-        otCoapMessageSetToken(responseMessage, otCoapMessageGetToken(aMessage), otCoapMessageGetTokenLength(aMessage));
+        SuccessOrExit(error = otCoapMessageInitResponse(responseMessage, aMessage, OT_COAP_TYPE_NON_CONFIRMABLE,
+                                                        OT_COAP_CODE_NOT_FOUND));
 
         SuccessOrExit(error = otCoapSecureSendResponse(mInterpreter.mInstance, responseMessage, aMessageInfo));
     }
 
 exit:
-    return;
+    if (error != OT_ERROR_NONE && responseMessage != NULL)
+    {
+        otMessageFree(responseMessage);
+    }
 }
 #endif // CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 
 } // namespace Cli
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE

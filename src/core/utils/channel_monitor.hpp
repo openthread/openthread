@@ -41,7 +41,7 @@
 #include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
-#include "phy/phy.hpp"
+#include "radio/radio.hpp"
 
 namespace ot {
 namespace Utils {
@@ -55,7 +55,7 @@ namespace Utils {
  * @{
  */
 
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 /**
  * This class implements the channel monitoring logic.
@@ -192,7 +192,7 @@ private:
 #else
         kNumChannelMasks = 4,
 #endif
-        kNumChannels       = (Phy::kChannelMax - Phy::kChannelMin + 1),
+        kNumChannels       = (Radio::kChannelMax - Radio::kChannelMin + 1),
         kTimerInterval     = (kSampleInterval / kNumChannelMasks),
         kMaxJitterInterval = 4096,
         kMaxOccupancy      = 0xffff,
@@ -200,8 +200,8 @@ private:
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
-    static void HandleEnergyScanResult(Instance &aInstance, otEnergyScanResult *aResult);
-    void        HandleEnergyScanResult(otEnergyScanResult *aResult);
+    static void HandleEnergyScanResult(Mac::EnergyScanResult *aResult, void *aContext);
+    void        HandleEnergyScanResult(Mac::EnergyScanResult *aResult);
     void        LogResults(void);
 
     static const uint32_t mScanChannelMasks[kNumChannelMasks];
@@ -212,7 +212,7 @@ private:
     TimerMilli mTimer;
 };
 
-#endif // OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#endif // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 /**
  * @}

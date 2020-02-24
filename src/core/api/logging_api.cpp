@@ -31,8 +31,6 @@
  *   This file implements the OpenThread logging related APIs.
  */
 
-#define WPP_NAME "logging_api.tmh"
-
 #include "openthread-core-config.h"
 
 #include <openthread/logging.h>
@@ -42,30 +40,17 @@
 using namespace ot;
 
 otLogLevel otLoggingGetLevel(void)
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL && !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 {
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE && !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     return Instance::Get().GetLogLevel();
-}
 #else
-{
     return static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL);
-}
 #endif
+}
 
-otError otLoggingSetLevel(otLogLevel aLogLevel)
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+void otLoggingSetLevel(otLogLevel aLogLevel)
 {
-    OT_UNUSED_VARIABLE(aLogLevel);
-
-    otError error = OT_ERROR_DISABLED_FEATURE;
-
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-#warning "Dynamic log level is not supported along with multiple OT instance feature (`ENABLE_MULTIPLE_INSTANCES`)"
-#else
     Instance::Get().SetLogLevel(aLogLevel);
-    error = OT_ERROR_NONE;
-#endif
-#endif
-
-    return error;
 }
+#endif

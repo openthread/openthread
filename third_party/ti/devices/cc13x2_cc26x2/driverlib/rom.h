@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       rom.h
-*  Revised:        2016-10-06 17:21:09 +0200 (Thu, 06 Oct 2016)
-*  Revision:       47343
+*  Revised:        2018-11-02 13:54:49 +0100 (Fri, 02 Nov 2018)
+*  Revision:       53196
 *
 *  Description:    Prototypes for the ROM utility functions.
 *
@@ -157,8 +157,8 @@ typedef struct
 #define HapiSelectDACVref(a)         P_HARD_API->SelectDACVref(a)
 
 // Defines for input parameter to the HapiSelectCompAInput function.
-// The define values can not be changed!
 #define COMPA_IN_NC            0x00
+// Defines used in CC13x0/CC26x0 devices
 #define COMPA_IN_AUXIO7        0x09
 #define COMPA_IN_AUXIO6        0x0A
 #define COMPA_IN_AUXIO5        0x0B
@@ -167,14 +167,23 @@ typedef struct
 #define COMPA_IN_AUXIO2        0x0E
 #define COMPA_IN_AUXIO1        0x0F
 #define COMPA_IN_AUXIO0        0x10
+// Defines used in CC13x2/CC26x2 devices
+#define COMPA_IN_AUXIO26       COMPA_IN_AUXIO7
+#define COMPA_IN_AUXIO25       COMPA_IN_AUXIO6
+#define COMPA_IN_AUXIO24       COMPA_IN_AUXIO5
+#define COMPA_IN_AUXIO23       COMPA_IN_AUXIO4
+#define COMPA_IN_AUXIO22       COMPA_IN_AUXIO3
+#define COMPA_IN_AUXIO21       COMPA_IN_AUXIO2
+#define COMPA_IN_AUXIO20       COMPA_IN_AUXIO1
+#define COMPA_IN_AUXIO19       COMPA_IN_AUXIO0
 
 // Defines for input parameter to the HapiSelectCompARef function.
-// The define values can not be changed!
 #define COMPA_REF_NC           0x00
 #define COMPA_REF_DCOUPL       0x01
 #define COMPA_REF_VSS          0x02
 #define COMPA_REF_VDDS         0x03
 #define COMPA_REF_ADCVREFP     0x04
+// Defines used in CC13x0/CC26x0 devices
 #define COMPA_REF_AUXIO7       0x09
 #define COMPA_REF_AUXIO6       0x0A
 #define COMPA_REF_AUXIO5       0x0B
@@ -183,13 +192,22 @@ typedef struct
 #define COMPA_REF_AUXIO2       0x0E
 #define COMPA_REF_AUXIO1       0x0F
 #define COMPA_REF_AUXIO0       0x10
+// Defines used in CC13x2/CC26x2 devices
+#define COMPA_REF_AUXIO26      COMPA_REF_AUXIO7
+#define COMPA_REF_AUXIO25      COMPA_REF_AUXIO6
+#define COMPA_REF_AUXIO24      COMPA_REF_AUXIO5
+#define COMPA_REF_AUXIO23      COMPA_REF_AUXIO4
+#define COMPA_REF_AUXIO22      COMPA_REF_AUXIO3
+#define COMPA_REF_AUXIO21      COMPA_REF_AUXIO2
+#define COMPA_REF_AUXIO20      COMPA_REF_AUXIO1
+#define COMPA_REF_AUXIO19      COMPA_REF_AUXIO0
 
 // Defines for input parameter to the HapiSelectADCCompBInput function.
-// The define values can not be changed!
 #define ADC_COMPB_IN_NC        0x00
 #define ADC_COMPB_IN_DCOUPL    0x03
 #define ADC_COMPB_IN_VSS       0x04
 #define ADC_COMPB_IN_VDDS      0x05
+// Defines used in CC13x0/CC26x0 devices
 #define ADC_COMPB_IN_AUXIO7    0x09
 #define ADC_COMPB_IN_AUXIO6    0x0A
 #define ADC_COMPB_IN_AUXIO5    0x0B
@@ -198,6 +216,15 @@ typedef struct
 #define ADC_COMPB_IN_AUXIO2    0x0E
 #define ADC_COMPB_IN_AUXIO1    0x0F
 #define ADC_COMPB_IN_AUXIO0    0x10
+// Defines used in CC13x2/CC26x2 devices
+#define ADC_COMPB_IN_AUXIO26   ADC_COMPB_IN_AUXIO7
+#define ADC_COMPB_IN_AUXIO25   ADC_COMPB_IN_AUXIO6
+#define ADC_COMPB_IN_AUXIO24   ADC_COMPB_IN_AUXIO5
+#define ADC_COMPB_IN_AUXIO23   ADC_COMPB_IN_AUXIO4
+#define ADC_COMPB_IN_AUXIO22   ADC_COMPB_IN_AUXIO3
+#define ADC_COMPB_IN_AUXIO21   ADC_COMPB_IN_AUXIO2
+#define ADC_COMPB_IN_AUXIO20   ADC_COMPB_IN_AUXIO1
+#define ADC_COMPB_IN_AUXIO19   ADC_COMPB_IN_AUXIO0
 
 // Defines for input parameter to the HapiSelectDACVref function.
 // The define values can not be changed!
@@ -243,6 +270,9 @@ typedef struct
 #define ROM_API_SETUP_ROM_TABLE  ((uint32_t*) (ROM_API_TABLE[28]))
 #define ROM_API_I2S_TABLE        ((uint32_t*) (ROM_API_TABLE[29]))
 #define ROM_API_PWR_CTRL_TABLE   ((uint32_t*) (ROM_API_TABLE[30]))
+#define ROM_API_AES_TABLE        ((uint32_t*) (ROM_API_TABLE[31]))
+#define ROM_API_PKA_TABLE        ((uint32_t*) (ROM_API_TABLE[32]))
+#define ROM_API_SHA2_TABLE       ((uint32_t*) (ROM_API_TABLE[33]))
 
 // AON_EVENT FUNCTIONS
 #define ROM_AONEventMcuWakeUpSet \
@@ -668,56 +698,6 @@ typedef struct
     ROM_API_VIMS_TABLE[3])
 
 
-// CRYPTO FUNCTIONS
-#define ROM_CRYPTOAesEcb \
-    ((uint32_t (*)(uint32_t *pui32MsgIn, uint32_t *pui32MsgOut, uint32_t ui32KeyLocation, bool bEncrypt, bool bIntEnable)) \
-    ROM_API_CRYPTO_TABLE[0])
-
-#define ROM_CRYPTOAesEcbStatus \
-    ((uint32_t (*)(void)) \
-    ROM_API_CRYPTO_TABLE[1])
-
-#define ROM_CRYPTOCcmAuthEncrypt \
-    ((uint32_t (*)(bool bEncrypt, uint32_t ui32AuthLength, uint32_t *pui32Nonce, uint32_t *pui32PlainText, uint32_t ui32PlainTextLength, uint32_t *pui32Header, uint32_t ui32HeaderLength, uint32_t ui32KeyLocation, uint32_t ui32FieldLength, bool bIntEnable)) \
-    ROM_API_CRYPTO_TABLE[3])
-
-#define ROM_CRYPTOCcmAuthEncryptResultGet \
-    ((uint32_t (*)(uint32_t ui32TagLength, uint32_t *pui32CcmTag)) \
-    ROM_API_CRYPTO_TABLE[4])
-
-#define ROM_CRYPTOCcmAuthEncryptStatus \
-    ((uint32_t (*)(void)) \
-    ROM_API_CRYPTO_TABLE[5])
-
-#define ROM_CRYPTOCcmInvAuthDecrypt \
-    ((uint32_t (*)(bool bDecrypt, uint32_t ui32AuthLength, uint32_t *pui32Nonce, uint32_t *pui32CipherText, uint32_t ui32CipherTextLength, uint32_t *pui32Header, uint32_t ui32HeaderLength, uint32_t ui32KeyLocation, uint32_t ui32FieldLength, bool bIntEnable)) \
-    ROM_API_CRYPTO_TABLE[6])
-
-#define ROM_CRYPTOCcmInvAuthDecryptResultGet \
-    ((uint32_t (*)(uint32_t ui32AuthLength, uint32_t *pui32CipherText, uint32_t ui32CipherTextLength, uint32_t *pui32CcmTag)) \
-    ROM_API_CRYPTO_TABLE[7])
-
-#define ROM_CRYPTOCcmInvAuthDecryptStatus \
-    ((uint32_t (*)(void)) \
-    ROM_API_CRYPTO_TABLE[8])
-
-#define ROM_CRYPTOAesCbc \
-    ((uint32_t (*)(uint32_t *pui32MsgIn, uint32_t *pui32MsgOut, uint32_t ui32MsgLength, uint32_t *pui32Nonce, uint32_t ui32KeyLocation, bool bEncrypt, bool bIntEnable)) \
-    ROM_API_CRYPTO_TABLE[9])
-
-#define ROM_CRYPTOAesCbcStatus \
-    ((uint32_t (*)(void)) \
-    ROM_API_CRYPTO_TABLE[10])
-
-#define ROM_CRYPTODmaDisable \
-    ((void (*)(uint32_t ui32Channels)) \
-    ROM_API_CRYPTO_TABLE[11])
-
-#define ROM_CRYPTODmaEnable \
-    ((void (*)(uint32_t ui32Channels)) \
-    ROM_API_CRYPTO_TABLE[12])
-
-
 // OSC FUNCTIONS
 #define ROM_OSCClockSourceGet \
     ((uint32_t (*)(uint32_t ui32SrcClk)) \
@@ -726,10 +706,6 @@ typedef struct
 #define ROM_OSCClockSourceSet \
     ((void (*)(uint32_t ui32SrcClk, uint32_t ui32Osc)) \
     ROM_API_OSC_TABLE[1])
-
-#define ROM_OSC_HPOSCRelativeFrequencyOffsetGet \
-    ((int32_t (*)(int32_t tempDegC)) \
-    ROM_API_OSC_TABLE[2])
 
 #define ROM_OSC_HPOSCRelativeFrequencyOffsetToRFCoreFormatConvert \
     ((int16_t (*)(int32_t HPOSC_RelFreqOffset)) \
@@ -807,6 +783,10 @@ typedef struct
 
 
 // SETUP_ROM FUNCTIONS
+#define ROM_SetupAfterColdResetWakeupFromShutDownCfg1 \
+    ((void (*)(uint32_t ccfg_ModeConfReg)) \
+    ROM_API_SETUP_ROM_TABLE[0])
+
 #define ROM_SetupAfterColdResetWakeupFromShutDownCfg2 \
     ((void (*)(uint32_t ui32Fcfg1Revision, uint32_t ccfg_ModeConfReg)) \
     ROM_API_SETUP_ROM_TABLE[1])
@@ -879,6 +859,10 @@ typedef struct
     ((void (*)(void)) \
     ROM_API_SETUP_ROM_TABLE[18])
 
+#define ROM_SetupStepVddrTrimTo \
+    ((void (*)(uint32_t toCode)) \
+    ROM_API_SETUP_ROM_TABLE[19])
+
 
 // I2S FUNCTIONS
 #define ROM_I2SPointerSet \
@@ -894,6 +878,168 @@ typedef struct
 #define ROM_PowerCtrlSourceSet \
     ((void (*)(uint32_t ui32PowerConfig)) \
     ROM_API_PWR_CTRL_TABLE[0])
+
+
+// AES FUNCTIONS
+#define ROM_AESConfigureCCMCtrl \
+    ((void (*)(uint32_t nonceLength, uint32_t macLength, bool encrypt)) \
+    ROM_API_AES_TABLE[0])
+
+#define ROM_AESReadFromKeyStore \
+    ((uint32_t (*)(uint32_t keyStoreArea)) \
+    ROM_API_AES_TABLE[1])
+
+#define ROM_AESReadTag \
+    ((uint32_t (*)(uint8_t *tag, uint32_t tagLength)) \
+    ROM_API_AES_TABLE[2])
+
+#define ROM_AESSetInitializationVector \
+    ((void (*)(const uint32_t *initializationVector)) \
+    ROM_API_AES_TABLE[3])
+
+#define ROM_AESStartDMAOperation \
+    ((void (*)(const uint8_t *channel0Addr, uint32_t channel0Length, uint8_t *channel1Addr, uint32_t channel1Length)) \
+    ROM_API_AES_TABLE[4])
+
+#define ROM_AESVerifyTag \
+    ((uint32_t (*)(const uint8_t *tag, uint32_t tagLength)) \
+    ROM_API_AES_TABLE[5])
+
+#define ROM_AESWaitForIRQFlags \
+    ((uint32_t (*)(uint32_t irqFlags)) \
+    ROM_API_AES_TABLE[6])
+
+#define ROM_AESWriteCCMInitializationVector \
+    ((void (*)(const uint8_t *nonce, uint32_t nonceLength)) \
+    ROM_API_AES_TABLE[7])
+
+#define ROM_AESWriteToKeyStore \
+    ((uint32_t (*)(const uint8_t *aesKey, uint32_t aesKeyLength, uint32_t keyStoreArea)) \
+    ROM_API_AES_TABLE[8])
+
+
+// PKA FUNCTIONS
+#define ROM_PKABigNumAddGetResult \
+    ((uint32_t  (*)(uint8_t *resultBuf, uint32_t *resultLength, uint32_t resultPKAMemAddr)) \
+    ROM_API_PKA_TABLE[0])
+
+#define ROM_PKABigNumCmpGetResult \
+    ((uint32_t  (*)(void)) \
+    ROM_API_PKA_TABLE[1])
+
+#define ROM_PKABigNumInvModGetResult \
+    ((uint32_t  (*)(uint8_t *resultBuf, uint32_t length, uint32_t resultPKAMemAddr)) \
+    ROM_API_PKA_TABLE[2])
+
+#define ROM_PKABigNumModGetResult \
+    ((uint32_t  (*)(uint8_t *resultBuf, uint32_t length, uint32_t resultPKAMemAddr)) \
+    ROM_API_PKA_TABLE[3])
+
+#define ROM_PKABigNumMultGetResult \
+    ((uint32_t  (*)(uint8_t *resultBuf, uint32_t *resultLength, uint32_t resultPKAMemAddr)) \
+    ROM_API_PKA_TABLE[4])
+
+#define ROM_PKAEccAddGetResult \
+    ((uint32_t  (*)(uint8_t *curvePointX, uint8_t *curvePointY, uint32_t resultPKAMemAddr, uint32_t length)) \
+    ROM_API_PKA_TABLE[5])
+
+#define ROM_PKAEccAddStart \
+    ((uint32_t  (*)(const uint8_t *curvePoint1X, const uint8_t *curvePoint1Y, const uint8_t *curvePoint2X, const uint8_t *curvePoint2Y, const uint8_t *prime, const uint8_t *a, uint32_t length, uint32_t *resultPKAMemAddr)) \
+    ROM_API_PKA_TABLE[6])
+
+#define ROM_PKAEccMultiplyGetResult \
+    ((uint32_t  (*)(uint8_t *curvePointX, uint8_t *curvePointY, uint32_t resultPKAMemAddr, uint32_t length)) \
+    ROM_API_PKA_TABLE[7])
+
+#define ROM_PKAEccMultiplyStart \
+    ((uint32_t  (*)(const uint8_t *scalar, const uint8_t *curvePointX, const uint8_t *curvePointY, const uint8_t *prime, const uint8_t *a, const uint8_t *b, uint32_t length, uint32_t *resultPKAMemAddr)) \
+    ROM_API_PKA_TABLE[8])
+
+#define ROM_PKAGetOpsStatus \
+    ((uint32_t  (*)(void)) \
+    ROM_API_PKA_TABLE[9])
+
+#define ROM_PKABigNumAddStart \
+    ((uint32_t  (*)(const uint8_t *bigNum1, uint32_t bigNum1Length, const uint8_t *bigNum2, uint32_t bigNum2Length, uint32_t *resultPKAMemAddr)) \
+    ROM_API_PKA_TABLE[10])
+
+#define ROM_PKABigNumCmpStart \
+    ((uint32_t  (*)(const uint8_t *bigNum1, const uint8_t *bigNum2, uint32_t length)) \
+    ROM_API_PKA_TABLE[11])
+
+#define ROM_PKABigNumInvModStart \
+    ((uint32_t  (*)(const uint8_t *bigNum, uint32_t bigNumLength, const uint8_t *modulus, uint32_t modulusLength, uint32_t *resultPKAMemAddr)) \
+    ROM_API_PKA_TABLE[12])
+
+#define ROM_PKABigNumModStart \
+    ((uint32_t  (*)(const uint8_t *bigNum, uint32_t bigNumLength, const uint8_t *modulus, uint32_t modulusLength, uint32_t *resultPKAMemAddr)) \
+    ROM_API_PKA_TABLE[13])
+
+#define ROM_PKABigNumMultiplyStart \
+    ((uint32_t  (*)(const uint8_t *multiplicand, uint32_t multiplicandLength, const uint8_t *multiplier, uint32_t multiplierLength, uint32_t *resultPKAMemAddr)) \
+    ROM_API_PKA_TABLE[14])
+
+#define ROM_PKABigNumSubGetResult \
+    ((uint32_t (*)(uint8_t *resultBuf, uint32_t *resultLength, uint32_t resultPKAMemAddr)) \
+    ROM_API_PKA_TABLE[15])
+
+#define ROM_PKABigNumSubStart \
+    ((uint32_t (*)(const uint8_t *minuend, uint32_t minuendLength, const uint8_t *subtrahend, uint32_t subtrahendLength, uint32_t *resultPKAMemAddr)) \
+    ROM_API_PKA_TABLE[16])
+
+#define ROM_PKAArrayAllZeros \
+    ((bool (*)(const uint8_t *array, uint32_t arrayLength)) \
+    ROM_API_PKA_TABLE[17])
+
+#define ROM_PKABigNumDivideGetQuotient \
+    ((uint32_t (*)(uint8_t *resultBuf, uint32_t *length, uint32_t resultQuotientMemAddr)) \
+    ROM_API_PKA_TABLE[18])
+
+#define ROM_PKABigNumDivideGetRemainder \
+    ((uint32_t (*)(uint8_t *resultBuf, uint32_t *length, uint32_t resultRemainderMemAddr)) \
+    ROM_API_PKA_TABLE[19])
+
+#define ROM_PKABigNumDivideStart \
+    ((uint32_t (*)(const uint8_t *dividend, uint32_t dividendLength, const uint8_t *divisor, uint32_t divisorLength, uint32_t *resultQuotientMemAddr, uint32_t *resultRemainderMemAddr)) \
+    ROM_API_PKA_TABLE[20])
+
+#define ROM_PKAEccVerifyPublicKeyWeierstrassStart \
+    ((uint32_t (*)(const uint8_t *curvePointX, const uint8_t *curvePointY, const uint8_t *prime, const uint8_t *a, const uint8_t *b, const uint8_t *order, uint32_t length)) \
+    ROM_API_PKA_TABLE[21])
+
+#define ROM_PKAZeroOutArray \
+    ((void (*)(const uint8_t *array, uint32_t arrayLength)) \
+    ROM_API_PKA_TABLE[22])
+
+#define ROM_PKAEccMontgomeryMultiplyStart \
+    ((uint32_t (*)(const uint8_t *scalar, const uint8_t *curvePointX, const uint8_t *prime, const uint8_t *a, uint32_t length, uint32_t *resultPKAMemAddr)) \
+    ROM_API_PKA_TABLE[23])
+
+
+// SHA2 FUNCTIONS
+#define ROM_SHA2ComputeFinalHash \
+    ((uint32_t (*)(const uint8_t *message, uint8_t *resultDigest, uint32_t *intermediateDigest, uint32_t totalMsgLength, uint32_t messageLength, uint32_t hashAlgorithm)) \
+    ROM_API_SHA2_TABLE[0])
+
+#define ROM_SHA2ComputeHash \
+    ((uint32_t (*)(const uint8_t *message, uint8_t *resultDigest, uint32_t totalMsgLength, uint32_t hashAlgorithm)) \
+    ROM_API_SHA2_TABLE[1])
+
+#define ROM_SHA2ComputeInitialHash \
+    ((uint32_t (*)(const uint8_t *message, uint32_t *intermediateDigest, uint32_t hashAlgorithm, uint32_t initialMessageLength)) \
+    ROM_API_SHA2_TABLE[2])
+
+#define ROM_SHA2ComputeIntermediateHash \
+    ((uint32_t (*)(const uint8_t *message, uint32_t *intermediateDigest, uint32_t hashAlgorithm, uint32_t intermediateMessageLength)) \
+    ROM_API_SHA2_TABLE[3])
+
+#define ROM_SHA2StartDMAOperation \
+    ((void (*)(uint8_t *channel0Addr, uint32_t channel0Length, uint8_t *channel1Addr, uint32_t channel1Length)) \
+    ROM_API_SHA2_TABLE[4])
+
+#define ROM_SHA2WaitForIRQFlags \
+    ((uint32_t (*)(uint32_t irqFlags)) \
+    ROM_API_SHA2_TABLE[5])
 
 
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import node
@@ -45,7 +44,9 @@ REED_ADVERTISEMENT_INTERVAL = 570
 REED_ADVERTISEMENT_MAX_JITTER = 60
 ROUTER_SELECTION_JITTER = 1
 
+
 class Cert_5_2_4_REEDUpgrade(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -79,9 +80,9 @@ class Cert_5_2_4_REEDUpgrade(unittest.TestCase):
         self.nodes[ED].enable_whitelist()
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -115,7 +116,8 @@ class Cert_5_2_4_REEDUpgrade(unittest.TestCase):
         msg.assertMleMessageDoesNotContainTlv(mle.Route64)
 
         # 4 Wait for DUT_REED to send the second packet.
-        self.simulator.go(REED_ADVERTISEMENT_INTERVAL + REED_ADVERTISEMENT_MAX_JITTER)
+        self.simulator.go(REED_ADVERTISEMENT_INTERVAL +
+                          REED_ADVERTISEMENT_MAX_JITTER)
 
         # 5 DUT_REED: Verify the second MLE Advertisement.
         reed_messages = self.simulator.get_messages_sent_by(DUT_REED)
@@ -160,14 +162,17 @@ class Cert_5_2_4_REEDUpgrade(unittest.TestCase):
         msg.assertSentToNode(self.nodes[ED])
         msg.assertMleMessageContainsTlv(mle.Address16)
 
-        # 11 Verify connectivity by sending an ICMPv6 Echo Request to the Leader.
+        # 11 Verify connectivity by sending an ICMPv6 Echo Request to the
+        # Leader.
         mleid = None
         for addr in self.nodes[LEADER].get_addrs():
-            if addr.find(MESH_LOCAL_PREFIX) != -1 and addr.find(ROUTING_LACATOR) == -1:
+            if (addr.find(MESH_LOCAL_PREFIX) != -1 and
+                    addr.find(ROUTING_LACATOR) == -1):
                 mleid = addr
                 break
 
         self.assertTrue(self.nodes[ED].ping(mleid))
+
 
 if __name__ == '__main__':
     unittest.main()

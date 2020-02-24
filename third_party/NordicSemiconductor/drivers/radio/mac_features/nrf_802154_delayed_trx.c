@@ -1,4 +1,4 @@
-/* Copyright (c) 2018, Nordic Semiconductor ASA
+/* Copyright (c) 2018 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,88 +40,185 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "../nrf_802154_debug.h"
 #include "nrf_802154_config.h"
 #include "nrf_802154_const.h"
+#include "nrf_802154_frame_parser.h"
 #include "nrf_802154_notification.h"
 #include "nrf_802154_pib.h"
 #include "nrf_802154_procedures_duration.h"
 #include "nrf_802154_request.h"
-#include "nrf_802154_rsch.h"
+#include "rsch/nrf_802154_rsch.h"
 #include "timer_scheduler/nrf_802154_timer_sched.h"
 
-#define TX_SETUP_TIME 190u                         ///< Time [us] needed to change channel, stop rx and setup tx procedure.
-#define RX_SETUP_TIME 190u                         ///< Time [us] needed to change channel, stop tx and setup rx procedure.
-
-static const uint8_t * mp_tx_psdu;                 ///< Pointer to PHR + PSDU of the frame requested to transmit.
-static bool            m_tx_cca;                   ///< If CCA should be performed prior to transmission.
-static uint8_t         m_tx_channel;               ///< Channel number on which transmission should be performed.
-
-static nrf_802154_timer_t m_timeout_timer;         ///< Timer for delayed RX timeout handling.
-static uint8_t            m_rx_channel;            ///< Channel number on which reception should be performed.
-
-static bool m_dly_op_in_progress[RSCH_DLY_TS_NUM]; ///< Status of delayed operation.
+/* The following time is the sum of 70us RTC_IRQHandler processing time, 40us of time that elapses
+ * from the moment a board starts transmission to the moment other boards (e.g. sniffer) are able
+ * to detect that frame and in case of TX - 50us that accounts for a delay of yet unknown origin.
+ */
+#define TX_SETUP_TIME 160u ///< Time needed to prepare TX procedure [us]. It does not include TX ramp-up time.
+#define RX_SETUP_TIME 110u ///< Time needed to prepare RX procedure [us]. It does not include RX ramp-up time.
 
 /**
- * Start delayed timeslot operation.
- *
- * @param[in]  dly_ts_id  Delayed timeslot ID.
+ * @brief States of delayed operations.
  */
-static void dly_op_start(rsch_dly_ts_id_t dly_ts_id)
+typedef enum
 {
-    assert(dly_ts_id < RSCH_DLY_TS_NUM);
-
-    m_dly_op_in_progress[dly_ts_id] = true;
-}
+    DELAYED_TRX_OP_STATE_STOPPED, ///< Delayed operation stopped.
+    DELAYED_TRX_OP_STATE_PENDING, ///< Delayed operation scheduled and waiting for timeslot.
+    DELAYED_TRX_OP_STATE_ONGOING, ///< Delayed operation ongoing (during timeslot).
+    DELAYED_TRX_OP_STATE_NB       ///< Number of delayed operation states.
+} delayed_trx_op_state_t;
 
 /**
- * Stop delayed timeslot operation.
- *
- * @param[in]  dly_ts_id  Delayed timeslot ID.
+ * @brief RX delayed operation frame data.
  */
-static void dly_op_stop(rsch_dly_ts_id_t dly_ts_id)
+typedef struct
 {
-    assert(dly_ts_id < RSCH_DLY_TS_NUM);
-
-    m_dly_op_in_progress[dly_ts_id] = false;
-}
+    uint32_t sof_timestamp; ///< Timestamp of last start of frame notification received in RX window.
+    uint8_t  psdu_length;   ///< Length in bytes of the frame to be received in RX window.
+    bool     ack_requested; ///< Flag indicating if Ack for the frame to be received in RX window is requested.
+} delayed_rx_frame_data_t;
 
 /**
- * Check if delayed operation is in progress.
- *
- * @retval true   Delayed operation is in progress (waiting or ongoing).
- * @retval false  Delayed operation is not in progress.
+ * @brief TX delayed operation configuration.
  */
-bool dly_op_is_in_progress(rsch_dly_ts_id_t dly_ts_id)
-{
-    assert(dly_ts_id < RSCH_DLY_TS_NUM);
-
-    return m_dly_op_in_progress[dly_ts_id];
-}
+static const uint8_t * mp_tx_data;         ///< Pointer to a buffer containing PHR and PSDU of the frame requested to be transmitted.
+static bool            m_tx_cca;           ///< If CCA should be performed prior to transmission.
+static uint8_t         m_tx_channel;       ///< Channel number on which transmission should be performed.
 
 /**
- * Notify MAC layer that requested timeslot is not granted if tx request failed.
- *
- * @param[in]  result  Result of TX request.
+ * @brief RX delayed operation configuration.
  */
-static void notify_tx_timeslot_denied(bool result)
+static nrf_802154_timer_t m_timeout_timer; ///< Timer for delayed RX timeout handling.
+static uint8_t            m_rx_channel;    ///< Channel number on which reception should be performed.
+
+/**
+ * @brief State of delayed operations.
+ */
+static volatile delayed_trx_op_state_t m_dly_op_state[RSCH_DLY_TS_NUM];
+
+/**
+ * @brief RX delayed operation frame data.
+ */
+static volatile delayed_rx_frame_data_t m_dly_rx_frame;
+
+/**
+ * Set state of a delayed operation.
+ *
+ * @param[in]  expected_dly_rx_state   Delayed RX current expected state.
+ * @param[in]  new_dly_rx_state        Delayed RX new state to be set.
+ *
+ * @retval true   Successfully set the new state.
+ * @retval false  Failed to set the new state.
+ */
+static bool dly_rx_state_set(delayed_trx_op_state_t expected_dly_rx_state,
+                             delayed_trx_op_state_t new_dly_rx_state)
 {
-    if (!result)
+    volatile delayed_trx_op_state_t current_dly_rx_state;
+
+    do
     {
-        nrf_802154_notify_transmit_failed(mp_tx_psdu, NRF_802154_TX_ERROR_TIMESLOT_DENIED);
+        current_dly_rx_state =
+            (delayed_trx_op_state_t)__LDREXB((uint8_t *)&m_dly_op_state[RSCH_DLY_RX]);
+
+        if (current_dly_rx_state != expected_dly_rx_state)
+        {
+            __CLREX();
+            return false;
+        }
+
+    }
+    while (__STREXB((uint8_t)new_dly_rx_state, (uint8_t *)&m_dly_op_state[RSCH_DLY_RX]));
+
+    __DMB();
+
+    return true;
+}
+
+/**
+ * Get state of a delayed operation.
+ *
+ * @param[in]  dly_ts_id  Delayed timeslot ID.
+ *
+ * @retval     State of delayed operation.
+ */
+static delayed_trx_op_state_t dly_op_state_get(rsch_dly_ts_id_t dly_ts_id)
+{
+    assert(dly_ts_id < RSCH_DLY_TS_NUM);
+
+    return m_dly_op_state[dly_ts_id];
+}
+
+/**
+ * Set state of a delayed operation.
+ *
+ * @param[in]  dly_ts_id      Delayed timeslot ID.
+ * @param[in]  expected_state Expected delayed operation state prior state transition.
+ * @param[in]  new_state      Delayed operation state to enter.
+ */
+static void dly_op_state_set(rsch_dly_ts_id_t       dly_ts_id,
+                             delayed_trx_op_state_t expected_state,
+                             delayed_trx_op_state_t new_state)
+{
+    assert(new_state < DELAYED_TRX_OP_STATE_NB);
+
+    switch (dly_ts_id)
+    {
+        case RSCH_DLY_TX:
+        {
+            assert(m_dly_op_state[RSCH_DLY_TX] == expected_state);
+            m_dly_op_state[RSCH_DLY_TX] = new_state;
+            break;
+        }
+
+        case RSCH_DLY_RX:
+        {
+            bool result = dly_rx_state_set(expected_state, new_state);
+
+            assert(result);
+            (void)result;
+            break;
+        }
+
+        default:
+        {
+            assert(false);
+            break;
+        }
     }
 }
 
 /**
- * Notify MAC layer that requested timeslot is not granted if rx request failed.
+ * Start delayed operation.
  *
- * @param[in]  result  Result of RX request.
+ * @param[in]  t0      Base time of the timestamp of the timeslot start [us].
+ * @param[in]  dt      Time delta between @p t0 and the timestamp of the timeslot start [us].
+ * @param[in]  length  Requested radio timeslot length [us].
+ * @param[in]  dly_ts  Delayed timeslot ID.
  */
-static void notify_rx_timeslot_denied(bool result)
+static bool dly_op_request(uint32_t         t0,
+                           uint32_t         dt,
+                           uint32_t         length,
+                           rsch_dly_ts_id_t dly_ts_id)
 {
+    bool result;
+
+    // Set PENDING state before timeslot request, in case timeslot starts
+    // immediatly and interrupts current function execution.
+    dly_op_state_set(dly_ts_id, DELAYED_TRX_OP_STATE_STOPPED, DELAYED_TRX_OP_STATE_PENDING);
+
+    result = nrf_802154_rsch_delayed_timeslot_request(t0,
+                                                      dt,
+                                                      length,
+                                                      RSCH_PRIO_MAX,
+                                                      dly_ts_id);
+
     if (!result)
     {
-        nrf_802154_notify_receive_failed(NRF_802154_RX_ERROR_DELAYED_TIMESLOT_DENIED);
+        dly_op_state_set(dly_ts_id, DELAYED_TRX_OP_STATE_PENDING, DELAYED_TRX_OP_STATE_STOPPED);
     }
+
+    return result;
 }
 
 /**
@@ -133,73 +230,141 @@ static void notify_rx_timeout(void * p_context)
 {
     (void)p_context;
 
-    dly_op_stop(RSCH_DLY_RX);
-    nrf_802154_notify_receive_failed(NRF_802154_RX_ERROR_DELAYED_TIMEOUT);
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_DTRX_RX_TIMEOUT);
+
+    assert(dly_op_state_get(RSCH_DLY_RX) != DELAYED_TRX_OP_STATE_PENDING);
+
+    if (dly_op_state_get(RSCH_DLY_RX) == DELAYED_TRX_OP_STATE_ONGOING)
+    {
+        uint32_t now           = nrf_802154_timer_sched_time_get();
+        uint32_t sof_timestamp = m_dly_rx_frame.sof_timestamp;
+
+        // Make sure that the timestamp has been latched safely. If frame reception preempts the code
+        // after executing this line, the RX window will not be extended.
+        __DMB();
+        uint8_t  psdu_length   = m_dly_rx_frame.psdu_length;
+        bool     ack_requested = m_dly_rx_frame.ack_requested;
+        uint32_t frame_length  = nrf_802154_rx_duration_get(psdu_length, ack_requested);
+
+        if (nrf_802154_timer_sched_time_is_in_future(now, sof_timestamp, frame_length))
+        {
+            // @TODO protect against infinite extensions - allow only one timer extension
+            m_timeout_timer.t0 = sof_timestamp;
+            m_timeout_timer.dt = frame_length;
+
+            nrf_802154_timer_sched_add(&m_timeout_timer, true);
+        }
+        else
+        {
+            if (dly_rx_state_set(DELAYED_TRX_OP_STATE_ONGOING, DELAYED_TRX_OP_STATE_STOPPED))
+            {
+                nrf_802154_notify_receive_failed(NRF_802154_RX_ERROR_DELAYED_TIMEOUT);
+            }
+
+            // even if the set operation failed, the delayed RX state
+            // should be set to STOPPED from other context anyway
+            assert(dly_op_state_get(RSCH_DLY_RX) == DELAYED_TRX_OP_STATE_STOPPED);
+        }
+    }
+
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_DTRX_RX_TIMEOUT);
+}
+
+/**
+ * Transmit request result callback.
+ *
+ * @param[in]  result  Result of TX request.
+ */
+static void tx_timeslot_started_callback(bool result)
+{
+    (void)result;
+
+    // To avoid attaching to every possible transmit hook, in order to be able
+    // to switch from ONGOING to STOPPED state, ONGOING state is not used at all
+    // and state is changed to STOPPED right after transmit request.
+    m_dly_op_state[RSCH_DLY_TX] = DELAYED_TRX_OP_STATE_STOPPED;
+
+    if (!result)
+    {
+        nrf_802154_notify_transmit_failed(mp_tx_data, NRF_802154_TX_ERROR_TIMESLOT_DENIED);
+    }
+}
+
+/**
+ * Receive request result callback.
+ *
+ * @param[in]  result  Result of RX request.
+ */
+static void rx_timeslot_started_callback(bool result)
+{
+    if (result)
+    {
+        uint32_t now;
+
+        dly_op_state_set(RSCH_DLY_RX, DELAYED_TRX_OP_STATE_PENDING, DELAYED_TRX_OP_STATE_ONGOING);
+
+        now = nrf_802154_timer_sched_time_get();
+
+        m_timeout_timer.t0           = now;
+        m_dly_rx_frame.sof_timestamp = now;
+        m_dly_rx_frame.psdu_length   = 0;
+        m_dly_rx_frame.ack_requested = false;
+
+        nrf_802154_timer_sched_add(&m_timeout_timer, true);
+    }
+    else
+    {
+        dly_op_state_set(RSCH_DLY_RX, DELAYED_TRX_OP_STATE_PENDING, DELAYED_TRX_OP_STATE_STOPPED);
+
+        nrf_802154_notify_receive_failed(NRF_802154_RX_ERROR_DELAYED_TIMESLOT_DENIED);
+    }
 }
 
 /**
  * Handle TX timeslot start.
  */
-static void nrf_802154_rsch_delayed_tx_timeslot_started(void)
+static void tx_timeslot_started_callout(void)
 {
     bool result;
-
-    assert(dly_op_is_in_progress(RSCH_DLY_TX));
 
     nrf_802154_pib_channel_set(m_tx_channel);
     result = nrf_802154_request_channel_update();
 
     if (result)
     {
-        result = nrf_802154_request_transmit(NRF_802154_TERM_802154,
-                                             REQ_ORIG_DELAYED_TRX,
-                                             mp_tx_psdu,
-                                             m_tx_cca,
-                                             true,
-                                             notify_tx_timeslot_denied);
-        (void)result;
+        (void)nrf_802154_request_transmit(NRF_802154_TERM_802154,
+                                          REQ_ORIG_DELAYED_TRX,
+                                          mp_tx_data,
+                                          m_tx_cca,
+                                          true,
+                                          tx_timeslot_started_callback);
     }
     else
     {
-        notify_tx_timeslot_denied(result);
+        tx_timeslot_started_callback(result);
     }
-
-    dly_op_stop(RSCH_DLY_TX);
 }
 
 /**
  * Handle RX timeslot start.
  */
-static void nrf_802154_rsch_delayed_rx_timeslot_started(void)
+static void rx_timeslot_started_callout(void)
 {
     bool result;
-
-    assert(dly_op_is_in_progress(RSCH_DLY_RX));
 
     nrf_802154_pib_channel_set(m_rx_channel);
     result = nrf_802154_request_channel_update();
 
     if (result)
     {
-        result = nrf_802154_request_receive(NRF_802154_TERM_802154,
-                                            REQ_ORIG_DELAYED_TRX,
-                                            notify_rx_timeslot_denied,
-                                            true);
-        if (result)
-        {
-            m_timeout_timer.t0 = nrf_802154_timer_sched_time_get();
-
-            nrf_802154_timer_sched_add(&m_timeout_timer, true);
-        }
-        else
-        {
-            dly_op_stop(RSCH_DLY_RX);
-        }
+        (void)nrf_802154_request_receive(NRF_802154_TERM_802154,
+                                         REQ_ORIG_DELAYED_TRX,
+                                         rx_timeslot_started_callback,
+                                         true);
     }
     else
     {
-        notify_rx_timeslot_denied(result);
-        dly_op_stop(RSCH_DLY_RX);
+        rx_timeslot_started_callback(result);
     }
 }
 
@@ -209,13 +374,11 @@ bool nrf_802154_delayed_trx_transmit(const uint8_t * p_data,
                                      uint32_t        dt,
                                      uint8_t         channel)
 {
-    bool     result = true;
+    bool     result;
     uint16_t timeslot_length;
+    bool     ack;
 
-    if (dly_op_is_in_progress(RSCH_DLY_TX))
-    {
-        result = false;
-    }
+    result = dly_op_state_get(RSCH_DLY_TX) == DELAYED_TRX_OP_STATE_STOPPED;
 
     if (result)
     {
@@ -227,26 +390,14 @@ bool nrf_802154_delayed_trx_transmit(const uint8_t * p_data,
             dt -= nrf_802154_cca_before_tx_duration_get();
         }
 
-        mp_tx_psdu   = p_data;
+        ack             = p_data[ACK_REQUEST_OFFSET] & ACK_REQUEST_BIT;
+        timeslot_length = nrf_802154_tx_duration_get(p_data[0], cca, ack);
+
+        mp_tx_data   = p_data;
         m_tx_cca     = cca;
         m_tx_channel = channel;
 
-        timeslot_length = nrf_802154_tx_duration_get(p_data[0],
-                                                     cca,
-                                                     p_data[ACK_REQUEST_OFFSET] & ACK_REQUEST_BIT);
-
-        dly_op_start(RSCH_DLY_TX);
-        result = nrf_802154_rsch_delayed_timeslot_request(t0,
-                                                          dt,
-                                                          timeslot_length,
-                                                          RSCH_PRIO_MAX,
-                                                          RSCH_DLY_TX);
-
-        if (!result)
-        {
-            notify_tx_timeslot_denied(result);
-            dly_op_stop(RSCH_DLY_TX);
-        }
+        result = dly_op_request(t0, dt, timeslot_length, RSCH_DLY_TX);
     }
 
     return result;
@@ -257,53 +408,62 @@ bool nrf_802154_delayed_trx_receive(uint32_t t0,
                                     uint32_t timeout,
                                     uint8_t  channel)
 {
-    bool result;
+    bool     result;
+    uint16_t timeslot_length;
 
-    result = !dly_op_is_in_progress(RSCH_DLY_RX);
+    result = dly_op_state_get(RSCH_DLY_RX) == DELAYED_TRX_OP_STATE_STOPPED;
 
     if (result)
     {
+
         dt -= RX_SETUP_TIME;
         dt -= RX_RAMP_UP_TIME;
 
-        dly_op_start(RSCH_DLY_RX);
-        result = nrf_802154_rsch_delayed_timeslot_request(t0,
-                                                          dt,
-                                                          timeout +
-                                                          nrf_802154_rx_duration_get(MAX_PACKET_SIZE,
-                                                                                     true),
-                                                          RSCH_PRIO_MAX,
-                                                          RSCH_DLY_RX);
+        timeslot_length = timeout + nrf_802154_rx_duration_get(MAX_PACKET_SIZE, true);
 
-        if (result)
-        {
-            m_timeout_timer.dt        = timeout;
-            m_timeout_timer.callback  = notify_rx_timeout;
-            m_timeout_timer.p_context = NULL;
+        m_timeout_timer.dt        = timeout + RX_RAMP_UP_TIME;
+        m_timeout_timer.callback  = notify_rx_timeout;
+        m_timeout_timer.p_context = NULL;
 
-            m_rx_channel = channel;
+        m_rx_channel = channel;
 
-        }
-        else
-        {
-            notify_rx_timeslot_denied(result);
-            dly_op_stop(RSCH_DLY_RX);
-        }
+        // remove timer in case it was left after abort operation
+        nrf_802154_timer_sched_remove(&m_timeout_timer, NULL);
+
+        result = dly_op_request(t0, dt, timeslot_length, RSCH_DLY_RX);
     }
 
     return result;
 }
 
-void nrf_802154_rsch_delayed_timeslot_started(rsch_dly_ts_id_t dly_ts_id)
+static inline void timeslot_started_callout(rsch_dly_ts_id_t dly_ts_id)
 {
     switch (dly_ts_id)
     {
         case RSCH_DLY_TX:
-            nrf_802154_rsch_delayed_tx_timeslot_started();
+            tx_timeslot_started_callout();
             break;
 
         case RSCH_DLY_RX:
-            nrf_802154_rsch_delayed_rx_timeslot_started();
+            rx_timeslot_started_callout();
+            break;
+
+        default:
+            assert(false);
+            break;
+    }
+}
+
+void nrf_802154_rsch_delayed_timeslot_started(rsch_dly_ts_id_t dly_ts_id)
+{
+    switch (dly_op_state_get(dly_ts_id))
+    {
+        case DELAYED_TRX_OP_STATE_PENDING:
+            timeslot_started_callout(dly_ts_id);
+            break;
+
+        case DELAYED_TRX_OP_STATE_STOPPED:
+            /* Intentionally do nothing */
             break;
 
         default:
@@ -311,55 +471,69 @@ void nrf_802154_rsch_delayed_timeslot_started(rsch_dly_ts_id_t dly_ts_id)
     }
 }
 
-void nrf_802154_rsch_delayed_timeslot_failed(rsch_dly_ts_id_t dly_ts_id)
+bool nrf_802154_delayed_trx_transmit_cancel(void)
 {
-    assert(dly_ts_id < RSCH_DLY_TS_NUM);
-    assert(dly_op_is_in_progress(dly_ts_id));
+    bool result;
 
-    if (RSCH_DLY_TX == dly_ts_id)
-    {
-        notify_tx_timeslot_denied(false);
-    }
-    else
-    {
-        notify_rx_timeslot_denied(false);
-    }
+    result                      = nrf_802154_rsch_delayed_timeslot_cancel(RSCH_DLY_TX);
+    m_dly_op_state[RSCH_DLY_TX] = DELAYED_TRX_OP_STATE_STOPPED;
 
-    dly_op_stop(dly_ts_id);
+    return result;
+}
+
+bool nrf_802154_delayed_trx_receive_cancel(void)
+{
+    bool result;
+
+    result = nrf_802154_rsch_delayed_timeslot_cancel(RSCH_DLY_RX);
+
+    bool was_running;
+
+    nrf_802154_timer_sched_remove(&m_timeout_timer, &was_running);
+
+    m_dly_op_state[RSCH_DLY_RX] = DELAYED_TRX_OP_STATE_STOPPED;
+
+    result = result || was_running;
+
+    return result;
 }
 
 bool nrf_802154_delayed_trx_abort(nrf_802154_term_t term_lvl, req_originator_t req_orig)
 {
     bool result = true;
 
-    if (!dly_op_is_in_progress(RSCH_DLY_RX))
+    if (req_orig == REQ_ORIG_DELAYED_TRX)
     {
-        // No active procedures, just return true.
+        // Ignore if self-request.
     }
-    else if ((REQ_ORIG_HIGHER_LAYER == req_orig) || (term_lvl >= NRF_802154_TERM_802154))
+    else if (dly_op_state_get(RSCH_DLY_RX) == DELAYED_TRX_OP_STATE_ONGOING)
     {
-        nrf_802154_timer_sched_remove(&m_timeout_timer);
-        dly_op_stop(RSCH_DLY_RX);
-    }
-    else
-    {
-        result = false;
+        if (term_lvl >= NRF_802154_TERM_802154)
+        {
+            if (dly_rx_state_set(DELAYED_TRX_OP_STATE_ONGOING, DELAYED_TRX_OP_STATE_STOPPED))
+            {
+                nrf_802154_notify_receive_failed(NRF_802154_RX_ERROR_DELAYED_ABORTED);
+            }
+
+            // even if the set operation failed, the delayed RX state
+            // should be set to STOPPED from other context anyway
+            assert(dly_op_state_get(RSCH_DLY_RX) == DELAYED_TRX_OP_STATE_STOPPED);
+        }
+        else
+        {
+            result = false;
+        }
     }
 
     return result;
 }
 
-void nrf_802154_delayed_trx_rx_started_hook(void)
+void nrf_802154_delayed_trx_rx_started_hook(const uint8_t * p_frame)
 {
-    if (dly_op_is_in_progress(RSCH_DLY_RX))
+    if (dly_op_state_get(RSCH_DLY_RX) == DELAYED_TRX_OP_STATE_ONGOING)
     {
-        if (nrf_802154_timer_sched_remaining_time_get(&m_timeout_timer)
-            < nrf_802154_rx_duration_get(MAX_PACKET_SIZE, true))
-        {
-            m_timeout_timer.t0 = nrf_802154_timer_sched_time_get();
-            m_timeout_timer.dt = nrf_802154_rx_duration_get(MAX_PACKET_SIZE, true);
-
-            nrf_802154_timer_sched_add(&m_timeout_timer, true);
-        }
+        m_dly_rx_frame.sof_timestamp = nrf_802154_timer_sched_time_get();
+        m_dly_rx_frame.psdu_length   = p_frame[PHR_OFFSET];
+        m_dly_rx_frame.ack_requested = nrf_802154_frame_parser_ar_bit_is_set(p_frame);
     }
 }

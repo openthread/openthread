@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -40,12 +39,14 @@ SED2 = 4
 
 MTDS = [ED2, SED2]
 
+
 class Cert_7_1_5_BorderRouterAsRouter(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,5):
+        for i in range(1, 5):
             self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -73,9 +74,9 @@ class Cert_7_1_5_BorderRouterAsRouter(unittest.TestCase):
         self.nodes[SED2].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -127,7 +128,8 @@ class Cert_7_1_5_BorderRouterAsRouter(unittest.TestCase):
         self.assertTrue(any('2001:2:0:2' in addr[0:10] for addr in addrs))
         self.assertTrue(any('2001:2:0:3' in addr[0:10] for addr in addrs))
         for addr in addrs:
-            if addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2' or addr[0:10] == '2001:2:0:3':
+            if (addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2' or
+                    addr[0:10] == '2001:2:0:3'):
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
         addrs = self.nodes[SED2].get_addrs()
@@ -135,8 +137,10 @@ class Cert_7_1_5_BorderRouterAsRouter(unittest.TestCase):
         self.assertFalse(any('2001:2:0:2' in addr[0:10] for addr in addrs))
         self.assertTrue(any('2001:2:0:3' in addr[0:10] for addr in addrs))
         for addr in addrs:
-            if addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2' or addr[0:10] == '2001:2:0:3':
+            if (addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2' or
+                    addr[0:10] == '2001:2:0:3'):
                 self.assertTrue(self.nodes[LEADER].ping(addr))
+
 
 if __name__ == '__main__':
     unittest.main()

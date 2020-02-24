@@ -35,7 +35,7 @@
 #include <openthread/platform/spi-slave.h>
 #include <openthread/platform/uart.h>
 
-#if OPENTHREAD_ENABLE_NCP_SPI
+#if OPENTHREAD_CONFIG_NCP_SPI_ENABLE
 
 // Spi-slave stubs
 
@@ -84,4 +84,4 @@ void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
     OT_UNUSED_VARIABLE(aBufLength);
 }
 
-#endif // OPENTHREAD_ENABLE_NCP_SPI
+#endif // OPENTHREAD_CONFIG_NCP_SPI_ENABLE

@@ -40,7 +40,7 @@
 #include <openthread/platform/radio.h>
 
 #include "common/string.hpp"
-#include "phy/phy.hpp"
+#include "radio/radio.hpp"
 #include "utils/static_assert.hpp"
 
 namespace ot {
@@ -209,6 +209,14 @@ public:
     otError GetNextChannel(uint8_t &aChannel) const;
 
     /**
+     * This method randomly chooses a channel from the channel mask.
+     *
+     * @returns A randomly chosen channel from the given mask, or `kChannelIteratorFirst` if the mask is empty.
+     *
+     */
+    uint8_t ChooseRandomChannel(void) const;
+
+    /**
      * This method overloads `==` operator to indicate whether two masks are equal.
      *
      * @param[in] aAnother   A reference to another mask to compare with the current one.
@@ -226,7 +234,7 @@ public:
      * @returns TRUE if the two masks are different, FALSE otherwise.
      *
      */
-    bool operator!=(const ChannelMask &aAnother) const { return (mMask != aAnother.mMask); }
+    bool operator!=(const ChannelMask &aAnother) const { return !(*this == aAnother); }
 
     /**
      * This method converts the channel mask into a human-readable string.
@@ -244,7 +252,7 @@ public:
     InfoString ToString(void) const;
 
 private:
-    OT_STATIC_ASSERT((Phy::kChannelMin < 32) && (Phy::kChannelMax < 32),
+    OT_STATIC_ASSERT((Radio::kChannelMin < 32) && (Radio::kChannelMax < 32),
                      "The channel number is larger than 32. `ChannelMask` uses 32 bit mask.");
     uint32_t mMask;
 };

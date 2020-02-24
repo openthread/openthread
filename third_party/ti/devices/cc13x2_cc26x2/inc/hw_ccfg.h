@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       hw_ccfg_h
-*  Revised:        2017-01-10 11:54:43 +0100 (Tue, 10 Jan 2017)
-*  Revision:       48190
+*  Revised:        2018-10-19 08:48:09 +0200 (Fri, 19 Oct 2018)
+*  Revision:       52957
 *
 * Copyright (c) 2015 - 2017, Texas Instruments Incorporated
 * All rights reserved.
@@ -415,9 +415,7 @@
 
 // Field: [19:18] XOSC_FREQ
 //
-// Reserved for future use. Software should not rely on the value of a
-// reserved. Writing any other value than the reset/default value may result in
-// undefined behavior.
+// Selects high precision HF oscillator (activated when using the radio).
 // ENUMs:
 // 24M                      24 MHz XOSC_HF
 // 48M                      48 MHz XOSC_HF

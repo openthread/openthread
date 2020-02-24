@@ -36,7 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
 
 #include "coap/coap_message.hpp"
 
@@ -85,6 +85,7 @@ private:
     void PrintPayload(otMessage *aMessage) const;
 
     otError ProcessHelp(int argc, char *argv[]);
+    otError ProcessParameters(int argc, char *argv[]);
     otError ProcessRequest(int argc, char *argv[]);
     otError ProcessResource(int argc, char *argv[]);
     otError ProcessStart(int argc, char *argv[]);
@@ -96,8 +97,24 @@ private:
     static void HandleResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
     void        HandleResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
 
+    const otCoapTxParameters *GetRequestTxParameters(void) const
+    {
+        return mUseDefaultRequestTxParameters ? NULL : &mRequestTxParameters;
+    }
+
+    const otCoapTxParameters *GetResponseTxParameters(void) const
+    {
+        return mUseDefaultResponseTxParameters ? NULL : &mResponseTxParameters;
+    }
+
     static const Command sCommands[];
     Interpreter &        mInterpreter;
+
+    bool mUseDefaultRequestTxParameters;
+    bool mUseDefaultResponseTxParameters;
+
+    otCoapTxParameters mRequestTxParameters;
+    otCoapTxParameters mResponseTxParameters;
 
     otCoapResource mResource;
     char           mUriPath[kMaxUriLength];
@@ -106,6 +123,6 @@ private:
 } // namespace Cli
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP
+#endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
 
 #endif // CLI_COAP_HPP_

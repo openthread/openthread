@@ -33,7 +33,7 @@ article][ubuntu-wiki-virtualbox].
 [gnu-autoconf]: https://www.gnu.org/software/autoconf
 [gnu-automake]: https://www.gnu.org/software/automake
 [python]: https://www.python.org
-[arm-toolchain]: https://launchpad.net/gcc-arm-embedded
+[arm-toolchain]: https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm
 [cygwin]: https://www.cygwin.com
 [mingw]: http://www.mingw.org
 [ubuntu-wiki-virtualbox]: https://help.ubuntu.com/community/VirtualBox

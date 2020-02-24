@@ -37,7 +37,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "utils/wrap_string.h"
+#include "common/locator-getters.hpp"
 
 namespace ot {
 
@@ -146,13 +146,11 @@ void LinkQualityInfo::Clear(void)
     SetLinkQuality(0);
     mLastRss = OT_RADIO_RSSI_INVALID;
 
-#if OPENTHREAD_CONFIG_ENABLE_TX_ERROR_RATE_TRACKING
     mFrameErrorRate.Reset();
     mMessageErrorRate.Reset();
-#endif
 }
 
-void LinkQualityInfo::AddRss(int8_t aNoiseFloor, int8_t aRss)
+void LinkQualityInfo::AddRss(int8_t aRss)
 {
     uint8_t oldLinkQuality = kNoLinkQuality;
 
@@ -167,10 +165,15 @@ void LinkQualityInfo::AddRss(int8_t aNoiseFloor, int8_t aRss)
 
     SuccessOrExit(mRssAverager.Add(aRss));
 
-    SetLinkQuality(CalculateLinkQuality(GetLinkMargin(aNoiseFloor), oldLinkQuality));
+    SetLinkQuality(CalculateLinkQuality(GetLinkMargin(), oldLinkQuality));
 
 exit:
     return;
+}
+
+uint8_t LinkQualityInfo::GetLinkMargin(void) const
+{
+    return ConvertRssToLinkMargin(Get<Mac::SubMac>().GetNoiseFloor(), GetAverageRss());
 }
 
 LinkQualityInfo::InfoString LinkQualityInfo::ToInfoString(void) const

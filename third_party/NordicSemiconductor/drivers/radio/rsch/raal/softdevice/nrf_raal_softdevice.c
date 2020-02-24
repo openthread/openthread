@@ -42,13 +42,13 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <hal/nrf_timer.h>
-#include <nrf_raal_api.h>
 #include <nrf_802154.h>
 #include <nrf_802154_const.h>
-#include <nrf_802154_debug.h>
+#include "nrf_802154_debug.h"
 #include <nrf_802154_procedures_duration.h>
 #include <nrf_802154_utils.h>
+#include <nrf_timer.h>
+#include <rsch/raal/nrf_raal_api.h>
 
 #if defined(__GNUC__)
 _Pragma("GCC diagnostic push")
@@ -71,16 +71,16 @@ _Pragma("GCC diagnostic pop")
  **************************************************************************************************/
 
 /*
- * @brief Defines the minimum version of the SoftDevice that supports configuration of BLE advertising
+ * @brief Defines the only version of the SoftDevice that supports configuration of BLE advertising
  *        role scheduling.
  *
- *        The first SoftDevice that supports this option is S140 6.1.1 (6001001). The full version
+ *        The only SoftDevice that supports this option is S140 6.1.1 (6001001). The full version
  *        number for the SoftDevice binary is a decimal number in the form Mmmmbbb, where:
  *           - M is major version (one or more digits)
  *           - mmm is minor version (three digits)
  *           - bbb is bugfix version (three digits).
  */
-#define BLE_ADV_SCHED_CFG_SUPPORT_MIN_SD_VERSION     (6001001)
+#define BLE_ADV_SCHED_CFG_SUPPORT_SD_VERSION         (6001001)
 
 /*
  * @brief Defines the minimum version of the SoftDevice that correctly handles timeslot releasing.
@@ -713,9 +713,9 @@ void nrf_raal_init(void)
     assert(err_code == NRF_SUCCESS);
     (void)err_code;
 
-#if (SD_VERSION >= BLE_ADV_SCHED_CFG_SUPPORT_MIN_SD_VERSION)
+#if (SD_VERSION == BLE_ADV_SCHED_CFG_SUPPORT_SD_VERSION)
     // Ensure that correct SoftDevice version is flashed.
-    if (SD_VERSION_GET(MBR_SIZE) >= BLE_ADV_SCHED_CFG_SUPPORT_MIN_SD_VERSION)
+    if (SD_VERSION_GET(MBR_SIZE) == BLE_ADV_SCHED_CFG_SUPPORT_SD_VERSION)
     {
         // Use improved Advertiser Role Scheduling configuration.
         ble_opt_t opt;
@@ -787,6 +787,8 @@ void nrf_raal_continuous_mode_exit(void)
 
         m_continuous = false;
         __DMB();
+
+        nrf_raal_timeslot_ended();
 
         // Emulate signal interrupt to inform SD about end of continuous mode.
         NVIC_SetPendingIRQ(RADIO_IRQn);

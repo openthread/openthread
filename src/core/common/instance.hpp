@@ -36,21 +36,28 @@
 
 #include "openthread-core-config.h"
 
-#include "utils/wrap_stdbool.h"
-#include "utils/wrap_stdint.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 #include <openthread/error.h>
+#include <openthread/heap.h>
 #include <openthread/platform/logging.h>
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#include "common/random_manager.hpp"
+#include "common/tasklet.hpp"
+#include "common/timer.hpp"
+#include "diags/factory_diags.hpp"
+#include "radio/radio.hpp"
+
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 #include "common/message.hpp"
 #include "mac/link_raw.hpp"
 #endif
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 #include "coap/coap.hpp"
 #include "common/code_utils.hpp"
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
 #include "crypto/mbedtls.hpp"
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 #include "utils/heap.hpp"
 #endif
 #include "common/notifier.hpp"
@@ -60,10 +67,10 @@
 #include "thread/announce_sender.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/thread_netif.hpp"
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 #include "utils/channel_manager.hpp"
 #endif
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 #include "utils/channel_monitor.hpp"
 #endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
@@ -100,7 +107,7 @@ namespace ot {
 class Instance : public otInstance
 {
 public:
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     /**
       * This static method initializes the OpenThread instance.
       *
@@ -115,7 +122,7 @@ public:
       */
     static Instance *Init(void *aBuffer, size_t *aBufferSize);
 
-#else // OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#else // OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
     /**
      * This static method initializes the single OpenThread instance.
@@ -161,7 +168,7 @@ public:
      *
      */
     otLogLevel GetLogLevel(void) const
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
     {
         return mLogLevel;
     }
@@ -171,7 +178,7 @@ public:
     }
 #endif
 
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
     /**
      * This method sets the log level.
      *
@@ -207,45 +214,30 @@ public:
      */
     otError ErasePersistentInfo(void);
 
-    /**
-     * This method registers the active scan callback.
-     *
-     * Subsequent calls to this method will overwrite the previous callback handler.
-     *
-     * @param[in]  aCallback   A pointer to the callback function pointer.
-     * @param[in]  aContext    A pointer to application-specific context.
-     *
-     */
-    void RegisterActiveScanCallback(otHandleActiveScanResult aCallback, void *aContext);
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+    void HeapFree(void *aPointer)
+    {
+        assert(mFree != NULL);
 
-    /**
-     * This method invokes the previously registered active scan callback with a given scan result.
-     *
-     * @param[in]  aResult     A pointer to active scan result.
-     *
-     */
-    void InvokeActiveScanCallback(otActiveScanResult *aResult) const;
+        mFree(aPointer);
+    }
 
-    /**
-     * This method registers the energy scan callback.
-     *
-     * Subsequent calls to this method will overwrite the previous callback handler.
-     *
-     * @param[in]  aCallback   A pointer to the callback function pointer.
-     * @param[in]  aContext    A pointer to application-specific context.
-     *
-     */
-    void RegisterEnergyScanCallback(otHandleEnergyScanResult aCallback, void *aContext);
+    void *HeapCAlloc(size_t aCount, size_t aSize)
+    {
+        assert(mCAlloc != NULL);
 
-    /**
-     * This method invokes the previously registered energy scan callback with a given result.
-     *
-     * @param[in]  aResult     A pointer to energy scan result.
-     *
-     */
-    void InvokeEnergyScanCallback(otEnergyScanResult *aResult) const;
+        return mCAlloc(aCount, aSize);
+    }
 
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+    static void HeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
+    {
+        mFree   = aFree;
+        mCAlloc = aCAlloc;
+    }
+#elif !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    void  HeapFree(void *aPointer) { mHeap.Free(aPointer); }
+    void *HeapCAlloc(size_t aCount, size_t aSize) { return mHeap.CAlloc(aCount, aSize); }
+
     /**
      * This method returns a reference to the Heap object.
      *
@@ -253,9 +245,9 @@ public:
      *
      */
     Utils::Heap &GetHeap(void) { return mHeap; }
-#endif
+#endif // OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
     /**
      * This method returns a reference to application COAP object.
      *
@@ -265,7 +257,7 @@ public:
     Coap::Coap &GetApplicationCoap(void) { return mApplicationCoap; }
 #endif
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     /**
      * This method returns a reference to application COAP Secure object.
      *
@@ -296,67 +288,96 @@ private:
     Instance(void);
     void AfterInit(void);
 
+    // Order of variables (their initialization in `Instance`)
+    // is important.
+    //
+    // Tasklet and Timer Schedulers are first to ensure other
+    // objects/classes can use them from their constructors.
+
+    TaskletScheduler    mTaskletScheduler;
     TimerMilliScheduler mTimerMilliScheduler;
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     TimerMicroScheduler mTimerMicroScheduler;
 #endif
-    TaskletScheduler mTaskletScheduler;
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    otHandleActiveScanResult mActiveScanCallback;
-    void *                   mActiveScanCallbackContext;
-    otHandleEnergyScanResult mEnergyScanCallback;
-    void *                   mEnergyScanCallbackContext;
-
-    Notifier mNotifier;
-    Settings mSettings;
-
-#if !OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
-#if OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS
+    // RandomManager is initialized before other objects. Note that it
+    // requires MbedTls which itself may use Heap.
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+    static otHeapFreeFn   mFree;
+    static otHeapCAllocFn mCAlloc;
+#elif !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    Utils::Heap  mHeap;
+#endif
     Crypto::MbedTls mMbedTls;
-#endif
-    Utils::Heap mHeap;
-#endif
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
+    RandomManager mRandomManager;
+
+    // Radio is initialized before other member variables
+    // (particularly, SubMac and Mac) to allow them to use its methods
+    // from their constructor.
+    Radio mRadio;
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    // Notifier, Settings, and MessagePool are initialized  before
+    // other member variables since other classes/objects from their
+    // constructor may use them.
+    Notifier    mNotifier;
+    Settings    mSettings;
+    MessagePool mMessagePool;
 
     Ip6::Ip6    mIp6;
     ThreadNetif mThreadNetif;
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP
+#if OPENTHREAD_CONFIG_COAP_API_ENABLE
     Coap::Coap mApplicationCoap;
 #endif
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     Coap::CoapSecure mApplicationCoapSecure;
 #endif
 
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     Utils::ChannelMonitor mChannelMonitor;
 #endif
 
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
     Utils::ChannelManager mChannelManager;
 #endif
 
-#if OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+#if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
     AnnounceSender mAnnounceSender;
 #endif
 
-    MessagePool mMessagePool;
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     Mac::LinkRaw mLinkRaw;
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
     otLogLevel mLogLevel;
 #endif
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     Extension::ExtensionBase &mExtension;
 #endif
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+    FactoryDiags::Diags mDiags;
+#endif
     bool mIsInitialized;
 };
 
 // Specializations of the `Get<Type>()` method.
+
+template <> inline Radio &Instance::Get(void)
+{
+    return mRadio;
+}
+
+template <> inline Radio::Callbacks &Instance::Get(void)
+{
+    return mRadio.mCallbacks;
+}
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 template <> inline Notifier &Instance::Get(void)
@@ -419,7 +440,7 @@ template <> inline Mac::SubMac &Instance::Get(void)
     return mThreadNetif.mMac.mSubMac;
 }
 
-#if OPENTHREAD_ENABLE_MAC_FILTER
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 template <> inline Mac::Filter &Instance::Get(void)
 {
     return mThreadNetif.mMac.mFilter;
@@ -442,9 +463,20 @@ template <> inline Ip6::Filter &Instance::Get(void)
 }
 
 #if OPENTHREAD_FTD
+
+template <> inline IndirectSender &Instance::Get(void)
+{
+    return mThreadNetif.mMeshForwarder.mIndirectSender;
+}
+
 template <> inline SourceMatchController &Instance::Get(void)
 {
-    return mThreadNetif.mMeshForwarder.mSourceMatchController;
+    return mThreadNetif.mMeshForwarder.mIndirectSender.mSourceMatchController;
+}
+
+template <> inline DataPollHandler &Instance::Get(void)
+{
+    return mThreadNetif.mMeshForwarder.mIndirectSender.mDataPollHandler;
 }
 
 template <> inline AddressResolver &Instance::Get(void)
@@ -468,9 +500,9 @@ template <> inline AnnounceBeginServer &Instance::Get(void)
     return mThreadNetif.mAnnounceBegin;
 }
 
-template <> inline DataPollManager &Instance::Get(void)
+template <> inline DataPollSender &Instance::Get(void)
 {
-    return mThreadNetif.mMeshForwarder.mDataPollManager;
+    return mThreadNetif.mMeshForwarder.mDataPollSender;
 }
 
 template <> inline EnergyScanServer &Instance::Get(void)
@@ -483,7 +515,7 @@ template <> inline PanIdQueryServer &Instance::Get(void)
     return mThreadNetif.mPanIdQuery;
 }
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 template <> inline NetworkData::Local &Instance::Get(void)
 {
     return mThreadNetif.mNetworkDataLocal;
@@ -493,11 +525,6 @@ template <> inline NetworkData::Local &Instance::Get(void)
 template <> inline NetworkData::Leader &Instance::Get(void)
 {
     return mThreadNetif.mNetworkDataLeader;
-}
-
-template <> inline Ip6::Routes &Instance::Get(void)
-{
-    return mIp6.mRoutes;
 }
 
 template <> inline Ip6::Udp &Instance::Get(void)
@@ -520,7 +547,7 @@ template <> inline Coap::Coap &Instance::Get(void)
     return mThreadNetif.mCoap;
 }
 
-#if OPENTHREAD_ENABLE_DTLS
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
 template <> inline Coap::CoapSecure &Instance::Get(void)
 {
     return mThreadNetif.mCoapSecure;
@@ -537,70 +564,70 @@ template <> inline MeshCoP::PendingDataset &Instance::Get(void)
     return mThreadNetif.mPendingDataset;
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 template <> inline TimeSync &Instance::Get(void)
 {
     return mThreadNetif.mTimeSync;
 }
 #endif
 
-#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 template <> inline MeshCoP::Commissioner &Instance::Get(void)
 {
     return mThreadNetif.mCommissioner;
 }
 #endif
 
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
 template <> inline MeshCoP::Joiner &Instance::Get(void)
 {
     return mThreadNetif.mJoiner;
 }
 #endif
 
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 template <> inline Dns::Client &Instance::Get(void)
 {
     return mThreadNetif.mDnsClient;
 }
 #endif
 
-#if OPENTHREAD_FTD || OPENTHREAD_ENABLE_MTD_NETWORK_DIAGNOSTIC
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 template <> inline NetworkDiagnostic::NetworkDiagnostic &Instance::Get(void)
 {
     return mThreadNetif.mNetworkDiagnostic;
 }
 #endif
 
-#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+#if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 template <> inline Dhcp6::Dhcp6Client &Instance::Get(void)
 {
     return mThreadNetif.mDhcp6Client;
 }
 #endif
 
-#if OPENTHREAD_ENABLE_DHCP6_SERVER
+#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
 template <> inline Dhcp6::Dhcp6Server &Instance::Get(void)
 {
     return mThreadNetif.mDhcp6Server;
 }
 #endif
 
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 template <> inline Utils::Slaac &Instance::Get(void)
 {
     return mThreadNetif.mSlaac;
 }
 #endif
 
-#if OPENTHREAD_ENABLE_JAM_DETECTION
+#if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 template <> inline Utils::JamDetector &Instance::Get(void)
 {
     return mThreadNetif.mJamDetector;
 }
 #endif
 
-#if OPENTHREAD_ENABLE_SNTP_CLIENT
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
 template <> inline Sntp::Client &Instance::Get(void)
 {
     return mThreadNetif.mSntpClient;
@@ -617,28 +644,28 @@ template <> inline Utils::SupervisionListener &Instance::Get(void)
     return mThreadNetif.mSupervisionListener;
 }
 
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 template <> inline Utils::ChannelMonitor &Instance::Get(void)
 {
     return mChannelMonitor;
 }
 #endif
 
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 template <> inline Utils::ChannelManager &Instance::Get(void)
 {
     return mChannelManager;
 }
 #endif
 
-#if OPENTHREAD_ENABLE_BORDER_AGENT
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 template <> inline MeshCoP::BorderAgent &Instance::Get(void)
 {
     return mThreadNetif.mBorderAgent;
 }
 #endif
 
-#if OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+#if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
 template <> inline AnnounceSender &Instance::Get(void)
 {
     return mAnnounceSender;
@@ -652,7 +679,7 @@ template <> inline MessagePool &Instance::Get(void)
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 template <> inline Mac::LinkRaw &Instance::Get(void)
 {
     return mLinkRaw;
@@ -665,7 +692,7 @@ template <> inline Mac::SubMac &Instance::Get(void)
 }
 #endif
 
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 template <> inline TaskletScheduler &Instance::Get(void)
 {
@@ -677,7 +704,7 @@ template <> inline TimerMilliScheduler &Instance::Get(void)
     return mTimerMilliScheduler;
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 template <> inline TimerMicroScheduler &Instance::Get(void)
 {
     return mTimerMicroScheduler;
@@ -688,6 +715,13 @@ template <> inline TimerMicroScheduler &Instance::Get(void)
 template <> inline Extension::ExtensionBase &Instance::Get(void)
 {
     return mExtension;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+template <> inline FactoryDiags::Diags &Instance::Get(void)
+{
+    return mDiags;
 }
 #endif
 

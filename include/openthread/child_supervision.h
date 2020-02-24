@@ -47,8 +47,8 @@ extern "C" {
  * @brief
  *   This module includes functions for child supervision feature.
  *
- *   The functions in this module are available when child supervision feature (`OPENTHREAD_ENABLE_CHILD_SUPERVISION`)
- *   is enabled.
+ *   The functions in this module are available when child supervision feature
+ *   (`OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE`) is enabled.
  *
  * @{
  *

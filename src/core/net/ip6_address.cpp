@@ -34,12 +34,10 @@
 #include "ip6_address.hpp"
 
 #include <stdio.h>
-#include "utils/wrap_string.h"
 
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
-#include "mac/mac_frame.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
@@ -64,12 +62,7 @@ bool Address::IsLoopback(void) const
 
 bool Address::IsLinkLocal(void) const
 {
-    return (mFields.m8[0] == 0xfe) && ((mFields.m8[1] & 0xc0) == 0x80);
-}
-
-bool Address::IsMulticast(void) const
-{
-    return mFields.m8[0] == 0xff;
+    return (mFields.m16[0] & HostSwap16(0xffc0)) == HostSwap16(0xfe80);
 }
 
 bool Address::IsLinkLocalMulticast(void) const
@@ -119,21 +112,20 @@ bool Address::IsRealmLocalAllMplForwarders(void) const
 
 bool Address::IsRoutingLocator(void) const
 {
-    return (mFields.m16[4] == HostSwap16(0x0000) && mFields.m16[5] == HostSwap16(0x00ff) &&
-            mFields.m16[6] == HostSwap16(0xfe00) && mFields.m8[14] < kAloc16Mask &&
-            (mFields.m8[14] & kRloc16ReservedBitMask) == 0);
+    return (mFields.m32[2] == HostSwap32(0x000000ff) && mFields.m16[6] == HostSwap16(0xfe00) &&
+            mFields.m8[14] < kAloc16Mask && (mFields.m8[14] & kRloc16ReservedBitMask) == 0);
 }
 
 bool Address::IsAnycastRoutingLocator(void) const
 {
-    return (mFields.m16[4] == HostSwap16(0x0000) && mFields.m16[5] == HostSwap16(0x00ff) &&
-            mFields.m16[6] == HostSwap16(0xfe00) && mFields.m8[14] == kAloc16Mask);
+    return (mFields.m32[2] == HostSwap32(0x000000ff) && mFields.m16[6] == HostSwap16(0xfe00) &&
+            mFields.m8[14] == kAloc16Mask);
 }
 
 bool Address::IsAnycastServiceLocator(void) const
 {
-    return IsAnycastRoutingLocator() && (mFields.m16[7] >= HostSwap16(Mle::kAloc16ServiceStart)) &&
-           (mFields.m16[7] <= HostSwap16(Mle::kAloc16ServiceEnd));
+    return IsAnycastRoutingLocator() && (mFields.m8[15] >= (Mle::kAloc16ServiceStart & 0xff)) &&
+           (mFields.m8[15] <= (Mle::kAloc16ServiceEnd & 0xff));
 }
 
 bool Address::IsSubnetRouterAnycast(void) const
@@ -152,16 +144,6 @@ bool Address::IsIidReserved(void) const
     return IsSubnetRouterAnycast() || IsReservedSubnetAnycast() || IsAnycastRoutingLocator();
 }
 
-const uint8_t *Address::GetIid(void) const
-{
-    return mFields.m8 + kInterfaceIdentifierOffset;
-}
-
-uint8_t *Address::GetIid(void)
-{
-    return mFields.m8 + kInterfaceIdentifierOffset;
-}
-
 void Address::SetIid(const uint8_t *aIid)
 {
     memcpy(mFields.m8 + kInterfaceIdentifierOffset, aIid, kInterfaceIdentifierSize);
@@ -169,19 +151,22 @@ void Address::SetIid(const uint8_t *aIid)
 
 void Address::SetIid(const Mac::ExtAddress &aExtAddress)
 {
-    memcpy(mFields.m8 + kInterfaceIdentifierOffset, aExtAddress.m8, kInterfaceIdentifierSize);
-    mFields.m8[kInterfaceIdentifierOffset] ^= 0x02;
+    Mac::ExtAddress addr;
+
+    addr = aExtAddress;
+    addr.ToggleLocal();
+    addr.CopyTo(mFields.m8 + kInterfaceIdentifierOffset);
 }
 
 void Address::ToExtAddress(Mac::ExtAddress &aExtAddress) const
 {
-    memcpy(aExtAddress.m8, mFields.m8 + kInterfaceIdentifierOffset, sizeof(aExtAddress.m8));
+    aExtAddress.Set(mFields.m8 + kInterfaceIdentifierOffset);
     aExtAddress.ToggleLocal();
 }
 
 void Address::ToExtAddress(Mac::Address &aMacAddress) const
 {
-    aMacAddress.SetExtended(mFields.m8 + kInterfaceIdentifierOffset, /* reverse */ false);
+    aMacAddress.SetExtended(mFields.m8 + kInterfaceIdentifierOffset);
     aMacAddress.GetExtended().ToggleLocal();
 }
 
@@ -252,24 +237,21 @@ bool Address::operator==(const Address &aOther) const
     return memcmp(mFields.m8, aOther.mFields.m8, sizeof(mFields.m8)) == 0;
 }
 
-bool Address::operator!=(const Address &aOther) const
-{
-    return memcmp(mFields.m8, aOther.mFields.m8, sizeof(mFields.m8)) != 0;
-}
-
 otError Address::FromString(const char *aBuf)
 {
-    otError  error  = OT_ERROR_NONE;
-    uint8_t *dst    = reinterpret_cast<uint8_t *>(mFields.m8);
-    uint8_t *endp   = reinterpret_cast<uint8_t *>(mFields.m8 + 15);
-    uint8_t *colonp = NULL;
-    uint16_t val    = 0;
-    uint8_t  count  = 0;
-    bool     first  = true;
-    char     ch;
-    uint8_t  d;
+    otError     error  = OT_ERROR_NONE;
+    uint8_t *   dst    = reinterpret_cast<uint8_t *>(mFields.m8);
+    uint8_t *   endp   = reinterpret_cast<uint8_t *>(mFields.m8 + 15);
+    uint8_t *   colonp = NULL;
+    const char *colonc = NULL;
+    uint16_t    val    = 0;
+    uint8_t     count  = 0;
+    bool        first  = true;
+    bool        hasIp4 = false;
+    char        ch;
+    uint8_t     d;
 
-    memset(mFields.m8, 0, 16);
+    Clear();
 
     dst--;
 
@@ -304,7 +286,20 @@ otError Address::FromString(const char *aBuf)
                 break;
             }
 
+            colonc = aBuf;
+
             continue;
+        }
+        else if (ch == '.')
+        {
+            hasIp4 = true;
+
+            // Do not count bytes of the embedded IPv4 address.
+            endp -= kIp4AddressSize;
+
+            VerifyOrExit(dst <= endp, error = OT_ERROR_PARSE);
+
+            break;
         }
         else
         {
@@ -316,6 +311,8 @@ otError Address::FromString(const char *aBuf)
         VerifyOrExit(++count <= 4, error = OT_ERROR_PARSE);
     }
 
+    VerifyOrExit(colonp || dst == endp, error = OT_ERROR_PARSE);
+
     while (colonp && dst > colonp)
     {
         *endp-- = *dst--;
@@ -324,6 +321,44 @@ otError Address::FromString(const char *aBuf)
     while (endp > dst)
     {
         *endp-- = 0;
+    }
+
+    if (hasIp4)
+    {
+        val = 0;
+
+        // Reset the start and end pointers.
+        dst  = reinterpret_cast<uint8_t *>(mFields.m8 + 12);
+        endp = reinterpret_cast<uint8_t *>(mFields.m8 + 15);
+
+        for (;;)
+        {
+            ch = *colonc++;
+
+            if (ch == '.' || ch == '\0' || ch == ' ')
+            {
+                VerifyOrExit(dst <= endp, error = OT_ERROR_PARSE);
+
+                *dst++ = static_cast<uint8_t>(val);
+                val    = 0;
+
+                if (ch == '\0' || ch == ' ')
+                {
+                    // Check if embedded IPv4 address had exactly four parts.
+                    VerifyOrExit(dst == endp + 1, error = OT_ERROR_PARSE);
+                    break;
+                }
+            }
+            else
+            {
+                VerifyOrExit('0' <= ch && ch <= '9', error = OT_ERROR_PARSE);
+
+                val = (10 * val) + (ch & 0xf);
+
+                // Single part of IPv4 address has to fit in one byte.
+                VerifyOrExit(val <= 0xff, error = OT_ERROR_PARSE);
+            }
+        }
     }
 
 exit:

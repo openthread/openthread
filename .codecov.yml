@@ -5,6 +5,7 @@ coverage:
 
 ignore:
   - "tests/*"
-  - "third_party/*"
+  - "third_party/**/*"
 
-comment: off
+comment:
+  layout: "diff, flags, files"

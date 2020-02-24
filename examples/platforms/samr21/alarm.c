@@ -77,7 +77,7 @@ void samr21AlarmProcess(otInstance *aInstance)
     {
         sDeltaTime = 0;
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
         if (otPlatDiagModeGet())
         {

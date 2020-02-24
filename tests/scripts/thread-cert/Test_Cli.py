@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,22 +27,23 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import node
 
 LEADER = 1
 
+
 class Cert_Cli(unittest.TestCase):
+
     def setUp(self):
         self.nodes = {}
         self.nodes[LEADER] = node.Node(LEADER)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
 
     def test(self):
         commands = self.nodes[LEADER].get_commands()
@@ -50,6 +51,7 @@ class Cert_Cli(unittest.TestCase):
         for command in commands:
             self.nodes[LEADER].send_command(command + ' -h')
             self.nodes[LEADER].pexpect.expect('Done')
+
 
 if __name__ == '__main__':
     unittest.main()

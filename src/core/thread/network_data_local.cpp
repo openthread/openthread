@@ -38,10 +38,10 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "thread/thread_netif.hpp"
 
-#if OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 namespace ot {
 namespace NetworkData {
@@ -52,6 +52,7 @@ Local::Local(Instance &aInstance)
 {
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 otError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf, uint8_t aFlags, bool aStable)
 {
     otError          error             = OT_ERROR_NONE;
@@ -175,7 +176,54 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_ENABLE_SERVICE
+void Local::UpdateRloc(PrefixTlv &aPrefix)
+{
+    for (NetworkDataTlv *cur = aPrefix.GetSubTlvs(); cur < aPrefix.GetNext(); cur = cur->GetNext())
+    {
+        switch (cur->GetType())
+        {
+        case NetworkDataTlv::kTypeHasRoute:
+            UpdateRloc(*static_cast<HasRouteTlv *>(cur));
+            break;
+
+        case NetworkDataTlv::kTypeBorderRouter:
+            UpdateRloc(*static_cast<BorderRouterTlv *>(cur));
+            break;
+
+        default:
+            assert(false);
+            break;
+        }
+    }
+}
+
+void Local::UpdateRloc(HasRouteTlv &aHasRoute)
+{
+    HasRouteEntry *entry = aHasRoute.GetEntry(0);
+    entry->SetRloc(Get<Mle::MleRouter>().GetRloc16());
+}
+
+void Local::UpdateRloc(BorderRouterTlv &aBorderRouter)
+{
+    BorderRouterEntry *entry = aBorderRouter.GetEntry(0);
+    entry->SetRloc(Get<Mle::MleRouter>().GetRloc16());
+}
+
+bool Local::IsOnMeshPrefixConsistent(void)
+{
+    return (Get<Leader>().ContainsOnMeshPrefixes(*this, Get<Mle::MleRouter>().GetRloc16()) &&
+            ContainsOnMeshPrefixes(Get<Leader>(), Get<Mle::MleRouter>().GetRloc16()));
+}
+
+bool Local::IsExternalRouteConsistent(void)
+{
+    return (Get<Leader>().ContainsExternalRoutes(*this, Get<Mle::MleRouter>().GetRloc16()) &&
+            ContainsExternalRoutes(Get<Leader>(), Get<Mle::MleRouter>().GetRloc16()));
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 otError Local::AddService(uint32_t       aEnterpriseNumber,
                           const uint8_t *aServiceData,
                           uint8_t        aServiceDataLength,
@@ -240,69 +288,7 @@ exit:
     otDumpDebgNetData("remove service done", mTlvs, mLength);
     return error;
 }
-#endif
 
-void Local::UpdateRloc(void)
-{
-    for (NetworkDataTlv *cur                                            = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength); cur = cur->GetNext())
-    {
-        switch (cur->GetType())
-        {
-        case NetworkDataTlv::kTypePrefix:
-            UpdateRloc(*static_cast<PrefixTlv *>(cur));
-            break;
-
-#if OPENTHREAD_ENABLE_SERVICE
-
-        case NetworkDataTlv::kTypeService:
-            UpdateRloc(*static_cast<ServiceTlv *>(cur));
-            break;
-#endif
-
-        default:
-            assert(false);
-            break;
-        }
-    }
-
-    ClearResubmitDelayTimer();
-}
-
-void Local::UpdateRloc(PrefixTlv &aPrefix)
-{
-    for (NetworkDataTlv *cur = aPrefix.GetSubTlvs(); cur < aPrefix.GetNext(); cur = cur->GetNext())
-    {
-        switch (cur->GetType())
-        {
-        case NetworkDataTlv::kTypeHasRoute:
-            UpdateRloc(*static_cast<HasRouteTlv *>(cur));
-            break;
-
-        case NetworkDataTlv::kTypeBorderRouter:
-            UpdateRloc(*static_cast<BorderRouterTlv *>(cur));
-            break;
-
-        default:
-            assert(false);
-            break;
-        }
-    }
-}
-
-void Local::UpdateRloc(HasRouteTlv &aHasRoute)
-{
-    HasRouteEntry *entry = aHasRoute.GetEntry(0);
-    entry->SetRloc(Get<Mle::MleRouter>().GetRloc16());
-}
-
-void Local::UpdateRloc(BorderRouterTlv &aBorderRouter)
-{
-    BorderRouterEntry *entry = aBorderRouter.GetEntry(0);
-    entry->SetRloc(Get<Mle::MleRouter>().GetRloc16());
-}
-
-#if OPENTHREAD_ENABLE_SERVICE
 void Local::UpdateRloc(ServiceTlv &aService)
 {
     for (NetworkDataTlv *cur = aService.GetSubTlvs(); cur < aService.GetNext(); cur = cur->GetNext())
@@ -324,38 +310,54 @@ void Local::UpdateRloc(ServerTlv &aServer)
 {
     aServer.SetServer16(Get<Mle::MleRouter>().GetRloc16());
 }
-#endif
 
-bool Local::IsOnMeshPrefixConsistent(void)
-{
-    return (Get<Leader>().ContainsOnMeshPrefixes(*this, Get<Mle::MleRouter>().GetRloc16()) &&
-            ContainsOnMeshPrefixes(Get<Leader>(), Get<Mle::MleRouter>().GetRloc16()));
-}
-
-bool Local::IsExternalRouteConsistent(void)
-{
-    return (Get<Leader>().ContainsExternalRoutes(*this, Get<Mle::MleRouter>().GetRloc16()) &&
-            ContainsExternalRoutes(Get<Leader>(), Get<Mle::MleRouter>().GetRloc16()));
-}
-
-#if OPENTHREAD_ENABLE_SERVICE
 bool Local::IsServiceConsistent(void)
 {
     return (Get<Leader>().ContainsServices(*this, Get<Mle::MleRouter>().GetRloc16()) &&
             ContainsServices(Get<Leader>(), Get<Mle::MleRouter>().GetRloc16()));
 }
+
+#endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+
+void Local::UpdateRloc(void)
+{
+    for (NetworkDataTlv *cur                                            = reinterpret_cast<NetworkDataTlv *>(mTlvs);
+         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength); cur = cur->GetNext())
+    {
+        switch (cur->GetType())
+        {
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+        case NetworkDataTlv::kTypePrefix:
+            UpdateRloc(*static_cast<PrefixTlv *>(cur));
+            break;
 #endif
+
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+
+        case NetworkDataTlv::kTypeService:
+            UpdateRloc(*static_cast<ServiceTlv *>(cur));
+            break;
+#endif
+
+        default:
+            assert(false);
+            break;
+        }
+    }
+
+    ClearResubmitDelayTimer();
+}
 
 otError Local::SendServerDataNotification(void)
 {
-    otError  error = OT_ERROR_NONE;
-    uint16_t rloc  = Get<Mle::MleRouter>().GetRloc16();
+    otError  error        = OT_ERROR_NONE;
+    uint16_t rloc         = Get<Mle::MleRouter>().GetRloc16();
+    bool     isConsistent = true;
 
 #if OPENTHREAD_FTD
 
     // Don't send this Server Data Notification if the device is going to upgrade to Router
-    if (Get<Mle::MleRouter>().IsFullThreadDevice() && Get<Mle::MleRouter>().IsRouterRoleEnabled() &&
-        (Get<Mle::MleRouter>().GetRole() < OT_DEVICE_ROLE_ROUTER) &&
+    if (Get<Mle::MleRouter>().IsRouterEligible() && (Get<Mle::MleRouter>().GetRole() < OT_DEVICE_ROLE_ROUTER) &&
         (Get<RouterTable>().GetActiveRouterCount() < Get<Mle::MleRouter>().GetRouterUpgradeThreshold()))
     {
         ExitNow(error = OT_ERROR_INVALID_STATE);
@@ -365,12 +367,14 @@ otError Local::SendServerDataNotification(void)
 
     UpdateRloc();
 
-#if OPENTHREAD_ENABLE_SERVICE
-    VerifyOrExit(!IsOnMeshPrefixConsistent() || !IsExternalRouteConsistent() || !IsServiceConsistent(),
-                 ClearResubmitDelayTimer());
-#else
-    VerifyOrExit(!IsOnMeshPrefixConsistent() || !IsExternalRouteConsistent(), ClearResubmitDelayTimer());
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+    isConsistent = isConsistent && IsOnMeshPrefixConsistent() && IsExternalRouteConsistent();
 #endif
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+    isConsistent = isConsistent && IsServiceConsistent();
+#endif
+
+    VerifyOrExit(!isConsistent, ClearResubmitDelayTimer());
 
     if (mOldRloc == rloc)
     {
@@ -387,4 +391,4 @@ exit:
 } // namespace NetworkData
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_BORDER_ROUTER || OPENTHREAD_ENABLE_SERVICE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE

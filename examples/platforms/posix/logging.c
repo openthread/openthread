@@ -36,10 +36,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-
-#ifndef _WIN32
 #include <syslog.h>
-#endif
 
 #include <openthread/platform/logging.h>
 #include <openthread/platform/toolchain.h>
@@ -77,11 +74,7 @@ OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const 
     otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);
 
 exit:
-#ifndef _WIN32
     syslog(LOG_CRIT, "%s", logString);
-#else
-    printf("%s\r\n", logString);
-#endif
 }
 
 #endif // #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)

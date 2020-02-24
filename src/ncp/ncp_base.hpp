@@ -35,6 +35,8 @@
 
 #include "openthread-core-config.h"
 
+#include "ncp/ncp_config.h"
+
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 #include <openthread/ip6.h>
 #else
@@ -49,12 +51,11 @@
 #include "changed_props_set.hpp"
 #include "common/instance.hpp"
 #include "common/tasklet.hpp"
-#include "ncp/ncp_buffer.hpp"
-#include "ncp/spinel_decoder.hpp"
-#include "ncp/spinel_encoder.hpp"
+#include "spinel/spinel.h"
+#include "spinel/spinel_buffer.hpp"
+#include "spinel/spinel_decoder.hpp"
+#include "spinel/spinel_encoder.hpp"
 #include "utils/static_assert.hpp"
-
-#include "spinel.h"
 
 namespace ot {
 namespace Ncp {
@@ -62,6 +63,12 @@ namespace Ncp {
 class NcpBase
 {
 public:
+    enum
+    {
+        kSpinelCmdHeaderSize = 2, ///< Size of spinel command header (in bytes).
+        kSpinelPropIdSize    = 3, ///< Size of spinel property identifier (in bytes).
+    };
+
     /**
      * This constructor creates and initializes an NcpBase instance.
      *
@@ -113,16 +120,13 @@ public:
      * @param[in] aAllowPeekDelegate      Delegate function pointer for peek operation.
      * @param[in] aAllowPokeDelegate      Delegate function pointer for poke operation.
      *
-     * @retval OT_ERROR_NONE              Successfully registered delegate functions.
-     * @retval OT_ERROR_DISABLED_FEATURE  Peek/Poke feature is disabled (by a build-time configuration option).
-     *
      */
     void RegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
                                    otNcpDelegateAllowPeekPoke aAllowPokeDelegate);
 #endif
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-#if OPENTHREAD_ENABLE_LEGACY
+#if OPENTHREAD_CONFIG_LEGACY_ENABLE
     /**
      * This callback is invoked by the legacy stack to notify that a new
      * legacy node did join the network.
@@ -197,14 +201,27 @@ protected:
         uint32_t     mPropKeyOrStatus : 24; ///< 3 bytes for either property key or spinel status.
     };
 
-    NcpFrameBuffer::FrameTag GetLastOutboundFrameTag(void);
+    struct HandlerEntry
+    {
+        spinel_prop_key_t        mKey;
+        NcpBase::PropertyHandler mHandler;
+    };
+
+    Spinel::Buffer::FrameTag GetLastOutboundFrameTag(void);
 
     otError HandleCommand(uint8_t aHeader);
 
-    PropertyHandler FindGetPropertyHandler(spinel_prop_key_t aKey);
-    PropertyHandler FindSetPropertyHandler(spinel_prop_key_t aKey);
-    PropertyHandler FindInsertPropertyHandler(spinel_prop_key_t aKey);
-    PropertyHandler FindRemovePropertyHandler(spinel_prop_key_t aKey);
+#if __cplusplus >= 201103L
+    static constexpr bool AreHandlerEntriesSorted(const HandlerEntry *aHandlerEntries, size_t aSize);
+#endif
+
+    static PropertyHandler FindPropertyHandler(const HandlerEntry *aHandlerEntries,
+                                               size_t              aSize,
+                                               spinel_prop_key_t   aKey);
+    static PropertyHandler FindGetPropertyHandler(spinel_prop_key_t aKey);
+    static PropertyHandler FindSetPropertyHandler(spinel_prop_key_t aKey);
+    static PropertyHandler FindInsertPropertyHandler(spinel_prop_key_t aKey);
+    static PropertyHandler FindRemovePropertyHandler(spinel_prop_key_t aKey);
 
     bool    HandlePropertySetForSpecialProperties(uint8_t aHeader, spinel_prop_key_t aKey, otError &aError);
     otError HandleCommandPropertySet(uint8_t aHeader, spinel_prop_key_t aKey);
@@ -219,7 +236,7 @@ protected:
                                                    uint16_t          aValueLen);
 
     otError SendQueuedResponses(void);
-    bool    IsResponseQueueEmpty(void) { return (mResponseQueueHead == mResponseQueueTail); }
+    bool    IsResponseQueueEmpty(void) const { return (mResponseQueueHead == mResponseQueueTail); }
     otError EnqueueResponse(uint8_t aHeader, ResponseType aType, unsigned int aPropKeyOrStatus);
 
     otError PrepareGetResponse(uint8_t aHeader, spinel_prop_key_t aPropKey)
@@ -241,15 +258,15 @@ protected:
     void        UpdateChangedProps(void);
 
     static void HandleFrameRemovedFromNcpBuffer(void *                   aContext,
-                                                NcpFrameBuffer::FrameTag aFrameTag,
-                                                NcpFrameBuffer::Priority aPriority,
-                                                NcpFrameBuffer *         aNcpBuffer);
-    void        HandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag);
+                                                Spinel::Buffer::FrameTag aFrameTag,
+                                                Spinel::Buffer::Priority aPriority,
+                                                Spinel::Buffer *         aNcpBuffer);
+    void        HandleFrameRemovedFromNcpBuffer(Spinel::Buffer::FrameTag aFrameTag);
 
     otError EncodeChannelMask(uint32_t aChannelMask);
     otError DecodeChannelMask(uint32_t &aChannelMask);
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
     static void LinkRawReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
     void        LinkRawReceiveDone(otRadioFrame *aFrame, otError aError);
@@ -263,7 +280,7 @@ protected:
     static void LinkRawEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
     void        LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi);
 
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     static void HandleStateChanged(otChangedFlags aFlags, void *aContext);
@@ -276,11 +293,11 @@ protected:
     void        HandleTimeSyncUpdate(void);
 
 #if OPENTHREAD_FTD
-    static void HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo *aChildInfo);
-    void        HandleChildTableChanged(otThreadChildTableEvent aEvent, const otChildInfo &aChildInfo);
+    static void HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo *aEntry);
+    void        HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo &aEntry);
 
     static void HandleParentResponseInfo(otThreadParentResponseInfo *aInfo, void *aContext);
-    void        HandleParentResponseInfo(const otThreadParentResponseInfo *aInfo);
+    void        HandleParentResponseInfo(const otThreadParentResponseInfo &aInfo);
 #endif
 
     static void HandleDatagramFromStack(otMessage *aMessage, void *aContext);
@@ -298,7 +315,7 @@ protected:
     static void HandleJamStateChange_Jump(bool aJamState, void *aContext);
     void        HandleJamStateChange(bool aJamState);
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     static void HandleCommissionerEnergyReport_Jump(uint32_t       aChannelMask,
                                                     const uint8_t *aEnergyData,
                                                     uint8_t        aLength,
@@ -309,7 +326,7 @@ protected:
     void        HandleCommissionerPanIdConflict(uint16_t aPanId, uint32_t aChannelMask);
 #endif
 
-#if OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
     static void HandleJoinerCallback_Jump(otError aError, void *aContext);
     void        HandleJoinerCallback(otError aError);
 #endif
@@ -322,18 +339,20 @@ protected:
                                      const otIp6Address ** aDestIpAddress    = NULL,
                                      bool                  aAllowEmptyValues = false);
 
+    otError EncodeNeighborInfo(const otNeighborInfo &aNeighborInfo);
+
 #if OPENTHREAD_FTD
     otError EncodeChildInfo(const otChildInfo &aChildInfo);
 #endif
 
-#if OPENTHREAD_ENABLE_UDP_FORWARD
+#if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     static void HandleUdpForwardStream(otMessage *   aMessage,
                                        uint16_t      aPeerPort,
                                        otIp6Address *aPeerAddr,
                                        uint16_t      aSockPort,
                                        void *        aContext);
     void HandleUdpForwardStream(otMessage *aMessage, uint16_t aPeerPort, otIp6Address &aPeerAddr, uint16_t aPort);
-#endif // OPENTHREAD_ENABLE_UDP_FORWARD
+#endif // OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     otError CommandHandler_NOOP(uint8_t aHeader);
@@ -345,9 +364,7 @@ protected:
     otError CommandHandler_POKE(uint8_t aHeader);
 #endif
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    otError CommandHandler_NET_SAVE(uint8_t aHeader);
     otError CommandHandler_NET_CLEAR(uint8_t aHeader);
-    otError CommandHandler_NET_RECALL(uint8_t aHeader);
 #endif
 
     // ----------------------------------------------------------------------------
@@ -397,23 +414,27 @@ protected:
 
     otError HandlePropertySet_SPINEL_PROP_HOST_POWER_STATE(uint8_t aHeader);
 
-#if OPENTHREAD_ENABLE_DIAG
-    OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <= OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE,
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+    OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <=
+                         OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE - kSpinelCmdHeaderSize - kSpinelPropIdSize,
                      "diag output buffer should be smaller than NCP UART tx buffer");
 
     otError HandlePropertySet_SPINEL_PROP_NEST_STREAM_MFG(uint8_t aHeader);
 #endif
 
-#if OPENTHREAD_FTD && OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+    otError HandlePropertySet_SPINEL_PROP_MESHCOP_COMMISSIONER_GENERATE_PSKC(uint8_t aHeader);
     otError HandlePropertySet_SPINEL_PROP_THREAD_COMMISSIONER_ENABLED(uint8_t aHeader);
 #endif // OPENTHREAD_FTD
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     otError DecodeStreamRawTxRequest(otRadioFrame &aFrame);
     otError HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader);
 #endif
 
-#if OPENTHREAD_ENABLE_LEGACY
+    void ResetCounters(void);
+
+#if OPENTHREAD_CONFIG_LEGACY_ENABLE
     void StartLegacy(void);
     void StopLegacy(void);
 #else
@@ -450,7 +471,7 @@ protected:
      * @param[in] aFrameTag    The tag of the frame removed from NCP buffer.
      *
      */
-    void VendorHandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag);
+    void VendorHandleFrameRemovedFromNcpBuffer(Spinel::Buffer::FrameTag aFrameTag);
 
     /**
      * This method defines a vendor "get property handler" hook to process vendor spinel properties.
@@ -498,9 +519,9 @@ protected:
                                                bool aDeviceType,
                                                bool aNetworkData);
     Instance *             mInstance;
-    NcpFrameBuffer         mTxFrameBuffer;
-    SpinelEncoder          mEncoder;
-    SpinelDecoder          mDecoder;
+    Spinel::Buffer         mTxFrameBuffer;
+    Spinel::Encoder        mEncoder;
+    Spinel::Decoder        mDecoder;
     bool                   mHostPowerStateInProgress;
 
     enum
@@ -522,7 +543,7 @@ protected:
     ChangedPropsSet mChangedPropsSet;
 
     spinel_host_power_state_t mHostPowerState;
-    NcpFrameBuffer::FrameTag  mHostPowerReplyFrameTag;
+    Spinel::Buffer::FrameTag  mHostPowerReplyFrameTag;
     uint8_t                   mHostPowerStateHeader;
 
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
@@ -544,22 +565,22 @@ protected:
     bool mPcapEnabled;
     bool mDisableStreamWrite;
     bool mShouldEmitChildTableUpdate;
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     bool mAllowLocalServerDataChange;
 #endif
 
 #if OPENTHREAD_FTD
-#if OPENTHREAD_CONFIG_ENABLE_STEERING_DATA_SET_OOB
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     otExtAddress mSteeringDataAddress;
 #endif
     uint8_t mPreferredRouteId;
 #endif
 
-#if OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     uint8_t mCurTransmitTID;
     int8_t  mCurScanChannel;
     bool    mSrcMatchEnabled;
-#endif // OPENTHREAD_RADIO || OPENTHREAD_ENABLE_RAW_LINK_API
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     otMessageQueue mMessageQueue;
@@ -570,7 +591,7 @@ protected:
     uint32_t mOutboundInsecureIpFrameCounter; // Number of insecure outbound data/IP frames.
     uint32_t mDroppedOutboundIpFrameCounter;  // Number of dropped outbound data/IP frames.
     uint32_t mDroppedInboundIpFrameCounter;   // Number of dropped inbound data/IP frames.
-#if OPENTHREAD_ENABLE_LEGACY
+#if OPENTHREAD_CONFIG_LEGACY_ENABLE
     const otNcpLegacyHandlers *mLegacyHandlers;
     uint8_t                    mLegacyUlaPrefix[OT_NCP_LEGACY_ULA_PREFIX_LENGTH];
     otExtAddress               mLegacyLastJoinedNode;
@@ -584,6 +605,8 @@ protected:
     uint32_t mTxSpinelFrameCounter;         // Number of sent (outbound) spinel frames.
 
     bool mDidInitialUpdates;
+
+    uint64_t mLogTimestampBase; // Timestamp base used for logging
 };
 
 } // namespace Ncp

@@ -36,8 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include <stdint.h>
 #include <stdlib.h>
-#include "utils/wrap_stdint.h"
 
 #include <openthread/error.h>
 
@@ -79,9 +79,6 @@ public:
                         uint16_t       aInputHashLength,
                         const uint8_t *aPrivateKey,
                         uint16_t       aPrivateKeyLength);
-
-private:
-    static int FillRandom(void *, unsigned char *aBuffer, size_t aSize);
 };
 
 /**

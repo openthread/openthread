@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -37,12 +36,14 @@ LEADER = 1
 ROUTER = 2
 ED = 3
 
+
 class Cert_5_6_8_ContextManagement(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
         self.nodes = {}
-        for i in range(1,4):
+        for i in range(1, 4):
             self.nodes[i] = node.Node(i, (i == ED), simulator=self.simulator)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -64,9 +65,9 @@ class Cert_5_6_8_ContextManagement(unittest.TestCase):
         self.nodes[ED].enable_whitelist()
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -137,6 +138,7 @@ class Cert_5_6_8_ContextManagement(unittest.TestCase):
         for addr in addrs:
             if addr[0:3] == '200':
                 self.assertTrue(self.nodes[ED].ping(addr))
+
 
 if __name__ == '__main__':
     unittest.main()

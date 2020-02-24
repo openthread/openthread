@@ -31,8 +31,6 @@
  *   This file implements the OpenThread IPv6 API.
  */
 
-#define WPP_NAME "ip6_api.tmh"
-
 #include "openthread-core-config.h"
 
 #include <openthread/ip6.h>
@@ -40,7 +38,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 #include "utils/slaac_address.hpp"
 #endif
 
@@ -51,7 +49,7 @@ otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(!instance.Get<Mac::LinkRaw>().IsEnabled(), error = OT_ERROR_INVALID_STATE);
 #endif
 
@@ -64,7 +62,7 @@ otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
         instance.Get<ThreadNetif>().Down();
     }
 
-#if OPENTHREAD_ENABLE_RAW_LINK_API
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 exit:
 #endif
     return error;
@@ -164,13 +162,9 @@ void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled)
 
 otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
 {
-    otError   error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    error = instance.Get<Ip6::Ip6>().SendRaw(*static_cast<Message *>(aMessage),
-                                             instance.Get<ThreadNetif>().GetInterfaceId());
-
-    return error;
+    return instance.Get<Ip6::Ip6>().SendRaw(*static_cast<Message *>(aMessage));
 }
 
 otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
@@ -243,14 +237,9 @@ otError otIp6AddressFromString(const char *aString, otIp6Address *aAddress)
 
 uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond)
 {
-    uint8_t rval;
+    assert(aFirst != NULL && aSecond != NULL);
 
-    VerifyOrExit(aFirst != NULL && aSecond != NULL, rval = 0);
-
-    rval = static_cast<const Ip6::Address *>(aFirst)->PrefixMatch(*static_cast<const Ip6::Address *>(aSecond));
-
-exit:
-    return rval;
+    return static_cast<const Ip6::Address *>(aFirst)->PrefixMatch(*static_cast<const Ip6::Address *>(aSecond));
 }
 
 bool otIp6IsAddressUnspecified(const otIp6Address *aAddress)
@@ -272,7 +261,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_SLAAC
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
 bool otIp6IsSlaacEnabled(otInstance *aInstance)
 {
@@ -300,4 +289,4 @@ void otIp6SetSlaacPrefixFilter(otInstance *aInstance, otIp6SlaacPrefixFilter aFi
     instance.Get<Utils::Slaac>().SetFilter(aFilter);
 }
 
-#endif // OPENTHREAD_CONFIG_ENABLE_SLAAC
+#endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE

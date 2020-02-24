@@ -36,10 +36,14 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
 #include "coap/coap_message.hpp"
 #include "coap/coap_secure.hpp"
+
+#ifndef CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
+#define CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER 0
+#endif
 
 namespace ot {
 namespace Cli {
@@ -130,6 +134,6 @@ private:
 } // namespace Cli
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
 #endif // CLI_COAP_SECURE_HPP_

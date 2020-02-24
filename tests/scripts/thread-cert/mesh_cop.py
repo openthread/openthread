@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2019, The OpenThread Authors.
 #  All rights reserved.
@@ -34,6 +34,7 @@ import struct
 
 from network_data import SubTlvsFactory
 import common
+
 
 class TlvType(IntEnum):
     CHANNEL = 0
@@ -79,21 +80,23 @@ class TlvType(IntEnum):
 
 class MeshCopState(IntEnum):
     ACCEPT = 0x1
-    REJECT = 0xFF
+    REJECT = 0xff
 
 
 class MeshCopMessageType(IntEnum):
-    JOIN_FIN_REQ = 1,
-    JOIN_FIN_RSP = 2,
-    JOIN_ENT_NTF = 3,
+    JOIN_FIN_REQ = (1,)
+    JOIN_FIN_RSP = (2,)
+    JOIN_ENT_NTF = (3,)
     JOIN_ENT_RSP = 4
 
 
 def create_mesh_cop_message_type_set():
-    return [ MeshCopMessageType.JOIN_FIN_REQ,
-             MeshCopMessageType.JOIN_FIN_RSP,
-             MeshCopMessageType.JOIN_ENT_NTF,
-             MeshCopMessageType.JOIN_ENT_RSP ]
+    return [
+        MeshCopMessageType.JOIN_FIN_REQ,
+        MeshCopMessageType.JOIN_FIN_RSP,
+        MeshCopMessageType.JOIN_ENT_NTF,
+        MeshCopMessageType.JOIN_ENT_RSP,
+    ]
 
 
 # Channel TLV (0)
@@ -114,13 +117,16 @@ class Channel(object):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return self._channel_page == other._channel_page and self._channel == other.__channel
+        return (self._channel_page == other._channel_page and
+                self._channel == other.__channel)
 
     def __repr__(self):
-        return 'Channel(channel_page={},channel={})'.format(self._channel_page, self._channel)
+        return 'Channel(channel_page={},channel={})'.format(
+            self._channel_page, self._channel)
 
     def to_hex(self):
-        return struct.pack('>BBBH', TlvType.CHANNEL, 3, self.channel_page, self.channel)
+        return struct.pack('>BBBH', TlvType.CHANNEL, 3, self.channel_page,
+                           self.channel)
 
 
 class ChannelFactory(object):
@@ -156,8 +162,8 @@ class ExtendedPanid(object):
         return self._extended_panid
 
     def __eq__(self, other):
-        return (type(self) is type(other)
-            and self.extended_panid == other.extended_panid)
+        return (isinstance(self, type(other)) and
+                self.extended_panid == other.extended_panid)
 
     def __repr__(self):
         return "ExtendedPanid(extended_panid={})".format(self.extended_panid)
@@ -181,8 +187,8 @@ class NetworkName(object):
         return self._network_name
 
     def __eq__(self, other):
-        return (type(self) is type(other)
-            and self.network_name == other.network_name)
+        return (isinstance(self, type(other)) and
+                self.network_name == other.network_name)
 
     def __repr__(self):
         return "NetworkName(network_name={})".format(self.network_name)
@@ -264,11 +270,13 @@ class SteeringData(object):
         return self._bloom_filter == other._bloom_filter
 
     def __repr__(self):
-        return "SteeringData(bloom_filter={})".format(hexlify(self._bloom_filter))
+        return "SteeringData(bloom_filter={})".format(
+            hexlify(self._bloom_filter))
 
     def to_hex(self):
         bloom_filter_len = len(self.bloom_filter)
-        return struct.pack('>BB', TlvType.STEERING_DATA, bloom_filter_len) + self.bloom_filter
+        return (struct.pack('>BB', TlvType.STEERING_DATA, bloom_filter_len) +
+                self.bloom_filter)
 
 
 class SteeringDataFactory:
@@ -294,10 +302,12 @@ class BorderAgentLocator(object):
         return self._border_agent_locator == other._border_agent_locator
 
     def __repr__(self):
-        return "BorderAgentLocator(rloc16={})".format(hex(self._border_agent_locator))
+        return "BorderAgentLocator(rloc16={})".format(
+            hex(self._border_agent_locator))
 
     def to_hex(self):
-        return struct.pack('>BBH', TlvType.BORDER_AGENT_LOCATOR, 2, self.border_agent_locator)
+        return struct.pack('>BBH', TlvType.BORDER_AGENT_LOCATOR, 2,
+                           self.border_agent_locator)
 
 
 class BorderAgentLocatorFactory:
@@ -325,6 +335,7 @@ class CommissionerId(object):
 
 
 class CommissionerIdFactory(object):
+
     def parse(self, data, message_info):
         commissioner_id = data.getvalue().decode('utf-8')
         return CommissionerId(commissioner_id)
@@ -346,10 +357,16 @@ class CommissionerSessionId(object):
         return self._commissioner_session_id == other._commissioner_session_id
 
     def __repr__(self):
-        return "CommissionerSessionId(commissioner_session_id={})".format(self._commissioner_session_id)
+        return "CommissionerSessionId(commissioner_session_id={})".format(
+            self._commissioner_session_id)
 
     def to_hex(self):
-        return struct.pack('>BBH', TlvType.COMMISSIONER_SESSION_ID, 2, self.commissioner_session_id)
+        return struct.pack(
+            '>BBH',
+            TlvType.COMMISSIONER_SESSION_ID,
+            2,
+            self.commissioner_session_id,
+        )
 
 
 class CommissionerSessionIdFactory:
@@ -472,7 +489,8 @@ class JoinerUdpPort(object):
         return self._udp_port
 
     def __eq__(self, other):
-        return type(self) is type(other) and self.udp_port == other.udp_port
+        return (isinstance(self, type(other)) and
+                self.udp_port == other.udp_port)
 
     def __repr__(self):
         return "JoinerUdpPort(udp_port={})".format(self.udp_port)
@@ -560,6 +578,7 @@ class VendorName(object):
 
     def __repr__(self):
         return "VendorName(vendor_name={})".format(self.vendor_name)
+
 
 class VendorNameFactory:
 
@@ -668,7 +687,9 @@ class VendorStackVersion(object):
         return self._major
 
     def __repr__(self):
-        return "VendorStackVersion(vendor_stack_version={}, build={}, rev={}, minor={}, major={})".format(self.stack_vendor_oui, self.build, self.rev, self.minor, self.major)
+        return "VendorStackVersion(vendor_stack_version={}, build={}, rev={}, minor={}, major={})".format(
+            self.stack_vendor_oui, self.build, self.rev, self.minor, self.major)
+
 
 class VendorStackVersionFactory:
 
@@ -676,9 +697,9 @@ class VendorStackVersionFactory:
         stack_vendor_oui = struct.unpack(">H", data.read(2))[0]
         rest = struct.unpack(">BBBB", data.read(4))
         build = rest[1] << 4 | (0xf0 & rest[2])
-        rev = 0xf & rest[2]
+        rev = 0xF & rest[2]
         minor = rest[3] & 0xf0
-        major = rest[3] & 0xf
+        major = rest[3] & 0xF
         return VendorStackVersion(stack_vendor_oui, build, rev, minor, major)
 
 
@@ -815,9 +836,9 @@ class DiscoveryRequest(object):
         return self._joiner_flag
 
     def __eq__(self, other):
-        return (type(self) is type(other)
-            and self.version == other.version
-            and self.joiner_flag == other.joiner_flag)
+        return (isinstance(self, type(other)) and
+                self.version == other.version and
+                self.joiner_flag == other.joiner_flag)
 
     def __repr__(self):
         return "DiscoveryRequest(version={}, joiner_flag={})".format(
@@ -850,9 +871,9 @@ class DiscoveryResponse(object):
         return self._native_flag
 
     def __eq__(self, other):
-        return (type(self) is type(other)
-            and self.version == other.version
-            and self.native_flag == other.native_flag)
+        return (isinstance(self, type(other)) and
+                self.version == other.version and
+                self.native_flag == other.native_flag)
 
     def __repr__(self):
         return "DiscoveryResponse(version={}, native_flag={})".format(
@@ -893,7 +914,7 @@ def create_deault_mesh_cop_msg_type_map():
         'JOIN_FIN.req': MeshCopMessageType.JOIN_FIN_REQ,
         'JOIN_FIN.rsp': MeshCopMessageType.JOIN_FIN_RSP,
         'JOIN_ENT.ntf': MeshCopMessageType.JOIN_ENT_NTF,
-        'JOIN_ENT.rsp': MeshCopMessageType.JOIN_ENT_RSP
+        'JOIN_ENT.rsp': MeshCopMessageType.JOIN_ENT_RSP,
     }
 
 
@@ -910,20 +931,24 @@ class MeshCopCommandFactory:
         try:
             return self._tlvs_factories[_type]
         except KeyError:
-            raise KeyError("Could not find TLV factory. Unsupported TLV type: {}".format(_type))
+            raise KeyError(
+                "Could not find TLV factory. Unsupported TLV type: {}".format(
+                    _type))
 
     def _parse_tlv(self, data):
         _type = TlvType(ord(data.read(1)))
         length = self._get_length(data)
         value = data.read(length)
         factory = self._get_tlv_factory(_type)
-        return factory.parse(io.BytesIO(value), None) # message_info not needed here
+        return factory.parse(io.BytesIO(value),
+                             None)  # message_info not needed here
 
     def _get_mesh_cop_msg_type(self, msg_type_str):
         try:
             return self._mesh_cop_msg_type_map[msg_type_str]
         except KeyError:
-            raise KeyError('Mesh cop message type not found: {}'.format(msg_type_str))
+            raise KeyError(
+                'Mesh cop message type not found: {}'.format(msg_type_str))
 
     def parse(self, cmd_type_str, data):
         cmd_type = self._get_mesh_cop_msg_type(cmd_type_str)
@@ -944,7 +969,7 @@ def create_default_mesh_cop_tlv_factories():
         TlvType.VENDOR_MODEL: VendorModelFactory(),
         TlvType.VENDOR_SW_VERSION: VendorSWVersionFactory(),
         TlvType.VENDOR_DATA: VendorDataFactory(),
-        TlvType.VENDOR_STACK_VERSION: VendorStackVersionFactory()
+        TlvType.VENDOR_STACK_VERSION: VendorStackVersionFactory(),
     }
 
 

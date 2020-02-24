@@ -48,7 +48,7 @@ at_exit() {
 
 build() {
     make -f examples/Makefile-posix
-    make -f src/posix/Makefile-posix PLATFORM_NETIF=1 PLATFORM_UDP=1
+    make -f src/posix/Makefile-posix PLATFORM_NETIF=1 PLATFORM_UDP=1 UDP_FORWARD=0
 }
 
 check() {
@@ -69,7 +69,7 @@ check() {
     echo 'RADIO_PTY' $DEVICE_PTY
     echo 'CORE_PTY' $CORE_PTY
 
-    RADIO_NCP_PATH="$(pwd)/$(ls output/*linux*/bin/ot-ncp-radio)"
+    RADIO_NCP_PATH="$(pwd)/$(ls output/*linux*/bin/ot-rcp)"
     $RADIO_NCP_PATH 1 > $RADIO_PTY < $RADIO_PTY &
 
     if [[ "${DAEMON}" = 1 ]]; then
@@ -78,6 +78,19 @@ check() {
         OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-ctl)"
     else
         OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli) ${OT_NCP_PATH} ${CORE_PTY}"
+    fi
+
+    # Cover setting a valid network interface name.
+    readonly VALID_NETIF_NAME="wan$(date +%H%M%S)"
+    sudo ${OT_CLI_CMD} -I "${VALID_NETIF_NAME}" -n
+
+    # Cover setting a too long(max is 15 characters) network interface name.
+    # Expect exit code to be 2(OT_EXIT_INVALID_ARGUMENTS).
+    readonly INVALID_NETIF_NAME="wan0123456789123"
+    sudo ${OT_CLI_CMD} -I "${INVALID_NETIF_NAME}" -n || test $? = 2
+
+    if [[ "${DAEMON}" = 1 ]]; then
+        sudo ${OT_CLI_CMD} panid 0xface | grep 'Done' || die 'failed to set panid with ot-ctl'
     fi
 
     sudo expect <<EOF > "${OT_OUTPUT}" &
@@ -95,6 +108,8 @@ expect "Done"
 send "extaddr\r\n"
 expect "Done"
 send "ipaddr\r\n"
+expect "Done"
+send "coex\r\n"
 expect "Done"
 wait
 EOF

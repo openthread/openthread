@@ -29,18 +29,25 @@
 /**
  * @file
  * @brief
- *   This file includes the (posix or windows) platform-specific initializers.
+ *   This file includes the platform-specific initializers.
  */
 
 #ifndef PLATFORM_POSIX_H_
 #define PLATFORM_POSIX_H_
 
+#include "openthread-posix-config.h"
+
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
 #include <sys/select.h>
 #include <sys/time.h>
 
+#include <openthread-system.h>
+#include <openthread/error.h>
 #include <openthread/instance.h>
 
-#include "platform-config.h"
+#include "common/logging.hpp"
 
 /**
  * This is the socket name used by daemon mode.
@@ -71,36 +78,68 @@ struct Event
 } OT_TOOL_PACKED_END;
 
 /**
- * This enumeration represents exit codes used when OpenThread exits.
+ * This function converts an exit code into a string.
+ *
+ * @param[in]  aExitCode  An exit code.
+ *
+ * @returns  A string representation of an exit code.
  *
  */
-enum
-{
-    /**
-     * Success.
-     */
-    OT_EXIT_SUCCESS = 0,
+const char *otExitCodeToString(uint8_t aExitCode);
 
-    /**
-     * Generic failure.
-     */
-    OT_EXIT_FAILURE = 1,
+/**
+ * This macro checks for the specified condition, which is expected to commonly be true,
+ * and both records exit status and terminates the program if the condition is false.
+ *
+ * @param[in]   aCondition  The condition to verify
+ * @param[in]   aExitCode   The exit code.
+ *
+ */
+#define VerifyOrDie(aCondition, aExitCode)                                                                   \
+    do                                                                                                       \
+    {                                                                                                        \
+        if (!(aCondition))                                                                                   \
+        {                                                                                                    \
+            otLogCritPlat("%s() at %s:%d: %s", __func__, __FILE__, __LINE__, otExitCodeToString(aExitCode)); \
+            exit(aExitCode);                                                                                 \
+        }                                                                                                    \
+    } while (false)
 
-    /**
-     * Invalid arguments.
-     */
-    OT_EXIT_INVALID_ARGUMENTS = 2,
+/**
+ * This macro checks for the specified error code, which is expected to commonly be successful,
+ * and both records exit status and terminates the program if the error code is unsuccessful.
+ *
+ * @param[in]  aError  An error code to be evaluated against OT_ERROR_NONE.
+ *
+ */
+#define SuccessOrDie(aError)             \
+    VerifyOrDie(aError == OT_ERROR_NONE, \
+                (aError == OT_ERROR_INVALID_ARGS ? OT_EXIT_INVALID_ARGUMENTS : OT_EXIT_FAILURE))
 
-    /**
-     * Incompatible radio spinel.
-     */
-    OT_EXIT_RADIO_SPINEL_INCOMPATIBLE = 3,
+/**
+ * This macro unconditionally both records exit status and terminates the program.
+ *
+ * @param[in]   aExitCode   The exit code.
+ *
+ */
+#define DieNow(aExitCode) VerifyOrDie(false, aExitCode)
 
-    /**
-     * Unexpected radio spinel reset.
-     */
-    OT_EXIT_RADIO_SPINEL_RESET = 4,
-};
+/**
+ * This macro unconditionally both records exit status and exit message and terminates the program.
+ *
+ * @param[in]   aMessage    The exit message.
+ * @param[in]   aExitCode   The exit code.
+ *
+ */
+#define DieNowWithMessage(aMessage, aExitCode)                                                       \
+    do                                                                                               \
+    {                                                                                                \
+        fprintf(stderr, "exit(%d): %s line %d, %s, %s\r\n", aExitCode, __func__, __LINE__, aMessage, \
+                otExitCodeToString(aExitCode));                                                      \
+        otLogCritPlat("exit(%d): %s line %d, %s, %s", aExitCode, __func__, __LINE__, aMessage,       \
+                      otExitCodeToString(aExitCode));                                                \
+        exit(aExitCode);                                                                             \
+    } while (false)
 
 /**
  * Unique node ID.
@@ -154,11 +193,13 @@ void platformAlarmAdvanceNow(uint64_t aDelta);
 /**
  * This function initializes the radio service used by OpenThread.
  *
- * @param[in]  aRadioFile       A pointer to the radio file.
- * @param[in]  aRadioConfig     A pointer to the radio config.
+ * @note Even when @p aPlatformConfig->mResetRadio is false, a reset event (i.e. a PROP_LAST_STATUS between
+ * [SPINEL_STATUS_RESET__BEGIN, SPINEL_STATUS_RESET__END]) is still expected from RCP.
+ *
+ * @param[in]  aPlatformConfig  Platform configuration structure.
  *
  */
-void platformRadioInit(const char *aRadioFile, const char *aRadioConfig);
+void platformRadioInit(const otPlatformConfig *aPlatformConfig);
 
 /**
  * This function shuts down the radio service used by OpenThread.
@@ -235,9 +276,10 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
  * This function initializes platform netif.
  *
  * @param[in]   aInstance       A pointer to the OpenThread instance.
+ * @param[in]   aInterfaceName  A pointer to Thread network interface name.
  *
  */
-void platformNetifInit(otInstance *aInstance);
+void platformNetifInit(otInstance *aInstance, const char *aInterfaceName);
 
 /**
  * This function updates the file descriptor sets with file descriptors used by platform netif module.
@@ -261,32 +303,33 @@ void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *a
 void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet);
 
 /**
- * This function initialize simulation.
+ * This function initialize virtual time simulation.
  *
  */
-void otSimInit(void);
+void virtualTimeInit(void);
 
 /**
- * This function deinitialize simulation.
+ * This function deinitialize virtual time simulation.
  *
  */
-void otSimDeinit(void);
+void virtualTimeDeinit(void);
 
 /**
- * This function performs simulation processing.
+ * This function performs virtual time simulation processing.
  *
  * @param[in]   aInstance       A pointer to the OpenThread instance.
  * @param[in]   aReadFdSet      A pointer to the read file descriptors.
  * @param[in]   aWriteFdSet     A pointer to the write file descriptors.
  *
  */
-void otSimProcess(otInstance *  aInstance,
-                  const fd_set *aReadFdSet,
-                  const fd_set *aWriteFdSet,
-                  const fd_set *aErrorFdSet);
+void virtualTimeProcess(otInstance *  aInstance,
+                        const fd_set *aReadFdSet,
+                        const fd_set *aWriteFdSet,
+                        const fd_set *aErrorFdSet);
 
 /**
- * This function updates the file descriptor sets with file descriptors used by the simulation.
+ * This function updates the file descriptor sets with file descriptors
+ * used by the virtual time simulation.
  *
  * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
  * @param[inout]  aWriteFdSet  A pointer to the write file descriptors.
@@ -295,53 +338,45 @@ void otSimProcess(otInstance *  aInstance,
  * @param[inout]  aTimeout     A pointer to the timeout.
  *
  */
-void otSimUpdateFdSet(fd_set *        aReadFdSet,
-                      fd_set *        aWriteFdSet,
-                      fd_set *        aErrorFdSet,
-                      int *           aMaxFd,
-                      struct timeval *aTimeout);
+void virtualTimeUpdateFdSet(fd_set *        aReadFdSet,
+                            fd_set *        aWriteFdSet,
+                            fd_set *        aErrorFdSet,
+                            int *           aMaxFd,
+                            struct timeval *aTimeout);
 
 /**
- * This function sends radio spinel frame through simulation.
+ * This function sends radio spinel event of virtual time simulation.
  *
  * @param[in] aData     A pointer to the spinel frame.
  * @param[in] aLength   Length of the spinel frame.
  *
  */
-void otSimSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength);
+void virtualTimeSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength);
 
 /**
- * This function receives a simulation event.
+ * This function receives an event of virtual time simulation.
  *
  * @param[out]  aEvent  A pointer to the event receiving the event.
  *
  */
-void otSimReceiveEvent(struct Event *aEvent);
+void virtualTimeReceiveEvent(struct Event *aEvent);
 
 /**
- * This function sends sleep event through simulation.
+ * This function sends sleep event through virtual time simulation.
  *
  * @param[in]   aTimeout    A pointer to the time sleeping.
  *
  */
-void otSimSendSleepEvent(const struct timeval *aTimeout);
+void virtualTimeSendSleepEvent(const struct timeval *aTimeout);
 
 /**
- * This function updates the file descriptor sets with file descriptors used by radio spinel.
- *
- * @param[out]   aTimeout    A pointer to the timeout event to be updated.
- *
- */
-void otSimRadioSpinelUpdate(struct timeval *atimeout);
-
-/**
- * This function performs radio spinel processing.
+ * This function performs radio spinel processing of virtual time simulation.
  *
  * @param[in]   aInstance   A pointer to the OpenThread instance.
  * @param[in]   aEvent      A pointer to the current event.
  *
  */
-void otSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent);
+void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent);
 
 /**
  * This function gets system time in microseconds without applying speed up factor.
@@ -349,7 +384,7 @@ void otSimRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent);
  * @returns System time in microseconds.
  *
  */
-uint64_t otSysGetTime(void);
+uint64_t platformGetTime(void);
 
 /**
  * This function initializes platform UDP driver.
@@ -378,22 +413,18 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadSet);
 void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMaxFd);
 
 /**
- * This function ends the current process with exit code @p aExitCode if @p aCondition is false.
+ * This function creates a socket with SOCK_CLOEXEC flag set.
  *
- * @param[in]   aCondition  The condition to verify
- * @param[in]   aExitCode   The exit code if exits.
+ * @param[in]   aDomain     The communication domain.
+ * @param[in]   aType       The semantics of communication.
+ * @param[in]   aProtocol   The protocol to use.
  *
- */
-void VerifyOrDie(bool aCondition, int aExitCode);
-
-/**
- * This function ends the current process if @p aError is not OT_ERROR_NONE.
- * The error code will be mapped from @p aError.
+ * @returns The file descriptor of the created socket.
  *
- * @param[in]   aError  The OpenThread error code.
+ * @retval  -1  Failed to create socket.
  *
  */
-void SuccessOrDie(otError aError);
+int SocketWithCloseExec(int aDomain, int aType, int aProtocol);
 
 #ifdef __cplusplus
 }

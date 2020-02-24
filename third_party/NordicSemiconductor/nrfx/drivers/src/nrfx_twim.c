@@ -139,6 +139,11 @@ static nrfx_err_t twi_process_error(uint32_t errorsrc)
 {
     nrfx_err_t ret = NRFX_ERROR_INTERNAL;
 
+    if (errorsrc & NRF_TWIM_ERROR_OVERRUN)
+    {
+        ret = NRFX_ERROR_DRV_TWI_ERR_OVERRUN;
+    }
+
     if (errorsrc & NRF_TWIM_ERROR_ADDRESS_NACK)
     {
         ret = NRFX_ERROR_DRV_TWI_ERR_ANACK;
@@ -150,6 +155,58 @@ static nrfx_err_t twi_process_error(uint32_t errorsrc)
     }
 
     return ret;
+}
+
+static bool xfer_completeness_check(NRF_TWIM_Type * p_twim, twim_control_block_t * p_cb)
+{
+    // If the actual number of transferred bytes is not equal to what was requested,
+    // but there was no error signaled by the peripheral, this means that something
+    // unexpected, like a premature STOP condition, happened on the bus.
+    // In such case the peripheral has to be disabled and re-enabled, so that its
+    // internal state machine is reinitialized.
+
+    bool transfer_complete = true;
+    switch (p_cb->xfer_desc.type)
+    {
+    case NRFX_TWIM_XFER_TXTX:
+            if (((p_cb->int_mask == (NRF_TWIM_INT_SUSPENDED_MASK | NRF_TWIM_INT_ERROR_MASK)) &&
+                 (nrf_twim_txd_amount_get(p_twim) != p_cb->xfer_desc.primary_length)) ||
+                ((p_cb->int_mask == (NRF_TWIM_INT_STOPPED_MASK | NRF_TWIM_INT_ERROR_MASK)) &&
+                 (nrf_twim_txd_amount_get(p_twim) != p_cb->xfer_desc.secondary_length)))
+            {
+                transfer_complete = false;
+            }
+        break;
+    case NRFX_TWIM_XFER_TXRX:
+            if ((nrf_twim_txd_amount_get(p_twim) != p_cb->xfer_desc.primary_length) ||
+                (nrf_twim_rxd_amount_get(p_twim) != p_cb->xfer_desc.secondary_length))
+            {
+                transfer_complete = false;
+            }
+        break;
+    case NRFX_TWIM_XFER_TX:
+            if (nrf_twim_txd_amount_get(p_twim) != p_cb->xfer_desc.primary_length)
+            {
+                transfer_complete = false;
+            }
+        break;
+    case NRFX_TWIM_XFER_RX:
+            if (nrf_twim_rxd_amount_get(p_twim) != p_cb->xfer_desc.primary_length)
+            {
+                transfer_complete = false;
+            }
+        break;
+    default:
+        break;
+    }
+
+    if (!transfer_complete)
+    {
+        nrf_twim_disable(p_twim);
+        nrf_twim_enable(p_twim);
+    }
+
+    return transfer_complete;
 }
 
 nrfx_err_t nrfx_twim_init(nrfx_twim_t const *        p_instance,
@@ -320,6 +377,7 @@ __STATIC_INLINE nrfx_err_t twim_xfer(twim_control_block_t        * p_cb,
     nrfx_err_t err_code = NRFX_SUCCESS;
     nrf_twim_task_t  start_task = NRF_TWIM_TASK_STARTTX;
     nrf_twim_event_t evt_to_wait = NRF_TWIM_EVENT_STOPPED;
+    p_cb->error = false;
 
     if (!nrfx_is_in_ram(p_xfer_desc->p_primary_buf))
     {
@@ -473,6 +531,13 @@ __STATIC_INLINE nrfx_err_t twim_xfer(twim_control_block_t        * p_cb,
         {
             err_code = twi_process_error(errorsrc);
         }
+        else
+        {
+            if (!xfer_completeness_check(p_twim, p_cb))
+            {
+                err_code = NRFX_ERROR_INTERNAL;
+            }
+        }
     }
     return err_code;
 }
@@ -583,6 +648,8 @@ static void twim_irq_handler(NRF_TWIM_Type * p_twim, twim_control_block_t * p_cb
 
             nrf_twim_task_trigger(p_twim, NRF_TWIM_TASK_RESUME);
             nrf_twim_task_trigger(p_twim, NRF_TWIM_TASK_STOP);
+
+            p_cb->error = true;
             return;
         }
     }
@@ -594,14 +661,9 @@ static void twim_irq_handler(NRF_TWIM_Type * p_twim, twim_control_block_t * p_cb
         NRFX_LOG_DEBUG("TWIM: Event: %s.", EVT_TO_STR_TWIM(NRF_TWIM_EVENT_STOPPED));
         nrf_twim_event_clear(p_twim, NRF_TWIM_EVENT_STOPPED);
         event.xfer_desc = p_cb->xfer_desc;
-        if (p_cb->error)
+        if (!p_cb->error)
         {
-
-            event.xfer_desc.primary_length = (p_cb->xfer_desc.type == NRFX_TWIM_XFER_RX) ?
-                nrf_twim_rxd_amount_get(p_twim) : nrf_twim_txd_amount_get(p_twim);
-            event.xfer_desc.secondary_length = (p_cb->xfer_desc.type == NRFX_TWIM_XFER_TXRX) ?
-                nrf_twim_rxd_amount_get(p_twim) : nrf_twim_txd_amount_get(p_twim);
-
+            p_cb->error = !xfer_completeness_check(p_twim, p_cb);
         }
         nrf_twim_event_clear(p_twim, NRF_TWIM_EVENT_LASTTX);
         nrf_twim_event_clear(p_twim, NRF_TWIM_EVENT_LASTRX);
@@ -649,9 +711,21 @@ static void twim_irq_handler(NRF_TWIM_Type * p_twim, twim_control_block_t * p_cb
         event.type = NRFX_TWIM_EVT_DATA_NACK;
         NRFX_LOG_DEBUG("Event: %s.", EVT_TO_STR(NRFX_TWIM_EVT_DATA_NACK));
     }
+    else if (errorsrc & NRF_TWIM_ERROR_OVERRUN)
+    {
+        event.type = NRFX_TWIM_EVT_DATA_NACK;
+        NRFX_LOG_DEBUG("Event: %s.", EVT_TO_STR(NRFX_TWIM_EVT_DATA_NACK));
+    }
     else
     {
-        event.type = NRFX_TWIM_EVT_DONE;
+        if (p_cb->error)
+        {
+            event.type = NRFX_TWIM_EVT_BUS_ERROR;
+        }
+        else
+        {
+            event.type = NRFX_TWIM_EVT_DONE;
+        }
         NRFX_LOG_DEBUG("Event: %s.", EVT_TO_STR(NRFX_TWIM_EVT_DONE));
     }
 
@@ -659,6 +733,7 @@ static void twim_irq_handler(NRF_TWIM_Type * p_twim, twim_control_block_t * p_cb
     {
         p_cb->busy = false;
     }
+
     p_cb->handler(&event, p_cb->p_context);
 }
 

@@ -1,12 +1,14 @@
 *.a
 *.bak
 *.db
+*.flash
 *.gcda
 *.gcno
 *.log
 *.o
 *.lo
 *.la
+*.ninja*
 *.opendb
 *.orig
 *.pyc
@@ -24,13 +26,15 @@
 aclocal.m4
 autom4te.cache
 build
+CMakeCache.txt
+CMakeFiles
+cmake_install.cmake
 configure
 config.log
 config.status
 doc/Doxyfile
 doc/html
-etc/visual-studio/BundleArtifacts
-etc/visual-studio/Generated Files
+etc/cmake/openthread-config-generic.h
 include/openthread-config.h
 include/openthread-config.h.in
 include/openthread-config-generic.h

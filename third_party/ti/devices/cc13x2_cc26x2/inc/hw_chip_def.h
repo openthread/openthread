@@ -195,7 +195,7 @@ extern "C"
 
 #define CC_GET_CHIP_FAMILY 0x26
 #define CC_GET_CHIP_OPTION 0x3
-#define CC_GET_CHIP_HWREV 0x10
+#define CC_GET_CHIP_HWREV 0x20
 
 #ifdef CC_CHIP_ID
     /* Define chip package only if specified */

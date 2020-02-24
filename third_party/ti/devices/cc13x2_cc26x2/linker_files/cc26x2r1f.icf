@@ -1,9 +1,9 @@
 //*****************************************************************************
 //! @file       cc26x2r1f.icf
-//! @brief      CC26x2R1F linker file for IAR EWARM.
+//! @brief      CC26x2R1F rev2 linker file for IAR EWARM.
 //!
-//! Revised     $Date: 2017-02-06 11:55:41 +0100 (ma, 06 feb 2017) $
-//! Revision    $Revision: 17642 $
+//! Revised     $Date$
+//! Revision    $Revision$
 //
 //  This file is auto-generated.
 //

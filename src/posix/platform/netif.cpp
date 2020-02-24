@@ -30,14 +30,15 @@
  * @file
  *   This file implements the platform network on Linux.
  */
-#include "openthread-core-config.h"
+
+#include "openthread-posix-config.h"
 #include "platform-posix.h"
 
 #include <arpa/inet.h>
 #include <assert.h>
 #include <fcntl.h>
 #include <ifaddrs.h>
-#if __linux__
+#ifdef __linux__
 #include <linux/if_tun.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
@@ -61,12 +62,14 @@
 #include "common/logging.hpp"
 #include "net/ip6_address.hpp"
 
-#if OPENTHREAD_ENABLE_PLATFORM_NETIF
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
 
 #ifndef OPENTHREAD_POSIX_TUN_DEVICE
 #define OPENTHREAD_POSIX_TUN_DEVICE "/dev/net/tun"
 #endif // OPENTHREAD_TUN_DEVICE
 
+// Some platforms will include linux/ipv6.h in netinet/in.h
+#if !defined(_IPV6_H) && !defined(_UAPI_IPV6_H)
 // from linux/ipv6.h
 struct in6_ifreq
 {
@@ -74,6 +77,7 @@ struct in6_ifreq
     __u32           ifr6_prefixlen;
     int             ifr6_ifindex;
 };
+#endif
 
 static otInstance * sInstance  = NULL;
 static int          sTunFd     = -1; ///< Used to exchange IPv6 packets.
@@ -98,18 +102,23 @@ static void UpdateUnicast(otInstance *aInstance, const otIp6Address &aAddress, u
     ifr6.ifr6_ifindex   = static_cast<int>(sTunIndex);
     ifr6.ifr6_prefixlen = aPrefixLength;
 
-    VerifyOrExit(ioctl(sIpFd, (aIsAdded ? SIOCSIFADDR : SIOCDIFADDR), &ifr6) == 0, perror("ioctl");
-                 error = OT_ERROR_FAILED);
-
-exit:
-    if (error == OT_ERROR_NONE)
+    if (aIsAdded)
     {
-        otLogInfoPlat("%s: %s", __func__, otThreadErrorToString(error));
+        VerifyOrDie(ioctl(sIpFd, SIOCSIFADDR, &ifr6) == 0, OT_EXIT_ERROR_ERRNO);
     }
     else
     {
-        otLogCritPlat("%s: %s", __func__, otThreadErrorToString(error));
-        exit(OT_EXIT_FAILURE);
+        VerifyOrExit(ioctl(sIpFd, SIOCDIFADDR, &ifr6) == 0, perror("ioctl"); error = OT_ERROR_FAILED);
+    }
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnPlat("%s: %s", __func__, otThreadErrorToString(error));
+    }
+    else
+    {
+        otLogInfoPlat("%s: %s", __func__, otThreadErrorToString(error));
     }
 }
 
@@ -130,15 +139,8 @@ static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress,
         error = OT_ERROR_FAILED);
 
 exit:
-    if (error == OT_ERROR_NONE)
-    {
-        otLogInfoPlat("%s: %s", __func__, otThreadErrorToString(error));
-    }
-    else
-    {
-        otLogCritPlat("%s: %s", __func__, otThreadErrorToString(error));
-        exit(OT_EXIT_FAILURE);
-    }
+    SuccessOrDie(error);
+    otLogInfoPlat("%s: %s", __func__, otThreadErrorToString(error));
 }
 
 static void UpdateLink(otInstance *aInstance)
@@ -382,12 +384,12 @@ exit:
     return;
 }
 
-void platformNetifInit(otInstance *aInstance)
+void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
 {
     struct ifreq ifr;
 
-    sIpFd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_IP);
-    VerifyOrExit(sIpFd > 0);
+    sIpFd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP);
+    VerifyOrExit(sIpFd >= 0);
 
     sNetlinkFd = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
     VerifyOrExit(sNetlinkFd > 0);
@@ -403,28 +405,33 @@ void platformNetifInit(otInstance *aInstance)
         VerifyOrExit(bind(sNetlinkFd, reinterpret_cast<struct sockaddr *>(&sa), sizeof(sa)) == 0);
     }
 
-    sTunFd = open(OPENTHREAD_POSIX_TUN_DEVICE, O_RDWR);
+    sTunFd = open(OPENTHREAD_POSIX_TUN_DEVICE, O_RDWR | O_CLOEXEC);
     VerifyOrExit(sTunFd > 0, otLogCritPlat("Unable to open tun device %s", OPENTHREAD_POSIX_TUN_DEVICE));
 
     memset(&ifr, 0, sizeof(ifr));
     ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
-    strncpy(ifr.ifr_name, "wpan%d", IFNAMSIZ);
+
+    if (aInterfaceName)
+    {
+        VerifyOrDie(strlen(aInterfaceName) < IFNAMSIZ, OT_EXIT_INVALID_ARGUMENTS);
+
+        strncpy(ifr.ifr_name, aInterfaceName, IFNAMSIZ);
+    }
+    else
+    {
+        strncpy(ifr.ifr_name, "wpan%d", IFNAMSIZ);
+    }
 
     VerifyOrExit(ioctl(sTunFd, TUNSETIFF, static_cast<void *>(&ifr)) == 0,
                  otLogCritPlat("Unable to configure tun device %s", OPENTHREAD_POSIX_TUN_DEVICE));
-#if defined(ARPHRD_6LOWPAN)
-    VerifyOrExit(ioctl(sTunFd, TUNSETLINK, ARPHRD_6LOWPAN) == 0,
+    VerifyOrExit(ioctl(sTunFd, TUNSETLINK, ARPHRD_VOID) == 0,
                  otLogCritPlat("Unable to set link type of tun device %s", OPENTHREAD_POSIX_TUN_DEVICE));
-#else
-    VerifyOrExit(ioctl(sTunFd, TUNSETLINK, ARPHRD_ETHER) == 0,
-                 otLogCritPlat("Unable to set link type of tun device %s", OPENTHREAD_POSIX_TUN_DEVICE));
-#endif
 
     sTunIndex = if_nametoindex(ifr.ifr_name);
     VerifyOrExit(sTunIndex > 0);
 
     strncpy(sTunName, ifr.ifr_name, sizeof(sTunName));
-#if OPENTHREAD_ENABLE_PLATFORM_UDP
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     platformUdpInit(sTunName);
 #endif
 
@@ -454,7 +461,7 @@ exit:
             sNetlinkFd = -1;
         }
 
-        exit(OT_EXIT_FAILURE);
+        DieNow(OT_EXIT_FAILURE);
     }
 }
 
@@ -495,13 +502,13 @@ void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, c
     if (FD_ISSET(sTunFd, aErrorFdSet))
     {
         close(sTunFd);
-        exit(OT_EXIT_FAILURE);
+        DieNow(OT_EXIT_FAILURE);
     }
 
     if (FD_ISSET(sNetlinkFd, aErrorFdSet))
     {
         close(sNetlinkFd);
-        exit(OT_EXIT_FAILURE);
+        DieNow(OT_EXIT_FAILURE);
     }
 
     if (FD_ISSET(sTunFd, aReadFdSet))
@@ -518,4 +525,4 @@ exit:
     return;
 }
 
-#endif // OPENTHREAD_ENABLE_PLATFORM_NETIF
+#endif // OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2018, The OpenThread Authors.
 #  All rights reserved.
@@ -27,12 +27,9 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
-import mle
-import network_layer
 import node
 
 LEADER = 1
@@ -60,9 +57,9 @@ class TestCoaps(unittest.TestCase):
         self.nodes[ROUTER].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -86,13 +83,14 @@ class TestCoaps(unittest.TestCase):
         self.nodes[LEADER].coaps_stop()
 
         self.nodes[LEADER].coaps_start_x509()
-        #self.nodes[LEADER].coaps_set_resource_path('test')
+        # self.nodes[LEADER].coaps_set_resource_path('test')
         self.nodes[ROUTER].coaps_start_x509()
         self.nodes[ROUTER].coaps_connect(mleid)
         self.nodes[ROUTER].coaps_get()
         self.nodes[ROUTER].coaps_disconnect()
         self.nodes[ROUTER].coaps_stop()
         self.nodes[LEADER].coaps_stop()
+
 
 if __name__ == '__main__':
     unittest.main()

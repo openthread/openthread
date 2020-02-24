@@ -28,17 +28,7 @@
 
 #include "test_platform.h"
 
-#if _WIN32
-__forceinline int gettimeofday(struct timeval *tv, struct timezone *)
-{
-    DWORD tick  = GetTickCount();
-    tv->tv_sec  = (long)(tick / 1000);
-    tv->tv_usec = (long)(tick * 1000);
-    return 0;
-}
-#else
 #include <sys/time.h>
-#endif
 
 bool                 g_testPlatAlarmSet     = false;
 uint32_t             g_testPlatAlarmNext    = 0;
@@ -81,7 +71,7 @@ ot::Instance *testInitInstance(void)
 {
     otInstance *instance = NULL;
 
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     size_t   instanceBufferLength = 0;
     uint8_t *instanceBuffer       = NULL;
 
@@ -106,7 +96,7 @@ void testFreeInstance(otInstance *aInstance)
 {
     otInstanceFinalize(aInstance);
 
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     free(aInstance);
 #endif
 }
@@ -115,7 +105,7 @@ bool sDiagMode = false;
 
 extern "C" {
 
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 void *otPlatCAlloc(size_t aNum, size_t aSize)
 {
     return calloc(aNum, aSize);
@@ -402,22 +392,13 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return 0;
+    return -100;
 }
 //
 // Random
 //
 
-uint32_t otPlatRandomGet(void)
-{
-#if _WIN32
-    return (uint32_t)rand();
-#else
-    return (uint32_t)random();
-#endif
-}
-
-otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
+otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
     otError error = OT_ERROR_NONE;
 
@@ -425,7 +406,7 @@ otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
 
     for (uint16_t length = 0; length < aOutputLength; length++)
     {
-        aOutput[length] = (uint8_t)otPlatRandomGet();
+        aOutput[length] = (uint8_t)rand();
     }
 
 exit:
@@ -436,9 +417,11 @@ exit:
 // Diag
 //
 
-void otPlatDiagProcess(int argc, char *argv[], char *aOutput)
+void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
+    OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(aOutputMaxLen);
 
     // no more diagnostics features for Posix platform
     sprintf(aOutput, "diag feature '%s' is not supported\r\n", argv[0]);
@@ -454,15 +437,19 @@ bool otPlatDiagModeGet()
     return sDiagMode;
 }
 
-void otPlatDiagAlarmFired(otInstance *)
+void otPlatDiagChannelSet(uint8_t)
 {
 }
 
-void otPlatDiagRadioTransmitDone(otInstance *, otRadioFrame *, otError)
+void otPlatDiagTxPowerSet(int8_t)
 {
 }
 
-void otPlatDiagRadioReceiveDone(otInstance *, otRadioFrame *, otError)
+void otPlatDiagRadioReceived(otInstance *, otRadioFrame *, otError)
+{
+}
+
+void otPlatDiagAlarmCallback(otInstance *)
 {
 }
 
@@ -506,25 +493,9 @@ void otPlatSettingsInit(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-otError otPlatSettingsBeginChange(otInstance *aInstance)
+void otPlatSettingsDeinit(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-
-    return OT_ERROR_NONE;
-}
-
-otError otPlatSettingsCommitChange(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    return OT_ERROR_NONE;
-}
-
-otError otPlatSettingsAbandonChange(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    return OT_ERROR_NONE;
 }
 
 otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
@@ -572,7 +543,7 @@ void otPlatSettingsWipe(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 uint64_t otPlatTimeGet(void)
 {
     struct timeval tv;
@@ -586,6 +557,6 @@ uint16_t otPlatTimeGetXtalAccuracy(void)
 {
     return 0;
 }
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 } // extern "C"

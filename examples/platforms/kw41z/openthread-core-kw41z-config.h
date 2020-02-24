@@ -38,10 +38,10 @@
 /**
  * @def OPENTHREAD_CONFIG_LOG_OUTPUT
  *
- * The emsk platform provides an otPlatLog() function.
+ * The kw41z platform provides an otPlatLog() function.
  */
 #ifndef OPENTHREAD_CONFIG_LOG_OUTPUT /* allow command line override */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT  OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
 #endif
 
 /**
@@ -50,7 +50,7 @@
  * The platform-specific string to insert into the OpenThread version string.
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_INFO                         "KW41Z"
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "KW41Z"
 
 /**
  * @def SETTINGS_CONFIG_BASE_ADDRESS
@@ -58,7 +58,7 @@
  * The base address of settings.
  *
  */
-#define SETTINGS_CONFIG_BASE_ADDRESS                            0x40000
+#define SETTINGS_CONFIG_BASE_ADDRESS 0x40000
 
 /**
  * @def SETTINGS_CONFIG_PAGE_SIZE
@@ -66,7 +66,7 @@
  * The page size of settings.
  *
  */
-#define SETTINGS_CONFIG_PAGE_SIZE                               0x800
+#define SETTINGS_CONFIG_PAGE_SIZE 0x800
 
 /**
  * @def SETTINGS_CONFIG_PAGE_NUM
@@ -74,7 +74,7 @@
  * The page number of settings.
  *
  */
-#define SETTINGS_CONFIG_PAGE_NUM                                2
+#define SETTINGS_CONFIG_PAGE_NUM 2
 
 /**
  * @def RADIO_CONFIG_SRC_MATCH_ENTRY_NUM
@@ -82,22 +82,30 @@
  * The number of source address table entries.
  *
  */
-#define RADIO_CONFIG_SRC_MATCH_ENTRY_NUM                        128
+#define RADIO_CONFIG_SRC_MATCH_ENTRY_NUM 128
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT
+ * @def OPENTHREAD_CONFIG_SOFTWARE_RETRANSMIT_ENABLE
  *
  * Define to 1 if you want to enable software retransmission logic.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_RETRANSMIT            1
+#define OPENTHREAD_CONFIG_SOFTWARE_RETRANSMIT_ENABLE 1
 
 /**
- * @def OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF
+ * @def OPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE
  *
  * Define to 1 if you want to enable software CSMA-CA backoff logic.
  *
  */
-#define OPENTHREAD_CONFIG_ENABLE_SOFTWARE_CSMA_BACKOFF          1
+#define OPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE 1
 
-#endif  // OPENTHREAD_CORE_KW41Z_CONFIG_H_
+/**
+ * @def OPENTHREAD_CONFIG_NCP_UART_ENABLE
+ *
+ * Define to 1 to enable NCP UART support.
+ *
+ */
+#define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
+
+#endif // OPENTHREAD_CORE_KW41Z_CONFIG_H_

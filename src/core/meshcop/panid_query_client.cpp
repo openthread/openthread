@@ -31,11 +31,7 @@
  *   This file implements the PAN ID Query Client.
  */
 
-#define WPP_NAME "panid_query_client.tmh"
-
 #include "panid_query_client.hpp"
-
-#include <openthread/platform/random.h>
 
 #include "coap/coap_message.hpp"
 #include "common/code_utils.hpp"
@@ -48,7 +44,7 @@
 #include "thread/thread_netif.hpp"
 #include "thread/thread_uri_paths.hpp"
 
-#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
 namespace ot {
 
@@ -77,27 +73,26 @@ otError PanIdQueryClient::SendQuery(uint16_t                            aPanId,
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = OT_ERROR_INVALID_STATE);
     VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->Init(aAddress.IsMulticast() ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->SetToken(Coap::Message::kDefaultTokenLength);
-    message->AppendUriPathOptions(OT_URI_PATH_PANID_QUERY);
-    message->SetPayloadMarker();
+    SuccessOrExit(error =
+                      message->Init(aAddress.IsMulticast() ? OT_COAP_TYPE_NON_CONFIRMABLE : OT_COAP_TYPE_CONFIRMABLE,
+                                    OT_COAP_CODE_POST, OT_URI_PATH_PANID_QUERY));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     sessionId.Init();
     sessionId.SetCommissionerSessionId(Get<MeshCoP::Commissioner>().GetSessionId());
-    SuccessOrExit(error = message->AppendTlv(sessionId));
+    SuccessOrExit(error = sessionId.AppendTo(*message));
 
     channelMask.Init();
     channelMask.SetChannelMask(aChannelMask);
-    SuccessOrExit(error = message->AppendTlv(channelMask));
+    SuccessOrExit(error = channelMask.AppendTo(*message));
 
     panId.Init();
     panId.SetPanId(aPanId);
-    SuccessOrExit(error = message->AppendTlv(panId));
+    SuccessOrExit(error = panId.AppendTo(*message));
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(aAddress);
     messageInfo.SetPeerPort(kCoapUdpPort);
-    messageInfo.SetInterfaceId(Get<ThreadNetif>().GetInterfaceId());
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent panid query");
@@ -151,4 +146,4 @@ exit:
 
 } // namespace ot
 
-#endif //  OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif //  OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD

@@ -207,6 +207,11 @@ exit:
     return error;
 }
 
+otError otPlatUartFlush(void)
+{
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
 void platformUartProcess(void)
 {
     ssize_t       rval;

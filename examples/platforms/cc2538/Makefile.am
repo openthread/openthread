@@ -38,11 +38,16 @@ libopenthread_cc2538_a_CPPFLAGS           = \
 
 PLATFORM_SOURCES                          = \
     alarm.c                                 \
+    cc2538-reg.h                            \
     diag.c                                  \
+    entropy.c                               \
     flash.c                                 \
     misc.c                                  \
+    openthread-core-cc2538-config.h         \
+    openthread-core-cc2538-config-check.h   \
+    platform-cc2538.h                       \
     radio.c                                 \
-    random.c                                \
+    rom-utility.h                           \
     startup-gcc.c                           \
     system.c                                \
     logging.c                               \
@@ -53,15 +58,8 @@ libopenthread_cc2538_a_SOURCES            = \
     $(PLATFORM_SOURCES)                     \
     $(NULL)
 
-noinst_HEADERS                            = \
-    cc2538-reg.h                            \
-    platform-cc2538.h                       \
-    rom-utility.h                           \
-    $(NULL)
-
 PRETTY_FILES                             = \
     $(PLATFORM_SOURCES)                    \
-    $(noinst_HEADERS)                      \
     $(NULL)
 
 Dash                                      = -

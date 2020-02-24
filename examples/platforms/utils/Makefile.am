@@ -38,16 +38,17 @@ libopenthread_platform_utils_a_CPPFLAGS                 = \
     $(NULL)
 
 libopenthread_platform_utils_a_SOURCES  = \
+    code_utils.h                          \
     debug_uart.c                          \
+    flash.h                               \
     logging_rtt.c                         \
+    logging_rtt.h                         \
+    mac_frame.cpp                         \
+    mac_frame.h                           \
+    settings.h                            \
+    settings_ram.c                        \
     settings_flash.c                      \
     soft_source_match_table.c             \
-    $(NULL)
-
-noinst_HEADERS                          = \
-    code_utils.h                          \
-    flash.h                               \
-    logging_rtt.h                         \
     soft_source_match_table.h             \
     $(NULL)
 

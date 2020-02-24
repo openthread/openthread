@@ -33,8 +33,6 @@
 
 #include "timestamp.hpp"
 
-#include "utils/wrap_string.h"
-
 namespace ot {
 namespace MeshCoP {
 

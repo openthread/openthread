@@ -38,24 +38,13 @@
 
 #include "platform-cc1352.h"
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
 /**
  * Diagnostics mode variables.
  *
  */
 static bool sDiagMode = false;
-
-void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    // Add more platform specific diagnostics features here.
-    if (argc > 1)
-    {
-        snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
-    }
-}
 
 void otPlatDiagModeSet(bool aMode)
 {
@@ -89,4 +78,4 @@ void otPlatDiagAlarmCallback(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-#endif // OPENTHREAD_ENABLE_DIAG
+#endif // OPENTHREAD_CONFIG_DIAG_ENABLE

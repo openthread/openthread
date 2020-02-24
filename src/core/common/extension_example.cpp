@@ -33,11 +33,12 @@
 
 #include "openthread-core-config.h"
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include "common/code_utils.hpp"
 #include "common/extension.hpp"
 #include "common/new.hpp"
-#include "utils/wrap_stdbool.h"
-#include "utils/wrap_stdint.h"
 
 namespace ot {
 namespace Extension {
@@ -61,7 +62,7 @@ public:
 // `ExtensionBase` API
 // ----------------------------------------------------------------------------
 
-static otDEFINE_ALIGNED_VAR(sExtensionRaw, sizeof(Extension), uint64_t);
+static OT_DEFINE_ALIGNED_VAR(sExtensionRaw, sizeof(Extension), uint64_t);
 
 ExtensionBase &ExtensionBase::Init(Instance &aInstance)
 {

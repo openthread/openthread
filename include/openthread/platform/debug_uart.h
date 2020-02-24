@@ -56,7 +56,7 @@
  * intended to be present, or used in production system.
  */
 
-#if __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -126,7 +126,7 @@ int otPlatDebugUart_kbhit(void);
  *
  * This function MUST be implemented by the platform
  *
- * @retval (negative) no data available, @sa otPlatDebugUart_kbhit()
+ * @retval (negative) no data available, see otPlatDebugUart_kbhit()
  * @retval (0x00..0x0ff) data byte value
  *
  */
@@ -188,7 +188,7 @@ otError otPlatDebugUart_logfile(const char *filename);
  *
  */
 
-#if __cplusplus
+#ifdef __cplusplus
 } // extern "C"
 #endif
 

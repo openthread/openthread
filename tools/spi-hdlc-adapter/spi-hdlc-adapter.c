@@ -27,6 +27,10 @@
 
 #define _GNU_SOURCE 1
 
+#ifndef HAVE_CONFIG_H
+#define HAVE_CONFIG_H 0
+#endif
+
 #if HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -53,16 +57,32 @@
 #include <linux/ioctl.h>
 #include <linux/spi/spidev.h>
 
+#ifndef HAVE_EXECINFO_H
+#define HAVE_EXECINFO_H 0
+#endif
+
 #if HAVE_EXECINFO_H
 #include <execinfo.h>
+#endif
+
+#ifndef HAVE_PTY_H
+#define HAVE_PTY_H 0
 #endif
 
 #if HAVE_PTY_H
 #include <pty.h>
 #endif
 
+#ifndef HAVE_UTIL_H
+#define HAVE_UTIL_H 0
+#endif
+
 #if HAVE_UTIL_H
 #include <util.h>
+#endif
+
+#ifndef HAVE_OPENPTY
+#define HAVE_OPENPTY 0
 #endif
 
 /* ------------------------------------------------------------------------- */
@@ -141,10 +161,6 @@ static int sMode = MODE_PTY;
 static int sMode = MODE_STDIO;
 #endif
 
-static const char *sSpiDevPath     = NULL;
-static const char *sIntGpioDevPath = NULL;
-static const char *sResGpioDevPath = NULL;
-
 static int sLogLevel = LOG_WARNING;
 
 static int sSpiDevFd       = -1;
@@ -154,9 +170,10 @@ static int sIntGpioValueFd = -1;
 static int sHdlcInputFd  = -1;
 static int sHdlcOutputFd = -1;
 
-static int     sSpiSpeed   = 1000000; // in Hz (default: 1MHz)
-static uint8_t sSpiMode    = 0;
-static int     sSpiCsDelay = 20; // in microseconds
+static int     sSpiSpeed      = 1000000; // in Hz (default: 1MHz)
+static uint8_t sSpiMode       = 0;
+static int     sSpiCsDelay    = 20; // in microseconds
+static int     sSpiResetDelay = 0;  // in milliseconds
 
 static uint16_t sSpiRxPayloadSize;
 static uint8_t  sSpiRxFrameBuffer[MAX_FRAME_SIZE + SPI_RX_ALIGN_ALLOWANCE_MAX];
@@ -170,6 +187,8 @@ static int sSpiRxAlignAllowance = 0;
 static int sSpiSmallPacketSize  = 32; // in bytes
 
 static bool sSlaveDidReset = false;
+
+static int sCaughtSignal = -1;
 
 // If sUseRawFrames is set to true, HDLC encoding/encoding
 // is skipped and the raw frames are read-from/written-to
@@ -212,6 +231,7 @@ static void signal_SIGINT(int sig)
     // Can't use syslog() because it isn't async signal safe.
     // So we write to stderr
     IGNORE_RETURN_VALUE(write(STDERR_FILENO, message, sizeof(message) - 1));
+    sCaughtSignal = sig;
 
     // Restore the previous handler so that if we end up getting
     // this signal again we perform the system default action.
@@ -231,6 +251,7 @@ static void signal_SIGTERM(int sig)
     // Can't use syslog() because it isn't async signal safe.
     // So we write to stderr
     IGNORE_RETURN_VALUE(write(STDERR_FILENO, message, sizeof(message) - 1));
+    sCaughtSignal = sig;
 
     // Restore the previous handler so that if we end up getting
     // this signal again we perform the system default action.
@@ -250,6 +271,7 @@ static void signal_SIGHUP(int sig)
     // Can't use syslog() because it isn't async signal safe.
     // So we write to stderr
     IGNORE_RETURN_VALUE(write(STDERR_FILENO, message, sizeof(message) - 1));
+    sCaughtSignal = sig;
 
     // We don't restore the "previous handler"
     // because we always want to let the main
@@ -569,7 +591,8 @@ static int push_pull_spi(void)
 
     if (ret < 0)
     {
-        perror("do_spi_xfer");
+        perror("push_pull_spi:do_spi_xfer");
+        syslog(LOG_ERR, "push_pull_spi:do_spi_xfer: errno=%d (%s)", errno, strerror(errno));
 
         // Print out a helpful error message for
         // a common error.
@@ -1129,9 +1152,10 @@ static bool setup_spi_dev(const char *path)
     int           fd            = -1;
     const uint8_t spi_word_bits = 8;
     int           ret;
-    sSpiDevPath = path;
 
-    fd = open(path, O_RDWR);
+    syslog(LOG_DEBUG, "SPI device path: %s", path);
+
+    fd = open(path, O_RDWR | O_CLOEXEC);
     if (fd < 0)
     {
         perror("open");
@@ -1187,7 +1211,7 @@ static bool setup_res_gpio(const char *path)
     char *value_path = NULL;
     int   len;
 
-    sResGpioDevPath = path;
+    syslog(LOG_DEBUG, "Reset gpio path: %s", path);
 
     len = asprintf(&dir_path, "%s/direction", path);
 
@@ -1205,7 +1229,7 @@ static bool setup_res_gpio(const char *path)
         goto bail;
     }
 
-    setup_fd = open(dir_path, O_WRONLY);
+    setup_fd = open(dir_path, O_WRONLY | O_CLOEXEC);
 
     if (setup_fd >= 0)
     {
@@ -1216,7 +1240,7 @@ static bool setup_res_gpio(const char *path)
         }
     }
 
-    sResGpioValueFd = open(value_path, O_WRONLY);
+    sResGpioValueFd = open(value_path, O_WRONLY | O_CLOEXEC);
 
 bail:
 
@@ -1275,7 +1299,7 @@ static bool setup_int_gpio(const char *path)
 
     sIntGpioValueFd = -1;
 
-    sIntGpioDevPath = path;
+    syslog(LOG_DEBUG, "Interrupt gpio path: %s", path);
 
     len = asprintf(&dir_path, "%s/direction", path);
 
@@ -1301,7 +1325,7 @@ static bool setup_int_gpio(const char *path)
         goto bail;
     }
 
-    setup_fd = open(dir_path, O_WRONLY);
+    setup_fd = open(dir_path, O_WRONLY | O_CLOEXEC);
 
     if (setup_fd >= 0)
     {
@@ -1315,7 +1339,7 @@ static bool setup_int_gpio(const char *path)
         close(setup_fd);
     }
 
-    setup_fd = open(edge_path, O_WRONLY);
+    setup_fd = open(edge_path, O_WRONLY | O_CLOEXEC);
 
     if (setup_fd >= 0)
     {
@@ -1332,7 +1356,7 @@ static bool setup_int_gpio(const char *path)
         setup_fd = -1;
     }
 
-    sIntGpioValueFd = open(value_path, O_RDONLY);
+    sIntGpioValueFd = open(value_path, O_RDONLY | O_CLOEXEC);
 
 bail:
 
@@ -1404,6 +1428,7 @@ static void print_help(void)
                        "    --spi-mode[=mode] ............ Specify the SPI mode to use (0-3).\n"
                        "    --spi-speed[=hertz] .......... Specify the SPI speed in hertz.\n"
                        "    --spi-cs-delay[=usec] ........ Specify the delay after C̅S̅ assertion, in µsec\n"
+                       "    --spi-reset-delay[=ms] ....... Specify the delay after R̅E̅S̅E̅T̅ assertion, in miliseconds\n"
                        "    --spi-align-allowance[=n] .... Specify the maximum number of 0xFF bytes to\n"
                        "                                   clip from start of MISO frame. Max value is 16.\n"
                        "    --spi-small-packet=[n] ....... Specify the smallest packet we can receive\n"
@@ -1487,6 +1512,7 @@ int main(int argc, char *argv[])
         ARG_RAW                 = 1006,
         ARG_MTU                 = 1007,
         ARG_SPI_SMALL_PACKET    = 1008,
+        ARG_SPI_RESET_DELAY     = 1009,
     };
 
     static struct option options[] = {
@@ -1504,6 +1530,7 @@ int main(int argc, char *argv[])
         {"spi-cs-delay", required_argument, NULL, ARG_SPI_CS_DELAY},
         {"spi-align-allowance", required_argument, NULL, ARG_SPI_ALIGN_ALLOWANCE},
         {"spi-small-packet", required_argument, NULL, ARG_SPI_SMALL_PACKET},
+        {"spi-reset-delay", required_argument, NULL, ARG_SPI_RESET_DELAY},
         {NULL, 0, NULL, 0},
     };
 
@@ -1562,6 +1589,8 @@ int main(int argc, char *argv[])
                 break;
 
             case ARG_SPI_ALIGN_ALLOWANCE:
+                assert(optarg);
+
                 errno                = 0;
                 sSpiRxAlignAllowance = atoi(optarg);
 
@@ -1581,6 +1610,8 @@ int main(int argc, char *argv[])
                 break;
 
             case ARG_SPI_MODE:
+                assert(optarg);
+
                 if (!update_spi_mode(atoi(optarg)))
                 {
                     syslog(LOG_ERR, "Unable to set SPI mode to \"%s\", %s", optarg, strerror(errno));
@@ -1589,6 +1620,8 @@ int main(int argc, char *argv[])
                 break;
 
             case ARG_SPI_SPEED:
+                assert(optarg);
+
                 if (!update_spi_speed(atoi(optarg)))
                 {
                     syslog(LOG_ERR, "Unable to set SPI speed to \"%s\", %s", optarg, strerror(errno));
@@ -1597,6 +1630,8 @@ int main(int argc, char *argv[])
                 break;
 
             case ARG_SPI_SMALL_PACKET:
+                assert(optarg);
+
                 sSpiSmallPacketSize = atoi(optarg);
                 if (sSpiSmallPacketSize > MAX_FRAME_SIZE - HEADER_LEN)
                 {
@@ -1613,6 +1648,8 @@ int main(int argc, char *argv[])
                 break;
 
             case ARG_SPI_CS_DELAY:
+                assert(optarg);
+
                 sSpiCsDelay = atoi(optarg);
                 if (sSpiCsDelay < 0)
                 {
@@ -1622,12 +1659,26 @@ int main(int argc, char *argv[])
                 syslog(LOG_NOTICE, "SPI CS Delay set to %d usec", sSpiCsDelay);
                 break;
 
+            case ARG_SPI_RESET_DELAY:
+                assert(optarg);
+
+                sSpiResetDelay = atoi(optarg);
+                if (sSpiResetDelay < 0)
+                {
+                    syslog(LOG_ERR, "Negative value (%d) for --spi-reset-delay is invalid.", sSpiResetDelay);
+                    exit(EXIT_FAILURE);
+                }
+                syslog(LOG_NOTICE, "SPI RESET Delay set to %d ms", sSpiResetDelay);
+                break;
+
             case ARG_RAW:
                 sUseRawFrames = true;
                 syslog(LOG_NOTICE, "HDLC encoding/decoding disabled. Will use raw frames for input/output.");
                 break;
 
             case ARG_MTU:
+                assert(optarg);
+
                 sMTU = atoi(optarg);
                 if (sMTU > MAX_FRAME_SIZE - HEADER_LEN)
                 {
@@ -1685,33 +1736,26 @@ int main(int argc, char *argv[])
 
     syslog(LOG_NOTICE, "spi-hdlc-adapter " SPI_HDLC_VERSION " (" __TIME__ " " __DATE__ ")\n");
 
-    argc -= optind;
-    argv += optind;
-
-    if (argc >= 1)
+    if (optind == argc)
     {
-        if (!setup_spi_dev(argv[0]))
+        fprintf(stderr, "%s: Missing SPI device path\n", prog);
+        exit(EXIT_FAILURE);
+    }
+    else if (optind + 1 == argc)
+    {
+        if (!setup_spi_dev(argv[optind]))
         {
             char spi_path[64];
 
-            strncpy(spi_path, argv[0], sizeof(spi_path) - 1);
+            strncpy(spi_path, argv[optind], sizeof(spi_path) - 1);
             spi_path[sizeof(spi_path) - 1] = 0;
             syslog(LOG_ERR, "%s: Unable to open SPI device \"%s\", %s", prog, spi_path, strerror(errno));
             exit(EXIT_FAILURE);
         }
-        argc--;
-        argv++;
     }
-
-    if (argc >= 1)
+    else
     {
-        fprintf(stderr, "%s: Unexpected argument \"%s\"\n", prog, argv[0]);
-        exit(EXIT_FAILURE);
-    }
-
-    if (sSpiDevPath == NULL)
-    {
-        fprintf(stderr, "%s: Missing SPI device path\n", prog);
+        fprintf(stderr, "%s: Unexpected argument \"%s\"\n", prog, argv[optind + 1]);
         exit(EXIT_FAILURE);
     }
 
@@ -1791,6 +1835,8 @@ int main(int argc, char *argv[])
     }
 
     trigger_reset();
+
+    usleep((useconds_t)sSpiResetDelay * USEC_PER_MSEC);
 
     // ========================================================================
     // MAIN LOOP
@@ -1981,7 +2027,15 @@ int main(int argc, char *argv[])
     // SHUTDOWN
 
 bail:
+    if (sCaughtSignal != -1)
+    {
+        syslog(LOG_ERR, "Caught %s", strsignal(sCaughtSignal));
+    }
+
     syslog(LOG_NOTICE, "Shutdown. (sRet = %d)", sRet);
+
+    syslog(LOG_NOTICE, "Reset NCP/RCP");
+    trigger_reset();
 
     if (sRet == EXIT_QUIT)
     {

@@ -32,14 +32,15 @@
  *
  */
 
+#include "openthread-core-config.h"
 #include <openthread/config.h>
 
 #include <assert.h>
 #include <utils/code_utils.h>
+#include <openthread/random_noncrypto.h> /* to seed the CSMA-CA funciton */
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
-#include <openthread/platform/random.h> /* to seed the CSMA-CA funciton */
 
 #include "cc2652_radio.h"
 #include <driverlib/chipinfo.h>
@@ -57,8 +58,6 @@
 #include <inc/hw_prcm.h>
 #include <inc/hw_rfc_pwr.h>
 #include <rf_patches/rf_patch_cpe_ieee_802_15_4.h>
-#include <rf_patches/rf_patch_mce_ieee_802_15_4.h>
-#include <rf_patches/rf_patch_rfe_ieee_802_15_4.h>
 
 enum
 {
@@ -80,38 +79,10 @@ static output_config_t const *sCurrentOutputPower = &(rgOutputPower[0]);
 /* Overrides from SmartRF Studio 7 2.10.0#94 */
 static uint32_t sIEEEOverrides[] = {
     // override_ieee_802_15_4.xml
-    // PHY: Use MCE RAM patch, RFE ROM bank 1
-    MCE_RFE_OVERRIDE(1, 0, 0, 0, 1, 0),
-    // Synth: Use 48 MHz crystal, enable extra PLL filtering
-    (uint32_t)0x02400403,
-    // Synth: Configure extra PLL filtering
-    (uint32_t)0x001C8473,
-    // Synth: Configure synth hardware
-    (uint32_t)0x00088433,
-    // Synth: Set minimum RTRIM to 3
-    (uint32_t)0x00038793,
-    // Synth: Configure faster calibration
-    HW32_ARRAY_OVERRIDE(0x4004, 1),
-    // Synth: Configure faster calibration
-    (uint32_t)0x1C0C0618,
-    // Synth: Configure faster calibration
-    (uint32_t)0xC00401A1,
-    // Synth: Configure faster calibration
-    (uint32_t)0x00010101,
-    // Synth: Configure faster calibration
-    (uint32_t)0xC0040141,
-    // Synth: Configure faster calibration
-    (uint32_t)0x00214AD3,
-    // Synth: Decrease synth programming time-out (0x0298 RAT ticks = 166 us)
-    (uint32_t)0x02980243,
-    // DC/DC regulator: In Tx, use DCDCCTL5[3:0]=0xC (DITHER_EN=1 and IPEAK=4). In Rx, use DCDCCTL5[3:0]=0xC
-    // (DITHER_EN=1 and IPEAK=4).
-    (uint32_t)0xFCFC08C3,
+    // DC/DC regulator: In Tx, use DCDCCTL5[3:0]=0x3 (DITHER_EN=0 and IPEAK=3).
+    (uint32_t)0x00F388D3,
     // Rx: Set LNA bias current offset to +15 to saturate trim to max (default: 0)
-    (uint32_t)0x000F8883,
-    // override_frontend_id.xml
-    (uint32_t)0xFFFFFFFF,
-};
+    (uint32_t)0x000F8883, (uint32_t)0xFFFFFFFF};
 
 /*
  * Number of retry counts left to the currently transmitting frame.
@@ -658,7 +629,7 @@ static uint_fast8_t rfCoreSendTransmitCmd(uint8_t *aPsdu, uint8_t aLen)
     sCsmacaBackoffCmd = cCsmacaBackoffCmd;
     /* initialize the random state with a true random seed for the radio core's
      * psudo rng */
-    sCsmacaBackoffCmd.randomState = otPlatRandomGet();
+    sCsmacaBackoffCmd.randomState = otRandomNonCryptoGetUint16();
     sCsmacaBackoffCmd.pNextOp     = (rfc_radioOp_t *)&sTransmitCmd;
 
     sTransmitCmd = cTransmitCmd;
@@ -918,13 +889,11 @@ static void rfCorePowerOff(void)
 }
 
 /**
- * Applies CPE, RFE, and MCE patches to the radio.
+ * Applies CPE patche to the radio.
  */
 static void rfCoreApplyPatch(void)
 {
     rf_patch_cpe_ieee_802_15_4();
-    rf_patch_mce_ieee_802_15_4();
-    rf_patch_rfe_ieee_802_15_4();
 
     /* disable ram bus clocks */
     RFCDoorbellSendTo(CMDR_DIR_CMD_2BYTE(CC2652_RF_CMD0, 0));
@@ -1225,6 +1194,7 @@ otError otPlatRadioEnable(otInstance *aInstance)
         otEXPECT_ACTION(rfCoreSendEnableCmd() == DONE_OK, error = OT_ERROR_FAILED);
 
         sState = cc2652_stateSleep;
+        error  = OT_ERROR_NONE;
     }
 
 exit:
@@ -1341,6 +1311,28 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 /**
  * Function documented in platform/radio.h
  */
+otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aThreshold);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+/**
+ * Function documented in platform/radio.h
+ */
+otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aThreshold);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+/**
+ * Function documented in platform/radio.h
+ */
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -1414,6 +1406,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
         else
         {
             sState = cc2652_stateSleep;
+            error  = OT_ERROR_NONE;
         }
     }
 
@@ -1564,14 +1557,15 @@ otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    otError error = OT_ERROR_NONE;
-    uint8_t idx   = rfCoreFindExtSrcMatchIdx((uint64_t *)aExtAddress);
+    otError  error      = OT_ERROR_NONE;
+    uint64_t extAddress = *(uint64_t *)aExtAddress;
+    uint8_t  idx        = rfCoreFindExtSrcMatchIdx(&extAddress);
 
     if (idx == CC2652_SRC_MATCH_NONE)
     {
         /* the entry does not exist already, add it */
         otEXPECT_ACTION((idx = rfCoreFindEmptyExtSrcMatchIdx()) != CC2652_SRC_MATCH_NONE, error = OT_ERROR_NO_BUFS);
-        sSrcMatchExtData.extAddrEnt[idx] = *((uint64_t *)aExtAddress);
+        sSrcMatchExtData.extAddrEnt[idx] = extAddress;
     }
 
     if (sReceiveCmd.status == ACTIVE || sReceiveCmd.status == IEEE_SUSPENDED)
@@ -1597,10 +1591,11 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddre
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    otError error = OT_ERROR_NONE;
-    uint8_t idx;
+    otError  error      = OT_ERROR_NONE;
+    uint64_t extAddress = *(uint64_t *)aExtAddress;
+    uint8_t  idx;
 
-    otEXPECT_ACTION((idx = rfCoreFindExtSrcMatchIdx((uint64_t *)aExtAddress)) != CC2652_SRC_MATCH_NONE,
+    otEXPECT_ACTION((idx = rfCoreFindExtSrcMatchIdx(&extAddress)) != CC2652_SRC_MATCH_NONE,
                     error = OT_ERROR_NO_ADDRESS);
 
     if (sReceiveCmd.status == ACTIVE || sReceiveCmd.status == IEEE_SUSPENDED)
@@ -1846,14 +1841,14 @@ static void cc2652RadioProcessTransmitDone(otInstance *  aInstance,
                                            otRadioFrame *aAckFrame,
                                            otError       aTransmitError)
 {
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
     if (otPlatDiagModeGet())
     {
         otPlatDiagRadioTransmitDone(aInstance, aTransmitFrame, aTransmitError);
     }
     else
-#endif /* OPENTHREAD_ENABLE_DIAG */
+#endif /* OPENTHREAD_CONFIG_DIAG_ENABLE */
     {
         otPlatRadioTxDone(aInstance, aTransmitFrame, aAckFrame, aTransmitError);
     }
@@ -1864,14 +1859,14 @@ static void cc2652RadioProcessReceiveDone(otInstance *aInstance, otRadioFrame *a
     // TODO Set this flag only when the packet is really acknowledged with frame pending set.
     // See https://github.com/openthread/openthread/pull/3785
     aReceiveFrame->mInfo.mRxInfo.mAckedWithFramePending = true;
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
     if (otPlatDiagModeGet())
     {
         otPlatDiagRadioReceiveDone(aInstance, aReceiveFrame, aReceiveError);
     }
     else
-#endif /* OPENTHREAD_ENABLE_DIAG */
+#endif /* OPENTHREAD_CONFIG_DIAG_ENABLE */
     {
         otPlatRadioReceiveDone(aInstance, aReceiveFrame, aReceiveError);
     }
@@ -1907,11 +1902,15 @@ static void cc2652RadioProcessReceiveQueue(otInstance *aInstance)
 
             if (crcCorr->status.bCrcErr == 0 && (len - 2) < OT_RADIO_FRAME_MAX_SIZE)
             {
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#error Time sync requires the timestamp of SFD rather than that of rx done!
+#else
                 if (otPlatRadioGetPromiscuous(aInstance))
+#endif
                 {
                     // TODO: Propagate CM0 timestamp
-                    receiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
-                    receiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
+                    // The current driver only supports milliseconds resolution.
+                    receiveFrame.mInfo.mRxInfo.mTimestamp = otPlatAlarmMilliGetNow() * 1000;
                 }
 
                 receiveFrame.mLength             = len;

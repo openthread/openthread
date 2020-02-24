@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+/* Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,8 +43,10 @@
 #include "nrf_802154.h"
 #include "nrf_802154_config.h"
 #include "nrf_802154_core.h"
+#include "nrf_802154_peripherals.h"
 #include "nrf_802154_rx_buffer.h"
-#include "hal/nrf_egu.h"
+#include "nrf_802154_utils.h"
+#include "nrf_egu.h"
 #include "platform/clock/nrf_802154_clock.h"
 
 /** Size of notification queue.
@@ -53,6 +55,7 @@
  * detection.
  */
 #define NTF_QUEUE_SIZE     (NRF_802154_RX_BUFFERS + 3)
+
 /** Size of requests queue.
  *
  * Two is minimal queue size. It is not expected in current implementation to queue a few requests.
@@ -100,9 +103,9 @@ typedef struct
     {
         struct
         {
-            uint8_t * p_psdu; ///< Pointer to received frame PSDU.
+            uint8_t * p_data; ///< Pointer to a buffer containing PHR and PSDU of the received frame.
             int8_t    power;  ///< RSSI of received frame.
-            int8_t    lqi;    ///< LQI of received frame.
+            uint8_t   lqi;    ///< LQI of received frame.
         } received;           ///< Received frame details.
 
         struct
@@ -113,9 +116,9 @@ typedef struct
         struct
         {
             const uint8_t * p_frame; ///< Pointer to frame that was transmitted.
-            uint8_t       * p_psdu;  ///< Pointer to received ACK PSDU or NULL.
+            uint8_t       * p_data;  ///< Pointer to a buffer containing PHR and PSDU of the received ACK or NULL.
             int8_t          power;   ///< RSSI of received ACK or 0.
-            int8_t          lqi;     ///< LQI of received ACK or 0.
+            uint8_t         lqi;     ///< LQI of received ACK or 0.
         } transmitted;               ///< Transmitted frame details.
 
         struct
@@ -157,7 +160,9 @@ typedef enum
     REQ_TYPE_CONTINUOUS_CARRIER,
     REQ_TYPE_BUFFER_FREE,
     REQ_TYPE_CHANNEL_UPDATE,
-    REQ_TYPE_CCA_CFG_UPDATE
+    REQ_TYPE_CCA_CFG_UPDATE,
+    REQ_TYPE_RSSI_MEASURE,
+    REQ_TYPE_RSSI_GET,
 } nrf_802154_req_type_t;
 
 /// Request data in request queue.
@@ -187,7 +192,7 @@ typedef struct
             nrf_802154_notification_func_t notif_func; ///< Error notified in case of success.
             nrf_802154_term_t              term_lvl;   ///< Request priority.
             req_originator_t               req_orig;   ///< Request originator.
-            const uint8_t                * p_data;     ///< Pointer to PSDU to transmit.
+            const uint8_t                * p_data;     ///< Pointer to a buffer containing PHR and PSDU of the frame to transmit.
             bool                           cca;        ///< If CCA was requested prior to transmission.
             bool                           immediate;  ///< If TX procedure must be performed immediately.
             bool                         * p_result;   ///< Transmit request result.
@@ -225,9 +230,20 @@ typedef struct
 
         struct
         {
-            bool * p_result;                              ///< CCA config update request result.
-        } cca_cfg_update;                                 ///< CCA config update request details.
-    } data;                                               ///< Request data depending on it's type.
+            bool * p_result; ///< CCA config update request result.
+        } cca_cfg_update;    ///< CCA config update request details.
+
+        struct
+        {
+            bool * p_result; ///< RSSI measurement request result.
+        } rssi_measure;      ///< RSSI measurement request details.
+
+        struct
+        {
+            int8_t * p_rssi;                              ///< RSSI measurement result.
+            bool   * p_result;                            ///< RSSI measurement status.
+        } rssi_get;                                       ///< Details of the getter that retrieves the RSSI measurement result.
+    } data;                                               ///< Request data depending on its type.
 } nrf_802154_req_data_t;
 
 static nrf_802154_ntf_data_t m_ntf_queue[NTF_QUEUE_SIZE]; ///< Notification queue.
@@ -434,17 +450,20 @@ void nrf_802154_swi_init(void)
 
     nrf_egu_int_enable(SWI_EGU, NTF_INT | HFCLK_STOP_INT | REQ_INT);
 
+#if !NRF_IS_IRQ_PRIORITY_ALLOWED(NRF_802154_SWI_PRIORITY)
+#error NRF_802154_SWI_PRIORITY value out of the allowed range.
+#endif
     NVIC_SetPriority(SWI_IRQn, NRF_802154_SWI_PRIORITY);
     NVIC_ClearPendingIRQ(SWI_IRQn);
     NVIC_EnableIRQ(SWI_IRQn);
 }
 
-void nrf_802154_swi_notify_received(uint8_t * p_data, int8_t power, int8_t lqi)
+void nrf_802154_swi_notify_received(uint8_t * p_data, int8_t power, uint8_t lqi)
 {
     nrf_802154_ntf_data_t * p_slot = ntf_enter();
 
     p_slot->type                 = NTF_TYPE_RECEIVED;
-    p_slot->data.received.p_psdu = p_data;
+    p_slot->data.received.p_data = p_data;
     p_slot->data.received.power  = power;
     p_slot->data.received.lqi    = lqi;
 
@@ -464,13 +483,13 @@ void nrf_802154_swi_notify_receive_failed(nrf_802154_rx_error_t error)
 void nrf_802154_swi_notify_transmitted(const uint8_t * p_frame,
                                        uint8_t       * p_data,
                                        int8_t          power,
-                                       int8_t          lqi)
+                                       uint8_t         lqi)
 {
     nrf_802154_ntf_data_t * p_slot = ntf_enter();
 
     p_slot->type                     = NTF_TYPE_TRANSMITTED;
     p_slot->data.transmitted.p_frame = p_frame;
-    p_slot->data.transmitted.p_psdu  = p_data;
+    p_slot->data.transmitted.p_data  = p_data;
     p_slot->data.transmitted.power   = power;
     p_slot->data.transmitted.lqi     = lqi;
 
@@ -658,6 +677,27 @@ void nrf_802154_swi_cca_cfg_update(bool * p_result)
     req_exit();
 }
 
+void nrf_802154_swi_rssi_measure(bool * p_result)
+{
+    nrf_802154_req_data_t * p_slot = req_enter();
+
+    p_slot->type                       = REQ_TYPE_RSSI_MEASURE;
+    p_slot->data.rssi_measure.p_result = p_result;
+
+    req_exit();
+}
+
+void nrf_802154_swi_rssi_measurement_get(int8_t * p_rssi, bool * p_result)
+{
+    nrf_802154_req_data_t * p_slot = req_enter();
+
+    p_slot->type                   = REQ_TYPE_RSSI_GET;
+    p_slot->data.rssi_get.p_rssi   = p_rssi;
+    p_slot->data.rssi_get.p_result = p_result;
+
+    req_exit();
+}
+
 void SWI_IRQHandler(void)
 {
     if (nrf_egu_event_check(SWI_EGU, NTF_EVENT))
@@ -672,12 +712,12 @@ void SWI_IRQHandler(void)
             {
                 case NTF_TYPE_RECEIVED:
 #if NRF_802154_USE_RAW_API
-                    nrf_802154_received_raw(p_slot->data.received.p_psdu,
+                    nrf_802154_received_raw(p_slot->data.received.p_data,
                                             p_slot->data.received.power,
                                             p_slot->data.received.lqi);
 #else // NRF_802154_USE_RAW_API
-                    nrf_802154_received(p_slot->data.received.p_psdu + RAW_PAYLOAD_OFFSET,
-                                        p_slot->data.received.p_psdu[RAW_LENGTH_OFFSET],
+                    nrf_802154_received(p_slot->data.received.p_data + RAW_PAYLOAD_OFFSET,
+                                        p_slot->data.received.p_data[RAW_LENGTH_OFFSET],
                                         p_slot->data.received.power,
                                         p_slot->data.received.lqi);
 #endif
@@ -690,14 +730,14 @@ void SWI_IRQHandler(void)
                 case NTF_TYPE_TRANSMITTED:
 #if NRF_802154_USE_RAW_API
                     nrf_802154_transmitted_raw(p_slot->data.transmitted.p_frame,
-                                               p_slot->data.transmitted.p_psdu,
+                                               p_slot->data.transmitted.p_data,
                                                p_slot->data.transmitted.power,
                                                p_slot->data.transmitted.lqi);
 #else // NRF_802154_USE_RAW_API
                     nrf_802154_transmitted(p_slot->data.transmitted.p_frame + RAW_PAYLOAD_OFFSET,
-                                           p_slot->data.transmitted.p_psdu == NULL ? NULL :
-                                           p_slot->data.transmitted.p_psdu + RAW_PAYLOAD_OFFSET,
-                                           p_slot->data.transmitted.p_psdu[RAW_LENGTH_OFFSET],
+                                           p_slot->data.transmitted.p_data == NULL ? NULL :
+                                           p_slot->data.transmitted.p_data + RAW_PAYLOAD_OFFSET,
+                                           p_slot->data.transmitted.p_data[RAW_LENGTH_OFFSET],
                                            p_slot->data.transmitted.power,
                                            p_slot->data.transmitted.lqi);
 #endif
@@ -807,6 +847,15 @@ void SWI_IRQHandler(void)
 
                 case REQ_TYPE_CCA_CFG_UPDATE:
                     *(p_slot->data.cca_cfg_update.p_result) = nrf_802154_core_cca_cfg_update();
+                    break;
+
+                case REQ_TYPE_RSSI_MEASURE:
+                    *(p_slot->data.rssi_measure.p_result) = nrf_802154_core_rssi_measure();
+                    break;
+
+                case REQ_TYPE_RSSI_GET:
+                    *(p_slot->data.rssi_get.p_result) =
+                        nrf_802154_core_last_rssi_measurement_get(p_slot->data.rssi_get.p_rssi);
                     break;
 
                 default:

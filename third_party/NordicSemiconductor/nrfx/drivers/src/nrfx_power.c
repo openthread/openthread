@@ -106,7 +106,7 @@ nrfx_err_t nrfx_power_init(nrfx_power_config_t const * p_config)
         return NRFX_ERROR_ALREADY_INITIALIZED;
     }
 
-#if NRF_POWER_HAS_VDDH
+#if NRF_POWER_HAS_DCDCEN_VDDH
     nrf_power_dcdcen_vddh_set(p_config->dcdcenhv);
 #endif
 #if NRF_POWER_HAS_DCDCEN
@@ -225,6 +225,8 @@ void nrfx_power_sleepevt_uninit(void)
 #if NRF_POWER_HAS_USBREG
 void nrfx_power_usbevt_init(nrfx_power_usbevt_config_t const * p_config)
 {
+    NRFX_ASSERT(p_config != NULL);
+
     nrfx_power_usbevt_uninit();
     if (p_config->handler != NULL)
     {

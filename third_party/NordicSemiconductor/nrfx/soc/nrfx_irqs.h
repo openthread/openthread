@@ -40,6 +40,8 @@
     #include <soc/nrfx_irqs_nrf52811.h>
 #elif defined(NRF52832_XXAA) || defined (NRF52832_XXAB)
     #include <soc/nrfx_irqs_nrf52832.h>
+#elif defined(NRF52833_XXAA)
+    #include <soc/nrfx_irqs_nrf52833.h>
 #elif defined(NRF52840_XXAA)
     #include <soc/nrfx_irqs_nrf52840.h>
 #elif defined(NRF9160_XXAA)

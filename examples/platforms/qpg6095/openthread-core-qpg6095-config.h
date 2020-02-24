@@ -35,11 +35,11 @@
 #define OPENTHREAD_CORE_QPG6095_CONFIG_H_
 
 /**
-  * @def OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
-  *
-  * Define to 1 if you want use legacy transmit done.
-  *
-  */
+ * @def OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE
+ *
+ * Define to 1 if you want use legacy transmit done.
+ *
+ */
 #define OPENTHREAD_CONFIG_LEGACY_TRANSMIT_DONE 1
 
 /**
@@ -48,6 +48,14 @@
  * The platform-specific string to insert into the OpenThread version string.
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_INFO                         "QPG6095"
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "QPG6095"
 
-#endif  // OPENTHREAD_CORE_QPG6095_CONFIG_H_
+/**
+ * @def OPENTHREAD_CONFIG_NCP_UART_ENABLE
+ *
+ * Define to 1 to enable NCP UART support.
+ *
+ */
+#define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
+
+#endif // OPENTHREAD_CORE_QPG6095_CONFIG_H_

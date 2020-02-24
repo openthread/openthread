@@ -29,29 +29,31 @@
 
 #include "common/logging.hpp"
 #include "meshcop/commissioner.hpp"
-#include "utils/wrap_string.h"
 
 #include "test_platform.h"
 #include "test_util.h"
+
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 static const otExtendedPanId sXPanId = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}};
 
 void TestMinimumPassphrase(void)
 {
-    uint8_t       pskc[OT_PSKC_MAX_SIZE];
+    ot::Pskc      pskc;
     const uint8_t expectedPskc[] = {0x44, 0x98, 0x8e, 0x22, 0xcf, 0x65, 0x2e, 0xee,
                                     0xcc, 0xd1, 0xe4, 0xc0, 0x1d, 0x01, 0x54, 0xf8};
     const char    passphrase[]   = "123456";
     otInstance *  instance       = testInitInstance();
-    SuccessOrQuit(ot::MeshCoP::Commissioner::GeneratePSKc(passphrase, "OpenThread", sXPanId, pskc),
+    SuccessOrQuit(ot::MeshCoP::Commissioner::GeneratePskc(passphrase, "OpenThread",
+                                                          static_cast<const ot::Mac::ExtendedPanId &>(sXPanId), pskc),
                   "TestMinimumPassphrase failed to generate PSKc");
-    VerifyOrQuit(memcmp(pskc, expectedPskc, sizeof(pskc)) == 0, "TestMinimumPassphrase got wrong pskc");
+    VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc)) == 0, "TestMinimumPassphrase got wrong pskc");
     testFreeInstance(instance);
 }
 
 void TestMaximumPassphrase(void)
 {
-    uint8_t       pskc[OT_PSKC_MAX_SIZE];
+    ot::Pskc      pskc;
     const uint8_t expectedPskc[] = {0x9e, 0x81, 0xbd, 0x35, 0xa2, 0x53, 0x76, 0x2f,
                                     0x80, 0xee, 0x04, 0xff, 0x2f, 0xa2, 0x85, 0xe9};
     const char    passphrase[]   = "1234567812345678"
@@ -72,13 +74,13 @@ void TestMaximumPassphrase(void)
                               "123456781234567";
 
     otInstance *instance = testInitInstance();
-    SuccessOrQuit(ot::MeshCoP::Commissioner::GeneratePSKc(passphrase, "OpenThread", sXPanId, pskc),
+    SuccessOrQuit(ot::MeshCoP::Commissioner::GeneratePskc(passphrase, "OpenThread",
+                                                          static_cast<const ot::Mac::ExtendedPanId &>(sXPanId), pskc),
                   "TestMaximumPassphrase failed to generate PSKc");
-    VerifyOrQuit(memcmp(pskc, expectedPskc, sizeof(pskc)) == 0, "TestMaximumPassphrase got wrong pskc");
+    VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc)) == 0, "TestMaximumPassphrase got wrong pskc");
     testFreeInstance(instance);
 }
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestMinimumPassphrase();
@@ -86,4 +88,13 @@ int main(void)
     printf("All tests passed\n");
     return 0;
 }
-#endif
+
+#else // #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+
+int main(void)
+{
+    printf("Commissioenr role disabled\n");
+    return 0;
+}
+
+#endif // #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE

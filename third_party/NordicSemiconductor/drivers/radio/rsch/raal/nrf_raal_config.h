@@ -51,8 +51,8 @@ extern "C" {
 /**
  * @def NRF_RAAL_MAX_CLEAN_UP_TIME_US
  *
- * Maximum time within radio driver needs to do any clean-up actions on RADIO peripheral
- * and stop using it completely.
+ * The maximum time in which the radio driver must do any clean-up actions on the RADIO peripheral
+ * and stop using it.
  *
  */
 #ifndef NRF_RAAL_MAX_CLEAN_UP_TIME_US

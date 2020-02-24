@@ -28,8 +28,6 @@
 
 #include "dns_client.hpp"
 
-#include "utils/wrap_string.h"
-
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -37,7 +35,7 @@
 #include "net/udp6.hpp"
 #include "thread/thread_netif.hpp"
 
-#if OPENTHREAD_ENABLE_DNS_CLIENT
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
 /**
  * @file
@@ -48,6 +46,30 @@ using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 namespace Dns {
+
+QueryMetadata::QueryMetadata(void)
+    : mHostname(NULL)
+    , mResponseHandler(NULL)
+    , mResponseContext(NULL)
+    , mTransmissionTime()
+    , mDestinationPort(0)
+    , mRetransmissionCount(0)
+{
+    mSourceAddress.Clear();
+    mDestinationAddress.Clear();
+}
+
+QueryMetadata::QueryMetadata(otDnsResponseHandler aHandler, void *aContext)
+    : mHostname(NULL)
+    , mResponseHandler(aHandler)
+    , mResponseContext(aContext)
+    , mTransmissionTime()
+    , mDestinationPort(0)
+    , mRetransmissionCount(0)
+{
+    mSourceAddress.Clear();
+    mDestinationAddress.Clear();
+}
 
 Client::Client(Ip6::Netif &aNetif)
     : mSocket(aNetif.Get<Ip6::Udp>())
@@ -160,9 +182,7 @@ exit:
 Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetadata &aQueryMetadata)
 {
     otError  error       = OT_ERROR_NONE;
-    uint32_t now         = TimerMilli::GetNow();
     Message *messageCopy = NULL;
-    uint32_t nextTransmissionTime;
 
     // Create a message copy for further retransmissions.
     VerifyOrExit((messageCopy = aMessage.Clone()) != NULL, error = OT_ERROR_NO_BUFS);
@@ -171,21 +191,7 @@ Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetad
     SuccessOrExit(error = aQueryMetadata.AppendTo(*messageCopy));
     mPendingQueries.Enqueue(*messageCopy);
 
-    // Setup the timer.
-    if (mRetransmissionTimer.IsRunning())
-    {
-        // If timer is already running, check if it should be restarted with earlier fire time.
-        nextTransmissionTime = mRetransmissionTimer.GetFireTime();
-
-        if (aQueryMetadata.IsEarlier(nextTransmissionTime))
-        {
-            mRetransmissionTimer.Start(aQueryMetadata.mTransmissionTime - now);
-        }
-    }
-    else
-    {
-        mRetransmissionTimer.Start(aQueryMetadata.mTransmissionTime - now);
-    }
+    mRetransmissionTimer.FireAtIfEarlier(aQueryMetadata.mTransmissionTime);
 
 exit:
 
@@ -374,7 +380,7 @@ exit:
 
 void Client::FinalizeDnsTransaction(Message &            aQuery,
                                     const QueryMetadata &aQueryMetadata,
-                                    otIp6Address *       aAddress,
+                                    const otIp6Address * aAddress,
                                     uint32_t             aTtl,
                                     otError              aResult)
 {
@@ -394,44 +400,33 @@ void Client::HandleRetransmissionTimer(Timer &aTimer)
 
 void Client::HandleRetransmissionTimer(void)
 {
-    uint32_t         now       = TimerMilli::GetNow();
-    uint32_t         nextDelta = TimerMilli::kForeverDt;
+    TimeMilli        now      = TimerMilli::GetNow();
+    TimeMilli        nextTime = now.GetDistantFuture();
     QueryMetadata    queryMetadata;
-    Message *        message     = mPendingQueries.GetHead();
-    Message *        nextMessage = NULL;
+    Message *        message;
+    Message *        nextMessage;
     Ip6::MessageInfo messageInfo;
 
-    while (message != NULL)
+    for (message = mPendingQueries.GetHead(); message != NULL; message = nextMessage)
     {
         nextMessage = message->GetNext();
+
         queryMetadata.ReadFrom(*message);
 
-        if (queryMetadata.IsLater(now))
+        if (now >= queryMetadata.mTransmissionTime)
         {
-            uint32_t diff = TimerMilli::Elapsed(now, queryMetadata.mTransmissionTime);
-
-            // Calculate the next delay and choose the lowest.
-            if (diff < nextDelta)
+            if (queryMetadata.mRetransmissionCount >= kMaxRetransmit)
             {
-                nextDelta = diff;
+                // No expected response.
+                FinalizeDnsTransaction(*message, queryMetadata, NULL, 0, OT_ERROR_RESPONSE_TIMEOUT);
+
+                continue;
             }
-        }
-        else if (queryMetadata.mRetransmissionCount < kMaxRetransmit)
-        {
-            uint32_t diff;
 
             // Increment retransmission counter and timer.
             queryMetadata.mRetransmissionCount++;
             queryMetadata.mTransmissionTime = now + kResponseTimeout;
             queryMetadata.UpdateIn(*message);
-
-            diff = TimerMilli::Elapsed(now, queryMetadata.mTransmissionTime);
-
-            // Check if retransmission time is lower than current lowest.
-            if (diff < nextDelta)
-            {
-                nextDelta = queryMetadata.mTransmissionTime - now;
-            }
 
             // Retransmit
             messageInfo.SetPeerAddr(queryMetadata.mDestinationAddress);
@@ -440,18 +435,16 @@ void Client::HandleRetransmissionTimer(void)
 
             SendCopy(*message, messageInfo);
         }
-        else
-        {
-            // No expected response.
-            FinalizeDnsTransaction(*message, queryMetadata, NULL, 0, OT_ERROR_RESPONSE_TIMEOUT);
-        }
 
-        message = nextMessage;
+        if (nextTime > queryMetadata.mTransmissionTime)
+        {
+            nextTime = queryMetadata.mTransmissionTime;
+        }
     }
 
-    if (nextDelta != TimerMilli::kForeverDt)
+    if (nextTime < now.GetDistantFuture())
     {
-        mRetransmissionTimer.Start(nextDelta);
+        mRetransmissionTimer.FireAt(nextTime);
     }
 }
 
@@ -477,7 +470,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(responseHeader), &responseHeader) ==
                  sizeof(responseHeader));
     VerifyOrExit(responseHeader.GetType() == Header::kTypeResponse && responseHeader.GetQuestionCount() == 1 &&
-                 responseHeader.IsTruncationFlagSet() == false);
+                 !responseHeader.IsTruncationFlagSet());
 
     aMessage.MoveOffset(sizeof(responseHeader));
     offset = aMessage.GetOffset();
@@ -526,4 +519,4 @@ exit:
 } // namespace Dns
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_DNS_CLIENT
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE

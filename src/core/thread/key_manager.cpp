@@ -34,6 +34,7 @@
 #include "key_manager.hpp"
 
 #include "common/code_utils.hpp"
+#include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/timer.hpp"
@@ -43,11 +44,11 @@
 
 namespace ot {
 
-static const uint8_t kThreadString[] = {
+const uint8_t KeyManager::kThreadString[] = {
     'T', 'h', 'r', 'e', 'a', 'd',
 };
 
-static const otMasterKey kDefaultMasterKey = {{
+const otMasterKey KeyManager::kDefaultMasterKey = {{
     0x00,
     0x11,
     0x22,
@@ -68,7 +69,6 @@ static const otMasterKey kDefaultMasterKey = {{
 
 KeyManager::KeyManager(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mMasterKey(kDefaultMasterKey)
     , mKeySequence(0)
     , mMacFrameCounter(0)
     , mMleFrameCounter(0)
@@ -81,9 +81,10 @@ KeyManager::KeyManager(Instance &aInstance)
     , mKeyRotationTimer(aInstance, &KeyManager::HandleKeyRotationTimer, this)
     , mKekFrameCounter(0)
     , mSecurityPolicyFlags(0xff)
-    , mIsPSKcSet(false)
+    , mIsPskcSet(false)
 {
-    memset(&mPSKc, 0, sizeof(mPSKc));
+    mMasterKey = static_cast<const MasterKey &>(kDefaultMasterKey);
+    mPskc.Clear();
     ComputeKey(mKeySequence, mKey);
 }
 
@@ -99,39 +100,29 @@ void KeyManager::Stop(void)
 }
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-void KeyManager::SetPSKc(const otPSKc &aPSKc)
+void KeyManager::SetPskc(const Pskc &aPskc)
 {
-    VerifyOrExit(memcmp(&mPSKc, &aPSKc, sizeof(mPSKc)) != 0, Get<Notifier>().SignalIfFirst(OT_CHANGED_PSKC));
-    mPSKc = aPSKc;
-    Get<Notifier>().Signal(OT_CHANGED_PSKC);
-
-exit:
-    mIsPSKcSet = true;
+    Get<Notifier>().Update(mPskc, aPskc, OT_CHANGED_PSKC);
+    mIsPskcSet = true;
 }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
-const otMasterKey &KeyManager::GetMasterKey(void) const
-{
-    return mMasterKey;
-}
-
-otError KeyManager::SetMasterKey(const otMasterKey &aKey)
+otError KeyManager::SetMasterKey(const MasterKey &aKey)
 {
     otError error = OT_ERROR_NONE;
-    Router *routers;
+    Router *parent;
 
-    VerifyOrExit(memcmp(&mMasterKey, &aKey, sizeof(mMasterKey)) != 0,
-                 Get<Notifier>().SignalIfFirst(OT_CHANGED_MASTER_KEY));
+    SuccessOrExit(
+        Get<Notifier>().Update(mMasterKey, aKey, OT_CHANGED_MASTER_KEY | OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER));
 
-    mMasterKey   = aKey;
     mKeySequence = 0;
     ComputeKey(mKeySequence, mKey);
 
     // reset parent frame counters
-    routers = Get<Mle::MleRouter>().GetParent();
-    routers->SetKeySequence(0);
-    routers->SetLinkFrameCounter(0);
-    routers->SetMleFrameCounter(0);
+    parent = &Get<Mle::MleRouter>().GetParent();
+    parent->SetKeySequence(0);
+    parent->SetLinkFrameCounter(0);
+    parent->SetMleFrameCounter(0);
 
     // reset router frame counters
     for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++)
@@ -142,14 +133,12 @@ otError KeyManager::SetMasterKey(const otMasterKey &aKey)
     }
 
     // reset child frame counters
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
     {
         iter.GetChild()->SetKeySequence(0);
         iter.GetChild()->SetLinkFrameCounter(0);
         iter.GetChild()->SetMleFrameCounter(0);
     }
-
-    Get<Notifier>().Signal(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER | OT_CHANGED_MASTER_KEY);
 
 exit:
     return error;
@@ -158,14 +147,11 @@ exit:
 void KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
 {
     Crypto::HmacSha256 hmac;
-    uint8_t            keySequenceBytes[4];
+    uint8_t            keySequenceBytes[sizeof(uint32_t)];
 
     hmac.Start(mMasterKey.m8, sizeof(mMasterKey.m8));
 
-    keySequenceBytes[0] = (aKeySequence >> 24) & 0xff;
-    keySequenceBytes[1] = (aKeySequence >> 16) & 0xff;
-    keySequenceBytes[2] = (aKeySequence >> 8) & 0xff;
-    keySequenceBytes[3] = aKeySequence & 0xff;
+    Encoding::BigEndian::WriteUint32(aKeySequence, keySequenceBytes);
     hmac.Update(keySequenceBytes, sizeof(keySequenceBytes));
     hmac.Update(kThreadString, sizeof(kThreadString));
 
@@ -176,11 +162,16 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
 {
     VerifyOrExit(aKeySequence != mKeySequence, Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER));
 
-    // Check if the guard timer has expired if key rotation is requested.
-    if ((aKeySequence == (mKeySequence + 1)) && (mKeySwitchGuardTime != 0) && mKeyRotationTimer.IsRunning() &&
-        mKeySwitchGuardEnabled)
+    if ((aKeySequence == (mKeySequence + 1)) && mKeyRotationTimer.IsRunning())
     {
-        VerifyOrExit(mHoursSinceKeyRotation >= mKeySwitchGuardTime);
+        if (mKeySwitchGuardEnabled)
+        {
+            // Check if the guard timer has expired if key rotation is requested.
+            VerifyOrExit(mHoursSinceKeyRotation >= mKeySwitchGuardTime);
+            StartKeyRotationTimer();
+        }
+
+        mKeySwitchGuardEnabled = true;
     }
 
     mKeySequence = aKeySequence;
@@ -188,12 +179,6 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
 
     mMacFrameCounter = 0;
     mMleFrameCounter = 0;
-
-    if (mKeyRotationTimer.IsRunning())
-    {
-        mKeySwitchGuardEnabled = true;
-        StartKeyRotationTimer();
-    }
 
     Get<Notifier>().Signal(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER);
 
@@ -253,13 +238,7 @@ exit:
 
 void KeyManager::SetSecurityPolicyFlags(uint8_t aSecurityPolicyFlags)
 {
-    Notifier &notifier = Get<Notifier>();
-
-    if (!notifier.HasSignaled(OT_CHANGED_SECURITY_POLICY) || (mSecurityPolicyFlags != aSecurityPolicyFlags))
-    {
-        mSecurityPolicyFlags = aSecurityPolicyFlags;
-        notifier.Signal(OT_CHANGED_SECURITY_POLICY);
-    }
+    Get<Notifier>().Update(mSecurityPolicyFlags, aSecurityPolicyFlags, OT_CHANGED_SECURITY_POLICY);
 }
 
 void KeyManager::StartKeyRotationTimer(void)
@@ -290,6 +269,20 @@ void KeyManager::HandleKeyRotationTimer(void)
     {
         SetCurrentKeySequence(mKeySequence + 1);
     }
+}
+
+void KeyManager::GenerateNonce(const Mac::ExtAddress &aAddress,
+                               uint32_t               aFrameCounter,
+                               uint8_t                aSecurityLevel,
+                               uint8_t *              aNonce)
+{
+    memcpy(aNonce, aAddress.m8, sizeof(Mac::ExtAddress));
+    aNonce += sizeof(Mac::ExtAddress);
+
+    Encoding::BigEndian::WriteUint32(aFrameCounter, aNonce);
+    aNonce += sizeof(uint32_t);
+
+    aNonce[0] = aSecurityLevel;
 }
 
 } // namespace ot

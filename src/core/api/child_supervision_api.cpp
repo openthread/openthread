@@ -39,7 +39,7 @@
 
 using namespace ot;
 
-#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 uint16_t otChildSupervisionGetInterval(otInstance *aInstance)
 {
@@ -69,4 +69,4 @@ void otChildSupervisionSetCheckTimeout(otInstance *aInstance, uint16_t aTimeout)
     instance.Get<Utils::SupervisionListener>().SetTimeout(aTimeout);
 }
 
-#endif // OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#endif // OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE

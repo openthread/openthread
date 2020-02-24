@@ -26,6 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdint.h>
 #include <stdio.h>
 
 #include <openthread/ip6.h>
@@ -33,7 +34,7 @@
 
 #include "test_util.h"
 #include "thread/topology.hpp"
-#include "utils/wrap_stdint.h"
+#include "utils/static_assert.hpp"
 
 extern "C" {
 uint32_t       otNetifAddress_Size_c();
@@ -51,9 +52,9 @@ void test_packed1()
         uint16_t mShort;
     } OT_TOOL_PACKED_END;
 
-    CompileTimeAssert(sizeof(packed_t) == 7, "packed_t should be packed to 7 bytes");
+    OT_STATIC_ASSERT(sizeof(packed_t) == 7, "packed_t should be packed to 7 bytes");
 
-    VerifyOrQuit(sizeof(packed_t) == 7, "Toolchain::OT_TOOL_PACKED failed 1\n");
+    VerifyOrQuit(sizeof(packed_t) == 7, "Toolchain::OT_TOOL_PACKED failed 1");
 }
 
 void test_packed2()
@@ -65,9 +66,9 @@ void test_packed2()
         uint8_t mByte;
     } OT_TOOL_PACKED_END;
 
-    CompileTimeAssert(sizeof(packed_t) == 4, "packed_t should be packed to 4 bytes");
+    OT_STATIC_ASSERT(sizeof(packed_t) == 4, "packed_t should be packed to 4 bytes");
 
-    VerifyOrQuit(sizeof(packed_t) == 4, "Toolchain::OT_TOOL_PACKED failed 2\n");
+    VerifyOrQuit(sizeof(packed_t) == 4, "Toolchain::OT_TOOL_PACKED failed 2");
 }
 
 void test_packed_union()
@@ -88,9 +89,9 @@ void test_packed_union()
         } OT_TOOL_PACKED_FIELD;
     } OT_TOOL_PACKED_END;
 
-    CompileTimeAssert(sizeof(packed_t) == 5, "packed_t should be packed to 5 bytes");
+    OT_STATIC_ASSERT(sizeof(packed_t) == 5, "packed_t should be packed to 5 bytes");
 
-    VerifyOrQuit(sizeof(packed_t) == 5, "Toolchain::OT_TOOL_PACKED failed 3\n");
+    VerifyOrQuit(sizeof(packed_t) == 5, "Toolchain::OT_TOOL_PACKED failed 3");
 }
 
 void test_packed_enum()
@@ -99,7 +100,7 @@ void test_packed_enum()
     neighbor.SetState(ot::Neighbor::kStateValid);
 
     // Make sure that when we read the 3 bit field it is read as unsigned, so it return '4'
-    VerifyOrQuit(neighbor.GetState() == ot::Neighbor::kStateValid, "Toolchain::OT_TOOL_PACKED failed 4\n");
+    VerifyOrQuit(neighbor.GetState() == ot::Neighbor::kStateValid, "Toolchain::OT_TOOL_PACKED failed 4");
 }
 
 void test_addr_sizes()
@@ -111,7 +112,7 @@ void test_addr_sizes()
 
 void test_addr_bitfield()
 {
-    VerifyOrQuit(CreateNetif_c().mScopeOverrideValid == true, "Toolchain::test_addr_size_cpp\n");
+    VerifyOrQuit(CreateNetif_c().mScopeOverrideValid == true, "Toolchain::test_addr_size_cpp");
 }
 
 void TestToolchain(void)
@@ -124,11 +125,9 @@ void TestToolchain(void)
     test_addr_bitfield();
 }
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestToolchain();
     printf("All tests passed\n");
     return 0;
 }
-#endif

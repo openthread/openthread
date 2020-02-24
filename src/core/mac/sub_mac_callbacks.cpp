@@ -31,8 +31,6 @@
  *   This file implements the callbacks from `SubMac` layer into `Mac` or `LinkRaw`.
  */
 
-#define WPP_NAME "sub_mac_callbacks.tmh"
-
 #include "sub_mac.hpp"
 
 #include "common/code_utils.hpp"
@@ -43,138 +41,98 @@
 namespace ot {
 namespace Mac {
 
+SubMac::Callbacks::Callbacks(Instance &aInstance)
+    : InstanceLocator(aInstance)
+{
+}
+
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
-void SubMac::Callbacks::ReceiveDone(Frame *aFrame, otError aError)
+void SubMac::Callbacks::ReceiveDone(RxFrame *aFrame, otError aError)
 {
-    Mac &mac = *static_cast<Mac *>(this);
-
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    LinkRaw &linkRaw = mac.Get<LinkRaw>();
-
-    if (linkRaw.IsEnabled())
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    if (Get<LinkRaw>().IsEnabled())
     {
-        linkRaw.InvokeReceiveDone(aFrame, aError);
+        Get<LinkRaw>().InvokeReceiveDone(aFrame, aError);
     }
     else
 #endif
     {
-        mac.HandleReceivedFrame(aFrame, aError);
+        Get<Mac>().HandleReceivedFrame(aFrame, aError);
     }
 }
 
 void SubMac::Callbacks::RecordCcaStatus(bool aCcaSuccess, uint8_t aChannel)
 {
-    static_cast<Mac *>(this)->RecordCcaStatus(aCcaSuccess, aChannel);
+    Get<Mac>().RecordCcaStatus(aCcaSuccess, aChannel);
 }
 
-void SubMac::Callbacks::RecordFrameTransmitStatus(const Frame &aFrame,
-                                                  const Frame *aAckFrame,
-                                                  otError      aError,
-                                                  uint8_t      aRetryCount,
-                                                  bool         aWillRetx)
+void SubMac::Callbacks::RecordFrameTransmitStatus(const TxFrame &aFrame,
+                                                  const RxFrame *aAckFrame,
+                                                  otError        aError,
+                                                  uint8_t        aRetryCount,
+                                                  bool           aWillRetx)
 {
-    static_cast<Mac *>(this)->RecordFrameTransmitStatus(aFrame, aAckFrame, aError, aRetryCount, aWillRetx);
+    Get<Mac>().RecordFrameTransmitStatus(aFrame, aAckFrame, aError, aRetryCount, aWillRetx);
 }
 
-void SubMac::Callbacks::TransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError)
+void SubMac::Callbacks::TransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError)
 {
-    Mac &mac = *static_cast<Mac *>(this);
-
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    LinkRaw &linkRaw = mac.Get<LinkRaw>();
-
-    if (linkRaw.IsEnabled())
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    if (Get<LinkRaw>().IsEnabled())
     {
-        linkRaw.InvokeTransmitDone(aFrame, aAckFrame, aError);
+        Get<LinkRaw>().InvokeTransmitDone(aFrame, aAckFrame, aError);
     }
     else
 #endif
     {
-        mac.HandleTransmitDone(aFrame, aAckFrame, aError);
+        Get<Mac>().HandleTransmitDone(aFrame, aAckFrame, aError);
     }
 }
 
 void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi)
 {
-    Mac &mac = *static_cast<Mac *>(this);
-
-#if OPENTHREAD_ENABLE_RAW_LINK_API
-    LinkRaw &linkRaw = mac.Get<LinkRaw>();
-
-    if (linkRaw.IsEnabled())
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    if (Get<LinkRaw>().IsEnabled())
     {
-        linkRaw.InvokeEnergyScanDone(aMaxRssi);
+        Get<LinkRaw>().InvokeEnergyScanDone(aMaxRssi);
     }
     else
 #endif
     {
-        mac.EnergyScanDone(aMaxRssi);
+        Get<Mac>().EnergyScanDone(aMaxRssi);
     }
 }
-
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
-void SubMac::Callbacks::FrameUpdated(Frame &aFrame)
-{
-    /**
-     * This function will be called from interrupt context, it should only read/write data passed in
-     * via @p aFrame, but should not read/write any state within OpenThread.
-     *
-     */
-
-    Mac &mac = *static_cast<Mac *>(this);
-
-    if (aFrame.GetSecurityEnabled())
-    {
-        const ExtAddress &extAddress = mac.GetExtAddress();
-
-        mac.ProcessTransmitAesCcm(aFrame, &extAddress);
-    }
-}
-#endif
 
 #elif OPENTHREAD_RADIO
 
-void SubMac::Callbacks::ReceiveDone(Frame *aFrame, otError aError)
+void SubMac::Callbacks::ReceiveDone(RxFrame *aFrame, otError aError)
 {
-    static_cast<LinkRaw *>(this)->InvokeReceiveDone(aFrame, aError);
+    Get<LinkRaw>().InvokeReceiveDone(aFrame, aError);
 }
 
 void SubMac::Callbacks::RecordCcaStatus(bool, uint8_t)
 {
 }
 
-void SubMac::Callbacks::RecordFrameTransmitStatus(const Frame &aFrame,
-                                                  const Frame *aAckFrame,
-                                                  otError      aError,
-                                                  uint8_t      aRetryCount,
-                                                  bool         aWillRetx)
+void SubMac::Callbacks::RecordFrameTransmitStatus(const TxFrame &aFrame,
+                                                  const RxFrame *aAckFrame,
+                                                  otError        aError,
+                                                  uint8_t        aRetryCount,
+                                                  bool           aWillRetx)
 {
-    static_cast<LinkRaw *>(this)->RecordFrameTransmitStatus(aFrame, aAckFrame, aError, aRetryCount, aWillRetx);
+    Get<LinkRaw>().RecordFrameTransmitStatus(aFrame, aAckFrame, aError, aRetryCount, aWillRetx);
 }
 
-void SubMac::Callbacks::TransmitDone(Frame &aFrame, Frame *aAckFrame, otError aError)
+void SubMac::Callbacks::TransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError)
 {
-    static_cast<LinkRaw *>(this)->InvokeTransmitDone(aFrame, aAckFrame, aError);
+    Get<LinkRaw>().InvokeTransmitDone(aFrame, aAckFrame, aError);
 }
 
 void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi)
 {
-    static_cast<LinkRaw *>(this)->InvokeEnergyScanDone(aMaxRssi);
+    Get<LinkRaw>().InvokeEnergyScanDone(aMaxRssi);
 }
-
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
-void SubMac::Callbacks::FrameUpdated(Frame &)
-{
-    /**
-     * This function will be called from interrupt context, it should only read/write data passed in
-     * via @p aFrame, but should not read/write any state within OpenThread.
-     *
-     */
-
-    // For now this functionality is not supported in Radio Only mode.
-}
-#endif
 
 #endif // OPENTHREAD_RADIO
 

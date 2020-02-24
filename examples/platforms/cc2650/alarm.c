@@ -26,6 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "openthread-core-config.h"
+
 #include <driverlib/aon_rtc.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -104,14 +106,14 @@ void cc2650AlarmProcess(otInstance *aInstance)
         if (sAlarmTime <= offsetTime)
         {
             sIsRunning = false;
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
             if (otPlatDiagModeGet())
             {
                 otPlatDiagAlarmFired(aInstance);
             }
             else
-#endif /* OPENTHREAD_ENABLE_DIAG */
+#endif /* OPENTHREAD_CONFIG_DIAG_ENABLE */
             {
                 otPlatAlarmMilliFired(aInstance);
             }

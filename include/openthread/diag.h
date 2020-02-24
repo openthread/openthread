@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *  This file defines the top-level functions for the OpenThread diagnostics library.
+ *   This file includes the OpenThread API for Factory Diagnostics.
  */
 
 #ifndef OPENTHREAD_DIAG_H_
@@ -52,41 +52,42 @@ extern "C" {
  */
 
 /**
- * Initialize the diagnostics module.
- *
- * @param[in]  aInstance  A pointer to the OpenThread instance.
- *
- */
-void otDiagInit(otInstance *aInstance);
-
-/**
  * This function processes a factory diagnostics command line.
  *
+ * @param[in]   aInstance       A pointer to an OpenThread instance.
  * @param[in]   aArgCount       The argument counter of diagnostics command line.
  * @param[in]   aArgVector      The argument vector of diagnostics command line.
  * @param[out]  aOutput         The diagnostics execution result.
  * @param[in]   aOutputMaxLen   The output buffer size.
  *
+ * @retval  OT_ERROR_INVALID_ARGS       The command is supported but invalid arugments provided.
+ * @retval  OT_ERROR_NONE               The command is successfully process.
+ * @retval  OT_ERROR_NOT_IMPLEMENTED    The command is not supported.
+ *
  */
-void otDiagProcessCmd(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+otError otDiagProcessCmd(otInstance *aInstance, int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
 
 /**
  * This function processes a factory diagnostics command line.
  *
+ * @param[in]   aInstance       A pointer to an OpenThread instance.
  * @param[in]   aString         A NULL-terminated input string.
  * @param[out]  aOutput         The diagnostics execution result.
  * @param[in]   aOutputMaxLen   The output buffer size.
  *
  */
-void otDiagProcessCmdLine(const char *aString, char *aOutput, size_t aOutputMaxLen);
+void otDiagProcessCmdLine(otInstance *aInstance, const char *aString, char *aOutput, size_t aOutputMaxLen);
 
 /**
  * This function indicates whether or not the factory diagnostics mode is enabled.
  *
- * @returns TRUE if factory diagnostics mode is enabled, FALSE otherwise.
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval TRUE if factory diagnostics mode is enabled
+ * @retval FALSE if factory diagnostics mode is disabled.
  *
  */
-bool otDiagIsEnabled(void);
+bool otDiagIsEnabled(otInstance *aInstance);
 
 /**
  * @}

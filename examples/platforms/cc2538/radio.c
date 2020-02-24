@@ -41,8 +41,6 @@
 #include "common/logging.hpp"
 #include "utils/code_utils.h"
 
-#define RFCORE_RXTX_INT (141)
-
 #define RFCORE_XREG_RFIRQM0 0x4008868C // RF interrupt masks
 #define RFCORE_XREG_RFIRQM1 0x40088690 // RF interrupt masks
 #define RFCORE_XREG_RFERRM 0x40088694  // RF error interrupt mask
@@ -173,6 +171,13 @@ static int8_t  sTxPower = 0;
 static otRadioState sState             = OT_RADIO_STATE_DISABLED;
 static bool         sIsReceiverEnabled = false;
 
+#if OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+// Debugging _and_ logging are enabled, so if there's a dropped frame
+// we'll need to store the length here as using snprintf from an interrupt
+// handler is not a good idea.
+static uint8_t sDroppedFrameLength = 0;
+#endif
+
 void enableReceiver(void)
 {
     if (!sIsReceiverEnabled)
@@ -257,6 +262,21 @@ void setTxPower(int8_t aTxPower)
     }
 }
 
+static bool cc2538SrcMatchEnabled(void)
+{
+    return (HWREG(RFCORE_XREG_FRMCTRL1) & RFCORE_XREG_FRMCTRL1_PENDING_OR) == 0;
+}
+
+static bool cc2538GetSrcMatchFoundIntFlag(void)
+{
+    bool flag = (HWREG(RFCORE_SFR_RFIRQF0) & RFCORE_SFR_RFIRQF0_SRC_MATCH_FOUND) != 0;
+    if (flag)
+    {
+        HWREG(RFCORE_SFR_RFIRQF0) &= ~RFCORE_SFR_RFIRQF0_SRC_MATCH_FOUND;
+    }
+    return flag;
+}
+
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -327,10 +347,12 @@ void cc2538RadioInit(void)
     sReceiveFrame.mLength  = 0;
     sReceiveFrame.mPsdu    = sReceivePsdu;
 
-    // Enable interrupts for RX/TX, interrupt 141.
-    // That's NVIC index 5 bit 13.
-    HWREG(NVIC_EN0 + (5 * 4)) = (1 << 13);
+#if OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+    // Enable interrupts for RX/TX, interrupt 26.
+    // That's NVIC index 0 (26 >> 5) bit 26 (26 & 0x1f).
+    HWREG(NVIC_EN0 + (0 * 4)) = (1 << 26);
     HWREG(RFCORE_XREG_RFIRQM0) |= RFCORE_XREG_RFIRQM0_RXPKTDONE;
+#endif
 
     // enable clock
     HWREG(SYS_CTRL_RCGCRFC) = SYS_CTRL_RCGCRFC_RFC0;
@@ -610,11 +632,16 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
     return OT_RADIO_CAPS_NONE;
 }
 
+static bool cc2538RadioGetPromiscuous(void)
+{
+    return (HWREG(RFCORE_XREG_FRMFILT0) & RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN) == 0;
+}
+
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    return (HWREG(RFCORE_XREG_FRMFILT0) & RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN) == 0;
+    return cc2538RadioGetPromiscuous();
 }
 
 static int8_t cc2538RadioGetRssiOffset(void)
@@ -649,11 +676,17 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     }
 }
 
-void readFrame(otInstance *aInstance)
+static void readFrame(void)
 {
     uint8_t length;
     uint8_t crcCorr;
     int     i;
+
+    /*
+     * There is already a frame present in the buffer, return early so
+     * we do not overwrite it (hopefully we'll catch it on the next run).
+     */
+    otEXPECT(sReceiveFrame.mLength == 0);
 
     otEXPECT(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT);
     otEXPECT((HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_FIFOP) != 0);
@@ -662,11 +695,15 @@ void readFrame(otInstance *aInstance)
     length = HWREG(RFCORE_SFR_RFDATA);
     otEXPECT(IEEE802154_MIN_LENGTH <= length && length <= IEEE802154_MAX_LENGTH);
 
-    if (otPlatRadioGetPromiscuous(aInstance))
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#error Time sync requires the timestamp of SFD rather than that of rx done!
+#else
+    // Timestamp
+    if (cc2538RadioGetPromiscuous())
+#endif
     {
-        // Timestamp
-        sReceiveFrame.mInfo.mRxInfo.mMsec = otPlatAlarmMilliGetNow();
-        sReceiveFrame.mInfo.mRxInfo.mUsec = 0; // Don't support microsecond timer for now.
+        // The current driver only supports milliseconds resolution.
+        sReceiveFrame.mInfo.mRxInfo.mTimestamp = otPlatAlarmMilliGetNow() * 1000;
     }
 
     // read psdu
@@ -682,14 +719,28 @@ void readFrame(otInstance *aInstance)
     {
         sReceiveFrame.mLength            = length;
         sReceiveFrame.mInfo.mRxInfo.mLqi = crcCorr & CC2538_LQI_BIT_MASK;
+
+        if (length > IEEE802154_ACK_LENGTH)
+        {
+            // Set ACK FP flag for the received frame according to whether SRC_MATCH_FOUND was triggered just before
+            // if SRC MATCH is not enabled, SRC_MATCH_FOUND is not triggered and all ACK FP is always set
+            sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending =
+                cc2538SrcMatchEnabled() ? cc2538GetSrcMatchFoundIntFlag() : true;
+        }
     }
     else
     {
         // resets rxfifo
         HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
         HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
-
+#if OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+        // Debugging _and_ logging are enabled, it may not be safe to do
+        // logging if we're in the interrupt context, so just stash the
+        // length and do the logging later.
+        sDroppedFrameLength = length;
+#else
         otLogDebgPlat("Dropping %d received bytes (Invalid CRC)", length);
+#endif
     }
 
     // check for rxfifo overflow
@@ -706,15 +757,26 @@ exit:
 
 void cc2538RadioProcess(otInstance *aInstance)
 {
-    readFrame(aInstance);
+#if OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+    // Disable the receive interrupt so that sReceiveFrame doesn't get
+    // blatted by the interrupt handler while we're polling.
+    HWREG(RFCORE_XREG_RFIRQM0) &= ~RFCORE_XREG_RFIRQM0_RXPKTDONE;
+#endif
+
+    readFrame();
+
+#if OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+    if (sDroppedFrameLength != 0)
+    {
+        otLogDebgPlat("Dropping %d received bytes (Invalid CRC)", sDroppedFrameLength);
+        sDroppedFrameLength = 0;
+    }
+#endif
 
     if ((sState == OT_RADIO_STATE_RECEIVE && sReceiveFrame.mLength > 0) ||
         (sState == OT_RADIO_STATE_TRANSMIT && sReceiveFrame.mLength > IEEE802154_ACK_LENGTH))
     {
-        // TODO Set this flag only when the packet is really acknowledged with frame pending set.
-        // See https://github.com/openthread/openthread/pull/3785
-        sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
         if (otPlatDiagModeGet())
         {
@@ -745,7 +807,7 @@ void cc2538RadioProcess(otInstance *aInstance)
 
             sState = OT_RADIO_STATE_RECEIVE;
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
             if (otPlatDiagModeGet())
             {
@@ -768,10 +830,30 @@ void cc2538RadioProcess(otInstance *aInstance)
     }
 
     sReceiveFrame.mLength = 0;
+
+#if OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+    // Turn the receive interrupt handler back on now the buffer is clear.
+    HWREG(RFCORE_XREG_RFIRQM0) |= RFCORE_XREG_RFIRQM0_RXPKTDONE;
+#endif
 }
 
 void RFCoreRxTxIntHandler(void)
 {
+#if OPENTHREAD_CONFIG_CC2538_USE_RADIO_RX_INTERRUPT
+    if (HWREG(RFCORE_SFR_RFIRQF0) & RFCORE_SFR_RFIRQF0_RXPKTDONE)
+    {
+        readFrame();
+
+        if (sReceiveFrame.mLength > 0)
+        {
+            // A frame has been received, disable the interrupt handler
+            // until the main loop has dealt with this previous frame,
+            // otherwise we might overwrite it whilst it is being read.
+            HWREG(RFCORE_XREG_RFIRQM0) &= ~RFCORE_XREG_RFIRQM0_RXPKTDONE;
+        }
+    }
+#endif
+
     HWREG(RFCORE_SFR_RFIRQF0) = 0;
 }
 
@@ -1098,6 +1180,22 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 
     setTxPower(aPower);
     return OT_ERROR_NONE;
+}
+
+otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aThreshold);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aThreshold);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)

@@ -36,11 +36,11 @@
 
 #include "openthread-core-config.h"
 
-#include "utils/wrap_stdint.h"
+#include <stdint.h>
 
 #include "mac/mac_frame.hpp"
 
-#if OPENTHREAD_ENABLE_MAC_FILTER
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
 namespace ot {
 namespace Mac {
@@ -144,7 +144,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  No subsequent entry exists.
      *
      */
-    otError GetNextAddress(Iterator &aIterator, Entry &aEntry);
+    otError GetNextAddress(Iterator &aIterator, Entry &aEntry) const;
 
     /**
      * This method sets the received signal strength for the messages from the Extended Address.
@@ -234,6 +234,6 @@ private:
 } // namespace Mac
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_MAC_FILTER
+#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
 #endif // MAC_FILTER_HPP_

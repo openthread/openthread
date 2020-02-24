@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       setup.h
-*  Revised:        2016-09-13 14:21:40 +0200 (Tue, 13 Sep 2016)
-*  Revision:       47152
+*  Revised:        2018-10-24 11:23:04 +0200 (Wed, 24 Oct 2018)
+*  Revision:       52993
 *
 *  Description:    Prototypes and defines for the setup API.
 *
@@ -83,11 +83,24 @@ extern "C"
 
 //*****************************************************************************
 //
-//! \brief Performs the necessary trim of the device which is not done in boot code.
+//! \brief Performs the necessary trim of the device which is not done in ROM boot code.
 //!
-//! This function should only execute coming from ROM boot. The current
-//! implementation does not take soft reset into account. However, it does no
-//! damage to execute it again. It only consumes time.
+//! This function should only execute coming from ROM boot.
+//!
+//! The following is handled by this function:
+//! - Checks if the driverlib variant used by the application is supported by the
+//!   device. Execution is halted in case of unsupported driverlib variant.
+//! - Configures VIMS cache mode based on setting in CCFG.
+//! - Configures functionalities like DCDC and XOSC dependent on startup modes like
+//!   cold reset, wakeup from shutdown and wakeup from from powerdown.
+//! - Configures VIMS power domain control.
+//! - Configures optimal wait time for flash FSM in cases where flash pump wakes up from sleep.
+//!
+//! \note The current implementation does not take soft reset into account. However,
+//! it does no damage to execute it again. It only consumes time.
+//!
+//! \note This function is called by the compiler specific device startup codes
+//! that are integrated in the SimpleLink SDKs for CC13xx/CC26XX devices.
 //!
 //! \return None
 //

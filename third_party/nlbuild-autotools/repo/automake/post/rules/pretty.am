@@ -47,8 +47,8 @@
 define nl-make-pretty
 $(AM_V_at)for file in $(4); do \
     $(1) \
-    if test -f $${file}; then d=.; else d=$(srcdir); fi; \
-    $(2) $(3) $${d}/$${file} \
+    if test -f $${file}; then d=; else d=$(srcdir)/; fi; \
+    $(2) $(3) $${d}$${file} \
     || exit 1; \
 done
 endef

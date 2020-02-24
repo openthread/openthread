@@ -33,6 +33,9 @@
  */
 
 #include "radio_qorvo.h"
+
+#include <string.h>
+
 #include <common/logging.hpp>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
@@ -324,6 +327,20 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
     // TODO: Create a proper implementation for this driver.
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aPower);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aThreshold);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aThreshold);
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 

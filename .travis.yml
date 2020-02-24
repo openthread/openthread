@@ -30,7 +30,7 @@ language: python
 python: "3.6"
 
 sudo: required
-dist: trusty
+dist: bionic
 
 before_install:
   - travis_retry .travis/before_install.sh
@@ -40,141 +40,175 @@ before_script:
       sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6';
     fi
 
-script:
-  - .travis/script.sh
-
 after_success:
   - .travis/after_success.sh
 
-matrix:
+stages:
+  - lint
+  - test
+
+jobs:
   include:
     - env: BUILD_TARGET="posix-app-cli" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="posix-app-pty" CC=clang CXX=clang++ VERBOSE=1 COVERAGE=1
+      script: .travis/script.sh
+    - env: BUILD_TARGET="posix-app-ncp" VERBOSE=1 VIRTUAL_TIME=1
+      os: linux
+      compiler: gcc
+      script: .travis/script.sh
+    - env: BUILD_TARGET="posix-app-pty" VERBOSE=1 COVERAGE=1
       os: linux
       compiler: clang
+      script: .travis/script.sh
     - env: BUILD_TARGET="posix-app-pty" DAEMON=1 VERBOSE=1 COVERAGE=1
       os: linux
       compiler: gcc
+      script: .travis/script.sh
+    - env: BUILD_TARGET="posix-app-migrate" VERBOSE=1 COVERAGE=1
+      os: linux
+      compiler: clang
+      script: .travis/script.sh
+    - env: BUILD_TARGET="posix-app-spi" VERBOSE=1 COVERAGE=1
+      os: linux
+      compiler: gcc
+      script: .travis/script.sh
     - env: BUILD_TARGET="android-build" VERBOSE=1
       os: linux
-      python: "2.7"
-    - env: BUILD_TARGET="posix-distcheck" CC=clang-6.0 CXX=clang++-6.0 VERBOSE=1 VIRTUAL_TIME=1
+      dist: trusty
+      python: "2.7" # The old Android build system only supports python2
+      script: .travis/script.sh
+    - env: BUILD_TARGET="android-build" VERBOSE=1 USE_OTBR_DAEMON=1
       os: linux
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-6.0
-            - ubuntu-toolchain-r-test
-          packages:
-            - clang-6.0
+      dist: trusty
+      python: "2.7" # The old Android build system only supports python2
+      script: .travis/script.sh
+    - env: BUILD_TARGET="gn-build" VERBOSE=1
+      os: linux
+      script: .travis/script.sh
+    - env: BUILD_TARGET="posix-distcheck" VERBOSE=1 VIRTUAL_TIME=1
+      os: linux
+      compiler: clang
+      script: .travis/script.sh
     - env: BUILD_TARGET="posix-32-bit" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
-      python: "2.7"
+      script: .travis/script.sh
     - env: BUILD_TARGET="posix-32-bit" VERBOSE=1 VIRTUAL_TIME=1 TIME_SYNC=1
       os: linux
       compiler: gcc
-      python: "2.7"
+      script: .travis/script.sh
     - env: BUILD_TARGET="posix-ncp" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
+      script: .travis/script.sh
     - env: BUILD_TARGET="posix-mtd" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="pretty-check"
+      script: .travis/script.sh
+    - env: BUILD_TARGET="scan-build"
       os: linux
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-6.0
-            - ubuntu-toolchain-r-test
-          packages:
-            - clang-format-6.0
-    - env: BUILD_TARGET="scan-build" CC="clang-6.0" CXX="clang++-6.0"
-      os: linux
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-6.0
-            - ubuntu-toolchain-r-test
-          packages:
-            - clang-6.0
+      compiler: clang
+      script: .travis/script.sh
     - env: BUILD_TARGET="arm-gcc-4"
       os: linux
       compiler: gcc
+      script: .travis/script.sh
     - env: BUILD_TARGET="arm-gcc-5"
       os: linux
       compiler: gcc
+      script: .travis/script.sh
     - env: BUILD_TARGET="arm-gcc-6"
       os: linux
       compiler: gcc
+      script: .travis/script.sh
     - env: BUILD_TARGET="arm-gcc-7"
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="arm-gcc-8"
+      script: .travis/script.sh
+# Disable Arm GCC 8 until slow compile bug is fixed:
+# https://github.com/openthread/openthread/issues/4053
+#    - env: BUILD_TARGET="arm-gcc-8"
+#      os: linux
+#      compiler: gcc
+#      script: .travis/script.sh
+    - env: BUILD_TARGET="arm-gcc-9"
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="posix" CC=clang-6.0 CXX=clang++-6.0
-      os: linux
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-6.0
-            - ubuntu-toolchain-r-test
-          packages:
-            - clang-6.0
+      script: .travis/script.sh
     - env: BUILD_TARGET="posix" CC="gcc-5" CXX="g++-5"
       os: linux
       compiler: gcc
       addons:
         apt:
-          sources:
-            - ubuntu-toolchain-r-test
           packages:
             - gcc-5
             - g++-5
+      script: .travis/script.sh
     - env: BUILD_TARGET="posix" CC="gcc-6" CXX="g++-6"
       os: linux
       compiler: gcc
       addons:
         apt:
-          sources:
-            - ubuntu-toolchain-r-test
           packages:
             - gcc-6
             - g++-6
+      script: .travis/script.sh
     - env: BUILD_TARGET="posix" CC="gcc-7" CXX="g++-7"
       os: linux
       compiler: gcc
       addons:
         apt:
-          sources:
-            - ubuntu-toolchain-r-test
           packages:
             - gcc-7
             - g++-7
+      script: .travis/script.sh
     - env: BUILD_TARGET="posix" CC="gcc-8" CXX="g++-8"
       os: linux
       compiler: gcc
       addons:
         apt:
-          sources:
-            - ubuntu-toolchain-r-test
           packages:
             - gcc-8
             - g++-8
+      script: .travis/script.sh
+    - env: BUILD_TARGET="posix" CC="gcc-9" CXX="g++-9"
+      os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - sourceline: "ppa:ubuntu-toolchain-r/test"
+          packages:
+            - gcc-9
+            - g++-9
+      script: .travis/script.sh
     - env: BUILD_TARGET="posix-ncp-spi" VERBOSE=1
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="toranj-test-framework" VERBOSE=1
+      script: .travis/script.sh
+    - env: BUILD_TARGET="toranj-test-framework" COVERAGE=1 VERBOSE=1
       os: linux
       compiler: gcc
-    - env: BUILD_TARGET="toranj-test-framework" VERBOSE=1 TORANJ_POSIX_APP_RCP_MODEL=1
+      script: .travis/script.sh
+    - env: BUILD_TARGET="toranj-test-framework" COVERAGE=1 VERBOSE=1 TORANJ_POSIX_APP_RCP_MODEL=1
       os: linux
       compiler: gcc
-      python: "2.7"
+      script: .travis/script.sh
     - env: BUILD_TARGET="osx" VERBOSE=1
       os: osx
       language: generic
+      script: .travis/script.sh
+    - stage: lint
+      name: "Pretty Check"
+      os: linux
+      addons:
+        apt:
+          packages:
+            - clang-format-6.0
+      script: .travis/check-pretty
+    - env:
+      name: "Size Report"
+      os: linux
+      script: .travis/check-size
+      if: type = pull_request

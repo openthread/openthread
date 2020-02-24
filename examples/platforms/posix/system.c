@@ -38,15 +38,12 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <libgen.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#ifndef _WIN32
-#include <libgen.h>
 #include <syslog.h>
-#endif
 
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
@@ -57,14 +54,12 @@ extern bool gPlatformPseudoResetWasRequested;
 
 static volatile bool gTerminate = false;
 
-#ifndef _WIN32
 static void handleSignal(int aSignal)
 {
     OT_UNUSED_VARIABLE(aSignal);
 
     gTerminate = true;
 }
-#endif
 
 void otSysInit(int aArgCount, char *aArgVector[])
 {
@@ -83,13 +78,11 @@ void otSysInit(int aArgCount, char *aArgVector[])
         exit(EXIT_FAILURE);
     }
 
-#ifndef _WIN32
     openlog(basename(aArgVector[0]), LOG_PID, LOG_USER);
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_NOTICE));
 
     signal(SIGTERM, &handleSignal);
     signal(SIGHUP, &handleSignal);
-#endif
 
     gNodeId = (uint32_t)strtol(aArgVector[1], &endptr, 0);
 
@@ -142,25 +135,31 @@ void otSysProcessDrivers(otInstance *aInstance)
     platformRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
     platformAlarmUpdateTimeout(&timeout);
 
-    if (!otTaskletsArePending(aInstance))
+    if (otTaskletsArePending(aInstance))
     {
-        rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
-
-        if ((rval < 0) && (errno != EINTR))
-        {
-            perror("select");
-            exit(EXIT_FAILURE);
-        }
+        timeout.tv_sec  = 0;
+        timeout.tv_usec = 0;
     }
+
+    rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
+
+    if (rval >= 0)
+    {
+        platformUartProcess();
+        platformRadioProcess(aInstance, &read_fds, &write_fds);
+    }
+    else if (errno != EINTR)
+    {
+        perror("select");
+        exit(EXIT_FAILURE);
+    }
+
+    platformAlarmProcess(aInstance);
 
     if (gTerminate)
     {
         exit(0);
     }
-
-    platformUartProcess();
-    platformRadioProcess(aInstance);
-    platformAlarmProcess(aInstance);
 }
 
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0

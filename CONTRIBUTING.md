@@ -37,7 +37,7 @@ The OpenThread Project follows the "Fork-and-Pull" model for accepting contribut
 Setup your GitHub fork and continuous-integration services:
 
 1. Fork the [OpenThread repository](https://github.com/openthread/openthread) by clicking "Fork" on the web UI.
-2. Enable [Travis CI](https://travis-ci.org/) and [AppVeyor](https://ci.appveyor.com/) by logging in the respective services with your GitHub account and enabling your newly created fork.  We use Travis CI for Linux-based continuous integration checks and AppVeyor for Windows-based continuous integration checks.  All contributions must pass these checks to be accepted.
+2. Enable [Travis CI](https://travis-ci.org/) by logging in the respective service with your GitHub account and enabling your newly created fork.  We use Travis CI for Linux-based continuous integration checks.  All contributions must pass these checks to be accepted.
 
 Setup your local development environment:
 
@@ -51,12 +51,9 @@ git remote add upstream git@github.com:openthread/openthread.git
 
 ### Contributor License Agreement (CLA)
 
-The OpenThread Project requires all contributors to sign a Contributor License Agreement ([individual](https://developers.google.com/open-source/cla/individual) or [corporate](https://developers.google.com/open-source/cla/corporate)) in order to protect contributors, users, and Google in issues of intellectual property.
+Contributions to this project must be accompanied by a Contributor License Agreement. You (or your employer) retain the copyright to your contribution; this simply gives us permission to use and redistribute your contributions as part of the project. Head over to <https://cla.developers.google.com/> to see your current agreements on file or to sign a new one.
 
-With each Pull Request, an automated check occurs to verify that you have signed the CLA.  Make sure that you sign the CLA with the same email address associated with your commits (i.e. via the `user.email` Git config as described on GitHub's [Set up Git](https://help.github.com/articles/set-up-git/) page.
-
-NOTE: Only original source code from you and other people that have signed the CLA can be accepted into the repository. This policy does not apply to [third_party](https://github.com/openthread/openthread/tree/master/third_party).
-
+You generally only need to submit a CLA once, so if you've already submitted one (even if it was for a different project), you probably don't need to do it again.
 
 ### Submitting a Pull Request
 
@@ -134,8 +131,8 @@ git checkout <branch-name>
 git push origin <branch-name>
 ```
 
-This will trigger the Travis CI and AppVeyor continuous-integration checks.  You can view the results in the respective services.  Note that the integration checks will report failures on occasion.  If a failure occurs, you may try rerunning the test via the Travis and/or AppVeyor web UI.
+This will trigger the Travis CI continuous-integration checks.  You can view the results in the respective services.  Note that the integration checks will report failures on occasion.  If a failure occurs, you may try rerunning the test via the Travis web UI.
 
 #### Submit Pull Request
 
-Once you've validated the Travis CI and AppVeyor results, go to the page for your fork on GitHub, select your development branch, and click the pull request button. If you need to make any adjustments to your pull request, just push the updates to GitHub. Your pull request will automatically track the changes on your development branch and update.
+Once you've validated the Travis CI results, go to the page for your fork on GitHub, select your development branch, and click the pull request button. If you need to make any adjustments to your pull request, just push the updates to GitHub. Your pull request will automatically track the changes on your development branch and update.

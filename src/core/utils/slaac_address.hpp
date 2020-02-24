@@ -148,7 +148,7 @@ private:
     bool                     mEnabled;
     otIp6SlaacPrefixFilter   mFilter;
     Notifier::Callback       mNotifierCallback;
-    Ip6::NetifUnicastAddress mAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
+    Ip6::NetifUnicastAddress mAddresses[OPENTHREAD_CONFIG_IP6_SLAAC_NUM_ADDRESSES];
 };
 
 /**

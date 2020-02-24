@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -87,9 +86,9 @@ class Cert_5_1_09_REEDAttachConnectivity(unittest.TestCase):
         self.nodes[ROUTER2].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -156,10 +155,14 @@ class Cert_5_1_09_REEDAttachConnectivity(unittest.TestCase):
         msg = reed1_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
         connectivity_tlv_reed1 = msg.get_mle_message_tlv(mle.Connectivity)
 
-        self.assertGreater(connectivity_tlv_reed1.link_quality_3, connectivity_tlv_reed0.link_quality_3)
+        self.assertGreater(
+            connectivity_tlv_reed1.link_quality_3,
+            connectivity_tlv_reed0.link_quality_3,
+        )
 
         # 6 - Router2
-        msg = router2_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        msg = router2_messages.next_mle_message(
+            mle.CommandType.CHILD_ID_REQUEST)
         msg.assertSentToNode(self.nodes[REED1])
         msg.assertMleMessageContainsTlv(mle.Response)
         msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)

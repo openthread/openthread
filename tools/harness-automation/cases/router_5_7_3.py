@@ -27,17 +27,19 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-
 import unittest
 
 from autothreadharness.harness_case import HarnessCase
+
 
 class Router_5_7_3(HarnessCase):
     role = HarnessCase.ROLE_ROUTER
     case = '5 7 3'
     golden_devices_required = 4
+
     def on_dialog(self, dialog, title):
         pass
+
 
 if __name__ == '__main__':
     unittest.main()

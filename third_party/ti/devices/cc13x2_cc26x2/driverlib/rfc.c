@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       rfc.c
-*  Revised:        2018-01-30 17:42:58 +0100 (Tue, 30 Jan 2018)
-*  Revision:       51371
+*  Revised:        2018-08-08 11:04:37 +0200 (Wed, 08 Aug 2018)
+*  Revision:       52334
 *
 *  Description:    Driver for the RF Core.
 *
@@ -61,9 +61,10 @@
     #define RFCOverrideUpdate               NOROM_RFCOverrideUpdate
     #undef  RFCHwIntGetAndClear
     #define RFCHwIntGetAndClear             NOROM_RFCHwIntGetAndClear
+    #undef  RFCAnaDivTxOverride
+    #define RFCAnaDivTxOverride             NOROM_RFCAnaDivTxOverride
 #endif
 
-    // Function is not complete
 
 //*****************************************************************************
 //
@@ -144,7 +145,8 @@ RFCSynthPowerDown(void)
 // Reset previously patched CPE RAM to a state where it can be patched again
 //
 //*****************************************************************************
-void RFCCpePatchReset(void)
+void
+RFCCpePatchReset(void)
 {
     // Function is not complete
 }
@@ -174,15 +176,74 @@ RFCOverrideSearch(const uint32_t *pOverride, const uint32_t pattern, const uint3
     return 0xFF;
 }
 
+//*****************************************************************************
+//
+// Function to calculate the proper override run-time for the High Gain PA.
+//
+//*****************************************************************************
+uint32_t
+RFCAnaDivTxOverride(uint8_t loDivider, uint8_t frontEndMode)
+{
+   uint16_t fsOnly;
+   uint16_t txSetting;
+
+   switch (loDivider)
+   {
+        case 0: fsOnly = 0x0502;
+                break;
+        case 2:
+                fsOnly = 0x0102;
+                break;
+        case 4:
+        case 6:
+        case 12:
+                fsOnly = 0xF101;
+                break;
+        case 5:
+        case 10:
+        case 15:
+        case 30:
+                fsOnly = 0x1101;
+                break;
+        default:
+                // Error, should not occur!
+                fsOnly = 0;
+                break;
+   }
+
+   if (frontEndMode == 255)
+   {
+        // Special value meaning 20 dBm PA
+        txSetting = (fsOnly | 0x00C0) & ~0x0400;
+   }
+   else if (frontEndMode == 0)
+   {
+        // Differential
+        txSetting = fsOnly | 0x0030;
+   }
+   else if (frontEndMode & 1)
+   {
+        // Single ended on RFP
+        txSetting = fsOnly | 0x0010;
+   }
+   else
+   {
+        // Single ended on RFN
+        txSetting = fsOnly | 0x0020;
+   }
+
+   return ((((uint32_t) txSetting) << 16) | RFC_FE_OVERRIDE_ADDRESS);
+}
 
 //*****************************************************************************
 //
 // Update the override list based on values stored in FCFG1
 //
 //*****************************************************************************
-uint8_t RFCOverrideUpdate(rfc_radioOp_t *pOpSetup, uint32_t *pParams)
+uint8_t
+RFCOverrideUpdate(rfc_radioOp_t *pOpSetup, uint32_t *pParams)
 {
-    // Function is not complete
+    // Function is left blank for compatibility reasons.
     return 0;
 }
 
@@ -227,6 +288,8 @@ RFCHwIntGetAndClear(uint32_t ui32Mask)
     #define RFCOverrideUpdate               NOROM_RFCOverrideUpdate
     #undef  RFCHwIntGetAndClear
     #define RFCHwIntGetAndClear             NOROM_RFCHwIntGetAndClear
+    #undef  RFCAnaDivTxOverride
+    #define RFCAnaDivTxOverride             NOROM_RFCAnaDivTxOverride
 #endif
 
 // See rfc.h for implementation

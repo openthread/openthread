@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2019, The OpenThread Authors.
 #  All rights reserved.
@@ -28,6 +28,7 @@
 
 import io
 
+
 class SubTlvsFactory(object):
 
     def __init__(self, sub_tlvs_factories):
@@ -37,7 +38,8 @@ class SubTlvsFactory(object):
         try:
             return self._sub_tlvs_factories[_type]
         except KeyError:
-            raise RuntimeError("Could not find factory. Factory type = {}.".format(_type))
+            raise RuntimeError(
+                "Could not find factory. Factory type = {}.".format(_type))
 
     def parse(self, data, message_info):
         sub_tlvs = []
@@ -56,4 +58,3 @@ class SubTlvsFactory(object):
             sub_tlvs.append(tlv)
 
         return sub_tlvs
-

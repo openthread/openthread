@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       rf_hs_cmd.h
-*  Revised:        2017-11-10 10:42:47 +0100 (Fri, 10 Nov 2017)
-*  Revision:       18052
+*  Revised:        2018-01-15 06:15:14 +0100 (Mon, 15 Jan 2018)
+*  Revision:       18170
 *
 *  Description:    CC13x2/CC26x2 API for high-speed mode commands
 *

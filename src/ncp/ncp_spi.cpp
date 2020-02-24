@@ -44,10 +44,12 @@
 #include "net/ip6.hpp"
 #include "utils/static_assert.hpp"
 
-#if OPENTHREAD_ENABLE_NCP_SPI
+#if OPENTHREAD_CONFIG_NCP_SPI_ENABLE
 
-#if OPENTHREAD_ENABLE_DIAG
-OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <= OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE,
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <=
+                     OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE - ot::Ncp::NcpBase::kSpinelCmdHeaderSize -
+                         ot::Ncp::NcpBase::kSpinelPropIdSize - ot::Ncp::SpiFrame::kHeaderSize,
                  "diag output should be smaller than NCP SPI tx buffer");
 OT_STATIC_ASSERT(OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE <= OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE,
                  "diag command line should be smaller than NCP SPI rx buffer");
@@ -58,7 +60,7 @@ namespace Ncp {
 
 #if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK == 0
 
-static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
+static OT_DEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
 
 extern "C" void otNcpInit(otInstance *aInstance)
 {
@@ -73,7 +75,7 @@ extern "C" void otNcpInit(otInstance *aInstance)
     }
 }
 
-#endif // OPENTHREAD_ENABLE_SPINEL_VENDOR_SUPPORT == 0
+#endif // OPENTHREAD_ENABLE_NCP_VENDOR_HOOK == 0
 
 NcpSpi::NcpSpi(Instance *aInstance)
     : NcpBase(aInstance)
@@ -239,11 +241,11 @@ void NcpSpi::SpiTransactionProcess(void)
 }
 
 void NcpSpi::HandleFrameAddedToTxBuffer(void *                   aContext,
-                                        NcpFrameBuffer::FrameTag aTag,
-                                        NcpFrameBuffer::Priority aPriority,
-                                        NcpFrameBuffer *         aNcpFrameBuffer)
+                                        Spinel::Buffer::FrameTag aTag,
+                                        Spinel::Buffer::Priority aPriority,
+                                        Spinel::Buffer *         aBuffer)
 {
-    OT_UNUSED_VARIABLE(aNcpFrameBuffer);
+    OT_UNUSED_VARIABLE(aBuffer);
     OT_UNUSED_VARIABLE(aTag);
     OT_UNUSED_VARIABLE(aPriority);
 
@@ -377,4 +379,4 @@ void NcpSpi::HandleRxFrame(void)
 } // namespace Ncp
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_NCP_SPI
+#endif // OPENTHREAD_CONFIG_NCP_SPI_ENABLE

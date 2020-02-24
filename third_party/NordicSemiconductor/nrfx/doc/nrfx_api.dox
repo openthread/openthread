@@ -2,6 +2,9 @@
 @defgroup nrfx_drivers Drivers
 @{
 @brief List of all drivers available in nrfx.
+
+@defgroup nrf_aar AAR
+
 @defgroup nrf_adc ADC
 
 @defgroup nrf_acl ACL
@@ -17,6 +20,8 @@
 @defgroup nrf_dppi DPPI
 
 @defgroup nrf_ecb ECB
+
+@defgroup nrf_ficr FICR
 
 @defgroup nrf_gpio GPIO
 

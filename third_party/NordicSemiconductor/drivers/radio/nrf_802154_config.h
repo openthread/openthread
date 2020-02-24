@@ -66,7 +66,7 @@ extern "C" {
 /**
  * @def NRF_802154_CCA_ED_THRESHOLD_DEFAULT
  *
- * Energy detection threshold used in CCA procedure.
+ * Energy detection threshold used in the CCA procedure.
  *
  */
 #ifndef NRF_802154_CCA_ED_THRESHOLD_DEFAULT
@@ -76,7 +76,7 @@ extern "C" {
 /**
  * @def NRF_802154_CCA_CORR_THRESHOLD_DEFAULT
  *
- * Correlator threshold used in CCA procedure.
+ * Correlator threshold used in the CCA procedure.
  *
  */
 #ifndef NRF_802154_CCA_CORR_THRESHOLD_DEFAULT
@@ -86,7 +86,7 @@ extern "C" {
 /**
  * @def NRF_802154_CCA_CORR_LIMIT_DEFAULT
  *
- * Correlator limit used in CCA procedure.
+ * Correlator limit used in the CCA procedure.
  *
  */
 #ifndef NRF_802154_CCA_CORR_LIMIT_DEFAULT
@@ -96,9 +96,11 @@ extern "C" {
 /**
  * @def NRF_802154_INTERNAL_RADIO_IRQ_HANDLING
  *
- * If the driver should internally handle the RADIO IRQ.
- * If the driver is used in an OS, the RADIO IRQ may be handled by the OS and passed to
- * the driver by @ref nrf_802154_radio_irq_handler. In this case, internal handling should be disabled.
+ * If the driver is expected to internally handle the RADIO IRQ.
+ * If the driver is used in an OS, the RADIO IRQ can be handled by the OS and passed to
+ * the driver by @ref nrf_802154_radio_irq_handler.
+ * In this case, the internal handling must be disabled.
+ *
  */
 
 #ifndef NRF_802154_INTERNAL_RADIO_IRQ_HANDLING
@@ -115,8 +117,7 @@ extern "C" {
  * @def NRF_802154_IRQ_PRIORITY
  *
  * Interrupt priority for RADIO peripheral.
- * Keep IRQ priority high (low number) to prevent losing frames due to
- * preemption.
+ * Keep the IRQ priority high (low number) to prevent losing frames due to preemption.
  *
  */
 #ifndef NRF_802154_IRQ_PRIORITY
@@ -124,68 +125,9 @@ extern "C" {
 #endif
 
 /**
- * @def NRF_802154_TIMER_INSTANCE
- *
- * Timer instance used by the driver for ACK IFS and by the FEM module.
- *
- */
-#ifndef NRF_802154_TIMER_INSTANCE
-#define NRF_802154_TIMER_INSTANCE NRF_TIMER1
-#endif
-
-/**
- * @def NRF_802154_COUNTER_TIMER_INSTANCE
- *
- * Timer instance used by the driver for detecting when PSDU is being received.
- *
- * @note This configuration is used only when NRF_RADIO_EVENT_BCMATCH event handling is disabled
- *       (see @ref NRF_802154_DISABLE_BCC_MATCHING).
- */
-#ifndef NRF_802154_COUNTER_TIMER_INSTANCE
-#define NRF_802154_COUNTER_TIMER_INSTANCE NRF_TIMER2
-#endif
-
-/**
- * @def NRF_802154_SWI_EGU_INSTANCE
- *
- * SWI EGU instance used by the driver to synchronize PPIs and for requests and notifications if
- * SWI is in use.
- *
- * @note This option is used by the core module regardless of the driver configuration.
- *
- */
-#ifndef NRF_802154_SWI_EGU_INSTANCE
-#define NRF_802154_SWI_EGU_INSTANCE NRF_EGU3
-#endif
-
-/**
- * @def NRF_802154_SWI_IRQ_HANDLER
- *
- * SWI EGU IRQ handler used by the driver for requests and notifications if SWI is in use.
- *
- * @note This option is used when the driver uses SWI to process requests and notifications.
- *
- */
-#ifndef NRF_802154_SWI_IRQ_HANDLER
-#define NRF_802154_SWI_IRQ_HANDLER SWI3_EGU3_IRQHandler
-#endif
-
-/**
- * @def NRF_802154_SWI_IRQN
- *
- * SWI EGU IRQ number used by the driver for requests and notifications if SWI is in use.
- *
- * @note This option is used when the driver uses SWI to process requests and notifications.
- *
- */
-#ifndef NRF_802154_SWI_IRQN
-#define NRF_802154_SWI_IRQN SWI3_EGU3_IRQn
-#endif
-
-/**
  * @def NRF_802154_SWI_PRIORITY
  *
- * Priority of software interrupt used for requests and notifications.
+ * The priority of software interrupt used for requests and notifications.
  *
  */
 #ifndef NRF_802154_SWI_PRIORITY
@@ -195,10 +137,10 @@ extern "C" {
 /**
  * @def NRF_802154_USE_RAW_API
  *
- * When this flag is set, RAW API is available for the MAC layer. It is recommended to use RAW API
- * because it provides more optimized functions.
+ * When this flag is set, the RAW API is available for the MAC layer. It is recommended to use
+ * the RAW API because it provides more optimized functions.
  *
- * @note If RAW API is not available for the MAC layer, only less optimized functions performing
+ * @note If the RAW API is not available for the MAC layer, only less optimized functions performing
  *       copy are available.
  *
  */
@@ -209,7 +151,7 @@ extern "C" {
 /**
  * @def NRF_802154_PENDING_SHORT_ADDRESSES
  *
- * Number of slots containing short addresses of nodes for which pending data is stored.
+ * The number of slots containing short addresses of nodes for which the pending data is stored.
  *
  */
 #ifndef NRF_802154_PENDING_SHORT_ADDRESSES
@@ -219,7 +161,7 @@ extern "C" {
 /**
  * @def NRF_802154_PENDING_EXTENDED_ADDRESSES
  *
- * Number of slots containing extended addresses of nodes for which pending data is stored.
+ * The number of slots containing extended addresses of nodes for which the pending data is stored.
  *
  */
 #ifndef NRF_802154_PENDING_EXTENDED_ADDRESSES
@@ -229,7 +171,7 @@ extern "C" {
 /**
  * @def NRF_802154_RX_BUFFERS
  *
- * Number of buffers in receive queue.
+ * The number of buffers in the receive queue.
  *
  */
 #ifndef NRF_802154_RX_BUFFERS
@@ -239,9 +181,9 @@ extern "C" {
 /**
  * @def NRF_802154_DISABLE_BCC_MATCHING
  *
- * Setting this flag disables NRF_RADIO_EVENT_BCMATCH handling, and therefore address filtering
- * during frame reception. With this flag set to 1, address filtering is done after receiving
- * a frame, during NRF_RADIO_EVENT_END handling.
+ * Setting this flag disables NRF_RADIO_EVENT_BCMATCH handling, and therefore the address filtering
+ * during the frame reception. With this flag set to 1, the address filtering is done after
+ * receiving a frame, during NRF_RADIO_EVENT_END handling.
  *
  */
 #ifndef NRF_802154_DISABLE_BCC_MATCHING
@@ -251,7 +193,7 @@ extern "C" {
 /**
  * @def NRF_802154_NOTIFY_CRCERROR
  *
- * With this flag set to 1, CRC errors are notified to upper layers. This requires an interrupt
+ * With this flag set to 1, the CRC errors are notified to upper layers. This requires an interrupt
  * handler to be used.
  *
  */
@@ -262,10 +204,10 @@ extern "C" {
 /**
  * @def NRF_802154_FRAME_TIMESTAMP_ENABLED
  *
- * If timestamps should be added to received frames.
- * Enabling this feature enables the functions @ref nrf_802154_received_timsestamp_raw,
+ * If timestamps are to be added to the frames received.
+ * Enabling this feature enables the functions @ref nrf_802154_received_timestamp_raw,
  * @ref nrf_802154_received_timestamp, @ref nrf_802154_transmitted_timestamp_raw, and
- * @ref nrf_802154_transmitted_timestamp, which add timestamps to received frames.
+ * @ref nrf_802154_transmitted_timestamp, which add timestamps to the frames received.
  *
  */
 #ifndef NRF_802154_FRAME_TIMESTAMP_ENABLED
@@ -275,7 +217,7 @@ extern "C" {
 /**
  * @def NRF_802154_DELAYED_TRX_ENABLED
  *
- * If delayed transmission and receive window features are available.
+ * If the delayed transmission and the receive window features are available.
  *
  */
 #ifndef NRF_802154_DELAYED_TRX_ENABLED
@@ -291,20 +233,20 @@ extern "C" {
 /**
  * @def NRF_802154_CLOCK_IRQ_PRIORITY
  *
- * Priority of clock interrupt used in standalone clock driver implementation.
+ * The priority of clock interrupt used in the standalone clock driver implementation.
  *
  * @note This configuration is only applicable for the Clock Abstraction Layer implementation
  *       in nrf_802154_clock_nodrv.c.
  *
  */
 #ifndef NRF_802154_CLOCK_IRQ_PRIORITY
-#define NRF_802154_CLOCK_IRQ_PRIORITY 10
+#define NRF_802154_CLOCK_IRQ_PRIORITY 7
 #endif
 
 /**
  * @def NRF_802154_CLOCK_LFCLK_SOURCE
  *
- * Low-frequency clock source used in standalone clock driver implementation.
+ * The low-frequency clock source used in the standalone clock driver implementation.
  *
  * @note This configuration is only applicable for the Clock Abstraction Layer implementation
  *       in nrf_802154_clock_nodrv.c.
@@ -323,53 +265,14 @@ extern "C" {
 /**
  * @def NRF_802154_RTC_IRQ_PRIORITY
  *
- * Priority of RTC interrupt used in standalone timer driver implementation.
+ * The priority of RTC interrupt used in the standalone timer driver implementation.
  *
- * @note This configuration is only applicable for the Low Power Timer Abstraction Layer implementation
- *       in nrf_802154_lp_timer_nodrv.c.
+ * @note This configuration is only applicable for the Low Power Timer Abstraction Layer
+ *       implementation in nrf_802154_lp_timer_nodrv.c.
  *
  */
 #ifndef NRF_802154_RTC_IRQ_PRIORITY
 #define NRF_802154_RTC_IRQ_PRIORITY 6
-#endif
-
-/**
- * @def NRF_802154_RTC_INSTANCE
- *
- * RTC instance used in standalone timer driver implementation.
- *
- * @note This configuration is only applicable for the Low Power Timer Abstraction Layer implementation
- *       in nrf_802154_lp_timer_nodrv.c.
- *
- */
-#ifndef NRF_802154_RTC_INSTANCE
-#define NRF_802154_RTC_INSTANCE NRF_RTC2
-#endif
-
-/**
- * @def NRF_802154_RTC_IRQ_HANDLER
- *
- * RTC interrupt handler name used in standalone timer driver implementation.
- *
- * @note This configuration is only applicable for Low Power Timer Abstraction Layer implementation
- *       in nrf_802154_lp_timer_nodrv.c.
- *
- */
-#ifndef NRF_802154_RTC_IRQ_HANDLER
-#define NRF_802154_RTC_IRQ_HANDLER RTC2_IRQHandler
-#endif
-
-/**
- * @def NRF_802154_RTC_IRQN
- *
- * RTC Interrupt number used in standalone timer driver implementation.
- *
- * @note This configuration is only applicable for the Low Power Timer Abstraction Layer implementation
- *       in nrf_802154_lp_timer_nodrv.c.
- *
- */
-#ifndef NRF_802154_RTC_IRQN
-#define NRF_802154_RTC_IRQN RTC2_IRQn
 #endif
 
 /**
@@ -381,8 +284,8 @@ extern "C" {
 /**
  * @def NRF_802154_CSMA_CA_ENABLED
  *
- * If CSMA-CA should be enabled by the driver. Disabling CSMA-CA improves
- * driver performance.
+ * If CSMA-CA is to be enabled by the driver. Disabling CSMA-CA improves
+ * the driver performance.
  *
  */
 #ifndef NRF_802154_CSMA_CA_ENABLED
@@ -393,7 +296,7 @@ extern "C" {
  * @def NRF_802154_CSMA_CA_MIN_BE
  *
  * The minimum value of the backoff exponent (BE) in the CSMA-CA algorithm
- * (IEEE 802.15.4-2015: 6.2.5.1).
+ * (see IEEE 802.15.4-2015: 6.2.5.1).
  *
  */
 #ifndef NRF_802154_CSMA_CA_MIN_BE
@@ -404,7 +307,7 @@ extern "C" {
  * @def NRF_802154_CSMA_CA_MAX_BE
  *
  * The maximum value of the backoff exponent, BE, in the CSMA-CA algorithm
- * (IEEE 802.15.4-2015: 6.2.5.1).
+ * (see IEEE 802.15.4-2015: 6.2.5.1).
  *
  */
 #ifndef NRF_802154_CSMA_CA_MAX_BE
@@ -425,17 +328,18 @@ extern "C" {
 /**
  * @def NRF_802154_CSMA_CA_WAIT_FOR_TIMESLOT
  *
- * Indicates whether the CSMA-CA algorithm waits for an available timeslot before it performs the CCA procedure.
+ * Indicates whether the CSMA-CA algorithm waits for an available timeslot before it performs
+ * the CCA procedure.
  *
- * @note When this option is enabled, the CSMA-CA procedure may be synchronized with timeslots of
- *       other protocols. It decreases robustness of the CSMA-CA procedure and is not recommended.
- *       This option may be used as a workaround to problems with higher layers that do not correctly handle
- *       multiple CHANNEL_BUSY errors in a row. This potentially problematic situation may
- *       happen during activity of other protocols.
+ * @note When this option is enabled, the CSMA-CA procedure can be synchronized with timeslots of
+ *       other protocols. This decreases the robustness of the CSMA-CA procedure. On the other hand,
+ *       enabling this function increases the performance of multi-protocol applications, especially
+ *       when protocols other than 802.15.4 use much of the radio time (like the BLE scanning
+ *       operation).
  *
  */
 #ifndef NRF_802154_CSMA_CA_WAIT_FOR_TIMESLOT
-#define NRF_802154_CSMA_CA_WAIT_FOR_TIMESLOT 0
+#define NRF_802154_CSMA_CA_WAIT_FOR_TIMESLOT 1
 #endif
 
 /**
@@ -447,7 +351,7 @@ extern "C" {
 /**
  * @def NRF_802154_ACK_TIMEOUT_ENABLED
  *
- * If the ACK timeout feature should be enabled in the driver.
+ * Indicates whether the ACK timeout feature is to be enabled in the driver.
  *
  */
 #ifndef NRF_802154_ACK_TIMEOUT_ENABLED
@@ -457,7 +361,7 @@ extern "C" {
 /**
  * @def NRF_802154_ACK_TIMEOUT_DEFAULT_TIMEOUT
  *
- * Default timeout in us for the ACK timeout feature.
+ * The default timeout in microseconds (us) for the ACK timeout feature.
  *
  */
 #ifndef NRF_802154_ACK_TIMEOUT_DEFAULT_TIMEOUT
@@ -467,7 +371,7 @@ extern "C" {
 /**
  * @def NRF_802154_ACK_TIMEOUT_DEFAULT_TIMEOUT
  *
- * Default time-out in us for the precise ACK time-out feature.
+ * The default timeout in microseconds (us) for the precise ACK timeout feature.
  *
  */
 #ifndef NRF_802154_PRECISE_ACK_TIMEOUT_DEFAULT_TIMEOUT
@@ -477,7 +381,7 @@ extern "C" {
 /**
  * @def NRF_802154_MAX_ACK_IE_SIZE
  *
- * Maximum supported size of 802.15.4-2015 IE header and content fields in an Enh-Ack.
+ * The maximum supported size of the 802.15.4-2015 IE header and content fields in an Enh-Ack.
  *
  */
 #ifndef NRF_802154_MAX_ACK_IE_SIZE
@@ -493,10 +397,10 @@ extern "C" {
 /**
  * @def NRF_802154_TX_STARTED_NOTIFY_ENABLED
  *
- * If notifications of started transmissions should be enabled in the driver.
+ * Indicates whether the notifications of the started transmissions are to be enabled in the driver.
  *
  * @note This feature is enabled by default if the ACK timeout feature or CSMA-CA is enabled.
- *       These features depend on notifications of transmission start.
+ *       These features depend on the notifications of the transmission start.
  */
 #ifndef NRF_802154_TX_STARTED_NOTIFY_ENABLED
 #if NRF_802154_ACK_TIMEOUT_ENABLED || NRF_802154_CSMA_CA_ENABLED

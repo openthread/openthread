@@ -44,11 +44,11 @@
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/timer.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip6_address.hpp"
 #include "net/ip6_headers.hpp"
 #include "net/ip6_mpl.hpp"
-#include "net/ip6_routes.hpp"
 #include "net/netif.hpp"
 #include "net/socket.hpp"
 #include "net/udp6.hpp"
@@ -105,8 +105,12 @@ class Ip6 : public InstanceLocator
 public:
     enum
     {
-        kDefaultHopLimit   = OPENTHREAD_CONFIG_IPV6_DEFAULT_HOP_LIMIT,
-        kMaxDatagramLength = OPENTHREAD_CONFIG_IPV6_DEFAULT_MAX_DATAGRAM,
+        kDefaultHopLimit            = OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT,
+        kMaxDatagramLength          = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH,
+        kMaxAssembledDatagramLength = OPENTHREAD_CONFIG_IP6_MAX_ASSEMBLED_DATAGRAM,
+        kIp6ReassemblyTimeout       = OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT,
+        kMinimalMtu                 = 1280,
+        kStateUpdatePeriod          = 1000,
     };
 
     /**
@@ -178,7 +182,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffer to add the IPv6 headers.
      *
      */
-    otError SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto aIpProto);
+    otError SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
 
     /**
      * This method sends a raw IPv6 datagram with a fully formed IPv6 header.
@@ -187,7 +191,6 @@ public:
      * processing is complete, including when a value other than `OT_ERROR_NONE` is returned.
      *
      * @param[in]  aMessage          A reference to the message.
-     * @param[in]  aInterfaceId      The interface identifier of the network interface that received the message.
      *
      * @retval OT_ERROR_NONE      Successfully processed the message.
      * @retval OT_ERROR_DROP      Message was well-formed but not fully processed due to packet processing rules.
@@ -196,14 +199,13 @@ public:
      * @retval OT_ERROR_PARSE     Encountered a malformed header when processing the message.
      *
      */
-    otError SendRaw(Message &aMessage, int8_t aInterfaceId);
+    otError SendRaw(Message &aMessage);
 
     /**
      * This method processes a received IPv6 datagram.
      *
      * @param[in]  aMessage          A reference to the message.
      * @param[in]  aNetif            A pointer to the network interface that received the message.
-     * @param[in]  aInterfaceId      The interface identifier of the network interface that received the message.
      * @param[in]  aLinkMessageInfo  A pointer to link-specific message information.
      * @param[in]  aFromNcpHost      TRUE if the message was submitted by the NCP host, FALSE otherwise.
      *
@@ -214,11 +216,7 @@ public:
      * @retval OT_ERROR_PARSE     Encountered a malformed header when processing the message.
      *
      */
-    otError HandleDatagram(Message &   aMessage,
-                           Netif *     aNetif,
-                           int8_t      aInterfaceId,
-                           const void *aLinkMessageInfo,
-                           bool        aFromNcpHost);
+    otError HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkMessageInfo, bool aFromNcpHost);
 
     /**
      * This methods adds a full IPv6 packet to the transmit queue.
@@ -252,7 +250,7 @@ public:
     static uint16_t ComputePseudoheaderChecksum(const Address &aSource,
                                                 const Address &aDestination,
                                                 uint16_t       aLength,
-                                                IpProto        aProto);
+                                                uint8_t        aProto);
 
     /**
      * This method registers a callback to provide received raw IPv6 datagrams.
@@ -280,7 +278,7 @@ public:
      * @sa SetReceiveIp6FilterEnabled
      *
      */
-    bool IsReceiveIp6FilterEnabled(void) { return mIsReceiveIp6FilterEnabled; }
+    bool IsReceiveIp6FilterEnabled(void) const { return mIsReceiveIp6FilterEnabled; }
 
     /**
      * This method sets whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
@@ -300,7 +298,7 @@ public:
      * @returns TRUE if IPv6 forwarding is enabled, FALSE otherwise.
      *
      */
-    bool IsForwardingEnabled(void) { return mForwardingEnabled; }
+    bool IsForwardingEnabled(void) const { return mForwardingEnabled; }
 
     /**
      * This method enables/disables IPv6 forwarding.
@@ -311,57 +309,6 @@ public:
     void SetForwardingEnabled(bool aEnable) { mForwardingEnabled = aEnable; }
 
     /**
-     * This method enables the network interface.
-     *
-     * @param  aNetif  A reference to the network interface.
-     *
-     * @retval OT_ERROR_NONE     Successfully enabled the network interface.
-     * @retval OT_ERROR_ALREADY  The network interface was already enabled.
-     *
-     */
-    otError AddNetif(Netif &aNetif);
-
-    /**
-     * This method disables the network interface.
-     *
-     * @param  aNetif  A reference to the network interface.
-     *
-     * @retval OT_ERROR_NONE       Successfully disabled the network interface.
-     * @retval OT_ERROR_NOT_FOUND  The network interface was already disabled.
-     *
-     */
-    otError RemoveNetif(Netif &aNetif);
-
-    /**
-     * This method returns the network interface list.
-     *
-     * @returns A pointer to the network interface list.
-     *
-     */
-    Netif *GetNetifList(void) { return mNetifListHead; }
-
-    /**
-     * This method returns the network interface identified by @p aInterfaceId.
-     *
-     * @param[in]  aInterfaceId  The network interface ID.
-     *
-     * @returns A pointer to the network interface or NULL if none is found.
-     *
-     */
-    Netif *GetNetifById(int8_t aInterfaceId);
-
-    /**
-     * This method indicates whether or not @p aAddress is assigned to a network interface.
-     *
-     * @param[in]  aAddress  A reference to the IPv6 address.
-     *
-     * @retval TRUE   If the IPv6 address is assigned to a network interface.
-     * @retval FALSE  If the IPv6 address is not assigned to any network interface.
-     *
-     */
-    bool IsUnicastAddress(const Address &aAddress);
-
-    /**
      * This method perform default source address selection.
      *
      * @param[in]  aMessageInfo  A reference to the message information.
@@ -370,16 +317,6 @@ public:
      *
      */
     const NetifUnicastAddress *SelectSourceAddress(MessageInfo &aMessageInfo);
-
-    /**
-     * This method determines which network interface @p aAddress is on-link, if any.
-     *
-     * @param[in]  aAddress  A reference to the IPv6 address.
-     *
-     * @returns The network interface identifier for the on-link interface or -1 if none is found.
-     *
-     */
-    int8_t GetOnLinkNetif(const Address &aAddress);
 
     /**
      * This method returns a reference to the send queue.
@@ -395,7 +332,7 @@ public:
      * @returns The string representation of an IP protocol enumeration.
      *
      */
-    static const char *IpProtoToString(IpProto aIpProto);
+    static const char *IpProtoToString(uint8_t aIpProto);
 
 private:
     enum
@@ -412,33 +349,48 @@ private:
                                    const MessageInfo &aMessageInfo,
                                    uint8_t            aIpProto,
                                    bool               aFromNcpHost);
-    otError HandleExtensionHeaders(Message &aMessage,
-                                   Header & aHeader,
-                                   uint8_t &aNextHeader,
-                                   bool     aForward,
-                                   bool     aReceive);
-    otError HandleFragment(Message &aMessage);
+    otError HandleExtensionHeaders(Message &    aMessage,
+                                   Netif *      aNetif,
+                                   MessageInfo &aMessageInfo,
+                                   Header &     aHeader,
+                                   uint8_t &    aNextHeader,
+                                   bool         aForward,
+                                   bool         aFromNcpHost,
+                                   bool         aReceive);
+    otError FragmentDatagram(Message &aMessage, uint8_t aIpProto);
+    otError HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromNcpHost);
+#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+    void        CleanupFragmentationBuffer(void);
+    void        HandleUpdateTimer(void);
+    void        UpdateReassemblyList(void);
+    otError     SendIcmpError(Message &aMessage, IcmpHeader::Type aIcmpType, IcmpHeader::Code aIcmpCode);
+    static void HandleTimer(Timer &aTimer);
+#endif
     otError AddMplOption(Message &aMessage, Header &aHeader);
     otError AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
     otError InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
     otError RemoveMplOption(Message &aMessage);
     otError HandleOptions(Message &aMessage, Header &aHeader, bool &aForward);
     otError HandlePayload(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
-    int8_t  FindForwardInterfaceId(const MessageInfo &aMessageInfo);
+    bool    ShouldForwardToThread(const MessageInfo &aMessageInfo) const;
+    bool    IsOnLink(const Address &aAddress) const;
 
     bool                 mForwardingEnabled;
     bool                 mIsReceiveIp6FilterEnabled;
     otIp6ReceiveCallback mReceiveIp6DatagramCallback;
     void *               mReceiveIp6DatagramCallbackContext;
-    Netif *              mNetifListHead;
 
     PriorityQueue mSendQueue;
     Tasklet       mSendQueueTask;
 
-    Routes mRoutes;
-    Icmp   mIcmp;
-    Udp    mUdp;
-    Mpl    mMpl;
+    Icmp mIcmp;
+    Udp  mUdp;
+    Mpl  mMpl;
+
+#if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+    TimerMilli   mTimer;
+    MessageQueue mReassemblyList;
+#endif
 };
 
 /**

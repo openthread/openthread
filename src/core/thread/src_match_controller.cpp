@@ -31,17 +31,18 @@
  *   This file implements source address match controller.
  */
 
-#define WPP_NAME "src_match_controller.tmh"
-
 #include "src_match_controller.hpp"
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
+#include "radio/radio.hpp"
 #include "thread/mesh_forwarder.hpp"
 #include "thread/thread_netif.hpp"
+#include "thread/topology.hpp"
 
 namespace ot {
 
@@ -108,15 +109,15 @@ exit:
 
 void SourceMatchController::ClearTable(void)
 {
-    otPlatRadioClearSrcMatchShortEntries(&GetInstance());
-    otPlatRadioClearSrcMatchExtEntries(&GetInstance());
+    Get<Radio>().ClearSrcMatchShortEntries();
+    Get<Radio>().ClearSrcMatchExtEntries();
     otLogDebgMac("SrcAddrMatch - Cleared all entries");
 }
 
 void SourceMatchController::Enable(bool aEnable)
 {
     mEnabled = aEnable;
-    otPlatRadioEnableSrcMatch(&GetInstance(), mEnabled);
+    Get<Radio>().EnableSrcMatch(mEnabled);
     otLogDebgMac("SrcAddrMatch - %sabling", mEnabled ? "En" : "Dis");
 }
 
@@ -145,17 +146,17 @@ otError SourceMatchController::AddAddress(const Child &aChild)
 
     if (aChild.IsIndirectSourceMatchShort())
     {
-        error = otPlatRadioAddSrcMatchShortEntry(&GetInstance(), aChild.GetRloc16());
+        error = Get<Radio>().AddSrcMatchShortEntry(aChild.GetRloc16());
 
         otLogDebgMac("SrcAddrMatch - Adding short addr: 0x%04x -- %s (%d)", aChild.GetRloc16(),
                      otThreadErrorToString(error), error);
     }
     else
     {
-        Mac::Address address;
+        Mac::ExtAddress address;
 
-        address.SetExtended(aChild.GetExtAddress().m8, /* aReverse */ true);
-        error = otPlatRadioAddSrcMatchExtEntry(&GetInstance(), &address.GetExtended());
+        address.Set(aChild.GetExtAddress().m8, Mac::ExtAddress::kReverseByteOrder);
+        error = Get<Radio>().AddSrcMatchExtEntry(address);
 
         otLogDebgMac("SrcAddrMatch - Adding addr: %s -- %s (%d)", aChild.GetExtAddress().ToString().AsCString(),
                      otThreadErrorToString(error), error);
@@ -177,17 +178,17 @@ void SourceMatchController::ClearEntry(Child &aChild)
 
     if (aChild.IsIndirectSourceMatchShort())
     {
-        error = otPlatRadioClearSrcMatchShortEntry(&GetInstance(), aChild.GetRloc16());
+        error = Get<Radio>().ClearSrcMatchShortEntry(aChild.GetRloc16());
 
         otLogDebgMac("SrcAddrMatch - Clearing short addr: 0x%04x -- %s (%d)", aChild.GetRloc16(),
                      otThreadErrorToString(error), error);
     }
     else
     {
-        Mac::Address address;
+        Mac::ExtAddress address;
 
-        address.SetExtended(aChild.GetExtAddress().m8, /* aReverse */ true);
-        error = otPlatRadioClearSrcMatchExtEntry(&GetInstance(), &address.GetExtended());
+        address.Set(aChild.GetExtAddress().m8, Mac::ExtAddress::kReverseByteOrder);
+        error = Get<Radio>().ClearSrcMatchExtEntry(address);
 
         otLogDebgMac("SrcAddrMatch - Clearing addr: %s -- %s (%d)", aChild.GetExtAddress().ToString().AsCString(),
                      otThreadErrorToString(error), error);
@@ -209,7 +210,7 @@ otError SourceMatchController::AddPendingEntries(void)
 {
     otError error = OT_ERROR_NONE;
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValidOrRestoring); !iter.IsDone(); iter++)
     {
         if (iter.GetChild()->IsIndirectSourceMatchPending())
         {

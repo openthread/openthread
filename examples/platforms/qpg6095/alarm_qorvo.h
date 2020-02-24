@@ -35,12 +35,12 @@
 #ifndef ALARM_QORVO_H_
 #define ALARM_QORVO_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <stdbool.h>
 
-typedef void (*qorvoAlarmCallback_t)( void* );
+typedef void (*qorvoAlarmCallback_t)(void *);
 
 /**
  * This function initializes the alarm service used by OpenThread.
@@ -64,7 +64,7 @@ uint32_t qorvoAlarmGetTimeMs(void);
  * @param[in]  arg       A context pointer which will be passed as an argument to the callback.
  *
  */
-void qorvoAlarmScheduleEventArg(uint32_t rel_time, qorvoAlarmCallback_t callback, void* arg);
+void qorvoAlarmScheduleEventArg(uint32_t rel_time, qorvoAlarmCallback_t callback, void *arg);
 
 /**
  * This function unschedules the callback.
@@ -73,6 +73,6 @@ void qorvoAlarmScheduleEventArg(uint32_t rel_time, qorvoAlarmCallback_t callback
  * @param[in]  arg       A context pointer which will be passed as an argument to the callback.
  *
  */
-bool qorvoAlarmUnScheduleEventArg(qorvoAlarmCallback_t callback, void* arg);
+bool qorvoAlarmUnScheduleEventArg(qorvoAlarmCallback_t callback, void *arg);
 
-#endif  // ALARM_QORVO_H_
+#endif // ALARM_QORVO_H_

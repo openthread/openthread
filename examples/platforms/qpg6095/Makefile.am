@@ -43,21 +43,27 @@ CLEANFILES =
 
 libopenthread_qpg6095_a_SOURCES             = \
     alarm.c                                   \
+    alarm_qorvo.h                             \
+    diag.c                                    \
+    entropy.c                                 \
     logging.c                                 \
     misc.c                                    \
+    misc_qorvo.h                              \
+    openthread-core-qpg6095-config.h          \
+    openthread-core-qpg6095-config-check.h \
     platform.c                                \
-    random.c                                  \
+    platform_qorvo.h                          \
     radio.c                                   \
+    radio_qorvo.h                             \
+    random_qorvo.h                            \
     settings.cpp                              \
+    settings_qorvo.h                          \
     uart.c                                    \
+    uart_qorvo.h                              \
     $(NULL)
 
-
-if OPENTHREAD_ENABLE_DIAG
-libopenthread_qpg6095_a_SOURCES            += \
-    diag.c                                    \
-    $(NULL)
-endif
+libopenthread_qpg6095_a_LIBADD              = \
+    $(top_builddir)/examples/platforms/utils/libopenthread_platform_utils_a-settings_ram.o
 
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                               += $(wildcard *.gcda *.gcno)

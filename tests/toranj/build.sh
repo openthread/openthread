@@ -39,9 +39,11 @@ display_usage() {
     echo "        ncp        : Build OpenThread NCP FTD mode with POSIX platform"
     echo "        rcp        : Build OpenThread RCP (NCP in radio mode) with POSIX platform"
     echo "        posix-app  : Build OpenThread POSIX App NCP"
+    echo "        cmake      : Configure and build OpenThread using cmake/ninja (RCP and NCP) only"
     echo ""
     echo "Options:"
     echo "        -c/--enable-coverage  Enable code coverage"
+    echo "        -t/--enable-tests     Enable tests"
     echo ""
 }
 
@@ -51,12 +53,17 @@ die() {
 }
 
 coverage=no
+tests=no
 
 while [ $# -ge 2 ]
 do
     case $1 in
         -c|--enable-coverage)
             coverage=yes
+            shift
+            ;;
+        -t|--enable-tests)
+            tests=yes
             shift
             ;;
         *)
@@ -76,25 +83,21 @@ build_config=$1
 
 configure_options="                \
     --disable-docs                 \
-    --disable-tests                \
-    --enable-border-router         \
-    --enable-channel-manager       \
-    --enable-channel-monitor       \
-    --enable-child-supervision     \
-    --enable-commissioner          \
+    --enable-tests=$tests          \
     --enable-coverage=$coverage    \
-    --enable-diag                  \
     --enable-ftd                   \
-    --enable-jam-detection         \
-    --enable-joiner                \
-    --enable-legacy                \
-    --enable-mac-filter            \
     --enable-ncp                   \
-    --enable-service               \
-    --with-ncp-bus=uart            \
     "
 
 cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config.h\"'
+
+if [ -n "${top_builddir}" ]; then
+    top_srcdir=$(pwd)
+    mkdir -p "${top_builddir}"
+else
+    top_srcdir=.
+    top_builddir=.
+fi
 
 case ${build_config} in
     ncp)
@@ -102,7 +105,8 @@ case ${build_config} in
         echo "Building OpenThread NCP FTD mode with POSIX platform"
         echo "==================================================================================================="
         ./bootstrap || die
-        ./configure                             \
+        cd "${top_builddir}"
+        ${top_srcdir}/configure                 \
             CPPFLAGS="$cppflags_config"         \
             --with-examples=posix               \
             $configure_options || die
@@ -114,15 +118,15 @@ case ${build_config} in
         echo "Building OpenThread RCP (NCP in radio mode) with POSIX platform"
         echo "===================================================================================================="
         ./bootstrap || die
-        ./configure                             \
+        cd "${top_builddir}"
+        ${top_srcdir}/configure                 \
             CPPFLAGS="$cppflags_config"         \
             --enable-coverage=${coverage}       \
             --enable-ncp                        \
-            --with-ncp-bus=uart                 \
             --enable-radio-only                 \
             --with-examples=posix               \
             --disable-docs                      \
-            --disable-tests || die
+            --enable-tests=$tests || die
         make -j 8 || die
         ;;
 
@@ -131,11 +135,20 @@ case ${build_config} in
         echo "Building OpenThread POSIX App NCP"
         echo "===================================================================================================="
         ./bootstrap || die
-        ./configure                             \
-            CPPFLAGS="$cppflags_config -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1" \
+        cd "${top_builddir}"
+        ${top_srcdir}/configure                 \
+            CPPFLAGS="$cppflags_config"         \
             --enable-posix-app                  \
             $configure_options || die
         make -j 8 || die
+        ;;
+
+    cmake)
+        echo "===================================================================================================="
+        echo "Building OpenThread (NCP/CLI for FTD/MTD/RCP mode) with POSIX platform using cmake"
+        echo "===================================================================================================="
+        cmake -GNinja -DOT_PLATFORM=posix -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config.h . || die
+        ninja || die
         ;;
 
     *)

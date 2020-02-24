@@ -41,7 +41,7 @@
 
 #include "coap/coap.hpp"
 #include "common/message.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 
 namespace ot {
 namespace MeshCoP {

@@ -38,7 +38,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 
-#if OPENTHREAD_ENABLE_BORDER_AGENT
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
 using namespace ot;
 
@@ -49,4 +49,4 @@ otBorderAgentState otBorderAgentGetState(otInstance *aInstance)
     return instance.Get<MeshCoP::BorderAgent>().GetState();
 }
 
-#endif // OPENTHREAD_ENABLE_BORDER_AGENT
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE

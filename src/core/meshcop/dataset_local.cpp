@@ -32,8 +32,6 @@
  *
  */
 
-#define WPP_NAME "dataset_local.tmh"
-
 #include "dataset_local.hpp"
 
 #include <stdio.h>
@@ -50,11 +48,12 @@
 namespace ot {
 namespace MeshCoP {
 
-DatasetLocal::DatasetLocal(Instance &aInstance, const Tlv::Type aType)
+DatasetLocal::DatasetLocal(Instance &aInstance, Tlv::Type aType)
     : InstanceLocator(aInstance)
     , mUpdateTime(0)
     , mType(aType)
     , mTimestampPresent(false)
+    , mSaved(false)
 {
     mTimestamp.Init();
 }
@@ -109,7 +108,7 @@ otError DatasetLocal::Read(Dataset &aDataset) const
         delayTimer = static_cast<DelayTimerTlv *>(aDataset.Get(Tlv::kDelayTimer));
         VerifyOrExit(delayTimer);
 
-        elapsed = TimerMilli::Elapsed(mUpdateTime);
+        elapsed = TimerMilli::GetNow() - mUpdateTime;
 
         if (delayTimer->GetDelayTimer() > elapsed)
         {

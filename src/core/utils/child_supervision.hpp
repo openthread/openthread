@@ -37,13 +37,14 @@
 
 #include "openthread-core-config.h"
 
+#include <stdint.h>
+
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "thread/topology.hpp"
-#include "utils/wrap_stdint.h"
 
 namespace ot {
 
@@ -81,7 +82,7 @@ namespace Utils {
  *
  */
 
-#if OPENTHREAD_ENABLE_CHILD_SUPERVISION && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE && OPENTHREAD_FTD
 
 /**
  * This class implements a child supervisor.
@@ -167,7 +168,7 @@ private:
     Notifier::Callback mNotifierCallback;
 };
 
-#else // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION && OPENTHREAD_FTD
+#else // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE && OPENTHREAD_FTD
 
 class ChildSupervisor
 {
@@ -181,9 +182,9 @@ public:
     void     UpdateOnSend(Child &) {}
 };
 
-#endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION && OPENTHREAD_FTD
+#endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE && OPENTHREAD_FTD
 
-#if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 /**
  * This class implements a child supervision listener.
@@ -247,7 +248,7 @@ public:
 private:
     enum
     {
-        kDefaultTimeout = OPENTHREAD_CONFIG_SUPERVISION_CHECK_TIMEOUT, // (seconds)
+        kDefaultTimeout = OPENTHREAD_CONFIG_CHILD_SUPERVISION_CHECK_TIMEOUT, // (seconds)
     };
 
     void        RestartTimer(void);
@@ -258,7 +259,7 @@ private:
     TimerMilli mTimer;
 };
 
-#else // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#else // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 class SupervisionListener
 {
@@ -271,7 +272,7 @@ public:
     void     UpdateOnReceive(const Mac::Address &, bool) {}
 };
 
-#endif // #if OPENTHREAD_ENABLE_CHILD_SUPERVISION
+#endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 /**
  * @}

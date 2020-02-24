@@ -55,6 +55,7 @@ libmbedcrypto_a_SOURCES                       = \
     repo/library/ecdh.c                         \
     repo/library/ecdsa.c                        \
     repo/library/ecjpake.c                      \
+    repo/library/ecp.c                          \
     repo/library/ecp_curves.c                   \
     repo/library/entropy.c                      \
     repo/library/entropy_poll.c                 \
@@ -66,6 +67,7 @@ libmbedcrypto_a_SOURCES                       = \
     repo/library/pk.c                           \
     repo/library/pk_wrap.c                      \
     repo/library/pkparse.c                      \
+    repo/library/pkwrite.c                      \
     repo/library/platform.c                     \
     repo/library/platform_util.c                \
     repo/library/sha256.c                       \
@@ -75,15 +77,10 @@ libmbedcrypto_a_SOURCES                       = \
     repo/library/ssl_srv.c                      \
     repo/library/ssl_ticket.c                   \
     repo/library/ssl_tls.c                      \
+    repo/library/threading.c                    \
     repo/library/x509.c                         \
     repo/library/x509_crt.c                     \
     $(NULL)
-
-if !OPENTHREAD_EXAMPLES_EFR32
-libmbedcrypto_a_SOURCES                      += \
-    repo/library/ecp.c                          \
-    $(NULL)
-endif
 
 if OPENTHREAD_BUILD_COVERAGE
 Dash                                          = -

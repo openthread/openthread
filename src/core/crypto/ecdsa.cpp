@@ -33,6 +33,7 @@
 
 #include "ecdsa.hpp"
 
+#include <mbedtls/ctr_drbg.h>
 #include <mbedtls/ecdsa.h>
 #include <mbedtls/pk.h>
 
@@ -43,7 +44,7 @@
 namespace ot {
 namespace Crypto {
 
-#if OPENTHREAD_ENABLE_ECDSA
+#if OPENTHREAD_CONFIG_ECDSA_ENABLE
 
 otError Ecdsa::Sign(uint8_t *      aOutput,
                     uint16_t *     aOutputLength,
@@ -75,8 +76,8 @@ otError Ecdsa::Sign(uint8_t *      aOutput,
     VerifyOrExit(mbedtls_ecdsa_from_keypair(&ctx, keypair) == 0, error = OT_ERROR_FAILED);
 
     // Sign using ECDSA.
-    VerifyOrExit(mbedtls_ecdsa_sign(&ctx.grp, &rMpi, &sMpi, &ctx.d, aInputHash, aInputHashLength, FillRandom, NULL) ==
-                     0,
+    VerifyOrExit(mbedtls_ecdsa_sign(&ctx.grp, &rMpi, &sMpi, &ctx.d, aInputHash, aInputHashLength,
+                                    mbedtls_ctr_drbg_random, Random::Crypto::MbedTlsContextGet()) == 0,
                  error = OT_ERROR_FAILED);
     VerifyOrExit(mbedtls_mpi_size(&rMpi) + mbedtls_mpi_size(&sMpi) <= *aOutputLength, error = OT_ERROR_NO_BUFS);
 
@@ -97,14 +98,7 @@ exit:
     return error;
 }
 
-int Ecdsa::FillRandom(void *, unsigned char *aBuffer, size_t aSize)
-{
-    Random::FillBuffer(aBuffer, static_cast<uint16_t>(aSize));
-
-    return 0;
-}
-
-#endif // OPENTHREAD_ENABLE_ECDSA
+#endif // OPENTHREAD_CONFIG_ECDSA_ENABLE
 
 } // namespace Crypto
 } // namespace ot

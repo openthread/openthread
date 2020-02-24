@@ -38,7 +38,7 @@
 
 #include "common/locator.hpp"
 #include "mac/mac.hpp"
-#include "mac/mac_frame.hpp"
+#include "mac/mac_types.hpp"
 #include "net/dhcp6.hpp"
 #include "net/udp6.hpp"
 #include "thread/network_data_leader.hpp"
@@ -214,7 +214,7 @@ private:
 
     Ip6::UdpSocket mSocket;
 
-    PrefixAgent mPrefixAgents[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
+    PrefixAgent mPrefixAgents[OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES];
     uint8_t     mPrefixAgentsCount;
     uint8_t     mPrefixAgentsMask;
 };

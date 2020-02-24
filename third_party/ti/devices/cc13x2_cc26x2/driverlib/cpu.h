@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       cpu.h
-*  Revised:        2017-08-21 13:20:52 +0200 (Mon, 21 Aug 2017)
-*  Revision:       49618
+*  Revised:        2018-06-04 16:10:13 +0200 (Mon, 04 Jun 2018)
+*  Revision:       52111
 *
 *  Description:    Defines and prototypes for the CPU instruction wrapper
 *                  functions.
@@ -145,7 +145,7 @@ extern uint32_t CPUbasepriGet(void);
 
 //*****************************************************************************
 //
-//! \brief Provide a small delay using a simple loop counter.
+//! \brief Provide a small non-zero delay using a simple loop counter.
 //!
 //! This function provides means for generating a constant length delay. It
 //! is written in assembly to keep the delay consistent across tool chains,
@@ -171,7 +171,7 @@ extern uint32_t CPUbasepriGet(void);
 //! Example: 250 us delay with code in flash and with cache and prefetch enabled:
 //! - ui32Count = 250 * 48 / 4 = 3000
 //!
-//! \param ui32Count is the number of delay loop iterations to perform.
+//! \param ui32Count is the number of delay loop iterations to perform. Number must be greater than zero.
 //!
 //! \return None
 //

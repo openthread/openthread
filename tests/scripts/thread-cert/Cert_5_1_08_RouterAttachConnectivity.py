@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -87,9 +86,9 @@ class Cert_5_1_08_RouterAttachConnectivity(unittest.TestCase):
         self.nodes[ROUTER4].set_router_selection_jitter(1)
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):
@@ -144,7 +143,8 @@ class Cert_5_1_08_RouterAttachConnectivity(unittest.TestCase):
         msg.assertSentToNode(self.nodes[ROUTER4])
 
         # 4 - Router4
-        msg = router4_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
+        msg = router4_messages.next_mle_message(
+            mle.CommandType.CHILD_ID_REQUEST)
         msg.assertSentToNode(self.nodes[ROUTER3])
         msg.assertMleMessageContainsTlv(mle.Response)
         msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)

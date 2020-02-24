@@ -181,7 +181,8 @@ class NordicBoardPduController(PduController):
         boards_serial_numbers = params['boards_serial_numbers']
 
         for serial_number in boards_serial_numbers:
-            logger.info('Resetting board with the serial number: %s', serial_number)
+            logger.info('Resetting board with the serial number: %s',
+                        serial_number)
             self._pin_reset(serial_number)
 
     def close(self):
@@ -193,7 +194,8 @@ class IpPowerSocketPduController(PduController):
     def open(self, **params):
         self._base_url = 'http://{}/outs.cgi?out'.format(params['ip'])
         password_manager = HTTPPasswordMgrWithDefaultRealm()
-        password_manager.add_password(None, self._base_url, params['user'], params['pass'])
+        password_manager.add_password(None, self._base_url, params['user'],
+                                      params['pass'])
         authentication_handler = HTTPBasicAuthHandler(password_manager)
         self._opener = build_opener(authentication_handler)
 
@@ -225,7 +227,7 @@ class ManualPduController(PduController):
         pass
 
     def reboot(self, **kwargs):
-        raw_input('Reset all devices and press enter to continue..')
+        input('Reset all devices and press enter to continue..')
 
     def close(self):
         pass

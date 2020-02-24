@@ -35,10 +35,10 @@
 #ifndef PLATFORM_QORVO_H_
 #define PLATFORM_QORVO_H_
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
-typedef bool (*qorvoPlatGotoSleepCheckCallback_t) ( void );
+typedef bool (*qorvoPlatGotoSleepCheckCallback_t)(void);
 
 /**
  * This function initializes the platform.
@@ -56,4 +56,4 @@ void qorvoPlatInit(qorvoPlatGotoSleepCheckCallback_t gotoSleepCheckCallback);
  */
 void qorvoPlatMainLoop(bool canGoToSleep);
 
-#endif  // PLATFORM_QORVO_H_
+#endif // PLATFORM_QORVO_H_

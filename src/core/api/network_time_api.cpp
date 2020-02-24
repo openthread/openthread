@@ -33,7 +33,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 #include "openthread/network_time.h"
 
@@ -42,11 +42,11 @@
 
 using namespace ot;
 
-otNetworkTimeStatus otNetworkTimeGet(otInstance *aInstance, uint64_t &aNetworkTime)
+otNetworkTimeStatus otNetworkTimeGet(otInstance *aInstance, uint64_t *aNetworkTime)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<TimeSync>().GetTime(aNetworkTime);
+    return instance.Get<TimeSync>().GetTime(*aNetworkTime);
 }
 
 otError otNetworkTimeSetSyncPeriod(otInstance *aInstance, uint16_t aTimeSyncPeriod)
@@ -96,4 +96,4 @@ void otNetworkTimeSyncSetCallback(otInstance *aInstance, otNetworkTimeSyncCallba
     return instance.Get<TimeSync>().SetTimeSyncCallback(aCallback, aCallbackContext);
 }
 
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE

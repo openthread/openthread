@@ -38,19 +38,8 @@
 
 #include <ctype.h>
 #include <stdio.h>
-#include "utils/wrap_string.h"
 
 #if defined(OPENTHREAD_TARGET_DARWIN) || defined(OPENTHREAD_TARGET_LINUX)
-
-#include <assert.h>
-
-#elif defined(_KERNEL_MODE)
-
-#include <wdm.h>
-
-#define assert(exp) ((!(exp)) ? (RtlAssert(#exp, __FILE__, __LINE__, NULL), FALSE) : TRUE)
-
-#elif defined(_WIN32)
 
 #include <assert.h>
 
@@ -66,6 +55,10 @@
 #define FILE_NAME __FILE__
 #endif
 
+#ifdef assert
+#undef assert
+#endif
+
 #define assert(cond)                               \
     do                                             \
     {                                              \
@@ -79,6 +72,10 @@
     } while (0)
 
 #else
+
+#ifdef assert
+#undef assert
+#endif
 
 #define assert(cond)  \
     do                \

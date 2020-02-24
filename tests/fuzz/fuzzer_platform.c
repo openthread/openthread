@@ -26,6 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "openthread-core-config.h"
+
 #include <string.h>
 
 #include <openthread/platform/alarm-micro.h>
@@ -34,7 +36,6 @@
 #include <openthread/platform/logging.h>
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
-#include <openthread/platform/random.h>
 #include <openthread/platform/settings.h>
 #include <openthread/platform/uart.h>
 
@@ -50,6 +51,7 @@ static AlarmState   sAlarmMicro;
 static uint32_t     sRandomState = 1;
 static uint8_t      sRadioTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE];
 static otRadioFrame sRadioTransmitFrame = {.mPsdu = sRadioTransmitPsdu};
+static bool         sResetWasRequested  = false;
 
 void FuzzerPlatformInit(void)
 {
@@ -83,7 +85,7 @@ void FuzzerPlatformProcess(otInstance *aInstance)
             otPlatAlarmMilliFired(aInstance);
         }
 
-#if OPENTHREAD_CONFIG_ENABLE_PLATFORM_USEC_TIMER
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
         if (sAlarmMicro.isRunning && sAlarmNow >= sAlarmMicro.fire)
         {
             sAlarmMicro.isRunning = false;
@@ -91,6 +93,11 @@ void FuzzerPlatformProcess(otInstance *aInstance)
         }
 #endif
     }
+}
+
+bool FuzzerPlatformResetWasRequested(void)
+{
+    return sResetWasRequested;
 }
 
 uint32_t otPlatAlarmMilliGetNow(void)
@@ -133,21 +140,27 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
     sAlarmMicro.isRunning = false;
 }
 
-bool otDiagIsEnabled(void)
+bool otDiagIsEnabled(otInstance *aInstance)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     return false;
 }
 
-void otDiagProcessCmd(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen)
+otError otDiagProcessCmd(otInstance *aInstance, int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen)
 {
+    OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aArgCount);
     OT_UNUSED_VARIABLE(aArgVector);
     OT_UNUSED_VARIABLE(aOutput);
     OT_UNUSED_VARIABLE(aOutputMaxLen);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-void otDiagProcessCmdLine(const char *aString, char *aOutput, size_t aOutputMaxLen)
+void otDiagProcessCmdLine(otInstance *aInstance, const char *aString, char *aOutput, size_t aOutputMaxLen)
 {
+    OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aString);
     OT_UNUSED_VARIABLE(aOutput);
     OT_UNUSED_VARIABLE(aOutputMaxLen);
@@ -156,6 +169,8 @@ void otDiagProcessCmdLine(const char *aString, char *aOutput, size_t aOutputMaxL
 void otPlatReset(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
+    sResetWasRequested = true;
 }
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
@@ -333,39 +348,31 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
+otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aThreshold);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aThreshold);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
     return 0;
 }
 
-uint32_t otPlatRandomGet(void)
-{
-    uint32_t mlcg, p, q;
-    uint64_t tmpstate;
-
-    tmpstate = (uint64_t)33614 * (uint64_t)sRandomState;
-    q        = tmpstate & 0xffffffff;
-    q        = q >> 1;
-    p        = tmpstate >> 32;
-    mlcg     = p + q;
-
-    if (mlcg & 0x80000000)
-    {
-        mlcg &= 0x7fffffff;
-        mlcg++;
-    }
-
-    sRandomState = mlcg;
-
-    return mlcg;
-}
-
-otError otPlatRandomGetTrue(uint8_t *aOutput, uint16_t aOutputLength)
+otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
     for (uint16_t length = 0; length < aOutputLength; length++)
     {
-        aOutput[length] = (uint8_t)otPlatRandomGet();
+        aOutput[length] = (uint8_t)rand();
     }
 
     return OT_ERROR_NONE;
@@ -376,22 +383,9 @@ void otPlatSettingsInit(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-otError otPlatSettingsBeginChange(otInstance *aInstance)
+void otPlatSettingsDeinit(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return OT_ERROR_NONE;
-}
-
-otError otPlatSettingsCommitChange(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return OT_ERROR_NONE;
-}
-
-otError otPlatSettingsAbandonChange(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    return OT_ERROR_NONE;
 }
 
 otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
@@ -450,4 +444,52 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
     OT_UNUSED_VARIABLE(aBuf);
     OT_UNUSED_VARIABLE(aBufLength);
     return OT_ERROR_NONE;
+}
+
+otError otPlatUartFlush(void)
+{
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(argv);
+    OT_UNUSED_VARIABLE(aOutput);
+    OT_UNUSED_VARIABLE(aOutputMaxLen);
+
+    return OT_ERROR_INVALID_ARGS;
+}
+
+void otPlatDiagModeSet(bool aMode)
+{
+    OT_UNUSED_VARIABLE(aMode);
+}
+
+bool otPlatDiagModeGet(void)
+{
+    return false;
+}
+
+void otPlatDiagChannelSet(uint8_t aChannel)
+{
+    OT_UNUSED_VARIABLE(aChannel);
+}
+
+void otPlatDiagTxPowerSet(int8_t aTxPower)
+{
+    OT_UNUSED_VARIABLE(aTxPower);
+}
+
+void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aFrame);
+    OT_UNUSED_VARIABLE(aError);
+}
+
+void otPlatDiagAlarmCallback(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
 }

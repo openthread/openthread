@@ -44,11 +44,9 @@ GCCVersion                      = $(shell expr `$(CC) -dumpversion | cut -f1 -d.
 
 configure_OPTIONS                                 = \
     --enable-cli                                    \
-    --enable-diag                                   \
     --enable-ftd                                    \
     --enable-mtd                                    \
     --enable-ncp                                    \
-    --with-ncp-bus=uart                             \
     --enable-radio-only                             \
     --enable-linker-map                             \
     --with-examples=qpg6095                         \
@@ -59,6 +57,7 @@ TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
 QPG6095_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-qpg6095-config.h\"'
+QPG6095_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-qpg6095-config-check.h\"'
 QPG6095_CONFIG_FILE_CPPFLAGS += -I$(PWD)/examples/platforms/qpg6095/
 QPG6095_MBEDTLS_CPPFLAGS      = -DMBEDTLS_CONFIG_FILE='\"mbedtls-config.h\"'
 QPG6095_MBEDTLS_CPPFLAGS     += -DMBEDTLS_USER_CONFIG_FILE='\"qpg6095-mbedtls-config.h\"'
@@ -67,16 +66,12 @@ QPG6095_MBEDTLS_CPPFLAGS     += -I$(PWD)/third_party/mbedtls
 QPG6095_MBEDTLS_CPPFLAGS     += -I$(PWD)/third_party/mbedtls/repo/include
 QPG6095_MBEDTLS_CPPFLAGS     += -I$(PWD)/third_party/mbedtls/repo/include/mbedtls
 
-CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-qpg6095-config.h\"'
-CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/qpg6095/
-
-COMMONCFLAGS                   := \
-    -fdata-sections               \
-    -ffunction-sections           \
-    -Os                           \
-    -g                            \
-    -D$(CONFIG_FILE)              \
-    -I$(CONFIG_FILE_PATH)         \
+COMMONCFLAGS                     := \
+    -fdata-sections                 \
+    -ffunction-sections             \
+    -Os                             \
+    -g                              \
+    $(QPG6095_CONFIG_FILE_CPPFLAGS) \
     $(NULL)
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk

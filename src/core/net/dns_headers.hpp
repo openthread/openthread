@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include "utils/wrap_string.h"
-
 #include "common/encoding.hpp"
 #include "common/message.hpp"
 
@@ -565,7 +563,9 @@ public:
      *
      */
     QuestionAaaa(void)
-        : Question(kType, kClass){};
+        : Question(kType, kClass)
+    {
+    }
 
     /**
      * This method appends request data to the message.
@@ -576,7 +576,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
-    otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); };
+    otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
 };
 
 /**

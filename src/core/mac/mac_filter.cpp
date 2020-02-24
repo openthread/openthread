@@ -33,11 +33,9 @@
 
 #include "mac_filter.hpp"
 
-#include "utils/wrap_string.h"
-
 #include "common/code_utils.hpp"
 
-#if OPENTHREAD_ENABLE_MAC_FILTER
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
 namespace ot {
 namespace Mac {
@@ -142,13 +140,13 @@ void Filter::ClearAddresses(void)
     }
 }
 
-otError Filter::GetNextAddress(Iterator &aIterator, Entry &aEntry)
+otError Filter::GetNextAddress(Iterator &aIterator, Entry &aEntry) const
 {
     otError error = OT_ERROR_NOT_FOUND;
 
     for (; aIterator < OT_ARRAY_LENGTH(mFilterEntries); aIterator++)
     {
-        FilterEntry &entry = mFilterEntries[aIterator];
+        const FilterEntry &entry = mFilterEntries[aIterator];
 
         if (entry.mFiltered)
         {
@@ -234,7 +232,7 @@ otError Filter::GetNextRssIn(Iterator &aIterator, Entry &aEntry)
     // Return the default RssIn at the end of list
     if ((aIterator == OT_ARRAY_LENGTH(mFilterEntries)) && (mDefaultRssIn != kFixedRssDisabled))
     {
-        memset(&aEntry.mExtAddress, 0xff, OT_EXT_ADDRESS_SIZE);
+        static_cast<ExtAddress &>(aEntry.mExtAddress).Fill(0xff);
         aEntry.mRssIn = mDefaultRssIn;
         error         = OT_ERROR_NONE;
         aIterator++;
@@ -273,4 +271,4 @@ exit:
 } // namespace Mac
 } // namespace ot
 
-#endif // OPENTHREAD_ENABLE_MAC_FILTER
+#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE

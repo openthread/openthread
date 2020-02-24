@@ -177,7 +177,7 @@
 
 ## Standards
 
-- OpenThread uses and enforces both Python 2 and Python 3.  Support for Python 2 is a result of the fact that some current Linux distributions and Macs are still using 2.x as default.
+- OpenThread uses and enforces Python 3.
 
 ## Conventions and Best Practices
 
@@ -185,4 +185,4 @@
 
 ## Format and Style
 
-- All code should adhere to [PEP 8](https://www.python.org/dev/peps/pep-0008/).
+- All code should adhere to [Google Python Style Guide](http://google.github.io/styleguide/pyguide.html).

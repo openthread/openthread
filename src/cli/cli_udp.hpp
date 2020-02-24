@@ -74,12 +74,20 @@ private:
         otError (UdpExample::*mCommand)(int argc, char *argv[]);
     };
 
+    enum PayloadType
+    {
+        kTypeText      = 0,
+        kTypeAutoSize  = 1,
+        kTypeHexString = 2,
+    };
+
     otError ProcessHelp(int argc, char *argv[]);
     otError ProcessBind(int argc, char *argv[]);
     otError ProcessClose(int argc, char *argv[]);
     otError ProcessConnect(int argc, char *argv[]);
     otError ProcessOpen(int argc, char *argv[]);
     otError ProcessSend(int argc, char *argv[]);
+    otError WriteCharToBuffer(otMessage *aMessage, uint16_t aSize);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo);

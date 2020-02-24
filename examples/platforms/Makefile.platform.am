@@ -57,16 +57,16 @@ if OPENTHREAD_EXAMPLES_CC2652
 include $(top_srcdir)/examples/platforms/cc2652/Makefile.platform.am
 endif
 
-if OPENTHREAD_EXAMPLES_DA15000
-include $(top_srcdir)/examples/platforms/da15000/Makefile.platform.am
+if OPENTHREAD_EXAMPLES_EFR32MG12
+include $(top_srcdir)/examples/platforms/efr32mg12/Makefile.platform.am
 endif
 
-if OPENTHREAD_EXAMPLES_EFR32
-include $(top_srcdir)/examples/platforms/efr32/Makefile.platform.am
+if OPENTHREAD_EXAMPLES_EFR32MG13
+include $(top_srcdir)/examples/platforms/efr32mg13/Makefile.platform.am
 endif
 
-if OPENTHREAD_EXAMPLES_EMSK
-include $(top_srcdir)/examples/platforms/emsk/Makefile.platform.am
+if OPENTHREAD_EXAMPLES_EFR32MG21
+include $(top_srcdir)/examples/platforms/efr32mg21/Makefile.platform.am
 endif
 
 if OPENTHREAD_EXAMPLES_GP712
@@ -78,11 +78,15 @@ include $(top_srcdir)/examples/platforms/kw41z/Makefile.platform.am
 endif
 
 if OPENTHREAD_EXAMPLES_NRF52811
-include $(top_srcdir)/examples/platforms/nrf52811/Makefile.platform.am
+include $(top_srcdir)/examples/platforms/nrf528xx/nrf52811/Makefile.platform.am
+endif
+
+if OPENTHREAD_EXAMPLES_NRF52833
+include $(top_srcdir)/examples/platforms/nrf528xx/nrf52833/Makefile.platform.am
 endif
 
 if OPENTHREAD_EXAMPLES_NRF52840
-include $(top_srcdir)/examples/platforms/nrf52840/Makefile.platform.am
+include $(top_srcdir)/examples/platforms/nrf528xx/nrf52840/Makefile.platform.am
 endif
 
 if OPENTHREAD_EXAMPLES_QPG6095

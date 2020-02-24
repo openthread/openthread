@@ -31,11 +31,10 @@
  *   This file implements MAC Channel Mask.
  */
 
-#define WPP_NAME "mac-channel-mask.tmh"
-
 #include "channel_mask.hpp"
 
 #include "common/code_utils.hpp"
+#include "common/random.hpp"
 
 namespace ot {
 namespace Mac {
@@ -59,10 +58,10 @@ otError ChannelMask::GetNextChannel(uint8_t &aChannel) const
 
     if (aChannel == kChannelIteratorFirst)
     {
-        aChannel = (Phy::kChannelMin - 1);
+        aChannel = (Radio::kChannelMin - 1);
     }
 
-    for (aChannel++; aChannel <= Phy::kChannelMax; aChannel++)
+    for (aChannel++; aChannel <= Radio::kChannelMax; aChannel++)
     {
         if (ContainsChannel(aChannel))
         {
@@ -72,6 +71,26 @@ otError ChannelMask::GetNextChannel(uint8_t &aChannel) const
 
 exit:
     return error;
+}
+
+uint8_t ChannelMask::ChooseRandomChannel(void) const
+{
+    uint8_t channel = kChannelIteratorFirst;
+    uint8_t randomIndex;
+
+    VerifyOrExit(!IsEmpty());
+
+    randomIndex = Random::NonCrypto::GetUint8InRange(0, GetNumberOfChannels());
+
+    SuccessOrExit(GetNextChannel(channel));
+
+    while (randomIndex-- != 0)
+    {
+        SuccessOrExit(GetNextChannel(channel));
+    }
+
+exit:
+    return channel;
 }
 
 ChannelMask::InfoString ChannelMask::ToString(void) const

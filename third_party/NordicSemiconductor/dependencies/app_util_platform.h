@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2014 - 2019, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -68,6 +68,7 @@ extern "C" {
 #define _PRIO_APP_HIGH      1
 #define _PRIO_APP_MID       1
 #define _PRIO_SD_LOW        2
+#define _PRIO_APP_LOW_MID   3
 #define _PRIO_APP_LOW       3
 #define _PRIO_APP_LOWEST    3
 #define _PRIO_THREAD        4
@@ -77,7 +78,7 @@ extern "C" {
 #define _PRIO_APP_HIGH      2
 #define _PRIO_APP_MID       3
 #define _PRIO_SD_LOW        4
-#define _PRIO_SD_LOWEST     5
+#define _PRIO_APP_LOW_MID   5
 #define _PRIO_APP_LOW       6
 #define _PRIO_APP_LOWEST    7
 #define _PRIO_THREAD        15
@@ -101,6 +102,7 @@ typedef enum
 #else
     APP_IRQ_PRIORITY_MID     = _PRIO_APP_MID,
 #endif
+    APP_IRQ_PRIORITY_LOW_MID = _PRIO_APP_LOW_MID,
     APP_IRQ_PRIORITY_LOW     = _PRIO_APP_LOW,
     APP_IRQ_PRIORITY_LOWEST  = _PRIO_APP_LOWEST,
     APP_IRQ_PRIORITY_THREAD  = _PRIO_THREAD     /**< "Interrupt level" when running in Thread Mode. */

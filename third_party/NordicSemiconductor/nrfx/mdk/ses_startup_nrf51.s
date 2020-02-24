@@ -176,6 +176,7 @@ Dummy_Handler:
 
   .extern Reset_Handler
   .global nRFInitialize
+  .extern afterInitialize
   .equ    NRF_POWER_RAMON_ADDRESS,             0x40000524
   .equ    NRF_POWER_RAMONB_ADDRESS,            0x40000554
   .equ    NRF_POWER_RAMONx_RAMxON_ONMODE_Msk,  0x3
@@ -193,7 +194,7 @@ nRFInitialize:
   LDR     R2, [R0]
   ORRS    R2, R1
   STR     R2, [R0]
-  bx lr
+  b afterInitialize
  
  
 /************************************************************************************

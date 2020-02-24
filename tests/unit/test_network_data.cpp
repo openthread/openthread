@@ -36,6 +36,7 @@
 #include "test_util.hpp"
 
 namespace ot {
+namespace NetworkData {
 
 class TestNetworkData : public NetworkData::NetworkData
 {
@@ -48,7 +49,7 @@ public:
     }
 };
 
-void PrintExternalRouteConfig(const otExternalRouteConfig &aConfig)
+void PrintExternalRouteConfig(const ExternalRouteConfig &aConfig)
 {
     printf("\nprefix:");
 
@@ -61,8 +62,8 @@ void PrintExternalRouteConfig(const otExternalRouteConfig &aConfig)
            aConfig.mPreference, aConfig.mStable, aConfig.mNextHopIsThisDevice);
 }
 
-// Returns true if the two given otExternalRouteConfig match (intentionally ignoring mNextHopIsThisDevice).
-bool CompareExternalRouteConfig(const otExternalRouteConfig &aConfig1, const otExternalRouteConfig &aConfig2)
+// Returns true if the two given ExternalRouteConfig match (intentionally ignoring mNextHopIsThisDevice).
+bool CompareExternalRouteConfig(const ExternalRouteConfig &aConfig1, const ExternalRouteConfig &aConfig2)
 {
     return (memcmp(aConfig1.mPrefix.mPrefix.mFields.m8, aConfig2.mPrefix.mPrefix.mFields.m8,
                    sizeof(aConfig1.mPrefix.mPrefix)) == 0) &&
@@ -72,9 +73,9 @@ bool CompareExternalRouteConfig(const otExternalRouteConfig &aConfig1, const otE
 
 void TestNetworkDataIterator(void)
 {
-    ot::Instance *        instance;
-    otNetworkDataIterator iter = OT_NETWORK_DATA_ITERATOR_INIT;
-    otExternalRouteConfig config;
+    ot::Instance *      instance;
+    Iterator            iter = kIteratorInit;
+    ExternalRouteConfig config;
 
     instance = testInitInstance();
     VerifyOrQuit(instance != NULL, "Null OpenThread instance\n");
@@ -84,7 +85,7 @@ void TestNetworkDataIterator(void)
                                         0xFD, 0x00, 0x12, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03,
                                         0xC8, 0x00, 0x40, 0x01, 0x03, 0x54, 0x00, 0x00};
 
-        otExternalRouteConfig routes[] = {
+        ExternalRouteConfig routes[] = {
             {
                 {{{{0xfd, 0x00, 0x12, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}},
                  64},
@@ -111,7 +112,7 @@ void TestNetworkDataIterator(void)
 
         for (uint8_t i = 0; i < OT_ARRAY_LENGTH(routes); i++)
         {
-            SuccessOrQuit(netData.GetNextExternalRoute(&iter, &config), "GetNextExternalRoute() failed\n");
+            SuccessOrQuit(netData.GetNextExternalRoute(iter, config), "GetNextExternalRoute() failed");
             PrintExternalRouteConfig(config);
             VerifyOrQuit(CompareExternalRouteConfig(config, routes[i]) == true,
                          "external route config does not match expectation");
@@ -125,7 +126,7 @@ void TestNetworkDataIterator(void)
             0x31, 0x00, 0x02, 0x0F, 0x00, 0x40, 0xFD, 0x00, 0xAB, 0xBA, 0xCD, 0xDC, 0x00, 0x00, 0x00, 0x03, 0x10, 0x00,
             0x00, 0x03, 0x0E, 0x00, 0x20, 0xFD, 0x00, 0xAB, 0xBA, 0x01, 0x06, 0x54, 0x00, 0x00, 0x04, 0x00, 0x00};
 
-        otExternalRouteConfig routes[] = {
+        ExternalRouteConfig routes[] = {
             {{{{{0xfd, 0x00, 0x12, 0x34, 0x56, 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}}, 64},
              0x1000,
              1,
@@ -161,7 +162,7 @@ void TestNetworkDataIterator(void)
 
         for (uint8_t i = 0; i < OT_ARRAY_LENGTH(routes); i++)
         {
-            SuccessOrQuit(netData.GetNextExternalRoute(&iter, &config), "GetNextExternalRoute() failed\n");
+            SuccessOrQuit(netData.GetNextExternalRoute(iter, config), "GetNextExternalRoute() failed");
             PrintExternalRouteConfig(config);
             VerifyOrQuit(CompareExternalRouteConfig(config, routes[i]) == true,
                          "external route config does not match expectation");
@@ -171,14 +172,13 @@ void TestNetworkDataIterator(void)
     testFreeInstance(instance);
 }
 
+} // namespace NetworkData
 } // namespace ot
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
-    ot::TestNetworkDataIterator();
+    ot::NetworkData::TestNetworkDataIterator();
 
     printf("\nAll tests passed\n");
     return 0;
 }
-#endif

@@ -31,9 +31,9 @@
  *   This file implements the OpenThread Server API.
  */
 
-#include <openthread/config.h>
+#include "openthread-core-config.h"
 
-#if OPENTHREAD_ENABLE_SERVICE
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 #include <openthread/server.h>
 
@@ -44,15 +44,11 @@ using namespace ot;
 
 otError otServerGetNetDataLocal(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
 {
-    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aData != NULL && aDataLength != NULL, error = OT_ERROR_INVALID_ARGS);
+    assert(aData != NULL && aDataLength != NULL);
 
-    error = instance.Get<NetworkData::Local>().GetNetworkData(aStable, aData, *aDataLength);
-
-exit:
-    return error;
+    return instance.Get<NetworkData::Local>().GetNetworkData(aStable, aData, *aDataLength);
 }
 
 otError otServerAddService(otInstance *aInstance, const otServiceConfig *aConfig)
@@ -82,20 +78,7 @@ otError otServerGetNextService(otInstance *aInstance, otNetworkDataIterator *aIt
 
     VerifyOrExit(aIterator && aConfig, error = OT_ERROR_INVALID_ARGS);
 
-    error = instance.Get<NetworkData::Local>().GetNextService(aIterator, aConfig);
-
-exit:
-    return error;
-}
-
-otError otServerGetNextLeaderService(otInstance *aInstance, otNetworkDataIterator *aIterator, otServiceConfig *aConfig)
-{
-    otError   error    = OT_ERROR_NONE;
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    VerifyOrExit(aIterator && aConfig, error = OT_ERROR_INVALID_ARGS);
-
-    error = instance.Get<NetworkData::Leader>().GetNextService(aIterator, aConfig);
+    error = instance.Get<NetworkData::Local>().GetNextService(*aIterator, *aConfig);
 
 exit:
     return error;
@@ -108,4 +91,4 @@ otError otServerRegister(otInstance *aInstance)
     return instance.Get<NetworkData::Local>().SendServerDataNotification();
 }
 
-#endif // OPENTHREAD_ENABLE_SERVICE
+#endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE

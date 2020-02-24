@@ -1,6 +1,6 @@
 ; /******************************************************************************
 ; *  Filename:       startup_keil.c
-; *  Revised:        $Date: 2016-09-13 11:33:40 +0200 (ti, 13 sep 2016) $
+; *  Revised:        $Date: 2016-09-13 11:33:40 +0200 (Tue, 13 Sep 2016) $
 ; *  Revision:       $Revision: 17320 $
 ; *
 ; *  Description:    Startup code for CC26xx device family for use with KEIL.

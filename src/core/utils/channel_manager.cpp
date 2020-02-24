@@ -34,16 +34,14 @@
 
 #include "channel_manager.hpp"
 
-#include <openthread/platform/random.h>
-
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
-#include "phy/phy.hpp"
+#include "radio/radio.hpp"
 
-#if OPENTHREAD_ENABLE_CHANNEL_MANAGER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 
 namespace ot {
 namespace Utils {
@@ -77,7 +75,7 @@ void ChannelManager::RequestChannelChange(uint8_t aChannel)
     mChannel         = aChannel;
     mActiveTimestamp = 0;
 
-    mTimer.Start(1 + Random::GetUint32InRange(0, kRequestStartJitterInterval));
+    mTimer.Start(1 + Random::NonCrypto::GetUint32InRange(0, kRequestStartJitterInterval));
 
     Get<Notifier>().Signal(OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL);
 
@@ -100,7 +98,7 @@ void ChannelManager::PreparePendingDataset(void)
 {
     uint64_t             pendingTimestamp       = 0;
     uint64_t             pendingActiveTimestamp = 0;
-    uint32_t             delayInMs              = TimerMilli::SecToMsec(static_cast<uint32_t>(mDelay));
+    uint32_t             delayInMs              = Time::SecToMsec(static_cast<uint32_t>(mDelay));
     otOperationalDataset dataset;
     otError              error;
 
@@ -131,7 +129,7 @@ void ChannelManager::PreparePendingDataset(void)
         }
     }
 
-    pendingTimestamp += 1 + Random::GetUint32InRange(0, kMaxTimestampIncrease);
+    pendingTimestamp += 1 + Random::NonCrypto::GetUint32InRange(0, kMaxTimestampIncrease);
 
     error = Get<MeshCoP::ActiveDataset>().Read(dataset);
 
@@ -194,7 +192,7 @@ void ChannelManager::PreparePendingDataset(void)
     }
     else
     {
-        mActiveTimestamp = dataset.mActiveTimestamp + 1 + Random::GetUint32InRange(0, kMaxTimestampIncrease);
+        mActiveTimestamp = dataset.mActiveTimestamp + 1 + Random::NonCrypto::GetUint32InRange(0, kMaxTimestampIncrease);
     }
 
     dataset.mActiveTimestamp                       = mActiveTimestamp;
@@ -218,7 +216,7 @@ void ChannelManager::PreparePendingDataset(void)
     else
     {
         otLogInfoUtil("ChannelManager: %s error in dataset update (channel change %d), retry in %d sec",
-                      otThreadErrorToString(error), mChannel, TimerMilli::MsecToSec(kPendingDatasetTxRetryInterval));
+                      otThreadErrorToString(error), mChannel, Time::MsecToSec(kPendingDatasetTxRetryInterval));
 
         mTimer.Start(kPendingDatasetTxRetryInterval);
     }
@@ -273,42 +271,7 @@ exit:
     return;
 }
 
-#if OPENTHREAD_ENABLE_CHANNEL_MONITOR
-
-/**
- * This function randomly chooses a channel from a given channel mask.
- *
- * @param[in]  aMask  A channel mask.
- *
- * @returns A randomly chosen channel from the given mask, or `ChannelMask::kChannelIteratorFirst` if the mask is empty.
- *
- */
-static uint8_t ChooseRandomChannel(const Mac::ChannelMask &aMask)
-{
-    uint8_t channel     = Mac::ChannelMask::kChannelIteratorFirst;
-    uint8_t numChannels = 0;
-    uint8_t randomIndex;
-
-    VerifyOrExit(!aMask.IsEmpty());
-
-    while (aMask.GetNextChannel(channel) == OT_ERROR_NONE)
-    {
-        numChannels++;
-    }
-
-    randomIndex = Random::GetUint8InRange(0, numChannels);
-
-    channel = Mac::ChannelMask::kChannelIteratorFirst;
-    SuccessOrExit(aMask.GetNextChannel(channel));
-
-    while (randomIndex-- != 0)
-    {
-        SuccessOrExit(aMask.GetNextChannel(channel));
-    }
-
-exit:
-    return channel;
-}
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 otError ChannelManager::FindBetterChannel(uint8_t &aNewChannel, uint16_t &aOccupancy)
 {
@@ -355,7 +318,7 @@ otError ChannelManager::FindBetterChannel(uint8_t &aNewChannel, uint16_t &aOccup
 
     VerifyOrExit(!favoredBest.IsEmpty(), error = OT_ERROR_NOT_FOUND);
 
-    aNewChannel = ChooseRandomChannel(favoredBest);
+    aNewChannel = favoredBest.ChooseRandomChannel();
     aOccupancy  = favoredOccupancy;
 
 exit:
@@ -422,16 +385,7 @@ exit:
 
     return error;
 }
-
-#else // OPENTHREAD_ENABLE_CHANNEL_MONITOR
-
-otError ChannelManager::RequestChannelSelect(bool)
-{
-    otLogInfoUtil("ChannelManager: ChannelMonitor feature is disabled - cannot select channel");
-    return OT_ERROR_DISABLED_FEATURE;
-}
-
-#endif // OPENTHREAD_ENABLE_CHANNEL_MONITOR
+#endif // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 void ChannelManager::StartAutoSelectTimer(void)
 {
@@ -439,7 +393,7 @@ void ChannelManager::StartAutoSelectTimer(void)
 
     if (mAutoSelectEnabled)
     {
-        mTimer.Start(TimerMilli::SecToMsec(mAutoSelectInterval));
+        mTimer.Start(Time::SecToMsec(mAutoSelectInterval));
     }
     else
     {
@@ -465,13 +419,13 @@ otError ChannelManager::SetAutoChannelSelectionInterval(uint32_t aInterval)
     otError  error        = OT_ERROR_NONE;
     uint32_t prevInterval = mAutoSelectInterval;
 
-    VerifyOrExit((aInterval != 0) && (aInterval < TimerMilli::MsecToSec(Timer::kMaxDt)), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit((aInterval != 0) && (aInterval <= Time::MsecToSec(Timer::kMaxDelay)), error = OT_ERROR_INVALID_ARGS);
 
     mAutoSelectInterval = aInterval;
 
     if (mAutoSelectEnabled && (mState == kStateIdle) && mTimer.IsRunning() && (prevInterval != aInterval))
     {
-        mTimer.StartAt(mTimer.GetFireTime() - prevInterval, aInterval);
+        mTimer.StartAt(mTimer.GetFireTime() - Time::SecToMsec(prevInterval), Time::SecToMsec(aInterval));
     }
 
 exit:
@@ -495,4 +449,4 @@ void ChannelManager::SetFavoredChannels(uint32_t aChannelMask)
 } // namespace Utils
 } // namespace ot
 
-#endif // #if OPENTHREAD_ENABLE_CHANNEL_MANAGER
+#endif // #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE

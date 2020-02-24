@@ -32,8 +32,6 @@
  *
  */
 
-#define WPP_NAME "dataset_manager.tmh"
-
 #include "dataset_manager.hpp"
 
 #include <stdio.h>
@@ -43,7 +41,7 @@
 #include "common/logging.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
-#include "phy/phy.hpp"
+#include "radio/radio.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
@@ -274,10 +272,8 @@ otError DatasetManager::Register(void)
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->SetToken(Coap::Message::kDefaultTokenLength);
-    message->AppendUriPathOptions(mUriSet);
-    message->SetPayloadMarker();
+    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, mUriSet));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     mLocal.Read(dataset);
     SuccessOrExit(error = message->Append(dataset.GetBytes(), dataset.GetSize()));
@@ -355,8 +351,8 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->SetDefaultResponseHeader(aRequest);
-    message->SetPayloadMarker();
+    SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     if (aLength == 0)
     {
@@ -368,7 +364,7 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
             if (cur->GetType() != Tlv::kNetworkMasterKey ||
                 (Get<KeyManager>().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY))
             {
-                SuccessOrExit(error = message->AppendTlv(*cur));
+                SuccessOrExit(error = cur->AppendTo(*message));
             }
 
             cur = cur->GetNext();
@@ -388,7 +384,7 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
 
             if ((tlv = dataset.Get(static_cast<Tlv::Type>(aTlvs[index]))) != NULL)
             {
-                SuccessOrExit(error = message->AppendTlv(*tlv));
+                SuccessOrExit(error = tlv->AppendTo(*message));
             }
         }
     }
@@ -419,12 +415,10 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->SetToken(Coap::Message::kDefaultTokenLength);
-    message->AppendUriPathOptions(mUriSet);
-    message->SetPayloadMarker();
+    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, mUriSet));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
-#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
     if (Get<Commissioner>().IsActive())
     {
@@ -448,11 +442,11 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
             CommissionerSessionIdTlv sessionId;
             sessionId.Init();
             sessionId.SetCommissionerSessionId(Get<Commissioner>().GetSessionId());
-            SuccessOrExit(error = message->AppendTlv(sessionId));
+            SuccessOrExit(error = sessionId.AppendTo(*message));
         }
     }
 
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
     if (aDataset.mComponents.mIsActiveTimestampPresent)
     {
@@ -460,7 +454,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         timestamp.Init();
         static_cast<Timestamp *>(&timestamp)->SetSeconds(aDataset.mActiveTimestamp);
         static_cast<Timestamp *>(&timestamp)->SetTicks(0);
-        SuccessOrExit(error = message->AppendTlv(timestamp));
+        SuccessOrExit(error = timestamp.AppendTo(*message));
     }
 
     if (aDataset.mComponents.mIsPendingTimestampPresent)
@@ -469,31 +463,31 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         timestamp.Init();
         static_cast<Timestamp *>(&timestamp)->SetSeconds(aDataset.mPendingTimestamp);
         static_cast<Timestamp *>(&timestamp)->SetTicks(0);
-        SuccessOrExit(error = message->AppendTlv(timestamp));
+        SuccessOrExit(error = timestamp.AppendTo(*message));
     }
 
     if (aDataset.mComponents.mIsMasterKeyPresent)
     {
         NetworkMasterKeyTlv masterkey;
         masterkey.Init();
-        masterkey.SetNetworkMasterKey(aDataset.mMasterKey);
-        SuccessOrExit(error = message->AppendTlv(masterkey));
+        masterkey.SetNetworkMasterKey(static_cast<const MasterKey &>(aDataset.mMasterKey));
+        SuccessOrExit(error = masterkey.AppendTo(*message));
     }
 
     if (aDataset.mComponents.mIsNetworkNamePresent)
     {
         NetworkNameTlv networkname;
         networkname.Init();
-        networkname.SetNetworkName(aDataset.mNetworkName.m8);
-        SuccessOrExit(error = message->AppendTlv(networkname));
+        networkname.SetNetworkName(static_cast<const Mac::NetworkName &>(aDataset.mNetworkName).GetAsData());
+        SuccessOrExit(error = networkname.AppendTo(*message));
     }
 
     if (aDataset.mComponents.mIsExtendedPanIdPresent)
     {
         ExtendedPanIdTlv extpanid;
         extpanid.Init();
-        extpanid.SetExtendedPanId(aDataset.mExtendedPanId);
-        SuccessOrExit(error = message->AppendTlv(extpanid));
+        extpanid.SetExtendedPanId(static_cast<const Mac::ExtendedPanId &>(aDataset.mExtendedPanId));
+        SuccessOrExit(error = extpanid.AppendTo(*message));
     }
 
     if (aDataset.mComponents.mIsMeshLocalPrefixPresent)
@@ -501,7 +495,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         MeshLocalPrefixTlv localprefix;
         localprefix.Init();
         localprefix.SetMeshLocalPrefix(aDataset.mMeshLocalPrefix);
-        SuccessOrExit(error = message->AppendTlv(localprefix));
+        SuccessOrExit(error = localprefix.AppendTo(*message));
     }
 
     if (aDataset.mComponents.mIsDelayPresent)
@@ -509,7 +503,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         DelayTimerTlv delaytimer;
         delaytimer.Init();
         delaytimer.SetDelayTimer(aDataset.mDelay);
-        SuccessOrExit(error = message->AppendTlv(delaytimer));
+        SuccessOrExit(error = delaytimer.AppendTo(*message));
     }
 
     if (aDataset.mComponents.mIsPanIdPresent)
@@ -517,7 +511,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         PanIdTlv panid;
         panid.Init();
         panid.SetPanId(aDataset.mPanId);
-        SuccessOrExit(error = message->AppendTlv(panid));
+        SuccessOrExit(error = panid.AppendTo(*message));
     }
 
     if (aDataset.mComponents.mIsChannelPresent)
@@ -525,7 +519,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         ChannelTlv channel;
         channel.Init();
         channel.SetChannel(aDataset.mChannel);
-        SuccessOrExit(error = message->AppendTlv(channel));
+        SuccessOrExit(error = channel.AppendTo(*message));
     }
 
     if (aDataset.mComponents.mIsChannelMaskPresent)
@@ -533,7 +527,24 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
         ChannelMaskTlv channelMask;
         channelMask.Init();
         channelMask.SetChannelMask(aDataset.mChannelMask);
-        SuccessOrExit(error = message->AppendTlv(channelMask));
+        SuccessOrExit(error = channelMask.AppendTo(*message));
+    }
+
+    if (aDataset.mComponents.mIsPskcPresent)
+    {
+        PskcTlv pskc;
+        pskc.Init();
+        pskc.SetPskc(static_cast<const Pskc &>(aDataset.mPskc));
+        SuccessOrExit(error = pskc.AppendTo(*message));
+    }
+
+    if (aDataset.mComponents.mIsSecurityPolicyPresent)
+    {
+        SecurityPolicyTlv securityPolicy;
+        securityPolicy.Init();
+        securityPolicy.SetRotationTime(aDataset.mSecurityPolicy.mRotationTime);
+        securityPolicy.SetFlags(aDataset.mSecurityPolicy.mFlags);
+        SuccessOrExit(error = securityPolicy.AppendTo(*message));
     }
 
     if (aLength > 0)
@@ -623,9 +634,9 @@ otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDa
         datasetTlvs[length++] = Tlv::kChannel;
     }
 
-    if (aDatasetComponents.mIsPSKcPresent)
+    if (aDatasetComponents.mIsPskcPresent)
     {
-        datasetTlvs[length++] = Tlv::kPSKc;
+        datasetTlvs[length++] = Tlv::kPskc;
     }
 
     if (aDatasetComponents.mIsSecurityPolicyPresent)
@@ -640,13 +651,11 @@ otError DatasetManager::SendGetRequest(const otOperationalDatasetComponents &aDa
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
-    message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST);
-    message->SetToken(Coap::Message::kDefaultTokenLength);
-    message->AppendUriPathOptions(mUriGet);
+    SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, mUriGet));
 
     if (aLength + length > 0)
     {
-        message->SetPayloadMarker();
+        SuccessOrExit(error = message->SetPayloadMarker());
     }
 
     if (aLength + length > 0)
@@ -808,9 +817,9 @@ void PendingDataset::StartDelayTimer(void)
         uint32_t delay = delayTimer->GetDelayTimer();
 
         // the Timer implementation does not support the full 32 bit range
-        if (delay > Timer::kMaxDt)
+        if (delay > Timer::kMaxDelay)
         {
-            delay = Timer::kMaxDt;
+            delay = Timer::kMaxDelay;
         }
 
         mDelayTimer.StartAt(dataset.GetUpdateTime(), delay);

@@ -1,7 +1,7 @@
 /******************************************************************************
 *  Filename:       ddi.c
-*  Revised:        2017-04-26 18:27:45 +0200 (Wed, 26 Apr 2017)
-*  Revision:       48852
+*  Revised:        2018-06-04 16:10:13 +0200 (Mon, 04 Jun 2018)
+*  Revision:       52111
 *
 *  Description:    Driver for the DDI master interface
 *
@@ -110,7 +110,7 @@ DDI16BitWrite(uint32_t ui32Base, uint32_t ui32Reg,
 
 //*****************************************************************************
 //
-// Write a bitfield via the DDI using 16-bit maskable write
+// Write a bit field via the DDI using 16-bit maskable write
 //
 //*****************************************************************************
 void

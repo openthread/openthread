@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
 import config
@@ -40,6 +39,7 @@ ED = 3
 SED = 4
 
 MTDS = [ED, SED]
+
 
 class Cert_5_1_02_ChildAddressTimeout(unittest.TestCase):
 
@@ -76,9 +76,9 @@ class Cert_5_1_02_ChildAddressTimeout(unittest.TestCase):
         self.nodes[SED].enable_whitelist()
 
     def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+        for n in list(self.nodes.values()):
+            n.stop()
+            n.destroy()
         self.simulator.stop()
 
     def test(self):

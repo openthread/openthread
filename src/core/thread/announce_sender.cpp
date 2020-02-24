@@ -31,8 +31,6 @@
  *   This file implements the AnnounceSender.
  */
 
-#define WPP_NAME "announce_sender.tmh"
-
 #include "announce_sender.hpp"
 
 #include <openthread/platform/radio.h>
@@ -44,7 +42,7 @@
 #include "common/random.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
-#include "phy/phy.hpp"
+#include "radio/radio.hpp"
 
 namespace ot {
 
@@ -78,7 +76,7 @@ otError AnnounceSenderBase::SendAnnounce(Mac::ChannelMask aChannelMask,
     mJitter      = aJitter;
     mChannel     = Mac::ChannelMask::kChannelIteratorFirst;
 
-    mTimer.Start(Random::AddJitter(mPeriod, mJitter));
+    mTimer.Start(Random::NonCrypto::AddJitter(mPeriod, mJitter));
 
 exit:
     return error;
@@ -106,13 +104,13 @@ void AnnounceSenderBase::HandleTimer(void)
 
     Get<Mle::MleRouter>().SendAnnounce(mChannel, false);
 
-    mTimer.Start(Random::AddJitter(mPeriod, mJitter));
+    mTimer.Start(Random::NonCrypto::AddJitter(mPeriod, mJitter));
 
 exit:
     return;
 }
 
-#if OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+#if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
 
 AnnounceSender::AnnounceSender(Instance &aInstance)
     : AnnounceSenderBase(aInstance, &AnnounceSender::HandleTimer)
@@ -136,13 +134,13 @@ void AnnounceSender::CheckState(void)
     {
     case OT_DEVICE_ROLE_ROUTER:
     case OT_DEVICE_ROLE_LEADER:
-        period = kRouterTxInterval;
+        interval = kRouterTxInterval;
         break;
 
     case OT_DEVICE_ROLE_CHILD:
-        if (mle.IsRouterRoleEnabled() && (mle.GetDeviceMode() & Mle::ModeTlv::kModeRxOnWhenIdle))
+        if (mle.IsRouterEligible() && mle.IsRxOnWhenIdle())
         {
-            period = kReedTxInterval;
+            interval = kReedTxInterval;
             break;
         }
 
@@ -193,6 +191,6 @@ void AnnounceSender::HandleStateChanged(otChangedFlags aFlags)
     }
 }
 
-#endif // OPENTHREAD_CONFIG_ENABLE_ANNOUNCE_SENDER
+#endif // OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
 
 } // namespace ot

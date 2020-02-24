@@ -39,20 +39,22 @@ NM                              = arm-none-eabi-nm
 RANLIB                          = arm-none-eabi-ranlib
 OBJCOPY                         = arm-none-eabi-objcopy
 
-BuildJobs                      ?= 10
 GCCVersion                      = $(shell expr `$(CC) -dumpversion | cut -f1 -d.`)
+
+# Disable built-in mbedTLS by default allowing for nrf_security implementation with hardware acceleration.
+# When set to 0 built-in, software implementation would be used.
+DISABLE_BUILTIN_MBEDTLS        ?= 1
+
+ifeq ($(DISABLE_CC310), 1)
+$(error DISABLE_CC310=1 is deprecated, please use DISABLE_BUILTIN_MBEDTLS=0)
+endif
 
 configure_OPTIONS                                 = \
     --enable-ftd                                    \
     --enable-mtd                                    \
-    --enable-diag                                   \
     --enable-linker-map                             \
     --with-examples=nrf52840                        \
     $(NULL)
-
-ifneq ($(DISABLE_BUILTIN_MBEDTLS), 1)
-configure_OPTIONS              += MBEDTLS_CPPFLAGS="$(NRF52840_MBEDTLS_CPPFLAGS)"
-endif
 
 ifdef SRC_PATH
 configure_OPTIONS              += --srcdir="$(SRC_PATH)"
@@ -61,45 +63,82 @@ endif
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
-NRF52840_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"mbedtls-config.h\"'
 NRF52840_MBEDTLS_CPPFLAGS += -DMBEDTLS_USER_CONFIG_FILE='\"nrf52840-mbedtls-config.h\"'
+NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/libraries/nrf_security/mbedtls_plat_config
+
+ifeq ($(DISABLE_BUILTIN_MBEDTLS), 1)
+NRF52840_MBEDTLS_CPPFLAGS += -DMBEDTLS_CONFIG_FILE='\"nrf-config.h\"'
+NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/libraries/nrf_security/include
+NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/libraries/nrf_security/config
+NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/libraries/nrf_security/nrf_cc310_plat/include
+else
+NRF52840_MBEDTLS_CPPFLAGS += -DMBEDTLS_CONFIG_FILE='\"mbedtls-config.h\"'
 NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls
 NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include
-NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include/mbedtls
-NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/libraries/crypto
-NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/libraries/nrf_cc310/include
-NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/nrfx/mdk
-NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/cmsis
 NRF52840_MBEDTLS_CPPFLAGS += -DNRF52840_XXAA
+endif
 
-CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-nrf52840-config.h\"'
-CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/nrf52840/
+ifeq ($(MBEDTLS_THREADING), 1)
+ifeq ($(DISABLE_BUILTIN_MBEDTLS), 1)
+$(error Cannot use MBEDTLS_THREADING with CC310 support. CC310 library comes with built-in threading support. To disable CC310 please use DISABLE_BUILTIN_MBEDTLS=0)
+else
+NRF52840_MBEDTLS_CPPFLAGS += -DMBEDTLS_THREADING_C
+NRF52840_MBEDTLS_CPPFLAGS += -DMBEDTLS_THREADING_ALT
+NRF52840_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/libraries/nrf_security/include/software-only-threading
+endif
+endif
 
-COMMONCFLAGS                   := \
-    -fdata-sections               \
-    -ffunction-sections           \
-    -Os                           \
-    -g                            \
-    -D$(CONFIG_FILE)              \
-    -I$(CONFIG_FILE_PATH)         \
+ifdef MBEDTLS_THREADING_MUTEX_DEF
+ifneq ($(MBEDTLS_THREADING), 1)
+$(error Cannot use MBEDTLS_THREADING_MUTEX_DEF without MBEDTLS_THREADING=1)
+else
+NRF52840_MBEDTLS_CPPFLAGS += -DMBEDTLS_THREADING_MUTEX_DEF='\"$(MBEDTLS_THREADING_MUTEX_DEF)\"'
+endif
+endif
+
+NRF52840_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-nrf52840-config.h\"'
+NRF52840_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-nrf52840-config-check.h\"'
+NRF52840_CONFIG_FILE_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/nrf528xx/nrf52840
+
+COMMONCFLAGS                      := \
+    -fdata-sections                  \
+    -ffunction-sections              \
+    -Os                              \
+    -g                               \
+    $(NRF52840_CONFIG_FILE_CPPFLAGS) \
     $(NULL)
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
-ifneq ($(CERT_LOG),1)
-COMMONCFLAGS += -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+ifeq ($(DISABLE_BUILTIN_MBEDTLS),1)
+COMMONCFLAGS                   += $(NRF52840_MBEDTLS_CPPFLAGS)
+else
+configure_OPTIONS              += MBEDTLS_CPPFLAGS="$(NRF52840_MBEDTLS_CPPFLAGS)"
 endif
 
 ifeq ($(BOOTLOADER),1)
-configure_OPTIONS += --with-custom-linker-file=$(AbsTopSourceDir)/examples/platforms/nrf52840/nrf52840_bootloader.ld
+$(info Warning: BOOTLOADER=1 switch is deprecated. Defaulting to BOOTLOADER=USB.)
+override BOOTLOADER = USB
+endif
+
+ifeq ($(BOOTLOADER),USB)
+configure_OPTIONS += --with-custom-linker-file=$(AbsTopSourceDir)/examples/platforms/nrf528xx/nrf52840/nrf52840_bootloader_usb.ld
 COMMONCFLAGS += -DAPP_USBD_NRF_DFU_TRIGGER_ENABLED=1
 endif
 
+ifeq ($(BOOTLOADER),UART)
+configure_OPTIONS += --with-custom-linker-file=$(AbsTopSourceDir)/examples/platforms/nrf528xx/nrf52840/nrf52840_bootloader_uart.ld
+endif
+
+ifeq ($(BOOTLOADER),BLE)
+configure_OPTIONS += --with-custom-linker-file=$(AbsTopSourceDir)/examples/platforms/nrf528xx/nrf52840/nrf52840_bootloader_ble.ld
+endif
+
 #
-# Select transport which CLI, NCP and NCP-Radio examples will use to communicate.
+# Select transport which CLI, NCP and RCP examples will use to communicate.
 # To disable all transports use the DISABLE_TRANSPORTS switch. This will disable
 # the build of all above examples.
-# If NCP_SPI switch is set, only NCP and NCP-Radio examples will be built.
+# If NCP_SPI switch is set, only NCP and RCP examples will be built.
 # Otherwise the user can select USB transport. If no transports were selected,
 # the default serial transport is UART.
 #
@@ -108,9 +147,9 @@ configure_OPTIONS              += --enable-ncp
 configure_OPTIONS              += --enable-radio-only
 ifeq ($(NCP_SPI),1)
 COMMONCFLAGS                   += -DSPIS_AS_SERIAL_TRANSPORT=1
-configure_OPTIONS              += --with-ncp-bus=spi
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_NCP_SPI_ENABLE=1
 else
-configure_OPTIONS              += --with-ncp-bus=uart
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1
 configure_OPTIONS              += --enable-cli
 ifeq ($(USB),1)
 COMMONCFLAGS                   += -DUSB_CDC_AS_SERIAL_TRANSPORT=1
@@ -119,10 +158,6 @@ COMMONCFLAGS                   += -DUART_AS_SERIAL_TRANSPORT=1
 endif # USB     == 1
 endif # NCP_SPI == 1
 endif # DISABLE_TRANSPORTS
-
-ifeq ($(DISABLE_CC310), 1)
-NRF52840_MBEDTLS_CPPFLAGS += -DDISABLE_CC310=1
-endif
 
 ifeq ($(shell expr $(GCCVersion) \>= 7), 1)
     COMMONCFLAGS += -Wno-expansion-to-defined

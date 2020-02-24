@@ -29,6 +29,8 @@
 #ifndef MBEDTLS_CONFIG_H
 #define MBEDTLS_CONFIG_H
 
+#include "openthread-core-config.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -36,45 +38,7 @@
 #include <openthread/platform/logging.h>
 #include <openthread/platform/memory.h>
 
-#if defined(_WIN32)
-#include <stdarg.h>
-#include <stdio.h>
-// Temporary, until the warnings can get fixed in the mbed library
-#pragma warning(disable:4242)  // conversion from '*' to '*', possible loss of data
-#pragma warning(disable:4244)  // conversion from '*' to '*', possible loss of data
-#pragma warning(disable:4267)  // conversion from '*' to '*', possible loss of data
-#endif
-
-#if defined(_KERNEL_MODE)
-#define MBEDTLS_PLATFORM_EXIT_MACRO
-__inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ...)
-{
-    va_list argp;
-    va_start( argp, format );
-    int ret = _vsnprintf_s( s, n, _TRUNCATE, format, argp );
-    va_end( argp );
-    return ret;
-}
-#define MBEDTLS_PLATFORM_STD_SNPRINTF windows_kernel_snprintf
-
-#define MBEDTLS_PLATFORM_ZEROIZE_ALT
-__inline void mbedtls_platform_zeroize( void *buf, size_t len)
-{
-    uint8_t *p = (uint8_t *)buf;
-    while ( len-- )
-    {
-        *p++ = 0;
-    }
-}
-#endif
-
-#ifndef _WIN32
 #define MBEDTLS_PLATFORM_SNPRINTF_MACRO snprintf
-#endif
-
-#if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_DEPRECATE) && !defined(_KERNEL_MODE)
-#define _CRT_SECURE_NO_DEPRECATE 1
-#endif
 
 #define MBEDTLS_AES_C
 #define MBEDTLS_AES_ROM_TABLES
@@ -112,12 +76,13 @@ __inline void mbedtls_platform_zeroize( void *buf, size_t len)
 #define MBEDTLS_SSL_PROTO_DTLS
 #define MBEDTLS_SSL_TLS_C
 
-#if OPENTHREAD_ENABLE_BORDER_AGENT || OPENTHREAD_ENABLE_COMMISSIONER || OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || OPENTHREAD_CONFIG_COMMISSIONER_ENABLE || \
+    OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #define MBEDTLS_SSL_COOKIE_C
 #define MBEDTLS_SSL_SRV_C
 #endif
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #define MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 #define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif
@@ -134,7 +99,7 @@ __inline void mbedtls_platform_zeroize( void *buf, size_t len)
 #define MBEDTLS_X509_CRT_PARSE_C
 #endif
 
-#if OPENTHREAD_ENABLE_ECDSA
+#if OPENTHREAD_CONFIG_ECDSA_ENABLE
 #define MBEDTLS_BASE64_C
 #define MBEDTLS_ECDH_C
 #define MBEDTLS_ECDSA_C
@@ -149,14 +114,14 @@ __inline void mbedtls_platform_zeroize( void *buf, size_t len)
 #define MBEDTLS_ECP_FIXED_POINT_OPTIM      0 /**< Enable fixed-point speed-up */
 #define MBEDTLS_ENTROPY_MAX_SOURCES        1 /**< Maximum number of sources supported */
 
-#if OPENTHREAD_ENABLE_MULTIPLE_INSTANCES
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 #define MBEDTLS_PLATFORM_STD_CALLOC      otPlatCAlloc /**< Default allocator to use, can be undefined */
 #define MBEDTLS_PLATFORM_STD_FREE        otPlatFree /**< Default free to use, can be undefined */
 #else
 #define MBEDTLS_MEMORY_BUFFER_ALLOC_C
 #endif
 
-#if OPENTHREAD_ENABLE_APPLICATION_COAP_SECURE
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #define MBEDTLS_SSL_MAX_CONTENT_LEN      900 /**< Maxium fragment length in bytes */
 #else
 #define MBEDTLS_SSL_MAX_CONTENT_LEN      768 /**< Maxium fragment length in bytes */

@@ -35,9 +35,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "utils/wrap_string.h"
 
 #include <openthread/dataset.h>
+#include <openthread/dataset_ftd.h>
 
 #include "cli/cli.hpp"
 #include "cli/cli_server.hpp"
@@ -55,6 +55,7 @@ const Dataset::Command Dataset::sCommands[] = {
     {"commit", &Dataset::ProcessCommit},
     {"delay", &Dataset::ProcessDelay},
     {"extpanid", &Dataset::ProcessExtPanId},
+    {"init", &Dataset::ProcessInit},
     {"masterkey", &Dataset::ProcessMasterKey},
     {"meshlocalprefix", &Dataset::ProcessMeshLocalPrefix},
     {"mgmtgetcommand", &Dataset::ProcessMgmtGetCommand},
@@ -63,7 +64,7 @@ const Dataset::Command Dataset::sCommands[] = {
     {"panid", &Dataset::ProcessPanId},
     {"pending", &Dataset::ProcessPending},
     {"pendingtimestamp", &Dataset::ProcessPendingTimestamp},
-    {"pskc", &Dataset::ProcessPSKc},
+    {"pskc", &Dataset::ProcessPskc},
     {"securitypolicy", &Dataset::ProcessSecurityPolicy},
 };
 
@@ -81,12 +82,12 @@ otError Dataset::Print(otOperationalDataset &aDataset)
 {
     if (aDataset.mComponents.mIsPendingTimestampPresent)
     {
-        mInterpreter.mServer->OutputFormat("Pending Timestamp: %d\r\n", aDataset.mPendingTimestamp);
+        mInterpreter.mServer->OutputFormat("Pending Timestamp: %lu\r\n", aDataset.mPendingTimestamp);
     }
 
     if (aDataset.mComponents.mIsActiveTimestampPresent)
     {
-        mInterpreter.mServer->OutputFormat("Active Timestamp: %d\r\n", aDataset.mActiveTimestamp);
+        mInterpreter.mServer->OutputFormat("Active Timestamp: %lu\r\n", aDataset.mActiveTimestamp);
     }
 
     if (aDataset.mComponents.mIsChannelPresent)
@@ -130,7 +131,8 @@ otError Dataset::Print(otOperationalDataset &aDataset)
     if (aDataset.mComponents.mIsNetworkNamePresent)
     {
         mInterpreter.mServer->OutputFormat("Network Name: ");
-        mInterpreter.mServer->OutputFormat("%.*s\r\n", sizeof(aDataset.mNetworkName), aDataset.mNetworkName.m8);
+        mInterpreter.mServer->OutputFormat("%.*s\r\n", static_cast<uint16_t>(sizeof(aDataset.mNetworkName)),
+                                           aDataset.mNetworkName.m8);
     }
 
     if (aDataset.mComponents.mIsPanIdPresent)
@@ -138,10 +140,10 @@ otError Dataset::Print(otOperationalDataset &aDataset)
         mInterpreter.mServer->OutputFormat("PAN ID: 0x%04x\r\n", aDataset.mPanId);
     }
 
-    if (aDataset.mComponents.mIsPSKcPresent)
+    if (aDataset.mComponents.mIsPskcPresent)
     {
         mInterpreter.mServer->OutputFormat("PSKc: ");
-        OutputBytes(aDataset.mPSKc.m8, sizeof(aDataset.mPSKc.m8));
+        OutputBytes(aDataset.mPskc.m8, sizeof(aDataset.mPskc.m8));
         mInterpreter.mServer->OutputFormat("\r\n");
     }
 
@@ -213,6 +215,35 @@ otError Dataset::ProcessHelp(int argc, char *argv[])
     }
 
     return OT_ERROR_NONE;
+}
+
+otError Dataset::ProcessInit(int argc, char *argv[])
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
+
+    if (strcmp(argv[0], "active") == 0)
+    {
+        SuccessOrExit(error = otDatasetGetActive(mInterpreter.mInstance, &sDataset));
+    }
+    else if (strcmp(argv[0], "pending") == 0)
+    {
+        SuccessOrExit(error = otDatasetGetPending(mInterpreter.mInstance, &sDataset));
+    }
+#if OPENTHREAD_FTD
+    else if (strcmp(argv[0], "new") == 0)
+    {
+        SuccessOrExit(error = otDatasetCreateNewNetwork(mInterpreter.mInstance, &sDataset));
+    }
+#endif
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+
+exit:
+    return error;
 }
 
 otError Dataset::ProcessActive(int argc, char *argv[])
@@ -643,7 +674,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessPSKc(int argc, char *argv[])
+otError Dataset::ProcessPskc(int argc, char *argv[])
 {
     otError  error = OT_ERROR_NONE;
     uint16_t length;
@@ -651,10 +682,10 @@ otError Dataset::ProcessPSKc(int argc, char *argv[])
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
     length = static_cast<uint16_t>((strlen(argv[0]) + 1) / 2);
     VerifyOrExit(length <= OT_PSKC_MAX_SIZE, error = OT_ERROR_NO_BUFS);
-    VerifyOrExit(Interpreter::Hex2Bin(argv[0], sDataset.mPSKc.m8 + OT_PSKC_MAX_SIZE - length, length) == length,
+    VerifyOrExit(Interpreter::Hex2Bin(argv[0], sDataset.mPskc.m8 + OT_PSKC_MAX_SIZE - length, length) == length,
                  error = OT_ERROR_PARSE);
 
-    sDataset.mComponents.mIsPSKcPresent = true;
+    sDataset.mComponents.mIsPskcPresent = true;
 
 exit:
     return error;

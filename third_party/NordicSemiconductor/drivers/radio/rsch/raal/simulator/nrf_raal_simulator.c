@@ -36,7 +36,7 @@
  *
  */
 
-#include "nrf_raal_api.h"
+#include "rsch/raal/nrf_raal_api.h"
 
 #include <assert.h>
 #include <stdbool.h>

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2019, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -181,7 +181,7 @@ static ret_code_t setup_req_std_in(app_usbd_class_inst_t const * p_inst,
     /* Only Get Descriptor standard IN request is supported by CDC class */
     if ((app_usbd_setup_req_rec(p_setup_ev->setup.bmRequestType) == APP_USBD_SETUP_REQREC_INTERFACE)
         &&
-        (p_setup_ev->setup.bmRequest == APP_USBD_SETUP_STDREQ_GET_DESCRIPTOR))
+        (p_setup_ev->setup.bRequest == APP_USBD_SETUP_STDREQ_GET_DESCRIPTOR))
     {
         size_t dsc_len = 0;
         size_t max_size;
@@ -218,7 +218,7 @@ static ret_code_t setup_req_std_out(app_usbd_class_inst_t const * p_inst,
                                     app_usbd_setup_evt_t const *  p_setup_ev)
 {
 
-    switch (p_setup_ev->setup.bmRequest)
+    switch (p_setup_ev->setup.bRequest)
     {
         default:
             break;
@@ -241,7 +241,7 @@ static ret_code_t setup_req_class_in(app_usbd_class_inst_t const * p_inst,
     app_usbd_cdc_acm_t const * p_cdc_acm = cdc_acm_get(p_inst);
     app_usbd_cdc_acm_ctx_t *   p_cdc_acm_ctx = cdc_acm_ctx_get(p_cdc_acm);
 
-    switch (p_setup_ev->setup.bmRequest)
+    switch (p_setup_ev->setup.bRequest)
     {
         case APP_USBD_CDC_REQ_GET_LINE_CODING:
         {
@@ -317,7 +317,7 @@ static ret_code_t cdc_acm_req_out_datastage(app_usbd_class_inst_t const * p_inst
     app_usbd_cdc_acm_t const * p_cdc_acm = cdc_acm_get(p_inst);
     app_usbd_cdc_acm_ctx_t *   p_cdc_acm_ctx = cdc_acm_ctx_get(p_cdc_acm);
 
-    p_cdc_acm_ctx->request.type = p_setup_ev->setup.bmRequest;
+    p_cdc_acm_ctx->request.type = p_setup_ev->setup.bRequest;
     p_cdc_acm_ctx->request.len = p_setup_ev->setup.wLength.w;
 
     /*Request setup data*/
@@ -377,7 +377,7 @@ static ret_code_t setup_req_class_out(app_usbd_class_inst_t const * p_inst,
     app_usbd_cdc_acm_t const * p_cdc_acm = cdc_acm_get(p_inst);
     app_usbd_cdc_acm_ctx_t *   p_cdc_acm_ctx = cdc_acm_ctx_get(p_cdc_acm);
 
-    switch (p_setup_ev->setup.bmRequest)
+    switch (p_setup_ev->setup.bRequest)
     {
         case APP_USBD_CDC_REQ_SET_LINE_CODING:
         {
@@ -1158,7 +1158,7 @@ ret_code_t app_usbd_cdc_acm_serial_state_notify(app_usbd_cdc_acm_t const *      
         notify->cdc_notify.bmRequestType = app_usbd_setup_req_val(APP_USBD_SETUP_REQREC_INTERFACE,
                                                                   APP_USBD_SETUP_REQTYPE_CLASS,
                                                                   APP_USBD_SETUP_REQDIR_IN);
-        notify->cdc_notify.bmRequest = APP_USBD_CDC_NOTIF_SERIAL_STATE;
+        notify->cdc_notify.bRequest = APP_USBD_CDC_NOTIF_SERIAL_STATE;
         notify->cdc_notify.wValue = 0;
         notify->cdc_notify.wIndex = 0;
         notify->cdc_notify.wLength = sizeof(notify->serial_state);

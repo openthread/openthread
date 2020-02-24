@@ -33,12 +33,13 @@
 
 #include "pbkdf2_cmac.h"
 
+#include <string.h>
+
 #include "common/debug.hpp"
-#include "utils/wrap_string.h"
 
 #include <mbedtls/cmac.h>
 
-#if OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
 void otPbkdf2Cmac(const uint8_t *aPassword,
                   uint16_t       aPasswordLen,
@@ -105,4 +106,4 @@ void otPbkdf2Cmac(const uint8_t *aPassword,
     }
 }
 
-#endif // OPENTHREAD_ENABLE_COMMISSIONER && OPENTHREAD_FTD
+#endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD

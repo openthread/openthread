@@ -164,10 +164,9 @@ typedef struct otExtAddress otExtAddress;
  */
 typedef struct otRadioIeInfo
 {
-    uint8_t  mTimeIeOffset;      ///< The Time IE offset from the start of PSDU.
-    uint8_t  mTimeSyncSeq;       ///< The Time sync sequence.
-    uint64_t mTimestamp;         ///< The time in microseconds when the SFD was received.
-    int64_t  mNetworkTimeOffset; ///< The time offset to the Thread network time.
+    int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time.
+    uint8_t mTimeIeOffset;      ///< The Time IE offset from the start of PSDU.
+    uint8_t mTimeSyncSeq;       ///< The Time sync sequence.
 } otRadioIeInfo;
 
 /**
@@ -175,10 +174,10 @@ typedef struct otRadioIeInfo
  */
 typedef struct otRadioFrame
 {
-    uint8_t *      mPsdu;    ///< The PSDU.
-    uint8_t        mLength;  ///< Length of the PSDU.
-    uint8_t        mChannel; ///< Channel used to transmit/receive the frame.
-    otRadioIeInfo *mIeInfo;  ///< The pointer to the Header IE(s) related information.
+    uint8_t *mPsdu; ///< The PSDU.
+
+    uint16_t mLength;  ///< Length of the PSDU.
+    uint8_t  mChannel; ///< Channel used to transmit/receive the frame.
 
     /**
      * The union of transmit and receive information for a radio frame.
@@ -190,11 +189,12 @@ typedef struct otRadioFrame
          */
         struct
         {
+            const uint8_t *mAesKey;            ///< The key used for AES-CCM frame security.
+            otRadioIeInfo *mIeInfo;            ///< The pointer to the Header IE(s) related information.
             uint8_t        mMaxCsmaBackoffs;   ///< Maximum number of backoffs attempts before declaring CCA failure.
             uint8_t        mMaxFrameRetries;   ///< Maximum number of retries allowed after a transmission failure.
             bool           mIsARetx : 1;       ///< True if this frame is a retransmission (ignored by radio driver).
             bool           mCsmaCaEnabled : 1; ///< Set to true to enable CSMA-CA for this packet, false otherwise.
-            const uint8_t *mAesKey;            ///< The key used for AES-CCM frame security.
         } mTxInfo;
 
         /**
@@ -203,20 +203,16 @@ typedef struct otRadioFrame
         struct
         {
             /**
-             * The timestamp when the frame was received (milliseconds).
-             * Applicable/Required only when raw-link-api feature (`OPENTHREAD_ENABLE_RAW_LINK_API`) is enabled.
+             * The timestamp when the frame was received in microseconds.
+             *
+             * The value SHALL be the time when the SFD was received when TIME_SYNC or CSL is enabled.
+             * Otherwise, the time when the MAC frame was fully received is also acceptable.
              *
              */
-            uint32_t mMsec;
+            uint64_t mTimestamp;
 
-            /**
-             * The timestamp when the frame was received (microseconds, the offset to mMsec).
-             * Applicable/Required only when raw-link-api feature (`OPENTHREAD_ENABLE_RAW_LINK_API`) is enabled.
-             *
-             */
-            uint16_t mUsec;
-            int8_t   mRssi; ///< Received signal strength indicator in dBm for received frames.
-            uint8_t  mLqi;  ///< Link Quality Indicator for received frames.
+            int8_t  mRssi; ///< Received signal strength indicator in dBm for received frames.
+            uint8_t mLqi;  ///< Link Quality Indicator for received frames.
 
             // Flags
             bool mAckedWithFramePending : 1; /// This indicates if this frame was acknowledged with frame pending set.
@@ -234,6 +230,7 @@ typedef enum otRadioState
     OT_RADIO_STATE_SLEEP    = 1,
     OT_RADIO_STATE_RECEIVE  = 2,
     OT_RADIO_STATE_TRANSMIT = 3,
+    OT_RADIO_STATE_INVALID  = 255,
 } otRadioState;
 
 /**
@@ -248,6 +245,32 @@ typedef enum otRadioState
  *                                    (Radio OFF)                 or
  *                                                        signal TransmitDone
  */
+
+/**
+ * This structure represents radio coexistence metrics.
+ */
+typedef struct otRadioCoexMetrics
+{
+    uint32_t mNumGrantGlitch;          ///< Number of grant glitches.
+    uint32_t mNumTxRequest;            ///< Number of tx requests.
+    uint32_t mNumTxGrantImmediate;     ///< Number of tx requests while grant was active.
+    uint32_t mNumTxGrantWait;          ///< Number of tx requests while grant was inactive.
+    uint32_t mNumTxGrantWaitActivated; ///< Number of tx requests while grant was inactive that were ultimately granted.
+    uint32_t mNumTxGrantWaitTimeout;   ///< Number of tx requests while grant was inactive that timed out.
+    uint32_t mNumTxGrantDeactivatedDuringRequest; ///< Number of tx that were in progress when grant was deactivated.
+    uint32_t mNumTxDelayedGrant;                  ///< Number of tx requests that were not granted within 50us.
+    uint32_t mAvgTxRequestToGrantTime;            ///< Average time in usec from tx request to grant.
+    uint32_t mNumRxRequest;                       ///< Number of rx requests.
+    uint32_t mNumRxGrantImmediate;                ///< Number of rx requests while grant was active.
+    uint32_t mNumRxGrantWait;                     ///< Number of rx requests while grant was inactive.
+    uint32_t mNumRxGrantWaitActivated; ///< Number of rx requests while grant was inactive that were ultimately granted.
+    uint32_t mNumRxGrantWaitTimeout;   ///< Number of rx requests while grant was inactive that timed out.
+    uint32_t mNumRxGrantDeactivatedDuringRequest; ///< Number of rx that were in progress when grant was deactivated.
+    uint32_t mNumRxDelayedGrant;                  ///< Number of rx requests that were not granted within 50us.
+    uint32_t mAvgRxRequestToGrantTime;            ///< Average time in usec from rx request to grant.
+    uint32_t mNumRxGrantNone;                     ///< Number of rx requests that completed without receiving grant.
+    bool     mStopped;                            ///< Stats collection stopped due to saturation.
+} otRadioCoexMetrics;
 
 /**
  * @}
@@ -358,6 +381,32 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower);
  *
  */
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower);
+
+/**
+ * Get the radio's CCA ED threshold in dBm.
+ *
+ * @param[in] aInstance    The OpenThread instance structure.
+ * @param[out] aThreshold  The CCA ED threshold in dBm.
+ *
+ * @retval OT_ERROR_NONE             Successfully retrieved the CCA ED threshold.
+ * @retval OT_ERROR_INVALID_ARGS     @p aThreshold was NULL.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  CCA ED threshold configuration via dBm is not implemented.
+ *
+ */
+otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold);
+
+/**
+ * Set the radio's CCA ED threshold in dBm.
+ *
+ * @param[in] aInstance   The OpenThread instance structure.
+ * @param[in] aThreshold  The CCA ED threshold in dBm.
+ *
+ * @retval OT_ERROR_NONE             Successfully set the transmit power.
+ * @retval OT_ERROR_INVALID_ARGS     Given threshold is out of range.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  CCA ED threshold configuration via dBm is not implemented.
+ *
+ */
+otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold);
 
 /**
  * Get the status of promiscuous mode.
@@ -563,21 +612,6 @@ extern void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRad
 extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
 /**
- * The radio driver calls this method to notify OpenThread to process transmit security for the frame,
- * this happens when the frame includes Header IE(s) that were updated before transmission.
- *
- * This function is used when feature `OPENTHREAD_CONFIG_HEADER_IE_SUPPORT` is enabled.
- *
- * @note This function can be called from interrupt context and it would only read/write data passed in
- *       via @p aFrame, but would not read/write any state within OpenThread.
- *
- * @param[in]  aInstance   The OpenThread instance structure.
- * @param[in]  aFrame      The radio frame which needs to process transmit security.
- *
- */
-extern void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFrame);
-
-/**
  * Get the most recent RSSI measurement.
  *
  * @param[in] aInstance  The OpenThread instance structure.
@@ -710,12 +744,51 @@ uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance);
 /**
  * Get the radio preferred channel mask that the device prefers to form on.
  *
- * @param[in]  aInstance   The OpenThread instance strucyyture.
+ * @param[in]  aInstance   The OpenThread instance structure.
  *
  * @returns The radio preferred channel mask.
  *
  */
 uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance);
+
+/**
+ * Enable the radio coex.
+ *
+ * This function is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ * @param[in] aEnabled   TRUE to enable the radio coex, FALSE otherwise.
+ *
+ * @retval OT_ERROR_NONE     Successfully enabled.
+ * @retval OT_ERROR_FAILED   The radio coex could not be enabled.
+ *
+ */
+otError otPlatRadioSetCoexEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * Check whether radio coex is enabled or not.
+ *
+ * This function is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ *
+ * @returns TRUE if the radio coex is enabled, FALSE otherwise.
+ *
+ */
+bool otPlatRadioIsCoexEnabled(otInstance *aInstance);
+
+/**
+ * Get the radio coexistence metrics.
+ *
+ * This function is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
+ *
+ * @param[in]  aInstance     The OpenThread instance structure.
+ * @param[out] aCoexMetrics  A pointer to the coexistence metrics structure.
+ *
+ * @retval OT_ERROR_NONE          Successfully retrieved the coex metrics.
+ * @retval OT_ERROR_INVALID_ARGS  @p aCoexMetrics was NULL.
+ */
+otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCoexMetrics);
 
 /**
  * @}

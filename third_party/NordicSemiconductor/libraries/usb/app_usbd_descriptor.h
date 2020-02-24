@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -85,7 +85,7 @@ ANON_UNIONS_ENABLE;
  * @brief Descriptor types.
  *
  * Descriptor types used in two situations:
- * - when processing @ref APP_USBD_SETUP_STDREQ_GET_DESCRIPTOR SETUP request,
+ * - When processing @ref APP_USBD_SETUP_STDREQ_GET_DESCRIPTOR SETUP request,
  *   the required descriptor type may be placed in wValue in HighByte.
  * - As a descriptor identifier itself inside descriptor stream.
  *
@@ -118,9 +118,9 @@ typedef enum
                                                          *       Cannot be accessed by GetDescriptor or SetDescriptor
                                                          */
     APP_USBD_DESCRIPTOR_DEVICE_QUALIFIER          =  6, /**< @note Not supported - used only in HighSpeed capable devices. */
-    APP_USBD_DESCRIPTOR_OTHER_SPEED_CONFIGURATION =  7, /**< @note Not supported - our USB implementation supports only one speed. */
+    APP_USBD_DESCRIPTOR_OTHER_SPEED_CONFIGURATION =  7, /**< @note Not supported - USB library supports only one speed. */
     APP_USBD_DESCRIPTOR_INTERFACE_POWER           =  8, /**< @note Not supported */
-    APP_USBD_DESCRIPTOR_OTG                       =  9, /**< @note Not supported - Our USB have not OTG functionality */
+    APP_USBD_DESCRIPTOR_OTG                       =  9, /**< @note Not supported - USB library does not have OTG functionality */
     APP_USBD_DESCRIPTOR_DEBUG                     = 10, /**< Debug channel descriptor if available, can be only reached by GetDescriptor */
     APP_USBD_DESCRIPTOR_INTERFACE_ASSOCIATION     = 11, /**<
                                                          * Descriptor used to describe that two or more interfaces are associated to the same function.

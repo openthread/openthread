@@ -366,6 +366,17 @@ public:
 #if OPENTHREAD_FTD
 
     /**
+     * This method creates a new Operational Dataset to use when forming a new network.
+     *
+     * @param[out]  aDataset  The Operational Dataset.
+     *
+     * @retval OT_ERROR_NONE    Successfully created a new Operational Dataset.
+     * @retval OT_ERROR_FAILED  Failed to generate random values for new parameters.
+     *
+     */
+    otError CreateNewNetwork(otOperationalDataset &aDataset);
+
+    /**
      * This method starts the Leader functions for maintaining the Active Operational Dataset.
      *
      */
@@ -380,7 +391,8 @@ public:
     /**
      * This method generate a default Active Operational Dataset.
      *
-     * @retval OT_ERROR_NONE  Successfully generated an Active Operational Dataset.
+     * @retval OT_ERROR_NONE           Successfully generated an Active Operational Dataset.
+     * @retval OT_ERROR_ALREADY        A valid Active Operational Dataset already exists.
      * @retval OT_ERROR_INVALID_STATE  Device is not currently attached to a network.
      *
      */
@@ -397,8 +409,6 @@ private:
 #if OPENTHREAD_FTD
     static void HandleSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    bool IsTlvInitialized(Tlv::Type aType);
 #endif
 
     Coap::Resource mResourceGet;
