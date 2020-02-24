@@ -82,7 +82,6 @@
 #define OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE 1
 #endif
 
-// Platform udp and platform netif is necessary for daemon mode to work.
 #if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
 
 #ifndef OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE 
