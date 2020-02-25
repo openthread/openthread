@@ -133,6 +133,10 @@ const char *otExitCodeToString(uint8_t aExitCode)
         retval = "RadioSpinelReset";
         break;
 
+    case OT_EXIT_RADIO_SPINEL_NO_RESPONSE:
+        retval = "RadioSpinelNoResponse";
+        break;
+
     case OT_EXIT_ERROR_ERRNO:
         retval = strerror(errno);
         break;
