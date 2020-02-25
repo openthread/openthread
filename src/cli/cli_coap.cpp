@@ -143,12 +143,11 @@ otError Coap::ProcessStop(int argc, char *argv[])
 
 otError Coap::ProcessParameters(int argc, char *argv[])
 {
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
-
+    otError             error = OT_ERROR_NONE;
     bool *              defaultTxParameters;
     otCoapTxParameters *txParameters;
+
+    VerifyOrExit(argc > 1, error = OT_ERROR_INVALID_ARGS);
 
     if (strcmp(argv[1], "request") == 0)
     {
