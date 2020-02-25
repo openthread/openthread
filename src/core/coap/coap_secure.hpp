@@ -262,7 +262,7 @@ public:
      * @retval OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
      *
      */
-    otError SendMessage(Message &aMessage, otCoapResponseHandler aHandler = NULL, void *aContext = NULL);
+    otError SendMessage(Message &aMessage, ResponseHandler aHandler = NULL, void *aContext = NULL);
 
     /**
      * This method sends a CoAP message over secure DTLS connection.
@@ -283,7 +283,7 @@ public:
      */
     otError SendMessage(Message &               aMessage,
                         const Ip6::MessageInfo &aMessageInfo,
-                        otCoapResponseHandler   aHandler = NULL,
+                        ResponseHandler         aHandler = NULL,
                         void *                  aContext = NULL);
 
     /**
