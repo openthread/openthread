@@ -47,15 +47,18 @@ noinst_HEADERS                                            = \
     SEGGER_RTT_V640/RTT/SEGGER_RTT_Conf.h                   \
     $(NULL)
 
-if OPENTHREAD_EXAMPLES_NRF52840
+if OPENTHREAD_EXAMPLES_NRF52811
 libjlinkrtt_a_CPPFLAGS                                                                                 += \
-    -DNRF52840_XXAA                                                                                       \
+    -DNRF52811_XXAA                                                                                       \
     -DSEGGER_RTT_CONFIG_H=\"$(top_srcdir)/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT_Conf.h\"  \
+    -DUSE_APP_CONFIG=1                                                                                    \
     -I$(top_srcdir)/include                                                                               \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/cmsis                                                 \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/config                                                \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/config/nrf52811/config                                \
     -I$(top_srcdir)/third_party/NordicSemiconductor/dependencies                                          \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/app_error                                   \
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk                                              \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/cmsis                                                 \
     $(NULL)
 endif
 
@@ -63,21 +66,29 @@ if OPENTHREAD_EXAMPLES_NRF52833
 libjlinkrtt_a_CPPFLAGS                                                                                 += \
     -DNRF52833_XXAA                                                                                       \
     -DSEGGER_RTT_CONFIG_H=\"$(top_srcdir)/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT_Conf.h\"  \
+    -DUSE_APP_CONFIG=1                                                                                    \
     -I$(top_srcdir)/include                                                                               \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/cmsis                                                 \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/config                                                \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/config/nrf52833/config                                \
     -I$(top_srcdir)/third_party/NordicSemiconductor/dependencies                                          \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/app_error                                   \
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk                                              \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/cmsis                                                 \
     $(NULL)
 endif
 
-if OPENTHREAD_EXAMPLES_NRF52811
+if OPENTHREAD_EXAMPLES_NRF52840
 libjlinkrtt_a_CPPFLAGS                                                                                 += \
-    -DNRF52811_XXAA                                                                                       \
+    -DNRF52840_XXAA                                                                                       \
     -DSEGGER_RTT_CONFIG_H=\"$(top_srcdir)/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT_Conf.h\"  \
+    -DUSE_APP_CONFIG=1                                                                                    \
     -I$(top_srcdir)/include                                                                               \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/cmsis                                                 \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/config                                                \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/config/nrf52840/config                                \
     -I$(top_srcdir)/third_party/NordicSemiconductor/dependencies                                          \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/app_error                                   \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk                                              \
     $(NULL)
 endif
 

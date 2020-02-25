@@ -79,6 +79,24 @@ void CoapBase::ClearRequestsAndResponses(void)
     mResponsesQueue.DequeueAllResponses();
 }
 
+void CoapBase::ClearRequests(const Ip6::Address &aAddress)
+{
+    Message *nextMessage;
+
+    // Remove pending messages with the specified source.
+    for (Message *message = static_cast<Message *>(mPendingRequests.GetHead()); message != NULL; message = nextMessage)
+    {
+        CoapMetadata coapMetadata;
+        nextMessage = static_cast<Message *>(message->GetNext());
+        coapMetadata.ReadFrom(*message);
+
+        if (coapMetadata.mSourceAddress == aAddress)
+        {
+            FinalizeCoapTransaction(*message, coapMetadata, NULL, NULL, OT_ERROR_ABORT);
+        }
+    }
+}
+
 otError CoapBase::AddResource(Resource &aResource)
 {
     return mResources.Add(aResource);
@@ -109,18 +127,18 @@ exit:
 
 otError CoapBase::SendMessage(Message &               aMessage,
                               const Ip6::MessageInfo &aMessageInfo,
+                              const CoapTxParameters &aTxParameters,
                               otCoapResponseHandler   aHandler,
                               void *                  aContext)
 {
-    otError      error;
-    CoapMetadata coapMetadata;
-    Message *    storedCopy = NULL;
-    uint16_t     copyLength = 0;
+    otError  error;
+    Message *storedCopy = NULL;
+    uint16_t copyLength = 0;
 
     switch (aMessage.GetType())
     {
     case OT_COAP_TYPE_ACKNOWLEDGMENT:
-        mResponsesQueue.EnqueueResponse(aMessage, aMessageInfo);
+        mResponsesQueue.EnqueueResponse(aMessage, aMessageInfo, aTxParameters);
         break;
     case OT_COAP_TYPE_RESET:
         assert(aMessage.GetCode() == OT_COAP_CODE_EMPTY);
@@ -145,7 +163,8 @@ otError CoapBase::SendMessage(Message &               aMessage,
 
     if (copyLength > 0)
     {
-        coapMetadata = CoapMetadata(aMessage.IsConfirmable(), aMessageInfo, aHandler, aContext);
+        CoapMetadata coapMetadata =
+            CoapMetadata(aMessage.IsConfirmable(), aMessageInfo, aHandler, aContext, aTxParameters);
         VerifyOrExit((storedCopy = CopyAndEnqueueMessage(aMessage, copyLength, coapMetadata)) != NULL,
                      error = OT_ERROR_NO_BUFS);
     }
@@ -247,7 +266,7 @@ void CoapBase::HandleRetransmissionTimer(void)
 
         if (now >= coapMetadata.mNextTimerShot)
         {
-            if (!coapMetadata.mConfirmable || (coapMetadata.mRetransmissionCount >= kMaxRetransmit))
+            if (!coapMetadata.mConfirmable || (coapMetadata.mRetransmissionsRemaining == 0))
             {
                 // No expected response or acknowledgment.
                 FinalizeCoapTransaction(*message, coapMetadata, NULL, NULL, OT_ERROR_RESPONSE_TIMEOUT);
@@ -255,7 +274,7 @@ void CoapBase::HandleRetransmissionTimer(void)
             }
 
             // Increment retransmission counter and timer.
-            coapMetadata.mRetransmissionCount++;
+            coapMetadata.mRetransmissionsRemaining--;
             coapMetadata.mRetransmissionTimeout *= 2;
             coapMetadata.mNextTimerShot = now + coapMetadata.mRetransmissionTimeout;
             coapMetadata.UpdateIn(*message);
@@ -438,6 +457,11 @@ void CoapBase::Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageIn
     if (message.ParseHeader() != OT_ERROR_NONE)
     {
         otLogDebgCoap("Failed to parse CoAP header");
+
+        if (!aMessageInfo.GetSockAddr().IsMulticast() && message.IsConfirmable())
+        {
+            SendReset(message, aMessageInfo);
+        }
     }
     else if (message.IsRequest())
     {
@@ -623,18 +647,16 @@ exit:
 CoapMetadata::CoapMetadata(bool                    aConfirmable,
                            const Ip6::MessageInfo &aMessageInfo,
                            otCoapResponseHandler   aHandler,
-                           void *                  aContext)
+                           void *                  aContext,
+                           const CoapTxParameters &aTxParameters)
 {
-    mSourceAddress         = aMessageInfo.GetSockAddr();
-    mDestinationPort       = aMessageInfo.GetPeerPort();
-    mDestinationAddress    = aMessageInfo.GetPeerAddr();
-    mResponseHandler       = aHandler;
-    mResponseContext       = aContext;
-    mRetransmissionCount   = 0;
-    mRetransmissionTimeout = Time::SecToMsec(kAckTimeout);
-    mRetransmissionTimeout += Random::NonCrypto::GetUint32InRange(
-        0, Time::SecToMsec(kAckTimeout) * kAckRandomFactorNumerator / kAckRandomFactorDenominator -
-               Time::SecToMsec(kAckTimeout) + 1);
+    mSourceAddress            = aMessageInfo.GetSockAddr();
+    mDestinationPort          = aMessageInfo.GetPeerPort();
+    mDestinationAddress       = aMessageInfo.GetPeerAddr();
+    mResponseHandler          = aHandler;
+    mResponseContext          = aContext;
+    mRetransmissionsRemaining = aTxParameters.mMaxRetransmit;
+    mRetransmissionTimeout    = aTxParameters.CalculateInitialRetransmissionTimeout();
 
     if (aConfirmable)
     {
@@ -644,7 +666,7 @@ CoapMetadata::CoapMetadata(bool                    aConfirmable,
     else
     {
         // Set overall response timeout.
-        mNextTimerShot = TimerMilli::GetNow() + Time::SecToMsec(kMaxTransmitWait);
+        mNextTimerShot = TimerMilli::GetNow() + aTxParameters.CalculateMaxTransmitWait();
     }
 
     mAcknowledged = false;
@@ -711,13 +733,17 @@ exit:
     return matchedResponse;
 }
 
-void ResponsesQueue::EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void ResponsesQueue::EnqueueResponse(Message &               aMessage,
+                                     const Ip6::MessageInfo &aMessageInfo,
+                                     const CoapTxParameters &aTxParameters)
 {
     otError                error        = OT_ERROR_NONE;
     Message *              responseCopy = NULL;
-    EnqueuedResponseHeader enqueuedResponseHeader(aMessageInfo);
     uint16_t               messageCount;
     uint16_t               bufferCount;
+    uint32_t               exchangeLifetime = aTxParameters.CalculateExchangeLifetime();
+    TimeMilli              dequeueTime      = TimerMilli::GetNow() + exchangeLifetime;
+    EnqueuedResponseHeader enqueuedResponseHeader(dequeueTime, aMessageInfo);
 
     // return success if matched response already exists in the cache
     VerifyOrExit(FindMatchedResponse(aMessage, aMessageInfo) == NULL);
@@ -736,7 +762,7 @@ void ResponsesQueue::EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &
 
     if (!mTimer.IsRunning())
     {
-        mTimer.Start(Time::SecToMsec(kExchangeLifetime));
+        mTimer.Start(exchangeLifetime);
     }
 
 exit:
@@ -808,6 +834,33 @@ uint32_t EnqueuedResponseHeader::GetRemainingTime(void) const
 
     return remainingTime;
 }
+
+uint32_t CoapTxParameters::CalculateInitialRetransmissionTimeout(void) const
+{
+    return Random::NonCrypto::GetUint32InRange(
+        mAckTimeout, mAckTimeout * mAckRandomFactorNumerator / mAckRandomFactorDenominator + 1);
+}
+
+uint32_t CoapTxParameters::CalculateExchangeLifetime(void) const
+{
+    uint32_t maxTransmitSpan = static_cast<uint32_t>(mAckTimeout * ((1ULL << mMaxRetransmit) - 1) *
+                                                     mAckRandomFactorNumerator / mAckRandomFactorDenominator);
+    uint32_t processingDelay = mAckTimeout;
+    return maxTransmitSpan + 2 * kDefaultMaxLatency + processingDelay;
+}
+
+uint32_t CoapTxParameters::CalculateMaxTransmitWait(void) const
+{
+    return static_cast<uint32_t>(mAckTimeout * ((2ULL << mMaxRetransmit) - 1) * mAckRandomFactorNumerator /
+                                 mAckRandomFactorDenominator);
+}
+
+const otCoapTxParameters CoapTxParameters::kDefaultTxParameters = {
+    kDefaultAckTimeout,
+    kDefaultAckRandomFactorNumerator,
+    kDefaultAckRandomFactorDenominator,
+    kDefaultMaxRetransmit,
+};
 
 Coap::Coap(Instance &aInstance)
     : CoapBase(aInstance, &Coap::Send)

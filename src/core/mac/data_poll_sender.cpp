@@ -319,7 +319,7 @@ void DataPollSender::CheckFramePending(Mac::RxFrame &aFrame, bool aIsAck)
     }
     else if (aIsAck)
     {
-#if OPENTHREAD_THREAD_VERSION >= OPENTHREAD_THREAD_VERSION_1_2
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
         ResetKeepAliveTimer();
 #endif
     }

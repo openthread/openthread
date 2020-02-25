@@ -50,6 +50,7 @@ CPPFLAGS_COMMON                                                        = \
     -I$(top_srcdir)/include                                              \
     -I$(top_srcdir)/src/core                                             \
     -I$(top_srcdir)/src/posix/platform                                   \
+    -I$(top_srcdir)/src/posix/platform/include                           \
     -D_GNU_SOURCE                                                        \
     -DOPENTHREAD_FTD=1                                                   \
     -DOPENTHREAD_MTD=0                                                   \
@@ -118,7 +119,7 @@ endif
 endif # OPENTHREAD_ENABLE_POSIX_APP_DAEMON
 
 ot_ctl_SOURCES                                                         = \
-    client.c                                                             \
+    client.cpp                                                           \
     $(NULL)
 
 ot_ctl_CPPFLAGS                                                        = \
@@ -160,7 +161,7 @@ ot_cli_CPPFLAGS                                                        = \
 
 ot_cli_SOURCES                                                         = \
     main.c                                                               \
-    console_cli.c                                                        \
+    console_cli.cpp                                                      \
     $(NULL)
 
 ot_cli_LDADD                                                           = \

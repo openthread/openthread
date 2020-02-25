@@ -715,7 +715,7 @@ void radioSendAck(void)
     sAckMessage.mPsdu[0] = IEEE802154_FRAME_TYPE_ACK;
 
     if (
-#if OPENTHREAD_THREAD_VERSION >= OPENTHREAD_THREAD_VERSION_1_2
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
         (otMacFrameIsData(&sReceiveFrame) || otMacFrameIsDataRequest(&sReceiveFrame))
 #else
         otMacFrameIsDataRequest(&sReceiveFrame)

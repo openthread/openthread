@@ -141,7 +141,7 @@ def check_r1_router_table():
         wpan.WPAN_THREAD_ROUTER_TABLE))
     verify(len(router_table) == NUM_ROUTERS)
     for entry in router_table:
-        verify(entry.rloc16 == r1_rloc or entry.is_link_established or
+        verify(entry.rloc16 == r1_rloc or entry.is_link_established() or
                entry.next_hop != INVALID_ROUTER_ID)
 
 

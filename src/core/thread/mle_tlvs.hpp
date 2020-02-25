@@ -1631,13 +1631,13 @@ public:
     /**
      * This method indicates whether or not the TLV appears to be well-formed and valid version.
      *
-     * @retval TRUE   If the TLV appears to be well-formed and valid version.
-     * @retval FALSE  If the TLV does not appear to be well-formed or invalid version.
+     * @retval TRUE   If the TLV appears to be well-formed and with valid version.
+     * @retval FALSE  If the TLV does not appear to be well-formed or with invalid version.
      *
      */
     bool IsValid(void) const
     {
-        return (GetLength() >= sizeof(*this) - sizeof(Tlv)) && mVersion >= OPENTHREAD_THREAD_VERSION_1_1;
+        return (GetLength() >= sizeof(*this) - sizeof(Tlv)) && mVersion >= OT_THREAD_VERSION_1_1;
     }
 
     /**

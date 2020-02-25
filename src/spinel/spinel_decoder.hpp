@@ -33,22 +33,21 @@
 #ifndef SPINEL_DECODER_HPP_
 #define SPINEL_DECODER_HPP_
 
-#include <openthread/config.h>
+#include "openthread-spinel-config.h"
 
 #include <openthread/ip6.h>
 #include <openthread/ncp.h>
 
-#include "openthread-core-config.h"
-#include "ncp/spinel.h"
+#include "spinel.h"
 
 namespace ot {
-namespace Ncp {
+namespace Spinel {
 
 /**
  * This class defines a spinel decoder.
  *
  */
-class SpinelDecoder
+class Decoder
 {
 public:
     enum
@@ -57,10 +56,10 @@ public:
     };
 
     /**
-     * This constructor initializes a `SpinelDecoder` object.
+     * This constructor initializes a `Decoder` object.
      *
      */
-    SpinelDecoder(void);
+    Decoder(void);
 
     /**
      * This method initializes the decoder to start decoding a new frame.
@@ -586,7 +585,7 @@ private:
     uint16_t mPrevEnd[kMaxNestedStructs];
 };
 
-} // namespace Ncp
+} // namespace Spinel
 } // namespace ot
 
 #endif // SPINEL_DECODER_HPP_

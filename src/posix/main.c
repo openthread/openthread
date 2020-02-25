@@ -73,7 +73,7 @@
 #else
 #error "Unknown posix app type!"
 #endif
-#include <openthread-system.h>
+#include <openthread/openthread-system.h>
 
 #ifndef OPENTHREAD_ENABLE_COVERAGE
 #define OPENTHREAD_ENABLE_COVERAGE 0
@@ -180,7 +180,7 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
 
 static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
 {
-    memset(aConfig, 0, sizeof(PosixConfig));
+    memset(aConfig, 0, sizeof(*aConfig));
 
     aConfig->mPlatformConfig.mSpeedUpFactor      = 1;
     aConfig->mPlatformConfig.mResetRadio         = true;

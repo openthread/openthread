@@ -55,8 +55,8 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include <common/code_utils.hpp>
-#include <common/logging.hpp>
+#include "common/code_utils.hpp"
+#include "common/logging.hpp"
 
 #ifndef SOCKET_UTILS_DEFAULT_SHELL
 #define SOCKET_UTILS_DEFAULT_SHELL "/bin/sh"
@@ -222,7 +222,7 @@ otError HdlcInterface::Write(const uint8_t *aFrame, uint16_t aLength)
 {
     otError error = OT_ERROR_NONE;
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    platformSimSendRadioSpinelWriteEvent(aFrame, aLength);
+    virtualTimeSendRadioSpinelWriteEvent(aFrame, aLength);
 #else
     while (aLength)
     {
@@ -250,14 +250,13 @@ exit:
 
 otError HdlcInterface::WaitForFrame(const struct timeval &aTimeout)
 {
-    otError        error   = OT_ERROR_NONE;
-    struct timeval timeout = aTimeout;
-
+    otError error = OT_ERROR_NONE;
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     struct Event event;
+    uint64_t     delay = static_cast<uint64_t>(aTimeout.tv_sec) * US_PER_S + static_cast<uint64_t>(aTimeout.tv_usec);
 
-    platformSimSendSleepEvent(&timeout);
-    platformSimReceiveEvent(&event);
+    virtualTimeSendSleepEvent(&aTimeout);
+    virtualTimeReceiveEvent(&event);
 
     switch (event.mEvent)
     {
@@ -266,7 +265,7 @@ otError HdlcInterface::WaitForFrame(const struct timeval &aTimeout)
         break;
 
     case OT_SIM_EVENT_ALARM_FIRED:
-        ExitNow(error = OT_ERROR_RESPONSE_TIMEOUT);
+        VerifyOrExit(event.mDelay <= delay, error = OT_ERROR_RESPONSE_TIMEOUT);
         break;
 
     default:
@@ -274,6 +273,8 @@ otError HdlcInterface::WaitForFrame(const struct timeval &aTimeout)
         break;
     }
 #else  // OPENTHREAD_POSIX_VIRTUAL_TIME
+    struct timeval timeout = aTimeout;
+
     fd_set read_fds;
     fd_set error_fds;
     int rval;

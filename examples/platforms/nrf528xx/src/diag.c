@@ -46,7 +46,7 @@
 #include <openthread/platform/toolchain.h>
 
 #include <common/logging.hpp>
-#include <drivers/radio/nrf_802154.h>
+#include <nrf_802154.h>
 #include <utils/code_utils.h>
 
 typedef enum
@@ -59,7 +59,7 @@ typedef enum
 struct PlatformDiagCommand
 {
     const char *mName;
-    void (*mCommand)(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
+    otError (*mCommand)(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
 };
 
 struct PlatformDiagMessage
@@ -111,7 +111,7 @@ static bool startCarrierTransmision(void)
     return nrf_802154_continuous_carrier();
 }
 
-static void processListen(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+static otError processListen(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -136,9 +136,10 @@ static void processListen(otInstance *aInstance, int argc, char *argv[], char *a
 
 exit:
     appendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
 }
 
-static void processID(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+static otError processID(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -163,9 +164,10 @@ static void processID(otInstance *aInstance, int argc, char *argv[], char *aOutp
 
 exit:
     appendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
 }
 
-static void processTransmit(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+static otError processTransmit(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
     otError error = OT_ERROR_NONE;
 
@@ -243,9 +245,10 @@ static void processTransmit(otInstance *aInstance, int argc, char *argv[], char 
 
 exit:
     appendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
 }
 
-static void processGpio(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+static otError processGpio(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -322,9 +325,10 @@ static void processGpio(otInstance *aInstance, int argc, char *argv[], char *aOu
 
 exit:
     appendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
 }
 
-static void processTemp(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+static otError processTemp(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(argv);
@@ -343,9 +347,10 @@ static void processTemp(otInstance *aInstance, int argc, char *argv[], char *aOu
 
 exit:
     appendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
 }
 
-static void processCcaThreshold(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+static otError processCcaThreshold(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -377,6 +382,7 @@ static void processCcaThreshold(otInstance *aInstance, int argc, char *argv[], c
 
 exit:
     appendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
 }
 
 const struct PlatformDiagCommand sCommands[] = {
@@ -388,23 +394,21 @@ const struct PlatformDiagCommand sCommands[] = {
     {"transmit", &processTransmit},
 };
 
-void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+otError otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
-    size_t i;
+    otError error = OT_ERROR_NOT_IMPLEMENTED;
+    size_t  i;
 
     for (i = 0; i < otARRAY_LENGTH(sCommands); i++)
     {
         if (strcmp(argv[0], sCommands[i].mName) == 0)
         {
-            sCommands[i].mCommand(aInstance, argc - 1, argc > 1 ? &argv[1] : NULL, aOutput, aOutputMaxLen);
+            error = sCommands[i].mCommand(aInstance, argc - 1, argc > 1 ? &argv[1] : NULL, aOutput, aOutputMaxLen);
             break;
         }
     }
 
-    if (i == otARRAY_LENGTH(sCommands))
-    {
-        snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
-    }
+    return error;
 }
 
 void otPlatDiagModeSet(bool aMode)

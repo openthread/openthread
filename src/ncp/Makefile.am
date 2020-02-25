@@ -58,25 +58,42 @@ COMMON_CPPFLAGS                                   = \
     $(OPENTHREAD_TARGET_DEFINES)                    \
     $(NULL)
 
-libopenthread_ncp_mtd_a_CPPFLAGS                  = \
-    -DOPENTHREAD_RADIO=0                            \
-    -DOPENTHREAD_FTD=0                              \
-    -DOPENTHREAD_MTD=1                              \
-    $(COMMON_CPPFLAGS)                              \
+libopenthread_ncp_mtd_a_CPPFLAGS                         = \
+    -DOPENTHREAD_RADIO=0                                   \
+    -DOPENTHREAD_FTD=0                                     \
+    -DOPENTHREAD_MTD=1                                     \
+    -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1 \
+    $(COMMON_CPPFLAGS)                                     \
     $(NULL)
 
-libopenthread_ncp_ftd_a_CPPFLAGS                  = \
-    -DOPENTHREAD_RADIO=0                            \
-    -DOPENTHREAD_FTD=1                              \
-    -DOPENTHREAD_MTD=0                              \
-    $(COMMON_CPPFLAGS)                              \
+libopenthread_ncp_ftd_a_CPPFLAGS                         = \
+    -DOPENTHREAD_RADIO=0                                   \
+    -DOPENTHREAD_FTD=1                                     \
+    -DOPENTHREAD_MTD=0                                     \
+    -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1 \
+    $(COMMON_CPPFLAGS)                                     \
     $(NULL)
 
-libopenthread_rcp_a_CPPFLAGS                      = \
-    -DOPENTHREAD_RADIO=1                            \
-    -DOPENTHREAD_FTD=0                              \
-    -DOPENTHREAD_MTD=0                              \
-    $(COMMON_CPPFLAGS)                              \
+libopenthread_rcp_a_CPPFLAGS                             = \
+    -DOPENTHREAD_RADIO=1                                   \
+    -DOPENTHREAD_FTD=0                                     \
+    -DOPENTHREAD_MTD=0                                     \
+    -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=0 \
+    $(COMMON_CPPFLAGS)                                     \
+    $(NULL)
+
+list_objects = $(addprefix $(dir $(1)),$(filter %.o,$(shell $(AR) t $(1))))
+
+libopenthread_ncp_mtd_a_LIBADD                                               = \
+    $(call list_objects,$(top_builddir)/src/spinel/libopenthread-spinel-ncp.a) \
+    $(NULL)
+
+libopenthread_ncp_ftd_a_LIBADD                                               = \
+    $(call list_objects,$(top_builddir)/src/spinel/libopenthread-spinel-ncp.a) \
+    $(NULL)
+
+libopenthread_rcp_a_LIBADD                                                   = \
+    $(call list_objects,$(top_builddir)/src/spinel/libopenthread-spinel-rcp.a) \
     $(NULL)
 
 COMMON_SOURCES                                    = \
@@ -90,20 +107,11 @@ COMMON_SOURCES                                    = \
     ncp_base_mtd.cpp                                \
     ncp_base_radio.cpp                              \
     ncp_base_dispatcher.cpp                         \
-    ncp_buffer.cpp                                  \
-    ncp_buffer.hpp                                  \
     ncp_config.h                                    \
     ncp_spi.cpp                                     \
     ncp_spi.hpp                                     \
     ncp_uart.cpp                                    \
     ncp_uart.hpp                                    \
-    spinel.c                                        \
-    spinel.h                                        \
-    spinel_decoder.cpp                              \
-    spinel_decoder.hpp                              \
-    spinel_encoder.cpp                              \
-    spinel_encoder.hpp                              \
-    spinel_platform.h                               \
     $(NULL)
 
 if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
@@ -138,26 +146,5 @@ libopenthread_rcp_a_SOURCES                       = \
 
 include_HEADERS                                   = \
     $(NULL)
-
-if OPENTHREAD_BUILD_TESTS
-
-check_PROGRAMS                                    = spinel-test
-spinel_test_SOURCES                               = spinel.c
-spinel_test_CFLAGS                                = \
-    $(COMMON_CPPFLAGS)                              \
-    -DSPINEL_SELF_TEST=1                            \
-    -D_GNU_SOURCE                                   \
-    -I$(top_srcdir)/src/core                        \
-    -I$(top_srcdir)/include                         \
-    $(NULL)
-
-TESTS                                             = spinel-test
-
-install-headers: install-includeHEADERS
-
-if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                                        = $(wildcard *.gcda *.gcno)
-endif # OPENTHREAD_BUILD_COVERAGE
-endif # OPENTHREAD_BUILD_TESTS
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

@@ -80,6 +80,15 @@ check() {
         OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli) ${OT_NCP_PATH} ${CORE_PTY}"
     fi
 
+    # Cover setting a valid network interface name.
+    readonly VALID_NETIF_NAME="wan$(date +%H%M%S)"
+    sudo ${OT_CLI_CMD} -I "${VALID_NETIF_NAME}" -n
+
+    # Cover setting a too long(max is 15 characters) network interface name.
+    # Expect exit code to be 2(OT_EXIT_INVALID_ARGUMENTS).
+    readonly INVALID_NETIF_NAME="wan0123456789123"
+    sudo ${OT_CLI_CMD} -I "${INVALID_NETIF_NAME}" -n || test $? = 2
+
     if [[ "${DAEMON}" = 1 ]]; then
         sudo ${OT_CLI_CMD} panid 0xface | grep 'Done' || die 'failed to set panid with ot-ctl'
     fi

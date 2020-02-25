@@ -191,7 +191,7 @@ Usage: `dataset activetimestamp <timestamp>`
 Set active timestamp.
 
 ```bash
-> dataset activestamp 123456789
+> dataset activetimestamp 123456789
 Done
 ```
 

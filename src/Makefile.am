@@ -35,12 +35,14 @@ DIST_SUBDIRS                            = \
     cli                                   \
     ncp                                   \
     posix                                 \
+    spinel                                \
     $(NULL)
 
 # Always build (e.g. for 'make all') these subdirectories.
 
 SUBDIRS                                 = \
     core                                  \
+    spinel                                \
     $(NULL)
 
 if OPENTHREAD_ENABLE_CLI
@@ -62,6 +64,7 @@ PRETTY_SUBDIRS                          = \
     core                                  \
     ncp                                   \
     posix                                 \
+    spinel                                \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

@@ -82,6 +82,11 @@ jobs:
       dist: trusty
       python: "2.7" # The old Android build system only supports python2
       script: .travis/script.sh
+    - env: BUILD_TARGET="android-build" VERBOSE=1 USE_OTBR_DAEMON=1
+      os: linux
+      dist: trusty
+      python: "2.7" # The old Android build system only supports python2
+      script: .travis/script.sh
     - env: BUILD_TARGET="gn-build" VERBOSE=1
       os: linux
       script: .travis/script.sh

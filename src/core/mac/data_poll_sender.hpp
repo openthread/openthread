@@ -233,7 +233,7 @@ public:
     uint32_t GetKeepAlivePollPeriod(void) const;
 
     /**
-     * This method resets the timer for sending keep-alive message.
+     * This method resets the timer for sending keep-alive messages.
      *
      */
     void ResetKeepAliveTimer(void);

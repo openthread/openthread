@@ -1045,7 +1045,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::RxFrame &aFrame)
             LogFrame("Received empty payload frame", aFrame, OT_ERROR_NONE);
         }
 
-#if OPENTHREAD_THREAD_VERSION >= OPENTHREAD_THREAD_VERSION_1_2 && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2 && OPENTHREAD_FTD
         // From Thread 1.2, MAC Data Frame can also act as keep-alive message if child supports
         if (aFrame.GetSecurityEnabled())
         {

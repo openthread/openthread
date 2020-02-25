@@ -53,12 +53,12 @@
 
 #include "platform-nrf5.h"
 
-#include "drivers/clock/nrf_drv_clock.h"
-#include "drivers/power/nrf_drv_power.h"
-#include "libraries/usb/app_usbd.h"
-#include "libraries/usb/app_usbd_serial_num.h"
-#include "libraries/usb/class/cdc/acm/app_usbd_cdc_acm.h"
-#include "libraries/usb/nrf_dfu_trigger_usb.h"
+#include "app_usbd.h"
+#include "app_usbd_serial_num.h"
+#include "nrf_dfu_trigger_usb.h"
+#include "nrf_drv_clock.h"
+#include "nrf_drv_power.h"
+#include "class/cdc/acm/app_usbd_cdc_acm.h"
 
 #if (USB_CDC_AS_SERIAL_TRANSPORT == 1)
 

@@ -1181,7 +1181,7 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
 
     if ((aError == OT_ERROR_NONE) && ackRequested && (aAckFrame != NULL) && (neighbor != NULL))
     {
-        neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), aAckFrame->GetRssi());
+        neighbor->GetLinkInfo().AddRss(aAckFrame->GetRssi());
     }
 
     // Update MAC counters.
@@ -1303,7 +1303,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
         otDumpDebgMac("TX", aFrame.GetHeader(), aFrame.GetLength());
         FinishOperation();
         Get<MeshForwarder>().HandleSentFrame(aFrame, aError);
-#if OPENTHREAD_THREAD_VERSION >= OPENTHREAD_THREAD_VERSION_1_2
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
         if (aError == OT_ERROR_NONE && Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported() &&
             aFrame.GetSecurityEnabled() && aAckFrame != NULL)
         {
@@ -1655,7 +1655,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
     if (neighbor != NULL)
     {
-        neighbor->GetLinkInfo().AddRss(GetNoiseFloor(), aFrame->GetRssi());
+        neighbor->GetLinkInfo().AddRss(aFrame->GetRssi());
 
         if (aFrame->GetSecurityEnabled())
         {
@@ -1674,6 +1674,15 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
             default:
                 ExitNow(error = OT_ERROR_UNKNOWN_NEIGHBOR);
             }
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2 && OPENTHREAD_FTD
+            // From Thread 1.2, MAC Data Frame can also act as keep-alive message if child supports
+            if (aFrame->GetType() == Frame::kFcfFrameData && !neighbor->IsRxOnWhenIdle() &&
+                neighbor->IsEnhancedKeepAliveSupported())
+            {
+                neighbor->SetLastHeard(TimerMilli::GetNow());
+            }
+#endif
         }
     }
 
@@ -1883,11 +1892,6 @@ void Mac::ResetRetrySuccessHistogram()
     memset(&mRetryHistogram, 0, sizeof(mRetryHistogram));
 }
 #endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
-
-int8_t Mac::GetNoiseFloor(void)
-{
-    return Get<Radio>().GetReceiveSensitivity();
-}
 
 // LCOV_EXCL_START
 

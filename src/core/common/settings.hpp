@@ -95,7 +95,7 @@ public:
         void Init(void)
         {
             memset(this, 0, sizeof(*this));
-            mVersion = OPENTHREAD_THREAD_VERSION_1_1;
+            SetVersion(OT_THREAD_VERSION_1_1);
         }
 
         /**
@@ -295,7 +295,7 @@ public:
         void Init(void)
         {
             memset(this, 0, sizeof(*this));
-            mVersion = OPENTHREAD_THREAD_VERSION_1_1;
+            SetVersion(OT_THREAD_VERSION_1_1);
         }
 
         /**
@@ -350,7 +350,7 @@ public:
         void Init(void)
         {
             memset(this, 0, sizeof(*this));
-            mVersion = OPENTHREAD_THREAD_VERSION_1_1;
+            SetVersion(OT_THREAD_VERSION_1_1);
         }
 
         /**

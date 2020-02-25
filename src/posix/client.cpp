@@ -40,13 +40,6 @@
 
 #define OPENTHREAD_USE_READLINE (HAVE_LIBEDIT || HAVE_LIBREADLINE)
 
-#if HAVE_LIBEDIT
-#include <editline/readline.h>
-#elif HAVE_LIBREADLINE
-#include <readline/history.h>
-#include <readline/readline.h>
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -54,7 +47,13 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-#include "code_utils.h"
+#if HAVE_LIBEDIT
+#include <editline/readline.h>
+#elif HAVE_LIBREADLINE
+#include <readline/history.h>
+#include <readline/readline.h>
+#endif
+
 #include "common/code_utils.hpp"
 
 #include "platform-posix.h"
@@ -147,6 +146,28 @@ static bool FindError(int *aErrorState, char aNowCharacter)
     return *aErrorState == 6;
 }
 
+static bool DoWrite(int aFile, const void *aBuffer, size_t aSize)
+{
+    bool ret = true;
+
+    while (aSize)
+    {
+        ssize_t rval = write(aFile, aBuffer, aSize);
+        if (rval <= 0)
+        {
+            VerifyOrExit((rval == -1) && (errno == EINTR), perror("write"); ret = false);
+        }
+        else
+        {
+            aBuffer = reinterpret_cast<const uint8_t *>(aBuffer) + rval;
+            aSize -= rval;
+        }
+    }
+
+exit:
+    return ret;
+}
+
 static void SendBlockingCommand(int aArgc, char *aArgv[])
 {
     char buffer[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
@@ -155,22 +176,22 @@ static void SendBlockingCommand(int aArgc, char *aArgv[])
 
     for (int i = 0; i < aArgc; i++)
     {
-        otEXPECT_ACTION(write(sSessionFd, aArgv[i], strlen(aArgv[i])) >= 0, perror("Failed to send command"));
-        otEXPECT_ACTION(write(sSessionFd, " ", 1) >= 0, perror("Failed to send command"));
+        VerifyOrExit(DoWrite(sSessionFd, aArgv[i], strlen(aArgv[i])));
+        VerifyOrExit(DoWrite(sSessionFd, " ", 1));
     }
-    otEXPECT_ACTION(write(sSessionFd, "\n", 1) >= 0, perror("Failed to send command"));
+    VerifyOrExit(DoWrite(sSessionFd, "\n", 1));
 
     while (true)
     {
         ssize_t rval = read(sSessionFd, buffer, sizeof(buffer));
 
-        otEXPECT(rval >= 0);
-        write(STDOUT_FILENO, buffer, rval);
+        VerifyOrExit(rval >= 0);
+        VerifyOrExit(DoWrite(STDOUT_FILENO, buffer, static_cast<size_t>(rval)));
         for (ssize_t i = 0; i < rval; i++)
         {
             if (FindDone(&doneState, buffer[i]) || FindError(&errorState, buffer[i]))
             {
-                otEXIT_NOW();
+                ExitNow();
             }
         }
     }
@@ -186,7 +207,7 @@ int main(int argc, char *argv[])
     int ret;
 
     sSessionFd = socket(AF_UNIX, SOCK_STREAM, 0);
-    otEXPECT_ACTION(sSessionFd != -1, perror("socket"); ret = OT_EXIT_FAILURE);
+    VerifyOrExit(sSessionFd != -1, perror("socket"); ret = OT_EXIT_FAILURE);
 
     {
         struct sockaddr_un sockname;
@@ -200,7 +221,7 @@ int main(int argc, char *argv[])
         if (ret == -1)
         {
             fprintf(stderr, "OpenThread daemon is not running.\n");
-            otEXIT_NOW(ret = OT_EXIT_FAILURE);
+            ExitNow(ret = OT_EXIT_FAILURE);
         }
 
 #if OPENTHREAD_USE_READLINE
@@ -215,15 +236,14 @@ int main(int argc, char *argv[])
     if (argc > 1)
     {
         SendBlockingCommand(argc - 1, &argv[1]);
-        otEXIT_NOW(ret = 0);
+        ExitNow(ret = 0);
     }
 
     while (1)
     {
-        fd_set  readFdSet;
-        char    buffer[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
-        ssize_t rval;
-        int     maxFd = sSessionFd > STDIN_FILENO ? sSessionFd : STDIN_FILENO;
+        fd_set readFdSet;
+        char   buffer[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
+        int    maxFd = sSessionFd > STDIN_FILENO ? sSessionFd : STDIN_FILENO;
 
         FD_ZERO(&readFdSet);
 
@@ -232,11 +252,11 @@ int main(int argc, char *argv[])
 
         ret = select(maxFd + 1, &readFdSet, NULL, NULL, NULL);
 
-        otEXPECT_ACTION(ret != -1, perror("select"); ret = OT_EXIT_FAILURE);
+        VerifyOrExit(ret != -1, perror("select"); ret = OT_EXIT_FAILURE);
 
         if (ret == 0)
         {
-            otEXIT_NOW(ret = OT_EXIT_SUCCESS);
+            ExitNow(ret = OT_EXIT_SUCCESS);
         }
 
         if (FD_ISSET(STDIN_FILENO, &readFdSet))
@@ -244,26 +264,25 @@ int main(int argc, char *argv[])
 #if OPENTHREAD_USE_READLINE
             rl_callback_read_char();
 #else
-            otEXPECT_ACTION(fgets(buffer, sizeof(buffer), stdin) != NULL, ret = OT_EXIT_FAILURE);
+            VerifyOrExit(fgets(buffer, sizeof(buffer), stdin) != NULL, ret = OT_EXIT_FAILURE);
 
-            rval = write(sSessionFd, buffer, strlen(buffer));
-            otEXPECT_ACTION(rval != -1, perror("write"); ret = OT_EXIT_FAILURE);
+            VerifyOrExit(DoWrite(sSessionFd, buffer, strlen(buffer)), ret = OT_EXIT_FAILURE);
 #endif
         }
 
         if (FD_ISSET(sSessionFd, &readFdSet))
         {
-            rval = read(sSessionFd, buffer, sizeof(buffer));
-            otEXPECT_ACTION(rval != -1, perror("read"); ret = OT_EXIT_FAILURE);
+            ssize_t rval = read(sSessionFd, buffer, sizeof(buffer));
+            VerifyOrExit(rval != -1, perror("read"); ret = OT_EXIT_FAILURE);
 
             if (rval == 0)
             {
                 // daemon closed sSessionFd
-                otEXIT_NOW(ret = OT_EXIT_FAILURE);
+                ExitNow(ret = OT_EXIT_FAILURE);
             }
             else
             {
-                IgnoreReturnValue(write(STDOUT_FILENO, buffer, rval));
+                VerifyOrExit(DoWrite(STDOUT_FILENO, buffer, static_cast<size_t>(rval)), ret = OT_EXIT_FAILURE);
             }
         }
     }

@@ -82,6 +82,11 @@ enum
      * System call or library function error.
      */
     OT_EXIT_ERROR_ERRNO = 5,
+
+    /**
+     * No response from radio spinel.
+     */
+    OT_EXIT_RADIO_SPINEL_NO_RESPONSE = 6,
 };
 
 /**
