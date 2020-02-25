@@ -389,6 +389,9 @@ otError Mle::Restore(void)
     Get<KeyManager>().SetMacFrameCounter(networkInfo.GetMacFrameCounter());
     mDeviceMode.Set(networkInfo.GetDeviceMode());
 
+    // force re-attach when version mismatch.
+    VerifyOrExit(networkInfo.GetVersion() == kThreadVersion);
+
     switch (networkInfo.GetRole())
     {
     case OT_DEVICE_ROLE_CHILD:
@@ -430,6 +433,7 @@ otError Mle::Restore(void)
 
         mParent.Clear();
         mParent.SetExtAddress(parentInfo.GetExtAddress());
+        mParent.SetVersion(static_cast<uint8_t>(parentInfo.GetVersion()));
         mParent.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                          DeviceMode::kModeFullNetworkData | DeviceMode::kModeSecureDataRequest));
         mParent.SetRloc16(Rloc16FromRouterId(RouterIdFromRloc16(networkInfo.GetRloc16())));
@@ -468,6 +472,7 @@ otError Mle::Store(void)
         networkInfo.SetPreviousPartitionId(mLeaderData.GetPartitionId());
         networkInfo.SetExtAddress(Get<Mac::Mac>().GetExtAddress());
         networkInfo.SetMeshLocalIid(&mMeshLocal64.GetAddress().mFields.m8[OT_IP6_PREFIX_SIZE]);
+        networkInfo.SetVersion(kThreadVersion);
 
         if (mRole == OT_DEVICE_ROLE_CHILD)
         {
@@ -475,6 +480,7 @@ otError Mle::Store(void)
 
             parentInfo.Init();
             parentInfo.SetExtAddress(mParent.GetExtAddress());
+            parentInfo.SetVersion(mParent.GetVersion());
 
             SuccessOrExit(error = Get<Settings>().SaveParentInfo(parentInfo));
         }
@@ -3167,6 +3173,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     otError                 error    = OT_ERROR_NONE;
     const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
     ResponseTlv             response;
+    VersionTlv              version;
     SourceAddressTlv        sourceAddress;
     LeaderDataTlv           leaderData;
     LinkMarginTlv           linkMarginTlv;
@@ -3186,6 +3193,10 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     VerifyOrExit(sourceAddress.IsValid(), error = OT_ERROR_PARSE);
 
     LogMleMessage("Receive Parent Response", aMessageInfo.GetPeerAddr(), sourceAddress.GetRloc16());
+
+    // Version
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kVersion, sizeof(version), version));
+    VerifyOrExit(version.IsValid(), error = OT_ERROR_PARSE);
 
     // Response
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kResponse, sizeof(response), response));
@@ -3337,6 +3348,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     mParentCandidate.SetRloc16(sourceAddress.GetRloc16());
     mParentCandidate.SetLinkFrameCounter(linkFrameCounter.GetFrameCounter());
     mParentCandidate.SetMleFrameCounter(mleFrameCounter.GetFrameCounter());
+    mParentCandidate.SetVersion(static_cast<uint8_t>(version.GetVersion()));
     mParentCandidate.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                               DeviceMode::kModeFullNetworkData | DeviceMode::kModeSecureDataRequest));
     mParentCandidate.GetLinkInfo().Clear();

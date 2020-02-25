@@ -57,6 +57,13 @@ do_cert() {
     PYTHONUNBUFFERED=1 "$1"
 }
 
+do_v1_2() {
+    ls tests/scripts/thread-cert/v1_2_*.py | while read test_case; do
+        [[ ! -d tmp ]] || rm -rvf tmp
+        PYTHONUNBUFFERED=1 "${test_case}"
+    done
+}
+
 print_usage() {
     echo "USAGE: [ENVIRONMENTS] $0 COMMANDS
 
@@ -123,6 +130,10 @@ main()
             cert)
                 shift
                 do_cert "$1"
+                ;;
+            v1.2)
+                do_v1_2
+                break
                 ;;
             help)
                 print_usage

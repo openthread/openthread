@@ -581,6 +581,12 @@ build_samr21() {
     REFERENCE_DEVICE=1 COVERAGE=1 PYTHONUNBUFFERED=1 OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli) -v" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" make -f src/posix/Makefile-posix check || die
 }
 
+[ $BUILD_TARGET != v1.2 ] || {
+    ./bootstrap || die
+    REFERENCE_DEVICE=1 make -f examples/Makefile-posix || die
+    ./script/test v1.2 || die
+}
+
 [ $BUILD_TARGET != posix-app-pty ] || {
     # check daemon mode
     git checkout -- . || die

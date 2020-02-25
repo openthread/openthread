@@ -394,6 +394,15 @@ exit:
     return error;
 }
 
+void DataPollSender::ResetKeepAliveTimer(void)
+{
+    if (mTimer.IsRunning() && mPollPeriod == GetDefaultPollPeriod())
+    {
+        mTimerStartTime = TimerMilli::GetNow();
+        mTimer.StartAt(mTimerStartTime, mPollPeriod);
+    }
+}
+
 void DataPollSender::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
 {
     TimeMilli now;

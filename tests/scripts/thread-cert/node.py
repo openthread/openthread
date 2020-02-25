@@ -338,6 +338,10 @@ class Node:
         self._expect('Done')
         return addr64
 
+    def set_addr64(self, addr64):
+        self.send_command('extaddr %s' % addr64)
+        self._expect('Done')
+
     def get_eui64(self):
         self.send_command('eui64')
         i = self._expect('([0-9a-fA-F]{16})')
@@ -443,6 +447,18 @@ class Node:
     def set_partition_id(self, partition_id):
         cmd = 'leaderpartitionid %d' % partition_id
         self.send_command(cmd)
+        self._expect('Done')
+
+    def get_pollperiod(self):
+        self.send_command('pollperiod')
+        i = self._expect(r'(\d+)\r?\n')
+        if i == 0:
+            pollperiod = self.pexpect.match.groups()[0]
+        self._expect('Done')
+        return pollperiod
+
+    def set_pollperiod(self, pollperiod):
+        self.send_command('pollperiod %d' % pollperiod)
         self._expect('Done')
 
     def set_router_upgrade_threshold(self, threshold):
@@ -772,10 +788,14 @@ class Node:
         result = True
         try:
             responders = {}
-            while len(responders) < num_responses:
-                i = self._expect([r'from (\S+):'])
+            # ncp-sim doesn't print Done
+            done = (self.node_type == 'ncp-sim')
+            while len(responders) < num_responses or not done:
+                i = self._expect([r'from (\S+):', 'Done'])
                 if i == 0:
                     responders[self.pexpect.match.groups()[0]] = 1
+                elif i == 1:
+                    done = True
             self._expect('\n')
         except (pexpect.TIMEOUT, socket.timeout):
             result = False

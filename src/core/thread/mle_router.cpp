@@ -2087,6 +2087,7 @@ otError MleRouter::HandleChildIdRequest(const Message &         aMessage,
     otError                 error    = OT_ERROR_NONE;
     const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
     Mac::ExtAddress         macAddr;
+    VersionTlv              version;
     ResponseTlv             response;
     LinkFrameCounterTlv     linkFrameCounter;
     MleFrameCounterTlv      mleFrameCounter;
@@ -2112,6 +2113,10 @@ otError MleRouter::HandleChildIdRequest(const Message &         aMessage,
 
     child = mChildTable.FindChild(macAddr, Child::kInStateAnyExceptInvalid);
     VerifyOrExit(child != NULL, error = OT_ERROR_ALREADY);
+
+    // Version
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kVersion, sizeof(version), version));
+    VerifyOrExit(version.IsValid(), error = OT_ERROR_PARSE);
 
     // Response
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kResponse, sizeof(response), response));
@@ -2194,6 +2199,7 @@ otError MleRouter::HandleChildIdRequest(const Message &         aMessage,
     child->SetMleFrameCounter(mleFrameCounter.GetFrameCounter());
     child->SetKeySequence(aKeySequence);
     child->SetDeviceMode(mode.GetMode());
+    child->SetVersion(static_cast<uint8_t>(version.GetVersion()));
     child->GetLinkInfo().AddRss(linkInfo->mRss);
     child->SetTimeout(timeout.GetTimeout());
 
@@ -3594,6 +3600,7 @@ void MleRouter::RestoreChildren(void)
         child->SetDeviceMode(DeviceMode(childInfo.GetMode()));
         child->SetState(Neighbor::kStateRestored);
         child->SetLastHeard(TimerMilli::GetNow());
+        child->SetVersion(static_cast<uint8_t>(childInfo.GetVersion()));
         Get<IndirectSender>().SetChildUseShortAddress(*child, true);
         numChildren++;
     }
@@ -3640,6 +3647,7 @@ otError MleRouter::StoreChild(const Child &aChild)
     childInfo.SetTimeout(aChild.GetTimeout());
     childInfo.SetRloc16(aChild.GetRloc16());
     childInfo.SetMode(aChild.GetDeviceMode().Get());
+    childInfo.SetVersion(aChild.GetVersion());
 
     return Get<Settings>().AddChildInfo(childInfo);
 }
