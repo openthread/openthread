@@ -1239,7 +1239,7 @@ otError RadioSpinel::WaitResponse(void)
 {
     uint64_t end = platformGetTime() + kMaxWaitTime * US_PER_MS;
 
-    otLogInfoPlat("Wait response: tid=%u key=%u", mWaitingTid, mWaitingKey);
+    otLogDebgPlat("Wait response: tid=%u key=%u", mWaitingTid, mWaitingKey);
 
     do
     {
