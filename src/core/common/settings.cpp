@@ -50,10 +50,11 @@ namespace ot {
 
 void SettingsBase::LogNetworkInfo(const char *aAction, const NetworkInfo &aNetworkInfo) const
 {
-    otLogInfoCore("Non-volatile: %s NetworkInfo {rloc:0x%04x, extaddr:%s, role:%s, mode:0x%02x, keyseq:0x%x, ...",
-                  aAction, aNetworkInfo.GetRloc16(), aNetworkInfo.GetExtAddress().ToString().AsCString(),
-                  Mle::Mle::RoleToString(static_cast<otDeviceRole>(aNetworkInfo.GetRole())),
-                  aNetworkInfo.GetDeviceMode(), aNetworkInfo.GetKeySequence());
+    otLogInfoCore(
+        "Non-volatile: %s NetworkInfo {rloc:0x%04x, extaddr:%s, role:%s, mode:0x%02x, version:%hu, keyseq:0x%x, ...",
+        aAction, aNetworkInfo.GetRloc16(), aNetworkInfo.GetExtAddress().ToString().AsCString(),
+        Mle::Mle::RoleToString(static_cast<otDeviceRole>(aNetworkInfo.GetRole())), aNetworkInfo.GetDeviceMode(),
+        aNetworkInfo.GetVersion(), aNetworkInfo.GetKeySequence());
 
     otLogInfoCore(
         "Non-volatile: ... pid:0x%x, mlecntr:0x%x, maccntr:0x%x, mliid:%02x%02x%02x%02x%02x%02x%02x%02x}",
@@ -65,15 +66,15 @@ void SettingsBase::LogNetworkInfo(const char *aAction, const NetworkInfo &aNetwo
 
 void SettingsBase::LogParentInfo(const char *aAction, const ParentInfo &aParentInfo) const
 {
-    otLogInfoCore("Non-volatile: %s ParentInfo {extaddr:%s}", aAction,
-                  aParentInfo.GetExtAddress().ToString().AsCString());
+    otLogInfoCore("Non-volatile: %s ParentInfo {extaddr:%s, version:%hu}", aAction,
+                  aParentInfo.GetExtAddress().ToString().AsCString(), aParentInfo.GetVersion());
 }
 
 void SettingsBase::LogChildInfo(const char *aAction, const ChildInfo &aChildInfo) const
 {
-    otLogInfoCore("Non-volatile: %s ChildInfo {rloc:0x%04x, extaddr:%s, timeout:%u, mode:0x%02x}", aAction,
+    otLogInfoCore("Non-volatile: %s ChildInfo {rloc:0x%04x, extaddr:%s, timeout:%u, mode:0x%02x, version:%hu}", aAction,
                   aChildInfo.GetRloc16(), aChildInfo.GetExtAddress().ToString().AsCString(), aChildInfo.GetTimeout(),
-                  aChildInfo.GetMode());
+                  aChildInfo.GetMode(), aChildInfo.GetVersion());
 }
 
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)

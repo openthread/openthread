@@ -73,7 +73,7 @@
 #else
 #error "Unknown posix app type!"
 #endif
-#include <openthread-system.h>
+#include <openthread/openthread-system.h>
 
 #ifndef OPENTHREAD_ENABLE_COVERAGE
 #define OPENTHREAD_ENABLE_COVERAGE 0

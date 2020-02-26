@@ -62,7 +62,11 @@ target_link_libraries(openthread-posix PUBLIC
     util
 )
 
-target_compile_definitions(openthread-posix PUBLIC ${OT_PLATFORM_DEFINES})
+target_compile_definitions(openthread-posix PUBLIC
+    ${OT_PRIVATE_DEFINES}
+    ${OT_PUBLIC_DEFINES}
+    ${OT_PLATFORM_DEFINES}
+)
 
 target_compile_options(openthread-posix PRIVATE
     ${OT_CFLAGS}
@@ -73,6 +77,7 @@ target_include_directories(openthread-posix PRIVATE
     ${OT_PRIVATE_INCLUDES}
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
-    ${PROJECT_SOURCE_DIR}/src/posix/platform
     ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}/src/posix/platform/include
 )

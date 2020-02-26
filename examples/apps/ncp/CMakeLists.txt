@@ -71,3 +71,6 @@ target_link_libraries(ot-rcp
     openthread-radio
     ${OT_PLATFORM_LIB}
 )
+
+install(TARGETS ot-rcp ot-ncp-ftd ot-ncp-mtd
+    DESTINATION bin)

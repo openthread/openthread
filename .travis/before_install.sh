@@ -47,14 +47,18 @@ cd /tmp || die
     pip3 install --upgrade pip
     pip3 install cmake
 
-    [ $BUILD_TARGET != simulation-distcheck -a $BUILD_TARGET != simulation-32-bit -a $BUILD_TARGET != posix-app-cli -a $BUILD_TARGET != simulation-mtd -a $BUILD_TARGET != simulation-ncp -a $BUILD_TARGET != posix-app-ncp ] || {
+    case "${BUILD_TARGET}" in
+    simulation-distcheck|simulation-32-bit|posix-app-cli|simulation-mtd|simulation-ncp|posix-app-ncp|v1.2)
         pip install --upgrade pip || die
         pip install -r $TRAVIS_BUILD_DIR/tests/scripts/thread-cert/requirements.txt || die
         [ $BUILD_TARGET != simulation-ncp -a $BUILD_TARGET != posix-app-ncp ] || {
             # Packages used by ncp tools.
             pip install git+https://github.com/openthread/pyspinel || die
         }
-    }
+        ;;
+    *)
+        ;;
+    esac
 
     [ $BUILD_TARGET != android-build ] || {
         sudo apt-get install -y bison gcc-multilib g++-multilib

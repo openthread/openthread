@@ -30,15 +30,16 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES                             = libopenthread-posix.a
 
-libopenthread_posix_a_CPPFLAGS            = \
-    -I$(top_srcdir)/include                 \
-    -I$(top_srcdir)/src                     \
-    -I$(top_srcdir)/src/core                \
-    -I$(top_srcdir)/src/posix/platform      \
-    -D_GNU_SOURCE                           \
-    -DOPENTHREAD_FTD=1                      \
-    -DOPENTHREAD_MTD=0                      \
-    -DOPENTHREAD_RADIO=0                    \
+libopenthread_posix_a_CPPFLAGS                                = \
+    -I$(top_srcdir)/include                                     \
+    -I$(top_srcdir)/src                                         \
+    -I$(top_srcdir)/src/core                                    \
+    -I$(top_srcdir)/src/posix/platform                          \
+    -I$(top_srcdir)/src/posix/platform/include                  \
+    -D_GNU_SOURCE                                               \
+    -DOPENTHREAD_FTD=1                                          \
+    -DOPENTHREAD_MTD=0                                          \
+    -DOPENTHREAD_RADIO=0                                        \
     $(NULL)
 
 libopenthread_posix_a_SOURCES             = \
@@ -66,7 +67,7 @@ noinst_HEADERS                            = \
     $(NULL)
 
 openthread_HEADERS                        = \
-    openthread-system.h                     \
+    include/openthread/openthread-system.h  \
     $(NULL)
 
 openthreaddir = $(includedir)/openthread
@@ -84,11 +85,12 @@ endif # OPENTHREAD_BUILD_COVERAGE
 
 check_PROGRAMS = test-settings
 
-test_settings_CPPFLAGS                    = \
-    -I$(top_srcdir)/include                 \
-    -I$(top_srcdir)/src/core                \
-    -DOPENTHREAD_CONFIG_LOG_PLATFORM=0      \
-    -DSELF_TEST                             \
+test_settings_CPPFLAGS                                        = \
+    -I$(top_srcdir)/include                                     \
+    -I$(top_srcdir)/src/core                                    \
+    -I$(top_srcdir)/src/posix/platform/include                  \
+    -DOPENTHREAD_CONFIG_LOG_PLATFORM=0                          \
+    -DSELF_TEST                                                 \
     $(NULL)
 
 test_settings_SOURCES                     = \

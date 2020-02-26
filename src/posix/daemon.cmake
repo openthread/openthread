@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,21 +26,42 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(COMMON_INCLUDES
-    ${OT_PUBLIC_INCLUDES}
-    ${OT_PRIVATE_INCLUDES}
-    ${PROJECT_SOURCE_DIR}/src/core
-    ${PROJECT_SOURCE_DIR}/src/posix/platform
-    ${PROJECT_SOURCE_DIR}/src/posix/platform/include
+add_executable(ot-daemon
+    main.c
 )
 
-if(OT_DAEMON)
-    include(daemon.cmake)
-else()
-    include(standalone.cmake)
-endif()
+target_include_directories(ot-daemon PRIVATE ${COMMON_INCLUDES})
 
-set(CPACK_GENERATOR "DEB")
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "OpenThread Authors <openthread-users@googlegroups.com")
-set(CPACK_PACKAGE_CONTACT "OpenThread Authors <openthread-users@googlegroups.com")
-include(CPack)
+target_compile_definitions(ot-daemon PRIVATE
+    OPENTHREAD_POSIX_APP_TYPE=2
+)
+
+target_compile_options(ot-daemon PRIVATE
+    ${OT_CFLAGS}
+)
+
+target_link_libraries(ot-daemon PRIVATE
+    openthread-cli-ftd
+    ${OT_PLATFORM_LIB}
+    openthread-ftd
+    ${OT_PLATFORM_LIB}
+    openthread-ncp-ftd
+    mbedcrypto
+)
+
+add_executable(ot-ctl
+    client.cpp
+)
+
+target_compile_options(ot-ctl PRIVATE
+    ${OT_CFLAGS}
+)
+
+target_include_directories(ot-ctl PRIVATE ${COMMON_INCLUDES})
+
+install(TARGETS ot-daemon
+    DESTINATION sbin)
+install(TARGETS ot-ctl
+    DESTINATION bin)
+
+set(CPACK_PACKAGE_NAME "openthread-daemon")

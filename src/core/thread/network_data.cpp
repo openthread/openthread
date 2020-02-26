@@ -50,7 +50,6 @@ namespace NetworkData {
 NetworkData::NetworkData(Instance &aInstance, Type aType)
     : InstanceLocator(aInstance)
     , mType(aType)
-    , mLastAttemptWait(false)
     , mLastAttempt(0)
 {
     mLength = 0;
@@ -978,8 +977,16 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
     Coap::Message *  message = NULL;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit(!mLastAttemptWait || (TimerMilli::GetNow() - mLastAttempt < kDataResubmitDelay),
-                 error = OT_ERROR_ALREADY);
+    if (mLastAttempt.GetValue() != 0)
+    {
+        uint32_t diff = TimerMilli::GetNow() - mLastAttempt;
+
+        if (((mType == kTypeLocal) && (diff > kDataResubmitDelay)) ||
+            ((mType == kTypeLeader) && (diff > kProxyResubmitDelay)))
+        {
+            ExitNow(error = OT_ERROR_ALREADY);
+        }
+    }
 
     VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
@@ -1008,10 +1015,13 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
     messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
 
-    if (mType == kTypeLocal)
+    mLastAttempt = TimerMilli::GetNow();
+
+    // `0` is a special value to indicate no delay limitation on sending SRV_DATA.ntf.
+    // Here avoids possible impact in rate limitation of SRV_DATA.ntf in case of wrap.
+    if (mLastAttempt.GetValue() == 0)
     {
-        mLastAttempt     = TimerMilli::GetNow();
-        mLastAttemptWait = true;
+        mLastAttempt.SetValue(1);
     }
 
     otLogInfoNetData("Sent server data notification");
@@ -1026,9 +1036,113 @@ exit:
     return error;
 }
 
+otError NetworkData::GetNextServer(Iterator &aIterator, uint16_t &aRloc16)
+{
+    otError             error = OT_ERROR_NOT_FOUND;
+    NetworkDataIterator iterator(aIterator);
+    NetworkDataTlv *    cur = reinterpret_cast<NetworkDataTlv *>(mTlvs + iterator.GetTlvOffset());
+    NetworkDataTlv *    end = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
+
+    for (; cur < end; cur = cur->GetNext(), iterator.SetSubTlvOffset(0), iterator.SetEntryIndex(0))
+    {
+        NetworkDataTlv *subCur;
+        NetworkDataTlv *subEnd;
+
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
+
+        switch (cur->GetType())
+        {
+        case NetworkDataTlv::kTypePrefix:
+        {
+            PrefixTlv *prefix = static_cast<PrefixTlv *>(cur);
+            subCur            = reinterpret_cast<NetworkDataTlv *>(reinterpret_cast<uint8_t *>(prefix->GetSubTlvs()) +
+                                                        iterator.GetSubTlvOffset());
+            subEnd            = cur->GetNext();
+
+            for (; subCur < subEnd; subCur = subCur->GetNext(), iterator.SetEntryIndex(0))
+            {
+                VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd, error = OT_ERROR_PARSE);
+
+                if (subCur->GetType() == NetworkDataTlv::kTypeBorderRouter)
+                {
+                    BorderRouterTlv *borderRouter = static_cast<BorderRouterTlv *>(subCur);
+                    uint8_t          index        = iterator.GetEntryIndex();
+
+                    if (index < borderRouter->GetNumEntries())
+                    {
+                        aRloc16 = borderRouter->GetEntry(index)->GetRloc();
+
+                        iterator.SaveTlvOffset(cur, mTlvs);
+                        iterator.SaveSubTlvOffset(subCur, prefix->GetSubTlvs());
+                        iterator.SetEntryIndex(index + 1);
+
+                        ExitNow(error = OT_ERROR_NONE);
+                    }
+                }
+                else if (subCur->GetType() == NetworkDataTlv::kTypeHasRoute)
+                {
+                    HasRouteTlv *hasRoute = static_cast<HasRouteTlv *>(subCur);
+                    uint8_t      index    = iterator.GetEntryIndex();
+
+                    if (index < hasRoute->GetNumEntries())
+                    {
+                        aRloc16 = hasRoute->GetEntry(index)->GetRloc();
+
+                        iterator.SaveTlvOffset(cur, mTlvs);
+                        iterator.SaveSubTlvOffset(subCur, prefix->GetSubTlvs());
+                        iterator.SetEntryIndex(index + 1);
+
+                        ExitNow(error = OT_ERROR_NONE);
+                    }
+                }
+            }
+
+            break;
+        }
+        case NetworkDataTlv::kTypeService:
+        {
+            ServiceTlv *service = static_cast<ServiceTlv *>(cur);
+            subCur = reinterpret_cast<NetworkDataTlv *>(reinterpret_cast<uint8_t *>(service->GetSubTlvs()) +
+                                                        iterator.GetSubTlvOffset());
+            subEnd = cur->GetNext();
+
+            for (; subCur < subEnd; subCur = subCur->GetNext())
+            {
+                VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd, error = OT_ERROR_PARSE);
+
+                if (subCur->GetType() == NetworkDataTlv::kTypeServer)
+                {
+                    ServerTlv *server = static_cast<ServerTlv *>(subCur);
+                    aRloc16           = server->GetServer16();
+
+                    if (subCur->GetNext() >= cur->GetNext())
+                    {
+                        iterator.SaveTlvOffset(cur->GetNext(), mTlvs);
+                        iterator.SetSubTlvOffset(0);
+                    }
+                    else
+                    {
+                        iterator.SaveTlvOffset(cur, mTlvs);
+                        iterator.SaveSubTlvOffset(subCur->GetNext(), service->GetSubTlvs());
+                    }
+
+                    ExitNow(error = OT_ERROR_NONE);
+                }
+            }
+            break;
+        }
+        default:
+            break;
+        }
+    }
+
+exit:
+    return error;
+}
+
 void NetworkData::ClearResubmitDelayTimer(void)
 {
-    mLastAttemptWait = false;
+    mLastAttempt.SetValue(0);
 }
 
 } // namespace NetworkData

@@ -42,10 +42,17 @@ import unittest
 
 class Node:
 
-    def __init__(self, nodeid, is_mtd=False, simulator=None):
+    def __init__(self, nodeid, is_mtd=False, simulator=None, version=None):
         self.nodeid = nodeid
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
         self.node_type = os.getenv('NODE_TYPE', 'sim')
+        self.env_version = os.getenv('THREAD_VERSION', '1.1')
+
+        if version is not None:
+            self.version = version
+        else:
+            self.version = self.env_version
+
         self.simulator = simulator
         if self.simulator:
             self.simulator.add_node(self)
@@ -69,11 +76,18 @@ class Node:
         """ Initialize a simulation node. """
         if 'OT_CLI_PATH' in os.environ:
             cmd = os.environ['OT_CLI_PATH']
-        elif 'top_builddir' in os.environ:
+        elif (self.version == '1.1' and self.version != self.env_version):
+            # Posix app
+            if 'OT_CLI_PATH_1_1' in os.environ:
+                cmd = os.environ['OT_CLI_PATH_1_1']
+            elif ('top_builddir_1_1') in os.environ:
+                srcdir = os.environ['top_builddir_1_1']
+                cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
+        elif ('top_builddir') in os.environ:
             srcdir = os.environ['top_builddir']
             cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
         else:
-            cmd = './ot-cli-%s' % mode
+            cmd = '%s/ot-cli-%s' % (self.version, mode)
 
         if 'RADIO_DEVICE' in os.environ:
             cmd += ' -v %s' % os.environ['RADIO_DEVICE']
@@ -107,15 +121,33 @@ class Node:
                 os.environ['OT_NCP_PATH'],
                 args,
             )
-        elif "top_builddir" in os.environ:
-            builddir = os.environ['top_builddir']
-            cmd = 'spinel-cli.py -p "%s/examples/apps/ncp/ot-ncp-%s%s" -n' % (
-                builddir,
-                mode,
+        elif (self.version == '1.1' and self.version != self.env_version):
+            if 'OT_NCP_PATH_1_1' in os.environ:
+                cmd = 'spinel-cli.py -p "%s%s" -n' % (
+                    os.environ['OT_NCP_PATH_1_1'],
+                    args,
+                )
+            elif ('top_builddir_1_1') in os.environ:
+                srcdir = os.environ['top_builddir_1_1']
+                cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
+                cmd = 'spinel-cli.py -p "%s%s" -n' % (
+                    cmd,
+                    args,
+                )
+        elif ('top_builddir') in os.environ:
+            srcdir = os.environ['top_builddir']
+            cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
+            cmd = 'spinel-cli.py -p "%s%s" -n' % (
+                cmd,
                 args,
             )
         else:
-            cmd = 'spinel-cli.py -p "./ot-ncp-%s%s" -n' % (mode, args)
+            cmd = 'spinel-cli.py -p "%s/ot-ncp-%s%s" -n' % (
+                self.version,
+                mode,
+                args,
+            )
+
         cmd += ' %d' % nodeid
         print("%s" % cmd)
 
@@ -312,6 +344,11 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
+    def set_link_quality(self, addr, lqi):
+        cmd = 'macfilter rss add-lqi %s %s' % (addr, lqi)
+        self.send_command(cmd)
+        self._expect('Done')
+
     def remove_whitelist(self, addr):
         cmd = 'macfilter addr remove %s' % addr
         self.send_command(cmd)
@@ -337,6 +374,10 @@ class Node:
 
         self._expect('Done')
         return addr64
+
+    def set_addr64(self, addr64):
+        self.send_command('extaddr %s' % addr64)
+        self._expect('Done')
 
     def get_eui64(self):
         self.send_command('eui64')
@@ -432,6 +473,11 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
+    def set_parent_priority(self, priority):
+        cmd = 'parentpriority %d' % priority
+        self.send_command(cmd)
+        self._expect('Done')
+
     def get_partition_id(self):
         self.send_command('leaderpartitionid')
         i = self._expect(r'(\d+)\r?\n')
@@ -443,6 +489,18 @@ class Node:
     def set_partition_id(self, partition_id):
         cmd = 'leaderpartitionid %d' % partition_id
         self.send_command(cmd)
+        self._expect('Done')
+
+    def get_pollperiod(self):
+        self.send_command('pollperiod')
+        i = self._expect(r'(\d+)\r?\n')
+        if i == 0:
+            pollperiod = self.pexpect.match.groups()[0]
+        self._expect('Done')
+        return pollperiod
+
+    def set_pollperiod(self, pollperiod):
+        self.send_command('pollperiod %d' % pollperiod)
         self._expect('Done')
 
     def set_router_upgrade_threshold(self, threshold):
@@ -772,10 +830,14 @@ class Node:
         result = True
         try:
             responders = {}
-            while len(responders) < num_responses:
-                i = self._expect([r'from (\S+):'])
+            # ncp-sim doesn't print Done
+            done = (self.node_type == 'ncp-sim')
+            while len(responders) < num_responses or not done:
+                i = self._expect([r'from (\S+):', 'Done'])
                 if i == 0:
                     responders[self.pexpect.match.groups()[0]] = 1
+                elif i == 1:
+                    done = True
             self._expect('\n')
         except (pexpect.TIMEOUT, socket.timeout):
             result = False
