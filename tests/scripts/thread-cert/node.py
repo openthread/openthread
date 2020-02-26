@@ -259,7 +259,7 @@ class Node:
         print("%d: %s" % (self.nodeid, cmd))
         self.pexpect.send(cmd + '\n')
         if go:
-            self.simulator.go(1, nodeid=self.nodeid)
+            self.simulator.go(0, nodeid=self.nodeid)
         sys.stdout.flush()
 
     def get_commands(self):
