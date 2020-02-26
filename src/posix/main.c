@@ -122,6 +122,7 @@ static const struct option kOptions[] = {{"debug-level", required_argument, NULL
                                          {"ncp-dataset", no_argument, NULL, ARG_RESTORE_NCP_DATASET},
                                          {"time-speed", required_argument, NULL, 's'},
                                          {"verbose", no_argument, NULL, 'v'},
+#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
                                          {"gpio-int-dev", required_argument, NULL, ARG_SPI_GPIO_INT_DEV},
                                          {"gpio-int-line", required_argument, NULL, ARG_SPI_GPIO_INT_LINE},
                                          {"gpio-reset-dev", required_argument, NULL, ARG_SPI_GPIO_RESET_DEV},
@@ -132,62 +133,49 @@ static const struct option kOptions[] = {{"debug-level", required_argument, NULL
                                          {"spi-reset-delay", required_argument, NULL, ARG_SPI_RESET_DELAY},
                                          {"spi-align-allowance", required_argument, NULL, ARG_SPI_ALIGN_ALLOWANCE},
                                          {"spi-small-packet", required_argument, NULL, ARG_SPI_SMALL_PACKET},
-                                         {0, 0, 0, 0}};
-
-#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
-static const char *sHelpString =
-    "Syntax:\n"
-    "    %s [Options] NodeId|Device|Command [DeviceConfig|CommandArgs]\n"
-    "Options:\n"
-    "    -I  --interface-name name     Thread network interface name.\n"
-    "    -d  --debug-level             Debug level of logging.\n"
-    "    -n  --dry-run                 Just verify if arguments is valid and radio spinel is compatible.\n"
-    "        --no-reset                Do not send Spinel reset command to RCP on initialization.\n"
-    "        --radio-version           Print radio firmware version.\n"
-    "        --ncp-dataset             Retrieve and save NCP dataset to file.\n"
-    "    -s  --time-speed factor       Time speed up factor.\n"
-    "    -v  --verbose                 Also log to stderr.\n"
-    "        --gpio-int-dev[=gpio-device-path]\n"
-    "                                  Specify a path to the Linux sysfs-exported GPIO device for the\n"
-    "                                  `I̅N̅T̅` pin. If not specified, `SPI` interface will fall back to\n"
-    "                                  polling, which is inefficient.\n"
-    "        --gpio-int-line[=line-offset]\n"
-    "                                  The offset index of `I̅N̅T̅` pin for the associated GPIO device.\n"
-    "                                  If not specified, `SPI` interface will fall back to polling,\n"
-    "                                  which is inefficient.\n"
-    "        --gpio-reset-dev[=gpio-device-path]\n"
-    "                                  Specify a path to the Linux sysfs-exported GPIO device for the\n"
-    "                                  `R̅E̅S̅` pin.\n"
-    "        --gpio-reset-line[=line-offset]"
-    "                                  The offset index of `R̅E̅S̅` pin for the associated GPIO device.\n"
-    "        --spi-mode[=mode]         Specify the SPI mode to use (0-3).\n"
-    "        --spi-speed[=hertz]       Specify the SPI speed in hertz.\n"
-    "        --spi-cs-delay[=usec]     Specify the delay after C̅S̅ assertion, in µsec.\n"
-    "        --spi-reset-delay[=ms]    Specify the delay after R̅E̅S̅E̅T̅ assertion, in milliseconds.\n"
-    "        --spi-align-allowance[=n] Specify the maximum number of 0xFF bytes to clip from start of\n"
-    "                                  MISO frame. Max value is 16.\n"
-    "        --spi-small-packet=[n]    Specify the smallest packet we can receive in a single transaction.\n"
-    "                                  (larger packets will require two transactions). Default value is 32.\n"
-    "    -h  --help                    Display this usage information.\n";
-#else
-static const char *sHelpString =
-    "Syntax:\n"
-    "    %s [Options] NodeId|Device|Command [DeviceConfig|CommandArgs]\n"
-    "Options:\n"
-    "    -I  --interface-name name     Thread network interface name.\n"
-    "    -d  --debug-level             Debug level of logging.\n"
-    "    -n  --dry-run                 Just verify if arguments is valid and radio spinel is compatible.\n"
-    "        --no-reset                Do not send Spinel reset command to RCP on initialization.\n"
-    "        --radio-version           Print radio firmware version.\n"
-    "        --ncp-dataset             Retrieve and save NCP dataset to file.\n"
-    "    -s  --time-speed factor       Time speed up factor.\n"
-    "    -v  --verbose                 Also log to stderr.\n"
-    "    -h  --help                    Display this usage information.\n";
 #endif
+                                         {0, 0, 0, 0}};
 
 static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
 {
-    fprintf(aStream, sHelpString, aProgramName);
+    fprintf(aStream,
+            "Syntax:\n"
+            "    %s [Options] NodeId|Device|Command [DeviceConfig|CommandArgs]\n"
+            "Options:\n"
+            "    -d  --debug-level             Debug level of logging.\n"
+            "    -h  --help                    Display this usage information.\n"
+            "    -I  --interface-name name     Thread network interface name.\n"
+            "    -n  --dry-run                 Just verify if arguments is valid and radio spinel is compatible.\n"
+            "        --no-reset                Do not send Spinel reset command to RCP on initialization.\n"
+            "        --radio-version           Print radio firmware version.\n"
+            "        --ncp-dataset             Retrieve and save NCP dataset to file.\n"
+            "    -s  --time-speed factor       Time speed up factor.\n"
+            "    -v  --verbose                 Also log to stderr.\n",
+            aProgramName);
+#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
+    fprintf(aStream,
+            "        --gpio-int-dev[=gpio-device-path]\n"
+            "                                  Specify a path to the Linux sysfs-exported GPIO device for the\n"
+            "                                  `I̅N̅T̅` pin. If not specified, `SPI` interface will fall back to\n"
+            "                                  polling, which is inefficient.\n"
+            "        --gpio-int-line[=line-offset]\n"
+            "                                  The offset index of `I̅N̅T̅` pin for the associated GPIO device.\n"
+            "                                  If not specified, `SPI` interface will fall back to polling,\n"
+            "                                  which is inefficient.\n"
+            "        --gpio-reset-dev[=gpio-device-path]\n"
+            "                                  Specify a path to the Linux sysfs-exported GPIO device for the\n"
+            "                                  `R̅E̅S̅` pin.\n"
+            "        --gpio-reset-line[=line-offset]"
+            "                                  The offset index of `R̅E̅S̅` pin for the associated GPIO device.\n"
+            "        --spi-mode[=mode]         Specify the SPI mode to use (0-3).\n"
+            "        --spi-speed[=hertz]       Specify the SPI speed in hertz.\n"
+            "        --spi-cs-delay[=usec]     Specify the delay after C̅S̅ assertion, in µsec.\n"
+            "        --spi-reset-delay[=ms]    Specify the delay after R̅E̅S̅E̅T̅ assertion, in milliseconds.\n"
+            "        --spi-align-allowance[=n] Specify the maximum number of 0xFF bytes to clip from start of\n"
+            "                                  MISO frame. Max value is 16.\n"
+            "        --spi-small-packet=[n]    Specify the smallest packet we can receive in a single transaction.\n"
+            "                                  (larger packets will require two transactions). Default value is 32.\n");
+#endif
     exit(aExitCode);
 }
 
