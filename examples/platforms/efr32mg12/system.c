@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -91,7 +91,6 @@ void otSysInit(int argc, char *argv[])
     CMU_ClockSelectSet(cmuClock_LFE, cmuSelect_LFRCO);
     CMU_ClockEnable(cmuClock_CORELE, true);
     CMU_ClockEnable(cmuClock_RTCC, true);
-
     status = sl_sleeptimer_init();
     assert(status == SL_STATUS_OK);
 
