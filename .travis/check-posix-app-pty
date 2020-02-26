@@ -77,7 +77,7 @@ check() {
         sleep 1
         OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-ctl)"
     else
-        OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli)" spinel+hdlc+forkpty://${OT_NCP_PATH}?arg=${CORE_PTY}
+        OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli) spinel+hdlc+forkpty://${CORE_PTY}"
     fi
 
     # Cover setting a valid network interface name.
