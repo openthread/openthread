@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,21 +26,53 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(COMMON_INCLUDES
-    ${OT_PUBLIC_INCLUDES}
-    ${OT_PRIVATE_INCLUDES}
-    ${PROJECT_SOURCE_DIR}/src/core
-    ${PROJECT_SOURCE_DIR}/src/posix/platform
-    ${PROJECT_SOURCE_DIR}/src/posix/platform/include
+add_executable(ot-cli
+    main.c
 )
 
-if(OT_DAEMON)
-    include(daemon.cmake)
-else()
-    include(standalone.cmake)
-endif()
+target_include_directories(ot-cli PRIVATE ${COMMON_INCLUDES})
 
-set(CPACK_GENERATOR "DEB")
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "OpenThread Authors <openthread-users@googlegroups.com")
-set(CPACK_PACKAGE_CONTACT "OpenThread Authors <openthread-users@googlegroups.com")
-include(CPack)
+target_compile_definitions(ot-cli PRIVATE
+    OPENTHREAD_POSIX_APP_TYPE=2
+)
+
+target_compile_options(ot-cli PRIVATE
+    ${OT_CFLAGS}
+)
+
+target_link_libraries(ot-cli
+    openthread-cli-ftd
+    ${OT_PLATFORM_LIB}
+    openthread-ftd
+    ${OT_PLATFORM_LIB}
+    mbedcrypto
+    openthread-ncp-ftd
+)
+
+add_executable(ot-ncp
+    main.c
+)
+
+target_include_directories(ot-ncp PRIVATE ${COMMON_INCLUDES})
+
+target_compile_definitions(ot-ncp PRIVATE
+    OPENTHREAD_POSIX_APP_TYPE=1
+)
+
+target_compile_options(ot-ncp PRIVATE
+    ${OT_CFLAGS}
+)
+
+target_link_libraries(ot-ncp
+    openthread-ncp-ftd
+    ${OT_PLATFORM_LIB}
+    openthread-ftd
+    ${OT_PLATFORM_LIB}
+    mbedcrypto
+    openthread-ncp-ftd
+)
+
+install(TARGETS ot-cli ot-ncp
+    DESTINATION bin)
+
+set(CPACK_PACKAGE_NAME "openthread-standalone")
