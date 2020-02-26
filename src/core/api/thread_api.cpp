@@ -412,7 +412,7 @@ otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
 
 uint16_t otThreadGetVersion(void)
 {
-    return OPENTHREAD_THREAD_VERSION;
+    return OPENTHREAD_CONFIG_THREAD_VERSION;
 }
 
 bool otThreadIsSingleton(otInstance *aInstance)

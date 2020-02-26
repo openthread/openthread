@@ -39,14 +39,26 @@ readonly OT_BUILDDIR="$(pwd)/build"
 readonly OT_SRCDIR="$(pwd)"
 
 do_build() {
-    if [[ -n "${RADIO_DEVICE}" && "${VIRTUAL_TIME}" = 1 ]]; then
-        VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix
-    else
-        make -f examples/Makefile-posix
+    ./bootstrap
+    if [ "${VIRTUAL_TIME}" = 1 ]; then
+        OPTIONS="VIRTUAL_TIME_UART=1"
     fi
+
+    make -f examples/Makefile-posix ${OPTIONS}
 
     if [[ -n "${RADIO_DEVICE}" ]]; then
         make -f src/posix/Makefile-posix
+    fi
+
+    # Extra 1.1 build for 1.2 env
+    if [ "${THREAD_VERSION}" = "1.2" ]; then
+        ./bootstrap
+        OPTIONS="TargetTuple=${SYSTEM_TRIPLET}-1.1 THREAD_VERSION=1.1 ${OPTIONS}"
+        make -f examples/Makefile-posix ${OPTIONS}
+
+        if [[ -n "${RADIO_DEVICE}" ]]; then
+            make -f src/posix/Makefile-posix
+        fi
     fi
 }
 
@@ -67,6 +79,7 @@ ENVIRONMENTS:
     NODE_TYPE       'sim' for CLI, 'ncp-sim' for NCP. The default is 'sim'.
     NODE_MODE       'transceiver' for transceiver mode, otherwise for standalone mode. The default is standalone mode.
     VIRTUAL_TIME    1 for virtual time, otherwise real time. The default is 1
+    THREAD_VERSION  1.1 for Thread 1.1 stack, 1.2 for Thread 1.2 stack. The default is 1.1.
 
 COMMANDS:
     clean           Clean built files to prepare for new build.
@@ -90,7 +103,11 @@ EXAMPLES:
     # Test CLI with real time
     VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
     VIRTUAL_TIME=0 $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
-"
+
+    # Test Thread 1.2 with real time
+    THREAD_VERSION=1.2 VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/v1_2_router_5_1_1.py
+    THREAD_VERSION=1.2 VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/v1_2_test_parent_selection.py
+    "
 
     exit $1
 }
@@ -123,11 +140,21 @@ main()
     export NODE_TYPE="${NODE_TYPE:-sim}"
     export VERBOSE="${VERBOSE:-1}"
     export VIRTUAL_TIME="${VIRTUAL_TIME:-1}"
+    export THREAD_VERSION="${THREAD_VERSION:-1.1}"
+    if [ "${THREAD_VERSION}" = "1.2" ]; then
+        export top_builddir_1_1="build/${SYSTEM_TRIPLET}-1.1"
+    fi
 
     if [[ "${NODE_MODE}" = 'transceiver' ]] ; then
         export RADIO_DEVICE="${OT_BUILDDIR}/${OT_SYSTEM_TRIPLET}/examples/apps/ncp/ot-rcp"
         export OT_CLI_PATH="${OT_BUILDDIR}/posix/${OT_SYSTEM_TRIPLET}/src/posix/ot-cli"
         export OT_NCP_PATH="${OT_BUILDDIR}/posix/${OT_SYSTEM_TRIPLET}/src/posix/ot-ncp"
+
+        if [ "${THREAD_VERSION}" = "1.2" ]; then
+            export RADIO_DEVICE_1_1="${OT_BUILDDIR}/${SYSTEM_TRIPLET}-1.1/examples/apps/ncp/ot-rcp"
+            export OT_CLI_PATH_1_1="${OT_BUILDDIR}/posix/${SYSTEM_TRIPLET}-1.1/src/posix/ot-cli"
+            export OT_NCP_PATH_1_1="${OT_BUILDDIR}/posix/${SYSTEM_TRIPLET}-1.1/src/posix/ot-ncp"
+        fi
     fi
 
     if [[ -z "$1" ]]; then
@@ -137,6 +164,7 @@ main()
     [[ -n "${RADIO_DEVICE}" ]] && echo "Using transceiver mode" || echo "Using standalone mode"
     [[ "${NODE_TYPE}" = "ncp-sim" ]] && echo "Using NCP node" || echo "Using CLI node"
     [[ "${VIRTUAL_TIME}" = 1 ]] && echo "Using virtual time" || echo "Using real time"
+    [[ "${THREAD_VERSION}" = "1.2" ]] && echo "Using Thread 1.2 stack" || echo "Using Thread 1.1 stack"
 
     while [[ -n "$1" ]]; do
         case "$1" in

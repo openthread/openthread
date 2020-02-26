@@ -104,6 +104,7 @@ LOCAL_C_INCLUDES                                         := \
     $(LOCAL_PATH)/src/core                                  \
     $(LOCAL_PATH)/src/ncp                                   \
     $(LOCAL_PATH)/src/posix/platform                        \
+    $(LOCAL_PATH)/src/posix/platform/include                \
     $(LOCAL_PATH)/third_party                               \
     $(LOCAL_PATH)/third_party/mbedtls                       \
     $(LOCAL_PATH)/third_party/mbedtls/repo/include          \
@@ -297,6 +298,7 @@ LOCAL_C_INCLUDES                                         := \
     $(LOCAL_PATH)/src/cli                                   \
     $(LOCAL_PATH)/src/core                                  \
     $(LOCAL_PATH)/src/posix/platform                        \
+    $(LOCAL_PATH)/src/posix/platform/include                \
     $(LOCAL_PATH)/third_party/mbedtls                       \
     $(LOCAL_PATH)/third_party/mbedtls/repo/include          \
     $(NULL)
@@ -339,6 +341,7 @@ LOCAL_C_INCLUDES                                         := \
     $(LOCAL_PATH)/src/cli                                   \
     $(LOCAL_PATH)/src/core                                  \
     $(LOCAL_PATH)/src/posix/platform                        \
+    $(LOCAL_PATH)/src/posix/platform/include                \
     $(LOCAL_PATH)/third_party/mbedtls                       \
     $(LOCAL_PATH)/third_party/mbedtls/repo/include          \
     $(NULL)
@@ -376,6 +379,7 @@ LOCAL_C_INCLUDES                                         := \
     $(LOCAL_PATH)/src/core                                  \
     $(LOCAL_PATH)/src/ncp                                   \
     $(LOCAL_PATH)/src/posix/platform                        \
+    $(LOCAL_PATH)/src/posix/platform/include                \
     $(LOCAL_PATH)/third_party/mbedtls                       \
     $(LOCAL_PATH)/third_party/mbedtls/repo/include          \
     $(NULL)
@@ -414,6 +418,7 @@ LOCAL_C_INCLUDES                                         := \
     $(LOCAL_PATH)/src/core                                  \
     $(LOCAL_PATH)/src/ncp                                   \
     $(LOCAL_PATH)/src/posix/platform                        \
+    $(LOCAL_PATH)/src/posix/platform/include                \
     $(LOCAL_PATH)/third_party/mbedtls                       \
     $(LOCAL_PATH)/third_party/mbedtls/repo/include          \
     $(NULL)
@@ -449,11 +454,12 @@ LOCAL_CFLAGS                                               := \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>  \
     $(NULL)
 
-LOCAL_C_INCLUDES                   := \
-    $(OPENTHREAD_PROJECT_INCLUDES)    \
-    $(LOCAL_PATH)/include             \
-    $(LOCAL_PATH)/src/core            \
-    $(LOCAL_PATH)/src/posix/platform  \
+LOCAL_C_INCLUDES                                         := \
+    $(OPENTHREAD_PROJECT_INCLUDES)                          \
+    $(LOCAL_PATH)/include                                   \
+    $(LOCAL_PATH)/src/core                                  \
+    $(LOCAL_PATH)/src/posix/platform                        \
+    $(LOCAL_PATH)/src/posix/platform/include                \
     $(NULL)
 
 LOCAL_SRC_FILES := src/posix/client.cpp

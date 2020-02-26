@@ -92,7 +92,11 @@ public:
          * This method clears the struct object (setting all the fields to zero).
          *
          */
-        void Init(void) { memset(this, 0, sizeof(*this)); }
+        void Init(void)
+        {
+            memset(this, 0, sizeof(*this));
+            SetVersion(OT_THREAD_VERSION_1_1);
+        }
 
         /**
          * This method returns the Thread role.
@@ -247,6 +251,22 @@ public:
          */
         void SetMeshLocalIid(const uint8_t *aMeshLocalIid) { memcpy(mMlIid, aMeshLocalIid, sizeof(mMlIid)); }
 
+        /**
+         * This method returns the Thread version.
+         *
+         * @returns The Thread version.
+         *
+         */
+        uint16_t GetVersion(void) const { return Encoding::LittleEndian::HostSwap16(mVersion); }
+
+        /**
+         * This method sets the Thread version.
+         *
+         * @param[in] aVersion  The Thread version.
+         *
+         */
+        void SetVersion(uint16_t aVersion) { mVersion = Encoding::LittleEndian::HostSwap16(aVersion); }
+
     private:
         uint8_t         mRole;                   ///< Current Thread role.
         uint8_t         mDeviceMode;             ///< Device mode setting.
@@ -257,6 +277,7 @@ public:
         uint32_t        mPreviousPartitionId;    ///< PartitionId
         Mac::ExtAddress mExtAddress;             ///< Extended Address
         uint8_t         mMlIid[OT_IP6_IID_SIZE]; ///< IID from ML-EID
+        uint16_t        mVersion;                ///< Version
     } OT_TOOL_PACKED_END;
 
     /**
@@ -271,7 +292,11 @@ public:
          * This method clears the struct object (setting all the fields to zero).
          *
          */
-        void Init(void) { memset(this, 0, sizeof(*this)); }
+        void Init(void)
+        {
+            memset(this, 0, sizeof(*this));
+            SetVersion(OT_THREAD_VERSION_1_1);
+        }
 
         /**
          * This method returns the extended address.
@@ -289,8 +314,25 @@ public:
          */
         void SetExtAddress(const Mac::ExtAddress &aExtAddress) { mExtAddress = aExtAddress; }
 
+        /**
+         * This method returns the Thread version.
+         *
+         * @returns The Thread version.
+         *
+         */
+        uint16_t GetVersion(void) const { return Encoding::LittleEndian::HostSwap16(mVersion); }
+
+        /**
+         * This method sets the Thread version.
+         *
+         * @param[in] aVersion  The Thread version.
+         *
+         */
+        void SetVersion(uint16_t aVersion) { mVersion = Encoding::LittleEndian::HostSwap16(aVersion); }
+
     private:
         Mac::ExtAddress mExtAddress; ///< Extended Address
+        uint16_t        mVersion;    ///< Version
     } OT_TOOL_PACKED_END;
 
     /**
@@ -305,7 +347,11 @@ public:
          * This method clears the struct object (setting all the fields to zero).
          *
          */
-        void Init(void) { memset(this, 0, sizeof(*this)); }
+        void Init(void)
+        {
+            memset(this, 0, sizeof(*this));
+            SetVersion(OT_THREAD_VERSION_1_1);
+        }
 
         /**
          * This method returns the extended address.
@@ -371,11 +417,28 @@ public:
          */
         void SetMode(uint8_t aMode) { mMode = aMode; }
 
+        /**
+         * This method returns the Thread version.
+         *
+         * @returns The Thread version.
+         *
+         */
+        uint16_t GetVersion(void) const { return Encoding::LittleEndian::HostSwap16(mVersion); }
+
+        /**
+         * This method sets the Thread version.
+         *
+         * @param[in] aVersion  The Thread version.
+         *
+         */
+        void SetVersion(uint16_t aVersion) { mVersion = Encoding::LittleEndian::HostSwap16(aVersion); }
+
     private:
         Mac::ExtAddress mExtAddress; ///< Extended Address
         uint32_t        mTimeout;    ///< Timeout
         uint16_t        mRloc16;     ///< RLOC16
         uint8_t         mMode;       ///< The MLE device mode
+        uint16_t        mVersion;    ///< Version
     } OT_TOOL_PACKED_END;
 
     /**

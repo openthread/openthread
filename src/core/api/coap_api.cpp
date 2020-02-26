@@ -206,7 +206,7 @@ otError otCoapSendRequestWithParameters(otInstance *              aInstance,
 
     return instance.GetApplicationCoap().SendMessage(*static_cast<Coap::Message *>(aMessage),
                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
-                                                     Coap::CoapTxParameters::From(aTxParameters), aHandler, aContext);
+                                                     Coap::TxParameters::From(aTxParameters), aHandler, aContext);
 }
 
 otError otCoapStart(otInstance *aInstance, uint16_t aPort)
@@ -253,7 +253,7 @@ otError otCoapSendResponseWithParameters(otInstance *              aInstance,
 
     return instance.GetApplicationCoap().SendMessage(*static_cast<Coap::Message *>(aMessage),
                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
-                                                     Coap::CoapTxParameters::From(aTxParameters), NULL, NULL);
+                                                     Coap::TxParameters::From(aTxParameters), NULL, NULL);
 }
 
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE

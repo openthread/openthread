@@ -2087,6 +2087,7 @@ otError MleRouter::HandleChildIdRequest(const Message &         aMessage,
     otError                 error    = OT_ERROR_NONE;
     const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
     Mac::ExtAddress         macAddr;
+    VersionTlv              version;
     ResponseTlv             response;
     LinkFrameCounterTlv     linkFrameCounter;
     MleFrameCounterTlv      mleFrameCounter;
@@ -2112,6 +2113,10 @@ otError MleRouter::HandleChildIdRequest(const Message &         aMessage,
 
     child = mChildTable.FindChild(macAddr, Child::kInStateAnyExceptInvalid);
     VerifyOrExit(child != NULL, error = OT_ERROR_ALREADY);
+
+    // Version
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kVersion, sizeof(version), version));
+    VerifyOrExit(version.IsValid(), error = OT_ERROR_PARSE);
 
     // Response
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kResponse, sizeof(response), response));
@@ -2194,6 +2199,7 @@ otError MleRouter::HandleChildIdRequest(const Message &         aMessage,
     child->SetMleFrameCounter(mleFrameCounter.GetFrameCounter());
     child->SetKeySequence(aKeySequence);
     child->SetDeviceMode(mode.GetMode());
+    child->SetVersion(static_cast<uint8_t>(version.GetVersion()));
     child->GetLinkInfo().AddRss(linkInfo->mRss);
     child->SetTimeout(timeout.GetTimeout());
 
@@ -2605,6 +2611,24 @@ void MleRouter::HandleNetworkDataUpdateRouter(void)
     SendDataResponse(destination, tlvs, sizeof(tlvs), delay);
 
     SynchronizeChildNetworkData();
+
+    // Detect if any server entry with invalid child RLOC16
+    {
+        NetworkData::Iterator iterator = NetworkData::kIteratorInit;
+        uint16_t              rloc16   = Mac::kShortAddrInvalid;
+
+        while (Get<NetworkData::Leader>().GetNextServer(iterator, rloc16) == OT_ERROR_NONE)
+        {
+            if (!IsActiveRouter(rloc16) && RouterIdMatch(GetRloc16(), rloc16) &&
+                mChildTable.FindChild(rloc16, Child::kInStateValid) == NULL)
+            {
+                Get<NetworkData::Leader>().SendServerDataNotification(rloc16);
+                // In Thread 1.1 Specification 5.15.6.1, only one RLOC16 TLV entry may appear in SRV_DATA.ntf.
+                // So break here.
+                break;
+            }
+        }
+    }
 
 exit:
     return;
@@ -3576,6 +3600,7 @@ void MleRouter::RestoreChildren(void)
         child->SetDeviceMode(DeviceMode(childInfo.GetMode()));
         child->SetState(Neighbor::kStateRestored);
         child->SetLastHeard(TimerMilli::GetNow());
+        child->SetVersion(static_cast<uint8_t>(childInfo.GetVersion()));
         Get<IndirectSender>().SetChildUseShortAddress(*child, true);
         numChildren++;
     }
@@ -3622,6 +3647,7 @@ otError MleRouter::StoreChild(const Child &aChild)
     childInfo.SetTimeout(aChild.GetTimeout());
     childInfo.SetRloc16(aChild.GetRloc16());
     childInfo.SetMode(aChild.GetDeviceMode().Get());
+    childInfo.SetVersion(aChild.GetVersion());
 
     return Get<Settings>().AddChildInfo(childInfo);
 }
@@ -3802,6 +3828,11 @@ otError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, I
         if (mChildTable.FindChild(aMeshDest, Child::kInStateValidOrRestoring))
         {
             ExitNow();
+        }
+        else if (IsAnycastLocator(aIp6Header.GetDestination()))
+        {
+            // Proactively notify Leader of the expired child to de-register the stale service if any.
+            Get<NetworkData::Leader>().SendServerDataNotification(aMeshDest);
         }
     }
     else if (GetNextHop(aMeshDest) != Mac::kShortAddrInvalid)
