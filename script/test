@@ -113,10 +113,6 @@ EXAMPLES:
 }
 
 do_package() {
-    if ! cmake --version | grep -q '(?<=cmake version \(\d+.+d)'; then
-        pip3 install -U cmake
-    fi
-
     local builddir="${OT_BUILDDIR}/cmake/openthread-sim"
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
