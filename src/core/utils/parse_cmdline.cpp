@@ -31,6 +31,8 @@
  *   This file implements the command line parser.
  */
 
+#include <string.h>
+
 #include "parse_cmdline.hpp"
 
 #include "common/code_utils.hpp"
@@ -50,21 +52,17 @@ otError CmdLineParser::ParseCmd(char *aString, uint8_t &aArgc, char *aArgv[], ui
 
     aArgc = 0;
 
-    for (cmd = aString; IsSpaceOrNewLine(*cmd) && *cmd; cmd++)
-        ;
-
-    if (*cmd)
+    for (cmd = aString; *cmd; cmd++)
     {
-        aArgv[aArgc++] = cmd++; // the first argument
-    }
-
-    for (; *cmd; cmd++)
-    {
-        if (IsSpaceOrNewLine(*cmd))
+        if ((*cmd == '\\') && (*(cmd + 1) == ' '))
+        {
+            strcpy(cmd, cmd + 1);
+        }
+        else if (IsSpaceOrNewLine(*cmd))
         {
             *cmd = '\0';
         }
-        else if (*(cmd - 1) == '\0')
+        if ((*cmd != '\0') && ((aArgc == 0) || (*(cmd - 1) == '\0')))
         {
             VerifyOrExit(aArgc < aArgcMax, error = OT_ERROR_INVALID_ARGS);
             aArgv[aArgc++] = cmd;
