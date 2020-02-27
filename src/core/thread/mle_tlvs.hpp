@@ -41,7 +41,6 @@
 #include "common/tlvs.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
-#include "thread/device_mode.hpp"
 #include "thread/mle_constants.hpp"
 
 namespace ot {
@@ -168,322 +167,6 @@ public:
         return ot::Tlv::GetOffset(aMessage, static_cast<uint8_t>(aType), aOffset);
     }
 
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class SourceAddressTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kSourceAddress);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the RLOC16 value.
-     *
-     * @returns The RLOC16 value.
-     *
-     */
-    uint16_t GetRloc16(void) const { return HostSwap16(mRloc16); }
-
-    /**
-     * This method sets the RLOC16 value.
-     *
-     * @param[in]  aRloc16  The RLOC16 value.
-     *
-     */
-    void SetRloc16(uint16_t aRloc16) { mRloc16 = HostSwap16(aRloc16); }
-
-private:
-    uint16_t mRloc16;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class ModeTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kMode);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the Mode value.
-     *
-     * @returns The Mode value.
-     *
-     */
-    DeviceMode GetMode(void) const { return DeviceMode(mMode); }
-
-    /**
-     * This method sets the Mode value.
-     *
-     * @param[in]  aMode  The Mode value.
-     *
-     */
-    void SetMode(DeviceMode aMode) { mMode = aMode.Get(); }
-
-private:
-    uint8_t mMode;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class TimeoutTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kTimeout);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the Timeout value.
-     *
-     * @returns The Timeout value.
-     *
-     */
-    uint32_t GetTimeout(void) const { return HostSwap32(mTimeout); }
-
-    /**
-     * This method sets the Timeout value.
-     *
-     * @param[in]  aTimeout  The Timeout value.
-     *
-     */
-    void SetTimeout(uint32_t aTimeout) { mTimeout = HostSwap32(aTimeout); }
-
-private:
-    uint32_t mTimeout;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class ChallengeTlv : public Tlv
-{
-public:
-    enum
-    {
-        kMinSize = 4, ///< Minimum size in bytes (Thread Specification).
-        kMaxSize = 8, ///< Maximum size in bytes (Thread Specification).
-    };
-
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kChallenge);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= kMinSize; }
-
-    /**
-     * This method returns the Challenge length.
-     *
-     * @returns The Challenge length.
-     *
-     */
-    uint8_t GetChallengeLength(void) const
-    {
-        return GetLength() <= sizeof(mChallenge) ? GetLength() : sizeof(mChallenge);
-    }
-
-    /**
-     * This method returns a pointer to the Challenge value.
-     *
-     * @returns A pointer to the Challenge value.
-     *
-     */
-    const uint8_t *GetChallenge(void) const { return mChallenge; }
-
-    /**
-     * This method sets the Challenge value.
-     *
-     * @param[in]  aChallenge  A pointer to the Challenge value.
-     *
-     */
-    void SetChallenge(const uint8_t *aChallenge) { memcpy(mChallenge, aChallenge, GetChallengeLength()); }
-
-private:
-    uint8_t mChallenge[kMaxSize];
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class ResponseTlv : public Tlv
-{
-public:
-    enum
-    {
-        kMinSize = 4, ///< Minimum size in bytes (Thread Specification).
-        kMaxSize = 8, ///< Maximum size in bytes (Thread Specification).
-    };
-
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kResponse);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * OpenThread only generates Challenge values with 8-byte length. As a result, Response value lengths must also
-     * have 8-byte length.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the Response length.
-     *
-     * @returns The Response length.
-     *
-     */
-    uint8_t GetResponseLength(void) const { return GetLength() <= sizeof(mResponse) ? GetLength() : sizeof(mResponse); }
-
-    /**
-     * This method returns a pointer to the Response value.
-     *
-     * @returns A pointer to the Response value.
-     *
-     */
-    const uint8_t *GetResponse(void) const { return mResponse; }
-
-    /**
-     * This method sets the Response value.
-     *
-     * @param[in]  aResponse  A pointer to the Response value.
-     *
-     */
-    void SetResponse(const uint8_t *aResponse) { memcpy(mResponse, aResponse, GetResponseLength()); }
-
-private:
-    uint8_t mResponse[kMaxSize];
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class LinkFrameCounterTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kLinkFrameCounter);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the Frame Counter value.
-     *
-     * @returns The Frame Counter value.
-     *
-     */
-    uint32_t GetFrameCounter(void) const { return HostSwap32(mFrameCounter); }
-
-    /**
-     * This method sets the Frame Counter value.
-     *
-     * @param[in]  aFrameCounter  The Frame Counter value.
-     *
-     */
-    void SetFrameCounter(uint32_t aFrameCounter) { mFrameCounter = HostSwap32(aFrameCounter); }
-
-private:
-    uint32_t mFrameCounter;
 } OT_TOOL_PACKED_END;
 
 #if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
@@ -891,100 +574,6 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class MleFrameCounterTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kMleFrameCounter);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the Frame Counter value.
-     *
-     * @returns The Frame Counter value.
-     *
-     */
-    uint32_t GetFrameCounter(void) const { return HostSwap32(mFrameCounter); }
-
-    /**
-     * This method sets the Frame Counter value.
-     *
-     * @param[in]  aFrameCounter  The Frame Counter value.
-     *
-     */
-    void SetFrameCounter(uint32_t aFrameCounter) { mFrameCounter = HostSwap32(aFrameCounter); }
-
-private:
-    uint32_t mFrameCounter;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class Address16Tlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kAddress16);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the RLOC16 value.
-     *
-     * @returns The RLOC16 value.
-     *
-     */
-    uint16_t GetRloc16(void) const { return HostSwap16(mRloc16); }
-
-    /**
-     * This method sets the RLOC16 value.
-     *
-     * @param[in]  aRloc16  The RLOC16 value.
-     *
-     */
-    void SetRloc16(uint16_t aRloc16) { mRloc16 = HostSwap16(aRloc16); }
-
-private:
-    uint16_t mRloc16;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
 class LeaderDataTlv : public Tlv
 {
 public:
@@ -1102,199 +691,38 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Source Address TLV generation and parsing.
+ * This class implements Scan Mask TLV generation and parsing.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class NetworkDataTlv : public Tlv
+class ScanMaskTlv
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kNetworkData);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method returns a pointer to the Network Data.
-     *
-     * @returns A pointer to the Network Data.
-     *
-     */
-    uint8_t *GetNetworkData(void) { return mNetworkData; }
-
-    /**
-     * This method sets the Network Data.
-     *
-     * @param[in]  aNetworkData  A pointer to the Network Data.
-     *
-     */
-    void SetNetworkData(const uint8_t *aNetworkData) { memcpy(mNetworkData, aNetworkData, GetLength()); }
-
-private:
-    uint8_t mNetworkData[255];
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class TlvRequestTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kTlvRequest);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns a pointer to the TLV list.
-     *
-     * @returns A pointer to the TLV list.
-     *
-     */
-    const uint8_t *GetTlvs(void) const { return mTlvs; }
-
-    /**
-     * This method provides the next Tlv in the TlvRequestTlv.
-     *
-     * @retval OT_ERROR_NONE        Successfully found the next Tlv.
-     * @retval OT_ERROR_NOT_FOUND   No subsequent Tlv exists in TlvRequestTlv.
-     *
-     */
-    otError GetNextTlv(TlvRequestIterator &aIterator, uint8_t &aTlv) const
-    {
-        otError error = OT_ERROR_NOT_FOUND;
-
-        if (aIterator < GetLength())
-        {
-            aTlv      = mTlvs[aIterator];
-            aIterator = static_cast<TlvRequestIterator>(aIterator + sizeof(uint8_t));
-            error     = OT_ERROR_NONE;
-        }
-
-        return error;
-    }
-
-    /**
-     * This method sets the list of TLVs.
-     *
-     * @param[in]  aTlvs  A pointer to the TLV list.
-     *
-     */
-    void SetTlvs(const uint8_t *aTlvs) { memcpy(mTlvs, aTlvs, GetLength()); }
-
-private:
     enum
     {
-        kMaxTlvs = 8,
+        kRouterFlag    = 1 << 7, ///< Scan Mask Router Flag.
+        kEndDeviceFlag = 1 << 6, ///< Scan Mask End Device Flag.
     };
-    uint8_t mTlvs[kMaxTlvs];
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class ScanMaskTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kScanMask);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    enum
-    {
-        kRouterFlag    = 1 << 7,
-        kEndDeviceFlag = 1 << 6,
-    };
-
-    /**
-     * This method clears Router flag.
-     *
-     */
-    void ClearRouterFlag(void) { mMask &= ~kRouterFlag; }
-
-    /**
-     * This method sets the Router flag.
-     *
-     */
-    void SetRouterFlag(void) { mMask |= kRouterFlag; }
 
     /**
      * This method indicates whether or not the Router flag is set.
      *
+     * @param[in] aMask   A scan mask value.
+     *
      * @retval TRUE   If the Router flag is set.
      * @retval FALSE  If the Router flag is not set.
      */
-    bool IsRouterFlagSet(void) const { return (mMask & kRouterFlag) != 0; }
-
-    /**
-     * This method clears the End Device flag.
-     *
-     */
-    void ClearEndDeviceFlag(void) { mMask &= ~kEndDeviceFlag; }
-
-    /**
-     * This method sets the End Device flag.
-     *
-     */
-    void SetEndDeviceFlag(void) { mMask |= kEndDeviceFlag; }
+    static bool IsRouterFlagSet(uint8_t aMask) { return (aMask & kRouterFlag) != 0; }
 
     /**
      * This method indicates whether or not the End Device flag is set.
      *
+     * @param[in] aMask   A scan mask value.
+     *
      * @retval TRUE   If the End Device flag is set.
      * @retval FALSE  If the End Device flag is not set.
      */
-    bool IsEndDeviceFlagSet(void) const { return (mMask & kEndDeviceFlag) != 0; }
-
-    /**
-     * This method sets the Mask byte value.
-     *
-     * @param[in]  aMask  The Mask byte value.
-     *
-     */
-    void SetMask(uint8_t aMask) { mMask = aMask; }
-
-private:
-    uint8_t mMask;
-} OT_TOOL_PACKED_END;
+    static bool IsEndDeviceFlagSet(uint8_t aMask) { return (aMask & kEndDeviceFlag) != 0; }
+};
 
 /**
  * This class implements Source Address TLV generation and parsing.
@@ -1523,79 +951,11 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Source Address TLV generation and parsing.
+ * This class specifies Status TLV status values.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class LinkMarginTlv : public Tlv
+struct StatusTlv
 {
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kLinkMargin);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the Link Margin value.
-     *
-     * @returns The Link Margin value.
-     *
-     */
-    uint8_t GetLinkMargin(void) const { return mLinkMargin; }
-
-    /**
-     * This method sets the Link Margin value.
-     *
-     * @param[in]  aLinkMargin  The Link Margin value.
-     *
-     */
-    void SetLinkMargin(uint8_t aLinkMargin) { mLinkMargin = aLinkMargin; }
-
-private:
-    uint8_t mLinkMargin;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class StatusTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kStatus);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
     /**
      * Status values.
      */
@@ -1603,76 +963,7 @@ public:
     {
         kError = 1, ///< Error.
     };
-
-    /**
-     * This method returns the Status value.
-     *
-     * @returns The Status value.
-     *
-     */
-    Status GetStatus(void) const { return static_cast<Status>(mStatus); }
-
-    /**
-     * This method sets the Status value.
-     *
-     * @param[in]  aStatus  The Status value.
-     *
-     */
-    void SetStatus(Status aStatus) { mStatus = static_cast<uint8_t>(aStatus); }
-
-private:
-    uint8_t mStatus;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class VersionTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kVersion);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed and valid version.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed and with valid version.
-     * @retval FALSE  If the TLV does not appear to be well-formed or with invalid version.
-     *
-     */
-    bool IsValid(void) const
-    {
-        return (GetLength() >= sizeof(*this) - sizeof(Tlv)) && mVersion >= OT_THREAD_VERSION_1_1;
-    }
-
-    /**
-     * This method returns the Version value.
-     *
-     * @returns The Version value.
-     *
-     */
-    uint16_t GetVersion(void) const { return HostSwap16(mVersion); }
-
-    /**
-     * This method sets the Version value.
-     *
-     * @param[in]  aVersion  The Version value.
-     *
-     */
-    void SetVersion(uint16_t aVersion) { mVersion = HostSwap16(aVersion); }
-
-private:
-    uint16_t mVersion;
-} OT_TOOL_PACKED_END;
+};
 
 /**
  * This class implements Source Address TLV generation and parsing.
@@ -1833,53 +1124,6 @@ private:
     uint16_t mChannel;
 } OT_TOOL_PACKED_END;
 
-/**
- * This class implements PAN ID TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class PanIdTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kPanId);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the PAN ID value.
-     *
-     * @returns The PAN ID value.
-     *
-     */
-    uint16_t GetPanId(void) const { return HostSwap16(mPanId); }
-
-    /**
-     * This method sets the PAN ID value.
-     *
-     * @param[in]  aPanId  The PAN ID value.
-     *
-     */
-    void SetPanId(uint16_t aPanId) { mPanId = HostSwap16(aPanId); }
-
-private:
-    uint16_t mPanId;
-} OT_TOOL_PACKED_END;
-
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 /**
  * This class implements Time Request TLV generation and parsing.
@@ -1973,52 +1217,6 @@ private:
     uint16_t mXtalThreshold;
 } OT_TOOL_PACKED_END;
 
-/**
- * This class implements XTAL Accuracy TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class XtalAccuracyTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kXtalAccuracy);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the XTAL accuracy.
-     *
-     * @returns The XTAL accuracy.
-     *
-     */
-    uint16_t GetXtalAccuracy(void) const { return HostSwap16(mXtalAccuracy); }
-
-    /**
-     * This method sets the XTAL accuracy.
-     *
-     * @param[in]  aXTALAccuracy  The XTAL accuracy.
-     *
-     */
-    void SetXtalAccuracy(uint16_t aXtalAccuracy) { mXtalAccuracy = HostSwap16(aXtalAccuracy); }
-
-private:
-    uint16_t mXtalAccuracy;
-} OT_TOOL_PACKED_END;
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 /**

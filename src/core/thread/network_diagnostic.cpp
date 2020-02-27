@@ -379,9 +379,14 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
         case NetworkDiagnosticTlv::kNetworkData:
         {
             NetworkDataTlv tlv;
+            uint8_t        length;
+
             tlv.Init();
 
-            Get<Mle::MleRouter>().FillNetworkDataTlv((reinterpret_cast<Mle::NetworkDataTlv &>(tlv)), false);
+            length = sizeof(NetworkDataTlv) - sizeof(Tlv); // sizeof( NetworkDataTlv::mNetworkData )
+            Get<NetworkData::Leader>().GetNetworkData(/* aStableOnly */ false, tlv.GetNetworkData(), length);
+            tlv.SetLength(length);
+
             SuccessOrExit(error = tlv.AppendTo(aResponse));
             break;
         }
