@@ -730,15 +730,18 @@ void Coap::HandleResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo
     }
     else if ((aMessageInfo != NULL) && (aMessage != NULL))
     {
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         otCoapOptionIterator iterator;
+#endif
 
+        mInterpreter.mServer->OutputFormat("coap response from ");
+        mInterpreter.OutputIp6Address(aMessageInfo->mPeerAddr);
+
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         if (otCoapOptionIteratorInit(&iterator, aMessage) == OT_ERROR_NONE)
         {
             const otCoapOption *observeOpt =
                 otCoapOptionIteratorGetFirstOptionMatching(&iterator, OT_COAP_OPTION_OBSERVE);
-
-            mInterpreter.mServer->OutputFormat("coap response from ");
-            mInterpreter.OutputIp6Address(aMessageInfo->mPeerAddr);
 
             if (observeOpt != NULL)
             {
@@ -750,9 +753,9 @@ void Coap::HandleResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo
                     mInterpreter.mServer->OutputFormat(" OBS=%u", observeVal);
                 }
             }
-
-            PrintPayload(aMessage);
         }
+#endif
+        PrintPayload(aMessage);
     }
 }
 
