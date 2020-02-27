@@ -395,13 +395,13 @@ LOCAL_CPPFLAGS                                                              := \
     $(NULL)
 
 LOCAL_SRC_FILES                            := \
+    src/lib/spinel/spinel_buffer.cpp          \
     src/ncp/changed_props_set.cpp             \
     src/ncp/ncp_base.cpp                      \
     src/ncp/ncp_base_mtd.cpp                  \
     src/ncp/ncp_base_ftd.cpp                  \
     src/ncp/ncp_base_dispatcher.cpp           \
     src/ncp/ncp_uart.cpp                      \
-    src/lib/spinel/spinel_buffer.cpp          \
     $(NULL)
 
 include $(BUILD_STATIC_LIBRARY)
