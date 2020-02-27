@@ -73,7 +73,7 @@ check() {
     $RADIO_NCP_PATH 1 > $RADIO_PTY < $RADIO_PTY &
 
     if [[ "${DAEMON}" = 1 ]]; then
-        sudo "$(pwd)/$(ls output/posix/*linux*/bin/ot-daemon)" spinel+hdlc+forkpty://${OT_NCP_PATH}?arg=${CORE_PTY} &
+        sudo "$(pwd)/$(ls output/posix/*linux*/bin/ot-daemon)" spinel+hdlc+forkpty://${CORE_PTY} &
         sleep 1
         OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-ctl)"
     else

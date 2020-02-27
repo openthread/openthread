@@ -91,8 +91,7 @@ class Node:
             cmd = '%s/ot-cli-%s' % (self.version, mode)
 
         if 'RADIO_DEVICE' in os.environ:
-            cmd += '-v spinel+hdlc+forkpty://%s?arg=' % os.environ[
-                'RADIO_DEVICE']
+            cmd += ' spinel+hdlc+forkpty://%s?arg=' % os.environ['RADIO_DEVICE']
             os.environ['NODE_ID'] = str(nodeid)
 
         cmd += '%d' % nodeid
@@ -125,7 +124,7 @@ class Node:
             )
         elif (self.version == '1.1' and self.version != self.env_version):
             if 'OT_NCP_PATH_1_1' in os.environ:
-                cmd = 'spinel-cli.py -p "%s%s" -n' % (
+                cmd = 'spinel-cli.py -p "%s" -n spinel+hdlc+forkpty://%s?arg=' % (
                     os.environ['OT_NCP_PATH_1_1'],
                     args,
                 )

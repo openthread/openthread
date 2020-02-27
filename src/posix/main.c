@@ -268,7 +268,6 @@ int ParseUrl(otRadioUrl *aRadioUrl, char *url)
 static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
 {
     memset(aConfig, 0, sizeof(*aConfig));
-    RadioUrl aUrl;
 
     aConfig->mPlatformConfig.mSpeedUpFactor = 1;
     aConfig->mPlatformConfig.mResetRadio    = true;
@@ -300,7 +299,8 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         case 'n':
             aConfig->mIsDryRun = true;
             break;
-        case 's': {
+        case 's':
+        {
             char *endptr = NULL;
 
             aConfig->mPlatformConfig.mSpeedUpFactor = (uint32_t)strtol(optarg, &endptr, 0);
