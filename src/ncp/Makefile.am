@@ -27,6 +27,7 @@
 #
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+include $(top_srcdir)/src/lib/common.am
 
 EXTRA_DIST                                        = \
     example_vendor_hook.cpp                         \
@@ -82,25 +83,24 @@ libopenthread_rcp_a_CPPFLAGS                             = \
     $(COMMON_CPPFLAGS)                                     \
     $(NULL)
 
-list_objects = $(addprefix $(dir $(1)),$(filter %.o,$(shell $(AR) t $(1))))
-
-libopenthread_ncp_mtd_a_LIBADD                                               = \
-    $(call list_objects,$(top_builddir)/src/spinel/libopenthread-spinel-ncp.a) \
+libopenthread_ncp_mtd_a_LIBADD                                                      = \
+    $(call ot_list_objects,$(top_builddir)/src/lib/hdlc/libopenthread-hdlc.a)         \
+    $(call ot_list_objects,$(top_builddir)/src/lib/spinel/libopenthread-spinel-ncp.a) \
     $(NULL)
 
-libopenthread_ncp_ftd_a_LIBADD                                               = \
-    $(call list_objects,$(top_builddir)/src/spinel/libopenthread-spinel-ncp.a) \
+libopenthread_ncp_ftd_a_LIBADD                                                      = \
+    $(call ot_list_objects,$(top_builddir)/src/lib/hdlc/libopenthread-hdlc.a  )       \
+    $(call ot_list_objects,$(top_builddir)/src/lib/spinel/libopenthread-spinel-ncp.a) \
     $(NULL)
 
-libopenthread_rcp_a_LIBADD                                                   = \
-    $(call list_objects,$(top_builddir)/src/spinel/libopenthread-spinel-rcp.a) \
+libopenthread_rcp_a_LIBADD                                                          = \
+    $(call ot_list_objects,$(top_builddir)/src/lib/hdlc/libopenthread-hdlc.a)         \
+    $(call ot_list_objects,$(top_builddir)/src/lib/spinel/libopenthread-spinel-rcp.a) \
     $(NULL)
 
 COMMON_SOURCES                                    = \
     changed_props_set.cpp                           \
     changed_props_set.hpp                           \
-    hdlc.cpp                                        \
-    hdlc.hpp                                        \
     ncp_base.cpp                                    \
     ncp_base.hpp                                    \
     ncp_base_ftd.cpp                                \

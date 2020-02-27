@@ -59,7 +59,6 @@ COMMON_SOURCES                                    = \
     spinel_encoder.cpp                              \
     $(NULL)
 
-
 include_HEADERS                                   = \
     spinel.h                                        \
     $(NULL)

@@ -37,7 +37,7 @@
 #include "openthread-posix-config.h"
 #include "platform-posix.h"
 #include "spinel_interface.hpp"
-#include "ncp/hdlc.hpp"
+#include "lib/hdlc/hdlc.hpp"
 
 #if OPENTHREAD_POSIX_RCP_UART_ENABLE
 

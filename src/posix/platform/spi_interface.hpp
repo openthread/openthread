@@ -37,7 +37,7 @@
 #include "openthread-posix-config.h"
 
 #include "spinel_interface.hpp"
-#include "ncp/hdlc.hpp"
+#include "lib/hdlc/hdlc.hpp"
 
 #include <openthread/openthread-system.h>
 
