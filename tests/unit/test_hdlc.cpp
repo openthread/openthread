@@ -30,7 +30,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "ncp/hdlc.hpp"
+#include "lib/hdlc/hdlc.hpp"
 
 #include "test_util.h"
 

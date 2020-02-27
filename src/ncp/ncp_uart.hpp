@@ -35,7 +35,7 @@
 
 #include "openthread-core-config.h"
 
-#include "ncp/hdlc.hpp"
+#include "lib/hdlc/hdlc.hpp"
 #include "ncp/ncp_base.hpp"
 
 #if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER

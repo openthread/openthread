@@ -1,6 +1,6 @@
-# OpenThread on POSIX Emulation Example
+# OpenThread Simulation on POSIX
 
-This directory contains example platform drivers for POSIX emulation.
+This directory contains example platform drivers for simulation on POSIX.
 
 ## Build Examples
 
@@ -9,7 +9,7 @@ This directory contains example platform drivers for POSIX emulation.
 ```bash
 $ cd <path-to-openthread>
 $ ./bootstrap
-$ make -f examples/Makefile-posix
+$ make -f examples/Makefile-simulation
 ```
 
 After a successful build, the `elf` files are found in:
@@ -21,7 +21,7 @@ After a successful build, the `elf` files are found in:
 ```bash
 $ cd <path-to-openthread>
 $ mkdir build && cd build
-$ cmake -GNinja -DOT_PLATFORM=posix ..
+$ cmake -GNinja -DOT_PLATFORM=simulation ..
 $ ninja
 ```
 

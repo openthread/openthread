@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-posix.h"
+#include "platform-simulation.h"
 
 #include <fcntl.h>
 #include <stdio.h>

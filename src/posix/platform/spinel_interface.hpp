@@ -37,7 +37,7 @@
 
 #include "openthread-posix-config.h"
 
-#include "ncp/hdlc.hpp"
+#include "lib/hdlc/hdlc.hpp"
 
 namespace ot {
 namespace PosixApp {

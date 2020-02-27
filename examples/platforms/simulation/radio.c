@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-posix.h"
+#include "platform-simulation.h"
 
 #include <errno.h>
 
@@ -56,14 +56,14 @@ enum
 
 enum
 {
-    POSIX_RECEIVE_SENSITIVITY = -100, // dBm
+    SIM_RECEIVE_SENSITIVITY = -100, // dBm
 
-    POSIX_HIGH_RSSI_SAMPLE               = -30, // dBm
-    POSIX_LOW_RSSI_SAMPLE                = -98, // dBm
-    POSIX_HIGH_RSSI_PROB_INC_PER_CHANNEL = 5,
+    SIM_HIGH_RSSI_SAMPLE               = -30, // dBm
+    SIM_LOW_RSSI_SAMPLE                = -98, // dBm
+    SIM_HIGH_RSSI_PROB_INC_PER_CHANNEL = 5,
 };
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME
 extern int      sSockFd;
 extern uint16_t sPortOffset;
 #else
@@ -75,8 +75,8 @@ static uint16_t sPort       = 0;
 
 enum
 {
-    POSIX_RADIO_CHANNEL_MIN = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN,
-    POSIX_RADIO_CHANNEL_MAX = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX,
+    SIM_RADIO_CHANNEL_MIN = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN,
+    SIM_RADIO_CHANNEL_MAX = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX,
 };
 
 OT_TOOL_PACKED_BEGIN
@@ -226,7 +226,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     sPromiscuous = aEnable;
 }
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
 static void initFds(void)
 {
     int                fd;
@@ -290,11 +290,11 @@ exit:
         exit(EXIT_FAILURE);
     }
 }
-#endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
 
 void platformRadioInit(void)
 {
-#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
     char *offset;
 
     offset = getenv("PORT_OFFSET");
@@ -315,7 +315,7 @@ void platformRadioInit(void)
     }
 
     initFds();
-#endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
 
     sReceiveFrame.mPsdu  = sReceiveMessage.mPsdu;
     sTransmitFrame.mPsdu = sTransmitMessage.mPsdu;
@@ -417,21 +417,21 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
     assert(aInstance != NULL);
 
-    int8_t   rssi    = POSIX_LOW_RSSI_SAMPLE;
+    int8_t   rssi    = SIM_LOW_RSSI_SAMPLE;
     uint8_t  channel = sReceiveFrame.mChannel;
     uint32_t probabilityThreshold;
 
-    otEXPECT((POSIX_RADIO_CHANNEL_MIN <= channel) && channel <= (POSIX_RADIO_CHANNEL_MAX));
+    otEXPECT((SIM_RADIO_CHANNEL_MIN <= channel) && channel <= (SIM_RADIO_CHANNEL_MAX));
 
     // To emulate a simple interference model, we return either a high or
     // a low  RSSI value with a fixed probability per each channel. The
     // probability is increased per channel by a constant.
 
-    probabilityThreshold = (channel - POSIX_RADIO_CHANNEL_MIN) * POSIX_HIGH_RSSI_PROB_INC_PER_CHANNEL;
+    probabilityThreshold = (channel - SIM_RADIO_CHANNEL_MIN) * SIM_HIGH_RSSI_PROB_INC_PER_CHANNEL;
 
     if (otRandomNonCryptoGetUint16() < (probabilityThreshold * 0xffff / 100))
     {
-        rssi = POSIX_HIGH_RSSI_SAMPLE;
+        rssi = SIM_HIGH_RSSI_SAMPLE;
     }
 
 exit:
@@ -469,7 +469,7 @@ static void radioReceive(otInstance *aInstance)
         {
             isTxDone = isAck && otMacFrameGetSequence(&sReceiveFrame) == otMacFrameGetSequence(&sTransmitFrame);
         }
-#if OPENTHREAD_POSIX_VIRTUAL_TIME
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME
         // Simulate tx done when receiving the echo frame.
         else
         {
@@ -555,7 +555,7 @@ void radioSendMessage(otInstance *aInstance)
     radioComputeCrc(&sTransmitMessage, sTransmitFrame.mLength);
     radioTransmit(&sTransmitMessage, &sTransmitFrame);
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
     sTxWait = otMacFrameIsAckRequested(&sTransmitFrame);
 
     if (!sTxWait)
@@ -577,7 +577,7 @@ void radioSendMessage(otInstance *aInstance)
 #else
     // Wait for echo radio in virtual time mode.
     sTxWait = true;
-#endif // OPENTHREAD_POSIX_VIRTUAL_TIME
+#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME
 }
 
 bool platformRadioIsTransmitPending(void)
@@ -585,7 +585,7 @@ bool platformRadioIsTransmitPending(void)
     return sState == OT_RADIO_STATE_TRANSMIT && !sTxWait;
 }
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME
 void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength)
 {
     assert(sizeof(sReceiveMessage) >= aBufLength);
@@ -633,14 +633,14 @@ void platformRadioDeinit(void)
         close(sTxFd);
     }
 }
-#endif // OPENTHREAD_POSIX_VIRTUAL_TIME
+#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME
 
 void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
 {
     OT_UNUSED_VARIABLE(aReadFdSet);
     OT_UNUSED_VARIABLE(aWriteFdSet);
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
     if (FD_ISSET(sRxFd, aReadFdSet))
     {
         struct sockaddr_in sockaddr;
@@ -681,7 +681,7 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
 
 void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFrame)
 {
-#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
     ssize_t            rval;
     struct sockaddr_in sockaddr;
 
@@ -698,7 +698,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
         perror("sendto(sTxFd)");
         exit(EXIT_FAILURE);
     }
-#else  // OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#else  // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
     struct Event event;
 
     event.mDelay      = 1; // 1us for now
@@ -707,7 +707,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
     memcpy(event.mData, aMessage, event.mDataLength);
 
     otSimSendEvent(&event);
-#endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
 }
 
 void radioSendAck(void)
@@ -777,7 +777,7 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
 {
     assert(aInstance != NULL);
-    assert(aScanChannel >= POSIX_RADIO_CHANNEL_MIN && aScanChannel <= POSIX_RADIO_CHANNEL_MAX);
+    assert(aScanChannel >= SIM_RADIO_CHANNEL_MIN && aScanChannel <= SIM_RADIO_CHANNEL_MAX);
     assert(aScanDuration > 0);
 
     return OT_ERROR_NOT_IMPLEMENTED;
@@ -823,7 +823,7 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 {
     assert(aInstance != NULL);
 
-    return POSIX_RECEIVE_SENSITIVITY;
+    return SIM_RECEIVE_SENSITIVITY;
 }
 
 otRadioState otPlatRadioGetState(otInstance *aInstance)

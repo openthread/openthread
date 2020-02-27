@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -28,43 +28,16 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-# Always package (e.g. for 'make dist') these subdirectories.
+noinst_LIBRARIES = libopenthread-hdlc.a
 
-DIST_SUBDIRS                            = \
-    core                                  \
-    cli                                   \
-    lib                                   \
-    ncp                                   \
-    posix                                 \
+libopenthread_hdlc_a_CPPFLAGS               = \
+    -I$(top_srcdir)/include                   \
+    -I$(top_srcdir)/src/core                  \
     $(NULL)
 
-# Always build (e.g. for 'make all') these subdirectories.
-
-SUBDIRS                                 = \
-    core                                  \
-    lib                                   \
-    $(NULL)
-
-if OPENTHREAD_ENABLE_CLI
-SUBDIRS                                += cli
-endif
-
-if OPENTHREAD_ENABLE_NCP
-SUBDIRS                                += ncp
-endif
-
-if OPENTHREAD_PLATFORM_POSIX_APP
-SUBDIRS                                += posix
-endif
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    cli                                   \
-    core                                  \
-    ncp                                   \
-    posix                                 \
-    lib                                   \
+libopenthread_hdlc_a_SOURCES                = \
+    hdlc.cpp                                  \
+    hdlc.hpp                                  \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

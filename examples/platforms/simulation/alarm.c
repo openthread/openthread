@@ -26,9 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-posix.h"
+#include "platform-simulation.h"
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -316,4 +316,4 @@ uint16_t otPlatTimeGetXtalAccuracy(void)
 }
 #endif
 
-#endif // OPENTHREAD_POSIX_VIRTUAL_TIME == 0
+#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0

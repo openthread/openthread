@@ -76,7 +76,6 @@ set(COMMON_INCLUDES
 
 set(COMMON_SOURCES
     changed_props_set.cpp
-    hdlc.cpp
     ncp_base.cpp
     ncp_base_ftd.cpp
     ncp_base_mtd.cpp
@@ -95,22 +94,25 @@ target_sources(openthread-ncp-mtd PRIVATE ${COMMON_SOURCES})
 target_sources(openthread-rcp PRIVATE ${COMMON_SOURCES})
 
 target_link_libraries(openthread-ncp-ftd
-    PRIVATE
-        openthread-spinel-ncp
     PUBLIC
         openthread-ftd
+    PRIVATE
+        openthread-hdlc
+        openthread-spinel-ncp
 )
 
 target_link_libraries(openthread-ncp-mtd
-    PRIVATE
-        openthread-spinel-ncp
     PUBLIC
         openthread-mtd
+    PRIVATE
+        openthread-hdlc
+        openthread-spinel-ncp
 )
 
 target_link_libraries(openthread-rcp
-    PRIVATE
-        openthread-spinel-rcp
     PUBLIC
         openthread-radio
+    PRIVATE
+        openthread-hdlc
+        openthread-spinel-rcp
 )

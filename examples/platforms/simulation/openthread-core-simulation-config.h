@@ -28,12 +28,12 @@
 
 /**
  * @file
- *   This file includes posix compile-time configuration constants
+ *   This file includes simulation compile-time configuration constants
  *   for OpenThread.
  */
 
-#ifndef OPENTHREAD_CORE_POSIX_CONFIG_H_
-#define OPENTHREAD_CORE_POSIX_CONFIG_H_
+#ifndef OPENTHREAD_CORE_SIMULATION_CONFIG_H_
+#define OPENTHREAD_CORE_SIMULATION_CONFIG_H_
 
 #ifndef OPENTHREAD_RADIO
 #define OPENTHREAD_RADIO 0
@@ -45,7 +45,7 @@
  * The platform-specific string to insert into the OpenThread version string.
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "POSIX"
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "SIMULATION"
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_OUTPUT
@@ -145,4 +145,4 @@
 #define OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE 1
 #endif
 
-#endif // OPENTHREAD_CORE_POSIX_CONFIG_H_
+#endif // OPENTHREAD_CORE_SIMULATION_CONFIG_H_

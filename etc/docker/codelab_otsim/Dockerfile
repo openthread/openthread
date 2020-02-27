@@ -36,4 +36,4 @@ RUN cd ~/src && \
     git clone --recursive https://github.com/openthread/openthread.git && \
     cd openthread && \
     ./bootstrap && \
-    make -f examples/Makefile-posix
+    make -f examples/Makefile-simulation

@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2017, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,16 +26,5 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-#
-# posix platform-specific Makefile
-#
-
-LDADD_COMMON                                                          += \
-    $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \
-    $(NULL)
-
-if OPENTHREAD_TARGET_LINUX
-LDADD_COMMON                                                          += \
-    -lrt                                                                 \
-    $(NULL)
-endif
+add_subdirectory(hdlc)
+add_subdirectory(spinel)

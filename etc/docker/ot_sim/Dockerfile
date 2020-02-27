@@ -7,7 +7,7 @@ RUN apk add -U autoconf automake ca-certificates flex git g++ libtool linux-head
 RUN git clone --recursive https://github.com/openthread/openthread.git && \
     cd /openthread && \
     ./bootstrap && \
-    make -f examples/Makefile-posix
+    make -f examples/Makefile-simulation
 
 
 FROM alpine:3.6

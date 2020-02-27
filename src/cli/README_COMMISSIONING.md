@@ -8,7 +8,7 @@ Use the `JOINER=1` build switch to enable Joiner support.
 
 ```bash
 > ./bootstrap
-> make -f examples/Makefile-posix JOINER=1
+> make -f examples/Makefile-simulation JOINER=1
 ```
 
 ### Build with Commissioner support
@@ -17,7 +17,7 @@ Use the `COMMISSIONER=1` build switch to enable Commissioner support.
 
 ```bash
 > ./bootstrap
-> make -f examples/Makefile-posix COMMISSIONER=1
+> make -f examples/Makefile-simulation COMMISSIONER=1
 ```
 
 ### Form Network

@@ -1034,7 +1034,7 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 
 exit:
     return;
-#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+#endif // OPENTHREAD_RADIO
 }
 
 // LCOV_EXCL_START
