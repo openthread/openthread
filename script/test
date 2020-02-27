@@ -116,7 +116,7 @@ do_package() {
     local builddir="${OT_BUILDDIR}/cmake/openthread-sim"
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
-        && cmake "${OT_SRCDIR}" -DOT_PLATFORM="posix" \
+        && cmake "${OT_SRCDIR}" -DOT_PLATFORM="simulation" \
         && make -j${OT_BUILD_JOBS} package \
         && ls "${builddir}"/openthread-simulation-*.deb)
 
