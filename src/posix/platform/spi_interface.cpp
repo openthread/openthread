@@ -691,16 +691,14 @@ otError SpiInterface::WaitForFrame(const struct timeval &aTimeout)
     }
 
     ret = select(mIntGpioValueFd + 1, &readFdSet, NULL, NULL, &timeout);
-    if (ret > 0)
-    {
-        if (FD_ISSET(mIntGpioValueFd, &readFdSet))
-        {
-            struct gpioevent_data event;
 
-            // Read event data to clear interrupt.
-            VerifyOrDie(read(mIntGpioValueFd, &event, sizeof(event)) != -1, OT_EXIT_FAILURE);
-            isDataReady = CheckInterrupt();
-        }
+    if (ret > 0 && FD_ISSET(mIntGpioValueFd, &readFdSet))
+    {
+        struct gpioevent_data event;
+
+        // Read event data to clear interrupt.
+        VerifyOrDie(read(mIntGpioValueFd, &event, sizeof(event)) != -1, OT_EXIT_FAILURE);
+        isDataReady = true;
     }
 
     if (isDataReady)
