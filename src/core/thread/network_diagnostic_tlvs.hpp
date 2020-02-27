@@ -157,6 +157,7 @@ public:
  * This class implements Extended Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class ExtMacAddressTlv : public NetworkDiagnosticTlv
 {
 public:
@@ -197,7 +198,7 @@ public:
 
 private:
     Mac::ExtAddress mMacAddr;
-};
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
