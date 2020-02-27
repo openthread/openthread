@@ -1303,6 +1303,13 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
         otDumpDebgMac("TX", aFrame.GetHeader(), aFrame.GetLength());
         FinishOperation();
         Get<MeshForwarder>().HandleSentFrame(aFrame, aError);
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+        if (aError == OT_ERROR_NONE && Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported() &&
+            aFrame.GetSecurityEnabled() && aAckFrame != NULL)
+        {
+            Get<DataPollSender>().ResetKeepAliveTimer();
+        }
+#endif
         PerformNextOperation();
         break;
 
@@ -1667,6 +1674,15 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
             default:
                 ExitNow(error = OT_ERROR_UNKNOWN_NEIGHBOR);
             }
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2 && OPENTHREAD_FTD
+            // From Thread 1.2, MAC Data Frame can also act as keep-alive message if child supports
+            if (aFrame->GetType() == Frame::kFcfFrameData && !neighbor->IsRxOnWhenIdle() &&
+                neighbor->IsEnhancedKeepAliveSupported())
+            {
+                neighbor->SetLastHeard(TimerMilli::GetNow());
+            }
+#endif
         }
     }
 

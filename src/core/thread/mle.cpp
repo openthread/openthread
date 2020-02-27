@@ -78,6 +78,8 @@ Mle::Mle(Instance &aInstance)
     , mParentLinkQuality3(0)
     , mParentLinkQuality2(0)
     , mParentLinkQuality1(0)
+    , mParentSedBufferSize(0)
+    , mParentSedDatagramCount(0)
     , mChildUpdateAttempts(0)
     , mChildUpdateRequestState(kChildUpdateRequestNone)
     , mDataRequestAttempts(0)
@@ -389,6 +391,9 @@ otError Mle::Restore(void)
     Get<KeyManager>().SetMacFrameCounter(networkInfo.GetMacFrameCounter());
     mDeviceMode.Set(networkInfo.GetDeviceMode());
 
+    // force re-attach when version mismatch.
+    VerifyOrExit(networkInfo.GetVersion() == kThreadVersion);
+
     switch (networkInfo.GetRole())
     {
     case OT_DEVICE_ROLE_CHILD:
@@ -430,6 +435,7 @@ otError Mle::Restore(void)
 
         mParent.Clear();
         mParent.SetExtAddress(parentInfo.GetExtAddress());
+        mParent.SetVersion(static_cast<uint8_t>(parentInfo.GetVersion()));
         mParent.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                          DeviceMode::kModeFullNetworkData | DeviceMode::kModeSecureDataRequest));
         mParent.SetRloc16(Rloc16FromRouterId(RouterIdFromRloc16(networkInfo.GetRloc16())));
@@ -468,6 +474,7 @@ otError Mle::Store(void)
         networkInfo.SetPreviousPartitionId(mLeaderData.GetPartitionId());
         networkInfo.SetExtAddress(Get<Mac::Mac>().GetExtAddress());
         networkInfo.SetMeshLocalIid(&mMeshLocal64.GetAddress().mFields.m8[OT_IP6_PREFIX_SIZE]);
+        networkInfo.SetVersion(kThreadVersion);
 
         if (mRole == OT_DEVICE_ROLE_CHILD)
         {
@@ -475,6 +482,7 @@ otError Mle::Store(void)
 
             parentInfo.Init();
             parentInfo.SetExtAddress(mParent.GetExtAddress());
+            parentInfo.SetVersion(mParent.GetVersion());
 
             SuccessOrExit(error = Get<Settings>().SaveParentInfo(parentInfo));
         }
@@ -978,6 +986,12 @@ void Mle::SetRloc16(uint16_t aRloc16)
     if (aRloc16 != oldRloc16)
     {
         otLogNoteMle("RLOC16 %04x -> %04x", oldRloc16, aRloc16);
+
+        // Clear cached CoAP with old RLOC source
+        if (oldRloc16 != Mac::kShortAddrInvalid)
+        {
+            Get<Coap::Coap>().ClearRequests(mMeshLocal16.GetAddress());
+        }
     }
 
     Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal16);
@@ -3111,7 +3125,11 @@ exit:
     return error;
 }
 
-bool Mle::IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, uint8_t aLinkMargin, ConnectivityTlv &aConnectivityTlv)
+bool Mle::IsBetterParent(uint16_t               aRloc16,
+                         uint8_t                aLinkQuality,
+                         uint8_t                aLinkMargin,
+                         const ConnectivityTlv &aConnectivityTlv,
+                         VersionTlv &           aVersionTlv)
 {
     bool rval = false;
 
@@ -3120,6 +3138,7 @@ bool Mle::IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, uint8_t aLinkMa
                                              ? candidateLinkQualityIn
                                              : mParentCandidate.GetLinkQualityOut();
 
+    // Mesh Impacting Criteria
     if (aLinkQuality != candidateTwoWayLinkQuality)
     {
         ExitNow(rval = (aLinkQuality > candidateTwoWayLinkQuality));
@@ -3135,11 +3154,29 @@ bool Mle::IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, uint8_t aLinkMa
         ExitNow(rval = (aConnectivityTlv.GetParentPriority() > mParentPriority));
     }
 
+    // Prefer the parent with highest quality links (Link Quality 3 field in Connectivity TLV) to neighbors
     if (aConnectivityTlv.GetLinkQuality3() != mParentLinkQuality3)
     {
         ExitNow(rval = (aConnectivityTlv.GetLinkQuality3() > mParentLinkQuality3));
     }
 
+    // Thread 1.2 Specification 4.5.2.1.2 Child Impacting Criteria
+    if (aVersionTlv.GetVersion() != mParentCandidate.GetVersion())
+    {
+        ExitNow(rval = (aVersionTlv.GetVersion() > mParentCandidate.GetVersion()));
+    }
+
+    if (aConnectivityTlv.GetSedBufferSize() != mParentSedBufferSize)
+    {
+        ExitNow(rval = (aConnectivityTlv.GetSedBufferSize() > mParentSedBufferSize));
+    }
+
+    if (aConnectivityTlv.GetSedDatagramCount() != mParentSedDatagramCount)
+    {
+        ExitNow(rval = (aConnectivityTlv.GetSedDatagramCount() > mParentSedDatagramCount));
+    }
+
+    // Extra rules
     if (aConnectivityTlv.GetLinkQuality2() != mParentLinkQuality2)
     {
         ExitNow(rval = (aConnectivityTlv.GetLinkQuality2() > mParentLinkQuality2));
@@ -3161,6 +3198,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     otError                 error    = OT_ERROR_NONE;
     const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
     ResponseTlv             response;
+    VersionTlv              version;
     SourceAddressTlv        sourceAddress;
     LeaderDataTlv           leaderData;
     LinkMarginTlv           linkMarginTlv;
@@ -3180,6 +3218,10 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     VerifyOrExit(sourceAddress.IsValid(), error = OT_ERROR_PARSE);
 
     LogMleMessage("Receive Parent Response", aMessageInfo.GetPeerAddr(), sourceAddress.GetRloc16());
+
+    // Version
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kVersion, sizeof(version), version));
+    VerifyOrExit(version.IsValid(), error = OT_ERROR_PARSE);
 
     // Response
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kResponse, sizeof(response), response));
@@ -3283,7 +3325,8 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
         VerifyOrExit(compare >= 0);
 
         // only consider better parents if the partitions are the same
-        VerifyOrExit(compare != 0 || IsBetterParent(sourceAddress.GetRloc16(), linkQuality, linkMargin, connectivity));
+        VerifyOrExit(compare != 0 ||
+                     IsBetterParent(sourceAddress.GetRloc16(), linkQuality, linkMargin, connectivity, version));
     }
 
     // Link Frame Counter
@@ -3331,6 +3374,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     mParentCandidate.SetRloc16(sourceAddress.GetRloc16());
     mParentCandidate.SetLinkFrameCounter(linkFrameCounter.GetFrameCounter());
     mParentCandidate.SetMleFrameCounter(mleFrameCounter.GetFrameCounter());
+    mParentCandidate.SetVersion(static_cast<uint8_t>(version.GetVersion()));
     mParentCandidate.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                               DeviceMode::kModeFullNetworkData | DeviceMode::kModeSecureDataRequest));
     mParentCandidate.GetLinkInfo().Clear();
@@ -3340,14 +3384,16 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     mParentCandidate.SetState(Neighbor::kStateParentResponse);
     mParentCandidate.SetKeySequence(aKeySequence);
 
-    mParentPriority     = connectivity.GetParentPriority();
-    mParentLinkQuality3 = connectivity.GetLinkQuality3();
-    mParentLinkQuality2 = connectivity.GetLinkQuality2();
-    mParentLinkQuality1 = connectivity.GetLinkQuality1();
-    mParentLeaderCost   = connectivity.GetLeaderCost();
-    mParentLeaderData   = leaderData;
-    mParentIsSingleton  = connectivity.GetActiveRouters() <= 1;
-    mParentLinkMargin   = linkMargin;
+    mParentPriority         = connectivity.GetParentPriority();
+    mParentLinkQuality3     = connectivity.GetLinkQuality3();
+    mParentLinkQuality2     = connectivity.GetLinkQuality2();
+    mParentLinkQuality1     = connectivity.GetLinkQuality1();
+    mParentLeaderCost       = connectivity.GetLeaderCost();
+    mParentSedBufferSize    = connectivity.GetSedBufferSize();
+    mParentSedDatagramCount = connectivity.GetSedDatagramCount();
+    mParentLeaderData       = leaderData;
+    mParentIsSingleton      = connectivity.GetActiveRouters() <= 1;
+    mParentLinkMargin       = linkMargin;
 
 exit:
 

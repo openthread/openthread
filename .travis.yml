@@ -49,6 +49,14 @@ stages:
 
 jobs:
   include:
+    - env: BUILD_TARGET="package-check" VERBOSE=1
+      os: linux
+      compiler: gcc
+      script: script/test package
+    - env: BUILD_TARGET="v1.2" VERBOSE=1 VIRTUAL_TIME=1 THREAD_VERSION=1.2
+      os: linux
+      compiler: gcc
+      script: .travis/script.sh
     - env: BUILD_TARGET="posix-app-cli" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc

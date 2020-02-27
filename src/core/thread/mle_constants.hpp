@@ -57,12 +57,12 @@ enum
  */
 enum
 {
-    kThreadVersion                  = OPENTHREAD_THREAD_VERSION, ///< Thread Version
-    kUdpPort                        = 19788,                     ///< MLE UDP Port
-    kParentRequestRouterTimeout     = 750,                       ///< Router Parent Request timeout
-    kParentRequestDuplicateMargin   = 50,                        ///< Margin for duplicate parent request
-    kParentRequestReedTimeout       = 1250,                      ///< Router and REEDs Parent Request timeout
-    kAttachStartJitter              = 50,                        ///< Maximum jitter time added to start of attach.
+    kThreadVersion                  = OPENTHREAD_CONFIG_THREAD_VERSION, ///< Thread Version
+    kUdpPort                        = 19788,                            ///< MLE UDP Port
+    kParentRequestRouterTimeout     = 750,                              ///< Router Parent Request timeout
+    kParentRequestDuplicateMargin   = 50,                               ///< Margin for duplicate parent request
+    kParentRequestReedTimeout       = 1250,                             ///< Router and REEDs Parent Request timeout
+    kAttachStartJitter              = 50,   ///< Maximum jitter time added to start of attach.
     kAnnounceProcessTimeout         = 250,  ///< Timeout after receiving Announcement before channel/pan-id change
     kAnnounceTimeout                = 1400, ///< Total timeout used for sending Announcement messages
     kMinAnnounceDelay               = 80,   ///< Minimum delay between Announcement messages

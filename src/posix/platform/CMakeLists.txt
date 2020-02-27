@@ -76,6 +76,7 @@ target_include_directories(openthread-posix PRIVATE
     ${OT_PRIVATE_INCLUDES}
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
-    ${PROJECT_SOURCE_DIR}/src/posix/platform
     ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}/src/posix/platform/include
 )

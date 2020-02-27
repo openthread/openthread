@@ -783,7 +783,8 @@ otError MeshForwarder::GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, ui
     {
         NetworkData::NetworkDataTlv *cur = serviceTlv->GetSubTlvs();
         NetworkData::NetworkDataTlv *end = serviceTlv->GetNext();
-        NetworkData::ServerTlv *     server;
+        Neighbor *                   neighbor;
+        uint16_t                     server16;
         uint8_t                      bestCost = Mle::kMaxRouteCost;
         uint8_t                      curCost  = 0x00;
         uint16_t                     bestDest = Mac::kShortAddrInvalid;
@@ -793,12 +794,45 @@ otError MeshForwarder::GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, ui
             switch (cur->GetType())
             {
             case NetworkData::NetworkDataTlv::kTypeServer:
-                server  = static_cast<NetworkData::ServerTlv *>(cur);
-                curCost = Get<Mle::MleRouter>().GetCost(server->GetServer16());
+                server16 = static_cast<NetworkData::ServerTlv *>(cur)->GetServer16();
+
+                // Path cost
+                curCost = Get<Mle::MleRouter>().GetCost(server16);
+
+                if (!Get<Mle::MleRouter>().IsActiveRouter(server16))
+                {
+                    // Assume best link between remote child server and its parent.
+                    curCost += 1;
+                }
+
+                // Cost if the server is direct neighbor.
+                neighbor = Get<Mle::MleRouter>().GetNeighbor(server16);
+
+                if (neighbor != NULL && neighbor->IsStateValid())
+                {
+                    uint8_t cost;
+
+                    if (!Get<Mle::MleRouter>().IsActiveRouter(server16))
+                    {
+                        // Cost calculated only from Link Quality In as the parent only maintains
+                        // one-direction link info.
+                        cost = Mle::MleRouter::LinkQualityToCost(neighbor->GetLinkInfo().GetLinkQuality());
+                    }
+                    else
+                    {
+                        cost = Get<Mle::MleRouter>().GetLinkCost(Mle::Mle::RouterIdFromRloc16(server16));
+                    }
+
+                    // Choose the minimum cost
+                    if (cost < curCost)
+                    {
+                        curCost = cost;
+                    }
+                }
 
                 if ((bestDest == Mac::kShortAddrInvalid) || (curCost < bestCost))
                 {
-                    bestDest = server->GetServer16();
+                    bestDest = server16;
                     bestCost = curCost;
                 }
 

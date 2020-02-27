@@ -1237,36 +1237,26 @@ otError RadioSpinel::Remove(spinel_prop_key_t aKey, const char *aFormat, ...)
 
 otError RadioSpinel::WaitResponse(void)
 {
-    uint64_t       now     = platformGetTime();
-    uint64_t       end     = now + kMaxWaitTime * US_PER_MS;
-    struct timeval timeout = {kMaxWaitTime / 1000, (kMaxWaitTime % 1000) * 1000};
+    uint64_t end = platformGetTime() + kMaxWaitTime * US_PER_MS;
+
+    otLogDebgPlat("Wait response: tid=%u key=%u", mWaitingTid, mWaitingKey);
 
     do
     {
-        if (mSpinelInterface.WaitForFrame(timeout) == OT_ERROR_RESPONSE_TIMEOUT)
-        {
-            FreeTid(mWaitingTid);
-            mWaitingTid = 0;
-            ExitNow(mError = OT_ERROR_RESPONSE_TIMEOUT);
-        }
+        uint64_t       now;
+        uint64_t       remain;
+        struct timeval timeout;
 
         now = platformGetTime();
+        VerifyOrDie(end > now, OT_EXIT_RADIO_SPINEL_NO_RESPONSE);
+        remain = end - now;
 
-        if (end > now)
-        {
-            uint64_t remain = end - now;
+        timeout.tv_sec  = static_cast<time_t>(remain / US_PER_S);
+        timeout.tv_usec = static_cast<suseconds_t>(remain % US_PER_S);
 
-            timeout.tv_sec  = static_cast<time_t>(remain / US_PER_S);
-            timeout.tv_usec = static_cast<suseconds_t>(remain % US_PER_S);
-        }
-        else
-        {
-            mWaitingTid = 0;
-            mError      = OT_ERROR_RESPONSE_TIMEOUT;
-        }
+        VerifyOrDie(mSpinelInterface.WaitForFrame(timeout) == OT_ERROR_NONE, OT_EXIT_RADIO_SPINEL_NO_RESPONSE);
     } while (mWaitingTid || !mIsReady);
 
-exit:
     LogIfFail("Error waiting response", mError);
     // This indicates end of waiting repsonse.
     mWaitingKey = SPINEL_PROP_LAST_STATUS;
