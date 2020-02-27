@@ -37,7 +37,7 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-mtd                      \
     --enable-ncp                      \
     --enable-radio-only               \
-    --with-examples=posix             \
+    --with-examples=simulation        \
     $(NULL)
 
 SUBDIRS                             = \

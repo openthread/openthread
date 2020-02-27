@@ -37,7 +37,7 @@
 
 #include "openthread-system.h"
 
-#if OPENTHREAD_EXAMPLES_POSIX
+#if OPENTHREAD_EXAMPLES_SIMULATION
 #include <setjmp.h>
 #include <unistd.h>
 
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 {
     otInstance *instance;
 
-#if OPENTHREAD_EXAMPLES_POSIX
+#if OPENTHREAD_EXAMPLES_SIMULATION
     if (setjmp(gResetJump))
     {
         alarm(0);

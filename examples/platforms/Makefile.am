@@ -41,7 +41,7 @@ DIST_SUBDIRS                            = \
     gp712                                 \
     kw41z                                 \
     nrf528xx                              \
-    posix                                 \
+    simulation                            \
     qpg6095                               \
     samr21                                \
     utils                                 \
@@ -93,8 +93,8 @@ if OPENTHREAD_PLATFORM_NRF528XX
 SUBDIRS                                += nrf528xx
 endif
 
-if OPENTHREAD_PLATFORM_POSIX
-SUBDIRS                                += posix
+if OPENTHREAD_PLATFORM_SIMULATION
+SUBDIRS                                += simulation
 endif
 
 if OPENTHREAD_PLATFORM_QPG6095
@@ -122,7 +122,7 @@ PRETTY_SUBDIRS                          = \
     gp712                                 \
     kw41z                                 \
     nrf528xx                              \
-    posix                                 \
+    simulation                            \
     qpg6095                               \
     samr21                                \
     utils                                 \

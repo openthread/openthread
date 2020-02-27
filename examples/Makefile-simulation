@@ -73,7 +73,7 @@ configure_OPTIONS               = \
     --enable-mtd                  \
     --enable-ncp                  \
     --enable-radio-only           \
-    --with-examples=posix         \
+    --with-examples=simulation    \
     $(NULL)
 
 # Platform specific switches
@@ -91,11 +91,11 @@ COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1
 endif # NCP_SPI == 1
 
 ifeq ($(VIRTUAL_TIME),1)
-COMMONCFLAGS                   += -DOPENTHREAD_POSIX_VIRTUAL_TIME=1
+COMMONCFLAGS                   += -DOPENTHREAD_SIMULATION_VIRTUAL_TIME=1
 endif
 
 ifeq ($(VIRTUAL_TIME_UART),1)
-COMMONCFLAGS                   += -DOPENTHREAD_POSIX_VIRTUAL_TIME_UART=1
+COMMONCFLAGS                   += -DOPENTHREAD_SIMULATION_VIRTUAL_TIME_UART=1
 endif
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
@@ -103,8 +103,8 @@ include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 TopSourceDir                   := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
-CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-posix-config.h\"'
-CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/posix/
+CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-simulation-config.h\"'
+CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/simulation/
 COMMONCFLAGS                   += \
     -D$(CONFIG_FILE)              \
     -I$(CONFIG_FILE_PATH)         \

@@ -27,11 +27,11 @@
 #
 
 #
-# posix platform-specific Makefile
+# Simulation platform-specific Makefile
 #
 
-LDADD_COMMON                                                          += \
-    $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \
+LDADD_COMMON                                                                 += \
+    $(top_builddir)/examples/platforms/simulation/libopenthread-simulation.a    \
     $(NULL)
 
 if OPENTHREAD_TARGET_LINUX
