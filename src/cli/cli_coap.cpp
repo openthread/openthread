@@ -545,10 +545,10 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
     otMessage *responseMessage = NULL;
     otCoapCode responseCode    = OT_COAP_CODE_EMPTY;
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    uint64_t observe        = 0;
-    bool     observePresent = false;
-#endif
+    uint64_t             observe        = 0;
+    bool                 observePresent = false;
     otCoapOptionIterator iterator;
+#endif
 
     mInterpreter.mServer->OutputFormat("coap request from ");
     mInterpreter.OutputIp6Address(aMessageInfo->mPeerAddr);
@@ -558,8 +558,8 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
     {
     case OT_COAP_CODE_GET:
         mInterpreter.mServer->OutputFormat("GET");
-        SuccessOrExit(error = otCoapOptionIteratorInit(&iterator, aMessage));
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+        SuccessOrExit(error = otCoapOptionIteratorInit(&iterator, aMessage));
         if (otCoapOptionIteratorGetFirstOptionMatching(&iterator, OT_COAP_OPTION_OBSERVE) != NULL)
         {
             SuccessOrExit(error = otCoapOptionIteratorGetOptionUintValue(&iterator, &observe));
