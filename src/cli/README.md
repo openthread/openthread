@@ -5,6 +5,27 @@ command line interface. Use the CLI to play with OpenThread, which
 can also be used with additional application code. The
 OpenThread test scripts use the CLI to execute test cases.
 
+## Separator and escaping characters
+
+The whitespace character (`' '`) is used to delimitate the command name
+and the different arguments, toghether with tab (`'\t'`) and new line
+characters (`'\r'`, `'\n'`).
+
+Some arguments might require to accept whitespaces on them. For those
+cases the backslash character (`'\'`) can be used to escape whitespace
+or the backslash itself.
+
+Example:
+
+```bash
+> networkname Test\ Network
+Done
+> networkname
+Test Network
+Done
+>
+```
+
 ## OpenThread Command List
 
 * [bufferinfo](#bufferinfo)
@@ -718,7 +739,7 @@ Done
 
 ### logfilename \<filename\>
 
-- Note: POSIX Platform Only, ie: `OPENTHREAD_EXAMPLES_POSIX`
+- Note: Simulation Only, ie: `OPENTHREAD_EXAMPLES_SIMULATION`
 - Requires `OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART`
 
 Specifies filename to capture otPlatLog() messages, useful when
