@@ -622,7 +622,7 @@ public:
     void SetLinkQualityIn(uint8_t aRouterIndex, uint8_t aLinkQuality)
     {
         mRouteData[aRouterIndex] = (mRouteData[aRouterIndex] & ~kLinkQualityInMask) |
-                                ((aLinkQuality << kLinkQualityInOffset) & kLinkQualityInMask);
+                                   ((aLinkQuality << kLinkQualityInOffset) & kLinkQualityInMask);
     }
 
     /**
@@ -648,7 +648,7 @@ public:
     void SetLinkQualityOut(uint8_t aRouterIndex, uint8_t aLinkQuality)
     {
         mRouteData[aRouterIndex] = (mRouteData[aRouterIndex] & ~kLinkQualityOutMask) |
-                                ((aLinkQuality << kLinkQualityOutOffset) & kLinkQualityOutMask);
+                                   ((aLinkQuality << kLinkQualityOutOffset) & kLinkQualityOutMask);
     }
 
 private:
@@ -774,7 +774,8 @@ public:
         }
         else
         {
-            return static_cast<uint8_t>((mRouteData[aRouterIndex + aRouterIndex / 2] & kRouteCostMask) << kOddEntryOffset) |
+            return static_cast<uint8_t>((mRouteData[aRouterIndex + aRouterIndex / 2] & kRouteCostMask)
+                                        << kOddEntryOffset) |
                    ((mRouteData[aRouterIndex + aRouterIndex / 2 + 1] &
                      static_cast<uint8_t>(kRouteCostMask << kOddEntryOffset)) >>
                     kOddEntryOffset);
@@ -796,8 +797,9 @@ public:
         }
         else
         {
-            mRouteData[aRouterIndex + aRouterIndex / 2] = (mRouteData[aRouterIndex + aRouterIndex / 2] & ~kRouteCostMask) |
-                                                    ((aRouteCost >> kOddEntryOffset) & kRouteCostMask);
+            mRouteData[aRouterIndex + aRouterIndex / 2] =
+                (mRouteData[aRouterIndex + aRouterIndex / 2] & ~kRouteCostMask) |
+                ((aRouteCost >> kOddEntryOffset) & kRouteCostMask);
             mRouteData[aRouterIndex + aRouterIndex / 2 + 1] = static_cast<uint8_t>(
                 (mRouteData[aRouterIndex + aRouterIndex / 2 + 1] & ~(kRouteCostMask << kOddEntryOffset)) |
                 ((aRouteCost & kRouteCostMask) << kOddEntryOffset));
