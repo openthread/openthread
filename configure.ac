@@ -889,12 +889,12 @@ AC_MSG_CHECKING([whether to build platform libraries])
 
 AC_ARG_WITH(platform,
     [AS_HELP_STRING([--with-platform=TARGET],
-        [Build OpenThread platform libraries for one of: posix, cc1352, cc2538, cc2650, cc2652,
-         efr32mg12, efr32mg13, efr32mg21, gp712, kw41z, nrf52811, nrf52833, nrf52840, qpg6095, samr21 @<:@default=no@:>@.])],
+        [Build OpenThread platform libraries for one of: cc1352, cc2538, cc2650, cc2652,
+         efr32mg12, efr32mg13, efr32mg21, gp712, kw41z, nrf52811, nrf52833, nrf52840, qpg6095, samr21, simulation @<:@default=simulation@:>@.])],
     [
         # Make sure the given target is valid.
         case "${with_platform}" in
-        no|posix|cc1352|cc2538|cc2650|cc2652|efr32mg12|efr32mg13|efr32mg21|gp712|kw41z|nrf52811|nrf52833|nrf52840|qpg6095|samr21)
+        no|cc1352|cc2538|cc2650|cc2652|efr32mg12|efr32mg13|efr32mg21|gp712|kw41z|nrf52811|nrf52833|nrf52840|qpg6095|samr21|simulation)
             ;;
         *)
             AC_MSG_RESULT(ERROR)
@@ -925,7 +925,6 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_PLATFORM], [test ${with_platform} != "no"])
 
 OPENTHREAD_ENABLE_PLATFORM=${with_platform}
 
-AM_CONDITIONAL([OPENTHREAD_PLATFORM_SIMULATION],[test "${with_platform}" = "simulation"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_CC1352],    [test "${with_platform}" = "cc1352"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_CC2538],    [test "${with_platform}" = "cc2538"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_CC2650],    [test "${with_platform}" = "cc2650"])
@@ -940,6 +939,7 @@ AM_CONDITIONAL([OPENTHREAD_PLATFORM_NRF52833],  [test "${with_platform}" = "nrf5
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_NRF52840],  [test "${with_platform}" = "nrf52840"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_QPG6095],   [test "${with_platform}" = "qpg6095"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_SAMR21],    [test "${with_platform}" = "samr21"])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_SIMULATION],[test "${with_platform}" = "simulation"])
 
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_NRF528XX], [test OPENTHREAD_PLATFORM_NRF52811 || test OPENTHREAD_PLATFORM_NRF52833 || test OPENTHREAD_PLATFORM_NRF52840])
 
