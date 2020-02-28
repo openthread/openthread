@@ -98,6 +98,9 @@ otError SpiInterface::Init(const otPlatformConfig &aPlatformConfig)
     {
         // If the interrupt pin is not set, SPI interface will use polling mode.
         InitIntPin(aPlatformConfig.mSpiGpioIntDevice, aPlatformConfig.mSpiGpioIntLine);
+    }
+    else
+    {
         otLogNotePlat("SPI interface enters polling mode.");
     }
 
@@ -657,12 +660,13 @@ otError SpiInterface::WaitForFrame(const struct timeval &aTimeout)
     struct timeval timeout = {kSecPerDay, 0};
     fd_set         readFdSet;
     int            ret;
+    bool           isDataReady = false;
 
     FD_ZERO(&readFdSet);
 
     if (mIntGpioValueFd >= 0)
     {
-        if (CheckInterrupt())
+        if ((isDataReady = CheckInterrupt()))
         {
             // Interrupt pin is asserted, set the timeout to be 0.
             timeout.tv_sec  = 0;
@@ -688,22 +692,19 @@ otError SpiInterface::WaitForFrame(const struct timeval &aTimeout)
     }
 
     ret = select(mIntGpioValueFd + 1, &readFdSet, NULL, NULL, &timeout);
-    if (ret > 0)
+
+    if (ret > 0 && FD_ISSET(mIntGpioValueFd, &readFdSet))
     {
-        if (FD_ISSET(mIntGpioValueFd, &readFdSet))
-        {
-            struct gpioevent_data event;
+        struct gpioevent_data event;
 
-            // Read event data to clear interrupt.
-            VerifyOrDie(read(mIntGpioValueFd, &event, sizeof(event)) != -1, OT_EXIT_FAILURE);
-        }
+        // Read event data to clear interrupt.
+        VerifyOrDie(read(mIntGpioValueFd, &event, sizeof(event)) != -1, OT_EXIT_FAILURE);
+        isDataReady = true;
+    }
 
-        // If we can receive a packet.
-        if (CheckInterrupt())
-        {
-            otLogDebgPlat("WaitForFrame(): Interrupt.");
-            PushPullSpi();
-        }
+    if (isDataReady)
+    {
+        PushPullSpi();
     }
     else if (ret == 0)
     {
