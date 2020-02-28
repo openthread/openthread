@@ -626,7 +626,7 @@ class OpenThread(IThci):
         print('%s call getCommissionerSessionId' % self.port)
         return self.__sendCommand('commissioner sessionid')[0]
 
-    def __escape_escapable(self, string):
+    def __escapeEscapable(self, string):
         """Escape CLI escapable characters in the given string.
 
         Args:
@@ -702,7 +702,7 @@ class OpenThread(IThci):
         """
         print('%s call setNetworkName' % self.port)
         print(networkName)
-        networkName = self.__escape_escapable(networkName)
+        networkName = self.__escapeEscapable(networkName)
         try:
             cmd = 'networkname %s' % networkName
             datasetCmd = 'dataset networkname %s' % networkName
@@ -2408,7 +2408,7 @@ class OpenThread(IThci):
 
             if sNetworkName is not None:
                 cmd += ' networkname '
-                cmd += self.__escape_escapable(str(sNetworkName))
+                cmd += self.__escapeEscapable(str(sNetworkName))
 
             if xChannel is not None:
                 cmd += ' channel '
@@ -2609,7 +2609,7 @@ class OpenThread(IThci):
 
             if sNetworkName is not None:
                 cmd += ' networkname '
-                cmd += self.__escape_escapable(str(sNetworkName))
+                cmd += self.__escapeEscapable(str(sNetworkName))
 
             if xCommissionerSessionId is not None:
                 cmd += ' binary '
