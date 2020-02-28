@@ -139,7 +139,7 @@ case ${build_config} in
         cd "${top_builddir}"
         ${top_srcdir}/configure                 \
             CPPFLAGS="$cppflags_config"         \
-            --enable-posix-app                  \
+            --with-platform=posix-app           \
             $configure_options || die
         make -j 8 || die
         ;;

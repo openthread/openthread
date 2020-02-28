@@ -76,7 +76,7 @@ configure_OPTIONS                   = \
     --enable-cli                      \
     --enable-ftd                      \
     --enable-ncp                      \
-    --enable-posix-app                \
+    --with-platform=posix-app         \
     $(NULL)
 
 # Platform specific switches
