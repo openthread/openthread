@@ -125,7 +125,7 @@ private:
 /**
  * This class implements a locator for an OpenThread Instance object.
  *
- * The `InstanceLocatorInit` is similar to `InstanceLoator` but provides a default constructor (instead of a
+ * The `InstanceLocatorInit` is similar to `InstanceLocator` but provides a default constructor (instead of a
  * parameterized one) and allows an inheriting class to initialize the object (set the OpenThread Instance) post
  * constructor call using the `Init()` method. This class is intended for types that require a default constructor and
  * cannot use a parameterized one. (e.g., `Neighbor`/`Child`/`Router` classes which are used as a C array element type

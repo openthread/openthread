@@ -60,7 +60,7 @@ extern "C" {
  * @param[out]  aOutput         The diagnostics execution result.
  * @param[in]   aOutputMaxLen   The output buffer size.
  *
- * @retval  OT_ERROR_INVALID_ARGS       The command is supported but invalid arugments provided.
+ * @retval  OT_ERROR_INVALID_ARGS       The command is supported but invalid arguments provided.
  * @retval  OT_ERROR_NONE               The command is successfully process.
  * @retval  OT_ERROR_NOT_IMPLEMENTED    The command is not supported.
  *

@@ -187,7 +187,7 @@ typedef struct otServiceConfig
 } otServiceConfig;
 
 /**
- * This method provides a full or stable copy of the Parition's Thread Network Data.
+ * This method provides a full or stable copy of the Partition's Thread Network Data.
  *
  * @param[in]     aInstance    A pointer to an OpenThread instance.
  * @param[in]     aStable      TRUE when copying the stable version, FALSE when copying the full version.

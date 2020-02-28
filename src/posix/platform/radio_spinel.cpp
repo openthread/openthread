@@ -1258,7 +1258,7 @@ otError RadioSpinel::WaitResponse(void)
     } while (mWaitingTid || !mIsReady);
 
     LogIfFail("Error waiting response", mError);
-    // This indicates end of waiting repsonse.
+    // This indicates end of waiting response.
     mWaitingKey = SPINEL_PROP_LAST_STATUS;
     return mError;
 }

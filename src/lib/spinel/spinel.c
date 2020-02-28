@@ -2252,7 +2252,7 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 
 const char *spinel_net_role_to_cstr(uint8_t net_role)
 {
-    const char *ret = "NET_ROLE_UNKNONW";
+    const char *ret = "NET_ROLE_UNKNOWN";
 
     switch (net_role)
     {

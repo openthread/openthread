@@ -146,7 +146,7 @@ verify(r2.get(wpan.WPAN_NODE_TYPE) == wpan.NODE_TYPE_ROUTER)
 r1.un_whitelist_node(r2)
 r2.un_whitelist_node(r1)
 
-# Add a prefix before r2 releaizes it can not longer talk
+# Add a prefix before r2 realizes it can not longer talk
 # to leader (r1).
 r2.add_prefix(prefix2)
 
@@ -167,11 +167,11 @@ r1.whitelist_node(r2)
 r2.whitelist_node(r1)
 
 
-def check_paritition_id_macth():
+def check_partition_id_match():
     verify(r1.get(wpan.WPAN_PARTITION_ID) == r2.get(wpan.WPAN_PARTITION_ID))
 
 
-wpan.verify_within(check_paritition_id_macth, long_wait)
+wpan.verify_within(check_partition_id_match, long_wait)
 
 # Check that partitions merged successfully
 

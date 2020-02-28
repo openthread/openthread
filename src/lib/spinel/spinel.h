@@ -383,9 +383,9 @@ enum
     SPINEL_STATUS_INVALID_STATE            = 4,  ///< This operation is invalid for the current device state.
     SPINEL_STATUS_INVALID_COMMAND          = 5,  ///< This command is not recognized.
     SPINEL_STATUS_INVALID_INTERFACE        = 6,  ///< This interface is not supported.
-    SPINEL_STATUS_INTERNAL_ERROR           = 7,  ///< An internal runtime error has occured.
-    SPINEL_STATUS_SECURITY_ERROR           = 8,  ///< A security/authentication error has occured.
-    SPINEL_STATUS_PARSE_ERROR              = 9,  ///< A error has occured while parsing the command.
+    SPINEL_STATUS_INTERNAL_ERROR           = 7,  ///< An internal runtime error has occurred.
+    SPINEL_STATUS_SECURITY_ERROR           = 8,  ///< A security/authentication error has occurred.
+    SPINEL_STATUS_PARSE_ERROR              = 9,  ///< A error has occurred while parsing the command.
     SPINEL_STATUS_IN_PROGRESS              = 10, ///< This operation is in progress.
     SPINEL_STATUS_NOMEM                    = 11, ///< Operation prevented due to memory pressure.
     SPINEL_STATUS_BUSY                     = 12, ///< The device is currently performing a mutually exclusive operation
@@ -3058,7 +3058,7 @@ enum
      *
      * Required capability: SPINEL_CAP_THREAD_COMMISSIONER
      *
-     * The valid values are specified by SPINEL_MESHCOP_COMMISIONER_STATE_<state> enumeration.
+     * The valid values are specified by SPINEL_MESHCOP_COMMISSIONER_STATE_<state> enumeration.
      *
      */
     SPINEL_PROP_MESHCOP_COMMISSIONER_STATE = SPINEL_PROP_MESHCOP__BEGIN + 2,
@@ -3936,7 +3936,7 @@ enum
     /// The NCP timestamp base
     /** Format: X (write-only)
      *
-     * This property controls the time base value that is used for logs timestamp field calulation.
+     * This property controls the time base value that is used for logs timestamp field calculation.
      *
      */
     SPINEL_PROP_DEBUG_LOG_TIMESTAMP_BASE = SPINEL_PROP_DEBUG__BEGIN + 3,
