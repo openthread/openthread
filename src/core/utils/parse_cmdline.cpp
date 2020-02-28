@@ -40,14 +40,14 @@
 namespace ot {
 namespace Utils {
 
-static bool IsSpaceOrNewLine(char aChar)
+static bool IsSeparator(char aChar)
 {
     return (aChar == ' ') || (aChar == '\t') || (aChar == '\r') || (aChar == '\n');
 }
 
 static bool IsEscapable(char aChar)
 {
-    return IsSpaceOrNewLine(aChar) || (aChar == '\\');
+    return IsSeparator(aChar) || (aChar == '\\');
 }
 
 otError CmdLineParser::ParseCmd(char *aString, uint8_t &aArgc, char *aArgv[], uint8_t aArgcMax)
@@ -64,7 +64,7 @@ otError CmdLineParser::ParseCmd(char *aString, uint8_t &aArgc, char *aArgv[], ui
             // include the null terminator: strlen(cmd) = strlen(cmd + 1) + 1
             memmove(cmd, cmd + 1, strlen(cmd));
         }
-        else if (IsSpaceOrNewLine(*cmd))
+        else if (IsSeparator(*cmd))
         {
             *cmd = '\0';
         }
