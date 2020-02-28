@@ -61,6 +61,7 @@ otError CmdLineParser::ParseCmd(char *aString, uint8_t &aArgc, char *aArgv[], ui
     {
         if ((*cmd == '\\') && IsEscapable(*(cmd + 1)))
         {
+            // include the null terminator: strlen(cmd) = strlen(cmd + 1) + 1
             memmove(cmd, cmd + 1, strlen(cmd));
         }
         else if (IsSpaceOrNewLine(*cmd))
