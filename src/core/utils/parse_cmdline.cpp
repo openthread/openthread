@@ -47,7 +47,7 @@ static bool IsSpaceOrNewLine(char aChar)
 
 static bool IsEscapable(char aChar)
 {
-    return (aChar == ' ') || (aChar == '\\');
+    return IsSpaceOrNewLine(aChar) || (aChar == '\\');
 }
 
 otError CmdLineParser::ParseCmd(char *aString, uint8_t &aArgc, char *aArgv[], uint8_t aArgcMax)
