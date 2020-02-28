@@ -49,10 +49,6 @@ stages:
 
 jobs:
   include:
-    - env: BUILD_TARGET="package-check" VERBOSE=1
-      os: linux
-      compiler: gcc
-      script: script/test package
     - env: BUILD_TARGET="v1.2" VERBOSE=1 VIRTUAL_TIME=1 THREAD_VERSION=1.2
       os: linux
       compiler: gcc
@@ -215,6 +211,10 @@ jobs:
           packages:
             - clang-format-6.0
       script: .travis/check-pretty
+    - name: "Package Check"
+      os: linux
+      compiler: gcc
+      script: pip3 install -U cmake && script/test package
     - env:
       name: "Size Report"
       os: linux
