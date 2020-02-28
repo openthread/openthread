@@ -45,6 +45,11 @@ static bool IsSpaceOrNewLine(char aChar)
     return (aChar == ' ') || (aChar == '\t') || (aChar == '\r') || (aChar == '\n');
 }
 
+static bool IsEscapable(char aChar)
+{
+    return (aChar == ' ') || (aChar == '\\');
+}
+
 otError CmdLineParser::ParseCmd(char *aString, uint8_t &aArgc, char *aArgv[], uint8_t aArgcMax)
 {
     otError error = OT_ERROR_NONE;
@@ -54,14 +59,15 @@ otError CmdLineParser::ParseCmd(char *aString, uint8_t &aArgc, char *aArgv[], ui
 
     for (cmd = aString; *cmd; cmd++)
     {
-        if ((*cmd == '\\') && (*(cmd + 1) == ' '))
+        if ((*cmd == '\\') && IsEscapable(*(cmd + 1)))
         {
-            strcpy(cmd, cmd + 1);
+            memmove(cmd, cmd + 1, strlen(cmd));
         }
         else if (IsSpaceOrNewLine(*cmd))
         {
             *cmd = '\0';
         }
+
         if ((*cmd != '\0') && ((aArgc == 0) || (*(cmd - 1) == '\0')))
         {
             VerifyOrExit(aArgc < aArgcMax, error = OT_ERROR_INVALID_ARGS);
