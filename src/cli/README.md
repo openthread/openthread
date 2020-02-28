@@ -8,7 +8,7 @@ OpenThread test scripts use the CLI to execute test cases.
 ## Separator and escaping characters
 
 The whitespace character (`' '`) is used to delimitate the command name
-and the different arguments, toghether with tab (`'\t'`) and new line
+and the different arguments, together with tab (`'\t'`) and new line
 characters (`'\r'`, `'\n'`).
 
 Some arguments might require to accept whitespaces on them. For those
