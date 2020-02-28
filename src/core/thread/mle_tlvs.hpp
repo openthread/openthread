@@ -615,7 +615,7 @@ public:
     /**
      * This method sets the Link Quality In value for a given Router index.
      *
-     * @param[in]  aRouterIndex     The Router index.
+     * @param[in]  aRouterIndex  The Router index.
      * @param[in]  aLinkQuality  The Link Quality In value for a given Router index.
      *
      */
@@ -824,7 +824,7 @@ public:
     /**
      * This method sets the Link Quality In value for a given Router index.
      *
-     * @param[in]  aRouterIndex     The Router index.
+     * @param[in]  aRouterIndex  The Router index.
      * @param[in]  aLinkQuality  The Link Quality In value for a given Router index.
      *
      */
