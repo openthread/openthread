@@ -32,8 +32,8 @@
  *   This file includes the platform-specific initializers.
  */
 
-#ifndef PLATFORM_POSIX_H_
-#define PLATFORM_POSIX_H_
+#ifndef PLATFORM_SIMULATION_H_
+#define PLATFORM_SIMULATION_H_
 
 #include <openthread-core-config.h>
 #include <openthread/config.h>
@@ -230,4 +230,4 @@ void otSimSendUartWriteEvent(const uint8_t *aData, uint16_t aLength);
  */
 bool platformRadioIsTransmitPending(void);
 
-#endif // PLATFORM_POSIX_H_
+#endif // PLATFORM_SIMULATION_H_

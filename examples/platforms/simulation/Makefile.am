@@ -28,9 +28,9 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                             = libopenthread-posix.a
+lib_LIBRARIES                             = libopenthread-simulation.a
 
-libopenthread_posix_a_CPPFLAGS            = \
+libopenthread_simulation_a_CPPFLAGS       = \
     -I$(top_srcdir)/include                 \
     -I$(top_srcdir)/examples/platforms      \
     -I$(top_srcdir)/src/core                \
@@ -44,17 +44,18 @@ PLATFORM_SOURCES                          = \
     flash.c                                 \
     logging.c                               \
     misc.c                                  \
-    openthread-core-posix-config.h          \
-    platform-posix.h                        \
+    openthread-core-simulation-config.h     \
+    platform-config.h                       \
+    platform-simulation.h                   \
     radio.c                                 \
     spi-stubs.c                             \
     system.c                                \
-    uart-posix.c                            \
-    sim/alarm-sim.c                         \
-    sim/platform-sim.c                      \
+    uart.c                                  \
+    virtual_time/alarm-sim.c                \
+    virtual_time/platform-sim.c             \
     $(NULL)
 
-libopenthread_posix_a_SOURCES             = \
+libopenthread_simulation_a_SOURCES        = \
     $(PLATFORM_SOURCES)                     \
     $(NULL)
 
@@ -63,11 +64,11 @@ PRETTY_FILES                              = \
     $(NULL)
 
 Dash                                      = -
-libopenthread_posix_a_LIBADD              = \
+libopenthread_simulation_a_LIBADD         = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 if OPENTHREAD_BUILD_COVERAGE
-libopenthread_posix_a_CPPFLAGS           += \
+libopenthread_simulation_a_CPPFLAGS      += \
     -DOPENTHREAD_ENABLE_COVERAGE            \
     $(NULL)
 

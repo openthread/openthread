@@ -7,7 +7,7 @@ This example application exposes OpenThread configuration and management APIs vi
 ```bash
 $ cd <path-to-openthread>
 $ ./bootstrap
-$ make -f examples/Makefile-posix
+$ make -f examples/Makefile-simulation
 ```
 
 ## 2. Start node 1

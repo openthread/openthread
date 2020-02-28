@@ -80,7 +80,7 @@ python --version || die
         --enable-mtd                      \
         --enable-ncp                      \
         --enable-radio-only               \
-        --with-examples=posix || die
+        --with-examples=simulation || die
 
     scan-build --status-bugs -analyze-headers -v make -j2 || die
 
@@ -93,7 +93,7 @@ python --version || die
         --enable-mtd                      \
         --enable-ncp                      \
         --enable-radio-only               \
-        --with-examples=posix || die
+        --with-examples=simulation || die
 
     scan-build --status-bugs -analyze-headers -v make -j2 || die
 }
@@ -415,23 +415,23 @@ build_samr21() {
     build_samr21
 }
 
-[ $BUILD_TARGET != posix ] || {
+[ $BUILD_TARGET != simulation ] || {
     git checkout -- . || die
     git clean -xfd || die
     mkdir build && cd build || die
-    cmake -GNinja -DOT_PLATFORM=posix -DOT_COMPILE_WARNING_AS_ERROR=ON .. || die
+    cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON .. || die
     ninja || die
     cd .. || die
 
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    CPPFLAGS=-DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_NONE make -f examples/Makefile-posix || die
+    CPPFLAGS=-DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_NONE make -f examples/Makefile-simulation || die
 
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    CPPFLAGS=-DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG make -f examples/Makefile-posix || die
+    CPPFLAGS=-DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG make -f examples/Makefile-simulation || die
 
     export CPPFLAGS="                                             \
         -DOPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE=1              \
@@ -477,7 +477,7 @@ build_samr21() {
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    make -f examples/Makefile-posix || die
+    make -f examples/Makefile-simulation || die
 
     export CPPFLAGS="                                    \
         -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1       \
@@ -494,12 +494,12 @@ build_samr21() {
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    CPPFLAGS=-DOPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE=1 make -f examples/Makefile-posix || die
+    CPPFLAGS=-DOPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE=1 make -f examples/Makefile-simulation || die
 
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    CPPFLAGS=-DOPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE=1 make -f examples/Makefile-posix || die
+    CPPFLAGS=-DOPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE=1 make -f examples/Makefile-simulation || die
 
     git checkout -- . || die
     git clean -xfd || die
@@ -508,7 +508,7 @@ build_samr21() {
         --enable-ncp                        \
         --enable-ftd                        \
         --enable-mtd                        \
-        --with-examples=posix               \
+        --with-examples=simulation          \
         --disable-docs                      \
         --disable-tests                     \
         --with-vendor-extension=./src/core/common/extension_example.cpp || die
@@ -520,7 +520,7 @@ build_samr21() {
     ./configure                             \
         --enable-cli                        \
         --enable-mtd                        \
-        --with-examples=posix               \
+        --with-examples=simulation          \
         --disable-docs                      \
         --disable-tests || die
     make -j 8 || die
@@ -539,7 +539,7 @@ build_samr21() {
         --enable-ftd                        \
         --enable-mtd                        \
         --enable-radio-only                 \
-        --with-examples=posix || die
+        --with-examples=simulation || die
     make -j 8 || die
 
     export CPPFLAGS="                               \
@@ -552,30 +552,30 @@ build_samr21() {
         --enable-ncp                        \
         --enable-ftd                        \
         --enable-mtd                        \
-        --with-examples=posix               \
+        --with-examples=simulation          \
         --disable-docs                      \
         --disable-tests                     \
         --with-ncp-vendor-hook-source=./src/ncp/example_vendor_hook.cpp || die
     make -j 8 || die
 }
 
-[ $BUILD_TARGET != posix-distcheck ] || {
+[ $BUILD_TARGET != simulation-distcheck ] || {
     export ASAN_SYMBOLIZER_PATH=`which llvm-symbolizer` || die
     export ASAN_OPTIONS=symbolize=1 || die
-    export DISTCHECK_CONFIGURE_FLAGS= CPPFLAGS=-DOPENTHREAD_POSIX_VIRTUAL_TIME=1 || die
+    export DISTCHECK_CONFIGURE_FLAGS= CPPFLAGS=-DOPENTHREAD_SIMULATION_VIRTUAL_TIME=1  || die
     ./bootstrap || die
-    REFERENCE_DEVICE=1 make -f examples/Makefile-posix distcheck || die
+    REFERENCE_DEVICE=1 make -f examples/Makefile-simulation distcheck || die
 }
 
-[ $BUILD_TARGET != posix-32-bit ] || {
+[ $BUILD_TARGET != simulation-32-bit ] || {
     ./bootstrap || die
-    REFERENCE_DEVICE=1 COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 make -f examples/Makefile-posix check || die
+    REFERENCE_DEVICE=1 COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 make -f examples/Makefile-simulation check || die
 }
 
 [ $BUILD_TARGET != posix-app-cli ] || {
     ./bootstrap || die
     # enable code coverage for OpenThread transceiver only
-    COVERAGE=1 VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix || die
+    COVERAGE=1 VIRTUAL_TIME_UART=1 make -f examples/Makefile-simulation || die
     # readline supports pipe, editline does not
     REFERENCE_DEVICE=1 COVERAGE=1 READLINE=readline make -f src/posix/Makefile-posix || die
     REFERENCE_DEVICE=1 COVERAGE=1 PYTHONUNBUFFERED=1 OT_CLI_PATH="$(pwd)/$(ls output/posix/*/bin/ot-cli) -v" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" make -f src/posix/Makefile-posix check || die
@@ -616,22 +616,21 @@ build_samr21() {
     .travis/check-ncp-rcp-migrate || die
 }
 
-[ $BUILD_TARGET != posix-mtd ] || {
+[ $BUILD_TARGET != simulation-mtd ] || {
     ./bootstrap || die
-    REFERENCE_DEVICE=1 COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 USE_MTD=1 make -f examples/Makefile-posix check || die
+    REFERENCE_DEVICE=1 COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 USE_MTD=1 make -f examples/Makefile-simulation check || die
 }
 
-[ $BUILD_TARGET != posix-ncp-spi ] || {
+[ $BUILD_TARGET != simulation-ncp-spi ] || {
     CPPFLAGS="-DOPENTHREAD_CONFIG_NCP_SPI_ENABLE=1"
 
     ./bootstrap || die
-    make -f examples/Makefile-posix check configure_OPTIONS="--enable-ncp --enable-ftd --with-examples=posix" || die
+    make -f examples/Makefile-simulation check configure_OPTIONS="--enable-ncp --enable-ftd --with-examples=simulation" || die
 }
 
 [ $BUILD_TARGET != posix-app-ncp ] || {
     ./bootstrap || die
-    REFERENCE_DEVICE=1 COVERAGE=1 VIRTUAL_TIME_UART=1 make -f examples/Makefile-posix || die
-    # enable code coverage for OpenThread posix radio
+    REFERENCE_DEVICE=1 COVERAGE=1 VIRTUAL_TIME_UART=1 make -f examples/Makefile-simulation || die
     REFERENCE_DEVICE=1 COVERAGE=1 READLINE=readline make -f src/posix/Makefile-posix || die
     REFERENCE_DEVICE=1 COVERAGE=1 PYTHONUNBUFFERED=1 OT_NCP_PATH="$(pwd)/$(ls output/posix/*/bin/ot-ncp)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" NODE_TYPE=ncp-sim make -f src/posix/Makefile-posix check || die
 }
@@ -641,9 +640,9 @@ build_samr21() {
     REFERENCE_DEVICE=1 READLINE=readline RCP_SPI=1 make -f src/posix/Makefile-posix || die
 }
 
-[ $BUILD_TARGET != posix-ncp ] || {
+[ $BUILD_TARGET != simulation-ncp ] || {
     ./bootstrap || die
-    REFERENCE_DEVICE=1 COVERAGE=1 PYTHONUNBUFFERED=1 NODE_TYPE=ncp-sim make -f examples/Makefile-posix check || die
+    REFERENCE_DEVICE=1 COVERAGE=1 PYTHONUNBUFFERED=1 NODE_TYPE=ncp-simulation make -f examples/Makefile-simulation check || die
 }
 
 [ $BUILD_TARGET != toranj-test-framework ] || {
@@ -654,7 +653,7 @@ build_samr21() {
     git checkout -- . || die
     git clean -xfd || die
     ./bootstrap || die
-    make -f examples/Makefile-posix || die
+    make -f examples/Makefile-simulation || die
 
     git checkout -- . || die
     git clean -xfd || die

@@ -432,6 +432,23 @@ exit:
     return err;
 }
 
+const otCoapOption *OptionIterator::GetFirstOptionMatching(otCoapOptionType aOption)
+{
+    const otCoapOption *rval = NULL;
+
+    for (const otCoapOption *option = GetFirstOption(); option != NULL; option = GetNextOption())
+    {
+        if (option->mNumber == aOption)
+        {
+            // Found, stop searching
+            rval = option;
+            break;
+        }
+    }
+
+    return rval;
+}
+
 const otCoapOption *OptionIterator::GetFirstOption(void)
 {
     const otCoapOption *option  = NULL;
@@ -447,6 +464,23 @@ const otCoapOption *OptionIterator::GetFirstOption(void)
     }
 
     return option;
+}
+
+const otCoapOption *OptionIterator::GetNextOptionMatching(otCoapOptionType aOption)
+{
+    const otCoapOption *rval = NULL;
+
+    for (const otCoapOption *option = GetNextOption(); option != NULL; option = GetNextOption())
+    {
+        if (option->mNumber == aOption)
+        {
+            // Found, stop searching
+            rval = option;
+            break;
+        }
+    }
+
+    return rval;
 }
 
 const otCoapOption *OptionIterator::GetNextOption(void)
@@ -530,6 +564,26 @@ exit:
     }
 
     return rval;
+}
+
+otError OptionIterator::GetOptionValue(uint64_t &aValue) const
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t value[sizeof(aValue)];
+    uint8_t pos = 0;
+
+    VerifyOrExit(mOption.mLength <= sizeof(aValue), error = OT_ERROR_NO_BUFS);
+    SuccessOrExit(error = GetOptionValue(value));
+
+    aValue = 0;
+    for (pos = 0; pos < mOption.mLength; pos++)
+    {
+        aValue <<= 8;
+        aValue |= value[pos];
+    }
+
+exit:
+    return error;
 }
 
 otError OptionIterator::GetOptionValue(void *aValue) const

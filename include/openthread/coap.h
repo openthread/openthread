@@ -127,7 +127,7 @@ typedef enum otCoapOptionType
     OT_COAP_OPTION_URI_HOST       = 3,  ///< Uri-Host
     OT_COAP_OPTION_E_TAG          = 4,  ///< ETag
     OT_COAP_OPTION_IF_NONE_MATCH  = 5,  ///< If-None-Match
-    OT_COAP_OPTION_OBSERVE        = 6,  ///< Observe
+    OT_COAP_OPTION_OBSERVE        = 6,  ///< Observe [RFC7641]
     OT_COAP_OPTION_URI_PORT       = 7,  ///< Uri-Port
     OT_COAP_OPTION_LOCATION_PATH  = 8,  ///< Location-Path
     OT_COAP_OPTION_URI_PATH       = 11, ///< Uri-Path
@@ -491,6 +491,7 @@ otError otCoapMessageAppendOption(otMessage *aMessage, uint16_t aNumber, uint16_
  * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
  * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
  *
+ * @see otCoapMessageGetOptionUintValue
  */
 otError otCoapMessageAppendUintOption(otMessage *aMessage, uint16_t aNumber, uint32_t aValue);
 
@@ -682,6 +683,18 @@ const uint8_t *otCoapMessageGetToken(const otMessage *aMessage);
 otError otCoapOptionIteratorInit(otCoapOptionIterator *aIterator, const otMessage *aMessage);
 
 /**
+ * This function returns a pointer to the first option matching the specified option number.
+ *
+ * @param[in]  aIterator A pointer to the CoAP message option iterator.
+ * @param[in]  aOption   The option number sought.
+ *
+ * @returns A pointer to the first matching option. If no matching option is present NULL pointer is returned.
+ *
+ */
+const otCoapOption *otCoapOptionIteratorGetFirstOptionMatching(otCoapOptionIterator *aIterator,
+                                                               otCoapOptionType      aOption);
+
+/**
  * This function returns a pointer to the first option.
  *
  * @param[inout]  aIterator A pointer to the CoAP message option iterator.
@@ -692,6 +705,18 @@ otError otCoapOptionIteratorInit(otCoapOptionIterator *aIterator, const otMessag
 const otCoapOption *otCoapOptionIteratorGetFirstOption(otCoapOptionIterator *aIterator);
 
 /**
+ * This function returns a pointer to the next option matching the specified option number.
+ *
+ * @param[in]  aIterator A pointer to the CoAP message option iterator.
+ * @param[in]  aOption   The option number sought.
+ *
+ * @returns A pointer to the next matching option. If no further matching option is present NULL pointer is returned.
+ *
+ */
+const otCoapOption *otCoapOptionIteratorGetNextOptionMatching(otCoapOptionIterator *aIterator,
+                                                              otCoapOptionType      aOption);
+
+/**
  * This function returns a pointer to the next option.
  *
  * @param[inout]  aIterator A pointer to the CoAP message option iterator.
@@ -700,6 +725,21 @@ const otCoapOption *otCoapOptionIteratorGetFirstOption(otCoapOptionIterator *aIt
  *
  */
 const otCoapOption *otCoapOptionIteratorGetNextOption(otCoapOptionIterator *aIterator);
+
+/**
+ * This function fills current option value into @p aValue assuming the current value is an unsigned integer encoded
+ * according to https://tools.ietf.org/html/rfc7252#section-3.2
+ *
+ * @param[inout]    aIterator   A pointer to the CoAP message option iterator.
+ * @param[out]      aValue      A pointer to an unsigned integer to receive the option value.
+ *
+ * @retval  OT_ERROR_NONE       Successfully filled value.
+ * @retval  OT_ERROR_NOT_FOUND  No current option.
+ * @retval  OT_ERROR_NO_BUFS    Value is too long to fit in a uint64_t.
+ *
+ * @see otCoapMessageAppendUintOption
+ */
+otError otCoapOptionIteratorGetOptionUintValue(otCoapOptionIterator *aIterator, uint64_t *const aValue);
 
 /**
  * This function fills current option value into @p aValue.
