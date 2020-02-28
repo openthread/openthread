@@ -637,7 +637,7 @@ class OpenThread(IThci):
         """
         escapable_chars = ['\\', ' ', '\t', '\r', '\n']
         for char in escapable_chars:
-            string = string.replace(char, '\ %s' % char)
+            string = string.replace(char, '\\%s' % char)
         return string
 
     def _connect(self):
