@@ -169,7 +169,45 @@ otError CoapBase::SendMessage(Message &               aMessage,
     {
         Metadata metadata;
 
-        metadata.Init(aMessage.IsConfirmable(), aMessageInfo, aHandler, aContext, aTxParameters);
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+        // Whether or not to turn on special "Observe" handling.
+        OptionIterator iterator;
+        bool           observe;
+
+        SuccessOrExit(error = iterator.Init(&aMessage));
+        observe = (iterator.GetFirstOptionMatching(OT_COAP_OPTION_OBSERVE) != NULL);
+
+        // Special case, if we're sending a GET with Observe=1, that is a cancellation.
+        if (observe && (aMessage.GetCode() == OT_COAP_CODE_GET))
+        {
+            uint64_t observeVal = 0;
+
+            SuccessOrExit(error = iterator.GetOptionValue(observeVal));
+
+            if (observeVal == 1)
+            {
+                Metadata handlerMetadata;
+
+                // We're cancelling our subscription, so disable special-case handling on this request.
+                observe = false;
+
+                // If we can find the previous handler context, cancel that too.  Peer address
+                // and tokens, etc should all match.
+                Message *origRequest = FindRelatedRequest(aMessage, aMessageInfo, handlerMetadata);
+                if (origRequest != NULL)
+                {
+                    FinalizeCoapTransaction(*origRequest, handlerMetadata, NULL, NULL, OT_ERROR_NONE);
+                }
+            }
+        }
+#endif // OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+
+        // Enqueue and send
+        metadata.Init(aMessage.IsConfirmable(),
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+                      observe,
+#endif
+                      aMessageInfo, aHandler, aContext, aTxParameters);
         storedCopy = CopyAndEnqueueMessage(aMessage, copyLength, metadata);
         VerifyOrExit(storedCopy != NULL, error = OT_ERROR_NO_BUFS);
     }
@@ -300,6 +338,14 @@ void CoapBase::HandleRetransmissionTimer(void)
 
         if (now >= metadata.mNextTimerShot)
         {
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+            if (message->IsRequest() && metadata.mObserve && metadata.mAcknowledged)
+            {
+                // This is a RFC7641 subscription.  Do not time out.
+                continue;
+            }
+#endif
+
             if (!metadata.mConfirmable || (metadata.mRetransmissionsRemaining == 0))
             {
                 // No expected response or acknowledgment.
@@ -501,9 +547,23 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
     Metadata metadata;
     Message *request = NULL;
     otError  error   = OT_ERROR_NONE;
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    bool responseObserve = false;
+#endif
 
     request = FindRelatedRequest(aMessage, aMessageInfo, metadata);
     VerifyOrExit(request != NULL);
+
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    if (metadata.mObserve && request->IsRequest())
+    {
+        // We sent Observe in our request, see if we received Observe in the response too.
+        OptionIterator iterator;
+
+        SuccessOrExit(error = iterator.Init(&aMessage));
+        responseObserve = (iterator.GetFirstOptionMatching(OT_COAP_OPTION_OBSERVE) != NULL);
+    }
+#endif
 
     switch (aMessage.GetType())
     {
@@ -520,22 +580,54 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
         if (aMessage.IsEmpty())
         {
             // Empty acknowledgment.
-            if (metadata.mConfirmable)
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+            if (metadata.mObserve && !request->IsRequest())
             {
-                metadata.mAcknowledged = true;
-                metadata.UpdateIn(*request);
+                // This is the ACK to our RFC7641 notification.  There will be no
+                // "separate" response so pass it back as if it were a piggy-backed
+                // response so we can stop re-sending and the application can move on.
+                FinalizeCoapTransaction(*request, metadata, &aMessage, &aMessageInfo, OT_ERROR_NONE);
             }
-
-            // Remove the message if response is not expected, otherwise await response.
-            if (metadata.mResponseHandler == NULL)
+            else
+#endif
             {
-                DequeueMessage(*request);
+                // This is not related to RFC7641 or the outgoing "request" was not a
+                // notification.
+                if (metadata.mConfirmable)
+                {
+                    metadata.mAcknowledged = true;
+                    metadata.UpdateIn(*request);
+                }
+
+                // Remove the message if response is not expected, otherwise await
+                // response.
+                if (metadata.mResponseHandler == NULL)
+                {
+                    DequeueMessage(*request);
+                }
             }
         }
         else if (aMessage.IsResponse() && aMessage.IsTokenEqual(*request))
         {
-            // Piggybacked response.
-            FinalizeCoapTransaction(*request, metadata, &aMessage, &aMessageInfo, OT_ERROR_NONE);
+            // Piggybacked response.  If there's an Observe option present in both
+            // request and response, and we have a response handler; then we're
+            // dealing with RFC7641 rules here.
+            // (If there is no response handler, then we're wasting our time!)
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+            if (metadata.mObserve && responseObserve && (metadata.mResponseHandler != NULL))
+            {
+                // This is a RFC7641 notification.  The request is *not* done!
+                metadata.mResponseHandler(metadata.mResponseContext, &aMessage, &aMessageInfo, OT_ERROR_NONE);
+
+                // Consider the message acknowledged at this point.
+                metadata.mAcknowledged = true;
+                metadata.UpdateIn(*request);
+            }
+            else
+#endif
+            {
+                FinalizeCoapTransaction(*request, metadata, &aMessage, &aMessageInfo, OT_ERROR_NONE);
+            }
         }
 
         // Silently ignore acknowledgments carrying requests (RFC 7252, p. 4.2)
@@ -545,13 +637,17 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
     case OT_COAP_TYPE_CONFIRMABLE:
         // Send empty ACK if it is a CON message.
         SendAck(aMessage, aMessageInfo);
-        FinalizeCoapTransaction(*request, metadata, &aMessage, &aMessageInfo, OT_ERROR_NONE);
-        break;
-
+        // Fall through
+        // Handling of RFC7641 and multicast is below.
     case OT_COAP_TYPE_NON_CONFIRMABLE:
-        // Separate response.
-
-        if (metadata.mDestinationAddress.IsMulticast() && metadata.mResponseHandler != NULL)
+        // Separate response or observation notification.  If the request was to a multicast
+        // address, OR both the request and response carry Observe options, then this is NOT
+        // the final message, we may see multiples.
+        if ((metadata.mResponseHandler != NULL) && (metadata.mDestinationAddress.IsMulticast()
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+                                                    || (metadata.mObserve && responseObserve)
+#endif
+                                                        ))
         {
             // If multicast non-confirmable request, allow multiple responses
             metadata.mResponseHandler(metadata.mResponseContext, &aMessage, &aMessageInfo, OT_ERROR_NONE);
@@ -664,7 +760,10 @@ exit:
     }
 }
 
-void CoapBase::Metadata::Init(bool                    aConfirmable,
+void CoapBase::Metadata::Init(bool aConfirmable,
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+                              bool aObserve,
+#endif
                               const Ip6::MessageInfo &aMessageInfo,
                               ResponseHandler         aHandler,
                               void *                  aContext,
@@ -679,6 +778,9 @@ void CoapBase::Metadata::Init(bool                    aConfirmable,
     mRetransmissionTimeout    = aTxParameters.CalculateInitialRetransmissionTimeout();
     mAcknowledged             = false;
     mConfirmable              = aConfirmable;
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    mObserve = aObserve;
+#endif
     mNextTimerShot =
         TimerMilli::GetNow() + (aConfirmable ? mRetransmissionTimeout : aTxParameters.CalculateMaxTransmitWait());
 }

@@ -38,6 +38,7 @@ DEBUG                          ?= 0
 BORDER_AGENT                   ?= 1
 BORDER_ROUTER                  ?= 1
 COAP                           ?= 1
+COAP_OBSERVE                   ?= 1
 COAPS                          ?= 1
 COMMISSIONER                   ?= 1
 CHANNEL_MANAGER                ?= 1
