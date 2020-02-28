@@ -87,4 +87,14 @@
 #define OPENTHREAD_POSIX_RCP_SPI_ENABLE 0
 #endif
 
+/**
+ * @def OPENTHREAD_ENABLE_POSIX_DAEMON
+ *
+ * Define to 1 to enable POSIX daemon.
+ *
+ */
+#ifndef OPENTHREAD_ENABLE_POSIX_DAEMON
+#define OPENTHREAD_ENABLE_POSIX_DAEMON 0
+#endif
+
 #endif // OPENTHREAD_PLATFORM_CONFIG_H_

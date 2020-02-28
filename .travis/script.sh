@@ -597,7 +597,7 @@ build_samr21() {
     REFERENCE_DEVICE=1 COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 make -f examples/Makefile-simulation check || die
 }
 
-[ $BUILD_TARGET != posix-app-cli ] || {
+[ $BUILD_TARGET != posix-cli ] || {
     ./bootstrap || die
     # enable code coverage for OpenThread transceiver only
     COVERAGE=1 VIRTUAL_TIME_UART=1 make -f examples/Makefile-simulation || die
@@ -612,27 +612,27 @@ build_samr21() {
     ./script/test cert_suite tests/scripts/thread-cert/v1_2_* || die
 }
 
-[ $BUILD_TARGET != posix-app-pty ] || {
+[ $BUILD_TARGET != posix-pty ] || {
     # check daemon mode
     git checkout -- . || die
     git clean -xfd || die
     mkdir build && cd build || die
-    cmake -GNinja -DOT_PLATFORM=posix-host -DOT_DAEMON=ON -DCOMPILE_WARNING_AS_ERROR=ON .. || die
+    cmake -GNinja -DOT_PLATFORM=posix -DOT_DAEMON=ON -DCOMPILE_WARNING_AS_ERROR=ON .. || die
     ninja || die
     cd .. || die
 
     git checkout -- . || die
     git clean -xfd || die
     mkdir build && cd build || die
-    cmake -GNinja -DOT_PLATFORM=posix-host -DCOMPILE_WARNING_AS_ERROR=ON .. || die
+    cmake -GNinja -DOT_PLATFORM=posix -DCOMPILE_WARNING_AS_ERROR=ON .. || die
     ninja || die
     cd .. || die
 
     ./bootstrap
-    .travis/check-posix-app-pty || die
+    .travis/check-posix-pty || die
 }
 
-[ $BUILD_TARGET != posix-app-migrate ] || {
+[ $BUILD_TARGET != posix-migrate ] || {
     ./bootstrap
     .travis/check-ncp-rcp-migrate || die
 }
@@ -649,14 +649,14 @@ build_samr21() {
     make -f examples/Makefile-simulation check configure_OPTIONS="--enable-ncp --enable-ftd --with-examples=simulation" || die
 }
 
-[ $BUILD_TARGET != posix-app-ncp ] || {
+[ $BUILD_TARGET != posix-ncp ] || {
     ./bootstrap || die
     REFERENCE_DEVICE=1 COVERAGE=1 VIRTUAL_TIME_UART=1 make -f examples/Makefile-simulation || die
     REFERENCE_DEVICE=1 COVERAGE=1 READLINE=readline make -f src/posix/Makefile-posix || die
     REFERENCE_DEVICE=1 COVERAGE=1 PYTHONUNBUFFERED=1 OT_NCP_PATH="$(pwd)/$(ls output/posix/*/bin/ot-ncp)" RADIO_DEVICE="$(pwd)/$(ls output/*/bin/ot-rcp)" NODE_TYPE=ncp-sim make -f src/posix/Makefile-posix check || die
 }
 
-[ $BUILD_TARGET != posix-app-spi ] || {
+[ $BUILD_TARGET != posix-spi ] || {
     ./bootstrap || die
     REFERENCE_DEVICE=1 READLINE=readline RCP_SPI=1 make -f src/posix/Makefile-posix || die
 }

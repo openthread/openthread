@@ -38,7 +38,7 @@ display_usage() {
     echo "    <config> can be:"
     echo "        ncp        : Build OpenThread NCP FTD mode with simulation platform"
     echo "        rcp        : Build OpenThread RCP (NCP in radio mode) with simulation platform"
-    echo "        posix-app  : Build OpenThread POSIX App NCP"
+    echo "        posix      : Build OpenThread POSIX App NCP"
     echo "        cmake      : Configure and build OpenThread using cmake/ninja (RCP and NCP) only"
     echo "        cmake-posix: Configure and build OpenThread POSIX host using cmake/ninja"
     echo ""
@@ -131,7 +131,7 @@ case ${build_config} in
         make -j 8 || die
         ;;
 
-    posix-app|posixapp)
+    posix|posix-app|posixapp)
         echo "===================================================================================================="
         echo "Building OpenThread POSIX App NCP"
         echo "===================================================================================================="
@@ -139,7 +139,7 @@ case ${build_config} in
         cd "${top_builddir}"
         ${top_srcdir}/configure                 \
             CPPFLAGS="$cppflags_config"         \
-            --with-platform=posix-app           \
+            --with-platform=posix               \
             $configure_options || die
         make -j 8 || die
         ;;
@@ -156,7 +156,7 @@ case ${build_config} in
         echo "===================================================================================================="
         echo "Building OpenThread POSIX host platform using cmake"
         echo "===================================================================================================="
-        cmake -GNinja -DOT_PLATFORM=posix-host -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config.h . || die
+        cmake -GNinja -DOT_PLATFORM=posix -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config.h . || die
         ninja || die
         ;;
 

@@ -56,7 +56,7 @@
 /* Define to 1 to enable the NCP UART interface. */
 #define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
 
-/* Define to 1 to build posix application. */
+/* Define to 1 to enable posix platform. */
 #define OPENTHREAD_PLATFORM_POSIX_APP 1
 
 /* Define to 1 if you want to enable Service */

@@ -1772,7 +1772,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
 #endif
 
 #if OPENTHREAD_PLATFORM_POSIX_APP
-    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_POSIX_APP));
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_POSIX));
 #endif
 
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)

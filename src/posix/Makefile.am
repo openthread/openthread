@@ -100,12 +100,12 @@ ot_ncp_LIBTOOLFLAGS                                                    = \
     $(LIBTOOLFLAGS_COMMON)                                               \
     $(NULL)
 
-if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+if OPENTHREAD_ENABLE_POSIX_DAEMON
 bin_PROGRAMS                                                          += \
     ot-ctl                                                               \
     ot-daemon                                                            \
     $(NULL)
-else # OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+else # OPENTHREAD_ENABLE_POSIX_DAEMON
 if OPENTHREAD_ENABLE_CLI
 bin_PROGRAMS                                                          += \
     ot-cli                                                               \
@@ -116,7 +116,7 @@ bin_PROGRAMS                                                          += \
     ot-ncp                                                               \
     $(NULL)
 endif
-endif # OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+endif # OPENTHREAD_ENABLE_POSIX_DAEMON
 
 ot_ctl_SOURCES                                                         = \
     client.cpp                                                           \

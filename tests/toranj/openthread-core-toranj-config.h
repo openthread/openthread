@@ -45,11 +45,11 @@
  *
  */
 #if OPENTHREAD_RADIO
-#define OPENTHREAD_CONFIG_PLATFORM_INFO                         "POSIX-RCP-toranj"
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "POSIX-RCP-toranj"
 #elif OPENTHREAD_PLATFORM_POSIX_APP
-#define OPENTHREAD_CONFIG_PLATFORM_INFO                         "POSIX-App-toranj"
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "POSIX-App-toranj"
 #else
-#define OPENTHREAD_CONFIG_PLATFORM_INFO                         "POSIX-toranj"
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "POSIX-toranj"
 #endif
 
 /**
@@ -58,7 +58,7 @@
  * Define to 1 to enable Border Router support.
  *
  */
-#define OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE                  1
+#define OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE 1
 
 /**
  * @def OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
@@ -66,7 +66,7 @@
  * Define to 1 to enable Commissioner support.
  *
  */
-#define OPENTHREAD_CONFIG_COMMISSIONER_ENABLE                   1
+#define OPENTHREAD_CONFIG_COMMISSIONER_ENABLE 1
 
 /**
  * @def OPENTHREAD_CONFIG_DIAG_ENABLE
@@ -74,7 +74,7 @@
  * Define to 1 to enable Factory Diagnostics support.
  *
  */
-#define OPENTHREAD_CONFIG_DIAG_ENABLE                           1
+#define OPENTHREAD_CONFIG_DIAG_ENABLE 1
 
 /**
  * @def OPENTHREAD_CONFIG_JOINER_ENABLE
@@ -82,7 +82,7 @@
  * Define to 1 to enable Joiner support.
  *
  */
-#define OPENTHREAD_CONFIG_JOINER_ENABLE                         1
+#define OPENTHREAD_CONFIG_JOINER_ENABLE 1
 
 /**
  * @def OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -90,7 +90,7 @@
  * Define to 1 to support injecting Service entries into the Thread Network Data.
  *
  */
-#define OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE                1
+#define OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE 1
 
 /**
  * @def OPENTHREAD_CONFIG_LEGACY_ENABLE
@@ -98,7 +98,7 @@
  * Define to 1 to enable legacy network support.
  *
  */
-#define OPENTHREAD_CONFIG_LEGACY_ENABLE                         1
+#define OPENTHREAD_CONFIG_LEGACY_ENABLE 1
 
 /**
  * @def OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
@@ -106,7 +106,7 @@
  * Define to 1 to enable the Jam Detection service.
  *
  */
-#define OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE                  1
+#define OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE 1
 
 /**
  * @def OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
@@ -114,7 +114,7 @@
  * The number of message buffers in the buffer pool.
  *
  */
-#define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS                   256
+#define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS 256
 
 /**
  * @def OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES
@@ -122,7 +122,7 @@
  * The number of EID-to-RLOC cache entries.
  *
  */
-#define OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES                 32
+#define OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES 32
 
 /**
  * @def OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_MAX_RETRY_DELAY
@@ -132,7 +132,7 @@
  * Default: 28800 seconds (480 minutes or 8 hours)
  *
  */
-#define OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_MAX_RETRY_DELAY         120
+#define OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_MAX_RETRY_DELAY 120
 
 /**
  * @def OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
@@ -140,7 +140,7 @@
  * The maximum number of children.
  *
  */
-#define OPENTHREAD_CONFIG_MLE_MAX_CHILDREN                          32
+#define OPENTHREAD_CONFIG_MLE_MAX_CHILDREN 32
 
 /**
  * @def OPENTHREAD_CONFIG_MLE_CHILD_TIMEOUT_DEFAULT
@@ -148,7 +148,7 @@
  * The default child timeout value (in seconds).
  *
  */
-#define OPENTHREAD_CONFIG_MLE_CHILD_TIMEOUT_DEFAULT                 120
+#define OPENTHREAD_CONFIG_MLE_CHILD_TIMEOUT_DEFAULT 120
 
 /**
  * @def OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD
@@ -156,7 +156,7 @@
  * The maximum number of supported IPv6 address registrations per child.
  *
  */
-#define OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD                    10
+#define OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD 10
 
 /**
  * @def OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS
@@ -164,7 +164,7 @@
  * The maximum number of supported IPv6 addresses allows to be externally added.
  *
  */
-#define OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS                      8
+#define OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS 8
 
 /**
  * @def OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS
@@ -172,7 +172,7 @@
  * The maximum number of supported IPv6 multicast addresses allows to be externally added.
  *
  */
-#define OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS            4
+#define OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS 4
 
 /**
  * @def OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
@@ -188,7 +188,7 @@
  * The number of MAC Filter entries.
  *
  */
-#define OPENTHREAD_CONFIG_MAC_FILTER_SIZE                       80
+#define OPENTHREAD_CONFIG_MAC_FILTER_SIZE 80
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_OUTPUT
@@ -196,7 +196,7 @@
  * Selects if, and where the LOG output goes to.
  *
  */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT                            OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL
+#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
@@ -204,7 +204,7 @@
  * The log level (used at compile time).
  *
  */
-#define OPENTHREAD_CONFIG_LOG_LEVEL                             OT_LOG_LEVEL_INFO
+#define OPENTHREAD_CONFIG_LOG_LEVEL OT_LOG_LEVEL_INFO
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
@@ -212,7 +212,7 @@
  * Define as 1 to enable dynamic log level control.
  *
  */
-#define OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE              1
+#define OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE 1
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
@@ -220,7 +220,7 @@
  * Define to prepend the log level to all log messages
  *
  */
-#define OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL                     0
+#define OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL 0
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_PREPEND_REGION
@@ -228,7 +228,7 @@
  * Define to prepend the log region to all log messages
  *
  */
-#define OPENTHREAD_CONFIG_LOG_PREPEND_REGION                    0
+#define OPENTHREAD_CONFIG_LOG_PREPEND_REGION 0
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_SUFFIX
@@ -236,7 +236,7 @@
  * Define suffix to append at the end of logs.
  *
  */
-#define OPENTHREAD_CONFIG_LOG_SUFFIX                            ""
+#define OPENTHREAD_CONFIG_LOG_SUFFIX ""
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_PLATFORM
@@ -244,7 +244,7 @@
  * Define to enable platform region logging.
  *
  */
-#define OPENTHREAD_CONFIG_LOG_PLATFORM                          1
+#define OPENTHREAD_CONFIG_LOG_PLATFORM 1
 
 /**
  * @def OPENTHREAD_CONFIG_NCP_UART_ENABLE
@@ -260,7 +260,7 @@
  *  The size of NCP message buffer in bytes
  *
  */
-#define OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE                    4096
+#define OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE 4096
 
 /**
  * @def OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
@@ -268,7 +268,7 @@
  * Enable setting steering data out of band.
  *
  */
-#define OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE          1
+#define OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE 1
 
 /**
  * @def OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
@@ -279,7 +279,7 @@
  * and mesh-local IP address as the source address) to its previous parent.
  *
  */
-#define OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH    1
+#define OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH 1
 
 /**
  * @def OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT
@@ -287,7 +287,7 @@
  * Define to 1 to send an MLE Link Request when MAX_NEIGHBOR_AGE is reached for a neighboring router.
  *
  */
-#define OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT  1
+#define OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT 1
 
 /**
  * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
@@ -295,7 +295,7 @@
  * Define as 1 to enable Channel Manager support.
  *
  */
-#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE                1
+#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE 1
 
 /**
  * @def OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
@@ -303,7 +303,7 @@
  * Define as 1 to enable Channel Monitor support.
  *
  */
-#define OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE                1
+#define OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE 1
 
 /**
  * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY
@@ -316,7 +316,7 @@
  * Applicable only if Channel Manager feature is enabled (i.e., `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` is set).
  *
  */
-#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY         2
+#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY 2
 
 /**
  * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_SKIP_FAVORED
@@ -394,7 +394,7 @@
  * Define as 1 to enable support for adding of auto-configured SLAAC addresses by OpenThread.
  *
  */
-#define OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE    1
+#define OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE 1
 
 #if OPENTHREAD_RADIO
 /**
@@ -419,7 +419,7 @@
  * Define to 1 if you want to enable software CSMA-CA backoff logic.
  *
  */
-#define OPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE          1
+#define OPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE 1
 #endif // OPENTHREAD_RADIO
 
 //--------------------------------------------------------------------------------------------------------------------

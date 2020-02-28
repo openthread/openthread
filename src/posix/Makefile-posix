@@ -76,13 +76,13 @@ configure_OPTIONS                   = \
     --enable-cli                      \
     --enable-ftd                      \
     --enable-ncp                      \
-    --with-platform=posix-app         \
+    --with-platform=posix             \
     $(NULL)
 
 # Platform specific switches
 
 ifeq ($(DAEMON),1)
-configure_OPTIONS              += --enable-posix-app-daemon
+configure_OPTIONS              += --enable-posix-daemon
 endif
 
 ifneq ($(DEBUG),1)

@@ -53,7 +53,7 @@ if OPENTHREAD_ENABLE_NCP
 SUBDIRS                                += ncp
 endif
 
-if OPENTHREAD_PLATFORM_POSIX_APP
+if OPENTHREAD_PLATFORM_POSIX
 SUBDIRS                                += posix
 endif
 
