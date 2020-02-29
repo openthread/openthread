@@ -78,3 +78,13 @@ target_include_directories(openthread-cli-mtd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVA
 
 target_sources(openthread-cli-ftd PRIVATE ${COMMON_SOURCES})
 target_sources(openthread-cli-mtd PRIVATE ${COMMON_SOURCES})
+
+target_link_libraries(openthread-cli-ftd
+    PUBLIC
+        openthread-ftd
+)
+
+target_link_libraries(openthread-cli-mtd
+    PUBLIC
+        openthread-mtd
+)

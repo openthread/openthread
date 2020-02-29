@@ -108,15 +108,6 @@ endif()
 
 list(APPEND OT_PRIVATE_DEFINES ${OT_PLATFORM_DEFINES})
 
-if(OT_BUILTIN_MBEDTLS)
-    list(APPEND OT_PRIVATE_INCLUDES ${PROJECT_SOURCE_DIR}/third_party/mbedtls)
-    list(APPEND OT_PRIVATE_INCLUDES ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include)
-
-    list(APPEND OT_PRIVATE_DEFINES
-        "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\""
-    )
-endif()
-
 if(OT_PLATFORM STREQUAL "posix-host")
     add_subdirectory(src/posix)
 elseif(NOT OT_PLATFORM MATCHES "none")
