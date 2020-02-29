@@ -110,7 +110,7 @@ NcpSpi::NcpSpi(Instance *aInstance)
     // reset flag was set.
 
     otPlatSpiSlavePrepareTransaction(mEmptySendFrameZeroAccept, kSpiHeaderSize, mEmptyReceiveFrame, kSpiHeaderSize,
-                                     /* aRequestTras */ true);
+                                     /* aRequestTransactionFlag */ true);
 }
 
 bool NcpSpi::SpiTransactionComplete(void *   aContext,

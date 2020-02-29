@@ -77,16 +77,16 @@ node.form('channel-manager', channel=24)
 # -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
-all_channls_mask = int('0x7fff800', 0)
+all_channels_mask = int('0x7fff800', 0)
 chan_12_to_15_mask = int('0x000f000', 0)
 chan_15_to_17_mask = int('0x0038000', 0)
 
 # Set supported channel mask to be all channels
 node.set(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK,
-         str(all_channls_mask))
+         str(all_channels_mask))
 verify(
     int(node.get(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK), 0) ==
-    all_channls_mask)
+    all_channels_mask)
 
 # Sleep for 4.5 second with speedup factor of 10,000 this is more than 12
 # hours.
@@ -157,7 +157,7 @@ node.set(wpan.WPAN_CHANNEL_MANAGER_NEW_CHANNEL,
          '12')  # request a channel change to 12
 verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_NEW_CHANNEL), 0) == 12)
 verify_channel([node], 12)
-node.set(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK, str(all_channls_mask))
+node.set(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK, str(all_channels_mask))
 node.set(wpan.WPAN_CHANNEL_MANAGER_CHANNEL_SELECT, 'true')
 verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_NEW_CHANNEL), 0) == 12)
 verify_channel([node], 12)

@@ -113,7 +113,7 @@ typedef struct otMacCounters
      * Note that this counter is incremented for each MAC transmission request only by one,
      * regardless of the amount of CCA failures, CSMA-CA attempts, or retransmissions.
      *
-     * This incrementation rule applies to the following counters:
+     * This increment rule applies to the following counters:
      *   @p mTxUnicast
      *   @p mTxBroadcast
      *   @p mTxAckRequested
