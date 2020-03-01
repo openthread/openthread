@@ -354,15 +354,15 @@ private:
     static void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
 
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
-    void HandleDiagnosticGetResponse(const otMessage &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleDiagnosticGetResponse(const otMessage &aMessage, const Ip6::MessageInfo &aMessageInfo);
     static void HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext);
-    void OutputMode(const otLinkModeConfig &aMode);
-    void OutputConnectivity(const otNetworkDiagConnectivity &aConnectivity);
-    void OutputRoute(const otNetworkDiagRoute &aRoute);
-    void OutputRouteData(const otNetworkDiagRouteData &aRouteData);
-    void OutputLeaderData(const otLeaderData &aLeaderData);
-    void OutputNetworkDiagMacCounters(const otNetworkDiagMacCounters &aMacCounters);
-    void OutputChildTableEntry(const otNetworkDiagChildEntry &aChildEntry);
+    void        OutputMode(const otLinkModeConfig &aMode);
+    void        OutputConnectivity(const otNetworkDiagConnectivity &aConnectivity);
+    void        OutputRoute(const otNetworkDiagRoute &aRoute);
+    void        OutputRouteData(const otNetworkDiagRouteData &aRouteData);
+    void        OutputLeaderData(const otLeaderData &aLeaderData);
+    void        OutputNetworkDiagMacCounters(const otNetworkDiagMacCounters &aMacCounters);
+    void        OutputChildTableEntry(const otNetworkDiagChildEntry &aChildEntry);
 #endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
