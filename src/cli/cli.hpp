@@ -199,6 +199,14 @@ private:
         kDefaultPingCount    = 1,
     };
 
+    void OutputMode(const otLinkModeConfig &aMode);
+    void OutputConnectivity(const otNetworkDiagConnectivity &aConnectivity);
+    void OutputRoute(const otNetworkDiagRoute &aRoute);
+    void OutputRouteData(const otNetworkDiagRouteData &aRouteData);
+    void OutputLeaderData(const otLeaderData &aLeaderData);
+    void OutputNetworkDiagMacCounters(const otNetworkDiagMacCounters &aMacCounters);
+    void OutputChildTableEntry(const otNetworkDiagChildEntry &aChildEntry);
+
     otError ParsePingInterval(const char *aString, uint32_t &aInterval);
     void    ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
     void    ProcessBufferInfo(uint8_t aArgsLength, char *aArgs[]);
@@ -371,7 +379,7 @@ private:
     void HandleActiveScanResult(otActiveScanResult *aResult);
     void HandleEnergyScanResult(otEnergyScanResult *aResult);
     void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx);
-    void HandleDiagnosticGetResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleDiagnosticGetResponse(const otMessage &aMessage, const Ip6::MessageInfo &aMessageInfo);
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     void HandleDnsResponse(const char *aHostname, const Ip6::Address *aAddress, uint32_t aTtl, otError aResult);
 #endif

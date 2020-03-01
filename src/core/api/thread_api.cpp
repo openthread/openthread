@@ -364,6 +364,14 @@ exit:
 }
 
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
+otError otThreadGetNextDiagnosticTlv(const otMessage *      aMessage,
+                                     otNetworkDiagIterator *aIterator,
+                                     otNetworkDiagTlv *     aNetworkDiagTlv)
+{
+    return NetworkDiagnostic::NetworkDiagnostic::GetNextDiagTlv(*static_cast<const Coap::Message *>(aMessage),
+                                                                *aIterator, *aNetworkDiagTlv);
+}
+
 void otThreadSetReceiveDiagnosticGetCallback(otInstance *                   aInstance,
                                              otReceiveDiagnosticGetCallback aCallback,
                                              void *                         aCallbackContext)

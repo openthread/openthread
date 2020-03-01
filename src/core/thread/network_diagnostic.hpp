@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/thread.h>
+
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "net/udp6.hpp"
@@ -97,6 +99,10 @@ public:
      *
      */
     otError SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
+
+    static otError GetNextDiagTlv(const otMessage &      aMessage,
+                                  otNetworkDiagIterator &aIterator,
+                                  otNetworkDiagTlv &     aNetworkDiagTlv);
 
 private:
     otError AppendIp6AddressList(Message &aMessage);

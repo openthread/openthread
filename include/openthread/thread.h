@@ -54,9 +54,11 @@ extern "C" {
  */
 
 /**
- * Maximum Number of Network Diagnostic TLV Types to Request or Reset.
+ * Maximum value length of all Network Diagnostic TLV.
  */
-#define OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES 19
+#define OT_NETWORK_BASE_TLV_MAX_LENGTH 254
+
+#define OT_NETWORK_MAX_ROUTE_ID 62 ///< Maximum Route ID
 
 /**
  * Represents a Thread device role.
@@ -661,6 +663,237 @@ otError otThreadGetParentAverageRssi(otInstance *aInstance, int8_t *aParentRssi)
  *
  */
 otError otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aLastRssi);
+
+/**
+ * Maximum Number of Network Diagnostic TLV Types to Request or Reset.
+ */
+#define OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES 19
+
+/**
+ * Size of Network Diagnostic Child Table entry.
+ */
+#define OT_NETWORK_DIAGNOSTIC_CHILD_TABLE_ENTRY_SIZE 3
+
+/**
+ * Initializer for otNetworkDiagIterator.
+ */
+#define OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT 0
+
+enum
+{
+    OT_NETWORK_DIAGNOSTIC_TLV_EXT_MAC_ADDR      = 0,  ///< MAC Extended Address TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_ADDR16            = 1,  ///< Address16 TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_MODE              = 2,  ///< Mode TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT           = 3,  ///< Timeout TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY      = 4,  ///< Connectivity TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_ROUTE             = 5,  ///< Route64 TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA       = 6,  ///< Leader Data TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_NETWORK_DATA      = 7,  ///< Network Data TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST     = 8,  ///< IPv6 Address List TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_MAC_COUNTERS      = 9,  ///< MAC Counters TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL     = 14, ///< Battery Level TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_SUPPLY_VOLTAGE    = 15, ///< Supply Voltage TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_CHILD_TABLE       = 16, ///< Child Table TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES     = 17, ///< Channel Pages TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_TYPE_LIST         = 18, ///< Type List TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT = 19, ///< Max Child Timeout TLV
+};
+
+typedef uint16_t otNetworkDiagIterator; ///< Used to iterate through Network Diagnostic TLV.
+
+/**
+ * This structure represents a Network Diagnostic Connectivity value.
+ *
+ */
+typedef struct otNetworkDiagConnectivity
+{
+    /**
+     * The priority of the sender as a parent
+     */
+    uint8_t mParentPriority : 2;
+
+    /**
+     * The number of neighboring device with which the sender shares a link of quality 3.
+     */
+    uint8_t mLinkQuality3;
+
+    /**
+     * The number of neighboring device with which the sender shares a link of quality 2.
+     */
+    uint8_t mLinkQuality2;
+
+    /**
+     * The number of neighboring device with which the sender shares a link of quality 1.
+     */
+    uint8_t mLinkQuality1;
+
+    /**
+     * The sender's routing cost to the Leader.
+     */
+    uint8_t mLeaderCost;
+
+    /**
+     * The most recent ID sequence number received by the sender.
+     */
+    uint8_t mIdSequence;
+
+    /**
+     * The number of active Routers in the sender's Thread Network Partition.
+     */
+    uint8_t mActiveRouters;
+
+    /**
+     * The guaranteed buffer capacity in octets for all IPv6 datagrams destined to a given SED. Optional.
+     */
+    uint16_t mSedBufferSize;
+
+    /**
+     * The guaranteed queue capacity in number of IPv6 datagrams destined to a given SED. Optional.
+     */
+    uint8_t mSedDatagramCount;
+} otNetworkDiagConnectivity;
+
+/**
+ * This structure represents a Network Diagnostic Route data.
+ *
+ */
+typedef struct otNetworkDiagRouteData
+{
+    uint8_t mRouterId;           ///< The Assigned Router ID.
+    uint8_t mLinkQualityOut : 2; ///< Link Quality Out.
+    uint8_t mLinkQualityIn : 2;  ///< Link Quality In.
+    uint8_t mRouteCost : 4;      ///< Routing Cost. Infinite routing cost is represented by value 0.
+} otNetworkDiagRouteData;
+
+/**
+ * This structure represents a Network Diagnostic Route TLV value.
+ *
+ */
+typedef struct otNetworkDiagRoute
+{
+    /**
+     * The sequence number associated with the set of Router ID assignments in #mRouteData.
+     */
+    uint8_t mIdSequence;
+
+    /**
+     * Number of elements in #mRouteData.
+     */
+    uint8_t mRouteCount;
+
+    /**
+     * Link Quality and Routing Cost data.
+     */
+    otNetworkDiagRouteData mRouteData[OT_NETWORK_MAX_ROUTE_ID + 1];
+} otNetworkDiagRoute;
+
+/**
+ * This structure represents a Network Diagnostic Mac Counters value.
+ *
+ * Reference to <a href="https://www.ietf.org/rfc/rfc2863">RFC 2863</a> for definitions of member fields.
+ *
+ */
+typedef struct otNetworkDiagMacCounters
+{
+    uint32_t mIfInUnknownProtos;
+    uint32_t mIfInErrors;
+    uint32_t mIfOutErrors;
+    uint32_t mIfInUcastPkts;
+    uint32_t mIfInBroadcastPkts;
+    uint32_t mIfInDiscards;
+    uint32_t mIfOutUcastPkts;
+    uint32_t mIfOutBroadcastPkts;
+    uint32_t mIfOutDiscards;
+} otNetworkDiagMacCounters;
+
+/**
+ * This structure represents a Network Diagnostic Child Table Entry.
+ *
+ */
+typedef struct otNetworkDiagChildEntry
+{
+    /**
+     * Expected poll time expressed as 2^(Timeout-4) seconds.
+     */
+    uint16_t mTimeout : 5;
+
+    /**
+     * Child ID from which an RLOC can be generated.
+     */
+    uint16_t mChildId : 9;
+
+    /**
+     * Link mode bits.
+     */
+    otLinkModeConfig mMode;
+} otNetworkDiagChildEntry;
+
+/**
+ * This structure represents a Network Diagnostic TLV.
+ *
+ */
+typedef struct otNetworkDiagTlv
+{
+    /**
+     * The actually Network Diagnostic TLV type.
+     */
+    uint8_t mType;
+
+    union
+    {
+        otExtAddress              mExtAddress;
+        uint16_t                  mAddr16;
+        otLinkModeConfig          mMode;
+        uint32_t                  mTimeout;
+        otNetworkDiagConnectivity mConnectivity;
+        otNetworkDiagRoute        mRoute;
+        otLeaderData              mLeaderData;
+        otNetworkDiagMacCounters  mMacCounters;
+        uint8_t                   mBatteryLevel;
+        uint16_t                  mSupplyVoltage;
+        uint32_t                  mMaxChildTimeout;
+        struct
+        {
+            uint8_t mNetworkDataCount;
+            uint8_t mNetworkData[OT_NETWORK_BASE_TLV_MAX_LENGTH];
+        };
+        struct
+        {
+            uint8_t      mIp6AddrCount;
+            otIp6Address mIp6AddrList[OT_NETWORK_BASE_TLV_MAX_LENGTH / OT_IP6_ADDRESS_SIZE];
+        };
+        struct
+        {
+            uint8_t mChildCount;
+            otNetworkDiagChildEntry
+                mChildTable[OT_NETWORK_BASE_TLV_MAX_LENGTH / OT_NETWORK_DIAGNOSTIC_CHILD_TABLE_ENTRY_SIZE];
+        };
+        struct
+        {
+            uint8_t mChannelPageCount;
+            uint8_t mChannelPages[OT_NETWORK_BASE_TLV_MAX_LENGTH];
+        };
+    };
+} otNetworkDiagTlv;
+
+/**
+ * This function gets the next Network Diagnostic TLV in the message.
+ *
+ * @param[in]     aMessage   A pointer to an message.
+ * @param[inout]  aIterator  A pointer to the Network Diagnostic iterator context. To get the first
+ *                           Network Diagnostic TLV it should be set to OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT.
+ * @param[out]    aConfig    A pointer to where the Network Diagnostic TLV information will be placed.
+ *
+ * @retval OT_ERROR_NONE       Successfully found the next Network Diagnostic TLV.
+ * @retval OT_ERROR_NOT_FOUND  No subsequent Network Diagnostic TLV exists in the message.
+ * @retval OT_ERROR_PARSE      Parsing the next Network Diagnostic Failed.
+ *
+ * @Note A subsequent call to this function is allowed only when current return value is OT_ERROR_NONE.
+ *
+ */
+otError otThreadGetNextDiagnosticTlv(const otMessage *      aMessage,
+                                     otNetworkDiagIterator *aIterator,
+                                     otNetworkDiagTlv *     aNetworkDiagTlv);
 
 /**
  * This function pointer is called when Network Diagnostic Get response is received.

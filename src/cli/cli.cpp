@@ -3726,32 +3726,155 @@ exit:
 void Interpreter::HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleDiagnosticGetResponse(
-        *static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+        *aMessage, *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void Interpreter::HandleDiagnosticGetResponse(Message &aMessage, const Ip6::MessageInfo &)
+void Interpreter::HandleDiagnosticGetResponse(const otMessage &aMessage, const Ip6::MessageInfo &)
 {
-    uint8_t  buf[16];
-    uint16_t bytesToPrint;
-    uint16_t bytesPrinted = 0;
-    uint16_t length       = aMessage.GetLength() - aMessage.GetOffset();
+    otNetworkDiagTlv      diagTlv;
+    otNetworkDiagIterator iterator = OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT;
+    otError               error    = OT_ERROR_NONE;
 
-    mServer->OutputFormat("DIAG_GET.rsp/ans: ");
+    mServer->OutputFormat("DIAG_GET.rsp/ans:\r\n");
 
-    while (length > 0)
+    while ((error = otThreadGetNextDiagnosticTlv(&aMessage, &iterator, &diagTlv)) == OT_ERROR_NONE)
     {
-        bytesToPrint = (length < sizeof(buf)) ? length : sizeof(buf);
-        aMessage.Read(aMessage.GetOffset() + bytesPrinted, bytesToPrint, buf);
+        switch (diagTlv.mType)
+        {
+        case OT_NETWORK_DIAGNOSTIC_TLV_EXT_MAC_ADDR:
+            mServer->OutputFormat("Ext Address: ");
+            OutputBytes(diagTlv.mExtAddress.m8, sizeof(diagTlv.mExtAddress.m8));
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_ADDR16:
+            mServer->OutputFormat("Rloc16: 0x%04x", diagTlv.mAddr16);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_MODE:
+            mServer->OutputFormat("Mode: ");
+            OutputMode(diagTlv.mMode);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT:
+            mServer->OutputFormat("Timeout: %u", diagTlv.mTimeout);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY:
+            mServer->OutputFormat("Connectivity: ");
+            OutputConnectivity(diagTlv.mConnectivity);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_ROUTE:
+            mServer->OutputFormat("Route: ");
+            OutputRoute(diagTlv.mRoute);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA:
+            mServer->OutputFormat("Leader Data: ");
+            OutputLeaderData(diagTlv.mLeaderData);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_NETWORK_DATA:
+            mServer->OutputFormat("Network Data: ");
+            OutputBytes(diagTlv.mNetworkData, diagTlv.mNetworkDataCount);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST:
+            mServer->OutputFormat("IP6 Address List: [");
+            for (uint16_t i = 0; i < diagTlv.mIp6AddrCount; ++i)
+            {
+                OutputIp6Address(diagTlv.mIp6AddrList[i]);
+                if (i + 1 < diagTlv.mIp6AddrCount)
+                    mServer->OutputFormat(", ");
+            }
+            mServer->OutputFormat("]");
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_MAC_COUNTERS:
+            mServer->OutputFormat("MAC Counters: ");
+            OutputNetworkDiagMacCounters(diagTlv.mMacCounters);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL:
+            mServer->OutputFormat("Battery Level: %u%%", diagTlv.mBatteryLevel);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_SUPPLY_VOLTAGE:
+            mServer->OutputFormat("Supply Voltage: %umV", diagTlv.mSupplyVoltage);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_CHILD_TABLE:
+            mServer->OutputFormat("Child Table: [");
+            for (uint16_t i = 0; i < diagTlv.mChildCount; ++i)
+            {
+                OutputChildTableEntry(diagTlv.mChildTable[i]);
+                if (i + 1 < diagTlv.mChildCount)
+                    mServer->OutputFormat(", ");
+            }
+            mServer->OutputFormat("]");
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES:
+            mServer->OutputFormat("Channel Pages: ");
+            OutputBytes(diagTlv.mChannelPages, diagTlv.mChannelPageCount);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT:
+            mServer->OutputFormat("Max Child Timeout: %u", diagTlv.mMaxChildTimeout);
+            break;
+        }
 
-        OutputBytes(buf, static_cast<uint8_t>(bytesToPrint));
-
-        length -= bytesToPrint;
-        bytesPrinted += bytesToPrint;
+        mServer->OutputFormat("\r\n");
     }
 
-    mServer->OutputFormat("\r\n");
+    AppendResult(error == OT_ERROR_NOT_FOUND ? OT_ERROR_NONE : error);
+}
 
-    AppendResult(OT_ERROR_NONE);
+void Interpreter::OutputMode(const otLinkModeConfig &aMode)
+{
+    mServer->OutputFormat("{RxOnWhenIdle: %d, SecureDataRequests: %d, DeviceType: %d, NetworkData: %d}",
+                          aMode.mRxOnWhenIdle, aMode.mSecureDataRequests, aMode.mDeviceType, aMode.mNetworkData);
+}
+
+void Interpreter::OutputConnectivity(const otNetworkDiagConnectivity &aConnectivity)
+{
+    // Members are separated to avoid buffer overflow.
+    mServer->OutputFormat("{ParentPriority: %u, LinkQuality3: %u, LinkQuality2: %u, ", aConnectivity.mParentPriority,
+                          aConnectivity.mLinkQuality3, aConnectivity.mLinkQuality2);
+    mServer->OutputFormat("LinkQuality1: %u, LeaderCost: %u, IdSequence: %u, ", aConnectivity.mLinkQuality1,
+                          aConnectivity.mLeaderCost, aConnectivity.mIdSequence);
+    mServer->OutputFormat("ActiveRouters: %u, SedBufferSize: %u, SedDatagramCount: %u}", aConnectivity.mActiveRouters,
+                          aConnectivity.mSedBufferSize, aConnectivity.mSedDatagramCount);
+}
+
+void Interpreter::OutputRoute(const otNetworkDiagRoute &aRoute)
+{
+    mServer->OutputFormat("{IdSequence: %u, RouteData: [", aRoute.mIdSequence);
+    for (uint16_t i = 0; i < aRoute.mRouteCount; ++i)
+    {
+        OutputRouteData(aRoute.mRouteData[i]);
+        mServer->OutputFormat((i + 1 < aRoute.mRouteCount) ? ", " : "");
+    }
+    mServer->OutputFormat("]}");
+}
+
+void Interpreter::OutputRouteData(const otNetworkDiagRouteData &aRouteData)
+{
+    mServer->OutputFormat("{RouteId: 0x%02x, LinkQualityOut: %u, LinkQualityIn: %u, RouteCost: %u}",
+                          aRouteData.mRouterId, aRouteData.mLinkQualityOut, aRouteData.mLinkQualityIn,
+                          aRouteData.mRouteCost);
+}
+
+void Interpreter::OutputLeaderData(const otLeaderData &aLeaderData)
+{
+    mServer->OutputFormat(
+        "{PartitionId: 0x%08x, Weighting: %u, DataVersion: %u, StableDataVersion: %u, LeaderRouterId: 0x%02x}",
+        aLeaderData.mPartitionId, aLeaderData.mWeighting, aLeaderData.mDataVersion, aLeaderData.mStableDataVersion,
+        aLeaderData.mLeaderRouterId);
+}
+
+void Interpreter::OutputNetworkDiagMacCounters(const otNetworkDiagMacCounters &aMacCounters)
+{
+    // Members are separated to avoid buffer overflow.
+    mServer->OutputFormat("{IfInUnknownProtos: %u, IfInErrors: %u, IfOutErrors: %u, ", aMacCounters.mIfInUnknownProtos,
+                          aMacCounters.mIfInErrors, aMacCounters.mIfOutErrors);
+    mServer->OutputFormat("IfInUcastPkts: %u, IfInBroadcastPkts: %u, IfInDiscards: %u, ", aMacCounters.mIfInUcastPkts,
+                          aMacCounters.mIfInBroadcastPkts, aMacCounters.mIfInDiscards);
+    mServer->OutputFormat("IfOutUcastPkts: %u, IfOutBroadcastPkts: %u, IfOutDiscards: %u}",
+                          aMacCounters.mIfOutUcastPkts, aMacCounters.mIfOutBroadcastPkts, aMacCounters.mIfOutDiscards);
+}
+
+void Interpreter::OutputChildTableEntry(const otNetworkDiagChildEntry &aChildEntry)
+{
+    mServer->OutputFormat("{ChildId: 0x%04x, Timeout: %u, Mode: ", aChildEntry.mChildId, aChildEntry.mTimeout);
+    OutputMode(aChildEntry.mMode);
+    mServer->OutputFormat("}");
 }
 
 void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength)

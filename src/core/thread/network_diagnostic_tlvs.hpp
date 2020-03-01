@@ -82,23 +82,22 @@ public:
      */
     enum Type
     {
-        kExtMacAddress   = 0,  ///< Source Address TLV
-        kAddress16       = 1,  ///< Address16 TLV
-        kMode            = 2,  ///< Mode TLV
-        kTimeout         = 3,  ///< Timeout TLV
-        kConnectivity    = 4,  ///< Connectivity TLV
-        kRoute           = 5,  ///< Routing-Table TLV
-        kLeaderData      = 6,  ///< Leader Data TLV
-        kNetworkData     = 7,  ///< Network Data TLV
-        kIp6AddressList  = 8,  ///< Ip6 Address List TLV
-        kMacCounters     = 9,  ///< Mac Counters TLV
-        kBatteryLevel    = 14, ///< Battery Level TLV
-        kSupplyVoltage   = 15, ///< Supply Voltage TLV
-        kChildTable      = 16, ///< Child Table TLV
-        kChannelPages    = 17, ///< Channel Pages TLV
-        kTypeList        = 18, ///< Type List TLV
-        kMaxChildTimeout = 19, ///< Max Child Timeout TLV
-        kInvalid         = 255,
+        kExtMacAddress   = OT_NETWORK_DIAGNOSTIC_TLV_EXT_MAC_ADDR,
+        kAddress16       = OT_NETWORK_DIAGNOSTIC_TLV_ADDR16,
+        kMode            = OT_NETWORK_DIAGNOSTIC_TLV_MODE,
+        kTimeout         = OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT,
+        kConnectivity    = OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY,
+        kRoute           = OT_NETWORK_DIAGNOSTIC_TLV_ROUTE,
+        kLeaderData      = OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA,
+        kNetworkData     = OT_NETWORK_DIAGNOSTIC_TLV_NETWORK_DATA,
+        kIp6AddressList  = OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST,
+        kMacCounters     = OT_NETWORK_DIAGNOSTIC_TLV_MAC_COUNTERS,
+        kBatteryLevel    = OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL,
+        kSupplyVoltage   = OT_NETWORK_DIAGNOSTIC_TLV_SUPPLY_VOLTAGE,
+        kChildTable      = OT_NETWORK_DIAGNOSTIC_TLV_CHILD_TABLE,
+        kChannelPages    = OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES,
+        kTypeList        = OT_NETWORK_DIAGNOSTIC_TLV_TYPE_LIST,
+        kMaxChildTimeout = OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT,
     };
 
     /**
@@ -920,6 +919,15 @@ public:
     }
 
     /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return !IsExtended() && (GetLength() % OT_IP6_ADDRESS_SIZE == 0); }
+
+    /**
      * This method returns a pointer to the IPv6 address entry.
      *
      * @param[in]  aIndex  The index into the IPv6 address list.
@@ -1388,7 +1396,7 @@ public:
      * @retval  OT_ERROR_NOT_FOUND  No such entry is found.
      * @retval  OT_ERROR_NONE       Successfully read the entry.
      */
-    otError ReadEntry(ChildTableEntry &aEntry, Message &aMessage, uint16_t aOffset, uint8_t aIndex) const
+    otError ReadEntry(ChildTableEntry &aEntry, const Message &aMessage, uint16_t aOffset, uint8_t aIndex) const
     {
         return (aIndex < GetNumEntries() &&
                 aMessage.Read(aOffset + sizeof(ChildTableTlv) + (aIndex * sizeof(ChildTableEntry)),
@@ -1416,6 +1424,15 @@ public:
         SetType(kChannelPages);
         SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
     }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return !IsExtended(); }
 
     /**
      * This method returns a pointer to the list of Channel Pages.

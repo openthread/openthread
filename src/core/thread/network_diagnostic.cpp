@@ -720,6 +720,261 @@ exit:
     return;
 }
 
+static inline void ParseExtMacAddr(const ExtMacAddressTlv &aExtMacAddressTlv, otExtAddress &aExtAddress)
+{
+    aExtMacAddressTlv.GetMacAddr()->CopyTo(aExtAddress.m8);
+}
+
+static inline void ParseMode(const Mle::DeviceMode &aMode, otLinkModeConfig &aLinkModeConfig)
+{
+    aLinkModeConfig.mRxOnWhenIdle       = aMode.IsRxOnWhenIdle();
+    aLinkModeConfig.mSecureDataRequests = aMode.IsSecureDataRequest();
+    aLinkModeConfig.mDeviceType         = aMode.IsFullThreadDevice();
+    aLinkModeConfig.mNetworkData        = aMode.IsFullNetworkData();
+}
+
+static inline void ParseConnectivity(const ConnectivityTlv &    aConnectivityTlv,
+                                     otNetworkDiagConnectivity &aNetworkDiagConnectivity)
+{
+    aNetworkDiagConnectivity.mParentPriority   = aConnectivityTlv.GetParentPriority();
+    aNetworkDiagConnectivity.mLinkQuality3     = aConnectivityTlv.GetLinkQuality3();
+    aNetworkDiagConnectivity.mLinkQuality2     = aConnectivityTlv.GetLinkQuality2();
+    aNetworkDiagConnectivity.mLinkQuality1     = aConnectivityTlv.GetLinkQuality1();
+    aNetworkDiagConnectivity.mLeaderCost       = aConnectivityTlv.GetLeaderCost();
+    aNetworkDiagConnectivity.mIdSequence       = aConnectivityTlv.GetIdSequence();
+    aNetworkDiagConnectivity.mActiveRouters    = aConnectivityTlv.GetActiveRouters();
+    aNetworkDiagConnectivity.mSedBufferSize    = aConnectivityTlv.GetSedBufferSize();
+    aNetworkDiagConnectivity.mSedDatagramCount = aConnectivityTlv.GetSedDatagramCount();
+}
+
+static void ParseRoute(const RouteTlv &aRouteTlv, otNetworkDiagRoute &aNetworkDiagRoute)
+{
+    aNetworkDiagRoute.mIdSequence = aRouteTlv.GetRouterIdSequence();
+
+    uint16_t routeCount = 0;
+    for (uint16_t i = 0; i <= Mle::kMaxRouterId; ++i)
+    {
+        if (!aRouteTlv.IsRouterIdSet(i))
+        {
+            continue;
+        }
+        aNetworkDiagRoute.mRouteData[routeCount].mRouterId       = i;
+        aNetworkDiagRoute.mRouteData[routeCount].mRouteCost      = aRouteTlv.GetRouteCost(routeCount);
+        aNetworkDiagRoute.mRouteData[routeCount].mLinkQualityIn  = aRouteTlv.GetLinkQualityIn(routeCount);
+        aNetworkDiagRoute.mRouteData[routeCount].mLinkQualityOut = aRouteTlv.GetLinkQualityOut(routeCount);
+        ++routeCount;
+    }
+    aNetworkDiagRoute.mRouteCount = routeCount;
+}
+
+static inline void ParseLeaderData(const LeaderDataTlv &aLeaderDataTlv, otLeaderData &aLeaderData)
+{
+    aLeaderData.mPartitionId       = aLeaderDataTlv.GetPartitionId();
+    aLeaderData.mWeighting         = aLeaderDataTlv.GetWeighting();
+    aLeaderData.mDataVersion       = aLeaderDataTlv.GetDataVersion();
+    aLeaderData.mStableDataVersion = aLeaderDataTlv.GetStableDataVersion();
+    aLeaderData.mLeaderRouterId    = aLeaderDataTlv.GetLeaderRouterId();
+}
+
+static inline void ParseMacCounters(const MacCountersTlv &aMacCountersTlv, otNetworkDiagMacCounters &aMacCounters)
+{
+    aMacCounters.mIfInUnknownProtos  = aMacCountersTlv.GetIfInUnknownProtos();
+    aMacCounters.mIfInErrors         = aMacCountersTlv.GetIfInErrors();
+    aMacCounters.mIfOutErrors        = aMacCountersTlv.GetIfOutErrors();
+    aMacCounters.mIfInUcastPkts      = aMacCountersTlv.GetIfInUcastPkts();
+    aMacCounters.mIfInBroadcastPkts  = aMacCountersTlv.GetIfInBroadcastPkts();
+    aMacCounters.mIfInDiscards       = aMacCountersTlv.GetIfInDiscards();
+    aMacCounters.mIfOutUcastPkts     = aMacCountersTlv.GetIfOutUcastPkts();
+    aMacCounters.mIfOutBroadcastPkts = aMacCountersTlv.GetIfOutBroadcastPkts();
+    aMacCounters.mIfOutDiscards      = aMacCountersTlv.GetIfOutDiscards();
+}
+
+static inline void ParseChildEntry(const ChildTableEntry &aChildTableTlvEntry, otNetworkDiagChildEntry &aChildEntry)
+{
+    aChildEntry.mTimeout = aChildTableTlvEntry.GetTimeout();
+    aChildEntry.mChildId = aChildTableTlvEntry.GetChildId();
+    ParseMode(aChildTableTlvEntry.GetMode(), aChildEntry.mMode);
+}
+
+otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
+                                          otNetworkDiagIterator &aIterator,
+                                          otNetworkDiagTlv &     aNetworkDiagTlv)
+{
+    otError              error   = OT_ERROR_PARSE;
+    const Coap::Message &message = static_cast<const Coap::Message &>(aMessage);
+    uint16_t             offset  = message.GetOffset();
+    uint16_t             tlvTotalLength;
+    NetworkDiagnosticTlv tlv;
+
+    VerifyOrExit(aIterator + offset < message.GetLength(), error = OT_ERROR_NOT_FOUND);
+    offset += aIterator;
+
+    VerifyOrExit(message.Read(offset, sizeof(tlv), &tlv) == sizeof(tlv));
+    VerifyOrExit(!tlv.IsExtended());
+
+    switch (tlv.GetType())
+    {
+    case NetworkDiagnosticTlv::kExtMacAddress:
+    {
+        ExtMacAddressTlv extMacAddr;
+        tlvTotalLength = sizeof(extMacAddr);
+        VerifyOrExit(message.Read(offset, tlvTotalLength, &extMacAddr) == tlvTotalLength);
+        VerifyOrExit(extMacAddr.IsValid());
+        ParseExtMacAddr(extMacAddr, aNetworkDiagTlv.mExtAddress);
+    }
+    break;
+    case NetworkDiagnosticTlv::kAddress16:
+    {
+        Address16Tlv addr16;
+        tlvTotalLength = sizeof(addr16);
+        VerifyOrExit(message.Read(offset, tlvTotalLength, &addr16) == tlvTotalLength);
+        VerifyOrExit(addr16.IsValid());
+        aNetworkDiagTlv.mAddr16 = addr16.GetRloc16();
+    }
+    break;
+    case NetworkDiagnosticTlv::kMode:
+    {
+        ModeTlv linkMode;
+        tlvTotalLength = sizeof(linkMode);
+        VerifyOrExit(message.Read(offset, tlvTotalLength, &linkMode) == tlvTotalLength);
+        VerifyOrExit(linkMode.IsValid());
+        ParseMode(linkMode.GetMode(), aNetworkDiagTlv.mMode);
+    }
+    break;
+    case NetworkDiagnosticTlv::kTimeout:
+    {
+        TimeoutTlv timeout;
+        tlvTotalLength = sizeof(timeout);
+        VerifyOrExit(message.Read(offset, tlvTotalLength, &timeout) == tlvTotalLength);
+        VerifyOrExit(timeout.IsValid());
+        aNetworkDiagTlv.mTimeout = timeout.GetTimeout();
+    }
+    break;
+    case NetworkDiagnosticTlv::kConnectivity:
+    {
+        ConnectivityTlv connectivity;
+        tlvTotalLength = sizeof(connectivity);
+        VerifyOrExit(message.Read(offset, tlvTotalLength, &connectivity) == tlvTotalLength);
+        VerifyOrExit(connectivity.IsValid());
+        ParseConnectivity(connectivity, aNetworkDiagTlv.mConnectivity);
+    }
+    break;
+    case NetworkDiagnosticTlv::kRoute:
+    {
+        RouteTlv route;
+        tlvTotalLength = sizeof(tlv) + tlv.GetLength();
+        VerifyOrExit(tlvTotalLength <= sizeof(route));
+        VerifyOrExit(message.Read(offset, tlvTotalLength, &route) == tlvTotalLength);
+        VerifyOrExit(route.IsValid());
+        ParseRoute(route, aNetworkDiagTlv.mRoute);
+    }
+    break;
+    case NetworkDiagnosticTlv::kLeaderData:
+    {
+        LeaderDataTlv leaderData;
+        tlvTotalLength = sizeof(leaderData);
+        VerifyOrExit(message.Read(offset, tlvTotalLength, &leaderData) == tlvTotalLength);
+        VerifyOrExit(leaderData.IsValid());
+        ParseLeaderData(leaderData, aNetworkDiagTlv.mLeaderData);
+    }
+    break;
+    case NetworkDiagnosticTlv::kNetworkData:
+    {
+        NetworkDataTlv networkData;
+        tlvTotalLength = sizeof(tlv) + tlv.GetLength();
+        VerifyOrExit(tlvTotalLength <= sizeof(networkData));
+        VerifyOrExit(message.Read(offset, tlvTotalLength, &networkData) == tlvTotalLength);
+        VerifyOrExit(networkData.IsValid());
+        assert(sizeof(aNetworkDiagTlv.mNetworkData) >= networkData.GetLength());
+        memcpy(aNetworkDiagTlv.mNetworkData, networkData.GetNetworkData(), networkData.GetLength());
+        aNetworkDiagTlv.mNetworkDataCount = networkData.GetLength();
+    }
+    break;
+    case NetworkDiagnosticTlv::kIp6AddressList:
+    {
+        Ip6AddressListTlv &ip6AddrList = static_cast<Ip6AddressListTlv &>(tlv);
+        tlvTotalLength                 = sizeof(tlv) + tlv.GetLength();
+        VerifyOrExit(ip6AddrList.IsValid());
+        assert(sizeof(aNetworkDiagTlv.mIp6AddrList) >= ip6AddrList.GetLength());
+        VerifyOrExit(message.Read(offset + sizeof(ip6AddrList), ip6AddrList.GetLength(),
+                                  aNetworkDiagTlv.mIp6AddrList) == ip6AddrList.GetLength());
+        aNetworkDiagTlv.mIp6AddrCount = ip6AddrList.GetLength() / OT_IP6_ADDRESS_SIZE;
+    }
+    break;
+    case NetworkDiagnosticTlv::kMacCounters:
+    {
+        MacCountersTlv macCounters;
+        tlvTotalLength = sizeof(MacCountersTlv);
+        VerifyOrExit(message.Read(offset, tlvTotalLength, &macCounters) == tlvTotalLength);
+        VerifyOrExit(macCounters.IsValid());
+        ParseMacCounters(macCounters, aNetworkDiagTlv.mMacCounters);
+    }
+    break;
+    case NetworkDiagnosticTlv::kBatteryLevel:
+    {
+        BatteryLevelTlv batteryLevel;
+        tlvTotalLength = sizeof(BatteryLevelTlv);
+        VerifyOrExit(message.Read(offset, tlvTotalLength, &batteryLevel) == tlvTotalLength);
+        VerifyOrExit(batteryLevel.IsValid());
+        aNetworkDiagTlv.mBatteryLevel = batteryLevel.GetBatteryLevel();
+    }
+    break;
+    case NetworkDiagnosticTlv::kSupplyVoltage:
+    {
+        SupplyVoltageTlv supplyVoltage;
+        tlvTotalLength = sizeof(SupplyVoltageTlv);
+        VerifyOrExit(message.Read(offset, tlvTotalLength, &supplyVoltage) == tlvTotalLength);
+        VerifyOrExit(supplyVoltage.IsValid());
+        aNetworkDiagTlv.mSupplyVoltage = supplyVoltage.GetSupplyVoltage();
+    }
+    break;
+    case NetworkDiagnosticTlv::kChildTable:
+    {
+        ChildTableTlv &childTable = static_cast<ChildTableTlv &>(tlv);
+        tlvTotalLength            = sizeof(childTable) + tlv.GetLength();
+        VerifyOrExit(childTable.IsValid());
+        VerifyOrExit(childTable.GetNumEntries() <= OT_ARRAY_LENGTH(aNetworkDiagTlv.mChildTable));
+        for (uint16_t i = 0; i < childTable.GetNumEntries(); ++i)
+        {
+            ChildTableEntry childEntry;
+            VerifyOrExit(childTable.ReadEntry(childEntry, message, offset, i) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
+            ParseChildEntry(childEntry, aNetworkDiagTlv.mChildTable[i]);
+        }
+        aNetworkDiagTlv.mChildCount = childTable.GetNumEntries();
+    }
+    break;
+    case NetworkDiagnosticTlv::kChannelPages:
+    {
+        tlvTotalLength = sizeof(tlv) + tlv.GetLength();
+        assert(sizeof(aNetworkDiagTlv.mChannelPages) >= tlv.GetLength());
+        VerifyOrExit(message.Read(offset + sizeof(tlv), tlv.GetLength(), aNetworkDiagTlv.mChannelPages) ==
+                     tlv.GetLength());
+        aNetworkDiagTlv.mChannelPageCount = tlv.GetLength();
+    }
+    break;
+    case NetworkDiagnosticTlv::kMaxChildTimeout:
+    {
+        MaxChildTimeoutTlv maxChildTimeout;
+        tlvTotalLength = sizeof(maxChildTimeout);
+        VerifyOrExit(message.Read(offset, tlvTotalLength, &maxChildTimeout));
+        VerifyOrExit(maxChildTimeout.IsValid());
+        aNetworkDiagTlv.mMaxChildTimeout = maxChildTimeout.GetTimeout();
+    }
+    break;
+    default:
+        // Unrecognized Network Diagnostic TLV.
+        ExitNow(error = OT_ERROR_PARSE);
+        break;
+    }
+
+    error                 = OT_ERROR_NONE;
+    aNetworkDiagTlv.mType = tlv.GetType();
+    aIterator += tlvTotalLength;
+
+exit:
+    return error;
+}
+
 } // namespace NetworkDiagnostic
 
 } // namespace ot
