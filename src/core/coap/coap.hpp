@@ -123,7 +123,7 @@ private:
     uint32_t CalculateInitialRetransmissionTimeout(void) const;
     uint32_t CalculateExchangeLifetime(void) const;
     uint32_t CalculateMaxTransmitWait(void) const;
-    uint32_t CalculateSpan(uint32_t aMaxRetx) const;
+    uint32_t CalculateSpan(uint8_t aMaxRetx) const;
 
     static const otCoapTxParameters kDefaultTxParameters;
 };

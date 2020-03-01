@@ -979,15 +979,10 @@ uint32_t TxParameters::CalculateMaxTransmitWait(void) const
     return CalculateSpan(mMaxRetransmit + 1);
 }
 
-uint32_t TxParameters::CalculateSpan(uint32_t aMaxRetx) const
+uint32_t TxParameters::CalculateSpan(uint8_t aMaxRetx) const
 {
-#if OPENTHREAD_CONFIG_COAP_API_ENABLE
-    return static_cast<uint32_t>(mAckTimeout * ((1ULL << aMaxRetx) - 1) * mAckRandomFactorNumerator /
-                                 mAckRandomFactorDenominator);
-#else
-    return static_cast<uint32_t>(mAckTimeout * ((1UL << aMaxRetx) - 1) * mAckRandomFactorNumerator /
-                                 mAckRandomFactorDenominator);
-#endif
+    return static_cast<uint32_t>(mAckTimeout * ((1UL << aMaxRetx) - 1) / mAckRandomFactorDenominator *
+                                 mAckRandomFactorNumerator);
 }
 
 const otCoapTxParameters TxParameters::kDefaultTxParameters = {

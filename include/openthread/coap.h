@@ -780,8 +780,9 @@ otMessage *otCoapNewMessage(otInstance *aInstance, const otMessageSettings *aSet
  * @param[in]  aContext         A pointer to arbitrary context information. May be NULL if not used.
  * @param[in]  aTxParameters    A pointer to transmission parameters for this request. Use NULL for defaults.
  *
- * @retval OT_ERROR_NONE    Successfully sent CoAP message.
- * @retval OT_ERROR_NO_BUFS Failed to allocate retransmission data.
+ * @retval OT_ERROR_INVALID_ARGS    @p aTxParameters is invalid.
+ * @retval OT_ERROR_NONE            Successfully sent CoAP message.
+ * @retval OT_ERROR_NO_BUFS         Failed to allocate retransmission data.
  *
  */
 otError otCoapSendRequestWithParameters(otInstance *              aInstance,
