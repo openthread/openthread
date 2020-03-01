@@ -36,49 +36,6 @@
 #define CONFIG_COAP_H_
 
 /**
- * @def OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT_MILLIS
- *
- * Minimum spacing before first retransmission when ACK is not received, in milliseconds (RFC7252 default value
- * is 2000).
- *
- */
-#ifndef OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT_MILLIS
-#define OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT_MILLIS 2000
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_NUMERATOR
- *
- * Numerator of ACK_RANDOM_FACTOR used to calculate maximum spacing before first retransmission when
- * ACK is not received (RFC7252 default value of ACK_RANDOM_FACTOR is 1.5, must not be decreased below 1).
- *
- */
-#ifndef OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_NUMERATOR
-#define OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_NUMERATOR 3
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_DENOMINATOR
- *
- * Denominator of ACK_RANDOM_FACTOR used to calculate maximum spacing before first retransmission when
- * ACK is not received (RFC7252 default value of ACK_RANDOM_FACTOR is 1.5, must not be decreased below 1).
- *
- */
-#ifndef OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_DENOMINATOR
-#define OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_DENOMINATOR 2
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_COAP_MAX_RETRANSMIT
- *
- * Maximum number of retransmissions for CoAP Confirmable messages (RFC7252 default value is 4).
- *
- */
-#ifndef OPENTHREAD_CONFIG_COAP_MAX_RETRANSMIT
-#define OPENTHREAD_CONFIG_COAP_MAX_RETRANSMIT 4
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES
  *
  * Maximum number of cached responses for CoAP Confirmable messages.

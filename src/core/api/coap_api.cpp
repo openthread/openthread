@@ -218,20 +218,17 @@ otError otCoapSendRequestWithParameters(otInstance *              aInstance,
                                         void *                    aContext,
                                         const otCoapTxParameters *aTxParameters)
 {
-    otError            error;
-    Instance &         instance = *static_cast<Instance *>(aInstance);
-    Coap::TxParameters txParameters;
+    otError   error;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aTxParameters == NULL ||
-                     (aTxParameters->mAckRandomFactorNumerator >= aTxParameters->mAckRandomFactorDenominator &&
-                      ((aTxParameters->mAckTimeout * ((1ULL << aTxParameters->aMaxRetx + 1) - 1) /
-                        aTxParameters->mAckRandomFactorDenominator * aTxParameters->mAckRandomFactorNumerator) >>
-                       32) == 0),
-                 error = OT_ERROR_INVALID_ARGS);
+    if (aTxParameters != NULL)
+    {
+        VerifyOrExit(Coap::TxParameters::Validate(*aTxParameters), error = OT_ERROR_INVALID_ARGS);
+    }
 
     error = instance.GetApplicationCoap().SendMessage(*static_cast<Coap::Message *>(aMessage),
                                                       *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
-                                                      txParameters, aHandler, aContext);
+                                                      Coap::TxParameters::From(aTxParameters), aHandler, aContext);
 
 exit:
     return error;
