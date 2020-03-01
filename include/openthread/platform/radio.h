@@ -150,7 +150,9 @@ typedef uint16_t otShortAddress;
 OT_TOOL_PACKED_BEGIN
 struct otExtAddress
 {
-    uint8_t m8[OT_EXT_ADDRESS_SIZE]; ///< IEEE 802.15.4 Extended Address bytes
+    OT_TOOL_ALIGNED_FIELD_BEGIN(OT_EXT_ADDRESS_SIZE)
+    uint8_t m8[OT_EXT_ADDRESS_SIZE] ///< IEEE 802.15.4 Extended Address bytes
+    OT_TOOL_ALIGNED_FIELD_END(OT_EXT_ADDRESS_SIZE);
 } OT_TOOL_PACKED_END;
 
 /**

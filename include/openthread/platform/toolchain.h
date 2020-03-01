@@ -92,6 +92,21 @@ extern "C" {
  *
  */
 
+/**
+ * @def OT_TOOL_ALIGNED_FIELD_BEGIN
+ *
+ * Compiler-specific alignment specification placed before a member definition.
+ *
+ */
+
+/**
+ * @def OT_TOOL_ALIGNED_FIELD_END
+ *
+ * Compiler-specific alignment specification placed after a member definition
+ * (but before the semicolon).
+ *
+ */
+
 // =========== TOOLCHAIN SELECTION : START ===========
 
 #if defined(__GNUC__) || defined(__clang__) || defined(__CC_ARM) || defined(__TI_ARM__)
@@ -103,6 +118,8 @@ extern "C" {
 #define OT_TOOL_PACKED_FIELD __attribute__((packed))
 #define OT_TOOL_PACKED_END __attribute__((packed))
 #define OT_TOOL_WEAK __attribute__((weak))
+#define OT_TOOL_ALIGNED_FIELD_BEGIN(size)
+#define OT_TOOL_ALIGNED_FIELD_END(size) __attribute__((aligned(size)))
 
 #elif defined(__ICCARM__) || defined(__ICC8051__)
 
@@ -114,6 +131,12 @@ extern "C" {
 #define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END
 #define OT_TOOL_WEAK __weak
+#define __OT_TOOL_ALIGNED_CONCAT(a,b) a##b
+#define __OT_TOOL_ALIGNED_DECLARE_4 _Pragma("data_alignment=4")
+#define __OT_TOOL_ALIGNED_DECLARE_8 _Pragma("data_alignment=8")
+#define __OT_TOOL_ALIGNED_DECLARE_16 _Pragma("data_alignment=16")
+#define OT_TOOL_ALIGNED_FIELD_BEGIN(size) __OT_TOOL_ALIGNED_CONCAT(__OT_TOOL_ALIGNED_DECLARE_,size)
+#define OT_TOOL_ALIGNED_FIELD_END(size)
 
 #elif defined(__SDCC)
 
@@ -123,6 +146,8 @@ extern "C" {
 #define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END
 #define OT_TOOL_WEAK
+#define OT_TOOL_ALIGNED_FIELD_BEGIN(size)
+#define OT_TOOL_ALIGNED_FIELD_END(size)
 
 #else
 
