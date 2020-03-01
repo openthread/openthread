@@ -3721,7 +3721,6 @@ exit:
         AppendResult(error);
     }
 }
-#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 
 void Interpreter::HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext)
 {
@@ -3876,6 +3875,7 @@ void Interpreter::OutputChildTableEntry(const otNetworkDiagChildEntry &aChildEnt
     OutputMode(aChildEntry.mMode);
     mServer->OutputFormat("}");
 }
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 
 void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength)
 {

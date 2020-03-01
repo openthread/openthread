@@ -199,14 +199,6 @@ private:
         kDefaultPingCount    = 1,
     };
 
-    void OutputMode(const otLinkModeConfig &aMode);
-    void OutputConnectivity(const otNetworkDiagConnectivity &aConnectivity);
-    void OutputRoute(const otNetworkDiagRoute &aRoute);
-    void OutputRouteData(const otNetworkDiagRouteData &aRouteData);
-    void OutputLeaderData(const otLeaderData &aLeaderData);
-    void OutputNetworkDiagMacCounters(const otNetworkDiagMacCounters &aMacCounters);
-    void OutputChildTableEntry(const otNetworkDiagChildEntry &aChildEntry);
-
     otError ParsePingInterval(const char *aString, uint32_t &aInterval);
     void    ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
     void    ProcessBufferInfo(uint8_t aArgsLength, char *aArgs[]);
@@ -360,7 +352,18 @@ private:
     static void HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
     static void HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext);
     static void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
+
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
+    void HandleDiagnosticGetResponse(const otMessage &aMessage, const Ip6::MessageInfo &aMessageInfo);
     static void HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext);
+    void OutputMode(const otLinkModeConfig &aMode);
+    void OutputConnectivity(const otNetworkDiagConnectivity &aConnectivity);
+    void OutputRoute(const otNetworkDiagRoute &aRoute);
+    void OutputRouteData(const otNetworkDiagRouteData &aRouteData);
+    void OutputLeaderData(const otLeaderData &aLeaderData);
+    void OutputNetworkDiagMacCounters(const otNetworkDiagMacCounters &aMacCounters);
+    void OutputChildTableEntry(const otNetworkDiagChildEntry &aChildEntry);
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     static void HandleDnsResponse(void *              aContext,
@@ -379,7 +382,6 @@ private:
     void HandleActiveScanResult(otActiveScanResult *aResult);
     void HandleEnergyScanResult(otEnergyScanResult *aResult);
     void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx);
-    void HandleDiagnosticGetResponse(const otMessage &aMessage, const Ip6::MessageInfo &aMessageInfo);
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     void HandleDnsResponse(const char *aHostname, const Ip6::Address *aAddress, uint32_t aTtl, otError aResult);
 #endif
