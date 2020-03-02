@@ -446,6 +446,20 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
+    def _escape_escapable(self, string):
+        """Escape CLI escapable characters in the given string.
+
+        Args:
+            string (str): UTF-8 input string.
+
+        Returns:
+            [str]: The modified string with escaped characters.
+        """
+        escapable_chars = '\\ \t\r\n'
+        for char in escapable_chars:
+            string = string.replace(char, '\\%s' % char)
+        return string
+
     def get_network_name(self):
         self.send_command('networkname')
         while True:
@@ -457,7 +471,7 @@ class Node:
         return network_name
 
     def set_network_name(self, network_name):
-        cmd = 'networkname %s' % network_name
+        cmd = 'networkname %s' % self._escape_escapable(network_name)
         self.send_command(cmd)
         self._expect('Done')
 
@@ -969,7 +983,7 @@ class Node:
             cmd += 'localprefix %s ' % mesh_local
 
         if network_name is not None:
-            cmd += 'networkname %s ' % network_name
+            cmd += 'networkname %s ' % self._escape_escapable(network_name)
 
         if binary is not None:
             cmd += 'binary %s ' % binary
@@ -1011,7 +1025,7 @@ class Node:
             cmd += 'localprefix %s ' % mesh_local
 
         if network_name is not None:
-            cmd += 'networkname %s ' % network_name
+            cmd += 'networkname %s ' % self._escape_escapable(network_name)
 
         self.send_command(cmd)
         self._expect('Done')
