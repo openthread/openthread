@@ -28,11 +28,14 @@
 
 #include "openthread-core-config.h"
 
+#include "fuzzer_platform.h"
+
 #include <string.h>
 
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
+#include <openthread/platform/entropy.h>
 #include <openthread/platform/logging.h>
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
