@@ -305,6 +305,7 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
 
     openlog(aArgVector[0], LOG_PID | (config.mIsVerbose ? LOG_PERROR : 0), LOG_DAEMON);
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
+    syslog(LOG_INFO, "Running %s", otGetVersionString());
     otLoggingSetLevel(config.mLogLevel);
 
     instance = otSysInit(&config.mPlatformConfig);
