@@ -181,7 +181,7 @@ otError otCoapOptionIteratorInit(otCoapOptionIterator *aIterator, const otMessag
 }
 
 const otCoapOption *otCoapOptionIteratorGetFirstOptionMatching(otCoapOptionIterator *aIterator,
-                                                               otCoapOptionType      aOption)
+                                                               uint16_t      aOption)
 {
     return static_cast<Coap::OptionIterator *>(aIterator)->GetFirstOptionMatching(aOption);
 }
@@ -191,7 +191,7 @@ const otCoapOption *otCoapOptionIteratorGetFirstOption(otCoapOptionIterator *aIt
     return static_cast<Coap::OptionIterator *>(aIterator)->GetFirstOption();
 }
 
-const otCoapOption *otCoapOptionIteratorGetNextOptionMatching(otCoapOptionIterator *aIterator, otCoapOptionType aOption)
+const otCoapOption *otCoapOptionIteratorGetNextOptionMatching(otCoapOptionIterator *aIterator, uint16_t aOption)
 {
     return static_cast<Coap::OptionIterator *>(aIterator)->GetNextOptionMatching(aOption);
 }

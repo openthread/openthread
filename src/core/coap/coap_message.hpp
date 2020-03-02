@@ -650,7 +650,7 @@ public:
      * @returns A pointer to the first matching option. If no option matching @p aOption is seen, NULL pointer is
      *          returned.
      */
-    const otCoapOption *GetFirstOptionMatching(otCoapOptionType aOption);
+    const otCoapOption *GetFirstOptionMatching(uint16_t aOption);
 
     /**
      * This method returns a pointer to the first option.
@@ -670,7 +670,7 @@ public:
      * @returns A pointer to the next matching option (relative to current iterator position). If no option matching @p
      *          aOption is seen, NULL pointer is returned.
      */
-    const otCoapOption *GetNextOptionMatching(otCoapOptionType aOption);
+    const otCoapOption *GetNextOptionMatching(uint16_t aOption);
 
     /**
      * This method returns a pointer to the next option.
