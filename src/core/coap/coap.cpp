@@ -985,10 +985,6 @@ bool TxParameters::Validate(const otCoapTxParameters &aTxParameters)
 
         rval = (tmp != 0 && (tmp + aTxParameters.mAckTimeout + 2 * kDefaultMaxLatency) > tmp);
     }
-    else
-    {
-        rval = false;
-    }
 
     return rval;
 }
