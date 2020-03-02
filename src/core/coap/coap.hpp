@@ -123,7 +123,7 @@ public:
 private:
     enum
     {
-        kDefaultAckTimeout                 = 2000,
+        kDefaultAckTimeout                 = 2000, // in millisecond
         kDefaultAckRandomFactorNumerator   = 3,
         kDefaultAckRandomFactorDenominator = 2,
         kDefaultMaxRetransmit              = 4,
