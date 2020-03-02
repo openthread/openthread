@@ -972,7 +972,7 @@ static uint32_t Multiple(uint32_t aValueA, uint32_t aValueB)
 
 bool TxParameters::Validate(const otCoapTxParameters &aTxParameters)
 {
-    bool rval;
+    bool rval = false;
 
     if (aTxParameters.mAckRandomFactorNumerator >= aTxParameters.mAckRandomFactorDenominator &&
         aTxParameters.mMaxRetransmit <= OT_COAP_MAX_RETRANSMIT)
