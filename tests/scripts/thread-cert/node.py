@@ -455,7 +455,7 @@ class Node:
         Returns:
             [str]: The modified string with escaped characters.
         """
-        escapable_chars = ['\\', ' ', '\t', '\r', '\n']
+        escapable_chars = '\\ \t\r\n'
         for char in escapable_chars:
             string = string.replace(char, '\\%s' % char)
         return string
