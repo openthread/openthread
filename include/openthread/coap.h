@@ -62,6 +62,8 @@ extern "C" {
 
 #define OT_COAP_MAX_RETRANSMIT 30 ///< Max retransmit supported by OpenThread.
 
+#define OT_COAP_MIN_ACK_TIMEOUT 1000 ///< Minimal ACK timeout in milliseconds supported by OpenThread.
+
 /**
  * CoAP Type values.
  *
