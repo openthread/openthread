@@ -691,8 +691,7 @@ otError otCoapOptionIteratorInit(otCoapOptionIterator *aIterator, const otMessag
  * @returns A pointer to the first matching option. If no matching option is present NULL pointer is returned.
  *
  */
-const otCoapOption *otCoapOptionIteratorGetFirstOptionMatching(otCoapOptionIterator *aIterator,
-                                                               uint16_t              aOption);
+const otCoapOption *otCoapOptionIteratorGetFirstOptionMatching(otCoapOptionIterator *aIterator, uint16_t aOption);
 
 /**
  * This function returns a pointer to the first option.
@@ -713,8 +712,7 @@ const otCoapOption *otCoapOptionIteratorGetFirstOption(otCoapOptionIterator *aIt
  * @returns A pointer to the next matching option. If no further matching option is present NULL pointer is returned.
  *
  */
-const otCoapOption *otCoapOptionIteratorGetNextOptionMatching(otCoapOptionIterator *aIterator,
-                                                              uint16_t              aOption);
+const otCoapOption *otCoapOptionIteratorGetNextOptionMatching(otCoapOptionIterator *aIterator, uint16_t aOption);
 
 /**
  * This function returns a pointer to the next option.
