@@ -3824,7 +3824,7 @@ void Interpreter::OutputMode(const otLinkModeConfig &aMode)
 void Interpreter::OutputConnectivity(const otNetworkDiagConnectivity &aConnectivity)
 {
     // Members are separated to avoid buffer overflow.
-    mServer->OutputFormat("{ParentPriority: %u, LinkQuality3: %u, LinkQuality2: %u, ", aConnectivity.mParentPriority,
+    mServer->OutputFormat("{ParentPriority: %d, LinkQuality3: %u, LinkQuality2: %u, ", aConnectivity.mParentPriority,
                           aConnectivity.mLinkQuality3, aConnectivity.mLinkQuality2);
     mServer->OutputFormat("LinkQuality1: %u, LeaderCost: %u, IdSequence: %u, ", aConnectivity.mLinkQuality1,
                           aConnectivity.mLeaderCost, aConnectivity.mIdSequence);

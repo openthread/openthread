@@ -751,8 +751,8 @@ static void ParseRoute(const RouteTlv &aRouteTlv, otNetworkDiagRoute &aNetworkDi
 {
     aNetworkDiagRoute.mIdSequence = aRouteTlv.GetRouterIdSequence();
 
-    uint16_t routeCount = 0;
-    for (uint16_t i = 0; i <= Mle::kMaxRouterId; ++i)
+    uint8_t routeCount = 0;
+    for (uint8_t i = 0; i <= Mle::kMaxRouterId; ++i)
     {
         if (!aRouteTlv.IsRouterIdSet(i))
         {
@@ -934,7 +934,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
         tlvTotalLength            = sizeof(childTable) + tlv.GetLength();
         VerifyOrExit(childTable.IsValid());
         VerifyOrExit(childTable.GetNumEntries() <= OT_ARRAY_LENGTH(aNetworkDiagTlv.mChildTable));
-        for (uint16_t i = 0; i < childTable.GetNumEntries(); ++i)
+        for (uint8_t i = 0; i < childTable.GetNumEntries(); ++i)
         {
             ChildTableEntry childEntry;
             VerifyOrExit(childTable.ReadEntry(childEntry, message, offset, i) == OT_ERROR_NONE, error = OT_ERROR_PARSE);

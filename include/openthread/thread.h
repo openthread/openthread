@@ -710,7 +710,7 @@ typedef struct otNetworkDiagConnectivity
     /**
      * The priority of the sender as a parent
      */
-    uint8_t mParentPriority : 2;
+    int8_t mParentPriority;
 
     /**
      * The number of neighboring device with which the sender shares a link of quality 3.
