@@ -785,7 +785,7 @@ otMessage *otCoapNewMessage(otInstance *aInstance, const otMessageSettings *aSet
  * @param[in]  aTxParameters    A pointer to transmission parameters for this request. Use NULL for defaults.
  *                              Otherwise, parameters given must meet the following conditions:
  *                              1. mMaxRetransmit is no more than OT_COAP_MAX_RETRANSMIT.
- *                              2. mAckRandomFactorNumerator / mAckRandomFactorDenominator must not below 1.0.
+ *                              2. mAckRandomFactorNumerator / mAckRandomFactorDenominator must not be below 1.0.
  *                              3. The calculated exchange life time must not overflow uint32_t.
  *
  * @retval OT_ERROR_INVALID_ARGS    @p aTxParameters is invalid.
