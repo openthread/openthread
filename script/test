@@ -39,25 +39,23 @@ readonly OT_BUILDDIR="$(pwd)/build"
 readonly OT_SRCDIR="$(pwd)"
 
 do_build() {
-    ./bootstrap
-    if [ "${VIRTUAL_TIME}" = 1 ]; then
+    if [[ "${NODE_MODE}" == "transceiver" &&  "${VIRTUAL_TIME}" -eq 1 ]]; then
         OPTIONS="VIRTUAL_TIME_UART=1"
     fi
 
     make -f examples/Makefile-simulation ${OPTIONS}
 
     if [[ -n "${RADIO_DEVICE}" ]]; then
-        make -f src/posix/Makefile-posix
+        make -f src/posix/Makefile-posix ${OPTIONS}
     fi
 
     # Extra 1.1 build for 1.2 env
-    if [ "${THREAD_VERSION}" = "1.2" ]; then
-        ./bootstrap
-        OPTIONS="TargetTuple=${SYSTEM_TRIPLET}-1.1 THREAD_VERSION=1.1 ${OPTIONS}"
+    if [[ "${THREAD_VERSION}" == "1.2" ]]; then
+        OPTIONS="TargetTuple=${OT_SYSTEM_TRIPLET}-1.1 THREAD_VERSION=1.1 ${OPTIONS}"
         make -f examples/Makefile-simulation "${OPTIONS}"
 
         if [[ -n "${RADIO_DEVICE}" ]]; then
-            make -f src/posix/Makefile-posix
+            make -f src/posix/Makefile-posix "${OPTIONS}"
         fi
     fi
 }
@@ -68,6 +66,11 @@ do_clean() {
 
 do_cert() {
     export top_builddir="${OT_BUILDDIR}/${OT_SYSTEM_TRIPLET}"
+
+    if [[ "${THREAD_VERSION}" == "1.2" ]]; then
+        export top_builddir_1_1="${OT_BUILDDIR}/${OT_SYSTEM_TRIPLET}-1.1"
+    fi
+
     [[ ! -d tmp ]] || rm -rvf tmp
     PYTHONUNBUFFERED=1 "$1"
 }
@@ -141,19 +144,16 @@ main()
     export VERBOSE="${VERBOSE:-1}"
     export VIRTUAL_TIME="${VIRTUAL_TIME:-1}"
     export THREAD_VERSION="${THREAD_VERSION:-1.1}"
-    if [ "${THREAD_VERSION}" = "1.2" ]; then
-        export top_builddir_1_1="build/${SYSTEM_TRIPLET}-1.1"
-    fi
 
     if [[ "${NODE_MODE}" = 'transceiver' ]] ; then
         export RADIO_DEVICE="${OT_BUILDDIR}/${OT_SYSTEM_TRIPLET}/examples/apps/ncp/ot-rcp"
         export OT_CLI_PATH="${OT_BUILDDIR}/posix/${OT_SYSTEM_TRIPLET}/src/posix/ot-cli"
         export OT_NCP_PATH="${OT_BUILDDIR}/posix/${OT_SYSTEM_TRIPLET}/src/posix/ot-ncp"
 
-        if [ "${THREAD_VERSION}" = "1.2" ]; then
-            export RADIO_DEVICE_1_1="${OT_BUILDDIR}/${SYSTEM_TRIPLET}-1.1/examples/apps/ncp/ot-rcp"
-            export OT_CLI_PATH_1_1="${OT_BUILDDIR}/posix/${SYSTEM_TRIPLET}-1.1/src/posix/ot-cli"
-            export OT_NCP_PATH_1_1="${OT_BUILDDIR}/posix/${SYSTEM_TRIPLET}-1.1/src/posix/ot-ncp"
+        if [[ "${THREAD_VERSION}" == "1.2" ]]; then
+            export RADIO_DEVICE_1_1="${OT_BUILDDIR}/${OT_SYSTEM_TRIPLET}-1.1/examples/apps/ncp/ot-rcp"
+            export OT_CLI_PATH_1_1="${OT_BUILDDIR}/posix/${OT_SYSTEM_TRIPLET}-1.1/src/posix/ot-cli"
+            export OT_NCP_PATH_1_1="${OT_BUILDDIR}/posix/${OT_SYSTEM_TRIPLET}-1.1/src/posix/ot-ncp"
         fi
     fi
 
