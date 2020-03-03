@@ -450,7 +450,8 @@ class Node:
 
     def get_panid(self):
         self.send_command('panid')
-        return self._expect_result('[0-9a-fA-F]{4}')
+        result = self._expect_result('0x[0-9a-fA-F]{4}')
+        return int(result, 16)
 
     def set_panid(self, panid=config.PANID):
         cmd = 'panid %d' % panid
