@@ -432,7 +432,7 @@ exit:
     return err;
 }
 
-const otCoapOption *OptionIterator::GetFirstOptionMatching(otCoapOptionType aOption)
+const otCoapOption *OptionIterator::GetFirstOptionMatching(uint16_t aOption)
 {
     const otCoapOption *rval = NULL;
 
@@ -466,7 +466,7 @@ const otCoapOption *OptionIterator::GetFirstOption(void)
     return option;
 }
 
-const otCoapOption *OptionIterator::GetNextOptionMatching(otCoapOptionType aOption)
+const otCoapOption *OptionIterator::GetNextOptionMatching(uint16_t aOption)
 {
     const otCoapOption *rval = NULL;
 
