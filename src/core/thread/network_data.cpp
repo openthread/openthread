@@ -1004,10 +1004,7 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
 
     if (aRloc16 != Mac::kShortAddrInvalid)
     {
-        ThreadRloc16Tlv rloc16Tlv;
-        rloc16Tlv.Init();
-        rloc16Tlv.SetRloc16(aRloc16);
-        SuccessOrExit(error = rloc16Tlv.AppendTo(*message));
+        SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, ThreadTlv::kRloc16, aRloc16));
     }
 
     Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr());

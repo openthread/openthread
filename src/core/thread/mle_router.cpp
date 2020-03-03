@@ -3886,12 +3886,9 @@ exit:
 
 otError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
 {
-    otError                error = OT_ERROR_NONE;
-    ThreadExtMacAddressTlv macAddr64Tlv;
-    ThreadRloc16Tlv        rlocTlv;
-    ThreadStatusTlv        statusTlv;
-    Ip6::MessageInfo       messageInfo;
-    Coap::Message *        message = NULL;
+    otError          error = OT_ERROR_NONE;
+    Ip6::MessageInfo messageInfo;
+    Coap::Message *  message = NULL;
 
     VerifyOrExit(!mAddressSolicitPending);
 
@@ -3900,20 +3897,16 @@ otError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
     SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_ADDRESS_SOLICIT));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    macAddr64Tlv.Init();
-    macAddr64Tlv.SetMacAddr(Get<Mac::Mac>().GetExtAddress());
-    SuccessOrExit(error = macAddr64Tlv.AppendTo(*message));
+    SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kExtMacAddress, Get<Mac::Mac>().GetExtAddress().m8,
+                                         sizeof(Mac::ExtAddress)));
 
     if (IsRouterIdValid(mPreviousRouterId))
     {
-        rlocTlv.Init();
-        rlocTlv.SetRloc16(Rloc16FromRouterId(mPreviousRouterId));
-        SuccessOrExit(error = rlocTlv.AppendTo(*message));
+        SuccessOrExit(error =
+                          Tlv::AppendUint16Tlv(*message, ThreadTlv::kRloc16, Rloc16FromRouterId(mPreviousRouterId)));
     }
 
-    statusTlv.Init();
-    statusTlv.SetStatus(aStatus);
-    SuccessOrExit(error = statusTlv.AppendTo(*message));
+    SuccessOrExit(error = Tlv::AppendUint8Tlv(*message, ThreadTlv::kStatus, static_cast<uint8_t>(aStatus)));
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     SuccessOrExit(error = AppendXtalAccuracy(*message));
@@ -3941,24 +3934,19 @@ exit:
 
 otError MleRouter::SendAddressRelease(void)
 {
-    otError                error = OT_ERROR_NONE;
-    ThreadRloc16Tlv        rlocTlv;
-    ThreadExtMacAddressTlv macAddr64Tlv;
-    Ip6::MessageInfo       messageInfo;
-    Coap::Message *        message;
+    otError          error = OT_ERROR_NONE;
+    Ip6::MessageInfo messageInfo;
+    Coap::Message *  message;
 
     VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_ADDRESS_RELEASE));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    rlocTlv.Init();
-    rlocTlv.SetRloc16(Rloc16FromRouterId(mRouterId));
-    SuccessOrExit(error = rlocTlv.AppendTo(*message));
+    SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, ThreadTlv::kRloc16, Rloc16FromRouterId(mRouterId)));
 
-    macAddr64Tlv.Init();
-    macAddr64Tlv.SetMacAddr(Get<Mac::Mac>().GetExtAddress());
-    SuccessOrExit(error = macAddr64Tlv.AppendTo(*message));
+    SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kExtMacAddress, Get<Mac::Mac>().GetExtAddress().m8,
+                                         sizeof(Mac::ExtAddress)));
 
     messageInfo.SetSockAddr(GetMeshLocal16());
     SuccessOrExit(error = GetLeaderAddress(messageInfo.GetPeerAddr()));
@@ -3992,8 +3980,8 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    ThreadStatusTlv     statusTlv;
-    ThreadRloc16Tlv     rlocTlv;
+    uint8_t             status;
+    uint16_t            rloc16;
     ThreadRouterMaskTlv routerMaskTlv;
     uint8_t             routerId;
     Router *            router;
@@ -4007,10 +3995,9 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
 
     LogMleMessage("Receive Address Reply", aMessageInfo->GetPeerAddr());
 
-    SuccessOrExit(ThreadTlv::GetTlv(*aMessage, ThreadTlv::kStatus, sizeof(statusTlv), statusTlv));
-    VerifyOrExit(statusTlv.IsValid());
+    SuccessOrExit(Tlv::ReadUint8Tlv(*aMessage, ThreadTlv::kStatus, status));
 
-    if (statusTlv.GetStatus() != statusTlv.kSuccess)
+    if (status != ThreadStatusTlv::kSuccess)
     {
         if (IsRouterIdValid(mPreviousRouterId))
         {
@@ -4025,9 +4012,8 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
         ExitNow();
     }
 
-    SuccessOrExit(ThreadTlv::GetTlv(*aMessage, ThreadTlv::kRloc16, sizeof(rlocTlv), rlocTlv));
-    VerifyOrExit(rlocTlv.IsValid());
-    routerId = RouterIdFromRloc16(rlocTlv.GetRloc16());
+    SuccessOrExit(Tlv::ReadUint16Tlv(*aMessage, ThreadTlv::kRloc16, rloc16));
+    routerId = RouterIdFromRloc16(rloc16);
 
     SuccessOrExit(ThreadTlv::GetTlv(*aMessage, ThreadTlv::kRouterMask, sizeof(routerMaskTlv), routerMaskTlv));
     VerifyOrExit(routerMaskTlv.IsValid());
@@ -4087,11 +4073,11 @@ void MleRouter::HandleAddressSolicit(void *aContext, otMessage *aMessage, const 
 
 void MleRouter::HandleAddressSolicit(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    otError                error = OT_ERROR_NONE;
-    ThreadExtMacAddressTlv macAddr64Tlv;
-    ThreadRloc16Tlv        rlocTlv;
-    ThreadStatusTlv        statusTlv;
-    Router *               router = NULL;
+    otError         error = OT_ERROR_NONE;
+    Mac::ExtAddress extAddress;
+    uint16_t        rloc16;
+    uint8_t         status;
+    Router *        router = NULL;
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     uint16_t xtalAccuracy;
 #endif
@@ -4101,11 +4087,9 @@ void MleRouter::HandleAddressSolicit(Coap::Message &aMessage, const Ip6::Message
 
     LogMleMessage("Receive Address Solicit", aMessageInfo.GetPeerAddr());
 
-    SuccessOrExit(error = ThreadTlv::GetTlv(aMessage, ThreadTlv::kExtMacAddress, sizeof(macAddr64Tlv), macAddr64Tlv));
-    VerifyOrExit(macAddr64Tlv.IsValid(), error = OT_ERROR_PARSE);
+    SuccessOrExit(error = Tlv::ReadTlv(aMessage, ThreadTlv::kExtMacAddress, &extAddress, sizeof(extAddress)));
 
-    SuccessOrExit(error = ThreadTlv::GetTlv(aMessage, ThreadTlv::kStatus, sizeof(statusTlv), statusTlv));
-    VerifyOrExit(statusTlv.IsValid(), error = OT_ERROR_PARSE);
+    SuccessOrExit(error = Tlv::ReadUint8Tlv(aMessage, ThreadTlv::kStatus, status));
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     // In a time sync enabled network, all routers' xtal accuracy must be less than the threshold.
@@ -4114,7 +4098,7 @@ void MleRouter::HandleAddressSolicit(Coap::Message &aMessage, const Ip6::Message
 #endif
 
     // see if allocation already exists
-    router = mRouterTable.GetRouter(macAddr64Tlv.GetMacAddr());
+    router = mRouterTable.GetRouter(extAddress);
 
     if (router != NULL)
     {
@@ -4122,7 +4106,7 @@ void MleRouter::HandleAddressSolicit(Coap::Message &aMessage, const Ip6::Message
     }
 
     // check the request reason
-    switch (statusTlv.GetStatus())
+    switch (status)
     {
     case ThreadStatusTlv::kTooFewRouters:
         VerifyOrExit(mRouterTable.GetActiveRouterCount() < mRouterUpgradeThreshold);
@@ -4137,10 +4121,15 @@ void MleRouter::HandleAddressSolicit(Coap::Message &aMessage, const Ip6::Message
         break;
     }
 
-    if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rlocTlv), rlocTlv) == OT_ERROR_NONE)
+    switch (Tlv::ReadUint16Tlv(aMessage, ThreadTlv::kRloc16, rloc16))
     {
-        VerifyOrExit(rlocTlv.IsValid(), error = OT_ERROR_PARSE);
-        router = mRouterTable.Allocate(RouterIdFromRloc16(rlocTlv.GetRloc16()));
+    case OT_ERROR_NONE:
+        router = mRouterTable.Allocate(RouterIdFromRloc16(rloc16));
+        break;
+    case OT_ERROR_NOT_FOUND:
+        break;
+    default:
+        ExitNow(error = OT_ERROR_PARSE);
     }
 
     // allocate new router id
@@ -4155,7 +4144,7 @@ void MleRouter::HandleAddressSolicit(Coap::Message &aMessage, const Ip6::Message
 
     if (router != NULL)
     {
-        router->SetExtAddress(macAddr64Tlv.GetMacAddr());
+        router->SetExtAddress(extAddress);
     }
     else
     {
@@ -4175,9 +4164,7 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message &   aRequest,
                                            const Ip6::MessageInfo &aMessageInfo)
 {
     otError             error = OT_ERROR_NONE;
-    ThreadStatusTlv     statusTlv;
     ThreadRouterMaskTlv routerMaskTlv;
-    ThreadRloc16Tlv     rlocTlv;
     Coap::Message *     message;
 
     VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
@@ -4185,15 +4172,13 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message &   aRequest,
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    statusTlv.Init();
-    statusTlv.SetStatus(aRouter == NULL ? statusTlv.kNoAddressAvailable : statusTlv.kSuccess);
-    SuccessOrExit(error = statusTlv.AppendTo(*message));
+    SuccessOrExit(error = Tlv::AppendUint8Tlv(*message, ThreadTlv::kStatus,
+                                              aRouter == NULL ? ThreadStatusTlv::kNoAddressAvailable
+                                                              : ThreadStatusTlv::kSuccess));
 
     if (aRouter != NULL)
     {
-        rlocTlv.Init();
-        rlocTlv.SetRloc16(aRouter->GetRloc16());
-        SuccessOrExit(error = rlocTlv.AppendTo(*message));
+        SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, ThreadTlv::kRloc16, aRouter->GetRloc16()));
 
         routerMaskTlv.Init();
         routerMaskTlv.SetIdSequence(mRouterTable.GetRouterIdSequence());
@@ -4230,25 +4215,23 @@ void MleRouter::HandleAddressRelease(void *aContext, otMessage *aMessage, const 
 
 void MleRouter::HandleAddressRelease(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadRloc16Tlv        rlocTlv;
-    ThreadExtMacAddressTlv macAddr64Tlv;
-    uint8_t                routerId;
-    Router *               router;
+    uint16_t        rloc16;
+    Mac::ExtAddress extAddress;
+    uint8_t         routerId;
+    Router *        router;
 
     VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST);
 
     LogMleMessage("Receive Address Release", aMessageInfo.GetPeerAddr());
 
-    SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rlocTlv), rlocTlv));
-    VerifyOrExit(rlocTlv.IsValid());
+    SuccessOrExit(Tlv::ReadUint16Tlv(aMessage, ThreadTlv::kRloc16, rloc16));
 
-    SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kExtMacAddress, sizeof(macAddr64Tlv), macAddr64Tlv));
-    VerifyOrExit(macAddr64Tlv.IsValid());
+    SuccessOrExit(Tlv::ReadTlv(aMessage, ThreadTlv::kExtMacAddress, &extAddress, sizeof(extAddress)));
 
-    routerId = RouterIdFromRloc16(rlocTlv.GetRloc16());
+    routerId = RouterIdFromRloc16(rloc16);
     router   = mRouterTable.GetRouter(routerId);
 
-    VerifyOrExit(router != NULL && router->GetExtAddress() == macAddr64Tlv.GetMacAddr());
+    VerifyOrExit((router != NULL) && (router->GetExtAddress() == extAddress));
 
     mRouterTable.Release(routerId);
 

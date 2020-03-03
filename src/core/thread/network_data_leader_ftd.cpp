@@ -148,16 +148,21 @@ void Leader::HandleServerData(void *aContext, otMessage *aMessage, const otMessa
 void Leader::HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadNetworkDataTlv networkData;
-    ThreadRloc16Tlv      rloc16;
+    uint16_t             rloc16;
 
     otLogInfoNetData("Received network data registration");
 
     VerifyOrExit(aMessageInfo.GetPeerAddr().IsRoutingLocator());
 
-    if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rloc16), rloc16) == OT_ERROR_NONE)
+    switch (Tlv::ReadUint16Tlv(aMessage, ThreadTlv::kRloc16, rloc16))
     {
-        VerifyOrExit(rloc16.IsValid());
-        RemoveBorderRouter(rloc16.GetRloc16(), kMatchModeRloc16);
+    case OT_ERROR_NONE:
+        RemoveBorderRouter(rloc16, kMatchModeRloc16);
+        break;
+    case OT_ERROR_NOT_FOUND:
+        break;
+    default:
+        ExitNow();
     }
 
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kThreadNetworkData, sizeof(networkData), networkData) == OT_ERROR_NONE)
