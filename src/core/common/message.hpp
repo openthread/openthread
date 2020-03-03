@@ -105,7 +105,7 @@ struct MessageInfo
     uint8_t mSubType : 4;      ///< Identifies the message sub type.
     bool    mDirectTx : 1;     ///< Used to indicate whether a direct transmission is required.
     bool    mLinkSecurity : 1; ///< Indicates whether or not link security is enabled.
-    uint8_t mPriority : 2;     ///< Identifies the message priority level (lower value is higher priority).
+    uint8_t mPriority : 2;     ///< Identifies the message priority level (higher value is higher priority).
     bool    mInPriorityQ : 1;  ///< Indicates whether the message is queued in normal or priority queue.
     bool    mTxSuccess : 1;    ///< Indicates whether the direct tx of the message was successful.
     bool    mDoNotEvict : 1;   ///< Indicates whether or not this message may be evicted.
