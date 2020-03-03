@@ -118,32 +118,34 @@ class Node:
             args = ''
 
         if 'OT_NCP_PATH' in os.environ:
-            cmd = 'spinel-cli.py -p "%s" -n spinel+hdlc+forkpty://%s?arg=' % (
+            cmd = 'spinel-cli.py -p "%s spinel+hdlc+forkpty://%s?arg=%d" -n' % (
                 os.environ['OT_NCP_PATH'],
                 args,
+                nodeid,
             )
         elif (self.version == '1.1' and self.version != self.env_version):
             if 'OT_NCP_PATH_1_1' in os.environ:
-                cmd = 'spinel-cli.py -p "%s" -n spinel+hdlc+forkpty://%s?arg=' % (
+                cmd = 'spinel-cli.py -p "%s spinel+hdlc+forkpty://%s?arg=%d" -n' % (
                     os.environ['OT_NCP_PATH_1_1'],
                     args,
+                    nodeid,
                 )
             elif ('top_builddir_1_1') in os.environ:
                 srcdir = os.environ['top_builddir_1_1']
-                cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
+                cmd = '%s/examples/apps/ncp/ot-ncp-%s ' % (srcdir, mode)
                 cmd = 'spinel-cli.py -p "%s%s" -n ' % (
                     cmd,
                     args,
                 )
         elif ('top_builddir') in os.environ:
             srcdir = os.environ['top_builddir']
-            cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
+            cmd = '%s/examples/apps/ncp/ot-ncp-%s ' % (srcdir, mode)
             cmd = 'spinel-cli.py -p "%s%s" -n ' % (
                 cmd,
                 args,
             )
         else:
-            cmd = 'spinel-cli.py -p "%s/ot-ncp-%s%s" -n ' % (
+            cmd = 'spinel-cli.py -p "%s/ot-ncp-%s %s" -n ' % (
                 self.version,
                 mode,
                 args,
@@ -152,7 +154,7 @@ class Node:
         cmd += '%d' % nodeid
         print("%s" % cmd)
 
-        self.pexpect = pexpect.spawn(cmd, timeout=4)
+        self.pexpect = pexpect.spawn(cmd, timeout=6)
 
         # Add delay to ensure that the process is ready to receive commands.
         time.sleep(0.2)
