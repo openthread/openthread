@@ -38,8 +38,13 @@ readonly OT_SYSTEM_TRIPLET="$(third_party/nlbuild-autotools/repo/third_party/aut
 readonly OT_BUILDDIR="$(pwd)/build"
 readonly OT_SRCDIR="$(pwd)"
 
+readonly COLOR_PASS='\033[0;32m'
+readonly COLOR_FAIL='\033[0;31m'
+readonly COLOR_NONE='\033[0m'
+
+
 do_build() {
-    if [[ "${NODE_MODE}" == "transceiver" &&  "${VIRTUAL_TIME}" -eq 1 ]]; then
+    if [[ "${NODE_MODE}" == "transceiver" &&  "${VIRTUAL_TIME}" == 1 ]]; then
         OPTIONS="VIRTUAL_TIME_UART=1"
     fi
 
@@ -52,10 +57,10 @@ do_build() {
     # Extra 1.1 build for 1.2 env
     if [[ "${THREAD_VERSION}" == "1.2" ]]; then
         OPTIONS="TargetTuple=${OT_SYSTEM_TRIPLET}-1.1 THREAD_VERSION=1.1 ${OPTIONS}"
-        make -f examples/Makefile-simulation "${OPTIONS}"
+        make -f examples/Makefile-simulation ${OPTIONS}
 
         if [[ -n "${RADIO_DEVICE}" ]]; then
-            make -f src/posix/Makefile-posix "${OPTIONS}"
+            make -f src/posix/Makefile-posix ${OPTIONS}
         fi
     fi
 }
@@ -75,6 +80,54 @@ do_cert() {
     PYTHONUNBUFFERED=1 "$1"
 }
 
+do_cert_suite() {
+    export top_builddir="${OT_BUILDDIR}/${OT_SYSTEM_TRIPLET}"
+
+    if [[ "${THREAD_VERSION}" == "1.2" ]]; then
+        export top_builddir_1_1="${OT_BUILDDIR}/${OT_SYSTEM_TRIPLET}-1.1"
+    fi
+
+    local pass_count=0
+    local fail_count=0
+
+    [[ ! -f fail.log ]] || rm fail.log
+
+    for test_case in "$@"; do
+        [[ ! -d tmp ]] || rm -rf tmp
+        exit_code=0
+        "${test_case}" &> test.log || exit_code=$?
+        if [[ "${exit_code}" == 0 ]]; then
+            echo -e "${COLOR_PASS}PASS${COLOR_NONE} ${test_case}"
+            pass_count=$(( pass_count + 1 ))
+        else
+            echo -e "${COLOR_FAIL}FAIL${COLOR_NONE} ${test_case}"
+            fail_count=$(( fail_count + 1 ))
+            {
+                echo "=============================="
+                echo "!!! FAIL:${test_case}"
+                echo "=============================="
+                cat test.log
+            } >> fail.log
+        fi
+    done
+
+    echo "=================================="
+    echo "         Test Summary"
+    echo "=================================="
+    echo "# TOTAL: $((pass_count + fail_count))"
+    echo "# PASS: ${pass_count}"
+    echo "# FAIL: ${fail_count}"
+
+    if [[ "${fail_count}" -gt 0 ]]; then
+        while read -r line; do
+            echo "${line}"
+        done < fail.log
+        exit 1
+    else
+        exit 0
+    fi
+}
+
 print_usage() {
     echo "USAGE: [ENVIRONMENTS] $0 COMMANDS
 
@@ -88,6 +141,7 @@ COMMANDS:
     clean           Clean built files to prepare for new build.
     build           Build project for running tests. This can be used to rebuild the project for changes.
     cert            Run a single thread-cert test. ENVIRONMENTS should be the same as those given to build or update.
+    cert_suite      Run a batch of thread-cert tests and summarize the test results. Only echo logs for failing tests.
     help            Print this help.
 
 EXAMPLES:
@@ -109,7 +163,7 @@ EXAMPLES:
 
     # Test Thread 1.2 with real time
     THREAD_VERSION=1.2 VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/v1_2_router_5_1_1.py
-    THREAD_VERSION=1.2 VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/v1_2_test_parent_selection.py
+    THREAD_VERSION=1.2 VIRTUAL_TIME=0 $0 clean build cert_suite tests/scripts/thread-cert/v1_2_*
     "
 
     exit "$1"
@@ -177,6 +231,10 @@ main()
             cert)
                 shift
                 do_cert "$1"
+                ;;
+            cert_suite)
+                shift
+                do_cert_suite "$@"
                 ;;
             help)
                 print_usage

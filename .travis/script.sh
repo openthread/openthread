@@ -584,11 +584,7 @@ build_samr21() {
 [ $BUILD_TARGET != v1.2 ] || {
     ./bootstrap || die
     ./script/test build || die
-
-    ls tests/scripts/thread-cert/v1_2_*.py | while read test_case; do
-        [[ ! -d tmp ]] || rm -rvf tmp
-        PYTHONUNBUFFERED=1 "${test_case}"
-    done
+    ./script/test cert_suite tests/scripts/thread-cert/v1_2_* || die
 }
 
 [ $BUILD_TARGET != posix-app-pty ] || {
