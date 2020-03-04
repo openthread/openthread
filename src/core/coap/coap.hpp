@@ -103,14 +103,12 @@ public:
     }
 
     /**
-     * This static method validates whether the CoAP transmission parameters are valid.
-     *
-     * @param[in]   aTxParameters   Transmission parameters.
+     * This method validates whether the CoAP transmission parameters are valid.
      *
      * @returns Whether the parameters are valid.
      *
      */
-    static bool Validate(const otCoapTxParameters &aTxParameters);
+    bool IsValid(void) const;
 
     /**
      * This static method returns default CoAP tx parameters.

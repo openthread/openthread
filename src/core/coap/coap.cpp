@@ -970,20 +970,20 @@ static uint32_t Multiply(uint32_t aValueA, uint32_t aValueB)
     return (result / aValueA == aValueB) ? result : 0;
 }
 
-bool TxParameters::Validate(const otCoapTxParameters &aTxParameters)
+bool TxParameters::IsValid(void) const
 {
     bool rval = false;
 
-    if (aTxParameters.mAckRandomFactorNumerator >= aTxParameters.mAckRandomFactorDenominator &&
-        aTxParameters.mAckTimeout >= OT_COAP_MIN_ACK_TIMEOUT && aTxParameters.mMaxRetransmit <= OT_COAP_MAX_RETRANSMIT)
+    if (mAckRandomFactorNumerator >= mAckRandomFactorDenominator && mAckTimeout >= OT_COAP_MIN_ACK_TIMEOUT &&
+        mMaxRetransmit <= OT_COAP_MAX_RETRANSMIT)
     {
         // Calulate exchange lifetime step by step and verify no overflow.
-        uint32_t tmp = Multiply(aTxParameters.mAckTimeout, (1U << (aTxParameters.mMaxRetransmit + 1)) - 1);
+        uint32_t tmp = Multiply(mAckTimeout, (1U << (mMaxRetransmit + 1)) - 1);
 
-        tmp /= aTxParameters.mAckRandomFactorDenominator;
-        tmp = Multiply(tmp, aTxParameters.mAckRandomFactorNumerator);
+        tmp /= mAckRandomFactorDenominator;
+        tmp = Multiply(tmp, mAckRandomFactorNumerator);
 
-        rval = (tmp != 0 && (tmp + aTxParameters.mAckTimeout + 2 * kDefaultMaxLatency) > tmp);
+        rval = (tmp != 0 && (tmp + mAckTimeout + 2 * kDefaultMaxLatency) > tmp);
     }
 
     return rval;
