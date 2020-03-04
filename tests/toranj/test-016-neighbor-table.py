@@ -85,7 +85,7 @@ for num in range(NUM_CHILDREN):
     children[num].whitelist_node(routers[0])
     routers[0].whitelist_node(children[num])
 
-# whiltelist the end-device ed with its corresponding router
+# whitelist the end-device ed with its corresponding router
 for num in range(1, NUM_ROUTERS):
     ed[num].whitelist_node(routers[num])
     routers[num].whitelist_node(ed[num])

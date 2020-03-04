@@ -47,7 +47,7 @@ at_exit() {
 }
 
 build() {
-    make -f examples/Makefile-posix
+    make -f examples/Makefile-simulation
     make -f src/posix/Makefile-posix PLATFORM_NETIF=1 PLATFORM_UDP=1 UDP_FORWARD=0
 }
 
@@ -73,11 +73,11 @@ check() {
     $RADIO_NCP_PATH 1 > $RADIO_PTY < $RADIO_PTY &
 
     if [[ "${DAEMON}" = 1 ]]; then
-        sudo "$(pwd)/$(ls output/posix/*linux*/bin/ot-daemon)" ${OT_NCP_PATH} ${CORE_PTY} &
+        sudo "$(pwd)/$(ls output/posix/*linux*/bin/ot-daemon)" ${CORE_PTY} &
         sleep 1
         OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-ctl)"
     else
-        OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli) ${OT_NCP_PATH} ${CORE_PTY}"
+        OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli) ${CORE_PTY}"
     fi
 
     # Cover setting a valid network interface name.

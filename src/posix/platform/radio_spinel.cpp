@@ -34,7 +34,7 @@
 #include "radio_spinel.hpp"
 
 #include "platform-posix.h"
-#include "spinel/spinel_decoder.hpp"
+#include "lib/spinel/spinel_decoder.hpp"
 
 #include <assert.h>
 #include <errno.h>
@@ -1239,7 +1239,7 @@ otError RadioSpinel::WaitResponse(void)
 {
     uint64_t end = platformGetTime() + kMaxWaitTime * US_PER_MS;
 
-    otLogInfoPlat("Wait response: tid=%u key=%u", mWaitingTid, mWaitingKey);
+    otLogDebgPlat("Wait response: tid=%u key=%u", mWaitingTid, mWaitingKey);
 
     do
     {
@@ -1258,7 +1258,7 @@ otError RadioSpinel::WaitResponse(void)
     } while (mWaitingTid || !mIsReady);
 
     LogIfFail("Error waiting response", mError);
-    // This indicates end of waiting repsonse.
+    // This indicates end of waiting response.
     mWaitingKey = SPINEL_PROP_LAST_STATUS;
     return mError;
 }

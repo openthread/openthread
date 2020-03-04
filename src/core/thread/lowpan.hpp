@@ -560,7 +560,7 @@ public:
      * A first fragment header starts at offset zero.
      *
      * @param[in] aSize   The Datagram Size value.
-     * @param[in] aTage   The Datagram Tag value.
+     * @param[in] aTag    The Datagram Tag value.
      *
      */
     void InitFirstFragment(uint16_t aSize, uint16_t aTag) { Init(aSize, aTag, 0); }
@@ -571,7 +571,7 @@ public:
      * The @p aOffset value will be truncated to become a multiple of 8.
      *
      * @param[in] aSize   The Datagram Size value.
-     * @param[in] aTage   The Datagram Tag value.
+     * @param[in] aTag    The Datagram Tag value.
      * @param[in] aOffset The Datagram Offset value.
      *
      */

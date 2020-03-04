@@ -30,7 +30,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "ncp/hdlc.hpp"
+#include "lib/hdlc/hdlc.hpp"
 
 #include "test_util.h"
 
@@ -55,7 +55,7 @@ static const uint8_t sOpenThreadText[] = "OpenThread Rocks";
 static const uint8_t sHelloText[]      = "Hello there!";
 static const uint8_t sMottoText[]      = "Think good thoughts, say good words, do good deeds!";
 static const uint8_t sHexText[]        = "0123456789abcdef";
-static const uint8_t sHdlcSpeicals[]   = {kFlagSequence, kFlagXOn,        kFlagXOff,
+static const uint8_t sHdlcSpecials[]   = {kFlagSequence, kFlagXOn,        kFlagXOff,
                                         kFlagSequence, kEscapeSequence, kFlagSpecial};
 
 otError WriteToBuffer(const uint8_t *aText, Hdlc::FrameWritePointer &aWritePointer)
@@ -395,7 +395,7 @@ void TestEncoderDecoder(void)
     encoderBuffer.SaveFrame();
 
     SuccessOrQuit(encoder.BeginFrame(), "Encoder::BeginFrame() failed");
-    SuccessOrQuit(encoder.Encode(sHdlcSpeicals, sizeof(sHdlcSpeicals)), "Encoder::Encode() failed");
+    SuccessOrQuit(encoder.Encode(sHdlcSpecials, sizeof(sHdlcSpecials)), "Encoder::Encode() failed");
     SuccessOrQuit(encoder.EndFrame(), "Encoder::EndFrame() failed");
     encoderBuffer.SaveFrame();
 
@@ -439,8 +439,8 @@ void TestEncoderDecoder(void)
     VerifyOrQuit(memcmp(frame, sMottoText, length) == 0, "Decoded frame content does not match original frame");
 
     SuccessOrQuit(decoderBuffer.GetNextSavedFrame(frame, length), "Incorrect decoded frame");
-    VerifyOrQuit(length == sizeof(sHdlcSpeicals), "Decoded frame length does not match original frame");
-    VerifyOrQuit(memcmp(frame, sHdlcSpeicals, length) == 0, "Decoded frame content does not match original frame");
+    VerifyOrQuit(length == sizeof(sHdlcSpecials), "Decoded frame length does not match original frame");
+    VerifyOrQuit(memcmp(frame, sHdlcSpecials, length) == 0, "Decoded frame content does not match original frame");
 
     SuccessOrQuit(decoderBuffer.GetNextSavedFrame(frame, length), "Incorrect decoded frame");
     VerifyOrQuit(length == sizeof(sHelloText) - 1, "Decoded frame length does not match original frame");

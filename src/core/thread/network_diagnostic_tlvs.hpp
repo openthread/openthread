@@ -157,6 +157,7 @@ public:
  * This class implements Extended Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class ExtMacAddressTlv : public NetworkDiagnosticTlv
 {
 public:
@@ -197,7 +198,7 @@ public:
 
 private:
     Mac::ExtAddress mMacAddr;
-};
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
@@ -625,71 +626,77 @@ public:
     void SetRouteDataLength(uint8_t aLength) { SetLength(sizeof(mRouterIdSequence) + sizeof(mRouterIdMask) + aLength); }
 
     /**
-     * This method returns the Route Cost value for a given Router ID.
+     * This method returns the Route Cost value for a given Router index.
      *
-     * @returns The Route Cost value for a given Router ID.
+     * @param[in]  aRouterIndex  The Router index.
+     *
+     * @returns The Route Cost value for a given Router index.
      *
      */
-    uint8_t GetRouteCost(uint8_t aRouterId) const { return mRouteData[aRouterId] & kRouteCostMask; }
+    uint8_t GetRouteCost(uint8_t aRouterIndex) const { return mRouteData[aRouterIndex] & kRouteCostMask; }
 
     /**
-     * This method sets the Route Cost value for a given Router ID.
+     * This method sets the Route Cost value for a given Router index.
      *
-     * @param[in]  aRouterId   The Router ID.
-     * @param[in]  aRouteCost  The Route Cost value.
+     * @param[in]  aRouterIndex  The Router index.
+     * @param[in]  aRouteCost    The Route Cost value.
      *
      */
-    void SetRouteCost(uint8_t aRouterId, uint8_t aRouteCost)
+    void SetRouteCost(uint8_t aRouterIndex, uint8_t aRouteCost)
     {
-        mRouteData[aRouterId] = (mRouteData[aRouterId] & ~kRouteCostMask) | aRouteCost;
+        mRouteData[aRouterIndex] = (mRouteData[aRouterIndex] & ~kRouteCostMask) | aRouteCost;
     }
 
     /**
-     * This method returns the Link Quality In value for a given Router ID.
+     * This method returns the Link Quality In value for a given Router index.
      *
-     * @returns The Link Quality In value for a given Router ID.
+     * @param[in]  aRouterIndex  The Router index.
+     *
+     * @returns The Link Quality In value for a given Router index.
      *
      */
-    uint8_t GetLinkQualityIn(uint8_t aRouterId) const
+    uint8_t GetLinkQualityIn(uint8_t aRouterIndex) const
     {
-        return (mRouteData[aRouterId] & kLinkQualityInMask) >> kLinkQualityInOffset;
+        return (mRouteData[aRouterIndex] & kLinkQualityInMask) >> kLinkQualityInOffset;
     }
 
     /**
-     * This method sets the Link Quality In value for a given Router ID.
+     * This method sets the Link Quality In value for a given Router index.
      *
-     * @param[in]  aRouterId     The Router ID.
-     * @param[in]  aLinkQuality  The Link Quality In value for a given Router ID.
+     * @param[in]  aRouterIndex  The Router index.
+     * @param[in]  aLinkQuality  The Link Quality In value for a given Router index.
      *
      */
-    void SetLinkQualityIn(uint8_t aRouterId, uint8_t aLinkQuality)
+    void SetLinkQualityIn(uint8_t aRouterIndex, uint8_t aLinkQuality)
     {
-        mRouteData[aRouterId] = (mRouteData[aRouterId] & ~kLinkQualityInMask) |
-                                ((aLinkQuality << kLinkQualityInOffset) & kLinkQualityInMask);
+        mRouteData[aRouterIndex] = (mRouteData[aRouterIndex] & ~kLinkQualityInMask) |
+                                   ((aLinkQuality << kLinkQualityInOffset) & kLinkQualityInMask);
     }
 
     /**
-     * This method returns the Link Quality Out value for a given Router ID.
+     * This method returns the Link Quality Out value for a given Router index.
      *
-     * @returns The Link Quality Out value for a given Router ID.
+     * @param[in]  aRouterIndex  The Router index.
+     *
+     * @returns The Link Quality Out value for a given Router index.
      *
      */
-    uint8_t GetLinkQualityOut(uint8_t aRouterId) const
+    uint8_t GetLinkQualityOut(uint8_t aRouterIndex) const
     {
-        return (mRouteData[aRouterId] & kLinkQualityOutMask) >> kLinkQualityOutOffset;
+        return (mRouteData[aRouterIndex] & kLinkQualityOutMask) >> kLinkQualityOutOffset;
     }
 
     /**
-     * This method sets the Link Quality Out value for a given Router ID.
+     * This method sets the Link Quality Out value for a given Router index.
      *
-     * @param[in]  aRouterId     The Router ID.
-     * @param[in]  aLinkQuality  The Link Quality Out value for a given Router ID.
+     * @param[in]  aRouterIndex  The Router index.
+     * @param[in]  aLinkQuality  The Link Quality Out value for a given Router index.
      *
      */
-    void SetLinkQualityOut(uint8_t aRouterId, uint8_t aLinkQuality)
+    void SetLinkQualityOut(uint8_t aRouterIndex, uint8_t aLinkQuality)
     {
-        mRouteData[aRouterId] = (mRouteData[aRouterId] & ~kLinkQualityOutMask) |
-                                ((aLinkQuality << kLinkQualityOutOffset) & kLinkQualityOutMask);
+        mRouteData[aRouterIndex] = (mRouteData[aRouterIndex] & ~kLinkQualityOutMask) |
+                                   ((aLinkQuality << kLinkQualityOutOffset) & kLinkQualityOutMask);
     }
 
 private:

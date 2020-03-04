@@ -59,3 +59,6 @@ target_link_libraries(ot-cli-mtd
     ${OT_PLATFORM_LIB}
     mbedcrypto
 )
+
+install(TARGETS ot-cli-ftd ot-cli-mtd
+    DESTINATION bin)

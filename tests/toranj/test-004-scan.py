@@ -30,7 +30,7 @@ from wpan import verify
 import wpan
 
 # -----------------------------------------------------------------------------------------------------------------------
-# Test desciption: Active scan and permit-join
+# Test description: Active scan and permit-join
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
 print('-' * 120)

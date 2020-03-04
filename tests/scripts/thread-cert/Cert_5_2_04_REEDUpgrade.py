@@ -39,7 +39,7 @@ ROUTER = 16
 DUT_REED = 17
 ED = 18
 MESH_LOCAL_PREFIX = 'fdde:ad00:beef:0:'
-ROUTING_LACATOR = ':0:ff:fe00'
+ROUTING_LOCATOR = ':0:ff:fe00'
 REED_ADVERTISEMENT_INTERVAL = 570
 REED_ADVERTISEMENT_MAX_JITTER = 60
 ROUTER_SELECTION_JITTER = 1
@@ -167,7 +167,7 @@ class Cert_5_2_4_REEDUpgrade(unittest.TestCase):
         mleid = None
         for addr in self.nodes[LEADER].get_addrs():
             if (addr.find(MESH_LOCAL_PREFIX) != -1 and
-                    addr.find(ROUTING_LACATOR) == -1):
+                    addr.find(ROUTING_LOCATOR) == -1):
                 mleid = addr
                 break
 

@@ -101,6 +101,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+ *
+ * Define to 1 to enable the CoAP Observe (RFC7641) API.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+#define OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
  *
  * Define to 1 to enable the CoAP Secure API.

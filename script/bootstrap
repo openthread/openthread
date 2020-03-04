@@ -81,9 +81,9 @@ install_packages_brew()
     brew tap ArmMbed/homebrew-formulae
     brew install arm-none-eabi-gcc
 
-    # check for gcc for posix examples
+    # check for gcc for simulation
     if ! which gcc; then
-        echo 'warning: clang/gcc needed for posix examples'
+        echo 'warning: clang/gcc needed for simulation'
         echo 'warning: please install Command Line Tools from https://developer.apple.com/download/more/'
     fi
 

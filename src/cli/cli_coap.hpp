@@ -82,17 +82,34 @@ private:
         otError (Coap::*mCommand)(int argc, char *argv[]);
     };
 
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    otError CancelResourceSubscription(void);
+    void    CancelSubscriber(void);
+#endif
+
     void PrintPayload(otMessage *aMessage) const;
 
     otError ProcessHelp(int argc, char *argv[]);
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    otError ProcessCancel(int argc, char *argv[]);
+#endif
     otError ProcessParameters(int argc, char *argv[]);
     otError ProcessRequest(int argc, char *argv[]);
     otError ProcessResource(int argc, char *argv[]);
+    otError ProcessSet(int argc, char *argv[]);
     otError ProcessStart(int argc, char *argv[]);
     otError ProcessStop(int argc, char *argv[]);
 
     static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo);
+
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    static void HandleNotificationResponse(void *               aContext,
+                                           otMessage *          aMessage,
+                                           const otMessageInfo *aMessageInfo,
+                                           otError              aError);
+    void        HandleNotificationResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
+#endif
 
     static void HandleResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
     void        HandleResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
@@ -117,7 +134,21 @@ private:
     otCoapTxParameters mResponseTxParameters;
 
     otCoapResource mResource;
-    char           mUriPath[kMaxUriLength];
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    otIp6Address mRequestAddr;
+    otSockAddr   mSubscriberSock;
+    char         mRequestUri[kMaxUriLength];
+    uint8_t      mRequestToken[OT_COAP_MAX_TOKEN_LENGTH];
+    uint8_t      mSubscriberToken[OT_COAP_MAX_TOKEN_LENGTH];
+#endif
+    char mUriPath[kMaxUriLength];
+    char mResourceContent[kMaxBufferSize];
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    uint32_t mObserveSerial;
+    uint8_t  mRequestTokenLength;
+    uint8_t  mSubscriberTokenLength;
+    bool     mSubscriberConfirmableNotifications;
+#endif
 };
 
 } // namespace Cli

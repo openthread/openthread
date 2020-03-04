@@ -36,7 +36,7 @@ You can also perform radio diagnostics using the command [diag](../../src/core/d
 ### With Simulation
 
 ```sh
-make -f examples/Makefile-posix
+make -f examples/Makefile-simulation
 ./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli ./output/x86_64-unknown-linux-gnu/bin/ot-rcp 1
 ```
 

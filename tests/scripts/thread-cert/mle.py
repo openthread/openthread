@@ -573,7 +573,7 @@ class Connectivity(object):
 
     def __init__(
         self,
-        pp,
+        pp_byte,
         link_quality_3,
         link_quality_2,
         link_quality_1,
@@ -583,7 +583,7 @@ class Connectivity(object):
         sed_buffer_size=None,
         sed_datagram_count=None,
     ):
-        self._pp = pp
+        self._pp_byte = pp_byte
         self._link_quality_3 = link_quality_3
         self._link_quality_2 = link_quality_2
         self._link_quality_1 = link_quality_1
@@ -594,8 +594,12 @@ class Connectivity(object):
         self._sed_datagram_count = sed_datagram_count
 
     @property
+    def pp_byte(self):
+        return self._pp_byte
+
+    @property
     def pp(self):
-        return self._pp
+        return common.map_pp(self, self._pp_byte)
 
     @property
     def link_quality_3(self):
@@ -667,7 +671,7 @@ class Connectivity(object):
 class ConnectivityFactory:
 
     def parse(self, data, message_info):
-        pp = ord(data.read(1)) & 0x03
+        pp_byte = ord(data.read(1))
         link_quality_3 = ord(data.read(1))
         link_quality_2 = ord(data.read(1))
         link_quality_1 = ord(data.read(1))
@@ -685,7 +689,7 @@ class ConnectivityFactory:
             sed_datagram_count = None
 
         return Connectivity(
-            pp,
+            pp_byte,
             link_quality_3,
             link_quality_2,
             link_quality_1,

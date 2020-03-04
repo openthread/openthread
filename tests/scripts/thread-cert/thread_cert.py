@@ -38,7 +38,7 @@ DEFAULT_PARAMS = {
     'mode': 'rsdn',
     'panid': 0xface,
     'whitelist': None,
-    'version': '1.2'
+    'version': '1.2',
 }
 """Default configurations when creating nodes."""
 
@@ -68,7 +68,12 @@ class TestCase(unittest.TestCase):
                 params = DEFAULT_PARAMS.copy()
             initial_topology[i] = params
 
-            self.nodes[i] = Node(i, params['is_mtd'], simulator=self.simulator)
+            self.nodes[i] = Node(
+                i,
+                params['is_mtd'],
+                simulator=self.simulator,
+                version=params['version'],
+            )
             self.nodes[i].set_panid(params['panid'])
             self.nodes[i].set_mode(params['mode'])
             self.nodes[i].set_addr64(format(EXTENDED_ADDRESS_BASE + i, '016x'))
@@ -101,3 +106,14 @@ class TestCase(unittest.TestCase):
         """
         for i in list(self.nodes.keys()):
             self.simulator.get_messages_sent_by(i)
+
+    def flush_nodes(self, nodes):
+        """Flush away all captured messages of specified nodes.
+
+        Args:
+            nodes (list): nodes whose messages to flush.
+
+        """
+        for i in nodes:
+            if i in list(self.nodes.keys()):
+                self.simulator.get_messages_sent_by(i)

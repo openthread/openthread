@@ -88,7 +88,7 @@ void TimeSync::HandleTimeSyncMessage(const Message &aMessage)
     if (mTimeSyncSeq != OT_TIME_SYNC_INVALID_SEQ && timeSyncSeqDelta < 0)
     {
         // An older time sync sequence was received. This indicates that there is a device that still needs to be
-        // synchronised with the current sequence, so forward it.
+        // synchronized with the current sequence, so forward it.
         mTimeSyncRequired = true;
 
         otLogInfoCore("Older time sync seq received:%u. Forwarding current seq:%u", aMessage.GetTimeSyncSeq(),
@@ -97,7 +97,7 @@ void TimeSync::HandleTimeSyncMessage(const Message &aMessage)
     else if (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER && timeSyncSeqDelta > 0)
     {
         // Another device is forwarding a later time sync sequence, perhaps because it merged from a different
-        // partition. The leader is authoritative, so ensure all devices synchronise to the time being seeded by this
+        // partition. The leader is authoritative, so ensure all devices synchronize to the time being seeded by this
         // leader instead.
         mTimeSyncSeq      = aMessage.GetTimeSyncSeq() + 1;
         mTimeSyncRequired = true;

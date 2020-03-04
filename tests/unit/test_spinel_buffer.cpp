@@ -32,7 +32,7 @@
 #include "common/instance.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
-#include "spinel/spinel_buffer.hpp"
+#include "lib/spinel/spinel_buffer.hpp"
 
 #include "test_platform.h"
 #include "test_util.hpp"
@@ -880,7 +880,7 @@ enum
     kLensArraySize                = 500,    // Size of "Lengths" array.
     kMaxFrameLen                  = 400,    // Maximum frame length
     kReadProbability              = 50,     // Probability (in percent) to randomly choose to read vs write frame
-    kHighPriorityProbablity       = 20,     // Probability (in percent) to write a high priority frame
+    kHighPriorityProbability      = 20,     // Probability (in percent) to write a high priority frame
     kUseTrueRandomNumberGenerator = 1,      // To use true random number generator or not.
 };
 
@@ -1020,7 +1020,7 @@ void TestFuzzBuffer(void)
             uint32_t                 len = GetRandom(kMaxFrameLen) + 1;
             Spinel::Buffer::Priority priority;
 
-            if (GetRandom(100) < kHighPriorityProbablity)
+            if (GetRandom(100) < kHighPriorityProbability)
             {
                 priority = Spinel::Buffer::kPriorityHigh;
             }

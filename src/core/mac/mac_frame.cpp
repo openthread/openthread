@@ -37,8 +37,11 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
 #include "crypto/aes_ccm.hpp"
 #include "thread/key_manager.hpp"
+#endif
 
 namespace ot {
 namespace Mac {
@@ -1031,7 +1034,7 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 
 exit:
     return;
-#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+#endif // OPENTHREAD_RADIO
 }
 
 // LCOV_EXCL_START

@@ -38,14 +38,22 @@ import simulator
 import socket
 import time
 import unittest
+import binascii
 
 
 class Node:
 
-    def __init__(self, nodeid, is_mtd=False, simulator=None):
+    def __init__(self, nodeid, is_mtd=False, simulator=None, version=None):
         self.nodeid = nodeid
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
         self.node_type = os.getenv('NODE_TYPE', 'sim')
+        self.env_version = os.getenv('THREAD_VERSION', '1.1')
+
+        if version is not None:
+            self.version = version
+        else:
+            self.version = self.env_version
+
         self.simulator = simulator
         if self.simulator:
             self.simulator.add_node(self)
@@ -69,11 +77,18 @@ class Node:
         """ Initialize a simulation node. """
         if 'OT_CLI_PATH' in os.environ:
             cmd = os.environ['OT_CLI_PATH']
-        elif 'top_builddir' in os.environ:
+        elif (self.version == '1.1' and self.version != self.env_version):
+            # Posix app
+            if 'OT_CLI_PATH_1_1' in os.environ:
+                cmd = os.environ['OT_CLI_PATH_1_1']
+            elif ('top_builddir_1_1') in os.environ:
+                srcdir = os.environ['top_builddir_1_1']
+                cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
+        elif ('top_builddir') in os.environ:
             srcdir = os.environ['top_builddir']
             cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
         else:
-            cmd = './ot-cli-%s' % mode
+            cmd = '%s/ot-cli-%s' % (self.version, mode)
 
         if 'RADIO_DEVICE' in os.environ:
             cmd += ' -v %s' % os.environ['RADIO_DEVICE']
@@ -107,15 +122,33 @@ class Node:
                 os.environ['OT_NCP_PATH'],
                 args,
             )
-        elif "top_builddir" in os.environ:
-            builddir = os.environ['top_builddir']
-            cmd = 'spinel-cli.py -p "%s/examples/apps/ncp/ot-ncp-%s%s" -n' % (
-                builddir,
-                mode,
+        elif (self.version == '1.1' and self.version != self.env_version):
+            if 'OT_NCP_PATH_1_1' in os.environ:
+                cmd = 'spinel-cli.py -p "%s%s" -n' % (
+                    os.environ['OT_NCP_PATH_1_1'],
+                    args,
+                )
+            elif ('top_builddir_1_1') in os.environ:
+                srcdir = os.environ['top_builddir_1_1']
+                cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
+                cmd = 'spinel-cli.py -p "%s%s" -n' % (
+                    cmd,
+                    args,
+                )
+        elif ('top_builddir') in os.environ:
+            srcdir = os.environ['top_builddir']
+            cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
+            cmd = 'spinel-cli.py -p "%s%s" -n' % (
+                cmd,
                 args,
             )
         else:
-            cmd = 'spinel-cli.py -p "./ot-ncp-%s%s" -n' % (mode, args)
+            cmd = 'spinel-cli.py -p "%s/ot-ncp-%s%s" -n' % (
+                self.version,
+                mode,
+                args,
+            )
+
         cmd += ' %d' % nodeid
         print("%s" % cmd)
 
@@ -312,6 +345,11 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
+    def set_link_quality(self, addr, lqi):
+        cmd = 'macfilter rss add-lqi %s %s' % (addr, lqi)
+        self.send_command(cmd)
+        self._expect('Done')
+
     def remove_whitelist(self, addr):
         cmd = 'macfilter addr remove %s' % addr
         self.send_command(cmd)
@@ -408,6 +446,20 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
+    def _escape_escapable(self, string):
+        """Escape CLI escapable characters in the given string.
+
+        Args:
+            string (str): UTF-8 input string.
+
+        Returns:
+            [str]: The modified string with escaped characters.
+        """
+        escapable_chars = '\\ \t\r\n'
+        for char in escapable_chars:
+            string = string.replace(char, '\\%s' % char)
+        return string
+
     def get_network_name(self):
         self.send_command('networkname')
         while True:
@@ -419,7 +471,7 @@ class Node:
         return network_name
 
     def set_network_name(self, network_name):
-        cmd = 'networkname %s' % network_name
+        cmd = 'networkname %s' % self._escape_escapable(network_name)
         self.send_command(cmd)
         self._expect('Done')
 
@@ -433,6 +485,11 @@ class Node:
 
     def set_panid(self, panid=config.PANID):
         cmd = 'panid %d' % panid
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def set_parent_priority(self, priority):
+        cmd = 'parentpriority %d' % priority
         self.send_command(cmd)
         self._expect('Done')
 
@@ -926,7 +983,7 @@ class Node:
             cmd += 'localprefix %s ' % mesh_local
 
         if network_name is not None:
-            cmd += 'networkname %s ' % network_name
+            cmd += 'networkname %s ' % self._escape_escapable(network_name)
 
         if binary is not None:
             cmd += 'binary %s ' % binary
@@ -968,10 +1025,186 @@ class Node:
             cmd += 'localprefix %s ' % mesh_local
 
         if network_name is not None:
-            cmd += 'networkname %s ' % network_name
+            cmd += 'networkname %s ' % self._escape_escapable(network_name)
 
         self.send_command(cmd)
         self._expect('Done')
+
+    def coap_cancel(self):
+        """
+        Cancel a CoAP subscription.
+        """
+        cmd = 'coap cancel'
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def coap_delete(self, ipaddr, uri, con=False, payload=None):
+        """
+        Send a DELETE request via CoAP.
+        """
+        return self._coap_rq('delete', ipaddr, uri, con, payload)
+
+    def coap_get(self, ipaddr, uri, con=False, payload=None):
+        """
+        Send a GET request via CoAP.
+        """
+        return self._coap_rq('get', ipaddr, uri, con, payload)
+
+    def coap_observe(self, ipaddr, uri, con=False, payload=None):
+        """
+        Send a GET request via CoAP with Observe set.
+        """
+        return self._coap_rq('observe', ipaddr, uri, con, payload)
+
+    def coap_post(self, ipaddr, uri, con=False, payload=None):
+        """
+        Send a POST request via CoAP.
+        """
+        return self._coap_rq('post', ipaddr, uri, con, payload)
+
+    def coap_put(self, ipaddr, uri, con=False, payload=None):
+        """
+        Send a PUT request via CoAP.
+        """
+        return self._coap_rq('put', ipaddr, uri, con, payload)
+
+    def _coap_rq(self, method, ipaddr, uri, con=False, payload=None):
+        """
+        Issue a GET/POST/PUT/DELETE/GET OBSERVE request.
+        """
+        cmd = 'coap %s %s %s' % (method, ipaddr, uri)
+        if con:
+            cmd += ' con'
+        else:
+            cmd += ' non'
+
+        if payload is not None:
+            cmd += ' %s' % payload
+
+        self.send_command(cmd)
+        return self.coap_wait_response()
+
+    def coap_wait_response(self):
+        """
+        Wait for a CoAP response, and return it.
+        """
+        if isinstance(self.simulator, simulator.VirtualTime):
+            self.simulator.go(5)
+            timeout = 1
+        else:
+            timeout = 5
+
+        self._expect(
+            r'coap response from ([\da-f:]+)(?: OBS=(\d+))?'
+            r'(?: with payload: ([\da-f]+))?\b',
+            timeout=timeout)
+        (source, observe, payload) = self.pexpect.match.groups()
+        source = source.decode('UTF-8')
+
+        if observe is not None:
+            observe = int(observe, base=10)
+
+        if payload is not None:
+            payload = binascii.a2b_hex(payload).decode('UTF-8')
+
+        # Return the values received
+        return dict(source=source, observe=observe, payload=payload)
+
+    def coap_wait_request(self):
+        """
+        Wait for a CoAP request to be made.
+        """
+        if isinstance(self.simulator, simulator.VirtualTime):
+            self.simulator.go(5)
+            timeout = 1
+        else:
+            timeout = 5
+
+        self._expect(
+            r'coap request from ([\da-f:]+)(?: OBS=(\d+))?'
+            r'(?: with payload: ([\da-f]+))?\b',
+            timeout=timeout)
+        (source, observe, payload) = self.pexpect.match.groups()
+        source = source.decode('UTF-8')
+
+        if observe is not None:
+            observe = int(observe, base=10)
+
+        if payload is not None:
+            payload = binascii.a2b_hex(payload).decode('UTF-8')
+
+        # Return the values received
+        return dict(source=source, observe=observe, payload=payload)
+
+    def coap_wait_subscribe(self):
+        """
+        Wait for a CoAP client to be subscribed.
+        """
+        if isinstance(self.simulator, simulator.VirtualTime):
+            self.simulator.go(5)
+            timeout = 1
+        else:
+            timeout = 5
+
+        self._expect(r'Subscribing client\b', timeout=timeout)
+
+    def coap_wait_ack(self):
+        """
+        Wait for a CoAP notification ACK.
+        """
+        if isinstance(self.simulator, simulator.VirtualTime):
+            self.simulator.go(5)
+            timeout = 1
+        else:
+            timeout = 5
+
+        self._expect(
+            r'Received ACK in reply to notification '
+            r'from ([\da-f:]+)\b',
+            timeout=timeout)
+        (source,) = self.pexpect.match.groups()
+        source = source.decode('UTF-8')
+
+        return source
+
+    def coap_set_resource_path(self, path):
+        """
+        Set the path for the CoAP resource.
+        """
+        cmd = 'coap resource %s' % path
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def coap_set_content(self, content):
+        """
+        Set the content of the CoAP resource.
+        """
+        cmd = 'coap set %s' % content
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def coap_start(self):
+        """
+        Start the CoAP service.
+        """
+        cmd = 'coap start'
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def coap_stop(self):
+        """
+        Stop the CoAP service.
+        """
+        cmd = 'coap stop'
+        self.send_command(cmd)
+
+        if isinstance(self.simulator, simulator.VirtualTime):
+            self.simulator.go(5)
+            timeout = 1
+        else:
+            timeout = 5
+
+        self._expect('Done', timeout=timeout)
 
     def coaps_start_psk(self, psk, pskIdentity):
         cmd = 'coaps psk %s %s' % (psk, pskIdentity)
