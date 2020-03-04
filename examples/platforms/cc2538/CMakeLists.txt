@@ -61,7 +61,12 @@ target_link_libraries(openthread-cc2538 PRIVATE openthread-platform-utils)
 target_link_options(openthread-cc2538 PUBLIC -T${PROJECT_SOURCE_DIR}/examples/platforms/cc2538/cc2538.ld)
 target_link_options(openthread-cc2538 PUBLIC -Wl,-Map=$<TARGET_PROPERTY:NAME>.map)
 
-target_compile_definitions(openthread-cc2538 PUBLIC ${OT_PLATFORM_DEFINES})
+target_compile_definitions(openthread-cc2538
+    PUBLIC
+        ${OT_PLATFORM_DEFINES}
+    PRIVATE
+        ${OT_PRIVATE_DEFINES}
+)
 
 target_compile_options(openthread-cc2538 PRIVATE
     ${OT_CFLAGS}
