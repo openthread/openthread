@@ -407,7 +407,7 @@ public:
     void ReadFrom(const Message &aMessage)
     {
         uint16_t length = aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-        assert(length == sizeof(*this));
+        OT_ASSERT(length == sizeof(*this));
         OT_UNUSED_VARIABLE(length);
     }
 
@@ -420,7 +420,7 @@ public:
     static void RemoveFrom(Message &aMessage)
     {
         otError error = aMessage.SetLength(aMessage.GetLength() - sizeof(DelayedResponseHeader));
-        assert(error == OT_ERROR_NONE);
+        OT_ASSERT(error == OT_ERROR_NONE);
         OT_UNUSED_VARIABLE(error);
     }
 

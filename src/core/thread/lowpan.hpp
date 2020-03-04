@@ -197,10 +197,12 @@ public:
         otError error = OT_ERROR_NONE;
         int     rval;
 
+        OT_UNUSED_VARIABLE(rval);
+
         VerifyOrExit(CanWrite(aLength), error = OT_ERROR_NO_BUFS);
 
         rval = aMessage.Read(aMessage.GetOffset(), aLength, mWritePointer);
-        assert(rval == aLength);
+        OT_ASSERT(rval == aLength);
 
         mWritePointer += aLength;
 

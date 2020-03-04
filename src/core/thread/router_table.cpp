@@ -235,7 +235,7 @@ Router *RouterTable::Allocate(void)
         if (freeBit == 0)
         {
             rval = Allocate(routerId);
-            assert(rval != NULL);
+            OT_ASSERT(rval != NULL);
             ExitNow();
         }
 
@@ -274,7 +274,7 @@ otError RouterTable::Release(uint8_t aRouterId)
     otError  error  = OT_ERROR_NONE;
     uint16_t rloc16 = Mle::Mle::Rloc16FromRouterId(aRouterId);
 
-    assert(aRouterId <= Mle::kMaxRouterId);
+    OT_ASSERT(aRouterId <= Mle::kMaxRouterId);
 
     VerifyOrExit(Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(IsAllocated(aRouterId), error = OT_ERROR_NOT_FOUND);
@@ -526,7 +526,7 @@ void RouterTable::ProcessTlv(const Mle::RouteTlv &aTlv)
         {
             Router *router = GetRouter(routerId);
 
-            assert(router != NULL);
+            OT_ASSERT(router != NULL);
             router->SetNextHop(Mle::kInvalidRouterId);
             RemoveNeighbor(*router);
 

@@ -1678,7 +1678,7 @@ void Mle::HandleAttachTimer(void)
     switch (mAttachState)
     {
     case kAttachStateIdle:
-        assert(false);
+        OT_ASSERT(false);
         break;
 
     case kAttachStateProcessAnnounce:
@@ -2296,7 +2296,7 @@ otError Mle::SendChildUpdateRequest(void)
     case OT_DEVICE_ROLE_DISABLED:
     case OT_DEVICE_ROLE_ROUTER:
     case OT_DEVICE_ROLE_LEADER:
-        assert(false);
+        OT_ASSERT(false);
         break;
     }
 
@@ -2508,7 +2508,7 @@ otError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
         aesCcm.SetKey(Get<KeyManager>().GetCurrentMleKey(), 16);
         error = aesCcm.Init(16 + 16 + header.GetHeaderLength(), aMessage.GetLength() - (header.GetLength() - 1),
                             sizeof(tag), nonce, sizeof(nonce));
-        assert(error == OT_ERROR_NONE);
+        OT_ASSERT(error == OT_ERROR_NONE);
 
         aesCcm.Header(&mLinkLocal64.GetAddress(), sizeof(mLinkLocal64.GetAddress()));
         aesCcm.Header(&aDestination, sizeof(aDestination));
@@ -3602,7 +3602,7 @@ otError Mle::HandleChildUpdateResponse(const Message &         aMessage,
         break;
 
     default:
-        assert(false);
+        OT_ASSERT(false);
         break;
     }
 
@@ -3681,7 +3681,7 @@ otError Mle::HandleChildUpdateResponse(const Message &         aMessage,
         break;
 
     default:
-        assert(false);
+        OT_ASSERT(false);
         break;
     }
 
@@ -3782,7 +3782,7 @@ void Mle::ProcessAnnounce(void)
     uint8_t  newChannel = mAlternateChannel;
     uint16_t newPanId   = mAlternatePanId;
 
-    assert(mAttachState == kAttachStateProcessAnnounce);
+    OT_ASSERT(mAttachState == kAttachStateProcessAnnounce);
 
     otLogNoteMle("Processing Announce - channel %d, panid 0x%02x", newChannel, newPanId);
 

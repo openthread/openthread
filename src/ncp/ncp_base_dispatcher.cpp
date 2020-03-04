@@ -629,7 +629,7 @@ NcpBase::PropertyHandler NcpBase::FindPropertyHandler(const HandlerEntry *aHandl
 {
     size_t l = 0;
 
-    assert(aSize > 0);
+    OT_ASSERT(aSize > 0);
 
     for (size_t r = aSize - 1; l < r;)
     {

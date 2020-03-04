@@ -71,7 +71,7 @@ otError Ecdsa::Sign(uint8_t *      aOutput,
     VerifyOrExit(mbedtls_pk_get_type(&pkCtx) == MBEDTLS_PK_ECKEY, error = OT_ERROR_INVALID_ARGS);
 
     keypair = mbedtls_pk_ec(pkCtx);
-    assert(keypair != NULL);
+    OT_ASSERT(keypair != NULL);
 
     VerifyOrExit(mbedtls_ecdsa_from_keypair(&ctx, keypair) == 0, error = OT_ERROR_FAILED);
 

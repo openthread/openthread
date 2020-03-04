@@ -92,7 +92,7 @@ otError otThreadGetLeaderRloc(otInstance *aInstance, otIp6Address *aLeaderRloc)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aLeaderRloc != NULL);
+    OT_ASSERT(aLeaderRloc != NULL);
 
     return instance.Get<Mle::MleRouter>().GetLeaderAddress(*static_cast<Ip6::Address *>(aLeaderRloc));
 }
@@ -126,7 +126,7 @@ otError otThreadSetMasterKey(otInstance *aInstance, const otMasterKey *aKey)
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aKey != NULL);
+    OT_ASSERT(aKey != NULL);
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
@@ -249,7 +249,7 @@ otError otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterato
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert((aInfo != NULL) && (aIterator != NULL));
+    OT_ASSERT((aInfo != NULL) && (aIterator != NULL));
 
     return instance.Get<Mle::MleRouter>().GetNextNeighborInfo(*aIterator, *aInfo);
 }
@@ -265,7 +265,7 @@ otError otThreadGetLeaderData(otInstance *aInstance, otLeaderData *aLeaderData)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aLeaderData != NULL);
+    OT_ASSERT(aLeaderData != NULL);
 
     return instance.Get<Mle::MleRouter>().GetLeaderData(*aLeaderData);
 }
@@ -304,7 +304,7 @@ otError otThreadGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
     otError   error    = OT_ERROR_NONE;
     Router *  parent;
 
-    assert(aParentInfo != NULL);
+    OT_ASSERT(aParentInfo != NULL);
 
     // Reference device needs get the original parent's info even after the node state changed.
 #if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -335,7 +335,7 @@ otError otThreadGetParentAverageRssi(otInstance *aInstance, int8_t *aParentRssi)
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aParentRssi != NULL);
+    OT_ASSERT(aParentRssi != NULL);
 
     *aParentRssi = instance.Get<Mle::MleRouter>().GetParent().GetLinkInfo().GetAverageRss();
 
@@ -350,7 +350,7 @@ otError otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aLastRssi)
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aLastRssi != NULL);
+    OT_ASSERT(aLastRssi != NULL);
 
     *aLastRssi = instance.Get<Mle::MleRouter>().GetParent().GetLinkInfo().GetLastRss();
 

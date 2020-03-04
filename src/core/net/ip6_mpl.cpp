@@ -177,7 +177,7 @@ otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
     if (evict->GetLifetime() != 0)
     {
         // no free entries available, look to evict an existing entry
-        assert(curCount != 0);
+        OT_ASSERT(curCount != 0);
 
         if (aSeedId == group->GetSeedId() && insert == NULL)
         {
@@ -210,12 +210,12 @@ otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
 
     if (evict > insert)
     {
-        assert(insert >= mSeedSet);
+        OT_ASSERT(insert >= mSeedSet);
         memmove(insert + 1, insert, static_cast<size_t>(evict - insert) * sizeof(MplSeedEntry));
     }
     else if (evict < insert)
     {
-        assert(evict >= mSeedSet);
+        OT_ASSERT(evict >= mSeedSet);
         memmove(evict, evict + 1, static_cast<size_t>(insert - 1 - evict) * sizeof(MplSeedEntry));
         insert--;
     }

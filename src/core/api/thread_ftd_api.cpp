@@ -241,7 +241,7 @@ otError otThreadGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChi
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aChildInfo != NULL);
+    OT_ASSERT(aChildInfo != NULL);
 
     return instance.Get<Mle::MleRouter>().GetChildInfoById(aChildId, *aChildInfo);
 }
@@ -250,7 +250,7 @@ otError otThreadGetChildInfoByIndex(otInstance *aInstance, uint16_t aChildIndex,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aChildInfo != NULL);
+    OT_ASSERT(aChildInfo != NULL);
 
     return instance.Get<Mle::MleRouter>().GetChildInfoByIndex(aChildIndex, *aChildInfo);
 }
@@ -265,7 +265,7 @@ otError otThreadGetChildNextIp6Address(otInstance *               aInstance,
     Child::Ip6AddressIterator iterator;
     Ip6::Address *            address;
 
-    assert(aIterator != NULL && aAddress != NULL);
+    OT_ASSERT(aIterator != NULL && aAddress != NULL);
 
     address = static_cast<Ip6::Address *>(aAddress);
     iterator.Set(*aIterator);
@@ -295,7 +295,7 @@ otError otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRoute
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aRouterInfo != NULL);
+    OT_ASSERT(aRouterInfo != NULL);
 
     return instance.Get<RouterTable>().GetRouterInfo(aRouterId, *aRouterInfo);
 }
@@ -304,7 +304,7 @@ otError otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIndex, otEidCac
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aEntry != NULL);
+    OT_ASSERT(aEntry != NULL);
     return instance.Get<AddressResolver>().GetEntry(aIndex, *aEntry);
 }
 

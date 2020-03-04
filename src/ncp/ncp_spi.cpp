@@ -71,7 +71,7 @@ extern "C" void otNcpInit(otInstance *aInstance)
 
     if (ncpSpi == NULL || ncpSpi != NcpBase::GetNcpInstance())
     {
-        assert(false);
+        OT_ASSERT(false);
     }
 }
 
@@ -269,14 +269,14 @@ void NcpSpi::PrepareNextSpiSendFrame(void)
     SuccessOrExit(error = mTxFrameBuffer.OutFrameBegin());
 
     frameLength = mTxFrameBuffer.OutFrameGetLength();
-    assert(frameLength <= kSpiBufferSize - kSpiHeaderSize);
+    OT_ASSERT(frameLength <= kSpiBufferSize - kSpiHeaderSize);
 
     // The "accept length" in `mSendFrame` is already updated based
     // on current state of receive. It is changed either from the
     // `SpiTransactionComplete()` callback or from `HandleRxFrame()`.
 
     readLength = mTxFrameBuffer.OutFrameRead(frameLength, sendFrame.GetData());
-    assert(readLength == frameLength);
+    OT_ASSERT(readLength == frameLength);
 
     sendFrame.SetHeaderDataLen(frameLength);
     mSendFrameLength = frameLength + kSpiHeaderSize;

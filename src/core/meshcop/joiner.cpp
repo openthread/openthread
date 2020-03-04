@@ -458,7 +458,7 @@ exit:
 
 void Joiner::SendJoinerFinalize(void)
 {
-    assert(mFinalizeMessage != NULL);
+    OT_ASSERT(mFinalizeMessage != NULL);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     LogCertMessage("[THCI] direction=send | type=JOIN_FIN.req |", *mFinalizeMessage);
@@ -595,7 +595,7 @@ void Joiner::HandleTimer(void)
     case OT_JOINER_STATE_IDLE:
     case OT_JOINER_STATE_DISCOVER:
     case OT_JOINER_STATE_CONNECT:
-        assert(false);
+        OT_ASSERT(false);
         break;
 
     case OT_JOINER_STATE_CONNECTED:

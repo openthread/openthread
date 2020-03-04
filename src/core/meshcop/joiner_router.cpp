@@ -462,7 +462,7 @@ void JoinerRouter::JoinerEntrustMetadata::ReadFrom(const Message &aMessage)
 {
     uint16_t length = aMessage.GetLength();
 
-    assert(length >= sizeof(*this));
+    OT_ASSERT(length >= sizeof(*this));
     aMessage.Read(length - sizeof(*this), sizeof(*this), this);
 }
 

@@ -151,7 +151,7 @@ void ChannelMonitor::HandleEnergyScanResult(Mac::EnergyScanResult *aResult)
         uint32_t newValue     = 0;
         uint32_t weight;
 
-        assert(channelIndex < kNumChannels);
+        OT_ASSERT(channelIndex < kNumChannels);
 
         otLogDebgUtil("ChannelMonitor: channel: %d, rssi:%d", aResult->mChannel, aResult->mMaxRssi);
 

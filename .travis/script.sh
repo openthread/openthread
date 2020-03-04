@@ -504,6 +504,14 @@ build_samr21() {
     ./bootstrap || die
     make -f examples/Makefile-simulation || die
 
+    export CPPFLAGS="${CPPFLAGS}                          \
+        -DOPENTHREAD_CONFIG_ASSERT_ENABLE=0"
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./bootstrap || die
+    make -f examples/Makefile-simulation || die
+
     export CPPFLAGS="                                    \
         -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1       \
         -DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1     \
