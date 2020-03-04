@@ -77,6 +77,7 @@
 #undef assert
 #endif
 
+#ifndef assert
 #define assert(cond)  \
     do                \
     {                 \
@@ -88,6 +89,7 @@
         }             \
     } while (0)
 
+#endif
 #endif
 
 #endif // DEBUG_HPP_
