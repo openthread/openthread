@@ -176,6 +176,17 @@ class Node:
                     raise
 
     def _prepare_pattern(self, pattern):
+        """Build a new pexpect pattern matching line by line.
+
+        Adds lookahead and lookbehind to make each pattern match a whole line,
+        and add 'Done' as the first pattern.
+
+        Args:
+            pattern: a single regex or a list of regex.
+
+        Returns:
+            A list of regex.
+        """
         EXPECT_LINE_FORMAT = r'(?<=[\r\n])%s(?=[\r\n])'
 
         if isinstance(pattern, list):
@@ -186,11 +197,25 @@ class Node:
         return [EXPECT_LINE_FORMAT % 'Done'] + pattern
 
     def _expect_result(self, pattern, *args, **kwargs):
+        """Expect a single matching result.
+
+        The arguments are identical to pexpect.expect().
+
+        Returns:
+            The matched line.
+        """
         results = self._expect_results(pattern, *args, **kwargs)
         assert len(results) == 1
         return results[0]
 
     def _expect_results(self, pattern, *args, **kwargs):
+        """Expect multiple matching results.
+
+        The arguments are identical to pexpect.expect().
+
+        Returns:
+            The matched lines.
+        """
         results = []
         pattern = self._prepare_pattern(pattern)
 
