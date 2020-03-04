@@ -981,7 +981,7 @@ bool TxParameters::Validate(const otCoapTxParameters &aTxParameters)
         uint32_t tmp = Multiply(aTxParameters.mAckTimeout, (1U << (aTxParameters.mMaxRetransmit + 1)) - 1);
 
         tmp /= aTxParameters.mAckRandomFactorDenominator;
-        tmp = Multiple(tmp, aTxParameters.mAckRandomFactorNumerator);
+        tmp = Multiply(tmp, aTxParameters.mAckRandomFactorNumerator);
 
         rval = (tmp != 0 && (tmp + aTxParameters.mAckTimeout + 2 * kDefaultMaxLatency) > tmp);
     }
