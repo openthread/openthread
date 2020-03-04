@@ -75,25 +75,22 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
     bool            isUpdateFromCommissioner = false;
     bool            doesAffectConnectivity   = false;
     bool            doesAffectMasterKey      = false;
+    bool            hasMasterKey             = false;
     StateTlv::State state                    = StateTlv::kReject;
     Dataset         dataset(mLocal.GetType());
 
-    ActiveTimestampTlv       activeTimestamp;
-    PendingTimestampTlv      pendingTimestamp;
-    ChannelTlv               channel;
-    CommissionerSessionIdTlv sessionId;
-    MeshLocalPrefixTlv       meshLocalPrefix;
-    NetworkMasterKeyTlv      masterKey;
-    PanIdTlv                 panId;
+    ActiveTimestampTlv  activeTimestamp;
+    PendingTimestampTlv pendingTimestamp;
+    ChannelTlv          channel;
+    uint16_t            sessionId;
+    otMeshLocalPrefix   meshLocalPrefix;
+    MasterKey           masterKey;
+    uint16_t            panId;
 
     activeTimestamp.SetLength(0);
     pendingTimestamp.SetLength(0);
     channel.SetLength(0);
-    masterKey.SetLength(0);
-    meshLocalPrefix.SetLength(0);
-    panId.SetLength(0);
     pendingTimestamp.SetLength(0);
-    sessionId.SetLength(0);
 
     VerifyOrExit(Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER);
 
@@ -140,32 +137,32 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
     }
 
     // check PAN ID
-    if (Tlv::GetTlv(aMessage, Tlv::kPanId, sizeof(panId), panId) == OT_ERROR_NONE && panId.IsValid() &&
-        panId.GetPanId() != Get<Mac::Mac>().GetPanId())
+    if (Tlv::ReadUint16Tlv(aMessage, Tlv::kPanId, panId) == OT_ERROR_NONE && panId != Get<Mac::Mac>().GetPanId())
     {
         doesAffectConnectivity = true;
     }
 
     // check mesh local prefix
-    if (Tlv::GetTlv(aMessage, Tlv::kMeshLocalPrefix, sizeof(meshLocalPrefix), meshLocalPrefix) == OT_ERROR_NONE &&
-        meshLocalPrefix.IsValid() &&
-        memcmp(&meshLocalPrefix.GetMeshLocalPrefix(), &Get<Mle::MleRouter>().GetMeshLocalPrefix(),
-               meshLocalPrefix.GetMeshLocalPrefixLength()))
+    if (Tlv::ReadTlv(aMessage, Tlv::kMeshLocalPrefix, &meshLocalPrefix, sizeof(meshLocalPrefix)) == OT_ERROR_NONE &&
+        memcmp(&meshLocalPrefix, &Get<Mle::MleRouter>().GetMeshLocalPrefix(), sizeof(meshLocalPrefix)))
     {
         doesAffectConnectivity = true;
     }
 
     // check network master key
-    if (Tlv::GetTlv(aMessage, Tlv::kNetworkMasterKey, sizeof(masterKey), masterKey) == OT_ERROR_NONE &&
-        masterKey.IsValid() && (masterKey.GetNetworkMasterKey() != Get<KeyManager>().GetMasterKey()))
+    if (Tlv::ReadTlv(aMessage, Tlv::kNetworkMasterKey, &masterKey, sizeof(masterKey)) == OT_ERROR_NONE)
     {
-        doesAffectConnectivity = true;
-        doesAffectMasterKey    = true;
+        hasMasterKey = true;
+
+        if (masterKey != Get<KeyManager>().GetMasterKey())
+        {
+            doesAffectConnectivity = true;
+            doesAffectMasterKey    = true;
+        }
     }
 
     // check active timestamp rollback
-    if (type == Tlv::kPendingTimestamp &&
-        ((masterKey.GetLength() == 0) || (masterKey.GetNetworkMasterKey() == Get<KeyManager>().GetMasterKey())))
+    if (type == Tlv::kPendingTimestamp && (!hasMasterKey || (masterKey == Get<KeyManager>().GetMasterKey())))
     {
         // no change to master key, active timestamp must be ahead
         const Timestamp *localActiveTimestamp = Get<ActiveDataset>().GetTimestamp();
@@ -174,7 +171,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
     }
 
     // check commissioner session id
-    if (Tlv::GetTlv(aMessage, Tlv::kCommissionerSessionId, sizeof(sessionId), sessionId) == OT_ERROR_NONE)
+    if (Tlv::ReadUint16Tlv(aMessage, Tlv::kCommissionerSessionId, sessionId) == OT_ERROR_NONE)
     {
         CommissionerSessionIdTlv *localId;
 
@@ -183,8 +180,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
         localId = static_cast<CommissionerSessionIdTlv *>(
             Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kCommissionerSessionId));
 
-        VerifyOrExit(sessionId.IsValid() && localId != NULL &&
-                     localId->GetCommissionerSessionId() == sessionId.GetCommissionerSessionId());
+        VerifyOrExit(localId != NULL && localId->GetCommissionerSessionId() == sessionId);
     }
 
     // verify an MGMT_ACTIVE_SET.req from a Commissioner does not affect connectivity
@@ -288,16 +284,13 @@ void DatasetManager::SendSetResponse(const Coap::Message &   aRequest,
 {
     otError        error = OT_ERROR_NONE;
     Coap::Message *message;
-    StateTlv       state;
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    state.Init();
-    state.SetState(aState);
-    SuccessOrExit(error = state.AppendTo(*message));
+    SuccessOrExit(error = Tlv::AppendUint8Tlv(*message, Tlv::kState, static_cast<uint8_t>(aState)));
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
 
