@@ -3730,11 +3730,28 @@ void Interpreter::HandleDiagnosticGetResponse(otMessage *aMessage, const otMessa
 
 void Interpreter::HandleDiagnosticGetResponse(const otMessage &aMessage, const Ip6::MessageInfo &)
 {
+    uint8_t               buf[16];
+    uint16_t              bytesToPrint;
+    uint16_t              bytesPrinted = 0;
+    uint16_t              length       = otMessageGetLength(&aMessage) - otMessageGetOffset(&aMessage);
     otNetworkDiagTlv      diagTlv;
     otNetworkDiagIterator iterator = OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT;
     otError               error    = OT_ERROR_NONE;
 
-    mServer->OutputFormat("DIAG_GET.rsp/ans:\r\n");
+    mServer->OutputFormat("DIAG_GET.rsp/ans:");
+
+    while (length > 0)
+    {
+        bytesToPrint = (length < sizeof(buf)) ? length : sizeof(buf);
+        otMessageRead(&aMessage, otMessageGetOffset(&aMessage) + bytesPrinted, buf, bytesToPrint);
+
+        OutputBytes(buf, static_cast<uint8_t>(bytesToPrint));
+
+        length -= bytesToPrint;
+        bytesPrinted += bytesToPrint;
+    }
+
+    mServer->OutputFormat("\r\n");
 
     while ((error = otThreadGetNextDiagnosticTlv(&aMessage, &iterator, &diagTlv)) == OT_ERROR_NONE)
     {
