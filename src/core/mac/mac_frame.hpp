@@ -367,7 +367,7 @@ public:
      * @retval FALSE  If this is not an Ack.
      *
      */
-    bool IsAck(void) const { return (GetPsdu()[0] & kFcfFrameTypeMask) == kFcfFrameAck; }
+    bool IsAck(void) const { return GetType() == kFcfFrameAck; }
 
     /**
      * This method returns the IEEE 802.15.4 Frame Version.
