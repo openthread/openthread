@@ -195,7 +195,8 @@ class Node:
         results = []
         pattern = self._prepare_pattern(pattern)
 
-        while True:
+        while self._expect(pattern, *args, **kwargs):
+            results.append(self.pexpect.match.group(0).decode('utf8'))
             if self._expect(pattern, *args, **kwargs):
                 results.append(self.pexpect.match.group(0).decode('utf8'))
             else:
