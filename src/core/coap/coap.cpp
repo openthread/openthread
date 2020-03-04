@@ -978,7 +978,7 @@ bool TxParameters::Validate(const otCoapTxParameters &aTxParameters)
         aTxParameters.mAckTimeout >= OT_COAP_MIN_ACK_TIMEOUT && aTxParameters.mMaxRetransmit <= OT_COAP_MAX_RETRANSMIT)
     {
         // Calulate exchange lifetime step by step and verify no overflow.
-        uint32_t tmp = Multiple(aTxParameters.mAckTimeout, (1U << (aTxParameters.mMaxRetransmit + 1)) - 1);
+        uint32_t tmp = Multiply(aTxParameters.mAckTimeout, (1U << (aTxParameters.mMaxRetransmit + 1)) - 1);
 
         tmp /= aTxParameters.mAckRandomFactorDenominator;
         tmp = Multiple(tmp, aTxParameters.mAckRandomFactorNumerator);
