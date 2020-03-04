@@ -59,8 +59,8 @@ COMMON_SOURCES                                    = \
     spinel_encoder.cpp                              \
     $(NULL)
 
-ot_spinel_headers                                   = \
-    spinel.h                                       \
+ot_spinel_headers                                 = \
+    spinel.h                                        \
     $(NULL)
 
 ot_spineldir = $(includedir)/spinel
@@ -106,7 +106,6 @@ spinel_test_CFLAGS                                = \
     -I$(top_srcdir)/src/core                        \
     -I$(top_srcdir)/include                         \
     $(NULL)
-
 
 TESTS                                             = spinel-test
 
