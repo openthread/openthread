@@ -116,6 +116,9 @@
  * Define to 1 if you want to use JN589 Flash implementation.
  *
  */
+#ifdef OPENTHREAD_SETTINGS_RAM
+#undef OPENTHREAD_SETTINGS_RAM
+#endif
 #define OPENTHREAD_SETTINGS_RAM 1
 
 /**

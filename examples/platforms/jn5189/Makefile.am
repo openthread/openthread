@@ -38,6 +38,10 @@ lib_LIBRARIES                                                                   
 override CFLAGS                                      := $(filter-out -pedantic-errors,$(CFLAGS))
 override CXXFLAGS                                    := $(filter-out -pedantic-errors,$(CXXFLAGS))
 
+# Do not enable -Wundef for jn5189 driver library
+override CFLAGS    := $(filter-out -Wundef,$(CFLAGS))
+override CXXFLAGS  := $(filter-out -Wundef,$(CXXFLAGS))
+
 LIB_FLAGS                                                                                          = \
     -DCPU_JN518X                                                                                     \
     -DCPU_JN518X_REV=2                                                                               \
