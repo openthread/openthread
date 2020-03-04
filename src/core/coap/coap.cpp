@@ -963,7 +963,7 @@ uint32_t ResponsesQueue::ResponseMetadata::GetRemainingTime(void) const
 }
 
 /// Return product of @p aValueA and @p aValueB if no overflow otherwise 0.
-static uint32_t Multiple(uint32_t aValueA, uint32_t aValueB)
+static uint32_t Multiply(uint32_t aValueA, uint32_t aValueB)
 {
     uint32_t result = aValueA * aValueB;
 
