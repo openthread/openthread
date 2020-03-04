@@ -34,13 +34,11 @@ import sys
 import pexpect
 import pexpect.popen_spawn
 import re
+import simulator
 import socket
 import time
 import unittest
 import binascii
-
-_EXPECT_LINE_START = r'(?<=[\r\n])'
-_EXPECT_LINE_END = r'(?=[\r\n])'
 
 
 class Node:
@@ -178,14 +176,14 @@ class Node:
                     raise
 
     def _prepare_pattern(self, pattern):
-        if isinstance(pattern, list):
-            pattern = [
-                _EXPECT_LINE_START + p + _EXPECT_LINE_END for p in pattern
-            ]
-        else:
-            pattern = [_EXPECT_LINE_START + pattern + _EXPECT_LINE_END]
+        EXPECT_LINE_FORMAT = r'(?<=[\r\n])%s(?=[\r\n])'
 
-        return [_EXPECT_LINE_START + r'Done' + _EXPECT_LINE_END] + pattern
+        if isinstance(pattern, list):
+            pattern = [EXPECT_LINE_FORMAT % p for p in pattern]
+        else:
+            pattern = [EXPECT_LINE_FORMAT % pattern]
+
+        return [EXPECT_LINE_FORMAT % 'Done'] + pattern
 
     def _expect_result(self, pattern, *args, **kwargs):
         results = self._expect_results(pattern, *args, **kwargs)
@@ -574,17 +572,11 @@ class Node:
         eidcaches = []
         self.send_command('eidcache')
 
-        while True:
-            i = self._expect([
-                _EXPECT_LINE_START + r'([a-fA-F0-9\:]+) ([a-fA-F0-9]+)' +
-                _EXPECT_LINE_END, 'Done'
-            ])
-            if i == 0:
-                eid = self.pexpect.match.groups()[0].decode("utf-8")
-                rloc = self.pexpect.match.groups()[1].decode("utf-8")
-                eidcaches.append((eid, rloc))
-            elif i == 1:
-                break
+        pattern = self._prepare_pattern(r'([a-fA-F0-9\:]+) ([a-fA-F0-9]+)')
+        while self._expect(pattern):
+            eid = self.pexpect.match.groups()[0].decode("utf-8")
+            rloc = self.pexpect.match.groups()[1].decode("utf-8")
+            eidcaches.append((eid, rloc))
 
         return eidcaches
 
