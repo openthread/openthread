@@ -217,11 +217,21 @@ otError otCoapSendRequestWithParameters(otInstance *              aInstance,
                                         void *                    aContext,
                                         const otCoapTxParameters *aTxParameters)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
+    otError                   error;
+    Instance &                instance     = *static_cast<Instance *>(aInstance);
+    const Coap::TxParameters &txParameters = Coap::TxParameters::From(aTxParameters);
 
-    return instance.GetApplicationCoap().SendMessage(*static_cast<Coap::Message *>(aMessage),
-                                                     *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
-                                                     Coap::TxParameters::From(aTxParameters), aHandler, aContext);
+    if (aTxParameters != NULL)
+    {
+        VerifyOrExit(txParameters.IsValid(), error = OT_ERROR_INVALID_ARGS);
+    }
+
+    error = instance.GetApplicationCoap().SendMessage(*static_cast<Coap::Message *>(aMessage),
+                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
+                                                      txParameters, aHandler, aContext);
+
+exit:
+    return error;
 }
 
 otError otCoapStart(otInstance *aInstance, uint16_t aPort)

@@ -962,6 +962,33 @@ uint32_t ResponsesQueue::ResponseMetadata::GetRemainingTime(void) const
     return (mDequeueTime > now) ? mDequeueTime - now : 0;
 }
 
+/// Return product of @p aValueA and @p aValueB if no overflow otherwise 0.
+static uint32_t Multiply(uint32_t aValueA, uint32_t aValueB)
+{
+    uint32_t result = aValueA * aValueB;
+
+    return (result / aValueA == aValueB) ? result : 0;
+}
+
+bool TxParameters::IsValid(void) const
+{
+    bool rval = false;
+
+    if (mAckRandomFactorNumerator >= mAckRandomFactorDenominator && mAckTimeout >= OT_COAP_MIN_ACK_TIMEOUT &&
+        mMaxRetransmit <= OT_COAP_MAX_RETRANSMIT)
+    {
+        // Calulate exchange lifetime step by step and verify no overflow.
+        uint32_t tmp = Multiply(mAckTimeout, (1U << (mMaxRetransmit + 1)) - 1);
+
+        tmp /= mAckRandomFactorDenominator;
+        tmp = Multiply(tmp, mAckRandomFactorNumerator);
+
+        rval = (tmp != 0 && (tmp + mAckTimeout + 2 * kDefaultMaxLatency) > tmp);
+    }
+
+    return rval;
+}
+
 uint32_t TxParameters::CalculateInitialRetransmissionTimeout(void) const
 {
     return Random::NonCrypto::GetUint32InRange(
@@ -979,10 +1006,10 @@ uint32_t TxParameters::CalculateMaxTransmitWait(void) const
     return CalculateSpan(mMaxRetransmit + 1);
 }
 
-uint32_t TxParameters::CalculateSpan(uint32_t aMaxRetx) const
+uint32_t TxParameters::CalculateSpan(uint8_t aMaxRetx) const
 {
-    return static_cast<uint32_t>(mAckTimeout * ((1ULL << aMaxRetx) - 1) * mAckRandomFactorNumerator /
-                                 mAckRandomFactorDenominator);
+    return static_cast<uint32_t>(mAckTimeout * ((1U << aMaxRetx) - 1) / mAckRandomFactorDenominator *
+                                 mAckRandomFactorNumerator);
 }
 
 const otCoapTxParameters TxParameters::kDefaultTxParameters = {

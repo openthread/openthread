@@ -103,6 +103,14 @@ public:
     }
 
     /**
+     * This method validates whether the CoAP transmission parameters are valid.
+     *
+     * @returns Whether the parameters are valid.
+     *
+     */
+    bool IsValid(void) const;
+
+    /**
      * This static method returns default CoAP tx parameters.
      *
      * @returns The default tx parameters.
@@ -113,17 +121,17 @@ public:
 private:
     enum
     {
-        kDefaultAckTimeout                 = OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT_MILLIS,
-        kDefaultAckRandomFactorNumerator   = OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_NUMERATOR,
-        kDefaultAckRandomFactorDenominator = OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_DENOMINATOR,
-        kDefaultMaxRetransmit              = OPENTHREAD_CONFIG_COAP_MAX_RETRANSMIT,
+        kDefaultAckTimeout                 = 2000, // in millisecond
+        kDefaultAckRandomFactorNumerator   = 3,
+        kDefaultAckRandomFactorDenominator = 2,
+        kDefaultMaxRetransmit              = 4,
         kDefaultMaxLatency                 = 100000, // in millisecond
     };
 
     uint32_t CalculateInitialRetransmissionTimeout(void) const;
     uint32_t CalculateExchangeLifetime(void) const;
     uint32_t CalculateMaxTransmitWait(void) const;
-    uint32_t CalculateSpan(uint32_t aMaxRetx) const;
+    uint32_t CalculateSpan(uint8_t aMaxRetx) const;
 
     static const otCoapTxParameters kDefaultTxParameters;
 };

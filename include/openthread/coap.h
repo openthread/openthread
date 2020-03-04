@@ -60,6 +60,10 @@ extern "C" {
 
 #define OT_COAP_MAX_TOKEN_LENGTH 8 ///< Max token length as specified (RFC 7252).
 
+#define OT_COAP_MAX_RETRANSMIT 30 ///< Max retransmit supported by OpenThread.
+
+#define OT_COAP_MIN_ACK_TIMEOUT 1000 ///< Minimal ACK timeout in milliseconds supported by OpenThread.
+
 /**
  * CoAP Type values.
  *
@@ -777,9 +781,14 @@ otMessage *otCoapNewMessage(otInstance *aInstance, const otMessageSettings *aSet
  * @param[in]  aHandler         A function pointer that shall be called on response reception or timeout.
  * @param[in]  aContext         A pointer to arbitrary context information. May be NULL if not used.
  * @param[in]  aTxParameters    A pointer to transmission parameters for this request. Use NULL for defaults.
+ *                              Otherwise, parameters given must meet the following conditions:
+ *                              1. mMaxRetransmit is no more than OT_COAP_MAX_RETRANSMIT.
+ *                              2. mAckRandomFactorNumerator / mAckRandomFactorDenominator must not be below 1.0.
+ *                              3. The calculated exchange life time must not overflow uint32_t.
  *
- * @retval OT_ERROR_NONE    Successfully sent CoAP message.
- * @retval OT_ERROR_NO_BUFS Failed to allocate retransmission data.
+ * @retval OT_ERROR_INVALID_ARGS    @p aTxParameters is invalid.
+ * @retval OT_ERROR_NONE            Successfully sent CoAP message.
+ * @retval OT_ERROR_NO_BUFS         Failed to allocate retransmission data.
  *
  */
 otError otCoapSendRequestWithParameters(otInstance *              aInstance,
