@@ -171,8 +171,11 @@ public:
      * the received frame header and if it is set, data poll sender will send an immediate data poll to retrieve the
      * pending frame.
      *
+     * If enhanced keep-alive is supported, this method also resets keep-alive timer if the frame is an Ack.
+     *
+     * @param[in]   aFrame
      */
-    void CheckFramePending(Mac::RxFrame &aFrame, bool aIsAck = false);
+    void ProcessFrame(const Mac::RxFrame &aFrame);
 
     /**
      * This method asks the data poll sender to recalculate the poll period.
