@@ -34,14 +34,13 @@ import sys
 import pexpect
 import pexpect.popen_spawn
 import re
-import simulator
 import socket
 import time
 import unittest
 import binascii
 
-EXPECT_LINE_START = r'(?<=[\r\n])'
-EXPECT_LINE_END = r'(?=[\r\n])'
+_EXPECT_LINE_START = r'(?<=[\r\n])'
+_EXPECT_LINE_END = r'(?=[\r\n])'
 
 
 class Node:
@@ -180,11 +179,13 @@ class Node:
 
     def _prepare_pattern(self, pattern):
         if isinstance(pattern, list):
-            pattern = [EXPECT_LINE_START + p + EXPECT_LINE_END for p in pattern]
+            pattern = [
+                _EXPECT_LINE_START + p + _EXPECT_LINE_END for p in pattern
+            ]
         else:
-            pattern = [EXPECT_LINE_START + pattern + EXPECT_LINE_END]
+            pattern = [_EXPECT_LINE_START + pattern + _EXPECT_LINE_END]
 
-        return [EXPECT_LINE_START + r'Done' + EXPECT_LINE_END] + pattern
+        return [_EXPECT_LINE_START + r'Done' + _EXPECT_LINE_END] + pattern
 
     def _expect_result(self, pattern, *args, **kwargs):
         results = self._expect_results(pattern, *args, **kwargs)
@@ -197,10 +198,6 @@ class Node:
 
         while self._expect(pattern, *args, **kwargs):
             results.append(self.pexpect.match.group(0).decode('utf8'))
-            if self._expect(pattern, *args, **kwargs):
-                results.append(self.pexpect.match.group(0).decode('utf8'))
-            else:
-                break
 
         return results
 
@@ -579,8 +576,8 @@ class Node:
 
         while True:
             i = self._expect([
-                EXPECT_LINE_START + r'([a-fA-F0-9\:]+) ([a-fA-F0-9]+)' +
-                EXPECT_LINE_END, 'Done'
+                _EXPECT_LINE_START + r'([a-fA-F0-9\:]+) ([a-fA-F0-9]+)' +
+                _EXPECT_LINE_END, 'Done'
             ])
             if i == 0:
                 eid = self.pexpect.match.groups()[0].decode("utf-8")
