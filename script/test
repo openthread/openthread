@@ -54,7 +54,7 @@ do_build() {
     if [ "${THREAD_VERSION}" = "1.2" ]; then
         ./bootstrap
         OPTIONS="TargetTuple=${SYSTEM_TRIPLET}-1.1 THREAD_VERSION=1.1 ${OPTIONS}"
-        make -f examples/Makefile-simulation ${OPTIONS}
+        make -f examples/Makefile-simulation "${OPTIONS}"
 
         if [[ -n "${RADIO_DEVICE}" ]]; then
             make -f src/posix/Makefile-posix
@@ -109,7 +109,7 @@ EXAMPLES:
     THREAD_VERSION=1.2 VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/v1_2_test_parent_selection.py
     "
 
-    exit $1
+    exit "$1"
 }
 
 do_package() {
@@ -117,21 +117,21 @@ do_package() {
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
         && cmake "${OT_SRCDIR}" -DOT_PLATFORM="simulation" \
-        && make -j${OT_BUILD_JOBS} package \
+        && make -j"${OT_BUILD_JOBS}" package \
         && ls "${builddir}"/openthread-simulation-*.deb)
 
     builddir="${OT_BUILDDIR}/cmake/openthread-host"
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
         && cmake "${OT_SRCDIR}" -DOT_PLATFORM="posix-host" \
-        && make -j${OT_BUILD_JOBS} package \
+        && make -j"${OT_BUILD_JOBS}" package \
         && ls "${builddir}"/openthread-standalone-*.deb)
 
     builddir="${OT_BUILDDIR}/cmake/openthread-daemon"
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
         && cmake "${OT_SRCDIR}" -DOT_PLATFORM="posix-host" -DOT_DAEMON=1 -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 \
-        && make -j${OT_BUILD_JOBS} package \
+        && make -j"${OT_BUILD_JOBS}" package \
         && ls "${builddir}"/openthread-daemon-*.deb)
 }
 
