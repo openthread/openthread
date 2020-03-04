@@ -41,6 +41,16 @@ if(OT_BORDER_ROUTER)
     list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1")
 endif()
 
+option(OT_NCP "enable network co-processor NCP")
+if(OT_NCP)
+    list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_ENABLE_NCP=1")
+endif()
+
+option(OT_NCP_RADIO_ONLY "run NCP in radio only mode")
+if(OT_NCP_RADIO_ONLY)
+    list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_ENABLE_RADIO_ONLY=1")
+endif()
+
 option(OT_COAP "enable coap api support")
 if(OT_COAP)
     list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_CONFIG_COAP_API_ENABLE=1")
