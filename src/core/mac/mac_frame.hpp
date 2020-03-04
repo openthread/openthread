@@ -366,7 +366,6 @@ public:
      * @retval TRUE   If this is an Ack.
      * @retval FALSE  If this is not an Ack.
      *
-     *
      */
     bool IsAck(void) const { return (GetPsdu()[0] & kFcfFrameTypeMask) == kFcfFrameAck; }
 
