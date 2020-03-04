@@ -403,7 +403,7 @@ class Node:
 
     def get_channel(self):
         self.send_command('channel')
-        return self._expect_result(r'\d+')
+        return int(self._expect_result(r'\d+'))
 
     def set_channel(self, channel):
         cmd = 'channel %d' % channel
