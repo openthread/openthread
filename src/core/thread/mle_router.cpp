@@ -2816,9 +2816,7 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
     uint16_t                      startOffset;
     Tlv                           tlv;
     MeshCoP::DiscoveryResponseTlv discoveryResponse;
-    MeshCoP::ExtendedPanIdTlv     extPanId;
     MeshCoP::NetworkNameTlv       networkName;
-    MeshCoP::JoinerUdpPortTlv     joinerUdpPort;
     MeshCoP::Tlv *                steeringData;
     uint16_t                      delay;
 
@@ -2839,11 +2837,8 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
 
     if (Get<KeyManager>().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_NATIVE_COMMISSIONING)
     {
-        MeshCoP::CommissionerUdpPortTlv commissionerUdpPort;
-
-        commissionerUdpPort.Init();
-        commissionerUdpPort.SetUdpPort(MeshCoP::kBorderAgentUdpPort);
-        SuccessOrExit(error = commissionerUdpPort.AppendTo(*message));
+        SuccessOrExit(
+            error = Tlv::AppendUint16Tlv(*message, MeshCoP::Tlv::kCommissionerUdpPort, MeshCoP::kBorderAgentUdpPort));
 
         discoveryResponse.SetNativeCommissioner(true);
     }
@@ -2855,9 +2850,8 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
     SuccessOrExit(error = discoveryResponse.AppendTo(*message));
 
     // Extended PAN ID TLV
-    extPanId.Init();
-    extPanId.SetExtendedPanId(Get<Mac::Mac>().GetExtendedPanId());
-    SuccessOrExit(error = extPanId.AppendTo(*message));
+    SuccessOrExit(error = Tlv::AppendTlv(*message, MeshCoP::Tlv::kExtendedPanId, Get<Mac::Mac>().GetExtendedPanId().m8,
+                                         sizeof(Mac::ExtendedPanId)));
 
     // Network Name TLV
     networkName.Init();
@@ -2885,9 +2879,8 @@ otError MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, uint1
     }
 
     // Joiner UDP Port TLV
-    joinerUdpPort.Init();
-    joinerUdpPort.SetUdpPort(Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort());
-    SuccessOrExit(error = joinerUdpPort.AppendTo(*message));
+    SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, MeshCoP::Tlv::kJoinerUdpPort,
+                                               Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort()));
 
     tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
     message->Write(startOffset - sizeof(tlv), sizeof(tlv), &tlv);

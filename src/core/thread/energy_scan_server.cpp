@@ -70,30 +70,25 @@ void EnergyScanServer::HandleRequest(void *aContext, otMessage *aMessage, const 
 
 void EnergyScanServer::HandleRequest(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    MeshCoP::CountTlv        count;
-    MeshCoP::PeriodTlv       period;
-    MeshCoP::ScanDurationTlv scanDuration;
-    Ip6::MessageInfo         responseInfo(aMessageInfo);
-    uint32_t                 mask;
+    uint8_t          count;
+    uint16_t         period;
+    uint16_t         scanDuration;
+    Ip6::MessageInfo responseInfo(aMessageInfo);
+    uint32_t         mask;
 
     VerifyOrExit(aMessage.GetCode() == OT_COAP_CODE_POST);
 
-    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kCount, sizeof(count), count));
-    VerifyOrExit(count.IsValid());
-
-    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPeriod, sizeof(period), period));
-    VerifyOrExit(period.IsValid());
-
-    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kScanDuration, sizeof(scanDuration), scanDuration));
-    VerifyOrExit(scanDuration.IsValid());
+    SuccessOrExit(Tlv::ReadUint8Tlv(aMessage, MeshCoP::Tlv::kCount, count));
+    SuccessOrExit(Tlv::ReadUint16Tlv(aMessage, MeshCoP::Tlv::kPeriod, period));
+    SuccessOrExit(Tlv::ReadUint16Tlv(aMessage, MeshCoP::Tlv::kScanDuration, scanDuration));
 
     VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
 
     mChannelMask        = mask;
     mChannelMaskCurrent = mChannelMask;
-    mCount              = count.GetCount();
-    mPeriod             = period.GetPeriod();
-    mScanDuration       = scanDuration.GetScanDuration();
+    mCount              = count;
+    mPeriod             = period;
+    mScanDuration       = scanDuration;
     mScanResultsLength  = 0;
     mActive             = true;
     mTimer.Start(kScanDelay);
