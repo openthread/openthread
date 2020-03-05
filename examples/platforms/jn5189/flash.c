@@ -42,7 +42,7 @@
 #define ONE_PAGE 1
 #define BYTES_ALINGMENT 16
 
-uint8_t pageBuffer[FLASH_PAGE_SIZE] __attribute__ ((aligned (4))) = {0};
+uint8_t         pageBuffer[FLASH_PAGE_SIZE] __attribute__((aligned(4))) = {0};
 static uint32_t sNvFlashStartAddr;
 static uint32_t sNvFlashEndAddr;
 
