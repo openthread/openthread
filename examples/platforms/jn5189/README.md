@@ -47,7 +47,7 @@ Connect to the board by plugging a mini-USB cable to the connector marked with T
 
 OpenThread example application compiled binaries can be found in `<path-to-openthread>/output/jn5189/bin` and include FTD (Full Thread Device) and MTD (Minimal Thread Device) variants of CLI and NCP applications.
 The compiled binaries can be flashed onto the JN5189 using MCUXpresso IDE. This requires the following steps:
-1. Import the JN5189 SDK into MCUXpresso IDE. This can be done by dragging and dropping the SDK archive into MCUXpresso IDE's Installed SDKs tab. The archive for SDK_2.5.0_JN5189DK6 can be downloaded from kex-stage.freescale.net.
+1. Import the JN5189 SDK into MCUXpresso IDE. This can be done by dragging and dropping the SDK archive into MCUXpresso IDE's Installed SDKs tab. The archive for SDK_2.6.0_JN5189DK6 can be downloaded from https://mcuxpresso.nxp.com.
 2. In MCUXpresso IDE, go to File->Import->C/C++->"Existing Code as Makefile Project" and click Next.
 3. Select the OpenThread folder as the "Existing Code Location". In the "Toolchain for Indexer Settings" list, be sure to keep the setting to "none". Click Finish.
 4. Right click on the newly created openthread project in the Workspace and go to Properties->"C/C++ Build"->"MCU Settings". Select the JN518x from the SDK MCUs list.
@@ -61,7 +61,6 @@ The compiled binaries can be flashed onto the JN5189 using MCUXpresso IDE. This 
 12. Click Debug.
 13. A pop-up window entitled "Errors in Workspace" will appear. Click Proceed.
 14. The board is now flashed.
-15. It is possible to encounter a flash driver error when flashing the board. This is fixed by copying the JN518x.cfx file in <path-to-openthread>/third_party/nxp/JN5189 to <path-to-MCUXpresso-IDE-folder>/ide/binaries/Flash and restarting MCUXpresso IDE.
 
 [cmsis-dap]: https://os.mbed.com/handbook/CMSIS-DAP
 
