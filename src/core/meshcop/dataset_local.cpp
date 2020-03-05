@@ -136,7 +136,7 @@ otError DatasetLocal::Read(otOperationalDataset &aDataset) const
     error = Read(dataset);
     SuccessOrExit(error);
 
-    dataset.Get(aDataset);
+    dataset.ConvertTo(aDataset);
 
 exit:
     return error;
@@ -147,7 +147,7 @@ otError DatasetLocal::Save(const otOperationalDataset &aDataset)
     otError error = OT_ERROR_NONE;
     Dataset dataset(mType);
 
-    error = dataset.Set(aDataset);
+    error = dataset.SetFrom(aDataset);
     SuccessOrExit(error);
 
     error = Save(dataset);

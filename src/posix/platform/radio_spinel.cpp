@@ -639,7 +639,7 @@ otError RadioSpinel::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLeng
     opDataset.mActiveTimestamp                      = 0;
     opDataset.mComponents.mIsActiveTimestampPresent = true;
 
-    SuccessOrExit(error = dataset.Set(opDataset));
+    SuccessOrExit(error = dataset.SetFrom(opDataset));
     SuccessOrExit(error = otPlatSettingsSet(
                       mInstance, isActive ? SettingsBase::kKeyActiveDataset : SettingsBase::kKeyPendingDataset,
                       dataset.GetBytes(), dataset.GetSize()));

@@ -115,7 +115,7 @@ exit:
     return rval;
 }
 
-void Dataset::Get(otOperationalDataset &aDataset) const
+void Dataset::ConvertTo(otOperationalDataset &aDataset) const
 {
     const Tlv *cur = reinterpret_cast<const Tlv *>(mTlvs);
     const Tlv *end = reinterpret_cast<const Tlv *>(mTlvs + mLength);
@@ -253,7 +253,7 @@ void Dataset::Set(const Dataset &aDataset)
     mUpdateTime = aDataset.GetUpdateTime();
 }
 
-otError Dataset::Set(const otOperationalDataset &aDataset)
+otError Dataset::SetFrom(const otOperationalDataset &aDataset)
 {
     otError error = OT_ERROR_NONE;
 

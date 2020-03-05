@@ -137,7 +137,7 @@ public:
      * @param[out] aDataset  A reference to `otOperationalDataset` to output the Dataset.
      *
      */
-    void Get(otOperationalDataset &aDataset) const;
+    void ConvertTo(otOperationalDataset &aDataset) const;
 
     /**
      * This method returns the Dataset size in bytes.
@@ -215,15 +215,15 @@ public:
     void Set(const Dataset &aDataset);
 
     /**
-     * This method sets the Dataset.
+     * This method sets the Dataset from a given structure representation.
      *
-     * @param[in]  aDataset  The input Dataset.
+     * @param[in]  aDataset  The input Dataset as otOperationalDataset.
      *
      * @retval OT_ERROR_NONE          Successfully set the Dataset.
      * @retval OT_ERROR_INVALID_ARGS  Dataset is missing Active and/or Pending Timestamp.
      *
      */
-    otError Set(const otOperationalDataset &aDataset);
+    otError SetFrom(const otOperationalDataset &aDataset);
 
     /**
      * This method removes a TLV from the Dataset.
