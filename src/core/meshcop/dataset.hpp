@@ -47,6 +47,10 @@
 namespace ot {
 namespace MeshCoP {
 
+/**
+ * This class represents MeshCop Dataset.
+ *
+ */
 class Dataset
 {
     friend class DatasetLocal;
@@ -82,7 +86,9 @@ public:
     bool IsValid(void) const;
 
     /**
-     * This method returns a pointer to the TLV.
+     * This method returns a pointer to the TLV with a given type.
+     *
+     * @param[in] aType  A TLV type.
      *
      * @returns A pointer to the TLV or NULL if none is found.
      *
@@ -90,7 +96,9 @@ public:
     Tlv *Get(Tlv::Type aType);
 
     /**
-     * This method returns a pointer to the TLV.
+     * This method returns a pointer to the TLV with a given type.
+     *
+     * @param[in] aType  The TLV type.
      *
      * @returns A pointer to the TLV or NULL if none is found.
      *
@@ -115,6 +123,8 @@ public:
 
     /**
      * This method converts the TLV representation to structure representation.
+     *
+     * @param[out] aDataset  A reference to `otOperationalDataset` to output the Dataset.
      *
      */
     void Get(otOperationalDataset &aDataset) const;
@@ -153,6 +163,8 @@ public:
 
     /**
      * This method sets the Timestamp value.
+     *
+     * @param[in] aTimestamp   A Timestamp.
      *
      */
     void SetTimestamp(const Timestamp &aTimestamp);
@@ -213,6 +225,8 @@ public:
 
     /**
      * This method appends the MLE Dataset TLV but excluding MeshCoP Sub Timestamp TLV.
+     *
+     * @param[in] aMessage       A message to append to.
      *
      * @retval OT_ERROR_NONE     Successfully append MLE Dataset TLV without MeshCoP Sub Timestamp TLV.
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to append the message with MLE Dataset TLV.
