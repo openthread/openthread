@@ -343,7 +343,7 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
 {
     otError        error;
     Coap::Message *message = NULL;
-    Dataset        dataset(MeshCoP::Tlv::kActiveTimestamp);
+    Dataset        dataset(Dataset::kActive);
 
     NetworkNameTlv networkName;
     const Tlv *    tlv;

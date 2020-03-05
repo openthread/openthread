@@ -47,7 +47,7 @@
 namespace ot {
 namespace MeshCoP {
 
-Dataset::Dataset(Tlv::Type aType)
+Dataset::Dataset(Type aType)
     : mUpdateTime(0)
     , mLength(0)
     , mType(aType)
@@ -244,7 +244,7 @@ void Dataset::Set(const Dataset &aDataset)
     memcpy(mTlvs, aDataset.mTlvs, aDataset.mLength);
     mLength = aDataset.mLength;
 
-    if (mType == Tlv::kActiveTimestamp)
+    if (mType == kActive)
     {
         Remove(Tlv::kPendingTimestamp);
         Remove(Tlv::kDelayTimer);
@@ -365,15 +365,15 @@ const Timestamp *Dataset::GetTimestamp(void) const
 {
     const Timestamp *timestamp = NULL;
 
-    if (mType == Tlv::kActiveTimestamp)
+    if (mType == kActive)
     {
-        const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(Get(mType));
+        const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(Get(Tlv::kActiveTimestamp));
         VerifyOrExit(tlv != NULL, OT_NOOP);
         timestamp = static_cast<const Timestamp *>(tlv);
     }
     else
     {
-        const PendingTimestampTlv *tlv = static_cast<const PendingTimestampTlv *>(Get(mType));
+        const PendingTimestampTlv *tlv = static_cast<const PendingTimestampTlv *>(Get(Tlv::kPendingTimestamp));
         VerifyOrExit(tlv != NULL, OT_NOOP);
         timestamp = static_cast<const Timestamp *>(tlv);
     }
@@ -384,7 +384,7 @@ exit:
 
 void Dataset::SetTimestamp(const Timestamp &aTimestamp)
 {
-    if (mType == Tlv::kActiveTimestamp)
+    if (mType == kActive)
     {
         ActiveTimestampTlv activeTimestamp;
         activeTimestamp.Init();
@@ -463,7 +463,7 @@ otError Dataset::AppendMleDatasetTlv(Message &aMessage) const
 
     VerifyOrExit(mLength > 0, OT_NOOP);
 
-    type = (mType == Tlv::kActiveTimestamp ? Mle::Tlv::kActiveDataset : Mle::Tlv::kPendingDataset);
+    type = (mType == kActive ? Mle::Tlv::kActiveDataset : Mle::Tlv::kPendingDataset);
 
     tlv.SetType(type);
     tlv.SetLength(static_cast<uint8_t>(mLength) - sizeof(Tlv) - sizeof(Timestamp));
@@ -471,7 +471,8 @@ otError Dataset::AppendMleDatasetTlv(Message &aMessage) const
 
     while (cur < end)
     {
-        if (cur->GetType() == mType)
+        if (((mType == kActive) && (cur->GetType() == Tlv::kActiveTimestamp)) ||
+            ((mType == kPending) && (cur->GetType() == Tlv::kPendingTimestamp)))
         {
             ; // skip Active or Pending Timestamp TLV
         }
@@ -615,7 +616,12 @@ void Dataset::ConvertToActive(void)
 {
     Remove(Tlv::kPendingTimestamp);
     Remove(Tlv::kDelayTimer);
-    mType = Tlv::kActiveTimestamp;
+    mType = kActive;
+}
+
+const char *Dataset::TypeToString(Type aType)
+{
+    return (aType == kActive) ? "Active" : "Pending";
 }
 
 } // namespace MeshCoP

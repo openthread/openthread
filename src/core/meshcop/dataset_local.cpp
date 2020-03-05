@@ -48,7 +48,7 @@
 namespace ot {
 namespace MeshCoP {
 
-DatasetLocal::DatasetLocal(Instance &aInstance, Tlv::Type aType)
+DatasetLocal::DatasetLocal(Instance &aInstance, Dataset::Type aType)
     : InstanceLocator(aInstance)
     , mUpdateTime(0)
     , mType(aType)
@@ -98,7 +98,7 @@ otError DatasetLocal::Read(Dataset &aDataset) const
     error = Get<Settings>().ReadOperationalDataset(IsActive(), aDataset);
     VerifyOrExit(error == OT_ERROR_NONE, aDataset.mLength = 0);
 
-    if (mType == Tlv::kActiveTimestamp)
+    if (mType == Dataset::kActive)
     {
         aDataset.Remove(Tlv::kPendingTimestamp);
         aDataset.Remove(Tlv::kDelayTimer);
@@ -167,13 +167,13 @@ otError DatasetLocal::Save(const Dataset &aDataset)
         // do not propagate error back
         Get<Settings>().DeleteOperationalDataset(IsActive());
         mSaved = false;
-        otLogInfoMeshCoP("%s dataset deleted", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
+        otLogInfoMeshCoP("%s dataset deleted", Dataset::TypeToString(mType));
     }
     else
     {
         SuccessOrExit(error = Get<Settings>().SaveOperationalDataset(IsActive(), aDataset));
         mSaved = true;
-        otLogInfoMeshCoP("%s dataset set", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
+        otLogInfoMeshCoP("%s dataset set", Dataset::TypeToString(mType));
     }
 
     timestamp = aDataset.GetTimestamp();

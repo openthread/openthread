@@ -64,12 +64,22 @@ public:
     };
 
     /**
+     * This enumeration represents the Dataset type (active or pending).
+     *
+     */
+    enum Type
+    {
+        kActive,  ///< Active Dataset
+        kPending, ///< Pending Dataset
+    };
+
+    /**
      * This constructor initializes the object.
      *
      * @param[in]  aType       The type of the dataset, active or pending.
      *
      */
-    explicit Dataset(Tlv::Type aType);
+    explicit Dataset(Type aType);
 
     /**
      * This method clears the Dataset.
@@ -254,13 +264,21 @@ public:
      */
     void ConvertToActive(void);
 
+    /**
+     * This static method converts a Dataset Type to a string.
+     *
+     * @param[in]  aType   A Dataset type.
+     *
+     */
+    static const char *TypeToString(Type aType);
+
 private:
     void Remove(uint8_t *aStart, uint8_t aLength);
 
     uint8_t   mTlvs[kMaxSize]; ///< The Dataset buffer
     TimeMilli mUpdateTime;     ///< Local time last updated
     uint16_t  mLength;         ///< The number of valid bytes in @var mTlvs
-    Tlv::Type mType;           ///< Active or Pending
+    Type      mType;           ///< Active or Pending
 };
 
 } // namespace MeshCoP

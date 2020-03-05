@@ -49,11 +49,11 @@
 namespace ot {
 namespace MeshCoP {
 
-DatasetManager::DatasetManager(Instance &      aInstance,
-                               const Tlv::Type aType,
-                               const char *    aUriGet,
-                               const char *    aUriSet,
-                               Timer::Handler  aTimerHandler)
+DatasetManager::DatasetManager(Instance &     aInstance,
+                               Dataset::Type  aType,
+                               const char *   aUriGet,
+                               const char *   aUriSet,
+                               Timer::Handler aTimerHandler)
     : InstanceLocator(aInstance)
     , mLocal(aInstance, aType)
     , mTimestampValid(false)
@@ -102,7 +102,7 @@ otError DatasetManager::Restore(void)
         mTimestampValid = true;
     }
 
-    if (mLocal.GetType() == Tlv::kActiveTimestamp)
+    if (mLocal.GetType() == Dataset::kActive)
     {
         dataset.ApplyConfiguration(GetInstance());
     }
@@ -150,7 +150,7 @@ otError DatasetManager::Save(const Dataset &aDataset)
         mTimestamp      = *timestamp;
         mTimestampValid = true;
 
-        if (mLocal.GetType() == Tlv::kActiveTimestamp)
+        if (mLocal.GetType() == Dataset::kActive)
         {
             SuccessOrExit(error = aDataset.ApplyConfiguration(GetInstance(), &isMasterkeyUpdated));
         }
@@ -236,9 +236,9 @@ void DatasetManager::HandleTimer(void)
 
     VerifyOrExit(mLocal.Compare(GetTimestamp()) < 0, OT_NOOP);
 
-    if (mLocal.GetType() == Tlv::kActiveTimestamp)
+    if (mLocal.GetType() == Dataset::kActive)
     {
-        Dataset dataset(Tlv::kPendingTimestamp);
+        Dataset dataset(Dataset::kPending);
         Get<PendingDataset>().Read(dataset);
 
         const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(dataset.Get(Tlv::kActiveTimestamp));
@@ -680,7 +680,7 @@ exit:
 
 ActiveDataset::ActiveDataset(Instance &aInstance)
     : DatasetManager(aInstance,
-                     Tlv::kActiveTimestamp,
+                     Dataset::kActive,
                      OT_URI_PATH_ACTIVE_GET,
                      OT_URI_PATH_ACTIVE_SET,
                      &ActiveDataset::HandleTimer)
@@ -728,7 +728,7 @@ void ActiveDataset::HandleTimer(Timer &aTimer)
 
 PendingDataset::PendingDataset(Instance &aInstance)
     : DatasetManager(aInstance,
-                     Tlv::kPendingTimestamp,
+                     Dataset::kPending,
                      OT_URI_PATH_PENDING_GET,
                      OT_URI_PATH_PENDING_SET,
                      &PendingDataset::HandleTimer)
