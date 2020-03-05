@@ -47,9 +47,9 @@ Connect to the board by plugging a mini-USB cable to the connector marked with T
 
 OpenThread example application compiled binaries can be found in `<path-to-openthread>/output/jn5189/bin` and include FTD (Full Thread Device) and MTD (Minimal Thread Device) variants of CLI and NCP applications.
 The compiled binaries can be flashed onto the JN5189 using MCUXpresso IDE. This requires the following steps:
-1. Import the JN5189 SDK into MCUXpresso IDE. This can be done by dragging and dropping the SDK archive into MCUXpresso IDE's Installed SDKs tab. The archive for SDK_2.5.0_JN5189DK6 is available in the <path-to-openthread>\third_party\nxp\JN5189 folder.
+1. Import the JN5189 SDK into MCUXpresso IDE. This can be done by dragging and dropping the SDK archive into MCUXpresso IDE's Installed SDKs tab. The archive for SDK_2.5.0_JN5189DK6 can be downloaded from kex-stage.freescale.net.
 2. In MCUXpresso IDE, go to File->Import->C/C++->"Existing Code as Makefile Project" and click Next.
-3. Select the OpenThread folder as the "Existing Code Location". In the "Toolchain for Indexer Settings" list, be sure to keep the setting to <none>. Click Finish.
+3. Select the OpenThread folder as the "Existing Code Location". In the "Toolchain for Indexer Settings" list, be sure to keep the setting to "none". Click Finish.
 4. Right click on the newly created openthread project in the Workspace and go to Properties->"C/C++ Build"->"MCU Settings". Select the JN518x from the SDK MCUs list.
 5. Go to C/C++ Build->"Tool Chain Editor" and untick the "Display compatible toolchains only" checkbox. In the drop-down menu named "Current toolchain", select "NXP MCU Tools". Click "Apply and Close".
 6. Right click on the openthread project and select "Debug As"->"MCUXpresso IDE LinkServer (inc. CMSIS-DAP) probes"
