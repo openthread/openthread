@@ -218,7 +218,7 @@ otError DatasetManager::GetChannelMask(Mac::ChannelMask &aChannelMask) const
 
     SuccessOrExit(error = mLocal.Read(dataset));
 
-    channelMaskTlv = static_cast<const MeshCoP::ChannelMaskTlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
+    channelMaskTlv = static_cast<const MeshCoP::ChannelMaskTlv *>(dataset.GetTlv(MeshCoP::Tlv::kChannelMask));
     VerifyOrExit(channelMaskTlv != NULL, error = OT_ERROR_NOT_FOUND);
     VerifyOrExit((mask = channelMaskTlv->GetChannelMask()) != 0, OT_NOOP);
 
@@ -241,7 +241,7 @@ void DatasetManager::HandleTimer(void)
         Dataset dataset(Dataset::kPending);
         Get<PendingDataset>().Read(dataset);
 
-        const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(dataset.Get(Tlv::kActiveTimestamp));
+        const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(dataset.GetTlv(Tlv::kActiveTimestamp));
         const Timestamp *         pendingActiveTimestamp = static_cast<const Timestamp *>(tlv);
 
         if (pendingActiveTimestamp != NULL && mLocal.Compare(pendingActiveTimestamp) == 0)
@@ -377,7 +377,7 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
                 continue;
             }
 
-            if ((tlv = dataset.Get(static_cast<Tlv::Type>(aTlvs[index]))) != NULL)
+            if ((tlv = dataset.GetTlv(static_cast<Tlv::Type>(aTlvs[index]))) != NULL)
             {
                 SuccessOrExit(error = tlv->AppendTo(*message));
             }
@@ -790,7 +790,7 @@ void PendingDataset::StartDelayTimer(void)
 
     mDelayTimer.Stop();
 
-    if ((delayTimer = static_cast<DelayTimerTlv *>(dataset.Get(Tlv::kDelayTimer))) != NULL)
+    if ((delayTimer = static_cast<DelayTimerTlv *>(dataset.GetTlv(Tlv::kDelayTimer))) != NULL)
     {
         uint32_t delay = delayTimer->GetDelayTimer();
 
@@ -819,7 +819,7 @@ void PendingDataset::HandleDelayTimer(void)
 
     // if the Delay Timer value is larger than what our Timer implementation can handle, we have to compute
     // the remainder and wait some more.
-    if ((delayTimer = static_cast<DelayTimerTlv *>(dataset.Get(Tlv::kDelayTimer))) != NULL)
+    if ((delayTimer = static_cast<DelayTimerTlv *>(dataset.GetTlv(Tlv::kDelayTimer))) != NULL)
     {
         uint32_t elapsed = mDelayTimer.GetFireTime() - dataset.GetUpdateTime();
         uint32_t delay   = delayTimer->GetDelayTimer();

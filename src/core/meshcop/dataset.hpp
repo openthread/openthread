@@ -103,7 +103,7 @@ public:
      * @returns A pointer to the TLV or NULL if none is found.
      *
      */
-    Tlv *Get(Tlv::Type aType);
+    Tlv *GetTlv(Tlv::Type aType);
 
     /**
      * This method returns a pointer to the TLV with a given type.
@@ -113,7 +113,7 @@ public:
      * @returns A pointer to the TLV or NULL if none is found.
      *
      */
-    const Tlv *Get(Tlv::Type aType) const;
+    const Tlv *GetTlv(Tlv::Type aType) const;
 
     /**
      * This method returns a pointer to the byte representation of the Dataset.
@@ -188,7 +188,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Could not set the TLV due to insufficient buffer space.
      *
      */
-    otError Set(const Tlv &aTlv);
+    otError SetTlv(const Tlv &aTlv);
 
     /**
      * This method sets the Dataset using TLVs stored in a message buffer.

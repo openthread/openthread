@@ -370,7 +370,7 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
 
     Get<ActiveDataset>().Read(dataset);
 
-    if ((tlv = dataset.Get(Tlv::kActiveTimestamp)) != NULL)
+    if ((tlv = dataset.GetTlv(Tlv::kActiveTimestamp)) != NULL)
     {
         SuccessOrExit(error = tlv->AppendTo(*message));
     }
@@ -381,7 +381,7 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
         SuccessOrExit(error = activeTimestamp.AppendTo(*message));
     }
 
-    if ((tlv = dataset.Get(Tlv::kChannelMask)) != NULL)
+    if ((tlv = dataset.GetTlv(Tlv::kChannelMask)) != NULL)
     {
         SuccessOrExit(error = tlv->AppendTo(*message));
     }
@@ -392,7 +392,7 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
         SuccessOrExit(error = channelMask.AppendTo(*message));
     }
 
-    if ((tlv = dataset.Get(Tlv::kPskc)) != NULL)
+    if ((tlv = dataset.GetTlv(Tlv::kPskc)) != NULL)
     {
         SuccessOrExit(error = tlv->AppendTo(*message));
     }
@@ -403,7 +403,7 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
         SuccessOrExit(error = pskc.AppendTo(*message));
     }
 
-    if ((tlv = dataset.Get(Tlv::kSecurityPolicy)) != NULL)
+    if ((tlv = dataset.GetTlv(Tlv::kSecurityPolicy)) != NULL)
     {
         SuccessOrExit(error = tlv->AppendTo(*message));
     }
