@@ -173,7 +173,8 @@ public:
      *
      * If enhanced keep-alive is supported, this method also resets keep-alive timer if the frame is an Ack.
      *
-     * @param[in]   aFrame
+     * @param[in] aFrame     The received frame.
+     *
      */
     void ProcessFrame(const Mac::RxFrame &aFrame);
 
