@@ -158,15 +158,15 @@ static void LogIfFail(const char *aText, otError aError)
     }
 }
 
-void SpinelInterface::Callbacks::HandleReceivedFrame(const uint8_t *aFrame, uint16_t aLength)
+void SpinelInterface::Callbacks::HandleReceivedFrame(void)
 {
-    static_cast<RadioSpinel *>(this)->HandleReceivedFrame(aFrame, aLength);
+    static_cast<RadioSpinel *>(this)->HandleReceivedFrame();
 }
 
 RadioSpinel::RadioSpinel(void)
     : mInstance(NULL)
     , mRxFrameBuffer()
-    , mSpinelInterface(*this)
+    , mSpinelInterface(*this, mRxFrameBuffer)
     , mCmdTidsInUse(0)
     , mCmdNextTid(1)
     , mTxRadioTid(0)
@@ -352,17 +352,11 @@ void RadioSpinel::Deinit(void)
     new (this) RadioSpinel();
 }
 
-void RadioSpinel::HandleReceivedFrame(const uint8_t *aFrame, uint16_t aLength)
+void RadioSpinel::HandleReceivedFrame(void)
 {
     otError        error = OT_ERROR_NONE;
     uint8_t        header;
     spinel_ssize_t unpacked;
-
-    if (mRxFrameBuffer.WriteBytes(aFrame, aLength) != OT_ERROR_NONE)
-    {
-        otLogNotePlat("No enough memory buffers, drop packet");
-        ExitNow();
-    }
 
     unpacked = spinel_datatype_unpack(mRxFrameBuffer.GetFrame(), mRxFrameBuffer.GetLength(), "C", &header);
 

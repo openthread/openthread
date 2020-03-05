@@ -69,11 +69,13 @@ public:
         /**
          * This callback is invoked to notify owner/user of `SpinelInterface` of a received spinel frame.
          *
-         * @param[in] aFrame   A pointer to buffer containing received the spinel frame.
-         * @param[in] aLength  The length (number of bytes) in the frame.
+         * The newly received frame is available in `RxFrameBuffer` from `SpinelInterface::GetRxFrameBuffer()`.
+         * User can read and process the frame. The callback is expected to either discard the new frame using
+         * `RxFrameBuffer::DiscardFrame()` or save the frame using `RxFrameBuffer::SaveFrame()` to be read and
+         * processed later.
          *
          */
-        void HandleReceivedFrame(const uint8_t *aFrame, uint16_t aLength);
+        void HandleReceivedFrame(void);
     };
 };
 } // namespace PosixApp

@@ -535,11 +535,10 @@ public:
     /**
      * This method processes a received Spinel frame.
      *
-     * @param[in] aFrame   A pointer to buffer containing received the spinel frame.
-     * @param[in] aLength  The length (number of bytes) in the frame.
+     * The newly received frame is available in `RxFrameBuffer` from `SpinelInterface::GetRxFrameBuffer()`.
      *
      */
-    void HandleReceivedFrame(const uint8_t *aFrame, uint16_t aLength);
+    void HandleReceivedFrame(void);
 
 private:
     enum
