@@ -27,7 +27,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set -e -x -o pipefail
+set -euo pipefail
 
 readonly TMP_DIR="/tmp/ot-make-pretty-$(date +%Y%m%d%H%M%S)"
 readonly SRC_DIR="$PWD"
@@ -40,7 +40,7 @@ at_exit()
     exit $EXIT_CODE
 }
 
-make_pretty()
+do_clang_format()
 {
     ./bootstrap
     mkdir "${TMP_DIR}"
@@ -49,11 +49,27 @@ make_pretty()
     make pretty
 }
 
+do_python_format()
+{
+    python3 -m yapf --verbose --style google -ipr "${SRC_DIR}/tests" "${SRC_DIR}/tools"
+}
+
 main()
 {
-    trap at_exit INT TERM EXIT
-    make_pretty
-    python3 -m yapf --style google -ipr "${SRC_DIR}/tests" "${SRC_DIR}/tools"
+    if [ $# == 0 ]; then
+        trap at_exit INT TERM EXIT
+        do_clang_format
+        do_python_format
+    elif [ "$1" == 'python' ]; then
+        do_python_format
+    elif [ "$1" == 'clang' ]; then
+        do_clang_format
+    else
+        >&2 echo "Unsupported action: $1"
+        # 128 for Invalid arguments
+        exit 128
+    fi
+
 }
 
 main "$@"

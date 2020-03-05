@@ -28,16 +28,23 @@
 
 #include "openthread-core-config.h"
 
+#include "fuzzer_platform.h"
+
 #include <string.h>
 
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
+#include <openthread/platform/entropy.h>
 #include <openthread/platform/logging.h>
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/settings.h>
 #include <openthread/platform/uart.h>
+
+#include "mac/mac_frame.hpp"
+
+using namespace ot;
 
 typedef struct AlarmState
 {
@@ -45,13 +52,33 @@ typedef struct AlarmState
     bool     isRunning;
 } AlarmState;
 
+enum
+{
+    IEEE802154_ACK_LENGTH = 5,
+
+    IEEE802154_FRAME_TYPE_ACK = 2 << 0,
+};
+
 static uint32_t     sAlarmNow;
 static AlarmState   sAlarmMilli;
 static AlarmState   sAlarmMicro;
 static uint32_t     sRandomState = 1;
 static uint8_t      sRadioTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE];
 static otRadioFrame sRadioTransmitFrame = {.mPsdu = sRadioTransmitPsdu};
-static bool         sResetWasRequested  = false;
+static uint8_t      sRadioAckPsdu[OT_RADIO_FRAME_MAX_SIZE];
+static otRadioFrame sRadioAckFrame     = {.mPsdu = sRadioAckPsdu};
+static bool         sResetWasRequested = false;
+static otRadioState sRadioState        = OT_RADIO_STATE_DISABLED;
+
+bool otMacFrameIsAckRequested(const otRadioFrame *aFrame)
+{
+    return static_cast<const Mac::Frame *>(aFrame)->GetAckRequest();
+}
+
+uint8_t otMacFrameGetSequence(const otRadioFrame *aFrame)
+{
+    return static_cast<const Mac::Frame *>(aFrame)->GetSequence();
+}
 
 void FuzzerPlatformInit(void)
 {
@@ -63,6 +90,26 @@ void FuzzerPlatformInit(void)
 
 void FuzzerPlatformProcess(otInstance *aInstance)
 {
+    if (sRadioState == OT_RADIO_STATE_TRANSMIT)
+    {
+        sRadioState = OT_RADIO_STATE_RECEIVE;
+
+        if (otMacFrameIsAckRequested(&sRadioTransmitFrame))
+        {
+            sRadioAckFrame.mLength  = IEEE802154_ACK_LENGTH;
+            sRadioAckFrame.mPsdu[0] = IEEE802154_FRAME_TYPE_ACK;
+            sRadioAckFrame.mPsdu[1] = 0;
+            sRadioAckFrame.mPsdu[2] = otMacFrameGetSequence(&sRadioTransmitFrame);
+            sRadioAckFrame.mChannel = sRadioTransmitFrame.mChannel;
+
+            otPlatRadioTxDone(aInstance, &sRadioTransmitFrame, &sRadioAckFrame, OT_ERROR_NONE);
+        }
+        else
+        {
+            otPlatRadioTxDone(aInstance, &sRadioTransmitFrame, NULL, OT_ERROR_NONE);
+        }
+    }
+
     if (sAlarmMilli.isRunning || sAlarmMicro.isRunning)
     {
         uint32_t fire = UINT32_MAX;
@@ -253,8 +300,10 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aFrame);
+    sRadioState = OT_RADIO_STATE_TRANSMIT;
+
+    otPlatRadioTxStarted(aInstance, aFrame);
+
     return OT_ERROR_NONE;
 }
 

@@ -47,7 +47,7 @@ COMMON_LDADD                                              = \
     $(NULL)
 
 COMMON_SOURCES                                            = \
-    fuzzer_platform.c                                       \
+    fuzzer_platform.cpp                                     \
     fuzzer_platform.h                                       \
     $(NULL)
 
