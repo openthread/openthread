@@ -1128,7 +1128,7 @@ void Interpreter::ProcessEidCache(int argc, char *argv[])
 
     for (uint8_t i = 0;; i++)
     {
-        SuccessOrExit(error = otThreadGetEidCacheEntry(mInstance, i, &entry));
+        SuccessOrExit(otThreadGetEidCacheEntry(mInstance, i, &entry));
 
         if (!entry.mValid)
         {
@@ -2389,7 +2389,7 @@ otError Interpreter::ProcessPrefixList(void)
     otBorderRouterConfig  config;
     otError               error;
 
-    while ((error = otBorderRouterGetNextOnMeshPrefix(mInstance, &iterator, &config)) == OT_ERROR_NONE)
+    while (otBorderRouterGetNextOnMeshPrefix(mInstance, &iterator, &config) == OT_ERROR_NONE)
     {
         mServer->OutputFormat("%x:%x:%x:%x::/%d ", HostSwap16(config.mPrefix.mPrefix.mFields.m16[0]),
                               HostSwap16(config.mPrefix.mPrefix.mFields.m16[1]),
@@ -2619,7 +2619,7 @@ otError Interpreter::ProcessRouteList(void)
     otExternalRouteConfig config;
     otError               error;
 
-    while ((error = otBorderRouterGetNextRoute(mInstance, &iterator, &config)) == OT_ERROR_NONE)
+    while (otBorderRouterGetNextRoute(mInstance, &iterator, &config) == OT_ERROR_NONE)
     {
         mServer->OutputFormat("%x:%x:%x:%x::/%d ", HostSwap16(config.mPrefix.mPrefix.mFields.m16[0]),
                               HostSwap16(config.mPrefix.mPrefix.mFields.m16[1]),

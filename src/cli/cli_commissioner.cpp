@@ -126,7 +126,8 @@ otError Commissioner::ProcessJoiner(int argc, char *argv[])
     }
     else
     {
-        VerifyOrExit(Interpreter::Hex2Bin(argv[2], addr.m8, sizeof(addr)) == sizeof(addr), error = OT_ERROR_PARSE);
+        VerifyOrExit(Interpreter::Hex2Bin(argv[2], addr.m8, sizeof(addr)) == sizeof(addr),
+                     error = OT_ERROR_INVALID_ARGS);
         addrPtr = &addr;
     }
 
@@ -191,7 +192,7 @@ otError Commissioner::ProcessMgmtGet(int argc, char *argv[])
             VerifyOrExit(static_cast<size_t>(value) <= (sizeof(tlvs) - static_cast<size_t>(length)),
                          error = OT_ERROR_NO_BUFS);
             VerifyOrExit(Interpreter::Hex2Bin(argv[index], tlvs + length, static_cast<uint16_t>(value)) >= 0,
-                         error = OT_ERROR_PARSE);
+                         error = OT_ERROR_INVALID_ARGS);
             length += value;
         }
         else
@@ -244,7 +245,7 @@ otError Commissioner::ProcessMgmtSet(int argc, char *argv[])
             VerifyOrExit(static_cast<size_t>(length) <= OT_STEERING_DATA_MAX_LENGTH, error = OT_ERROR_NO_BUFS);
             VerifyOrExit(Interpreter::Hex2Bin(argv[index], dataset.mSteeringData.m8, static_cast<uint16_t>(length)) >=
                              0,
-                         error = OT_ERROR_PARSE);
+                         error = OT_ERROR_INVALID_ARGS);
             dataset.mSteeringData.mLength = static_cast<uint8_t>(length);
             length                        = 0;
         }
@@ -261,7 +262,7 @@ otError Commissioner::ProcessMgmtSet(int argc, char *argv[])
             length = static_cast<int>((strlen(argv[index]) + 1) / 2);
             VerifyOrExit(static_cast<size_t>(length) <= sizeof(tlvs), error = OT_ERROR_NO_BUFS);
             VerifyOrExit(Interpreter::Hex2Bin(argv[index], tlvs, static_cast<uint16_t>(length)) >= 0,
-                         error = OT_ERROR_PARSE);
+                         error = OT_ERROR_INVALID_ARGS);
         }
         else
         {
@@ -387,7 +388,7 @@ otError Commissioner::ProcessStop(int argc, char *argv[])
 
 otError Commissioner::Process(int argc, char *argv[])
 {
-    otError error = OT_ERROR_INVALID_ARGS;
+    otError error = OT_ERROR_INVALID_COMMAND;
 
     if (argc < 1)
     {
