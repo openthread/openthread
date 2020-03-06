@@ -38,7 +38,7 @@ Topology
 4. Wait for half polling period, verify no packet received by SED.
 5. SED sends a UDP packet to Leader to solicit a ACK with frame pending set.
    * Verify Leader receives a UDP packet
-   * Verify SED sent a data poll
+   * Verify SED sends a data poll
    * Verify SED receives a UDP packet
 """
 
