@@ -794,13 +794,14 @@ class Node:
         while len(responders) < num_responses or not done:
             self.simulator.go(1)
             try:
-                i = self._expect([r'from (\S+):', r'Done'], timeout=1)
+                i = self._expect([r'from (\S+):', r'Done'], timeout=0.1)
             except (pexpect.TIMEOUT, socket.timeout):
                 if self.simulator.now() < end:
                     continue
                 result = False
                 if isinstance(self.simulator, simulator.VirtualTime):
                     self.simulator.sync_devices()
+                break
             else:
                 if i == 0:
                     responders[self.pexpect.match.groups()[0]] = 1

@@ -460,7 +460,7 @@ class VirtualTime(BaseSimulator):
         self.awake_devices.clear()
 
     def now(self):
-        return self.current_time
+        return self.current_time / 1000000
 
     def go(self, duration, nodeid=None):
         assert self.current_time == self._pause_time

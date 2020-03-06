@@ -34,7 +34,7 @@ import struct
 from binascii import hexlify
 from ipaddress import ip_address
 
-import config
+import common
 
 try:
     from itertools import izip_longest as zip_longest
@@ -1081,7 +1081,7 @@ class UdpBasedOnSrcDstPortsPayloadFactory:
         if message_info.src_port in self._factories:
             factory = self._factories[message_info.src_port]
 
-        if message_info.dst_port == config.UDP_TEST_PORT:
+        if message_info.dst_port == common.UDP_TEST_PORT:
             # Ignore traffic targeted to test port
             return None
         elif factory is None:
