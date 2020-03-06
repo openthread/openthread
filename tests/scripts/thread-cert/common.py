@@ -39,7 +39,7 @@ pp_map = {1: 1, 0: 0, 3: -1, 2: -2}
 
 
 # Get the signed parent priority from the byte that parent priority is in.
-def map_pp(self, pp_byte):
+def map_pp(pp_byte):
     return pp_map[((pp_byte & 0xC0) >> 6)]
 
 
