@@ -1122,7 +1122,6 @@ void Interpreter::ProcessEidCache(int argc, char *argv[])
 {
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
-    otError error = OT_ERROR_NONE;
 
     otEidCacheEntry entry;
 
@@ -1140,7 +1139,7 @@ void Interpreter::ProcessEidCache(int argc, char *argv[])
     }
 
 exit:
-    AppendResult(error);
+    AppendResult(OT_ERROR_NONE);
 }
 #endif // OPENTHREAD_FTD
 
@@ -2387,7 +2386,6 @@ otError Interpreter::ProcessPrefixList(void)
 {
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otBorderRouterConfig  config;
-    otError               error;
 
     while (otBorderRouterGetNextOnMeshPrefix(mInstance, &iterator, &config) == OT_ERROR_NONE)
     {
@@ -2447,7 +2445,7 @@ otError Interpreter::ProcessPrefixList(void)
         }
     }
 
-    return error;
+    return OT_ERROR_NONE;
 }
 
 void Interpreter::ProcessPrefix(int argc, char *argv[])
@@ -2617,7 +2615,6 @@ otError Interpreter::ProcessRouteList(void)
 {
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otExternalRouteConfig config;
-    otError               error;
 
     while (otBorderRouterGetNextRoute(mInstance, &iterator, &config) == OT_ERROR_NONE)
     {
@@ -2647,7 +2644,7 @@ otError Interpreter::ProcessRouteList(void)
         }
     }
 
-    return error;
+    return OT_ERROR_NONE;
 }
 
 void Interpreter::ProcessRoute(int argc, char *argv[])
