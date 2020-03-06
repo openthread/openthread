@@ -33,7 +33,7 @@ Topology
     Leader ----- SED_1
 
 1. Set up topology a Leader and a SED.
-2. SED ping leader so a data poll is just sent.
+2. SED pings leader so a data poll is just sent.
 3. Leader sends a UDP packet to SED to put a pending frame in queue.
 4. Wait for half polling period, verify no packet received by SED.
 5. SED sends a UDP packet to Leader to solicit a ACK with frame pending set.
