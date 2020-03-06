@@ -1078,7 +1078,7 @@ void Interpreter::ProcessDns(int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
 
 exit:
@@ -1122,12 +1122,13 @@ void Interpreter::ProcessEidCache(int argc, char *argv[])
 {
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
+    otError error = OT_ERROR_NONE;
 
     otEidCacheEntry entry;
 
     for (uint8_t i = 0;; i++)
     {
-        SuccessOrExit(otThreadGetEidCacheEntry(mInstance, i, &entry));
+        SuccessOrExit(error = otThreadGetEidCacheEntry(mInstance, i, &entry));
 
         if (!entry.mValid)
         {
@@ -1139,7 +1140,7 @@ void Interpreter::ProcessEidCache(int argc, char *argv[])
     }
 
 exit:
-    AppendResult(OT_ERROR_NONE);
+    AppendResult(error);
 }
 #endif // OPENTHREAD_FTD
 
@@ -1343,7 +1344,7 @@ void Interpreter::ProcessIpAddr(int argc, char *argv[])
         }
         else
         {
-            ExitNow(error = OT_ERROR_INVALID_ARGS);
+            ExitNow(error = OT_ERROR_INVALID_COMMAND);
         }
     }
 
@@ -1442,7 +1443,7 @@ void Interpreter::ProcessIpMulticastAddr(int argc, char *argv[])
         }
         else
         {
-            ExitNow(error = OT_ERROR_INVALID_ARGS);
+            ExitNow(error = OT_ERROR_INVALID_COMMAND);
         }
     }
 
@@ -1797,7 +1798,7 @@ void Interpreter::ProcessService(int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
 
 exit:
@@ -2386,8 +2387,9 @@ otError Interpreter::ProcessPrefixList(void)
 {
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otBorderRouterConfig  config;
+    otError               error;
 
-    while (otBorderRouterGetNextOnMeshPrefix(mInstance, &iterator, &config) == OT_ERROR_NONE)
+    while ((error = otBorderRouterGetNextOnMeshPrefix(mInstance, &iterator, &config)) == OT_ERROR_NONE)
     {
         mServer->OutputFormat("%x:%x:%x:%x::/%d ", HostSwap16(config.mPrefix.mPrefix.mFields.m16[0]),
                               HostSwap16(config.mPrefix.mPrefix.mFields.m16[1]),
@@ -2445,7 +2447,7 @@ otError Interpreter::ProcessPrefixList(void)
         }
     }
 
-    return OT_ERROR_NONE;
+    return error;
 }
 
 void Interpreter::ProcessPrefix(int argc, char *argv[])
@@ -2466,7 +2468,7 @@ void Interpreter::ProcessPrefix(int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
 
 exit:
@@ -2615,8 +2617,9 @@ otError Interpreter::ProcessRouteList(void)
 {
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otExternalRouteConfig config;
+    otError               error;
 
-    while (otBorderRouterGetNextRoute(mInstance, &iterator, &config) == OT_ERROR_NONE)
+    while ((error = otBorderRouterGetNextRoute(mInstance, &iterator, &config)) == OT_ERROR_NONE)
     {
         mServer->OutputFormat("%x:%x:%x:%x::/%d ", HostSwap16(config.mPrefix.mPrefix.mFields.m16[0]),
                               HostSwap16(config.mPrefix.mPrefix.mFields.m16[1]),
@@ -2644,7 +2647,7 @@ otError Interpreter::ProcessRouteList(void)
         }
     }
 
-    return OT_ERROR_NONE;
+    return error;
 }
 
 void Interpreter::ProcessRoute(int argc, char *argv[])
@@ -2665,7 +2668,7 @@ void Interpreter::ProcessRoute(int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
 
 exit:
@@ -3019,7 +3022,7 @@ void Interpreter::ProcessSntp(int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
 
 exit:
@@ -3145,7 +3148,7 @@ void Interpreter::ProcessThread(int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
 
 exit:
@@ -3263,7 +3266,7 @@ void Interpreter::ProcessMacFilter(int argc, char *argv[])
         }
         else
         {
-            error = OT_ERROR_INVALID_ARGS;
+            error = OT_ERROR_INVALID_COMMAND;
         }
     }
 
@@ -3418,7 +3421,7 @@ otError Interpreter::ProcessMacFilterAddress(int argc, char *argv[])
         }
         else
         {
-            error = OT_ERROR_INVALID_ARGS;
+            error = OT_ERROR_INVALID_COMMAND;
         }
     }
 
@@ -3525,7 +3528,7 @@ otError Interpreter::ProcessMacFilterRss(int argc, char *argv[])
         }
         else
         {
-            error = OT_ERROR_INVALID_ARGS;
+            error = OT_ERROR_INVALID_COMMAND;
         }
     }
 
@@ -3547,7 +3550,7 @@ void Interpreter::ProcessMac(int argc, char *argv[])
     }
     else
     {
-        error = OT_ERROR_INVALID_ARGS;
+        error = OT_ERROR_INVALID_COMMAND;
     }
 
 exit:
@@ -3708,7 +3711,7 @@ void Interpreter::ProcessNetworkDiagnostic(int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
 
 exit:
