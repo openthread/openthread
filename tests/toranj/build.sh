@@ -40,6 +40,7 @@ display_usage() {
     echo "        rcp        : Build OpenThread RCP (NCP in radio mode) with simulation platform"
     echo "        posix-app  : Build OpenThread POSIX App NCP"
     echo "        cmake      : Configure and build OpenThread using cmake/ninja (RCP and NCP) only"
+    echo "        cmake-posix: Configure and build OpenThread POSIX host using cmake/ninja"
     echo ""
     echo "Options:"
     echo "        -c/--enable-coverage  Enable code coverage"
@@ -148,6 +149,14 @@ case ${build_config} in
         echo "Building OpenThread (NCP/CLI for FTD/MTD/RCP mode) with simulation platform using cmake"
         echo "===================================================================================================="
         cmake -GNinja -DOT_PLATFORM=simulation -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config.h . || die
+        ninja || die
+        ;;
+
+    cmake-posix-host|cmake-posix|cmake-p)
+        echo "===================================================================================================="
+        echo "Building OpenThread POSIX host platform using cmake"
+        echo "===================================================================================================="
+        cmake -GNinja -DOT_PLATFORM=posix-host -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config.h . || die
         ninja || die
         ;;
 

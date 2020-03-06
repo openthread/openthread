@@ -763,7 +763,7 @@ public:
         void Read(void);
 
         ChildInfo mChildInfo;
-        uint8_t   mIndex;
+        uint16_t  mIndex;
         bool      mIsDone;
     };
 

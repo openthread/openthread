@@ -69,7 +69,12 @@ endif()
 
 target_link_libraries(openthread-simulation PRIVATE openthread-platform-utils)
 
-target_compile_definitions(openthread-simulation PUBLIC ${OT_PLATFORM_DEFINES})
+target_compile_definitions(openthread-simulation
+    PUBLIC
+        ${OT_PLATFORM_DEFINES}
+    PRIVATE
+        ${OT_PRIVATE_DEFINES}
+)
 
 target_compile_options(openthread-simulation PRIVATE
     ${OT_CFLAGS}
