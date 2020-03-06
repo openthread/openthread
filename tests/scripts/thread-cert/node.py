@@ -68,9 +68,6 @@ class Node:
         else:
             self.__init_sim(nodeid, mode)
 
-        # Skip version information printed on start
-        self.get_state()
-
         if self.verbose:
             self.pexpect.logfile_read = sys.stdout.buffer
 
