@@ -187,7 +187,7 @@ class Node:
         Returns:
             A list of regex.
         """
-        EXPECT_LINE_FORMAT = r'(?<=[\r\n])%s(?=[\r\n])'
+        EXPECT_LINE_FORMAT = r'(?<=[ \r\n])%s(?=[\r\n])'
 
         if isinstance(pattern, list):
             pattern = [EXPECT_LINE_FORMAT % p for p in pattern]
