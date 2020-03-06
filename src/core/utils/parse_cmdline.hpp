@@ -60,7 +60,8 @@ public:
      * This function parses the command line.
      *
      * Note: this method may change the input @p aString, it will put a '\0' by the end of each argument,
-     *       and @p aArgv will point to the arguments in the input @p aString.
+     *       and @p aArgv will point to the arguments in the input @p aString. Backslash ('\') can be used
+     *       to escape separators (' ', '\t', '\r', '\n') and the backslash itself.
      *
      * @param[in]   aString   A NULL-terminated input string.
      * @param[out]  aArgc     The argument counter of the command line.

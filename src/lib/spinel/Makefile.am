@@ -59,8 +59,14 @@ COMMON_SOURCES                                    = \
     spinel_encoder.cpp                              \
     $(NULL)
 
-include_HEADERS                                   = \
+ot_spinel_headers                                 = \
     spinel.h                                        \
+    $(NULL)
+
+ot_spineldir = $(includedir)/spinel
+dist_ot_spinel_HEADERS = $(ot_spinel_headers)
+
+include_HEADERS                                   = \
     $(NULL)
 
 noinst_HEADERS                                    = \

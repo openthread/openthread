@@ -178,6 +178,55 @@ class Node:
                 if timeout <= 0:
                     raise
 
+    def _prepare_pattern(self, pattern):
+        """Build a new pexpect pattern matching line by line.
+
+        Adds lookahead and lookbehind to make each pattern match a whole line,
+        and add 'Done' as the first pattern.
+
+        Args:
+            pattern: a single regex or a list of regex.
+
+        Returns:
+            A list of regex.
+        """
+        EXPECT_LINE_FORMAT = r'(?<=[\r\n])%s(?=[\r\n])'
+
+        if isinstance(pattern, list):
+            pattern = [EXPECT_LINE_FORMAT % p for p in pattern]
+        else:
+            pattern = [EXPECT_LINE_FORMAT % pattern]
+
+        return [EXPECT_LINE_FORMAT % 'Done'] + pattern
+
+    def _expect_result(self, pattern, *args, **kwargs):
+        """Expect a single matching result.
+
+        The arguments are identical to pexpect.expect().
+
+        Returns:
+            The matched line.
+        """
+        results = self._expect_results(pattern, *args, **kwargs)
+        assert len(results) == 1
+        return results[0]
+
+    def _expect_results(self, pattern, *args, **kwargs):
+        """Expect multiple matching results.
+
+        The arguments are identical to pexpect.expect().
+
+        Returns:
+            The matched lines.
+        """
+        results = []
+        pattern = self._prepare_pattern(pattern)
+
+        while self._expect(pattern, *args, **kwargs):
+            results.append(self.pexpect.match.group(0).decode('utf8'))
+
+        return results
+
     def __init_soc(self, nodeid):
         """ Initialize a System-on-a-chip node connected via UART. """
         import fdpexpect
@@ -267,14 +316,7 @@ class Node:
     def get_commands(self):
         self.send_command('?')
         self._expect('Commands:')
-        commands = []
-        while True:
-            i = self._expect(['Done', r'(\S+)'])
-            if i != 0:
-                commands.append(self.pexpect.match.groups()[0])
-            else:
-                break
-        return commands
+        return self._expect_results(r'\S+')
 
     def set_mode(self, mode):
         cmd = 'mode %s' % mode
@@ -360,11 +402,8 @@ class Node:
 
     def get_addr16(self):
         self.send_command('rloc16')
-        i = self._expect('([0-9a-fA-F]{4})')
-        if i == 0:
-            addr16 = int(self.pexpect.match.groups()[0], 16)
-        self._expect('Done')
-        return addr16
+        rloc16 = self._expect_result(r'[0-9a-fA-F]{4}')
+        return int(rloc16, 16)
 
     def get_router_id(self):
         rloc16 = self.get_addr16()
@@ -372,12 +411,7 @@ class Node:
 
     def get_addr64(self):
         self.send_command('extaddr')
-        i = self._expect('([0-9a-fA-F]{16})')
-        if i == 0:
-            addr64 = self.pexpect.match.groups()[0].decode("utf-8")
-
-        self._expect('Done')
-        return addr64
+        return self._expect_result('[0-9a-fA-F]{16}')
 
     def set_addr64(self, addr64):
         self.send_command('extaddr %s' % addr64)
@@ -385,28 +419,15 @@ class Node:
 
     def get_eui64(self):
         self.send_command('eui64')
-        i = self._expect('([0-9a-fA-F]{16})')
-        if i == 0:
-            addr64 = self.pexpect.match.groups()[0].decode("utf-8")
-
-        self._expect('Done')
-        return addr64
+        return self._expect_result('[0-9a-fA-F]{16}')
 
     def get_joiner_id(self):
         self.send_command('joiner id')
-        i = self._expect('([0-9a-fA-F]{16})')
-        if i == 0:
-            addr = self.pexpect.match.groups()[0].decode("utf-8")
-        self._expect('Done')
-        return addr
+        return self._expect_result('[0-9a-fA-F]{16}')
 
     def get_channel(self):
         self.send_command('channel')
-        i = self._expect(r'(\d+)\r?\n')
-        if i == 0:
-            channel = int(self.pexpect.match.groups()[0])
-        self._expect('Done')
-        return channel
+        return int(self._expect_result(r'\d+'))
 
     def set_channel(self, channel):
         cmd = 'channel %d' % channel
@@ -415,11 +436,7 @@ class Node:
 
     def get_masterkey(self):
         self.send_command('masterkey')
-        i = self._expect('([0-9a-fA-F]{32})')
-        if i == 0:
-            masterkey = self.pexpect.match.groups()[0].decode("utf-8")
-        self._expect('Done')
-        return masterkey
+        return self._expect_result('[0-9a-fA-F]{32}')
 
     def set_masterkey(self, masterkey):
         cmd = 'masterkey %s' % masterkey
@@ -428,11 +445,8 @@ class Node:
 
     def get_key_sequence_counter(self):
         self.send_command('keysequence counter')
-        i = self._expect(r'(\d+)\r?\n')
-        if i == 0:
-            key_sequence_counter = int(self.pexpect.match.groups()[0])
-        self._expect('Done')
-        return key_sequence_counter
+        result = self._expect_result(r'\d+')
+        return int(result)
 
     def set_key_sequence_counter(self, key_sequence_counter):
         cmd = 'keysequence counter %d' % key_sequence_counter
@@ -449,28 +463,33 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
+    def _escape_escapable(self, string):
+        """Escape CLI escapable characters in the given string.
+
+        Args:
+            string (str): UTF-8 input string.
+
+        Returns:
+            [str]: The modified string with escaped characters.
+        """
+        escapable_chars = '\\ \t\r\n'
+        for char in escapable_chars:
+            string = string.replace(char, '\\%s' % char)
+        return string
+
     def get_network_name(self):
         self.send_command('networkname')
-        while True:
-            i = self._expect(['Done', r'(\S+)'])
-            if i != 0:
-                network_name = self.pexpect.match.groups()[0].decode('utf-8')
-            else:
-                break
-        return network_name
+        return self._expect_result([r'\S+'])
 
     def set_network_name(self, network_name):
-        cmd = 'networkname %s' % network_name
+        cmd = 'networkname %s' % self._escape_escapable(network_name)
         self.send_command(cmd)
         self._expect('Done')
 
     def get_panid(self):
         self.send_command('panid')
-        i = self._expect('([0-9a-fA-F]{4})')
-        if i == 0:
-            panid = int(self.pexpect.match.groups()[0], 16)
-        self._expect('Done')
-        return panid
+        result = self._expect_result('0x[0-9a-fA-F]{4}')
+        return int(result, 16)
 
     def set_panid(self, panid=config.PANID):
         cmd = 'panid %d' % panid
@@ -484,11 +503,7 @@ class Node:
 
     def get_partition_id(self):
         self.send_command('leaderpartitionid')
-        i = self._expect(r'(\d+)\r?\n')
-        if i == 0:
-            weight = self.pexpect.match.groups()[0]
-        self._expect('Done')
-        return weight
+        return self._expect_result(r'\d+')
 
     def set_partition_id(self, partition_id):
         cmd = 'leaderpartitionid %d' % partition_id
@@ -497,11 +512,7 @@ class Node:
 
     def get_pollperiod(self):
         self.send_command('pollperiod')
-        i = self._expect(r'(\d+)\r?\n')
-        if i == 0:
-            pollperiod = self.pexpect.match.groups()[0]
-        self._expect('Done')
-        return pollperiod
+        return self._expect_result(r'\d+')
 
     def set_pollperiod(self, pollperiod):
         self.send_command('pollperiod %d' % pollperiod)
@@ -523,11 +534,9 @@ class Node:
         self._expect('Done')
 
     def get_state(self):
-        states = [r'\ndetached', r'\nchild', r'\nrouter', r'\nleader']
+        states = [r'detached', r'child', r'router', r'leader']
         self.send_command('state')
-        match = self._expect(states)
-        self._expect('Done')
-        return states[match].strip(r'\n')
+        return self._expect_result(states)
 
     def set_state(self, state):
         cmd = 'state %s' % state
@@ -536,11 +545,7 @@ class Node:
 
     def get_timeout(self):
         self.send_command('childtimeout')
-        i = self._expect(r'(\d+)\r?\n')
-        if i == 0:
-            timeout = self.pexpect.match.groups()[0]
-        self._expect('Done')
-        return timeout
+        return self._expect_result(r'\d+')
 
     def set_timeout(self, timeout):
         cmd = 'childtimeout %d' % timeout
@@ -554,11 +559,7 @@ class Node:
 
     def get_weight(self):
         self.send_command('leaderweight')
-        i = self._expect(r'(\d+)\r?\n')
-        if i == 0:
-            weight = self.pexpect.match.groups()[0]
-        self._expect('Done')
-        return weight
+        return self._expect_result(r'\d+')
 
     def set_weight(self, weight):
         cmd = 'leaderweight %d' % weight
@@ -571,47 +572,21 @@ class Node:
         self._expect('Done')
 
     def get_addrs(self):
-        addrs = []
         self.send_command('ipaddr')
 
-        while True:
-            i = self._expect([r'(\S+(:\S*)+)\r?\n', 'Done'])
-            if i == 0:
-                addrs.append(self.pexpect.match.groups()[0].decode("utf-8"))
-            elif i == 1:
-                break
-
-        return addrs
+        return self._expect_results(r'\S+(:\S*)+')
 
     def get_mleid(self):
-        addr = None
-        cmd = 'ipaddr mleid'
-        self.send_command(cmd)
-        i = self._expect(r'(\S+(:\S*)+)\r?\n')
-        if i == 0:
-            addr = self.pexpect.match.groups()[0].decode("utf-8")
-        self._expect('Done')
-        return addr
+        self.send_command('ipaddr mleid')
+        return self._expect_result(r'\S+(:\S*)+')
 
     def get_linklocal(self):
-        addr = None
-        cmd = 'ipaddr linklocal'
-        self.send_command(cmd)
-        i = self._expect(r'(\S+(:\S*)+)\r?\n')
-        if i == 0:
-            addr = self.pexpect.match.groups()[0].decode("utf-8")
-        self._expect('Done')
-        return addr
+        self.send_command('ipaddr linklocal')
+        return self._expect_result(r'\S+(:\S*)+')
 
     def get_rloc(self):
-        addr = None
-        cmd = 'ipaddr rloc'
-        self.send_command(cmd)
-        i = self._expect(r'(\S+(:\S*)+)\r?\n')
-        if i == 0:
-            addr = self.pexpect.match.groups()[0].decode("utf-8")
-        self._expect('Done')
-        return addr
+        self.send_command('ipaddr rloc')
+        return self._expect_result(r'\S+(:\S*)+')
 
     def get_addr(self, prefix):
         network = ipaddress.ip_network(u'%s' % str(prefix))
@@ -639,14 +614,11 @@ class Node:
         eidcaches = []
         self.send_command('eidcache')
 
-        while True:
-            i = self._expect([r'([a-fA-F0-9\:]+) ([a-fA-F0-9]+)\r?\n', 'Done'])
-            if i == 0:
-                eid = self.pexpect.match.groups()[0].decode("utf-8")
-                rloc = self.pexpect.match.groups()[1].decode("utf-8")
-                eidcaches.append((eid, rloc))
-            elif i == 1:
-                break
+        pattern = self._prepare_pattern(r'([a-fA-F0-9\:]+) ([a-fA-F0-9]+)')
+        while self._expect(pattern):
+            eid = self.pexpect.match.groups()[0].decode("utf-8")
+            rloc = self.pexpect.match.groups()[1].decode("utf-8")
+            eidcaches.append((eid, rloc))
 
         return eidcaches
 
@@ -740,11 +712,7 @@ class Node:
 
     def get_context_reuse_delay(self):
         self.send_command('contextreusedelay')
-        i = self._expect(r'(\d+)\r?\n')
-        if i == 0:
-            timeout = self.pexpect.match.groups()[0]
-        self._expect('Done')
-        return timeout
+        return self._expect_result(r'\d+')
 
     def set_context_reuse_delay(self, delay):
         cmd = 'contextreusedelay %d' % delay
@@ -808,18 +776,9 @@ class Node:
     def scan(self):
         self.send_command('scan')
 
-        results = []
-        while True:
-            i = self._expect([
-                r'\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)\r?\n',
-                'Done',
-            ])
-            if i == 0:
-                results.append(self.pexpect.match.groups())
-            else:
-                break
-
-        return results
+        return self._expect_results(
+            r'\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)'
+        )
 
     def ping(self, ipaddr, num_responses=1, size=None, timeout=5):
         cmd = 'ping %s' % ipaddr
@@ -972,7 +931,7 @@ class Node:
             cmd += 'localprefix %s ' % mesh_local
 
         if network_name is not None:
-            cmd += 'networkname %s ' % network_name
+            cmd += 'networkname %s ' % self._escape_escapable(network_name)
 
         if binary is not None:
             cmd += 'binary %s ' % binary
@@ -1014,7 +973,7 @@ class Node:
             cmd += 'localprefix %s ' % mesh_local
 
         if network_name is not None:
-            cmd += 'networkname %s ' % network_name
+            cmd += 'networkname %s ' % self._escape_escapable(network_name)
 
         self.send_command(cmd)
         self._expect('Done')

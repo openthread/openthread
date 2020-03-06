@@ -416,10 +416,35 @@ build_samr21() {
 }
 
 [ $BUILD_TARGET != simulation ] || {
+    CMAKE_FLAGS="                        \
+        -DOT_COMPILE_WARNING_AS_ERROR=on \
+        -DOT_BORDER_AGENT=on             \
+        -DOT_BORDER_ROUTER=on            \
+        -DOT_COAP=on                     \
+        -DOT_COAPS=on                    \
+        -DOT_COMMISSIONER=on             \
+        -DOT_CHANNEL_MANAGER=on          \
+        -DOT_CHANNEL_MONITOR=on          \
+        -DOT_CHILD_SUPERVISION=on        \
+        -DOT_DHCP6_CLIENT=on             \
+        -DOT_DHCP6_SERVER=on             \
+        -DOT_DIAGNOSTIC=on               \
+        -DOT_DNS_CLIENT=on               \
+        -DOT_ECDSA=on                    \
+        -DOT_IP6_FRAGM=on                \
+        -DOT_JAM_DETECTION=on            \
+        -DOT_JOINER=on                   \
+        -DOT_LINK_RAW=on                 \
+        -DOT_MAC_FILTER=on               \
+        -DOT_MTD_NETDIAG=on              \
+        -DOT_SERVICE=on                  \
+        -DOT_SLAAC=on                    \
+        -DOT_SNTP_CLIENT=on"
+
     git checkout -- . || die
     git clean -xfd || die
     mkdir build && cd build || die
-    cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON .. || die
+    cmake -GNinja -DOT_PLATFORM=simulation $CMAKE_FLAGS .. || die
     ninja || die
     cd .. || die
 
@@ -584,11 +609,7 @@ build_samr21() {
 [ $BUILD_TARGET != v1.2 ] || {
     ./bootstrap || die
     ./script/test build || die
-
-    ls tests/scripts/thread-cert/v1_2_*.py | while read test_case; do
-        [[ ! -d tmp ]] || rm -rvf tmp
-        PYTHONUNBUFFERED=1 "${test_case}"
-    done
+    ./script/test cert_suite tests/scripts/thread-cert/v1_2_* || die
 }
 
 [ $BUILD_TARGET != posix-app-pty ] || {
