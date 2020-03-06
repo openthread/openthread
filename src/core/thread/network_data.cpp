@@ -981,11 +981,9 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
     {
         uint32_t diff = TimerMilli::GetNow() - mLastAttempt;
 
-        if (((mType == kTypeLocal) && (diff > kDataResubmitDelay)) ||
-            ((mType == kTypeLeader) && (diff > kProxyResubmitDelay)))
-        {
-            ExitNow(error = OT_ERROR_ALREADY);
-        }
+        VerifyOrExit(((mType == kTypeLocal) && (diff > kDataResubmitDelay)) ||
+                         ((mType == kTypeLeader) && (diff > kProxyResubmitDelay)),
+                     error = OT_ERROR_ALREADY);
     }
 
     VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
