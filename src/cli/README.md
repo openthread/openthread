@@ -28,6 +28,7 @@ Done
 
 ## OpenThread Command List
 
+* [bbr](#bbr)
 * [bufferinfo](#bufferinfo)
 * [channel](#channel)
 * [child](#child-list)
@@ -97,6 +98,132 @@ Done
 * [version](#version)
 
 ## OpenThread Command Details
+
+### bbr
+
+Show current Primary Backbone Router information for Thread 1.2 device.
+
+```bash
+> bbr
+BBR Primary:
+server16: 0xE400
+seqno:    10
+delay:    120 secs
+timeout:  300 secs
+Done
+```
+
+```bash
+> bbr
+BBR Primary: None
+Done
+```
+
+### bbr state
+Show local Backbone state ([`Disabled`,`Primary`, `Secondary`]) for Thread 1.2 FTD.
+
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+
+```bash
+> bbr state
+Disabled
+Done
+
+> bbr state
+Primary
+Done
+
+> bbr state
+Secondary
+Done
+```
+
+### bbr enable
+Enable Backbone Router Service for Thread 1.2 FTD.
+`SRV_DATA.ntf` would be triggerred for attached device if there is no
+Backbone Router Service in Thread Network Data. 
+
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+```bash
+> bbr enable
+Done
+```
+
+### bbr disable
+Disable Backbone Router Service for Thread 1.2 FTD.
+`SRV_DATA.ntf` would be triggerred if Backbone Router is Primary state.
+o
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+```bash
+> bbr disable
+Done
+```
+
+### bbr register
+Register Backbone Router Service for Thread 1.2 FTD.
+`SRV_DATA.ntf` would be triggerred for attached device.
+
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+```bash
+> bbr register
+Done
+```
+
+### bbr local
+
+Show local Backbone Router configuration for Thread 1.2 FTD.
+
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+```bash
+> bbr local
+BBR local:
+seqno:    10
+delay:    120 secs
+timeout:  300 secs
+Done
+```
+
+### bbr local \[seqno \<seqno\>\] \[delay \<delay\>\] \[timeout \<timeout\>\]
+
+Configure local Backbone Router configuration for Thread 1.2 FTD.
+`bbr register` should be issued explicitly to register Backbone Router service to Leader for
+Secondary Backbone Router. `SRV_DATA.ntf` would be initiated automatically if BBR Dataset
+changes for Primary Backbone Router. 
+
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+```bash
+> bbr local seqno 20 delay 30
+Done
+```
+
+### bbr jitter
+
+Show jitter (in seconds) for Backbone Router registration for Thread 1.2 FTD.
+
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+```bash
+> bbr jitter
+20
+Done
+```
+
+### bbr jitter \<jitter\>
+
+Set jitter (in seconds) for Backbone Router registration for Thread 1.2 FTD.
+
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+```bash
+> bbr jitter 10
+Done
+```
 
 ### bufferinfo
 

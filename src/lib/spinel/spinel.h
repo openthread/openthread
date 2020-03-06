@@ -2747,6 +2747,30 @@ enum
      */
     SPINEL_PROP_THREAD_NEW_DATASET = SPINEL_PROP_THREAD_EXT__BEGIN + 40,
 
+    /// Primary Backbone Router
+    /** Format: `CSLS` - Read
+     *
+     *
+     *  `C`: Sequence Number
+     *  `S`: Reregistration Delay
+     *  `L`: MLR Timeout
+     *  `S`: RLOC16 or ALOC16 if the device only store stable network data
+     *
+     */
+    SPINEL_PROP_THREAD_BACKBONE_ROUTER_PRIMARY = SPINEL_PROP_THREAD_EXT__BEGIN + 41,
+
+    SPINEL_PROP_THREAD_BACKBONE_ROUTER_STATE = SPINEL_PROP_THREAD_EXT__BEGIN + 42, ///< [C]
+
+    /// Local Backbone Router.
+    /** Format: `CSL` - Write or read
+     *
+     *  `C`: Sequence Number
+     *  `S`: Reregistration Delay
+     *  `L`: MLR Timeout
+     *
+     */
+    SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL = SPINEL_PROP_THREAD_EXT__BEGIN + 43,
+
     SPINEL_PROP_THREAD_EXT__END = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN = 0x60,

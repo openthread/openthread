@@ -26,6 +26,11 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+option(OT_BACKBONE_ROUTER "enable backbone router functionality")
+if(OT_BACKBONE_ROUTER)
+    list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE=1")
+endif()
+
 option(OT_BIG_ENDIAN "host platform uses big-endian byte order")
 if(OT_BIG_ENDIAN)
     list(APPEND OT_PRIVATE_DEFINES "BYTE_ORDER_BIG_ENDIAN=1")

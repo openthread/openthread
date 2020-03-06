@@ -38,6 +38,10 @@
 
 #include <stdint.h>
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+#include "backbone_router/leader.hpp"
+#endif
+
 #include "coap/coap.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_address.hpp"
@@ -228,6 +232,38 @@ public:
      *
      */
     otError GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16);
+
+    /**
+     * This method gets the Service Id for the specified service.
+     *
+     * @param[in]  aEnterpriseNumber  Enterprise Number (IANA-assigned) for Service TLV
+     * @param[in]  aServiceData       A pointer to the Service Data
+     * @param[in]  aServiceDataLength The length of @p aServiceData in bytes.
+     * @param[in]  aServerStable      The Stable flag value for Server TLV
+     * @param[out] aServiceId               A reference where to put the Service Id.
+     *
+     * @retval OT_ERROR_NONE       Successfully got the Service Id.
+     * @retval OT_ERROR_NOT_FOUND  The specified service was not found.
+     *
+     */
+    otError GetServiceId(uint32_t       aEnterpriseNumber,
+                         const uint8_t *aServiceData,
+                         uint8_t        aServiceDataLength,
+                         bool           aServerStable,
+                         uint8_t &      aServiceId);
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    /**
+     * This method gets the Primary Backbone Router (PBBR) in the Thread Network.
+     *
+     * @param[out]  aConfig      A refernce where to put the Primary Backbone Router configuration.
+     *
+     * @retval OT_ERROR_NONE       Successfully got the Primary Backbone Router configuration.
+     * @retval OT_ERROR_NOT_FOUND  No Backbone Router Service in the Thread Network.
+     *
+     */
+    otError GetBackboneRouterPrimary(BackboneRouter::BackboneRouterConfig &aConfig);
+#endif
 
 protected:
     uint8_t mStableVersion;

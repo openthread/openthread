@@ -926,7 +926,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_LEADER_SERVICE
     {
         SuccessOrExit(error = mEncoder.OpenStruct());
 
-        SuccessOrExit(error = mEncoder.WriteUint8(cfg.mServiceID));
+        SuccessOrExit(error = mEncoder.WriteUint8(cfg.mServiceId));
         SuccessOrExit(error = mEncoder.WriteUint32(cfg.mEnterpriseNumber));
         SuccessOrExit(error = mEncoder.WriteDataWithLen(cfg.mServiceData, cfg.mServiceDataLength));
         SuccessOrExit(error = mEncoder.WriteBool(cfg.mServerConfig.mStable));
@@ -1533,6 +1533,34 @@ exit:
 
 #endif
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+otError NcpBase::EncodeBackboneRouterConfig(const otBackboneRouterConfig &aConfig)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(mEncoder.OpenStruct());
+    SuccessOrExit(mEncoder.WriteUint8(aConfig.mSequenceNumber));
+    SuccessOrExit(mEncoder.WriteUint16(aConfig.mReregistrationDelay));
+    SuccessOrExit(mEncoder.WriteUint32(aConfig.mMlrTimeout));
+    SuccessOrExit(mEncoder.WriteUint16(aConfig.mServer16));
+    SuccessOrExit(mEncoder.CloseStruct());
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_BACKBONE_ROUTER_PRIMARY>(void)
+{
+    otError                error = OT_ERROR_NONE;
+    otBackboneRouterConfig config;
+
+    SuccessOrExit(error = otBackboneRouterGetPrimary(mInstance, &config));
+    error = EncodeBackboneRouterConfig(config);
+
+exit:
+    return error;
+}
+#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_IPV6_ML_PREFIX>(void)
 {
     otError                  error    = OT_ERROR_NONE;
@@ -3661,6 +3689,8 @@ void NcpBase::ProcessThreadChangedFlags(void)
         {OT_CHANGED_PSKC, SPINEL_PROP_NET_PSKC},
         {OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL, SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL},
         {OT_CHANGED_SUPPORTED_CHANNEL_MASK, SPINEL_PROP_PHY_CHAN_SUPPORTED},
+        {OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE, SPINEL_PROP_THREAD_BACKBONE_ROUTER_STATE},
+        {OT_CHANGED_THREAD_BACKBONE_ROUTER_LOCAL, SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL},
     };
 
     VerifyOrExit(mThreadChangedFlags != 0);

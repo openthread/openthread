@@ -969,7 +969,7 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOl
         {
             // The same service is not found in current data, but was in old data. So, it had to be just removed by
             // RemoveRloc() Lets use the same ServiceID
-            serviceID = oldService->GetServiceID();
+            serviceID = oldService->GetServiceId();
         }
         else
         {
@@ -1034,7 +1034,7 @@ ServiceTlv *Leader::FindServiceById(uint8_t aServiceId)
         {
             compare = static_cast<ServiceTlv *>(cur);
 
-            if (compare->GetServiceID() == aServiceId)
+            if (compare->GetServiceId() == aServiceId)
             {
                 ExitNow();
             }

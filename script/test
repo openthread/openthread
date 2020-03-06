@@ -54,13 +54,17 @@ do_build() {
         make -f src/posix/Makefile-posix ${OPTIONS}
     fi
 
-    # Extra 1.1 build for 1.2 env
+    # Extra builds for 1.2 env
     if [[ "${THREAD_VERSION}" == "1.2" ]]; then
-        OPTIONS="TargetTuple=${OT_SYSTEM_TRIPLET}-1.1 THREAD_VERSION=1.1 ${OPTIONS}"
-        make -f examples/Makefile-simulation ${OPTIONS}
+        OPTIONS_1_1="TargetTuple=${OT_SYSTEM_TRIPLET}-1.1 ${OPTIONS}"
+        THREAD_VERSION=1.1 make -f examples/Makefile-simulation ${OPTIONS_1_1}
+
+        OPTIONS_BBR="TargetTuple=${OT_SYSTEM_TRIPLET}-bbr BACKBONE_ROUTER=1 ${OPTIONS}"
+        THREAD_VERSION=1.2 make -f examples/Makefile-simulation ${OPTIONS_BBR}
 
         if [[ -n "${RADIO_DEVICE}" ]]; then
-            make -f src/posix/Makefile-posix ${OPTIONS}
+          THREAD_VERSION=1.1 make -f src/posix/Makefile-posix ${OPTIONS_1_1}
+          THREAD_VERSION=1.2 make -f src/posix/Makefile-posix ${OPTIONS_BBR}
         fi
     fi
 }
@@ -74,6 +78,7 @@ do_cert() {
 
     if [[ "${THREAD_VERSION}" == "1.2" ]]; then
         export top_builddir_1_1="${OT_BUILDDIR}/${OT_SYSTEM_TRIPLET}-1.1"
+        export top_builddir_bbr="${OT_BUILDDIR}/${OT_SYSTEM_TRIPLET}-bbr"
     fi
 
     [[ ! -d tmp ]] || rm -rvf tmp
@@ -85,6 +90,7 @@ do_cert_suite() {
 
     if [[ "${THREAD_VERSION}" == "1.2" ]]; then
         export top_builddir_1_1="${OT_BUILDDIR}/${OT_SYSTEM_TRIPLET}-1.1"
+        export top_builddir_bbr="${OT_BUILDDIR}/${OT_SYSTEM_TRIPLET}-bbr"
     fi
 
     local pass_count=0
@@ -208,6 +214,10 @@ main()
             export RADIO_DEVICE_1_1="${OT_BUILDDIR}/${OT_SYSTEM_TRIPLET}-1.1/examples/apps/ncp/ot-rcp"
             export OT_CLI_PATH_1_1="${OT_BUILDDIR}/posix/${OT_SYSTEM_TRIPLET}-1.1/src/posix/ot-cli"
             export OT_NCP_PATH_1_1="${OT_BUILDDIR}/posix/${OT_SYSTEM_TRIPLET}-1.1/src/posix/ot-ncp"
+
+            export RADIO_DEVICE_BBR="${OT_BUILDDIR}/${OT_SYSTEM_TRIPLET}-bbr/examples/apps/ncp/ot-rcp"
+            export OT_CLI_PATH_BBR="${OT_BUILDDIR}/posix/${OT_SYSTEM_TRIPLET}-bbr/src/posix/ot-cli"
+            export OT_NCP_PATH_BBR="${OT_BUILDDIR}/posix/${OT_SYSTEM_TRIPLET}-bbr/src/posix/ot-ncp"
         fi
     fi
 

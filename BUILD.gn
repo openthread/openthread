@@ -30,6 +30,8 @@ static_library("lib-ot-core") {
  cflags_cc = [ "-Wno-non-virtual-dtor" ]
 
  sources = [
+    "src/core/api/backbone_router_api.cpp",
+    "src/core/api/backbone_router_ftd_api.cpp",
     "src/core/api/border_agent_api.cpp",
     "src/core/api/border_router_api.cpp",
     "src/core/api/channel_manager_api.cpp",
@@ -64,6 +66,8 @@ static_library("lib-ot-core") {
     "src/core/api/thread_api.cpp",
     "src/core/api/thread_ftd_api.cpp",
     "src/core/api/udp_api.cpp",
+    "src/core/backbone_router/leader.cpp",
+    "src/core/backbone_router/local.cpp",
     "src/core/coap/coap.cpp",
     "src/core/coap/coap_message.cpp",
     "src/core/coap/coap_secure.cpp",

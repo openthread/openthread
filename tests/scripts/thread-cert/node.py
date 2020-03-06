@@ -43,11 +43,17 @@ import binascii
 
 class Node:
 
-    def __init__(self, nodeid, is_mtd=False, simulator=None, version=None):
+    def __init__(self,
+                 nodeid,
+                 is_mtd=False,
+                 simulator=None,
+                 version=None,
+                 is_bbr=False):
         self.nodeid = nodeid
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
         self.node_type = os.getenv('NODE_TYPE', 'sim')
         self.env_version = os.getenv('THREAD_VERSION', '1.1')
+        self.is_bbr = is_bbr
 
         if version is not None:
             self.version = version
@@ -84,6 +90,9 @@ class Node:
             elif ('top_builddir_1_1') in os.environ:
                 srcdir = os.environ['top_builddir_1_1']
                 cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
+        elif (self.version == '1.2' and self.is_bbr):
+            srcdir = os.environ['top_builddir_bbr']
+            cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
         elif ('top_builddir') in os.environ:
             srcdir = os.environ['top_builddir']
             cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
@@ -135,6 +144,13 @@ class Node:
                     cmd,
                     args,
                 )
+        elif (self.version == '1.2' and self.is_bbr):
+            srcdir = os.environ['top_builddir_bbr']
+            cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
+            cmd = 'spinel-cli.py -p "%s%s" -n' % (
+                cmd,
+                args,
+            )
         elif ('top_builddir') in os.environ:
             srcdir = os.environ['top_builddir']
             cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
@@ -383,6 +399,74 @@ class Node:
 
         if rssi is not None:
             cmd += ' %s' % rssi
+
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def get_bbr_registration_jitter(self):
+        self.send_command('bbr jitter')
+        return self._expect_result(r'\d+')
+
+    def set_bbr_registration_jitter(self, jitter):
+        cmd = 'bbr jitter %d' % jitter
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def enable_backbone_router(self):
+        cmd = 'bbr enable'
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def disable_backbone_router(self):
+        cmd = 'bbr disable'
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def register_backbone_router(self):
+        cmd = 'bbr register'
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def get_backbone_router_state(self):
+        states = [r'Disabled', r'Primary', r'Secondary']
+        self.send_command('bbr state')
+        return self._expect_result(states)
+
+    def get_backbone_router(self):
+        cmd = 'bbr local'
+        self.send_command(cmd)
+        self._expect(r'(.*)Done')
+        g = self.pexpect.match.groups()
+        output = g[0].decode("utf-8")
+        lines = output.strip().split('\n')
+        lines = [l.strip() for l in lines]
+        ret = {}
+        for l in lines:
+            z = re.search(r'seqno:\s+([0-9]+)', l)
+            if z:
+                ret['seqno'] = int(z.groups()[0])
+
+            z = re.search(r'delay:\s+([0-9]+)', l)
+            if z:
+                ret['delay'] = int(z.groups()[0])
+
+            z = re.search(r'timeout:\s+([0-9]+)', l)
+            if z:
+                ret['timeout'] = int(z.groups()[0])
+
+        return ret
+
+    def set_backbone_router(self, seqno=None, reg_delay=None, mlr_timeout=None):
+        cmd = 'bbr local'
+
+        if seqno is not None:
+            cmd += ' seqno %d' % seqno
+
+        if reg_delay is not None:
+            cmd += ' delay %d' % reg_delay
+
+        if mlr_timeout is not None:
+            cmd += ' timeout %d' % mlr_timeout
 
         self.send_command(cmd)
         self._expect('Done')

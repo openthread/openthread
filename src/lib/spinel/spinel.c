@@ -1815,6 +1815,18 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "THREAD_NEW_DATASET";
         break;
 
+    case SPINEL_PROP_THREAD_BACKBONE_ROUTER_PRIMARY:
+        ret = "PROP_THREAD_BACKBONE_ROUTER_PRIMARY";
+        break;
+
+    case SPINEL_PROP_THREAD_BACKBONE_ROUTER_STATE:
+        ret = "PROP_THREAD_BACKBONE_ROUTER_STATE";
+        break;
+
+    case SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL:
+        ret = "PROP_THREAD_BACKBONE_ROUTER_LOCAL";
+        break;
+
     case SPINEL_PROP_MESHCOP_JOINER_STATE:
         ret = "MESHCOP_JOINER_STATE";
         break;

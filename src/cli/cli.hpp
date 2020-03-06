@@ -203,6 +203,9 @@ private:
     void    ProcessHelp(int argc, char *argv[]);
     void    ProcessBufferInfo(int argc, char *argv[]);
     void    ProcessChannel(int argc, char *argv[]);
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    void ProcessBackboneRouter(int argc, char *argv[]);
+#endif
 #if OPENTHREAD_FTD
     void ProcessChild(int argc, char *argv[]);
     void ProcessChildIp(int argc, char *argv[]);

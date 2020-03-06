@@ -120,6 +120,8 @@ LOCAL_CPPFLAGS                                                              := \
     $(NULL)
 
 LOCAL_SRC_FILES                                          := \
+    src/core/api/backbone_router_api.cpp                    \
+    src/core/api/backbone_router_ftd_api.cpp                \
     src/core/api/border_router_api.cpp                      \
     src/core/api/channel_manager_api.cpp                    \
     src/core/api/channel_monitor_api.cpp                    \
@@ -148,6 +150,8 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/thread_api.cpp                             \
     src/core/api/thread_ftd_api.cpp                         \
     src/core/api/udp_api.cpp                                \
+    src/core/backbone_router/leader.cpp                     \
+    src/core/backbone_router/local.cpp                      \
     src/core/coap/coap.cpp                                  \
     src/core/coap/coap_message.cpp                          \
     src/core/coap/coap_secure.cpp                           \

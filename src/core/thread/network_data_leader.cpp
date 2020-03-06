@@ -67,6 +67,89 @@ void LeaderBase::Reset(void)
     Get<Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
 }
 
+otError LeaderBase::GetServiceId(uint32_t       aEnterpriseNumber,
+                                 const uint8_t *aServiceData,
+                                 uint8_t        aServiceDataLength,
+                                 bool           aServerStable,
+                                 uint8_t &      aServiceId)
+{
+    otError error = OT_ERROR_NOT_FOUND;
+
+    Iterator        iterator = kIteratorInit;
+    otServiceConfig serviceConfig;
+
+    while (GetNextService(iterator, serviceConfig) == OT_ERROR_NONE)
+    {
+        if (aEnterpriseNumber == serviceConfig.mEnterpriseNumber &&
+            aServiceDataLength == serviceConfig.mServiceDataLength &&
+            memcmp(aServiceData, serviceConfig.mServiceData, aServiceDataLength) == 0 &&
+            aServerStable == serviceConfig.mServerConfig.mStable)
+        {
+            aServiceId = serviceConfig.mServiceId;
+            ExitNow(error = OT_ERROR_NONE);
+        }
+    }
+
+exit:
+    return error;
+}
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+otError LeaderBase::GetBackboneRouterPrimary(BackboneRouter::BackboneRouterConfig &aConfig)
+{
+    otError                         error          = OT_ERROR_NOT_FOUND;
+    uint8_t                         serviceData    = ServiceTlv::kServiceDataBackboneRouter;
+    const ServerTlv *               rvalServerTlv  = NULL;
+    const BackboneRouterServerData *rvalServerData = NULL;
+    ServiceTlv *                    serviceTlv;
+    NetworkDataTlv *                subCur;
+    NetworkDataTlv *                subEnd;
+
+    serviceTlv = Get<Leader>().FindService(THREAD_ENTERPRISE_NUMBER, &serviceData, sizeof(serviceData));
+
+    if (serviceTlv == NULL)
+    {
+        aConfig.mServer16 = Mac::kShortAddrInvalid;
+        ExitNow();
+    }
+
+    subCur = serviceTlv->GetSubTlvs();
+    subEnd = serviceTlv->GetNext();
+
+    while (subCur < subEnd)
+    {
+        ServerTlv *                     serverTlv;
+        const BackboneRouterServerData *serverData;
+
+        VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd, error = OT_ERROR_PARSE);
+
+        serverTlv  = static_cast<ServerTlv *>(subCur);
+        serverData = reinterpret_cast<const BackboneRouterServerData *>(serverTlv->GetServerData());
+
+        if (rvalServerTlv == NULL ||
+            (serverTlv->GetServer16() == Mle::Mle::Rloc16FromRouterId(Get<Mle::MleRouter>().GetLeaderId())) ||
+            serverData->GetSequenceNumber() > rvalServerData->GetSequenceNumber() ||
+            serverTlv->GetServer16() > rvalServerTlv->GetServer16())
+        {
+            rvalServerTlv  = const_cast<ServerTlv *>(serverTlv);
+            rvalServerData = serverData;
+        }
+
+        subCur = subCur->GetNext();
+    }
+
+    aConfig.mServer16            = rvalServerTlv->GetServer16();
+    aConfig.mSequenceNumber      = rvalServerData->GetSequenceNumber();
+    aConfig.mReregistrationDelay = rvalServerData->GetReregistrationDelay();
+    aConfig.mMlrTimeout          = rvalServerData->GetMlrTimeout();
+
+    error = OT_ERROR_NONE;
+
+exit:
+    return error;
+}
+#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+
 otError LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext)
 {
     PrefixTlv * prefix;

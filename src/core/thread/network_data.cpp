@@ -275,7 +275,7 @@ otError NetworkData::GetNextService(Iterator &aIterator, uint16_t aRloc16, Servi
             {
                 memset(&aConfig, 0, sizeof(aConfig));
 
-                aConfig.mServiceID         = service->GetServiceID();
+                aConfig.mServiceId         = service->GetServiceId();
                 aConfig.mEnterpriseNumber  = service->GetEnterpriseNumber();
                 aConfig.mServiceDataLength = service->GetServiceDataLength();
 
@@ -347,7 +347,7 @@ otError NetworkData::GetNextServiceId(Iterator &aIterator, uint16_t aRloc16, uin
 
             if ((aRloc16 == Mac::kShortAddrBroadcast) || (server->GetServer16() == aRloc16))
             {
-                aServiceId = service->GetServiceID();
+                aServiceId = service->GetServiceId();
 
                 if (subCur->GetNext() >= cur->GetNext())
                 {
@@ -486,7 +486,7 @@ bool NetworkData::ContainsService(uint8_t aServiceId, uint16_t aRloc16)
 
         service = static_cast<ServiceTlv *>(cur);
 
-        if (service->GetServiceID() == aServiceId)
+        if (service->GetServiceId() == aServiceId)
         {
             subCur = service->GetSubTlvs();
             subEnd = cur->GetNext();
@@ -715,7 +715,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Serv
             case NetworkDataTlv::kTypeServer:
             {
                 server = static_cast<ServerTlv *>(cur);
-                server->SetServer16(Mle::Mle::ServiceAlocFromId(aService.GetServiceID()));
+                server->SetServer16(Mle::Mle::ServiceAlocFromId(aService.GetServiceId()));
                 break;
             }
 

@@ -110,6 +110,7 @@ enum AlocAllocation
     kAloc16ServiceEnd                  = 0xfc2f,
     kAloc16CommissionerStart           = 0xfc30,
     kAloc16CommissionerEnd             = 0xfc37,
+    kAloc16BackboneRouterPrimary       = 0xfc38,
     kAloc16CommissionerMask            = 0x0007,
     kAloc16NeighborDiscoveryAgentStart = 0xfc40,
     kAloc16NeighborDiscoveryAgentEnd   = 0xfc4e,

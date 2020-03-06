@@ -49,6 +49,12 @@ enum
     kMaxChildren               = OPENTHREAD_CONFIG_MLE_MAX_CHILDREN,
     kMaxChildKeepAliveAttempts = 4, ///< Maximum keep alive attempts before attempting to reattach to a new Parent
     kFailedChildTransmissions  = OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS, ///< FAILED_CHILD_TRANSMISSIONS
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    // Extra one for core Backbone Router Service.
+    kMaxServiceAlocs = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS + 1,
+#else
+    kMaxServiceAlocs      = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS,
+#endif
 };
 
 /**
@@ -159,6 +165,21 @@ enum
     kMplChildDataMessageTimerExpirations  = 0, ///< Number of MPL retransmissions for Children.
     kMplRouterDataMessageTimerExpirations = 2, ///< Number of MPL retransmissions for Routers.
 };
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+
+/**
+ * Backbone Router constants
+ *
+ */
+enum
+{
+    kRegistrationDelayDefault = 1200, //< In seconds.
+    kMlrTimeoutDefault        = 3600, //< In seconds.
+    kBackboneRouterJitter     = 10,   //< In seconds.
+};
+
+#endif
 
 } // namespace Mle
 

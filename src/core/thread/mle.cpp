@@ -55,6 +55,10 @@
 #include "thread/thread_netif.hpp"
 #include "thread/time_sync_service.hpp"
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#include "backbone_router/local.hpp"
+#endif
+
 using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
@@ -746,6 +750,10 @@ bool Mle::IsAttached(void) const
 
 void Mle::SetStateDetached(void)
 {
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    Get<BackboneRouter::Local>().Reset();
+#endif
+
     if (mRole == OT_DEVICE_ROLE_LEADER)
     {
         Get<ThreadNetif>().RemoveUnicastAddress(mLeaderAloc);
@@ -1571,6 +1579,9 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
             ScheduleMessageTransmissionTimer();
         }
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+        Get<BackboneRouter::Leader>().Update();
+#endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
         Get<NetworkData::Local>().SendServerDataNotification();
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE

@@ -57,6 +57,12 @@
 #include "lib/spinel/spinel_encoder.hpp"
 #include "utils/static_assert.hpp"
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+#include <openthread/backbone_router.h>
+#endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#include <openthread/backbone_router_ftd.h>
+#endif
 namespace ot {
 namespace Ncp {
 
@@ -345,6 +351,12 @@ protected:
     otError EncodeChildInfo(const otChildInfo &aChildInfo);
 #endif
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    otError DecodeBackboneRouterConfig(otBackboneRouterConfig &aConfig);
+#endif
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    otError EncodeBackboneRouterConfig(const otBackboneRouterConfig &aConfig);
+#endif
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     static void HandleUdpForwardStream(otMessage *   aMessage,
                                        uint16_t      aPeerPort,

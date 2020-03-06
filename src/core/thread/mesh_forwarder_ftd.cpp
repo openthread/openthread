@@ -421,6 +421,13 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
             SuccessOrExit(error = GetDestinationRlocByServiceAloc(aloc16, mMeshDest));
         }
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+        else if (aloc16 == Mle::kAloc16BackboneRouterPrimary)
+        {
+            VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary(), error = OT_ERROR_DROP);
+            mMeshDest = Get<BackboneRouter::Leader>().GetServer16();
+        }
+#endif
         else
         {
             // TODO: support for Neighbor Discovery Agent ALOC
