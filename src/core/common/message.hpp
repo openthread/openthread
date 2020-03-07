@@ -206,6 +206,7 @@ public:
         kTypeIp6         = 0, ///< A full uncompressed IPv6 packet
         kType6lowpan     = 1, ///< A 6lowpan frame
         kTypeSupervision = 2, ///< A child supervision frame.
+        kTypeOther       = 3, ///< Other (data) message.
     };
 
     enum
