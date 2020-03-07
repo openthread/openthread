@@ -599,7 +599,7 @@ class Connectivity(object):
 
     @property
     def pp(self):
-        return common.map_pp(self, self._pp_byte)
+        return common.map_pp(self._pp_byte)
 
     @property
     def link_quality_3(self):

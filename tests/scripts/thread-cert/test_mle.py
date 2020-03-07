@@ -1130,7 +1130,7 @@ class TestConnectivity(unittest.TestCase):
         actual_pp = connectivity_obj.pp
 
         # THEN
-        self.assertEqual(common.map_pp(self, pp_byte), actual_pp)
+        self.assertEqual(common.map_pp(pp_byte), actual_pp)
 
     def test_should_return_link_quality_3_value_when_link_quality_3_property_is_called(
         self):
@@ -1317,7 +1317,7 @@ class TestConnectivityFactory(unittest.TestCase):
 
         # THEN
         self.assertTrue(isinstance(actual_connectivity, mle.Connectivity))
-        self.assertEqual(common.map_pp(self, pp_byte), actual_connectivity.pp)
+        self.assertEqual(common.map_pp(pp_byte), actual_connectivity.pp)
         self.assertEqual(link_quality_3, actual_connectivity.link_quality_3)
         self.assertEqual(link_quality_2, actual_connectivity.link_quality_2)
         self.assertEqual(link_quality_1, actual_connectivity.link_quality_1)
@@ -1353,7 +1353,7 @@ class TestConnectivityFactory(unittest.TestCase):
 
         # THEN
         self.assertTrue(isinstance(actual_connectivity, mle.Connectivity))
-        self.assertEqual(common.map_pp(self, pp_byte), actual_connectivity.pp)
+        self.assertEqual(common.map_pp(pp_byte), actual_connectivity.pp)
         self.assertEqual(link_quality_3, actual_connectivity.link_quality_3)
         self.assertEqual(link_quality_2, actual_connectivity.link_quality_2)
         self.assertEqual(link_quality_1, actual_connectivity.link_quality_1)
