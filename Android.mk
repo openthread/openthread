@@ -40,7 +40,6 @@ OPENTHREAD_COMMON_FLAGS                                          := \
     -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1               \
     -DOPENTHREAD_FTD=1                                              \
     -DOPENTHREAD_POSIX=1                                            \
-    -DOPENTHREAD_POSIX_RCP_UART_ENABLE=1                            \
     -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1          \
     -DPACKAGE=\"openthread\"                                        \
     -DPACKAGE_BUGREPORT=\"openthread-devel@googlegroups.com\"       \
@@ -68,6 +67,12 @@ OPENTHREAD_COMMON_FLAGS                                          += \
     $(NULL)
 else
 OPENTHREAD_COMMON_FLAGS += -DOPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1
+endif
+
+ifeq ($(USE_OT_RCP_BUS), spi)
+OPENTHREAD_COMMON_FLAGS += -DOPENTHREAD_POSIX_RCP_SPI_ENABLE=1
+else
+OPENTHREAD_COMMON_FLAGS += -DOPENTHREAD_POSIX_RCP_UART_ENABLE=1
 endif
 
 # Enable all optional features for CI tests.
