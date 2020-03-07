@@ -58,6 +58,7 @@
 #include <openthread/diag.h>
 #include <openthread/logging.h>
 #include <openthread/tasklet.h>
+#include <openthread/thread.h>
 #include <openthread/platform/radio.h>
 #if OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_NCP
 #include <openthread/ncp.h>
@@ -305,6 +306,8 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
 
     openlog(aArgVector[0], LOG_PID | (config.mIsVerbose ? LOG_PERROR : 0), LOG_DAEMON);
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
+    syslog(LOG_INFO, "Running %s", otGetVersionString());
+    syslog(LOG_INFO, "Thread version: %hu", otThreadGetVersion());
     otLoggingSetLevel(config.mLogLevel);
 
     instance = otSysInit(&config.mPlatformConfig);
@@ -312,6 +315,10 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
     if (config.mPrintRadioVersion)
     {
         printf("%s\n", otPlatRadioGetVersionString(instance));
+    }
+    else
+    {
+        syslog(LOG_INFO, "RCP version: %s", otPlatRadioGetVersionString(instance));
     }
 
     if (config.mIsDryRun)
