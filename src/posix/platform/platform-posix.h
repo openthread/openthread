@@ -45,7 +45,7 @@
 
 #include <openthread/error.h>
 #include <openthread/instance.h>
-#include <openthread/openthread-system.h>
+#include <openthread/openthread-posix.h>
 
 #include "common/logging.hpp"
 
