@@ -36,7 +36,7 @@ Topology
 2. SED pings leader so a data poll is just sent.
 3. Leader sends a UDP packet to SED to put a pending frame in queue.
 4. Wait for half polling period, verify no packet received by SED.
-5. SED sends a UDP packet to Leader to solicit a ACK with frame pending set.
+5. SED sends a UDP packet to Leader to solicit an ACK with frame pending set.
    * Verify Leader receives a UDP packet
    * Verify SED sends a data poll
    * Verify SED receives a UDP packet
@@ -95,7 +95,7 @@ class SED_EnhancedFramePending(thread_cert.TestCase):
         # 4 - Wait for half polling period
         self.simulator.go(DEFAULT_POLL_PERIOD // 2)
         with self.assertRaises(pexpect.TIMEOUT):
-            self.nodes[LEADER].udp_check_rx(UDP_BYTES_COUNT)
+            self.nodes[SED_1].udp_check_rx(UDP_BYTES_COUNT)
 
         # 5 - Send to Leader
         self.nodes[SED_1].udp_send(UDP_BYTES_COUNT,
@@ -104,7 +104,7 @@ class SED_EnhancedFramePending(thread_cert.TestCase):
         self.simulator.go(1)
         self.nodes[LEADER].udp_check_rx(UDP_BYTES_COUNT)
         sed_messages = self.simulator.get_messages_sent_by(SED_1)
-        sed_messages.next_data_poll()
+        self.assertNotEqual(sed_messages.next_data_poll(), None)
         self.nodes[SED_1].udp_check_rx(UDP_BYTES_COUNT)
 
 
