@@ -78,6 +78,7 @@ Done
 * [pollperiod](#pollperiod-pollperiod)
 * [prefix](#prefix-add-prefix-pvdcsr-prf)
 * [promiscuous](#promiscuous)
+* [preferrouterid](#preferrouterid-routerid)
 * [releaserouterid](#releaserouterid-routerid)
 * [reset](#reset)
 * [rloc16](#rloc16)
@@ -1064,6 +1065,14 @@ Disable radio promiscuous operation.
 
 ```bash
 > promiscuous disable
+Done
+```
+
+### preferrouterid \<routerid\>
+Prefer a Router ID when solicit router id from Leader.
+
+```bash
+> preferrouterid 16
 Done
 ```
 

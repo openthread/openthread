@@ -305,6 +305,7 @@ private:
 #endif
     void ProcessPromiscuous(int argc, char *argv[]);
 #if OPENTHREAD_FTD
+    void ProcessPreferRouterId(int argc, char *argv[]);
     void ProcessPskc(int argc, char *argv[]);
     void ProcessReleaseRouterId(int argc, char *argv[]);
 #endif

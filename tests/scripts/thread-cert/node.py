@@ -525,6 +525,11 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
+    def prefer_router_id(self, router_id):
+        cmd = 'preferrouterid %d' % router_id
+        self.send_command(cmd)
+        self._expect('Done')
+
     def release_router_id(self, router_id):
         cmd = 'releaserouterid %d' % router_id
         self.send_command(cmd)
