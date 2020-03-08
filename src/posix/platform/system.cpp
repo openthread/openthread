@@ -44,7 +44,7 @@
 
 uint64_t gNodeId = 0;
 
-otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
+otInstance *otPosixInit(otPlatformConfig *aPlatformConfig)
 {
     otInstance *instance = NULL;
 
@@ -67,7 +67,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     return instance;
 }
 
-void otSysDeinit(void)
+void otPosixDeinit(void)
 {
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     virtualTimeDeinit();
@@ -108,7 +108,7 @@ static int trySelect(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSe
 }
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME
 
-void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
+void otPosixMainloopUpdate(otInstance *aInstance, otPosixMainloopContext *aMainloop)
 {
     platformAlarmUpdateTimeout(&aMainloop->mTimeout);
     platformUartUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet,
@@ -134,7 +134,7 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
     }
 }
 
-int otSysMainloopPoll(otSysMainloopContext *aMainloop)
+int otPosixMainloopPoll(otPosixMainloopContext *aMainloop)
 {
     int rval;
 
@@ -177,7 +177,7 @@ int otSysMainloopPoll(otSysMainloopContext *aMainloop)
     return rval;
 }
 
-void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMainloop)
+void otPosixMainloopProcess(otInstance *aInstance, const otPosixMainloopContext *aMainloop)
 {
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     virtualTimeProcess(aInstance, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);

@@ -103,7 +103,7 @@ void otxConsoleDeinit(void)
     rl_callback_handler_remove();
 }
 
-void otxConsoleUpdate(otSysMainloopContext *aMainloop)
+void otxConsoleUpdate(otPosixMainloopContext *aMainloop)
 {
     FD_SET(sReadFd, &aMainloop->mReadFdSet);
     FD_SET(sReadFd, &aMainloop->mErrorFdSet);
@@ -114,7 +114,7 @@ void otxConsoleUpdate(otSysMainloopContext *aMainloop)
     }
 }
 
-void otxConsoleProcess(const otSysMainloopContext *aMainloop)
+void otxConsoleProcess(const otPosixMainloopContext *aMainloop)
 {
     if (FD_ISSET(sReadFd, &aMainloop->mErrorFdSet))
     {

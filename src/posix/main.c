@@ -74,7 +74,7 @@
 #else
 #error "Unknown posix app type!"
 #endif
-#include <openthread/openthread-system.h>
+#include <openthread/openthread-posix.h>
 
 #ifndef OPENTHREAD_ENABLE_COVERAGE
 #define OPENTHREAD_ENABLE_COVERAGE 0
@@ -310,7 +310,7 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
     syslog(LOG_INFO, "Thread version: %hu", otThreadGetVersion());
     otLoggingSetLevel(config.mLogLevel);
 
-    instance = otSysInit(&config.mPlatformConfig);
+    instance = otPosixInit(&config.mPlatformConfig);
 
     if (config.mPrintRadioVersion)
     {
@@ -337,7 +337,7 @@ void otTaskletsSignalPending(otInstance *aInstance)
 void otPlatReset(otInstance *aInstance)
 {
     otInstanceFinalize(aInstance);
-    otSysDeinit();
+    otPosixDeinit();
 
     longjmp(gResetJump, 1);
     assert(false);
@@ -376,7 +376,7 @@ int main(int argc, char *argv[])
 
     while (true)
     {
-        otSysMainloopContext mainloop;
+        otPosixMainloopContext mainloop;
 
         otTaskletsProcess(instance);
 
@@ -392,11 +392,11 @@ int main(int argc, char *argv[])
         otxConsoleUpdate(&mainloop);
 #endif
 
-        otSysMainloopUpdate(instance, &mainloop);
+        otPosixMainloopUpdate(instance, &mainloop);
 
-        if (otSysMainloopPoll(&mainloop) >= 0)
+        if (otPosixMainloopPoll(&mainloop) >= 0)
         {
-            otSysMainloopProcess(instance, &mainloop);
+            otPosixMainloopProcess(instance, &mainloop);
 #if OPENTHREAD_USE_CONSOLE
             otxConsoleProcess(&mainloop);
 #endif
@@ -412,7 +412,7 @@ int main(int argc, char *argv[])
     otxConsoleDeinit();
 #endif
     otInstanceFinalize(instance);
-    otSysDeinit();
+    otPosixDeinit();
 
     return 0;
 }

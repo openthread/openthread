@@ -33,7 +33,7 @@
 
 #include <stdint.h>
 
-#include <openthread/openthread-system.h>
+#include <openthread/openthread-posix.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,7 +59,7 @@ void otxConsoleDeinit(void);
  * @param[inout]    aMainloop   A pointer to the mainloop context.
  *
  */
-void otxConsoleUpdate(otSysMainloopContext *aMainloop);
+void otxConsoleUpdate(otPosixMainloopContext *aMainloop);
 
 /**
  * This function performs console driver processing.
@@ -67,7 +67,7 @@ void otxConsoleUpdate(otSysMainloopContext *aMainloop);
  * @param[in]    aMainloop      A pointer to the mainloop context.
  *
  */
-void otxConsoleProcess(const otSysMainloopContext *aMainloop);
+void otxConsoleProcess(const otPosixMainloopContext *aMainloop);
 
 #ifdef __cplusplus
 }
