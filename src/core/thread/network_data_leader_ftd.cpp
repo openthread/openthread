@@ -662,6 +662,8 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
 
                 while (curInner < endInner)
                 {
+                    VerifyOrExit((curInner + 1) <= endInner && curInner->GetNext() <= endInner);
+
                     if (curInner->IsStable())
                     {
                         switch (curInner->GetType())
@@ -674,11 +676,12 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
                             NetworkDataTlv *curServerBase = serviceBase->GetSubTlvs();
                             NetworkDataTlv *endServerBase = serviceBase->GetNext();
 
-                            while (curServerBase <= endServerBase)
+                            while (curServerBase < endServerBase)
                             {
                                 ServerTlv *serverBase = static_cast<ServerTlv *>(curServerBase);
 
-                                VerifyOrExit((curServerBase + 1) <= endServerBase && curServerBase->GetNext() <= end);
+                                VerifyOrExit((curServerBase + 1) <= endServerBase &&
+                                             curServerBase->GetNext() <= endServerBase);
 
                                 if (curServerBase->IsStable() && (server->GetServer16() == serverBase->GetServer16()) &&
                                     (server->GetServerDataLength() == serverBase->GetServerDataLength()) &&
