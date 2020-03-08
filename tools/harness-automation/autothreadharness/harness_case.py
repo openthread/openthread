@@ -882,6 +882,8 @@ class HarnessCase(unittest.TestCase):
         finder = re.compile(r'.*\b' + case + r'\b')
         finder_dotted = re.compile(r'.*\b' + case.replace(' ', r'\.') + r'\b')
         for elem in elems:
+            if settings.MIXED_DEVICE_TYPE and not elem.text:
+                continue
             action_chains = ActionChains(self._browser)
             action_chains.move_to_element(elem)
             action_chains.perform()
