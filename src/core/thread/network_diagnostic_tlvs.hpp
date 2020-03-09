@@ -368,9 +368,8 @@ public:
      */
     bool IsValid(void) const
     {
-        return IsSedBufferingIncluded()||
-                (GetLength() ==
-                 sizeof(*this) - sizeof(NetworkDiagnosticTlv) - sizeof(mSedBufferSize) - sizeof(mSedDatagramCount));
+        return IsSedBufferingIncluded() || (GetLength() == sizeof(*this) - sizeof(NetworkDiagnosticTlv) -
+                                                               sizeof(mSedBufferSize) - sizeof(mSedDatagramCount));
     }
 
     /**
