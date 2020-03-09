@@ -1320,9 +1320,9 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
         uint8_t        candidatePrefixMatched;
         uint8_t        overrideScope;
 
-        if (candidateAddr->IsAnycastRoutingLocator())
+        if (!addr->IsPreferred() || candidateAddr->IsAnycastRoutingLocator())
         {
-            // Don't use anycast address as source address.
+            // Don't use deprecated or anycast address as source address.
             continue;
         }
 
