@@ -242,7 +242,7 @@ do_package() {
 
 envsetup()
 {
-    if [[ "${NODE_MODE}" = 'rcp' ]] ; then
+    if [[ "${NODE_MODE}" == 'rcp' ]] ; then
         export RADIO_DEVICE="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}/examples/apps/ncp/ot-rcp"
         export OT_CLI_PATH="${OT_BUILDDIR}/cmake/openthread-posix-${THREAD_VERSION}/src/posix/ot-cli"
         export OT_NCP_PATH="${OT_BUILDDIR}/cmake/openthread-posix-${THREAD_VERSION}/src/posix/ot-ncp"
