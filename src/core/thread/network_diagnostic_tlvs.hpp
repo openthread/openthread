@@ -1432,7 +1432,11 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return !IsExtended(); }
+    bool IsValid(void) const
+    {
+        // At least one channel pages must be included.
+        return GetLength() >= 1;
+    }
 
     /**
      * This method returns a pointer to the list of Channel Pages.
