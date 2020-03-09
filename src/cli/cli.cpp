@@ -3757,18 +3757,18 @@ void Interpreter::HandleDiagnosticGetResponse(const otMessage &aMessage, const I
     {
         switch (diagTlv.mType)
         {
-        case OT_NETWORK_DIAGNOSTIC_TLV_EXT_MAC_ADDR:
+        case OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS:
             mServer->OutputFormat("Ext Address: ");
             OutputBytes(diagTlv.mExtAddress.m8, sizeof(diagTlv.mExtAddress.m8));
             break;
-        case OT_NETWORK_DIAGNOSTIC_TLV_ADDR16:
+        case OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS:
             mServer->OutputFormat("Rloc16: 0x%04x", diagTlv.mAddr16);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_MODE:
             mServer->OutputFormat("Mode: ");
             OutputMode(diagTlv.mMode);
             break;
-        case OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT:
+        case OT_NETWORK_DIAGNOSTIC_TLV_POLLING_PERIOD:
             mServer->OutputFormat("Timeout: %u", diagTlv.mTimeout);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY:

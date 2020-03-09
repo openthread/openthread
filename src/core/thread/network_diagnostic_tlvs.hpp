@@ -82,10 +82,10 @@ public:
      */
     enum Type
     {
-        kExtMacAddress   = OT_NETWORK_DIAGNOSTIC_TLV_EXT_MAC_ADDR,
-        kAddress16       = OT_NETWORK_DIAGNOSTIC_TLV_ADDR16,
+        kExtMacAddress   = OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS,
+        kAddress16       = OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS,
         kMode            = OT_NETWORK_DIAGNOSTIC_TLV_MODE,
-        kTimeout         = OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT,
+        kPollingPeriod   = OT_NETWORK_DIAGNOSTIC_TLV_POLLING_PERIOD,
         kConnectivity    = OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY,
         kRoute           = OT_NETWORK_DIAGNOSTIC_TLV_ROUTE,
         kLeaderData      = OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA,
@@ -306,7 +306,7 @@ public:
      */
     void Init(void)
     {
-        SetType(kTimeout);
+        SetType(kPollingPeriod);
         SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
     }
 

@@ -337,7 +337,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             break;
         }
 
-        case NetworkDiagnosticTlv::kTimeout:
+        case NetworkDiagnosticTlv::kPollingPeriod:
         {
             if (!Get<Mle::MleRouter>().IsRxOnWhenIdle())
             {
@@ -841,7 +841,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
         ParseMode(linkMode.GetMode(), aNetworkDiagTlv.mMode);
     }
     break;
-    case NetworkDiagnosticTlv::kTimeout:
+    case NetworkDiagnosticTlv::kPollingPeriod:
     {
         TimeoutTlv timeout;
         tlvTotalLength = sizeof(timeout);
