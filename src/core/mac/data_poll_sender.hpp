@@ -167,13 +167,13 @@ public:
     void HandlePollTimeout(void);
 
     /**
-     * This method informs the data poll sender that a mac frame has been received. It checks the "frame pending" in
-     * the received frame header and if it is set, data poll sender will send an immediate data poll to retrieve the
-     * pending frame.
+     * This method informs the data poll sender to process a MAC frame.
      *
-     * If enhanced keep-alive is supported, this method also resets keep-alive timer if the frame is an Ack.
+     *   1. Data Frame: send an immediate data poll if "frame pending" is set.
+     *   2. Ack Frame for a secured data frame in version 1.2 or newer: send an immediate data poll if
+     *      "frame pending" is set, otherwise reset the keep-alive timer for sending next poll.
      *
-     * @param[in] aFrame     The received frame.
+     * @param[in] aFrame     The frame to process.
      *
      */
     void ProcessFrame(const Mac::RxFrame &aFrame);
