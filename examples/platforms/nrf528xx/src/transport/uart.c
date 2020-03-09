@@ -56,16 +56,16 @@ bool sUartEnabled = false;
 /**
  *  UART TX buffer variables.
  */
-static const uint8_t *sTransmitBuffer = NULL;
-static uint16_t       sTransmitLength = 0;
-static bool           sTransmitDone   = 0;
+static volatile const uint8_t *sTransmitBuffer = NULL;
+static volatile uint16_t       sTransmitLength = 0;
+static volatile bool           sTransmitDone   = 0;
 
 /**
  *  UART RX ring buffer variables.
  */
-static uint8_t  sReceiveBuffer[UART_RX_BUFFER_SIZE];
-static uint16_t sReceiveHead = 0;
-static uint16_t sReceiveTail = 0;
+static uint8_t           sReceiveBuffer[UART_RX_BUFFER_SIZE];
+static volatile uint16_t sReceiveHead = 0;
+static volatile uint16_t sReceiveTail = 0;
 
 /**
  * Function for checking if RX buffer is full.
