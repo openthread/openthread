@@ -883,14 +883,16 @@ class HarnessCase(unittest.TestCase):
         finder_dotted = re.compile(r'.*\b' + case.replace(' ', r'\.') + r'\b')
         for elem in elems:
             if elem.text:
-                self._browser.execute_script('arguments[0].scrollIntoView();', elem)
+                self._browser.execute_script('arguments[0].scrollIntoView();',
+                                             elem)
                 action_chains = ActionChains(self._browser)
                 action_chains.move_to_element(elem)
                 action_chains.perform()
                 logger.debug(elem.text)
                 if finder.match(elem.text) or finder_dotted.match(elem.text):
                     parent = elem.find_element_by_xpath('..')
-                    checkbox = parent.find_element_by_class_name('tree-checkbox')
+                    checkbox = parent.find_element_by_class_name(
+                        'tree-checkbox')
                     break
 
         if not checkbox:
