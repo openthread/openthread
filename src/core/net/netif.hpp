@@ -101,6 +101,22 @@ public:
         return mScopeOverrideValid ? static_cast<uint8_t>(mScopeOverride) : GetAddress().GetScope();
     }
 
+    /**
+     * This method indicates whether or not the address is preferred.
+     *
+     * @returns TRUE if the address is preferred, FALSE if deprecated.
+     *
+     */
+    bool IsPreferred(void) const { return mPreferred; }
+
+    /**
+     * This method sets whether the address is preferred or deprecated.
+     *
+     * @param[in]  aPreferred  TRUE if the address is preferred, FALSE if deprecated.
+     *
+     */
+    void SetPreferred(bool aPreferred) { mPreferred = aPreferred; }
+
 private:
     // In an unused/available entry (i.e., entry not present in a linked
     // list), the next pointer is set to point back to the entry itself.

@@ -1385,7 +1385,8 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
     for (const Ip6::NetifUnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr; addr = addr->GetNext())
     {
         if (addr->GetAddress().IsLinkLocal() || IsRoutingLocator(addr->GetAddress()) ||
-            IsAnycastLocator(addr->GetAddress()) || addr->GetAddress() == GetMeshLocal64())
+            IsAnycastLocator(addr->GetAddress()) || addr->GetAddress() == GetMeshLocal64() ||
+            !addr->IsPreferred() /*skip deprecated address*/)
         {
             continue;
         }
