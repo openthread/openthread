@@ -272,10 +272,10 @@ main()
         print_usage 1
     fi
 
-    [[ "${NODE_MODE}" = "rcp" ]] && echo "Using rcp mode" || echo "Using standalone mode"
-    [[ "${NODE_TYPE}" = "ncp-sim" ]] && echo "Using NCP node" || echo "Using CLI node"
-    [[ "${VIRTUAL_TIME}" = 1 ]] && echo "Using virtual time" || echo "Using real time"
-    [[ "${THREAD_VERSION}" = "1.2" ]] && echo "Using Thread 1.2 stack" || echo "Using Thread 1.1 stack"
+    [[ "${NODE_MODE}" == "rcp" ]] && echo "Using rcp mode" || echo "Using standalone mode"
+    [[ "${NODE_TYPE}" == "ncp-sim" ]] && echo "Using NCP node" || echo "Using CLI node"
+    [[ "${VIRTUAL_TIME}" == 1 ]] && echo "Using virtual time" || echo "Using real time"
+    [[ "${THREAD_VERSION}" == "1.2" ]] && echo "Using Thread 1.2 stack" || echo "Using Thread 1.1 stack"
 
     while [[ $# != 0 ]]; do
         case "$1" in
