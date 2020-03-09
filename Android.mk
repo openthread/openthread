@@ -146,6 +146,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/logging_api.cpp                            \
     src/core/api/message_api.cpp                            \
     src/core/api/netdata_api.cpp                            \
+    src/core/api/netdiag_api.cpp                            \
     src/core/api/random_crypto_api.cpp                      \
     src/core/api/random_noncrypto_api.cpp                   \
     src/core/api/server_api.cpp                             \

@@ -36,7 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/thread.h>
+#include <openthread/netdiag.h>
 
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
