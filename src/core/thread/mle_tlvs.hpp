@@ -578,12 +578,6 @@ class LeaderDataTlv : public Tlv
 {
 public:
     /**
-     * This method clears the object (setting all fields to zero).
-     *
-     */
-    void Clear(void) { memset(this, 0, sizeof(*this)); }
-
-    /**
      * This method initializes the TLV.
      *
      */
@@ -603,84 +597,34 @@ public:
     bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
-     * This method returns the Partition ID value.
+     * This method gets the Leader Data info from TLV.
      *
-     * @returns The Partition ID value.
+     * @param[out] aLeaderData   A reference to output Leader Data info.
      *
      */
-    uint32_t GetPartitionId(void) const { return HostSwap32(mPartitionId); }
+    void Get(LeaderData &aLeaderData) const
+    {
+        aLeaderData.SetPartitionId(HostSwap32(mPartitionId));
+        aLeaderData.SetWeighting(mWeighting);
+        aLeaderData.SetDataVersion(mDataVersion);
+        aLeaderData.SetStableDataVersion(mStableDataVersion);
+        aLeaderData.SetLeaderRouterId(mLeaderRouterId);
+    }
 
     /**
-     * This method sets the Partition ID value.
+     * This method sets the Leader Data.
      *
-     * @param[in]  aPartitionId  The Partition ID value.
-     *
-     */
-    void SetPartitionId(uint32_t aPartitionId) { mPartitionId = HostSwap32(aPartitionId); }
-
-    /**
-     * This method returns the Weighting value.
-     *
-     * @returns The Weighting value.
+     * @param[in] aLeaderData   A Leader Data.
      *
      */
-    uint8_t GetWeighting(void) const { return mWeighting; }
-
-    /**
-     * This method sets the Weighting value.
-     *
-     * @param[in]  aWeighting  The Weighting value.
-     *
-     */
-    void SetWeighting(uint8_t aWeighting) { mWeighting = aWeighting; }
-
-    /**
-     * This method returns the Data Version value.
-     *
-     * @returns The Data Version value.
-     *
-     */
-    uint8_t GetDataVersion(void) const { return mDataVersion; }
-
-    /**
-     * This method sets the Data Version value.
-     *
-     * @param[in]  aVersion  The Data Version value.
-     *
-     */
-    void SetDataVersion(uint8_t aVersion) { mDataVersion = aVersion; }
-
-    /**
-     * This method returns the Stable Data Version value.
-     *
-     * @returns The Stable Data Version value.
-     *
-     */
-    uint8_t GetStableDataVersion(void) const { return mStableDataVersion; }
-
-    /**
-     * This method sets the Stable Data Version value.
-     *
-     * @param[in]  aVersion  The Stable Data Version value.
-     *
-     */
-    void SetStableDataVersion(uint8_t aVersion) { mStableDataVersion = aVersion; }
-
-    /**
-     * This method returns the Leader Router ID value.
-     *
-     * @returns The Leader Router ID value.
-     *
-     */
-    uint8_t GetLeaderRouterId(void) const { return mLeaderRouterId; }
-
-    /**
-     * This method sets the Leader Router ID value.
-     *
-     * @param[in]  aRouterId  The Leader Router ID value.
-     *
-     */
-    void SetLeaderRouterId(uint8_t aRouterId) { mLeaderRouterId = aRouterId; }
+    void Set(const LeaderData &aLeaderData)
+    {
+        mPartitionId       = HostSwap32(aLeaderData.GetPartitionId());
+        mWeighting         = aLeaderData.GetWeighting();
+        mDataVersion       = aLeaderData.GetDataVersion();
+        mStableDataVersion = aLeaderData.GetStableDataVersion();
+        mLeaderRouterId    = aLeaderData.GetLeaderRouterId();
+    }
 
 private:
     uint32_t mPartitionId;

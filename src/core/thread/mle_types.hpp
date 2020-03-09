@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include <stdint.h>
+#include <string.h>
 
 #include <openthread/thread.h>
 
@@ -400,6 +401,100 @@ public:
 
 private:
     uint8_t mMode;
+};
+
+/**
+ * This class represents the Thread Leader Data.
+ *
+ */
+class LeaderData : public otLeaderData
+{
+public:
+    /**
+     * This method clears the Leader Data (setting all the fields to zero).
+     *
+     */
+    void Clear(void) { memset(this, 0, sizeof(*this)); }
+
+    /**
+     * This method returns the Partition ID value.
+     *
+     * @returns The Partition ID value.
+     *
+     */
+    uint32_t GetPartitionId(void) const { return mPartitionId; }
+
+    /**
+     * This method sets the Partition ID value.
+     *
+     * @param[in]  aPartitionId  The Partition ID value.
+     *
+     */
+    void SetPartitionId(uint32_t aPartitionId) { mPartitionId = aPartitionId; }
+
+    /**
+     * This method returns the Weighting value.
+     *
+     * @returns The Weighting value.
+     *
+     */
+    uint8_t GetWeighting(void) const { return mWeighting; }
+
+    /**
+     * This method sets the Weighting value.
+     *
+     * @param[in]  aWeighting  The Weighting value.
+     *
+     */
+    void SetWeighting(uint8_t aWeighting) { mWeighting = aWeighting; }
+
+    /**
+     * This method returns the Data Version value.
+     *
+     * @returns The Data Version value.
+     *
+     */
+    uint8_t GetDataVersion(void) const { return mDataVersion; }
+
+    /**
+     * This method sets the Data Version value.
+     *
+     * @param[in]  aVersion  The Data Version value.
+     *
+     */
+    void SetDataVersion(uint8_t aVersion) { mDataVersion = aVersion; }
+
+    /**
+     * This method returns the Stable Data Version value.
+     *
+     * @returns The Stable Data Version value.
+     *
+     */
+    uint8_t GetStableDataVersion(void) const { return mStableDataVersion; }
+
+    /**
+     * This method sets the Stable Data Version value.
+     *
+     * @param[in]  aVersion  The Stable Data Version value.
+     *
+     */
+    void SetStableDataVersion(uint8_t aVersion) { mStableDataVersion = aVersion; }
+
+    /**
+     * This method returns the Leader Router ID value.
+     *
+     * @returns The Leader Router ID value.
+     *
+     */
+    uint8_t GetLeaderRouterId(void) const { return mLeaderRouterId; }
+
+    /**
+     * This method sets the Leader Router ID value.
+     *
+     * @param[in]  aRouterId  The Leader Router ID value.
+     *
+     */
+    void SetLeaderRouterId(uint8_t aRouterId) { mLeaderRouterId = aRouterId; }
 };
 
 /**
