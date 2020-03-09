@@ -126,6 +126,100 @@ enum ServiceID
 };
 
 /**
+ * This class represents the Thread Leader Data.
+ *
+ */
+class LeaderData : public otLeaderData
+{
+public:
+    /**
+     * This method clears the Leader Data (setting all the fields to zero).
+     *
+     */
+    void Clear(void) { memset(this, 0, sizeof(*this)); }
+
+    /**
+     * This method returns the Partition ID value.
+     *
+     * @returns The Partition ID value.
+     *
+     */
+    uint32_t GetPartitionId(void) const { return mPartitionId; }
+
+    /**
+     * This method sets the Partition ID value.
+     *
+     * @param[in]  aPartitionId  The Partition ID value.
+     *
+     */
+    void SetPartitionId(uint32_t aPartitionId) { mPartitionId = aPartitionId; }
+
+    /**
+     * This method returns the Weighting value.
+     *
+     * @returns The Weighting value.
+     *
+     */
+    uint8_t GetWeighting(void) const { return mWeighting; }
+
+    /**
+     * This method sets the Weighting value.
+     *
+     * @param[in]  aWeighting  The Weighting value.
+     *
+     */
+    void SetWeighting(uint8_t aWeighting) { mWeighting = aWeighting; }
+
+    /**
+     * This method returns the Data Version value.
+     *
+     * @returns The Data Version value.
+     *
+     */
+    uint8_t GetDataVersion(void) const { return mDataVersion; }
+
+    /**
+     * This method sets the Data Version value.
+     *
+     * @param[in]  aVersion  The Data Version value.
+     *
+     */
+    void SetDataVersion(uint8_t aVersion) { mDataVersion = aVersion; }
+
+    /**
+     * This method returns the Stable Data Version value.
+     *
+     * @returns The Stable Data Version value.
+     *
+     */
+    uint8_t GetStableDataVersion(void) const { return mStableDataVersion; }
+
+    /**
+     * This method sets the Stable Data Version value.
+     *
+     * @param[in]  aVersion  The Stable Data Version value.
+     *
+     */
+    void SetStableDataVersion(uint8_t aVersion) { mStableDataVersion = aVersion; }
+
+    /**
+     * This method returns the Leader Router ID value.
+     *
+     * @returns The Leader Router ID value.
+     *
+     */
+    uint8_t GetLeaderRouterId(void) const { return mLeaderRouterId; }
+
+    /**
+     * This method sets the Leader Router ID value.
+     *
+     * @param[in]  aRouterId  The Leader Router ID value.
+     *
+     */
+    void SetLeaderRouterId(uint8_t aRouterId) { mLeaderRouterId = aRouterId; }
+};
+
+/**
  * This class implements MLE Header generation and parsing.
  *
  */
@@ -897,23 +991,12 @@ public:
     otError AddLeaderAloc(void);
 
     /**
-     * This method returns the most recently received Leader Data TLV.
+     * This method returns the most recently received Leader Data.
      *
-     * @returns  A reference to the most recently received Leader Data TLV.
-     *
-     */
-    const LeaderDataTlv &GetLeaderDataTlv(void);
-
-    /**
-     * This method gets the Leader Data.
-     *
-     * @param[out]  aLeaderData  A reference to where the leader data is placed.
-     *
-     * @retval OT_ERROR_NONE         Successfully retrieved the leader data.
-     * @retval OT_ERROR_DETACHED     Not currently attached.
+     * @returns  A reference to the most recently received Leader Data.
      *
      */
-    otError GetLeaderData(otLeaderData &aLeaderData);
+    const LeaderData &GetLeaderData(void);
 
     /**
      * This method derives the Child ID from a given RLOC16.
@@ -1378,6 +1461,19 @@ protected:
     otError AppendLeaderData(Message &aMessage);
 
     /**
+     * This method reads Leader Data TLV from a message.
+     *
+     * @param[in]  aMessage        A reference to the message.
+     * @param[out] aLeaderData     A reference to output the Leader Data.
+     *
+     * @retval OT_ERROR_NONE       Successfully read the TLV.
+     * @retval OT_ERROR_NOT_FOUND  TLV was not found in the message.
+     * @retval OT_ERROR_PARSE      TLV was found but could not be parsed.
+     *
+     */
+    otError ReadLeaderData(const Message &aMessage, LeaderData &aLeaderData);
+
+    /**
      * This method appends a Scan Mask TLV to a message.
      *
      * @param[in]  aMessage   A reference to the message.
@@ -1723,7 +1819,7 @@ protected:
     static const char *ReattachStateToString(ReattachState aState);
 #endif
 
-    LeaderDataTlv mLeaderData;               ///< Last received Leader Data TLV.
+    LeaderData    mLeaderData;               ///< Last received Leader Data TLV.
     bool          mRetrieveNewNetworkData;   ///< Indicating new Network Data is needed if set.
     otDeviceRole  mRole;                     ///< Current Thread role.
     Router        mParent;                   ///< Parent information.
@@ -1821,7 +1917,7 @@ private:
                         uint8_t                aLinkMargin,
                         const ConnectivityTlv &aConnectivityTlv,
                         uint8_t                aVersion);
-    bool IsNetworkDataNewer(const LeaderDataTlv &aLeaderData);
+    bool IsNetworkDataNewer(const LeaderData &aLeaderData);
 
     otError GetAlocAddress(Ip6::Address &aAddress, uint16_t aAloc16) const;
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -1862,10 +1958,10 @@ private:
 
     AddressRegistrationMode mAddressRegistrationMode;
 
-    uint8_t       mParentLinkMargin;
-    bool          mParentIsSingleton;
-    bool          mReceivedResponseFromParent;
-    LeaderDataTlv mParentLeaderData;
+    uint8_t    mParentLinkMargin;
+    bool       mParentIsSingleton;
+    bool       mReceivedResponseFromParent;
+    LeaderData mParentLeaderData;
 
     Router    mParentCandidate;
     Challenge mParentCandidateChallenge;

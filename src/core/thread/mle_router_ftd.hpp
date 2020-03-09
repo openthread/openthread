@@ -475,10 +475,10 @@ public:
      * @retval -1  If partition B is preferred.
      *
      */
-    static int ComparePartitions(bool                 aSingletonA,
-                                 const LeaderDataTlv &aLeaderDataA,
-                                 bool                 aSingletonB,
-                                 const LeaderDataTlv &aLeaderDataB);
+    static int ComparePartitions(bool              aSingletonA,
+                                 const LeaderData &aLeaderDataA,
+                                 bool              aSingletonB,
+                                 const LeaderData &aLeaderDataB);
 
     /**
      * This method checks if the destination is reachable.

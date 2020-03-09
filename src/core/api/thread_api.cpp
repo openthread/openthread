@@ -264,31 +264,36 @@ otDeviceRole otThreadGetDeviceRole(otInstance *aInstance)
 otError otThreadGetLeaderData(otInstance *aInstance, otLeaderData *aLeaderData)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
+    otError   error    = OT_ERROR_NONE;
 
     assert(aLeaderData != NULL);
 
-    return instance.Get<Mle::MleRouter>().GetLeaderData(*aLeaderData);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsAttached(), error = OT_ERROR_DETACHED);
+    *aLeaderData = instance.Get<Mle::MleRouter>().GetLeaderData();
+
+exit:
+    return error;
 }
 
 uint8_t otThreadGetLeaderRouterId(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::MleRouter>().GetLeaderDataTlv().GetLeaderRouterId();
+    return instance.Get<Mle::MleRouter>().GetLeaderId();
 }
 
 uint8_t otThreadGetLeaderWeight(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::MleRouter>().GetLeaderDataTlv().GetWeighting();
+    return instance.Get<Mle::MleRouter>().GetLeaderData().GetWeighting();
 }
 
 uint32_t otThreadGetPartitionId(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::MleRouter>().GetLeaderDataTlv().GetPartitionId();
+    return instance.Get<Mle::MleRouter>().GetLeaderData().GetPartitionId();
 }
 
 uint16_t otThreadGetRloc16(otInstance *aInstance)

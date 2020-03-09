@@ -1086,29 +1086,12 @@ exit:
     return error;
 }
 
-const LeaderDataTlv &Mle::GetLeaderDataTlv(void)
+const LeaderData &Mle::GetLeaderData(void)
 {
     mLeaderData.SetDataVersion(Get<NetworkData::Leader>().GetVersion());
     mLeaderData.SetStableDataVersion(Get<NetworkData::Leader>().GetStableVersion());
 
     return mLeaderData;
-}
-
-otError Mle::GetLeaderData(otLeaderData &aLeaderData)
-{
-    const LeaderDataTlv &leaderData(GetLeaderDataTlv());
-    otError              error = OT_ERROR_NONE;
-
-    VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED && mRole != OT_DEVICE_ROLE_DETACHED, error = OT_ERROR_DETACHED);
-
-    aLeaderData.mPartitionId       = leaderData.GetPartitionId();
-    aLeaderData.mWeighting         = leaderData.GetWeighting();
-    aLeaderData.mDataVersion       = leaderData.GetDataVersion();
-    aLeaderData.mStableDataVersion = leaderData.GetStableDataVersion();
-    aLeaderData.mLeaderRouterId    = leaderData.GetLeaderRouterId();
-
-exit:
-    return error;
 }
 
 Message *Mle::NewMleMessage(void)
@@ -1232,11 +1215,37 @@ otError Mle::AppendAddress16(Message &aMessage, uint16_t aRloc16)
 
 otError Mle::AppendLeaderData(Message &aMessage)
 {
-    mLeaderData.Init();
+    LeaderDataTlv leaderDataTlv;
+
     mLeaderData.SetDataVersion(Get<NetworkData::Leader>().GetVersion());
     mLeaderData.SetStableDataVersion(Get<NetworkData::Leader>().GetStableVersion());
 
-    return mLeaderData.AppendTo(aMessage);
+    leaderDataTlv.Init();
+    leaderDataTlv.SetPartitionId(mLeaderData.GetPartitionId());
+    leaderDataTlv.SetWeighting(mLeaderData.GetWeighting());
+    leaderDataTlv.SetDataVersion(mLeaderData.GetDataVersion());
+    leaderDataTlv.SetStableDataVersion(mLeaderData.GetStableDataVersion());
+    leaderDataTlv.SetLeaderRouterId(mLeaderData.GetLeaderRouterId());
+
+    return leaderDataTlv.AppendTo(aMessage);
+}
+
+otError Mle::ReadLeaderData(const Message &aMessage, LeaderData &aLeaderData)
+{
+    otError       error;
+    LeaderDataTlv leaderDataTlv;
+
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderDataTlv), leaderDataTlv));
+    VerifyOrExit(leaderDataTlv.IsValid(), error = OT_ERROR_PARSE);
+
+    aLeaderData.SetPartitionId(leaderDataTlv.GetPartitionId());
+    aLeaderData.SetWeighting(leaderDataTlv.GetWeighting());
+    aLeaderData.SetDataVersion(leaderDataTlv.GetDataVersion());
+    aLeaderData.SetStableDataVersion(leaderDataTlv.GetStableDataVersion());
+    aLeaderData.SetLeaderRouterId(leaderDataTlv.GetLeaderRouterId());
+
+exit:
+    return error;
 }
 
 otError Mle::AppendNetworkData(Message &aMessage, bool aStableOnly)
@@ -2803,12 +2812,12 @@ exit:
 
 otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor)
 {
-    otError       error = OT_ERROR_NONE;
-    uint16_t      sourceAddress;
-    LeaderDataTlv leaderData;
-    RouteTlv      route;
-    uint8_t       tlvs[] = {Tlv::kNetworkData};
-    uint16_t      delay;
+    otError    error = OT_ERROR_NONE;
+    uint16_t   sourceAddress;
+    LeaderData leaderData;
+    RouteTlv   route;
+    uint8_t    tlvs[] = {Tlv::kNetworkData};
+    uint16_t   delay;
 
     // Source Address
     SuccessOrExit(error = Tlv::ReadUint16Tlv(aMessage, Tlv::kSourceAddress, sourceAddress));
@@ -2816,8 +2825,7 @@ otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo
     LogMleMessage("Receive Advertisement", aMessageInfo.GetPeerAddr(), sourceAddress);
 
     // Leader Data
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
-    VerifyOrExit(leaderData.IsValid(), error = OT_ERROR_PARSE);
+    SuccessOrExit(error = ReadLeaderData(aMessage, leaderData));
 
     if (mRole != OT_DEVICE_ROLE_DETACHED)
     {
@@ -2919,7 +2927,7 @@ exit:
     return error;
 }
 
-bool Mle::IsNetworkDataNewer(const LeaderDataTlv &aLeaderData)
+bool Mle::IsNetworkDataNewer(const LeaderData &aLeaderData)
 {
     int8_t diff;
 
@@ -2938,7 +2946,7 @@ bool Mle::IsNetworkDataNewer(const LeaderDataTlv &aLeaderData)
 otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     otError             error = OT_ERROR_NONE;
-    LeaderDataTlv       leaderData;
+    LeaderData          leaderData;
     ActiveTimestampTlv  activeTimestamp;
     PendingTimestampTlv pendingTimestamp;
     uint16_t            networkDataOffset    = 0;
@@ -2948,8 +2956,7 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
     Tlv                 tlv;
 
     // Leader Data
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
-    VerifyOrExit(leaderData.IsValid(), error = OT_ERROR_PARSE);
+    SuccessOrExit(error = ReadLeaderData(aMessage, leaderData));
 
     if ((leaderData.GetPartitionId() != mLeaderData.GetPartitionId()) ||
         (leaderData.GetWeighting() != mLeaderData.GetWeighting()) || (leaderData.GetLeaderRouterId() != GetLeaderId()))
@@ -3159,7 +3166,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     Challenge               response;
     uint16_t                version;
     uint16_t                sourceAddress;
-    LeaderDataTlv           leaderData;
+    LeaderData              leaderData;
     uint8_t                 linkMarginFromTlv;
     uint8_t                 linkMargin;
     uint8_t                 linkQuality;
@@ -3192,8 +3199,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
     }
 
     // Leader Data
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
-    VerifyOrExit(leaderData.IsValid(), error = OT_ERROR_PARSE);
+    SuccessOrExit(error = ReadLeaderData(aMessage, leaderData));
 
     // Link Margin
     SuccessOrExit(error = Tlv::ReadUint8Tlv(aMessage, Tlv::kLinkMargin, linkMarginFromTlv));
@@ -3364,7 +3370,7 @@ otError Mle::HandleChildIdResponse(const Message &         aMessage,
     OT_UNUSED_VARIABLE(aMessageInfo);
 
     otError             error = OT_ERROR_NONE;
-    LeaderDataTlv       leaderData;
+    LeaderData          leaderData;
     uint16_t            sourceAddress;
     uint16_t            shortAddress;
     RouteTlv            route;
@@ -3384,8 +3390,7 @@ otError Mle::HandleChildIdResponse(const Message &         aMessage,
     VerifyOrExit(mAttachState == kAttachStateChildIdRequest);
 
     // Leader Data
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
-    VerifyOrExit(leaderData.IsValid(), error = OT_ERROR_PARSE);
+    SuccessOrExit(error = ReadLeaderData(aMessage, leaderData));
 
     // ShortAddress
     SuccessOrExit(error = Tlv::ReadUint16Tlv(aMessage, Tlv::kAddress16, shortAddress));

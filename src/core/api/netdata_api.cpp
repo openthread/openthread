@@ -94,12 +94,12 @@ uint8_t otNetDataGetVersion(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::MleRouter>().GetLeaderDataTlv().GetDataVersion();
+    return instance.Get<Mle::MleRouter>().GetLeaderData().GetDataVersion();
 }
 
 uint8_t otNetDataGetStableVersion(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::MleRouter>().GetLeaderDataTlv().GetStableDataVersion();
+    return instance.Get<Mle::MleRouter>().GetLeaderData().GetStableDataVersion();
 }

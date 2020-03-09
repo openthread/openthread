@@ -561,7 +561,7 @@ otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Message
     Neighbor *    neighbor = NULL;
     Challenge     challenge;
     uint16_t      version;
-    LeaderDataTlv leaderData;
+    LeaderData    leaderData;
     uint16_t      sourceAddress;
     RequestedTlvs requestedTlvs;
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -582,10 +582,15 @@ otError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Message
     VerifyOrExit(version >= OT_THREAD_VERSION_1_1, error = OT_ERROR_PARSE);
 
     // Leader Data
-    if (Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData) == OT_ERROR_NONE)
+    switch (ReadLeaderData(aMessage, leaderData))
     {
-        VerifyOrExit(leaderData.IsValid(), error = OT_ERROR_PARSE);
+    case OT_ERROR_NONE:
         VerifyOrExit(leaderData.GetPartitionId() == mLeaderData.GetPartitionId(), error = OT_ERROR_INVALID_STATE);
+        break;
+    case OT_ERROR_NOT_FOUND:
+        break;
+    default:
+        ExitNow(error = OT_ERROR_PARSE);
     }
 
     // Source Address
@@ -810,7 +815,7 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
     uint8_t                 routerId;
     uint16_t                address16;
     RouteTlv                route;
-    LeaderDataTlv           leaderData;
+    LeaderData              leaderData;
     uint8_t                 linkMargin;
 
     // Source Address
@@ -903,8 +908,7 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
         VerifyOrExit(GetRloc16() == address16, error = OT_ERROR_DROP);
 
         // Leader Data
-        SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
-        VerifyOrExit(leaderData.IsValid(), error = OT_ERROR_PARSE);
+        SuccessOrExit(error = ReadLeaderData(aMessage, leaderData));
         SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
 
         // Route
@@ -941,8 +945,7 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
         VerifyOrExit(router != NULL);
 
         // Leader Data
-        SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
-        VerifyOrExit(leaderData.IsValid(), error = OT_ERROR_PARSE);
+        SuccessOrExit(error = ReadLeaderData(aMessage, leaderData));
         VerifyOrExit(leaderData.GetPartitionId() == mLeaderData.GetPartitionId());
 
         if (mRetrieveNewNetworkData ||
@@ -1099,10 +1102,10 @@ exit:
     return rval;
 }
 
-int MleRouter::ComparePartitions(bool                 aSingletonA,
-                                 const LeaderDataTlv &aLeaderDataA,
-                                 bool                 aSingletonB,
-                                 const LeaderDataTlv &aLeaderDataB)
+int MleRouter::ComparePartitions(bool              aSingletonA,
+                                 const LeaderData &aLeaderDataA,
+                                 bool              aSingletonB,
+                                 const LeaderData &aLeaderDataB)
 {
     int rval = 0;
 
@@ -1158,7 +1161,7 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
     uint8_t linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
     Mac::ExtAddress macAddr;
     uint16_t        sourceAddress;
-    LeaderDataTlv   leaderData;
+    LeaderData      leaderData;
     RouteTlv        route;
     uint32_t        partitionId;
     Router *        router;
@@ -1171,8 +1174,7 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
     SuccessOrExit(error = Tlv::ReadUint16Tlv(aMessage, Tlv::kSourceAddress, sourceAddress));
 
     // Leader Data
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
-    VerifyOrExit(leaderData.IsValid(), error = OT_ERROR_PARSE);
+    SuccessOrExit(error = ReadLeaderData(aMessage, leaderData));
 
     // Route Data (optional)
     if (Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route) == OT_ERROR_NONE)
@@ -1189,8 +1191,7 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
 
     if (partitionId != mLeaderData.GetPartitionId())
     {
-        otLogNoteMle("Different partition (peer:%u, local:%u)", leaderData.GetPartitionId(),
-                     mLeaderData.GetPartitionId());
+        otLogNoteMle("Different partition (peer:%u, local:%u)", partitionId, mLeaderData.GetPartitionId());
 
         VerifyOrExit(linkMargin >= OPENTHREAD_CONFIG_MLE_PARTITION_MERGE_MARGIN_MIN, error = OT_ERROR_LINK_MARGIN_LOW);
 
@@ -2262,7 +2263,7 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
     uint8_t         modeBitmask;
     DeviceMode      mode;
     Challenge       challenge;
-    LeaderDataTlv   leaderData;
+    LeaderData      leaderData;
     uint32_t        timeout;
     Child *         child;
     DeviceMode      oldMode;
@@ -2333,9 +2334,13 @@ otError MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
     }
 
     // Leader Data
-    if (Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData) == OT_ERROR_NONE)
+    switch (ReadLeaderData(aMessage, leaderData))
     {
-        VerifyOrExit(leaderData.IsValid(), error = OT_ERROR_PARSE);
+    case OT_ERROR_NONE:
+    case OT_ERROR_NOT_FOUND:
+        break;
+    default:
+        ExitNow(error = OT_ERROR_PARSE);
     }
 
     // Timeout
@@ -2433,7 +2438,7 @@ otError MleRouter::HandleChildUpdateResponse(const Message &         aMessage,
     uint8_t                 status;
     uint32_t                linkFrameCounter;
     uint32_t                mleFrameCounter;
-    LeaderDataTlv           leaderData;
+    LeaderData              leaderData;
     Child *                 child;
     uint16_t                addressRegistrationOffset = 0;
 
@@ -2535,10 +2540,9 @@ otError MleRouter::HandleChildUpdateResponse(const Message &         aMessage,
     }
 
     // Leader Data
-    if (Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData) == OT_ERROR_NONE)
+    switch (ReadLeaderData(aMessage, leaderData))
     {
-        VerifyOrExit(leaderData.IsValid(), error = OT_ERROR_PARSE);
-
+    case OT_ERROR_NONE:
         if (child->IsFullNetworkData())
         {
             child->SetNetworkDataVersion(leaderData.GetDataVersion());
@@ -2547,6 +2551,11 @@ otError MleRouter::HandleChildUpdateResponse(const Message &         aMessage,
         {
             child->SetNetworkDataVersion(leaderData.GetStableDataVersion());
         }
+        break;
+    case OT_ERROR_NOT_FOUND:
+        break;
+    default:
+        ExitNow(error = OT_ERROR_PARSE);
     }
 
     SetChildStateToValid(*child);
