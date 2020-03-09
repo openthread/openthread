@@ -45,11 +45,11 @@ readonly COLOR_PASS='\033[0;32m'
 readonly COLOR_FAIL='\033[0;31m'
 readonly COLOR_NONE='\033[0m'
 
+readonly NODE_MODE="${NODE_MODE:-standalone}"
 readonly NODE_TYPE="${NODE_TYPE:-sim}"
+readonly THREAD_VERSION="${THREAD_VERSION:-1.1}"
 readonly VERBOSE="${VERBOSE:-0}"
 readonly VIRTUAL_TIME="${VIRTUAL_TIME:-1}"
-readonly THREAD_VERSION="${THREAD_VERSION:-1.1}"
-readonly NODE_MODE="${NODE_MODE:-standalone}"
 
 build_simulation()
 {
@@ -254,8 +254,9 @@ envsetup()
         fi
     fi
 
-    export NODE_TYPE
+    export NODE_TYPE VIRTUAL_TIME
 
+    # CMake always works in verbose mode if VERBOSE exists in environments.
     if [[ "${VERBOSE}" == 1 ]]; then
         export VERBOSE
     else

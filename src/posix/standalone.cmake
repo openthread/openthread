@@ -26,14 +26,20 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+set(OT_READLINE "readline" CACHE STRING "set readline library name(readline or edit)")
+find_library(READLINE ${OT_READLINE})
+string(TOUPPER ${OT_READLINE} READLINE_DEFINE)
+
 add_executable(ot-cli
     main.c
+    $<$<BOOL:${READLINE}>:console_cli.cpp>
 )
 
 target_include_directories(ot-cli PRIVATE ${COMMON_INCLUDES})
 
 target_compile_definitions(ot-cli PRIVATE
     OPENTHREAD_POSIX_APP_TYPE=2
+    $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>
 )
 
 target_compile_options(ot-cli PRIVATE
@@ -47,6 +53,7 @@ target_link_libraries(ot-cli
     ${OT_PLATFORM_LIB}
     mbedcrypto
     openthread-ncp-ftd
+    $<$<BOOL:${READLINE}>:${OT_READLINE}>
 )
 
 add_executable(ot-ncp
