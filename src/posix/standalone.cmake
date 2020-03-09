@@ -28,7 +28,6 @@
 
 set(OT_READLINE "readline" CACHE STRING "set readline library name(readline or edit)")
 find_library(READLINE ${OT_READLINE})
-string(TOUPPER ${OT_READLINE} READLINE_DEFINE)
 
 add_executable(ot-cli
     main.c
