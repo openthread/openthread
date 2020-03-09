@@ -26,9 +26,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(OT_READLINE "readline" CACHE STRING "set readline library name(readline or edit)")
-find_library(READLINE ${OT_READLINE})
-
 add_executable(ot-cli
     main.c
     $<$<BOOL:${READLINE}>:console_cli.cpp>

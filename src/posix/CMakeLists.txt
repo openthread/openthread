@@ -34,6 +34,9 @@ set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/src/posix/platform/include
 )
 
+set(OT_READLINE "readline" CACHE STRING "set readline library name(readline or edit)")
+find_library(READLINE ${OT_READLINE})
+
 if(OT_DAEMON)
     include(daemon.cmake)
 else()
