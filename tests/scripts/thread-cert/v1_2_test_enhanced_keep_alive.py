@@ -135,7 +135,7 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
         self.nodes[LEADER].enable_whitelist()
         self.nodes[SED_1].enable_whitelist()
         self.nodes[SED_1].set_pollperiod(CHILD_TIMEOUT * 1000 * 2)
-        self.simulator.go(CHILD_TIMEOUT)
+        self.simulator.go(CHILD_TIMEOUT + 1)
         self.assertEqual(self.nodes[SED_1].get_state(), 'child')
         self.nodes[SED_1].set_pollperiod(USER_POLL_PERIOD * 1000)
         self.nodes[LEADER].disable_whitelist()

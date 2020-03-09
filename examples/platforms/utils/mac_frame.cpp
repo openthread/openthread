@@ -72,6 +72,11 @@ bool otMacFrameIsAck(const otRadioFrame *aFrame)
     return static_cast<const Mac::Frame *>(aFrame)->GetType() == Mac::Frame::kFcfFrameAck;
 }
 
+bool otMacFrameIsData(const otRadioFrame *aFrame)
+{
+    return static_cast<const Mac::Frame *>(aFrame)->GetType() == Mac::Frame::kFcfFrameData;
+}
+
 bool otMacFrameIsDataRequest(const otRadioFrame *aFrame)
 {
     return static_cast<const Mac::Frame *>(aFrame)->IsDataRequestCommand();
