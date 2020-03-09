@@ -587,7 +587,6 @@ otDeviceRole otThreadGetDeviceRole(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE          Successfully retrieved the leader data.
  * @retval OT_ERROR_DETACHED      Not currently attached.
- * @retval OT_ERROR_INVALID_ARGS  @p aLeaderData is NULL.
  *
  */
 otError otThreadGetLeaderData(otInstance *aInstance, otLeaderData *aLeaderData);
