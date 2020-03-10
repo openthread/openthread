@@ -1,6 +1,5 @@
 #
 #  Copyright (c) 2019, The OpenThread Authors.
-#  Copyright (c) 2019, NXP.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -31,7 +30,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES                                                                                      = \
     libopenthread-jn5189_plat.a                                                                      \
-	libopenthread-jn5189_sdk.a
+    libopenthread-jn5189_sdk.a
     $(NULL)
 
 # Do not enable -pedantic-errors for jn5189 driver library
@@ -88,7 +87,7 @@ PLATFORM_SOURCES                                                                
     uart.c                                                                                           \
     settings_jn5189.c                                                                                \
     @top_builddir@/third_party/nxp/JN5189/drivers/fsl_assert.c                                       \
-	@top_builddir@/third_party/nxp/JN5189/crypto/aes_alt.c                                           \
+    @top_builddir@/third_party/nxp/JN5189/crypto/aes_alt.c                                           \
     @top_builddir@/third_party/nxp/JN5189/crypto/ksdk_mbedtls.c                                      \
     $(NULL)
 
@@ -97,7 +96,7 @@ libopenthread_jn5189_sdk_a_SOURCES                                              
     @top_builddir@/third_party/nxp/JN5189/system_JN5189.c                                            \
     @top_builddir@/third_party/nxp/JN5189/dk6_jn5180/pin_mux.c                                       \
     @top_builddir@/third_party/nxp/JN5189/dk6_jn5180/clock_config.c                                  \
-    @top_builddir@/third_party/nxp/JN5189/drivers/fsl_gpio.c                                        \
+    @top_builddir@/third_party/nxp/JN5189/drivers/fsl_gpio.c                                         \
     @top_builddir@/third_party/nxp/JN5189/drivers/fsl_clock.c                                        \
     @top_builddir@/third_party/nxp/JN5189/drivers/fsl_ctimer.c                                       \
     @top_builddir@/third_party/nxp/JN5189/drivers/fsl_wtimer.c                                       \

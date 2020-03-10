@@ -1,7 +1,7 @@
 # OpenThread on NXP JN5189 Example
 
-This directory contains example platform drivers for the [NXP JN5189][jn5189]
-based on [JN5189-DK006][jn5189-dk006] hardware platform.
+This directory contains example platform drivers for the [NXP JN5189][https://www.nxp.com/products/wireless/thread/jn5189-88-t-high-performance-and-ultra-low-power-mcus-for-zigbee-and-thread-with-built-in-nfc-option:JN5189_88_T]
+based on [JN5189-DK006][https://www.nxp.com/products/wireless/zigbee/advanced-development-kit-for-jn5189-88:JN5189-DK006] hardware platform.
 
 The example platform drivers are intended to present the minimal code
 necessary to support OpenThread.  As a result, the example platform

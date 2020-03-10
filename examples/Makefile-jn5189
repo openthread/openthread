@@ -85,11 +85,11 @@ COMMONCFLAGS                          := \
     -ffunction-sections                  \
     -Os                                  \
     -g                                   \
-	-DCPU_JN518X                         \
-	-DCPU_JN518X_REV=2                   \
-	-DJENNIC_CHIP_FAMILY_JN518x          \
-	-DJENNIC_CHIP_FAMILY_NAME=_JN518x    \
-	-DSDK_DEBUGCONSOLE=0                 \
+    -DCPU_JN518X                         \
+    -DCPU_JN518X_REV=2                   \
+    -DJENNIC_CHIP_FAMILY_JN518x          \
+    -DJENNIC_CHIP_FAMILY_NAME=_JN518x    \
+    -DSDK_DEBUGCONSOLE=0                 \
     -D$(CONFIG_FILE)                     \
     -I$(CONFIG_FILE_PATH)                \
     $(NULL)
