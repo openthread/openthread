@@ -266,7 +266,7 @@ void SpiInterface::TrigerReset(void)
     otLogNotePlat("Triggered hardware reset");
 }
 
-uint8_t *SpiInterface::GetRealRxFrameStart(uint8_t *aSpiRxFrameBuffer, uint8_t aAlignAllowance, uint16_t *aSkipLength)
+uint8_t *SpiInterface::GetRealRxFrameStart(uint8_t *aSpiRxFrameBuffer, uint8_t aAlignAllowance, uint16_t &aSkipLength)
 {
     uint8_t *      start = aSpiRxFrameBuffer;
     const uint8_t *end   = aSpiRxFrameBuffer + aAlignAllowance;
@@ -274,7 +274,7 @@ uint8_t *SpiInterface::GetRealRxFrameStart(uint8_t *aSpiRxFrameBuffer, uint8_t a
     for (; start != end && start[0] == 0xff; start++)
         ;
 
-    *aSkipLength = static_cast<uint16_t>(start - aSpiRxFrameBuffer);
+    aSkipLength = static_cast<uint16_t>(start - aSpiRxFrameBuffer);
 
     return start;
 }
@@ -422,7 +422,7 @@ otError SpiInterface::PushPullSpi(void)
     }
 
     // Account for misalignment (0xFF bytes at the start)
-    spiRxFrame = GetRealRxFrameStart(spiRxFrameBuffer, mSpiAlignAllowance, &skipAlignAllowanceLength);
+    spiRxFrame = GetRealRxFrameStart(spiRxFrameBuffer, mSpiAlignAllowance, skipAlignAllowanceLength);
 
     {
         Ncp::SpiFrame rxFrame(spiRxFrame);

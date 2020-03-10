@@ -146,7 +146,7 @@ private:
     void InitSpiDev(const char *aPath, uint8_t aMode, uint32_t aSpeed);
     void TrigerReset(void);
 
-    uint8_t *GetRealRxFrameStart(uint8_t *aSpiRxFrameBuffer, uint8_t aAlignAllowance, uint16_t *aSkipLength);
+    uint8_t *GetRealRxFrameStart(uint8_t *aSpiRxFrameBuffer, uint8_t aAlignAllowance, uint16_t &aSkipLength);
     otError  DoSpiTransfer(uint8_t *aSpiRxFrameBuffer, uint32_t aTransferLength);
     otError  PushPullSpi(void);
 

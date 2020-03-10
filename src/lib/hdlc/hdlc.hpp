@@ -276,8 +276,9 @@ public:
         if (mWriteFrameStart + kHeaderSize + aSkipLength <= OT_ARRAY_END(mBuffer))
         {
             Encoding::LittleEndian::WriteUint16(aSkipLength, mWriteFrameStart + kHeaderSkipLengthOffset);
-            mWritePointer = GetFrame();
-            error         = OT_ERROR_NONE;
+            mWritePointer    = GetFrame();
+            mRemainingLength = static_cast<uint16_t>(mBuffer + kSize - mWritePointer);
+            error            = OT_ERROR_NONE;
         }
 
         return error;
@@ -333,6 +334,8 @@ public:
      */
     void DiscardFrame(void)
     {
+        SetSkipLength(0);
+
         mWritePointer    = GetFrame();
         mRemainingLength = static_cast<uint16_t>(mBuffer + kSize - mWritePointer);
     }
