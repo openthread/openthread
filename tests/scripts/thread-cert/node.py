@@ -901,6 +901,28 @@ class Node:
         self.send_command('netdataregister')
         self._expect('Done')
 
+    def send_network_diag_get(self, addr, tlv_types):
+        self.send_command('networkdiagnostic get %s %s' % (addr, ' '.join([str(t.value) for t in tlv_types])))
+
+        if isinstance(self.simulator, simulator.VirtualTime):
+            self.simulator.go(8)
+            timeout = 1
+        else:
+            timeout = 8
+
+        self._expect('Done', timeout=timeout)
+
+    def send_network_diag_reset(self, addr, tlv_types):
+        self.send_command('networkdiagnostic reset %s %s' % (addr, ' '.join([str(t.value) for t in tlv_types])))
+
+        if isinstance(self.simulator, simulator.VirtualTime):
+            self.simulator.go(8)
+            timeout = 1
+        else:
+            timeout = 8
+
+        self._expect('Done', timeout=timeout)
+
     def energy_scan(self, mask, count, period, scan_duration, ipaddr):
         cmd = 'commissioner energy %d %d %d %d %s' % (
             mask,

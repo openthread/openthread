@@ -78,6 +78,7 @@ EXTRA_DIST                                                         = \
     Cert_5_6_07_NetworkDataRequestREED.py                            \
     Cert_5_6_08_ContextManagement.py                                 \
     Cert_5_6_09_NetworkDataForwarding.py                             \
+    Cert_5_7_01_CoapDiagCommands_A.py                                \
     Cert_5_8_01_KeySynchronization.py                                \
     Cert_5_8_02_KeyIncrement.py                                      \
     Cert_5_8_03_KeyIncrementRollOver.py                              \
