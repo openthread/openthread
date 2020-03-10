@@ -44,7 +44,7 @@
 
 #include "openthread-system.h"
 
-#include "platform-nrf5.h"
+#include "platform-nrf5-transport.h"
 #include <hal/nrf_gpio.h>
 #include <hal/nrf_uart.h>
 #include <nrf_drv_clock.h>
