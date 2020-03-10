@@ -3741,7 +3741,7 @@ void NcpBase::ProcessThreadChangedFlags(void)
     }
 
     // Clear any remaining ThreadFlag that has no matching
-    // NCP property update (e.g., OT_CHANGED_THREAD_RLOC_ADDED)
+    // NCP property update (e.g., OT_CHANGED_SECURITY_POLICY)
 
     mThreadChangedFlags = 0;
 
