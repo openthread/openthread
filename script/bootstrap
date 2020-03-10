@@ -41,7 +41,7 @@ install_packages_apt()
 {
     # apt update and install dependencies
     sudo apt-get update || die
-    sudo apt-get -y install automake g++ libtool lsb-release make || die
+    sudo apt-get -y install automake g++ libtool lsb-release make cmake ninja-build || die
 
     PLATFORM=$(lsb_release -is)
 
@@ -59,7 +59,7 @@ install_packages_apt()
 
     # add yapf for pretty
     python3 -m pip install yapf || echo 'Failed to install python code formatter yapf. Install it manually if you need.'
-    
+
 }
 
 install_packages_opkg()
@@ -74,8 +74,8 @@ install_packages_rpm()
 
 install_packages_brew()
 {
-    # add autotools
-    brew install automake libtool
+    # add build tools
+    brew install automake libtool cmake ninja
 
     # add ARM toolchain
     brew tap ArmMbed/homebrew-formulae

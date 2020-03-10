@@ -74,8 +74,8 @@ build_simulation()
     local builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${version}"
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
-        && cmake "${OT_SRCDIR}" "${options[@]}" \
-        && make -j"${OT_BUILD_JOBS}")
+        && cmake -GNinja "${OT_SRCDIR}" "${options[@]}" \
+        && ninja -j"${OT_BUILD_JOBS}")
 
 }
 
@@ -96,8 +96,8 @@ build_posix()
     local builddir="${OT_BUILDDIR}/cmake/openthread-posix-${version}"
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
-        && cmake "${OT_SRCDIR}" "${options[@]}" \
-        && make -j"${OT_BUILD_JOBS}")
+        && cmake -GNinja "${OT_SRCDIR}" "${options[@]}" \
+        && ninja -j"${OT_BUILD_JOBS}")
 }
 
 do_build() {
