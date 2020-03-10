@@ -35,17 +35,17 @@
 #ifndef __BOARD_CONFIG_H__
 #define __BOARD_CONFIG_H__
 
-#define RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT 1   /// Dev board suppports OQPSK modulation in 2.4GHz band.
-#define RADIO_CONFIG_915MHZ_OQPSK_SUPPORT 0   /// Dev board doesn't support OQPSK modulation in 915MHz band.
+#define RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT 1 /// Dev board suppports OQPSK modulation in 2.4GHz band.
+#define RADIO_CONFIG_915MHZ_OQPSK_SUPPORT 0 /// Dev board doesn't support OQPSK modulation in 915MHz band.
 
 #ifndef RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
 #define RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT 0 /// Set to 1 to enable debug counters in radio.c
 #endif
 
 #ifndef RADIO_CONFIG_DMP_SUPPORT
-#define RADIO_CONFIG_DMP_SUPPORT 0            /// Set to 1 to enable Dynamic Multi-Protocol support in radio.c
+#define RADIO_CONFIG_DMP_SUPPORT 0 /// Set to 1 to enable Dynamic Multi-Protocol support in radio.c
 #endif
 
-#define RADIO_CONFIG_PA_USES_DCDC 1           /// The PA(s) is(are) fed from the DCDC
+#define RADIO_CONFIG_PA_USES_DCDC 1 /// The PA(s) is(are) fed from the DCDC
 
 #endif // __BOARD_CONFIG_H__

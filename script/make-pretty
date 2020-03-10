@@ -27,45 +27,102 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+#
+# The script to check or format source code of OpenThread.
+#
+# Format python and c/cpp:
+#
+#     script/make-pretty
+#
+# Format python only:
+#
+#     script/make-pretty python
+#
+# Format c/cpp only:
+#
+#     script/make-pretty clang
+#
+# Check only:
+#
+#     script/make-pretty check clang
+#     script/make-pretty check python
+#
+
 set -euo pipefail
 
-readonly TMP_DIR="/tmp/ot-make-pretty-$(date +%Y%m%d%H%M%S)"
-readonly SRC_DIR="$PWD"
-
-at_exit()
-{
-    EXIT_CODE=$?
-
-    [[ ! -d "${TMP_DIR}" ]] || rm -rf "${TMP_DIR}"
-    exit $EXIT_CODE
-}
+readonly OT_CLANG_DIRS=(examples src tests tools)
+readonly OT_PYTHON_DIRS=(tests tools)
+readonly OT_BUILD_JOBS=$(getconf _NPROCESSORS_ONLN)
 
 do_clang_format()
 {
-    ./bootstrap
-    mkdir "${TMP_DIR}"
-    cd "${TMP_DIR}"
-    "${SRC_DIR}/configure"
-    make pretty
+    echo -e '====================='
+    echo -e '     format c/cpp'
+    echo -e '====================='
+
+    find "${OT_CLANG_DIRS[@]}" \
+        \( -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.hpp' \) -print0 \
+        | xargs -0 -n10 -P"${OT_BUILD_JOBS}" script/clang-format.sh -style=file -i -verbose
+}
+
+do_clang_check()
+{
+    echo -e '====================='
+    echo -e '     check c/cpp'
+    echo -e '====================='
+
+    find "${OT_CLANG_DIRS[@]}" \
+        \( -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.hpp' \) -print0 \
+        | xargs -0 -n10 -P"${OT_BUILD_JOBS}" script/clang-format-check.sh
 }
 
 do_python_format()
 {
-    python3 -m yapf --verbose --style google -ipr "${SRC_DIR}/tests" "${SRC_DIR}/tools"
+    echo -e '======================'
+    echo -e '     format python'
+    echo -e '======================'
+
+    python3 -m yapf --verbose --style google -ipr "${OT_PYTHON_DIRS[@]}"
+}
+
+do_python_check()
+{
+    echo -e '====================='
+    echo -e '     check python'
+    echo -e '====================='
+    python3 -m yapf --verbose --style google -dpr "${OT_PYTHON_DIRS[@]}"
+}
+
+do_check()
+{
+    if [ $# == 0 ]; then
+        do_python_check
+        do_clang_check
+    elif [ "$1" == 'clang' ]; then
+        do_clang_check
+    elif [ "$1" == 'python' ]; then
+        do_python_check
+    else
+        >&2 echo "Unsupported check: $1. Supported: clang, python"
+        # 128 for Invalid arguments
+        exit 128
+    fi
 }
 
 main()
 {
     if [ $# == 0 ]; then
-        trap at_exit INT TERM EXIT
         do_clang_format
         do_python_format
     elif [ "$1" == 'python' ]; then
         do_python_format
     elif [ "$1" == 'clang' ]; then
         do_clang_format
+    elif [ "$1" == 'check' ]; then
+        shift
+        do_check "$@"
     else
-        >&2 echo "Unsupported action: $1"
+        >&2 echo "Unsupported action: $1. Supported: clang, python"
         # 128 for Invalid arguments
         exit 128
     fi
