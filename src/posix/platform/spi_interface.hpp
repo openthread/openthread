@@ -41,7 +41,7 @@
 
 #include <openthread/openthread-system.h>
 
-#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
 
 #include "ncp/ncp_spi.hpp"
 
@@ -226,5 +226,5 @@ private:
 } // namespace PosixApp
 } // namespace ot
 
-#endif // OPENTHREAD_POSIX_RCP_SPI_ENABLE
+#endif // OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
 #endif // POSIX_APP_SPI_INTERFACE_HPP_

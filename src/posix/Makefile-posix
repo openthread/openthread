@@ -104,9 +104,9 @@ configure_OPTIONS              += --with-readline=$(READLINE)
 endif
 
 ifeq ($(RCP_SPI),1)
-COMMONCFLAGS                   += -DOPENTHREAD_POSIX_RCP_SPI_ENABLE=1
+COMMONCFLAGS                   += -DOPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE=1
 else
-COMMONCFLAGS                   += -DOPENTHREAD_POSIX_RCP_UART_ENABLE=1
+COMMONCFLAGS                   += -DOPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE=1
 endif
 
 ifeq ($(VIRTUAL_TIME),1)

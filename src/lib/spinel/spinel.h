@@ -3415,7 +3415,7 @@ enum
      * Required capability: SPINEL_CAP_POSIX
      *
      * This property gives the version string of RCP (NCP in radio mode) which is being controlled by a POSIX
-     * application. It is available only in "POSIX" platform (i.e., `OPENTHREAD_PLATFORM_POSIX_APP` is enabled).
+     * application. It is available only in "POSIX" platform (i.e., `OPENTHREAD_PLATFORM_POSIX` is enabled).
      *
      */
     SPINEL_PROP_RCP_VERSION = SPINEL_PROP_OPENTHREAD__BEGIN + 12,

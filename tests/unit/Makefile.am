@@ -67,7 +67,7 @@ endif
 
 if OPENTHREAD_PLATFORM_POSIX
 AM_CPPFLAGS                                                        += \
-    -DOPENTHREAD_PLATFORM_POSIX_APP=1                                     \
+    -DOPENTHREAD_PLATFORM_POSIX=1                                     \
     -I$(top_srcdir)/src/posix/platform                                \
     $(NULL)
 endif
