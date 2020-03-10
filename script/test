@@ -75,7 +75,7 @@ build_simulation()
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
         && cmake -GNinja "${OT_SRCDIR}" "${options[@]}" \
-        && ninja -j"${OT_BUILD_JOBS}")
+        && ninja)
 
 }
 
@@ -97,7 +97,7 @@ build_posix()
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
         && cmake -GNinja "${OT_SRCDIR}" "${options[@]}" \
-        && ninja -j"${OT_BUILD_JOBS}")
+        && ninja)
 }
 
 do_build() {
