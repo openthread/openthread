@@ -99,10 +99,6 @@ libopenthread_kw41z_a_SOURCES                                                   
     $(PLATFORM_SOURCES)                                                                              \
     $(NULL)
 
-PRETTY_FILES                                                                                       = \
-    $(PLATFORM_SOURCES)                                                                              \
-    $(NULL)
-
 Dash                                                                                               = -
 libopenthread_kw41z_a_LIBADD                                                                       = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")

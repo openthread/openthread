@@ -44,11 +44,4 @@ if OPENTHREAD_ENABLE_EXECUTABLE
 SUBDIRS                                += sleepy-demo-mtd sleepy-demo-ftd
 endif
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    sleepy-demo-mtd                       \
-    sleepy-demo-ftd                       \
-    $(NULL)
-
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
