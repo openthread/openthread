@@ -83,6 +83,9 @@ MleRouter::MleRouter(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     , mBackboneRouterRegistrationDelay(0)
 #endif
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    , mMaxChildIpAddresses(0)
+#endif
 {
     mDeviceMode.Set(mDeviceMode.Get() | DeviceMode::kModeFullThreadDevice | DeviceMode::kModeFullNetworkData);
 
@@ -1984,6 +1987,34 @@ exit:
     }
 }
 
+uint8_t MleRouter::GetMaxChildIpAddresses(void) const
+{
+    uint8_t num = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD;
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    if (mMaxChildIpAddresses != 0)
+    {
+        num = mMaxChildIpAddresses;
+    }
+#endif
+
+    return num;
+}
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+otError MleRouter::SetMaxChildIpAddresses(uint8_t aMaxIpAddresses)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aMaxIpAddresses <= OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD, error = OT_ERROR_INVALID_ARGS);
+
+    mMaxChildIpAddresses = aMaxIpAddresses;
+
+exit:
+    return error;
+}
+#endif
+
 otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, Child &aChild)
 {
     otError                  error = OT_ERROR_NONE;
@@ -2034,10 +2065,20 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
             address = *entry.GetIp6Address();
         }
 
-        // We try to accept/add as many IPv6 addresses as possible.
-        // "Child ID/Update Response" will indicate the accepted
-        // addresses.
-        error = aChild.AddIp6Address(address);
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        if (mMaxChildIpAddresses > 0 && storedCount >= mMaxChildIpAddresses)
+        {
+            // Skip remaining address registration entries but keep logging skipped addresses.
+            error = OT_ERROR_NO_BUFS;
+        }
+        else
+#endif
+        {
+            // We try to accept/add as many IPv6 addresses as possible.
+            // "Child ID/Update Response" will indicate the accepted
+            // addresses.
+            error = aChild.AddIp6Address(address);
+        }
 
         if (error == OT_ERROR_NONE)
         {

@@ -58,6 +58,22 @@ otError otThreadSetMaxAllowedChildren(otInstance *aInstance, uint16_t aMaxChildr
     return instance.Get<ChildTable>().SetMaxChildrenAllowed(aMaxChildren);
 }
 
+uint8_t otThreadGetMaxChildIpAddresses(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Mle::MleRouter>().GetMaxChildIpAddresses();
+}
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+otError otThreadSetMaxChildIpAddresses(otInstance *aInstance, uint8_t aMaxIpAddresses)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Mle::MleRouter>().SetMaxChildIpAddresses(aMaxIpAddresses);
+}
+#endif
+
 bool otThreadIsRouterEligible(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

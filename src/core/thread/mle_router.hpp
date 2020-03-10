@@ -669,6 +669,29 @@ public:
     void SetBackboneRouterRegistrationDelay(uint8_t aDelay) { mBackboneRouterRegistrationDelay = aDelay; }
 #endif
 
+    /**
+     * This method gets the maximum number of IP addresses that each MTD child may register with this device as parent.
+     *
+     * @returns The maximum number of IP addresses that each MTD child may register with this device as parent.
+     *
+     */
+    uint8_t GetMaxChildIpAddresses(void) const;
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    /**
+     * This method sets/restores the maximum number of IP addresses that each MTD child may register with this
+     * device as parent.
+     *
+     * @param[in]  aMaxIpAddresses  The maximum number of IP addresses that each MTD child may register with this
+     *                              device as parent. 0 to clear the setting and restore the default.
+     *
+     * @retval OT_ERROR_NONE           Successfully set/cleared the number.
+     * @retval OT_ERROR_INVALID_ARGS   If exceeds the allowed maximum number.
+     *
+     */
+    otError SetMaxChildIpAddresses(uint8_t aMaxIpAddresses);
+#endif
+
 private:
     enum
     {
@@ -815,6 +838,9 @@ private:
     int8_t mParentPriority; ///< The assigned parent priority value, -2 means not assigned.
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     uint8_t mBackboneRouterRegistrationDelay; ///< Delay before registering Backbone Router service.
+#endif
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    uint8_t mMaxChildIpAddresses;
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
