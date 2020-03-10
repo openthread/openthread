@@ -34,8 +34,8 @@
 
 #include "fsl_clock.h"
 #include "fsl_ctimer.h"
-#include "fsl_device_registers.h"
 #include "fsl_wtimer.h"
+#include "fsl_device_registers.h"
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 
@@ -45,10 +45,10 @@
 /* Timer frequency in Hz needed for 1ms tick */
 #define TARGET_FREQ 1000U
 /* Wake Timer max count value that is loaded in the register */
-#define TIMER0_MAX_COUNT_VALUE 0xffffffff
-#define TIMER1_MAX_COUNT_VALUE 0x0fffffff
+#define TIMER0_MAX_COUNT_VALUE  0xffffffff
+#define TIMER1_MAX_COUNT_VALUE  0x0fffffff
 
-static bool     sEventFired = false;
+static bool sEventFired = false;
 static uint32_t refClk;
 
 #if ALARM_USE_CTIMER
@@ -63,8 +63,10 @@ static ctimer_match_config_t sMatchConfig = {.enableCounterReset = false,
 static uint32_t sRemainingTicks;
 #endif
 
+
 void JN5189AlarmInit(void)
 {
+
 #if ALARM_USE_CTIMER
     ctimer_config_t config;
     CTIMER_GetDefaultConfig(&config);
@@ -149,7 +151,7 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
     /* Calculate the difference between now and the requested timestamp aT0 - this time will be
        substracted from the total time until the event needs to fire */
     uint32_t timestamp = otPlatAlarmMilliGetNow();
-    timestamp          = timestamp - aT0;
+    timestamp = timestamp - aT0;
 
     uint64_t targetTicks = ((aDt - timestamp) * refClk) / TARGET_FREQ;
 
@@ -165,6 +167,7 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
         WTIMER_StartTimer(WTIMER_TIMER1_ID, TIMER1_MAX_COUNT_VALUE);
         sRemainingTicks = targetTicks - TIMER1_MAX_COUNT_VALUE;
     }
+
 
 #endif
 }
@@ -186,10 +189,11 @@ void otPlatAlarmMilliStop(otInstance *aInstance)
 
 uint32_t otPlatAlarmMilliGetNow(void)
 {
+
 #if ALARM_USE_CTIMER
     return CTIMER0->TC;
 #else
-    uint32_t timestamp  = WTIMER_ReadTimerSafe(WTIMER_TIMER0_ID);
+    uint32_t timestamp = WTIMER_ReadTimerSafe(WTIMER_TIMER0_ID);
     uint64_t tempTstamp = (TIMER0_MAX_COUNT_VALUE - timestamp);
 
     tempTstamp *= TARGET_FREQ;

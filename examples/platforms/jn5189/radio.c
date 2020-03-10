@@ -179,11 +179,11 @@ static otInstance * sInstance;    /* Saved OT Instance */
 static int8_t       sTxPwrLevel;  /* Default power is 0 dBm */
 static uint8_t      sChannel = 0; /* Default channel - must be invalid so it
                                      updates the first time it is set */
-static bool_t    sIsFpEnabled;    /* Frame Pending enabled? */
-static uint16_t  sPanId;          /* PAN ID currently in use */
-static uint16_t  sShortAddress;
+static bool_t   sIsFpEnabled; /* Frame Pending enabled? */
+static uint16_t sPanId;       /* PAN ID currently in use */
+static uint16_t sShortAddress;
 static tsExtAddr sExtAddress;
-static uint64_t  sCustomExtAddr = 0;
+static uint64_t sCustomExtAddr = 0;
 
 static fpNeighShortAddr sFpShortAddr[MAX_FP_ADDRS]; /* Frame Pending short addresses array */
 static uint16_t         sFpShortAddrMask;           /* Mask - sFpShortAddr valid entries */
@@ -205,7 +205,7 @@ static tsRxFrameFormat sRxAckFrame;                      /* Frame used for keepi
 static otRadioFrame    sRxOtFrame;                       /* Used for TX/RX frame conversion */
 static uint8           sRxData[OT_RADIO_FRAME_MAX_SIZE]; /* mPsdu buffer for sRxOtFrame */
 
-static bool         sRadioInitForLp    = FALSE;
+static bool         sRadioInitForLp = FALSE;
 static bool         sPromiscuousEnable = FALSE;
 static bool         sTxDone;                          /* TRUE if a TX frame was sent into the air */
 static otError      sTxStatus;                        /* Status of the latest TX operation */
@@ -232,6 +232,7 @@ WEAK void App_AllowDeviceToSleep()
  */
 WEAK void App_DisallowDeviceToSleep()
 {
+
 }
 
 /**
@@ -244,7 +245,7 @@ WEAK void BOARD_LedDongleToggle()
 
 void App_SetCustomEui64(uint8_t *aIeeeEui64)
 {
-    memcpy((uint8_t *)&sCustomExtAddr, aIeeeEui64, sizeof(sCustomExtAddr));
+    memcpy((uint8_t*)&sCustomExtAddr, aIeeeEui64, sizeof(sCustomExtAddr));
 }
 
 void JN5189RadioInit(void)
@@ -285,7 +286,7 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
     }
     else
     {
-        memcpy(aIeeeEui64, (uint8_t *)&sCustomExtAddr, sizeof(sCustomExtAddr));
+        memcpy(aIeeeEui64,(uint8_t*)&sCustomExtAddr, sizeof(sCustomExtAddr));
     }
 }
 
@@ -394,9 +395,9 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    otError      error            = OT_ERROR_NONE;
-    bool_t       isNewFrameNeeded = TRUE;
-    otRadioState tempState        = sState;
+    otError error            = OT_ERROR_NONE;
+    bool_t  isNewFrameNeeded = TRUE;
+    otRadioState tempState = sState;
 
     otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) && (sState != OT_RADIO_STATE_DISABLED)),
                     error = OT_ERROR_INVALID_STATE);
@@ -587,7 +588,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 
     int8_t  rssidBm       = 127;
     int16_t rssiValSigned = 0;
-    bool_t  stateChanged  = FALSE;
+    bool_t stateChanged = FALSE;
 
     /* in RCP designs, the RSSI function is called while the radio is in
      * OT_RADIO_STATE_RECEIVE. Turn off the radio before reading RSSI,
@@ -678,7 +679,7 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
     otRadioState tempState = sState;
-    sState                 = OT_RADIO_STATE_SLEEP;
+    sState = OT_RADIO_STATE_SLEEP;
 
     /* trim the values to the radio capabilities */
     if (aPower < JN5189_RADIO_MIN_TX_POWER_DBM)
@@ -744,83 +745,85 @@ static void JN5189ISR(uint32_t u32IntBitmap)
 
     switch (sState)
     {
-    case OT_RADIO_STATE_RECEIVE:
+        case OT_RADIO_STATE_RECEIVE:
 
-        /* no rx errors */
-        if (0 == u32MMAC_GetRxErrors())
-        {
-            if (u32IntBitmap & E_MMAC_INT_RX_HEADER)
+            /* no rx errors */
+            if (0 == u32MMAC_GetRxErrors())
             {
-                /* go back one index from current frame index */
-                pRxFrame = &sRxFrame[(sRxFrameIndex + JN5189_RX_BUFFERS - 1) % JN5189_RX_BUFFERS];
+                if (u32IntBitmap & E_MMAC_INT_RX_HEADER)
+                {
+                    /* go back one index from current frame index */
+                    pRxFrame = &sRxFrame[(sRxFrameIndex + JN5189_RX_BUFFERS - 1) % JN5189_RX_BUFFERS];
 
-                /* FP processing first */
-                JN5189ProcessMacHeader(pRxFrame);
+                    /* FP processing first */
+                    JN5189ProcessMacHeader(pRxFrame);
 
-                /* RX interrupt fired so it's safe to consume the frame */
-                JN5189PushRxRingBuffer(&sRxRing, pRxFrame);
+                    /* RX interrupt fired so it's safe to consume the frame */
+                    JN5189PushRxRingBuffer(&sRxRing, pRxFrame);
 
-                if (0 == (pRxFrame->sFrameBody.u16FCF & kFcfAckRequest))
+                    if (0 == (pRxFrame->sFrameBody.u16FCF & kFcfAckRequest))
+                    {
+                        JN5189EnableReceive(TRUE);
+                    }
+                }
+                else if (u32IntBitmap & E_MMAC_INT_RX_COMPLETE)
                 {
                     JN5189EnableReceive(TRUE);
                 }
             }
-            else if (u32IntBitmap & E_MMAC_INT_RX_COMPLETE)
+            else
             {
-                JN5189EnableReceive(TRUE);
-            }
-        }
-        else
-        {
-            /* restart RX and keep same buffer as data received contains errors */
-            JN5189EnableReceive(FALSE);
-        }
-
-        BOARD_LedDongleToggle();
-        break;
-    case OT_RADIO_STATE_TRANSMIT:
-
-        if (u32IntBitmap & E_MMAC_INT_TX_COMPLETE)
-        {
-            uint32_t txErrors = u32MMAC_GetTxErrors();
-            sTxDone           = TRUE;
-
-            if (txErrors & REG_BBC_TXSTAT_CCAE_MASK)
-            {
-                sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
-            }
-            else if (txErrors & REG_BBC_TXSTAT_ACKE_MASK)
-            {
-                sTxStatus = OT_ERROR_NO_ACK;
-            }
-            else if (txErrors & REG_BBC_TXSTAT_OOTE_MASK)
-            {
-                sTxStatus = OT_ERROR_ABORT;
-            }
-            else if ((txErrors & REG_BBC_TXSTAT_TXPCTO_MASK) || (txErrors & REG_BBC_TXSTAT_TXTO_MASK))
-            {
-                /* The JN518x has a TXTO timeout that we are using to catch and cope with the curious
-                hang-up issue */
-                vMMAC_AbortRadio();
-
-                /* Describe failure as a CCA failure for onward processing */
-                sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
-            }
-
-            /* go to RX and restore channel */
-            if (sChannel != sTxOtFrame.mChannel)
-            {
-                vMMAC_SetChannelAndPower(sChannel, sTxPwrLevel);
+                /* restart RX and keep same buffer as data received contains errors */
+                JN5189EnableReceive(FALSE);
             }
 
             BOARD_LedDongleToggle();
-            sState = OT_RADIO_STATE_RECEIVE;
-            JN5189EnableReceive(TRUE);
-        }
-        break;
+            break;
+        case OT_RADIO_STATE_TRANSMIT:
 
-    default:
-        break;
+            if (u32IntBitmap & E_MMAC_INT_TX_COMPLETE)
+            {
+                uint32_t txErrors = u32MMAC_GetTxErrors();
+                sTxDone = TRUE;
+
+                if (txErrors & REG_BBC_TXSTAT_CCAE_MASK)
+                {
+                    sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
+                }
+                else if (txErrors & REG_BBC_TXSTAT_ACKE_MASK)
+                {
+                    sTxStatus = OT_ERROR_NO_ACK;
+                }
+                else if (txErrors & REG_BBC_TXSTAT_OOTE_MASK)
+                {
+                    sTxStatus = OT_ERROR_ABORT;
+                }
+                else if ((txErrors & REG_BBC_TXSTAT_TXPCTO_MASK) ||
+                         (txErrors & REG_BBC_TXSTAT_TXTO_MASK))
+                {
+                    /* The JN518x has a TXTO timeout that we are using to catch and cope with the curious
+                    hang-up issue */
+                    vMMAC_AbortRadio();
+
+                    /* Describe failure as a CCA failure for onward processing */
+                    sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
+                }
+
+                /* go to RX and restore channel */
+                if (sChannel != sTxOtFrame.mChannel)
+                {
+                    vMMAC_SetChannelAndPower(sChannel, sTxPwrLevel);
+                }
+
+                BOARD_LedDongleToggle();
+                sState  = OT_RADIO_STATE_RECEIVE;
+                JN5189EnableReceive(TRUE);
+
+            }
+            break;
+
+        default:
+            break;
     }
 }
 /**
