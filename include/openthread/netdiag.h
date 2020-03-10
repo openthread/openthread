@@ -49,7 +49,6 @@ extern "C" {
  *
  */
 
-
 /**
  * Maximum Number of Network Diagnostic TLV Types to Request or Reset.
  */
