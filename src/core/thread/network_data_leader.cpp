@@ -129,7 +129,8 @@ otError LeaderBase::GetBackboneRouterPrimary(BackboneRouter::BackboneRouterConfi
         if (rvalServerTlv == NULL ||
             (serverTlv->GetServer16() == Mle::Mle::Rloc16FromRouterId(Get<Mle::MleRouter>().GetLeaderId())) ||
             serverData->GetSequenceNumber() > rvalServerData->GetSequenceNumber() ||
-            serverTlv->GetServer16() > rvalServerTlv->GetServer16())
+            (serverData->GetSequenceNumber() == rvalServerData->GetSequenceNumber() &&
+             serverTlv->GetServer16() > rvalServerTlv->GetServer16()))
         {
             rvalServerTlv  = const_cast<ServerTlv *>(serverTlv);
             rvalServerData = serverData;
