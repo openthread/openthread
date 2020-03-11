@@ -191,6 +191,7 @@ const struct Command Interpreter::sCommands[] = {
     {"prefix", &Interpreter::ProcessPrefix},
 #endif
 #if OPENTHREAD_FTD
+    {"preferrouterid", &Interpreter::ProcessPreferRouterId},
     {"pskc", &Interpreter::ProcessPskc},
     {"releaserouterid", &Interpreter::ProcessReleaseRouterId},
 #endif
@@ -2480,6 +2481,19 @@ exit:
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 #if OPENTHREAD_FTD
+void Interpreter::ProcessPreferRouterId(int argc, char *argv[])
+{
+    otError       error = OT_ERROR_NONE;
+    unsigned long value;
+
+    VerifyOrExit(argc == 1, error = OT_ERROR_INVALID_ARGS);
+    SuccessOrExit(error = ParseUnsignedLong(argv[0], value));
+    error = otThreadSetPreferredRouterId(mInstance, static_cast<uint8_t>(value));
+
+exit:
+    AppendResult(error);
+}
+
 void Interpreter::ProcessReleaseRouterId(int argc, char *argv[])
 {
     otError error = OT_ERROR_NONE;

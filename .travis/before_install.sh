@@ -42,7 +42,7 @@ cd /tmp || die
     (cd /etc/apt/sources.list.d && sudo rm -rf cassandra.list* couchdb.list* mongodb-3.4.list* rabbitmq_rabbitmq-server.list* chris-lea-redis-server.list* github_git-lfs.list* pgdg.list)
     sudo apt-get update || die
 
-    sudo apt-get install ninja-build
+    sudo apt-get --no-install-recommends install -y ninja-build
 
     pip3 install --upgrade pip
     pip3 install cmake
@@ -61,7 +61,7 @@ cd /tmp || die
     esac
 
     [ $BUILD_TARGET != android-build ] || {
-        sudo apt-get install -y bison gcc-multilib g++-multilib
+        sudo apt-get --no-install-recommends install -y bison gcc-multilib g++-multilib
         (
         cd $HOME
         wget https://dl.google.com/android/repository/android-ndk-r17c-linux-x86_64.zip
@@ -92,7 +92,7 @@ cd /tmp || die
     }
 
     [ $BUILD_TARGET != posix-pty ] || {
-        sudo apt-get install socat expect || die
+        sudo apt-get --no-install-recommends install -y socat expect || die
         JOBS=$(getconf _NPROCESSORS_ONLN)
         (
         LIBCOAP_TMPDIR=/tmp/libcoap
@@ -110,10 +110,11 @@ cd /tmp || die
 
     [ $BUILD_TARGET != posix-migrate ] || {
         sudo apt-get install expect || die
+        sudo apt-get --no-install-recommends install -y expect || die
     }
 
     [ $BUILD_TARGET != arm-gcc-4 ] || {
-        sudo apt-get install lib32z1 || die
+        sudo apt-get --no-install-recommends install -y lib32z1 || die
         wget https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q3-update/+download/gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2 || die
         tar xjf gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2 || die
         export PATH=/tmp/gcc-arm-none-eabi-4_9-2015q3/bin:$PATH || die
@@ -121,7 +122,7 @@ cd /tmp || die
     }
 
     [ $BUILD_TARGET != arm-gcc-5 ] || {
-        sudo apt-get install lib32z1 || die
+        sudo apt-get --no-install-recommends install -y lib32z1 || die
         wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/5_4-2016q3/gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2 || die
         tar xjf gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2 || die
         export PATH=/tmp/gcc-arm-none-eabi-5_4-2016q3/bin:$PATH || die
@@ -157,23 +158,23 @@ cd /tmp || die
     }
 
     [ $BUILD_TARGET != simulation-32-bit -a $BUILD_TARGET != simulation-mtd ] || {
-        sudo apt-get install g++-multilib || die
+        sudo apt-get --no-install-recommends install -y g++-multilib || die
     }
 
     [ $BUILD_TARGET != simulation-distcheck ] || {
-        sudo apt-get install llvm-runtime || die
+        sudo apt-get --no-install-recommends install -y llvm-runtime || die
     }
 
     [ $BUILD_TARGET != toranj-test-framework ] || {
         # packages for wpantund
-        sudo apt-get install dbus || die
-        sudo apt-get install gcc g++ libdbus-1-dev || die
-        sudo apt-get install autoconf-archive || die
-        sudo apt-get install bsdtar || die
-        sudo apt-get install libtool || die
-        sudo apt-get install libglib2.0-dev || die
-        sudo apt-get install libboost-dev || die
-        sudo apt-get install libboost-signals-dev || die
+        sudo apt-get --no-install-recommends install -y dbus || die
+        sudo apt-get --no-install-recommends install -y gcc g++ libdbus-1-dev || die
+        sudo apt-get --no-install-recommends install -y autoconf-archive || die
+        sudo apt-get --no-install-recommends install -y bsdtar || die
+        sudo apt-get --no-install-recommends install -y libtool || die
+        sudo apt-get --no-install-recommends install -y libglib2.0-dev || die
+        sudo apt-get --no-install-recommends install -y libboost-dev || die
+        sudo apt-get --no-install-recommends install -y libboost-signals-dev || die
 
         # clone and build wpantund
         git clone --depth=1 --branch=master https://github.com/openthread/wpantund.git
