@@ -81,7 +81,8 @@ do_python_format()
     echo -e '     format python'
     echo -e '======================'
 
-    python3 -m yapf --verbose --style google -ipr "${OT_PYTHON_DIRS[@]}"
+    git ls-files '*.py' | grep -E "^($(echo "${OT_PYTHON_DIRS[@]}" | tr ' ' '|'))" \
+        | xargs -n10 -P"${OT_BUILD_JOBS}" python3 -m yapf --verbose --style google -ipr
 }
 
 do_python_check()
@@ -89,7 +90,9 @@ do_python_check()
     echo -e '====================='
     echo -e '     check python'
     echo -e '====================='
-    python3 -m yapf --verbose --style google -dpr "${OT_PYTHON_DIRS[@]}"
+
+    git ls-files '*.py' | grep -E "^($(echo "${OT_PYTHON_DIRS[@]}" | tr ' ' '|'))" \
+        | xargs -n10 -P"${OT_BUILD_JOBS}" python3 -m yapf --verbose --style google -dpr
 }
 
 do_check()
