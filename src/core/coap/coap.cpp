@@ -974,8 +974,8 @@ bool TxParameters::IsValid(void) const
 {
     bool rval = false;
 
-    if (mAckRandomFactorNumerator >= mAckRandomFactorDenominator && mAckTimeout >= OT_COAP_MIN_ACK_TIMEOUT &&
-        mMaxRetransmit <= OT_COAP_MAX_RETRANSMIT)
+    if ((mAckRandomFactorDenominator > 0) && (mAckRandomFactorNumerator >= mAckRandomFactorDenominator) &&
+        (mAckTimeout >= OT_COAP_MIN_ACK_TIMEOUT) && (mMaxRetransmit <= OT_COAP_MAX_RETRANSMIT))
     {
         // Calulate exchange lifetime step by step and verify no overflow.
         uint32_t tmp = Multiply(mAckTimeout, (1U << (mMaxRetransmit + 1)) - 1);
