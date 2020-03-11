@@ -902,7 +902,8 @@ class Node:
         self._expect('Done')
 
     def send_network_diag_get(self, addr, tlv_types):
-        self.send_command('networkdiagnostic get %s %s' % (addr, ' '.join([str(t.value) for t in tlv_types])))
+        self.send_command('networkdiagnostic get %s %s' %
+                          (addr, ' '.join([str(t.value) for t in tlv_types])))
 
         if isinstance(self.simulator, simulator.VirtualTime):
             self.simulator.go(8)
@@ -913,7 +914,8 @@ class Node:
         self._expect('Done', timeout=timeout)
 
     def send_network_diag_reset(self, addr, tlv_types):
-        self.send_command('networkdiagnostic reset %s %s' % (addr, ' '.join([str(t.value) for t in tlv_types])))
+        self.send_command('networkdiagnostic reset %s %s' %
+                          (addr, ' '.join([str(t.value) for t in tlv_types])))
 
         if isinstance(self.simulator, simulator.VirtualTime):
             self.simulator.go(8)

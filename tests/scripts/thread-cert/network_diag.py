@@ -122,7 +122,7 @@ class MacCounters(object):
     @property
     def if_out_discards(self):
         return self._counters[8]
-    
+
     @property
     def counters(self):
         return self._counters
@@ -222,8 +222,7 @@ class ChildTableEntry(object):
         common.expect_the_same_class(self, other)
 
         return (self.timeout == other.timeout and
-                self.child_id == other.child_id
-                and self.mode == other.mode)
+                self.child_id == other.child_id and self.mode == other.mode)
 
     def __repr__(self):
         return f"ChildTableEntry(timeout={self.timeout}, child_id={self.child_id}, mode={self.mode})"
