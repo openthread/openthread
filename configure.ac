@@ -448,64 +448,34 @@ AC_MSG_RESULT(${enable_builtin_mbedtls})
 AM_CONDITIONAL([OPENTHREAD_ENABLE_BUILTIN_MBEDTLS], [test "${enable_builtin_mbedtls}" = "yes"])
 
 #
-# POSIX Application
-#
-
-AC_MSG_CHECKING([whether to build POSIX applicaton])
-AC_ARG_ENABLE(posix-app,
-    [AS_HELP_STRING([--enable-posix-app], [Build POSIX application @<:@default=no@:>@.])],
-    [
-        case "${enableval}" in
-
-        no|yes)
-            enable_posix_app=${enableval}
-            ;;
-
-        *)
-            AC_MSG_ERROR([Invalid value ${enable_posix_app} for --enable-posix-app])
-            ;;
-        esac
-    ],
-    [enable_posix_app=no])
-
-if test "$enable_posix_app" = "yes"; then
-    CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_PLATFORM_POSIX_APP=1"
-else
-    CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_PLATFORM_POSIX_APP=0"
-fi
-
-AC_MSG_RESULT(${enable_posix_app})
-AM_CONDITIONAL([OPENTHREAD_PLATFORM_POSIX_APP], [test "${enable_posix_app}" = "yes"])
-
-#
 # POSIX Daemon
 #
 
 AC_MSG_CHECKING([whether to build POSIX applicaton in daemon mode])
-AC_ARG_ENABLE(posix-app-daemon,
-    [AS_HELP_STRING([--enable-posix-app-daemon], [Build POSIX application in daemon mode@<:@default=no@:>@.])],
+AC_ARG_ENABLE(posix-daemon,
+    [AS_HELP_STRING([--enable-posix-daemon], [Build POSIX application in daemon mode@<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
         no|yes)
-            enable_posix_app_daemon=${enableval}
+            enable_posix_daemon=${enableval}
             ;;
 
         *)
-            AC_MSG_ERROR([Invalid value ${enable_posix_app} for --enable-posix-app-daemon])
+            AC_MSG_ERROR([Invalid value ${enable_posix} for --enable-posix-daemon])
             ;;
         esac
     ],
-    [enable_posix_app_daemon=no])
+    [enable_posix_daemon=no])
 
-if test "$enable_posix_app_daemon" = "yes"; then
-    CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_ENABLE_POSIX_APP_DAEMON=1"
+if test "$enable_posix_daemon" = "yes"; then
+    CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE=1"
 else
-    CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_ENABLE_POSIX_APP_DAEMON=0"
+    CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE=0"
 fi
 
-AC_MSG_RESULT(${enable_posix_app_daemon})
-AM_CONDITIONAL([OPENTHREAD_ENABLE_POSIX_APP_DAEMON], [test "${enable_posix_app_daemon}" = "yes"])
+AC_MSG_RESULT(${enable_posix_daemon})
+AM_CONDITIONAL([OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE], [test "${enable_posix_daemon}" = "yes"])
 
 #
 # FTD Library
@@ -826,10 +796,6 @@ AC_ARG_WITH(examples,
         no)
             ;;
         simulation|cc1352|cc2538|cc2650|cc2652|efr32mg12|efr32mg13|efr32mg21|gp712|kw41z|nrf52811|nrf52833|nrf52840|qpg6095|samr21)
-            if test ${enable_posix_app} = "yes"; then
-                AC_MSG_RESULT(ERROR)
-                AC_MSG_ERROR([--with-examples must be no when POSIX apps are enabled by --enable-posix-app])
-            fi
             ;;
         *)
             AC_MSG_RESULT(ERROR)
@@ -878,12 +844,12 @@ AC_MSG_CHECKING([whether to build platform libraries])
 
 AC_ARG_WITH(platform,
     [AS_HELP_STRING([--with-platform=TARGET],
-        [Build OpenThread platform libraries for one of: posix, cc1352, cc2538, cc2650, cc2652,
-         efr32mg12, efr32mg13, efr32mg21, gp712, kw41z, nrf52811, nrf52833, nrf52840, qpg6095, samr21 @<:@default=no@:>@.])],
+        [Build OpenThread platform libraries for one of: cc1352, cc2538, cc2650, cc2652,
+         efr32mg12, efr32mg13, efr32mg21, gp712, kw41z, nrf52811, nrf52833, nrf52840, posix, qpg6095, samr21, simulation @<:@default=simulation@:>@.])],
     [
         # Make sure the given target is valid.
         case "${with_platform}" in
-        no|posix|cc1352|cc2538|cc2650|cc2652|efr32mg12|efr32mg13|efr32mg21|gp712|kw41z|nrf52811|nrf52833|nrf52840|qpg6095|samr21)
+        no|cc1352|cc2538|cc2650|cc2652|efr32mg12|efr32mg13|efr32mg21|gp712|kw41z|nrf52811|nrf52833|nrf52840|posix|qpg6095|samr21|simulation)
             ;;
         *)
             AC_MSG_RESULT(ERROR)
@@ -914,7 +880,6 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_PLATFORM], [test ${with_platform} != "no"])
 
 OPENTHREAD_ENABLE_PLATFORM=${with_platform}
 
-AM_CONDITIONAL([OPENTHREAD_PLATFORM_SIMULATION],[test "${with_platform}" = "simulation"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_CC1352],    [test "${with_platform}" = "cc1352"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_CC2538],    [test "${with_platform}" = "cc2538"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_CC2650],    [test "${with_platform}" = "cc2650"])
@@ -927,10 +892,14 @@ AM_CONDITIONAL([OPENTHREAD_PLATFORM_KW41Z],     [test "${with_platform}" = "kw41
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_NRF52811],  [test "${with_platform}" = "nrf52811"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_NRF52833],  [test "${with_platform}" = "nrf52833"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_NRF52840],  [test "${with_platform}" = "nrf52840"])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_POSIX],     [test "${with_platform}" = "posix"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_QPG6095],   [test "${with_platform}" = "qpg6095"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_SAMR21],    [test "${with_platform}" = "samr21"])
+AM_CONDITIONAL([OPENTHREAD_PLATFORM_SIMULATION],[test "${with_platform}" = "simulation"])
 
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_NRF528XX], [test OPENTHREAD_PLATFORM_NRF52811 || test OPENTHREAD_PLATFORM_NRF52833 || test OPENTHREAD_PLATFORM_NRF52840])
+
+AM_COND_IF([OPENTHREAD_PLATFORM_POSIX], CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_PLATFORM_POSIX=1", CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_PLATFORM_POSIX=0")
 
 case ${with_platform} in
     no)
@@ -977,7 +946,7 @@ NL_ENABLE_DOCS([auto],[NO])
 
 AM_CONDITIONAL(OPENTHREAD_BUILD_DOCS, [test "${nl_cv_build_docs}" = "yes"])
 
-AM_CONDITIONAL(OPENTHREAD_POSIX, [test "${enable_posix_app}" = "yes" -o "${with_examples}" = "simulation"])
+AM_CONDITIONAL(OPENTHREAD_POSIX, [test "${with_platform}" = "posix" -o "${with_examples}" = "simulation"])
 
 #
 # Checks for libraries and packages.
@@ -1167,6 +1136,5 @@ AC_MSG_NOTICE([
   OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
   OpenThread Examples                       : ${with_examples}
   OpenThread Platform Libraries             : ${with_platform}
-  OpenThread POSIX Application              : ${enable_posix_app}
 
 ])

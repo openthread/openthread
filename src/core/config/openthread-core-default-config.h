@@ -108,16 +108,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_ENABLE_POSIX_APP_DAEMON
- *
- * Define to 1 to enable posix-app daemon support.
- *
- */
-#ifndef OPENTHREAD_ENABLE_POSIX_APP_DAEMON
-#define OPENTHREAD_ENABLE_POSIX_APP_DAEMON 0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
  *
  * Define to 1 to enable Thread Test Harness reference device support.
