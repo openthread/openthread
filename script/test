@@ -229,14 +229,14 @@ do_package() {
     builddir="${OT_BUILDDIR}/cmake/openthread-host"
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
-        && cmake "${OT_SRCDIR}" -DOT_PLATFORM="posix-host" \
+        && cmake "${OT_SRCDIR}" -DOT_PLATFORM="posix" \
         && make -j"${OT_BUILD_JOBS}" package \
         && ls "${builddir}"/openthread-standalone-*.deb)
 
     builddir="${OT_BUILDDIR}/cmake/openthread-daemon"
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
-        && cmake "${OT_SRCDIR}" -DOT_PLATFORM="posix-host" -DOT_DAEMON=1 -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 \
+        && cmake "${OT_SRCDIR}" -DOT_PLATFORM="posix" -DOT_DAEMON=1 -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 \
         && make -j"${OT_BUILD_JOBS}" package \
         && ls "${builddir}"/openthread-daemon-*.deb)
 }

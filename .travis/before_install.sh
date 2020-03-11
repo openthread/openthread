@@ -48,10 +48,10 @@ cd /tmp || die
     pip3 install cmake
 
     case "${BUILD_TARGET}" in
-    simulation-distcheck|simulation-32-bit|posix-app-cli|simulation-mtd|simulation-ncp|posix-app-ncp|v1.2)
+    simulation-distcheck|simulation-32-bit|posix-cli|simulation-mtd|simulation-ncp|posix-ncp|v1.2)
         pip install --upgrade pip || die
         pip install -r $TRAVIS_BUILD_DIR/tests/scripts/thread-cert/requirements.txt || die
-        [ $BUILD_TARGET != simulation-ncp -a $BUILD_TARGET != posix-app-ncp ] || {
+        [ $BUILD_TARGET != simulation-ncp -a $BUILD_TARGET != posix-ncp ] || {
             # Packages used by ncp tools.
             pip install git+https://github.com/openthread/pyspinel || die
         }
@@ -91,7 +91,7 @@ cd /tmp || die
         ) || die
     }
 
-    [ $BUILD_TARGET != posix-app-pty ] || {
+    [ $BUILD_TARGET != posix-pty ] || {
         sudo apt-get --no-install-recommends install -y socat expect || die
         JOBS=$(getconf _NPROCESSORS_ONLN)
         (
@@ -108,7 +108,8 @@ cd /tmp || die
         ) || die
     }
 
-    [ $BUILD_TARGET != posix-app-migrate ] || {
+    [ $BUILD_TARGET != posix-migrate ] || {
+        sudo apt-get install expect || die
         sudo apt-get --no-install-recommends install -y expect || die
     }
 

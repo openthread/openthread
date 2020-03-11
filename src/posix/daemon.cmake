@@ -33,7 +33,7 @@ add_executable(ot-daemon
 target_include_directories(ot-daemon PRIVATE ${COMMON_INCLUDES})
 
 target_compile_definitions(ot-daemon PRIVATE
-    OPENTHREAD_POSIX_APP_TYPE=2
+    OPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_CLI
 )
 
 target_compile_options(ot-daemon PRIVATE
