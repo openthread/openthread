@@ -26,6 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <limits.h>
+
 #include "net/ip6_address.hpp"
 
 #include "test_util.h"
@@ -134,8 +136,92 @@ void TestIp6AddressFromString(void)
     }
 }
 
+bool CheckPrefix(const ot::Ip6::Address &aAddress, const uint8_t *aPrefix, uint8_t aPrefixLength)
+{
+    // Check the first aPrefixLength bits of aAddress to match the given aPrefix.
+
+    bool matches = true;
+
+    for (uint8_t bit = 0; bit < aPrefixLength; bit++)
+    {
+        uint8_t index = bit / CHAR_BIT;
+        uint8_t mask  = (0x80 >> (bit % CHAR_BIT));
+
+        if ((aAddress.mFields.m8[index] & mask) != (aPrefix[index] & mask))
+        {
+            matches = false;
+            break;
+        }
+    }
+
+    return matches;
+}
+
+bool CheckInterfaceId(const ot::Ip6::Address &aAddress1, const ot::Ip6::Address &aAddress2, uint8_t aPrefixLength)
+{
+    // Check whether all the bits after aPrefixLength of the two given IPv6 Address match or not.
+
+    bool matches = true;
+
+    for (uint8_t bit = aPrefixLength; bit < sizeof(ot::Ip6::Address) * CHAR_BIT; bit++)
+    {
+        uint8_t index = bit / CHAR_BIT;
+        uint8_t mask  = (0x80 >> (bit % CHAR_BIT));
+
+        if ((aAddress1.mFields.m8[index] & mask) != (aAddress2.mFields.m8[index] & mask))
+        {
+            matches = false;
+            break;
+        }
+    }
+
+    return matches;
+}
+
+void TestIp6AddressSetPrefix(void)
+{
+    const uint8_t kPrefixes[][OT_IP6_ADDRESS_SIZE] = {
+        {0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef},
+        {0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55},
+        {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+        {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
+    };
+
+    ot::Ip6::Address address;
+    ot::Ip6::Address allZeroAddress;
+    ot::Ip6::Address allOneAddress;
+
+    allZeroAddress.Clear();
+    memset(&allOneAddress, 0xff, sizeof(allOneAddress));
+
+    for (uint8_t index = 0; index < OT_ARRAY_LENGTH(kPrefixes); index++)
+    {
+        const uint8_t *prefix = kPrefixes[index];
+
+        memcpy(address.mFields.m8, prefix, sizeof(address));
+        printf("Prefix is %s\n", address.ToString().AsCString());
+
+        for (uint8_t prefixLength = 0; prefixLength <= sizeof(ot::Ip6::Address) * CHAR_BIT; prefixLength++)
+        {
+            address = allZeroAddress;
+            address.SetPrefix(prefix, prefixLength);
+            printf("   prefix-len:%-3d --> %s\n", prefixLength, address.ToString().AsCString());
+            VerifyOrQuit(CheckPrefix(address, prefix, prefixLength), "Prefix does not match after SetPrefix()");
+            VerifyOrQuit(CheckInterfaceId(address, allZeroAddress, prefixLength),
+                         "SetPrefix changed bits beyond the prefix length");
+
+            address = allOneAddress;
+            address.SetPrefix(prefix, prefixLength);
+            VerifyOrQuit(CheckPrefix(address, prefix, prefixLength), "Prefix does not match after SetPrefix()");
+            VerifyOrQuit(CheckInterfaceId(address, allOneAddress, prefixLength),
+                         "SetPrefix changed bits beyond the prefix length");
+        }
+    }
+}
+
 int main(void)
 {
+    TestIp6AddressSetPrefix();
     TestIp6AddressFromString();
     printf("All tests passed\n");
     return 0;

@@ -57,13 +57,7 @@ Lowpan::Lowpan(Instance &aInstance)
 
 void Lowpan::CopyContext(const Context &aContext, Ip6::Address &aAddress)
 {
-    memcpy(&aAddress, aContext.mPrefix, aContext.mPrefixLength / CHAR_BIT);
-
-    for (int i = (aContext.mPrefixLength & ~7); i < aContext.mPrefixLength; i++)
-    {
-        aAddress.mFields.m8[i / CHAR_BIT] &= ~(0x80 >> (i % CHAR_BIT));
-        aAddress.mFields.m8[i / CHAR_BIT] |= aContext.mPrefix[i / CHAR_BIT] & (0x80 >> (i % CHAR_BIT));
-    }
+    aAddress.SetPrefix(aContext.mPrefix, aContext.mPrefixLength);
 }
 
 otError Lowpan::ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, Ip6::Address &aIpAddress)
