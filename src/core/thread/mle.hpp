@@ -645,9 +645,9 @@ public:
      * @returns A reference to the Mesh Local Prefix.
      *
      */
-    const otMeshLocalPrefix &GetMeshLocalPrefix(void) const
+    const MeshLocalPrefix &GetMeshLocalPrefix(void) const
     {
-        return reinterpret_cast<const otMeshLocalPrefix &>(mMeshLocal16.GetAddress());
+        return reinterpret_cast<const MeshLocalPrefix &>(mMeshLocal16.GetAddress());
     }
 
     /**
@@ -656,7 +656,7 @@ public:
      * @param[in]  aMeshLocalPrefix  A reference to the Mesh Local Prefix.
      *
      */
-    void SetMeshLocalPrefix(const otMeshLocalPrefix &aMeshLocalPrefix);
+    void SetMeshLocalPrefix(const MeshLocalPrefix &aMeshLocalPrefix);
 
     /**
      * This method applies the Mesh Local Prefix.

@@ -67,18 +67,16 @@ const otExtendedPanId *otThreadGetExtendedPanId(otInstance *aInstance)
 
 otError otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *aExtendedPanId)
 {
-    otError           error    = OT_ERROR_NONE;
-    Instance &        instance = *static_cast<Instance *>(aInstance);
-    otMeshLocalPrefix prefix;
+    otError                   error    = OT_ERROR_NONE;
+    Instance &                instance = *static_cast<Instance *>(aInstance);
+    const Mac::ExtendedPanId &extPanId = *static_cast<const Mac::ExtendedPanId *>(aExtendedPanId);
+    Mle::MeshLocalPrefix      prefix;
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
-    instance.Get<Mac::Mac>().SetExtendedPanId(*static_cast<const Mac::ExtendedPanId *>(aExtendedPanId));
+    instance.Get<Mac::Mac>().SetExtendedPanId(extPanId);
 
-    prefix.m8[0] = 0xfd;
-    memcpy(&prefix.m8[1], aExtendedPanId->m8, 5);
-    prefix.m8[6] = 0x00;
-    prefix.m8[7] = 0x00;
+    prefix.SetFromExtendedPanId(extPanId);
     instance.Get<Mle::MleRouter>().SetMeshLocalPrefix(prefix);
 
     instance.Get<MeshCoP::ActiveDataset>().Clear();
@@ -166,7 +164,7 @@ otError otThreadSetMeshLocalPrefix(otInstance *aInstance, const otMeshLocalPrefi
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
 
-    instance.Get<Mle::MleRouter>().SetMeshLocalPrefix(*aMeshLocalPrefix);
+    instance.Get<Mle::MleRouter>().SetMeshLocalPrefix(*static_cast<const Mle::MeshLocalPrefix *>(aMeshLocalPrefix));
     instance.Get<MeshCoP::ActiveDataset>().Clear();
     instance.Get<MeshCoP::PendingDataset>().Clear();
 

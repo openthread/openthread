@@ -51,6 +51,7 @@
 #include "net/ip6_address.hpp"
 #include "radio/radio.hpp"
 #include "thread/key_manager.hpp"
+#include "thread/mle_types.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -604,7 +605,7 @@ public:
      * @returns The Mesh Local Prefix value.
      *
      */
-    const otMeshLocalPrefix &GetMeshLocalPrefix(void) const { return mMeshLocalPrefix; }
+    const Mle::MeshLocalPrefix &GetMeshLocalPrefix(void) const { return mMeshLocalPrefix; }
 
     /**
      * This method sets the Mesh Local Prefix value.
@@ -612,10 +613,10 @@ public:
      * @param[in]  aMeshLocalPrefix  A pointer to the Mesh Local Prefix value.
      *
      */
-    void SetMeshLocalPrefix(const otMeshLocalPrefix &aMeshLocalPrefix) { mMeshLocalPrefix = aMeshLocalPrefix; }
+    void SetMeshLocalPrefix(const Mle::MeshLocalPrefix &aMeshLocalPrefix) { mMeshLocalPrefix = aMeshLocalPrefix; }
 
 private:
-    otMeshLocalPrefix mMeshLocalPrefix;
+    Mle::MeshLocalPrefix mMeshLocalPrefix;
 } OT_TOOL_PACKED_END;
 
 /**
