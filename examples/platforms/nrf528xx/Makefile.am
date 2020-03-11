@@ -42,14 +42,3 @@ endif
 if OPENTHREAD_PLATFORM_NRF52840
 include nrf52840/Makefile.am
 endif
-
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
-
-PRETTY_FILES                            = \
-    src/platform-fem.h                    \
-    src/platform-nrf5.h                   \
-    $(wildcard $(srcdir)/**/*.c)          \
-    $(wildcard $(srcdir)/**/*.h)          \
-    $(NULL)
-
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am

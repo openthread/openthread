@@ -30,13 +30,13 @@
 CLANG_FORMAT_VERSION="clang-format version 6.0"
 
 die() {
-    echo " *** ERROR: " $*
+    echo " *** ERROR: $*"
     exit 1
 }
 
-if which clang-format-6.0 > /dev/null; then
+if command -v clang-format-6.0 > /dev/null; then
     alias clang-format=clang-format-6.0
-elif which clang-format > /dev/null; then
+elif command -v clang-format > /dev/null; then
     case "$(clang-format --version)" in
         "$CLANG_FORMAT_VERSION"*)
             ;;
@@ -48,7 +48,7 @@ else
     die "clang-format 6.0 required"
 fi
 
-clang-format $@ || die
+clang-format "$@" || die
 
 # ensure EOF newline
 REPLACE=no
@@ -64,7 +64,7 @@ done
 file=$arg
 
 [ $REPLACE != yes ] || {
-    [ -n "$(tail -c1 $file)" ] && echo >> $file
+    [ -n "$(tail -c1 "$file")" ] && echo >> "$file"
 }
 
 exit 0

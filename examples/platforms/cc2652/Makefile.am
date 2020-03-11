@@ -73,10 +73,6 @@ libopenthread_cc2652_a_DEPENDENCIES                                             
     $(top_srcdir)/third_party/ti/devices/cc13x2_cc26x2/driverlib/bin/gcc/driverlib.a      \
     $(NULL)
 
-PRETTY_FILES                                                                            = \
-    $(PLATFORM_SOURCES)                                                                   \
-    $(NULL)
-
 Dash = -
 libopenthread_cc2652_a_LIBADD                                                           = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")

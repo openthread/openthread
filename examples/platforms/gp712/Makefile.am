@@ -65,10 +65,6 @@ libopenthread_gp712_a_SOURCES             = \
     $(PLATFORM_SOURCES)                     \
     $(NULL)
 
-PRETTY_FILES                              = \
-    $(PLATFORM_SOURCES)                     \
-    $(NULL)
-
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE

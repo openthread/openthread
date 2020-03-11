@@ -40,12 +40,6 @@ SUBDIRS                                                                = \
     platform                                                             \
     $(NULL)
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                                                         = \
-    platform                                                             \
-    $(NULL)
-
 CPPFLAGS_COMMON                                                        = \
     -I$(top_srcdir)/include                                              \
     -I$(top_srcdir)/src/core                                             \

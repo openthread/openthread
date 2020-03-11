@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 #  Copyright (c) 2018, The OpenThread Authors.
 #  All rights reserved.
@@ -33,23 +33,18 @@
 # replacements.
 #
 
-set -x
+set -euo pipefail
 
 die() {
-    echo " *** ERROR: " $*
+    echo " *** ERROR:  $*"
     exit 1
 }
 
 # from `man diff`:
 # Exit status is 0 if inputs are the same, 1 if different, 2 if trouble.
 
-$(dirname "$0")/clang-format.sh -style=file $@  | diff -u $@ - || die
-
-for arg; do true; done
-file=$arg
-[ -n "$(tail -c1 $file)" ] && {
-    echo " *** ERROR: Missing EOF newline: " $file
-    exit 1
-}
-
-exit 0
+for file in "$@"; do
+    echo "Checking ${file}"
+    "$(dirname "$0")"/clang-format.sh -style=file "${file}" | diff -u "${file}" - || die "${file} is not pretty."
+    [ -z "$(tail -c1 "${file}")" ] || die "${file} misses EOF newline."
+done
