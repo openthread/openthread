@@ -311,7 +311,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
     {
         MeshCoP::MeshLocalPrefixTlv tlv;
         tlv.Init();
-        tlv.SetMeshLocalPrefix(aDataset.mMeshLocalPrefix);
+        tlv.SetMeshLocalPrefix(static_cast<const Mle::MeshLocalPrefix &>(aDataset.mMeshLocalPrefix));
         Set(tlv);
     }
 

@@ -39,6 +39,7 @@
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "mac/mac_types.hpp"
+#include "thread/mle_types.hpp"
 #include "thread/thread_netif.hpp"
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -68,7 +69,7 @@ otError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, in
                  error = OT_ERROR_INVALID_ARGS);
 
     VerifyOrExit(Ip6::Address::PrefixMatch(aPrefix, Get<Mle::MleRouter>().GetMeshLocalPrefix().m8, prefixLengthBytes) <
-                     Ip6::Address::kMeshLocalPrefixLength,
+                     Mle::MeshLocalPrefix::kLength,
                  error = OT_ERROR_INVALID_ARGS);
 
     RemoveOnMeshPrefix(aPrefix, aPrefixLength);

@@ -114,7 +114,7 @@ Mle::Mle(Instance &aInstance)
     , mParentResponseCb(NULL)
     , mParentResponseCbContext(NULL)
 {
-    otMeshLocalPrefix meshLocalPrefix;
+    MeshLocalPrefix meshLocalPrefix;
 
     mParent.Init(aInstance);
     mParentCandidate.Init(aInstance);
@@ -158,10 +158,7 @@ Mle::Mle(Instance &aInstance)
 #endif
 
     // initialize Mesh Local Prefix
-    meshLocalPrefix.m8[0] = 0xfd;
-    memcpy(&meshLocalPrefix.m8[1], Get<Mac::Mac>().GetExtendedPanId().m8, 5);
-    meshLocalPrefix.m8[6] = 0x00;
-    meshLocalPrefix.m8[7] = 0x00;
+    meshLocalPrefix.SetFromExtendedPanId(Get<Mac::Mac>().GetExtendedPanId());
 
     // mesh-local 64
     mMeshLocal64.Clear();
@@ -897,13 +894,9 @@ void Mle::UpdateLinkLocalAddress(void)
     Get<Notifier>().Signal(OT_CHANGED_THREAD_LL_ADDR);
 }
 
-void Mle::SetMeshLocalPrefix(const otMeshLocalPrefix &aMeshLocalPrefix)
+void Mle::SetMeshLocalPrefix(const MeshLocalPrefix &aMeshLocalPrefix)
 {
-    if (memcmp(mMeshLocal64.GetAddress().mFields.m8, aMeshLocalPrefix.m8, sizeof(aMeshLocalPrefix)) == 0)
-    {
-        Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_ML_ADDR);
-        ExitNow();
-    }
+    VerifyOrExit(GetMeshLocalPrefix() != aMeshLocalPrefix, Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_ML_ADDR));
 
     if (Get<ThreadNetif>().IsUp())
     {
@@ -915,9 +908,9 @@ void Mle::SetMeshLocalPrefix(const otMeshLocalPrefix &aMeshLocalPrefix)
         Get<ThreadNetif>().UnsubscribeMulticast(mRealmLocalAllThreadNodes);
     }
 
-    mMeshLocal64.GetAddress().SetPrefix(aMeshLocalPrefix.m8, Ip6::Address::kMeshLocalPrefixLength);
-    mMeshLocal16.GetAddress().SetPrefix(aMeshLocalPrefix.m8, Ip6::Address::kMeshLocalPrefixLength);
-    mLeaderAloc.GetAddress().SetPrefix(aMeshLocalPrefix.m8, Ip6::Address::kMeshLocalPrefixLength);
+    mMeshLocal64.GetAddress().SetPrefix(aMeshLocalPrefix);
+    mMeshLocal16.GetAddress().SetPrefix(aMeshLocalPrefix);
+    mLeaderAloc.GetAddress().SetPrefix(aMeshLocalPrefix);
 
     // Just keep mesh local prefix if network interface is down
     VerifyOrExit(Get<ThreadNetif>().IsUp());
@@ -937,7 +930,7 @@ void Mle::ApplyMeshLocalPrefix(void)
         if (HostSwap16(mServiceAlocs[i].GetAddress().mFields.m16[7]) != Mac::kShortAddrInvalid)
         {
             Get<ThreadNetif>().RemoveUnicastAddress(mServiceAlocs[i]);
-            mServiceAlocs[i].GetAddress().SetPrefix(GetMeshLocalPrefix().m8, Ip6::Address::kMeshLocalPrefixLength);
+            mServiceAlocs[i].GetAddress().SetPrefix(GetMeshLocalPrefix());
             Get<ThreadNetif>().AddUnicastAddress(mServiceAlocs[i]);
         }
     }
@@ -1033,7 +1026,7 @@ otError Mle::GetLeaderAddress(Ip6::Address &aAddress) const
 
     VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = OT_ERROR_DETACHED);
 
-    aAddress.SetPrefix(GetMeshLocalPrefix().m8, Ip6::Address::kMeshLocalPrefixLength);
+    aAddress.SetPrefix(GetMeshLocalPrefix());
     aAddress.mFields.m16[4] = HostSwap16(0x0000);
     aAddress.mFields.m16[5] = HostSwap16(0x00ff);
     aAddress.mFields.m16[6] = HostSwap16(0xfe00);
@@ -1062,7 +1055,7 @@ otError Mle::GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
 
     VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = OT_ERROR_DETACHED);
 
-    aAddress.SetPrefix(GetMeshLocalPrefix().m8, Ip6::Address::kMeshLocalPrefixLength);
+    aAddress.SetPrefix(GetMeshLocalPrefix());
     aAddress.mFields.m16[4] = HostSwap16(0x0000);
     aAddress.mFields.m16[5] = HostSwap16(0x00ff);
     aAddress.mFields.m16[6] = HostSwap16(0xfe00);
@@ -3971,7 +3964,7 @@ bool Mle::IsAnycastLocator(const Ip6::Address &aAddress) const
 
 bool Mle::IsMeshLocalAddress(const Ip6::Address &aAddress) const
 {
-    return aAddress.PrefixMatch(GetMeshLocal16()) >= Ip6::Address::kMeshLocalPrefixLength;
+    return aAddress.PrefixMatch(GetMeshLocal16()) >= MeshLocalPrefix::kLength;
 }
 
 otError Mle::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header)

@@ -36,12 +36,14 @@
 
 #include "openthread-core-config.h"
 
+#include <limits.h>
 #include <stdint.h>
 #include <string.h>
 
 #include <openthread/thread.h>
 
 #include "common/string.hpp"
+#include "mac/mac_types.hpp"
 
 namespace ot {
 namespace Mle {
@@ -402,6 +404,52 @@ public:
 private:
     uint8_t mMode;
 };
+
+/**
+ * This class represents a Mesh Local Prefix.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class MeshLocalPrefix : public otMeshLocalPrefix
+{
+public:
+    enum
+    {
+        kSize   = OT_MESH_LOCAL_PREFIX_SIZE,            ///< Size in bytes.
+        kLength = OT_MESH_LOCAL_PREFIX_SIZE * CHAR_BIT, ///< Length of Mesh Local Prefix in bits.
+    };
+
+    /**
+     * This method evaluates whether or not two Mesh Local Prefixes match.
+     *
+     * @param[in]  aOther  The Mesh Local Prefix to compare.
+     *
+     * @retval TRUE   If the Mesh Local Prefixes match.
+     * @retval FALSE  If the Mesh Local Prefixes do not match.
+     *
+     */
+    bool operator==(const MeshLocalPrefix &aOther) const { return memcmp(m8, aOther.m8, sizeof(*this)) == 0; }
+
+    /**
+     * This method evaluates whether or not two Mesh Local Prefixes match.
+     *
+     * @param[in]  aOther  The Mesh Local Prefix to compare.
+     *
+     * @retval TRUE   If the Mesh Local Prefixes do not match.
+     * @retval FALSE  If the Mesh Local Prefixes match.
+     *
+     */
+    bool operator!=(const MeshLocalPrefix &aOther) const { return !(*this == aOther); }
+
+    /**
+     * This method derives and sets the Mesh Local Prefix from an Extended PAN ID.
+     *
+     * @param[in] aExtendedPanId   An Extended PAN ID.
+     *
+     */
+    void SetFromExtendedPanId(const Mac::ExtendedPanId &aExtendedPanId);
+
+} OT_TOOL_PACKED_END;
 
 /**
  * This class represents the Thread Leader Data.
