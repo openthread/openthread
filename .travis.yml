@@ -210,7 +210,7 @@ jobs:
         apt:
           packages:
             - clang-format-6.0
-      script: .travis/check-pretty
+      script: python3 -m pip install yapf && script/make-pretty check
     - name: "Package Check"
       os: linux
       compiler: gcc

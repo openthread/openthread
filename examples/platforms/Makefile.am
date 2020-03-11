@@ -109,23 +109,4 @@ noinst_HEADERS                          = \
     openthread-system.h                   \
     $(NULL)
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    cc1352                                \
-    cc2538                                \
-    cc2650                                \
-    cc2652                                \
-    efr32mg12                             \
-    efr32mg13                             \
-    efr32mg21                             \
-    gp712                                 \
-    kw41z                                 \
-    nrf528xx                              \
-    simulation                            \
-    qpg6095                               \
-    samr21                                \
-    utils                                 \
-    $(NULL)
-
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

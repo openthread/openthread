@@ -43,9 +43,9 @@ extern "C" {
 
 typedef struct
 {
-        uint8_t hwKeyLen;
-        unsigned char aes_enc_key[32]; /* Encryption key */
-        unsigned char aes_dec_key[32]; /* Decryption key */
+    uint8_t       hwKeyLen;
+    unsigned char aes_enc_key[32]; /* Encryption key */
+    unsigned char aes_dec_key[32]; /* Decryption key */
 } mbedtls_aes_context;
 
 /**
@@ -71,8 +71,7 @@ void mbedtls_aes_free(mbedtls_aes_context *ctx);
  *
  * \return         0 if successful, or MBEDTLS_ERR_AES_INVALID_KEY_LENGTH
  */
-int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key,
-                           unsigned int keybits);
+int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits);
 
 /**
  * \brief          AES key schedule (decryption)
@@ -83,8 +82,7 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key,
  *
  * \return         0 if successful, or MBEDTLS_ERR_AES_INVALID_KEY_LENGTH
  */
-int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key,
-                           unsigned int keybits);
+int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits);
 
 /**
  * \brief          AES-ECB block encryption/decryption
@@ -96,8 +94,7 @@ int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key,
  *
  * \return         0 if successful
  */
-int mbedtls_aes_crypt_ecb(mbedtls_aes_context *ctx, int mode, const unsigned char input[16],
-                          unsigned char output[16]);
+int mbedtls_aes_crypt_ecb(mbedtls_aes_context *ctx, int mode, const unsigned char input[16], unsigned char output[16]);
 
 /**
  * \brief          AES-CBC buffer encryption/decryption
@@ -121,12 +118,12 @@ int mbedtls_aes_crypt_ecb(mbedtls_aes_context *ctx, int mode, const unsigned cha
  *
  * \return         0 if successful, or MBEDTLS_ERR_AES_INVALID_INPUT_LENGTH
  */
-int mbedtls_aes_crypt_cbc( mbedtls_aes_context *ctx,
-                    int mode,
-                    size_t length,
-                    unsigned char iv[16],
-                    const unsigned char *input,
-                    unsigned char *output );
+int mbedtls_aes_crypt_cbc(mbedtls_aes_context *ctx,
+                          int                  mode,
+                          size_t               length,
+                          unsigned char        iv[16],
+                          const unsigned char *input,
+                          unsigned char *      output);
 
 /**
  * \brief               AES-CTR buffer encryption/decryption
@@ -150,13 +147,13 @@ int mbedtls_aes_crypt_cbc( mbedtls_aes_context *ctx,
  *
  * \return         0 if successful
  */
-int mbedtls_aes_crypt_ctr( mbedtls_aes_context *ctx,
-                       size_t length,
-                       size_t *nc_off,
-                       unsigned char nonce_counter[16],
-                       unsigned char stream_block[16],
-                       const unsigned char *input,
-                       unsigned char *output );
+int mbedtls_aes_crypt_ctr(mbedtls_aes_context *ctx,
+                          size_t               length,
+                          size_t *             nc_off,
+                          unsigned char        nonce_counter[16],
+                          unsigned char        stream_block[16],
+                          const unsigned char *input,
+                          unsigned char *      output);
 
 #ifdef __cplusplus
 }

@@ -403,20 +403,9 @@ if test "${enable_address_sanitizer}" = "yes" ; then
 fi
 
 #
-# Code style
-#
-
-AC_SUBST(PRETTY, ["\${abs_top_srcdir}/script/clang-format.sh"])
-AC_SUBST(PRETTY_ARGS, ["-style=file -i"])
-AC_SUBST(PRETTY_CHECK, ["\${abs_top_srcdir}/script/clang-format-check.sh"])
-AC_SUBST(PRETTY_CHECK_ARGS, [""])
-
-#
 # Tests
 #
 AC_MSG_NOTICE([checking whether to build tests])
-
-# Tests
 
 NL_ENABLE_TESTS([yes])
 
@@ -1167,10 +1156,6 @@ AC_MSG_NOTICE([
   Link flags                                : ${LDFLAGS:--}
   Link libraries                            : ${LIBS}
   Link maps                                 : ${enable_linker_map}
-  Pretty                                    : ${PRETTY:--}
-  Pretty args                               : ${PRETTY_ARGS:--}
-  Pretty check                              : ${PRETTY_CHECK:--}
-  Pretty check args                         : ${PRETTY_CHECK_ARGS:--}
   OpenThread FTD support                    : ${enable_ftd}
   OpenThread MTD support                    : ${enable_mtd}
   OpenThread Radio Only support             : ${enable_radio_only}

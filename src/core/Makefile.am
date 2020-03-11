@@ -447,12 +447,6 @@ noinst_HEADERS                             = \
     $(HEADERS_COMMON)                        \
     $(NULL)
 
-PRETTY_FILES                               = \
-    $(HEADERS_COMMON)                        \
-    $(SOURCES_COMMON)                        \
-    $(EXTRA_DIST)                            \
-    $(NULL)
-
 if OPENTHREAD_BUILD_COVERAGE
 Dash       = -
 CLEANFILES = $(shell find $(top_builddir)/src/core $(Dash)name "*.gcda" $(Dash)o $(Dash)name "*.gcno")
