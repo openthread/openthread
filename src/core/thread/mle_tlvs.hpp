@@ -41,7 +41,7 @@
 #include "common/tlvs.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
-#include "thread/mle_constants.hpp"
+#include "thread/mle_types.hpp"
 
 namespace ot {
 

@@ -44,11 +44,10 @@
 #include "common/timer.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6.hpp"
-#include "thread/device_mode.hpp"
 #include "thread/indirect_sender.hpp"
 #include "thread/link_quality.hpp"
-#include "thread/mle_constants.hpp"
 #include "thread/mle_tlvs.hpp"
+#include "thread/mle_types.hpp"
 
 namespace ot {
 

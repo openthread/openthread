@@ -170,7 +170,6 @@ set(COMMON_SOURCES
     thread/announce_begin_server.cpp
     thread/announce_sender.cpp
     thread/child_table.cpp
-    thread/device_mode.cpp
     thread/energy_scan_server.cpp
     thread/indirect_sender.cpp
     thread/key_manager.cpp
@@ -181,6 +180,7 @@ set(COMMON_SOURCES
     thread/mesh_forwarder_mtd.cpp
     thread/mle.cpp
     thread/mle_router.cpp
+    thread/mle_types.cpp
     thread/network_data.cpp
     thread/network_data_leader.cpp
     thread/network_data_leader_ftd.cpp

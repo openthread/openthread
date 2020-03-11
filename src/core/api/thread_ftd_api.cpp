@@ -39,7 +39,7 @@
 
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
-#include "thread/mle_constants.hpp"
+#include "thread/mle_types.hpp"
 #include "thread/topology.hpp"
 
 using namespace ot;
