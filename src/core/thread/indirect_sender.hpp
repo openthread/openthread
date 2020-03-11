@@ -40,8 +40,8 @@
 #include "common/message.hpp"
 #include "mac/data_poll_handler.hpp"
 #include "mac/mac_frame.hpp"
-#include "thread/device_mode.hpp"
 #include "thread/indirect_sender_frame_context.hpp"
+#include "thread/mle_types.hpp"
 #include "thread/src_match_controller.hpp"
 
 namespace ot {

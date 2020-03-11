@@ -42,9 +42,8 @@
 #include "mac/mac.hpp"
 #include "meshcop/joiner_router.hpp"
 #include "net/udp6.hpp"
-#include "thread/device_mode.hpp"
-#include "thread/mle_constants.hpp"
 #include "thread/mle_tlvs.hpp"
+#include "thread/mle_types.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {
@@ -82,48 +81,6 @@ namespace Mle {
  * @{
  *
  */
-
-/**
- * MLE Attach modes
- *
- */
-enum AttachMode
-{
-    kAttachAny           = 0, ///< Attach to any Thread partition.
-    kAttachSame1         = 1, ///< Attach to the same Thread partition (attempt 1 when losing connectivity).
-    kAttachSame2         = 2, ///< Attach to the same Thread partition (attempt 2 when losing connectivity).
-    kAttachBetter        = 3, ///< Attach to a better (i.e. higher weight/partition id) Thread partition.
-    kAttachSameDowngrade = 4, ///< Attach to the same Thread partition during downgrade process.
-};
-
-/**
- * This enumeration represents the allocation of the ALOC Space
- *
- */
-enum AlocAllocation
-{
-    kAloc16Leader                      = 0xfc00,
-    kAloc16DhcpAgentStart              = 0xfc01,
-    kAloc16DhcpAgentEnd                = 0xfc0f,
-    kAloc16DhcpAgentMask               = 0x000f,
-    kAloc16ServiceStart                = 0xfc10,
-    kAloc16ServiceEnd                  = 0xfc2f,
-    kAloc16CommissionerStart           = 0xfc30,
-    kAloc16CommissionerEnd             = 0xfc37,
-    kAloc16CommissionerMask            = 0x0007,
-    kAloc16NeighborDiscoveryAgentStart = 0xfc40,
-    kAloc16NeighborDiscoveryAgentEnd   = 0xfc4e,
-};
-
-/**
- * Service IDs
- *
- */
-enum ServiceID
-{
-    kServiceMinId = 0x00, ///< Minimal Service ID.
-    kServiceMaxId = 0x0f, ///< Maximal Service ID.
-};
 
 /**
  * This class implements MLE Header generation and parsing.

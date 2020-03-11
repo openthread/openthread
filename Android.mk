@@ -217,7 +217,6 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/announce_begin_server.cpp               \
     src/core/thread/announce_sender.cpp                     \
     src/core/thread/child_table.cpp                         \
-    src/core/thread/device_mode.cpp                         \
     src/core/thread/energy_scan_server.cpp                  \
     src/core/thread/indirect_sender.cpp                     \
     src/core/thread/key_manager.cpp                         \
@@ -228,6 +227,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/mesh_forwarder_mtd.cpp                  \
     src/core/thread/mle.cpp                                 \
     src/core/thread/mle_router.cpp                          \
+    src/core/thread/mle_types.cpp                           \
     src/core/thread/network_data.cpp                        \
     src/core/thread/network_data_leader.cpp                 \
     src/core/thread/network_data_leader_ftd.cpp             \

@@ -28,10 +28,10 @@
 
 /**
  * @file
- *   This file implements of MLE device mode.
+ *   This file implements of MLE types and constants.
  */
 
-#include "device_mode.hpp"
+#include "mle_types.hpp"
 
 #include "common/code_utils.hpp"
 
