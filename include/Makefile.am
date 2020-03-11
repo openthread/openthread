@@ -40,12 +40,6 @@ SUBDIRS                                 = \
     openthread                            \
     $(NULL)
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    openthread                            \
-    $(NULL)
-
 install-headers: install-includeHEADERS
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
