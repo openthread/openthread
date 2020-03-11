@@ -41,7 +41,6 @@
 
 #include "platform-config.h"
 
-
 void nrf5AlarmInit(void);
 
 /**

@@ -36,10 +36,10 @@
 #include <utils/code_utils.h>
 #include <openthread/platform/spi-slave.h>
 
+#include "platform-nrf5-transport.h"
 #include <hal/nrf_gpio.h>
 #include <nrfx.h>
 #include <nrfx_spis.h>
-#include "platform-nrf5-transport.h"
 
 #include "openthread-system.h"
 

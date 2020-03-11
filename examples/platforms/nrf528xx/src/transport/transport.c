@@ -36,7 +36,6 @@
 
 #include "transport-drivers.h"
 
-
 void nrf5TransportInit(bool pseudoReset)
 {
 #if ((UART_AS_SERIAL_TRANSPORT == 1) || (USB_CDC_AS_SERIAL_TRANSPORT == 1))
