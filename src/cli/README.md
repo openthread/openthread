@@ -76,6 +76,7 @@ Done
 * [parentpriority](#parentpriority)
 * [ping](#ping-ipaddr-size-count-interval-hoplimit)
 * [pollperiod](#pollperiod-pollperiod)
+* [preferrouterid](#preferrouterid-routerid)
 * [prefix](#prefix-add-prefix-pvdcsr-prf)
 * [promiscuous](#promiscuous)
 * [releaserouterid](#releaserouterid-routerid)
@@ -999,6 +1000,14 @@ Set the customized data poll period for sleepy end device (milliseconds >= 10ms)
 
 ```bash
 > pollperiod 10
+Done
+```
+
+### preferrouterid \<routerid\>
+Prefer a Router ID when solicit router id from Leader.
+
+```bash
+> preferrouterid 16
 Done
 ```
 

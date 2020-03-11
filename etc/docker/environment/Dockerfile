@@ -4,8 +4,8 @@ FROM ubuntu:18.04
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get -y update
-RUN apt-get install -y git software-properties-common sudo
-RUN apt-get install -y iproute2 psmisc rsyslog
+RUN apt-get --no-install-recommends install -y git software-properties-common sudo
+RUN apt-get --no-install-recommends install -y iproute2 psmisc rsyslog
 
 # setup openthread
 WORKDIR /

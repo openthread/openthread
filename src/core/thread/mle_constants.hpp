@@ -93,6 +93,15 @@ enum
 };
 
 /**
+ *  MLE TLV Constants
+ */
+enum
+{
+    kMinChallengeSize = 4, ///< Minimum Challenge size in bytes.
+    kMaxChallengeSize = 8, ///< Maximum Challenge size in bytes.
+};
+
+/**
  * Routing Protocol Constants
  *
  */

@@ -1307,7 +1307,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
         if (aError == OT_ERROR_NONE && Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported() &&
             aFrame.GetSecurityEnabled() && aAckFrame != NULL)
         {
-            Get<DataPollSender>().ResetKeepAliveTimer();
+            Get<DataPollSender>().ProcessFrame(*aAckFrame);
         }
 #endif
         PerformNextOperation();
@@ -1651,7 +1651,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
         ExitNow();
     }
 
-    Get<DataPollSender>().CheckFramePending(*aFrame);
+    Get<DataPollSender>().ProcessFrame(*aFrame);
 
     if (neighbor != NULL)
     {
