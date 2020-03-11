@@ -41,21 +41,21 @@ install_packages_apt()
 {
     # apt update and install dependencies
     sudo apt-get update || die
-    sudo apt-get -y install automake g++ libtool lsb-release make || die
+    sudo apt-get --no-install-recommends install -y automake g++ libtool lsb-release make || die
 
     PLATFORM=$(lsb_release -is)
 
     if [ $PLATFORM = "Raspbian" ]; then
-        sudo apt-get -y install binutils-arm-none-eabi gcc-arm-none-eabi gdb-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib || die
+        sudo apt-get --no-install-recommends install -y binutils-arm-none-eabi gcc-arm-none-eabi gdb-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib || die
     else
         # add gcc-arm-embedded ppa
         sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa -y || die
         sudo apt-get update || die
-        sudo apt-get -y install gcc-arm-embedded || die
+        sudo apt-get --no-install-recommends install -y gcc-arm-embedded || die
     fi
 
     # add clang-format for pretty
-    sudo apt-get -y install clang-format-6.0
+    sudo apt-get --no-install-recommends install -y clang-format-6.0
 
     # add yapf for pretty
     python3 -m pip install yapf || echo 'Failed to install python code formatter yapf. Install it manually if you need.'
