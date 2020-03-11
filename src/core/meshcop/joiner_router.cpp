@@ -234,15 +234,120 @@ exit:
 
 otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const uint8_t *aKek)
 {
-    otError          error;
-    Coap::Message *  message = NULL;
-    Ip6::MessageInfo messageInfo;
-    Dataset          dataset(MeshCoP::Tlv::kActiveTimestamp);
+    otError               error   = OT_ERROR_NONE;
+    Message *             message = Get<MessagePool>().New(Message::kTypeOther, 0);
+    JoinerEntrustMetadata metadata;
+
+    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
+
+    metadata.mMessageInfo = aMessageInfo;
+    metadata.mMessageInfo.SetPeerPort(kCoapUdpPort);
+    metadata.mSendTime = TimerMilli::GetNow() + kJoinerEntrustTxDelay;
+    memcpy(metadata.mKek, aKek, sizeof(metadata.mKek));
+
+    SuccessOrExit(error = metadata.AppendTo(*message));
+
+    mDelayedJoinEnts.Enqueue(*message);
+
+    if (!mTimer.IsRunning())
+    {
+        mTimer.FireAt(metadata.mSendTime);
+    }
+
+exit:
+
+    if (error != OT_ERROR_NONE && message != NULL)
+    {
+        message->Free();
+    }
+
+    return error;
+}
+
+void JoinerRouter::HandleTimer(Timer &aTimer)
+{
+    aTimer.GetOwner<JoinerRouter>().HandleTimer();
+}
+
+void JoinerRouter::HandleTimer(void)
+{
+    SendDelayedJoinerEntrust();
+}
+
+void JoinerRouter::SendDelayedJoinerEntrust(void)
+{
+    JoinerEntrustMetadata metadata;
+    Message *             message = mDelayedJoinEnts.GetHead();
+
+    VerifyOrExit(message != NULL);
+    VerifyOrExit(!mTimer.IsRunning());
+
+    metadata.ReadFrom(*message);
+
+    // The message can be sent during CoAP transaction if KEK did not
+    // change (i.e., retransmission). Otherweise, we wait for Joiner
+    // Entrust Response before handling any other pending delayed
+    // Jointer Entrust message.
+    VerifyOrExit(!mExpectJoinEntRsp ||
+                 memcmp(Get<KeyManager>().GetKek(), metadata.mKek, KeyManager::kMaxKeyLength) == 0);
+
+    if (TimerMilli::GetNow() < metadata.mSendTime)
+    {
+        mTimer.FireAt(metadata.mSendTime);
+    }
+    else
+    {
+        mDelayedJoinEnts.Dequeue(*message);
+        message->Free();
+
+        Get<KeyManager>().SetKek(metadata.mKek);
+
+        if (SendJoinerEntrust(metadata.mMessageInfo) != OT_ERROR_NONE)
+        {
+            mTimer.Start(0);
+        }
+    }
+
+exit:
+    return;
+}
+
+otError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo)
+{
+    otError        error = OT_ERROR_NONE;
+    Coap::Message *message;
+
+    message = PrepareJoinerEntrustMessage();
+    VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
+
+    Get<Coap::Coap>().AbortTransaction(&JoinerRouter::HandleJoinerEntrustResponse, this);
+
+    otLogInfoMeshCoP("Sending JOIN_ENT.ntf");
+    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo,
+                                                        &JoinerRouter::HandleJoinerEntrustResponse, this));
+
+    otLogInfoMeshCoP("Sent joiner entrust length = %d", message->GetLength());
+    otLogCertMeshCoP("[THCI] direction=send | type=JOIN_ENT.ntf");
+
+    mExpectJoinEntRsp = true;
+
+exit:
+    if (error != OT_ERROR_NONE && message != NULL)
+    {
+        message->Free();
+    }
+
+    return error;
+}
+
+Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
+{
+    otError        error;
+    Coap::Message *message = NULL;
+    Dataset        dataset(MeshCoP::Tlv::kActiveTimestamp);
 
     NetworkNameTlv networkName;
     const Tlv *    tlv;
-
-    DelayedJoinEntHeader delayedMessage;
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
@@ -313,99 +418,15 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
     SuccessOrExit(
         error = Tlv::AppendUint32Tlv(*message, Tlv::kNetworkKeySequence, Get<KeyManager>().GetCurrentKeySequence()));
 
-    messageInfo = aMessageInfo;
-    messageInfo.SetPeerPort(kCoapUdpPort);
-
-    delayedMessage.Init(TimerMilli::GetNow() + kDelayJoinEnt, messageInfo, aKek);
-    SuccessOrExit(error = delayedMessage.AppendTo(*message));
-
-    mDelayedJoinEnts.Enqueue(*message);
-
-    if (!mTimer.IsRunning())
-    {
-        mTimer.Start(kDelayJoinEnt);
-    }
-
 exit:
 
     if (error != OT_ERROR_NONE && message != NULL)
     {
         message->Free();
+        message = NULL;
     }
 
-    return error;
-}
-
-void JoinerRouter::HandleTimer(Timer &aTimer)
-{
-    aTimer.GetOwner<JoinerRouter>().HandleTimer();
-}
-
-void JoinerRouter::HandleTimer(void)
-{
-    SendDelayedJoinerEntrust();
-}
-
-void JoinerRouter::SendDelayedJoinerEntrust(void)
-{
-    DelayedJoinEntHeader delayedJoinEnt;
-    Coap::Message *      message = static_cast<Coap::Message *>(mDelayedJoinEnts.GetHead());
-    Ip6::MessageInfo     messageInfo;
-
-    VerifyOrExit(message != NULL);
-    VerifyOrExit(!mTimer.IsRunning());
-
-    delayedJoinEnt.ReadFrom(*message);
-
-    // The message can be sent during CoAP transaction if KEK did not change (i.e. retransmission).
-    VerifyOrExit(!mExpectJoinEntRsp ||
-                 memcmp(Get<KeyManager>().GetKek(), delayedJoinEnt.GetKek(), KeyManager::kMaxKeyLength) == 0);
-
-    if (TimerMilli::GetNow() < delayedJoinEnt.GetSendTime())
-    {
-        mTimer.FireAt(delayedJoinEnt.GetSendTime());
-    }
-    else
-    {
-        mDelayedJoinEnts.Dequeue(*message);
-
-        // Remove the DelayedJoinEntHeader from the message.
-        DelayedJoinEntHeader::RemoveFrom(*message);
-
-        // Set KEK to one used for this message.
-        Get<KeyManager>().SetKek(delayedJoinEnt.GetKek());
-
-        // Send the message.
-        memcpy(&messageInfo, delayedJoinEnt.GetMessageInfo(), sizeof(messageInfo));
-
-        if (SendJoinerEntrust(*message, messageInfo) != OT_ERROR_NONE)
-        {
-            message->Free();
-            mTimer.Start(0);
-        }
-    }
-
-exit:
-    return;
-}
-
-otError JoinerRouter::SendJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    otError error;
-
-    Get<Coap::Coap>().AbortTransaction(&JoinerRouter::HandleJoinerEntrustResponse, this);
-
-    otLogInfoMeshCoP("Sending JOIN_ENT.ntf");
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(aMessage, aMessageInfo,
-                                                        &JoinerRouter::HandleJoinerEntrustResponse, this));
-
-    otLogInfoMeshCoP("Sent joiner entrust length = %d", aMessage.GetLength());
-    otLogCertMeshCoP("[THCI] direction=send | type=JOIN_ENT.ntf");
-
-    mExpectJoinEntRsp = true;
-
-exit:
-    return error;
+    return message;
 }
 
 void JoinerRouter::HandleJoinerEntrustResponse(void *               aContext,
@@ -435,6 +456,14 @@ void JoinerRouter::HandleJoinerEntrustResponse(Coap::Message *         aMessage,
 
 exit:
     return;
+}
+
+void JoinerRouter::JoinerEntrustMetadata::ReadFrom(const Message &aMessage)
+{
+    uint16_t length = aMessage.GetLength();
+
+    assert(length >= sizeof(*this));
+    aMessage.Read(length - sizeof(*this), sizeof(*this), this);
 }
 
 } // namespace MeshCoP
