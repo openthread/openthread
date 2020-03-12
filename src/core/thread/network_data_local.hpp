@@ -1,3 +1,4 @@
+
 /*
  *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
@@ -73,7 +74,7 @@ public:
      * This method adds a Border Router entry to the Thread Network Data.
      *
      * @param[in]  aPrefix        A pointer to the prefix.
-     * @param[in]  aPrefixLength  The length of @p aPrefix in bytes.
+     * @param[in]  aPrefixLength  The prefix length in bits.
      * @param[in]  aPrf           The preference value.
      * @param[in]  aFlags         The Border Router Flags value.
      * @param[in]  aStable        The Stable value.
@@ -89,7 +90,7 @@ public:
      * This method removes a Border Router entry from the Thread Network Data.
      *
      * @param[in]  aPrefix        A pointer to the prefix.
-     * @param[in]  aPrefixLength  The length of @p aPrefix in bytes.
+     * @param[in]  aPrefixLength  The prefix length in bits.
      *
      * @retval OT_ERROR_NONE       Successfully removed the Border Router entry.
      * @retval OT_ERROR_NOT_FOUND  Could not find the Border Router entry.
@@ -101,7 +102,7 @@ public:
      * This method adds a Has Route entry to the Thread Network data.
      *
      * @param[in]  aPrefix        A pointer to the prefix.
-     * @param[in]  aPrefixLength  The length of @p aPrefix in bytes.
+     * @param[in]  aPrefixLength  The prefix length in bits.
      * @param[in]  aPrf           The preference value.
      * @param[in]  aStable        The Stable value.
      *
@@ -115,7 +116,7 @@ public:
      * This method removes a Border Router entry from the Thread Network Data.
      *
      * @param[in]  aPrefix        A pointer to the prefix.
-     * @param[in]  aPrefixLength  The length of @p aPrefix in bytes.
+     * @param[in]  aPrefixLength  The prefix length in bits.
      *
      * @retval OT_ERROR_NONE       Successfully removed the Border Router entry.
      * @retval OT_ERROR_NOT_FOUND  Could not find the Border Router entry.
