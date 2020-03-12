@@ -35,8 +35,8 @@
 #ifndef PLATFORM_KWJN5189_H_
 #define PLATFORM_KWJN5189_H_
 
-#include <openthread/config.h>
 #include <openthread-core-config.h>
+#include <openthread/config.h>
 
 #include <stdint.h>
 
@@ -90,4 +90,4 @@ void JN5189UartProcess(void);
  *
  */
 void JN5189WriteBlocking(const uint8_t *aBuf, uint32_t len);
-#endif  // PLATFORM_JN5189_H_
+#endif // PLATFORM_JN5189_H_
