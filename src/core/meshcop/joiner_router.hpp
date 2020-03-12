@@ -89,9 +89,9 @@ private:
         otError AppendTo(Message &aMessage) { return aMessage.Append(this, sizeof(*this)); }
         void    ReadFrom(const Message &aMessage);
 
-        Ip6::MessageInfo mMessageInfo;                    // Message info of the message to send.
-        TimeMilli        mSendTime;                       // Time when the message shall be sent.
-        uint8_t          mKek[KeyManager::kMaxKeyLength]; // KEK used by MAC layer to encode this message.
+        Ip6::MessageInfo mMessageInfo; // Message info of the message to send.
+        TimeMilli        mSendTime;    // Time when the message shall be sent.
+        Kek              mKek;         // KEK used by MAC layer to encode this message.
     };
 
     static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
@@ -112,7 +112,7 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    otError        DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const uint8_t *aKek);
+    otError        DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const Kek &aKek);
     void           SendDelayedJoinerEntrust(void);
     otError        SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo);
     Coap::Message *PrepareJoinerEntrustMessage(void);

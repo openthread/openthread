@@ -190,7 +190,7 @@ void JoinerRouter::HandleRelayTransmit(Coap::Message &aMessage, const Ip6::Messa
     otError           error;
     uint16_t          joinerPort;
     uint8_t           joinerIid[Ip6::Address::kInterfaceIdentifierSize];
-    uint8_t           kek[KeyManager::kMaxKeyLength];
+    Kek               kek;
     uint16_t          offset;
     uint16_t          length;
     Message *         message  = NULL;
@@ -218,7 +218,7 @@ void JoinerRouter::HandleRelayTransmit(Coap::Message &aMessage, const Ip6::Messa
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    if (Tlv::ReadTlv(aMessage, Tlv::kJoinerRouterKek, kek, sizeof(kek)) == OT_ERROR_NONE)
+    if (Tlv::ReadTlv(aMessage, Tlv::kJoinerRouterKek, &kek, sizeof(kek)) == OT_ERROR_NONE)
     {
         otLogInfoMeshCoP("Received kek");
 
@@ -232,7 +232,7 @@ exit:
     }
 }
 
-otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const uint8_t *aKek)
+otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const Kek &aKek)
 {
     otError               error   = OT_ERROR_NONE;
     Message *             message = Get<MessagePool>().New(Message::kTypeOther, 0);
@@ -243,7 +243,7 @@ otError JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessage
     metadata.mMessageInfo = aMessageInfo;
     metadata.mMessageInfo.SetPeerPort(kCoapUdpPort);
     metadata.mSendTime = TimerMilli::GetNow() + kJoinerEntrustTxDelay;
-    memcpy(metadata.mKek, aKek, sizeof(metadata.mKek));
+    metadata.mKek      = aKek;
 
     SuccessOrExit(error = metadata.AppendTo(*message));
 
@@ -288,8 +288,7 @@ void JoinerRouter::SendDelayedJoinerEntrust(void)
     // change (i.e., retransmission). Otherweise, we wait for Joiner
     // Entrust Response before handling any other pending delayed
     // Jointer Entrust message.
-    VerifyOrExit(!mExpectJoinEntRsp ||
-                 memcmp(Get<KeyManager>().GetKek(), metadata.mKek, KeyManager::kMaxKeyLength) == 0);
+    VerifyOrExit(!mExpectJoinEntRsp || (Get<KeyManager>().GetKek() == metadata.mKek));
 
     if (TimerMilli::GetNow() < metadata.mSendTime)
     {
