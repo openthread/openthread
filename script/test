@@ -85,7 +85,7 @@ build_posix()
     local options=("${OT_TEST_COMMON_OPTIONS[@]}")
 
     options+=(
-        "-DOT_PLATFORM=posix-host"
+        "-DOT_PLATFORM=posix"
         "-DOT_THREAD_VERSION=${version}"
     )
 
