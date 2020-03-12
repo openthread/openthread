@@ -87,6 +87,8 @@
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
 
+#define INDENT_SIZE (4)
+
 namespace ot {
 
 namespace Cli {
@@ -3755,142 +3757,235 @@ void Interpreter::HandleDiagnosticGetResponse(const otMessage &aMessage, const I
 
     while ((error = otThreadGetNextDiagnosticTlv(&aMessage, &iterator, &diagTlv)) == OT_ERROR_NONE)
     {
+        size_t column = 0;
         switch (diagTlv.mType)
         {
         case OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS:
             mServer->OutputFormat("Ext Address: ");
             OutputBytes(diagTlv.mExtAddress.m8, sizeof(diagTlv.mExtAddress.m8));
+            mServer->OutputFormat("\r\n");
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS:
-            mServer->OutputFormat("Rloc16: 0x%04x", diagTlv.mAddr16);
+            mServer->OutputFormat("Rloc16: 0x%04x\r\n", diagTlv.mAddr16);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_MODE:
-            mServer->OutputFormat("Mode: ");
-            OutputMode(diagTlv.mMode);
+            mServer->OutputFormat("Mode:\r\n");
+            OutputMode(diagTlv.mMode, column + INDENT_SIZE);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_POLLING_PERIOD:
-            mServer->OutputFormat("Timeout: %u", diagTlv.mTimeout);
+            mServer->OutputFormat("Timeout: %u\r\n", diagTlv.mTimeout);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY:
-            mServer->OutputFormat("Connectivity: ");
-            OutputConnectivity(diagTlv.mConnectivity);
+            mServer->OutputFormat("Connectivity:\r\n");
+            OutputConnectivity(diagTlv.mConnectivity, column + INDENT_SIZE);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_ROUTE:
-            mServer->OutputFormat("Route: ");
-            OutputRoute(diagTlv.mRoute);
+            mServer->OutputFormat("Route:\r\n");
+            OutputRoute(diagTlv.mRoute, column + INDENT_SIZE);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA:
-            mServer->OutputFormat("Leader Data: ");
-            OutputLeaderData(diagTlv.mLeaderData);
+            mServer->OutputFormat("Leader Data:\r\n");
+            OutputLeaderData(diagTlv.mLeaderData, column + INDENT_SIZE);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_NETWORK_DATA:
             mServer->OutputFormat("Network Data: ");
             OutputBytes(diagTlv.mNetworkData, diagTlv.mNetworkDataCount);
+            mServer->OutputFormat("\r\n");
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST:
-            mServer->OutputFormat("IP6 Address List: [");
+            mServer->OutputFormat("IP6 Address List:\r\n");
             for (uint16_t i = 0; i < diagTlv.mIp6AddrCount; ++i)
             {
+                OutputSpaces(column + INDENT_SIZE);
+                mServer->OutputFormat("- ");
                 OutputIp6Address(diagTlv.mIp6AddrList[i]);
-                if (i + 1 < diagTlv.mIp6AddrCount)
-                    mServer->OutputFormat(", ");
+                mServer->OutputFormat("\r\n");
             }
-            mServer->OutputFormat("]");
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_MAC_COUNTERS:
-            mServer->OutputFormat("MAC Counters: ");
-            OutputNetworkDiagMacCounters(diagTlv.mMacCounters);
+            mServer->OutputFormat("MAC Counters:\r\n");
+            OutputNetworkDiagMacCounters(diagTlv.mMacCounters, column + INDENT_SIZE);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL:
-            mServer->OutputFormat("Battery Level: %u%%", diagTlv.mBatteryLevel);
+            mServer->OutputFormat("Battery Level: %u%%\r\n", diagTlv.mBatteryLevel);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_SUPPLY_VOLTAGE:
-            mServer->OutputFormat("Supply Voltage: %umV", diagTlv.mSupplyVoltage);
+            mServer->OutputFormat("Supply Voltage: %umV\r\n", diagTlv.mSupplyVoltage);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_CHILD_TABLE:
-            mServer->OutputFormat("Child Table: [");
+            mServer->OutputFormat("Child Table:\r\n");
             for (uint16_t i = 0; i < diagTlv.mChildCount; ++i)
             {
-                OutputChildTableEntry(diagTlv.mChildTable[i]);
-                if (i + 1 < diagTlv.mChildCount)
-                    mServer->OutputFormat(", ");
+                OutputSpaces(column + INDENT_SIZE);
+                mServer->OutputFormat("- ");
+                OutputChildTableEntry(diagTlv.mChildTable[i], column + INDENT_SIZE + 2);
             }
-            mServer->OutputFormat("]");
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES:
             mServer->OutputFormat("Channel Pages: ");
             OutputBytes(diagTlv.mChannelPages, diagTlv.mChannelPageCount);
+            mServer->OutputFormat("\r\n");
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT:
-            mServer->OutputFormat("Max Child Timeout: %u", diagTlv.mMaxChildTimeout);
+            mServer->OutputFormat("Max Child Timeout: %u\r\n", diagTlv.mMaxChildTimeout);
             break;
         }
-
-        mServer->OutputFormat("\r\n");
     }
 
     AppendResult(error == OT_ERROR_NOT_FOUND ? OT_ERROR_NONE : error);
 }
 
-void Interpreter::OutputMode(const otLinkModeConfig &aMode)
+void Interpreter::OutputSpaces(size_t aCount)
 {
-    mServer->OutputFormat("{RxOnWhenIdle: %d, SecureDataRequests: %d, DeviceType: %d, NetworkData: %d}",
-                          aMode.mRxOnWhenIdle, aMode.mSecureDataRequests, aMode.mDeviceType, aMode.mNetworkData);
+    static const size_t kSpaceStrLen = 16;
+    char                spaceStr[kSpaceStrLen + 1];
+
+    memset(spaceStr, ' ', kSpaceStrLen);
+    spaceStr[kSpaceStrLen] = '\0';
+
+    for (size_t i = 0; i < aCount; i += kSpaceStrLen)
+    {
+        size_t idx = (i + kSpaceStrLen <= aCount) ? 0 : (i + kSpaceStrLen - aCount);
+        mServer->OutputFormat(&spaceStr[idx]);
+    }
 }
 
-void Interpreter::OutputConnectivity(const otNetworkDiagConnectivity &aConnectivity)
+void Interpreter::OutputMode(const otLinkModeConfig &aMode, size_t aColumn)
 {
-    // Members are separated to avoid buffer overflow.
-    mServer->OutputFormat("{ParentPriority: %d, LinkQuality3: %u, LinkQuality2: %u, ", aConnectivity.mParentPriority,
-                          aConnectivity.mLinkQuality3, aConnectivity.mLinkQuality2);
-    mServer->OutputFormat("LinkQuality1: %u, LeaderCost: %u, IdSequence: %u, ", aConnectivity.mLinkQuality1,
-                          aConnectivity.mLeaderCost, aConnectivity.mIdSequence);
-    mServer->OutputFormat("ActiveRouters: %u, SedBufferSize: %u, SedDatagramCount: %u}", aConnectivity.mActiveRouters,
-                          aConnectivity.mSedBufferSize, aConnectivity.mSedDatagramCount);
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("RxOnWhenIdle: %d\r\n", aMode.mRxOnWhenIdle);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("SecureDataRequests: %d\r\n", aMode.mSecureDataRequests);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("DeviceType: %d\r\n", aMode.mDeviceType);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("NetworkData: %d\r\n", aMode.mNetworkData);
 }
 
-void Interpreter::OutputRoute(const otNetworkDiagRoute &aRoute)
+void Interpreter::OutputConnectivity(const otNetworkDiagConnectivity &aConnectivity, size_t aColumn)
 {
-    mServer->OutputFormat("{IdSequence: %u, RouteData: [", aRoute.mIdSequence);
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("ParentPriority: %d\r\n", aConnectivity.mParentPriority);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("LinkQuality3: %u\r\n", aConnectivity.mLinkQuality3);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("LinkQuality2: %u\r\n", aConnectivity.mLinkQuality2);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("LinkQuality1: %u\r\n", aConnectivity.mLinkQuality1);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("LeaderCost: %u\r\n", aConnectivity.mLeaderCost);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("IdSequence: %u\r\n", aConnectivity.mIdSequence);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("ActiveRouters: %u\r\n", aConnectivity.mActiveRouters);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("SedBufferSize: %u\r\n", aConnectivity.mSedBufferSize);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("SedDatagramCount: %u\r\n", aConnectivity.mSedDatagramCount);
+}
+
+void Interpreter::OutputRoute(const otNetworkDiagRoute &aRoute, size_t aColumn)
+{
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("IdSequence: %u\r\n", aRoute.mIdSequence);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("RouteData:\r\n");
+
+    aColumn += INDENT_SIZE;
     for (uint16_t i = 0; i < aRoute.mRouteCount; ++i)
     {
-        OutputRouteData(aRoute.mRouteData[i]);
-        mServer->OutputFormat((i + 1 < aRoute.mRouteCount) ? ", " : "");
+        OutputSpaces(aColumn);
+        mServer->OutputFormat("- ");
+
+        OutputRouteData(aRoute.mRouteData[i], aColumn + 2);
     }
-    mServer->OutputFormat("]}");
 }
 
-void Interpreter::OutputRouteData(const otNetworkDiagRouteData &aRouteData)
+void Interpreter::OutputRouteData(const otNetworkDiagRouteData &aRouteData, size_t aColumn)
 {
-    mServer->OutputFormat("{RouteId: 0x%02x, LinkQualityOut: %u, LinkQualityIn: %u, RouteCost: %u}",
-                          aRouteData.mRouterId, aRouteData.mLinkQualityOut, aRouteData.mLinkQualityIn,
-                          aRouteData.mRouteCost);
+    mServer->OutputFormat("RouteId: 0x%02x\r\n", aRouteData.mRouterId);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("LinkQualityOut: %u\r\n", aRouteData.mLinkQualityOut);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("LinkQualityIn: %u\r\n", aRouteData.mLinkQualityIn);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("RouteCost: %u\r\n", aRouteData.mRouteCost);
 }
 
-void Interpreter::OutputLeaderData(const otLeaderData &aLeaderData)
+void Interpreter::OutputLeaderData(const otLeaderData &aLeaderData, size_t aColumn)
 {
-    mServer->OutputFormat(
-        "{PartitionId: 0x%08x, Weighting: %u, DataVersion: %u, StableDataVersion: %u, LeaderRouterId: 0x%02x}",
-        aLeaderData.mPartitionId, aLeaderData.mWeighting, aLeaderData.mDataVersion, aLeaderData.mStableDataVersion,
-        aLeaderData.mLeaderRouterId);
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("PartitionId: 0x%08x\r\n", aLeaderData.mPartitionId);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("Weighting: %u\r\n", aLeaderData.mWeighting);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("DataVersion: %u\r\n", aLeaderData.mDataVersion);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("StableDataVersion: %u\r\n", aLeaderData.mStableDataVersion);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("LeaderRouterId: 0x%02x\r\n", aLeaderData.mLeaderRouterId);
 }
 
-void Interpreter::OutputNetworkDiagMacCounters(const otNetworkDiagMacCounters &aMacCounters)
+void Interpreter::OutputNetworkDiagMacCounters(const otNetworkDiagMacCounters &aMacCounters, size_t aColumn)
 {
-    // Members are separated to avoid buffer overflow.
-    mServer->OutputFormat("{IfInUnknownProtos: %u, IfInErrors: %u, IfOutErrors: %u, ", aMacCounters.mIfInUnknownProtos,
-                          aMacCounters.mIfInErrors, aMacCounters.mIfOutErrors);
-    mServer->OutputFormat("IfInUcastPkts: %u, IfInBroadcastPkts: %u, IfInDiscards: %u, ", aMacCounters.mIfInUcastPkts,
-                          aMacCounters.mIfInBroadcastPkts, aMacCounters.mIfInDiscards);
-    mServer->OutputFormat("IfOutUcastPkts: %u, IfOutBroadcastPkts: %u, IfOutDiscards: %u}",
-                          aMacCounters.mIfOutUcastPkts, aMacCounters.mIfOutBroadcastPkts, aMacCounters.mIfOutDiscards);
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("IfInUnknownProtos: %u\r\n", aMacCounters.mIfInUnknownProtos);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("IfInErrors: %u\r\n", aMacCounters.mIfInErrors);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("IfOutErrors: %u\r\n", aMacCounters.mIfOutErrors);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("IfInUcastPkts: %u\r\n", aMacCounters.mIfInUcastPkts);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("IfInBroadcastPkts: %u\r\n", aMacCounters.mIfInBroadcastPkts);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("IfInDiscards: %u\r\n", aMacCounters.mIfInDiscards);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("IfOutUcastPkts: %u\r\n", aMacCounters.mIfOutUcastPkts);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("IfOutBroadcastPkts: %u\r\n", aMacCounters.mIfOutBroadcastPkts);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("IfOutDiscards: %u\r\n", aMacCounters.mIfOutDiscards);
 }
 
-void Interpreter::OutputChildTableEntry(const otNetworkDiagChildEntry &aChildEntry)
+void Interpreter::OutputChildTableEntry(const otNetworkDiagChildEntry &aChildEntry, size_t aColumn)
 {
-    mServer->OutputFormat("{ChildId: 0x%04x, Timeout: %u, Mode: ", aChildEntry.mChildId, aChildEntry.mTimeout);
-    OutputMode(aChildEntry.mMode);
-    mServer->OutputFormat("}");
+    mServer->OutputFormat("ChildId: 0x%04x\r\n", aChildEntry.mChildId);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("Timeout: %u\r\n", aChildEntry.mTimeout);
+
+    OutputSpaces(aColumn);
+    mServer->OutputFormat("Mode:\r\n");
+
+    OutputMode(aChildEntry.mMode, aColumn + INDENT_SIZE);
 }
 #endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 
