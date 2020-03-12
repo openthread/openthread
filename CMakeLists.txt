@@ -31,6 +31,7 @@ project(openthread)
 
 option(OT_BUILD_EXECUTABLES "Build executables" ON)
 option(OT_BUILTIN_MBEDTLS "Enable builtin mbedTLS" ON)
+option(OT_COVERAGE "enable coverage" OFF)
 
 include("${PROJECT_SOURCE_DIR}/etc/cmake/checks.cmake")
 include("${PROJECT_SOURCE_DIR}/etc/cmake/options.cmake")
@@ -40,6 +41,12 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
     option(OT_COMPILE_WARNING_AS_ERROR "whether to include -Werror with gcc-compatible compilers")
     if (OT_COMPILE_WARNING_AS_ERROR)
         set(OT_CFLAGS -Werror)
+    endif()
+
+    if(OT_COVERAGE)
+        list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_ENABLE_COVERAGE=1")
+        add_compile_options(-g -O0 --coverage)
+        add_link_options(--coverage)
     endif()
 
     set(OT_CFLAGS
@@ -70,7 +77,6 @@ elseif(${OT_THREAD_VERSION} EQUAL "1.2")
 else()
     message(FATAL_ERROR "Thread version unknown: ${OT_THREAD_VERSION}")
 endif()
-
 
 set(OT_PLATFORM "none" CACHE STRING "Target platform chosen by the user at configure time")
 ot_get_platforms(OT_EXAMPLE_PLATFORMS)
