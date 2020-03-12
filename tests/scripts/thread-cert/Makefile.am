@@ -298,6 +298,7 @@ XFAIL_NCP_TESTS                                                    = \
     test_reed_address_solicit_rejected.py                            \
     test_service.py                                                  \
     Cert_5_3_10_AddressQuery.py                                      \
+    Cert_5_7_01_CoapDiagCommands_A.py                                \
     Cert_8_1_01_Commissioning.py                                     \
     Cert_8_1_02_Commissioning.py                                     \
     Cert_8_2_01_JoinerRouter.py                                      \
