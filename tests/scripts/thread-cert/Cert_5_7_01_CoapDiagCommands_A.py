@@ -136,13 +136,11 @@ class Cert_5_7_01_CoapDiagCommands_A(unittest.TestCase):
             TlvType.NETWORK_DTA, TlvType.IPV6_ADDRESS_LIST,
             TlvType.CHANNEL_PAGES
         ]
-        print(f"DUT RLOC: {dut_rloc}")
         self.nodes[LEADER].send_network_diag_get(dut_rloc, tlv_types)
         self.simulator.go(2)
 
         dut_messages = self.simulator.get_messages_sent_by(DUT)
 
-        print(f"DUT message \n {dut_messages.messages}")
         diag_get_rsp = dut_messages.next_coap_message(code='2.04')
         diag_get_rsp.assertCoapMessageContainsTlv(
             network_layer.MacExtendedAddress)

@@ -137,6 +137,7 @@ EXTRA_DIST                                                         = \
     mle.py                                                           \
     net_crypto.py                                                    \
     network_data.py                                                  \
+    network_diag.py                                                  \
     network_layer.py                                                 \
     node.py                                                          \
     pcap.py                                                          \
