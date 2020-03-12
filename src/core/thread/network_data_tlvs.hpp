@@ -221,8 +221,8 @@ public:
      */
     void SetPreference(int8_t aPrf)
     {
-        assert((aPrf == OT_ROUTE_PREFERENCE_LOW) || (aPrf == OT_ROUTE_PREFERENCE_MED) ||
-               (aPrf == OT_ROUTE_PREFERENCE_HIGH));
+        OT_ASSERT((aPrf == OT_ROUTE_PREFERENCE_LOW) || (aPrf == OT_ROUTE_PREFERENCE_MED) ||
+                  (aPrf == OT_ROUTE_PREFERENCE_HIGH));
         mFlags = (mFlags & ~kPreferenceMask) | ((static_cast<uint8_t>(aPrf) << kPreferenceOffset) & kPreferenceMask);
     }
 

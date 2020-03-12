@@ -145,7 +145,7 @@ otError CoapBase::SendMessage(Message &               aMessage,
         mResponsesQueue.EnqueueResponse(aMessage, aMessageInfo, aTxParameters);
         break;
     case OT_COAP_TYPE_RESET:
-        assert(aMessage.GetCode() == OT_COAP_CODE_EMPTY);
+        OT_ASSERT(aMessage.GetCode() == OT_COAP_CODE_EMPTY);
         break;
     default:
         aMessage.SetMessageId(mMessageId++);
@@ -789,7 +789,7 @@ void CoapBase::Metadata::ReadFrom(const Message &aMessage)
 {
     uint16_t length = aMessage.GetLength();
 
-    assert(length >= sizeof(*this));
+    OT_ASSERT(length >= sizeof(*this));
     aMessage.Read(length - sizeof(*this), sizeof(*this), this);
 }
 
@@ -951,7 +951,7 @@ void ResponsesQueue::ResponseMetadata::ReadFrom(const Message &aMessage)
 {
     uint16_t length = aMessage.GetLength();
 
-    assert(length >= sizeof(*this));
+    OT_ASSERT(length >= sizeof(*this));
     aMessage.Read(length - sizeof(*this), sizeof(*this), this);
 }
 

@@ -254,7 +254,7 @@ void TimeSync::CheckAndHandleChanges(bool aTimeUpdated)
         else
         {
             // Schedule a check 1 millisecond after two periods of time
-            assert(resyncNeededThresholdMs >= timeSyncLastSyncMs);
+            OT_ASSERT(resyncNeededThresholdMs >= timeSyncLastSyncMs);
             mTimer.Start(resyncNeededThresholdMs - timeSyncLastSyncMs + 1);
             otLogInfoCore("Time sync status SYNCHRONIZED");
         }

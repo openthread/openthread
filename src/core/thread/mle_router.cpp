@@ -159,7 +159,7 @@ otError MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
         break;
 
     default:
-        assert(false);
+        OT_ASSERT(false);
         break;
     }
 
@@ -189,7 +189,7 @@ otError MleRouter::BecomeLeader(void)
     SetLeaderData(partitionId, mLeaderWeight, leaderId);
 
     router = mRouterTable.Allocate(leaderId);
-    assert(router != NULL);
+    OT_ASSERT(router != NULL);
 
     SetRouterId(leaderId);
     router->SetExtAddress(Get<Mac::Mac>().GetExtAddress());
@@ -433,7 +433,7 @@ otError MleRouter::SendAdvertisement(void)
     {
     case OT_DEVICE_ROLE_DISABLED:
     case OT_DEVICE_ROLE_DETACHED:
-        assert(false);
+        OT_ASSERT(false);
         break;
 
     case OT_DEVICE_ROLE_CHILD:
@@ -480,7 +480,7 @@ otError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
     switch (mRole)
     {
     case OT_DEVICE_ROLE_DISABLED:
-        assert(false);
+        OT_ASSERT(false);
         break;
 
     case OT_DEVICE_ROLE_DETACHED:
@@ -894,7 +894,7 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
     switch (mRole)
     {
     case OT_DEVICE_ROLE_DISABLED:
-        assert(false);
+        OT_ASSERT(false);
         break;
 
     case OT_DEVICE_ROLE_DETACHED:
@@ -1611,7 +1611,7 @@ otError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::Messa
 
     // 3. Its current routing path cost to the Leader is infinite.
     leader = mRouterTable.GetLeader();
-    assert(leader != NULL);
+    OT_ASSERT(leader != NULL);
 
     VerifyOrExit(mRole == OT_DEVICE_ROLE_LEADER || GetLinkCost(GetLeaderId()) < kMaxRouteCost ||
                      (mRole == OT_DEVICE_ROLE_CHILD && leader->GetCost() + 1 < kMaxRouteCost) ||
@@ -1728,7 +1728,7 @@ void MleRouter::HandleStateUpdateTimer(void)
     switch (mRole)
     {
     case OT_DEVICE_ROLE_DISABLED:
-        assert(false);
+        OT_ASSERT(false);
         break;
 
     case OT_DEVICE_ROLE_DETACHED:
@@ -1812,7 +1812,7 @@ void MleRouter::HandleStateUpdateTimer(void)
 
         case Neighbor::kStateParentResponse:
         case Neighbor::kStateLinkRequest:
-            assert(false);
+            OT_ASSERT(false);
             break;
         }
 
@@ -2227,7 +2227,7 @@ otError MleRouter::HandleChildIdRequest(const Message &         aMessage,
     {
     case OT_DEVICE_ROLE_DISABLED:
     case OT_DEVICE_ROLE_DETACHED:
-        assert(false);
+        OT_ASSERT(false);
         break;
 
     case OT_DEVICE_ROLE_CHILD:
@@ -4034,7 +4034,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
     router->SetCost(0);
 
     leader = mRouterTable.GetLeader();
-    assert(leader != NULL);
+    OT_ASSERT(leader != NULL);
 
     if (leader != router)
     {
@@ -4681,6 +4681,8 @@ void MleRouter::Signal(otNeighborTableEvent aEvent, Neighbor &aNeighbor)
         otNeighborTableEntryInfo info;
         otError                  error;
 
+        OT_UNUSED_VARIABLE(error);
+
         info.mInstance = &GetInstance();
 
         switch (aEvent)
@@ -4688,7 +4690,7 @@ void MleRouter::Signal(otNeighborTableEvent aEvent, Neighbor &aNeighbor)
         case OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED:
         case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
             error = GetChildInfo(static_cast<Child &>(aNeighbor), info.mInfo.mChild);
-            assert(error == OT_ERROR_NONE);
+            OT_ASSERT(error == OT_ERROR_NONE);
             break;
 
         case OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED:

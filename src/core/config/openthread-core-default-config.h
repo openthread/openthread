@@ -291,6 +291,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ASSERT_ENABLE
+ *
+ * Define as 1 to enable assert function `OT_ASSERT()` within OpenThread code and its libraries.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ASSERT_ENABLE
+#define OPENTHREAD_CONFIG_ASSERT_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
  *
  * Enable the "Debug Uart" platform feature.
