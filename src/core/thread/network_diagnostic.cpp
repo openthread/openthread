@@ -720,11 +720,6 @@ exit:
     return;
 }
 
-static inline void ParseExtMacAddr(const ExtMacAddressTlv &aExtMacAddressTlv, otExtAddress &aExtAddress)
-{
-    aExtMacAddressTlv.GetMacAddr()->CopyTo(aExtAddress.m8);
-}
-
 static inline void ParseMode(const Mle::DeviceMode &aMode, otLinkModeConfig &aLinkModeConfig)
 {
     aLinkModeConfig.mRxOnWhenIdle       = aMode.IsRxOnWhenIdle();
@@ -826,7 +821,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
             tlvTotalLength = sizeof(extMacAddr);
             VerifyOrExit(message.Read(offset, tlvTotalLength, &extMacAddr) == tlvTotalLength);
             VerifyOrExit(extMacAddr.IsValid());
-            ParseExtMacAddr(extMacAddr, aNetworkDiagTlv.mExtAddress);
+            aNetworkDiagTlv.mExtAddress = *extMacAddr.GetMacAddr();
             break;
         }
 
