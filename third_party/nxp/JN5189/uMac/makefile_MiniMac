@@ -1,0 +1,50 @@
+AR                              = arm-none-eabi-ar
+CCAS                            = arm-none-eabi-as
+CPP                             = arm-none-eabi-cpp
+CC                              = arm-none-eabi-gcc
+CXX                             = arm-none-eabi-g++
+LD                              = arm-none-eabi-ld
+STRIP                           = arm-none-eabi-strip
+NM                              = arm-none-eabi-nm
+RANLIB                          = arm-none-eabi-ranlib
+OBJCOPY                         = arm-none-eabi-objcopy
+
+ECHO                            := @echo
+RM_F                            := rm -f
+
+CFLAGS = -DCPU_JN518X \
+         -DCPU_JN518X_REV=2 \
+         -DJENNIC_CHIP_FAMILY_JN518x \
+         -DJENNIC_CHIP_FAMILY_NAME=_JN518x \
+         -DCORE_M4 \
+         -Wno-unknown-pragmas \
+         -Wno-sign-compare \
+         -Wno-unused-function \
+         -Wno-unused-parameter \
+         -Wno-empty-body \
+         -Iinclude \
+         -fdata-sections               \
+         -ffunction-sections           \
+         -Os                           \
+         -g                            \
+         -mcpu=cortex-m4 \
+         -mfloat-abi=soft \
+         -mthumb
+    
+INCLUDES = -I../drivers \
+           -I../uMac/Include \
+           -I../JennicCommon/Include \
+           -I../MicroSpecific/Include \
+           -I../Radio_JN5189/Include \
+           -I../../CMSIS/Include \
+           -I../rom_apis \
+           -I../
+
+all:
+		$(CC) $(CFLAGS) $(INCLUDES) -c ../uMac/Source/MMAC.c -o ../uMac/Source/MMAC.o
+		$(CC) $(CFLAGS) $(INCLUDES) -c ../uMac/Source/MMAC_RadioInit_JN518x.c -o ../uMac/Source/MMAC_RadioInit_JN518x.o
+		$(AR) rcs ../libraries/libMiniMac_JN518x.a ../uMac/Source/MMAC.o ../uMac/Source/MMAC_RadioInit_JN518x.o
+
+clean:
+	$(ECHO) "  CLEAN"
+	@$(RM_F) -r *.o *.a

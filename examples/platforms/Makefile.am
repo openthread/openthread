@@ -39,6 +39,7 @@ DIST_SUBDIRS                            = \
     efr32mg13                             \
     efr32mg21                             \
     gp712                                 \
+    jn5189                                \
     kw41z                                 \
     nrf528xx                              \
     simulation                            \
@@ -83,6 +84,10 @@ endif
 
 if OPENTHREAD_PLATFORM_GP712
 SUBDIRS                                += gp712
+endif
+
+if OPENTHREAD_PLATFORM_JN5189
+SUBDIRS                                += jn5189
 endif
 
 if OPENTHREAD_PLATFORM_KW41Z
