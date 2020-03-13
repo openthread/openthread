@@ -45,7 +45,11 @@ namespace ot {
 class Instance;
 
 #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#if !OPENTHREAD_CONFIG_INSTANCE_ON_HEAP
 extern uint64_t gInstanceRaw[];
+#else
+extern Instance *gInstanceRaw;
+#endif
 #endif
 
 /**
@@ -83,7 +87,11 @@ public:
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     Instance &GetInstance(void) const { return *mInstance; }
 #else
+#if !OPENTHREAD_CONFIG_INSTANCE_ON_HEAP
     Instance &GetInstance(void) const { return *reinterpret_cast<Instance *>(&gInstanceRaw); }
+#else
+    Instance &GetInstance(void) const { return *gInstanceRaw; }
+#endif
 #endif
 
     /**

@@ -108,6 +108,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+ *
+ * Define to 1 to move instance on heap
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_INSTANCE_ON_HEAP
+#define OPENTHREAD_CONFIG_INSTANCE_ON_HEAP 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
  *
  * Define to 1 to enable Thread Test Harness reference device support.

@@ -43,7 +43,11 @@ namespace ot {
 #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 // Define the raw storage used for OpenThread instance (in single-instance case).
+#if !OPENTHREAD_CONFIG_INSTANCE_ON_HEAP
 OT_DEFINE_ALIGNED_VAR(gInstanceRaw, sizeof(Instance), uint64_t);
+#else
+Instance *gInstanceRaw = NULL;
+#endif
 
 #endif
 
@@ -116,11 +120,21 @@ Instance &Instance::InitSingle(void)
 {
     Instance *instance = &Get();
 
+#if !OPENTHREAD_CONFIG_INSTANCE_ON_HEAP
     VerifyOrExit(!instance->mIsInitialized);
 
     instance = new (&gInstanceRaw) Instance();
 
     instance->AfterInit();
+#else
+    VerifyOrExit(instance == NULL);
+
+    gInstanceRaw = new Instance();
+
+    instance = gInstanceRaw;
+
+    instance->AfterInit();
+#endif
 
 exit:
     return *instance;
@@ -128,9 +142,11 @@ exit:
 
 Instance &Instance::Get(void)
 {
-    void *instance = &gInstanceRaw;
-
-    return *static_cast<Instance *>(instance);
+#if !OPENTHREAD_CONFIG_INSTANCE_ON_HEAP
+    return *static_cast<Instance *>((void*)&gInstanceRaw);
+#else
+    return *gInstanceRaw;
+#endif
 }
 
 #else // #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
