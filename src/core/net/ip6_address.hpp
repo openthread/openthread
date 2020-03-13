@@ -271,6 +271,18 @@ public:
     bool IsIidReserved(void) const;
 
     /**
+     * This method sets the IPv6 address prefix.
+     *
+     * This method only changes the first @p aPrefixLength bits of the address and keeps the rest of the bits in the
+     * address as before.
+     *
+     * @param[in]  aPrefix         A buffer containing the prefix
+     * @param[in]  aPrefixLength   The prefix length (in bits).
+     *
+     */
+    void SetPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength);
+
+    /**
      * This method returns a pointer to the Interface Identifier.
      *
      * @returns A pointer to the Interface Identifier.

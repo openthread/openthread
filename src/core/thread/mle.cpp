@@ -915,9 +915,9 @@ void Mle::SetMeshLocalPrefix(const otMeshLocalPrefix &aMeshLocalPrefix)
         Get<ThreadNetif>().UnsubscribeMulticast(mRealmLocalAllThreadNodes);
     }
 
-    memcpy(mMeshLocal64.GetAddress().mFields.m8, aMeshLocalPrefix.m8, sizeof(aMeshLocalPrefix));
-    memcpy(mMeshLocal16.GetAddress().mFields.m8, aMeshLocalPrefix.m8, sizeof(aMeshLocalPrefix));
-    memcpy(mLeaderAloc.GetAddress().mFields.m8, aMeshLocalPrefix.m8, sizeof(aMeshLocalPrefix));
+    mMeshLocal64.GetAddress().SetPrefix(aMeshLocalPrefix.m8, Ip6::Address::kMeshLocalPrefixLength);
+    mMeshLocal16.GetAddress().SetPrefix(aMeshLocalPrefix.m8, Ip6::Address::kMeshLocalPrefixLength);
+    mLeaderAloc.GetAddress().SetPrefix(aMeshLocalPrefix.m8, Ip6::Address::kMeshLocalPrefixLength);
 
     // Just keep mesh local prefix if network interface is down
     VerifyOrExit(Get<ThreadNetif>().IsUp());
@@ -937,7 +937,7 @@ void Mle::ApplyMeshLocalPrefix(void)
         if (HostSwap16(mServiceAlocs[i].GetAddress().mFields.m16[7]) != Mac::kShortAddrInvalid)
         {
             Get<ThreadNetif>().RemoveUnicastAddress(mServiceAlocs[i]);
-            memcpy(mServiceAlocs[i].GetAddress().mFields.m8, mMeshLocal64.GetAddress().mFields.m8, 8);
+            mServiceAlocs[i].GetAddress().SetPrefix(GetMeshLocalPrefix().m8, Ip6::Address::kMeshLocalPrefixLength);
             Get<ThreadNetif>().AddUnicastAddress(mServiceAlocs[i]);
         }
     }
@@ -1033,7 +1033,7 @@ otError Mle::GetLeaderAddress(Ip6::Address &aAddress) const
 
     VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = OT_ERROR_DETACHED);
 
-    memcpy(&aAddress, &mMeshLocal16.GetAddress(), 8);
+    aAddress.SetPrefix(GetMeshLocalPrefix().m8, Ip6::Address::kMeshLocalPrefixLength);
     aAddress.mFields.m16[4] = HostSwap16(0x0000);
     aAddress.mFields.m16[5] = HostSwap16(0x00ff);
     aAddress.mFields.m16[6] = HostSwap16(0xfe00);
@@ -1062,7 +1062,7 @@ otError Mle::GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
 
     VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = OT_ERROR_DETACHED);
 
-    memcpy(&aAddress, &mMeshLocal16.GetAddress(), 8);
+    aAddress.SetPrefix(GetMeshLocalPrefix().m8, Ip6::Address::kMeshLocalPrefixLength);
     aAddress.mFields.m16[4] = HostSwap16(0x0000);
     aAddress.mFields.m16[5] = HostSwap16(0x00ff);
     aAddress.mFields.m16[6] = HostSwap16(0xfe00);
