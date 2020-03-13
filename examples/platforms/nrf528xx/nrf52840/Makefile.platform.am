@@ -32,6 +32,7 @@
 
 LDADD_COMMON                                                                           += \
     $(top_builddir)/examples/platforms/nrf528xx/libopenthread-nrf52840.a                  \
+    $(top_builddir)/examples/platforms/nrf528xx/libopenthread-nrf52840-transport.a        \
     $(top_builddir)/third_party/NordicSemiconductor/libnordicsemi-nrf52840-sdk.a          \
     $(top_builddir)/third_party/NordicSemiconductor/libnordicsemi-nrf52840-radio-driver.a \
     $(NULL)
