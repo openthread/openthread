@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,65 +26,54 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_PLATFORM_CONFIG_H_
-#define OPENTHREAD_PLATFORM_CONFIG_H_
-
-#include "openthread-core-config.h"
-
 /**
  * @file
- * @brief
- *   This file includes the POSIX platform-specific configurations.
+ *   This file includes UART/USB and SPI driver initializers.
+ *
  */
+
+#ifndef TRANSPORT_DRIVERS_H_
+#define TRANSPORT_DRIVERS_H_
 
 /**
- * @def OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
- *
- * Define as 1 to enable PTY RCP support.
+ * Initialization of UART driver.
  *
  */
-#ifndef OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
-#define OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE 1
-#endif
+void nrf5UartInit(void);
 
 /**
- * @def OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME
- *
- * Define socket basename used by POSIX app daemon.
+ * Deinitialization of UART driver.
  *
  */
-#ifndef OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME
-#define OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME "/tmp/openthread"
-#endif
+void nrf5UartDeinit(void);
 
 /**
- * @def OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE
- *
- * Define as 1 to enable UART interface to RCP.
+ * Clear pending UART data.
  *
  */
-#ifndef OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE
-#define OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE 0
-#endif
+void nrf5UartClearPendingData(void);
 
 /**
- * @def OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
- *
- * Define as 1 to enable SPI interface to RCP.
+ * This function performs UART driver processing.
  *
  */
-#ifndef OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
-#define OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE 0
-#endif
+void nrf5UartProcess(void);
 
 /**
- * @def OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
- *
- * Define to 1 to enable POSIX daemon.
+ * Initialization of SPI Slave driver.
  *
  */
-#ifndef OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-#define OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE 0
-#endif
+void nrf5SpiSlaveInit(void);
 
-#endif // OPENTHREAD_PLATFORM_CONFIG_H_
+/**
+ * Deinitialization of SPI Slave driver.
+ *
+ */
+void nrf5SpiSlaveDeinit(void);
+
+/**
+ * Function for processing SPI Slave driver.
+ */
+void nrf5SpiSlaveProcess(void);
+
+#endif

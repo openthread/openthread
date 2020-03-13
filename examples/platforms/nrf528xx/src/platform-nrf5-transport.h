@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,65 +26,35 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_PLATFORM_CONFIG_H_
-#define OPENTHREAD_PLATFORM_CONFIG_H_
-
-#include "openthread-core-config.h"
-
 /**
  * @file
- * @brief
- *   This file includes the POSIX platform-specific configurations.
+ *   This file includes the platform-specific transport initializers.
+ *
  */
+
+#ifndef PLATFORM_NRF5_TRANSPORT_H_
+#define PLATFORM_NRF5_TRANSPORT_H_
+
+#include <stdbool.h>
+
+#include "platform-config.h"
 
 /**
- * @def OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
- *
- * Define as 1 to enable PTY RCP support.
+ * Initialization of transport.
  *
  */
-#ifndef OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
-#define OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE 1
-#endif
+void nrf5TransportInit(bool aPseudoReset);
 
 /**
- * @def OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME
- *
- * Define socket basename used by POSIX app daemon.
+ * Deinitialization of transport.
  *
  */
-#ifndef OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME
-#define OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME "/tmp/openthread"
-#endif
+void nrf5TransportDeinit(bool aPseudoReset);
 
 /**
- * @def OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE
- *
- * Define as 1 to enable UART interface to RCP.
+ * This function performs transport processing.
  *
  */
-#ifndef OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE
-#define OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE 0
-#endif
+void nrf5TransportProcess(void);
 
-/**
- * @def OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
- *
- * Define as 1 to enable SPI interface to RCP.
- *
- */
-#ifndef OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
-#define OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE 0
 #endif
-
-/**
- * @def OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
- *
- * Define to 1 to enable POSIX daemon.
- *
- */
-#ifndef OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-#define OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE 0
-#endif
-
-#endif // OPENTHREAD_PLATFORM_CONFIG_H_

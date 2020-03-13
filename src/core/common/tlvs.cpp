@@ -59,7 +59,7 @@ otError Tlv::AppendTo(Message &aMessage) const
 {
     uint32_t size = GetSize();
 
-    assert(size <= UINT16_MAX);
+    OT_ASSERT(size <= UINT16_MAX);
 
     return aMessage.Append(this, static_cast<uint16_t>(size));
 }
@@ -262,7 +262,7 @@ otError Tlv::AppendTlv(Message &aMessage, uint8_t aType, const uint8_t *aValue, 
     otError error = OT_ERROR_NONE;
     Tlv     tlv;
 
-    assert(aLength <= Tlv::kBaseTlvMaxLength);
+    OT_ASSERT(aLength <= Tlv::kBaseTlvMaxLength);
 
     tlv.SetType(aType);
     tlv.SetLength(aLength);

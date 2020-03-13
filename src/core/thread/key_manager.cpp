@@ -218,9 +218,15 @@ void KeyManager::IncrementMleFrameCounter(void)
     }
 }
 
+void KeyManager::SetKek(const Kek &aKek)
+{
+    mKek             = aKek;
+    mKekFrameCounter = 0;
+}
+
 void KeyManager::SetKek(const uint8_t *aKek)
 {
-    memcpy(mKek, aKek, sizeof(mKek));
+    memcpy(mKek.m8, aKek, sizeof(mKek));
     mKekFrameCounter = 0;
 }
 

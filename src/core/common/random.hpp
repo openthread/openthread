@@ -90,7 +90,7 @@ inline uint16_t GetUint16(void)
  */
 inline uint8_t GetUint8InRange(uint8_t aMin, uint8_t aMax)
 {
-    assert(aMax > aMin);
+    OT_ASSERT(aMax > aMin);
     return (aMin + (GetUint8() % (aMax - aMin)));
 }
 
@@ -106,7 +106,7 @@ inline uint8_t GetUint8InRange(uint8_t aMin, uint8_t aMax)
  */
 inline uint16_t GetUint16InRange(uint16_t aMin, uint16_t aMax)
 {
-    assert(aMax > aMin);
+    OT_ASSERT(aMax > aMin);
     return (aMin + (GetUint16() % (aMax - aMin)));
 }
 
@@ -123,7 +123,7 @@ inline uint16_t GetUint16InRange(uint16_t aMin, uint16_t aMax)
  */
 inline uint32_t GetUint32InRange(uint32_t aMin, uint32_t aMax)
 {
-    assert(aMax > aMin);
+    OT_ASSERT(aMax > aMin);
     return (aMin + (GetUint32() % (aMax - aMin)));
 }
 

@@ -45,7 +45,7 @@ Notifier::Callback::Callback(Instance &aInstance, Handler aHandler, void *aOwner
     , mHandler(aHandler)
     , mNext(NULL)
 {
-    assert(aHandler != NULL);
+    OT_ASSERT(aHandler != NULL);
     aInstance.Get<Notifier>().RegisterCallback(*this);
 }
 

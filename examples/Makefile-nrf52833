@@ -61,7 +61,6 @@ NRF52833_MBEDTLS_CPPFLAGS += -DMBEDTLS_USER_CONFIG_FILE='\"nrf52833-mbedtls-conf
 NRF52833_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls
 NRF52833_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include
 NRF52833_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include/mbedtls
-NRF52833_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/libraries/crypto
 NRF52833_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/libraries/nrf_security/mbedtls_plat_config
 NRF52833_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/nrfx/mdk
 NRF52833_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/NordicSemiconductor/cmsis

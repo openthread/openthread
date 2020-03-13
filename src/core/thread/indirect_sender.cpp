@@ -344,7 +344,7 @@ otError IndirectSender::PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext 
         break;
 
     default:
-        assert(false);
+        OT_ASSERT(false);
         break;
     }
 
@@ -466,7 +466,7 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
         break;
 
     default:
-        assert(false);
+        OT_ASSERT(false);
         break;
     }
 

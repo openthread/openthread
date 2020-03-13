@@ -145,7 +145,7 @@ otError CoapBase::SendMessage(Message &               aMessage,
         mResponsesQueue.EnqueueResponse(aMessage, aMessageInfo, aTxParameters);
         break;
     case OT_COAP_TYPE_RESET:
-        assert(aMessage.GetCode() == OT_COAP_CODE_EMPTY);
+        OT_ASSERT(aMessage.GetCode() == OT_COAP_CODE_EMPTY);
         break;
     default:
         aMessage.SetMessageId(mMessageId++);
@@ -789,7 +789,7 @@ void CoapBase::Metadata::ReadFrom(const Message &aMessage)
 {
     uint16_t length = aMessage.GetLength();
 
-    assert(length >= sizeof(*this));
+    OT_ASSERT(length >= sizeof(*this));
     aMessage.Read(length - sizeof(*this), sizeof(*this), this);
 }
 
@@ -951,7 +951,7 @@ void ResponsesQueue::ResponseMetadata::ReadFrom(const Message &aMessage)
 {
     uint16_t length = aMessage.GetLength();
 
-    assert(length >= sizeof(*this));
+    OT_ASSERT(length >= sizeof(*this));
     aMessage.Read(length - sizeof(*this), sizeof(*this), this);
 }
 
@@ -974,8 +974,8 @@ bool TxParameters::IsValid(void) const
 {
     bool rval = false;
 
-    if (mAckRandomFactorNumerator >= mAckRandomFactorDenominator && mAckTimeout >= OT_COAP_MIN_ACK_TIMEOUT &&
-        mMaxRetransmit <= OT_COAP_MAX_RETRANSMIT)
+    if ((mAckRandomFactorDenominator > 0) && (mAckRandomFactorNumerator >= mAckRandomFactorDenominator) &&
+        (mAckTimeout >= OT_COAP_MIN_ACK_TIMEOUT) && (mMaxRetransmit <= OT_COAP_MAX_RETRANSMIT))
     {
         // Calulate exchange lifetime step by step and verify no overflow.
         uint32_t tmp = Multiply(mAckTimeout, (1U << (mMaxRetransmit + 1)) - 1);

@@ -30,37 +30,89 @@
 #      This file runs various tests of OpenThread.
 #
 
-set -e
-set -o pipefail
+set -euo pipefail
 
 readonly OT_BUILD_JOBS=$(getconf _NPROCESSORS_ONLN)
-readonly OT_SYSTEM_TRIPLET="$(third_party/nlbuild-autotools/repo/third_party/autoconf/config.guess | sed -e 's/[[:digit:].]*$//g')"
 readonly OT_BUILDDIR="$(pwd)/build"
 readonly OT_SRCDIR="$(pwd)"
+readonly OT_TEST_COMMON_OPTIONS=(
+    "-DOT_CHILD_SUPERVISION=ON"
+    "-DOT_COVERAGE=ON"
+    "-DOT_MAC_FILTER=ON"
+    "-DOT_REFERENCE_DEVICE=ON"
+)
 
 readonly COLOR_PASS='\033[0;32m'
 readonly COLOR_FAIL='\033[0;31m'
 readonly COLOR_NONE='\033[0m'
 
+readonly NODE_MODE="${NODE_MODE:-standalone}"
+readonly NODE_TYPE="${NODE_TYPE:-sim}"
+readonly THREAD_VERSION="${THREAD_VERSION:-1.1}"
+readonly VERBOSE="${VERBOSE:-0}"
+readonly VIRTUAL_TIME="${VIRTUAL_TIME:-1}"
+
+build_simulation()
+{
+    local version="$1"
+    local options=("${OT_TEST_COMMON_OPTIONS[@]}")
+
+    options+=(
+        "-DOT_PLATFORM=simulation"
+        "-DOT_THREAD_VERSION=${version}"
+    )
+
+    if [[ "${VIRTUAL_TIME}" == 1 ]]; then
+        options+=("-DOT_SIMULATION_VIRTUAL_TIME=ON")
+
+        if [[ "${NODE_MODE}" == "rcp" ]]; then
+            options+=("-DOT_SIMULATION_VIRTUAL_TIME_UART=ON")
+        fi
+
+    fi
+
+    local builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${version}"
+    (mkdir -p "${builddir}" \
+        && cd "${builddir}" \
+        && cmake -GNinja "${OT_SRCDIR}" "${options[@]}" \
+        && ninja)
+
+}
+
+build_posix()
+{
+    local version="$1"
+    local options=("${OT_TEST_COMMON_OPTIONS[@]}")
+
+    options+=(
+        "-DOT_PLATFORM=posix"
+        "-DOT_THREAD_VERSION=${version}"
+    )
+
+    if [[ "${VIRTUAL_TIME}" == 1 ]]; then
+        options+=("-DOT_POSIX_VIRTUAL_TIME=ON")
+    fi
+
+    local builddir="${OT_BUILDDIR}/cmake/openthread-posix-${version}"
+    (mkdir -p "${builddir}" \
+        && cd "${builddir}" \
+        && cmake -GNinja "${OT_SRCDIR}" "${options[@]}" \
+        && ninja)
+}
 
 do_build() {
-    if [[ "${NODE_MODE}" == "transceiver" &&  "${VIRTUAL_TIME}" == 1 ]]; then
-        OPTIONS="VIRTUAL_TIME_UART=1"
+    build_simulation "${THREAD_VERSION}"
+
+    if [[ "${NODE_MODE}" == "rcp" ]]; then
+        build_posix "${THREAD_VERSION}"
     fi
 
-    make -f examples/Makefile-simulation ${OPTIONS}
-
-    if [[ -n "${RADIO_DEVICE}" ]]; then
-        make -f src/posix/Makefile-posix ${OPTIONS}
-    fi
-
-    # Extra 1.1 build for 1.2 env
+    # Extra 1.1 build for 1.2 tests
     if [[ "${THREAD_VERSION}" == "1.2" ]]; then
-        OPTIONS="TargetTuple=${OT_SYSTEM_TRIPLET}-1.1 THREAD_VERSION=1.1 ${OPTIONS}"
-        make -f examples/Makefile-simulation ${OPTIONS}
+        build_simulation 1.1
 
-        if [[ -n "${RADIO_DEVICE}" ]]; then
-            make -f src/posix/Makefile-posix ${OPTIONS}
+        if [[ "${NODE_MODE}" == "rcp" ]]; then
+            build_posix 1.1
         fi
     fi
 }
@@ -70,10 +122,10 @@ do_clean() {
 }
 
 do_cert() {
-    export top_builddir="${OT_BUILDDIR}/${OT_SYSTEM_TRIPLET}"
+    export top_builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}"
 
     if [[ "${THREAD_VERSION}" == "1.2" ]]; then
-        export top_builddir_1_1="${OT_BUILDDIR}/${OT_SYSTEM_TRIPLET}-1.1"
+        export top_builddir_1_1="${OT_BUILDDIR}/cmake/openthread-simulation-1.1"
     fi
 
     [[ ! -d tmp ]] || rm -rvf tmp
@@ -81,10 +133,10 @@ do_cert() {
 }
 
 do_cert_suite() {
-    export top_builddir="${OT_BUILDDIR}/${OT_SYSTEM_TRIPLET}"
+    export top_builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}"
 
     if [[ "${THREAD_VERSION}" == "1.2" ]]; then
-        export top_builddir_1_1="${OT_BUILDDIR}/${OT_SYSTEM_TRIPLET}-1.1"
+        export top_builddir_1_1="${OT_BUILDDIR}/cmake/openthread-simulation-1.1"
     fi
 
     local pass_count=0
@@ -94,9 +146,7 @@ do_cert_suite() {
 
     for test_case in "$@"; do
         [[ ! -d tmp ]] || rm -rf tmp
-        exit_code=0
-        "${test_case}" &> test.log || exit_code=$?
-        if [[ "${exit_code}" == 0 ]]; then
+        if "${test_case}" &> test.log; then
             echo -e "${COLOR_PASS}PASS${COLOR_NONE} ${test_case}"
             pass_count=$(( pass_count + 1 ))
         else
@@ -119,9 +169,7 @@ do_cert_suite() {
     echo "# FAIL: ${fail_count}"
 
     if [[ "${fail_count}" -gt 0 ]]; then
-        while read -r line; do
-            echo "${line}"
-        done < fail.log
+        tr -dc '[:print:]\r\n\t' < fail.log
         exit 1
     else
         exit 0
@@ -133,8 +181,9 @@ print_usage() {
 
 ENVIRONMENTS:
     NODE_TYPE       'sim' for CLI, 'ncp-sim' for NCP. The default is 'sim'.
-    NODE_MODE       'transceiver' for transceiver mode, otherwise for standalone mode. The default is standalone mode.
-    VIRTUAL_TIME    1 for virtual time, otherwise real time. The default is 1
+    NODE_MODE       'rcp' for RCP mode, otherwise for standalone mode. The default is standalone mode.
+    VERBOSE         1 to build or test verbosely. The default is 0.
+    VIRTUAL_TIME    1 for virtual time, otherwise real time. The default is 1.
     THREAD_VERSION  1.1 for Thread 1.1 stack, 1.2 for Thread 1.2 stack. The default is 1.1.
 
 COMMANDS:
@@ -154,8 +203,8 @@ EXAMPLES:
     NODE_TYPE=ncp-sim $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
 
     # Test CLI with radio only
-    NODE_MODE=transceiver $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
-    NODE_MODE=transceiver $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
+    NODE_MODE=rcp $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
+    NODE_MODE=rcp $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
 
     # Test CLI with real time
     VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
@@ -180,47 +229,56 @@ do_package() {
     builddir="${OT_BUILDDIR}/cmake/openthread-host"
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
-        && cmake "${OT_SRCDIR}" -DOT_PLATFORM="posix-host" \
+        && cmake "${OT_SRCDIR}" -DOT_PLATFORM="posix" \
         && make -j"${OT_BUILD_JOBS}" package \
         && ls "${builddir}"/openthread-standalone-*.deb)
 
     builddir="${OT_BUILDDIR}/cmake/openthread-daemon"
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
-        && cmake "${OT_SRCDIR}" -DOT_PLATFORM="posix-host" -DOT_DAEMON=1 -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 \
+        && cmake "${OT_SRCDIR}" -DOT_PLATFORM="posix" -DOT_DAEMON=1 -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 \
         && make -j"${OT_BUILD_JOBS}" package \
         && ls "${builddir}"/openthread-daemon-*.deb)
 }
 
-main()
+envsetup()
 {
-    export NODE_TYPE="${NODE_TYPE:-sim}"
-    export VERBOSE="${VERBOSE:-1}"
-    export VIRTUAL_TIME="${VIRTUAL_TIME:-1}"
-    export THREAD_VERSION="${THREAD_VERSION:-1.1}"
-
-    if [[ "${NODE_MODE}" = 'transceiver' ]] ; then
-        export RADIO_DEVICE="${OT_BUILDDIR}/${OT_SYSTEM_TRIPLET}/examples/apps/ncp/ot-rcp"
-        export OT_CLI_PATH="${OT_BUILDDIR}/posix/${OT_SYSTEM_TRIPLET}/src/posix/ot-cli"
-        export OT_NCP_PATH="${OT_BUILDDIR}/posix/${OT_SYSTEM_TRIPLET}/src/posix/ot-ncp"
+    if [[ "${NODE_MODE}" == 'rcp' ]] ; then
+        export RADIO_DEVICE="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}/examples/apps/ncp/ot-rcp"
+        export OT_CLI_PATH="${OT_BUILDDIR}/cmake/openthread-posix-${THREAD_VERSION}/src/posix/ot-cli"
+        export OT_NCP_PATH="${OT_BUILDDIR}/cmake/openthread-posix-${THREAD_VERSION}/src/posix/ot-ncp"
 
         if [[ "${THREAD_VERSION}" == "1.2" ]]; then
-            export RADIO_DEVICE_1_1="${OT_BUILDDIR}/${OT_SYSTEM_TRIPLET}-1.1/examples/apps/ncp/ot-rcp"
-            export OT_CLI_PATH_1_1="${OT_BUILDDIR}/posix/${OT_SYSTEM_TRIPLET}-1.1/src/posix/ot-cli"
-            export OT_NCP_PATH_1_1="${OT_BUILDDIR}/posix/${OT_SYSTEM_TRIPLET}-1.1/src/posix/ot-ncp"
+            export RADIO_DEVICE_1_1="${OT_BUILDDIR}/cmake/openthread-simulation-1.1/examples/apps/ncp/ot-rcp"
+            export OT_CLI_PATH_1_1="${OT_BUILDDIR}/cmake/openthread-posix-1.1/src/posix/ot-cli"
+            export OT_NCP_PATH_1_1="${OT_BUILDDIR}/cmake/openthread-posix-1.1/src/posix/ot-ncp"
         fi
     fi
+
+    export NODE_TYPE VIRTUAL_TIME
+
+    # CMake always works in verbose mode if VERBOSE exists in environments.
+    if [[ "${VERBOSE}" == 1 ]]; then
+        export VERBOSE
+    else
+        export -n VERBOSE
+    fi
+}
+
+main()
+{
+    envsetup
 
     if [[ -z "$1" ]]; then
         print_usage 1
     fi
 
-    [[ -n "${RADIO_DEVICE}" ]] && echo "Using transceiver mode" || echo "Using standalone mode"
-    [[ "${NODE_TYPE}" = "ncp-sim" ]] && echo "Using NCP node" || echo "Using CLI node"
-    [[ "${VIRTUAL_TIME}" = 1 ]] && echo "Using virtual time" || echo "Using real time"
-    [[ "${THREAD_VERSION}" = "1.2" ]] && echo "Using Thread 1.2 stack" || echo "Using Thread 1.1 stack"
+    [[ "${NODE_MODE}" == "rcp" ]] && echo "Using rcp mode" || echo "Using standalone mode"
+    [[ "${NODE_TYPE}" == "ncp-sim" ]] && echo "Using NCP node" || echo "Using CLI node"
+    [[ "${VIRTUAL_TIME}" == 1 ]] && echo "Using virtual time" || echo "Using real time"
+    [[ "${THREAD_VERSION}" == "1.2" ]] && echo "Using Thread 1.2 stack" || echo "Using Thread 1.1 stack"
 
-    while [[ -n "$1" ]]; do
+    while [[ $# != 0 ]]; do
         case "$1" in
             clean)
                 do_clean

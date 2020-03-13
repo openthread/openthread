@@ -41,34 +41,6 @@
 
 #include "platform-config.h"
 
-/**
- * Initialization of UART driver.
- *
- */
-void nrf5UartInit(void);
-
-/**
- * Deinitialization of UART driver.
- *
- */
-void nrf5UartDeinit(void);
-
-/**
- * Clear pending UART data.
- *
- */
-void nrf5UartClearPendingData(void);
-
-/**
- * This function performs UART driver processing.
- *
- */
-void nrf5UartProcess(void);
-
-/**
- * Initialization of Alarm driver.
- *
- */
 void nrf5AlarmInit(void);
 
 /**
@@ -118,23 +90,6 @@ void nrf5LogInit(void);
  *
  */
 void nrf5LogDeinit(void);
-
-/**
- * Initialization of SPI Slave driver.
- *
- */
-void nrf5SpiSlaveInit(void);
-
-/**
- * Deinitialization of SPI Slave driver.
- *
- */
-void nrf5SpiSlaveDeinit(void);
-
-/**
- * Function for processing SPI Slave driver.
- */
-void nrf5SpiSlaveProcess(void);
 
 /**
  * Initialization of Misc module.

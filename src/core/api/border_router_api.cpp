@@ -47,7 +47,7 @@ otError otBorderRouterGetNetData(otInstance *aInstance, bool aStable, uint8_t *a
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aData != NULL && aDataLength != NULL);
+    OT_ASSERT(aData != NULL && aDataLength != NULL);
 
     return instance.Get<NetworkData::Local>().GetNetworkData(aStable, aData, *aDataLength);
 }
@@ -57,7 +57,7 @@ otError otBorderRouterAddOnMeshPrefix(otInstance *aInstance, const otBorderRoute
     uint8_t   flags    = 0;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aConfig != NULL);
+    OT_ASSERT(aConfig != NULL);
 
     if (aConfig->mPreferred)
     {
@@ -97,7 +97,7 @@ otError otBorderRouterRemoveOnMeshPrefix(otInstance *aInstance, const otIp6Prefi
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aPrefix != NULL);
+    OT_ASSERT(aPrefix != NULL);
 
     return instance.Get<NetworkData::Local>().RemoveOnMeshPrefix(aPrefix->mPrefix.mFields.m8, aPrefix->mLength);
 }
@@ -108,7 +108,7 @@ otError otBorderRouterGetNextOnMeshPrefix(otInstance *           aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aIterator != NULL && aConfig != NULL);
+    OT_ASSERT(aIterator != NULL && aConfig != NULL);
 
     return instance.Get<NetworkData::Local>().GetNextOnMeshPrefix(*aIterator, *aConfig);
 }
@@ -117,7 +117,7 @@ otError otBorderRouterAddRoute(otInstance *aInstance, const otExternalRouteConfi
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aConfig != NULL);
+    OT_ASSERT(aConfig != NULL);
 
     return instance.Get<NetworkData::Local>().AddHasRoutePrefix(
         aConfig->mPrefix.mPrefix.mFields.m8, aConfig->mPrefix.mLength, aConfig->mPreference, aConfig->mStable);
@@ -127,7 +127,7 @@ otError otBorderRouterRemoveRoute(otInstance *aInstance, const otIp6Prefix *aPre
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aPrefix != NULL);
+    OT_ASSERT(aPrefix != NULL);
 
     return instance.Get<NetworkData::Local>().RemoveHasRoutePrefix(aPrefix->mPrefix.mFields.m8, aPrefix->mLength);
 }
@@ -138,7 +138,7 @@ otError otBorderRouterGetNextRoute(otInstance *           aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aIterator != NULL && aConfig != NULL);
+    OT_ASSERT(aIterator != NULL && aConfig != NULL);
 
     return instance.Get<NetworkData::Local>().GetNextExternalRoute(*aIterator, *aConfig);
 }

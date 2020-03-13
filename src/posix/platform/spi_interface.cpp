@@ -54,7 +54,7 @@
 #include <sys/types.h>
 #include <sys/ucontext.h>
 
-#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
 #include <linux/gpio.h>
 #include <linux/ioctl.h>
 #include <linux/spi/spidev.h>
@@ -785,4 +785,4 @@ void SpiInterface::LogStats(void)
 } // namespace PosixApp
 } // namespace ot
 
-#endif // OPENTHREAD_POSIX_RCP_SPI_ENABLE
+#endif // OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE

@@ -922,7 +922,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame, bool aProcessAesCcm)
     switch (keyIdMode)
     {
     case Frame::kKeyIdMode0:
-        aFrame.SetAesKey(keyManager.GetKek());
+        aFrame.SetAesKey(keyManager.GetKek().GetKey());
         extAddress = &GetExtAddress();
 
         if (!aFrame.IsARetransmission())
@@ -965,7 +965,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame, bool aProcessAesCcm)
     }
 
     default:
-        assert(false);
+        OT_ASSERT(false);
         break;
     }
 
@@ -1044,7 +1044,7 @@ void Mac::BeginTransmit(void)
         break;
 
     default:
-        assert(false);
+        OT_ASSERT(false);
         break;
     }
 
@@ -1265,7 +1265,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
         break;
 
     case kOperationTransmitPoll:
-        assert(aFrame.IsEmpty() || aFrame.GetAckRequest());
+        OT_ASSERT(aFrame.IsEmpty() || aFrame.GetAckRequest());
 
         if ((aError == OT_ERROR_NONE) && (aAckFrame != NULL))
         {
@@ -1341,7 +1341,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
         break;
 
     default:
-        assert(false);
+        OT_ASSERT(false);
         break;
     }
 
@@ -1382,7 +1382,7 @@ void Mac::HandleTimer(void)
 #endif
 
     default:
-        assert(false);
+        OT_ASSERT(false);
         break;
     }
 }
@@ -1414,7 +1414,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
     switch (keyIdMode)
     {
     case Frame::kKeyIdMode0:
-        macKey = keyManager.GetKek();
+        macKey = keyManager.GetKek().GetKey();
         VerifyOrExit(macKey != NULL);
         extAddress = &aSrcAddr.GetExtended();
         break;

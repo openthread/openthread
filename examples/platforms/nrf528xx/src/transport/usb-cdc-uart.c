@@ -51,7 +51,7 @@
 #include <openthread/platform/misc.h>
 #include <openthread/platform/uart.h>
 
-#include "platform-nrf5.h"
+#include "platform-nrf5-transport.h"
 
 #include "app_usbd.h"
 #include "app_usbd_serial_num.h"

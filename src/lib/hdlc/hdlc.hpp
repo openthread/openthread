@@ -365,7 +365,7 @@ public:
     {
         otError error = OT_ERROR_NONE;
 
-        assert(aFrame == NULL || (mBuffer <= aFrame && aFrame < OT_ARRAY_END(mBuffer)));
+        OT_ASSERT(aFrame == NULL || (mBuffer <= aFrame && aFrame < OT_ARRAY_END(mBuffer)));
 
         aFrame = (aFrame == NULL) ? mBuffer : aFrame + aLength;
 

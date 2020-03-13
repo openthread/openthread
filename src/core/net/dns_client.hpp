@@ -91,7 +91,7 @@ public:
     void ReadFrom(const Message &aMessage)
     {
         uint16_t length = aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-        assert(length == sizeof(*this));
+        OT_ASSERT(length == sizeof(*this));
         OT_UNUSED_VARIABLE(length);
     }
 

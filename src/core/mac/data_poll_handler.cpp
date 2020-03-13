@@ -277,7 +277,7 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError
         break;
 
     default:
-        assert(false);
+        OT_ASSERT(false);
         break;
     }
 

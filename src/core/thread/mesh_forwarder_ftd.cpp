@@ -126,7 +126,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
     case Message::kTypeSupervision:
     {
         Child *child = Get<Utils::ChildSupervisor>().GetDestination(aMessage);
-        assert((child != NULL) && !child->IsRxOnWhenIdle());
+        OT_ASSERT((child != NULL) && !child->IsRxOnWhenIdle());
         mIndirectSender.AddMessageForSleepyChild(aMessage, *child);
         break;
     }
@@ -328,7 +328,7 @@ void MeshForwarder::SendMesh(Message &aMessage, Mac::TxFrame &aFrame)
     aFrame.SetSrcAddr(mMacSource.GetShort());
 
     // write payload
-    assert(aMessage.GetLength() <= aFrame.GetMaxPayloadLength());
+    OT_ASSERT(aMessage.GetLength() <= aFrame.GetMaxPayloadLength());
     aMessage.Read(0, aMessage.GetLength(), aFrame.GetPayload());
     aFrame.SetPayloadLength(aMessage.GetLength());
 

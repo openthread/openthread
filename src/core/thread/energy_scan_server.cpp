@@ -140,6 +140,7 @@ void EnergyScanServer::HandleScanResult(Mac::EnergyScanResult *aResult)
 
     if (aResult)
     {
+        VerifyOrExit(mScanResultsLength < OPENTHREAD_CONFIG_TMF_ENERGY_SCAN_MAX_RESULTS);
         mScanResults[mScanResultsLength++] = aResult->mMaxRssi;
     }
     else
