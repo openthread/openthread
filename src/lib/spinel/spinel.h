@@ -2782,7 +2782,7 @@ enum
      * Array of structures containing:
      *
      *  `6`: IPv6 Address
-     *  `C`: Network Prefix Length
+     *  `C`: Network Prefix Length (in bits)
      *  `L`: Valid Lifetime
      *  `L`: Preferred Lifetime
      *
