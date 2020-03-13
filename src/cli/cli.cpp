@@ -3755,15 +3755,16 @@ void Interpreter::HandleDiagnosticGetResponse(const otMessage &aMessage, const I
 
     mServer->OutputFormat("\r\n");
 
+    // Output Network Diagnostic TLV values in standard YAML format.
     while ((error = otThreadGetNextDiagnosticTlv(&aMessage, &iterator, &diagTlv)) == OT_ERROR_NONE)
     {
         size_t column = 0;
         switch (diagTlv.mType)
         {
         case OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS:
-            mServer->OutputFormat("Ext Address: ");
+            mServer->OutputFormat("Ext Address: '");
             OutputBytes(diagTlv.mExtAddress.m8, sizeof(diagTlv.mExtAddress.m8));
-            mServer->OutputFormat("\r\n");
+            mServer->OutputFormat("'\r\n");
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS:
             mServer->OutputFormat("Rloc16: 0x%04x\r\n", diagTlv.mAddr16);
@@ -3788,9 +3789,9 @@ void Interpreter::HandleDiagnosticGetResponse(const otMessage &aMessage, const I
             OutputLeaderData(diagTlv.mLeaderData, column + INDENT_SIZE);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_NETWORK_DATA:
-            mServer->OutputFormat("Network Data: ");
+            mServer->OutputFormat("Network Data: '");
             OutputBytes(diagTlv.mNetworkData, diagTlv.mNetworkDataCount);
-            mServer->OutputFormat("\r\n");
+            mServer->OutputFormat("'\r\n");
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST:
             mServer->OutputFormat("IP6 Address List:\r\n");
@@ -3822,9 +3823,9 @@ void Interpreter::HandleDiagnosticGetResponse(const otMessage &aMessage, const I
             }
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES:
-            mServer->OutputFormat("Channel Pages: ");
+            mServer->OutputFormat("Channel Pages: '");
             OutputBytes(diagTlv.mChannelPages, diagTlv.mChannelPageCount);
-            mServer->OutputFormat("\r\n");
+            mServer->OutputFormat("'\r\n");
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT:
             mServer->OutputFormat("Max Child Timeout: %u\r\n", diagTlv.mMaxChildTimeout);
