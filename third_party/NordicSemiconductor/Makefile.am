@@ -90,7 +90,6 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio                                                         \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/fem                                                     \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/fem/three_pin_gpio                                      \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/hal                                                     \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch                                                    \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch/raal                                               \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch/raal/softdevice                                    \

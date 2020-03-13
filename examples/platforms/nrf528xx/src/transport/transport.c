@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -36,10 +36,10 @@
 
 #include "transport-drivers.h"
 
-void nrf5TransportInit(bool pseudoReset)
+void nrf5TransportInit(bool aPseudoReset)
 {
 #if ((UART_AS_SERIAL_TRANSPORT == 1) || (USB_CDC_AS_SERIAL_TRANSPORT == 1))
-    if (!pseudoReset)
+    if (!aPseudoReset)
     {
         nrf5UartInit();
     }
@@ -54,10 +54,10 @@ void nrf5TransportInit(bool pseudoReset)
 #endif
 }
 
-void nrf5TransportDeinit(bool pseudoReset)
+void nrf5TransportDeinit(bool aPseudoReset)
 {
 #if ((UART_AS_SERIAL_TRANSPORT == 1) || (USB_CDC_AS_SERIAL_TRANSPORT == 1))
-    if (!pseudoReset)
+    if (!aPseudoReset)
     {
         nrf5UartDeinit();
     }

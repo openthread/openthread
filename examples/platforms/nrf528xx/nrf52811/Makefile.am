@@ -50,10 +50,9 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/include                                                                                  \
     -I$(top_srcdir)/examples/platforms                                                                       \
     -I$(top_srcdir)/examples/platforms/nrf528xx/src                                                          \
-    -I$(top_srcdir)/examples/platforms/nrf528xx/src/transport                                                    \
+    -I$(top_srcdir)/examples/platforms/nrf528xx/src/transport                                                \
     -I$(top_srcdir)/src/core                                                                                 \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio                                            \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/hal                                        \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/mac_features                               \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/fem/three_pin_gpio                         \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/mac_features/ack_generator                 \
@@ -114,9 +113,9 @@ PLATFORM_COMMON_SOURCES                                                         
     $(NULL)
 
 TRANSPORT_SOURCES                                                                                          = \
-    src/transport/spi-slave.c                                                                                    \
-    src/transport/uart.c                                                                                         \
-    src/transport/transport.c                                                                                    \
+    src/transport/spi-slave.c                                                                                \
+    src/transport/uart.c                                                                                     \
+    src/transport/transport.c                                                                                \
     $(NULL)
 
 SINGLEPHY_SOURCES                                                                                          = \

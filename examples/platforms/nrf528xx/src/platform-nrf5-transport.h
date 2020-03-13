@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -43,13 +43,13 @@
  * Initialization of transport.
  *
  */
-void nrf5TransportInit(bool pseudoReset);
+void nrf5TransportInit(bool aPseudoReset);
 
 /**
  * Deinitialization of transport.
  *
  */
-void nrf5TransportDeinit(bool pseudoReset);
+void nrf5TransportDeinit(bool aPseudoReset);
 
 /**
  * This function performs transport processing.
