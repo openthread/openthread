@@ -3740,7 +3740,7 @@ void Interpreter::HandleDiagnosticGetResponse(const otMessage &aMessage, const I
     otNetworkDiagIterator iterator = OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT;
     otError               error    = OT_ERROR_NONE;
 
-    mServer->OutputFormat("DIAG_GET.rsp/ans:");
+    mServer->OutputFormat("DIAG_GET.rsp/ans: ");
 
     while (length > 0)
     {
