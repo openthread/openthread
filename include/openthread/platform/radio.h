@@ -161,6 +161,29 @@ struct otExtAddress
 typedef struct otExtAddress otExtAddress;
 
 /**
+ * Converts an array representing an IEEE 802.15.4 Extended Address into a
+ * 64-bit value.
+ *
+ * This is necessary as the otExtAddress array is not necessary aligned for
+ * access as a 64-bit value.
+ */
+static inline uint64_t otExtAddressLoadUint64(const otExtAddress *address)
+{
+    uint64_t alignedValue = 0;
+    /* The following loads assume that the array is storing the 64-bit word
+     * in little-endian format. */
+    alignedValue |= (uint64_t)address->m8[0];
+    alignedValue |= ((uint64_t)address->m8[1]) << 8;
+    alignedValue |= ((uint64_t)address->m8[2]) << 16;
+    alignedValue |= ((uint64_t)address->m8[3]) << 24;
+    alignedValue |= ((uint64_t)address->m8[4]) << 32;
+    alignedValue |= ((uint64_t)address->m8[5]) << 40;
+    alignedValue |= ((uint64_t)address->m8[6]) << 48;
+    alignedValue |= ((uint64_t)address->m8[7]) << 56;
+    return alignedValue;
+}
+
+/**
  * This structure represents the IEEE 802.15.4 Header IE (Information Element) related information of a radio frame.
  */
 typedef struct otRadioIeInfo
