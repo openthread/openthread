@@ -48,6 +48,7 @@ class Node:
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
         self.node_type = os.getenv('NODE_TYPE', 'sim')
         self.env_version = os.getenv('THREAD_VERSION', '1.1')
+        self._initialized = False
 
         if version is not None:
             self.version = version
