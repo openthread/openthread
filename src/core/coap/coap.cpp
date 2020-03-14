@@ -254,9 +254,8 @@ otError CoapBase::SendAck(const Message &aRequest, const Ip6::MessageInfo &aMess
 
 otError CoapBase::SendEmptyAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
 {
-    return (aRequest.GetType() == OT_COAP_TYPE_CONFIRMABLE
-                ? SendHeaderResponse(OT_COAP_CODE_CHANGED, aRequest, aMessageInfo)
-                : OT_ERROR_INVALID_ARGS);
+    return (aRequest.IsConfirmable() ? SendHeaderResponse(OT_COAP_CODE_CHANGED, aRequest, aMessageInfo)
+                                     : OT_ERROR_INVALID_ARGS);
 }
 
 otError CoapBase::SendNotFound(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
@@ -269,7 +268,7 @@ otError CoapBase::SendEmptyMessage(Message::Type aType, const Message &aRequest,
     otError  error   = OT_ERROR_NONE;
     Message *message = NULL;
 
-    VerifyOrExit(aRequest.GetType() == OT_COAP_TYPE_CONFIRMABLE, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aRequest.IsConfirmable(), error = OT_ERROR_INVALID_ARGS);
 
     VerifyOrExit((message = NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 

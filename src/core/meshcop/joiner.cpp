@@ -490,8 +490,8 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Message &         aMessage,
 
     uint8_t state;
 
-    VerifyOrExit(mState == OT_JOINER_STATE_CONNECTED && aResult == OT_ERROR_NONE &&
-                 aMessage.GetType() == OT_COAP_TYPE_ACKNOWLEDGMENT && aMessage.GetCode() == OT_COAP_CODE_CHANGED);
+    VerifyOrExit(mState == OT_JOINER_STATE_CONNECTED && aResult == OT_ERROR_NONE && aMessage.IsAck() &&
+                 aMessage.GetCode() == OT_COAP_CODE_CHANGED);
 
     SuccessOrExit(Tlv::ReadUint8Tlv(aMessage, Tlv::kState, state));
 
@@ -520,7 +520,7 @@ void Joiner::HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo
     otError              error;
     otOperationalDataset dataset;
 
-    VerifyOrExit(mState == OT_JOINER_STATE_ENTRUST && aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE &&
+    VerifyOrExit(mState == OT_JOINER_STATE_ENTRUST && aMessage.IsConfirmable() &&
                      aMessage.GetCode() == OT_COAP_CODE_POST,
                  error = OT_ERROR_DROP);
 
