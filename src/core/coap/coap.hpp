@@ -252,7 +252,6 @@ private:
 
     struct ResponseMetadata
     {
-        void     Init(TimeMilli aDequeueTime, const Ip6::MessageInfo &aMessageInfo);
         otError  AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
         void     ReadFrom(const Message &aMessage);
         uint32_t GetRemainingTime(void) const;
@@ -533,15 +532,6 @@ protected:
 private:
     struct Metadata
     {
-        void Init(bool aConfirmable,
-#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-                  bool aObserve,
-#endif
-                  const Ip6::MessageInfo &aMessageInfo,
-                  ResponseHandler         aHandler,
-                  void *                  aContext,
-                  const TxParameters &    aTxParameters);
-
         otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
         void    ReadFrom(const Message &aMessage);
         int     UpdateIn(Message &aMessage) const;
