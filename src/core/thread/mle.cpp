@@ -1865,36 +1865,33 @@ void Mle::HandleDelayedResponseTimer(Timer &aTimer)
 
 void Mle::HandleDelayedResponseTimer(void)
 {
-    DelayedResponseHeader delayedResponse;
-    TimeMilli             now          = TimerMilli::GetNow();
-    TimeMilli             nextSendTime = now.GetDistantFuture();
-    Message *             message;
-    Message *             nextMessage;
+    DelayedResponseMetadata metadata;
+    TimeMilli               now          = TimerMilli::GetNow();
+    TimeMilli               nextSendTime = now.GetDistantFuture();
+    Message *               message;
+    Message *               nextMessage;
 
     for (message = mDelayedResponses.GetHead(); message != NULL; message = nextMessage)
     {
         nextMessage = message->GetNext();
 
-        delayedResponse.ReadFrom(*message);
+        metadata.ReadFrom(*message);
 
-        if (now < delayedResponse.GetSendTime())
+        if (now < metadata.mSendTime)
         {
-            if (nextSendTime > delayedResponse.GetSendTime())
+            if (nextSendTime > metadata.mSendTime)
             {
-                nextSendTime = delayedResponse.GetSendTime();
+                nextSendTime = metadata.mSendTime;
             }
         }
         else
         {
             mDelayedResponses.Dequeue(*message);
+            metadata.RemoveFrom(*message);
 
-            // Remove the DelayedResponseHeader from the message.
-            DelayedResponseHeader::RemoveFrom(*message);
-
-            // Send the message.
-            if (SendMessage(*message, delayedResponse.GetDestination()) == OT_ERROR_NONE)
+            if (SendMessage(*message, metadata.mDestination) == OT_ERROR_NONE)
             {
-                LogMleMessage("Send delayed message", delayedResponse.GetDestination());
+                LogMleMessage("Send delayed message", metadata.mDestination);
 
                 // Here enters fast poll mode, as for Rx-Off-when-idle device, the enqueued msg should
                 // be Mle Data Request.
@@ -1921,18 +1918,18 @@ void Mle::HandleDelayedResponseTimer(void)
 
 void Mle::RemoveDelayedDataResponseMessage(void)
 {
-    Message *             message = mDelayedResponses.GetHead();
-    DelayedResponseHeader delayedResponse;
+    Message *               message = mDelayedResponses.GetHead();
+    DelayedResponseMetadata metadata;
 
     while (message != NULL)
     {
-        delayedResponse.ReadFrom(*message);
+        metadata.ReadFrom(*message);
 
         if (message->GetSubType() == Message::kSubTypeMleDataResponse)
         {
             mDelayedResponses.Dequeue(*message);
             message->Free();
-            LogMleMessage("Remove Delayed Data Response", delayedResponse.GetDestination());
+            LogMleMessage("Remove Delayed Data Response", metadata.mDestination);
 
             // no more than one multicast MLE Data Response in Delayed Message Queue.
             break;
@@ -2537,13 +2534,16 @@ exit:
 
 otError Mle::AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay)
 {
-    otError               error = OT_ERROR_NONE;
-    DelayedResponseHeader delayedResponse(TimerMilli::GetNow() + aDelay, aDestination);
+    otError                 error = OT_ERROR_NONE;
+    DelayedResponseMetadata metadata;
 
-    SuccessOrExit(error = delayedResponse.AppendTo(aMessage));
+    metadata.mSendTime    = TimerMilli::GetNow() + aDelay;
+    metadata.mDestination = aDestination;
+
+    SuccessOrExit(error = metadata.AppendTo(aMessage));
     mDelayedResponses.Enqueue(aMessage);
 
-    mDelayedResponseTimer.FireAtIfEarlier(delayedResponse.GetSendTime());
+    mDelayedResponseTimer.FireAtIfEarlier(metadata.mSendTime);
 
 exit:
     return error;
@@ -4301,6 +4301,21 @@ void Mle::Challenge::GenerateRandom(void)
 bool Mle::Challenge::Matches(const uint8_t *aBuffer, uint8_t aLength) const
 {
     return (mLength == aLength) && (memcmp(mBuffer, aBuffer, aLength) == 0);
+}
+
+void Mle::DelayedResponseMetadata::ReadFrom(const Message &aMessage)
+{
+    uint16_t length = aMessage.GetLength();
+
+    OT_ASSERT(length >= sizeof(*this));
+    aMessage.Read(length - sizeof(*this), sizeof(*this), this);
+}
+
+void Mle::DelayedResponseMetadata::RemoveFrom(Message &aMessage) const
+{
+    otError error = aMessage.SetLength(aMessage.GetLength() - sizeof(*this));
+    OT_ASSERT(error == OT_ERROR_NONE);
+    OT_UNUSED_VARIABLE(error);
 }
 
 } // namespace Mle

@@ -91,6 +91,43 @@ class Header
 {
 public:
     /**
+     * MLE Command Types.
+     *
+     */
+    enum Command
+    {
+        kCommandLinkRequest          = 0,  ///< Link Request
+        kCommandLinkAccept           = 1,  ///< Link Accept
+        kCommandLinkAcceptAndRequest = 2,  ///< Link Accept and Reject
+        kCommandLinkReject           = 3,  ///< Link Reject
+        kCommandAdvertisement        = 4,  ///< Advertisement
+        kCommandUpdate               = 5,  ///< Update
+        kCommandUpdateRequest        = 6,  ///< Update Request
+        kCommandDataRequest          = 7,  ///< Data Request
+        kCommandDataResponse         = 8,  ///< Data Response
+        kCommandParentRequest        = 9,  ///< Parent Request
+        kCommandParentResponse       = 10, ///< Parent Response
+        kCommandChildIdRequest       = 11, ///< Child ID Request
+        kCommandChildIdResponse      = 12, ///< Child ID Response
+        kCommandChildUpdateRequest   = 13, ///< Child Update Request
+        kCommandChildUpdateResponse  = 14, ///< Child Update Response
+        kCommandAnnounce             = 15, ///< Announce
+        kCommandDiscoveryRequest     = 16, ///< Discovery Request
+        kCommandDiscoveryResponse    = 17, ///< Discovery Response
+        kCommandTimeSync             = 99, ///< Time Sync (applicable when OPENTHREAD_CONFIG_TIME_SYNC_ENABLE enabled)
+    };
+
+    /**
+     * MLE Security Suite
+     *
+     */
+    enum SecuritySuite
+    {
+        k154Security = 0,   ///< IEEE 802.15.4-2006 security.
+        kNoSecurity  = 255, ///< No security enabled.
+    };
+
+    /**
      * This method initializes the MLE header.
      *
      */
@@ -122,21 +159,11 @@ public:
      */
     uint8_t GetLength(void) const
     {
-        uint8_t rval = sizeof(mSecuritySuite) + sizeof(mCommand);
-
-        if (mSecuritySuite == k154Security)
-        {
-            rval += sizeof(mSecurityControl) + sizeof(mFrameCounter) + sizeof(mKeySource) + sizeof(mKeyIndex);
-        }
-
-        return rval;
+        return sizeof(mSecuritySuite) + sizeof(mCommand) +
+               ((mSecuritySuite == k154Security)
+                    ? sizeof(mSecurityControl) + sizeof(mFrameCounter) + sizeof(mKeySource) + sizeof(mKeyIndex)
+                    : 0);
     }
-
-    enum SecuritySuite
-    {
-        k154Security = 0,   ///< IEEE 802.15.4-2006 security.
-        kNoSecurity  = 255, ///< No security enabled.
-    };
 
     /**
      * This method returns the Security Suite value.
@@ -236,39 +263,6 @@ public:
     void SetFrameCounter(uint32_t aFrameCounter) { mFrameCounter = Encoding::LittleEndian::HostSwap32(aFrameCounter); }
 
     /**
-     * MLE Command Types.
-     *
-     */
-    enum Command
-    {
-        kCommandLinkRequest          = 0,  ///< Link Reject
-        kCommandLinkAccept           = 1,  ///< Link Accept
-        kCommandLinkAcceptAndRequest = 2,  ///< Link Accept and Reject
-        kCommandLinkReject           = 3,  ///< Link Reject
-        kCommandAdvertisement        = 4,  ///< Advertisement
-        kCommandUpdate               = 5,  ///< Update
-        kCommandUpdateRequest        = 6,  ///< Update Request
-        kCommandDataRequest          = 7,  ///< Data Request
-        kCommandDataResponse         = 8,  ///< Data Response
-        kCommandParentRequest        = 9,  ///< Parent Request
-        kCommandParentResponse       = 10, ///< Parent Response
-        kCommandChildIdRequest       = 11, ///< Child ID Request
-        kCommandChildIdResponse      = 12, ///< Child ID Response
-        kCommandChildUpdateRequest   = 13, ///< Child Update Request
-        kCommandChildUpdateResponse  = 14, ///< Child Update Response
-        kCommandAnnounce             = 15, ///< Announce
-        kCommandDiscoveryRequest     = 16, ///< Discovery Request
-        kCommandDiscoveryResponse    = 17, ///< Discovery Response
-
-        /**
-         * Applicable/Required only when time synchronization service
-         * (`OPENTHREAD_CONFIG_TIME_SYNC_ENABLE`) is enabled.
-         *
-         */
-        kCommandTimeSync = 99, ///< Time Synchronization
-    };
-
-    /**
      * This method returns the Command Type value.
      *
      * @returns The Command Type value.
@@ -276,14 +270,7 @@ public:
      */
     Command GetCommand(void) const
     {
-        if (mSecuritySuite == kNoSecurity)
-        {
-            return static_cast<Command>(mSecurityControl);
-        }
-        else
-        {
-            return static_cast<Command>(mCommand);
-        }
+        return static_cast<Command>((mSecuritySuite == kNoSecurity) ? mSecurityControl : mCommand);
     }
 
     /**
@@ -312,95 +299,6 @@ private:
     uint8_t  mKeyIndex;
     uint8_t  mCommand;
 } OT_TOOL_PACKED_END;
-
-/**
- * This class implements functionality required for delaying MLE responses.
- *
- */
-class DelayedResponseHeader
-{
-public:
-    /**
-     * Default constructor for the object.
-     *
-     */
-    DelayedResponseHeader(void)
-        : mDestination()
-        , mSendTime(0)
-    {
-        mDestination.Clear();
-    }
-
-    /**
-     * This constructor initializes the object with specific values.
-     *
-     * @param[in]  aSendTime     Time when the message shall be sent.
-     * @param[in]  aDestination  IPv6 address of the message destination.
-     *
-     */
-    DelayedResponseHeader(TimeMilli aSendTime, const Ip6::Address &aDestination)
-        : mDestination(aDestination)
-        , mSendTime(aSendTime)
-    {
-    }
-
-    /**
-     * This method appends delayed response header to the message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval OT_ERROR_NONE     Successfully appended the bytes.
-     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
-     *
-     */
-    otError AppendTo(Message &aMessage) { return aMessage.Append(this, sizeof(*this)); }
-
-    /**
-     * This method reads delayed response header from the message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     */
-    void ReadFrom(const Message &aMessage)
-    {
-        uint16_t length = aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-        OT_ASSERT(length == sizeof(*this));
-        OT_UNUSED_VARIABLE(length);
-    }
-
-    /**
-     * This method removes delayed response header from the message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     */
-    static void RemoveFrom(Message &aMessage)
-    {
-        otError error = aMessage.SetLength(aMessage.GetLength() - sizeof(DelayedResponseHeader));
-        OT_ASSERT(error == OT_ERROR_NONE);
-        OT_UNUSED_VARIABLE(error);
-    }
-
-    /**
-     * This method returns a time when the message shall be sent.
-     *
-     * @returns  A time when the message shall be sent.
-     *
-     */
-    TimeMilli GetSendTime(void) const { return mSendTime; }
-
-    /**
-     * This method returns a destination of the delayed message.
-     *
-     * @returns  A destination of the delayed message.
-     *
-     */
-    const Ip6::Address &GetDestination(void) const { return mDestination; }
-
-private:
-    Ip6::Address mDestination; ///< IPv6 address of the message destination.
-    TimeMilli    mSendTime;    ///< Time when the message shall be sent.
-};
 
 /**
  * This class implements MLE functionality required by the Thread EndDevices, Router, and Leader roles.
@@ -1732,6 +1630,16 @@ private:
     {
         kDataRequestNone,   ///< Not waiting for a Data Response.
         kDataRequestActive, ///< Data Request has been sent, Data Response is expected.
+    };
+
+    struct DelayedResponseMetadata
+    {
+        otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
+        void    ReadFrom(const Message &aMessage);
+        void    RemoveFrom(Message &aMessage) const;
+
+        Ip6::Address mDestination; // IPv6 address of the message destination.
+        TimeMilli    mSendTime;    // Time when the message shall be sent.
     };
 
     static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
