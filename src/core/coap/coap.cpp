@@ -834,61 +834,64 @@ void ResponsesQueue::EnqueueResponse(Message &               aMessage,
                                      const Ip6::MessageInfo &aMessageInfo,
                                      const TxParameters &    aTxParameters)
 {
-    otError          error        = OT_ERROR_NONE;
-    Message *        responseCopy = NULL;
-    uint16_t         messageCount;
-    uint16_t         bufferCount;
-    uint32_t         exchangeLifetime = aTxParameters.CalculateExchangeLifetime();
+    Message *        responseCopy;
     ResponseMetadata metadata;
 
-    metadata.mDequeueTime = TimerMilli::GetNow() + exchangeLifetime;
+    metadata.mDequeueTime = TimerMilli::GetNow() + aTxParameters.CalculateExchangeLifetime();
     metadata.mMessageInfo = aMessageInfo;
 
-    // Return success if matched response already exists in the cache.
     VerifyOrExit(FindMatchedResponse(aMessage, aMessageInfo) == NULL);
 
-    mQueue.GetInfo(messageCount, bufferCount);
-
-    if (messageCount >= kMaxCachedResponses)
-    {
-        DequeueOldestResponse();
-    }
+    UpdateQueue();
 
     VerifyOrExit((responseCopy = aMessage.Clone()) != NULL);
 
-    SuccessOrExit(error = metadata.AppendTo(*responseCopy));
+    VerifyOrExit(metadata.AppendTo(*responseCopy) == OT_ERROR_NONE, responseCopy->Free());
+
     mQueue.Enqueue(*responseCopy);
 
-    if (!mTimer.IsRunning())
-    {
-        mTimer.Start(exchangeLifetime);
-    }
+    mTimer.FireAtIfEarlier(metadata.mDequeueTime);
 
 exit:
+    return;
+}
 
-    if (error != OT_ERROR_NONE && responseCopy != NULL)
+void ResponsesQueue::UpdateQueue(void)
+{
+    uint16_t  msgCount    = 0;
+    Message * earliestMsg = NULL;
+    TimeMilli earliestDequeueTime(0);
+
+    // Check the number of messages in the queue and if number is at
+    // `kMaxCachedResponses` remove the one with earliest dequeue
+    // time.
+
+    for (Message *message = static_cast<Message *>(mQueue.GetHead()); message != NULL;
+         message          = static_cast<Message *>(message->GetNext()))
     {
-        responseCopy->Free();
+        ResponseMetadata metadata;
+
+        metadata.ReadFrom(*message);
+
+        if ((earliestMsg == NULL) || (metadata.mDequeueTime < earliestDequeueTime))
+        {
+            earliestMsg         = message;
+            earliestDequeueTime = metadata.mDequeueTime;
+        }
+
+        msgCount++;
     }
 
-    return;
+    if (msgCount >= kMaxCachedResponses)
+    {
+        DequeueResponse(*earliestMsg);
+    }
 }
 
 void ResponsesQueue::DequeueResponse(Message &aMessage)
 {
     mQueue.Dequeue(aMessage);
     aMessage.Free();
-}
-
-void ResponsesQueue::DequeueOldestResponse(void)
-{
-    Message *message;
-
-    VerifyOrExit((message = static_cast<Message *>(mQueue.GetHead())) != NULL);
-    DequeueResponse(*message);
-
-exit:
-    return;
 }
 
 void ResponsesQueue::DequeueAllResponses(void)
@@ -908,22 +911,33 @@ void ResponsesQueue::HandleTimer(Timer &aTimer)
 
 void ResponsesQueue::HandleTimer(void)
 {
-    Message *        message;
-    ResponseMetadata metadata;
+    TimeMilli now             = TimerMilli::GetNow();
+    TimeMilli nextDequeueTime = now.GetDistantFuture();
+    Message * nextMessage;
 
-    while ((message = static_cast<Message *>(mQueue.GetHead())) != NULL)
+    for (Message *message = static_cast<Message *>(mQueue.GetHead()); message != NULL; message = nextMessage)
     {
+        ResponseMetadata metadata;
+
+        nextMessage = static_cast<Message *>(message->GetNext());
+
         metadata.ReadFrom(*message);
 
-        if (TimerMilli::GetNow() >= metadata.mDequeueTime)
+        if (now >= metadata.mDequeueTime)
         {
             DequeueResponse(*message);
+            continue;
         }
-        else
+
+        if (metadata.mDequeueTime < nextDequeueTime)
         {
-            mTimer.Start(metadata.GetRemainingTime());
-            break;
+            nextDequeueTime = metadata.mDequeueTime;
         }
+    }
+
+    if (nextDequeueTime < now.GetDistantFuture())
+    {
+        mTimer.FireAt(nextDequeueTime);
     }
 }
 
@@ -933,13 +947,6 @@ void ResponsesQueue::ResponseMetadata::ReadFrom(const Message &aMessage)
 
     OT_ASSERT(length >= sizeof(*this));
     aMessage.Read(length - sizeof(*this), sizeof(*this), this);
-}
-
-uint32_t ResponsesQueue::ResponseMetadata::GetRemainingTime(void) const
-{
-    TimeMilli now = TimerMilli::GetNow();
-
-    return (mDequeueTime > now) ? mDequeueTime - now : 0;
 }
 
 /// Return product of @p aValueA and @p aValueB if no overflow otherwise 0.

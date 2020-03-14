@@ -211,12 +211,6 @@ public:
     void EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const TxParameters &aTxParameters);
 
     /**
-     * This method removes the oldest response from the cache.
-     *
-     */
-    void DequeueOldestResponse(void);
-
-    /**
      * This method removes all responses from the cache.
      *
      */
@@ -252,9 +246,8 @@ private:
 
     struct ResponseMetadata
     {
-        otError  AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
-        void     ReadFrom(const Message &aMessage);
-        uint32_t GetRemainingTime(void) const;
+        otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
+        void    ReadFrom(const Message &aMessage);
 
         TimeMilli        mDequeueTime;
         Ip6::MessageInfo mMessageInfo;
@@ -262,6 +255,7 @@ private:
 
     const Message *FindMatchedResponse(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo) const;
     void           DequeueResponse(Message &aMessage);
+    void           UpdateQueue(void);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
