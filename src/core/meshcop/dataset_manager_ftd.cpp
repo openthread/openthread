@@ -79,13 +79,13 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
     StateTlv::State state                    = StateTlv::kReject;
     Dataset         dataset(mLocal.GetType());
 
-    ActiveTimestampTlv  activeTimestamp;
-    PendingTimestampTlv pendingTimestamp;
-    ChannelTlv          channel;
-    uint16_t            sessionId;
-    otMeshLocalPrefix   meshLocalPrefix;
-    MasterKey           masterKey;
-    uint16_t            panId;
+    ActiveTimestampTlv   activeTimestamp;
+    PendingTimestampTlv  pendingTimestamp;
+    ChannelTlv           channel;
+    uint16_t             sessionId;
+    Mle::MeshLocalPrefix meshLocalPrefix;
+    MasterKey            masterKey;
+    uint16_t             panId;
 
     activeTimestamp.SetLength(0);
     pendingTimestamp.SetLength(0);
@@ -144,7 +144,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
 
     // check mesh local prefix
     if (Tlv::ReadTlv(aMessage, Tlv::kMeshLocalPrefix, &meshLocalPrefix, sizeof(meshLocalPrefix)) == OT_ERROR_NONE &&
-        memcmp(&meshLocalPrefix, &Get<Mle::MleRouter>().GetMeshLocalPrefix(), sizeof(meshLocalPrefix)))
+        meshLocalPrefix != Get<Mle::MleRouter>().GetMeshLocalPrefix())
     {
         doesAffectConnectivity = true;
     }
