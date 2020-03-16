@@ -108,14 +108,24 @@ python --version || die
 }
 
 build_cc1352() {
+    CMAKE_FLAGS="                        \
+        -DOT_COMPILE_WARNING_AS_ERROR=on \
+        -DOT_COMMISSIONER=on             \
+        -DOT_DHCP6_CLIENT=on             \
+        -DOT_DHCP6_SERVER=on             \
+        -DOT_DNS_CLIENT=on               \
+        -DOT_JOINER=on                   \
+        -DOT_SLAAC=on"
     git checkout -- . || die
     git clean -xfd || die
-    ./bootstrap || die
-    COMMISSIONER=1 JOINER=1 SLAAC=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DNS_CLIENT=1 make -f examples/Makefile-cc1352 || die
-    arm-none-eabi-size  output/cc1352/bin/ot-cli-ftd || die
-    arm-none-eabi-size  output/cc1352/bin/ot-cli-mtd || die
-    arm-none-eabi-size  output/cc1352/bin/ot-ncp-ftd || die
-    arm-none-eabi-size  output/cc1352/bin/ot-ncp-mtd || die
+    mkdir build && cd build || die
+    cmake -GNinja -DOT_PLATFORM=cc1352 -DCMAKE_TOOLCHAIN_FILE=examples/platforms/cc1352/arm-none-eabi.cmake ${CMAKE_FLAGS} .. || die
+    ninja || die
+    arm-none-eabi-size  examples/apps/cli/ot-cli-ftd || die
+    arm-none-eabi-size  examples/apps/cli/ot-cli-mtd || die
+    arm-none-eabi-size  examples/apps/ncp/ot-ncp-ftd || die
+    arm-none-eabi-size  examples/apps/ncp/ot-ncp-mtd || die
+    cd .. || die
 }
 
 build_cc2538() {
