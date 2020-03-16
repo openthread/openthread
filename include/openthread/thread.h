@@ -54,7 +54,7 @@ extern "C" {
  */
 
 /**
- * Maximum value length of all Network Diagnostic TLV.
+ * Maximum value length of Thread Base TLV.
  */
 #define OT_NETWORK_BASE_TLV_MAX_LENGTH 254
 
