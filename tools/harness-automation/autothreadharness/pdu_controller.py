@@ -96,8 +96,10 @@ class ApcPduController(PduController):
 
     def open(self, **params):
         """Open telnet connection
+        
         Args:
             params (dict), must contain two parameters "ip" - ip address or hostname and "port" - port number
+            
         Example:
             params = {'port': 23, 'ip': 'localhost'}
         """
@@ -127,8 +129,10 @@ class ApcPduController(PduController):
 
     def reboot(self, **params):
         """Reboot outlet
+        
         Args:
             params (dict), must contain parameter "outlet" - outlet number
+            
         Example:
             params = {'outlet': 1}
         """
