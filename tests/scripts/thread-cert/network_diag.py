@@ -14,7 +14,7 @@
 #     names of its contributors may be used to endorse or promote products
 #     derived from this software without specific prior written permission.
 #
-#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS'
 #  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 #  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 #  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -29,12 +29,11 @@
 
 import struct
 
+from enum import IntEnum
+
 import common
 import ipaddress
 import mle
-import network_layer
-
-from enum import IntEnum
 
 
 class TlvType(IntEnum):
@@ -45,7 +44,7 @@ class TlvType(IntEnum):
     CONNECTIVITY = 4
     ROUTE64 = 5
     LEADER_DATA = 6
-    NETWORK_DTA = 7
+    NETWORK_DATA = 7
     IPV6_ADDRESS_LIST = 8
     MAC_COUNTERS = 9
     BATTERY_LEVEL = 14
@@ -56,7 +55,7 @@ class TlvType(IntEnum):
     MAX_CHILD_TIMEOUT = 19
 
 
-class Ipv6AddressList(object):
+class Ipv6AddressList:
 
     def __init__(self, addresses: [ipaddress.IPv6Address]):
         self._addresses = addresses
@@ -70,10 +69,10 @@ class Ipv6AddressList(object):
         return self.addresses == other.addresses
 
     def __repr__(self):
-        return f"Ipv6AddressList({self.addresses})"
+        return f'Ipv6AddressList({self.addresses})'
 
 
-class Ipv6AddressListFactory(object):
+class Ipv6AddressListFactory:
 
     def parse(self, data, message_info):
         addresses = []
@@ -82,7 +81,7 @@ class Ipv6AddressListFactory(object):
         return Ipv6AddressList(addresses)
 
 
-class MacCounters(object):
+class MacCounters:
 
     def __init__(self, counters: [int]):
         self._counters = counters
@@ -133,25 +132,25 @@ class MacCounters(object):
         return self.counters == other.counters
 
     def __repr__(self):
-        return ("MacCounters(" +
-                f"if_in_unknown_protos={self.if_in_unknown_protos}, " +
-                f"if_in_errors={self.if_in_errors}, " +
-                f"if_out_errors={self.if_out_errors}, " +
-                f"if_in_ucast_pkts={self.if_in_ucast_pkts}, " +
-                f"if_in_broadcast_pkts={self.if_in_broadcast_pkts}, " +
-                f"if_in_discards={self.if_in_discards}, " +
-                f"if_out_ucast_pkts={self.if_out_ucast_pkts}, " +
-                f"if_out_broadcast_pkts={self.if_out_broadcast_pkts}, " +
-                f"if_out_discards={self.if_out_discards})")
+        return ('MacCounters(' +
+                f'if_in_unknown_protos={self.if_in_unknown_protos}, ' +
+                f'if_in_errors={self.if_in_errors}, ' +
+                f'if_out_errors={self.if_out_errors}, ' +
+                f'if_in_ucast_pkts={self.if_in_ucast_pkts}, ' +
+                f'if_in_broadcast_pkts={self.if_in_broadcast_pkts}, ' +
+                f'if_in_discards={self.if_in_discards}, ' +
+                f'if_out_ucast_pkts={self.if_out_ucast_pkts}, ' +
+                f'if_out_broadcast_pkts={self.if_out_broadcast_pkts}, ' +
+                f'if_out_discards={self.if_out_discards})')
 
 
-class MacCountersFactory(object):
+class MacCountersFactory:
 
     def parse(self, data, message_info):
-        return MacCounters(struct.unpack(">9I", data.read(4 * 9)))
+        return MacCounters(struct.unpack('>9I', data.read(4 * 9)))
 
 
-class BatteryLevel(object):
+class BatteryLevel:
 
     def __init__(self, battery_level: int):
         self._battery_level = battery_level
@@ -166,16 +165,16 @@ class BatteryLevel(object):
         return self.battery_level == other.battery_level
 
     def __repr__(self):
-        return f"BatteryLevel(battery_level={self.battery_level})"
+        return f'BatteryLevel(battery_level={self.battery_level})'
 
 
-class BatteryLevelFactory(object):
+class BatteryLevelFactory:
 
     def parse(self, data, message_info):
-        return BatteryLevel(struct.unpack(">B", data.read(1))[0])
+        return BatteryLevel(struct.unpack('>B', data.read(1))[0])
 
 
-class SupplyVoltage(object):
+class SupplyVoltage:
 
     def __init__(self, supply_voltage: int):
         self._supply_voltage = supply_voltage
@@ -190,16 +189,16 @@ class SupplyVoltage(object):
         return self.supply_voltage == other.supply_voltage
 
     def __repr__(self):
-        return f"SupplyVoltage(supply_voltage={self.supply_voltage})"
+        return f'SupplyVoltage(supply_voltage={self.supply_voltage})'
 
 
-class SupplyVoltageFactory(object):
+class SupplyVoltageFactory:
 
     def parse(self, data, message_info):
-        return SupplyVoltage(struct.unpack(">H", data.read(2))[0])
+        return SupplyVoltage(struct.unpack('>H', data.read(2))[0])
 
 
-class ChildTableEntry(object):
+class ChildTableEntry:
 
     def __init__(self, timeout: int, child_id: int, mode: mle.Mode):
         self._timeout = timeout
@@ -225,10 +224,10 @@ class ChildTableEntry(object):
                 self.child_id == other.child_id and self.mode == other.mode)
 
     def __repr__(self):
-        return f"ChildTableEntry(timeout={self.timeout}, child_id={self.child_id}, mode={self.mode})"
+        return f'ChildTableEntry(timeout={self.timeout}, child_id={self.child_id}, mode={self.mode})'
 
 
-class ChildTable(object):
+class ChildTable:
 
     def __init__(self, children: [ChildTableEntry]):
         self._children = children
@@ -243,15 +242,15 @@ class ChildTable(object):
         return self.children == other.children
 
     def __repr__(self):
-        return f"ChildTable({self.children})"
+        return f'ChildTable({self.children})'
 
 
-class ChildTableFactory(object):
+class ChildTableFactory:
 
     def parse(self, data, message_info):
         children = []
         while message_info.length > 0:
-            timeout_and_id = struct.unpack(">H", data.read(2))[0]
+            timeout_and_id = struct.unpack('>H', data.read(2))[0]
             message_info.length -= 2
 
             timeout = (timeout_and_id & 0xf800) >> 11
@@ -264,7 +263,7 @@ class ChildTableFactory(object):
         return ChildTable(children)
 
 
-class ChannelPages(object):
+class ChannelPages:
 
     def __init__(self, channel_pages: bytes):
         self._channel_pages = channel_pages
@@ -279,16 +278,16 @@ class ChannelPages(object):
         return self.channel_pages == other.channel_pages
 
     def __repr__(self):
-        return f"ChannelPages(channel_pages={self.channel_pages})"
+        return f'ChannelPages(channel_pages={self.channel_pages})'
 
 
-class ChannelPagesFactory(object):
+class ChannelPagesFactory:
 
     def parse(self, data, message_info):
         return ChannelPages(data.getvalue())
 
 
-class TypeList(object):
+class TypeList:
 
     def __init__(self, tlv_types: [int]):
         self._tlv_types = tlv_types
@@ -303,16 +302,16 @@ class TypeList(object):
         return self.tlv_types == other.tlv_types
 
     def __repr__(self):
-        return f"TypeList(tlv_types={self.tlv_types})"
+        return f'TypeList(tlv_types={self.tlv_types})'
 
 
-class TypeListFactory(object):
+class TypeListFactory:
 
     def parse(self, data, message_info):
         return TypeList([ord(t) for t in data.getvalue()])
 
 
-class MaxChildTimeout(object):
+class MaxChildTimeout:
 
     def __init__(self, max_child_timeout: int):
         self._max_child_timeout = max_child_timeout
@@ -327,10 +326,10 @@ class MaxChildTimeout(object):
         return self.max_child_timeout == other.max_child_timeout
 
     def __repr__(self):
-        return f"MaxChildTimeout(max_child_timeout={self.max_child_timeout})"
+        return f'MaxChildTimeout(max_child_timeout={self.max_child_timeout})'
 
 
-class MaxChildTimeoutFactory(object):
+class MaxChildTimeoutFactory:
 
     def parse(self, data, message_info):
-        return MaxChildTimeout(struct.unpack(">I", data.read(4))[0])
+        return MaxChildTimeout(struct.unpack('>I', data.read(4))[0])

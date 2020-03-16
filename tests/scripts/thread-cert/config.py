@@ -14,7 +14,7 @@
 #     names of its contributors may be used to endorse or promote products
 #     derived from this software without specific prior written permission.
 #
-#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS'
 #  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 #  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 #  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -440,7 +440,7 @@ def create_default_network_diag_tlv_factories():
             create_default_mle_tlv_route64_factory(),
         network_diag.TlvType.LEADER_DATA:
             mle.LeaderDataFactory(),
-        network_diag.TlvType.NETWORK_DTA:
+        network_diag.TlvType.NETWORK_DATA:
             create_default_mle_tlv_network_data_factory(),
         network_diag.TlvType.IPV6_ADDRESS_LIST:
             network_diag.Ipv6AddressListFactory(),
@@ -472,18 +472,18 @@ def create_default_uri_path_based_payload_factories():
     network_diag_tlvs_factory = create_default_network_diag_tlvs_factory()
 
     return {
-        "/a/as": network_layer_tlvs_factory,
-        "/a/aq": network_layer_tlvs_factory,
-        "/a/ar": network_layer_tlvs_factory,
-        "/a/ae": network_layer_tlvs_factory,
-        "/a/an": network_layer_tlvs_factory,
-        "/a/sd": network_layer_tlvs_factory,
-        "/c/lp": mesh_cop_tlvs_factory,
-        "/c/cs": mesh_cop_tlvs_factory,
-        "/d/da": network_diag_tlvs_factory,
-        "/d/dg": network_diag_tlvs_factory,
-        "/d/dq": network_diag_tlvs_factory,
-        "/d/dr": network_diag_tlvs_factory,
+        '/a/as': network_layer_tlvs_factory,
+        '/a/aq': network_layer_tlvs_factory,
+        '/a/ar': network_layer_tlvs_factory,
+        '/a/ae': network_layer_tlvs_factory,
+        '/a/an': network_layer_tlvs_factory,
+        '/a/sd': network_layer_tlvs_factory,
+        '/c/lp': mesh_cop_tlvs_factory,
+        '/c/cs': mesh_cop_tlvs_factory,
+        '/d/da': network_diag_tlvs_factory,
+        '/d/dg': network_diag_tlvs_factory,
+        '/d/dq': network_diag_tlvs_factory,
+        '/d/dr': network_diag_tlvs_factory,
     }
 
 
@@ -532,7 +532,7 @@ def create_default_ipv6_icmp_body_factories():
             ipv6.ICMPv6EchoBodyFactory(),
         ipv6.ICMP_ECHO_RESPONSE:
             ipv6.ICMPv6EchoBodyFactory(),
-        "default":
+        'default':
             ipv6.BytesPayloadFactory(),
     }
 

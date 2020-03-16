@@ -14,7 +14,7 @@
 #     names of its contributors may be used to endorse or promote products
 #     derived from this software without specific prior written permission.
 #
-#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS'
 #  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 #  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 #  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -133,7 +133,7 @@ class Cert_5_7_01_CoapDiagCommands_A(unittest.TestCase):
         tlv_types = [
             TlvType.EXT_ADDRESS, TlvType.ADDRESS16, TlvType.MODE,
             TlvType.CONNECTIVITY, TlvType.ROUTE64, TlvType.LEADER_DATA,
-            TlvType.NETWORK_DTA, TlvType.IPV6_ADDRESS_LIST,
+            TlvType.NETWORK_DATA, TlvType.IPV6_ADDRESS_LIST,
             TlvType.CHANNEL_PAGES
         ]
         self.nodes[LEADER].send_network_diag_get(dut_rloc, tlv_types)
