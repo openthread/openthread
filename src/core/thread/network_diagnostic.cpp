@@ -910,7 +910,6 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
         {
             Ip6AddressListTlv &ip6AddrList = static_cast<Ip6AddressListTlv &>(tlv);
 
-            tlvTotalLength = sizeof(tlv) + tlv.GetLength();
             VerifyOrExit(ip6AddrList.IsValid());
             VerifyOrExit(sizeof(aNetworkDiagTlv.mIp6AddrList) >= ip6AddrList.GetLength());
             VerifyOrExit(message.Read(offset + sizeof(ip6AddrList), ip6AddrList.GetLength(),
@@ -956,7 +955,6 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
         {
             ChildTableTlv &childTable = static_cast<ChildTableTlv &>(tlv);
 
-            tlvTotalLength = sizeof(childTable) + tlv.GetLength();
             VerifyOrExit(childTable.IsValid());
             VerifyOrExit(childTable.GetNumEntries() <= OT_ARRAY_LENGTH(aNetworkDiagTlv.mChildTable));
             for (uint8_t i = 0; i < childTable.GetNumEntries(); ++i)
@@ -971,8 +969,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
 
         case NetworkDiagnosticTlv::kChannelPages:
         {
-            tlvTotalLength = sizeof(tlv) + tlv.GetLength();
-            OT_ASSERT(sizeof(aNetworkDiagTlv.mChannelPages) >= tlv.GetLength());
+            VerifyOrExit(sizeof(aNetworkDiagTlv.mChannelPages) >= tlv.GetLength());
             VerifyOrExit(message.Read(offset + sizeof(tlv), tlv.GetLength(), aNetworkDiagTlv.mChannelPages) ==
                          tlv.GetLength());
             aNetworkDiagTlv.mChannelPageCount = tlv.GetLength();
