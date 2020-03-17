@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,12 +28,12 @@
 
 /**
  * @file
- *   This file includes the platform-specific configuration.
+ *   This file includes the transport-specific configuration.
  *
  */
 
-#ifndef PLATFORM_CONFIG_H_
-#define PLATFORM_CONFIG_H_
+#ifndef TRANSPORT_CONFIG_H_
+#define TRANSPORT_CONFIG_H_
 
 #include "nrf.h"
 #include "nrf_drv_clock.h"
