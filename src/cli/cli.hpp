@@ -153,8 +153,7 @@ public:
      * @param[in]   aAllowTruncate  TRUE if @p aBinLength may be less than what is required
      *                              to convert @p aHex to binary representation, FALSE otherwise.
      *
-     * @returns -1         Indicates @p aHex is a invalid hex string.
-     * @returns Otherwise  The number of bytes in the binary representation.
+     * @returns  The number of bytes in the binary representation, or -1 if @p aHex is not a valid hex string
      *
      */
     static int Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength, bool aAllowTruncate = false);
