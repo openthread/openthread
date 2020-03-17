@@ -45,6 +45,6 @@ die() {
 
 for file in "$@"; do
     echo "Checking ${file}"
-    "$(dirname "$0")"/clang-format.sh -style=file "${file}" | diff -u "${file}" - || die "${file} is not pretty."
+    "$(dirname "$0")"/clang-format -style=file "${file}" | diff -u "${file}" - || die "${file} is not pretty."
     [ -z "$(tail -c1 "${file}")" ] || die "${file} misses EOF newline."
 done
