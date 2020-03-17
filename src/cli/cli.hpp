@@ -139,7 +139,7 @@ public:
      * @param[out]  aUnsignedLong    A reference to where the parsed unsigned long is placed.
      *
      * @retval OT_ERROR_NONE          Successfully parsed the ASCII string.
-     * @retval OT_ERROR_INVALID_ARGS  @p aString is an invalid unsigned long integer.
+     * @retval OT_ERROR_INVALID_ARGS  @p aString is not a valid unsigned long integer.
      *
      */
     static otError ParseUnsignedLong(char *aString, unsigned long &aUnsignedLong);
