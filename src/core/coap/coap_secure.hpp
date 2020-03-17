@@ -325,7 +325,7 @@ private:
     MeshCoP::Dtls     mDtls;
     ConnectedCallback mConnectedCallback;
     void *            mConnectedContext;
-    MessageQueue      mTransmitQueue;
+    ot::MessageQueue  mTransmitQueue;
     TaskletContext    mTransmitTask;
 };
 
