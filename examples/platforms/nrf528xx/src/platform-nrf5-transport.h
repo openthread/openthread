@@ -37,7 +37,7 @@
 
 #include <stdbool.h>
 
-#include "platform-config.h"
+#include "transport-config.h"
 
 /**
  * Initialization of transport.
