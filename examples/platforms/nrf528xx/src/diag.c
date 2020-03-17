@@ -396,7 +396,7 @@ const struct PlatformDiagCommand sCommands[] = {
 
 otError otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
-    otError error = OT_ERROR_NOT_IMPLEMENTED;
+    otError error = OT_ERROR_INVALID_COMMAND;
     size_t  i;
 
     for (i = 0; i < otARRAY_LENGTH(sCommands); i++)

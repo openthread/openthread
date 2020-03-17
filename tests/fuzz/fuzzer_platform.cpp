@@ -520,7 +520,7 @@ otError otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *a
     OT_UNUSED_VARIABLE(aOutput);
     OT_UNUSED_VARIABLE(aOutputMaxLen);
 
-    return OT_ERROR_INVALID_ARGS;
+    return OT_ERROR_INVALID_COMMAND;
 }
 
 void otPlatDiagModeSet(bool aMode)
