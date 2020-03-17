@@ -170,6 +170,7 @@ NORDICSEMI_COMMON_SOURCES                                                       
     libraries/app_error/app_error_weak.c                                                                                  \
     libraries/utf_converter/utf.c                                                                                         \
     nrfx/drivers/src/nrfx_clock.c                                                                                         \
+    nrfx/drivers/src/nrfx_nvmc.c                                                                                          \
     nrfx/drivers/src/nrfx_power.c                                                                                         \
     nrfx/drivers/src/nrfx_spis.c                                                                                          \
     nrfx/drivers/src/nrfx_systick.c                                                                                       \
@@ -471,6 +472,7 @@ noinst_HEADERS                                                                  
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/nrfx_common.h                                              \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/nrfx_errors.h                                              \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_clock.h                                       \
+    $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_nvmc.h                                        \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_power_clock.h                                 \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_power.h                                       \
     $(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include/nrfx_spis.h                                        \
