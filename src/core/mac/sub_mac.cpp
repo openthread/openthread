@@ -285,8 +285,11 @@ void SubMac::BeginTransmit(void)
         mTransmitFrame.SetCsmaCaEnabled(true);
     }
 
-    error = Get<Radio>().Receive(mTransmitFrame.GetChannel());
-    OT_ASSERT(error == OT_ERROR_NONE);
+    if ((mRadioCaps & OT_RADIO_CAPS_SLEEP_TO_TX) == 0)
+    {
+        error = Get<Radio>().Receive(mTransmitFrame.GetChannel());
+        OT_ASSERT(error == OT_ERROR_NONE);
+    }
 
     SetState(kStateTransmit);
 
