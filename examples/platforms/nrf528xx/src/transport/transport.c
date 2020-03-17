@@ -77,3 +77,11 @@ void nrf5TransportProcess(void)
     nrf5SpiSlaveProcess();
 #endif
 }
+
+bool nrf5TransportPseudoResetRequired(void)
+{
+#if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+    return true;
+#else // if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+    return false;
+}

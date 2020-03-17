@@ -57,4 +57,10 @@ void nrf5TransportDeinit(bool aPseudoReset);
  */
 void nrf5TransportProcess(void);
 
+/**
+ * This function returns true if transport driver should not be affected
+ * by reset. Otherwise, false is returned.
+ */
+bool nrf5TransportPseudoResetRequired(void);
+
 #endif
