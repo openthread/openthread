@@ -2543,6 +2543,7 @@ otError Interpreter::ProcessRouteAdd(int argc, char *argv[])
 
     {
         unsigned long length;
+
         SuccessOrExit(error = ParseUnsignedLong(prefixLengthStr, length));
         config.mPrefix.mLength = static_cast<uint8_t>(length);
     }
