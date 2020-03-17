@@ -84,4 +84,5 @@ bool nrf5TransportPseudoResetRequired(void)
     return true;
 #else // if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
     return false;
+#endif
 }
