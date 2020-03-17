@@ -2602,6 +2602,7 @@ otError Interpreter::ProcessRouteRemove(int argc, char *argv[])
 
     {
         unsigned long length;
+
         SuccessOrExit(error = ParseUnsignedLong(prefixLengthStr, length));
         prefix.mLength = static_cast<uint8_t>(length);
     }
