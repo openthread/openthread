@@ -245,6 +245,10 @@ typedef enum otRadioState
  *  +----------+  Disable() +-------+   Sleep()  +---------+   Receive()   +----------+
  *                                    (Radio OFF)                 or
  *                                                        signal TransmitDone
+ *
+ * During the IEEE 802.15.4 data request command the transition Sleep->Receive->Transmit
+ * can be shortened to direct transition from Sleep to Transmit if the platform supports
+ * the OT_RADIO_CAPS_SLEEP_TO_TX capability.
  */
 
 /**
@@ -559,7 +563,9 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance);
  * requesting transmission.  The channel and transmit power are also included in the otRadioFrame structure.
  *
  * The transmit sequence consists of:
- * 1. Transitioning the radio to Transmit from Receive.
+ * 1. Transitioning the radio to Transmit from one of the following states:
+ *    - Receive if RX is on when the device is idle or OT_RADIO_CAPS_SLEEP_TO_TX is not supported
+ *    - Sleep if RX is off when the device is idle and OT_RADIO_CAPS_SLEEP_TO_TX is supported.
  * 2. Transmits the psdu on the given channel and at the given transmit power.
  *
  * @param[in] aInstance  The OpenThread instance structure.
