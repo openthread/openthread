@@ -127,7 +127,7 @@ public:
      * @param[out]  aLong    A reference to where the parsed long is placed.
      *
      * @retval OT_ERROR_NONE          Successfully parsed the ASCII string.
-     * @retval OT_ERROR_INVALID_ARGS  @p aString is an invalid long integer.
+     * @retval OT_ERROR_INVALID_ARGS  @p aString is not a valid long integer.
      *
      */
     static otError ParseLong(char *aString, long &aLong);
