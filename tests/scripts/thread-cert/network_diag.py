@@ -30,6 +30,7 @@
 import struct
 
 from enum import IntEnum
+from typing import List
 
 import common
 import ipaddress
@@ -57,7 +58,7 @@ class TlvType(IntEnum):
 
 class Ipv6AddressList:
 
-    def __init__(self, addresses: [ipaddress.IPv6Address]):
+    def __init__(self, addresses: List[ipaddress.IPv6Address]):
         self._addresses = addresses
 
     @property
@@ -83,7 +84,7 @@ class Ipv6AddressListFactory:
 
 class MacCounters:
 
-    def __init__(self, counters: [int]):
+    def __init__(self, counters: List[int]):
         self._counters = counters
 
     @property
@@ -229,8 +230,8 @@ class ChildTableEntry:
 
 class ChildTable:
 
-    def __init__(self, children: [ChildTableEntry]):
-        self._children = children
+    def __init__(self, children: List[ChildTableEntry]):
+        self._children = sorted(children, key=lambda child: child.child_id)
 
     @property
     def children(self):
@@ -289,7 +290,7 @@ class ChannelPagesFactory:
 
 class TypeList:
 
-    def __init__(self, tlv_types: [int]):
+    def __init__(self, tlv_types: List[int]):
         self._tlv_types = tlv_types
 
     @property
