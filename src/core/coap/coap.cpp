@@ -202,12 +202,22 @@ otError CoapBase::SendMessage(Message &               aMessage,
         }
 #endif // OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
 
-        // Enqueue and send
-        metadata.Init(aMessage.IsConfirmable(),
+        metadata.mSourceAddress            = aMessageInfo.GetSockAddr();
+        metadata.mDestinationPort          = aMessageInfo.GetPeerPort();
+        metadata.mDestinationAddress       = aMessageInfo.GetPeerAddr();
+        metadata.mResponseHandler          = aHandler;
+        metadata.mResponseContext          = aContext;
+        metadata.mRetransmissionsRemaining = aTxParameters.mMaxRetransmit;
+        metadata.mRetransmissionTimeout    = aTxParameters.CalculateInitialRetransmissionTimeout();
+        metadata.mAcknowledged             = false;
+        metadata.mConfirmable              = aMessage.IsConfirmable();
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-                      observe,
+        metadata.mObserve = observe;
 #endif
-                      aMessageInfo, aHandler, aContext, aTxParameters);
+        metadata.mNextTimerShot =
+            TimerMilli::GetNow() +
+            (metadata.mConfirmable ? metadata.mRetransmissionTimeout : aTxParameters.CalculateMaxTransmitWait());
+
         storedCopy = CopyAndEnqueueMessage(aMessage, copyLength, metadata);
         VerifyOrExit(storedCopy != NULL, error = OT_ERROR_NO_BUFS);
     }
@@ -760,31 +770,6 @@ exit:
     }
 }
 
-void CoapBase::Metadata::Init(bool aConfirmable,
-#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-                              bool aObserve,
-#endif
-                              const Ip6::MessageInfo &aMessageInfo,
-                              ResponseHandler         aHandler,
-                              void *                  aContext,
-                              const TxParameters &    aTxParameters)
-{
-    mSourceAddress            = aMessageInfo.GetSockAddr();
-    mDestinationPort          = aMessageInfo.GetPeerPort();
-    mDestinationAddress       = aMessageInfo.GetPeerAddr();
-    mResponseHandler          = aHandler;
-    mResponseContext          = aContext;
-    mRetransmissionsRemaining = aTxParameters.mMaxRetransmit;
-    mRetransmissionTimeout    = aTxParameters.CalculateInitialRetransmissionTimeout();
-    mAcknowledged             = false;
-    mConfirmable              = aConfirmable;
-#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    mObserve = aObserve;
-#endif
-    mNextTimerShot =
-        TimerMilli::GetNow() + (aConfirmable ? mRetransmissionTimeout : aTxParameters.CalculateMaxTransmitWait());
-}
-
 void CoapBase::Metadata::ReadFrom(const Message &aMessage)
 {
     uint16_t length = aMessage.GetLength();
@@ -849,60 +834,64 @@ void ResponsesQueue::EnqueueResponse(Message &               aMessage,
                                      const Ip6::MessageInfo &aMessageInfo,
                                      const TxParameters &    aTxParameters)
 {
-    otError          error        = OT_ERROR_NONE;
-    Message *        responseCopy = NULL;
-    uint16_t         messageCount;
-    uint16_t         bufferCount;
-    uint32_t         exchangeLifetime = aTxParameters.CalculateExchangeLifetime();
+    Message *        responseCopy;
     ResponseMetadata metadata;
 
-    metadata.Init(TimerMilli::GetNow() + exchangeLifetime, aMessageInfo);
+    metadata.mDequeueTime = TimerMilli::GetNow() + aTxParameters.CalculateExchangeLifetime();
+    metadata.mMessageInfo = aMessageInfo;
 
-    // Return success if matched response already exists in the cache.
     VerifyOrExit(FindMatchedResponse(aMessage, aMessageInfo) == NULL);
 
-    mQueue.GetInfo(messageCount, bufferCount);
-
-    if (messageCount >= kMaxCachedResponses)
-    {
-        DequeueOldestResponse();
-    }
+    UpdateQueue();
 
     VerifyOrExit((responseCopy = aMessage.Clone()) != NULL);
 
-    SuccessOrExit(error = metadata.AppendTo(*responseCopy));
+    VerifyOrExit(metadata.AppendTo(*responseCopy) == OT_ERROR_NONE, responseCopy->Free());
+
     mQueue.Enqueue(*responseCopy);
 
-    if (!mTimer.IsRunning())
-    {
-        mTimer.Start(exchangeLifetime);
-    }
+    mTimer.FireAtIfEarlier(metadata.mDequeueTime);
 
 exit:
+    return;
+}
 
-    if (error != OT_ERROR_NONE && responseCopy != NULL)
+void ResponsesQueue::UpdateQueue(void)
+{
+    uint16_t  msgCount    = 0;
+    Message * earliestMsg = NULL;
+    TimeMilli earliestDequeueTime(0);
+
+    // Check the number of messages in the queue and if number is at
+    // `kMaxCachedResponses` remove the one with earliest dequeue
+    // time.
+
+    for (Message *message = static_cast<Message *>(mQueue.GetHead()); message != NULL;
+         message          = static_cast<Message *>(message->GetNext()))
     {
-        responseCopy->Free();
+        ResponseMetadata metadata;
+
+        metadata.ReadFrom(*message);
+
+        if ((earliestMsg == NULL) || (metadata.mDequeueTime < earliestDequeueTime))
+        {
+            earliestMsg         = message;
+            earliestDequeueTime = metadata.mDequeueTime;
+        }
+
+        msgCount++;
     }
 
-    return;
+    if (msgCount >= kMaxCachedResponses)
+    {
+        DequeueResponse(*earliestMsg);
+    }
 }
 
 void ResponsesQueue::DequeueResponse(Message &aMessage)
 {
     mQueue.Dequeue(aMessage);
     aMessage.Free();
-}
-
-void ResponsesQueue::DequeueOldestResponse(void)
-{
-    Message *message;
-
-    VerifyOrExit((message = static_cast<Message *>(mQueue.GetHead())) != NULL);
-    DequeueResponse(*message);
-
-exit:
-    return;
 }
 
 void ResponsesQueue::DequeueAllResponses(void)
@@ -922,29 +911,34 @@ void ResponsesQueue::HandleTimer(Timer &aTimer)
 
 void ResponsesQueue::HandleTimer(void)
 {
-    Message *        message;
-    ResponseMetadata metadata;
+    TimeMilli now             = TimerMilli::GetNow();
+    TimeMilli nextDequeueTime = now.GetDistantFuture();
+    Message * nextMessage;
 
-    while ((message = static_cast<Message *>(mQueue.GetHead())) != NULL)
+    for (Message *message = static_cast<Message *>(mQueue.GetHead()); message != NULL; message = nextMessage)
     {
+        ResponseMetadata metadata;
+
+        nextMessage = static_cast<Message *>(message->GetNext());
+
         metadata.ReadFrom(*message);
 
-        if (TimerMilli::GetNow() >= metadata.mDequeueTime)
+        if (now >= metadata.mDequeueTime)
         {
             DequeueResponse(*message);
+            continue;
         }
-        else
+
+        if (metadata.mDequeueTime < nextDequeueTime)
         {
-            mTimer.Start(metadata.GetRemainingTime());
-            break;
+            nextDequeueTime = metadata.mDequeueTime;
         }
     }
-}
 
-void ResponsesQueue::ResponseMetadata::Init(TimeMilli aDequeueTime, const Ip6::MessageInfo &aMessageInfo)
-{
-    mDequeueTime = aDequeueTime;
-    mMessageInfo = aMessageInfo;
+    if (nextDequeueTime < now.GetDistantFuture())
+    {
+        mTimer.FireAt(nextDequeueTime);
+    }
 }
 
 void ResponsesQueue::ResponseMetadata::ReadFrom(const Message &aMessage)
@@ -953,13 +947,6 @@ void ResponsesQueue::ResponseMetadata::ReadFrom(const Message &aMessage)
 
     OT_ASSERT(length >= sizeof(*this));
     aMessage.Read(length - sizeof(*this), sizeof(*this), this);
-}
-
-uint32_t ResponsesQueue::ResponseMetadata::GetRemainingTime(void) const
-{
-    TimeMilli now = TimerMilli::GetNow();
-
-    return (mDequeueTime > now) ? mDequeueTime - now : 0;
 }
 
 /// Return product of @p aValueA and @p aValueB if no overflow otherwise 0.

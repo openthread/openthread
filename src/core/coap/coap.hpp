@@ -211,12 +211,6 @@ public:
     void EnqueueResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const TxParameters &aTxParameters);
 
     /**
-     * This method removes the oldest response from the cache.
-     *
-     */
-    void DequeueOldestResponse(void);
-
-    /**
      * This method removes all responses from the cache.
      *
      */
@@ -252,10 +246,8 @@ private:
 
     struct ResponseMetadata
     {
-        void     Init(TimeMilli aDequeueTime, const Ip6::MessageInfo &aMessageInfo);
-        otError  AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
-        void     ReadFrom(const Message &aMessage);
-        uint32_t GetRemainingTime(void) const;
+        otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
+        void    ReadFrom(const Message &aMessage);
 
         TimeMilli        mDequeueTime;
         Ip6::MessageInfo mMessageInfo;
@@ -263,6 +255,7 @@ private:
 
     const Message *FindMatchedResponse(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo) const;
     void           DequeueResponse(Message &aMessage);
+    void           UpdateQueue(void);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
@@ -533,15 +526,6 @@ protected:
 private:
     struct Metadata
     {
-        void Init(bool aConfirmable,
-#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-                  bool aObserve,
-#endif
-                  const Ip6::MessageInfo &aMessageInfo,
-                  ResponseHandler         aHandler,
-                  void *                  aContext,
-                  const TxParameters &    aTxParameters);
-
         otError AppendTo(Message &aMessage) const { return aMessage.Append(this, sizeof(*this)); }
         void    ReadFrom(const Message &aMessage);
         int     UpdateIn(Message &aMessage) const;
