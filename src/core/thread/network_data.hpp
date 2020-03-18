@@ -502,6 +502,43 @@ protected:
      */
     otError SendServerDataNotification(uint16_t aRloc16);
 
+    /**
+     * This static method searches in a given sequence of TLVs to find the first TLV with a given TLV Type.
+     *
+     * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
+     * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
+     * @param[in]  aType   The TLV type to find.
+     *
+     * @returns A pointer to the TLV if found, or NULL if not found.
+     *
+     */
+    static NetworkDataTlv *FindTlv(NetworkDataTlv *aStart, NetworkDataTlv *aEnd, NetworkDataTlv::Type aType);
+
+    /**
+     * This static method searches in a given sequence of TLVs to find the first TLV with a given TLV Type and stable
+     * flag.
+     *
+     * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
+     * @param [in] aEnd    A pointer to the end of the sequence of TLVs.
+     * @param[in]  aType   The TLV type to find.
+     * @param[in]  aStable TRUE if to find a stable TLV, FALSE otherwise.
+     *
+     * @returns A pointer to the TLV if found, or NULL if not found.
+     *
+     */
+    static NetworkDataTlv *FindTlv(NetworkDataTlv *     aStart,
+                                   NetworkDataTlv *     aEnd,
+                                   NetworkDataTlv::Type aType,
+                                   bool                 aStable);
+
+    /**
+     * This method returns a pointer to the end of Network Data TLV sequence.
+     *
+     * @returns A pointer to the end of Network Data TLV sequence.
+     *
+     */
+    NetworkDataTlv *GetTlvsEnd(void) { return reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength); }
+
     uint8_t mTlvs[kMaxSize]; ///< The Network Data buffer.
     uint8_t mLength;         ///< The number of valid bytes in @var mTlvs.
 
@@ -528,6 +565,19 @@ private:
         void    SetSubTlvOffset(uint8_t aOffset) { mIteratorBuffer[kSubTlvPosition] = aOffset; }
         void    SetEntryIndex(uint8_t aIndex) { mIteratorBuffer[kEntryPosition] = aIndex; }
 
+        bool IsNewEntry(void) const { return GetEntryIndex() == 0; }
+        void MarkEntryAsNotnew(void) { SetEntryIndex(1); }
+
+        NetworkDataTlv *GetTlv(uint8_t *aTlvs) const
+        {
+            return reinterpret_cast<NetworkDataTlv *>(aTlvs + GetTlvOffset());
+        }
+
+        NetworkDataTlv *GetSubTlv(NetworkDataTlv *aSubTlvs)
+        {
+            return reinterpret_cast<NetworkDataTlv *>(reinterpret_cast<uint8_t *>(aSubTlvs) + GetSubTlvOffset());
+        }
+
         void SaveTlvOffset(const NetworkDataTlv *aTlv, const uint8_t *aTlvs)
         {
             SetTlvOffset(static_cast<uint8_t>(reinterpret_cast<const uint8_t *>(aTlv) - aTlvs));
@@ -549,6 +599,14 @@ private:
 
         uint8_t *mIteratorBuffer;
     };
+
+    NetworkDataTlv *FindTlv(NetworkDataIterator &aIterator, NetworkDataTlv::Type aTlvType);
+    void            IterateToNextTlv(NetworkDataIterator &aIterator);
+    NetworkDataTlv *FindSubTlv(NetworkDataIterator &aIterator,
+                               NetworkDataTlv::Type aSubTlvType,
+                               NetworkDataTlv *     aSubTlvs,
+                               NetworkDataTlv *     aSubTlvsEnd);
+    void            IterateToNextSubTlv(NetworkDataIterator &aIterator, NetworkDataTlv *aSubTlvs);
 
     const Type mType;
     TimeMilli  mLastAttempt;
