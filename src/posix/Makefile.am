@@ -40,12 +40,6 @@ SUBDIRS                                                                = \
     platform                                                             \
     $(NULL)
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                                                         = \
-    platform                                                             \
-    $(NULL)
-
 CPPFLAGS_COMMON                                                        = \
     -I$(top_srcdir)/include                                              \
     -I$(top_srcdir)/src/core                                             \
@@ -76,7 +70,7 @@ bin_PROGRAMS                                                           = \
 if OPENTHREAD_ENABLE_EXECUTABLE
 ot_ncp_CPPFLAGS                                                        = \
     $(CPPFLAGS_COMMON)                                                   \
-    -DOPENTHREAD_POSIX_APP_TYPE=1                                        \
+    -DOPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_NCP                    \
     $(NULL)
 
 ot_ncp_SOURCES                                                         = \
@@ -100,12 +94,12 @@ ot_ncp_LIBTOOLFLAGS                                                    = \
     $(LIBTOOLFLAGS_COMMON)                                               \
     $(NULL)
 
-if OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
 bin_PROGRAMS                                                          += \
     ot-ctl                                                               \
     ot-daemon                                                            \
     $(NULL)
-else # OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+else # OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
 if OPENTHREAD_ENABLE_CLI
 bin_PROGRAMS                                                          += \
     ot-cli                                                               \
@@ -116,7 +110,7 @@ bin_PROGRAMS                                                          += \
     ot-ncp                                                               \
     $(NULL)
 endif
-endif # OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+endif # OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
 
 ot_ctl_SOURCES                                                         = \
     client.cpp                                                           \
@@ -128,7 +122,7 @@ ot_ctl_CPPFLAGS                                                        = \
 
 ot_daemon_CPPFLAGS                                                     = \
     $(CPPFLAGS_COMMON)                                                   \
-    -DOPENTHREAD_POSIX_APP_TYPE=2                                        \
+    -DOPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_CLI                    \
     $(NULL)
 
 ot_daemon_SOURCES                                                      = \
@@ -156,7 +150,7 @@ ot_daemon_LIBTOOLFLAGS                                                 = \
 
 ot_cli_CPPFLAGS                                                        = \
     $(CPPFLAGS_COMMON)                                                   \
-    -DOPENTHREAD_POSIX_APP_TYPE=2                                        \
+    -DOPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_CLI                    \
     $(NULL)
 
 ot_cli_SOURCES                                                         = \

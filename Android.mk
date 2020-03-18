@@ -37,10 +37,9 @@ OPENTHREAD_COMMON_FLAGS                                          := \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>        \
     -DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1                  \
     -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                         \
-    -DOPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE=1               \
+    -DOPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE=1                      \
     -DOPENTHREAD_FTD=1                                              \
     -DOPENTHREAD_POSIX=1                                            \
-    -DOPENTHREAD_POSIX_RCP_UART_ENABLE=1                            \
     -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1          \
     -DPACKAGE=\"openthread\"                                        \
     -DPACKAGE_BUGREPORT=\"openthread-devel@googlegroups.com\"       \
@@ -64,10 +63,16 @@ ifeq ($(USE_OTBR_DAEMON), 1)
 OPENTHREAD_COMMON_FLAGS                                          += \
     -DOPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE=1                     \
     -DOPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE=1                       \
-    -DOPENTHREAD_ENABLE_POSIX_APP_DAEMON                            \
+    -DOPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE=1                       \
     $(NULL)
 else
 OPENTHREAD_COMMON_FLAGS += -DOPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1
+endif
+
+ifeq ($(USE_OT_RCP_BUS), spi)
+OPENTHREAD_COMMON_FLAGS += -DOPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE=1
+else
+OPENTHREAD_COMMON_FLAGS += -DOPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE=1
 endif
 
 # Enable all optional features for CI tests.
@@ -216,7 +221,6 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/announce_begin_server.cpp               \
     src/core/thread/announce_sender.cpp                     \
     src/core/thread/child_table.cpp                         \
-    src/core/thread/device_mode.cpp                         \
     src/core/thread/energy_scan_server.cpp                  \
     src/core/thread/indirect_sender.cpp                     \
     src/core/thread/key_manager.cpp                         \
@@ -227,6 +231,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/mesh_forwarder_mtd.cpp                  \
     src/core/thread/mle.cpp                                 \
     src/core/thread/mle_router.cpp                          \
+    src/core/thread/mle_types.cpp                           \
     src/core/thread/network_data.cpp                        \
     src/core/thread/network_data_leader.cpp                 \
     src/core/thread/network_data_leader_ftd.cpp             \
@@ -310,7 +315,6 @@ LOCAL_C_INCLUDES                                         := \
 LOCAL_CFLAGS                                                                := \
     $(OPENTHREAD_COMMON_FLAGS)                                                 \
     -DOPENTHREAD_CONFIG_UART_CLI_RAW=1                                         \
-    -DOPENTHREAD_POSIX_APP_TYPE=2                                              \
     $(OPENTHREAD_PROJECT_CFLAGS)                                               \
     $(NULL)
 
@@ -352,8 +356,7 @@ LOCAL_C_INCLUDES                                         := \
 
 LOCAL_CFLAGS                                                                := \
     $(OPENTHREAD_COMMON_FLAGS)                                                 \
-    -DOPENTHREAD_CONFIG_UART_CLI_RAW=1                                         \
-    -DOPENTHREAD_POSIX_APP_TYPE=2                                              \
+    -DOPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_CLI                          \
     $(OPENTHREAD_PROJECT_CFLAGS)                                               \
     $(NULL)
 
@@ -390,7 +393,6 @@ LOCAL_C_INCLUDES                                         := \
 
 LOCAL_CFLAGS                                                                := \
     $(OPENTHREAD_COMMON_FLAGS)                                                 \
-    -DOPENTHREAD_POSIX_APP_TYPE=1                                              \
     $(OPENTHREAD_PROJECT_CFLAGS)                                               \
     $(NULL)
 
@@ -429,7 +431,7 @@ LOCAL_C_INCLUDES                                         := \
 
 LOCAL_CFLAGS                                                                := \
     $(OPENTHREAD_COMMON_FLAGS)                                                 \
-    -DOPENTHREAD_POSIX_APP_TYPE=1                                              \
+    -DOPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_NCP                          \
     $(OPENTHREAD_PROJECT_CFLAGS)                                               \
     $(NULL)
 

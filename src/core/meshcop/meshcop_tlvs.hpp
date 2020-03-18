@@ -51,11 +51,11 @@
 #include "net/ip6_address.hpp"
 #include "radio/radio.hpp"
 #include "thread/key_manager.hpp"
+#include "thread/mle_types.hpp"
 
 namespace ot {
 namespace MeshCoP {
 
-using ot::Encoding::Reverse32;
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
 
@@ -605,7 +605,7 @@ public:
      * @returns The Mesh Local Prefix value.
      *
      */
-    const otMeshLocalPrefix &GetMeshLocalPrefix(void) const { return mMeshLocalPrefix; }
+    const Mle::MeshLocalPrefix &GetMeshLocalPrefix(void) const { return mMeshLocalPrefix; }
 
     /**
      * This method sets the Mesh Local Prefix value.
@@ -613,10 +613,10 @@ public:
      * @param[in]  aMeshLocalPrefix  A pointer to the Mesh Local Prefix value.
      *
      */
-    void SetMeshLocalPrefix(const otMeshLocalPrefix &aMeshLocalPrefix) { mMeshLocalPrefix = aMeshLocalPrefix; }
+    void SetMeshLocalPrefix(const Mle::MeshLocalPrefix &aMeshLocalPrefix) { mMeshLocalPrefix = aMeshLocalPrefix; }
 
 private:
-    otMeshLocalPrefix mMeshLocalPrefix;
+    Mle::MeshLocalPrefix mMeshLocalPrefix;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -1008,53 +1008,6 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Commissioner UDP Port TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class CommissionerUdpPortTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kCommissionerUdpPort);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the UDP Port value.
-     *
-     * @returns The UDP Port value.
-     *
-     */
-    uint16_t GetUdpPort(void) const { return HostSwap16(mUdpPort); }
-
-    /**
-     * This method sets the UDP Port value.
-     *
-     * @param[in]  aUdpPort  The UDP Port value.
-     *
-     */
-    void SetUdpPort(uint16_t aUdpPort) { mUdpPort = HostSwap16(aUdpPort); }
-
-private:
-    uint16_t mUdpPort;
-} OT_TOOL_PACKED_END;
-
-/**
  * This class implements State TLV generation and parsing.
  *
  */
@@ -1087,9 +1040,9 @@ public:
      */
     enum State
     {
-        kReject  = -1, ///< Reject
-        kPending = 0,  ///< Pending
-        kAccept  = 1,  ///< Accept
+        kReject  = 0xff, ///< Reject (-1)
+        kPending = 0,    ///< Pending
+        kAccept  = 1,    ///< Accept
     };
 
     /**
@@ -1157,147 +1110,6 @@ public:
 
 private:
     uint16_t mUdpPort;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Joiner IID TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class JoinerIidTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kJoinerIid);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns a pointer to the Joiner IID.
-     *
-     * @returns A pointer to the Joiner IID.
-     *
-     */
-    const uint8_t *GetIid(void) const { return mIid; }
-
-    /**
-     * This method sets the Joiner IID.
-     *
-     * @param[in]  aIid  A pointer to the Joiner IID.
-     *
-     */
-    void SetIid(const uint8_t *aIid) { memcpy(mIid, aIid, sizeof(mIid)); }
-
-private:
-    uint8_t mIid[8];
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Joiner Router Locator TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class JoinerRouterLocatorTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kJoinerRouterLocator);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the Joiner Router Locator value.
-     *
-     * @returns The Joiner Router Locator value.
-     *
-     */
-    uint16_t GetJoinerRouterLocator(void) const { return HostSwap16(mLocator); }
-
-    /**
-     * This method sets the Joiner Router Locator value.
-     *
-     * @param[in]  aJoinerRouterLocator  The Joiner Router Locator value.
-     *
-     */
-    void SetJoinerRouterLocator(uint16_t aLocator) { mLocator = HostSwap16(aLocator); }
-
-private:
-    uint16_t mLocator;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Joiner Router KEK TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class JoinerRouterKekTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kJoinerRouterKek);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns a pointer to the Joiner Router KEK.
-     *
-     * @returns A pointer to the Joiner Router KEK.
-     *
-     */
-    const uint8_t *GetKek(void) const { return mKek; }
-
-    /**
-     * This method sets the Joiner Router KEK.
-     *
-     * @param[in]  aIid  A pointer to the Joiner Router KEK.
-     *
-     */
-    void SetKek(const uint8_t *aKek) { memcpy(mKek, aKek, sizeof(mKek)); }
-
-private:
-    uint8_t mKek[16];
 } OT_TOOL_PACKED_END;
 
 /**
@@ -1540,7 +1352,7 @@ public:
      * @returns The Channel Mask value.
      *
      */
-    uint32_t GetMask(void) const { return Reverse32(HostSwap32(mMask)); }
+    uint32_t GetMask(void) const { return Encoding::Reverse32(HostSwap32(mMask)); }
 
     /**
      * This method sets the Channel Mask value.
@@ -1548,7 +1360,7 @@ public:
      * @param[in]  aMask  The Channel Mask value.
      *
      */
-    void SetMask(uint32_t aMask) { mMask = HostSwap32(Reverse32(aMask)); }
+    void SetMask(uint32_t aMask) { mMask = HostSwap32(Encoding::Reverse32(aMask)); }
 
 private:
     uint32_t mMask;
@@ -1650,147 +1462,6 @@ private:
     };
 
     ChannelMaskEntry mEntries[kNumMaskEntries];
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Count TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class CountTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kCount);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the Count value.
-     *
-     * @returns The Count value.
-     *
-     */
-    uint8_t GetCount(void) const { return mCount; }
-
-    /**
-     * This method sets the Count value.
-     *
-     * @param[in]  aCount  The Count value.
-     *
-     */
-    void SetCount(uint8_t aCount) { mCount = aCount; }
-
-private:
-    uint8_t mCount;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Period TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class PeriodTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kPeriod);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the Period value.
-     *
-     * @returns The Period value.
-     *
-     */
-    uint16_t GetPeriod(void) const { return HostSwap16(mPeriod); }
-
-    /**
-     * This method sets the Period value.
-     *
-     * @param[in]  aPeriod  The Period value.
-     *
-     */
-    void SetPeriod(uint16_t aPeriod) { mPeriod = HostSwap16(aPeriod); }
-
-private:
-    uint16_t mPeriod;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Scan Duration TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class ScanDurationTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kScanDuration);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the Scan Duration value.
-     *
-     * @returns The Scan Duration value.
-     *
-     */
-    uint16_t GetScanDuration(void) const { return HostSwap16(mScanDuration); }
-
-    /**
-     * This method sets the Scan Duration value.
-     *
-     * @param[in]  aScanDuration  The Scan Duration value.
-     *
-     */
-    void SetScanDuration(uint16_t aScanDuration) { mScanDuration = HostSwap16(aScanDuration); }
-
-private:
-    uint16_t mScanDuration;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -2300,44 +1971,6 @@ private:
         kMajorMask   = 0xf << kMajorOffset,
     };
     uint8_t mMinorMajor;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements IPv6 Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class IPv6AddressTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kIPv6Address);
-        SetLength(sizeof(mAddress));
-    }
-
-    /**
-     * This method returns the IPv6 Address.
-     *
-     * @returns A reference to the IPv6 Address.
-     *
-     */
-    const Ip6::Address &GetAddress(void) const { return mAddress; }
-
-    /**
-     * This method sets the IPv6 Address.
-     *
-     * @param[in]   aAddress    A reference to the IPv6 Address.
-     *
-     */
-    void SetAddress(const Ip6::Address &aAddress) { mAddress = aAddress; }
-
-private:
-    Ip6::Address mAddress;
 } OT_TOOL_PACKED_END;
 
 /**

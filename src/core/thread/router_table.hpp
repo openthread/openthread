@@ -32,7 +32,7 @@
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
 #include "mac/mac_types.hpp"
-#include "thread/mle_constants.hpp"
+#include "thread/mle_types.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/topology.hpp"
 

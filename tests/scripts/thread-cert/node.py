@@ -54,6 +54,7 @@ class Node:
         self.node_type = os.getenv('NODE_TYPE', 'sim')
         self.env_version = os.getenv('THREAD_VERSION', '1.1')
         self.is_bbr = is_bbr
+        self._initialized = False
 
         if version is not None:
             self.version = version
@@ -81,28 +82,45 @@ class Node:
 
     def __init_sim(self, nodeid, mode):
         """ Initialize a simulation node. """
-        if 'OT_CLI_PATH' in os.environ:
-            cmd = os.environ['OT_CLI_PATH']
-        elif (self.version == '1.1' and self.version != self.env_version):
+
+        # Default command if no match below, will be override if below conditions are met.
+        cmd = 'ot-cli-%s' % (mode)
+
+        # If Thread version of node matches the testing environment version.
+        if (self.version == self.env_version):
+            # Load Thread 1.2 BBR device when testing Thread 1.2 scenarios
+            # which requires device with Backbone functionality.
+            if (self.version == '1.2' and self.is_bbr):
+                if 'OT_CLI_PATH_1_2_BBR' in os.environ:
+                    cmd = os.environ['OT_CLI_PATH_1_2_BBR']
+                elif ('top_builddir_1_2_bbr') in os.environ:
+                    srcdir = os.environ['top_builddir_1_2_bbr']
+                    cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
+
+            # Load Thread device of the testing environment version (may be 1.1 or 1.2)
+            else:
+                if 'OT_CLI_PATH' in os.environ:
+                    cmd = os.environ['OT_CLI_PATH']
+                elif ('top_builddir') in os.environ:
+                    srcdir = os.environ['top_builddir']
+                    cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
+
+            if 'RADIO_DEVICE' in os.environ:
+                cmd += ' -v %s' % os.environ['RADIO_DEVICE']
+
+        # Load Thread 1.1 node when testing Thread 1.2 scenarios for interoperability
+        else if self.version == '1.1':
             # Posix app
             if 'OT_CLI_PATH_1_1' in os.environ:
                 cmd = os.environ['OT_CLI_PATH_1_1']
             elif ('top_builddir_1_1') in os.environ:
                 srcdir = os.environ['top_builddir_1_1']
                 cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
-        elif (self.version == '1.2' and self.is_bbr):
-            srcdir = os.environ['top_builddir_bbr']
-            cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
-        elif ('top_builddir') in os.environ:
-            srcdir = os.environ['top_builddir']
-            cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
-        else:
-            cmd = '%s/ot-cli-%s' % (self.version, mode)
 
-        if 'RADIO_DEVICE' in os.environ:
-            cmd += ' -v %s' % os.environ['RADIO_DEVICE']
-            os.environ['NODE_ID'] = str(nodeid)
+            if 'RADIO_DEVICE_1_1' in os.environ:
+                cmd += ' -v %s' % os.environ['RADIO_DEVICE_1_1']
 
+        os.environ['NODE_ID'] = str(nodeid)
         cmd += ' %d' % nodeid
         print("%s" % cmd)
 
@@ -120,18 +138,47 @@ class Node:
 
     def __init_ncp_sim(self, nodeid, mode):
         """ Initialize an NCP simulation node. """
-        if 'RADIO_DEVICE' in os.environ:
-            args = ' %s' % os.environ['RADIO_DEVICE']
-            os.environ['NODE_ID'] = str(nodeid)
-        else:
-            args = ''
 
-        if 'OT_NCP_PATH' in os.environ:
-            cmd = 'spinel-cli.py -p "%s%s" -n' % (
-                os.environ['OT_NCP_PATH'],
-                args,
-            )
-        elif (self.version == '1.1' and self.version != self.env_version):
+        # Default command if no match below, will be override if below conditions are met.
+        cmd = 'ot-ncp-ftd'
+
+        # If Thread version of node matches the testing environment version.
+        if (self.version == self.env_version):
+            if 'RADIO_DEVICE' in os.environ:
+                args = ' %s' % os.environ['RADIO_DEVICE']
+            else:
+                args = ''
+
+            # Load Thread 1.2 BBR device when testing Thread 1.2 scenarios
+            # which requires device with Backbone functionality.
+            if (self.version == '1.2' and self.is_bbr):
+                if 'OT_NCP_PATH_1_2_BBR' in os.environ:
+                    cmd = 'spinel-cli.py -p "%s%s" -n' % (
+                        os.environ['OT_NCP_PATH_1_2_BBR'],
+                        args,
+                    )
+                elif ('top_builddir_1_2_bbr') in os.environ:
+                    srcdir = os.environ['top_builddir_1_2_bbr']
+                    cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
+
+            # Load Thread device of the testing environment version (may be 1.1 or 1.2).
+            else:
+                if 'OT_NCP_PATH' in os.environ:
+                    cmd = 'spinel-cli.py -p "%s%s" -n' % (
+                        os.environ['OT_NCP_PATH'],
+                        args,
+                    )
+                elif ('top_builddir') in os.environ:
+                    srcdir = os.environ['top_builddir_1_2_bbr']
+                    cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
+
+        # Load Thread 1.1 node when testing Thread 1.2 scenarios for interoperability.
+        elif (self.version == '1.1'):
+            if 'RADIO_DEVICE_1_1' in os.environ:
+                args = ' %s' % os.environ['RADIO_DEVICE_1_1']
+            else:
+                args = ''
+
             if 'OT_NCP_PATH_1_1' in os.environ:
                 cmd = 'spinel-cli.py -p "%s%s" -n' % (
                     os.environ['OT_NCP_PATH_1_1'],
@@ -144,27 +191,8 @@ class Node:
                     cmd,
                     args,
                 )
-        elif (self.version == '1.2' and self.is_bbr):
-            srcdir = os.environ['top_builddir_bbr']
-            cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
-            cmd = 'spinel-cli.py -p "%s%s" -n' % (
-                cmd,
-                args,
-            )
-        elif ('top_builddir') in os.environ:
-            srcdir = os.environ['top_builddir']
-            cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
-            cmd = 'spinel-cli.py -p "%s%s" -n' % (
-                cmd,
-                args,
-            )
-        else:
-            cmd = 'spinel-cli.py -p "%s/ot-ncp-%s%s" -n' % (
-                self.version,
-                mode,
-                args,
-            )
 
+        os.environ['NODE_ID'] = str(nodeid)
         cmd += ' %d' % nodeid
         print("%s" % cmd)
 
@@ -609,6 +637,11 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
+    def prefer_router_id(self, router_id):
+        cmd = 'preferrouterid %d' % router_id
+        self.send_command(cmd)
+        self._expect('Done')
+
     def release_router_id(self, router_id):
         cmd = 'releaserouterid %d' % router_id
         self.send_command(cmd)
@@ -868,25 +901,29 @@ class Node:
 
         self.send_command(cmd)
 
-        if isinstance(self.simulator, simulator.VirtualTime):
-            self.simulator.go(timeout)
+        end = self.simulator.now() + timeout
+
+        responders = {}
 
         result = True
-        try:
-            responders = {}
-            # ncp-sim doesn't print Done
-            done = (self.node_type == 'ncp-sim')
-            while len(responders) < num_responses or not done:
-                i = self._expect([r'from (\S+):', 'Done'])
+        # ncp-sim doesn't print Done
+        done = (self.node_type == 'ncp-sim')
+        while len(responders) < num_responses or not done:
+            self.simulator.go(1)
+            try:
+                i = self._expect([r'from (\S+):', r'Done'], timeout=0.1)
+            except (pexpect.TIMEOUT, socket.timeout):
+                if self.simulator.now() < end:
+                    continue
+                result = False
+                if isinstance(self.simulator, simulator.VirtualTime):
+                    self.simulator.sync_devices()
+                break
+            else:
                 if i == 0:
                     responders[self.pexpect.match.groups()[0]] = 1
                 elif i == 1:
                     done = True
-            self._expect('\n')
-        except (pexpect.TIMEOUT, socket.timeout):
-            result = False
-            if isinstance(self.simulator, simulator.VirtualTime):
-                self.simulator.sync_devices()
 
         return result
 

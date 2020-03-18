@@ -1055,7 +1055,7 @@ enum
     SPINEL_CAP_OPENTHREAD_LOG_METADATA = (SPINEL_CAP_OPENTHREAD__BEGIN + 6),
     SPINEL_CAP_TIME_SYNC               = (SPINEL_CAP_OPENTHREAD__BEGIN + 7),
     SPINEL_CAP_CHILD_SUPERVISION       = (SPINEL_CAP_OPENTHREAD__BEGIN + 8),
-    SPINEL_CAP_POSIX_APP               = (SPINEL_CAP_OPENTHREAD__BEGIN + 9),
+    SPINEL_CAP_POSIX                   = (SPINEL_CAP_OPENTHREAD__BEGIN + 9),
     SPINEL_CAP_SLAAC                   = (SPINEL_CAP_OPENTHREAD__BEGIN + 10),
     SPINEL_CAP_RADIO_COEX              = (SPINEL_CAP_OPENTHREAD__BEGIN + 11),
     SPINEL_CAP_MAC_RETRY_HISTOGRAM     = (SPINEL_CAP_OPENTHREAD__BEGIN + 12),
@@ -2806,7 +2806,7 @@ enum
      * Array of structures containing:
      *
      *  `6`: IPv6 Address
-     *  `C`: Network Prefix Length
+     *  `C`: Network Prefix Length (in bits)
      *  `L`: Valid Lifetime
      *  `L`: Preferred Lifetime
      *
@@ -3436,11 +3436,10 @@ enum
     // RCP (NCP in radio only mode) version
     /** Format `U` - Read only
      *
-     * Required capability: SPINEL_CAP_POSIX_APP
+     * Required capability: SPINEL_CAP_POSIX
      *
-     * This property gives the version string of RCP (NCP in radio mode) which is being controlled by the POSIX
-     * application. It is available only in "POSIX Application" configuration (i.e., `OPENTHREAD_PLATFORM_POSIX_APP` is
-     * enabled).
+     * This property gives the version string of RCP (NCP in radio mode) which is being controlled by a POSIX
+     * application. It is available only in "POSIX" platform (i.e., `OPENTHREAD_PLATFORM_POSIX` is enabled).
      *
      */
     SPINEL_PROP_RCP_VERSION = SPINEL_PROP_OPENTHREAD__BEGIN + 12,

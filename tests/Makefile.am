@@ -41,13 +41,6 @@ DIST_SUBDIRS                            = \
 SUBDIRS                                 = \
     $(NULL)
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    fuzz                                  \
-    unit                                  \
-    $(NULL)
-
 SUBDIRS                                += \
     unit                                  \
     $(NULL)

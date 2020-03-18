@@ -567,18 +567,13 @@ otError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDatase
 
     if (aDataset.mIsLocatorSet)
     {
-        MeshCoP::BorderAgentLocatorTlv locator;
-        locator.Init();
-        locator.SetBorderAgentLocator(aDataset.mLocator);
-        SuccessOrExit(error = locator.AppendTo(*message));
+        SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, MeshCoP::Tlv::kBorderAgentLocator, aDataset.mLocator));
     }
 
     if (aDataset.mIsSessionIdSet)
     {
-        MeshCoP::CommissionerSessionIdTlv sessionId;
-        sessionId.Init();
-        sessionId.SetCommissionerSessionId(aDataset.mSessionId);
-        SuccessOrExit(error = sessionId.AppendTo(*message));
+        SuccessOrExit(error =
+                          Tlv::AppendUint16Tlv(*message, MeshCoP::Tlv::kCommissionerSessionId, aDataset.mSessionId));
     }
 
     if (aDataset.mIsSteeringDataSet)
@@ -592,10 +587,7 @@ otError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDatase
 
     if (aDataset.mIsJoinerUdpPortSet)
     {
-        MeshCoP::JoinerUdpPortTlv joinerUdpPort;
-        joinerUdpPort.Init();
-        joinerUdpPort.SetUdpPort(aDataset.mJoinerUdpPort);
-        SuccessOrExit(error = joinerUdpPort.AppendTo(*message));
+        SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kJoinerUdpPort, aDataset.mJoinerUdpPort));
     }
 
     if (aLength > 0)
@@ -701,23 +693,18 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Message *         aMessage
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    StateTlv                 state;
-    CommissionerSessionIdTlv sessionId;
-    bool                     retransmit = false;
+    uint8_t state;
+    bool    retransmit = false;
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_PETITION, SetState(OT_COMMISSIONER_STATE_DISABLED));
     VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED, retransmit = true);
 
     otLogInfoMeshCoP("received Leader Petition response");
 
-    SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kState, sizeof(state), state));
-    VerifyOrExit(state.IsValid());
+    SuccessOrExit(Tlv::ReadUint8Tlv(*aMessage, Tlv::kState, state));
+    VerifyOrExit(state == StateTlv::kAccept, SetState(OT_COMMISSIONER_STATE_DISABLED));
 
-    VerifyOrExit(state.GetState() == StateTlv::kAccept, SetState(OT_COMMISSIONER_STATE_DISABLED));
-
-    SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kCommissionerSessionId, sizeof(sessionId), sessionId));
-    VerifyOrExit(sessionId.IsValid());
-    mSessionId = sessionId.GetCommissionerSessionId();
+    SuccessOrExit(Tlv::ReadUint16Tlv(*aMessage, Tlv::kCommissionerSessionId, mSessionId));
 
     Get<Mle::MleRouter>().GetCommissionerAloc(mCommissionerAloc.GetAddress(), mSessionId);
     Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
@@ -745,24 +732,20 @@ exit:
 
 otError Commissioner::SendKeepAlive(void)
 {
-    otError                  error   = OT_ERROR_NONE;
-    Coap::Message *          message = NULL;
-    Ip6::MessageInfo         messageInfo;
-    StateTlv                 state;
-    CommissionerSessionIdTlv sessionId;
+    otError          error   = OT_ERROR_NONE;
+    Coap::Message *  message = NULL;
+    Ip6::MessageInfo messageInfo;
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->Init(OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_POST, OT_URI_PATH_LEADER_KEEP_ALIVE));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    state.Init();
-    state.SetState(mState == OT_COMMISSIONER_STATE_ACTIVE ? StateTlv::kAccept : StateTlv::kReject);
-    SuccessOrExit(error = state.AppendTo(*message));
+    SuccessOrExit(
+        error = Tlv::AppendUint8Tlv(*message, Tlv::kState,
+                                    (mState == OT_COMMISSIONER_STATE_ACTIVE) ? StateTlv::kAccept : StateTlv::kReject));
 
-    sessionId.Init();
-    sessionId.SetCommissionerSessionId(mSessionId);
-    SuccessOrExit(error = sessionId.AppendTo(*message));
+    SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kCommissionerSessionId, mSessionId));
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     SuccessOrExit(error = Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
@@ -797,7 +780,7 @@ void Commissioner::HandleLeaderKeepAliveResponse(Coap::Message *         aMessag
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    StateTlv state;
+    uint8_t state;
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, SetState(OT_COMMISSIONER_STATE_DISABLED));
     VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED,
@@ -805,10 +788,8 @@ void Commissioner::HandleLeaderKeepAliveResponse(Coap::Message *         aMessag
 
     otLogInfoMeshCoP("received Leader keep-alive response");
 
-    SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kState, sizeof(state), state));
-    VerifyOrExit(state.IsValid());
-
-    VerifyOrExit(state.GetState() == StateTlv::kAccept, SetState(OT_COMMISSIONER_STATE_DISABLED));
+    SuccessOrExit(Tlv::ReadUint8Tlv(*aMessage, Tlv::kState, state));
+    VerifyOrExit(state == StateTlv::kAccept, SetState(OT_COMMISSIONER_STATE_DISABLED));
 
     mTimer.Start(Time::SecToMsec(kKeepAliveTimeout) / 2);
 
@@ -831,36 +812,31 @@ void Commissioner::HandleRelayReceive(Coap::Message &aMessage, const Ip6::Messag
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    otError                error;
-    JoinerUdpPortTlv       joinerPort;
-    JoinerIidTlv           joinerIid;
-    JoinerRouterLocatorTlv joinerRloc;
-    Ip6::MessageInfo       joinerMessageInfo;
-    uint16_t               offset;
-    uint16_t               length;
-    bool                   enableJoiner = false;
-    Mac::ExtAddress        receivedId;
-    Mac::ExtAddress        joinerId;
+    otError          error;
+    uint16_t         joinerPort;
+    uint8_t          joinerIid[Ip6::Address::kInterfaceIdentifierSize];
+    uint16_t         joinerRloc;
+    Ip6::MessageInfo joinerMessageInfo;
+    uint16_t         offset;
+    uint16_t         length;
+    bool             enableJoiner = false;
+    Mac::ExtAddress  receivedId;
+    Mac::ExtAddress  joinerId;
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
 
     VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST);
 
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kJoinerUdpPort, sizeof(joinerPort), joinerPort));
-    VerifyOrExit(joinerPort.IsValid(), error = OT_ERROR_PARSE);
-
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kJoinerIid, sizeof(joinerIid), joinerIid));
-    VerifyOrExit(joinerIid.IsValid(), error = OT_ERROR_PARSE);
-
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kJoinerRouterLocator, sizeof(joinerRloc), joinerRloc));
-    VerifyOrExit(joinerRloc.IsValid(), error = OT_ERROR_PARSE);
+    SuccessOrExit(error = Tlv::ReadUint16Tlv(aMessage, Tlv::kJoinerUdpPort, joinerPort));
+    SuccessOrExit(error = Tlv::ReadTlv(aMessage, Tlv::kJoinerIid, joinerIid, sizeof(joinerIid)));
+    SuccessOrExit(error = Tlv::ReadUint16Tlv(aMessage, Tlv::kJoinerRouterLocator, joinerRloc));
 
     SuccessOrExit(error = Tlv::GetValueOffset(aMessage, Tlv::kJoinerDtlsEncapsulation, offset, length));
     VerifyOrExit(length <= aMessage.GetLength() - offset, error = OT_ERROR_PARSE);
 
     if (!Get<Coap::CoapSecure>().IsConnectionActive())
     {
-        memcpy(mJoinerIid, joinerIid.GetIid(), sizeof(mJoinerIid));
+        memcpy(mJoinerIid, joinerIid, sizeof(mJoinerIid));
 
         receivedId.Set(mJoinerIid);
         receivedId.ToggleLocal();
@@ -891,13 +867,13 @@ void Commissioner::HandleRelayReceive(Coap::Message &aMessage, const Ip6::Messag
     }
     else
     {
-        enableJoiner = (memcmp(mJoinerIid, joinerIid.GetIid(), sizeof(mJoinerIid)) == 0);
+        enableJoiner = (memcmp(mJoinerIid, joinerIid, sizeof(mJoinerIid)) == 0);
     }
 
     VerifyOrExit(enableJoiner);
 
-    mJoinerPort = joinerPort.GetUdpPort();
-    mJoinerRloc = joinerRloc.GetJoinerRouterLocator();
+    mJoinerPort = joinerPort;
+    mJoinerRloc = joinerRloc;
 
     otLogInfoMeshCoP("Remove Relay Receive (%02x%02x%02x%02x%02x%02x%02x%02x, 0x%04x)", mJoinerIid[0], mJoinerIid[1],
                      mJoinerIid[2], mJoinerIid[3], mJoinerIid[4], mJoinerIid[5], mJoinerIid[6], mJoinerIid[7],
@@ -978,11 +954,10 @@ void Commissioner::HandleJoinerFinalize(Coap::Message &aMessage, const Ip6::Mess
 
 void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, StateTlv::State aState)
 {
-    otError           error = OT_ERROR_NONE;
-    Ip6::MessageInfo  joinerMessageInfo;
-    MeshCoP::StateTlv stateTlv;
-    Coap::Message *   message;
-    Mac::ExtAddress   joinerId;
+    otError          error = OT_ERROR_NONE;
+    Ip6::MessageInfo joinerMessageInfo;
+    Coap::Message *  message;
+    Mac::ExtAddress  joinerId;
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::CoapSecure>())) != NULL, error = OT_ERROR_NO_BUFS);
 
@@ -991,9 +966,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
     message->SetOffset(message->GetLength());
     message->SetSubType(Message::kSubTypeJoinerFinalizeResponse);
 
-    stateTlv.Init();
-    stateTlv.SetState(aState);
-    SuccessOrExit(error = stateTlv.AppendTo(*message));
+    SuccessOrExit(error = Tlv::AppendUint8Tlv(*message, Tlv::kState, static_cast<uint8_t>(aState)));
 
     joinerMessageInfo.SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocal64());
     joinerMessageInfo.GetPeerAddr().SetIid(mJoinerIid);
@@ -1038,14 +1011,11 @@ otError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInf
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    otError                error = OT_ERROR_NONE;
-    JoinerUdpPortTlv       udpPort;
-    JoinerIidTlv           iid;
-    JoinerRouterLocatorTlv rloc;
-    ExtendedTlv            tlv;
-    Coap::Message *        message;
-    uint16_t               offset;
-    Ip6::MessageInfo       messageInfo;
+    otError          error = OT_ERROR_NONE;
+    ExtendedTlv      tlv;
+    Coap::Message *  message;
+    uint16_t         offset;
+    Ip6::MessageInfo messageInfo;
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
@@ -1053,24 +1023,14 @@ otError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInf
     SuccessOrExit(error = message->AppendUriPathOptions(OT_URI_PATH_RELAY_TX));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    udpPort.Init();
-    udpPort.SetUdpPort(mJoinerPort);
-    SuccessOrExit(error = udpPort.AppendTo(*message));
-
-    iid.Init();
-    iid.SetIid(mJoinerIid);
-    SuccessOrExit(error = iid.AppendTo(*message));
-
-    rloc.Init();
-    rloc.SetJoinerRouterLocator(mJoinerRloc);
-    SuccessOrExit(error = rloc.AppendTo(*message));
+    SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kJoinerUdpPort, mJoinerPort));
+    SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kJoinerIid, mJoinerIid, sizeof(mJoinerIid)));
+    SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kJoinerRouterLocator, mJoinerRloc));
 
     if (aMessage.GetSubType() == Message::kSubTypeJoinerFinalizeResponse)
     {
-        JoinerRouterKekTlv kek;
-        kek.Init();
-        kek.SetKek(Get<KeyManager>().GetKek());
-        SuccessOrExit(error = kek.AppendTo(*message));
+        SuccessOrExit(
+            error = Tlv::AppendTlv(*message, Tlv::kJoinerRouterKek, Get<KeyManager>().GetKek().GetKey(), Kek::kSize));
     }
 
     tlv.SetType(Tlv::kJoinerDtlsEncapsulation);

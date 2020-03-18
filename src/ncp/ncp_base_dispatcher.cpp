@@ -316,7 +316,7 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT),
 #endif
 #endif // OPENTHREAD_FTD
-#if OPENTHREAD_PLATFORM_POSIX_APP
+#if OPENTHREAD_PLATFORM_POSIX
         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_RCP_VERSION),
 #endif
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
@@ -643,7 +643,7 @@ NcpBase::PropertyHandler NcpBase::FindPropertyHandler(const HandlerEntry *aHandl
 {
     size_t l = 0;
 
-    assert(aSize > 0);
+    OT_ASSERT(aSize > 0);
 
     for (size_t r = aSize - 1; l < r;)
     {

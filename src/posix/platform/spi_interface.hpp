@@ -41,7 +41,7 @@
 
 #include <openthread/openthread-system.h>
 
-#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
 
 #include "ncp/ncp_spi.hpp"
 
@@ -146,12 +146,11 @@ private:
     void InitSpiDev(const char *aPath, uint8_t aMode, uint32_t aSpeed);
     void TrigerReset(void);
 
-    uint8_t *GetRealRxFrameStart(void);
-    otError  DoSpiTransfer(uint32_t aLength);
+    uint8_t *GetRealRxFrameStart(uint8_t *aSpiRxFrameBuffer, uint8_t aAlignAllowance, uint16_t &aSkipLength);
+    otError  DoSpiTransfer(uint8_t *aSpiRxFrameBuffer, uint32_t aTransferLength);
     otError  PushPullSpi(void);
 
     bool CheckInterrupt(void);
-    void HandleReceivedFrame(Ncp::SpiFrame &aSpiFrame);
     void LogStats(void);
     void LogError(const char *aString);
     void LogBuffer(const char *aDesc, const uint8_t *aBuffer, uint16_t aLength, bool aForce);
@@ -212,8 +211,6 @@ private:
     uint64_t mSpiTxFrameCount;
     uint64_t mSpiTxFrameByteCount;
 
-    uint8_t mSpiRxFrameBuffer[kMaxFrameSize + kSpiAlignAllowanceMax];
-
     bool     mSpiTxIsReady;
     uint16_t mSpiTxRefusedCount;
     uint16_t mSpiTxPayloadSize;
@@ -226,5 +223,5 @@ private:
 } // namespace PosixApp
 } // namespace ot
 
-#endif // OPENTHREAD_POSIX_RCP_SPI_ENABLE
+#endif // OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
 #endif // POSIX_APP_SPI_INTERFACE_HPP_

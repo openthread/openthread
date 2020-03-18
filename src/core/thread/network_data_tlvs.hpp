@@ -221,8 +221,8 @@ public:
      */
     void SetPreference(int8_t aPrf)
     {
-        assert((aPrf == OT_ROUTE_PREFERENCE_LOW) || (aPrf == OT_ROUTE_PREFERENCE_MED) ||
-               (aPrf == OT_ROUTE_PREFERENCE_HIGH));
+        OT_ASSERT((aPrf == OT_ROUTE_PREFERENCE_LOW) || (aPrf == OT_ROUTE_PREFERENCE_MED) ||
+                  (aPrf == OT_ROUTE_PREFERENCE_HIGH));
         mFlags = (mFlags & ~kPreferenceMask) | ((static_cast<uint8_t>(aPrf) << kPreferenceOffset) & kPreferenceMask);
     }
 
@@ -319,7 +319,7 @@ public:
      * This method initializes the TLV.
      *
      * @param[in]  aDomainId      The Domain ID.
-     * @param[in]  aPrefixLength  The Prefix Length
+     * @param[in]  aPrefixLength  The Prefix Length in bits.
      * @param[in]  aPrefix        A pointer to the prefix.
      *
      */
@@ -358,7 +358,7 @@ public:
     /**
      * This method returns the Prefix Length value.
      *
-     * @returns The Prefix Length value.
+     * @returns The Prefix Length value (in bits).
      *
      */
     uint8_t GetPrefixLength(void) const { return mPrefixLength; }

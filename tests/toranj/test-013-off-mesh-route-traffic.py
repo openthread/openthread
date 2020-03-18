@@ -107,6 +107,9 @@ sed2.set(wpan.WPAN_POLL_INTERVAL, '1500')
 # -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
+WAIT_TIME = 10
+NUM_ROUTES = 3
+NUM_ROUTES_LOCAL = 1
 ON_MESH_PREFIX = "fd00:1234::"
 OFF_MESH_ROUTE_1 = "fd00:abba::"
 OFF_MESH_ROUTE_2 = "fd00:cafe::"
@@ -132,7 +135,27 @@ r2.add_ip6_address_on_interface(OFF_MESH_ADDR_2)
 fed1.add_route(OFF_MESH_ROUTE_3)
 fed1.add_ip6_address_on_interface(OFF_MESH_ADDR_3)
 
-time.sleep(0.5)
+# Wait till network data is updated on r1, r2, and sed2 and they all see all
+# the added off-mesh routes.
+
+
+def check_off_mesh_routes():
+    # If a node itself adds a route, the route entry will be seen twice in
+    # its WPAN_THREAD_OFF_MESH_ROUTES list (one time as part of network-wide
+    # network data and again as part of the local network data). Note that
+    # `r1 and `r2` each add a route, while `sed2` does not.
+    verify(
+        len(wpan.parse_list(r1.get(wpan.WPAN_THREAD_OFF_MESH_ROUTES))) ==
+        NUM_ROUTES + NUM_ROUTES_LOCAL)
+    verify(
+        len(wpan.parse_list(r2.get(wpan.WPAN_THREAD_OFF_MESH_ROUTES))) ==
+        NUM_ROUTES + NUM_ROUTES_LOCAL)
+    verify(
+        len(wpan.parse_list(sed2.get(wpan.WPAN_THREAD_OFF_MESH_ROUTES))) ==
+        NUM_ROUTES)
+
+
+wpan.verify_within(check_off_mesh_routes, WAIT_TIME)
 
 # Traffic from `sed2` to `OFF_MESH_ADDR_1` (verify that it is received on
 # `r1`).

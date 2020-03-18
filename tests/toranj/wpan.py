@@ -281,13 +281,13 @@ class Node(object):
     _WPANCTL = '%s/bin/wpanctl' % _WPANTUND_PREFIX
 
     _OT_NCP_FTD = '%s/examples/apps/ncp/ot-ncp-ftd' % _OT_BUILDDIR
-    _OT_NCP_FTD_POSIX_APP = '%s/src/posix/ot-ncp' % _OT_BUILDDIR
+    _OT_NCP_FTD_POSIX = '%s/src/posix/ot-ncp' % _OT_BUILDDIR
     _OT_RCP = '%s/examples/apps/ncp/ot-rcp' % _OT_BUILDDIR
 
     # Environment variable used to determine how to run OpenThread
-    # If set to 1, then posix-app (`ot-ncp`) is used along with a posix RCP `ot-rcp`.
+    # If set to 1, then posix NCP (`ot-ncp`) is used along with a posix RCP `ot-rcp`.
     # Otherwise, the posix NCP `ot-ncp-ftd` is used
-    _POSIX_APP_ENV_VAR = 'TORANJ_POSIX_APP_RCP_MODEL'
+    _POSIX_ENV_VAR = 'TORANJ_POSIX_RCP_MODEL'
 
     # determines if the wpantund logs are saved in file or sent to stdout
     _TUND_LOG_TO_FILE = True
@@ -312,17 +312,18 @@ class Node(object):
         self._interface_name = self._INTFC_NAME_PREFIX + str(index)
         self._verbose = verbose
 
-        # Check if env variable `TORANJ_POSIX_APP_RCP_MODEL` is defined
+        # Check if env variable `TORANJ_POSIX_RCP_MODEL` is defined
         # and use it to determine if to use operate in "posix-ncp-app".
-        if self._POSIX_APP_ENV_VAR in os.environ:
-            self._use_posix_app_with_rcp = (
-                os.environ[self._POSIX_APP_ENV_VAR] in ['1', 'yes'])
+        if self._POSIX_ENV_VAR in os.environ:
+            self._use_posix_with_rcp = (os.environ[self._POSIX_ENV_VAR] in [
+                '1', 'yes'
+            ])
         else:
-            self._use_posix_app_with_rcp = False
+            self._use_posix_with_rcp = False
 
-        if self._use_posix_app_with_rcp:
+        if self._use_posix_with_rcp:
             ncp_socket_path = 'system:{} -s {} {} {}'.format(
-                self._OT_NCP_FTD_POSIX_APP, self._SPEED_UP_FACTOR, self._OT_RCP,
+                self._OT_NCP_FTD_POSIX, self._SPEED_UP_FACTOR, self._OT_RCP,
                 index)
         else:
             ncp_socket_path = 'system:{} {} {}'.format(self._OT_NCP_FTD, index,
@@ -376,8 +377,8 @@ class Node(object):
         return self._tund_log_file
 
     @property
-    def using_posix_app_with_rcp(self):
-        return self._use_posix_app_with_rcp
+    def using_posix_with_rcp(self):
+        return self._use_posix_with_rcp
 
     # ------------------------------------------------------------------------------------------------------------------
     # Executing a `wpanctl` command

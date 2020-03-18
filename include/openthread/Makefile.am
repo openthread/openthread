@@ -40,12 +40,6 @@ SUBDIRS                                 = \
     platform                              \
     $(NULL)
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    platform                              \
-    $(NULL)
-
 openthread_headers                      = \
     backbone_router.h                     \
     backbone_router_ftd.h                 \

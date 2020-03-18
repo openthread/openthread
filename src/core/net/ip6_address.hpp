@@ -40,6 +40,7 @@
 
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
+#include "thread/mle_types.hpp"
 
 namespace ot {
 namespace Ip6 {
@@ -77,8 +78,6 @@ public:
     {
         kInterfaceIdentifierSize = 8,  ///< Interface Identifier size in bytes.
         kIp6AddressStringSize    = 40, ///< Max buffer size in bytes to store an IPv6 address in string format.
-        kMeshLocalPrefixLength   = 64, ///< Length of Thread mesh local prefix.
-        kMeshLocalPrefixSize     = 8,  ///< Mesh local prefix size in bytes.
     };
 
     /**
@@ -269,6 +268,29 @@ public:
      *
      */
     bool IsIidReserved(void) const;
+
+    /**
+     * This method sets the IPv6 address prefix.
+     *
+     * This method only changes the first @p aPrefixLength bits of the address and keeps the rest of the bits in the
+     * address as before.
+     *
+     * @param[in]  aPrefix         A buffer containing the prefix
+     * @param[in]  aPrefixLength   The prefix length (in bits).
+     *
+     */
+    void SetPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength);
+
+    /**
+     * This method sets the IPv6 address prefix to the given Mesh Local Prefix.
+     *
+     * @param[in]  aMeshLocalPrefix   A Mesh Local Prefix.
+     *
+     */
+    void SetPrefix(const Mle::MeshLocalPrefix &aMeshLocalPrefix)
+    {
+        SetPrefix(aMeshLocalPrefix.m8, Mle::MeshLocalPrefix::kLength);
+    }
 
     /**
      * This method returns a pointer to the Interface Identifier.

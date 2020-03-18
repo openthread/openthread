@@ -276,18 +276,27 @@ bool otPlatRadioIsEnabled(otInstance *aInstance)
 otError otPlatRadioEnable(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
+    sRadioState = OT_RADIO_STATE_SLEEP;
+
     return OT_ERROR_NONE;
 }
 
 otError otPlatRadioDisable(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
+    sRadioState = OT_RADIO_STATE_DISABLED;
+
     return OT_ERROR_NONE;
 }
 
 otError otPlatRadioSleep(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
+    sRadioState = OT_RADIO_STATE_SLEEP;
+
     return OT_ERROR_NONE;
 }
 
@@ -295,6 +304,9 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aChannel);
+
+    sRadioState = OT_RADIO_STATE_RECEIVE;
+
     return OT_ERROR_NONE;
 }
 

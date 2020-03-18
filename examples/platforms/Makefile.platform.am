@@ -73,6 +73,10 @@ if OPENTHREAD_EXAMPLES_GP712
 include $(top_srcdir)/examples/platforms/gp712/Makefile.platform.am
 endif
 
+if OPENTHREAD_EXAMPLES_JN5189
+include $(top_srcdir)/examples/platforms/jn5189/Makefile.platform.am
+endif
+
 if OPENTHREAD_EXAMPLES_KW41Z
 include $(top_srcdir)/examples/platforms/kw41z/Makefile.platform.am
 endif

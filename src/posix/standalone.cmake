@@ -28,12 +28,14 @@
 
 add_executable(ot-cli
     main.c
+    $<$<BOOL:${READLINE}>:console_cli.cpp>
 )
 
 target_include_directories(ot-cli PRIVATE ${COMMON_INCLUDES})
 
 target_compile_definitions(ot-cli PRIVATE
-    OPENTHREAD_POSIX_APP_TYPE=2
+    $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>
+    OPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_CLI
 )
 
 target_compile_options(ot-cli PRIVATE
@@ -47,6 +49,7 @@ target_link_libraries(ot-cli
     ${OT_PLATFORM_LIB}
     mbedcrypto
     openthread-ncp-ftd
+    $<$<BOOL:${READLINE}>:${OT_READLINE}>
 )
 
 add_executable(ot-ncp
@@ -56,7 +59,7 @@ add_executable(ot-ncp
 target_include_directories(ot-ncp PRIVATE ${COMMON_INCLUDES})
 
 target_compile_definitions(ot-ncp PRIVATE
-    OPENTHREAD_POSIX_APP_TYPE=1
+    OPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_NCP
 )
 
 target_compile_options(ot-ncp PRIVATE

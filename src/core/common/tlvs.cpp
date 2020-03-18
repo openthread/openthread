@@ -55,6 +55,15 @@ const uint8_t *Tlv::GetValue(void) const
     return reinterpret_cast<const uint8_t *>(this) + (IsExtended() ? sizeof(ExtendedTlv) : sizeof(Tlv));
 }
 
+otError Tlv::AppendTo(Message &aMessage) const
+{
+    uint32_t size = GetSize();
+
+    OT_ASSERT(size <= UINT16_MAX);
+
+    return aMessage.Append(this, static_cast<uint16_t>(size));
+}
+
 otError Tlv::Get(const Message &aMessage, uint8_t aType, uint16_t aMaxSize, Tlv &aTlv)
 {
     otError  error;
@@ -165,13 +174,105 @@ exit:
     return error;
 }
 
-otError Tlv::AppendTo(Message &aMessage) const
+otError Tlv::ReadUint8Tlv(const Message &aMessage, uint8_t aType, uint8_t &aValue)
 {
-    uint32_t size = GetSize();
+    otError  error = OT_ERROR_NONE;
+    TlvUint8 tlv8;
 
-    assert(size <= UINT16_MAX);
+    SuccessOrExit(error = Get(aMessage, aType, sizeof(tlv8), tlv8));
+    VerifyOrExit(tlv8.IsValid(), error = OT_ERROR_PARSE);
+    aValue = tlv8.GetUint8Value();
 
-    return aMessage.Append(this, static_cast<uint16_t>(size));
+exit:
+    return error;
+}
+
+otError Tlv::ReadUint16Tlv(const Message &aMessage, uint8_t aType, uint16_t &aValue)
+{
+    otError   error = OT_ERROR_NONE;
+    TlvUint16 tlv16;
+
+    SuccessOrExit(error = Get(aMessage, aType, sizeof(tlv16), tlv16));
+    VerifyOrExit(tlv16.IsValid(), error = OT_ERROR_PARSE);
+    aValue = tlv16.GetUint16Value();
+
+exit:
+    return error;
+}
+
+otError Tlv::ReadUint32Tlv(const Message &aMessage, uint8_t aType, uint32_t &aValue)
+{
+    otError   error = OT_ERROR_NONE;
+    TlvUint32 tlv32;
+
+    SuccessOrExit(error = Get(aMessage, aType, sizeof(tlv32), tlv32));
+    VerifyOrExit(tlv32.IsValid(), error = OT_ERROR_PARSE);
+    aValue = tlv32.GetUint32Value();
+
+exit:
+    return error;
+}
+
+otError Tlv::ReadTlv(const Message &aMessage, uint8_t aType, void *aValue, uint8_t aLength)
+{
+    otError  error;
+    uint16_t offset;
+    uint16_t length;
+
+    SuccessOrExit(error = GetValueOffset(aMessage, aType, offset, length));
+    VerifyOrExit(length >= aLength, error = OT_ERROR_PARSE);
+    aMessage.Read(offset, aLength, static_cast<uint8_t *>(aValue));
+
+exit:
+    return error;
+}
+
+otError Tlv::AppendUint8Tlv(Message &aMessage, uint8_t aType, uint8_t aValue)
+{
+    TlvUint8 tlv8;
+
+    tlv8.Init(aType);
+    tlv8.SetUint8Value(aValue);
+
+    return tlv8.AppendTo(aMessage);
+}
+
+otError Tlv::AppendUint16Tlv(Message &aMessage, uint8_t aType, uint16_t aValue)
+{
+    TlvUint16 tlv16;
+
+    tlv16.Init(aType);
+    tlv16.SetUint16Value(aValue);
+
+    return tlv16.AppendTo(aMessage);
+}
+
+otError Tlv::AppendUint32Tlv(Message &aMessage, uint8_t aType, uint32_t aValue)
+{
+    TlvUint32 tlv32;
+
+    tlv32.Init(aType);
+    tlv32.SetUint32Value(aValue);
+
+    return tlv32.AppendTo(aMessage);
+}
+
+otError Tlv::AppendTlv(Message &aMessage, uint8_t aType, const uint8_t *aValue, uint8_t aLength)
+{
+    otError error = OT_ERROR_NONE;
+    Tlv     tlv;
+
+    OT_ASSERT(aLength <= Tlv::kBaseTlvMaxLength);
+
+    tlv.SetType(aType);
+    tlv.SetLength(aLength);
+    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
+
+    VerifyOrExit(aLength > 0);
+    error = aMessage.Append(aValue, aLength);
+
+exit:
+    return error;
 }
 
 } // namespace ot

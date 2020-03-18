@@ -108,16 +108,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_ENABLE_POSIX_APP_DAEMON
- *
- * Define to 1 to enable posix-app daemon support.
- *
- */
-#ifndef OPENTHREAD_ENABLE_POSIX_APP_DAEMON
-#define OPENTHREAD_ENABLE_POSIX_APP_DAEMON 0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
  *
  * Define to 1 to enable Thread Test Harness reference device support.
@@ -298,6 +288,16 @@
  */
 #ifndef OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH
 #define OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH 1400
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ASSERT_ENABLE
+ *
+ * Define as 1 to enable assert function `OT_ASSERT()` within OpenThread code and its libraries.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ASSERT_ENABLE
+#define OPENTHREAD_CONFIG_ASSERT_ENABLE 1
 #endif
 
 /**

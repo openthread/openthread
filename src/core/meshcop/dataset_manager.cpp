@@ -439,10 +439,8 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
 
         if (!hasSessionId)
         {
-            CommissionerSessionIdTlv sessionId;
-            sessionId.Init();
-            sessionId.SetCommissionerSessionId(Get<Commissioner>().GetSessionId());
-            SuccessOrExit(error = sessionId.AppendTo(*message));
+            SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kCommissionerSessionId,
+                                                       Get<Commissioner>().GetSessionId()));
         }
     }
 
@@ -468,10 +466,8 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
 
     if (aDataset.mComponents.mIsMasterKeyPresent)
     {
-        NetworkMasterKeyTlv masterkey;
-        masterkey.Init();
-        masterkey.SetNetworkMasterKey(static_cast<const MasterKey &>(aDataset.mMasterKey));
-        SuccessOrExit(error = masterkey.AppendTo(*message));
+        SuccessOrExit(error =
+                          Tlv::AppendTlv(*message, Tlv::kNetworkMasterKey, aDataset.mMasterKey.m8, sizeof(MasterKey)));
     }
 
     if (aDataset.mComponents.mIsNetworkNamePresent)
@@ -484,34 +480,24 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
 
     if (aDataset.mComponents.mIsExtendedPanIdPresent)
     {
-        ExtendedPanIdTlv extpanid;
-        extpanid.Init();
-        extpanid.SetExtendedPanId(static_cast<const Mac::ExtendedPanId &>(aDataset.mExtendedPanId));
-        SuccessOrExit(error = extpanid.AppendTo(*message));
+        SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kExtendedPanId, aDataset.mExtendedPanId.m8,
+                                             sizeof(Mac::ExtendedPanId)));
     }
 
     if (aDataset.mComponents.mIsMeshLocalPrefixPresent)
     {
-        MeshLocalPrefixTlv localprefix;
-        localprefix.Init();
-        localprefix.SetMeshLocalPrefix(aDataset.mMeshLocalPrefix);
-        SuccessOrExit(error = localprefix.AppendTo(*message));
+        SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kMeshLocalPrefix, aDataset.mMeshLocalPrefix.m8,
+                                             sizeof(otMeshLocalPrefix)));
     }
 
     if (aDataset.mComponents.mIsDelayPresent)
     {
-        DelayTimerTlv delaytimer;
-        delaytimer.Init();
-        delaytimer.SetDelayTimer(aDataset.mDelay);
-        SuccessOrExit(error = delaytimer.AppendTo(*message));
+        SuccessOrExit(error = Tlv::AppendUint32Tlv(*message, Tlv::kDelayTimer, aDataset.mDelay));
     }
 
     if (aDataset.mComponents.mIsPanIdPresent)
     {
-        PanIdTlv panid;
-        panid.Init();
-        panid.SetPanId(aDataset.mPanId);
-        SuccessOrExit(error = panid.AppendTo(*message));
+        SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kPanId, aDataset.mPanId));
     }
 
     if (aDataset.mComponents.mIsChannelPresent)
@@ -532,10 +518,7 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
 
     if (aDataset.mComponents.mIsPskcPresent)
     {
-        PskcTlv pskc;
-        pskc.Init();
-        pskc.SetPskc(static_cast<const Pskc &>(aDataset.mPskc));
-        SuccessOrExit(error = pskc.AppendTo(*message));
+        SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kPskc, aDataset.mPskc.m8, sizeof(Pskc)));
     }
 
     if (aDataset.mComponents.mIsSecurityPolicyPresent)

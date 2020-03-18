@@ -75,7 +75,7 @@ extern "C" void otNcpInit(otInstance *aInstance)
 
     if (ncpUart == NULL || ncpUart != NcpBase::GetNcpInstance())
     {
-        assert(false);
+        OT_ASSERT(false);
     }
 }
 
@@ -208,7 +208,7 @@ exit:
     {
         if (otPlatUartSend(mUartBuffer.GetFrame(), len) != OT_ERROR_NONE)
         {
-            assert(false);
+            OT_ASSERT(false);
         }
     }
 }
@@ -334,7 +334,7 @@ otError NcpUart::Spinel::BufferEncrypterReader::OutFrameBegin(void)
 
         if (mOutputDataLength > 0)
         {
-            assert(mOutputDataLength <= sizeof(mDataBuffer));
+            OT_ASSERT(mOutputDataLength <= sizeof(mDataBuffer));
             mTxFrameBuffer.OutFrameRead(mOutputDataLength, mDataBuffer);
 
             if (!SpinelEncrypter::EncryptOutbound(mDataBuffer, sizeof(mDataBuffer), &mOutputDataLength))

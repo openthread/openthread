@@ -44,10 +44,10 @@
 #include "common/timer.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6.hpp"
-#include "thread/device_mode.hpp"
 #include "thread/indirect_sender.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/mle_tlvs.hpp"
+#include "thread/mle_types.hpp"
 
 namespace ot {
 
@@ -465,7 +465,7 @@ private:
         } mValid;
         struct
         {
-            uint8_t mChallenge[Mle::ChallengeTlv::kMaxSize]; ///< The challenge value
+            uint8_t mChallenge[Mle::kMaxChallengeSize]; ///< The challenge value
         } mPending;
     } mValidPending;
 
@@ -745,8 +745,8 @@ private:
 
     union
     {
-        uint8_t mRequestTlvs[kMaxRequestTlvs];                 ///< Requested MLE TLVs
-        uint8_t mAttachChallenge[Mle::ChallengeTlv::kMaxSize]; ///< The challenge value
+        uint8_t mRequestTlvs[kMaxRequestTlvs];            ///< Requested MLE TLVs
+        uint8_t mAttachChallenge[Mle::kMaxChallengeSize]; ///< The challenge value
     };
 
 #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE

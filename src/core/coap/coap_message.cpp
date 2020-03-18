@@ -246,9 +246,9 @@ otError Message::ParseHeader(void)
     otError        error = OT_ERROR_NONE;
     OptionIterator iterator;
 
-    assert(mBuffer.mHead.mInfo.mReserved >=
-           sizeof(GetHelpData()) +
-               static_cast<size_t>((reinterpret_cast<uint8_t *>(&GetHelpData()) - mBuffer.mHead.mData)));
+    OT_ASSERT(mBuffer.mHead.mInfo.mReserved >=
+              sizeof(GetHelpData()) +
+                  static_cast<size_t>((reinterpret_cast<uint8_t *>(&GetHelpData()) - mBuffer.mHead.mData)));
 
     GetHelpData().Clear();
 
@@ -284,7 +284,7 @@ otError Message::SetToken(uint8_t aTokenLength)
 {
     uint8_t token[kMaxTokenLength] = {0};
 
-    assert(aTokenLength <= sizeof(token));
+    OT_ASSERT(aTokenLength <= sizeof(token));
 
     Random::NonCrypto::FillBuffer(token, aTokenLength);
 

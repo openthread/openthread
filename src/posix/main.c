@@ -52,19 +52,20 @@
 #define HAVE_LIBREADLINE 0
 #endif
 
-#define OPENTHREAD_POSIX_APP_TYPE_NCP 1
-#define OPENTHREAD_POSIX_APP_TYPE_CLI 2
+#define OT_POSIX_APP_TYPE_NCP 1
+#define OT_POSIX_APP_TYPE_CLI 2
 
 #include <openthread/diag.h>
 #include <openthread/logging.h>
 #include <openthread/tasklet.h>
+#include <openthread/thread.h>
 #include <openthread/platform/radio.h>
-#if OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_NCP
+#if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_NCP
 #include <openthread/ncp.h>
 #define OPENTHREAD_USE_CONSOLE 0
-#elif OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_CLI
+#elif OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
 #include <openthread/cli.h>
-#if (HAVE_LIBEDIT || HAVE_LIBREADLINE) && !OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+#if (HAVE_LIBEDIT || HAVE_LIBREADLINE) && !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
 #define OPENTHREAD_USE_CONSOLE 1
 #include "console_cli.h"
 #else
@@ -122,7 +123,7 @@ static const struct option kOptions[] = {{"debug-level", required_argument, NULL
                                          {"ncp-dataset", no_argument, NULL, ARG_RESTORE_NCP_DATASET},
                                          {"time-speed", required_argument, NULL, 's'},
                                          {"verbose", no_argument, NULL, 'v'},
-#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
                                          {"gpio-int-dev", required_argument, NULL, ARG_SPI_GPIO_INT_DEV},
                                          {"gpio-int-line", required_argument, NULL, ARG_SPI_GPIO_INT_LINE},
                                          {"gpio-reset-dev", required_argument, NULL, ARG_SPI_GPIO_RESET_DEV},
@@ -152,7 +153,7 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    -s  --time-speed factor       Time speed up factor.\n"
             "    -v  --verbose                 Also log to stderr.\n",
             aProgramName);
-#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
     fprintf(aStream,
             "        --gpio-int-dev[=gpio-device-path]\n"
             "                                  Specify a path to the Linux sysfs-exported GPIO device for the\n"
@@ -305,6 +306,8 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
 
     openlog(aArgVector[0], LOG_PID | (config.mIsVerbose ? LOG_PERROR : 0), LOG_DAEMON);
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
+    syslog(LOG_INFO, "Running %s", otGetVersionString());
+    syslog(LOG_INFO, "Thread version: %hu", otThreadGetVersion());
     otLoggingSetLevel(config.mLogLevel);
 
     instance = otSysInit(&config.mPlatformConfig);
@@ -312,6 +315,10 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
     if (config.mPrintRadioVersion)
     {
         printf("%s\n", otPlatRadioGetVersionString(instance));
+    }
+    else
+    {
+        syslog(LOG_INFO, "RCP version: %s", otPlatRadioGetVersionString(instance));
     }
 
     if (config.mIsDryRun)
@@ -357,9 +364,9 @@ int main(int argc, char *argv[])
 
     instance = InitInstance(argc, argv);
 
-#if OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_NCP
+#if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_NCP
     otNcpInit(instance);
-#elif OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_CLI
+#elif OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
 #if OPENTHREAD_USE_CONSOLE
     otxConsoleInit(instance);
 #else

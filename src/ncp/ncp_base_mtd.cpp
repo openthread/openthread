@@ -2429,8 +2429,6 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_ALL_MAC_COUNTERS
     otError              error    = OT_ERROR_NONE;
     const otMacCounters *counters = otLinkGetCounters(mInstance);
 
-    assert(counters != NULL);
-
     // Encode Tx related counters
     SuccessOrExit(error = mEncoder.OpenStruct());
     SuccessOrExit(error = mEncoder.WriteUint32(counters->mTxTotal));
@@ -2489,7 +2487,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_MLE_COUNTERS>(vo
     otError              error    = OT_ERROR_NONE;
     const otMleCounters *counters = otThreadGetMleCounters(mInstance);
 
-    assert(counters != NULL);
+    OT_ASSERT(counters != NULL);
 
     SuccessOrExit(error = mEncoder.WriteUint16(counters->mDisabledRole));
     SuccessOrExit(error = mEncoder.WriteUint16(counters->mDetachedRole));
@@ -2517,7 +2515,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_ALL_IP_COUNTERS>
     otError             error    = OT_ERROR_NONE;
     const otIpCounters *counters = otThreadGetIp6Counters(mInstance);
 
-    assert(counters != NULL);
+    OT_ASSERT(counters != NULL);
 
     // Encode Tx related counters
     SuccessOrExit(error = mEncoder.OpenStruct());
@@ -2547,8 +2545,8 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_MAC_RETRY_HISTOG
     histogramDirect   = otLinkGetTxDirectRetrySuccessHistogram(mInstance, &histogramDirectEntries);
     histogramIndirect = otLinkGetTxIndirectRetrySuccessHistogram(mInstance, &histogramIndirectEntries);
 
-    assert((histogramDirectEntries == 0) || (histogramDirect != NULL));
-    assert((histogramIndirectEntries == 0) || (histogramIndirect != NULL));
+    OT_ASSERT((histogramDirectEntries == 0) || (histogramDirect != NULL));
+    OT_ASSERT((histogramIndirectEntries == 0) || (histogramIndirect != NULL));
 
     // Encode direct message retries histogram
     SuccessOrExit(error = mEncoder.OpenStruct());
@@ -3112,7 +3110,7 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
-#if OPENTHREAD_PLATFORM_POSIX_APP
+#if OPENTHREAD_PLATFORM_POSIX
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_VERSION>(void)
 {
@@ -3685,6 +3683,8 @@ void NcpBase::ProcessThreadChangedFlags(void)
         {OT_CHANGED_THREAD_PANID, SPINEL_PROP_MAC_15_4_PANID},
         {OT_CHANGED_THREAD_NETWORK_NAME, SPINEL_PROP_NET_NETWORK_NAME},
         {OT_CHANGED_THREAD_EXT_PANID, SPINEL_PROP_NET_XPANID},
+        {OT_CHANGED_THREAD_RLOC_ADDED, SPINEL_PROP_IPV6_ADDRESS_TABLE},
+        {OT_CHANGED_THREAD_RLOC_REMOVED, SPINEL_PROP_IPV6_ADDRESS_TABLE},
         {OT_CHANGED_MASTER_KEY, SPINEL_PROP_NET_MASTER_KEY},
         {OT_CHANGED_PSKC, SPINEL_PROP_NET_PSKC},
         {OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL, SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL},
@@ -3769,7 +3769,7 @@ void NcpBase::ProcessThreadChangedFlags(void)
     }
 
     // Clear any remaining ThreadFlag that has no matching
-    // NCP property update (e.g., OT_CHANGED_THREAD_RLOC_ADDED)
+    // NCP property update (e.g., OT_CHANGED_SECURITY_POLICY)
 
     mThreadChangedFlags = 0;
 

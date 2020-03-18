@@ -44,7 +44,7 @@ otError otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aData != NULL && aDataLength != NULL);
+    OT_ASSERT(aData != NULL && aDataLength != NULL);
 
     return instance.Get<NetworkData::Leader>().GetNetworkData(aStable, aData, *aDataLength);
 }
@@ -94,12 +94,12 @@ uint8_t otNetDataGetVersion(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::MleRouter>().GetLeaderDataTlv().GetDataVersion();
+    return instance.Get<Mle::MleRouter>().GetLeaderData().GetDataVersion();
 }
 
 uint8_t otNetDataGetStableVersion(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::MleRouter>().GetLeaderDataTlv().GetStableDataVersion();
+    return instance.Get<Mle::MleRouter>().GetLeaderData().GetStableDataVersion();
 }

@@ -38,8 +38,8 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
-#ifdef __APPLE__
+#if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
+#if defined(__APPLE__) || defined(__NetBSD__)
 #include <util.h>
 #else
 #include <pty.h>
@@ -118,7 +118,7 @@
 
 #endif // __APPLE__
 
-#if OPENTHREAD_POSIX_RCP_UART_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE
 
 namespace ot {
 namespace PosixApp {
@@ -145,13 +145,13 @@ otError HdlcInterface::Init(const otPlatformConfig &aPlatformConfig)
         mSockFd = OpenFile(aPlatformConfig.mRadioFile, aPlatformConfig.mRadioConfig);
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     }
-#if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
+#if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
     else if (S_ISREG(st.st_mode))
     {
         mSockFd = ForkPty(aPlatformConfig.mRadioFile, aPlatformConfig.mRadioConfig);
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     }
-#endif // OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
+#endif // OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
     else
     {
         otLogCritPlat("Radio file '%s' not supported", aPlatformConfig.mRadioFile);
@@ -574,7 +574,7 @@ exit:
     return fd;
 }
 
-#if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
+#if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
 int HdlcInterface::ForkPty(const char *aCommand, const char *aArguments)
 {
     int fd   = -1;
@@ -615,7 +615,7 @@ exit:
     VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
     return fd;
 }
-#endif // OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
+#endif // OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
 
 void HdlcInterface::HandleHdlcFrame(void *aContext, otError aError)
 {
@@ -637,4 +637,4 @@ void HdlcInterface::HandleHdlcFrame(otError aError)
 
 } // namespace PosixApp
 } // namespace ot
-#endif // OPENTHREAD_POSIX_RCP_UART_ENABLE
+#endif // OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE

@@ -65,9 +65,9 @@ AM_CPPFLAGS                                                        += \
     $(NULL)
 endif
 
-if OPENTHREAD_PLATFORM_POSIX_APP
+if OPENTHREAD_PLATFORM_POSIX
 AM_CPPFLAGS                                                        += \
-    -DOPENTHREAD_PLATFORM_POSIX_APP=1                                 \
+    -DOPENTHREAD_PLATFORM_POSIX=1                                     \
     -I$(top_srcdir)/src/posix/platform                                \
     $(NULL)
 endif
@@ -92,7 +92,7 @@ COMMON_LDADD                                                       += \
     $(NULL)
 endif
 
-if OPENTHREAD_PLATFORM_POSIX_APP
+if OPENTHREAD_PLATFORM_POSIX
 COMMON_LDADD                                                       += \
     -lutil
     $(NULL)
@@ -232,33 +232,6 @@ test_timer_SOURCES           = $(COMMON_SOURCES) test_timer.cpp
 
 test_toolchain_LDADD         = $(NULL)
 test_toolchain_SOURCES       = test_toolchain.cpp test_toolchain_c.c
-
-PRETTY_FILES                                                        = \
-    $(noinst_HEADERS)                                                 \
-    $(test_address_sanitizer_SOURCES)                                 \
-    $(test_aes_SOURCES)                                               \
-    $(test_child_SOURCES)                                             \
-    $(test_child_table_SOURCES)                                       \
-    $(test_hdlc_SOURCES)                                              \
-    $(test_heap_SOURCES)                                              \
-    $(test_hmac_sha256_SOURCES)                                       \
-    $(test_link_quality_SOURCES)                                      \
-    $(test_linked_list_SOURCES)                                       \
-    $(test_lowpan_SOURCES)                                            \
-    $(test_mac_frame_SOURCES)                                         \
-    $(test_message_queue_SOURCES)                                     \
-    $(test_message_SOURCES)                                           \
-    $(test_spinel_buffer_SOURCES)                                     \
-    $(test_netif_SOURCES)                                             \
-    $(test_network_data_SOURCES)                                      \
-    $(test_priority_queue_SOURCES)                                    \
-    $(test_pskc_SOURCES)                                              \
-    $(test_spinel_decoder_SOURCES)                                    \
-    $(test_spinel_encoder_SOURCES)                                    \
-    $(test_string_SOURCES)                                            \
-    $(test_timer_SOURCES)                                             \
-    $(test_toolchain_SOURCES)                                         \
-    $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                   = $(wildcard *.gcda *.gcno)

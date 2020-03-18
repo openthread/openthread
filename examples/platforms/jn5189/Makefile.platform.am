@@ -1,4 +1,3 @@
-#!/bin/bash
 #
 #  Copyright (c) 2019, The OpenThread Authors.
 #  All rights reserved.
@@ -27,48 +26,18 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set -e -x -o pipefail
+#
+# JN5189 platform-specific Makefile
+#
 
-setup_python()
-{
-  python3 -m pip install yapf
-}
+LDADD_COMMON                                                               += \
+    $(top_builddir)/examples/platforms/jn5189/libopenthread-jn5189_plat.a     \
+    $(top_builddir)/examples/platforms/jn5189/libopenthread-jn5189_sdk.a      \
+    $(top_srcdir)/third_party/nxp/JN5189/libraries/libMiniMac.a               \
+    $(top_srcdir)/third_party/nxp/JN5189/libraries/libRadio.a                 \
+    $(top_srcdir)/third_party/nxp/JN5189/libraries/libMicroSpecific_JN518x.a  \
+    $(NULL)
 
-check_python()
-{
-  python3 -m yapf --style google -dpr tests tools
-}
-
-check_clang()
-{
-  clang-format --version
-  ./bootstrap
-  ./configure
-  make pretty-check
-}
-
-main()
-{
-  case $1 in
-    setup)
-      setup_python
-      ;;
-    python)
-      check_python
-      ;;
-    clang)
-      check_cpp
-      ;;
-    '')
-      setup_python
-      check_python
-      check_clang
-      ;;
-    *)
-      echo "USAGE: $0 [setup|python|clang]"
-      exit 1
-      ;;
-  esac
-}
-
-main "$@"
+LDFLAGS_COMMON                                                        += \
+    -T $(top_srcdir)/examples/platforms/jn5189/jn5189.ld                 \
+    $(NULL)

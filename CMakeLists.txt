@@ -31,6 +31,7 @@ project(openthread)
 
 option(OT_BUILD_EXECUTABLES "Build executables" ON)
 option(OT_BUILTIN_MBEDTLS "Enable builtin mbedTLS" ON)
+option(OT_COVERAGE "enable coverage" OFF)
 
 include("${PROJECT_SOURCE_DIR}/etc/cmake/checks.cmake")
 include("${PROJECT_SOURCE_DIR}/etc/cmake/options.cmake")
@@ -40,6 +41,12 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
     option(OT_COMPILE_WARNING_AS_ERROR "whether to include -Werror with gcc-compatible compilers")
     if (OT_COMPILE_WARNING_AS_ERROR)
         set(OT_CFLAGS -Werror)
+    endif()
+
+    if(OT_COVERAGE)
+        list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_ENABLE_COVERAGE=1")
+        add_compile_options(-g -O0 --coverage)
+        add_link_options(--coverage)
     endif()
 
     set(OT_CFLAGS
@@ -71,12 +78,11 @@ else()
     message(FATAL_ERROR "Thread version unknown: ${OT_THREAD_VERSION}")
 endif()
 
-
 set(OT_PLATFORM "none" CACHE STRING "Target platform chosen by the user at configure time")
 ot_get_platforms(OT_EXAMPLE_PLATFORMS)
 set_property(CACHE OT_PLATFORM PROPERTY STRINGS ${OT_EXAMPLE_PLATFORMS})
 if(NOT OT_PLATFORM IN_LIST OT_EXAMPLE_PLATFORMS)
-    if(NOT OT_PLATFORM STREQUAL "posix-host")
+    if(NOT OT_PLATFORM STREQUAL "posix")
         message(FATAL_ERROR "Platform unknown: ${OT_PLATFORM}")
     endif()
 endif()
@@ -93,7 +99,7 @@ list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_BINARY_DIR}/etc/cmake)
 list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/etc/cmake)
 list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/include)
 
-if(OT_PLATFORM STREQUAL "posix-host")
+if(OT_PLATFORM STREQUAL "posix")
     list(APPEND OT_PRIVATE_INCLUDES ${PROJECT_SOURCE_DIR}/src/posix/platform)
     add_subdirectory("${PROJECT_SOURCE_DIR}/src/posix/platform")
 elseif(NOT OT_PLATFORM MATCHES "none")
@@ -108,7 +114,7 @@ endif()
 
 list(APPEND OT_PRIVATE_DEFINES ${OT_PLATFORM_DEFINES})
 
-if(OT_PLATFORM STREQUAL "posix-host")
+if(OT_PLATFORM STREQUAL "posix")
     add_subdirectory(src/posix)
 elseif(NOT OT_PLATFORM MATCHES "none")
     add_subdirectory(examples)

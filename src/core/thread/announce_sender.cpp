@@ -100,7 +100,7 @@ void AnnounceSenderBase::HandleTimer(void)
         error    = mChannelMask.GetNextChannel(mChannel);
     }
 
-    assert(error == OT_ERROR_NONE);
+    OT_ASSERT(error == OT_ERROR_NONE);
 
     Get<Mle::MleRouter>().SendAnnounce(mChannel, false);
 

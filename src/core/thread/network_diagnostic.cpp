@@ -370,8 +370,16 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
 
         case NetworkDiagnosticTlv::kLeaderData:
         {
-            LeaderDataTlv tlv(reinterpret_cast<const LeaderDataTlv &>(Get<Mle::MleRouter>().GetLeaderDataTlv()));
+            LeaderDataTlv          tlv;
+            const Mle::LeaderData &leaderData = Get<Mle::MleRouter>().GetLeaderData();
+
             tlv.Init();
+            tlv.SetPartitionId(leaderData.GetPartitionId());
+            tlv.SetWeighting(leaderData.GetWeighting());
+            tlv.SetDataVersion(leaderData.GetDataVersion());
+            tlv.SetStableDataVersion(leaderData.GetStableDataVersion());
+            tlv.SetLeaderRouterId(leaderData.GetLeaderRouterId());
+
             SuccessOrExit(error = tlv.AppendTo(aResponse));
             break;
         }
@@ -379,9 +387,14 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
         case NetworkDiagnosticTlv::kNetworkData:
         {
             NetworkDataTlv tlv;
+            uint8_t        length;
+
             tlv.Init();
 
-            Get<Mle::MleRouter>().FillNetworkDataTlv((reinterpret_cast<Mle::NetworkDataTlv &>(tlv)), false);
+            length = sizeof(NetworkDataTlv) - sizeof(Tlv); // sizeof( NetworkDataTlv::mNetworkData )
+            Get<NetworkData::Leader>().GetNetworkData(/* aStableOnly */ false, tlv.GetNetworkData(), length);
+            tlv.SetLength(length);
+
             SuccessOrExit(error = tlv.AppendTo(aResponse));
             break;
         }

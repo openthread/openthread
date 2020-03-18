@@ -2643,8 +2643,8 @@ const char *spinel_capability_to_cstr(spinel_capability_t capability)
         ret = "CHILD_SUPERVISION";
         break;
 
-    case SPINEL_CAP_POSIX_APP:
-        ret = "POSIX_APP";
+    case SPINEL_CAP_POSIX:
+        ret = "POSIX";
         break;
 
     case SPINEL_CAP_SLAAC:

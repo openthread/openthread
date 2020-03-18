@@ -27,40 +27,66 @@
  */
 
 /**
- * @file
- *   This file implements of MLE device mode.
+ * @file logging.c
+ * Platform abstraction for the logging
+ *
  */
 
-#include "device_mode.hpp"
+#include "platform-jn5189.h"
+#include <openthread-core-config.h>
+#include <utils/code_utils.h>
+#include <openthread/config.h>
+#include <openthread/platform/logging.h>
+#include <openthread/platform/toolchain.h>
+#include <openthread/platform/uart.h>
 
-#include "common/code_utils.hpp"
+#include "stdio.h"
+#include "string.h"
 
-namespace ot {
-namespace Mle {
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED) || \
+    (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
 
-void DeviceMode::Get(ModeConfig &aModeConfig) const
+/* defines */
+#define TX_BUFFER_SIZE 256 /* Length of the send buffer */
+#define EOL_CHARS "\r\n"   /* End of Line Characters */
+#define EOL_CHARS_LEN 2    /* Length of EOL */
+
+/* static functions */
+static void JN5189LogOutput(const char *aFormat, va_list ap);
+
+/* static variables */
+static char sTxBuffer[TX_BUFFER_SIZE + 1]; /* Transmit Buffer */
+
+OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
-    aModeConfig.mRxOnWhenIdle       = IsRxOnWhenIdle();
-    aModeConfig.mSecureDataRequests = IsSecureDataRequest();
-    aModeConfig.mDeviceType         = IsFullThreadDevice();
-    aModeConfig.mNetworkData        = IsFullNetworkData();
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aLogRegion);
+    va_list ap;
+
+    va_start(ap, aFormat);
+    JN5189LogOutput(aFormat, ap);
+    va_end(ap);
 }
 
-void DeviceMode::Set(const ModeConfig &aModeConfig)
+/**
+ * Write Blocking data
+ *
+ * @param[in]    aFormat*     A pointer to the format string
+ * @param[in]    ap           Variable List Argument
+ *
+ */
+static void JN5189LogOutput(const char *aFormat, va_list ap)
 {
-    mMode = 0;
-    mMode |= aModeConfig.mRxOnWhenIdle ? kModeRxOnWhenIdle : 0;
-    mMode |= aModeConfig.mSecureDataRequests ? kModeSecureDataRequest : 0;
-    mMode |= aModeConfig.mDeviceType ? kModeFullThreadDevice : 0;
-    mMode |= aModeConfig.mNetworkData ? kModeFullNetworkData : 0;
+    int len = 0;
+
+    len = vsnprintf(sTxBuffer, TX_BUFFER_SIZE - EOL_CHARS_LEN, aFormat, ap);
+    otEXPECT(len >= 0);
+    memcpy(sTxBuffer + len, EOL_CHARS, EOL_CHARS_LEN);
+    len += EOL_CHARS_LEN;
+    JN5189WriteBlocking((const uint8_t *)sTxBuffer, len);
+
+exit:
+    return;
 }
 
-DeviceMode::InfoString DeviceMode::ToString(void) const
-{
-    return InfoString("rx-on:%s sec-poll:%s ftd:%s full-net:%s", IsRxOnWhenIdle() ? "yes" : "no",
-                      IsSecureDataRequest() ? "yes" : "no", IsFullThreadDevice() ? "yes" : "no",
-                      IsFullNetworkData() ? "yes" : "no");
-}
-
-} // namespace Mle
-} // namespace ot
+#endif

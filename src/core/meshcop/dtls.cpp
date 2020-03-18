@@ -284,7 +284,7 @@ otError Dtls::Setup(bool aClient)
     mbedtls_ssl_conf_min_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
     mbedtls_ssl_conf_max_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
 
-    assert(mCipherSuites[1] == 0);
+    OT_ASSERT(mCipherSuites[1] == 0);
     mbedtls_ssl_conf_ciphersuites(&mConf, mCipherSuites);
     mbedtls_ssl_conf_export_keys_cb(&mConf, HandleMbedtlsExportKeys, this);
     mbedtls_ssl_conf_handshake_timeout(&mConf, 8000, 60000);
@@ -457,11 +457,11 @@ void Dtls::SetCertificate(const uint8_t *aX509Certificate,
                           const uint8_t *aPrivateKey,
                           uint32_t       aPrivateKeyLength)
 {
-    assert(aX509CertLength > 0);
-    assert(aX509Certificate != NULL);
+    OT_ASSERT(aX509CertLength > 0);
+    OT_ASSERT(aX509Certificate != NULL);
 
-    assert(aPrivateKeyLength > 0);
-    assert(aPrivateKey != NULL);
+    OT_ASSERT(aPrivateKeyLength > 0);
+    OT_ASSERT(aPrivateKey != NULL);
 
     mOwnCertSrc       = aX509Certificate;
     mOwnCertLength    = aX509CertLength;
@@ -474,8 +474,8 @@ void Dtls::SetCertificate(const uint8_t *aX509Certificate,
 
 void Dtls::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength)
 {
-    assert(aX509CaCertChainLength > 0);
-    assert(aX509CaCertificateChain != NULL);
+    OT_ASSERT(aX509CaCertChainLength > 0);
+    OT_ASSERT(aX509CaCertificateChain != NULL);
 
     mCaChainSrc    = aX509CaCertificateChain;
     mCaChainLength = aX509CaCertChainLength;
@@ -487,10 +487,10 @@ void Dtls::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_
 
 void Dtls::SetPreSharedKey(const uint8_t *aPsk, uint16_t aPskLength, const uint8_t *aPskIdentity, uint16_t aPskIdLength)
 {
-    assert(aPsk != NULL);
-    assert(aPskIdentity != NULL);
-    assert(aPskLength > 0);
-    assert(aPskIdLength > 0);
+    OT_ASSERT(aPsk != NULL);
+    OT_ASSERT(aPskIdentity != NULL);
+    OT_ASSERT(aPskLength > 0);
+    OT_ASSERT(aPskIdLength > 0);
 
     mPreSharedKey         = aPsk;
     mPreSharedKeyLength   = aPskLength;
@@ -778,7 +778,7 @@ void Dtls::HandleTimer(void)
         break;
 
     default:
-        assert(false);
+        OT_ASSERT(false);
         break;
     }
 }

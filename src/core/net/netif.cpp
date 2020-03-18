@@ -177,8 +177,8 @@ otError Netif::UnsubscribeAllNodesMulticast(void)
     //    LinkLocalAllRouters -> RealmLocalAllRouters -> LinkLocalAll
     //         -> RealmLocalAll -> RealmLocalAllMpl.
 
-    assert(prev != static_cast<NetifMulticastAddress *>(
-                       const_cast<otNetifMulticastAddress *>(&kRealmLocalAllRoutersMulticastAddress)));
+    OT_ASSERT(prev != static_cast<NetifMulticastAddress *>(
+                          const_cast<otNetifMulticastAddress *>(&kRealmLocalAllRoutersMulticastAddress)));
 
     if (prev == NULL)
     {
@@ -204,8 +204,8 @@ exit:
 
 otError Netif::SubscribeAllRoutersMulticast(void)
 {
-    otError                error = OT_ERROR_NONE;
-    NetifMulticastAddress *prev;
+    otError                error                      = OT_ERROR_NONE;
+    NetifMulticastAddress *prev                       = NULL;
     NetifMulticastAddress &linkLocalAllRoutersAddress = static_cast<NetifMulticastAddress &>(
         const_cast<otNetifMulticastAddress &>(kLinkLocalAllRoutersMulticastAddress));
     NetifMulticastAddress &linkLocalAllNodesAddress =
@@ -218,7 +218,7 @@ otError Netif::SubscribeAllRoutersMulticast(void)
     // This method MUST be called after `SubscribeAllNodesMulticast()`
     // Ensure that the `LinkLocalAll` was found on the list.
 
-    assert(error == OT_ERROR_NONE);
+    OT_ASSERT(error == OT_ERROR_NONE);
 
     // The tail of multicast address linked list contains the
     // fixed addresses. We either have a chain of five addresses

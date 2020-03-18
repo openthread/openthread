@@ -152,8 +152,7 @@ otError Child::GetMeshLocalIp6Address(Ip6::Address &aAddress) const
 
     VerifyOrExit(!IsAllZero(mMeshLocalIid, sizeof(mMeshLocalIid)), error = OT_ERROR_NOT_FOUND);
 
-    memcpy(aAddress.mFields.m8, Get<Mle::MleRouter>().GetMeshLocalPrefix().m8, Ip6::Address::kMeshLocalPrefixSize);
-
+    aAddress.SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
     aAddress.SetIid(mMeshLocalIid);
 
 exit:
