@@ -946,20 +946,20 @@ public:
     }
 
     /**
-     * This method returns Service ID. It is in range 0x00-0x0f.
+     * This method returns Service Id. It is in range 0x00-0x0f.
      *
-     * @returns Service ID
+     * @returns Service Id
      */
     uint8_t GetServiceId(void) const { return (mTResSId & kSIdMask) >> kSIdOffset; }
 
     /**
-     * This method sets Service ID.
+     * This method sets Service Id.
      *
-     * @param [in] aServiceID Service ID to be set. Expected range: 0x00-0x0f.
+     * @param [in] aServiceId Service Id to be set. Expected range: 0x00-0x0f.
      */
-    void SetServiceID(uint8_t aServiceID)
+    void SetServiceId(uint8_t aServiceId)
     {
-        mTResSId = static_cast<uint8_t>((mTResSId & ~kSIdMask) | (aServiceID << kSIdOffset));
+        mTResSId = static_cast<uint8_t>((mTResSId & ~kSIdMask) | (aServiceId << kSIdOffset));
     }
 
     /**

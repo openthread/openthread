@@ -81,8 +81,7 @@ MleRouter::MleRouter(Instance &aInstance)
     , mRouterSelectionJitterTimeout(0)
     , mParentPriority(kParentPriorityUnspecified)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    , mBackboneRouterJitter(kBackboneRouterJitter)
-    , mBackboneRouterJitterTimeout(0)
+    , mBackboneRouterRegistrationDelay(0)
 #endif
 {
     mDeviceMode.Set(mDeviceMode.Get() | DeviceMode::kModeFullThreadDevice | DeviceMode::kModeFullNetworkData);
@@ -1730,20 +1729,18 @@ void MleRouter::HandleStateUpdateTimer(void)
         }
     }
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    // Counting jitter only when `mRouterSelectionJitterTimeout` is 0.
-    // That is, when the device has decided to stay as REED or Router.
-    else if (mBackboneRouterJitterTimeout > 0)
+    // Delay register only when `mRouterSelectionJitterTimeout` is 0,
+    // that is, when the device has decided to stay as REED or Router.
+    else if (mBackboneRouterRegistrationDelay > 0)
     {
-        mBackboneRouterJitterTimeout--;
+        mBackboneRouterRegistrationDelay--;
 
-        if (mBackboneRouterJitterTimeout == 0)
+        if (mBackboneRouterRegistrationDelay == 0)
         {
             // If no Backbone Router service after jitter, try to register its own Backbone Router Service.
-            // Restart the jitter if fails to register.
-            if ((!Get<BackboneRouter::Leader>().HasPrimary()) &&
-                (Get<BackboneRouter::Local>().AddService() != OT_ERROR_NONE))
+            if (!Get<BackboneRouter::Leader>().HasPrimary())
             {
-                mBackboneRouterJitterTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, kBackboneRouterJitter);
+                Get<BackboneRouter::Local>().AddService();
             }
         }
     }
@@ -4817,20 +4814,6 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-void MleRouter::StartBackboneRouterJitter(void)
-{
-    if (GetRole() == OT_DEVICE_ROLE_LEADER)
-    {
-        mBackboneRouterJitterTimeout = 1;
-    }
-    else
-    {
-        mBackboneRouterJitterTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, mBackboneRouterJitter);
-    }
-}
-#endif
 
 } // namespace Mle
 } // namespace ot

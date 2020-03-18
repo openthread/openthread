@@ -160,6 +160,17 @@ Mle::Mle(Instance &aInstance)
     }
 
 #endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    // Primary Backbone Router Aloc
+    mBackboneRouterPrimaryAloc.Clear();
+
+    mBackboneRouterPrimaryAloc.mPrefixLength       = 64;
+    mBackboneRouterPrimaryAloc.mPreferred          = true;
+    mBackboneRouterPrimaryAloc.mValid              = true;
+    mBackboneRouterPrimaryAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
+    mBackboneRouterPrimaryAloc.mScopeOverrideValid = true;
+    mBackboneRouterPrimaryAloc.GetAddress().SetLocator(Mac::kShortAddrInvalid);
+#endif
 
     // initialize Mesh Local Prefix
     meshLocalPrefix.SetFromExtendedPanId(Get<Mac::Mac>().GetExtendedPanId());
@@ -749,6 +760,9 @@ void Mle::SetStateDetached(void)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     Get<BackboneRouter::Local>().Reset();
 #endif
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    Get<BackboneRouter::Leader>().Reset();
+#endif
 
     if (mRole == OT_DEVICE_ROLE_LEADER)
     {
@@ -943,6 +957,15 @@ void Mle::ApplyMeshLocalPrefix(void)
         }
     }
 
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    if (mBackboneRouterPrimaryAloc.GetAddress().GetLocator() != Mac::kShortAddrInvalid)
+    {
+        Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc);
+        mBackboneRouterPrimaryAloc.GetAddress().SetPrefix(GetMeshLocalPrefix());
+        Get<ThreadNetif>().AddUnicastAddress(mBackboneRouterPrimaryAloc);
+    }
 #endif
 
     mLinkLocalAllThreadNodes.GetAddress().mFields.m8[3] = 64;
@@ -1570,6 +1593,25 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         Get<Ip6::Filter>().AllowNativeCommissioner(
             (Get<KeyManager>().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_NATIVE_COMMISSIONING) != 0);
     }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    if ((aFlags & OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE) &&
+        (Get<BackboneRouter::Local>().IsPrimary() !=
+         (mBackboneRouterPrimaryAloc.GetAddress().GetLocator() != Mac::kShortAddrInvalid)))
+    {
+        if (Get<BackboneRouter::Local>().IsPrimary())
+        {
+            mBackboneRouterPrimaryAloc.GetAddress().SetLocator(kAloc16BackboneRouterPrimary);
+            mBackboneRouterPrimaryAloc.GetAddress().SetPrefix(GetMeshLocalPrefix());
+            Get<ThreadNetif>().AddUnicastAddress(mBackboneRouterPrimaryAloc);
+        }
+        else
+        {
+            Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc);
+            mBackboneRouterPrimaryAloc.GetAddress().SetLocator(Mac::kShortAddrInvalid);
+        }
+    }
+#endif
 
 exit:
     return;

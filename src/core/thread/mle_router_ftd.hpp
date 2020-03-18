@@ -277,24 +277,6 @@ public:
      */
     otError SetRouterSelectionJitter(uint8_t aRouterJitter);
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    /**
-     * This method returns the Backbone Router registration jitter value.
-     *
-     * @returns The Backbone Router registration jitter value.
-     *
-     */
-    uint8_t GetBackboneRouterJitter(void) const { return mBackboneRouterJitter; }
-
-    /**
-     * This method sets the Backbone Router registration jitter value.
-     *
-     * @param[in]  aJitter the Backbone Router registration jitter value to set.
-     *
-     */
-    void SetBackboneRouterJitter(uint8_t aJitter) { mBackboneRouterJitter = aJitter; }
-#endif
-
     /**
      * This method returns the current router selection jitter timeout value.
      *
@@ -677,10 +659,12 @@ public:
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     /**
-     * This method sets jitter before registering Backbone Router Dataset.
+     * This method sets the delay before registering Backbone Router service.
+     *
+     * @param[in]  aDelay  The delay before registering Backbone Router service.
      *
      */
-    void StartBackboneRouterJitter(void);
+    void SetBackboneRouterRegistrationDelay(uint8_t aDelay) { mBackboneRouterRegistrationDelay = aDelay; }
 #endif
 
 private:
@@ -829,8 +813,7 @@ private:
     int8_t mParentPriority; ///< The assigned parent priority value, -2 means not assigned.
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    uint8_t mBackboneRouterJitter;        ///< The variable to save the assigned jitter value.
-    uint8_t mBackboneRouterJitterTimeout; ///< Jitter before registering Backbone Router Dataset.
+    uint8_t mBackboneRouterRegistrationDelay; ///< Delay before registering Backbone Router service.
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE

@@ -87,13 +87,13 @@ class Node:
         cmd = 'ot-cli-%s' % (mode)
 
         # If Thread version of node matches the testing environment version.
-        if (self.version == self.env_version):
+        if self.version == self.env_version:
             # Load Thread 1.2 BBR device when testing Thread 1.2 scenarios
             # which requires device with Backbone functionality.
-            if (self.version == '1.2' and self.is_bbr):
+            if self.version == '1.2' and self.is_bbr:
                 if 'OT_CLI_PATH_1_2_BBR' in os.environ:
                     cmd = os.environ['OT_CLI_PATH_1_2_BBR']
-                elif ('top_builddir_1_2_bbr') in os.environ:
+                elif 'top_builddir_1_2_bbr' in os.environ:
                     srcdir = os.environ['top_builddir_1_2_bbr']
                     cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
 
@@ -101,7 +101,7 @@ class Node:
             else:
                 if 'OT_CLI_PATH' in os.environ:
                     cmd = os.environ['OT_CLI_PATH']
-                elif ('top_builddir') in os.environ:
+                elif 'top_builddir' in os.environ:
                     srcdir = os.environ['top_builddir']
                     cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
 
@@ -109,11 +109,11 @@ class Node:
                 cmd += ' -v %s' % os.environ['RADIO_DEVICE']
 
         # Load Thread 1.1 node when testing Thread 1.2 scenarios for interoperability
-        else if self.version == '1.1':
+        elif self.version == '1.1':
             # Posix app
             if 'OT_CLI_PATH_1_1' in os.environ:
                 cmd = os.environ['OT_CLI_PATH_1_1']
-            elif ('top_builddir_1_1') in os.environ:
+            elif 'top_builddir_1_1' in os.environ:
                 srcdir = os.environ['top_builddir_1_1']
                 cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
 
@@ -143,7 +143,7 @@ class Node:
         cmd = 'ot-ncp-ftd'
 
         # If Thread version of node matches the testing environment version.
-        if (self.version == self.env_version):
+        if self.version == self.env_version:
             if 'RADIO_DEVICE' in os.environ:
                 args = ' %s' % os.environ['RADIO_DEVICE']
             else:
@@ -151,13 +151,13 @@ class Node:
 
             # Load Thread 1.2 BBR device when testing Thread 1.2 scenarios
             # which requires device with Backbone functionality.
-            if (self.version == '1.2' and self.is_bbr):
+            if self.version == '1.2' and self.is_bbr:
                 if 'OT_NCP_PATH_1_2_BBR' in os.environ:
                     cmd = 'spinel-cli.py -p "%s%s" -n' % (
                         os.environ['OT_NCP_PATH_1_2_BBR'],
                         args,
                     )
-                elif ('top_builddir_1_2_bbr') in os.environ:
+                elif 'top_builddir_1_2_bbr' in os.environ:
                     srcdir = os.environ['top_builddir_1_2_bbr']
                     cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
 
@@ -168,12 +168,12 @@ class Node:
                         os.environ['OT_NCP_PATH'],
                         args,
                     )
-                elif ('top_builddir') in os.environ:
+                elif 'top_builddir' in os.environ:
                     srcdir = os.environ['top_builddir_1_2_bbr']
                     cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
 
         # Load Thread 1.1 node when testing Thread 1.2 scenarios for interoperability.
-        elif (self.version == '1.1'):
+        elif self.version == '1.1':
             if 'RADIO_DEVICE_1_1' in os.environ:
                 args = ' %s' % os.environ['RADIO_DEVICE_1_1']
             else:
@@ -184,7 +184,7 @@ class Node:
                     os.environ['OT_NCP_PATH_1_1'],
                     args,
                 )
-            elif ('top_builddir_1_1') in os.environ:
+            elif 'top_builddir_1_1' in os.environ:
                 srcdir = os.environ['top_builddir_1_1']
                 cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
                 cmd = 'spinel-cli.py -p "%s%s" -n' % (
@@ -433,7 +433,7 @@ class Node:
 
     def get_bbr_registration_jitter(self):
         self.send_command('bbr jitter')
-        return self._expect_result(r'\d+')
+        return int(self._expect_result(r'\d+'))
 
     def set_bbr_registration_jitter(self, jitter):
         cmd = 'bbr jitter %d' % jitter
@@ -461,7 +461,7 @@ class Node:
         return self._expect_result(states)
 
     def get_backbone_router(self):
-        cmd = 'bbr local'
+        cmd = 'bbr config'
         self.send_command(cmd)
         self._expect(r'(.*)Done')
         g = self.pexpect.match.groups()
@@ -485,7 +485,7 @@ class Node:
         return ret
 
     def set_backbone_router(self, seqno=None, reg_delay=None, mlr_timeout=None):
-        cmd = 'bbr local'
+        cmd = 'bbr config'
 
         if seqno is not None:
             cmd += ' seqno %d' % seqno

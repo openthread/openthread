@@ -730,9 +730,9 @@ public:
     }
 
     /**
-     * This method retrieves the Service ALOC for given Service ID.
+     * This method retrieves the Service ALOC for given Service Id.
      *
-     * @param[in]   aServiceID Service ID to get ALOC for.
+     * @param[in]   aServiceId Service Id to get ALOC for.
      * @param[out]  aAddress   A reference to the Service ALOC.
      *
      * @retval OT_ERROR_NONE      Successfully retrieved the Service ALOC.
@@ -794,19 +794,19 @@ public:
     }
 
     /**
-     * This method returns the Service ID corresponding to a Service ALOC16.
+     * This method returns the Service Id corresponding to a Service ALOC16.
      *
      * @param[in]  aAloc16  The Servicer ALOC16 value.
      *
-     * @returns The Service ID corresponding to given ALOC16.
+     * @returns The Service Id corresponding to given ALOC16.
      *
      */
     static uint8_t ServiceIdFromAloc(uint16_t aAloc16) { return static_cast<uint8_t>(aAloc16 - kAloc16ServiceStart); }
 
     /**
-     * This method returns the Service Aloc corresponding to a Service ID.
+     * This method returns the Service Aloc corresponding to a Service Id.
      *
-     * @param[in]  aServiceId  The Service ID value.
+     * @param[in]  aServiceId  The Service Id value.
      *
      * @returns The Service ALOC16 corresponding to given ID.
      *
@@ -1767,7 +1767,11 @@ private:
     Ip6::NetifUnicastAddress mLeaderAloc;
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    Ip6::NetifUnicastAddress mServiceAlocs[OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS];
+    Ip6::NetifUnicastAddress mServiceAlocs[kMaxServiceAlocs];
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    Ip6::NetifUnicastAddress mBackboneRouterPrimaryAloc;
 #endif
 
     otMleCounters mCounters;

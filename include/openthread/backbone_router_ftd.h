@@ -69,9 +69,9 @@ typedef enum
  * @param[in] aEnable   TRUE if enable Backbone functionality, FALSE otherwise.
  *
  * @sa otBackboneRouterGetState
- * @sa otBackboneRouterGetLocal
- * @sa otBackboneRouterSetLocal
- * @sa otBackboneRouterRegisterLocal
+ * @sa otBackboneRouterGetConfig
+ * @sa otBackboneRouterSetConfig
+ * @sa otBackboneRouterRegister
  *
  */
 void otBackboneRouterSetEnabled(otInstance *aInstance, bool aEnable);
@@ -86,9 +86,9 @@ void otBackboneRouterSetEnabled(otInstance *aInstance, bool aEnable);
  * @retval OT_BACKBONE_ROUTER_STATE_PRIMARY    The Primary Backbone Router.
  *
  * @sa otBackboneRouterSetEnabled
- * @sa otBackboneRouterGetLocal
- * @sa otBackboneRouterSetLocal
- * @sa otBackboneRouterRegisterLocal
+ * @sa otBackboneRouterGetConfig
+ * @sa otBackboneRouterSetConfig
+ * @sa otBackboneRouterRegister
  *
  */
 otBackboneRouterState otBackboneRouterGetState(otInstance *aInstance);
@@ -102,11 +102,11 @@ otBackboneRouterState otBackboneRouterGetState(otInstance *aInstance);
  *
  * @sa otBackboneRouterSetEnabled
  * @sa otBackboneRouterGetState
- * @sa otBackboneRouterSetLocal
- * @sa otBackboneRouterRegisterLocal
+ * @sa otBackboneRouterSetConfig
+ * @sa otBackboneRouterRegister
  *
  */
-void otBackboneRouterGetLocal(otInstance *aInstance, otBackboneRouterConfig *aConfig);
+void otBackboneRouterGetConfig(otInstance *aInstance, otBackboneRouterConfig *aConfig);
 
 /**
  * This function sets the local Backbone Router configuration.
@@ -116,11 +116,11 @@ void otBackboneRouterGetLocal(otInstance *aInstance, otBackboneRouterConfig *aCo
  *
  * @sa otBackboneRouterSetEnabled
  * @sa otBackboneRouterGetState
- * @sa otBackboneRouterGetLocal
- * @sa otBackboneRouterRegisterLocal
+ * @sa otBackboneRouterGetConfig
+ * @sa otBackboneRouterRegister
  *
  */
-void otBackboneRouterSetLocal(otInstance *aInstance, const otBackboneRouterConfig *aConfig);
+void otBackboneRouterSetConfig(otInstance *aInstance, const otBackboneRouterConfig *aConfig);
 
 /**
  * This function explicitly registers local Backbone Router configuration.
@@ -132,31 +132,31 @@ void otBackboneRouterSetLocal(otInstance *aInstance, const otBackboneRouterConfi
  *
  * @sa otBackboneRouterSetEnabled
  * @sa otBackboneRouterGetState
- * @sa otBackboneRouterGetLocal
- * @sa otBackboneRouterSetLocal
+ * @sa otBackboneRouterGetConfig
+ * @sa otBackboneRouterSetConfig
  *
  */
-otError otBackboneRouterRegisterLocal(otInstance *aInstance);
+otError otBackboneRouterRegister(otInstance *aInstance);
 
 /**
  * This method returns the Backbone Router registration jitter value.
  *
  * @returns The Backbone Router registration jitter value.
  *
- * @sa otBackboneRouterSetJitter
+ * @sa otBackboneRouterSetRegistrationJitter
  *
  */
-uint8_t otBackboneRouterGetJitter(otInstance *aInstance);
+uint8_t otBackboneRouterGetRegistrationJitter(otInstance *aInstance);
 
 /**
  * This method sets the Backbone Router registration jitter value.
  *
  * @param[in]  aJitter the Backbone Router registration jitter value to set.
  *
- * @sa otBackboneRouterGetJitter
+ * @sa otBackboneRouterGetRegistrationJitter
  *
  */
-void otBackboneRouterSetJitter(otInstance *aInstance, uint8_t aJitter);
+void otBackboneRouterSetRegistrationJitter(otInstance *aInstance, uint8_t aJitter);
 
 /**
  * @}

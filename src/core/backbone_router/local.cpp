@@ -41,7 +41,7 @@
 #include "common/logging.hpp"
 #include "common/random.hpp"
 #include "thread/mle.hpp"
-#include "thread/mle_constants.hpp"
+#include "thread/mle_types.hpp"
 #include "thread/thread_netif.hpp"
 
 namespace ot {
@@ -50,20 +50,13 @@ namespace BackboneRouter {
 
 Local::Local(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mIsServiceAdded(false)
     , mState(OT_BACKBONE_ROUTER_STATE_DISABLED)
-    , mSequenceNumber(Random::NonCrypto::GetUint8())
-    , mReregistrationDelay(Mle::kRegistrationDelayDefault)
     , mMlrTimeout(Mle::kMlrTimeoutDefault)
+    , mReregistrationDelay(Mle::kRegistrationDelayDefault)
+    , mSequenceNumber(Random::NonCrypto::GetUint8())
+    , mRegistrationJitter(Mle::kBackboneRouterRegistrationJitter)
+    , mIsServiceAdded(false)
 {
-    // Primary Backbone Router Aloc
-    memset(&mBackboneRouterPrimaryAloc, 0, sizeof(mBackboneRouterPrimaryAloc));
-
-    mBackboneRouterPrimaryAloc.mPrefixLength       = 128;
-    mBackboneRouterPrimaryAloc.mPreferred          = true;
-    mBackboneRouterPrimaryAloc.mValid              = true;
-    mBackboneRouterPrimaryAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
-    mBackboneRouterPrimaryAloc.mScopeOverrideValid = true;
 }
 
 void Local::SetEnabled(bool aEnable)
@@ -72,13 +65,12 @@ void Local::SetEnabled(bool aEnable)
 
     if (aEnable)
     {
-        AddService();
         SetState(OT_BACKBONE_ROUTER_STATE_SECONDARY);
+        AddService();
     }
-    else if (mState == OT_BACKBONE_ROUTER_STATE_PRIMARY)
+    else
     {
         RemoveService();
-        Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc);
         SetState(OT_BACKBONE_ROUTER_STATE_DISABLED);
     }
 
@@ -88,12 +80,13 @@ exit:
 
 void Local::Reset(void)
 {
-    if (mState == OT_BACKBONE_ROUTER_STATE_PRIMARY)
-    {
-        RemoveService();
-        Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc);
-        SetState(OT_BACKBONE_ROUTER_STATE_SECONDARY);
-    }
+    VerifyOrExit(mState != OT_BACKBONE_ROUTER_STATE_DISABLED);
+
+    RemoveService();
+    SetState(OT_BACKBONE_ROUTER_STATE_SECONDARY);
+
+exit:
+    return;
 }
 
 void Local::GetConfig(BackboneRouterConfig &aConfig) const
@@ -128,6 +121,7 @@ void Local::SetConfig(const BackboneRouterConfig &aConfig)
     if (update)
     {
         IgnoreReturnValue(AddService());
+        Get<Notifier>().Signal(OT_CHANGED_THREAD_BACKBONE_ROUTER_LOCAL);
     }
 
     otLogDebgNetData("BBR local: seqno (%d), delay (%ds), timeout (%ds)", mSequenceNumber, mReregistrationDelay,
@@ -142,25 +136,27 @@ otError Local::AddService(bool aForce)
 
     VerifyOrExit(mState != OT_BACKBONE_ROUTER_STATE_DISABLED && Get<Mle::Mle>().IsAttached());
 
-    // If not by force, not register unless 1) there is no avilable Backbone Router service, or 2) it is PBBR itself
-    // refresh its dataset.
-    VerifyOrExit(aForce || !Get<BackboneRouter::Leader>().HasPrimary() || mState == OT_BACKBONE_ROUTER_STATE_PRIMARY);
+    VerifyOrExit(aForce /* if register by force */ ||
+                 !Get<BackboneRouter::Leader>().HasPrimary() /* if no available Backbone Router service */ ||
+                 Get<BackboneRouter::Leader>().GetServer16() == Get<Mle::MleRouter>().GetRloc16()
+                 /* If the device itself should be BBR. */
+    );
 
     serverData.SetSequenceNumber(mSequenceNumber);
     serverData.SetReregistrationDelay(mReregistrationDelay);
     serverData.SetMlrTimeout(mMlrTimeout);
 
-    error = Get<NetworkData::Local>().AddService(THREAD_ENTERPRISE_NUMBER, &serviceData, sizeof(serviceData), true,
-                                                 reinterpret_cast<const uint8_t *>(&serverData), sizeof(serverData));
-exit:
-    if (error == OT_ERROR_NONE)
-    {
-        mIsServiceAdded = true;
-        otLogInfoNetData("BBR Service added: seqno (%d), delay (%ds), timeout (%ds)", mSequenceNumber,
-                         mReregistrationDelay, mMlrTimeout);
-        error = Get<NetworkData::Local>().SendServerDataNotification();
-    }
+    SuccessOrExit(error = Get<NetworkData::Local>().AddService(
+                      THREAD_ENTERPRISE_NUMBER, &serviceData, sizeof(serviceData), true,
+                      reinterpret_cast<const uint8_t *>(&serverData), sizeof(serverData)));
 
+    mIsServiceAdded = true;
+    Get<NetworkData::Local>().SendServerDataNotification();
+
+    otLogInfoNetData("BBR Service added: seqno (%d), delay (%ds), timeout (%ds)", mSequenceNumber, mReregistrationDelay,
+                     mMlrTimeout);
+
+exit:
     otLogInfoNetData("Add BBR Service: %s", otThreadErrorToString(error));
     return error;
 }
@@ -170,62 +166,19 @@ otError Local::RemoveService(void)
     otError error       = OT_ERROR_NONE;
     uint8_t serviceData = NetworkData::ServiceTlv::kServiceDataBackboneRouter;
 
-    error = Get<NetworkData::Local>().RemoveService(THREAD_ENTERPRISE_NUMBER, &serviceData, sizeof(serviceData));
-    SuccessOrExit(error);
+    SuccessOrExit(
+        error = Get<NetworkData::Local>().RemoveService(THREAD_ENTERPRISE_NUMBER, &serviceData, sizeof(serviceData)));
 
-    error = Get<NetworkData::Local>().SendServerDataNotification();
+    mIsServiceAdded = false;
+
+    if (Get<Mle::MleRouter>().IsAttached())
+    {
+        Get<NetworkData::Local>().SendServerDataNotification();
+    }
 
 exit:
     otLogInfoNetData("Remove BBR Service %s", otThreadErrorToString(error));
     return error;
-}
-
-otError Local::AddBackboneRouterPrimaryAloc(void)
-{
-    memcpy(&mBackboneRouterPrimaryAloc.GetAddress(), &Get<Mle::MleRouter>().GetMeshLocal16(), 14);
-    mBackboneRouterPrimaryAloc.GetAddress().mFields.m16[7] = HostSwap16(Mle::kAloc16BackboneRouterPrimary);
-    return Get<ThreadNetif>().AddUnicastAddress(mBackboneRouterPrimaryAloc);
-}
-
-void Local::NotifyBackboneRouterPrimaryUpdate(Leader::State aState, const BackboneRouterConfig &aConfig)
-{
-    OT_UNUSED_VARIABLE(aConfig);
-
-    switch (aState)
-    {
-    case Leader::kStateToTriggerRereg:
-        // fall through
-    case Leader::kStateAdded:
-        if (Get<BackboneRouter::Leader>().GetServer16() == Get<Mle::MleRouter>().GetRloc16())
-        {
-            if (mState == OT_BACKBONE_ROUTER_STATE_SECONDARY)
-            {
-                if (!mIsServiceAdded)
-                {
-                    // Here original PBBR restores its Backbone Rouetr Service from Thread Network,
-                    // Intentionally skips the state update as PBBR will refresh its service.
-                    mSequenceNumber      = aConfig.mSequenceNumber + 1;
-                    mReregistrationDelay = aConfig.mReregistrationDelay;
-                    mMlrTimeout          = aConfig.mMlrTimeout;
-                    AddService(true /* Force registration to refresh and restore Primary state */);
-                }
-                else
-                {
-                    AddBackboneRouterPrimaryAloc();
-                    SetState(OT_BACKBONE_ROUTER_STATE_PRIMARY);
-                }
-            }
-        }
-        else if (mState == OT_BACKBONE_ROUTER_STATE_PRIMARY)
-        {
-            Reset();
-            // Here increases sequence number if becomes Secondary from Primary.
-            mSequenceNumber++;
-        }
-        break;
-    default:
-        break;
-    }
 }
 
 void Local::SetState(BackboneRouterState aState)
@@ -234,6 +187,58 @@ void Local::SetState(BackboneRouterState aState)
 
     mState = aState;
     Get<Notifier>().Signal(OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE);
+
+exit:
+    return;
+}
+
+void Local::UpdateBackboneRouterPrimary(Leader::State aState, const BackboneRouterConfig &aConfig)
+{
+    OT_UNUSED_VARIABLE(aState);
+
+    VerifyOrExit(mState != OT_BACKBONE_ROUTER_STATE_DISABLED && Get<Mle::MleRouter>().IsAttached());
+
+    // Wait some jitter before trying to Register.
+    if (aConfig.mServer16 == Mac::kShortAddrInvalid)
+    {
+        uint8_t delay = 1;
+
+        if (Get<Mle::MleRouter>().GetRole() != OT_DEVICE_ROLE_LEADER)
+        {
+            delay += Random::NonCrypto::GetUint8InRange(0, mRegistrationJitter < 255 ? mRegistrationJitter + 1
+                                                                                     : mRegistrationJitter);
+        }
+
+        // Here uses the timer resource in Mle.
+        Get<Mle::MleRouter>().SetBackboneRouterRegistrationDelay(delay);
+    }
+    else if (aConfig.mServer16 != Get<Mle::MleRouter>().GetRloc16())
+    {
+        RemoveService();
+
+        if (mState == OT_BACKBONE_ROUTER_STATE_PRIMARY)
+        {
+            // Here increases sequence number if becomes Secondary from Primary.
+            mSequenceNumber++;
+            Get<Notifier>().Signal(OT_CHANGED_THREAD_BACKBONE_ROUTER_LOCAL);
+        }
+
+        SetState(OT_BACKBONE_ROUTER_STATE_SECONDARY);
+    }
+    else if (!mIsServiceAdded)
+    {
+        // Here original PBBR restores its Backbone Rouetr Service from Thread Network,
+        // Intentionally skips the state update as PBBR will refresh its service.
+        mSequenceNumber      = aConfig.mSequenceNumber + 1;
+        mReregistrationDelay = aConfig.mReregistrationDelay;
+        mMlrTimeout          = aConfig.mMlrTimeout;
+        Get<Notifier>().Signal(OT_CHANGED_THREAD_BACKBONE_ROUTER_LOCAL);
+        AddService(true /* Force registration to refresh and restore Primary state */);
+    }
+    else
+    {
+        SetState(OT_BACKBONE_ROUTER_STATE_PRIMARY);
+    }
 
 exit:
     return;

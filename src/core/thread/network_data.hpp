@@ -240,11 +240,11 @@ public:
     otError GetNextService(Iterator &aIterator, uint16_t aRloc16, ServiceConfig &aConfig);
 
     /**
-     * This method provides the next service ID in the Thread Network Data for a given RLOC16.
+     * This method provides the next service Id in the Thread Network Data for a given RLOC16.
      *
      * @param[inout]  aIterator  A reference to the Network Data iterator.
      * @param[in]     aRloc16    The RLOC16 value.
-     * @param[out]    aServiceID A reference to variable where the service ID will be placed.
+     * @param[out]    aServiceId A reference to variable where the service Id will be placed.
      *
      * @retval OT_ERROR_NONE       Successfully found the next service.
      * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the Thread Network Data.
@@ -292,10 +292,10 @@ public:
     bool ContainsServices(NetworkData &aCompare, uint16_t aRloc16);
 
     /**
-     * This method indicates whether or not the Thread Network Data contains the service with given Service ID
+     * This method indicates whether or not the Thread Network Data contains the service with given Service Id
      * associated with @p aRloc16.
      *
-     * @param[in]  aServiceID The Service ID to search for.
+     * @param[in]  aServiceId The Service Id to search for.
      * @param[in]  aRloc16    The RLOC16 to consider.
      *
      * @returns TRUE if this object contains the service with given ID associated with @p aRloc16,

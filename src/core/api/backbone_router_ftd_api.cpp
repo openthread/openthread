@@ -55,43 +55,43 @@ otBackboneRouterState otBackboneRouterGetState(otInstance *aInstance)
     return instance.Get<BackboneRouter::Local>().GetState();
 }
 
-void otBackboneRouterGetLocal(otInstance *aInstance, otBackboneRouterConfig *aConfig)
+void otBackboneRouterGetConfig(otInstance *aInstance, otBackboneRouterConfig *aConfig)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aConfig != NULL);
+    OT_ASSERT(aConfig != NULL);
 
     instance.Get<BackboneRouter::Local>().GetConfig(*aConfig);
 }
 
-void otBackboneRouterSetLocal(otInstance *aInstance, const otBackboneRouterConfig *aConfig)
+void otBackboneRouterSetConfig(otInstance *aInstance, const otBackboneRouterConfig *aConfig)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aConfig != NULL);
+    OT_ASSERT(aConfig != NULL);
 
     instance.Get<BackboneRouter::Local>().SetConfig(*aConfig);
 }
 
-otError otBackboneRouterRegisterLocal(otInstance *aInstance)
+otError otBackboneRouterRegister(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.Get<BackboneRouter::Local>().AddService(true /* Forcely register local Backbone Router Service */);
 }
 
-uint8_t otBackboneRouterGetJitter(otInstance *aInstance)
+uint8_t otBackboneRouterGetRegistrationJitter(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::MleRouter>().GetBackboneRouterJitter();
+    return instance.Get<BackboneRouter::Local>().GetRegistrationJitter();
 }
 
-void otBackboneRouterSetJitter(otInstance *aInstance, uint8_t aJitter)
+void otBackboneRouterSetRegistrationJitter(otInstance *aInstance, uint8_t aJitter)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::MleRouter>().SetBackboneRouterJitter(aJitter);
+    return instance.Get<BackboneRouter::Local>().SetRegistrationJitter(aJitter);
 }
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE

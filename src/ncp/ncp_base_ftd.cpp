@@ -39,9 +39,6 @@
 #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 #include <openthread/child_supervision.h>
 #endif
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-#include <openthread/backbone_router_ftd.h>
-#endif
 #include <openthread/dataset.h>
 #include <openthread/dataset_ftd.h>
 #include <openthread/diag.h>
@@ -185,21 +182,6 @@ exit:
         mUpdateChangedPropsTask.Post();
     }
 }
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_BACKBONE_ROUTER_STATE>(void)
-{
-    return mEncoder.WriteUint8(otBackboneRouterGetState(mInstance));
-}
-
-template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL>(void)
-{
-    otBackboneRouterConfig config;
-
-    otBackboneRouterGetLocal(mInstance, &config);
-    return EncodeBackboneRouterConfig(config);
-}
-#endif
 
 // ----------------------------------------------------------------------------
 // MARK: Individual Property Handlers
@@ -951,33 +933,6 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_ADDRESS_CACHE_
 exit:
     return error;
 }
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-otError NcpBase::DecodeBackboneRouterConfig(otBackboneRouterConfig &aConfig)
-{
-    otError error = OT_ERROR_NONE;
-
-    memset(&aConfig, 0, sizeof(otBackboneRouterConfig));
-    SuccessOrExit(error = mDecoder.ReadUint8(aConfig.mSequenceNumber));
-    SuccessOrExit(error = mDecoder.ReadUint16(aConfig.mReregistrationDelay));
-    SuccessOrExit(error = mDecoder.ReadUint32(aConfig.mMlrTimeout));
-
-exit:
-    return error;
-}
-
-template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL>(void)
-{
-    otError                error = OT_ERROR_NONE;
-    otBackboneRouterConfig config;
-
-    SuccessOrExit(error = DecodeBackboneRouterConfig(config));
-    otBackboneRouterSetLocal(mInstance, &config);
-
-exit:
-    return error;
-}
-#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
 #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 

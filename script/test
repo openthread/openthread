@@ -78,11 +78,13 @@ build_simulation()
         && ninja)
 
     if [[ "${version}" == "1.2" ]]; then
+
         options+=(
         "-DOT_BACKBONE_ROUTER=ON"
         "-DOT_BORDER_ROUTER=ON"
         "-DOT_SERVICE=ON"
         )
+
         local builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${version}-bbr"
         (mkdir -p "${builddir}" \
             && cd "${builddir}" \
@@ -113,11 +115,13 @@ build_posix()
         && ninja)
 
     if [[ "${version}" == "1.2" ]]; then
+
         options+=(
         "-DOT_BACKBONE_ROUTER=ON"
         "-DOT_BORDER_ROUTER=ON"
         "-DOT_SERVICE=ON"
         )
+
         local builddir="${OT_BUILDDIR}/cmake/openthread-posix-${version}-bbr"
         (mkdir -p "${builddir}" \
             && cd "${builddir}" \

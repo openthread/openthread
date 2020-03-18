@@ -248,7 +248,7 @@ otError Local::AddService(uint32_t       aEnterpriseNumber,
 
     serviceTlv->Init();
     serviceTlv->SetEnterpriseNumber(aEnterpriseNumber);
-    serviceTlv->SetServiceID(0);
+    serviceTlv->SetServiceId(0);
     serviceTlv->SetServiceData(aServiceData, aServiceDataLength);
     serviceTlv->SetLength(static_cast<uint8_t>(serviceTlvLength));
 

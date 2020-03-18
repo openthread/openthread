@@ -143,7 +143,7 @@ Done
 ### bbr enable
 Enable Backbone Router Service for Thread 1.2 FTD.
 `SRV_DATA.ntf` would be triggerred for attached device if there is no
-Backbone Router Service in Thread Network Data. 
+Backbone Router Service in Thread Network Data.
 
 `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
 
@@ -174,32 +174,31 @@ Register Backbone Router Service for Thread 1.2 FTD.
 Done
 ```
 
-### bbr local
+### bbr config
 
 Show local Backbone Router configuration for Thread 1.2 FTD.
 
 `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
 
 ```bash
-> bbr local
-BBR local:
+> bbr config
 seqno:    10
 delay:    120 secs
 timeout:  300 secs
 Done
 ```
 
-### bbr local \[seqno \<seqno\>\] \[delay \<delay\>\] \[timeout \<timeout\>\]
+### bbr config \[seqno \<seqno\>\] \[delay \<delay\>\] \[timeout \<timeout\>\]
 
 Configure local Backbone Router configuration for Thread 1.2 FTD.
 `bbr register` should be issued explicitly to register Backbone Router service to Leader for
 Secondary Backbone Router. `SRV_DATA.ntf` would be initiated automatically if BBR Dataset
-changes for Primary Backbone Router. 
+changes for Primary Backbone Router.
 
 `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
 
 ```bash
-> bbr local seqno 20 delay 30
+> bbr config seqno 20 delay 30
 Done
 ```
 

@@ -94,13 +94,13 @@ class TestBackboneRouterService(thread_cert.TestCase):
         # 1) First Backbone Router would become the Primary.
         self.nodes[BBR_1].set_router_selection_jitter(ROUTER_SELECTION_JITTER)
         self.nodes[BBR_1].set_bbr_registration_jitter(BBR_REGISTRATION_JITTER)
-        self.nodes[BBR_1].enable_backbone_router()
         self.nodes[BBR_1].set_backbone_router(seqno=1)
         self.nodes[BBR_1].start()
-        WAIT_TIME = WAIT_ATTACH
+        WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
         self.simulator.go(WAIT_TIME)
         self.assertEqual(self.nodes[BBR_1].get_state(), 'router')
-        WAIT_TIME = ROUTER_SELECTION_JITTER + BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
+        self.nodes[BBR_1].enable_backbone_router()
+        WAIT_TIME = BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
         self.assertEqual(self.nodes[BBR_1].get_backbone_router_state(),
                          'Primary')
@@ -113,20 +113,18 @@ class TestBackboneRouterService(thread_cert.TestCase):
         self.nodes[BBR_1].set_router_selection_jitter(ROUTER_SELECTION_JITTER)
         self.nodes[BBR_1].enable_backbone_router()
         self.nodes[BBR_1].start()
-        WAIT_TIME = WAIT_ATTACH
+        WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
         self.simulator.go(WAIT_TIME)
         self.assertEqual(self.nodes[BBR_1].get_state(), 'router')
-        WAIT_TIME = ROUTER_SELECTION_JITTER + BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
+        WAIT_TIME = BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
         self.assertEqual(self.nodes[BBR_1].get_backbone_router_state(),
                          'Primary')
         assert self.nodes[BBR_1].get_backbone_router()['seqno'] == 2
 
-        BBR_1_RLOC16 = self.nodes[BBR_1].get_addr16()
-
-        # 3) Reset BBR_2 and bring it back after its original router id is released
+        # 3) Reset BBR_1 and bring it back after its original router id is released
         # 200s (100s MaxNeighborAge + 90s InfiniteCost + 10s redundance)
-        # Verify it becomes Primary again and allocated with a different RLOC16.
+        # Verify it becomes Primary again.
         # Note: To ensure test in next step, here Step 3) will repeat until
         # the random sequence number is not the highest value 255.
         while True:
@@ -139,16 +137,13 @@ class TestBackboneRouterService(thread_cert.TestCase):
                 BBR_REGISTRATION_JITTER)
             self.nodes[BBR_1].enable_backbone_router()
             self.nodes[BBR_1].start()
-            WAIT_TIME = WAIT_ATTACH
+            WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
             self.simulator.go(WAIT_TIME)
             self.assertEqual(self.nodes[BBR_1].get_state(), 'router')
-            WAIT_TIME = ROUTER_SELECTION_JITTER + BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
+            WAIT_TIME = BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
             self.simulator.go(WAIT_TIME)
             self.assertEqual(self.nodes[BBR_1].get_backbone_router_state(),
                              'Primary')
-            RLOC16 = self.nodes[BBR_1].get_addr16()
-            self.assertNotEqual(RLOC16, BBR_1_RLOC16)
-            BBR_1_RLOC16 = RLOC16
             BBR_1_SEQNO = self.nodes[BBR_1].get_backbone_router()['seqno']
             if (BBR_1_SEQNO != 255):
                 break
@@ -163,10 +158,10 @@ class TestBackboneRouterService(thread_cert.TestCase):
         self.nodes[BBR_2].set_router_selection_jitter(ROUTER_SELECTION_JITTER)
         self.nodes[BBR_2].set_bbr_registration_jitter(BBR_REGISTRATION_JITTER)
         self.nodes[BBR_2].start()
-        WAIT_TIME = WAIT_ATTACH
+        WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
         self.simulator.go(WAIT_TIME)
         self.assertEqual(self.nodes[BBR_2].get_state(), 'router')
-        WAIT_TIME = ROUTER_SELECTION_JITTER + BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
+        WAIT_TIME = BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
         self.assertEqual(self.nodes[BBR_2].get_backbone_router_state(),
                          'Disabled')
@@ -227,7 +222,10 @@ class TestBackboneRouterService(thread_cert.TestCase):
         self.nodes[BBR_2].enable_backbone_router()
         self.nodes[BBR_2].interface_up()
         self.nodes[BBR_2].thread_start()
-        WAIT_TIME = WAIT_ATTACH + WAIT_REDUNDANCE
+        WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
+        self.simulator.go(WAIT_TIME)
+        self.assertEqual(self.nodes[BBR_2].get_state(), 'router')
+        WAIT_TIME = BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
         self.assertEqual(self.nodes[BBR_2].get_backbone_router_state(),
                          'Secondary')

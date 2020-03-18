@@ -77,6 +77,12 @@ public:
     explicit Leader(Instance &aInstance);
 
     /**
+     * This method resets the cached Primary Backbone Router.
+     *
+     */
+    void Reset(void);
+
+    /**
      * This method updates the cached Primary Backbone Router if any when new network data is available.
      *
      */

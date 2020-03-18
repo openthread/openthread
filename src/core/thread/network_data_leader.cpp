@@ -139,6 +139,8 @@ otError LeaderBase::GetBackboneRouterPrimary(BackboneRouter::BackboneRouterConfi
         subCur = subCur->GetNext();
     }
 
+    VerifyOrExit(rvalServerTlv != NULL);
+
     aConfig.mServer16            = rvalServerTlv->GetServer16();
     aConfig.mSequenceNumber      = rvalServerData->GetSequenceNumber();
     aConfig.mReregistrationDelay = rvalServerData->GetReregistrationDelay();

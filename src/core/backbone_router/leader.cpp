@@ -52,6 +52,11 @@ namespace BackboneRouter {
 Leader::Leader(Instance &aInstance)
     : InstanceLocator(aInstance)
 {
+    Reset();
+}
+
+void Leader::Reset(void)
+{
     memset(&mConfig, 0, sizeof(mConfig));
     mConfig.mServer16 = Mac::kShortAddrInvalid;
 }
@@ -151,11 +156,13 @@ void Leader::Update(void)
         }
         else
         {
+            // Short Address of PBBR changes
             state = kStateToTriggerRereg;
         }
     }
     else if (config.mServer16 == Mac::kShortAddrInvalid)
     {
+        // If no primary all the time
         state = kStateNone;
     }
     else if (config.mSequenceNumber != mConfig.mSequenceNumber)
@@ -175,11 +182,7 @@ void Leader::Update(void)
     LogBackboneRouterPrimary(state, mConfig);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    Get<BackboneRouter::Local>().NotifyBackboneRouterPrimaryUpdate(state, mConfig);
-    if (state == kStateRemoved || state == kStateNone)
-    {
-        Get<Mle::MleRouter>().StartBackboneRouterJitter();
-    }
+    Get<BackboneRouter::Local>().UpdateBackboneRouterPrimary(state, mConfig);
 #endif
 }
 

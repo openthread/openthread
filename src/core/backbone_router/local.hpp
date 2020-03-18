@@ -106,15 +106,6 @@ public:
     void SetConfig(const BackboneRouterConfig &aConfig);
 
     /**
-     * This method notifies the Primary Backbone Router update in existing Thread Network.
-     *
-     * @param[in]  aState               The Primary Backbone Router state or state change.
-     * @param[in]  aConfig              A reference of the Primary Backbone Router information.
-     *
-     */
-    void NotifyBackboneRouterPrimaryUpdate(Leader::State aState, const BackboneRouterConfig &aConfig);
-
-    /**
      * This method registers Backbone Router Dataset to Leader.
      *
      * @param[in]  aForce True if to register forcely regardless of current BackboneRouterState.
@@ -128,22 +119,54 @@ public:
      */
     otError AddService(bool aForce = false);
 
+    /**
+     * This method indicates whether or not the Backbone Router is primary.
+     *
+     * @retval  True  if the backbone router is primary.
+     * @retval  False if the backbone router is not primary.
+     *
+     */
+    bool IsPrimary(void) const { return mState == OT_BACKBONE_ROUTER_STATE_PRIMARY; }
+
+    /**
+     * This method sets the Backbone Router registration jitter value.
+     *
+     * @param[in]  aRegistrationJitter the Backbone Router registration jitter value to set.
+     *
+     */
+    void SetRegistrationJitter(uint8_t aRegistrationJitter) { mRegistrationJitter = aRegistrationJitter; }
+
+    /**
+     * This method returns the Backbone Router registration jitter value.
+     *
+     * @returns The Backbone Router registration jitter value.
+     *
+     */
+    uint8_t GetRegistrationJitter(void) const { return mRegistrationJitter; }
+
+    /**
+     * This method notifies primary backbone router status.
+     *
+     * @param[in]  aState   The state or state change of primary backbone router.
+     * @param[in]  aConfig  The primary backbone router service.
+     *
+     */
+    void UpdateBackboneRouterPrimary(Leader::State aState, const BackboneRouterConfig &aConfig);
+
 private:
+    void    SetState(BackboneRouterState aState);
     otError RemoveService(void);
-    otError AddBackboneRouterPrimaryAloc(void);
-
-    void SetState(BackboneRouterState aState);
-
-    // Indicates whether or not already add Backbone Router Service to local server data.
-    // Used to check whether or not in restore stage after reset.
-    bool mIsServiceAdded : 1;
 
     BackboneRouterState mState;
-    uint8_t             mSequenceNumber;
-    uint16_t            mReregistrationDelay;
     uint32_t            mMlrTimeout;
+    uint16_t            mReregistrationDelay;
+    uint8_t             mSequenceNumber;
+    uint8_t             mRegistrationJitter;
 
-    Ip6::NetifUnicastAddress mBackboneRouterPrimaryAloc;
+    // Indicates whether or not already add Backbone Router Service to local server data.
+    // Used to check whether or not in restore stage after reset or whether to remove bbr
+    // service for secondary bbr if it is added by force.
+    bool mIsServiceAdded;
 };
 
 } // namespace BackboneRouter
