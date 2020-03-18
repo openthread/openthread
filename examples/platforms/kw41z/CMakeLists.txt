@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -93,20 +93,22 @@ target_compile_definitions(openthread-kw41z
         ${OT_PRIVATE_DEFINES}
 )
 
-target_compile_options(openthread-kw41z PRIVATE
-    ${OT_CFLAGS}
-    -Wno-unknown-pragmas
-    -Wno-sign-compare
-    -Wno-unused-function
-    -Wno-unused-parameter
-    -Wno-empty-body
+target_compile_options(openthread-kw41z
+    PRIVATE
+        ${OT_CFLAGS}
+        -Wno-unknown-pragmas
+        -Wno-sign-compare
+        -Wno-unused-function
+        -Wno-unused-parameter
+        -Wno-empty-body
 )
 
-target_include_directories(openthread-kw41z PRIVATE
-    ${OT_PUBLIC_INCLUDES}
-    ${OT_PRIVATE_INCLUDES}
-    ${PROJECT_SOURCE_DIR}/examples/platforms
-    ${PROJECT_SOURCE_DIR}/src/core
+target_include_directories(openthread-kw41z
+    PRIVATE
+        ${OT_PUBLIC_INCLUDES}
+        ${OT_PRIVATE_INCLUDES}
+        ${PROJECT_SOURCE_DIR}/examples/platforms
+        ${PROJECT_SOURCE_DIR}/src/core
     PUBLIC
         ${PROJECT_SOURCE_DIR}/third_party/nxp
         ${PROJECT_SOURCE_DIR}/third_party/nxp/CMSIS/Include
