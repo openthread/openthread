@@ -99,6 +99,7 @@ static void processReceive(void)
     // Set head position to not be changed during read procedure.
     uint16_t head = sReceiveHead;
     uint8_t *position;
+
     otEXPECT(isRxBufferEmpty() == false);
 
     // In case head roll back to the beginning of the buffer, notify about left
