@@ -213,7 +213,7 @@ void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageI
     {
         MeshCoP::Tlv::Type type;
 
-        VerifyOrExit(((cur + 1) <= end) && !cur->IsExtended() && (cur->GetNext() <= end));
+        VerifyOrExit(cur->IsBoundedBy(end));
 
         type = cur->GetType();
 
@@ -443,7 +443,7 @@ otError Leader::RlocLookup(uint16_t  aRloc16,
 
     while (cur < end)
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
+        VerifyOrExit(cur->IsBoundedBy(end), error = OT_ERROR_PARSE);
 
         switch (cur->GetType())
         {
@@ -596,7 +596,7 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
 
     while (cur < end)
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+        VerifyOrExit(cur->IsBoundedBy(end));
 
         switch (cur->GetType())
         {
@@ -785,7 +785,7 @@ otError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aOl
 
     while (cur < end)
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
+        VerifyOrExit(cur->IsBoundedBy(end), error = OT_ERROR_PARSE);
 
         switch (cur->GetType())
         {
@@ -824,7 +824,7 @@ otError Leader::AddPrefix(PrefixTlv &aPrefix)
 
     while (cur < end)
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
+        VerifyOrExit(cur->IsBoundedBy(end), error = OT_ERROR_PARSE);
 
         switch (cur->GetType())
         {
@@ -859,7 +859,7 @@ otError Leader::AddService(ServiceTlv &aService, uint8_t *aOldTlvs, uint8_t aOld
 
     while (cur < end)
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
+        VerifyOrExit(cur->IsBoundedBy(end), error = OT_ERROR_PARSE);
 
         switch (cur->GetType())
         {
@@ -1033,7 +1033,7 @@ ServiceTlv *Leader::FindServiceById(uint8_t aServiceId)
 
     while (cur < end)
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+        VerifyOrExit(cur->IsBoundedBy(end));
 
         if (cur->GetType() == NetworkDataTlv::kTypeService)
         {

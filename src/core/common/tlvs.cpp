@@ -55,6 +55,15 @@ const uint8_t *Tlv::GetValue(void) const
     return reinterpret_cast<const uint8_t *>(this) + (IsExtended() ? sizeof(ExtendedTlv) : sizeof(Tlv));
 }
 
+bool Tlv::IsBoundedBy(const void *aEndPointer) const
+{
+    const uint8_t *cur = reinterpret_cast<const uint8_t *>(this);
+    const uint8_t *end = reinterpret_cast<const uint8_t *>(aEndPointer);
+
+    return (cur + sizeof(Tlv) <= end) && (!IsExtended() || (cur + sizeof(ExtendedTlv) <= end)) &&
+           (cur + GetSize() <= end);
+}
+
 otError Tlv::AppendTo(Message &aMessage) const
 {
     uint32_t size = GetSize();

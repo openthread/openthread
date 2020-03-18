@@ -141,6 +141,18 @@ public:
     }
 
     /**
+     * This method returns a pointer to the next Network Data TLV.
+     *
+     * @returns A pointer to the next Network Data TLV.
+     *
+     */
+    const NetworkDataTlv *GetNext(void) const
+    {
+        return reinterpret_cast<const NetworkDataTlv *>(reinterpret_cast<const uint8_t *>(this) + sizeof(*this) +
+                                                        mLength);
+    }
+
+    /**
      * This method clears the Stable bit.
      *
      */
@@ -160,6 +172,20 @@ public:
      *
      */
     void SetStable(void) { mType |= kStableMask; }
+
+    /**
+     * This method indicates whether the TLV and its Value are bounded by (i.e., `<`) a given end pointer.
+     *
+     * @param[in] aEndPointer  An end pointer to check against.
+     *
+     * @retval TRUE   The TLV is bounded by the @p aEndPointer (i.e., the end of TLV < @p aEndPointer)
+     * @retval FALSE  The TLV is not bounded by the @p aEndPointer (i.e., the end of TLV >= @p aEndPointer).
+     *
+     */
+    bool IsBoundedBy(const NetworkDataTlv *aEndPointer) const
+    {
+        return ((this + 1) <= aEndPointer) && (GetNext() <= aEndPointer);
+    }
 
 private:
     enum

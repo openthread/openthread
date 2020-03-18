@@ -68,7 +68,7 @@ bool Dataset::IsValid(void) const
 
     for (; cur < end; cur = cur->GetNext())
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end && Tlv::IsValid(*cur), rval = false);
+        VerifyOrExit(cur->IsBoundedBy(end) && Tlv::IsValid(*cur), rval = false);
     }
 
 exit:

@@ -164,6 +164,19 @@ public:
     }
 
     /**
+     * This method indicates whether the TLV and its Value are bounded by (i.e., `<`) a given end pointer.
+     *
+     * This method can be used independent of whether TLV is an Extended TLV or not.
+     *
+     * @param[in] aEndPointer  An end pointer to check against.
+     *
+     * @retval TRUE   The TLV is bounded by the @p aEndPointer (i.e., the end of TLV < @p aEndPointer)
+     * @retval FALSE  The TLV is not bounded by the @p aEndPointer (i.e., the end of TLV >= @p aEndPointer).
+     *
+     */
+    bool IsBoundedBy(const void *aEndPointer) const;
+
+    /**
      * This method appends a TLV to the end of the message.
      *
      * On success, this method grows the message by the size of the TLV.
