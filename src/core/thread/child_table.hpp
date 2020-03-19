@@ -36,12 +36,12 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_FTD
+
 #include "common/locator.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {
-
-#if OPENTHREAD_FTD
 
 /**
  * This class represents the Thread child table.
@@ -285,50 +285,8 @@ private:
     Child    mChildren[kMaxChildren];
 };
 
-#endif // OPENTHREAD_FTD
-
-#if OPENTHREAD_MTD
-
-class ChildTable : public InstanceLocator
-{
-public:
-    class Iterator
-    {
-    public:
-        Iterator(Instance &, Child::StateFilter) {}
-        Iterator(Instance &, Child::StateFilter, Child *) {}
-        void   Reset(void) {}
-        bool   IsDone(void) const { return true; }
-        void   Advance(void) {}
-        void   operator++(void) {}
-        void   operator++(int) {}
-        Child *GetChild(void) { return NULL; }
-    };
-
-    explicit ChildTable(Instance &aInstance)
-        : InstanceLocator(aInstance)
-    {
-    }
-    void Clear(void) {}
-
-    uint16_t GetChildIndex(const Child &) const { return 0; }
-    Child *  GetChildAtIndex(uint16_t) { return NULL; }
-
-    Child *GetNewChild(void) { return NULL; }
-
-    Child *FindChild(uint16_t, Child::StateFilter) { return NULL; }
-    Child *FindChild(const Mac::ExtAddress &, Child::StateFilter) { return NULL; }
-    Child *FindChild(const Mac::Address &, Child::StateFilter) { return NULL; }
-
-    bool     HasChildren(Child::StateFilter) const { return false; }
-    uint16_t GetNumChildren(Child::StateFilter) const { return 0; }
-    uint16_t GetMaxChildren(void) const { return 0; }
-    uint16_t GetMaxChildrenAllowed(void) const { return 0; }
-    otError  SetMaxChildrenAllowed(uint16_t) { return OT_ERROR_INVALID_STATE; }
-};
-
-#endif // OPENTHREAD_MTD
-
 } // namespace ot
+
+#endif // OPENTHREAD_FTD
 
 #endif // CHILD_TABLE_HPP_
