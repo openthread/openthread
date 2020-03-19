@@ -416,10 +416,12 @@ template <> inline ChildTable &Instance::Get(void)
     return mThreadNetif.mMleRouter.mChildTable;
 }
 
+#if OPENTHREAD_FTD
 template <> inline RouterTable &Instance::Get(void)
 {
     return mThreadNetif.mMleRouter.mRouterTable;
 }
+#endif
 
 template <> inline Ip6::Netif &Instance::Get(void)
 {

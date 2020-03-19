@@ -38,7 +38,6 @@
 
 #include "thread/child_table.hpp"
 #include "thread/mle.hpp"
-#include "thread/router_table.hpp"
 
 namespace ot {
 namespace Mle {
@@ -52,7 +51,6 @@ public:
     explicit MleRouter(Instance &aInstance)
         : Mle(aInstance)
         , mChildTable(aInstance)
-        , mRouterTable(aInstance)
     {
     }
 
@@ -85,8 +83,7 @@ public:
     bool HasSleepyChildrenSubscribed(const Ip6::Address &) { return false; }
 
 private:
-    ChildTable  mChildTable;
-    RouterTable mRouterTable;
+    ChildTable mChildTable;
 };
 
 } // namespace Mle
