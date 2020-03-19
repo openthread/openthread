@@ -33,6 +33,8 @@
 
 #include "src_match_controller.hpp"
 
+#if OPENTHREAD_FTD
+
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -224,3 +226,5 @@ exit:
 }
 
 } // namespace ot
+
+#endif // OPENTHREAD_FTD
