@@ -1,0 +1,93 @@
+#
+#  Copyright (c) 2020, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+set(OT_PLATFORM_LIB "openthread-qpg6095" PARENT_SCOPE)
+
+if(NOT OT_CONFIG)
+    set(OT_CONFIG "openthread-core-qpg6095-config.h")
+    set(OT_CONFIG ${OT_CONFIG} PARENT_SCOPE)
+endif()
+
+list(APPEND OT_PLATFORM_DEFINES
+    "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-qpg6095-config-check.h\""
+    "OPENTHREAD_SETTINGS_RAM=0"
+    "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\""
+)
+set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
+
+list(APPEND OT_PRIVATE_DEFINES "MBEDTLS_USER_CONFIG_FILE=\"qpg6095-mbedtls-config.h\"")
+list(APPEND OT_PUBLIC_INCLUDES
+    "${PROJECT_SOURCE_DIR}/examples/platforms/qpg6095/crypto"
+)
+set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
+
+list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
+
+add_library(openthread-qpg6095
+    alarm.c
+    diag.c
+    entropy.c
+    logging.c
+    platform.c
+    misc.c
+    settings.cpp
+    radio.c
+    uart.c
+    $<TARGET_OBJECTS:openthread-platform-utils>
+)
+
+set_property(TARGET openthread-qpg6095 PROPERTY C_STANDARD 99)
+
+target_link_libraries(openthread-qpg6095 PRIVATE openthread-platform-utils)
+target_link_libraries(openthread-qpg6095 PRIVATE ${PROJECT_SOURCE_DIR}/third_party/Qorvo/qpg6095/libQorvoQPG6095.a)
+target_link_options(openthread-qpg6095 PUBLIC -T${PROJECT_SOURCE_DIR}/examples/platforms/qpg6095/qpg6095.ld)
+target_link_options(openthread-qpg6095 PUBLIC -Wl,-Map=$<TARGET_PROPERTY:NAME>.map)
+
+target_compile_definitions(openthread-qpg6095
+    PUBLIC
+        ${OT_PLATFORM_DEFINES}
+    PRIVATE
+        ${OT_PRIVATE_DEFINES}
+)
+
+target_compile_options(openthread-qpg6095 PRIVATE
+    ${OT_CFLAGS}
+    -lrt
+    -lpthread
+)
+
+target_include_directories(openthread-qpg6095
+    PRIVATE
+        ${OT_PUBLIC_INCLUDES}
+        ${OT_PRIVATE_INCLUDES}
+        ${PROJECT_SOURCE_DIR}/src/core
+        ${PROJECT_SOURCE_DIR}/examples/platforms
+        ${PROJECT_SOURCE_DIR}/examples/platforms/utils
+        ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
+        ${PROJECT_SOURCE_DIR}/third_party/mbedtls
+)
