@@ -361,14 +361,14 @@ otError Interpreter::ParseLong(char *aString, long &aLong)
 {
     char *endptr;
     aLong = strtol(aString, &endptr, 0);
-    return (*endptr == '\0') ? OT_ERROR_NONE : OT_ERROR_PARSE;
+    return (*endptr == '\0') ? OT_ERROR_NONE : OT_ERROR_INVALID_ARGS;
 }
 
 otError Interpreter::ParseUnsignedLong(char *aString, unsigned long &aUnsignedLong)
 {
     char *endptr;
     aUnsignedLong = strtoul(aString, &endptr, 0);
-    return (*endptr == '\0') ? OT_ERROR_NONE : OT_ERROR_PARSE;
+    return (*endptr == '\0') ? OT_ERROR_NONE : OT_ERROR_INVALID_ARGS;
 }
 
 otError Interpreter::ParsePingInterval(const char *aString, uint32_t &aInterval)
@@ -400,14 +400,14 @@ otError Interpreter::ParsePingInterval(const char *aString, uint32_t &aInterval)
         else if (*aString == '.')
         {
             // Accept only one dot character.
-            VerifyOrExit(factor == msFactor, error = OT_ERROR_PARSE);
+            VerifyOrExit(factor == msFactor, error = OT_ERROR_INVALID_ARGS);
 
             // Start analyzing hundreds of milliseconds.
             factor /= 10;
         }
         else
         {
-            ExitNow(error = OT_ERROR_PARSE);
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
         }
 
         aString++;
@@ -999,7 +999,7 @@ void Interpreter::ProcessDelayTimerMin(int argc, char *argv[])
     }
     else
     {
-        error = OT_ERROR_INVALID_ARGS;
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
 exit:
@@ -1078,7 +1078,7 @@ void Interpreter::ProcessDns(int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
 
 exit:
@@ -1174,7 +1174,7 @@ void Interpreter::ProcessExtAddress(int argc, char *argv[])
     {
         otExtAddress extAddress;
 
-        VerifyOrExit(Hex2Bin(argv[0], extAddress.m8, sizeof(otExtAddress)) >= 0, error = OT_ERROR_PARSE);
+        VerifyOrExit(Hex2Bin(argv[0], extAddress.m8, sizeof(otExtAddress)) >= 0, error = OT_ERROR_INVALID_ARGS);
 
         error = otLinkSetExtendedAddress(mInstance, &extAddress);
     }
@@ -1222,7 +1222,7 @@ void Interpreter::ProcessExtPanId(int argc, char *argv[])
     {
         otExtendedPanId extPanId;
 
-        VerifyOrExit(Hex2Bin(argv[0], extPanId.m8, sizeof(extPanId)) >= 0, error = OT_ERROR_PARSE);
+        VerifyOrExit(Hex2Bin(argv[0], extPanId.m8, sizeof(extPanId)) >= 0, error = OT_ERROR_INVALID_ARGS);
 
         error = otThreadSetExtendedPanId(mInstance, &extPanId);
     }
@@ -1343,7 +1343,7 @@ void Interpreter::ProcessIpAddr(int argc, char *argv[])
         }
         else
         {
-            ExitNow(error = OT_ERROR_INVALID_ARGS);
+            ExitNow(error = OT_ERROR_INVALID_COMMAND);
         }
     }
 
@@ -1442,7 +1442,7 @@ void Interpreter::ProcessIpMulticastAddr(int argc, char *argv[])
         }
         else
         {
-            ExitNow(error = OT_ERROR_INVALID_ARGS);
+            ExitNow(error = OT_ERROR_INVALID_COMMAND);
         }
     }
 
@@ -1570,7 +1570,7 @@ void Interpreter::ProcessPskc(int argc, char *argv[])
     {
         otPskc pskc;
 
-        VerifyOrExit(Hex2Bin(argv[0], pskc.m8, sizeof(pskc)) == OT_PSKC_MAX_SIZE, error = OT_ERROR_PARSE);
+        VerifyOrExit(Hex2Bin(argv[0], pskc.m8, sizeof(pskc)) == OT_PSKC_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
         SuccessOrExit(error = otThreadSetPskc(mInstance, &pskc));
     }
 
@@ -1598,7 +1598,7 @@ void Interpreter::ProcessMasterKey(int argc, char *argv[])
     {
         otMasterKey key;
 
-        VerifyOrExit(Hex2Bin(argv[0], key.m8, sizeof(key.m8)) == OT_MASTER_KEY_SIZE, error = OT_ERROR_PARSE);
+        VerifyOrExit(Hex2Bin(argv[0], key.m8, sizeof(key.m8)) == OT_MASTER_KEY_SIZE, error = OT_ERROR_INVALID_ARGS);
         SuccessOrExit(error = otThreadSetMasterKey(mInstance, &key));
     }
 
@@ -1662,7 +1662,7 @@ void Interpreter::ProcessMode(int argc, char *argv[])
                 break;
 
             default:
-                ExitNow(error = OT_ERROR_PARSE);
+                ExitNow(error = OT_ERROR_INVALID_ARGS);
             }
         }
 
@@ -1797,7 +1797,7 @@ void Interpreter::ProcessService(int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
 
 exit:
@@ -2264,13 +2264,11 @@ otError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
     otError              error = OT_ERROR_NONE;
     otBorderRouterConfig config;
     int                  argcur = 0;
+    char *               prefixLengthStr;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
     memset(&config, 0, sizeof(otBorderRouterConfig));
-
-    char *prefixLengthStr;
-    char *endptr;
 
     if ((prefixLengthStr = strchr(argv[argcur], '/')) == NULL)
     {
@@ -2281,11 +2279,11 @@ otError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
 
     SuccessOrExit(error = otIp6AddressFromString(argv[argcur], &config.mPrefix.mPrefix));
 
-    config.mPrefix.mLength = static_cast<uint8_t>(strtol(prefixLengthStr, &endptr, 0));
-
-    if (*endptr != '\0')
     {
-        ExitNow(error = OT_ERROR_PARSE);
+        unsigned long length;
+
+        SuccessOrExit(error = ParseUnsignedLong(prefixLengthStr, length));
+        config.mPrefix.mLength = static_cast<uint8_t>(length);
     }
 
     argcur++;
@@ -2339,7 +2337,7 @@ otError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
                     break;
 
                 default:
-                    ExitNow(error = OT_ERROR_PARSE);
+                    ExitNow(error = OT_ERROR_INVALID_ARGS);
                 }
             }
         }
@@ -2358,13 +2356,11 @@ otError Interpreter::ProcessPrefixRemove(int argc, char *argv[])
     otError            error = OT_ERROR_NONE;
     struct otIp6Prefix prefix;
     int                argcur = 0;
+    char *             prefixLengthStr;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
     memset(&prefix, 0, sizeof(otIp6Prefix));
-
-    char *prefixLengthStr;
-    char *endptr;
 
     if ((prefixLengthStr = strchr(argv[argcur], '/')) == NULL)
     {
@@ -2375,11 +2371,11 @@ otError Interpreter::ProcessPrefixRemove(int argc, char *argv[])
 
     SuccessOrExit(error = otIp6AddressFromString(argv[argcur], &prefix.mPrefix));
 
-    prefix.mLength = static_cast<uint8_t>(strtol(prefixLengthStr, &endptr, 0));
-
-    if (*endptr != '\0')
     {
-        ExitNow(error = OT_ERROR_PARSE);
+        unsigned long length;
+
+        SuccessOrExit(error = ParseUnsignedLong(prefixLengthStr, length));
+        prefix.mLength = static_cast<uint8_t>(length);
     }
 
     error = otBorderRouterRemoveOnMeshPrefix(mInstance, &prefix);
@@ -2472,7 +2468,7 @@ void Interpreter::ProcessPrefix(int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
 
 exit:
@@ -2532,11 +2528,9 @@ otError Interpreter::ProcessRouteAdd(int argc, char *argv[])
     otError               error = OT_ERROR_NONE;
     otExternalRouteConfig config;
     int                   argcur = 0;
+    char *                prefixLengthStr;
 
     memset(&config, 0, sizeof(otExternalRouteConfig));
-
-    char *prefixLengthStr;
-    char *endptr;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
@@ -2549,11 +2543,11 @@ otError Interpreter::ProcessRouteAdd(int argc, char *argv[])
 
     SuccessOrExit(error = otIp6AddressFromString(argv[argcur], &config.mPrefix.mPrefix));
 
-    config.mPrefix.mLength = static_cast<uint8_t>(strtol(prefixLengthStr, &endptr, 0));
-
-    if (*endptr != '\0')
     {
-        ExitNow(error = OT_ERROR_PARSE);
+        unsigned long length;
+
+        SuccessOrExit(error = ParseUnsignedLong(prefixLengthStr, length));
+        config.mPrefix.mLength = static_cast<uint8_t>(length);
     }
 
     argcur++;
@@ -2578,7 +2572,7 @@ otError Interpreter::ProcessRouteAdd(int argc, char *argv[])
         }
         else
         {
-            ExitNow(error = OT_ERROR_PARSE);
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
         }
     }
 
@@ -2593,10 +2587,9 @@ otError Interpreter::ProcessRouteRemove(int argc, char *argv[])
     otError            error = OT_ERROR_NONE;
     struct otIp6Prefix prefix;
     int                argcur = 0;
+    char *             prefixLengthStr;
 
     memset(&prefix, 0, sizeof(struct otIp6Prefix));
-    char *prefixLengthStr;
-    char *endptr;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
 
@@ -2609,11 +2602,11 @@ otError Interpreter::ProcessRouteRemove(int argc, char *argv[])
 
     SuccessOrExit(error = otIp6AddressFromString(argv[argcur], &prefix.mPrefix));
 
-    prefix.mLength = static_cast<uint8_t>(strtol(prefixLengthStr, &endptr, 0));
-
-    if (*endptr != '\0')
     {
-        ExitNow(error = OT_ERROR_PARSE);
+        unsigned long length;
+
+        SuccessOrExit(error = ParseUnsignedLong(prefixLengthStr, length));
+        prefix.mLength = static_cast<uint8_t>(length);
     }
 
     error = otBorderRouterRemoveRoute(mInstance, &prefix);
@@ -2676,7 +2669,7 @@ void Interpreter::ProcessRoute(int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
 
 exit:
@@ -3030,7 +3023,7 @@ void Interpreter::ProcessSntp(int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
 
 exit:
@@ -3156,7 +3149,7 @@ void Interpreter::ProcessThread(int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
 
 exit:
@@ -3274,7 +3267,7 @@ void Interpreter::ProcessMacFilter(int argc, char *argv[])
         }
         else
         {
-            error = OT_ERROR_INVALID_ARGS;
+            error = OT_ERROR_INVALID_COMMAND;
         }
     }
 
@@ -3400,7 +3393,7 @@ otError Interpreter::ProcessMacFilterAddress(int argc, char *argv[])
         {
             VerifyOrExit(argc >= 2, error = OT_ERROR_INVALID_ARGS);
             VerifyOrExit(Hex2Bin(argv[1], extAddr.m8, OT_EXT_ADDRESS_SIZE) == OT_EXT_ADDRESS_SIZE,
-                         error = OT_ERROR_PARSE);
+                         error = OT_ERROR_INVALID_ARGS);
 
             error = otLinkFilterAddAddress(mInstance, &extAddr);
 
@@ -3419,7 +3412,7 @@ otError Interpreter::ProcessMacFilterAddress(int argc, char *argv[])
         {
             VerifyOrExit(argc == 2, error = OT_ERROR_INVALID_ARGS);
             VerifyOrExit(Hex2Bin(argv[1], extAddr.m8, OT_EXT_ADDRESS_SIZE) == OT_EXT_ADDRESS_SIZE,
-                         error = OT_ERROR_PARSE);
+                         error = OT_ERROR_INVALID_ARGS);
             SuccessOrExit(error = otLinkFilterRemoveAddress(mInstance, &extAddr));
         }
         else if (strcmp(argv[0], "clear") == 0)
@@ -3429,7 +3422,7 @@ otError Interpreter::ProcessMacFilterAddress(int argc, char *argv[])
         }
         else
         {
-            error = OT_ERROR_INVALID_ARGS;
+            error = OT_ERROR_INVALID_COMMAND;
         }
     }
 
@@ -3481,7 +3474,7 @@ otError Interpreter::ProcessMacFilterRss(int argc, char *argv[])
             VerifyOrExit(argc == 3, error = OT_ERROR_INVALID_ARGS);
             SuccessOrExit(error = ParseLong(argv[2], value));
             linkquality = static_cast<uint8_t>(value);
-            VerifyOrExit(linkquality <= 3, error = OT_ERROR_PARSE);
+            VerifyOrExit(linkquality <= 3, error = OT_ERROR_INVALID_ARGS);
             rss = otLinkConvertLinkQualityToRss(mInstance, linkquality);
 
             if (strcmp(argv[1], "*") == 0)
@@ -3491,7 +3484,7 @@ otError Interpreter::ProcessMacFilterRss(int argc, char *argv[])
             else
             {
                 VerifyOrExit(Hex2Bin(argv[1], extAddr.m8, OT_EXT_ADDRESS_SIZE) == OT_EXT_ADDRESS_SIZE,
-                             error = OT_ERROR_PARSE);
+                             error = OT_ERROR_INVALID_ARGS);
 
                 SuccessOrExit(error = otLinkFilterAddRssIn(mInstance, &extAddr, rss));
             }
@@ -3509,7 +3502,7 @@ otError Interpreter::ProcessMacFilterRss(int argc, char *argv[])
             else
             {
                 VerifyOrExit(Hex2Bin(argv[1], extAddr.m8, OT_EXT_ADDRESS_SIZE) == OT_EXT_ADDRESS_SIZE,
-                             error = OT_ERROR_PARSE);
+                             error = OT_ERROR_INVALID_ARGS);
 
                 SuccessOrExit(error = otLinkFilterAddRssIn(mInstance, &extAddr, rss));
             }
@@ -3525,7 +3518,7 @@ otError Interpreter::ProcessMacFilterRss(int argc, char *argv[])
             else
             {
                 VerifyOrExit(Hex2Bin(argv[1], extAddr.m8, OT_EXT_ADDRESS_SIZE) == OT_EXT_ADDRESS_SIZE,
-                             error = OT_ERROR_PARSE);
+                             error = OT_ERROR_INVALID_ARGS);
 
                 SuccessOrExit(error = otLinkFilterRemoveRssIn(mInstance, &extAddr));
             }
@@ -3536,7 +3529,7 @@ otError Interpreter::ProcessMacFilterRss(int argc, char *argv[])
         }
         else
         {
-            error = OT_ERROR_INVALID_ARGS;
+            error = OT_ERROR_INVALID_COMMAND;
         }
     }
 
@@ -3558,7 +3551,7 @@ void Interpreter::ProcessMac(int argc, char *argv[])
     }
     else
     {
-        error = OT_ERROR_INVALID_ARGS;
+        error = OT_ERROR_INVALID_COMMAND;
     }
 
 exit:
@@ -3676,7 +3669,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 
         if (i == mUserCommandsLength)
         {
-            AppendResult(OT_ERROR_PARSE);
+            AppendResult(OT_ERROR_INVALID_COMMAND);
         }
     }
 
@@ -3719,7 +3712,7 @@ void Interpreter::ProcessNetworkDiagnostic(int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
 
 exit:

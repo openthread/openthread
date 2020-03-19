@@ -107,7 +107,7 @@ otError Joiner::ProcessStop(int argc, char *argv[])
 
 otError Joiner::Process(int argc, char *argv[])
 {
-    otError error = OT_ERROR_INVALID_ARGS;
+    otError error = OT_ERROR_INVALID_COMMAND;
 
     if (argc < 1)
     {
