@@ -70,7 +70,7 @@ otError Lowpan::ComputeIid(const Mac::Address &aMacAddr, const Context &aContext
         aIpAddress.mFields.m16[4] = HostSwap16(0x0000);
         aIpAddress.mFields.m16[5] = HostSwap16(0x00ff);
         aIpAddress.mFields.m16[6] = HostSwap16(0xfe00);
-        aIpAddress.mFields.m16[7] = HostSwap16(aMacAddr.GetShort());
+        aIpAddress.SetLocator(aMacAddr.GetShort());
         break;
 
     case Mac::Address::kTypeExtended:
@@ -113,7 +113,7 @@ otError Lowpan::CompressSourceIid(const Mac::Address &aMacAddr,
     }
     else
     {
-        tmp.SetShort(HostSwap16(aIpAddr.mFields.m16[7]));
+        tmp.SetShort(aIpAddr.GetLocator());
         ComputeIid(tmp, aContext, ipaddr);
 
         if (memcmp(ipaddr.GetIid(), aIpAddr.GetIid(), Ip6::Address::kInterfaceIdentifierSize) == 0)
@@ -156,7 +156,7 @@ otError Lowpan::CompressDestinationIid(const Mac::Address &aMacAddr,
     }
     else
     {
-        tmp.SetShort(HostSwap16(aIpAddr.mFields.m16[7]));
+        tmp.SetShort(aIpAddr.GetLocator());
         ComputeIid(tmp, aContext, ipaddr);
 
         if (memcmp(ipaddr.GetIid(), aIpAddr.GetIid(), Ip6::Address::kInterfaceIdentifierSize) == 0)
