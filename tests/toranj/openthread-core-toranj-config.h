@@ -26,30 +26,17 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_CORE_TORANJ_CONFIG_H_
-#define OPENTHREAD_CORE_TORANJ_CONFIG_H_
-
 /**
  * This header file defines the OpenThread core configuration options used in NCP build for `toranj` test framework.
  *
  */
 
-#ifndef OPENTHREAD_RADIO
-#define OPENTHREAD_RADIO 0
+#if !defined(OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_) && !defined(OPENTHREAD_CORE_TORANJ_CONFIG_POSIX_H_)
+#error "This header file should only be included through the platform-specific one"
 #endif
 
-/**
- * @def OPENTHREAD_CONFIG_PLATFORM_INFO
- *
- * The platform-specific string to insert into the OpenThread version string.
- *
- */
-#if OPENTHREAD_RADIO
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "SIMULATION-RCP-toranj"
-#elif OPENTHREAD_PLATFORM_POSIX
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "POSIX-toranj"
-#else
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "SIMULATION-toranj"
+#ifndef OPENTHREAD_RADIO
+#define OPENTHREAD_RADIO 0
 #endif
 
 /**
@@ -421,24 +408,3 @@
  */
 #define OPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE 1
 #endif // OPENTHREAD_RADIO
-
-//--------------------------------------------------------------------------------------------------------------------
-// POSIX-App configurations
-
-/**
- * @def OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
- *
- * Define as 1 to enable PTY device support in POSIX app.
- *
- */
-#define OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE 1
-
-/**
- * @def OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE
- *
- * Define as 1 to enable UART interface to RCP.
- *
- */
-#define OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE 1
-
-#endif /* OPENTHREAD_CORE_TORANJ_CONFIG_H_ */
