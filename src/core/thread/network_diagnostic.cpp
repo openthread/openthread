@@ -350,6 +350,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             break;
         }
 
+#if OPENTHREAD_FTD
         case NetworkDiagnosticTlv::kConnectivity:
         {
             ConnectivityTlv tlv;
@@ -359,7 +360,6 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             break;
         }
 
-#if OPENTHREAD_FTD
         case NetworkDiagnosticTlv::kRoute:
         {
             RouteTlv tlv;
