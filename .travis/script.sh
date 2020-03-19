@@ -138,10 +138,12 @@ build_cc2538() {
 build_cc2650() {
     git checkout -- . || die
     git clean -xfd || die
-    ./bootstrap || die
-    make -f examples/Makefile-cc2650 || die
-    arm-none-eabi-size  output/cc2650/bin/ot-cli-mtd || die
-    arm-none-eabi-size  output/cc2650/bin/ot-ncp-mtd || die
+    mkdir build && cd build || die
+    cmake -GNinja -DOT_PLATFORM=cc2650 -DCMAKE_TOOLCHAIN_FILE=examples/platforms/cc2650/arm-none-eabi.cmake -DOT_COMPILE_WARNING_AS_ERROR=on -DCMAKE_BUILD_TYPE=Debug ..
+    ninja ot-cli-mtd ot-ncp-mtd || die
+
+    arm-none-eabi-size  examples/apps/cli/ot-cli-mtd || die
+    arm-none-eabi-size  examples/apps/ncp/ot-ncp-mtd || die
 }
 
 build_cc2652() {
