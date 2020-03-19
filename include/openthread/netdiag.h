@@ -69,7 +69,7 @@ enum
     OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS       = 0,  ///< MAC Extended Address TLV
     OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS     = 1,  ///< Address16 TLV
     OT_NETWORK_DIAGNOSTIC_TLV_MODE              = 2,  ///< Mode TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_POLLING_PERIOD    = 3,  ///< Timeout TLV (the maximum polling time period for SEDs)
+    OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT           = 3,  ///< Timeout TLV (the maximum polling time period for SEDs)
     OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY      = 4,  ///< Connectivity TLV
     OT_NETWORK_DIAGNOSTIC_TLV_ROUTE             = 5,  ///< Route64 TLV
     OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA       = 6,  ///< Leader Data TLV

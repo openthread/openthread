@@ -3773,7 +3773,7 @@ void Interpreter::HandleDiagnosticGetResponse(const otMessage &aMessage, const I
             mServer->OutputFormat("Mode:\r\n");
             OutputMode(diagTlv.mMode, column + INDENT_SIZE);
             break;
-        case OT_NETWORK_DIAGNOSTIC_TLV_POLLING_PERIOD:
+        case OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT:
             mServer->OutputFormat("Timeout: %u\r\n", diagTlv.mTimeout);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY:

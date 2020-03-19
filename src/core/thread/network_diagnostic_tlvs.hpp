@@ -85,7 +85,7 @@ public:
         kExtMacAddress   = OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS,
         kAddress16       = OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS,
         kMode            = OT_NETWORK_DIAGNOSTIC_TLV_MODE,
-        kPollingPeriod   = OT_NETWORK_DIAGNOSTIC_TLV_POLLING_PERIOD,
+        kTimeout         = OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT,
         kConnectivity    = OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY,
         kRoute           = OT_NETWORK_DIAGNOSTIC_TLV_ROUTE,
         kLeaderData      = OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA,
@@ -306,7 +306,7 @@ public:
      */
     void Init(void)
     {
-        SetType(kPollingPeriod);
+        SetType(kTimeout);
         SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
     }
 
