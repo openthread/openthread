@@ -467,6 +467,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             break;
         }
 
+#if OPENTHREAD_FTD
         case NetworkDiagnosticTlv::kMaxChildTimeout:
         {
             uint32_t maxTimeout = 0;
@@ -481,6 +482,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
 
             break;
         }
+#endif
 
         default:
             ExitNow(error = OT_ERROR_PARSE);

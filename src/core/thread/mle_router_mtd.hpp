@@ -73,8 +73,6 @@ public:
     static bool IsRouterIdValid(uint8_t aRouterId) { return aRouterId <= kMaxRouterId; }
 
     otError SendChildUpdateRequest(void) { return Mle::SendChildUpdateRequest(); }
-
-    otError GetMaxChildTimeout(uint32_t &) { return OT_ERROR_NOT_IMPLEMENTED; }
 };
 
 } // namespace Mle
