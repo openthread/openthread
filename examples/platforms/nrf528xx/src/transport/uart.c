@@ -87,7 +87,8 @@ static __INLINE bool isRxBufferFull()
  */
 static __INLINE bool isRxBufferEmpty()
 {
-    return (sReceiveHead == sReceiveTail);
+    uint16_t head = sReceiveHead;
+    return (head == sReceiveTail);
 }
 
 /**
@@ -97,6 +98,7 @@ static void processReceive(void)
 {
     // Set head position to not be changed during read procedure.
     uint16_t head = sReceiveHead;
+    uint8_t *position;
 
     otEXPECT(isRxBufferEmpty() == false);
 
@@ -104,14 +106,16 @@ static void processReceive(void)
     // bytes from the end of the buffer.
     if (head < sReceiveTail)
     {
-        otPlatUartReceived(&sReceiveBuffer[sReceiveTail], (UART_RX_BUFFER_SIZE - sReceiveTail));
+        position = &sReceiveBuffer[sReceiveTail];
+        otPlatUartReceived(position, (UART_RX_BUFFER_SIZE - sReceiveTail));
         sReceiveTail = 0;
     }
 
     // Notify about received bytes.
     if (head > sReceiveTail)
     {
-        otPlatUartReceived(&sReceiveBuffer[sReceiveTail], (head - sReceiveTail));
+        position = &sReceiveBuffer[sReceiveTail];
+        otPlatUartReceived(position, (head - sReceiveTail));
         sReceiveTail = head;
     }
 
