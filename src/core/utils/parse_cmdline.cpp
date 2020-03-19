@@ -50,12 +50,12 @@ static bool IsEscapable(char aChar)
     return IsSeparator(aChar) || (aChar == '\\');
 }
 
-otError CmdLineParser::ParseCmd(char *aString, uint8_t &aArgc, char *aArgv[], uint8_t aArgcMax)
+otError CmdLineParser::ParseCmd(char *aString, uint8_t &aArgsLength, char *aArgs[], uint8_t aArgsLengthMax)
 {
     otError error = OT_ERROR_NONE;
     char *  cmd;
 
-    aArgc = 0;
+    aArgsLength = 0;
 
     for (cmd = aString; *cmd; cmd++)
     {
@@ -69,10 +69,10 @@ otError CmdLineParser::ParseCmd(char *aString, uint8_t &aArgc, char *aArgv[], ui
             *cmd = '\0';
         }
 
-        if ((*cmd != '\0') && ((aArgc == 0) || (*(cmd - 1) == '\0')))
+        if ((*cmd != '\0') && ((aArgsLength == 0) || (*(cmd - 1) == '\0')))
         {
-            VerifyOrExit(aArgc < aArgcMax, error = OT_ERROR_INVALID_ARGS);
-            aArgv[aArgc++] = cmd;
+            VerifyOrExit(aArgsLength < aArgsLengthMax, error = OT_ERROR_INVALID_ARGS);
+            aArgs[aArgsLength++] = cmd;
         }
     }
 

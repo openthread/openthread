@@ -66,11 +66,11 @@ public:
     /**
      * This method interprets a list of CLI arguments.
      *
-     * @param[in]  argc  The number of elements in argv.
-     * @param[in]  argv  A pointer to an array of command line arguments.
+     * @param[in]  aArgsLength  The number of elements in @p aArgs.
+     * @param[in]  aArgs        An array of command line arguments.
      *
      */
-    otError Process(int argc, char *argv[]);
+    otError Process(int aArgsLength, char *aArgs[]);
 
 private:
     enum
@@ -81,20 +81,20 @@ private:
     struct Command
     {
         const char *mName;
-        otError (Commissioner::*mCommand)(int argc, char *argv[]);
+        otError (Commissioner::*mCommand)(int aArgsLength, char *aArgs[]);
     };
 
-    otError ProcessHelp(int argc, char *argv[]);
-    otError ProcessAnnounce(int argc, char *argv[]);
-    otError ProcessEnergy(int argc, char *argv[]);
-    otError ProcessJoiner(int argc, char *argv[]);
-    otError ProcessMgmtGet(int argc, char *argv[]);
-    otError ProcessMgmtSet(int argc, char *argv[]);
-    otError ProcessPanId(int argc, char *argv[]);
-    otError ProcessProvisioningUrl(int argc, char *argv[]);
-    otError ProcessSessionId(int argc, char *argv[]);
-    otError ProcessStart(int argc, char *argv[]);
-    otError ProcessStop(int argc, char *argv[]);
+    otError ProcessHelp(int aArgsLength, char *aArgs[]);
+    otError ProcessAnnounce(int aArgsLength, char *aArgs[]);
+    otError ProcessEnergy(int aArgsLength, char *aArgs[]);
+    otError ProcessJoiner(int aArgsLength, char *aArgs[]);
+    otError ProcessMgmtGet(int aArgsLength, char *aArgs[]);
+    otError ProcessMgmtSet(int aArgsLength, char *aArgs[]);
+    otError ProcessPanId(int aArgsLength, char *aArgs[]);
+    otError ProcessProvisioningUrl(int aArgsLength, char *aArgs[]);
+    otError ProcessSessionId(int aArgsLength, char *aArgs[]);
+    otError ProcessStart(int aArgsLength, char *aArgs[]);
+    otError ProcessStop(int aArgsLength, char *aArgs[]);
 
     static void HandleStateChanged(otCommissionerState aState, void *aContext);
     void        HandleStateChanged(otCommissionerState aState);
