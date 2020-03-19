@@ -31,6 +31,7 @@
  *   This file implements the radio apis on posix platform.
  */
 
+#include "platform-posix.h"
 #include "lib/spinel/radio_spinel.hpp"
 
 #if OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE
@@ -42,9 +43,9 @@
 #endif
 
 #if OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE
-static ot::PosixApp::RadioSpinel<ot::PosixApp::HdlcInterface> sRadioSpinel;
+static ot::Spinel::RadioSpinel<ot::PosixApp::HdlcInterface> sRadioSpinel;
 #elif OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
-static ot::PosixApp::RadioSpinel<ot::PosixApp::SpiInterface> sRadioSpinel;
+static ot::Spinel::RadioSpinel<ot::PosixApp::SpiInterface> sRadioSpinel;
 #endif
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
@@ -222,9 +223,9 @@ void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct Event *aE
     }
 
     // The current event can be other event types
-    if (aEvent.mEvent == OT_SIM_EVENT_RADIO_SPINEL_WRITE)
+    if (aEvent->mEvent == OT_SIM_EVENT_RADIO_SPINEL_WRITE)
     {
-        sRadioSpinel.GetSpinelInterface().Process(*aReadFdSet, *aWriteFdSet);
+        sRadioSpinel.GetSpinelInterface().ProcessReadData(aEvent->mData, aEvent->mDataLength);
     }
 
     if (sRadioSpinel.HasSavedFrame())

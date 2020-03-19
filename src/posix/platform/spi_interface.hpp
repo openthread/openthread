@@ -62,9 +62,9 @@ public:
      * @param[in] aFrameBuffer  A reference to a `RxFrameBuffer` object.
      *
      */
-    SpiInterface(SpinelInterface::ReceiveFrameCallback aCallback,
-                 void *                                aCallbackContext,
-                 SpinelInterface::RxFrameBuffer &      aFrameBuffer);
+    SpiInterface(Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
+                 void *                                        aCallbackContext,
+                 Spinel::SpinelInterface::RxFrameBuffer &      aFrameBuffer);
 
     /**
      * This destructor deinitializes the object.
@@ -186,12 +186,12 @@ private:
 
     enum
     {
-        kMaxFrameSize = SpinelInterface::kMaxFrameSize,
+        kMaxFrameSize = Spinel::SpinelInterface::kMaxFrameSize,
     };
 
-    SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
-    void *                                mReceiveFrameContext;
-    SpinelInterface::RxFrameBuffer &      mRxFrameBuffer;
+    Spinel::SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
+    void *                                        mReceiveFrameContext;
+    Spinel::SpinelInterface::RxFrameBuffer &      mRxFrameBuffer;
 
     int mSpiDevFd;
     int mResetGpioValueFd;
@@ -223,8 +223,8 @@ private:
     uint16_t mSpiSlaveDataLen;
 
     // Non-copyable, intentionally not implemented.
-    SpiInterface(const HdlcInterface &);
-    SpiInterface &operator=(const HdlcInterface &);
+    SpiInterface(const SpiInterface &);
+    SpiInterface &operator=(const SpiInterface &);
 };
 
 } // namespace PosixApp

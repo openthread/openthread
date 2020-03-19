@@ -246,6 +246,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/utils/parse_cmdline.cpp                        \
     src/core/utils/slaac_address.cpp                        \
     src/lib/hdlc/hdlc.cpp                                   \
+    src/lib/platform/exit_code.c                            \
     src/lib/spinel/spinel.c                                 \
     src/lib/spinel/spinel_decoder.cpp                       \
     src/lib/spinel/spinel_encoder.cpp                       \
@@ -255,7 +256,7 @@ LOCAL_SRC_FILES                                          := \
     src/posix/platform/logging.cpp                          \
     src/posix/platform/misc.cpp                             \
     src/posix/platform/netif.cpp                            \
-    src/posix/platform/radio_spinel.cpp                     \
+    src/posix/platform/radio.cpp                            \
     src/posix/platform/settings.cpp                         \
     src/posix/platform/spi_interface.cpp                    \
     src/posix/platform/system.cpp                           \
@@ -459,6 +460,7 @@ LOCAL_CFLAGS                                               := \
 LOCAL_C_INCLUDES                                         := \
     $(OPENTHREAD_PROJECT_INCLUDES)                          \
     $(LOCAL_PATH)/include                                   \
+    $(LOCAL_PATH)/src/                                      \
     $(LOCAL_PATH)/src/core                                  \
     $(LOCAL_PATH)/src/posix/platform                        \
     $(LOCAL_PATH)/src/posix/platform/include                \

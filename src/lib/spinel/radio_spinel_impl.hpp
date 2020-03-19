@@ -56,19 +56,18 @@
 #include "common/logging.hpp"
 #include "common/new.hpp"
 #include "common/settings.hpp"
-#include "meshcop/dataset.hpp"
-#include "meshcop/meshcop_tlvs.hpp"
-
 #include "lib/platform/exit_code.h"
 #include "lib/platform/time.h"
 #include "lib/spinel/spinel_decoder.hpp"
+#include "meshcop/dataset.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
 
 #ifndef TX_WAIT_US
 #define TX_WAIT_US (5 * US_PER_S)
 #endif
 
 namespace ot {
-namespace PosixApp {
+namespace Spinel {
 
 static otError SpinelStatusToOtError(spinel_status_t aError)
 {
@@ -1581,5 +1580,5 @@ template <typename InterfaceType> otRadioState RadioSpinel<InterfaceType>::GetSt
     return sOtRadioStateMap[mState];
 }
 
-} // namespace PosixApp
+} // namespace Spinel
 } // namespace ot

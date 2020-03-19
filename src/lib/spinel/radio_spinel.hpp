@@ -42,7 +42,7 @@
 #include "ncp/ncp_config.h"
 
 namespace ot {
-namespace PosixApp {
+namespace Spinel {
 
 template <typename InterfaceType> class RadioSpinel
 {
@@ -728,7 +728,7 @@ private:
     uint64_t mTxRadioEndUs;
 };
 
-} // namespace PosixApp
+} // namespace Spinel
 } // namespace ot
 
 #include "radio_spinel_impl.hpp"

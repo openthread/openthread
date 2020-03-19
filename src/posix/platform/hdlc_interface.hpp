@@ -59,9 +59,9 @@ public:
      * @param[in] aFrameBuffer      A reference to a `RxFrameBuffer` object.
      *
      */
-    HdlcInterface(SpinelInterface::ReceiveFrameCallback aCallback,
-                  void *                                aCallbackContext,
-                  SpinelInterface::RxFrameBuffer &      aFrameBuffer);
+    HdlcInterface(Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
+                  void *                                        aCallbackContext,
+                  Spinel::SpinelInterface::RxFrameBuffer &      aFrameBuffer);
 
     /**
      * This destructor deinitializes the object.
@@ -207,13 +207,13 @@ private:
 
     enum
     {
-        kMaxFrameSize = SpinelInterface::kMaxFrameSize,
+        kMaxFrameSize = Spinel::SpinelInterface::kMaxFrameSize,
         kMaxWaitTime  = 2000, ///< Maximum wait time in Milliseconds for socket to become writable (see `SendFrame`).
     };
 
-    SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
-    void *                                mReceiveFrameContext;
-    SpinelInterface::RxFrameBuffer &      mRxFrameBuffer;
+    Spinel::SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
+    void *                                        mReceiveFrameContext;
+    Spinel::SpinelInterface::RxFrameBuffer &      mRxFrameBuffer;
 
     int           mSockFd;
     Hdlc::Decoder mHdlcDecoder;

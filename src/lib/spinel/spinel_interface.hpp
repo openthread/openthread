@@ -35,12 +35,10 @@
 #ifndef POSIX_APP_SPINEL_INTERFACE_HPP_
 #define POSIX_APP_SPINEL_INTERFACE_HPP_
 
-#include "openthread-posix-config.h"
-
 #include "lib/hdlc/hdlc.hpp"
 
 namespace ot {
-namespace PosixApp {
+namespace Spinel {
 
 class SpinelInterface
 {
@@ -61,7 +59,7 @@ public:
 
     typedef void (*ReceiveFrameCallback)(void *aContext);
 };
-} // namespace PosixApp
+} // namespace Spinel
 } // namespace ot
 
 #endif // POSIX_APP_SPINEL_INTERFACE_HPP_

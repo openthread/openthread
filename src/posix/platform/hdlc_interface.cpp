@@ -120,6 +120,8 @@
 
 #if OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE
 
+using ot::Spinel::SpinelInterface;
+
 namespace ot {
 namespace PosixApp {
 

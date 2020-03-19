@@ -59,6 +59,8 @@
 #include <linux/ioctl.h>
 #include <linux/spi/spidev.h>
 
+using ot::Spinel::SpinelInterface;
+
 namespace ot {
 namespace PosixApp {
 
