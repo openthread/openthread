@@ -62,8 +62,11 @@
 namespace ot {
 namespace PosixApp {
 
-SpiInterface::SpiInterface(SpinelInterface::Callbacks &aCallback, SpinelInterface::RxFrameBuffer &aFrameBuffer)
-    : mCallbacks(aCallback)
+SpiInterface::SpiInterface(SpinelInterface::ReceiveFrameCallback aCallback,
+                           void *                                aCallbackContext,
+                           SpinelInterface::RxFrameBuffer &      aFrameBuffer)
+    : mReceiveFrameCallback(aCallback)
+    , mReceiveFrameContext(aCallbackContext)
     , mRxFrameBuffer(aFrameBuffer)
     , mSpiDevFd(-1)
     , mResetGpioValueFd(-1)
@@ -508,7 +511,7 @@ otError SpiInterface::PushPullSpi(void)
             // Upper layer will free the frame buffer.
             discardRxFrame = false;
 
-            mCallbacks.HandleReceivedFrame();
+            mReceiveFrameCallback(mReceiveFrameContext);
         }
     }
 

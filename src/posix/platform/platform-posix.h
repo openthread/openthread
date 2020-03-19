@@ -49,6 +49,9 @@
 
 #include "common/logging.hpp"
 
+#include "lib/platform/exit_code.h"
+#include "lib/platform/time.h"
+
 /**
  * @def OPENTHREAD_POSIX_VIRTUAL_TIME
  *
@@ -88,70 +91,6 @@ struct Event
 } OT_TOOL_PACKED_END;
 
 /**
- * This function converts an exit code into a string.
- *
- * @param[in]  aExitCode  An exit code.
- *
- * @returns  A string representation of an exit code.
- *
- */
-const char *otExitCodeToString(uint8_t aExitCode);
-
-/**
- * This macro checks for the specified condition, which is expected to commonly be true,
- * and both records exit status and terminates the program if the condition is false.
- *
- * @param[in]   aCondition  The condition to verify
- * @param[in]   aExitCode   The exit code.
- *
- */
-#define VerifyOrDie(aCondition, aExitCode)                                                                   \
-    do                                                                                                       \
-    {                                                                                                        \
-        if (!(aCondition))                                                                                   \
-        {                                                                                                    \
-            otLogCritPlat("%s() at %s:%d: %s", __func__, __FILE__, __LINE__, otExitCodeToString(aExitCode)); \
-            exit(aExitCode);                                                                                 \
-        }                                                                                                    \
-    } while (false)
-
-/**
- * This macro checks for the specified error code, which is expected to commonly be successful,
- * and both records exit status and terminates the program if the error code is unsuccessful.
- *
- * @param[in]  aError  An error code to be evaluated against OT_ERROR_NONE.
- *
- */
-#define SuccessOrDie(aError)             \
-    VerifyOrDie(aError == OT_ERROR_NONE, \
-                (aError == OT_ERROR_INVALID_ARGS ? OT_EXIT_INVALID_ARGUMENTS : OT_EXIT_FAILURE))
-
-/**
- * This macro unconditionally both records exit status and terminates the program.
- *
- * @param[in]   aExitCode   The exit code.
- *
- */
-#define DieNow(aExitCode) VerifyOrDie(false, aExitCode)
-
-/**
- * This macro unconditionally both records exit status and exit message and terminates the program.
- *
- * @param[in]   aMessage    The exit message.
- * @param[in]   aExitCode   The exit code.
- *
- */
-#define DieNowWithMessage(aMessage, aExitCode)                                                       \
-    do                                                                                               \
-    {                                                                                                \
-        fprintf(stderr, "exit(%d): %s line %d, %s, %s\r\n", aExitCode, __func__, __LINE__, aMessage, \
-                otExitCodeToString(aExitCode));                                                      \
-        otLogCritPlat("exit(%d): %s line %d, %s, %s", aExitCode, __func__, __LINE__, aMessage,       \
-                      otExitCodeToString(aExitCode));                                                \
-        exit(aExitCode);                                                                             \
-    } while (false)
-
-/**
  * Unique node ID.
  *
  */
@@ -186,11 +125,6 @@ void platformAlarmProcess(otInstance *aInstance);
  *
  */
 int32_t platformAlarmGetNext(void);
-
-#define MS_PER_S 1000
-#define US_PER_MS 1000
-#define US_PER_S 1000000
-#define NS_PER_US 1000
 
 /**
  * This function advances the alarm time by @p aDelta.

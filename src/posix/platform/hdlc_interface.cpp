@@ -123,8 +123,11 @@
 namespace ot {
 namespace PosixApp {
 
-HdlcInterface::HdlcInterface(SpinelInterface::Callbacks &aCallback, SpinelInterface::RxFrameBuffer &aFrameBuffer)
-    : mCallbacks(aCallback)
+HdlcInterface::HdlcInterface(SpinelInterface::ReceiveFrameCallback aCallback,
+                             void *                                aCallbackContext,
+                             SpinelInterface::RxFrameBuffer &      aFrameBuffer)
+    : mReceiveFrameCallback(aCallback)
+    , mReceiveFrameContext(aCallbackContext)
     , mRxFrameBuffer(aFrameBuffer)
     , mSockFd(-1)
     , mHdlcDecoder(aFrameBuffer, HandleHdlcFrame, this)
@@ -626,7 +629,7 @@ void HdlcInterface::HandleHdlcFrame(otError aError)
 {
     if (aError == OT_ERROR_NONE)
     {
-        mCallbacks.HandleReceivedFrame();
+        mReceiveFrameCallback(mReceiveFrameContext);
     }
     else
     {

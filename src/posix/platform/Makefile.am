@@ -49,7 +49,7 @@ libopenthread_posix_a_SOURCES             = \
     logging.cpp                             \
     misc.cpp                                \
     netif.cpp                               \
-    radio_spinel.cpp                        \
+    radio.cpp                               \
     settings.cpp                            \
     spi_interface.cpp                       \
     system.cpp                              \
@@ -62,8 +62,6 @@ noinst_HEADERS                            = \
     hdlc_interface.hpp                      \
     openthread-posix-config.h               \
     platform-posix.h                        \
-    radio_spinel.hpp                        \
-    spinel_interface.hpp                    \
     $(NULL)
 
 openthread_HEADERS                        = \

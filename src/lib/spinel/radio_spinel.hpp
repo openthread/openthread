@@ -34,30 +34,17 @@
 #ifndef RADIO_SPINEL_HPP_
 #define RADIO_SPINEL_HPP_
 
-#include "openthread-posix-config.h"
-
+#include <openthread/openthread-system.h>
 #include <openthread/platform/radio.h>
 
-#if OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE
-#include "hdlc_interface.hpp"
-#endif
-
-#if OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
-#include "spi_interface.hpp"
-#endif
-
-#if !OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE && !OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
-#error "Please enable either OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE or OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE."
-#endif
-
+#include "spinel.h"
 #include "spinel_interface.hpp"
-#include "lib/spinel/spinel.h"
 #include "ncp/ncp_config.h"
 
 namespace ot {
 namespace PosixApp {
 
-class RadioSpinel : public SpinelInterface::Callbacks
+template <typename InterfaceType> class RadioSpinel
 {
 public:
     /**
@@ -451,42 +438,59 @@ public:
     bool IsEnabled(void) const { return mState != kStateDisabled; }
 
     /**
-     * This method updates the file descriptor sets with file descriptors used by the radio driver.
+     * This method indicates whether there are any saved frames in the underlying buffer.
      *
-     * @param[inout]  aReadFdSet   A reference to the read file descriptors.
-     * @param[inout]  aWriteFdSet  A reference to the write file descriptors.
-     * @param[inout]  aMaxFd       A reference to the max file descriptor.
-     * @param[inout]  aTimeout     A reference to the timeout.
+     * @retval TRUE  There is at least one saved frame in the buffer.
+     * @retval FALSE There is no saved frame in the buffer.
      *
      */
-    void UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout);
+    bool HasSavedFrame(void) const { return mRxFrameBuffer.HasSavedFrame(); }
 
     /**
-     * This method performs radio driver processing.
+     * This method indicates whether there is a pending transmission.
      *
-     * @param[in]   aReadFdSet      A reference to the read file descriptors.
-     * @param[in]   aWriteFdSet     A reference to the write file descriptors.
-     *
-     */
-    void Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet);
-
-#if OPENTHREAD_POSIX_VIRTUAL_TIME
-    /**
-     * This method performs radio spinel processing in simulation mode.
-     *
-     * @param[in]   aEvent  A reference to the current received simulation event.
+     * @retval TRUE  There is a pending transmission.
+     * @retval FALSE There is no pending transmission.
      *
      */
-    void Process(const struct Event &aEvent);
+    bool IsTransmitting(void) const { return mState == kStateTransmitting; }
 
     /**
-     * This method updates the @p aTimeout for processing radio spinel in simulation mode.
+     * This method indicates whether a transmit has just finished.
      *
-     * @param[out]   aTimeout    A reference to the current timeout.
+     * @retval TRUE  There is a pending transmission.
+     * @retval FALSE There is no pending transmission.
      *
      */
-    void Update(struct timeval &aTimeout);
-#endif
+    bool IsTransmitDone(void) const { return mState == kStateTransmitDone; }
+
+    /**
+     * This method returns the timeout timepoint for the pending transmission.
+     *
+     * @returns The timeout timepoint for the pending transmission.
+     *
+     */
+    bool GetTxRadioEndUs(void) const { return mTxRadioEndUs; }
+
+    /**
+     * This method triggers a state transfer of the state machine
+     *
+     */
+    void ProcessRadioStateMachine(void);
+
+    /**
+     * This method processes the frame queue.
+     *
+     */
+    void ProcessFrameQueue(void);
+
+    /**
+     * This method returns the underlying spinel interface.
+     *
+     * @returns The underlying spinel interface.
+     *
+     */
+    InterfaceType &GetSpinelInterface(void) { return mSpinelInterface; }
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     /**
@@ -561,10 +565,11 @@ private:
 
     typedef otError (RadioSpinel::*ResponseHandler)(const uint8_t *aBuffer, uint16_t aLength);
 
+    static void sHandleReceivedFrame(void *aContext);
+
     otError CheckSpinelVersion(void);
     otError CheckCapabilities(bool &aIsRcp);
     otError CheckRadioCapabilities(void);
-    void    ProcessFrameQueue(void);
 
     /**
      * This method tries to retrieve a spinel property from OpenThread transceiver.
@@ -680,13 +685,7 @@ private:
 
     SpinelInterface::RxFrameBuffer mRxFrameBuffer;
 
-#if OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE
-    HdlcInterface mSpinelInterface;
-#endif
-
-#if OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
-    SpiInterface mSpinelInterface;
-#endif
+    InterfaceType mSpinelInterface;
 
     uint16_t          mCmdTidsInUse;    ///< Used transaction ids.
     spinel_tid_t      mCmdNextTid;      ///< Next available transaction id.
@@ -731,5 +730,7 @@ private:
 
 } // namespace PosixApp
 } // namespace ot
+
+#include "radio_spinel_impl.hpp"
 
 #endif // RADIO_SPINEL_HPP_

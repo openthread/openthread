@@ -70,6 +70,8 @@ include_HEADERS                                   = \
     $(NULL)
 
 noinst_HEADERS                                    = \
+    radio_spinel.hpp                                \
+    radio_spinel_impl.hpp                           \
     spinel_buffer.hpp                               \
     spinel_decoder.hpp                              \
     spinel_encoder.hpp                              \

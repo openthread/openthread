@@ -1027,6 +1027,7 @@ src/posix/Makefile
 src/posix/platform/Makefile
 src/lib/Makefile
 src/lib/hdlc/Makefile
+src/lib/platform/Makefile
 src/lib/spinel/Makefile
 third_party/Makefile
 third_party/jlink/Makefile

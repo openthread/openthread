@@ -36,8 +36,8 @@
 
 #include "openthread-posix-config.h"
 #include "platform-posix.h"
-#include "spinel_interface.hpp"
 #include "lib/hdlc/hdlc.hpp"
+#include "lib/spinel/spinel_interface.hpp"
 
 #if OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE
 
@@ -54,11 +54,14 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in] aCallback     A reference to a `Callback` object.
-     * @param[in] aFrameBuffer  A reference to a `RxFrameBuffer` object.
+     * @param[in] aCallback         Callback on frame received
+     * @param[in] aCallbackContext  Callback context
+     * @param[in] aFrameBuffer      A reference to a `RxFrameBuffer` object.
      *
      */
-    HdlcInterface(SpinelInterface::Callbacks &aCallback, SpinelInterface::RxFrameBuffer &aFrameBuffer);
+    HdlcInterface(SpinelInterface::ReceiveFrameCallback aCallback,
+                  void *                                aCallbackContext,
+                  SpinelInterface::RxFrameBuffer &      aFrameBuffer);
 
     /**
      * This destructor deinitializes the object.
@@ -208,11 +211,16 @@ private:
         kMaxWaitTime  = 2000, ///< Maximum wait time in Milliseconds for socket to become writable (see `SendFrame`).
     };
 
-    SpinelInterface::Callbacks &    mCallbacks;
-    SpinelInterface::RxFrameBuffer &mRxFrameBuffer;
+    SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
+    void *                                mReceiveFrameContext;
+    SpinelInterface::RxFrameBuffer &      mRxFrameBuffer;
 
     int           mSockFd;
     Hdlc::Decoder mHdlcDecoder;
+
+    // Non-copyable, intentionally not implemented.
+    HdlcInterface(const HdlcInterface &);
+    HdlcInterface &operator=(const HdlcInterface &);
 };
 
 } // namespace PosixApp

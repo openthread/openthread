@@ -36,8 +36,8 @@
 
 #include "openthread-posix-config.h"
 
-#include "spinel_interface.hpp"
 #include "lib/hdlc/hdlc.hpp"
+#include "lib/spinel/spinel_interface.hpp"
 
 #include <openthread/openthread-system.h>
 
@@ -62,7 +62,9 @@ public:
      * @param[in] aFrameBuffer  A reference to a `RxFrameBuffer` object.
      *
      */
-    SpiInterface(SpinelInterface::Callbacks &aCallback, SpinelInterface::RxFrameBuffer &aFrameBuffer);
+    SpiInterface(SpinelInterface::ReceiveFrameCallback aCallback,
+                 void *                                aCallbackContext,
+                 SpinelInterface::RxFrameBuffer &      aFrameBuffer);
 
     /**
      * This destructor deinitializes the object.
@@ -187,8 +189,9 @@ private:
         kMaxFrameSize = SpinelInterface::kMaxFrameSize,
     };
 
-    SpinelInterface::Callbacks &    mCallbacks;
-    SpinelInterface::RxFrameBuffer &mRxFrameBuffer;
+    SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
+    void *                                mReceiveFrameContext;
+    SpinelInterface::RxFrameBuffer &      mRxFrameBuffer;
 
     int mSpiDevFd;
     int mResetGpioValueFd;
@@ -218,6 +221,10 @@ private:
 
     bool     mDidPrintRateLimitLog;
     uint16_t mSpiSlaveDataLen;
+
+    // Non-copyable, intentionally not implemented.
+    SpiInterface(const HdlcInterface &);
+    SpiInterface &operator=(const HdlcInterface &);
 };
 
 } // namespace PosixApp

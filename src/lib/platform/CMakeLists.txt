@@ -26,12 +26,22 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+add_library(openthread-platform
+    exit_code.c
+)
 
-SUBDIRS                                 = \
-    hdlc                                  \
-    platform                              \
-    spinel                                \
-    $(NULL)
+target_include_directories(openthread-platform
+    PUBLIC
+        ${OT_PUBLIC_INCLUDES}
+        ${PROJECT_SOURCE_DIR}/src/
+    PRIVATE
+        ${OT_PRIVATE_INCLUDES}
+)
 
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am
+target_compile_definitions(openthread-platform PRIVATE
+    ${OT_PRIVATE_DEFINES}
+)
+
+target_compile_options(openthread-platform PRIVATE
+    ${OT_CFLAGS}
+)

@@ -59,24 +59,7 @@ public:
      */
     typedef Hdlc::MultiFrameBuffer<kMaxFrameSize> RxFrameBuffer;
 
-    /**
-     * This class defines the callbacks provided by `SpinelInterface` to its owner/user.
-     *
-     */
-    class Callbacks
-    {
-    public:
-        /**
-         * This callback is invoked to notify owner/user of `SpinelInterface` of a received spinel frame.
-         *
-         * The newly received frame is available in `RxFrameBuffer` from `SpinelInterface::GetRxFrameBuffer()`.
-         * User can read and process the frame. The callback is expected to either discard the new frame using
-         * `RxFrameBuffer::DiscardFrame()` or save the frame using `RxFrameBuffer::SaveFrame()` to be read and
-         * processed later.
-         *
-         */
-        void HandleReceivedFrame(void);
-    };
+    typedef void (*ReceiveFrameCallback)(void *aContext);
 };
 } // namespace PosixApp
 } // namespace ot

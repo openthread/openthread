@@ -28,10 +28,17 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-SUBDIRS                                 = \
-    hdlc                                  \
-    platform                              \
-    spinel                                \
+noinst_LIBRARIES = libopenthread-platform.a
+
+libopenthread_platform_a_CPPFLAGS           = \
+    -I$(top_srcdir)/include                   \
+    -I$(top_srcdir)/src/core                  \
+    $(NULL)
+
+libopenthread_platform_a_SOURCES            = \
+    exit_code.c                               \
+    exit_code.h                               \
+    time.h                                    \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
