@@ -124,6 +124,7 @@ otError KeyManager::SetMasterKey(const MasterKey &aKey)
     parent->SetLinkFrameCounter(0);
     parent->SetMleFrameCounter(0);
 
+#if OPENTHREAD_FTD
     // reset router frame counters
     for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++)
     {
@@ -131,6 +132,7 @@ otError KeyManager::SetMasterKey(const MasterKey &aKey)
         iter.GetRouter()->SetLinkFrameCounter(0);
         iter.GetRouter()->SetMleFrameCounter(0);
     }
+#endif
 
     // reset child frame counters
     for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)

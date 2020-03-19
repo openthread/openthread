@@ -29,6 +29,10 @@
 #ifndef ROUTER_TABLE_HPP_
 #define ROUTER_TABLE_HPP_
 
+#include "openthread-core-config.h"
+
+#if OPENTHREAD_FTD
+
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
 #include "mac/mac_types.hpp"
@@ -37,8 +41,6 @@
 #include "thread/topology.hpp"
 
 namespace ot {
-
-#if OPENTHREAD_FTD
 
 class RouterTable : public InstanceLocator
 {
@@ -361,32 +363,8 @@ private:
     uint8_t     mActiveRouterCount;
 };
 
-#endif // OPENTHREAD_FTD
-
-#if OPENTHREAD_MTD
-
-class RouterTable
-{
-public:
-    class Iterator
-    {
-    public:
-        explicit Iterator(Instance &) {}
-        void    Reset(void) {}
-        bool    IsDone(void) const { return true; }
-        void    Advance(void) {}
-        void    operator++(void) {}
-        void    operator++(int) {}
-        Router *GetRouter(void) { return NULL; }
-    };
-
-    explicit RouterTable(Instance &) {}
-
-    uint8_t GetNeighborCount(void) const { return 0; }
-};
-
-#endif // OPENTHREAD_MTD
-
 } // namespace ot
+
+#endif // OPENTHREAD_FTD
 
 #endif // ROUTER_TABLE_HPP_
