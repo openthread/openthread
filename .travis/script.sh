@@ -168,7 +168,7 @@ build_kw41z() {
     git checkout -- . || die
     git clean -xfd || die
     mkdir build && cd build || die
-    cmake -GNinja -DOT_PLATFORM=kw41z -DCMAKE_TOOLCHAIN_FILE=examples/platforms/kw41z/arm-none-eabi.cmake ${CMAKE_FLAGS} .. || die
+    cmake -GNinja -DOT_PLATFORM=kw41z -DCMAKE_TOOLCHAIN_FILE=examples/platforms/kw41z/arm-none-eabi.cmake ${CMAKE_FLAGS} -DCMAKE_BUILD_TYPE=Debug .. || die
     ninja || die
     arm-none-eabi-size  examples/apps/cli/ot-cli-ftd || die
     arm-none-eabi-size  examples/apps/cli/ot-cli-mtd || die
