@@ -45,7 +45,7 @@
  */
 static bool sDiagMode = false;
 
-void otPlatDiagProcess(otInstance *aInstance, int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+void otPlatDiagProcess(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aArgsLength);

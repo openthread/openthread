@@ -65,13 +65,13 @@ public:
      * @param[in]  aArgs        An array of command line arguments.
      *
      */
-    otError Process(int aArgsLength, char *aArgs[]);
+    otError Process(uint8_t aArgsLength, char *aArgs[]);
 
 private:
     struct Command
     {
         const char *mName;
-        otError (UdpExample::*mCommand)(int aArgsLength, char *aArgs[]);
+        otError (UdpExample::*mCommand)(uint8_t aArgsLength, char *aArgs[]);
     };
 
     enum PayloadType
@@ -81,12 +81,12 @@ private:
         kTypeHexString = 2,
     };
 
-    otError ProcessHelp(int aArgsLength, char *aArgs[]);
-    otError ProcessBind(int aArgsLength, char *aArgs[]);
-    otError ProcessClose(int aArgsLength, char *aArgs[]);
-    otError ProcessConnect(int aArgsLength, char *aArgs[]);
-    otError ProcessOpen(int aArgsLength, char *aArgs[]);
-    otError ProcessSend(int aArgsLength, char *aArgs[]);
+    otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessBind(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessClose(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessConnect(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessOpen(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessSend(uint8_t aArgsLength, char *aArgs[]);
     otError WriteCharToBuffer(otMessage *aMessage, uint16_t aSize);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);

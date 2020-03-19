@@ -81,7 +81,7 @@ public:
      * @retval  OT_ERROR_NOT_IMPLEMENTED    The command is not supported.
      *
      */
-    otError ProcessCmd(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessCmd(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
 
     /**
      * This method indicates whether or not the factory diagnostics mode is enabled.
@@ -123,7 +123,7 @@ private:
     struct Command
     {
         const char *mName;
-        otError (Diags::*mCommand)(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+        otError (Diags::*mCommand)(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
     };
 
     struct Stats
@@ -138,14 +138,14 @@ private:
         uint8_t  mLastLqi;
     };
 
-    otError ProcessChannel(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
-    otError ProcessPower(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
-    otError ProcessRadio(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
-    otError ProcessRepeat(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
-    otError ProcessSend(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
-    otError ProcessStart(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
-    otError ProcessStats(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
-    otError ProcessStop(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessChannel(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessPower(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessRadio(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessRepeat(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessSend(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessStart(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessStats(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessStop(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
 
     void TransmitPacket(void);
 

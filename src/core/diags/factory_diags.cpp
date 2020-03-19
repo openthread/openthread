@@ -46,7 +46,11 @@
 #include "utils/parse_cmdline.hpp"
 
 OT_TOOL_WEAK
-otError otPlatDiagProcess(otInstance *aInstance, int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+otError otPlatDiagProcess(otInstance *aInstance,
+                          uint8_t     aArgsLength,
+                          char *      aArgs[],
+                          char *      aOutput,
+                          size_t      aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -75,7 +79,7 @@ Diags::Diags(Instance &aInstance)
 {
 }
 
-otError Diags::ProcessChannel(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+otError Diags::ProcessChannel(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -92,7 +96,7 @@ exit:
     return error;
 }
 
-otError Diags::ProcessPower(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+otError Diags::ProcessPower(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -108,7 +112,7 @@ exit:
     return error;
 }
 
-otError Diags::ProcessStart(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+otError Diags::ProcessStart(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -120,7 +124,7 @@ otError Diags::ProcessStart(int aArgsLength, char *aArgs[], char *aOutput, size_
     return OT_ERROR_NONE;
 }
 
-otError Diags::ProcessStop(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+otError Diags::ProcessStop(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -161,7 +165,7 @@ Diags::Diags(Instance &aInstance)
     otPlatDiagTxPowerSet(mTxPower);
 }
 
-otError Diags::ProcessChannel(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+otError Diags::ProcessChannel(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
     otError error = OT_ERROR_NONE;
 
@@ -190,7 +194,7 @@ exit:
     return error;
 }
 
-otError Diags::ProcessPower(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+otError Diags::ProcessPower(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
     otError error = OT_ERROR_NONE;
 
@@ -218,7 +222,7 @@ exit:
     return error;
 }
 
-otError Diags::ProcessRepeat(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+otError Diags::ProcessRepeat(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
     otError error = OT_ERROR_NONE;
 
@@ -256,7 +260,7 @@ exit:
     return error;
 }
 
-otError Diags::ProcessSend(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+otError Diags::ProcessSend(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -280,7 +284,7 @@ exit:
     return error;
 }
 
-otError Diags::ProcessStart(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+otError Diags::ProcessStart(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -301,7 +305,7 @@ exit:
     return error;
 }
 
-otError Diags::ProcessStats(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+otError Diags::ProcessStats(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
     otError error = OT_ERROR_NONE;
 
@@ -329,7 +333,7 @@ exit:
     return error;
 }
 
-otError Diags::ProcessStop(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+otError Diags::ProcessStop(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -369,7 +373,7 @@ void Diags::TransmitPacket(void)
     Get<Radio>().Transmit(*static_cast<Mac::TxFrame *>(mTxPacket));
 }
 
-otError Diags::ProcessRadio(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+otError Diags::ProcessRadio(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
     otError error = OT_ERROR_INVALID_ARGS;
 
@@ -549,7 +553,7 @@ exit:
     }
 }
 
-otError Diags::ProcessCmd(int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+otError Diags::ProcessCmd(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
     otError error = OT_ERROR_NONE;
 

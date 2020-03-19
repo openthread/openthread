@@ -158,7 +158,7 @@ void Coap::PrintPayload(otMessage *aMessage) const
 }
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-otError Coap::ProcessCancel(int aArgsLength, char *aArgs[])
+otError Coap::ProcessCancel(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -167,7 +167,7 @@ otError Coap::ProcessCancel(int aArgsLength, char *aArgs[])
 }
 #endif
 
-otError Coap::ProcessHelp(int aArgsLength, char *aArgs[])
+otError Coap::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -180,7 +180,7 @@ otError Coap::ProcessHelp(int aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError Coap::ProcessResource(int aArgsLength, char *aArgs[])
+otError Coap::ProcessResource(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -204,7 +204,7 @@ exit:
     return OT_ERROR_NONE;
 }
 
-otError Coap::ProcessSet(int aArgsLength, char *aArgs[])
+otError Coap::ProcessSet(uint8_t aArgsLength, char *aArgs[])
 {
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     otMessage *   notificationMessage = NULL;
@@ -265,7 +265,7 @@ exit:
     return error;
 }
 
-otError Coap::ProcessStart(int aArgsLength, char *aArgs[])
+otError Coap::ProcessStart(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -273,7 +273,7 @@ otError Coap::ProcessStart(int aArgsLength, char *aArgs[])
     return otCoapStart(mInterpreter.mInstance, OT_DEFAULT_COAP_PORT);
 }
 
-otError Coap::ProcessStop(int aArgsLength, char *aArgs[])
+otError Coap::ProcessStop(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -283,7 +283,7 @@ otError Coap::ProcessStop(int aArgsLength, char *aArgs[])
     return otCoapStop(mInterpreter.mInstance);
 }
 
-otError Coap::ProcessParameters(int aArgsLength, char *aArgs[])
+otError Coap::ProcessParameters(uint8_t aArgsLength, char *aArgs[])
 {
     otError             error = OT_ERROR_NONE;
     bool *              defaultTxParameters;
@@ -356,7 +356,7 @@ exit:
     return error;
 }
 
-otError Coap::ProcessRequest(int aArgsLength, char *aArgs[])
+otError Coap::ProcessRequest(uint8_t aArgsLength, char *aArgs[])
 {
     otError       error   = OT_ERROR_NONE;
     otMessage *   message = NULL;
@@ -510,7 +510,7 @@ exit:
     return error;
 }
 
-otError Coap::Process(int aArgsLength, char *aArgs[])
+otError Coap::Process(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 

@@ -70,19 +70,19 @@ public:
      * @param[in]  aArgs        A pointer to an array of command line arguments.
      *
      */
-    otError Process(int aArgsLength, char *aArgs[]);
+    otError Process(uint8_t aArgsLength, char *aArgs[]);
 
 private:
     struct Command
     {
         const char *mName;
-        otError (Joiner::*mCommand)(int aArgsLength, char *aArgs[]);
+        otError (Joiner::*mCommand)(uint8_t aArgsLength, char *aArgs[]);
     };
 
-    otError ProcessHelp(int aArgsLength, char *aArgs[]);
-    otError ProcessId(int aArgsLength, char *aArgs[]);
-    otError ProcessStart(int aArgsLength, char *aArgs[]);
-    otError ProcessStop(int aArgsLength, char *aArgs[]);
+    otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessId(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessStart(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessStop(uint8_t aArgsLength, char *aArgs[]);
 
     static void HandleCallback(otError aError, void *aContext);
     void        HandleCallback(otError aError);

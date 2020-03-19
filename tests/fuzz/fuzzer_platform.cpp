@@ -194,7 +194,7 @@ bool otDiagIsEnabled(otInstance *aInstance)
     return false;
 }
 
-otError otDiagProcessCmd(otInstance *aInstance, int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+otError otDiagProcessCmd(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aArgsLength);
@@ -512,7 +512,11 @@ otError otPlatUartFlush(void)
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-otError otPlatDiagProcess(otInstance *aInstance, int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+otError otPlatDiagProcess(otInstance *aInstance,
+                          uint8_t     aArgsLength,
+                          char *      aArgs[],
+                          char *      aOutput,
+                          size_t      aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aArgsLength);

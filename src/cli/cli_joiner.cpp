@@ -48,7 +48,7 @@ const struct Joiner::Command Joiner::sCommands[] = {
     {"stop", &Joiner::ProcessStop},
 };
 
-otError Joiner::ProcessHelp(int aArgsLength, char *aArgs[])
+otError Joiner::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -61,7 +61,7 @@ otError Joiner::ProcessHelp(int aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError Joiner::ProcessId(int aArgsLength, char *aArgs[])
+otError Joiner::ProcessId(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -76,7 +76,7 @@ otError Joiner::ProcessId(int aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError Joiner::ProcessStart(int aArgsLength, char *aArgs[])
+otError Joiner::ProcessStart(uint8_t aArgsLength, char *aArgs[])
 {
     otError     error;
     const char *provisioningUrl = NULL;
@@ -95,7 +95,7 @@ exit:
     return error;
 }
 
-otError Joiner::ProcessStop(int aArgsLength, char *aArgs[])
+otError Joiner::ProcessStop(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -105,7 +105,7 @@ otError Joiner::ProcessStop(int aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError Joiner::Process(int aArgsLength, char *aArgs[])
+otError Joiner::Process(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 

@@ -49,7 +49,7 @@ void otDiagProcessCmdLine(otInstance *aInstance, const char *aString, char *aOut
     instance.Get<FactoryDiags::Diags>().ProcessLine(aString, aOutput, aOutputMaxLen);
 }
 
-otError otDiagProcessCmd(otInstance *aInstance, int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+otError otDiagProcessCmd(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
