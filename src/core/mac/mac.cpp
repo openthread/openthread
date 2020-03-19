@@ -1554,11 +1554,13 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
                          ((mRxOnWhenIdle && dstaddr.IsBroadcast()) || dstaddr.GetShort() == GetShortAddress()),
                      error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
 
-        // Allow  multicasts from neighbor routers if FTD
+#if OPENTHREAD_FTD
+        // Allow multicasts from neighbor routers if FTD
         if (neighbor == NULL && dstaddr.IsBroadcast() && Get<Mle::MleRouter>().IsFullThreadDevice())
         {
             neighbor = Get<Mle::MleRouter>().GetRxOnlyNeighborRouter(srcaddr);
         }
+#endif
 
         break;
 
