@@ -60,8 +60,6 @@ static inline uint32_t mapAddress(uint8_t aSwapIndex, uint32_t aOffset)
 void otPlatFlashInit(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-
-    MSC_Init();
 }
 
 uint32_t otPlatFlashGetSwapSize(otInstance *aInstance)
