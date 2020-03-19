@@ -63,11 +63,11 @@ public:
     /**
      * This method interprets a list of CLI arguments.
      *
-     * @param[in]  argc  The number of elements in argv.
-     * @param[in]  argv  A pointer to an array of command line arguments.
+     * @param[in]  aArgsLength  The number of elements in @p aArgs.
+     * @param[in]  aArgs        An array of command line arguments.
      *
      */
-    otError Process(int argc, char *argv[]);
+    otError Process(int aArgsLength, char *aArgs[]);
 
 private:
     enum
@@ -79,7 +79,7 @@ private:
     struct Command
     {
         const char *mName;
-        otError (Coap::*mCommand)(int argc, char *argv[]);
+        otError (Coap::*mCommand)(int aArgsLength, char *aArgs[]);
     };
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
@@ -89,16 +89,16 @@ private:
 
     void PrintPayload(otMessage *aMessage) const;
 
-    otError ProcessHelp(int argc, char *argv[]);
+    otError ProcessHelp(int aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    otError ProcessCancel(int argc, char *argv[]);
+    otError ProcessCancel(int aArgsLength, char *aArgs[]);
 #endif
-    otError ProcessParameters(int argc, char *argv[]);
-    otError ProcessRequest(int argc, char *argv[]);
-    otError ProcessResource(int argc, char *argv[]);
-    otError ProcessSet(int argc, char *argv[]);
-    otError ProcessStart(int argc, char *argv[]);
-    otError ProcessStop(int argc, char *argv[]);
+    otError ProcessParameters(int aArgsLength, char *aArgs[]);
+    otError ProcessRequest(int aArgsLength, char *aArgs[]);
+    otError ProcessResource(int aArgsLength, char *aArgs[]);
+    otError ProcessSet(int aArgsLength, char *aArgs[]);
+    otError ProcessStart(int aArgsLength, char *aArgs[]);
+    otError ProcessStop(int aArgsLength, char *aArgs[]);
 
     static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo);
