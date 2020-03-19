@@ -730,8 +730,6 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Message *         aMessage
         ExitNow();
     }
 
-    mSessionId = sessionId.GetCommissionerSessionId();
-
     Get<Mle::MleRouter>().GetCommissionerAloc(mCommissionerAloc.GetAddress(), mSessionId);
     Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
 
@@ -763,11 +761,9 @@ otError Commissioner::SendKeepAlive(void)
 
 otError Commissioner::SendKeepAlive(uint16_t aSessionId)
 {
-    otError                  error   = OT_ERROR_NONE;
-    Coap::Message *          message = NULL;
-    Ip6::MessageInfo         messageInfo;
-    StateTlv                 state;
-    CommissionerSessionIdTlv sessionId;
+    otError          error   = OT_ERROR_NONE;
+    Coap::Message *  message = NULL;
+    Ip6::MessageInfo messageInfo;
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
@@ -778,7 +774,7 @@ otError Commissioner::SendKeepAlive(uint16_t aSessionId)
         error = Tlv::AppendUint8Tlv(*message, Tlv::kState,
                                     (mState == OT_COMMISSIONER_STATE_ACTIVE) ? StateTlv::kAccept : StateTlv::kReject));
 
-    SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kCommissionerSessionId, mSessionId));
+    SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kCommissionerSessionId, aSessionId));
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     SuccessOrExit(error = Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
