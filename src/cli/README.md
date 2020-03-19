@@ -859,7 +859,7 @@ Leader Data:
 Done
 
 > networkdiagnostic get ff02::1 0 1
-> DIAG_GET.rsp/ans:00080e336e1c41494e1c01020c00
+> DIAG_GET.rsp/ans: 00080e336e1c41494e1c01020c00
 Ext Address: 0e336e1c41494e1c
 Rloc16: 0x0c00
 Done
