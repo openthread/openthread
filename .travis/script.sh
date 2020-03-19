@@ -157,7 +157,7 @@ build_cc2652() {
     git checkout -- . || die
     git clean -xfd || die
     mkdir build && cd build || die
-    cmake -GNinja -DOT_PLATFORM=cc2652 -DCMAKE_TOOLCHAIN_FILE=examples/platforms/cc2652/arm-none-eabi.cmake ${CMAKE_FLAGS} .. || die
+    cmake -GNinja -DOT_PLATFORM=cc2652 -DCMAKE_TOOLCHAIN_FILE=examples/platforms/cc2652/arm-none-eabi.cmake ${CMAKE_FLAGS} -DCMAKE_BUILD_TYPE=Debug .. || die
     ninja || die
     arm-none-eabi-size  examples/apps/cli/ot-cli-ftd || die
     arm-none-eabi-size  examples/apps/cli/ot-cli-mtd || die

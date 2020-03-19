@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -39,9 +39,16 @@ list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13
 list(APPEND OT_PLATFORM_DEFINES
     "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-cc2652-config-check.h\""
     "OPENTHREAD_SETTINGS_RAM=0"
+    "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\""
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
+list(APPEND OT_PRIVATE_DEFINES "MBEDTLS_USER_CONFIG_FILE=\"cc2652-mbedtls-config.h\"")
+list(APPEND OT_PUBLIC_INCLUDES
+    "${PROJECT_SOURCE_DIR}/examples/platforms/cc2652/crypto"
+    "${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2"
+)
+set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
 list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
 
 add_library(openthread-cc2652
@@ -71,8 +78,6 @@ target_link_options(openthread-cc2652 PUBLIC -T${PROJECT_SOURCE_DIR}/third_party
 target_compile_definitions(openthread-cc2652
     PUBLIC
         ${OT_PLATFORM_DEFINES}
-        "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\""
-        "MBEDTLS_USER_CONFIG_FILE=\"cc2652-mbedtls-config.h\""
     PRIVATE
         ${OT_PRIVATE_DEFINES}
 )
