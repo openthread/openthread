@@ -55,7 +55,7 @@ UdpExample::UdpExample(Interpreter &aInterpreter)
     memset(&mSocket, 0, sizeof(mSocket));
 }
 
-otError UdpExample::ProcessHelp(int aArgsLength, char *aArgs[])
+otError UdpExample::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -68,7 +68,7 @@ otError UdpExample::ProcessHelp(int aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError UdpExample::ProcessBind(int aArgsLength, char *aArgs[])
+otError UdpExample::ProcessBind(uint8_t aArgsLength, char *aArgs[])
 {
     otError    error;
     otSockAddr sockaddr;
@@ -92,7 +92,7 @@ exit:
     return error;
 }
 
-otError UdpExample::ProcessConnect(int aArgsLength, char *aArgs[])
+otError UdpExample::ProcessConnect(uint8_t aArgsLength, char *aArgs[])
 {
     otError    error;
     otSockAddr sockaddr;
@@ -116,7 +116,7 @@ exit:
     return error;
 }
 
-otError UdpExample::ProcessClose(int aArgsLength, char *aArgs[])
+otError UdpExample::ProcessClose(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -124,7 +124,7 @@ otError UdpExample::ProcessClose(int aArgsLength, char *aArgs[])
     return otUdpClose(&mSocket);
 }
 
-otError UdpExample::ProcessOpen(int aArgsLength, char *aArgs[])
+otError UdpExample::ProcessOpen(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -132,12 +132,12 @@ otError UdpExample::ProcessOpen(int aArgsLength, char *aArgs[])
     return otUdpOpen(mInterpreter.mInstance, &mSocket, HandleUdpReceive, this);
 }
 
-otError UdpExample::ProcessSend(int aArgsLength, char *aArgs[])
+otError UdpExample::ProcessSend(uint8_t aArgsLength, char *aArgs[])
 {
     otError       error = OT_ERROR_NONE;
     otMessageInfo messageInfo;
     otMessage *   message       = NULL;
-    int           curArg        = 0;
+    uint8_t       curArg        = 0;
     uint16_t      payloadLength = 0;
     PayloadType   payloadType   = kTypeText;
 
@@ -159,7 +159,7 @@ otError UdpExample::ProcessSend(int aArgsLength, char *aArgs[])
 
     if (aArgsLength == 2 || aArgsLength == 4)
     {
-        int typePos = curArg++;
+        uint8_t typePos = curArg++;
 
         if (strcmp(aArgs[typePos], "-s") == 0)
         {
@@ -258,7 +258,7 @@ exit:
     return error;
 }
 
-otError UdpExample::Process(int aArgsLength, char *aArgs[])
+otError UdpExample::Process(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 

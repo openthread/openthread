@@ -65,7 +65,11 @@ extern "C" {
  * @retval  OT_ERROR_NOT_IMPLEMENTED    The command is not supported.
  *
  */
-otError otDiagProcessCmd(otInstance *aInstance, int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+otError otDiagProcessCmd(otInstance *aInstance,
+                         uint8_t     aArgsLength,
+                         char *      aArgs[],
+                         char *      aOutput,
+                         size_t      aOutputMaxLen);
 
 /**
  * This function processes a factory diagnostics command line.

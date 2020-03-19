@@ -182,7 +182,7 @@ otError Dataset::Print(otOperationalDataset &aDataset)
     return OT_ERROR_NONE;
 }
 
-otError Dataset::Process(int aArgsLength, char *aArgs[])
+otError Dataset::Process(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 
@@ -204,7 +204,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessHelp(int aArgsLength, char *aArgs[])
+otError Dataset::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -217,7 +217,7 @@ otError Dataset::ProcessHelp(int aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError Dataset::ProcessInit(int aArgsLength, char *aArgs[])
+otError Dataset::ProcessInit(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -246,7 +246,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessActive(int aArgsLength, char *aArgs[])
+otError Dataset::ProcessActive(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -261,7 +261,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessPending(int aArgsLength, char *aArgs[])
+otError Dataset::ProcessPending(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -276,7 +276,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessActiveTimestamp(int aArgsLength, char *aArgs[])
+otError Dataset::ProcessActiveTimestamp(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -290,7 +290,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessChannel(int aArgsLength, char *aArgs[])
+otError Dataset::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -304,7 +304,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessChannelMask(int aArgsLength, char *aArgs[])
+otError Dataset::ProcessChannelMask(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -318,7 +318,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessClear(int aArgsLength, char *aArgs[])
+otError Dataset::ProcessClear(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -327,7 +327,7 @@ otError Dataset::ProcessClear(int aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError Dataset::ProcessCommit(int aArgsLength, char *aArgs[])
+otError Dataset::ProcessCommit(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -350,7 +350,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessDelay(int aArgsLength, char *aArgs[])
+otError Dataset::ProcessDelay(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -364,7 +364,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessExtPanId(int aArgsLength, char *aArgs[])
+otError Dataset::ProcessExtPanId(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     uint8_t extPanId[OT_EXT_PAN_ID_SIZE];
@@ -379,7 +379,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessMasterKey(int aArgsLength, char *aArgs[])
+otError Dataset::ProcessMasterKey(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     uint8_t key[OT_MASTER_KEY_SIZE];
@@ -395,7 +395,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessMeshLocalPrefix(int aArgsLength, char *aArgs[])
+otError Dataset::ProcessMeshLocalPrefix(uint8_t aArgsLength, char *aArgs[])
 {
     otError      error = OT_ERROR_NONE;
     otIp6Address prefix;
@@ -410,7 +410,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessNetworkName(int aArgsLength, char *aArgs[])
+otError Dataset::ProcessNetworkName(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     size_t  length;
@@ -426,7 +426,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessPanId(int aArgsLength, char *aArgs[])
+otError Dataset::ProcessPanId(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -440,7 +440,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessPendingTimestamp(int aArgsLength, char *aArgs[])
+otError Dataset::ProcessPendingTimestamp(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;
@@ -454,7 +454,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessMgmtSetCommand(int aArgsLength, char *aArgs[])
+otError Dataset::ProcessMgmtSetCommand(uint8_t aArgsLength, char *aArgs[])
 {
     otError              error = OT_ERROR_NONE;
     otOperationalDataset dataset;
@@ -578,7 +578,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessMgmtGetCommand(int aArgsLength, char *aArgs[])
+otError Dataset::ProcessMgmtGetCommand(uint8_t aArgsLength, char *aArgs[])
 {
     otError                        error = OT_ERROR_NONE;
     otOperationalDatasetComponents datasetComponents;
@@ -675,7 +675,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessPskc(int aArgsLength, char *aArgs[])
+otError Dataset::ProcessPskc(uint8_t aArgsLength, char *aArgs[])
 {
     otError  error = OT_ERROR_NONE;
     uint16_t length;
@@ -692,7 +692,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessSecurityPolicy(int aArgsLength, char *aArgs[])
+otError Dataset::ProcessSecurityPolicy(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     long    value;

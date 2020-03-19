@@ -50,7 +50,7 @@ const struct Commissioner::Command Commissioner::sCommands[] = {
     {"stop", &Commissioner::ProcessStop},
 };
 
-otError Commissioner::ProcessHelp(int aArgsLength, char *aArgs[])
+otError Commissioner::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -63,7 +63,7 @@ otError Commissioner::ProcessHelp(int aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError Commissioner::ProcessAnnounce(int aArgsLength, char *aArgs[])
+otError Commissioner::ProcessAnnounce(uint8_t aArgsLength, char *aArgs[])
 {
     otError      error;
     long         mask;
@@ -86,7 +86,7 @@ exit:
     return error;
 }
 
-otError Commissioner::ProcessEnergy(int aArgsLength, char *aArgs[])
+otError Commissioner::ProcessEnergy(uint8_t aArgsLength, char *aArgs[])
 {
     otError      error;
     long         mask;
@@ -112,7 +112,7 @@ exit:
     return error;
 }
 
-otError Commissioner::ProcessJoiner(int aArgsLength, char *aArgs[])
+otError Commissioner::ProcessJoiner(uint8_t aArgsLength, char *aArgs[])
 {
     otError             error;
     otExtAddress        addr;
@@ -158,7 +158,7 @@ exit:
     return error;
 }
 
-otError Commissioner::ProcessMgmtGet(int aArgsLength, char *aArgs[])
+otError Commissioner::ProcessMgmtGet(uint8_t aArgsLength, char *aArgs[])
 {
     otError error;
     uint8_t tlvs[32];
@@ -207,7 +207,7 @@ exit:
     return error;
 }
 
-otError Commissioner::ProcessMgmtSet(int aArgsLength, char *aArgs[])
+otError Commissioner::ProcessMgmtSet(uint8_t aArgsLength, char *aArgs[])
 {
     otError                error;
     otCommissioningDataset dataset;
@@ -277,7 +277,7 @@ exit:
     return error;
 }
 
-otError Commissioner::ProcessPanId(int aArgsLength, char *aArgs[])
+otError Commissioner::ProcessPanId(uint8_t aArgsLength, char *aArgs[])
 {
     otError      error;
     long         panid;
@@ -298,12 +298,12 @@ exit:
     return error;
 }
 
-otError Commissioner::ProcessProvisioningUrl(int aArgsLength, char *aArgs[])
+otError Commissioner::ProcessProvisioningUrl(uint8_t aArgsLength, char *aArgs[])
 {
     return otCommissionerSetProvisioningUrl(mInterpreter.mInstance, (aArgsLength > 1) ? aArgs[1] : NULL);
 }
 
-otError Commissioner::ProcessSessionId(int aArgsLength, char *aArgs[])
+otError Commissioner::ProcessSessionId(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -313,7 +313,7 @@ otError Commissioner::ProcessSessionId(int aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError Commissioner::ProcessStart(int aArgsLength, char *aArgs[])
+otError Commissioner::ProcessStart(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -378,7 +378,7 @@ void Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent, const otE
     mInterpreter.mServer->OutputFormat("\r\n");
 }
 
-otError Commissioner::ProcessStop(int aArgsLength, char *aArgs[])
+otError Commissioner::ProcessStop(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -386,7 +386,7 @@ otError Commissioner::ProcessStop(int aArgsLength, char *aArgs[])
     return otCommissionerStop(mInterpreter.mInstance);
 }
 
-otError Commissioner::Process(int aArgsLength, char *aArgs[])
+otError Commissioner::Process(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 

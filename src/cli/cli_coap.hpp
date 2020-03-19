@@ -67,7 +67,7 @@ public:
      * @param[in]  aArgs        An array of command line arguments.
      *
      */
-    otError Process(int aArgsLength, char *aArgs[]);
+    otError Process(uint8_t aArgsLength, char *aArgs[]);
 
 private:
     enum
@@ -79,7 +79,7 @@ private:
     struct Command
     {
         const char *mName;
-        otError (Coap::*mCommand)(int aArgsLength, char *aArgs[]);
+        otError (Coap::*mCommand)(uint8_t aArgsLength, char *aArgs[]);
     };
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
@@ -89,16 +89,16 @@ private:
 
     void PrintPayload(otMessage *aMessage) const;
 
-    otError ProcessHelp(int aArgsLength, char *aArgs[]);
+    otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    otError ProcessCancel(int aArgsLength, char *aArgs[]);
+    otError ProcessCancel(uint8_t aArgsLength, char *aArgs[]);
 #endif
-    otError ProcessParameters(int aArgsLength, char *aArgs[]);
-    otError ProcessRequest(int aArgsLength, char *aArgs[]);
-    otError ProcessResource(int aArgsLength, char *aArgs[]);
-    otError ProcessSet(int aArgsLength, char *aArgs[]);
-    otError ProcessStart(int aArgsLength, char *aArgs[]);
-    otError ProcessStop(int aArgsLength, char *aArgs[]);
+    otError ProcessParameters(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessRequest(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessResource(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessSet(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessStart(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessStop(uint8_t aArgsLength, char *aArgs[]);
 
     static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo);

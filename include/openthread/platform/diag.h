@@ -70,7 +70,11 @@ extern "C" {
  * @retval  OT_ERROR_INVALID_COMMAND    The command is not valid or not supported.
  *
  */
-otError otPlatDiagProcess(otInstance *aInstance, int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+otError otPlatDiagProcess(otInstance *aInstance,
+                          uint8_t     aArgsLength,
+                          char *      aArgs[],
+                          char *      aOutput,
+                          size_t      aOutputMaxLen);
 
 /**
  * This function enables/disables the factory diagnostics mode.

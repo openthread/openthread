@@ -98,7 +98,7 @@ void CoapSecure::PrintPayload(otMessage *aMessage) const
     mInterpreter.mServer->OutputFormat("\r\n");
 }
 
-otError CoapSecure::ProcessHelp(int aArgsLength, char *aArgs[])
+otError CoapSecure::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -111,7 +111,7 @@ otError CoapSecure::ProcessHelp(int aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError CoapSecure::ProcessResource(int aArgsLength, char *aArgs[])
+otError CoapSecure::ProcessResource(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -135,7 +135,7 @@ exit:
     return OT_ERROR_NONE;
 }
 
-otError CoapSecure::ProcessStart(int aArgsLength, char *aArgs[])
+otError CoapSecure::ProcessStart(uint8_t aArgsLength, char *aArgs[])
 {
     otError error;
     bool    verifyPeerCert = true;
@@ -165,7 +165,7 @@ exit:
     return error;
 }
 
-otError CoapSecure::ProcessStop(int aArgsLength, char *aArgs[])
+otError CoapSecure::ProcessStop(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -185,7 +185,7 @@ otError CoapSecure::ProcessStop(int aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError CoapSecure::ProcessRequest(int aArgsLength, char *aArgs[])
+otError CoapSecure::ProcessRequest(uint8_t aArgsLength, char *aArgs[])
 {
     otError       error   = OT_ERROR_NONE;
     otMessage *   message = NULL;
@@ -305,7 +305,7 @@ exit:
     return error;
 }
 
-otError CoapSecure::ProcessConnect(int aArgsLength, char *aArgs[])
+otError CoapSecure::ProcessConnect(uint8_t aArgsLength, char *aArgs[])
 {
     otError    error;
     otSockAddr sockaddr;
@@ -333,7 +333,7 @@ exit:
     return error;
 }
 
-otError CoapSecure::ProcessDisconnect(int aArgsLength, char *aArgs[])
+otError CoapSecure::ProcessDisconnect(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -344,7 +344,7 @@ otError CoapSecure::ProcessDisconnect(int aArgsLength, char *aArgs[])
 }
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-otError CoapSecure::ProcessPsk(int aArgsLength, char *aArgs[])
+otError CoapSecure::ProcessPsk(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     size_t  length;
@@ -370,7 +370,7 @@ exit:
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-otError CoapSecure::ProcessX509(int aArgsLength, char *aArgs[])
+otError CoapSecure::ProcessX509(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -387,7 +387,7 @@ otError CoapSecure::ProcessX509(int aArgsLength, char *aArgs[])
 }
 #endif
 
-otError CoapSecure::Process(int aArgsLength, char *aArgs[])
+otError CoapSecure::Process(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 

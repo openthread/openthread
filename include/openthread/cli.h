@@ -51,8 +51,8 @@ extern "C" {
  */
 typedef struct otCliCommand
 {
-    const char *mName;                                ///< A pointer to the command string.
-    void (*mCommand)(int aArgsLength, char *aArgs[]); ///< A function pointer to process the command.
+    const char *mName;                                    ///< A pointer to the command string.
+    void (*mCommand)(uint8_t aArgsLength, char *aArgs[]); ///< A function pointer to process the command.
 } otCliCommand;
 
 /**

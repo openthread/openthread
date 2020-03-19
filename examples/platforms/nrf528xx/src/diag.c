@@ -59,7 +59,7 @@ typedef enum
 struct PlatformDiagCommand
 {
     const char *mName;
-    otError (*mCommand)(otInstance *aInstance, int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    otError (*mCommand)(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
 };
 
 struct PlatformDiagMessage
@@ -111,7 +111,11 @@ static bool startCarrierTransmision(void)
     return nrf_802154_continuous_carrier();
 }
 
-static otError processListen(otInstance *aInstance, int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+static otError processListen(otInstance *aInstance,
+                             uint8_t     aArgsLength,
+                             char *      aArgs[],
+                             char *      aOutput,
+                             size_t      aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -139,7 +143,7 @@ exit:
     return error;
 }
 
-static otError processID(otInstance *aInstance, int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+static otError processID(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -168,7 +172,7 @@ exit:
 }
 
 static otError processTransmit(otInstance *aInstance,
-                               int         aArgsLength,
+                               uint8_t     aArgsLength,
                                char *      aArgs[],
                                char *      aOutput,
                                size_t      aOutputMaxLen)
@@ -252,7 +256,11 @@ exit:
     return error;
 }
 
-static otError processGpio(otInstance *aInstance, int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+static otError processGpio(otInstance *aInstance,
+                           uint8_t     aArgsLength,
+                           char *      aArgs[],
+                           char *      aOutput,
+                           size_t      aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -332,7 +340,11 @@ exit:
     return error;
 }
 
-static otError processTemp(otInstance *aInstance, int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+static otError processTemp(otInstance *aInstance,
+                           uint8_t     aArgsLength,
+                           char *      aArgs[],
+                           char *      aOutput,
+                           size_t      aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aArgs);
@@ -355,7 +367,7 @@ exit:
 }
 
 static otError processCcaThreshold(otInstance *aInstance,
-                                   int         aArgsLength,
+                                   uint8_t     aArgsLength,
                                    char *      aArgs[],
                                    char *      aOutput,
                                    size_t      aOutputMaxLen)
@@ -402,7 +414,11 @@ const struct PlatformDiagCommand sCommands[] = {
     {"transmit", &processTransmit},
 };
 
-otError otPlatDiagProcess(otInstance *aInstance, int aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+otError otPlatDiagProcess(otInstance *aInstance,
+                          uint8_t     aArgsLength,
+                          char *      aArgs[],
+                          char *      aOutput,
+                          size_t      aOutputMaxLen)
 {
     otError error = OT_ERROR_INVALID_COMMAND;
     size_t  i;
