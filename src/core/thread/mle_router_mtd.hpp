@@ -77,8 +77,6 @@ public:
     otError SendChildUpdateRequest(void) { return Mle::SendChildUpdateRequest(); }
 
     otError GetMaxChildTimeout(uint32_t &) { return OT_ERROR_NOT_IMPLEMENTED; }
-
-    bool HasSleepyChildrenSubscribed(const Ip6::Address &) { return false; }
 };
 
 } // namespace Mle
