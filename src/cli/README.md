@@ -863,7 +863,7 @@ Done
 Ext Address: 0e336e1c41494e1c
 Rloc16: 0x0c00
 Done
-DIAG_GET.rsp/ans:00083efcdb7e3f9eb0f201021800
+DIAG_GET.rsp/ans: 00083efcdb7e3f9eb0f201021800
 Ext Address: 3efcdb7e3f9eb0f2
 Rloc16: 0x1800
 Done
