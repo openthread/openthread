@@ -1015,7 +1015,7 @@ void Interpreter::ProcessDiscover(int argc, char *argv[])
 
     if (argc > 0)
     {
-        VerifyOrExit(ParseLong(argv[0], value) == OT_ERROR_NONE, error = OT_ERROR_INVALID_ARGS);
+        SuccessOrExit(error = ParseLong(argv[0], value) == OT_ERROR_NONE);
         VerifyOrExit((0 <= value) && (value < static_cast<long>(sizeof(scanChannels) * CHAR_BIT)),
                      error = OT_ERROR_INVALID_ARGS);
         scanChannels = 1 << value;
