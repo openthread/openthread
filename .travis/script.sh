@@ -451,6 +451,14 @@ build_samr21() {
 
     git checkout -- . || die
     git clean -xfd || die
+    ./tests/toranj/build.sh cmake || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./tests/toranj/build.sh cmake-posix || die
+
+    git checkout -- . || die
+    git clean -xfd || die
     ./bootstrap || die
     CPPFLAGS=-DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_NONE make -f examples/Makefile-simulation || die
 
