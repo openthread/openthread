@@ -36,7 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include "thread/child_table.hpp"
 #include "thread/mle.hpp"
 
 namespace ot {
@@ -50,7 +49,6 @@ class MleRouter : public Mle
 public:
     explicit MleRouter(Instance &aInstance)
         : Mle(aInstance)
-        , mChildTable(aInstance)
     {
     }
 
@@ -81,9 +79,6 @@ public:
     otError GetMaxChildTimeout(uint32_t &) { return OT_ERROR_NOT_IMPLEMENTED; }
 
     bool HasSleepyChildrenSubscribed(const Ip6::Address &) { return false; }
-
-private:
-    ChildTable mChildTable;
 };
 
 } // namespace Mle
