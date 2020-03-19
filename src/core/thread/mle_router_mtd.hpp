@@ -38,9 +38,7 @@
 
 #include "thread/child_table.hpp"
 #include "thread/mle.hpp"
-#include "thread/mle_tlvs.hpp"
 #include "thread/router_table.hpp"
-#include "thread/thread_tlvs.hpp"
 
 namespace ot {
 namespace Mle {
@@ -58,39 +56,16 @@ public:
     {
     }
 
-    bool IsRouterEligible(void) const { return false; }
-
     bool IsSingleton(void) const { return false; }
-
-    otError BecomeRouter(ThreadStatusTlv::Status) { return OT_ERROR_NOT_CAPABLE; }
-    otError BecomeLeader(void) { return OT_ERROR_NOT_CAPABLE; }
-
-    uint8_t GetRouterSelectionJitterTimeout(void) const { return 0; }
-
-    uint32_t GetPreviousPartitionId(void) const { return 0; }
-    void     SetPreviousPartitionId(uint32_t) {}
-    void     SetRouterId(uint8_t) {}
 
     uint16_t GetNextHop(uint16_t aDestination) const { return Mle::GetNextHop(aDestination); }
 
-    uint8_t GetNetworkIdTimeout(void) const { return 0; }
-
-    uint8_t GetRouteCost(uint16_t) const { return 0; }
-    uint8_t GetLinkCost(uint16_t) { return 0; }
     uint8_t GetCost(uint16_t) { return 0; }
 
     otError RemoveNeighbor(Neighbor &) { return BecomeDetached(); }
 
-    bool IsMinimalChild(uint16_t) const { return false; }
-
-    void    RestoreChildren(void) {}
-    otError RemoveStoredChild(uint16_t) { return OT_ERROR_NOT_IMPLEMENTED; }
-    otError StoreChild(const Child &) { return OT_ERROR_NOT_IMPLEMENTED; }
-
-    Neighbor *GetNeighbor(uint16_t aAddress) { return Mle::GetNeighbor(aAddress); }
     Neighbor *GetNeighbor(const Mac::ExtAddress &aAddress) { return Mle::GetNeighbor(aAddress); }
     Neighbor *GetNeighbor(const Mac::Address &aAddress) { return Mle::GetNeighbor(aAddress); }
-    Neighbor *GetNeighbor(const Ip6::Address &aAddress) { return Mle::GetNeighbor(aAddress); }
     Neighbor *GetRxOnlyNeighborRouter(const Mac::Address &aAddress)
     {
         OT_UNUSED_VARIABLE(aAddress);
@@ -99,62 +74,17 @@ public:
 
     otError GetNextNeighborInfo(otNeighborInfoIterator &, otNeighborInfo &) { return OT_ERROR_NOT_IMPLEMENTED; }
 
-    static int ComparePartitions(bool, const LeaderData &, bool, const LeaderData &) { return 0; }
-
-    void ResolveRoutingLoops(uint16_t, uint16_t) {}
-
-    otError CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header)
-    {
-        return Mle::CheckReachability(aMeshSource, aMeshDest, aIp6Header);
-    }
-
     static bool IsRouterIdValid(uint8_t aRouterId) { return aRouterId <= kMaxRouterId; }
 
     void FillConnectivityTlv(ConnectivityTlv &) {}
 
     otError SendChildUpdateRequest(void) { return Mle::SendChildUpdateRequest(); }
 
-#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
-    otError SetSteeringData(const otExtAddress *) { return OT_ERROR_NOT_IMPLEMENTED; }
-#endif // OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
-
     otError GetMaxChildTimeout(uint32_t &) { return OT_ERROR_NOT_IMPLEMENTED; }
 
     bool HasSleepyChildrenSubscribed(const Ip6::Address &) { return false; }
 
-    bool IsSleepyChildSubscribed(const Ip6::Address &, Child &) { return false; }
-
 private:
-    void    HandleDetachStart(void) {}
-    otError HandleChildStart(AttachMode) { return OT_ERROR_NONE; }
-    otError HandleLinkRequest(const Message &, const Ip6::MessageInfo &, Neighbor *) { return OT_ERROR_DROP; }
-    otError HandleLinkAccept(const Message &, const Ip6::MessageInfo &, uint32_t, Neighbor *) { return OT_ERROR_DROP; }
-    otError HandleLinkAccept(const Message &, const Ip6::MessageInfo &, uint32_t, Neighbor *, bool)
-    {
-        return OT_ERROR_DROP;
-    }
-    otError HandleLinkAcceptAndRequest(const Message &, const Ip6::MessageInfo &, uint32_t, Neighbor *)
-    {
-        return OT_ERROR_DROP;
-    }
-    otError HandleAdvertisement(const Message &, const Ip6::MessageInfo &, Neighbor *) { return OT_ERROR_DROP; }
-    otError HandleParentRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
-    otError HandleChildIdRequest(const Message &, const Ip6::MessageInfo &, uint32_t) { return OT_ERROR_DROP; }
-    otError HandleChildUpdateRequest(const Message &, const Ip6::MessageInfo &, uint32_t) { return OT_ERROR_DROP; }
-    otError HandleChildUpdateResponse(const Message &, const Ip6::MessageInfo &, uint32_t, Neighbor *)
-    {
-        return OT_ERROR_DROP;
-    }
-    otError HandleDataRequest(const Message &, const Ip6::MessageInfo &, const Neighbor *) { return OT_ERROR_DROP; }
-    void    HandleNetworkDataUpdateRouter(void) {}
-    otError HandleDiscoveryRequest(const Message &, const Ip6::MessageInfo &) { return OT_ERROR_DROP; }
-    void    HandlePartitionChange(void) {}
-    void    StopAdvertiseTimer(void) {}
-    otError ProcessRouteTlv(const RouteTlv &) { return OT_ERROR_NONE; }
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    otError HandleTimeSync(const Message &, const Ip6::MessageInfo &, const Neighbor *) { return OT_ERROR_DROP; }
-#endif
-
     ChildTable  mChildTable;
     RouterTable mRouterTable;
 };
