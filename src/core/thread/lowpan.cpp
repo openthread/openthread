@@ -468,10 +468,8 @@ otError Lowpan::CompressExtensionHeader(Message &aMessage, BufferWriter &aBuf, u
     BufferWriter         buf         = aBuf;
     uint16_t             startOffset = aMessage.GetOffset();
     Ip6::ExtensionHeader extHeader;
-    Ip6::OptionHeader    optionHeader;
-    uint8_t              len;
+    uint16_t             len;
     uint8_t              padLength = 0;
-    uint16_t             offset;
     uint8_t              tmpByte;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(extHeader), &extHeader) == sizeof(extHeader),
@@ -497,13 +495,17 @@ otError Lowpan::CompressExtensionHeader(Message &aMessage, BufferWriter &aBuf, u
 
     len = (extHeader.GetLength() + 1) * 8 - sizeof(extHeader);
 
+    // RFC 6282 does not support compressing large extension headers
+    VerifyOrExit(len <= kExtHdrMaxLength, error = OT_ERROR_FAILED);
+
     // RFC 6282 says: "IPv6 Hop-by-Hop and Destination Options Headers may use a trailing
     // Pad1 or PadN to achieve 8-octet alignment. When there is a single trailing Pad1 or PadN
     // option of 7 octets or less and the containing header is a multiple of 8 octets, the trailing
     // Pad1 or PadN option MAY be elided by the compressor."
     if (aNextHeader == Ip6::kProtoHopOpts || aNextHeader == Ip6::kProtoDstOpts)
     {
-        offset = aMessage.GetOffset();
+        uint16_t          offset = aMessage.GetOffset();
+        Ip6::OptionHeader optionHeader;
 
         while (offset < len + aMessage.GetOffset())
         {
@@ -537,8 +539,8 @@ otError Lowpan::CompressExtensionHeader(Message &aMessage, BufferWriter &aBuf, u
 
     aNextHeader = static_cast<uint8_t>(extHeader.GetNextHeader());
 
-    SuccessOrExit(error = buf.Write(len));
-    SuccessOrExit(error = buf.Write(aMessage, len));
+    SuccessOrExit(error = buf.Write(static_cast<uint8_t>(len)));
+    SuccessOrExit(error = buf.Write(aMessage, static_cast<uint8_t>(len)));
     aMessage.MoveOffset(len + padLength);
 
 exit:
