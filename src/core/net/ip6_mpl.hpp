@@ -243,6 +243,7 @@ private:
     uint8_t  mLifetime;
 };
 
+#if OPENTHREAD_FTD
 /**
  * This class represents metadata required for MPL retransmissions.
  *
@@ -406,6 +407,7 @@ private:
     TimeMilli mTransmissionTime;
     uint8_t   mIntervalOffset;
 };
+#endif // OPENTHREAD_FTD
 
 /**
  * This class implements MPL message processing.
@@ -464,6 +466,15 @@ public:
     void SetSeedId(uint16_t aSeedId) { mSeedId = aSeedId; }
 
     /**
+     * This method sets the IPv6 matching address, that allows to elide MPL Seed Id.
+     *
+     * @param[in] aAddress The reference to the IPv6 matching address.
+     *
+     */
+    void SetMatchingAddress(const Address &aAddress) { mMatchingAddress = &aAddress; }
+
+#if OPENTHREAD_FTD
+    /**
      * This method gets the MPL number of Trickle timer expirations that occur before
      * terminating the Trickle algorithm's retransmission of a given MPL Data Message.
      *
@@ -482,20 +493,13 @@ public:
     void SetTimerExpirations(uint8_t aTimerExpirations) { mTimerExpirations = aTimerExpirations; }
 
     /**
-     * This method sets the IPv6 matching address, that allows to elide MPL Seed Id.
-     *
-     * @param[in] aAddress The reference to the IPv6 matching address.
-     *
-     */
-    void SetMatchingAddress(const Address &aAddress) { mMatchingAddress = &aAddress; }
-
-    /**
      * This method returns a reference to the buffered message set.
      *
      * @returns A reference to the buffered message set.
      *
      */
     const MessageQueue &GetBufferedMessageSet(void) const { return mBufferedMessageSet; }
+#endif
 
 private:
     enum
@@ -506,27 +510,27 @@ private:
         kDataMessageInterval = 64
     };
 
-    otError UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence);
-    void    UpdateBufferedSet(uint16_t aSeedId, uint8_t aSequence);
-    void    AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound);
-
     static void HandleSeedSetTimer(Timer &aTimer);
     void        HandleSeedSetTimer(void);
 
+    otError UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence);
+
+    MplSeedEntry   mSeedSet[kNumSeedEntries];
+    const Address *mMatchingAddress;
+    TimerMilli     mSeedSetTimer;
+    uint16_t       mSeedId;
+    uint8_t        mSequence;
+
+#if OPENTHREAD_FTD
     static void HandleRetransmissionTimer(Timer &aTimer);
     void        HandleRetransmissionTimer(void);
 
-    uint8_t  mTimerExpirations;
-    uint8_t  mSequence;
-    uint16_t mSeedId;
+    void AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound);
 
-    TimerMilli mSeedSetTimer;
-    TimerMilli mRetransmissionTimer;
-
-    const Address *mMatchingAddress;
-
-    MplSeedEntry mSeedSet[kNumSeedEntries];
     MessageQueue mBufferedMessageSet;
+    TimerMilli   mRetransmissionTimer;
+    uint8_t      mTimerExpirations;
+#endif
 };
 
 /**

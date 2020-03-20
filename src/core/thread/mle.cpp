@@ -759,7 +759,9 @@ void Mle::SetStateDetached(void)
     Get<Mac::Mac>().SetBeaconEnabled(false);
     Get<MleRouter>().HandleDetachStart();
     Get<Ip6::Ip6>().SetForwardingEnabled(false);
+#if OPENTHREAD_FTD
     Get<Ip6::Mpl>().SetTimerExpirations(0);
+#endif
 }
 
 void Mle::SetStateChild(uint16_t aRloc16)
@@ -789,7 +791,9 @@ void Mle::SetStateChild(uint16_t aRloc16)
     Get<NetworkData::Local>().ClearResubmitDelayTimer();
 #endif
     Get<Ip6::Ip6>().SetForwardingEnabled(false);
+#if OPENTHREAD_FTD
     Get<Ip6::Mpl>().SetTimerExpirations(kMplChildDataMessageTimerExpirations);
+#endif
 
     // send announce after attached if needed
     InformPreviousChannel();
