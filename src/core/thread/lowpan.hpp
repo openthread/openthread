@@ -353,6 +353,7 @@ private:
         kExtHdrEidMask     = 0x0e,
 
         kExtHdrNextHeader = 0x01,
+        kExtHdrMaxLength  = 255,
 
         kUdpDispatch     = 0xf0,
         kUdpDispatchMask = 0xf8,
