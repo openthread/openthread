@@ -297,10 +297,10 @@ void Mpl::HandleSeedSetTimer(void)
 
 void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound)
 {
-    otError                    error       = OT_ERROR_NONE;
-    Message *                  messageCopy = NULL;
-    MplBufferedMessageMetadata messageMetadata;
-    uint8_t                    hopLimit = 0;
+    otError  error       = OT_ERROR_NONE;
+    Message *messageCopy = NULL;
+    Metadata metadata;
+    uint8_t  hopLimit = 0;
 
 #if OPENTHREAD_CONFIG_MPL_DYNAMIC_INTERVAL_ENABLE
     // adjust the first MPL forward interval dynamically according to the network scale
@@ -319,15 +319,16 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
         messageCopy->Write(Header::GetHopLimitOffset(), Header::GetHopLimitSize(), &hopLimit);
     }
 
-    messageMetadata.SetSeedId(aSeedId);
-    messageMetadata.SetSequence(aSequence);
-    messageMetadata.SetTransmissionCount(aIsOutbound ? 1 : 0);
-    messageMetadata.GenerateNextTransmissionTime(TimerMilli::GetNow(), interval);
+    metadata.mSeedId            = aSeedId;
+    metadata.mSequence          = aSequence;
+    metadata.mTransmissionCount = aIsOutbound ? 1 : 0;
+    metadata.mIntervalOffset    = 0;
+    metadata.GenerateNextTransmissionTime(TimerMilli::GetNow(), interval);
 
-    SuccessOrExit(error = messageMetadata.AppendTo(*messageCopy));
+    SuccessOrExit(error = metadata.AppendTo(*messageCopy));
     mBufferedMessageSet.Enqueue(*messageCopy);
 
-    mRetransmissionTimer.FireAtIfEarlier(messageMetadata.GetTransmissionTime());
+    mRetransmissionTimer.FireAtIfEarlier(metadata.mTransmissionTime);
 
 exit:
 
@@ -337,16 +338,6 @@ exit:
     }
 }
 
-void MplBufferedMessageMetadata::GenerateNextTransmissionTime(TimeMilli aCurrentTime, uint8_t aInterval)
-{
-    // Emulate Trickle timer behavior and set up the next retransmission within [0,I) range.
-    uint8_t t = (aInterval == 0) ? aInterval : Random::NonCrypto::GetUint8InRange(0, aInterval);
-
-    // Set transmission time at the beginning of the next interval.
-    SetTransmissionTime(aCurrentTime + static_cast<uint32_t>(GetIntervalOffset() + t));
-    SetIntervalOffset(aInterval - t);
-}
-
 void Mpl::HandleRetransmissionTimer(Timer &aTimer)
 {
     aTimer.GetOwner<Mpl>().HandleRetransmissionTimer();
@@ -354,37 +345,37 @@ void Mpl::HandleRetransmissionTimer(Timer &aTimer)
 
 void Mpl::HandleRetransmissionTimer(void)
 {
-    TimeMilli                  now      = TimerMilli::GetNow();
-    TimeMilli                  nextTime = now.GetDistantFuture();
-    MplBufferedMessageMetadata messageMetadata;
-    Message *                  message;
-    Message *                  nextMessage;
+    TimeMilli now      = TimerMilli::GetNow();
+    TimeMilli nextTime = now.GetDistantFuture();
+    Metadata  metadata;
+    Message * message;
+    Message * nextMessage;
 
     for (message = mBufferedMessageSet.GetHead(); message != NULL; message = nextMessage)
     {
         nextMessage = message->GetNext();
 
-        messageMetadata.ReadFrom(*message);
+        metadata.ReadFrom(*message);
 
-        if (now < messageMetadata.GetTransmissionTime())
+        if (now < metadata.mTransmissionTime)
         {
-            if (nextTime > messageMetadata.GetTransmissionTime())
+            if (nextTime > metadata.mTransmissionTime)
             {
-                nextTime = messageMetadata.GetTransmissionTime();
+                nextTime = metadata.mTransmissionTime;
             }
         }
         else
         {
             // Update the number of transmission timer expirations.
-            messageMetadata.SetTransmissionCount(messageMetadata.GetTransmissionCount() + 1);
+            metadata.mTransmissionCount++;
 
-            if (messageMetadata.GetTransmissionCount() < GetTimerExpirations())
+            if (metadata.mTransmissionCount < GetTimerExpirations())
             {
-                Message *messageCopy = message->Clone(message->GetLength() - sizeof(MplBufferedMessageMetadata));
+                Message *messageCopy = message->Clone(message->GetLength() - sizeof(Metadata));
 
                 if (messageCopy != NULL)
                 {
-                    if (messageMetadata.GetTransmissionCount() > 1)
+                    if (metadata.mTransmissionCount > 1)
                     {
                         messageCopy->SetSubType(Message::kSubTypeMplRetransmission);
                     }
@@ -392,27 +383,26 @@ void Mpl::HandleRetransmissionTimer(void)
                     Get<Ip6>().EnqueueDatagram(*messageCopy);
                 }
 
-                messageMetadata.GenerateNextTransmissionTime(now, kDataMessageInterval);
-                messageMetadata.UpdateIn(*message);
+                metadata.GenerateNextTransmissionTime(now, kDataMessageInterval);
+                metadata.UpdateIn(*message);
 
-                if (nextTime > messageMetadata.GetTransmissionTime())
+                if (nextTime > metadata.mTransmissionTime)
                 {
-                    nextTime = messageMetadata.GetTransmissionTime();
+                    nextTime = metadata.mTransmissionTime;
                 }
             }
             else
             {
                 mBufferedMessageSet.Dequeue(*message);
 
-                if (messageMetadata.GetTransmissionCount() == GetTimerExpirations())
+                if (metadata.mTransmissionCount == GetTimerExpirations())
                 {
-                    if (messageMetadata.GetTransmissionCount() > 1)
+                    if (metadata.mTransmissionCount > 1)
                     {
                         message->SetSubType(Message::kSubTypeMplRetransmission);
                     }
 
-                    // Remove the extra metadata from the MPL Data Message.
-                    MplBufferedMessageMetadata::RemoveFrom(*message);
+                    metadata.RemoveFrom(*message);
                     Get<Ip6>().EnqueueDatagram(*message);
                 }
                 else
@@ -428,6 +418,37 @@ void Mpl::HandleRetransmissionTimer(void)
     {
         mRetransmissionTimer.FireAt(nextTime);
     }
+}
+
+void Mpl::Metadata::ReadFrom(const Message &aMessage)
+{
+    uint16_t length = aMessage.GetLength();
+
+    OT_ASSERT(length >= sizeof(*this));
+    aMessage.Read(length - sizeof(*this), sizeof(*this), this);
+}
+
+void Mpl::Metadata::RemoveFrom(Message &aMessage) const
+{
+    otError error = aMessage.SetLength(aMessage.GetLength() - sizeof(*this));
+
+    OT_ASSERT(error == OT_ERROR_NONE);
+    OT_UNUSED_VARIABLE(error);
+}
+
+int Mpl::Metadata::UpdateIn(Message &aMessage) const
+{
+    return aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+}
+
+void Mpl::Metadata::GenerateNextTransmissionTime(TimeMilli aCurrentTime, uint8_t aInterval)
+{
+    // Emulate Trickle timer behavior and set up the next retransmission within [0,I) range.
+    uint8_t t = (aInterval == 0) ? aInterval : Random::NonCrypto::GetUint8InRange(0, aInterval);
+
+    // Set transmission time at the beginning of the next interval.
+    mTransmissionTime = aCurrentTime + static_cast<uint32_t>(mIntervalOffset + t);
+    mIntervalOffset   = aInterval - t;
 }
 
 #endif // OPENTHREAD_FTD
