@@ -36,10 +36,19 @@ endif()
 list(APPEND OT_PLATFORM_DEFINES
     "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-cc1352-config-check.h\""
     "OPENTHREAD_SETTINGS_RAM=0"
+    "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\""
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
+list(APPEND OT_PRIVATE_DEFINES "MBEDTLS_USER_CONFIG_FILE=\"cc1352-mbedtls-config.h\"")
+list(APPEND OT_PUBLIC_INCLUDES
+    "${PROJECT_SOURCE_DIR}/examples/platforms/cc1352/crypto"
+    "${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2"
+)
+set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
+
 list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
+string (REPLACE "-pedantic-errors" "" OT_CFLAGS "${OT_CFLAGS}")
 
 add_library(openthread-cc1352
     alarm.c
@@ -68,24 +77,21 @@ target_link_options(openthread-cc1352 PUBLIC -Wl,-Map=$<TARGET_PROPERTY:NAME>.ma
 target_compile_definitions(openthread-cc1352
     PUBLIC
         ${OT_PLATFORM_DEFINES}
-        "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\""
-        "MBEDTLS_USER_CONFIG_FILE=\"cc1352-mbedtls-config.h\""
     PRIVATE
         ${OT_PRIVATE_DEFINES}
 )
 
-target_compile_options(openthread-cc1352 PRIVATE
-    ${OT_CFLAGS}
-)
+target_compile_options(openthread-cc1352 PRIVATE ${OT_CFLAGS})
 
-target_include_directories(openthread-cc1352 PRIVATE
-    ${OT_PUBLIC_INCLUDES}
-    ${OT_PRIVATE_INCLUDES}
-    ${PROJECT_SOURCE_DIR}/src
-    ${PROJECT_SOURCE_DIR}/src/core
-    ${PROJECT_SOURCE_DIR}/examples/platforms
-    ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
-    ${PROJECT_SOURCE_DIR}/third_party/mbedtls
+target_include_directories(openthread-cc1352
+    PRIVATE
+        ${OT_PUBLIC_INCLUDES}
+        ${OT_PRIVATE_INCLUDES}
+        ${PROJECT_SOURCE_DIR}/src
+        ${PROJECT_SOURCE_DIR}/src/core
+        ${PROJECT_SOURCE_DIR}/examples/platforms
+        ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
+        ${PROJECT_SOURCE_DIR}/third_party/mbedtls
     PUBLIC
         ${PROJECT_SOURCE_DIR}/examples/platforms/cc1352/crypto
         ${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2

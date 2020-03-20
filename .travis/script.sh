@@ -119,7 +119,7 @@ build_cc1352() {
     git checkout -- . || die
     git clean -xfd || die
     mkdir build && cd build || die
-    cmake -GNinja -DOT_PLATFORM=cc1352 -DCMAKE_TOOLCHAIN_FILE=examples/platforms/cc1352/arm-none-eabi.cmake ${CMAKE_FLAGS} .. || die
+    cmake -GNinja -DOT_PLATFORM=cc1352 -DCMAKE_TOOLCHAIN_FILE=examples/platforms/cc1352/arm-none-eabi.cmake ${CMAKE_FLAGS} -DCMAKE_BUILD_TYPE=Debug .. || die
     ninja || die
     arm-none-eabi-size  examples/apps/cli/ot-cli-ftd || die
     arm-none-eabi-size  examples/apps/cli/ot-cli-mtd || die
