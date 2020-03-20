@@ -214,7 +214,7 @@ void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffse
     while (written < aSize)
     {
         uint32_t       toWrite = aSize - written;
-        const uint8_t *data    = aData + written;
+        const uint8_t *data    = (uint8_t *)aData + written;
         uint32_t       fsmRet;
         bool           interruptsWereDisabled;
 
