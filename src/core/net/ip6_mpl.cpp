@@ -136,16 +136,16 @@ exit:
  */
 otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
 {
-    otError       error    = OT_ERROR_NONE;
-    MplSeedEntry *insert   = NULL;
-    MplSeedEntry *group    = mSeedSet;
-    MplSeedEntry *evict    = mSeedSet;
-    uint8_t       curCount = 0;
-    uint8_t       maxCount = 0;
+    otError    error    = OT_ERROR_NONE;
+    SeedEntry *insert   = NULL;
+    SeedEntry *group    = mSeedSet;
+    SeedEntry *evict    = mSeedSet;
+    uint8_t    curCount = 0;
+    uint8_t    maxCount = 0;
 
     for (uint32_t i = 0; i < kNumSeedEntries; i++, curCount++)
     {
-        if (mSeedSet[i].GetLifetime() == 0)
+        if (mSeedSet[i].mLifetime == 0)
         {
             // unused entries exist
 
@@ -160,11 +160,11 @@ otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
             break;
         }
 
-        if (mSeedSet[i].GetSeedId() != group->GetSeedId())
+        if (mSeedSet[i].mSeedId != group->mSeedId)
         {
             // processing new group
 
-            if (aSeedId == group->GetSeedId() && insert == NULL)
+            if (aSeedId == group->mSeedId && insert == NULL)
             {
                 // insert at end of existing group
                 insert = &mSeedSet[i];
@@ -182,11 +182,11 @@ otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
             curCount = 0;
         }
 
-        if (aSeedId == mSeedSet[i].GetSeedId())
+        if (aSeedId == mSeedSet[i].mSeedId)
         {
             // have existing entries for aSeedId
 
-            int8_t diff = static_cast<int8_t>(aSequence - mSeedSet[i].GetSequence());
+            int8_t diff = static_cast<int8_t>(aSequence - mSeedSet[i].mSequence);
 
             if (diff == 0)
             {
@@ -202,12 +202,12 @@ otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
         }
     }
 
-    if (evict->GetLifetime() != 0)
+    if (evict->mLifetime != 0)
     {
         // no free entries available, look to evict an existing entry
         OT_ASSERT(curCount != 0);
 
-        if (aSeedId == group->GetSeedId() && insert == NULL)
+        if (aSeedId == group->mSeedId && insert == NULL)
         {
             // insert at end of existing group
             insert = &mSeedSet[kNumSeedEntries];
@@ -232,25 +232,25 @@ otError Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
         else
         {
             // require Sequence to be larger than oldest stored Sequence in group
-            VerifyOrExit(insert > mSeedSet && aSeedId == (insert - 1)->GetSeedId(), error = OT_ERROR_DROP);
+            VerifyOrExit(insert > mSeedSet && aSeedId == (insert - 1)->mSeedId, error = OT_ERROR_DROP);
         }
     }
 
     if (evict > insert)
     {
         OT_ASSERT(insert >= mSeedSet);
-        memmove(insert + 1, insert, static_cast<size_t>(evict - insert) * sizeof(MplSeedEntry));
+        memmove(insert + 1, insert, static_cast<size_t>(evict - insert) * sizeof(SeedEntry));
     }
     else if (evict < insert)
     {
         OT_ASSERT(evict >= mSeedSet);
-        memmove(evict, evict + 1, static_cast<size_t>(insert - 1 - evict) * sizeof(MplSeedEntry));
+        memmove(evict, evict + 1, static_cast<size_t>(insert - 1 - evict) * sizeof(SeedEntry));
         insert--;
     }
 
-    insert->SetSeedId(aSeedId);
-    insert->SetSequence(aSequence);
-    insert->SetLifetime(kSeedEntryLifetime);
+    insert->mSeedId   = aSeedId;
+    insert->mSequence = aSequence;
+    insert->mLifetime = kSeedEntryLifetime;
 
     if (!mSeedSetTimer.IsRunning())
     {
@@ -271,20 +271,20 @@ void Mpl::HandleSeedSetTimer(void)
     bool startTimer = false;
     int  j          = 0;
 
-    for (int i = 0; i < kNumSeedEntries && mSeedSet[i].GetLifetime(); i++)
+    for (int i = 0; i < kNumSeedEntries && mSeedSet[i].mLifetime; i++)
     {
-        mSeedSet[i].SetLifetime(mSeedSet[i].GetLifetime() - 1);
+        mSeedSet[i].mLifetime--;
 
-        if (mSeedSet[i].GetLifetime() > 0)
+        if (mSeedSet[i].mLifetime > 0)
         {
             mSeedSet[j++] = mSeedSet[i];
             startTimer    = true;
         }
     }
 
-    for (; j < kNumSeedEntries && mSeedSet[j].GetLifetime(); j++)
+    for (; j < kNumSeedEntries && mSeedSet[j].mLifetime; j++)
     {
-        mSeedSet[j].SetLifetime(0);
+        mSeedSet[j].mLifetime = 0;
     }
 
     if (startTimer)

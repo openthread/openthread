@@ -183,67 +183,6 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class represents an MPL's Seed Set entry.
- *
- */
-class MplSeedEntry
-{
-public:
-    /**
-     * This method returns the MPL Seed Id value.
-     *
-     * @returns The MPL Seed Id value.
-     *
-     */
-    uint16_t GetSeedId(void) const { return mSeedId; }
-
-    /**
-     * This method sets the MPL Seed Id value.
-     *
-     * @param[in]  aSeedId  The MPL Seed Id value.
-     *
-     */
-    void SetSeedId(uint16_t aSeedId) { mSeedId = aSeedId; }
-
-    /**
-     * This method returns the MPL Sequence value.
-     *
-     * @returns The MPL Sequence value.
-     *
-     */
-    uint8_t GetSequence(void) const { return mSequence; }
-
-    /**
-     * This method sets the MPL Sequence value.
-     *
-     * @param[in]  aSequence  The MPL Sequence value.
-     *
-     */
-    void SetSequence(uint8_t aSequence) { mSequence = aSequence; }
-
-    /**
-     * This method returns the MPL Seed Set entry's remaining lifetime.
-     *
-     * @returns The MPL Seed Set entry's remaining lifetime.
-     *
-     */
-    uint8_t GetLifetime(void) const { return mLifetime; }
-
-    /**
-     * This method sets the remaining lifetime of the Seed Set entry.
-     *
-     * @param[in]  aLifetime  The remaining lifetime of the Seed Set entry.
-     *
-     */
-    void SetLifetime(uint8_t aLifetime) { mLifetime = aLifetime; }
-
-private:
-    uint16_t mSeedId;
-    uint8_t  mSequence;
-    uint8_t  mLifetime;
-};
-
-/**
  * This class implements MPL message processing.
  *
  */
@@ -344,12 +283,19 @@ private:
         kDataMessageInterval = 64
     };
 
+    struct SeedEntry
+    {
+        uint16_t mSeedId;
+        uint8_t  mSequence;
+        uint8_t  mLifetime;
+    };
+
     static void HandleSeedSetTimer(Timer &aTimer);
     void        HandleSeedSetTimer(void);
 
     otError UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence);
 
-    MplSeedEntry   mSeedSet[kNumSeedEntries];
+    SeedEntry      mSeedSet[kNumSeedEntries];
     const Address *mMatchingAddress;
     TimerMilli     mSeedSetTimer;
     uint16_t       mSeedId;
