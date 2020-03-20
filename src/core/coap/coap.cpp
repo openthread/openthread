@@ -76,11 +76,11 @@ void CoapBase::ClearRequests(const Ip6::Address *aAddress)
 {
     Message *nextMessage;
 
-    for (Message *message = static_cast<Message *>(mPendingRequests.GetHead()); message != NULL; message = nextMessage)
+    for (Message *message = mPendingRequests.GetHead(); message != NULL; message = nextMessage)
     {
         Metadata metadata;
 
-        nextMessage = static_cast<Message *>(message->GetNext());
+        nextMessage = message->GetNextCoapMessage();
         metadata.ReadFrom(*message);
 
         if ((aAddress == NULL) || (metadata.mSourceAddress == *aAddress))
@@ -339,9 +339,9 @@ void CoapBase::HandleRetransmissionTimer(void)
     Message *        nextMessage;
     Ip6::MessageInfo messageInfo;
 
-    for (Message *message = static_cast<Message *>(mPendingRequests.GetHead()); message != NULL; message = nextMessage)
+    for (Message *message = mPendingRequests.GetHead(); message != NULL; message = nextMessage)
     {
-        nextMessage = static_cast<Message *>(message->GetNext());
+        nextMessage = message->GetNextCoapMessage();
 
         metadata.ReadFrom(*message);
 
@@ -411,9 +411,9 @@ otError CoapBase::AbortTransaction(ResponseHandler aHandler, void *aContext)
     Message *nextMessage;
     Metadata metadata;
 
-    for (Message *message = static_cast<Message *>(mPendingRequests.GetHead()); message != NULL; message = nextMessage)
+    for (Message *message = mPendingRequests.GetHead(); message != NULL; message = nextMessage)
     {
-        nextMessage = static_cast<Message *>(message->GetNext());
+        nextMessage = message->GetNextCoapMessage();
         metadata.ReadFrom(*message);
 
         if (metadata.mResponseHandler == aHandler && metadata.mResponseContext == aContext)
@@ -492,8 +492,7 @@ Message *CoapBase::FindRelatedRequest(const Message &         aResponse,
 {
     Message *message;
 
-    for (message = static_cast<Message *>(mPendingRequests.GetHead()); message != NULL;
-         message = static_cast<Message *>(message->GetNext()))
+    for (message = mPendingRequests.GetHead(); message != NULL; message = message->GetNextCoapMessage())
     {
         aMetadata.ReadFrom(*message);
 
@@ -809,8 +808,7 @@ const Message *ResponsesQueue::FindMatchedResponse(const Message &aRequest, cons
 {
     Message *message;
 
-    for (message = static_cast<Message *>(mQueue.GetHead()); message != NULL;
-         message = static_cast<Message *>(message->GetNext()))
+    for (message = mQueue.GetHead(); message != NULL; message = message->GetNextCoapMessage())
     {
         if (message->GetMessageId() == aRequest.GetMessageId())
         {
@@ -865,8 +863,7 @@ void ResponsesQueue::UpdateQueue(void)
     // `kMaxCachedResponses` remove the one with earliest dequeue
     // time.
 
-    for (Message *message = static_cast<Message *>(mQueue.GetHead()); message != NULL;
-         message          = static_cast<Message *>(message->GetNext()))
+    for (Message *message = mQueue.GetHead(); message != NULL; message = message->GetNextCoapMessage())
     {
         ResponseMetadata metadata;
 
@@ -897,7 +894,7 @@ void ResponsesQueue::DequeueAllResponses(void)
 {
     Message *message;
 
-    while ((message = static_cast<Message *>(mQueue.GetHead())) != NULL)
+    while ((message = mQueue.GetHead()) != NULL)
     {
         DequeueResponse(*message);
     }
@@ -914,11 +911,11 @@ void ResponsesQueue::HandleTimer(void)
     TimeMilli nextDequeueTime = now.GetDistantFuture();
     Message * nextMessage;
 
-    for (Message *message = static_cast<Message *>(mQueue.GetHead()); message != NULL; message = nextMessage)
+    for (Message *message = mQueue.GetHead(); message != NULL; message = nextMessage)
     {
         ResponseMetadata metadata;
 
-        nextMessage = static_cast<Message *>(message->GetNext());
+        nextMessage = message->GetNextCoapMessage();
 
         metadata.ReadFrom(*message);
 
