@@ -43,24 +43,16 @@
 namespace ot {
 namespace Ip6 {
 
-void MplBufferedMessageMetadata::GenerateNextTransmissionTime(TimeMilli aCurrentTime, uint8_t aInterval)
-{
-    // Emulate Trickle timer behavior and set up the next retransmission within [0,I) range.
-    uint8_t t = (aInterval == 0) ? aInterval : Random::NonCrypto::GetUint8InRange(0, aInterval);
-
-    // Set transmission time at the beginning of the next interval.
-    SetTransmissionTime(aCurrentTime + static_cast<uint32_t>(GetIntervalOffset() + t));
-    SetIntervalOffset(aInterval - t);
-}
-
 Mpl::Mpl(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTimerExpirations(0)
-    , mSequence(0)
-    , mSeedId(0)
-    , mSeedSetTimer(aInstance, &Mpl::HandleSeedSetTimer, this)
-    , mRetransmissionTimer(aInstance, &Mpl::HandleRetransmissionTimer, this)
     , mMatchingAddress(NULL)
+    , mSeedSetTimer(aInstance, &Mpl::HandleSeedSetTimer, this)
+    , mSeedId(0)
+    , mSequence(0)
+#if OPENTHREAD_FTD
+    , mRetransmissionTimer(aInstance, &Mpl::HandleRetransmissionTimer, this)
+    , mTimerExpirations(0)
+#endif
 {
     memset(mSeedSet, 0, sizeof(mSeedSet));
 }
@@ -83,6 +75,42 @@ void Mpl::InitOption(OptionMpl &aOption, const Address &aAddress)
         aOption.SetSeedIdLength(OptionMpl::kSeedIdLength2);
         aOption.SetSeedId(mSeedId);
     }
+}
+
+otError Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOutbound)
+{
+    otError   error;
+    OptionMpl option;
+
+    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(option), &option) >= OptionMpl::kMinLength &&
+                     (option.GetSeedIdLength() == OptionMpl::kSeedIdLength0 ||
+                      option.GetSeedIdLength() == OptionMpl::kSeedIdLength2),
+                 error = OT_ERROR_PARSE);
+
+    if (option.GetSeedIdLength() == OptionMpl::kSeedIdLength0)
+    {
+        // Retrieve MPL Seed Id from the IPv6 Source Address.
+        option.SetSeedId(HostSwap16(aAddress.mFields.m16[7]));
+    }
+
+    // Check if the MPL Data Message is new.
+    error = UpdateSeedSet(option.GetSeedId(), option.GetSequence());
+
+    if (error == OT_ERROR_NONE)
+    {
+#if OPENTHREAD_FTD
+        AddBufferedMessage(aMessage, option.GetSeedId(), option.GetSequence(), aIsOutbound);
+#endif
+    }
+    else if (aIsOutbound)
+    {
+        // In case MPL Data Message is generated locally, ignore potential error of the MPL Seed Set
+        // to allow subsequent retransmissions with the same sequence number.
+        ExitNow(error = OT_ERROR_NONE);
+    }
+
+exit:
+    return error;
 }
 
 /*
@@ -233,6 +261,40 @@ exit:
     return error;
 }
 
+void Mpl::HandleSeedSetTimer(Timer &aTimer)
+{
+    aTimer.GetOwner<Mpl>().HandleSeedSetTimer();
+}
+
+void Mpl::HandleSeedSetTimer(void)
+{
+    bool startTimer = false;
+    int  j          = 0;
+
+    for (int i = 0; i < kNumSeedEntries && mSeedSet[i].GetLifetime(); i++)
+    {
+        mSeedSet[i].SetLifetime(mSeedSet[i].GetLifetime() - 1);
+
+        if (mSeedSet[i].GetLifetime() > 0)
+        {
+            mSeedSet[j++] = mSeedSet[i];
+            startTimer    = true;
+        }
+    }
+
+    for (; j < kNumSeedEntries && mSeedSet[j].GetLifetime(); j++)
+    {
+        mSeedSet[j].SetLifetime(0);
+    }
+
+    if (startTimer)
+    {
+        mSeedSetTimer.Start(kSeedEntryLifetimeDt);
+    }
+}
+
+#if OPENTHREAD_FTD
+
 void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound)
 {
     otError                    error       = OT_ERROR_NONE;
@@ -275,38 +337,14 @@ exit:
     }
 }
 
-otError Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOutbound)
+void MplBufferedMessageMetadata::GenerateNextTransmissionTime(TimeMilli aCurrentTime, uint8_t aInterval)
 {
-    otError   error;
-    OptionMpl option;
+    // Emulate Trickle timer behavior and set up the next retransmission within [0,I) range.
+    uint8_t t = (aInterval == 0) ? aInterval : Random::NonCrypto::GetUint8InRange(0, aInterval);
 
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(option), &option) >= OptionMpl::kMinLength &&
-                     (option.GetSeedIdLength() == OptionMpl::kSeedIdLength0 ||
-                      option.GetSeedIdLength() == OptionMpl::kSeedIdLength2),
-                 error = OT_ERROR_PARSE);
-
-    if (option.GetSeedIdLength() == OptionMpl::kSeedIdLength0)
-    {
-        // Retrieve MPL Seed Id from the IPv6 Source Address.
-        option.SetSeedId(aAddress.GetLocator());
-    }
-
-    // Check if the MPL Data Message is new.
-    error = UpdateSeedSet(option.GetSeedId(), option.GetSequence());
-
-    if (error == OT_ERROR_NONE)
-    {
-        AddBufferedMessage(aMessage, option.GetSeedId(), option.GetSequence(), aIsOutbound);
-    }
-    else if (aIsOutbound)
-    {
-        // In case MPL Data Message is generated locally, ignore potential error of the MPL Seed Set
-        // to allow subsequent retransmissions with the same sequence number.
-        ExitNow(error = OT_ERROR_NONE);
-    }
-
-exit:
-    return error;
+    // Set transmission time at the beginning of the next interval.
+    SetTransmissionTime(aCurrentTime + static_cast<uint32_t>(GetIntervalOffset() + t));
+    SetIntervalOffset(aInterval - t);
 }
 
 void Mpl::HandleRetransmissionTimer(Timer &aTimer)
@@ -392,37 +430,7 @@ void Mpl::HandleRetransmissionTimer(void)
     }
 }
 
-void Mpl::HandleSeedSetTimer(Timer &aTimer)
-{
-    aTimer.GetOwner<Mpl>().HandleSeedSetTimer();
-}
-
-void Mpl::HandleSeedSetTimer(void)
-{
-    bool startTimer = false;
-    int  j          = 0;
-
-    for (int i = 0; i < kNumSeedEntries && mSeedSet[i].GetLifetime(); i++)
-    {
-        mSeedSet[i].SetLifetime(mSeedSet[i].GetLifetime() - 1);
-
-        if (mSeedSet[i].GetLifetime() > 0)
-        {
-            mSeedSet[j++] = mSeedSet[i];
-            startTimer    = true;
-        }
-    }
-
-    for (; j < kNumSeedEntries && mSeedSet[j].GetLifetime(); j++)
-    {
-        mSeedSet[j].SetLifetime(0);
-    }
-
-    if (startTimer)
-    {
-        mSeedSetTimer.Start(kSeedEntryLifetimeDt);
-    }
-}
+#endif // OPENTHREAD_FTD
 
 } // namespace Ip6
 } // namespace ot
