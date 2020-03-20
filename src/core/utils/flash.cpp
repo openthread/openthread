@@ -69,11 +69,47 @@ void Flash::Init(void)
     for (mSwapUsed = kSwapMarkerSize; mSwapUsed <= mSwapSize - sizeof(record); mSwapUsed += record.GetSize())
     {
         otPlatFlashRead(&GetInstance(), mSwapIndex, mSwapUsed, &record, sizeof(record));
-        VerifyOrExit(record.IsAddBeginSet());
+        if (!record.IsAddBeginSet())
+        {
+            break;
+        }
+
+        if (!record.IsAddCompleteSet())
+        {
+            break;
+        }
     }
+
+    SanitizeFreeSpace();
 
 exit:
     return;
+}
+
+void Flash::SanitizeFreeSpace(void)
+{
+    uint32_t temp;
+    bool     sanitizeNeeded = false;
+
+    if (mSwapUsed & 3)
+    {
+        ExitNow(sanitizeNeeded = true);
+    }
+
+    for (uint32_t offset = mSwapUsed; offset < mSwapSize; offset += sizeof(temp))
+    {
+        otPlatFlashRead(&GetInstance(), mSwapIndex, offset, &temp, sizeof(temp));
+        if (temp != ~0U)
+        {
+            ExitNow(sanitizeNeeded = true);
+        }
+    }
+
+exit:
+    if (sanitizeNeeded)
+    {
+        Swap();
+    }
 }
 
 otError Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const
