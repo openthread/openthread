@@ -96,7 +96,7 @@ Config:NCP:SocketPath "system:/usr/bin/ot-ncp /usr/bin/spi-hdlc-adapter -- '--st
 
 In this example, [spi-hdlc-adapter][spi-hdlc-adapter] is a tool that you can use to communicate between RCP and wpantund over SPI. For this example, `spi-hdlc-adapter` is installed in `/usr/bin`.
 
-The default SPI Slave pin configuration for nRF52811 is defined in `examples/platforms/nrf52811/platform-config.h`.
+The default SPI Slave pin configuration for nRF52811 is defined in `examples/platforms/nrf52811/transport-config.h`.
 
 [spi-hdlc-adapter]: https://github.com/openthread/openthread/tree/master/tools/spi-hdlc-adapter
 
