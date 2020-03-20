@@ -116,7 +116,7 @@ otError Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueL
 {
     otError      error       = OT_ERROR_NOT_FOUND;
     uint16_t     valueLength = 0;
-    int          index       = 0;
+    int          index = 0; // This must be initalized to 0. See [Note] in Delete().
     uint32_t     offset;
     RecordHeader record;
 
@@ -255,8 +255,8 @@ exit:
 
 otError Flash::Delete(uint16_t aKey, int aIndex)
 {
-    otError      error = OT_ERROR_NOT_FOUND;
-    int          index = 0;
+    otError error = OT_ERROR_NOT_FOUND;
+    int index = 0; // This must be initalized to 0. See [Note] below.
     RecordHeader record;
 
     for (uint32_t offset = kSwapMarkerSize; offset < mSwapUsed; offset += record.GetSize())
@@ -279,6 +279,10 @@ otError Flash::Delete(uint16_t aKey, int aIndex)
             otPlatFlashWrite(&GetInstance(), mSwapIndex, offset, &record, sizeof(record));
             error = OT_ERROR_NONE;
         }
+
+        /* [Note] If the operation gets interrupted here and aIndex is 0, the next record (index == 1) will never get
+         * marked as first. However, this is not actually an issue because all the methods that iterate over the
+         * settings area initialize the index to 0, without expecting any record to be effectively marked as first. */
 
         if ((index == 1) && (aIndex == 0))
         {
