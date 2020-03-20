@@ -40,7 +40,8 @@
 #define FLASH_PAGE_NUM 4
 #define FLASH_DATA_END_ADDR (FLASH_BASE + FLASH_SIZE)
 #define FLASH_DATA_START_ADDR (FLASH_DATA_END_ADDR - (FLASH_PAGE_SIZE * FLASH_PAGE_NUM))
-#define FLASH_SWAP_SIZE (FLASH_PAGE_SIZE * (FLASH_PAGE_NUM / 2))
+#define FLASH_SWAP_PAGE_NUM (FLASH_PAGE_NUM / 2)
+#define FLASH_SWAP_SIZE (FLASH_PAGE_SIZE * FLASH_SWAP_PAGE_NUM)
 
 static inline uint32_t mapAddress(uint8_t aSwapIndex, uint32_t aOffset)
 {
@@ -59,8 +60,6 @@ static inline uint32_t mapAddress(uint8_t aSwapIndex, uint32_t aOffset)
 void otPlatFlashInit(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-
-    MSC_Init();
 }
 
 uint32_t otPlatFlashGetSwapSize(otInstance *aInstance)
@@ -74,9 +73,11 @@ void otPlatFlashErase(otInstance *aInstance, uint8_t aSwapIndex)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    MSC_ErasePage((uint32_t *)mapAddress(aSwapIndex, 0));
-    while ((MSC->STATUS & MSC_STATUS_WDATAREADY) == 0)
+    uint32_t address = mapAddress(aSwapIndex, 0);
+
+    for (uint32_t n = 0; n < FLASH_SWAP_PAGE_NUM; n++, address += FLASH_PAGE_SIZE)
     {
+        MSC_ErasePage((uint32_t *)address);
     }
 }
 
@@ -91,5 +92,5 @@ void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    memcpy(aData, (uint8_t *)mapAddress(aSwapIndex, aOffset), aSize);
+    memcpy(aData, (const uint8_t *)mapAddress(aSwapIndex, aOffset), aSize);
 }
