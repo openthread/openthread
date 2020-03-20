@@ -183,6 +183,8 @@ otError Flash::Add(uint16_t aKey, bool aFirst, const uint8_t *aValue, uint16_t a
     record.Init(aKey, aFirst);
     record.SetData(aValue, aValueLength);
 
+    OT_ASSERT((mSwapSize - record.GetSize()) >= kSwapMarkerSize);
+
     if ((mSwapSize - record.GetSize()) < mSwapUsed)
     {
         Swap();
