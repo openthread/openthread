@@ -46,9 +46,7 @@
 #include <unistd.h>
 
 #include <openthread/dataset.h>
-#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
-#include <openthread/platform/radio.h>
 #include <openthread/platform/settings.h>
 
 #include "common/code_utils.hpp"
@@ -192,14 +190,11 @@ RadioSpinel<InterfaceType>::RadioSpinel(void)
     mVersion[0] = '\0';
 }
 
-template <typename InterfaceType> void RadioSpinel<InterfaceType>::Init(const otPlatformConfig &aPlatformConfig)
+template <typename InterfaceType> void RadioSpinel<InterfaceType>::Init(bool aResetRadio, bool aFetchNcp)
 {
     otError error = OT_ERROR_NONE;
-    bool    isRcp;
 
-    SuccessOrExit(error = mSpinelInterface.Init(aPlatformConfig));
-
-    if (aPlatformConfig.mResetRadio)
+    if (aResetRadio)
     {
         SuccessOrExit(error = SendReset());
     }
@@ -208,15 +203,12 @@ template <typename InterfaceType> void RadioSpinel<InterfaceType>::Init(const ot
     VerifyOrExit(mIsReady, error = OT_ERROR_FAILED);
 
     SuccessOrExit(error = CheckSpinelVersion());
-    SuccessOrExit(error = CheckCapabilities(isRcp));
     SuccessOrExit(error = Get(SPINEL_PROP_NCP_VERSION, SPINEL_DATATYPE_UTF8_S, mVersion, sizeof(mVersion)));
 
-    if (aPlatformConfig.mRestoreDatasetFromNcp && !isRcp)
+    if (!aFetchNcp)
     {
-        DieNow((RestoreDatasetFromNcp() == OT_ERROR_NONE) ? OT_EXIT_SUCCESS : OT_EXIT_FAILURE);
+        SuccessOrExit(error = CheckRadioCapabilities());
     }
-
-    SuccessOrExit(error = CheckRadioCapabilities());
 
     mRxRadioFrame.mPsdu  = mRxPsdu;
     mTxRadioFrame.mPsdu  = mTxPsdu;
@@ -248,17 +240,15 @@ exit:
     return error;
 }
 
-template <typename InterfaceType> otError RadioSpinel<InterfaceType>::CheckCapabilities(bool &aIsRcp)
+template <typename InterfaceType> bool RadioSpinel<InterfaceType>::GetIsRcp(void)
 {
-    otError        error = OT_ERROR_NONE;
     uint8_t        capsBuffer[kCapsBufferSize];
     const uint8_t *capsData         = capsBuffer;
     spinel_size_t  capsLength       = sizeof(capsBuffer);
     bool           supportsRawRadio = false;
+    bool           isRcp            = false;
 
-    SuccessOrExit(error = Get(SPINEL_PROP_CAPS, SPINEL_DATATYPE_DATA_S, capsBuffer, &capsLength));
-
-    aIsRcp = false;
+    SuccessOrDie(Get(SPINEL_PROP_CAPS, SPINEL_DATATYPE_DATA_S, capsBuffer, &capsLength));
 
     while (capsLength > 0)
     {
@@ -266,7 +256,7 @@ template <typename InterfaceType> otError RadioSpinel<InterfaceType>::CheckCapab
         spinel_ssize_t unpacked;
 
         unpacked = spinel_datatype_unpack(capsData, capsLength, SPINEL_DATATYPE_UINT_PACKED_S, &capability);
-        VerifyOrExit(unpacked > 0, error = OT_ERROR_FAILED);
+        VerifyOrDie(unpacked > 0, OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
 
         if (capability == SPINEL_CAP_OPENTHREAD_LOG_METADATA)
         {
@@ -280,21 +270,20 @@ template <typename InterfaceType> otError RadioSpinel<InterfaceType>::CheckCapab
 
         if (capability == SPINEL_CAP_CONFIG_RADIO)
         {
-            aIsRcp = true;
+            isRcp = true;
         }
 
         capsData += unpacked;
         capsLength -= static_cast<spinel_size_t>(unpacked);
     }
 
-    if (!supportsRawRadio && aIsRcp)
+    if (!supportsRawRadio && isRcp)
     {
         otLogCritPlat("RCP capability list does not include support for radio/raw mode");
         DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
     }
 
-exit:
-    return error;
+    return isRcp;
 }
 
 template <typename InterfaceType> otError RadioSpinel<InterfaceType>::CheckRadioCapabilities(void)

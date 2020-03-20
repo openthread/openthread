@@ -87,10 +87,16 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 
 void platformRadioInit(const otPlatformConfig *aPlatformConfig)
 {
-    sRadioSpinel.Init(*aPlatformConfig);
+    SuccessOrDie(sRadioSpinel.GetSpinelInterface().Init(*aPlatformConfig));
+    sRadioSpinel.Init(aPlatformConfig->mResetRadio, aPlatformConfig->mRestoreDatasetFromNcp);
 
     SuccessOrDie(sRadioSpinel.GetIeeeEui64(reinterpret_cast<uint8_t *>(&gNodeId)));
     gNodeId = ot::Encoding::BigEndian::HostSwap64(gNodeId);
+
+    if (aPlatformConfig->mRestoreDatasetFromNcp && !sRadioSpinel.GetIsRcp())
+    {
+        DieNow((sRadioSpinel.RestoreDatasetFromNcp() == OT_ERROR_NONE) ? OT_EXIT_SUCCESS : OT_EXIT_FAILURE);
+    }
 }
 
 void platformRadioDeinit(void)

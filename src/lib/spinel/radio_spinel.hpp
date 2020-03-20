@@ -34,7 +34,6 @@
 #ifndef RADIO_SPINEL_HPP_
 #define RADIO_SPINEL_HPP_
 
-#include <openthread/openthread-system.h>
 #include <openthread/platform/radio.h>
 
 #include "spinel.h"
@@ -56,10 +55,11 @@ public:
     /**
      * Initialize this radio transceiver.
      *
-     * @param[in]  aPlatformConfig  Platform configuration structure.
+     * @param[in]  aResetRadio Whether to reset on init or not.
+     * @param[in]  aFetchNcp   Whether to support fetch data from NCP or not.
      *
      */
-    void Init(const otPlatformConfig &aPlatformConfig);
+    void Init(bool aResetRadio, bool aFetchNcp);
 
     /**
      * Deinitialize this radio transceiver.
@@ -544,6 +544,25 @@ public:
      */
     void HandleReceivedFrame(void);
 
+    /**
+     * This method checks whether the spinel interface is radio-only
+     *
+     * @returns Whether the spinel interface is radio-only.
+     *
+     */
+    bool GetIsRcp(void);
+
+    /**
+     * This method gets dataset from NCP radio and saves it.
+     *
+     * @retval  OT_ERROR_NONE               Successfully restore dataset.
+     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
+     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
+     * @retval  OT_ERROR_NOT_FOUND          Failed due to spinel property not supported in radio.
+     * @retval  OT_ERROR_FAILED             Failed due to other reasons.
+     */
+    otError RestoreDatasetFromNcp(void);
+
 private:
     enum
     {
@@ -568,7 +587,6 @@ private:
     static void sHandleReceivedFrame(void *aContext);
 
     otError CheckSpinelVersion(void);
-    otError CheckCapabilities(bool &aIsRcp);
     otError CheckRadioCapabilities(void);
 
     /**
@@ -669,17 +687,6 @@ private:
     void RadioReceive(void);
 
     void TransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
-
-    /**
-     * This method gets dataset from NCP radio and saves it.
-     *
-     * @retval  OT_ERROR_NONE               Successfully restore dataset.
-     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
-     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
-     * @retval  OT_ERROR_NOT_FOUND          Failed due to spinel property not supported in radio.
-     * @retval  OT_ERROR_FAILED             Failed due to other reasons.
-     */
-    otError RestoreDatasetFromNcp(void);
 
     otInstance *mInstance;
 
