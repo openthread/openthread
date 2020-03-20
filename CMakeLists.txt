@@ -37,6 +37,7 @@ project(openthread VERSION ${OT_DEFAULT_VERSION})
 option(OT_BUILD_EXECUTABLES "Build executables" ON)
 option(OT_COVERAGE "enable coverage" OFF)
 set(OT_EXTERNAL_MBEDTLS "" CACHE STRING "Specify external mbedtls library")
+option(OT_MBEDTLS_THREADING "enable mbedtls threading" OFF)
 
 add_library(ot-config INTERFACE)
 

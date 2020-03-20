@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,76 +26,38 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_library(openthread-ncp-ftd)
-add_library(openthread-ncp-mtd)
-add_library(openthread-rcp)
-
-# We depend on C++11 to validate that NCP handlers are sorted.
-set_target_properties(
-    openthread-ncp-ftd openthread-ncp-mtd openthread-rcp
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
+string(REPLACE "-Wundef" "" OT_CFLAGS "${OT_CFLAGS}")
+add_library(jlinkrtt
+    SEGGER_RTT_V640/RTT/SEGGER_RTT.c
 )
 
-target_compile_definitions(openthread-ncp-ftd PRIVATE
-    OPENTHREAD_FTD=1
-)
-
-target_compile_definitions(openthread-ncp-mtd PRIVATE
-    OPENTHREAD_MTD=1
-)
-
-target_compile_definitions(openthread-rcp PRIVATE
-    OPENTHREAD_RADIO=1
-)
-
-target_compile_options(openthread-ncp-ftd PRIVATE
-    ${OT_CFLAGS}
-)
-
-target_compile_options(openthread-ncp-mtd PRIVATE
-    ${OT_CFLAGS}
-)
-
-target_compile_options(openthread-rcp PRIVATE
-    ${OT_CFLAGS}
-)
-
-set(COMMON_INCLUDES
-    ${PROJECT_SOURCE_DIR}/src
-    ${PROJECT_SOURCE_DIR}/src/core
-)
-
-set(COMMON_SOURCES
-    changed_props_set.cpp
-    ncp_base.cpp
-    ncp_base_dispatcher.cpp
-    ncp_base_radio.cpp
-    ncp_spi.cpp
-    ncp_uart.cpp
-)
-
-set(OT_NCP_VENDOR_HOOK_SOURCE "" CACHE STRING "set vendor hook source file for NCP")
-if(OT_NCP_VENDOR_HOOK_SOURCE)
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_ENABLE_NCP_VENDOR_HOOK=1")
-    list(APPEND COMMON_SOURCES ${OT_NCP_VENDOR_HOOK_SOURCE_DIR}${OT_NCP_VENDOR_HOOK_SOURCE})
+if(OT_PLATFORM STREQUAL "nrf52811")
+    target_compile_options(jlinkrtt PRIVATE
+        -DNRF52811_XXAA
+        -DSEGGER_RTT_CONFIG_H=\"${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT_Conf.h\"
+        -DUSE_APP_CONFIG=1
+    )
+elseif(OT_PLATFORM STREQUAL "nrf52833")
+    target_compile_options(jlinkrtt PRIVATE
+        -DNRF52833_XXAA
+        -DSEGGER_RTT_CONFIG_H=\"${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT_Conf.h\"
+        -DUSE_APP_CONFIG=1
+    )
+else()
+    target_compile_options(jlinkrtt PRIVATE
+        -DNRF52840_XXAA
+        -DSEGGER_RTT_CONFIG_H=\"${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT_Conf.h\"
+        -DUSE_APP_CONFIG=1
+    )
 endif()
 
-set(COMMON_NCP_SOURCES
-    ${COMMON_SOURCES}
-    ncp_base_ftd.cpp
-    ncp_base_mtd.cpp
+
+target_include_directories(jlinkrtt PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/cmsis
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/config
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/config/${OT_PLATFORM}/config
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/dependencies
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/app_error
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/nrfx/mdk
 )
-
-if(OT_FTD)
-    include(ftd.cmake)
-endif()
-
-if(OT_MTD)
-    include(mtd.cmake)
-endif()
-
-if(OT_RCP)
-    include(radio.cmake)
-endif()

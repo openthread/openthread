@@ -40,6 +40,48 @@ if(OT_APP_NCP)
         include(mtd.cmake)
     endif()
 endif()
+target_include_directories(ot-ncp-ftd PRIVATE ${COMMON_INCLUDES})
+target_include_directories(ot-ncp-mtd PRIVATE ${COMMON_INCLUDES})
+target_include_directories(ot-rcp PRIVATE ${COMMON_INCLUDES})
+
+if(OT_BUILTIN_MBEDTLS)
+    target_link_libraries(ot-ncp-ftd
+        openthread-ncp-ftd
+        ${OT_PLATFORM_LIB}
+        openthread-ftd
+        ${OT_PLATFORM_LIB}
+        mbedcrypto
+    )
+
+    target_link_libraries(ot-ncp-mtd
+        openthread-ncp-mtd
+        ${OT_PLATFORM_LIB}
+        openthread-mtd
+        ${OT_PLATFORM_LIB}
+        mbedcrypto
+    )
+else()
+    target_link_libraries(ot-ncp-ftd
+        openthread-ncp-ftd
+        ${OT_PLATFORM_LIB}
+        openthread-ftd
+        ${OT_PLATFORM_LIB}
+    )
+
+    target_link_libraries(ot-ncp-mtd
+        openthread-ncp-mtd
+        ${OT_PLATFORM_LIB}
+        openthread-mtd
+        ${OT_PLATFORM_LIB}
+    )
+endif()
+
+target_link_libraries(ot-rcp
+    openthread-rcp
+    ${OT_PLATFORM_LIB}
+    openthread-radio
+    ${OT_PLATFORM_LIB}
+)
 
 if(OT_APP_RCP)
     if(OT_RCP)
