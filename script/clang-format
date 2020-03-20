@@ -34,6 +34,10 @@ die() {
     exit 1
 }
 
+# Aliases are not expanded when the shell is not interactive, unless the
+# expand_aliases shell option is set using shopt.
+shopt -s expand_aliases
+
 if command -v clang-format-6.0 > /dev/null; then
     alias clang-format=clang-format-6.0
 elif command -v clang-format > /dev/null; then
