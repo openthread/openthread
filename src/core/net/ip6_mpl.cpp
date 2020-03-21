@@ -288,7 +288,7 @@ otError Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool aIsO
     if (option.GetSeedIdLength() == OptionMpl::kSeedIdLength0)
     {
         // Retrieve MPL Seed Id from the IPv6 Source Address.
-        option.SetSeedId(HostSwap16(aAddress.mFields.m16[7]));
+        option.SetSeedId(aAddress.GetLocator());
     }
 
     // Check if the MPL Data Message is new.

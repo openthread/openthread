@@ -379,13 +379,13 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
 
     if (mle.IsRoutingLocator(ip6Header.GetDestination()))
     {
-        uint16_t rloc16 = HostSwap16(ip6Header.GetDestination().mFields.m16[7]);
+        uint16_t rloc16 = ip6Header.GetDestination().GetLocator();
         VerifyOrExit(mle.IsRouterIdValid(Mle::Mle::RouterIdFromRloc16(rloc16)), error = OT_ERROR_DROP);
         mMeshDest = rloc16;
     }
     else if (mle.IsAnycastLocator(ip6Header.GetDestination()))
     {
-        uint16_t aloc16 = HostSwap16(ip6Header.GetDestination().mFields.m16[7]);
+        uint16_t aloc16 = ip6Header.GetDestination().GetLocator();
 
         if (aloc16 == Mle::kAloc16Leader)
         {
