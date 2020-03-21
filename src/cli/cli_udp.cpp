@@ -260,7 +260,7 @@ exit:
 
 otError UdpExample::Process(int argc, char *argv[])
 {
-    otError error = OT_ERROR_PARSE;
+    otError error = OT_ERROR_INVALID_COMMAND;
 
     if (argc < 1)
     {

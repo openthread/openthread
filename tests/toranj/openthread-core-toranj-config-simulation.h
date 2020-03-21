@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,49 +26,37 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-cc2650.h"
-
-#include <openthread/error.h>
+#ifndef OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_
+#define OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_
 
 /**
- * @warning this file only implements stubs for the function calls. There is
- * not enough space on the cc2650 to support NV as an SoC.
+ * This header file defines the OpenThread core configuration for toranj with simulation platform.
+ *
  */
 
-otError utilsFlashInit(void)
-{
-    return OT_ERROR_NOT_IMPLEMENTED;
-}
+// Include the common configuration for all platforms.
+#include "openthread-core-toranj-config.h"
 
-uint32_t utilsFlashGetSize(void)
-{
-    return 0;
-}
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_INFO
+ *
+ * The platform-specific string to insert into the OpenThread version string.
+ *
+ */
+#if OPENTHREAD_RADIO
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "SIMULATION-RCP-toranj"
+#else
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "SIMULATION-toranj"
+#endif
 
-otError utilsFlashErasePage(uint32_t aAddress)
-{
-    OT_UNUSED_VARIABLE(aAddress);
-    return OT_ERROR_NOT_IMPLEMENTED;
-}
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+ *
+ * Define to 1 to enable otPlatFlash* APIs to support non-volatile storage.
+ *
+ * When defined to 1, the platform MUST implement the otPlatFlash* APIs instead of the otPlatSettings* APIs.
+ *
+ */
+#define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 1
 
-otError utilsFlashStatusWait(uint32_t aTimeout)
-{
-    OT_UNUSED_VARIABLE(aTimeout);
-    return OT_ERROR_NONE;
-}
-
-uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
-{
-    OT_UNUSED_VARIABLE(aAddress);
-    OT_UNUSED_VARIABLE(aData);
-    OT_UNUSED_VARIABLE(aSize);
-    return 0;
-}
-
-uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
-{
-    OT_UNUSED_VARIABLE(aAddress);
-    OT_UNUSED_VARIABLE(aData);
-    OT_UNUSED_VARIABLE(aSize);
-    return 0;
-}
+#endif /* OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_ */

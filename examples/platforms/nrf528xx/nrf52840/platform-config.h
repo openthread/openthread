@@ -112,6 +112,20 @@
 #endif
 
 /*******************************************************************************
+ * @section Platform Flash Configuration
+ ******************************************************************************/
+
+/**
+ * @def PLATFORM_FLASH_PAGE_NUM
+ *
+ * Number of flash pages to use for OpenThread's non-volatile settings.
+ *
+ */
+#ifndef PLATFORM_FLASH_PAGE_NUM
+#define PLATFORM_FLASH_PAGE_NUM 4
+#endif
+
+/*******************************************************************************
  * @section Platform FEM Configuration
  ******************************************************************************/
 

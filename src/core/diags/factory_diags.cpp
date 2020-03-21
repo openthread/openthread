@@ -54,7 +54,7 @@ otError otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *a
     OT_UNUSED_VARIABLE(aOutput);
     OT_UNUSED_VARIABLE(aOutputMaxLen);
 
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_INVALID_COMMAND;
 }
 
 namespace ot {
@@ -574,7 +574,7 @@ otError Diags::ProcessCmd(int aArgCount, char *aArgVector[], char *aOutput, size
 
 exit:
     // Add more platform specific diagnostics features here.
-    if (error == OT_ERROR_NOT_IMPLEMENTED && aArgCount > 1)
+    if (error == OT_ERROR_INVALID_COMMAND && aArgCount > 1)
     {
         snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", aArgVector[0]);
     }

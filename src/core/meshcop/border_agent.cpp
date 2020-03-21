@@ -193,7 +193,7 @@ static void SendErrorMessage(Coap::CoapSecure &   aCoapSecure,
 
     VerifyOrExit((message = NewMeshCoPMessage(aCoapSecure)) != NULL, error = OT_ERROR_NO_BUFS);
 
-    if (aRequest.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE || aSeparate)
+    if (aRequest.IsNonConfirmable() || aSeparate)
     {
         message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, CoapCodeFromError(aError));
     }
@@ -453,8 +453,7 @@ void BorderAgent::HandleRelayReceive(const Coap::Message &aMessage)
     Coap::Message *message = NULL;
     otError        error;
 
-    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST,
-                 error = OT_ERROR_DROP);
+    VerifyOrExit(aMessage.IsNonConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_DROP);
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::CoapSecure>())) != NULL, error = OT_ERROR_NO_BUFS);
 
     message->Init(OT_COAP_TYPE_NON_CONFIRMABLE, OT_COAP_CODE_POST);
@@ -518,7 +517,7 @@ void BorderAgent::HandleRelayTransmit(const Coap::Message &aMessage)
     Ip6::MessageInfo messageInfo;
     uint16_t         offset = 0;
 
-    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST);
+    VerifyOrExit(aMessage.IsNonConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST);
 
     SuccessOrExit(error = Tlv::ReadUint16Tlv(aMessage, Tlv::kJoinerRouterLocator, joinerRouterRloc));
 

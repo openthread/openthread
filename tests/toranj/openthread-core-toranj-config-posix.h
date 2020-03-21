@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,19 +26,16 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef OPENTHREAD_CORE_TORANJ_CONFIG_POSIX_H_
+#define OPENTHREAD_CORE_TORANJ_CONFIG_POSIX_H_
+
 /**
- * @file
- *   This file includes samr21 compile-time configuration constants
- *   for OpenThread.
+ * This header file defines the OpenThread core configuration options for toranj with POSIX platform.
+ *
  */
 
-#ifndef OPENTHREAD_CORE_SAMR21_CONFIG_H_
-#define OPENTHREAD_CORE_SAMR21_CONFIG_H_
-
-#include <stdint.h>
-
-extern uint32_t __d_nv_mem_start;
-extern uint32_t __d_nv_mem_end;
+// Include the common configuration for all platforms.
+#include "openthread-core-toranj-config.h"
 
 /**
  * @def OPENTHREAD_CONFIG_PLATFORM_INFO
@@ -46,40 +43,30 @@ extern uint32_t __d_nv_mem_end;
  * The platform-specific string to insert into the OpenThread version string.
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "SAMR21"
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "POSIX-toranj"
 
 /**
- * @def OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
  *
- * Define to 1 to enable otPlatFlash* APIs to support non-volatile storage.
- *
- * When defined to 1, the platform MUST implement the otPlatFlash* APIs instead of the otPlatSettings* APIs.
+ * Define to 1 to enable Border Router support.
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 1
+#define OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE 1
 
 /**
- * @def RADIO_CONFIG_SRC_MATCH_ENTRY_NUM
+ * @def OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
  *
- * The number of source address table entries.
+ * Define as 1 to enable PTY device support in POSIX app.
  *
  */
-#define RADIO_CONFIG_SRC_MATCH_ENTRY_NUM 128
+#define OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE 1
 
 /**
- * @def OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER
+ * @def OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE
  *
- * The default IEEE 802.15.4 transmit power (dBm)
- *
- */
-#define OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER 5
-
-/**
- * @def OPENTHREAD_CONFIG_NCP_UART_ENABLE
- *
- * Define to 1 to enable NCP UART support.
+ * Define as 1 to enable UART interface to RCP.
  *
  */
-#define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
+#define OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE 1
 
-#endif // OPENTHREAD_CORE_SAMR21_CONFIG_H_
+#endif /* OPENTHREAD_CORE_TORANJ_CONFIG_POSIX_H_ */

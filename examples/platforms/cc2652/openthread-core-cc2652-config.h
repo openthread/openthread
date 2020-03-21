@@ -38,27 +38,14 @@
 #define OPENTHREAD_CONFIG_PLATFORM_INFO "CC2652"
 
 /**
- * @def SETTINGS_CONFIG_BASE_ADDRESS
+ * @def OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
  *
- * The base address of the pages to be used for non-volatile-settings storage.
+ * Define to 1 to enable otPlatFlash* APIs to support non-volatile storage.
+ *
+ * When defined to 1, the platform MUST implement the otPlatFlash* APIs instead of the otPlatSettings* APIs.
+ *
  */
-#define SETTINGS_CONFIG_BASE_ADDRESS (0x52000)
-
-/**
- * @def SETTINGS_CONFIG_PAGE_SIZE
- *
- * The size in bytes of a page for the cc26x2 platform.
- *
- * @note *MUST BE* 8K.
- */
-#define SETTINGS_CONFIG_PAGE_SIZE (0x2000)
-
-/**
- * @def SETTINGS_CONFIG_PAGE_NUM
- *
- * The number of flash pages to use for non-volatile settings storage.
- */
-#define SETTINGS_CONFIG_PAGE_NUM (2)
+#define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 1
 
 /**
  * @def OPENTHREAD_CONFIG_NCP_UART_ENABLE

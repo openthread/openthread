@@ -220,7 +220,7 @@ otError CoapSecure::ProcessRequest(int argc, char *argv[])
     }
     else
     {
-        ExitNow(error = OT_ERROR_PARSE);
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
     // Destination IPv6 address
@@ -389,7 +389,7 @@ otError CoapSecure::ProcessX509(int argc, char *argv[])
 
 otError CoapSecure::Process(int argc, char *argv[])
 {
-    otError error = OT_ERROR_PARSE;
+    otError error = OT_ERROR_INVALID_COMMAND;
 
     if (argc < 1)
     {

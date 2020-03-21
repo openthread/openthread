@@ -332,9 +332,10 @@ private:
     // Notifier, Settings, and MessagePool are initialized  before
     // other member variables since other classes/objects from their
     // constructor may use them.
-    Notifier    mNotifier;
-    Settings    mSettings;
-    MessagePool mMessagePool;
+    Notifier       mNotifier;
+    Settings       mSettings;
+    SettingsDriver mSettingsDriver;
+    MessagePool    mMessagePool;
 
     Ip6::Ip6    mIp6;
     ThreadNetif mThreadNetif;
@@ -397,6 +398,11 @@ template <> inline Notifier &Instance::Get(void)
 template <> inline Settings &Instance::Get(void)
 {
     return mSettings;
+}
+
+template <> inline SettingsDriver &Instance::Get(void)
+{
+    return mSettingsDriver;
 }
 
 template <> inline MeshForwarder &Instance::Get(void)

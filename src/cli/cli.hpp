@@ -126,8 +126,8 @@ public:
      * @param[in]   aString  A pointer to the ASCII string.
      * @param[out]  aLong    A reference to where the parsed long is placed.
      *
-     * @retval OT_ERROR_NONE   Successfully parsed the ASCII string.
-     * @retval OT_ERROR_PARSE  Could not parse the ASCII string.
+     * @retval OT_ERROR_NONE          Successfully parsed the ASCII string.
+     * @retval OT_ERROR_INVALID_ARGS  @p aString is not a valid long integer.
      *
      */
     static otError ParseLong(char *aString, long &aLong);
@@ -138,8 +138,8 @@ public:
      * @param[in]   aString          A pointer to the ASCII string.
      * @param[out]  aUnsignedLong    A reference to where the parsed unsigned long is placed.
      *
-     * @retval OT_ERROR_NONE   Successfully parsed the ASCII string.
-     * @retval OT_ERROR_PARSE  Could not parse the ASCII string.
+     * @retval OT_ERROR_NONE          Successfully parsed the ASCII string.
+     * @retval OT_ERROR_INVALID_ARGS  @p aString is not a valid unsigned long integer.
      *
      */
     static otError ParseUnsignedLong(char *aString, unsigned long &aUnsignedLong);
@@ -153,8 +153,8 @@ public:
      * @param[in]   aAllowTruncate  TRUE if @p aBinLength may be less than what is required
      *                              to convert @p aHex to binary representation, FALSE otherwise.
      *
+     * @returns  The number of bytes in the binary representation, or -1 if @p aHex is not a valid hex string
      *
-     * @returns The number of bytes in the binary representation.
      */
     static int Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength, bool aAllowTruncate = false);
 

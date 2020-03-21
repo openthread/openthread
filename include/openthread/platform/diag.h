@@ -67,7 +67,7 @@ extern "C" {
  *
  * @retval  OT_ERROR_INVALID_ARGS       The command is supported but invalid arguments provided.
  * @retval  OT_ERROR_NONE               The command is successfully process.
- * @retval  OT_ERROR_NOT_IMPLEMENTED    The command is not supported.
+ * @retval  OT_ERROR_INVALID_COMMAND    The command is not valid or not supported.
  *
  */
 otError otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 #  Copyright (c) 2018, The OpenThread Authors.
 #  All rights reserved.
@@ -27,44 +27,24 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-CLANG_FORMAT_VERSION="clang-format version 6.0"
+#
+# clang-format does not return a non-zero exit code.  This wrapper
+# exits with a non-zero exit code if clang-format outputs any
+# replacements.
+#
+
+set -euo pipefail
 
 die() {
-    echo " *** ERROR: $*"
+    echo " *** ERROR:  $*"
     exit 1
 }
 
-if command -v clang-format-6.0 > /dev/null; then
-    alias clang-format=clang-format-6.0
-elif command -v clang-format > /dev/null; then
-    case "$(clang-format --version)" in
-        "$CLANG_FORMAT_VERSION"*)
-            ;;
-        *)
-            die "$(clang-format --version); clang-format 6.0 required"
-            ;;
-    esac
-else
-    die "clang-format 6.0 required"
-fi
+# from `man diff`:
+# Exit status is 0 if inputs are the same, 1 if different, 2 if trouble.
 
-clang-format "$@" || die
-
-# ensure EOF newline
-REPLACE=no
-for arg
-do
-    case $arg in
-        -i)
-            REPLACE=yes
-            ;;
-    esac
+for file in "$@"; do
+    echo "Checking ${file}"
+    "$(dirname "$0")"/clang-format -style=file "${file}" | diff -u "${file}" - || die "${file} is not pretty."
+    [ -z "$(tail -c1 "${file}")" ] || die "${file} misses EOF newline."
 done
-
-file=$arg
-
-[ $REPLACE != yes ] || {
-    [ -n "$(tail -c1 "$file")" ] && echo >> "$file"
-}
-
-exit 0

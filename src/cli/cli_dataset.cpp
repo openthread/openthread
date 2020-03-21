@@ -184,7 +184,7 @@ otError Dataset::Print(otOperationalDataset &aDataset)
 
 otError Dataset::Process(int argc, char *argv[])
 {
-    otError error = OT_ERROR_PARSE;
+    otError error = OT_ERROR_INVALID_COMMAND;
 
     if (argc == 0)
     {
@@ -370,7 +370,7 @@ otError Dataset::ProcessExtPanId(int argc, char *argv[])
     uint8_t extPanId[OT_EXT_PAN_ID_SIZE];
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(Interpreter::Hex2Bin(argv[0], extPanId, sizeof(extPanId)) >= 0, error = OT_ERROR_PARSE);
+    VerifyOrExit(Interpreter::Hex2Bin(argv[0], extPanId, sizeof(extPanId)) >= 0, error = OT_ERROR_INVALID_ARGS);
 
     memcpy(sDataset.mExtendedPanId.m8, extPanId, sizeof(sDataset.mExtendedPanId));
     sDataset.mComponents.mIsExtendedPanIdPresent = true;
@@ -385,7 +385,8 @@ otError Dataset::ProcessMasterKey(int argc, char *argv[])
     uint8_t key[OT_MASTER_KEY_SIZE];
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit((Interpreter::Hex2Bin(argv[0], key, sizeof(key))) == OT_MASTER_KEY_SIZE, error = OT_ERROR_PARSE);
+    VerifyOrExit((Interpreter::Hex2Bin(argv[0], key, sizeof(key))) == OT_MASTER_KEY_SIZE,
+                 error = OT_ERROR_INVALID_ARGS);
 
     memcpy(sDataset.mMasterKey.m8, key, sizeof(sDataset.mMasterKey));
     sDataset.mComponents.mIsMasterKeyPresent = true;
@@ -415,7 +416,7 @@ otError Dataset::ProcessNetworkName(int argc, char *argv[])
     size_t  length;
 
     VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit((length = strlen(argv[0])) <= OT_NETWORK_NAME_MAX_SIZE, error = OT_ERROR_PARSE);
+    VerifyOrExit((length = strlen(argv[0])) <= OT_NETWORK_NAME_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
 
     memset(&sDataset.mNetworkName, 0, sizeof(sDataset.mNetworkName));
     memcpy(sDataset.mNetworkName.m8, argv[0], length);
@@ -488,7 +489,7 @@ otError Dataset::ProcessMgmtSetCommand(int argc, char *argv[])
             dataset.mComponents.mIsMasterKeyPresent = true;
             VerifyOrExit((length = Interpreter::Hex2Bin(argv[index], dataset.mMasterKey.m8,
                                                         sizeof(dataset.mMasterKey.m8))) == OT_MASTER_KEY_SIZE,
-                         error = OT_ERROR_PARSE);
+                         error = OT_ERROR_INVALID_ARGS);
             length = 0;
         }
         else if (strcmp(argv[index], "networkname") == 0)
@@ -496,7 +497,7 @@ otError Dataset::ProcessMgmtSetCommand(int argc, char *argv[])
             VerifyOrExit(++index < argc, error = OT_ERROR_INVALID_ARGS);
             dataset.mComponents.mIsNetworkNamePresent = true;
             VerifyOrExit((length = static_cast<int>(strlen(argv[index]))) <= OT_NETWORK_NAME_MAX_SIZE,
-                         error = OT_ERROR_PARSE);
+                         error = OT_ERROR_INVALID_ARGS);
             memset(&dataset.mNetworkName, 0, sizeof(sDataset.mNetworkName));
             memcpy(dataset.mNetworkName.m8, argv[index], static_cast<size_t>(length));
             length = 0;
@@ -507,7 +508,7 @@ otError Dataset::ProcessMgmtSetCommand(int argc, char *argv[])
             dataset.mComponents.mIsExtendedPanIdPresent = true;
             VerifyOrExit(
                 Interpreter::Hex2Bin(argv[index], dataset.mExtendedPanId.m8, sizeof(dataset.mExtendedPanId.m8)) >= 0,
-                error = OT_ERROR_PARSE);
+                error = OT_ERROR_INVALID_ARGS);
         }
         else if (strcmp(argv[index], "localprefix") == 0)
         {
@@ -550,7 +551,7 @@ otError Dataset::ProcessMgmtSetCommand(int argc, char *argv[])
             length = static_cast<int>((strlen(argv[index]) + 1) / 2);
             VerifyOrExit(static_cast<size_t>(length) <= sizeof(tlvs), error = OT_ERROR_NO_BUFS);
             VerifyOrExit(Interpreter::Hex2Bin(argv[index], tlvs, static_cast<uint16_t>(length)) >= 0,
-                         error = OT_ERROR_PARSE);
+                         error = OT_ERROR_INVALID_ARGS);
         }
         else
         {
@@ -638,7 +639,7 @@ otError Dataset::ProcessMgmtGetCommand(int argc, char *argv[])
             VerifyOrExit(static_cast<size_t>(value) <= (sizeof(tlvs) - static_cast<size_t>(length)),
                          error = OT_ERROR_NO_BUFS);
             VerifyOrExit(Interpreter::Hex2Bin(argv[index], tlvs + length, static_cast<uint16_t>(value)) >= 0,
-                         error = OT_ERROR_PARSE);
+                         error = OT_ERROR_INVALID_ARGS);
             length += value;
         }
         else if (strcmp(argv[index], "address") == 0)
@@ -683,7 +684,7 @@ otError Dataset::ProcessPskc(int argc, char *argv[])
     length = static_cast<uint16_t>((strlen(argv[0]) + 1) / 2);
     VerifyOrExit(length <= OT_PSKC_MAX_SIZE, error = OT_ERROR_NO_BUFS);
     VerifyOrExit(Interpreter::Hex2Bin(argv[0], sDataset.mPskc.m8 + OT_PSKC_MAX_SIZE - length, length) == length,
-                 error = OT_ERROR_PARSE);
+                 error = OT_ERROR_INVALID_ARGS);
 
     sDataset.mComponents.mIsPskcPresent = true;
 
@@ -729,7 +730,7 @@ otError Dataset::ProcessSecurityPolicy(int argc, char *argv[])
                 break;
 
             default:
-                ExitNow(error = OT_ERROR_PARSE);
+                ExitNow(error = OT_ERROR_INVALID_ARGS);
             }
         }
     }

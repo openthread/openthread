@@ -31,112 +31,98 @@
  *   This file implements the OpenThread platform abstraction for the non-volatile storage.
  */
 
+#include <string.h>
+
+#include <openthread/instance.h>
+
 #include "asf.h"
 
-#include "utils/code_utils.h"
-#include "utils/flash.h"
+#define OT_FLASH_BASE_ADDRESS ((uint32_t)&__d_nv_mem_start)
+#define OT_FLASH_PAGE_SIZE 0x100
 
-#include "openthread-core-samr21-config.h"
+/*
+ * This value should not exceed:
+ *     (((uint32_t)&__d_nv_mem_end - (uint32_t)&__d_nv_mem_start) / OT_FLASH_PAGE_SIZE)
+ *
+ * __d_nv_mem_start and __d_nv_mem_end is defined in linker script.
+ * The size of NVRAM region is 4k. Page size is 256 bytes. Maximum OT_FLASH_PAGE_NUM
+ * should be equal or less than 16.
+ *
+ */
+#define OT_FLASH_PAGE_NUM 16
 
-otError utilsFlashInit(void)
+#define OT_FLASH_SWAP_SIZE (OT_FLASH_PAGE_SIZE * (OT_FLASH_PAGE_NUM / 2))
+
+extern uint32_t __d_nv_mem_start;
+extern uint32_t __d_nv_mem_end;
+
+static uint32_t mapAddress(uint8_t aSwapIndex, uint32_t aOffset)
 {
-    otError           error = OT_ERROR_NONE;
+    uint32_t address = OT_FLASH_BASE_ADDRESS + aOffset;
+
+    if (aSwapIndex)
+    {
+        address += OT_FLASH_SWAP_SIZE;
+    }
+
+    return address;
+}
+
+void otPlatFlashInit(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
     struct nvm_config configNvm;
+    enum status_code  status;
 
     nvm_get_config_defaults(&configNvm);
 
     configNvm.manual_page_write = false;
-
-    enum status_code status;
-
     while ((status = nvm_set_config(&configNvm)) == STATUS_BUSY)
-        ;
-
-    if (status != STATUS_OK)
     {
-        error = OT_ERROR_FAILED;
     }
-
-    return error;
 }
 
-uint32_t utilsFlashGetSize(void)
+uint32_t otPlatFlashGetSwapSize(otInstance *aInstance)
 {
-    return SETTINGS_CONFIG_PAGE_NUM * SETTINGS_CONFIG_PAGE_SIZE;
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return OT_FLASH_SWAP_SIZE;
 }
 
-otError utilsFlashErasePage(uint32_t aAddress)
+void otPlatFlashErase(otInstance *aInstance, uint8_t aSwapIndex)
 {
-    otError error = OT_ERROR_NONE;
+    OT_UNUSED_VARIABLE(aInstance);
 
-    if (nvm_erase_row(aAddress) != STATUS_OK)
+    nvm_erase_row(mapAddress(aSwapIndex, 0));
+    while (!nvm_is_ready())
     {
-        error = OT_ERROR_FAILED;
     }
-
-    return error;
 }
 
-otError utilsFlashStatusWait(uint32_t aTimeout)
+void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, const void *aData, uint32_t aSize)
 {
-    otError  error = OT_ERROR_BUSY;
-    uint32_t start = otPlatAlarmMilliGetNow();
+    OT_UNUSED_VARIABLE(aInstance);
 
-    do
-    {
-        if (nvm_is_ready())
-        {
-            error = OT_ERROR_NONE;
-            break;
-        }
-    } while (aTimeout && ((otPlatAlarmMilliGetNow() - start) < aTimeout));
-
-    return error;
-}
-
-uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
-{
-    uint32_t rval = aSize;
-
-    otEXPECT_ACTION(aData, rval = 0);
-    otEXPECT_ACTION(aAddress >= SETTINGS_CONFIG_BASE_ADDRESS, rval = 0);
-    otEXPECT_ACTION((aAddress - SETTINGS_CONFIG_BASE_ADDRESS + aSize) <= utilsFlashGetSize(), rval = 0);
-    otEXPECT_ACTION(((aAddress & 3) == 0) && ((aSize & 3) == 0), rval = 0);
+    uint32_t address = mapAddress(aSwapIndex, aOffset);
 
     for (uint32_t i = 0; i < (aSize / sizeof(uint32_t)); i++)
     {
-        *((volatile uint32_t *)aAddress) = *((uint32_t *)aData);
+        *((volatile uint32_t *)address) = *((uint32_t *)aData);
         aData += sizeof(uint32_t);
-        aAddress += sizeof(uint32_t);
+        address += sizeof(uint32_t);
     }
 
     // check if write page command is required
-    if ((aAddress) & (NVMCTRL_PAGE_SIZE - 1))
+    if ((address) & (NVMCTRL_PAGE_SIZE - 1))
     {
-        enum status_code status;
-
-        status = nvm_execute_command(NVM_COMMAND_WRITE_PAGE, aAddress & (~(NVMCTRL_PAGE_SIZE - 1)), 0);
-
-        otEXPECT_ACTION(status == STATUS_OK, rval = 0);
+        nvm_execute_command(NVM_COMMAND_WRITE_PAGE, address & (~(NVMCTRL_PAGE_SIZE - 1)), 0);
     }
-
-exit:
-    return rval;
 }
 
-uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, void *aData, uint32_t aSize)
 {
-    uint32_t rval = aSize;
+    OT_UNUSED_VARIABLE(aInstance);
 
-    otEXPECT_ACTION(aData, rval = 0);
-    otEXPECT_ACTION(aAddress >= SETTINGS_CONFIG_BASE_ADDRESS, rval = 0);
-    otEXPECT_ACTION((aAddress - SETTINGS_CONFIG_BASE_ADDRESS + aSize) <= utilsFlashGetSize(), rval = 0);
-
-    while (aSize--)
-    {
-        *aData++ = (*(uint8_t *)(aAddress++));
-    }
-
-exit:
-    return rval;
+    memcpy(aData, (void *)mapAddress(aSwapIndex, aOffset), aSize);
 }
