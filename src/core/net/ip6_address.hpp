@@ -38,9 +38,12 @@
 
 #include <stdint.h>
 
+#include "common/encoding.hpp"
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/mle_types.hpp"
+
+using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 namespace Ip6 {
@@ -268,6 +271,24 @@ public:
      *
      */
     bool IsIidReserved(void) const;
+
+    /**
+     * This method gets the IPv6 address locator.
+     *
+     * @returns RLOC16 or ALOC16.
+     *
+     */
+    uint16_t GetLocator(void) const { return HostSwap16(mFields.m16[7]); }
+
+    /**
+     * This method sets the IPv6 address locator.
+     *
+     * This method only changes the last 2 bytes of the address and keeps the rest of the address as before.
+     *
+     * @param[in]  aLocator   RLOC16 or ALOC16.
+     *
+     */
+    void SetLocator(uint16_t aLocator) { mFields.m16[7] = HostSwap16(aLocator); }
 
     /**
      * This method sets the IPv6 address prefix.

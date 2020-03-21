@@ -534,7 +534,7 @@ void BorderAgent::HandleRelayTransmit(const Coap::Message &aMessage)
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
     messageInfo.SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(joinerRouterRloc);
+    messageInfo.GetPeerAddr().SetLocator(joinerRouterRloc);
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
 

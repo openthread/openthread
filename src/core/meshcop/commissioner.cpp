@@ -1041,7 +1041,7 @@ otError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInf
     aMessage.CopyTo(0, offset, aMessage.GetLength(), *message);
 
     messageInfo.SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(mJoinerRloc);
+    messageInfo.GetPeerAddr().SetLocator(mJoinerRloc);
     messageInfo.SetPeerPort(kCoapUdpPort);
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));

@@ -3410,7 +3410,7 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
         if (aAddress.mFields.m16[4] == HostSwap16(0x0000) && aAddress.mFields.m16[5] == HostSwap16(0x00ff) &&
             aAddress.mFields.m16[6] == HostSwap16(0xfe00))
         {
-            macAddr.SetShort(HostSwap16(aAddress.mFields.m16[7]));
+            macAddr.SetShort(aAddress.GetLocator());
         }
         else
         {
@@ -3431,7 +3431,7 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
 
         if (context.mContextId == kMeshLocalPrefixContextId && aAddress.mFields.m16[4] == HostSwap16(0x0000) &&
             aAddress.mFields.m16[5] == HostSwap16(0x00ff) && aAddress.mFields.m16[6] == HostSwap16(0xfe00) &&
-            aAddress.mFields.m16[7] == HostSwap16(child->GetRloc16()))
+            aAddress.GetLocator() == child->GetRloc16())
         {
             ExitNow(rval = child);
         }
@@ -3447,7 +3447,7 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
     if (aAddress.mFields.m16[4] == HostSwap16(0x0000) && aAddress.mFields.m16[5] == HostSwap16(0x00ff) &&
         aAddress.mFields.m16[6] == HostSwap16(0xfe00))
     {
-        rval = mRouterTable.GetNeighbor(HostSwap16(aAddress.mFields.m16[7]));
+        rval = mRouterTable.GetNeighbor(aAddress.GetLocator());
     }
 
 exit:
@@ -3897,8 +3897,8 @@ otError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, I
         ExitNow();
     }
 
-    messageInfo.GetPeerAddr()                = GetMeshLocal16();
-    messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(aMeshSource);
+    messageInfo.GetPeerAddr() = GetMeshLocal16();
+    messageInfo.GetPeerAddr().SetLocator(aMeshSource);
 
     Get<Ip6::Icmp>().SendError(Ip6::IcmpHeader::kTypeDstUnreach, Ip6::IcmpHeader::kCodeDstUnreachNoRoute, messageInfo,
                                aIp6Header);
