@@ -247,11 +247,28 @@ otError Lowpan::Compress(Message &           aMessage,
                          const Mac::Address &aMacDest,
                          BufferWriter &      aBuf)
 {
+    otError error;
+    uint8_t headerDepth = 0xff;
+
+    do
+    {
+        error = Compress(aMessage, aMacSource, aMacDest, aBuf, headerDepth);
+    } while ((error != OT_ERROR_NONE) && (headerDepth > 0));
+
+    return error;
+}
+
+otError Lowpan::Compress(Message &           aMessage,
+                         const Mac::Address &aMacSource,
+                         const Mac::Address &aMacDest,
+                         BufferWriter &      aBuf,
+                         uint8_t &           aHeaderDepth)
+{
     otError              error       = OT_ERROR_NONE;
     NetworkData::Leader &networkData = Get<NetworkData::Leader>();
     uint16_t             startOffset = aMessage.GetOffset();
     BufferWriter         buf         = aBuf;
-    uint16_t             hcCtl;
+    uint16_t             hcCtl       = kHcDispatch;
     Ip6::Header          ip6Header;
     uint8_t *            ip6HeaderBytes = reinterpret_cast<uint8_t *>(&ip6Header);
     Context              srcContext, dstContext;
@@ -259,13 +276,8 @@ otError Lowpan::Compress(Message &           aMessage,
     uint8_t              nextHeader;
     uint8_t              ecn;
     uint8_t              dscp;
-    uint8_t              headerDepth;
-    uint8_t              headerMaxDepth = 0xff;
-
-compress:
-
-    headerDepth = 0;
-    hcCtl       = kHcDispatch;
+    uint8_t              headerDepth    = 0;
+    uint8_t              headerMaxDepth = aHeaderDepth;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(ip6Header), &ip6Header) == sizeof(ip6Header),
                  error = OT_ERROR_PARSE);
@@ -441,6 +453,8 @@ compress:
     }
 
 exit:
+    aHeaderDepth = headerDepth;
+
     if (error == OT_ERROR_NONE)
     {
         IgnoreReturnValue(aBuf.Write(hcCtl >> 8));
@@ -450,13 +464,6 @@ exit:
     else
     {
         aMessage.SetOffset(startOffset);
-
-        if (headerDepth > 0)
-        {
-            buf            = aBuf;
-            headerMaxDepth = headerDepth;
-            goto compress;
-        }
     }
 
     return error;

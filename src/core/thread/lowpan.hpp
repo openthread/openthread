@@ -360,6 +360,12 @@ private:
         kUdpPortMask     = 3 << 0,
     };
 
+    otError Compress(Message &           aMessage,
+                     const Mac::Address &aMacSource,
+                     const Mac::Address &aMacDest,
+                     BufferWriter &      aBuf,
+                     uint8_t &           aHeaderDepth);
+
     otError CompressExtensionHeader(Message &aMessage, BufferWriter &aBuf, uint8_t &aNextHeader);
     otError CompressSourceIid(const Mac::Address &aMacAddr,
                               const Ip6::Address &aIpAddr,
