@@ -50,7 +50,6 @@ list(APPEND OT_PUBLIC_INCLUDES
 )
 set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
 list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
-string (REPLACE "-pedantic-errors" "" OT_CFLAGS "${OT_CFLAGS}")
 
 add_library(openthread-cc2652
     alarm.c
@@ -95,7 +94,4 @@ target_include_directories(openthread-cc2652 PRIVATE
     ${PROJECT_SOURCE_DIR}/examples/platforms
     ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
     ${PROJECT_SOURCE_DIR}/third_party/mbedtls
-    PUBLIC
-        ${PROJECT_SOURCE_DIR}/examples/platforms/cc2652/crypto
-        ${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2
 )
