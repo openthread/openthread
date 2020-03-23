@@ -145,6 +145,7 @@ build_cc2650() {
 
     arm-none-eabi-size  examples/apps/cli/ot-cli-mtd || die
     arm-none-eabi-size  examples/apps/ncp/ot-ncp-mtd || die
+    cd .. || die
 }
 
 build_cc2652() {
