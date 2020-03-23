@@ -756,9 +756,6 @@ class OpenThread(IThci):
         print(xEUI)
         address64 = ''
         try:
-            if not xEUI:
-                address64 = self.mac
-
             if not isinstance(xEUI, str):
                 address64 = self.__convertLongToHex(xEUI, 16)
             else:

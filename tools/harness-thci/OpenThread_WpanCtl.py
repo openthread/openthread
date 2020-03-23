@@ -940,9 +940,6 @@ class OpenThread_WpanCtl(IThci):
 
         address64 = ''
         try:
-            if not xEUI:
-                address64 = self.mac
-
             if not isinstance(xEUI, str):
                 address64 = self.__convertLongToHex(xEUI, 16)
             else:
@@ -1414,8 +1411,7 @@ class OpenThread_WpanCtl(IThci):
             cmd = 'ping %s -c 1 -s %s -I %s' % (destination, str(length),
                                                 self.wpan_interface)
             if self._is_net:
-                ssh_stdin, ssh_stdout, ssh_stderr = self.handle.exec_command(
-                    cmd)
+                self.handle.exec_command(cmd)
             else:
                 self._sendline(cmd)
                 self._expect(cmd)
@@ -1438,8 +1434,7 @@ class OpenThread_WpanCtl(IThci):
             cmd = 'ping %s -c 1 -s %s -I %s' % (destination, str(length),
                                                 self.wpan_interface)
             if self._is_net:
-                ssh_stdin, ssh_stdout, ssh_stderr = self.handle.exec_command(
-                    cmd)
+                self.handle.exec_command(cmd)
             else:
                 self._sendline(cmd)
                 self._expect(cmd)

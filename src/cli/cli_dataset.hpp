@@ -60,42 +60,42 @@ public:
     /**
      * This method interprets a list of CLI arguments.
      *
-     * @param[in]  argc  The number of elements in argv.
-     * @param[in]  argv  A pointer to an array of command line arguments.
+     * @param[in]  aArgsLength  The number of elements in @p aArgs.
+     * @param[in]  aArgs        An array of command line arguments.
      *
      */
-    otError Process(int argc, char *argv[]);
+    otError Process(uint8_t aArgsLength, char *aArgs[]);
 
 private:
     struct Command
     {
         const char *mName;
-        otError (Dataset::*mCommand)(int argc, char *argv[]);
+        otError (Dataset::*mCommand)(uint8_t aArgsLength, char *aArgs[]);
     };
 
     void    OutputBytes(const uint8_t *aBytes, uint8_t aLength);
     otError Print(otOperationalDataset &aDataset);
 
-    otError ProcessHelp(int argc, char *argv[]);
-    otError ProcessActive(int argc, char *argv[]);
-    otError ProcessActiveTimestamp(int argc, char *argv[]);
-    otError ProcessChannel(int argc, char *argv[]);
-    otError ProcessChannelMask(int argc, char *argv[]);
-    otError ProcessClear(int argc, char *argv[]);
-    otError ProcessCommit(int argc, char *argv[]);
-    otError ProcessDelay(int argc, char *argv[]);
-    otError ProcessExtPanId(int argc, char *argv[]);
-    otError ProcessInit(int argc, char *argv[]);
-    otError ProcessMasterKey(int argc, char *argv[]);
-    otError ProcessMeshLocalPrefix(int argc, char *argv[]);
-    otError ProcessNetworkName(int argc, char *argv[]);
-    otError ProcessPanId(int argc, char *argv[]);
-    otError ProcessPending(int argc, char *argv[]);
-    otError ProcessPendingTimestamp(int argc, char *argv[]);
-    otError ProcessMgmtSetCommand(int argc, char *argv[]);
-    otError ProcessMgmtGetCommand(int argc, char *argv[]);
-    otError ProcessPskc(int argc, char *argv[]);
-    otError ProcessSecurityPolicy(int argc, char *argv[]);
+    otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessActive(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessActiveTimestamp(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessChannel(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessChannelMask(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessClear(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessCommit(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessDelay(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessExtPanId(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessInit(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessMasterKey(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessMeshLocalPrefix(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessNetworkName(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessPanId(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessPending(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessPendingTimestamp(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessMgmtSetCommand(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessMgmtGetCommand(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessPskc(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessSecurityPolicy(uint8_t aArgsLength, char *aArgs[]);
 
     Interpreter &mInterpreter;
 

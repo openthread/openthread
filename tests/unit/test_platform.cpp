@@ -425,14 +425,14 @@ exit:
 // Diag
 //
 
-void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+void otPlatDiagProcess(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aOutputMaxLen);
 
     // no more diagnostics features for Posix platform
-    sprintf(aOutput, "diag feature '%s' is not supported\r\n", argv[0]);
+    sprintf(aOutput, "diag feature '%s' is not supported\r\n", aArgs[0]);
 }
 
 void otPlatDiagModeSet(bool aMode)

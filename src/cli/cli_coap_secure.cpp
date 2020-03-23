@@ -98,10 +98,10 @@ void CoapSecure::PrintPayload(otMessage *aMessage) const
     mInterpreter.mServer->OutputFormat("\r\n");
 }
 
-otError CoapSecure::ProcessHelp(int argc, char *argv[])
+otError CoapSecure::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 {
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
 
     for (size_t i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
@@ -111,19 +111,19 @@ otError CoapSecure::ProcessHelp(int argc, char *argv[])
     return OT_ERROR_NONE;
 }
 
-otError CoapSecure::ProcessResource(int argc, char *argv[])
+otError CoapSecure::ProcessResource(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
-    if (argc > 1)
+    if (aArgsLength > 1)
     {
-        VerifyOrExit(strlen(argv[1]) < kMaxUriLength, error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(strlen(aArgs[1]) < kMaxUriLength, error = OT_ERROR_INVALID_ARGS);
 
         mResource.mUriPath = mUriPath;
         mResource.mContext = this;
         mResource.mHandler = &CoapSecure::HandleRequest;
 
-        strncpy(mUriPath, argv[1], sizeof(mUriPath) - 1);
+        strncpy(mUriPath, aArgs[1], sizeof(mUriPath) - 1);
         SuccessOrExit(error = otCoapSecureAddResource(mInterpreter.mInstance, &mResource));
     }
     else
@@ -135,18 +135,18 @@ exit:
     return OT_ERROR_NONE;
 }
 
-otError CoapSecure::ProcessStart(int argc, char *argv[])
+otError CoapSecure::ProcessStart(uint8_t aArgsLength, char *aArgs[])
 {
     otError error;
     bool    verifyPeerCert = true;
 
-    if (argc > 1)
+    if (aArgsLength > 1)
     {
-        if (strcmp(argv[1], "false") == 0)
+        if (strcmp(aArgs[1], "false") == 0)
         {
             verifyPeerCert = false;
         }
-        else if (strcmp(argv[1], "true") != 0)
+        else if (strcmp(aArgs[1], "true") != 0)
         {
             ExitNow(error = OT_ERROR_INVALID_ARGS);
         }
@@ -165,10 +165,10 @@ exit:
     return error;
 }
 
-otError CoapSecure::ProcessStop(int argc, char *argv[])
+otError CoapSecure::ProcessStop(uint8_t aArgsLength, char *aArgs[])
 {
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
 
     otCoapRemoveResource(mInterpreter.mInstance, &mResource);
 
@@ -185,7 +185,7 @@ otError CoapSecure::ProcessStop(int argc, char *argv[])
     return OT_ERROR_NONE;
 }
 
-otError CoapSecure::ProcessRequest(int argc, char *argv[])
+otError CoapSecure::ProcessRequest(uint8_t aArgsLength, char *aArgs[])
 {
     otError       error   = OT_ERROR_NONE;
     otMessage *   message = NULL;
@@ -199,22 +199,22 @@ otError CoapSecure::ProcessRequest(int argc, char *argv[])
     otCoapCode   coapCode               = OT_COAP_CODE_GET;
     otIp6Address coapDestinationIp;
 
-    VerifyOrExit(argc > 0, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
     // CoAP-Code
-    if (strcmp(argv[0], "get") == 0)
+    if (strcmp(aArgs[0], "get") == 0)
     {
         coapCode = OT_COAP_CODE_GET;
     }
-    else if (strcmp(argv[0], "post") == 0)
+    else if (strcmp(aArgs[0], "post") == 0)
     {
         coapCode = OT_COAP_CODE_POST;
     }
-    else if (strcmp(argv[0], "put") == 0)
+    else if (strcmp(aArgs[0], "put") == 0)
     {
         coapCode = OT_COAP_CODE_PUT;
     }
-    else if (strcmp(argv[0], "delete") == 0)
+    else if (strcmp(aArgs[0], "delete") == 0)
     {
         coapCode = OT_COAP_CODE_DELETE;
     }
@@ -224,9 +224,9 @@ otError CoapSecure::ProcessRequest(int argc, char *argv[])
     }
 
     // Destination IPv6 address
-    if (argc > 1)
+    if (aArgsLength > 1)
     {
-        error = otIp6AddressFromString(argv[1], &coapDestinationIp);
+        error = otIp6AddressFromString(aArgs[1], &coapDestinationIp);
     }
     else
     {
@@ -245,15 +245,15 @@ otError CoapSecure::ProcessRequest(int argc, char *argv[])
     }
 
     // CoAP-URI
-    if (argc > (2 - indexShifter))
+    if (aArgsLength > (2 - indexShifter))
     {
-        strncpy(coapUri, argv[2 - indexShifter], sizeof(coapUri) - 1);
+        strncpy(coapUri, aArgs[2 - indexShifter], sizeof(coapUri) - 1);
     }
 
     // CoAP-Type
-    if (argc > (3 - indexShifter))
+    if (aArgsLength > (3 - indexShifter))
     {
-        if (strcmp(argv[3 - indexShifter], "con") == 0)
+        if (strcmp(aArgs[3 - indexShifter], "con") == 0)
         {
             coapType = OT_COAP_TYPE_CONFIRMABLE;
         }
@@ -266,9 +266,9 @@ otError CoapSecure::ProcessRequest(int argc, char *argv[])
     otCoapMessageGenerateToken(message, ot::Coap::Message::kDefaultTokenLength);
     SuccessOrExit(error = otCoapMessageAppendUriPathOptions(message, coapUri));
 
-    if (argc > (4 - indexShifter))
+    if (aArgsLength > (4 - indexShifter))
     {
-        payloadLength = static_cast<uint16_t>(strlen(argv[4 - indexShifter]));
+        payloadLength = static_cast<uint16_t>(strlen(aArgs[4 - indexShifter]));
 
         if (payloadLength > 0)
         {
@@ -279,7 +279,7 @@ otError CoapSecure::ProcessRequest(int argc, char *argv[])
     // add payload
     if (payloadLength > 0)
     {
-        SuccessOrExit(error = otMessageAppend(message, argv[4 - indexShifter], payloadLength));
+        SuccessOrExit(error = otMessageAppend(message, aArgs[4 - indexShifter], payloadLength));
     }
 
     memset(&messageInfo, 0, sizeof(messageInfo));
@@ -305,24 +305,24 @@ exit:
     return error;
 }
 
-otError CoapSecure::ProcessConnect(int argc, char *argv[])
+otError CoapSecure::ProcessConnect(uint8_t aArgsLength, char *aArgs[])
 {
     otError    error;
     otSockAddr sockaddr;
 
-    VerifyOrExit(argc > 1, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aArgsLength > 1, error = OT_ERROR_INVALID_ARGS);
 
     // Destination IPv6 address
     memset(&sockaddr, 0, sizeof(sockaddr));
-    SuccessOrExit(error = otIp6AddressFromString(argv[1], &sockaddr.mAddress));
+    SuccessOrExit(error = otIp6AddressFromString(aArgs[1], &sockaddr.mAddress));
     sockaddr.mPort = OT_DEFAULT_COAP_SECURE_PORT;
 
     // check for port specification
-    if (argc > 2)
+    if (aArgsLength > 2)
     {
         long value;
 
-        error = Interpreter::ParseLong(argv[2], value);
+        error = Interpreter::ParseLong(aArgs[2], value);
         SuccessOrExit(error);
         sockaddr.mPort = static_cast<uint16_t>(value);
     }
@@ -333,10 +333,10 @@ exit:
     return error;
 }
 
-otError CoapSecure::ProcessDisconnect(int argc, char *argv[])
+otError CoapSecure::ProcessDisconnect(uint8_t aArgsLength, char *aArgs[])
 {
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
 
     otCoapSecureDisconnect(mInterpreter.mInstance);
 
@@ -344,22 +344,22 @@ otError CoapSecure::ProcessDisconnect(int argc, char *argv[])
 }
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-otError CoapSecure::ProcessPsk(int argc, char *argv[])
+otError CoapSecure::ProcessPsk(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
     size_t  length;
 
-    VerifyOrExit(argc > 2, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aArgsLength > 2, error = OT_ERROR_INVALID_ARGS);
 
-    length = strlen(argv[1]);
+    length = strlen(aArgs[1]);
     VerifyOrExit(length <= sizeof(mPsk), error = OT_ERROR_INVALID_ARGS);
     mPskLength = static_cast<uint8_t>(length);
-    memcpy(mPsk, argv[1], mPskLength);
+    memcpy(mPsk, aArgs[1], mPskLength);
 
-    length = strlen(argv[2]);
+    length = strlen(aArgs[2]);
     VerifyOrExit(length <= sizeof(mPskId), error = OT_ERROR_INVALID_ARGS);
     mPskIdLength = static_cast<uint8_t>(length);
-    memcpy(mPskId, argv[2], mPskIdLength);
+    memcpy(mPskId, aArgs[2], mPskIdLength);
 
     otCoapSecureSetPsk(mInterpreter.mInstance, mPsk, mPskLength, mPskId, mPskIdLength);
     mUseCertificate = false;
@@ -370,10 +370,10 @@ exit:
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-otError CoapSecure::ProcessX509(int argc, char *argv[])
+otError CoapSecure::ProcessX509(uint8_t aArgsLength, char *aArgs[])
 {
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
 
     otCoapSecureSetCertificate(mInterpreter.mInstance, (const uint8_t *)OT_CLI_COAPS_X509_CERT,
                                sizeof(OT_CLI_COAPS_X509_CERT), (const uint8_t *)OT_CLI_COAPS_PRIV_KEY,
@@ -387,11 +387,11 @@ otError CoapSecure::ProcessX509(int argc, char *argv[])
 }
 #endif
 
-otError CoapSecure::Process(int argc, char *argv[])
+otError CoapSecure::Process(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 
-    if (argc < 1)
+    if (aArgsLength < 1)
     {
         ProcessHelp(0, NULL);
         error = OT_ERROR_INVALID_ARGS;
@@ -400,9 +400,9 @@ otError CoapSecure::Process(int argc, char *argv[])
     {
         for (size_t i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
         {
-            if (strcmp(argv[0], sCommands[i].mName) == 0)
+            if (strcmp(aArgs[0], sCommands[i].mName) == 0)
             {
-                error = (this->*sCommands[i].mCommand)(argc, argv);
+                error = (this->*sCommands[i].mCommand)(aArgsLength, aArgs);
                 break;
             }
         }

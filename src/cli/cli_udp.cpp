@@ -55,10 +55,10 @@ UdpExample::UdpExample(Interpreter &aInterpreter)
     memset(&mSocket, 0, sizeof(mSocket));
 }
 
-otError UdpExample::ProcessHelp(int argc, char *argv[])
+otError UdpExample::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 {
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
 
     for (unsigned int i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
@@ -68,20 +68,20 @@ otError UdpExample::ProcessHelp(int argc, char *argv[])
     return OT_ERROR_NONE;
 }
 
-otError UdpExample::ProcessBind(int argc, char *argv[])
+otError UdpExample::ProcessBind(uint8_t aArgsLength, char *aArgs[])
 {
     otError    error;
     otSockAddr sockaddr;
     long       value;
 
-    VerifyOrExit(argc == 2, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
 
     memset(&sockaddr, 0, sizeof(sockaddr));
 
-    error = otIp6AddressFromString(argv[0], &sockaddr.mAddress);
+    error = otIp6AddressFromString(aArgs[0], &sockaddr.mAddress);
     SuccessOrExit(error);
 
-    error = Interpreter::ParseLong(argv[1], value);
+    error = Interpreter::ParseLong(aArgs[1], value);
     SuccessOrExit(error);
 
     sockaddr.mPort = static_cast<uint16_t>(value);
@@ -92,20 +92,20 @@ exit:
     return error;
 }
 
-otError UdpExample::ProcessConnect(int argc, char *argv[])
+otError UdpExample::ProcessConnect(uint8_t aArgsLength, char *aArgs[])
 {
     otError    error;
     otSockAddr sockaddr;
     long       value;
 
-    VerifyOrExit(argc == 2, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
 
     memset(&sockaddr, 0, sizeof(sockaddr));
 
-    error = otIp6AddressFromString(argv[0], &sockaddr.mAddress);
+    error = otIp6AddressFromString(aArgs[0], &sockaddr.mAddress);
     SuccessOrExit(error);
 
-    error = Interpreter::ParseLong(argv[1], value);
+    error = Interpreter::ParseLong(aArgs[1], value);
     SuccessOrExit(error);
 
     sockaddr.mPort = static_cast<uint16_t>(value);
@@ -116,64 +116,64 @@ exit:
     return error;
 }
 
-otError UdpExample::ProcessClose(int argc, char *argv[])
+otError UdpExample::ProcessClose(uint8_t aArgsLength, char *aArgs[])
 {
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
 
     return otUdpClose(&mSocket);
 }
 
-otError UdpExample::ProcessOpen(int argc, char *argv[])
+otError UdpExample::ProcessOpen(uint8_t aArgsLength, char *aArgs[])
 {
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
 
     return otUdpOpen(mInterpreter.mInstance, &mSocket, HandleUdpReceive, this);
 }
 
-otError UdpExample::ProcessSend(int argc, char *argv[])
+otError UdpExample::ProcessSend(uint8_t aArgsLength, char *aArgs[])
 {
     otError       error = OT_ERROR_NONE;
     otMessageInfo messageInfo;
     otMessage *   message       = NULL;
-    int           curArg        = 0;
+    uint8_t       curArg        = 0;
     uint16_t      payloadLength = 0;
     PayloadType   payloadType   = kTypeText;
 
     memset(&messageInfo, 0, sizeof(messageInfo));
 
-    VerifyOrExit(argc >= 1 && argc <= 4, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aArgsLength >= 1 && aArgsLength <= 4, error = OT_ERROR_INVALID_ARGS);
 
-    if (argc > 2)
+    if (aArgsLength > 2)
     {
         long value;
-        error = otIp6AddressFromString(argv[curArg++], &messageInfo.mPeerAddr);
+        error = otIp6AddressFromString(aArgs[curArg++], &messageInfo.mPeerAddr);
         SuccessOrExit(error);
 
-        error = Interpreter::ParseLong(argv[curArg++], value);
+        error = Interpreter::ParseLong(aArgs[curArg++], value);
         SuccessOrExit(error);
 
         messageInfo.mPeerPort = static_cast<uint16_t>(value);
     }
 
-    if (argc == 2 || argc == 4)
+    if (aArgsLength == 2 || aArgsLength == 4)
     {
-        int typePos = curArg++;
+        uint8_t typePos = curArg++;
 
-        if (strcmp(argv[typePos], "-s") == 0)
+        if (strcmp(aArgs[typePos], "-s") == 0)
         {
             unsigned long value;
             payloadType = kTypeAutoSize;
-            SuccessOrExit(error = Interpreter::ParseUnsignedLong(argv[curArg], value));
+            SuccessOrExit(error = Interpreter::ParseUnsignedLong(aArgs[curArg], value));
             payloadLength = static_cast<uint16_t>(value);
         }
-        else if (strcmp(argv[typePos], "-x") == 0)
+        else if (strcmp(aArgs[typePos], "-x") == 0)
         {
-            payloadLength = static_cast<uint16_t>(strlen(argv[curArg]));
+            payloadLength = static_cast<uint16_t>(strlen(aArgs[curArg]));
             payloadType   = kTypeHexString;
         }
-        else if (strcmp(argv[typePos], "-t") == 0)
+        else if (strcmp(aArgs[typePos], "-t") == 0)
         {
             payloadType = kTypeText;
         }
@@ -185,7 +185,7 @@ otError UdpExample::ProcessSend(int argc, char *argv[])
     switch (payloadType)
     {
     case kTypeText:
-        SuccessOrExit(error = otMessageAppend(message, argv[curArg], static_cast<uint16_t>(strlen(argv[curArg]))));
+        SuccessOrExit(error = otMessageAppend(message, aArgs[curArg], static_cast<uint16_t>(strlen(aArgs[curArg]))));
         break;
     case kTypeAutoSize:
         SuccessOrExit(error = WriteCharToBuffer(message, payloadLength));
@@ -195,7 +195,7 @@ otError UdpExample::ProcessSend(int argc, char *argv[])
         uint8_t     buf[50];
         int16_t     bufLen;
         uint16_t    conversionLength = 0;
-        const char *hexString        = argv[curArg];
+        const char *hexString        = aArgs[curArg];
 
         while (payloadLength > 0)
         {
@@ -258,11 +258,11 @@ exit:
     return error;
 }
 
-otError UdpExample::Process(int argc, char *argv[])
+otError UdpExample::Process(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 
-    if (argc < 1)
+    if (aArgsLength < 1)
     {
         ProcessHelp(0, NULL);
         error = OT_ERROR_INVALID_ARGS;
@@ -271,9 +271,9 @@ otError UdpExample::Process(int argc, char *argv[])
     {
         for (size_t i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
         {
-            if (strcmp(argv[0], sCommands[i].mName) == 0)
+            if (strcmp(aArgs[0], sCommands[i].mName) == 0)
             {
-                error = (this->*sCommands[i].mCommand)(argc - 1, argv + 1);
+                error = (this->*sCommands[i].mCommand)(aArgsLength - 1, aArgs + 1);
                 break;
             }
         }
