@@ -36,7 +36,6 @@ endif()
 list(APPEND OT_PLATFORM_DEFINES
     "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-cc2650-config-check.h\""
     "OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE=1"
-    "OPENTHREAD_SETTINGS_RAM=0"
     "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\""
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
@@ -59,7 +58,6 @@ add_library(openthread-cc2650
     alarm.c
     diag.c
     entropy.c
-    flash.c
     logging.c
     misc.c
     radio.c
@@ -98,7 +96,4 @@ target_include_directories(openthread-cc2650
         ${PROJECT_SOURCE_DIR}/examples/platforms
         ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
         ${PROJECT_SOURCE_DIR}/third_party/mbedtls
-    PUBLIC
-        ${PROJECT_SOURCE_DIR}/examples/platforms/cc2650/crypto
-        ${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc26x0
 )
