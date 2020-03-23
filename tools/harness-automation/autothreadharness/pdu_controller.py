@@ -213,7 +213,7 @@ class EatonPduController(PduController):
         ]
         if missing_fields:
             raise KeyError(
-               'Missing keys in PDU params: {}'.format(missing_fields))
+                'Missing keys in PDU params: {}'.format(missing_fields))
         self.params = params
         self.type = 'pdu'
         self.ip = self.params['ip']
