@@ -83,7 +83,14 @@ void Local::Reset(void)
     VerifyOrExit(mState != OT_BACKBONE_ROUTER_STATE_DISABLED);
 
     RemoveService();
-    SetState(OT_BACKBONE_ROUTER_STATE_SECONDARY);
+
+    if (mState == OT_BACKBONE_ROUTER_STATE_PRIMARY)
+    {
+        // Increase sequenence number when changing from primary to secondary.
+        mSequenceNumber++;
+        Get<Notifier>().Signal(OT_CHANGED_THREAD_BACKBONE_ROUTER_LOCAL);
+        SetState(OT_BACKBONE_ROUTER_STATE_SECONDARY);
+    }
 
 exit:
     return;
