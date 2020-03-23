@@ -213,7 +213,7 @@ class EatonPduController(PduController):
         ]
         if missing_fields:
             raise KeyError(
-                "Missing keys in PDU params: {}".format(missing_fields))
+               'Missing keys in PDU params: {}'.format(missing_fields))
         self.params = params
         self.type = 'pdu'
         self.ip = self.params['ip']
@@ -237,15 +237,15 @@ class EatonPduController(PduController):
             full OID identifying the SNMP object (str)
         """
         parameters = {
-            "get_state":
+            'get_state':
                 self.outlet_oid_cmd_get_state_base,
-            "set_on":
+            'set_on':
                 self.outlet_oid_cmd_set_on_base,
-            "set_off":
+            'set_off':
                 self.outlet_oid_cmd_set_off_base,
-            "set_reboot_delay":
+            'set_reboot_delay':
                 self.outlet_oid_cmd_set_reboot_delay_seconds_base,
-            "reboot":
+            'reboot':
                 self.outlet_oid_cmd_reboot_base
         }
 
@@ -266,11 +266,11 @@ class EatonPduController(PduController):
                    ObjectType(ObjectIdentity(oid), Integer32(value))))
 
         if errorIndication:
-            msg = "Found PDU errorIndication: {}".format(errorIndication)
+            msg = 'Found PDU errorIndication: {}'.format(errorIndication)
             logger.exception(msg)
             raise RuntimeError(msg)
         elif errorStatus:
-            msg = "Found PDU errorStatus: {}".format(errorStatus)
+            msg = 'Found PDU errorStatus: {}'.format(errorStatus)
             logger.exception(msg)
             raise RuntimeError(msg)
 
@@ -290,11 +290,11 @@ class EatonPduController(PduController):
                    ObjectType(ObjectIdentity(oid))))
 
         if errorIndication:
-            msg = "Found PDU errorIndication: {}".format(errorIndication)
+            msg = 'Found PDU errorIndication: {}'.format(errorIndication)
             logger.exception(msg)
             raise RuntimeError(msg)
         elif errorStatus:
-            msg = "Found PDU errorStatus: {}".format(errorStatus)
+            msg = 'Found PDU errorStatus: {}'.format(errorStatus)
             logger.exception(msg)
             raise RuntimeError(msg)
 
@@ -312,7 +312,7 @@ class EatonPduController(PduController):
         oid = self._outlet_oid_get(cmd, socket)
 
         # Values other than 1 does not make sense with commands other than "set_reboot_delay".
-        if cmd is not "set_reboot_delay":
+        if cmd is not 'set_reboot_delay':
             value = 1
 
         self._oid_set(oid, value)
@@ -333,7 +333,7 @@ class EatonPduController(PduController):
         return self._oid_get(oid)
 
     def validate_state(self, socket, state):
-        return (self._outlet_value_get("get_state", socket) == state)
+        return (self._outlet_value_get('get_state', socket) == state)
 
     def turn_off(self, sockets):
         """
@@ -345,7 +345,7 @@ class EatonPduController(PduController):
         logger.info('Executing turn OFF for: {}'.format(sockets))
 
         for socket in sockets:
-            self._outlet_value_set("set_off", socket)
+            self._outlet_value_set('set_off', socket)
             time.sleep(2)
 
             timeout = time.time() + self.PDU_COMMAND_TIMEOUT
@@ -354,10 +354,10 @@ class EatonPduController(PduController):
                 time.sleep(0.1)
 
             if self.validate_state(socket, 0):
-                logger.debug("Turned OFF socket {} at {}".format(
+                logger.debug('Turned OFF socket {} at {}'.format(
                     socket, self.ip))
             else:
-                logger.error("Failed to turn OFF socket {} at {}".format(
+                logger.error('Failed to turn OFF socket {} at {}'.format(
                     socket, self.ip))
 
     def turn_on(self, sockets):
@@ -371,7 +371,7 @@ class EatonPduController(PduController):
         logger.info('Executing turn ON for: {}'.format(sockets))
 
         for socket in sockets:
-            self._outlet_value_set("set_on", socket)
+            self._outlet_value_set('set_on', socket)
             time.sleep(2)
 
             timeout = time.time() + self.PDU_COMMAND_TIMEOUT
@@ -380,10 +380,10 @@ class EatonPduController(PduController):
                 time.sleep(0.1)
 
             if self.validate_state(socket, 1):
-                logger.debug("Turned ON socket {} at {}".format(
+                logger.debug('Turned ON socket {} at {}'.format(
                     socket, self.ip))
             else:
-                logger.error("Failed to turn ON socket {} at {}".format(
+                logger.error('Failed to turn ON socket {} at {}'.format(
                     socket, self.ip))
 
     def close(self):
