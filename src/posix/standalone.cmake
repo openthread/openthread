@@ -44,9 +44,9 @@ target_compile_options(ot-cli PRIVATE
 
 target_link_libraries(ot-cli
     openthread-cli-ftd
-    ${OT_PLATFORM_LIB}
+    ${OT_POSIX_LIB}
     openthread-ftd
-    ${OT_PLATFORM_LIB}
+    ${OT_POSIX_LIB}
     mbedcrypto
     openthread-ncp-ftd
     $<$<BOOL:${READLINE}>:${OT_READLINE}>
@@ -68,9 +68,9 @@ target_compile_options(ot-ncp PRIVATE
 
 target_link_libraries(ot-ncp
     openthread-ncp-ftd
-    ${OT_PLATFORM_LIB}
+    ${OT_POSIX_LIB}
     openthread-ftd
-    ${OT_PLATFORM_LIB}
+    ${OT_POSIX_LIB}
     mbedcrypto
     openthread-ncp-ftd
 )
