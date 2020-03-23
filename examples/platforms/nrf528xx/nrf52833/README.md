@@ -90,7 +90,7 @@ Config:NCP:SocketPath "system:/usr/bin/spi-hdlc-adapter --gpio-int /sys/class/gp
 
 In this example, [spi-hdlc-adapter][spi-hdlc-adapter] is a tool that you can use to communicate between NCP and wpantund over SPI. For this example, `spi-hdlc-adapter` is installed in `/usr/bin`.
 
-The default SPI Slave pin configuration for nRF52833 is defined in `examples/platforms/nrf52833/platform-config.h`.
+The default SPI Slave pin configuration for nRF52833 is defined in `examples/platforms/nrf52833/transport-config.h`.
 
 Note that the native SPI Slave support is not intended to be used with Engineering sample A of the nRF52833 chip due to
 single transfer size limitation.

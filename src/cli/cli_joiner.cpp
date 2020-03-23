@@ -48,10 +48,10 @@ const struct Joiner::Command Joiner::sCommands[] = {
     {"stop", &Joiner::ProcessStop},
 };
 
-otError Joiner::ProcessHelp(int argc, char *argv[])
+otError Joiner::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 {
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
 
     for (size_t i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
@@ -61,10 +61,10 @@ otError Joiner::ProcessHelp(int argc, char *argv[])
     return OT_ERROR_NONE;
 }
 
-otError Joiner::ProcessId(int argc, char *argv[])
+otError Joiner::ProcessId(uint8_t aArgsLength, char *aArgs[])
 {
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
 
     otExtAddress joinerId;
 
@@ -76,40 +76,40 @@ otError Joiner::ProcessId(int argc, char *argv[])
     return OT_ERROR_NONE;
 }
 
-otError Joiner::ProcessStart(int argc, char *argv[])
+otError Joiner::ProcessStart(uint8_t aArgsLength, char *aArgs[])
 {
     otError     error;
     const char *provisioningUrl = NULL;
 
-    VerifyOrExit(argc > 1, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aArgsLength > 1, error = OT_ERROR_INVALID_ARGS);
 
-    if (argc > 2)
+    if (aArgsLength > 2)
     {
-        provisioningUrl = argv[2];
+        provisioningUrl = aArgs[2];
     }
 
-    error = otJoinerStart(mInterpreter.mInstance, argv[1], provisioningUrl, PACKAGE_NAME,
+    error = otJoinerStart(mInterpreter.mInstance, aArgs[1], provisioningUrl, PACKAGE_NAME,
                           OPENTHREAD_CONFIG_PLATFORM_INFO, PACKAGE_VERSION, NULL, &Joiner::HandleCallback, this);
 
 exit:
     return error;
 }
 
-otError Joiner::ProcessStop(int argc, char *argv[])
+otError Joiner::ProcessStop(uint8_t aArgsLength, char *aArgs[])
 {
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
 
     otJoinerStop(mInterpreter.mInstance);
 
     return OT_ERROR_NONE;
 }
 
-otError Joiner::Process(int argc, char *argv[])
+otError Joiner::Process(uint8_t aArgsLength, char *aArgs[])
 {
-    otError error = OT_ERROR_INVALID_ARGS;
+    otError error = OT_ERROR_INVALID_COMMAND;
 
-    if (argc < 1)
+    if (aArgsLength < 1)
     {
         ProcessHelp(0, NULL);
     }
@@ -117,9 +117,9 @@ otError Joiner::Process(int argc, char *argv[])
     {
         for (size_t i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
         {
-            if (strcmp(argv[0], sCommands[i].mName) == 0)
+            if (strcmp(aArgs[0], sCommands[i].mName) == 0)
             {
-                error = (this->*sCommands[i].mCommand)(argc, argv);
+                error = (this->*sCommands[i].mCommand)(aArgsLength, aArgs);
                 break;
             }
         }

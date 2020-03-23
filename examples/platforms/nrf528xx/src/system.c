@@ -39,6 +39,7 @@
 
 #include "openthread-system.h"
 #include "platform-fem.h"
+#include "platform-nrf5-transport.h"
 #include "platform-nrf5.h"
 #include <nrf.h>
 #include <nrf_drv_clock.h>
@@ -94,23 +95,11 @@ void otSysInit(int argc, char *argv[])
     nrf5RandomInit();
     if (!gPlatformPseudoResetWasRequested)
     {
-#if ((UART_AS_SERIAL_TRANSPORT == 1) || (USB_CDC_AS_SERIAL_TRANSPORT == 1))
-        nrf5UartInit();
-#endif
 #if NRF52840_XXAA
         nrf5CryptoInit();
 #endif
     }
-    else
-    {
-#if ((UART_AS_SERIAL_TRANSPORT == 1) || (USB_CDC_AS_SERIAL_TRANSPORT == 1))
-        nrf5UartClearPendingData();
-#endif
-    }
-
-#if (SPIS_AS_SERIAL_TRANSPORT == 1)
-    nrf5SpiSlaveInit();
-#endif
+    nrf5TransportInit(gPlatformPseudoResetWasRequested);
     nrf5MiscInit();
     nrf5RadioInit();
     nrf5TempInit();
@@ -127,18 +116,13 @@ void otSysDeinit(void)
     nrf5TempDeinit();
     nrf5RadioDeinit();
     nrf5MiscDeinit();
-#if (SPIS_AS_SERIAL_TRANSPORT == 1)
-    nrf5SpiSlaveDeinit();
-#endif
     if (!gPlatformPseudoResetWasRequested)
     {
 #if NRF52840_XXAA
         nrf5CryptoDeinit();
 #endif
-#if ((UART_AS_SERIAL_TRANSPORT == 1) || (USB_CDC_AS_SERIAL_TRANSPORT == 1))
-        nrf5UartDeinit();
-#endif
     }
+    nrf5TransportDeinit(gPlatformPseudoResetWasRequested);
     nrf5RandomDeinit();
     nrf5AlarmDeinit();
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED) || \
@@ -159,12 +143,7 @@ bool otSysPseudoResetWasRequested(void)
 void otSysProcessDrivers(otInstance *aInstance)
 {
     nrf5RadioProcess(aInstance);
-#if ((UART_AS_SERIAL_TRANSPORT == 1) || (USB_CDC_AS_SERIAL_TRANSPORT == 1))
-    nrf5UartProcess();
-#endif
-#if (SPIS_AS_SERIAL_TRANSPORT == 1)
-    nrf5SpiSlaveProcess();
-#endif
+    nrf5TransportProcess();
     nrf5TempProcess();
     nrf5AlarmProcess(aInstance);
 }

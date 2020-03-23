@@ -194,11 +194,11 @@ bool otDiagIsEnabled(otInstance *aInstance)
     return false;
 }
 
-otError otDiagProcessCmd(otInstance *aInstance, int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen)
+otError otDiagProcessCmd(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aArgCount);
-    OT_UNUSED_VARIABLE(aArgVector);
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
     OT_UNUSED_VARIABLE(aOutput);
     OT_UNUSED_VARIABLE(aOutputMaxLen);
 
@@ -276,18 +276,27 @@ bool otPlatRadioIsEnabled(otInstance *aInstance)
 otError otPlatRadioEnable(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
+    sRadioState = OT_RADIO_STATE_SLEEP;
+
     return OT_ERROR_NONE;
 }
 
 otError otPlatRadioDisable(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
+    sRadioState = OT_RADIO_STATE_DISABLED;
+
     return OT_ERROR_NONE;
 }
 
 otError otPlatRadioSleep(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
+    sRadioState = OT_RADIO_STATE_SLEEP;
+
     return OT_ERROR_NONE;
 }
 
@@ -295,6 +304,9 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aChannel);
+
+    sRadioState = OT_RADIO_STATE_RECEIVE;
+
     return OT_ERROR_NONE;
 }
 
@@ -500,15 +512,19 @@ otError otPlatUartFlush(void)
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-otError otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+otError otPlatDiagProcess(otInstance *aInstance,
+                          uint8_t     aArgsLength,
+                          char *      aArgs[],
+                          char *      aOutput,
+                          size_t      aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(argc);
-    OT_UNUSED_VARIABLE(argv);
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
     OT_UNUSED_VARIABLE(aOutput);
     OT_UNUSED_VARIABLE(aOutputMaxLen);
 
-    return OT_ERROR_INVALID_ARGS;
+    return OT_ERROR_INVALID_COMMAND;
 }
 
 void otPlatDiagModeSet(bool aMode)

@@ -53,27 +53,27 @@ jobs:
       os: linux
       compiler: gcc
       script: .travis/script.sh
-    - env: BUILD_TARGET="posix-app-cli" VERBOSE=1 VIRTUAL_TIME=1
+    - env: BUILD_TARGET="posix-cli" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
       script: .travis/script.sh
-    - env: BUILD_TARGET="posix-app-ncp" VERBOSE=1 VIRTUAL_TIME=1
+    - env: BUILD_TARGET="posix-ncp" VERBOSE=1 VIRTUAL_TIME=1
       os: linux
       compiler: gcc
       script: .travis/script.sh
-    - env: BUILD_TARGET="posix-app-pty" VERBOSE=1 COVERAGE=1
+    - env: BUILD_TARGET="posix-pty" VERBOSE=1 COVERAGE=1
       os: linux
       compiler: clang
       script: .travis/script.sh
-    - env: BUILD_TARGET="posix-app-pty" DAEMON=1 VERBOSE=1 COVERAGE=1
+    - env: BUILD_TARGET="posix-pty" DAEMON=1 VERBOSE=1 COVERAGE=1
       os: linux
       compiler: gcc
       script: .travis/script.sh
-    - env: BUILD_TARGET="posix-app-migrate" VERBOSE=1 COVERAGE=1
+    - env: BUILD_TARGET="posix-migrate" VERBOSE=1 COVERAGE=1
       os: linux
       compiler: clang
       script: .travis/script.sh
-    - env: BUILD_TARGET="posix-app-spi" VERBOSE=1 COVERAGE=1
+    - env: BUILD_TARGET="posix-spi" VERBOSE=1 COVERAGE=1
       os: linux
       compiler: gcc
       script: .travis/script.sh
@@ -195,7 +195,7 @@ jobs:
       os: linux
       compiler: gcc
       script: .travis/script.sh
-    - env: BUILD_TARGET="toranj-test-framework" COVERAGE=1 VERBOSE=1 TORANJ_POSIX_APP_RCP_MODEL=1
+    - env: BUILD_TARGET="toranj-test-framework" COVERAGE=1 VERBOSE=1 TORANJ_POSIX_RCP_MODEL=1
       os: linux
       compiler: gcc
       script: .travis/script.sh
@@ -210,7 +210,7 @@ jobs:
         apt:
           packages:
             - clang-format-6.0
-      script: .travis/check-pretty
+      script: python3 -m pip install yapf && script/make-pretty check
     - name: "Package Check"
       os: linux
       compiler: gcc

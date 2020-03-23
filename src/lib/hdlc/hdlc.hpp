@@ -216,6 +216,8 @@ public:
         mWriteFrameStart = mBuffer;
         mWritePointer    = mBuffer + kHeaderSize;
         mRemainingLength = kSize - kHeaderSize;
+
+        SetSkipLength(0);
     }
 
     /**
@@ -225,7 +227,30 @@ public:
      * @retval FALSE Current frame is not empty.
      *
      */
-    bool HasFrame(void) const { return (mWritePointer != mWriteFrameStart + kHeaderSize); }
+    bool HasFrame(void) const { return (mWritePointer != GetFrame()); }
+
+    /**
+     * This method sets the length (number of bytes) of the current frame being written.
+     *
+     * param[in] aLength  The length of current frame.
+     *
+     * @retval OT_ERROR_NONE     Successfully set the length of the current frame.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space to hold a frame of length @p aLength.
+     *
+     */
+    otError SetLength(uint16_t aLength)
+    {
+        otError error = OT_ERROR_NO_BUFS;
+
+        if (GetFrame() + aLength <= OT_ARRAY_END(mBuffer))
+        {
+            mWritePointer    = GetFrame() + aLength;
+            mRemainingLength = static_cast<uint16_t>(mBuffer + kSize - mWritePointer);
+            error            = OT_ERROR_NONE;
+        }
+
+        return error;
+    }
 
     /**
      * This method gets the length (number of bytes) in the current frame being written into the buffer.
@@ -233,7 +258,42 @@ public:
      * @returns The length (number of bytes) in the frame.
      *
      */
-    uint16_t GetLength(void) const { return static_cast<uint16_t>(mWritePointer - mWriteFrameStart - kHeaderSize); }
+    uint16_t GetLength(void) const { return static_cast<uint16_t>(mWritePointer - GetFrame()); }
+
+    /**
+     * This method sets the length (number of bytes) of reserved buffer in front of the current frame being written.
+     *
+     * param[in] aSkipLength  The length of reserved buffer.
+     *
+     * @retval OT_ERROR_NONE     Successfully set the length of reserved buffer.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space to hold a reserved buffer of length @p aLength.
+     *
+     */
+    otError SetSkipLength(uint16_t aSkipLength)
+    {
+        otError error = OT_ERROR_NO_BUFS;
+
+        if (mWriteFrameStart + kHeaderSize + aSkipLength <= OT_ARRAY_END(mBuffer))
+        {
+            Encoding::LittleEndian::WriteUint16(aSkipLength, mWriteFrameStart + kHeaderSkipLengthOffset);
+            mWritePointer    = GetFrame();
+            mRemainingLength = static_cast<uint16_t>(mBuffer + kSize - mWritePointer);
+            error            = OT_ERROR_NONE;
+        }
+
+        return error;
+    }
+
+    /**
+     * This method gets the length (number of bytes) of reserved buffer in front of the current frame being written.
+     *
+     * @returns The length (number of bytes) of the reserved buffer.
+     *
+     */
+    uint16_t GetSkipLength(void) const
+    {
+        return Encoding::LittleEndian::ReadUint16(mWriteFrameStart + kHeaderSkipLengthOffset);
+    }
 
     /**
      * This method gets a pointer to the start of the current frame.
@@ -241,7 +301,15 @@ public:
      * @returns A pointer to the start of the frame.
      *
      */
-    uint8_t *GetFrame(void) { return mWriteFrameStart + kHeaderSize; }
+    uint8_t *GetFrame(void) const { return mWriteFrameStart + kHeaderSize + GetSkipLength(); }
+
+    /**
+     * This method gets the maximum length of the current frame.
+     *
+     * @returns The maximum length of the current frame.
+     *
+     */
+    uint16_t GetFrameMaxLength(void) const { return static_cast<uint16_t>(mBuffer + kSize - GetFrame()); }
 
     /**
      * This method saves the current frame and prepares the write pointer for a next frame to be written into the
@@ -252,9 +320,10 @@ public:
      */
     void SaveFrame(void)
     {
-        Encoding::LittleEndian::WriteUint16(GetLength(), mWriteFrameStart);
+        Encoding::LittleEndian::WriteUint16(GetSkipLength() + GetLength(), mWriteFrameStart + kHeaderTotalLengthOffset);
         mWriteFrameStart = mWritePointer;
-        mWritePointer += kHeaderSize;
+        SetSkipLength(0);
+        mWritePointer    = GetFrame();
         mRemainingLength = static_cast<uint16_t>(mBuffer + kSize - mWritePointer);
     }
 
@@ -265,7 +334,9 @@ public:
      */
     void DiscardFrame(void)
     {
-        mWritePointer    = mWriteFrameStart + kHeaderSize;
+        SetSkipLength(0);
+
+        mWritePointer    = GetFrame();
         mRemainingLength = static_cast<uint16_t>(mBuffer + kSize - mWritePointer);
     }
 
@@ -283,7 +354,8 @@ public:
      *
      * @param[inout] aFrame   On entry, should point to a previous saved frame or NULL to get the first frame.
      *                        On exit, the pointer variable is updated to next frame or set to NULL if there are none.
-     * @param[out]   aLength  A reference to a variable to return the frame length (number of bytes).
+     * @param[inout] aLength  On entry, should be a reference to the frame length of the previous saved frame.
+     *                        On exit, the reference is updated to the frame length (number of bytes) of next frame.
      *
      * @retval OT_ERROR_NONE       Updated @aFrame and @aLength successfully with the next saved frame.
      * @retval OT_ERROR_NOT_FOUND  No more saved frame in the buffer.
@@ -293,14 +365,17 @@ public:
     {
         otError error = OT_ERROR_NONE;
 
-        assert(aFrame == NULL || (mBuffer <= aFrame && aFrame < OT_ARRAY_END(mBuffer)));
+        OT_ASSERT(aFrame == NULL || (mBuffer <= aFrame && aFrame < OT_ARRAY_END(mBuffer)));
 
-        aFrame = (aFrame == NULL) ? mBuffer : aFrame + Encoding::LittleEndian::ReadUint16(aFrame - kHeaderSize);
+        aFrame = (aFrame == NULL) ? mBuffer : aFrame + aLength;
 
         if (aFrame != mWriteFrameStart)
         {
-            aLength = Encoding::LittleEndian::ReadUint16(aFrame);
-            aFrame += kHeaderSize;
+            uint16_t totalLength = Encoding::LittleEndian::ReadUint16(aFrame + kHeaderTotalLengthOffset);
+            uint16_t skipLength  = Encoding::LittleEndian::ReadUint16(aFrame + kHeaderSkipLengthOffset);
+
+            aLength = totalLength - skipLength;
+            aFrame += kHeaderSize + skipLength;
         }
         else
         {
@@ -335,11 +410,22 @@ public:
 
 private:
     /*
-     * The diagram below illustrates how the frames are saved in the buffer.
+     * The diagram below illustrates the format of a saved frame.
      *
-     * Each saved frame contains a header which is 2 bytes long and specifies the frame length (the length does not
-     * include the header itself). The frame length is stored in header bytes as a `uint16_t` value using little-endian
-     * encoding.
+     *  +---------+-------------+------------+----------------+----------------------------+
+     *  | Octets: |      2      |      2     |   SkipLength   |  TotalLength - SkipLength  |
+     *  +---------+-------------+------------+----------------+----------------------------+
+     *  | Fields: | TotalLength | SkipLength | ReservedBuffer |         FrameBuffer        |
+     *  +---------+-------------+------------+----------------+----------------------------+
+     *
+     *   -  "TotalLength"   : The total length of the `ReservedBuffer` and `FrameBuffer`. It is stored in header bytes
+     *                        as a `uint16_t` value using little-endian encoding.
+     *   -  "SkipLength"    : The length of the `ReservedBuffer`. It is stored in header bytes as a `uint16_t` value
+     *                        using little-endian encoding.
+     *   -  "ReservedBuffer": A reserved buffer in front of `FrameBuffer`. User can use it to store extra header, etc.
+     *   -  "FrameBuffer"   : Frame buffer.
+     *
+     * The diagram below illustrates how the frames are saved in the buffer.
      *
      * The diagram shows `mBuffer` and different pointers into the buffer. It represents buffer state when there are
      * two saved frames in the buffer.
@@ -358,7 +444,9 @@ private:
 
     enum
     {
-        kHeaderSize = sizeof(uint16_t),
+        kHeaderTotalLengthOffset = 0,
+        kHeaderSkipLengthOffset  = sizeof(uint16_t),
+        kHeaderSize              = sizeof(uint16_t) + sizeof(uint16_t),
     };
 
     uint8_t  mBuffer[kSize];

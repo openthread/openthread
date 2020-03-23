@@ -125,12 +125,11 @@ static void ReverseExtAddress(otExtAddress *aReversed, const otExtAddress *aOrig
     }
 }
 
-static bool isDataRequestAndHasFramePending(const otRadioFrame *aFrame)
+static bool HasFramePending(const otRadioFrame *aFrame)
 {
     bool         rval = false;
     otMacAddress src;
 
-    otEXPECT(otMacFrameIsDataRequest(aFrame));
     otEXPECT_ACTION(sSrcMatchEnabled, rval = true);
     otEXPECT(otMacFrameGetSrcAddr(aFrame, &src) == OT_ERROR_NONE);
 
@@ -715,7 +714,13 @@ void radioSendAck(void)
     sAckFrame.mLength    = IEEE802154_ACK_LENGTH;
     sAckMessage.mPsdu[0] = IEEE802154_FRAME_TYPE_ACK;
 
-    if (isDataRequestAndHasFramePending(&sReceiveFrame))
+    if (
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+        (otMacFrameIsData(&sReceiveFrame) || otMacFrameIsDataRequest(&sReceiveFrame))
+#else
+        otMacFrameIsDataRequest(&sReceiveFrame)
+#endif
+        && HasFramePending(&sReceiveFrame))
     {
         sAckMessage.mPsdu[0] |= IEEE802154_FRAME_PENDING;
         sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = true;

@@ -88,7 +88,7 @@ typedef enum otError
     OT_ERROR_BUSY = 5,
 
     /**
-     * Failed to parse message or arguments.
+     * Failed to parse message.
      */
     OT_ERROR_PARSE = 6,
 
@@ -222,6 +222,11 @@ typedef enum otError
      * The link margin was too low.
      */
     OT_ERROR_LINK_MARGIN_LOW = 34,
+
+    /**
+     * Input (CLI) command is invalid.
+     */
+    OT_ERROR_INVALID_COMMAND = 35,
 
     /**
      * The number of defined errors.

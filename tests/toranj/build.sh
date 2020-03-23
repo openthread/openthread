@@ -38,7 +38,7 @@ display_usage() {
     echo "    <config> can be:"
     echo "        ncp        : Build OpenThread NCP FTD mode with simulation platform"
     echo "        rcp        : Build OpenThread RCP (NCP in radio mode) with simulation platform"
-    echo "        posix-app  : Build OpenThread POSIX App NCP"
+    echo "        posix      : Build OpenThread POSIX App NCP"
     echo "        cmake      : Configure and build OpenThread using cmake/ninja (RCP and NCP) only"
     echo "        cmake-posix: Configure and build OpenThread POSIX host using cmake/ninja"
     echo ""
@@ -90,8 +90,6 @@ configure_options="                \
     --enable-ncp                   \
     "
 
-cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config.h\"'
-
 if [ -n "${top_builddir}" ]; then
     top_srcdir=$(pwd)
     mkdir -p "${top_builddir}"
@@ -107,9 +105,10 @@ case ${build_config} in
         echo "==================================================================================================="
         ./bootstrap || die
         cd "${top_builddir}"
-        ${top_srcdir}/configure                 \
-            CPPFLAGS="$cppflags_config"         \
-            --with-examples=simulation          \
+        cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-simulation.h\"'
+        ${top_srcdir}/configure                                                         \
+            CPPFLAGS="$cppflags_config"                                                 \
+            --with-examples=simulation                                                  \
             $configure_options || die
         make -j 8 || die
         ;;
@@ -120,26 +119,28 @@ case ${build_config} in
         echo "===================================================================================================="
         ./bootstrap || die
         cd "${top_builddir}"
-        ${top_srcdir}/configure                 \
-            CPPFLAGS="$cppflags_config"         \
-            --enable-coverage=${coverage}       \
-            --enable-ncp                        \
-            --enable-radio-only                 \
-            --with-examples=simulation          \
-            --disable-docs                      \
+        cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-simulation.h\"'
+        ${top_srcdir}/configure                                                         \
+            CPPFLAGS="$cppflags_config "                                                \
+            --enable-coverage=${coverage}                                               \
+            --enable-ncp                                                                \
+            --enable-radio-only                                                         \
+            --with-examples=simulation                                                  \
+            --disable-docs                                                              \
             --enable-tests=$tests || die
         make -j 8 || die
         ;;
 
-    posix-app|posixapp)
+    posix|posix-app|posixapp)
         echo "===================================================================================================="
         echo "Building OpenThread POSIX App NCP"
         echo "===================================================================================================="
         ./bootstrap || die
         cd "${top_builddir}"
+        cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-posix.h\"'
         ${top_srcdir}/configure                 \
             CPPFLAGS="$cppflags_config"         \
-            --enable-posix-app                  \
+            --with-platform=posix               \
             $configure_options || die
         make -j 8 || die
         ;;
@@ -148,7 +149,7 @@ case ${build_config} in
         echo "===================================================================================================="
         echo "Building OpenThread (NCP/CLI for FTD/MTD/RCP mode) with simulation platform using cmake"
         echo "===================================================================================================="
-        cmake -GNinja -DOT_PLATFORM=simulation -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config.h . || die
+        cmake -GNinja -DOT_PLATFORM=simulation -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h . || die
         ninja || die
         ;;
 
@@ -156,7 +157,7 @@ case ${build_config} in
         echo "===================================================================================================="
         echo "Building OpenThread POSIX host platform using cmake"
         echo "===================================================================================================="
-        cmake -GNinja -DOT_PLATFORM=posix-host -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config.h . || die
+        cmake -GNinja -DOT_PLATFORM=posix -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config-posix.h . || die
         ninja || die
         ;;
 

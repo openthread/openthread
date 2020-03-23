@@ -390,7 +390,7 @@ protected:
      * This method returns a pointer to a Prefix TLV in a specified tlvs buffer.
      *
      * @param[in]  aPrefix        A pointer to an IPv6 prefix.
-     * @param[in]  aPrefixLength  The prefix length pointed to by @p aPrefix.
+     * @param[in]  aPrefixLength  The prefix length pointed to by @p aPrefix (in bits).
      * @param[in]  aTlvs          A pointer to a specified tlvs buffer.
      * @param[in]  aTlvsLength    The specified tlvs buffer length pointed to by @p aTlvs.
      *

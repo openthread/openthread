@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -31,114 +31,66 @@
  *   This file implements the OpenThread platform abstraction for the non-volatile storage.
  */
 
-#include <openthread-core-config.h>
+#include <string.h>
 
-#include <openthread/config.h>
-#include <openthread/platform/alarm-milli.h>
-
-#include "utils/code_utils.h"
-#include "utils/flash.h"
+#include <openthread/instance.h>
 
 #include "em_msc.h"
 
-// clang-format off
-#define FLASH_DATA_END_ADDR     (FLASH_BASE + FLASH_SIZE)
-#define FLASH_DATA_START_ADDR   (FLASH_DATA_END_ADDR - (FLASH_PAGE_SIZE * SETTINGS_CONFIG_PAGE_NUM))
-// clang-format on
+#define FLASH_PAGE_NUM 4
+#define FLASH_DATA_END_ADDR (FLASH_BASE + FLASH_SIZE)
+#define FLASH_DATA_START_ADDR (FLASH_DATA_END_ADDR - (FLASH_PAGE_SIZE * FLASH_PAGE_NUM))
+#define FLASH_SWAP_PAGE_NUM (FLASH_PAGE_NUM / 2)
+#define FLASH_SWAP_SIZE (FLASH_PAGE_SIZE * FLASH_SWAP_PAGE_NUM)
 
-static inline uint32_t mapAddress(uint32_t aAddress)
+static inline uint32_t mapAddress(uint8_t aSwapIndex, uint32_t aOffset)
 {
-    return aAddress + FLASH_DATA_START_ADDR;
-}
+    uint32_t address;
 
-static otError returnTypeConvert(int32_t aStatus)
-{
-    otError error = OT_ERROR_NONE;
+    address = FLASH_DATA_START_ADDR + aOffset;
 
-    switch (aStatus)
+    if (aSwapIndex)
     {
-    case mscReturnOk:
-        error = OT_ERROR_NONE;
-        break;
-
-    case mscReturnInvalidAddr:
-    case mscReturnUnaligned:
-        error = OT_ERROR_INVALID_ARGS;
-        break;
-
-    default:
-        error = OT_ERROR_FAILED;
+        address += FLASH_SWAP_SIZE;
     }
 
-    return error;
+    return address;
 }
 
-otError utilsFlashInit(void)
+void otPlatFlashInit(otInstance *aInstance)
 {
-    MSC_Init();
-    return OT_ERROR_NONE;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
-uint32_t utilsFlashGetSize(void)
+uint32_t otPlatFlashGetSwapSize(otInstance *aInstance)
 {
-    return FLASH_DATA_END_ADDR - FLASH_DATA_START_ADDR;
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return FLASH_SWAP_SIZE;
 }
 
-otError utilsFlashErasePage(uint32_t aAddress)
+void otPlatFlashErase(otInstance *aInstance, uint8_t aSwapIndex)
 {
-    int32_t status;
+    OT_UNUSED_VARIABLE(aInstance);
 
-    status = MSC_ErasePage((uint32_t *)mapAddress(aAddress));
+    uint32_t address = mapAddress(aSwapIndex, 0);
 
-    return returnTypeConvert(status);
-}
-
-otError utilsFlashStatusWait(uint32_t aTimeout)
-{
-    otError  error = OT_ERROR_BUSY;
-    uint32_t start = otPlatAlarmMilliGetNow();
-
-    do
+    for (uint32_t n = 0; n < FLASH_SWAP_PAGE_NUM; n++, address += FLASH_PAGE_SIZE)
     {
-        if (MSC->STATUS & MSC_STATUS_WDATAREADY)
-        {
-            error = OT_ERROR_NONE;
-            break;
-        }
-    } while (aTimeout && ((otPlatAlarmMilliGetNow() - start) < aTimeout));
-
-    return error;
-}
-
-uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
-{
-    uint32_t rval = aSize;
-    int32_t  status;
-
-    otEXPECT_ACTION(aData, rval = 0);
-    otEXPECT_ACTION(((aAddress + aSize) < utilsFlashGetSize()) && (!(aAddress & 3)) && (!(aSize & 3)), rval = 0);
-
-    status = MSC_WriteWord((uint32_t *)mapAddress(aAddress), aData, aSize);
-    otEXPECT_ACTION(returnTypeConvert(status) == OT_ERROR_NONE, rval = 0);
-
-exit:
-    return rval;
-}
-
-uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
-{
-    uint32_t rval     = aSize;
-    uint32_t pAddress = mapAddress(aAddress);
-    uint8_t *byte     = aData;
-
-    otEXPECT_ACTION(aData, rval = 0);
-    otEXPECT_ACTION((aAddress + aSize) < utilsFlashGetSize(), rval = 0);
-
-    while (aSize--)
-    {
-        *byte++ = (*(uint8_t *)(pAddress++));
+        MSC_ErasePage((uint32_t *)address);
     }
+}
 
-exit:
-    return rval;
+void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, const void *aData, uint32_t aSize)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    MSC_WriteWord((uint32_t *)mapAddress(aSwapIndex, aOffset), aData, aSize);
+}
+
+void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, void *aData, uint32_t aSize)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    memcpy(aData, (const uint8_t *)mapAddress(aSwapIndex, aOffset), aSize);
 }

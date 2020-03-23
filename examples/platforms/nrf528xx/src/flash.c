@@ -26,32 +26,47 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread-core-config.h>
-#include <openthread/config.h>
-
 #include <assert.h>
 #include <stdint.h>
 #include <string.h>
 
-#include <utils/code_utils.h>
-#include <utils/flash.h>
-#include <openthread/platform/alarm-milli.h>
-
 #include "platform-nrf5.h"
+
+/**
+ * @def PLATFORM_FLASH_PAGE_NUM
+ *
+ * Number of flash pages to use for OpenThread's non-volatile settings.
+ *
+ */
+#ifndef PLATFORM_FLASH_PAGE_NUM
+#define PLATFORM_FLASH_PAGE_NUM 4
+#endif
 
 #define FLASH_PAGE_ADDR_MASK 0xFFFFF000
 #define FLASH_PAGE_SIZE 4096
 
 static uint32_t sFlashDataStart;
 static uint32_t sFlashDataEnd;
+static uint32_t sSwapSize;
 
-static inline uint32_t mapAddress(uint32_t aAddress)
+static inline uint32_t mapAddress(uint8_t aSwapIndex, uint32_t aOffset)
 {
-    return aAddress + sFlashDataStart;
+    uint32_t address;
+
+    address = sFlashDataStart + aOffset;
+
+    if (aSwapIndex)
+    {
+        address += sSwapSize;
+    }
+
+    return address;
 }
 
-otError utilsFlashInit(void)
+void otPlatFlashInit(otInstance *aInstance)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
 #if defined(__CC_ARM)
     // Temporary solution for Keil compiler.
     uint32_t const bootloaderAddr = NRF_UICR->NRFFW[0];
@@ -67,7 +82,7 @@ otError utilsFlashInit(void)
         sFlashDataEnd = pageSize * codeSize;
     }
 
-    sFlashDataStart = sFlashDataEnd - (pageSize * SETTINGS_CONFIG_PAGE_NUM);
+    sFlashDataStart = sFlashDataEnd - (pageSize * PLATFORM_FLASH_PAGE_NUM);
 
 #elif defined(__GNUC__) || defined(__ICCARM__)
     extern uint32_t __start_ot_flash_data;
@@ -82,75 +97,47 @@ otError utilsFlashInit(void)
     assert((sFlashDataStart % FLASH_PAGE_SIZE) == 0);
     assert((sFlashDataEnd % FLASH_PAGE_SIZE) == 0);
 
-    return OT_ERROR_NONE;
+    sSwapSize = ((sFlashDataEnd - sFlashDataStart) / FLASH_PAGE_SIZE / 2) * FLASH_PAGE_SIZE;
+    assert(sSwapSize > 0);
 }
 
-uint32_t utilsFlashGetSize(void)
+uint32_t otPlatFlashGetSwapSize(otInstance *aInstance)
 {
-    return sFlashDataEnd - sFlashDataStart;
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return sSwapSize;
 }
 
-otError utilsFlashErasePage(uint32_t aAddress)
+void otPlatFlashErase(otInstance *aInstance, uint8_t aSwapIndex)
 {
-    otError error = OT_ERROR_NONE;
-    otEXPECT_ACTION(aAddress < utilsFlashGetSize(), error = OT_ERROR_INVALID_ARGS);
+    OT_UNUSED_VARIABLE(aInstance);
 
-    error = nrf5FlashPageErase(mapAddress(aAddress & FLASH_PAGE_ADDR_MASK));
+    otError error;
 
-exit:
-    return error;
-}
-
-otError utilsFlashStatusWait(uint32_t aTimeout)
-{
-    otError error = OT_ERROR_BUSY;
-
-    if (aTimeout == 0)
+    for (uint32_t offset = 0; offset < sSwapSize; offset += FLASH_PAGE_SIZE)
     {
-        if (!nrf5FlashIsBusy())
+        error = nrf5FlashPageErase(mapAddress(aSwapIndex, offset));
+        assert(error == OT_ERROR_NONE);
+
+        while (nrf5FlashIsBusy())
         {
-            error = OT_ERROR_NONE;
         }
     }
-    else
-    {
-        uint32_t startTime = otPlatAlarmMilliGetNow();
-
-        do
-        {
-            if (!nrf5FlashIsBusy())
-            {
-                error = OT_ERROR_NONE;
-                break;
-            }
-        } while (otPlatAlarmMilliGetNow() - startTime < aTimeout);
-    }
-
-    return error;
 }
 
-uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, const void *aData, uint32_t aSize)
 {
-    uint32_t result = 0;
-    otEXPECT(aData);
-    otEXPECT(aAddress < utilsFlashGetSize());
-    otEXPECT(aSize);
+    OT_UNUSED_VARIABLE(aInstance);
 
-    result = nrf5FlashWrite(mapAddress(aAddress), aData, aSize);
+    otError error;
 
-exit:
-    return result;
+    error = nrf5FlashWrite(mapAddress(aSwapIndex, aOffset), aData, aSize);
+    assert(error == OT_ERROR_NONE);
 }
 
-uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, void *aData, uint32_t aSize)
 {
-    uint32_t result = 0;
-    otEXPECT(aData);
-    otEXPECT(aAddress < utilsFlashGetSize());
+    OT_UNUSED_VARIABLE(aInstance);
 
-    memcpy(aData, (uint8_t *)mapAddress(aAddress), aSize);
-    result = aSize;
-
-exit:
-    return result;
+    memcpy(aData, (uint8_t *)mapAddress(aSwapIndex, aOffset), aSize);
 }

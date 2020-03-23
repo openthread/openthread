@@ -149,7 +149,7 @@ extern "C" void otNcpInit(otInstance *aInstance)
 
     if (ncpVendor == NULL || ncpVendor != ot::Ncp::NcpBase::GetNcpInstance())
     {
-        assert(false);
+        // assert(false);
     }
 }
 

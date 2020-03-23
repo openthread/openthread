@@ -73,7 +73,7 @@ void Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
         break;
 
     default:
-        assert(false);
+        OT_ASSERT(false);
     }
 
     // Source PAN
@@ -97,7 +97,7 @@ void Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
         break;
 
     default:
-        assert(false);
+        OT_ASSERT(false);
     }
 
     // Security Header
@@ -209,7 +209,7 @@ void Frame::SetDstPanId(PanId aPanId)
 {
     uint8_t index = FindDstPanIdIndex();
 
-    assert(index != kInvalidIndex);
+    OT_ASSERT(index != kInvalidIndex);
     Encoding::LittleEndian::WriteUint16(aPanId, GetPsdu() + index);
 }
 
@@ -246,7 +246,7 @@ exit:
 
 void Frame::SetDstAddr(ShortAddress aShortAddress)
 {
-    assert((GetFrameControlField() & kFcfDstAddrMask) == kFcfDstAddrShort);
+    OT_ASSERT((GetFrameControlField() & kFcfDstAddrMask) == kFcfDstAddrShort);
     Encoding::LittleEndian::WriteUint16(aShortAddress, GetPsdu() + FindDstAddrIndex());
 }
 
@@ -254,8 +254,8 @@ void Frame::SetDstAddr(const ExtAddress &aExtAddress)
 {
     uint8_t index = FindDstAddrIndex();
 
-    assert((GetFrameControlField() & kFcfDstAddrMask) == kFcfDstAddrExt);
-    assert(index != kInvalidIndex);
+    OT_ASSERT((GetFrameControlField() & kFcfDstAddrMask) == kFcfDstAddrExt);
+    OT_ASSERT(index != kInvalidIndex);
 
     aExtAddress.CopyTo(GetPsdu() + index, ExtAddress::kReverseByteOrder);
 }
@@ -273,7 +273,7 @@ void Frame::SetDstAddr(const Address &aAddress)
         break;
 
     default:
-        assert(false);
+        OT_ASSERT(false);
         break;
     }
 }
@@ -416,8 +416,8 @@ void Frame::SetSrcAddr(ShortAddress aShortAddress)
 {
     uint8_t index = FindSrcAddrIndex();
 
-    assert((GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrShort);
-    assert(index != kInvalidIndex);
+    OT_ASSERT((GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrShort);
+    OT_ASSERT(index != kInvalidIndex);
 
     Encoding::LittleEndian::WriteUint16(aShortAddress, GetPsdu() + index);
 }
@@ -426,8 +426,8 @@ void Frame::SetSrcAddr(const ExtAddress &aExtAddress)
 {
     uint8_t index = FindSrcAddrIndex();
 
-    assert((GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrExt);
-    assert(index != kInvalidIndex);
+    OT_ASSERT((GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrExt);
+    OT_ASSERT(index != kInvalidIndex);
 
     aExtAddress.CopyTo(GetPsdu() + index, ExtAddress::kReverseByteOrder);
 }
@@ -445,7 +445,7 @@ void Frame::SetSrcAddr(const Address &aAddress)
         break;
 
     default:
-        assert(false);
+        OT_ASSERT(false);
         break;
     }
 }
@@ -540,7 +540,7 @@ void Frame::SetFrameCounter(uint32_t aFrameCounter)
 {
     uint8_t index = FindSecurityHeaderIndex();
 
-    assert(index != kInvalidIndex);
+    OT_ASSERT(index != kInvalidIndex);
 
     // Security Control
     index += kSecurityControlSize;
@@ -553,7 +553,7 @@ const uint8_t *Frame::GetKeySource(void) const
     uint8_t        index = FindSecurityHeaderIndex();
     const uint8_t *buf   = GetPsdu() + index;
 
-    assert(index != kInvalidIndex);
+    OT_ASSERT(index != kInvalidIndex);
 
     // Security Control
     buf += kSecurityControlSize + kFrameCounterSize;
@@ -593,7 +593,7 @@ void Frame::SetKeySource(const uint8_t *aKeySource)
     uint8_t  index = FindSecurityHeaderIndex();
     uint8_t *buf   = GetPsdu() + index;
 
-    assert(index != kInvalidIndex);
+    OT_ASSERT(index != kInvalidIndex);
 
     keySourceLength = GetKeySourceLength(buf[0] & kKeyIdModeMask);
 
@@ -627,7 +627,7 @@ void Frame::SetKeyId(uint8_t aKeyId)
     uint8_t  index = FindSecurityHeaderIndex();
     uint8_t *buf   = GetPsdu() + index;
 
-    assert(index != kInvalidIndex);
+    OT_ASSERT(index != kInvalidIndex);
 
     keySourceLength = GetKeySourceLength(buf[0] & kKeyIdModeMask);
 
@@ -1026,7 +1026,7 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
     tagLength = GetFooterLength() - Frame::kFcsSize;
 
     error = aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, nonce, sizeof(nonce));
-    assert(error == OT_ERROR_NONE);
+    OT_ASSERT(error == OT_ERROR_NONE);
 
     aesCcm.Header(GetHeader(), GetHeaderLength());
     aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), true);

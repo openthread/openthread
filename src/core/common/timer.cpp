@@ -75,7 +75,7 @@ void TimerMilli::Start(uint32_t aDelay)
 
 void TimerMilli::StartAt(TimeMilli aStartTime, uint32_t aDelay)
 {
-    assert(aDelay <= kMaxDelay);
+    OT_ASSERT(aDelay <= kMaxDelay);
     FireAt(aStartTime + aDelay);
 }
 
@@ -205,7 +205,7 @@ void                           TimerMicro::Start(uint32_t aDelay)
 
 void TimerMicro::StartAt(TimeMicro aStartTime, uint32_t aDelay)
 {
-    assert(aDelay <= kMaxDelay);
+    OT_ASSERT(aDelay <= kMaxDelay);
     FireAt(aStartTime + aDelay);
 }
 

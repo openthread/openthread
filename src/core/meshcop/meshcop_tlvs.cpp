@@ -199,7 +199,7 @@ void ChannelMaskTlv::SetChannelMask(uint32_t aChannelMask)
 #if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
     if (aChannelMask & OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK)
     {
-        assert(entry != NULL);
+        OT_ASSERT(entry != NULL);
         entry->Init();
         entry->SetChannelPage(OT_RADIO_CHANNEL_PAGE_2);
         entry->SetMask(aChannelMask & OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK);
@@ -213,7 +213,7 @@ void ChannelMaskTlv::SetChannelMask(uint32_t aChannelMask)
 #if OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
     if (aChannelMask & OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK)
     {
-        assert(entry != NULL);
+        OT_ASSERT(entry != NULL);
         entry->Init();
         entry->SetChannelPage(OT_RADIO_CHANNEL_PAGE_0);
         entry->SetMask(aChannelMask & OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK);

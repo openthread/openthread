@@ -65,7 +65,7 @@ typedef struct otBorderRouterConfig
     /**
      * A 2-bit signed integer indicating router preference as defined in RFC 4191.
      */
-    int mPreference : 2;
+    signed int mPreference : 2;
 
     /**
      * TRUE, if @p mPrefix is preferred.  FALSE, otherwise.
@@ -129,7 +129,7 @@ typedef struct otExternalRouteConfig
     /**
      * A 2-bit signed integer indicating router preference as defined in RFC 4191.
      */
-    int mPreference : 2;
+    signed int mPreference : 2;
 
     /**
      * TRUE, if this configuration is considered Stable Network Data.  FALSE, otherwise.

@@ -75,6 +75,7 @@ Instance::Instance(void)
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     , mNotifier(*this)
     , mSettings(*this)
+    , mSettingsDriver(*this)
     , mMessagePool(*this)
     , mIp6(*this)
     , mThreadNetif(*this)

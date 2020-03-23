@@ -39,6 +39,7 @@ DIST_SUBDIRS                            = \
     efr32mg13                             \
     efr32mg21                             \
     gp712                                 \
+    jn5189                                \
     kw41z                                 \
     nrf528xx                              \
     simulation                            \
@@ -85,6 +86,10 @@ if OPENTHREAD_PLATFORM_GP712
 SUBDIRS                                += gp712
 endif
 
+if OPENTHREAD_PLATFORM_JN5189
+SUBDIRS                                += jn5189
+endif
+
 if OPENTHREAD_PLATFORM_KW41Z
 SUBDIRS                                += kw41z
 endif
@@ -107,25 +112,6 @@ endif
 
 noinst_HEADERS                          = \
     openthread-system.h                   \
-    $(NULL)
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    cc1352                                \
-    cc2538                                \
-    cc2650                                \
-    cc2652                                \
-    efr32mg12                             \
-    efr32mg13                             \
-    efr32mg21                             \
-    gp712                                 \
-    kw41z                                 \
-    nrf528xx                              \
-    simulation                            \
-    qpg6095                               \
-    samr21                                \
-    utils                                 \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

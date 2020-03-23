@@ -296,7 +296,7 @@ class AuxiliarySecurityHeader:
         if self.key_id_mode == 0:
             key_source = self.key_id[:8]
             format = ">Q" if self._big_endian else "<Q"
-        if self.key_id_mode == 1:
+        elif self.key_id_mode == 1:
             # Try to guess valid Key Sequence Counter based on Key Index. This
             # one should work for now.
             return self.key_index - 1

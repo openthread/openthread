@@ -177,7 +177,7 @@ void NetworkDiagnostic::HandleDiagnosticGetAnswer(void *               aContext,
 
 void NetworkDiagnostic::HandleDiagnosticGetAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST);
+    VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST);
 
     otLogInfoNetDiag("Diagnostic get answer received");
 
@@ -370,8 +370,16 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
 
         case NetworkDiagnosticTlv::kLeaderData:
         {
-            LeaderDataTlv tlv(reinterpret_cast<const LeaderDataTlv &>(Get<Mle::MleRouter>().GetLeaderDataTlv()));
+            LeaderDataTlv          tlv;
+            const Mle::LeaderData &leaderData = Get<Mle::MleRouter>().GetLeaderData();
+
             tlv.Init();
+            tlv.SetPartitionId(leaderData.GetPartitionId());
+            tlv.SetWeighting(leaderData.GetWeighting());
+            tlv.SetDataVersion(leaderData.GetDataVersion());
+            tlv.SetStableDataVersion(leaderData.GetStableDataVersion());
+            tlv.SetLeaderRouterId(leaderData.GetLeaderRouterId());
+
             SuccessOrExit(error = tlv.AppendTo(aResponse));
             break;
         }
@@ -379,9 +387,14 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
         case NetworkDiagnosticTlv::kNetworkData:
         {
             NetworkDataTlv tlv;
+            uint8_t        length;
+
             tlv.Init();
 
-            Get<Mle::MleRouter>().FillNetworkDataTlv((reinterpret_cast<Mle::NetworkDataTlv &>(tlv)), false);
+            length = sizeof(NetworkDataTlv) - sizeof(Tlv); // sizeof( NetworkDataTlv::mNetworkData )
+            Get<NetworkData::Leader>().GetNetworkData(/* aStableOnly */ false, tlv.GetNetworkData(), length);
+            tlv.SetLength(length);
+
             SuccessOrExit(error = tlv.AppendTo(aResponse));
             break;
         }
@@ -500,7 +513,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const 
     VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList, error = OT_ERROR_PARSE);
 
     // DIAG_GET.qry may be sent as a confirmable message.
-    if (aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE)
+    if (aMessage.IsConfirmable())
     {
         if (Get<Coap::Coap>().SendEmptyAck(aMessage, aMessageInfo) == OT_ERROR_NONE)
         {
@@ -565,8 +578,7 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Message &aMessage, cons
     NetworkDiagnosticTlv networkDiagnosticTlv;
     Ip6::MessageInfo     messageInfo(aMessageInfo);
 
-    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST,
-                 error = OT_ERROR_DROP);
+    VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_DROP);
 
     otLogInfoNetDiag("Received diagnostic get request");
 
@@ -668,7 +680,7 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Message &aMessage, const Ip6
 
     otLogInfoNetDiag("Received diagnostic reset request");
 
-    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST);
+    VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST);
 
     VerifyOrExit((aMessage.Read(aMessage.GetOffset(), sizeof(NetworkDiagnosticTlv), &networkDiagnosticTlv) ==
                   sizeof(NetworkDiagnosticTlv)));

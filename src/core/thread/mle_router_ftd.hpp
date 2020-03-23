@@ -475,10 +475,10 @@ public:
      * @retval -1  If partition B is preferred.
      *
      */
-    static int ComparePartitions(bool                 aSingletonA,
-                                 const LeaderDataTlv &aLeaderDataA,
-                                 bool                 aSingletonB,
-                                 const LeaderDataTlv &aLeaderDataB);
+    static int ComparePartitions(bool              aSingletonA,
+                                 const LeaderData &aLeaderDataA,
+                                 bool              aSingletonB,
+                                 const LeaderData &aLeaderDataB);
 
     /**
      * This method checks if the destination is reachable.
@@ -716,16 +716,16 @@ private:
     otError SendAdvertisement(void);
     otError SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
                            Neighbor *              aNeighbor,
-                           const TlvRequestTlv &   aTlvRequest,
-                           const ChallengeTlv &    aChallenge);
-    void    SendParentResponse(Child *aChild, const ChallengeTlv &aChallenge, bool aRoutersOnlyRequest);
+                           const RequestedTlvs &   aRequestedTlvs,
+                           const Challenge &       aChallenge);
+    void    SendParentResponse(Child *aChild, const Challenge &aChallenge, bool aRoutersOnlyRequest);
     otError SendChildIdResponse(Child &aChild);
     otError SendChildUpdateRequest(Child &aChild);
     void    SendChildUpdateResponse(Child *                 aChild,
                                     const Ip6::MessageInfo &aMessageInfo,
                                     const uint8_t *         aTlvs,
                                     uint8_t                 aTlvsLength,
-                                    const ChallengeTlv &    aChallenge);
+                                    const Challenge &       aChallenge);
     otError SendDataResponse(const Ip6::Address &aDestination,
                              const uint8_t *     aTlvs,
                              uint8_t             aTlvsLength,
@@ -777,8 +777,9 @@ private:
 
     otNeighborTableCallback mNeighborTableChangedCallback;
 
-    uint8_t  mChallengeTimeout;
-    uint8_t  mChallenge[8];
+    uint8_t   mChallengeTimeout;
+    Challenge mChallenge;
+
     uint16_t mNextChildId;
     uint8_t  mNetworkIdTimeout;
     uint8_t  mRouterUpgradeThreshold;

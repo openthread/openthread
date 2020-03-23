@@ -108,16 +108,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_ENABLE_POSIX_APP_DAEMON
- *
- * Define to 1 to enable posix-app daemon support.
- *
- */
-#ifndef OPENTHREAD_ENABLE_POSIX_APP_DAEMON
-#define OPENTHREAD_ENABLE_POSIX_APP_DAEMON 0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
  *
  * Define to 1 to enable Thread Test Harness reference device support.
@@ -301,6 +291,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ASSERT_ENABLE
+ *
+ * Define as 1 to enable assert function `OT_ASSERT()` within OpenThread code and its libraries.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ASSERT_ENABLE
+#define OPENTHREAD_CONFIG_ASSERT_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
  *
  * Enable the "Debug Uart" platform feature.
@@ -330,6 +330,18 @@
  */
 #ifndef OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH
 #define OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH "tmp"
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+ *
+ * Define to 1 to enable otPlatFlash* APIs to support non-volatile storage.
+ *
+ * When defined to 1, the platform MUST implement the otPlatFlash* APIs instead of the otPlatSettings* APIs.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+#define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 0
 #endif
 
 /**

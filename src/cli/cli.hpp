@@ -85,8 +85,8 @@ class Server;
  */
 struct Command
 {
-    const char *mName;                                     ///< A pointer to the command string.
-    void (Interpreter::*mCommand)(int argc, char *argv[]); ///< A function pointer to process the command.
+    const char *mName;                                                 ///< A pointer to the command string.
+    void (Interpreter::*mCommand)(uint8_t aArgsLength, char *aArgs[]); ///< A function pointer to process the command.
 };
 
 /**
@@ -126,8 +126,8 @@ public:
      * @param[in]   aString  A pointer to the ASCII string.
      * @param[out]  aLong    A reference to where the parsed long is placed.
      *
-     * @retval OT_ERROR_NONE   Successfully parsed the ASCII string.
-     * @retval OT_ERROR_PARSE  Could not parse the ASCII string.
+     * @retval OT_ERROR_NONE          Successfully parsed the ASCII string.
+     * @retval OT_ERROR_INVALID_ARGS  @p aString is not a valid long integer.
      *
      */
     static otError ParseLong(char *aString, long &aLong);
@@ -138,8 +138,8 @@ public:
      * @param[in]   aString          A pointer to the ASCII string.
      * @param[out]  aUnsignedLong    A reference to where the parsed unsigned long is placed.
      *
-     * @retval OT_ERROR_NONE   Successfully parsed the ASCII string.
-     * @retval OT_ERROR_PARSE  Could not parse the ASCII string.
+     * @retval OT_ERROR_NONE          Successfully parsed the ASCII string.
+     * @retval OT_ERROR_INVALID_ARGS  @p aString is not a valid unsigned long integer.
      *
      */
     static otError ParseUnsignedLong(char *aString, unsigned long &aUnsignedLong);
@@ -153,8 +153,8 @@ public:
      * @param[in]   aAllowTruncate  TRUE if @p aBinLength may be less than what is required
      *                              to convert @p aHex to binary representation, FALSE otherwise.
      *
+     * @returns  The number of bytes in the binary representation, or -1 if @p aHex is not a valid hex string
      *
-     * @returns The number of bytes in the binary representation.
      */
     static int Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength, bool aAllowTruncate = false);
 
@@ -200,148 +200,149 @@ private:
     };
 
     otError ParsePingInterval(const char *aString, uint32_t &aInterval);
-    void    ProcessHelp(int argc, char *argv[]);
-    void    ProcessBufferInfo(int argc, char *argv[]);
-    void    ProcessChannel(int argc, char *argv[]);
+    void    ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
+    void    ProcessBufferInfo(uint8_t aArgsLength, char *aArgs[]);
+    void    ProcessChannel(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_FTD
-    void ProcessChild(int argc, char *argv[]);
-    void ProcessChildIp(int argc, char *argv[]);
-    void ProcessChildMax(int argc, char *argv[]);
+    void ProcessChild(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessChildIp(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessChildMax(uint8_t aArgsLength, char *aArgs[]);
 #endif
-    void ProcessChildTimeout(int argc, char *argv[]);
+    void ProcessChildTimeout(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
-    void ProcessCoap(int argc, char *argv[]);
+    void ProcessCoap(uint8_t aArgsLength, char *aArgs[]);
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
-    void ProcessCoapSecure(int argc, char *argv[]);
+    void ProcessCoapSecure(uint8_t aArgsLength, char *aArgs[]);
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
-    void ProcessCoexMetrics(int argc, char *argv[]);
+    void ProcessCoexMetrics(uint8_t aArgsLength, char *aArgs[]);
 #endif
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-    void ProcessCommissioner(int argc, char *argv[]);
+    void ProcessCommissioner(uint8_t aArgsLength, char *aArgs[]);
 #endif
 #if OPENTHREAD_FTD
-    void ProcessContextIdReuseDelay(int argc, char *argv[]);
+    void ProcessContextIdReuseDelay(uint8_t aArgsLength, char *aArgs[]);
 #endif
-    void ProcessCounters(int argc, char *argv[]);
+    void ProcessCounters(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_FTD
-    void ProcessDelayTimerMin(int argc, char *argv[]);
+    void ProcessDelayTimerMin(uint8_t aArgsLength, char *aArgs[]);
 #endif
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-    void ProcessDiag(int argc, char *argv[]);
+    void ProcessDiag(uint8_t aArgsLength, char *aArgs[]);
 #endif // OPENTHREAD_CONFIG_DIAG_ENABLE
-    void ProcessDiscover(int argc, char *argv[]);
+    void ProcessDiscover(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    void ProcessDns(int argc, char *argv[]);
+    void ProcessDns(uint8_t aArgsLength, char *aArgs[]);
 #endif
 #if OPENTHREAD_FTD
-    void ProcessEidCache(int argc, char *argv[]);
+    void ProcessEidCache(uint8_t aArgsLength, char *aArgs[]);
 #endif
-    void ProcessEui64(int argc, char *argv[]);
+    void ProcessEui64(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_POSIX
-    void ProcessExit(int argc, char *argv[]);
+    void ProcessExit(uint8_t aArgsLength, char *aArgs[]);
 #endif
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_POSIX
-    void ProcessLogFilename(int argc, char *argv[]);
+    void ProcessLogFilename(uint8_t aArgsLength, char *aArgs[]);
 #endif
-    void    ProcessExtAddress(int argc, char *argv[]);
-    void    ProcessExtPanId(int argc, char *argv[]);
-    void    ProcessFactoryReset(int argc, char *argv[]);
-    void    ProcessIfconfig(int argc, char *argv[]);
-    void    ProcessIpAddr(int argc, char *argv[]);
-    otError ProcessIpAddrAdd(int argc, char *argv[]);
-    otError ProcessIpAddrDel(int argc, char *argv[]);
-    void    ProcessIpMulticastAddr(int argc, char *argv[]);
-    otError ProcessIpMulticastAddrAdd(int argc, char *argv[]);
-    otError ProcessIpMulticastAddrDel(int argc, char *argv[]);
-    otError ProcessMulticastPromiscuous(int argc, char *argv[]);
+    void    ProcessExtAddress(uint8_t aArgsLength, char *aArgs[]);
+    void    ProcessExtPanId(uint8_t aArgsLength, char *aArgs[]);
+    void    ProcessFactoryReset(uint8_t aArgsLength, char *aArgs[]);
+    void    ProcessIfconfig(uint8_t aArgsLength, char *aArgs[]);
+    void    ProcessIpAddr(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessIpAddrAdd(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessIpAddrDel(uint8_t aArgsLength, char *aArgs[]);
+    void    ProcessIpMulticastAddr(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessIpMulticastAddrAdd(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessIpMulticastAddrDel(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessMulticastPromiscuous(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
-    void ProcessJoiner(int argc, char *argv[]);
+    void ProcessJoiner(uint8_t aArgsLength, char *aArgs[]);
 #endif
 #if OPENTHREAD_FTD
-    void ProcessJoinerPort(int argc, char *argv[]);
+    void ProcessJoinerPort(uint8_t aArgsLength, char *aArgs[]);
 #endif
-    void ProcessKeySequence(int argc, char *argv[]);
-    void ProcessLeaderData(int argc, char *argv[]);
+    void ProcessKeySequence(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessLeaderData(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_FTD
-    void ProcessLeaderPartitionId(int argc, char *argv[]);
-    void ProcessLeaderWeight(int argc, char *argv[]);
+    void ProcessLeaderPartitionId(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessLeaderWeight(uint8_t aArgsLength, char *aArgs[]);
 #endif
-    void ProcessMasterKey(int argc, char *argv[]);
-    void ProcessMode(int argc, char *argv[]);
+    void ProcessMasterKey(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessMode(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_FTD
-    void ProcessNeighbor(int argc, char *argv[]);
+    void ProcessNeighbor(uint8_t aArgsLength, char *aArgs[]);
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    void ProcessNetworkDataRegister(int argc, char *argv[]);
+    void ProcessNetworkDataRegister(uint8_t aArgsLength, char *aArgs[]);
 #endif
-    void ProcessNetworkDataShow(int argc, char *argv[]);
+    void ProcessNetworkDataShow(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    void ProcessService(int argc, char *argv[]);
+    void ProcessService(uint8_t aArgsLength, char *aArgs[]);
 #endif
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
-    void ProcessNetworkDiagnostic(int argc, char *argv[]);
+    void ProcessNetworkDiagnostic(uint8_t aArgsLength, char *aArgs[]);
 #endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 #if OPENTHREAD_FTD
-    void ProcessNetworkIdTimeout(int argc, char *argv[]);
+    void ProcessNetworkIdTimeout(uint8_t aArgsLength, char *aArgs[]);
 #endif
-    void ProcessNetworkName(int argc, char *argv[]);
+    void ProcessNetworkName(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    void ProcessNetworkTime(int argc, char *argv[]);
+    void ProcessNetworkTime(uint8_t aArgsLength, char *aArgs[]);
 #endif
-    void ProcessPanId(int argc, char *argv[]);
-    void ProcessParent(int argc, char *argv[]);
+    void ProcessPanId(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessParent(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_FTD
-    void ProcessParentPriority(int argc, char *argv[]);
+    void ProcessParentPriority(uint8_t aArgsLength, char *aArgs[]);
 #endif
-    void ProcessPing(int argc, char *argv[]);
-    void ProcessPollPeriod(int argc, char *argv[]);
+    void ProcessPing(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessPollPeriod(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-    void    ProcessPrefix(int argc, char *argv[]);
-    otError ProcessPrefixAdd(int argc, char *argv[]);
-    otError ProcessPrefixRemove(int argc, char *argv[]);
+    void    ProcessPrefix(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessPrefixAdd(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessPrefixRemove(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessPrefixList(void);
 #endif
-    void ProcessPromiscuous(int argc, char *argv[]);
+    void ProcessPromiscuous(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_FTD
-    void ProcessPskc(int argc, char *argv[]);
-    void ProcessReleaseRouterId(int argc, char *argv[]);
+    void ProcessPreferRouterId(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessPskc(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessReleaseRouterId(uint8_t aArgsLength, char *aArgs[]);
 #endif
-    void ProcessReset(int argc, char *argv[]);
+    void ProcessReset(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-    void    ProcessRoute(int argc, char *argv[]);
-    otError ProcessRouteAdd(int argc, char *argv[]);
-    otError ProcessRouteRemove(int argc, char *argv[]);
+    void    ProcessRoute(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessRouteAdd(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessRouteRemove(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessRouteList(void);
 #endif
 #if OPENTHREAD_FTD
-    void ProcessRouter(int argc, char *argv[]);
-    void ProcessRouterDowngradeThreshold(int argc, char *argv[]);
-    void ProcessRouterEligible(int argc, char *argv[]);
-    void ProcessRouterSelectionJitter(int argc, char *argv[]);
-    void ProcessRouterUpgradeThreshold(int argc, char *argv[]);
+    void ProcessRouter(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessRouterDowngradeThreshold(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessRouterEligible(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessRouterSelectionJitter(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessRouterUpgradeThreshold(uint8_t aArgsLength, char *aArgs[]);
 #endif
-    void ProcessRloc16(int argc, char *argv[]);
-    void ProcessScan(int argc, char *argv[]);
-    void ProcessSingleton(int argc, char *argv[]);
+    void ProcessRloc16(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessScan(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessSingleton(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
-    void ProcessSntp(int argc, char *argv[]);
+    void ProcessSntp(uint8_t aArgsLength, char *aArgs[]);
 #endif
-    void ProcessState(int argc, char *argv[]);
-    void ProcessThread(int argc, char *argv[]);
-    void ProcessDataset(int argc, char *argv[]);
-    void ProcessTxPower(int argc, char *argv[]);
-    void ProcessUdp(int argc, char *argv[]);
-    void ProcessVersion(int argc, char *argv[]);
+    void ProcessState(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessThread(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessDataset(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessTxPower(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessUdp(uint8_t aArgsLength, char *aArgs[]);
+    void ProcessVersion(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-    void    ProcessMacFilter(int argc, char *argv[]);
+    void    ProcessMacFilter(uint8_t aArgsLength, char *aArgs[]);
     void    PrintMacFilter(void);
-    otError ProcessMacFilterAddress(int argc, char *argv[]);
-    otError ProcessMacFilterRss(int argc, char *argv[]);
+    otError ProcessMacFilterAddress(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessMacFilterRss(uint8_t aArgsLength, char *aArgs[]);
 #endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-    void    ProcessMac(int argc, char *argv[]);
-    otError ProcessMacRetries(int argc, char *argv[]);
+    void    ProcessMac(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessMacRetries(uint8_t aArgsLength, char *aArgs[]);
 
     static void HandleIcmpReceive(void *               aContext,
                                   otMessage *          aMessage,

@@ -66,14 +66,10 @@ otError EnergyScanClient::SendQuery(uint32_t                           aChannelM
                                     otCommissionerEnergyReportCallback aCallback,
                                     void *                             aContext)
 {
-    otError                           error = OT_ERROR_NONE;
-    MeshCoP::CommissionerSessionIdTlv sessionId;
-    MeshCoP::ChannelMaskTlv           channelMask;
-    MeshCoP::CountTlv                 count;
-    MeshCoP::PeriodTlv                period;
-    MeshCoP::ScanDurationTlv          scanDuration;
-    Ip6::MessageInfo                  messageInfo;
-    Coap::Message *                   message = NULL;
+    otError                 error = OT_ERROR_NONE;
+    MeshCoP::ChannelMaskTlv channelMask;
+    Ip6::MessageInfo        messageInfo;
+    Coap::Message *         message = NULL;
 
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = OT_ERROR_INVALID_STATE);
     VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
@@ -83,25 +79,16 @@ otError EnergyScanClient::SendQuery(uint32_t                           aChannelM
                                     OT_COAP_CODE_POST, OT_URI_PATH_ENERGY_SCAN));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    sessionId.Init();
-    sessionId.SetCommissionerSessionId(Get<MeshCoP::Commissioner>().GetSessionId());
-    SuccessOrExit(error = sessionId.AppendTo(*message));
+    SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, MeshCoP::Tlv::kCommissionerSessionId,
+                                               Get<MeshCoP::Commissioner>().GetSessionId()));
 
     channelMask.Init();
     channelMask.SetChannelMask(aChannelMask);
     SuccessOrExit(error = channelMask.AppendTo(*message));
 
-    count.Init();
-    count.SetCount(aCount);
-    SuccessOrExit(error = count.AppendTo(*message));
-
-    period.Init();
-    period.SetPeriod(aPeriod);
-    SuccessOrExit(error = period.AppendTo(*message));
-
-    scanDuration.Init();
-    scanDuration.SetScanDuration(aScanDuration);
-    SuccessOrExit(error = scanDuration.AppendTo(*message));
+    SuccessOrExit(error = Tlv::AppendUint8Tlv(*message, MeshCoP::Tlv::kCount, aCount));
+    SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, MeshCoP::Tlv::kPeriod, aPeriod));
+    SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, MeshCoP::Tlv::kScanDuration, aScanDuration));
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(aAddress);
@@ -140,7 +127,7 @@ void EnergyScanClient::HandleReport(Coap::Message &aMessage, const Ip6::MessageI
         uint8_t                list[OPENTHREAD_CONFIG_TMF_ENERGY_SCAN_MAX_RESULTS];
     } OT_TOOL_PACKED_END energyList;
 
-    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST);
+    VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST);
 
     otLogInfoMeshCoP("received energy scan report");
 

@@ -386,7 +386,6 @@ otError Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
                                              const char *aVendorData)
 {
     otError               error = OT_ERROR_NONE;
-    StateTlv              stateTlv;
     VendorNameTlv         vendorNameTlv;
     VendorModelTlv        vendorModelTlv;
     VendorSwVersionTlv    vendorSwVersionTlv;
@@ -400,9 +399,7 @@ otError Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
     SuccessOrExit(error = mFinalizeMessage->SetPayloadMarker());
     mFinalizeMessage->SetOffset(mFinalizeMessage->GetLength());
 
-    stateTlv.Init();
-    stateTlv.SetState(MeshCoP::StateTlv::kAccept);
-    SuccessOrExit(error = stateTlv.AppendTo(*mFinalizeMessage));
+    SuccessOrExit(error = Tlv::AppendUint8Tlv(*mFinalizeMessage, Tlv::kState, StateTlv::kAccept));
 
     vendorNameTlv.Init();
     vendorNameTlv.SetVendorName(aVendorName);
@@ -461,7 +458,7 @@ exit:
 
 void Joiner::SendJoinerFinalize(void)
 {
-    assert(mFinalizeMessage != NULL);
+    OT_ASSERT(mFinalizeMessage != NULL);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     LogCertMessage("[THCI] direction=send | type=JOIN_FIN.req |", *mFinalizeMessage);
@@ -491,18 +488,17 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Message &         aMessage,
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    StateTlv state;
+    uint8_t state;
 
-    VerifyOrExit(mState == OT_JOINER_STATE_CONNECTED && aResult == OT_ERROR_NONE &&
-                 aMessage.GetType() == OT_COAP_TYPE_ACKNOWLEDGMENT && aMessage.GetCode() == OT_COAP_CODE_CHANGED);
+    VerifyOrExit(mState == OT_JOINER_STATE_CONNECTED && aResult == OT_ERROR_NONE && aMessage.IsAck() &&
+                 aMessage.GetCode() == OT_COAP_CODE_CHANGED);
 
-    SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kState, sizeof(state), state));
-    VerifyOrExit(state.IsValid());
+    SuccessOrExit(Tlv::ReadUint8Tlv(aMessage, Tlv::kState, state));
 
     SetState(OT_JOINER_STATE_ENTRUST);
     mTimer.Start(kReponseTimeout);
 
-    otLogInfoMeshCoP("Joiner received finalize response %d", static_cast<uint8_t>(state.GetState()));
+    otLogInfoMeshCoP("Joiner received finalize response %d", state);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     LogCertMessage("[THCI] direction=recv | type=JOIN_FIN.rsp |", aMessage);
@@ -522,22 +518,18 @@ void Joiner::HandleJoinerEntrust(void *aContext, otMessage *aMessage, const otMe
 void Joiner::HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     otError              error;
-    NetworkMasterKeyTlv  masterKey;
     otOperationalDataset dataset;
 
-    VerifyOrExit(mState == OT_JOINER_STATE_ENTRUST && aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE &&
+    VerifyOrExit(mState == OT_JOINER_STATE_ENTRUST && aMessage.IsConfirmable() &&
                      aMessage.GetCode() == OT_COAP_CODE_POST,
                  error = OT_ERROR_DROP);
 
     otLogInfoMeshCoP("Joiner received entrust");
     otLogCertMeshCoP("[THCI] direction=recv | type=JOIN_ENT.ntf");
 
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkMasterKey, sizeof(masterKey), masterKey));
-    VerifyOrExit(masterKey.IsValid(), error = OT_ERROR_PARSE);
-
     memset(&dataset, 0, sizeof(dataset));
 
-    dataset.mMasterKey                      = masterKey.GetNetworkMasterKey();
+    SuccessOrExit(error = Tlv::ReadTlv(aMessage, Tlv::kNetworkMasterKey, &dataset.mMasterKey, sizeof(MasterKey)));
     dataset.mComponents.mIsMasterKeyPresent = true;
 
     dataset.mChannel                      = Get<Mac::Mac>().GetPanChannel();
@@ -603,7 +595,7 @@ void Joiner::HandleTimer(void)
     case OT_JOINER_STATE_IDLE:
     case OT_JOINER_STATE_DISCOVER:
     case OT_JOINER_STATE_CONNECT:
-        assert(false);
+        OT_ASSERT(false);
         break;
 
     case OT_JOINER_STATE_CONNECTED:

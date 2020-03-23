@@ -208,7 +208,6 @@ SOURCES_COMMON                             = \
     thread/announce_begin_server.cpp         \
     thread/announce_sender.cpp               \
     thread/child_table.cpp                   \
-    thread/device_mode.cpp                   \
     thread/energy_scan_server.cpp            \
     thread/indirect_sender.cpp               \
     thread/key_manager.cpp                   \
@@ -219,6 +218,7 @@ SOURCES_COMMON                             = \
     thread/mesh_forwarder_mtd.cpp            \
     thread/mle.cpp                           \
     thread/mle_router.cpp                    \
+    thread/mle_types.cpp                     \
     thread/network_data.cpp                  \
     thread/network_data_leader.cpp           \
     thread/network_data_leader_ftd.cpp       \
@@ -233,6 +233,7 @@ SOURCES_COMMON                             = \
     utils/channel_manager.cpp                \
     utils/channel_monitor.cpp                \
     utils/child_supervision.cpp              \
+    utils/flash.cpp                          \
     utils/heap.cpp                           \
     utils/jam_detector.cpp                   \
     utils/parse_cmdline.cpp                  \
@@ -404,7 +405,6 @@ HEADERS_COMMON                             = \
     thread/announce_begin_server.hpp         \
     thread/announce_sender.hpp               \
     thread/child_table.hpp                   \
-    thread/device_mode.hpp                   \
     thread/energy_scan_server.hpp            \
     thread/indirect_sender.hpp               \
     thread/indirect_sender_frame_context.hpp \
@@ -413,11 +413,11 @@ HEADERS_COMMON                             = \
     thread/lowpan.hpp                        \
     thread/mesh_forwarder.hpp                \
     thread/mle.hpp                           \
-    thread/mle_constants.hpp                 \
     thread/mle_router.hpp                    \
     thread/mle_router_ftd.hpp                \
     thread/mle_router_mtd.hpp                \
     thread/mle_tlvs.hpp                      \
+    thread/mle_types.hpp                     \
     thread/network_data.hpp                  \
     thread/network_data_leader.hpp           \
     thread/network_data_leader_ftd.hpp       \
@@ -436,6 +436,7 @@ HEADERS_COMMON                             = \
     utils/channel_manager.hpp                \
     utils/channel_monitor.hpp                \
     utils/child_supervision.hpp              \
+    utils/flash.hpp                          \
     utils/heap.hpp                           \
     utils/jam_detector.hpp                   \
     utils/parse_cmdline.hpp                  \
@@ -445,12 +446,6 @@ HEADERS_COMMON                             = \
 
 noinst_HEADERS                             = \
     $(HEADERS_COMMON)                        \
-    $(NULL)
-
-PRETTY_FILES                               = \
-    $(HEADERS_COMMON)                        \
-    $(SOURCES_COMMON)                        \
-    $(EXTRA_DIST)                            \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE

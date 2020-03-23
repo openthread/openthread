@@ -64,7 +64,7 @@ otError NetworkData::GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aData
 {
     otError error = OT_ERROR_NONE;
 
-    assert(aData != NULL);
+    OT_ASSERT(aData != NULL);
     VerifyOrExit(aDataLength >= mLength, error = OT_ERROR_NO_BUFS);
 
     memcpy(aData, mTlvs, mLength);
@@ -959,14 +959,14 @@ exit:
 
 void NetworkData::Insert(uint8_t *aStart, uint8_t aLength)
 {
-    assert(aLength + mLength <= sizeof(mTlvs) && mTlvs <= aStart && aStart <= mTlvs + mLength);
+    OT_ASSERT(aLength + mLength <= sizeof(mTlvs) && mTlvs <= aStart && aStart <= mTlvs + mLength);
     memmove(aStart + aLength, aStart, mLength - static_cast<size_t>(aStart - mTlvs));
     mLength += aLength;
 }
 
 void NetworkData::Remove(uint8_t *aStart, uint8_t aLength)
 {
-    assert(aLength <= mLength && mTlvs <= aStart && (aStart - mTlvs) + aLength <= mLength);
+    OT_ASSERT(aLength <= mLength && mTlvs <= aStart && (aStart - mTlvs) + aLength <= mLength);
     memmove(aStart, aStart + aLength, mLength - (static_cast<size_t>(aStart - mTlvs) + aLength));
     mLength -= aLength;
 }
@@ -1002,10 +1002,7 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
 
     if (aRloc16 != Mac::kShortAddrInvalid)
     {
-        ThreadRloc16Tlv rloc16Tlv;
-        rloc16Tlv.Init();
-        rloc16Tlv.SetRloc16(aRloc16);
-        SuccessOrExit(error = rloc16Tlv.AppendTo(*message));
+        SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, ThreadTlv::kRloc16, aRloc16));
     }
 
     Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr());

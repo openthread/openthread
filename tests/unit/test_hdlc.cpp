@@ -42,6 +42,7 @@ enum
     kBufferSize        = 1500,  // Frame buffer size
     kMaxFrameLength    = 500,   // Maximum allowed frame length (used when randomly generating frames)
     kFuzzTestIteration = 50000, // Number of iteration during fuzz test (randomly generating frames)
+    kFrameHeaderSize   = 4,     // Frame header size
 
     kFlagXOn        = 0x11,
     kFlagXOff       = 0x13,
@@ -55,6 +56,7 @@ static const uint8_t sOpenThreadText[] = "OpenThread Rocks";
 static const uint8_t sHelloText[]      = "Hello there!";
 static const uint8_t sMottoText[]      = "Think good thoughts, say good words, do good deeds!";
 static const uint8_t sHexText[]        = "0123456789abcdef";
+static const uint8_t sSkipText[]       = "Skip text";
 static const uint8_t sHdlcSpecials[]   = {kFlagSequence, kFlagXOn,        kFlagXOff,
                                         kFlagSequence, kEscapeSequence, kFlagSpecial};
 
@@ -130,6 +132,7 @@ void TestHdlcMultiFrameBuffer(void)
     uint8_t *                           frame    = NULL;
     uint8_t *                           newFrame = NULL;
     uint16_t                            length;
+    uint16_t                            newLength;
 
     printf("Testing Hdlc::MultiFrameBuffer");
 
@@ -221,8 +224,9 @@ void TestHdlcMultiFrameBuffer(void)
     VerifyOrQuit(length == sizeof(sHexText) - 1, "GetNextSavedFrame() length is incorrect");
     VerifyOrQuit(memcmp(frame, sHexText, length) == 0, "GetNextSavedFrame() frame content is incorrect");
 
-    newFrame = frame;
-    VerifyOrQuit(frameBuffer.GetNextSavedFrame(newFrame, length) == OT_ERROR_NOT_FOUND,
+    newFrame  = frame;
+    newLength = length;
+    VerifyOrQuit(frameBuffer.GetNextSavedFrame(newFrame, newLength) == OT_ERROR_NOT_FOUND,
                  "GetNextSavedFrame() incorrect behavior after all frames were read");
     VerifyOrQuit(newFrame == NULL, "GetNextSavedFrame() incorrect behavior after all frames were read");
 
@@ -286,8 +290,10 @@ void TestHdlcMultiFrameBuffer(void)
 
     VerifyOrQuit(!frameBuffer.HasFrame(), "HasFrame() incorrect behavior after Clear()");
     VerifyOrQuit(!frameBuffer.HasSavedFrame(), "HasFrame() incorrect behavior after Clear()");
-    VerifyOrQuit(frameBuffer.CanWrite(kBufferSize - 1) == false, "CanWrite() incorrect behavior after Clear()");
-    VerifyOrQuit(frameBuffer.CanWrite(kBufferSize - 2) == true, "CanWrite() incorrect behavior after Clear()");
+    VerifyOrQuit(frameBuffer.CanWrite(kBufferSize - (kFrameHeaderSize - 1)) == false,
+                 "CanWrite() incorrect behavior after Clear()");
+    VerifyOrQuit(frameBuffer.CanWrite(kBufferSize - kFrameHeaderSize) == true,
+                 "CanWrite() incorrect behavior after Clear()");
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Verify behavior of `ClearSavedFrames()`
@@ -333,9 +339,9 @@ void TestHdlcMultiFrameBuffer(void)
 
     VerifyOrQuit(!frameBuffer.HasFrame(), "HasFrame() incorrect behavior after all frames are read and discarded");
     VerifyOrQuit(!frameBuffer.HasSavedFrame(), "HasFrame() incorrect behavior after all read or discarded");
-    VerifyOrQuit(frameBuffer.CanWrite(kBufferSize - 1) == false,
+    VerifyOrQuit(frameBuffer.CanWrite(kBufferSize - (kFrameHeaderSize - 1)) == false,
                  "CanWrite() incorrect behavior after all read or discarded");
-    VerifyOrQuit(frameBuffer.CanWrite(kBufferSize - 2) == true,
+    VerifyOrQuit(frameBuffer.CanWrite(kBufferSize - kFrameHeaderSize) == true,
                  "CanWrite() incorrect behavior after all read of discarded");
 
     SuccessOrQuit(WriteToBuffer(sHelloText, frameBuffer), "WriteByte() failed");
@@ -351,6 +357,103 @@ void TestHdlcMultiFrameBuffer(void)
     SuccessOrQuit(frameBuffer.GetNextSavedFrame(frame, length), "GetNextSavedFrame() failed unexpectedly");
     VerifyOrQuit(length == sizeof(sHelloText) - 1, "GetNextSavedFrame() length is incorrect");
     VerifyOrQuit(memcmp(frame, sHelloText, length) == 0, "GetNextSavedFrame() frame content is incorrect");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Verify behavior of `SetSkipLength()` and `GetSkipLength()`
+
+    frameBuffer.Clear();
+
+    VerifyOrQuit(frameBuffer.GetSkipLength() == 0, "GetSkipLength() incorrect behavior after Clear()");
+    VerifyOrQuit(frameBuffer.SetSkipLength(sizeof(sSkipText)) == OT_ERROR_NONE, "SetSkipLength() failed");
+    SuccessOrQuit(WriteToBuffer(sMottoText, frameBuffer), "WriteByte() failed");
+    VerifyOrQuit(memcmp(frameBuffer.GetFrame(), sMottoText, frameBuffer.GetLength()) == 0,
+                 "GetFrame() content is incorrect");
+    memcpy(frameBuffer.GetFrame() - sizeof(sSkipText), sSkipText, sizeof(sSkipText));
+    VerifyOrQuit(frameBuffer.GetSkipLength() == sizeof(sSkipText), "GetSkipLength() failed");
+    VerifyOrQuit(frameBuffer.GetLength() == sizeof(sMottoText) - 1, "GetLength() failed");
+    VerifyOrQuit(memcmp(frameBuffer.GetFrame(), sMottoText, frameBuffer.GetLength()) == 0,
+                 "GetFrame() content is incorrect");
+
+    frameBuffer.SaveFrame();
+    VerifyOrQuit(!frameBuffer.HasFrame(), "HasFrame() incorrect behavior after SaveFrame()");
+    VerifyOrQuit(frameBuffer.HasSavedFrame(), "HasFrame() incorrect behavior after SaveFrame()");
+    VerifyOrQuit(frameBuffer.GetSkipLength() == 0, "GetSkipLength() incorrect behavior after SaveFrame()");
+
+    VerifyOrQuit(frameBuffer.SetSkipLength(sizeof(sSkipText)) == OT_ERROR_NONE, "SetSkipLength() failed");
+    SuccessOrQuit(WriteToBuffer(sOpenThreadText, frameBuffer), "WriteByte() failed");
+    VerifyOrQuit(memcmp(frameBuffer.GetFrame(), sOpenThreadText, frameBuffer.GetLength()) == 0,
+                 "GetFrame() content is incorrect");
+    memcpy(frameBuffer.GetFrame() - sizeof(sSkipText), sSkipText, sizeof(sSkipText));
+    VerifyOrQuit(frameBuffer.GetSkipLength() == sizeof(sSkipText), "GetSkipLength() failed");
+    VerifyOrQuit(frameBuffer.GetLength() == sizeof(sOpenThreadText) - 1, "GetLength() failed");
+    VerifyOrQuit(memcmp(frameBuffer.GetFrame(), sOpenThreadText, frameBuffer.GetLength()) == 0,
+                 "GetFrame() content is incorrect");
+
+    frameBuffer.SaveFrame();
+    VerifyOrQuit(!frameBuffer.HasFrame(), "HasFrame() incorrect behavior after SaveFrame()");
+    VerifyOrQuit(frameBuffer.HasSavedFrame(), "HasFrame() incorrect behavior after SaveFrame()");
+    VerifyOrQuit(frameBuffer.GetSkipLength() == 0, "GetSkipLength() incorrect behavior after SaveFrame()");
+
+    frame = NULL;
+    SuccessOrQuit(frameBuffer.GetNextSavedFrame(frame, length), "GetNextSavedFrame() failed unexpectedly");
+    VerifyOrQuit(length == sizeof(sMottoText) - 1, "GetNextSavedFrame() length is incorrect");
+    VerifyOrQuit(memcmp(frame, sMottoText, length) == 0, "GetNextSavedFrame() frame content is incorrect");
+    VerifyOrQuit(memcmp(frame - sizeof(sSkipText), sSkipText, sizeof(sSkipText)) == 0,
+                 "GetNextSavedFrame() reserved frame buffer content is incorrect");
+
+    SuccessOrQuit(frameBuffer.GetNextSavedFrame(frame, length), "GetNextSavedFrame() failed unexpectedly");
+    VerifyOrQuit(length == sizeof(sOpenThreadText) - 1, "GetNextSavedFrame() length is incorrect");
+    VerifyOrQuit(memcmp(frame, sOpenThreadText, length) == 0, "GetNextSavedFrame() frame content is incorrect");
+    VerifyOrQuit(memcmp(frame - sizeof(sSkipText), sSkipText, sizeof(sSkipText)) == 0,
+                 "GetNextSavedFrame() reserved frame buffer content is incorrect");
+
+    frameBuffer.Clear();
+    VerifyOrQuit(frameBuffer.SetSkipLength(kBufferSize - (kFrameHeaderSize - 1)) == OT_ERROR_NO_BUFS,
+                 "SetSkipLength() incorrect behavior after Clear()");
+    VerifyOrQuit(frameBuffer.SetSkipLength(kBufferSize - kFrameHeaderSize) == OT_ERROR_NONE,
+                 "SetSkipLength() incorrect behavior after Clear()");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Verify behavior of `SetLength()` and `GetLength()`
+
+    frameBuffer.Clear();
+    VerifyOrQuit((frame = frameBuffer.GetFrame()) != NULL, "GetFrame() failed");
+    memcpy(frame, sHelloText, sizeof(sHelloText));
+    VerifyOrQuit(frameBuffer.SetLength(sizeof(sHelloText)) == OT_ERROR_NONE, "SetLength() failed");
+    VerifyOrQuit(frameBuffer.GetLength() == sizeof(sHelloText), "GetLength() failed");
+    VerifyOrQuit(frameBuffer.HasFrame(), "HasFrame() is incorrect");
+    frameBuffer.SaveFrame();
+
+    VerifyOrQuit((frame = frameBuffer.GetFrame()) != NULL, "GetFrame() failed");
+    memcpy(frame, sMottoText, sizeof(sMottoText));
+    VerifyOrQuit(frameBuffer.SetLength(sizeof(sMottoText)) == OT_ERROR_NONE, "SetLength() failed");
+    VerifyOrQuit(frameBuffer.GetLength() == sizeof(sMottoText), "GetLength() failed");
+    VerifyOrQuit(frameBuffer.HasFrame(), "HasFrame() is incorrect");
+    frameBuffer.SaveFrame();
+
+    VerifyOrQuit((frame = frameBuffer.GetFrame()) != NULL, "GetFrame() failed");
+    memcpy(frame, sHexText, sizeof(sHexText));
+    VerifyOrQuit(frameBuffer.SetLength(sizeof(sHexText)) == OT_ERROR_NONE, "SetLength() failed");
+    VerifyOrQuit(frameBuffer.GetLength() == sizeof(sHexText), "GetLength() failed");
+    frameBuffer.DiscardFrame();
+    VerifyOrQuit(!frameBuffer.HasFrame(), "HasFrame() is incorrect");
+
+    frame = NULL;
+    SuccessOrQuit(frameBuffer.GetNextSavedFrame(frame, length), "GetNextSavedFrame() failed unexpectedly");
+    VerifyOrQuit(length == sizeof(sHelloText), "GetNextSavedFrame() length is incorrect");
+    VerifyOrQuit(memcmp(frame, sHelloText, length) == 0, "GetNextSavedFrame() frame content is incorrect");
+
+    SuccessOrQuit(frameBuffer.GetNextSavedFrame(frame, length), "GetNextSavedFrame() failed unexpectedly");
+    VerifyOrQuit(length == sizeof(sMottoText), "GetNextSavedFrame() length is incorrect");
+    VerifyOrQuit(memcmp(frame, sMottoText, length) == 0, "GetNextSavedFrame() frame content is incorrect");
+
+    SuccessOrQuit(!frameBuffer.GetNextSavedFrame(frame, length), "GetNextSavedFrame() failed unexpectedly");
+
+    frameBuffer.Clear();
+    VerifyOrQuit(frameBuffer.SetLength(kBufferSize - (kFrameHeaderSize - 1)) == OT_ERROR_NO_BUFS,
+                 "SetLength() incorrect behavior after Clear()");
+    VerifyOrQuit(frameBuffer.SetLength(kBufferSize - kFrameHeaderSize) == OT_ERROR_NONE,
+                 "SetLength() incorrect behavior after Clear()");
 
     printf(" -- PASS\n");
 }

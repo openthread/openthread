@@ -217,14 +217,14 @@ public:
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     void HeapFree(void *aPointer)
     {
-        assert(mFree != NULL);
+        OT_ASSERT(mFree != NULL);
 
         mFree(aPointer);
     }
 
     void *HeapCAlloc(size_t aCount, size_t aSize)
     {
-        assert(mCAlloc != NULL);
+        OT_ASSERT(mCAlloc != NULL);
 
         return mCAlloc(aCount, aSize);
     }
@@ -323,9 +323,10 @@ private:
     // Notifier, Settings, and MessagePool are initialized  before
     // other member variables since other classes/objects from their
     // constructor may use them.
-    Notifier    mNotifier;
-    Settings    mSettings;
-    MessagePool mMessagePool;
+    Notifier       mNotifier;
+    Settings       mSettings;
+    SettingsDriver mSettingsDriver;
+    MessagePool    mMessagePool;
 
     Ip6::Ip6    mIp6;
     ThreadNetif mThreadNetif;
@@ -388,6 +389,11 @@ template <> inline Notifier &Instance::Get(void)
 template <> inline Settings &Instance::Get(void)
 {
     return mSettings;
+}
+
+template <> inline SettingsDriver &Instance::Get(void)
+{
+    return mSettingsDriver;
 }
 
 template <> inline MeshForwarder &Instance::Get(void)

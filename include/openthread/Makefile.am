@@ -40,12 +40,6 @@ SUBDIRS                                 = \
     platform                              \
     $(NULL)
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    platform                              \
-    $(NULL)
-
 openthread_headers                      = \
     channel_manager.h                     \
     channel_monitor.h                     \

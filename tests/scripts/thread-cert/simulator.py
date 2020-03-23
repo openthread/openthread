@@ -107,6 +107,9 @@ class RealTime(BaseSimulator):
         self.commissioning_messages[nodeid] = []
         return ret
 
+    def now(self):
+        return time.time()
+
     def go(self, duration, nodeid=None):
         time.sleep(duration)
 
@@ -455,6 +458,9 @@ class VirtualTime(BaseSimulator):
             self.awake_devices.add(addr)
             self.receive_events()
         self.awake_devices.clear()
+
+    def now(self):
+        return self.current_time / 1000000
 
     def go(self, duration, nodeid=None):
         assert self.current_time == self._pause_time

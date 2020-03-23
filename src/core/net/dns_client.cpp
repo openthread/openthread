@@ -363,7 +363,9 @@ Message *Client::FindRelatedQuery(const Header &aResponseHeader, QueryMetadata &
     {
         // Partially read DNS header to obtain message ID only.
         uint16_t count = message->Read(message->GetOffset(), sizeof(messageId), &messageId);
-        assert(count == sizeof(messageId));
+
+        OT_UNUSED_VARIABLE(count);
+        OT_ASSERT(count == sizeof(messageId));
 
         if (HostSwap16(messageId) == aResponseHeader.GetMessageId())
         {

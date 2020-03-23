@@ -138,6 +138,55 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
+ *
+ * This class represents a Key Encryption Key (KEK).
+ *
+ */
+class Kek
+{
+    friend class KeyManager;
+
+public:
+    enum
+    {
+        kSize = 16, // KEK size in bytes.
+    };
+
+    /**
+     * This method returns the KEK.
+     *
+     * @returns A pointer to buffer containing the KEK.
+     *
+     */
+    const uint8_t *GetKey(void) const { return m8; }
+
+    /**
+     * This method evaluates whether or not two KEKs match.
+     *
+     * @param[in]  aOther  The KEK to compare.
+     *
+     * @retval TRUE   If the KEKs match.
+     * @retval FALSE  If the KEKs do not match.
+     *
+     */
+    bool operator==(const Kek &aOther) const { return memcmp(m8, aOther.m8, sizeof(Kek)) == 0; }
+
+    /**
+     * This method evaluates whether or not the KEK match.
+     *
+     * @param[in]  aOther  The KEK to compare.
+     *
+     * @retval TRUE   If the KEK do not match.
+     * @retval FALSE  If the KEK match.
+     *
+     */
+    bool operator!=(const Kek &aOther) const { return !(*this == aOther); }
+
+private:
+    uint8_t m8[kSize]; ///< Buffer containing the KEK.
+};
+
+/**
  * This class defines Thread Key Manager.
  *
  */
@@ -146,8 +195,7 @@ class KeyManager : public InstanceLocator
 public:
     enum
     {
-        kMaxKeyLength = 16,
-        kNonceSize    = 13, ///< Size of IEEE 802.15.4 Nonce (bytes).
+        kNonceSize = 13, ///< Size of IEEE 802.15.4 Nonce (bytes).
     };
 
     /**
@@ -336,7 +384,15 @@ public:
      * @returns A pointer to the KEK.
      *
      */
-    const uint8_t *GetKek(void) const { return mKek; }
+    const Kek &GetKek(void) const { return mKek; }
+
+    /**
+     * This method sets the KEK.
+     *
+     * @param[in]  aKek  A KEK.
+     *
+     */
+    void SetKek(const Kek &aKek);
 
     /**
      * This method sets the KEK.
@@ -479,7 +535,7 @@ private:
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     Pskc mPskc;
 #endif
-    uint8_t  mKek[kMaxKeyLength];
+    Kek      mKek;
     uint32_t mKekFrameCounter;
 
     uint8_t mSecurityPolicyFlags;
