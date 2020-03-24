@@ -41,8 +41,9 @@ LDADD_COMMON                                                                  +=
     $(top_builddir)/examples/platforms/efr32mg13/libopenthread-efr32mg13.a       \
     $(top_builddir)/third_party/silabs/libsilabs-efr32mg13-sdk.a                 \
     $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.7/platform/radio/rail_lib/autogen/librail_release/$(LIBRAIL) \
+    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.7/platform/emdrv/nvm3/lib/libnvm3_CM4_gcc.a \
     $(NULL)
 
 LDFLAGS_COMMON                                                                += \
-    -T $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.7/platform/Device/SiliconLabs/EFR32MG13P/Source/GCC/efr32mg13p.ld \
+    -T $(top_srcdir)/examples/platforms/efr32mg13/efr32mg13.ld                   \
     $(NULL)

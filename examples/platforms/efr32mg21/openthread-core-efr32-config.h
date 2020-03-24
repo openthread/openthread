@@ -108,7 +108,7 @@
  * When defined to 1, the platform MUST implement the otPlatFlash* APIs instead of the otPlatSettings* APIs.
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 1
+#define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 0
 
 /**
  * @def RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
