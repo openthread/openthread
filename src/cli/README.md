@@ -848,7 +848,7 @@ if \<addr\> is multicast address, `Diagnostic Query` will be sent.
 ```bash
 > networkdiagnostic get fdde:ad00:beef:0:0:ff:fe00:fc00 0 1 6
 > DIAG_GET.rsp/ans: 00080e336e1c41494e1c01020c000608640b0f674074c503
-Ext Address: 0e336e1c41494e1c
+Ext Address: '0e336e1c41494e1c'
 Rloc16: 0x0c00
 Leader Data:
     PartitionId: 0x640b0f67
@@ -860,11 +860,11 @@ Done
 
 > networkdiagnostic get ff02::1 0 1
 > DIAG_GET.rsp/ans: 00080e336e1c41494e1c01020c00
-Ext Address: 0e336e1c41494e1c
+Ext Address: '0e336e1c41494e1c'
 Rloc16: 0x0c00
 Done
 DIAG_GET.rsp/ans: 00083efcdb7e3f9eb0f201021800
-Ext Address: 3efcdb7e3f9eb0f2
+Ext Address: '3efcdb7e3f9eb0f2'
 Rloc16: 0x1800
 Done
 ```

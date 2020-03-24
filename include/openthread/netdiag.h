@@ -169,7 +169,7 @@ typedef struct otNetworkDiagRoute
     /**
      * Link Quality and Routing Cost data.
      */
-    otNetworkDiagRouteData mRouteData[OT_NETWORK_MAX_ROUTE_ID + 1];
+    otNetworkDiagRouteData mRouteData[OT_NETWORK_MAX_ROUTER_ID + 1];
 } otNetworkDiagRoute;
 
 /**

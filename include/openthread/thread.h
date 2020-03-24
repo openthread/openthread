@@ -58,7 +58,7 @@ extern "C" {
  */
 #define OT_NETWORK_BASE_TLV_MAX_LENGTH 254
 
-#define OT_NETWORK_MAX_ROUTE_ID 62 ///< Maximum Route ID
+#define OT_NETWORK_MAX_ROUTER_ID 62 ///< Maximum Router ID
 
 /**
  * Represents a Thread device role.
