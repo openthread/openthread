@@ -218,6 +218,12 @@ void platformRadioInit(const otPosixConfig *aPlatformConfig);
 void platformRadioDeinit(void);
 
 /**
+ * This function shuts down platform network interface.
+ *
+ */
+void platformNetifDeinit(void);
+
+/**
  * This function inputs a received radio frame.
  *
  * @param[in]  aInstance   A pointer to the OpenThread instance.
