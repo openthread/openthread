@@ -309,6 +309,13 @@ void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::Message
         if (tlv.GetType() == Tlv::kGet)
         {
             length = tlv.GetLength();
+
+            if (length > (sizeof(tlvs) - 1))
+            {
+                // leave space for potential DelayTimer type below
+                length = sizeof(tlvs) - 1;
+            }
+
             aMessage.Read(offset + sizeof(Tlv), length, tlvs);
             break;
         }
@@ -317,24 +324,19 @@ void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::Message
     }
 
     // MGMT_PENDING_GET.rsp must include Delay Timer TLV (Thread 1.1.1 Section 8.7.5.4)
-    if (length != 0 && strcmp(mUriGet, OT_URI_PATH_PENDING_GET) == 0)
+    VerifyOrExit(length > 0 && strcmp(mUriGet, OT_URI_PATH_PENDING_GET) == 0);
+
+    for (uint8_t i = 0; i < length; i++)
     {
-        uint16_t i;
-
-        for (i = 0; i < length; i++)
+        if (tlvs[i] == Tlv::kDelayTimer)
         {
-            if (tlvs[i] == Tlv::kDelayTimer)
-            {
-                break;
-            }
-        }
-
-        if (i == length && (i + 1u) <= sizeof(tlvs))
-        {
-            tlvs[length++] = Tlv::kDelayTimer;
+            ExitNow();
         }
     }
 
+    tlvs[length++] = Tlv::kDelayTimer;
+
+exit:
     SendGetResponse(aMessage, aMessageInfo, tlvs, length);
 }
 
