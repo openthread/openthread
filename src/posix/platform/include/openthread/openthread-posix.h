@@ -95,13 +95,13 @@ enum
  */
 enum
 {
-    OT_PLATFORM_CONFIG_SPI_DEFAULT_MODE           = 0,       ///< Default SPI Mode: CPOL=0, CPHA=0.
-    OT_PLATFORM_CONFIG_SPI_DEFAULT_SPEED_HZ       = 1000000, ///< Default SPI speed in hertz.
-    OT_PLATFORM_CONFIG_SPI_DEFAULT_CS_DELAY_US    = 20,      ///< Default delay after SPI C̅S̅ assertion, in µsec.
-    OT_PLATFORM_CONFIG_SPI_DEFAULT_RESET_DELAY_MS = 0, ///< Default delay after R̅E̅S̅E̅T̅ assertion, in miliseconds.
-    OT_PLATFORM_CONFIG_SPI_DEFAULT_ALIGN_ALLOWANCE =
+    OT_POSIX_CONFIG_SPI_DEFAULT_MODE            = 0,       ///< Default SPI Mode: CPOL=0, CPHA=0.
+    OT_POSIX_CONFIG_SPI_DEFAULT_SPEED_HZ        = 1000000, ///< Default SPI speed in hertz.
+    OT_POSIX_CONFIG_SPI_DEFAULT_CS_DELAY_US     = 20,      ///< Default delay after SPI C̅S̅ assertion, in µsec.
+    OT_POSIX_CONFIG_SPI_DEFAULT_RESET_DELAY_MS  = 0, ///< Default delay after R̅E̅S̅E̅T̅ assertion, in miliseconds.
+    OT_POSIX_CONFIG_SPI_DEFAULT_ALIGN_ALLOWANCE =
         16, ///< Default maximum number of 0xFF bytes to clip from start of MISO frame.
-    OT_PLATFORM_CONFIG_SPI_DEFAULT_SMALL_PACKET_SIZE =
+    OT_POSIX_CONFIG_SPI_DEFAULT_SMALL_PACKET_SIZE =
         32, ///< Default smallest SPI packet size we can receive in a single transaction.
 };
 
@@ -109,7 +109,7 @@ enum
  * This structure represents platform specific configurations.
  *
  */
-typedef struct otPlatformConfig
+typedef struct otPosixConfig
 {
     uint64_t    mNodeId;                ///< Unique node ID.
     uint32_t    mSpeedUpFactor;         ///< Speed up factor.
@@ -129,7 +129,7 @@ typedef struct otPlatformConfig
     uint16_t mSpiCsDelay;         ///< The delay after SPI C̅S̅ assertion, in µsec.
     uint8_t  mSpiAlignAllowance;  ///< Maximum number of 0xFF bytes to clip from start of MISO frame.
     uint8_t  mSpiSmallPacketSize; ///< Smallest SPI packet size we can receive in a single transaction.
-} otPlatformConfig;
+} otPosixConfig;
 
 /**
  * This function performs all platform-specific initialization of OpenThread's drivers.
@@ -142,7 +142,7 @@ typedef struct otPlatformConfig
  * @returns A pointer to the OpenThread instance.
  *
  */
-otInstance *otPosixInit(otPlatformConfig *aPlatformConfig);
+otInstance *otPosixInit(otPosixConfig *aPlatformConfig);
 
 /**
  * This function performs all platform-specific deinitialization for OpenThread's drivers.

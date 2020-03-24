@@ -131,7 +131,7 @@ HdlcInterface::HdlcInterface(SpinelInterface::Callbacks &aCallback, SpinelInterf
 {
 }
 
-otError HdlcInterface::Init(const otPlatformConfig &aPlatformConfig)
+otError HdlcInterface::Init(const otPosixConfig &aPlatformConfig)
 {
     otError     error = OT_ERROR_NONE;
     struct stat st;

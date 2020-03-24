@@ -195,7 +195,7 @@ RadioSpinel::RadioSpinel(void)
     mVersion[0] = '\0';
 }
 
-void RadioSpinel::Init(const otPlatformConfig &aPlatformConfig)
+void RadioSpinel::Init(const otPosixConfig &aPlatformConfig)
 {
     otError error = OT_ERROR_NONE;
     bool    isRcp;
@@ -1640,7 +1640,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-void platformRadioInit(const otPlatformConfig *aPlatformConfig)
+void platformRadioInit(const otPosixConfig *aPlatformConfig)
 {
     sRadioSpinel.Init(*aPlatformConfig);
 }

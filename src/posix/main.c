@@ -82,7 +82,7 @@
 
 typedef struct PosixConfig
 {
-    otPlatformConfig mPlatformConfig;    ///< Platform configuration.
+    otPosixConfig    mPosixConfig;    ///< Platform configuration.
     otLogLevel       mLogLevel;          ///< Debug level of logging.
     bool             mIsDryRun;          ///< Dry run.
     bool             mPrintRadioVersion; ///< Whether to print radio firmware version.
@@ -184,15 +184,15 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
 {
     memset(aConfig, 0, sizeof(*aConfig));
 
-    aConfig->mPlatformConfig.mSpeedUpFactor      = 1;
-    aConfig->mPlatformConfig.mResetRadio         = true;
-    aConfig->mPlatformConfig.mSpiSpeed           = OT_PLATFORM_CONFIG_SPI_DEFAULT_SPEED_HZ;
-    aConfig->mPlatformConfig.mSpiCsDelay         = OT_PLATFORM_CONFIG_SPI_DEFAULT_CS_DELAY_US;
-    aConfig->mPlatformConfig.mSpiResetDelay      = OT_PLATFORM_CONFIG_SPI_DEFAULT_RESET_DELAY_MS;
-    aConfig->mPlatformConfig.mSpiAlignAllowance  = OT_PLATFORM_CONFIG_SPI_DEFAULT_ALIGN_ALLOWANCE;
-    aConfig->mPlatformConfig.mSpiSmallPacketSize = OT_PLATFORM_CONFIG_SPI_DEFAULT_SMALL_PACKET_SIZE;
-    aConfig->mPlatformConfig.mSpiMode            = OT_PLATFORM_CONFIG_SPI_DEFAULT_MODE;
-    aConfig->mLogLevel                           = OT_LOG_LEVEL_CRIT;
+    aConfig->mPosixConfig.mSpeedUpFactor      = 1;
+    aConfig->mPosixConfig.mResetRadio         = true;
+    aConfig->mPosixConfig.mSpiSpeed           = OT_POSIX_CONFIG_SPI_DEFAULT_SPEED_HZ;
+    aConfig->mPosixConfig.mSpiCsDelay         = OT_POSIX_CONFIG_SPI_DEFAULT_CS_DELAY_US;
+    aConfig->mPosixConfig.mSpiResetDelay      = OT_POSIX_CONFIG_SPI_DEFAULT_RESET_DELAY_MS;
+    aConfig->mPosixConfig.mSpiAlignAllowance  = OT_POSIX_CONFIG_SPI_DEFAULT_ALIGN_ALLOWANCE;
+    aConfig->mPosixConfig.mSpiSmallPacketSize = OT_POSIX_CONFIG_SPI_DEFAULT_SMALL_PACKET_SIZE;
+    aConfig->mPosixConfig.mSpiMode            = OT_POSIX_CONFIG_SPI_DEFAULT_MODE;
+    aConfig->mLogLevel                        = OT_LOG_LEVEL_CRIT;
 
     optind = 1;
 
@@ -215,7 +215,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             PrintUsage(aArgVector[0], stdout, OT_EXIT_SUCCESS);
             break;
         case 'I':
-            aConfig->mPlatformConfig.mInterfaceName = optarg;
+            aConfig->mPosixConfig.mInterfaceName = optarg;
             break;
         case 'n':
             aConfig->mIsDryRun = true;
@@ -224,9 +224,9 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         {
             char *endptr = NULL;
 
-            aConfig->mPlatformConfig.mSpeedUpFactor = (uint32_t)strtol(optarg, &endptr, 0);
+            aConfig->mPosixConfig.mSpeedUpFactor = (uint32_t)strtol(optarg, &endptr, 0);
 
-            if (*endptr != '\0' || aConfig->mPlatformConfig.mSpeedUpFactor == 0)
+            if (*endptr != '\0' || aConfig->mPosixConfig.mSpeedUpFactor == 0)
             {
                 fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", optarg);
                 exit(OT_EXIT_INVALID_ARGUMENTS);
@@ -240,40 +240,40 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             aConfig->mPrintRadioVersion = true;
             break;
         case ARG_NO_RADIO_RESET:
-            aConfig->mPlatformConfig.mResetRadio = false;
+            aConfig->mPosixConfig.mResetRadio = false;
             break;
         case ARG_RESTORE_NCP_DATASET:
-            aConfig->mPlatformConfig.mRestoreDatasetFromNcp = true;
+            aConfig->mPosixConfig.mRestoreDatasetFromNcp = true;
             break;
         case ARG_SPI_GPIO_INT_DEV:
-            aConfig->mPlatformConfig.mSpiGpioIntDevice = optarg;
+            aConfig->mPosixConfig.mSpiGpioIntDevice = optarg;
             break;
         case ARG_SPI_GPIO_INT_LINE:
-            aConfig->mPlatformConfig.mSpiGpioIntLine = (uint8_t)atoi(optarg);
+            aConfig->mPosixConfig.mSpiGpioIntLine = (uint8_t)atoi(optarg);
             break;
         case ARG_SPI_GPIO_RESET_DEV:
-            aConfig->mPlatformConfig.mSpiGpioResetDevice = optarg;
+            aConfig->mPosixConfig.mSpiGpioResetDevice = optarg;
             break;
         case ARG_SPI_GPIO_RESET_LINE:
-            aConfig->mPlatformConfig.mSpiGpioResetLine = (uint8_t)atoi(optarg);
+            aConfig->mPosixConfig.mSpiGpioResetLine = (uint8_t)atoi(optarg);
             break;
         case ARG_SPI_MODE:
-            aConfig->mPlatformConfig.mSpiMode = (uint8_t)atoi(optarg);
+            aConfig->mPosixConfig.mSpiMode = (uint8_t)atoi(optarg);
             break;
         case ARG_SPI_SPEED:
-            aConfig->mPlatformConfig.mSpiSpeed = (uint32_t)atoi(optarg);
+            aConfig->mPosixConfig.mSpiSpeed = (uint32_t)atoi(optarg);
             break;
         case ARG_SPI_CS_DELAY:
-            aConfig->mPlatformConfig.mSpiCsDelay = (uint16_t)atoi(optarg);
+            aConfig->mPosixConfig.mSpiCsDelay = (uint16_t)atoi(optarg);
             break;
         case ARG_SPI_RESET_DELAY:
-            aConfig->mPlatformConfig.mSpiResetDelay = (uint32_t)atoi(optarg);
+            aConfig->mPosixConfig.mSpiResetDelay = (uint32_t)atoi(optarg);
             break;
         case ARG_SPI_ALIGN_ALLOWANCE:
-            aConfig->mPlatformConfig.mSpiAlignAllowance = (uint8_t)atoi(optarg);
+            aConfig->mPosixConfig.mSpiAlignAllowance = (uint8_t)atoi(optarg);
             break;
         case ARG_SPI_SMALL_PACKET:
-            aConfig->mPlatformConfig.mSpiSmallPacketSize = (uint8_t)atoi(optarg);
+            aConfig->mPosixConfig.mSpiSmallPacketSize = (uint8_t)atoi(optarg);
             break;
         case '?':
             PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
@@ -289,11 +289,11 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
     }
 
-    aConfig->mPlatformConfig.mRadioFile = aArgVector[optind];
+    aConfig->mPosixConfig.mRadioFile = aArgVector[optind];
 
     if (optind + 1 < aArgCount)
     {
-        aConfig->mPlatformConfig.mRadioConfig = aArgVector[optind + 1];
+        aConfig->mPosixConfig.mRadioConfig = aArgVector[optind + 1];
     }
 }
 
@@ -310,7 +310,7 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
     syslog(LOG_INFO, "Thread version: %hu", otThreadGetVersion());
     otLoggingSetLevel(config.mLogLevel);
 
-    instance = otPosixInit(&config.mPlatformConfig);
+    instance = otPosixInit(&config.mPosixConfig);
 
     if (config.mPrintRadioVersion)
     {
