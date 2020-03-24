@@ -72,7 +72,7 @@ public:
      * @param[in]  aPlatformConfig  Platform configuration structure.
      *
      */
-    void Init(const otPosixConfig &aPlatformConfig);
+    void Init(const otPlatformConfig &aPlatformConfig);
 
     /**
      * Deinitialize this radio transceiver.

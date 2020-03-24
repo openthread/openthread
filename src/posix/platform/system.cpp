@@ -44,7 +44,7 @@
 
 uint64_t gNodeId = 0;
 
-otInstance *otPosixInit(otPosixConfig *aPlatformConfig)
+otInstance *otPosixInit(otPlatformConfig *aPlatformConfig)
 {
     otInstance *instance = NULL;
 

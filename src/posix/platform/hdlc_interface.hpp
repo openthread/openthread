@@ -78,7 +78,7 @@ public:
      * @retval OT_ERROR_INVALID_ARGS  The UART device or executable cannot be found or failed to open/run.
      *
      */
-    otError Init(const otPosixConfig &aPlatformConfig);
+    otError Init(const otPlatformConfig &aPlatformConfig);
 
     /**
      * This method deinitializes the interface to the RCP.

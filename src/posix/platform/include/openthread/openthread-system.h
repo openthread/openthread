@@ -32,8 +32,8 @@
  *   This file defines the platform-specific functions needed by OpenThread's example applications.
  */
 
-#ifndef OPENTHREAD_POSIX_H_
-#define OPENTHREAD_POSIX_H_
+#ifndef OPENTHREAD_SYSTEM_H_
+#define OPENTHREAD_SYSTEM_H_
 
 #include <setjmp.h>
 #include <stdbool.h>
@@ -142,7 +142,7 @@ typedef struct otPlatformConfig
  * @returns A pointer to the OpenThread instance.
  *
  */
-otInstance *otPosixInit(otPlatformConfig *aPlatformConfig);
+otInstance *otSysInit(otPlatformConfig *aPlatformConfig);
 
 /**
  * This function performs all platform-specific deinitialization for OpenThread's drivers.
@@ -151,20 +151,20 @@ otInstance *otPosixInit(otPlatformConfig *aPlatformConfig);
  *       when deinitialization of OpenThread's drivers is most appropriate.
  *
  */
-void otPosixDeinit(void);
+void otSysDeinit(void);
 
 /**
  * This structure represents a context for a select() based mainloop.
  *
  */
-typedef struct otPosixMainloopContext
+typedef struct otSysMainloopContext
 {
     fd_set         mReadFdSet;  ///< The read file descriptors.
     fd_set         mWriteFdSet; ///< The write file descriptors.
     fd_set         mErrorFdSet; ///< The error file descriptors.
     int            mMaxFd;      ///< The max file descriptor.
     struct timeval mTimeout;    ///< The timeout.
-} otPosixMainloopContext;
+} otSysMainloopContext;
 
 /**
  * This function updates the file descriptor sets with file descriptors used by OpenThread drivers.
@@ -173,7 +173,7 @@ typedef struct otPosixMainloopContext
  * @param[inout]    aMainloop   A pointer to the mainloop context.
  *
  */
-void otPosixMainloopUpdate(otInstance *aInstance, otPosixMainloopContext *aMainloop);
+void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop);
 
 /**
  * This function polls OpenThread's mainloop.
@@ -183,7 +183,7 @@ void otPosixMainloopUpdate(otInstance *aInstance, otPosixMainloopContext *aMainl
  * @returns value returned from select().
  *
  */
-int otPosixMainloopPoll(otPosixMainloopContext *aMainloop);
+int otSysMainloopPoll(otSysMainloopContext *aMainloop);
 
 /**
  * This function performs all platform-specific processing for OpenThread's example applications.
@@ -195,10 +195,10 @@ int otPosixMainloopPoll(otPosixMainloopContext *aMainloop);
  * @param[in]   aMainloop   A pointer to the mainloop context.
  *
  */
-void otPosixMainloopProcess(otInstance *aInstance, const otPosixMainloopContext *aMainloop);
+void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMainloop);
 
 #ifdef __cplusplus
 } // end of extern "C"
 #endif
 
-#endif // OPENTHREAD_POSIX_H_
+#endif // OPENTHREAD_SYSTEM_H_

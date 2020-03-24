@@ -86,7 +86,7 @@ SpiInterface::SpiInterface(SpinelInterface::Callbacks &aCallback, SpinelInterfac
 {
 }
 
-otError SpiInterface::Init(const otPosixConfig &aPlatformConfig)
+otError SpiInterface::Init(const otPlatformConfig &aPlatformConfig)
 {
     VerifyOrDie(aPlatformConfig.mSpiAlignAllowance <= kSpiAlignAllowanceMax, OT_EXIT_FAILURE);
 
