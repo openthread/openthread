@@ -221,16 +221,7 @@ void Local::UpdateBackboneRouterPrimary(Leader::State aState, const BackboneRout
     }
     else if (aConfig.mServer16 != Get<Mle::MleRouter>().GetRloc16())
     {
-        RemoveService();
-
-        if (mState == OT_BACKBONE_ROUTER_STATE_PRIMARY)
-        {
-            // Here increases sequence number if becomes Secondary from Primary.
-            mSequenceNumber++;
-            Get<Notifier>().Signal(OT_CHANGED_THREAD_BACKBONE_ROUTER_LOCAL);
-        }
-
-        SetState(OT_BACKBONE_ROUTER_STATE_SECONDARY);
+        Reset(); 
     }
     else if (!mIsServiceAdded)
     {
