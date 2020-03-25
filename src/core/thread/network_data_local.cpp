@@ -179,16 +179,18 @@ exit:
 
 void Local::UpdateRloc(PrefixTlv &aPrefix)
 {
+    uint16_t rloc16 = Get<Mle::MleRouter>().GetRloc16();
+
     for (NetworkDataTlv *cur = aPrefix.GetSubTlvs(); cur < aPrefix.GetNext(); cur = cur->GetNext())
     {
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypeHasRoute:
-            UpdateRloc(*static_cast<HasRouteTlv *>(cur));
+            static_cast<HasRouteTlv *>(cur)->GetEntry(0)->SetRloc(rloc16);
             break;
 
         case NetworkDataTlv::kTypeBorderRouter:
-            UpdateRloc(*static_cast<BorderRouterTlv *>(cur));
+            static_cast<BorderRouterTlv *>(cur)->GetEntry(0)->SetRloc(rloc16);
             break;
 
         default:
@@ -196,18 +198,6 @@ void Local::UpdateRloc(PrefixTlv &aPrefix)
             break;
         }
     }
-}
-
-void Local::UpdateRloc(HasRouteTlv &aHasRoute)
-{
-    HasRouteEntry *entry = aHasRoute.GetEntry(0);
-    entry->SetRloc(Get<Mle::MleRouter>().GetRloc16());
-}
-
-void Local::UpdateRloc(BorderRouterTlv &aBorderRouter)
-{
-    BorderRouterEntry *entry = aBorderRouter.GetEntry(0);
-    entry->SetRloc(Get<Mle::MleRouter>().GetRloc16());
 }
 
 bool Local::IsOnMeshPrefixConsistent(void)
@@ -292,12 +282,14 @@ exit:
 
 void Local::UpdateRloc(ServiceTlv &aService)
 {
+    uint16_t rloc16 = Get<Mle::MleRouter>().GetRloc16();
+
     for (NetworkDataTlv *cur = aService.GetSubTlvs(); cur < aService.GetNext(); cur = cur->GetNext())
     {
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypeServer:
-            UpdateRloc(*static_cast<ServerTlv *>(cur));
+            static_cast<ServerTlv *>(cur)->SetServer16(rloc16);
             break;
 
         default:
@@ -305,11 +297,6 @@ void Local::UpdateRloc(ServiceTlv &aService)
             break;
         }
     }
-}
-
-void Local::UpdateRloc(ServerTlv &aServer)
-{
-    aServer.SetServer16(Get<Mle::MleRouter>().GetRloc16());
 }
 
 bool Local::IsServiceConsistent(void)
