@@ -48,7 +48,6 @@ list(APPEND OT_PUBLIC_INCLUDES
 set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
 
 list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
-string (REPLACE "-pedantic-errors" "" OT_CFLAGS "${OT_CFLAGS}")
 
 add_library(openthread-cc1352
     alarm.c
@@ -64,12 +63,10 @@ add_library(openthread-cc1352
     cc1352_ccfg.c
     cc1352_startup.c
     cxx_helpers.c
-    $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
 set_property(TARGET openthread-cc1352 PROPERTY C_STANDARD 99)
 
-target_link_libraries(openthread-cc1352 PRIVATE openthread-platform-utils)
 target_link_libraries(openthread-cc1352 PRIVATE "${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2/driverlib/bin/gcc/driverlib.a")
 target_link_options(openthread-cc1352 PUBLIC -T${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2/linker_files/cc26x2r1f.lds)
 target_link_options(openthread-cc1352 PUBLIC -Wl,-Map=$<TARGET_PROPERTY:NAME>.map)
@@ -87,12 +84,8 @@ target_include_directories(openthread-cc1352
     PRIVATE
         ${OT_PUBLIC_INCLUDES}
         ${OT_PRIVATE_INCLUDES}
-        ${PROJECT_SOURCE_DIR}/src
         ${PROJECT_SOURCE_DIR}/src/core
         ${PROJECT_SOURCE_DIR}/examples/platforms
         ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
         ${PROJECT_SOURCE_DIR}/third_party/mbedtls
-    PUBLIC
-        ${PROJECT_SOURCE_DIR}/examples/platforms/cc1352/crypto
-        ${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2
 )
