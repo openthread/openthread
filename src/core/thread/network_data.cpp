@@ -737,10 +737,12 @@ exit:
     return tlv;
 }
 
-void NetworkData::Insert(uint8_t *aStart, uint8_t aLength)
+void NetworkData::Insert(void *aStart, uint8_t aLength)
 {
-    OT_ASSERT(aLength + mLength <= sizeof(mTlvs) && mTlvs <= aStart && aStart <= mTlvs + mLength);
-    memmove(aStart + aLength, aStart, mLength - static_cast<size_t>(aStart - mTlvs));
+    uint8_t *start = reinterpret_cast<uint8_t *>(aStart);
+
+    OT_ASSERT(aLength + mLength <= sizeof(mTlvs) && mTlvs <= start && start <= mTlvs + mLength);
+    memmove(start + aLength, start, mLength - static_cast<size_t>(start - mTlvs));
     mLength += aLength;
 }
 
@@ -760,9 +762,9 @@ void NetworkData::RemoveTlv(uint8_t *aData, uint8_t &aDataLength, NetworkDataTlv
     Remove(aData, aDataLength, reinterpret_cast<uint8_t *>(aTlv), aTlv->GetSize());
 }
 
-void NetworkData::Remove(uint8_t *aRemoveStart, uint8_t aRemoveLength)
+void NetworkData::Remove(void *aRemoveStart, uint8_t aRemoveLength)
 {
-    NetworkData::Remove(mTlvs, mLength, aRemoveStart, aRemoveLength);
+    NetworkData::Remove(mTlvs, mLength, reinterpret_cast<uint8_t *>(aRemoveStart), aRemoveLength);
 }
 
 void NetworkData::RemoveTlv(NetworkDataTlv *aTlv)

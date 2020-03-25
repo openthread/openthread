@@ -450,7 +450,7 @@ protected:
      * @param[in]  aLength  The number of bytes to insert.
      *
      */
-    void Insert(uint8_t *aStart, uint8_t aLength);
+    void Insert(void *aStart, uint8_t aLength);
 
     /**
      * This method removes bytes from the Network Data.
@@ -459,7 +459,7 @@ protected:
      * @param[in]  aRemoveLength  The number of bytes to remove.
      *
      */
-    void Remove(uint8_t *aRemoveStart, uint8_t aRemoveLength);
+    void Remove(void *aRemoveStart, uint8_t aRemoveLength);
 
     /**
      * This method removes a TLV from the Network Data.

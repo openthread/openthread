@@ -908,7 +908,7 @@ otError Leader::AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute)
     if (dstPrefix == NULL)
     {
         dstPrefix = reinterpret_cast<PrefixTlv *>(mTlvs + mLength);
-        Insert(reinterpret_cast<uint8_t *>(dstPrefix), sizeof(PrefixTlv) + BitVectorBytes(aPrefix.GetPrefixLength()));
+        Insert(dstPrefix, sizeof(PrefixTlv) + BitVectorBytes(aPrefix.GetPrefixLength()));
         dstPrefix->Init(aPrefix.GetDomainId(), aPrefix.GetPrefixLength(), aPrefix.GetPrefix());
     }
 
@@ -920,7 +920,7 @@ otError Leader::AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute)
     if (dstHasRoute == NULL)
     {
         dstHasRoute = static_cast<HasRouteTlv *>(dstPrefix->GetNext());
-        Insert(reinterpret_cast<uint8_t *>(dstHasRoute), sizeof(HasRouteTlv));
+        Insert(dstHasRoute, sizeof(HasRouteTlv));
         dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(HasRouteTlv));
         dstHasRoute->Init();
 
@@ -930,7 +930,7 @@ otError Leader::AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute)
         }
     }
 
-    Insert(reinterpret_cast<uint8_t *>(dstHasRoute->GetNext()), sizeof(HasRouteEntry));
+    Insert(dstHasRoute->GetNext(), sizeof(HasRouteEntry));
     dstHasRoute->SetLength(dstHasRoute->GetLength() + sizeof(HasRouteEntry));
     dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(HasRouteEntry));
     memcpy(dstHasRoute->GetEntry(dstHasRoute->GetNumEntries() - 1), aHasRoute.GetEntry(0), sizeof(HasRouteEntry));
@@ -997,7 +997,7 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOl
         }
 
         dstService = reinterpret_cast<ServiceTlv *>(mTlvs + mLength);
-        Insert(reinterpret_cast<uint8_t *>(dstService), serviceInsertLength);
+        Insert(dstService, serviceInsertLength);
         dstService->Init();
         dstService->SetServiceId(serviceId);
         dstService->SetEnterpriseNumber(aService.GetEnterpriseNumber());
@@ -1007,7 +1007,7 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOl
 
     dstServer = static_cast<ServerTlv *>(dstService->GetNext());
 
-    Insert(reinterpret_cast<uint8_t *>(dstServer), sizeof(ServerTlv) + aServer.GetServerDataLength());
+    Insert(dstServer, sizeof(ServerTlv) + aServer.GetServerDataLength());
     dstServer->Init();
     dstServer->SetServer16(aServer.GetServer16());
     dstServer->SetServerData(aServer.GetServerData(), aServer.GetServerDataLength());
@@ -1098,14 +1098,14 @@ otError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRout
     if (dstPrefix == NULL)
     {
         dstPrefix = reinterpret_cast<PrefixTlv *>(mTlvs + mLength);
-        Insert(reinterpret_cast<uint8_t *>(dstPrefix), sizeof(PrefixTlv) + BitVectorBytes(aPrefix.GetPrefixLength()));
+        Insert(dstPrefix, sizeof(PrefixTlv) + BitVectorBytes(aPrefix.GetPrefixLength()));
         dstPrefix->Init(aPrefix.GetDomainId(), aPrefix.GetPrefixLength(), aPrefix.GetPrefix());
     }
 
     if (dstContext == NULL)
     {
         dstContext = static_cast<ContextTlv *>(dstPrefix->GetNext());
-        Insert(reinterpret_cast<uint8_t *>(dstContext), sizeof(ContextTlv));
+        Insert(dstContext, sizeof(ContextTlv));
         dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(ContextTlv));
         dstContext->Init();
         dstContext->SetCompress();
@@ -1119,12 +1119,12 @@ otError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRout
     if (dstBorderRouter == NULL)
     {
         dstBorderRouter = static_cast<BorderRouterTlv *>(dstPrefix->GetNext());
-        Insert(reinterpret_cast<uint8_t *>(dstBorderRouter), sizeof(BorderRouterTlv));
+        Insert(dstBorderRouter, sizeof(BorderRouterTlv));
         dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(BorderRouterTlv));
         dstBorderRouter->Init();
     }
 
-    Insert(reinterpret_cast<uint8_t *>(dstBorderRouter->GetNext()), sizeof(BorderRouterEntry));
+    Insert(dstBorderRouter->GetNext(), sizeof(BorderRouterEntry));
     dstBorderRouter->SetLength(dstBorderRouter->GetLength() + sizeof(BorderRouterEntry));
     dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(BorderRouterEntry));
     memcpy(dstBorderRouter->GetEntry(dstBorderRouter->GetNumEntries() - 1), aBorderRouter.GetEntry(0),
@@ -1286,7 +1286,7 @@ void Leader::RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16, MatchMode aMatchMo
             if (cur->GetLength() == 0)
             {
                 aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - sizeof(HasRouteTlv));
-                Remove(reinterpret_cast<uint8_t *>(cur), sizeof(HasRouteTlv));
+                Remove(cur, sizeof(HasRouteTlv));
                 continue;
             }
 
@@ -1299,7 +1299,7 @@ void Leader::RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16, MatchMode aMatchMo
             if (cur->GetLength() == 0)
             {
                 aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - sizeof(BorderRouterTlv));
-                Remove(reinterpret_cast<uint8_t *>(cur), sizeof(BorderRouterTlv));
+                Remove(cur, sizeof(BorderRouterTlv));
                 continue;
             }
 
@@ -1375,7 +1375,7 @@ void Leader::RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint16_t aRl
         {
             aHasRoute.SetLength(aHasRoute.GetLength() - sizeof(HasRouteEntry));
             aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - sizeof(HasRouteEntry));
-            Remove(reinterpret_cast<uint8_t *>(entry), sizeof(HasRouteEntry));
+            Remove(entry, sizeof(HasRouteEntry));
             continue;
         }
 
@@ -1393,7 +1393,7 @@ void Leader::RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter, uint
         {
             aBorderRouter.SetLength(aBorderRouter.GetLength() - sizeof(BorderRouterEntry));
             aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - sizeof(BorderRouterEntry));
-            Remove(reinterpret_cast<uint8_t *>(entry), sizeof(*entry));
+            Remove(entry, sizeof(*entry));
             continue;
         }
 
