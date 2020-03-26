@@ -329,7 +329,8 @@ otError otThreadSendDiagnosticGet(otInstance *        aInstance,
  * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types. Currently only Type 9 is allowed.
  * @param[in]  aCount         Number of types in aTlvTypes
  *
- * @retval OT_ERROR_NONE  Successfully sent the message.
+ * @retval OT_ERROR_NONE    Successfully queued the DIAG_RST.ntf.
+ * @retval OT_ERROR_NO_BUFS Insufficient message buffers available to send DIAG_RST.ntf.
  *
  */
 otError otThreadSendDiagnosticReset(otInstance *        aInstance,
