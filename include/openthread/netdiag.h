@@ -312,7 +312,8 @@ void otThreadSetReceiveDiagnosticGetCallback(otInstance *                   aIns
  * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types.
  * @param[in]  aCount         Number of types in aTlvTypes.
  *
- * @retval OT_ERROR_NONE  Successfully sent the message.
+ * @retval OT_ERROR_NONE    Successfully queued the DIAG_GET.req.
+ * @retval OT_ERROR_NO_BUFS Insufficient message buffers available to send DIAG_GET.req.
  *
  */
 otError otThreadSendDiagnosticGet(otInstance *        aInstance,
