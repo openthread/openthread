@@ -441,11 +441,19 @@ protected:
     /**
      * This method removes bytes from the Network Data.
      *
-     * @param[in]  aStart   A pointer to the beginning of the removal.
-     * @param[in]  aLength  The number of bytes to remove.
+     * @param[in]  aRemoveStart   A pointer to the beginning of the removal.
+     * @param[in]  aRemoveLength  The number of bytes to remove.
      *
      */
-    void Remove(uint8_t *aStart, uint8_t aLength);
+    void Remove(uint8_t *aRemoveStart, uint8_t aRemoveLength);
+
+    /**
+     * This method removes a TLV from the Network Data.
+     *
+     * @param[in]  aTlv   The TLV to remove.
+     *
+     */
+    void RemoveTlv(NetworkDataTlv *aTlv);
 
     /**
      * This method strips non-stable data from the Thread Network Data.
@@ -599,6 +607,9 @@ private:
 
         uint8_t *mIteratorBuffer;
     };
+
+    static void Remove(uint8_t *aData, uint8_t &aDataLength, uint8_t *aRemoveStart, uint8_t aRemoveLength);
+    static void RemoveTlv(uint8_t *aData, uint8_t &aDataLength, NetworkDataTlv *aTlv);
 
     NetworkDataTlv *FindTlv(NetworkDataIterator &aIterator, NetworkDataTlv::Type aTlvType);
     void            IterateToNextTlv(NetworkDataIterator &aIterator);

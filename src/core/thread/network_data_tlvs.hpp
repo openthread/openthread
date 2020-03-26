@@ -122,6 +122,14 @@ public:
     void SetLength(uint8_t aLength) { mLength = aLength; }
 
     /**
+     * This method returns the TLV's total size (number of bytes) including Type, Length, and Value fields.
+     *
+     * @returns The total size include Type, Length, and Value fields.
+     *
+     */
+    uint8_t GetSize(void) const { return sizeof(NetworkDataTlv) + mLength; }
+
+    /**
      * This method returns a pointer to the Value.
      *
      * @returns A pointer to the value.

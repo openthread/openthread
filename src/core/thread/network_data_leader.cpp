@@ -623,7 +623,7 @@ otError LeaderBase::RemoveCommissioningData(void)
     {
         if (cur->GetType() == NetworkDataTlv::kTypeCommissioningData)
         {
-            Remove(reinterpret_cast<uint8_t *>(cur), sizeof(NetworkDataTlv) + cur->GetLength());
+            RemoveTlv(cur);
             ExitNow(error = OT_ERROR_NONE);
         }
     }

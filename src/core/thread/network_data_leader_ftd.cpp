@@ -1228,7 +1228,7 @@ void Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode)
 
             if (prefix->GetSubTlvsLength() == 0)
             {
-                Remove(reinterpret_cast<uint8_t *>(prefix), sizeof(NetworkDataTlv) + prefix->GetLength());
+                RemoveTlv(prefix);
                 continue;
             }
 
@@ -1243,7 +1243,7 @@ void Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode)
 
             if (service->GetSubTlvsLength() == 0)
             {
-                Remove(reinterpret_cast<uint8_t *>(service), sizeof(NetworkDataTlv) + service->GetLength());
+                RemoveTlv(service);
                 continue;
             }
 
@@ -1332,7 +1332,6 @@ void Leader::RemoveRloc(ServiceTlv &aService, uint16_t aRloc16, MatchMode aMatch
     NetworkDataTlv *cur = aService.GetSubTlvs();
     NetworkDataTlv *end;
     ServerTlv *     server;
-    uint8_t         removeLength;
 
     while (1)
     {
@@ -1350,9 +1349,9 @@ void Leader::RemoveRloc(ServiceTlv &aService, uint16_t aRloc16, MatchMode aMatch
 
             if (RlocMatch(server->GetServer16(), aRloc16, aMatchMode))
             {
-                removeLength = sizeof(ServerTlv) + server->GetServerDataLength();
-                aService.SetSubTlvsLength(aService.GetSubTlvsLength() - removeLength);
-                Remove(reinterpret_cast<uint8_t *>(cur), removeLength);
+                uint8_t subTlvSize = server->GetSize();
+                RemoveTlv(server);
+                aService.SetSubTlvsLength(aService.GetSubTlvsLength() - subTlvSize);
                 continue;
             }
 
@@ -1426,7 +1425,7 @@ void Leader::RemoveContext(uint8_t aContextId)
 
             if (prefix->GetSubTlvsLength() == 0)
             {
-                Remove(reinterpret_cast<uint8_t *>(prefix), sizeof(NetworkDataTlv) + prefix->GetLength());
+                RemoveTlv(prefix);
                 continue;
             }
 
@@ -1449,7 +1448,6 @@ void Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
     NetworkDataTlv *cur = aPrefix.GetSubTlvs();
     NetworkDataTlv *end;
     ContextTlv *    context;
-    uint8_t         length;
 
     while (1)
     {
@@ -1469,9 +1467,9 @@ void Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
 
             if (context->GetContextId() == aContextId)
             {
-                length = sizeof(NetworkDataTlv) + context->GetLength();
-                aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - length);
-                Remove(reinterpret_cast<uint8_t *>(context), length);
+                uint8_t subTlvSize = context->GetSize();
+                RemoveTlv(context);
+                aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - subTlvSize);
                 continue;
             }
 

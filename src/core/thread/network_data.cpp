@@ -476,11 +476,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
 
             if (prefix->GetSubTlvsLength() == 0)
             {
-                uint8_t  length = sizeof(NetworkDataTlv) + cur->GetLength();
-                uint8_t *dst    = reinterpret_cast<uint8_t *>(cur);
-                uint8_t *src    = reinterpret_cast<uint8_t *>(cur->GetNext());
-                memmove(dst, src, aDataLength - static_cast<size_t>(src - aData));
-                aDataLength -= length;
+                RemoveTlv(aData, aDataLength, cur);
                 continue;
             }
 
@@ -495,11 +491,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
 
             if (service->GetSubTlvsLength() == 0)
             {
-                uint8_t  length = sizeof(NetworkDataTlv) + cur->GetLength();
-                uint8_t *dst    = reinterpret_cast<uint8_t *>(cur);
-                uint8_t *src    = reinterpret_cast<uint8_t *>(cur->GetNext());
-                memmove(dst, src, aDataLength - static_cast<size_t>(src - aData));
-                aDataLength -= length;
+                RemoveTlv(aData, aDataLength, cur);
                 continue;
             }
 
@@ -511,11 +503,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
             // remove temporary tlv
             if (!cur->IsStable())
             {
-                uint8_t  length = sizeof(NetworkDataTlv) + cur->GetLength();
-                uint8_t *dst    = reinterpret_cast<uint8_t *>(cur);
-                uint8_t *src    = reinterpret_cast<uint8_t *>(cur->GetNext());
-                memmove(dst, src, aDataLength - static_cast<size_t>(src - aData));
-                aDataLength -= length;
+                RemoveTlv(aData, aDataLength, cur);
                 continue;
             }
 
@@ -584,12 +572,9 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Pref
         else
         {
             // remove temporary tlv
-            uint8_t  length = sizeof(NetworkDataTlv) + cur->GetLength();
-            uint8_t *dst    = reinterpret_cast<uint8_t *>(cur);
-            uint8_t *src    = reinterpret_cast<uint8_t *>(cur->GetNext());
-            memmove(dst, src, aDataLength - static_cast<size_t>(src - aData));
-            aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - length);
-            aDataLength -= length;
+            uint8_t subTlvSize = cur->GetSize();
+            RemoveTlv(aData, aDataLength, cur);
+            aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - subTlvSize);
         }
     }
 }
@@ -621,12 +606,9 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Serv
         else
         {
             // remove temporary tlv
-            uint8_t  length = sizeof(NetworkDataTlv) + cur->GetLength();
-            uint8_t *dst    = reinterpret_cast<uint8_t *>(cur);
-            uint8_t *src    = reinterpret_cast<uint8_t *>(cur->GetNext());
-            memmove(dst, src, aDataLength - static_cast<size_t>(src - aData));
-            aService.SetSubTlvsLength(aService.GetSubTlvsLength() - length);
-            aDataLength -= length;
+            uint8_t subTlvSize = cur->GetSize();
+            RemoveTlv(aData, aDataLength, cur);
+            aService.SetSubTlvsLength(aService.GetSubTlvsLength() - subTlvSize);
         }
     }
 }
@@ -749,11 +731,30 @@ void NetworkData::Insert(uint8_t *aStart, uint8_t aLength)
     mLength += aLength;
 }
 
-void NetworkData::Remove(uint8_t *aStart, uint8_t aLength)
+void NetworkData::Remove(uint8_t *aData, uint8_t &aDataLength, uint8_t *aRemoveStart, uint8_t aRemoveLength)
 {
-    OT_ASSERT(aLength <= mLength && mTlvs <= aStart && (aStart - mTlvs) + aLength <= mLength);
-    memmove(aStart, aStart + aLength, mLength - (static_cast<size_t>(aStart - mTlvs) + aLength));
-    mLength -= aLength;
+    uint8_t *dataEnd   = aData + aDataLength;
+    uint8_t *removeEnd = aRemoveStart + aRemoveLength;
+
+    OT_ASSERT((aRemoveLength <= aDataLength) && (aData <= aRemoveStart) && (removeEnd <= dataEnd));
+
+    memmove(aRemoveStart, removeEnd, static_cast<uint8_t>(dataEnd - removeEnd));
+    aDataLength -= aRemoveLength;
+}
+
+void NetworkData::RemoveTlv(uint8_t *aData, uint8_t &aDataLength, NetworkDataTlv *aTlv)
+{
+    Remove(aData, aDataLength, reinterpret_cast<uint8_t *>(aTlv), aTlv->GetSize());
+}
+
+void NetworkData::Remove(uint8_t *aRemoveStart, uint8_t aRemoveLength)
+{
+    NetworkData::Remove(mTlvs, mLength, aRemoveStart, aRemoveLength);
+}
+
+void NetworkData::RemoveTlv(NetworkDataTlv *aTlv)
+{
+    NetworkData::RemoveTlv(mTlvs, mLength, aTlv);
 }
 
 otError NetworkData::SendServerDataNotification(uint16_t aRloc16)

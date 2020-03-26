@@ -110,7 +110,7 @@ otError Local::RemoveOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
 
     VerifyOrExit((tlv = FindPrefix(aPrefix, aPrefixLength)) != NULL, error = OT_ERROR_NOT_FOUND);
     VerifyOrExit(FindBorderRouter(*tlv) != NULL, error = OT_ERROR_NOT_FOUND);
-    Remove(reinterpret_cast<uint8_t *>(tlv), sizeof(NetworkDataTlv) + tlv->GetLength());
+    RemoveTlv(tlv);
     ClearResubmitDelayTimer();
 
 exit:
@@ -169,7 +169,7 @@ otError Local::RemoveHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLengt
 
     VerifyOrExit((tlv = FindPrefix(aPrefix, aPrefixLength)) != NULL, error = OT_ERROR_NOT_FOUND);
     VerifyOrExit(FindHasRoute(*tlv) != NULL, error = OT_ERROR_NOT_FOUND);
-    Remove(reinterpret_cast<uint8_t *>(tlv), sizeof(NetworkDataTlv) + tlv->GetLength());
+    RemoveTlv(tlv);
     ClearResubmitDelayTimer();
 
 exit:
@@ -272,7 +272,7 @@ otError Local::RemoveService(uint32_t aEnterpriseNumber, const uint8_t *aService
 
     VerifyOrExit((tlv = FindService(aEnterpriseNumber, aServiceData, aServiceDataLength)) != NULL,
                  error = OT_ERROR_NOT_FOUND);
-    Remove(reinterpret_cast<uint8_t *>(tlv), sizeof(NetworkDataTlv) + tlv->GetLength());
+    RemoveTlv(tlv);
     ClearResubmitDelayTimer();
 
 exit:
