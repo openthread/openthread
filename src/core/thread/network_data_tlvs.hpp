@@ -808,6 +808,11 @@ OT_TOOL_PACKED_BEGIN
 class ServiceTlv : public NetworkDataTlv
 {
 public:
+    enum
+    {
+        kServiceDataBackboneRouter = 0x01, // const THREAD_SERVICE_DATA_BBR
+    };
+
     /**
      * This method initializes the TLV.
      * Initial length is set to 2, to hold S_service_data_length field.
@@ -945,16 +950,16 @@ public:
      *
      * @returns Service ID
      */
-    uint8_t GetServiceID(void) const { return (mTResSId & kSIdMask) >> kSIdOffset; }
+    uint8_t GetServiceId(void) const { return (mTResSId & kSIdMask) >> kSIdOffset; }
 
     /**
      * This method sets Service ID.
      *
-     * @param [in] aServiceID Service ID to be set. Expected range: 0x00-0x0f.
+     * @param [in] aServiceId Service ID to be set. Expected range: 0x00-0x0f.
      */
-    void SetServiceID(uint8_t aServiceID)
+    void SetServiceId(uint8_t aServiceId)
     {
-        mTResSId = static_cast<uint8_t>((mTResSId & ~kSIdMask) | (aServiceID << kSIdOffset));
+        mTResSId = static_cast<uint8_t>((mTResSId & ~kSIdMask) | (aServiceId << kSIdOffset));
     }
 
     /**
@@ -1098,6 +1103,67 @@ public:
 
 private:
     uint16_t mServer16;
+} OT_TOOL_PACKED_END;
+
+OT_TOOL_PACKED_BEGIN
+class BackboneRouterServerData
+{
+public:
+    /**
+     * This method returns the sequence number of Backbone Router.
+     *
+     * @returns  The sequence number of the Backbone Router.
+     *
+     */
+    uint8_t GetSequenceNumber(void) const { return mSequenceNumber; }
+
+    /**
+     * This method sets the sequence number of Backbone Router.
+     *
+     * @param[in]  aSequenceNumber  The sequence number of Backbone Router.
+     *
+     */
+    void SetSequenceNumber(uint8_t aSequenceNumber) { mSequenceNumber = aSequenceNumber; }
+
+    /**
+     * This method returns the Registration Delay (in seconds) of Backbone Router.
+     *
+     * @returns The BBR Registration Delay (in seconds) of Backbone Router.
+     *
+     */
+    uint16_t GetReregistrationDelay(void) const { return HostSwap16(mReregistrationDelay); }
+
+    /**
+     * This method sets the Registration Delay (in seconds) of Backbone Router.
+     *
+     * @param[in]  aReregistrationDelay  The Registration Delay (in seconds) of Backbone Router.
+     *
+     */
+    void SetReregistrationDelay(uint16_t aReregistrationDelay)
+    {
+        mReregistrationDelay = HostSwap16(aReregistrationDelay);
+    }
+
+    /**
+     * This method returns the multicast listener report timeout (in seconds) of Backbone Router.
+     *
+     * @returns The multicast listener report timeout (in seconds) of Backbone Router.
+     *
+     */
+    uint32_t GetMlrTimeout(void) const { return HostSwap32(mMlrTimeout); }
+
+    /**
+     * This method sets multicast listener report timeout (in seconds) of Backbone Router.
+     *
+     * @param[in]  aMlrTimeout  The multicast listener report timeout (in seconds) of Backbone Router.
+     *
+     */
+    void SetMlrTimeout(uint32_t aMlrTimeout) { mMlrTimeout = HostSwap32(aMlrTimeout); }
+
+private:
+    uint8_t  mSequenceNumber;
+    uint16_t mReregistrationDelay;
+    uint32_t mMlrTimeout;
 } OT_TOOL_PACKED_END;
 
 /**

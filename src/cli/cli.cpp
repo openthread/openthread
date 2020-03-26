@@ -66,6 +66,13 @@
 #include "common/new.hpp"
 #include "net/ip6.hpp"
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+#include <openthread/backbone_router.h>
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#include <openthread/backbone_router_ftd.h>
+#endif
+#endif
+
 #include "cli_dataset.hpp"
 
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
@@ -92,6 +99,9 @@ namespace ot {
 namespace Cli {
 
 const struct Command Interpreter::sCommands[] = {
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    {"bbr", &Interpreter::ProcessBackboneRouter},
+#endif
     {"bufferinfo", &Interpreter::ProcessBufferInfo},
     {"channel", &Interpreter::ProcessChannel},
 #if OPENTHREAD_FTD
@@ -434,6 +444,140 @@ void Interpreter::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     AppendResult(OT_ERROR_NONE);
 }
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+void Interpreter::ProcessBackboneRouter(uint8_t aArgsLength, char *aArgs[])
+{
+    OT_UNUSED_VARIABLE(aArgs);
+    otError                error = OT_ERROR_INVALID_COMMAND;
+    otBackboneRouterConfig config;
+
+    if (aArgsLength == 0)
+    {
+        if (otBackboneRouterGetPrimary(mInstance, &config) == OT_ERROR_NONE)
+        {
+            mServer->OutputFormat("BBR Primary:\r\n");
+            mServer->OutputFormat("server16: 0x%04X\r\n", config.mServer16);
+            mServer->OutputFormat("seqno:    %d\r\n", config.mSequenceNumber);
+            mServer->OutputFormat("delay:    %d secs\r\n", config.mReregistrationDelay);
+            mServer->OutputFormat("timeout:  %d secs\r\n", config.mMlrTimeout);
+        }
+        else
+        {
+            mServer->OutputFormat("BBR Primary: None\r\n");
+        }
+
+        error = OT_ERROR_NONE;
+    }
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    else
+    {
+        error = ProcessBackboneRouterLocal(aArgsLength, aArgs);
+    }
+#endif
+
+    AppendResult(error);
+}
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+otError Interpreter::ProcessBackboneRouterLocal(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+    ;
+    otBackboneRouterConfig config;
+    unsigned long          value;
+
+    if (strcmp(aArgs[0], "disable") == 0)
+    {
+        otBackboneRouterSetEnabled(mInstance, false);
+    }
+    else if (strcmp(aArgs[0], "enable") == 0)
+    {
+        otBackboneRouterSetEnabled(mInstance, true);
+    }
+    else if (strcmp(aArgs[0], "jitter") == 0)
+    {
+        if (aArgsLength == 1)
+        {
+            mServer->OutputFormat("%d\r\n", otBackboneRouterGetRegistrationJitter(mInstance));
+        }
+        else if (aArgsLength == 2)
+        {
+            SuccessOrExit(error = ParseUnsignedLong(aArgs[1], value));
+            otBackboneRouterSetRegistrationJitter(mInstance, static_cast<uint8_t>(value));
+        }
+    }
+    else if (strcmp(aArgs[0], "register") == 0)
+    {
+        SuccessOrExit(error = otBackboneRouterRegister(mInstance));
+    }
+    else if (strcmp(aArgs[0], "state") == 0)
+    {
+        switch (otBackboneRouterGetState(mInstance))
+        {
+        case OT_BACKBONE_ROUTER_STATE_DISABLED:
+            mServer->OutputFormat("Disabled\r\n");
+            break;
+        case OT_BACKBONE_ROUTER_STATE_SECONDARY:
+            mServer->OutputFormat("Secondary\r\n");
+            break;
+        case OT_BACKBONE_ROUTER_STATE_PRIMARY:
+            mServer->OutputFormat("Primary\r\n");
+            break;
+        }
+    }
+    else if (strcmp(aArgs[0], "config") == 0)
+    {
+        otBackboneRouterGetConfig(mInstance, &config);
+
+        if (aArgsLength == 1)
+        {
+            mServer->OutputFormat("seqno:    %d\r\n", config.mSequenceNumber);
+            mServer->OutputFormat("delay:    %d secs\r\n", config.mReregistrationDelay);
+            mServer->OutputFormat("timeout:  %d secs\r\n", config.mMlrTimeout);
+        }
+        else
+        {
+            // Set local Backbone Router configuration.
+            for (int argCur = 1; argCur < aArgsLength; argCur++)
+            {
+                VerifyOrExit(argCur + 1 < aArgsLength, error = OT_ERROR_INVALID_ARGS);
+
+                if (strcmp(aArgs[argCur], "seqno") == 0)
+                {
+                    SuccessOrExit(error = ParseUnsignedLong(aArgs[++argCur], value));
+                    config.mSequenceNumber = static_cast<uint8_t>(value);
+                }
+                else if (strcmp(aArgs[argCur], "delay") == 0)
+                {
+                    SuccessOrExit(error = ParseUnsignedLong(aArgs[++argCur], value));
+                    config.mReregistrationDelay = static_cast<uint16_t>(value);
+                }
+                else if (strcmp(aArgs[argCur], "timeout") == 0)
+                {
+                    SuccessOrExit(error = ParseUnsignedLong(aArgs[++argCur], value));
+                    config.mMlrTimeout = static_cast<uint32_t>(value);
+                }
+                else
+                {
+                    ExitNow(error = OT_ERROR_INVALID_ARGS);
+                }
+            }
+
+            otBackboneRouterSetConfig(mInstance, &config);
+        }
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+
+#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 void Interpreter::ProcessBufferInfo(uint8_t aArgsLength, char *aArgs[])
 {

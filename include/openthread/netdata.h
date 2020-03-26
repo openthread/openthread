@@ -179,7 +179,7 @@ typedef struct otServerConfig
  */
 typedef struct otServiceConfig
 {
-    uint8_t        mServiceID;         ///< Used to return service ID when iterating over the partition's Network Data.
+    uint8_t        mServiceId;         ///< Used to return Service ID when iterating over the partition's Network Data.
     uint32_t       mEnterpriseNumber;  ///< IANA Enterprise Number.
     uint8_t        mServiceDataLength; ///< Length of service data.
     uint8_t        mServiceData[OT_SERVICE_DATA_MAX_SIZE]; ///< Service data bytes.

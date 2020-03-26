@@ -659,6 +659,16 @@ public:
     otError SendTimeSync(void);
 #endif
 
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    /**
+     * This method sets the delay before registering Backbone Router service.
+     *
+     * @param[in]  aDelay  The delay before registering Backbone Router service.
+     *
+     */
+    void SetBackboneRouterRegistrationDelay(uint8_t aDelay) { mBackboneRouterRegistrationDelay = aDelay; }
+#endif
+
 private:
     enum
     {
@@ -803,6 +813,9 @@ private:
     uint8_t mRouterSelectionJitterTimeout; ///< The Timeout prior to request/release Router ID.
 
     int8_t mParentPriority; ///< The assigned parent priority value, -2 means not assigned.
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    uint8_t mBackboneRouterRegistrationDelay; ///< Delay before registering Backbone Router service.
+#endif
 
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     MeshCoP::SteeringDataTlv mSteeringData;

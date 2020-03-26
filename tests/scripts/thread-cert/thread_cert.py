@@ -35,6 +35,7 @@ from node import Node
 
 DEFAULT_PARAMS = {
     'is_mtd': False,
+    'is_bbr': False,
     'mode': 'rsdn',
     'panid': 0xface,
     'whitelist': None,
@@ -73,6 +74,7 @@ class TestCase(unittest.TestCase):
                 params['is_mtd'],
                 simulator=self.simulator,
                 version=params['version'],
+                is_bbr=params['is_bbr'],
             )
             self.nodes[i].set_panid(params['panid'])
             self.nodes[i].set_mode(params['mode'])

@@ -100,7 +100,7 @@ public:
     /**
      * This method generate the response header according to the saved metadata.
      *
-     * @param[out]  aHeader     A refernce to the response header.
+     * @param[out]  aHeader     A reference to the response header.
      * @param[in]   aCode       The response code to fill in the response header.
      *
      * @retval OT_ERROR_NONE     Successfully generated the response header.

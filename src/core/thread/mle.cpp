@@ -55,6 +55,10 @@
 #include "thread/thread_netif.hpp"
 #include "thread/time_sync_service.hpp"
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#include "backbone_router/local.hpp"
+#endif
+
 using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
@@ -155,6 +159,17 @@ Mle::Mle(Instance &aInstance)
         mServiceAlocs[i].GetAddress().SetLocator(Mac::kShortAddrInvalid);
     }
 
+#endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    // Primary Backbone Router Aloc
+    mBackboneRouterPrimaryAloc.Clear();
+
+    mBackboneRouterPrimaryAloc.mPrefixLength       = 64;
+    mBackboneRouterPrimaryAloc.mPreferred          = true;
+    mBackboneRouterPrimaryAloc.mValid              = true;
+    mBackboneRouterPrimaryAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
+    mBackboneRouterPrimaryAloc.mScopeOverrideValid = true;
+    mBackboneRouterPrimaryAloc.GetAddress().SetLocator(kAloc16BackboneRouterPrimary);
 #endif
 
     // initialize Mesh Local Prefix
@@ -748,6 +763,13 @@ bool Mle::IsAttached(void) const
 
 void Mle::SetStateDetached(void)
 {
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    Get<BackboneRouter::Local>().Reset();
+#endif
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    Get<BackboneRouter::Leader>().Reset();
+#endif
+
     if (mRole == OT_DEVICE_ROLE_LEADER)
     {
         Get<ThreadNetif>().RemoveUnicastAddress(mLeaderAloc);
@@ -921,11 +943,22 @@ void Mle::SetMeshLocalPrefix(const MeshLocalPrefix &aMeshLocalPrefix)
         Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal16);
         Get<ThreadNetif>().UnsubscribeMulticast(mLinkLocalAllThreadNodes);
         Get<ThreadNetif>().UnsubscribeMulticast(mRealmLocalAllThreadNodes);
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+        if (Get<BackboneRouter::Local>().IsPrimary())
+        {
+            Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc);
+        }
+#endif
     }
 
     mMeshLocal64.GetAddress().SetPrefix(aMeshLocalPrefix);
     mMeshLocal16.GetAddress().SetPrefix(aMeshLocalPrefix);
     mLeaderAloc.GetAddress().SetPrefix(aMeshLocalPrefix);
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    mBackboneRouterPrimaryAloc.GetAddress().SetPrefix(GetMeshLocalPrefix());
+#endif
 
     // Just keep mesh local prefix if network interface is down
     VerifyOrExit(Get<ThreadNetif>().IsUp());
@@ -950,6 +983,13 @@ void Mle::ApplyMeshLocalPrefix(void)
         }
     }
 
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    if (Get<BackboneRouter::Local>().IsPrimary())
+    {
+        Get<ThreadNetif>().AddUnicastAddress(mBackboneRouterPrimaryAloc);
+    }
 #endif
 
     mLinkLocalAllThreadNodes.GetAddress().mFields.m8[3] = 64;
@@ -1549,6 +1589,9 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
             }
         }
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+        Get<BackboneRouter::Leader>().Update();
+#endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
         Get<NetworkData::Local>().SendServerDataNotification();
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -1581,6 +1624,20 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         Get<Ip6::Filter>().AllowNativeCommissioner(
             (Get<KeyManager>().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_NATIVE_COMMISSIONING) != 0);
     }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    if (aFlags & OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE)
+    {
+        if (Get<BackboneRouter::Local>().IsPrimary())
+        {
+            Get<ThreadNetif>().AddUnicastAddress(mBackboneRouterPrimaryAloc);
+        }
+        else
+        {
+            Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc);
+        }
+    }
+#endif
 
 exit:
     return;

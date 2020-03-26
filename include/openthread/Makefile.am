@@ -41,6 +41,10 @@ SUBDIRS                                 = \
     $(NULL)
 
 openthread_headers                      = \
+    backbone_router.h                     \
+    backbone_router_ftd.h                 \
+    border_agent.h                        \
+    border_router.h                       \
     channel_manager.h                     \
     channel_monitor.h                     \
     child_supervision.h                   \
@@ -49,8 +53,6 @@ openthread_headers                      = \
     coap.h                                \
     commissioner.h                        \
     crypto.h                              \
-    border_agent.h                        \
-    border_router.h                       \
     dataset.h                             \
     dataset_ftd.h                         \
     diag.h                                \

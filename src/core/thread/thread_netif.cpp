@@ -100,6 +100,12 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     , mLeader(aInstance)
     , mAddressResolver(aInstance)
 #endif // OPENTHREAD_FTD
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    , mBackboneRouterLeader(aInstance)
+#endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    , mBackboneRouterLocal(aInstance)
+#endif
     , mChildSupervisor(aInstance)
     , mSupervisionListener(aInstance)
     , mAnnounceBegin(aInstance)

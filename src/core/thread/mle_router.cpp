@@ -80,6 +80,9 @@ MleRouter::MleRouter(Instance &aInstance)
     , mRouterSelectionJitter(kRouterSelectionJitter)
     , mRouterSelectionJitterTimeout(0)
     , mParentPriority(kParentPriorityUnspecified)
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    , mBackboneRouterRegistrationDelay(0)
+#endif
 {
     mDeviceMode.Set(mDeviceMode.Get() | DeviceMode::kModeFullThreadDevice | DeviceMode::kModeFullNetworkData);
 
@@ -1725,6 +1728,23 @@ void MleRouter::HandleStateUpdateTimer(void)
             routerStateUpdate = true;
         }
     }
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    // Delay register only when `mRouterSelectionJitterTimeout` is 0,
+    // that is, when the device has decided to stay as REED or Router.
+    else if (mBackboneRouterRegistrationDelay > 0)
+    {
+        mBackboneRouterRegistrationDelay--;
+
+        if (mBackboneRouterRegistrationDelay == 0)
+        {
+            // If no Backbone Router service after jitter, try to register its own Backbone Router Service.
+            if (!Get<BackboneRouter::Leader>().HasPrimary())
+            {
+                Get<BackboneRouter::Local>().AddService();
+            }
+        }
+    }
+#endif
 
     switch (mRole)
     {

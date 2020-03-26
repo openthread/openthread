@@ -750,7 +750,7 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aT
             rlocStable = true;
         }
 
-        // Store old Service IDs for given rloc16, so updates to server will reuse the same Service ID
+        // Store old Service IDs for given rloc16, so updates to server will reuse the same Service ID.
         SuccessOrExit(error = GetNetworkData(false, oldTlvs, oldTlvsLength));
 
         RemoveRloc(aRloc16, kMatchModeRloc16);
@@ -946,7 +946,7 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOl
     ServiceTlv *oldService          = NULL;
     ServerTlv * dstServer           = NULL;
     uint16_t    appendLength        = 0;
-    uint8_t     serviceID           = 0;
+    uint8_t     serviceId           = 0;
     uint8_t     serviceInsertLength = sizeof(ServiceTlv) + sizeof(uint8_t) /*mServiceDataLength*/ +
                                   ServiceTlv::GetEnterpriseNumberFieldLength(aService.GetEnterpriseNumber()) +
                                   aService.GetServiceDataLength();
@@ -972,21 +972,21 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOl
         if (oldService != NULL)
         {
             // The same service is not found in current data, but was in old data. So, it had to be just removed by
-            // RemoveRloc() Lets use the same ServiceID
-            serviceID = oldService->GetServiceID();
+            // RemoveRloc() Lets use the same ServiceId
+            serviceId = oldService->GetServiceId();
         }
         else
         {
             uint8_t i;
 
-            // This seems like completely new service. Lets try to find new ServiceID for it. If all are taken, error
+            // This seems like completely new service. Lets try to find new ServiceId for it. If all are taken, error
             // out. Since we call FindServiceById() on mTlv, we need to execute this before Insert() call, otherwise
             // we'll find uninitialized service as well.
             for (i = Mle::kServiceMinId; i <= Mle::kServiceMaxId; i++)
             {
                 if (FindServiceById(i) == NULL)
                 {
-                    serviceID = i;
+                    serviceId = i;
                     break;
                 }
             }
@@ -999,7 +999,7 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOl
         dstService = reinterpret_cast<ServiceTlv *>(mTlvs + mLength);
         Insert(reinterpret_cast<uint8_t *>(dstService), serviceInsertLength);
         dstService->Init();
-        dstService->SetServiceID(serviceID);
+        dstService->SetServiceId(serviceId);
         dstService->SetEnterpriseNumber(aService.GetEnterpriseNumber());
         dstService->SetServiceData(aService.GetServiceData(), aService.GetServiceDataLength());
         dstService->SetLength(serviceInsertLength - sizeof(NetworkDataTlv));
@@ -1038,7 +1038,7 @@ ServiceTlv *Leader::FindServiceById(uint8_t aServiceId)
         {
             compare = static_cast<ServiceTlv *>(cur);
 
-            if (compare->GetServiceID() == aServiceId)
+            if (compare->GetServiceId() == aServiceId)
             {
                 ExitNow();
             }

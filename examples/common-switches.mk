@@ -28,6 +28,7 @@
 
 # OpenThread Features (Makefile default configuration).
 
+BACKBONE_ROUTER     ?= 0
 BIG_ENDIAN          ?= 0
 BORDER_AGENT        ?= 0
 BORDER_ROUTER       ?= 0
@@ -70,6 +71,10 @@ THREAD_VERSION      ?= 1.1
 TIME_SYNC           ?= 0
 UDP_FORWARD         ?= 0
 
+
+ifeq ($(BACKBONE_ROUTER),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE=1
+endif
 
 ifeq ($(BIG_ENDIAN),1)
 COMMONCFLAGS                   += -DBYTE_ORDER_BIG_ENDIAN=1

@@ -732,7 +732,7 @@ public:
     /**
      * This method retrieves the Service ALOC for given Service ID.
      *
-     * @param[in]   aServiceID Service ID to get ALOC for.
+     * @param[in]   aServiceId Service ID to get ALOC for.
      * @param[out]  aAddress   A reference to the Service ALOC.
      *
      * @retval OT_ERROR_NONE      Successfully retrieved the Service ALOC.
@@ -1767,7 +1767,11 @@ private:
     Ip6::NetifUnicastAddress mLeaderAloc;
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    Ip6::NetifUnicastAddress mServiceAlocs[OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS];
+    Ip6::NetifUnicastAddress mServiceAlocs[kMaxServiceAlocs];
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    Ip6::NetifUnicastAddress mBackboneRouterPrimaryAloc;
 #endif
 
     otMleCounters mCounters;

@@ -70,6 +70,8 @@ set(COMMON_INCLUDES
 )
 
 set(COMMON_SOURCES
+    api/backbone_router_api.cpp
+    api/backbone_router_ftd_api.cpp
     api/border_router_api.cpp
     api/channel_manager_api.cpp
     api/channel_monitor_api.cpp
@@ -103,6 +105,8 @@ set(COMMON_SOURCES
     api/thread_api.cpp
     api/thread_ftd_api.cpp
     api/udp_api.cpp
+    backbone_router/leader.cpp
+    backbone_router/local.cpp
     coap/coap.cpp
     coap/coap_message.cpp
     coap/coap_secure.cpp
