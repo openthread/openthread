@@ -248,8 +248,8 @@ void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageI
     VerifyOrExit(hasValidTlv);
 
     // Find Commissioning Data TLV
-    for (NetworkDataTlv *netDataTlv = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-         netDataTlv < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength); netDataTlv = netDataTlv->GetNext())
+    for (NetworkDataTlv *netDataTlv = reinterpret_cast<NetworkDataTlv *>(mTlvs); netDataTlv < GetTlvsEnd();
+         netDataTlv                 = netDataTlv->GetNext())
     {
         if (netDataTlv->GetType() == NetworkDataTlv::kTypeCommissioningData)
         {
@@ -317,8 +317,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    for (NetworkDataTlv *cur                                            = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength); cur = cur->GetNext())
+    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs); cur < GetTlvsEnd(); cur = cur->GetNext())
     {
         if (cur->GetType() == NetworkDataTlv::kTypeCommissioningData)
         {
@@ -1027,7 +1026,7 @@ exit:
 ServiceTlv *Leader::FindServiceById(uint8_t aServiceId)
 {
     NetworkDataTlv *cur     = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-    NetworkDataTlv *end     = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
+    NetworkDataTlv *end     = GetTlvsEnd();
     ServiceTlv *    compare = NULL;
 
     while (cur < end)
@@ -1206,24 +1205,15 @@ exit:
 void Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode)
 {
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-    NetworkDataTlv *end;
-    PrefixTlv *     prefix;
-    ServiceTlv *    service;
 
-    while (1)
+    while (cur < GetTlvsEnd())
     {
-        end = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
-
-        if (cur >= end)
-        {
-            break;
-        }
-
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypePrefix:
         {
-            prefix = static_cast<PrefixTlv *>(cur);
+            PrefixTlv *prefix = static_cast<PrefixTlv *>(cur);
+
             RemoveRloc(*prefix, aRloc16, aMatchMode);
 
             if (prefix->GetSubTlvsLength() == 0)
@@ -1238,7 +1228,8 @@ void Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode)
 
         case NetworkDataTlv::kTypeService:
         {
-            service = static_cast<ServiceTlv *>(cur);
+            ServiceTlv *service = static_cast<ServiceTlv *>(cur);
+
             RemoveRloc(*service, aRloc16, aMatchMode);
 
             if (service->GetSubTlvsLength() == 0)
@@ -1265,18 +1256,10 @@ void Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode)
 void Leader::RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16, MatchMode aMatchMode)
 {
     NetworkDataTlv *cur = aPrefix.GetSubTlvs();
-    NetworkDataTlv *end;
     ContextTlv *    context;
 
-    while (1)
+    while (cur < aPrefix.GetNext())
     {
-        end = aPrefix.GetNext();
-
-        if (cur >= end)
-        {
-            break;
-        }
-
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypeHasRoute:
@@ -1286,7 +1269,7 @@ void Leader::RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16, MatchMode aMatchMo
             if (cur->GetLength() == 0)
             {
                 aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - sizeof(HasRouteTlv));
-                Remove(cur, sizeof(HasRouteTlv));
+                RemoveTlv(cur);
                 continue;
             }
 
@@ -1299,7 +1282,7 @@ void Leader::RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16, MatchMode aMatchMo
             if (cur->GetLength() == 0)
             {
                 aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - sizeof(BorderRouterTlv));
-                Remove(cur, sizeof(BorderRouterTlv));
+                RemoveTlv(cur);
                 continue;
             }
 
@@ -1330,18 +1313,10 @@ void Leader::RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16, MatchMode aMatchMo
 void Leader::RemoveRloc(ServiceTlv &aService, uint16_t aRloc16, MatchMode aMatchMode)
 {
     NetworkDataTlv *cur = aService.GetSubTlvs();
-    NetworkDataTlv *end;
     ServerTlv *     server;
 
-    while (1)
+    while (cur < aService.GetNext())
     {
-        end = aService.GetNext();
-
-        if (cur >= end)
-        {
-            break;
-        }
-
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypeServer:
@@ -1404,23 +1379,15 @@ void Leader::RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter, uint
 void Leader::RemoveContext(uint8_t aContextId)
 {
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-    NetworkDataTlv *end;
-    PrefixTlv *     prefix;
 
-    while (1)
+    while (cur < GetTlvsEnd())
     {
-        end = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
-
-        if (cur >= end)
-        {
-            break;
-        }
-
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypePrefix:
         {
-            prefix = static_cast<PrefixTlv *>(cur);
+            PrefixTlv *prefix = static_cast<PrefixTlv *>(cur);
+
             RemoveContext(*prefix, aContextId);
 
             if (prefix->GetSubTlvsLength() == 0)
@@ -1446,24 +1413,15 @@ void Leader::RemoveContext(uint8_t aContextId)
 void Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
 {
     NetworkDataTlv *cur = aPrefix.GetSubTlvs();
-    NetworkDataTlv *end;
-    ContextTlv *    context;
 
-    while (1)
+    while (cur < aPrefix.GetNext())
     {
-        end = aPrefix.GetNext();
-
-        if (cur >= end)
-        {
-            break;
-        }
-
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypeContext:
         {
             // remove context tlv
-            context = static_cast<ContextTlv *>(cur);
+            ContextTlv *context = static_cast<ContextTlv *>(cur);
 
             if (context->GetContextId() == aContextId)
             {
@@ -1490,8 +1448,7 @@ void Leader::UpdateContextsAfterReset(void)
     ContextTlv *contextTlv;
 
     // Iterate through Network Data and synchronize missing contexts.
-    for (NetworkDataTlv *cur                                            = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength); cur = cur->GetNext())
+    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs); cur < GetTlvsEnd(); cur = cur->GetNext())
     {
         if (cur->GetType() != NetworkDataTlv::kTypePrefix)
         {
