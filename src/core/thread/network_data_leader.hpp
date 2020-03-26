@@ -234,15 +234,15 @@ public:
     otError GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16);
 
     /**
-     * This method gets the Service Id for the specified service.
+     * This method gets the Service ID for the specified service.
      *
      * @param[in]  aEnterpriseNumber  Enterprise Number (IANA-assigned) for Service TLV
      * @param[in]  aServiceData       A pointer to the Service Data
      * @param[in]  aServiceDataLength The length of @p aServiceData in bytes.
      * @param[in]  aServerStable      The Stable flag value for Server TLV
-     * @param[out] aServiceId               A reference where to put the Service Id.
+     * @param[out] aServiceId         A reference where to put the Service ID.
      *
-     * @retval OT_ERROR_NONE       Successfully got the Service Id.
+     * @retval OT_ERROR_NONE       Successfully got the Service ID.
      * @retval OT_ERROR_NOT_FOUND  The specified service was not found.
      *
      */
@@ -256,7 +256,7 @@ public:
     /**
      * This method gets the Primary Backbone Router (PBBR) in the Thread Network.
      *
-     * @param[out]  aConfig      A refernce where to put the Primary Backbone Router configuration.
+     * @param[out]  aConfig      The Primary Backbone Router configuration.
      *
      * @retval OT_ERROR_NONE       Successfully got the Primary Backbone Router configuration.
      * @retval OT_ERROR_NOT_FOUND  No Backbone Router Service in the Thread Network.

@@ -96,12 +96,12 @@ enum
     kMaxChildUpdateResponseTimeout  = 2000, ///< Maximum delay for receiving a Child Update Response
     kMaxLinkRequestTimeout          = 2000, ///< Maximum delay for receiving a Link Accept
     kMinTimeoutKeepAlive            = (((kMaxChildKeepAliveAttempts + 1) * kUnicastRetransmissionDelay) /
-                            1000), ///< Minimum timeout(s) for keep alive
+                            1000), ///< Minimum timeout(in seconds) for keep alive
     kMinTimeoutDataPoll             = (OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD +
                            OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS * OPENTHREAD_CONFIG_MAC_RETX_POLL_PERIOD) /
-                          1000, ///< Minimum timeout(s) for data poll
+                          1000, ///< Minimum timeout(in seconds) for data poll
     kMinTimeout = (kMinTimeoutKeepAlive >= kMinTimeoutDataPoll ? kMinTimeoutKeepAlive
-                                                               : kMinTimeoutDataPoll), ///< Minimum timeout(s)
+                                                               : kMinTimeoutDataPoll), ///< Minimum timeout(in seconds)
 };
 
 enum
@@ -223,13 +223,13 @@ enum AlocAllocation
 };
 
 /**
- * Service Ids
+ * Service IDs
  *
  */
 enum ServiceId
 {
-    kServiceMinId = 0x00, ///< Minimal Service Id.
-    kServiceMaxId = 0x0f, ///< Maximal Service Id.
+    kServiceMinId = 0x00, ///< Minimal Service ID.
+    kServiceMaxId = 0x0f, ///< Maximal Service ID.
 };
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE

@@ -946,16 +946,16 @@ public:
     }
 
     /**
-     * This method returns Service Id. It is in range 0x00-0x0f.
+     * This method returns Service ID. It is in range 0x00-0x0f.
      *
-     * @returns Service Id
+     * @returns Service ID
      */
     uint8_t GetServiceId(void) const { return (mTResSId & kSIdMask) >> kSIdOffset; }
 
     /**
-     * This method sets Service Id.
+     * This method sets Service ID.
      *
-     * @param [in] aServiceId Service Id to be set. Expected range: 0x00-0x0f.
+     * @param [in] aServiceId Service ID to be set. Expected range: 0x00-0x0f.
      */
     void SetServiceId(uint8_t aServiceId)
     {
@@ -1112,7 +1112,7 @@ public:
     /**
      * This method returns the sequence number of Backbone Router.
      *
-     *  @returns  The sequence number of Backbone Router.
+     * @returns  The sequence number of the Backbone Router.
      *
      */
     uint8_t GetSequenceNumber(void) const { return mSequenceNumber; }
@@ -1120,23 +1120,23 @@ public:
     /**
      * This method sets the sequence number of Backbone Router.
      *
-     *  @param[in]  aSequenceNumber  The sequence number of Backbone Router.
+     * @param[in]  aSequenceNumber  The sequence number of Backbone Router.
      *
      */
     void SetSequenceNumber(uint8_t aSequenceNumber) { mSequenceNumber = aSequenceNumber; }
 
     /**
-     * This method returns the Registration Delay (s) of Backbone Router.
+     * This method returns the Registration Delay (in seconds) of Backbone Router.
      *
-     *  @returns The BBR Registration Delay (s) of Backbone Router.
+     * @returns The BBR Registration Delay (in seconds) of Backbone Router.
      *
      */
     uint16_t GetReregistrationDelay(void) const { return HostSwap16(mReregistrationDelay); }
 
     /**
-     * This method sets the Registration Delay (s) of Backbone Router.
+     * This method sets the Registration Delay (in seconds) of Backbone Router.
      *
-     *  @param[in]  aReregistrationDelay  The Registration Delay (s) of Backbone Router.
+     * @param[in]  aReregistrationDelay  The Registration Delay (in seconds) of Backbone Router.
      *
      */
     void SetReregistrationDelay(uint16_t aReregistrationDelay)
@@ -1145,17 +1145,17 @@ public:
     }
 
     /**
-     * This method returns the multicast listener report timeout (s) of Backbone Router.
+     * This method returns the multicast listener report timeout (in seconds) of Backbone Router.
      *
-     *  @returns The multicast listener report timeout (s) of Backbone Router.
+     * @returns The multicast listener report timeout (in seconds) of Backbone Router.
      *
      */
     uint32_t GetMlrTimeout(void) const { return HostSwap32(mMlrTimeout); }
 
     /**
-     * This method sets multicast listener report timeout (s) of Backbone Router.
+     * This method sets multicast listener report timeout (in seconds) of Backbone Router.
      *
-     *  @param[in]  aMlrTimeout  The multicast listener report timeout (s) of Backbone Router.
+     * @param[in]  aMlrTimeout  The multicast listener report timeout (in seconds) of Backbone Router.
      *
      */
     void SetMlrTimeout(uint32_t aMlrTimeout) { mMlrTimeout = HostSwap32(aMlrTimeout); }

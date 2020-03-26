@@ -160,10 +160,10 @@ public:
     void UpdateContextsAfterReset(void);
 
     /**
-     * This method scans network data for given service Id and returns pointer to the respective TLV, if present.
+     * This method scans network data for given Service ID and returns pointer to the respective TLV, if present.
      *
-     * @param aServiceId Service Id to look for.
-     * @return Pointer to the Service TLV for given Service Id, or NULL if not present.
+     * @param aServiceId Service ID to look for.
+     * @return Pointer to the Service TLV for given Service ID, or NULL if not present.
      *
      */
     ServiceTlv *FindServiceById(uint8_t aServiceId);

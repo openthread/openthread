@@ -86,7 +86,7 @@ void Local::Reset(void)
 
     if (mState == OT_BACKBONE_ROUTER_STATE_PRIMARY)
     {
-        // Increase sequenence number when changing from primary to secondary.
+        // Increase sequence number when changing from primary to secondary.
         mSequenceNumber++;
         Get<Notifier>().Signal(OT_CHANGED_THREAD_BACKBONE_ROUTER_LOCAL);
         SetState(OT_BACKBONE_ROUTER_STATE_SECONDARY);
@@ -221,11 +221,11 @@ void Local::UpdateBackboneRouterPrimary(Leader::State aState, const BackboneRout
     }
     else if (aConfig.mServer16 != Get<Mle::MleRouter>().GetRloc16())
     {
-        Reset(); 
+        Reset();
     }
     else if (!mIsServiceAdded)
     {
-        // Here original PBBR restores its Backbone Rouetr Service from Thread Network,
+        // Here original PBBR restores its Backbone Router Service from Thread Network,
         // Intentionally skips the state update as PBBR will refresh its service.
         mSequenceNumber      = aConfig.mSequenceNumber + 1;
         mReregistrationDelay = aConfig.mReregistrationDelay;

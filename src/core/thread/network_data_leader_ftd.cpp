@@ -750,7 +750,7 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aT
             rlocStable = true;
         }
 
-        // Store old Service Ids for given rloc16, so updates to server will reuse the same Service Id
+        // Store old Service IDs for given rloc16, so updates to server will reuse the same Service ID.
         SuccessOrExit(error = GetNetworkData(false, oldTlvs, oldTlvsLength));
 
         RemoveRloc(aRloc16, kMatchModeRloc16);
@@ -965,7 +965,7 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOl
 
     if (dstService == NULL)
     {
-        // Try to preserve old Service Id, if existing
+        // Try to preserve old Service ID, if existing
         oldService = FindService(aService.GetEnterpriseNumber(), aService.GetServiceData(),
                                  aService.GetServiceDataLength(), aOldTlvs, aOldTlvsLength);
 
@@ -991,7 +991,7 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOl
                 }
             }
 
-            otLogInfoNetData("Allocated Service Id = %d", i);
+            otLogInfoNetData("Allocated Service ID = %d", i);
 
             VerifyOrExit(i <= Mle::kServiceMaxId, error = OT_ERROR_NO_BUFS);
         }

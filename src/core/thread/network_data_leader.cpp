@@ -73,8 +73,7 @@ otError LeaderBase::GetServiceId(uint32_t       aEnterpriseNumber,
                                  bool           aServerStable,
                                  uint8_t &      aServiceId)
 {
-    otError error = OT_ERROR_NOT_FOUND;
-
+    otError         error    = OT_ERROR_NOT_FOUND;
     Iterator        iterator = kIteratorInit;
     otServiceConfig serviceConfig;
 

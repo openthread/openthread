@@ -448,9 +448,9 @@ void Interpreter::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 void Interpreter::ProcessBackboneRouter(uint8_t aArgsLength, char *aArgs[])
 {
+    OT_UNUSED_VARIABLE(aArgs);
     otError                error = OT_ERROR_INVALID_COMMAND;
     otBackboneRouterConfig config;
-    OT_UNUSED_VARIABLE(aArgs);
 
     if (aArgsLength == 0)
     {

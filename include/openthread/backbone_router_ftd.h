@@ -66,7 +66,7 @@ typedef enum
  * This function enables or disables Backbone functionality.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
- * @param[in] aEnable   TRUE if enable Backbone functionality, FALSE otherwise.
+ * @param[in] aEnable   TRUE to enable Backbone functionality, FALSE otherwise.
  *
  * @sa otBackboneRouterGetState
  * @sa otBackboneRouterGetConfig

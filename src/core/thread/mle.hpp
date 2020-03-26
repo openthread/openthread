@@ -730,9 +730,9 @@ public:
     }
 
     /**
-     * This method retrieves the Service ALOC for given Service Id.
+     * This method retrieves the Service ALOC for given Service ID.
      *
-     * @param[in]   aServiceId Service Id to get ALOC for.
+     * @param[in]   aServiceId Service ID to get ALOC for.
      * @param[out]  aAddress   A reference to the Service ALOC.
      *
      * @retval OT_ERROR_NONE      Successfully retrieved the Service ALOC.
@@ -794,19 +794,19 @@ public:
     }
 
     /**
-     * This method returns the Service Id corresponding to a Service ALOC16.
+     * This method returns the Service ID corresponding to a Service ALOC16.
      *
      * @param[in]  aAloc16  The Servicer ALOC16 value.
      *
-     * @returns The Service Id corresponding to given ALOC16.
+     * @returns The Service ID corresponding to given ALOC16.
      *
      */
     static uint8_t ServiceIdFromAloc(uint16_t aAloc16) { return static_cast<uint8_t>(aAloc16 - kAloc16ServiceStart); }
 
     /**
-     * This method returns the Service Aloc corresponding to a Service Id.
+     * This method returns the Service Aloc corresponding to a Service ID.
      *
-     * @param[in]  aServiceId  The Service Id value.
+     * @param[in]  aServiceId  The Service ID value.
      *
      * @returns The Service ALOC16 corresponding to given ID.
      *

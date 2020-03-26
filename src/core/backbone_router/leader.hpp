@@ -71,7 +71,7 @@ public:
     /**
      * This constructor initializes the `Leader`.
      *
-     * @param[in]  aNetif  A reference to the Thread network interface.
+     * @param[in] aInstance  A reference to the OpenThread instance.
      *
      */
     explicit Leader(Instance &aInstance);
@@ -91,7 +91,7 @@ public:
     /**
      * This method gets the Primary Backbone Router in the Thread Network.
      *
-     * @param[out]  aConfig        A reference whether to put the Primary Backbone Router information.
+     * @param[out]  aConfig        The Primary Backbone Router information.
      *
      * @retval OT_ERROR_NONE       Successfully got the Primary Backbone Router information.
      * @retval OT_ERROR_NOT_FOUND  No Backbone Router in the Thread Network.
@@ -100,11 +100,11 @@ public:
     otError GetConfig(BackboneRouterConfig &aConfig) const;
 
     /**
-     * This method gets the Backbone Router service id.
+     * This method gets the Backbone Router Service ID.
      *
-     * @param[out]  aServiceId     A reference whether to put the Backbone Router service id.
+     * @param[out]  aServiceId     The reference whether to put the Backbone Router Service ID.
      *
-     * @retval OT_ERROR_NONE       Successfully got the Backbone Router service id.
+     * @retval OT_ERROR_NONE       Successfully got the Backbone Router Service ID.
      * @retval OT_ERROR_NOT_FOUND  Backbone Router service doesn't exist.
      *
      */
@@ -113,7 +113,7 @@ public:
     /**
      * This method gets the short address of the Primary Backbone Router.
      *
-     * @retval short address of Primary Backbone Router, or Mac::kShortAddrInvalid if no Primary Backbone Router.
+     * @returns short address of Primary Backbone Router, or Mac::kShortAddrInvalid if no Primary Backbone Router.
      *
      */
     uint16_t GetServer16(void) const { return mConfig.mServer16; }

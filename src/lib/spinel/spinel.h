@@ -3489,7 +3489,7 @@ enum
      *
      * Array of structures containing:
      *
-     *  `C`: Service Id
+     *  `C`: Service ID
      *  `L`: Enterprise Number
      *  `d`: Service Data
      *  `b`: Stable

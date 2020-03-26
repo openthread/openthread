@@ -77,7 +77,7 @@ otError otBackboneRouterRegister(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<BackboneRouter::Local>().AddService(true /* Forcely register local Backbone Router Service */);
+    return instance.Get<BackboneRouter::Local>().AddService(true /* Force registration */);
 }
 
 uint8_t otBackboneRouterGetRegistrationJitter(otInstance *aInstance)

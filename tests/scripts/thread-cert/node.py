@@ -83,8 +83,8 @@ class Node:
     def __init_sim(self, nodeid, mode):
         """ Initialize a simulation node. """
 
-        # Default command if no match below, will be override if below conditions are met.
-        cmd = 'ot-cli-%s' % (mode)
+        # Default command if no match below, will be overridden if below conditions are met.
+        cmd = './ot-cli-%s' % (mode)
 
         # If Thread version of node matches the testing environment version.
         if self.version == self.env_version:
@@ -107,6 +107,7 @@ class Node:
 
             if 'RADIO_DEVICE' in os.environ:
                 cmd += ' -v %s' % os.environ['RADIO_DEVICE']
+                os.environ['NODE_ID'] = str(nodeid)
 
         # Load Thread 1.1 node when testing Thread 1.2 scenarios for interoperability
         elif self.version == '1.1':
@@ -119,8 +120,8 @@ class Node:
 
             if 'RADIO_DEVICE_1_1' in os.environ:
                 cmd += ' -v %s' % os.environ['RADIO_DEVICE_1_1']
+                os.environ['NODE_ID'] = str(nodeid)
 
-        os.environ['NODE_ID'] = str(nodeid)
         cmd += ' %d' % nodeid
         print("%s" % cmd)
 
@@ -139,13 +140,14 @@ class Node:
     def __init_ncp_sim(self, nodeid, mode):
         """ Initialize an NCP simulation node. """
 
-        # Default command if no match below, will be override if below conditions are met.
-        cmd = 'ot-ncp-ftd'
+        # Default command if no match below, will be overridden if below conditions are met.
+        cmd = 'spinel-cli.py -p ./ot-ncp-%s -n' % mode
 
         # If Thread version of node matches the testing environment version.
         if self.version == self.env_version:
             if 'RADIO_DEVICE' in os.environ:
                 args = ' %s' % os.environ['RADIO_DEVICE']
+                os.environ['NODE_ID'] = str(nodeid)
             else:
                 args = ''
 
@@ -160,6 +162,10 @@ class Node:
                 elif 'top_builddir_1_2_bbr' in os.environ:
                     srcdir = os.environ['top_builddir_1_2_bbr']
                     cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
+                    cmd = 'spinel-cli.py -p "%s%s" -n' % (
+                        cmd,
+                        args,
+                    )
 
             # Load Thread device of the testing environment version (may be 1.1 or 1.2).
             else:
@@ -169,13 +175,18 @@ class Node:
                         args,
                     )
                 elif 'top_builddir' in os.environ:
-                    srcdir = os.environ['top_builddir_1_2_bbr']
+                    srcdir = os.environ['top_builddir']
                     cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
+                    cmd = 'spinel-cli.py -p "%s%s" -n' % (
+                        cmd,
+                        args,
+                    )
 
         # Load Thread 1.1 node when testing Thread 1.2 scenarios for interoperability.
         elif self.version == '1.1':
             if 'RADIO_DEVICE_1_1' in os.environ:
                 args = ' %s' % os.environ['RADIO_DEVICE_1_1']
+                os.environ['NODE_ID'] = str(nodeid)
             else:
                 args = ''
 
@@ -192,7 +203,6 @@ class Node:
                     args,
                 )
 
-        os.environ['NODE_ID'] = str(nodeid)
         cmd += ' %d' % nodeid
         print("%s" % cmd)
 

@@ -76,6 +76,7 @@
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 #include "backbone_router/leader.hpp"
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 #include "backbone_router/local.hpp"
 #endif

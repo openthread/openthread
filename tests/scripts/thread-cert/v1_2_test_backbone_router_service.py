@@ -53,7 +53,7 @@ BBR_REGISTRATION_JITTER = 5
     from the network, after increasing sequence number, it will reregister its
     Backbone Router Service to the Leader and become Primary.
  3) Reset BBR_1, if bring back after it is released in the network, BBR_1 will
-    choose a random sequence number, register its Backbone Rouetr Service to
+    choose a random sequence number, register its Backbone Router Service to
     Leader and become Primary.
  4) Configure BBR_2 with highest sequence number and explicitly trigger SRV_DATA.ntf.
     BBR_2 would become Primary and BBR_1 would change to Secondary with sequence

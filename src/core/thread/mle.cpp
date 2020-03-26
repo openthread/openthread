@@ -169,7 +169,7 @@ Mle::Mle(Instance &aInstance)
     mBackboneRouterPrimaryAloc.mValid              = true;
     mBackboneRouterPrimaryAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
     mBackboneRouterPrimaryAloc.mScopeOverrideValid = true;
-    mBackboneRouterPrimaryAloc.GetAddress().SetLocator(Mac::kShortAddrInvalid);
+    mBackboneRouterPrimaryAloc.GetAddress().SetLocator(kAloc16BackboneRouterPrimary);
 #endif
 
     // initialize Mesh Local Prefix
@@ -943,11 +943,22 @@ void Mle::SetMeshLocalPrefix(const MeshLocalPrefix &aMeshLocalPrefix)
         Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal16);
         Get<ThreadNetif>().UnsubscribeMulticast(mLinkLocalAllThreadNodes);
         Get<ThreadNetif>().UnsubscribeMulticast(mRealmLocalAllThreadNodes);
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+        if (Get<BackboneRouter::Local>().IsPrimary())
+        {
+            Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc);
+        }
+#endif
     }
 
     mMeshLocal64.GetAddress().SetPrefix(aMeshLocalPrefix);
     mMeshLocal16.GetAddress().SetPrefix(aMeshLocalPrefix);
     mLeaderAloc.GetAddress().SetPrefix(aMeshLocalPrefix);
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    mBackboneRouterPrimaryAloc.GetAddress().SetPrefix(GetMeshLocalPrefix());
+#endif
 
     // Just keep mesh local prefix if network interface is down
     VerifyOrExit(Get<ThreadNetif>().IsUp());
@@ -975,10 +986,8 @@ void Mle::ApplyMeshLocalPrefix(void)
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    if (mBackboneRouterPrimaryAloc.GetAddress().GetLocator() != Mac::kShortAddrInvalid)
+    if (Get<BackboneRouter::Local>().IsPrimary())
     {
-        Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc);
-        mBackboneRouterPrimaryAloc.GetAddress().SetPrefix(GetMeshLocalPrefix());
         Get<ThreadNetif>().AddUnicastAddress(mBackboneRouterPrimaryAloc);
     }
 #endif
@@ -1617,20 +1626,15 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
     }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    if ((aFlags & OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE) &&
-        (Get<BackboneRouter::Local>().IsPrimary() !=
-         (mBackboneRouterPrimaryAloc.GetAddress().GetLocator() != Mac::kShortAddrInvalid)))
+    if (aFlags & OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE)
     {
         if (Get<BackboneRouter::Local>().IsPrimary())
         {
-            mBackboneRouterPrimaryAloc.GetAddress().SetLocator(kAloc16BackboneRouterPrimary);
-            mBackboneRouterPrimaryAloc.GetAddress().SetPrefix(GetMeshLocalPrefix());
             Get<ThreadNetif>().AddUnicastAddress(mBackboneRouterPrimaryAloc);
         }
         else
         {
             Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc);
-            mBackboneRouterPrimaryAloc.GetAddress().SetLocator(Mac::kShortAddrInvalid);
         }
     }
 #endif

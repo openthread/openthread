@@ -59,7 +59,7 @@ public:
     /**
      * This constructor initializes the local Backbone Router.
      *
-     * @param[in]  aNetif  A reference to the Thread network interface.
+     * @param[in] aInstance  A reference to the OpenThread instance.
      *
      */
     explicit Local(Instance &aInstance);
@@ -92,7 +92,7 @@ public:
     /**
      * This method gets local Backbone Router configuration.
      *
-     * @param[out]  aConfig  A reference whether to put local Backbone Router configuration.
+     * @param[out]  aConfig  The local Backbone Router configuration.
      *
      */
     void GetConfig(BackboneRouterConfig &aConfig) const;
@@ -100,7 +100,7 @@ public:
     /**
      * This method sets local Backbone Router configuration.
      *
-     * @param[in]  aConfig              A reference of the configuration to set.
+     * @param[in]  aConfig  The configuration to set.
      *
      */
     void SetConfig(const BackboneRouterConfig &aConfig);
@@ -108,9 +108,9 @@ public:
     /**
      * This method registers Backbone Router Dataset to Leader.
      *
-     * @param[in]  aForce True if to register forcely regardless of current BackboneRouterState.
-     *                    False if allow to decide whether or not to register according to
-     *                    current BackboneRouterState.
+     * @param[in]  aForce True to force registration regardless of current BackboneRouterState.
+     *                    False to decide based on current BackboneRouterState.
+     *
      *
      * @retval OT_ERROR_NONE             Successfully added the Service entry.
      * @retval OT_ERROR_INVALID_STATE    Not in the ready state to register.
