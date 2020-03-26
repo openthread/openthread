@@ -121,7 +121,7 @@
 #if OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE
 
 namespace ot {
-namespace PosixApp {
+namespace Posix {
 
 HdlcInterface::HdlcInterface(SpinelInterface::Callbacks &aCallback, SpinelInterface::RxFrameBuffer &aFrameBuffer)
     : mCallbacks(aCallback)
@@ -635,6 +635,6 @@ void HdlcInterface::HandleHdlcFrame(otError aError)
     }
 }
 
-} // namespace PosixApp
+} // namespace Posix
 } // namespace ot
 #endif // OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE

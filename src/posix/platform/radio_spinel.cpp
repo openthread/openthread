@@ -68,10 +68,10 @@
 
 using ot::Spinel::Decoder;
 
-static ot::PosixApp::RadioSpinel sRadioSpinel;
+static ot::Posix::RadioSpinel sRadioSpinel;
 
 namespace ot {
-namespace PosixApp {
+namespace Posix {
 
 static otError SpinelStatusToOtError(spinel_status_t aError)
 {
@@ -245,7 +245,7 @@ otError RadioSpinel::CheckSpinelVersion(void)
     if ((versionMajor != SPINEL_PROTOCOL_VERSION_THREAD_MAJOR) ||
         (versionMinor != SPINEL_PROTOCOL_VERSION_THREAD_MINOR))
     {
-        otLogCritPlat("Spinel version mismatch - PosixApp:%d.%d, RCP:%d.%d", SPINEL_PROTOCOL_VERSION_THREAD_MAJOR,
+        otLogCritPlat("Spinel version mismatch - Posix:%d.%d, RCP:%d.%d", SPINEL_PROTOCOL_VERSION_THREAD_MAJOR,
                       SPINEL_PROTOCOL_VERSION_THREAD_MINOR, versionMajor, versionMinor);
         DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
     }
@@ -1600,7 +1600,7 @@ otRadioState RadioSpinel::GetState(void) const
     return sOtRadioStateMap[mState];
 }
 
-} // namespace PosixApp
+} // namespace Posix
 } // namespace ot
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
@@ -1849,7 +1849,7 @@ exit:
 #endif
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-void ot::PosixApp::RadioSpinel::Process(const Event &aEvent)
+void ot::Posix::RadioSpinel::Process(const Event &aEvent)
 {
     if (mRxFrameBuffer.HasSavedFrame())
     {

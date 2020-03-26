@@ -40,7 +40,7 @@
 #include "lib/hdlc/hdlc.hpp"
 
 namespace ot {
-namespace PosixApp {
+namespace Posix {
 
 class SpinelInterface
 {
@@ -78,7 +78,7 @@ public:
         void HandleReceivedFrame(void);
     };
 };
-} // namespace PosixApp
+} // namespace Posix
 } // namespace ot
 
 #endif // POSIX_APP_SPINEL_INTERFACE_HPP_
