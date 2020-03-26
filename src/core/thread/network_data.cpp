@@ -519,34 +519,22 @@ exit:
 void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
 {
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aData);
-    NetworkDataTlv *end;
-    PrefixTlv *     prefix;
-    ServiceTlv *    service;
-    uint8_t         length;
-    uint8_t *       dst;
-    uint8_t *       src;
 
-    while (1)
+    while (cur < reinterpret_cast<NetworkDataTlv *>(aData + aDataLength))
     {
-        end = reinterpret_cast<NetworkDataTlv *>(aData + aDataLength);
-
-        if (cur >= end)
-        {
-            break;
-        }
-
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypePrefix:
         {
-            prefix = static_cast<PrefixTlv *>(cur);
+            PrefixTlv *prefix = static_cast<PrefixTlv *>(cur);
+
             RemoveTemporaryData(aData, aDataLength, *prefix);
 
             if (prefix->GetSubTlvsLength() == 0)
             {
-                length = sizeof(NetworkDataTlv) + cur->GetLength();
-                dst    = reinterpret_cast<uint8_t *>(cur);
-                src    = reinterpret_cast<uint8_t *>(cur->GetNext());
+                uint8_t  length = sizeof(NetworkDataTlv) + cur->GetLength();
+                uint8_t *dst    = reinterpret_cast<uint8_t *>(cur);
+                uint8_t *src    = reinterpret_cast<uint8_t *>(cur->GetNext());
                 memmove(dst, src, aDataLength - static_cast<size_t>(src - aData));
                 aDataLength -= length;
                 continue;
@@ -558,14 +546,14 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
 
         case NetworkDataTlv::kTypeService:
         {
-            service = static_cast<ServiceTlv *>(cur);
+            ServiceTlv *service = static_cast<ServiceTlv *>(cur);
             RemoveTemporaryData(aData, aDataLength, *service);
 
             if (service->GetSubTlvsLength() == 0)
             {
-                length = sizeof(NetworkDataTlv) + cur->GetLength();
-                dst    = reinterpret_cast<uint8_t *>(cur);
-                src    = reinterpret_cast<uint8_t *>(cur->GetNext());
+                uint8_t  length = sizeof(NetworkDataTlv) + cur->GetLength();
+                uint8_t *dst    = reinterpret_cast<uint8_t *>(cur);
+                uint8_t *src    = reinterpret_cast<uint8_t *>(cur->GetNext());
                 memmove(dst, src, aDataLength - static_cast<size_t>(src - aData));
                 aDataLength -= length;
                 continue;
@@ -576,20 +564,18 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
         }
 
         default:
-        {
             // remove temporary tlv
             if (!cur->IsStable())
             {
-                length = sizeof(NetworkDataTlv) + cur->GetLength();
-                dst    = reinterpret_cast<uint8_t *>(cur);
-                src    = reinterpret_cast<uint8_t *>(cur->GetNext());
+                uint8_t  length = sizeof(NetworkDataTlv) + cur->GetLength();
+                uint8_t *dst    = reinterpret_cast<uint8_t *>(cur);
+                uint8_t *src    = reinterpret_cast<uint8_t *>(cur->GetNext());
                 memmove(dst, src, aDataLength - static_cast<size_t>(src - aData));
                 aDataLength -= length;
                 continue;
             }
 
             break;
-        }
         }
 
         cur = cur->GetNext();
@@ -600,50 +586,27 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
 
 void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, PrefixTlv &aPrefix)
 {
-    NetworkDataTlv *   cur = aPrefix.GetSubTlvs();
-    NetworkDataTlv *   end;
-    BorderRouterTlv *  borderRouter;
-    HasRouteTlv *      hasRoute;
-    ContextTlv *       context;
-    BorderRouterEntry *borderRouterEntry;
-    HasRouteEntry *    hasRouteEntry;
-    uint8_t            length;
-    uint8_t            contextId;
-    uint8_t *          dst;
-    uint8_t *          src;
+    NetworkDataTlv *cur = aPrefix.GetSubTlvs();
 
-    while (1)
+    while (cur < aPrefix.GetNext())
     {
-        end = aPrefix.GetNext();
-
-        if (cur >= end)
-        {
-            break;
-        }
-
         if (cur->IsStable())
         {
             switch (cur->GetType())
             {
             case NetworkDataTlv::kTypeBorderRouter:
             {
-                borderRouter = FindBorderRouter(aPrefix);
+                BorderRouterTlv *borderRouter = static_cast<BorderRouterTlv *>(cur);
+                ContextTlv *     context      = FindContext(aPrefix);
 
-                if ((context = FindContext(aPrefix)) == NULL)
-                {
-                    break;
-                }
-
-                contextId = context->GetContextId();
-
-                // replace p_border_router_16
+                // Replace p_border_router_16
                 for (uint8_t i = 0; i < borderRouter->GetNumEntries(); i++)
                 {
-                    borderRouterEntry = borderRouter->GetEntry(i);
+                    BorderRouterEntry *borderRouterEntry = borderRouter->GetEntry(i);
 
-                    if (borderRouterEntry->IsDhcp() || borderRouterEntry->IsConfigure())
+                    if ((borderRouterEntry->IsDhcp() || borderRouterEntry->IsConfigure()) && (context != NULL))
                     {
-                        borderRouterEntry->SetRloc(0xfc00 | contextId);
+                        borderRouterEntry->SetRloc(0xfc00 | context->GetContextId());
                     }
                     else
                     {
@@ -656,22 +619,19 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Pref
 
             case NetworkDataTlv::kTypeHasRoute:
             {
-                hasRoute = FindHasRoute(aPrefix);
+                HasRouteTlv *hasRoute = static_cast<HasRouteTlv *>(cur);
 
-                // replace r_border_router_16
+                // Replace r_border_router_16
                 for (uint8_t j = 0; j < hasRoute->GetNumEntries(); j++)
                 {
-                    hasRouteEntry = hasRoute->GetEntry(j);
-                    hasRouteEntry->SetRloc(0xfffe);
+                    hasRoute->GetEntry(j)->SetRloc(0xfffe);
                 }
 
                 break;
             }
 
             default:
-            {
                 break;
-            }
             }
 
             // keep stable tlv
@@ -680,9 +640,9 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Pref
         else
         {
             // remove temporary tlv
-            length = sizeof(NetworkDataTlv) + cur->GetLength();
-            dst    = reinterpret_cast<uint8_t *>(cur);
-            src    = reinterpret_cast<uint8_t *>(cur->GetNext());
+            uint8_t  length = sizeof(NetworkDataTlv) + cur->GetLength();
+            uint8_t *dst    = reinterpret_cast<uint8_t *>(cur);
+            uint8_t *src    = reinterpret_cast<uint8_t *>(cur->GetNext());
             memmove(dst, src, aDataLength - static_cast<size_t>(src - aData));
             aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - length);
             aDataLength -= length;
@@ -693,36 +653,22 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Pref
 void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, ServiceTlv &aService)
 {
     NetworkDataTlv *cur = aService.GetSubTlvs();
-    NetworkDataTlv *end;
-    ServerTlv *     server;
-    uint8_t         length;
-    uint8_t *       dst;
-    uint8_t *       src;
 
-    while (1)
+    while (cur < aService.GetNext())
     {
-        end = aService.GetNext();
-
-        if (cur >= end)
-        {
-            break;
-        }
-
         if (cur->IsStable())
         {
             switch (cur->GetType())
             {
             case NetworkDataTlv::kTypeServer:
             {
-                server = static_cast<ServerTlv *>(cur);
+                ServerTlv *server = static_cast<ServerTlv *>(cur);
                 server->SetServer16(Mle::Mle::ServiceAlocFromId(aService.GetServiceId()));
                 break;
             }
 
             default:
-            {
                 break;
-            }
             }
 
             // keep stable tlv
@@ -731,9 +677,9 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Serv
         else
         {
             // remove temporary tlv
-            length = sizeof(NetworkDataTlv) + cur->GetLength();
-            dst    = reinterpret_cast<uint8_t *>(cur);
-            src    = reinterpret_cast<uint8_t *>(cur->GetNext());
+            uint8_t  length = sizeof(NetworkDataTlv) + cur->GetLength();
+            uint8_t *dst    = reinterpret_cast<uint8_t *>(cur);
+            uint8_t *src    = reinterpret_cast<uint8_t *>(cur->GetNext());
             memmove(dst, src, aDataLength - static_cast<size_t>(src - aData));
             aService.SetSubTlvsLength(aService.GetSubTlvsLength() - length);
             aDataLength -= length;
