@@ -69,18 +69,54 @@ void Flash::Init(void)
     for (mSwapUsed = kSwapMarkerSize; mSwapUsed <= mSwapSize - sizeof(record); mSwapUsed += record.GetSize())
     {
         otPlatFlashRead(&GetInstance(), mSwapIndex, mSwapUsed, &record, sizeof(record));
-        VerifyOrExit(record.IsAddBeginSet());
+        if (!record.IsAddBeginSet())
+        {
+            break;
+        }
+
+        if (!record.IsAddCompleteSet())
+        {
+            break;
+        }
     }
+
+    SanitizeFreeSpace();
 
 exit:
     return;
+}
+
+void Flash::SanitizeFreeSpace(void)
+{
+    uint32_t temp;
+    bool     sanitizeNeeded = false;
+
+    if (mSwapUsed & 3)
+    {
+        ExitNow(sanitizeNeeded = true);
+    }
+
+    for (uint32_t offset = mSwapUsed; offset < mSwapSize; offset += sizeof(temp))
+    {
+        otPlatFlashRead(&GetInstance(), mSwapIndex, offset, &temp, sizeof(temp));
+        if (temp != ~0U)
+        {
+            ExitNow(sanitizeNeeded = true);
+        }
+    }
+
+exit:
+    if (sanitizeNeeded)
+    {
+        Swap();
+    }
 }
 
 otError Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const
 {
     otError      error       = OT_ERROR_NOT_FOUND;
     uint16_t     valueLength = 0;
-    int          index       = 0;
+    int          index       = 0; // This must be initalized to 0. See [Note] in Delete().
     uint32_t     offset;
     RecordHeader record;
 
@@ -146,6 +182,8 @@ otError Flash::Add(uint16_t aKey, bool aFirst, const uint8_t *aValue, uint16_t a
 
     record.Init(aKey, aFirst);
     record.SetData(aValue, aValueLength);
+
+    OT_ASSERT((mSwapSize - record.GetSize()) >= kSwapMarkerSize);
 
     if ((mSwapSize - record.GetSize()) < mSwapUsed)
     {
@@ -218,7 +256,7 @@ exit:
 otError Flash::Delete(uint16_t aKey, int aIndex)
 {
     otError      error = OT_ERROR_NOT_FOUND;
-    int          index = 0;
+    int          index = 0; // This must be initalized to 0. See [Note] below.
     RecordHeader record;
 
     for (uint32_t offset = kSwapMarkerSize; offset < mSwapUsed; offset += record.GetSize())
@@ -241,6 +279,10 @@ otError Flash::Delete(uint16_t aKey, int aIndex)
             otPlatFlashWrite(&GetInstance(), mSwapIndex, offset, &record, sizeof(record));
             error = OT_ERROR_NONE;
         }
+
+        /* [Note] If the operation gets interrupted here and aIndex is 0, the next record (index == 1) will never get
+         * marked as first. However, this is not actually an issue because all the methods that iterate over the
+         * settings area initialize the index to 0, without expecting any record to be effectively marked as first. */
 
         if ((index == 1) && (aIndex == 0))
         {
