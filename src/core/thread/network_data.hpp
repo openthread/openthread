@@ -575,6 +575,13 @@ private:
     class NetworkDataIterator
     {
     public:
+        enum Type
+        {
+            kTypeOnMeshPrefix  = 0,
+            kTypeExternalRoute = 1,
+            kTypeService       = 2,
+        };
+
         explicit NetworkDataIterator(Iterator &aIterator)
             : mIteratorBuffer(reinterpret_cast<uint8_t *>(&aIterator))
         {
@@ -583,9 +590,11 @@ private:
         uint8_t GetTlvOffset(void) const { return mIteratorBuffer[kTlvPosition]; }
         uint8_t GetSubTlvOffset(void) const { return mIteratorBuffer[kSubTlvPosition]; }
         uint8_t GetEntryIndex(void) const { return mIteratorBuffer[kEntryPosition]; }
+        Type    GetType(void) const { return static_cast<Type>(mIteratorBuffer[kTypePosition]); }
         void    SetTlvOffset(uint8_t aOffset) { mIteratorBuffer[kTlvPosition] = aOffset; }
         void    SetSubTlvOffset(uint8_t aOffset) { mIteratorBuffer[kSubTlvPosition] = aOffset; }
         void    SetEntryIndex(uint8_t aIndex) { mIteratorBuffer[kEntryPosition] = aIndex; }
+        void    SetType(Type aType) { mIteratorBuffer[kTypePosition] = static_cast<uint8_t>(aType); }
 
         bool IsNewEntry(void) const { return GetEntryIndex() == 0; }
         void MarkEntryAsNotnew(void) { SetEntryIndex(1); }
@@ -617,6 +626,7 @@ private:
             kTlvPosition    = 0,
             kSubTlvPosition = 1,
             kEntryPosition  = 2,
+            kTypePosition   = 3,
         };
 
         uint8_t *mIteratorBuffer;
