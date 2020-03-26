@@ -41,7 +41,7 @@
 #include "softdevice.h"
 
 #define FLASH_PAGE_SIZE 4096
-#define FLASH_TIMEOUT 500
+#define FLASH_MAX_RETRY 5
 
 typedef enum
 {
@@ -99,58 +99,57 @@ void nrf5SdSocFlashProcess(uint32_t aEvtId)
 
 static void waitInState(SdFlashState state)
 {
-    uint32_t startTime = otPlatAlarmMilliGetNow();
-
     do
     {
         nrf_sdh_evts_poll();
 
-        if (sState != state)
-        {
-            break;
-        }
-    } while (otPlatAlarmMilliGetNow() - startTime < FLASH_TIMEOUT);
+    } while (sState == state);
 }
 
 static otError sdFlashSingleWrite(uint32_t aAddress, const uint8_t *aData, uint32_t aSize)
 {
     uint32_t retval;
-
-    nrf_sdh_suspend();
+    uint32_t maxRetry = FLASH_MAX_RETRY;
 
     do
     {
-        sState = FLASH_STATE_PENDING;
+        nrf_sdh_suspend();
 
-        retval = sd_flash_write((uint32_t *)aAddress, (uint32_t *)aData, aSize);
-
-        if (retval == NRF_SUCCESS)
+        do
         {
-            break;
-        }
-        else if (retval == NRF_ERROR_BUSY)
+            sState = FLASH_STATE_PENDING;
+
+            retval = sd_flash_write((uint32_t *)aAddress, (uint32_t *)aData, aSize);
+
+            if (retval == NRF_SUCCESS)
+            {
+                break;
+            }
+            else if (retval == NRF_ERROR_BUSY)
+            {
+                sState = FLASH_STATE_WAITING_FOR_IDLE;
+            }
+            else
+            {
+                assert(false);
+            }
+
+            waitInState(FLASH_STATE_WAITING_FOR_IDLE);
+
+        } while (retval == NRF_ERROR_BUSY);
+
+        waitInState(FLASH_STATE_PENDING);
+
+        if (sState != FLASH_STATE_COMPLETE_SUCCESS)
         {
-            sState = FLASH_STATE_WAITING_FOR_IDLE;
-        }
-        else
-        {
-            assert(false);
+            retval = NRF_ERROR_INTERNAL;
         }
 
-        waitInState(FLASH_STATE_WAITING_FOR_IDLE);
+        sState = FLASH_STATE_IDLE;
 
-    } while (retval == NRF_ERROR_BUSY);
+        nrf_sdh_resume();
 
-    waitInState(FLASH_STATE_PENDING);
-
-    if (sState != FLASH_STATE_COMPLETE_SUCCESS)
-    {
-        retval = NRF_ERROR_INTERNAL;
-    }
-
-    sState = FLASH_STATE_IDLE;
-
-    nrf_sdh_resume();
+    } while (retval != NRF_SUCCESS && maxRetry--);
 
     return nrf5SdErrorToOtError(retval);
 }
@@ -158,42 +157,47 @@ static otError sdFlashSingleWrite(uint32_t aAddress, const uint8_t *aData, uint3
 otError nrf5FlashPageErase(uint32_t aAddress)
 {
     uint32_t retval;
-
-    nrf_sdh_suspend();
+    uint32_t maxRetry = FLASH_MAX_RETRY;
 
     do
     {
-        sState = FLASH_STATE_PENDING;
+        nrf_sdh_suspend();
 
-        retval = sd_flash_page_erase(aAddress / FLASH_PAGE_SIZE);
-
-        if (retval == NRF_SUCCESS)
+        do
         {
-            break;
-        }
-        else if (retval == NRF_ERROR_BUSY)
+            sState = FLASH_STATE_PENDING;
+
+            retval = sd_flash_page_erase(aAddress / FLASH_PAGE_SIZE);
+
+            if (retval == NRF_SUCCESS)
+            {
+                break;
+            }
+            else if (retval == NRF_ERROR_BUSY)
+            {
+                sState = FLASH_STATE_WAITING_FOR_IDLE;
+            }
+            else
+            {
+                assert(false);
+            }
+
+            waitInState(FLASH_STATE_WAITING_FOR_IDLE);
+
+        } while (retval == NRF_ERROR_BUSY);
+
+        waitInState(FLASH_STATE_PENDING);
+
+        if (sState != FLASH_STATE_COMPLETE_SUCCESS)
         {
-            sState = FLASH_STATE_WAITING_FOR_IDLE;
-        }
-        else
-        {
-            assert(false);
+            retval = NRF_ERROR_INTERNAL;
         }
 
-        waitInState(FLASH_STATE_WAITING_FOR_IDLE);
+        sState = FLASH_STATE_IDLE;
 
-    } while (retval == NRF_ERROR_BUSY);
+        nrf_sdh_resume();
 
-    waitInState(FLASH_STATE_PENDING);
-
-    if (sState != FLASH_STATE_COMPLETE_SUCCESS)
-    {
-        retval = NRF_ERROR_INTERNAL;
-    }
-
-    sState = FLASH_STATE_IDLE;
-
-    nrf_sdh_resume();
+    } while (retval != NRF_SUCCESS && maxRetry--);
 
     return nrf5SdErrorToOtError(retval);
 }
@@ -203,15 +207,14 @@ bool nrf5FlashIsBusy(void)
     return sState != FLASH_STATE_IDLE;
 }
 
-uint32_t nrf5FlashWrite(uint32_t aAddress, const uint8_t *aData, uint32_t aSize)
+otError nrf5FlashWrite(uint32_t aAddress, const uint8_t *aData, uint32_t aSize)
 {
     otError  error     = OT_ERROR_NONE;
-    uint32_t result    = 0;
     uint32_t remainder = (aAddress % sizeof(uint32_t));
     uint32_t blockSize;
     uint32_t blockValue;
 
-    otEXPECT(sState == FLASH_STATE_IDLE);
+    otEXPECT_ACTION(sState == FLASH_STATE_IDLE, error = OT_ERROR_BUSY);
 
     // Check if @p aAddress is aligned to full word size. If not, make additional
     // flash write at the beginning.
@@ -229,7 +232,6 @@ uint32_t nrf5FlashWrite(uint32_t aAddress, const uint8_t *aData, uint32_t aSize)
         aAddress += blockSize;
         aData += blockSize;
         aSize -= blockSize;
-        result += blockSize;
     }
 
     otEXPECT(aSize);
@@ -245,7 +247,6 @@ uint32_t nrf5FlashWrite(uint32_t aAddress, const uint8_t *aData, uint32_t aSize)
     aAddress += blockSize;
     aData += blockSize;
     aSize -= blockSize;
-    result += blockSize;
 
     // Store any additional bytes that didn't fit into middle block.
     if (remainder)
@@ -257,10 +258,8 @@ uint32_t nrf5FlashWrite(uint32_t aAddress, const uint8_t *aData, uint32_t aSize)
         error = sdFlashSingleWrite(aAddress, (uint8_t *)&blockValue, sizeof(blockValue) / sizeof(uint32_t));
 
         otEXPECT(error == OT_ERROR_NONE);
-
-        result += remainder;
     }
 
 exit:
-    return result;
+    return error;
 }
