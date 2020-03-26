@@ -299,7 +299,7 @@ void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::Message
 {
     Tlv      tlv;
     uint16_t offset = aMessage.GetOffset();
-    uint8_t  tlvs[Dataset::kMaxSize];
+    uint8_t  tlvs[Dataset::kMaxGetTypes];
     uint8_t  length = 0;
 
     while (offset < aMessage.GetLength())
