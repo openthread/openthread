@@ -438,28 +438,24 @@ void platformNetifDeinit(void)
     if (sMLDMonitorFd != -1)
     {
         close(sMLDMonitorFd);
-        sNetlinkFd = -1;
+        sMLDMonitorFd = -1;
     }
 
     sTunIndex = 0;
 }
 
-static otError mldListenerInit(void)
+static void mldListenerInit(void)
 {
     struct ipv6_mreq mreq6;
-    otError          err = OT_ERROR_NONE;
 
     sMLDMonitorFd          = SocketWithCloseExec(AF_INET6, SOCK_RAW | SOCK_NONBLOCK, IPPROTO_ICMPV6);
     mreq6.ipv6mr_interface = sTunIndex;
     memcpy(&mreq6.ipv6mr_multiaddr, kMLDv2MulticastAddress.mFields.m8, sizeof(kMLDv2MulticastAddress.mFields.m8));
 
-    VerifyOrExit(setsockopt(sMLDMonitorFd, IPPROTO_IPV6, IPV6_JOIN_GROUP, &mreq6, sizeof(mreq6)) == 0,
-                 err = OT_ERROR_FAILED);
-    VerifyOrExit(setsockopt(sMLDMonitorFd, SOL_SOCKET, SO_BINDTODEVICE, sTunName,
-                            static_cast<socklen_t>(strnlen(sTunName, IFNAMSIZ))) == 0,
-                 err = OT_ERROR_FAILED);
-exit:
-    return err;
+    VerifyOrDie(setsockopt(sMLDMonitorFd, IPPROTO_IPV6, IPV6_JOIN_GROUP, &mreq6, sizeof(mreq6)) == 0, OT_EXIT_FAILURE);
+    VerifyOrDie(setsockopt(sMLDMonitorFd, SOL_SOCKET, SO_BINDTODEVICE, sTunName,
+                           static_cast<socklen_t>(strnlen(sTunName, IFNAMSIZ))) == 0,
+                OT_EXIT_FAILURE);
 }
 
 static void processMLDEvent(otInstance *aInstance)
@@ -565,10 +561,10 @@ void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
     struct ifreq ifr;
 
     sIpFd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP);
-    VerifyOrExit(sIpFd >= 0);
+    VerifyOrDie(sIpFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     sNetlinkFd = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
-    VerifyOrExit(sNetlinkFd > 0);
+    VerifyOrDie(sNetlinkFd > 0, OT_EXIT_ERROR_ERRNO);
 
     otIcmp6SetEchoMode(aInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
 
@@ -578,11 +574,11 @@ void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
         memset(&sa, 0, sizeof(sa));
         sa.nl_family = AF_NETLINK;
         sa.nl_groups = RTMGRP_LINK | RTMGRP_IPV6_IFADDR;
-        VerifyOrExit(bind(sNetlinkFd, reinterpret_cast<struct sockaddr *>(&sa), sizeof(sa)) == 0);
+        VerifyOrDie(bind(sNetlinkFd, reinterpret_cast<struct sockaddr *>(&sa), sizeof(sa)) == 0, OT_EXIT_ERROR_ERRNO);
     }
 
     sTunFd = open(OPENTHREAD_POSIX_TUN_DEVICE, O_RDWR | O_CLOEXEC);
-    VerifyOrExit(sTunFd > 0, otLogCritPlat("Unable to open tun device %s", OPENTHREAD_POSIX_TUN_DEVICE));
+    VerifyOrDie(sTunFd > 0, OT_EXIT_ERROR_ERRNO);
 
     memset(&ifr, 0, sizeof(ifr));
     ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
@@ -598,32 +594,22 @@ void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
         strncpy(ifr.ifr_name, "wpan%d", IFNAMSIZ);
     }
 
-    VerifyOrExit(ioctl(sTunFd, TUNSETIFF, static_cast<void *>(&ifr)) == 0,
-                 otLogCritPlat("Unable to configure tun device %s", OPENTHREAD_POSIX_TUN_DEVICE));
-    VerifyOrExit(ioctl(sTunFd, TUNSETLINK, ARPHRD_VOID) == 0,
-                 otLogCritPlat("Unable to set link type of tun device %s", OPENTHREAD_POSIX_TUN_DEVICE));
-
-    strncpy(sTunName, ifr.ifr_name, sizeof(sTunName));
-    SuccessOrExit(mldListenerInit());
+    VerifyOrDie(ioctl(sTunFd, TUNSETIFF, static_cast<void *>(&ifr)) == 0, OT_EXIT_ERROR_ERRNO);
+    VerifyOrDie(ioctl(sTunFd, TUNSETLINK, ARPHRD_VOID) == 0, OT_EXIT_ERROR_ERRNO);
 
     sTunIndex = if_nametoindex(ifr.ifr_name);
-    VerifyOrExit(sTunIndex > 0);
+    VerifyOrDie(sTunIndex > 0, OT_EXIT_FAILURE);
 
+    strncpy(sTunName, ifr.ifr_name, sizeof(sTunName));
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     platformUdpInit(sTunName);
 #endif
+    mldListenerInit();
 
     otIp6SetReceiveCallback(aInstance, processReceive, aInstance);
     otIp6SetAddressCallback(aInstance, processAddressChange, aInstance);
     otSetStateChangedCallback(aInstance, processStateChange, aInstance);
     sInstance = aInstance;
-
-exit:
-    if (sTunIndex == 0)
-    {
-        platformNetifDeinit();
-        DieNow(OT_EXIT_FAILURE);
-    }
 }
 
 void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd)
