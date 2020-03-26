@@ -430,6 +430,20 @@ protected:
                             uint8_t        aTlvsLength);
 
     /**
+     * This method grows the Network Data to append a TLV with a requested size.
+     *
+     * On success, the returned TLV is not initialized (i.e., the TLV Length field is not set) but the requested
+     * size for it (@p aTlvSize number of bytes) is reserved in the Network Data.
+     *
+     * @param[in]  aTlvSize  The size of TLV (total number of bytes including Type, Length, and Value fields)
+     *
+     * @returns A pointer to the TLV if there is space to grow Network Data, or NULL if no space to grow the Network
+     *          Data with requested @p aTlvSize number of bytes.
+     *
+     */
+    NetworkDataTlv *AppendTlv(uint8_t aTlvSize);
+
+    /**
      * This method inserts bytes into the Network Data.
      *
      * @param[in]  aStart   A pointer to the beginning of the insertion.

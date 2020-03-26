@@ -524,18 +524,18 @@ exit:
 
 otError LeaderBase::SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength)
 {
-    otError               error     = OT_ERROR_NONE;
-    uint8_t               remaining = kMaxSize - mLength;
+    otError               error = OT_ERROR_NONE;
     CommissioningDataTlv *commissioningDataTlv;
-
-    VerifyOrExit(sizeof(NetworkDataTlv) + aValueLength < remaining, error = OT_ERROR_NO_BUFS);
 
     RemoveCommissioningData();
 
     if (aValueLength > 0)
     {
-        commissioningDataTlv = reinterpret_cast<CommissioningDataTlv *>(mTlvs + mLength);
-        Insert(reinterpret_cast<uint8_t *>(commissioningDataTlv), sizeof(CommissioningDataTlv) + aValueLength);
+        VerifyOrExit(aValueLength <= kMaxSize - sizeof(CommissioningDataTlv), error = OT_ERROR_NO_BUFS);
+        commissioningDataTlv =
+            static_cast<CommissioningDataTlv *>(AppendTlv(sizeof(CommissioningDataTlv) + aValueLength));
+        VerifyOrExit(commissioningDataTlv != NULL, error = OT_ERROR_NO_BUFS);
+
         commissioningDataTlv->Init();
         commissioningDataTlv->SetLength(aValueLength);
         memcpy(commissioningDataTlv->GetValue(), aValue, aValueLength);

@@ -58,7 +58,7 @@ otError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, in
 {
     otError          error             = OT_ERROR_NONE;
     uint8_t          prefixLengthBytes = BitVectorBytes(aPrefixLength);
-    uint8_t          appendLength;
+    uint8_t          tlvSize;
     PrefixTlv *      prefixTlv;
     BorderRouterTlv *brTlv;
 
@@ -74,11 +74,10 @@ otError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, in
 
     RemoveOnMeshPrefix(aPrefix, aPrefixLength);
 
-    appendLength = sizeof(PrefixTlv) + prefixLengthBytes + sizeof(BorderRouterTlv) + sizeof(BorderRouterEntry);
-    VerifyOrExit(mLength + appendLength <= sizeof(mTlvs), error = OT_ERROR_NO_BUFS);
+    tlvSize   = sizeof(PrefixTlv) + prefixLengthBytes + sizeof(BorderRouterTlv) + sizeof(BorderRouterEntry);
+    prefixTlv = static_cast<PrefixTlv *>(AppendTlv(tlvSize));
+    VerifyOrExit(prefixTlv != NULL, error = OT_ERROR_NO_BUFS);
 
-    prefixTlv = reinterpret_cast<PrefixTlv *>(mTlvs + mLength);
-    Insert(reinterpret_cast<uint8_t *>(prefixTlv), appendLength);
     prefixTlv->Init(0, aPrefixLength, aPrefix);
     prefixTlv->SetSubTlvsLength(sizeof(BorderRouterTlv) + sizeof(BorderRouterEntry));
 
@@ -124,7 +123,7 @@ otError Local::AddHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, 
     uint8_t      prefixLengthBytes = BitVectorBytes(aPrefixLength);
     PrefixTlv *  prefixTlv;
     HasRouteTlv *hasRouteTlv;
-    uint8_t      appendLength;
+    uint8_t      tlvSize;
 
     VerifyOrExit(prefixLengthBytes <= sizeof(Ip6::Address), error = OT_ERROR_INVALID_ARGS);
 
@@ -134,11 +133,10 @@ otError Local::AddHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, 
 
     RemoveHasRoutePrefix(aPrefix, aPrefixLength);
 
-    appendLength = sizeof(PrefixTlv) + prefixLengthBytes + sizeof(HasRouteTlv) + sizeof(HasRouteEntry);
-    VerifyOrExit(mLength + appendLength <= sizeof(mTlvs), error = OT_ERROR_NO_BUFS);
+    tlvSize   = sizeof(PrefixTlv) + prefixLengthBytes + sizeof(HasRouteTlv) + sizeof(HasRouteEntry);
+    prefixTlv = static_cast<PrefixTlv *>(AppendTlv(tlvSize));
+    VerifyOrExit(prefixTlv != NULL, error = OT_ERROR_NO_BUFS);
 
-    prefixTlv = reinterpret_cast<PrefixTlv *>(mTlvs + mLength);
-    Insert(reinterpret_cast<uint8_t *>(prefixTlv), appendLength);
     prefixTlv->Init(0, aPrefixLength, aPrefix);
     prefixTlv->SetSubTlvsLength(sizeof(HasRouteTlv) + sizeof(HasRouteEntry));
 
@@ -231,10 +229,10 @@ otError Local::AddService(uint32_t       aEnterpriseNumber,
 
     RemoveService(aEnterpriseNumber, aServiceData, aServiceDataLength);
 
-    VerifyOrExit(mLength + sizeof(NetworkDataTlv) + serviceTlvLength <= sizeof(mTlvs), error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(serviceTlvLength + sizeof(NetworkDataTlv) <= kMaxSize, error = OT_ERROR_NO_BUFS);
 
-    serviceTlv = reinterpret_cast<ServiceTlv *>(mTlvs + mLength);
-    Insert(reinterpret_cast<uint8_t *>(serviceTlv), static_cast<uint8_t>(serviceTlvLength) + sizeof(NetworkDataTlv));
+    serviceTlv = static_cast<ServiceTlv *>(AppendTlv(static_cast<uint8_t>(serviceTlvLength + sizeof(NetworkDataTlv))));
+    VerifyOrExit(serviceTlv != NULL, error = OT_ERROR_NO_BUFS);
 
     serviceTlv->Init();
     serviceTlv->SetEnterpriseNumber(aEnterpriseNumber);

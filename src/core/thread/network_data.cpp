@@ -724,6 +724,19 @@ exit:
     return serviceTlv;
 }
 
+NetworkDataTlv *NetworkData::AppendTlv(uint8_t aTlvSize)
+{
+    NetworkDataTlv *tlv;
+
+    VerifyOrExit(mLength + aTlvSize <= kMaxSize, tlv = NULL);
+
+    tlv = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
+    mLength += aTlvSize;
+
+exit:
+    return tlv;
+}
+
 void NetworkData::Insert(uint8_t *aStart, uint8_t aLength)
 {
     OT_ASSERT(aLength + mLength <= sizeof(mTlvs) && mTlvs <= aStart && aStart <= mTlvs + mLength);
