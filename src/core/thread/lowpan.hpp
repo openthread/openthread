@@ -353,12 +353,19 @@ private:
         kExtHdrEidMask     = 0x0e,
 
         kExtHdrNextHeader = 0x01,
+        kExtHdrMaxLength  = 255,
 
         kUdpDispatch     = 0xf0,
         kUdpDispatchMask = 0xf8,
         kUdpChecksum     = 1 << 2,
         kUdpPortMask     = 3 << 0,
     };
+
+    otError Compress(Message &           aMessage,
+                     const Mac::Address &aMacSource,
+                     const Mac::Address &aMacDest,
+                     BufferWriter &      aBuf,
+                     uint8_t &           aHeaderDepth);
 
     otError CompressExtensionHeader(Message &aMessage, BufferWriter &aBuf, uint8_t &aNextHeader);
     otError CompressSourceIid(const Mac::Address &aMacAddr,

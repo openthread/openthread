@@ -220,6 +220,7 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_FTD
 otError NetworkDiagnostic::AppendChildTable(Message &aMessage)
 {
     otError         error   = OT_ERROR_NONE;
@@ -271,6 +272,7 @@ exit:
 
     return error;
 }
+#endif // OPENTHREAD_FTD
 
 void NetworkDiagnostic::FillMacCountersTlv(MacCountersTlv &aMacCountersTlv)
 {
@@ -348,6 +350,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             break;
         }
 
+#if OPENTHREAD_FTD
         case NetworkDiagnosticTlv::kConnectivity:
         {
             ConnectivityTlv tlv;
@@ -357,7 +360,6 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             break;
         }
 
-#if OPENTHREAD_FTD
         case NetworkDiagnosticTlv::kRoute:
         {
             RouteTlv tlv;
@@ -430,6 +432,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             break;
         }
 
+#if OPENTHREAD_FTD
         case NetworkDiagnosticTlv::kChildTable:
         {
             // Thread 1.1.1 Specification Section 10.11.2.2:
@@ -442,6 +445,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             }
             break;
         }
+#endif
 
         case NetworkDiagnosticTlv::kChannelPages:
         {
@@ -463,6 +467,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             break;
         }
 
+#if OPENTHREAD_FTD
         case NetworkDiagnosticTlv::kMaxChildTimeout:
         {
             uint32_t maxTimeout = 0;
@@ -477,6 +482,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
 
             break;
         }
+#endif
 
         default:
             ExitNow(error = OT_ERROR_PARSE);

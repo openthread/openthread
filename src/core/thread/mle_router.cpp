@@ -80,7 +80,7 @@ MleRouter::MleRouter(Instance &aInstance)
     , mRouterSelectionJitter(kRouterSelectionJitter)
     , mRouterSelectionJitterTimeout(0)
     , mParentPriority(kParentPriorityUnspecified)
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     , mBackboneRouterRegistrationDelay(0)
 #endif
 {
@@ -1728,7 +1728,7 @@ void MleRouter::HandleStateUpdateTimer(void)
             routerStateUpdate = true;
         }
     }
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     // Delay register only when `mRouterSelectionJitterTimeout` is 0,
     // that is, when the device has decided to stay as REED or Router.
     else if (mBackboneRouterRegistrationDelay > 0)

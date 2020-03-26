@@ -421,8 +421,6 @@ HEADERS_COMMON                             = \
     thread/mesh_forwarder.hpp                \
     thread/mle.hpp                           \
     thread/mle_router.hpp                    \
-    thread/mle_router_ftd.hpp                \
-    thread/mle_router_mtd.hpp                \
     thread/mle_tlvs.hpp                      \
     thread/mle_types.hpp                     \
     thread/network_data.hpp                  \

@@ -391,10 +391,6 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
         {
             mMeshDest = Mle::Mle::Rloc16FromRouterId(mle.GetLeaderId());
         }
-        else if ((aloc16 >= Mle::kAloc16CommissionerStart) && (aloc16 <= Mle::kAloc16CommissionerEnd))
-        {
-            SuccessOrExit(error = MeshCoP::GetBorderAgentRloc(Get<ThreadNetif>(), mMeshDest));
-        }
         else if (aloc16 <= Mle::kAloc16DhcpAgentEnd)
         {
             uint16_t agentRloc16;
@@ -416,9 +412,13 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
                 mMeshDest = Mle::Mle::Rloc16FromRouterId(routerId);
             }
         }
-        else if ((aloc16 >= Mle::kAloc16ServiceStart) && (aloc16 <= Mle::kAloc16ServiceEnd))
+        else if (aloc16 <= Mle::kAloc16ServiceEnd)
         {
             SuccessOrExit(error = GetDestinationRlocByServiceAloc(aloc16, mMeshDest));
+        }
+        else if (aloc16 <= Mle::kAloc16CommissionerEnd)
+        {
+            SuccessOrExit(error = MeshCoP::GetBorderAgentRloc(Get<ThreadNetif>(), mMeshDest));
         }
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)

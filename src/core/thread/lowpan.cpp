@@ -247,11 +247,28 @@ otError Lowpan::Compress(Message &           aMessage,
                          const Mac::Address &aMacDest,
                          BufferWriter &      aBuf)
 {
+    otError error;
+    uint8_t headerDepth = 0xff;
+
+    do
+    {
+        error = Compress(aMessage, aMacSource, aMacDest, aBuf, headerDepth);
+    } while ((error != OT_ERROR_NONE) && (headerDepth > 0));
+
+    return error;
+}
+
+otError Lowpan::Compress(Message &           aMessage,
+                         const Mac::Address &aMacSource,
+                         const Mac::Address &aMacDest,
+                         BufferWriter &      aBuf,
+                         uint8_t &           aHeaderDepth)
+{
     otError              error       = OT_ERROR_NONE;
     NetworkData::Leader &networkData = Get<NetworkData::Leader>();
     uint16_t             startOffset = aMessage.GetOffset();
     BufferWriter         buf         = aBuf;
-    uint16_t             hcCtl;
+    uint16_t             hcCtl       = kHcDispatch;
     Ip6::Header          ip6Header;
     uint8_t *            ip6HeaderBytes = reinterpret_cast<uint8_t *>(&ip6Header);
     Context              srcContext, dstContext;
@@ -259,13 +276,8 @@ otError Lowpan::Compress(Message &           aMessage,
     uint8_t              nextHeader;
     uint8_t              ecn;
     uint8_t              dscp;
-    uint8_t              headerDepth;
-    uint8_t              headerMaxDepth = 0xff;
-
-compress:
-
-    headerDepth = 0;
-    hcCtl       = kHcDispatch;
+    uint8_t              headerDepth    = 0;
+    uint8_t              headerMaxDepth = aHeaderDepth;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(ip6Header), &ip6Header) == sizeof(ip6Header),
                  error = OT_ERROR_PARSE);
@@ -441,6 +453,8 @@ compress:
     }
 
 exit:
+    aHeaderDepth = headerDepth;
+
     if (error == OT_ERROR_NONE)
     {
         IgnoreReturnValue(aBuf.Write(hcCtl >> 8));
@@ -450,13 +464,6 @@ exit:
     else
     {
         aMessage.SetOffset(startOffset);
-
-        if (headerDepth > 0)
-        {
-            buf            = aBuf;
-            headerMaxDepth = headerDepth;
-            goto compress;
-        }
     }
 
     return error;
@@ -468,10 +475,8 @@ otError Lowpan::CompressExtensionHeader(Message &aMessage, BufferWriter &aBuf, u
     BufferWriter         buf         = aBuf;
     uint16_t             startOffset = aMessage.GetOffset();
     Ip6::ExtensionHeader extHeader;
-    Ip6::OptionHeader    optionHeader;
-    uint8_t              len;
+    uint16_t             len;
     uint8_t              padLength = 0;
-    uint16_t             offset;
     uint8_t              tmpByte;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(extHeader), &extHeader) == sizeof(extHeader),
@@ -497,13 +502,17 @@ otError Lowpan::CompressExtensionHeader(Message &aMessage, BufferWriter &aBuf, u
 
     len = (extHeader.GetLength() + 1) * 8 - sizeof(extHeader);
 
+    // RFC 6282 does not support compressing large extension headers
+    VerifyOrExit(len <= kExtHdrMaxLength, error = OT_ERROR_FAILED);
+
     // RFC 6282 says: "IPv6 Hop-by-Hop and Destination Options Headers may use a trailing
     // Pad1 or PadN to achieve 8-octet alignment. When there is a single trailing Pad1 or PadN
     // option of 7 octets or less and the containing header is a multiple of 8 octets, the trailing
     // Pad1 or PadN option MAY be elided by the compressor."
     if (aNextHeader == Ip6::kProtoHopOpts || aNextHeader == Ip6::kProtoDstOpts)
     {
-        offset = aMessage.GetOffset();
+        uint16_t          offset = aMessage.GetOffset();
+        Ip6::OptionHeader optionHeader;
 
         while (offset < len + aMessage.GetOffset())
         {
@@ -537,8 +546,8 @@ otError Lowpan::CompressExtensionHeader(Message &aMessage, BufferWriter &aBuf, u
 
     aNextHeader = static_cast<uint8_t>(extHeader.GetNextHeader());
 
-    SuccessOrExit(error = buf.Write(len));
-    SuccessOrExit(error = buf.Write(aMessage, len));
+    SuccessOrExit(error = buf.Write(static_cast<uint8_t>(len)));
+    SuccessOrExit(error = buf.Write(aMessage, static_cast<uint8_t>(len)));
     aMessage.MoveOffset(len + padLength);
 
 exit:

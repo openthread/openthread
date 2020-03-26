@@ -288,6 +288,7 @@ otError Mle::Start(bool aAnnounceAttach)
     {
         BecomeChild(kAttachAny);
     }
+#if OPENTHREAD_FTD
     else if (IsActiveRouter(GetRloc16()))
     {
         if (Get<MleRouter>().BecomeRouter(ThreadStatusTlv::kTooFewRouters) != OT_ERROR_NONE)
@@ -295,6 +296,7 @@ otError Mle::Start(bool aAnnounceAttach)
             BecomeChild(kAttachAny);
         }
     }
+#endif
     else
     {
         mChildUpdateAttempts = 0;
@@ -456,12 +458,14 @@ otError Mle::Restore(void)
         mPreviousParentRloc = mParent.GetRloc16();
 #endif
     }
+#if OPENTHREAD_FTD
     else
     {
         Get<MleRouter>().SetRouterId(RouterIdFromRloc16(GetRloc16()));
         Get<MleRouter>().SetPreviousPartitionId(networkInfo.GetPreviousPartitionId());
         Get<MleRouter>().RestoreChildren();
     }
+#endif
 
 exit:
     return error;
@@ -673,10 +677,12 @@ otError Mle::BecomeChild(AttachMode aMode)
 
     if (aMode != kAttachBetter)
     {
+#if OPENTHREAD_FTD
         if (IsFullThreadDevice())
         {
             Get<MleRouter>().StopAdvertiseTimer();
         }
+#endif
     }
     else
     {
@@ -779,9 +785,13 @@ void Mle::SetStateDetached(void)
     mDataRequestAttempts     = 0;
     Get<MeshForwarder>().SetRxOnWhenIdle(true);
     Get<Mac::Mac>().SetBeaconEnabled(false);
+#if OPENTHREAD_FTD
     Get<MleRouter>().HandleDetachStart();
+#endif
     Get<Ip6::Ip6>().SetForwardingEnabled(false);
+#if OPENTHREAD_FTD
     Get<Ip6::Mpl>().SetTimerExpirations(0);
+#endif
 }
 
 void Mle::SetStateChild(uint16_t aRloc16)
@@ -802,16 +812,20 @@ void Mle::SetStateChild(uint16_t aRloc16)
     Get<Mac::Mac>().SetBeaconEnabled(false);
     ScheduleMessageTransmissionTimer();
 
+#if OPENTHREAD_FTD
     if (IsFullThreadDevice())
     {
         Get<MleRouter>().HandleChildStart(mParentRequestMode);
     }
+#endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     Get<NetworkData::Local>().ClearResubmitDelayTimer();
 #endif
     Get<Ip6::Ip6>().SetForwardingEnabled(false);
+#if OPENTHREAD_FTD
     Get<Ip6::Mpl>().SetTimerExpirations(kMplChildDataMessageTimerExpirations);
+#endif
 
     // send announce after attached if needed
     InformPreviousChannel();
@@ -831,12 +845,13 @@ void Mle::InformPreviousChannel(void)
     VerifyOrExit(mAlternatePanId != Mac::kPanIdBroadcast);
     VerifyOrExit(mRole == OT_DEVICE_ROLE_CHILD || mRole == OT_DEVICE_ROLE_ROUTER);
 
-    if (!IsFullThreadDevice() || mRole == OT_DEVICE_ROLE_ROUTER ||
-        Get<MleRouter>().GetRouterSelectionJitterTimeout() == 0)
-    {
-        mAlternatePanId = Mac::kPanIdBroadcast;
-        Get<AnnounceBeginServer>().SendAnnounce(1 << mAlternateChannel);
-    }
+#if OPENTHREAD_FTD
+    VerifyOrExit(!IsFullThreadDevice() || mRole == OT_DEVICE_ROLE_ROUTER ||
+                 Get<MleRouter>().GetRouterSelectionJitterTimeout() == 0);
+#endif
+
+    mAlternatePanId = Mac::kPanIdBroadcast;
+    Get<AnnounceBeginServer>().SendAnnounce(1 << mAlternateChannel);
 
 exit:
     return;
@@ -1037,7 +1052,9 @@ void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLead
 {
     if (mLeaderData.GetPartitionId() != aPartitionId)
     {
+#if OPENTHREAD_FTD
         Get<MleRouter>().HandlePartitionChange();
+#endif
         Get<Notifier>().Signal(OT_CHANGED_THREAD_PARTITION_ID);
         mCounters.mPartitionIdChanges++;
     }
@@ -1548,14 +1565,19 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
 
     if ((aFlags & OT_CHANGED_THREAD_NETDATA) != 0)
     {
+#if OPENTHREAD_FTD
         if (IsFullThreadDevice())
         {
             Get<MleRouter>().HandleNetworkDataUpdateRouter();
         }
-        else if ((aFlags & OT_CHANGED_THREAD_ROLE) == 0)
+        else
+#endif
         {
-            mChildUpdateRequestState = kChildUpdateRequestPending;
-            ScheduleMessageTransmissionTimer();
+            if ((aFlags & OT_CHANGED_THREAD_ROLE) == 0)
+            {
+                mChildUpdateRequestState = kChildUpdateRequestPending;
+                ScheduleMessageTransmissionTimer();
+            }
         }
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
@@ -1876,11 +1898,13 @@ uint32_t Mle::Reattach(void)
                 mAlternatePanId = Mac::kPanIdBroadcast;
                 BecomeDetached();
             }
-            else if (!IsFullThreadDevice())
+#if OPENTHREAD_FTD
+            else if (IsFullThreadDevice() && Get<MleRouter>().BecomeLeader() == OT_ERROR_NONE)
             {
-                BecomeDetached();
+                // do nothing
             }
-            else if (Get<MleRouter>().BecomeLeader() != OT_ERROR_NONE)
+#endif
+            else
             {
                 BecomeDetached();
             }
@@ -2641,9 +2665,11 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
         switch (header.GetCommand())
         {
+#if OPENTHREAD_FTD
         case Header::kCommandDiscoveryRequest:
             Get<MleRouter>().HandleDiscoveryRequest(aMessage, aMessageInfo);
             break;
+#endif
 
         case Header::kCommandDiscoveryResponse:
             HandleDiscoveryResponse(aMessage, aMessageInfo);
@@ -2762,6 +2788,55 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     switch (command)
     {
+    case Header::kCommandAdvertisement:
+        HandleAdvertisement(aMessage, aMessageInfo, neighbor);
+        break;
+
+    case Header::kCommandDataResponse:
+        HandleDataResponse(aMessage, aMessageInfo, neighbor);
+        break;
+
+    case Header::kCommandParentResponse:
+        HandleParentResponse(aMessage, aMessageInfo, keySequence);
+        break;
+
+    case Header::kCommandChildIdResponse:
+        HandleChildIdResponse(aMessage, aMessageInfo, neighbor);
+        break;
+
+    case Header::kCommandAnnounce:
+        HandleAnnounce(aMessage, aMessageInfo);
+        break;
+
+    case Header::kCommandChildUpdateRequest:
+#if OPENTHREAD_FTD
+        if (mRole == OT_DEVICE_ROLE_LEADER || mRole == OT_DEVICE_ROLE_ROUTER)
+        {
+            Get<MleRouter>().HandleChildUpdateRequest(aMessage, aMessageInfo, keySequence);
+        }
+        else
+#endif
+        {
+            HandleChildUpdateRequest(aMessage, aMessageInfo, neighbor);
+        }
+
+        break;
+
+    case Header::kCommandChildUpdateResponse:
+#if OPENTHREAD_FTD
+        if (mRole == OT_DEVICE_ROLE_LEADER || mRole == OT_DEVICE_ROLE_ROUTER)
+        {
+            Get<MleRouter>().HandleChildUpdateResponse(aMessage, aMessageInfo, keySequence, neighbor);
+        }
+        else
+#endif
+        {
+            HandleChildUpdateResponse(aMessage, aMessageInfo, neighbor);
+        }
+
+        break;
+
+#if OPENTHREAD_FTD
     case Header::kCommandLinkRequest:
         Get<MleRouter>().HandleLinkRequest(aMessage, aMessageInfo, neighbor);
         break;
@@ -2774,60 +2849,16 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         Get<MleRouter>().HandleLinkAcceptAndRequest(aMessage, aMessageInfo, keySequence, neighbor);
         break;
 
-    case Header::kCommandAdvertisement:
-        HandleAdvertisement(aMessage, aMessageInfo, neighbor);
-        break;
-
     case Header::kCommandDataRequest:
         Get<MleRouter>().HandleDataRequest(aMessage, aMessageInfo, neighbor);
-        break;
-
-    case Header::kCommandDataResponse:
-        HandleDataResponse(aMessage, aMessageInfo, neighbor);
         break;
 
     case Header::kCommandParentRequest:
         Get<MleRouter>().HandleParentRequest(aMessage, aMessageInfo);
         break;
 
-    case Header::kCommandParentResponse:
-        HandleParentResponse(aMessage, aMessageInfo, keySequence);
-        break;
-
     case Header::kCommandChildIdRequest:
         Get<MleRouter>().HandleChildIdRequest(aMessage, aMessageInfo, keySequence);
-        break;
-
-    case Header::kCommandChildIdResponse:
-        HandleChildIdResponse(aMessage, aMessageInfo, neighbor);
-        break;
-
-    case Header::kCommandChildUpdateRequest:
-        if (mRole == OT_DEVICE_ROLE_LEADER || mRole == OT_DEVICE_ROLE_ROUTER)
-        {
-            Get<MleRouter>().HandleChildUpdateRequest(aMessage, aMessageInfo, keySequence);
-        }
-        else
-        {
-            HandleChildUpdateRequest(aMessage, aMessageInfo, neighbor);
-        }
-
-        break;
-
-    case Header::kCommandChildUpdateResponse:
-        if (mRole == OT_DEVICE_ROLE_LEADER || mRole == OT_DEVICE_ROLE_ROUTER)
-        {
-            Get<MleRouter>().HandleChildUpdateResponse(aMessage, aMessageInfo, keySequence, neighbor);
-        }
-        else
-        {
-            HandleChildUpdateResponse(aMessage, aMessageInfo, neighbor);
-        }
-
-        break;
-
-    case Header::kCommandAnnounce:
-        HandleAnnounce(aMessage, aMessageInfo);
         break;
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -2835,6 +2866,10 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         Get<MleRouter>().HandleTimeSync(aMessage, aMessageInfo, neighbor);
         break;
 #endif
+#endif // OPENTHREAD_FTD
+
+    default:
+        ExitNow(error = OT_ERROR_DROP);
     }
 
 exit:
@@ -2852,7 +2887,6 @@ otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo
     otError    error = OT_ERROR_NONE;
     uint16_t   sourceAddress;
     LeaderData leaderData;
-    RouteTlv   route;
     uint8_t    tlvs[] = {Tlv::kNetworkData};
     uint16_t   delay;
 
@@ -2866,14 +2900,19 @@ otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo
 
     if (mRole != OT_DEVICE_ROLE_DETACHED)
     {
+#if OPENTHREAD_FTD
         if (IsFullThreadDevice())
         {
             SuccessOrExit(error = Get<MleRouter>().HandleAdvertisement(aMessage, aMessageInfo, aNeighbor));
         }
-        else if ((aNeighbor == &mParent) && (mParent.GetRloc16() != sourceAddress))
+        else
+#endif
         {
-            // Remove stale parent.
-            BecomeDetached();
+            if ((aNeighbor == &mParent) && (mParent.GetRloc16() != sourceAddress))
+            {
+                // Remove stale parent.
+                BecomeDetached();
+            }
         }
     }
 
@@ -2891,12 +2930,18 @@ otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo
         {
             SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
 
-            if (IsFullThreadDevice() && (Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route) == OT_ERROR_NONE) &&
-                route.IsValid())
+#if OPENTHREAD_FTD
+            if (IsFullThreadDevice())
             {
-                // Overwrite Route Data
-                Get<MleRouter>().ProcessRouteTlv(route);
+                RouteTlv route;
+
+                if ((Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route) == OT_ERROR_NONE) && route.IsValid())
+                {
+                    // Overwrite Route Data
+                    Get<MleRouter>().ProcessRouteTlv(route);
+                }
             }
+#endif
 
             mRetrieveNewNetworkData = true;
         }
@@ -3312,6 +3357,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
 
         int compare = 0;
 
+#if OPENTHREAD_FTD
         if (IsFullThreadDevice())
         {
             compare = MleRouter::ComparePartitions(connectivity.GetActiveRouters() <= 1, leaderData, mParentIsSingleton,
@@ -3320,6 +3366,7 @@ otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInf
 
         // only consider partitions that are the same or better
         VerifyOrExit(compare >= 0);
+#endif
 
         // only consider better parents if the partitions are the same
         VerifyOrExit(compare != 0 || IsBetterParent(sourceAddress, linkQuality, linkMargin, connectivity,
@@ -3410,7 +3457,6 @@ otError Mle::HandleChildIdResponse(const Message &         aMessage,
     LeaderData          leaderData;
     uint16_t            sourceAddress;
     uint16_t            shortAddress;
-    RouteTlv            route;
     ActiveTimestampTlv  activeTimestamp;
     PendingTimestampTlv pendingTimestamp;
     Tlv                 tlv;
@@ -3496,11 +3542,17 @@ otError Mle::HandleChildIdResponse(const Message &         aMessage,
         Get<MeshForwarder>().SetRxOnWhenIdle(true);
     }
 
-    // Route
-    if ((Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route) == OT_ERROR_NONE) && IsFullThreadDevice())
+#if OPENTHREAD_FTD
+    if (IsFullThreadDevice())
     {
-        SuccessOrExit(error = Get<MleRouter>().ProcessRouteTlv(route));
+        RouteTlv route;
+
+        if (Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route) == OT_ERROR_NONE)
+        {
+            SuccessOrExit(error = Get<MleRouter>().ProcessRouteTlv(route));
+        }
     }
+#endif
 
     mParent = mParentCandidate;
     mParentCandidate.Clear();

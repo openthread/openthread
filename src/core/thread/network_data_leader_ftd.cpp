@@ -309,7 +309,6 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
 {
     otError        error = OT_ERROR_NONE;
     Coap::Message *message;
-    uint8_t        index;
     uint8_t *      data   = NULL;
     uint8_t        length = 0;
 
@@ -337,7 +336,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
     }
     else
     {
-        for (index = 0; index < aLength; index++)
+        for (uint16_t index = 0; index < aLength; index++)
         {
             uint8_t type;
 

@@ -187,7 +187,12 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
 
     instance.Get<Ip6::Ip6>().GetSendQueue().GetInfo(aBufferInfo->mIp6Messages, aBufferInfo->mIp6Buffers);
 
+#if OPENTHREAD_FTD
     instance.Get<Ip6::Mpl>().GetBufferedMessageSet().GetInfo(aBufferInfo->mMplMessages, aBufferInfo->mMplBuffers);
+#else
+    aBufferInfo->mMplMessages             = 0;
+    aBufferInfo->mMplBuffers              = 0;
+#endif
 
     instance.Get<Mle::MleRouter>().GetMessageQueue().GetInfo(aBufferInfo->mMleMessages, aBufferInfo->mMleBuffers);
 
