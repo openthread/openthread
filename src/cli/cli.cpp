@@ -3758,7 +3758,7 @@ void Interpreter::HandleDiagnosticGetResponse(const otMessage &aMessage, const I
     // Output Network Diagnostic TLV values in standard YAML format.
     while ((error = otThreadGetNextDiagnosticTlv(&aMessage, &iterator, &diagTlv)) == OT_ERROR_NONE)
     {
-        size_t column = 0;
+        uint16_t column = 0;
         switch (diagTlv.mType)
         {
         case OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS:
