@@ -888,31 +888,14 @@ exit:
 
 int8_t NetworkData::PrefixMatch(const uint8_t *a, const uint8_t *b, uint8_t aLength)
 {
-    int8_t  rval  = 0;
-    uint8_t bytes = BitVectorBytes(aLength);
-    uint8_t diff;
+    uint8_t matchedLength;
 
-    for (uint8_t i = 0; i < bytes; i++)
-    {
-        diff = a[i] ^ b[i];
+    // Note that he `Ip6::Address::PrefixMatch` expects the prefix
+    // length to be in bytes unit.
 
-        if (diff == 0)
-        {
-            rval += 8;
-        }
-        else
-        {
-            while ((diff & 0x80) == 0)
-            {
-                rval++;
-                diff <<= 1;
-            }
+    matchedLength = Ip6::Address::PrefixMatch(a, b, BitVectorBytes(aLength));
 
-            break;
-        }
-    }
-
-    return (rval >= aLength) ? rval : -1;
+    return (matchedLength >= aLength) ? static_cast<int8_t>(matchedLength) : -1;
 }
 
 ServiceTlv *NetworkData::FindService(uint32_t       aEnterpriseNumber,
