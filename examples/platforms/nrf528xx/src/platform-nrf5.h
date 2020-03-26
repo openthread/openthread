@@ -155,7 +155,7 @@ bool nrf5FlashIsBusy(void);
  * Function for writing data into flash.
  *
  */
-uint32_t nrf5FlashWrite(uint32_t aAddress, const uint8_t *aData, uint32_t aSize);
+otError nrf5FlashWrite(uint32_t aAddress, const uint8_t *aData, uint32_t aSize);
 
 /**
  * Initialization of temperature controller.
