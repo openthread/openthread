@@ -71,6 +71,7 @@ openthread_headers                      = \
     message.h                             \
     ncp.h                                 \
     netdata.h                             \
+    netdiag.h                             \
     network_time.h                        \
     random_crypto.h                       \
     random_noncrypto.h                    \

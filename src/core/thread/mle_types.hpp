@@ -142,7 +142,7 @@ enum
 #else
     kMaxRouteCost         = 16, ///< MAX_ROUTE_COST
 #endif
-    kMaxRouterId                = 62,                                          ///< MAX_ROUTER_ID
+    kMaxRouterId                = OT_NETWORK_MAX_ROUTER_ID,                    ///< MAX_ROUTER_ID
     kInvalidRouterId            = kMaxRouterId + 1,                            ///< Value indicating incorrect Router Id
     kMaxRouters                 = OPENTHREAD_CONFIG_MLE_MAX_ROUTERS,           ///< MAX_ROUTERS
     kMinDowngradeNeighbors      = 7,                                           ///< MIN_DOWNGRADE_NEIGHBORS
