@@ -356,14 +356,14 @@ private:
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     void        HandleDiagnosticGetResponse(const otMessage &aMessage, const Ip6::MessageInfo &aMessageInfo);
     static void HandleDiagnosticGetResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext);
-    void        OutputSpaces(size_t aCount);
-    void        OutputMode(const otLinkModeConfig &aMode, size_t aColumn);
-    void        OutputConnectivity(const otNetworkDiagConnectivity &aConnectivity, size_t aColumn);
-    void        OutputRoute(const otNetworkDiagRoute &aRoute, size_t aColumn);
-    void        OutputRouteData(const otNetworkDiagRouteData &aRouteData, size_t aColumn);
-    void        OutputLeaderData(const otLeaderData &aLeaderData, size_t aColumn);
-    void        OutputNetworkDiagMacCounters(const otNetworkDiagMacCounters &aMacCounters, size_t aColumn);
-    void        OutputChildTableEntry(const otNetworkDiagChildEntry &aChildEntry, size_t aColumn);
+    void        OutputSpaces(uint16_t aCount);
+    void        OutputMode(const otLinkModeConfig &aMode, uint16_t aColumn);
+    void        OutputConnectivity(const otNetworkDiagConnectivity &aConnectivity, uint16_t aColumn);
+    void        OutputRoute(const otNetworkDiagRoute &aRoute, uint16_t aColumn);
+    void        OutputRouteData(const otNetworkDiagRouteData &aRouteData, uint16_t aColumn);
+    void        OutputLeaderData(const otLeaderData &aLeaderData, uint16_t aColumn);
+    void        OutputNetworkDiagMacCounters(const otNetworkDiagMacCounters &aMacCounters, uint16_t aColumn);
+    void        OutputChildTableEntry(const otNetworkDiagChildEntry &aChildEntry, uint16_t aColumn);
 #endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE

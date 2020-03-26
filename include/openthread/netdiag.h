@@ -93,22 +93,22 @@ typedef uint16_t otNetworkDiagIterator; ///< Used to iterate through Network Dia
 typedef struct otNetworkDiagConnectivity
 {
     /**
-     * The priority of the sender as a parent
+     * The priority of the sender as a parent.
      */
     int8_t mParentPriority;
 
     /**
-     * The number of neighboring device with which the sender shares a link of quality 3.
+     * The number of neighboring devices with which the sender shares a link of quality 3.
      */
     uint8_t mLinkQuality3;
 
     /**
-     * The number of neighboring device with which the sender shares a link of quality 2.
+     * The number of neighboring devices with which the sender shares a link of quality 2.
      */
     uint8_t mLinkQuality2;
 
     /**
-     * The number of neighboring device with which the sender shares a link of quality 1.
+     * The number of neighboring devices with which the sender shares a link of quality 1.
      */
     uint8_t mLinkQuality1;
 
@@ -175,7 +175,7 @@ typedef struct otNetworkDiagRoute
 /**
  * This structure represents a Network Diagnostic Mac Counters value.
  *
- * Reference to <a href="https://www.ietf.org/rfc/rfc2863">RFC 2863</a> for definitions of member fields.
+ * See <a href="https://www.ietf.org/rfc/rfc2863">RFC 2863</a> for definitions of member fields.
  *
  */
 typedef struct otNetworkDiagMacCounters
@@ -220,7 +220,7 @@ typedef struct otNetworkDiagChildEntry
 typedef struct otNetworkDiagTlv
 {
     /**
-     * The actually Network Diagnostic TLV type.
+     * The Network Diagnostic TLV type.
      */
     uint8_t mType;
 
@@ -264,14 +264,14 @@ typedef struct otNetworkDiagTlv
 /**
  * This function gets the next Network Diagnostic TLV in the message.
  *
- * @param[in]     aMessage   A pointer to an message.
- * @param[inout]  aIterator  A pointer to the Network Diagnostic iterator context. To get the first
- *                           Network Diagnostic TLV it should be set to OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT.
- * @param[out]    aConfig    A pointer to where the Network Diagnostic TLV information will be placed.
+ * @param[in]     aMessage         A pointer to a message.
+ * @param[inout]  aIterator        A pointer to the Network Diagnostic iterator context. To get the first
+ *                                 Network Diagnostic TLV it should be set to OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT.
+ * @param[out]    aNetworkDiagTlv  A pointer to where the Network Diagnostic TLV information will be placed.
  *
  * @retval OT_ERROR_NONE       Successfully found the next Network Diagnostic TLV.
  * @retval OT_ERROR_NOT_FOUND  No subsequent Network Diagnostic TLV exists in the message.
- * @retval OT_ERROR_PARSE      Parsing the next Network Diagnostic Failed.
+ * @retval OT_ERROR_PARSE      Parsing the next Network Diagnostic failed.
  *
  * @Note A subsequent call to this function is allowed only when current return value is OT_ERROR_NONE.
  *
@@ -310,7 +310,9 @@ void otThreadSetReceiveDiagnosticGetCallback(otInstance *                   aIns
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  * @param[in]  aDestination   A pointer to destination address.
  * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types.
- * @param[in]  aCount         Number of types in aTlvTypes
+ * @param[in]  aCount         Number of types in aTlvTypes.
+ *
+ * @retval OT_ERROR_NONE  Successfully sent the message.
  *
  */
 otError otThreadSendDiagnosticGet(otInstance *        aInstance,
@@ -325,6 +327,8 @@ otError otThreadSendDiagnosticGet(otInstance *        aInstance,
  * @param[in]  aDestination   A pointer to destination address.
  * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types. Currently only Type 9 is allowed.
  * @param[in]  aCount         Number of types in aTlvTypes
+ *
+ * @retval OT_ERROR_NONE  Successfully sent the message.
  *
  */
 otError otThreadSendDiagnosticReset(otInstance *        aInstance,

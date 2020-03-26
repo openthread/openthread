@@ -1434,7 +1434,7 @@ public:
      */
     bool IsValid(void) const
     {
-        // At least one channel pages must be included.
+        // At least one channel page must be included.
         return GetLength() >= 1;
     }
 

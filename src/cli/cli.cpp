@@ -3836,22 +3836,22 @@ void Interpreter::HandleDiagnosticGetResponse(const otMessage &aMessage, const I
     AppendResult(error == OT_ERROR_NOT_FOUND ? OT_ERROR_NONE : error);
 }
 
-void Interpreter::OutputSpaces(size_t aCount)
+void Interpreter::OutputSpaces(uint16_t aCount)
 {
-    static const size_t kSpaceStrLen = 16;
-    char                spaceStr[kSpaceStrLen + 1];
+    static const uint16_t kSpaceStrLen = 16;
+    char                  spaceStr[kSpaceStrLen + 1];
 
     memset(spaceStr, ' ', kSpaceStrLen);
     spaceStr[kSpaceStrLen] = '\0';
 
-    for (size_t i = 0; i < aCount; i += kSpaceStrLen)
+    for (uint16_t i = 0; i < aCount; i += kSpaceStrLen)
     {
-        size_t idx = (i + kSpaceStrLen <= aCount) ? 0 : (i + kSpaceStrLen - aCount);
+        uint16_t idx = (i + kSpaceStrLen <= aCount) ? 0 : (i + kSpaceStrLen - aCount);
         mServer->OutputFormat(&spaceStr[idx]);
     }
 }
 
-void Interpreter::OutputMode(const otLinkModeConfig &aMode, size_t aColumn)
+void Interpreter::OutputMode(const otLinkModeConfig &aMode, uint16_t aColumn)
 {
     OutputSpaces(aColumn);
     mServer->OutputFormat("RxOnWhenIdle: %d\r\n", aMode.mRxOnWhenIdle);
@@ -3866,7 +3866,7 @@ void Interpreter::OutputMode(const otLinkModeConfig &aMode, size_t aColumn)
     mServer->OutputFormat("NetworkData: %d\r\n", aMode.mNetworkData);
 }
 
-void Interpreter::OutputConnectivity(const otNetworkDiagConnectivity &aConnectivity, size_t aColumn)
+void Interpreter::OutputConnectivity(const otNetworkDiagConnectivity &aConnectivity, uint16_t aColumn)
 {
     OutputSpaces(aColumn);
     mServer->OutputFormat("ParentPriority: %d\r\n", aConnectivity.mParentPriority);
@@ -3896,7 +3896,7 @@ void Interpreter::OutputConnectivity(const otNetworkDiagConnectivity &aConnectiv
     mServer->OutputFormat("SedDatagramCount: %u\r\n", aConnectivity.mSedDatagramCount);
 }
 
-void Interpreter::OutputRoute(const otNetworkDiagRoute &aRoute, size_t aColumn)
+void Interpreter::OutputRoute(const otNetworkDiagRoute &aRoute, uint16_t aColumn)
 {
     OutputSpaces(aColumn);
     mServer->OutputFormat("IdSequence: %u\r\n", aRoute.mIdSequence);
@@ -3914,7 +3914,7 @@ void Interpreter::OutputRoute(const otNetworkDiagRoute &aRoute, size_t aColumn)
     }
 }
 
-void Interpreter::OutputRouteData(const otNetworkDiagRouteData &aRouteData, size_t aColumn)
+void Interpreter::OutputRouteData(const otNetworkDiagRouteData &aRouteData, uint16_t aColumn)
 {
     mServer->OutputFormat("RouteId: 0x%02x\r\n", aRouteData.mRouterId);
 
@@ -3928,7 +3928,7 @@ void Interpreter::OutputRouteData(const otNetworkDiagRouteData &aRouteData, size
     mServer->OutputFormat("RouteCost: %u\r\n", aRouteData.mRouteCost);
 }
 
-void Interpreter::OutputLeaderData(const otLeaderData &aLeaderData, size_t aColumn)
+void Interpreter::OutputLeaderData(const otLeaderData &aLeaderData, uint16_t aColumn)
 {
     OutputSpaces(aColumn);
     mServer->OutputFormat("PartitionId: 0x%08x\r\n", aLeaderData.mPartitionId);
@@ -3946,7 +3946,7 @@ void Interpreter::OutputLeaderData(const otLeaderData &aLeaderData, size_t aColu
     mServer->OutputFormat("LeaderRouterId: 0x%02x\r\n", aLeaderData.mLeaderRouterId);
 }
 
-void Interpreter::OutputNetworkDiagMacCounters(const otNetworkDiagMacCounters &aMacCounters, size_t aColumn)
+void Interpreter::OutputNetworkDiagMacCounters(const otNetworkDiagMacCounters &aMacCounters, uint16_t aColumn)
 {
     OutputSpaces(aColumn);
     mServer->OutputFormat("IfInUnknownProtos: %u\r\n", aMacCounters.mIfInUnknownProtos);
@@ -3976,7 +3976,7 @@ void Interpreter::OutputNetworkDiagMacCounters(const otNetworkDiagMacCounters &a
     mServer->OutputFormat("IfOutDiscards: %u\r\n", aMacCounters.mIfOutDiscards);
 }
 
-void Interpreter::OutputChildTableEntry(const otNetworkDiagChildEntry &aChildEntry, size_t aColumn)
+void Interpreter::OutputChildTableEntry(const otNetworkDiagChildEntry &aChildEntry, uint16_t aColumn)
 {
     mServer->OutputFormat("ChildId: 0x%04x\r\n", aChildEntry.mChildId);
 
