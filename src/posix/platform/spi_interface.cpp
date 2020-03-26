@@ -60,7 +60,7 @@
 #include <linux/spi/spidev.h>
 
 namespace ot {
-namespace PosixApp {
+namespace Posix {
 
 SpiInterface::SpiInterface(SpinelInterface::Callbacks &aCallback, SpinelInterface::RxFrameBuffer &aFrameBuffer)
     : mCallbacks(aCallback)
@@ -782,7 +782,7 @@ void SpiInterface::LogStats(void)
     otLogInfoPlat("INFO: mSpiTxFrameCount=%" PRIu64, mSpiTxFrameCount);
     otLogInfoPlat("INFO: mSpiTxFrameByteCount=%" PRIu64, mSpiTxFrameByteCount);
 }
-} // namespace PosixApp
+} // namespace Posix
 } // namespace ot
 
 #endif // OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE

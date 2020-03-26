@@ -55,7 +55,7 @@
 #include "ncp/ncp_config.h"
 
 namespace ot {
-namespace PosixApp {
+namespace Posix {
 
 class RadioSpinel : public SpinelInterface::Callbacks
 {
@@ -729,7 +729,7 @@ private:
     uint64_t mTxRadioEndUs;
 };
 
-} // namespace PosixApp
+} // namespace Posix
 } // namespace ot
 
 #endif // RADIO_SPINEL_HPP_

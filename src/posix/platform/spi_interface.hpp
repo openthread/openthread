@@ -46,7 +46,7 @@
 #include "ncp/ncp_spi.hpp"
 
 namespace ot {
-namespace PosixApp {
+namespace Posix {
 
 /**
  * This class defines an SPI interface to the Radio Co-processor (RCP).
@@ -220,7 +220,7 @@ private:
     uint16_t mSpiSlaveDataLen;
 };
 
-} // namespace PosixApp
+} // namespace Posix
 } // namespace ot
 
 #endif // OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
