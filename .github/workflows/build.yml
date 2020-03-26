@@ -53,14 +53,16 @@ jobs:
         clang-format-6.0 --version
         python3 -m pip install yapf
     - name: Check
-      run: script/make-pretty check
+      run: |
+        script/make-pretty check
 
   package:
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v2
     - name: Package
-      run: script/test package
+      run: |
+        script/test package
 
   scan-build:
     runs-on: ubuntu-18.04
@@ -73,7 +75,8 @@ jobs:
         sudo apt-get autoremove
         sudo apt-get --no-install-recommends install -y clang-tools
     - name: Run
-      run: script/check-scan-build
+      run: |
+        script/check-scan-build
 
   arm-gcc-4:
     runs-on: ubuntu-18.04
@@ -158,9 +161,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
-      run: sudo apt-get --no-install-recommends install -y gcc-5 g++-5 ninja-build
+      run: |
+        sudo apt-get --no-install-recommends install -y gcc-5 g++-5 ninja-build
     - name: Build
-      run: script/check-simulation-build
+      run: |
+        script/check-simulation-build
+        script/check-posix-build
 
   gcc-6:
     runs-on: ubuntu-18.04
@@ -170,9 +176,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
-      run: sudo apt-get --no-install-recommends install -y gcc-6 g++-6 ninja-build
+      run: |
+        sudo apt-get --no-install-recommends install -y gcc-6 g++-6 ninja-build
     - name: Build
-      run: script/check-simulation-build
+      run: |
+        script/check-simulation-build
+        script/check-posix-build
 
   gcc-7:
     runs-on: ubuntu-18.04
@@ -182,9 +191,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
-      run: sudo apt-get --no-install-recommends install -y gcc-7 g++-7 ninja-build
+      run: |
+        sudo apt-get --no-install-recommends install -y gcc-7 g++-7 ninja-build
     - name: Build
-      run: script/check-simulation-build
+      run: |
+        script/check-simulation-build
+        script/check-posix-build
 
   gcc-8:
     runs-on: ubuntu-18.04
@@ -194,9 +206,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
-      run: sudo apt-get --no-install-recommends install -y gcc-8 g++-8 ninja-build
+      run: |
+        sudo apt-get --no-install-recommends install -y gcc-8 g++-8 ninja-build
     - name: Build
-      run: script/check-simulation-build
+      run: |
+        script/check-simulation-build
+        script/check-posix-build
 
   gcc-9:
     runs-on: ubuntu-18.04
@@ -206,15 +221,36 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
-      run: sudo apt-get --no-install-recommends install -y gcc-9 g++-9 ninja-build
+      run: |
+        sudo apt-get --no-install-recommends install -y gcc-9 g++-9 ninja-build
     - name: Build
-      run: script/check-simulation-build
+      run: |
+        script/check-simulation-build
+        script/check-posix-build
+
+  gn:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y ninja-build
+        cd /tmp
+        wget -O gn.zip https://chrome-infra-packages.appspot.com/dl/gn/gn/linux-amd64/+/latest
+        unzip -o gn.zip
+        chmod a+x gn && mkdir -p bin && mv -f gn bin/
+    - name: Build
+      run: |
+        export PATH=/tmp/bin:$PATH
+        script/check-gn-build
 
   macos:
     runs-on: macos-10.15
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
-      run: brew install automake ninja
+      run: |
+        brew install automake ninja
     - name: Build
-      run: script/check-simulation-build
+      run: |
+        script/check-simulation-build
