@@ -45,6 +45,30 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_OUTPUT
+ *
+ * Select the log output.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_OUTPUT
+#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+ *
+ * Define as 1 to enable dynamic log level control.
+ *
+ * Note that the OPENTHREAD_CONFIG_LOG_LEVEL determines the log level at
+ * compile time. The dynamic log level control (if enabled) only allows
+ * decreasing the log level from the compile time value.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+#define OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_PLATFORM_INFO
  *
  * The platform-specific string to insert into the OpenThread version string.
