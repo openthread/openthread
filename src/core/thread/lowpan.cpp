@@ -514,7 +514,7 @@ otError Lowpan::CompressExtensionHeader(Message &aMessage, BufferWriter &aBuf, u
         uint16_t          offset = aMessage.GetOffset();
         Ip6::OptionHeader optionHeader;
 
-        while (offset < len + aMessage.GetOffset())
+        while ((offset - aMessage.GetOffset()) < len)
         {
             VerifyOrExit(aMessage.Read(offset, sizeof(optionHeader), &optionHeader) == sizeof(optionHeader),
                          error = OT_ERROR_PARSE);
