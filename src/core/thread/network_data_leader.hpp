@@ -270,6 +270,8 @@ protected:
     uint8_t mVersion;
 
 private:
+    PrefixTlv *FindNextMatchingPrefix(const Ip6::Address &aAddress, PrefixTlv *aPrevTlv);
+
     otError RemoveCommissioningData(void);
 
     otError ExternalRouteLookup(uint8_t             aDomainId,

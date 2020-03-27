@@ -144,22 +144,12 @@ exit:
 }
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
-otError LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext)
+PrefixTlv *LeaderBase::FindNextMatchingPrefix(const Ip6::Address &aAddress, PrefixTlv *aPrevTlv)
 {
-    PrefixTlv * prefix;
-    ContextTlv *contextTlv;
+    PrefixTlv *     prefix;
+    NetworkDataTlv *start = (aPrevTlv == NULL) ? reinterpret_cast<NetworkDataTlv *>(mTlvs) : aPrevTlv->GetNext();
 
-    aContext.mPrefixLength = 0;
-
-    if (Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress))
-    {
-        aContext.mPrefix       = Get<Mle::MleRouter>().GetMeshLocalPrefix().m8;
-        aContext.mPrefixLength = Mle::MeshLocalPrefix::kLength;
-        aContext.mContextId    = Mle::kMeshLocalPrefixContextId;
-        aContext.mCompressFlag = true;
-    }
-
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs); cur < GetTlvsEnd(); cur = cur->GetNext())
+    for (NetworkDataTlv *cur = start; cur < GetTlvsEnd(); cur = cur->GetNext())
     {
         if (cur->GetType() != NetworkDataTlv::kTypePrefix)
         {
@@ -173,6 +163,32 @@ otError LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aC
             continue;
         }
 
+        ExitNow();
+    }
+
+    prefix = NULL;
+
+exit:
+    return prefix;
+}
+
+otError LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext)
+{
+    PrefixTlv * prefix = NULL;
+    ContextTlv *contextTlv;
+
+    aContext.mPrefixLength = 0;
+
+    if (Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress))
+    {
+        aContext.mPrefix       = Get<Mle::MleRouter>().GetMeshLocalPrefix().m8;
+        aContext.mPrefixLength = Mle::MeshLocalPrefix::kLength;
+        aContext.mContextId    = Mle::kMeshLocalPrefixContextId;
+        aContext.mCompressFlag = true;
+    }
+
+    while ((prefix = FindNextMatchingPrefix(aAddress, prefix)) != NULL)
+    {
         contextTlv = FindContext(*prefix);
 
         if (contextTlv == NULL)
@@ -265,25 +281,13 @@ exit:
 
 bool LeaderBase::IsOnMesh(const Ip6::Address &aAddress)
 {
-    PrefixTlv *prefix;
-    bool       rval = false;
+    PrefixTlv *prefix = NULL;
+    bool       rval   = false;
 
     VerifyOrExit(!Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress), rval = true);
 
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs); cur < GetTlvsEnd(); cur = cur->GetNext())
+    while ((prefix = FindNextMatchingPrefix(aAddress, prefix)) != NULL)
     {
-        if (cur->GetType() != NetworkDataTlv::kTypePrefix)
-        {
-            continue;
-        }
-
-        prefix = static_cast<PrefixTlv *>(cur);
-
-        if (PrefixMatch(prefix->GetPrefix(), aAddress.mFields.m8, prefix->GetPrefixLength()) < 0)
-        {
-            continue;
-        }
-
         if (FindBorderRouter(*prefix) == NULL)
         {
             continue;
@@ -301,34 +305,24 @@ otError LeaderBase::RouteLookup(const Ip6::Address &aSource,
                                 uint8_t *           aPrefixMatch,
                                 uint16_t *          aRloc16)
 {
-    otError    error = OT_ERROR_NO_ROUTE;
-    PrefixTlv *prefix;
+    otError    error  = OT_ERROR_NO_ROUTE;
+    PrefixTlv *prefix = NULL;
 
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs); cur < GetTlvsEnd(); cur = cur->GetNext())
+    while ((prefix = FindNextMatchingPrefix(aSource, prefix)) != NULL)
     {
-        if (cur->GetType() != NetworkDataTlv::kTypePrefix)
+        if (ExternalRouteLookup(prefix->GetDomainId(), aDestination, aPrefixMatch, aRloc16) == OT_ERROR_NONE)
         {
-            continue;
+            ExitNow(error = OT_ERROR_NONE);
         }
 
-        prefix = static_cast<PrefixTlv *>(cur);
-
-        if (PrefixMatch(prefix->GetPrefix(), aSource.mFields.m8, prefix->GetPrefixLength()) >= 0)
+        if (DefaultRouteLookup(*prefix, aRloc16) == OT_ERROR_NONE)
         {
-            if (ExternalRouteLookup(prefix->GetDomainId(), aDestination, aPrefixMatch, aRloc16) == OT_ERROR_NONE)
+            if (aPrefixMatch)
             {
-                ExitNow(error = OT_ERROR_NONE);
+                *aPrefixMatch = 0;
             }
 
-            if (DefaultRouteLookup(*prefix, aRloc16) == OT_ERROR_NONE)
-            {
-                if (aPrefixMatch)
-                {
-                    *aPrefixMatch = 0;
-                }
-
-                ExitNow(error = OT_ERROR_NONE);
-            }
+            ExitNow(error = OT_ERROR_NONE);
         }
     }
 
