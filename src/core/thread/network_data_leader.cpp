@@ -540,23 +540,10 @@ exit:
     return error;
 }
 
-NetworkDataTlv *LeaderBase::GetCommissioningData(void)
+CommissioningDataTlv *LeaderBase::GetCommissioningData(void)
 {
-    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-    NetworkDataTlv *end = GetTlvsEnd();
-
-    for (; cur < end; cur = cur->GetNext())
-    {
-        if (cur->GetType() == NetworkDataTlv::kTypeCommissioningData)
-        {
-            ExitNow();
-        }
-    }
-
-    cur = NULL;
-
-exit:
-    return cur;
+    return static_cast<CommissioningDataTlv *>(
+        FindTlv(reinterpret_cast<NetworkDataTlv *>(mTlvs), GetTlvsEnd(), NetworkDataTlv::kTypeCommissioningData));
 }
 
 MeshCoP::Tlv *LeaderBase::GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType)
@@ -608,16 +595,11 @@ exit:
 
 otError LeaderBase::RemoveCommissioningData(void)
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    otError               error = OT_ERROR_NONE;
+    CommissioningDataTlv *tlv   = GetCommissioningData();
 
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs); cur < GetTlvsEnd(); cur = cur->GetNext())
-    {
-        if (cur->GetType() == NetworkDataTlv::kTypeCommissioningData)
-        {
-            RemoveTlv(cur);
-            ExitNow(error = OT_ERROR_NONE);
-        }
-    }
+    VerifyOrExit(tlv != NULL, error = OT_ERROR_NOT_FOUND);
+    RemoveTlv(tlv);
 
 exit:
     return error;
