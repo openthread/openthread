@@ -1,5 +1,6 @@
+#!/bin/bash
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,34 +27,11 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-language: python
-python: "3.6"
+set -euxo pipefail
 
-sudo: required
-dist: bionic
+main()
+{
+    "$(dirname "$0")"/check-posix-build-autotools
+}
 
-before_install:
-  - travis_retry .travis/before_install.sh
-
-before_script:
-  - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
-      sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6';
-    fi
-
-jobs:
-  include:
-    - env: BUILD_TARGET="android-build" VERBOSE=1
-      os: linux
-      dist: trusty
-      python: "2.7" # The old Android build system only supports python2
-      script: .travis/script.sh
-    - env: BUILD_TARGET="android-build" VERBOSE=1 USE_OTBR_DAEMON=1
-      os: linux
-      dist: trusty
-      python: "2.7" # The old Android build system only supports python2
-      script: .travis/script.sh
-    - env:
-      name: "Size Report"
-      os: linux
-      script: .travis/check-size
-      if: type = pull_request
+main "$@"
