@@ -98,7 +98,7 @@ otError LeaderBase::GetBackboneRouterPrimary(BackboneRouter::BackboneRouterConfi
 {
     otError                         error          = OT_ERROR_NOT_FOUND;
     uint8_t                         serviceData    = ServiceTlv::kServiceDataBackboneRouter;
-    const ServerTlv *               rvalServerTlv  = NULL;
+    ServerTlv *                     rvalServerTlv  = NULL;
     const BackboneRouterServerData *rvalServerData = NULL;
     ServiceTlv *                    serviceTlv;
     NetworkDataTlv *                subCur;
@@ -106,24 +106,16 @@ otError LeaderBase::GetBackboneRouterPrimary(BackboneRouter::BackboneRouterConfi
 
     serviceTlv = Get<Leader>().FindService(THREAD_ENTERPRISE_NUMBER, &serviceData, sizeof(serviceData));
 
-    if (serviceTlv == NULL)
-    {
-        aConfig.mServer16 = Mac::kShortAddrInvalid;
-        ExitNow();
-    }
+    VerifyOrExit(serviceTlv != NULL, aConfig.mServer16 = Mac::kShortAddrInvalid);
 
     subCur = serviceTlv->GetSubTlvs();
     subEnd = serviceTlv->GetNext();
 
-    while (subCur < subEnd)
+    while ((subCur = FindTlv(subCur, subEnd, NetworkDataTlv::kTypeServer)) != NULL)
     {
-        ServerTlv *                     serverTlv;
-        const BackboneRouterServerData *serverData;
-
-        VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd, error = OT_ERROR_PARSE);
-
-        serverTlv  = static_cast<ServerTlv *>(subCur);
-        serverData = reinterpret_cast<const BackboneRouterServerData *>(serverTlv->GetServerData());
+        ServerTlv *                     serverTlv = static_cast<ServerTlv *>(subCur);
+        const BackboneRouterServerData *serverData =
+            reinterpret_cast<const BackboneRouterServerData *>(serverTlv->GetServerData());
 
         if (rvalServerTlv == NULL ||
             (serverTlv->GetServer16() == Mle::Mle::Rloc16FromRouterId(Get<Mle::MleRouter>().GetLeaderId())) ||
@@ -131,7 +123,7 @@ otError LeaderBase::GetBackboneRouterPrimary(BackboneRouter::BackboneRouterConfi
             (serverData->GetSequenceNumber() == rvalServerData->GetSequenceNumber() &&
              serverTlv->GetServer16() > rvalServerTlv->GetServer16()))
         {
-            rvalServerTlv  = const_cast<ServerTlv *>(serverTlv);
+            rvalServerTlv  = serverTlv;
             rvalServerData = serverData;
         }
 
