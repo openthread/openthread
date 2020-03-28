@@ -337,7 +337,7 @@ protected:
      * This method returns a pointer to the stable or non-stable Border Router TLV within a given Prefix TLV.
      *
      * @param[in]  aPrefix  A reference to the Prefix TLV.
-     * @param[in]  aStable  TRUE if requesting a stable Border Router TLV, FALSE otherwise.
+     * @param[in]  aStable  TRUE to find a stable TLV, FALSE to find a TLV not marked as stable..
      *
      * @returns A pointer to the Border Router TLV if one is found or NULL if no Border Router TLV exists.
      *
@@ -358,7 +358,7 @@ protected:
      * This method returns a pointer to the stable or non-stable Has Route TLV within a given Prefix TLV.
      *
      * @param[in]  aPrefix  A reference to the Prefix TLV.
-     * @param[in]  aStable  TRUE if requesting a stable Has Route TLV, FALSE otherwise.
+     * @param[in]  aStable  TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
      * @returns A pointer to the Has Route TLV if one is found or NULL if no Has Route TLV exists.
      *
@@ -543,7 +543,7 @@ protected:
      * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
      * @param [in] aEnd    A pointer to the end of the sequence of TLVs.
      * @param[in]  aType   The TLV type to find.
-     * @param[in]  aStable TRUE if to find a stable TLV, FALSE otherwise.
+     * @param[in]  aStable TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
      * @returns A pointer to the TLV if found, or NULL if not found.
      *
@@ -597,7 +597,7 @@ private:
         void    SetType(Type aType) { mIteratorBuffer[kTypePosition] = static_cast<uint8_t>(aType); }
 
         bool IsNewEntry(void) const { return GetEntryIndex() == 0; }
-        void MarkEntryAsNotnew(void) { SetEntryIndex(1); }
+        void MarkEntryAsNotNew(void) { SetEntryIndex(1); }
 
         NetworkDataTlv *GetTlv(uint8_t *aTlvs) const
         {

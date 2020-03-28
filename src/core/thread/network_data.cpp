@@ -323,7 +323,7 @@ otError NetworkData::GetNextService(Iterator &aIterator, uint16_t aRloc16, Servi
                 memcpy(&aConfig.mServerConfig.mServerData, server->GetServerData(), server->GetServerDataLength());
                 aConfig.mServerConfig.mRloc16 = server->GetServer16();
 
-                iterator.MarkEntryAsNotnew();
+                iterator.MarkEntryAsNotNew();
 
                 ExitNow(error = OT_ERROR_NONE);
             }
