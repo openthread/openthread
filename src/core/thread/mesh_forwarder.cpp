@@ -372,13 +372,6 @@ void MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::
     {
         aMacAddr.SetShort(Mac::kShortAddrBroadcast);
     }
-    else if (aIp6Addr.mFields.m16[0] == HostSwap16(0xfe80) && aIp6Addr.mFields.m16[1] == HostSwap16(0x0000) &&
-             aIp6Addr.mFields.m16[2] == HostSwap16(0x0000) && aIp6Addr.mFields.m16[3] == HostSwap16(0x0000) &&
-             aIp6Addr.mFields.m16[4] == HostSwap16(0x0000) && aIp6Addr.mFields.m16[5] == HostSwap16(0x00ff) &&
-             aIp6Addr.mFields.m16[6] == HostSwap16(0xfe00))
-    {
-        aMacAddr.SetShort(aIp6Addr.GetLocator());
-    }
     else if (Get<Mle::MleRouter>().IsRoutingLocator(aIp6Addr))
     {
         aMacAddr.SetShort(aIp6Addr.GetLocator());

@@ -3404,15 +3404,7 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
 
     if (aAddress.IsLinkLocal())
     {
-        if (aAddress.mFields.m16[4] == HostSwap16(0x0000) && aAddress.mFields.m16[5] == HostSwap16(0x00ff) &&
-            aAddress.mFields.m16[6] == HostSwap16(0xfe00))
-        {
-            macAddr.SetShort(aAddress.GetLocator());
-        }
-        else
-        {
-            aAddress.ToExtAddress(macAddr);
-        }
+        aAddress.ToExtAddress(macAddr);
 
         ExitNow(rval = GetNeighbor(macAddr));
     }
