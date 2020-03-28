@@ -904,8 +904,7 @@ otError Leader::AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute)
 
     if (dstPrefix == NULL)
     {
-        dstPrefix = reinterpret_cast<PrefixTlv *>(mTlvs + mLength);
-        Insert(dstPrefix, sizeof(PrefixTlv) + BitVectorBytes(aPrefix.GetPrefixLength()));
+        dstPrefix = static_cast<PrefixTlv *>(AppendTlv(sizeof(PrefixTlv) + BitVectorBytes(aPrefix.GetPrefixLength())));
         dstPrefix->Init(aPrefix.GetDomainId(), aPrefix.GetPrefixLength(), aPrefix.GetPrefix());
     }
 
@@ -993,8 +992,8 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOl
             VerifyOrExit(i <= Mle::kServiceMaxId, error = OT_ERROR_NO_BUFS);
         }
 
-        dstService = reinterpret_cast<ServiceTlv *>(mTlvs + mLength);
-        Insert(dstService, serviceInsertLength);
+        dstService = static_cast<ServiceTlv *>(AppendTlv(serviceInsertLength));
+
         dstService->Init();
         dstService->SetServiceId(serviceId);
         dstService->SetEnterpriseNumber(aService.GetEnterpriseNumber());
@@ -1094,8 +1093,7 @@ otError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRout
 
     if (dstPrefix == NULL)
     {
-        dstPrefix = reinterpret_cast<PrefixTlv *>(mTlvs + mLength);
-        Insert(dstPrefix, sizeof(PrefixTlv) + BitVectorBytes(aPrefix.GetPrefixLength()));
+        dstPrefix = static_cast<PrefixTlv *>(AppendTlv(sizeof(PrefixTlv) + BitVectorBytes(aPrefix.GetPrefixLength())));
         dstPrefix->Init(aPrefix.GetDomainId(), aPrefix.GetPrefixLength(), aPrefix.GetPrefix());
     }
 
