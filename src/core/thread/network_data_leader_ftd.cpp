@@ -195,6 +195,7 @@ void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageI
     bool                     hasSessionId = false;
     bool                     hasValidTlv  = false;
     uint16_t                 sessionId    = 0;
+    CommissioningDataTlv *   commDataTlv;
 
     MeshCoP::Tlv *cur;
     MeshCoP::Tlv *end;
@@ -248,27 +249,25 @@ void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageI
     VerifyOrExit(hasValidTlv);
 
     // Find Commissioning Data TLV
-    for (NetworkDataTlv *netDataTlv = reinterpret_cast<NetworkDataTlv *>(mTlvs); netDataTlv < GetTlvsEnd();
-         netDataTlv                 = netDataTlv->GetNext())
+    commDataTlv = GetCommissioningData();
+
+    if (commDataTlv != NULL)
     {
-        if (netDataTlv->GetType() == NetworkDataTlv::kTypeCommissioningData)
+        // Iterate over MeshCoP TLVs and extract desired data
+        for (cur = reinterpret_cast<MeshCoP::Tlv *>(commDataTlv->GetValue());
+             cur < reinterpret_cast<MeshCoP::Tlv *>(commDataTlv->GetValue() + commDataTlv->GetLength());
+             cur = cur->GetNext())
         {
-            // Iterate over MeshCoP TLVs and extract desired data
-            for (cur = reinterpret_cast<MeshCoP::Tlv *>(netDataTlv->GetValue());
-                 cur < reinterpret_cast<MeshCoP::Tlv *>(netDataTlv->GetValue() + netDataTlv->GetLength());
-                 cur = cur->GetNext())
+            if (cur->GetType() == MeshCoP::Tlv::kCommissionerSessionId)
             {
-                if (cur->GetType() == MeshCoP::Tlv::kCommissionerSessionId)
-                {
-                    VerifyOrExit(sessionId ==
-                                 static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur)->GetCommissionerSessionId());
-                }
-                else if (cur->GetType() == MeshCoP::Tlv::kBorderAgentLocator)
-                {
-                    VerifyOrExit(length + cur->GetSize() <= sizeof(tlvs));
-                    memcpy(tlvs + length, reinterpret_cast<uint8_t *>(cur), cur->GetSize());
-                    length += cur->GetSize();
-                }
+                VerifyOrExit(sessionId ==
+                             static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur)->GetCommissionerSessionId());
+            }
+            else if (cur->GetType() == MeshCoP::Tlv::kBorderAgentLocator)
+            {
+                VerifyOrExit(length + cur->GetSize() <= sizeof(tlvs));
+                memcpy(tlvs + length, reinterpret_cast<uint8_t *>(cur), cur->GetSize());
+                length += cur->GetSize();
             }
         }
     }
@@ -307,24 +306,23 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
                                           uint16_t                aLength,
                                           const Ip6::MessageInfo &aMessageInfo)
 {
-    otError        error = OT_ERROR_NONE;
-    Coap::Message *message;
-    uint8_t *      data   = NULL;
-    uint8_t        length = 0;
+    otError               error = OT_ERROR_NONE;
+    Coap::Message *       message;
+    CommissioningDataTlv *commDataTlv;
+    uint8_t *             data   = NULL;
+    uint8_t               length = 0;
 
     VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs); cur < GetTlvsEnd(); cur = cur->GetNext())
+    commDataTlv = GetCommissioningData();
+
+    if (commDataTlv != NULL)
     {
-        if (cur->GetType() == NetworkDataTlv::kTypeCommissioningData)
-        {
-            data   = cur->GetValue();
-            length = cur->GetLength();
-            break;
-        }
+        data   = commDataTlv->GetValue();
+        length = commDataTlv->GetLength();
     }
 
     VerifyOrExit(data && length, error = OT_ERROR_DROP);
