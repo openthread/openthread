@@ -147,7 +147,7 @@ exit:
 PrefixTlv *LeaderBase::FindNextMatchingPrefix(const Ip6::Address &aAddress, PrefixTlv *aPrevTlv)
 {
     PrefixTlv *     prefix;
-    NetworkDataTlv *start = (aPrevTlv == NULL) ? reinterpret_cast<NetworkDataTlv *>(mTlvs) : aPrevTlv->GetNext();
+    NetworkDataTlv *start = (aPrevTlv == NULL) ? GetTlvsStart() : aPrevTlv->GetNext();
 
     for (NetworkDataTlv *cur = start; cur < GetTlvsEnd(); cur = cur->GetNext())
     {
@@ -223,7 +223,7 @@ otError LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext)
         ExitNow(error = OT_ERROR_NONE);
     }
 
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs); cur < GetTlvsEnd(); cur = cur->GetNext())
+    for (NetworkDataTlv *cur = GetTlvsStart(); cur < GetTlvsEnd(); cur = cur->GetNext())
     {
         if (cur->GetType() != NetworkDataTlv::kTypePrefix)
         {
@@ -345,7 +345,7 @@ otError LeaderBase::ExternalRouteLookup(uint8_t             aDomainId,
     NetworkDataTlv *cur;
     NetworkDataTlv *subCur;
 
-    for (cur = reinterpret_cast<NetworkDataTlv *>(mTlvs); cur < GetTlvsEnd(); cur = cur->GetNext())
+    for (cur = GetTlvsStart(); cur < GetTlvsEnd(); cur = cur->GetNext())
     {
         if (cur->GetType() != NetworkDataTlv::kTypePrefix)
         {
@@ -528,7 +528,7 @@ exit:
 
 CommissioningDataTlv *LeaderBase::GetCommissioningData(void)
 {
-    return FindTlv<CommissioningDataTlv>(reinterpret_cast<NetworkDataTlv *>(mTlvs), GetTlvsEnd());
+    return FindTlv<CommissioningDataTlv>(GetTlvsStart(), GetTlvsEnd());
 }
 
 MeshCoP::Tlv *LeaderBase::GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType)

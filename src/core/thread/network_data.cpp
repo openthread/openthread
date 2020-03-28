@@ -712,7 +712,7 @@ NetworkDataTlv *NetworkData::AppendTlv(uint8_t aTlvSize)
 
     VerifyOrExit(mLength + aTlvSize <= kMaxSize, tlv = NULL);
 
-    tlv = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
+    tlv = GetTlvsEnd();
     mLength += aTlvSize;
 
 exit:

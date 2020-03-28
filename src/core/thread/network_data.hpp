@@ -324,6 +324,22 @@ public:
 
 protected:
     /**
+     * This method returns a pointer to the start of Network Data TLV sequence.
+     *
+     * @returns A pointer to the start of Network Data TLV sequence.
+     *
+     */
+    NetworkDataTlv *GetTlvsStart(void) { return reinterpret_cast<NetworkDataTlv *>(mTlvs); }
+
+    /**
+     * This method returns a pointer to the end of Network Data TLV sequence.
+     *
+     * @returns A pointer to the end of Network Data TLV sequence.
+     *
+     */
+    NetworkDataTlv *GetTlvsEnd(void) { return reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength); }
+
+    /**
      * This method returns a pointer to the Border Router TLV within a given Prefix TLV.
      *
      * @param[in]  aPrefix  A reference to the Prefix TLV.
@@ -584,14 +600,6 @@ protected:
         return static_cast<TlvType *>(
             FindTlv(aStart, aEnd, static_cast<NetworkDataTlv::Type>(TlvType::kType), aStable));
     }
-
-    /**
-     * This method returns a pointer to the end of Network Data TLV sequence.
-     *
-     * @returns A pointer to the end of Network Data TLV sequence.
-     *
-     */
-    NetworkDataTlv *GetTlvsEnd(void) { return reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength); }
 
     uint8_t mTlvs[kMaxSize]; ///< The Network Data buffer.
     uint8_t mLength;         ///< The number of valid bytes in @var mTlvs.

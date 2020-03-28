@@ -1022,7 +1022,7 @@ exit:
 
 ServiceTlv *Leader::FindServiceById(uint8_t aServiceId)
 {
-    NetworkDataTlv *cur     = reinterpret_cast<NetworkDataTlv *>(mTlvs);
+    NetworkDataTlv *cur     = GetTlvsStart();
     NetworkDataTlv *end     = GetTlvsEnd();
     ServiceTlv *    compare = NULL;
 
@@ -1200,7 +1200,7 @@ exit:
 
 void Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode)
 {
-    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
+    NetworkDataTlv *cur = GetTlvsStart();
 
     while (cur < GetTlvsEnd())
     {
@@ -1374,7 +1374,7 @@ void Leader::RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter, uint
 
 void Leader::RemoveContext(uint8_t aContextId)
 {
-    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
+    NetworkDataTlv *cur = GetTlvsStart();
 
     while (cur < GetTlvsEnd())
     {
@@ -1444,7 +1444,7 @@ void Leader::UpdateContextsAfterReset(void)
     ContextTlv *contextTlv;
 
     // Iterate through Network Data and synchronize missing contexts.
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs); cur < GetTlvsEnd(); cur = cur->GetNext())
+    for (NetworkDataTlv *cur = GetTlvsStart(); cur < GetTlvsEnd(); cur = cur->GetNext())
     {
         if (cur->GetType() != NetworkDataTlv::kTypePrefix)
         {
