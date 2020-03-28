@@ -140,6 +140,9 @@ EOF
 
 main() {
     case $1 in
+        build)
+            build
+            ;;
         check)
             check
             ;;
