@@ -531,6 +531,7 @@ void RouterTable::ProcessTlv(const Mle::RouteTlv &aTlv)
             RemoveNeighbor(*router);
 
             mAllocatedRouterIds.Remove(routerId);
+            Get<AddressResolver>().Remove(routerId);
         }
     }
 
@@ -564,6 +565,7 @@ void RouterTable::ProcessTlv(const ThreadRouterMaskTlv &aTlv)
         else
         {
             mAllocatedRouterIds.Remove(routerId);
+            Get<AddressResolver>().Remove(routerId);
         }
     }
 
