@@ -261,6 +261,11 @@ OT_TOOL_PACKED_BEGIN
 class HasRouteTlv : public NetworkDataTlv
 {
 public:
+    enum
+    {
+        kType = kTypeHasRoute, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -323,6 +328,11 @@ OT_TOOL_PACKED_BEGIN
 class PrefixTlv : public NetworkDataTlv
 {
 public:
+    enum
+    {
+        kType = kTypePrefix, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -646,6 +656,11 @@ OT_TOOL_PACKED_BEGIN
 class BorderRouterTlv : public NetworkDataTlv
 {
 public:
+    enum
+    {
+        kType = kTypeBorderRouter, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -708,6 +723,11 @@ OT_TOOL_PACKED_BEGIN
 class ContextTlv : public NetworkDataTlv
 {
 public:
+    enum
+    {
+        kType = kTypeContext, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -796,6 +816,11 @@ OT_TOOL_PACKED_BEGIN
 class CommissioningDataTlv : public NetworkDataTlv
 {
 public:
+    enum
+    {
+        kType = kTypeCommissioningData, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -818,7 +843,8 @@ class ServiceTlv : public NetworkDataTlv
 public:
     enum
     {
-        kServiceDataBackboneRouter = 0x01, // const THREAD_SERVICE_DATA_BBR
+        kType                      = kTypeService, ///< The TLV Type.
+        kServiceDataBackboneRouter = 0x01,         ///< const THREAD_SERVICE_DATA_BBR
     };
 
     /**
@@ -1045,6 +1071,11 @@ OT_TOOL_PACKED_BEGIN
 class ServerTlv : public NetworkDataTlv
 {
 public:
+    enum
+    {
+        kType = kTypeServer, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *

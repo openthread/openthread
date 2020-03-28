@@ -528,8 +528,7 @@ exit:
 
 CommissioningDataTlv *LeaderBase::GetCommissioningData(void)
 {
-    return static_cast<CommissioningDataTlv *>(
-        FindTlv(reinterpret_cast<NetworkDataTlv *>(mTlvs), GetTlvsEnd(), NetworkDataTlv::kTypeCommissioningData));
+    return FindTlv<CommissioningDataTlv>(reinterpret_cast<NetworkDataTlv *>(mTlvs), GetTlvsEnd());
 }
 
 MeshCoP::Tlv *LeaderBase::GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType)

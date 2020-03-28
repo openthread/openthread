@@ -537,6 +537,21 @@ protected:
     static NetworkDataTlv *FindTlv(NetworkDataTlv *aStart, NetworkDataTlv *aEnd, NetworkDataTlv::Type aType);
 
     /**
+     * This static template method searches in a given sequence of TLVs to find the first TLV with a give template
+     * `TlvType`.
+     *
+     * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
+     * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
+     *
+     * @returns A pointer to the TLV if found, or NULL if not found.
+     *
+     */
+    template <typename TlvType> static TlvType *FindTlv(NetworkDataTlv *aStart, NetworkDataTlv *aEnd)
+    {
+        return static_cast<TlvType *>(FindTlv(aStart, aEnd, static_cast<NetworkDataTlv::Type>(TlvType::kType)));
+    }
+
+    /**
      * This static method searches in a given sequence of TLVs to find the first TLV with a given TLV Type and stable
      * flag.
      *
@@ -552,6 +567,23 @@ protected:
                                    NetworkDataTlv *     aEnd,
                                    NetworkDataTlv::Type aType,
                                    bool                 aStable);
+
+    /**
+     * This template static method searches in a given sequence of TLVs to find the first TLV with a given TLV Type and
+     * stable flag.
+     *
+     * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
+     * @param [in] aEnd    A pointer to the end of the sequence of TLVs.
+     * @param[in]  aStable TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
+     *
+     * @returns A pointer to the TLV if found, or NULL if not found.
+     *
+     */
+    template <typename TlvType> static TlvType *FindTlv(NetworkDataTlv *aStart, NetworkDataTlv *aEnd, bool aStable)
+    {
+        return static_cast<TlvType *>(
+            FindTlv(aStart, aEnd, static_cast<NetworkDataTlv::Type>(TlvType::kType), aStable));
+    }
 
     /**
      * This method returns a pointer to the end of Network Data TLV sequence.
@@ -642,6 +674,18 @@ private:
                                NetworkDataTlv *     aSubTlvs,
                                NetworkDataTlv *     aSubTlvsEnd);
     void            IterateToNextSubTlv(NetworkDataIterator &aIterator, NetworkDataTlv *aSubTlvs);
+
+    template <typename TlvType> TlvType *FindTlv(NetworkDataIterator &aIterator)
+    {
+        return static_cast<TlvType *>(FindTlv(aIterator, static_cast<NetworkDataTlv::Type>(TlvType::kType)));
+    }
+
+    template <typename TlvType>
+    TlvType *FindSubTlv(NetworkDataIterator &aIterator, NetworkDataTlv *aSubTlvs, NetworkDataTlv *aSubTlvsEnd)
+    {
+        return static_cast<TlvType *>(
+            FindSubTlv(aIterator, static_cast<NetworkDataTlv::Type>(TlvType::kType), aSubTlvs, aSubTlvsEnd));
+    }
 
     const Type mType;
     TimeMilli  mLastAttempt;

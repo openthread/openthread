@@ -193,17 +193,12 @@ otError NetworkData::GetNextOnMeshPrefix(Iterator &aIterator, uint16_t aRloc16, 
     otError             error = OT_ERROR_NOT_FOUND;
     NetworkDataIterator iterator(aIterator);
 
-    for (NetworkDataTlv *tlv; (tlv = FindTlv(iterator, NetworkDataTlv::kTypePrefix)) != NULL;
-         IterateToNextTlv(iterator))
+    for (PrefixTlv *prefix; (prefix = FindTlv<PrefixTlv>(iterator)) != NULL; IterateToNextTlv(iterator))
     {
-        PrefixTlv *prefix = static_cast<PrefixTlv *>(tlv);
-
-        for (NetworkDataTlv *subTlv; (subTlv = FindSubTlv(iterator, NetworkDataTlv::kTypeBorderRouter,
-                                                          prefix->GetSubTlvs(), prefix->GetNext())) != NULL;
+        for (BorderRouterTlv *borderRouter;
+             (borderRouter = FindSubTlv<BorderRouterTlv>(iterator, prefix->GetSubTlvs(), prefix->GetNext())) != NULL;
              IterateToNextSubTlv(iterator, prefix->GetSubTlvs()))
         {
-            BorderRouterTlv *borderRouter = static_cast<BorderRouterTlv *>(subTlv);
-
             for (uint8_t index = iterator.GetEntryIndex(); index < borderRouter->GetNumEntries(); index++)
             {
                 if (aRloc16 == Mac::kShortAddrBroadcast || borderRouter->GetEntry(index)->GetRloc() == aRloc16)
@@ -245,17 +240,12 @@ otError NetworkData::GetNextExternalRoute(Iterator &aIterator, uint16_t aRloc16,
     otError             error = OT_ERROR_NOT_FOUND;
     NetworkDataIterator iterator(aIterator);
 
-    for (NetworkDataTlv *tlv; (tlv = FindTlv(iterator, NetworkDataTlv::kTypePrefix)) != NULL;
-         IterateToNextTlv(iterator))
+    for (PrefixTlv *prefix; (prefix = FindTlv<PrefixTlv>(iterator)) != NULL; IterateToNextTlv(iterator))
     {
-        PrefixTlv *prefix = static_cast<PrefixTlv *>(tlv);
-
-        for (NetworkDataTlv *subTlv; (subTlv = FindSubTlv(iterator, NetworkDataTlv::kTypeHasRoute, prefix->GetSubTlvs(),
-                                                          prefix->GetNext())) != NULL;
+        for (HasRouteTlv *hasRoute;
+             (hasRoute = FindSubTlv<HasRouteTlv>(iterator, prefix->GetSubTlvs(), prefix->GetNext())) != NULL;
              IterateToNextSubTlv(iterator, prefix->GetSubTlvs()))
         {
-            HasRouteTlv *hasRoute = static_cast<HasRouteTlv *>(subTlv);
-
             for (uint8_t index = iterator.GetEntryIndex(); index < hasRoute->GetNumEntries(); index++)
             {
                 if (aRloc16 == Mac::kShortAddrBroadcast || hasRoute->GetEntry(index)->GetRloc() == aRloc16)
@@ -292,17 +282,12 @@ otError NetworkData::GetNextService(Iterator &aIterator, uint16_t aRloc16, Servi
     otError             error = OT_ERROR_NOT_FOUND;
     NetworkDataIterator iterator(aIterator);
 
-    for (NetworkDataTlv *tlv; (tlv = FindTlv(iterator, NetworkDataTlv::kTypeService)) != NULL;
-         IterateToNextTlv(iterator))
+    for (ServiceTlv *service; (service = FindTlv<ServiceTlv>(iterator)) != NULL; IterateToNextTlv(iterator))
     {
-        ServiceTlv *service = static_cast<ServiceTlv *>(tlv);
-
-        for (NetworkDataTlv *subTlv; (subTlv = FindSubTlv(iterator, NetworkDataTlv::kTypeServer, service->GetSubTlvs(),
-                                                          service->GetNext())) != NULL;
+        for (ServerTlv *server;
+             (server = FindSubTlv<ServerTlv>(iterator, service->GetSubTlvs(), service->GetNext())) != NULL;
              IterateToNextSubTlv(iterator, service->GetSubTlvs()))
         {
-            ServerTlv *server = static_cast<ServerTlv *>(subTlv);
-
             if (!iterator.IsNewEntry())
             {
                 continue;
@@ -615,30 +600,27 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Serv
 
 BorderRouterTlv *NetworkData::FindBorderRouter(PrefixTlv &aPrefix)
 {
-    return static_cast<BorderRouterTlv *>(
-        FindTlv(aPrefix.GetSubTlvs(), aPrefix.GetNext(), NetworkDataTlv::kTypeBorderRouter));
+    return FindTlv<BorderRouterTlv>(aPrefix.GetSubTlvs(), aPrefix.GetNext());
 }
 
 BorderRouterTlv *NetworkData::FindBorderRouter(PrefixTlv &aPrefix, bool aStable)
 {
-    return static_cast<BorderRouterTlv *>(
-        FindTlv(aPrefix.GetSubTlvs(), aPrefix.GetNext(), NetworkDataTlv::kTypeBorderRouter, aStable));
+    return FindTlv<BorderRouterTlv>(aPrefix.GetSubTlvs(), aPrefix.GetNext(), aStable);
 }
 
 HasRouteTlv *NetworkData::FindHasRoute(PrefixTlv &aPrefix)
 {
-    return static_cast<HasRouteTlv *>(FindTlv(aPrefix.GetSubTlvs(), aPrefix.GetNext(), NetworkDataTlv::kTypeHasRoute));
+    return FindTlv<HasRouteTlv>(aPrefix.GetSubTlvs(), aPrefix.GetNext());
 }
 
 HasRouteTlv *NetworkData::FindHasRoute(PrefixTlv &aPrefix, bool aStable)
 {
-    return static_cast<HasRouteTlv *>(
-        FindTlv(aPrefix.GetSubTlvs(), aPrefix.GetNext(), NetworkDataTlv::kTypeHasRoute, aStable));
+    return FindTlv<HasRouteTlv>(aPrefix.GetSubTlvs(), aPrefix.GetNext(), aStable);
 }
 
 ContextTlv *NetworkData::FindContext(PrefixTlv &aPrefix)
 {
-    return static_cast<ContextTlv *>(FindTlv(aPrefix.GetSubTlvs(), aPrefix.GetNext(), NetworkDataTlv::kTypeContext));
+    return FindTlv<ContextTlv>(aPrefix.GetSubTlvs(), aPrefix.GetNext());
 }
 
 PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
@@ -654,7 +636,7 @@ PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength
 
     while (start < end)
     {
-        prefixTlv = static_cast<PrefixTlv *>(FindTlv(start, end, NetworkDataTlv::kTypePrefix));
+        prefixTlv = FindTlv<PrefixTlv>(start, end);
 
         VerifyOrExit(prefixTlv != NULL);
 
@@ -704,7 +686,7 @@ ServiceTlv *NetworkData::FindService(uint32_t       aEnterpriseNumber,
 
     while (start < end)
     {
-        serviceTlv = static_cast<ServiceTlv *>(FindTlv(start, end, NetworkDataTlv::kTypeService));
+        serviceTlv = FindTlv<ServiceTlv>(start, end);
 
         VerifyOrExit(serviceTlv != NULL);
 
