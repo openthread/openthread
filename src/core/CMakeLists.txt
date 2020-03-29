@@ -152,8 +152,8 @@ set(COMMON_SOURCES
     meshcop/energy_scan_client.cpp
     meshcop/joiner.cpp
     meshcop/joiner_router.cpp
-    meshcop/leader.cpp
     meshcop/meshcop.cpp
+    meshcop/meshcop_leader.cpp
     meshcop/meshcop_tlvs.cpp
     meshcop/panid_query_client.cpp
     meshcop/timestamp.cpp

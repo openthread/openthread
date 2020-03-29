@@ -33,7 +33,7 @@
 
 #if OPENTHREAD_FTD
 
-#include "leader.hpp"
+#include "meshcop_leader.hpp"
 
 #include <stdio.h>
 
