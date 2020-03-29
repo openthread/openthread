@@ -42,6 +42,7 @@
 
 #include <openthread/thread.h>
 
+#include "common/encoding.hpp"
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
 
@@ -566,6 +567,61 @@ public:
      */
     void SetLeaderRouterId(uint8_t aRouterId) { mLeaderRouterId = aRouterId; }
 };
+
+OT_TOOL_PACKED_BEGIN
+class RouterIdSet
+{
+public:
+    /**
+     * This method clears the Router Id Set.
+     *
+     */
+    void Clear(void) { memset(mRouterIdSet, 0, sizeof(mRouterIdSet)); }
+
+    /**
+     * This method indicates whether or not a Router ID bit is set.
+     *
+     * @param[in]  aRouterId  The Router ID.
+     *
+     * @retval TRUE   If the Router ID bit is set.
+     * @retval FALSE  If the Router ID bit is not set.
+     *
+     */
+    bool Contains(uint8_t aRouterId) const { return (mRouterIdSet[aRouterId / 8] & (0x80 >> (aRouterId % 8))) != 0; }
+
+    /**
+     * This method sets a given Router ID.
+     *
+     * @param[in]  aRouterId  The Router ID to set.
+     *
+     */
+    void Add(uint8_t aRouterId) { mRouterIdSet[aRouterId / 8] |= 0x80 >> (aRouterId % 8); }
+
+    /**
+     * This method removes a given Router ID.
+     *
+     * @param[in]  aRouterId  The Router ID to remove.
+     *
+     */
+    void Remove(uint8_t aRouterId) { mRouterIdSet[aRouterId / 8] &= ~(0x80 >> (aRouterId % 8)); }
+
+    /**
+     * This method returns whether or not the Router ID sets are equal.
+     *
+     * @param[in]  aOther The other Router ID Set to compare with.
+     *
+     * @retval TRUE   If the Router ID sets are equal.
+     * @retval FALSE  If the Router ID sets are not equal.
+     *
+     */
+    bool operator!=(const RouterIdSet &aOther) const
+    {
+        return memcmp(mRouterIdSet, aOther.mRouterIdSet, sizeof(mRouterIdSet)) != 0;
+    }
+
+private:
+    uint8_t mRouterIdSet[BitVectorBytes(Mle::kMaxRouterId + 1)];
+} OT_TOOL_PACKED_END;
 
 /**
  * @}

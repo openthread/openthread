@@ -306,7 +306,7 @@ exit:
     return error;
 }
 
-void RouterTable::RemoveNeighbor(Router &aRouter)
+void RouterTable::RemoveRouterLink(Router &aRouter)
 {
     aRouter.SetLinkQualityOut(0);
     aRouter.SetLastHeard(TimerMilli::GetNow());
@@ -502,23 +502,25 @@ exit:
     return rval;
 }
 
-void RouterTable::ProcessTlv(const Mle::RouteTlv &aTlv)
+void RouterTable::ProcessRouterIdSet(uint8_t aRouterIdSequence, const Mle::RouterIdSet &aRouterIdSet)
 {
     bool allocationChanged = false;
 
-    mRouterIdSequence            = aTlv.GetRouterIdSequence();
+    mRouterIdSequence            = aRouterIdSequence;
     mRouterIdSequenceLastUpdated = TimerMilli::GetNow();
+
+    VerifyOrExit(mAllocatedRouterIds != aRouterIdSet);
 
     for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
     {
-        if (aTlv.IsRouterIdSet(routerId) == IsAllocated(routerId))
+        if (aRouterIdSet.Contains(routerId) == IsAllocated(routerId))
         {
             continue;
         }
 
         allocationChanged = true;
 
-        if (aTlv.IsRouterIdSet(routerId))
+        if (aRouterIdSet.Contains(routerId))
         {
             mAllocatedRouterIds.Add(routerId);
         }
@@ -528,7 +530,7 @@ void RouterTable::ProcessTlv(const Mle::RouteTlv &aTlv)
 
             OT_ASSERT(router != NULL);
             router->SetNextHop(Mle::kInvalidRouterId);
-            RemoveNeighbor(*router);
+            RemoveRouterLink(*router);
 
             mAllocatedRouterIds.Remove(routerId);
         }
@@ -539,39 +541,9 @@ void RouterTable::ProcessTlv(const Mle::RouteTlv &aTlv)
         UpdateAllocation();
         Get<Mle::MleRouter>().ResetAdvertiseInterval();
     }
-}
 
-void RouterTable::ProcessTlv(const ThreadRouterMaskTlv &aTlv)
-{
-    bool allocationChanged = false;
-
-    mRouterIdSequence            = aTlv.GetIdSequence();
-    mRouterIdSequenceLastUpdated = TimerMilli::GetNow();
-
-    for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
-    {
-        if (aTlv.IsAssignedRouterIdSet(routerId) == IsAllocated(routerId))
-        {
-            continue;
-        }
-
-        allocationChanged = true;
-
-        if (aTlv.IsAssignedRouterIdSet(routerId))
-        {
-            mAllocatedRouterIds.Add(routerId);
-        }
-        else
-        {
-            mAllocatedRouterIds.Remove(routerId);
-        }
-    }
-
-    if (allocationChanged)
-    {
-        UpdateAllocation();
-        Get<Mle::MleRouter>().ResetAdvertiseInterval();
-    }
+exit:
+    return;
 }
 
 void RouterTable::ProcessTimerTick(void)

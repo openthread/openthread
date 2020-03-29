@@ -1077,7 +1077,7 @@ otError MleRouter::ProcessRouteTlv(const RouteTlv &aRoute)
 {
     otError error = OT_ERROR_NONE;
 
-    mRouterTable.ProcessTlv(aRoute);
+    mRouterTable.ProcessRouterIdSet(aRoute.GetRouterIdSequence(), aRoute.GetRouterIdMask());
 
     if (mRole == OT_DEVICE_ROLE_ROUTER && !mRouterTable.IsAllocated(mRouterId))
     {
@@ -3281,7 +3281,7 @@ void MleRouter::RemoveRouterLink(Router &aRouter)
 #if OPENTHREAD_FTD
     case OT_DEVICE_ROLE_ROUTER:
     case OT_DEVICE_ROLE_LEADER:
-        mRouterTable.RemoveNeighbor(aRouter);
+        mRouterTable.RemoveRouterLink(aRouter);
         break;
 #endif
 
@@ -3320,7 +3320,7 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
     else if (aNeighbor.IsStateValid())
     {
         Signal(OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED, aNeighbor);
-        mRouterTable.RemoveNeighbor(static_cast<Router &>(aNeighbor));
+        mRouterTable.RemoveRouterLink(static_cast<Router &>(aNeighbor));
     }
 
     aNeighbor.GetLinkInfo().Clear();
@@ -4060,7 +4060,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
 
     SetStateRouter(Rloc16FromRouterId(mRouterId));
     mRouterTable.Clear();
-    mRouterTable.ProcessTlv(routerMaskTlv);
+    mRouterTable.ProcessRouterIdSet(routerMaskTlv.GetIdSequence(), routerMaskTlv.GetAssignedRouterIdMask());
 
     router = mRouterTable.GetRouter(routerId);
     VerifyOrExit(router != NULL);
@@ -4218,15 +4218,7 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message &   aRequest,
 
         routerMaskTlv.Init();
         routerMaskTlv.SetIdSequence(mRouterTable.GetRouterIdSequence());
-        routerMaskTlv.ClearAssignedRouterIdMask();
-
-        for (uint8_t routerId = 0; routerId <= kMaxRouterId; routerId++)
-        {
-            if (mRouterTable.IsAllocated(routerId))
-            {
-                routerMaskTlv.SetAssignedRouterId(routerId);
-            }
-        }
+        routerMaskTlv.SetAssignedRouterIdMask(mRouterTable.GetRouterIdSet());
 
         SuccessOrExit(error = routerMaskTlv.AppendTo(*message));
     }
@@ -4465,13 +4457,11 @@ void MleRouter::FillRouteTlv(RouteTlv &aTlv)
     uint8_t routerCount = 0;
 
     aTlv.SetRouterIdSequence(mRouterTable.GetRouterIdSequence());
-    aTlv.ClearRouterIdMask();
+    aTlv.SetRouterIdMask(mRouterTable.GetRouterIdSet());
 
     for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++, routerCount++)
     {
         Router &router = *iter.GetRouter();
-
-        aTlv.SetRouterId(router.GetRouterId());
 
         if (router.GetRloc16() == GetRloc16())
         {
