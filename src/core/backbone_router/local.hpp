@@ -129,6 +129,15 @@ public:
     bool IsPrimary(void) const { return mState == OT_BACKBONE_ROUTER_STATE_PRIMARY; }
 
     /**
+     * This method indicates whether or not the Backbone Router is disabled.
+     *
+     * @retval  True  if the backbone router is disabled.
+     * @retval  False if the backbone router is not disabled.
+     *
+     */
+    bool IsDisabled(void) const { return mState == OT_BACKBONE_ROUTER_STATE_DISABLED; }
+
+    /**
      * This method sets the Backbone Router registration jitter value.
      *
      * @param[in]  aRegistrationJitter the Backbone Router registration jitter value to set.

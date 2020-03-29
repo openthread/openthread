@@ -160,7 +160,9 @@ Mle::Mle(Instance &aInstance)
     }
 
 #endif
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+
     // Primary Backbone Router Aloc
     mBackboneRouterPrimaryAloc.Clear();
 
@@ -170,6 +172,16 @@ Mle::Mle(Instance &aInstance)
     mBackboneRouterPrimaryAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
     mBackboneRouterPrimaryAloc.mScopeOverrideValid = true;
     mBackboneRouterPrimaryAloc.GetAddress().SetLocator(kAloc16BackboneRouterPrimary);
+
+    // All Network Backbone Routers Multicast Address.
+    mNetworkAllBackboneRouters.Clear();
+
+    mNetworkAllBackboneRouters.GetAddress().mFields.m8[0]  = 0xff; // Multicast
+    mNetworkAllBackboneRouters.GetAddress().mFields.m8[1]  = 0x32; // Flags = 3, Scope = 2
+    mNetworkAllBackboneRouters.GetAddress().mFields.m8[2]  = 0;    // Reserved
+    mNetworkAllBackboneRouters.GetAddress().mFields.m8[3]  = 64;   // Prefix Length = 64
+    mNetworkAllBackboneRouters.GetAddress().mFields.m8[15] = 3;    // Group ID = 3
+
 #endif
 
     // initialize Mesh Local Prefix
@@ -945,10 +957,17 @@ void Mle::SetMeshLocalPrefix(const MeshLocalPrefix &aMeshLocalPrefix)
         Get<ThreadNetif>().UnsubscribeMulticast(mRealmLocalAllThreadNodes);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+
         if (Get<BackboneRouter::Local>().IsPrimary())
         {
             Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc);
         }
+
+        if (!Get<BackboneRouter::Local>().IsDisabled())
+        {
+            Get<ThreadNetif>().UnsubscribeMulticast(mNetworkAllBackboneRouters);
+        }
+
 #endif
     }
 
@@ -957,7 +976,7 @@ void Mle::SetMeshLocalPrefix(const MeshLocalPrefix &aMeshLocalPrefix)
     mLeaderAloc.GetAddress().SetPrefix(aMeshLocalPrefix);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    mBackboneRouterPrimaryAloc.GetAddress().SetPrefix(GetMeshLocalPrefix());
+    mBackboneRouterPrimaryAloc.GetAddress().SetPrefix(aMeshLocalPrefix);
 #endif
 
     // Just keep mesh local prefix if network interface is down
@@ -971,27 +990,6 @@ exit:
 
 void Mle::ApplyMeshLocalPrefix(void)
 {
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-
-    for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mServiceAlocs); i++)
-    {
-        if (mServiceAlocs[i].GetAddress().GetLocator() != Mac::kShortAddrInvalid)
-        {
-            Get<ThreadNetif>().RemoveUnicastAddress(mServiceAlocs[i]);
-            mServiceAlocs[i].GetAddress().SetPrefix(GetMeshLocalPrefix());
-            Get<ThreadNetif>().AddUnicastAddress(mServiceAlocs[i]);
-        }
-    }
-
-#endif
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    if (Get<BackboneRouter::Local>().IsPrimary())
-    {
-        Get<ThreadNetif>().AddUnicastAddress(mBackboneRouterPrimaryAloc);
-    }
-#endif
-
     mLinkLocalAllThreadNodes.GetAddress().mFields.m8[3] = 64;
     memcpy(mLinkLocalAllThreadNodes.GetAddress().mFields.m8 + 4, mMeshLocal64.GetAddress().mFields.m8, 8);
 
@@ -1015,6 +1013,37 @@ void Mle::ApplyMeshLocalPrefix(void)
     {
         Get<ThreadNetif>().AddUnicastAddress(mLeaderAloc);
     }
+
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+
+    for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mServiceAlocs); i++)
+    {
+        if (mServiceAlocs[i].GetAddress().GetLocator() != Mac::kShortAddrInvalid)
+        {
+            Get<ThreadNetif>().RemoveUnicastAddress(mServiceAlocs[i]);
+            mServiceAlocs[i].GetAddress().SetPrefix(GetMeshLocalPrefix());
+            Get<ThreadNetif>().AddUnicastAddress(mServiceAlocs[i]);
+        }
+    }
+
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+
+    if (Get<BackboneRouter::Local>().IsPrimary())
+    {
+        Get<ThreadNetif>().AddUnicastAddress(mBackboneRouterPrimaryAloc);
+    }
+
+    memcpy(mNetworkAllBackboneRouters.GetAddress().mFields.m8 + 4, mMeshLocal64.GetAddress().mFields.m8, 8);
+
+    if (!Get<BackboneRouter::Local>().IsDisabled())
+    {
+        // Subscribe All Network Backbone Routers Multicast Address for both Seconday and Primary state.
+        Get<ThreadNetif>().SubscribeMulticast(mNetworkAllBackboneRouters);
+    }
+
+#endif
 
 exit:
     // Changing the prefix also causes the mesh local address to be different.
@@ -1626,17 +1655,30 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
     }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+
     if (aFlags & OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE)
     {
         if (Get<BackboneRouter::Local>().IsPrimary())
         {
+            // Add Primary Backbone Router Aloc for Primary Backbone Router.
             Get<ThreadNetif>().AddUnicastAddress(mBackboneRouterPrimaryAloc);
         }
         else
         {
             Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc);
         }
+
+        if (Get<BackboneRouter::Local>().IsDisabled())
+        {
+            Get<ThreadNetif>().UnsubscribeMulticast(mNetworkAllBackboneRouters);
+        }
+        else
+        {
+            // Subscribe All Network Backbone Routers Multicast Address for both Seconday and Primary state.
+            Get<ThreadNetif>().SubscribeMulticast(mNetworkAllBackboneRouters);
+        }
     }
+
 #endif
 
 exit:
