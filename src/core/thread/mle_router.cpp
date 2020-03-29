@@ -3267,6 +3267,29 @@ bool MleRouter::IsMinimalChild(uint16_t aRloc16)
     return rval;
 }
 
+void MleRouter::RemoveRouterLink(Router &aRouter)
+{
+    switch (mRole)
+    {
+    case OT_DEVICE_ROLE_CHILD:
+        if (&aRouter == &mParent)
+        {
+            BecomeDetached();
+        }
+        break;
+
+#if OPENTHREAD_FTD
+    case OT_DEVICE_ROLE_ROUTER:
+    case OT_DEVICE_ROLE_LEADER:
+        mRouterTable.RemoveNeighbor(aRouter);
+        break;
+#endif
+
+    default:
+        break;
+    }
+}
+
 void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 {
     if (&aNeighbor == &mParent)
