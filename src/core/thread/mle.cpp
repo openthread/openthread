@@ -963,7 +963,7 @@ void Mle::SetMeshLocalPrefix(const MeshLocalPrefix &aMeshLocalPrefix)
             Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc);
         }
 
-        if (!Get<BackboneRouter::Local>().IsDisabled())
+        if (Get<BackboneRouter::Local>().IsEnabled())
         {
             Get<ThreadNetif>().UnsubscribeMulticast(mNetworkAllBackboneRouters);
         }
@@ -1037,7 +1037,7 @@ void Mle::ApplyMeshLocalPrefix(void)
 
     memcpy(mNetworkAllBackboneRouters.GetAddress().mFields.m8 + 4, mMeshLocal64.GetAddress().mFields.m8, 8);
 
-    if (!Get<BackboneRouter::Local>().IsDisabled())
+    if (Get<BackboneRouter::Local>().IsEnabled())
     {
         // Subscribe All Network Backbone Routers Multicast Address for both Seconday and Primary state.
         Get<ThreadNetif>().SubscribeMulticast(mNetworkAllBackboneRouters);
@@ -1668,14 +1668,14 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
             Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc);
         }
 
-        if (Get<BackboneRouter::Local>().IsDisabled())
-        {
-            Get<ThreadNetif>().UnsubscribeMulticast(mNetworkAllBackboneRouters);
-        }
-        else
+        if (Get<BackboneRouter::Local>().IsEnabled())
         {
             // Subscribe All Network Backbone Routers Multicast Address for both Seconday and Primary state.
             Get<ThreadNetif>().SubscribeMulticast(mNetworkAllBackboneRouters);
+        }
+        else
+        {
+            Get<ThreadNetif>().UnsubscribeMulticast(mNetworkAllBackboneRouters);
         }
     }
 
