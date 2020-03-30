@@ -239,25 +239,25 @@ typedef struct otNetworkDiagTlv
         uint32_t                  mMaxChildTimeout;
         struct
         {
-            uint8_t mNetworkDataCount;
-            uint8_t mNetworkData[OT_NETWORK_BASE_TLV_MAX_LENGTH];
-        };
+            uint8_t mCount;
+            uint8_t m8[OT_NETWORK_BASE_TLV_MAX_LENGTH];
+        } mNetworkData;
         struct
         {
-            uint8_t      mIp6AddrCount;
-            otIp6Address mIp6AddrList[OT_NETWORK_BASE_TLV_MAX_LENGTH / OT_IP6_ADDRESS_SIZE];
-        };
+            uint8_t      mCount;
+            otIp6Address mList[OT_NETWORK_BASE_TLV_MAX_LENGTH / OT_IP6_ADDRESS_SIZE];
+        } mIp6AddrList;
         struct
         {
-            uint8_t mChildCount;
+            uint8_t mCount;
             otNetworkDiagChildEntry
-                mChildTable[OT_NETWORK_BASE_TLV_MAX_LENGTH / OT_NETWORK_DIAGNOSTIC_CHILD_TABLE_ENTRY_SIZE];
-        };
+                mTable[OT_NETWORK_BASE_TLV_MAX_LENGTH / OT_NETWORK_DIAGNOSTIC_CHILD_TABLE_ENTRY_SIZE];
+        } mChildTable;
         struct
         {
-            uint8_t mChannelPageCount;
-            uint8_t mChannelPages[OT_NETWORK_BASE_TLV_MAX_LENGTH];
-        };
+            uint8_t mCount;
+            uint8_t m8[OT_NETWORK_BASE_TLV_MAX_LENGTH];
+        } mChannelPages;
     };
 } otNetworkDiagTlv;
 
