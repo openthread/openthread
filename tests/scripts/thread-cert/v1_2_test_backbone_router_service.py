@@ -206,7 +206,7 @@ class TestBackboneRouterService(thread_cert.TestCase):
         self.nodes[BBR_2].reset()
         self.nodes[LEADER_1_1].release_router_id(
             self.nodes[BBR_2].get_router_id())
-        # Wait for the dissemination of Network Data without backbone router service
+        # Wait for the dissemination of Network Data without Backbone Router service
         self.simulator.go(10)
 
         # BBR_1 becomes Primary.
