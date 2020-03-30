@@ -30,6 +30,7 @@
 
 #include "platform_qorvo.h"
 
+#include <assert.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,9 +45,9 @@ static int sFlashFd = -1;
 
 enum
 {
-    SWAP_SIZE = 2048;
-    SWAP_NUM  = 2;
-}
+    SWAP_SIZE = 2048,
+    SWAP_NUM  = 2,
+};
 
 void otPlatFlashInit(otInstance *aInstance)
 {
@@ -82,19 +83,20 @@ void otPlatFlashInit(otInstance *aInstance)
     }
 }
 
-uint32_t otPlatFlashGetSwapSize(otIntstance *aInstance)
+uint32_t otPlatFlashGetSwapSize(otInstance *aInstance)
 {
-    OT_UNUSED_VARIABLE(aInstance)
+    OT_UNUSED_VARIABLE(aInstance);
     return SWAP_SIZE;
 }
 
-void otPlatFlashErase(otInstance *otInstance, uint8_t aSwapIndex)
+void otPlatFlashErase(otInstance *aInstance, uint8_t aSwapIndex)
 {
-    OT_UNUSED_VARIABLE(aInstance)
+    OT_UNUSED_VARIABLE(aInstance);
+    uint32_t address;
     uint8_t  buffer[SWAP_SIZE];
     ssize_t  r;
 
-    assert((sFlashFd) >= 0 && (aSwapIndex < SWAAP_NUM));
+    assert((sFlashFd) >= 0 && (aSwapIndex < SWAP_NUM));
 
     address = aSwapIndex ? SWAP_SIZE : 0;
     memset(buffer, 0xff, sizeof(buffer));
@@ -145,16 +147,3 @@ void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffse
     }
 }
 
-<<<<<<< Updated upstream
-uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
-{
-    uint32_t ret = 0;
-
-    otEXPECT(sFlashFd >= 0 && aAddress < FLASH_SIZE);
-    ret = (uint32_t)pread(sFlashFd, aData, aSize, (off_t)aAddress);
-
-exit:
-    return ret;
-}
-=======
->>>>>>> Stashed changes

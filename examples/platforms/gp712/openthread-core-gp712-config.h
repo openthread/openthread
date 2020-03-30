@@ -42,8 +42,6 @@
  */
 #define OPENTHREAD_CONFIG_PLATFORM_INFO "GP712"
 
-<<<<<<< Updated upstream
-=======
 /**
  * @def OPENTHREAD_CONFIG_PLATFORM_INFO
  *
@@ -54,5 +52,4 @@
  */
 #define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 1
 
->>>>>>> Stashed changes
 #endif // OPENTHREAD_CORE_GP712_CONFIG_H_
