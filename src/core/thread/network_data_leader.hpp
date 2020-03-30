@@ -187,7 +187,7 @@ public:
      * @returns A pointer to the Commissioning Data or NULL if no Commissioning Data exists.
      *
      */
-    NetworkDataTlv *GetCommissioningData(void);
+    CommissioningDataTlv *GetCommissioningData(void);
 
     /**
      * This method returns a pointer to the Commissioning Data Sub-TLV.
@@ -270,6 +270,8 @@ protected:
     uint8_t mVersion;
 
 private:
+    PrefixTlv *FindNextMatchingPrefix(const Ip6::Address &aAddress, PrefixTlv *aPrevTlv);
+
     otError RemoveCommissioningData(void);
 
     otError ExternalRouteLookup(uint8_t             aDomainId,
