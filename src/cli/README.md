@@ -28,6 +28,7 @@ Done
 
 ## OpenThread Command List
 
+* [bbr](#bbr)
 * [bufferinfo](#bufferinfo)
 * [channel](#channel)
 * [child](#child-list)
@@ -98,6 +99,131 @@ Done
 * [version](#version)
 
 ## OpenThread Command Details
+
+### bbr
+
+Show current Primary Backbone Router information for Thread 1.2 device.
+
+```bash
+> bbr
+BBR Primary:
+server16: 0xE400
+seqno:    10
+delay:    120 secs
+timeout:  300 secs
+Done
+```
+
+```bash
+> bbr
+BBR Primary: None
+Done
+```
+
+### bbr state
+Show local Backbone state ([`Disabled`,`Primary`, `Secondary`]) for Thread 1.2 FTD.
+
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+
+```bash
+> bbr state
+Disabled
+Done
+
+> bbr state
+Primary
+Done
+
+> bbr state
+Secondary
+Done
+```
+
+### bbr enable
+Enable Backbone Router Service for Thread 1.2 FTD.
+`SRV_DATA.ntf` would be triggerred for attached device if there is no
+Backbone Router Service in Thread Network Data.
+
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+```bash
+> bbr enable
+Done
+```
+
+### bbr disable
+Disable Backbone Router Service for Thread 1.2 FTD.
+`SRV_DATA.ntf` would be triggerred if Backbone Router is Primary state.
+o
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+```bash
+> bbr disable
+Done
+```
+
+### bbr register
+Register Backbone Router Service for Thread 1.2 FTD.
+`SRV_DATA.ntf` would be triggerred for attached device.
+
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+```bash
+> bbr register
+Done
+```
+
+### bbr config
+
+Show local Backbone Router configuration for Thread 1.2 FTD.
+
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+```bash
+> bbr config
+seqno:    10
+delay:    120 secs
+timeout:  300 secs
+Done
+```
+
+### bbr config \[seqno \<seqno\>\] \[delay \<delay\>\] \[timeout \<timeout\>\]
+
+Configure local Backbone Router configuration for Thread 1.2 FTD.
+`bbr register` should be issued explicitly to register Backbone Router service to Leader for
+Secondary Backbone Router. `SRV_DATA.ntf` would be initiated automatically if BBR Dataset
+changes for Primary Backbone Router.
+
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+```bash
+> bbr config seqno 20 delay 30
+Done
+```
+
+### bbr jitter
+
+Show jitter (in seconds) for Backbone Router registration for Thread 1.2 FTD.
+
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+```bash
+> bbr jitter
+20
+Done
+```
+
+### bbr jitter \<jitter\>
+
+Set jitter (in seconds) for Backbone Router registration for Thread 1.2 FTD.
+
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+```bash
+> bbr jitter 10
+Done
+```
 
 ### bufferinfo
 
@@ -846,12 +972,27 @@ If \<addr\> is unicast address, `Diagnostic Get` will be sent.
 if \<addr\> is multicast address, `Diagnostic Query` will be sent.
 
 ```bash
-> networkdiagnostic get fdde:ad00:beef:0:0:ff:fe00:f400 0 1 6
-DIAG_GET.rsp: 00088e18ad17a24b0b740102f400060841dcb82d40bac63d
+> networkdiagnostic get fdde:ad00:beef:0:0:ff:fe00:fc00 0 1 6
+> DIAG_GET.rsp/ans: 00080e336e1c41494e1c01020c000608640b0f674074c503
+Ext Address: '0e336e1c41494e1c'
+Rloc16: 0x0c00
+Leader Data:
+    PartitionId: 0x640b0f67
+    Weighting: 64
+    DataVersion: 116
+    StableDataVersion: 197
+    LeaderRouterId: 0x03
+Done
 
 > networkdiagnostic get ff02::1 0 1
-DIAG_GET.rsp: 0008567e31a79667a8cc0102f000
-DIAG_GET.rsp: 0008aaa7e584759e4e6401025400
+> DIAG_GET.rsp/ans: 00080e336e1c41494e1c01020c00
+Ext Address: '0e336e1c41494e1c'
+Rloc16: 0x0c00
+Done
+DIAG_GET.rsp/ans: 00083efcdb7e3f9eb0f201021800
+Ext Address: '3efcdb7e3f9eb0f2'
+Rloc16: 0x1800
+Done
 ```
 
 ### networkdiagnostic reset \<addr\> \<type\> ..

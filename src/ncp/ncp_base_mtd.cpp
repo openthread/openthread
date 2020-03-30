@@ -926,7 +926,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SERVER_LEADER_SERVICE
     {
         SuccessOrExit(error = mEncoder.OpenStruct());
 
-        SuccessOrExit(error = mEncoder.WriteUint8(cfg.mServiceID));
+        SuccessOrExit(error = mEncoder.WriteUint8(cfg.mServiceId));
         SuccessOrExit(error = mEncoder.WriteUint32(cfg.mEnterpriseNumber));
         SuccessOrExit(error = mEncoder.WriteDataWithLen(cfg.mServiceData, cfg.mServiceDataLength));
         SuccessOrExit(error = mEncoder.WriteBool(cfg.mServerConfig.mStable));

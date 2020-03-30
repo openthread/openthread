@@ -56,6 +56,7 @@ public:
     {
         kMaxSize      = 256, ///< Maximum size of MeshCoP Dataset (bytes)
         kMaxValueSize = 16,  ///< Maximum size of each Dataset TLV value (bytes)
+        kMaxGetTypes  = 64,  ///< Maximum number of types in MGMT_GET.req
     };
 
     /**

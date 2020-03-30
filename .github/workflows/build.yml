@@ -1,0 +1,256 @@
+#
+#  Copyright (c) 2020, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+
+  cancel-previous-runs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: rokroskar/workflow-run-cleanup-action@master
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      if: "github.ref != 'refs/heads/master'"
+
+  pretty:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get update
+        sudo apt-get remove -y clang-6.0 libclang-common-6.0-dev libclang1-6.0 libllvm6.0
+        sudo apt-get autoremove
+        sudo apt-get --no-install-recommends install -y clang-tools clang-format-6.0
+        clang-format-6.0 --version
+        python3 -m pip install yapf
+    - name: Check
+      run: |
+        script/make-pretty check
+
+  package:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Package
+      run: |
+        script/test package
+
+  scan-build:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get update
+        sudo apt-get remove -y clang-6.0 libclang-common-6.0-dev libclang1-6.0 libllvm6.0
+        sudo apt-get autoremove
+        sudo apt-get --no-install-recommends install -y clang-tools
+    - name: Run
+      run: |
+        script/check-scan-build
+
+  arm-gcc-4:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        cd /tmp
+        sudo apt-get --no-install-recommends install -y lib32z1 ninja-build
+        wget https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q3-update/+download/gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2
+        tar xjf gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2
+    - name: Build
+      run: |
+        export PATH=/tmp/gcc-arm-none-eabi-4_9-2015q3/bin:$PATH
+        script/check-arm-build
+
+  arm-gcc-5:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        cd /tmp
+        sudo apt-get --no-install-recommends install -y lib32z1 ninja-build
+        wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/5_4-2016q3/gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2
+        tar xjf gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2
+    - name: Build
+      run: |
+        export PATH=/tmp/gcc-arm-none-eabi-5_4-2016q3/bin:$PATH
+        script/check-arm-build
+
+  arm-gcc-6:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        cd /tmp
+        sudo apt-get --no-install-recommends install -y ninja-build
+        wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/6-2017q2/gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
+        tar xjf gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
+    - name: Build
+      run: |
+        export PATH=/tmp/gcc-arm-none-eabi-6-2017-q2-update/bin:$PATH
+        script/check-arm-build
+
+  arm-gcc-7:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        cd /tmp
+        sudo apt-get --no-install-recommends install -y ninja-build
+        wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
+        tar xjf gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
+    - name: Build
+      run: |
+        export PATH=/tmp/gcc-arm-none-eabi-7-2018-q2-update/bin:$PATH
+        script/check-arm-build
+
+  arm-gcc-9:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        cd /tmp
+        sudo apt-get --no-install-recommends install -y ninja-build
+        wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2019q4/RC2.1/gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2
+        tar xjf gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2
+    - name: Build
+      run: |
+        export PATH=/tmp/gcc-arm-none-eabi-9-2019-q4-major/bin:$PATH
+        script/check-arm-build
+
+  gcc-5:
+    runs-on: ubuntu-18.04
+    env:
+      CC: gcc-5
+      CXX: g++-5
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y gcc-5 g++-5 ninja-build
+    - name: Build
+      run: |
+        script/check-simulation-build
+        script/check-posix-build
+
+  gcc-6:
+    runs-on: ubuntu-18.04
+    env:
+      CC: gcc-6
+      CXX: g++-6
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y gcc-6 g++-6 ninja-build
+    - name: Build
+      run: |
+        script/check-simulation-build
+        script/check-posix-build
+
+  gcc-7:
+    runs-on: ubuntu-18.04
+    env:
+      CC: gcc-7
+      CXX: g++-7
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y gcc-7 g++-7 ninja-build
+    - name: Build
+      run: |
+        script/check-simulation-build
+        script/check-posix-build
+
+  gcc-8:
+    runs-on: ubuntu-18.04
+    env:
+      CC: gcc-8
+      CXX: g++-8
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y gcc-8 g++-8 ninja-build
+    - name: Build
+      run: |
+        script/check-simulation-build
+        script/check-posix-build
+
+  gcc-9:
+    runs-on: ubuntu-18.04
+    env:
+      CC: gcc-9
+      CXX: g++-9
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y gcc-9 g++-9 ninja-build
+    - name: Build
+      run: |
+        script/check-simulation-build
+        script/check-posix-build
+
+  gn:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y ninja-build
+        cd /tmp
+        wget -O gn.zip https://chrome-infra-packages.appspot.com/dl/gn/gn/linux-amd64/+/latest
+        unzip -o gn.zip
+        chmod a+x gn && mkdir -p bin && mv -f gn bin/
+    - name: Build
+      run: |
+        export PATH=/tmp/bin:$PATH
+        script/check-gn-build
+
+  macos:
+    runs-on: macos-10.15
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        brew install automake ninja
+    - name: Build
+      run: |
+        script/check-simulation-build

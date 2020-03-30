@@ -62,7 +62,7 @@
 using ot::Spinel::SpinelInterface;
 
 namespace ot {
-namespace PosixApp {
+namespace Posix {
 
 SpiInterface::SpiInterface(SpinelInterface::ReceiveFrameCallback aCallback,
                            void *                                aCallbackContext,
@@ -787,7 +787,7 @@ void SpiInterface::LogStats(void)
     otLogInfoPlat("INFO: mSpiTxFrameCount=%" PRIu64, mSpiTxFrameCount);
     otLogInfoPlat("INFO: mSpiTxFrameByteCount=%" PRIu64, mSpiTxFrameByteCount);
 }
-} // namespace PosixApp
+} // namespace Posix
 } // namespace ot
 
 #endif // OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE

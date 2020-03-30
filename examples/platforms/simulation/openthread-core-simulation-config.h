@@ -124,6 +124,16 @@
 #define OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE 1
 
 /**
+ * @def OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+ *
+ * Define to 1 to enable otPlatFlash* APIs to support non-volatile storage.
+ *
+ * When defined to 1, the platform MUST implement the otPlatFlash* APIs instead of the otPlatSettings* APIs.
+ *
+ */
+#define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 1
+
+/**
  * @def CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
  *
  * Define to 1 to use DefaultHandler for unhandled requests

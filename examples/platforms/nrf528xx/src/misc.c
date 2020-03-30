@@ -32,6 +32,7 @@
 
 #include <nrf.h>
 
+#include "platform-nrf5-transport.h"
 #include "platform-nrf5.h"
 
 #if SOFTDEVICE_PRESENT
@@ -74,12 +75,16 @@ void otPlatReset(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-#if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
-    gPlatformPseudoResetWasRequested = true;
-    sResetReason                     = POWER_RESETREAS_SREQ_Msk;
-#else  // if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
-    NVIC_SystemReset();
-#endif // else OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
+    gPlatformPseudoResetWasRequested = nrf5TransportPseudoResetRequired();
+
+    if (gPlatformPseudoResetWasRequested)
+    {
+        sResetReason = POWER_RESETREAS_SREQ_Msk;
+    }
+    else
+    {
+        NVIC_SystemReset();
+    }
 }
 
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)

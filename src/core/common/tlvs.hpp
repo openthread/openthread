@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include <openthread/error.h>
+#include <openthread/thread.h>
 #include <openthread/platform/toolchain.h>
 
 #include "common/encoding.hpp"
@@ -62,7 +63,7 @@ public:
      */
     enum
     {
-        kBaseTlvMaxLength = 254, ///< The maximum length of the Base TLV format.
+        kBaseTlvMaxLength = OT_NETWORK_BASE_TLV_MAX_LENGTH, ///< The maximum length of the Base TLV format.
     };
 
     /**

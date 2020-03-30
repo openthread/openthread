@@ -53,6 +53,7 @@
 #include "config/openthread-core-default-config.h"
 
 #include "config/announce_sender.h"
+#include "config/backbone_router.h"
 #include "config/border_router.h"
 #include "config/channel_manager.h"
 #include "config/channel_monitor.h"

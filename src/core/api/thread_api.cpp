@@ -38,7 +38,6 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
-#include "common/logging.hpp"
 #include "common/settings.hpp"
 
 using namespace ot;
@@ -362,39 +361,6 @@ otError otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aLastRssi)
 exit:
     return error;
 }
-
-#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
-void otThreadSetReceiveDiagnosticGetCallback(otInstance *                   aInstance,
-                                             otReceiveDiagnosticGetCallback aCallback,
-                                             void *                         aCallbackContext)
-{
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<NetworkDiagnostic::NetworkDiagnostic>().SetReceiveDiagnosticGetCallback(aCallback, aCallbackContext);
-}
-
-otError otThreadSendDiagnosticGet(otInstance *        aInstance,
-                                  const otIp6Address *aDestination,
-                                  const uint8_t       aTlvTypes[],
-                                  uint8_t             aCount)
-{
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<NetworkDiagnostic::NetworkDiagnostic>().SendDiagnosticGet(
-        *static_cast<const Ip6::Address *>(aDestination), aTlvTypes, aCount);
-}
-
-otError otThreadSendDiagnosticReset(otInstance *        aInstance,
-                                    const otIp6Address *aDestination,
-                                    const uint8_t       aTlvTypes[],
-                                    uint8_t             aCount)
-{
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<NetworkDiagnostic::NetworkDiagnostic>().SendDiagnosticReset(
-        *static_cast<const Ip6::Address *>(aDestination), aTlvTypes, aCount);
-}
-#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 
 otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
 {

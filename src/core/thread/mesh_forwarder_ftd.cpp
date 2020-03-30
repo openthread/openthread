@@ -379,21 +379,17 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
 
     if (mle.IsRoutingLocator(ip6Header.GetDestination()))
     {
-        uint16_t rloc16 = HostSwap16(ip6Header.GetDestination().mFields.m16[7]);
+        uint16_t rloc16 = ip6Header.GetDestination().GetLocator();
         VerifyOrExit(mle.IsRouterIdValid(Mle::Mle::RouterIdFromRloc16(rloc16)), error = OT_ERROR_DROP);
         mMeshDest = rloc16;
     }
     else if (mle.IsAnycastLocator(ip6Header.GetDestination()))
     {
-        uint16_t aloc16 = HostSwap16(ip6Header.GetDestination().mFields.m16[7]);
+        uint16_t aloc16 = ip6Header.GetDestination().GetLocator();
 
         if (aloc16 == Mle::kAloc16Leader)
         {
             mMeshDest = Mle::Mle::Rloc16FromRouterId(mle.GetLeaderId());
-        }
-        else if ((aloc16 >= Mle::kAloc16CommissionerStart) && (aloc16 <= Mle::kAloc16CommissionerEnd))
-        {
-            SuccessOrExit(error = MeshCoP::GetBorderAgentRloc(Get<ThreadNetif>(), mMeshDest));
         }
         else if (aloc16 <= Mle::kAloc16DhcpAgentEnd)
         {
@@ -416,11 +412,22 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
                 mMeshDest = Mle::Mle::Rloc16FromRouterId(routerId);
             }
         }
-        else if ((aloc16 >= Mle::kAloc16ServiceStart) && (aloc16 <= Mle::kAloc16ServiceEnd))
+        else if (aloc16 <= Mle::kAloc16ServiceEnd)
         {
             SuccessOrExit(error = GetDestinationRlocByServiceAloc(aloc16, mMeshDest));
         }
+        else if (aloc16 <= Mle::kAloc16CommissionerEnd)
+        {
+            SuccessOrExit(error = MeshCoP::GetBorderAgentRloc(Get<ThreadNetif>(), mMeshDest));
+        }
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+        else if (aloc16 == Mle::kAloc16BackboneRouterPrimary)
+        {
+            VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary(), error = OT_ERROR_DROP);
+            mMeshDest = Get<BackboneRouter::Leader>().GetServer16();
+        }
+#endif
         else
         {
             // TODO: support for Neighbor Discovery Agent ALOC

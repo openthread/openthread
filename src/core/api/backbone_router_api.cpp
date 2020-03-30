@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,49 +26,26 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-cc2650.h"
-
-#include <openthread/error.h>
-
 /**
- * @warning this file only implements stubs for the function calls. There is
- * not enough space on the cc2650 to support NV as an SoC.
+ * @file
+ *  This file defines the OpenThread Backbone Router API (Thread 1.2)
  */
 
-otError utilsFlashInit(void)
+#include "openthread-core-config.h"
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+#include <openthread/backbone_router.h>
+#include "common/instance.hpp"
+
+using namespace ot;
+
+otError otBackboneRouterGetPrimary(otInstance *aInstance, otBackboneRouterConfig *aConfig)
 {
-    return OT_ERROR_NOT_IMPLEMENTED;
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    OT_ASSERT(aConfig != NULL);
+
+    return instance.Get<BackboneRouter::Leader>().GetConfig(*aConfig);
 }
 
-uint32_t utilsFlashGetSize(void)
-{
-    return 0;
-}
-
-otError utilsFlashErasePage(uint32_t aAddress)
-{
-    OT_UNUSED_VARIABLE(aAddress);
-    return OT_ERROR_NOT_IMPLEMENTED;
-}
-
-otError utilsFlashStatusWait(uint32_t aTimeout)
-{
-    OT_UNUSED_VARIABLE(aTimeout);
-    return OT_ERROR_NONE;
-}
-
-uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
-{
-    OT_UNUSED_VARIABLE(aAddress);
-    OT_UNUSED_VARIABLE(aData);
-    OT_UNUSED_VARIABLE(aSize);
-    return 0;
-}
-
-uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
-{
-    OT_UNUSED_VARIABLE(aAddress);
-    OT_UNUSED_VARIABLE(aData);
-    OT_UNUSED_VARIABLE(aSize);
-    return 0;
-}
+#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)

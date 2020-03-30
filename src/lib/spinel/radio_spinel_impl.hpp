@@ -64,6 +64,8 @@
 #define TX_WAIT_US (5 * US_PER_S)
 #endif
 
+using ot::Spinel::Decoder;
+
 namespace ot {
 namespace Spinel {
 
@@ -231,7 +233,7 @@ template <typename InterfaceType> otError RadioSpinel<InterfaceType>::CheckSpine
     if ((versionMajor != SPINEL_PROTOCOL_VERSION_THREAD_MAJOR) ||
         (versionMinor != SPINEL_PROTOCOL_VERSION_THREAD_MINOR))
     {
-        otLogCritPlat("Spinel version mismatch - PosixApp:%d.%d, RCP:%d.%d", SPINEL_PROTOCOL_VERSION_THREAD_MAJOR,
+        otLogCritPlat("Spinel version mismatch - Posix:%d.%d, RCP:%d.%d", SPINEL_PROTOCOL_VERSION_THREAD_MAJOR,
                       SPINEL_PROTOCOL_VERSION_THREAD_MINOR, versionMajor, versionMinor);
         DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
     }

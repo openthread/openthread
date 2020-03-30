@@ -196,7 +196,7 @@ static void socket_init(void)
         sPortOffset *= WELLKNOWN_NODE_ID;
     }
 
-    sockaddr.sin_port        = htons(9000 + sPortOffset + gNodeId);
+    sockaddr.sin_port        = htons((uint16_t)(9000 + sPortOffset + gNodeId));
     sockaddr.sin_addr.s_addr = INADDR_ANY;
 
     sSockFd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);

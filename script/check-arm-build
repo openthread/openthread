@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 #
-#  Copyright (c) 2018, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -27,44 +27,12 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-CLANG_FORMAT_VERSION="clang-format version 6.0"
+set -euxo pipefail
 
-die() {
-    echo " *** ERROR: $*"
-    exit 1
+main()
+{
+    "$(dirname "$0")"/check-arm-build-autotools
+    "$(dirname "$0")"/check-arm-build-cmake
 }
 
-if command -v clang-format-6.0 > /dev/null; then
-    alias clang-format=clang-format-6.0
-elif command -v clang-format > /dev/null; then
-    case "$(clang-format --version)" in
-        "$CLANG_FORMAT_VERSION"*)
-            ;;
-        *)
-            die "$(clang-format --version); clang-format 6.0 required"
-            ;;
-    esac
-else
-    die "clang-format 6.0 required"
-fi
-
-clang-format "$@" || die
-
-# ensure EOF newline
-REPLACE=no
-for arg
-do
-    case $arg in
-        -i)
-            REPLACE=yes
-            ;;
-    esac
-done
-
-file=$arg
-
-[ $REPLACE != yes ] || {
-    [ -n "$(tail -c1 "$file")" ] && echo >> "$file"
-}
-
-exit 0
+main "$@"

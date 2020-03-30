@@ -39,7 +39,6 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
 
 namespace ot {

@@ -84,11 +84,13 @@ public:
     /**
      * This method stops the Commissioner service.
      *
+     * @param[in]  aResign      Whether send LEAD_KA.req to resign as Commissioner
+     *
      * @retval OT_ERROR_NONE           Successfully stopped the Commissioner service.
      * @retval OT_ERROR_INVALID_STATE  Commissioner is already stopped.
      *
      */
-    otError Stop(void);
+    otError Stop(bool aResign);
 
     /**
      * This method clears all Joiner entries.
@@ -320,6 +322,7 @@ private:
     otError SendCommissionerSet(void);
     otError SendPetition(void);
     otError SendKeepAlive(void);
+    otError SendKeepAlive(uint16_t aSessionId);
 
     void SetState(otCommissionerState aState);
     void SignalJoinerEvent(otCommissionerJoinerEvent aEvent, const Mac::ExtAddress &aJoinerId);

@@ -464,7 +464,7 @@ otError Dhcp6Server::AddIaAddress(Message &aMessage, const Ip6::Address &aPrefix
     IaAddress option;
 
     option.Init();
-    memcpy(option.GetAddress().mFields.m8, &aPrefix, OT_IP6_PREFIX_SIZE);
+    option.GetAddress().SetPrefix(aPrefix.mFields.m8, OT_IP6_PREFIX_BITSIZE);
     option.GetAddress().SetIid(*reinterpret_cast<Mac::ExtAddress *>(aClientId.GetDuidLinkLayerAddress()));
     option.SetPreferredLifetime(OT_DHCP6_DEFAULT_PREFERRED_LIFETIME);
     option.SetValidLifetime(OT_DHCP6_DEFAULT_VALID_LIFETIME);

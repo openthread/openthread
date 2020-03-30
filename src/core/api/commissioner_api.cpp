@@ -64,7 +64,7 @@ otError otCommissionerStop(otInstance *aInstance)
     otError   error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    SuccessOrExit(error = instance.Get<MeshCoP::Commissioner>().Stop());
+    SuccessOrExit(error = instance.Get<MeshCoP::Commissioner>().Stop(/* aResign */ true));
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     SuccessOrExit(error = instance.Get<MeshCoP::BorderAgent>().Start());
 #endif

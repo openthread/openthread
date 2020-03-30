@@ -56,16 +56,16 @@ bool sUartEnabled = false;
 /**
  *  UART TX buffer variables.
  */
-static const uint8_t *sTransmitBuffer = NULL;
-static uint16_t       sTransmitLength = 0;
-static bool           sTransmitDone   = 0;
+static volatile const uint8_t *sTransmitBuffer = NULL;
+static volatile uint16_t       sTransmitLength = 0;
+static volatile bool           sTransmitDone   = 0;
 
 /**
  *  UART RX ring buffer variables.
  */
-static uint8_t  sReceiveBuffer[UART_RX_BUFFER_SIZE];
-static uint16_t sReceiveHead = 0;
-static uint16_t sReceiveTail = 0;
+static uint8_t           sReceiveBuffer[UART_RX_BUFFER_SIZE];
+static volatile uint16_t sReceiveHead = 0;
+static volatile uint16_t sReceiveTail = 0;
 
 /**
  * Function for checking if RX buffer is full.
@@ -87,7 +87,8 @@ static __INLINE bool isRxBufferFull()
  */
 static __INLINE bool isRxBufferEmpty()
 {
-    return (sReceiveHead == sReceiveTail);
+    uint16_t head = sReceiveHead;
+    return (head == sReceiveTail);
 }
 
 /**
@@ -97,6 +98,7 @@ static void processReceive(void)
 {
     // Set head position to not be changed during read procedure.
     uint16_t head = sReceiveHead;
+    uint8_t *position;
 
     otEXPECT(isRxBufferEmpty() == false);
 
@@ -104,14 +106,16 @@ static void processReceive(void)
     // bytes from the end of the buffer.
     if (head < sReceiveTail)
     {
-        otPlatUartReceived(&sReceiveBuffer[sReceiveTail], (UART_RX_BUFFER_SIZE - sReceiveTail));
+        position = &sReceiveBuffer[sReceiveTail];
+        otPlatUartReceived(position, (UART_RX_BUFFER_SIZE - sReceiveTail));
         sReceiveTail = 0;
     }
 
     // Notify about received bytes.
     if (head > sReceiveTail)
     {
-        otPlatUartReceived(&sReceiveBuffer[sReceiveTail], (head - sReceiveTail));
+        position = &sReceiveBuffer[sReceiveTail];
+        otPlatUartReceived(position, (head - sReceiveTail));
         sReceiveTail = head;
     }
 

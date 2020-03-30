@@ -63,6 +63,12 @@ enum
     kMaxChildren               = OPENTHREAD_CONFIG_MLE_MAX_CHILDREN,
     kMaxChildKeepAliveAttempts = 4, ///< Maximum keep alive attempts before attempting to reattach to a new Parent
     kFailedChildTransmissions  = OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS, ///< FAILED_CHILD_TRANSMISSIONS
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    // Extra one for core Backbone Router Service.
+    kMaxServiceAlocs = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS + 1,
+#else
+    kMaxServiceAlocs      = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS,
+#endif
 };
 
 /**
@@ -90,12 +96,12 @@ enum
     kMaxChildUpdateResponseTimeout  = 2000, ///< Maximum delay for receiving a Child Update Response
     kMaxLinkRequestTimeout          = 2000, ///< Maximum delay for receiving a Link Accept
     kMinTimeoutKeepAlive            = (((kMaxChildKeepAliveAttempts + 1) * kUnicastRetransmissionDelay) /
-                            1000), ///< Minimum timeout(s) for keep alive
+                            1000), ///< Minimum timeout(in seconds) for keep alive
     kMinTimeoutDataPoll             = (OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD +
                            OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS * OPENTHREAD_CONFIG_MAC_RETX_POLL_PERIOD) /
-                          1000, ///< Minimum timeout(s) for data poll
+                          1000, ///< Minimum timeout(in seconds) for data poll
     kMinTimeout = (kMinTimeoutKeepAlive >= kMinTimeoutDataPoll ? kMinTimeoutKeepAlive
-                                                               : kMinTimeoutDataPoll), ///< Minimum timeout(s)
+                                                               : kMinTimeoutDataPoll), ///< Minimum timeout(in seconds)
 };
 
 enum
@@ -136,7 +142,7 @@ enum
 #else
     kMaxRouteCost         = 16, ///< MAX_ROUTE_COST
 #endif
-    kMaxRouterId                = 62,                                          ///< MAX_ROUTER_ID
+    kMaxRouterId                = OT_NETWORK_MAX_ROUTER_ID,                    ///< MAX_ROUTER_ID
     kInvalidRouterId            = kMaxRouterId + 1,                            ///< Value indicating incorrect Router Id
     kMaxRouters                 = OPENTHREAD_CONFIG_MLE_MAX_ROUTERS,           ///< MAX_ROUTERS
     kMinDowngradeNeighbors      = 7,                                           ///< MIN_DOWNGRADE_NEIGHBORS
@@ -210,6 +216,7 @@ enum AlocAllocation
     kAloc16ServiceEnd                  = 0xfc2f,
     kAloc16CommissionerStart           = 0xfc30,
     kAloc16CommissionerEnd             = 0xfc37,
+    kAloc16BackboneRouterPrimary       = 0xfc38,
     kAloc16CommissionerMask            = 0x0007,
     kAloc16NeighborDiscoveryAgentStart = 0xfc40,
     kAloc16NeighborDiscoveryAgentEnd   = 0xfc4e,
@@ -219,11 +226,26 @@ enum AlocAllocation
  * Service IDs
  *
  */
-enum ServiceID
+enum ServiceId
 {
     kServiceMinId = 0x00, ///< Minimal Service ID.
     kServiceMaxId = 0x0f, ///< Maximal Service ID.
 };
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+
+/**
+ * Backbone Router constants
+ *
+ */
+enum
+{
+    kRegistrationDelayDefault         = 1200, //< In seconds.
+    kMlrTimeoutDefault                = 3600, //< In seconds.
+    kBackboneRouterRegistrationJitter = 5,    //< In seconds.
+};
+
+#endif
 
 /**
  * This type represents a MLE device mode.

@@ -123,7 +123,7 @@
 using ot::Spinel::SpinelInterface;
 
 namespace ot {
-namespace PosixApp {
+namespace Posix {
 
 HdlcInterface::HdlcInterface(SpinelInterface::ReceiveFrameCallback aCallback,
                              void *                                aCallbackContext,
@@ -640,6 +640,6 @@ void HdlcInterface::HandleHdlcFrame(otError aError)
     }
 }
 
-} // namespace PosixApp
+} // namespace Posix
 } // namespace ot
 #endif // OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE

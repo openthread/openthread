@@ -138,11 +138,13 @@ void AnnounceSender::CheckState(void)
         break;
 
     case OT_DEVICE_ROLE_CHILD:
+#if OPENTHREAD_FTD
         if (mle.IsRouterEligible() && mle.IsRxOnWhenIdle())
         {
             interval = kReedTxInterval;
             break;
         }
+#endif
 
         // fall through
 

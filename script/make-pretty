@@ -62,7 +62,7 @@ do_clang_format()
     echo -e '====================='
 
     git ls-files "${OT_CLANG_SOURCES[@]}" | grep -E "^($(echo "${OT_CLANG_DIRS[@]}" | tr ' ' '|'))" \
-        | xargs -n3 -P"${OT_BUILD_JOBS}" script/clang-format.sh -style=file -i -verbose
+        | xargs -n3 -P"${OT_BUILD_JOBS}" script/clang-format -style=file -i -verbose
 }
 
 do_clang_check()
@@ -72,7 +72,7 @@ do_clang_check()
     echo -e '====================='
 
     git ls-files "${OT_CLANG_SOURCES[@]}" | grep -E "^($(echo "${OT_CLANG_DIRS[@]}" | tr ' ' '|'))" \
-        | xargs -n3 -P"${OT_BUILD_JOBS}" script/clang-format-check.sh
+        | xargs -n3 -P"${OT_BUILD_JOBS}" script/clang-format-check
 }
 
 do_python_format()

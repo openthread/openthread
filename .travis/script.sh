@@ -66,6 +66,7 @@ python --version || die
         -DOPENTHREAD_CONFIG_LINK_RAW_ENABLE=1             \
         -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1           \
         -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1             \
+        -DOPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE=1   \
         -DOPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE=1     \
         -DOPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE=1          \
         -DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1  \
@@ -450,6 +451,14 @@ build_samr21() {
 
     git checkout -- . || die
     git clean -xfd || die
+    ./tests/toranj/build.sh cmake || die
+
+    git checkout -- . || die
+    git clean -xfd || die
+    ./tests/toranj/build.sh cmake-posix || die
+
+    git checkout -- . || die
+    git clean -xfd || die
     ./bootstrap || die
     CPPFLAGS=-DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_NONE make -f examples/Makefile-simulation || die
 
@@ -486,6 +495,7 @@ build_samr21() {
         -DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1            \
         -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                   \
         -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1                     \
+        -DOPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE=1           \
         -DOPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE=1               \
         -DOPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE=1          \
         -DOPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE=1          \
@@ -522,6 +532,7 @@ build_samr21() {
         -DOPENTHREAD_CONFIG_LEGACY_ENABLE=1              \
         -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1          \
         -DOPENTHREAD_CONFIG_NCP_SPI_ENABLE=1             \
+        -DOPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE=1  \
         -DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1"
 
     git checkout -- . || die
@@ -558,9 +569,10 @@ build_samr21() {
         --disable-tests || die
     make -j 8 || die
 
-    export CPPFLAGS="                               \
-        -DOPENTHREAD_CONFIG_ANOUNCE_SENDER_ENABLE=1 \
-        -DOPENTHREAD_CONFIG_TIME_SYNC_ENABLE=1      \
+    export CPPFLAGS="                                   \
+        -DOPENTHREAD_CONFIG_ANOUNCE_SENDER_ENABLE=1     \
+        -DOPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE=1 \
+        -DOPENTHREAD_CONFIG_TIME_SYNC_ENABLE=1          \
         -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
 
     git checkout -- . || die
@@ -575,8 +587,9 @@ build_samr21() {
         --with-examples=simulation || die
     make -j 8 || die
 
-    export CPPFLAGS="                               \
-        -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
+    export CPPFLAGS="                                    \
+        -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1            \
+        -DOPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE=1"
 
     git checkout -- . || die
     git clean -xfd || die

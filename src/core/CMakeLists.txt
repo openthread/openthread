@@ -70,6 +70,8 @@ set(COMMON_INCLUDES
 )
 
 set(COMMON_SOURCES
+    api/backbone_router_api.cpp
+    api/backbone_router_ftd_api.cpp
     api/border_router_api.cpp
     api/channel_manager_api.cpp
     api/channel_monitor_api.cpp
@@ -94,6 +96,7 @@ set(COMMON_SOURCES
     api/logging_api.cpp
     api/message_api.cpp
     api/netdata_api.cpp
+    api/netdiag_api.cpp
     api/network_time_api.cpp
     api/random_crypto_api.cpp
     api/random_noncrypto_api.cpp
@@ -103,6 +106,8 @@ set(COMMON_SOURCES
     api/thread_api.cpp
     api/thread_ftd_api.cpp
     api/udp_api.cpp
+    backbone_router/leader.cpp
+    backbone_router/local.cpp
     coap/coap.cpp
     coap/coap_message.cpp
     coap/coap_secure.cpp
@@ -195,6 +200,7 @@ set(COMMON_SOURCES
     utils/channel_manager.cpp
     utils/channel_monitor.cpp
     utils/child_supervision.cpp
+    utils/flash.cpp
     utils/heap.cpp
     utils/jam_detector.cpp
     utils/parse_cmdline.cpp
@@ -233,12 +239,14 @@ target_sources(openthread-radio PRIVATE
     utils/parse_cmdline.cpp
 )
 
-target_link_libraries(openthread-ftd
-    PUBLIC
-        mbedcrypto
-)
+if(OT_BUILTIN_MBEDTLS)
+    target_link_libraries(openthread-ftd
+        PUBLIC
+            mbedcrypto
+    )
 
-target_link_libraries(openthread-mtd
-    PUBLIC
-        mbedcrypto
-)
+    target_link_libraries(openthread-mtd
+        PUBLIC
+            mbedcrypto
+    )
+endif()

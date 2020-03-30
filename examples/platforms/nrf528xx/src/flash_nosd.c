@@ -26,22 +26,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread-core-config.h>
-#include <openthread/config.h>
-
-#include <assert.h>
 #include <stdint.h>
-#include <string.h>
-
-#include <utils/code_utils.h>
-#include <utils/flash.h>
 
 #include "platform-nrf5.h"
-#include "hal/nrf_nvmc.h"
+#include "drivers/include/nrfx_nvmc.h"
 
 otError nrf5FlashPageErase(uint32_t aAddress)
 {
-    nrf_nvmc_page_erase(aAddress);
+    nrfx_nvmc_page_erase(aAddress);
 
     return OT_ERROR_NONE;
 }
@@ -51,8 +43,9 @@ bool nrf5FlashIsBusy(void)
     return NRF_NVMC->READY != NVMC_READY_READY_Ready;
 }
 
-uint32_t nrf5FlashWrite(uint32_t aAddress, const uint8_t *aData, uint32_t aSize)
+otError nrf5FlashWrite(uint32_t aAddress, const uint8_t *aData, uint32_t aSize)
 {
-    nrf_nvmc_write_bytes(aAddress, aData, aSize);
-    return aSize;
+    nrfx_nvmc_bytes_write(aAddress, aData, aSize);
+
+    return OT_ERROR_NONE;
 }

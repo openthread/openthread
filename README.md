@@ -1,4 +1,6 @@
 [![OpenThread][ot-logo]][ot-repo]
+[![Build][ot-gh-action-build-svg]][ot-gh-action-build]
+[![Simulation][ot-gh-action-simulation-svg]][ot-gh-action-simulation]
 [![Build Status][ot-travis-svg]][ot-travis]
 [![Coverage Status][ot-codecov-svg]][ot-codecov]
 [![Build Status][ot-docker-dev-svg]][ot-docker-dev]
@@ -23,6 +25,10 @@ More information about Thread can be found at [threadgroup.org](http://threadgro
 [thread]: http://threadgroup.org/technology/ourtechnology
 [ot-repo]: https://github.com/openthread/openthread
 [ot-logo]: doc/images/openthread_logo.png
+[ot-gh-action-build]: https://github.com/openthread/openthread/actions?query=workflow%3ABuild+branch%3Amaster+event%3Apush
+[ot-gh-action-build-svg]: https://github.com/openthread/openthread/workflows/Build/badge.svg?branch=master&event=push
+[ot-gh-action-simulation]: https://github.com/openthread/openthread/actions?query=workflow%3ASimulation+branch%3Amaster+event%3Apush
+[ot-gh-action-simulation-svg]: https://github.com/openthread/openthread/workflows/Simulation/badge.svg?branch=master&event=push
 [ot-travis]: https://travis-ci.org/openthread/openthread
 [ot-travis-svg]: https://travis-ci.org/openthread/openthread.svg?branch=master
 [ot-codecov]: https://codecov.io/gh/openthread/openthread

@@ -90,8 +90,6 @@ configure_options="                \
     --enable-ncp                   \
     "
 
-cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config.h\"'
-
 if [ -n "${top_builddir}" ]; then
     top_srcdir=$(pwd)
     mkdir -p "${top_builddir}"
@@ -107,9 +105,10 @@ case ${build_config} in
         echo "==================================================================================================="
         ./bootstrap || die
         cd "${top_builddir}"
-        ${top_srcdir}/configure                 \
-            CPPFLAGS="$cppflags_config"         \
-            --with-examples=simulation          \
+        cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-simulation.h\"'
+        ${top_srcdir}/configure                                                         \
+            CPPFLAGS="$cppflags_config"                                                 \
+            --with-examples=simulation                                                  \
             $configure_options || die
         make -j 8 || die
         ;;
@@ -120,13 +119,14 @@ case ${build_config} in
         echo "===================================================================================================="
         ./bootstrap || die
         cd "${top_builddir}"
-        ${top_srcdir}/configure                 \
-            CPPFLAGS="$cppflags_config"         \
-            --enable-coverage=${coverage}       \
-            --enable-ncp                        \
-            --enable-radio-only                 \
-            --with-examples=simulation          \
-            --disable-docs                      \
+        cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-simulation.h\"'
+        ${top_srcdir}/configure                                                         \
+            CPPFLAGS="$cppflags_config "                                                \
+            --enable-coverage=${coverage}                                               \
+            --enable-ncp                                                                \
+            --enable-radio-only                                                         \
+            --with-examples=simulation                                                  \
+            --disable-docs                                                              \
             --enable-tests=$tests || die
         make -j 8 || die
         ;;
@@ -137,6 +137,7 @@ case ${build_config} in
         echo "===================================================================================================="
         ./bootstrap || die
         cd "${top_builddir}"
+        cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-posix.h\"'
         ${top_srcdir}/configure                 \
             CPPFLAGS="$cppflags_config"         \
             --with-platform=posix               \
@@ -148,7 +149,7 @@ case ${build_config} in
         echo "===================================================================================================="
         echo "Building OpenThread (NCP/CLI for FTD/MTD/RCP mode) with simulation platform using cmake"
         echo "===================================================================================================="
-        cmake -GNinja -DOT_PLATFORM=simulation -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config.h . || die
+        cmake -GNinja -DOT_PLATFORM=simulation -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h . || die
         ninja || die
         ;;
 
@@ -156,7 +157,7 @@ case ${build_config} in
         echo "===================================================================================================="
         echo "Building OpenThread POSIX host platform using cmake"
         echo "===================================================================================================="
-        cmake -GNinja -DOT_PLATFORM=posix -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config.h . || die
+        cmake -GNinja -DOT_PLATFORM=posix -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config-posix.h . || die
         ninja || die
         ;;
 

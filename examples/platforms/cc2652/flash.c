@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2018, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,43 +28,21 @@
 
 #include <string.h>
 
+#include <openthread/instance.h>
+
 #include <driverlib/aon_batmon.h>
 #include <driverlib/flash.h>
 #include <driverlib/interrupt.h>
 #include <driverlib/vims.h>
 
-#include <openthread-core-config.h>
-#include <openthread/config.h>
-#include <openthread/platform/alarm-milli.h>
-
 #include <utils/code_utils.h>
 
 #include "platform-cc2652.h"
 
-/*
- * The settings configuration base address *MUST* be defined in the core config
- * file. The base address *MUST* be aligned on an 8K page boundary or the flash
- * program calls will fail.
- */
-#ifndef SETTINGS_CONFIG_BASE_ADDRESS
-#error "SETTINGS_CONFIG_BASE_ADDRESS not defined in the OpenThread Core Config"
-#endif /* SETTINGS_CONFIG_BASE_ADDRESS */
-
-/*
- * The settings configuration page size *MUST* be defined in the core config
- * file. The page size *MUST* be 8K or the flash program calls will fail.
- */
-#if (SETTINGS_CONFIG_PAGE_SIZE != 0x2000)
-#error "SETTINGS_CONFIG_PAGE_SIZE must be defined in OpenThread Core Config"
-#endif
-
-/*
- * The settings configuration page number _SHOULD_ be defined in the core
- * config file.
- */
-#ifndef SETTINGS_CONFIG_PAGE_NUM
-#warn "SETTINGS_CONFIG_PAGE_NUM not defined in the OpenThread Core Config"
-#endif /* SETTINGS_CONFIG_PAGE_NUM */
+#define FLASH_BASE_ADDRESS 0x52000
+#define FLASH_PAGE_SIZE 0x2000
+#define FLASH_PAGE_NUM 2 /* must be a multiple of 2 */
+#define FLASH_SWAP_SIZE (FLASH_PAGE_SIZE * (FLASH_PAGE_NUM / 2))
 
 enum
 {
@@ -158,117 +136,87 @@ static void restoreFlashCache(uint32_t mode)
     VIMSLineBufEnable(VIMS_BASE);
 }
 
-/**
- * Translate the errors from the Flash programming FSM to OpenThread error
- * codes.
- *
- * @param [in] error Return from the Flash programming function.
- *
- * @return The corresponding OpenThread @ref otError value.
- */
-static otError fsmErrorToOtError(uint32_t error)
+static uint32_t mapAddress(uint8_t aSwapIndex, uint32_t aOffset)
 {
-    otError ret = OT_ERROR_GENERIC;
+    uint32_t address = FLASH_BASE_ADDRESS + aOffset;
 
-    switch (error)
+    if (aSwapIndex)
     {
-    case FAPI_STATUS_SUCCESS:
-        ret = OT_ERROR_NONE;
-        break;
-
-    case FAPI_STATUS_INCORRECT_DATABUFFER_LENGTH:
-        ret = OT_ERROR_INVALID_ARGS;
-        break;
-
-    case FAPI_STATUS_FSM_ERROR:
-        ret = OT_ERROR_FAILED;
-        break;
-
-    default:
-        break;
+        address += FLASH_SWAP_SIZE;
     }
 
-    return ret;
+    return address;
 }
 
 /**
  * Function documented in platforms/utils/flash.h
  */
-otError utilsFlashInit(void)
+void otPlatFlashInit(otInstance *aInstance)
 {
-    return OT_ERROR_NONE;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
 /**
  * Function documented in platforms/utils/flash.h
  */
-uint32_t utilsFlashGetSize(void)
+uint32_t otPlatFlashGetSwapSize(otInstance *aInstance)
 {
-    return FlashSizeGet();
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return FLASH_SWAP_SIZE;
 }
 
 /**
  * Function documented in platforms/utils/flash.h
  */
-otError utilsFlashErasePage(uint32_t aAddress)
+void otPlatFlashErase(otInstance *aInstance, uint8_t aSwapIndex)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     uint32_t mode;
-    uint32_t fsmRet;
-    otError  ret;
-
-    otEXPECT_ACTION(checkVoltage(), ret = OT_ERROR_FAILED);
-
-    mode = disableFlashCache();
-
-    fsmRet = FlashSectorErase(aAddress);
-
-    restoreFlashCache(mode);
-
-    ret = fsmErrorToOtError(fsmRet);
-
-exit:
-    return ret;
-}
-
-/**
- * Function documented in platforms/utils/flash.h
- */
-otError utilsFlashStatusWait(uint32_t aTimeout)
-{
-    uint32_t start = otPlatAlarmMilliGetNow();
-    otError  ret   = OT_ERROR_BUSY;
-
-    while ((otPlatAlarmMilliGetNow() - start) < aTimeout)
-    {
-        if (FlashCheckFsmForReady() == FAPI_STATUS_FSM_READY)
-        {
-            ret = OT_ERROR_NONE;
-            break;
-        }
-    }
-
-    return ret;
-}
-
-/**
- * Function documented in platforms/utils/flash.h
- */
-uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
-{
-    uint32_t mode;
-    uint32_t written = 0;
 
     otEXPECT(checkVoltage());
 
     mode = disableFlashCache();
 
+    for (uint8_t page = 0; page < FLASH_PAGE_NUM; page++)
+    {
+        FlashSectorErase(mapAddress(aSwapIndex, (page * FLASH_PAGE_SIZE)));
+    }
+
+    restoreFlashCache(mode);
+
+    while (FlashCheckFsmForReady() != FAPI_STATUS_FSM_READY)
+    {
+    }
+
+exit:
+    return;
+}
+
+/**
+ * Function documented in platforms/utils/flash.h
+ */
+void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, const void *aData, uint32_t aSize)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    uint32_t mode;
+    uint32_t written = 0;
+    uint32_t address;
+
+    otEXPECT(checkVoltage());
+
+    mode = disableFlashCache();
+
+    address = mapAddress(aSwapIndex, aOffset);
+
     while (written < aSize)
     {
-        uint32_t toWrite = aSize - written;
-        uint8_t *data    = aData + written;
-        uint32_t address = aAddress + written;
-        uint32_t fsmRet;
-        bool     interruptsWereDisabled;
+        uint32_t       toWrite = aSize - written;
+        const uint8_t *data    = (uint8_t *)aData + written;
+        uint32_t       fsmRet;
+        bool           interruptsWereDisabled;
 
         if (toWrite > MAX_WRITE_INCREMENT)
         {
@@ -281,7 +229,7 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
          */
         interruptsWereDisabled = IntMasterDisable();
 
-        fsmRet = FlashProgram(data, address, toWrite);
+        fsmRet = FlashProgram((uint8_t *)data, address + written, toWrite);
 
         if (!interruptsWereDisabled)
         {
@@ -299,15 +247,15 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
     restoreFlashCache(mode);
 
 exit:
-    return written;
+    return;
 }
 
 /**
  * Function documented in platforms/utils/flash.h
  */
-uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, void *aData, uint32_t aSize)
 {
-    memcpy(aData, (void *)aAddress, (size_t)aSize);
+    OT_UNUSED_VARIABLE(aInstance);
 
-    return aSize;
+    memcpy(aData, (void *)mapAddress(aSwapIndex, aOffset), (size_t)aSize);
 }

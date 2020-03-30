@@ -68,11 +68,11 @@ public:
     /**
      * This method interprets a list of CLI arguments.
      *
-     * @param[in]  argc  The number of elements in argv.
-     * @param[in]  argv  A pointer to an array of command line arguments.
+     * @param[in]  aArgsLength  The number of elements in @p aArgs.
+     * @param[in]  aArgs        An array of command line arguments.
      *
      */
-    otError Process(int argc, char *argv[]);
+    otError Process(uint8_t aArgsLength, char *aArgs[]);
 
 private:
     enum
@@ -86,20 +86,20 @@ private:
     struct Command
     {
         const char *mName;
-        otError (CoapSecure::*mCommand)(int argc, char *argv[]);
+        otError (CoapSecure::*mCommand)(uint8_t aArgsLength, char *aArgs[]);
     };
 
     void PrintPayload(otMessage *aMessage) const;
 
-    otError ProcessHelp(int argc, char *argv[]);
-    otError ProcessConnect(int argc, char *argv[]);
-    otError ProcessDisconnect(int argc, char *argv[]);
-    otError ProcessPsk(int argc, char *argv[]);
-    otError ProcessRequest(int argc, char *argv[]);
-    otError ProcessResource(int argc, char *argv[]);
-    otError ProcessStart(int argc, char *argv[]);
-    otError ProcessStop(int argc, char *argv[]);
-    otError ProcessX509(int argc, char *argv[]);
+    otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessConnect(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessDisconnect(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessPsk(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessRequest(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessResource(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessStart(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessStop(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessX509(uint8_t aArgsLength, char *aArgs[]);
 
     void Stop(void);
 
