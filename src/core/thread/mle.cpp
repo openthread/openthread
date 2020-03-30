@@ -174,13 +174,13 @@ Mle::Mle(Instance &aInstance)
     mBackboneRouterPrimaryAloc.GetAddress().SetLocator(kAloc16BackboneRouterPrimary);
 
     // All Network Backbone Routers Multicast Address.
-    mNetworkAllBackboneRouters.Clear();
+    mAllNetworkBackboneRouters.Clear();
 
-    mNetworkAllBackboneRouters.GetAddress().mFields.m8[0]  = 0xff; // Multicast
-    mNetworkAllBackboneRouters.GetAddress().mFields.m8[1]  = 0x32; // Flags = 3, Scope = 2
-    mNetworkAllBackboneRouters.GetAddress().mFields.m8[2]  = 0;    // Reserved
-    mNetworkAllBackboneRouters.GetAddress().mFields.m8[3]  = 64;   // Prefix Length = 64
-    mNetworkAllBackboneRouters.GetAddress().mFields.m8[15] = 3;    // Group ID = 3
+    mAllNetworkBackboneRouters.GetAddress().mFields.m8[0]  = 0xff; // Multicast
+    mAllNetworkBackboneRouters.GetAddress().mFields.m8[1]  = 0x32; // Flags = 3, Scope = 2
+    mAllNetworkBackboneRouters.GetAddress().mFields.m8[2]  = 0;    // Reserved
+    mAllNetworkBackboneRouters.GetAddress().mFields.m8[3]  = 64;   // Prefix Length = 64
+    mAllNetworkBackboneRouters.GetAddress().mFields.m8[15] = 3;    // Group ID = 3
 
 #endif
 
@@ -965,7 +965,7 @@ void Mle::SetMeshLocalPrefix(const MeshLocalPrefix &aMeshLocalPrefix)
 
         if (Get<BackboneRouter::Local>().IsEnabled())
         {
-            Get<ThreadNetif>().UnsubscribeMulticast(mNetworkAllBackboneRouters);
+            Get<ThreadNetif>().UnsubscribeMulticast(mAllNetworkBackboneRouters);
         }
 
 #endif
@@ -1035,12 +1035,12 @@ void Mle::ApplyMeshLocalPrefix(void)
         Get<ThreadNetif>().AddUnicastAddress(mBackboneRouterPrimaryAloc);
     }
 
-    memcpy(mNetworkAllBackboneRouters.GetAddress().mFields.m8 + 4, mMeshLocal64.GetAddress().mFields.m8, 8);
+    memcpy(mAllNetworkBackboneRouters.GetAddress().mFields.m8 + 4, mMeshLocal64.GetAddress().mFields.m8, 8);
 
     if (Get<BackboneRouter::Local>().IsEnabled())
     {
         // Subscribe All Network Backbone Routers Multicast Address for both Seconday and Primary state.
-        Get<ThreadNetif>().SubscribeMulticast(mNetworkAllBackboneRouters);
+        Get<ThreadNetif>().SubscribeMulticast(mAllNetworkBackboneRouters);
     }
 
 #endif
@@ -1671,11 +1671,11 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         if (Get<BackboneRouter::Local>().IsEnabled())
         {
             // Subscribe All Network Backbone Routers Multicast Address for both Seconday and Primary state.
-            Get<ThreadNetif>().SubscribeMulticast(mNetworkAllBackboneRouters);
+            Get<ThreadNetif>().SubscribeMulticast(mAllNetworkBackboneRouters);
         }
         else
         {
-            Get<ThreadNetif>().UnsubscribeMulticast(mNetworkAllBackboneRouters);
+            Get<ThreadNetif>().UnsubscribeMulticast(mAllNetworkBackboneRouters);
         }
     }
 

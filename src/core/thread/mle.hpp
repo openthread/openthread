@@ -608,9 +608,9 @@ public:
      * @returns A reference to the All Network Backbone Routers Multicast Address.
      *
      */
-    const Ip6::Address &GetNetworkAllBackboneRoutersAddress(void) const
+    const Ip6::Address &GetAllNetworkBackboneRoutersAddress(void) const
     {
-        return mNetworkAllBackboneRouters.GetAddress();
+        return mAllNetworkBackboneRouters.GetAddress();
     }
 #endif
 
@@ -1785,7 +1785,7 @@ private:
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     Ip6::NetifUnicastAddress   mBackboneRouterPrimaryAloc;
-    Ip6::NetifMulticastAddress mNetworkAllBackboneRouters;
+    Ip6::NetifMulticastAddress mAllNetworkBackboneRouters;
 #endif
 
     otMleCounters mCounters;
