@@ -52,19 +52,20 @@
 #define HAVE_LIBREADLINE 0
 #endif
 
-#define OPENTHREAD_POSIX_APP_TYPE_NCP 1
-#define OPENTHREAD_POSIX_APP_TYPE_CLI 2
+#define OT_POSIX_APP_TYPE_NCP 1
+#define OT_POSIX_APP_TYPE_CLI 2
 
 #include <openthread/diag.h>
 #include <openthread/logging.h>
 #include <openthread/tasklet.h>
+#include <openthread/thread.h>
 #include <openthread/platform/radio.h>
-#if OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_NCP
+#if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_NCP
 #include <openthread/ncp.h>
 #define OPENTHREAD_USE_CONSOLE 0
-#elif OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_CLI
+#elif OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
 #include <openthread/cli.h>
-#if (HAVE_LIBEDIT || HAVE_LIBREADLINE) && !OPENTHREAD_ENABLE_POSIX_APP_DAEMON
+#if (HAVE_LIBEDIT || HAVE_LIBREADLINE) && !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
 #define OPENTHREAD_USE_CONSOLE 1
 #include "console_cli.h"
 #else
@@ -73,7 +74,7 @@
 #else
 #error "Unknown posix app type!"
 #endif
-#include <openthread-system.h>
+#include <openthread/openthread-system.h>
 
 #ifndef OPENTHREAD_ENABLE_COVERAGE
 #define OPENTHREAD_ENABLE_COVERAGE 0
@@ -122,7 +123,7 @@ static const struct option kOptions[] = {{"debug-level", required_argument, NULL
                                          {"ncp-dataset", no_argument, NULL, ARG_RESTORE_NCP_DATASET},
                                          {"time-speed", required_argument, NULL, 's'},
                                          {"verbose", no_argument, NULL, 'v'},
-#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
                                          {"gpio-int-dev", required_argument, NULL, ARG_SPI_GPIO_INT_DEV},
                                          {"gpio-int-line", required_argument, NULL, ARG_SPI_GPIO_INT_LINE},
                                          {"gpio-reset-dev", required_argument, NULL, ARG_SPI_GPIO_RESET_DEV},
@@ -142,15 +143,18 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "Syntax:\n"
             "    %s [Options] NodeId|Device|Command [DeviceConfig|CommandArgs]\n"
             "Options:\n"
-            "    -I  --interface-name name     Thread network interface name.\n"
             "    -d  --debug-level             Debug level of logging.\n"
+            "    -h  --help                    Display this usage information.\n"
+            "    -I  --interface-name name     Thread network interface name.\n"
             "    -n  --dry-run                 Just verify if arguments is valid and radio spinel is compatible.\n"
             "        --no-reset                Do not send Spinel reset command to RCP on initialization.\n"
             "        --radio-version           Print radio firmware version.\n"
             "        --ncp-dataset             Retrieve and save NCP dataset to file.\n"
             "    -s  --time-speed factor       Time speed up factor.\n"
-            "    -v  --verbose                 Also log to stderr.\n"
-#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
+            "    -v  --verbose                 Also log to stderr.\n",
+            aProgramName);
+#if OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
+    fprintf(aStream,
             "        --gpio-int-dev[=gpio-device-path]\n"
             "                                  Specify a path to the Linux sysfs-exported GPIO device for the\n"
             "                                  `I̅N̅T̅` pin. If not specified, `SPI` interface will fall back to\n"
@@ -171,10 +175,8 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "        --spi-align-allowance[=n] Specify the maximum number of 0xFF bytes to clip from start of\n"
             "                                  MISO frame. Max value is 16.\n"
             "        --spi-small-packet=[n]    Specify the smallest packet we can receive in a single transaction.\n"
-            "                                  (larger packets will require two transactions). Default value is 32.\n"
+            "                                  (larger packets will require two transactions). Default value is 32.\n");
 #endif
-            "    -h  --help                    Display this usage information.\n",
-            aProgramName);
     exit(aExitCode);
 }
 
@@ -243,7 +245,6 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         case ARG_RESTORE_NCP_DATASET:
             aConfig->mPlatformConfig.mRestoreDatasetFromNcp = true;
             break;
-#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
         case ARG_SPI_GPIO_INT_DEV:
             aConfig->mPlatformConfig.mSpiGpioIntDevice = optarg;
             break;
@@ -260,21 +261,20 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             aConfig->mPlatformConfig.mSpiMode = (uint8_t)atoi(optarg);
             break;
         case ARG_SPI_SPEED:
-            aConfig->mPlatformConfig.mSpiSpeed = atoi(optarg);
+            aConfig->mPlatformConfig.mSpiSpeed = (uint32_t)atoi(optarg);
             break;
         case ARG_SPI_CS_DELAY:
-            aConfig->mPlatformConfig.mSpiCsDelay = atoi(optarg);
+            aConfig->mPlatformConfig.mSpiCsDelay = (uint16_t)atoi(optarg);
             break;
         case ARG_SPI_RESET_DELAY:
-            aConfig->mPlatformConfig.mSpiResetDelay = atoi(optarg);
+            aConfig->mPlatformConfig.mSpiResetDelay = (uint32_t)atoi(optarg);
             break;
         case ARG_SPI_ALIGN_ALLOWANCE:
-            aConfig->mPlatformConfig.mSpiAlignAllowance = atoi(optarg);
+            aConfig->mPlatformConfig.mSpiAlignAllowance = (uint8_t)atoi(optarg);
             break;
         case ARG_SPI_SMALL_PACKET:
-            aConfig->mPlatformConfig.mSpiSmallPacketSize = atoi(optarg);
+            aConfig->mPlatformConfig.mSpiSmallPacketSize = (uint8_t)atoi(optarg);
             break;
-#endif // OPENTHREAD_POSIX_RCP_SPI_ENABLE
         case '?':
             PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
             break;
@@ -306,6 +306,8 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
 
     openlog(aArgVector[0], LOG_PID | (config.mIsVerbose ? LOG_PERROR : 0), LOG_DAEMON);
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
+    syslog(LOG_INFO, "Running %s", otGetVersionString());
+    syslog(LOG_INFO, "Thread version: %hu", otThreadGetVersion());
     otLoggingSetLevel(config.mLogLevel);
 
     instance = otSysInit(&config.mPlatformConfig);
@@ -313,6 +315,10 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
     if (config.mPrintRadioVersion)
     {
         printf("%s\n", otPlatRadioGetVersionString(instance));
+    }
+    else
+    {
+        syslog(LOG_INFO, "RCP version: %s", otPlatRadioGetVersionString(instance));
     }
 
     if (config.mIsDryRun)
@@ -358,9 +364,9 @@ int main(int argc, char *argv[])
 
     instance = InitInstance(argc, argv);
 
-#if OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_NCP
+#if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_NCP
     otNcpInit(instance);
-#elif OPENTHREAD_POSIX_APP_TYPE == OPENTHREAD_POSIX_APP_TYPE_CLI
+#elif OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
 #if OPENTHREAD_USE_CONSOLE
     otxConsoleInit(instance);
 #else

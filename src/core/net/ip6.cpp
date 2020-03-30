@@ -305,6 +305,7 @@ otError Ip6::InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aM
     }
     else
     {
+#if OPENTHREAD_FTD
         if (aHeader.GetDestination().IsMulticastLargerThanRealmLocal() &&
             Get<Mle::MleRouter>().HasSleepyChildrenSubscribed(aHeader.GetDestination()))
         {
@@ -320,6 +321,7 @@ otError Ip6::InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aM
                 otLogWarnIp6("No enough buffer for message copy for indirect transmission to sleepy children");
             }
         }
+#endif
 
         SuccessOrExit(error = AddTunneledMplOption(aMessage, aHeader, aMessageInfo));
     }
@@ -510,6 +512,7 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t 
 
     if (aMessageInfo.GetPeerAddr().IsMulticastLargerThanRealmLocal())
     {
+#if OPENTHREAD_FTD
         if (Get<Mle::MleRouter>().HasSleepyChildrenSubscribed(header.GetDestination()))
         {
             Message *messageCopy = NULL;
@@ -524,6 +527,7 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t 
                 otLogWarnIp6("No enough buffer for message copy for indirect transmission to sleepy children");
             }
         }
+#endif
 
         SuccessOrExit(error = AddTunneledMplOption(aMessage, header, aMessageInfo));
     }
@@ -636,6 +640,8 @@ otError Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
     uint16_t       offset          = 0;
     int            assertValue     = 0;
 
+    OT_UNUSED_VARIABLE(assertValue);
+
     uint16_t maxPayloadFragment =
         FragmentHeader::MakeDivisibleByEight(kMinimalMtu - aMessage.GetOffset() - sizeof(fragmentHeader));
     uint16_t payloadLeft = aMessage.GetLength() - aMessage.GetOffset();
@@ -675,11 +681,11 @@ otError Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
 
         header.SetPayloadLength(payloadFragment + sizeof(fragmentHeader));
         assertValue = fragment->Write(0, sizeof(header), &header);
-        assert(assertValue == sizeof(header));
+        OT_ASSERT(assertValue == sizeof(header));
 
         SuccessOrExit(error = fragment->SetOffset(aMessage.GetOffset()));
         assertValue = fragment->Write(aMessage.GetOffset(), sizeof(fragmentHeader), &fragmentHeader);
-        assert(assertValue == sizeof(fragmentHeader));
+        OT_ASSERT(assertValue == sizeof(fragmentHeader));
 
         VerifyOrExit(aMessage.CopyTo(aMessage.GetOffset() + FragmentHeader::FragmentOffsetToBytes(offset),
                                      aMessage.GetOffset() + sizeof(fragmentHeader), payloadFragment,
@@ -721,6 +727,8 @@ otError Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMess
     int            assertValue     = 0;
     bool           isFragmented    = true;
 
+    OT_UNUSED_VARIABLE(assertValue);
+
     VerifyOrExit(aMessage.Read(0, sizeof(header), &header) == sizeof(header), error = OT_ERROR_PARSE);
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(fragmentHeader), &fragmentHeader) == sizeof(fragmentHeader),
@@ -760,7 +768,7 @@ otError Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMess
 
         // copying the non-fragmentable header to the fragmentation buffer
         assertValue = aMessage.CopyTo(0, 0, aMessage.GetOffset(), *message);
-        assert(assertValue == aMessage.GetOffset());
+        OT_ASSERT(assertValue == aMessage.GetOffset());
 
         if (!mTimer.IsRunning())
         {
@@ -790,7 +798,7 @@ otError Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMess
     // copy the fragment payload into the message buffer
     assertValue = aMessage.CopyTo(aMessage.GetOffset() + sizeof(fragmentHeader), aMessage.GetOffset() + offset,
                                   payloadFragment, *message);
-    assert(assertValue == static_cast<int>(payloadFragment));
+    OT_ASSERT(assertValue == static_cast<int>(payloadFragment));
 
     // check if it is the last frame
     if (!fragmentHeader.IsMoreFlagSet())
@@ -806,7 +814,7 @@ otError Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMess
         header.SetPayloadLength(message->GetLength() - sizeof(header));
         header.SetNextHeader(fragmentHeader.GetNextHeader());
         assertValue = message->Write(0, sizeof(header), &header);
-        assert(assertValue == sizeof(header));
+        OT_ASSERT(assertValue == sizeof(header));
 
         otLogDebgIp6("Reassembly complete.");
 
@@ -1174,11 +1182,13 @@ otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkM
                 multicastPromiscuous = true;
             }
 
+#if OPENTHREAD_FTD
             if (header.GetDestination().IsMulticastLargerThanRealmLocal() &&
                 Get<Mle::MleRouter>().HasSleepyChildrenSubscribed(header.GetDestination()))
             {
                 forward = true;
             }
+#endif
         }
         else
         {

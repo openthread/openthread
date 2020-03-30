@@ -44,10 +44,10 @@
 #include "common/timer.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6.hpp"
-#include "thread/device_mode.hpp"
 #include "thread/indirect_sender.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/mle_tlvs.hpp"
+#include "thread/mle_types.hpp"
 
 namespace ot {
 
@@ -352,6 +352,31 @@ public:
     void SetRloc16(uint16_t aRloc16) { mRloc16 = aRloc16; }
 
     /**
+     * This method indicates whether Enhanced Keep-Alive is supported or not.
+     *
+     * @returns TRUE if Enhanced Keep-Alive is supported, FALSE otherwise.
+     *
+     */
+    bool IsEnhancedKeepAliveSupported(void) const
+    {
+        return mState != kStateInvalid && mVersion >= OT_THREAD_VERSION_1_2;
+    }
+
+    /**
+     * This method gets the device MLE version.
+     *
+     */
+    uint8_t GetVersion(void) const { return mVersion; }
+
+    /**
+     * This method sets the device MLE version.
+     *
+     * @param[in]  aVersion  The device MLE version.
+     *
+     */
+    void SetVersion(uint8_t aVersion) { mVersion = aVersion; }
+
+    /**
      * This method gets the number of consecutive link failures.
      *
      * @returns The number of consecutive link failures.
@@ -440,7 +465,7 @@ private:
         } mValid;
         struct
         {
-            uint8_t mChallenge[Mle::ChallengeTlv::kMaxSize]; ///< The challenge value
+            uint8_t mChallenge[Mle::kMaxChallengeSize]; ///< The challenge value
         } mPending;
     } mValidPending;
 
@@ -454,6 +479,7 @@ private:
 #else
     uint8_t mLinkFailures; ///< Consecutive link failure count
 #endif
+    uint8_t         mVersion;  ///< The MLE version
     LinkQualityInfo mLinkInfo; ///< Link quality info (contains average RSS, link margin and link quality)
 };
 
@@ -719,8 +745,8 @@ private:
 
     union
     {
-        uint8_t mRequestTlvs[kMaxRequestTlvs];                 ///< Requested MLE TLVs
-        uint8_t mAttachChallenge[Mle::ChallengeTlv::kMaxSize]; ///< The challenge value
+        uint8_t mRequestTlvs[kMaxRequestTlvs];            ///< Requested MLE TLVs
+        uint8_t mAttachChallenge[Mle::kMaxChallengeSize]; ///< The challenge value
     };
 
 #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE

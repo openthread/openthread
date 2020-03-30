@@ -47,6 +47,14 @@ testPlatRadioReceive            g_testPlatRadioReceive            = NULL;
 testPlatRadioTransmit           g_testPlatRadioTransmit           = NULL;
 testPlatRadioGetTransmitBuffer  g_testPlatRadioGetTransmitBuffer  = NULL;
 
+enum
+{
+    FLASH_SWAP_SIZE = 2048,
+    FLASH_SWAP_NUM  = 2,
+};
+
+uint8_t g_flash[FLASH_SWAP_SIZE * FLASH_SWAP_NUM];
+
 void testPlatResetToDefaults(void)
 {
     g_testPlatAlarmSet     = false;
@@ -417,14 +425,14 @@ exit:
 // Diag
 //
 
-void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+void otPlatDiagProcess(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aOutputMaxLen);
 
     // no more diagnostics features for Posix platform
-    sprintf(aOutput, "diag feature '%s' is not supported\r\n", argv[0]);
+    sprintf(aOutput, "diag feature '%s' is not supported\r\n", aArgs[0]);
 }
 
 void otPlatDiagModeSet(bool aMode)
@@ -541,6 +549,66 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 void otPlatSettingsWipe(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+}
+
+void otPlatFlashInit(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    memset(g_flash, 0xff, sizeof(g_flash));
+}
+
+uint32_t otPlatFlashGetSwapSize(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return FLASH_SWAP_SIZE;
+}
+
+void otPlatFlashErase(otInstance *aInstance, uint8_t aSwapIndex)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    uint32_t address;
+
+    VerifyOrQuit(aSwapIndex < FLASH_SWAP_NUM, "aSwapIndex invalid");
+
+    address = aSwapIndex ? FLASH_SWAP_SIZE : 0;
+
+    memset(g_flash + address, 0xff, FLASH_SWAP_SIZE);
+}
+
+void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, void *aData, uint32_t aSize)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    uint32_t address;
+
+    VerifyOrQuit(aSwapIndex < FLASH_SWAP_NUM, "aSwapIndex invalid");
+    VerifyOrQuit(aSize <= FLASH_SWAP_SIZE, "aSize invalid");
+    VerifyOrQuit(aOffset <= (FLASH_SWAP_SIZE - aSize), "aOffset + aSize invalid");
+
+    address = aSwapIndex ? FLASH_SWAP_SIZE : 0;
+
+    memcpy(aData, g_flash + address + aOffset, aSize);
+}
+
+void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, const void *aData, uint32_t aSize)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    uint32_t address;
+
+    VerifyOrQuit(aSwapIndex < FLASH_SWAP_NUM, "aSwapIndex invalid");
+    VerifyOrQuit(aSize <= FLASH_SWAP_SIZE, "aSize invalid");
+    VerifyOrQuit(aOffset <= (FLASH_SWAP_SIZE - aSize), "aOffset + aSize invalid");
+
+    address = aSwapIndex ? FLASH_SWAP_SIZE : 0;
+
+    for (uint32_t index = 0; index < aSize; index++)
+    {
+        g_flash[address + aOffset + index] &= ((uint8_t *)aData)[index];
+    }
 }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE

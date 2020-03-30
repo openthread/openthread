@@ -85,7 +85,7 @@ class Cert_9_2_02_MGMTCommissionerSet(unittest.TestCase):
         self.simulator.go(3)
         self.simulator.get_messages_sent_by(COMMISSIONER)  # Skip LEAD_PET.req
 
-        # Get CommissionerSesssionId from LEAD_PET.rsp
+        # Get CommissionerSessionId from LEAD_PET.rsp
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04', assert_enabled=True)
         commissioner_session_id_tlv = command.get_sub_tlv(

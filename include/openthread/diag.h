@@ -55,17 +55,21 @@ extern "C" {
  * This function processes a factory diagnostics command line.
  *
  * @param[in]   aInstance       A pointer to an OpenThread instance.
- * @param[in]   aArgCount       The argument counter of diagnostics command line.
- * @param[in]   aArgVector      The argument vector of diagnostics command line.
+ * @param[in]   aArgsLength     The number of elements in @p aArgs.
+ * @param[in]   aArgs           An array of arguments.
  * @param[out]  aOutput         The diagnostics execution result.
  * @param[in]   aOutputMaxLen   The output buffer size.
  *
- * @retval  OT_ERROR_INVALID_ARGS       The command is supported but invalid arugments provided.
+ * @retval  OT_ERROR_INVALID_ARGS       The command is supported but invalid arguments provided.
  * @retval  OT_ERROR_NONE               The command is successfully process.
  * @retval  OT_ERROR_NOT_IMPLEMENTED    The command is not supported.
  *
  */
-otError otDiagProcessCmd(otInstance *aInstance, int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+otError otDiagProcessCmd(otInstance *aInstance,
+                         uint8_t     aArgsLength,
+                         char *      aArgs[],
+                         char *      aOutput,
+                         size_t      aOutputMaxLen);
 
 /**
  * This function processes a factory diagnostics command line.

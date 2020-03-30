@@ -327,7 +327,7 @@ otError MeshForwarder::UpdateIp6Route(Message &aMessage)
 #if OPENTHREAD_FTD
         error = UpdateIp6RouteFtd(ip6Header);
 #else
-        assert(false);
+        OT_ASSERT(false);
 #endif
     }
 
@@ -372,16 +372,9 @@ void MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::
     {
         aMacAddr.SetShort(Mac::kShortAddrBroadcast);
     }
-    else if (aIp6Addr.mFields.m16[0] == HostSwap16(0xfe80) && aIp6Addr.mFields.m16[1] == HostSwap16(0x0000) &&
-             aIp6Addr.mFields.m16[2] == HostSwap16(0x0000) && aIp6Addr.mFields.m16[3] == HostSwap16(0x0000) &&
-             aIp6Addr.mFields.m16[4] == HostSwap16(0x0000) && aIp6Addr.mFields.m16[5] == HostSwap16(0x00ff) &&
-             aIp6Addr.mFields.m16[6] == HostSwap16(0xfe00))
-    {
-        aMacAddr.SetShort(HostSwap16(aIp6Addr.mFields.m16[7]));
-    }
     else if (Get<Mle::MleRouter>().IsRoutingLocator(aIp6Addr))
     {
-        aMacAddr.SetShort(HostSwap16(aIp6Addr.mFields.m16[7]));
+        aMacAddr.SetShort(aIp6Addr.GetLocator());
     }
     else
     {
@@ -461,7 +454,7 @@ otError MeshForwarder::HandleFrameRequest(Mac::TxFrame &aFrame)
             ExitNow();
         }
 
-        assert(aFrame.GetLength() != 7);
+        OT_ASSERT(aFrame.GetLength() != 7);
         break;
 
 #if OPENTHREAD_FTD
@@ -691,6 +684,8 @@ start:
         Mac::Address         meshSource, meshDest;
         otError              error;
 
+        OT_UNUSED_VARIABLE(error);
+
         if (aAddMeshHeader)
         {
             meshSource.SetShort(aMeshSource);
@@ -703,7 +698,7 @@ start:
         }
 
         error = Get<Lowpan::Lowpan>().Compress(aMessage, meshSource, meshDest, buffer);
-        assert(error == OT_ERROR_NONE);
+        OT_ASSERT(error == OT_ERROR_NONE);
 
         hcLength = static_cast<uint8_t>(buffer.GetWritePointer() - payload);
         headerLength += hcLength;
@@ -828,8 +823,8 @@ void MeshForwarder::HandleSentFrame(Mac::TxFrame &aFrame, otError aError)
     Neighbor *   neighbor = NULL;
     Mac::Address macDest;
 
-    assert((aError == OT_ERROR_NONE) || (aError == OT_ERROR_CHANNEL_ACCESS_FAILURE) || (aError == OT_ERROR_ABORT) ||
-           (aError == OT_ERROR_NO_ACK));
+    OT_ASSERT((aError == OT_ERROR_NONE) || (aError == OT_ERROR_CHANNEL_ACCESS_FAILURE) || (aError == OT_ERROR_ABORT) ||
+              (aError == OT_ERROR_NO_ACK));
 
     mSendBusy = false;
 
@@ -842,7 +837,7 @@ void MeshForwarder::HandleSentFrame(Mac::TxFrame &aFrame, otError aError)
     }
 
     VerifyOrExit(mSendMessage != NULL);
-    assert(mSendMessage->GetDirectTransmission());
+    OT_ASSERT(mSendMessage->GetDirectTransmission());
 
     if (aError != OT_ERROR_NONE)
     {
@@ -977,7 +972,7 @@ exit:
 
 void MeshForwarder::HandleDiscoverComplete(void)
 {
-    assert(mScanning);
+    OT_ASSERT(mScanning);
 
     Get<Mac::Mac>().ClearTemporaryChannel();
     Get<Mac::Mac>().SetPanId(mRestorePanId);

@@ -34,6 +34,8 @@ import struct
 from binascii import hexlify
 from ipaddress import ip_address
 
+import common
+
 try:
     from itertools import izip_longest as zip_longest
 except ImportError:
@@ -1079,7 +1081,10 @@ class UdpBasedOnSrcDstPortsPayloadFactory:
         if message_info.src_port in self._factories:
             factory = self._factories[message_info.src_port]
 
-        if factory is None:
+        if message_info.dst_port == common.UDP_TEST_PORT:
+            # Ignore traffic targeted to test port
+            return None
+        elif factory is None:
             raise RuntimeError("Could not find factory to build UDP payload.")
 
         return factory.parse(data, message_info)

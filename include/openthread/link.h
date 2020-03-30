@@ -113,23 +113,23 @@ typedef struct otMacCounters
      * Note that this counter is incremented for each MAC transmission request only by one,
      * regardless of the amount of CCA failures, CSMA-CA attempts, or retransmissions.
      *
-     * This incrementation rule applies to the following counters:
-     *   @p mTxUnicast
-     *   @p mTxBroadcast
-     *   @p mTxAckRequested
-     *   @p mTxNoAckRequested
-     *   @p mTxData
-     *   @p mTxDataPoll
-     *   @p mTxBeacon
-     *   @p mTxBeaconRequest
-     *   @p mTxOther
-     *   @p mTxErrAbort
-     *   @p mTxErrBusyChannel
+     * This increment rule applies to the following counters:
+     *   - @p mTxUnicast
+     *   - @p mTxBroadcast
+     *   - @p mTxAckRequested
+     *   - @p mTxNoAckRequested
+     *   - @p mTxData
+     *   - @p mTxDataPoll
+     *   - @p mTxBeacon
+     *   - @p mTxBeaconRequest
+     *   - @p mTxOther
+     *   - @p mTxErrAbort
+     *   - @p mTxErrBusyChannel
      *
      * The following equations are valid:
-     *     @p mTxTotal = @p mTxUnicast + @p mTxBroadcast
-     *     @p mTxTotal = @p mTxAckRequested + @p mTxNoAckRequested
-     *     @p mTxTotal = @p mTxData + @p mTxDataPoll + @p mTxBeacon + @p mTxBeaconRequest + @p mTxOther
+     *   - @p mTxTotal = @p mTxUnicast + @p mTxBroadcast
+     *   - @p mTxTotal = @p mTxAckRequested + @p mTxNoAckRequested
+     *   - @p mTxTotal = @p mTxData + @p mTxDataPoll + @p mTxBeacon + @p mTxBeaconRequest + @p mTxOther
      *
      */
     uint32_t mTxTotal;
@@ -203,15 +203,16 @@ typedef struct otMacCounters
      * triggered by lack of acknowledgement, CSMA/CA failure, or other type of transmission error.
      * The @p mTxRetry counter is incremented both for unicast and broadcast MAC frames.
      *
-     * Check the following configuration parameters to control the amount of retransmissions in the system:
-     *   @sa OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT
-     *   @sa OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT
-     *   @sa OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST
-     *   @sa OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT
-     *   @sa OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT
+     * Modify the following configuration parameters to control the amount of retransmissions in the system:
+     *
+     * - OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT
+     * - OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT
+     * - OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST
+     * - OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT
+     * - OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT
      *
      * Currently, this counter is invalid if the platform's radio driver capability includes
-     * @sa OT_RADIO_CAPS_TRANSMIT_RETRIES.
+     * @ref OT_RADIO_CAPS_TRANSMIT_RETRIES.
      *
      */
     uint32_t mTxRetry;
@@ -233,12 +234,12 @@ typedef struct otMacCounters
      *
      * The meaning of this counter can be different and it depends on the platform's radio driver capabilities.
      *
-     * If @sa OT_RADIO_CAPS_CSMA_BACKOFF is enabled, this counter represents the total number of full CSMA/CA
+     * If @ref OT_RADIO_CAPS_CSMA_BACKOFF is enabled, this counter represents the total number of full CSMA/CA
      * failed attempts and it is incremented by one also for each retransmission (in case of a CSMA/CA fail).
      *
-     * If @sa OT_RADIO_CAPS_TRANSMIT_RETRIES is enabled, this counter represents the total number of full CSMA/CA
-     * failed attempts and it is incremented by one for each individual data frame request (regardless of the amount of
-     * retransmissions).
+     * If @ref OT_RADIO_CAPS_TRANSMIT_RETRIES is enabled, this counter represents the total number of full CSMA/CA
+     * failed attempts and it is incremented by one for each individual data frame request (regardless of the
+     * amount of retransmissions).
      *
      */
     uint32_t mTxErrCca;

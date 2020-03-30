@@ -30,17 +30,27 @@ set(OT_PLATFORM_LIB "openthread-posix" PARENT_SCOPE)
 
 option(OT_DAEMON "Enable daemon mode" OFF)
 if(OT_DAEMON)
-    list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_ENABLE_POSIX_APP_DAEMON=1")
+    list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE=1")
+endif()
+
+option(OT_POSIX_VIRTUAL_TIME "enable virtual time" OFF)
+if(OT_POSIX_VIRTUAL_TIME)
+    list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_POSIX_VIRTUAL_TIME=1")
+endif()
+
+if(NOT OT_CONFIG)
+    set(OT_CONFIG "openthread-core-posix-config.h")
+    set(OT_CONFIG ${OT_CONFIG} PARENT_SCOPE)
 endif()
 
 list(APPEND OT_PLATFORM_DEFINES
-    "OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1"
-    "OPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
     "OPENTHREAD_POSIX=1"
-    "OPENTHREAD_POSIX_RCP_UART_ENABLE=1"
-    "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\""
+    "OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE=1"
 )
+
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
+
+list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
 
 add_library(openthread-posix
     alarm.cpp
@@ -62,7 +72,13 @@ target_link_libraries(openthread-posix PUBLIC
     util
 )
 
-target_compile_definitions(openthread-posix PUBLIC ${OT_PLATFORM_DEFINES})
+target_compile_definitions(openthread-posix
+    PUBLIC
+        ${OT_PUBLIC_DEFINES}
+    PRIVATE
+        ${OT_PLATFORM_DEFINES}
+        ${OT_PRIVATE_DEFINES}
+)
 
 target_compile_options(openthread-posix PRIVATE
     ${OT_CFLAGS}
@@ -73,6 +89,7 @@ target_include_directories(openthread-posix PRIVATE
     ${OT_PRIVATE_INCLUDES}
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
-    ${PROJECT_SOURCE_DIR}/src/posix/platform
     ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}/src/posix/platform/include
 )

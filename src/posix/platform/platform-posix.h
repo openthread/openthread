@@ -43,17 +43,27 @@
 #include <sys/select.h>
 #include <sys/time.h>
 
-#include <openthread-system.h>
 #include <openthread/error.h>
 #include <openthread/instance.h>
+#include <openthread/openthread-system.h>
 
 #include "common/logging.hpp"
+
+/**
+ * @def OPENTHREAD_POSIX_VIRTUAL_TIME
+ *
+ * This setting configures whether to use virtual time.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_VIRTUAL_TIME
+#define OPENTHREAD_POSIX_VIRTUAL_TIME 0
+#endif
 
 /**
  * This is the socket name used by daemon mode.
  *
  */
-#define OPENTHREAD_POSIX_APP_SOCKET_NAME OPENTHREAD_POSIX_APP_SOCKET_BASENAME ".sock"
+#define OPENTHREAD_POSIX_DAEMON_SOCKET_NAME OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME ".sock"
 
 #ifdef __cplusplus
 extern "C" {
@@ -206,6 +216,12 @@ void platformRadioInit(const otPlatformConfig *aPlatformConfig);
  *
  */
 void platformRadioDeinit(void);
+
+/**
+ * This function shuts down platform network interface.
+ *
+ */
+void platformNetifDeinit(void);
 
 /**
  * This function inputs a received radio frame.

@@ -31,7 +31,7 @@ import wpan
 # -----------------------------------------------------------------------------------------------------------------------
 # Test description:
 #
-# This test covers a situation where a single parent exists in network with poor link quality ensuding the child
+# This test covers a situation where a single parent exists in network with poor link quality ensuring the child
 # can attach the parent.
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__

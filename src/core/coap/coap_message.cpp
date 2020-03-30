@@ -246,14 +246,16 @@ otError Message::ParseHeader(void)
     otError        error = OT_ERROR_NONE;
     OptionIterator iterator;
 
-    assert(mBuffer.mHead.mInfo.mReserved >=
-           sizeof(GetHelpData()) +
-               static_cast<size_t>((reinterpret_cast<uint8_t *>(&GetHelpData()) - mBuffer.mHead.mData)));
+    OT_ASSERT(mBuffer.mHead.mInfo.mReserved >=
+              sizeof(GetHelpData()) +
+                  static_cast<size_t>((reinterpret_cast<uint8_t *>(&GetHelpData()) - mBuffer.mHead.mData)));
 
     GetHelpData().Clear();
 
     GetHelpData().mHeaderOffset = GetOffset();
     Read(GetHelpData().mHeaderOffset, sizeof(GetHelpData().mHeader), &GetHelpData().mHeader);
+
+    VerifyOrExit(GetTokenLength() <= kMaxTokenLength, error = OT_ERROR_PARSE);
 
     SuccessOrExit(error = iterator.Init(this));
     for (const otCoapOption *option = iterator.GetFirstOption(); option != NULL; option = iterator.GetNextOption())
@@ -282,7 +284,7 @@ otError Message::SetToken(uint8_t aTokenLength)
 {
     uint8_t token[kMaxTokenLength] = {0};
 
-    assert(aTokenLength <= sizeof(token));
+    OT_ASSERT(aTokenLength <= sizeof(token));
 
     Random::NonCrypto::FillBuffer(token, aTokenLength);
 
@@ -430,6 +432,23 @@ exit:
     return err;
 }
 
+const otCoapOption *OptionIterator::GetFirstOptionMatching(uint16_t aOption)
+{
+    const otCoapOption *rval = NULL;
+
+    for (const otCoapOption *option = GetFirstOption(); option != NULL; option = GetNextOption())
+    {
+        if (option->mNumber == aOption)
+        {
+            // Found, stop searching
+            rval = option;
+            break;
+        }
+    }
+
+    return rval;
+}
+
 const otCoapOption *OptionIterator::GetFirstOption(void)
 {
     const otCoapOption *option  = NULL;
@@ -445,6 +464,23 @@ const otCoapOption *OptionIterator::GetFirstOption(void)
     }
 
     return option;
+}
+
+const otCoapOption *OptionIterator::GetNextOptionMatching(uint16_t aOption)
+{
+    const otCoapOption *rval = NULL;
+
+    for (const otCoapOption *option = GetNextOption(); option != NULL; option = GetNextOption())
+    {
+        if (option->mNumber == aOption)
+        {
+            // Found, stop searching
+            rval = option;
+            break;
+        }
+    }
+
+    return rval;
 }
 
 const otCoapOption *OptionIterator::GetNextOption(void)
@@ -528,6 +564,25 @@ exit:
     }
 
     return rval;
+}
+
+otError OptionIterator::GetOptionValue(uint64_t &aValue) const
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t value[sizeof(aValue)];
+
+    VerifyOrExit(mOption.mLength <= sizeof(aValue), error = OT_ERROR_NO_BUFS);
+    SuccessOrExit(error = GetOptionValue(value));
+
+    aValue = 0;
+    for (uint16_t pos = 0; pos < mOption.mLength; pos++)
+    {
+        aValue <<= 8;
+        aValue |= value[pos];
+    }
+
+exit:
+    return error;
 }
 
 otError OptionIterator::GetOptionValue(void *aValue) const

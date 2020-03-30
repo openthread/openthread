@@ -384,6 +384,29 @@ exit:
     return;
 }
 
+void platformNetifDeinit(void)
+{
+    if (sTunFd != -1)
+    {
+        close(sTunFd);
+        sTunFd = -1;
+    }
+
+    if (sIpFd != -1)
+    {
+        close(sIpFd);
+        sIpFd = -1;
+    }
+
+    if (sNetlinkFd != -1)
+    {
+        close(sNetlinkFd);
+        sNetlinkFd = -1;
+    }
+
+    sTunIndex = 0;
+}
+
 void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
 {
     struct ifreq ifr;

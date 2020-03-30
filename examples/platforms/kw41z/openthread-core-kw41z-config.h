@@ -53,28 +53,14 @@
 #define OPENTHREAD_CONFIG_PLATFORM_INFO "KW41Z"
 
 /**
- * @def SETTINGS_CONFIG_BASE_ADDRESS
+ * @def OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
  *
- * The base address of settings.
+ * Define to 1 to enable otPlatFlash* APIs to support non-volatile storage.
  *
- */
-#define SETTINGS_CONFIG_BASE_ADDRESS 0x40000
-
-/**
- * @def SETTINGS_CONFIG_PAGE_SIZE
- *
- * The page size of settings.
+ * When defined to 1, the platform MUST implement the otPlatFlash* APIs instead of the otPlatSettings* APIs.
  *
  */
-#define SETTINGS_CONFIG_PAGE_SIZE 0x800
-
-/**
- * @def SETTINGS_CONFIG_PAGE_NUM
- *
- * The page number of settings.
- *
- */
-#define SETTINGS_CONFIG_PAGE_NUM 2
+#define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 1
 
 /**
  * @def RADIO_CONFIG_SRC_MATCH_ENTRY_NUM

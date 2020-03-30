@@ -294,7 +294,7 @@ def any_u():
 
 
 def any_pp():
-    return random.getrandbits(2)
+    return (random.getrandbits(2) << 6)
 
 
 def any_link_quality_3():
@@ -1115,9 +1115,9 @@ class TestConnectivity(unittest.TestCase):
 
     def test_should_return_pp_value_when_pp_property_is_called(self):
         # GIVEN
-        pp = any_pp()
+        pp_byte = any_pp()
 
-        connectivity_obj = mle.Connectivity(pp, any_link_quality_3(),
+        connectivity_obj = mle.Connectivity(pp_byte, any_link_quality_3(),
                                             any_link_quality_2(),
                                             any_link_quality_1(),
                                             any_leader_cost(),
@@ -1130,7 +1130,7 @@ class TestConnectivity(unittest.TestCase):
         actual_pp = connectivity_obj.pp
 
         # THEN
-        self.assertEqual(pp, actual_pp)
+        self.assertEqual(common.map_pp(pp_byte), actual_pp)
 
     def test_should_return_link_quality_3_value_when_link_quality_3_property_is_called(
         self):
@@ -1294,7 +1294,7 @@ class TestConnectivityFactory(unittest.TestCase):
     def test_should_create_Connectivity_from_bytearray_when_parse_method_is_called(
         self):
         # GIVEN
-        pp = any_pp()
+        pp_byte = any_pp()
         link_quality_3 = any_link_quality_3()
         link_quality_2 = any_link_quality_2()
         link_quality_1 = any_link_quality_1()
@@ -1307,8 +1307,8 @@ class TestConnectivityFactory(unittest.TestCase):
         factory = mle.ConnectivityFactory()
 
         data = bytearray([
-            pp, link_quality_3, link_quality_2, link_quality_1, leader_cost,
-            id_sequence, active_routers
+            pp_byte, link_quality_3, link_quality_2, link_quality_1,
+            leader_cost, id_sequence, active_routers
         ]) + struct.pack(">H", sed_buffer_size) + bytearray(
             [sed_datagram_count])
 
@@ -1317,7 +1317,7 @@ class TestConnectivityFactory(unittest.TestCase):
 
         # THEN
         self.assertTrue(isinstance(actual_connectivity, mle.Connectivity))
-        self.assertEqual(pp, actual_connectivity.pp)
+        self.assertEqual(common.map_pp(pp_byte), actual_connectivity.pp)
         self.assertEqual(link_quality_3, actual_connectivity.link_quality_3)
         self.assertEqual(link_quality_2, actual_connectivity.link_quality_2)
         self.assertEqual(link_quality_1, actual_connectivity.link_quality_1)
@@ -1331,7 +1331,7 @@ class TestConnectivityFactory(unittest.TestCase):
     def test_should_create_Connectivity_without_sed_data_when_parse_method_is_called(
         self):
         # GIVEN
-        pp = any_pp()
+        pp_byte = any_pp()
         link_quality_3 = any_link_quality_3()
         link_quality_2 = any_link_quality_2()
         link_quality_1 = any_link_quality_1()
@@ -1344,8 +1344,8 @@ class TestConnectivityFactory(unittest.TestCase):
         factory = mle.ConnectivityFactory()
 
         data = bytearray([
-            pp, link_quality_3, link_quality_2, link_quality_1, leader_cost,
-            id_sequence, active_routers
+            pp_byte, link_quality_3, link_quality_2, link_quality_1,
+            leader_cost, id_sequence, active_routers
         ])
 
         # WHEN
@@ -1353,7 +1353,7 @@ class TestConnectivityFactory(unittest.TestCase):
 
         # THEN
         self.assertTrue(isinstance(actual_connectivity, mle.Connectivity))
-        self.assertEqual(pp, actual_connectivity.pp)
+        self.assertEqual(common.map_pp(pp_byte), actual_connectivity.pp)
         self.assertEqual(link_quality_3, actual_connectivity.link_quality_3)
         self.assertEqual(link_quality_2, actual_connectivity.link_quality_2)
         self.assertEqual(link_quality_1, actual_connectivity.link_quality_1)

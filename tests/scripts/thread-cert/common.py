@@ -34,6 +34,16 @@ from enum import IntEnum
 
 import ipaddress
 
+# Map of 2 bits of parent priority.
+pp_map = {1: 1, 0: 0, 3: -1, 2: -2}
+
+UDP_TEST_PORT = 12345
+
+
+# Get the signed parent priority from the byte that parent priority is in.
+def map_pp(pp_byte):
+    return pp_map[((pp_byte & 0xC0) >> 6)]
+
 
 def expect_the_same_class(self, other):
     if not isinstance(other, self.__class__):

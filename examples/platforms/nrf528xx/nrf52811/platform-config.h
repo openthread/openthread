@@ -45,142 +45,6 @@
 #include <openthread/config.h>
 
 /*******************************************************************************
- * @section UART Driver Configuration.
- ******************************************************************************/
-
-/**
- * @def UART_INSTANCE
- *
- * UART Instance.
- *
- */
-#ifndef UART_INSTANCE
-#define UART_INSTANCE NRF_UART0
-#endif
-
-/**
- * @def UART_PARITY
- *
- * UART Parity configuration.
- *
- * @brief Possible values:
- *         \ref NRF_UART_PARITY_EXCLUDED - Parity bit is not present.
- *         \ref NRF_UART_PARITY_INCLUDED - Parity bit is present.
- *
- */
-#ifndef UART_PARITY
-#define UART_PARITY NRF_UART_PARITY_EXCLUDED
-#endif
-
-/**
- * @def UART_HWFC_ENABLED
- *
- * Enable UART Hardware Flow Control.
- *
- */
-#ifndef UART_HWFC_ENABLED
-#define UART_HWFC_ENABLED 1
-#endif
-
-/**
- * @def UART_BAUDRATE
- *
- * UART Baudrate.
- *
- * @brief Possible values:
- *         \ref NRF_UART_BAUDRATE_1200 - 1200 baud.
- *         \ref NRF_UART_BAUDRATE_2400 - 2400 baud.
- *         \ref NRF_UART_BAUDRATE_4800 - 4800 baud.
- *         \ref NRF_UART_BAUDRATE_9600 - 9600 baud.
- *         \ref NRF_UART_BAUDRATE_14400 - 14400 baud.
- *         \ref NRF_UART_BAUDRATE_19200 - 19200 baud.
- *         \ref NRF_UART_BAUDRATE_28800 - 28800 baud.
- *         \ref NRF_UART_BAUDRATE_38400 - 38400 baud.
- *         \ref NRF_UART_BAUDRATE_57600 - 57600 baud.
- *         \ref NRF_UART_BAUDRATE_76800 - 76800 baud.
- *         \ref NRF_UART_BAUDRATE_115200 - 115200 baud.
- *         \ref NRF_UART_BAUDRATE_230400 - 230400 baud.
- *         \ref NRF_UART_BAUDRATE_250000 - 250000 baud.
- *         \ref NRF_UART_BAUDRATE_460800 - 460800 baud.
- *         \ref NRF_UART_BAUDRATE_921600 - 921600 baud.
- *         \ref NRF_UART_BAUDRATE_1000000 - 1000000 baud.
- *
- */
-#ifndef UART_BAUDRATE
-#define UART_BAUDRATE NRF_UART_BAUDRATE_115200
-#endif
-
-/**
- *  @def UART_IRQN
- *
- * UART Interrupt number.
- *
- */
-#ifndef UART_IRQN
-#define UART_IRQN UARTE0_UART0_IRQn
-#endif
-
-/**
- * @def UART_IRQ_PRIORITY
- *
- * UART Interrupt priority.
- *
- */
-#ifndef UART_IRQ_PRIORITY
-#define UART_IRQ_PRIORITY 6
-#endif
-
-/**
- * @def UART_RX_BUFFER_SIZE
- *
- * UART Receive buffer size.
- *
- */
-#ifndef UART_RX_BUFFER_SIZE
-#define UART_RX_BUFFER_SIZE 256
-#endif
-
-/**
- * @def UART_PIN_TX
- *
- * UART TX Pin.
- *
- */
-#ifndef UART_PIN_TX
-#define UART_PIN_TX 6
-#endif
-
-/**
- * @def UART_PIN_RX
- *
- * UART RX Pin.
- *
- */
-#ifndef UART_PIN_RX
-#define UART_PIN_RX 8
-#endif
-
-/**
- * @def UART_PIN_CTS
- *
- * UART CTS Pin.
- *
- */
-#ifndef UART_PIN_CTS
-#define UART_PIN_CTS 7
-#endif
-
-/**
- * @def UART_PIN_RTS
- *
- * UART RTS Pin.
- *
- */
-#ifndef UART_PIN_RTS
-#define UART_PIN_RTS 5
-#endif
-
-/*******************************************************************************
  * @section Alarm Driver Configuration.
  ******************************************************************************/
 
@@ -249,80 +113,19 @@
 #endif
 
 /*******************************************************************************
- * @section SPI Slave configuration.
+ * @section Platform Flash Configuration
  ******************************************************************************/
 
 /**
- * @def SPIS Instance.
- */
-#ifndef SPIS_INSTANCE
-#define SPIS_INSTANCE 0
-#endif
-
-/**
- * @def SPIS mode.
+ * @def PLATFORM_FLASH_PAGE_NUM
  *
- * @brief Possible values:
- *         \ref NRF_SPIS_MODE_0 - SCK active high, sample on leading edge of clock.
- *         \ref NRF_SPIS_MODE_1 - SCK active high, sample on trailing edge of clock.
- *         \ref NRF_SPIS_MODE_2 - SCK active low, sample on leading edge of clock.
- *         \ref NRF_SPIS_MODE_3 - SCK active low, sample on trailing edge of clock.
- */
-#ifndef SPIS_MODE
-#define SPIS_MODE NRF_SPIS_MODE_0
-#endif
-
-/**
- * @def SPIS bit orders.
+ * Number of flash pages to use for OpenThread's non-volatile settings.
  *
- * @brief Possible values:
- *         \ref NRF_SPIS_BIT_ORDER_MSB_FIRST - Most significant bit shifted out first.
- *         \ref NRF_SPIS_BIT_ORDER_LSB_FIRST - Least significant bit shifted out first.
+ * @note This define applies only for MDK-ARM Keil toolchain configuration.
+ *
  */
-#ifndef SPIS_BIT_ORDER
-#define SPIS_BIT_ORDER NRF_SPIS_BIT_ORDER_MSB_FIRST
-#endif
-
-/**
- * @def SPIS Interrupt priority.
- */
-#ifndef SPIS_IRQ_PRIORITY
-#define SPIS_IRQ_PRIORITY 6
-#endif
-
-/**
- * @def SPIS MOSI Pin.
- */
-#ifndef SPIS_PIN_MOSI
-#define SPIS_PIN_MOSI 4
-#endif
-
-/**
- * @def SPIS MISO Pin.
- */
-#ifndef SPIS_PIN_MISO
-#define SPIS_PIN_MISO 28
-#endif
-
-/**
- * @def SPIS SCK Pin.
- */
-#ifndef SPIS_PIN_SCK
-#define SPIS_PIN_SCK 3
-#endif
-
-/**
- * @def SPIS CSN Pin.
- */
-#ifndef SPIS_PIN_CSN
-#define SPIS_PIN_CSN 29
-#endif
-
-/**
- * @def SPIS Host IRQ Pin.
- */
-#ifndef SPIS_PIN_HOST_IRQ
-#define SPIS_PIN_HOST_IRQ 30
+#ifndef PLATFORM_FLASH_PAGE_NUM
+#define PLATFORM_FLASH_PAGE_NUM 2
 #endif
 
 /*******************************************************************************

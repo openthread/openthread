@@ -39,7 +39,6 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
 
 namespace ot {
@@ -142,6 +141,28 @@ bool Address::IsReservedSubnetAnycast(void) const
 bool Address::IsIidReserved(void) const
 {
     return IsSubnetRouterAnycast() || IsReservedSubnetAnycast() || IsAnycastRoutingLocator();
+}
+
+void Address::SetPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
+{
+    uint8_t extraBits = (aPrefixLength % CHAR_BIT);
+
+    OT_ASSERT(aPrefixLength <= sizeof(Address) * CHAR_BIT);
+
+    memcpy(mFields.m8, aPrefix, (aPrefixLength - extraBits) / CHAR_BIT);
+
+    if (extraBits > 0)
+    {
+        uint8_t index = aPrefixLength / CHAR_BIT;
+        uint8_t mask  = ((0x80 >> (extraBits - 1)) - 1);
+
+        // `mask` has its higher (msb) `extraBits` bits as `0` and the reminaing as `1`.
+        // Example with `extraBits` = 3:
+        // ((0x80 >> 2) - 1) = (0b0010_0000 - 1) = 0b0001_1111
+
+        mFields.m8[index] &= mask;
+        mFields.m8[index] |= (aPrefix[index] & ~mask);
+    }
 }
 
 void Address::SetIid(const uint8_t *aIid)

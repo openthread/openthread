@@ -29,6 +29,8 @@
 #ifndef FUZZER_PLATFORM_H_
 #define FUZZER_PLATFORM_H_
 
+#include <openthread/instance.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

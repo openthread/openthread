@@ -28,7 +28,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "spinel/spinel_decoder.hpp"
+#include "lib/spinel/spinel_decoder.hpp"
 
 #include "test_util.hpp"
 
@@ -594,7 +594,7 @@ void TestDecoder(void)
         SuccessOrQuit(decoder.CloseStruct(), "CloseStruct() failed.");
         SuccessOrQuit(decoder.ReadUint16(u16), "ReadUint16() failed.");
 
-        // `ResetToSaved()` should fail sicne the enclosing struct for the saved position is closed.
+        // `ResetToSaved()` should fail since the enclosing struct for the saved position is closed.
         VerifyOrQuit(decoder.ResetToSaved() == OT_ERROR_INVALID_STATE, "ResetToSaved() did not fail.");
     }
 

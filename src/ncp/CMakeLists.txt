@@ -76,12 +76,11 @@ set(COMMON_INCLUDES
 
 set(COMMON_SOURCES
     changed_props_set.cpp
-    hdlc.cpp
     ncp_base.cpp
+    ncp_base_dispatcher.cpp
     ncp_base_ftd.cpp
     ncp_base_mtd.cpp
     ncp_base_radio.cpp
-    ncp_base_dispatcher.cpp
     ncp_spi.cpp
     ncp_uart.cpp
 )
@@ -92,8 +91,36 @@ target_include_directories(openthread-rcp PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE $
 
 target_sources(openthread-ncp-ftd PRIVATE ${COMMON_SOURCES})
 target_sources(openthread-ncp-mtd PRIVATE ${COMMON_SOURCES})
-target_sources(openthread-rcp PRIVATE ${COMMON_SOURCES})
 
-target_link_libraries(openthread-ncp-ftd openthread-spinel-ncp)
-target_link_libraries(openthread-ncp-mtd openthread-spinel-ncp)
-target_link_libraries(openthread-rcp openthread-spinel-rcp)
+target_sources(openthread-rcp PRIVATE
+    changed_props_set.cpp
+    ncp_base.cpp
+    ncp_base_dispatcher.cpp
+    ncp_base_radio.cpp
+    ncp_spi.cpp
+    ncp_uart.cpp
+)
+
+target_link_libraries(openthread-ncp-ftd
+    PUBLIC
+        openthread-ftd
+    PRIVATE
+        openthread-hdlc
+        openthread-spinel-ncp
+)
+
+target_link_libraries(openthread-ncp-mtd
+    PUBLIC
+        openthread-mtd
+    PRIVATE
+        openthread-hdlc
+        openthread-spinel-ncp
+)
+
+target_link_libraries(openthread-rcp
+    PUBLIC
+        openthread-radio
+    PRIVATE
+        openthread-hdlc
+        openthread-spinel-rcp
+)

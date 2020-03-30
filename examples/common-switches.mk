@@ -28,10 +28,12 @@
 
 # OpenThread Features (Makefile default configuration).
 
+BACKBONE_ROUTER     ?= 0
 BIG_ENDIAN          ?= 0
 BORDER_AGENT        ?= 0
 BORDER_ROUTER       ?= 0
 COAP                ?= 0
+COAP_OBSERVE        ?= 0
 COAPS               ?= 0
 COMMISSIONER        ?= 0
 COVERAGE            ?= 0
@@ -65,9 +67,14 @@ SETTINGS_RAM        ?= 0
 # SLAAC is enabled by default
 SLAAC               ?= 1
 SNTP_CLIENT         ?= 0
+THREAD_VERSION      ?= 1.1
 TIME_SYNC           ?= 0
 UDP_FORWARD         ?= 0
 
+
+ifeq ($(BACKBONE_ROUTER),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE=1
+endif
 
 ifeq ($(BIG_ENDIAN),1)
 COMMONCFLAGS                   += -DBYTE_ORDER_BIG_ENDIAN=1
@@ -87,6 +94,10 @@ endif
 
 ifeq ($(COAPS),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1
+endif
+
+ifeq ($(COAP_OBSERVE),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE=1
 endif
 
 ifeq ($(COMMISSIONER),1)
@@ -202,6 +213,12 @@ ifeq ($(SNTP_CLIENT),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE=1
 endif
 
+ifeq ($(THREAD_VERSION),1.1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_THREAD_VERSION=2
+else ifeq ($(THREAD_VERSION),1.2)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_THREAD_VERSION=3
+endif
+
 ifeq ($(TIME_SYNC),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_TIME_SYNC_ENABLE=1 -DOPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT=1
 endif
@@ -234,8 +251,6 @@ endif
 
 ifeq ($(SETTINGS_RAM),1)
 COMMONCFLAGS += -DOPENTHREAD_SETTINGS_RAM=1
-else
-COMMONCFLAGS += -DOPENTHREAD_SETTINGS_RAM=0
 endif
 
 ifeq ($(FULL_LOGS),1)

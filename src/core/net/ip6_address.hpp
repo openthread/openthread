@@ -38,8 +38,12 @@
 
 #include <stdint.h>
 
+#include "common/encoding.hpp"
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
+#include "thread/mle_types.hpp"
+
+using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 namespace Ip6 {
@@ -77,8 +81,6 @@ public:
     {
         kInterfaceIdentifierSize = 8,  ///< Interface Identifier size in bytes.
         kIp6AddressStringSize    = 40, ///< Max buffer size in bytes to store an IPv6 address in string format.
-        kMeshLocalPrefixLength   = 64, ///< Length of Thread mesh local prefix.
-        kMeshLocalPrefixSize     = 8,  ///< Mesh local prefix size in bytes.
     };
 
     /**
@@ -269,6 +271,47 @@ public:
      *
      */
     bool IsIidReserved(void) const;
+
+    /**
+     * This method gets the IPv6 address locator.
+     *
+     * @returns RLOC16 or ALOC16.
+     *
+     */
+    uint16_t GetLocator(void) const { return HostSwap16(mFields.m16[7]); }
+
+    /**
+     * This method sets the IPv6 address locator.
+     *
+     * This method only changes the last 2 bytes of the address and keeps the rest of the address as before.
+     *
+     * @param[in]  aLocator   RLOC16 or ALOC16.
+     *
+     */
+    void SetLocator(uint16_t aLocator) { mFields.m16[7] = HostSwap16(aLocator); }
+
+    /**
+     * This method sets the IPv6 address prefix.
+     *
+     * This method only changes the first @p aPrefixLength bits of the address and keeps the rest of the bits in the
+     * address as before.
+     *
+     * @param[in]  aPrefix         A buffer containing the prefix
+     * @param[in]  aPrefixLength   The prefix length (in bits).
+     *
+     */
+    void SetPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength);
+
+    /**
+     * This method sets the IPv6 address prefix to the given Mesh Local Prefix.
+     *
+     * @param[in]  aMeshLocalPrefix   A Mesh Local Prefix.
+     *
+     */
+    void SetPrefix(const Mle::MeshLocalPrefix &aMeshLocalPrefix)
+    {
+        SetPrefix(aMeshLocalPrefix.m8, Mle::MeshLocalPrefix::kLength);
+    }
 
     /**
      * This method returns a pointer to the Interface Identifier.

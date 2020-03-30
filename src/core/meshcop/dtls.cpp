@@ -109,7 +109,7 @@ Dtls::Dtls(Instance &aInstance, bool aLayerTwoSecurity)
 
 void Dtls::FreeMbedtls(void)
 {
-#ifdef MBEDTLS_SSL_COOKIE_C
+#if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
     mbedtls_ssl_cookie_free(&mCookieCtx);
 #endif
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
@@ -259,6 +259,9 @@ otError Dtls::Setup(bool aClient)
     mbedtls_pk_init(&mPrivateKey);
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+#if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
+    mbedtls_ssl_cookie_init(&mCookieCtx);
+#endif
 
     rval = mbedtls_ssl_config_defaults(&mConf, aClient ? MBEDTLS_SSL_IS_CLIENT : MBEDTLS_SSL_IS_SERVER,
                                        MBEDTLS_SSL_TRANSPORT_DATAGRAM, MBEDTLS_SSL_PRESET_DEFAULT);
@@ -281,17 +284,15 @@ otError Dtls::Setup(bool aClient)
     mbedtls_ssl_conf_min_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
     mbedtls_ssl_conf_max_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
 
-    assert(mCipherSuites[1] == 0);
+    OT_ASSERT(mCipherSuites[1] == 0);
     mbedtls_ssl_conf_ciphersuites(&mConf, mCipherSuites);
     mbedtls_ssl_conf_export_keys_cb(&mConf, HandleMbedtlsExportKeys, this);
     mbedtls_ssl_conf_handshake_timeout(&mConf, 8000, 60000);
     mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, this);
 
-#ifdef MBEDTLS_SSL_SRV_C
+#if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
     if (!aClient)
     {
-        mbedtls_ssl_cookie_init(&mCookieCtx);
-
         rval = mbedtls_ssl_cookie_setup(&mCookieCtx, mbedtls_ctr_drbg_random, Random::Crypto::MbedTlsContextGet());
         VerifyOrExit(rval == 0);
 
@@ -456,11 +457,11 @@ void Dtls::SetCertificate(const uint8_t *aX509Certificate,
                           const uint8_t *aPrivateKey,
                           uint32_t       aPrivateKeyLength)
 {
-    assert(aX509CertLength > 0);
-    assert(aX509Certificate != NULL);
+    OT_ASSERT(aX509CertLength > 0);
+    OT_ASSERT(aX509Certificate != NULL);
 
-    assert(aPrivateKeyLength > 0);
-    assert(aPrivateKey != NULL);
+    OT_ASSERT(aPrivateKeyLength > 0);
+    OT_ASSERT(aPrivateKey != NULL);
 
     mOwnCertSrc       = aX509Certificate;
     mOwnCertLength    = aX509CertLength;
@@ -473,8 +474,8 @@ void Dtls::SetCertificate(const uint8_t *aX509Certificate,
 
 void Dtls::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength)
 {
-    assert(aX509CaCertChainLength > 0);
-    assert(aX509CaCertificateChain != NULL);
+    OT_ASSERT(aX509CaCertChainLength > 0);
+    OT_ASSERT(aX509CaCertificateChain != NULL);
 
     mCaChainSrc    = aX509CaCertificateChain;
     mCaChainLength = aX509CaCertChainLength;
@@ -486,10 +487,10 @@ void Dtls::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_
 
 void Dtls::SetPreSharedKey(const uint8_t *aPsk, uint16_t aPskLength, const uint8_t *aPskIdentity, uint16_t aPskIdLength)
 {
-    assert(aPsk != NULL);
-    assert(aPskIdentity != NULL);
-    assert(aPskLength > 0);
-    assert(aPskIdLength > 0);
+    OT_ASSERT(aPsk != NULL);
+    OT_ASSERT(aPskIdentity != NULL);
+    OT_ASSERT(aPskLength > 0);
+    OT_ASSERT(aPskIdLength > 0);
 
     mPreSharedKey         = aPsk;
     mPreSharedKeyLength   = aPskLength;
@@ -777,7 +778,7 @@ void Dtls::HandleTimer(void)
         break;
 
     default:
-        assert(false);
+        OT_ASSERT(false);
         break;
     }
 }

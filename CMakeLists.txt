@@ -31,6 +31,7 @@ project(openthread)
 
 option(OT_BUILD_EXECUTABLES "Build executables" ON)
 option(OT_BUILTIN_MBEDTLS "Enable builtin mbedTLS" ON)
+option(OT_COVERAGE "enable coverage" OFF)
 
 include("${PROJECT_SOURCE_DIR}/etc/cmake/checks.cmake")
 include("${PROJECT_SOURCE_DIR}/etc/cmake/options.cmake")
@@ -42,9 +43,15 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
         set(OT_CFLAGS -Werror)
     endif()
 
+    if(OT_COVERAGE)
+        list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_ENABLE_COVERAGE=1")
+        add_compile_options(-g -O0 --coverage)
+        add_link_options(--coverage)
+    endif()
+
     set(OT_CFLAGS
-        $<$<COMPILE_LANGUAGE:C>:${OT_CFLAGS} -Wall -Wextra -Wshadow -Werror -pedantic-errors>
-        $<$<COMPILE_LANGUAGE:CXX>:${OT_FLAGS} -Wall -Wextra -Wshadow -Wno-c++14-compat -fno-exceptions>
+        $<$<COMPILE_LANGUAGE:C>:${OT_CFLAGS} -Wall -Wextra -Wshadow -pedantic-errors>
+        $<$<COMPILE_LANGUAGE:CXX>:${OT_CFLAGS} -Wall -Wextra -Wshadow -Wno-c++14-compat -fno-exceptions>
     )
 endif()
 
@@ -61,12 +68,21 @@ list(APPEND OT_PRIVATE_DEFINES
     "PACKAGE_VERSION=\"${OT_VERSION}\""
 )
 
-set(OT_PLATFORM "none" CACHE STRING "Target platform chosen by the user at configure time")
+set(OT_THREAD_VERSION "1.1" CACHE STRING "Thread version chosen by the user at configure time")
+set_property(CACHE OT_THREAD_VERSION PROPERTY STRINGS "1.1" "1.2")
+if(${OT_THREAD_VERSION} EQUAL "1.1")
+    list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_1")
+elseif(${OT_THREAD_VERSION} EQUAL "1.2")
+    list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_2")
+else()
+    message(FATAL_ERROR "Thread version unknown: ${OT_THREAD_VERSION}")
+endif()
 
+set(OT_PLATFORM "none" CACHE STRING "Target platform chosen by the user at configure time")
 ot_get_platforms(OT_EXAMPLE_PLATFORMS)
 set_property(CACHE OT_PLATFORM PROPERTY STRINGS ${OT_EXAMPLE_PLATFORMS})
 if(NOT OT_PLATFORM IN_LIST OT_EXAMPLE_PLATFORMS)
-    if(NOT OT_PLATFORM STREQUAL "posix-host")
+    if(NOT OT_PLATFORM STREQUAL "posix")
         message(FATAL_ERROR "Platform unknown: ${OT_PLATFORM}")
     endif()
 endif()
@@ -83,7 +99,7 @@ list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_BINARY_DIR}/etc/cmake)
 list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/etc/cmake)
 list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/include)
 
-if(OT_PLATFORM STREQUAL "posix-host")
+if(OT_PLATFORM STREQUAL "posix")
     list(APPEND OT_PRIVATE_INCLUDES ${PROJECT_SOURCE_DIR}/src/posix/platform)
     add_subdirectory("${PROJECT_SOURCE_DIR}/src/posix/platform")
 elseif(NOT OT_PLATFORM MATCHES "none")
@@ -98,16 +114,7 @@ endif()
 
 list(APPEND OT_PRIVATE_DEFINES ${OT_PLATFORM_DEFINES})
 
-if(OT_BUILTIN_MBEDTLS)
-    list(APPEND OT_PRIVATE_INCLUDES ${PROJECT_SOURCE_DIR}/third_party/mbedtls)
-    list(APPEND OT_PRIVATE_INCLUDES ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include)
-
-    list(APPEND OT_PRIVATE_DEFINES
-        "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\""
-    )
-endif()
-
-if(OT_PLATFORM STREQUAL "posix-host")
+if(OT_PLATFORM STREQUAL "posix")
     add_subdirectory(src/posix)
 elseif(NOT OT_PLATFORM MATCHES "none")
     add_subdirectory(examples)

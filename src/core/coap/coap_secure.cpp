@@ -152,7 +152,7 @@ void CoapSecure::SetSslAuthMode(bool aVerifyPeerCertificate)
 
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
-otError CoapSecure::SendMessage(Message &aMessage, otCoapResponseHandler aHandler, void *aContext)
+otError CoapSecure::SendMessage(Message &aMessage, ResponseHandler aHandler, void *aContext)
 {
     otError error = OT_ERROR_NONE;
 
@@ -166,7 +166,7 @@ exit:
 
 otError CoapSecure::SendMessage(Message &               aMessage,
                                 const Ip6::MessageInfo &aMessageInfo,
-                                otCoapResponseHandler   aHandler,
+                                ResponseHandler         aHandler,
                                 void *                  aContext)
 {
     return CoapBase::SendMessage(aMessage, aMessageInfo, aHandler, aContext);

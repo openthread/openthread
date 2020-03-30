@@ -73,6 +73,9 @@ void otSysDeinit(void)
     virtualTimeDeinit();
 #endif
     platformRadioDeinit();
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+    platformNetifDeinit();
+#endif
 }
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME

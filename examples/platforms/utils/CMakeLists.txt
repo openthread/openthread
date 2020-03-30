@@ -31,7 +31,6 @@ add_library(openthread-platform-utils OBJECT
     logging_rtt.c
     mac_frame.cpp
     settings_ram.c
-    settings_flash.c
     soft_source_match_table.c
 )
 

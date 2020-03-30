@@ -922,7 +922,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame, bool aProcessAesCcm)
     switch (keyIdMode)
     {
     case Frame::kKeyIdMode0:
-        aFrame.SetAesKey(keyManager.GetKek());
+        aFrame.SetAesKey(keyManager.GetKek().GetKey());
         extAddress = &GetExtAddress();
 
         if (!aFrame.IsARetransmission())
@@ -965,7 +965,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame, bool aProcessAesCcm)
     }
 
     default:
-        assert(false);
+        OT_ASSERT(false);
         break;
     }
 
@@ -1044,7 +1044,7 @@ void Mac::BeginTransmit(void)
         break;
 
     default:
-        assert(false);
+        OT_ASSERT(false);
         break;
     }
 
@@ -1265,7 +1265,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
         break;
 
     case kOperationTransmitPoll:
-        assert(aFrame.IsEmpty() || aFrame.GetAckRequest());
+        OT_ASSERT(aFrame.IsEmpty() || aFrame.GetAckRequest());
 
         if ((aError == OT_ERROR_NONE) && (aAckFrame != NULL))
         {
@@ -1303,6 +1303,13 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
         otDumpDebgMac("TX", aFrame.GetHeader(), aFrame.GetLength());
         FinishOperation();
         Get<MeshForwarder>().HandleSentFrame(aFrame, aError);
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+        if (aError == OT_ERROR_NONE && Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported() &&
+            aFrame.GetSecurityEnabled() && aAckFrame != NULL)
+        {
+            Get<DataPollSender>().ProcessFrame(*aAckFrame);
+        }
+#endif
         PerformNextOperation();
         break;
 
@@ -1334,7 +1341,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
         break;
 
     default:
-        assert(false);
+        OT_ASSERT(false);
         break;
     }
 
@@ -1375,7 +1382,7 @@ void Mac::HandleTimer(void)
 #endif
 
     default:
-        assert(false);
+        OT_ASSERT(false);
         break;
     }
 }
@@ -1407,7 +1414,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
     switch (keyIdMode)
     {
     case Frame::kKeyIdMode0:
-        macKey = keyManager.GetKek();
+        macKey = keyManager.GetKek().GetKey();
         VerifyOrExit(macKey != NULL);
         extAddress = &aSrcAddr.GetExtended();
         break;
@@ -1547,11 +1554,13 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
                          ((mRxOnWhenIdle && dstaddr.IsBroadcast()) || dstaddr.GetShort() == GetShortAddress()),
                      error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
 
-        // Allow  multicasts from neighbor routers if FTD
+#if OPENTHREAD_FTD
+        // Allow multicasts from neighbor routers if FTD
         if (neighbor == NULL && dstaddr.IsBroadcast() && Get<Mle::MleRouter>().IsFullThreadDevice())
         {
             neighbor = Get<Mle::MleRouter>().GetRxOnlyNeighborRouter(srcaddr);
         }
+#endif
 
         break;
 
@@ -1644,7 +1653,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
         ExitNow();
     }
 
-    Get<DataPollSender>().CheckFramePending(*aFrame);
+    Get<DataPollSender>().ProcessFrame(*aFrame);
 
     if (neighbor != NULL)
     {
@@ -1667,6 +1676,15 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
             default:
                 ExitNow(error = OT_ERROR_UNKNOWN_NEIGHBOR);
             }
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2 && OPENTHREAD_FTD
+            // From Thread 1.2, MAC Data Frame can also act as keep-alive message if child supports
+            if (aFrame->GetType() == Frame::kFcfFrameData && !neighbor->IsRxOnWhenIdle() &&
+                neighbor->IsEnhancedKeepAliveSupported())
+            {
+                neighbor->SetLastHeard(TimerMilli::GetNow());
+            }
+#endif
         }
     }
 

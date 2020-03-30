@@ -162,7 +162,7 @@ wpan.verify_within(check_child_is_associated, WAIT_TIME)
 # child table.
 
 
-def check_child_addressses_on_parent():
+def check_child_addresses_on_parent():
     child_addrs = parent.get(wpan.WPAN_THREAD_CHILD_TABLE_ADDRESSES)
     verify(child_addrs.find(prefix1) > 0)
     verify(child_addrs.find(prefix2) > 0)
@@ -170,7 +170,7 @@ def check_child_addressses_on_parent():
     verify(child_addrs.find(prefix4) > 0)
 
 
-wpan.verify_within(check_child_addressses_on_parent, WAIT_TIME)
+wpan.verify_within(check_child_addresses_on_parent, WAIT_TIME)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Check the child recovery after a parent reset using quick re-attach
@@ -194,7 +194,7 @@ child.set(wpan.WPAN_POLL_INTERVAL, '100')
 # Verify that we again see all the child addresses in the parent's child table.
 # Note that child should register its addresses using "Child Update
 # Request" exchange.
-wpan.verify_within(check_child_addressses_on_parent, WAIT_TIME)
+wpan.verify_within(check_child_addresses_on_parent, WAIT_TIME)
 
 # Verify that there was no state change on child.
 verify(child_num_state_changes == len(wpan.parse_list(child.get("stat:ncp"))))

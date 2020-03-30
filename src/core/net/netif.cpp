@@ -177,8 +177,8 @@ otError Netif::UnsubscribeAllNodesMulticast(void)
     //    LinkLocalAllRouters -> RealmLocalAllRouters -> LinkLocalAll
     //         -> RealmLocalAll -> RealmLocalAllMpl.
 
-    assert(prev != static_cast<NetifMulticastAddress *>(
-                       const_cast<otNetifMulticastAddress *>(&kRealmLocalAllRoutersMulticastAddress)));
+    OT_ASSERT(prev != static_cast<NetifMulticastAddress *>(
+                          const_cast<otNetifMulticastAddress *>(&kRealmLocalAllRoutersMulticastAddress)));
 
     if (prev == NULL)
     {
@@ -204,8 +204,8 @@ exit:
 
 otError Netif::SubscribeAllRoutersMulticast(void)
 {
-    otError                error = OT_ERROR_NONE;
-    NetifMulticastAddress *prev;
+    otError                error                      = OT_ERROR_NONE;
+    NetifMulticastAddress *prev                       = NULL;
     NetifMulticastAddress &linkLocalAllRoutersAddress = static_cast<NetifMulticastAddress &>(
         const_cast<otNetifMulticastAddress &>(kLinkLocalAllRoutersMulticastAddress));
     NetifMulticastAddress &linkLocalAllNodesAddress =
@@ -218,7 +218,7 @@ otError Netif::SubscribeAllRoutersMulticast(void)
     // This method MUST be called after `SubscribeAllNodesMulticast()`
     // Ensure that the `LinkLocalAll` was found on the list.
 
-    assert(error == OT_ERROR_NONE);
+    OT_ASSERT(error == OT_ERROR_NONE);
 
     // The tail of multicast address linked list contains the
     // fixed addresses. We either have a chain of five addresses
@@ -363,6 +363,8 @@ otError Netif::SubscribeExternalMulticast(const Address &aAddress)
     NetifMulticastAddress &linkLocalAllRoutersAddress = static_cast<NetifMulticastAddress &>(
         const_cast<otNetifMulticastAddress &>(kLinkLocalAllRoutersMulticastAddress));
 
+    VerifyOrExit(!IsMulticastSubscribed(aAddress), error = OT_ERROR_ALREADY);
+
     // Check that the address is not one of the fixed addresses:
     // LinkLocalAllRouters -> RealmLocalAllRouters -> LinkLocalAllNodes
     // -> RealmLocalAllNodes -> RealmLocalAllMpl.
@@ -371,8 +373,6 @@ otError Netif::SubscribeExternalMulticast(const Address &aAddress)
     {
         VerifyOrExit(cur->GetAddress() != aAddress, error = OT_ERROR_INVALID_ARGS);
     }
-
-    VerifyOrExit(!IsMulticastSubscribed(aAddress), error = OT_ERROR_ALREADY);
 
     for (entry = &mExtMulticastAddresses[0]; entry < OT_ARRAY_END(mExtMulticastAddresses); entry++)
     {
@@ -482,14 +482,12 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
     otError              error = OT_ERROR_NONE;
     NetifUnicastAddress *entry;
 
-    VerifyOrExit(!aAddress.GetAddress().IsLinkLocal(), error = OT_ERROR_INVALID_ARGS);
-
     for (entry = mUnicastAddresses.GetHead(); entry; entry = entry->GetNext())
     {
         if (entry->GetAddress() == aAddress.GetAddress())
         {
             VerifyOrExit((entry >= &mExtUnicastAddresses[0]) && (entry < OT_ARRAY_END(mExtUnicastAddresses)),
-                         error = OT_ERROR_INVALID_ARGS);
+                         error = OT_ERROR_ALREADY);
 
             entry->mPrefixLength = aAddress.mPrefixLength;
             entry->mPreferred    = aAddress.mPreferred;
@@ -497,6 +495,8 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
             ExitNow();
         }
     }
+
+    VerifyOrExit(!aAddress.GetAddress().IsLinkLocal(), error = OT_ERROR_INVALID_ARGS);
 
     for (entry = &mExtUnicastAddresses[0]; entry < OT_ARRAY_END(mExtUnicastAddresses); entry++)
     {

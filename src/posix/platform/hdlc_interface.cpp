@@ -38,8 +38,8 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
-#ifdef __APPLE__
+#if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
+#if defined(__APPLE__) || defined(__NetBSD__)
 #include <util.h>
 #else
 #include <pty.h>
@@ -118,10 +118,10 @@
 
 #endif // __APPLE__
 
-#if OPENTHREAD_POSIX_RCP_UART_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE
 
 namespace ot {
-namespace PosixApp {
+namespace Posix {
 
 HdlcInterface::HdlcInterface(SpinelInterface::Callbacks &aCallback, SpinelInterface::RxFrameBuffer &aFrameBuffer)
     : mCallbacks(aCallback)
@@ -145,13 +145,13 @@ otError HdlcInterface::Init(const otPlatformConfig &aPlatformConfig)
         mSockFd = OpenFile(aPlatformConfig.mRadioFile, aPlatformConfig.mRadioConfig);
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     }
-#if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
+#if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
     else if (S_ISREG(st.st_mode))
     {
         mSockFd = ForkPty(aPlatformConfig.mRadioFile, aPlatformConfig.mRadioConfig);
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
     }
-#endif // OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
+#endif // OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
     else
     {
         otLogCritPlat("Radio file '%s' not supported", aPlatformConfig.mRadioFile);
@@ -250,13 +250,12 @@ exit:
 
 otError HdlcInterface::WaitForFrame(const struct timeval &aTimeout)
 {
-    otError        error   = OT_ERROR_NONE;
-    struct timeval timeout = aTimeout;
-
+    otError error = OT_ERROR_NONE;
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     struct Event event;
+    uint64_t     delay = static_cast<uint64_t>(aTimeout.tv_sec) * US_PER_S + static_cast<uint64_t>(aTimeout.tv_usec);
 
-    virtualTimeSendSleepEvent(&timeout);
+    virtualTimeSendSleepEvent(&aTimeout);
     virtualTimeReceiveEvent(&event);
 
     switch (event.mEvent)
@@ -266,7 +265,7 @@ otError HdlcInterface::WaitForFrame(const struct timeval &aTimeout)
         break;
 
     case OT_SIM_EVENT_ALARM_FIRED:
-        ExitNow(error = OT_ERROR_RESPONSE_TIMEOUT);
+        VerifyOrExit(event.mDelay <= delay, error = OT_ERROR_RESPONSE_TIMEOUT);
         break;
 
     default:
@@ -274,6 +273,8 @@ otError HdlcInterface::WaitForFrame(const struct timeval &aTimeout)
         break;
     }
 #else  // OPENTHREAD_POSIX_VIRTUAL_TIME
+    struct timeval timeout = aTimeout;
+
     fd_set read_fds;
     fd_set error_fds;
     int rval;
@@ -573,7 +574,7 @@ exit:
     return fd;
 }
 
-#if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
+#if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
 int HdlcInterface::ForkPty(const char *aCommand, const char *aArguments)
 {
     int fd   = -1;
@@ -614,7 +615,7 @@ exit:
     VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
     return fd;
 }
-#endif // OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
+#endif // OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
 
 void HdlcInterface::HandleHdlcFrame(void *aContext, otError aError)
 {
@@ -634,6 +635,6 @@ void HdlcInterface::HandleHdlcFrame(otError aError)
     }
 }
 
-} // namespace PosixApp
+} // namespace Posix
 } // namespace ot
-#endif // OPENTHREAD_POSIX_RCP_UART_ENABLE
+#endif // OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE

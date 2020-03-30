@@ -65,7 +65,7 @@ typedef struct otBorderRouterConfig
     /**
      * A 2-bit signed integer indicating router preference as defined in RFC 4191.
      */
-    int mPreference : 2;
+    signed int mPreference : 2;
 
     /**
      * TRUE, if @p mPrefix is preferred.  FALSE, otherwise.
@@ -129,7 +129,7 @@ typedef struct otExternalRouteConfig
     /**
      * A 2-bit signed integer indicating router preference as defined in RFC 4191.
      */
-    int mPreference : 2;
+    signed int mPreference : 2;
 
     /**
      * TRUE, if this configuration is considered Stable Network Data.  FALSE, otherwise.
@@ -179,7 +179,7 @@ typedef struct otServerConfig
  */
 typedef struct otServiceConfig
 {
-    uint8_t        mServiceID;         ///< Used to return service ID when iterating over the partition's Network Data.
+    uint8_t        mServiceId;         ///< Used to return Service ID when iterating over the partition's Network Data.
     uint32_t       mEnterpriseNumber;  ///< IANA Enterprise Number.
     uint8_t        mServiceDataLength; ///< Length of service data.
     uint8_t        mServiceData[OT_SERVICE_DATA_MAX_SIZE]; ///< Service data bytes.
@@ -187,7 +187,7 @@ typedef struct otServiceConfig
 } otServiceConfig;
 
 /**
- * This method provides a full or stable copy of the Parition's Thread Network Data.
+ * This method provides a full or stable copy of the Partition's Thread Network Data.
  *
  * @param[in]     aInstance    A pointer to an OpenThread instance.
  * @param[in]     aStable      TRUE when copying the stable version, FALSE when copying the full version.

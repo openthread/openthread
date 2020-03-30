@@ -112,7 +112,8 @@ otError otCoapMessageAppendUriPathOptions(otMessage *aMessage, const char *aUriP
 
 uint16_t otCoapBlockSizeFromExponent(otCoapBlockSize aSize)
 {
-    return static_cast<uint16_t>(1 << (aSize + Coap::Message::kBlockSzxBase));
+    return static_cast<uint16_t>(
+        1 << (static_cast<uint8_t>(aSize) + static_cast<uint8_t>(Coap::Message::kBlockSzxBase)));
 }
 
 otError otCoapMessageAppendBlock2Option(otMessage *aMessage, uint32_t aNum, bool aMore, otCoapBlockSize aSize)
@@ -180,14 +181,29 @@ otError otCoapOptionIteratorInit(otCoapOptionIterator *aIterator, const otMessag
     return static_cast<Coap::OptionIterator *>(aIterator)->Init(static_cast<const Coap::Message *>(aMessage));
 }
 
+const otCoapOption *otCoapOptionIteratorGetFirstOptionMatching(otCoapOptionIterator *aIterator, uint16_t aOption)
+{
+    return static_cast<Coap::OptionIterator *>(aIterator)->GetFirstOptionMatching(aOption);
+}
+
 const otCoapOption *otCoapOptionIteratorGetFirstOption(otCoapOptionIterator *aIterator)
 {
     return static_cast<Coap::OptionIterator *>(aIterator)->GetFirstOption();
 }
 
+const otCoapOption *otCoapOptionIteratorGetNextOptionMatching(otCoapOptionIterator *aIterator, uint16_t aOption)
+{
+    return static_cast<Coap::OptionIterator *>(aIterator)->GetNextOptionMatching(aOption);
+}
+
 const otCoapOption *otCoapOptionIteratorGetNextOption(otCoapOptionIterator *aIterator)
 {
     return static_cast<Coap::OptionIterator *>(aIterator)->GetNextOption();
+}
+
+otError otCoapOptionIteratorGetOptionUintValue(otCoapOptionIterator *aIterator, uint64_t *const aValue)
+{
+    return static_cast<Coap::OptionIterator *>(aIterator)->GetOptionValue(*aValue);
 }
 
 otError otCoapOptionIteratorGetOptionValue(otCoapOptionIterator *aIterator, void *aValue)
@@ -202,11 +218,21 @@ otError otCoapSendRequestWithParameters(otInstance *              aInstance,
                                         void *                    aContext,
                                         const otCoapTxParameters *aTxParameters)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
+    otError                   error;
+    Instance &                instance     = *static_cast<Instance *>(aInstance);
+    const Coap::TxParameters &txParameters = Coap::TxParameters::From(aTxParameters);
 
-    return instance.GetApplicationCoap().SendMessage(*static_cast<Coap::Message *>(aMessage),
-                                                     *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
-                                                     Coap::CoapTxParameters::From(aTxParameters), aHandler, aContext);
+    if (aTxParameters != NULL)
+    {
+        VerifyOrExit(txParameters.IsValid(), error = OT_ERROR_INVALID_ARGS);
+    }
+
+    error = instance.GetApplicationCoap().SendMessage(*static_cast<Coap::Message *>(aMessage),
+                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
+                                                      txParameters, aHandler, aContext);
+
+exit:
+    return error;
 }
 
 otError otCoapStart(otInstance *aInstance, uint16_t aPort)
@@ -253,7 +279,7 @@ otError otCoapSendResponseWithParameters(otInstance *              aInstance,
 
     return instance.GetApplicationCoap().SendMessage(*static_cast<Coap::Message *>(aMessage),
                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
-                                                     Coap::CoapTxParameters::From(aTxParameters), NULL, NULL);
+                                                     Coap::TxParameters::From(aTxParameters), NULL, NULL);
 }
 
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE

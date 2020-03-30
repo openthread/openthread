@@ -49,35 +49,14 @@ extern uint32_t __d_nv_mem_end;
 #define OPENTHREAD_CONFIG_PLATFORM_INFO "SAMR21"
 
 /**
- * @def SETTINGS_CONFIG_BASE_ADDRESS
+ * @def OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
  *
- * The base address of settings.
+ * Define to 1 to enable otPlatFlash* APIs to support non-volatile storage.
  *
- */
-#define SETTINGS_CONFIG_BASE_ADDRESS ((uint32_t)&__d_nv_mem_start)
-
-/**
- * @def SETTINGS_CONFIG_PAGE_SIZE
- *
- * The page size of settings.
+ * When defined to 1, the platform MUST implement the otPlatFlash* APIs instead of the otPlatSettings* APIs.
  *
  */
-#define SETTINGS_CONFIG_PAGE_SIZE 0x100
-
-/**
- * @def SETTINGS_CONFIG_PAGE_NUM
- *
- * The page number of settings.
- *
- * This value should not exceeds:
- *     (((uint32_t)&__d_nv_mem_end - (uint32_t)&__d_nv_mem_start) / SETTINGS_CONFIG_PAGE_SIZE)
- *
- * __d_nv_mem_start and __d_nv_mem_end is defined in linker script.
- * The size of NVRAM region is 4k. Page size is 256 bytes. Maximum SETTINGS_CONFIG_PAGE_NUM
- * should be equal or less than 16.
- *
- */
-#define SETTINGS_CONFIG_PAGE_NUM 16
+#define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 1
 
 /**
  * @def RADIO_CONFIG_SRC_MATCH_ENTRY_NUM

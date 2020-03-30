@@ -38,24 +38,24 @@
 
 #include <openthread/platform/radio.h>
 
-#if OPENTHREAD_POSIX_RCP_UART_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE
 #include "hdlc_interface.hpp"
 #endif
 
-#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
 #include "spi_interface.hpp"
 #endif
 
-#if !OPENTHREAD_POSIX_RCP_UART_ENABLE && !OPENTHREAD_POSIX_RCP_SPI_ENABLE
-#error "Please enable either OPENTHREAD_POSIX_RCP_UART_ENABLE or OPENTHREAD_POSIX_RCP_SPI_ENABLE."
+#if !OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE && !OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
+#error "Please enable either OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE or OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE."
 #endif
 
 #include "spinel_interface.hpp"
+#include "lib/spinel/spinel.h"
 #include "ncp/ncp_config.h"
-#include "spinel/spinel.h"
 
 namespace ot {
-namespace PosixApp {
+namespace Posix {
 
 class RadioSpinel : public SpinelInterface::Callbacks
 {
@@ -680,11 +680,11 @@ private:
 
     SpinelInterface::RxFrameBuffer mRxFrameBuffer;
 
-#if OPENTHREAD_POSIX_RCP_UART_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE
     HdlcInterface mSpinelInterface;
 #endif
 
-#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
     SpiInterface mSpinelInterface;
 #endif
 
@@ -729,7 +729,7 @@ private:
     uint64_t mTxRadioEndUs;
 };
 
-} // namespace PosixApp
+} // namespace Posix
 } // namespace ot
 
 #endif // RADIO_SPINEL_HPP_

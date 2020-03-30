@@ -3,7 +3,7 @@
 
 To start the OpenThread simulator, run:
 ```
-docker run --rm -d --name otsim openthread/sim tail -F /dev/null
+docker run --rm -d --name otsim openthread/simulation tail -F /dev/null
 ```
 or
 ```

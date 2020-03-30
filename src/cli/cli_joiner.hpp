@@ -66,23 +66,23 @@ public:
     /**
      * This method interprets a list of CLI arguments.
      *
-     * @param[in]  argc  The number of elements in argv.
-     * @param[in]  argv  A pointer to an array of command line arguments.
+     * @param[in]  aArgsLength  The number of elements in @p aArgs.
+     * @param[in]  aArgs        A pointer to an array of command line arguments.
      *
      */
-    otError Process(int argc, char *argv[]);
+    otError Process(uint8_t aArgsLength, char *aArgs[]);
 
 private:
     struct Command
     {
         const char *mName;
-        otError (Joiner::*mCommand)(int argc, char *argv[]);
+        otError (Joiner::*mCommand)(uint8_t aArgsLength, char *aArgs[]);
     };
 
-    otError ProcessHelp(int argc, char *argv[]);
-    otError ProcessId(int argc, char *argv[]);
-    otError ProcessStart(int argc, char *argv[]);
-    otError ProcessStop(int argc, char *argv[]);
+    otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessId(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessStart(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessStop(uint8_t aArgsLength, char *aArgs[]);
 
     static void HandleCallback(otError aError, void *aContext);
     void        HandleCallback(otError aError);

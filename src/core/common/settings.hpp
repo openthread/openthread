@@ -39,6 +39,7 @@
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
 #include "mac/mac_types.hpp"
+#include "utils/flash.hpp"
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 #include "utils/slaac_address.hpp"
 #endif
@@ -48,6 +49,101 @@ namespace ot {
 namespace MeshCoP {
 class Dataset;
 }
+
+class SettingsDriver : public InstanceLocator
+{
+public:
+    /**
+     * Constructor.
+     */
+    explicit SettingsDriver(Instance &aInstance);
+
+    /**
+     * This method initializes the settings storage driver.
+     *
+     */
+    void Init(void);
+
+    /**
+     * This method deinitializes the settings driver.
+     *
+     */
+    void Deinit(void);
+
+    /**
+     * This method adds a value to @p aKey.
+     *
+     * @param[in]  aKey          The key associated with the value.
+     * @param[in]  aValue        A pointer to where the new value of the setting should be read from.
+     *                           MUST NOT be NULL if @p aValueLength is non-zero.
+     * @param[in]  aValueLength  The length of the data pointed to by @p aValue. May be zero.
+     *
+     * @retval OT_ERROR_NONE     The value was added.
+     * @retval OT_ERROR_NO_BUFS  Not enough space to store the value.
+     *
+     */
+    otError Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
+
+    /**
+     * This method removes a value from @p aKey.
+     *
+     * @param[in] aKey    The key associated with the value.
+     * @param[in] aIndex  The index of the value to be removed.
+     *                    If set to -1, all values for @p aKey will be removed.
+     *
+     * @retval OT_ERROR_NONE       The given key and index was found and removed successfully.
+     * @retval OT_ERROR_NOT_FOUND  The given key or index was not found.
+     *
+     */
+    otError Delete(uint16_t aKey, int aIndex);
+
+    /**
+     * This method fetches the value identified by @p aKey.
+     *
+     * @param[in]     aKey          The key associated with the requested value.
+     * @param[in]     aIndex        The index of the specific item to get.
+     * @param[out]    aValue        A pointer to where the value of the setting should be written.
+     *                              May be NULL if just testing for the presence or length of a key.
+     * @param[inout]  aValueLength  A pointer to the length of the value.
+     *                              When called, this should point to an integer containing the maximum bytes that
+     *                              can be written to @p aValue.
+     *                              At return, the actual length of the setting is written.
+     *                              May be NULL if performing a presence check.
+     *
+     * @retval OT_ERROR_NONE        The value was fetched successfully.
+     * @retval OT_ERROR_NOT_FOUND   The key was not found.
+     *
+     */
+    otError Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const;
+
+    /**
+     * This method sets or replaces the value identified by @p aKey.
+     *
+     * If there was more than one value previously associated with @p aKey, then they are all deleted and replaced with
+     * this single entry.
+     *
+     * @param[in]  aKey          The key associated with the value.
+     * @param[in]  aValue        A pointer to where the new value of the setting should be read from.
+     *                           MUST NOT be NULL if @p aValueLength is non-zero.
+     * @param[in]  aValueLength  The length of the data pointed to by @p aValue. May be zero.
+     *
+     * @retval OT_ERROR_NONE     The value was changed.
+     * @retval OT_ERROR_NO_BUFS  Not enough space to store the value.
+     *
+     */
+    otError Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
+
+    /**
+     * This method remves all values.
+     *
+     */
+    void Wipe(void);
+
+#if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+private:
+    Flash mFlash;
+#endif
+};
 
 /**
  * This class defines the base class used by `Settings` and `Settings::ChildInfoIterator`.
@@ -92,7 +188,11 @@ public:
          * This method clears the struct object (setting all the fields to zero).
          *
          */
-        void Init(void) { memset(this, 0, sizeof(*this)); }
+        void Init(void)
+        {
+            memset(this, 0, sizeof(*this));
+            SetVersion(OT_THREAD_VERSION_1_1);
+        }
 
         /**
          * This method returns the Thread role.
@@ -247,6 +347,22 @@ public:
          */
         void SetMeshLocalIid(const uint8_t *aMeshLocalIid) { memcpy(mMlIid, aMeshLocalIid, sizeof(mMlIid)); }
 
+        /**
+         * This method returns the Thread version.
+         *
+         * @returns The Thread version.
+         *
+         */
+        uint16_t GetVersion(void) const { return Encoding::LittleEndian::HostSwap16(mVersion); }
+
+        /**
+         * This method sets the Thread version.
+         *
+         * @param[in] aVersion  The Thread version.
+         *
+         */
+        void SetVersion(uint16_t aVersion) { mVersion = Encoding::LittleEndian::HostSwap16(aVersion); }
+
     private:
         uint8_t         mRole;                   ///< Current Thread role.
         uint8_t         mDeviceMode;             ///< Device mode setting.
@@ -257,6 +373,7 @@ public:
         uint32_t        mPreviousPartitionId;    ///< PartitionId
         Mac::ExtAddress mExtAddress;             ///< Extended Address
         uint8_t         mMlIid[OT_IP6_IID_SIZE]; ///< IID from ML-EID
+        uint16_t        mVersion;                ///< Version
     } OT_TOOL_PACKED_END;
 
     /**
@@ -271,7 +388,11 @@ public:
          * This method clears the struct object (setting all the fields to zero).
          *
          */
-        void Init(void) { memset(this, 0, sizeof(*this)); }
+        void Init(void)
+        {
+            memset(this, 0, sizeof(*this));
+            SetVersion(OT_THREAD_VERSION_1_1);
+        }
 
         /**
          * This method returns the extended address.
@@ -289,8 +410,25 @@ public:
          */
         void SetExtAddress(const Mac::ExtAddress &aExtAddress) { mExtAddress = aExtAddress; }
 
+        /**
+         * This method returns the Thread version.
+         *
+         * @returns The Thread version.
+         *
+         */
+        uint16_t GetVersion(void) const { return Encoding::LittleEndian::HostSwap16(mVersion); }
+
+        /**
+         * This method sets the Thread version.
+         *
+         * @param[in] aVersion  The Thread version.
+         *
+         */
+        void SetVersion(uint16_t aVersion) { mVersion = Encoding::LittleEndian::HostSwap16(aVersion); }
+
     private:
         Mac::ExtAddress mExtAddress; ///< Extended Address
+        uint16_t        mVersion;    ///< Version
     } OT_TOOL_PACKED_END;
 
     /**
@@ -305,7 +443,11 @@ public:
          * This method clears the struct object (setting all the fields to zero).
          *
          */
-        void Init(void) { memset(this, 0, sizeof(*this)); }
+        void Init(void)
+        {
+            memset(this, 0, sizeof(*this));
+            SetVersion(OT_THREAD_VERSION_1_1);
+        }
 
         /**
          * This method returns the extended address.
@@ -371,11 +513,28 @@ public:
          */
         void SetMode(uint8_t aMode) { mMode = aMode; }
 
+        /**
+         * This method returns the Thread version.
+         *
+         * @returns The Thread version.
+         *
+         */
+        uint16_t GetVersion(void) const { return Encoding::LittleEndian::HostSwap16(mVersion); }
+
+        /**
+         * This method sets the Thread version.
+         *
+         * @param[in] aVersion  The Thread version.
+         *
+         */
+        void SetVersion(uint16_t aVersion) { mVersion = Encoding::LittleEndian::HostSwap16(aVersion); }
+
     private:
         Mac::ExtAddress mExtAddress; ///< Extended Address
         uint32_t        mTimeout;    ///< Timeout
         uint16_t        mRloc16;     ///< RLOC16
         uint8_t         mMode;       ///< The MLE device mode
+        uint16_t        mVersion;    ///< Version
     } OT_TOOL_PACKED_END;
 
     /**
@@ -700,7 +859,7 @@ public:
         void Read(void);
 
         ChildInfo mChildInfo;
-        uint8_t   mIndex;
+        uint16_t  mIndex;
         bool      mIsDone;
     };
 

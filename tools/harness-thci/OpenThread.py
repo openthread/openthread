@@ -626,6 +626,20 @@ class OpenThread(IThci):
         print('%s call getCommissionerSessionId' % self.port)
         return self.__sendCommand('commissioner sessionid')[0]
 
+    def __escapeEscapable(self, string):
+        """Escape CLI escapable characters in the given string.
+
+        Args:
+            string (str): UTF-8 input string.
+
+        Returns:
+            [str]: The modified string with escaped characters.
+        """
+        escapable_chars = '\\ \t\r\n'
+        for char in escapable_chars:
+            string = string.replace(char, '\\%s' % char)
+        return string
+
     def _connect(self):
         print('My port is %s' % self.port)
         if self.port.startswith('COM'):
@@ -688,6 +702,7 @@ class OpenThread(IThci):
         """
         print('%s call setNetworkName' % self.port)
         print(networkName)
+        networkName = self.__escapeEscapable(networkName)
         try:
             cmd = 'networkname %s' % networkName
             datasetCmd = 'dataset networkname %s' % networkName
@@ -741,9 +756,6 @@ class OpenThread(IThci):
         print(xEUI)
         address64 = ''
         try:
-            if not xEUI:
-                address64 = self.mac
-
             if not isinstance(xEUI, str):
                 address64 = self.__convertLongToHex(xEUI, 16)
             else:
@@ -2393,7 +2405,7 @@ class OpenThread(IThci):
 
             if sNetworkName is not None:
                 cmd += ' networkname '
-                cmd += str(sNetworkName)
+                cmd += self.__escapeEscapable(str(sNetworkName))
 
             if xChannel is not None:
                 cmd += ' channel '
@@ -2594,7 +2606,7 @@ class OpenThread(IThci):
 
             if sNetworkName is not None:
                 cmd += ' networkname '
-                cmd += str(sNetworkName)
+                cmd += self.__escapeEscapable(str(sNetworkName))
 
             if xCommissionerSessionId is not None:
                 cmd += ' binary '

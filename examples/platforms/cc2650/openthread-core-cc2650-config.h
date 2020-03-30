@@ -52,4 +52,12 @@
  */
 #define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
 
+/**
+ * @def OPENTHREAD_SETTINGS_RAM
+ *
+ * Define as 1 to enable saving the settings in RAM instead of flash.
+ *
+ */
+#define OPENTHREAD_SETTINGS_RAM 1
+
 #endif /* OPENTHREAD_CORE_CC2650_CONFIG_H_ */

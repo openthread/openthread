@@ -1,0 +1,97 @@
+#!/bin/bash
+#
+#  Copyright (c) 2020, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+set -euxo pipefail
+
+readonly OT_COMMON_OPTIONS=(
+    "-DOT_COMPILE_WARNING_AS_ERROR=on"
+    "-DOT_PLATFORM=simulation"
+)
+
+reset_source()
+{
+    git checkout -- .
+    git clean -xfd
+}
+
+build_all_features()
+{
+    local options=("${OT_COMMON_OPTIONS[@]}")
+
+    options+=(
+        "-DOT_BORDER_AGENT=on"
+        "-DOT_BORDER_ROUTER=on"
+        "-DOT_COAP=on"
+        "-DOT_COAPS=on"
+        "-DOT_COMMISSIONER=on"
+        "-DOT_CHANNEL_MANAGER=on"
+        "-DOT_CHANNEL_MONITOR=on"
+        "-DOT_CHILD_SUPERVISION=on"
+        "-DOT_DHCP6_CLIENT=on"
+        "-DOT_DHCP6_SERVER=on"
+        "-DOT_DIAGNOSTIC=on"
+        "-DOT_DNS_CLIENT=on"
+        "-DOT_ECDSA=on"
+        "-DOT_IP6_FRAGM=on"
+        "-DOT_JAM_DETECTION=on"
+        "-DOT_JOINER=on"
+        "-DOT_LINK_RAW=on"
+        "-DOT_MAC_FILTER=on"
+        "-DOT_MTD_NETDIAG=on"
+        "-DOT_SERVICE=on"
+        "-DOT_SLAAC=on"
+        "-DOT_SNTP_CLIENT=on"
+    )
+
+    reset_source
+
+    git checkout -- .
+    git clean -xfd
+    mkdir build && cd build
+    cmake -GNinja "${options[@]}" ..
+    ninja
+    cd ..
+}
+
+build_toranj()
+{
+    reset_source
+    ./tests/toranj/build.sh cmake
+
+    reset_source
+    ./tests/toranj/build.sh cmake-posix
+}
+
+main()
+{
+    build_all_features
+    build_toranj
+}
+
+main "$@"

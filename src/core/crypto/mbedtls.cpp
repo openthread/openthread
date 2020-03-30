@@ -154,7 +154,7 @@ otError MbedTls::MapError(int rval)
         break;
 
     default:
-        assert(rval >= 0);
+        OT_ASSERT(rval >= 0);
         break;
     }
 

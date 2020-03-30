@@ -38,6 +38,7 @@ DEBUG                                ?= 0
 BORDER_AGENT                         ?= 1
 BORDER_ROUTER                        ?= 1
 COAP                                 ?= 1
+COAP_OBSERVE                         ?= 1
 COAPS                                ?= 1
 COMMISSIONER                         ?= 1
 CHANNEL_MANAGER                      ?= 1
@@ -75,13 +76,13 @@ configure_OPTIONS                   = \
     --enable-cli                      \
     --enable-ftd                      \
     --enable-ncp                      \
-    --enable-posix-app                \
+    --with-platform=posix             \
     $(NULL)
 
 # Platform specific switches
 
 ifeq ($(DAEMON),1)
-configure_OPTIONS              += --enable-posix-app-daemon
+configure_OPTIONS              += --enable-posix-daemon
 endif
 
 ifneq ($(DEBUG),1)
@@ -103,9 +104,9 @@ configure_OPTIONS              += --with-readline=$(READLINE)
 endif
 
 ifeq ($(RCP_SPI),1)
-COMMONCFLAGS                   += -DOPENTHREAD_POSIX_RCP_SPI_ENABLE=1
+COMMONCFLAGS                   += -DOPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE=1
 else
-COMMONCFLAGS                   += -DOPENTHREAD_POSIX_RCP_UART_ENABLE=1
+COMMONCFLAGS                   += -DOPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE=1
 endif
 
 ifeq ($(VIRTUAL_TIME),1)

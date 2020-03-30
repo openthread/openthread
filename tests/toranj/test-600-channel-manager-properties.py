@@ -77,15 +77,15 @@ verify(node.get(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_ENABLED) == 'false')
 node.set(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL, '1000')
 verify(int(node.get(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_INTERVAL), 0) == 1000)
 
-all_channls_mask = int('0x7fff800', 0)
+all_channels_mask = int('0x7fff800', 0)
 chan_11_mask = int('0x800', 0)
 chan_11_to_13_mask = int('0x3800', 0)
 
 node.set(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK,
-         str(all_channls_mask))
+         str(all_channels_mask))
 verify(
     int(node.get(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK), 0) ==
-    all_channls_mask)
+    all_channels_mask)
 
 node.set(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK, str(chan_11_mask))
 verify(
@@ -98,10 +98,10 @@ verify(
     int(node.get(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK), 0) ==
     chan_11_to_13_mask)
 
-node.set(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK, str(all_channls_mask))
+node.set(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK, str(all_channels_mask))
 verify(
     int(node.get(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK), 0) ==
-    all_channls_mask)
+    all_channels_mask)
 
 node.set(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_ENABLED, '1')
 verify(node.get(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_ENABLED) == 'true')
@@ -123,7 +123,7 @@ while node.get(wpan.WPAN_STATE) != wpan.STATE_ASSOCIATED:
 verify(node.get(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_ENABLED) == 'true')
 verify(
     int(node.get(wpan.WPAN_CHANNEL_MANAGER_FAVORED_CHANNEL_MASK), 0) ==
-    all_channls_mask)
+    all_channels_mask)
 verify(
     int(node.get(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK), 0) ==
     chan_11_to_13_mask)

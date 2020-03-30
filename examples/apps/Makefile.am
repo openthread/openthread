@@ -50,11 +50,4 @@ SUBDIRS                                += ncp
 endif
 endif
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    cli                                   \
-    ncp                                   \
-    $(NULL)
-
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

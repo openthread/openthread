@@ -31,6 +31,8 @@
  *   This file implements the command line parser.
  */
 
+#include <string.h>
+
 #include "parse_cmdline.hpp"
 
 #include "common/code_utils.hpp"
@@ -38,36 +40,39 @@
 namespace ot {
 namespace Utils {
 
-static bool IsSpaceOrNewLine(char aChar)
+static bool IsSeparator(char aChar)
 {
     return (aChar == ' ') || (aChar == '\t') || (aChar == '\r') || (aChar == '\n');
 }
 
-otError CmdLineParser::ParseCmd(char *aString, uint8_t &aArgc, char *aArgv[], uint8_t aArgcMax)
+static bool IsEscapable(char aChar)
+{
+    return IsSeparator(aChar) || (aChar == '\\');
+}
+
+otError CmdLineParser::ParseCmd(char *aString, uint8_t &aArgsLength, char *aArgs[], uint8_t aArgsLengthMax)
 {
     otError error = OT_ERROR_NONE;
     char *  cmd;
 
-    aArgc = 0;
+    aArgsLength = 0;
 
-    for (cmd = aString; IsSpaceOrNewLine(*cmd) && *cmd; cmd++)
-        ;
-
-    if (*cmd)
+    for (cmd = aString; *cmd; cmd++)
     {
-        aArgv[aArgc++] = cmd++; // the first argument
-    }
-
-    for (; *cmd; cmd++)
-    {
-        if (IsSpaceOrNewLine(*cmd))
+        if ((*cmd == '\\') && IsEscapable(*(cmd + 1)))
+        {
+            // include the null terminator: strlen(cmd) = strlen(cmd + 1) + 1
+            memmove(cmd, cmd + 1, strlen(cmd));
+        }
+        else if (IsSeparator(*cmd))
         {
             *cmd = '\0';
         }
-        else if (*(cmd - 1) == '\0')
+
+        if ((*cmd != '\0') && ((aArgsLength == 0) || (*(cmd - 1) == '\0')))
         {
-            VerifyOrExit(aArgc < aArgcMax, error = OT_ERROR_INVALID_ARGS);
-            aArgv[aArgc++] = cmd;
+            VerifyOrExit(aArgsLength < aArgsLengthMax, error = OT_ERROR_INVALID_ARGS);
+            aArgs[aArgsLength++] = cmd;
         }
     }
 

@@ -75,32 +75,6 @@
 #define OPENTHREAD_CONFIG_SOFTWARE_ENERGY_SCAN_ENABLE 1
 
 /**
- * @def SETTINGS_CONFIG_BASE_ADDRESS
- *
- * The actual physical address used for the cc2538 is set by the
- * linker file, the value here is "relative to the base address" set
- * in the linker file.
- *
- */
-#define SETTINGS_CONFIG_BASE_ADDRESS 0
-
-/**
- * @def SETTINGS_CONFIG_PAGE_NUM
- *
- * The CC2538 linker script sets aside 2 pages.
- *
- */
-#define SETTINGS_CONFIG_PAGE_NUM 2
-
-/**
- * @def SETTINGS_CONFIG_PAGE_SIZE
- *
- * The page size of settings, 2K bytes
- *
- */
-#define SETTINGS_CONFIG_PAGE_SIZE 2048
-
-/**
  * @def OPENTHREAD_CONFIG_NCP_UART_ENABLE
  *
  * Define to 1 to enable NCP UART support.
@@ -259,5 +233,15 @@
 #ifndef OPENTHREAD_CONFIG_CC2592_HGM_DEFAULT_STATE
 #define OPENTHREAD_CONFIG_CC2592_HGM_DEFAULT_STATE true
 #endif
+
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+ *
+ * Define to 1 to enable otPlatFlash* APIs to support non-volatile storage.
+ *
+ * When defined to 1, the platform MUST implement the otPlatFlash* APIs instead of the otPlatSettings* APIs.
+ *
+ */
+#define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 1
 
 #endif // OPENTHREAD_CORE_CC2538_CONFIG_H_

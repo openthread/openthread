@@ -13,6 +13,9 @@
 *.orig
 *.pyc
 *.suo
+*.swn
+*.swo
+*.swp
 *.trs
 *.user
 *.bak

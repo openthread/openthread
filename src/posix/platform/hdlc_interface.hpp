@@ -37,12 +37,12 @@
 #include "openthread-posix-config.h"
 #include "platform-posix.h"
 #include "spinel_interface.hpp"
-#include "ncp/hdlc.hpp"
+#include "lib/hdlc/hdlc.hpp"
 
-#if OPENTHREAD_POSIX_RCP_UART_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE
 
 namespace ot {
-namespace PosixApp {
+namespace Posix {
 
 /**
  * This class defines an HDLC interface to the Radio Co-processor (RCP)
@@ -198,7 +198,7 @@ private:
     void        HandleHdlcFrame(otError aError);
 
     static int OpenFile(const char *aFile, const char *aConfig);
-#if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
+#if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
     static int ForkPty(const char *aCommand, const char *aArguments);
 #endif
 
@@ -215,8 +215,8 @@ private:
     Hdlc::Decoder mHdlcDecoder;
 };
 
-} // namespace PosixApp
+} // namespace Posix
 } // namespace ot
 
-#endif // OPENTHREAD_POSIX_RCP_UART_ENABLE
+#endif // OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE
 #endif // POSIX_APP_HDLC_INTERFACE_HPP_

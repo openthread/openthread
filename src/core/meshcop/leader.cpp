@@ -93,7 +93,7 @@ void Leader::HandlePetition(Coap::Message &aMessage, const Ip6::MessageInfo &aMe
     }
 
     data.mBorderAgentLocator.Init();
-    data.mBorderAgentLocator.SetBorderAgentLocator(HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
+    data.mBorderAgentLocator.SetBorderAgentLocator(aMessageInfo.GetPeerAddr().GetLocator());
 
     data.mCommissionerSessionId.Init();
     data.mCommissionerSessionId.SetCommissionerSessionId(++mSessionId);
@@ -123,19 +123,15 @@ otError Leader::SendPetitionResponse(const Coap::Message &   aRequest,
                                      const Ip6::MessageInfo &aMessageInfo,
                                      StateTlv::State         aState)
 {
-    otError                  error = OT_ERROR_NONE;
-    StateTlv                 state;
-    CommissionerSessionIdTlv sessionId;
-    Coap::Message *          message;
+    otError        error = OT_ERROR_NONE;
+    Coap::Message *message;
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    state.Init();
-    state.SetState(aState);
-    SuccessOrExit(error = state.AppendTo(*message));
+    SuccessOrExit(error = Tlv::AppendUint8Tlv(*message, Tlv::kState, static_cast<uint8_t>(aState)));
 
     if (mTimer.IsRunning())
     {
@@ -144,9 +140,7 @@ otError Leader::SendPetitionResponse(const Coap::Message &   aRequest,
 
     if (aState == StateTlv::kAccept)
     {
-        sessionId.Init();
-        sessionId.SetCommissionerSessionId(mSessionId);
-        SuccessOrExit(error = sessionId.AppendTo(*message));
+        SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, Tlv::kCommissionerSessionId, mSessionId));
     }
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
@@ -171,34 +165,32 @@ void Leader::HandleKeepAlive(void *aContext, otMessage *aMessage, const otMessag
 
 void Leader::HandleKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    StateTlv                 state;
-    CommissionerSessionIdTlv sessionId;
-    BorderAgentLocatorTlv *  borderAgentLocator;
-    StateTlv::State          responseState;
+    uint8_t                state;
+    uint16_t               sessionId;
+    BorderAgentLocatorTlv *borderAgentLocator;
+    StateTlv::State        responseState;
 
     otLogInfoMeshCoP("received keep alive");
 
-    SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kState, sizeof(state), state));
-    VerifyOrExit(state.IsValid());
+    SuccessOrExit(Tlv::ReadUint8Tlv(aMessage, Tlv::kState, state));
 
-    SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kCommissionerSessionId, sizeof(sessionId), sessionId));
-    VerifyOrExit(sessionId.IsValid());
+    SuccessOrExit(Tlv::ReadUint16Tlv(aMessage, Tlv::kCommissionerSessionId, sessionId));
 
     borderAgentLocator = static_cast<BorderAgentLocatorTlv *>(
         Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kBorderAgentLocator));
 
-    if ((borderAgentLocator == NULL) || (sessionId.GetCommissionerSessionId() != mSessionId))
+    if ((borderAgentLocator == NULL) || (sessionId != mSessionId))
     {
         responseState = StateTlv::kReject;
     }
-    else if (state.GetState() != StateTlv::kAccept)
+    else if (state != StateTlv::kAccept)
     {
         responseState = StateTlv::kReject;
         ResignCommissioner();
     }
     else
     {
-        uint16_t rloc = HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]);
+        uint16_t rloc = aMessageInfo.GetPeerAddr().GetLocator();
 
         if (borderAgentLocator->GetBorderAgentLocator() != rloc)
         {
@@ -221,7 +213,6 @@ otError Leader::SendKeepAliveResponse(const Coap::Message &   aRequest,
                                       StateTlv::State         aState)
 {
     otError        error = OT_ERROR_NONE;
-    StateTlv       state;
     Coap::Message *message;
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
@@ -229,9 +220,7 @@ otError Leader::SendKeepAliveResponse(const Coap::Message &   aRequest,
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    state.Init();
-    state.SetState(aState);
-    SuccessOrExit(error = state.AppendTo(*message));
+    SuccessOrExit(error = Tlv::AppendUint8Tlv(*message, Tlv::kState, static_cast<uint8_t>(aState)));
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
 

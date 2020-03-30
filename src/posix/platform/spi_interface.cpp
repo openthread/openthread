@@ -39,6 +39,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
+#include <inttypes.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -53,13 +54,13 @@
 #include <sys/types.h>
 #include <sys/ucontext.h>
 
-#if OPENTHREAD_POSIX_RCP_SPI_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
 #include <linux/gpio.h>
 #include <linux/ioctl.h>
 #include <linux/spi/spidev.h>
 
 namespace ot {
-namespace PosixApp {
+namespace Posix {
 
 SpiInterface::SpiInterface(SpinelInterface::Callbacks &aCallback, SpinelInterface::RxFrameBuffer &aFrameBuffer)
     : mCallbacks(aCallback)
@@ -97,6 +98,9 @@ otError SpiInterface::Init(const otPlatformConfig &aPlatformConfig)
     {
         // If the interrupt pin is not set, SPI interface will use polling mode.
         InitIntPin(aPlatformConfig.mSpiGpioIntDevice, aPlatformConfig.mSpiGpioIntLine);
+    }
+    else
+    {
         otLogNotePlat("SPI interface enters polling mode.");
     }
 
@@ -262,18 +266,20 @@ void SpiInterface::TrigerReset(void)
     otLogNotePlat("Triggered hardware reset");
 }
 
-uint8_t *SpiInterface::GetRealRxFrameStart(void)
+uint8_t *SpiInterface::GetRealRxFrameStart(uint8_t *aSpiRxFrameBuffer, uint8_t aAlignAllowance, uint16_t &aSkipLength)
 {
-    uint8_t *      ret = mSpiRxFrameBuffer;
-    const uint8_t *end = mSpiRxFrameBuffer + mSpiAlignAllowance;
+    uint8_t *      start = aSpiRxFrameBuffer;
+    const uint8_t *end   = aSpiRxFrameBuffer + aAlignAllowance;
 
-    for (; ret != end && ret[0] == 0xff; ret++)
+    for (; start != end && start[0] == 0xff; start++)
         ;
 
-    return ret;
+    aSkipLength = static_cast<uint16_t>(start - aSpiRxFrameBuffer);
+
+    return start;
 }
 
-otError SpiInterface::DoSpiTransfer(uint32_t aLength)
+otError SpiInterface::DoSpiTransfer(uint8_t *aSpiRxFrameBuffer, uint32_t aTransferLength)
 {
     int                     ret;
     struct spi_ioc_transfer transfer[2];
@@ -292,8 +298,8 @@ otError SpiInterface::DoSpiTransfer(uint32_t aLength)
 
     // This part is the actual SPI transfer.
     transfer[1].tx_buf        = reinterpret_cast<uintptr_t>(mSpiTxFrameBuffer);
-    transfer[1].rx_buf        = reinterpret_cast<uintptr_t>(mSpiRxFrameBuffer);
-    transfer[1].len           = aLength + kSpiFrameHeaderSize + mSpiAlignAllowance;
+    transfer[1].rx_buf        = reinterpret_cast<uintptr_t>(aSpiRxFrameBuffer);
+    transfer[1].len           = aTransferLength;
     transfer[1].speed_hz      = mSpiSpeedHz;
     transfer[1].delay_usecs   = 0;
     transfer[1].bits_per_word = kSpiBitsPerWord;
@@ -313,7 +319,7 @@ otError SpiInterface::DoSpiTransfer(uint32_t aLength)
     if (ret != -1)
     {
         otDumpDebg(OT_LOG_REGION_PLATFORM, "SPI-TX", mSpiTxFrameBuffer, transfer[1].len);
-        otDumpDebg(OT_LOG_REGION_PLATFORM, "SPI-RX", mSpiRxFrameBuffer, transfer[1].len);
+        otDumpDebg(OT_LOG_REGION_PLATFORM, "SPI-RX", aSpiRxFrameBuffer, transfer[1].len);
 
         mSpiFrameCount++;
     }
@@ -323,13 +329,16 @@ otError SpiInterface::DoSpiTransfer(uint32_t aLength)
 
 otError SpiInterface::PushPullSpi(void)
 {
-    otError       error;
-    uint8_t *     spiRxFrameBuffer    = NULL;
+    otError       error               = OT_ERROR_FAILED;
     uint16_t      spiTransferBytes    = 0;
     uint8_t       successfulExchanges = 0;
+    bool          discardRxFrame      = true;
+    uint8_t *     spiRxFrameBuffer;
+    uint8_t *     spiRxFrame;
     uint8_t       slaveHeader;
     uint16_t      slaveAcceptLen;
     Ncp::SpiFrame txFrame(mSpiTxFrameBuffer);
+    uint16_t      skipAlignAllowanceLength;
 
     if (mSpiValidFrameCount == 0)
     {
@@ -383,8 +392,20 @@ otError SpiInterface::PushPullSpi(void)
 
     txFrame.SetHeaderAcceptLen(spiTransferBytes);
 
+    // Set skip length to make MultiFrameBuffer to reserve a space in front of the frame buffer.
+    SuccessOrExit(error = mRxFrameBuffer.SetSkipLength(kSpiFrameHeaderSize));
+
+    // Check whether the remaining frame buffer has enough space to store the data to be received.
+    VerifyOrExit(mRxFrameBuffer.GetFrameMaxLength() >= spiTransferBytes + mSpiAlignAllowance);
+
+    // Point to the start of the reserved buffer.
+    spiRxFrameBuffer = mRxFrameBuffer.GetFrame() - kSpiFrameHeaderSize;
+
+    // Set the total number of bytes to be transmitted.
+    spiTransferBytes += kSpiFrameHeaderSize + mSpiAlignAllowance;
+
     // Perform the SPI transaction.
-    error = DoSpiTransfer(spiTransferBytes);
+    error = DoSpiTransfer(spiRxFrameBuffer, spiTransferBytes);
 
     if (error != OT_ERROR_NONE)
     {
@@ -401,10 +422,10 @@ otError SpiInterface::PushPullSpi(void)
     }
 
     // Account for misalignment (0xFF bytes at the start)
-    spiRxFrameBuffer = GetRealRxFrameStart();
+    spiRxFrame = GetRealRxFrameStart(spiRxFrameBuffer, mSpiAlignAllowance, skipAlignAllowanceLength);
 
     {
-        Ncp::SpiFrame rxFrame(spiRxFrameBuffer);
+        Ncp::SpiFrame rxFrame(spiRxFrame);
 
         otLogDebgPlat("spi_transfer TX: H:%02X ACCEPT:%" PRIu16 " DATA:%" PRIu16, txFrame.GetHeaderFlagByte(),
                       txFrame.GetHeaderAcceptLen(), txFrame.GetHeaderDataLen());
@@ -414,8 +435,8 @@ otError SpiInterface::PushPullSpi(void)
         slaveHeader = rxFrame.GetHeaderFlagByte();
         if ((slaveHeader == 0xFF) || (slaveHeader == 0x00))
         {
-            if ((slaveHeader == spiRxFrameBuffer[1]) && (slaveHeader == spiRxFrameBuffer[2]) &&
-                (slaveHeader == spiRxFrameBuffer[3]) && (slaveHeader == spiRxFrameBuffer[4]))
+            if ((slaveHeader == spiRxFrame[1]) && (slaveHeader == spiRxFrame[2]) && (slaveHeader == spiRxFrame[3]) &&
+                (slaveHeader == spiRxFrame[4]))
             {
                 // Device is off or in a bad state. In some cases may be induced by flow control.
                 if (mSpiSlaveDataLen == 0)
@@ -434,12 +455,10 @@ otError SpiInterface::PushPullSpi(void)
                 // Header is full of garbage
                 mSpiGarbageFrameCount++;
 
-                otLogWarnPlat("Garbage in header : %02X %02X %02X %02X %02X", spiRxFrameBuffer[0], spiRxFrameBuffer[1],
-                              spiRxFrameBuffer[2], spiRxFrameBuffer[3], spiRxFrameBuffer[4]);
-                otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-TX", mSpiTxFrameBuffer,
-                           spiTransferBytes + kSpiFrameHeaderSize + mSpiAlignAllowance);
-                otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-RX", mSpiRxFrameBuffer,
-                           spiTransferBytes + kSpiFrameHeaderSize + mSpiAlignAllowance);
+                otLogWarnPlat("Garbage in header : %02X %02X %02X %02X %02X", spiRxFrame[0], spiRxFrame[1],
+                              spiRxFrame[2], spiRxFrame[3], spiRxFrame[4]);
+                otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-TX", mSpiTxFrameBuffer, spiTransferBytes);
+                otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-RX", spiRxFrameBuffer, spiTransferBytes);
             }
 
             mSpiTxRefusedCount++;
@@ -455,12 +474,10 @@ otError SpiInterface::PushPullSpi(void)
             mSpiTxRefusedCount++;
             mSpiSlaveDataLen = 0;
 
-            otLogWarnPlat("Garbage in header : %02X %02X %02X %02X %02X", spiRxFrameBuffer[0], spiRxFrameBuffer[1],
-                          spiRxFrameBuffer[2], spiRxFrameBuffer[3], spiRxFrameBuffer[4]);
-            otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-TX", mSpiTxFrameBuffer,
-                       spiTransferBytes + kSpiFrameHeaderSize + mSpiAlignAllowance);
-            otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-RX", mSpiRxFrameBuffer,
-                       spiTransferBytes + kSpiFrameHeaderSize + mSpiAlignAllowance);
+            otLogWarnPlat("Garbage in header : %02X %02X %02X %02X %02X", spiRxFrame[0], spiRxFrame[1], spiRxFrame[2],
+                          spiRxFrame[3], spiRxFrame[4]);
+            otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-TX", mSpiTxFrameBuffer, spiTransferBytes);
+            otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-RX", spiRxFrameBuffer, spiTransferBytes);
 
             ExitNow();
         }
@@ -483,7 +500,15 @@ otError SpiInterface::PushPullSpi(void)
             mSpiRxFrameCount++;
             successfulExchanges++;
 
-            HandleReceivedFrame(rxFrame);
+            // Set the skip length to skip align bytes and SPI frame header.
+            SuccessOrExit(error = mRxFrameBuffer.SetSkipLength(skipAlignAllowanceLength + kSpiFrameHeaderSize));
+            // Set the received frame length.
+            SuccessOrExit(error = mRxFrameBuffer.SetLength(rxFrame.GetHeaderDataLen()));
+
+            // Upper layer will free the frame buffer.
+            discardRxFrame = false;
+
+            mCallbacks.HandleReceivedFrame();
         }
     }
 
@@ -522,6 +547,11 @@ otError SpiInterface::PushPullSpi(void)
     }
 
 exit:
+    if (discardRxFrame)
+    {
+        mRxFrameBuffer.DiscardFrame();
+    }
+
     return error;
 }
 
@@ -656,12 +686,13 @@ otError SpiInterface::WaitForFrame(const struct timeval &aTimeout)
     struct timeval timeout = {kSecPerDay, 0};
     fd_set         readFdSet;
     int            ret;
+    bool           isDataReady = false;
 
     FD_ZERO(&readFdSet);
 
     if (mIntGpioValueFd >= 0)
     {
-        if (CheckInterrupt())
+        if ((isDataReady = CheckInterrupt()))
         {
             // Interrupt pin is asserted, set the timeout to be 0.
             timeout.tv_sec  = 0;
@@ -687,22 +718,19 @@ otError SpiInterface::WaitForFrame(const struct timeval &aTimeout)
     }
 
     ret = select(mIntGpioValueFd + 1, &readFdSet, NULL, NULL, &timeout);
-    if (ret > 0)
+
+    if (ret > 0 && FD_ISSET(mIntGpioValueFd, &readFdSet))
     {
-        if (FD_ISSET(mIntGpioValueFd, &readFdSet))
-        {
-            struct gpioevent_data event;
+        struct gpioevent_data event;
 
-            // Read event data to clear interrupt.
-            VerifyOrDie(read(mIntGpioValueFd, &event, sizeof(event)) != -1, OT_EXIT_FAILURE);
-        }
+        // Read event data to clear interrupt.
+        VerifyOrDie(read(mIntGpioValueFd, &event, sizeof(event)) != -1, OT_EXIT_FAILURE);
+        isDataReady = true;
+    }
 
-        // If we can receive a packet.
-        if (CheckInterrupt())
-        {
-            otLogDebgPlat("WaitForFrame(): Interrupt.");
-            PushPullSpi();
-        }
+    if (isDataReady)
+    {
+        PushPullSpi();
     }
     else if (ret == 0)
     {
@@ -735,26 +763,6 @@ exit:
     return error;
 }
 
-void SpiInterface::HandleReceivedFrame(Ncp::SpiFrame &aSpiFrame)
-{
-    const uint8_t *spinelFrame = aSpiFrame.GetData();
-
-    for (uint16_t i = 0; i < aSpiFrame.GetHeaderDataLen(); i++)
-    {
-        if (mRxFrameBuffer.WriteByte(spinelFrame[i]) != OT_ERROR_NONE)
-        {
-            mRxFrameBuffer.DiscardFrame();
-            otLogNotePlat("No enough memory buffers, drop packet");
-            ExitNow();
-        }
-    }
-
-    mCallbacks.HandleReceivedFrame();
-
-exit:
-    return;
-}
-
 void SpiInterface::LogError(const char *aString)
 {
     OT_UNUSED_VARIABLE(aString);
@@ -774,7 +782,7 @@ void SpiInterface::LogStats(void)
     otLogInfoPlat("INFO: mSpiTxFrameCount=%" PRIu64, mSpiTxFrameCount);
     otLogInfoPlat("INFO: mSpiTxFrameByteCount=%" PRIu64, mSpiTxFrameByteCount);
 }
-} // namespace PosixApp
+} // namespace Posix
 } // namespace ot
 
-#endif // OPENTHREAD_POSIX_RCP_SPI_ENABLE
+#endif // OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE

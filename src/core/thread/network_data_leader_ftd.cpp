@@ -148,14 +148,21 @@ void Leader::HandleServerData(void *aContext, otMessage *aMessage, const otMessa
 void Leader::HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadNetworkDataTlv networkData;
-    ThreadRloc16Tlv      rloc16;
+    uint16_t             rloc16;
 
     otLogInfoNetData("Received network data registration");
 
-    if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rloc16), rloc16) == OT_ERROR_NONE)
+    VerifyOrExit(aMessageInfo.GetPeerAddr().IsRoutingLocator());
+
+    switch (Tlv::ReadUint16Tlv(aMessage, ThreadTlv::kRloc16, rloc16))
     {
-        VerifyOrExit(rloc16.IsValid());
-        RemoveBorderRouter(rloc16.GetRloc16(), kMatchModeRloc16);
+    case OT_ERROR_NONE:
+        RemoveBorderRouter(rloc16, kMatchModeRloc16);
+        break;
+    case OT_ERROR_NOT_FOUND:
+        break;
+    default:
+        ExitNow();
     }
 
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kThreadNetworkData, sizeof(networkData), networkData) == OT_ERROR_NONE)
@@ -302,7 +309,6 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
 {
     otError        error = OT_ERROR_NONE;
     Coap::Message *message;
-    uint8_t        index;
     uint8_t *      data   = NULL;
     uint8_t        length = 0;
 
@@ -330,7 +336,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
     }
     else
     {
-        for (index = 0; index < aLength; index++)
+        for (uint16_t index = 0; index < aLength; index++)
         {
             uint8_t type;
 
@@ -370,18 +376,15 @@ void Leader::SendCommissioningSetResponse(const Coap::Message &    aRequest,
                                           const Ip6::MessageInfo & aMessageInfo,
                                           MeshCoP::StateTlv::State aState)
 {
-    otError           error = OT_ERROR_NONE;
-    Coap::Message *   message;
-    MeshCoP::StateTlv state;
+    otError        error = OT_ERROR_NONE;
+    Coap::Message *message;
 
     VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    state.Init();
-    state.SetState(aState);
-    SuccessOrExit(error = state.AppendTo(*message));
+    SuccessOrExit(error = Tlv::AppendUint8Tlv(*message, MeshCoP::Tlv::kState, static_cast<uint8_t>(aState)));
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));
 
@@ -660,6 +663,8 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
 
                 while (curInner < endInner)
                 {
+                    VerifyOrExit((curInner + 1) <= endInner && curInner->GetNext() <= endInner);
+
                     if (curInner->IsStable())
                     {
                         switch (curInner->GetType())
@@ -672,11 +677,12 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
                             NetworkDataTlv *curServerBase = serviceBase->GetSubTlvs();
                             NetworkDataTlv *endServerBase = serviceBase->GetNext();
 
-                            while (curServerBase <= endServerBase)
+                            while (curServerBase < endServerBase)
                             {
                                 ServerTlv *serverBase = static_cast<ServerTlv *>(curServerBase);
 
-                                VerifyOrExit((curServerBase + 1) <= endServerBase && curServerBase->GetNext() <= end);
+                                VerifyOrExit((curServerBase + 1) <= endServerBase &&
+                                             curServerBase->GetNext() <= endServerBase);
 
                                 if (curServerBase->IsStable() && (server->GetServer16() == serverBase->GetServer16()) &&
                                     (server->GetServerDataLength() == serverBase->GetServerDataLength()) &&
@@ -744,7 +750,7 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aT
             rlocStable = true;
         }
 
-        // Store old Service IDs for given rloc16, so updates to server will reuse the same Service ID
+        // Store old Service IDs for given rloc16, so updates to server will reuse the same Service ID.
         SuccessOrExit(error = GetNetworkData(false, oldTlvs, oldTlvsLength));
 
         RemoveRloc(aRloc16, kMatchModeRloc16);
@@ -940,7 +946,7 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOl
     ServiceTlv *oldService          = NULL;
     ServerTlv * dstServer           = NULL;
     uint16_t    appendLength        = 0;
-    uint8_t     serviceID           = 0;
+    uint8_t     serviceId           = 0;
     uint8_t     serviceInsertLength = sizeof(ServiceTlv) + sizeof(uint8_t) /*mServiceDataLength*/ +
                                   ServiceTlv::GetEnterpriseNumberFieldLength(aService.GetEnterpriseNumber()) +
                                   aService.GetServiceDataLength();
@@ -966,21 +972,21 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOl
         if (oldService != NULL)
         {
             // The same service is not found in current data, but was in old data. So, it had to be just removed by
-            // RemoveRloc() Lets use the same ServiceID
-            serviceID = oldService->GetServiceID();
+            // RemoveRloc() Lets use the same ServiceId
+            serviceId = oldService->GetServiceId();
         }
         else
         {
             uint8_t i;
 
-            // This seems like completely new service. Lets try to find new ServiceID for it. If all are taken, error
+            // This seems like completely new service. Lets try to find new ServiceId for it. If all are taken, error
             // out. Since we call FindServiceById() on mTlv, we need to execute this before Insert() call, otherwise
             // we'll find uninitialized service as well.
             for (i = Mle::kServiceMinId; i <= Mle::kServiceMaxId; i++)
             {
                 if (FindServiceById(i) == NULL)
                 {
-                    serviceID = i;
+                    serviceId = i;
                     break;
                 }
             }
@@ -993,7 +999,7 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOl
         dstService = reinterpret_cast<ServiceTlv *>(mTlvs + mLength);
         Insert(reinterpret_cast<uint8_t *>(dstService), serviceInsertLength);
         dstService->Init();
-        dstService->SetServiceID(serviceID);
+        dstService->SetServiceId(serviceId);
         dstService->SetEnterpriseNumber(aService.GetEnterpriseNumber());
         dstService->SetServiceData(aService.GetServiceData(), aService.GetServiceDataLength());
         dstService->SetLength(serviceInsertLength - sizeof(NetworkDataTlv));
@@ -1032,7 +1038,7 @@ ServiceTlv *Leader::FindServiceById(uint8_t aServiceId)
         {
             compare = static_cast<ServiceTlv *>(cur);
 
-            if (compare->GetServiceID() == aServiceId)
+            if (compare->GetServiceId() == aServiceId)
             {
                 ExitNow();
             }

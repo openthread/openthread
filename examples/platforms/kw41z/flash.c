@@ -26,85 +26,67 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdint.h>
+
+#include <openthread/instance.h>
+
 #include "fsl_device_registers.h"
 #include "fsl_flash.h"
-#include <stdint.h>
-#include <utils/code_utils.h>
-#include <utils/flash.h>
-#include "openthread/platform/alarm-milli.h"
+
+#define FLASH_BASE_ADDRESS 0x40000
+#define FLASH_PAGE_SIZE 0x800
+#define FLASH_PAGE_NUM 2
+#define FLASH_SWAP_SIZE (FLASH_PAGE_SIZE * (FLASH_PAGE_NUM / 2))
 
 static flash_config_t sFlashConfig;
 
-otError utilsFlashInit(void)
+static uint32_t mapAddress(uint8_t aSwapIndex, uint32_t aOffset)
 {
-    otError error = OT_ERROR_NONE;
+    uint32_t address = FLASH_BASE_ADDRESS + aOffset;
 
-    if (FLASH_Init(&sFlashConfig) != kStatus_FLASH_Success)
+    if (aSwapIndex)
     {
-        error = OT_ERROR_FAILED;
+        address += FLASH_SWAP_SIZE;
     }
 
-    return error;
+    return address;
 }
 
-uint32_t utilsFlashGetSize(void)
+void otPlatFlashInit(otInstance *aInstance)
 {
-    return FSL_FEATURE_FLASH_PFLASH_BLOCK_SIZE;
+    OT_UNUSED_VARIABLE(aInstance);
+
+    FLASH_Init(&sFlashConfig);
 }
 
-otError utilsFlashErasePage(uint32_t aAddress)
+uint32_t otPlatFlashGetSwapSize(otInstance *aInstance)
 {
-    otError  error;
-    status_t status;
+    OT_UNUSED_VARIABLE(aInstance);
 
-    status = FLASH_Erase(&sFlashConfig, aAddress, FSL_FEATURE_FLASH_PFLASH_BLOCK_SECTOR_SIZE, kFLASH_ApiEraseKey);
+    return FLASH_SWAP_SIZE;
+}
 
-    if (status == kStatus_FLASH_Success)
+void otPlatFlashErase(otInstance *aInstance, uint32_t aSwapIndex)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    FLASH_Erase(&sFlashConfig, mapAddress(aSwapIndex, 0), FSL_FEATURE_FLASH_PFLASH_BLOCK_SECTOR_SIZE,
+                kFLASH_ApiEraseKey);
+    while ((FTFA->FSTAT & FTFA_FSTAT_CCIF_MASK) == 0)
     {
-        error = OT_ERROR_NONE;
     }
-    else if (status == kStatus_FLASH_AlignmentError)
-    {
-        error = OT_ERROR_INVALID_ARGS;
-    }
-    else
-    {
-        error = OT_ERROR_FAILED;
-    }
-
-    return error;
 }
 
-otError utilsFlashStatusWait(uint32_t aTimeout)
+void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, const void *aData, uint32_t aSize)
 {
-    otError  error = OT_ERROR_BUSY;
-    uint32_t start = otPlatAlarmMilliGetNow();
+    OT_UNUSED_VARIABLE(aInstance);
 
-    do
-    {
-        if (FTFA->FSTAT & FTFA_FSTAT_CCIF_MASK)
-        {
-            error = OT_ERROR_NONE;
-            break;
-        }
-    } while (aTimeout && ((otPlatAlarmMilliGetNow() - start) < aTimeout));
-
-    return error;
+    FLASH_Program(&sFlashConfig, mapAddress(aSwapIndex, aOffset), (uint32_t *)aData, aSize);
 }
 
-uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, void *aData, uint32_t aSize)
 {
-    if (FLASH_Program(&sFlashConfig, aAddress, (uint32_t *)aData, aSize) != kStatus_FLASH_Success)
-    {
-        aSize = 0;
-    }
+    OT_UNUSED_VARIABLE(aInstance);
 
-    return aSize;
-}
-
-uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
-{
-    memcpy(aData, (uint8_t *)aAddress, aSize);
-
-    return aSize;
+    memcpy(aData, (void *)mapAddress(aSwapIndex, aOffset), aSize);
 }

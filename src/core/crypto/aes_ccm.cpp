@@ -172,7 +172,7 @@ void AesCcm::Header(const void *aHeader, uint32_t aHeaderLength)
 {
     const uint8_t *headerBytes = reinterpret_cast<const uint8_t *>(aHeader);
 
-    assert(mHeaderCur + aHeaderLength <= mHeaderLength);
+    OT_ASSERT(mHeaderCur + aHeaderLength <= mHeaderLength);
 
     // process header
     for (unsigned i = 0; i < aHeaderLength; i++)
@@ -206,7 +206,7 @@ void AesCcm::Payload(void *aPlainText, void *aCipherText, uint32_t aLength, bool
     uint8_t *ciphertextBytes = reinterpret_cast<uint8_t *>(aCipherText);
     uint8_t  byte;
 
-    assert(mPlainTextCur + aLength <= mPlainTextLength);
+    OT_ASSERT(mPlainTextCur + aLength <= mPlainTextLength);
 
     for (unsigned i = 0; i < aLength; i++)
     {
@@ -265,7 +265,7 @@ void AesCcm::Finalize(void *aTag, uint8_t *aTagLength)
 {
     uint8_t *tagBytes = reinterpret_cast<uint8_t *>(aTag);
 
-    assert(mPlainTextCur == mPlainTextLength);
+    OT_ASSERT(mPlainTextCur == mPlainTextLength);
 
     if (mTagLength > 0)
     {

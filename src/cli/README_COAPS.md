@@ -10,7 +10,7 @@ Use the   `COAPS=1` build       switch to enable CoAPS API support.
 
 ```bash
 > ./bootstrap
-> make -f examples/Makefile-posix COAPS=1
+> make -f examples/Makefile-simulation COAPS=1
 ```
 
 ### Form Network

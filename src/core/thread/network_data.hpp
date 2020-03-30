@@ -240,11 +240,11 @@ public:
     otError GetNextService(Iterator &aIterator, uint16_t aRloc16, ServiceConfig &aConfig);
 
     /**
-     * This method provides the next service ID in the Thread Network Data for a given RLOC16.
+     * This method provides the next Service ID in the Thread Network Data for a given RLOC16.
      *
      * @param[inout]  aIterator  A reference to the Network Data iterator.
      * @param[in]     aRloc16    The RLOC16 value.
-     * @param[out]    aServiceID A reference to variable where the service ID will be placed.
+     * @param[out]    aServiceId A reference to variable where the Service ID will be placed.
      *
      * @retval OT_ERROR_NONE       Successfully found the next service.
      * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the Thread Network Data.
@@ -295,7 +295,7 @@ public:
      * This method indicates whether or not the Thread Network Data contains the service with given Service ID
      * associated with @p aRloc16.
      *
-     * @param[in]  aServiceID The Service ID to search for.
+     * @param[in]  aServiceId The Service ID to search for.
      * @param[in]  aRloc16    The RLOC16 to consider.
      *
      * @returns TRUE if this object contains the service with given ID associated with @p aRloc16,
@@ -303,6 +303,18 @@ public:
      *
      */
     bool ContainsService(uint8_t aServiceId, uint16_t aRloc16);
+
+    /**
+     * This method provides the next server RLOC16 in the Thread Network Data.
+     *
+     * @param[inout]  aIterator  A reference to the Network Data iterator.
+     * @param[out]    aRloc16    The RLOC16 value.
+     *
+     * @retval OT_ERROR_NONE       Successfully found the next server.
+     * @retval OT_ERROR_NOT_FOUND  No subsequent server exists in the Thread Network Data.
+     *
+     */
+    otError GetNextServer(Iterator &aIterator, uint16_t &aRloc16);
 
     /**
      * This method cancels the data resubmit delay timer.
@@ -378,7 +390,7 @@ protected:
      * This method returns a pointer to a Prefix TLV in a specified tlvs buffer.
      *
      * @param[in]  aPrefix        A pointer to an IPv6 prefix.
-     * @param[in]  aPrefixLength  The prefix length pointed to by @p aPrefix.
+     * @param[in]  aPrefixLength  The prefix length pointed to by @p aPrefix (in bits).
      * @param[in]  aTlvs          A pointer to a specified tlvs buffer.
      * @param[in]  aTlvsLength    The specified tlvs buffer length pointed to by @p aTlvs.
      *
@@ -496,7 +508,9 @@ protected:
 private:
     enum
     {
-        kDataResubmitDelay = 300000, ///< DATA_RESUBMIT_DELAY (milliseconds)
+        kDataResubmitDelay  = 300000, ///< DATA_RESUBMIT_DELAY (milliseconds) if the device itself is the server.
+        kProxyResubmitDelay = 5000,   ///< Resubmit delay (milliseconds) if deregister as the child server proxy.
+
     };
 
     class NetworkDataIterator
@@ -537,7 +551,6 @@ private:
     };
 
     const Type mType;
-    bool       mLastAttemptWait;
     TimeMilli  mLastAttempt;
 };
 

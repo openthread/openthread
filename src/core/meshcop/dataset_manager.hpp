@@ -242,7 +242,7 @@ protected:
     void HandleTimer(void);
 
     /**
-     * This method re-defines template `Get<Type>()` as the `InstanceLoctaor` (base class) definition is shadowed by
+     * This method re-defines template `Get<Type>()` as the `InstanceLocator` (base class) definition is shadowed by
      * the public `Get(dataset)` methods in this class.
      *
      */

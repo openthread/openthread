@@ -137,10 +137,6 @@ nodist_libopenthread_samr21_a_SOURCES                                           
     @top_builddir@/third_party/microchip/asf/thirdparty/wireless/services/trx_access/trx_access.c              \
     $(NULL)
 
-PRETTY_FILES                                                                                                 = \
-    $(PLATFORM_SOURCES)                                                                                        \
-    $(NULL)
-
 Dash                                                                                                         = -
 libopenthread_samr21_a_LIBADD                                                                                = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")

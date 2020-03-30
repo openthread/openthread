@@ -545,6 +545,28 @@ public:
      */
     static uint16_t GetHelpDataReserved(void) { return sizeof(HelpData) + kHelpDataAlignment; }
 
+    /**
+     * This method returns a pointer to the next message after this as a `Coap::Message`.
+     *
+     * This method should be used when the message is in a `Coap::MessageQueue` (i.e., a queue containing only CoAP
+     * messages).
+     *
+     * @returns A pointer to the next message in the queue or NULL if at the end of the queue.
+     *
+     */
+    Message *GetNextCoapMessage(void) { return static_cast<Message *>(GetNext()); }
+
+    /**
+     * This method returns a pointer to the next message after this as a `Coap::Message`.
+     *
+     * This method should be used when the message is in a `Coap::MessageQueue` (i.e., a queue containing only CoAP
+     * messages).
+     *
+     * @returns A pointer to the next message in the queue or NULL if at the end of the queue.
+     *
+     */
+    const Message *GetNextCoapMessage(void) const { return static_cast<const Message *>(GetNext()); }
+
 private:
     /**
      * Protocol Constants (RFC 7252).
@@ -627,17 +649,96 @@ private:
     HelpData &GetHelpData(void) { return const_cast<HelpData &>(static_cast<const Message *>(this)->GetHelpData()); }
 };
 
+/**
+ * This class implements a CoAP message queue.
+ *
+ */
+class MessageQueue : public ot::MessageQueue
+{
+public:
+    /**
+     * This constructor initializes the message queue.
+     *
+     */
+    MessageQueue(void)
+        : ot::MessageQueue()
+    {
+    }
+
+    /**
+     * This method returns a pointer to the first message.
+     *
+     * @returns A pointer to the first message.
+     *
+     */
+    Message *GetHead(void) const { return static_cast<Message *>(ot::MessageQueue::GetHead()); }
+
+    /**
+     * This method adds a message to the end of the queue.
+     *
+     * @param[in]  aMessage  The message to add.
+     *
+     * @retval OT_ERROR_NONE     Successfully added the message to the queue.
+     * @retval OT_ERROR_ALREADY  The message is already enqueued in a queue.
+     *
+     */
+    otError Enqueue(Message &aMessage) { return Enqueue(aMessage, kQueuePositionTail); }
+
+    /**
+     * This method adds a message at a given position (head/tail) of the queue.
+     *
+     * @param[in]  aMessage  The message to add.
+     * @param[in]  aPosition The position (head or tail) where to add the message.
+     *
+     * @retval OT_ERROR_NONE     Successfully added the message to the queue.
+     * @retval OT_ERROR_ALREADY  The message is already enqueued in a queue.
+     *
+     */
+    otError Enqueue(Message &aMessage, QueuePosition aPosition)
+    {
+        return ot::MessageQueue::Enqueue(aMessage, aPosition);
+    }
+
+    /**
+     * This method removes a message from the queue.
+     *
+     * @param[in]  aMessage  The message to remove.
+     *
+     * @retval OT_ERROR_NONE       Successfully removed the message from the queue.
+     * @retval OT_ERROR_NOT_FOUND  The message is not enqueued in a queue.
+     *
+     */
+    otError Dequeue(Message &aMessage) { return ot::MessageQueue::Dequeue(aMessage); }
+};
+
+/**
+ * This class acts as an iterator for CoAP options.
+ *
+ */
 class OptionIterator : public ::otCoapOptionIterator
 {
 public:
     /**
-     * Initialise the state of the iterator to iterate over the given message.
+     * Initialize the state of the iterator to iterate over the given message.
      *
-     * @retval  OT_ERROR_NONE   Successfully initialised
+     * @retval  OT_ERROR_NONE   Successfully initialized
      * @retval  OT_ERROR_PARSE  Message state is inconsistent
      *
      */
     otError Init(const Message *aMessage);
+
+    /**
+     * This method returns a pointer to the first option matching the given option number.
+     *
+     * The internal option pointer is advanced until matching option is seen, if no matching
+     * option is seen, the iterator will advance to the end of the options block.
+     *
+     * @param[in]   aOption         Option number to look for.
+     *
+     * @returns A pointer to the first matching option. If no option matching @p aOption is seen, NULL pointer is
+     *          returned.
+     */
+    const otCoapOption *GetFirstOptionMatching(uint16_t aOption);
 
     /**
      * This method returns a pointer to the first option.
@@ -647,6 +748,19 @@ public:
     const otCoapOption *GetFirstOption(void);
 
     /**
+     * This method returns a pointer to the next option matching the given option number.
+     *
+     * The internal option pointer is advanced until matching option is seen, if no matching
+     * option is seen, the iterator will advance to the end of the options block.
+     *
+     * @param[in]   aOption         Option number to look for.
+     *
+     * @returns A pointer to the next matching option (relative to current iterator position). If no option matching @p
+     *          aOption is seen, NULL pointer is returned.
+     */
+    const otCoapOption *GetNextOptionMatching(uint16_t aOption);
+
+    /**
      * This method returns a pointer to the next option.
      *
      * @returns A pointer to the next option. If no more options are present NULL pointer is returned.
@@ -654,7 +768,22 @@ public:
     const otCoapOption *GetNextOption(void);
 
     /**
+     * This function fills current option value into @p aValue.  The option is assumed to be an unsigned integer.
+     *
+     * @param[out]  aValue          Buffer to store the option value.
+     *
+     * @retval  OT_ERROR_NONE       Successfully filled value.
+     * @retval  OT_ERROR_NOT_FOUND  No more options, aIterator->mNextOptionOffset is set to offset of payload.
+     * @retval  OT_ERROR_NO_BUFS    Value is too long to fit in a uint64_t.
+     *
+     */
+    otError GetOptionValue(uint64_t &aValue) const;
+
+    /**
      * This function fills current option value into @p aValue.
+     *
+     * @param[out]  aValue          Buffer to store the option value.  This buffer is assumed to be sufficiently large
+     *                              (see @ref otCoapOption::mLength).
      *
      * @retval  OT_ERROR_NONE       Successfully filled value.
      * @retval  OT_ERROR_NOT_FOUND  No more options, mNextOptionOffset is set to offset of payload.

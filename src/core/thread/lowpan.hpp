@@ -197,10 +197,12 @@ public:
         otError error = OT_ERROR_NONE;
         int     rval;
 
+        OT_UNUSED_VARIABLE(rval);
+
         VerifyOrExit(CanWrite(aLength), error = OT_ERROR_NO_BUFS);
 
         rval = aMessage.Read(aMessage.GetOffset(), aLength, mWritePointer);
-        assert(rval == aLength);
+        OT_ASSERT(rval == aLength);
 
         mWritePointer += aLength;
 
@@ -351,12 +353,19 @@ private:
         kExtHdrEidMask     = 0x0e,
 
         kExtHdrNextHeader = 0x01,
+        kExtHdrMaxLength  = 255,
 
         kUdpDispatch     = 0xf0,
         kUdpDispatchMask = 0xf8,
         kUdpChecksum     = 1 << 2,
         kUdpPortMask     = 3 << 0,
     };
+
+    otError Compress(Message &           aMessage,
+                     const Mac::Address &aMacSource,
+                     const Mac::Address &aMacDest,
+                     BufferWriter &      aBuf,
+                     uint8_t &           aHeaderDepth);
 
     otError CompressExtensionHeader(Message &aMessage, BufferWriter &aBuf, uint8_t &aNextHeader);
     otError CompressSourceIid(const Mac::Address &aMacAddr,
@@ -560,7 +569,7 @@ public:
      * A first fragment header starts at offset zero.
      *
      * @param[in] aSize   The Datagram Size value.
-     * @param[in] aTage   The Datagram Tag value.
+     * @param[in] aTag    The Datagram Tag value.
      *
      */
     void InitFirstFragment(uint16_t aSize, uint16_t aTag) { Init(aSize, aTag, 0); }
@@ -571,7 +580,7 @@ public:
      * The @p aOffset value will be truncated to become a multiple of 8.
      *
      * @param[in] aSize   The Datagram Size value.
-     * @param[in] aTage   The Datagram Tag value.
+     * @param[in] aTag    The Datagram Tag value.
      * @param[in] aOffset The Datagram Offset value.
      *
      */

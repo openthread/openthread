@@ -54,9 +54,11 @@ extern "C" {
  */
 
 /**
- * Maximum Number of Network Diagnostic TLV Types to Request or Reset.
+ * Maximum value length of Thread Base TLV.
  */
-#define OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES 19
+#define OT_NETWORK_BASE_TLV_MAX_LENGTH 254
+
+#define OT_NETWORK_MAX_ROUTER_ID 62 ///< Maximum Router ID
 
 /**
  * Represents a Thread device role.
@@ -587,7 +589,6 @@ otDeviceRole otThreadGetDeviceRole(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE          Successfully retrieved the leader data.
  * @retval OT_ERROR_DETACHED      Not currently attached.
- * @retval OT_ERROR_INVALID_ARGS  @p aLeaderData is NULL.
  *
  */
 otError otThreadGetLeaderData(otInstance *aInstance, otLeaderData *aLeaderData);
@@ -662,58 +663,6 @@ otError otThreadGetParentAverageRssi(otInstance *aInstance, int8_t *aParentRssi)
  *
  */
 otError otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aLastRssi);
-
-/**
- * This function pointer is called when Network Diagnostic Get response is received.
- *
- * @param[in]  aMessage      A pointer to the message buffer containing the received Network Diagnostic
- *                           Get response payload.
- * @param[in]  aMessageInfo  A pointer to the message info for @p aMessage.
- * @param[in]  aContext      A pointer to application-specific context.
- *
- */
-typedef void (*otReceiveDiagnosticGetCallback)(otMessage *aMessage, const otMessageInfo *aMessageInfo, void *aContext);
-
-/**
- * This function registers a callback to provide received raw Network Diagnostic Get response payload.
- *
- * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aCallback         A pointer to a function that is called when Network Diagnostic Get response
- *                               is received or NULL to disable the callback.
- * @param[in]  aCallbackContext  A pointer to application-specific context.
- *
- */
-void otThreadSetReceiveDiagnosticGetCallback(otInstance *                   aInstance,
-                                             otReceiveDiagnosticGetCallback aCallback,
-                                             void *                         aCallbackContext);
-
-/**
- * Send a Network Diagnostic Get request.
- *
- * @param[in]  aInstance      A pointer to an OpenThread instance.
- * @param[in]  aDestination   A pointer to destination address.
- * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types.
- * @param[in]  aCount         Number of types in aTlvTypes
- *
- */
-otError otThreadSendDiagnosticGet(otInstance *        aInstance,
-                                  const otIp6Address *aDestination,
-                                  const uint8_t       aTlvTypes[],
-                                  uint8_t             aCount);
-
-/**
- * Send a Network Diagnostic Reset request.
- *
- * @param[in]  aInstance      A pointer to an OpenThread instance.
- * @param[in]  aDestination   A pointer to destination address.
- * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types. Currently only Type 9 is allowed.
- * @param[in]  aCount         Number of types in aTlvTypes
- *
- */
-otError otThreadSendDiagnosticReset(otInstance *        aInstance,
-                                    const otIp6Address *aDestination,
-                                    const uint8_t       aTlvTypes[],
-                                    uint8_t             aCount);
 
 /**
  * Get the IPv6 counters.

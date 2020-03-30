@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
 
         memset(&sockname, 0, sizeof(struct sockaddr_un));
         sockname.sun_family = AF_UNIX;
-        strncpy(sockname.sun_path, OPENTHREAD_POSIX_APP_SOCKET_NAME, sizeof(sockname.sun_path) - 1);
+        strncpy(sockname.sun_path, OPENTHREAD_POSIX_DAEMON_SOCKET_NAME, sizeof(sockname.sun_path) - 1);
 
         ret = connect(sSessionFd, (const struct sockaddr *)&sockname, sizeof(struct sockaddr_un));
 

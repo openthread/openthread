@@ -100,7 +100,7 @@ void AnnounceSenderBase::HandleTimer(void)
         error    = mChannelMask.GetNextChannel(mChannel);
     }
 
-    assert(error == OT_ERROR_NONE);
+    OT_ASSERT(error == OT_ERROR_NONE);
 
     Get<Mle::MleRouter>().SendAnnounce(mChannel, false);
 
@@ -138,11 +138,13 @@ void AnnounceSender::CheckState(void)
         break;
 
     case OT_DEVICE_ROLE_CHILD:
+#if OPENTHREAD_FTD
         if (mle.IsRouterEligible() && mle.IsRxOnWhenIdle())
         {
             interval = kReedTxInterval;
             break;
         }
+#endif
 
         // fall through
 

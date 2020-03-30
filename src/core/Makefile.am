@@ -108,6 +108,8 @@ libopenthread_mtd_a_CPPFLAGS               = \
 #
 
 SOURCES_COMMON                             = \
+    api/backbone_router_api.cpp              \
+    api/backbone_router_ftd_api.cpp          \
     api/border_router_api.cpp                \
     api/channel_manager_api.cpp              \
     api/channel_monitor_api.cpp              \
@@ -132,6 +134,7 @@ SOURCES_COMMON                             = \
     api/logging_api.cpp                      \
     api/message_api.cpp                      \
     api/netdata_api.cpp                      \
+    api/netdiag_api.cpp                      \
     api/network_time_api.cpp                 \
     api/random_crypto_api.cpp                \
     api/random_noncrypto_api.cpp             \
@@ -141,6 +144,8 @@ SOURCES_COMMON                             = \
     api/thread_api.cpp                       \
     api/thread_ftd_api.cpp                   \
     api/udp_api.cpp                          \
+    backbone_router/leader.cpp               \
+    backbone_router/local.cpp                \
     coap/coap.cpp                            \
     coap/coap_message.cpp                    \
     coap/coap_secure.cpp                     \
@@ -208,7 +213,6 @@ SOURCES_COMMON                             = \
     thread/announce_begin_server.cpp         \
     thread/announce_sender.cpp               \
     thread/child_table.cpp                   \
-    thread/device_mode.cpp                   \
     thread/energy_scan_server.cpp            \
     thread/indirect_sender.cpp               \
     thread/key_manager.cpp                   \
@@ -219,6 +223,7 @@ SOURCES_COMMON                             = \
     thread/mesh_forwarder_mtd.cpp            \
     thread/mle.cpp                           \
     thread/mle_router.cpp                    \
+    thread/mle_types.cpp                     \
     thread/network_data.cpp                  \
     thread/network_data_leader.cpp           \
     thread/network_data_leader_ftd.cpp       \
@@ -233,6 +238,7 @@ SOURCES_COMMON                             = \
     utils/channel_manager.cpp                \
     utils/channel_monitor.cpp                \
     utils/child_supervision.cpp              \
+    utils/flash.cpp                          \
     utils/heap.cpp                           \
     utils/jam_detector.cpp                   \
     utils/parse_cmdline.cpp                  \
@@ -301,6 +307,8 @@ endif # OPENTHREAD_ENABLE_VENDOR_EXTENSION
 
 HEADERS_COMMON                             = \
     openthread-core-config.h                 \
+    backbone_router/leader.hpp               \
+    backbone_router/local.hpp                \
     coap/coap.hpp                            \
     coap/coap_message.hpp                    \
     coap/coap_secure.hpp                     \
@@ -327,6 +335,7 @@ HEADERS_COMMON                             = \
     common/tlvs.hpp                          \
     common/trickle_timer.hpp                 \
     config/announce_sender.h                 \
+    config/backbone_router.h                 \
     config/border_router.h                   \
     config/channel_manager.h                 \
     config/channel_monitor.h                 \
@@ -404,7 +413,6 @@ HEADERS_COMMON                             = \
     thread/announce_begin_server.hpp         \
     thread/announce_sender.hpp               \
     thread/child_table.hpp                   \
-    thread/device_mode.hpp                   \
     thread/energy_scan_server.hpp            \
     thread/indirect_sender.hpp               \
     thread/indirect_sender_frame_context.hpp \
@@ -413,11 +421,9 @@ HEADERS_COMMON                             = \
     thread/lowpan.hpp                        \
     thread/mesh_forwarder.hpp                \
     thread/mle.hpp                           \
-    thread/mle_constants.hpp                 \
     thread/mle_router.hpp                    \
-    thread/mle_router_ftd.hpp                \
-    thread/mle_router_mtd.hpp                \
     thread/mle_tlvs.hpp                      \
+    thread/mle_types.hpp                     \
     thread/network_data.hpp                  \
     thread/network_data_leader.hpp           \
     thread/network_data_leader_ftd.hpp       \
@@ -436,6 +442,7 @@ HEADERS_COMMON                             = \
     utils/channel_manager.hpp                \
     utils/channel_monitor.hpp                \
     utils/child_supervision.hpp              \
+    utils/flash.hpp                          \
     utils/heap.hpp                           \
     utils/jam_detector.hpp                   \
     utils/parse_cmdline.hpp                  \
@@ -445,12 +452,6 @@ HEADERS_COMMON                             = \
 
 noinst_HEADERS                             = \
     $(HEADERS_COMMON)                        \
-    $(NULL)
-
-PRETTY_FILES                               = \
-    $(HEADERS_COMMON)                        \
-    $(SOURCES_COMMON)                        \
-    $(EXTRA_DIST)                            \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE

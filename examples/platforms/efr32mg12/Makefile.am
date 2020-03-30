@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2017, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -123,10 +123,6 @@ libopenthread_efr32mg12_a_SOURCES                                             = 
     $(PLATFORM_SOURCES)                                                         \
     $(NULL)
 
-PRETTY_FILES                                                                  = \
-    $(PLATFORM_SOURCES)                                                         \
-    $(NULL)
-
 Dash = -
 libopenthread_efr32mg12_a_LIBADD                                                                     = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")             \
@@ -135,13 +131,9 @@ libopenthread_efr32mg12_a_LIBADD                                                
 DIST_SUBDIRS                                                                  = \
     sleepy-demo                                                                 \
     $(NULL)
-    
+
 SUBDIRS                                                                       = \
     sleepy-demo                                                                 \
     $(NULL)
 
-PRETTY_SUBDIRS                                                                = \
-    sleepy-demo                                                                 \
-    $(NULL)
-    
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
