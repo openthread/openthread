@@ -54,52 +54,52 @@ otError otBorderRouterGetNetData(otInstance *aInstance, bool aStable, uint8_t *a
 
 otError otBorderRouterAddOnMeshPrefix(otInstance *aInstance, const otBorderRouterConfig *aConfig)
 {
-    uint8_t   flags    = 0;
+    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     OT_ASSERT(aConfig != NULL);
+    // Add Prefix validation check:
+    // Thread 1.1 Specification 5.13.2 says
+    // "A valid prefix MUST NOT allow both DHCPv6 and SLAAC for address configuration"
+    VerifyOrExit(!aConfig->mDhcp || !aConfig->mSlaac, error = OT_ERROR_INVALID_ARGS);
 
-    if (aConfig->mPreferred)
+    error = instance.Get<NetworkData::Local>().AddOnMeshPrefix(*aConfig);
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    // Only try to configure Domain Prefix after the parameter is vaidated via above `AddOnMeshPrefix()`.
+    if (error == OT_ERROR_NONE && aConfig->mDp)
     {
-        flags |= NetworkData::BorderRouterEntry::kPreferredFlag;
-    }
+        // Restore local server data
+        instance.Get<NetworkData::Local>().RemoveOnMeshPrefix(aConfig->mPrefix.mPrefix.mFields.m8,
+                                                              aConfig->mPrefix.mLength);
 
-    if (aConfig->mSlaac)
-    {
-        flags |= NetworkData::BorderRouterEntry::kSlaacFlag;
+        error = instance.Get<BackboneRouter::Local>().SetDomainPrefix(*aConfig);
     }
+#endif
 
-    if (aConfig->mDhcp)
-    {
-        flags |= NetworkData::BorderRouterEntry::kDhcpFlag;
-    }
-
-    if (aConfig->mConfigure)
-    {
-        flags |= NetworkData::BorderRouterEntry::kConfigureFlag;
-    }
-
-    if (aConfig->mDefaultRoute)
-    {
-        flags |= NetworkData::BorderRouterEntry::kDefaultRouteFlag;
-    }
-
-    if (aConfig->mOnMesh)
-    {
-        flags |= NetworkData::BorderRouterEntry::kOnMeshFlag;
-    }
-
-    return instance.Get<NetworkData::Local>().AddOnMeshPrefix(
-        aConfig->mPrefix.mPrefix.mFields.m8, aConfig->mPrefix.mLength, aConfig->mPreference, flags, aConfig->mStable);
+exit:
+    return error;
 }
 
 otError otBorderRouterRemoveOnMeshPrefix(otInstance *aInstance, const otIp6Prefix *aPrefix)
 {
+    otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     OT_ASSERT(aPrefix != NULL);
 
-    return instance.Get<NetworkData::Local>().RemoveOnMeshPrefix(aPrefix->mPrefix.mFields.m8, aPrefix->mLength);
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    if ((error = instance.Get<BackboneRouter::Local>().RemoveDomainPrefix(*aPrefix)) == OT_ERROR_NONE)
+    {
+        // do nothing
+    }
+    else
+    // Continue to try to remove on mesh prefix if it is not the Domain Prefix.
+#endif
+    {
+        error = instance.Get<NetworkData::Local>().RemoveOnMeshPrefix(aPrefix->mPrefix.mFields.m8, aPrefix->mLength);
+    }
+
+    return error;
 }
 
 otError otBorderRouterGetNextOnMeshPrefix(otInstance *           aInstance,

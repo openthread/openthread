@@ -437,14 +437,16 @@ class BorderRouterEntry
 public:
     enum
     {
-        kPreferenceOffset = 6,
+        kPreferenceOffset = 14,
         kPreferenceMask   = 3 << kPreferenceOffset,
-        kPreferredFlag    = 1 << 5,
-        kSlaacFlag        = 1 << 4,
-        kDhcpFlag         = 1 << 3,
-        kConfigureFlag    = 1 << 2,
-        kDefaultRouteFlag = 1 << 1,
-        kOnMeshFlag       = 1 << 0,
+        kPreferredFlag    = 1 << 13,
+        kSlaacFlag        = 1 << 12,
+        kDhcpFlag         = 1 << 11,
+        kConfigureFlag    = 1 << 10,
+        kDefaultRouteFlag = 1 << 9,
+        kOnMeshFlag       = 1 << 8,
+        kNdDnsFlag        = 1 << 7,
+        kDpFlag           = 1 << 6,
     };
 
     /**
@@ -454,8 +456,7 @@ public:
     void Init(void)
     {
         SetRloc(Mac::kShortAddrInvalid);
-        mFlags    = 0;
-        mReserved = 0;
+        mFlags = 0;
     }
 
     /**
@@ -474,20 +475,23 @@ public:
     void SetRloc(uint16_t aRloc16) { mRloc = HostSwap16(aRloc16); }
 
     /**
-     * This method returns the Flags byte value.
+     * This method returns the Flags value.
      *
-     * @returns The Flags byte value.
+     * @returns The Flags value.
      *
      */
-    uint8_t GetFlags(void) const { return mFlags & ~kPreferenceMask; }
+    uint16_t GetFlags(void) const { return HostSwap16(mFlags) & ~kPreferenceMask; }
 
     /**
-     * This method sets the Flags byte value.
+     * This method sets the Flags value.
      *
-     * @param[in]  aFlags  The Flags byte value.
+     * @param[in]  aFlags  The Flags value.
      *
      */
-    void SetFlags(uint8_t aFlags) { mFlags = (mFlags & kPreferenceMask) | (aFlags & ~kPreferenceMask); }
+    void SetFlags(uint16_t aFlags)
+    {
+        mFlags = HostSwap16((HostSwap16(mFlags) & kPreferenceMask) | (aFlags & ~kPreferenceMask));
+    }
 
     /**
      * This method returns the Preference value.
@@ -495,7 +499,10 @@ public:
      * @returns the Preference value.
      *
      */
-    int8_t GetPreference(void) const { return static_cast<int8_t>(mFlags) >> kPreferenceOffset; }
+    int8_t GetPreference(void) const
+    {
+        return static_cast<int8_t>(static_cast<int16_t>(HostSwap16(mFlags)) >> kPreferenceOffset);
+    }
 
     /**
      * This method sets the Preference value.
@@ -505,7 +512,8 @@ public:
      */
     void SetPreference(int8_t aPrf)
     {
-        mFlags = (mFlags & ~kPreferenceMask) | ((static_cast<uint8_t>(aPrf) << kPreferenceOffset) & kPreferenceMask);
+        mFlags = HostSwap16((HostSwap16(mFlags) & ~kPreferenceMask) |
+                            ((static_cast<uint16_t>(aPrf) << kPreferenceOffset) & kPreferenceMask));
     }
 
     /**
@@ -515,19 +523,7 @@ public:
      * @retval FALSE  If the Preferred flag is not set.
      *
      */
-    bool IsPreferred(void) const { return (mFlags & kPreferredFlag) != 0; }
-
-    /**
-     * This method clears the Preferred flag.
-     *
-     */
-    void ClearPreferred(void) { mFlags &= ~kPreferredFlag; }
-
-    /**
-     * This method sets the Preferred flag.
-     *
-     */
-    void SetPreferred(void) { mFlags |= kPreferredFlag; }
+    bool IsPreferred(void) const { return (HostSwap16(mFlags) & kPreferredFlag) != 0; }
 
     /**
      * This method indicates whether or not the SLAAC flag is set.
@@ -536,19 +532,7 @@ public:
      * @retval FALSE  If the SLAAC flag is not set.
      *
      */
-    bool IsSlaac(void) const { return (mFlags & kSlaacFlag) != 0; }
-
-    /**
-     * This method clears the SLAAC flag.
-     *
-     */
-    void ClearSlaac(void) { mFlags &= ~kSlaacFlag; }
-
-    /**
-     * This method sets the SLAAC flag.
-     *
-     */
-    void SetSlaac(void) { mFlags |= kSlaacFlag; }
+    bool IsSlaac(void) const { return (HostSwap16(mFlags) & kSlaacFlag) != 0; }
 
     /**
      * This method indicates whether or not the DHCP flag is set.
@@ -557,19 +541,7 @@ public:
      * @retval FALSE  If the DHCP flag is not set.
      *
      */
-    bool IsDhcp(void) const { return (mFlags & kDhcpFlag) != 0; }
-
-    /**
-     * This method clears the DHCP flag.
-     *
-     */
-    void ClearDhcp(void) { mFlags &= ~kDhcpFlag; }
-
-    /**
-     * This method sets the DHCP flag.
-     *
-     */
-    void SetDhcp(void) { mFlags |= kDhcpFlag; }
+    bool IsDhcp(void) const { return (HostSwap16(mFlags) & kDhcpFlag) != 0; }
 
     /**
      * This method indicates whether or not the Configure flag is set.
@@ -578,19 +550,7 @@ public:
      * @retval FALSE  If the Configure flag is not set.
      *
      */
-    bool IsConfigure(void) const { return (mFlags & kConfigureFlag) != 0; }
-
-    /**
-     * This method clears the Configure flag.
-     *
-     */
-    void ClearConfigure(void) { mFlags &= ~kConfigureFlag; }
-
-    /**
-     * This method sets the Configure flag.
-     *
-     */
-    void SetConfigure(void) { mFlags |= kConfigureFlag; }
+    bool IsConfigure(void) const { return (HostSwap16(mFlags) & kConfigureFlag) != 0; }
 
     /**
      * This method indicates whether or not the Default Route flag is set.
@@ -599,19 +559,7 @@ public:
      * @retval FALSE  If the Default Route flag is not set.
      *
      */
-    bool IsDefaultRoute(void) const { return (mFlags & kDefaultRouteFlag) != 0; }
-
-    /**
-     * This method clears the Default Route flag.
-     *
-     */
-    void ClearDefaultRoute(void) { mFlags &= ~kDefaultRouteFlag; }
-
-    /**
-     * This method sets the Default Route flag.
-     *
-     */
-    void SetDefaultRoute(void) { mFlags |= kDefaultRouteFlag; }
+    bool IsDefaultRoute(void) const { return (HostSwap16(mFlags) & kDefaultRouteFlag) != 0; }
 
     /**
      * This method indicates whether or not the On-Mesh flag is set.
@@ -620,19 +568,25 @@ public:
      * @retval FALSE  If the On-Mesh flag is not set.
      *
      */
-    bool IsOnMesh(void) const { return (mFlags & kOnMeshFlag) != 0; }
+    bool IsOnMesh(void) const { return (HostSwap16(mFlags) & kOnMeshFlag) != 0; }
 
     /**
-     * This method clears the On-Mesh flag.
+     * This method indicates whether or not the Nd-Dns flag is set.
+     *
+     * @retval TRUE   If the Nd-Dns flag is set.
+     * @retval FALSE  If the Nd-Dns flag is not set.
      *
      */
-    void ClearOnMesh(void) { mFlags &= ~kOnMeshFlag; }
+    bool IsNdDns(void) const { return (HostSwap16(mFlags) & kNdDnsFlag) != 0; }
 
     /**
-     * This method sets the On-Mesh flag.
+     * This method indicates whether or not the Domain Prefix flag is set.
+     *
+     * @retval TRUE   If the Domain Prefix flag is set.
+     * @retval FALSE  If the Domain Prefix flag is not set.
      *
      */
-    void SetOnMesh(void) { mFlags |= kOnMeshFlag; }
+    bool IsDp(void) const { return (HostSwap16(mFlags) & kDpFlag) != 0; }
 
     /**
      * This method returns a pointer to the next BorderRouterEntry
@@ -644,8 +598,7 @@ public:
 
 private:
     uint16_t mRloc;
-    uint8_t  mFlags;
-    uint8_t  mReserved;
+    uint16_t mFlags;
 } OT_TOOL_PACKED_END;
 
 /**

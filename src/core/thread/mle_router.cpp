@@ -1744,7 +1744,10 @@ void MleRouter::HandleStateUpdateTimer(void)
             // If no Backbone Router service after jitter, try to register its own Backbone Router Service.
             if (!Get<BackboneRouter::Leader>().HasPrimary())
             {
-                Get<BackboneRouter::Local>().AddService();
+                if (Get<BackboneRouter::Local>().AddService() == OT_ERROR_NONE)
+                {
+                    Get<NetworkData::Notifier>().HandleServerDataUpdated();
+                }
             }
         }
     }

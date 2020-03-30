@@ -318,6 +318,7 @@ private:
     otError ProcessPrefixAdd(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessPrefixRemove(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessPrefixList(void);
+    void    OutputPrefix(otBorderRouterConfig &aConfig);
 #endif
     void ProcessPromiscuous(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_FTD

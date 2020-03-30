@@ -216,6 +216,8 @@ otError NetworkData::GetNextOnMeshPrefix(Iterator &aIterator, uint16_t aRloc16, 
                     aConfig.mOnMesh         = borderRouterEntry->IsOnMesh();
                     aConfig.mStable         = borderRouter->IsStable();
                     aConfig.mRloc16         = borderRouterEntry->GetRloc();
+                    aConfig.mNdDns          = borderRouterEntry->IsNdDns();
+                    aConfig.mDp             = borderRouterEntry->IsDp();
 
                     iterator.SetEntryIndex(index + 1);
 

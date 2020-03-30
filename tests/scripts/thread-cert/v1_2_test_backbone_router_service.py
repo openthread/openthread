@@ -30,6 +30,7 @@
 import unittest
 
 import thread_cert
+import config
 
 LEADER_1_1 = 1
 BBR_1 = 2
@@ -90,10 +91,12 @@ class TestBackboneRouterService(thread_cert.TestCase):
         WAIT_TIME = WAIT_ATTACH
         self.simulator.go(WAIT_TIME)
         self.assertEqual(self.nodes[LEADER_1_1].get_state(), 'leader')
+        self.simulator.set_lowpan_context(1, config.DOMAIN_PREFIX)
 
         # 1) First Backbone Router would become the Primary.
         self.nodes[BBR_1].set_router_selection_jitter(ROUTER_SELECTION_JITTER)
         self.nodes[BBR_1].set_bbr_registration_jitter(BBR_REGISTRATION_JITTER)
+        self.nodes[BBR_1].set_domain_prefix(config.DOMAIN_PREFIX)
         self.nodes[BBR_1].set_backbone_router(seqno=1)
         self.nodes[BBR_1].start()
         WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
@@ -111,6 +114,7 @@ class TestBackboneRouterService(thread_cert.TestCase):
         self.nodes[BBR_1].reset()
         self.nodes[BBR_1].set_bbr_registration_jitter(BBR_REGISTRATION_JITTER)
         self.nodes[BBR_1].set_router_selection_jitter(ROUTER_SELECTION_JITTER)
+        self.nodes[BBR_1].set_domain_prefix(config.DOMAIN_PREFIX)
         self.nodes[BBR_1].enable_backbone_router()
         self.nodes[BBR_1].start()
         WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
@@ -135,6 +139,7 @@ class TestBackboneRouterService(thread_cert.TestCase):
                 ROUTER_SELECTION_JITTER)
             self.nodes[BBR_1].set_bbr_registration_jitter(
                 BBR_REGISTRATION_JITTER)
+            self.nodes[BBR_1].set_domain_prefix(config.DOMAIN_PREFIX)
             self.nodes[BBR_1].enable_backbone_router()
             self.nodes[BBR_1].start()
             WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
@@ -157,6 +162,7 @@ class TestBackboneRouterService(thread_cert.TestCase):
         # by default.
         self.nodes[BBR_2].set_router_selection_jitter(ROUTER_SELECTION_JITTER)
         self.nodes[BBR_2].set_bbr_registration_jitter(BBR_REGISTRATION_JITTER)
+        self.nodes[BBR_2].set_domain_prefix(config.DOMAIN_PREFIX)
         self.nodes[BBR_2].start()
         WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
         self.simulator.go(WAIT_TIME)
@@ -168,12 +174,16 @@ class TestBackboneRouterService(thread_cert.TestCase):
 
         # Enable Backbone function, it will stay at Secondary state as
         # there is Primary Backbone Router already.
+        # Here removes the Domain Prefix before enabling backbone function
+        # intentionally to avoid SRV_DATA.ntf due to prefix inconsistency.
+        self.nodes[BBR_2].remove_domain_prefix(config.DOMAIN_PREFIX)
         self.nodes[BBR_2].enable_backbone_router()
         self.nodes[BBR_2].set_backbone_router(seqno=255)
         WAIT_TIME = BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
         self.assertEqual(self.nodes[BBR_2].get_backbone_router_state(),
                          'Secondary')
+
         # Check no SRV_DATA.ntf.
         messages = self.simulator.get_messages_sent_by(BBR_2)
         msg = messages.next_coap_message('0.02', '/a/sd', False)
@@ -219,6 +229,7 @@ class TestBackboneRouterService(thread_cert.TestCase):
         #    Verify that BBR_2 stays at Secondary.
         self.nodes[BBR_2].set_router_selection_jitter(ROUTER_SELECTION_JITTER)
         self.nodes[BBR_2].set_bbr_registration_jitter(BBR_REGISTRATION_JITTER)
+        self.nodes[BBR_1].set_domain_prefix(config.DOMAIN_PREFIX)
         self.nodes[BBR_2].enable_backbone_router()
         self.nodes[BBR_2].interface_up()
         self.nodes[BBR_2].thread_start()
