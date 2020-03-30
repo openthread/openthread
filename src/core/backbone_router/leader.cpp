@@ -156,13 +156,13 @@ void Leader::Update(void)
         }
         else
         {
-            // Short Address of PBBR changes
+            // Short Address of PBBR changes.
             state = kStateToTriggerRereg;
         }
     }
     else if (config.mServer16 == Mac::kShortAddrInvalid)
     {
-        // If no primary all the time
+        // If no Primary all the time.
         state = kStateNone;
     }
     else if (config.mSequenceNumber != mConfig.mSequenceNumber)

@@ -120,13 +120,22 @@ public:
     otError AddService(bool aForce = false);
 
     /**
-     * This method indicates whether or not the Backbone Router is primary.
+     * This method indicates whether or not the Backbone Router is Primary.
      *
-     * @retval  True  if the backbone router is primary.
-     * @retval  False if the backbone router is not primary.
+     * @retval  True  if the Backbone Router is Primary.
+     * @retval  False if the Backbone Router is not Primary.
      *
      */
     bool IsPrimary(void) const { return mState == OT_BACKBONE_ROUTER_STATE_PRIMARY; }
+
+    /**
+     * This method indicates whether or not the Backbone Router is enabled.
+     *
+     * @retval  True  if the Backbone Router is enabled.
+     * @retval  False if the Backbone Router is not enabled.
+     *
+     */
+    bool IsEnabled(void) const { return mState != OT_BACKBONE_ROUTER_STATE_DISABLED; }
 
     /**
      * This method sets the Backbone Router registration jitter value.
@@ -145,10 +154,10 @@ public:
     uint8_t GetRegistrationJitter(void) const { return mRegistrationJitter; }
 
     /**
-     * This method notifies primary backbone router status.
+     * This method notifies Primary Backbone Router status.
      *
-     * @param[in]  aState   The state or state change of primary backbone router.
-     * @param[in]  aConfig  The primary backbone router service.
+     * @param[in]  aState   The state or state change of Primary Backbone Router.
+     * @param[in]  aConfig  The Primary Backbone Router service.
      *
      */
     void UpdateBackboneRouterPrimary(Leader::State aState, const BackboneRouterConfig &aConfig);
@@ -164,8 +173,8 @@ private:
     uint8_t             mRegistrationJitter;
 
     // Indicates whether or not already add Backbone Router Service to local server data.
-    // Used to check whether or not in restore stage after reset or whether to remove bbr
-    // service for secondary bbr if it is added by force.
+    // Used to check whether or not in restore stage after reset or whether to remove
+    // Backbone Router service for Secondary Backbone Router if it was added by force.
     bool mIsServiceAdded;
 };
 
