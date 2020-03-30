@@ -60,7 +60,7 @@
 #endif // OPENTHREAD_CONFIG_JOINER_ENABLE
 
 #include "meshcop/joiner_router.hpp"
-#include "meshcop/leader.hpp"
+#include "meshcop/meshcop_leader.hpp"
 #include "net/dhcp6.hpp"
 #include "net/dhcp6_client.hpp"
 #include "net/dhcp6_server.hpp"
