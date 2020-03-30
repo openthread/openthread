@@ -39,6 +39,29 @@ reset_source()
     git clean -xfd
 }
 
+build_cc1352()
+{
+    local options=("${OT_COMMON_OPTIONS[@]}")
+
+    options+=(
+        "-DOT_PLATFORM=cc1352"
+        "-DCMAKE_TOOLCHAIN_FILE=examples/platforms/cc1352/arm-none-eabi.cmake"
+        "-DOT_COMMISSIONER=on"
+        "-DOT_DHCP6_CLIENT=on"
+        "-DOT_DHCP6_SERVER=on"
+        "-DOT_DNS_CLIENT=on"
+        "-DOT_JOINER=on"
+        "-DOT_SLAAC=on"
+        "-DCMAKE_BUILD_TYPE=Release"
+    )
+
+    reset_source
+    mkdir build
+    cd build
+    cmake -GNinja "${options[@]}" ..
+    ninja
+}
+
 build_cc2538()
 {
     local options=("${OT_COMMON_OPTIONS[@]}")
@@ -57,6 +80,7 @@ build_cc2538()
 
 main()
 {
+    build_cc1352
     build_cc2538
 }
 
