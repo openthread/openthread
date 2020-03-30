@@ -3907,72 +3907,72 @@ void Interpreter::HandleDiagnosticGetResponse(const otMessage &aMessage, const I
         {
         case OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS:
             mServer->OutputFormat("Ext Address: '");
-            OutputBytes(diagTlv.mExtAddress.m8, sizeof(diagTlv.mExtAddress.m8));
+            OutputBytes(diagTlv.mData.mExtAddress.m8, sizeof(diagTlv.mData.mExtAddress.m8));
             mServer->OutputFormat("'\r\n");
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS:
-            mServer->OutputFormat("Rloc16: 0x%04x\r\n", diagTlv.mAddr16);
+            mServer->OutputFormat("Rloc16: 0x%04x\r\n", diagTlv.mData.mAddr16);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_MODE:
             mServer->OutputFormat("Mode:\r\n");
-            OutputMode(diagTlv.mMode, column + INDENT_SIZE);
+            OutputMode(diagTlv.mData.mMode, column + INDENT_SIZE);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT:
-            mServer->OutputFormat("Timeout: %u\r\n", diagTlv.mTimeout);
+            mServer->OutputFormat("Timeout: %u\r\n", diagTlv.mData.mTimeout);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY:
             mServer->OutputFormat("Connectivity:\r\n");
-            OutputConnectivity(diagTlv.mConnectivity, column + INDENT_SIZE);
+            OutputConnectivity(diagTlv.mData.mConnectivity, column + INDENT_SIZE);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_ROUTE:
             mServer->OutputFormat("Route:\r\n");
-            OutputRoute(diagTlv.mRoute, column + INDENT_SIZE);
+            OutputRoute(diagTlv.mData.mRoute, column + INDENT_SIZE);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA:
             mServer->OutputFormat("Leader Data:\r\n");
-            OutputLeaderData(diagTlv.mLeaderData, column + INDENT_SIZE);
+            OutputLeaderData(diagTlv.mData.mLeaderData, column + INDENT_SIZE);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_NETWORK_DATA:
             mServer->OutputFormat("Network Data: '");
-            OutputBytes(diagTlv.mNetworkData.m8, diagTlv.mNetworkData.mCount);
+            OutputBytes(diagTlv.mData.mNetworkData.m8, diagTlv.mData.mNetworkData.mCount);
             mServer->OutputFormat("'\r\n");
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST:
             mServer->OutputFormat("IP6 Address List:\r\n");
-            for (uint16_t i = 0; i < diagTlv.mIp6AddrList.mCount; ++i)
+            for (uint16_t i = 0; i < diagTlv.mData.mIp6AddrList.mCount; ++i)
             {
                 OutputSpaces(column + INDENT_SIZE);
                 mServer->OutputFormat("- ");
-                OutputIp6Address(diagTlv.mIp6AddrList.mList[i]);
+                OutputIp6Address(diagTlv.mData.mIp6AddrList.mList[i]);
                 mServer->OutputFormat("\r\n");
             }
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_MAC_COUNTERS:
             mServer->OutputFormat("MAC Counters:\r\n");
-            OutputNetworkDiagMacCounters(diagTlv.mMacCounters, column + INDENT_SIZE);
+            OutputNetworkDiagMacCounters(diagTlv.mData.mMacCounters, column + INDENT_SIZE);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL:
-            mServer->OutputFormat("Battery Level: %u%%\r\n", diagTlv.mBatteryLevel);
+            mServer->OutputFormat("Battery Level: %u%%\r\n", diagTlv.mData.mBatteryLevel);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_SUPPLY_VOLTAGE:
-            mServer->OutputFormat("Supply Voltage: %umV\r\n", diagTlv.mSupplyVoltage);
+            mServer->OutputFormat("Supply Voltage: %umV\r\n", diagTlv.mData.mSupplyVoltage);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_CHILD_TABLE:
             mServer->OutputFormat("Child Table:\r\n");
-            for (uint16_t i = 0; i < diagTlv.mChildTable.mCount; ++i)
+            for (uint16_t i = 0; i < diagTlv.mData.mChildTable.mCount; ++i)
             {
                 OutputSpaces(column + INDENT_SIZE);
                 mServer->OutputFormat("- ");
-                OutputChildTableEntry(diagTlv.mChildTable.mTable[i], column + INDENT_SIZE + 2);
+                OutputChildTableEntry(diagTlv.mData.mChildTable.mTable[i], column + INDENT_SIZE + 2);
             }
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES:
             mServer->OutputFormat("Channel Pages: '");
-            OutputBytes(diagTlv.mChannelPages.m8, diagTlv.mChannelPages.mCount);
+            OutputBytes(diagTlv.mData.mChannelPages.m8, diagTlv.mData.mChannelPages.mCount);
             mServer->OutputFormat("'\r\n");
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT:
-            mServer->OutputFormat("Max Child Timeout: %u\r\n", diagTlv.mMaxChildTimeout);
+            mServer->OutputFormat("Max Child Timeout: %u\r\n", diagTlv.mData.mMaxChildTimeout);
             break;
         }
     }

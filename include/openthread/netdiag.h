@@ -258,7 +258,7 @@ typedef struct otNetworkDiagTlv
             uint8_t mCount;
             uint8_t m8[OT_NETWORK_BASE_TLV_MAX_LENGTH];
         } mChannelPages;
-    };
+    } mData;
 } otNetworkDiagTlv;
 
 /**
