@@ -60,6 +60,7 @@ build_cc1352()
     cd build
     cmake -GNinja "${options[@]}" ..
     ninja
+    cd ..
 }
 
 build_cc2538()
@@ -76,6 +77,7 @@ build_cc2538()
     cd build
     cmake -GNinja "${options[@]}" ..
     ninja
+    cd ..
 }
 
 main()
