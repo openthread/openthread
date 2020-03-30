@@ -328,6 +328,14 @@ public:
     void RemoveNeighbor(Neighbor &aNeighbor);
 
     /**
+     * This method invalidates a direct link to a neighboring router (due to failed link-layer acks).
+     *
+     * @param[in]  aRouter  A reference to the router object.
+     *
+     */
+    void RemoveRouterLink(Router &aRouter);
+
+    /**
      * This method restores children information from non-volatile memory.
      *
      */
@@ -844,6 +852,7 @@ public:
     uint8_t GetCost(uint16_t) { return 0; }
 
     otError RemoveNeighbor(Neighbor &) { return BecomeDetached(); }
+    otError RemoveRouterLink(Router &) { return BecomeDetached(); }
 
     Neighbor *GetNeighbor(const Mac::ExtAddress &aAddress) { return Mle::GetNeighbor(aAddress); }
     Neighbor *GetNeighbor(const Mac::Address &aAddress) { return Mle::GetNeighbor(aAddress); }

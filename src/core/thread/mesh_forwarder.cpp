@@ -810,7 +810,7 @@ Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame &aFrame, otError
 
         if (neighbor->GetLinkFailures() >= Mle::kFailedRouterTransmissions)
         {
-            Get<Mle::MleRouter>().RemoveNeighbor(*neighbor);
+            Get<Mle::MleRouter>().RemoveRouterLink(*static_cast<Router *>(neighbor));
         }
     }
 
