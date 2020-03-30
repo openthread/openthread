@@ -130,7 +130,7 @@ HdlcInterface::HdlcInterface(SpinelInterface::ReceiveFrameCallback aCallback,
                              SpinelInterface::RxFrameBuffer &      aFrameBuffer)
     : mReceiveFrameCallback(aCallback)
     , mReceiveFrameContext(aCallbackContext)
-    , mRxFrameBuffer(aFrameBuffer)
+    , mReceiveFrameBuffer(aFrameBuffer)
     , mSockFd(-1)
     , mHdlcDecoder(aFrameBuffer, HandleHdlcFrame, this)
 {
@@ -635,7 +635,7 @@ void HdlcInterface::HandleHdlcFrame(otError aError)
     }
     else
     {
-        mRxFrameBuffer.DiscardFrame();
+        mReceiveFrameBuffer.DiscardFrame();
         otLogWarnPlat("Error decoding hdlc frame: %s", otThreadErrorToString(aError));
     }
 }

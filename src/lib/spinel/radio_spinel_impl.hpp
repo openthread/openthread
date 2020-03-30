@@ -154,7 +154,7 @@ static void LogIfFail(const char *aText, otError aError)
     }
 }
 
-template <typename InterfaceType> void RadioSpinel<InterfaceType>::sHandleReceivedFrame(void *aContext)
+template <typename InterfaceType> void RadioSpinel<InterfaceType>::HandleReceivedFrame(void *aContext)
 {
     static_cast<RadioSpinel *>(aContext)->HandleReceivedFrame();
 }
@@ -163,7 +163,7 @@ template <typename InterfaceType>
 RadioSpinel<InterfaceType>::RadioSpinel(void)
     : mInstance(NULL)
     , mRxFrameBuffer()
-    , mSpinelInterface(sHandleReceivedFrame, this, mRxFrameBuffer)
+    , mSpinelInterface(HandleReceivedFrame, this, mRxFrameBuffer)
     , mCmdTidsInUse(0)
     , mCmdNextTid(1)
     , mTxRadioTid(0)
@@ -192,7 +192,7 @@ RadioSpinel<InterfaceType>::RadioSpinel(void)
     mVersion[0] = '\0';
 }
 
-template <typename InterfaceType> void RadioSpinel<InterfaceType>::Init(bool aResetRadio, bool aFetchNcp)
+template <typename InterfaceType> void RadioSpinel<InterfaceType>::Init(bool aResetRadio, bool aRestoreDataSetFromNcp)
 {
     otError error = OT_ERROR_NONE;
 
@@ -207,7 +207,7 @@ template <typename InterfaceType> void RadioSpinel<InterfaceType>::Init(bool aRe
     SuccessOrExit(error = CheckSpinelVersion());
     SuccessOrExit(error = Get(SPINEL_PROP_NCP_VERSION, SPINEL_DATATYPE_UTF8_S, mVersion, sizeof(mVersion)));
 
-    if (!aFetchNcp)
+    if (!aRestoreDataSetFromNcp)
     {
         SuccessOrExit(error = CheckRadioCapabilities());
     }
@@ -242,7 +242,7 @@ exit:
     return error;
 }
 
-template <typename InterfaceType> bool RadioSpinel<InterfaceType>::GetIsRcp(void)
+template <typename InterfaceType> bool RadioSpinel<InterfaceType>::IsRcp(void)
 {
     uint8_t        capsBuffer[kCapsBufferSize];
     const uint8_t *capsData         = capsBuffer;
@@ -489,7 +489,7 @@ otError RadioSpinel<InterfaceType>::ThreadDatasetHandler(const uint8_t *aBuffer,
     otError              error = OT_ERROR_NONE;
     otOperationalDataset opDataset;
     bool                 isActive = ((mWaitingKey == SPINEL_PROP_THREAD_ACTIVE_DATASET) ? true : false);
-    ot::Spinel::Decoder  decoder;
+    Decoder              decoder;
     MeshCoP::Dataset     dataset(isActive ? MeshCoP::Tlv::kActiveTimestamp : MeshCoP::Tlv::kPendingTimestamp);
 
     memset(&opDataset, 0, sizeof(otOperationalDataset));

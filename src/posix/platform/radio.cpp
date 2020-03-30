@@ -43,9 +43,9 @@
 #endif
 
 #if OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE
-static ot::Spinel::RadioSpinel<ot::PosixApp::HdlcInterface> sRadioSpinel;
+static ot::Spinel::RadioSpinel<ot::Posix::HdlcInterface> sRadioSpinel;
 #elif OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
-static ot::Spinel::RadioSpinel<ot::PosixApp::SpiInterface> sRadioSpinel;
+static ot::Spinel::RadioSpinel<ot::Posix::SpiInterface> sRadioSpinel;
 #endif
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
@@ -93,7 +93,7 @@ void platformRadioInit(const otPlatformConfig *aPlatformConfig)
     SuccessOrDie(sRadioSpinel.GetIeeeEui64(reinterpret_cast<uint8_t *>(&gNodeId)));
     gNodeId = ot::Encoding::BigEndian::HostSwap64(gNodeId);
 
-    if (aPlatformConfig->mRestoreDatasetFromNcp && !sRadioSpinel.GetIsRcp())
+    if (aPlatformConfig->mRestoreDatasetFromNcp && !sRadioSpinel.IsRcp())
     {
         DieNow((sRadioSpinel.RestoreDatasetFromNcp() == OT_ERROR_NONE) ? OT_EXIT_SUCCESS : OT_EXIT_FAILURE);
     }

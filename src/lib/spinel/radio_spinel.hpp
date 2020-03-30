@@ -55,11 +55,11 @@ public:
     /**
      * Initialize this radio transceiver.
      *
-     * @param[in]  aResetRadio Whether to reset on init or not.
-     * @param[in]  aFetchNcp   Whether to support fetch data from NCP or not.
+     * @param[in]  aResetRadio            Whether to reset on init or not.
+     * @param[in]  aRestoreDatasetFromNcp Whether to restore NCP dataset to host.
      *
      */
-    void Init(bool aResetRadio, bool aFetchNcp);
+    void Init(bool aResetRadio, bool aRestoreDataSetFromNcp);
 
     /**
      * Deinitialize this radio transceiver.
@@ -550,7 +550,7 @@ public:
      * @returns Whether the spinel interface is radio-only.
      *
      */
-    bool GetIsRcp(void);
+    bool IsRcp(void);
 
     /**
      * This method gets dataset from NCP radio and saves it.
@@ -584,7 +584,7 @@ private:
 
     typedef otError (RadioSpinel::*ResponseHandler)(const uint8_t *aBuffer, uint16_t aLength);
 
-    static void sHandleReceivedFrame(void *aContext);
+    static void HandleReceivedFrame(void *aContext);
 
     otError CheckSpinelVersion(void);
     otError CheckRadioCapabilities(void);

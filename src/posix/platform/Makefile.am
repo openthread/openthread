@@ -79,6 +79,7 @@ check_PROGRAMS = test-settings
 
 test_settings_CPPFLAGS                                        = \
     -I$(top_srcdir)/include                                     \
+    -I$(top_srcdir)/src                                         \
     -I$(top_srcdir)/src/core                                    \
     -I$(top_srcdir)/src/posix/platform/include                  \
     -DOPENTHREAD_CONFIG_LOG_PLATFORM=0                          \

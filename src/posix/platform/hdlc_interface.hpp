@@ -213,7 +213,7 @@ private:
 
     Spinel::SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
     void *                                        mReceiveFrameContext;
-    Spinel::SpinelInterface::RxFrameBuffer &      mRxFrameBuffer;
+    Spinel::SpinelInterface::RxFrameBuffer &      mReceiveFrameBuffer;
 
     int           mSockFd;
     Hdlc::Decoder mHdlcDecoder;

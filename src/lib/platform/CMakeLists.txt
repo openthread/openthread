@@ -28,6 +28,8 @@
 
 add_library(openthread-platform
     exit_code.c
+    exit_code.h
+    time.h
 )
 
 target_include_directories(openthread-platform
