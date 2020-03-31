@@ -55,7 +55,7 @@ namespace Utils {
  * This class implements the OTNS Stub that interacts with OTNS.
  *
  */
-class OtnsStub : public InstanceLocator
+class Otns : public InstanceLocator
 {
 public:
     /**
@@ -64,9 +64,9 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit OtnsStub(Instance &aInstance)
+    explicit Otns(Instance &aInstance)
         : InstanceLocator(aInstance)
-        , mNotifierCallback(aInstance, &OtnsStub::HandleStateChanged, this)
+        , mNotifierCallback(aInstance, &Otns::HandleStateChanged, this)
     {
     }
 

@@ -4194,7 +4194,7 @@ void Interpreter::SignalPingRequest(const Ip6::Address &aPeerAddress,
     OT_UNUSED_VARIABLE(aHopLimit);
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
-    mInstance->Get<Utils::OtnsStub>().EmitPingRequest(aPeerAddress, aPingLength, aTimestamp, aHopLimit);
+    mInstance->Get<Utils::Otns>().EmitPingRequest(aPeerAddress, aPingLength, aTimestamp, aHopLimit);
 #endif
 }
 
@@ -4209,7 +4209,7 @@ void Interpreter::SignalPingReply(const Ip6::Address &aPeerAddress,
     OT_UNUSED_VARIABLE(aHopLimit);
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
-    mInstance->Get<Utils::OtnsStub>().EmitPingReply(aPeerAddress, aPingLength, aTimestamp, aHopLimit);
+    mInstance->Get<Utils::Otns>().EmitPingReply(aPeerAddress, aPingLength, aTimestamp, aHopLimit);
 #endif
 }
 

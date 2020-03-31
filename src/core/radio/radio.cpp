@@ -38,7 +38,7 @@ void Radio::SetExtendedAddress(const Mac::ExtAddress &aExtAddress)
     otPlatRadioSetExtendedAddress(GetInstance(), &aExtAddress);
 
 #if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
-    Get<Utils::OtnsStub>().EmitExtendedAddress(aExtAddress);
+    Get<Utils::Otns>().EmitExtendedAddress(aExtAddress);
 #endif
 }
 
@@ -47,7 +47,7 @@ void Radio::SetShortAddress(Mac::ShortAddress aShortAddress)
     otPlatRadioSetShortAddress(GetInstance(), aShortAddress);
 
 #if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
-    Get<Utils::OtnsStub>().EmitShortAddress(aShortAddress);
+    Get<Utils::Otns>().EmitShortAddress(aShortAddress);
 #endif
 }
 

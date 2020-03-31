@@ -44,36 +44,33 @@ namespace Utils {
 
 const int kMaxStatusStringLength = 128;
 
-void OtnsStub::EmitShortAddress(uint16_t aShortAddress)
+void Otns::EmitShortAddress(uint16_t aShortAddress)
 {
     EmitStatus("rloc16=%d", aShortAddress);
 }
 
-void OtnsStub::EmitExtendedAddress(const Mac::ExtAddress &aExtAddress)
+void Otns::EmitExtendedAddress(const Mac::ExtAddress &aExtAddress)
 {
     Mac::ExtAddress revExtAddress;
     revExtAddress.Set(aExtAddress.m8, Mac::ExtAddress::kReverseByteOrder);
     EmitStatus("extaddr=%s", revExtAddress.ToString().AsCString());
 }
 
-void OtnsStub::EmitPingRequest(const Ip6::Address &aPeerAddress,
-                               uint16_t            aPingLength,
-                               uint32_t            aTimestamp,
-                               uint8_t             aHopLimit)
+void Otns::EmitPingRequest(const Ip6::Address &aPeerAddress,
+                           uint16_t            aPingLength,
+                           uint32_t            aTimestamp,
+                           uint8_t             aHopLimit)
 {
     OT_UNUSED_VARIABLE(aHopLimit);
     EmitStatus("ping_request=%s,%d,%lu", aPeerAddress.ToString().AsCString(), aPingLength, aTimestamp);
 }
 
-void OtnsStub::EmitPingReply(const Ip6::Address &aPeerAddress,
-                             uint16_t            aPingLength,
-                             uint32_t            aTimestamp,
-                             uint8_t             aHopLimit)
+void Otns::EmitPingReply(const Ip6::Address &aPeerAddress, uint16_t aPingLength, uint32_t aTimestamp, uint8_t aHopLimit)
 {
     EmitStatus("ping_reply=%s,%u,%lu,%d", aPeerAddress.ToString().AsCString(), aPingLength, aTimestamp, aHopLimit);
 }
 
-void OtnsStub::EmitStatus(const char *aFmt, ...)
+void Otns::EmitStatus(const char *aFmt, ...)
 {
     static char statusStr[kMaxStatusStringLength + 1];
     int         n;
@@ -89,12 +86,12 @@ void OtnsStub::EmitStatus(const char *aFmt, ...)
     otPlatOtnsStatus(statusStr);
 }
 
-void OtnsStub::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
+void Otns::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
 {
-    aCallback.GetOwner<OtnsStub>().HandleStateChanged(aFlags);
+    aCallback.GetOwner<Otns>().HandleStateChanged(aFlags);
 }
 
-void OtnsStub::HandleStateChanged(otChangedFlags aFlags)
+void Otns::HandleStateChanged(otChangedFlags aFlags)
 {
     if ((aFlags & OT_CHANGED_THREAD_ROLE) != 0)
     {
@@ -112,7 +109,7 @@ void OtnsStub::HandleStateChanged(otChangedFlags aFlags)
     }
 }
 
-void OtnsStub::EmitNeighborChange(otNeighborTableEvent aEvent, Neighbor &aNeighbor)
+void Otns::EmitNeighborChange(otNeighborTableEvent aEvent, Neighbor &aNeighbor)
 {
     const char *extAddr = aNeighbor.GetExtAddress().ToString().AsCString();
 

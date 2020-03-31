@@ -364,7 +364,7 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
-    Utils::OtnsStub mOtnsStub;
+    Utils::Otns mOtns;
 #endif
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -716,9 +716,9 @@ template <> inline BackboneRouter::Local &Instance::Get(void)
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
-template <> inline Utils::OtnsStub &Instance::Get(void)
+template <> inline Utils::Otns &Instance::Get(void)
 {
-    return mOtnsStub;
+    return mOtns;
 }
 #endif
 

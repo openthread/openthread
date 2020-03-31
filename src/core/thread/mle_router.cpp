@@ -4788,7 +4788,7 @@ void MleRouter::Signal(otNeighborTableEvent aEvent, Neighbor &aNeighbor)
     }
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
-    Get<Utils::OtnsStub>().EmitNeighborChange(aEvent, aNeighbor);
+    Get<Utils::Otns>().EmitNeighborChange(aEvent, aNeighbor);
 #endif
 
     switch (aEvent)

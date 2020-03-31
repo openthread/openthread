@@ -95,7 +95,7 @@ Instance::Instance(void)
     , mAnnounceSender(*this)
 #endif
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
-    , mOtnsStub(*this)
+    , mOtns(*this)
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
