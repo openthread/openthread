@@ -67,7 +67,7 @@ inline Coap::Message *NewMeshCoPMessage(Coap::CoapBase &aCoap)
 }
 
 /**
- * This static method generates PSKc.
+ * This function generates PSKc.
  *
  * PSKc is used to establish the Commissioner Session.
  *
