@@ -139,7 +139,7 @@ Mle::Mle(Instance &aInstance)
 
     // Leader Aloc
     mLeaderAloc.Clear();
-    mLeaderAloc.mPrefixLength       = 64;
+    mLeaderAloc.mPrefixLength       = MeshLocalPrefix::kLength;
     mLeaderAloc.mPreferred          = true;
     mLeaderAloc.mValid              = true;
     mLeaderAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
@@ -151,7 +151,7 @@ Mle::Mle(Instance &aInstance)
     for (size_t i = 0; i < OT_ARRAY_LENGTH(mServiceAlocs); i++)
     {
         mServiceAlocs[i].Clear();
-        mServiceAlocs[i].mPrefixLength       = 64;
+        mServiceAlocs[i].mPrefixLength       = MeshLocalPrefix::kLength;
         mServiceAlocs[i].mPreferred          = true;
         mServiceAlocs[i].mValid              = true;
         mServiceAlocs[i].mScopeOverride      = Ip6::Address::kRealmLocalScope;
@@ -166,7 +166,7 @@ Mle::Mle(Instance &aInstance)
     // Primary Backbone Router Aloc
     mBackboneRouterPrimaryAloc.Clear();
 
-    mBackboneRouterPrimaryAloc.mPrefixLength       = 64;
+    mBackboneRouterPrimaryAloc.mPrefixLength       = MeshLocalPrefix::kLength;
     mBackboneRouterPrimaryAloc.mPreferred          = true;
     mBackboneRouterPrimaryAloc.mValid              = true;
     mBackboneRouterPrimaryAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
@@ -179,7 +179,6 @@ Mle::Mle(Instance &aInstance)
     mAllNetworkBackboneRouters.GetAddress().mFields.m8[0]  = 0xff; // Multicast
     mAllNetworkBackboneRouters.GetAddress().mFields.m8[1]  = 0x32; // Flags = 3, Scope = 2
     mAllNetworkBackboneRouters.GetAddress().mFields.m8[2]  = 0;    // Reserved
-    mAllNetworkBackboneRouters.GetAddress().mFields.m8[3]  = 64;   // Prefix Length = 64
     mAllNetworkBackboneRouters.GetAddress().mFields.m8[15] = 3;    // Group ID = 3
 
 #endif
@@ -192,7 +191,7 @@ Mle::Mle(Instance &aInstance)
     Random::NonCrypto::FillBuffer(mMeshLocal64.GetAddress().mFields.m8 + OT_IP6_PREFIX_SIZE,
                                   OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE);
 
-    mMeshLocal64.mPrefixLength       = 64;
+    mMeshLocal64.mPrefixLength       = MeshLocalPrefix::kLength;
     mMeshLocal64.mPreferred          = true;
     mMeshLocal64.mValid              = true;
     mMeshLocal64.mScopeOverride      = Ip6::Address::kRealmLocalScope;
@@ -203,7 +202,7 @@ Mle::Mle(Instance &aInstance)
     mMeshLocal16.GetAddress().mFields.m16[4] = HostSwap16(0x0000);
     mMeshLocal16.GetAddress().mFields.m16[5] = HostSwap16(0x00ff);
     mMeshLocal16.GetAddress().mFields.m16[6] = HostSwap16(0xfe00);
-    mMeshLocal16.mPrefixLength               = 64;
+    mMeshLocal16.mPrefixLength               = MeshLocalPrefix::kLength;
     mMeshLocal16.mPreferred                  = true;
     mMeshLocal16.mValid                      = true;
     mMeshLocal16.mScopeOverride              = Ip6::Address::kRealmLocalScope;
@@ -990,11 +989,8 @@ exit:
 
 void Mle::ApplyMeshLocalPrefix(void)
 {
-    mLinkLocalAllThreadNodes.GetAddress().mFields.m8[3] = 64;
-    memcpy(mLinkLocalAllThreadNodes.GetAddress().mFields.m8 + 4, mMeshLocal64.GetAddress().mFields.m8, 8);
-
-    mRealmLocalAllThreadNodes.GetAddress().mFields.m8[3] = 64;
-    memcpy(mRealmLocalAllThreadNodes.GetAddress().mFields.m8 + 4, mMeshLocal64.GetAddress().mFields.m8, 8);
+    mLinkLocalAllThreadNodes.GetAddress().SetMulticastNetworkPrefix(GetMeshLocalPrefix());
+    mRealmLocalAllThreadNodes.GetAddress().SetMulticastNetworkPrefix(GetMeshLocalPrefix());
 
     VerifyOrExit(mRole != OT_DEVICE_ROLE_DISABLED);
 
@@ -1035,7 +1031,7 @@ void Mle::ApplyMeshLocalPrefix(void)
         Get<ThreadNetif>().AddUnicastAddress(mBackboneRouterPrimaryAloc);
     }
 
-    memcpy(mAllNetworkBackboneRouters.GetAddress().mFields.m8 + 4, mMeshLocal64.GetAddress().mFields.m8, 8);
+    mAllNetworkBackboneRouters.GetAddress().SetMulticastNetworkPrefix(GetMeshLocalPrefix());
 
     if (Get<BackboneRouter::Local>().IsEnabled())
     {
