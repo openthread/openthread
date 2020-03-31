@@ -333,11 +333,11 @@ void HdlcInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aM
     }
 }
 
-void HdlcInterface::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
+void HdlcInterface::Process(const RadioProcessContext &aContext)
 {
-    OT_UNUSED_VARIABLE(aWriteFdSet);
+    OT_UNUSED_VARIABLE(aContext.mWriteFdSet);
 
-    if (FD_ISSET(mSockFd, &aReadFdSet))
+    if (FD_ISSET(mSockFd, aContext.mReadFdSet))
     {
         Read();
     }

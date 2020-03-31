@@ -43,7 +43,7 @@
 namespace ot {
 namespace Spinel {
 
-template <typename InterfaceType> class RadioSpinel
+template <typename InterfaceType, typename ProcessContextType> class RadioSpinel
 {
 public:
     /**
@@ -438,15 +438,6 @@ public:
     bool IsEnabled(void) const { return mState != kStateDisabled; }
 
     /**
-     * This method indicates whether there are any saved frames in the underlying buffer.
-     *
-     * @retval TRUE  There is at least one saved frame in the buffer.
-     * @retval FALSE There is no saved frame in the buffer.
-     *
-     */
-    bool HasSavedFrame(void) const { return mRxFrameBuffer.HasSavedFrame(); }
-
-    /**
      * This method indicates whether there is a pending transmission.
      *
      * @retval TRUE  There is a pending transmission.
@@ -473,16 +464,12 @@ public:
     bool GetTxRadioEndUs(void) const { return mTxRadioEndUs; }
 
     /**
-     * This method triggers a state transfer of the state machine
+     * This method triggers the I/O process.
+     *
+     * @param[in]  aContext   The process context.
      *
      */
-    void ProcessRadioStateMachine(void);
-
-    /**
-     * This method processes the frame queue.
-     *
-     */
-    void ProcessFrameQueue(void);
+    void Process(const ProcessContextType &aContext);
 
     /**
      * This method returns the underlying spinel interface.
@@ -553,6 +540,14 @@ public:
     bool IsRcp(void);
 
     /**
+     * This method checks whether there is pending frame in the buffer.
+     *
+     * @returns Whether there is pending frame in the buffer.
+     *
+     */
+    bool HasPendingFrame(void) { return mRxFrameBuffer.HasSavedFrame(); }
+
+    /**
      * This method gets dataset from NCP radio and saves it.
      *
      * @retval  OT_ERROR_NONE               Successfully restore dataset.
@@ -588,6 +583,18 @@ private:
 
     otError CheckSpinelVersion(void);
     otError CheckRadioCapabilities(void);
+
+    /**
+     * This method triggers a state transfer of the state machine.
+     *
+     */
+    void ProcessRadioStateMachine(void);
+
+    /**
+     * This method processes the frame queue.
+     *
+     */
+    void ProcessFrameQueue(void);
 
     /**
      * This method tries to retrieve a spinel property from OpenThread transceiver.

@@ -43,10 +43,14 @@
 #endif
 
 #if OPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE
-static ot::Spinel::RadioSpinel<ot::Posix::HdlcInterface> sRadioSpinel;
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+static ot::Spinel::RadioSpinel<ot::Posix::HdlcInterface, Event> sRadioSpinel;
+#else
+static ot::Spinel::RadioSpinel<ot::Posix::HdlcInterface, RadioProcessContext> sRadioSpinel;
+#endif // OPENTHREAD_POSIX_VIRTUAL_TIME
 #elif OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
-static ot::Spinel::RadioSpinel<ot::Posix::SpiInterface> sRadioSpinel;
-#endif
+static ot::Spinel::RadioSpinel<ot::Posix::SpiInterface, RadioProcessContext> sRadioSpinel;
+#endif // OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
@@ -195,52 +199,26 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
         }
     }
 
-    if (sRadioSpinel.HasSavedFrame() || sRadioSpinel.IsTransmitDone())
+    if (sRadioSpinel.HasPendingFrame() || sRadioSpinel.IsTransmitDone())
     {
         aTimeout->tv_sec  = 0;
         aTimeout->tv_usec = 0;
     }
 }
 
-void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
-{
-    if (sRadioSpinel.HasSavedFrame())
-    {
-        sRadioSpinel.ProcessFrameQueue();
-    }
-
-    sRadioSpinel.GetSpinelInterface().Process(*aReadFdSet, *aWriteFdSet);
-
-    if (sRadioSpinel.HasSavedFrame())
-    {
-        sRadioSpinel.ProcessFrameQueue();
-    }
-
-    sRadioSpinel.ProcessRadioStateMachine();
-    OT_UNUSED_VARIABLE(aInstance);
-}
-
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
 void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent)
 {
-    if (sRadioSpinel.HasSavedFrame())
-    {
-        sRadioSpinel.ProcessFrameQueue();
-    }
-
-    // The current event can be other event types
-    if (aEvent->mEvent == OT_SIM_EVENT_RADIO_SPINEL_WRITE)
-    {
-        sRadioSpinel.GetSpinelInterface().ProcessReadData(aEvent->mData, aEvent->mDataLength);
-    }
-
-    if (sRadioSpinel.HasSavedFrame())
-    {
-        sRadioSpinel.ProcessFrameQueue();
-    }
-
-    sRadioSpinel.ProcessRadioStateMachine();
     OT_UNUSED_VARIABLE(aInstance);
+    sRadioSpinel.Process(*aEvent);
+}
+#else
+void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
+{
+    RadioProcessContext context = {aReadFdSet, aWriteFdSet};
+
+    OT_UNUSED_VARIABLE(aInstance);
+    sRadioSpinel.Process(context);
 }
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME
 

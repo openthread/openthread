@@ -36,6 +36,7 @@
 
 #include "openthread-posix-config.h"
 
+#include "platform-posix.h"
 #include "lib/hdlc/hdlc.hpp"
 #include "lib/spinel/spinel_interface.hpp"
 
@@ -131,11 +132,10 @@ public:
     /**
      * This method performs radio driver processing.
      *
-     * @param[in]   aReadFdSet      A reference to the read file descriptors.
-     * @param[in]   aWriteFdSet     A reference to the write file descriptors.
+     * @param[in]   aContext        The context containing fd_sets.
      *
      */
-    void Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet);
+    void Process(const RadioProcessContext &aContext);
 
 private:
     int     SetupGpioHandle(int aFd, uint8_t aLine, uint32_t aHandleFlags, const char *aLabel);

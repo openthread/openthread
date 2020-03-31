@@ -90,6 +90,12 @@ struct Event
     uint8_t  mData[OT_EVENT_DATA_MAX_SIZE];
 } OT_TOOL_PACKED_END;
 
+struct RadioProcessContext
+{
+    const fd_set *mReadFdSet;
+    const fd_set *mWriteFdSet;
+};
+
 /**
  * Unique node ID.
  *

@@ -663,11 +663,9 @@ void SpiInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMa
     }
 }
 
-void SpiInterface::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
+void SpiInterface::Process(const RadioProcessContext &aContext)
 {
-    OT_UNUSED_VARIABLE(aWriteFdSet);
-
-    if (FD_ISSET(mIntGpioValueFd, &aReadFdSet))
+    if (FD_ISSET(mIntGpioValueFd, aContext.mReadFdSet))
     {
         struct gpioevent_data event;
 

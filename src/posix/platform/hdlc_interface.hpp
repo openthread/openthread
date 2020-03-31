@@ -130,24 +130,22 @@ public:
     /**
      * This method performs radio driver processing.
      *
-     * @param[in]   aReadFdSet      A reference to the read file descriptors.
-     * @param[in]   aWriteFdSet     A reference to the write file descriptors.
+     * @param[in]   aContext        The context containing fd_sets.
      *
      */
-    void Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet);
+    void Process(const RadioProcessContext &aContext);
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     /**
      * This method process read data (decode the data).
      *
      * This method is intended only for virtual time simulation. Its behavior is similar to `Read()` but instead of
-     * reading the data from the radio socket, it uses the given data in the buffer `aBuffer`.
+     * reading the data from the radio socket, it uses the given data in the `aEvent`.
      *
-     * @param[in] aBuffer  A pointer to buffer containing data.
-     * @param[in] aLength  The length (number of bytes) in the buffer.
+     * @param[in] aEvent   The data event.
      *
      */
-    void ProcessReadData(const uint8_t *aBuffer, uint16_t aLength) { Decode(aBuffer, aLength); }
+    void Process(const Event &aEvent) { Decode(aEvent.mData, aEvent.mDataLength); }
 #endif
 
 private:
