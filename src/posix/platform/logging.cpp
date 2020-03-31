@@ -69,7 +69,8 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     }
 
     va_start(args, aFormat);
-    vsyslog(aLogLevel, aFormat, args);
+    vfprintf(stderr, aFormat, args);
+    fprintf(stderr, "\n");
     va_end(args);
 }
 #endif // OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED

@@ -448,6 +448,7 @@ static void mldListenerInit(void)
 {
     struct ipv6_mreq mreq6;
 
+    otLogInfoPlat("mldListenerInit tun index %d name %s", sTunIndex, sTunName);
     sMLDMonitorFd          = SocketWithCloseExec(AF_INET6, SOCK_RAW | SOCK_NONBLOCK, IPPROTO_ICMPV6);
     mreq6.ipv6mr_interface = sTunIndex;
     memcpy(&mreq6.ipv6mr_multiaddr, kMLDv2MulticastAddress.mFields.m8, sizeof(kMLDv2MulticastAddress.mFields.m8));
@@ -456,6 +457,7 @@ static void mldListenerInit(void)
     VerifyOrDie(setsockopt(sMLDMonitorFd, SOL_SOCKET, SO_BINDTODEVICE, sTunName,
                            static_cast<socklen_t>(strnlen(sTunName, IFNAMSIZ))) == 0,
                 OT_EXIT_FAILURE);
+    otLogInfoPlat("sMLDMonitorFd=%d", sMLDMonitorFd);
 }
 
 static void processMLDEvent(otInstance *aInstance)
@@ -471,11 +473,19 @@ static void processMLDEvent(otInstance *aInstance)
     uint8_t             type;
     struct ifaddrs *    ifAddrs = NULL;
 
+    otLogInfoPlat("processMLDEvent");
     bufferLen = recvfrom(sMLDMonitorFd, buffer, sizeof(buffer), 0, reinterpret_cast<sockaddr *>(&srcAddr), &addrLen);
+    otLogInfoPlat("processMLDEvent bufferLen=%zd", bufferLen);
+    if (bufferLen < 0)
+    {
+        otLogInfoPlat("Error %s", strerror(errno));
+    }
     VerifyOrExit(bufferLen > 0);
 
     type = buffer[0];
+    otLogInfoPlat("processMLDEvent type %d", type);
     VerifyOrExit(type == kICMPv6MLDv2Type && bufferLen >= static_cast<ssize_t>(sizeof(MLDv2Header)));
+    otLogInfoPlat("Got ICMPv6 MLD message");
 
     // Check whether it is sent by self
     VerifyOrExit(getifaddrs(&ifAddrs) == 0);
@@ -498,6 +508,7 @@ static void processMLDEvent(otInstance *aInstance)
     hdr    = reinterpret_cast<MLDv2Header *>(buffer);
     offset = sizeof(MLDv2Header);
 
+    otLogInfoPlat("Processing %d records", ntohs(hdr->mNumRecords));
     for (size_t i = 0; i < ntohs(hdr->mNumRecords) && offset < static_cast<size_t>(bufferLen); i++)
     {
         if (static_cast<size_t>(bufferLen) >= (sizeof(MLDv2Record) + offset))
@@ -510,6 +521,7 @@ static void processMLDEvent(otInstance *aInstance)
 
             memcpy(&address.mFields.m8, &record->mMulticastAddress, sizeof(address.mFields.m8));
             inet_ntop(AF_INET6, &record->mMulticastAddress, addressString, sizeof(addressString));
+            otLogInfoPlat("Address %s type %d", addressString, record->mRecordType);
             if (record->mRecordType == kICMPv6MLDv2RecordChangeToIncludeType)
             {
                 err = otIp6SubscribeMulticastAddress(aInstance, &address);
@@ -526,7 +538,7 @@ static void processMLDEvent(otInstance *aInstance)
                 }
                 else
                 {
-                    otLogDebgPlat("Subscribed multicast address %s", addressString);
+                    otLogInfoPlat("Subscribed multicast address %s", addressString);
                 }
             }
             else if (record->mRecordType == kICMPv6MLDv2RecordChangeToExcludeType)
@@ -539,7 +551,7 @@ static void processMLDEvent(otInstance *aInstance)
                 }
                 else
                 {
-                    otLogDebgPlat("Unsubscribed multicast address %s", addressString);
+                    otLogInfoPlat("Unsubscribed multicast address %s", addressString);
                 }
             }
 
