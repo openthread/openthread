@@ -72,8 +72,8 @@ void Otns::EmitPingReply(const Ip6::Address &aPeerAddress, uint16_t aPingLength,
 
 void Otns::EmitStatus(const char *aFmt, ...)
 {
-    static char statusStr[kMaxStatusStringLength + 1];
-    int         n;
+    char statusStr[kMaxStatusStringLength + 1];
+    int  n;
 
     va_list ap;
     va_start(ap, aFmt);
