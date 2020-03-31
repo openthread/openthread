@@ -111,21 +111,19 @@ void Otns::HandleStateChanged(otChangedFlags aFlags)
 
 void Otns::EmitNeighborChange(otNeighborTableEvent aEvent, Neighbor &aNeighbor)
 {
-    const char *extAddr = aNeighbor.GetExtAddress().ToString().AsCString();
-
     switch (aEvent)
     {
     case OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED:
-        EmitStatus("router_added=%s", extAddr);
+        EmitStatus("router_added=%s", aNeighbor.GetExtAddress().ToString().AsCString());
         break;
     case OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED:
-        EmitStatus("router_removed=%s", extAddr);
+        EmitStatus("router_removed=%s", aNeighbor.GetExtAddress().ToString().AsCString());
         break;
     case OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED:
-        EmitStatus("child_added=%s", extAddr);
+        EmitStatus("child_added=%s", aNeighbor.GetExtAddress().ToString().AsCString());
         break;
     case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
-        EmitStatus("child_removed=%s", extAddr);
+        EmitStatus("child_removed=%s", aNeighbor.GetExtAddress().ToString().AsCString());
         break;
     }
 }
