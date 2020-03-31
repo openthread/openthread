@@ -2,6 +2,7 @@
 [![Build][ot-gh-action-build-svg]][ot-gh-action-build]
 [![Simulation][ot-gh-action-simulation-svg]][ot-gh-action-simulation]
 [![Build Status][ot-travis-svg]][ot-travis]
+[![Language grade: C/C++][ot-lgtm-svg]][ot-lgtm]
 [![Coverage Status][ot-codecov-svg]][ot-codecov]
 [![Build Status][ot-docker-dev-svg]][ot-docker-dev]
 
@@ -31,6 +32,8 @@ More information about Thread can be found at [threadgroup.org](http://threadgro
 [ot-gh-action-simulation-svg]: https://github.com/openthread/openthread/workflows/Simulation/badge.svg?branch=master&event=push
 [ot-travis]: https://travis-ci.org/openthread/openthread
 [ot-travis-svg]: https://travis-ci.org/openthread/openthread.svg?branch=master
+[ot-lgtm]: https://lgtm.com/projects/g/openthread/openthread/context:cpp
+[ot-lgtm-svg]: https://img.shields.io/lgtm/grade/cpp/g/openthread/openthread.svg?logo=lgtm&logoWidth=18
 [ot-codecov]: https://codecov.io/gh/openthread/openthread
 [ot-codecov-svg]: https://codecov.io/gh/openthread/openthread/branch/master/graph/badge.svg
 [ot-docker-dev]: https://hub.docker.com/r/openthread/environment
