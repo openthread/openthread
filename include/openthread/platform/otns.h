@@ -56,7 +56,7 @@ extern "C" {
 /**
  * This function exports status information to OTNS.
  *
- * The status information is represented by a string with format recognizable by OTNS.
+ * The status information is represented by a null-terminated string with format recognizable by OTNS.
  * Each call to `otPlatOtnsStatus` can send multiple statuses, separated by ';', e.x. "parid=577fbc37;lrid=5".
  * Each status contains key and value separated by '='.
  * Status value can be further separated into multiple fields using ',',
@@ -66,11 +66,10 @@ extern "C" {
  *
  * Currently, OTNS only supports virtual time simulation.
  *
- * @param[in]  aStatus  The pointer to status data.
- * @param[in]  aLength  The length of status data.
+ * @param[in]  aStatus  The status string.
  *
  */
-void otPlatOtnsStatus(uint8_t *aStatus, uint16_t aLength);
+void otPlatOtnsStatus(const char *aStatus);
 
 /**
  * @}

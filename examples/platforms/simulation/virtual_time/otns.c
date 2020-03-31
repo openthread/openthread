@@ -32,14 +32,15 @@
 
 #include <openthread/platform/alarm-micro.h>
 
-void otPlatOtnsStatus(uint8_t *aStatus, uint16_t aLength)
+void otPlatOtnsStatus(const char *aStatus)
 {
     struct Event event;
+    uint16_t     statusLength = (uint16_t)strlen(aStatus);
 
-    assert(aLength < sizeof(event.mData));
+    assert(statusLength < sizeof(event.mData));
 
-    memcpy(event.mData, aStatus, aLength);
-    event.mDataLength = aLength;
+    memcpy(event.mData, aStatus, statusLength);
+    event.mDataLength = statusLength;
     event.mDelay      = 0;
     event.mEvent      = OT_SIM_EVENT_OTNS_STATUS_PUSH;
 

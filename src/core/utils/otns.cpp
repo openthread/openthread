@@ -86,7 +86,7 @@ void OtnsStub::EmitStatus(const char *aFmt, ...)
 
     va_end(ap);
 
-    otPlatOtnsStatus(reinterpret_cast<uint8_t *>(statusStr), n);
+    otPlatOtnsStatus(statusStr);
 }
 
 void OtnsStub::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)

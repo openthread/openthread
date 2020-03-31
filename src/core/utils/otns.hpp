@@ -71,7 +71,7 @@ public:
     }
 
     /**
-     * this function emits radio short address to OTNS when changed.
+     * This function emits radio short address to OTNS when changed.
      *
      * @param[in]  aShortAddress  The new short address.
      *
@@ -79,7 +79,7 @@ public:
     static void EmitShortAddress(uint16_t aShortAddress);
 
     /**
-     * this function emits radio extended address to OTNS when changed.
+     * This function emits radio extended address to OTNS when changed.
      *
      * @param[in]  aExtAddress  The new extended address.
      *
@@ -87,11 +87,12 @@ public:
     static void EmitExtendedAddress(const Mac::ExtAddress &aExtAddress);
 
     /**
-     * this function emits ping request information to OTNS when sending.
+     * This function emits ping request information to OTNS when sending.
      *
-     * @param[in]  aPingLength  The data length of the ping request.
-     * @param[in]  aTimestamp   The timestamp of the ping request.
-     * @param[in]  aHopLimit    The hop limit of the ping request.
+     * @param[in]  aPeerAddress  The peer address of the ping request.
+     * @param[in]  aPingLength   The data length of the ping request.
+     * @param[in]  aTimestamp    The timestamp of the ping request.
+     * @param[in]  aHopLimit     The hop limit of the ping request.
      *
      */
     static void EmitPingRequest(const Ip6::Address &aPeerAddress,
@@ -100,8 +101,9 @@ public:
                                 uint8_t             aHopLimit);
 
     /**
-     * this function emits ping reply information to OTNS when received.
+     * This function emits ping reply information to OTNS when received.
      *
+     * @param[in]  aPeerAddress  The peer address of the ping request.
      * @param[in]  aPingLength  The data length of the ping reply.
      * @param[in]  aTimestamp   The timestamp of the ping reply.
      * @param[in]  aHopLimit    The hop limit of the ping reply.
@@ -113,7 +115,7 @@ public:
                               uint8_t             aHopLimit);
 
     /**
-     * this function emits a neighbor table event to OTNS when a neighbor is added or removed.
+     * This function emits a neighbor table event to OTNS when a neighbor is added or removed.
      *
      * @param[in]  aEvent     The event type.
      * @param[in]  aNeighbor  The neighbor that is added or removed.
