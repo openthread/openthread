@@ -47,7 +47,8 @@
  *
  * Define to 1 to enable otPlatFlash* APIs to support non-volatile storage.
  *
- * When defined to 1, the platform MUST implement the otPlatFlash* APIs instead of the otPlatSettings* 
+ * When defined to 1, the platform MUST implement the otPlatFlash* APIs
+ * instead of the otPlatSettings*
  *
  */
 #define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 1

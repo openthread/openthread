@@ -146,4 +146,3 @@ void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffse
         assert(rval == sizeof(byte));
     }
 }
-
