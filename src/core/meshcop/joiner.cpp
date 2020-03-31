@@ -76,9 +76,11 @@ void Joiner::GetJoinerId(Mac::ExtAddress &aJoinerId) const
 
 void Joiner::SetState(otJoinerState aState)
 {
+    otJoinerState oldState = mState;
+
     SuccessOrExit(Get<Notifier>().Update(mState, aState, OT_CHANGED_JOINER_STATE));
 
-    otLogInfoMeshCoP("JoinerState: %s -> %s", JoinerStateToString(mState), JoinerStateToString(aState));
+    otLogInfoMeshCoP("JoinerState: %s -> %s", JoinerStateToString(oldState), JoinerStateToString(aState));
 exit:
     return;
 }

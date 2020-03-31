@@ -104,9 +104,9 @@ public:
      * This function emits ping reply information to OTNS when received.
      *
      * @param[in]  aPeerAddress  The peer address of the ping request.
-     * @param[in]  aPingLength  The data length of the ping reply.
-     * @param[in]  aTimestamp   The timestamp of the ping reply.
-     * @param[in]  aHopLimit    The hop limit of the ping reply.
+     * @param[in]  aPingLength   The data length of the ping reply.
+     * @param[in]  aTimestamp    The timestamp of the ping reply.
+     * @param[in]  aHopLimit     The hop limit of the ping reply.
      *
      */
     static void EmitPingReply(const Ip6::Address &aPeerAddress,
