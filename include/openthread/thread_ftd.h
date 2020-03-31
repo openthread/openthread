@@ -579,6 +579,37 @@ int8_t otThreadGetParentPriority(otInstance *aInstance);
 otError otThreadSetParentPriority(otInstance *aInstance, int8_t aParentPriority);
 
 /**
+ * This function gets the maximum number of IP addresses that each MTD child may register with this device as parent.
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ *
+ * @returns The maximum number of IP addresses that each MTD child may register with this device as parent.
+ *
+ * @sa otThreadSetMaxChildIpAddresses
+ *
+ */
+uint8_t otThreadGetMaxChildIpAddresses(otInstance *aInstance);
+
+/**
+ * This function sets/restores the maximum number of IP addresses that each MTD child may register with this
+ * device as parent.
+ *
+ * @note This API requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`, and is only used by Thread Test Harness
+ *       to limit the address registrations of the reference parent in order to test the MTD DUT reaction.
+ *
+ * @param[in]  aInstance        A pointer to an OpenThread instance.
+ * @param[in]  aMaxIpAddresses  The maximum number of IP addresses that each MTD child may register with this
+ *                              device as parent. 0 to clear the setting and restore the default.
+ *
+ * @retval OT_ERROR_NONE           Successfully set/cleared the number.
+ * @retval OT_ERROR_INVALID_ARGS   If exceeds the allowed maximum number.
+ *
+ * @sa otThreadGetMaxChildIpAddresses
+ *
+ */
+otError otThreadSetMaxChildIpAddresses(otInstance *aInstance, uint8_t aMaxIpAddresses);
+
+/**
  * This enumeration defines the constants used in `otNeighborTableCallback` to indicate whether a child or router
  * neighbor is being added or removed.
  *
