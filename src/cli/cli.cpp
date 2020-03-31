@@ -1716,7 +1716,20 @@ void Interpreter::ProcessPskc(uint8_t aArgsLength, char *aArgs[])
     {
         otPskc pskc;
 
-        VerifyOrExit(Hex2Bin(aArgs[0], pskc.m8, sizeof(pskc)) == OT_PSKC_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
+        if (aArgsLength == 1)
+        {
+            VerifyOrExit(Hex2Bin(aArgs[0], pskc.m8, sizeof(pskc)) == OT_PSKC_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
+        }
+        else if (!strcmp(aArgs[0], "-p"))
+        {
+            otDatasetGeneratePskc(aArgs[1], otThreadGetNetworkName(mInstance), otThreadGetExtendedPanId(mInstance),
+                                  &pskc);
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+
         SuccessOrExit(error = otThreadSetPskc(mInstance, &pskc));
     }
 

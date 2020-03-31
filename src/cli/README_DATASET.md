@@ -374,12 +374,15 @@ Done
 
 ### pskc
 
-Usage: `dataset pskc <key>`
+Usage: `dataset pskc [-p] <key>|<passphrase>`
 
-Set pskc with hex format.
+Set pskc with hex format or passphrase if `-p` is given when the pskc is
+computed with the **current** Thread network name and extended PAN ID.
 
 ```bash
 > dataset pskc 67c0c203aa0b042bfb5381c47aef4d9e
+Done
+> dataset pskc -p 123456
 Done
 ```
 

@@ -773,8 +773,8 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_MESHCOP_COMMISSIONER_GENERATE_PSK
     SuccessOrExit(error = mDecoder.ReadDataWithLen(extPanIdData, length));
     VerifyOrExit(length == sizeof(spinel_net_xpanid_t), error = OT_ERROR_PARSE);
 
-    SuccessOrExit(error = otCommissionerGeneratePskc(passPhrase, networkName,
-                                                     reinterpret_cast<const otExtendedPanId *>(extPanIdData), &pskc));
+    SuccessOrExit(error = otDatasetGeneratePskc(passPhrase, networkName,
+                                                reinterpret_cast<const otExtendedPanId *>(extPanIdData), &pskc));
 
     SuccessOrExit(
         error = mEncoder.BeginFrame(aHeader, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_MESHCOP_COMMISSIONER_GENERATE_PSKC));

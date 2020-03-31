@@ -214,25 +214,6 @@ public:
                                            uint8_t                       aLength);
 
     /**
-     * This static method generates PSKc.
-     *
-     * PSKc is used to establish the Commissioner Session.
-     *
-     * @param[in]  aPassPhrase   The commissioning passphrase.
-     * @param[in]  aNetworkName  The network name for PSKc computation.
-     * @param[in]  aExtPanId     The extended pan id for PSKc computation.
-     * @param[out] aPskc         A reference to a PSKc where the generated PSKc will be placed.
-     *
-     * @retval OT_ERROR_NONE          Successfully generate PSKc.
-     * @retval OT_ERROR_INVALID_ARGS  If the length of passphrase is out of range.
-     *
-     */
-    static otError GeneratePskc(const char *              aPassPhrase,
-                                const char *              aNetworkName,
-                                const Mac::ExtendedPanId &aExtPanId,
-                                Pskc &                    aPskc);
-
-    /**
      * This method returns a reference to the AnnounceBeginClient instance.
      *
      * @returns A reference to the AnnounceBeginClient instance.

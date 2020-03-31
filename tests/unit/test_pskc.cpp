@@ -29,11 +29,12 @@
 
 #include "common/logging.hpp"
 #include "meshcop/commissioner.hpp"
+#include "meshcop/meshcop.hpp"
 
 #include "test_platform.h"
 #include "test_util.h"
 
-#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if OPENTHREAD_FTD
 
 static const otExtendedPanId sXPanId = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}};
 
@@ -44,9 +45,9 @@ void TestMinimumPassphrase(void)
                                     0xcc, 0xd1, 0xe4, 0xc0, 0x1d, 0x01, 0x54, 0xf8};
     const char    passphrase[]   = "123456";
     otInstance *  instance       = testInitInstance();
-    SuccessOrQuit(ot::MeshCoP::Commissioner::GeneratePskc(passphrase, "OpenThread",
-                                                          static_cast<const ot::Mac::ExtendedPanId &>(sXPanId), pskc),
-                  "TestMinimumPassphrase failed to generate PSKc");
+    SuccessOrQuit(
+        ot::MeshCoP::GeneratePskc(passphrase, "OpenThread", static_cast<const ot::Mac::ExtendedPanId &>(sXPanId), pskc),
+        "TestMinimumPassphrase failed to generate PSKc");
     VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc)) == 0, "TestMinimumPassphrase got wrong pskc");
     testFreeInstance(instance);
 }
@@ -74,9 +75,9 @@ void TestMaximumPassphrase(void)
                               "123456781234567";
 
     otInstance *instance = testInitInstance();
-    SuccessOrQuit(ot::MeshCoP::Commissioner::GeneratePskc(passphrase, "OpenThread",
-                                                          static_cast<const ot::Mac::ExtendedPanId &>(sXPanId), pskc),
-                  "TestMaximumPassphrase failed to generate PSKc");
+    SuccessOrQuit(
+        ot::MeshCoP::GeneratePskc(passphrase, "OpenThread", static_cast<const ot::Mac::ExtendedPanId &>(sXPanId), pskc),
+        "TestMaximumPassphrase failed to generate PSKc");
     VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc)) == 0, "TestMaximumPassphrase got wrong pskc");
     testFreeInstance(instance);
 }
@@ -89,12 +90,12 @@ int main(void)
     return 0;
 }
 
-#else // #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#else // #if OPENTHREAD_FTD
 
 int main(void)
 {
-    printf("Commissioenr role disabled\n");
+    printf("PSKc generation is not supported on non-ftd build\n");
     return 0;
 }
 
-#endif // #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#endif // #if OPENTHREAD_FTD
