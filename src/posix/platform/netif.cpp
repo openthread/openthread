@@ -464,7 +464,7 @@ static void processMLDEvent(otInstance *aInstance)
     uint8_t             buffer[kMaxMLDEvent];
     ssize_t             bufferLen = -1;
     struct sockaddr_in6 srcAddr;
-    socklen_t           addrLen;
+    socklen_t           addrLen = sizeof(srcAddr);
     bool                fromSelf = false;
     MLDv2Header *       hdr      = reinterpret_cast<MLDv2Header *>(buffer);
     size_t              offset;
