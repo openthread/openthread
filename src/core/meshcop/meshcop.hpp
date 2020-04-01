@@ -73,7 +73,7 @@ inline Coap::Message *NewMeshCoPMessage(Coap::CoapBase &aCoap)
  *
  * @param[in]  aPassPhrase   The commissioning passphrase.
  * @param[in]  aNetworkName  The network name for PSKc computation.
- * @param[in]  aExtPanId     The extended pan id for PSKc computation.
+ * @param[in]  aExtPanId     The extended PAN ID for PSKc computation.
  * @param[out] aPskc         A reference to a PSKc where the generated PSKc will be placed.
  *
  * @retval OT_ERROR_NONE          Successfully generate PSKc.
