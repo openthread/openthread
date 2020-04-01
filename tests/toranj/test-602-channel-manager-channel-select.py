@@ -88,11 +88,23 @@ verify(
     int(node.get(wpan.WPAN_CHANNEL_MANAGER_SUPPORTED_CHANNEL_MASK), 0) ==
     all_channels_mask)
 
+WAIT_TIME = 15
+EXPECTED_SAMEPLE_COUNT = 970
+
 # Sleep for 4.5 second with speedup factor of 10,000 this is more than 12
-# hours.
+# hours. We sleep instead of immediately checking the sample counter in
+# order to not add more actions/events into simulation (specially since
+# we are running at very high speedup).
 time.sleep(4.5)
 
-verify(int(node.get(wpan.WPAN_CHANNEL_MONITOR_SAMPLE_COUNT), 0) > 970)
+
+def check_sample_count():
+    verify(
+        int(node.get(wpan.WPAN_CHANNEL_MONITOR_SAMPLE_COUNT), 0) >
+        EXPECTED_SAMEPLE_COUNT)
+
+
+wpan.verify_within(check_sample_count, WAIT_TIME)
 
 # Verify the initial value of `NEW_CHANNEL` (should be zero if there has
 # been no channel change so far).
