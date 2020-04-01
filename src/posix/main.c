@@ -59,6 +59,7 @@
 #include <openthread/logging.h>
 #include <openthread/tasklet.h>
 #include <openthread/thread.h>
+#include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
 #if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_NCP
 #include <openthread/ncp.h>
@@ -334,7 +335,12 @@ void otTaskletsSignalPending(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 }
 
-void otPlatReset(otInstance *aInstance)
+#if OPENTHREAD_LINK_PLAT_RESET_VIA_CALLBACK
+#define otPlatReset localPlatReset
+static
+#endif
+    void
+    otPlatReset(otInstance *aInstance)
 {
     otInstanceFinalize(aInstance);
     otSysDeinit();
@@ -346,6 +352,10 @@ void otPlatReset(otInstance *aInstance)
 int main(int argc, char *argv[])
 {
     otInstance *instance;
+
+#if OPENTHREAD_LINK_PLAT_RESET_VIA_CALLBACK
+    otSetPlatResetCallback(otPlatReset);
+#endif
 
 #ifdef __linux__
     // Ensure we terminate this process if the

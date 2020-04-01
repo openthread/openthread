@@ -43,6 +43,22 @@
 static otPlatResetReason   sPlatResetReason   = OT_PLAT_RESET_REASON_POWER_ON;
 static otPlatMcuPowerState gPlatMcuPowerState = OT_PLAT_MCU_POWER_STATE_ON;
 
+#if OPENTHREAD_LINK_PLAT_RESET_VIA_CALLBACK
+static otPlatResetCallbackFunction otPlatResetCallback = NULL;
+
+void otSetPlatResetCallback(otPlatResetCallbackFunction f)
+{
+    otPlatResetCallback = f;
+}
+
+void otPlatReset(otInstance *aInstance)
+{
+    assert(otPlatResetCallback != NULL);
+
+    otPlatResetCallback(aInstance);
+}
+#endif
+
 otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);

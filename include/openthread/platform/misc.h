@@ -61,6 +61,11 @@ extern "C" {
  */
 void otPlatReset(otInstance *aInstance);
 
+#if OPENTHREAD_LINK_PLAT_RESET_VIA_CALLBACK
+typedef void (*otPlatResetCallbackFunction)(otInstance *aInstance);
+void otSetPlatResetCallback(otPlatResetCallbackFunction f);
+#endif
+
 /**
  * Enumeration of possible reset reason codes.
  *
