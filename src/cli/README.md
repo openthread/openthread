@@ -80,7 +80,7 @@ Done
 * [preferrouterid](#preferrouterid-routerid)
 * [prefix](#prefix-add-prefix-pvdcsr-prf)
 * [promiscuous](#promiscuous)
-* [pskc](#pskc--p-key-passphrase)
+* [pskc](#pskc--p-keypassphrase)
 * [releaserouterid](#releaserouterid-routerid)
 * [reset](#reset)
 * [rloc16](#rloc16)
