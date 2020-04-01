@@ -1718,12 +1718,12 @@ void Interpreter::ProcessPskc(uint8_t aArgsLength, char *aArgs[])
 
         if (aArgsLength == 1)
         {
-            VerifyOrExit(Hex2Bin(aArgs[0], pskc.m8, sizeof(pskc)) == OT_PSKC_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
+            VerifyOrExit(Hex2Bin(aArgs[0], pskc.m8, sizeof(pskc)) == sizeof(pskc), error = OT_ERROR_INVALID_ARGS);
         }
         else if (!strcmp(aArgs[0], "-p"))
         {
-            otDatasetGeneratePskc(aArgs[1], otThreadGetNetworkName(mInstance), otThreadGetExtendedPanId(mInstance),
-                                  &pskc);
+            SuccessOrExit(error = otDatasetGeneratePskc(aArgs[1], otThreadGetNetworkName(mInstance),
+                                                        otThreadGetExtendedPanId(mInstance), &pskc));
         }
         else
         {

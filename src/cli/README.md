@@ -1144,6 +1144,20 @@ Set the customized data poll period for sleepy end device (milliseconds >= 10ms)
 Done
 ```
 
+### pskc
+
+Usage: `pskc [-p] <key>|<passphrase>`
+
+Set pskc with hex format or passphrase if `-p` is given when the pskc is
+computed with the **current** Thread network name and extended PAN ID.
+
+```bash
+> pskc 67c0c203aa0b042bfb5381c47aef4d9e
+Done
+> pskc -p 123456
+Done
+```
+
 ### preferrouterid \<routerid\>
 Prefer a Router ID when solicit router id from Leader.
 
