@@ -168,6 +168,12 @@ public:
      */
     ServiceTlv *FindServiceById(uint8_t aServiceId);
 
+    /**
+     * This method sends SVR_DATA.ntf message for any stale child entries that exist in the network data.
+     *
+     */
+    void RemoveStaleChildEntries(void);
+
 private:
     static void HandleServerData(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

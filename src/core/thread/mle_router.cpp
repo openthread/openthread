@@ -2714,24 +2714,6 @@ void MleRouter::HandleNetworkDataUpdateRouter(void)
 
     SynchronizeChildNetworkData();
 
-    // Detect if any server entry with invalid child RLOC16
-    {
-        NetworkData::Iterator iterator = NetworkData::kIteratorInit;
-        uint16_t              rloc16   = Mac::kShortAddrInvalid;
-
-        while (Get<NetworkData::Leader>().GetNextServer(iterator, rloc16) == OT_ERROR_NONE)
-        {
-            if (!IsActiveRouter(rloc16) && RouterIdMatch(GetRloc16(), rloc16) &&
-                mChildTable.FindChild(rloc16, Child::kInStateValid) == NULL)
-            {
-                Get<NetworkData::Leader>().SendServerDataNotification(rloc16);
-                // In Thread 1.1 Specification 5.15.6.1, only one RLOC16 TLV entry may appear in SRV_DATA.ntf.
-                // So break here.
-                break;
-            }
-        }
-    }
-
 exit:
     return;
 }
@@ -2739,6 +2721,8 @@ exit:
 void MleRouter::SynchronizeChildNetworkData(void)
 {
     VerifyOrExit(mRole == OT_DEVICE_ROLE_ROUTER || mRole == OT_DEVICE_ROLE_LEADER);
+
+    Get<NetworkData::Leader>().RemoveStaleChildEntries();
 
     for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValid); !iter.IsDone(); iter++)
     {
