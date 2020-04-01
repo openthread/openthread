@@ -1548,8 +1548,6 @@ class AddressCacheEntry(object):
         # separator
         dict = {item.split(':')[0]: item.split(':')[1] for item in items[3:]}
 
-        self._age = int(dict['age'], 0)
-
     @property
     def address(self):
         return self._address
@@ -1557,10 +1555,6 @@ class AddressCacheEntry(object):
     @property
     def rloc16(self):
         return self._rloc16
-
-    @property
-    def age(self):
-        return self._age
 
     def __repr__(self):
         return 'AddressCacheEntry({})'.format(self.__dict__)

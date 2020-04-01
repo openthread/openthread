@@ -199,18 +199,28 @@ public:
      *
      * @note This method does not change the popped entry itself, i.e., the popped entry next pointer stays as before.
      *
-     * @param[in] aPrevEntry  A reference to n previous entry (the entry after this will be popped).
-
-     * @returns The entry that was popped if list is not empty, or NULL if there is no entry after the given one.
+     * @param[in] aPrevEntry  A pointer to a previous entry. If it is not NULL the entry after this will be popped,
+     *                        otherwise (if it is NULL) the entry at head of the list is popped.
+     *
+     * @returns Pointer to the entry that was popped, or NULL if there is no entry to pop.
      *
      */
-    Type *PopAfter(Type &aPrevEntry)
+    Type *PopAfter(Type *aPrevEntry)
     {
-        Type *entry = aPrevEntry.GetNext();
+        Type *entry;
 
-        if (entry != NULL)
+        if (aPrevEntry == NULL)
         {
-            aPrevEntry.SetNext(entry->GetNext());
+            entry = Pop();
+        }
+        else
+        {
+            entry = aPrevEntry->GetNext();
+
+            if (entry != NULL)
+            {
+                aPrevEntry->SetNext(entry->GetNext());
+            }
         }
 
         return entry;

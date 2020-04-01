@@ -79,16 +79,45 @@ typedef struct
 typedef uint16_t otChildIp6AddressIterator; ///< Used to iterate through IPv6 addresses of a Thread Child entry.
 
 /**
+ * This enumeration defines the EID cache entry state.
+ *
+ */
+typedef enum otCacheEntryState
+{
+    OT_CACHE_ENTRY_STATE_CACHED      = 0, // Entry is cached and in-use.
+    OT_CACHE_ENTRY_STATE_SNOOPED     = 1, // Entry is created by snoop optimization (inspection of received msg).
+    OT_CACHE_ENTRY_STATE_QUERY       = 2, // Entry represents an ongoing query for the EID.
+    OT_CACHE_ENTRY_STATE_RETRY_QUERY = 3, // Entry is in retry wait mode (a prior query did not get a response).
+} otCacheEntryState;
+
+/**
  * This structure represents an EID cache entry.
  *
  */
-typedef struct otEidCacheEntry
+typedef struct otCacheEntryInfo
 {
-    otIp6Address   mTarget;    ///< Target
-    otShortAddress mRloc16;    ///< RLOC16
-    uint8_t        mAge;       ///< Age (order of use, 0 indicates most recently used entry)
-    bool           mValid : 1; ///< Indicates whether or not the cache entry is valid
-} otEidCacheEntry;
+    otIp6Address      mTarget;             ///< Target EID
+    otShortAddress    mRloc16;             ///< RLOC16
+    otCacheEntryState mState;              ///< Entry state
+    bool              mCanEvict : 1;       ///< Indicates whether the entry can be evicted.
+    bool              mValidLastTrans : 1; ///< Indicates whether last transaction time and ML-EID are valid.
+    uint32_t          mLastTransTime;      ///< Last transaction time (applicable in cached state).
+    otIp6Address      mMeshLocalEid;       ///< Mesh Local EID (applicable if entry in cached state).
+    uint16_t          mTimeout;            ///< Timeout in seconds (applicable if in snooped/query/retry-query states).
+    uint16_t          mRetryDelay;         ///< Retry delay in seconds (applicable if in query-retry state).
+} otCacheEntryInfo;
+
+/**
+ * This type represents an iterator used for iterating through the EID cache table entries.
+ *
+ * To initialize the iterator and start from the first entry in the cache table, set all its fields in the structure to
+ * zero (e.g., `memset` the iterator to zero).
+ *
+ */
+typedef struct otCacheEntryIterator
+{
+    const void *mData[2]; ///< Opaque data used by the core implementation. Should not be changed by user.
+} otCacheEntryIterator;
 
 /**
  * Get the maximum number of children currently allowed.
@@ -507,17 +536,19 @@ uint8_t otThreadGetMaxRouterId(otInstance *aInstance);
 otError otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRouterInfo *aRouterInfo);
 
 /**
- * This function gets an EID cache entry.
+ * This function gets the next EID cache entry (using an iterator).
  *
- * @param[in]   aInstance A pointer to an OpenThread instance.
- * @param[in]   aIndex    An index into the EID cache table.
- * @param[out]  aEntry    A pointer to where the EID information is placed.
+ * @param[in]    aInstance   A pointer to an OpenThread instance.
+ * @param[out]   aEntryInfo  A pointer to where the EID cache entry information is placed.
+ * @param[inout] aIterator   A pointer to an iterator. It will be updated to point to next entry on success. To get the
+ *                           first entry, initialize the iterator by setting all its fields to zero (e.g., `memset` the
+ *                           the iterator structure to zero).
  *
- * @retval OT_ERROR_NONE          Successfully retrieved the EID cache entry.
- * @retval OT_ERROR_INVALID_ARGS  @p aIndex was out of bounds or @p aEntry was NULL.
+ * @retval OT_ERROR_NONE          Successfully populated @p aEntryInfo for next EID cache entry.
+ * @retval OT_ERROR_NOT_FOUND     No more entries in the address cache table.
  *
  */
-otError otThreadGetEidCacheEntry(otInstance *aInstance, uint8_t aIndex, otEidCacheEntry *aEntry);
+otError otThreadGetNextCacheEntry(otInstance *aInstance, otCacheEntryInfo *aEntryInfo, otCacheEntryIterator *aIterator);
 
 /**
  * Get the Thread PSKc
@@ -577,6 +608,37 @@ int8_t otThreadGetParentPriority(otInstance *aInstance);
  *
  */
 otError otThreadSetParentPriority(otInstance *aInstance, int8_t aParentPriority);
+
+/**
+ * This function gets the maximum number of IP addresses that each MTD child may register with this device as parent.
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ *
+ * @returns The maximum number of IP addresses that each MTD child may register with this device as parent.
+ *
+ * @sa otThreadSetMaxChildIpAddresses
+ *
+ */
+uint8_t otThreadGetMaxChildIpAddresses(otInstance *aInstance);
+
+/**
+ * This function sets/restores the maximum number of IP addresses that each MTD child may register with this
+ * device as parent.
+ *
+ * @note This API requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`, and is only used by Thread Test Harness
+ *       to limit the address registrations of the reference parent in order to test the MTD DUT reaction.
+ *
+ * @param[in]  aInstance        A pointer to an OpenThread instance.
+ * @param[in]  aMaxIpAddresses  The maximum number of IP addresses that each MTD child may register with this
+ *                              device as parent. 0 to clear the setting and restore the default.
+ *
+ * @retval OT_ERROR_NONE           Successfully set/cleared the number.
+ * @retval OT_ERROR_INVALID_ARGS   If exceeds the allowed maximum number.
+ *
+ * @sa otThreadGetMaxChildIpAddresses
+ *
+ */
+otError otThreadSetMaxChildIpAddresses(otInstance *aInstance, uint8_t aMaxIpAddresses);
 
 /**
  * This enumeration defines the constants used in `otNeighborTableCallback` to indicate whether a child or router

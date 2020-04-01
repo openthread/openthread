@@ -864,37 +864,62 @@ exit:
 
 void Interpreter::ProcessChildIp(uint8_t aArgsLength, char *aArgs[])
 {
-    otError  error = OT_ERROR_NONE;
-    uint16_t maxChildren;
+    OT_UNUSED_VARIABLE(aArgs);
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aArgsLength == 0, error = OT_ERROR_INVALID_ARGS);
-
-    maxChildren = otThreadGetMaxAllowedChildren(mInstance);
-
-    for (uint16_t childIndex = 0; childIndex < maxChildren; childIndex++)
+    if (aArgsLength == 0)
     {
-        otChildIp6AddressIterator iterator = OT_CHILD_IP6_ADDRESS_ITERATOR_INIT;
-        otIp6Address              ip6Address;
-        otChildInfo               childInfo;
+        uint16_t maxChildren = otThreadGetMaxAllowedChildren(mInstance);
 
-        if ((otThreadGetChildInfoByIndex(mInstance, childIndex, &childInfo) != OT_ERROR_NONE) ||
-            childInfo.mIsStateRestoring)
+        for (uint16_t childIndex = 0; childIndex < maxChildren; childIndex++)
         {
-            continue;
-        }
+            otChildIp6AddressIterator iterator = OT_CHILD_IP6_ADDRESS_ITERATOR_INIT;
+            otIp6Address              ip6Address;
+            otChildInfo               childInfo;
 
-        iterator = OT_CHILD_IP6_ADDRESS_ITERATOR_INIT;
+            if ((otThreadGetChildInfoByIndex(mInstance, childIndex, &childInfo) != OT_ERROR_NONE) ||
+                childInfo.mIsStateRestoring)
+            {
+                continue;
+            }
 
-        while (otThreadGetChildNextIp6Address(mInstance, childIndex, &iterator, &ip6Address) == OT_ERROR_NONE)
-        {
-            mServer->OutputFormat("%04x: ", childInfo.mRloc16);
-            OutputIp6Address(ip6Address);
-            mServer->OutputFormat("\r\n");
+            iterator = OT_CHILD_IP6_ADDRESS_ITERATOR_INIT;
+
+            while (otThreadGetChildNextIp6Address(mInstance, childIndex, &iterator, &ip6Address) == OT_ERROR_NONE)
+            {
+                mServer->OutputFormat("%04x: ", childInfo.mRloc16);
+                OutputIp6Address(ip6Address);
+                mServer->OutputFormat("\r\n");
+            }
         }
     }
+    else if (strcmp(aArgs[0], "max") == 0)
+    {
+        if (aArgsLength == 1)
+        {
+            mServer->OutputFormat("%d\r\n", otThreadGetMaxChildIpAddresses(mInstance));
+        }
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        else if (aArgsLength == 2)
+        {
+            unsigned long value;
+            SuccessOrExit(error = ParseUnsignedLong(aArgs[1], value));
+            SuccessOrExit(error = otThreadSetMaxChildIpAddresses(mInstance, static_cast<uint8_t>(value)));
+        }
+#endif
+        else
+        {
+            error = OT_ERROR_INVALID_ARGS;
+        }
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 exit:
-    OT_UNUSED_VARIABLE(aArgs);
+#endif
     AppendResult(error);
 }
 
@@ -1269,16 +1294,14 @@ void Interpreter::ProcessEidCache(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    otEidCacheEntry entry;
+    otCacheEntryIterator iterator;
+    otCacheEntryInfo     entry;
+
+    memset(&iterator, 0, sizeof(iterator));
 
     for (uint8_t i = 0;; i++)
     {
-        SuccessOrExit(otThreadGetEidCacheEntry(mInstance, i, &entry));
-
-        if (!entry.mValid)
-        {
-            continue;
-        }
+        SuccessOrExit(otThreadGetNextCacheEntry(mInstance, &entry, &iterator));
 
         OutputIp6Address(entry.mTarget);
         mServer->OutputFormat(" %04x\r\n", entry.mRloc16);

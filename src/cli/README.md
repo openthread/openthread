@@ -333,6 +333,28 @@ Get the list of IP addresses stored for MTD children.
 Done
 ```
 
+### childip max
+
+Get the maximum number of IP addresses that each MTD child may register with this device as parent.
+
+```bash
+> childip max
+4
+Done
+```
+
+### childip max \<count\>
+
+Set the maximum number of IP addresses that each MTD child may register with this device as parent.
+0 to clear the setting and restore the default.
+
+`OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is required.
+
+```bash
+> childip max 2
+Done
+```
+
 ### childmax
 
 Get the Thread maximum number of allowed children.
