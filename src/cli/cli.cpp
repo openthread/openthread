@@ -2166,13 +2166,13 @@ void Interpreter::HandleIcmpReceive(otMessage *          aMessage,
                                     const otIcmp6Header *aIcmpHeader)
 {
     uint32_t timestamp = 0;
-    uint16_t datasize;
+    uint16_t dataSize;
 
     VerifyOrExit(aIcmpHeader->mType == OT_ICMP6_TYPE_ECHO_REPLY);
     VerifyOrExit((mPingIdentifier != 0) && (mPingIdentifier == HostSwap16(aIcmpHeader->mData.m16[0])));
 
-    datasize = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
-    mServer->OutputFormat("%u bytes from ", datasize + static_cast<uint16_t>(sizeof(otIcmp6Header)));
+    dataSize = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
+    mServer->OutputFormat("%u bytes from ", dataSize + static_cast<uint16_t>(sizeof(otIcmp6Header)));
 
     OutputIp6Address(aMessageInfo->mPeerAddr);
 
@@ -2185,7 +2185,7 @@ void Interpreter::HandleIcmpReceive(otMessage *          aMessage,
 
     mServer->OutputFormat("\r\n");
 
-    SignalPingReply(static_cast<const Ip6::MessageInfo *>(aMessageInfo)->GetPeerAddr(), datasize, HostSwap32(timestamp),
+    SignalPingReply(static_cast<const Ip6::MessageInfo *>(aMessageInfo)->GetPeerAddr(), dataSize, HostSwap32(timestamp),
                     aMessageInfo->mHopLimit);
 
 exit:
