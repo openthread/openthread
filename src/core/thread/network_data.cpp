@@ -66,7 +66,7 @@ NetworkDataTlv *NetworkData::FindTlv(NetworkDataTlv *aStart, NetworkDataTlv *aEn
 
     for (tlv = aStart; tlv < aEnd; tlv = tlv->GetNext())
     {
-        VerifyOrExit((tlv + 1) <= aEnd && tlv->GetNext() <= aEnd);
+        VerifyOrExit((tlv + 1) <= aEnd && tlv->GetNext() <= aEnd, tlv = NULL);
 
         if (tlv->GetType() == aType)
         {
@@ -89,7 +89,7 @@ NetworkDataTlv *NetworkData::FindTlv(NetworkDataTlv *     aStart,
 
     for (tlv = aStart; tlv < aEnd; tlv = tlv->GetNext())
     {
-        VerifyOrExit((tlv + 1) <= aEnd && tlv->GetNext() <= aEnd);
+        VerifyOrExit((tlv + 1) <= aEnd && tlv->GetNext() <= aEnd, tlv = NULL);
 
         if ((tlv->GetType() == aType) && (tlv->IsStable() == aStable))
         {
