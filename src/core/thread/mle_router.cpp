@@ -49,6 +49,7 @@
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
 #include "thread/time_sync_service.hpp"
+#include "utils/otns.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -4785,6 +4786,10 @@ void MleRouter::Signal(otNeighborTableEvent aEvent, Neighbor &aNeighbor)
 
         mNeighborTableChangedCallback(aEvent, &info);
     }
+
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+    Get<Utils::Otns>().EmitNeighborChange(aEvent, aNeighbor);
+#endif
 
     switch (aEvent)
     {

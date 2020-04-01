@@ -91,6 +91,10 @@ else
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1
 endif # NCP_SPI == 1
 
+ifeq ($(OTNS),1)
+VIRTUAL_TIME ?= 1
+endif
+
 ifeq ($(VIRTUAL_TIME),1)
 COMMONCFLAGS                   += -DOPENTHREAD_SIMULATION_VIRTUAL_TIME=1
 endif

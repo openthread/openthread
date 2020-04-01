@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,74 +26,29 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file includes the platform-specific configuration.
- *
- */
+#include "radio.hpp"
 
-/**
- * @def OPENTHREAD_SIMULATION_UART_BAUDRATE
- *
- * This setting configures the baud rate of the UART.
- *
- */
-#ifndef OPENTHREAD_SIMULATION_UART_BAUDRATE
-#define OPENTHREAD_SIMULATION_UART_BAUDRATE B115200
+#include "common/locator-getters.hpp"
+#include "utils/otns.hpp"
+
+namespace ot {
+
+void Radio::SetExtendedAddress(const Mac::ExtAddress &aExtAddress)
+{
+    otPlatRadioSetExtendedAddress(GetInstance(), &aExtAddress);
+
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
+    Get<Utils::Otns>().EmitExtendedAddress(aExtAddress);
 #endif
+}
 
-/**
- * @def OPENTHREAD_SIMULATION_VIRTUAL_TIME
- *
- * This setting configures whether to use virtual time (used for simulation) in simulation platform.
- *
- */
-#ifndef OPENTHREAD_SIMULATION_VIRTUAL_TIME
-#define OPENTHREAD_SIMULATION_VIRTUAL_TIME 0
+void Radio::SetShortAddress(Mac::ShortAddress aShortAddress)
+{
+    otPlatRadioSetShortAddress(GetInstance(), aShortAddress);
+
+#if (OPENTHREAD_MTD || OPENTHREAD_FTD) && OPENTHREAD_CONFIG_OTNS_ENABLE
+    Get<Utils::Otns>().EmitShortAddress(aShortAddress);
 #endif
+}
 
-/**
- * @def OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART
- *
- * This setting configures whether to use virtual time for UART.
- *
- */
-#ifndef OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART
-#define OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART 0
-#endif
-
-/**
- * @def OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
- *
- * Define as 1 to enable pseudo-reset.
- *
- */
-#ifndef OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
-#define OPENTHREAD_PLATFORM_USE_PSEUDO_RESET 0
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_NCP_SPI_ENABLE
- *
- * Define as 1 to enable SPI NCP interface.
- *
- */
-#ifndef OPENTHREAD_CONFIG_NCP_SPI_ENABLE
-#define OPENTHREAD_CONFIG_NCP_SPI_ENABLE 0
-#endif
-
-/**
- * Check OTNS configurations
- *
- */
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
-
-#if !OPENTHREAD_SIMULATION_VIRTUAL_TIME
-#error "OTNS requires virtual time simulations"
-#endif
-
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART
-#error "OTNS does not support virtual time UART"
-#endif
-
-#endif // OPENTHREAD_CONFIG_OTNS_ENABLE
+} // namespace ot

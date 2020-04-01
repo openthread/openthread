@@ -45,6 +45,7 @@
 #include "radio/radio.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_uri_paths.hpp"
+#include "utils/otns.hpp"
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
 
@@ -75,11 +76,12 @@ void Joiner::GetJoinerId(Mac::ExtAddress &aJoinerId) const
 
 void Joiner::SetState(otJoinerState aState)
 {
-    VerifyOrExit(aState != mState);
+    otJoinerState oldState = mState;
+    OT_UNUSED_VARIABLE(oldState);
 
-    otLogInfoMeshCoP("JoinerState: %s -> %s", JoinerStateToString(mState), JoinerStateToString(aState));
-    mState = aState;
+    SuccessOrExit(Get<Notifier>().Update(mState, aState, OT_CHANGED_JOINER_STATE));
 
+    otLogInfoMeshCoP("JoinerState: %s -> %s", JoinerStateToString(oldState), JoinerStateToString(aState));
 exit:
     return;
 }

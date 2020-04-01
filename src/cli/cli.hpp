@@ -304,6 +304,15 @@ private:
 #endif
     void ProcessPing(uint8_t aArgsLength, char *aArgs[]);
     void ProcessPollPeriod(uint8_t aArgsLength, char *aArgs[]);
+    void SignalPingRequest(const Ip6::Address &aPeerAddress,
+                           uint16_t            aPingLength,
+                           uint32_t            aTimestamp,
+                           uint8_t             aHopLimit);
+    void SignalPingReply(const Ip6::Address &aPeerAddress,
+                         uint16_t            aPingLength,
+                         uint32_t            aTimestamp,
+                         uint8_t             aHopLimit);
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     void    ProcessPrefix(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessPrefixAdd(uint8_t aArgsLength, char *aArgs[]);

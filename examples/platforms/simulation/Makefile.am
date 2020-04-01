@@ -52,6 +52,7 @@ PLATFORM_SOURCES                          = \
     system.c                                \
     uart.c                                  \
     virtual_time/alarm-sim.c                \
+    virtual_time/otns.c                     \
     virtual_time/platform-sim.c             \
     $(NULL)
 
