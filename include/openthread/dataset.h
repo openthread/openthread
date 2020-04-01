@@ -427,7 +427,7 @@ otError otDatasetSendMgmtPendingSet(otInstance *                aInstance,
                                     uint8_t                     aLength);
 
 /**
- * This function generates PSKc from a given pass-phrase, network name, and extended PAN Id.
+ * This function generates PSKc from a given pass-phrase, network name, and extended PAN ID.
  *
  * PSKc is used to establish the Commissioner Session.
  *
