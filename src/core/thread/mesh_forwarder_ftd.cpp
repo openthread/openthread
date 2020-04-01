@@ -184,36 +184,69 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, otError aError)
 
 otError MeshForwarder::EvictMessage(uint8_t aPriority)
 {
-    otError  error = OT_ERROR_NOT_FOUND;
-    Message *message;
+    otError        error    = OT_ERROR_NOT_FOUND;
+    PriorityQueue *queues[] = {&mResolvingQueue, &mSendQueue};
+    Message *      evict    = NULL;
 
-    VerifyOrExit((message = mSendQueue.GetTail()) != NULL);
-
-    if (message->GetPriority() < aPriority)
+    // search for a lower priority message to evict (choose lowest priority message among all queues)
+    for (uint8_t index = 0; index < OT_ARRAY_LENGTH(queues); index++)
     {
-        VerifyOrExit(!message->GetDoNotEvict());
-        RemoveMessage(*message);
+        for (uint8_t priority = 0; priority < aPriority; priority++)
+        {
+            for (Message *message = queues[index]->GetHeadForPriority(priority); message; message = message->GetNext())
+            {
+                if (message->GetPriority() != priority)
+                {
+                    break;
+                }
+
+                if (message->GetDoNotEvict())
+                {
+                    continue;
+                }
+
+                evict     = message;
+                aPriority = priority;
+                break;
+            }
+        }
+    }
+
+    if (evict != NULL)
+    {
         ExitNow(error = OT_ERROR_NONE);
     }
-    else
+
+    for (uint8_t priority = aPriority; priority < Message::kNumPriorities; priority++)
     {
-        while (aPriority <= Message::kPriorityNet)
+        // search for an equal or higher priority indirect message to evict
+        for (Message *message = mSendQueue.GetHeadForPriority(aPriority); message; message = message->GetNext())
         {
-            for (message = mSendQueue.GetHeadForPriority(aPriority); message && (message->GetPriority() == aPriority);
-                 message = message->GetNext())
+            if (message->GetPriority() != priority)
             {
-                if (message->IsChildPending())
-                {
-                    RemoveMessage(*message);
-                    ExitNow(error = OT_ERROR_NONE);
-                }
+                break;
             }
 
-            aPriority++;
+            if (message->GetDoNotEvict())
+            {
+                continue;
+            }
+
+            if (message->IsChildPending())
+            {
+                evict = message;
+                ExitNow(error = OT_ERROR_NONE);
+            }
         }
     }
 
 exit:
+
+    if (error == OT_ERROR_NONE)
+    {
+        RemoveMessage(*evict);
+    }
+
     return error;
 }
 
