@@ -137,11 +137,11 @@ otError otDatasetSendMgmtPendingSet(otInstance *                aInstance,
 
 #if OPENTHREAD_FTD
 otError otDatasetGeneratePskc(const char *           aPassPhrase,
-                              const char *           aNetworkName,
+                              const otNetworkName *  aNetworkName,
                               const otExtendedPanId *aExtPanId,
                               otPskc *               aPskc)
 {
-    return MeshCoP::GeneratePskc(aPassPhrase, aNetworkName, *static_cast<const Mac::ExtendedPanId *>(aExtPanId),
-                                 *static_cast<Pskc *>(aPskc));
+    return MeshCoP::GeneratePskc(aPassPhrase, *static_cast<const Mac::NetworkName *>(aNetworkName),
+                                 *static_cast<const Mac::ExtendedPanId *>(aExtPanId), *static_cast<Pskc *>(aPskc));
 }
 #endif // OPENTHREAD_FTD

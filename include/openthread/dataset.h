@@ -441,7 +441,7 @@ otError otDatasetSendMgmtPendingSet(otInstance *                aInstance,
  *
  */
 otError otDatasetGeneratePskc(const char *           aPassPhrase,
-                              const char *           aNetworkName,
+                              const otNetworkName *  aNetworkName,
                               const otExtendedPanId *aExtPanId,
                               otPskc *               aPskc);
 

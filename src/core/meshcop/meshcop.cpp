@@ -70,7 +70,7 @@ exit:
 
 #if OPENTHREAD_FTD
 otError GeneratePskc(const char *              aPassPhrase,
-                     const char *              aNetworkName,
+                     const Mac::NetworkName &  aNetworkName,
                      const Mac::ExtendedPanId &aExtPanId,
                      Pskc &                    aPskc)
 {
@@ -82,7 +82,7 @@ otError GeneratePskc(const char *              aPassPhrase,
     uint8_t    networkNameLen;
 
     passphraseLen  = static_cast<uint16_t>(StringLength(aPassPhrase, OT_COMMISSIONING_PASSPHRASE_MAX_SIZE + 1));
-    networkNameLen = static_cast<uint8_t>(StringLength(aNetworkName, OT_NETWORK_NAME_MAX_SIZE + 1));
+    networkNameLen = static_cast<uint8_t>(StringLength(aNetworkName.GetAsCString(), OT_NETWORK_NAME_MAX_SIZE + 1));
 
     VerifyOrExit((passphraseLen >= OT_COMMISSIONING_PASSPHRASE_MIN_SIZE) &&
                      (passphraseLen <= OT_COMMISSIONING_PASSPHRASE_MAX_SIZE) &&
@@ -96,7 +96,7 @@ otError GeneratePskc(const char *              aPassPhrase,
     memcpy(salt + saltLen, aExtPanId.m8, sizeof(aExtPanId));
     saltLen += OT_EXT_PAN_ID_SIZE;
 
-    memcpy(salt + saltLen, aNetworkName, networkNameLen);
+    memcpy(salt + saltLen, aNetworkName.GetAsCString(), networkNameLen);
     saltLen += networkNameLen;
 
     otPbkdf2Cmac(reinterpret_cast<const uint8_t *>(aPassPhrase), passphraseLen, reinterpret_cast<const uint8_t *>(salt),

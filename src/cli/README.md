@@ -80,6 +80,7 @@ Done
 * [preferrouterid](#preferrouterid-routerid)
 * [prefix](#prefix-add-prefix-pvdcsr-prf)
 * [promiscuous](#promiscuous)
+* [pskc](#pskc--p-key-passphrase)
 * [releaserouterid](#releaserouterid-routerid)
 * [reset](#reset)
 * [rloc16](#rloc16)
@@ -1166,12 +1167,9 @@ Set the customized data poll period for sleepy end device (milliseconds >= 10ms)
 Done
 ```
 
-### pskc
+### pskc [-p] \<key\>|\<passphrase\>
 
-Usage: `pskc [-p] <key>|<passphrase>`
-
-Set pskc with hex format or passphrase if `-p` is given when the pskc is
-computed with the **current** Thread network name and extended PAN ID.
+with `-p` generate pskc from \<passphrase\>(UTF-8 encoded) together with current network name and extended PAN ID, otherwise set pskc as \<key\>(hex format). 
 
 ```bash
 > pskc 67c0c203aa0b042bfb5381c47aef4d9e

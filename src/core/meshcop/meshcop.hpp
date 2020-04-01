@@ -81,7 +81,7 @@ inline Coap::Message *NewMeshCoPMessage(Coap::CoapBase &aCoap)
  *
  */
 otError GeneratePskc(const char *              aPassPhrase,
-                     const char *              aNetworkName,
+                     const Mac::NetworkName &  aNetworkName,
                      const Mac::ExtendedPanId &aExtPanId,
                      Pskc &                    aPskc);
 

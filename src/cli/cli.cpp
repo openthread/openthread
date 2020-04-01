@@ -1745,8 +1745,9 @@ void Interpreter::ProcessPskc(uint8_t aArgsLength, char *aArgs[])
         }
         else if (!strcmp(aArgs[0], "-p"))
         {
-            SuccessOrExit(error = otDatasetGeneratePskc(aArgs[1], otThreadGetNetworkName(mInstance),
-                                                        otThreadGetExtendedPanId(mInstance), &pskc));
+            SuccessOrExit(error = otDatasetGeneratePskc(
+                              aArgs[1], reinterpret_cast<const otNetworkName *>(otThreadGetNetworkName(mInstance)),
+                              otThreadGetExtendedPanId(mInstance), &pskc));
         }
         else
         {
