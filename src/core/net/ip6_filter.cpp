@@ -173,6 +173,23 @@ exit:
     return error;
 }
 
+bool Filter::IsPortUnsecure(uint16_t aPort)
+{
+    bool found = false;
+
+    for (int i = 0; i < kMaxUnsecurePorts; i++)
+    {
+        if (mUnsecurePorts[i] == aPort)
+        {
+            found = true;
+            ExitNow();
+        }
+    }
+
+exit:
+    return found;
+}
+
 void Filter::RemoveAllUnsecurePorts(void)
 {
     memset(mUnsecurePorts, 0, sizeof(mUnsecurePorts));

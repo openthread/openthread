@@ -98,6 +98,16 @@ public:
     otError RemoveUnsecurePort(uint16_t aPort);
 
     /**
+     * This method checks whether a port is in the unsecure port list.
+     *
+     * @param[in]  aPort  The port value.
+     *
+     * @returns Whether the given port is in the unsecure port list.
+     *
+     */
+    bool IsPortUnsecure(uint16_t aPort);
+
+    /**
      * This method removes all ports from the allowed unsecure port list.
      *
      */
