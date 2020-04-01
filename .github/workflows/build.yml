@@ -46,10 +46,10 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get update
-        sudo apt-get remove -y clang-6.0 libclang-common-6.0-dev libclang1-6.0 libllvm6.0
-        sudo apt-get autoremove
-        sudo apt-get --no-install-recommends install -y clang-tools clang-format-6.0
+        sudo apt update
+        sudo apt remove -y clang-6.0 libclang-common-6.0-dev libclang1-6.0 libllvm6.0
+        sudo apt autoremove
+        sudo apt --no-install-recommends install -y clang-tools clang-format-6.0
         clang-format-6.0 --version
         python3 -m pip install yapf
     - name: Check
@@ -70,10 +70,10 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get update
-        sudo apt-get remove -y clang-6.0 libclang-common-6.0-dev libclang1-6.0 libllvm6.0
-        sudo apt-get autoremove
-        sudo apt-get --no-install-recommends install -y clang-tools
+        sudo apt update
+        sudo apt remove -y clang-6.0 libclang-common-6.0-dev libclang1-6.0 libllvm6.0
+        sudo apt autoremove
+        sudo apt --no-install-recommends install -y clang-tools
     - name: Run
       run: |
         script/check-scan-build
@@ -85,7 +85,8 @@ jobs:
     - name: Bootstrap
       run: |
         cd /tmp
-        sudo apt-get --no-install-recommends install -y lib32z1 ninja-build
+        sudo apt update
+        sudo apt --no-install-recommends install -y lib32z1 ninja-build
         wget https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q3-update/+download/gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2
         tar xjf gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2
     - name: Build
@@ -100,7 +101,8 @@ jobs:
     - name: Bootstrap
       run: |
         cd /tmp
-        sudo apt-get --no-install-recommends install -y lib32z1 ninja-build
+        sudo apt update
+        sudo apt --no-install-recommends install -y lib32z1 ninja-build
         wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/5_4-2016q3/gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2
         tar xjf gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2
     - name: Build
@@ -115,7 +117,8 @@ jobs:
     - name: Bootstrap
       run: |
         cd /tmp
-        sudo apt-get --no-install-recommends install -y ninja-build
+        sudo apt update
+        sudo apt --no-install-recommends install -y ninja-build
         wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/6-2017q2/gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
         tar xjf gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
     - name: Build
@@ -130,7 +133,8 @@ jobs:
     - name: Bootstrap
       run: |
         cd /tmp
-        sudo apt-get --no-install-recommends install -y ninja-build
+        sudo apt update
+        sudo apt --no-install-recommends install -y ninja-build
         wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
         tar xjf gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
     - name: Build
@@ -145,7 +149,8 @@ jobs:
     - name: Bootstrap
       run: |
         cd /tmp
-        sudo apt-get --no-install-recommends install -y ninja-build
+        sudo apt update
+        sudo apt --no-install-recommends install -y ninja-build
         wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2019q4/RC2.1/gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2
         tar xjf gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2
     - name: Build
@@ -162,7 +167,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get --no-install-recommends install -y gcc-5 g++-5 ninja-build
+        sudo apt update
+        sudo apt --no-install-recommends install -y gcc-5 g++-5 ninja-build
     - name: Build
       run: |
         script/check-simulation-build
@@ -177,7 +183,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get --no-install-recommends install -y gcc-6 g++-6 ninja-build
+        sudo apt update
+        sudo apt --no-install-recommends install -y gcc-6 g++-6 ninja-build
     - name: Build
       run: |
         script/check-simulation-build
@@ -192,7 +199,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get --no-install-recommends install -y gcc-7 g++-7 ninja-build
+        sudo apt update
+        sudo apt --no-install-recommends install -y gcc-7 g++-7 ninja-build
     - name: Build
       run: |
         script/check-simulation-build
@@ -207,7 +215,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get --no-install-recommends install -y gcc-8 g++-8 ninja-build
+        sudo apt update
+        sudo apt --no-install-recommends install -y gcc-8 g++-8 ninja-build
     - name: Build
       run: |
         script/check-simulation-build
@@ -222,7 +231,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get --no-install-recommends install -y gcc-9 g++-9 ninja-build
+        sudo apt update
+        sudo apt --no-install-recommends install -y gcc-9 g++-9 ninja-build
     - name: Build
       run: |
         script/check-simulation-build
@@ -234,7 +244,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        sudo apt-get --no-install-recommends install -y ninja-build
+        sudo apt update
+        sudo apt --no-install-recommends install -y ninja-build
         cd /tmp
         wget -O gn.zip https://chrome-infra-packages.appspot.com/dl/gn/gn/linux-amd64/+/latest
         unzip -o gn.zip
