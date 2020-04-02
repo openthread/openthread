@@ -502,10 +502,8 @@ exit:
     return rval;
 }
 
-void RouterTable::ProcessRouterIdSet(uint8_t aRouterIdSequence, const Mle::RouterIdSet &aRouterIdSet)
+void RouterTable::UpdateRouterIdSet(uint8_t aRouterIdSequence, const Mle::RouterIdSet &aRouterIdSet)
 {
-    bool allocationChanged = false;
-
     mRouterIdSequence            = aRouterIdSequence;
     mRouterIdSequenceLastUpdated = TimerMilli::GetNow();
 
@@ -513,18 +511,8 @@ void RouterTable::ProcessRouterIdSet(uint8_t aRouterIdSequence, const Mle::Route
 
     for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
     {
-        if (aRouterIdSet.Contains(routerId) == IsAllocated(routerId))
-        {
-            continue;
-        }
-
-        allocationChanged = true;
-
-        if (aRouterIdSet.Contains(routerId))
-        {
-            mAllocatedRouterIds.Add(routerId);
-        }
-        else
+        // If was allocated but removed in new Router Id Set
+        if (IsAllocated(routerId) && !aRouterIdSet.Contains(routerId))
         {
             Router *router = GetRouter(routerId);
 
@@ -536,11 +524,9 @@ void RouterTable::ProcessRouterIdSet(uint8_t aRouterIdSequence, const Mle::Route
         }
     }
 
-    if (allocationChanged)
-    {
-        UpdateAllocation();
-        Get<Mle::MleRouter>().ResetAdvertiseInterval();
-    }
+    mAllocatedRouterIds = aRouterIdSet;
+    UpdateAllocation();
+    Get<Mle::MleRouter>().ResetAdvertiseInterval();
 
 exit:
     return;

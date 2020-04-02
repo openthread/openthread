@@ -318,7 +318,7 @@ public:
      * @param[in]  aRouterIdSet       A reference to the Router Id Set.
      *
      */
-    void ProcessRouterIdSet(uint8_t aRouterIdSequence, const Mle::RouterIdSet &aRouterIdSet);
+    void UpdateRouterIdSet(uint8_t aRouterIdSequence, const Mle::RouterIdSet &aRouterIdSet);
 
     /**
      * This method gets the allocated Router ID set.

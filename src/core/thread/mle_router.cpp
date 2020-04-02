@@ -1077,7 +1077,7 @@ otError MleRouter::ProcessRouteTlv(const RouteTlv &aRoute)
 {
     otError error = OT_ERROR_NONE;
 
-    mRouterTable.ProcessRouterIdSet(aRoute.GetRouterIdSequence(), aRoute.GetRouterIdMask());
+    mRouterTable.UpdateRouterIdSet(aRoute.GetRouterIdSequence(), aRoute.GetRouterIdMask());
 
     if (mRole == OT_DEVICE_ROLE_ROUTER && !mRouterTable.IsAllocated(mRouterId))
     {
@@ -4060,7 +4060,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
 
     SetStateRouter(Rloc16FromRouterId(mRouterId));
     mRouterTable.Clear();
-    mRouterTable.ProcessRouterIdSet(routerMaskTlv.GetIdSequence(), routerMaskTlv.GetAssignedRouterIdMask());
+    mRouterTable.UpdateRouterIdSet(routerMaskTlv.GetIdSequence(), routerMaskTlv.GetAssignedRouterIdMask());
 
     router = mRouterTable.GetRouter(routerId);
     VerifyOrExit(router != NULL);

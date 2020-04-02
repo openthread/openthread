@@ -614,10 +614,21 @@ public:
      * @retval FALSE  If the Router ID sets are not equal.
      *
      */
-    bool operator!=(const RouterIdSet &aOther) const
+    bool operator==(const RouterIdSet &aOther) const
     {
-        return memcmp(mRouterIdSet, aOther.mRouterIdSet, sizeof(mRouterIdSet)) != 0;
+        return memcmp(mRouterIdSet, aOther.mRouterIdSet, sizeof(mRouterIdSet)) == 0;
     }
+
+    /**
+     * This method returns whether or not the Router ID sets are not equal.
+     *
+     * @param[in]  aOther The other Router ID Set to compare with.
+     *
+     * @retval TRUE   If the Router ID sets are not equal.
+     * @retval FALSE  If the Router ID sets are equal.
+     *
+     */
+    bool operator!=(const RouterIdSet &aOther) const { return !(*this == aOther); }
 
 private:
     uint8_t mRouterIdSet[BitVectorBytes(Mle::kMaxRouterId + 1)];
