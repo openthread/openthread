@@ -33,9 +33,6 @@ if(NOT OT_CONFIG)
     set(OT_CONFIG ${OT_CONFIG} PARENT_SCOPE)
 endif()
 
-list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/examples/platforms/cc2652/crypto)
-list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2)
-
 list(APPEND OT_PLATFORM_DEFINES
     "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-cc2652-config-check.h\""
     "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\""
@@ -85,7 +82,6 @@ target_compile_options(openthread-cc2652 PRIVATE
 target_include_directories(openthread-cc2652 PRIVATE
     ${OT_PUBLIC_INCLUDES}
     ${OT_PRIVATE_INCLUDES}
-    ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
     ${PROJECT_SOURCE_DIR}/examples/platforms
     ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
