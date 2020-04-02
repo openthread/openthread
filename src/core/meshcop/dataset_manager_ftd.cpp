@@ -242,8 +242,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
         }
 
         SuccessOrExit(Save(dataset));
-        Get<NetworkData::Leader>().IncrementVersion();
-        Get<NetworkData::Leader>().IncrementStableVersion();
+        Get<NetworkData::Leader>().IncrementVersionAndStableVersion();
     }
     else
     {

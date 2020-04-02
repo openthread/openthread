@@ -108,10 +108,10 @@ public:
     void IncrementVersion(void);
 
     /**
-     * This method increments the Thread Network Data stable version.
+     * This method increments both the Thread Network Data version and stable version.
      *
      */
-    void IncrementStableVersion(void);
+    void IncrementVersionAndStableVersion(void);
 
     /**
      * This method returns CONTEXT_ID_RESUSE_DELAY value.
@@ -230,6 +230,7 @@ private:
     void SendCommissioningSetResponse(const Coap::Message &    aRequest,
                                       const Ip6::MessageInfo & aMessageInfo,
                                       MeshCoP::StateTlv::State aState);
+    void IncrementVersions(bool aIncludeStable);
 
     /**
      * Thread Specification Constants.

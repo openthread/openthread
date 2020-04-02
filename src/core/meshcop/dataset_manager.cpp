@@ -163,11 +163,7 @@ otError DatasetManager::Save(const Dataset &aDataset)
         mLocal.Save(aDataset);
 
 #if OPENTHREAD_FTD
-        if (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER)
-        {
-            Get<NetworkData::Leader>().IncrementVersion();
-            Get<NetworkData::Leader>().IncrementStableVersion();
-        }
+        Get<NetworkData::Leader>().IncrementVersionAndStableVersion();
 #endif
     }
     else if (compare < 0)
@@ -201,8 +197,7 @@ otError DatasetManager::Save(const otOperationalDataset &aDataset)
 
     case OT_DEVICE_ROLE_LEADER:
         Restore();
-        Get<NetworkData::Leader>().IncrementVersion();
-        Get<NetworkData::Leader>().IncrementStableVersion();
+        Get<NetworkData::Leader>().IncrementVersionAndStableVersion();
         break;
 #endif
 
