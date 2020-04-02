@@ -374,12 +374,14 @@ Done
 
 ### pskc
 
-Usage: `dataset pskc <key>`
+Usage: `pskc [-p] <key>|<passphrase>`
 
-Set pskc with hex format.
+With `-p`(**only for FTD**) generate pskc from \<passphrase\> (UTF-8 encoded) together with current network name and extended PAN ID, otherwise set pskc as \<key\> (hex format).
 
 ```bash
 > dataset pskc 67c0c203aa0b042bfb5381c47aef4d9e
+Done
+> dataset pskc -p 123456
 Done
 ```
 
