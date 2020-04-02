@@ -43,7 +43,7 @@ set(CMAKE_EXE_LINKER_FLAGS         "${COMMON_C_FLAGS} -Wl,--gc-sections -specs=n
 
 set(CMAKE_C_FLAGS_DEBUG            "-Og -g")
 set(CMAKE_CXX_FLAGS_DEBUG          "-Og -g")
-set(CMAKE_ASM_FLAGS_DEBUG          "")
+set(CMAKE_ASM_FLAGS_DEBUG          "-g")
 set(CMAKE_EXE_LINKER_FLAGS_DEBUG   "")
 
 set(CMAKE_C_FLAGS_RELEASE          "-Os")
