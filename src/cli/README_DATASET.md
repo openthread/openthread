@@ -376,7 +376,7 @@ Done
 
 Usage: `pskc [-p] <key>|<passphrase>`
 
-With `-p`(**only for FTD**) generate pskc from \<passphrase\> (UTF-8 encoded) together with current network name and extended PAN ID, otherwise set pskc as \<key\> (hex format).
+With `-p`(**only for FTD**) generate pskc from \<passphrase\> (UTF-8 encoded) together with network name and extended PAN ID in the dataset buffer if set or values in the current stack if not, otherwise set pskc as \<key\> (hex format).
 
 ```bash
 > dataset pskc 67c0c203aa0b042bfb5381c47aef4d9e
