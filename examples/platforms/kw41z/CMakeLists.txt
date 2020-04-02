@@ -35,7 +35,6 @@ endif()
 
 list(APPEND OT_PLATFORM_DEFINES
     "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-kw41z-config-check.h\""
-    "OPENTHREAD_SETTINGS_RAM=0"
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
@@ -76,19 +75,16 @@ add_library(openthread-kw41z
     ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/XCVR/cfgs_kw4x_3x_2x/fsl_xcvr_mode_datarate_config.c
     ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/XCVR/cfgs_kw4x_3x_2x/fsl_xcvr_msk_config.c
     ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/XCVR/cfgs_kw4x_3x_2x/fsl_xcvr_zgbe_config.c
-    $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
 set_property(TARGET openthread-kw41z PROPERTY C_STANDARD 99)
-
-target_link_libraries(openthread-kw41z PRIVATE openthread-platform-utils)
 target_link_options(openthread-kw41z PRIVATE -T${PROJECT_SOURCE_DIR}/examples/platforms/kw41z/MKW41Z512xxx4.ld)
 target_link_options(openthread-kw41z PUBLIC -Wl,-Map=$<TARGET_PROPERTY:NAME>.map)
 
 target_compile_definitions(openthread-kw41z
     PUBLIC
         ${OT_PLATFORM_DEFINES}
-	-DCPU_MKW41Z512VHT4
+        -DCPU_MKW41Z512VHT4
     PRIVATE
         ${OT_PRIVATE_DEFINES}
 )
