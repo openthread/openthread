@@ -316,12 +316,6 @@ public:
      */
     otError GetNextServer(Iterator &aIterator, uint16_t &aRloc16);
 
-    /**
-     * This method cancels the data resubmit delay timer.
-     *
-     */
-    void ClearResubmitDelayTimer(void);
-
 protected:
     /**
      * This method returns a pointer to the start of Network Data TLV sequence.
@@ -532,13 +526,15 @@ protected:
     /**
      * This method sends a Server Data Notification message to the Leader.
      *
-     * @param[in]  aRloc16  The old RLOC16 value that was previously registered.
+     * @param[in]  aRloc16   The old RLOC16 value that was previously registered.
+     * @param[in]  aHandler  A function pointer that is called when the transaction ends.
+     * @param[in]  aContext  A pointer to arbitrary context information.
      *
      * @retval OT_ERROR_NONE     Successfully enqueued the notification message.
      * @retval OT_ERROR_NO_BUFS  Insufficient message buffers to generate the notification message.
      *
      */
-    otError SendServerDataNotification(uint16_t aRloc16);
+    otError SendServerDataNotification(uint16_t aRloc16, Coap::ResponseHandler aHandler, void *aContext);
 
     /**
      * This static method searches in a given sequence of TLVs to find the first TLV with a given TLV Type.
@@ -696,7 +692,6 @@ private:
     }
 
     const Type mType;
-    TimeMilli  mLastAttempt;
 };
 
 } // namespace NetworkData

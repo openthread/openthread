@@ -138,8 +138,6 @@ otError Local::AddPrefix(const uint8_t *      aPrefix,
         prefixTlv->GetSubTlvs()->SetStable();
     }
 
-    ClearResubmitDelayTimer();
-
     otDumpDebgNetData("add prefix done", mTlvs, mLength);
 
 exit:
@@ -154,7 +152,6 @@ otError Local::RemovePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, Netwo
     VerifyOrExit((tlv = FindPrefix(aPrefix, aPrefixLength)) != NULL, error = OT_ERROR_NOT_FOUND);
     VerifyOrExit(FindTlv(tlv->GetSubTlvs(), tlv->GetNext(), aSubTlvType) != NULL, error = OT_ERROR_NOT_FOUND);
     RemoveTlv(tlv);
-    ClearResubmitDelayTimer();
 
 exit:
     otDumpDebgNetData("remove done", mTlvs, mLength);
@@ -241,8 +238,6 @@ otError Local::AddService(uint32_t       aEnterpriseNumber,
     serverTlv->SetServer16(Get<Mle::MleRouter>().GetRloc16());
     serverTlv->SetServerData(aServerData, aServerDataLength);
 
-    ClearResubmitDelayTimer();
-
     otDumpDebgNetData("add service done", mTlvs, mLength);
 
 exit:
@@ -257,7 +252,6 @@ otError Local::RemoveService(uint32_t aEnterpriseNumber, const uint8_t *aService
     VerifyOrExit((tlv = FindService(aEnterpriseNumber, aServiceData, aServiceDataLength)) != NULL,
                  error = OT_ERROR_NOT_FOUND);
     RemoveTlv(tlv);
-    ClearResubmitDelayTimer();
 
 exit:
     otDumpDebgNetData("remove service done", mTlvs, mLength);
@@ -317,7 +311,7 @@ void Local::UpdateRloc(void)
     }
 }
 
-otError Local::SendServerDataNotification(void)
+otError Local::UpdateInconsistentServerData(Coap::ResponseHandler aHandler, void *aContext)
 {
     otError  error        = OT_ERROR_NONE;
     uint16_t rloc         = Get<Mle::MleRouter>().GetRloc16();
@@ -343,14 +337,14 @@ otError Local::SendServerDataNotification(void)
     isConsistent = isConsistent && IsServiceConsistent();
 #endif
 
-    VerifyOrExit(!isConsistent, ClearResubmitDelayTimer());
+    VerifyOrExit(!isConsistent, error = OT_ERROR_NOT_FOUND);
 
     if (mOldRloc == rloc)
     {
         mOldRloc = Mac::kShortAddrInvalid;
     }
 
-    SuccessOrExit(error = NetworkData::SendServerDataNotification(mOldRloc));
+    SuccessOrExit(error = NetworkData::SendServerDataNotification(mOldRloc, aHandler, aContext));
     mOldRloc = rloc;
 
 exit:

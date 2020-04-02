@@ -141,17 +141,6 @@ public:
     void RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode);
 
     /**
-     * This method sends a Server Data Notification message to the Leader indicating an invalid RLOC16.
-     *
-     * @param[in]  aRloc16  The invalid RLOC16 to notify.
-     *
-     * @retval OT_ERROR_NONE     Successfully enqueued the notification message.
-     * @retval OT_ERROR_NO_BUFS  Insufficient message buffers to generate the notification message.
-     *
-     */
-    otError SendServerDataNotification(uint16_t aRloc16);
-
-    /**
      * This method synchronizes internal 6LoWPAN Context ID Set with recently obtained Thread Network Data.
      *
      * Note that this method should be called only by the Leader once after reset.
@@ -171,8 +160,15 @@ public:
     /**
      * This method sends SVR_DATA.ntf message for any stale child entries that exist in the network data.
      *
+     * @param[in]  aHandler  A function pointer that is called when the transaction ends.
+     * @param[in]  aContext  A pointer to arbitrary context information.
+     *
+     * @retval OT_ERROR_NONE       A stale child entry was found and successfully enqueued a SVR_DATA.ntf message.
+     * @retval OT_ERROR_NO_BUFS    A stale child entry was found, but insufficient message buffers were available.
+     * @retval OT_ERROR_NOT_FOUND  No stale child entries were found.
+     *
      */
-    void RemoveStaleChildEntries(void);
+    otError RemoveStaleChildEntries(Coap::ResponseHandler aHandler, void *aContext);
 
 private:
     static void HandleServerData(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);

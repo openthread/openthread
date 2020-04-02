@@ -158,7 +158,7 @@ otError Local::AddService(bool aForce)
                       reinterpret_cast<const uint8_t *>(&serverData), sizeof(serverData)));
 
     mIsServiceAdded = true;
-    Get<NetworkData::Local>().SendServerDataNotification();
+    Get<NetworkData::Notifier>().HandleServerDataUpdated();
 
     otLogInfoNetData("BBR Service added: seqno (%d), delay (%ds), timeout (%ds)", mSequenceNumber, mReregistrationDelay,
                      mMlrTimeout);
@@ -177,11 +177,7 @@ otError Local::RemoveService(void)
         error = Get<NetworkData::Local>().RemoveService(THREAD_ENTERPRISE_NUMBER, &serviceData, sizeof(serviceData)));
 
     mIsServiceAdded = false;
-
-    if (Get<Mle::MleRouter>().IsAttached())
-    {
-        Get<NetworkData::Local>().SendServerDataNotification();
-    }
+    Get<NetworkData::Notifier>().HandleServerDataUpdated();
 
 exit:
     otLogInfoNetData("Remove BBR Service %s", otThreadErrorToString(error));
