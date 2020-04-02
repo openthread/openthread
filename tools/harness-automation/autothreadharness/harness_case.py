@@ -882,7 +882,11 @@ class HarnessCase(unittest.TestCase):
         finder = re.compile(r'.*\b' + case + r'\b')
         finder_dotted = re.compile(r'.*\b' + case.replace(' ', r'\.') + r'\b')
         for elem in elems:
+            # perform() will throw exceptions if elem.text is null since Chrome
+            # and chromedriver 80. If elem is not shown in current case list
+            # window, move_to_element() will not work either.
             if elem.text:
+                # execute a javascript to scroll the window to the elem
                 self._browser.execute_script('arguments[0].scrollIntoView();',
                                              elem)
                 action_chains = ActionChains(self._browser)
