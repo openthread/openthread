@@ -723,6 +723,17 @@ public:
         return (!mBuffer.mHead.mInfo.mInPriorityQ) ? mBuffer.mHead.mInfo.mQueue.mMessage : NULL;
     }
 
+    /**
+     * This method returns a pointer to the priority message queue (if any) where this message is queued.
+     *
+     * @returns A pointer to the priority queue or NULL if not in any priority queue.
+     *
+     */
+    PriorityQueue *GetPriorityQueue(void) const
+    {
+        return (mBuffer.mHead.mInfo.mInPriorityQ) ? mBuffer.mHead.mInfo.mQueue.mPriority : NULL;
+    }
+
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * This method indicates whether or not the message is also used for time sync purpose.
@@ -809,17 +820,6 @@ private:
      *
      */
     void SetMessageQueue(MessageQueue *aMessageQueue);
-
-    /**
-     * This method returns a pointer to the priority message queue (if any) where this message is queued.
-     *
-     * @returns A pointer to the priority queue or NULL if not in any priority queue.
-     *
-     */
-    PriorityQueue *GetPriorityQueue(void) const
-    {
-        return (mBuffer.mHead.mInfo.mInPriorityQ) ? mBuffer.mHead.mInfo.mQueue.mPriority : NULL;
-    }
 
     /**
      * This method sets the message queue information for the message.
