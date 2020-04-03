@@ -88,11 +88,12 @@ Commissioner::Commissioner(Instance &aInstance)
 
 void Commissioner::SetState(otCommissionerState aState)
 {
-    VerifyOrExit(mState != aState);
+    otCommissionerState oldState = mState;
+    OT_UNUSED_VARIABLE(oldState);
 
-    otLogInfoMeshCoP("Commissioner State: %s -> %s", StateToString(mState), StateToString(aState));
+    SuccessOrExit(Get<Notifier>().Update(mState, aState, OT_CHANGED_COMMISSIONER_STATE));
 
-    mState = aState;
+    otLogInfoMeshCoP("CommissionerState: %s -> %s", StateToString(oldState), StateToString(aState));
 
     if (mStateCallback)
     {
@@ -150,7 +151,12 @@ otError Commissioner::Start(otCommissionerStateCallback  aStateCallback,
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(mState == OT_COMMISSIONER_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(mState == OT_COMMISSIONER_STATE_DISABLED, error = OT_ERROR_ALREADY);
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    error = Get<MeshCoP::BorderAgent>().Stop();
+    VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY);
+#endif
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().Start(SendRelayTransmit, this));
     Get<Coap::CoapSecure>().SetConnectedCallback(&Commissioner::HandleCoapsConnected, this);
@@ -166,8 +172,10 @@ otError Commissioner::Start(otCommissionerStateCallback  aStateCallback,
 exit:
     if (error != OT_ERROR_NONE)
     {
+        otLogWarnMeshCoP("Failed to start commissioner: %s", otThreadErrorToString(error));
         Get<Coap::CoapSecure>().Stop();
     }
+
     return error;
 }
 
@@ -176,7 +184,7 @@ otError Commissioner::Stop(bool aResign)
     otError error      = OT_ERROR_NONE;
     bool    needResign = false;
 
-    VerifyOrExit(mState != OT_COMMISSIONER_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(mState != OT_COMMISSIONER_STATE_DISABLED, error = OT_ERROR_ALREADY);
 
     Get<Coap::CoapSecure>().Stop();
 
@@ -202,6 +210,11 @@ otError Commissioner::Stop(bool aResign)
     }
 
 exit:
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMeshCoP("Failed to stop Commissioner: %s", otThreadErrorToString(error));
+    }
+
     return error;
 }
 

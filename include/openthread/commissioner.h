@@ -158,8 +158,9 @@ typedef void (*otCommissionerJoinerCallback)(otCommissionerJoinerEvent aEvent,
  * @param[in]  aJoinerCallback   A pointer to a function that is called with a joiner event occurs.
  * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
- * @retval OT_ERROR_NONE           Successfully started the Commissioner role.
- * @retval OT_ERROR_INVALID_STATE  Commissioner is already started.
+ * @retval OT_ERROR_NONE           Successfully started the Commissioner service.
+ * @retval OT_ERROR_ALREADY        Commissioner is already started.
+ * @retval OT_ERROR_INVALID_STATE  Device is not currently attached to a network.
  *
  */
 otError otCommissionerStart(otInstance *                 aInstance,
@@ -172,8 +173,8 @@ otError otCommissionerStart(otInstance *                 aInstance,
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  *
- * @retval OT_ERROR_NONE           Successfully stopped the Commissioner role.
- * @retval OT_ERROR_INVALID_STATE  Commissioner is already stopped.
+ * @retval OT_ERROR_NONE     Successfully stopped the Commissioner service.
+ * @retval OT_ERROR_ALREADY  Commissioner is already stopped.
  *
  */
 otError otCommissionerStop(otInstance *aInstance);
