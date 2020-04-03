@@ -50,9 +50,6 @@ otError otCommissionerStart(otInstance *                 aInstance,
 
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    SuccessOrExit(error = instance.Get<MeshCoP::BorderAgent>().Stop());
-#endif
     SuccessOrExit(error =
                       instance.Get<MeshCoP::Commissioner>().Start(aStateCallback, aJoinerCallback, aCallbackContext));
 exit:
@@ -65,9 +62,6 @@ otError otCommissionerStop(otInstance *aInstance)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     SuccessOrExit(error = instance.Get<MeshCoP::Commissioner>().Stop(/* aResign */ true));
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    SuccessOrExit(error = instance.Get<MeshCoP::BorderAgent>().Start());
-#endif
 
 exit:
     return error;

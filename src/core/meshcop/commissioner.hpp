@@ -74,7 +74,8 @@ public:
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      * @retval OT_ERROR_NONE           Successfully started the Commissioner service.
-     * @retval OT_ERROR_INVALID_STATE  Commissioner is already started.
+     * @retval OT_ERROR_ALREADY        Commissioner is already started.
+     * @retval OT_ERROR_INVALID_STATE  Device is not currently attached to a network.
      *
      */
     otError Start(otCommissionerStateCallback  aStateCallback,
@@ -86,8 +87,8 @@ public:
      *
      * @param[in]  aResign      Whether send LEAD_KA.req to resign as Commissioner
      *
-     * @retval OT_ERROR_NONE           Successfully stopped the Commissioner service.
-     * @retval OT_ERROR_INVALID_STATE  Commissioner is already stopped.
+     * @retval OT_ERROR_NONE     Successfully stopped the Commissioner service.
+     * @retval OT_ERROR_ALREADY  Commissioner is already stopped.
      *
      */
     otError Stop(bool aResign);
@@ -171,6 +172,14 @@ public:
      *
      */
     bool IsActive(void) const { return mState == OT_COMMISSIONER_STATE_ACTIVE; }
+
+    /**
+     * This method indicates whether or not the Commissioner role is disabled.
+     *
+     * @returns TRUE if the Commissioner role is disabled, FALSE otherwise.
+     *
+     */
+    bool IsDisabled(void) const { return mState == OT_COMMISSIONER_STATE_DISABLED; }
 
     /**
      * This function returns the Commissioner State.

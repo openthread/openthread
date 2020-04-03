@@ -316,6 +316,10 @@ const char *Notifier::FlagToString(otChangedFlags aFlag) const
         retval = "NetifState";
         break;
 
+    case OT_CHANGED_COMMISSIONER_STATE:
+        retval = "CommissionerState";
+        break;
+
     default:
         break;
     }

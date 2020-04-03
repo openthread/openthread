@@ -367,7 +367,11 @@ void BorderAgent::HandleStateChanged(Notifier::Callback &aCallback, otChangedFla
 
 void BorderAgent::HandleStateChanged(otChangedFlags aFlags)
 {
-    VerifyOrExit((aFlags & OT_CHANGED_THREAD_ROLE) != 0);
+    VerifyOrExit((aFlags & (OT_CHANGED_THREAD_ROLE | OT_CHANGED_COMMISSIONER_STATE)) != 0);
+
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
+    VerifyOrExit(Get<MeshCoP::Commissioner>().IsDisabled());
+#endif
 
     if (Get<Mle::MleRouter>().IsAttached())
     {
