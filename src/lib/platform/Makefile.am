@@ -38,7 +38,6 @@ libopenthread_platform_a_CPPFLAGS           = \
 libopenthread_platform_a_SOURCES            = \
     exit_code.c                               \
     exit_code.h                               \
-    time.h                                    \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

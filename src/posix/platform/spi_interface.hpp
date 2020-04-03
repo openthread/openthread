@@ -59,8 +59,9 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in] aCallback     A reference to a `Callback` object.
-     * @param[in] aFrameBuffer  A reference to a `RxFrameBuffer` object.
+     * @param[in] aCallback         A reference to a `Callback` object.
+     * @param[in] aCallbackContext  The context pointer passed to the callback.
+     * @param[in] aFrameBuffer      A reference to a `RxFrameBuffer` object.
      *
      */
     SpiInterface(Spinel::SpinelInterface::ReceiveFrameCallback aCallback,

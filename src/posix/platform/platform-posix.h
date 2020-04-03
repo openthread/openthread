@@ -46,11 +46,11 @@
 #include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/openthread-system.h>
+#include <openthread/platform/time.h>
 
 #include "common/logging.hpp"
 
 #include "lib/platform/exit_code.h"
-#include "lib/platform/time.h"
 
 /**
  * @def OPENTHREAD_POSIX_VIRTUAL_TIME
@@ -131,6 +131,19 @@ void platformAlarmProcess(otInstance *aInstance);
  *
  */
 int32_t platformAlarmGetNext(void);
+
+#ifndef MS_PER_S
+#define MS_PER_S 1000
+#endif
+#ifndef US_PER_MS
+#define US_PER_MS 1000
+#endif
+#ifndef US_PER_S
+#define US_PER_S (MS_PER_S * US_PER_MS)
+#endif
+#ifndef NS_PER_US
+#define NS_PER_US 1000
+#endif
 
 /**
  * This function advances the alarm time by @p aDelta.
@@ -333,14 +346,6 @@ void virtualTimeSendSleepEvent(const struct timeval *aTimeout);
  *
  */
 void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct Event *aEvent);
-
-/**
- * This function gets system time in microseconds without applying speed up factor.
- *
- * @returns System time in microseconds.
- *
- */
-uint64_t platformGetTime(void);
 
 /**
  * This function initializes platform UDP driver.

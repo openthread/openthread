@@ -55,8 +55,10 @@ public:
     /**
      * Initialize this radio transceiver.
      *
-     * @param[in]  aResetRadio            Whether to reset on init or not.
-     * @param[in]  aRestoreDatasetFromNcp Whether to restore NCP dataset to host.
+     * @param[in]  aResetRadio            TRUE to reset on init, FALSE to not reset on init.
+     * @param[in]  aRestoreDatasetFromNcp TRUE to restore dataset to host from non-volatile memory
+     *                                    (only used when attempts to upgrade from NCP to RCP mode),
+     *                                    FALSE otherwise.
      *
      */
     void Init(bool aResetRadio, bool aRestoreDataSetFromNcp);
@@ -449,8 +451,8 @@ public:
     /**
      * This method indicates whether a transmit has just finished.
      *
-     * @retval TRUE  There is a pending transmission.
-     * @retval FALSE There is no pending transmission.
+     * @retval TRUE  The trasmission is done.
+     * @retval FALSE The trasmission is not done.
      *
      */
     bool IsTransmitDone(void) const { return mState == kStateTransmitDone; }
@@ -461,7 +463,7 @@ public:
      * @returns The timeout timepoint for the pending transmission.
      *
      */
-    bool GetTxRadioEndUs(void) const { return mTxRadioEndUs; }
+    uint64_t GetTxRadioEndUs(void) const { return mTxRadioEndUs; }
 
     /**
      * This method triggers the I/O process.
@@ -534,7 +536,8 @@ public:
     /**
      * This method checks whether the spinel interface is radio-only
      *
-     * @returns Whether the spinel interface is radio-only.
+     * @retval  TRUE    The radio chip is in radio-only mode.
+     * @retval  FALSE   Otherwise.
      *
      */
     bool IsRcp(void);
@@ -552,7 +555,7 @@ public:
      *
      * @retval  OT_ERROR_NONE               Successfully restore dataset.
      * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
-     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
+     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the radio.
      * @retval  OT_ERROR_NOT_FOUND          Failed due to spinel property not supported in radio.
      * @retval  OT_ERROR_FAILED             Failed due to other reasons.
      */
@@ -727,6 +730,7 @@ private:
     int8_t       mRxSensitivity;
     otError      mTxError;
     char         mVersion[kVersionStringSize];
+    uint8_t      mIeeeEui64[sizeof(uint64_t)];
 
     State mState;
     bool  mIsPromiscuous : 1;     ///< Promiscuous mode.

@@ -31,8 +31,6 @@
  *   This file implements the spinel based radio transceiver.
  */
 
-#include "radio_spinel.hpp"
-
 #include <assert.h>
 #include <errno.h>
 #include <stdarg.h>
@@ -48,6 +46,7 @@
 #include <openthread/dataset.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/settings.h>
+#include <openthread/platform/time.h>
 
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
@@ -55,10 +54,22 @@
 #include "common/new.hpp"
 #include "common/settings.hpp"
 #include "lib/platform/exit_code.h"
-#include "lib/platform/time.h"
 #include "lib/spinel/spinel_decoder.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
+
+#ifndef MS_PER_S
+#define MS_PER_S 1000
+#endif
+#ifndef US_PER_MS
+#define US_PER_MS 1000
+#endif
+#ifndef US_PER_S
+#define US_PER_S (MS_PER_S * US_PER_MS)
+#endif
+#ifndef NS_PER_US
+#define NS_PER_US 1000
+#endif
 
 #ifndef TX_WAIT_US
 #define TX_WAIT_US (5 * US_PER_S)
@@ -194,7 +205,7 @@ RadioSpinel<InterfaceType, ProcessContextType>::RadioSpinel(void)
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio, bool aRestoreDataSetFromNcp)
+void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio, bool aRestoreDatasetFromNcp)
 {
     otError error = OT_ERROR_NONE;
 
@@ -208,11 +219,13 @@ void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio, bool
 
     SuccessOrExit(error = CheckSpinelVersion());
     SuccessOrExit(error = Get(SPINEL_PROP_NCP_VERSION, SPINEL_DATATYPE_UTF8_S, mVersion, sizeof(mVersion)));
+    SuccessOrExit(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_EUI64_S, mIeeeEui64));
 
-    if (!aRestoreDataSetFromNcp)
+    if (!IsRcp() && aRestoreDatasetFromNcp)
     {
-        SuccessOrExit(error = CheckRadioCapabilities());
+        DieNow((RestoreDatasetFromNcp() == OT_ERROR_NONE) ? OT_EXIT_SUCCESS : OT_EXIT_FAILURE);
     }
+    SuccessOrDie(CheckRadioCapabilities());
 
     mRxRadioFrame.mPsdu  = mRxPsdu;
     mTxRadioFrame.mPsdu  = mTxPsdu;
@@ -264,11 +277,6 @@ bool RadioSpinel<InterfaceType, ProcessContextType>::IsRcp(void)
         unpacked = spinel_datatype_unpack(capsData, capsLength, SPINEL_DATATYPE_UINT_PACKED_S, &capability);
         VerifyOrDie(unpacked > 0, OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
 
-        if (capability == SPINEL_CAP_OPENTHREAD_LOG_METADATA)
-        {
-            mSupportsLogStream = true;
-        }
-
         if (capability == SPINEL_CAP_MAC_RAW)
         {
             supportsRawRadio = true;
@@ -298,11 +306,14 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRadioCapabilities(v
     const otRadioCaps kRequiredRadioCaps =
         OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_TRANSMIT_RETRIES | OT_RADIO_CAPS_CSMA_BACKOFF;
 
-    otError      error = OT_ERROR_NONE;
-    unsigned int caps;
+    otError        error = OT_ERROR_NONE;
+    unsigned int   radioCaps;
+    uint8_t        capsBuffer[kCapsBufferSize];
+    const uint8_t *capsData   = capsBuffer;
+    spinel_size_t  capsLength = sizeof(capsBuffer);
 
-    SuccessOrExit(error = Get(SPINEL_PROP_RADIO_CAPS, SPINEL_DATATYPE_UINT_PACKED_S, &caps));
-    mRadioCaps = static_cast<otRadioCaps>(caps);
+    SuccessOrExit(error = Get(SPINEL_PROP_RADIO_CAPS, SPINEL_DATATYPE_UINT_PACKED_S, &radioCaps));
+    mRadioCaps = static_cast<otRadioCaps>(radioCaps);
 
     if ((mRadioCaps & kRequiredRadioCaps) != kRequiredRadioCaps)
     {
@@ -312,6 +323,24 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRadioCapabilities(v
                       (mRadioCaps & OT_RADIO_CAPS_CSMA_BACKOFF) ? "yes" : "no");
 
         DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+    }
+
+    SuccessOrExit(error = Get(SPINEL_PROP_CAPS, SPINEL_DATATYPE_DATA_S, capsBuffer, &capsLength));
+    while (capsLength > 0)
+    {
+        unsigned int   capability;
+        spinel_ssize_t unpacked =
+            spinel_datatype_unpack(capsData, capsLength, SPINEL_DATATYPE_UINT_PACKED_S, &capability);
+
+        VerifyOrDie(unpacked > 0, OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+
+        if (capability == SPINEL_CAP_OPENTHREAD_LOG_METADATA)
+        {
+            mSupportsLogStream = true;
+        }
+
+        capsData += unpacked;
+        capsLength -= static_cast<spinel_size_t>(unpacked);
     }
 
 exit:
@@ -938,7 +967,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::ProcessRadioStateMachine(vo
 
         TransmitDone(mTransmitFrame, (mAckRadioFrame.mLength != 0) ? &mAckRadioFrame : NULL, mTxError);
     }
-    else if (mState == kStateTransmitting && platformGetTime() >= mTxRadioEndUs)
+    else if (mState == kStateTransmitting && otPlatTimeGet() >= mTxRadioEndUs)
     {
         // Frame has been successfully passed to radio, but no `TransmitDone` event received within TX_WAIT_US.
         DieNowWithMessage("radio tx timeout", OT_EXIT_FAILURE);
@@ -992,7 +1021,9 @@ exit:
 template <typename InterfaceType, typename ProcessContextType>
 otError RadioSpinel<InterfaceType, ProcessContextType>::GetIeeeEui64(uint8_t *aIeeeEui64)
 {
-    return Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_EUI64_S, aIeeeEui64);
+    memcpy(aIeeeEui64, mIeeeEui64, sizeof(mIeeeEui64));
+
+    return OT_ERROR_NONE;
 }
 
 template <typename InterfaceType, typename ProcessContextType>
@@ -1246,7 +1277,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Remove(spinel_prop_key_t
 template <typename InterfaceType, typename ProcessContextType>
 otError RadioSpinel<InterfaceType, ProcessContextType>::WaitResponse(void)
 {
-    uint64_t end = platformGetTime() + kMaxWaitTime * US_PER_MS;
+    uint64_t end = otPlatTimeGet() + kMaxWaitTime * US_PER_MS;
 
     otLogDebgPlat("Wait response: tid=%u key=%u", mWaitingTid, mWaitingKey);
 
@@ -1256,7 +1287,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::WaitResponse(void)
         uint64_t       remain;
         struct timeval timeout;
 
-        now = platformGetTime();
+        now = otPlatTimeGet();
         VerifyOrDie(end > now, OT_EXIT_RADIO_SPINEL_NO_RESPONSE);
         remain = end - now;
 
@@ -1464,7 +1495,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Transmit(otRadioFrame &a
     {
         // Waiting for `TransmitDone` event.
         mState        = kStateTransmitting;
-        mTxRadioEndUs = platformGetTime() + TX_WAIT_US;
+        mTxRadioEndUs = otPlatTimeGet() + TX_WAIT_US;
     }
 
 exit:

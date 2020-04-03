@@ -137,14 +137,12 @@ const char *otExitCodeToString(uint8_t aExitCode);
  * @param[in]   aExitCode   The exit code.
  *
  */
-#define DieNowWithMessage(aMessage, aExitCode)                                                       \
-    do                                                                                               \
-    {                                                                                                \
-        fprintf(stderr, "exit(%d): %s line %d, %s, %s\r\n", aExitCode, __func__, __LINE__, aMessage, \
-                otExitCodeToString(aExitCode));                                                      \
-        otLogCritPlat("exit(%d): %s line %d, %s, %s", aExitCode, __func__, __LINE__, aMessage,       \
-                      otExitCodeToString(aExitCode));                                                \
-        exit(aExitCode);                                                                             \
+#define DieNowWithMessage(aMessage, aExitCode)                                                 \
+    do                                                                                         \
+    {                                                                                          \
+        otLogCritPlat("exit(%d): %s line %d, %s, %s", aExitCode, __func__, __LINE__, aMessage, \
+                      otExitCodeToString(aExitCode));                                          \
+        exit(aExitCode);                                                                       \
     } while (false)
 
 #ifdef __cplusplus

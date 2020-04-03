@@ -335,8 +335,6 @@ void HdlcInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aM
 
 void HdlcInterface::Process(const RadioProcessContext &aContext)
 {
-    OT_UNUSED_VARIABLE(aContext.mWriteFdSet);
-
     if (FD_ISSET(mSockFd, aContext.mReadFdSet))
     {
         Read();
@@ -347,7 +345,7 @@ otError HdlcInterface::WaitForWritable(void)
 {
     otError        error   = OT_ERROR_NONE;
     struct timeval timeout = {kMaxWaitTime / 1000, (kMaxWaitTime % 1000) * 1000};
-    uint64_t       now     = platformGetTime();
+    uint64_t       now     = otPlatTimeGet();
     uint64_t       end     = now + kMaxWaitTime * US_PER_MS;
     fd_set         writeFds;
     fd_set         errorFds;
@@ -382,7 +380,7 @@ otError HdlcInterface::WaitForWritable(void)
             DieNow(OT_EXIT_ERROR_ERRNO);
         }
 
-        now = platformGetTime();
+        now = otPlatTimeGet();
 
         if (end > now)
         {
