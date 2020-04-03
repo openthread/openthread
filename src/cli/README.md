@@ -600,6 +600,8 @@ Done
 
 Get the Thread Extended PAN ID value.
 
+**NOTE** The current commissioning credential becomes stale after changing this value. Use [pskc](#pskc--p-keypassphrase) to reset.
+
 ```bash
 > extpanid
 dead00beef00cafe
@@ -1059,6 +1061,8 @@ Done
 ### networkname \<name\>
 
 Set the Thread Network Name.
+
+**NOTE** The current commissioning credential becomes stale after changing this value. Use [pskc](#pskc--p-keypassphrase) to reset.
 
 ```bash
 > networkname OpenThread

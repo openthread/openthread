@@ -256,6 +256,8 @@ Usage: `dataset extpanid <extpanid>`
 
 Set extended panid.
 
+**NOTE** The commissioning credential in the dataset buffer becomes stale after changing this value. Use [pskc](#pskc) to reset.
+
 ```bash
 > dataset extpanid 000db80123456789
 Done
@@ -321,6 +323,8 @@ Done
 Usage: `dataset networkname <name>`
 
 Set network name.
+
+**NOTE** The commissioning credential in the dataset buffer becomes stale after changing this value. Use [pskc](#pskc) to reset.
 
 ```bash
 > dataset networkname OpenThread
