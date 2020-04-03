@@ -41,6 +41,7 @@
 #include "common/tlvs.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/mle.hpp"
+#include "thread/mle_types.hpp"
 
 namespace ot {
 
@@ -149,6 +150,7 @@ public:
     {
         SetType(kRouterMask);
         SetLength(sizeof(*this) - sizeof(ThreadTlv));
+        mAssignedRouterIdMask.Clear();
     }
 
     /**
@@ -177,36 +179,24 @@ public:
     void SetIdSequence(uint8_t aSequence) { mIdSequence = aSequence; }
 
     /**
-     * This method clears the Assigned Router ID Mask.
+     * This method gets the Assigned Router ID Mask.
+     *
+     * @returns The Assigned Router ID Mask.
      *
      */
-    void ClearAssignedRouterIdMask(void) { memset(mAssignedRouterIdMask, 0, sizeof(mAssignedRouterIdMask)); }
+    const Mle::RouterIdSet &GetAssignedRouterIdMask(void) const { return mAssignedRouterIdMask; }
 
     /**
-     * This method indicates whether or not a given Router ID is set in the Assigned Router ID Mask.
+     * This method sets the Assigned Router ID Mask.
      *
-     * @param[in]  aRouterId  The Router ID.
-     *
-     * @retval TRUE   If the given Router ID is set in the Assigned Router ID Mask.
-     * @retval FALSE  If the given Router ID is not set in the Assigned Router ID Mask.
+     * @param[in]  aRouterIdSet A reference to the Assigned Router ID Mask.
      *
      */
-    bool IsAssignedRouterIdSet(uint8_t aRouterId) const
-    {
-        return (mAssignedRouterIdMask[aRouterId / 8] & (0x80 >> (aRouterId % 8))) != 0;
-    }
-
-    /**
-     * This method clears the Assigned Router ID Mask.
-     *
-     * @param[in]  aRouterId  The Router ID.
-     *
-     */
-    void SetAssignedRouterId(uint8_t aRouterId) { mAssignedRouterIdMask[aRouterId / 8] |= 0x80 >> (aRouterId % 8); }
+    void SetAssignedRouterIdMask(const Mle::RouterIdSet &aRouterIdSet) { mAssignedRouterIdMask = aRouterIdSet; }
 
 private:
-    uint8_t mIdSequence;
-    uint8_t mAssignedRouterIdMask[BitVectorBytes(Mle::kMaxRouterId + 1)];
+    uint8_t          mIdSequence;
+    Mle::RouterIdSet mAssignedRouterIdMask;
 };
 
 /**
