@@ -427,6 +427,25 @@ otError otDatasetSendMgmtPendingSet(otInstance *                aInstance,
                                     uint8_t                     aLength);
 
 /**
+ * This function generates PSKc from a given pass-phrase, network name, and extended PAN ID.
+ *
+ * PSKc is used to establish the Commissioner Session.
+ *
+ * @param[in]  aPassPhrase   The commissioning pass-phrase.
+ * @param[in]  aNetworkName  The network name for PSKc computation.
+ * @param[in]  aExtPanId     The extended PAN ID for PSKc computation.
+ * @param[out] aPskc         A pointer to variable to output the generated PSKc.
+ *
+ * @retval OT_ERROR_NONE          Successfully generate PSKc.
+ * @retval OT_ERROR_INVALID_ARGS  If any of the input arguments is invalid.
+ *
+ */
+otError otDatasetGeneratePskc(const char *           aPassPhrase,
+                              const otNetworkName *  aNetworkName,
+                              const otExtendedPanId *aExtPanId,
+                              otPskc *               aPskc);
+
+/**
  * @}
  *
  */

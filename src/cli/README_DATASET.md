@@ -256,6 +256,8 @@ Usage: `dataset extpanid <extpanid>`
 
 Set extended panid.
 
+**NOTE** The commissioning credential in the dataset buffer becomes stale after changing this value. Use [pskc](#pskc) to reset.
+
 ```bash
 > dataset extpanid 000db80123456789
 Done
@@ -322,6 +324,8 @@ Usage: `dataset networkname <name>`
 
 Set network name.
 
+**NOTE** The commissioning credential in the dataset buffer becomes stale after changing this value. Use [pskc](#pskc) to reset.
+
 ```bash
 > dataset networkname OpenThread
 Done
@@ -374,12 +378,14 @@ Done
 
 ### pskc
 
-Usage: `dataset pskc <key>`
+Usage: `pskc [-p] <key>|<passphrase>`
 
-Set pskc with hex format.
+With `-p`(**only for FTD**) generate pskc from \<passphrase\> (UTF-8 encoded) together with network name and extended PAN ID in the dataset buffer if set or values in the current stack if not, otherwise set pskc as \<key\> (hex format).
 
 ```bash
 > dataset pskc 67c0c203aa0b042bfb5381c47aef4d9e
+Done
+> dataset pskc -p 123456
 Done
 ```
 

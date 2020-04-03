@@ -677,14 +677,32 @@ exit:
 
 otError Dataset::ProcessPskc(uint8_t aArgsLength, char *aArgs[])
 {
-    otError  error = OT_ERROR_NONE;
-    uint16_t length;
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
-    length = static_cast<uint16_t>((strlen(aArgs[0]) + 1) / 2);
-    VerifyOrExit(length <= OT_PSKC_MAX_SIZE, error = OT_ERROR_NO_BUFS);
-    VerifyOrExit(Interpreter::Hex2Bin(aArgs[0], sDataset.mPskc.m8 + OT_PSKC_MAX_SIZE - length, length) == length,
-                 error = OT_ERROR_INVALID_ARGS);
+    if (aArgsLength == 1)
+    {
+        VerifyOrExit(Interpreter::Hex2Bin(aArgs[0], sDataset.mPskc.m8, sizeof(sDataset.mPskc)) ==
+                         sizeof(sDataset.mPskc),
+                     error = OT_ERROR_INVALID_ARGS);
+    }
+#if OPENTHREAD_FTD
+    else if (aArgsLength == 2 && !strcmp(aArgs[0], "-p"))
+    {
+        SuccessOrExit(
+            error = otDatasetGeneratePskc(
+                aArgs[1],
+                (sDataset.mComponents.mIsNetworkNamePresent
+                     ? &sDataset.mNetworkName
+                     : reinterpret_cast<const otNetworkName *>(otThreadGetNetworkName(mInterpreter.mInstance))),
+                (sDataset.mComponents.mIsExtendedPanIdPresent ? &sDataset.mExtendedPanId
+                                                              : otThreadGetExtendedPanId(mInterpreter.mInstance)),
+                &sDataset.mPskc));
+    }
+#endif
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
 
     sDataset.mComponents.mIsPskcPresent = true;
 
