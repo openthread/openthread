@@ -324,6 +324,22 @@ public:
 
 protected:
     /**
+     * This method returns a pointer to the start of Network Data TLV sequence.
+     *
+     * @returns A pointer to the start of Network Data TLV sequence.
+     *
+     */
+    NetworkDataTlv *GetTlvsStart(void) { return reinterpret_cast<NetworkDataTlv *>(mTlvs); }
+
+    /**
+     * This method returns a pointer to the end of Network Data TLV sequence.
+     *
+     * @returns A pointer to the end of Network Data TLV sequence.
+     *
+     */
+    NetworkDataTlv *GetTlvsEnd(void) { return reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength); }
+
+    /**
      * This method returns a pointer to the Border Router TLV within a given Prefix TLV.
      *
      * @param[in]  aPrefix  A reference to the Prefix TLV.
@@ -337,7 +353,7 @@ protected:
      * This method returns a pointer to the stable or non-stable Border Router TLV within a given Prefix TLV.
      *
      * @param[in]  aPrefix  A reference to the Prefix TLV.
-     * @param[in]  aStable  TRUE if requesting a stable Border Router TLV, FALSE otherwise.
+     * @param[in]  aStable  TRUE to find a stable TLV, FALSE to find a TLV not marked as stable..
      *
      * @returns A pointer to the Border Router TLV if one is found or NULL if no Border Router TLV exists.
      *
@@ -358,7 +374,7 @@ protected:
      * This method returns a pointer to the stable or non-stable Has Route TLV within a given Prefix TLV.
      *
      * @param[in]  aPrefix  A reference to the Prefix TLV.
-     * @param[in]  aStable  TRUE if requesting a stable Has Route TLV, FALSE otherwise.
+     * @param[in]  aStable  TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
      * @returns A pointer to the Has Route TLV if one is found or NULL if no Has Route TLV exists.
      *
@@ -430,22 +446,44 @@ protected:
                             uint8_t        aTlvsLength);
 
     /**
+     * This method grows the Network Data to append a TLV with a requested size.
+     *
+     * On success, the returned TLV is not initialized (i.e., the TLV Length field is not set) but the requested
+     * size for it (@p aTlvSize number of bytes) is reserved in the Network Data.
+     *
+     * @param[in]  aTlvSize  The size of TLV (total number of bytes including Type, Length, and Value fields)
+     *
+     * @returns A pointer to the TLV if there is space to grow Network Data, or NULL if no space to grow the Network
+     *          Data with requested @p aTlvSize number of bytes.
+     *
+     */
+    NetworkDataTlv *AppendTlv(uint8_t aTlvSize);
+
+    /**
      * This method inserts bytes into the Network Data.
      *
      * @param[in]  aStart   A pointer to the beginning of the insertion.
      * @param[in]  aLength  The number of bytes to insert.
      *
      */
-    void Insert(uint8_t *aStart, uint8_t aLength);
+    void Insert(void *aStart, uint8_t aLength);
 
     /**
      * This method removes bytes from the Network Data.
      *
-     * @param[in]  aStart   A pointer to the beginning of the removal.
-     * @param[in]  aLength  The number of bytes to remove.
+     * @param[in]  aRemoveStart   A pointer to the beginning of the removal.
+     * @param[in]  aRemoveLength  The number of bytes to remove.
      *
      */
-    void Remove(uint8_t *aStart, uint8_t aLength);
+    void Remove(void *aRemoveStart, uint8_t aRemoveLength);
+
+    /**
+     * This method removes a TLV from the Network Data.
+     *
+     * @param[in]  aTlv   The TLV to remove.
+     *
+     */
+    void RemoveTlv(NetworkDataTlv *aTlv);
 
     /**
      * This method strips non-stable data from the Thread Network Data.
@@ -502,6 +540,67 @@ protected:
      */
     otError SendServerDataNotification(uint16_t aRloc16);
 
+    /**
+     * This static method searches in a given sequence of TLVs to find the first TLV with a given TLV Type.
+     *
+     * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
+     * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
+     * @param[in]  aType   The TLV type to find.
+     *
+     * @returns A pointer to the TLV if found, or NULL if not found.
+     *
+     */
+    static NetworkDataTlv *FindTlv(NetworkDataTlv *aStart, NetworkDataTlv *aEnd, NetworkDataTlv::Type aType);
+
+    /**
+     * This static template method searches in a given sequence of TLVs to find the first TLV with a give template
+     * `TlvType`.
+     *
+     * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
+     * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
+     *
+     * @returns A pointer to the TLV if found, or NULL if not found.
+     *
+     */
+    template <typename TlvType> static TlvType *FindTlv(NetworkDataTlv *aStart, NetworkDataTlv *aEnd)
+    {
+        return static_cast<TlvType *>(FindTlv(aStart, aEnd, static_cast<NetworkDataTlv::Type>(TlvType::kType)));
+    }
+
+    /**
+     * This static method searches in a given sequence of TLVs to find the first TLV with a given TLV Type and stable
+     * flag.
+     *
+     * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
+     * @param [in] aEnd    A pointer to the end of the sequence of TLVs.
+     * @param[in]  aType   The TLV type to find.
+     * @param[in]  aStable TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
+     *
+     * @returns A pointer to the TLV if found, or NULL if not found.
+     *
+     */
+    static NetworkDataTlv *FindTlv(NetworkDataTlv *     aStart,
+                                   NetworkDataTlv *     aEnd,
+                                   NetworkDataTlv::Type aType,
+                                   bool                 aStable);
+
+    /**
+     * This template static method searches in a given sequence of TLVs to find the first TLV with a given TLV Type and
+     * stable flag.
+     *
+     * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
+     * @param [in] aEnd    A pointer to the end of the sequence of TLVs.
+     * @param[in]  aStable TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
+     *
+     * @returns A pointer to the TLV if found, or NULL if not found.
+     *
+     */
+    template <typename TlvType> static TlvType *FindTlv(NetworkDataTlv *aStart, NetworkDataTlv *aEnd, bool aStable)
+    {
+        return static_cast<TlvType *>(
+            FindTlv(aStart, aEnd, static_cast<NetworkDataTlv::Type>(TlvType::kType), aStable));
+    }
+
     uint8_t mTlvs[kMaxSize]; ///< The Network Data buffer.
     uint8_t mLength;         ///< The number of valid bytes in @var mTlvs.
 
@@ -516,6 +615,13 @@ private:
     class NetworkDataIterator
     {
     public:
+        enum Type
+        {
+            kTypeOnMeshPrefix  = 0,
+            kTypeExternalRoute = 1,
+            kTypeService       = 2,
+        };
+
         explicit NetworkDataIterator(Iterator &aIterator)
             : mIteratorBuffer(reinterpret_cast<uint8_t *>(&aIterator))
         {
@@ -524,9 +630,24 @@ private:
         uint8_t GetTlvOffset(void) const { return mIteratorBuffer[kTlvPosition]; }
         uint8_t GetSubTlvOffset(void) const { return mIteratorBuffer[kSubTlvPosition]; }
         uint8_t GetEntryIndex(void) const { return mIteratorBuffer[kEntryPosition]; }
+        Type    GetType(void) const { return static_cast<Type>(mIteratorBuffer[kTypePosition]); }
         void    SetTlvOffset(uint8_t aOffset) { mIteratorBuffer[kTlvPosition] = aOffset; }
         void    SetSubTlvOffset(uint8_t aOffset) { mIteratorBuffer[kSubTlvPosition] = aOffset; }
         void    SetEntryIndex(uint8_t aIndex) { mIteratorBuffer[kEntryPosition] = aIndex; }
+        void    SetType(Type aType) { mIteratorBuffer[kTypePosition] = static_cast<uint8_t>(aType); }
+
+        bool IsNewEntry(void) const { return GetEntryIndex() == 0; }
+        void MarkEntryAsNotNew(void) { SetEntryIndex(1); }
+
+        NetworkDataTlv *GetTlv(uint8_t *aTlvs) const
+        {
+            return reinterpret_cast<NetworkDataTlv *>(aTlvs + GetTlvOffset());
+        }
+
+        NetworkDataTlv *GetSubTlv(NetworkDataTlv *aSubTlvs)
+        {
+            return reinterpret_cast<NetworkDataTlv *>(reinterpret_cast<uint8_t *>(aSubTlvs) + GetSubTlvOffset());
+        }
 
         void SaveTlvOffset(const NetworkDataTlv *aTlv, const uint8_t *aTlvs)
         {
@@ -545,10 +666,34 @@ private:
             kTlvPosition    = 0,
             kSubTlvPosition = 1,
             kEntryPosition  = 2,
+            kTypePosition   = 3,
         };
 
         uint8_t *mIteratorBuffer;
     };
+
+    static void Remove(uint8_t *aData, uint8_t &aDataLength, uint8_t *aRemoveStart, uint8_t aRemoveLength);
+    static void RemoveTlv(uint8_t *aData, uint8_t &aDataLength, NetworkDataTlv *aTlv);
+
+    NetworkDataTlv *FindTlv(NetworkDataIterator &aIterator, NetworkDataTlv::Type aTlvType);
+    void            IterateToNextTlv(NetworkDataIterator &aIterator);
+    NetworkDataTlv *FindSubTlv(NetworkDataIterator &aIterator,
+                               NetworkDataTlv::Type aSubTlvType,
+                               NetworkDataTlv *     aSubTlvs,
+                               NetworkDataTlv *     aSubTlvsEnd);
+    void            IterateToNextSubTlv(NetworkDataIterator &aIterator, NetworkDataTlv *aSubTlvs);
+
+    template <typename TlvType> TlvType *FindTlv(NetworkDataIterator &aIterator)
+    {
+        return static_cast<TlvType *>(FindTlv(aIterator, static_cast<NetworkDataTlv::Type>(TlvType::kType)));
+    }
+
+    template <typename TlvType>
+    TlvType *FindSubTlv(NetworkDataIterator &aIterator, NetworkDataTlv *aSubTlvs, NetworkDataTlv *aSubTlvsEnd)
+    {
+        return static_cast<TlvType *>(
+            FindSubTlv(aIterator, static_cast<NetworkDataTlv::Type>(TlvType::kType), aSubTlvs, aSubTlvsEnd));
+    }
 
     const Type mType;
     TimeMilli  mLastAttempt;

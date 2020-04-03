@@ -86,7 +86,7 @@ void Local::Reset(void)
 
     if (mState == OT_BACKBONE_ROUTER_STATE_PRIMARY)
     {
-        // Increase sequence number when changing from primary to secondary.
+        // Increase sequence number when changing from Primary to Secondary.
         mSequenceNumber++;
         Get<Notifier>().Signal(OT_CHANGED_THREAD_BACKBONE_ROUTER_LOCAL);
         SetState(OT_BACKBONE_ROUTER_STATE_SECONDARY);

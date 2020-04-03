@@ -58,15 +58,13 @@ run() {
             return
         fi
 
-        # On Travis, we allow a failed test to be retried up to 3 attempts.
-        if [ "$BUILD_TARGET" = "toranj-test-framework" ]; then
-            if [ "$counter" -lt 2 ]; then
-                counter=$((counter+1))
-                echo Attempt $counter running "$1" failed. Trying again.
-                cleanup
-                sleep 10
-                continue
-            fi
+        # We allow a failed test to be retried up to 3 attempts.
+        if [ "$counter" -lt 2 ]; then
+            counter=$((counter+1))
+            echo Attempt $counter running "$1" failed. Trying again.
+            cleanup
+            sleep 10
+            continue
         fi
 
         echo " *** TEST FAILED"

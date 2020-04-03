@@ -173,16 +173,20 @@ public:
 private:
     void UpdateRloc(void);
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-    void UpdateRloc(PrefixTlv &aPrefix);
-    void UpdateRloc(HasRouteTlv &aHasRoute);
-    void UpdateRloc(BorderRouterTlv &aBorderRouter);
-    bool IsOnMeshPrefixConsistent(void);
-    bool IsExternalRouteConsistent(void);
+    otError AddPrefix(const uint8_t *      aPrefix,
+                      uint8_t              aPrefixLength,
+                      NetworkDataTlv::Type aSubTlvType,
+                      int8_t               aPrf,
+                      uint8_t              aFlags,
+                      bool                 aStable);
+    otError RemovePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, NetworkDataTlv::Type aSubTlvType);
+    void    UpdateRloc(PrefixTlv &aPrefix);
+    bool    IsOnMeshPrefixConsistent(void);
+    bool    IsExternalRouteConsistent(void);
 #endif
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     void UpdateRloc(ServiceTlv &aService);
-    void UpdateRloc(ServerTlv &aServer);
     bool IsServiceConsistent(void);
 #endif
 

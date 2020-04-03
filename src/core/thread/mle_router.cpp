@@ -3267,6 +3267,29 @@ bool MleRouter::IsMinimalChild(uint16_t aRloc16)
     return rval;
 }
 
+void MleRouter::RemoveRouterLink(Router &aRouter)
+{
+    switch (mRole)
+    {
+    case OT_DEVICE_ROLE_CHILD:
+        if (&aRouter == &mParent)
+        {
+            BecomeDetached();
+        }
+        break;
+
+#if OPENTHREAD_FTD
+    case OT_DEVICE_ROLE_ROUTER:
+    case OT_DEVICE_ROLE_LEADER:
+        mRouterTable.RemoveNeighbor(aRouter);
+        break;
+#endif
+
+    default:
+        break;
+    }
+}
+
 void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 {
     if (&aNeighbor == &mParent)
@@ -3404,15 +3427,7 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
 
     if (aAddress.IsLinkLocal())
     {
-        if (aAddress.mFields.m16[4] == HostSwap16(0x0000) && aAddress.mFields.m16[5] == HostSwap16(0x00ff) &&
-            aAddress.mFields.m16[6] == HostSwap16(0xfe00))
-        {
-            macAddr.SetShort(aAddress.GetLocator());
-        }
-        else
-        {
-            aAddress.ToExtAddress(macAddr);
-        }
+        aAddress.ToExtAddress(macAddr);
 
         ExitNow(rval = GetNeighbor(macAddr));
     }

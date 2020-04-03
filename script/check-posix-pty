@@ -72,16 +72,17 @@ check() {
     RADIO_NCP_PATH="$(pwd)/$(ls output/*linux*/bin/ot-rcp)"
     $RADIO_NCP_PATH 1 > $RADIO_PTY < $RADIO_PTY &
 
+    # Cover setting a valid network interface name.
+    readonly VALID_NETIF_NAME="wan$(date +%H%M%S)"
+
     if [[ "${DAEMON}" = 1 ]]; then
-        sudo "$(pwd)/$(ls output/posix/*linux*/bin/ot-daemon)" ${CORE_PTY} &
+        sudo "$(pwd)/$(ls output/posix/*linux*/bin/ot-daemon)" -I "${VALID_NETIF_NAME}" ${CORE_PTY} &
         sleep 1
         OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-ctl)"
     else
         OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli) ${CORE_PTY}"
     fi
 
-    # Cover setting a valid network interface name.
-    readonly VALID_NETIF_NAME="wan$(date +%H%M%S)"
     sudo ${OT_CLI_CMD} -I "${VALID_NETIF_NAME}" -n
 
     # Cover setting a too long(max is 15 characters) network interface name.
@@ -129,6 +130,15 @@ EOF
     extaddr=$(awk '/extaddr/{getline; print}' $OT_OUTPUT | tr -d '\r\n')
     echo "Extended address is: ${extaddr}"
 
+    if [[ "${DAEMON}" = 1 ]]; then
+        sudo killall -9 expect || true
+        sudo killall -9 ot-ctl || true
+        NETIF_INDEX=$(ip link show "${VALID_NETIF_NAME}" | cut -f 1 -d ":" | head -n 1)
+        sudo PATH="$(dirname ${OT_CLI_CMD}):${PATH}" \
+             python3 "$(pwd)/.travis/test_multicast_join.py" "${NETIF_INDEX}" \
+             || die 'multicast group join failed'
+    fi
+
     LEADER_ALOC=fdde:ad00:beef::ff:fe00:fc00
     # Retrievie extended address through network diagnostic get
     coap_response=$(echo -n '120100' | xxd -r -p | coap-client -m POST coap://[${LEADER_ALOC}]:61631/d/dg -f- | xxd -p | grep 0008)
@@ -140,6 +150,9 @@ EOF
 
 main() {
     case $1 in
+        build)
+            build
+            ;;
         check)
             check
             ;;

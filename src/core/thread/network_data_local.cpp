@@ -56,43 +56,86 @@ Local::Local(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 otError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf, uint8_t aFlags, bool aStable)
 {
-    otError          error             = OT_ERROR_NONE;
-    uint8_t          prefixLengthBytes = BitVectorBytes(aPrefixLength);
-    uint8_t          appendLength;
-    PrefixTlv *      prefixTlv;
-    BorderRouterTlv *brTlv;
+    return AddPrefix(aPrefix, aPrefixLength, NetworkDataTlv::kTypeBorderRouter, aPrf, aFlags, aStable);
+}
+
+otError Local::RemoveOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
+{
+    return RemovePrefix(aPrefix, aPrefixLength, NetworkDataTlv::kTypeBorderRouter);
+}
+
+otError Local::AddHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf, bool aStable)
+{
+    return AddPrefix(aPrefix, aPrefixLength, NetworkDataTlv::kTypeHasRoute, aPrf, /* aFlags */ 0, aStable);
+}
+
+otError Local::RemoveHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
+{
+    return RemovePrefix(aPrefix, aPrefixLength, NetworkDataTlv::kTypeHasRoute);
+}
+
+otError Local::AddPrefix(const uint8_t *      aPrefix,
+                         uint8_t              aPrefixLength,
+                         NetworkDataTlv::Type aSubTlvType,
+                         int8_t               aPrf,
+                         uint8_t              aFlags,
+                         bool                 aStable)
+{
+    otError    error             = OT_ERROR_NONE;
+    uint8_t    prefixLengthBytes = BitVectorBytes(aPrefixLength);
+    uint8_t    subTlvLength;
+    PrefixTlv *prefixTlv;
 
     VerifyOrExit(prefixLengthBytes <= sizeof(Ip6::Address), error = OT_ERROR_INVALID_ARGS);
 
-    VerifyOrExit((aPrf == OT_ROUTE_PREFERENCE_LOW) || (aPrf == OT_ROUTE_PREFERENCE_MED) ||
-                     (aPrf == OT_ROUTE_PREFERENCE_HIGH),
-                 error = OT_ERROR_INVALID_ARGS);
+    switch (aPrf)
+    {
+    case OT_ROUTE_PREFERENCE_LOW:
+    case OT_ROUTE_PREFERENCE_MED:
+    case OT_ROUTE_PREFERENCE_HIGH:
+        break;
+    default:
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
 
     VerifyOrExit(Ip6::Address::PrefixMatch(aPrefix, Get<Mle::MleRouter>().GetMeshLocalPrefix().m8, prefixLengthBytes) <
                      Mle::MeshLocalPrefix::kLength,
                  error = OT_ERROR_INVALID_ARGS);
 
-    RemoveOnMeshPrefix(aPrefix, aPrefixLength);
+    RemovePrefix(aPrefix, aPrefixLength, aSubTlvType);
 
-    appendLength = sizeof(PrefixTlv) + prefixLengthBytes + sizeof(BorderRouterTlv) + sizeof(BorderRouterEntry);
-    VerifyOrExit(mLength + appendLength <= sizeof(mTlvs), error = OT_ERROR_NO_BUFS);
+    subTlvLength = (aSubTlvType == NetworkDataTlv::kTypeBorderRouter)
+                       ? sizeof(BorderRouterTlv) + sizeof(BorderRouterEntry)
+                       : sizeof(HasRouteTlv) + sizeof(HasRouteEntry);
 
-    prefixTlv = reinterpret_cast<PrefixTlv *>(mTlvs + mLength);
-    Insert(reinterpret_cast<uint8_t *>(prefixTlv), appendLength);
+    prefixTlv = static_cast<PrefixTlv *>(AppendTlv(sizeof(PrefixTlv) + prefixLengthBytes + subTlvLength));
+    VerifyOrExit(prefixTlv != NULL, error = OT_ERROR_NO_BUFS);
+
     prefixTlv->Init(0, aPrefixLength, aPrefix);
-    prefixTlv->SetSubTlvsLength(sizeof(BorderRouterTlv) + sizeof(BorderRouterEntry));
+    prefixTlv->SetSubTlvsLength(subTlvLength);
 
-    brTlv = static_cast<BorderRouterTlv *>(prefixTlv->GetSubTlvs());
-    brTlv->Init();
-    brTlv->SetLength(brTlv->GetLength() + sizeof(BorderRouterEntry));
-    brTlv->GetEntry(0)->Init();
-    brTlv->GetEntry(0)->SetPreference(aPrf);
-    brTlv->GetEntry(0)->SetFlags(aFlags);
+    if (aSubTlvType == NetworkDataTlv::kTypeBorderRouter)
+    {
+        BorderRouterTlv *brTlv = static_cast<BorderRouterTlv *>(prefixTlv->GetSubTlvs());
+        brTlv->Init();
+        brTlv->SetLength(brTlv->GetLength() + sizeof(BorderRouterEntry));
+        brTlv->GetEntry(0)->Init();
+        brTlv->GetEntry(0)->SetPreference(aPrf);
+        brTlv->GetEntry(0)->SetFlags(aFlags);
+    }
+    else // aSubTlvType is NetworkDataTlv::kTypeHasRoute
+    {
+        HasRouteTlv *hasRouteTlv = static_cast<HasRouteTlv *>(prefixTlv->GetSubTlvs());
+        hasRouteTlv->Init();
+        hasRouteTlv->SetLength(hasRouteTlv->GetLength() + sizeof(HasRouteEntry));
+        hasRouteTlv->GetEntry(0)->Init();
+        hasRouteTlv->GetEntry(0)->SetPreference(aPrf);
+    }
 
     if (aStable)
     {
         prefixTlv->SetStable();
-        brTlv->SetStable();
+        prefixTlv->GetSubTlvs()->SetStable();
     }
 
     ClearResubmitDelayTimer();
@@ -103,73 +146,14 @@ exit:
     return error;
 }
 
-otError Local::RemoveOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
+otError Local::RemovePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, NetworkDataTlv::Type aSubTlvType)
 {
     otError    error = OT_ERROR_NONE;
     PrefixTlv *tlv;
 
     VerifyOrExit((tlv = FindPrefix(aPrefix, aPrefixLength)) != NULL, error = OT_ERROR_NOT_FOUND);
-    VerifyOrExit(FindBorderRouter(*tlv) != NULL, error = OT_ERROR_NOT_FOUND);
-    Remove(reinterpret_cast<uint8_t *>(tlv), sizeof(NetworkDataTlv) + tlv->GetLength());
-    ClearResubmitDelayTimer();
-
-exit:
-    otDumpDebgNetData("remove done", mTlvs, mLength);
-    return error;
-}
-
-otError Local::AddHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf, bool aStable)
-{
-    otError      error             = OT_ERROR_NONE;
-    uint8_t      prefixLengthBytes = BitVectorBytes(aPrefixLength);
-    PrefixTlv *  prefixTlv;
-    HasRouteTlv *hasRouteTlv;
-    uint8_t      appendLength;
-
-    VerifyOrExit(prefixLengthBytes <= sizeof(Ip6::Address), error = OT_ERROR_INVALID_ARGS);
-
-    VerifyOrExit((aPrf == OT_ROUTE_PREFERENCE_LOW) || (aPrf == OT_ROUTE_PREFERENCE_MED) ||
-                     (aPrf == OT_ROUTE_PREFERENCE_HIGH),
-                 error = OT_ERROR_INVALID_ARGS);
-
-    RemoveHasRoutePrefix(aPrefix, aPrefixLength);
-
-    appendLength = sizeof(PrefixTlv) + prefixLengthBytes + sizeof(HasRouteTlv) + sizeof(HasRouteEntry);
-    VerifyOrExit(mLength + appendLength <= sizeof(mTlvs), error = OT_ERROR_NO_BUFS);
-
-    prefixTlv = reinterpret_cast<PrefixTlv *>(mTlvs + mLength);
-    Insert(reinterpret_cast<uint8_t *>(prefixTlv), appendLength);
-    prefixTlv->Init(0, aPrefixLength, aPrefix);
-    prefixTlv->SetSubTlvsLength(sizeof(HasRouteTlv) + sizeof(HasRouteEntry));
-
-    hasRouteTlv = static_cast<HasRouteTlv *>(prefixTlv->GetSubTlvs());
-    hasRouteTlv->Init();
-    hasRouteTlv->SetLength(hasRouteTlv->GetLength() + sizeof(HasRouteEntry));
-    hasRouteTlv->GetEntry(0)->Init();
-    hasRouteTlv->GetEntry(0)->SetPreference(aPrf);
-
-    if (aStable)
-    {
-        prefixTlv->SetStable();
-        hasRouteTlv->SetStable();
-    }
-
-    ClearResubmitDelayTimer();
-
-    otDumpDebgNetData("add route done", mTlvs, mLength);
-
-exit:
-    return error;
-}
-
-otError Local::RemoveHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
-{
-    otError    error = OT_ERROR_NONE;
-    PrefixTlv *tlv;
-
-    VerifyOrExit((tlv = FindPrefix(aPrefix, aPrefixLength)) != NULL, error = OT_ERROR_NOT_FOUND);
-    VerifyOrExit(FindHasRoute(*tlv) != NULL, error = OT_ERROR_NOT_FOUND);
-    Remove(reinterpret_cast<uint8_t *>(tlv), sizeof(NetworkDataTlv) + tlv->GetLength());
+    VerifyOrExit(FindTlv(tlv->GetSubTlvs(), tlv->GetNext(), aSubTlvType) != NULL, error = OT_ERROR_NOT_FOUND);
+    RemoveTlv(tlv);
     ClearResubmitDelayTimer();
 
 exit:
@@ -179,16 +163,18 @@ exit:
 
 void Local::UpdateRloc(PrefixTlv &aPrefix)
 {
+    uint16_t rloc16 = Get<Mle::MleRouter>().GetRloc16();
+
     for (NetworkDataTlv *cur = aPrefix.GetSubTlvs(); cur < aPrefix.GetNext(); cur = cur->GetNext())
     {
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypeHasRoute:
-            UpdateRloc(*static_cast<HasRouteTlv *>(cur));
+            static_cast<HasRouteTlv *>(cur)->GetEntry(0)->SetRloc(rloc16);
             break;
 
         case NetworkDataTlv::kTypeBorderRouter:
-            UpdateRloc(*static_cast<BorderRouterTlv *>(cur));
+            static_cast<BorderRouterTlv *>(cur)->GetEntry(0)->SetRloc(rloc16);
             break;
 
         default:
@@ -196,18 +182,6 @@ void Local::UpdateRloc(PrefixTlv &aPrefix)
             break;
         }
     }
-}
-
-void Local::UpdateRloc(HasRouteTlv &aHasRoute)
-{
-    HasRouteEntry *entry = aHasRoute.GetEntry(0);
-    entry->SetRloc(Get<Mle::MleRouter>().GetRloc16());
-}
-
-void Local::UpdateRloc(BorderRouterTlv &aBorderRouter)
-{
-    BorderRouterEntry *entry = aBorderRouter.GetEntry(0);
-    entry->SetRloc(Get<Mle::MleRouter>().GetRloc16());
 }
 
 bool Local::IsOnMeshPrefixConsistent(void)
@@ -241,10 +215,10 @@ otError Local::AddService(uint32_t       aEnterpriseNumber,
 
     RemoveService(aEnterpriseNumber, aServiceData, aServiceDataLength);
 
-    VerifyOrExit(mLength + sizeof(NetworkDataTlv) + serviceTlvLength <= sizeof(mTlvs), error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(serviceTlvLength + sizeof(NetworkDataTlv) <= kMaxSize, error = OT_ERROR_NO_BUFS);
 
-    serviceTlv = reinterpret_cast<ServiceTlv *>(mTlvs + mLength);
-    Insert(reinterpret_cast<uint8_t *>(serviceTlv), static_cast<uint8_t>(serviceTlvLength) + sizeof(NetworkDataTlv));
+    serviceTlv = static_cast<ServiceTlv *>(AppendTlv(static_cast<uint8_t>(serviceTlvLength + sizeof(NetworkDataTlv))));
+    VerifyOrExit(serviceTlv != NULL, error = OT_ERROR_NO_BUFS);
 
     serviceTlv->Init();
     serviceTlv->SetEnterpriseNumber(aEnterpriseNumber);
@@ -282,7 +256,7 @@ otError Local::RemoveService(uint32_t aEnterpriseNumber, const uint8_t *aService
 
     VerifyOrExit((tlv = FindService(aEnterpriseNumber, aServiceData, aServiceDataLength)) != NULL,
                  error = OT_ERROR_NOT_FOUND);
-    Remove(reinterpret_cast<uint8_t *>(tlv), sizeof(NetworkDataTlv) + tlv->GetLength());
+    RemoveTlv(tlv);
     ClearResubmitDelayTimer();
 
 exit:
@@ -292,12 +266,14 @@ exit:
 
 void Local::UpdateRloc(ServiceTlv &aService)
 {
+    uint16_t rloc16 = Get<Mle::MleRouter>().GetRloc16();
+
     for (NetworkDataTlv *cur = aService.GetSubTlvs(); cur < aService.GetNext(); cur = cur->GetNext())
     {
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypeServer:
-            UpdateRloc(*static_cast<ServerTlv *>(cur));
+            static_cast<ServerTlv *>(cur)->SetServer16(rloc16);
             break;
 
         default:
@@ -305,11 +281,6 @@ void Local::UpdateRloc(ServiceTlv &aService)
             break;
         }
     }
-}
-
-void Local::UpdateRloc(ServerTlv &aServer)
-{
-    aServer.SetServer16(Get<Mle::MleRouter>().GetRloc16());
 }
 
 bool Local::IsServiceConsistent(void)
@@ -322,8 +293,7 @@ bool Local::IsServiceConsistent(void)
 
 void Local::UpdateRloc(void)
 {
-    for (NetworkDataTlv *cur                                            = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength); cur = cur->GetNext())
+    for (NetworkDataTlv *cur = GetTlvsStart(); cur < GetTlvsEnd(); cur = cur->GetNext())
     {
         switch (cur->GetType())
         {

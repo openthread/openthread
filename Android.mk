@@ -200,8 +200,8 @@ LOCAL_SRC_FILES                                          := \
     src/core/meshcop/energy_scan_client.cpp                 \
     src/core/meshcop/joiner.cpp                             \
     src/core/meshcop/joiner_router.cpp                      \
-    src/core/meshcop/leader.cpp                             \
     src/core/meshcop/meshcop.cpp                            \
+    src/core/meshcop/meshcop_leader.cpp                     \
     src/core/meshcop/meshcop_tlvs.cpp                       \
     src/core/meshcop/panid_query_client.cpp                 \
     src/core/meshcop/timestamp.cpp                          \

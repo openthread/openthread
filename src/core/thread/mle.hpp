@@ -601,6 +601,19 @@ public:
         return mRealmLocalAllThreadNodes.GetAddress();
     }
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    /**
+     * This method returns a reference to the All Network Backbone Routers Multicast Address.
+     *
+     * @returns A reference to the All Network Backbone Routers Multicast Address.
+     *
+     */
+    const Ip6::Address &GetAllNetworkBackboneRoutersAddress(void) const
+    {
+        return mAllNetworkBackboneRouters.GetAddress();
+    }
+#endif
+
     /**
      * This method gets the parent when operating in End Device mode.
      *
@@ -1771,7 +1784,8 @@ private:
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    Ip6::NetifUnicastAddress mBackboneRouterPrimaryAloc;
+    Ip6::NetifUnicastAddress   mBackboneRouterPrimaryAloc;
+    Ip6::NetifMulticastAddress mAllNetworkBackboneRouters;
 #endif
 
     otMleCounters mCounters;
