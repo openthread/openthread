@@ -104,7 +104,7 @@ void Dhcp6Client::UpdateAddresses(void)
 
         if (!found)
         {
-            Get<ThreadNetif>().RemoveUnicastAddress(ia.mNetifAddress);
+            IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(ia.mNetifAddress));
             mIdentityAssociations[i].mStatus = kIaStatusInvalid;
         }
     }
@@ -173,15 +173,15 @@ void Dhcp6Client::Start(void)
     Ip6::SockAddr sockaddr;
 
     sockaddr.mPort = kDhcpClientPort;
-    mSocket.Open(&Dhcp6Client::HandleUdpReceive, this);
-    mSocket.Bind(sockaddr);
+    IgnoreError(mSocket.Open(&Dhcp6Client::HandleUdpReceive, this));
+    IgnoreError(mSocket.Bind(sockaddr));
 
     ProcessNextIdentityAssociation();
 }
 
 void Dhcp6Client::Stop(void)
 {
-    mSocket.Close();
+    IgnoreError(mSocket.Close());
 }
 
 bool Dhcp6Client::ProcessNextIdentityAssociation()
@@ -206,8 +206,8 @@ bool Dhcp6Client::ProcessNextIdentityAssociation()
 
         mIdentityAssociationCurrent = &mIdentityAssociations[i];
 
-        mTrickleTimer.Start(Time::SecToMsec(kTrickleTimerImin), Time::SecToMsec(kTrickleTimerImax),
-                            TrickleTimer::kModeNormal);
+        IgnoreError(mTrickleTimer.Start(Time::SecToMsec(kTrickleTimerImin), Time::SecToMsec(kTrickleTimerImax),
+                                        TrickleTimer::kModeNormal));
 
         mTrickleTimer.IndicateInconsistent();
 
@@ -238,7 +238,7 @@ bool Dhcp6Client::HandleTrickleTimer(void)
         // fall through
 
     case kIaStatusSoliciting:
-        Solicit(mIdentityAssociationCurrent->mPrefixAgentRloc);
+        IgnoreError(Solicit(mIdentityAssociationCurrent->mPrefixAgentRloc));
         break;
 
     case kIaStatusSolicitReplied:
@@ -416,7 +416,7 @@ void Dhcp6Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aM
     Dhcp6Header header;
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(header), &header) == sizeof(header), OT_NOOP);
-    aMessage.MoveOffset(sizeof(header));
+    IgnoreError(aMessage.MoveOffset(sizeof(header)));
 
     if ((header.GetType() == kTypeReply) && (!memcmp(header.GetTransactionId(), mTransactionId, kTransactionIdSize)))
     {
@@ -588,7 +588,7 @@ otError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
             mIdentityAssociations[i].mNetifAddress.mPreferred = option.GetPreferredLifetime() != 0;
             mIdentityAssociations[i].mNetifAddress.mValid     = option.GetValidLifetime() != 0;
             mIdentityAssociations[i].mStatus                  = kIaStatusSolicitReplied;
-            Get<ThreadNetif>().AddUnicastAddress(ia.mNetifAddress);
+            IgnoreError(Get<ThreadNetif>().AddUnicastAddress(ia.mNetifAddress));
             break;
         }
     }

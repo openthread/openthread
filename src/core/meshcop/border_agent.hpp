@@ -105,9 +105,9 @@ private:
     template <Coap::Resource BorderAgent::*aResource>
     static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
     {
-        static_cast<BorderAgent *>(aContext)->ForwardToLeader(
+        IgnoreError(static_cast<BorderAgent *>(aContext)->ForwardToLeader(
             *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
-            (static_cast<BorderAgent *>(aContext)->*aResource).GetUriPath(), false, false);
+            (static_cast<BorderAgent *>(aContext)->*aResource).GetUriPath(), false, false));
     }
 
     static void HandleTimeout(Timer &aTimer);

@@ -124,7 +124,7 @@ void Notifier::Signal(otChangedFlags aFlags)
 {
     mFlagsToSignal |= aFlags;
     mSignaledFlags |= aFlags;
-    mTask.Post();
+    IgnoreError(mTask.Post());
 }
 
 void Notifier::SignalIfFirst(otChangedFlags aFlags)
@@ -195,7 +195,7 @@ void Notifier::LogChangedFlags(otChangedFlags aFlags) const
                 addSpace = false;
             }
 
-            string.Append("%s%s", addSpace ? " " : "", FlagToString(1 << bit));
+            IgnoreError(string.Append("%s%s", addSpace ? " " : "", FlagToString(1 << bit)));
             addSpace = true;
 
             flags ^= (1 << bit);

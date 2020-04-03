@@ -63,10 +63,10 @@ NetworkDiagnostic::NetworkDiagnostic(Instance &aInstance)
     , mReceiveDiagnosticGetCallback(NULL)
     , mReceiveDiagnosticGetCallbackContext(NULL)
 {
-    Get<Coap::Coap>().AddResource(mDiagnosticGetRequest);
-    Get<Coap::Coap>().AddResource(mDiagnosticGetQuery);
-    Get<Coap::Coap>().AddResource(mDiagnosticGetAnswer);
-    Get<Coap::Coap>().AddResource(mDiagnosticReset);
+    IgnoreError(Get<Coap::Coap>().AddResource(mDiagnosticGetRequest));
+    IgnoreError(Get<Coap::Coap>().AddResource(mDiagnosticGetQuery));
+    IgnoreError(Get<Coap::Coap>().AddResource(mDiagnosticGetAnswer));
+    IgnoreError(Get<Coap::Coap>().AddResource(mDiagnosticReset));
 }
 
 void NetworkDiagnostic::SetReceiveDiagnosticGetCallback(otReceiveDiagnosticGetCallback aCallback,
@@ -394,7 +394,8 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             tlv.Init();
 
             length = sizeof(NetworkDataTlv) - sizeof(Tlv); // sizeof( NetworkDataTlv::mNetworkData )
-            Get<NetworkData::Leader>().GetNetworkData(/* aStableOnly */ false, tlv.GetNetworkData(), length);
+            IgnoreError(
+                Get<NetworkData::Leader>().GetNetworkData(/* aStableOnly */ false, tlv.GetNetworkData(), length));
             tlv.SetLength(length);
 
             SuccessOrExit(error = tlv.AppendTo(aResponse));
@@ -553,7 +554,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const 
     if (message->GetLength() == message->GetOffset())
     {
         // Remove Payload Marker if payload is actually empty.
-        message->SetLength(message->GetLength() - 1);
+        IgnoreError(message->SetLength(message->GetLength() - 1));
     }
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo, NULL, this));
@@ -603,7 +604,7 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Message &aMessage, cons
     if (message->GetLength() == message->GetOffset())
     {
         // Remove Payload Marker if payload is actually empty.
-        message->SetLength(message->GetOffset() - 1);
+        IgnoreError(message->SetLength(message->GetOffset() - 1));
     }
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));

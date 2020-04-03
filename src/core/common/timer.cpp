@@ -135,7 +135,7 @@ void TimerScheduler::Remove(Timer &aTimer, const AlarmApi &aAlarmApi)
     }
     else
     {
-        mTimerList.Remove(aTimer);
+        IgnoreError(mTimerList.Remove(aTimer));
     }
 
     aTimer.SetNext(&aTimer);

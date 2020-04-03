@@ -178,8 +178,8 @@ Message *Client::NewMessage(const Header &aHeader)
     Message *message = NULL;
 
     VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != NULL, OT_NOOP);
-    message->Prepend(&aHeader, sizeof(aHeader));
-    message->SetOffset(0);
+    IgnoreError(message->Prepend(&aHeader, sizeof(aHeader)));
+    IgnoreError(message->SetOffset(0));
 
 exit:
     return message;
@@ -195,7 +195,7 @@ Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetad
 
     // Append the copy with retransmission data and add it to the queue.
     SuccessOrExit(error = aQueryMetadata.AppendTo(*messageCopy));
-    mPendingQueries.Enqueue(*messageCopy);
+    IgnoreError(mPendingQueries.Enqueue(*messageCopy));
 
     mRetransmissionTimer.FireAtIfEarlier(aQueryMetadata.mTransmissionTime);
 
@@ -212,7 +212,7 @@ exit:
 
 void Client::DequeueMessage(Message &aMessage)
 {
-    mPendingQueries.Dequeue(aMessage);
+    IgnoreError(mPendingQueries.Dequeue(aMessage));
 
     if (mRetransmissionTimer.IsRunning() && (mPendingQueries.GetHead() == NULL))
     {
@@ -325,7 +325,7 @@ void Client::HandleRetransmissionTimer(void)
             messageInfo.SetPeerPort(queryMetadata.mDestinationPort);
             messageInfo.SetSockAddr(queryMetadata.mSourceAddress);
 
-            SendCopy(*message, messageInfo);
+            IgnoreError(SendCopy(*message, messageInfo));
         }
 
         if (nextTime > queryMetadata.mTransmissionTime)

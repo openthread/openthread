@@ -208,14 +208,14 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, otError aError)
 
     if (!aFrame.IsEmpty())
     {
-        aFrame.GetDstAddr(macDest);
+        IgnoreError(aFrame.GetDstAddr(macDest));
         Get<MeshForwarder>().UpdateNeighborOnSentFrame(aFrame, aError, macDest);
     }
 
     if (GetParent().IsStateInvalid())
     {
         StopPolling();
-        Get<Mle::MleRouter>().BecomeDetached();
+        IgnoreError(Get<Mle::MleRouter>().BecomeDetached());
         ExitNow();
     }
 
@@ -296,7 +296,7 @@ void DataPollSender::HandlePollTimeout(void)
 
     if (mPollTimeoutCounter < kQuickPollsAfterTimeout)
     {
-        SendDataPoll();
+        IgnoreError(SendDataPoll());
     }
     else
     {
@@ -315,7 +315,7 @@ void DataPollSender::ProcessFrame(const Mac::RxFrame &aFrame)
 
     if (aFrame.GetFramePending())
     {
-        SendDataPoll();
+        IgnoreError(SendDataPoll());
     }
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     else if (aFrame.IsAck())
@@ -494,7 +494,7 @@ uint32_t DataPollSender::CalculatePollPeriod(void) const
 
 void DataPollSender::HandlePollTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<DataPollSender>().SendDataPoll();
+    IgnoreError(aTimer.GetOwner<DataPollSender>().SendDataPoll());
 }
 
 uint32_t DataPollSender::GetDefaultPollPeriod(void) const

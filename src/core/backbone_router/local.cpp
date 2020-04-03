@@ -93,12 +93,12 @@ void Local::SetEnabled(bool aEnable)
     {
         SetState(OT_BACKBONE_ROUTER_STATE_SECONDARY);
         AddDomainPrefixToNetworkData();
-        AddService();
+        IgnoreError(AddService());
     }
     else
     {
         RemoveDomainPrefixFromNetworkData();
-        RemoveService();
+        IgnoreError(RemoveService());
         SetState(OT_BACKBONE_ROUTER_STATE_DISABLED);
     }
 

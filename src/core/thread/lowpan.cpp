@@ -102,7 +102,7 @@ otError Lowpan::CompressSourceIid(const Mac::Address &aMacAddr,
     Ip6::Address ipaddr;
     Mac::Address tmp;
 
-    ComputeIid(aMacAddr, aContext, ipaddr);
+    IgnoreError(ComputeIid(aMacAddr, aContext, ipaddr));
 
     if (memcmp(ipaddr.GetIid(), aIpAddr.GetIid(), Ip6::Address::kInterfaceIdentifierSize) == 0)
     {
@@ -111,7 +111,7 @@ otError Lowpan::CompressSourceIid(const Mac::Address &aMacAddr,
     else
     {
         tmp.SetShort(aIpAddr.GetLocator());
-        ComputeIid(tmp, aContext, ipaddr);
+        IgnoreError(ComputeIid(tmp, aContext, ipaddr));
 
         if (memcmp(ipaddr.GetIid(), aIpAddr.GetIid(), Ip6::Address::kInterfaceIdentifierSize) == 0)
         {
@@ -145,7 +145,7 @@ otError Lowpan::CompressDestinationIid(const Mac::Address &aMacAddr,
     Ip6::Address ipaddr;
     Mac::Address tmp;
 
-    ComputeIid(aMacAddr, aContext, ipaddr);
+    IgnoreError(ComputeIid(aMacAddr, aContext, ipaddr));
 
     if (memcmp(ipaddr.GetIid(), aIpAddr.GetIid(), Ip6::Address::kInterfaceIdentifierSize) == 0)
     {
@@ -154,7 +154,7 @@ otError Lowpan::CompressDestinationIid(const Mac::Address &aMacAddr,
     else
     {
         tmp.SetShort(aIpAddr.GetLocator());
-        ComputeIid(tmp, aContext, ipaddr);
+        IgnoreError(ComputeIid(tmp, aContext, ipaddr));
 
         if (memcmp(ipaddr.GetIid(), aIpAddr.GetIid(), Ip6::Address::kInterfaceIdentifierSize) == 0)
         {
@@ -284,7 +284,7 @@ otError Lowpan::Compress(Message &           aMessage,
 
     if (!srcContextValid)
     {
-        networkData.GetContext(0, srcContext);
+        IgnoreError(networkData.GetContext(0, srcContext));
     }
 
     dstContextValid =
@@ -292,7 +292,7 @@ otError Lowpan::Compress(Message &           aMessage,
 
     if (!dstContextValid)
     {
-        networkData.GetContext(0, dstContext);
+        IgnoreError(networkData.GetContext(0, dstContext));
     }
 
     // Lowpan HC Control Bits
@@ -418,7 +418,7 @@ otError Lowpan::Compress(Message &           aMessage,
 
     headerDepth++;
 
-    aMessage.MoveOffset(sizeof(ip6Header));
+    IgnoreError(aMessage.MoveOffset(sizeof(ip6Header)));
 
     nextHeader = static_cast<uint8_t>(ip6Header.GetNextHeader());
 
@@ -454,13 +454,13 @@ exit:
 
     if (error == OT_ERROR_NONE)
     {
-        IgnoreReturnValue(aBuf.Write(hcCtl >> 8));
-        IgnoreReturnValue(aBuf.Write(hcCtl & 0xff));
+        IgnoreError(aBuf.Write(hcCtl >> 8));
+        IgnoreError(aBuf.Write(hcCtl & 0xff));
         aBuf = buf;
     }
     else
     {
-        aMessage.SetOffset(startOffset);
+        IgnoreError(aMessage.SetOffset(startOffset));
     }
 
     return error;
@@ -478,7 +478,7 @@ otError Lowpan::CompressExtensionHeader(Message &aMessage, BufferWriter &aBuf, u
 
     VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(extHeader), &extHeader) == sizeof(extHeader),
                  error = OT_ERROR_PARSE);
-    aMessage.MoveOffset(sizeof(extHeader));
+    IgnoreError(aMessage.MoveOffset(sizeof(extHeader)));
 
     tmpByte = kExtHdrDispatch | kExtHdrEidHbh;
 
@@ -545,7 +545,7 @@ otError Lowpan::CompressExtensionHeader(Message &aMessage, BufferWriter &aBuf, u
 
     SuccessOrExit(error = buf.Write(static_cast<uint8_t>(len)));
     SuccessOrExit(error = buf.Write(aMessage, static_cast<uint8_t>(len)));
-    aMessage.MoveOffset(len + padLength);
+    IgnoreError(aMessage.MoveOffset(len + padLength));
 
 exit:
     if (error == OT_ERROR_NONE)
@@ -554,7 +554,7 @@ exit:
     }
     else
     {
-        aMessage.SetOffset(startOffset);
+        IgnoreError(aMessage.SetOffset(startOffset));
     }
 
     return error;
@@ -602,7 +602,7 @@ otError Lowpan::CompressUdp(Message &aMessage, BufferWriter &aBuf)
 
     SuccessOrExit(error = buf.Write(reinterpret_cast<uint8_t *>(&udpHeader) + Ip6::UdpHeader::GetChecksumOffset(), 2));
 
-    aMessage.MoveOffset(sizeof(udpHeader));
+    IgnoreError(aMessage.MoveOffset(sizeof(udpHeader)));
 
 exit:
     if (error == OT_ERROR_NONE)
@@ -611,7 +611,7 @@ exit:
     }
     else
     {
-        aMessage.SetOffset(startOffset);
+        IgnoreError(aMessage.SetOffset(startOffset));
     }
 
     return error;
@@ -704,8 +704,8 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
     }
     else
     {
-        networkData.GetContext(0, srcContext);
-        networkData.GetContext(0, dstContext);
+        IgnoreError(networkData.GetContext(0, srcContext));
+        IgnoreError(networkData.GetContext(0, dstContext));
     }
 
     memset(&aIp6Header, 0, sizeof(aIp6Header));
@@ -799,7 +799,7 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
         break;
 
     case kHcSrcAddrMode3:
-        ComputeIid(aMacSource, srcContext, aIp6Header.GetSource());
+        IgnoreError(ComputeIid(aMacSource, srcContext, aIp6Header.GetSource()));
         break;
     }
 
@@ -976,11 +976,11 @@ int Lowpan::DecompressExtensionHeader(Message &aMessage, const uint8_t *aBuf, ui
     hdr[1] = BitVectorBytes(sizeof(hdr) + len) - 1;
 
     SuccessOrExit(aMessage.Append(hdr, sizeof(hdr)));
-    aMessage.MoveOffset(sizeof(hdr));
+    IgnoreError(aMessage.MoveOffset(sizeof(hdr)));
 
     // payload
     SuccessOrExit(aMessage.Append(cur, len));
-    aMessage.MoveOffset(len);
+    IgnoreError(aMessage.MoveOffset(len));
     cur += len;
 
     // The RFC6282 says: "The trailing Pad1 or PadN option MAY be elided by the compressor.
@@ -1001,7 +1001,7 @@ int Lowpan::DecompressExtensionHeader(Message &aMessage, const uint8_t *aBuf, ui
             SuccessOrExit(aMessage.Append(&optionPadN, padLength));
         }
 
-        aMessage.MoveOffset(padLength);
+        IgnoreError(aMessage.MoveOffset(padLength));
     }
 
     error = OT_ERROR_NONE;
@@ -1094,7 +1094,7 @@ int Lowpan::DecompressUdpHeader(Message &aMessage, const uint8_t *aBuf, uint16_t
     }
 
     VerifyOrExit(aMessage.Append(&udpHeader, sizeof(udpHeader)) == OT_ERROR_NONE, headerLen = -1);
-    aMessage.MoveOffset(sizeof(udpHeader));
+    IgnoreError(aMessage.MoveOffset(sizeof(udpHeader)));
 
 exit:
     return headerLen;

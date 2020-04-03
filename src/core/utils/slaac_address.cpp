@@ -186,7 +186,7 @@ void Slaac::Update(UpdateMode aMode)
             {
                 otLogInfoUtil("SLAAC: Removing address %s", slaacAddr->GetAddress().ToString().AsCString());
 
-                Get<ThreadNetif>().RemoveUnicastAddress(*slaacAddr);
+                IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(*slaacAddr));
                 slaacAddr->mValid = false;
             }
         }
@@ -242,7 +242,7 @@ void Slaac::Update(UpdateMode aMode)
 
                     otLogInfoUtil("SLAAC: Adding address %s", slaacAddr->GetAddress().ToString().AsCString());
 
-                    Get<ThreadNetif>().AddUnicastAddress(*slaacAddr);
+                    IgnoreError(Get<ThreadNetif>().AddUnicastAddress(*slaacAddr));
 
                     added = true;
                     break;
@@ -345,7 +345,7 @@ void Slaac::GetIidSecretKey(IidSecretKey &aKey) const
         Random::Crypto::FillBuffer(aKey.m8, sizeof(IidSecretKey));
     }
 
-    Get<Settings>().SaveSlaacIidSecretKey(aKey);
+    IgnoreError(Get<Settings>().SaveSlaacIidSecretKey(aKey));
 
     otLogInfoUtil("SLAAC: Generated and saved secret key");
 

@@ -139,7 +139,7 @@ void IndirectSender::ClearAllMessagesForSleepyChild(Child &aChild)
                 Get<MeshForwarder>().mSendMessage = NULL;
             }
 
-            Get<MeshForwarder>().mSendQueue.Dequeue(*message);
+            IgnoreError(Get<MeshForwarder>().mSendQueue.Dequeue(*message));
             message->Free();
         }
     }
@@ -219,7 +219,7 @@ Message *IndirectSender::FindIndirectMessage(Child &aChild)
             {
                 message->ClearChildMask(childIndex);
                 mSourceMatchController.DecrementMessageCount(aChild);
-                Get<MeshForwarder>().mSendQueue.Dequeue(*message);
+                IgnoreError(Get<MeshForwarder>().mSendQueue.Dequeue(*message));
                 message->Free();
                 continue;
             }
@@ -377,11 +377,11 @@ uint16_t IndirectSender::PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, M
     // Prepare the data frame from previous child's indirect offset.
 
     directTxOffset = aMessage.GetOffset();
-    aMessage.SetOffset(aChild.GetIndirectFragmentOffset());
+    IgnoreError(aMessage.SetOffset(aChild.GetIndirectFragmentOffset()));
 
     nextOffset = Get<MeshForwarder>().PrepareDataFrame(aFrame, aMessage, macSource, macDest);
 
-    aMessage.SetOffset(directTxOffset);
+    IgnoreError(aMessage.SetOffset(directTxOffset));
 
     // Set `FramePending` if there are more queued messages (excluding
     // the current one being sent out) for the child (note `> 1` check).
@@ -424,7 +424,7 @@ void IndirectSender::PrepareEmptyFrame(Mac::TxFrame &aFrame, Child &aChild, bool
     aFrame.InitMacHeader(fcf, Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32);
 
     aFrame.SetDstPanId(Get<Mac::Mac>().GetPanId());
-    aFrame.SetSrcPanId(Get<Mac::Mac>().GetPanId());
+    IgnoreError(aFrame.SetSrcPanId(Get<Mac::Mac>().GetPanId()));
     aFrame.SetDstAddr(macDest);
     aFrame.SetSrcAddr(macSource);
     aFrame.SetPayloadLength(0);
@@ -517,7 +517,7 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
 
         if (!aFrame.IsEmpty())
         {
-            aFrame.GetDstAddr(macDest);
+            IgnoreError(aFrame.GetDstAddr(macDest));
             Get<MeshForwarder>().LogMessage(MeshForwarder::kMessageTransmit, *message, &macDest, txError);
         }
 
@@ -541,7 +541,7 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
 
         if (!message->GetDirectTransmission() && !message->IsChildPending())
         {
-            Get<MeshForwarder>().mSendQueue.Dequeue(*message);
+            IgnoreError(Get<MeshForwarder>().mSendQueue.Dequeue(*message));
             message->Free();
         }
     }

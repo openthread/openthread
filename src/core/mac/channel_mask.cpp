@@ -100,7 +100,7 @@ ChannelMask::InfoString ChannelMask::ToString(void) const
     bool       addComma = false;
     otError    error;
 
-    string.Append("{");
+    IgnoreError(string.Append("{"));
 
     error = GetNextChannel(channel);
 
@@ -119,16 +119,16 @@ ChannelMask::InfoString ChannelMask::ToString(void) const
             rangeEnd = channel;
         }
 
-        string.Append("%s%d", addComma ? ", " : " ", rangeStart);
+        IgnoreError(string.Append("%s%d", addComma ? ", " : " ", rangeStart));
         addComma = true;
 
         if (rangeStart < rangeEnd)
         {
-            string.Append("%s%d", rangeEnd == rangeStart + 1 ? ", " : "-", rangeEnd);
+            IgnoreError(string.Append("%s%d", rangeEnd == rangeStart + 1 ? ", " : "-", rangeEnd));
         }
     }
 
-    string.Append("}");
+    IgnoreError(string.Append("}"));
 
     return string;
 }

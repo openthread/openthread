@@ -276,7 +276,7 @@ Interpreter::Interpreter(Instance *aInstance)
 
     mIcmpHandler.mReceiveCallback = Interpreter::HandleIcmpReceive;
     mIcmpHandler.mContext         = this;
-    otIcmp6RegisterHandler(mInstance, &mIcmpHandler);
+    IgnoreError(otIcmp6RegisterHandler(mInstance, &mIcmpHandler));
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     memset(mResolvingHostname, 0, sizeof(mResolvingHostname));
@@ -3978,12 +3978,12 @@ void Interpreter::ProcessNetworkDiagnostic(uint8_t aArgsLength, char *aArgs[])
 
     if (strcmp(aArgs[0], "get") == 0)
     {
-        otThreadSendDiagnosticGet(mInstance, &address, tlvTypes, count);
+        IgnoreError(otThreadSendDiagnosticGet(mInstance, &address, tlvTypes, count));
         ExitNow();
     }
     else if (strcmp(aArgs[0], "reset") == 0)
     {
-        otThreadSendDiagnosticReset(mInstance, &address, tlvTypes, count);
+        IgnoreError(otThreadSendDiagnosticReset(mInstance, &address, tlvTypes, count));
         AppendResult(OT_ERROR_NONE);
     }
     else

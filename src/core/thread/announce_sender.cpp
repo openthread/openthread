@@ -102,7 +102,7 @@ void AnnounceSenderBase::HandleTimer(void)
 
     OT_ASSERT(error == OT_ERROR_NONE);
 
-    Get<Mle::MleRouter>().SendAnnounce(mChannel, false);
+    IgnoreError(Get<Mle::MleRouter>().SendAnnounce(mChannel, false));
 
     mTimer.Start(Random::NonCrypto::AddJitter(mPeriod, mJitter));
 
@@ -165,7 +165,7 @@ void AnnounceSender::CheckState(void)
 
     VerifyOrExit(!IsRunning() || (period != GetPeriod()) || (GetChannelMask() != channelMask), OT_NOOP);
 
-    SendAnnounce(channelMask, 0, period, kMaxJitter);
+    IgnoreError(SendAnnounce(channelMask, 0, period, kMaxJitter));
 
     otLogInfoMle("Starting periodic MLE Announcements tx, period %u, mask %s", period,
                  channelMask.ToString().AsCString());

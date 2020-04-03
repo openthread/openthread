@@ -55,7 +55,7 @@ EnergyScanClient::EnergyScanClient(Instance &aInstance)
 {
     mContext  = NULL;
     mCallback = NULL;
-    Get<Coap::Coap>().AddResource(mEnergyScan);
+    IgnoreError(Get<Coap::Coap>().AddResource(mEnergyScan));
 }
 
 otError EnergyScanClient::SendQuery(uint32_t                           aChannelMask,
