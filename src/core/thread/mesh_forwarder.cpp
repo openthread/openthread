@@ -139,19 +139,26 @@ exit:
 
 void MeshForwarder::RemoveMessage(Message &aMessage)
 {
-#if OPENTHREAD_FTD
-    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
+    PriorityQueue *queue = aMessage.GetPriorityQueue();
+
+    OT_ASSERT(queue != NULL);
+
+    if (queue == &mSendQueue)
     {
-        IgnoreReturnValue(mIndirectSender.RemoveMessageFromSleepyChild(aMessage, *iter.GetChild()));
-    }
+#if OPENTHREAD_FTD
+        for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
+        {
+            IgnoreReturnValue(mIndirectSender.RemoveMessageFromSleepyChild(aMessage, *iter.GetChild()));
+        }
 #endif
 
-    if (mSendMessage == &aMessage)
-    {
-        mSendMessage = NULL;
+        if (mSendMessage == &aMessage)
+        {
+            mSendMessage = NULL;
+        }
     }
 
-    mSendQueue.Dequeue(aMessage);
+    queue->Dequeue(aMessage);
     LogMessage(kMessageEvict, aMessage, NULL, OT_ERROR_NO_BUFS);
     aMessage.Free();
 }
