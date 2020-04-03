@@ -310,8 +310,8 @@
 //#define MBEDTLS_BLOWFISH_ALT
 //#define MBEDTLS_CAMELLIA_ALT
 #define MBEDTLS_CCM_ALT
-/* #undef MBEDTLS_CHACHA20_ALT */
-/* #undef MBEDTLS_CHACHAPOLY_ALT */
+#define MBEDTLS_CHACHA20_ALT
+#define MBEDTLS_CHACHAPOLY_ALT
 #define MBEDTLS_CMAC_ALT
 //#define MBEDTLS_DES_ALT
 #define MBEDTLS_DHM_ALT
@@ -321,11 +321,11 @@
 //#define MBEDTLS_MD2_ALT
 //#define MBEDTLS_MD4_ALT
 //#define MBEDTLS_MD5_ALT
-/* #undef MBEDTLS_POLY1305_ALT */
+#define MBEDTLS_POLY1305_ALT
 //#define MBEDTLS_RIPEMD160_ALT
 #define MBEDTLS_ECP_ALT
 /* #undef MBEDTLS_RSA_ALT */
-/* #undef MBEDTLS_SHA1_ALT */
+#define MBEDTLS_SHA1_ALT
 #define MBEDTLS_SHA256_ALT
 //#define MBEDTLS_SHA512_ALT
 //#define MBEDTLS_XTEA_ALT
@@ -1987,7 +1987,7 @@
  *
  * Module:  library/chacha20.c
  */
-/* #undef MBEDTLS_CHACHA20_C */
+#define MBEDTLS_CHACHA20_C
 
 /**
  * \def MBEDTLS_CHACHAPOLY_C
@@ -1998,7 +1998,7 @@
  *
  * This module requires: MBEDTLS_CHACHA20_C, MBEDTLS_POLY1305_C
  */
-/* #undef MBEDTLS_CHACHAPOLY_C */
+#define MBEDTLS_CHACHAPOLY_C
 
 /**
  * \def MBEDTLS_CIPHER_C
@@ -2563,7 +2563,7 @@
  * Module:  library/poly1305.c
  * Caller:  library/chachapoly.c
  */
-/* #undef MBEDTLS_POLY1305_C */
+#define MBEDTLS_POLY1305_C
 
 /**
  * \def MBEDTLS_RIPEMD160_C
@@ -2615,7 +2615,7 @@
  *            on it, and considering stronger message digests instead.
  * 
  */
-/* #undef MBEDTLS_SHA1_C */
+#define MBEDTLS_SHA1_C
 
 /**
  * \def MBEDTLS_SHA256_C
@@ -2647,7 +2647,7 @@
  *
  * This module adds support for SHA-384 and SHA-512.
  */
-/* #undef MBEDTLS_SHA512_C */
+#define MBEDTLS_SHA512_C
 
 /**
  * \def MBEDTLS_SSL_CACHE_C
@@ -3139,6 +3139,8 @@ it is (2^48 - 1), our restriction is :  (int - 0xFFFF - 0xF).*/
 #define CONFIG_CC310_MBEDTLS_AES_C
 #define CONFIG_CC310_MBEDTLS_C
 #define CONFIG_CC310_MBEDTLS_CCM_C
+#define CONFIG_CC310_MBEDTLS_CHACHA20_C
+#define CONFIG_CC310_MBEDTLS_CHACHAPOLY_C
 #define CONFIG_CC310_MBEDTLS_CIPHER_MODE_C
 #define CONFIG_CC310_MBEDTLS_CMAC_C
 #define CONFIG_CC310_MBEDTLS_DHM_C
@@ -3146,6 +3148,8 @@ it is (2^48 - 1), our restriction is :  (int - 0xFFFF - 0xF).*/
 #define CONFIG_CC310_MBEDTLS_ECDSA_C
 #define CONFIG_CC310_MBEDTLS_ECJPAKE_C
 #define CONFIG_CC310_MBEDTLS_ECP_C
+#define CONFIG_CC310_MBEDTLS_POLY1305_C
+#define CONFIG_CC310_MBEDTLS_SHA1_C
 #define CONFIG_CC310_MBEDTLS_SHA256_C
 #define CONFIG_GLUE_MBEDTLS_AES_C
 #define CONFIG_GLUE_MBEDTLS_C
