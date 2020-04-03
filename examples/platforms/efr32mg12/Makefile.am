@@ -76,6 +76,8 @@ libopenthread_efr32mg12_a_CPPFLAGS                                            = 
     -I$(SDK_SRC_DIR)/platform/emdrv/ustimer/inc                                 \
     -I$(SDK_SRC_DIR)/platform/emdrv/dmadrv/inc                                  \
     -I$(SDK_SRC_DIR)/platform/emdrv/dmadrv/config                               \
+    -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/inc                                    \
+    -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config                                 \
     -I$(SDK_SRC_DIR)/platform/emlib/inc                                         \
     -I$(SDK_SRC_DIR)/platform/halconfig/inc/hal-config                          \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32                         \

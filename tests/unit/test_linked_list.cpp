@@ -132,13 +132,13 @@ void TestLinkedList(void)
     list.Push(e);
     VerifyLinkedListContent(&list, &e, &c, &a, &d, &b, NULL);
 
-    VerifyOrQuit(list.PopAfter(a) == &d, "LinkedList::PopAfter() failed");
+    VerifyOrQuit(list.PopAfter(&a) == &d, "LinkedList::PopAfter() failed");
     VerifyLinkedListContent(&list, &e, &c, &a, &b, NULL);
 
-    VerifyOrQuit(list.PopAfter(b) == NULL, "LinkedList::PopAfter() failed");
+    VerifyOrQuit(list.PopAfter(&b) == NULL, "LinkedList::PopAfter() failed");
     VerifyLinkedListContent(&list, &e, &c, &a, &b, NULL);
 
-    VerifyOrQuit(list.PopAfter(e) == &c, "LinkedList::PopAfter() failed");
+    VerifyOrQuit(list.PopAfter(&e) == &c, "LinkedList::PopAfter() failed");
     VerifyLinkedListContent(&list, &e, &a, &b, NULL);
 
     list.PushAfter(c, b);
@@ -147,8 +147,15 @@ void TestLinkedList(void)
     list.PushAfter(d, a);
     VerifyLinkedListContent(&list, &e, &a, &d, &b, &c, NULL);
 
+    VerifyOrQuit(list.PopAfter(NULL) == &e, "LinkedList::PopAfter() failed");
+    VerifyLinkedListContent(&list, &a, &d, &b, &c, NULL);
+
+    VerifyOrQuit(list.PopAfter(NULL) == &a, "LinkedList::PopAfter() failed");
+    VerifyLinkedListContent(&list, &d, &b, &c, NULL);
+
     list.Clear();
     VerifyOrQuit(list.IsEmpty(), "LinkedList::IsEmpty() failed after Clear()");
+    VerifyOrQuit(list.PopAfter(NULL) == NULL, "LinkedList::PopAfter() failed");
     VerifyLinkedListContent(&list, NULL);
 }
 

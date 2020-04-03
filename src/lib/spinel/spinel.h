@@ -630,6 +630,14 @@ enum
     SPINEL_MESHCOP_COMMISSIONER_STATE_ACTIVE   = 2,
 };
 
+enum
+{
+    SPINEL_ADDRESS_CACHE_ENTRY_STATE_CACHED      = 0, // Entry is cached and in-use.
+    SPINEL_ADDRESS_CACHE_ENTRY_STATE_SNOOPED     = 1, // Entry is created by snoop optimization.
+    SPINEL_ADDRESS_CACHE_ENTRY_STATE_QUERY       = 2, // Entry represents an ongoing query for the EID.
+    SPINEL_ADDRESS_CACHE_ENTRY_STATE_RETRY_QUERY = 3, // Entry is in retry mode (a prior query did not  a response).
+};
+
 typedef struct
 {
     uint8_t bytes[8];
@@ -2646,7 +2654,7 @@ enum
     SPINEL_PROP_THREAD_NEIGHBOR_TABLE_ERROR_RATES = SPINEL_PROP_THREAD_EXT__BEGIN + 34,
 
     /// EID (Endpoint Identifier) IPv6 Address Cache Table
-    /** Format `A(t(6SC))`
+    /** Format `A(t(6SCCt(bL6)t(bSS)))
      *
      * This property provides Thread EID address cache table.
      *
@@ -2655,6 +2663,17 @@ enum
      *  `6` : Target IPv6 address
      *  `S` : RLOC16 of target
      *  `C` : Age (order of use, 0 indicates most recently used entry)
+     *  `C` : Entry state (values are defined by enumeration `SPINEL_ADDRESS_CACHE_ENTRY_STATE_*`).
+     *
+     *  `t` : Info when state is `SPINEL_ADDRESS_CACHE_ENTRY_STATE_CACHED`
+     *    `b` : Indicates whether last transaction time and ML-EID are valid.
+     *    `L` : Last transaction time
+     *    `6` : Mesh-local EID
+     *
+     *  `t` : Info when state is other than `SPINEL_ADDRESS_CACHE_ENTRY_STATE_CACHED`
+     *    `b` : Indicates whether the entry can be evicted.
+     *    `S` : Timeout in seconds
+     *    `S` : Retry delay (applicable if in query-retry state).
      *
      */
     SPINEL_PROP_THREAD_ADDRESS_CACHE_TABLE = SPINEL_PROP_THREAD_EXT__BEGIN + 35,

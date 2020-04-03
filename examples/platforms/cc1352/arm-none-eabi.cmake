@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,24 +26,27 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-#
-# efr32mg21 platform-specific Makefile
-#
+set(CMAKE_SYSTEM_NAME              Generic)
+set(CMAKE_SYSTEM_PROCESSOR         ARM)
 
-LIBRAIL = $(shell                                                                \
-if [ "$(DMP)" = "1" ]; then                                                      \
-    echo "librail_multiprotocol_efr32xg21_gcc_release.a";                        \
-else                                                                             \
-    echo "librail_efr32xg21_gcc_release.a";                                      \
-fi )
+set(CMAKE_C_COMPILER               arm-none-eabi-gcc)
+set(CMAKE_CXX_COMPILER             arm-none-eabi-g++)
+set(CMAKE_ASM_COMPILER             arm-none-eabi-as)
+set(CMAKE_RANLIB                   arm-none-eabi-ranlib)
 
-LDADD_COMMON                                                                  += \
-    $(top_builddir)/examples/platforms/efr32mg21/libopenthread-efr32mg21.a       \
-    $(top_builddir)/third_party/silabs/libsilabs-efr32mg21-sdk.a                 \
-    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.7/platform/radio/rail_lib/autogen/librail_release/$(LIBRAIL) \
-    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.7/platform/emdrv/nvm3/lib/libnvm3_CM33_gcc.a \
-    $(NULL)
-    
-LDFLAGS_COMMON                                                                += \
-    -T $(top_srcdir)/examples/platforms/efr32mg21/efr32mg21.ld                   \
-    $(NULL)
+set(COMMON_C_FLAGS                 "-mcpu=cortex-m4 -march=armv7e-m -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -fdata-sections -ffunction-sections")
+
+set(CMAKE_C_FLAGS                  "${COMMON_C_FLAGS} -std=gnu99")
+set(CMAKE_CXX_FLAGS                "${COMMON_C_FLAGS} -fno-exceptions -fno-rtti")
+set(CMAKE_ASM_FLAGS                "${COMMON_C_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS         "${COMMON_C_FLAGS} -nostartfiles -specs=nano.specs -specs=nosys.specs -Wl,--gc-sections -Wl,-Map=map.map")
+
+set(CMAKE_C_FLAGS_DEBUG            "-Og -g")
+set(CMAKE_CXX_FLAGS_DEBUG          "-Og -g")
+set(CMAKE_ASM_FLAGS_DEBUG          "-g")
+set(CMAKE_EXE_LINKER_FLAGS_DEBUG   "")
+
+set(CMAKE_C_FLAGS_RELEASE          "-Os")
+set(CMAKE_CXX_FLAGS_RELEASE        "-Os")
+set(CMAKE_ASM_FLAGS_RELEASE        "")
+set(CMAKE_EXE_LINKER_FLAGS_RELEASE "")

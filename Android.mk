@@ -216,6 +216,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/net/ip6_mpl.cpp                                \
     src/core/net/netif.cpp                                  \
     src/core/net/udp6.cpp                                   \
+    src/core/radio/radio.cpp                                \
     src/core/radio/radio_callbacks.cpp                      \
     src/core/radio/radio_platform.cpp                       \
     src/core/thread/address_resolver.cpp                    \

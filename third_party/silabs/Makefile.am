@@ -90,6 +90,8 @@ COMMONCPPFLAGS                                                                = 
     -I$(SDK_SRC_DIR)/platform/emdrv/ustimer/inc                                 \
     -I$(SDK_SRC_DIR)/platform/emdrv/dmadrv/inc                                  \
     -I$(SDK_SRC_DIR)/platform/emdrv/dmadrv/config                               \
+    -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/inc                                    \
+    -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config                                 \
     -I$(SDK_SRC_DIR)/platform/emlib/inc                                         \
     -I$(SDK_SRC_DIR)/platform/halconfig/inc/hal-config                          \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32                         \
@@ -134,6 +136,8 @@ SILABS_COMMON_SOURCES                                                           
     gecko_sdk_suite/v2.7/hardware/kit/common/bsp/bsp_stk_leds.c                           \
     gecko_sdk_suite/v2.7/platform/emdrv/dmadrv/src/dmadrv.c                               \
     gecko_sdk_suite/v2.7/platform/emdrv/gpiointerrupt/src/gpiointerrupt.c                 \
+    gecko_sdk_suite/v2.7/platform/emdrv/nvm3/src/nvm3_hal_flash.c                         \
+    gecko_sdk_suite/v2.7/platform/emdrv/nvm3/src/nvm3_lock.c                              \
     gecko_sdk_suite/v2.7/platform/emdrv/uartdrv/src/uartdrv.c                             \
     gecko_sdk_suite/v2.7/platform/emdrv/ustimer/src/ustimer.c                             \
     gecko_sdk_suite/v2.7/platform/emlib/src/em_adc.c                                      \

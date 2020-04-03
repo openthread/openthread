@@ -60,6 +60,7 @@ endif
 LINK_RAW            ?= 0
 MAC_FILTER          ?= 0
 MTD_NETDIAG         ?= 0
+OTNS                ?= 0
 PLATFORM_UDP        ?= 0
 REFERENCE_DEVICE    ?= 0
 SERVICE             ?= 0
@@ -251,6 +252,10 @@ endif
 
 ifeq ($(SETTINGS_RAM),1)
 COMMONCFLAGS += -DOPENTHREAD_SETTINGS_RAM=1
+endif
+
+ifeq ($(OTNS),1)
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_OTNS_ENABLE=1
 endif
 
 ifeq ($(FULL_LOGS),1)

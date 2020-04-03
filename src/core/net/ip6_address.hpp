@@ -314,6 +314,26 @@ public:
     }
 
     /**
+     * This method sets the prefix content of the Prefix-Based Multicast Address.
+     *
+     * @param[in]  aPrefix         A buffer containing the prefix.
+     * @param[in]  aPrefixLength   The prefix length (in bits).
+     *
+     */
+    void SetMulticastNetworkPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength);
+
+    /**
+     * This method sets the prefix content of Mesh Local Prefix-Based Multicast Address.
+     *
+     * @param[in]  aMeshLocalPrefix   A reference to the  Mesh Local Prefix.
+     *
+     */
+    void SetMulticastNetworkPrefix(const Mle::MeshLocalPrefix &aMeshLocalPrefix)
+    {
+        SetMulticastNetworkPrefix(aMeshLocalPrefix.m8, Mle::MeshLocalPrefix::kLength);
+    }
+
+    /**
      * This method returns a pointer to the Interface Identifier.
      *
      * @returns A pointer to the Interface Identifier.
@@ -433,10 +453,14 @@ public:
     static uint8_t PrefixMatch(const uint8_t *aPrefixA, const uint8_t *aPrefixB, uint8_t aMaxLength);
 
 private:
+    void SetPrefix(uint8_t aOffset, const uint8_t *aPrefix, uint8_t aPrefixLength);
+
     enum
     {
-        kInterfaceIdentifierOffset = 8, ///< Interface Identifier offset in bytes.
-        kIp4AddressSize            = 4  ///< Size of the IPv4 address.
+        kInterfaceIdentifierOffset          = 8, ///< Interface Identifier offset in bytes.
+        kIp4AddressSize                     = 4, ///< Size of the IPv4 address.
+        kMulticastNetworkPrefixLengthOffset = 3, ///< Prefix-Based Multicast Address (RFC3306).
+        kMulticastNetworkPrefixOffset       = 4, ///< Prefix-Based Multicast Address (RFC3306).
     };
 } OT_TOOL_PACKED_END;
 

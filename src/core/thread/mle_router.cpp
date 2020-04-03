@@ -49,6 +49,7 @@
 #include "thread/thread_tlvs.hpp"
 #include "thread/thread_uri_paths.hpp"
 #include "thread/time_sync_service.hpp"
+#include "utils/otns.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -82,6 +83,9 @@ MleRouter::MleRouter(Instance &aInstance)
     , mParentPriority(kParentPriorityUnspecified)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     , mBackboneRouterRegistrationDelay(0)
+#endif
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    , mMaxChildIpAddresses(0)
 #endif
 {
     mDeviceMode.Set(mDeviceMode.Get() | DeviceMode::kModeFullThreadDevice | DeviceMode::kModeFullNetworkData);
@@ -1077,7 +1081,7 @@ otError MleRouter::ProcessRouteTlv(const RouteTlv &aRoute)
 {
     otError error = OT_ERROR_NONE;
 
-    mRouterTable.ProcessTlv(aRoute);
+    mRouterTable.UpdateRouterIdSet(aRoute.GetRouterIdSequence(), aRoute.GetRouterIdMask());
 
     if (mRole == OT_DEVICE_ROLE_ROUTER && !mRouterTable.IsAllocated(mRouterId))
     {
@@ -1984,6 +1988,34 @@ exit:
     }
 }
 
+uint8_t MleRouter::GetMaxChildIpAddresses(void) const
+{
+    uint8_t num = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD;
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    if (mMaxChildIpAddresses != 0)
+    {
+        num = mMaxChildIpAddresses;
+    }
+#endif
+
+    return num;
+}
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+otError MleRouter::SetMaxChildIpAddresses(uint8_t aMaxIpAddresses)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aMaxIpAddresses <= OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD, error = OT_ERROR_INVALID_ARGS);
+
+    mMaxChildIpAddresses = aMaxIpAddresses;
+
+exit:
+    return error;
+}
+#endif
+
 otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, Child &aChild)
 {
     otError                  error = OT_ERROR_NONE;
@@ -2034,10 +2066,20 @@ otError MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffse
             address = *entry.GetIp6Address();
         }
 
-        // We try to accept/add as many IPv6 addresses as possible.
-        // "Child ID/Update Response" will indicate the accepted
-        // addresses.
-        error = aChild.AddIp6Address(address);
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        if (mMaxChildIpAddresses > 0 && storedCount >= mMaxChildIpAddresses)
+        {
+            // Skip remaining address registration entries but keep logging skipped addresses.
+            error = OT_ERROR_NO_BUFS;
+        }
+        else
+#endif
+        {
+            // We try to accept/add as many IPv6 addresses as possible.
+            // "Child ID/Update Response" will indicate the accepted
+            // addresses.
+            error = aChild.AddIp6Address(address);
+        }
 
         if (error == OT_ERROR_NONE)
         {
@@ -2672,24 +2714,6 @@ void MleRouter::HandleNetworkDataUpdateRouter(void)
 
     SynchronizeChildNetworkData();
 
-    // Detect if any server entry with invalid child RLOC16
-    {
-        NetworkData::Iterator iterator = NetworkData::kIteratorInit;
-        uint16_t              rloc16   = Mac::kShortAddrInvalid;
-
-        while (Get<NetworkData::Leader>().GetNextServer(iterator, rloc16) == OT_ERROR_NONE)
-        {
-            if (!IsActiveRouter(rloc16) && RouterIdMatch(GetRloc16(), rloc16) &&
-                mChildTable.FindChild(rloc16, Child::kInStateValid) == NULL)
-            {
-                Get<NetworkData::Leader>().SendServerDataNotification(rloc16);
-                // In Thread 1.1 Specification 5.15.6.1, only one RLOC16 TLV entry may appear in SRV_DATA.ntf.
-                // So break here.
-                break;
-            }
-        }
-    }
-
 exit:
     return;
 }
@@ -2697,6 +2721,8 @@ exit:
 void MleRouter::SynchronizeChildNetworkData(void)
 {
     VerifyOrExit(mRole == OT_DEVICE_ROLE_ROUTER || mRole == OT_DEVICE_ROLE_LEADER);
+
+    Get<NetworkData::Leader>().RemoveStaleChildEntries();
 
     for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValid); !iter.IsDone(); iter++)
     {
@@ -3281,7 +3307,7 @@ void MleRouter::RemoveRouterLink(Router &aRouter)
 #if OPENTHREAD_FTD
     case OT_DEVICE_ROLE_ROUTER:
     case OT_DEVICE_ROLE_LEADER:
-        mRouterTable.RemoveNeighbor(aRouter);
+        mRouterTable.RemoveRouterLink(aRouter);
         break;
 #endif
 
@@ -3320,7 +3346,7 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
     else if (aNeighbor.IsStateValid())
     {
         Signal(OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED, aNeighbor);
-        mRouterTable.RemoveNeighbor(static_cast<Router &>(aNeighbor));
+        mRouterTable.RemoveRouterLink(static_cast<Router &>(aNeighbor));
     }
 
     aNeighbor.GetLinkInfo().Clear();
@@ -4060,7 +4086,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
 
     SetStateRouter(Rloc16FromRouterId(mRouterId));
     mRouterTable.Clear();
-    mRouterTable.ProcessTlv(routerMaskTlv);
+    mRouterTable.UpdateRouterIdSet(routerMaskTlv.GetIdSequence(), routerMaskTlv.GetAssignedRouterIdMask());
 
     router = mRouterTable.GetRouter(routerId);
     VerifyOrExit(router != NULL);
@@ -4218,15 +4244,7 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message &   aRequest,
 
         routerMaskTlv.Init();
         routerMaskTlv.SetIdSequence(mRouterTable.GetRouterIdSequence());
-        routerMaskTlv.ClearAssignedRouterIdMask();
-
-        for (uint8_t routerId = 0; routerId <= kMaxRouterId; routerId++)
-        {
-            if (mRouterTable.IsAllocated(routerId))
-            {
-                routerMaskTlv.SetAssignedRouterId(routerId);
-            }
-        }
+        routerMaskTlv.SetAssignedRouterIdMask(mRouterTable.GetRouterIdSet());
 
         SuccessOrExit(error = routerMaskTlv.AppendTo(*message));
     }
@@ -4465,13 +4483,11 @@ void MleRouter::FillRouteTlv(RouteTlv &aTlv)
     uint8_t routerCount = 0;
 
     aTlv.SetRouterIdSequence(mRouterTable.GetRouterIdSequence());
-    aTlv.ClearRouterIdMask();
+    aTlv.SetRouterIdMask(mRouterTable.GetRouterIdSet());
 
     for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++, routerCount++)
     {
         Router &router = *iter.GetRouter();
-
-        aTlv.SetRouterId(router.GetRouterId());
 
         if (router.GetRloc16() == GetRloc16())
         {
@@ -4744,6 +4760,10 @@ void MleRouter::Signal(otNeighborTableEvent aEvent, Neighbor &aNeighbor)
 
         mNeighborTableChangedCallback(aEvent, &info);
     }
+
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+    Get<Utils::Otns>().EmitNeighborChange(aEvent, aNeighbor);
+#endif
 
     switch (aEvent)
     {

@@ -169,6 +169,7 @@ set(COMMON_SOURCES
     net/netif.cpp
     net/sntp_client.cpp
     net/udp6.cpp
+    radio/radio.cpp
     radio/radio_callbacks.cpp
     radio/radio_platform.cpp
     thread/address_resolver.cpp
@@ -203,6 +204,7 @@ set(COMMON_SOURCES
     utils/flash.cpp
     utils/heap.cpp
     utils/jam_detector.cpp
+    utils/otns.cpp
     utils/parse_cmdline.cpp
     utils/slaac_address.cpp
 )
@@ -233,6 +235,7 @@ target_sources(openthread-radio PRIVATE
     mac/mac_types.cpp
     mac/sub_mac.cpp
     mac/sub_mac_callbacks.cpp
+    radio/radio.cpp
     radio/radio_callbacks.cpp
     radio/radio_platform.cpp
     thread/link_quality.cpp

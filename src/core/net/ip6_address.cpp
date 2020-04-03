@@ -145,15 +145,21 @@ bool Address::IsIidReserved(void) const
 
 void Address::SetPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
 {
-    uint8_t extraBits = (aPrefixLength % CHAR_BIT);
+    SetPrefix(0, aPrefix, aPrefixLength);
+}
 
-    OT_ASSERT(aPrefixLength <= sizeof(Address) * CHAR_BIT);
+void Address::SetPrefix(uint8_t aOffset, const uint8_t *aPrefix, uint8_t aPrefixLength)
+{
+    uint8_t bytes     = aPrefixLength / CHAR_BIT;
+    uint8_t extraBits = aPrefixLength % CHAR_BIT;
 
-    memcpy(mFields.m8, aPrefix, (aPrefixLength - extraBits) / CHAR_BIT);
+    OT_ASSERT(aPrefixLength <= (sizeof(Address) - aOffset) * CHAR_BIT);
+
+    memcpy(mFields.m8 + aOffset, aPrefix, bytes);
 
     if (extraBits > 0)
     {
-        uint8_t index = aPrefixLength / CHAR_BIT;
+        uint8_t index = aOffset + bytes;
         uint8_t mask  = ((0x80 >> (extraBits - 1)) - 1);
 
         // `mask` has its higher (msb) `extraBits` bits as `0` and the reminaing as `1`.
@@ -163,6 +169,12 @@ void Address::SetPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
         mFields.m8[index] &= mask;
         mFields.m8[index] |= (aPrefix[index] & ~mask);
     }
+}
+
+void Address::SetMulticastNetworkPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
+{
+    SetPrefix(kMulticastNetworkPrefixOffset, aPrefix, aPrefixLength);
+    mFields.m8[kMulticastNetworkPrefixLengthOffset] = aPrefixLength;
 }
 
 void Address::SetIid(const uint8_t *aIid)

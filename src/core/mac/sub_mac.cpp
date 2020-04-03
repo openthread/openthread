@@ -231,14 +231,6 @@ void SubMac::StartCsmaBackoff(void)
 
     VerifyOrExit(ShouldHandleCsmaBackOff(), BeginTransmit());
 
-#if OPENTHREAD_CONFIG_MAC_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
-    if ((mTransmitRetries > 0) && (mTransmitRetries == mTransmitFrame.GetMaxFrameRetries()))
-    {
-        BeginTransmit();
-        ExitNow();
-    }
-#endif
-
     if (backoffExponent > kMaxBE)
     {
         backoffExponent = kMaxBE;
@@ -274,16 +266,7 @@ void SubMac::BeginTransmit(void)
 
     VerifyOrExit(mState == kStateCsmaBackoff);
 
-#if OPENTHREAD_CONFIG_MAC_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
-    if ((mTransmitRetries > 0) && (mTransmitRetries == mTransmitFrame.GetMaxFrameRetries()))
-    {
-        mTransmitFrame.SetCsmaCaEnabled(false);
-    }
-    else
-#endif
-    {
-        mTransmitFrame.SetCsmaCaEnabled(true);
-    }
+    mTransmitFrame.SetCsmaCaEnabled(true);
 
     if ((mRadioCaps & OT_RADIO_CAPS_SLEEP_TO_TX) == 0)
     {

@@ -578,6 +578,7 @@ public:
     {
         SetType(kRoute);
         SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
+        mRouterIdMask.Clear();
     }
 
     /**
@@ -606,12 +607,6 @@ public:
     void SetRouterIdSequence(uint8_t aSequence) { mRouterIdSequence = aSequence; }
 
     /**
-     * This method clears the Router ID Mask.
-     *
-     */
-    void ClearRouterIdMask(void) { memset(mRouterIdMask, 0, sizeof(mRouterIdMask)); }
-
-    /**
      * This method indicates whether or not a Router ID bit is set.
      *
      * @param[in]  aRouterId  The Router ID.
@@ -620,10 +615,7 @@ public:
      * @retval FALSE  If the Router ID bit is not set.
      *
      */
-    bool IsRouterIdSet(uint8_t aRouterId) const
-    {
-        return (mRouterIdMask[aRouterId / 8] & (0x80 >> (aRouterId % 8))) != 0;
-    }
+    bool IsRouterIdSet(uint8_t aRouterId) const { return mRouterIdMask.Contains(aRouterId); }
 
     /**
      * This method sets the Router ID bit.
@@ -631,7 +623,7 @@ public:
      * @param[in]  aRouterId  The Router ID bit to set.
      *
      */
-    void SetRouterId(uint8_t aRouterId) { mRouterIdMask[aRouterId / 8] |= 0x80 >> (aRouterId % 8); }
+    void SetRouterId(uint8_t aRouterId) { mRouterIdMask.Add(aRouterId); }
 
     /**
      * This method returns the Route Data Length value.
@@ -733,9 +725,9 @@ private:
         kRouteCostOffset      = 0,
         kRouteCostMask        = 0xf << kRouteCostOffset,
     };
-    uint8_t mRouterIdSequence;
-    uint8_t mRouterIdMask[BitVectorBytes(Mle::kMaxRouterId + 1)];
-    uint8_t mRouteData[Mle::kMaxRouterId + 1];
+    uint8_t          mRouterIdSequence;
+    Mle::RouterIdSet mRouterIdMask;
+    uint8_t          mRouteData[Mle::kMaxRouterId + 1];
 } OT_TOOL_PACKED_END;
 
 /**

@@ -38,6 +38,7 @@ ot_platform_headers                     = \
     memory.h                              \
     misc.h                                \
     logging.h                             \
+    otns.h                                \
     radio.h                               \
     time.h                                \
     uart.h                                \

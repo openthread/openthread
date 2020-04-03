@@ -244,6 +244,14 @@ JOIN_TYPE_END_DEVICE = 'e'
 JOIN_TYPE_SLEEPY_END_DEVICE = 's'
 
 # -----------------------------------------------------------------------------------------------------------------------
+# Address Cache Table Entry States
+
+ADDRESS_CACHE_ENTRY_STATE_CACHED = "cached"
+ADDRESS_CACHE_ENTRY_STATE_SNOOPED = "snooped"
+ADDRESS_CACHE_ENTRY_STATE_QUERY = "query"
+ADDRESS_CACHE_ENTRY_STATE_RETRY_QUERY = "retry-query"
+
+# -----------------------------------------------------------------------------------------------------------------------
 # Bit Flags for Thread Device Mode `WPAN_THREAD_DEVICE_MODE`
 
 THREAD_MODE_FLAG_FULL_NETWORK_DATA = (1 << 0)
@@ -1530,8 +1538,8 @@ class AddressCacheEntry(object):
 
         # Example of expected text:
         #
-        # '\t"fd00:1234::d427:a1d9:6204:dbae -> 0x9c00, age:0"'
-        #
+        # '\t"fd00:1234::100:8 -> 0xfffe, Age:1, State:query, CanEvict:no, Timeout:3, RetryDelay:15"`
+        # '\t"fd00:1234::3:2 -> 0x2000, Age:0, State:cached, LastTrans:0, ML-EID:fd40:ea58:a88c:0:b7ab:4919:aa7b:11a3"`
 
         # We get rid of the first two chars `\t"' and last char '"', split the rest using whitespace as separator.
         # Then remove any ',' at end of items in the list.
@@ -1548,7 +1556,16 @@ class AddressCacheEntry(object):
         # separator
         dict = {item.split(':')[0]: item.split(':')[1] for item in items[3:]}
 
-        self._age = int(dict['age'], 0)
+        self._age = int(dict['Age'], 0)
+
+        self._state = dict['State']
+
+        if self._state == ADDRESS_CACHE_ENTRY_STATE_CACHED:
+            self._last_trans = int(dict.get("LastTrans", "-1"), 0)
+        else:
+            self._can_evict = (dict['CanEvict'] == 'yes')
+            self._timeout = int(dict['Timeout'])
+            self._retry_delay = int(dict['RetryDelay'])
 
     @property
     def address(self):
@@ -1561,6 +1578,25 @@ class AddressCacheEntry(object):
     @property
     def age(self):
         return self._age
+
+    @property
+    def state(self):
+        return self._state
+
+    def can_evict(self):
+        return self._can_evict
+
+    @property
+    def timeout(self):
+        return self._timeout
+
+    @property
+    def retry_delay(self):
+        return self._retry_delay
+
+    @property
+    def last_trans(self):
+        return self._last_trans
 
     def __repr__(self):
         return 'AddressCacheEntry({})'.format(self.__dict__)

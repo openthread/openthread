@@ -310,7 +310,7 @@ public:
      * @returns  A reference to the resolving queue.
      *
      */
-    const MessageQueue &GetResolvingQueue(void) const { return mResolvingQueue; }
+    const PriorityQueue &GetResolvingQueue(void) const { return mResolvingQueue; }
 #endif
 
 private:
@@ -519,7 +519,7 @@ private:
 
 #if OPENTHREAD_FTD
     FragmentPriorityEntry mFragmentEntries[kNumFragmentPriorityEntries];
-    MessageQueue          mResolvingQueue;
+    PriorityQueue         mResolvingQueue;
     IndirectSender        mIndirectSender;
 #endif
 

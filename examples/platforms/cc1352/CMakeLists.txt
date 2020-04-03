@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,35 +26,29 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(OT_PLATFORM_LIB "openthread-simulation" PARENT_SCOPE)
-
-option(OT_SIMULATION_VIRTUAL_TIME "enable virtual time")
-if(OT_SIMULATION_VIRTUAL_TIME)
-    list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_SIMULATION_VIRTUAL_TIME=1")
-endif()
-
-option(OT_SIMULATION_VIRTUAL_TIME_UART "enable virtual time for UART")
-if(OT_SIMULATION_VIRTUAL_TIME_UART)
-    list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART=1")
-endif()
+set(OT_PLATFORM_LIB "openthread-cc1352" PARENT_SCOPE)
 
 if(NOT OT_CONFIG)
-    set(OT_CONFIG "openthread-core-simulation-config.h")
+    set(OT_CONFIG "openthread-core-cc1352-config.h")
     set(OT_CONFIG ${OT_CONFIG} PARENT_SCOPE)
 endif()
 
 list(APPEND OT_PLATFORM_DEFINES
-    "_BSD_SOURCE=1"
-    "_DEFAULT_SOURCE=1"
-    "OPENTHREAD_EXAMPLES_SIMULATION=1"
-    "OPENTHREAD_POSIX=1"
-    "OPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
+    "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-cc1352-config-check.h\""
+    "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\""
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
+list(APPEND OT_PRIVATE_DEFINES "MBEDTLS_USER_CONFIG_FILE=\"cc1352-mbedtls-config.h\"")
+list(APPEND OT_PUBLIC_INCLUDES
+    "${PROJECT_SOURCE_DIR}/examples/platforms/cc1352/crypto"
+    "${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2"
+)
+set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
+
 list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
 
-add_library(openthread-simulation
+add_library(openthread-cc1352
     alarm.c
     diag.c
     entropy.c
@@ -62,44 +56,35 @@ add_library(openthread-simulation
     logging.c
     misc.c
     radio.c
-    spi-stubs.c
     system.c
     uart.c
-    virtual_time/alarm-sim.c
-    virtual_time/otns.c
-    virtual_time/platform-sim.c
-    $<TARGET_OBJECTS:openthread-platform-utils>
+    crypto/aes_alt.c
+    cc1352_ccfg.c
+    cc1352_startup.c
+    cxx_helpers.c
 )
 
-set_property(TARGET openthread-simulation PROPERTY C_STANDARD 99)
+set_property(TARGET openthread-cc1352 PROPERTY C_STANDARD 99)
 
-find_library(LIBRT rt)
-if(LIBRT)
-    target_link_libraries(openthread-simulation PRIVATE ${LIBRT})
-endif()
+target_link_libraries(openthread-cc1352 PRIVATE "${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2/driverlib/bin/gcc/driverlib.a")
+target_link_options(openthread-cc1352 PUBLIC -T${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2/linker_files/cc26x2r1f.lds)
+target_link_options(openthread-cc1352 PUBLIC -Wl,-Map=$<TARGET_PROPERTY:NAME>.map)
 
-target_link_libraries(openthread-simulation PRIVATE openthread-platform-utils)
-
-target_compile_definitions(openthread-simulation
+target_compile_definitions(openthread-cc1352
     PUBLIC
         ${OT_PLATFORM_DEFINES}
     PRIVATE
         ${OT_PRIVATE_DEFINES}
 )
 
-target_compile_options(openthread-simulation PRIVATE
-    ${OT_CFLAGS}
-)
+target_compile_options(openthread-cc1352 PRIVATE ${OT_CFLAGS})
 
-target_include_directories(openthread-simulation PRIVATE
-    ${OT_PUBLIC_INCLUDES}
-    ${OT_PRIVATE_INCLUDES}
-    ${PROJECT_SOURCE_DIR}/examples/platforms
-    ${PROJECT_SOURCE_DIR}/src/core
+target_include_directories(openthread-cc1352
+    PRIVATE
+        ${OT_PUBLIC_INCLUDES}
+        ${OT_PRIVATE_INCLUDES}
+        ${PROJECT_SOURCE_DIR}/src/core
+        ${PROJECT_SOURCE_DIR}/examples/platforms
+        ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
+        ${PROJECT_SOURCE_DIR}/third_party/mbedtls
 )
-
-set(CPACK_PACKAGE_NAME "openthread-simulation")
-set(CPACK_GENERATOR "DEB")
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "OpenThread Authors <openthread-users@googlegroups.com")
-set(CPACK_PACKAGE_CONTACT "OpenThread Authors <openthread-users@googlegroups.com")
-include(CPack)
