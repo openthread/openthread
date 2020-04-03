@@ -948,9 +948,15 @@ void ResponsesQueue::ResponseMetadata::ReadFrom(const Message &aMessage)
 /// Return product of @p aValueA and @p aValueB if no overflow otherwise 0.
 static uint32_t Multiply(uint32_t aValueA, uint32_t aValueB)
 {
-    uint32_t result = aValueA * aValueB;
+    uint32_t result = 0;
 
-    return (result / aValueA == aValueB) ? result : 0;
+    VerifyOrExit(aValueA);
+
+    result = aValueA * aValueB;
+    result = (result / aValueA == aValueB) ? result : 0;
+
+exit:
+    return result;
 }
 
 bool TxParameters::IsValid(void) const
