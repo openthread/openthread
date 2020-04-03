@@ -374,17 +374,6 @@ void Mle::SetRole(DeviceRole aRole)
         mParent.SetState(Neighbor::kStateInvalid);
     }
 
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    if (IsAttached())
-    {
-        SuccessOrExit(Get<MeshCoP::BorderAgent>().Start());
-    }
-    else
-    {
-        SuccessOrExit(Get<MeshCoP::BorderAgent>().Stop());
-    }
-#endif
-
 exit:
     OT_UNUSED_VARIABLE(oldRole);
 }

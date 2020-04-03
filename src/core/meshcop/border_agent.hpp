@@ -40,6 +40,7 @@
 
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
+#include "common/notifier.hpp"
 #include "net/udp6.hpp"
 
 namespace ot {
@@ -63,7 +64,7 @@ public:
      * This method starts the Border Agent service.
      *
      * @retval OT_ERROR_NONE    Successfully started the Border Agent service.
-     * @retval OT_ERROR_ALREADY Already started.
+     * @retval OT_ERROR_ALREADY Border Agent is already started.
      *
      */
     otError Start(void);
@@ -71,7 +72,8 @@ public:
     /**
      * This method stops the Border Agent service.
      *
-     * @retval OT_ERROR_NONE  Successfully stopped the Border Agent service.
+     * @retval OT_ERROR_NONE    Successfully stopped the Border Agent service.
+     * @retval OT_ERROR_ALREADY Border Agent is already stopped.
      *
      */
     otError Stop(void);
@@ -85,6 +87,9 @@ public:
     otBorderAgentState GetState(void) const { return mState; }
 
 private:
+    static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
+    void        HandleStateChanged(otChangedFlags aFlags);
+
     static void HandleConnected(bool aConnected, void *aContext)
     {
         static_cast<BorderAgent *>(aContext)->HandleConnected(aConnected);
@@ -151,6 +156,8 @@ private:
 
     TimerMilli         mTimer;
     otBorderAgentState mState;
+
+    Notifier::Callback mNotifierCallback;
 };
 
 } // namespace MeshCoP

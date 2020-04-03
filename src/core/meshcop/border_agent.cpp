@@ -350,6 +350,7 @@ BorderAgent::BorderAgent(Instance &aInstance)
     , mUdpReceiver(BorderAgent::HandleUdpReceive, this)
     , mTimer(aInstance, HandleTimeout, this)
     , mState(OT_BORDER_AGENT_STATE_STOPPED)
+    , mNotifierCallback(aInstance, &BorderAgent::HandleStateChanged, this)
 {
     mCommissionerAloc.Clear();
     mCommissionerAloc.mPrefixLength       = 64;
@@ -357,6 +358,28 @@ BorderAgent::BorderAgent(Instance &aInstance)
     mCommissionerAloc.mValid              = true;
     mCommissionerAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
     mCommissionerAloc.mScopeOverrideValid = true;
+}
+
+void BorderAgent::HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags)
+{
+    aCallback.GetOwner<BorderAgent>().HandleStateChanged(aFlags);
+}
+
+void BorderAgent::HandleStateChanged(otChangedFlags aFlags)
+{
+    VerifyOrExit((aFlags & OT_CHANGED_THREAD_ROLE) != 0);
+
+    if (Get<Mle::MleRouter>().IsAttached())
+    {
+        Start();
+    }
+    else
+    {
+        Stop();
+    }
+
+exit:
+    return;
 }
 
 void BorderAgent::HandleProxyTransmit(const Coap::Message &aMessage)
