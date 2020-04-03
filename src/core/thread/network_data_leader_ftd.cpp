@@ -94,17 +94,27 @@ void Leader::IncrementVersion(void)
 {
     if (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER)
     {
-        mVersion++;
-        Get<Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
+        IncrementVersions(/* aIncludeStable */ false);
     }
 }
 
-void Leader::IncrementStableVersion(void)
+void Leader::IncrementVersionAndStableVersion(void)
 {
     if (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER)
     {
+        IncrementVersions(/* aIncludeStable */ true);
+    }
+}
+
+void Leader::IncrementVersions(bool aIncludeStable)
+{
+    if (aIncludeStable)
+    {
         mStableVersion++;
     }
+
+    mVersion++;
+    Get<Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
 }
 
 uint32_t Leader::GetContextIdReuseDelay(void) const
@@ -125,15 +135,7 @@ void Leader::RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode)
     RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength, aMatchMode);
     VerifyOrExit(rlocIn);
     RemoveRloc(aRloc16, aMatchMode);
-
-    mVersion++;
-
-    if (rlocStable)
-    {
-        mStableVersion++;
-    }
-
-    Get<Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
+    IncrementVersions(rlocStable);
 
 exit:
     return;
@@ -759,15 +761,7 @@ otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aT
     }
 
     SuccessOrExit(error = AddNetworkData(aTlvs, aTlvsLength, oldTlvs, oldTlvsLength));
-
-    mVersion++;
-
-    if (rlocStable)
-    {
-        mStableVersion++;
-    }
-
-    Get<Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
+    IncrementVersions(rlocStable);
 
 exit:
     return error;
@@ -1160,9 +1154,7 @@ void Leader::FreeContext(uint8_t aContextId)
     otLogInfoNetData("Free Context Id = %d", aContextId);
     RemoveContext(aContextId);
     mContextUsed &= ~(1 << aContextId);
-    mVersion++;
-    mStableVersion++;
-    Get<Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
+    IncrementVersions(/* aIncludeStable */ true);
 }
 
 void Leader::StartContextReuseTimer(uint8_t aContextId)
