@@ -121,12 +121,16 @@ for num in range(NUM_ADDRESSES):
 # From r1 send msg to a group of addresses (not provided by any nodes in network).
 
 NUM_QUERY_ADDRS = 5
+MAX_STAGGER_INTERVAL = 2.5
 
 for num in range(NUM_QUERY_ADDRS):
     sender = r1.prepare_tx((r1_address, PORT),
                            (PREFIX + "800:" + str(num), PORT), "hi nobody!", 1)
     wpan.Node.perform_async_tx_rx()
     verify(sender.was_successful)
+    # Wait before next tx to stagger the address queries
+    # request ensuring different timeouts
+    time.sleep(MAX_STAGGER_INTERVAL / (NUM_QUERY_ADDRS * speedup))
 
 r2_rloc = int(r2.get(wpan.WPAN_THREAD_RLOC16), 16)
 c2_rloc = int(c2.get(wpan.WPAN_THREAD_RLOC16), 16)
@@ -183,7 +187,7 @@ cache_table = wpan.parse_address_cache_table_result(
 def check_cache_entry_in_retry_state_to_get_to_zero_timeout():
     cache_table = wpan.parse_address_cache_table_result(
         r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
-    for index in range(NUM_ADDRESSES, NUM_QUERY_ADDRS):
+    for index in range(NUM_QUERY_ADDRS):
         verify(cache_table[index].state ==
                wpan.ADDRESS_CACHE_ENTRY_STATE_RETRY_QUERY)
         verify(cache_table[index].timeout == 0)
@@ -207,7 +211,7 @@ for num in range(NUM_QUERY_ADDRS):
 def check_cache_entry_switch_to_query_state():
     cache_table = wpan.parse_address_cache_table_result(
         r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
-    for index in range(NUM_ADDRESSES, NUM_QUERY_ADDRS):
+    for index in range(NUM_QUERY_ADDRS):
         verify(cache_table[index].state == wpan.ADDRESS_CACHE_ENTRY_STATE_QUERY)
         verify(cache_table[index].can_evict() == True)
 

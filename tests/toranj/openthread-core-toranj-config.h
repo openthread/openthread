@@ -112,6 +112,16 @@
 #define OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES 16
 
 /**
+ * @def OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_TIMEOUT
+ *
+ * The timeout value (in seconds) waiting for a address notification response after sending an address query.
+ *
+ * Default: 3 seconds
+ *
+ */
+#define OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_TIMEOUT 6
+
+/**
  * @def OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_INITIAL_RETRY_DELAY
  *
  * Initial retry delay for address query (in seconds).
