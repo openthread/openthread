@@ -315,6 +315,8 @@ private:
 
     const char *ListToString(const CacheEntryList *aList) const;
 
+    static AddressResolver::CacheEntry *GetEntryAfter(CacheEntry *aPrev, CacheEntryList &aList);
+
     Coap::Resource mAddressError;
     Coap::Resource mAddressQuery;
     Coap::Resource mAddressNotification;
