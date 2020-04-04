@@ -517,17 +517,16 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Pref
                 ContextTlv *     context      = FindContext(aPrefix);
 
                 // Replace p_border_router_16
-                for (uint8_t i = 0; i < borderRouter->GetNumEntries(); i++)
+                for (BorderRouterEntry *entry = borderRouter->GetFirstEntry(); entry <= borderRouter->GetLastEntry();
+                     entry                    = entry->GetNext())
                 {
-                    BorderRouterEntry *borderRouterEntry = borderRouter->GetEntry(i);
-
-                    if ((borderRouterEntry->IsDhcp() || borderRouterEntry->IsConfigure()) && (context != NULL))
+                    if ((entry->IsDhcp() || entry->IsConfigure()) && (context != NULL))
                     {
-                        borderRouterEntry->SetRloc(0xfc00 | context->GetContextId());
+                        entry->SetRloc(0xfc00 | context->GetContextId());
                     }
                     else
                     {
-                        borderRouterEntry->SetRloc(0xfffe);
+                        entry->SetRloc(0xfffe);
                     }
                 }
 
@@ -539,9 +538,10 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Pref
                 HasRouteTlv *hasRoute = static_cast<HasRouteTlv *>(cur);
 
                 // Replace r_border_router_16
-                for (uint8_t j = 0; j < hasRoute->GetNumEntries(); j++)
+                for (HasRouteEntry *entry = hasRoute->GetFirstEntry(); entry <= hasRoute->GetLastEntry();
+                     entry                = entry->GetNext())
                 {
-                    hasRoute->GetEntry(j)->SetRloc(0xfffe);
+                    entry->SetRloc(0xfffe);
                 }
 
                 break;

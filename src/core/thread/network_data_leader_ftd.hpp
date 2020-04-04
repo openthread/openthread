@@ -119,7 +119,7 @@ public:
      * @returns The CONTEXT_ID_REUSE_DELAY value.
      *
      */
-    uint32_t GetContextIdReuseDelay(void) const;
+    uint32_t GetContextIdReuseDelay(void) const { return mContextIdReuseDelay; }
 
     /**
      * This method sets CONTEXT_ID_RESUSE_DELAY value.
@@ -129,7 +129,7 @@ public:
      * @param[in]  aDelay  The CONTEXT_ID_REUSE_DELAY value.
      *
      */
-    void SetContextIdReuseDelay(uint32_t aDelay);
+    void SetContextIdReuseDelay(uint32_t aDelay) { mContextIdReuseDelay = aDelay; }
 
     /**
      * This method removes Network Data entries matching with a given RLOC16.
