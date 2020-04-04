@@ -34,7 +34,7 @@ set_target_properties(
     openthread-ftd openthread-mtd openthread-radio
     PROPERTIES
         C_STANDARD 99
-        CXX_STANDARD 98
+        CXX_STANDARD 11
 )
 
 target_compile_definitions(openthread-ftd PRIVATE
