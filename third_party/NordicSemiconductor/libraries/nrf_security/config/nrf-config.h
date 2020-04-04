@@ -55,7 +55,7 @@
  * Required by:
  *      MBEDTLS_AESNI_C
  *      MBEDTLS_PADLOCK_C
- * 
+ *
  * Comment to disable the use of assembly code.
  */
 #define MBEDTLS_HAVE_ASM
@@ -1141,7 +1141,7 @@
  *
  * Do not use the Chinese Remainder Theorem
  * for the RSA private operation.
- * 
+ *
  * Uncomment this macro to disable the use of CRT in RSA.
  *
  */
@@ -2613,7 +2613,7 @@
  * \warning   SHA-1 is considered a weak message digest and its use constitutes
  *            a security risk. If possible, we recommend avoiding dependencies
  *            on it, and considering stronger message digests instead.
- * 
+ *
  */
 #define MBEDTLS_SHA1_C
 
@@ -3198,7 +3198,8 @@ it is (2^48 - 1), our restriction is :  (int - 0xFFFF - 0xF).*/
 /*
  * Nordic added. Ensure there is a definition of mbedtls_ecp_restart_ctx
  */
-#if defined(MBEDTLS_ECP_ALT) && !defined(MBEDTLS_ECP_RESTARTABLE)
+#if defined(MBEDTLS_ECP_ALT) && !defined(MBEDTLS_ECP_RESTARTABLE) && !defined(MBEDTLS_ECP_RESTART_CTX_DECLARED)
+#define MBEDTLS_ECP_RESTART_CTX_DECLARED
 typedef void mbedtls_ecp_restart_ctx;
 #endif
 
