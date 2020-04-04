@@ -189,6 +189,11 @@ void AddressResolver::Remove(uint16_t aRloc16)
     Remove(aRloc16, /* aMatchRouterId */ false);
 }
 
+AddressResolver::CacheEntry *AddressResolver::GetEntryAfter(CacheEntry *aPrev, CacheEntryList &aList)
+{
+    return (aPrev == NULL) ? aList.GetHead() : aPrev->GetNext();
+}
+
 void AddressResolver::Remove(Mac::ShortAddress aRloc16, bool aMatchRouterId)
 {
     CacheEntryList *lists[] = {&mCachedList, &mSnoopedList};
@@ -196,23 +201,23 @@ void AddressResolver::Remove(Mac::ShortAddress aRloc16, bool aMatchRouterId)
     for (uint8_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
     {
         CacheEntryList *list = lists[index];
-        CacheEntry *    prev;
+        CacheEntry *    prev = NULL;
         CacheEntry *    entry;
-        CacheEntry *    next;
 
-        for (prev = NULL, entry = list->GetHead(); entry != NULL; prev = entry, entry = next)
+        while ((entry = GetEntryAfter(prev, *list)) != NULL)
         {
-            // We keep track of the next entry in the list before
-            // checking the entry's RLOC16 or Router Id since the
-            // entry may be removed from the list if it matches.
-
-            next = entry->GetNext();
-
             if ((aMatchRouterId && Mle::Mle::RouterIdMatch(entry->GetRloc16(), aRloc16)) ||
                 (!aMatchRouterId && (entry->GetRloc16() == aRloc16)))
             {
                 RemoveCacheEntry(*entry, *list, prev, aMatchRouterId ? kReasonRemovingRouterId : kReasonRemovingRloc16);
                 mUnusedList.Push(*entry);
+
+                // If the entry is removed from list, we keep the same
+                // `prev` pointer.
+            }
+            else
+            {
+                prev = entry;
             }
         }
     }
@@ -223,9 +228,8 @@ AddressResolver::CacheEntry *AddressResolver::FindCacheEntryInList(CacheEntryLis
                                                                    CacheEntry *&       aPrevEntry)
 {
     CacheEntry *entry;
-    CacheEntry *prev;
 
-    for (prev = NULL, entry = aList.GetHead(); entry != NULL; prev = entry, entry = entry->GetNext())
+    for (CacheEntry *prev = NULL; (entry = GetEntryAfter(prev, aList)) != NULL; prev = entry)
     {
         if (entry->GetTarget() == aEid)
         {
@@ -303,7 +307,7 @@ AddressResolver::CacheEntry *AddressResolver::NewCacheEntry(bool aSnoopedEntry)
         CacheEntry *    entry;
         uint16_t        numNonEvictable = 0;
 
-        for (prev = NULL, entry = list->GetHead(); entry != NULL; prev = entry, entry = entry->GetNext())
+        for (prev = NULL; (entry = GetEntryAfter(prev, *list)) != NULL; prev = entry)
         {
             if ((list != &mCachedList) && !entry->CanEvict())
             {
@@ -881,7 +885,6 @@ void AddressResolver::HandleTimer(void)
     bool        continueTimer = false;
     CacheEntry *prev;
     CacheEntry *entry;
-    CacheEntry *next;
 
     for (entry = mSnoopedList.GetHead(); entry != NULL; entry = entry->GetNext())
     {
@@ -910,10 +913,10 @@ void AddressResolver::HandleTimer(void)
         entry->DecrementTimeout();
     }
 
-    for (prev = NULL, entry = mQueryList.GetHead(); entry != NULL; entry = next)
-    {
-        next = entry->GetNext();
+    prev = NULL;
 
+    while ((entry = GetEntryAfter(prev, mQueryList)) != NULL)
+    {
         OT_ASSERT(!entry->IsTimeoutZero());
 
         continueTimer = true;
@@ -943,6 +946,13 @@ void AddressResolver::HandleTimer(void)
                          entry->GetTarget().ToString().AsCString(), entry->GetTimeout());
 
             Get<MeshForwarder>().HandleResolved(entry->GetTarget(), OT_ERROR_DROP);
+
+            // When the entry is removed from `mQueryList`
+            // we keep the `prev` pointer same as before.
+        }
+        else
+        {
+            prev = entry;
         }
     }
 
