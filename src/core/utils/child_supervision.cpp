@@ -146,7 +146,7 @@ void ChildSupervisor::CheckState(void)
     // zero, Thread MLE operation is enabled, and there is at least one
     // "valid" child in the child table.
 
-    shouldRun = ((mSupervisionInterval != 0) && (Get<Mle::MleRouter>().GetRole() != OT_DEVICE_ROLE_DISABLED) &&
+    shouldRun = ((mSupervisionInterval != 0) && !Get<Mle::MleRouter>().IsDisabled() &&
                  Get<ChildTable>().HasChildren(Child::kInStateValid));
 
     if (shouldRun && !mTimer.IsRunning())
@@ -208,7 +208,7 @@ void SupervisionListener::UpdateOnReceive(const Mac::Address &aSourceAddress, bo
 {
     // If listener is enabled and device is a child and it received a secure frame from its parent, restart the timer.
 
-    VerifyOrExit(mTimer.IsRunning() && aIsSecure && (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_CHILD) &&
+    VerifyOrExit(mTimer.IsRunning() && aIsSecure && Get<Mle::MleRouter>().IsChild() &&
                  (Get<Mle::MleRouter>().GetNeighbor(aSourceAddress) == &Get<Mle::MleRouter>().GetParent()));
 
     RestartTimer();
@@ -219,8 +219,7 @@ exit:
 
 void SupervisionListener::RestartTimer(void)
 {
-    if ((mTimeout != 0) && (Get<Mle::MleRouter>().GetRole() != OT_DEVICE_ROLE_DISABLED) &&
-        !Get<MeshForwarder>().GetRxOnWhenIdle())
+    if ((mTimeout != 0) && !Get<Mle::MleRouter>().IsDisabled() && !Get<MeshForwarder>().GetRxOnWhenIdle())
     {
         mTimer.Start(Time::SecToMsec(mTimeout));
     }
@@ -237,7 +236,7 @@ void SupervisionListener::HandleTimer(Timer &aTimer)
 
 void SupervisionListener::HandleTimer(void)
 {
-    VerifyOrExit((Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_CHILD) && !Get<MeshForwarder>().GetRxOnWhenIdle());
+    VerifyOrExit(Get<Mle::MleRouter>().IsChild() && !Get<MeshForwarder>().GetRxOnWhenIdle());
 
     otLogWarnUtil("Supervision timeout. No frame from parent in %d sec", mTimeout);
 

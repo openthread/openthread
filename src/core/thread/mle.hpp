@@ -471,12 +471,66 @@ public:
     bool IsAttaching(void) const { return (mAttachState != kAttachStateIdle); }
 
     /**
-     * This method returns the current Thread interface state.
+     * This method returns the current Thread device role.
      *
-     * @returns The current Thread interface state.
+     * @returns The current Thread device role.
      *
      */
-    otDeviceRole GetRole(void) const { return mRole; }
+    DeviceRole GetRole(void) const { return mRole; }
+
+    /**
+     * This method indicates whether device role is disabled.
+     *
+     * @retval TRUE   Device role is disabled.
+     * @retval FALSE  Device role is not disabled.
+     *
+     */
+    bool IsDisabled(void) const { return (mRole == kRoleDisabled); }
+
+    /**
+     * This method indicates whether device role is detached.
+     *
+     * @retval TRUE   Device role is detached.
+     * @retval FALSE  Device role is not detached.
+     *
+     */
+    bool IsDetached(void) const { return (mRole == kRoleDetached); }
+
+    /**
+     * This method indicates whether device role is child.
+     *
+     * @retval TRUE   Device role is child.
+     * @retval FALSE  Device role is not child.
+     *
+     */
+    bool IsChild(void) const { return (mRole == kRoleChild); }
+
+    /**
+     * This method indicates whether device role is router.
+     *
+     * @retval TRUE   Device role is router.
+     * @retval FALSE  Device role is not router.
+     *
+     */
+    bool IsRouter(void) const { return (mRole == kRoleRouter); }
+
+    /**
+     * This method indicates whether device role is leader.
+     *
+     * @retval TRUE   Device role is leader.
+     * @retval FALSE  Device role is not leader.
+     *
+     */
+    bool IsLeader(void) const { return (mRole == kRoleLeader); }
+
+    /**
+     * This method indicates whether device role is either router or leader.
+     *
+     * @retval TRUE   Device role is either router or leader.
+     * @retval FALSE  Device role is neither router nor leader.
+     *
+     */
+    bool IsRouterOrLeader(void) const;
 
     /**
      * This method returns the Device Mode as reported in the Mode TLV.
@@ -884,7 +938,7 @@ public:
      * This method converts a device role into a human-readable string.
      *
      */
-    static const char *RoleToString(otDeviceRole aRole);
+    static const char *RoleToString(DeviceRole aRole);
 
     /**
      * This method gets the MLE counters.
@@ -1031,7 +1085,7 @@ protected:
      * @param[in] aRole A device role.
      *
      */
-    void SetRole(otDeviceRole aRole);
+    void SetRole(DeviceRole aRole);
 
     /**
      * This method sets the attach state
@@ -1595,7 +1649,7 @@ protected:
 
     LeaderData    mLeaderData;               ///< Last received Leader Data TLV.
     bool          mRetrieveNewNetworkData;   ///< Indicating new Network Data is needed if set.
-    otDeviceRole  mRole;                     ///< Current Thread role.
+    DeviceRole    mRole;                     ///< Current Thread role.
     Router        mParent;                   ///< Parent information.
     DeviceMode    mDeviceMode;               ///< Device mode setting.
     AttachState   mAttachState;              ///< The parent request state.

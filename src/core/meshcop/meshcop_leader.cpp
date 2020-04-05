@@ -286,7 +286,7 @@ void Leader::HandleTimer(Timer &aTimer)
 
 void Leader::HandleTimer(void)
 {
-    VerifyOrExit(Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER);
+    VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
 
     ResignCommissioner();
 

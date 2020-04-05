@@ -436,7 +436,7 @@ otError LeaderBase::SetNetworkData(uint8_t        aVersion,
 
 #if OPENTHREAD_FTD
     // Synchronize internal 6LoWPAN Context ID Set with recently obtained Network Data.
-    if (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER)
+    if (Get<Mle::MleRouter>().IsLeader())
     {
         Get<Leader>().UpdateContextsAfterReset();
     }

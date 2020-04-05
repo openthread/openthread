@@ -90,7 +90,7 @@ void Leader::Stop(void)
 
 void Leader::IncrementVersion(void)
 {
-    if (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER)
+    if (Get<Mle::MleRouter>().IsLeader())
     {
         IncrementVersions(/* aIncludeStable */ false);
     }
@@ -98,7 +98,7 @@ void Leader::IncrementVersion(void)
 
 void Leader::IncrementVersionAndStableVersion(void)
 {
-    if (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER)
+    if (Get<Mle::MleRouter>().IsLeader())
     {
         IncrementVersions(/* aIncludeStable */ true);
     }
@@ -190,7 +190,7 @@ void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageI
     MeshCoP::Tlv *end;
 
     VerifyOrExit(length <= sizeof(tlvs));
-    VerifyOrExit(Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER);
+    VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
 
     aMessage.Read(offset, length, tlvs);
 
@@ -267,7 +267,7 @@ void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageI
 
 exit:
 
-    if (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER)
+    if (Get<Mle::MleRouter>().IsLeader())
     {
         SendCommissioningSetResponse(aMessage, aMessageInfo, state);
     }
@@ -1390,12 +1390,11 @@ void Leader::HandleTimer(void)
 
 otError Leader::RemoveStaleChildEntries(Coap::ResponseHandler aHandler, void *aContext)
 {
-    otError      error    = OT_ERROR_NOT_FOUND;
-    Iterator     iterator = kIteratorInit;
-    otDeviceRole role     = Get<Mle::MleRouter>().GetRole();
-    uint16_t     rloc16;
+    otError  error    = OT_ERROR_NOT_FOUND;
+    Iterator iterator = kIteratorInit;
+    uint16_t rloc16;
 
-    VerifyOrExit((role == OT_DEVICE_ROLE_ROUTER) || (role == OT_DEVICE_ROLE_LEADER));
+    VerifyOrExit(Get<Mle::MleRouter>().IsRouterOrLeader());
 
     while (GetNextServer(iterator, rloc16) == OT_ERROR_NONE)
     {

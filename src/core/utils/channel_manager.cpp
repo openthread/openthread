@@ -140,7 +140,7 @@ void ChannelManager::PreparePendingDataset(void)
         // situation where a channel change request comes right after the
         // network is formed but before the active dataset is created.
 
-        if (Get<Mle::Mle>().GetRole() != OT_DEVICE_ROLE_DISABLED)
+        if (!Get<Mle::Mle>().IsDisabled())
         {
             mTimer.Start(kPendingDatasetTxRetryInterval);
         }
@@ -345,7 +345,7 @@ otError ChannelManager::RequestChannelSelect(bool aSkipQualityCheck)
     otLogInfoUtil("ChannelManager: Request to select channel (skip quality check: %s)",
                   aSkipQualityCheck ? "yes" : "no");
 
-    VerifyOrExit(Get<Mle::Mle>().GetRole() != OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!Get<Mle::Mle>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
 
     VerifyOrExit(aSkipQualityCheck || ShouldAttemptChannelChange());
 

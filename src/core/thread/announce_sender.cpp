@@ -132,12 +132,12 @@ void AnnounceSender::CheckState(void)
 
     switch (mle.GetRole())
     {
-    case OT_DEVICE_ROLE_ROUTER:
-    case OT_DEVICE_ROLE_LEADER:
+    case Mle::kRoleRouter:
+    case Mle::kRoleLeader:
         interval = kRouterTxInterval;
         break;
 
-    case OT_DEVICE_ROLE_CHILD:
+    case Mle::kRoleChild:
 #if OPENTHREAD_FTD
         if (mle.IsRouterEligible() && mle.IsRxOnWhenIdle())
         {
@@ -148,8 +148,8 @@ void AnnounceSender::CheckState(void)
 
         // fall through
 
-    case OT_DEVICE_ROLE_DISABLED:
-    case OT_DEVICE_ROLE_DETACHED:
+    case Mle::kRoleDisabled:
+    case Mle::kRoleDetached:
         Stop();
         ExitNow();
     }

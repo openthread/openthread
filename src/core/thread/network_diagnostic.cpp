@@ -438,8 +438,7 @@ otError NetworkDiagnostic::FillRequestedTlvs(Message &             aRequest,
             // Thread 1.1.1 Specification Section 10.11.2.2:
             // If a Thread device is unable to supply a specific Diagnostic TLV, that TLV is omitted.
             // Here only Leader or Router may have children.
-            if (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER ||
-                Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_ROUTER)
+            if (Get<Mle::MleRouter>().IsRouterOrLeader())
             {
                 SuccessOrExit(error = AppendChildTable(aResponse));
             }

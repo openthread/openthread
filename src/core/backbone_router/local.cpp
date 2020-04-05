@@ -206,7 +206,7 @@ void Local::UpdateBackboneRouterPrimary(Leader::State aState, const BackboneRout
     {
         uint8_t delay = 1;
 
-        if (Get<Mle::MleRouter>().GetRole() != OT_DEVICE_ROLE_LEADER)
+        if (!Get<Mle::MleRouter>().IsLeader())
         {
             delay += Random::NonCrypto::GetUint8InRange(0, mRegistrationJitter < 255 ? mRegistrationJitter + 1
                                                                                      : mRegistrationJitter);

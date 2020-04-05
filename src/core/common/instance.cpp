@@ -221,7 +221,7 @@ otError Instance::ErasePersistentInfo(void)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
     Get<Settings>().Wipe();
 
 exit:

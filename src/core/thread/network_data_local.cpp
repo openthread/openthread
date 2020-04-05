@@ -320,7 +320,7 @@ otError Local::UpdateInconsistentServerData(Coap::ResponseHandler aHandler, void
 #if OPENTHREAD_FTD
 
     // Don't send this Server Data Notification if the device is going to upgrade to Router
-    if (Get<Mle::MleRouter>().IsRouterEligible() && (Get<Mle::MleRouter>().GetRole() < OT_DEVICE_ROLE_ROUTER) &&
+    if (Get<Mle::MleRouter>().IsRouterEligible() && !Get<Mle::MleRouter>().IsRouterOrLeader() &&
         (Get<RouterTable>().GetActiveRouterCount() < Get<Mle::MleRouter>().GetRouterUpgradeThreshold()))
     {
         ExitNow(error = OT_ERROR_INVALID_STATE);

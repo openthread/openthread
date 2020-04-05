@@ -276,7 +276,7 @@ otError RouterTable::Release(uint8_t aRouterId)
 
     OT_ASSERT(aRouterId <= Mle::kMaxRouterId);
 
-    VerifyOrExit(Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(Get<Mle::MleRouter>().IsLeader(), error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(IsAllocated(aRouterId), error = OT_ERROR_NOT_FOUND);
 
     mAllocatedRouterIds.Remove(aRouterId);
@@ -536,7 +536,7 @@ void RouterTable::ProcessTimerTick(void)
 {
     Mle::MleRouter &mle = Get<Mle::MleRouter>();
 
-    if (mle.GetRole() == OT_DEVICE_ROLE_LEADER)
+    if (mle.IsLeader())
     {
         // update router id sequence
         if (GetLeaderAge() >= Mle::kRouterIdSequencePeriod)

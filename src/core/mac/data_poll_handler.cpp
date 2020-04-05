@@ -131,7 +131,7 @@ void DataPollHandler::HandleDataPoll(Mac::RxFrame &aFrame)
     uint16_t     indirectMsgCount;
 
     VerifyOrExit(aFrame.GetSecurityEnabled());
-    VerifyOrExit(Get<Mle::MleRouter>().GetRole() != OT_DEVICE_ROLE_DETACHED);
+    VerifyOrExit(!Get<Mle::MleRouter>().IsDetached());
 
     SuccessOrExit(aFrame.GetSrcAddr(macSource));
     child = Get<ChildTable>().FindChild(macSource, Child::kInStateValidOrRestoring);

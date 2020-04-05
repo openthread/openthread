@@ -201,16 +201,16 @@ otError otThreadBecomeRouter(otInstance *aInstance)
 
     switch (instance.Get<Mle::MleRouter>().GetRole())
     {
-    case OT_DEVICE_ROLE_DISABLED:
-    case OT_DEVICE_ROLE_DETACHED:
+    case Mle::kRoleDisabled:
+    case Mle::kRoleDetached:
         break;
 
-    case OT_DEVICE_ROLE_CHILD:
+    case Mle::kRoleChild:
         error = instance.Get<Mle::MleRouter>().BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest);
         break;
 
-    case OT_DEVICE_ROLE_ROUTER:
-    case OT_DEVICE_ROLE_LEADER:
+    case Mle::kRoleRouter:
+    case Mle::kRoleLeader:
         error = OT_ERROR_NONE;
         break;
     }
@@ -346,7 +346,7 @@ otError otThreadSetPskc(otInstance *aInstance, const otPskc *aPskc)
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
 
     instance.Get<KeyManager>().SetPskc(*static_cast<const Pskc *>(aPskc));
     instance.Get<MeshCoP::ActiveDataset>().Clear();
