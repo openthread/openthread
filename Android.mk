@@ -32,8 +32,7 @@ OPENTHREAD_DEFAULT_VERSION := $(shell cat $(LOCAL_PATH)/.default-version)
 OPENTHREAD_SOURCE_VERSION := $(shell git -C $(LOCAL_PATH) describe --always --match "[0-9].*" 2> /dev/null)
 OPENTHREAD_PROJECT_CFLAGS ?= -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\"
 
-OPENTHREAD_COMMON_FLAGS                                          := \
-    -DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"                      \
+OPENTHREAD_PUBLIC_CFLAGS                                         := \
     -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>        \
     -DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1                  \
     -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                         \
@@ -41,6 +40,10 @@ OPENTHREAD_COMMON_FLAGS                                          := \
     -DOPENTHREAD_FTD=1                                              \
     -DOPENTHREAD_POSIX=1                                            \
     -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1          \
+    $(NULL)
+
+OPENTHREAD_PRIVATE_CFLAGS                                        := \
+    -DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"                      \
     -DPACKAGE=\"openthread\"                                        \
     -DPACKAGE_BUGREPORT=\"openthread-devel@googlegroups.com\"       \
     -DPACKAGE_NAME=\"OPENTHREAD\"                                   \
@@ -54,30 +57,30 @@ OPENTHREAD_COMMON_FLAGS                                          := \
 
 # Enable required features for on-device tests.
 ifeq ($(TARGET_BUILD_VARIANT),eng)
-OPENTHREAD_COMMON_FLAGS                                          += \
+OPENTHREAD_PUBLIC_CFLAGS                                         += \
     -DOPENTHREAD_CONFIG_DIAG_ENABLE=1                               \
     $(NULL)
 endif
 
 ifeq ($(USE_OTBR_DAEMON), 1)
-OPENTHREAD_COMMON_FLAGS                                          += \
+OPENTHREAD_PUBLIC_CFLAGS                                         += \
     -DOPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE=1                     \
     -DOPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE=1                       \
     -DOPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE=1                       \
     $(NULL)
 else
-OPENTHREAD_COMMON_FLAGS += -DOPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1
+OPENTHREAD_PUBLIC_CFLAGS += -DOPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1
 endif
 
 ifeq ($(USE_OT_RCP_BUS), spi)
-OPENTHREAD_COMMON_FLAGS += -DOPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE=1
+OPENTHREAD_PUBLIC_CFLAGS += -DOPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE=1
 else
-OPENTHREAD_COMMON_FLAGS += -DOPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE=1
+OPENTHREAD_PUBLIC_CFLAGS += -DOPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE=1
 endif
 
 # Enable all optional features for CI tests.
 ifeq ($(TARGET_PRODUCT),generic)
-OPENTHREAD_COMMON_FLAGS                                          += \
+OPENTHREAD_PUBLIC_CFLAGS                                         += \
     -DOPENTHREAD_CONFIG_COAP_API_ENABLE=1                           \
     -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1                       \
     -DOPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE=1                       \
@@ -116,8 +119,20 @@ LOCAL_C_INCLUDES                                         := \
     $(NULL)
 
 LOCAL_CFLAGS                                                                := \
-    $(OPENTHREAD_COMMON_FLAGS)                                                 \
+    $(OPENTHREAD_PUBLIC_CFLAGS)                                                \
+    $(OPENTHREAD_PRIVATE_CFLAGS)                                               \
     $(OPENTHREAD_PROJECT_CFLAGS)                                               \
+    $(NULL)
+
+LOCAL_EXPORT_CFLAGS                                        := \
+    $(OPENTHREAD_PUBLIC_CFLAGS)                               \
+    $(OPENTHREAD_PROJECT_CFLAGS)                              \
+    $(NULL)
+
+LOCAL_EXPORT_C_INCLUDE_DIRS     := \
+    $(OPENTHREAD_PROJECT_INCLUDES) \
+    $(LOCAL_PATH)/include          \
+    $(LOCAL_PATH)/src              \
     $(NULL)
 
 LOCAL_CPPFLAGS                                                              := \
@@ -315,7 +330,8 @@ LOCAL_C_INCLUDES                                         := \
     $(NULL)
 
 LOCAL_CFLAGS                                                                := \
-    $(OPENTHREAD_COMMON_FLAGS)                                                 \
+    $(OPENTHREAD_PUBLIC_CFLAGS)                                                \
+    $(OPENTHREAD_PRIVATE_CFLAGS)                                               \
     -DOPENTHREAD_CONFIG_UART_CLI_RAW=1                                         \
     $(OPENTHREAD_PROJECT_CFLAGS)                                               \
     $(NULL)
@@ -357,7 +373,8 @@ LOCAL_C_INCLUDES                                         := \
     $(NULL)
 
 LOCAL_CFLAGS                                                                := \
-    $(OPENTHREAD_COMMON_FLAGS)                                                 \
+    $(OPENTHREAD_PUBLIC_CFLAGS)                                                \
+    $(OPENTHREAD_PRIVATE_CFLAGS)                                               \
     -DOPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_CLI                          \
     $(OPENTHREAD_PROJECT_CFLAGS)                                               \
     $(NULL)
@@ -394,7 +411,8 @@ LOCAL_C_INCLUDES                                         := \
     $(NULL)
 
 LOCAL_CFLAGS                                                                := \
-    $(OPENTHREAD_COMMON_FLAGS)                                                 \
+    $(OPENTHREAD_PUBLIC_CFLAGS)                                                \
+    $(OPENTHREAD_PRIVATE_CFLAGS)                                               \
     $(OPENTHREAD_PROJECT_CFLAGS)                                               \
     $(NULL)
 
@@ -432,7 +450,8 @@ LOCAL_C_INCLUDES                                         := \
     $(NULL)
 
 LOCAL_CFLAGS                                                                := \
-    $(OPENTHREAD_COMMON_FLAGS)                                                 \
+    $(OPENTHREAD_PUBLIC_CFLAGS)                                                \
+    $(OPENTHREAD_PRIVATE_CFLAGS)                                               \
     -DOPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_NCP                          \
     $(OPENTHREAD_PROJECT_CFLAGS)                                               \
     $(NULL)
