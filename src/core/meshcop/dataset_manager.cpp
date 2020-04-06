@@ -104,7 +104,7 @@ otError DatasetManager::Restore(void)
 
     if (mLocal.GetType() == Dataset::kActive)
     {
-        SuccessOrExit(error = dataset.ApplyConfiguration(GetInstance()));
+        IgnoreError(dataset.ApplyConfiguration(GetInstance()));
     }
 
 exit:
@@ -160,7 +160,7 @@ otError DatasetManager::Save(const Dataset &aDataset)
 
     if (isMasterkeyUpdated || compare > 0)
     {
-        SuccessOrExit(error = mLocal.Save(aDataset));
+        IgnoreError(mLocal.Save(aDataset));
 
 #if OPENTHREAD_FTD
         Get<NetworkData::Leader>().IncrementVersionAndStableVersion();
