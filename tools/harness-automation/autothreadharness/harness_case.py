@@ -882,6 +882,8 @@ class HarnessCase(unittest.TestCase):
         finder = re.compile(r'.*\b' + case + r'\b')
         finder_dotted = re.compile(r'.*\b' + case.replace(' ', r'\.') + r'\b')
         for elem in elems:
+            # elem.txt might be null when the required reference devices could
+            # not be met (either due to the quantity or the type) for specific test.
             # perform() will throw exceptions if elem.text is null since Chrome
             # and chromedriver 80. If elem is not shown in current case list
             # window, move_to_element() will not work either.
