@@ -145,5 +145,31 @@ exit:
     return error;
 }
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+NameData DomainName::GetAsData(void) const
+{
+    uint8_t len = static_cast<uint8_t>(StringLength(m8, kMaxSize + 1));
+
+    return NameData(m8, len);
+}
+
+otError DomainName::Set(const NameData &aNameData)
+{
+    otError error  = OT_ERROR_NONE;
+    uint8_t newLen = static_cast<uint8_t>(StringLength(aNameData.GetBuffer(), aNameData.GetLength()));
+
+    VerifyOrExit(newLen <= kMaxSize, error = OT_ERROR_INVALID_ARGS);
+
+    // Ensure the new name does not match the current one.
+    VerifyOrExit(memcmp(m8, aNameData.GetBuffer(), newLen) || (m8[newLen] != '\0'), error = OT_ERROR_ALREADY);
+
+    memcpy(m8, aNameData.GetBuffer(), newLen);
+    m8[newLen] = '\0';
+
+exit:
+    return error;
+}
+#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+
 } // namespace Mac
 } // namespace ot

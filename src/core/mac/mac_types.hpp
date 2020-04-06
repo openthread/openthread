@@ -40,6 +40,7 @@
 #include <string.h>
 
 #include <openthread/link.h>
+#include <openthread/thread.h>
 
 #include "common/string.hpp"
 
@@ -499,7 +500,7 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class represents a Name of char array as Data (pointer to a char buffer along with a length).
+ * This class represents a Name of char array as of Data (pointer to a char buffer along with a length).
  *
  * @note The char array does NOT need to be null terminated.
  *
@@ -582,9 +583,9 @@ public:
     const char *GetAsCString(void) const { return m8; }
 
     /**
-     * This method gets the IEEE802.15.4 Network Name as Data.
+     * This method gets the IEEE802.15.4 Network Name as NameData.
      *
-     * @returns The Network Name as Data.
+     * @returns The Network Name as NameData.
      *
      */
     NameData GetAsData(void) const;
@@ -601,6 +602,55 @@ public:
      */
     otError Set(const NameData &aNameData);
 };
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+/**
+ * This structure represents a Thread Domain Name.
+ *
+ */
+class DomainName : public otDomainName
+{
+public:
+    enum
+    {
+        kMaxSize = OT_DOMAIN_NAME_MAX_SIZE, // Maximum number of chars in Domain Name (excludes null char).
+    };
+
+    /**
+     * This constructor initializes the Thread Domain Name as an empty string.
+     *
+     */
+    DomainName(void) { m8[0] = '\0'; }
+
+    /**
+     * This method gets the Thread Domain Name as a null terminated C string.
+     *
+     * @returns The Domain Name as a null terminated C string array.
+     *
+     */
+    const char *GetAsCString(void) const { return m8; }
+
+    /**
+     * This method gets the Thread Domain Name as NameData.
+     *
+     * @returns The Domain Name as NameData.
+     *
+     */
+    NameData GetAsData(void) const;
+
+    /**
+     * This method sets the Thread Domain Name.
+     *
+     * @param[in]  aNameData           A reference to name data.
+     *
+     * @retval OT_ERROR_NONE           Successfully set the Thread Domain Name.
+     * @retval OT_ERROR_ALREADY        The name is already set to the same string.
+     * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
+     *
+     */
+    otError Set(const NameData &aNameData);
+};
+#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 /**
  * @}

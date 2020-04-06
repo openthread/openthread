@@ -45,6 +45,7 @@ Done
 * [diag](#diag)
 * [discover](#discover-channel)
 * [dns](#dns-resolve-hostname-dns-server-ip-dns-server-port)
+* [domainname](#domainname)
 * [eidcache](#eidcache)
 * [eui64](#eui64)
 * [extaddr](#extaddr)
@@ -553,6 +554,25 @@ The latter two parameters have following default values:
 ```bash
 > dns resolve ipv6.google.com
 > DNS response for ipv6.google.com - 2a00:1450:401b:801:0:0:0:200e TTL: 300
+```
+
+### domainname
+
+Get the Thread Domain Name for Thread 1.2 device.
+
+```bash
+> domainname
+Thread
+Done
+```
+
+### domainname \<name\>
+
+Set the Thread Domain Name for Thread 1.2 device.
+
+```bash
+> domainname Test\ Thread
+Done
 ```
 
 ### eidcache

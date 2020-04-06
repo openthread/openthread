@@ -141,6 +141,9 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     {"dns", &Interpreter::ProcessDns},
 #endif
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    {"domainname", &Interpreter::ProcessDomainName},
+#endif
 #if OPENTHREAD_FTD
     {"eidcache", &Interpreter::ProcessEidCache},
 #endif
@@ -578,6 +581,24 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+
+void Interpreter::ProcessDomainName(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgsLength == 0)
+    {
+        const char *domainName = otThreadGetDomainName(mInstance);
+        mServer->OutputFormat("%.*s\r\n", OT_DOMAIN_NAME_MAX_SIZE, static_cast<const char *>(domainName));
+    }
+    else
+    {
+        SuccessOrExit(error = otThreadSetDomainName(mInstance, aArgs[0]));
+    }
+
+exit:
+    AppendResult(error);
+}
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 

@@ -369,6 +369,38 @@ public:
      */
     otError SetNetworkName(const NameData &aNameData);
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    /**
+     * This method returns the Thread Domain Name.
+     *
+     * @returns The Thread Domain Name.
+     *
+     */
+    const DomainName &GetDomainName(void) const { return mDomainName; }
+
+    /**
+     * This method sets the Thread Domain Name.
+     *
+     * @param[in]  aNameString   A pointer to a string character array. Must be null terminated.
+     *
+     * @retval OT_ERROR_NONE           Successfully set the Thread Domain Name.
+     * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
+     *
+     */
+    otError SetDomainName(const char *aNameString);
+
+    /**
+     * This method sets the Thread Domain Name.
+     *
+     * @param[in]  aNameData     A name data (pointer to char buffer and length).
+     *
+     * @retval OT_ERROR_NONE           Successfully set the Thread Domain Name.
+     * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
+     *
+     */
+    otError SetDomainName(const NameData &aNameData);
+#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+
     /**
      * This method returns the IEEE 802.15.4 PAN ID.
      *
@@ -737,6 +769,7 @@ private:
     static const otExtAddress    sMode2ExtAddress;
     static const otExtendedPanId sExtendedPanidInit;
     static const char            sNetworkNameInit[];
+    static const char            sDomainNameInit[];
 
     bool mEnabled : 1;
     bool mPendingActiveScan : 1;
@@ -769,10 +802,13 @@ private:
     ChannelMask   mSupportedChannelMask;
     ExtendedPanId mExtendedPanId;
     NetworkName   mNetworkName;
-    uint8_t       mScanChannel;
-    uint16_t      mScanDuration;
-    ChannelMask   mScanChannelMask;
-    uint8_t       mMaxFrameRetriesDirect;
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    DomainName mDomainName;
+#endif
+    uint8_t     mScanChannel;
+    uint16_t    mScanDuration;
+    ChannelMask mScanChannelMask;
+    uint8_t     mMaxFrameRetriesDirect;
 #if OPENTHREAD_FTD
     uint8_t mMaxFrameRetriesIndirect;
 #endif

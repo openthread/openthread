@@ -67,6 +67,10 @@ const otExtendedPanId Mac::sExtendedPanidInit = {
 
 const char Mac::sNetworkNameInit[] = "OpenThread";
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+const char Mac::sDomainNameInit[] = "Thread";
+#endif
+
 Mac::Mac(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEnabled(true)
@@ -98,6 +102,9 @@ Mac::Mac(Instance &aInstance)
     , mRadioChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mSupportedChannelMask(Get<Radio>().GetSupportedChannelMask())
     , mNetworkName()
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    , mDomainName()
+#endif
     , mScanChannel(Radio::kChannelMin)
     , mScanDuration(0)
     , mScanChannelMask()
@@ -129,6 +136,9 @@ Mac::Mac(Instance &aInstance)
 
     SetExtendedPanId(static_cast<const ExtendedPanId &>(sExtendedPanidInit));
     SetNetworkName(sNetworkNameInit);
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    SetDomainName(sDomainNameInit);
+#endif
     SetPanId(mPanId);
     SetExtAddress(randomExtAddress);
     SetShortAddress(GetShortAddress());
@@ -482,6 +492,41 @@ otError Mac::SetNetworkName(const NameData &aName)
 exit:
     return error;
 }
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+otError Mac::SetDomainName(const char *aNameString)
+{
+    // When setting Domain Name from a string, we treat it as `Data`
+    // with `kMaxSize + 1` chars. `DomainName::Set(data)` will look
+    // for null char in the data (within its given size) to calculate
+    // the name's length and ensure that the name fits in `kMaxSize`
+    // chars. The `+ 1` ensures that a `aNameString` with length
+    // longer than `kMaxSize` is correctly rejected (returning error
+    // `OT_ERROR_INVALID_ARGS`).
+
+    NameData data(aNameString, DomainName::kMaxSize + 1);
+
+    return SetDomainName(data);
+}
+
+otError Mac::SetDomainName(const NameData &aName)
+{
+    otError error = mDomainName.Set(aName);
+
+    if (error == OT_ERROR_ALREADY)
+    {
+        Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_DOMAIN_NAME);
+        error = OT_ERROR_NONE;
+        ExitNow();
+    }
+
+    SuccessOrExit(error);
+    Get<Notifier>().Signal(OT_CHANGED_THREAD_DOMAIN_NAME);
+
+exit:
+    return error;
+}
+#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 void Mac::SetPanId(PanId aPanId)
 {
