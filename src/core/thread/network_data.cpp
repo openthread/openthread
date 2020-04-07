@@ -50,7 +50,6 @@ namespace NetworkData {
 NetworkData::NetworkData(Instance &aInstance, Type aType)
     : InstanceLocator(aInstance)
     , mType(aType)
-    , mLastAttempt(0)
 {
     mLength = 0;
 }
@@ -754,20 +753,11 @@ void NetworkData::RemoveTlv(NetworkDataTlv *aTlv)
     NetworkData::RemoveTlv(mTlvs, mLength, aTlv);
 }
 
-otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
+otError NetworkData::SendServerDataNotification(uint16_t aRloc16, Coap::ResponseHandler aHandler, void *aContext)
 {
     otError          error   = OT_ERROR_NONE;
     Coap::Message *  message = NULL;
     Ip6::MessageInfo messageInfo;
-
-    if (mLastAttempt.GetValue() != 0)
-    {
-        uint32_t diff = TimerMilli::GetNow() - mLastAttempt;
-
-        VerifyOrExit(((mType == kTypeLocal) && (diff > kDataResubmitDelay)) ||
-                         ((mType == kTypeLeader) && (diff > kProxyResubmitDelay)),
-                     error = OT_ERROR_ALREADY);
-    }
 
     VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
 
@@ -791,16 +781,7 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16)
     Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr());
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
-
-    mLastAttempt = TimerMilli::GetNow();
-
-    // `0` is a special value to indicate no delay limitation on sending SRV_DATA.ntf.
-    // Here avoids possible impact in rate limitation of SRV_DATA.ntf in case of wrap.
-    if (mLastAttempt.GetValue() == 0)
-    {
-        mLastAttempt.SetValue(1);
-    }
+    SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo, aHandler, aContext));
 
     otLogInfoNetData("Sent server data notification");
 
@@ -873,11 +854,6 @@ otError NetworkData::GetNextServer(Iterator &aIterator, uint16_t &aRloc16)
 
 exit:
     return error;
-}
-
-void NetworkData::ClearResubmitDelayTimer(void)
-{
-    mLastAttempt.SetValue(0);
 }
 
 } // namespace NetworkData

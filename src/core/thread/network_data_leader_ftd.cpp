@@ -114,7 +114,7 @@ void Leader::IncrementVersions(bool aIncludeStable)
     }
 
     mVersion++;
-    Get<Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
+    Get<ot::Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
 }
 
 void Leader::RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode)
@@ -1129,22 +1129,6 @@ void Leader::StopContextReuseTimer(uint8_t aContextId)
     mContextLastUsed[aContextId - kMinContextId].SetValue(0);
 }
 
-otError Leader::SendServerDataNotification(uint16_t aRloc16)
-{
-    otError error = OT_ERROR_NONE;
-    bool    rlocIn;
-    bool    rlocStable;
-
-    RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength, kMatchModeRloc16);
-
-    VerifyOrExit(rlocIn, error = OT_ERROR_NOT_FOUND);
-
-    SuccessOrExit(error = NetworkData::SendServerDataNotification(aRloc16));
-
-exit:
-    return error;
-}
-
 void Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode)
 {
     NetworkDataTlv *cur = GetTlvsStart();
@@ -1407,10 +1391,14 @@ void Leader::HandleTimer(void)
     }
 }
 
-void Leader::RemoveStaleChildEntries(void)
+otError Leader::RemoveStaleChildEntries(Coap::ResponseHandler aHandler, void *aContext)
 {
-    Iterator iterator = kIteratorInit;
-    uint16_t rloc16;
+    otError      error    = OT_ERROR_NOT_FOUND;
+    Iterator     iterator = kIteratorInit;
+    otDeviceRole role     = Get<Mle::MleRouter>().GetRole();
+    uint16_t     rloc16;
+
+    VerifyOrExit((role == OT_DEVICE_ROLE_ROUTER) || (role == OT_DEVICE_ROLE_LEADER));
 
     while (GetNextServer(iterator, rloc16) == OT_ERROR_NONE)
     {
@@ -1418,10 +1406,13 @@ void Leader::RemoveStaleChildEntries(void)
             Get<ChildTable>().FindChild(rloc16, Child::kInStateValid) == NULL)
         {
             // In Thread 1.1 Specification 5.15.6.1, only one RLOC16 TLV entry may appear in SRV_DATA.ntf.
-            SendServerDataNotification(rloc16);
-            break;
+            error = NetworkData::SendServerDataNotification(rloc16, aHandler, aContext);
+            ExitNow();
         }
     }
+
+exit:
+    return error;
 }
 
 } // namespace NetworkData

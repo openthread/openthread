@@ -164,11 +164,16 @@ public:
     /**
      * This method sends a Server Data Notification message to the Leader.
      *
-     * @retval OT_ERROR_NONE     Successfully enqueued the notification message.
-     * @retval OT_ERROR_NO_BUFS  Insufficient message buffers to generate the notification message.
+     * @param[in]  aHandler  A function pointer that is called when the transaction ends.
+     * @param[in]  aContext  A pointer to arbitrary context information.
+     *
+     * @retval OT_ERROR_NONE           Successfully enqueued the notification message.
+     * @retval OT_ERROR_NO_BUFS        Insufficient message buffers to generate the notification message.
+     * @retval OT_ERROR_INVALID_STATE  Device is a REED and is in the process of becoming a Router.
+     * @retval OT_ERROR_NOT_FOUND      Server Data is already consistent with network data.
      *
      */
-    otError SendServerDataNotification(void);
+    otError UpdateInconsistentServerData(Coap::ResponseHandler aHandler, void *aContext);
 
 private:
     void UpdateRloc(void);

@@ -64,7 +64,7 @@ void LeaderBase::Reset(void)
     mVersion       = Random::NonCrypto::GetUint8();
     mStableVersion = Random::NonCrypto::GetUint8();
     mLength        = 0;
-    Get<Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
+    Get<ot::Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
 }
 
 otError LeaderBase::GetServiceId(uint32_t       aEnterpriseNumber,
@@ -444,7 +444,7 @@ otError LeaderBase::SetNetworkData(uint8_t        aVersion,
 
     otDumpDebgNetData("set network data", mTlvs, mLength);
 
-    Get<Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
+    Get<ot::Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
 
 exit:
     return error;
@@ -470,7 +470,7 @@ otError LeaderBase::SetCommissioningData(const uint8_t *aValue, uint8_t aValueLe
     }
 
     mVersion++;
-    Get<Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
+    Get<ot::Notifier>().Signal(OT_CHANGED_THREAD_NETDATA);
 
 exit:
     return error;

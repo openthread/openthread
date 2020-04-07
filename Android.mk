@@ -238,6 +238,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/network_data_leader.cpp                 \
     src/core/thread/network_data_leader_ftd.cpp             \
     src/core/thread/network_data_local.cpp                  \
+    src/core/thread/network_data_notifier.cpp               \
     src/core/thread/network_diagnostic.cpp                  \
     src/core/thread/panid_query_server.cpp                  \
     src/core/thread/router_table.cpp                        \

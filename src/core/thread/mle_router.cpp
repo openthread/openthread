@@ -2722,8 +2722,6 @@ void MleRouter::SynchronizeChildNetworkData(void)
 {
     VerifyOrExit(mRole == OT_DEVICE_ROLE_ROUTER || mRole == OT_DEVICE_ROLE_LEADER);
 
-    Get<NetworkData::Leader>().RemoveStaleChildEntries();
-
     for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValid); !iter.IsDone(); iter++)
     {
         Child & child = *iter.GetChild();
@@ -3333,7 +3331,6 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
         }
 
         Get<IndirectSender>().ClearAllMessagesForSleepyChild(static_cast<Child &>(aNeighbor));
-        Get<NetworkData::Leader>().SendServerDataNotification(aNeighbor.GetRloc16());
 
         if (aNeighbor.IsFullThreadDevice())
         {
@@ -3922,11 +3919,6 @@ otError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, I
         if (mChildTable.FindChild(aMeshDest, Child::kInStateValidOrRestoring))
         {
             ExitNow();
-        }
-        else if (IsAnycastLocator(aIp6Header.GetDestination()))
-        {
-            // Proactively notify Leader of the expired child to de-register the stale service if any.
-            Get<NetworkData::Leader>().SendServerDataNotification(aMeshDest);
         }
     }
     else if (GetNextHop(aMeshDest) != Mac::kShortAddrInvalid)

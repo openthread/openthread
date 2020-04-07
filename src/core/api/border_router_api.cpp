@@ -147,7 +147,9 @@ otError otBorderRouterRegister(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<NetworkData::Local>().SendServerDataNotification();
+    instance.Get<NetworkData::Notifier>().HandleServerDataUpdated();
+
+    return OT_ERROR_NONE;
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE

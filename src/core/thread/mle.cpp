@@ -830,9 +830,6 @@ void Mle::SetStateChild(uint16_t aRloc16)
     }
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    Get<NetworkData::Local>().ClearResubmitDelayTimer();
-#endif
     Get<Ip6::Ip6>().SetForwardingEnabled(false);
 #if OPENTHREAD_FTD
     Get<Ip6::Mpl>().SetTimerExpirations(kMplChildDataMessageTimerExpirations);
@@ -1617,11 +1614,8 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
         Get<BackboneRouter::Leader>().Update();
 #endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-        Get<NetworkData::Local>().SendServerDataNotification();
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
         this->UpdateServiceAlocs();
-#endif
 #endif
 
 #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
@@ -3002,12 +2996,6 @@ otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo
         delay = Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
         SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay);
     }
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    else
-    {
-        Get<NetworkData::Local>().SendServerDataNotification();
-    }
-#endif
 
 exit:
 

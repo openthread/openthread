@@ -191,6 +191,7 @@ set(COMMON_SOURCES
     thread/network_data_leader.cpp
     thread/network_data_leader_ftd.cpp
     thread/network_data_local.cpp
+    thread/network_data_notifier.cpp
     thread/network_diagnostic.cpp
     thread/panid_query_server.cpp
     thread/router_table.cpp

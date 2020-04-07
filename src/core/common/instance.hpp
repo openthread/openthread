@@ -551,6 +551,13 @@ template <> inline NetworkData::Leader &Instance::Get(void)
     return mThreadNetif.mNetworkDataLeader;
 }
 
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+template <> inline NetworkData::Notifier &Instance::Get(void)
+{
+    return mThreadNetif.mNetworkDataNotifier;
+}
+#endif
+
 template <> inline Ip6::Udp &Instance::Get(void)
 {
     return mIp6.mUdp;
