@@ -98,12 +98,23 @@ otError Icmp::SendError(IcmpHeader::Type   aType,
     IcmpHeader  icmp6Header;
     Header      ip6Header;
 
+    VerifyOrExit(aMessage.GetLength() >= sizeof(ip6Header), error = OT_ERROR_INVALID_ARGS);
+
+    aMessage.Read(0, sizeof(ip6Header), &ip6Header);
+
+    if (ip6Header.GetNextHeader() == kProtoIcmp6)
+    {
+        VerifyOrExit(aMessage.GetLength() >= (sizeof(ip6Header) + sizeof(icmp6Header)));
+
+        aMessage.Read(sizeof(ip6Header), sizeof(icmp6Header), &icmp6Header);
+        VerifyOrExit(!icmp6Header.IsError());
+    }
+
     messageInfoLocal = aMessageInfo;
 
     VerifyOrExit((message = Get<Ip6>().NewMessage(0)) != NULL, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = message->SetLength(sizeof(icmp6Header) + sizeof(ip6Header)));
 
-    aMessage.Read(0, sizeof(ip6Header), &ip6Header);
     message->Write(sizeof(icmp6Header), sizeof(ip6Header), &ip6Header);
 
     icmp6Header.Init();

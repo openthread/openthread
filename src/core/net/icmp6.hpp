@@ -102,6 +102,15 @@ public:
     };
 
     /**
+     * This method indicates whether the ICMPv6 message is an error message.
+     *
+     * @retval TRUE if the ICMPv6 message is an error message.
+     * @retval FALSE if the ICMPv6 message is an informational message.
+     *
+     */
+    bool IsError(void) const { return mType < OT_ICMP6_TYPE_ECHO_REQUEST; }
+
+    /**
      * This method returns the ICMPv6 message type.
      *
      * @returns The ICMPv6 message type.
