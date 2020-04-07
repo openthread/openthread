@@ -597,6 +597,18 @@ protected:
                                          uint8_t        aTlvsLength);
 
     /**
+     * This method indicates whether there is space in Network Data to insert/append new info and grow it by a given
+     * number of bytes.
+     *
+     * @param[in]  aSize  The number of bytes to grow the Network Data.
+     *
+     * @retval TRUE   There is space to grow Network Data by @p aSize bytes.
+     * @retval FALSE  There is no space left to grow Network Data by @p aSize bytes.
+     *
+     */
+    bool CanInsert(uint16_t aSize) const { return (mLength + aSize <= kMaxSize); }
+
+    /**
      * This method grows the Network Data to append a TLV with a requested size.
      *
      * On success, the returned TLV is not initialized (i.e., the TLV Length field is not set) but the requested
@@ -608,7 +620,7 @@ protected:
      *          Data with requested @p aTlvSize number of bytes.
      *
      */
-    NetworkDataTlv *AppendTlv(uint8_t aTlvSize);
+    NetworkDataTlv *AppendTlv(uint16_t aTlvSize);
 
     /**
      * This method inserts bytes into the Network Data.
