@@ -90,19 +90,21 @@ exit:
 otError Icmp::SendError(IcmpHeader::Type   aType,
                         IcmpHeader::Code   aCode,
                         const MessageInfo &aMessageInfo,
-                        const Header &     aHeader)
+                        const Message &    aMessage)
 {
     otError     error = OT_ERROR_NONE;
     MessageInfo messageInfoLocal;
     Message *   message = NULL;
     IcmpHeader  icmp6Header;
+    Header      ip6Header;
 
     messageInfoLocal = aMessageInfo;
 
     VerifyOrExit((message = Get<Ip6>().NewMessage(0)) != NULL, error = OT_ERROR_NO_BUFS);
-    SuccessOrExit(error = message->SetLength(sizeof(icmp6Header) + sizeof(aHeader)));
+    SuccessOrExit(error = message->SetLength(sizeof(icmp6Header) + sizeof(ip6Header)));
 
-    message->Write(sizeof(icmp6Header), sizeof(aHeader), &aHeader);
+    aMessage.Read(0, sizeof(ip6Header), &ip6Header);
+    message->Write(sizeof(icmp6Header), sizeof(ip6Header), &ip6Header);
 
     icmp6Header.Init();
     icmp6Header.SetType(aType);

@@ -284,7 +284,7 @@ public:
      * @param[in]  aType         The ICMPv6 message type.
      * @param[in]  aCode         The ICMPv6 message code.
      * @param[in]  aMessageInfo  A reference to the message info.
-     * @param[in]  aHeader       The IPv6 header of the error-causing message.
+     * @param[in]  aMessage      The error-causing IPv6 message.
      *
      * @retval OT_ERROR_NONE     Successfully enqueued the ICMPv6 error message.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffers available.
@@ -293,7 +293,7 @@ public:
     otError SendError(IcmpHeader::Type   aType,
                       IcmpHeader::Code   aCode,
                       const MessageInfo &aMessageInfo,
-                      const Header &     aHeader);
+                      const Message &    aMessage);
 
     /**
      * This method handles an ICMPv6 message.

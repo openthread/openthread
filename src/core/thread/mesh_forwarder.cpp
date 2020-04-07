@@ -332,7 +332,7 @@ otError MeshForwarder::UpdateIp6Route(Message &aMessage)
     else
     {
 #if OPENTHREAD_FTD
-        error = UpdateIp6RouteFtd(ip6Header);
+        error = UpdateIp6RouteFtd(ip6Header, aMessage);
 #else
         OT_ASSERT(false);
 #endif
