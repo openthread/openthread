@@ -191,12 +191,8 @@ public:
      *
      * @param[in]  aConfig A reference to the Domain Prefix configuration.
      *
-     * @retval OT_ERROR_NONE         Successfully set the Domain Prefix.
-     * @retval OT_ERROR_INVALID_ARGS @p aConfig is invalid.
-     * @retval OT_ERROR_NO_BUFS      Insufficient space to add the Domain Prefix entry to local server data.
-     *
      */
-    otError SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig);
+    void SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig);
 
 private:
     void    SetState(BackboneRouterState aState);

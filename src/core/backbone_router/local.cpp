@@ -287,10 +287,8 @@ exit:
     return error;
 }
 
-otError Local::SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig)
+void Local::SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig)
 {
-    otError error = OT_ERROR_NONE;
-
     if (IsEnabled() && mDomainPrefixConfig.mPrefix.mLength > 0)
     {
         Get<NetworkData::Local>().RemoveOnMeshPrefix(mDomainPrefixConfig.mPrefix.mPrefix.mFields.m8,
@@ -303,8 +301,6 @@ otError Local::SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig)
     {
         Get<NetworkData::Local>().AddOnMeshPrefix(mDomainPrefixConfig);
     }
-
-    return error;
 }
 
 void Local::RemoveDomainPrefixFromNetworkData(void)
