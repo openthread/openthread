@@ -404,7 +404,7 @@ exit:
     return error;
 }
 
-otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
+otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, const Message &aMessage)
 {
     Mle::MleRouter &mle   = Get<Mle::MleRouter>();
     otError         error = OT_ERROR_NONE;
@@ -497,7 +497,7 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
 exit:
     if (error == OT_ERROR_NO_ROUTE)
     {
-        SendDestinationUnreachable(mMeshSource, ip6Header);
+        SendDestinationUnreachable(mMeshSource, aMessage);
     }
 
     return error;
@@ -516,32 +516,56 @@ otError MeshForwarder::GetIp6Header(const uint8_t *     aFrame,
                                nextHeaderCompressed);
 }
 
-otError MeshForwarder::CheckReachability(uint8_t *           aFrame,
+otError MeshForwarder::CheckReachability(const uint8_t *     aFrame,
                                          uint16_t            aFrameLength,
                                          const Mac::Address &aMeshSource,
                                          const Mac::Address &aMeshDest)
 {
-    otError     error = OT_ERROR_NONE;
-    Ip6::Header ip6Header;
+    otError                error = OT_ERROR_NONE;
+    Ip6::Header            ip6Header;
+    Message *              message = NULL;
+    Lowpan::FragmentHeader fragmentHeader;
+    uint16_t               fragmentHeaderLength;
+    uint16_t               datagramSize = 0;
 
-    SuccessOrExit(error = GetIp6Header(aFrame, aFrameLength, aMeshSource, aMeshDest, ip6Header));
+    if (fragmentHeader.ParseFrom(aFrame, aFrameLength, fragmentHeaderLength) == OT_ERROR_NONE)
+    {
+        // Only the first fragment header is followed by a LOWPAN_IPHC header
+        VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0, error = OT_ERROR_NOT_FOUND);
+        aFrame += fragmentHeaderLength;
+        aFrameLength -= fragmentHeaderLength;
+
+        datagramSize = fragmentHeader.GetDatagramSize();
+    }
+
+    VerifyOrExit(aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame), error = OT_ERROR_NOT_FOUND);
+
+    error = FrameToMessage(aFrame, aFrameLength, datagramSize, aMeshSource, aMeshDest, message);
+    SuccessOrExit(error);
+
+    message->Read(0, sizeof(ip6Header), &ip6Header);
     error = Get<Mle::MleRouter>().CheckReachability(aMeshDest.GetShort(), ip6Header);
 
 exit:
-    // the message may not contain an IPv6 header
     if (error == OT_ERROR_NOT_FOUND)
     {
+        // the message may not contain an IPv6 header
         error = OT_ERROR_NONE;
     }
     else if (error == OT_ERROR_NO_ROUTE)
     {
-        SendDestinationUnreachable(aMeshSource.GetShort(), ip6Header);
+        SendDestinationUnreachable(aMeshSource.GetShort(), *message);
+    }
+
+    if (message != NULL)
+    {
+        message->Free();
     }
 
     return error;
 }
 
-void MeshForwarder::SendDestinationUnreachable(uint16_t aMeshSource, const Ip6::Header &aIp6Header)
+void MeshForwarder::SendDestinationUnreachable(uint16_t aMeshSource, const Message &aMessage)
 {
     Ip6::MessageInfo messageInfo;
 
@@ -549,7 +573,7 @@ void MeshForwarder::SendDestinationUnreachable(uint16_t aMeshSource, const Ip6::
     messageInfo.GetPeerAddr().SetLocator(aMeshSource);
 
     Get<Ip6::Icmp>().SendError(Ip6::IcmpHeader::kTypeDstUnreach, Ip6::IcmpHeader::kCodeDstUnreachNoRoute, messageInfo,
-                               aIp6Header);
+                               aMessage);
 }
 
 void MeshForwarder::HandleMesh(uint8_t *               aFrame,

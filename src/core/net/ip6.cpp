@@ -905,7 +905,7 @@ otError Ip6::SendIcmpError(Message &aMessage, IcmpHeader::Type aIcmpType, IcmpHe
     messageInfo.SetHopLimit(header.GetHopLimit());
     messageInfo.SetLinkInfo(NULL);
 
-    SuccessOrExit(error = mIcmp.SendError(aIcmpType, aIcmpCode, messageInfo, header));
+    SuccessOrExit(error = mIcmp.SendError(aIcmpType, aIcmpCode, messageInfo, aMessage));
 
 exit:
     return error;
