@@ -240,7 +240,7 @@ enum AlocAllocation
  * Service IDs
  *
  */
-enum ServiceId
+enum
 {
     kServiceMinId = 0x00, ///< Minimal Service ID.
     kServiceMaxId = 0x0f, ///< Maximal Service ID.

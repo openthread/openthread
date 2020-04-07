@@ -104,6 +104,14 @@ void Leader::IncrementVersionAndStableVersion(void)
     }
 }
 
+void Leader::IncrementVersions(const ChangedFlags &aFlags)
+{
+    if (aFlags.DidChange())
+    {
+        IncrementVersions(aFlags.DidStableChange());
+    }
+}
+
 void Leader::IncrementVersions(bool aIncludeStable)
 {
     if (aIncludeStable)
@@ -117,16 +125,10 @@ void Leader::IncrementVersions(bool aIncludeStable)
 
 void Leader::RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode)
 {
-    bool rlocIn;
-    bool rlocStable;
+    ChangedFlags flags;
 
-    RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength, aMatchMode);
-    VerifyOrExit(rlocIn);
-    RemoveRloc(aRloc16, aMatchMode);
-    IncrementVersions(rlocStable);
-
-exit:
-    return;
+    RemoveRloc(aRloc16, aMatchMode, flags);
+    IncrementVersions(flags);
 }
 
 void Leader::HandleServerData(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -402,19 +404,14 @@ bool Leader::RlocMatch(uint16_t aFirstRloc16, uint16_t aSecondRloc16, MatchMode 
     return matched;
 }
 
-otError Leader::RlocLookup(uint16_t       aRloc16,
-                           bool &         aIn,
-                           bool &         aStable,
-                           const uint8_t *aTlvs,
-                           uint8_t        aTlvsLength,
-                           MatchMode      aMatchMode,
-                           bool           aAllowOtherEntries)
+otError Leader::Validate(const uint8_t *aTlvs, uint8_t aTlvsLength, uint16_t aRloc16)
 {
+    // Validate that the `aTlvs` contains well-formed TLVs, sub-TLVs,
+    // and entries all matching `aRloc16` (no other entry for other
+    // RLOCs and no duplicates TLVs).
+
     otError               error = OT_ERROR_NONE;
     const NetworkDataTlv *end   = reinterpret_cast<const NetworkDataTlv *>(aTlvs + aTlvsLength);
-
-    aIn     = false;
-    aStable = false;
 
     for (const NetworkDataTlv *cur = reinterpret_cast<const NetworkDataTlv *>(aTlvs); cur < end; cur = cur->GetNext())
     {
@@ -424,196 +421,15 @@ otError Leader::RlocLookup(uint16_t       aRloc16,
         {
         case NetworkDataTlv::kTypePrefix:
         {
-            const PrefixTlv *     prefix = static_cast<const PrefixTlv *>(cur);
-            const NetworkDataTlv *subEnd;
+            const PrefixTlv *prefix = static_cast<const PrefixTlv *>(cur);
 
             VerifyOrExit(prefix->IsValid(), error = OT_ERROR_PARSE);
 
-            subEnd = prefix->GetNext();
+            // Ensure there is no duplicate Prefix TLVs with same prefix.
+            VerifyOrExit(prefix == FindPrefix(prefix->GetPrefix(), prefix->GetPrefixLength(), aTlvs, aTlvsLength),
+                         error = OT_ERROR_PARSE);
 
-            for (const NetworkDataTlv *subCur = prefix->GetSubTlvs(); subCur < subEnd; subCur = subCur->GetNext())
-            {
-                VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd, error = OT_ERROR_PARSE);
-
-                switch (subCur->GetType())
-                {
-                case NetworkDataTlv::kTypeBorderRouter:
-                {
-                    const BorderRouterTlv *borderRouter = static_cast<const BorderRouterTlv *>(subCur);
-
-                    for (const BorderRouterEntry *borderRouterEntry = borderRouter->GetFirstEntry();
-                         borderRouterEntry <= borderRouter->GetLastEntry();
-                         borderRouterEntry = borderRouterEntry->GetNext())
-                    {
-                        if (RlocMatch(borderRouterEntry->GetRloc(), aRloc16, aMatchMode))
-                        {
-                            aIn = true;
-
-                            if (borderRouter->IsStable())
-                            {
-                                aStable = true;
-                            }
-                        }
-                        else
-                        {
-                            VerifyOrExit(aAllowOtherEntries, error = OT_ERROR_FAILED);
-                        }
-                    }
-
-                    break;
-                }
-
-                case NetworkDataTlv::kTypeHasRoute:
-                {
-                    const HasRouteTlv *hasRoute = static_cast<const HasRouteTlv *>(subCur);
-
-                    for (const HasRouteEntry *hasRouteEntry                       = hasRoute->GetFirstEntry();
-                         hasRouteEntry <= hasRoute->GetLastEntry(); hasRouteEntry = hasRouteEntry->GetNext())
-                    {
-                        if (RlocMatch(hasRouteEntry->GetRloc(), aRloc16, aMatchMode))
-                        {
-                            aIn = true;
-
-                            if (hasRoute->IsStable())
-                            {
-                                aStable = true;
-                            }
-                        }
-                        else
-                        {
-                            VerifyOrExit(aAllowOtherEntries, error = OT_ERROR_FAILED);
-                        }
-                    }
-
-                    break;
-                }
-
-                default:
-                    break;
-                }
-
-                if (aIn && aStable && aAllowOtherEntries)
-                {
-                    ExitNow();
-                }
-            }
-        }
-        break;
-
-        case NetworkDataTlv::kTypeService:
-        {
-            const ServiceTlv *    service = static_cast<const ServiceTlv *>(cur);
-            const NetworkDataTlv *subEnd;
-
-            VerifyOrExit(service->IsValid(), error = OT_ERROR_PARSE);
-
-            subEnd = service->GetNext();
-
-            for (const NetworkDataTlv *subCur = service->GetSubTlvs(); subCur < subEnd; subCur = subCur->GetNext())
-            {
-                VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd, error = OT_ERROR_PARSE);
-
-                switch (subCur->GetType())
-                {
-                case NetworkDataTlv::kTypeServer:
-                {
-                    const ServerTlv *server = static_cast<const ServerTlv *>(subCur);
-
-                    VerifyOrExit(server->IsValid(), error = OT_ERROR_PARSE);
-
-                    if (RlocMatch(server->GetServer16(), aRloc16, aMatchMode))
-                    {
-                        aIn = true;
-
-                        if (server->IsStable())
-                        {
-                            aStable = true;
-                        }
-                    }
-                    else
-                    {
-                        VerifyOrExit(aAllowOtherEntries, error = OT_ERROR_FAILED);
-                    }
-
-                    break;
-                }
-
-                default:
-                    break;
-                }
-
-                if (aIn && aStable && aAllowOtherEntries)
-                {
-                    ExitNow();
-                }
-            }
-
-            break;
-        }
-
-        default:
-            break;
-        }
-    }
-
-exit:
-    return error;
-}
-
-bool Leader::IsStableUpdated(const uint8_t *aTlvs,
-                             uint8_t        aTlvsLength,
-                             const uint8_t *aTlvsBase,
-                             uint8_t        aTlvsBaseLength)
-{
-    bool                  rval = false;
-    const NetworkDataTlv *end  = reinterpret_cast<const NetworkDataTlv *>(aTlvs + aTlvsLength);
-
-    for (const NetworkDataTlv *cur = reinterpret_cast<const NetworkDataTlv *>(aTlvs); cur < end; cur = cur->GetNext())
-    {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
-
-        switch (cur->GetType())
-        {
-        case NetworkDataTlv::kTypePrefix:
-        {
-            const PrefixTlv *      prefix       = static_cast<const PrefixTlv *>(cur);
-            const ContextTlv *     context      = FindContext(*prefix);
-            const BorderRouterTlv *borderRouter = FindBorderRouter(*prefix, true);
-            const HasRouteTlv *    hasRoute     = FindHasRoute(*prefix, true);
-
-            if (cur->IsStable() && (!context || borderRouter))
-            {
-                const PrefixTlv *prefixBase =
-                    FindPrefix(prefix->GetPrefix(), prefix->GetPrefixLength(), aTlvsBase, aTlvsBaseLength);
-
-                if (!prefixBase)
-                {
-                    ExitNow(rval = true);
-                }
-
-                if (borderRouter)
-                {
-                    const BorderRouterTlv *borderRouterBase = FindBorderRouter(*prefixBase, true);
-
-                    if (!borderRouterBase || (borderRouter->GetLength() != borderRouterBase->GetLength()) ||
-                        (memcmp(borderRouter, borderRouterBase, borderRouter->GetLength()) != 0))
-                    {
-                        ExitNow(rval = true);
-                    }
-                }
-
-                if (hasRoute)
-                {
-                    const HasRouteTlv *hasRouteBase = FindHasRoute(*prefixBase, true);
-
-                    if (!hasRouteBase || (hasRoute->GetLength() != hasRouteBase->GetLength()) ||
-                        (memcmp(hasRoute, hasRouteBase, hasRoute->GetLength()) != 0))
-                    {
-                        ExitNow(rval = true);
-                    }
-                }
-            }
-
+            SuccessOrExit(error = ValidatePrefix(*prefix, aRloc16));
             break;
         }
 
@@ -621,75 +437,15 @@ bool Leader::IsStableUpdated(const uint8_t *aTlvs,
         {
             const ServiceTlv *service = static_cast<const ServiceTlv *>(cur);
 
-            if (cur->IsStable())
-            {
-                const NetworkDataTlv *curInner;
-                const NetworkDataTlv *endInner;
+            VerifyOrExit(service->IsValid(), error = OT_ERROR_PARSE);
 
-                const ServiceTlv *serviceBase =
-                    FindService(service->GetEnterpriseNumber(), service->GetServiceData(),
-                                service->GetServiceDataLength(), aTlvsBase, aTlvsBaseLength);
+            // Ensure there is no duplicate Service TLV with same
+            // Enterprise Number and Service Data.
+            VerifyOrExit(service == FindService(service->GetEnterpriseNumber(), service->GetServiceData(),
+                                                service->GetServiceDataLength(), aTlvs, aTlvsLength),
+                         error = OT_ERROR_PARSE);
 
-                if (!serviceBase || !serviceBase->IsStable())
-                {
-                    ExitNow(rval = true);
-                }
-
-                curInner = service->GetSubTlvs();
-                endInner = service->GetNext();
-
-                while (curInner < endInner)
-                {
-                    VerifyOrExit((curInner + 1) <= endInner && curInner->GetNext() <= endInner);
-
-                    if (curInner->IsStable())
-                    {
-                        switch (curInner->GetType())
-                        {
-                        case NetworkDataTlv::kTypeServer:
-                        {
-                            bool             foundInBase = false;
-                            const ServerTlv *server      = static_cast<const ServerTlv *>(curInner);
-
-                            const NetworkDataTlv *curServerBase = serviceBase->GetSubTlvs();
-                            const NetworkDataTlv *endServerBase = serviceBase->GetNext();
-
-                            while (curServerBase < endServerBase)
-                            {
-                                const ServerTlv *serverBase = static_cast<const ServerTlv *>(curServerBase);
-
-                                VerifyOrExit((curServerBase + 1) <= endServerBase &&
-                                             curServerBase->GetNext() <= endServerBase);
-
-                                if (curServerBase->IsStable() && (server->GetServer16() == serverBase->GetServer16()) &&
-                                    (server->GetServerDataLength() == serverBase->GetServerDataLength()) &&
-                                    (memcmp(server->GetServerData(), serverBase->GetServerData(),
-                                            server->GetServerDataLength()) == 0))
-                                {
-                                    foundInBase = true;
-                                    break;
-                                }
-
-                                curServerBase = curServerBase->GetNext();
-                            }
-
-                            if (!foundInBase)
-                            {
-                                ExitNow(rval = true);
-                            }
-
-                            break;
-                        }
-
-                        default:
-                            break;
-                        }
-                    }
-
-                    curInner = curInner->GetNext();
-                }
-            }
-
+            SuccessOrExit(error = ValidateService(*service, aRloc16));
             break;
         }
 
@@ -697,78 +453,278 @@ bool Leader::IsStableUpdated(const uint8_t *aTlvs,
             break;
         }
     }
-
-exit:
-    return rval;
-}
-
-otError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLength)
-{
-    otError error = OT_ERROR_NONE;
-    bool    rlocIn;
-    bool    rlocStable;
-    bool    unused;
-    uint8_t oldTlvs[NetworkData::kMaxSize];
-    uint8_t oldTlvsLength = NetworkData::kMaxSize;
-
-    VerifyOrExit(Get<RouterTable>().IsAllocated(Mle::Mle::RouterIdFromRloc16(aRloc16)), error = OT_ERROR_NO_ROUTE);
-
-    // Verify that `aTlvs` only contains entries matching `aRloc16`.
-    SuccessOrExit(error = RlocLookup(aRloc16, rlocIn, rlocStable, aTlvs, aTlvsLength, kMatchModeRloc16,
-                                     /* aAllowOtherEntries */ false));
-
-    RlocLookup(aRloc16, rlocIn, unused, mTlvs, mLength, kMatchModeRloc16);
-
-    if (rlocIn)
-    {
-        if (IsStableUpdated(aTlvs, aTlvsLength, mTlvs, mLength) || IsStableUpdated(mTlvs, mLength, aTlvs, aTlvsLength))
-        {
-            rlocStable = true;
-        }
-
-        // Store old Service IDs for given rloc16, so updates to server will reuse the same Service ID.
-        SuccessOrExit(error = GetNetworkData(false, oldTlvs, oldTlvsLength));
-
-        RemoveRloc(aRloc16, kMatchModeRloc16);
-    }
-    else
-    {
-        // No old data to be preserved, lets avoid memcpy() & FindService calls.
-        oldTlvsLength = 0;
-    }
-
-    SuccessOrExit(error = AddNetworkData(aTlvs, aTlvsLength, oldTlvs, oldTlvsLength));
-    IncrementVersions(rlocStable);
 
 exit:
     return error;
 }
 
-otError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aOldTlvs, uint8_t aOldTlvsLength)
+otError Leader::ValidatePrefix(const PrefixTlv &aPrefix, uint16_t aRloc16)
 {
-    otError         error = OT_ERROR_NONE;
-    NetworkDataTlv *end   = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
+    // Validate that `aPrefix` TLV contains well-formed sub-TLVs and
+    // and entries all matching `aRloc16` (no other entry for other
+    // RLOCs).
 
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aTlvs); cur < end; cur = cur->GetNext())
+    otError               error                   = OT_ERROR_NONE;
+    const NetworkDataTlv *subEnd                  = aPrefix.GetNext();
+    bool                  foundTempHasRoute       = false;
+    bool                  foundStableHasRoute     = false;
+    bool                  foundTempBorderRouter   = false;
+    bool                  foundStableBorderRouter = false;
+
+    for (const NetworkDataTlv *subCur = aPrefix.GetSubTlvs(); subCur < subEnd; subCur = subCur->GetNext())
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
+        VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd, error = OT_ERROR_PARSE);
 
+        switch (subCur->GetType())
+        {
+        case NetworkDataTlv::kTypeBorderRouter:
+        {
+            const BorderRouterTlv *borderRouter = static_cast<const BorderRouterTlv *>(subCur);
+
+            // Ensure Prefix TLV contains at most one stable and one
+            // temporary Border Router sub-TLV and the sub-TLVs have
+            // a single entry.
+
+            if (borderRouter->IsStable())
+            {
+                VerifyOrExit(!foundStableBorderRouter, error = OT_ERROR_PARSE);
+                foundStableBorderRouter = true;
+            }
+            else
+            {
+                VerifyOrExit(!foundTempBorderRouter, error = OT_ERROR_PARSE);
+                foundTempBorderRouter = true;
+            }
+
+            VerifyOrExit(borderRouter->GetFirstEntry() == borderRouter->GetLastEntry(), error = OT_ERROR_PARSE);
+            VerifyOrExit(borderRouter->GetFirstEntry()->GetRloc() == aRloc16, error = OT_ERROR_PARSE);
+            break;
+        }
+
+        case NetworkDataTlv::kTypeHasRoute:
+        {
+            const HasRouteTlv *hasRoute = static_cast<const HasRouteTlv *>(subCur);
+
+            // Ensure Prefix TLV contains at most one stable and one
+            // temporary Has Route sub-TLV and the sub-TLVs have a
+            // single entry.
+
+            if (hasRoute->IsStable())
+            {
+                VerifyOrExit(!foundStableHasRoute, error = OT_ERROR_PARSE);
+                foundStableHasRoute = true;
+            }
+            else
+            {
+                VerifyOrExit(!foundTempHasRoute, error = OT_ERROR_PARSE);
+                foundTempHasRoute = true;
+            }
+
+            VerifyOrExit(hasRoute->GetFirstEntry() == hasRoute->GetLastEntry(), error = OT_ERROR_PARSE);
+            VerifyOrExit(hasRoute->GetFirstEntry()->GetRloc() == aRloc16, error = OT_ERROR_PARSE);
+            break;
+        }
+
+        default:
+            break;
+        }
+    }
+
+exit:
+    return error;
+}
+
+otError Leader::ValidateService(const ServiceTlv &aService, uint16_t aRloc16)
+{
+    // Validate that `aService` TLV contains a single well-formed
+    // Server sub-TLV associated with `aRloc16`.
+
+    otError               error       = OT_ERROR_NONE;
+    const NetworkDataTlv *subEnd      = aService.GetNext();
+    bool                  foundServer = false;
+
+    for (const NetworkDataTlv *subCur = aService.GetSubTlvs(); subCur < subEnd; subCur = subCur->GetNext())
+    {
+        VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd, error = OT_ERROR_PARSE);
+
+        switch (subCur->GetType())
+        {
+        case NetworkDataTlv::kTypeServer:
+        {
+            const ServerTlv *server = static_cast<const ServerTlv *>(subCur);
+
+            VerifyOrExit(!foundServer, error = OT_ERROR_PARSE);
+            foundServer = true;
+
+            VerifyOrExit(server->IsValid() && server->GetServer16() == aRloc16, error = OT_ERROR_PARSE);
+            break;
+        }
+
+        default:
+            break;
+        }
+    }
+
+exit:
+    return error;
+}
+
+bool Leader::ContainsMatchingEntry(const PrefixTlv *aPrefix, bool aStable, const HasRouteEntry &aEntry)
+{
+    // Check whether `aPrefix` has a Has Route sub-TLV with stable
+    // flag `aStable` containing a matching entry to `aEntry`.
+
+    return (aPrefix == NULL) ? false : ContainsMatchingEntry(FindHasRoute(*aPrefix, aStable), aEntry);
+}
+
+bool Leader::ContainsMatchingEntry(const HasRouteTlv *aHasRoute, const HasRouteEntry &aEntry)
+{
+    // Check whether `aHasRoute` has a matching entry to `aEntry`.
+
+    bool contains = false;
+
+    VerifyOrExit(aHasRoute != NULL);
+
+    for (const HasRouteEntry *entry = aHasRoute->GetFirstEntry(); entry <= aHasRoute->GetLastEntry(); entry++)
+    {
+        if (*entry == aEntry)
+        {
+            contains = true;
+            break;
+        }
+    }
+
+exit:
+    return contains;
+}
+
+bool Leader::ContainsMatchingEntry(const PrefixTlv *aPrefix, bool aStable, const BorderRouterEntry &aEntry)
+{
+    // Check whether `aPrefix` has a Border Router sub-TLV with stable
+    // flag `aStable` containing a matching entry to `aEntry`.
+
+    return (aPrefix == NULL) ? false : ContainsMatchingEntry(FindBorderRouter(*aPrefix, aStable), aEntry);
+}
+
+bool Leader::ContainsMatchingEntry(const BorderRouterTlv *aBorderRouter, const BorderRouterEntry &aEntry)
+{
+    // Check whether `aBorderRouter` has a matching entry to `aEntry`.
+
+    bool contains = false;
+
+    VerifyOrExit(aBorderRouter != NULL);
+
+    for (const BorderRouterEntry *entry = aBorderRouter->GetFirstEntry(); entry <= aBorderRouter->GetLastEntry();
+         entry++)
+    {
+        if (*entry == aEntry)
+        {
+            contains = true;
+            break;
+        }
+    }
+
+exit:
+    return contains;
+}
+
+bool Leader::ContainsMatchingServer(const ServiceTlv *aService, const ServerTlv &aServer)
+{
+    // Check whether the `aService` has a matching Server sub-TLV
+    // same as `aServer`.
+
+    bool             contains = false;
+    const ServerTlv *server;
+
+    VerifyOrExit(aService != NULL);
+
+    for (const NetworkDataTlv *start = aService->GetSubTlvs();
+         (server = FindTlv<ServerTlv>(start, aService->GetNext(), aServer.IsStable())) != NULL;
+         start = server->GetNext())
+    {
+        if (*server == aServer)
+        {
+            ExitNow(contains = true);
+        }
+    }
+
+exit:
+    return contains;
+}
+
+Leader::UpdateStatus Leader::UpdatePrefix(PrefixTlv &aPrefix)
+{
+    return UpdateTlv(aPrefix, aPrefix.GetSubTlvs());
+}
+
+Leader::UpdateStatus Leader::UpdateService(ServiceTlv &aService)
+{
+    return UpdateTlv(aService, aService.GetSubTlvs());
+}
+
+Leader::UpdateStatus Leader::UpdateTlv(NetworkDataTlv &aTlv, const NetworkDataTlv *aSubTlvs)
+{
+    // If `aTlv` contains no sub-TLVs, remove it from Network Data,
+    // otherwise update its stable flag based on its sub-TLVs.
+
+    UpdateStatus status = kTlvUpdated;
+
+    if (aSubTlvs == aTlv.GetNext())
+    {
+        RemoveTlv(&aTlv);
+        ExitNow(status = kTlvRemoved);
+    }
+
+    for (const NetworkDataTlv *subCur = aSubTlvs; subCur < aTlv.GetNext(); subCur = subCur->GetNext())
+    {
+        if (subCur->IsStable())
+        {
+            aTlv.SetStable();
+            ExitNow();
+        }
+    }
+
+    aTlv.ClearStable();
+
+exit:
+    return status;
+}
+
+otError Leader::RegisterNetworkData(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsLength)
+{
+    otError               error = OT_ERROR_NONE;
+    const NetworkDataTlv *end   = reinterpret_cast<const NetworkDataTlv *>(aTlvs + aTlvsLength);
+    ChangedFlags          flags;
+
+    VerifyOrExit(Get<RouterTable>().IsAllocated(Mle::Mle::RouterIdFromRloc16(aRloc16)), error = OT_ERROR_NO_ROUTE);
+
+    // Validate that the `aTlvs` contains well-formed TLVs, sub-TLVs,
+    // and entries all matching `aRloc16` (no other RLOCs).
+    SuccessOrExit(error = Validate(aTlvs, aTlvsLength, aRloc16));
+
+    // Remove all entries matching `aRloc16` excluding entries that are
+    // present in `aTlvs`
+    RemoveRloc(aRloc16, kMatchModeRloc16, aTlvs, aTlvsLength, flags);
+
+    // Now add all new entries in `aTlvs` to Network Data.
+    for (const NetworkDataTlv *cur = reinterpret_cast<const NetworkDataTlv *>(aTlvs); cur < end; cur = cur->GetNext())
+    {
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypePrefix:
-            SuccessOrExit(error = AddPrefix(*static_cast<PrefixTlv *>(cur)));
-            otDumpDebgNetData("add prefix done", mTlvs, mLength);
+            SuccessOrExit(error = AddPrefix(*static_cast<const PrefixTlv *>(cur), flags));
             break;
 
         case NetworkDataTlv::kTypeService:
-            SuccessOrExit(error = AddService(*static_cast<ServiceTlv *>(cur), aOldTlvs, aOldTlvsLength));
-            otDumpDebgNetData("add service done", mTlvs, mLength);
+            SuccessOrExit(error = AddService(*static_cast<const ServiceTlv *>(cur), flags));
             break;
 
         default:
             break;
         }
     }
+
+    IncrementVersions(flags);
 
     otDumpDebgNetData("add done", mTlvs, mLength);
 
@@ -776,108 +732,107 @@ exit:
     return error;
 }
 
-otError Leader::AddPrefix(PrefixTlv &aPrefix)
+otError Leader::AddPrefix(const PrefixTlv &aPrefix, ChangedFlags &aChangedFlags)
 {
-    otError         error = OT_ERROR_NONE;
-    NetworkDataTlv *end;
-
-    VerifyOrExit(aPrefix.IsValid(), error = OT_ERROR_PARSE);
-    end = aPrefix.GetNext();
-
-    for (NetworkDataTlv *cur = aPrefix.GetSubTlvs(); cur < end; cur = cur->GetNext())
-    {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
-
-        switch (cur->GetType())
-        {
-        case NetworkDataTlv::kTypeHasRoute:
-            SuccessOrExit(error = AddHasRoute(aPrefix, *static_cast<HasRouteTlv *>(cur)));
-            break;
-
-        case NetworkDataTlv::kTypeBorderRouter:
-            SuccessOrExit(error = AddBorderRouter(aPrefix, *static_cast<BorderRouterTlv *>(cur)));
-            break;
-
-        default:
-            break;
-        }
-    }
-
-exit:
-    return error;
-}
-
-otError Leader::AddService(ServiceTlv &aService, uint8_t *aOldTlvs, uint8_t aOldTlvsLength)
-{
-    otError         error = OT_ERROR_NONE;
-    NetworkDataTlv *end;
-
-    VerifyOrExit(aService.IsValid(), error = OT_ERROR_PARSE);
-    end = aService.GetNext();
-
-    for (NetworkDataTlv *cur = aService.GetSubTlvs(); cur < end; cur = cur->GetNext())
-    {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
-
-        switch (cur->GetType())
-        {
-        case NetworkDataTlv::kTypeServer:
-            SuccessOrExit(error = AddServer(aService, *static_cast<ServerTlv *>(cur), aOldTlvs, aOldTlvsLength));
-            break;
-
-        default:
-            break;
-        }
-    }
-
-exit:
-    return error;
-}
-
-otError Leader::AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute)
-{
-    otError      error        = OT_ERROR_NONE;
-    PrefixTlv *  dstPrefix    = NULL;
-    HasRouteTlv *dstHasRoute  = NULL;
-    uint16_t     appendLength = 0;
-
-    VerifyOrExit(aHasRoute.GetNumEntries() > 0, error = OT_ERROR_PARSE);
-
-    if ((dstPrefix = FindPrefix(aPrefix.GetPrefix(), aPrefix.GetPrefixLength())) != NULL)
-    {
-        dstHasRoute = FindHasRoute(*dstPrefix, aHasRoute.IsStable());
-    }
+    otError    error     = OT_ERROR_NONE;
+    PrefixTlv *dstPrefix = FindPrefix(aPrefix.GetPrefix(), aPrefix.GetPrefixLength());
 
     if (dstPrefix == NULL)
     {
-        appendLength += sizeof(PrefixTlv) + BitVectorBytes(aPrefix.GetPrefixLength());
-    }
+        dstPrefix = static_cast<PrefixTlv *>(AppendTlv(PrefixTlv::CalculateSize(aPrefix.GetPrefixLength())));
+        VerifyOrExit(dstPrefix != NULL, error = OT_ERROR_NO_BUFS);
 
-    if (dstHasRoute == NULL)
-    {
-        appendLength += sizeof(HasRouteTlv);
-    }
-
-    appendLength += sizeof(HasRouteEntry);
-
-    VerifyOrExit(mLength + appendLength <= sizeof(mTlvs), error = OT_ERROR_NO_BUFS);
-
-    if (dstPrefix == NULL)
-    {
-        dstPrefix = static_cast<PrefixTlv *>(AppendTlv(sizeof(PrefixTlv) + BitVectorBytes(aPrefix.GetPrefixLength())));
         dstPrefix->Init(aPrefix.GetDomainId(), aPrefix.GetPrefixLength(), aPrefix.GetPrefix());
     }
 
-    if (aHasRoute.IsStable())
+    for (const NetworkDataTlv *subCur = aPrefix.GetSubTlvs(); subCur < aPrefix.GetNext(); subCur = subCur->GetNext())
     {
-        dstPrefix->SetStable();
+        switch (subCur->GetType())
+        {
+        case NetworkDataTlv::kTypeHasRoute:
+            SuccessOrExit(error = AddHasRoute(*static_cast<const HasRouteTlv *>(subCur), *dstPrefix, aChangedFlags));
+            break;
+
+        case NetworkDataTlv::kTypeBorderRouter:
+            SuccessOrExit(
+                error = AddBorderRouter(*static_cast<const BorderRouterTlv *>(subCur), *dstPrefix, aChangedFlags));
+            break;
+
+        default:
+            break;
+        }
     }
+
+exit:
+    if (dstPrefix != NULL)
+    {
+        // `UpdatePrefix()` updates the TLV's stable flag based on
+        // its sub-TLVs, or removes the TLV if it contains no sub-TLV.
+        // This is called at `exit` to ensure that if appending
+        // sub-TLVs fail (e.g., out of space in network data), we
+        // remove an empty Prefix TLV.
+
+        IgnoreReturnValue(UpdatePrefix(*dstPrefix));
+    }
+
+    return error;
+}
+
+otError Leader::AddService(const ServiceTlv &aService, ChangedFlags &aChangedFlags)
+{
+    otError     error = OT_ERROR_NONE;
+    ServiceTlv *dstService =
+        FindService(aService.GetEnterpriseNumber(), aService.GetServiceData(), aService.GetServiceDataLength());
+    const ServerTlv *server;
+
+    if (dstService == NULL)
+    {
+        uint8_t serviceId;
+
+        SuccessOrExit(error = AllocateServiceId(serviceId));
+
+        dstService = static_cast<ServiceTlv *>(
+            AppendTlv(ServiceTlv::CalculateSize(aService.GetEnterpriseNumber(), aService.GetServiceDataLength())));
+        VerifyOrExit(dstService != NULL, error = OT_ERROR_NO_BUFS);
+
+        dstService->Init(serviceId, aService.GetEnterpriseNumber(), aService.GetServiceData(),
+                         aService.GetServiceDataLength());
+    }
+
+    server = FindTlv<ServerTlv>(aService.GetSubTlvs(), aService.GetNext());
+    OT_ASSERT(server != NULL);
+
+    SuccessOrExit(error = AddServer(*server, *dstService, aChangedFlags));
+
+exit:
+    if (dstService != NULL)
+    {
+        // `UpdateService()` updates the TLV's stable flag based on
+        // its sub-TLVs, or removes the TLV if it contains no sub-TLV.
+        // This is called at `exit` to ensure that if appending
+        // sub-TLVs fail (e.g., out of space in network data), we
+        // remove an empty Service TLV.
+
+        IgnoreReturnValue(UpdateService(*dstService));
+    }
+
+    return error;
+}
+
+otError Leader::AddHasRoute(const HasRouteTlv &aHasRoute, PrefixTlv &aDstPrefix, ChangedFlags &aChangedFlags)
+{
+    otError              error       = OT_ERROR_NONE;
+    HasRouteTlv *        dstHasRoute = FindHasRoute(aDstPrefix, aHasRoute.IsStable());
+    const HasRouteEntry *entry       = aHasRoute.GetFirstEntry();
 
     if (dstHasRoute == NULL)
     {
-        dstHasRoute = static_cast<HasRouteTlv *>(dstPrefix->GetNext());
+        // Ensure there is space for `HasRouteTlv` and a single entry.
+        VerifyOrExit(CanInsert(sizeof(HasRouteTlv) + sizeof(HasRouteEntry)), error = OT_ERROR_NO_BUFS);
+
+        dstHasRoute = static_cast<HasRouteTlv *>(aDstPrefix.GetNext());
         Insert(dstHasRoute, sizeof(HasRouteTlv));
-        dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(HasRouteTlv));
+        aDstPrefix.IncreaseLength(sizeof(HasRouteTlv));
         dstHasRoute->Init();
 
         if (aHasRoute.IsStable())
@@ -886,92 +841,133 @@ otError Leader::AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute)
         }
     }
 
+    VerifyOrExit(!ContainsMatchingEntry(dstHasRoute, *entry));
+
+    VerifyOrExit(CanInsert(sizeof(HasRouteEntry)), error = OT_ERROR_NO_BUFS);
+
     Insert(dstHasRoute->GetNext(), sizeof(HasRouteEntry));
-    dstHasRoute->SetLength(dstHasRoute->GetLength() + sizeof(HasRouteEntry));
-    dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(HasRouteEntry));
-    memcpy(dstHasRoute->GetEntry(dstHasRoute->GetNumEntries() - 1), aHasRoute.GetEntry(0), sizeof(HasRouteEntry));
+    dstHasRoute->IncreaseLength(sizeof(HasRouteEntry));
+    aDstPrefix.IncreaseLength(sizeof(HasRouteEntry));
+
+    *dstHasRoute->GetLastEntry() = *entry;
+    aChangedFlags.Update(*dstHasRoute);
 
 exit:
     return error;
 }
 
-otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOldTlvs, uint8_t aOldTlvsLength)
+otError Leader::AddBorderRouter(const BorderRouterTlv &aBorderRouter,
+                                PrefixTlv &            aDstPrefix,
+                                ChangedFlags &         aChangedFlags)
 {
-    otError     error          = OT_ERROR_NONE;
-    ServiceTlv *dstService     = NULL;
-    ServiceTlv *oldService     = NULL;
-    ServerTlv * dstServer      = NULL;
-    uint16_t    appendLength   = 0;
-    uint8_t     serviceId      = 0;
-    uint16_t    serviceTlvSize = ServiceTlv::GetSize(aService.GetEnterpriseNumber(), aService.GetServiceDataLength());
+    otError                  error           = OT_ERROR_NONE;
+    BorderRouterTlv *        dstBorderRouter = FindBorderRouter(aDstPrefix, aBorderRouter.IsStable());
+    ContextTlv *             dstContext      = FindContext(aDstPrefix);
+    uint8_t                  contextId       = 0;
+    const BorderRouterEntry *entry           = aBorderRouter.GetFirstEntry();
 
-    dstService =
-        FindService(aService.GetEnterpriseNumber(), aService.GetServiceData(), aService.GetServiceDataLength());
-
-    if (dstService == NULL)
+    if (dstContext == NULL)
     {
-        appendLength += serviceTlvSize;
+        // Allocate a Context ID first. This ensure that if we cannot
+        // allocate, we fail and exit before potentially inserting a
+        // Border Router sub-TLV.
+        SuccessOrExit(error = AllocateContextId(contextId));
     }
 
-    appendLength += sizeof(ServerTlv) + aServer.GetServerDataLength();
-
-    VerifyOrExit(mLength + appendLength <= sizeof(mTlvs), error = OT_ERROR_NO_BUFS);
-
-    if (dstService == NULL)
+    if (dstBorderRouter == NULL)
     {
-        // Try to preserve old Service ID, if existing
-        oldService = FindService(aService.GetEnterpriseNumber(), aService.GetServiceData(),
-                                 aService.GetServiceDataLength(), aOldTlvs, aOldTlvsLength);
+        // Ensure there is space for `BorderRouterTlv` with a single entry
+        // and a `ContextTlv` (if not already present).
+        VerifyOrExit(CanInsert(sizeof(BorderRouterTlv) + sizeof(BorderRouterEntry) +
+                               ((dstContext == NULL) ? sizeof(ContextTlv) : 0)),
+                     error = OT_ERROR_NO_BUFS);
 
-        if (oldService != NULL)
+        dstBorderRouter = static_cast<BorderRouterTlv *>(aDstPrefix.GetNext());
+        Insert(dstBorderRouter, sizeof(BorderRouterTlv));
+        aDstPrefix.IncreaseLength(sizeof(BorderRouterTlv));
+        dstBorderRouter->Init();
+
+        if (aBorderRouter.IsStable())
         {
-            // The same service is not found in current data, but was in old data. So, it had to be just removed by
-            // RemoveRloc() Lets use the same ServiceId
-            serviceId = oldService->GetServiceId();
+            dstBorderRouter->SetStable();
         }
-        else
-        {
-            uint8_t i;
-
-            // This seems like completely new service. Lets try to find new ServiceId for it. If all are taken, error
-            // out. Since we call FindServiceById() on mTlv, we need to execute this before Insert() call, otherwise
-            // we'll find uninitialized service as well.
-            for (i = Mle::kServiceMinId; i <= Mle::kServiceMaxId; i++)
-            {
-                if (FindServiceById(i) == NULL)
-                {
-                    serviceId = i;
-                    break;
-                }
-            }
-
-            otLogInfoNetData("Allocated Service ID = %d", i);
-
-            VerifyOrExit(i <= Mle::kServiceMaxId, error = OT_ERROR_NO_BUFS);
-        }
-
-        dstService = static_cast<ServiceTlv *>(AppendTlv(static_cast<uint8_t>(serviceTlvSize)));
-
-        dstService->Init(serviceId, aService.GetEnterpriseNumber(), aService.GetServiceData(),
-                         aService.GetServiceDataLength());
     }
 
-    dstServer = static_cast<ServerTlv *>(dstService->GetNext());
+    if (dstContext == NULL)
+    {
+        // Ensure there is space for a `ContextTlv` and a single entry.
+        VerifyOrExit(CanInsert(sizeof(BorderRouterEntry) + sizeof(ContextTlv)), error = OT_ERROR_NO_BUFS);
 
-    Insert(dstServer, sizeof(ServerTlv) + aServer.GetServerDataLength());
-    dstServer->Init();
-    dstServer->SetServer16(aServer.GetServer16());
-    dstServer->SetServerData(aServer.GetServerData(), aServer.GetServerDataLength());
+        dstContext = static_cast<ContextTlv *>(aDstPrefix.GetNext());
+        Insert(dstContext, sizeof(ContextTlv));
+        aDstPrefix.IncreaseLength(sizeof(ContextTlv));
+        dstContext->Init(static_cast<uint8_t>(contextId), aDstPrefix.GetPrefixLength());
+    }
+
+    if (aBorderRouter.IsStable())
+    {
+        dstContext->SetStable();
+    }
+
+    dstContext->SetCompress();
+    StopContextReuseTimer(dstContext->GetContextId());
+
+    VerifyOrExit(!ContainsMatchingEntry(dstBorderRouter, *entry));
+
+    VerifyOrExit(CanInsert(sizeof(BorderRouterEntry)), error = OT_ERROR_NO_BUFS);
+
+    Insert(dstBorderRouter->GetNext(), sizeof(BorderRouterEntry));
+    dstBorderRouter->IncreaseLength(sizeof(BorderRouterEntry));
+    aDstPrefix.IncreaseLength(sizeof(BorderRouterEntry));
+    *dstBorderRouter->GetLastEntry() = *entry;
+    aChangedFlags.Update(*dstBorderRouter);
+
+exit:
+    return error;
+}
+
+otError Leader::AddServer(const ServerTlv &aServer, ServiceTlv &aDstService, ChangedFlags &aChangedFlags)
+{
+    otError    error = OT_ERROR_NONE;
+    ServerTlv *dstServer;
+    uint8_t    tlvSize = aServer.GetSize();
+
+    VerifyOrExit(!ContainsMatchingServer(&aDstService, aServer));
+
+    VerifyOrExit(CanInsert(tlvSize), error = OT_ERROR_NO_BUFS);
+
+    dstServer = static_cast<ServerTlv *>(aDstService.GetNext());
+    Insert(dstServer, tlvSize);
+    dstServer->Init(aServer.GetServer16(), aServer.GetServerData(), aServer.GetServerDataLength());
 
     if (aServer.IsStable())
     {
-        dstService->SetStable();
         dstServer->SetStable();
     }
 
-    dstService->SetLength(dstService->GetLength() + sizeof(ServerTlv) + aServer.GetServerDataLength());
+    aDstService.IncreaseLength(tlvSize);
+    aChangedFlags.Update(*dstServer);
 
 exit:
+    return error;
+}
+
+otError Leader::AllocateServiceId(uint8_t &aServiceId)
+{
+    otError error = OT_ERROR_NOT_FOUND;
+    uint8_t serviceId;
+
+    for (serviceId = Mle::kServiceMinId; serviceId <= Mle::kServiceMaxId; serviceId++)
+    {
+        if (FindServiceById(serviceId) == NULL)
+        {
+            aServiceId = serviceId;
+            error      = OT_ERROR_NONE;
+            otLogInfoNetData("Allocated Service ID = %d", serviceId);
+            break;
+        }
+    }
+
     return error;
 }
 
@@ -994,113 +990,26 @@ exit:
     return service;
 }
 
-otError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter)
+otError Leader::AllocateContextId(uint8_t &aContextId)
 {
-    otError          error           = OT_ERROR_NONE;
-    PrefixTlv *      dstPrefix       = NULL;
-    ContextTlv *     dstContext      = NULL;
-    BorderRouterTlv *dstBorderRouter = NULL;
-    int              contextId       = -1;
-    uint16_t         appendLength    = 0;
+    otError error = OT_ERROR_NOT_FOUND;
 
-    VerifyOrExit(aBorderRouter.GetNumEntries() > 0, error = OT_ERROR_PARSE);
-
-    if ((dstPrefix = FindPrefix(aPrefix.GetPrefix(), aPrefix.GetPrefixLength())) != NULL)
+    for (uint8_t contextId = kMinContextId; contextId < kMinContextId + kNumContextIds; contextId++)
     {
-        dstContext      = FindContext(*dstPrefix);
-        dstBorderRouter = FindBorderRouter(*dstPrefix, aBorderRouter.IsStable());
-    }
-
-    if (dstPrefix == NULL)
-    {
-        appendLength += sizeof(PrefixTlv) + BitVectorBytes(aPrefix.GetPrefixLength());
-    }
-
-    if (dstContext == NULL)
-    {
-        appendLength += sizeof(ContextTlv);
-    }
-
-    if (dstBorderRouter == NULL)
-    {
-        appendLength += sizeof(BorderRouterTlv);
-    }
-
-    appendLength += sizeof(BorderRouterEntry);
-
-    VerifyOrExit(mLength + appendLength <= sizeof(mTlvs), error = OT_ERROR_NO_BUFS);
-
-    if (dstContext == NULL)
-    {
-        contextId = AllocateContext();
-        VerifyOrExit(contextId >= 0, error = OT_ERROR_NO_BUFS);
-    }
-
-    if (dstPrefix == NULL)
-    {
-        dstPrefix = static_cast<PrefixTlv *>(AppendTlv(sizeof(PrefixTlv) + BitVectorBytes(aPrefix.GetPrefixLength())));
-        dstPrefix->Init(aPrefix.GetDomainId(), aPrefix.GetPrefixLength(), aPrefix.GetPrefix());
-    }
-
-    if (dstContext == NULL)
-    {
-        dstContext = static_cast<ContextTlv *>(dstPrefix->GetNext());
-        Insert(dstContext, sizeof(ContextTlv));
-        dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(ContextTlv));
-        dstContext->Init();
-        dstContext->SetCompress();
-        dstContext->SetContextId(static_cast<uint8_t>(contextId));
-        dstContext->SetContextLength(aPrefix.GetPrefixLength());
-    }
-
-    dstContext->SetCompress();
-    StopContextReuseTimer(dstContext->GetContextId());
-
-    if (dstBorderRouter == NULL)
-    {
-        dstBorderRouter = static_cast<BorderRouterTlv *>(dstPrefix->GetNext());
-        Insert(dstBorderRouter, sizeof(BorderRouterTlv));
-        dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(BorderRouterTlv));
-        dstBorderRouter->Init();
-    }
-
-    Insert(dstBorderRouter->GetNext(), sizeof(BorderRouterEntry));
-    dstBorderRouter->SetLength(dstBorderRouter->GetLength() + sizeof(BorderRouterEntry));
-    dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(BorderRouterEntry));
-    memcpy(dstBorderRouter->GetEntry(dstBorderRouter->GetNumEntries() - 1), aBorderRouter.GetEntry(0),
-           sizeof(BorderRouterEntry));
-
-    if (aBorderRouter.IsStable())
-    {
-        dstPrefix->SetStable();
-        dstContext->SetStable();
-        dstBorderRouter->SetStable();
-    }
-
-exit:
-    return error;
-}
-
-int Leader::AllocateContext(void)
-{
-    int rval = -1;
-
-    for (int i = kMinContextId; i < kMinContextId + kNumContextIds; i++)
-    {
-        if ((mContextUsed & (1 << i)) == 0)
+        if ((mContextUsed & (1 << contextId)) == 0)
         {
-            mContextUsed |= 1 << i;
-            rval = i;
-            otLogInfoNetData("Allocated Context ID = %d", rval);
-            ExitNow();
+            mContextUsed |= (1 << contextId);
+            aContextId = contextId;
+            error      = OT_ERROR_NONE;
+            otLogInfoNetData("Allocated Context ID = %d", contextId);
+            break;
         }
     }
 
-exit:
-    return rval;
+    return error;
 }
 
-void Leader::FreeContext(uint8_t aContextId)
+void Leader::FreeContextId(uint8_t aContextId)
 {
     otLogInfoNetData("Free Context Id = %d", aContextId);
     RemoveContext(aContextId);
@@ -1125,8 +1034,23 @@ void Leader::StopContextReuseTimer(uint8_t aContextId)
     mContextLastUsed[aContextId - kMinContextId].SetValue(0);
 }
 
-void Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode)
+void Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode, ChangedFlags &aChangedFlags)
 {
+    RemoveRloc(aRloc16, aMatchMode, NULL, 0, aChangedFlags);
+}
+
+void Leader::RemoveRloc(uint16_t       aRloc16,
+                        MatchMode      aMatchMode,
+                        const uint8_t *aExcludeTlvs,
+                        uint8_t        aExcludeTlvsLength,
+                        ChangedFlags & aChangedFlags)
+{
+    // Remove entries from Network Data matching `aRloc16` (using
+    // `aMatchMode` to determine the match) but exclude any entries
+    // that are present in `aExcludeTlvs`. As entries are removed
+    // update `aChangedFlags` to indicate if Network Data (stable or
+    // not) got changed.
+
     NetworkDataTlv *cur = GetTlvsStart();
 
     while (cur < GetTlvsEnd())
@@ -1135,33 +1059,35 @@ void Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode)
         {
         case NetworkDataTlv::kTypePrefix:
         {
-            PrefixTlv *prefix = static_cast<PrefixTlv *>(cur);
+            PrefixTlv *      prefix = static_cast<PrefixTlv *>(cur);
+            const PrefixTlv *excludePrefix =
+                FindPrefix(prefix->GetPrefix(), prefix->GetPrefixLength(), aExcludeTlvs, aExcludeTlvsLength);
 
-            RemoveRloc(*prefix, aRloc16, aMatchMode);
+            RemoveRlocInPrefix(*prefix, aRloc16, aMatchMode, excludePrefix, aChangedFlags);
 
-            if (prefix->GetSubTlvsLength() == 0)
+            if (UpdatePrefix(*prefix) == kTlvRemoved)
             {
-                RemoveTlv(prefix);
+                // Do not update `cur` when TLV is removed.
                 continue;
             }
 
-            otDumpDebgNetData("remove prefix done", mTlvs, mLength);
             break;
         }
 
         case NetworkDataTlv::kTypeService:
         {
-            ServiceTlv *service = static_cast<ServiceTlv *>(cur);
+            ServiceTlv *      service = static_cast<ServiceTlv *>(cur);
+            const ServiceTlv *excludeService =
+                FindService(service->GetEnterpriseNumber(), service->GetServiceData(), service->GetServiceDataLength(),
+                            aExcludeTlvs, aExcludeTlvsLength);
 
-            RemoveRloc(*service, aRloc16, aMatchMode);
+            RemoveRlocInService(*service, aRloc16, aMatchMode, excludeService, aChangedFlags);
 
-            if (service->GetSubTlvsLength() == 0)
+            if (UpdateService(*service) == kTlvRemoved)
             {
-                RemoveTlv(service);
+                // Do not update `cur` when TLV is removed.
                 continue;
             }
-
-            otDumpDebgNetData("remove service done", mTlvs, mLength);
 
             break;
         }
@@ -1176,8 +1102,15 @@ void Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode)
     otDumpDebgNetData("remove done", mTlvs, mLength);
 }
 
-void Leader::RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16, MatchMode aMatchMode)
+void Leader::RemoveRlocInPrefix(PrefixTlv &      aPrefix,
+                                uint16_t         aRloc16,
+                                MatchMode        aMatchMode,
+                                const PrefixTlv *aExcludePrefix,
+                                ChangedFlags &   aChangedFlags)
 {
+    // Remove entries in `aPrefix` TLV matching the given `aRloc16`
+    // excluding any entries that are present in `aExcludePrefix`.
+
     NetworkDataTlv *cur = aPrefix.GetSubTlvs();
     ContextTlv *    context;
 
@@ -1186,12 +1119,12 @@ void Leader::RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16, MatchMode aMatchMo
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypeHasRoute:
-            RemoveRloc(aPrefix, *static_cast<HasRouteTlv *>(cur), aRloc16, aMatchMode);
+            RemoveRlocInHasRoute(aPrefix, *static_cast<HasRouteTlv *>(cur), aRloc16, aMatchMode, aExcludePrefix,
+                                 aChangedFlags);
 
-            // remove has route tlv if empty
             if (cur->GetLength() == 0)
             {
-                aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - sizeof(HasRouteTlv));
+                aPrefix.DecreaseLength(sizeof(HasRouteTlv));
                 RemoveTlv(cur);
                 continue;
             }
@@ -1199,12 +1132,12 @@ void Leader::RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16, MatchMode aMatchMo
             break;
 
         case NetworkDataTlv::kTypeBorderRouter:
-            RemoveRloc(aPrefix, *static_cast<BorderRouterTlv *>(cur), aRloc16, aMatchMode);
+            RemoveRlocInBorderRouter(aPrefix, *static_cast<BorderRouterTlv *>(cur), aRloc16, aMatchMode, aExcludePrefix,
+                                     aChangedFlags);
 
-            // remove border router tlv if empty
             if (cur->GetLength() == 0)
             {
-                aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - sizeof(BorderRouterTlv));
+                aPrefix.DecreaseLength(sizeof(BorderRouterTlv));
                 RemoveTlv(cur);
                 continue;
             }
@@ -1233,18 +1166,27 @@ void Leader::RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16, MatchMode aMatchMo
     }
 }
 
-void Leader::RemoveRloc(ServiceTlv &aService, uint16_t aRloc16, MatchMode aMatchMode)
+void Leader::RemoveRlocInService(ServiceTlv &      aService,
+                                 uint16_t          aRloc16,
+                                 MatchMode         aMatchMode,
+                                 const ServiceTlv *aExcludeService,
+                                 ChangedFlags &    aChangedFlags)
 {
+    // Remove entries in `aService` TLV matching the given `aRloc16`
+    // excluding any entries that are present in `aExcludeService`.
+
     NetworkDataTlv *start = aService.GetSubTlvs();
     ServerTlv *     server;
 
     while ((server = FindTlv<ServerTlv>(start, aService.GetNext())) != NULL)
     {
-        if (RlocMatch(server->GetServer16(), aRloc16, aMatchMode))
+        if (RlocMatch(server->GetServer16(), aRloc16, aMatchMode) && !ContainsMatchingServer(aExcludeService, *server))
         {
             uint8_t subTlvSize = server->GetSize();
+
+            aChangedFlags.Update(*server);
             RemoveTlv(server);
-            aService.SetSubTlvsLength(aService.GetSubTlvsLength() - subTlvSize);
+            aService.DecreaseLength(subTlvSize);
             continue;
         }
 
@@ -1252,16 +1194,27 @@ void Leader::RemoveRloc(ServiceTlv &aService, uint16_t aRloc16, MatchMode aMatch
     }
 }
 
-void Leader::RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint16_t aRloc16, MatchMode aMatchMode)
+void Leader::RemoveRlocInHasRoute(PrefixTlv &      aPrefix,
+                                  HasRouteTlv &    aHasRoute,
+                                  uint16_t         aRloc16,
+                                  MatchMode        aMatchMode,
+                                  const PrefixTlv *aExcludePrefix,
+                                  ChangedFlags &   aChangedFlags)
 {
+    // Remove entries in `aHasRoute` (a sub-TLV of `aPrefix` TLV)
+    // matching the given `aRloc16` excluding entries that are present
+    // in `aExcludePrefix`.
+
     HasRouteEntry *entry = aHasRoute.GetFirstEntry();
 
     while (entry <= aHasRoute.GetLastEntry())
     {
-        if (RlocMatch(entry->GetRloc(), aRloc16, aMatchMode))
+        if (RlocMatch(entry->GetRloc(), aRloc16, aMatchMode) &&
+            !ContainsMatchingEntry(aExcludePrefix, aHasRoute.IsStable(), *entry))
         {
-            aHasRoute.SetLength(aHasRoute.GetLength() - sizeof(HasRouteEntry));
-            aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - sizeof(HasRouteEntry));
+            aChangedFlags.Update(aHasRoute);
+            aHasRoute.DecreaseLength(sizeof(HasRouteEntry));
+            aPrefix.DecreaseLength(sizeof(HasRouteEntry));
             Remove(entry, sizeof(HasRouteEntry));
             continue;
         }
@@ -1270,16 +1223,27 @@ void Leader::RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint16_t aRl
     }
 }
 
-void Leader::RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter, uint16_t aRloc16, MatchMode aMatchMode)
+void Leader::RemoveRlocInBorderRouter(PrefixTlv &      aPrefix,
+                                      BorderRouterTlv &aBorderRouter,
+                                      uint16_t         aRloc16,
+                                      MatchMode        aMatchMode,
+                                      const PrefixTlv *aExcludePrefix,
+                                      ChangedFlags &   aChangedFlags)
 {
+    // Remove entries in `aBorderRouter` (a sub-TLV of `aPrefix` TLV)
+    // matching the given `aRloc16` excluding entries that are present
+    // in `aExcludePrefix`.
+
     BorderRouterEntry *entry = aBorderRouter.GetFirstEntry();
 
     while (entry <= aBorderRouter.GetLastEntry())
     {
-        if (RlocMatch(entry->GetRloc(), aRloc16, aMatchMode))
+        if (RlocMatch(entry->GetRloc(), aRloc16, aMatchMode) &&
+            !ContainsMatchingEntry(aExcludePrefix, aBorderRouter.IsStable(), *entry))
         {
-            aBorderRouter.SetLength(aBorderRouter.GetLength() - sizeof(BorderRouterEntry));
-            aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - sizeof(BorderRouterEntry));
+            aChangedFlags.Update(aBorderRouter);
+            aBorderRouter.DecreaseLength(sizeof(BorderRouterEntry));
+            aPrefix.DecreaseLength(sizeof(BorderRouterEntry));
             Remove(entry, sizeof(*entry));
             continue;
         }
@@ -1297,16 +1261,14 @@ void Leader::RemoveContext(uint8_t aContextId)
     {
         RemoveContext(*prefix, aContextId);
 
-        if (prefix->GetSubTlvsLength() == 0)
+        if (UpdatePrefix(*prefix) == kTlvRemoved)
         {
-            RemoveTlv(prefix);
+            // Do not update `start` when TLV is removed.
             continue;
         }
 
         start = prefix->GetNext();
     }
-
-    otDumpDebgNetData("remove done", mTlvs, mLength);
 }
 
 void Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
@@ -1320,7 +1282,7 @@ void Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
         {
             uint8_t subTlvSize = context->GetSize();
             RemoveTlv(context);
-            aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - subTlvSize);
+            aPrefix.DecreaseLength(subTlvSize);
             continue;
         }
 
@@ -1373,7 +1335,7 @@ void Leader::HandleTimer(void)
 
         if (TimerMilli::GetNow() - mContextLastUsed[i] >= Time::SecToMsec(mContextIdReuseDelay))
         {
-            FreeContext(kMinContextId + i);
+            FreeContextId(kMinContextId + i);
         }
         else
         {
