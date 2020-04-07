@@ -4106,28 +4106,19 @@ bool Mle::IsMeshLocalAddress(const Ip6::Address &aAddress) const
     return aAddress.PrefixMatch(GetMeshLocal16()) >= MeshLocalPrefix::kLength;
 }
 
-otError Mle::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header)
+otError Mle::CheckReachability(uint16_t aMeshDest, Ip6::Header &aIp6Header)
 {
-    otError          error = OT_ERROR_DROP;
-    Ip6::MessageInfo messageInfo;
+    otError error;
 
-    if (aMeshDest != GetRloc16())
+    if ((aMeshDest != GetRloc16()) || Get<ThreadNetif>().IsUnicastAddress(aIp6Header.GetDestination()))
     {
-        ExitNow(error = OT_ERROR_NONE);
+        error = OT_ERROR_NONE;
+    }
+    else
+    {
+        error = OT_ERROR_NO_ROUTE;
     }
 
-    if (Get<ThreadNetif>().IsUnicastAddress(aIp6Header.GetDestination()))
-    {
-        ExitNow(error = OT_ERROR_NONE);
-    }
-
-    messageInfo.GetPeerAddr() = GetMeshLocal16();
-    messageInfo.GetPeerAddr().SetLocator(aMeshSource);
-
-    Get<Ip6::Icmp>().SendError(Ip6::IcmpHeader::kTypeDstUnreach, Ip6::IcmpHeader::kCodeDstUnreachNoRoute, messageInfo,
-                               aIp6Header);
-
-exit:
     return error;
 }
 
