@@ -71,7 +71,7 @@ otError otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *a
     const Mac::ExtendedPanId &extPanId = *static_cast<const Mac::ExtendedPanId *>(aExtendedPanId);
     Mle::MeshLocalPrefix      prefix;
 
-    VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
 
     instance.Get<Mac::Mac>().SetExtendedPanId(extPanId);
 
@@ -125,7 +125,7 @@ otError otThreadSetMasterKey(otInstance *aInstance, const otMasterKey *aKey)
 
     OT_ASSERT(aKey != NULL);
 
-    VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
 
     error = instance.Get<KeyManager>().SetMasterKey(*static_cast<const MasterKey *>(aKey));
     instance.Get<MeshCoP::ActiveDataset>().Clear();
@@ -161,7 +161,7 @@ otError otThreadSetMeshLocalPrefix(otInstance *aInstance, const otMeshLocalPrefi
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
 
     instance.Get<Mle::MleRouter>().SetMeshLocalPrefix(*static_cast<const Mle::MeshLocalPrefix *>(aMeshLocalPrefix));
     instance.Get<MeshCoP::ActiveDataset>().Clear();
@@ -190,7 +190,7 @@ otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
 
     error = instance.Get<Mac::Mac>().SetNetworkName(aNetworkName);
     instance.Get<MeshCoP::ActiveDataset>().Clear();
@@ -310,7 +310,7 @@ otError otThreadGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
 
     // Reference device needs get the original parent's info even after the node state changed.
 #if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_CHILD, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsChild(), error = OT_ERROR_INVALID_STATE);
 #endif
 
     parent = &instance.Get<Mle::MleRouter>().GetParent();

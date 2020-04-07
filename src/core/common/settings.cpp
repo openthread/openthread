@@ -54,7 +54,7 @@ void SettingsBase::LogNetworkInfo(const char *aAction, const NetworkInfo &aNetwo
     otLogInfoCore(
         "Non-volatile: %s NetworkInfo {rloc:0x%04x, extaddr:%s, role:%s, mode:0x%02x, version:%hu, keyseq:0x%x, ...",
         aAction, aNetworkInfo.GetRloc16(), aNetworkInfo.GetExtAddress().ToString().AsCString(),
-        Mle::Mle::RoleToString(static_cast<otDeviceRole>(aNetworkInfo.GetRole())), aNetworkInfo.GetDeviceMode(),
+        Mle::Mle::RoleToString(static_cast<Mle::DeviceRole>(aNetworkInfo.GetRole())), aNetworkInfo.GetDeviceMode(),
         aNetworkInfo.GetVersion(), aNetworkInfo.GetKeySequence());
 
     otLogInfoCore(

@@ -183,19 +183,19 @@ otError DatasetManager::Save(const otOperationalDataset &aDataset)
 
     switch (Get<Mle::MleRouter>().GetRole())
     {
-    case OT_DEVICE_ROLE_DISABLED:
+    case Mle::kRoleDisabled:
         Restore();
         break;
 
-    case OT_DEVICE_ROLE_CHILD:
+    case Mle::kRoleChild:
         mTimer.Start(1000);
         break;
 #if OPENTHREAD_FTD
-    case OT_DEVICE_ROLE_ROUTER:
+    case Mle::kRoleRouter:
         mTimer.Start(1000);
         break;
 
-    case OT_DEVICE_ROLE_LEADER:
+    case Mle::kRoleLeader:
         Restore();
         Get<NetworkData::Leader>().IncrementVersionAndStableVersion();
         break;

@@ -105,7 +105,7 @@ void JamDetector::CheckState(void)
 
     switch (Get<Mle::MleRouter>().GetRole())
     {
-    case OT_DEVICE_ROLE_DISABLED:
+    case Mle::kRoleDisabled:
         VerifyOrExit(mTimer.IsRunning());
         mTimer.Stop();
         SetJamState(false);

@@ -92,7 +92,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
     channel.SetLength(0);
     pendingTimestamp.SetLength(0);
 
-    VerifyOrExit(Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER);
+    VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
 
     // verify that TLV data size is less than maximum TLV value size
     while (offset < aMessage.GetLength())
@@ -269,7 +269,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
 
 exit:
 
-    if (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER)
+    if (Get<Mle::MleRouter>().IsLeader())
     {
         SendSetResponse(aMessage, aMessageInfo, state);
     }

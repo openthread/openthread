@@ -292,7 +292,7 @@ otError MeshForwarder::UpdateIp6Route(Message &aMessage)
 
     GetMacSourceAddress(ip6Header.GetSource(), mMacSource);
 
-    if (mle.GetRole() == OT_DEVICE_ROLE_DISABLED || mle.GetRole() == OT_DEVICE_ROLE_DETACHED)
+    if (mle.IsDisabled() || mle.IsDetached())
     {
         if (ip6Header.GetDestination().IsLinkLocal() || ip6Header.GetDestination().IsLinkLocalMulticast())
         {
@@ -312,7 +312,7 @@ otError MeshForwarder::UpdateIp6Route(Message &aMessage)
         // transmits multicasts, as IEEE 802.15.4 unicasts to its
         // parent.
 
-        if (mle.GetRole() == OT_DEVICE_ROLE_CHILD && !aMessage.IsSubTypeMle())
+        if (mle.IsChild() && !aMessage.IsSubTypeMle())
         {
             mMacDest.SetShort(mle.GetNextHop(Mac::kShortAddrBroadcast));
         }
@@ -646,7 +646,7 @@ start:
         uint16_t           meshHeaderLength;
         uint8_t            hopsLeft;
 
-        if (mle.GetRole() == OT_DEVICE_ROLE_CHILD)
+        if (mle.IsChild())
         {
             // REED sets hopsLeft to max (16) + 1. It does not know the route cost.
             hopsLeft = Mle::kMaxRouteCost + 1;
