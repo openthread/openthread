@@ -484,7 +484,7 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
 
     mMeshSource = Get<Mac::Mac>().GetShortAddress();
 
-    SuccessOrExit(error = mle.CheckReachability(mMeshSource, mMeshDest, ip6Header));
+    SuccessOrExit(error = mle.CheckReachability(mMeshDest, ip6Header));
     mMacDest.SetShort(mle.GetNextHop(mMeshDest));
 
     if (mMacDest.GetShort() != mMeshDest)
@@ -495,6 +495,11 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header)
     }
 
 exit:
+    if (error == OT_ERROR_NO_ROUTE)
+    {
+        SendDestinationUnreachable(mMeshSource, ip6Header);
+    }
+
     return error;
 }
 
@@ -520,7 +525,7 @@ otError MeshForwarder::CheckReachability(uint8_t *           aFrame,
     Ip6::Header ip6Header;
 
     SuccessOrExit(error = GetIp6Header(aFrame, aFrameLength, aMeshSource, aMeshDest, ip6Header));
-    error = Get<Mle::MleRouter>().CheckReachability(aMeshSource.GetShort(), aMeshDest.GetShort(), ip6Header);
+    error = Get<Mle::MleRouter>().CheckReachability(aMeshDest.GetShort(), ip6Header);
 
 exit:
     // the message may not contain an IPv6 header
@@ -528,12 +533,23 @@ exit:
     {
         error = OT_ERROR_NONE;
     }
-    else if (error != OT_ERROR_NONE)
+    else if (error == OT_ERROR_NO_ROUTE)
     {
-        error = OT_ERROR_DROP;
+        SendDestinationUnreachable(aMeshSource.GetShort(), ip6Header);
     }
 
     return error;
+}
+
+void MeshForwarder::SendDestinationUnreachable(uint16_t aMeshSource, const Ip6::Header &aIp6Header)
+{
+    Ip6::MessageInfo messageInfo;
+
+    messageInfo.GetPeerAddr() = Get<Mle::MleRouter>().GetMeshLocal16();
+    messageInfo.GetPeerAddr().SetLocator(aMeshSource);
+
+    Get<Ip6::Icmp>().SendError(Ip6::IcmpHeader::kTypeDstUnreach, Ip6::IcmpHeader::kCodeDstUnreachNoRoute, messageInfo,
+                               aIp6Header);
 }
 
 void MeshForwarder::HandleMesh(uint8_t *               aFrame,

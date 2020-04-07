@@ -384,6 +384,7 @@ private:
                               uint16_t            aMeshDest      = 0xffff);
 
     void    SendMesh(Message &aMessage, Mac::TxFrame &aFrame);
+    void    SendDestinationUnreachable(uint16_t aMeshSource, const Ip6::Header &aIp6Header);
     otError UpdateIp6Route(Message &aMessage);
     otError UpdateIp6RouteFtd(Ip6::Header &ip6Header);
     otError UpdateMeshRoute(Message &aMessage);

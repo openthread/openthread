@@ -3886,14 +3886,13 @@ exit:
     return;
 }
 
-otError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header)
+otError MleRouter::CheckReachability(uint16_t aMeshDest, Ip6::Header &aIp6Header)
 {
-    Ip6::MessageInfo messageInfo;
-    otError          error = OT_ERROR_NONE;
+    otError error = OT_ERROR_NONE;
 
     if (IsChild())
     {
-        error = Mle::CheckReachability(aMeshSource, aMeshDest, aIp6Header);
+        error = Mle::CheckReachability(aMeshDest, aIp6Header);
         ExitNow();
     }
 
@@ -3925,13 +3924,7 @@ otError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, I
         ExitNow();
     }
 
-    messageInfo.GetPeerAddr() = GetMeshLocal16();
-    messageInfo.GetPeerAddr().SetLocator(aMeshSource);
-
-    Get<Ip6::Icmp>().SendError(Ip6::IcmpHeader::kTypeDstUnreach, Ip6::IcmpHeader::kCodeDstUnreachNoRoute, messageInfo,
-                               aIp6Header);
-
-    error = OT_ERROR_DROP;
+    error = OT_ERROR_NO_ROUTE;
 
 exit:
     return error;
