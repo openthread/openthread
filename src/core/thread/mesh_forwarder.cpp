@@ -1065,7 +1065,7 @@ exit:
     }
 }
 
-void MeshForwarder::HandleFragment(uint8_t *               aFrame,
+void MeshForwarder::HandleFragment(const uint8_t *         aFrame,
                                    uint16_t                aFrameLength,
                                    const Mac::Address &    aMacSource,
                                    const Mac::Address &    aMacDest,
@@ -1083,14 +1083,17 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
 
     if (fragmentHeader.GetDatagramOffset() == 0)
     {
-        uint8_t priority;
-        int     headerLength;
+        uint16_t datagramSize = fragmentHeader.GetDatagramSize();
 
-        SuccessOrExit(error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, priority));
+        error = FrameToMessage(aFrame, aFrameLength, datagramSize, aMacSource, aMacDest, message);
+        SuccessOrExit(error);
 
-        message = Get<MessagePool>().New(Message::kTypeIp6, 0, priority);
-        VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(datagramSize >= message->GetLength(), error = OT_ERROR_PARSE);
+        error = message->SetLength(datagramSize);
+        SuccessOrExit(error);
 
+        message->SetDatagramTag(fragmentHeader.GetDatagramTag());
+        message->SetTimeout(kReassemblyTimeout);
         message->SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);
         message->SetPanId(aLinkInfo.mPanId);
         message->AddRss(aLinkInfo.mRss);
@@ -1098,21 +1101,6 @@ void MeshForwarder::HandleFragment(uint8_t *               aFrame,
         message->SetTimeSyncSeq(aLinkInfo.mTimeSyncSeq);
         message->SetNetworkTimeOffset(aLinkInfo.mNetworkTimeOffset);
 #endif
-        headerLength = Get<Lowpan::Lowpan>().Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength,
-                                                        fragmentHeader.GetDatagramSize());
-        VerifyOrExit(headerLength > 0, error = OT_ERROR_PARSE);
-
-        aFrame += headerLength;
-        aFrameLength -= static_cast<uint16_t>(headerLength);
-
-        VerifyOrExit(fragmentHeader.GetDatagramSize() >= message->GetOffset() + aFrameLength, error = OT_ERROR_PARSE);
-
-        SuccessOrExit(error = message->SetLength(fragmentHeader.GetDatagramSize()));
-
-        message->SetDatagramTag(fragmentHeader.GetDatagramTag());
-        message->SetTimeout(kReassemblyTimeout);
-        message->Write(message->GetOffset(), aFrameLength, aFrame);
-        message->MoveOffset(aFrameLength);
 
         // Security Check
         VerifyOrExit(Get<Ip6::Filter>().Accept(*message), error = OT_ERROR_DROP);
@@ -1257,7 +1245,39 @@ bool MeshForwarder::UpdateReassemblyList(void)
     return mReassemblyList.GetHead() != NULL;
 }
 
-void MeshForwarder::HandleLowpanHC(uint8_t *               aFrame,
+otError MeshForwarder::FrameToMessage(const uint8_t *     aFrame,
+                                      uint16_t            aFrameLength,
+                                      uint16_t            aDatagramSize,
+                                      const Mac::Address &aMacSource,
+                                      const Mac::Address &aMacDest,
+                                      Message *&          aMessage)
+{
+    otError error = OT_ERROR_NONE;
+    int     headerLength;
+    uint8_t priority;
+
+    error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, priority);
+    SuccessOrExit(error);
+
+    aMessage = Get<MessagePool>().New(Message::kTypeIp6, 0, priority);
+    VerifyOrExit(aMessage, error = OT_ERROR_NO_BUFS);
+
+    headerLength =
+        Get<Lowpan::Lowpan>().Decompress(*aMessage, aMacSource, aMacDest, aFrame, aFrameLength, aDatagramSize);
+    VerifyOrExit(headerLength > 0, error = OT_ERROR_PARSE);
+
+    aFrame += headerLength;
+    aFrameLength -= static_cast<uint16_t>(headerLength);
+
+    SuccessOrExit(error = aMessage->SetLength(aMessage->GetLength() + aFrameLength));
+    aMessage->Write(aMessage->GetOffset(), aFrameLength, aFrame);
+    aMessage->MoveOffset(aFrameLength);
+
+exit:
+    return error;
+}
+
+void MeshForwarder::HandleLowpanHC(const uint8_t *         aFrame,
                                    uint16_t                aFrameLength,
                                    const Mac::Address &    aMacSource,
                                    const Mac::Address &    aMacDest,
@@ -1265,15 +1285,14 @@ void MeshForwarder::HandleLowpanHC(uint8_t *               aFrame,
 {
     otError  error   = OT_ERROR_NONE;
     Message *message = NULL;
-    int      headerLength;
-    uint8_t  priority;
 
 #if OPENTHREAD_FTD
     UpdateRoutes(aFrame, aFrameLength, aMacSource, aMacDest);
 #endif
 
-    SuccessOrExit(error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, priority));
-    VerifyOrExit((message = Get<MessagePool>().New(Message::kTypeIp6, 0, priority)) != NULL, error = OT_ERROR_NO_BUFS);
+    error = FrameToMessage(aFrame, aFrameLength, 0, aMacSource, aMacDest, message);
+    SuccessOrExit(error);
+
     message->SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);
     message->SetPanId(aLinkInfo.mPanId);
     message->AddRss(aLinkInfo.mRss);
@@ -1281,15 +1300,6 @@ void MeshForwarder::HandleLowpanHC(uint8_t *               aFrame,
     message->SetTimeSyncSeq(aLinkInfo.mTimeSyncSeq);
     message->SetNetworkTimeOffset(aLinkInfo.mNetworkTimeOffset);
 #endif
-
-    headerLength = Get<Lowpan::Lowpan>().Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength, 0);
-    VerifyOrExit(headerLength > 0, error = OT_ERROR_PARSE);
-
-    aFrame += headerLength;
-    aFrameLength -= static_cast<uint16_t>(headerLength);
-
-    SuccessOrExit(error = message->SetLength(message->GetLength() + aFrameLength));
-    message->Write(message->GetOffset(), aFrameLength, aFrame);
 
     // Security Check
     VerifyOrExit(Get<Ip6::Filter>().Accept(*message), error = OT_ERROR_DROP);

@@ -340,7 +340,7 @@ private:
                               uint16_t            aFrameLength,
                               const Mac::Address &aMeshSource,
                               const Mac::Address &aMeshDest);
-    void    UpdateRoutes(uint8_t *           aFrame,
+    void    UpdateRoutes(const uint8_t *     aFrame,
                          uint16_t            aFrameLength,
                          const Mac::Address &aMeshSource,
                          const Mac::Address &aMeshDest);
@@ -352,6 +352,12 @@ private:
                                  Ip6::Header &       aIp6Header,
                                  uint8_t &           aHeaderLength,
                                  bool &              aNextHeaderCompressed);
+    otError  FrameToMessage(const uint8_t *     aFrame,
+                            uint16_t            aFrameLength,
+                            uint16_t            aDatagramSize,
+                            const Mac::Address &aMacSource,
+                            const Mac::Address &aMacDest,
+                            Message *&          aMessage);
     otError  GetIp6Header(const uint8_t *     aFrame,
                           uint16_t            aFrameLength,
                           const Mac::Address &aMacSource,
@@ -365,12 +371,12 @@ private:
                         uint16_t                aFrameLength,
                         const Mac::Address &    aMacSource,
                         const otThreadLinkInfo &aLinkInfo);
-    void     HandleFragment(uint8_t *               aFrame,
+    void     HandleFragment(const uint8_t *         aFrame,
                             uint16_t                aFrameLength,
                             const Mac::Address &    aMacSource,
                             const Mac::Address &    aMacDest,
                             const otThreadLinkInfo &aLinkInfo);
-    void     HandleLowpanHC(uint8_t *               aFrame,
+    void     HandleLowpanHC(const uint8_t *         aFrame,
                             uint16_t                aFrameLength,
                             const Mac::Address &    aMacSource,
                             const Mac::Address &    aMacDest,
