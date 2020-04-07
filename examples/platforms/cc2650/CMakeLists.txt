@@ -35,14 +35,9 @@ endif()
 
 list(APPEND OT_PLATFORM_DEFINES
     "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-cc2650-config-check.h\""
-    "OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE=1"
     "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\""
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
-set(CC2650_CFLAGS
-    $<$<COMPILE_LANGUAGE:C>: -Wall -Wextra -Wshadow -Werror>
-    $<$<COMPILE_LANGUAGE:CXX>: -Wall -Wextra -Wshadow -Wno-c++14-compat -fno-exceptions>
-)
 
 list(APPEND OT_PRIVATE_DEFINES "MBEDTLS_USER_CONFIG_FILE=\"cc2650-mbedtls-config.h\"")
 set(OT_PRIVATE_DEFINES ${OT_PRIVATE_DEFINES} PARENT_SCOPE)
@@ -73,10 +68,14 @@ add_library(openthread-cc2650
 
 set_property(TARGET openthread-cc2650 PROPERTY C_STANDARD 99)
 
-target_link_libraries(openthread-cc2650 PRIVATE openthread-platform-utils)
-target_link_libraries(openthread-cc2650 PRIVATE "${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc26x0/driverlib/bin/gcc/driverlib.a")
-target_link_options(openthread-cc2650 PUBLIC -T${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc26x0/linker_files/cc26x0f128.lds)
-target_link_options(openthread-cc2650 PUBLIC -Wl,-Map=$<TARGET_PROPERTY:NAME>.map)
+target_link_libraries(openthread-cc2650 PRIVATE
+    openthread-platform-utils
+    "${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc26x0/driverlib/bin/gcc/driverlib.a"
+)
+target_link_options(openthread-cc2650 PUBLIC
+    -T${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc26x0/linker_files/cc26x0f128.lds
+    -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
+)
 
 target_compile_definitions(openthread-cc2650
     PUBLIC
@@ -91,7 +90,6 @@ target_include_directories(openthread-cc2650
     PRIVATE
         ${OT_PUBLIC_INCLUDES}
         ${OT_PRIVATE_INCLUDES}
-        ${PROJECT_SOURCE_DIR}/src
         ${PROJECT_SOURCE_DIR}/src/core
         ${PROJECT_SOURCE_DIR}/examples/platforms
         ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include

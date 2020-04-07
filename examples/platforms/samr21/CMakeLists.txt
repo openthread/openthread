@@ -35,7 +35,6 @@ endif()
 
 list(APPEND OT_PLATFORM_DEFINES
     "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-samr21-config-check.h\""
-    "OPENTHREAD_SETTINGS_RAM=0"
     "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\""
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
@@ -45,7 +44,7 @@ list(APPEND OT_PUBLIC_INCLUDES
     "${PROJECT_SOURCE_DIR}/examples/platforms/samr21/crypto"
 )
 set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
-string (REPLACE "-pedantic-errors" "" OT_CFLAGS "${OT_CFLAGS}")
+string(REPLACE "-pedantic-errors" "" OT_CFLAGS "${OT_CFLAGS}")
 
 list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
 
@@ -83,12 +82,10 @@ add_library(openthread-samr21
     ${PROJECT_SOURCE_DIR}/third_party/microchip/asf/thirdparty/wireless/avr2130_lwmesh/source/phy/at86rf233/src/phy.c
     ${PROJECT_SOURCE_DIR}/third_party/microchip/asf/thirdparty/wireless/services/sal/at86rf2xx/src/sal.c
     ${PROJECT_SOURCE_DIR}/third_party/microchip/asf/thirdparty/wireless/services/trx_access/trx_access.c
-    $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
 set_property(TARGET openthread-samr21 PROPERTY C_STANDARD 99)
 
-target_link_libraries(openthread-samr21 PRIVATE openthread-platform-utils)
 target_link_options(openthread-samr21 PUBLIC -T${PROJECT_SOURCE_DIR}/third_party/microchip/include/samr21x18a.ld)
 target_link_options(openthread-samr21 PUBLIC -Wl,-Map=$<TARGET_PROPERTY:NAME>.map)
 

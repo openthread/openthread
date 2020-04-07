@@ -41,10 +41,10 @@ set(CMAKE_CXX_FLAGS                "${COMMON_C_FLAGS} -fno-exceptions -fno-rtti"
 set(CMAKE_ASM_FLAGS                "${COMMON_C_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS         "${COMMON_C_FLAGS} -specs=nano.specs -specs=nosys.specs -Wl,--gc-sections -Wl,--entry=Reset_Handler")
 
-set(CMAKE_C_FLAGS_DEBUG            "-Os -g")
-set(CMAKE_CXX_FLAGS_DEBUG          "-Os -g")
-set(CMAKE_ASM_FLAGS_DEBUG          "-Os -g")
-set(CMAKE_EXE_LINKER_FLAGS_DEBUG   "-Os -g")
+set(CMAKE_C_FLAGS_DEBUG            "-Og -g")
+set(CMAKE_CXX_FLAGS_DEBUG          "-Og -g")
+set(CMAKE_ASM_FLAGS_DEBUG          "-g")
+set(CMAKE_EXE_LINKER_FLAGS_DEBUG   "")
 
 set(CMAKE_C_FLAGS_RELEASE          "-Os")
 set(CMAKE_CXX_FLAGS_RELEASE        "-Os")

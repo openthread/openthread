@@ -35,7 +35,6 @@ endif()
 
 list(APPEND OT_PLATFORM_DEFINES
     "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-qpg6095-config-check.h\""
-    "OPENTHREAD_SETTINGS_RAM=0"
     "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\""
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
@@ -58,12 +57,10 @@ add_library(openthread-qpg6095
     settings.cpp
     radio.c
     uart.c
-    $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
 set_property(TARGET openthread-qpg6095 PROPERTY C_STANDARD 99)
 
-target_link_libraries(openthread-qpg6095 PRIVATE openthread-platform-utils)
 target_link_libraries(openthread-qpg6095 PRIVATE ${PROJECT_SOURCE_DIR}/third_party/Qorvo/qpg6095/libQorvoQPG6095.a)
 target_link_options(openthread-qpg6095 PUBLIC -T${PROJECT_SOURCE_DIR}/examples/platforms/qpg6095/qpg6095.ld)
 target_link_options(openthread-qpg6095 PUBLIC -Wl,-Map=$<TARGET_PROPERTY:NAME>.map)
@@ -87,7 +84,6 @@ target_include_directories(openthread-qpg6095
         ${OT_PRIVATE_INCLUDES}
         ${PROJECT_SOURCE_DIR}/src/core
         ${PROJECT_SOURCE_DIR}/examples/platforms
-        ${PROJECT_SOURCE_DIR}/examples/platforms/utils
         ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
         ${PROJECT_SOURCE_DIR}/third_party/mbedtls
 )
