@@ -634,7 +634,7 @@ exit:
     }
 }
 
-void MeshForwarder::UpdateRoutes(uint8_t *           aFrame,
+void MeshForwarder::UpdateRoutes(const uint8_t *     aFrame,
                                  uint16_t            aFrameLength,
                                  const Mac::Address &aMeshSource,
                                  const Mac::Address &aMeshDest)
