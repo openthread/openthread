@@ -173,11 +173,11 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
     // check commissioner session id
     if (Tlv::ReadUint16Tlv(aMessage, Tlv::kCommissionerSessionId, sessionId) == OT_ERROR_NONE)
     {
-        CommissionerSessionIdTlv *localId;
+        const CommissionerSessionIdTlv *localId;
 
         isUpdateFromCommissioner = true;
 
-        localId = static_cast<CommissionerSessionIdTlv *>(
+        localId = static_cast<const CommissionerSessionIdTlv *>(
             Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kCommissionerSessionId));
 
         VerifyOrExit(localId != NULL && localId->GetCommissionerSessionId() == sessionId);
@@ -254,10 +254,10 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
     // notify commissioner if update is from thread device
     if (!isUpdateFromCommissioner)
     {
-        CommissionerSessionIdTlv *localSessionId;
-        Ip6::Address              destination;
+        const CommissionerSessionIdTlv *localSessionId;
+        Ip6::Address                    destination;
 
-        localSessionId = static_cast<CommissionerSessionIdTlv *>(
+        localSessionId = static_cast<const CommissionerSessionIdTlv *>(
             Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kCommissionerSessionId));
         VerifyOrExit(localSessionId != NULL);
 

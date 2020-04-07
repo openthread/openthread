@@ -155,7 +155,7 @@ public:
      * @return Pointer to the Service TLV for given Service ID, or NULL if not present.
      *
      */
-    ServiceTlv *FindServiceById(uint8_t aServiceId);
+    const ServiceTlv *FindServiceById(uint8_t aServiceId) const;
 
     /**
      * This method sends SVR_DATA.ntf message for any stale child entries that exist in the network data.
@@ -204,15 +204,18 @@ private:
 
     static bool RlocMatch(uint16_t aFirstRloc16, uint16_t aSecondRloc16, MatchMode aMatchMode);
 
-    otError RlocLookup(uint16_t  aRloc16,
-                       bool &    aIn,
-                       bool &    aStable,
-                       uint8_t * aTlvs,
-                       uint8_t   aTlvsLength,
-                       MatchMode aMatchMode,
-                       bool      aAllowOtherEntries = true);
+    static otError RlocLookup(uint16_t       aRloc16,
+                              bool &         aIn,
+                              bool &         aStable,
+                              const uint8_t *aTlvs,
+                              uint8_t        aTlvsLength,
+                              MatchMode      aMatchMode,
+                              bool           aAllowOtherEntries = true);
 
-    bool IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase, uint8_t aTlvsBaseLength);
+    static bool IsStableUpdated(const uint8_t *aTlvs,
+                                uint8_t        aTlvsLength,
+                                const uint8_t *aTlvsBase,
+                                uint8_t        aTlvsBaseLength);
 
     static void HandleCommissioningSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

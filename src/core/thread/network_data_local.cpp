@@ -181,13 +181,13 @@ void Local::UpdateRloc(PrefixTlv &aPrefix)
     }
 }
 
-bool Local::IsOnMeshPrefixConsistent(void)
+bool Local::IsOnMeshPrefixConsistent(void) const
 {
     return (Get<Leader>().ContainsOnMeshPrefixes(*this, Get<Mle::MleRouter>().GetRloc16()) &&
             ContainsOnMeshPrefixes(Get<Leader>(), Get<Mle::MleRouter>().GetRloc16()));
 }
 
-bool Local::IsExternalRouteConsistent(void)
+bool Local::IsExternalRouteConsistent(void) const
 {
     return (Get<Leader>().ContainsExternalRoutes(*this, Get<Mle::MleRouter>().GetRloc16()) &&
             ContainsExternalRoutes(Get<Leader>(), Get<Mle::MleRouter>().GetRloc16()));
@@ -277,7 +277,7 @@ void Local::UpdateRloc(ServiceTlv &aService)
     }
 }
 
-bool Local::IsServiceConsistent(void)
+bool Local::IsServiceConsistent(void) const
 {
     return (Get<Leader>().ContainsServices(*this, Get<Mle::MleRouter>().GetRloc16()) &&
             ContainsServices(Get<Leader>(), Get<Mle::MleRouter>().GetRloc16()));

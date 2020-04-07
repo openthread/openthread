@@ -402,21 +402,21 @@ bool Leader::RlocMatch(uint16_t aFirstRloc16, uint16_t aSecondRloc16, MatchMode 
     return matched;
 }
 
-otError Leader::RlocLookup(uint16_t  aRloc16,
-                           bool &    aIn,
-                           bool &    aStable,
-                           uint8_t * aTlvs,
-                           uint8_t   aTlvsLength,
-                           MatchMode aMatchMode,
-                           bool      aAllowOtherEntries)
+otError Leader::RlocLookup(uint16_t       aRloc16,
+                           bool &         aIn,
+                           bool &         aStable,
+                           const uint8_t *aTlvs,
+                           uint8_t        aTlvsLength,
+                           MatchMode      aMatchMode,
+                           bool           aAllowOtherEntries)
 {
-    otError         error = OT_ERROR_NONE;
-    NetworkDataTlv *end   = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
+    otError               error = OT_ERROR_NONE;
+    const NetworkDataTlv *end   = reinterpret_cast<const NetworkDataTlv *>(aTlvs + aTlvsLength);
 
     aIn     = false;
     aStable = false;
 
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aTlvs); cur < end; cur = cur->GetNext())
+    for (const NetworkDataTlv *cur = reinterpret_cast<const NetworkDataTlv *>(aTlvs); cur < end; cur = cur->GetNext())
     {
         VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = OT_ERROR_PARSE);
 
@@ -424,14 +424,14 @@ otError Leader::RlocLookup(uint16_t  aRloc16,
         {
         case NetworkDataTlv::kTypePrefix:
         {
-            PrefixTlv *     prefix = static_cast<PrefixTlv *>(cur);
-            NetworkDataTlv *subEnd;
+            const PrefixTlv *     prefix = static_cast<const PrefixTlv *>(cur);
+            const NetworkDataTlv *subEnd;
 
             VerifyOrExit(prefix->IsValid(), error = OT_ERROR_PARSE);
 
             subEnd = prefix->GetNext();
 
-            for (NetworkDataTlv *subCur = prefix->GetSubTlvs(); subCur < subEnd; subCur = subCur->GetNext())
+            for (const NetworkDataTlv *subCur = prefix->GetSubTlvs(); subCur < subEnd; subCur = subCur->GetNext())
             {
                 VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd, error = OT_ERROR_PARSE);
 
@@ -439,9 +439,9 @@ otError Leader::RlocLookup(uint16_t  aRloc16,
                 {
                 case NetworkDataTlv::kTypeBorderRouter:
                 {
-                    BorderRouterTlv *borderRouter = static_cast<BorderRouterTlv *>(subCur);
+                    const BorderRouterTlv *borderRouter = static_cast<const BorderRouterTlv *>(subCur);
 
-                    for (BorderRouterEntry *borderRouterEntry = borderRouter->GetFirstEntry();
+                    for (const BorderRouterEntry *borderRouterEntry = borderRouter->GetFirstEntry();
                          borderRouterEntry <= borderRouter->GetLastEntry();
                          borderRouterEntry = borderRouterEntry->GetNext())
                     {
@@ -465,9 +465,9 @@ otError Leader::RlocLookup(uint16_t  aRloc16,
 
                 case NetworkDataTlv::kTypeHasRoute:
                 {
-                    HasRouteTlv *hasRoute = static_cast<HasRouteTlv *>(subCur);
+                    const HasRouteTlv *hasRoute = static_cast<const HasRouteTlv *>(subCur);
 
-                    for (HasRouteEntry *hasRouteEntry                             = hasRoute->GetFirstEntry();
+                    for (const HasRouteEntry *hasRouteEntry                       = hasRoute->GetFirstEntry();
                          hasRouteEntry <= hasRoute->GetLastEntry(); hasRouteEntry = hasRouteEntry->GetNext())
                     {
                         if (RlocMatch(hasRouteEntry->GetRloc(), aRloc16, aMatchMode))
@@ -502,14 +502,14 @@ otError Leader::RlocLookup(uint16_t  aRloc16,
 
         case NetworkDataTlv::kTypeService:
         {
-            ServiceTlv *    service = static_cast<ServiceTlv *>(cur);
-            NetworkDataTlv *subEnd;
+            const ServiceTlv *    service = static_cast<const ServiceTlv *>(cur);
+            const NetworkDataTlv *subEnd;
 
             VerifyOrExit(service->IsValid(), error = OT_ERROR_PARSE);
 
             subEnd = service->GetNext();
 
-            for (NetworkDataTlv *subCur = service->GetSubTlvs(); subCur < subEnd; subCur = subCur->GetNext())
+            for (const NetworkDataTlv *subCur = service->GetSubTlvs(); subCur < subEnd; subCur = subCur->GetNext())
             {
                 VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd, error = OT_ERROR_PARSE);
 
@@ -517,7 +517,7 @@ otError Leader::RlocLookup(uint16_t  aRloc16,
                 {
                 case NetworkDataTlv::kTypeServer:
                 {
-                    ServerTlv *server = static_cast<ServerTlv *>(subCur);
+                    const ServerTlv *server = static_cast<const ServerTlv *>(subCur);
 
                     VerifyOrExit(server->IsValid(), error = OT_ERROR_PARSE);
 
@@ -560,12 +560,15 @@ exit:
     return error;
 }
 
-bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase, uint8_t aTlvsBaseLength)
+bool Leader::IsStableUpdated(const uint8_t *aTlvs,
+                             uint8_t        aTlvsLength,
+                             const uint8_t *aTlvsBase,
+                             uint8_t        aTlvsBaseLength)
 {
-    bool            rval = false;
-    NetworkDataTlv *end  = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
+    bool                  rval = false;
+    const NetworkDataTlv *end  = reinterpret_cast<const NetworkDataTlv *>(aTlvs + aTlvsLength);
 
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aTlvs); cur < end; cur = cur->GetNext())
+    for (const NetworkDataTlv *cur = reinterpret_cast<const NetworkDataTlv *>(aTlvs); cur < end; cur = cur->GetNext())
     {
         VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
 
@@ -573,14 +576,14 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
         {
         case NetworkDataTlv::kTypePrefix:
         {
-            PrefixTlv *      prefix       = static_cast<PrefixTlv *>(cur);
-            ContextTlv *     context      = FindContext(*prefix);
-            BorderRouterTlv *borderRouter = FindBorderRouter(*prefix, true);
-            HasRouteTlv *    hasRoute     = FindHasRoute(*prefix, true);
+            const PrefixTlv *      prefix       = static_cast<const PrefixTlv *>(cur);
+            const ContextTlv *     context      = FindContext(*prefix);
+            const BorderRouterTlv *borderRouter = FindBorderRouter(*prefix, true);
+            const HasRouteTlv *    hasRoute     = FindHasRoute(*prefix, true);
 
             if (cur->IsStable() && (!context || borderRouter))
             {
-                PrefixTlv *prefixBase =
+                const PrefixTlv *prefixBase =
                     FindPrefix(prefix->GetPrefix(), prefix->GetPrefixLength(), aTlvsBase, aTlvsBaseLength);
 
                 if (!prefixBase)
@@ -590,7 +593,7 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
 
                 if (borderRouter)
                 {
-                    BorderRouterTlv *borderRouterBase = FindBorderRouter(*prefixBase, true);
+                    const BorderRouterTlv *borderRouterBase = FindBorderRouter(*prefixBase, true);
 
                     if (!borderRouterBase || (borderRouter->GetLength() != borderRouterBase->GetLength()) ||
                         (memcmp(borderRouter, borderRouterBase, borderRouter->GetLength()) != 0))
@@ -601,7 +604,7 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
 
                 if (hasRoute)
                 {
-                    HasRouteTlv *hasRouteBase = FindHasRoute(*prefixBase, true);
+                    const HasRouteTlv *hasRouteBase = FindHasRoute(*prefixBase, true);
 
                     if (!hasRouteBase || (hasRoute->GetLength() != hasRouteBase->GetLength()) ||
                         (memcmp(hasRoute, hasRouteBase, hasRoute->GetLength()) != 0))
@@ -616,15 +619,16 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
 
         case NetworkDataTlv::kTypeService:
         {
-            ServiceTlv *service = static_cast<ServiceTlv *>(cur);
+            const ServiceTlv *service = static_cast<const ServiceTlv *>(cur);
 
             if (cur->IsStable())
             {
-                NetworkDataTlv *curInner;
-                NetworkDataTlv *endInner;
+                const NetworkDataTlv *curInner;
+                const NetworkDataTlv *endInner;
 
-                ServiceTlv *serviceBase = FindService(service->GetEnterpriseNumber(), service->GetServiceData(),
-                                                      service->GetServiceDataLength(), aTlvsBase, aTlvsBaseLength);
+                const ServiceTlv *serviceBase =
+                    FindService(service->GetEnterpriseNumber(), service->GetServiceData(),
+                                service->GetServiceDataLength(), aTlvsBase, aTlvsBaseLength);
 
                 if (!serviceBase || !serviceBase->IsStable())
                 {
@@ -644,15 +648,15 @@ bool Leader::IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvs
                         {
                         case NetworkDataTlv::kTypeServer:
                         {
-                            bool       foundInBase = false;
-                            ServerTlv *server      = static_cast<ServerTlv *>(curInner);
+                            bool             foundInBase = false;
+                            const ServerTlv *server      = static_cast<const ServerTlv *>(curInner);
 
-                            NetworkDataTlv *curServerBase = serviceBase->GetSubTlvs();
-                            NetworkDataTlv *endServerBase = serviceBase->GetNext();
+                            const NetworkDataTlv *curServerBase = serviceBase->GetSubTlvs();
+                            const NetworkDataTlv *endServerBase = serviceBase->GetNext();
 
                             while (curServerBase < endServerBase)
                             {
-                                ServerTlv *serverBase = static_cast<ServerTlv *>(curServerBase);
+                                const ServerTlv *serverBase = static_cast<const ServerTlv *>(curServerBase);
 
                                 VerifyOrExit((curServerBase + 1) <= endServerBase &&
                                              curServerBase->GetNext() <= endServerBase);
@@ -976,10 +980,10 @@ exit:
     return error;
 }
 
-ServiceTlv *Leader::FindServiceById(uint8_t aServiceId)
+const ServiceTlv *Leader::FindServiceById(uint8_t aServiceId) const
 {
-    NetworkDataTlv *start = GetTlvsStart();
-    ServiceTlv *    service;
+    const NetworkDataTlv *start = GetTlvsStart();
+    const ServiceTlv *    service;
 
     while ((service = FindTlv<ServiceTlv>(start, GetTlvsEnd())) != NULL)
     {

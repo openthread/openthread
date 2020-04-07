@@ -102,13 +102,13 @@ exit:
 
 uint16_t JoinerRouter::GetJoinerUdpPort(void)
 {
-    uint16_t          rval = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
-    JoinerUdpPortTlv *joinerUdpPort;
+    uint16_t                rval = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
+    const JoinerUdpPortTlv *joinerUdpPort;
 
     VerifyOrExit(!mIsJoinerPortConfigured, rval = mJoinerUdpPort);
 
-    joinerUdpPort =
-        static_cast<JoinerUdpPortTlv *>(Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kJoinerUdpPort));
+    joinerUdpPort = static_cast<const JoinerUdpPortTlv *>(
+        Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kJoinerUdpPort));
     VerifyOrExit(joinerUdpPort != NULL);
 
     rval = joinerUdpPort->GetUdpPort();

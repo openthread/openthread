@@ -186,13 +186,13 @@ private:
                       bool                 aStable);
     otError RemovePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, NetworkDataTlv::Type aSubTlvType);
     void    UpdateRloc(PrefixTlv &aPrefix);
-    bool    IsOnMeshPrefixConsistent(void);
-    bool    IsExternalRouteConsistent(void);
+    bool    IsOnMeshPrefixConsistent(void) const;
+    bool    IsExternalRouteConsistent(void) const;
 #endif
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     void UpdateRloc(ServiceTlv &aService);
-    bool IsServiceConsistent(void);
+    bool IsServiceConsistent(void) const;
 #endif
 
     uint16_t mOldRloc;
