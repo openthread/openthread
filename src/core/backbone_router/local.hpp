@@ -199,6 +199,8 @@ private:
     otError RemoveService(void);
     void    AddDomainPrefixToNetworkData(void);
     void    RemoveDomainPrefixFromNetworkData(void);
+    void    LogBackboneRouterService(const char *aAction, otError aError);
+    void    LogDomainPrefix(const char *aAction, otError aError);
 
     BackboneRouterState mState;
     uint32_t            mMlrTimeout;
