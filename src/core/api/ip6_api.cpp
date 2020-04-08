@@ -191,7 +191,7 @@ otMessage *otIp6NewMessageFromBuffer(otInstance *             aInstance,
     Instance &instance = *static_cast<Instance *>(aInstance);
     Message * message;
 
-    VerifyOrExit((message = instance.Get<Ip6::Ip6>().NewMessage(aData, aDataLength, aSettings)) != NULL);
+    VerifyOrExit((message = instance.Get<Ip6::Ip6>().NewMessage(aData, aDataLength, aSettings)) != NULL, OT_NOOP);
 
 exit:
     return message;

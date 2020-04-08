@@ -368,13 +368,13 @@ const Timestamp *Dataset::GetTimestamp(void) const
     if (mType == Tlv::kActiveTimestamp)
     {
         const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(Get(mType));
-        VerifyOrExit(tlv != NULL);
+        VerifyOrExit(tlv != NULL, OT_NOOP);
         timestamp = static_cast<const Timestamp *>(tlv);
     }
     else
     {
         const PendingTimestampTlv *tlv = static_cast<const PendingTimestampTlv *>(Get(mType));
-        VerifyOrExit(tlv != NULL);
+        VerifyOrExit(tlv != NULL, OT_NOOP);
         timestamp = static_cast<const Timestamp *>(tlv);
     }
 
@@ -446,7 +446,7 @@ void Dataset::Remove(Tlv::Type aType)
 {
     Tlv *tlv;
 
-    VerifyOrExit((tlv = Get(aType)) != NULL);
+    VerifyOrExit((tlv = Get(aType)) != NULL, OT_NOOP);
     Remove(reinterpret_cast<uint8_t *>(tlv), sizeof(Tlv) + tlv->GetLength());
 
 exit:
@@ -461,7 +461,7 @@ otError Dataset::AppendMleDatasetTlv(Message &aMessage) const
     const Tlv *    cur = reinterpret_cast<const Tlv *>(mTlvs);
     const Tlv *    end = reinterpret_cast<const Tlv *>(mTlvs + mLength);
 
-    VerifyOrExit(mLength > 0);
+    VerifyOrExit(mLength > 0, OT_NOOP);
 
     type = (mType == Tlv::kActiveTimestamp ? Mle::Tlv::kActiveDataset : Mle::Tlv::kPendingDataset);
 

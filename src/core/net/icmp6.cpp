@@ -104,10 +104,10 @@ otError Icmp::SendError(IcmpHeader::Type   aType,
 
     if (ip6Header.GetNextHeader() == kProtoIcmp6)
     {
-        VerifyOrExit(aMessage.GetLength() >= (sizeof(ip6Header) + sizeof(icmp6Header)));
+        VerifyOrExit(aMessage.GetLength() >= (sizeof(ip6Header) + sizeof(icmp6Header)), OT_NOOP);
 
         aMessage.Read(sizeof(ip6Header), sizeof(icmp6Header), &icmp6Header);
-        VerifyOrExit(!icmp6Header.IsError());
+        VerifyOrExit(!icmp6Header.IsError(), OT_NOOP);
     }
 
     messageInfoLocal = aMessageInfo;
@@ -202,7 +202,8 @@ otError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMe
 
     // always handle Echo Request destined for RLOC or ALOC
     VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo) || aMessageInfo.GetSockAddr().IsRoutingLocator() ||
-                 aMessageInfo.GetSockAddr().IsAnycastRoutingLocator());
+                     aMessageInfo.GetSockAddr().IsAnycastRoutingLocator(),
+                 OT_NOOP);
 
     otLogInfoIcmp("Received Echo Request");
 

@@ -70,7 +70,7 @@ IndirectSender::IndirectSender(Instance &aInstance)
 
 void IndirectSender::Stop(void)
 {
-    VerifyOrExit(mEnabled);
+    VerifyOrExit(mEnabled, OT_NOOP);
 
     for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
     {
@@ -124,7 +124,7 @@ void IndirectSender::ClearAllMessagesForSleepyChild(Child &aChild)
     Message *message;
     Message *nextMessage;
 
-    VerifyOrExit(aChild.GetIndirectMessageCount() > 0);
+    VerifyOrExit(aChild.GetIndirectMessageCount() > 0, OT_NOOP);
 
     for (message = Get<MeshForwarder>().mSendQueue.GetHead(); message; message = nextMessage)
     {
@@ -155,7 +155,7 @@ exit:
 
 void IndirectSender::SetChildUseShortAddress(Child &aChild, bool aUseShortAddress)
 {
-    VerifyOrExit(aChild.IsIndirectSourceMatchShort() != aUseShortAddress);
+    VerifyOrExit(aChild.IsIndirectSourceMatchShort() != aUseShortAddress, OT_NOOP);
 
     mSourceMatchController.SetSrcMatchAsShort(aChild, aUseShortAddress);
 
@@ -260,11 +260,11 @@ void IndirectSender::RequestMessageUpdate(Child &aChild)
         ExitNow();
     }
 
-    VerifyOrExit(!aChild.IsWaitingForMessageUpdate());
+    VerifyOrExit(!aChild.IsWaitingForMessageUpdate(), OT_NOOP);
 
     newMessage = FindIndirectMessage(aChild);
 
-    VerifyOrExit(curMessage != newMessage);
+    VerifyOrExit(curMessage != newMessage, OT_NOOP);
 
     if (curMessage == NULL)
     {
@@ -281,7 +281,7 @@ void IndirectSender::RequestMessageUpdate(Child &aChild)
     // fragment. If a next fragment frame for message is already
     // prepared, we wait for the entire message to be delivered.
 
-    VerifyOrExit(aChild.GetIndirectFragmentOffset() == 0);
+    VerifyOrExit(aChild.GetIndirectFragmentOffset() == 0, OT_NOOP);
 
     aChild.SetWaitingForMessageUpdate(true);
     mDataPollHandler.RequestFrameChange(DataPollHandler::kReplaceFrame, aChild);
@@ -292,7 +292,7 @@ exit:
 
 void IndirectSender::HandleFrameChangeDone(Child &aChild)
 {
-    VerifyOrExit(aChild.IsWaitingForMessageUpdate());
+    VerifyOrExit(aChild.IsWaitingForMessageUpdate(), OT_NOOP);
     UpdateIndirectMessage(aChild);
 
 exit:
@@ -439,7 +439,7 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
     Message *message    = aChild.GetIndirectMessage();
     uint16_t nextOffset = aContext.mMessageNextOffset;
 
-    VerifyOrExit(mEnabled);
+    VerifyOrExit(mEnabled, OT_NOOP);
 
     switch (aError)
     {

@@ -448,7 +448,7 @@ void RadioSpinel::HandleNotification(const uint8_t *aFrame, uint16_t aLength)
     unpacked = spinel_datatype_unpack(aFrame, aLength, "CiiD", &header, &cmd, &key, &data, &len);
     VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
     VerifyOrExit(SPINEL_HEADER_GET_TID(header) == 0, error = OT_ERROR_PARSE);
-    VerifyOrExit(cmd == SPINEL_CMD_PROP_VALUE_IS);
+    VerifyOrExit(cmd == SPINEL_CMD_PROP_VALUE_IS, OT_NOOP);
     HandleValueIs(key, data, static_cast<uint16_t>(len));
 
 exit:
@@ -666,7 +666,7 @@ void RadioSpinel::HandleWaitingResponse(uint32_t          aCommand,
     {
         spinel_ssize_t unpacked;
 
-        VerifyOrExit(mDiagOutput != NULL);
+        VerifyOrExit(mDiagOutput != NULL, OT_NOOP);
         unpacked =
             spinel_datatype_unpack_in_place(aBuffer, aLength, SPINEL_DATATYPE_UTF8_S, mDiagOutput, &mDiagOutputMaxLen);
         VerifyOrExit(unpacked > 0, mError = OT_ERROR_PARSE);
@@ -996,7 +996,7 @@ otError RadioSpinel::SetShortAddress(uint16_t aAddress)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mShortAddress != aAddress);
+    VerifyOrExit(mShortAddress != aAddress, OT_NOOP);
     SuccessOrExit(error = sRadioSpinel.Set(SPINEL_PROP_MAC_15_4_SADDR, SPINEL_DATATYPE_UINT16_S, aAddress));
     mShortAddress = aAddress;
 
@@ -1024,7 +1024,7 @@ otError RadioSpinel::SetPanId(uint16_t aPanId)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mPanId != aPanId);
+    VerifyOrExit(mPanId != aPanId, OT_NOOP);
     SuccessOrExit(error = Set(SPINEL_PROP_MAC_15_4_PANID, SPINEL_DATATYPE_UINT16_S, aPanId));
     mPanId = aPanId;
 
@@ -1339,7 +1339,7 @@ otError RadioSpinel::RequestV(bool aWait, uint32_t command, spinel_prop_key_t aK
     VerifyOrExit(!aWait || tid > 0, error = OT_ERROR_BUSY);
 
     error = SendCommand(command, aKey, tid, aFormat, aArgs);
-    VerifyOrExit(error == OT_ERROR_NONE);
+    SuccessOrExit(error);
 
     if (aKey == SPINEL_PROP_STREAM_RAW)
     {
@@ -1419,7 +1419,7 @@ otError RadioSpinel::Transmit(otRadioFrame &aFrame)
 {
     otError error = OT_ERROR_INVALID_STATE;
 
-    VerifyOrExit(mState == kStateReceive);
+    VerifyOrExit(mState == kStateReceive, OT_NOOP);
 
     mTransmitFrame = &aFrame;
 
@@ -1456,14 +1456,14 @@ otError RadioSpinel::Receive(uint8_t aChannel)
     if (mChannel != aChannel)
     {
         error = Set(SPINEL_PROP_PHY_CHAN, SPINEL_DATATYPE_UINT8_S, aChannel);
-        VerifyOrExit(error == OT_ERROR_NONE);
+        SuccessOrExit(error);
         mChannel = aChannel;
     }
 
     if (mState == kStateSleep)
     {
         error = Set(SPINEL_PROP_MAC_RAW_STREAM_ENABLED, SPINEL_DATATYPE_BOOL_S, true);
-        VerifyOrExit(error == OT_ERROR_NONE);
+        SuccessOrExit(error);
     }
 
     if (mTxRadioTid != 0)
@@ -1486,7 +1486,7 @@ otError RadioSpinel::Sleep(void)
     {
     case kStateReceive:
         error = sRadioSpinel.Set(SPINEL_PROP_MAC_RAW_STREAM_ENABLED, SPINEL_DATATYPE_BOOL_S, false);
-        VerifyOrExit(error == OT_ERROR_NONE);
+        SuccessOrExit(error);
 
         mState = kStateSleep;
         break;
@@ -1507,7 +1507,7 @@ otError RadioSpinel::Enable(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(!IsEnabled());
+    VerifyOrExit(!IsEnabled(), OT_NOOP);
 
     mInstance = aInstance;
 
@@ -1532,7 +1532,7 @@ otError RadioSpinel::Disable(void)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(IsEnabled());
+    VerifyOrExit(IsEnabled(), OT_NOOP);
     VerifyOrExit(mState == kStateSleep, error = OT_ERROR_INVALID_STATE);
 
     SuccessOrDie(sRadioSpinel.Set(SPINEL_PROP_PHY_ENABLED, SPINEL_DATATYPE_BOOL_S, false));

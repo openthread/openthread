@@ -155,7 +155,7 @@ otError Commissioner::Start(otCommissionerStateCallback  aStateCallback,
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     error = Get<MeshCoP::BorderAgent>().Stop();
-    VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY);
+    VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY, OT_NOOP);
 #endif
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().Start(SendRelayTransmit, this));
@@ -573,7 +573,7 @@ void Commissioner::HandleMgmtCommissionerGetResponse(Coap::Message *         aMe
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED);
+    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED, OT_NOOP);
     otLogInfoMeshCoP("received MGMT_COMMISSIONER_GET response");
 
 exit:
@@ -662,7 +662,7 @@ void Commissioner::HandleMgmtCommissionerSetResponse(Coap::Message *         aMe
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED);
+    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED, OT_NOOP);
     otLogInfoMeshCoP("received MGMT_COMMISSIONER_SET response");
 
 exit:
@@ -724,7 +724,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Message *         aMessage
     uint8_t state;
     bool    retransmit = false;
 
-    VerifyOrExit(mState != OT_COMMISSIONER_STATE_ACTIVE);
+    VerifyOrExit(mState != OT_COMMISSIONER_STATE_ACTIVE, OT_NOOP);
     VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED,
                  retransmit = (mState == OT_COMMISSIONER_STATE_PETITION));
 
@@ -824,7 +824,7 @@ void Commissioner::HandleLeaderKeepAliveResponse(Coap::Message *         aMessag
 
     uint8_t state;
 
-    VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE);
+    VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, OT_NOOP);
     VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED, Stop(/* aResign */ false));
 
     otLogInfoMeshCoP("received Leader keep-alive response");
@@ -861,7 +861,7 @@ void Commissioner::HandleRelayReceive(Coap::Message &aMessage, const Ip6::Messag
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
 
-    VerifyOrExit(aMessage.IsNonConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST);
+    VerifyOrExit(aMessage.IsNonConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, OT_NOOP);
 
     SuccessOrExit(error = Tlv::ReadUint16Tlv(aMessage, Tlv::kJoinerUdpPort, joinerPort));
     SuccessOrExit(error = Tlv::ReadTlv(aMessage, Tlv::kJoinerIid, joinerIid, sizeof(joinerIid)));
@@ -906,7 +906,7 @@ void Commissioner::HandleRelayReceive(Coap::Message &aMessage, const Ip6::Messag
         enableJoiner = (memcmp(mJoinerIid, joinerIid, sizeof(mJoinerIid)) == 0);
     }
 
-    VerifyOrExit(enableJoiner);
+    VerifyOrExit(enableJoiner, OT_NOOP);
 
     mJoinerPort = joinerPort;
     mJoinerRloc = joinerRloc;
@@ -936,7 +936,7 @@ void Commissioner::HandleDatasetChanged(void *aContext, otMessage *aMessage, con
 
 void Commissioner::HandleDatasetChanged(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST);
+    VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, OT_NOOP);
 
     otLogInfoMeshCoP("received dataset changed");
 
@@ -1011,7 +1011,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
 
-    VerifyOrExit(message->GetLength() <= sizeof(buf));
+    VerifyOrExit(message->GetLength() <= sizeof(buf), OT_NOOP);
     message->Read(message->GetOffset(), message->GetLength() - message->GetOffset(), buf);
     otDumpCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.rsp |", buf, message->GetLength() - message->GetOffset());
 #endif

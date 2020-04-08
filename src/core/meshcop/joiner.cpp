@@ -222,7 +222,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult, void *aContext)
 
 void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
 {
-    VerifyOrExit(mState == OT_JOINER_STATE_DISCOVER);
+    VerifyOrExit(mState == OT_JOINER_STATE_DISCOVER, OT_NOOP);
 
     if (aResult != NULL)
     {
@@ -272,7 +272,7 @@ void Joiner::SaveDiscoveredJoinerRouter(const otActiveScanResult &aResult)
         }
     }
 
-    VerifyOrExit(entry < end);
+    VerifyOrExit(entry < end, OT_NOOP);
 
     // Shift elements in array to make room for the new one.
     memmove(entry + 1, entry,
@@ -364,7 +364,7 @@ void Joiner::HandleSecureCoapClientConnect(bool aConnected, void *aContext)
 
 void Joiner::HandleSecureCoapClientConnect(bool aConnected)
 {
-    VerifyOrExit(mState == OT_JOINER_STATE_CONNECT);
+    VerifyOrExit(mState == OT_JOINER_STATE_CONNECT, OT_NOOP);
 
     if (aConnected)
     {
@@ -449,7 +449,7 @@ exit:
 
 void Joiner::FreeJoinerFinalizeMessage(void)
 {
-    VerifyOrExit(mState == OT_JOINER_STATE_IDLE && mFinalizeMessage != NULL);
+    VerifyOrExit(mState == OT_JOINER_STATE_IDLE && mFinalizeMessage != NULL, OT_NOOP);
 
     mFinalizeMessage->Free();
     mFinalizeMessage = NULL;
@@ -493,7 +493,8 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Message &         aMessage,
     uint8_t state;
 
     VerifyOrExit(mState == OT_JOINER_STATE_CONNECTED && aResult == OT_ERROR_NONE && aMessage.IsAck() &&
-                 aMessage.GetCode() == OT_COAP_CODE_CHANGED);
+                     aMessage.GetCode() == OT_COAP_CODE_CHANGED,
+                 OT_NOOP);
 
     SuccessOrExit(Tlv::ReadUint8Tlv(aMessage, Tlv::kState, state));
 
@@ -655,7 +656,7 @@ void Joiner::LogCertMessage(const char *aText, const Coap::Message &aMessage) co
 {
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
 
-    VerifyOrExit(aMessage.GetLength() <= sizeof(buf));
+    VerifyOrExit(aMessage.GetLength() <= sizeof(buf), OT_NOOP);
     aMessage.Read(aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset(), buf);
 
     otDumpCertMeshCoP(aText, buf, aMessage.GetLength() - aMessage.GetOffset());

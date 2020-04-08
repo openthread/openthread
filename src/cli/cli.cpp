@@ -2229,8 +2229,8 @@ void Interpreter::HandleIcmpReceive(otMessage *          aMessage,
     uint32_t timestamp = 0;
     uint16_t dataSize;
 
-    VerifyOrExit(aIcmpHeader->mType == OT_ICMP6_TYPE_ECHO_REPLY);
-    VerifyOrExit((mPingIdentifier != 0) && (mPingIdentifier == HostSwap16(aIcmpHeader->mData.m16[0])));
+    VerifyOrExit(aIcmpHeader->mType == OT_ICMP6_TYPE_ECHO_REPLY, OT_NOOP);
+    VerifyOrExit((mPingIdentifier != 0) && (mPingIdentifier == HostSwap16(aIcmpHeader->mData.m16[0])), OT_NOOP);
 
     dataSize = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
     mServer->OutputFormat("%u bytes from ", dataSize + static_cast<uint16_t>(sizeof(otIcmp6Header)));
@@ -2344,7 +2344,7 @@ void Interpreter::SendPing(void)
     messageInfo.mAllowZeroHopLimit = mPingAllowZeroHopLimit;
 
     message = otIp6NewMessage(mInstance, NULL);
-    VerifyOrExit(message != NULL);
+    VerifyOrExit(message != NULL, OT_NOOP);
 
     SuccessOrExit(otMessageAppend(message, &timestamp, sizeof(timestamp)));
     SuccessOrExit(otMessageSetLength(message, mPingLength));
@@ -3672,7 +3672,7 @@ otError Interpreter::ProcessMacFilterAddress(uint8_t aArgsLength, char *aArgs[])
 
             error = otLinkFilterAddAddress(mInstance, &extAddr);
 
-            VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY);
+            VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY, OT_NOOP);
 
             if (aArgsLength > 2)
             {
@@ -3906,7 +3906,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 
     mServer = &aServer;
 
-    VerifyOrExit(aBuf != NULL && StringLength(aBuf, aBufLength + 1) <= aBufLength);
+    VerifyOrExit(aBuf != NULL && StringLength(aBuf, aBufLength + 1) <= aBufLength, OT_NOOP);
 
     VerifyOrExit(Utils::CmdLineParser::ParseCmd(aBuf, aArgsLength, aArgs, kMaxArgs) == OT_ERROR_NONE,
                  mServer->OutputFormat("Error: too many args (max %d)\r\n", kMaxArgs));
@@ -4344,7 +4344,7 @@ extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, cons
     OT_UNUSED_VARIABLE(aLogLevel);
     OT_UNUSED_VARIABLE(aLogRegion);
 
-    VerifyOrExit(Server::sServer != NULL);
+    VerifyOrExit(Server::sServer != NULL, OT_NOOP);
 
     Server::sServer->OutputFormatV(aFormat, aArgs);
     Server::sServer->OutputFormat("\r\n");

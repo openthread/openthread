@@ -295,7 +295,7 @@ void Mac::PerformActiveScan(void)
 
 void Mac::ReportActiveScanResult(const RxFrame *aBeaconFrame)
 {
-    VerifyOrExit(mActiveScanHandler != NULL);
+    VerifyOrExit(mActiveScanHandler != NULL, OT_NOOP);
 
     if (aBeaconFrame == NULL)
     {
@@ -352,7 +352,7 @@ void Mac::ReportEnergyScanResult(int8_t aRssi)
 {
     EnergyScanResult result;
 
-    VerifyOrExit((mEnergyScanHandler != NULL) && (aRssi != kInvalidRssiValue));
+    VerifyOrExit((mEnergyScanHandler != NULL) && (aRssi != kInvalidRssiValue), OT_NOOP);
 
     result.mChannel = mScanChannel;
     result.mMaxRssi = aRssi;
@@ -371,7 +371,7 @@ void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
 
 void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 {
-    VerifyOrExit(mRxOnWhenIdle != aRxOnWhenIdle);
+    VerifyOrExit(mRxOnWhenIdle != aRxOnWhenIdle, OT_NOOP);
 
     mRxOnWhenIdle = aRxOnWhenIdle;
 
@@ -417,7 +417,7 @@ otError Mac::SetPanChannel(uint8_t aChannel)
 
     mCcaSuccessRateTracker.Reset();
 
-    VerifyOrExit(!mUsingTemporaryChannel);
+    VerifyOrExit(!mUsingTemporaryChannel, OT_NOOP);
 
     mRadioChannel = mPanChannel;
 
@@ -605,7 +605,7 @@ void Mac::UpdateIdleMode(void)
 {
     bool shouldSleep = !mRxOnWhenIdle && !mPromiscuous;
 
-    VerifyOrExit(mOperation == kOperationIdle);
+    VerifyOrExit(mOperation == kOperationIdle, OT_NOOP);
 
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
     if (mShouldDelaySleep)
@@ -707,7 +707,7 @@ void Mac::HandleOperationTask(Tasklet &aTasklet)
 
 void Mac::PerformNextOperation(void)
 {
-    VerifyOrExit(mOperation == kOperationIdle);
+    VerifyOrExit(mOperation == kOperationIdle, OT_NOOP);
 
     if (!mEnabled)
     {
@@ -917,7 +917,7 @@ bool Mac::ShouldSendBeacon(void) const
 {
     bool shouldSend = false;
 
-    VerifyOrExit(mEnabled);
+    VerifyOrExit(mEnabled, OT_NOOP);
 
     shouldSend = IsBeaconEnabled();
 
@@ -954,7 +954,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame, bool aProcessAesCcm)
     uint8_t           keyIdMode;
     const ExtAddress *extAddress = NULL;
 
-    VerifyOrExit(aFrame.GetSecurityEnabled());
+    VerifyOrExit(aFrame.GetSecurityEnabled(), OT_NOOP);
 
     aFrame.GetKeyIdMode(keyIdMode);
 
@@ -1166,7 +1166,7 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
     Address   dstAddr;
     Neighbor *neighbor;
 
-    VerifyOrExit(!aFrame.IsEmpty());
+    VerifyOrExit(!aFrame.IsEmpty(), OT_NOOP);
 
     aFrame.GetDstAddr(dstAddr);
     neighbor = Get<Mle::MleRouter>().GetNeighbor(dstAddr);
@@ -1454,12 +1454,12 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
     {
     case Frame::kKeyIdMode0:
         macKey = keyManager.GetKek().GetKey();
-        VerifyOrExit(macKey != NULL);
+        VerifyOrExit(macKey != NULL, OT_NOOP);
         extAddress = &aSrcAddr.GetExtended();
         break;
 
     case Frame::kKeyIdMode1:
-        VerifyOrExit(aNeighbor != NULL);
+        VerifyOrExit(aNeighbor != NULL, OT_NOOP);
 
         aFrame.GetKeyId(keyid);
         keyid--;
@@ -1491,14 +1491,14 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
 
         if (aNeighbor->IsStateValid())
         {
-            VerifyOrExit(keySequence >= aNeighbor->GetKeySequence());
+            VerifyOrExit(keySequence >= aNeighbor->GetKeySequence(), OT_NOOP);
 
             if (keySequence == aNeighbor->GetKeySequence())
             {
                 // If frame counter is one off, then frame is a duplicate.
                 VerifyOrExit((frameCounter + 1) != aNeighbor->GetLinkFrameCounter(), error = OT_ERROR_DUPLICATED);
 
-                VerifyOrExit(frameCounter >= aNeighbor->GetLinkFrameCounter());
+                VerifyOrExit(frameCounter >= aNeighbor->GetLinkFrameCounter(), OT_NOOP);
             }
         }
 
@@ -1534,7 +1534,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
     aesCcm.Finalize(tag, &tagLength);
 
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    VerifyOrExit(memcmp(tag, aFrame.GetFooter(), tagLength) == 0);
+    VerifyOrExit(memcmp(tag, aFrame.GetFooter(), tagLength) == 0, OT_NOOP);
 #endif
 
     if ((keyIdMode == Frame::kKeyIdMode1) && aNeighbor->IsStateValid())
@@ -1681,7 +1681,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
         // so the duplicate frame will not be passed to next
         // layer (`MeshForwarder`).
 
-        VerifyOrExit(mOperation == kOperationWaitingForData);
+        VerifyOrExit(mOperation == kOperationWaitingForData, OT_NOOP);
 
         // Fall through
 
@@ -2054,7 +2054,7 @@ uint8_t Mac::GetTimeIeOffset(const Frame &aFrame)
     const uint8_t *cur    = NULL;
 
     cur = reinterpret_cast<const uint8_t *>(aFrame.GetTimeIe());
-    VerifyOrExit(cur != NULL);
+    VerifyOrExit(cur != NULL, OT_NOOP);
 
     cur += sizeof(VendorIeHeader);
     offset = static_cast<uint8_t>(cur - base);

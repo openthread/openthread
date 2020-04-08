@@ -86,7 +86,7 @@ Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength, const otMes
 
     SuccessOrExit(GetDatagramPriority(aData, aDataLength, priority));
     settings.mPriority = static_cast<otMessagePriority>(priority);
-    VerifyOrExit((message = Get<MessagePool>().New(Message::kTypeIp6, 0, &settings)) != NULL);
+    VerifyOrExit((message = Get<MessagePool>().New(Message::kTypeIp6, 0, &settings)) != NULL, OT_NOOP);
 
     if (message->Append(aData, aDataLength) != OT_ERROR_NONE)
     {
@@ -254,7 +254,8 @@ otError Ip6::InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aM
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aHeader.GetDestination().IsMulticast() &&
-                 aHeader.GetDestination().GetScope() >= Address::kRealmLocalScope);
+                     aHeader.GetDestination().GetScope() >= Address::kRealmLocalScope,
+                 OT_NOOP);
 
     if (aHeader.GetDestination().IsRealmLocalMulticast())
     {
@@ -343,7 +344,7 @@ otError Ip6::RemoveMplOption(Message &aMessage)
     offset = 0;
     aMessage.Read(offset, sizeof(ip6Header), &ip6Header);
     offset += sizeof(ip6Header);
-    VerifyOrExit(ip6Header.GetNextHeader() == kProtoHopOpts);
+    VerifyOrExit(ip6Header.GetNextHeader() == kProtoHopOpts, OT_NOOP);
 
     aMessage.Read(offset, sizeof(hbh), &hbh);
     endOffset = offset + (hbh.GetLength() + 1) * 8;

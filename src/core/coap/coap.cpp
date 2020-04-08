@@ -117,7 +117,7 @@ Message *CoapBase::NewMessage(const otMessageSettings *aSettings)
 {
     Message *message = NULL;
 
-    VerifyOrExit((message = static_cast<Message *>(Get<Ip6::Udp>().NewMessage(0, aSettings))) != NULL);
+    VerifyOrExit((message = static_cast<Message *>(Get<Ip6::Udp>().NewMessage(0, aSettings))) != NULL, OT_NOOP);
     message->SetOffset(0);
 
 exit:
@@ -560,7 +560,7 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
 #endif
 
     request = FindRelatedRequest(aMessage, aMessageInfo, metadata);
-    VerifyOrExit(request != NULL);
+    VerifyOrExit(request != NULL, OT_NOOP);
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     if (metadata.mObserve && request->IsRequest())
@@ -721,7 +721,7 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
                 *curUriPath++ = '/';
             }
 
-            VerifyOrExit(option->mLength < sizeof(uriPath) - static_cast<size_t>(curUriPath + 1 - uriPath));
+            VerifyOrExit(option->mLength < sizeof(uriPath) - static_cast<size_t>(curUriPath + 1 - uriPath), OT_NOOP);
 
             iterator.GetOptionValue(curUriPath);
             curUriPath += option->mLength;
@@ -837,11 +837,11 @@ void ResponsesQueue::EnqueueResponse(Message &               aMessage,
     metadata.mDequeueTime = TimerMilli::GetNow() + aTxParameters.CalculateExchangeLifetime();
     metadata.mMessageInfo = aMessageInfo;
 
-    VerifyOrExit(FindMatchedResponse(aMessage, aMessageInfo) == NULL);
+    VerifyOrExit(FindMatchedResponse(aMessage, aMessageInfo) == NULL, OT_NOOP);
 
     UpdateQueue();
 
-    VerifyOrExit((responseCopy = aMessage.Clone()) != NULL);
+    VerifyOrExit((responseCopy = aMessage.Clone()) != NULL, OT_NOOP);
 
     VerifyOrExit(metadata.AppendTo(*responseCopy) == OT_ERROR_NONE, responseCopy->Free());
 
@@ -950,7 +950,7 @@ static uint32_t Multiply(uint32_t aValueA, uint32_t aValueB)
 {
     uint32_t result = 0;
 
-    VerifyOrExit(aValueA);
+    VerifyOrExit(aValueA, OT_NOOP);
 
     result = aValueA * aValueB;
     result = (result / aValueA == aValueB) ? result : 0;
