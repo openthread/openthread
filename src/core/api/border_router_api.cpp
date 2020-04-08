@@ -88,12 +88,9 @@ otError otBorderRouterRemoveOnMeshPrefix(otInstance *aInstance, const otIp6Prefi
     OT_ASSERT(aPrefix != NULL);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    if ((error = instance.Get<BackboneRouter::Local>().RemoveDomainPrefix(*aPrefix)) == OT_ERROR_NONE)
-    {
-        // do nothing
-    }
-    else
-    // Continue to try to remove on mesh prefix if it is not the Domain Prefix.
+    error = instance.Get<BackboneRouter::Local>().RemoveDomainPrefix(*aPrefix);
+
+    if (error == OT_ERROR_NOT_FOUND)
 #endif
     {
         error = instance.Get<NetworkData::Local>().RemoveOnMeshPrefix(aPrefix->mPrefix.mFields.m8, aPrefix->mLength);
