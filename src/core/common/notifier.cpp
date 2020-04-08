@@ -308,16 +308,12 @@ const char *Notifier::FlagToString(otChangedFlags aFlag) const
         retval = "ChanMask";
         break;
 
-    case OT_CHANGED_BORDER_AGENT_STATE:
-        retval = "BorderAgentState";
+    case OT_CHANGED_COMMISSIONER_STATE:
+        retval = "CommissionerState";
         break;
 
     case OT_CHANGED_THREAD_NETIF_STATE:
         retval = "NetifState";
-        break;
-
-    case OT_CHANGED_COMMISSIONER_STATE:
-        retval = "CommissionerState";
         break;
 
     default:

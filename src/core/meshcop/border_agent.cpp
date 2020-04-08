@@ -743,7 +743,6 @@ void BorderAgent::SetState(otBorderAgentState aState)
     if (mState != aState)
     {
         mState = aState;
-        Get<Notifier>().Signal(OT_CHANGED_BORDER_AGENT_STATE);
     }
 }
 

@@ -145,12 +145,11 @@ enum
     OT_CHANGED_SECURITY_POLICY              = 1 << 20, ///< Security Policy changed
     OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL  = 1 << 21, ///< Channel Manager new pending Thread channel changed
     OT_CHANGED_SUPPORTED_CHANNEL_MASK       = 1 << 22, ///< Supported channel mask changed
-    OT_CHANGED_BORDER_AGENT_STATE           = 1 << 23, ///< Border agent state changed
+    OT_CHANGED_COMMISSIONER_STATE           = 1 << 23, ///< Commissioner state changed
     OT_CHANGED_THREAD_NETIF_STATE           = 1 << 24, ///< Thread network interface state changed
     OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE = 1 << 25, ///< Backbone Router state changed
     OT_CHANGED_THREAD_BACKBONE_ROUTER_LOCAL = 1 << 26, ///< Local Backbone Router configuration changed
     OT_CHANGED_JOINER_STATE                 = 1 << 27, ///< Joiner state changed
-    OT_CHANGED_COMMISSIONER_STATE           = 1 << 28, ///< Commissioner state changed
 };
 
 /**
