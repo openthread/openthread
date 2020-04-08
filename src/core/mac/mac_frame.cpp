@@ -609,7 +609,7 @@ otError Frame::GetKeyId(uint8_t &aKeyId) const
     uint8_t        index = FindSecurityHeaderIndex();
     const uint8_t *buf   = GetPsdu() + index;
 
-    VerifyOrExit(index != kInvalidIndex);
+    VerifyOrExit(index != kInvalidIndex, OT_NOOP);
 
     keySourceLength = GetKeySourceLength(buf[0] & kKeyIdModeMask);
 
@@ -667,7 +667,7 @@ bool Frame::IsDataRequestCommand(void) const
     bool    isDataRequest = false;
     uint8_t commandId     = 0;
 
-    VerifyOrExit(GetType() == kFcfFrameMacCmd);
+    VerifyOrExit(GetType() == kFcfFrameMacCmd, OT_NOOP);
     SuccessOrExit(GetCommandId(commandId));
     isDataRequest = (commandId == kMacCmdDataRequest);
 
@@ -685,7 +685,7 @@ uint8_t Frame::GetFooterLength(void) const
     uint8_t footerLength = 0;
     uint8_t index        = FindSecurityHeaderIndex();
 
-    VerifyOrExit(index != kInvalidIndex);
+    VerifyOrExit(index != kInvalidIndex, OT_NOOP);
 
     switch ((GetPsdu() + index)[0] & kSecLevelMask)
     {
@@ -829,7 +829,7 @@ uint8_t Frame::FindPayloadIndex(void) const
     const uint8_t *footer = GetFooter();
 #endif
 
-    VerifyOrExit(index != kInvalidIndex);
+    VerifyOrExit(index != kInvalidIndex, OT_NOOP);
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     cur = GetPsdu() + index;
@@ -928,7 +928,7 @@ const uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
     const uint8_t *cur     = NULL;
     const uint8_t *payload = GetPayload();
 
-    VerifyOrExit(index != kInvalidIndex);
+    VerifyOrExit(index != kInvalidIndex, OT_NOOP);
 
     cur = GetPsdu() + index;
 
@@ -969,7 +969,7 @@ const TimeIe *Frame::GetTimeIe(void) const
                                                    (VendorIeHeader::kVendorOuiNest >> 16) & 0xff};
 
     cur = GetHeaderIe(kHeaderIeVendor);
-    VerifyOrExit(cur != NULL);
+    VerifyOrExit(cur != NULL, OT_NOOP);
 
     cur += sizeof(HeaderIe);
 
@@ -1015,7 +1015,7 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
     Crypto::AesCcm aesCcm;
     otError        error;
 
-    VerifyOrExit(GetSecurityEnabled());
+    VerifyOrExit(GetSecurityEnabled(), OT_NOOP);
 
     SuccessOrExit(error = GetSecurityLevel(securityLevel));
     SuccessOrExit(error = GetFrameCounter(frameCounter));

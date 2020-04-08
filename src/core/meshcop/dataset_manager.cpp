@@ -220,7 +220,7 @@ otError DatasetManager::GetChannelMask(Mac::ChannelMask &aChannelMask) const
 
     channelMaskTlv = static_cast<const MeshCoP::ChannelMaskTlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
     VerifyOrExit(channelMaskTlv != NULL, error = OT_ERROR_NOT_FOUND);
-    VerifyOrExit((mask = channelMaskTlv->GetChannelMask()) != 0);
+    VerifyOrExit((mask = channelMaskTlv->GetChannelMask()) != 0, OT_NOOP);
 
     aChannelMask.SetMask(mask & Get<Mac::Mac>().GetSupportedChannelMask().GetMask());
 
@@ -232,9 +232,9 @@ exit:
 
 void DatasetManager::HandleTimer(void)
 {
-    VerifyOrExit(Get<Mle::MleRouter>().IsAttached());
+    VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), OT_NOOP);
 
-    VerifyOrExit(mLocal.Compare(GetTimestamp()) < 0);
+    VerifyOrExit(mLocal.Compare(GetTimestamp()) < 0, OT_NOOP);
 
     if (mLocal.GetType() == Tlv::kActiveTimestamp)
     {
@@ -319,7 +319,7 @@ void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::Message
     }
 
     // MGMT_PENDING_GET.rsp must include Delay Timer TLV (Thread 1.1.1 Section 8.7.5.4)
-    VerifyOrExit(length > 0 && strcmp(mUriGet, OT_URI_PATH_PENDING_GET) == 0);
+    VerifyOrExit(length > 0 && strcmp(mUriGet, OT_URI_PATH_PENDING_GET) == 0, OT_NOOP);
 
     for (uint8_t i = 0; i < length; i++)
     {

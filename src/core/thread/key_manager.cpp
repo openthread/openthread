@@ -169,7 +169,7 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
         if (mKeySwitchGuardEnabled)
         {
             // Check if the guard timer has expired if key rotation is requested.
-            VerifyOrExit(mHoursSinceKeyRotation >= mKeySwitchGuardTime);
+            VerifyOrExit(mHoursSinceKeyRotation >= mKeySwitchGuardTime, OT_NOOP);
             StartKeyRotationTimer();
         }
 

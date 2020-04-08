@@ -666,7 +666,7 @@ void MeshForwarder::UpdateRoutes(const uint8_t *     aFrame,
     Ip6::Header ip6Header;
     Neighbor *  neighbor;
 
-    VerifyOrExit(!aMeshDest.IsBroadcast() && aMeshSource.IsShort());
+    VerifyOrExit(!aMeshDest.IsBroadcast() && aMeshSource.IsShort(), OT_NOOP);
     SuccessOrExit(GetIp6Header(aFrame, aFrameLength, aMeshSource, aMeshDest, ip6Header));
 
     if (!ip6Header.GetSource().IsRoutingLocator() && !ip6Header.GetSource().IsAnycastRoutingLocator() &&
@@ -692,7 +692,7 @@ void MeshForwarder::UpdateRoutes(const uint8_t *     aFrame,
     }
 
     neighbor = Get<Mle::MleRouter>().GetNeighbor(ip6Header.GetSource());
-    VerifyOrExit(neighbor != NULL && !neighbor->IsFullThreadDevice());
+    VerifyOrExit(neighbor != NULL && !neighbor->IsFullThreadDevice(), OT_NOOP);
 
     if (!Mle::Mle::RouterIdMatch(aMeshSource.GetShort(), Get<Mac::Mac>().GetShortAddress()))
     {
@@ -732,7 +732,7 @@ void MeshForwarder::UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHead
 
     if (aFragmentHeader.GetDatagramOffset() == 0)
     {
-        VerifyOrExit((entry = GetUnusedFragmentPriorityEntry()) != NULL);
+        VerifyOrExit((entry = GetUnusedFragmentPriorityEntry()) != NULL, OT_NOOP);
 
         entry->SetDatagramTag(aFragmentHeader.GetDatagramTag());
         entry->SetSrcRloc16(aSrcRloc16);
@@ -746,7 +746,8 @@ void MeshForwarder::UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHead
     }
     else
     {
-        VerifyOrExit((entry = FindFragmentPriorityEntry(aFragmentHeader.GetDatagramTag(), aSrcRloc16)) != NULL);
+        VerifyOrExit((entry = FindFragmentPriorityEntry(aFragmentHeader.GetDatagramTag(), aSrcRloc16)) != NULL,
+                     OT_NOOP);
 
         entry->SetLifetime(kReassemblyTimeout);
 
@@ -995,7 +996,7 @@ otError MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
         otLogMac(aLogLevel, "    Frag tag:%04x, offset:%d, size:%d", fragmentHeader.GetDatagramTag(),
                  fragmentHeader.GetDatagramOffset(), fragmentHeader.GetDatagramSize());
 
-        VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0);
+        VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0, OT_NOOP);
     }
 
     error = OT_ERROR_NONE;
@@ -1034,7 +1035,7 @@ otError MeshForwarder::DecompressIp6UdpTcpHeader(const Message &     aMessage,
 
     headerLength = Get<Lowpan::Lowpan>().DecompressBaseHeader(aIp6Header, nextHeaderCompressed, aMeshSource, aMeshDest,
                                                               frameBuffer, frameLength);
-    VerifyOrExit(headerLength >= 0);
+    VerifyOrExit(headerLength >= 0, OT_NOOP);
 
     aOffset += headerLength;
 
@@ -1047,11 +1048,12 @@ otError MeshForwarder::DecompressIp6UdpTcpHeader(const Message &     aMessage,
         {
             frameLength  = aMessage.Read(aOffset, sizeof(Ip6::UdpHeader), frameBuffer);
             headerLength = Get<Lowpan::Lowpan>().DecompressUdpHeader(header.udp, frameBuffer, frameLength);
-            VerifyOrExit(headerLength >= 0);
+            VerifyOrExit(headerLength >= 0, OT_NOOP);
         }
         else
         {
-            VerifyOrExit(sizeof(Ip6::UdpHeader) == aMessage.Read(aOffset, sizeof(Ip6::UdpHeader), &header.udp));
+            VerifyOrExit(sizeof(Ip6::UdpHeader) == aMessage.Read(aOffset, sizeof(Ip6::UdpHeader), &header.udp),
+                         OT_NOOP);
         }
 
         aChecksum   = header.udp.GetChecksum();
@@ -1060,7 +1062,7 @@ otError MeshForwarder::DecompressIp6UdpTcpHeader(const Message &     aMessage,
         break;
 
     case Ip6::kProtoTcp:
-        VerifyOrExit(sizeof(Ip6::TcpHeader) == aMessage.Read(aOffset, sizeof(Ip6::TcpHeader), &header.tcp));
+        VerifyOrExit(sizeof(Ip6::TcpHeader) == aMessage.Read(aOffset, sizeof(Ip6::TcpHeader), &header.tcp), OT_NOOP);
         aChecksum   = header.tcp.GetChecksum();
         aSourcePort = header.tcp.GetSourcePort();
         aDestPort   = header.tcp.GetDestinationPort();
@@ -1117,7 +1119,7 @@ void MeshForwarder::LogMeshMessage(MessageAction       aAction,
     // logged when the same Mesh Header message was received
     // and info about it was logged.
 
-    VerifyOrExit(aAction != kMessageTransmit);
+    VerifyOrExit(aAction != kMessageTransmit, OT_NOOP);
 
     LogMeshIpHeader(aMessage, offset, meshSource, meshDest, aLogLevel);
 

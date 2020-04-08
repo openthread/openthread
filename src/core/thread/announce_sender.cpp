@@ -93,7 +93,7 @@ void AnnounceSenderBase::HandleTimer(void)
         if (mCount != 0)
         {
             mCount--;
-            VerifyOrExit(mCount != 0);
+            VerifyOrExit(mCount != 0, OT_NOOP);
         }
 
         mChannel = Mac::ChannelMask::kChannelIteratorFirst;
@@ -163,7 +163,7 @@ void AnnounceSender::CheckState(void)
         period = kMinTxPeriod;
     }
 
-    VerifyOrExit(!IsRunning() || (period != GetPeriod()) || (GetChannelMask() != channelMask));
+    VerifyOrExit(!IsRunning() || (period != GetPeriod()) || (GetChannelMask() != channelMask), OT_NOOP);
 
     SendAnnounce(channelMask, 0, period, kMaxJitter);
 

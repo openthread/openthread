@@ -341,7 +341,7 @@ void NcpBase::HandleReceive(const uint8_t *aBuf, uint16_t aBufLength)
     // Skip if there is no header byte to read or this isn't a spinel frame.
 
     SuccessOrExit(mDecoder.ReadUint8(header));
-    VerifyOrExit((SPINEL_HEADER_FLAG & header) == SPINEL_HEADER_FLAG);
+    VerifyOrExit((SPINEL_HEADER_FLAG & header) == SPINEL_HEADER_FLAG, OT_NOOP);
 
     mRxSpinelFrameCounter++;
 
@@ -623,7 +623,7 @@ void NcpBase::Log(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aLog
     uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
 
     VerifyOrExit(!mDisableStreamWrite, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(SPINEL_PROP_STREAM_LOG));
+    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(SPINEL_PROP_STREAM_LOG), OT_NOOP);
 
     // If there is a pending queued response we do not allow any new log
     // stream writes. This is to ensure that log messages can not continue
@@ -811,7 +811,7 @@ void NcpBase::UpdateChangedProps(void)
     ProcessThreadChangedFlags();
 #endif
 
-    VerifyOrExit(!mChangedPropsSet.IsEmpty());
+    VerifyOrExit(!mChangedPropsSet.IsEmpty(), OT_NOOP);
 
     entry = mChangedPropsSet.GetSupportedEntries(numEntries);
 
@@ -841,7 +841,7 @@ void NcpBase::UpdateChangedProps(void)
         }
 
         mChangedPropsSet.RemoveEntry(index);
-        VerifyOrExit(!mChangedPropsSet.IsEmpty());
+        VerifyOrExit(!mChangedPropsSet.IsEmpty(), OT_NOOP);
     }
 
 exit:
@@ -978,7 +978,7 @@ otError NcpBase::HandleCommandPropertySet(uint8_t aHeader, spinel_prop_key_t aKe
 
         bool didHandle = HandlePropertySetForSpecialProperties(aHeader, aKey, error);
 
-        VerifyOrExit(!didHandle);
+        VerifyOrExit(!didHandle, OT_NOOP);
 
 #if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
         if (aKey >= SPINEL_PROP_VENDOR__BEGIN && aKey < SPINEL_PROP_VENDOR__END)

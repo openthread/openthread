@@ -31,6 +31,13 @@ add_executable(ot-cli
     $<$<BOOL:${READLINE}>:console_cli.cpp>
 )
 
+set_target_properties(
+    ot-cli
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 11
+)
+
 target_include_directories(ot-cli PRIVATE ${COMMON_INCLUDES})
 
 target_compile_definitions(ot-cli PRIVATE
@@ -54,6 +61,13 @@ target_link_libraries(ot-cli
 
 add_executable(ot-ncp
     main.c
+)
+
+set_target_properties(
+    ot-ncp
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 11
 )
 
 target_include_directories(ot-ncp PRIVATE ${COMMON_INCLUDES})

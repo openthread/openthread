@@ -127,7 +127,7 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
     if (sIsMsRunning)
     {
         remaining = (int32_t)(sMsAlarm - (uint32_t)(now / US_PER_MS));
-        VerifyOrExit(remaining > 0);
+        VerifyOrExit(remaining > 0, OT_NOOP);
         remaining *= US_PER_MS;
         remaining -= (now % US_PER_MS);
     }

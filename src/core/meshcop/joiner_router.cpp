@@ -73,14 +73,14 @@ void JoinerRouter::HandleStateChanged(Notifier::Callback &aCallback, otChangedFl
 
 void JoinerRouter::HandleStateChanged(otChangedFlags aFlags)
 {
-    VerifyOrExit(Get<Mle::MleRouter>().IsFullThreadDevice());
-    VerifyOrExit(aFlags & OT_CHANGED_THREAD_NETDATA);
+    VerifyOrExit(Get<Mle::MleRouter>().IsFullThreadDevice(), OT_NOOP);
+    VerifyOrExit(aFlags & OT_CHANGED_THREAD_NETDATA, OT_NOOP);
 
     if (Get<NetworkData::Leader>().IsJoiningEnabled())
     {
         Ip6::SockAddr sockaddr;
 
-        VerifyOrExit(!mSocket.IsBound());
+        VerifyOrExit(!mSocket.IsBound(), OT_NOOP);
 
         sockaddr.mPort = GetJoinerUdpPort();
 
@@ -91,7 +91,7 @@ void JoinerRouter::HandleStateChanged(otChangedFlags aFlags)
     }
     else
     {
-        VerifyOrExit(mSocket.IsBound());
+        VerifyOrExit(mSocket.IsBound(), OT_NOOP);
 
         Get<Ip6::Filter>().RemoveUnsecurePort(mSocket.GetSockName().mPort);
 
@@ -111,7 +111,7 @@ uint16_t JoinerRouter::GetJoinerUdpPort(void)
 
     joinerUdpPort = static_cast<const JoinerUdpPortTlv *>(
         Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kJoinerUdpPort));
-    VerifyOrExit(joinerUdpPort != NULL);
+    VerifyOrExit(joinerUdpPort != NULL, OT_NOOP);
 
     rval = joinerUdpPort->GetUdpPort();
 
@@ -280,8 +280,8 @@ void JoinerRouter::SendDelayedJoinerEntrust(void)
     JoinerEntrustMetadata metadata;
     Message *             message = mDelayedJoinEnts.GetHead();
 
-    VerifyOrExit(message != NULL);
-    VerifyOrExit(!mTimer.IsRunning());
+    VerifyOrExit(message != NULL, OT_NOOP);
+    VerifyOrExit(!mTimer.IsRunning(), OT_NOOP);
 
     metadata.ReadFrom(*message);
 
@@ -289,7 +289,7 @@ void JoinerRouter::SendDelayedJoinerEntrust(void)
     // change (i.e., retransmission). Otherweise, we wait for Joiner
     // Entrust Response before handling any other pending delayed
     // Jointer Entrust message.
-    VerifyOrExit(!mExpectJoinEntRsp || (Get<KeyManager>().GetKek() == metadata.mKek));
+    VerifyOrExit(!mExpectJoinEntRsp || (Get<KeyManager>().GetKek() == metadata.mKek), OT_NOOP);
 
     if (TimerMilli::GetNow() < metadata.mSendTime)
     {
@@ -447,9 +447,9 @@ void JoinerRouter::HandleJoinerEntrustResponse(Coap::Message *         aMessage,
     mExpectJoinEntRsp = false;
     SendDelayedJoinerEntrust();
 
-    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage != NULL);
+    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage != NULL, OT_NOOP);
 
-    VerifyOrExit(aMessage->GetCode() == OT_COAP_CODE_CHANGED);
+    VerifyOrExit(aMessage->GetCode() == OT_COAP_CODE_CHANGED, OT_NOOP);
 
     otLogInfoMeshCoP("Receive joiner entrust response");
     otLogCertMeshCoP("[THCI] direction=recv | type=JOIN_ENT.rsp");
