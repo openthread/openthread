@@ -1231,6 +1231,7 @@ otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkM
             ExitNow(tunnel = true);
         }
 
+#if OPENTHREAD_CONFIG_UNSECURE_TRAFFIC_MANAGED_BY_STACK_ENABLE
         if (aFromNcpHost && (nextHeader == kProtoTcp || nextHeader == kProtoUdp))
         {
             uint16_t dstPort;
@@ -1240,12 +1241,12 @@ otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkM
                              sizeof(dstPort),
                          error = OT_ERROR_PARSE);
             dstPort = HostSwap16(dstPort);
-            if (aMessage.IsLinkSecurityEnabled() && Get<ot::Ip6::Filter>().IsPortUnsecure(dstPort))
+            if (aMessage.IsLinkSecurityEnabled() && Get<ot::Ip6::Filter>().IsUnsecurePort(dstPort))
             {
                 Get<ot::Ip6::Filter>().RemoveUnsecurePort(dstPort);
-                otLogInfoIp6("Removed unsecure port %d", dstPort);
             }
         }
+#endif
 
         ProcessReceiveCallback(aMessage, messageInfo, nextHeader, aFromNcpHost);
 
@@ -1285,6 +1286,7 @@ otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkM
             hopLimit = header.GetHopLimit();
             aMessage.Write(Header::GetHopLimitOffset(), Header::GetHopLimitSize(), &hopLimit);
 
+#if OPENTHREAD_CONFIG_UNSECURE_TRAFFIC_MANAGED_BY_STACK_ENABLE
             // check whether source port is an unsecure port
             if (aFromNcpHost && (nextHeader == kProtoTcp || nextHeader == kProtoUdp))
             {
@@ -1293,13 +1295,14 @@ otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkM
                 VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(sourcePort), &sourcePort) == sizeof(sourcePort),
                              error = OT_ERROR_PARSE);
                 sourcePort = HostSwap16(sourcePort);
-                if (Get<ot::Ip6::Filter>().IsPortUnsecure(sourcePort))
+                if (Get<ot::Ip6::Filter>().IsUnsecurePort(sourcePort))
                 {
                     aMessage.SetLinkSecurityEnabled(false);
                     otLogInfoIp6("Disabled link security for packet to %s",
                                  header.GetDestination().ToString().AsCString());
                 }
             }
+#endif
 
             // submit aMessage to interface
             SuccessOrExit(error = Get<ThreadNetif>().SendMessage(aMessage));
