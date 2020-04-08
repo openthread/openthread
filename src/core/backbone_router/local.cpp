@@ -154,7 +154,7 @@ otError Local::AddService(bool aForce)
     serverData.SetMlrTimeout(mMlrTimeout);
 
     SuccessOrExit(error = Get<NetworkData::Local>().AddService(
-                      THREAD_ENTERPRISE_NUMBER, &serviceData, sizeof(serviceData), true,
+                      NetworkData::ServiceTlv::kThreadEnterpriseNumber, &serviceData, sizeof(serviceData), true,
                       reinterpret_cast<const uint8_t *>(&serverData), sizeof(serverData)));
 
     mIsServiceAdded = true;
@@ -173,8 +173,8 @@ otError Local::RemoveService(void)
     otError error       = OT_ERROR_NONE;
     uint8_t serviceData = NetworkData::ServiceTlv::kServiceDataBackboneRouter;
 
-    SuccessOrExit(
-        error = Get<NetworkData::Local>().RemoveService(THREAD_ENTERPRISE_NUMBER, &serviceData, sizeof(serviceData)));
+    SuccessOrExit(error = Get<NetworkData::Local>().RemoveService(NetworkData::ServiceTlv::kThreadEnterpriseNumber,
+                                                                  &serviceData, sizeof(serviceData)));
 
     mIsServiceAdded = false;
     Get<NetworkData::Notifier>().HandleServerDataUpdated();

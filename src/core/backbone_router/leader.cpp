@@ -80,8 +80,8 @@ otError Leader::GetServiceId(uint8_t &aServiceId) const
 
     VerifyOrExit(HasPrimary(), error = OT_ERROR_NOT_FOUND);
 
-    error = Get<NetworkData::Leader>().GetServiceId(THREAD_ENTERPRISE_NUMBER, &serviceData, sizeof(serviceData), true,
-                                                    aServiceId);
+    error = Get<NetworkData::Leader>().GetServiceId(NetworkData::ServiceTlv::kThreadEnterpriseNumber, &serviceData,
+                                                    sizeof(serviceData), true, aServiceId);
 
 exit:
     return error;

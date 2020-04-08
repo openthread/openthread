@@ -897,22 +897,20 @@ exit:
 
 otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOldTlvs, uint8_t aOldTlvsLength)
 {
-    otError     error               = OT_ERROR_NONE;
-    ServiceTlv *dstService          = NULL;
-    ServiceTlv *oldService          = NULL;
-    ServerTlv * dstServer           = NULL;
-    uint16_t    appendLength        = 0;
-    uint8_t     serviceId           = 0;
-    uint8_t     serviceInsertLength = sizeof(ServiceTlv) + sizeof(uint8_t) /*mServiceDataLength*/ +
-                                  ServiceTlv::GetEnterpriseNumberFieldLength(aService.GetEnterpriseNumber()) +
-                                  aService.GetServiceDataLength();
+    otError     error          = OT_ERROR_NONE;
+    ServiceTlv *dstService     = NULL;
+    ServiceTlv *oldService     = NULL;
+    ServerTlv * dstServer      = NULL;
+    uint16_t    appendLength   = 0;
+    uint8_t     serviceId      = 0;
+    uint16_t    serviceTlvSize = ServiceTlv::GetSize(aService.GetEnterpriseNumber(), aService.GetServiceDataLength());
 
     dstService =
         FindService(aService.GetEnterpriseNumber(), aService.GetServiceData(), aService.GetServiceDataLength());
 
     if (dstService == NULL)
     {
-        appendLength += serviceInsertLength;
+        appendLength += serviceTlvSize;
     }
 
     appendLength += sizeof(ServerTlv) + aServer.GetServerDataLength();
@@ -952,13 +950,10 @@ otError Leader::AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOl
             VerifyOrExit(i <= Mle::kServiceMaxId, error = OT_ERROR_NO_BUFS);
         }
 
-        dstService = static_cast<ServiceTlv *>(AppendTlv(serviceInsertLength));
+        dstService = static_cast<ServiceTlv *>(AppendTlv(static_cast<uint8_t>(serviceTlvSize)));
 
-        dstService->Init();
-        dstService->SetServiceId(serviceId);
-        dstService->SetEnterpriseNumber(aService.GetEnterpriseNumber());
-        dstService->SetServiceData(aService.GetServiceData(), aService.GetServiceDataLength());
-        dstService->SetLength(serviceInsertLength - sizeof(NetworkDataTlv));
+        dstService->Init(serviceId, aService.GetEnterpriseNumber(), aService.GetServiceData(),
+                         aService.GetServiceDataLength());
     }
 
     dstServer = static_cast<ServerTlv *>(dstService->GetNext());
