@@ -887,19 +887,18 @@ class HarnessCase(unittest.TestCase):
             # perform() will throw exceptions if elem.text is null since Chrome
             # and chromedriver 80. If elem is not shown in current case list
             # window, move_to_element() will not work either.
-            if elem.text:
-                # execute a javascript to scroll the window to the elem
-                self._browser.execute_script('arguments[0].scrollIntoView();',
-                                             elem)
-                action_chains = ActionChains(self._browser)
-                action_chains.move_to_element(elem)
-                action_chains.perform()
-                logger.debug(elem.text)
-                if finder.match(elem.text) or finder_dotted.match(elem.text):
-                    parent = elem.find_element_by_xpath('..')
-                    checkbox = parent.find_element_by_class_name(
-                        'tree-checkbox')
-                    break
+            if not elem.text:
+                continue
+            # execute a javascript to scroll the window to the elem
+            self._browser.execute_script('arguments[0].scrollIntoView();', elem)
+            action_chains = ActionChains(self._browser)
+            action_chains.move_to_element(elem)
+            action_chains.perform()
+            logger.debug(elem.text)
+            if finder.match(elem.text) or finder_dotted.match(elem.text):
+                parent = elem.find_element_by_xpath('..')
+                checkbox = parent.find_element_by_class_name('tree-checkbox')
+                break
 
         if not checkbox:
             time.sleep(5)
