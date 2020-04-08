@@ -130,7 +130,7 @@ otError Joiner::Start(const char *     aPskd,
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogInfoMeshCoP("Error %s while starting joiner", otThreadErrorToString(error));
+        otLogWarnMeshCoP("Failed to start joiner: %s", otThreadErrorToString(error));
         FreeJoinerFinalizeMessage();
     }
 
@@ -351,7 +351,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        otLogInfoMeshCoP("Error %s while joiner trying to connect", otThreadErrorToString(error));
+        otLogWarnMeshCoP("Failed to start secure joiner connection: %s", otThreadErrorToString(error));
     }
 
     return error;
@@ -553,7 +553,7 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnMeshCoP("Error %s while processing joiner entrust", otThreadErrorToString(error));
+        otLogWarnMeshCoP("Failed to process joiner entrust: %s", otThreadErrorToString(error));
     }
 }
 
