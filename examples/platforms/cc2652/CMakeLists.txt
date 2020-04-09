@@ -35,16 +35,18 @@ endif()
 
 list(APPEND OT_PLATFORM_DEFINES
     "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-cc2652-config-check.h\""
-    "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\""
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
 list(APPEND OT_PRIVATE_DEFINES "MBEDTLS_USER_CONFIG_FILE=\"cc2652-mbedtls-config.h\"")
+set(OT_PRIVATE_DEFINES ${OT_PRIVATE_DEFINES} PARENT_SCOPE)
+
 list(APPEND OT_PUBLIC_INCLUDES
     "${PROJECT_SOURCE_DIR}/examples/platforms/cc2652/crypto"
     "${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2"
 )
 set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
+
 list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
 
 add_library(openthread-cc2652
@@ -64,9 +66,17 @@ add_library(openthread-cc2652
 )
 
 set_property(TARGET openthread-cc2652 PROPERTY C_STANDARD 99)
-target_link_libraries(openthread-cc2652 PRIVATE "${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2/driverlib/bin/gcc/driverlib.a")
-target_link_options(openthread-cc2652 PUBLIC -T${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2/linker_files/cc26x2r1f.lds)
-target_link_options(openthread-cc2652 PUBLIC -Wl,-Map=$<TARGET_PROPERTY:NAME>.map)
+
+target_link_libraries(openthread-cc2652
+    PRIVATE
+        "${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2/driverlib/bin/gcc/driverlib.a"
+        mbedtls
+)
+target_link_options(openthread-cc2652
+    PUBLIC
+        -T${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2/linker_files/cc26x2r1f.lds
+        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
+)
 
 target_compile_definitions(openthread-cc2652
     PUBLIC
@@ -75,15 +85,17 @@ target_compile_definitions(openthread-cc2652
         ${OT_PRIVATE_DEFINES}
 )
 
-target_compile_options(openthread-cc2652 PRIVATE
-    ${OT_CFLAGS}
+target_compile_options(openthread-cc2652
+    PRIVATE
+        ${OT_CFLAGS}
 )
 
-target_include_directories(openthread-cc2652 PRIVATE
-    ${OT_PUBLIC_INCLUDES}
-    ${OT_PRIVATE_INCLUDES}
-    ${PROJECT_SOURCE_DIR}/src/core
-    ${PROJECT_SOURCE_DIR}/examples/platforms
-    ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
-    ${PROJECT_SOURCE_DIR}/third_party/mbedtls
+target_include_directories(openthread-cc2652
+    PRIVATE
+        ${OT_PUBLIC_INCLUDES}
+        ${OT_PRIVATE_INCLUDES}
+        ${PROJECT_SOURCE_DIR}/src/core
+        ${PROJECT_SOURCE_DIR}/examples/platforms
+        ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
+        ${PROJECT_SOURCE_DIR}/third_party/mbedtls
 )
