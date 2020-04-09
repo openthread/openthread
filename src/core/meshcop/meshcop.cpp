@@ -55,10 +55,10 @@ void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId)
 
 otError GetBorderAgentRloc(ThreadNetif &aNetif, uint16_t &aRloc)
 {
-    otError                error = OT_ERROR_NONE;
-    BorderAgentLocatorTlv *borderAgentLocator;
+    otError                      error = OT_ERROR_NONE;
+    const BorderAgentLocatorTlv *borderAgentLocator;
 
-    borderAgentLocator = static_cast<BorderAgentLocatorTlv *>(
+    borderAgentLocator = static_cast<const BorderAgentLocatorTlv *>(
         aNetif.Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kBorderAgentLocator));
     VerifyOrExit(borderAgentLocator != NULL, error = OT_ERROR_NOT_FOUND);
 

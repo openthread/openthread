@@ -815,26 +815,26 @@ exit:
 
 otError MeshForwarder::GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest)
 {
-    otError                  error      = OT_ERROR_NONE;
-    uint8_t                  serviceId  = Mle::Mle::ServiceIdFromAloc(aServiceAloc);
-    NetworkData::ServiceTlv *serviceTlv = Get<NetworkData::Leader>().FindServiceById(serviceId);
+    otError                        error      = OT_ERROR_NONE;
+    uint8_t                        serviceId  = Mle::Mle::ServiceIdFromAloc(aServiceAloc);
+    const NetworkData::ServiceTlv *serviceTlv = Get<NetworkData::Leader>().FindServiceById(serviceId);
 
     if (serviceTlv != NULL)
     {
-        NetworkData::NetworkDataTlv *cur = serviceTlv->GetSubTlvs();
-        NetworkData::NetworkDataTlv *end = serviceTlv->GetNext();
-        Neighbor *                   neighbor;
-        uint16_t                     server16;
-        uint8_t                      bestCost = Mle::kMaxRouteCost;
-        uint8_t                      curCost  = 0x00;
-        uint16_t                     bestDest = Mac::kShortAddrInvalid;
+        const NetworkData::NetworkDataTlv *cur = serviceTlv->GetSubTlvs();
+        const NetworkData::NetworkDataTlv *end = serviceTlv->GetNext();
+        Neighbor *                         neighbor;
+        uint16_t                           server16;
+        uint8_t                            bestCost = Mle::kMaxRouteCost;
+        uint8_t                            curCost  = 0x00;
+        uint16_t                           bestDest = Mac::kShortAddrInvalid;
 
         while (cur < end)
         {
             switch (cur->GetType())
             {
             case NetworkData::NetworkDataTlv::kTypeServer:
-                server16 = static_cast<NetworkData::ServerTlv *>(cur)->GetServer16();
+                server16 = static_cast<const NetworkData::ServerTlv *>(cur)->GetServer16();
 
                 // Path cost
                 curCost = Get<Mle::MleRouter>().GetCost(server16);

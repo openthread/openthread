@@ -71,7 +71,7 @@ otError LeaderBase::GetServiceId(uint32_t       aEnterpriseNumber,
                                  const uint8_t *aServiceData,
                                  uint8_t        aServiceDataLength,
                                  bool           aServerStable,
-                                 uint8_t &      aServiceId)
+                                 uint8_t &      aServiceId) const
 {
     otError         error    = OT_ERROR_NOT_FOUND;
     Iterator        iterator = kIteratorInit;
@@ -94,20 +94,20 @@ exit:
 }
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-otError LeaderBase::GetBackboneRouterPrimary(BackboneRouter::BackboneRouterConfig &aConfig)
+otError LeaderBase::GetBackboneRouterPrimary(BackboneRouter::BackboneRouterConfig &aConfig) const
 {
     otError                         error          = OT_ERROR_NOT_FOUND;
     uint8_t                         serviceData    = ServiceTlv::kServiceDataBackboneRouter;
-    ServerTlv *                     rvalServerTlv  = NULL;
+    const ServerTlv *               rvalServerTlv  = NULL;
     const BackboneRouterServerData *rvalServerData = NULL;
-    ServiceTlv *                    serviceTlv;
-    ServerTlv *                     serverTlv;
+    const ServiceTlv *              serviceTlv;
+    const ServerTlv *               serverTlv;
 
     serviceTlv = Get<Leader>().FindService(THREAD_ENTERPRISE_NUMBER, &serviceData, sizeof(serviceData));
 
     VerifyOrExit(serviceTlv != NULL, aConfig.mServer16 = Mac::kShortAddrInvalid);
 
-    for (NetworkDataTlv *start                                                         = serviceTlv->GetSubTlvs();
+    for (const NetworkDataTlv *start                                                   = serviceTlv->GetSubTlvs();
          (serverTlv = FindTlv<ServerTlv>(start, serviceTlv->GetNext())) != NULL; start = serverTlv->GetNext())
     {
         const BackboneRouterServerData *serverData =
@@ -138,11 +138,11 @@ exit:
 }
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
-PrefixTlv *LeaderBase::FindNextMatchingPrefix(const Ip6::Address &aAddress, PrefixTlv *aPrevTlv)
+const PrefixTlv *LeaderBase::FindNextMatchingPrefix(const Ip6::Address &aAddress, const PrefixTlv *aPrevTlv) const
 {
-    PrefixTlv *prefix;
+    const PrefixTlv *prefix;
 
-    for (NetworkDataTlv *start = (aPrevTlv == NULL) ? GetTlvsStart() : aPrevTlv->GetNext();
+    for (const NetworkDataTlv *start = (aPrevTlv == NULL) ? GetTlvsStart() : aPrevTlv->GetNext();
          (prefix = FindTlv<PrefixTlv>(start, GetTlvsEnd())) != NULL; start = prefix->GetNext())
     {
         if (PrefixMatch(prefix->GetPrefix(), aAddress.mFields.m8, prefix->GetPrefixLength()) >= 0)
@@ -155,10 +155,10 @@ exit:
     return prefix;
 }
 
-otError LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext)
+otError LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext) const
 {
-    PrefixTlv * prefix = NULL;
-    ContextTlv *contextTlv;
+    const PrefixTlv * prefix = NULL;
+    const ContextTlv *contextTlv;
 
     aContext.mPrefixLength = 0;
 
@@ -191,10 +191,10 @@ otError LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aC
     return (aContext.mPrefixLength > 0) ? OT_ERROR_NONE : OT_ERROR_NOT_FOUND;
 }
 
-otError LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext)
+otError LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext) const
 {
-    otError    error = OT_ERROR_NOT_FOUND;
-    PrefixTlv *prefix;
+    otError          error = OT_ERROR_NOT_FOUND;
+    const PrefixTlv *prefix;
 
     if (aContextId == Mle::kMeshLocalPrefixContextId)
     {
@@ -205,10 +205,10 @@ otError LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext)
         ExitNow(error = OT_ERROR_NONE);
     }
 
-    for (NetworkDataTlv *start = GetTlvsStart(); (prefix = FindTlv<PrefixTlv>(start, GetTlvsEnd())) != NULL;
-         start                 = prefix->GetNext())
+    for (const NetworkDataTlv *start = GetTlvsStart(); (prefix = FindTlv<PrefixTlv>(start, GetTlvsEnd())) != NULL;
+         start                       = prefix->GetNext())
     {
-        ContextTlv *contextTlv = FindContext(*prefix);
+        const ContextTlv *contextTlv = FindContext(*prefix);
 
         if ((contextTlv == NULL) || (contextTlv->GetContextId() != aContextId))
         {
@@ -226,7 +226,7 @@ exit:
     return error;
 }
 
-otError LeaderBase::GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16)
+otError LeaderBase::GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16) const
 {
     otError         error = OT_ERROR_NOT_FOUND;
     Lowpan::Context lowpanContext;
@@ -251,10 +251,10 @@ exit:
     return error;
 }
 
-bool LeaderBase::IsOnMesh(const Ip6::Address &aAddress)
+bool LeaderBase::IsOnMesh(const Ip6::Address &aAddress) const
 {
-    PrefixTlv *prefix = NULL;
-    bool       rval   = false;
+    const PrefixTlv *prefix = NULL;
+    bool             rval   = false;
 
     VerifyOrExit(!Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress), rval = true);
 
@@ -275,10 +275,10 @@ exit:
 otError LeaderBase::RouteLookup(const Ip6::Address &aSource,
                                 const Ip6::Address &aDestination,
                                 uint8_t *           aPrefixMatch,
-                                uint16_t *          aRloc16)
+                                uint16_t *          aRloc16) const
 {
-    otError    error  = OT_ERROR_NO_ROUTE;
-    PrefixTlv *prefix = NULL;
+    otError          error  = OT_ERROR_NO_ROUTE;
+    const PrefixTlv *prefix = NULL;
 
     while ((prefix = FindNextMatchingPrefix(aSource, prefix)) != NULL)
     {
@@ -305,18 +305,18 @@ exit:
 otError LeaderBase::ExternalRouteLookup(uint8_t             aDomainId,
                                         const Ip6::Address &aDestination,
                                         uint8_t *           aPrefixMatch,
-                                        uint16_t *          aRloc16)
+                                        uint16_t *          aRloc16) const
 {
-    otError        error = OT_ERROR_NO_ROUTE;
-    PrefixTlv *    prefix;
-    HasRouteEntry *rvalRoute = NULL;
-    uint8_t        rval_plen = 0;
+    otError              error = OT_ERROR_NO_ROUTE;
+    const PrefixTlv *    prefix;
+    const HasRouteEntry *rvalRoute = NULL;
+    uint8_t              rval_plen = 0;
 
-    for (NetworkDataTlv *start = GetTlvsStart(); (prefix = FindTlv<PrefixTlv>(start, GetTlvsEnd())) != NULL;
-         start                 = prefix->GetNext())
+    for (const NetworkDataTlv *start = GetTlvsStart(); (prefix = FindTlv<PrefixTlv>(start, GetTlvsEnd())) != NULL;
+         start                       = prefix->GetNext())
     {
-        HasRouteTlv *hasRoute;
-        int8_t       plen;
+        const HasRouteTlv *hasRoute;
+        int8_t             plen;
 
         if (prefix->GetDomainId() != aDomainId)
         {
@@ -330,11 +330,11 @@ otError LeaderBase::ExternalRouteLookup(uint8_t             aDomainId,
             continue;
         }
 
-        for (NetworkDataTlv *subStart                                                         = prefix->GetSubTlvs();
+        for (const NetworkDataTlv *subStart                                                   = prefix->GetSubTlvs();
              (hasRoute = FindTlv<HasRouteTlv>(subStart, prefix->GetNext())) != NULL; subStart = hasRoute->GetNext())
         {
-            for (HasRouteEntry *entry = hasRoute->GetFirstEntry(); entry <= hasRoute->GetLastEntry();
-                 entry                = entry->GetNext())
+            for (const HasRouteEntry *entry = hasRoute->GetFirstEntry(); entry <= hasRoute->GetLastEntry();
+                 entry                      = entry->GetNext())
             {
                 if (rvalRoute == NULL || entry->GetPreference() > rvalRoute->GetPreference() ||
                     (entry->GetPreference() == rvalRoute->GetPreference() &&
@@ -368,17 +368,17 @@ otError LeaderBase::ExternalRouteLookup(uint8_t             aDomainId,
     return error;
 }
 
-otError LeaderBase::DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16)
+otError LeaderBase::DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t *aRloc16) const
 {
-    otError            error = OT_ERROR_NO_ROUTE;
-    BorderRouterTlv *  borderRouter;
-    BorderRouterEntry *route = NULL;
+    otError                  error = OT_ERROR_NO_ROUTE;
+    const BorderRouterTlv *  borderRouter;
+    const BorderRouterEntry *route = NULL;
 
-    for (NetworkDataTlv *start                                                              = aPrefix.GetSubTlvs();
+    for (const NetworkDataTlv *start                                                        = aPrefix.GetSubTlvs();
          (borderRouter = FindTlv<BorderRouterTlv>(start, aPrefix.GetNext())) != NULL; start = borderRouter->GetNext())
     {
-        for (BorderRouterEntry *entry = borderRouter->GetFirstEntry(); entry <= borderRouter->GetLastEntry();
-             entry                    = entry->GetNext())
+        for (const BorderRouterEntry *entry = borderRouter->GetFirstEntry(); entry <= borderRouter->GetLastEntry();
+             entry                          = entry->GetNext())
         {
             if (!entry->IsDefaultRoute())
             {
@@ -476,23 +476,23 @@ exit:
     return error;
 }
 
-CommissioningDataTlv *LeaderBase::GetCommissioningData(void)
+const CommissioningDataTlv *LeaderBase::GetCommissioningData(void) const
 {
     return FindTlv<CommissioningDataTlv>(GetTlvsStart(), GetTlvsEnd());
 }
 
-MeshCoP::Tlv *LeaderBase::GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType)
+const MeshCoP::Tlv *LeaderBase::GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType) const
 {
-    MeshCoP::Tlv *  rval = NULL;
-    NetworkDataTlv *commissioningDataTlv;
-    MeshCoP::Tlv *  cur;
-    MeshCoP::Tlv *  end;
+    const MeshCoP::Tlv *  rval = NULL;
+    const NetworkDataTlv *commissioningDataTlv;
+    const MeshCoP::Tlv *  cur;
+    const MeshCoP::Tlv *  end;
 
     commissioningDataTlv = GetCommissioningData();
     VerifyOrExit(commissioningDataTlv != NULL);
 
-    cur = reinterpret_cast<MeshCoP::Tlv *>(commissioningDataTlv->GetValue());
-    end = reinterpret_cast<MeshCoP::Tlv *>(commissioningDataTlv->GetValue() + commissioningDataTlv->GetLength());
+    cur = reinterpret_cast<const MeshCoP::Tlv *>(commissioningDataTlv->GetValue());
+    end = reinterpret_cast<const MeshCoP::Tlv *>(commissioningDataTlv->GetValue() + commissioningDataTlv->GetLength());
 
     for (; cur < end; cur = cur->GetNext())
     {
@@ -506,10 +506,10 @@ exit:
     return rval;
 }
 
-bool LeaderBase::IsJoiningEnabled(void)
+bool LeaderBase::IsJoiningEnabled(void) const
 {
-    MeshCoP::Tlv *steeringData;
-    bool          rval = false;
+    const MeshCoP::Tlv *steeringData;
+    bool                rval = false;
 
     VerifyOrExit(GetCommissioningDataSubTlv(MeshCoP::Tlv::kBorderAgentLocator) != NULL);
 

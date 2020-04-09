@@ -138,6 +138,14 @@ public:
     uint8_t *GetValue(void) { return reinterpret_cast<uint8_t *>(this) + sizeof(NetworkDataTlv); }
 
     /**
+     * This method returns a pointer to the Value.
+     *
+     * @returns A pointer to the value.
+     *
+     */
+    const uint8_t *GetValue(void) const { return reinterpret_cast<const uint8_t *>(this) + sizeof(NetworkDataTlv); }
+
+    /**
      * This method returns a pointer to the next Network Data TLV.
      *
      * @returns A pointer to the next Network Data TLV.
@@ -146,6 +154,18 @@ public:
     NetworkDataTlv *GetNext(void)
     {
         return reinterpret_cast<NetworkDataTlv *>(reinterpret_cast<uint8_t *>(this) + sizeof(*this) + mLength);
+    }
+
+    /**
+     * This method returns a pointer to the next Network Data TLV.
+     *
+     * @returns A pointer to the next Network Data TLV.
+     *
+     */
+    const NetworkDataTlv *GetNext(void) const
+    {
+        return reinterpret_cast<const NetworkDataTlv *>(reinterpret_cast<const uint8_t *>(this) + sizeof(*this) +
+                                                        mLength);
     }
 
     /**
@@ -242,6 +262,14 @@ public:
      */
     HasRouteEntry *GetNext(void) { return (this + 1); }
 
+    /**
+     * This method returns a pointer to the next HasRouteEntry.
+     *
+     * @returns A pointer to the next HasRouteEntry.
+     *
+     */
+    const HasRouteEntry *GetNext(void) const { return (this + 1); }
+
 private:
     enum
     {
@@ -299,12 +327,33 @@ public:
     }
 
     /**
+     * This method returns a pointer to the i'th HasRoute entry.
+     *
+     * @param[in]  i  An index.
+     *
+     * @returns A pointer to the i'th HasRoute entry.
+     *
+     */
+    const HasRouteEntry *GetEntry(uint8_t i) const
+    {
+        return reinterpret_cast<const HasRouteEntry *>(GetValue() + (i * sizeof(HasRouteEntry)));
+    }
+
+    /**
      * This method returns a pointer to the first HasRouteEntry (at index 0'th).
      *
      * @returns A pointer to the first HasRouteEntry.
      *
      */
     HasRouteEntry *GetFirstEntry(void) { return reinterpret_cast<HasRouteEntry *>(GetValue()); }
+
+    /**
+     * This method returns a pointer to the first HasRouteEntry (at index 0'th).
+     *
+     * @returns A pointer to the first HasRouteEntry.
+     *
+     */
+    const HasRouteEntry *GetFirstEntry(void) const { return reinterpret_cast<const HasRouteEntry *>(GetValue()); }
 
     /**
      * This method returns a pointer to the last HasRouteEntry.
@@ -318,6 +367,20 @@ public:
     {
         return reinterpret_cast<HasRouteEntry *>(GetValue() + GetLength() - sizeof(HasRouteEntry));
     }
+
+    /**
+     * This method returns a pointer to the last HasRouteEntry.
+     *
+     * If there are no entries the pointer will be invalid but guaranteed to be before the `GetFirstEntry()` pointer.
+     *
+     * @returns A pointer to the last HasRouteEntry.
+     *
+     */
+    const HasRouteEntry *GetLastEntry(void) const
+    {
+        return reinterpret_cast<const HasRouteEntry *>(GetValue() + GetLength() - sizeof(HasRouteEntry));
+    }
+
 } OT_TOOL_PACKED_END;
 
 /**
@@ -390,6 +453,14 @@ public:
     uint8_t *GetPrefix(void) { return reinterpret_cast<uint8_t *>(this) + sizeof(*this); }
 
     /**
+     * This method returns a pointer to the Prefix.
+     *
+     * @returns A pointer to the Prefix.
+     *
+     */
+    const uint8_t *GetPrefix(void) const { return reinterpret_cast<const uint8_t *>(this) + sizeof(*this); }
+
+    /**
      * This method returns a pointer to the Sub-TLVs.
      *
      * @returns A pointer to the Sub-TLVs.
@@ -398,6 +469,17 @@ public:
     NetworkDataTlv *GetSubTlvs(void)
     {
         return reinterpret_cast<NetworkDataTlv *>(GetPrefix() + BitVectorBytes(mPrefixLength));
+    }
+
+    /**
+     * This method returns a pointer to the Sub-TLVs.
+     *
+     * @returns A pointer to the Sub-TLVs.
+     *
+     */
+    const NetworkDataTlv *GetSubTlvs(void) const
+    {
+        return reinterpret_cast<const NetworkDataTlv *>(GetPrefix() + BitVectorBytes(mPrefixLength));
     }
 
     /**
@@ -642,6 +724,14 @@ public:
      */
     BorderRouterEntry *GetNext(void) { return (this + 1); }
 
+    /**
+     * This method returns a pointer to the next BorderRouterEntry
+     *
+     * @returns A pointer to the next BorderRouterEntry.
+     *
+     */
+    const BorderRouterEntry *GetNext(void) const { return (this + 1); }
+
 private:
     uint16_t mRloc;
     uint8_t  mFlags;
@@ -694,12 +784,36 @@ public:
     }
 
     /**
+     * This method returns a pointer to the i'th Border Router entry.
+     *
+     * @param[in]  i  The index.
+     *
+     * @returns A pointer to the i'th Border Router entry.
+     *
+     */
+    const BorderRouterEntry *GetEntry(uint8_t i) const
+    {
+        return reinterpret_cast<const BorderRouterEntry *>(GetValue() + (i * sizeof(BorderRouterEntry)));
+    }
+
+    /**
      * This method returns a pointer to the first BorderRouterEntry (at index 0'th).
      *
      * @returns A pointer to the first BorderRouterEntry.
      *
      */
     BorderRouterEntry *GetFirstEntry(void) { return reinterpret_cast<BorderRouterEntry *>(GetValue()); }
+
+    /**
+     * This method returns a pointer to the first BorderRouterEntry (at index 0'th).
+     *
+     * @returns A pointer to the first BorderRouterEntry.
+     *
+     */
+    const BorderRouterEntry *GetFirstEntry(void) const
+    {
+        return reinterpret_cast<const BorderRouterEntry *>(GetValue());
+    }
 
     /**
      * This method returns a pointer to the last BorderRouterEntry.
@@ -713,6 +827,20 @@ public:
     {
         return reinterpret_cast<BorderRouterEntry *>(GetValue() + GetLength() - sizeof(BorderRouterEntry));
     }
+
+    /**
+     * This method returns a pointer to the last BorderRouterEntry.
+     *
+     * If there are no entries the pointer will be invalid but guaranteed to be before the `GetFirstEntry()` pointer.
+     *
+     * @returns A pointer to the last BorderRouterEntry.
+     *
+     */
+    const BorderRouterEntry *GetLastEntry(void) const
+    {
+        return reinterpret_cast<const BorderRouterEntry *>(GetValue() + GetLength() - sizeof(BorderRouterEntry));
+    }
+
 } OT_TOOL_PACKED_END;
 
 /**
@@ -849,7 +977,9 @@ public:
 
     /**
      * This method initializes the TLV.
+     *
      * Initial length is set to 2, to hold S_service_data_length field.
+     *
      */
     void Init(void)
     {
@@ -867,7 +997,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void)
+    bool IsValid(void) const
     {
         uint8_t length = GetLength();
         return ((length >= (sizeof(*this) - sizeof(NetworkDataTlv))) &&
@@ -881,13 +1011,15 @@ public:
      * This method gets Service Data length.
      *
      * @returns length of the Service Data field in bytes.
+     *
      */
-    uint8_t GetServiceDataLength(void) { return *GetServiceDataLengthLocation(); }
+    uint8_t GetServiceDataLength(void) const { return *GetServiceDataLengthLocation(); }
 
     /**
      * This method sets Service Data length.
      *
-     * @param aServiceDataLength desired length of the Service Data field in bytes.
+     * @param[in] aServiceDataLength desired length of the Service Data field in bytes.
+     *
      */
     void SetServiceDataLength(uint8_t aServiceDataLength) { *GetServiceDataLengthLocation() = aServiceDataLength; }
 
@@ -895,8 +1027,17 @@ public:
      * This method returns a pointer to the Service Data.
      *
      * @returns A pointer to the Service Data.
+     *
      */
     uint8_t *GetServiceData(void) { return GetServiceDataLengthLocation() + sizeof(uint8_t); }
+
+    /**
+     * This method returns a pointer to the Service Data.
+     *
+     * @returns A pointer to the Service Data.
+     *
+     */
+    const uint8_t *GetServiceData(void) const { return GetServiceDataLengthLocation() + sizeof(uint8_t); }
 
     /**
      * This method sets Service Data to the given values.
@@ -905,6 +1046,7 @@ public:
      *
      * @param aServiceData       pointer to the service data to use
      * @param aServiceDataLength length of the provided service data in bytes
+     *
      */
     void SetServiceData(const uint8_t *aServiceData, uint8_t aServiceDataLength)
     {
@@ -917,8 +1059,9 @@ public:
      * This method returns Enterprise Number field.
      *
      * @returns Enterprise Number
+     *
      */
-    uint32_t GetEnterpriseNumber(void)
+    uint32_t GetEnterpriseNumber(void) const
     {
         if (IsThreadEnterprise())
         {
@@ -927,7 +1070,7 @@ public:
         else
         {
             // This memory access most likely will not be aligned to 4 bytes
-            return HostSwap32(*reinterpret_cast<uint32_t *>(GetEnterpriseNumberLocation()));
+            return HostSwap32(*reinterpret_cast<const uint32_t *>(GetEnterpriseNumberLocation()));
         }
     }
 
@@ -935,6 +1078,7 @@ public:
      * This method returns the T flag. It is set when Enterprise Number is equal to THREAD_ENTERPRISE_NUMBER.
      *
      * @returns Flag whether Enterprise Number is equal to THREAD_ENTERPRISE_NUMBER
+     *
      */
     bool IsThreadEnterprise(void) const { return (mTResSId & kTMask) != 0; }
 
@@ -946,6 +1090,7 @@ public:
      * memory corruption) so modification of Enterprise Number must be done before adding any content to the TLV.
      *
      * @param [in] aEnterpriseNumber Enterprise Number
+     *
      */
     void SetEnterpriseNumber(uint32_t aEnterpriseNumber)
     {
@@ -966,6 +1111,7 @@ public:
      * This method returns length of the S_enterprise_number TLV field in bytes, for given Enterprise Number.
      *
      * @returns length of the S_enterprise_number field in bytes
+     *
      */
     static uint8_t GetEnterpriseNumberFieldLength(uint32_t aEnterpriseNumber)
     {
@@ -983,6 +1129,7 @@ public:
      * This method returns Service ID. It is in range 0x00-0x0f.
      *
      * @returns Service ID
+     *
      */
     uint8_t GetServiceId(void) const { return (mTResSId & kSIdMask) >> kSIdOffset; }
 
@@ -990,6 +1137,7 @@ public:
      * This method sets Service ID.
      *
      * @param [in] aServiceId Service ID to be set. Expected range: 0x00-0x0f.
+     *
      */
     void SetServiceId(uint8_t aServiceId)
     {
@@ -1032,25 +1180,31 @@ public:
                                                   GetServiceDataLength());
     }
 
-private:
     /**
-     * This method returns pointer to where mServiceDataLength would be.
+     * This method returns a pointer to the Sub-TLVs.
      *
-     * @returns pointer to service data length location
+     * @returns A pointer to the Sub-TLVs.
+     *
      */
+    const NetworkDataTlv *GetSubTlvs(void) const
+    {
+        return reinterpret_cast<const NetworkDataTlv *>(GetServiceDataLengthLocation() + sizeof(uint8_t) +
+                                                        GetServiceDataLength());
+    }
+
+private:
     uint8_t *GetServiceDataLengthLocation(void)
     {
         return GetEnterpriseNumberLocation() + (IsThreadEnterprise() ? 0 : sizeof(uint32_t));
     }
 
-    /**
-     * This method returns pointer to where mEnterpriseNumber would be.
-     *
-     * Note: this method returns uint8_t*, not uint32_t*.
-     *
-     * @returns pointer to enterprise number location
-     */
-    uint8_t *GetEnterpriseNumberLocation(void) { return &mTResSId + sizeof(mTResSId); }
+    const uint8_t *GetServiceDataLengthLocation(void) const
+    {
+        return GetEnterpriseNumberLocation() + (IsThreadEnterprise() ? 0 : sizeof(uint32_t));
+    }
+
+    uint8_t *      GetEnterpriseNumberLocation(void) { return &mTResSId + sizeof(mTResSId); }
+    const uint8_t *GetEnterpriseNumberLocation(void) const { return &mTResSId + sizeof(mTResSId); }
 
     enum
     {
@@ -1100,6 +1254,7 @@ public:
      * This method returns the S_server_16 value.
      *
      * @returns The S_server_16 value.
+     *
      */
     uint16_t GetServer16(void) const { return HostSwap16(mServer16); }
 
@@ -1115,8 +1270,9 @@ public:
      * This method returns a pointer to the Server Data.
      *
      * @returns A pointer to the Server Data.
+     *
      */
-    const uint8_t *GetServerData(void) { return reinterpret_cast<uint8_t *>(this) + sizeof(*this); }
+    const uint8_t *GetServerData(void) const { return reinterpret_cast<const uint8_t *>(this) + sizeof(*this); }
 
     /**
      * This method sets Server Data to the given values.

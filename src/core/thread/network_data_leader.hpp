@@ -109,7 +109,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  Could not find the 6LoWPAN Context information.
      *
      */
-    otError GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext);
+    otError GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext) const;
 
     /**
      * This method retrieves the 6LoWPAN Context information based on a given Context ID.
@@ -121,7 +121,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  Could not find the 6LoWPAN Context information.
      *
      */
-    otError GetContext(uint8_t aContextId, Lowpan::Context &aContext);
+    otError GetContext(uint8_t aContextId, Lowpan::Context &aContext) const;
 
     /**
      * This method indicates whether or not the given IPv6 address is on-mesh.
@@ -132,7 +132,7 @@ public:
      * @retval FALSE  If @p aAddress if not on-link.
      *
      */
-    bool IsOnMesh(const Ip6::Address &aAddress);
+    bool IsOnMesh(const Ip6::Address &aAddress) const;
 
     /**
      * This method performs a route lookup using the Network Data.
@@ -149,7 +149,7 @@ public:
     otError RouteLookup(const Ip6::Address &aSource,
                         const Ip6::Address &aDestination,
                         uint8_t *           aPrefixMatch,
-                        uint16_t *          aRloc16);
+                        uint16_t *          aRloc16) const;
 
     /**
      * This method is used by non-Leader devices to set newly received Network Data from the Leader.
@@ -187,7 +187,18 @@ public:
      * @returns A pointer to the Commissioning Data or NULL if no Commissioning Data exists.
      *
      */
-    CommissioningDataTlv *GetCommissioningData(void);
+    CommissioningDataTlv *GetCommissioningData(void)
+    {
+        return const_cast<CommissioningDataTlv *>(const_cast<const LeaderBase *>(this)->GetCommissioningData());
+    }
+
+    /**
+     * This method returns a pointer to the Commissioning Data.
+     *
+     * @returns A pointer to the Commissioning Data or NULL if no Commissioning Data exists.
+     *
+     */
+    const CommissioningDataTlv *GetCommissioningData(void) const;
 
     /**
      * This method returns a pointer to the Commissioning Data Sub-TLV.
@@ -197,7 +208,20 @@ public:
      * @returns A pointer to the Commissioning Data Sub-TLV or NULL if no Sub-TLV exists.
      *
      */
-    MeshCoP::Tlv *GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType);
+    MeshCoP::Tlv *GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType)
+    {
+        return const_cast<MeshCoP::Tlv *>(const_cast<const LeaderBase *>(this)->GetCommissioningDataSubTlv(aType));
+    }
+
+    /**
+     * This method returns a pointer to the Commissioning Data Sub-TLV.
+     *
+     * @param[in]  aType  The TLV type value.
+     *
+     * @returns A pointer to the Commissioning Data Sub-TLV or NULL if no Sub-TLV exists.
+     *
+     */
+    const MeshCoP::Tlv *GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType) const;
 
     /**
      * This method indicates whether or not the Commissioning Data TLV indicates Joining is enabled.
@@ -207,7 +231,7 @@ public:
      * @returns TRUE if the Commissioning Data TLV says Joining is enabled, FALSE otherwise.
      *
      */
-    bool IsJoiningEnabled(void);
+    bool IsJoiningEnabled(void) const;
 
     /**
      * This method adds Commissioning Data to the Thread Network Data.
@@ -231,7 +255,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  The specified @p aContextId could not be found.
      *
      */
-    otError GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16);
+    otError GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16) const;
 
     /**
      * This method gets the Service ID for the specified service.
@@ -250,7 +274,7 @@ public:
                          const uint8_t *aServiceData,
                          uint8_t        aServiceDataLength,
                          bool           aServerStable,
-                         uint8_t &      aServiceId);
+                         uint8_t &      aServiceId) const;
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     /**
@@ -262,7 +286,7 @@ public:
      * @retval OT_ERROR_NOT_FOUND  No Backbone Router Service in the Thread Network.
      *
      */
-    otError GetBackboneRouterPrimary(BackboneRouter::BackboneRouterConfig &aConfig);
+    otError GetBackboneRouterPrimary(BackboneRouter::BackboneRouterConfig &aConfig) const;
 #endif
 
 protected:
@@ -270,15 +294,15 @@ protected:
     uint8_t mVersion;
 
 private:
-    PrefixTlv *FindNextMatchingPrefix(const Ip6::Address &aAddress, PrefixTlv *aPrevTlv);
+    const PrefixTlv *FindNextMatchingPrefix(const Ip6::Address &aAddress, const PrefixTlv *aPrevTlv) const;
 
     otError RemoveCommissioningData(void);
 
     otError ExternalRouteLookup(uint8_t             aDomainId,
                                 const Ip6::Address &aDestination,
                                 uint8_t *           aPrefixMatch,
-                                uint16_t *          aRloc16);
-    otError DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16);
+                                uint16_t *          aRloc16) const;
+    otError DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t *aRloc16) const;
 };
 
 /**
