@@ -49,6 +49,10 @@ list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONF
 
 add_library(openthread-cc2652
     alarm.c
+    cc2652_ccfg.c
+    cc2652_startup.c
+    crypto/aes_alt.c
+    cxx_helpers.c
     diag.c
     entropy.c
     flash.c
@@ -57,10 +61,6 @@ add_library(openthread-cc2652
     radio.c
     system.c
     uart.c
-    crypto/aes_alt.c
-    cc2652_ccfg.c
-    cc2652_startup.c
-    cxx_helpers.c
 )
 
 set_property(TARGET openthread-cc2652 PROPERTY C_STANDARD 99)
