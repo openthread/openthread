@@ -108,12 +108,12 @@ void Notifier::HandleStateChanged(ot::Notifier::Callback &aCallback, otChangedFl
 
 void Notifier::HandleStateChanged(otChangedFlags aFlags)
 {
-    if (aFlags & (OT_CHANGED_THREAD_ROLE | OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED))
+    if (aFlags & (OT_CHANGED_THREAD_ROLE | OT_CHANGED_THREAD_CHILD_REMOVED))
     {
         mNextDelay = 0;
     }
 
-    if (aFlags & (OT_CHANGED_THREAD_NETDATA | OT_CHANGED_THREAD_ROLE | OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED))
+    if (aFlags & (OT_CHANGED_THREAD_NETDATA | OT_CHANGED_THREAD_ROLE | OT_CHANGED_THREAD_CHILD_REMOVED))
     {
         SynchronizeServerData();
     }
