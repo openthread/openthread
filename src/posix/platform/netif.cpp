@@ -107,7 +107,6 @@ struct MLDv2Record
     uint8_t         mAuxDataLen;
     uint16_t        mNumSources;
     struct in6_addr mMulticastAddress;
-    struct in6_addr mSourceAddresses[];
 } OT_TOOL_PACKED_END;
 
 enum
