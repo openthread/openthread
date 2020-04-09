@@ -82,9 +82,13 @@ target_sources(openthread-cli-mtd PRIVATE ${COMMON_SOURCES})
 target_link_libraries(openthread-cli-ftd
     PUBLIC
         openthread-ftd
+    PRIVATE
+        mbedtls
 )
 
 target_link_libraries(openthread-cli-mtd
     PUBLIC
         openthread-mtd
+    PRIVATE
+        mbedtls
 )

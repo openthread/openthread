@@ -35,11 +35,12 @@ endif()
 
 list(APPEND OT_PLATFORM_DEFINES
     "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-cc1352-config-check.h\""
-    "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\""
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
 list(APPEND OT_PRIVATE_DEFINES "MBEDTLS_USER_CONFIG_FILE=\"cc1352-mbedtls-config.h\"")
+set(OT_PRIVATE_DEFINES ${OT_PRIVATE_DEFINES} PARENT_SCOPE)
+
 list(APPEND OT_PUBLIC_INCLUDES
     "${PROJECT_SOURCE_DIR}/examples/platforms/cc1352/crypto"
     "${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2"
@@ -66,9 +67,19 @@ add_library(openthread-cc1352
 
 set_property(TARGET openthread-cc1352 PROPERTY C_STANDARD 99)
 
-target_link_libraries(openthread-cc1352 PRIVATE "${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2/driverlib/bin/gcc/driverlib.a")
-target_link_options(openthread-cc1352 PUBLIC -T${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2/linker_files/cc26x2r1f.lds)
-target_link_options(openthread-cc1352 PUBLIC -Wl,-Map=$<TARGET_PROPERTY:NAME>.map)
+target_link_libraries(openthread-cc1352
+    PRIVATE
+        "${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2/driverlib/bin/gcc/driverlib.a"
+        mbedtls
+)
+target_link_options(openthread-cc1352
+    PUBLIC
+        -T${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2/linker_files/cc26x2r1f.lds
+)
+target_link_options(openthread-cc1352
+    PUBLIC
+        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
+)
 
 target_compile_definitions(openthread-cc1352
     PUBLIC
