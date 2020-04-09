@@ -434,13 +434,14 @@ void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMax
  * @param[in]   aDomain     The communication domain.
  * @param[in]   aType       The semantics of communication.
  * @param[in]   aProtocol   The protocol to use.
+ * @param[in]   aNonBlock   Whether to add nonblock flags.
  *
  * @returns The file descriptor of the created socket.
  *
  * @retval  -1  Failed to create socket.
  *
  */
-int SocketWithCloseExec(int aDomain, int aType, int aProtocol);
+int SocketWithCloseExec(int aDomain, int aType, int aProtocol, bool aNonBlock);
 
 #ifdef __cplusplus
 }

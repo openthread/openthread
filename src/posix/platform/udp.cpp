@@ -219,7 +219,7 @@ otError otPlatUdpSocket(otUdpSocket *aUdpSocket)
 
     assert(aUdpSocket->mHandle == NULL);
 
-    fd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+    fd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_UDP, /*aNonBlock=*/true);
     VerifyOrExit(fd >= 0, error = OT_ERROR_FAILED);
 
     aUdpSocket->mHandle = FdToHandle(fd);
