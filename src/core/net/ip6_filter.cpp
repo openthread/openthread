@@ -37,6 +37,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/logging.hpp"
 #include "meshcop/meshcop.hpp"
 #include "net/ip6.hpp"
 #include "net/tcp.hpp"
@@ -136,6 +137,7 @@ otError Filter::AddUnsecurePort(uint16_t aPort)
         if (mUnsecurePorts[i] == 0)
         {
             mUnsecurePorts[i] = aPort;
+            otLogInfoIp6("Added unsecure port %d", aPort);
             ExitNow();
         }
     }
@@ -163,6 +165,7 @@ otError Filter::RemoveUnsecurePort(uint16_t aPort)
 
             // Clear the last port entry.
             mUnsecurePorts[i] = 0;
+            otLogInfoIp6("Removed unsecure port %d", aPort);
             ExitNow();
         }
     }
@@ -171,6 +174,21 @@ otError Filter::RemoveUnsecurePort(uint16_t aPort)
 
 exit:
     return error;
+}
+
+bool Filter::IsUnsecurePort(uint16_t aPort)
+{
+    bool found = false;
+
+    for (int i = 0; i < kMaxUnsecurePorts; i++)
+    {
+        if (mUnsecurePorts[i] == aPort)
+        {
+            found = true;
+            break;
+        }
+    }
+    return found;
 }
 
 void Filter::RemoveAllUnsecurePorts(void)
