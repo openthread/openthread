@@ -26,9 +26,16 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_BUILTIN_MBEDTLS)
+if(NOT OT_EXTERNAL_MBEDTLS)
     add_subdirectory(mbedtls)
 endif()
+
+add_library(openthread-mbedtls INTERFACE)
+
+target_link_libraries(openthread-mbedtls
+    INTERFACE $<IF:$<BOOL:${OT_EXTERNAL_MBEDTLS}>,${OT_EXTERNAL_MBEDTLS}, mbedtls>
+)
+
 if(OT_PLATFORM STREQUAL "kw41z")
     add_subdirectory(nxp)
 elseif(OT_PLATFORM STREQUAL "cc2650")

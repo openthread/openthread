@@ -83,12 +83,12 @@ target_link_libraries(openthread-cli-ftd
     PUBLIC
         openthread-ftd
     PRIVATE
-        mbedtls
+        openthread-mbedtls
 )
 
 target_link_libraries(openthread-cli-mtd
     PUBLIC
         openthread-mtd
     PRIVATE
-        mbedtls
+        openthread-mbedtls
 )
