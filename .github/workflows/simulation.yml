@@ -142,6 +142,17 @@ jobs:
     - name: Codecov
       uses: codecov/codecov-action@v1
 
+  expects:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run
+      run: |
+        sudo apt --no-install-recommends install -y expect ninja-build
+        ./script/test build expect
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+
   ncp:
     runs-on: ubuntu-18.04
     env:
