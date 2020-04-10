@@ -199,8 +199,13 @@ private:
     otError RemoveService(void);
     void    AddDomainPrefixToNetworkData(void);
     void    RemoveDomainPrefixFromNetworkData(void);
-    void    LogBackboneRouterService(const char *aAction, otError aError);
-    void    LogDomainPrefix(const char *aAction, otError aError);
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_NETDATA == 1)
+    void LogBackboneRouterService(const char *aAction, otError aError);
+    void LogDomainPrefix(const char *aAction, otError aError);
+#else
+    void LogBackboneRouterService(const char *, otError) {}
+    void LogDomainPrefix(const char *, otError) {}
+#endif
 
     BackboneRouterState mState;
     uint32_t            mMlrTimeout;

@@ -273,8 +273,7 @@ otError Local::RemoveDomainPrefix(const otIp6Prefix &aPrefix)
 
     if (IsEnabled())
     {
-        error = Get<NetworkData::Local>().RemoveOnMeshPrefix(aPrefix.mPrefix.mFields.m8, aPrefix.mLength);
-        LogDomainPrefix("Remove", error);
+        RemoveDomainPrefixFromNetworkData();
     }
 
     mDomainPrefixConfig.mPrefix.mLength = 0;
@@ -285,14 +284,9 @@ exit:
 
 void Local::SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig)
 {
-    otError error; // only used for logging.
-
-    if (IsEnabled() && mDomainPrefixConfig.mPrefix.mLength > 0)
+    if (IsEnabled())
     {
-        error = Get<NetworkData::Local>().RemoveOnMeshPrefix(mDomainPrefixConfig.mPrefix.mPrefix.mFields.m8,
-                                                             mDomainPrefixConfig.mPrefix.mLength);
-
-        LogDomainPrefix("Remove", error);
+        RemoveDomainPrefixFromNetworkData();
     }
 
     mDomainPrefixConfig = aConfig;
@@ -300,8 +294,7 @@ void Local::SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig)
 
     if (IsEnabled())
     {
-        error = Get<NetworkData::Local>().AddOnMeshPrefix(mDomainPrefixConfig);
-        LogDomainPrefix("Add", error);
+        AddDomainPrefixToNetworkData();
     }
 }
 
@@ -314,7 +307,6 @@ void Local::RemoveDomainPrefixFromNetworkData(void)
         error = Get<NetworkData::Local>().RemoveOnMeshPrefix(mDomainPrefixConfig.mPrefix.mPrefix.mFields.m8,
 
                                                              mDomainPrefixConfig.mPrefix.mLength);
-        OT_ASSERT(error == OT_ERROR_NONE);
     }
 
     LogDomainPrefix("Remove", error);
@@ -332,28 +324,22 @@ void Local::AddDomainPrefixToNetworkData(void)
     LogDomainPrefix("Add", error);
 }
 
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_NETDATA == 1)
 void Local::LogDomainPrefix(const char *aAction, otError aError)
 {
-    if (mDomainPrefixConfig.mPrefix.mLength > 0)
-    {
-        otLogDebgNetData("prefix: %s/%d",
-                         (*static_cast<Ip6::Address *>(&mDomainPrefixConfig.mPrefix.mPrefix)).ToString().AsCString(),
-                         mDomainPrefixConfig.mPrefix.mLength);
-    }
-    else
-    {
-        otLogInfoNetData("No available prefix");
-    }
-
-    otLogInfoNetData("%s Domain Prefix: %s%s", aAction, otThreadErrorToString(aError));
+    otLogInfoNetData("%s Domain Prefix: %s/%d, %s", aAction,
+                     mDomainPrefixConfig.mPrefix.mLength > 0
+                         ? (*static_cast<Ip6::Address *>(&mDomainPrefixConfig.mPrefix.mPrefix)).ToString().AsCString()
+                         : "",
+                     mDomainPrefixConfig.mPrefix.mLength, otThreadErrorToString(aError));
 }
 
 void Local::LogBackboneRouterService(const char *aAction, otError aError)
 {
-    otLogDebgNetData("local BBR: seqno (%d), delay (%ds), timeout (%ds)", mSequenceNumber, mReregistrationDelay,
-                     mMlrTimeout);
-    otLogInfoNetData("%s BBR Service: %s", aAction, otThreadErrorToString(aError));
+    otLogInfoNetData("%s BBR Service: seqno (%d), delay (%ds), timeout (%ds), %s", aAction, mSequenceNumber,
+                     mReregistrationDelay, mMlrTimeout, otThreadErrorToString(aError));
 }
+#endif
 
 } // namespace BackboneRouter
 
