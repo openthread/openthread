@@ -70,8 +70,11 @@ otLogLevel otLoggingGetLevel(void);
  *
  * @param[in]  aLogLevel               The log level.
  *
+ * @retval OT_ERROR_NONE            Successfully updated log level.
+ * @retval OT_ERROR_INVALID_ARGS    Log level value is invalid.
+ *
  */
-void otLoggingSetLevel(otLogLevel aLogLevel);
+otError otLoggingSetLevel(otLogLevel aLogLevel);
 
 /**
  * @}

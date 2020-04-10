@@ -249,9 +249,7 @@ private:
 #if OPENTHREAD_POSIX
     void ProcessExit(uint8_t aArgsLength, char *aArgs[]);
 #endif
-#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_POSIX
-    void ProcessLogFilename(uint8_t aArgsLength, char *aArgs[]);
-#endif
+    void    ProcessLog(uint8_t aArgsLength, char *aArgs[]);
     void    ProcessExtAddress(uint8_t aArgsLength, char *aArgs[]);
     void    ProcessExtPanId(uint8_t aArgsLength, char *aArgs[]);
     void    ProcessFactoryReset(uint8_t aArgsLength, char *aArgs[]);

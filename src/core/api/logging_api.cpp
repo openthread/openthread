@@ -49,8 +49,19 @@ otLogLevel otLoggingGetLevel(void)
 }
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
-void otLoggingSetLevel(otLogLevel aLogLevel)
+otError otLoggingSetLevel(otLogLevel aLogLevel)
 {
-    Instance::Get().SetLogLevel(aLogLevel);
+    otError error = OT_ERROR_NONE;
+
+    if (aLogLevel <= OT_LOG_LEVEL_DEBG && aLogLevel >= OT_LOG_LEVEL_NONE)
+    {
+        Instance::Get().SetLogLevel(aLogLevel);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+    return error;
 }
 #endif

@@ -61,6 +61,7 @@
 
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
+#include <openthread/logging.h>
 #include <openthread/platform/uart.h>
 
 #include "common/new.hpp"
@@ -147,9 +148,7 @@ const struct Command Interpreter::sCommands[] = {
 #if OPENTHREAD_POSIX
     {"exit", &Interpreter::ProcessExit},
 #endif
-#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_POSIX
-    {"logfilename", &Interpreter::ProcessLogFilename},
-#endif
+    {"log", &Interpreter::ProcessLog},
     {"extaddr", &Interpreter::ProcessExtAddress},
     {"extpanid", &Interpreter::ProcessExtPanId},
     {"factoryreset", &Interpreter::ProcessFactoryReset},
@@ -1363,20 +1362,47 @@ void Interpreter::ProcessExit(uint8_t aArgsLength, char *aArgs[])
 }
 #endif
 
-#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_POSIX
-
-void Interpreter::ProcessLogFilename(uint8_t aArgsLength, char *aArgs[])
+void Interpreter::ProcessLog(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aArgsLength >= 1, error = OT_ERROR_INVALID_ARGS);
 
-    SuccessOrExit(error = otPlatDebugUart_logfile(aArgs[0]));
+    if (!strcmp(aArgs[0], "level"))
+    {
+        if (aArgsLength == 1)
+        {
+            mServer->OutputFormat("%d\r\n", otLoggingGetLevel());
+        }
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+        else if (aArgsLength == 2)
+        {
+            long level;
+
+            SuccessOrExit(error = ParseLong(aArgs[1], level));
+            SuccessOrExit(error = otLoggingSetLevel(level));
+        }
+#endif
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+    }
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_POSIX
+    else if (!strcmp(aArgs[0], "filename"))
+    {
+        VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
+        SuccessOrExit(error = otPlatDebugUart_logfile(aArgs[1]));
+    }
+#endif
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
 
 exit:
     AppendResult(error);
 }
-#endif
 
 void Interpreter::ProcessExtPanId(uint8_t aArgsLength, char *aArgs[])
 {
