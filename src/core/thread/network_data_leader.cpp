@@ -103,7 +103,7 @@ otError LeaderBase::GetBackboneRouterPrimary(BackboneRouter::BackboneRouterConfi
     const ServiceTlv *              serviceTlv;
     const ServerTlv *               serverTlv;
 
-    serviceTlv = Get<Leader>().FindService(THREAD_ENTERPRISE_NUMBER, &serviceData, sizeof(serviceData));
+    serviceTlv = Get<Leader>().FindService(ServiceTlv::kThreadEnterpriseNumber, &serviceData, sizeof(serviceData));
 
     VerifyOrExit(serviceTlv != NULL, aConfig.mServer16 = Mac::kShortAddrInvalid);
 

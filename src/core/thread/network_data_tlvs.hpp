@@ -36,15 +36,17 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/netdata.h>
+
+#include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "net/ip6_address.hpp"
-
-#define THREAD_ENTERPRISE_NUMBER 44970
 
 namespace ot {
 namespace NetworkData {
 
 using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
 /**
  * @addtogroup core-netdata-tlvs
@@ -972,22 +974,40 @@ public:
     enum
     {
         kType                      = kTypeService, ///< The TLV Type.
+        kThreadEnterpriseNumber    = 44970,        ///< Thread enterprise number.
         kServiceDataBackboneRouter = 0x01,         ///< const THREAD_SERVICE_DATA_BBR
     };
 
     /**
      * This method initializes the TLV.
      *
-     * Initial length is set to 2, to hold S_service_data_length field.
+     * @param[in]  aServiceId          The Service Id value.
+     * @param[in]  aEnterpriseNumber   The Enterprise Number.
+     * @param[in]  aServiceData        The Service Data.
+     * @param[in]  aServiceDataLength  The Service Data length (number of bytes).
      *
      */
-    void Init(void)
+    void Init(uint8_t aServiceId, uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength)
     {
         NetworkDataTlv::Init();
         SetType(kTypeService);
-        SetLength(2);
-        mTResSId = kTMask;
-        SetServiceDataLength(0);
+
+        mFlagsServiceId = (aEnterpriseNumber == kThreadEnterpriseNumber) ? kThreadEnterpriseFlag : 0;
+        mFlagsServiceId |= (aServiceId & kServiceIdMask);
+
+        if (aEnterpriseNumber != kThreadEnterpriseNumber)
+        {
+            mShared.mEnterpriseNumber = HostSwap32(aEnterpriseNumber);
+            mServiceDataLength        = aServiceDataLength;
+            memcpy(&mServiceDataLength + sizeof(uint8_t), aServiceData, aServiceDataLength);
+        }
+        else
+        {
+            mShared.mServiceDataLengthThreadEnterprise = aServiceDataLength;
+            memcpy(&mShared.mServiceDataLengthThreadEnterprise + sizeof(uint8_t), aServiceData, aServiceDataLength);
+        }
+
+        SetLength(GetFieldsLength());
     }
 
     /**
@@ -1000,11 +1020,29 @@ public:
     bool IsValid(void) const
     {
         uint8_t length = GetLength();
-        return ((length >= (sizeof(*this) - sizeof(NetworkDataTlv))) &&
-                (length >= ((sizeof(*this) - sizeof(NetworkDataTlv)) + (IsThreadEnterprise() ? 0 : sizeof(uint32_t)) +
-                            sizeof(uint8_t))) &&
-                (length >= ((sizeof(*this) - sizeof(NetworkDataTlv)) + (IsThreadEnterprise() ? 0 : sizeof(uint32_t)) +
-                            sizeof(uint8_t) + GetServiceDataLength())));
+
+        return (length >= sizeof(mFlagsServiceId)) &&
+               (length >= kMinLength + (IsThreadEnterprise() ? 0 : sizeof(uint32_t))) && (length >= GetFieldsLength());
+    }
+
+    /**
+     * This method returns the Service ID. It is in range 0x00-0x0f.
+     *
+     * @returns the Service ID.
+     *
+     */
+    uint8_t GetServiceId(void) const { return (mFlagsServiceId & kServiceIdMask); }
+
+    /**
+     * This method returns Enterprise Number field.
+     *
+     * @returns The Enterprise Number.
+     *
+     */
+    uint32_t GetEnterpriseNumber(void) const
+    {
+        return IsThreadEnterprise() ? static_cast<uint32_t>(kThreadEnterpriseNumber)
+                                    : HostSwap32(mShared.mEnterpriseNumber);
     }
 
     /**
@@ -1013,15 +1051,10 @@ public:
      * @returns length of the Service Data field in bytes.
      *
      */
-    uint8_t GetServiceDataLength(void) const { return *GetServiceDataLengthLocation(); }
-
-    /**
-     * This method sets Service Data length.
-     *
-     * @param[in] aServiceDataLength desired length of the Service Data field in bytes.
-     *
-     */
-    void SetServiceDataLength(uint8_t aServiceDataLength) { *GetServiceDataLengthLocation() = aServiceDataLength; }
+    uint8_t GetServiceDataLength(void) const
+    {
+        return IsThreadEnterprise() ? mShared.mServiceDataLengthThreadEnterprise : mServiceDataLength;
+    }
 
     /**
      * This method returns a pointer to the Service Data.
@@ -1029,7 +1062,11 @@ public:
      * @returns A pointer to the Service Data.
      *
      */
-    uint8_t *GetServiceData(void) { return GetServiceDataLengthLocation() + sizeof(uint8_t); }
+    uint8_t *GetServiceData(void)
+    {
+        return (IsThreadEnterprise() ? &mShared.mServiceDataLengthThreadEnterprise : &mServiceDataLength) +
+               sizeof(uint8_t);
+    }
 
     /**
      * This method returns a pointer to the Service Data.
@@ -1037,111 +1074,10 @@ public:
      * @returns A pointer to the Service Data.
      *
      */
-    const uint8_t *GetServiceData(void) const { return GetServiceDataLengthLocation() + sizeof(uint8_t); }
-
-    /**
-     * This method sets Service Data to the given values.
-     *
-     * Caller must ensure that there is enough memory allocated.
-     *
-     * @param aServiceData       pointer to the service data to use
-     * @param aServiceDataLength length of the provided service data in bytes
-     *
-     */
-    void SetServiceData(const uint8_t *aServiceData, uint8_t aServiceDataLength)
+    const uint8_t *GetServiceData(void) const
     {
-        SetServiceDataLength(aServiceDataLength);
-
-        memcpy(GetServiceData(), aServiceData, aServiceDataLength);
-    }
-
-    /**
-     * This method returns Enterprise Number field.
-     *
-     * @returns Enterprise Number
-     *
-     */
-    uint32_t GetEnterpriseNumber(void) const
-    {
-        if (IsThreadEnterprise())
-        {
-            return THREAD_ENTERPRISE_NUMBER;
-        }
-        else
-        {
-            // This memory access most likely will not be aligned to 4 bytes
-            return HostSwap32(*reinterpret_cast<const uint32_t *>(GetEnterpriseNumberLocation()));
-        }
-    }
-
-    /**
-     * This method returns the T flag. It is set when Enterprise Number is equal to THREAD_ENTERPRISE_NUMBER.
-     *
-     * @returns Flag whether Enterprise Number is equal to THREAD_ENTERPRISE_NUMBER
-     *
-     */
-    bool IsThreadEnterprise(void) const { return (mTResSId & kTMask) != 0; }
-
-    /**
-     * This method sets Enterprise Number and updates the T flag.
-     *
-     * Note: this method does not preserve service data / sub-TLV fields. Changing the T flag and inserting
-     * few bytes in the middle of this TLV effectively destroys rest of the content of this TLV (and might lead to
-     * memory corruption) so modification of Enterprise Number must be done before adding any content to the TLV.
-     *
-     * @param [in] aEnterpriseNumber Enterprise Number
-     *
-     */
-    void SetEnterpriseNumber(uint32_t aEnterpriseNumber)
-    {
-        if (aEnterpriseNumber == THREAD_ENTERPRISE_NUMBER)
-        {
-            mTResSId |= kTMask;
-        }
-        else
-        {
-            mTResSId &= ~kTMask;
-
-            // This memory access most likely will not be aligned to 4 bytes
-            *reinterpret_cast<uint32_t *>(GetEnterpriseNumberLocation()) = HostSwap32(aEnterpriseNumber);
-        }
-    }
-
-    /**
-     * This method returns length of the S_enterprise_number TLV field in bytes, for given Enterprise Number.
-     *
-     * @returns length of the S_enterprise_number field in bytes
-     *
-     */
-    static uint8_t GetEnterpriseNumberFieldLength(uint32_t aEnterpriseNumber)
-    {
-        if (aEnterpriseNumber == THREAD_ENTERPRISE_NUMBER)
-        {
-            return 0;
-        }
-        else
-        {
-            return (sizeof(aEnterpriseNumber));
-        }
-    }
-
-    /**
-     * This method returns Service ID. It is in range 0x00-0x0f.
-     *
-     * @returns Service ID
-     *
-     */
-    uint8_t GetServiceId(void) const { return (mTResSId & kSIdMask) >> kSIdOffset; }
-
-    /**
-     * This method sets Service ID.
-     *
-     * @param [in] aServiceId Service ID to be set. Expected range: 0x00-0x0f.
-     *
-     */
-    void SetServiceId(uint8_t aServiceId)
-    {
-        mTResSId = static_cast<uint8_t>((mTResSId & ~kSIdMask) | (aServiceId << kSIdOffset));
+        return (IsThreadEnterprise() ? &mShared.mServiceDataLengthThreadEnterprise : &mServiceDataLength) +
+               sizeof(uint8_t);
     }
 
     /**
@@ -1150,11 +1086,7 @@ public:
      * @returns The Sub-TLVs length in bytes.
      *
      */
-    uint8_t GetSubTlvsLength(void)
-    {
-        return GetLength() - (sizeof(*this) - sizeof(NetworkDataTlv)) - (IsThreadEnterprise() ? 0 : sizeof(uint32_t)) -
-               sizeof(uint8_t) /* mServiceDataLength */ - GetServiceDataLength();
-    }
+    uint8_t GetSubTlvsLength(void) { return GetLength() - GetFieldsLength(); }
 
     /**
      * This method sets the Sub-TLVs length in bytes.
@@ -1162,11 +1094,7 @@ public:
      * @param[in]  aLength  The Sub-TLVs length in bytes.
      *
      */
-    void SetSubTlvsLength(uint8_t aLength)
-    {
-        SetLength(sizeof(*this) - sizeof(NetworkDataTlv) + (IsThreadEnterprise() ? 0 : sizeof(uint32_t)) +
-                  sizeof(uint8_t) /* mServiceDataLength */ + GetServiceDataLength() + aLength);
-    }
+    void SetSubTlvsLength(uint8_t aLength) { SetLength(GetFieldsLength() + aLength); }
 
     /**
      * This method returns a pointer to the Sub-TLVs.
@@ -1174,11 +1102,7 @@ public:
      * @returns A pointer to the Sub-TLVs.
      *
      */
-    NetworkDataTlv *GetSubTlvs(void)
-    {
-        return reinterpret_cast<NetworkDataTlv *>(GetServiceDataLengthLocation() + sizeof(uint8_t) +
-                                                  GetServiceDataLength());
-    }
+    NetworkDataTlv *GetSubTlvs(void) { return reinterpret_cast<NetworkDataTlv *>(GetValue() + GetFieldsLength()); }
 
     /**
      * This method returns a pointer to the Sub-TLVs.
@@ -1188,33 +1112,59 @@ public:
      */
     const NetworkDataTlv *GetSubTlvs(void) const
     {
-        return reinterpret_cast<const NetworkDataTlv *>(GetServiceDataLengthLocation() + sizeof(uint8_t) +
-                                                        GetServiceDataLength());
+        return reinterpret_cast<const NetworkDataTlv *>(GetValue() + GetFieldsLength());
+    }
+
+    /**
+     * This static method calculates the total size (number of bytes) of a Service TLV with a given Enterprise Number
+     * and Service Data length.
+     *
+     * Note that the returned size does include the Type and Length fields in the TLV, but does not account for any
+     * sub-TLVs of the Service TLV.
+     *
+     * @param[in]  aEnterpriseNumber   A Enterprise Number.
+     * @param[in]  aServiceDataLength  A Service Data length.
+     *
+     * @returns    The size (number of bytes) of the Service TLV.
+     *
+     */
+    static uint16_t GetSize(uint32_t aEnterpriseNumber, uint8_t aServiceDataLength)
+    {
+        return sizeof(NetworkDataTlv) + kMinLength + aServiceDataLength +
+               ((aEnterpriseNumber == kThreadEnterpriseNumber) ? 0 : sizeof(uint32_t) /* mEnterpriseNumber  */);
     }
 
 private:
-    uint8_t *GetServiceDataLengthLocation(void)
-    {
-        return GetEnterpriseNumberLocation() + (IsThreadEnterprise() ? 0 : sizeof(uint32_t));
-    }
+    bool IsThreadEnterprise(void) const { return (mFlagsServiceId & kThreadEnterpriseFlag) != 0; }
 
-    const uint8_t *GetServiceDataLengthLocation(void) const
+    uint8_t GetFieldsLength(void) const
     {
-        return GetEnterpriseNumberLocation() + (IsThreadEnterprise() ? 0 : sizeof(uint32_t));
-    }
+        // Returns the length of TLV value's common fields (flags, enterprise
+        // number and service data) excluding any sub-TLVs.
 
-    uint8_t *      GetEnterpriseNumberLocation(void) { return &mTResSId + sizeof(mTResSId); }
-    const uint8_t *GetEnterpriseNumberLocation(void) const { return &mTResSId + sizeof(mTResSId); }
+        return kMinLength + (IsThreadEnterprise() ? 0 : sizeof(uint32_t)) + GetServiceDataLength();
+    }
 
     enum
     {
-        kTOffset   = 7,
-        kTMask     = 0x1 << kTOffset,
-        kSIdOffset = 0,
-        kSIdMask   = 0xf << kSIdOffset,
+        kThreadEnterpriseFlag = (1 << 7),
+        kServiceIdMask        = 0xf,
+        kMinLength            = sizeof(uint8_t) + sizeof(uint8_t), // Flags and Service Data length.
     };
 
-    uint8_t mTResSId;
+    // When `kThreadEnterpriseFlag is set in the `mFlagsServiceId`, the
+    // `mEnterpriseNumber` field is elided and `mFlagsServiceId` is
+    // immediately followed by the Service Data length field (which is
+    // represented by `mServiceDataLengthThreadEnterprise`)
+
+    uint8_t mFlagsServiceId;
+    union OT_TOOL_PACKED_FIELD
+    {
+        uint32_t mEnterpriseNumber;
+        uint8_t  mServiceDataLengthThreadEnterprise;
+    } mShared;
+    uint8_t mServiceDataLength;
+
 } OT_TOOL_PACKED_END;
 
 /**
