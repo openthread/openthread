@@ -1380,7 +1380,7 @@ void Interpreter::ProcessLog(uint8_t aArgsLength, char *aArgs[])
             long level;
 
             SuccessOrExit(error = ParseLong(aArgs[1], level));
-            SuccessOrExit(error = otLoggingSetLevel(level));
+            SuccessOrExit(error = otLoggingSetLevel(static_cast<otLogLevel>(level)));
         }
 #endif
         else
