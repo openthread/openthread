@@ -973,6 +973,18 @@ public:
      */
     void RequestShorterChildIdRequest(void);
 
+    /**
+     * This method gets the RLOC address of a given RLOC16.
+     *
+     * @param[out]  aAddress  A reference to the RLOC address.
+     * @param[in]   aRloc16   The RLOC16.
+     *
+     * @retval OT_ERROR_NONE      If got the RLOC address successfully.
+     * @retval OT_ERROR_DETACHED  If device is detached.
+     *
+     */
+    otError GetRlocAddress(Ip6::Address &aAddress, uint16_t aRloc16) const;
+
 protected:
     /**
      * States during attach (when searching for a parent).

@@ -765,9 +765,7 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
 
             if (child.RemoveIp6Address(target) == OT_ERROR_NONE)
             {
-                destination.Clear();
-                destination.mFields.m16[0] = HostSwap16(0xfe80);
-                destination.SetIid(child.GetExtAddress());
+                SuccessOrExit(error = Get<Mle::Mle>().GetRlocAddress(destination, child.GetRloc16()));
 
                 SendAddressError(target, meshLocalIid, &destination);
                 ExitNow();

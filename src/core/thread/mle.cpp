@@ -1121,6 +1121,12 @@ exit:
     return error;
 }
 
+otError Mle::GetRlocAddress(Ip6::Address &aAddress, uint16_t aRloc16) const
+{
+    // Same logic with `GetAlocAddress`
+    return GetAlocAddress(aAddress, aRloc16);
+}
+
 otError Mle::GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
 {
     otError error = OT_ERROR_NONE;
