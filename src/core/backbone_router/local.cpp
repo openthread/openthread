@@ -305,7 +305,6 @@ void Local::RemoveDomainPrefixFromNetworkData(void)
     if (mDomainPrefixConfig.mPrefix.mLength > 0)
     {
         error = Get<NetworkData::Local>().RemoveOnMeshPrefix(mDomainPrefixConfig.mPrefix.mPrefix.mFields.m8,
-
                                                              mDomainPrefixConfig.mPrefix.mLength);
     }
 

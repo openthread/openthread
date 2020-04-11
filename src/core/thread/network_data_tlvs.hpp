@@ -512,8 +512,7 @@ public:
      */
     void SetPreference(int8_t aPrf)
     {
-        mFlags = HostSwap16((HostSwap16(mFlags) & ~kPreferenceMask) |
-                            ((static_cast<uint16_t>(aPrf) << kPreferenceOffset) & kPreferenceMask));
+        mFlags = HostSwap16(GetFlags() | ((static_cast<uint16_t>(aPrf) << kPreferenceOffset) & kPreferenceMask));
     }
 
     /**
