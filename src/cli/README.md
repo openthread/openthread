@@ -60,7 +60,7 @@ Done
 * [leaderpartitionid](#leaderpartitionid)
 * [leaderweight](#leaderweight)
 * [linkquality](#linkquality-extaddr)
-* [logfilename](#logfilename-filename)
+* [log](#log-filename-filename)
 * [mac](#mac-retries-direct)
 * [macfilter](#macfilter)
 * [masterkey](#masterkey)
@@ -889,7 +889,7 @@ Set the link quality on the link to a given extended address.
 Done
 ```
 
-### logfilename \<filename\>
+### log filename \<filename\>
 
 - Note: Simulation Only, ie: `OPENTHREAD_EXAMPLES_SIMULATION`
 - Requires `OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART`
@@ -897,6 +897,25 @@ Done
 Specifies filename to capture otPlatLog() messages, useful when
 debugging automated test scripts on Linux when logging disrupts
 the automated test scripts.
+
+### log level
+
+Get the log level.
+
+```bash
+> log level
+1
+Done
+```
+
+### log level \<level\>
+
+Set the log level.
+
+```bash
+> log level 4
+Done
+```
 
 ### masterkey
 
