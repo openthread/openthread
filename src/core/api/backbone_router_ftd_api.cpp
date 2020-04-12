@@ -75,9 +75,16 @@ void otBackboneRouterSetConfig(otInstance *aInstance, const otBackboneRouterConf
 
 otError otBackboneRouterRegister(otInstance *aInstance)
 {
+    otError error = OT_ERROR_NONE;
+
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<BackboneRouter::Local>().AddService(true /* Force registration */);
+    SuccessOrExit(error = instance.Get<BackboneRouter::Local>().AddService(true /* Force registration */));
+
+    instance.Get<NetworkData::Notifier>().HandleServerDataUpdated();
+
+exit:
+    return error;
 }
 
 uint8_t otBackboneRouterGetRegistrationJitter(otInstance *aInstance)
@@ -92,6 +99,15 @@ void otBackboneRouterSetRegistrationJitter(otInstance *aInstance, uint8_t aJitte
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.Get<BackboneRouter::Local>().SetRegistrationJitter(aJitter);
+}
+
+otError otBackboneRouterGetDomainPrefix(otInstance *aInstance, otBorderRouterConfig *aConfig)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    OT_ASSERT(aConfig != NULL);
+
+    return instance.Get<BackboneRouter::Local>().GetDomainPrefix(*aConfig);
 }
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE

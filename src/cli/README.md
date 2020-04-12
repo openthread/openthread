@@ -78,7 +78,7 @@ Done
 * [ping](#ping-ipaddr-size-count-interval-hoplimit)
 * [pollperiod](#pollperiod-pollperiod)
 * [preferrouterid](#preferrouterid-routerid)
-* [prefix](#prefix-add-prefix-pvdcsr-prf)
+* [prefix](#prefix-add-prefix-padcrosnD-prf)
 * [promiscuous](#promiscuous)
 * [pskc](#pskc--p-keypassphrase)
 * [releaserouterid](#releaserouterid-routerid)
@@ -1193,16 +1193,22 @@ Done
 ### prefix
 
 Get the prefix list in the local Network Data.
+Note: For the Thread 1.2 border router with backbone capability, the local Domain
+      Prefix would be listed as well (with flag `D`), with preceeding `- ` if backbone
+      functionality is disabled.
 
 ```bash
 > prefix
 2001:dead:beef:cafe::/64 paros med
+- fd00:7d03:7d03:7d03::/64 prosD med
 Done
 ```
 
-### prefix add \<prefix\> [pvdcsr] [prf]
+### prefix add \<prefix\> [padcrosnD] [prf]
 
 Add a valid prefix to the Network Data.
+
+Note: The Domain Prefix flag (`D`) is only available for Thread 1.2.
 
 * p: Preferred flag
 * a: Stateless IPv6 Address Autoconfiguration flag
@@ -1211,10 +1217,15 @@ Add a valid prefix to the Network Data.
 * r: Default Route flag
 * o: On Mesh flag
 * s: Stable flag
+* n: Nd Dns flag
+* D: Domain Prefix flag
 * prf: Default router preference, which may be 'high', 'med', or 'low'.
 
 ```bash
 > prefix add 2001:dead:beef:cafe::/64 paros med
+Done
+
+> prefix add fd00:7d03:7d03:7d03::/64 prosD med
 Done
 ```
 

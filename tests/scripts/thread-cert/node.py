@@ -509,6 +509,15 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
+    def set_domain_prefix(self, prefix):
+        flags = 'prosD'
+        self.add_prefix(prefix, flags)
+        self.register_netdata()
+
+    def remove_domain_prefix(self, prefix):
+        self.remove_prefix(prefix)
+        self.register_netdata()
+
     def set_link_quality(self, addr, lqi):
         cmd = 'macfilter rss add-lqi %s %s' % (addr, lqi)
         self.send_command(cmd)

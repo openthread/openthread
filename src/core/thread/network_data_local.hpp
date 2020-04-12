@@ -73,18 +73,14 @@ public:
     /**
      * This method adds a Border Router entry to the Thread Network Data.
      *
-     * @param[in]  aPrefix        A pointer to the prefix.
-     * @param[in]  aPrefixLength  The prefix length in bits.
-     * @param[in]  aPrf           The preference value.
-     * @param[in]  aFlags         The Border Router Flags value.
-     * @param[in]  aStable        The Stable value.
+     * @param[in]  aConfig  A reference to the on mesh perfix configuration.
      *
      * @retval OT_ERROR_NONE         Successfully added the Border Router entry.
      * @retval OT_ERROR_NO_BUFS      Insufficient space to add the Border Router entry.
      * @retval OT_ERROR_INVALID_ARGS The prefix is mesh local prefix.
      *
      */
-    otError AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf, uint8_t aFlags, bool aStable);
+    otError AddOnMeshPrefix(const OnMeshPrefixConfig &aConfig);
 
     /**
      * This method removes a Border Router entry from the Thread Network Data.
@@ -182,7 +178,7 @@ private:
                       uint8_t              aPrefixLength,
                       NetworkDataTlv::Type aSubTlvType,
                       int8_t               aPrf,
-                      uint8_t              aFlags,
+                      uint16_t             aFlags,
                       bool                 aStable);
     otError RemovePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, NetworkDataTlv::Type aSubTlvType);
     void    UpdateRloc(PrefixTlv &aPrefix);

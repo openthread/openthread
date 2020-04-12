@@ -54,9 +54,54 @@ Local::Local(Instance &aInstance)
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-otError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf, uint8_t aFlags, bool aStable)
+otError Local::AddOnMeshPrefix(const OnMeshPrefixConfig &aConfig)
 {
-    return AddPrefix(aPrefix, aPrefixLength, NetworkDataTlv::kTypeBorderRouter, aPrf, aFlags, aStable);
+    uint16_t flags = 0;
+
+    if (aConfig.mPreferred)
+    {
+        flags |= BorderRouterEntry::kPreferredFlag;
+    }
+
+    if (aConfig.mSlaac)
+    {
+        flags |= BorderRouterEntry::kSlaacFlag;
+    }
+
+    if (aConfig.mDhcp)
+    {
+        flags |= BorderRouterEntry::kDhcpFlag;
+    }
+
+    if (aConfig.mConfigure)
+    {
+        flags |= BorderRouterEntry::kConfigureFlag;
+    }
+
+    if (aConfig.mDefaultRoute)
+    {
+        flags |= BorderRouterEntry::kDefaultRouteFlag;
+    }
+
+    if (aConfig.mOnMesh)
+    {
+        flags |= BorderRouterEntry::kOnMeshFlag;
+    }
+
+    if (aConfig.mNdDns)
+    {
+        flags |= BorderRouterEntry::kNdDnsFlag;
+    }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    if (aConfig.mDp)
+    {
+        flags |= BorderRouterEntry::kDpFlag;
+    }
+#endif
+
+    return AddPrefix(aConfig.mPrefix.mPrefix.mFields.m8, aConfig.mPrefix.mLength, NetworkDataTlv::kTypeBorderRouter,
+                     aConfig.mPreference, flags, aConfig.mStable);
 }
 
 otError Local::RemoveOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
@@ -78,7 +123,7 @@ otError Local::AddPrefix(const uint8_t *      aPrefix,
                          uint8_t              aPrefixLength,
                          NetworkDataTlv::Type aSubTlvType,
                          int8_t               aPrf,
-                         uint8_t              aFlags,
+                         uint16_t             aFlags,
                          bool                 aStable)
 {
     otError    error             = OT_ERROR_NONE;
@@ -86,7 +131,7 @@ otError Local::AddPrefix(const uint8_t *      aPrefix,
     uint8_t    subTlvLength;
     PrefixTlv *prefixTlv;
 
-    VerifyOrExit(prefixLengthBytes <= sizeof(Ip6::Address), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aPrefixLength > 0 && prefixLengthBytes <= sizeof(Ip6::Address), error = OT_ERROR_INVALID_ARGS);
 
     switch (aPrf)
     {

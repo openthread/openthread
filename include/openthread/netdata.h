@@ -103,6 +103,18 @@ typedef struct otBorderRouterConfig
     bool mStable : 1;
 
     /**
+     * TRUE, if this border router is able to supply DNS infomration obtained via ND.  FALSE, otherwise.
+     */
+    bool mNdDns : 1;
+
+    /**
+     * TRUE, if this prefix is a Thread Domain Prefix.  FALSE, otherwise.
+     *
+     * Note: Domain Prefix is introduced since Thread 1.2.
+     */
+    bool mDp : 1;
+
+    /**
      * The Border Agent Rloc.
      */
     uint16_t mRloc16;
