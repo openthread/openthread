@@ -363,14 +363,6 @@ public:
     }
 
     /**
-     * This method indicates whether support Enhanced Frame Pending or not.
-     *
-     * @returns TRUE if support Enhanced Frame Pending, FALSE otherwise.
-     *
-     */
-    bool IsSupportEnhancedFramePending(void) const { return mVersion >= OT_THREAD_VERSION_1_2; }
-
-    /**
      * This method gets the device MLE version.
      *
      */

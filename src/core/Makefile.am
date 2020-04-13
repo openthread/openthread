@@ -313,7 +313,6 @@ HEADERS_COMMON                             = \
     openthread-core-config.h                 \
     backbone_router/leader.hpp               \
     backbone_router/local.hpp                \
-    openthread-thread_v1_2-core-default-config.h \
     coap/coap.hpp                            \
     coap/coap_message.hpp                    \
     coap/coap_secure.hpp                     \

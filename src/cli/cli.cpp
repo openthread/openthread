@@ -1169,6 +1169,7 @@ void Interpreter::ProcessCsl(uint8_t aArgsLength, char *argv[])
     }
     else if (aArgsLength == 2)
     {
+        long value;
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         if (strcmp(argv[0], "headerie") == 0)
         {
@@ -1187,7 +1188,6 @@ void Interpreter::ProcessCsl(uint8_t aArgsLength, char *argv[])
             ExitNow(error = OT_ERROR_NONE);
         }
 #endif
-        long value;
 
         SuccessOrExit(error = ParseLong(argv[1], value));
 

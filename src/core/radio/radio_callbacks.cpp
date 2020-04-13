@@ -58,18 +58,18 @@ void Radio::Callbacks::HandleEnergyScanDone(int8_t aMaxRssi)
     Get<Mac::SubMac>().HandleEnergyScanDone(aMaxRssi);
 }
 
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-void Radio::Callbacks::HandleFrameUpdated(Mac::TxFrame &aFrame)
-{
-    Get<Mac::SubMac>().HandleFrameUpdated(aFrame);
-}
-#endif
-
 void Radio::Callbacks::HandleTransmitAckStarted(uint8_t *aFrame, uint16_t aLength)
 {
     Mac::TxFrame frame;
     frame.mPsdu   = aFrame;
     frame.mLength = aLength;
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    if (Get<Mac::SubMac>().IsCslStarted())
+    {
+        Get<Mac::SubMac>().FillCsl(frame);
+    }
+#endif
 
 #if !OPENTHREAD_RADIO
     Get<Mac::Mac>().ProcessTransmitSecurity(frame, true);

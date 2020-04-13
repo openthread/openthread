@@ -74,8 +74,6 @@
 
 #define RSSI_SETTLE_TIME_US   40           ///< RSSI settle time in microseconds.
 
-#define ACK_IE_MAX_SIZE       16           ///< Max length for header IE in ACK.
-
 #if defined(__ICCARM__)
 _Pragma("diag_suppress=Pe167")
 #endif
@@ -84,12 +82,6 @@ enum
 {
     NRF528XX_RECEIVE_SENSITIVITY  = -100, // dBm
     NRF528XX_MIN_CCA_ED_THRESHOLD = -94,  // dBm
-};
-
-enum
-{
-    IE_HEADER_SIZE = 2, // Size of IE header in bytes
-    CSL_IE_SIZE    = 4, // Size of CSL IE content in bytes
 };
 
 // clang-format on
@@ -117,12 +109,11 @@ static uint8_t  sEnergyDetectionChannel;
 static int8_t   sEnergyDetected;
 
 #if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
-static uint32_t sCslPeriod;
-static uint32_t sCslSampleTime;
-static uint8_t  sCslIeHeader[IE_HEADER_SIZE] = {0x04, 0x0d};
+static uint32_t      sCslPeriod;
+static uint32_t      sCslSampleTime;
+static const uint8_t sCslIeHeader[IE_HEADER_SIZE] = {0x04, 0x0d};
+static uint8_t       sParentShortAddress[SHORT_ADDRESS_SIZE];
 #endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
-
-static uint8_t sParentShortAddress[SHORT_ADDRESS_SIZE];
 
 typedef enum
 {
@@ -256,7 +247,9 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
 
     uint8_t address[SHORT_ADDRESS_SIZE];
     convertShortAddress(address, aShortAddress);
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
     convertShortAddress(sParentShortAddress, aShortAddress & 0xfc00);
+#endif
 
     nrf_802154_short_address_set(address);
 }
@@ -879,30 +872,12 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error)
     setPendingEvent(kPendingEventReceiveFailed);
 }
 
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
-uint16_t getCslPhase()
-{
-    uint32_t curTime       = otPlatAlarmMicroGetNow();
-    uint32_t cslPeriodInUs = sCslPeriod * OT_US_PER_TEN_SYMBOLS;
-    uint32_t diff = ((sCslSampleTime % cslPeriodInUs) - (curTime % cslPeriodInUs) + cslPeriodInUs) % cslPeriodInUs;
-
-    return (uint16_t)(diff / OT_US_PER_TEN_SYMBOLS);
-}
-#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
-
 void nrf_802154_tx_ack_started(const uint8_t *p_data)
 {
     // Check if the frame pending bit is set in ACK frame.
     sAckedWithFramePending = p_data[FRAME_PENDING_OFFSET] & FRAME_PENDING_BIT;
 
 #if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
-    if (sCslPeriod > 0)
-    {
-        otRadioFrame ackFrame;
-        ackFrame.mPsdu   = (uint8_t *)(p_data + 1);
-        ackFrame.mLength = p_data[0];
-        otMacFrameSetCslIe(&ackFrame, sCslPeriod, getCslPhase());
-    }
     otPlatRadioTxAckStarted(sInstance, (uint8_t *)(p_data + 1), p_data[0]);
 #endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
 }
@@ -968,7 +943,7 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 void nrf_802154_tx_started(const uint8_t *aFrame)
 {
-    bool notifyFrameUpdated = sTransmitFrame.mInfo.mTxInfo.mCslPresent;
+    bool processTransmitAesCcm = sTransmitFrame.mInfo.mTxInfo.mCslPresent;
     assert(aFrame == sTransmitPsdu);
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -986,13 +961,13 @@ void nrf_802154_tx_started(const uint8_t *aFrame)
             *(++timeIe) = (uint8_t)(time & 0xff);
         }
 
-        notifyFrameUpdated = true;
+        processTransmitAesCcm = true;
     }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-    if (notifyFrameUpdated)
+    if (processTransmitAesCcm)
     {
-        otPlatRadioFrameUpdated(sInstance, &sTransmitFrame);
+        otMacFrameProcessTransmitAesCcm(&sTransmitFrame, &sExtAddress);
     }
 }
 #endif

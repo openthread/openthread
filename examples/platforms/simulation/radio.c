@@ -80,17 +80,6 @@ enum
     SIM_RADIO_CHANNEL_MAX = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX,
 };
 
-enum
-{
-    ACK_IE_MAX_SIZE = 16,
-};
-
-enum
-{
-    IE_HEADER_SIZE = 2, // Size of IE header in bytes
-    CSL_IE_SIZE    = 4, // Size of CSL IE content in bytes
-};
-
 OT_TOOL_PACKED_BEGIN
 struct RadioMessage
 {
@@ -126,11 +115,6 @@ static int8_t         sCcaEdThresh = -74;
 static bool sSrcMatchEnabled = false;
 
 #if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
-static struct IeState
-{
-    uint8_t mCslEnabled : 1;
-    uint8_t mLinkMetricsEnabled : 1;
-} sIeState;
 static uint8_t sAckIeData[ACK_IE_MAX_SIZE];
 static uint8_t sAckIeDataLength = 0;
 #endif
@@ -549,7 +533,7 @@ static void radioComputeCrc(struct RadioMessage *aMessage, uint16_t aLength)
 void radioSendMessage(otInstance *aInstance)
 {
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    bool notifyFrameUpdated = sTransmitFrame.mInfo.mTxInfo.mCslPresent;
+    bool processTransmitAesCcm = sTransmitFrame.mInfo.mTxInfo.mCslPresent;
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0)
@@ -566,13 +550,13 @@ void radioSendMessage(otInstance *aInstance)
             *(++timeIe) = (uint8_t)(time & 0xff);
         }
 
-        notifyFrameUpdated = true;
+        processTransmitAesCcm = true;
     }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-    if (notifyFrameUpdated)
+    if (processTransmitAesCcm)
     {
-        otPlatRadioFrameUpdated(aInstance, &sTransmitFrame);
+        otMacFrameProcessTransmitAesCcm(&sTransmitFrame, &sExtAddress);
     }
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
@@ -781,16 +765,6 @@ uint16_t getCslPhase()
 void radioSendAck(otInstance *aInstance)
 {
     radioGenerateAck();
-    // Set CSL IE if the ACK is version 2015
-    if (otMacFrameIsVersion2015(&sAckFrame))
-    {
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
-        if (sCslPeriod > 0)
-        {
-            otMacFrameSetCslIe(&sAckFrame, (uint16_t)sCslPeriod, getCslPhase());
-        }
-#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
-    }
     otPlatRadioTxAckStarted(aInstance, sAckFrame.mPsdu, sAckFrame.mLength);
     sAckMessage.mChannel = sReceiveFrame.mChannel;
 
@@ -970,10 +944,6 @@ static void updateIeData(otInstance *aInstance)
         offset += IE_HEADER_SIZE + CSL_IE_SIZE; // reserve space for CSL IE
     }
 #endif
-    if (sIeState.mLinkMetricsEnabled)
-    {
-        // TODO
-    }
     sAckIeDataLength = offset;
 }
 #endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE

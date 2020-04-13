@@ -1087,19 +1087,6 @@ otError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous);
 uint8_t otLinkCslGetAccuracy(otInstance *aInstance);
 
 /**
- * This function sets the CSL accuray.
- *
- * @param[in]  aInstance      A pointer to an OpenThread instance.
- * @param[in]  aAccuracy      The accuracy of the clock that is used by the device, in units of ppm.
- *
- * @retval OT_ERROR_NONE           Successfully set the CSL parameters.
- * @retval OT_ERROR_INVALID_ARGS   Invalid value for @p aAccuracy.
- * @retval OT_ERROR_INVALID_STATE  Invalid state to change this parameter.
- *
- */
-otError otLinkCslSetAccuracy(otInstance *aInstance, uint8_t aAccuracy);
-
-/**
  * This function gets the CSL channel.
  *
  * @param[in]  aInstance      A pointer to an OpenThread instance.

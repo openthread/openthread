@@ -2199,24 +2199,23 @@ exit:
 
 bool Mac::ShouldIncludeCslIe(void) const
 {
+    return mSubMac.IsCslStarted()
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    return mSubMac.IsCslStarted() && !IsCslIeSuppressed() &&
-           !Get<Mle::Mle>().IsRxOnWhenIdle(); // Only for certification
-#else
-    return mSubMac.IsCslStarted() && !Get<Mle::Mle>().IsRxOnWhenIdle();
-#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+           && !IsCslIeSuppressed()
+#endif
+           && !Get<Mle::Mle>().IsRxOnWhenIdle();
 }
 
 otError Mac::StartCsl(void)
 {
     otError   error  = OT_ERROR_NONE;
-    Neighbor *parent = &Get<Mle::Mle>().GetParent();
+    Neighbor &parent = Get<Mle::Mle>().GetParent();
 
     VerifyOrExit(!mRxOnWhenIdle && Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_CHILD,
                  error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(parent->IsSupportEnhancedFramePending(), error = OT_ERROR_NOT_CAPABLE);
+    VerifyOrExit(parent.IsEnhancedKeepAliveSupported(), error = OT_ERROR_NOT_CAPABLE);
 
-    otPlatRadioEnableCsl(&GetInstance(), mSubMac.GetCslPeriod(), &parent->GetExtAddress());
+    otPlatRadioEnableCsl(&GetInstance(), mSubMac.GetCslPeriod(), &parent.GetExtAddress());
 
     SuccessOrExit(error = mSubMac.StartCsl());
 
@@ -2228,15 +2227,14 @@ exit:
 
 void Mac::StopCsl(void)
 {
-    Neighbor *parent = &Get<Mle::Mle>().GetParent();
-    VerifyOrExit(parent != NULL);
+    Neighbor &parent = Get<Mle::Mle>().GetParent();
 
     VerifyOrExit(mSubMac.IsCslStarted()); // This is required to avoid StopCsl is called during initialization and call
                                           // otPlatRadioEnableCsl
 
     mSubMac.StopCsl();
 
-    otPlatRadioEnableCsl(&GetInstance(), 0, &parent->GetExtAddress());
+    otPlatRadioEnableCsl(&GetInstance(), 0, &parent.GetExtAddress());
 
 exit:
     return;
@@ -2278,7 +2276,7 @@ otError Mac::AppendHeaderIe(TxFrame &aFrame, bool aIsTimeSync) const
     otError      error   = OT_ERROR_NONE;
     uint8_t      ieCount = 0;
 
-    VerifyOrExit(aFrame.IsIePresent());
+    VerifyOrExit(aFrame.IsVersion2015() && aFrame.IsIePresent());
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (aIsTimeSync)

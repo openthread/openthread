@@ -222,11 +222,9 @@ bool Frame::IsDstPanIdPresent(uint16_t aFcf)
     }
     else
 #endif
-    {
         if (!isDstAddrPresent)
-        {
-            present = false;
-        }
+    {
+        present = false;
     }
 
     return present;
@@ -1002,8 +1000,6 @@ void Frame::SetFrameControlFieldForAck(const Frame *aFrame,
                                        uint8_t      aIeLength,
                                        Frame *      aAckFrame) const
 {
-    (void)aIeLength;
-
     memset(aAckFrame->mPsdu, 0, kFcfSize);
     aAckFrame->mPsdu[0] |= kFcfFrameAck;
     reinterpret_cast<uint16_t *>(aAckFrame->mPsdu)[0] |= kFcfFrameVersion2015;

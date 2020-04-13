@@ -143,6 +143,17 @@ typedef uint16_t otShortAddress;
 #define OT_EXT_ADDRESS_SIZE 8 ///< Size of an IEEE 802.15.4 Extended Address (bytes)
 
 /**
+ * This enumeration defines constants about size of header IE in ACK.
+ *
+ */
+enum
+{
+    IE_HEADER_SIZE  = 2,  ///< Size of IE header in bytes
+    CSL_IE_SIZE     = 4,  ///< Size of CSL IE content in bytes
+    ACK_IE_MAX_SIZE = 16, ///< Max length for header IE in ACK.
+};
+
+/**
  * @struct otExtAddress
  *
  * This structure represents the IEEE 802.15.4 Extended Address.
@@ -622,21 +633,6 @@ extern void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRad
 extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
 /**
- * The radio driver calls this method to notify OpenThread to process transmit security for the frame,
- * this happens when the frame includes Header IE(s) that were updated before transmission.
- *
- * This function is used when feature `OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT` is enabled.
- *
- * @note This function can be called from interrupt context and it would only read/write data passed in
- *       via @p aFrame, but would not read/write any state within OpenThread.
- *
- * @param[in]  aInstance   The OpenThread instance structure.
- * @param[in]  aFrame      The radio frame which needs to process transmit security.
- *
- */
-extern void otPlatRadioFrameUpdated(otInstance *aInstance, otRadioFrame *aFrame);
-
-/**
  * Get the most recent RSSI measurement.
  *
  * @param[in] aInstance  The OpenThread instance structure.
@@ -857,24 +853,6 @@ void otPlatRadioUpdateCslSampleTime(uint32_t aCslSampleTime);
  *
  */
 void otPlatRadioTxAckStarted(otInstance *aInstance, uint8_t *aFrame, uint16_t aLength);
-
-/**
- * Enable or disable link metrics.
- *
- * @param[in]   aInstance            The OpenThread instance structure.
- * @param[in]   aEnabled             Whether to enable the link metrics
- *                                   feature.
- * @param[in]   aTypeIdFlag          The Metric Type ID Flag when using
- *                                   using enhanced-ack link metrics.
- *
- * @retval  OT_ERROR_NOT_SUPPORTED   Radio driver doesn't support link
- *                                   metrics.
- * @retval  OT_ERROR_NONE            Successfully enabled or disabled link
- *                                   metrics.
- * @retval  OT_ERROR_INVALID_ARGS    The parameters are not valid.
- *
- */
-otError otPlatRadioEnableEnhAckLinkMetrics(otInstance *aInstance, bool aEnabled, uint8_t aTypeIdFlag);
 
 /**
  * @}

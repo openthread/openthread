@@ -232,9 +232,7 @@ private:
     void ProcessContextIdReuseDelay(uint8_t aArgsLength, char *aArgs[]);
 #endif
     void ProcessCounters(uint8_t aArgsLength, char *aArgs[]);
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
     void ProcessCsl(uint8_t aArgsLength, char *argv[]);
-#endif
 #if OPENTHREAD_FTD
     void ProcessDelayTimerMin(uint8_t aArgsLength, char *aArgs[]);
 #endif

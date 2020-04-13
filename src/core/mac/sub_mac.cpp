@@ -607,16 +607,6 @@ exit:
     return swEnergyScan;
 }
 
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-void SubMac::HandleFrameUpdated(TxFrame &aFrame)
-{
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
-    FillCsl(aFrame);
-#endif
-    mCallbacks.FrameUpdated(aFrame);
-}
-#endif
-
 void SubMac::SetState(State aState)
 {
     if (mState != aState)
