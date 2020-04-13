@@ -460,12 +460,12 @@ otError Mac::SetNetworkName(const char *aNameString)
     // longer than `kMaxSize` is correctly rejected (returning error
     // `OT_ERROR_INVALID_ARGS`).
 
-    NetworkName::Data data(aNameString, NetworkName::kMaxSize + 1);
+    NameData data(aNameString, NetworkName::kMaxSize + 1);
 
     return SetNetworkName(data);
 }
 
-otError Mac::SetNetworkName(const NetworkName::Data &aName)
+otError Mac::SetNetworkName(const NameData &aName)
 {
     otError error = mNetworkName.Set(aName);
 

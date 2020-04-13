@@ -406,18 +406,18 @@ public:
     /**
      * This method gets the Network Name value.
      *
-     * @returns The Network Name value (as `NetworkName::Data`).
+     * @returns The Network Name value (as `NameData`).
      *
      */
-    Mac::NetworkName::Data GetNetworkName(void) const;
+    Mac::NameData GetNetworkName(void) const;
 
     /**
      * This method sets the Network Name value.
      *
-     * @param[in] aNameData   A Network Name value (as `NetworkName::Data`).
+     * @param[in] aNameData   A Network Name value (as `NameData`).
      *
      */
-    void SetNetworkName(const Mac::NetworkName::Data &aNameData);
+    void SetNetworkName(const Mac::NameData &aNameData);
 
 private:
     char mNetworkName[Mac::NetworkName::kMaxSize];

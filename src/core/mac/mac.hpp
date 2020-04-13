@@ -367,7 +367,7 @@ public:
      * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
      *
      */
-    otError SetNetworkName(const NetworkName::Data &aNameData);
+    otError SetNetworkName(const NameData &aNameData);
 
     /**
      * This method returns the IEEE 802.15.4 PAN ID.

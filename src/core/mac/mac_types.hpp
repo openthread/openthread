@@ -499,6 +499,63 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
+ * This class represents a Name of char array as Data (pointer to a char buffer along with a length).
+ *
+ * @note The char array does NOT need to be null terminated.
+ *
+ */
+class NameData
+{
+public:
+    /**
+     * This constructor initializes the Data object.
+     *
+     * @param[in] aBuffer   A pointer to a `char` buffer (does not need to be null terminated).
+     * @param[in] aLength   The length (number of chars) in the buffer.
+     *
+     */
+    NameData(const char *aBuffer, uint8_t aLength)
+        : mBuffer(aBuffer)
+        , mLength(aLength)
+    {
+    }
+
+    /**
+     * This method returns the pointer to char buffer (not necessarily null terminated).
+     *
+     * @returns The pointer to the char buffer.
+     *
+     */
+    const char *GetBuffer(void) const { return mBuffer; }
+
+    /**
+     * This method returns the length (number of chars in buffer).
+     *
+     * @returns The name length.
+     *
+     */
+    uint8_t GetLength(void) const { return mLength; }
+
+    /**
+     * This method copies the name data into a given char buffer with a given size.
+     *
+     * The given buffer is cleared (`memset` to zero) before copying the Network Name into it. The copied string
+     * in @p aBuffer is NOT necessarily null terminated.
+     *
+     * @param[out] aBuffer   A pointer to a buffer where to copy the Network Name into.
+     * @param[in]  aMaxSize  Size of @p aBuffer (maximum number of chars to write into @p aBuffer).
+     *
+     * @returns The actual number of chars copied into @p aBuffer.
+     *
+     */
+    uint8_t CopyTo(char *aBuffer, uint8_t aMaxSize) const;
+
+private:
+    const char *mBuffer;
+    uint8_t     mLength;
+};
+
+/**
  * This structure represents an IEEE802.15.4 Network Name.
  *
  */
@@ -508,63 +565,6 @@ public:
     enum
     {
         kMaxSize = OT_NETWORK_NAME_MAX_SIZE, // Maximum number of chars in Network Name (excludes null char).
-    };
-
-    /**
-     * This class represents an IEEE802.15.4 Network Name as Data (pointer to a char buffer along with a length).
-     *
-     * @note The char array does NOT need to be null terminated.
-     *
-     */
-    class Data
-    {
-    public:
-        /**
-         * This constructor initializes the Data object.
-         *
-         * @param[in] aBuffer   A pointer to a `char` buffer (does not need to be null terminated).
-         * @param[in] aLength   The length (number of chars) in the buffer.
-         *
-         */
-        Data(const char *aBuffer, uint8_t aLength)
-            : mBuffer(aBuffer)
-            , mLength(aLength)
-        {
-        }
-
-        /**
-         * This method returns the pointer to char buffer (not necessarily null terminated).
-         *
-         * @returns The pointer to the char buffer.
-         *
-         */
-        const char *GetBuffer(void) const { return mBuffer; }
-
-        /**
-         * This method returns the length (number of chars in buffer).
-         *
-         * @returns The name length.
-         *
-         */
-        uint8_t GetLength(void) const { return mLength; }
-
-        /**
-         * This method copies the name data into a given char buffer with a given size.
-         *
-         * The given buffer is cleared (`memset` to zero) before copying the Network Name into it. The copied string
-         * in @p aBuffer is NOT necessarily null terminated.
-         *
-         * @param[out] aBuffer   A pointer to a buffer where to copy the Network Name into.
-         * @param[in]  aMaxSize  Size of @p aBuffer (maximum number of chars to write into @p aBuffer).
-         *
-         * @returns The actual number of chars copied into @p aBuffer.
-         *
-         */
-        uint8_t CopyTo(char *aBuffer, uint8_t aMaxSize) const;
-
-    private:
-        const char *mBuffer;
-        uint8_t     mLength;
     };
 
     /**
@@ -587,7 +587,7 @@ public:
      * @returns The Network Name as Data.
      *
      */
-    Data GetAsData(void) const;
+    NameData GetAsData(void) const;
 
     /**
      * This method sets the IEEE 802.15.4 Network Name.
@@ -599,7 +599,7 @@ public:
      * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
      *
      */
-    otError Set(const Data &aNameData);
+    otError Set(const NameData &aNameData);
 };
 
 /**

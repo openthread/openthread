@@ -179,55 +179,55 @@ void TestMacNetworkName(void)
 
     CompareNetworkName(networkName, kEmptyName);
 
-    SuccessOrQuit(networkName.Set(Mac::NetworkName::Data(kName1, sizeof(kName1))), "NetworkName::Set() failed");
+    SuccessOrQuit(networkName.Set(Mac::NameData(kName1, sizeof(kName1))), "NetworkName::Set() failed");
     CompareNetworkName(networkName, kName1);
 
-    VerifyOrQuit(networkName.Set(Mac::NetworkName::Data(kName1, sizeof(kName1))) == OT_ERROR_ALREADY,
+    VerifyOrQuit(networkName.Set(Mac::NameData(kName1, sizeof(kName1))) == OT_ERROR_ALREADY,
                  "NetworkName::Set() accepted same name without returning OT_ERROR_ALREADY");
     CompareNetworkName(networkName, kName1);
 
-    VerifyOrQuit(networkName.Set(Mac::NetworkName::Data(kName1, sizeof(kName1) - 1)) == OT_ERROR_ALREADY,
+    VerifyOrQuit(networkName.Set(Mac::NameData(kName1, sizeof(kName1) - 1)) == OT_ERROR_ALREADY,
                  "NetworkName::Set() accepted same name without returning OT_ERROR_ALREADY");
 
-    SuccessOrQuit(networkName.Set(Mac::NetworkName::Data(kName2, sizeof(kName2))), "NetworkName::Set() failed");
+    SuccessOrQuit(networkName.Set(Mac::NameData(kName2, sizeof(kName2))), "NetworkName::Set() failed");
     CompareNetworkName(networkName, kName2);
 
-    SuccessOrQuit(networkName.Set(Mac::NetworkName::Data(kEmptyName, 0)), "NetworkName::Set() failed");
+    SuccessOrQuit(networkName.Set(Mac::NameData(kEmptyName, 0)), "NetworkName::Set() failed");
     CompareNetworkName(networkName, kEmptyName);
 
-    SuccessOrQuit(networkName.Set(Mac::NetworkName::Data(kLongName, sizeof(kLongName))), "NetworkName::Set() failed");
+    SuccessOrQuit(networkName.Set(Mac::NameData(kLongName, sizeof(kLongName))), "NetworkName::Set() failed");
     CompareNetworkName(networkName, kLongName);
 
-    VerifyOrQuit(networkName.Set(Mac::NetworkName::Data(kLongName, sizeof(kLongName) - 1)) == OT_ERROR_ALREADY,
+    VerifyOrQuit(networkName.Set(Mac::NameData(kLongName, sizeof(kLongName) - 1)) == OT_ERROR_ALREADY,
                  "NetworkName::Set() accepted same name without returning OT_ERROR_ALREADY");
 
-    SuccessOrQuit(networkName.Set(Mac::NetworkName::Data(NULL, 0)), "NetworkName::Set() failed");
+    SuccessOrQuit(networkName.Set(Mac::NameData(NULL, 0)), "NetworkName::Set() failed");
     CompareNetworkName(networkName, kEmptyName);
 
-    SuccessOrQuit(networkName.Set(Mac::NetworkName::Data(kName1, sizeof(kName1))), "NetworkName::Set() failed");
+    SuccessOrQuit(networkName.Set(Mac::NameData(kName1, sizeof(kName1))), "NetworkName::Set() failed");
 
-    VerifyOrQuit(networkName.Set(Mac::NetworkName::Data(kTooLongName, sizeof(kTooLongName))) == OT_ERROR_INVALID_ARGS,
+    VerifyOrQuit(networkName.Set(Mac::NameData(kTooLongName, sizeof(kTooLongName))) == OT_ERROR_INVALID_ARGS,
                  "NetworkName::Set() accepted an invalid (too long) name");
 
     CompareNetworkName(networkName, kName1);
 
     memset(buffer, 'a', sizeof(buffer));
     len = networkName.GetAsData().CopyTo(buffer, 1);
-    VerifyOrQuit(len == 1, "NetworkName::Data::CopyTo() failed");
-    VerifyOrQuit(buffer[0] == kName1[0], "NetworkName::Data::CopyTo() failed");
-    VerifyOrQuit(buffer[1] == 'a', "NetworkName::Data::CopyTo() failed");
+    VerifyOrQuit(len == 1, "NameData::CopyTo() failed");
+    VerifyOrQuit(buffer[0] == kName1[0], "NameData::CopyTo() failed");
+    VerifyOrQuit(buffer[1] == 'a', "NameData::CopyTo() failed");
 
     memset(buffer, 'a', sizeof(buffer));
     len = networkName.GetAsData().CopyTo(buffer, sizeof(kName1) - 1);
-    VerifyOrQuit(len == sizeof(kName1) - 1, "NetworkName::Data::CopyTo() failed");
-    VerifyOrQuit(memcmp(buffer, kName1, sizeof(kName1) - 1) == 0, "NetworkName::Data::CopyTo() failed");
-    VerifyOrQuit(buffer[sizeof(kName1)] == 'a', "NetworkName::Data::CopyTo() failed");
+    VerifyOrQuit(len == sizeof(kName1) - 1, "NameData::CopyTo() failed");
+    VerifyOrQuit(memcmp(buffer, kName1, sizeof(kName1) - 1) == 0, "NameData::CopyTo() failed");
+    VerifyOrQuit(buffer[sizeof(kName1)] == 'a', "NameData::CopyTo() failed");
 
     memset(buffer, 'a', sizeof(buffer));
     len = networkName.GetAsData().CopyTo(buffer, sizeof(buffer));
-    VerifyOrQuit(len == sizeof(kName1) - 1, "NetworkName::Data::CopyTo() failed");
-    VerifyOrQuit(memcmp(buffer, kName1, sizeof(kName1) - 1) == 0, "NetworkName::Data::CopyTo() failed");
-    VerifyOrQuit(buffer[sizeof(kName1)] == 0, "NetworkName::Data::CopyTo() failed");
+    VerifyOrQuit(len == sizeof(kName1) - 1, "NameData::CopyTo() failed");
+    VerifyOrQuit(memcmp(buffer, kName1, sizeof(kName1) - 1) == 0, "NameData::CopyTo() failed");
+    VerifyOrQuit(buffer[sizeof(kName1)] == 0, "NameData::CopyTo() failed");
 }
 
 void TestMacHeader(void)

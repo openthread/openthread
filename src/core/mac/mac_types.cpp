@@ -105,7 +105,7 @@ ExtendedPanId::InfoString ExtendedPanId::ToString(void) const
     return InfoString("%02x%02x%02x%02x%02x%02x%02x%02x", m8[0], m8[1], m8[2], m8[3], m8[4], m8[5], m8[6], m8[7]);
 }
 
-uint8_t NetworkName::Data::CopyTo(char *aBuffer, uint8_t aMaxSize) const
+uint8_t NameData::CopyTo(char *aBuffer, uint8_t aMaxSize) const
 {
     uint8_t len = GetLength();
 
@@ -121,14 +121,14 @@ uint8_t NetworkName::Data::CopyTo(char *aBuffer, uint8_t aMaxSize) const
     return len;
 }
 
-NetworkName::Data NetworkName::GetAsData(void) const
+NameData NetworkName::GetAsData(void) const
 {
     uint8_t len = static_cast<uint8_t>(StringLength(m8, kMaxSize + 1));
 
-    return Data(m8, len);
+    return NameData(m8, len);
 }
 
-otError NetworkName::Set(const Data &aNameData)
+otError NetworkName::Set(const NameData &aNameData)
 {
     otError error  = OT_ERROR_NONE;
     uint8_t newLen = static_cast<uint8_t>(StringLength(aNameData.GetBuffer(), aNameData.GetLength()));
