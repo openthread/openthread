@@ -475,9 +475,9 @@ otError Mac::SetNetworkName(const char *aNameString)
     return SetNetworkName(data);
 }
 
-otError Mac::SetNetworkName(const NameData &aName)
+otError Mac::SetNetworkName(const NameData &aNameData)
 {
-    otError error = mNetworkName.Set(aName);
+    otError error = mNetworkName.Set(aNameData);
 
     if (error == OT_ERROR_ALREADY)
     {
@@ -509,9 +509,9 @@ otError Mac::SetDomainName(const char *aNameString)
     return SetDomainName(data);
 }
 
-otError Mac::SetDomainName(const NameData &aName)
+otError Mac::SetDomainName(const NameData &aNameData)
 {
-    otError error = mDomainName.Set(aName);
+    otError error = mDomainName.Set(aNameData);
 
     if (error == OT_ERROR_ALREADY)
     {
