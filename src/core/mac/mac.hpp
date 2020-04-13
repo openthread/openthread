@@ -712,15 +712,12 @@ private:
     /**
      * This method processes transmit security on the frame which is going to be sent.
      *
-     * This method prepares the frame, fills Mac auxiliary header, and perform AES CCM immediately in most cases
-     * (depends on @p aProcessAesCcm). If aProcessAesCcm is False, it probably means that some content in the frame
-     * will be updated just before transmission, so AES CCM will be performed after that (before transmission).
+     * This method prepares the frame and fills Mac auxiliary header.
      *
      * @param[in]  aFrame          A reference to the MAC frame buffer which is going to be sent.
-     * @param[in]  aProcessAesCcm  TRUE to perform AES CCM immediately, FALSE otherwise.
      *
      */
-    void ProcessTransmitSecurity(TxFrame &aFrame, bool aProcessAesCcm);
+    void ProcessTransmitSecurity(TxFrame &aFrame);
 
     otError ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
     void    UpdateIdleMode(void);

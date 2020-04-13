@@ -944,11 +944,10 @@ bool Mac::IsJoinable(void) const
     return (numUnsecurePorts != 0);
 }
 
-void Mac::ProcessTransmitSecurity(TxFrame &aFrame, bool aProcessAesCcm)
+void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
 {
-    KeyManager &      keyManager = Get<KeyManager>();
-    uint8_t           keyIdMode;
-    const ExtAddress *extAddress = NULL;
+    KeyManager &keyManager = Get<KeyManager>();
+    uint8_t     keyIdMode;
 
     VerifyOrExit(aFrame.GetSecurityEnabled(), OT_NOOP);
 
@@ -958,7 +957,6 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame, bool aProcessAesCcm)
     {
     case Frame::kKeyIdMode0:
         aFrame.SetAesKey(keyManager.GetKek().GetKey());
-        extAddress = &GetExtAddress();
 
         if (!aFrame.IsARetransmission())
         {
@@ -970,7 +968,6 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame, bool aProcessAesCcm)
 
     case Frame::kKeyIdMode1:
         aFrame.SetAesKey(keyManager.GetCurrentMacKey());
-        extAddress = &GetExtAddress();
 
         // If the frame is marked as a retransmission, `MeshForwarder` which
         // prepared the frame should set the frame counter and key id to the
@@ -995,18 +992,12 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame, bool aProcessAesCcm)
         aFrame.SetFrameCounter(mKeyIdMode2FrameCounter);
         aFrame.SetKeySource(keySource);
         aFrame.SetKeyId(0xff);
-        extAddress = static_cast<const ExtAddress *>(&sMode2ExtAddress);
         break;
     }
 
     default:
         OT_ASSERT(false);
         OT_UNREACHABLE_CODE(break);
-    }
-
-    if (aProcessAesCcm)
-    {
-        aFrame.ProcessTransmitAesCcm(*extAddress);
     }
 
 exit:
@@ -1017,7 +1008,6 @@ void Mac::BeginTransmit(void)
 {
     otError  error                 = OT_ERROR_NONE;
     bool     applyTransmitSecurity = true;
-    bool     processTransmitAesCcm = true;
     TxFrame &sendFrame             = mSubMac.GetTransmitFrame();
 
     VerifyOrExit(IsEnabled(), error = OT_ERROR_ABORT);
@@ -1091,8 +1081,6 @@ void Mac::BeginTransmit(void)
 
         if (timeIeOffset != 0)
         {
-            // Transmit security will be processed after time IE content is updated.
-            processTransmitAesCcm = false;
             sendFrame.SetTimeSyncSeq(Get<TimeSync>().GetTimeSyncSeq());
             sendFrame.SetNetworkTimeOffset(Get<TimeSync>().GetNetworkTimeOffset());
         }
@@ -1101,7 +1089,7 @@ void Mac::BeginTransmit(void)
 
     if (applyTransmitSecurity)
     {
-        ProcessTransmitSecurity(sendFrame, processTransmitAesCcm);
+        ProcessTransmitSecurity(sendFrame);
     }
 
     mBroadcastTransmitCount = 0;

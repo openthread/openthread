@@ -45,6 +45,10 @@
 namespace ot {
 namespace Mac {
 
+const otExtAddress SubMac::sMode2ExtAddress = {
+    {0x35, 0x06, 0xfe, 0xb8, 0x23, 0xd4, 0x87, 0x12},
+};
+
 SubMac::SubMac(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mRadioCaps(Get<Radio>().GetCaps())
@@ -214,12 +218,56 @@ otError SubMac::Send(void)
         break;
     }
 
+    ProcessTransmitSecurity();
     mCsmaBackoffs    = 0;
     mTransmitRetries = 0;
     StartCsmaBackoff();
 
 exit:
     return error;
+}
+
+void SubMac::ProcessTransmitSecurity(void)
+{
+    const ExtAddress *extAddress            = NULL;
+    bool              processTransmitAesCcm = true;
+    uint8_t           keyIdMode;
+
+    VerifyOrExit(ShouldHandleTransmitSecurity());
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    if (mTransmitFrame.GetTimeIeOffset() != 0)
+    {
+        // Transmit security will be processed after time IE content is updated.
+        processTransmitAesCcm = false;
+    }
+#endif
+
+    if (processTransmitAesCcm)
+    {
+        mTransmitFrame.GetKeyIdMode(keyIdMode);
+
+        switch (keyIdMode)
+        {
+        case Frame::kKeyIdMode0:
+        case Frame::kKeyIdMode1:
+            extAddress = &GetExtAddress();
+            break;
+
+        case Frame::kKeyIdMode2:
+            extAddress = static_cast<const ExtAddress *>(&sMode2ExtAddress);
+            break;
+
+        default:
+            OT_ASSERT(false);
+            break;
+        }
+
+        mTransmitFrame.ProcessTransmitAesCcm(*extAddress);
+    }
+
+exit:
+    return;
 }
 
 void SubMac::StartCsmaBackoff(void)
@@ -482,6 +530,24 @@ void SubMac::HandleTimer(void)
     default:
         break;
     }
+}
+
+bool SubMac::ShouldHandleTransmitSecurity(void) const
+{
+    bool swTxSecurity = true;
+
+    VerifyOrExit(!RadioSupportsTransmitSecurity(), swTxSecurity = false);
+
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    VerifyOrExit(Get<LinkRaw>().IsEnabled());
+#endif
+
+#if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
+    swTxSecurity = OPENTHREAD_CONFIG_SOFTWARE_TX_SECURITY_ENABLE;
+#endif
+
+exit:
+    return swTxSecurity;
 }
 
 bool SubMac::ShouldHandleCsmaBackOff(void) const

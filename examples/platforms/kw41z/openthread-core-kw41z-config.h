@@ -87,6 +87,14 @@
 #define OPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE 1
 
 /**
+ * @def OPENTHREAD_CONFIG_SOFTWARE_TX_SECURITY_ENABLE
+ *
+ * Define to 1 if you want to enable software transmission security logic.
+ *
+ */
+#define OPENTHREAD_CONFIG_SOFTWARE_TX_SECURITY_ENABLE 0
+
+/**
  * @def OPENTHREAD_CONFIG_NCP_UART_ENABLE
  *
  * Define to 1 to enable NCP UART support.

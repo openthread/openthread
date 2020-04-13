@@ -1175,6 +1175,14 @@ public:
     void SetTimeIeOffset(uint8_t aOffset) { mInfo.mTxInfo.mIeInfo->mTimeIeOffset = aOffset; }
 
     /**
+     * This method gets the Time IE offset.
+     *
+     * @returns The Time IE offset, 0 means no Time IE.
+     *
+     */
+    uint8_t GetTimeIeOffset(void) { return mInfo.mTxInfo.mIeInfo->mTimeIeOffset; }
+
+    /**
      * This method sets the offset to network time.
      *
      * @param[in]  aNetworkTimeOffset  The offset to network time.

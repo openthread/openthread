@@ -141,6 +141,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_SOFTWARE_TX_SECURITY_ENABLE
+ *
+ * Define to 1 if you want to enable software transmission security logic.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SOFTWARE_TX_SECURITY_ENABLE
+#define OPENTHREAD_CONFIG_SOFTWARE_TX_SECURITY_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
  *
  * Define to 1 if you want to support microsecond timer in platform.
