@@ -45,10 +45,10 @@ add_library(openthread-kw41z
     diag.c
     entropy.c
     flash.c
+    logging.c
     misc.c
     radio.c
     system.c
-    logging.c
     uart.c
     ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/clock_config.c
     ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/system_MKW41Z4.c
