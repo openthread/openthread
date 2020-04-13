@@ -779,7 +779,7 @@ public:
      * @retval OT_ERROR_DETACHED  The Thread interface is not currently attached to a Thread Partition.
      *
      */
-    otError GetLeaderAloc(Ip6::Address &aAddress) const { return GetAlocAddress(aAddress, kAloc16Leader); }
+    otError GetLeaderAloc(Ip6::Address &aAddress) const { return GetLocatorAddress(aAddress, kAloc16Leader); }
 
     /**
      * This method computes the Commissioner's ALOC.
@@ -793,7 +793,7 @@ public:
      */
     otError GetCommissionerAloc(Ip6::Address &aAddress, uint16_t aSessionId) const
     {
-        return GetAlocAddress(aAddress, CommissionerAloc16FromId(aSessionId));
+        return GetLocatorAddress(aAddress, CommissionerAloc16FromId(aSessionId));
     }
 
     /**
@@ -974,16 +974,16 @@ public:
     void RequestShorterChildIdRequest(void);
 
     /**
-     * This method gets the RLOC address of a given RLOC16.
+     * This method gets the RLOC or ALOC of a given RLOC16 or ALOC16.
      *
-     * @param[out]  aAddress  A reference to the RLOC address.
-     * @param[in]   aRloc16   The RLOC16.
+     * @param[out]  aAddress  A reference to the RLOC or ALOC.
+     * @param[in]   aLoc16    RLOC16 or ALOC16.
      *
-     * @retval OT_ERROR_NONE      If got the RLOC address successfully.
+     * @retval OT_ERROR_NONE      If got the RLOC or ALOC successfully.
      * @retval OT_ERROR_DETACHED  If device is detached.
      *
      */
-    otError GetRlocAddress(Ip6::Address &aAddress, uint16_t aRloc16) const;
+    otError GetLocatorAddress(Ip6::Address &aAddress, uint16_t aLoc16) const;
 
 protected:
     /**
@@ -1768,7 +1768,6 @@ private:
                         uint8_t                aVersion);
     bool IsNetworkDataNewer(const LeaderData &aLeaderData);
 
-    otError GetAlocAddress(Ip6::Address &aAddress, uint16_t aAloc16) const;
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     /**
      * This method scans for network data from the leader and updates IP addresses assigned to this
