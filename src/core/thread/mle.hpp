@@ -977,13 +977,13 @@ public:
      * This method gets the RLOC or ALOC of a given RLOC16 or ALOC16.
      *
      * @param[out]  aAddress  A reference to the RLOC or ALOC.
-     * @param[in]   aLoc16    RLOC16 or ALOC16.
+     * @param[in]   aLocator  RLOC16 or ALOC16.
      *
      * @retval OT_ERROR_NONE      If got the RLOC or ALOC successfully.
      * @retval OT_ERROR_DETACHED  If device is detached.
      *
      */
-    otError GetLocatorAddress(Ip6::Address &aAddress, uint16_t aLoc16) const;
+    otError GetLocatorAddress(Ip6::Address &aAddress, uint16_t aLocator) const;
 
 protected:
     /**

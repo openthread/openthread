@@ -1108,14 +1108,14 @@ exit:
     return error;
 }
 
-otError Mle::GetLocatorAddress(Ip6::Address &aAddress, uint16_t aLoc16) const
+otError Mle::GetLocatorAddress(Ip6::Address &aAddress, uint16_t aLocator) const
 {
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = OT_ERROR_DETACHED);
 
     memcpy(&aAddress, &mMeshLocal16.GetAddress(), 14);
-    aAddress.SetLocator(aLoc16);
+    aAddress.SetLocator(aLocator);
 
 exit:
     return error;
