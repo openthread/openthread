@@ -150,7 +150,6 @@ enum
     OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE = 1 << 25, ///< Backbone Router state changed
     OT_CHANGED_THREAD_BACKBONE_ROUTER_LOCAL = 1 << 26, ///< Local Backbone Router configuration changed
     OT_CHANGED_JOINER_STATE                 = 1 << 27, ///< Joiner state changed
-    OT_CHANGED_THREAD_DOMAIN_NAME           = 1 << 29, ///< Thread Domain Name changed.
 };
 
 /**

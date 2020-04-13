@@ -316,12 +316,6 @@ const char *Notifier::FlagToString(otChangedFlags aFlag) const
         retval = "NetifState";
         break;
 
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    case OT_CHANGED_THREAD_DOMAIN_NAME:
-        retval = "DomainName";
-        break;
-#endif
-
     default:
         break;
     }

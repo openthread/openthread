@@ -515,15 +515,9 @@ otError Mac::SetDomainName(const NameData &aNameData)
 
     if (error == OT_ERROR_ALREADY)
     {
-        Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_DOMAIN_NAME);
         error = OT_ERROR_NONE;
-        ExitNow();
     }
 
-    SuccessOrExit(error);
-    Get<Notifier>().Signal(OT_CHANGED_THREAD_DOMAIN_NAME);
-
-exit:
     return error;
 }
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
