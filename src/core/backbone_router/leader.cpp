@@ -83,26 +83,26 @@ exit:
     return error;
 }
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_NETDATA == 1)
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_BBR == 1)
 void Leader::LogBackboneRouterPrimary(State aState, const BackboneRouterConfig &aConfig) const
 {
     OT_UNUSED_VARIABLE(aConfig);
 
-    otLogInfoNetData("PBBR state: %s", StateToString(aState));
+    otLogInfoBbr("PBBR state: %s", StateToString(aState));
 
     if (aState != kStateRemoved && aState != kStateNone)
     {
-        otLogInfoNetData("Rloc16: 0x%4X, seqno: %d, delay: %d, timeout %d", aConfig.mServer16, aConfig.mSequenceNumber,
-                         aConfig.mReregistrationDelay, aConfig.mMlrTimeout);
+        otLogInfoBbr("Rloc16: 0x%4X, seqno: %d, delay: %d, timeout %d", aConfig.mServer16, aConfig.mSequenceNumber,
+                     aConfig.mReregistrationDelay, aConfig.mMlrTimeout);
     }
 }
 
 void Leader::LogDomainPrefix(DomainPrefixState aState, const otIp6Prefix &aPrefix) const
 {
-    otLogInfoNetData("Domain Prefix: %s/%d, state: %s",
-                     aPrefix.mLength == 0 ? ""
-                                          : static_cast<const Ip6::Address *>(&aPrefix.mPrefix)->ToString().AsCString(),
-                     aPrefix.mLength, DomainPrefixStateToString(aState));
+    otLogInfoBbr("Domain Prefix: %s/%d, state: %s",
+                 aPrefix.mLength == 0 ? ""
+                                      : static_cast<const Ip6::Address *>(&aPrefix.mPrefix)->ToString().AsCString(),
+                 aPrefix.mLength, DomainPrefixStateToString(aState));
 }
 
 const char *Leader::StateToString(State aState)
