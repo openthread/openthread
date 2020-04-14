@@ -64,6 +64,18 @@ jobs:
       run: |
         script/test package
 
+  size-report:
+    runs-on: ubuntu-18.04
+    if: "github.event_name == 'pull_request'"
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run
+      env:
+        OT_BASE_BRANCH: "${{ github.base_ref }}"
+        SIZE_REPORT_URL: "https://openthread-size-report.glitch.me/size-report/1354027"
+      run: |
+        ./script/check-size
+
   scan-build:
     runs-on: ubuntu-18.04
     steps:

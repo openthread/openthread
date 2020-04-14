@@ -52,8 +52,3 @@ jobs:
       dist: trusty
       python: "2.7" # The old Android build system only supports python2
       script: .travis/script.sh
-    - env:
-      name: "Size Report"
-      os: linux
-      script: .travis/check-size
-      if: type = pull_request
