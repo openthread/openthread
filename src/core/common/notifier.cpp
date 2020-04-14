@@ -316,6 +316,20 @@ const char *Notifier::FlagToString(otChangedFlags aFlag) const
         retval = "NetifState";
         break;
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    case OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE:
+        retval = "BbrState";
+        break;
+
+    case OT_CHANGED_THREAD_BACKBONE_ROUTER_LOCAL:
+        retval = "BbrLocal";
+        break;
+#endif
+
+    case OT_CHANGED_JOINER_STATE:
+        retval = "JoinerState";
+        break;
+
     default:
         break;
     }
