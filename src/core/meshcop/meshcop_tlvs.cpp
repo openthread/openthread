@@ -83,7 +83,7 @@ bool Tlv::IsValid(const Tlv &aTlv)
     return rval;
 }
 
-Mac::NetworkName::Data NetworkNameTlv::GetNetworkName(void) const
+Mac::NameData NetworkNameTlv::GetNetworkName(void) const
 {
     uint8_t len = GetLength();
 
@@ -92,10 +92,10 @@ Mac::NetworkName::Data NetworkNameTlv::GetNetworkName(void) const
         len = sizeof(mNetworkName);
     }
 
-    return Mac::NetworkName::Data(mNetworkName, len);
+    return Mac::NameData(mNetworkName, len);
 }
 
-void NetworkNameTlv::SetNetworkName(const Mac::NetworkName::Data &aNameData)
+void NetworkNameTlv::SetNetworkName(const Mac::NameData &aNameData)
 {
     uint8_t len;
 
