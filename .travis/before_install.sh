@@ -30,8 +30,8 @@
 [ -n "$BUILD_TARGET" ] || exit 0
 
 die() {
-	echo " *** ERROR: " $*
-	exit 1
+    echo " *** ERROR: " $*
+    exit 1
 }
 
 set -x
