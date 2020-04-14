@@ -405,6 +405,61 @@ void TestMacChannelMask(void)
     VerifyOrQuit(mask1 != mask2, "ChannelMask.operator== failed");
 }
 
+void TestMacFrameApi(void)
+{
+    uint8_t    ack_psdu1[] = {0x02, 0x10, 0x5e, 0xd2, 0x9b};
+    uint8_t    ack_psdu2[] = {0x29, 0xee, 0x53, 0xce, 0xfa, 0x01, 0x00, 0x00, 0x00, 0x00, 0x0a, 0x6e, 0x16, 0x05,
+                           0x00, 0x00, 0x00, 0x00, 0x0a, 0x6e, 0x16, 0x0d, 0x01, 0x00, 0x00, 0x00, 0x01};
+    otError    error;
+    Mac::Frame frame;
+    uint8_t    scf; // SecurityControlField
+
+    // IEEE 802.15.4 Ack, Sequence Number: 94
+    //   Frame Control Field: 0x1002
+    //     .... .... .... .010 = Frame Type: Ack (0x2)
+    //     .... .... .... 0... = Security Enabled: False
+    //     .... .... ...0 .... = Frame Pending: False
+    //     .... .... ..0. .... = Acknowledge Request: False
+    //     .... .... .0.. .... = PAN ID Compression: False
+    //     .... ...0 .... .... = Sequence Number Suppression: False
+    //     .... ..0. .... .... = Information Elements Present: False
+    //     .... 00.. .... .... = Destination Addressing Mode: None (0x0)
+    //     ..01 .... .... .... = Frame Version: IEEE Std 802.15.4-2006 (1)
+    //     00.. .... .... .... = Source Addressing Mode: None (0x0)
+    //   Sequence Number: 94
+    //   FCS: 0x9bd2 (Correct)
+    frame.mPsdu = ack_psdu1;
+    VerifyOrQuit(frame.GetType() == Mac::Frame::kFcfFrameAck, "Mac::Frame::GetType() failed\n");
+    VerifyOrQuit(frame.GetSecurityEnabled() == false, "Mac::Frame::GetSecurityEnabled() failed\n");
+    VerifyOrQuit(frame.GetFramePending() == false, "Mac::Frame::GetFramePendIng() failed\n");
+    VerifyOrQuit(frame.GetAckRequest() == false, "Mac::Frame::GetAckRequest failed\n");
+    VerifyOrQuit(frame.IsIePresent() == false, "Mac::Frame::IsIePresent failed\n");
+    VerifyOrQuit(frame.IsDstPanIdPresent() == false, "Mac::Frame::IsDstPanIdPresent failed\n");
+    VerifyOrQuit(frame.IsDstAddrPresent() == false, "Mac::Frame::IsDstAddrPresent failed\n");
+    VerifyOrQuit(frame.GetVersion() == Mac::Frame::kFcfFrameVersion2006, "Mac::Frame::GetVersion failed\n");
+    VerifyOrQuit(frame.IsSrcAddrPresent() == false, "Mac::Frame::IsSrcAddrPresent failed\n");
+    VerifyOrQuit(frame.GetSequence() == 94, "Mac::Frame::GetSequence failed\n");
+
+    // IEEE 802.15.4 Data
+    //   Sequence Number: 83
+    //   Destination PAN: 0xface
+    //   Destination: 16:6e:0a:00:00:00:00:01
+    //   Extended Source: 16:6e:0a:00:00:00:00:05
+    //   Auxiliary Security Header
+    //     Security Control Field: 0x0d
+    frame.mPsdu = ack_psdu2;
+    VerifyOrQuit(frame.IsDstPanIdPresent() == true, "Mac::Frame::IsDstPanIdPresent failed\n");
+    VerifyOrQuit(frame.IsDstAddrPresent() == true, "Mac::Frame::IsDstAddrPresent failed\n");
+    VerifyOrQuit(frame.IsSrcAddrPresent() == true, "Mac::Frame::IsSrcAddrPresent failed\n");
+    VerifyOrQuit((error = frame.GetSecurityControlField(scf)) == OT_ERROR_NONE,
+                 "Mac::Frame::GetSecurityControlField failed\n");
+    VerifyOrQuit(scf == 0x0d, "Mac::Frame::GetSecurityControlField value failed\n");
+    frame.SetSecurityControlField(0xff);
+    VerifyOrQuit((error = frame.GetSecurityControlField(scf)) == OT_ERROR_NONE,
+                 "Mac::Frame::SetSecurityControlField failed\n");
+    VerifyOrQuit(scf == 0xff, "Mac::Frame::SetSecurityControlField value failed\n");
+}
+
 } // namespace ot
 
 int main(void)
@@ -413,6 +468,7 @@ int main(void)
     ot::TestMacNetworkName();
     ot::TestMacHeader();
     ot::TestMacChannelMask();
+    ot::TestMacFrameApi();
     printf("All tests passed\n");
     return 0;
 }
