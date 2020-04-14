@@ -1,5 +1,6 @@
+#!/bin/bash
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2018, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,34 +27,39 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-language: python
-python: "3.6"
+#
+# Run this command on parent directory of openthread
+#
 
-sudo: required
-dist: bionic
+set -euxo pipefail
 
-before_install:
-  - travis_retry .travis/before_install.sh
+#######################################
+# Prepare android build system
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   None
+#######################################
 
-before_script:
-  - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
-      sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6';
-    fi
 
-jobs:
-  include:
-    - env: BUILD_TARGET="android-build" VERBOSE=1
-      os: linux
-      dist: trusty
-      python: "2.7" # The old Android build system only supports python2
-      script: .travis/script.sh
-    - env: BUILD_TARGET="android-build" VERBOSE=1 USE_OTBR_DAEMON=1
-      os: linux
-      dist: trusty
-      python: "2.7" # The old Android build system only supports python2
-      script: .travis/script.sh
-    - env:
-      name: "Size Report"
-      os: linux
-      script: .travis/check-size
-      if: type = pull_request
+check_targets()
+{
+    for target in "$@"; do
+        make showcommands "${target}"
+        test -x "out/target/product/generic/system/bin/${target}"
+    done
+
+    for target in "$@"; do
+        make "clean-${target}" || true
+    done
+}
+
+main()
+{
+    USE_OTBR_DAEMON=1 check_targets ot-cli ot-ctl ot-ncp
+    check_targets ot-cli ot-ncp spi-hdlc-adapter
+}
+
+main "$@"

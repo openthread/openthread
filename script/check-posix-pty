@@ -135,7 +135,7 @@ EOF
         sudo killall -9 ot-ctl || true
         NETIF_INDEX=$(ip link show "${VALID_NETIF_NAME}" | cut -f 1 -d ":" | head -n 1)
         sudo PATH="$(dirname ${OT_CLI_CMD}):${PATH}" \
-             python3 "$(pwd)/.travis/test_multicast_join.py" "${NETIF_INDEX}" \
+             python3 "$PWD/tests/scripts/misc/test_multicast_join.py" "${NETIF_INDEX}" \
              || die 'multicast group join failed'
     fi
 
