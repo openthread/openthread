@@ -540,7 +540,7 @@ public:
     /**
      * This method copies the name data into a given char buffer with a given size.
      *
-     * The given buffer is cleared (`memset` to zero) before copying the Network Name into it. The copied string
+     * The given buffer is cleared (`memset` to zero) before copying the Name into it. The copied string
      * in @p aBuffer is NOT necessarily null terminated.
      *
      * @param[out] aBuffer   A pointer to a buffer where to copy the Name into.
