@@ -1232,7 +1232,7 @@ otError Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkM
         }
 
 #if OPENTHREAD_CONFIG_UNSECURE_TRAFFIC_MANAGED_BY_STACK_ENABLE
-        if (aFromNcpHost && (nextHeader == kProtoTcp || nextHeader == kProtoUdp))
+        if (nextHeader == kProtoTcp || nextHeader == kProtoUdp)
         {
             uint16_t dstPort;
 
