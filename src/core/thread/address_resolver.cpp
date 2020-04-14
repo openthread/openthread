@@ -562,8 +562,8 @@ otError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
 
     SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kTarget, aEid.mFields.m8, sizeof(aEid)));
 
-    messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xff03);
-    messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(0x0002);
+    messageInfo.GetPeerAddr().SetToRealmLocalAllRoutersMulticast();
+
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
 
@@ -680,8 +680,7 @@ otError AddressResolver::SendAddressError(const Ip6::Address &aTarget,
 
     if (aDestination == NULL)
     {
-        messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xff03);
-        messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(0x0002);
+        messageInfo.GetPeerAddr().SetToRealmLocalAllRoutersMulticast();
     }
     else
     {

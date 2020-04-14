@@ -38,6 +38,7 @@
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
+#include "net/netif.hpp"
 
 using ot::Encoding::BigEndian::HostSwap32;
 
@@ -71,14 +72,22 @@ bool Address::IsLinkLocalMulticast(void) const
 
 bool Address::IsLinkLocalAllNodesMulticast(void) const
 {
-    return (mFields.m32[0] == HostSwap32(0xff020000) && mFields.m32[1] == 0 && mFields.m32[2] == 0 &&
-            mFields.m32[3] == HostSwap32(0x01));
+    return (*this == GetLinkLocalAllNodesMulticast());
+}
+
+void Address::SetToLinkLocalAllNodesMulticast(void)
+{
+    *this = GetLinkLocalAllNodesMulticast();
 }
 
 bool Address::IsLinkLocalAllRoutersMulticast(void) const
 {
-    return (mFields.m32[0] == HostSwap32(0xff020000) && mFields.m32[1] == 0 && mFields.m32[2] == 0 &&
-            mFields.m32[3] == HostSwap32(0x02));
+    return (*this == GetLinkLocalAllRoutersMulticast());
+}
+
+void Address::SetToLinkLocalAllRoutersMulticast(void)
+{
+    *this = GetLinkLocalAllRoutersMulticast();
 }
 
 bool Address::IsRealmLocalMulticast(void) const
@@ -93,20 +102,32 @@ bool Address::IsMulticastLargerThanRealmLocal(void) const
 
 bool Address::IsRealmLocalAllNodesMulticast(void) const
 {
-    return (mFields.m32[0] == HostSwap32(0xff030000) && mFields.m32[1] == 0 && mFields.m32[2] == 0 &&
-            mFields.m32[3] == HostSwap32(0x01));
+    return (*this == GetRealmLocalAllNodesMulticast());
+}
+
+void Address::SetToRealmLocalAllNodesMulticast(void)
+{
+    *this = GetRealmLocalAllNodesMulticast();
 }
 
 bool Address::IsRealmLocalAllRoutersMulticast(void) const
 {
-    return (mFields.m32[0] == HostSwap32(0xff030000) && mFields.m32[1] == 0 && mFields.m32[2] == 0 &&
-            mFields.m32[3] == HostSwap32(0x02));
+    return (*this == GetRealmLocalAllRoutersMulticast());
+}
+
+void Address::SetToRealmLocalAllRoutersMulticast(void)
+{
+    *this = GetRealmLocalAllRoutersMulticast();
 }
 
 bool Address::IsRealmLocalAllMplForwarders(void) const
 {
-    return (mFields.m32[0] == HostSwap32(0xff030000) && mFields.m32[1] == 0 && mFields.m32[2] == 0 &&
-            mFields.m32[3] == HostSwap32(0xfc));
+    return (*this == GetRealmLocalAllMplForwarders());
+}
+
+void Address::SetToRealmLocalAllMplForwarders(void)
+{
+    *this = GetRealmLocalAllMplForwarders();
 }
 
 bool Address::IsRoutingLocator(void) const
@@ -403,6 +424,31 @@ Address::InfoString Address::ToString(void) const
     return InfoString("%x:%x:%x:%x:%x:%x:%x:%x", HostSwap16(mFields.m16[0]), HostSwap16(mFields.m16[1]),
                       HostSwap16(mFields.m16[2]), HostSwap16(mFields.m16[3]), HostSwap16(mFields.m16[4]),
                       HostSwap16(mFields.m16[5]), HostSwap16(mFields.m16[6]), HostSwap16(mFields.m16[7]));
+}
+
+const Address &Address::GetLinkLocalAllNodesMulticast(void)
+{
+    return static_cast<const Address &>(Netif::kLinkLocalAllNodesMulticastAddress.mAddress);
+}
+
+const Address &Address::GetLinkLocalAllRoutersMulticast(void)
+{
+    return static_cast<const Address &>(Netif::kLinkLocalAllRoutersMulticastAddress.mAddress);
+}
+
+const Address &Address::GetRealmLocalAllNodesMulticast(void)
+{
+    return static_cast<const Address &>(Netif::kRealmLocalAllNodesMulticastAddress.mAddress);
+}
+
+const Address &Address::GetRealmLocalAllRoutersMulticast(void)
+{
+    return static_cast<const Address &>(Netif::kRealmLocalAllRoutersMulticastAddress.mAddress);
+}
+
+const Address &Address::GetRealmLocalAllMplForwarders(void)
+{
+    return static_cast<const Address &>(Netif::kRealmLocalAllMplForwardersMulticastAddress.mAddress);
 }
 
 } // namespace Ip6

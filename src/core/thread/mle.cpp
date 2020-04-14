@@ -595,9 +595,8 @@ otError Mle::Discover(const Mac::ChannelMask &aScanChannels,
     tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
     message->Write(startOffset - sizeof(tlv), sizeof(tlv), &tlv);
 
-    destination.Clear();
-    destination.mFields.m16[0] = HostSwap16(0xff02);
-    destination.mFields.m16[7] = HostSwap16(0x0002);
+    destination.SetToLinkLocalAllRoutersMulticast();
+
     SuccessOrExit(error = SendMessage(*message, destination));
 
     mDiscoverInProgress = true;
@@ -2075,9 +2074,7 @@ otError Mle::SendParentRequest(ParentRequestType aType)
     SuccessOrExit(error = AppendTimeRequest(*message));
 #endif
 
-    destination.Clear();
-    destination.mFields.m16[0] = HostSwap16(0xff02);
-    destination.mFields.m16[7] = HostSwap16(0x0002);
+    destination.SetToLinkLocalAllRoutersMulticast();
     SuccessOrExit(error = SendMessage(*message, destination));
 
     switch (aType)
@@ -2501,9 +2498,7 @@ otError Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce)
 {
     Ip6::Address destination;
 
-    destination.Clear();
-    destination.mFields.m16[0] = HostSwap16(0xff02);
-    destination.mFields.m16[7] = HostSwap16(0x0001);
+    destination.SetToLinkLocalAllNodesMulticast();
 
     return SendAnnounce(aChannel, aOrphanAnnounce, destination);
 }

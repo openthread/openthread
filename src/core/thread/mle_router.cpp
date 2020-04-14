@@ -452,9 +452,7 @@ otError MleRouter::SendAdvertisement(void)
         break;
     }
 
-    destination.Clear();
-    destination.mFields.m16[0] = HostSwap16(0xff02);
-    destination.mFields.m16[7] = HostSwap16(0x0001);
+    destination.SetToLinkLocalAllNodesMulticast();
     SuccessOrExit(error = SendMessage(*message, destination));
 
     LogMleMessage("Send Advertisement", destination);
@@ -2707,9 +2705,7 @@ void MleRouter::HandleNetworkDataUpdateRouter(void)
 
     VerifyOrExit(IsRouterOrLeader());
 
-    destination.Clear();
-    destination.mFields.m16[0] = HostSwap16(0xff02);
-    destination.mFields.m16[7] = HostSwap16(0x0001);
+    destination.SetToLinkLocalAllNodesMulticast();
 
     delay = IsLeader() ? 0 : Random::NonCrypto::GetUint16InRange(0, kUnsolicitedDataResponseJitter);
     SendDataResponse(destination, tlvs, sizeof(tlvs), delay);
@@ -4818,9 +4814,7 @@ otError MleRouter::SendTimeSync(void)
 
     message->SetTimeSync(true);
 
-    destination.Clear();
-    destination.mFields.m16[0] = HostSwap16(0xff02);
-    destination.mFields.m16[7] = HostSwap16(0x0001);
+    destination.SetToLinkLocalAllNodesMulticast();
     SuccessOrExit(error = SendMessage(*message, destination));
 
     LogMleMessage("Send Time Sync", destination);
