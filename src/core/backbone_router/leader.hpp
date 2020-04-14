@@ -69,14 +69,14 @@ public:
     };
 
     // Domain Prefix state or state change.
-    typedef enum DomainPrefixState
+   enum DomainPrefixState
     {
         kDomainPrefixNone = 0,  ///< Not available.
         kDomainPrefixAdded,     ///< Added.
         kDomainPrefixRemoved,   ///< Removed.
         kDomainPrefixRefreshed, ///< Changed.
         kDomainPrefixUnchanged, ///< Nothing changed.
-    } DomainPrefixState;
+    };
 
     /**
      * This constructor initializes the `Leader`.
