@@ -69,7 +69,7 @@ public:
     };
 
     // Domain Prefix state or state change.
-   enum DomainPrefixState
+    enum DomainPrefixState
     {
         kDomainPrefixNone = 0,  ///< Not available.
         kDomainPrefixAdded,     ///< Added.
