@@ -589,7 +589,7 @@ void Interpreter::ProcessDomainName(uint8_t aArgsLength, char *aArgs[])
     if (aArgsLength == 0)
     {
         const char *domainName = otThreadGetDomainName(mInstance);
-        mServer->OutputFormat("%.*s\r\n", OT_DOMAIN_NAME_MAX_SIZE, static_cast<const char *>(domainName));
+        mServer->OutputFormat("%s\r\n", static_cast<const char *>(domainName));
     }
     else
     {
@@ -2082,7 +2082,7 @@ void Interpreter::ProcessNetworkName(uint8_t aArgsLength, char *aArgs[])
     if (aArgsLength == 0)
     {
         const char *networkName = otThreadGetNetworkName(mInstance);
-        mServer->OutputFormat("%.*s\r\n", OT_NETWORK_NAME_MAX_SIZE, static_cast<const char *>(networkName));
+        mServer->OutputFormat("%s\r\n", static_cast<const char *>(networkName));
     }
     else
     {

@@ -608,12 +608,12 @@ public:
  * This structure represents a Thread Domain Name.
  *
  */
-class DomainName : public otDomainName
+class DomainName
 {
 public:
     enum
     {
-        kMaxSize = OT_DOMAIN_NAME_MAX_SIZE, // Maximum number of chars in Domain Name (excludes null char).
+        kMaxSize = 16, // Maximum number of chars in Domain Name (excludes null char).
     };
 
     /**
@@ -649,6 +649,9 @@ public:
      *
      */
     otError Set(const NameData &aNameData);
+
+private:
+    char m8[kMaxSize + 1]; ///< Byte values.
 };
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 

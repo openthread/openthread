@@ -462,7 +462,7 @@ void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
 
 otError Mac::SetNetworkName(const char *aNameString)
 {
-    // When setting Network Name from a string, we treat it as `Data`
+    // When setting Network Name from a string, we treat it as `NameData`
     // with `kMaxSize + 1` chars. `NetworkName::Set(data)` will look
     // for null char in the data (within its given size) to calculate
     // the name's length and ensure that the name fits in `kMaxSize`
@@ -496,7 +496,7 @@ exit:
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 otError Mac::SetDomainName(const char *aNameString)
 {
-    // When setting Domain Name from a string, we treat it as `Data`
+    // When setting Domain Name from a string, we treat it as `NameData`
     // with `kMaxSize + 1` chars. `DomainName::Set(data)` will look
     // for null char in the data (within its given size) to calculate
     // the name's length and ensure that the name fits in `kMaxSize`

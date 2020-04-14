@@ -73,17 +73,6 @@ typedef enum
     OT_DEVICE_ROLE_LEADER   = 4, ///< The Thread Leader role.
 } otDeviceRole;
 
-#define OT_DOMAIN_NAME_MAX_SIZE 16 ///< Maximum size of the Thread Domain Name field (bytes).
-
-/**
- * This structure represents a Domain Name.
- *
- */
-typedef struct otDomainName
-{
-    char m8[OT_DOMAIN_NAME_MAX_SIZE + 1]; ///< Byte values.
-} otDomainName;
-
 /**
  * This structure represents an MLE Link Mode configuration.
  */
