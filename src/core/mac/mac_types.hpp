@@ -543,7 +543,7 @@ public:
      * The given buffer is cleared (`memset` to zero) before copying the Network Name into it. The copied string
      * in @p aBuffer is NOT necessarily null terminated.
      *
-     * @param[out] aBuffer   A pointer to a buffer where to copy the Network Name into.
+     * @param[out] aBuffer   A pointer to a buffer where to copy the Name into.
      * @param[in]  aMaxSize  Size of @p aBuffer (maximum number of chars to write into @p aBuffer).
      *
      * @returns The actual number of chars copied into @p aBuffer.
