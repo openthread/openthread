@@ -91,6 +91,8 @@ void JoinerRouter::HandleStateChanged(otChangedFlags aFlags)
     }
     else
     {
+        VerifyOrExit(mSocket.IsBound());
+
         Get<Ip6::Filter>().RemoveUnsecurePort(mSocket.GetSockName().mPort);
 
         mSocket.Close();
