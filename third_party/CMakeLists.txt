@@ -29,3 +29,6 @@
 if(OT_BUILTIN_MBEDTLS)
     add_subdirectory(mbedtls)
 endif()
+if(OT_PLATFORM STREQUAL "kw41z")
+    add_subdirectory(nxp)
+endif()

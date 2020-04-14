@@ -40,7 +40,6 @@ set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
 list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
 
-set_property(SOURCE ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/startup_MKW41Z4.S PROPERTY LANGUAGE C)
 add_library(openthread-kw41z
     alarm.c
     diag.c
@@ -51,41 +50,16 @@ add_library(openthread-kw41z
     radio.c
     system.c
     uart.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/clock_config.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/drivers/fsl_clock.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/drivers/fsl_flash.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/drivers/fsl_lpuart.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/drivers/fsl_gpio.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/drivers/fsl_pit.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/drivers/fsl_trng.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/startup_MKW41Z4.S
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/system_MKW41Z4.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/XCVR/cfgs_kw4x_3x_2x/fsl_xcvr_ant_config.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/XCVR/cfgs_kw4x_3x_2x/fsl_xcvr_ble_config.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/XCVR/cfgs_kw4x_3x_2x/fsl_xcvr_common_config.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/XCVR/cfgs_kw4x_3x_2x/fsl_xcvr_gfsk_bt_0p3_h_0p5_config.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/XCVR/cfgs_kw4x_3x_2x/fsl_xcvr_gfsk_bt_0p5_h_0p32_config.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/XCVR/cfgs_kw4x_3x_2x/fsl_xcvr_gfsk_bt_0p5_h_0p5_config.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/XCVR/cfgs_kw4x_3x_2x/fsl_xcvr_gfsk_bt_0p5_h_0p7_config.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/XCVR/cfgs_kw4x_3x_2x/fsl_xcvr_gfsk_bt_0p5_h_1p0_config.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/XCVR/cfgs_kw4x_3x_2x/fsl_xcvr_gfsk_bt_0p7_h_0p5_config.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/XCVR/cfgs_kw4x_3x_2x/fsl_xcvr_mode_datarate_config.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/XCVR/cfgs_kw4x_3x_2x/fsl_xcvr_msk_config.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/XCVR/cfgs_kw4x_3x_2x/fsl_xcvr_zgbe_config.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/XCVR/dbg_ram_capture.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/XCVR/fsl_xcvr.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/XCVR/fsl_xcvr_trim.c
-    ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/XCVR/ifr_radio.c
 )
 
 set_property(TARGET openthread-kw41z PROPERTY C_STANDARD 99)
+target_link_libraries(openthread-kw41z PUBLIC nxp-kw41z-driver)
 target_link_options(openthread-kw41z PRIVATE -T${PROJECT_SOURCE_DIR}/examples/platforms/kw41z/MKW41Z512xxx4.ld)
 target_link_options(openthread-kw41z PUBLIC -Wl,-Map=$<TARGET_PROPERTY:NAME>.map)
 
 target_compile_definitions(openthread-kw41z
     PUBLIC
         ${OT_PLATFORM_DEFINES}
-        -DCPU_MKW41Z512VHT4
     PRIVATE
         ${OT_PRIVATE_DEFINES}
 )
@@ -106,11 +80,4 @@ target_include_directories(openthread-kw41z
         ${OT_PRIVATE_INCLUDES}
         ${PROJECT_SOURCE_DIR}/examples/platforms
         ${PROJECT_SOURCE_DIR}/src/core
-    PUBLIC
-        ${PROJECT_SOURCE_DIR}/third_party/nxp
-        ${PROJECT_SOURCE_DIR}/third_party/nxp/CMSIS/Include
-        ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4
-        ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/drivers
-        ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/XCVR
-        ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/XCVR/cfgs_kw4x_3x_2x
 )
