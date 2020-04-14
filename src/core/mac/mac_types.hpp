@@ -509,7 +509,7 @@ class NameData
 {
 public:
     /**
-     * This constructor initializes the Data object.
+     * This constructor initializes the NameData object.
      *
      * @param[in] aBuffer   A pointer to a `char` buffer (does not need to be null terminated).
      * @param[in] aLength   The length (number of chars) in the buffer.
