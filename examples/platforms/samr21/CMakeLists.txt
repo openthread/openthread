@@ -35,7 +35,6 @@ endif()
 
 list(APPEND OT_PLATFORM_DEFINES
     "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-samr21-config-check.h\""
-    "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\""
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
@@ -49,8 +48,8 @@ string(REPLACE "-pedantic-errors" "" OT_CFLAGS "${OT_CFLAGS}")
 list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
 
 add_library(openthread-samr21
-    crypto/aes_alt.c
     alarm.c
+    crypto/aes_alt.c
     cxx_helpers.c
     diag.c
     entropy.c
@@ -86,8 +85,13 @@ add_library(openthread-samr21
 
 set_property(TARGET openthread-samr21 PROPERTY C_STANDARD 99)
 
-target_link_options(openthread-samr21 PUBLIC -T${PROJECT_SOURCE_DIR}/third_party/microchip/include/samr21x18a.ld)
-target_link_options(openthread-samr21 PUBLIC -Wl,-Map=$<TARGET_PROPERTY:NAME>.map)
+target_link_libraries(openthread-samr21 PRIVATE mbedtls)
+
+target_link_options(openthread-samr21
+    PUBLIC
+        -T${PROJECT_SOURCE_DIR}/third_party/microchip/include/samr21x18a.ld
+        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
+)
 
 target_compile_definitions(openthread-samr21
     PUBLIC

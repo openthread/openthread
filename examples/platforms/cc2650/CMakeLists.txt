@@ -35,7 +35,6 @@ endif()
 
 list(APPEND OT_PLATFORM_DEFINES
     "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-cc2650-config-check.h\""
-    "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\""
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
@@ -51,6 +50,11 @@ list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONF
 
 add_library(openthread-cc2650
     alarm.c
+    cc2650_ccfg.c
+    cc2650_startup.c
+    crypto/aes_alt.c
+    crypto/sha256_alt.c
+    cxx_helpers.c
     diag.c
     entropy.c
     logging.c
@@ -58,17 +62,13 @@ add_library(openthread-cc2650
     radio.c
     system.c
     uart.c
-    crypto/aes_alt.c
-    crypto/sha256_alt.c
-    cc2650_ccfg.c
-    cc2650_startup.c
-    cxx_helpers.c
     $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
 set_property(TARGET openthread-cc2650 PROPERTY C_STANDARD 99)
 
 target_link_libraries(openthread-cc2650 PRIVATE
+    mbedtls
     openthread-platform-utils
     "${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc26x0/driverlib/bin/gcc/driverlib.a"
 )
@@ -84,7 +84,7 @@ target_compile_definitions(openthread-cc2650
         ${OT_PRIVATE_DEFINES}
 )
 
-target_compile_options(openthread-cc2650 PRIVATE ${CC2650_CFLAGS})
+target_compile_options(openthread-cc2650 PRIVATE ${OT_CFLAGS})
 
 target_include_directories(openthread-cc2650
     PRIVATE
