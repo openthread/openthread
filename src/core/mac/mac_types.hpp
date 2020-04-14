@@ -500,7 +500,7 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class represents a Name of char array as of Data (pointer to a char buffer along with a length).
+ * This class represents a name string as data (pointer to a char buffer along with a length).
  *
  * @note The char array does NOT need to be null terminated.
  *
