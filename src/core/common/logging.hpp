@@ -89,9 +89,7 @@ extern "C" {
 #define _OT_REGION_CLI_PREFIX "-CLI-----: "
 #define _OT_REGION_CORE_PREFIX "-CORE----: "
 #define _OT_REGION_UTIL_PREFIX "-UTIL----: "
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 #define _OT_REGION_BBR_PREFIX "-BBR-----: "
-#endif
 #else
 #define _OT_REGION_API_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_MLE_PREFIX _OT_REGION_SUFFIX
@@ -109,9 +107,7 @@ extern "C" {
 #define _OT_REGION_CLI_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_CORE_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_UTIL_PREFIX _OT_REGION_SUFFIX
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 #define _OT_REGION_BBR_PREFIX _OT_REGION_SUFFIX
-#endif
 #endif
 
 /**
@@ -464,7 +460,6 @@ extern "C" {
 #define otLogDebgArp(aFormat, ...)
 #endif
 
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 /**
  * @def otLogCritBbr
  *
@@ -527,8 +522,6 @@ extern "C" {
 #define otLogInfoBbr(aFormat, ...)
 #define otLogDebgBbr(aFormat, ...)
 #endif
-
-#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 /**
  * @def otLogCritNetData
@@ -1556,7 +1549,6 @@ extern "C" {
 #define otDumpDebgArp(aId, aBuf, aLength)
 #endif
 
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 /**
  * @def otDumpCritBbr
  *
@@ -1624,8 +1616,6 @@ extern "C" {
 #define otDumpInfoBbr(aId, aBuf, aLength)
 #define otDumpDebgBbr(aId, aBuf, aLength)
 #endif
-
-#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 /**
  * @def otDumpCritIcmp
