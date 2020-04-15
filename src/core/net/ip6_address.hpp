@@ -325,12 +325,23 @@ public:
     /**
      * This method sets the prefix content of Mesh Local Prefix-Based Multicast Address.
      *
-     * @param[in]  aMeshLocalPrefix   A reference to the  Mesh Local Prefix.
+     * @param[in]  aMeshLocalPrefix   A reference to the Mesh Local Prefix.
      *
      */
     void SetMulticastNetworkPrefix(const Mle::MeshLocalPrefix &aMeshLocalPrefix)
     {
         SetMulticastNetworkPrefix(aMeshLocalPrefix.m8, Mle::MeshLocalPrefix::kLength);
+    }
+
+    /**
+     * This method sets the prefix content of Prefix-Based Multicast Address.
+     *
+     * @param[in]  aPrefix A reference to an IPv6 Prefix.
+     *
+     */
+    void SetMulticastNetworkPrefix(const otIp6Prefix &aPrefix)
+    {
+        SetMulticastNetworkPrefix(aPrefix.mPrefix.mFields.m8, aPrefix.mLength);
     }
 
     /**

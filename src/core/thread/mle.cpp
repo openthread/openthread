@@ -55,10 +55,6 @@
 #include "thread/thread_netif.hpp"
 #include "thread/time_sync_service.hpp"
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-#include "backbone_router/local.hpp"
-#endif
-
 using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
@@ -181,6 +177,13 @@ Mle::Mle(Instance &aInstance)
     mAllNetworkBackboneRouters.GetAddress().mFields.m8[2]  = 0;    // Reserved
     mAllNetworkBackboneRouters.GetAddress().mFields.m8[15] = 3;    // Group ID = 3
 
+    // All Domain Backbone Routers Multicast Address.
+    mAllDomainBackboneRouters.Clear();
+
+    mAllDomainBackboneRouters.GetAddress().mFields.m8[0]  = 0xff; // Multicast
+    mAllDomainBackboneRouters.GetAddress().mFields.m8[1]  = 0x32; // Flags = 3, Scope = 2
+    mAllDomainBackboneRouters.GetAddress().mFields.m8[2]  = 0;    // Reserved
+    mAllDomainBackboneRouters.GetAddress().mFields.m8[15] = 3;    // Group ID = 3
 #endif
 
     // initialize Mesh Local Prefix
@@ -1025,7 +1028,7 @@ void Mle::ApplyMeshLocalPrefix(void)
 
     if (Get<BackboneRouter::Local>().IsEnabled())
     {
-        // Subscribe All Network Backbone Routers Multicast Address for both Seconday and Primary state.
+        // Subscribe All Network Backbone Routers Multicast Address for both Secondary and Primary state.
         Get<ThreadNetif>().SubscribeMulticast(mAllNetworkBackboneRouters);
     }
 
@@ -1653,7 +1656,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
 
         if (Get<BackboneRouter::Local>().IsEnabled())
         {
-            // Subscribe All Network Backbone Routers Multicast Address for both Seconday and Primary state.
+            // Subscribe All Network Backbone Routers Multicast Address for both Secondary and Primary state.
             Get<ThreadNetif>().SubscribeMulticast(mAllNetworkBackboneRouters);
         }
         else
@@ -4436,6 +4439,34 @@ void Mle::DelayedResponseMetadata::RemoveFrom(Message &aMessage) const
     OT_ASSERT(error == OT_ERROR_NONE);
     OT_UNUSED_VARIABLE(error);
 }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+void Mle::UpdateAllDomainBackboneRouters(BackboneRouter::Leader::DomainPrefixState aState)
+{
+    if (!Get<BackboneRouter::Local>().IsEnabled())
+    {
+        Get<ThreadNetif>().UnsubscribeMulticast(mAllDomainBackboneRouters);
+        ExitNow();
+    }
+
+    if (aState == BackboneRouter::Leader::kDomainPrefixRemoved ||
+        aState == BackboneRouter::Leader::kDomainPrefixRefreshed)
+    {
+        Get<ThreadNetif>().UnsubscribeMulticast(mAllDomainBackboneRouters);
+    }
+
+    if (aState == BackboneRouter::Leader::kDomainPrefixAdded ||
+        aState == BackboneRouter::Leader::kDomainPrefixRefreshed)
+    {
+        mAllDomainBackboneRouters.GetAddress().SetMulticastNetworkPrefix(
+            *Get<BackboneRouter::Leader>().GetDomainPrefix());
+        Get<ThreadNetif>().SubscribeMulticast(mAllDomainBackboneRouters);
+    }
+
+exit:
+    return;
+}
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
 } // namespace Mle
 } // namespace ot

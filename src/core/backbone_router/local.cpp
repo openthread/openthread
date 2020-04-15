@@ -40,7 +40,6 @@
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
-#include "thread/mle.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/thread_netif.hpp"
 

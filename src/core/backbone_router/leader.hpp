@@ -56,16 +56,26 @@ typedef otBackboneRouterConfig BackboneRouterConfig;
 class Leader : public InstanceLocator
 {
 public:
-    // Primary Backbone Router Service State or State change.
+    // Primary Backbone Router Service state or state change.
     enum State
     {
-        kStateNone = 0,       // Not exist (trigger Backbone Router register its service).
-        kStateAdded,          // Newly added.
-        kStateRemoved,        // Newly removed (trigger Backbone Router register its service).
-        kStateToTriggerRereg, // Short address or sequence number changes (trigger re-registration).
-                              // May also have ReregistrationDelay or MlrTimeout update.
-        kStateRefreshed,      // Only ReregistrationDelay or MlrTimeout changes.
-        kStateUnchanged,      // No change on Primary Backbone Router information (only for logging).
+        kStateNone = 0,       ///< Not exist (trigger Backbone Router register its service).
+        kStateAdded,          ///< Newly added.
+        kStateRemoved,        ///< Newly removed (trigger Backbone Router register its service).
+        kStateToTriggerRereg, ///< Short address or sequence number changes (trigger re-registration).
+                              ///< May also have ReregistrationDelay or MlrTimeout update.
+        kStateRefreshed,      ///< Only ReregistrationDelay or MlrTimeout changes.
+        kStateUnchanged,      ///< No change on Primary Backbone Router information (only for logging).
+    };
+
+    // Domain Prefix state or state change.
+    enum DomainPrefixState
+    {
+        kDomainPrefixNone = 0,  ///< Not available.
+        kDomainPrefixAdded,     ///< Added.
+        kDomainPrefixRemoved,   ///< Removed.
+        kDomainPrefixRefreshed, ///< Changed.
+        kDomainPrefixUnchanged, ///< Nothing changed.
     };
 
     /**
@@ -126,11 +136,37 @@ public:
      */
     bool HasPrimary(void) const { return mConfig.mServer16 != Mac::kShortAddrInvalid; }
 
-private:
-    void               LogBackboneRouterPrimary(State aState, const BackboneRouterConfig &aConfig) const;
-    static const char *StateToString(State aState);
+    /**
+     * This method gets the Domain Prefix in the Thread Network.
+     *
+     * @retval A pointer to the Domain Prefix or NULL if there is no Domain Prefix.
+     *
+     */
+    const otIp6Prefix *GetDomainPrefix(void) const { return (mDomainPrefix.mLength == 0) ? NULL : &mDomainPrefix; }
 
-    BackboneRouterConfig mConfig; ///< Primary Backbone Router information.
+    /**
+     * This method indicates whether or not the Domain Prefix is available in the Thread Network.
+     *
+     * @retval TRUE if there is Domain Prefix, FALSE otherwise.
+     *
+     */
+    bool HasDomainPrefix(void) const { return (mDomainPrefix.mLength > 0); }
+
+private:
+    void UpdateBackboneRouterPrimary(void);
+    void UpdateDomainPrefixConfig(void);
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_NETDATA == 1)
+    void               LogBackboneRouterPrimary(State aState, const BackboneRouterConfig &aConfig) const;
+    void               LogDomainPrefix(DomainPrefixState aState, const otIp6Prefix &aPrefix) const;
+    static const char *StateToString(State aState);
+    static const char *DomainPrefixStateToString(DomainPrefixState aState);
+#else
+    void LogBackboneRouterPrimary(State, const BackboneRouterConfig &) const {}
+    void LogDomainPrefix(DomainPrefixState, const otIp6Prefix &) const {}
+#endif
+
+    BackboneRouterConfig mConfig;       ///< Primary Backbone Router information.
+    otIp6Prefix          mDomainPrefix; ///< Domain Prefix on the Thread Network.
 };
 
 } // namespace BackboneRouter

@@ -35,16 +35,9 @@
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "common/settings.hpp"
-
-#include "thread/network_data_leader.hpp"
-#include "thread/network_data_tlvs.hpp"
-#include "thread/thread_netif.hpp"
 
 namespace ot {
 namespace BackboneRouter {
@@ -57,8 +50,11 @@ Leader::Leader(Instance &aInstance)
 
 void Leader::Reset(void)
 {
-    memset(&mConfig, 0, sizeof(mConfig));
+    // Invalid server short address indicates no available Backbone Router service in the Thread Network.
     mConfig.mServer16 = Mac::kShortAddrInvalid;
+
+    // Domain Prefix Length 0 indicates no available Domain Prefix in the Thread network.
+    mDomainPrefix.mLength = 0;
 }
 
 otError Leader::GetConfig(BackboneRouterConfig &aConfig) const
@@ -87,17 +83,26 @@ exit:
     return error;
 }
 
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_NETDATA == 1)
 void Leader::LogBackboneRouterPrimary(State aState, const BackboneRouterConfig &aConfig) const
 {
     OT_UNUSED_VARIABLE(aConfig);
 
-    otLogInfoNetData("BBR state %s", StateToString(aState));
+    otLogInfoNetData("PBBR state: %s", StateToString(aState));
 
     if (aState != kStateRemoved && aState != kStateNone)
     {
         otLogInfoNetData("Rloc16: 0x%4X, seqno: %d, delay: %d, timeout %d", aConfig.mServer16, aConfig.mSequenceNumber,
                          aConfig.mReregistrationDelay, aConfig.mMlrTimeout);
     }
+}
+
+void Leader::LogDomainPrefix(DomainPrefixState aState, const otIp6Prefix &aPrefix) const
+{
+    otLogInfoNetData("Domain Prefix: %s/%d, state: %s",
+                     aPrefix.mLength == 0 ? ""
+                                          : static_cast<const Ip6::Address *>(&aPrefix.mPrefix)->ToString().AsCString(),
+                     aPrefix.mLength, DomainPrefixStateToString(aState));
 }
 
 const char *Leader::StateToString(State aState)
@@ -107,27 +112,27 @@ const char *Leader::StateToString(State aState)
     switch (aState)
     {
     case kStateNone:
-        logString = "PBBR: None";
+        logString = "None";
         break;
 
     case kStateAdded:
-        logString = "PBBR: Added";
+        logString = "Added";
         break;
 
     case kStateRemoved:
-        logString = "PBBR: Removed";
+        logString = "Removed";
         break;
 
     case kStateToTriggerRereg:
-        logString = "PBBR: To trigger re-registration";
+        logString = "Rereg triggered";
         break;
 
     case kStateRefreshed:
-        logString = "PBBR: Refreshed";
+        logString = "Refreshed";
         break;
 
     case kStateUnchanged:
-        logString = "PBBR: Unchanged";
+        logString = "Unchanged";
         break;
 
     default:
@@ -137,7 +142,44 @@ const char *Leader::StateToString(State aState)
     return logString;
 }
 
+const char *Leader::DomainPrefixStateToString(DomainPrefixState aState)
+{
+    const char *logString = "Unknown";
+
+    switch (aState)
+    {
+    case kDomainPrefixNone:
+        logString = "None";
+        break;
+
+    case kDomainPrefixAdded:
+        logString = "Added";
+        break;
+
+    case kDomainPrefixRemoved:
+        logString = "Removed";
+        break;
+
+    case kDomainPrefixRefreshed:
+        logString = "Refreshed";
+        break;
+
+    case kDomainPrefixUnchanged:
+        logString = "Unchanged";
+        break;
+    }
+
+    return logString;
+}
+#endif
+
 void Leader::Update(void)
+{
+    UpdateBackboneRouterPrimary();
+    UpdateDomainPrefixConfig();
+}
+
+void Leader::UpdateBackboneRouterPrimary(void)
 {
     BackboneRouterConfig config;
     State                state;
@@ -183,6 +225,62 @@ void Leader::Update(void)
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     Get<BackboneRouter::Local>().UpdateBackboneRouterPrimary(state, mConfig);
+#endif
+}
+
+void Leader::UpdateDomainPrefixConfig(void)
+{
+    NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
+    NetworkData::OnMeshPrefixConfig config;
+    DomainPrefixState               state;
+    bool                            found = false;
+
+    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == OT_ERROR_NONE)
+    {
+        if (config.mDp)
+        {
+            found = true;
+            break;
+        }
+    }
+
+    if (!found)
+    {
+        if (mDomainPrefix.mLength != 0)
+        {
+            // Domain Prefix does not exist any more.
+            mDomainPrefix.mLength = 0;
+            state                 = kDomainPrefixRemoved;
+        }
+        else
+        {
+            state = kDomainPrefixNone;
+        }
+    }
+    else if (config.mPrefix.mLength == mDomainPrefix.mLength &&
+             Ip6::Address::PrefixMatch(mDomainPrefix.mPrefix.mFields.m8, config.mPrefix.mPrefix.mFields.m8,
+                                       BitVectorBytes(mDomainPrefix.mLength)) >= mDomainPrefix.mLength)
+    {
+        state = kDomainPrefixUnchanged;
+    }
+    else
+    {
+        if (mDomainPrefix.mLength == 0)
+        {
+            state = kDomainPrefixAdded;
+        }
+        else
+        {
+            state = kDomainPrefixRefreshed;
+        }
+
+        mDomainPrefix = config.mPrefix;
+    }
+
+    LogDomainPrefix(state, mDomainPrefix);
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    Get<Mle::Mle>().UpdateAllDomainBackboneRouters(state);
 #endif
 }
 

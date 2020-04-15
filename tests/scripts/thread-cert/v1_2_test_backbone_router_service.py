@@ -96,7 +96,6 @@ class TestBackboneRouterService(thread_cert.TestCase):
         # 1) First Backbone Router would become the Primary.
         self.nodes[BBR_1].set_router_selection_jitter(ROUTER_SELECTION_JITTER)
         self.nodes[BBR_1].set_bbr_registration_jitter(BBR_REGISTRATION_JITTER)
-        self.nodes[BBR_1].set_domain_prefix(config.DOMAIN_PREFIX)
         self.nodes[BBR_1].set_backbone_router(seqno=1)
         self.nodes[BBR_1].start()
         WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
@@ -107,6 +106,13 @@ class TestBackboneRouterService(thread_cert.TestCase):
         self.simulator.go(WAIT_TIME)
         self.assertEqual(self.nodes[BBR_1].get_backbone_router_state(),
                          'Primary')
+        assert self.nodes[BBR_1].has_ipmaddr(config.ALL_NETWORK_BBRS_ADDRESS)
+        assert not self.nodes[BBR_1].has_ipmaddr(config.ALL_DOMAIN_BBRS_ADDRESS)
+
+        self.nodes[BBR_1].set_domain_prefix(config.DOMAIN_PREFIX)
+        WAIT_TIME = WAIT_REDUNDANCE
+        self.simulator.go(WAIT_TIME)
+        assert self.nodes[BBR_1].has_ipmaddr(config.ALL_DOMAIN_BBRS_ADDRESS)
 
         # 2) Reset BBR_1 and bring it back soon.
         # Verify that it restores Primary State with sequence number
@@ -171,6 +177,10 @@ class TestBackboneRouterService(thread_cert.TestCase):
         self.simulator.go(WAIT_TIME)
         self.assertEqual(self.nodes[BBR_2].get_backbone_router_state(),
                          'Disabled')
+
+        assert not self.nodes[BBR_2].has_ipmaddr(
+            config.ALL_NETWORK_BBRS_ADDRESS)
+        assert not self.nodes[BBR_2].has_ipmaddr(config.ALL_DOMAIN_BBRS_ADDRESS)
 
         # Enable Backbone function, it will stay at Secondary state as
         # there is Primary Backbone Router already.
@@ -240,6 +250,9 @@ class TestBackboneRouterService(thread_cert.TestCase):
         self.simulator.go(WAIT_TIME)
         self.assertEqual(self.nodes[BBR_2].get_backbone_router_state(),
                          'Secondary')
+
+        assert self.nodes[BBR_1].has_ipmaddr(config.ALL_NETWORK_BBRS_ADDRESS)
+        assert self.nodes[BBR_1].has_ipmaddr(config.ALL_DOMAIN_BBRS_ADDRESS)
 
 
 if __name__ == '__main__':
