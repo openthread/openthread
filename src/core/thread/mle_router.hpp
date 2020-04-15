@@ -839,6 +839,7 @@ private:
     uint32_t mFixedLeaderPartitionId; ///< only for certification testing
     bool     mRouterEligible : 1;
     bool     mAddressSolicitPending : 1;
+    bool     mAddressSolicitRejected : 1;
 
     uint8_t mRouterId;
     uint8_t mPreviousRouterId;

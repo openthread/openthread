@@ -74,6 +74,7 @@ MleRouter::MleRouter(Instance &aInstance)
     , mFixedLeaderPartitionId(0)
     , mRouterEligible(true)
     , mAddressSolicitPending(false)
+    , mAddressSolicitRejected(false)
     , mPreviousPartitionIdRouter(0)
     , mPreviousPartitionId(0)
     , mPreviousPartitionRouterIdSequence(0)
@@ -231,6 +232,9 @@ void MleRouter::HandleDetachStart(void)
 otError MleRouter::HandleChildStart(AttachMode aMode)
 {
     otError error = OT_ERROR_NONE;
+
+    // reset `rejected` flag whenever REED becomes child.
+    mAddressSolicitRejected = false;
 
     mRouterSelectionJitterTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, mRouterSelectionJitter);
 
@@ -4046,6 +4050,8 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
 
     SuccessOrExit(Tlv::ReadUint8Tlv(*aMessage, ThreadTlv::kStatus, status));
 
+    mAddressSolicitRejected = (status != ThreadStatusTlv::kSuccess);
+
     if (status != ThreadStatusTlv::kSuccess)
     {
         if (IsRouterIdValid(mPreviousRouterId))
@@ -4112,6 +4118,12 @@ exit:
 
     // send announce after received address solicit reply if needed
     InformPreviousChannel();
+}
+
+bool MleRouter::ExpectBecomeRouterSoon(void) const
+{
+    return IsRouterEligible() && !IsRouterOrLeader() &&
+           (Get<RouterTable>().GetActiveRouterCount() < GetRouterUpgradeThreshold()) && !mAddressSolicitRejected;
 }
 
 void MleRouter::HandleAddressSolicit(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -4833,12 +4845,6 @@ exit:
     }
 
     return error;
-}
-
-bool MleRouter::ExpectBecomeRouterSoon(void) const
-{
-    return IsRouterEligible() && !IsRouterOrLeader() &&
-           (Get<RouterTable>().GetActiveRouterCount() < GetRouterUpgradeThreshold());
 }
 
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
