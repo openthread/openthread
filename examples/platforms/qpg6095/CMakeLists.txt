@@ -40,7 +40,7 @@ set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
 list(APPEND OT_PRIVATE_DEFINES "MBEDTLS_USER_CONFIG_FILE=\"qpg6095-mbedtls-config.h\"")
 list(APPEND OT_PUBLIC_INCLUDES
-    "${PROJECT_SOURCE_DIR}/examples/platforms/qpg6095/crypto"
+    "${CMAKE_CURRENT_SOURCE_DIR}/crypto"
 )
 set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
 
@@ -62,13 +62,13 @@ set_property(TARGET openthread-qpg6095 PROPERTY C_STANDARD 99)
 
 target_link_libraries(openthread-qpg6095
     PRIVATE
-        ${PROJECT_SOURCE_DIR}/third_party/Qorvo/qpg6095/libQorvoQPG6095.a
+        qpg6095-driver
         mbedtls
 )
 
 target_link_options(openthread-qpg6095
     PUBLIC
-        -T${PROJECT_SOURCE_DIR}/examples/platforms/qpg6095/qpg6095.ld
+        -T${CMAKE_CURRENT_SOURCE_DIR}/qpg6095.ld
         -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
 )
 
@@ -79,10 +79,9 @@ target_compile_definitions(openthread-qpg6095
         ${OT_PRIVATE_DEFINES}
 )
 
-target_compile_options(openthread-qpg6095 PRIVATE
-    ${OT_CFLAGS}
-    -lrt
-    -lpthread
+target_compile_options(openthread-qpg6095
+    PRIVATE
+        ${OT_CFLAGS}
 )
 
 target_include_directories(openthread-qpg6095

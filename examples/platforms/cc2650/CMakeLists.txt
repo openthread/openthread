@@ -41,7 +41,7 @@ set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 list(APPEND OT_PRIVATE_DEFINES "MBEDTLS_USER_CONFIG_FILE=\"cc2650-mbedtls-config.h\"")
 set(OT_PRIVATE_DEFINES ${OT_PRIVATE_DEFINES} PARENT_SCOPE)
 list(APPEND OT_PUBLIC_INCLUDES
-    "${PROJECT_SOURCE_DIR}/examples/platforms/cc2650/crypto"
+    "${CMAKE_CURRENT_SOURCE_DIR}/crypto"
     "${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc26x0"
 )
 set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
@@ -67,14 +67,17 @@ add_library(openthread-cc2650
 
 set_property(TARGET openthread-cc2650 PROPERTY C_STANDARD 99)
 
-target_link_libraries(openthread-cc2650 PRIVATE
-    mbedtls
-    openthread-platform-utils
-    "${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc26x0/driverlib/bin/gcc/driverlib.a"
+target_link_libraries(openthread-cc2650
+    PUBLIC
+        cc26x0-driver
+    PRIVATE
+        mbedtls
+        openthread-platform-utils
 )
-target_link_options(openthread-cc2650 PUBLIC
-    -T${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc26x0/linker_files/cc26x0f128.lds
-    -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
+
+target_link_options(openthread-cc2650
+    PUBLIC
+        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
 )
 
 target_compile_definitions(openthread-cc2650

@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,15 +26,9 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_BUILTIN_MBEDTLS)
-    add_subdirectory(mbedtls)
-endif()
-if(OT_PLATFORM STREQUAL "kw41z")
-    add_subdirectory(nxp)
-elseif(OT_PLATFORM STREQUAL "cc2650")
-    add_subdirectory(ti)
-elseif(OT_PLATFORM STREQUAL "qpg6095")
-    add_subdirectory(Qorvo)
-elseif(OT_PLATFORM STREQUAL "samr21")
-    add_subdirectory(microchip)
-endif()
+add_library(qpg6095-driver INTERFACE)
+
+target_link_libraries(qpg6095-driver
+    INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/qpg6095/libQorvoQPG6095.a
+)
