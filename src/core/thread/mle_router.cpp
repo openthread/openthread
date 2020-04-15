@@ -4834,6 +4834,13 @@ exit:
 
     return error;
 }
+
+bool MleRouter::ExpectBecomeRouterSoon(void) const
+{
+    return IsRouterEligible() && !IsRouterOrLeader() &&
+           (Get<RouterTable>().GetActiveRouterCount() < GetRouterUpgradeThreshold());
+}
+
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 } // namespace Mle
