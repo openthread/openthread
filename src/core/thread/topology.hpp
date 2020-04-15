@@ -352,6 +352,14 @@ public:
     void SetRloc16(uint16_t aRloc16) { mRloc16 = aRloc16; }
 
     /**
+     * This method indicates whether or not it is a valid Thread 1.1 neighbor.
+     *
+     * @returns TRUE if it is a valid Thread 1.1 neighbor, FALSE otherwise.
+     *
+     */
+    bool IsThreadVersion2(void) const { return mState != kStateInvalid && mVersion == OT_THREAD_VERSION_1_1; }
+
+    /**
      * This method indicates whether Enhanced Keep-Alive is supported or not.
      *
      * @returns TRUE if Enhanced Keep-Alive is supported, FALSE otherwise.

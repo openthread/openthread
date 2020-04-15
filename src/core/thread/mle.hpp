@@ -1809,6 +1809,7 @@ private:
     void        StartParentSearchTimer(void);
     void        UpdateParentSearchState(void);
 #endif
+    bool ShouldRegisterMulticastToParent(void) const;
 
     MessageQueue mDelayedResponses;
 

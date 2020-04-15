@@ -1392,6 +1392,8 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
     uint8_t                  length      = 0;
     uint8_t                  counter     = 0;
     uint16_t                 startOffset = aMessage.GetLength();
+    uint8_t                  iterator    = 0; // used to iterate external multicast addresses.
+    Ip6::Address             address;         // used to cache external multicast address.
 
     tlv.SetType(Tlv::kAddressRegistration);
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
@@ -1434,24 +1436,40 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
         VerifyOrExit(counter < OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER, OT_NOOP);
     }
 
-    // For sleepy end device, register external multicast addresses to the parent for indirect transmission
-    if (!IsRxOnWhenIdle())
+    // Append external multicast address.
+    // For sleepy end device, register external multicast addresses to the parent for indirect transmission.
+    // Since Thread 1.2, non-sleepy MED would depend on its Thread 1.2 parent as the proxy to perform
+    // Multicast Listener Report, it registers external multicast addresses of scope larger than realm
+    // local as well.
+    while (Get<ThreadNetif>().GetNextExternalMulticast(iterator, address) == OT_ERROR_NONE)
     {
-        uint8_t      iterator = 0;
-        Ip6::Address address;
-
-        // append external multicast address
-        while (Get<ThreadNetif>().GetNextExternalMulticast(iterator, address) == OT_ERROR_NONE)
+        if (IsRxOnWhenIdle())
         {
-            entry.SetUncompressed();
-            entry.SetIp6Address(address);
-            SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
-            length += entry.GetLength();
-
-            counter++;
-            // only continue to append if there is available entry.
-            VerifyOrExit(counter < OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER, OT_NOOP);
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+            // For Thread 1.2 MED, skip MA registration if the parent is Thread 1.1 device.
+            if (GetParent().IsThreadVersion2())
+            {
+                break;
+            }
+            else if (!address.IsMulticastLargerThanRealmLocal())
+            {
+                // For Thread 1.2 MED, skip multicast address with scope not larger than realm local when registering.
+                continue;
+            }
+#else
+            // For Thread 1.1 MED, skip any multicast address.
+            break;
+#endif
         }
+
+        entry.SetUncompressed();
+        entry.SetIp6Address(address);
+        SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
+        length += entry.GetLength();
+
+        counter++;
+        // only continue to append if there is available entry.
+        VerifyOrExit(counter < OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER, OT_NOOP);
     }
 
 exit:
@@ -1571,7 +1589,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
 
     if ((aFlags & (OT_CHANGED_IP6_MULTICAST_SUBSCRIBED | OT_CHANGED_IP6_MULTICAST_UNSUBSCRIBED)) != 0)
     {
-        if (IsChild() && !IsFullThreadDevice() && !IsRxOnWhenIdle())
+        if (ShouldRegisterMulticastToParent())
         {
             mChildUpdateRequestState = kChildUpdateRequestPending;
             ScheduleMessageTransmissionTimer();
@@ -4445,6 +4463,23 @@ exit:
     return;
 }
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+
+// Since Thread 1.2, MTD end device (including rx-on-when-idle or rx-off-when-idle) should
+// register or de-register their multicast address larger than realm local to the parent via
+// MLE Child Update Request.
+bool Mle::ShouldRegisterMulticastToParent(void) const
+{
+    bool update = false;
+
+    VerifyOrExit(IsChild() && !IsFullThreadDevice(), OT_NOOP);
+#if (OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_1)
+    VerifyOrExit(!IsRxOnWhenIdle(), OT_NOOP);
+#endif
+    update = true;
+
+exit:
+    return update;
+}
 
 } // namespace Mle
 } // namespace ot
