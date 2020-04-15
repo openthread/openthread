@@ -73,6 +73,8 @@ typedef otPanId PanId;
  */
 typedef otShortAddress ShortAddress;
 
+#if !OPENTHREAD_RADIO
+
 /**
  * This function generates a random IEEE 802.15.4 PAN ID.
  *
@@ -80,6 +82,8 @@ typedef otShortAddress ShortAddress;
  *
  */
 PanId GenerateRandomPanId(void);
+
+#endif
 
 /**
  * This structure represents an IEEE 802.15.4 Extended Address.
