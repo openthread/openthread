@@ -65,6 +65,20 @@ bool Address::IsLinkLocal(void) const
     return (mFields.m16[0] & HostSwap16(0xffc0)) == HostSwap16(0xfe80);
 }
 
+void Address::SetToLinkLocalAddress(const Mac::ExtAddress &aExtAddress)
+{
+    mFields.m32[0] = HostSwap32(0xfe800000);
+    mFields.m32[1] = 0;
+    SetIid(aExtAddress);
+}
+
+void Address::SetToLinkLocalAddress(const uint8_t *aIid)
+{
+    mFields.m32[0] = HostSwap32(0xfe800000);
+    mFields.m32[1] = 0;
+    SetIid(aIid);
+}
+
 bool Address::IsLinkLocalMulticast(void) const
 {
     return IsMulticast() && (GetScope() == kLinkLocalScope);
@@ -130,24 +144,6 @@ void Address::SetToRealmLocalAllMplForwarders(void)
     *this = GetRealmLocalAllMplForwarders();
 }
 
-bool Address::IsRoutingLocator(void) const
-{
-    return (mFields.m32[2] == HostSwap32(0x000000ff) && mFields.m16[6] == HostSwap16(0xfe00) &&
-            mFields.m8[14] < kAloc16Mask && (mFields.m8[14] & kRloc16ReservedBitMask) == 0);
-}
-
-bool Address::IsAnycastRoutingLocator(void) const
-{
-    return (mFields.m32[2] == HostSwap32(0x000000ff) && mFields.m16[6] == HostSwap16(0xfe00) &&
-            mFields.m8[14] == kAloc16Mask);
-}
-
-bool Address::IsAnycastServiceLocator(void) const
-{
-    return IsAnycastRoutingLocator() && (mFields.m8[15] >= (Mle::kAloc16ServiceStart & 0xff)) &&
-           (mFields.m8[15] <= (Mle::kAloc16ServiceEnd & 0xff));
-}
-
 bool Address::IsSubnetRouterAnycast(void) const
 {
     return (mFields.m32[2] == 0 && mFields.m32[3] == 0);
@@ -161,7 +157,31 @@ bool Address::IsReservedSubnetAnycast(void) const
 
 bool Address::IsIidReserved(void) const
 {
-    return IsSubnetRouterAnycast() || IsReservedSubnetAnycast() || IsAnycastRoutingLocator();
+    return IsSubnetRouterAnycast() || IsReservedSubnetAnycast() || IsIidAnycastLocator();
+}
+
+bool Address::IsIidLocator(void) const
+{
+    // IID pattern 0000:00ff:fe00:xxxx
+    return (mFields.m32[2] == HostSwap32(0x000000ff) && mFields.m16[6] == HostSwap16(0xfe00));
+}
+
+bool Address::IsIidRoutingLocator(void) const
+{
+    return (IsIidLocator() && (mFields.m8[14] < kAloc16Mask) && ((mFields.m8[14] & kRloc16ReservedBitMask) == 0));
+}
+
+bool Address::IsIidAnycastLocator(void) const
+{
+    // Anycast locator range 0xfc00- 0xfcff (`kAloc16Max` is 0xfc)
+    return (IsIidLocator() && (mFields.m8[14] == kAloc16Mask));
+}
+
+bool Address::IsIidAnycastServiceLocator(void) const
+{
+    uint16_t locator = GetLocator();
+
+    return (IsIidLocator() && (locator >= Mle::kAloc16ServiceStart) && (locator <= Mle::kAloc16ServiceEnd));
 }
 
 void Address::SetPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
@@ -210,6 +230,20 @@ void Address::SetIid(const Mac::ExtAddress &aExtAddress)
     addr = aExtAddress;
     addr.ToggleLocal();
     addr.CopyTo(mFields.m8 + kInterfaceIdentifierOffset);
+}
+
+void Address::SetIidToLocator(uint16_t aLocator)
+{
+    // Locator IID pattern `0000:00ff:fe00:xxxx`
+    mFields.m32[2] = HostSwap32(0x000000ff);
+    mFields.m16[6] = HostSwap16(0xfe00);
+    mFields.m16[7] = HostSwap16(aLocator);
+}
+
+void Address::SetToLocator(const Mle::MeshLocalPrefix &aMeshLocalPrefix, uint16_t aLocator)
+{
+    SetPrefix(aMeshLocalPrefix);
+    SetIidToLocator(aLocator);
 }
 
 void Address::ToExtAddress(Mac::ExtAddress &aExtAddress) const

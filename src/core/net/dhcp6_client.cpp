@@ -280,11 +280,7 @@ otError Dhcp6Client::Solicit(uint16_t aRloc16)
 #if OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT
     messageInfo.GetPeerAddr().SetToRealmLocalAllRoutersMulticast();
 #else
-    messageInfo.GetPeerAddr().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-    messageInfo.GetPeerAddr().mFields.m16[4] = HostSwap16(0x0000);
-    messageInfo.GetPeerAddr().mFields.m16[5] = HostSwap16(0x00ff);
-    messageInfo.GetPeerAddr().mFields.m16[6] = HostSwap16(0xfe00);
-    messageInfo.GetPeerAddr().SetLocator(aRloc16);
+    messageInfo.GetPeerAddr().SetToRoutingLocator(Get<Mle::MleRouter>().GetMeshLocalPrefix(), aRloc16);
 #endif
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.mPeerPort = kDhcpServerPort;

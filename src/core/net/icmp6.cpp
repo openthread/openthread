@@ -201,9 +201,7 @@ otError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMe
     uint16_t    payloadLength;
 
     // always handle Echo Request destined for RLOC or ALOC
-    VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo) || aMessageInfo.GetSockAddr().IsRoutingLocator() ||
-                     aMessageInfo.GetSockAddr().IsAnycastRoutingLocator(),
-                 OT_NOOP);
+    VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo) || aMessageInfo.GetSockAddr().IsIidLocator(), OT_NOOP);
 
     otLogInfoIcmp("Received Echo Request");
 
