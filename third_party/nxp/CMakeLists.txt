@@ -28,6 +28,7 @@
 
 if(OT_PLATFORM STREQUAL "kw41z")
     set_property(SOURCE ${PROJECT_SOURCE_DIR}/third_party/nxp/MKW41Z4/startup_MKW41Z4.S PROPERTY LANGUAGE C)
+
     add_library(nxp-kw41z-driver
         MKW41Z4/clock_config.c
         MKW41Z4/drivers/fsl_clock.c
@@ -55,6 +56,7 @@ if(OT_PLATFORM STREQUAL "kw41z")
         MKW41Z4/XCVR/fsl_xcvr_trim.c
         MKW41Z4/XCVR/ifr_radio.c
     )
+
     target_compile_definitions(nxp-kw41z-driver
         PUBLIC
             ${OT_PLATFORM_DEFINES}
