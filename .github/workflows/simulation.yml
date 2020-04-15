@@ -124,6 +124,7 @@ jobs:
       COVERAGE: 1
       REFERENCE_DEVICE: 1
       TIME_SYNC: 1
+      THREAD_VERSION: 1.2
       VIRTUAL_TIME: 1
     steps:
     - uses: actions/checkout@v2
