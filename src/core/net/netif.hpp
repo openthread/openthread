@@ -172,6 +172,7 @@ private:
 class Netif : public InstanceLocator, public LinkedListEntry<Netif>
 {
     friend class Ip6;
+    friend class Address;
 
 public:
     /**

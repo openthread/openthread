@@ -277,8 +277,7 @@ otError Dhcp6Client::Solicit(uint16_t aRloc16)
     SuccessOrExit(error = AppendRapidCommit(*message));
 
 #if OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT
-    messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xff03);
-    messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(0x0002);
+    messageInfo.GetPeerAddr().SetToRealmLocalAllRoutersMulticast();
 #else
     messageInfo.GetPeerAddr().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
     messageInfo.GetPeerAddr().mFields.m16[4] = HostSwap16(0x0000);
