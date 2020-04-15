@@ -378,12 +378,12 @@ public:
     uint16_t GetVersion(void) const { return GetFrameControlField() & kFcfFrameVersionMask; }
 
     /**
-     * This method returns if the IEEE 802.15.4 frame's version is 2015.
+     * This method returns if the current IEEE 802.15.4 frame object's version is 2015.
      *
-     * @returns true if version is 2015 and false otherwise.
+     * @returns TRUE if version is 2015 and false otherwise.
      *
      */
-    bool IsVersion2015(void) const { return (GetFrameControlField() & kFcfFrameVersionMask) == kFcfFrameVersion2015; }
+    bool IsVersion2015(void) const { return IsVersion2015(GetFrameControlField()); }
 
     /**
      * This method indicates whether or not security is enabled.
@@ -454,15 +454,6 @@ public:
     void SetSequence(uint8_t aSequence) { GetPsdu()[kSequenceIndex] = aSequence; }
 
     /**
-     * This method indicates whether or not the Dst PanId is present.
-     *
-     * @param[in]  aFcf          The Frame Control field.
-     * @returns TRUE if the Dst PanId is present, FALSE otherwise.
-     *
-     */
-    bool IsDstPanIdPresent(uint16_t aFcf) const;
-
-    /**
      * This method indicates whether or not the Dst PanId is present in this frame object.
      *
      * @returns TRUE if the Dst PanId is present, FALSE otherwise.
@@ -488,16 +479,6 @@ public:
      *
      */
     void SetDstPanId(PanId aPanId);
-
-    /**
-     * This method indicates whether or not the Destination Address is present.
-     *
-     * @paran[in]  aFcf  The frame control field
-     *
-     * @retval TRUE if the Destination Address is present, FALSE otherwise.
-     *
-     */
-    static bool IsDstAddrPresent(uint16_t aFcf) { return (aFcf & kFcfDstAddrMask) != kFcfDstAddrNone; }
 
     /**
      * This method indicates whether or not the Destination Address is present for this object.
@@ -570,16 +551,6 @@ public:
     otError SetSrcPanId(PanId aPanId);
 
     /**
-     * This method indicates whether or not the Source Address is present.
-     *
-     * @paran[in]  aFcf  The frame control field
-     *
-     * @retval TRUE if the Source Address is present, FALSE otherwise.
-     *
-     */
-    static bool IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone; }
-
-    /**
      * This method indicates whether or not the Source Address is present for this object.
      *
      * @retval TRUE if the Source Address is present, FALSE otherwise.
@@ -626,7 +597,8 @@ public:
      *
      * @param[out]  aSecurityControlField  The Security Control Field.
      *
-     * @retval OT_ERROR_NONE  Successfully retrieved the Security Level Identifier.
+     * @retval OT_ERROR_NONE   Successfully retrieved the Security Level Identifier.
+     * @retval OT_ERROR_PARSE  Fail to find the security control field ins the frame.
      *
      */
     otError GetSecurityControlField(uint8_t &aSecurityControlField) const;
@@ -981,7 +953,7 @@ private:
     uint8_t  FindDstAddrIndex(void) const;
     uint8_t  FindSrcPanIdIndex(void) const;
     uint8_t  FindSrcAddrIndex(void) const;
-    uint8_t  SkipAddrField(const uint16_t &fcf) const;
+    uint8_t  SkipAddrFieldIndex() const;
     uint8_t  FindSecurityHeaderIndex(void) const;
     uint8_t  SkipSecurityHeaderIndex(void) const;
     uint8_t  FindPayloadIndex(void) const;
@@ -990,6 +962,11 @@ private:
 #endif
 
     static uint8_t GetKeySourceLength(uint8_t aKeyIdMode);
+
+    static bool IsDstAddrPresent(uint16_t aFcf) { return (aFcf & kFcfDstAddrMask) != kFcfDstAddrNone; }
+    static bool IsDstPanIdPresent(uint16_t aFcf);
+    static bool IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone; }
+    static bool IsVersion2015(uint16_t aFcf) { return (aFcf & kFcfFrameVersionMask) == kFcfFrameVersion2015; }
 };
 
 /**

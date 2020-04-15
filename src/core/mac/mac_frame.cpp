@@ -199,29 +199,33 @@ exit:
     return index;
 }
 
-bool Frame::IsDstPanIdPresent(uint16_t aFcf) const
+bool Frame::IsDstPanIdPresent(uint16_t aFcf)
 {
-    bool present          = true;
-    bool isDstAddrPresent = IsDstAddrPresent(aFcf);
+    bool present = true;
 
-    if ((aFcf & kFcfFrameVersionMask) == kFcfFrameVersion2015)
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    if (IsVersion2015(aFcf))
     {
-        bool isPanIdCompressed = aFcf & kFcfPanidCompression;
-        bool isSrcAddrPresent  = IsSrcAddrPresent(aFcf);
-        // According to IEEE 802.15.4-2015 Table 7-2
-        if ((!isDstAddrPresent && !isSrcAddrPresent && !isPanIdCompressed) ||
-            (isDstAddrPresent && !isSrcAddrPresent && isPanIdCompressed) ||
-            (!isDstAddrPresent && isSrcAddrPresent && isPanIdCompressed) ||
-            (!isDstAddrPresent && isSrcAddrPresent && !isPanIdCompressed) ||
-            ((aFcf & kFcfDstAddrMask) == kFcfDstAddrExt && (aFcf & kFcfSrcAddrMask) == kFcfSrcAddrExt &&
-             isPanIdCompressed))
+        switch (aFcf & (kFcfDstAddrMask | kFcfSrcAddrMask | kFcfPanidCompression))
         {
+        case (kFcfDstAddrNone | kFcfSrcAddrNone):
+        case (kFcfDstAddrExt | kFcfSrcAddrNone | kFcfPanidCompression):
+        case (kFcfDstAddrShort | kFcfSrcAddrNone | kFcfPanidCompression):
+        case (kFcfDstAddrNone | kFcfSrcAddrExt):
+        case (kFcfDstAddrNone | kFcfSrcAddrShort):
+        case (kFcfDstAddrNone | kFcfSrcAddrExt | kFcfPanidCompression):
+        case (kFcfDstAddrNone | kFcfSrcAddrShort | kFcfPanidCompression):
+        case (kFcfDstAddrExt | kFcfSrcAddrExt | kFcfPanidCompression):
             present = false;
+            break;
+        default:
+            break;
         }
     }
-    else if (!isDstAddrPresent)
+    else
+#endif
     {
-        present = false;
+        present = IsDstAddrPresent(aFcf);
     }
 
     return present;
@@ -348,14 +352,16 @@ bool Frame::IsSrcPanIdPresent(uint16_t aFcf) const
 
     if ((aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone && (aFcf & kFcfPanidCompression) == 0)
     {
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
         // Handle a special case in IEEE 802.15.4-2015, when Pan ID Compression is 0, but Src Pan ID is not present:
         //  Dest Address:       Extended
         //  Source Address:     Extended
         //  Dest Pan ID:        Present
         //  Src Pan ID:         Not Present
         //  Pan ID Compression: 0
-        if ((aFcf & kFcfFrameVersionMask) != kFcfFrameVersion2015 || (aFcf & kFcfDstAddrMask) != kFcfDstAddrExt ||
+        if (!IsVersion2015(aFcf) || (aFcf & kFcfDstAddrMask) != kFcfDstAddrExt ||
             (aFcf & kFcfSrcAddrMask) != kFcfSrcAddrExt)
+#endif
         {
             srcPanIdPresent = true;
         }
@@ -492,6 +498,7 @@ otError Frame::GetSecurityControlField(uint8_t &aSecurityControlField) const
 {
     otError error = OT_ERROR_NONE;
     uint8_t index = FindSecurityHeaderIndex();
+
     VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_PARSE);
 
     aSecurityControlField = GetPsdu()[index];
@@ -503,6 +510,7 @@ exit:
 void Frame::SetSecurityControlField(uint8_t aSecurityControlField)
 {
     uint8_t index = FindSecurityHeaderIndex();
+
     OT_ASSERT(index != kInvalidIndex);
 
     GetPsdu()[index] = aSecurityControlField;
@@ -510,15 +518,11 @@ void Frame::SetSecurityControlField(uint8_t aSecurityControlField)
 
 uint8_t Frame::FindSecurityHeaderIndex(void) const
 {
-    uint8_t  index = 0;
-    uint16_t fcf   = GetFrameControlField();
+    uint8_t index;
 
-    VerifyOrExit((fcf & kFcfSecurityEnabled) != 0, index = kInvalidIndex);
-
-    // Frame Control Field and  Sequence Number
-    index += kFcfSize + kDsnSize;
-    // Address field
-    index += SkipAddrField(fcf);
+    VerifyOrExit(kFcfSize < GetLength(), index = kInvalidIndex);
+    VerifyOrExit(GetSecurityEnabled(), index = kInvalidIndex);
+    index = SkipAddrFieldIndex();
 
 exit:
     return index;
@@ -764,13 +768,11 @@ void Frame::SetPayloadLength(uint16_t aLength)
 
 uint8_t Frame::SkipSecurityHeaderIndex(void) const
 {
-    uint8_t  index = kFcfSize + kDsnSize; // Frame Control field and Sequence Number field
+    uint8_t  index = SkipAddrFieldIndex();
     uint16_t fcf;
 
-    VerifyOrExit((index + GetFcsSize()) <= GetPsduLength(), index = kInvalidIndex);
-
+    VerifyOrExit(index != kInvalidIndex, OT_NOOP);
     fcf = GetFrameControlField();
-    index += SkipAddrField(fcf);
 
     // Security Control + Frame Counter + Key Identifier
     if ((fcf & kFcfSecurityEnabled) != 0)
@@ -804,14 +806,18 @@ exit:
     return index;
 }
 
-uint8_t Frame::SkipAddrField(const uint16_t &fcf) const
+uint8_t Frame::SkipAddrFieldIndex() const
 {
-    uint8_t offset = 0;
+    uint8_t  index = kFcfSize + kDsnSize; // Frame Control field and Sequence Number field
+    uint16_t fcf;
+
+    VerifyOrExit((index + GetFcsSize()) <= GetPsduLength(), index = kInvalidIndex);
+    fcf = GetFrameControlField();
 
     // Destination PAN
     if (IsDstPanIdPresent(fcf))
     {
-        offset += sizeof(PanId);
+        index += sizeof(PanId);
     }
 
     // Destination Address
@@ -821,21 +827,22 @@ uint8_t Frame::SkipAddrField(const uint16_t &fcf) const
         break;
 
     case kFcfDstAddrShort:
-        offset += sizeof(ShortAddress);
+        index += sizeof(ShortAddress);
         break;
 
     case kFcfDstAddrExt:
-        offset += sizeof(ExtAddress);
+        index += sizeof(ExtAddress);
         break;
 
     default:
+        ExitNow(index = kInvalidIndex);
         break;
     }
 
     // Source PAN
     if (IsSrcPanIdPresent(fcf))
     {
-        offset += sizeof(PanId);
+        index += sizeof(PanId);
     }
 
     // Source Address
@@ -845,18 +852,20 @@ uint8_t Frame::SkipAddrField(const uint16_t &fcf) const
         break;
 
     case kFcfSrcAddrShort:
-        offset += sizeof(ShortAddress);
+        index += sizeof(ShortAddress);
         break;
 
     case kFcfSrcAddrExt:
-        offset += sizeof(ExtAddress);
+        index += sizeof(ExtAddress);
         break;
 
     default:
+        ExitNow(index = kInvalidIndex);
         break;
     }
 
-    return offset;
+exit:
+    return index;
 }
 
 uint8_t Frame::FindPayloadIndex(void) const
