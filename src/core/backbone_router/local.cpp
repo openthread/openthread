@@ -322,20 +322,20 @@ void Local::AddDomainPrefixToNetworkData(void)
     LogDomainPrefix("Add", error);
 }
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_NETDATA == 1)
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_BBR == 1)
 void Local::LogDomainPrefix(const char *aAction, otError aError)
 {
-    otLogInfoNetData("%s Domain Prefix: %s/%d, %s", aAction,
-                     mDomainPrefixConfig.mPrefix.mLength > 0
-                         ? (*static_cast<Ip6::Address *>(&mDomainPrefixConfig.mPrefix.mPrefix)).ToString().AsCString()
-                         : "",
-                     mDomainPrefixConfig.mPrefix.mLength, otThreadErrorToString(aError));
+    otLogInfoBbr("%s Domain Prefix: %s/%d, %s", aAction,
+                 mDomainPrefixConfig.mPrefix.mLength > 0
+                     ? (*static_cast<Ip6::Address *>(&mDomainPrefixConfig.mPrefix.mPrefix)).ToString().AsCString()
+                     : "",
+                 mDomainPrefixConfig.mPrefix.mLength, otThreadErrorToString(aError));
 }
 
 void Local::LogBackboneRouterService(const char *aAction, otError aError)
 {
-    otLogInfoNetData("%s BBR Service: seqno (%d), delay (%ds), timeout (%ds), %s", aAction, mSequenceNumber,
-                     mReregistrationDelay, mMlrTimeout, otThreadErrorToString(aError));
+    otLogInfoBbr("%s BBR Service: seqno (%d), delay (%ds), timeout (%ds), %s", aAction, mSequenceNumber,
+                 mReregistrationDelay, mMlrTimeout, otThreadErrorToString(aError));
 }
 #endif
 

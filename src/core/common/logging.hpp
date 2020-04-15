@@ -89,6 +89,7 @@ extern "C" {
 #define _OT_REGION_CLI_PREFIX "-CLI-----: "
 #define _OT_REGION_CORE_PREFIX "-CORE----: "
 #define _OT_REGION_UTIL_PREFIX "-UTIL----: "
+#define _OT_REGION_BBR_PREFIX "-BBR-----: "
 #else
 #define _OT_REGION_API_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_MLE_PREFIX _OT_REGION_SUFFIX
@@ -106,6 +107,7 @@ extern "C" {
 #define _OT_REGION_CLI_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_CORE_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_UTIL_PREFIX _OT_REGION_SUFFIX
+#define _OT_REGION_BBR_PREFIX _OT_REGION_SUFFIX
 #endif
 
 /**
@@ -456,6 +458,69 @@ extern "C" {
 #define otLogNoteArp(aFormat, ...)
 #define otLogInfoArp(aFormat, ...)
 #define otLogDebgArp(aFormat, ...)
+#endif
+
+/**
+ * @def otLogCritBbr
+ *
+ * This method generates a log with level critical for the Backbone Router (BBR) region.
+ *
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogWarnBbr
+ *
+ * This method generates a log with level warning for the Backbone Router (BBR) region.
+ *
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogInfoBbr
+ *
+ * This method generates a log with level note for the Backbone Router (BBR) region.
+ *
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogInfoBbr
+ *
+ * This method generates a log with level info for the Backbone Router (BBR) region.
+ *
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogDebgBbr
+ *
+ * This method generates a log with level debug for the Backbone Router (BBR) region.
+ *
+ * @param[in]  aFormat      A pointer to the format string.
+ * @param[in]  ...          Arguments for the format specification.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_BBR == 1
+#define otLogCritBbr(aFormat, ...) otLogCrit(OT_LOG_REGION_BBR, _OT_REGION_BBR_PREFIX aFormat, ##__VA_ARGS__)
+#define otLogWarnBbr(aFormat, ...) otLogWarn(OT_LOG_REGION_BBR, _OT_REGION_BBR_PREFIX aFormat, ##__VA_ARGS__)
+#define otLogNoteBbr(aFormat, ...) otLogNote(OT_LOG_REGION_BBR, _OT_REGION_BBR_PREFIX aFormat, ##__VA_ARGS__)
+#define otLogInfoBbr(aFormat, ...) otLogInfo(OT_LOG_REGION_BBR, _OT_REGION_BBR_PREFIX aFormat, ##__VA_ARGS__)
+#define otLogDebgBbr(aFormat, ...) otLogDebg(OT_LOG_REGION_BBR, _OT_REGION_BBR_PREFIX aFormat, ##__VA_ARGS__)
+#else
+#define otLogCritBbr(aFormat, ...)
+#define otLogWarnBbr(aFormat, ...)
+#define otLogNoteBbr(aFormat, ...)
+#define otLogInfoBbr(aFormat, ...)
+#define otLogDebgBbr(aFormat, ...)
 #endif
 
 /**
@@ -1482,6 +1547,74 @@ extern "C" {
 #define otDumpNoteArp(aId, aBuf, aLength)
 #define otDumpInfoArp(aId, aBuf, aLength)
 #define otDumpDebgArp(aId, aBuf, aLength)
+#endif
+
+/**
+ * @def otDumpCritBbr
+ *
+ * This method generates a memory dump with log level critical and region Backbone Router (BBR).
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpWarnBbr
+ *
+ * This method generates a memory dump with log level warning and region Backbone Router (BBR).
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpNoteBbr
+ *
+ * This method generates a memory dump with log level note and region Backbone Router (BBR).
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpInfoBbr
+ *
+ * This method generates a memory dump with log level info and region Backbone Router (BBR).
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpDebgBbr
+ *
+ * This method generates a memory dump with log level debug and region Backbone Router (BBR).
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_BBR == 1
+#define otDumpCritBbr(aId, aBuf, aLength) otDumpCrit(OT_LOG_REGION_BBR, aId, aBuf, aLength)
+#define otDumpWarnBbr(aId, aBuf, aLength) otDumpWarn(OT_LOG_REGION_BBR, aId, aBuf, aLength)
+#define otDumpNoteBbr(aId, aBuf, aLength) otDumpNote(OT_LOG_REGION_BBR, aId, aBuf, aLength)
+#define otDumpInfoBbr(aId, aBuf, aLength) otDumpInfo(OT_LOG_REGION_BBR, aId, aBuf, aLength)
+#define otDumpDebgBbr(aId, aBuf, aLength) otDumpDebg(OT_LOG_REGION_BBR, aId, aBuf, aLength)
+#else
+#define otDumpCritBbr(aId, aBuf, aLength)
+#define otDumpWarnBbr(aId, aBuf, aLength)
+#define otDumpNoteBbr(aId, aBuf, aLength)
+#define otDumpInfoBbr(aId, aBuf, aLength)
+#define otDumpDebgBbr(aId, aBuf, aLength)
 #endif
 
 /**
