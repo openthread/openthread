@@ -54,12 +54,14 @@ PanId GenerateRandomPanId(void)
     return panId;
 }
 
+#if !OPENTHREAD_RADIO
 void ExtAddress::GenerateRandom(void)
 {
-    Random::NonCrypto::FillBuffer(m8, sizeof(ExtAddress));
+    Random::Crypto::FillBuffer(m8, sizeof(ExtAddress));
     SetGroup(false);
     SetLocal(true);
 }
+#endif
 
 bool ExtAddress::operator==(const ExtAddress &aOther) const
 {

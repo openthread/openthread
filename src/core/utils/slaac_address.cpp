@@ -298,7 +298,7 @@ void Slaac::GenerateIid(Ip6::NetifUnicastAddress &aAddress) const
     }
 
     otLogWarnUtil("SLAAC: Failed to generate a non-reserved IID after %d attempts", dadCounter);
-    Random::NonCrypto::FillBuffer(hash, Ip6::Address::kInterfaceIdentifierSize);
+    Random::Crypto::FillBuffer(hash, Ip6::Address::kInterfaceIdentifierSize);
     aAddress.GetAddress().SetIid(&hash[0]);
 
 exit:
@@ -319,7 +319,7 @@ void Slaac::GetIidSecretKey(IidSecretKey &aKey) const
 
     if (error != OT_ERROR_NONE)
     {
-        Random::NonCrypto::FillBuffer(aKey.m8, sizeof(IidSecretKey));
+        Random::Crypto::FillBuffer(aKey.m8, sizeof(IidSecretKey));
     }
 
     Get<Settings>().SaveSlaacIidSecretKey(aKey);

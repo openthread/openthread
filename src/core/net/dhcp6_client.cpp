@@ -202,7 +202,7 @@ bool Dhcp6Client::ProcessNextIdentityAssociation()
         }
 
         // new transaction id
-        Random::NonCrypto::FillBuffer(mTransactionId, kTransactionIdSize);
+        Random::Crypto::FillBuffer(mTransactionId, kTransactionIdSize);
 
         mIdentityAssociationCurrent = &mIdentityAssociations[i];
 
