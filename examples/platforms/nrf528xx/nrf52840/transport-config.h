@@ -50,7 +50,7 @@
  *
  */
 #ifndef UART_INSTANCE
-#define UART_INSTANCE NRF_UART0
+#define UART_INSTANCE NRF_UARTE0
 #endif
 
 /**
@@ -59,12 +59,12 @@
  * UART Parity configuration.
  *
  * @brief Possible values:
- *         \ref NRF_UART_PARITY_EXCLUDED - Parity bit is not present.
- *         \ref NRF_UART_PARITY_INCLUDED - Parity bit is present.
+ *         \ref NRF_UARTE_PARITY_EXCLUDED - Parity bit is not present.
+ *         \ref NRF_UARTE_PARITY_INCLUDED - Parity bit is present.
  *
  */
 #ifndef UART_PARITY
-#define UART_PARITY NRF_UART_PARITY_EXCLUDED
+#define UART_PARITY NRF_UARTE_PARITY_EXCLUDED
 #endif
 
 /**
@@ -83,26 +83,26 @@
  * UART Baudrate.
  *
  * @brief Possible values:
- *         \ref NRF_UART_BAUDRATE_1200 - 1200 baud.
- *         \ref NRF_UART_BAUDRATE_2400 - 2400 baud.
- *         \ref NRF_UART_BAUDRATE_4800 - 4800 baud.
- *         \ref NRF_UART_BAUDRATE_9600 - 9600 baud.
- *         \ref NRF_UART_BAUDRATE_14400 - 14400 baud.
- *         \ref NRF_UART_BAUDRATE_19200 - 19200 baud.
- *         \ref NRF_UART_BAUDRATE_28800 - 28800 baud.
- *         \ref NRF_UART_BAUDRATE_38400 - 38400 baud.
- *         \ref NRF_UART_BAUDRATE_57600 - 57600 baud.
- *         \ref NRF_UART_BAUDRATE_76800 - 76800 baud.
- *         \ref NRF_UART_BAUDRATE_115200 - 115200 baud.
- *         \ref NRF_UART_BAUDRATE_230400 - 230400 baud.
- *         \ref NRF_UART_BAUDRATE_250000 - 250000 baud.
- *         \ref NRF_UART_BAUDRATE_460800 - 460800 baud.
- *         \ref NRF_UART_BAUDRATE_921600 - 921600 baud.
- *         \ref NRF_UART_BAUDRATE_1000000 - 1000000 baud.
+ *         \ref NRF_UARTE_BAUDRATE_1200 - 1200 baud.
+ *         \ref NRF_UARTE_BAUDRATE_2400 - 2400 baud.
+ *         \ref NRF_UARTE_BAUDRATE_4800 - 4800 baud.
+ *         \ref NRF_UARTE_BAUDRATE_9600 - 9600 baud.
+ *         \ref NRF_UARTE_BAUDRATE_14400 - 14400 baud.
+ *         \ref NRF_UARTE_BAUDRATE_19200 - 19200 baud.
+ *         \ref NRF_UARTE_BAUDRATE_28800 - 28800 baud.
+ *         \ref NRF_UARTE_BAUDRATE_38400 - 38400 baud.
+ *         \ref NRF_UARTE_BAUDRATE_57600 - 57600 baud.
+ *         \ref NRF_UARTE_BAUDRATE_76800 - 76800 baud.
+ *         \ref NRF_UARTE_BAUDRATE_115200 - 115200 baud.
+ *         \ref NRF_UARTE_BAUDRATE_230400 - 230400 baud.
+ *         \ref NRF_UARTE_BAUDRATE_250000 - 250000 baud.
+ *         \ref NRF_UARTE_BAUDRATE_460800 - 460800 baud.
+ *         \ref NRF_UARTE_BAUDRATE_921600 - 921600 baud.
+ *         \ref NRF_UARTE_BAUDRATE_1000000 - 1000000 baud.
  *
  */
 #ifndef UART_BAUDRATE
-#define UART_BAUDRATE NRF_UART_BAUDRATE_115200
+#define UART_BAUDRATE NRF_UARTE_BAUDRATE_115200
 #endif
 
 /**

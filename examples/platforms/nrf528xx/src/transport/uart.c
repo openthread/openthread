@@ -35,6 +35,7 @@
 #include <openthread-core-config.h>
 #include <openthread/config.h>
 
+#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -46,26 +47,38 @@
 
 #include "platform-nrf5-transport.h"
 #include <hal/nrf_gpio.h>
-#include <hal/nrf_uart.h>
+#include <hal/nrf_uarte.h>
 #include <nrf_drv_clock.h>
 
 #if (UART_AS_SERIAL_TRANSPORT == 1)
 
+/**
+ * UART enable flag.
+ */
 bool sUartEnabled = false;
 
 /**
- *  UART TX buffer variables.
+ * UART TX buffer variables.
  */
-static volatile const uint8_t *sTransmitBuffer = NULL;
-static volatile uint16_t       sTransmitLength = 0;
-static volatile bool           sTransmitDone   = 0;
+static const uint8_t *sTransmitBuffer = NULL;
+static volatile bool  sTransmitDone   = 0;
 
 /**
- *  UART RX ring buffer variables.
+ * UART RX ring buffer variables.
  */
 static uint8_t           sReceiveBuffer[UART_RX_BUFFER_SIZE];
 static volatile uint16_t sReceiveHead = 0;
 static volatile uint16_t sReceiveTail = 0;
+
+/**
+ * Function for returning the next RX buffer index.
+ *
+ * @return Next RX buffer index.
+ */
+static __INLINE uint16_t getNextRxBufferIndex()
+{
+    return (sReceiveHead + 1) % UART_RX_BUFFER_SIZE;
+}
 
 /**
  * Function for checking if RX buffer is full.
@@ -75,8 +88,7 @@ static volatile uint16_t sReceiveTail = 0;
  */
 static __INLINE bool isRxBufferFull()
 {
-    uint16_t next = (sReceiveHead + 1) % UART_RX_BUFFER_SIZE;
-    return (next == sReceiveTail);
+    return getNextRxBufferIndex() == sReceiveTail;
 }
 
 /**
@@ -119,6 +131,12 @@ static void processReceive(void)
         sReceiveTail = head;
     }
 
+    // In case interrupts were disabled due to the full buffer, re-enable it now.
+    if (!nrf_uarte_int_enable_check(UART_INSTANCE, NRF_UARTE_INT_RXDRDY_MASK))
+    {
+        nrf_uarte_int_enable(UART_INSTANCE, NRF_UARTE_INT_RXDRDY_MASK | NRF_UARTE_INT_ERROR_MASK);
+    }
+
 exit:
     return;
 }
@@ -139,7 +157,6 @@ static void processTransmit(void)
     {
         // Clear Transmition transaction and notify application.
         sTransmitBuffer = NULL;
-        sTransmitLength = 0;
         sTransmitDone   = false;
         otPlatUartSendDone();
     }
@@ -182,33 +199,33 @@ otError otPlatUartEnable(void)
     nrf_gpio_pin_set(UART_PIN_TX);
     nrf_gpio_cfg_output(UART_PIN_TX);
     nrf_gpio_cfg_input(UART_PIN_RX, NRF_GPIO_PIN_NOPULL);
-    nrf_uart_txrx_pins_set(UART_INSTANCE, UART_PIN_TX, UART_PIN_RX);
+    nrf_uarte_txrx_pins_set(UART_INSTANCE, UART_PIN_TX, UART_PIN_RX);
 
 #if (UART_HWFC_ENABLED == 1)
     // Set up CTS and RTS pins.
     nrf_gpio_cfg_input(UART_PIN_CTS, NRF_GPIO_PIN_NOPULL);
     nrf_gpio_pin_set(UART_PIN_RTS);
     nrf_gpio_cfg_output(UART_PIN_RTS);
-    nrf_uart_hwfc_pins_set(UART_INSTANCE, UART_PIN_RTS, UART_PIN_CTS);
+    nrf_uarte_hwfc_pins_set(UART_INSTANCE, UART_PIN_RTS, UART_PIN_CTS);
 
-    nrf_uart_configure(UART_INSTANCE, UART_PARITY, NRF_UART_HWFC_ENABLED);
+    nrf_uarte_configure(UART_INSTANCE, UART_PARITY, NRF_UARTE_HWFC_ENABLED);
 #else
-    nrf_uart_configure(UART_INSTANCE, UART_PARITY, NRF_UART_HWFC_DISABLED);
+    nrf_uarte_configure(UART_INSTANCE, UART_PARITY, NRF_UARTE_HWFC_DISABLED);
 #endif
 
     // Configure baudrate.
-    nrf_uart_baudrate_set(UART_INSTANCE, UART_BAUDRATE);
+    nrf_uarte_baudrate_set(UART_INSTANCE, UART_BAUDRATE);
 
     // Clear UART specific events.
-    nrf_uart_event_clear(UART_INSTANCE, NRF_UART_EVENT_TXDRDY);
-    nrf_uart_event_clear(UART_INSTANCE, NRF_UART_EVENT_ERROR);
-    nrf_uart_event_clear(UART_INSTANCE, NRF_UART_EVENT_RXDRDY);
+    nrf_uarte_event_clear(UART_INSTANCE, NRF_UARTE_EVENT_ENDTX);
+    nrf_uarte_event_clear(UART_INSTANCE, NRF_UARTE_EVENT_ERROR);
+    nrf_uarte_event_clear(UART_INSTANCE, NRF_UARTE_EVENT_RXDRDY);
 
     // Enable interrupts for TX.
-    nrf_uart_int_enable(UART_INSTANCE, NRF_UART_INT_MASK_TXDRDY);
+    nrf_uarte_int_enable(UART_INSTANCE, NRF_UARTE_INT_ENDTX_MASK);
 
     // Enable interrupts for RX.
-    nrf_uart_int_enable(UART_INSTANCE, NRF_UART_INT_MASK_RXDRDY | NRF_UART_INT_MASK_ERROR);
+    nrf_uarte_int_enable(UART_INSTANCE, NRF_UARTE_INT_RXDRDY_MASK | NRF_UARTE_INT_ERROR_MASK);
 
     // Configure NVIC to handle UART interrupts.
     NVIC_SetPriority(UART_IRQN, UART_IRQ_PRIORITY);
@@ -223,8 +240,8 @@ otError otPlatUartEnable(void)
     }
 
     // Enable UART instance, and start RX on it.
-    nrf_uart_enable(UART_INSTANCE);
-    nrf_uart_task_trigger(UART_INSTANCE, NRF_UART_TASK_STARTRX);
+    nrf_uarte_enable(UART_INSTANCE);
+    nrf_uarte_task_trigger(UART_INSTANCE, NRF_UARTE_TASK_STARTRX);
 
     sUartEnabled = true;
 
@@ -244,13 +261,13 @@ otError otPlatUartDisable(void)
     NVIC_SetPriority(UART_IRQN, 0);
 
     // Disable interrupts for TX.
-    nrf_uart_int_disable(UART_INSTANCE, NRF_UART_INT_MASK_TXDRDY);
+    nrf_uarte_int_disable(UART_INSTANCE, NRF_UARTE_INT_ENDTX_MASK);
 
     // Disable interrupts for RX.
-    nrf_uart_int_disable(UART_INSTANCE, NRF_UART_INT_MASK_RXDRDY | NRF_UART_INT_MASK_ERROR);
+    nrf_uarte_int_disable(UART_INSTANCE, NRF_UARTE_INT_RXDRDY_MASK | NRF_UARTE_INT_ERROR_MASK);
 
     // Disable UART instance.
-    nrf_uart_disable(UART_INSTANCE);
+    nrf_uarte_disable(UART_INSTANCE);
 
     // Release HF clock.
     nrf_drv_clock_hfclk_release();
@@ -267,14 +284,13 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 
     otEXPECT_ACTION(sTransmitBuffer == NULL, error = OT_ERROR_BUSY);
 
-    // Set up transmit buffer and its size without counting first triggered byte.
+    // Set up transmit buffer.
     sTransmitBuffer = aBuf;
-    sTransmitLength = aBufLength - 1;
 
-    // Initiate Transmission process.
-    nrf_uart_event_clear(UART_INSTANCE, NRF_UART_EVENT_TXDRDY);
-    nrf_uart_txd_set(UART_INSTANCE, *sTransmitBuffer++);
-    nrf_uart_task_trigger(UART_INSTANCE, NRF_UART_TASK_STARTTX);
+    // Initiate transmission process.
+    nrf_uarte_event_clear(UART_INSTANCE, NRF_UARTE_EVENT_ENDTX);
+    nrf_uarte_tx_buffer_set(UART_INSTANCE, sTransmitBuffer, aBufLength);
+    nrf_uarte_task_trigger(UART_INSTANCE, NRF_UARTE_TASK_STARTTX);
 
 exit:
     return error;
@@ -286,45 +302,45 @@ exit:
 void UARTE0_UART0_IRQHandler(void)
 {
     // Check if any error has been detected.
-    if (nrf_uart_event_check(UART_INSTANCE, NRF_UART_EVENT_ERROR))
+    if (nrf_uarte_int_enable_check(UART_INSTANCE, NRF_UARTE_INT_ERROR_MASK) &&
+        nrf_uarte_event_check(UART_INSTANCE, NRF_UARTE_EVENT_ERROR))
     {
-        nrf_uart_event_clear(UART_INSTANCE, NRF_UART_EVENT_ERROR);
+        nrf_uarte_event_clear(UART_INSTANCE, NRF_UARTE_EVENT_ERROR);
     }
-    else if (nrf_uart_event_check(UART_INSTANCE, NRF_UART_EVENT_RXDRDY))
+    else if (nrf_uarte_int_enable_check(UART_INSTANCE, NRF_UARTE_INT_RXDRDY_MASK) &&
+             nrf_uarte_event_check(UART_INSTANCE, NRF_UARTE_EVENT_RXDRDY))
     {
         // Clear RXDRDY event.
-        nrf_uart_event_clear(UART_INSTANCE, NRF_UART_EVENT_RXDRDY);
+        nrf_uarte_event_clear(UART_INSTANCE, NRF_UARTE_EVENT_RXDRDY);
 
         // Read byte from the UART buffer.
-        uint8_t byte = nrf_uart_rxd_get(UART_INSTANCE);
+        uint8_t byte = nrf_uart_rxd_get((NRF_UART_Type *)UART_INSTANCE);
 
-        if (!isRxBufferFull())
+        assert(!isRxBufferFull());
+
+        sReceiveBuffer[sReceiveHead] = byte;
+        sReceiveHead                 = getNextRxBufferIndex();
+
+        // Check if we are able to process next RX bytes.
+        if (isRxBufferFull())
         {
-            sReceiveBuffer[sReceiveHead] = byte;
-            sReceiveHead                 = (sReceiveHead + 1) % UART_RX_BUFFER_SIZE;
-
-            otSysEventSignalPending();
+            // Disable interrupts for RX.
+            nrf_uarte_int_disable(UART_INSTANCE, NRF_UARTE_INT_RXDRDY_MASK | NRF_UARTE_INT_ERROR_MASK);
         }
+
+        otSysEventSignalPending();
     }
 
-    if (nrf_uart_event_check(UART_INSTANCE, NRF_UART_EVENT_TXDRDY))
+    if (nrf_uarte_event_check(UART_INSTANCE, NRF_UARTE_EVENT_ENDTX))
     {
-        // Clear TXDRDY event.
-        nrf_uart_event_clear(UART_INSTANCE, NRF_UART_EVENT_TXDRDY);
+        // Clear ENDTX event.
+        nrf_uarte_event_clear(UART_INSTANCE, NRF_UARTE_EVENT_ENDTX);
 
-        // Send any more bytes if available or call application about TX done.
-        if (sTransmitLength)
-        {
-            nrf_uart_txd_set(UART_INSTANCE, *sTransmitBuffer++);
-            sTransmitLength--;
-        }
-        else
-        {
-            sTransmitDone = true;
-            nrf_uart_task_trigger(UART_INSTANCE, NRF_UART_TASK_STOPTX);
+        sTransmitDone = true;
 
-            otSysEventSignalPending();
-        }
+        nrf_uarte_task_trigger(UART_INSTANCE, NRF_UARTE_TASK_STOPTX);
+
+        otSysEventSignalPending();
     }
 }
 
