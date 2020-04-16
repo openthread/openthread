@@ -488,7 +488,7 @@ public:
      * @retval FALSE  If obtaining Master key for out-of-band is not enabled.
      *
      */
-    bool IsObtainMasterKeyEnabled(void) const { return mSecurityPolicyFlags & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY; }
+    bool IsObtainMasterKeyEnabled(void) const { return (mSecurityPolicyFlags & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY) != 0; }
 
     /**
      * This method indicates whether or not Native Commissioning using PSKc is allowed.
@@ -499,7 +499,7 @@ public:
      */
     bool IsNativeCommissioningAllowed(void) const
     {
-        return mSecurityPolicyFlags & OT_SECURITY_POLICY_NATIVE_COMMISSIONING;
+        return (mSecurityPolicyFlags & OT_SECURITY_POLICY_NATIVE_COMMISSIONING) != 0;
     }
 
     /**
@@ -509,7 +509,7 @@ public:
      * @retval FALSE  If Thread 1.1 Routers are not enabled.
      *
      */
-    bool IsRouterEnabled(void) const { return mSecurityPolicyFlags & OT_SECURITY_POLICY_ROUTERS; }
+    bool IsRouterEnabled(void) const { return (mSecurityPolicyFlags & OT_SECURITY_POLICY_ROUTERS) != 0; }
 
     /**
      * This method indicates whether or not external Commissioner authentication is allowed using PSKc.
@@ -522,7 +522,7 @@ public:
      */
     bool IsExternalCommissionerAllowed(void) const
     {
-        return mSecurityPolicyFlags & OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER;
+        return (mSecurityPolicyFlags & OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER) != 0;
     }
 
     /**
@@ -532,7 +532,7 @@ public:
      * @retval FALSE  If Thread Beacons are not enabled.
      *
      */
-    bool IsThreadBeaconEnabled(void) const { return mSecurityPolicyFlags & OT_SECURITY_POLICY_BEACONS; }
+    bool IsThreadBeaconEnabled(void) const { return (mSecurityPolicyFlags & OT_SECURITY_POLICY_BEACONS) != 0; }
 
     /**
      * This static method generates IEEE 802.15.4 nonce byte sequence.
