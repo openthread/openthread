@@ -1011,6 +1011,17 @@ exit:
     return error;
 }
 
+otError RadioSpinel::SetMacKey(uint8_t aKeyMode, const uint8_t *aKeyMaterial, uint8_t aKeyLen)
+{
+    otError error;
+
+    SuccessOrExit(error = Set(SPINEL_PROP_MAC_PROMISCUOUS_MODE, SPINEL_DATATYPE_UINT8_S, aKeyMode,
+                              SPINEL_DATATYPE_DATA_WLEN_S, aKeyMaterial, aKeyLen));
+
+exit:
+    return error;
+}
+
 template <typename InterfaceType, typename ProcessContextType>
 otError RadioSpinel<InterfaceType, ProcessContextType>::GetIeeeEui64(uint8_t *aIeeeEui64)
 {

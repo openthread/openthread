@@ -63,9 +63,13 @@ SubMac::SubMac(Instance &aInstance)
     , mCallbacks(aInstance)
     , mPcapCallback(NULL)
     , mPcapCallbackContext(NULL)
+    , mKeyId(0)
     , mTimer(aInstance, &SubMac::HandleTimer, this)
 {
     mExtAddress.Clear();
+    memset(mPrevKey, 0, kMacKeySize);
+    memset(mCurrKey, 0, kMacKeySize);
+    memset(mNextKey, 0, kMacKeySize);
 }
 
 otRadioCaps SubMac::GetCaps(void) const
@@ -629,6 +633,59 @@ void SubMac::SetState(State aState)
         otLogDebgMac("RadioState: %s -> %s", StateToString(mState), StateToString(aState));
         mState = aState;
     }
+}
+
+void SubMac::SetRadioMacKey(uint8_t aKeyIdMode)
+{
+    uint8_t keyMaterial[kMacKeySize * 3];
+    uint8_t keyLength = 0;
+
+    VerifyOrExit(RadioSupportsTransmitSecurity());
+
+    switch (aKeyIdMode)
+    {
+    case Frame::kKeyIdMode0:
+        break;
+
+    case Frame::kKeyIdMode1:
+        // Previous MAC Key
+        memcpy(&keyMaterial[keyLength], mPrevKey, kMacKeySize);
+        keyLength += kMacKeySize;
+
+        // Current MAC Key
+        memcpy(&keyMaterial[keyLength], mCurrKey, kMacKeySize);
+        keyLength += kMacKeySize;
+
+        // Next MAC Key
+        memcpy(&keyMaterial[keyLength], mNextKey, kMacKeySize);
+        keyLength += kMacKeySize;
+
+        break;
+
+    case Frame::kKeyIdMode2:
+        break;
+
+    default:
+        OT_ASSERT(false);
+        break;
+    }
+
+    otPlatRadioSetMacKey(&GetInstance(), aKeyIdMode, keyMaterial, keyLength);
+
+exit:
+    return;
+}
+
+void SubMac::SetMacKey(uint8_t aKeyId, uint8_t *aPrevKey, uint8_t *aCurrKey, uint8_t *aNextKey)
+{
+    OT_ASSERT(aPrevKey != NULL && aCurrKey != NULL && aNextKey != NULL);
+
+    mKeyId = aKeyId;
+    memcpy(mPrevKey, aPrevKey, kMacKeySize);
+    memcpy(mCurrKey, aCurrKey, kMacKeySize);
+    memcpy(mNextKey, aNextKey, kMacKeySize);
+
+    SetRadioMacKey(Frame::kKeyIdMode1);
 }
 
 // LCOV_EXCL_START

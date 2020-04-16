@@ -85,7 +85,7 @@ KeyManager::KeyManager(Instance &aInstance)
 {
     mMasterKey = static_cast<const MasterKey &>(kDefaultMasterKey);
     mPskc.Clear();
-    ComputeKey(mKeySequence, mKey);
+    HandleKeyChange();
 }
 
 void KeyManager::Start(void)
@@ -116,7 +116,7 @@ otError KeyManager::SetMasterKey(const MasterKey &aKey)
         Get<Notifier>().Update(mMasterKey, aKey, OT_CHANGED_MASTER_KEY | OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER));
 
     mKeySequence = 0;
-    ComputeKey(mKeySequence, mKey);
+    HandleKeyChange();
 
     // reset parent frame counters
     parent = &Get<Mle::MleRouter>().GetParent();
@@ -160,6 +160,21 @@ void KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
     hmac.Finish(aKey);
 }
 
+void KeyManager::HandleKeyChange()
+{
+    uint8_t prevKey[Crypto::HmacSha256::kHashSize];
+    uint8_t currKey[Crypto::HmacSha256::kHashSize];
+    uint8_t nextKey[Crypto::HmacSha256::kHashSize];
+
+    ComputeKey(mKeySequence - 1, prevKey);
+    ComputeKey(mKeySequence, currKey);
+    ComputeKey(mKeySequence + 1, nextKey);
+
+    memcpy(mMleKey, currKey, kMleKeySize);
+    Get<Mac::SubMac>().SetMacKey((mKeySequence & 0x7f) + 1, prevKey + kMacKeyOffset, currKey + kMacKeyOffset,
+                                 nextKey + kMacKeyOffset);
+}
+
 void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
 {
     VerifyOrExit(aKeySequence != mKeySequence, Get<Notifier>().SignalIfFirst(OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER));
@@ -177,7 +192,7 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
     }
 
     mKeySequence = aKeySequence;
-    ComputeKey(mKeySequence, mKey);
+    HandleKeyChange();
 
     mMacFrameCounter = 0;
     mMleFrameCounter = 0;
@@ -186,12 +201,6 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
 
 exit:
     return;
-}
-
-const uint8_t *KeyManager::GetTemporaryMacKey(uint32_t aKeySequence)
-{
-    ComputeKey(aKeySequence, mTemporaryKey);
-    return mTemporaryKey + kMacKeyOffset;
 }
 
 const uint8_t *KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)

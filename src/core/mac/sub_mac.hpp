@@ -347,6 +347,49 @@ public:
      */
     int8_t GetNoiseFloor(void);
 
+    /**
+     * This method sets MAC key index and previous, current and next MAC key.
+     *
+     * @param[in] aKeyId    Current MAC key index.
+     * @param[in] aPrevKey  A pointer to the previous MAC key.
+     * @param[in] aCurrKey  A pointer to the current MAC key.
+     * @param[in] aNextKey  A pointer to the next MAC key.
+     *
+     */
+    void SetMacKey(uint8_t aKeyId, uint8_t *aPrevKey, uint8_t *aCurrKey, uint8_t *aNextKey);
+
+    /**
+     * This method returns a pointer to the current MAC key.
+     *
+     * @returns A pointer to the current MAC key.
+     *
+     */
+    const uint8_t *GetCurrentMacKey(void) const { return mCurrKey; }
+
+    /**
+     * This method returns a pointer to the previous MAC key.
+     *
+     * @returns A pointer to the previous MAC key.
+     *
+     */
+    const uint8_t *GetPreviousMacKey(void) const { return mPrevKey; }
+
+    /**
+     * This method returns a pointer to the next MAC key.
+     *
+     * @returns A pointer to the next MAC key.
+     *
+     */
+    const uint8_t *GetNextMacKey(void) const { return mNextKey; }
+
+    /**
+     * This method prepares key materials and set it to radio driver.
+     *
+     * @param[in] aKeyIdMode  Key ID mode to be set to radio driver.
+     *
+     */
+    void SetRadioMacKey(uint8_t aKeyIdMode);
+
 private:
     enum
     {
@@ -355,6 +398,7 @@ private:
         kUnitBackoffPeriod = 20, ///< Number of symbols (IEEE 802.15.4-2006).
         kMinBackoff        = 1,  ///< Minimum backoff (milliseconds).
         kAckTimeout        = 16, ///< Timeout for waiting on an ACK (milliseconds).
+        kMacKeySize        = 16, ///< MAC Key size (bytes)
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
         kEnergyScanRssiSampleInterval = 128, ///< RSSI sample interval during energy scan, 128 usec
@@ -420,6 +464,10 @@ private:
     Callbacks          mCallbacks;
     otLinkPcapCallback mPcapCallback;
     void *             mPcapCallbackContext;
+    uint8_t            mPrevKey[kMacKeySize];
+    uint8_t            mCurrKey[kMacKeySize];
+    uint8_t            mNextKey[kMacKeySize];
+    uint8_t            mKeyId;
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     TimerMicro mTimer;
 #else

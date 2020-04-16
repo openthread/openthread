@@ -434,6 +434,8 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance);
  */
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
 
+void otPlatRadioSetMacKey(otInstance *aInstance, uint8_t aKeyMode, const uint8_t *aKeyMaterial, uint8_t aKeyLen);
+
 /**
  * @}
  *

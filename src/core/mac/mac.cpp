@@ -967,7 +967,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
         break;
 
     case Frame::kKeyIdMode1:
-        aFrame.SetAesKey(keyManager.GetCurrentMacKey());
+        aFrame.SetAesKey(mSubMac.GetCurrentMacKey());
 
         // If the frame is marked as a retransmission, `MeshForwarder` which
         // prepared the frame should set the frame counter and key id to the
@@ -1453,17 +1453,17 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
         if (keyid == (keyManager.GetCurrentKeySequence() & 0x7f))
         {
             keySequence = keyManager.GetCurrentKeySequence();
-            macKey      = keyManager.GetCurrentMacKey();
+            macKey      = mSubMac.GetCurrentMacKey();
         }
         else if (keyid == ((keyManager.GetCurrentKeySequence() - 1) & 0x7f))
         {
             keySequence = keyManager.GetCurrentKeySequence() - 1;
-            macKey      = keyManager.GetTemporaryMacKey(keySequence);
+            macKey      = mSubMac.GetPreviousMacKey();
         }
         else if (keyid == ((keyManager.GetCurrentKeySequence() + 1) & 0x7f))
         {
             keySequence = keyManager.GetCurrentKeySequence() + 1;
-            macKey      = keyManager.GetTemporaryMacKey(keySequence);
+            macKey      = mSubMac.GetNextMacKey();
         }
         else
         {

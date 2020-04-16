@@ -595,7 +595,8 @@ public:
      * The newly received frame is available in `RxFrameBuffer` from `SpinelInterface::GetRxFrameBuffer()`.
      *
      */
-    void HandleReceivedFrame(void);
+    void    HandleReceivedFrame(void);
+    otError SetMacKey(uint8_t aKeyMode, const uint8_t *aKeyMaterial, uint8_t aKeyLen);
 
     /**
      * This method checks whether the spinel interface is radio-only
