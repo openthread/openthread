@@ -4846,7 +4846,6 @@ exit:
 
     return error;
 }
-
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 } // namespace Mle
