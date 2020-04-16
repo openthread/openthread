@@ -488,7 +488,10 @@ public:
      * @retval FALSE  If obtaining Master key for out-of-band is not enabled.
      *
      */
-    bool IsObtainMasterKeyEnabled(void) const { return (mSecurityPolicyFlags & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY) != 0; }
+    bool IsObtainMasterKeyEnabled(void) const
+    {
+        return (mSecurityPolicyFlags & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY) != 0;
+    }
 
     /**
      * This method indicates whether or not Native Commissioning using PSKc is allowed.
