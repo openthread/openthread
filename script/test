@@ -168,6 +168,17 @@ do_clean() {
     rm -rfv "${OT_BUILDDIR}"
 }
 
+do_cert_unit_tests() {
+    local builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}"
+    if [[ ! -d "${builddir}" ]]; then
+        echo "Cannot find build directory!"
+        exit -1
+    fi
+
+    cd "${builddir}"
+    ninja test
+}
+
 do_cert() {
     export top_builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}"
 
@@ -380,6 +391,9 @@ main()
             cert_suite)
                 shift
                 do_cert_suite "$@"
+                ;;
+            cert_unit_tests)
+                do_cert_unit_tests
                 ;;
             help)
                 print_usage
