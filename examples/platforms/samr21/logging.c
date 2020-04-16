@@ -32,19 +32,19 @@
  *
  */
 
-#include <openthread-core-config.h>
+#include "openthread-core-config.h"
+
 #include <utils/code_utils.h>
-#include <openthread/config.h>
 #include <openthread/platform/logging.h>
 #include <openthread/platform/toolchain.h>
+
+#include "board.h"
+#include "spi.h"
 
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED) || \
     (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
 
 #if BOARD == SAMR21_XPLAINED_PRO
-
-#include "board.h"
-#include "spi.h"
 
 #define LOG_PARSE_BUFFER_SIZE 128
 #define LOG_TIMESTAMP_ENABLE 1
