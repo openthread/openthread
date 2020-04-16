@@ -4120,7 +4120,7 @@ exit:
     InformPreviousChannel();
 }
 
-bool MleRouter::ExpectBecomeRouterSoon(void) const
+bool MleRouter::IsExpectedToBecomeRouter(void) const
 {
     return IsRouterEligible() && !IsRouterOrLeader() &&
            (Get<RouterTable>().GetActiveRouterCount() < GetRouterUpgradeThreshold()) && !mAddressSolicitRejected;

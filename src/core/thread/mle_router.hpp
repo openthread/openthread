@@ -326,7 +326,7 @@ public:
      * @retval FALSE  Otherwise.
      *
      */
-    bool ExpectBecomeRouterSoon(void) const;
+    bool IsExpectedToBecomeRouter(void) const;
 
     /**
      * This method removes a link to a neighbor.
