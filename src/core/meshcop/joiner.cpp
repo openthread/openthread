@@ -339,8 +339,7 @@ otError Joiner::Connect(JoinerRouter &aRouter)
     SuccessOrExit(error = Get<Mac::Mac>().SetPanChannel(aRouter.mChannel));
     SuccessOrExit(error = Get<Ip6::Filter>().AddUnsecurePort(kJoinerUdpPort));
 
-    sockaddr.GetAddress().mFields.m16[0] = HostSwap16(0xfe80);
-    sockaddr.GetAddress().SetIid(aRouter.mExtAddr);
+    sockaddr.GetAddress().SetToLinkLocalAddress(aRouter.mExtAddr);
     sockaddr.mPort = aRouter.mJoinerUdpPort;
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().Connect(sockaddr, Joiner::HandleSecureCoapClientConnect, this));

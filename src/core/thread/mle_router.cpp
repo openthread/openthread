@@ -523,9 +523,7 @@ otError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
         mChallengeTimeout = (((2 * kMaxResponseDelay) + kStateUpdatePeriod - 1) / kStateUpdatePeriod);
 
         SuccessOrExit(error = AppendChallenge(*message, mChallenge));
-        destination.mFields.m8[0]  = 0xff;
-        destination.mFields.m8[1]  = 0x02;
-        destination.mFields.m8[15] = 2;
+        destination.SetToLinkLocalAllRoutersMulticast();
     }
     else
     {
@@ -542,8 +540,7 @@ otError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
             SuccessOrExit(error = AppendChallenge(*message, challenge));
         }
 
-        destination.mFields.m16[0] = HostSwap16(0xfe80);
-        destination.SetIid(aNeighbor->GetExtAddress());
+        destination.SetToLinkLocalAddress(aNeighbor->GetExtAddress());
     }
 
     SuccessOrExit(error = SendMessage(*message, destination));
@@ -1964,9 +1961,7 @@ void MleRouter::SendParentResponse(Child *aChild, const Challenge &aChallenge, b
     SuccessOrExit(error = AppendConnectivity(*message));
     SuccessOrExit(error = AppendVersion(*message));
 
-    destination.Clear();
-    destination.mFields.m16[0] = HostSwap16(0xfe80);
-    destination.SetIid(aChild->GetExtAddress());
+    destination.SetToLinkLocalAddress(aChild->GetExtAddress());
 
     if (aRoutersOnlyRequest)
     {
@@ -3038,9 +3033,7 @@ otError MleRouter::SendChildIdResponse(Child &aChild)
     }
 #endif
 
-    destination.Clear();
-    destination.mFields.m16[0] = HostSwap16(0xfe80);
-    destination.SetIid(aChild.GetExtAddress());
+    destination.SetToLinkLocalAddress(aChild.GetExtAddress());
     SuccessOrExit(error = SendMessage(*message, destination));
 
     LogMleMessage("Send Child ID Response", destination, aChild.GetRloc16());
@@ -3100,9 +3093,7 @@ otError MleRouter::SendChildUpdateRequest(Child &aChild)
         SuccessOrExit(error = AppendChallenge(*message, aChild.GetChallenge(), aChild.GetChallengeSize()));
     }
 
-    destination.Clear();
-    destination.mFields.m16[0] = HostSwap16(0xfe80);
-    destination.SetIid(aChild.GetExtAddress());
+    destination.SetToLinkLocalAddress(aChild.GetExtAddress());
     SuccessOrExit(error = SendMessage(*message, destination));
 
     if (aChild.IsRxOnWhenIdle())
@@ -3462,9 +3453,8 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
     {
         child = iter.GetChild();
 
-        if (context.mContextId == kMeshLocalPrefixContextId && aAddress.mFields.m16[4] == HostSwap16(0x0000) &&
-            aAddress.mFields.m16[5] == HostSwap16(0x00ff) && aAddress.mFields.m16[6] == HostSwap16(0xfe00) &&
-            aAddress.GetLocator() == child->GetRloc16())
+        if ((context.mContextId == kMeshLocalPrefixContextId) && aAddress.IsIidLocator() &&
+            (aAddress.GetLocator() == child->GetRloc16()))
         {
             ExitNow(rval = child);
         }
@@ -3477,8 +3467,7 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
 
     VerifyOrExit(context.mContextId == kMeshLocalPrefixContextId, rval = NULL);
 
-    if (aAddress.mFields.m16[4] == HostSwap16(0x0000) && aAddress.mFields.m16[5] == HostSwap16(0x00ff) &&
-        aAddress.mFields.m16[6] == HostSwap16(0xfe00))
+    if (aAddress.IsIidLocator())
     {
         rval = mRouterTable.GetNeighbor(aAddress.GetLocator());
     }

@@ -127,8 +127,7 @@ Mle::Mle(Instance &aInstance)
 
     // link-local 64
     mLinkLocal64.Clear();
-    mLinkLocal64.GetAddress().mFields.m16[0] = HostSwap16(0xfe80);
-    mLinkLocal64.GetAddress().SetIid(Get<Mac::Mac>().GetExtAddress());
+    mLinkLocal64.GetAddress().SetToLinkLocalAddress(Get<Mac::Mac>().GetExtAddress());
     mLinkLocal64.mPrefixLength = 64;
     mLinkLocal64.mPreferred    = true;
     mLinkLocal64.mValid        = true;
@@ -202,15 +201,13 @@ Mle::Mle(Instance &aInstance)
 
     // mesh-local 16
     mMeshLocal16.Clear();
-    mMeshLocal16.GetAddress().mFields.m16[4] = HostSwap16(0x0000);
-    mMeshLocal16.GetAddress().mFields.m16[5] = HostSwap16(0x00ff);
-    mMeshLocal16.GetAddress().mFields.m16[6] = HostSwap16(0xfe00);
-    mMeshLocal16.mPrefixLength               = MeshLocalPrefix::kLength;
-    mMeshLocal16.mPreferred                  = true;
-    mMeshLocal16.mValid                      = true;
-    mMeshLocal16.mScopeOverride              = Ip6::Address::kRealmLocalScope;
-    mMeshLocal16.mScopeOverrideValid         = true;
-    mMeshLocal16.mRloc                       = true;
+    mMeshLocal16.GetAddress().SetIidToLocator(0);
+    mMeshLocal16.mPrefixLength       = MeshLocalPrefix::kLength;
+    mMeshLocal16.mPreferred          = true;
+    mMeshLocal16.mValid              = true;
+    mMeshLocal16.mScopeOverride      = Ip6::Address::kRealmLocalScope;
+    mMeshLocal16.mScopeOverrideValid = true;
+    mMeshLocal16.mRloc               = true;
 
     // Store RLOC address reference in MPL module.
     Get<Ip6::Mpl>().SetMatchingAddress(mMeshLocal16.GetAddress());
@@ -1101,11 +1098,7 @@ otError Mle::GetLeaderAddress(Ip6::Address &aAddress) const
 
     VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = OT_ERROR_DETACHED);
 
-    aAddress.SetPrefix(GetMeshLocalPrefix());
-    aAddress.mFields.m16[4] = HostSwap16(0x0000);
-    aAddress.mFields.m16[5] = HostSwap16(0x00ff);
-    aAddress.mFields.m16[6] = HostSwap16(0xfe00);
-    aAddress.SetLocator(Rloc16FromRouterId(mLeaderData.GetLeaderRouterId()));
+    aAddress.SetToRoutingLocator(GetMeshLocalPrefix(), Rloc16FromRouterId(mLeaderData.GetLeaderRouterId()));
 
 exit:
     return error;
@@ -1129,12 +1122,7 @@ otError Mle::GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = OT_ERROR_DETACHED);
-
-    aAddress.SetPrefix(GetMeshLocalPrefix());
-    aAddress.mFields.m16[4] = HostSwap16(0x0000);
-    aAddress.mFields.m16[5] = HostSwap16(0x00ff);
-    aAddress.mFields.m16[6] = HostSwap16(0xfe00);
-    aAddress.SetLocator(ServiceAlocFromId(aServiceId));
+    aAddress.SetToAnycastLocator(GetMeshLocalPrefix(), ServiceAlocFromId(aServiceId));
 
 exit:
     return error;
@@ -2161,9 +2149,7 @@ otError Mle::SendChildIdRequest(void)
 
     mParentCandidate.SetState(Neighbor::kStateValid);
 
-    destination.Clear();
-    destination.mFields.m16[0] = HostSwap16(0xfe80);
-    destination.SetIid(mParentCandidate.GetExtAddress());
+    destination.SetToLinkLocalAddress(mParentCandidate.GetExtAddress());
     SuccessOrExit(error = SendMessage(*message, destination));
 
     if (mAddressRegistrationMode == kAppendMeshLocalOnly)
@@ -2307,9 +2293,7 @@ void Mle::HandleMessageTransmissionTimer(void)
 
             VerifyOrExit(mDataRequestAttempts < kMaxChildKeepAliveAttempts, BecomeDetached());
 
-            destination.Clear();
-            destination.mFields.m16[0] = HostSwap16(0xfe80);
-            destination.SetIid(mParent.GetExtAddress());
+            destination.SetToLinkLocalAddress(mParent.GetExtAddress());
 
             if (SendDataRequest(destination, tlvs, sizeof(tlvs), 0) == OT_ERROR_NONE)
             {
@@ -2397,9 +2381,7 @@ otError Mle::SendChildUpdateRequest(void)
         break;
     }
 
-    destination.Clear();
-    destination.mFields.m16[0] = HostSwap16(0xfe80);
-    destination.SetIid(mParent.GetExtAddress());
+    destination.SetToLinkLocalAddress(mParent.GetExtAddress());
     SuccessOrExit(error = SendMessage(*message, destination));
 
     LogMleMessage("Send Child Update Request to parent", destination);
@@ -2476,9 +2458,7 @@ otError Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, con
         }
     }
 
-    destination.Clear();
-    destination.mFields.m16[0] = HostSwap16(0xfe80);
-    destination.SetIid(mParent.GetExtAddress());
+    destination.SetToLinkLocalAddress(mParent.GetExtAddress());
     SuccessOrExit(error = SendMessage(*message, destination));
 
     LogMleMessage("Send Child Update Response to parent", destination);
@@ -4082,20 +4062,17 @@ uint16_t Mle::GetNextHop(uint16_t aDestination) const
 
 bool Mle::IsRoutingLocator(const Ip6::Address &aAddress) const
 {
-    return memcmp(&mMeshLocal16, &aAddress, kRlocPrefixLength) == 0 &&
-           aAddress.mFields.m8[14] < Ip6::Address::kAloc16Mask &&
-           (aAddress.mFields.m8[14] & Ip6::Address::kRloc16ReservedBitMask) == 0;
+    return IsMeshLocalAddress(aAddress) && aAddress.IsIidRoutingLocator();
 }
 
 bool Mle::IsAnycastLocator(const Ip6::Address &aAddress) const
 {
-    return memcmp(&mMeshLocal16, &aAddress, kRlocPrefixLength) == 0 &&
-           aAddress.mFields.m8[14] == Ip6::Address::kAloc16Mask;
+    return IsMeshLocalAddress(aAddress) && aAddress.IsIidAnycastLocator();
 }
 
 bool Mle::IsMeshLocalAddress(const Ip6::Address &aAddress) const
 {
-    return aAddress.PrefixMatch(GetMeshLocal16()) >= MeshLocalPrefix::kLength;
+    return (memcmp(&GetMeshLocalPrefix(), &aAddress, MeshLocalPrefix::kSize) == 0);
 }
 
 otError Mle::CheckReachability(uint16_t aMeshDest, Ip6::Header &aIp6Header)
