@@ -1636,8 +1636,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
 
     if (aFlags & OT_CHANGED_SECURITY_POLICY)
     {
-        Get<Ip6::Filter>().AllowNativeCommissioner(
-            (Get<KeyManager>().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_NATIVE_COMMISSIONING) != 0);
+        Get<Ip6::Filter>().AllowNativeCommissioner(Get<KeyManager>().IsNativeCommissioningAllowed());
     }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE

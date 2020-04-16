@@ -889,7 +889,7 @@ void Mac::PrepareBeacon(TxFrame &aFrame)
 
     beaconPayload = reinterpret_cast<BeaconPayload *>(beacon->GetPayload());
 
-    if (Get<KeyManager>().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_BEACONS)
+    if (Get<KeyManager>().IsThreadBeaconEnabled())
     {
         beaconPayload->Init();
 

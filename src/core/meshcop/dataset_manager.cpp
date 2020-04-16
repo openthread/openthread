@@ -358,8 +358,7 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
 
         while (cur < end)
         {
-            if (cur->GetType() != Tlv::kNetworkMasterKey ||
-                (Get<KeyManager>().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY))
+            if (cur->GetType() != Tlv::kNetworkMasterKey || Get<KeyManager>().IsObtainMasterKeyEnabled())
             {
                 SuccessOrExit(error = cur->AppendTo(*message));
             }
@@ -373,8 +372,7 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
         {
             const Tlv *tlv;
 
-            if (aTlvs[index] == Tlv::kNetworkMasterKey &&
-                !(Get<KeyManager>().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY))
+            if (aTlvs[index] == Tlv::kNetworkMasterKey && !Get<KeyManager>().IsObtainMasterKeyEnabled())
             {
                 continue;
             }
