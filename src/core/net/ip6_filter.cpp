@@ -124,6 +124,8 @@ otError Filter::AddUnsecurePort(uint16_t aPort)
 {
     otError error = OT_ERROR_NONE;
 
+    VerifyOrExit(aPort != 0, error = OT_ERROR_INVALID_ARGS);
+
     for (int i = 0; i < kMaxUnsecurePorts; i++)
     {
         if (mUnsecurePorts[i] == aPort)
@@ -151,6 +153,8 @@ exit:
 otError Filter::RemoveUnsecurePort(uint16_t aPort)
 {
     otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aPort != 0, error = OT_ERROR_INVALID_ARGS);
 
     for (int i = 0; i < kMaxUnsecurePorts; i++)
     {
