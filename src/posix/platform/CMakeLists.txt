@@ -68,6 +68,13 @@ add_library(openthread-posix
     virtual_time.cpp
 )
 
+set_target_properties(
+    openthread-posix
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 11
+)
+
 target_link_libraries(openthread-posix PUBLIC
     util
     openthread-platform

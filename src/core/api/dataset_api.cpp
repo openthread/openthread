@@ -38,6 +38,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "meshcop/dataset_manager.hpp"
+#include "meshcop/meshcop.hpp"
 
 using namespace ot;
 
@@ -133,3 +134,14 @@ otError otDatasetSendMgmtPendingSet(otInstance *                aInstance,
 
     return instance.Get<MeshCoP::PendingDataset>().SendSetRequest(*aDataset, aTlvs, aLength);
 }
+
+#if OPENTHREAD_FTD
+otError otDatasetGeneratePskc(const char *           aPassPhrase,
+                              const otNetworkName *  aNetworkName,
+                              const otExtendedPanId *aExtPanId,
+                              otPskc *               aPskc)
+{
+    return MeshCoP::GeneratePskc(aPassPhrase, *static_cast<const Mac::NetworkName *>(aNetworkName),
+                                 *static_cast<const Mac::ExtendedPanId *>(aExtPanId), *static_cast<Pskc *>(aPskc));
+}
+#endif // OPENTHREAD_FTD

@@ -93,7 +93,7 @@ void AnnounceSenderBase::HandleTimer(void)
         if (mCount != 0)
         {
             mCount--;
-            VerifyOrExit(mCount != 0);
+            VerifyOrExit(mCount != 0, OT_NOOP);
         }
 
         mChannel = Mac::ChannelMask::kChannelIteratorFirst;
@@ -132,12 +132,12 @@ void AnnounceSender::CheckState(void)
 
     switch (mle.GetRole())
     {
-    case OT_DEVICE_ROLE_ROUTER:
-    case OT_DEVICE_ROLE_LEADER:
+    case Mle::kRoleRouter:
+    case Mle::kRoleLeader:
         interval = kRouterTxInterval;
         break;
 
-    case OT_DEVICE_ROLE_CHILD:
+    case Mle::kRoleChild:
 #if OPENTHREAD_FTD
         if (mle.IsRouterEligible() && mle.IsRxOnWhenIdle())
         {
@@ -148,8 +148,8 @@ void AnnounceSender::CheckState(void)
 
         // fall through
 
-    case OT_DEVICE_ROLE_DISABLED:
-    case OT_DEVICE_ROLE_DETACHED:
+    case Mle::kRoleDisabled:
+    case Mle::kRoleDetached:
         Stop();
         ExitNow();
     }
@@ -163,7 +163,7 @@ void AnnounceSender::CheckState(void)
         period = kMinTxPeriod;
     }
 
-    VerifyOrExit(!IsRunning() || (period != GetPeriod()) || (GetChannelMask() != channelMask));
+    VerifyOrExit(!IsRunning() || (period != GetPeriod()) || (GetChannelMask() != channelMask), OT_NOOP);
 
     SendAnnounce(channelMask, 0, period, kMaxJitter);
 

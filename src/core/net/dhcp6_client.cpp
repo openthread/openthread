@@ -189,7 +189,8 @@ bool Dhcp6Client::ProcessNextIdentityAssociation()
     bool rval = false;
 
     // not interrupt in-progress solicit
-    VerifyOrExit(mIdentityAssociationCurrent == NULL || mIdentityAssociationCurrent->mStatus != kIaStatusSoliciting);
+    VerifyOrExit(mIdentityAssociationCurrent == NULL || mIdentityAssociationCurrent->mStatus != kIaStatusSoliciting,
+                 OT_NOOP);
 
     mTrickleTimer.Stop();
 
@@ -277,8 +278,7 @@ otError Dhcp6Client::Solicit(uint16_t aRloc16)
     SuccessOrExit(error = AppendRapidCommit(*message));
 
 #if OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT
-    messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xff03);
-    messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(0x0002);
+    messageInfo.GetPeerAddr().SetToRealmLocalAllRoutersMulticast();
 #else
     messageInfo.GetPeerAddr().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
     messageInfo.GetPeerAddr().mFields.m16[4] = HostSwap16(0x0000);
@@ -419,7 +419,7 @@ void Dhcp6Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aM
 
     Dhcp6Header header;
 
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(header), &header) == sizeof(header));
+    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(header), &header) == sizeof(header), OT_NOOP);
     aMessage.MoveOffset(sizeof(header));
 
     if ((header.GetType() == kTypeReply) && (!memcmp(header.GetTransactionId(), mTransactionId, kTransactionIdSize)))
@@ -443,18 +443,18 @@ void Dhcp6Client::ProcessReply(Message &aMessage)
     }
 
     // Server Identifier
-    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionServerIdentifier)) > 0);
+    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionServerIdentifier)) > 0, OT_NOOP);
     SuccessOrExit(ProcessServerIdentifier(aMessage, optionOffset));
 
     // Client Identifier
-    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionClientIdentifier)) > 0);
+    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionClientIdentifier)) > 0, OT_NOOP);
     SuccessOrExit(ProcessClientIdentifier(aMessage, optionOffset));
 
     // Rapid Commit
-    VerifyOrExit(FindOption(aMessage, offset, length, kOptionRapidCommit) > 0);
+    VerifyOrExit(FindOption(aMessage, offset, length, kOptionRapidCommit) > 0, OT_NOOP);
 
     // IA_NA
-    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionIaNa)) > 0);
+    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionIaNa)) > 0, OT_NOOP);
     SuccessOrExit(ProcessIaNa(aMessage, optionOffset));
 
     HandleTrickleTimer();
@@ -471,7 +471,7 @@ uint16_t Dhcp6Client::FindOption(Message &aMessage, uint16_t aOffset, uint16_t a
     while (aOffset <= end)
     {
         Dhcp6Option option;
-        VerifyOrExit(aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option));
+        VerifyOrExit(aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option), OT_NOOP);
 
         if (option.GetCode() == (aCode))
         {
@@ -490,7 +490,7 @@ otError Dhcp6Client::ProcessServerIdentifier(Message &aMessage, uint16_t aOffset
     otError          error = OT_ERROR_NONE;
     ServerIdentifier option;
 
-    VerifyOrExit((aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option)));
+    VerifyOrExit((aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option)), OT_NOOP);
     VerifyOrExit(((option.GetDuidType() == kDuidLLT) && (option.GetDuidHardwareType() == kHardwareTypeEthernet)) ||
                      ((option.GetLength() == (sizeof(option) - sizeof(Dhcp6Option))) &&
                       (option.GetDuidType() == kDuidLL) && (option.GetDuidHardwareType() == kHardwareTypeEui64)),

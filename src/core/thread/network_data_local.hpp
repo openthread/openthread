@@ -73,18 +73,14 @@ public:
     /**
      * This method adds a Border Router entry to the Thread Network Data.
      *
-     * @param[in]  aPrefix        A pointer to the prefix.
-     * @param[in]  aPrefixLength  The prefix length in bits.
-     * @param[in]  aPrf           The preference value.
-     * @param[in]  aFlags         The Border Router Flags value.
-     * @param[in]  aStable        The Stable value.
+     * @param[in]  aConfig  A reference to the on mesh perfix configuration.
      *
      * @retval OT_ERROR_NONE         Successfully added the Border Router entry.
      * @retval OT_ERROR_NO_BUFS      Insufficient space to add the Border Router entry.
      * @retval OT_ERROR_INVALID_ARGS The prefix is mesh local prefix.
      *
      */
-    otError AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf, uint8_t aFlags, bool aStable);
+    otError AddOnMeshPrefix(const OnMeshPrefixConfig &aConfig);
 
     /**
      * This method removes a Border Router entry from the Thread Network Data.
@@ -164,11 +160,16 @@ public:
     /**
      * This method sends a Server Data Notification message to the Leader.
      *
-     * @retval OT_ERROR_NONE     Successfully enqueued the notification message.
-     * @retval OT_ERROR_NO_BUFS  Insufficient message buffers to generate the notification message.
+     * @param[in]  aHandler  A function pointer that is called when the transaction ends.
+     * @param[in]  aContext  A pointer to arbitrary context information.
+     *
+     * @retval OT_ERROR_NONE           Successfully enqueued the notification message.
+     * @retval OT_ERROR_NO_BUFS        Insufficient message buffers to generate the notification message.
+     * @retval OT_ERROR_INVALID_STATE  Device is a REED and is in the process of becoming a Router.
+     * @retval OT_ERROR_NOT_FOUND      Server Data is already consistent with network data.
      *
      */
-    otError SendServerDataNotification(void);
+    otError UpdateInconsistentServerData(Coap::ResponseHandler aHandler, void *aContext);
 
 private:
     void UpdateRloc(void);
@@ -177,17 +178,17 @@ private:
                       uint8_t              aPrefixLength,
                       NetworkDataTlv::Type aSubTlvType,
                       int8_t               aPrf,
-                      uint8_t              aFlags,
+                      uint16_t             aFlags,
                       bool                 aStable);
     otError RemovePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, NetworkDataTlv::Type aSubTlvType);
     void    UpdateRloc(PrefixTlv &aPrefix);
-    bool    IsOnMeshPrefixConsistent(void);
-    bool    IsExternalRouteConsistent(void);
+    bool    IsOnMeshPrefixConsistent(void) const;
+    bool    IsExternalRouteConsistent(void) const;
 #endif
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     void UpdateRloc(ServiceTlv &aService);
-    bool IsServiceConsistent(void);
+    bool IsServiceConsistent(void) const;
 #endif
 
     uint16_t mOldRloc;

@@ -156,7 +156,7 @@ public:
     bool IsLinkLocalMulticast(void) const;
 
     /**
-     * This method indicates whether or not the IPv6 address is a link-local all nodes multicast address.
+     * This method indicates whether or not the IPv6 address is a link-local all nodes multicast address (ff02::01).
      *
      * @retval TRUE   If the IPv6 address is a link-local all nodes multicast address.
      * @retval FALSE  If the IPv6 address is not a link-local all nodes multicast address.
@@ -165,13 +165,25 @@ public:
     bool IsLinkLocalAllNodesMulticast(void) const;
 
     /**
-     * This method indicates whether or not the IPv6 address is a link-local all routers multicast address.
+     * This method sets the IPv6 address to the link-local all nodes multicast address (ff02::01).
+     *
+     */
+    void SetToLinkLocalAllNodesMulticast(void);
+
+    /**
+     * This method indicates whether or not the IPv6 address is a link-local all routers multicast address (ff02::02).
      *
      * @retval TRUE   If the IPv6 address is a link-local all routers multicast address.
      * @retval FALSE  If the IPv6 address is not a link-local all routers multicast address.
      *
      */
     bool IsLinkLocalAllRoutersMulticast(void) const;
+
+    /**
+     * This method sets the IPv6 address to the link-local all routers multicast address (ff02::02).
+     *
+     */
+    void SetToLinkLocalAllRoutersMulticast(void);
 
     /**
      * This method indicates whether or not the IPv6 address is a realm-local multicast address.
@@ -183,7 +195,7 @@ public:
     bool IsRealmLocalMulticast(void) const;
 
     /**
-     * This method indicates whether or not the IPv6 address is a realm-local all nodes multicast address.
+     * This method indicates whether or not the IPv6 address is a realm-local all nodes multicast address (ff03::01).
      *
      * @retval TRUE   If the IPv6 address is a realm-local all nodes multicast address.
      * @retval FALSE  If the IPv6 address is not a realm-local all nodes multicast address.
@@ -192,7 +204,13 @@ public:
     bool IsRealmLocalAllNodesMulticast(void) const;
 
     /**
-     * This method indicates whether or not the IPv6 address is a realm-local all routers multicast address.
+     * This method sets the IPv6 address to the realm-local all nodes multicast address (ff03::01)
+     *
+     */
+    void SetToRealmLocalAllNodesMulticast(void);
+
+    /**
+     * This method indicates whether or not the IPv6 address is a realm-local all routers multicast address (ff03::02).
      *
      * @retval TRUE   If the IPv6 address is a realm-local all routers multicast address.
      * @retval FALSE  If the IPv6 address is not a realm-local all routers multicast address.
@@ -201,13 +219,25 @@ public:
     bool IsRealmLocalAllRoutersMulticast(void) const;
 
     /**
-     * This method indicates whether or not the IPv6 address is a realm-local all MPL forwarders address.
+     * This method sets the IPv6 address to the realm-local all routers multicast address (ff03::02).
+     *
+     */
+    void SetToRealmLocalAllRoutersMulticast(void);
+
+    /**
+     * This method indicates whether or not the IPv6 address is a realm-local all MPL forwarders address (ff03::fc).
      *
      * @retval TRUE   If the IPv6 address is a realm-local all MPL forwarders address.
      * @retval FALSE  If the IPv6 address is not a realm-local all MPL forwarders address.
      *
      */
     bool IsRealmLocalAllMplForwarders(void) const;
+
+    /**
+     * This method sets the the IPv6 address to the realm-local all MPL forwarders address (ff03::fc).
+     *
+     */
+    void SetToRealmLocalAllMplForwarders(void);
 
     /**
      * This method indicates whether or not the IPv6 address is multicast larger than realm local.
@@ -325,12 +355,23 @@ public:
     /**
      * This method sets the prefix content of Mesh Local Prefix-Based Multicast Address.
      *
-     * @param[in]  aMeshLocalPrefix   A reference to the  Mesh Local Prefix.
+     * @param[in]  aMeshLocalPrefix   A reference to the Mesh Local Prefix.
      *
      */
     void SetMulticastNetworkPrefix(const Mle::MeshLocalPrefix &aMeshLocalPrefix)
     {
         SetMulticastNetworkPrefix(aMeshLocalPrefix.m8, Mle::MeshLocalPrefix::kLength);
+    }
+
+    /**
+     * This method sets the prefix content of Prefix-Based Multicast Address.
+     *
+     * @param[in]  aPrefix A reference to an IPv6 Prefix.
+     *
+     */
+    void SetMulticastNetworkPrefix(const otIp6Prefix &aPrefix)
+    {
+        SetMulticastNetworkPrefix(aPrefix.mPrefix.mFields.m8, aPrefix.mLength);
     }
 
     /**
@@ -454,6 +495,12 @@ public:
 
 private:
     void SetPrefix(uint8_t aOffset, const uint8_t *aPrefix, uint8_t aPrefixLength);
+
+    static const Address &GetLinkLocalAllNodesMulticast(void);
+    static const Address &GetLinkLocalAllRoutersMulticast(void);
+    static const Address &GetRealmLocalAllNodesMulticast(void);
+    static const Address &GetRealmLocalAllRoutersMulticast(void);
+    static const Address &GetRealmLocalAllMplForwarders(void);
 
     enum
     {

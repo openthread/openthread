@@ -76,6 +76,9 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     , mNetworkDataLocal(aInstance)
 #endif
     , mNetworkDataLeader(aInstance)
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+    , mNetworkDataNotifier(aInstance)
+#endif
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     , mNetworkDiagnostic(aInstance)
 #endif
@@ -120,7 +123,7 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 
 void ThreadNetif::Up(void)
 {
-    VerifyOrExit(!mIsUp);
+    VerifyOrExit(!mIsUp, OT_NOOP);
 
     // Enable the MAC just in case it was disabled while the Interface was down.
     Get<Mac::Mac>().SetEnabled(true);
@@ -148,7 +151,7 @@ exit:
 
 void ThreadNetif::Down(void)
 {
-    VerifyOrExit(mIsUp);
+    VerifyOrExit(mIsUp, OT_NOOP);
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     Get<Dns::Client>().Stop();

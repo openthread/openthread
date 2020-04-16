@@ -41,7 +41,9 @@
 #include <openthread/backbone_router_ftd.h>
 
 #include "backbone_router/leader.hpp"
+#include "common/locator.hpp"
 #include "net/netif.hpp"
+#include "thread/network_data.hpp"
 
 namespace ot {
 
@@ -162,9 +164,49 @@ public:
      */
     void UpdateBackboneRouterPrimary(Leader::State aState, const BackboneRouterConfig &aConfig);
 
+    /**
+     * This method gets the Domain Prefix configuration.
+     *
+     * @param[out]  aConfig  A reference to the Domain Prefix configuration.
+     *
+     * @retval OT_ERROR_NONE       Successfully got the Domain Prefix configuration.
+     * @retval OT_ERROR_NOT_FOUND  No Domain Prefix was configured.
+     *
+     */
+    otError GetDomainPrefix(NetworkData::OnMeshPrefixConfig &aConfig);
+
+    /**
+     * This method removes the local Domain Prefix configuration.
+     *
+     * @param[in]  aPrefix A reference to the IPv6 Domain Prefix.
+     *
+     * @retval OT_ERROR_NONE          Successfully removed the Domain Prefix.
+     * @retval OT_ERROR_INVALID_ARGS  @p aPrefix is invalid.
+     * @retval OT_ERROR_NOT_FOUND     No Domain Prefix was configured or @p aPrefix doesn't match.
+     *
+     */
+    otError RemoveDomainPrefix(const otIp6Prefix &aPrefix);
+
+    /**
+     * This method sets the local Domain Prefix configuration.
+     *
+     * @param[in]  aConfig A reference to the Domain Prefix configuration.
+     *
+     */
+    void SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig);
+
 private:
     void    SetState(BackboneRouterState aState);
     otError RemoveService(void);
+    void    AddDomainPrefixToNetworkData(void);
+    void    RemoveDomainPrefixFromNetworkData(void);
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_BBR == 1)
+    void LogBackboneRouterService(const char *aAction, otError aError);
+    void LogDomainPrefix(const char *aAction, otError aError);
+#else
+    void LogBackboneRouterService(const char *, otError) {}
+    void LogDomainPrefix(const char *, otError) {}
+#endif
 
     BackboneRouterState mState;
     uint32_t            mMlrTimeout;
@@ -176,6 +218,8 @@ private:
     // Used to check whether or not in restore stage after reset or whether to remove
     // Backbone Router service for Secondary Backbone Router if it was added by force.
     bool mIsServiceAdded;
+
+    NetworkData::OnMeshPrefixConfig mDomainPrefixConfig;
 };
 
 } // namespace BackboneRouter

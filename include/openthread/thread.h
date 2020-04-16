@@ -475,6 +475,37 @@ const char *otThreadGetNetworkName(otInstance *aInstance);
 otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName);
 
 /**
+ * Get the Thread Domain Name.
+ *
+ * This function is only availble since Thread 1.2.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to the Thread Domain Name.
+ *
+ * @sa otThreadSetDomainName
+ *
+ */
+const char *otThreadGetDomainName(otInstance *aInstance);
+
+/**
+ * Set the Thread Domain Name.
+ *
+ * This function is only availble since Thread 1.2.
+ * This function succeeds only when Thread protocols are disabled.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aDomainName   A pointer to the Thread Domain Name.
+ *
+ * @retval OT_ERROR_NONE           Successfully set the Thread Domain Name.
+ * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
+ *
+ * @sa otThreadGetDomainName
+ *
+ */
+otError otThreadSetDomainName(otInstance *aInstance, const char *aDomainName);
+
+/**
  * Get the thrKeySequenceCounter.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.

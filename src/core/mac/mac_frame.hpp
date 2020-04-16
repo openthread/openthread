@@ -1312,18 +1312,18 @@ public:
     /**
      * This method gets the Network Name field.
      *
-     * @returns The Network Name field as `NetworkName::Data`.
+     * @returns The Network Name field as `NameData`.
      *
      */
-    NetworkName::Data GetNetworkName(void) const { return NetworkName::Data(mNetworkName, sizeof(mNetworkName)); }
+    NameData GetNetworkName(void) const { return NameData(mNetworkName, sizeof(mNetworkName)); }
 
     /**
      * This method sets the Network Name field.
      *
-     * @param[in]  aNameData  The Network Name (as a `NetworkName::Data`).
+     * @param[in]  aNameData  The Network Name (as a `NameData`).
      *
      */
-    void SetNetworkName(const NetworkName::Data &aNameData) { aNameData.CopyTo(mNetworkName, sizeof(mNetworkName)); }
+    void SetNetworkName(const NameData &aNameData) { aNameData.CopyTo(mNetworkName, sizeof(mNetworkName)); }
 
     /**
      * This method returns the Extended PAN ID field.

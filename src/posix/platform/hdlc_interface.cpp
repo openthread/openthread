@@ -174,7 +174,7 @@ HdlcInterface::~HdlcInterface(void)
 
 void HdlcInterface::Deinit(void)
 {
-    VerifyOrExit(mSockFd != -1);
+    VerifyOrExit(mSockFd != -1, OT_NOOP);
 
     VerifyOrExit(0 == close(mSockFd), perror("close RCP"));
     VerifyOrExit(-1 != wait(NULL) || errno == ECHILD, perror("wait RCP"));
@@ -422,7 +422,7 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
         char parity = 'N';
         char flow   = 'N';
 
-        VerifyOrExit((rval = tcgetattr(fd, &tios)) == 0);
+        VerifyOrExit((rval = tcgetattr(fd, &tios)) == 0, OT_NOOP);
 
         cfmakeraw(&tios);
 
@@ -565,7 +565,7 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
 
         VerifyOrExit((rval = cfsetspeed(&tios, static_cast<speed_t>(speed))) == 0, perror("cfsetspeed"));
         VerifyOrExit((rval = tcsetattr(fd, TCSANOW, &tios)) == 0, perror("tcsetattr"));
-        VerifyOrExit((rval = tcflush(fd, TCIOFLUSH)) == 0);
+        VerifyOrExit((rval = tcflush(fd, TCIOFLUSH)) == 0, OT_NOOP);
     }
 
 exit:

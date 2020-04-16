@@ -33,7 +33,7 @@ set_target_properties(
     openthread-cli-ftd openthread-cli-mtd
     PROPERTIES
         C_STANDARD 99
-        CXX_STANDARD 98
+        CXX_STANDARD 11
 )
 
 target_compile_definitions(openthread-cli-ftd PRIVATE
@@ -82,9 +82,13 @@ target_sources(openthread-cli-mtd PRIVATE ${COMMON_SOURCES})
 target_link_libraries(openthread-cli-ftd
     PUBLIC
         openthread-ftd
+    PRIVATE
+        mbedtls
 )
 
 target_link_libraries(openthread-cli-mtd
     PUBLIC
         openthread-mtd
+    PRIVATE
+        mbedtls
 )

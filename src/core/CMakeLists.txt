@@ -34,7 +34,7 @@ set_target_properties(
     openthread-ftd openthread-mtd openthread-radio
     PROPERTIES
         C_STANDARD 99
-        CXX_STANDARD 98
+        CXX_STANDARD 11
 )
 
 target_compile_definitions(openthread-ftd PRIVATE
@@ -191,6 +191,7 @@ set(COMMON_SOURCES
     thread/network_data_leader.cpp
     thread/network_data_leader_ftd.cpp
     thread/network_data_local.cpp
+    thread/network_data_notifier.cpp
     thread/network_diagnostic.cpp
     thread/panid_query_server.cpp
     thread/router_table.cpp
@@ -242,14 +243,12 @@ target_sources(openthread-radio PRIVATE
     utils/parse_cmdline.cpp
 )
 
-if(OT_BUILTIN_MBEDTLS)
-    target_link_libraries(openthread-ftd
-        PUBLIC
-            mbedcrypto
-    )
+target_link_libraries(openthread-ftd
+    PRIVATE
+        mbedtls
+)
 
-    target_link_libraries(openthread-mtd
-        PUBLIC
-            mbedcrypto
-    )
-endif()
+target_link_libraries(openthread-mtd
+    PRIVATE
+        mbedtls
+)

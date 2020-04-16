@@ -197,7 +197,11 @@ public:
      * @param[in] aLogLevel  A log level.
      *
      */
-    void SetLogLevel(otLogLevel aLogLevel) { mLogLevel = aLogLevel; }
+    void SetLogLevel(otLogLevel aLogLevel)
+    {
+        OT_ASSERT(aLogLevel <= OT_LOG_LEVEL_DEBG && aLogLevel >= OT_LOG_LEVEL_NONE);
+        mLogLevel = aLogLevel;
+    }
 #endif
 
     /**
@@ -550,6 +554,13 @@ template <> inline NetworkData::Leader &Instance::Get(void)
 {
     return mThreadNetif.mNetworkDataLeader;
 }
+
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+template <> inline NetworkData::Notifier &Instance::Get(void)
+{
+    return mThreadNetif.mNetworkDataNotifier;
+}
+#endif
 
 template <> inline Ip6::Udp &Instance::Get(void)
 {

@@ -50,9 +50,6 @@ otError otCommissionerStart(otInstance *                 aInstance,
 
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    SuccessOrExit(error = instance.Get<MeshCoP::BorderAgent>().Stop());
-#endif
     SuccessOrExit(error =
                       instance.Get<MeshCoP::Commissioner>().Start(aStateCallback, aJoinerCallback, aCallbackContext));
 exit:
@@ -65,9 +62,6 @@ otError otCommissionerStop(otInstance *aInstance)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     SuccessOrExit(error = instance.Get<MeshCoP::Commissioner>().Stop(/* aResign */ true));
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    SuccessOrExit(error = instance.Get<MeshCoP::BorderAgent>().Start());
-#endif
 
 exit:
     return error;
@@ -181,12 +175,4 @@ otCommissionerState otCommissionerGetState(otInstance *aInstance)
     return instance.Get<MeshCoP::Commissioner>().GetState();
 }
 
-otError otCommissionerGeneratePskc(const char *           aPassPhrase,
-                                   const char *           aNetworkName,
-                                   const otExtendedPanId *aExtPanId,
-                                   otPskc *               aPskc)
-{
-    return MeshCoP::Commissioner::GeneratePskc(
-        aPassPhrase, aNetworkName, *static_cast<const Mac::ExtendedPanId *>(aExtPanId), *static_cast<Pskc *>(aPskc));
-}
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE

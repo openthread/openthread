@@ -108,10 +108,10 @@ public:
     void IncrementVersion(void);
 
     /**
-     * This method increments the Thread Network Data stable version.
+     * This method increments both the Thread Network Data version and stable version.
      *
      */
-    void IncrementStableVersion(void);
+    void IncrementVersionAndStableVersion(void);
 
     /**
      * This method returns CONTEXT_ID_RESUSE_DELAY value.
@@ -119,7 +119,7 @@ public:
      * @returns The CONTEXT_ID_REUSE_DELAY value.
      *
      */
-    uint32_t GetContextIdReuseDelay(void) const;
+    uint32_t GetContextIdReuseDelay(void) const { return mContextIdReuseDelay; }
 
     /**
      * This method sets CONTEXT_ID_RESUSE_DELAY value.
@@ -129,7 +129,7 @@ public:
      * @param[in]  aDelay  The CONTEXT_ID_REUSE_DELAY value.
      *
      */
-    void SetContextIdReuseDelay(uint32_t aDelay);
+    void SetContextIdReuseDelay(uint32_t aDelay) { mContextIdReuseDelay = aDelay; }
 
     /**
      * This method removes Network Data entries matching with a given RLOC16.
@@ -139,17 +139,6 @@ public:
      *
      */
     void RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode);
-
-    /**
-     * This method sends a Server Data Notification message to the Leader indicating an invalid RLOC16.
-     *
-     * @param[in]  aRloc16  The invalid RLOC16 to notify.
-     *
-     * @retval OT_ERROR_NONE     Successfully enqueued the notification message.
-     * @retval OT_ERROR_NO_BUFS  Insufficient message buffers to generate the notification message.
-     *
-     */
-    otError SendServerDataNotification(uint16_t aRloc16);
 
     /**
      * This method synchronizes internal 6LoWPAN Context ID Set with recently obtained Thread Network Data.
@@ -166,57 +155,121 @@ public:
      * @return Pointer to the Service TLV for given Service ID, or NULL if not present.
      *
      */
-    ServiceTlv *FindServiceById(uint8_t aServiceId);
+    const ServiceTlv *FindServiceById(uint8_t aServiceId) const;
 
     /**
      * This method sends SVR_DATA.ntf message for any stale child entries that exist in the network data.
      *
+     * @param[in]  aHandler  A function pointer that is called when the transaction ends.
+     * @param[in]  aContext  A pointer to arbitrary context information.
+     *
+     * @retval OT_ERROR_NONE       A stale child entry was found and successfully enqueued a SVR_DATA.ntf message.
+     * @retval OT_ERROR_NO_BUFS    A stale child entry was found, but insufficient message buffers were available.
+     * @retval OT_ERROR_NOT_FOUND  No stale child entries were found.
+     *
      */
-    void RemoveStaleChildEntries(void);
+    otError RemoveStaleChildEntries(Coap::ResponseHandler aHandler, void *aContext);
 
 private:
+    class ChangedFlags
+    {
+    public:
+        ChangedFlags(void)
+            : mChanged(false)
+            , mStableChanged(false)
+        {
+        }
+
+        void Update(const NetworkDataTlv &aTlv)
+        {
+            mChanged       = true;
+            mStableChanged = (mStableChanged || aTlv.IsStable());
+        }
+
+        bool DidChange(void) const { return mChanged; }
+        bool DidStableChange(void) const { return mStableChanged; }
+
+    private:
+        bool mChanged;       // Any (stable or not) network data change (add/remove).
+        bool mStableChanged; // Stable network data change (add/remove).
+    };
+
+    enum UpdateStatus
+    {
+        kTlvRemoved, // TLV contained no sub TLVs and therefore is removed.
+        kTlvUpdated, // TLV stable flag is updated based on its sub TLVs.
+    };
+
     static void HandleServerData(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    otError RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLength);
+    otError RegisterNetworkData(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsLength);
 
-    otError AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute);
-    otError AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter);
-    otError AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aOldTlvs, uint8_t aOldTlvsLength);
-    otError AddPrefix(PrefixTlv &aPrefix);
-    otError AddServer(ServiceTlv &aService, ServerTlv &aServer, uint8_t *aOldTlvs, uint8_t aOldTlvsLength);
-    otError AddService(ServiceTlv &aService, uint8_t *aOldTlvs, uint8_t aOldTlvsLength);
+    otError AddPrefix(const PrefixTlv &aPrefix, ChangedFlags &aChangedFlags);
+    otError AddHasRoute(const HasRouteTlv &aHasRoute, PrefixTlv &aDstPrefix, ChangedFlags &aChangedFlags);
+    otError AddBorderRouter(const BorderRouterTlv &aBorderRouter, PrefixTlv &aDstPrefix, ChangedFlags &aFlags);
+    otError AddService(const ServiceTlv &aService, ChangedFlags &aChangedFlags);
+    otError AddServer(const ServerTlv &aServer, ServiceTlv &aDstService, ChangedFlags &aChangedFlags);
 
-    int  AllocateContext(void);
-    void FreeContext(uint8_t aContextId);
-    void StartContextReuseTimer(uint8_t aContextId);
-    void StopContextReuseTimer(uint8_t aContextId);
+    otError AllocateServiceId(uint8_t &aServiceId);
+
+    otError AllocateContextId(uint8_t &aConextId);
+    void    FreeContextId(uint8_t aContextId);
+    void    StartContextReuseTimer(uint8_t aContextId);
+    void    StopContextReuseTimer(uint8_t aContextId);
 
     void RemoveContext(uint8_t aContextId);
     void RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId);
 
     void RemoveCommissioningData(void);
 
-    void RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode);
-    void RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16, MatchMode aMatchMode);
-    void RemoveRloc(ServiceTlv &aService, uint16_t aRloc16, MatchMode aMatchMode);
-    void RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint16_t aRloc16, MatchMode aMatchMode);
-    void RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRouter, uint16_t aRloc16, MatchMode aMatchMode);
+    void RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode, ChangedFlags &aChangedFlags);
+    void RemoveRloc(uint16_t       aRloc16,
+                    MatchMode      aMatchMode,
+                    const uint8_t *aExcludeTlvs,
+                    uint8_t        aExcludeTlvsLength,
+                    ChangedFlags & aChangedFlags);
+    void RemoveRlocInPrefix(PrefixTlv &      aPrefix,
+                            uint16_t         aRloc16,
+                            MatchMode        aMatchMode,
+                            const PrefixTlv *aExcludePrefix,
+                            ChangedFlags &   aChangedFlags);
+    void RemoveRlocInService(ServiceTlv &      aService,
+                             uint16_t          aRloc16,
+                             MatchMode         aMatchMode,
+                             const ServiceTlv *aExcludeService,
+                             ChangedFlags &    aChangedFlags);
+    void RemoveRlocInHasRoute(PrefixTlv &      aPrefix,
+                              HasRouteTlv &    aHasRoute,
+                              uint16_t         aRloc16,
+                              MatchMode        aMatchMode,
+                              const PrefixTlv *aExcludePrefix,
+                              ChangedFlags &   aChangedFlags);
+    void RemoveRlocInBorderRouter(PrefixTlv &      aPrefix,
+                                  BorderRouterTlv &aBorderRouter,
+                                  uint16_t         aRloc16,
+                                  MatchMode        aMatchMode,
+                                  const PrefixTlv *aExcludePrefix,
+                                  ChangedFlags &   aChangedFlags);
 
     static bool RlocMatch(uint16_t aFirstRloc16, uint16_t aSecondRloc16, MatchMode aMatchMode);
 
-    otError RlocLookup(uint16_t  aRloc16,
-                       bool &    aIn,
-                       bool &    aStable,
-                       uint8_t * aTlvs,
-                       uint8_t   aTlvsLength,
-                       MatchMode aMatchMode,
-                       bool      aAllowOtherEntries = true);
+    static otError Validate(const uint8_t *aTlvs, uint8_t aTlvsLength, uint16_t aRloc16);
+    static otError ValidatePrefix(const PrefixTlv &aPrefix, uint16_t aRloc16);
+    static otError ValidateService(const ServiceTlv &aService, uint16_t aRloc16);
 
-    bool IsStableUpdated(uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase, uint8_t aTlvsBaseLength);
+    static bool ContainsMatchingEntry(const PrefixTlv *aPrefix, bool aStable, const HasRouteEntry &aEntry);
+    static bool ContainsMatchingEntry(const HasRouteTlv *aHasRoute, const HasRouteEntry &aEntry);
+    static bool ContainsMatchingEntry(const PrefixTlv *aPrefix, bool aStable, const BorderRouterEntry &aEntry);
+    static bool ContainsMatchingEntry(const BorderRouterTlv *aBorderRouter, const BorderRouterEntry &aEntry);
+    static bool ContainsMatchingServer(const ServiceTlv *aService, const ServerTlv &aServer);
+
+    UpdateStatus UpdatePrefix(PrefixTlv &aPrefix);
+    UpdateStatus UpdateService(ServiceTlv &aService);
+    UpdateStatus UpdateTlv(NetworkDataTlv &aTlv, const NetworkDataTlv *aSubTlvs);
 
     static void HandleCommissioningSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -230,6 +283,8 @@ private:
     void SendCommissioningSetResponse(const Coap::Message &    aRequest,
                                       const Ip6::MessageInfo & aMessageInfo,
                                       MeshCoP::StateTlv::State aState);
+    void IncrementVersions(bool aIncludeStable);
+    void IncrementVersions(const ChangedFlags &aFlags);
 
     /**
      * Thread Specification Constants.

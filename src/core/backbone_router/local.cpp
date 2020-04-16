@@ -40,7 +40,6 @@
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
-#include "thread/mle.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/thread_netif.hpp"
 
@@ -57,22 +56,27 @@ Local::Local(Instance &aInstance)
     , mRegistrationJitter(Mle::kBackboneRouterRegistrationJitter)
     , mIsServiceAdded(false)
 {
+    mDomainPrefixConfig.mPrefix.mLength = 0;
 }
 
 void Local::SetEnabled(bool aEnable)
 {
-    VerifyOrExit(aEnable == (mState == OT_BACKBONE_ROUTER_STATE_DISABLED));
+    VerifyOrExit(aEnable == (mState == OT_BACKBONE_ROUTER_STATE_DISABLED), OT_NOOP);
 
     if (aEnable)
     {
         SetState(OT_BACKBONE_ROUTER_STATE_SECONDARY);
+        AddDomainPrefixToNetworkData();
         AddService();
     }
     else
     {
+        RemoveDomainPrefixFromNetworkData();
         RemoveService();
         SetState(OT_BACKBONE_ROUTER_STATE_DISABLED);
     }
+
+    Get<NetworkData::Notifier>().HandleServerDataUpdated();
 
 exit:
     return;
@@ -80,9 +84,12 @@ exit:
 
 void Local::Reset(void)
 {
-    VerifyOrExit(mState != OT_BACKBONE_ROUTER_STATE_DISABLED);
+    VerifyOrExit(mState != OT_BACKBONE_ROUTER_STATE_DISABLED, OT_NOOP);
 
-    RemoveService();
+    if (RemoveService() == OT_ERROR_NONE)
+    {
+        Get<NetworkData::Notifier>().HandleServerDataUpdated();
+    }
 
     if (mState == OT_BACKBONE_ROUTER_STATE_PRIMARY)
     {
@@ -127,12 +134,15 @@ void Local::SetConfig(const BackboneRouterConfig &aConfig)
 
     if (update)
     {
-        IgnoreReturnValue(AddService());
         Get<Notifier>().Signal(OT_CHANGED_THREAD_BACKBONE_ROUTER_LOCAL);
+
+        if (AddService() == OT_ERROR_NONE)
+        {
+            Get<NetworkData::Notifier>().HandleServerDataUpdated();
+        }
     }
 
-    otLogDebgNetData("BBR local: seqno (%d), delay (%ds), timeout (%ds)", mSequenceNumber, mReregistrationDelay,
-                     mMlrTimeout);
+    LogBackboneRouterService("Set", OT_ERROR_NONE);
 }
 
 otError Local::AddService(bool aForce)
@@ -141,56 +151,48 @@ otError Local::AddService(bool aForce)
     uint8_t                               serviceData = NetworkData::ServiceTlv::kServiceDataBackboneRouter;
     NetworkData::BackboneRouterServerData serverData;
 
-    VerifyOrExit(mState != OT_BACKBONE_ROUTER_STATE_DISABLED && Get<Mle::Mle>().IsAttached());
+    VerifyOrExit(mState != OT_BACKBONE_ROUTER_STATE_DISABLED && Get<Mle::Mle>().IsAttached(), OT_NOOP);
 
     VerifyOrExit(aForce /* if register by force */ ||
-                 !Get<BackboneRouter::Leader>().HasPrimary() /* if no available Backbone Router service */ ||
-                 Get<BackboneRouter::Leader>().GetServer16() == Get<Mle::MleRouter>().GetRloc16()
+                     !Get<BackboneRouter::Leader>().HasPrimary() /* if no available Backbone Router service */ ||
+                     Get<BackboneRouter::Leader>().GetServer16() == Get<Mle::MleRouter>().GetRloc16()
                  /* If the device itself should be BBR. */
-    );
+                 ,
+                 OT_NOOP);
 
     serverData.SetSequenceNumber(mSequenceNumber);
     serverData.SetReregistrationDelay(mReregistrationDelay);
     serverData.SetMlrTimeout(mMlrTimeout);
 
     SuccessOrExit(error = Get<NetworkData::Local>().AddService(
-                      THREAD_ENTERPRISE_NUMBER, &serviceData, sizeof(serviceData), true,
+                      NetworkData::ServiceTlv::kThreadEnterpriseNumber, &serviceData, sizeof(serviceData), true,
                       reinterpret_cast<const uint8_t *>(&serverData), sizeof(serverData)));
 
     mIsServiceAdded = true;
-    Get<NetworkData::Local>().SendServerDataNotification();
-
-    otLogInfoNetData("BBR Service added: seqno (%d), delay (%ds), timeout (%ds)", mSequenceNumber, mReregistrationDelay,
-                     mMlrTimeout);
 
 exit:
-    otLogInfoNetData("Add BBR Service: %s", otThreadErrorToString(error));
+    LogBackboneRouterService("Add", error);
     return error;
 }
 
 otError Local::RemoveService(void)
 {
-    otError error       = OT_ERROR_NONE;
+    otError error;
     uint8_t serviceData = NetworkData::ServiceTlv::kServiceDataBackboneRouter;
 
-    SuccessOrExit(
-        error = Get<NetworkData::Local>().RemoveService(THREAD_ENTERPRISE_NUMBER, &serviceData, sizeof(serviceData)));
+    SuccessOrExit(error = Get<NetworkData::Local>().RemoveService(NetworkData::ServiceTlv::kThreadEnterpriseNumber,
+                                                                  &serviceData, sizeof(serviceData)));
 
     mIsServiceAdded = false;
 
-    if (Get<Mle::MleRouter>().IsAttached())
-    {
-        Get<NetworkData::Local>().SendServerDataNotification();
-    }
-
 exit:
-    otLogInfoNetData("Remove BBR Service %s", otThreadErrorToString(error));
+    LogBackboneRouterService("Remove", error);
     return error;
 }
 
 void Local::SetState(BackboneRouterState aState)
 {
-    VerifyOrExit(mState != aState);
+    VerifyOrExit(mState != aState, OT_NOOP);
 
     mState = aState;
     Get<Notifier>().Signal(OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE);
@@ -203,14 +205,14 @@ void Local::UpdateBackboneRouterPrimary(Leader::State aState, const BackboneRout
 {
     OT_UNUSED_VARIABLE(aState);
 
-    VerifyOrExit(mState != OT_BACKBONE_ROUTER_STATE_DISABLED && Get<Mle::MleRouter>().IsAttached());
+    VerifyOrExit(mState != OT_BACKBONE_ROUTER_STATE_DISABLED && Get<Mle::MleRouter>().IsAttached(), OT_NOOP);
 
     // Wait some jitter before trying to Register.
     if (aConfig.mServer16 == Mac::kShortAddrInvalid)
     {
         uint8_t delay = 1;
 
-        if (Get<Mle::MleRouter>().GetRole() != OT_DEVICE_ROLE_LEADER)
+        if (!Get<Mle::MleRouter>().IsLeader())
         {
             delay += Random::NonCrypto::GetUint8InRange(0, mRegistrationJitter < 255 ? mRegistrationJitter + 1
                                                                                      : mRegistrationJitter);
@@ -231,7 +233,10 @@ void Local::UpdateBackboneRouterPrimary(Leader::State aState, const BackboneRout
         mReregistrationDelay = aConfig.mReregistrationDelay;
         mMlrTimeout          = aConfig.mMlrTimeout;
         Get<Notifier>().Signal(OT_CHANGED_THREAD_BACKBONE_ROUTER_LOCAL);
-        AddService(true /* Force registration to refresh and restore Primary state */);
+        if (AddService(true /* Force registration to refresh and restore Primary state */) == OT_ERROR_NONE)
+        {
+            Get<NetworkData::Notifier>().HandleServerDataUpdated();
+        }
     }
     else
     {
@@ -241,6 +246,99 @@ void Local::UpdateBackboneRouterPrimary(Leader::State aState, const BackboneRout
 exit:
     return;
 }
+
+otError Local::GetDomainPrefix(NetworkData::OnMeshPrefixConfig &aConfig)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(mDomainPrefixConfig.mPrefix.mLength > 0, error = OT_ERROR_NOT_FOUND);
+
+    aConfig = mDomainPrefixConfig;
+
+exit:
+    return error;
+}
+
+otError Local::RemoveDomainPrefix(const otIp6Prefix &aPrefix)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aPrefix.mLength > 0, error = OT_ERROR_INVALID_ARGS);
+
+    VerifyOrExit(mDomainPrefixConfig.mPrefix.mLength == aPrefix.mLength, error = OT_ERROR_NOT_FOUND);
+
+    VerifyOrExit(Ip6::Address::PrefixMatch(mDomainPrefixConfig.mPrefix.mPrefix.mFields.m8, aPrefix.mPrefix.mFields.m8,
+                                           BitVectorBytes(aPrefix.mLength)) >= aPrefix.mLength,
+                 error = OT_ERROR_NOT_FOUND);
+
+    if (IsEnabled())
+    {
+        RemoveDomainPrefixFromNetworkData();
+    }
+
+    mDomainPrefixConfig.mPrefix.mLength = 0;
+
+exit:
+    return error;
+}
+
+void Local::SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig)
+{
+    if (IsEnabled())
+    {
+        RemoveDomainPrefixFromNetworkData();
+    }
+
+    mDomainPrefixConfig = aConfig;
+    LogDomainPrefix("Set", OT_ERROR_NONE);
+
+    if (IsEnabled())
+    {
+        AddDomainPrefixToNetworkData();
+    }
+}
+
+void Local::RemoveDomainPrefixFromNetworkData(void)
+{
+    otError error = OT_ERROR_NOT_FOUND; // only used for logging.
+
+    if (mDomainPrefixConfig.mPrefix.mLength > 0)
+    {
+        error = Get<NetworkData::Local>().RemoveOnMeshPrefix(mDomainPrefixConfig.mPrefix.mPrefix.mFields.m8,
+                                                             mDomainPrefixConfig.mPrefix.mLength);
+    }
+
+    LogDomainPrefix("Remove", error);
+}
+
+void Local::AddDomainPrefixToNetworkData(void)
+{
+    otError error = OT_ERROR_NOT_FOUND; // only used for logging.
+
+    if (mDomainPrefixConfig.mPrefix.mLength > 0)
+    {
+        error = Get<NetworkData::Local>().AddOnMeshPrefix(mDomainPrefixConfig);
+    }
+
+    LogDomainPrefix("Add", error);
+}
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_BBR == 1)
+void Local::LogDomainPrefix(const char *aAction, otError aError)
+{
+    otLogInfoBbr("%s Domain Prefix: %s/%d, %s", aAction,
+                 mDomainPrefixConfig.mPrefix.mLength > 0
+                     ? (*static_cast<Ip6::Address *>(&mDomainPrefixConfig.mPrefix.mPrefix)).ToString().AsCString()
+                     : "",
+                 mDomainPrefixConfig.mPrefix.mLength, otThreadErrorToString(aError));
+}
+
+void Local::LogBackboneRouterService(const char *aAction, otError aError)
+{
+    otLogInfoBbr("%s BBR Service: seqno (%d), delay (%ds), timeout (%ds), %s", aAction, mSequenceNumber,
+                 mReregistrationDelay, mMlrTimeout, otThreadErrorToString(aError));
+}
+#endif
 
 } // namespace BackboneRouter
 

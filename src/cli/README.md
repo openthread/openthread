@@ -45,6 +45,7 @@ Done
 * [diag](#diag)
 * [discover](#discover-channel)
 * [dns](#dns-resolve-hostname-dns-server-ip-dns-server-port)
+* [domainname](#domainname)
 * [eidcache](#eidcache)
 * [eui64](#eui64)
 * [extaddr](#extaddr)
@@ -60,7 +61,7 @@ Done
 * [leaderpartitionid](#leaderpartitionid)
 * [leaderweight](#leaderweight)
 * [linkquality](#linkquality-extaddr)
-* [logfilename](#logfilename-filename)
+* [log](#log-filename-filename)
 * [mac](#mac-retries-direct)
 * [macfilter](#macfilter)
 * [masterkey](#masterkey)
@@ -78,8 +79,9 @@ Done
 * [ping](#ping-ipaddr-size-count-interval-hoplimit)
 * [pollperiod](#pollperiod-pollperiod)
 * [preferrouterid](#preferrouterid-routerid)
-* [prefix](#prefix-add-prefix-pvdcsr-prf)
+* [prefix](#prefix-add-prefix-padcrosnD-prf)
 * [promiscuous](#promiscuous)
+* [pskc](#pskc--p-keypassphrase)
 * [releaserouterid](#releaserouterid-routerid)
 * [reset](#reset)
 * [rloc16](#rloc16)
@@ -554,6 +556,25 @@ The latter two parameters have following default values:
 > DNS response for ipv6.google.com - 2a00:1450:401b:801:0:0:0:200e TTL: 300
 ```
 
+### domainname
+
+Get the Thread Domain Name for Thread 1.2 device.
+
+```bash
+> domainname
+Thread
+Done
+```
+
+### domainname \<name\>
+
+Set the Thread Domain Name for Thread 1.2 device.
+
+```bash
+> domainname Test\ Thread
+Done
+```
+
 ### eidcache
 
 Print the EID-to-RLOC cache entries.
@@ -598,6 +619,8 @@ Done
 ### extpanid
 
 Get the Thread Extended PAN ID value.
+
+**NOTE** The current commissioning credential becomes stale after changing this value. Use [pskc](#pskc--p-keypassphrase) to reset.
 
 ```bash
 > extpanid
@@ -886,7 +909,7 @@ Set the link quality on the link to a given extended address.
 Done
 ```
 
-### logfilename \<filename\>
+### log filename \<filename\>
 
 - Note: Simulation Only, ie: `OPENTHREAD_EXAMPLES_SIMULATION`
 - Requires `OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART`
@@ -894,6 +917,25 @@ Done
 Specifies filename to capture otPlatLog() messages, useful when
 debugging automated test scripts on Linux when logging disrupts
 the automated test scripts.
+
+### log level
+
+Get the log level.
+
+```bash
+> log level
+1
+Done
+```
+
+### log level \<level\>
+
+Set the log level.
+
+```bash
+> log level 4
+Done
+```
 
 ### masterkey
 
@@ -1059,6 +1101,8 @@ Done
 
 Set the Thread Network Name.
 
+**NOTE** The current commissioning credential becomes stale after changing this value. Use [pskc](#pskc--p-keypassphrase) to reset.
+
 ```bash
 > networkname OpenThread
 Done
@@ -1166,6 +1210,17 @@ Set the customized data poll period for sleepy end device (milliseconds >= 10ms)
 Done
 ```
 
+### pskc [-p] \<key\>|\<passphrase\>
+
+With `-p` generate pskc from \<passphrase\> (UTF-8 encoded) together with **current** network name and extended PAN ID, otherwise set pskc as \<key\> (hex format).
+
+```bash
+> pskc 67c0c203aa0b042bfb5381c47aef4d9e
+Done
+> pskc -p 123456
+Done
+```
+
 ### preferrouterid \<routerid\>
 Prefer a Router ID when solicit router id from Leader.
 
@@ -1177,16 +1232,22 @@ Done
 ### prefix
 
 Get the prefix list in the local Network Data.
+Note: For the Thread 1.2 border router with backbone capability, the local Domain
+      Prefix would be listed as well (with flag `D`), with preceeding `- ` if backbone
+      functionality is disabled.
 
 ```bash
 > prefix
 2001:dead:beef:cafe::/64 paros med
+- fd00:7d03:7d03:7d03::/64 prosD med
 Done
 ```
 
-### prefix add \<prefix\> [pvdcsr] [prf]
+### prefix add \<prefix\> [padcrosnD] [prf]
 
 Add a valid prefix to the Network Data.
+
+Note: The Domain Prefix flag (`D`) is only available for Thread 1.2.
 
 * p: Preferred flag
 * a: Stateless IPv6 Address Autoconfiguration flag
@@ -1195,10 +1256,15 @@ Add a valid prefix to the Network Data.
 * r: Default Route flag
 * o: On Mesh flag
 * s: Stable flag
+* n: Nd Dns flag
+* D: Domain Prefix flag
 * prf: Default router preference, which may be 'high', 'med', or 'low'.
 
 ```bash
 > prefix add 2001:dead:beef:cafe::/64 paros med
+Done
+
+> prefix add fd00:7d03:7d03:7d03::/64 prosD med
 Done
 ```
 

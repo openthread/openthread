@@ -158,8 +158,9 @@ typedef void (*otCommissionerJoinerCallback)(otCommissionerJoinerEvent aEvent,
  * @param[in]  aJoinerCallback   A pointer to a function that is called with a joiner event occurs.
  * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
- * @retval OT_ERROR_NONE           Successfully started the Commissioner role.
- * @retval OT_ERROR_INVALID_STATE  Commissioner is already started.
+ * @retval OT_ERROR_NONE           Successfully started the Commissioner service.
+ * @retval OT_ERROR_ALREADY        Commissioner is already started.
+ * @retval OT_ERROR_INVALID_STATE  Device is not currently attached to a network.
  *
  */
 otError otCommissionerStart(otInstance *                 aInstance,
@@ -172,8 +173,8 @@ otError otCommissionerStart(otInstance *                 aInstance,
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  *
- * @retval OT_ERROR_NONE           Successfully stopped the Commissioner role.
- * @retval OT_ERROR_INVALID_STATE  Commissioner is already stopped.
+ * @retval OT_ERROR_NONE     Successfully stopped the Commissioner service.
+ * @retval OT_ERROR_ALREADY  Commissioner is already stopped.
  *
  */
 otError otCommissionerStop(otInstance *aInstance);
@@ -401,25 +402,6 @@ uint16_t otCommissionerGetSessionId(otInstance *aInstance);
  *
  */
 otCommissionerState otCommissionerGetState(otInstance *aInstance);
-
-/**
- * This helper function generates PSKc from a given pass-phrase, network name, and extended PAN Id.
- *
- * PSKc is used to establish the Commissioner Session.
- *
- * @param[in]  aPassPhrase   The commissioning pass-phrase.
- * @param[in]  aNetworkName  The network name for PSKc computation.
- * @param[in]  aExtPanId     The extended PAN ID for PSKc computation.
- * @param[out] aPskc         A pointer to variable to output the generated PSKc.
- *
- * @retval OT_ERROR_NONE          Successfully generate PSKc.
- * @retval OT_ERROR_INVALID_ARGS  If any of the input arguments is invalid.
- *
- */
-otError otCommissionerGeneratePskc(const char *           aPassPhrase,
-                                   const char *           aNetworkName,
-                                   const otExtendedPanId *aExtPanId,
-                                   otPskc *               aPskc);
 
 /**
  * @}

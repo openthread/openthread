@@ -509,6 +509,15 @@ class Node:
         self.send_command(cmd)
         self._expect('Done')
 
+    def set_domain_prefix(self, prefix):
+        flags = 'prosD'
+        self.add_prefix(prefix, flags)
+        self.register_netdata()
+
+    def remove_domain_prefix(self, prefix):
+        self.remove_prefix(prefix)
+        self.register_netdata()
+
     def set_link_quality(self, addr, lqi):
         cmd = 'macfilter rss add-lqi %s %s' % (addr, lqi)
         self.send_command(cmd)
@@ -724,6 +733,20 @@ class Node:
                 return ipv6_address.exploded
 
         return None
+
+    def get_ipmaddrs(self):
+        self.send_command('ipmaddr')
+        return self._expect_results(r'\S+(:\S*)+')
+
+    def has_ipmaddr(self, address):
+        ipmaddr = ipaddress.ip_address(address)
+        ipmaddrs = self.get_ipmaddrs()
+        for addr in ipmaddrs:
+            if isinstance(addr, bytearray):
+                addr = bytes(addr)
+            if ipaddress.ip_address(addr) == ipmaddr:
+                return True
+        return False
 
     def get_addr_leader_aloc(self):
         addrs = self.get_addrs()

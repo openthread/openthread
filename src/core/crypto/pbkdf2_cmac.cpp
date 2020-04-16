@@ -39,7 +39,7 @@
 
 #include <mbedtls/cmac.h>
 
-#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
+#if OPENTHREAD_FTD
 
 void otPbkdf2Cmac(const uint8_t *aPassword,
                   uint16_t       aPasswordLen,
@@ -106,4 +106,4 @@ void otPbkdf2Cmac(const uint8_t *aPassword,
     }
 }
 
-#endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD

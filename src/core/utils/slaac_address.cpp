@@ -58,7 +58,7 @@ Slaac::Slaac(Instance &aInstance)
 
 void Slaac::Enable(void)
 {
-    VerifyOrExit(!mEnabled);
+    VerifyOrExit(!mEnabled, OT_NOOP);
 
     otLogInfoUtil("SLAAC:: Enabling");
     mEnabled = true;
@@ -70,7 +70,7 @@ exit:
 
 void Slaac::Disable(void)
 {
-    VerifyOrExit(mEnabled);
+    VerifyOrExit(mEnabled, OT_NOOP);
 
     otLogInfoUtil("SLAAC:: Disabling");
     mEnabled = false;
@@ -82,12 +82,12 @@ exit:
 
 void Slaac::SetFilter(otIp6SlaacPrefixFilter aFilter)
 {
-    VerifyOrExit(aFilter != mFilter);
+    VerifyOrExit(aFilter != mFilter, OT_NOOP);
 
     mFilter = aFilter;
     otLogInfoUtil("SLAAC: Filter %s", (mFilter != NULL) ? "updated" : "disabled");
 
-    VerifyOrExit(mEnabled);
+    VerifyOrExit(mEnabled, OT_NOOP);
     Update(kModeAdd | kModeRemove);
 
 exit:
@@ -108,7 +108,7 @@ void Slaac::HandleStateChanged(otChangedFlags aFlags)
 {
     UpdateMode mode = kModeNone;
 
-    VerifyOrExit(mEnabled);
+    VerifyOrExit(mEnabled, OT_NOOP);
 
     if (aFlags & OT_CHANGED_THREAD_NETDATA)
     {
@@ -294,7 +294,7 @@ void Slaac::GenerateIid(Ip6::NetifUnicastAddress &aAddress) const
         // Exit and return the address if the IID is not reserved,
         // otherwise, try again with a new dadCounter
 
-        VerifyOrExit(aAddress.GetAddress().IsIidReserved());
+        VerifyOrExit(aAddress.GetAddress().IsIidReserved(), OT_NOOP);
     }
 
     otLogWarnUtil("SLAAC: Failed to generate a non-reserved IID after %d attempts", dadCounter);
@@ -310,7 +310,7 @@ void Slaac::GetIidSecretKey(IidSecretKey &aKey) const
     otError error;
 
     error = Get<Settings>().ReadSlaacIidSecretKey(aKey);
-    VerifyOrExit(error != OT_ERROR_NONE);
+    VerifyOrExit(error != OT_ERROR_NONE, OT_NOOP);
 
     // If there is no previously saved secret key, generate
     // a random one and save it.

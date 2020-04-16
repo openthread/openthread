@@ -133,7 +133,7 @@ RssAverager::InfoString RssAverager::ToString(void) const
 {
     InfoString string;
 
-    VerifyOrExit(mCount != 0);
+    VerifyOrExit(mCount != 0, OT_NOOP);
     string.Set("%d.%s", -(mAverage >> kPrecisionBitShift), kDigitsString[mAverage & kPrecisionBitMask]);
 
 exit:
@@ -154,7 +154,7 @@ void LinkQualityInfo::AddRss(int8_t aRss)
 {
     uint8_t oldLinkQuality = kNoLinkQuality;
 
-    VerifyOrExit(aRss != OT_RADIO_RSSI_INVALID);
+    VerifyOrExit(aRss != OT_RADIO_RSSI_INVALID, OT_NOOP);
 
     mLastRss = aRss;
 

@@ -205,10 +205,13 @@ private:
     void    ProcessChannel(uint8_t aArgsLength, char *aArgs[]);
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     void ProcessBackboneRouter(uint8_t aArgsLength, char *aArgs[]);
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     otError ProcessBackboneRouterLocal(uint8_t aArgsLength, char *aArgs[]);
 #endif
-#endif
+
+    void ProcessDomainName(uint8_t aArgsLength, char *aArgs[]);
+#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 #if OPENTHREAD_FTD
     void ProcessChild(uint8_t aArgsLength, char *aArgs[]);
@@ -249,9 +252,7 @@ private:
 #if OPENTHREAD_POSIX
     void ProcessExit(uint8_t aArgsLength, char *aArgs[]);
 #endif
-#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_POSIX
-    void ProcessLogFilename(uint8_t aArgsLength, char *aArgs[]);
-#endif
+    void    ProcessLog(uint8_t aArgsLength, char *aArgs[]);
     void    ProcessExtAddress(uint8_t aArgsLength, char *aArgs[]);
     void    ProcessExtPanId(uint8_t aArgsLength, char *aArgs[]);
     void    ProcessFactoryReset(uint8_t aArgsLength, char *aArgs[]);
@@ -318,6 +319,7 @@ private:
     otError ProcessPrefixAdd(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessPrefixRemove(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessPrefixList(void);
+    void    OutputPrefix(otBorderRouterConfig &aConfig);
 #endif
     void ProcessPromiscuous(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_FTD

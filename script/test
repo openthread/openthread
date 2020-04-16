@@ -51,6 +51,7 @@ readonly OT_TEST_COMMON_OPTIONS=(
     "-DOT_IP6_FRAGM=ON"
     "-DOT_JAM_DETECTION=ON"
     "-DOT_JOINER=ON"
+    "-DOT_LOG_LEVEL_DYNAMIC=ON"
     "-DOT_MAC_FILTER=ON"
     "-DOT_REFERENCE_DEVICE=ON"
     "-DOT_SERVICE=ON"
@@ -193,7 +194,7 @@ do_cert_suite() {
     [[ ! -f fail.log ]] || rm fail.log
 
     for test_case in "$@"; do
-        [[ ! -d tmp ]] || rm -rf tmp
+        rm -rf tmp
         if "${test_case}" &> test.log; then
             echo -e "${COLOR_PASS}PASS${COLOR_NONE} ${test_case}"
             pass_count=$(( pass_count + 1 ))
@@ -224,6 +225,35 @@ do_cert_suite() {
     fi
 }
 
+do_expect()
+{
+    local ot_command
+
+    if [[ "${NODE_MODE}" == rcp ]]; then
+        ot_command="${OT_CLI_PATH} ${RADIO_DEVICE}"
+    else
+        ot_command="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}/examples/apps/cli/ot-cli-ftd"
+    fi
+
+    while read -r script; do
+        rm -rf tmp
+        OT_COMMAND="${ot_command}" "${script}" || {
+            local exit_code=$?
+            echo -e "${COLOR_FAIL}FAIL${COLOR_NONE} ${script}"
+            exit "${exit_code}"
+        }
+        echo -e "${COLOR_PASS}PASS${COLOR_NONE} ${script}"
+    done < <(
+        if [[ $# != 0 ]]; then
+            for script in "$@"; do echo ${script}; done
+        else
+            find tests/scripts/expect -type f -executable
+        fi
+    )
+
+    exit 0
+}
+
 print_usage() {
     echo "USAGE: [ENVIRONMENTS] $0 COMMANDS
 
@@ -239,6 +269,7 @@ COMMANDS:
     build           Build project for running tests. This can be used to rebuild the project for changes.
     cert            Run a single thread-cert test. ENVIRONMENTS should be the same as those given to build or update.
     cert_suite      Run a batch of thread-cert tests and summarize the test results. Only echo logs for failing tests.
+    expect          Run expect tests.
     help            Print this help.
 
 EXAMPLES:
@@ -261,6 +292,12 @@ EXAMPLES:
     # Test Thread 1.2 with real time
     THREAD_VERSION=1.2 VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/v1_2_router_5_1_1.py
     THREAD_VERSION=1.2 VIRTUAL_TIME=0 $0 clean build cert_suite tests/scripts/thread-cert/v1_2_*
+
+    # Run a single expect test
+    $0 clean build expect tests/scripts/expect/log-level.exp
+
+    # Run all expect tests
+    $0 clean build expect
     "
 
     exit "$1"
@@ -349,6 +386,10 @@ main()
                 ;;
             package)
                 do_package
+                ;;
+            expect)
+                shift
+                do_expect "$@"
                 ;;
         esac
         shift

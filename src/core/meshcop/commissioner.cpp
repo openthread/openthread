@@ -88,11 +88,12 @@ Commissioner::Commissioner(Instance &aInstance)
 
 void Commissioner::SetState(otCommissionerState aState)
 {
-    VerifyOrExit(mState != aState);
+    otCommissionerState oldState = mState;
+    OT_UNUSED_VARIABLE(oldState);
 
-    otLogInfoMeshCoP("Commissioner State: %s -> %s", StateToString(mState), StateToString(aState));
+    SuccessOrExit(Get<Notifier>().Update(mState, aState, OT_CHANGED_COMMISSIONER_STATE));
 
-    mState = aState;
+    otLogInfoMeshCoP("CommissionerState: %s -> %s", StateToString(oldState), StateToString(aState));
 
     if (mStateCallback)
     {
@@ -150,7 +151,12 @@ otError Commissioner::Start(otCommissionerStateCallback  aStateCallback,
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(mState == OT_COMMISSIONER_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(mState == OT_COMMISSIONER_STATE_DISABLED, error = OT_ERROR_ALREADY);
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    error = Get<MeshCoP::BorderAgent>().Stop();
+    VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY, OT_NOOP);
+#endif
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().Start(SendRelayTransmit, this));
     Get<Coap::CoapSecure>().SetConnectedCallback(&Commissioner::HandleCoapsConnected, this);
@@ -166,8 +172,10 @@ otError Commissioner::Start(otCommissionerStateCallback  aStateCallback,
 exit:
     if (error != OT_ERROR_NONE)
     {
+        otLogWarnMeshCoP("Failed to start commissioner: %s", otThreadErrorToString(error));
         Get<Coap::CoapSecure>().Stop();
     }
+
     return error;
 }
 
@@ -176,7 +184,7 @@ otError Commissioner::Stop(bool aResign)
     otError error      = OT_ERROR_NONE;
     bool    needResign = false;
 
-    VerifyOrExit(mState != OT_COMMISSIONER_STATE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(mState != OT_COMMISSIONER_STATE_DISABLED, error = OT_ERROR_ALREADY);
 
     Get<Coap::CoapSecure>().Stop();
 
@@ -202,6 +210,11 @@ otError Commissioner::Stop(bool aResign)
     }
 
 exit:
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnMeshCoP("Failed to stop Commissioner: %s", otThreadErrorToString(error));
+    }
+
     return error;
 }
 
@@ -560,7 +573,7 @@ void Commissioner::HandleMgmtCommissionerGetResponse(Coap::Message *         aMe
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED);
+    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED, OT_NOOP);
     otLogInfoMeshCoP("received MGMT_COMMISSIONER_GET response");
 
 exit:
@@ -649,7 +662,7 @@ void Commissioner::HandleMgmtCommissionerSetResponse(Coap::Message *         aMe
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED);
+    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED, OT_NOOP);
     otLogInfoMeshCoP("received MGMT_COMMISSIONER_SET response");
 
 exit:
@@ -711,7 +724,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Message *         aMessage
     uint8_t state;
     bool    retransmit = false;
 
-    VerifyOrExit(mState != OT_COMMISSIONER_STATE_ACTIVE);
+    VerifyOrExit(mState != OT_COMMISSIONER_STATE_ACTIVE, OT_NOOP);
     VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED,
                  retransmit = (mState == OT_COMMISSIONER_STATE_PETITION));
 
@@ -811,7 +824,7 @@ void Commissioner::HandleLeaderKeepAliveResponse(Coap::Message *         aMessag
 
     uint8_t state;
 
-    VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE);
+    VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, OT_NOOP);
     VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED, Stop(/* aResign */ false));
 
     otLogInfoMeshCoP("received Leader keep-alive response");
@@ -848,7 +861,7 @@ void Commissioner::HandleRelayReceive(Coap::Message &aMessage, const Ip6::Messag
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
 
-    VerifyOrExit(aMessage.IsNonConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST);
+    VerifyOrExit(aMessage.IsNonConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, OT_NOOP);
 
     SuccessOrExit(error = Tlv::ReadUint16Tlv(aMessage, Tlv::kJoinerUdpPort, joinerPort));
     SuccessOrExit(error = Tlv::ReadTlv(aMessage, Tlv::kJoinerIid, joinerIid, sizeof(joinerIid)));
@@ -893,7 +906,7 @@ void Commissioner::HandleRelayReceive(Coap::Message &aMessage, const Ip6::Messag
         enableJoiner = (memcmp(mJoinerIid, joinerIid, sizeof(mJoinerIid)) == 0);
     }
 
-    VerifyOrExit(enableJoiner);
+    VerifyOrExit(enableJoiner, OT_NOOP);
 
     mJoinerPort = joinerPort;
     mJoinerRloc = joinerRloc;
@@ -923,7 +936,7 @@ void Commissioner::HandleDatasetChanged(void *aContext, otMessage *aMessage, con
 
 void Commissioner::HandleDatasetChanged(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST);
+    VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, OT_NOOP);
 
     otLogInfoMeshCoP("received dataset changed");
 
@@ -998,7 +1011,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
 
-    VerifyOrExit(message->GetLength() <= sizeof(buf));
+    VerifyOrExit(message->GetLength() <= sizeof(buf), OT_NOOP);
     message->Read(message->GetOffset(), message->GetLength() - message->GetOffset(), buf);
     otDumpCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.rsp |", buf, message->GetLength() - message->GetOffset());
 #endif
@@ -1078,43 +1091,6 @@ exit:
         message->Free();
     }
 
-    return error;
-}
-
-otError Commissioner::GeneratePskc(const char *              aPassPhrase,
-                                   const char *              aNetworkName,
-                                   const Mac::ExtendedPanId &aExtPanId,
-                                   Pskc &                    aPskc)
-{
-    otError    error        = OT_ERROR_NONE;
-    const char saltPrefix[] = "Thread";
-    uint8_t    salt[OT_PBKDF2_SALT_MAX_LEN];
-    uint16_t   saltLen = 0;
-    uint16_t   passphraseLen;
-    uint8_t    networkNameLen;
-
-    passphraseLen  = static_cast<uint16_t>(StringLength(aPassPhrase, OT_COMMISSIONING_PASSPHRASE_MAX_SIZE + 1));
-    networkNameLen = static_cast<uint8_t>(StringLength(aNetworkName, OT_NETWORK_NAME_MAX_SIZE + 1));
-
-    VerifyOrExit((passphraseLen >= OT_COMMISSIONING_PASSPHRASE_MIN_SIZE) &&
-                     (passphraseLen <= OT_COMMISSIONING_PASSPHRASE_MAX_SIZE) &&
-                     (networkNameLen <= OT_NETWORK_NAME_MAX_SIZE),
-                 error = OT_ERROR_INVALID_ARGS);
-
-    memset(salt, 0, sizeof(salt));
-    memcpy(salt, saltPrefix, sizeof(saltPrefix) - 1);
-    saltLen += static_cast<uint16_t>(sizeof(saltPrefix) - 1);
-
-    memcpy(salt + saltLen, aExtPanId.m8, sizeof(aExtPanId));
-    saltLen += OT_EXT_PAN_ID_SIZE;
-
-    memcpy(salt + saltLen, aNetworkName, networkNameLen);
-    saltLen += networkNameLen;
-
-    otPbkdf2Cmac(reinterpret_cast<const uint8_t *>(aPassPhrase), passphraseLen, reinterpret_cast<const uint8_t *>(salt),
-                 saltLen, 16384, OT_PSKC_MAX_SIZE, aPskc.m8);
-
-exit:
     return error;
 }
 

@@ -163,11 +163,7 @@ otError DatasetManager::Save(const Dataset &aDataset)
         mLocal.Save(aDataset);
 
 #if OPENTHREAD_FTD
-        if (Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_LEADER)
-        {
-            Get<NetworkData::Leader>().IncrementVersion();
-            Get<NetworkData::Leader>().IncrementStableVersion();
-        }
+        Get<NetworkData::Leader>().IncrementVersionAndStableVersion();
 #endif
     }
     else if (compare < 0)
@@ -187,22 +183,21 @@ otError DatasetManager::Save(const otOperationalDataset &aDataset)
 
     switch (Get<Mle::MleRouter>().GetRole())
     {
-    case OT_DEVICE_ROLE_DISABLED:
+    case Mle::kRoleDisabled:
         Restore();
         break;
 
-    case OT_DEVICE_ROLE_CHILD:
+    case Mle::kRoleChild:
         mTimer.Start(1000);
         break;
 #if OPENTHREAD_FTD
-    case OT_DEVICE_ROLE_ROUTER:
+    case Mle::kRoleRouter:
         mTimer.Start(1000);
         break;
 
-    case OT_DEVICE_ROLE_LEADER:
+    case Mle::kRoleLeader:
         Restore();
-        Get<NetworkData::Leader>().IncrementVersion();
-        Get<NetworkData::Leader>().IncrementStableVersion();
+        Get<NetworkData::Leader>().IncrementVersionAndStableVersion();
         break;
 #endif
 
@@ -225,7 +220,7 @@ otError DatasetManager::GetChannelMask(Mac::ChannelMask &aChannelMask) const
 
     channelMaskTlv = static_cast<const MeshCoP::ChannelMaskTlv *>(dataset.Get(MeshCoP::Tlv::kChannelMask));
     VerifyOrExit(channelMaskTlv != NULL, error = OT_ERROR_NOT_FOUND);
-    VerifyOrExit((mask = channelMaskTlv->GetChannelMask()) != 0);
+    VerifyOrExit((mask = channelMaskTlv->GetChannelMask()) != 0, OT_NOOP);
 
     aChannelMask.SetMask(mask & Get<Mac::Mac>().GetSupportedChannelMask().GetMask());
 
@@ -237,9 +232,9 @@ exit:
 
 void DatasetManager::HandleTimer(void)
 {
-    VerifyOrExit(Get<Mle::MleRouter>().IsAttached());
+    VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), OT_NOOP);
 
-    VerifyOrExit(mLocal.Compare(GetTimestamp()) < 0);
+    VerifyOrExit(mLocal.Compare(GetTimestamp()) < 0, OT_NOOP);
 
     if (mLocal.GetType() == Tlv::kActiveTimestamp)
     {
@@ -324,7 +319,7 @@ void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::Message
     }
 
     // MGMT_PENDING_GET.rsp must include Delay Timer TLV (Thread 1.1.1 Section 8.7.5.4)
-    VerifyOrExit(length > 0 && strcmp(mUriGet, OT_URI_PATH_PENDING_GET) == 0);
+    VerifyOrExit(length > 0 && strcmp(mUriGet, OT_URI_PATH_PENDING_GET) == 0, OT_NOOP);
 
     for (uint8_t i = 0; i < length; i++)
     {

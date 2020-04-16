@@ -191,6 +191,19 @@ enum
 };
 
 /**
+ * This type represents a Thread device role.
+ *
+ */
+enum DeviceRole
+{
+    kRoleDisabled = OT_DEVICE_ROLE_DISABLED, ///< The Thread stack is disabled.
+    kRoleDetached = OT_DEVICE_ROLE_DETACHED, ///< Not currently participating in a Thread network/partition.
+    kRoleChild    = OT_DEVICE_ROLE_CHILD,    ///< The Thread Child role.
+    kRoleRouter   = OT_DEVICE_ROLE_ROUTER,   ///< The Thread Router role.
+    kRoleLeader   = OT_DEVICE_ROLE_LEADER,   ///< The Thread Leader role.
+};
+
+/**
  * MLE Attach modes
  *
  */
@@ -227,7 +240,7 @@ enum AlocAllocation
  * Service IDs
  *
  */
-enum ServiceId
+enum
 {
     kServiceMinId = 0x00, ///< Minimal Service ID.
     kServiceMaxId = 0x0f, ///< Maximal Service ID.
