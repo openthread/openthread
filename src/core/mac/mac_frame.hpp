@@ -598,7 +598,7 @@ public:
      * @param[out]  aSecurityControlField  The Security Control Field.
      *
      * @retval OT_ERROR_NONE   Successfully retrieved the Security Level Identifier.
-     * @retval OT_ERROR_PARSE  Fail to find the security control field ins the frame.
+     * @retval OT_ERROR_PARSE  Failed to find the security control field in the frame.
      *
      */
     otError GetSecurityControlField(uint8_t &aSecurityControlField) const;
