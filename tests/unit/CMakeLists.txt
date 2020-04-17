@@ -34,7 +34,7 @@ set(COMMON_SOURCES
 set(COMMON_LIBS
     openthread-ftd
     openthread-ncp-ftd
-    mbedcrypto
+    mbedtls
     util
 )
 
@@ -147,382 +147,382 @@ add_executable(test-timer
 
 target_include_directories(test-aes
     PRIVATE
-    ${COMMON_INCLUDES}
+        ${COMMON_INCLUDES}
 )
 
 target_include_directories(test-child
     PRIVATE
-    ${COMMON_INCLUDES}
+        ${COMMON_INCLUDES}
 )
 
 target_include_directories(test-child-table
     PRIVATE
-    ${COMMON_INCLUDES}
+        ${COMMON_INCLUDES}
 )
 
 target_include_directories(test-flash
     PRIVATE
-    ${COMMON_INCLUDES}
+        ${COMMON_INCLUDES}
 )
 
 target_include_directories(test-heap
     PRIVATE
-    ${COMMON_INCLUDES}
+        ${COMMON_INCLUDES}
 )
 
 target_include_directories(test-hmac-sha256
     PRIVATE
-    ${COMMON_INCLUDES}
+        ${COMMON_INCLUDES}
 )
 
 target_include_directories(test-ip6-address
     PRIVATE
-    ${COMMON_INCLUDES}
+        ${COMMON_INCLUDES}
 )
 
 target_include_directories(test-link-quality
     PRIVATE
-    ${COMMON_INCLUDES}
+        ${COMMON_INCLUDES}
 )
 
 target_include_directories(test-linked-list
     PRIVATE
-    ${COMMON_INCLUDES}
+        ${COMMON_INCLUDES}
 )
 
 target_include_directories(test-lowpan
     PRIVATE
-    ${COMMON_INCLUDES}
+        ${COMMON_INCLUDES}
 )
 
 target_include_directories(test-mac-frame
     PRIVATE
-    ${COMMON_INCLUDES}
+        ${COMMON_INCLUDES}
 )
 
 target_include_directories(test-message
     PRIVATE
-    ${COMMON_INCLUDES}
+        ${COMMON_INCLUDES}
 )
 
 target_include_directories(test-message-queue
     PRIVATE
-    ${COMMON_INCLUDES}
+        ${COMMON_INCLUDES}
 )
 
 target_include_directories(test-netif
     PRIVATE
-    ${COMMON_INCLUDES}
+        ${COMMON_INCLUDES}
 )
 
 target_include_directories(test-network-data
     PRIVATE
-    ${COMMON_INCLUDES}
+        ${COMMON_INCLUDES}
 )
 
 target_include_directories(test-priority-queue
     PRIVATE
-    ${COMMON_INCLUDES}
+        ${COMMON_INCLUDES}
 )
 
 target_include_directories(test-pskc
     PRIVATE
-    ${COMMON_INCLUDES}
+        ${COMMON_INCLUDES}
 )
 
 target_include_directories(test-string
     PRIVATE
-    ${COMMON_INCLUDES}
+        ${COMMON_INCLUDES}
 )
 
 target_include_directories(test-timer
     PRIVATE
-    ${COMMON_INCLUDES}
+        ${COMMON_INCLUDES}
 )
 
 target_compile_definitions(test-aes
     PRIVATE
-    ${OT_PRIVATE_DEFINES}
+        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_definitions(test-child
     PRIVATE
-    ${OT_PRIVATE_DEFINES}
+        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_definitions(test-child-table
     PRIVATE
-    ${OT_PRIVATE_DEFINES}
+        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_definitions(test-flash
     PRIVATE
-    ${OT_PRIVATE_DEFINES}
+        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_definitions(test-heap
     PRIVATE
-    ${OT_PRIVATE_DEFINES}
+        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_definitions(test-hmac-sha256
     PRIVATE
-    ${OT_PRIVATE_DEFINES}
+        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_definitions(test-ip6-address
     PRIVATE
-    ${OT_PRIVATE_DEFINES}
+        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_definitions(test-link-quality
     PRIVATE
-    ${OT_PRIVATE_DEFINES}
+        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_definitions(test-linked-list
     PRIVATE
-    ${OT_PRIVATE_DEFINES}
+        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_definitions(test-lowpan
     PRIVATE
-    ${OT_PRIVATE_DEFINES}
+        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_definitions(test-mac-frame
     PRIVATE
-    ${OT_PRIVATE_DEFINES}
+        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_definitions(test-message
     PRIVATE
-    ${OT_PRIVATE_DEFINES}
+        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_definitions(test-message-queue
     PRIVATE
-    ${OT_PRIVATE_DEFINES}
+        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_definitions(test-netif
     PRIVATE
-    ${OT_PRIVATE_DEFINES}
+        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_definitions(test-network-data
     PRIVATE
-    ${OT_PRIVATE_DEFINES}
+        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_definitions(test-priority-queue
     PRIVATE
-    ${OT_PRIVATE_DEFINES}
+        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_definitions(test-pskc
     PRIVATE
-    ${OT_PRIVATE_DEFINES}
+        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_definitions(test-string
     PRIVATE
-    ${OT_PRIVATE_DEFINES}
+        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_definitions(test-timer
     PRIVATE
-    ${OT_PRIVATE_DEFINES}
+        ${OT_PRIVATE_DEFINES}
 )
 
 target_compile_options(test-aes
     PRIVATE
-    ${COMMON_COMPILE_OPTIONS}
+        ${COMMON_COMPILE_OPTIONS}
 )
 
 target_compile_options(test-child
     PRIVATE
-    ${COMMON_COMPILE_OPTIONS}
+        ${COMMON_COMPILE_OPTIONS}
 )
 
 target_compile_options(test-child-table
     PRIVATE
-    ${COMMON_COMPILE_OPTIONS}
+        ${COMMON_COMPILE_OPTIONS}
 )
 
 target_compile_options(test-flash
     PRIVATE
-    ${COMMON_COMPILE_OPTIONS}
+        ${COMMON_COMPILE_OPTIONS}
 )
 
 target_compile_options(test-heap
     PRIVATE
-    ${COMMON_COMPILE_OPTIONS}
+        ${COMMON_COMPILE_OPTIONS}
 )
 
 target_compile_options(test-hmac-sha256
     PRIVATE
-    ${COMMON_COMPILE_OPTIONS}
+        ${COMMON_COMPILE_OPTIONS}
 )
 
 target_compile_options(test-ip6-address
     PRIVATE
-    ${COMMON_COMPILE_OPTIONS}
+        ${COMMON_COMPILE_OPTIONS}
 )
 
 target_compile_options(test-link-quality
     PRIVATE
-    ${COMMON_COMPILE_OPTIONS}
+        ${COMMON_COMPILE_OPTIONS}
 )
 
 target_compile_options(test-linked-list
     PRIVATE
-    ${COMMON_COMPILE_OPTIONS}
+        ${COMMON_COMPILE_OPTIONS}
 )
 
 target_compile_options(test-lowpan
     PRIVATE
-    ${COMMON_COMPILE_OPTIONS}
+        ${COMMON_COMPILE_OPTIONS}
 )
 
 target_compile_options(test-mac-frame
     PRIVATE
-    ${COMMON_COMPILE_OPTIONS}
+        ${COMMON_COMPILE_OPTIONS}
 )
 
 target_compile_options(test-message
     PRIVATE
-    ${COMMON_COMPILE_OPTIONS}
+        ${COMMON_COMPILE_OPTIONS}
 )
 
 target_compile_options(test-message-queue
     PRIVATE
-    ${COMMON_COMPILE_OPTIONS}
+        ${COMMON_COMPILE_OPTIONS}
 )
 
 target_compile_options(test-netif
     PRIVATE
-    ${COMMON_COMPILE_OPTIONS}
+        ${COMMON_COMPILE_OPTIONS}
 )
 
 target_compile_options(test-network-data
     PRIVATE
-    ${COMMON_COMPILE_OPTIONS}
+        ${COMMON_COMPILE_OPTIONS}
 )
 
 target_compile_options(test-priority-queue
     PRIVATE
-    ${COMMON_COMPILE_OPTIONS}
+        ${COMMON_COMPILE_OPTIONS}
 )
 
 target_compile_options(test-pskc
     PRIVATE
-    ${COMMON_COMPILE_OPTIONS}
+        ${COMMON_COMPILE_OPTIONS}
 )
 
 target_compile_options(test-string
     PRIVATE
-    ${COMMON_COMPILE_OPTIONS}
+        ${COMMON_COMPILE_OPTIONS}
 )
 
 target_compile_options(test-timer
     PRIVATE
-    ${COMMON_COMPILE_OPTIONS}
+        ${COMMON_COMPILE_OPTIONS}
 )
 
 target_link_libraries(test-aes
     PRIVATE
-    ${COMMON_LIBS}
+        ${COMMON_LIBS}
 )
 
 target_link_libraries(test-child
     PRIVATE
-    ${COMMON_LIBS}
+        ${COMMON_LIBS}
 )
 
 target_link_libraries(test-child-table
     PRIVATE
-    ${COMMON_LIBS}
+        ${COMMON_LIBS}
 )
 
 target_link_libraries(test-flash
     PRIVATE
-    ${COMMON_LIBS}
+        ${COMMON_LIBS}
 )
 
 target_link_libraries(test-heap
     PRIVATE
-    ${COMMON_LIBS}
+        ${COMMON_LIBS}
 )
 
 target_link_libraries(test-hmac-sha256
     PRIVATE
-    ${COMMON_LIBS}
+        ${COMMON_LIBS}
 )
 
 target_link_libraries(test-ip6-address
     PRIVATE
-    ${COMMON_LIBS}
+        ${COMMON_LIBS}
 )
 
 target_link_libraries(test-link-quality
     PRIVATE
-    ${COMMON_LIBS}
+        ${COMMON_LIBS}
 )
 
 target_link_libraries(test-linked-list
     PRIVATE
-    ${COMMON_LIBS}
+        ${COMMON_LIBS}
 )
 
 target_link_libraries(test-lowpan
     PRIVATE
-    ${COMMON_LIBS}
+        ${COMMON_LIBS}
 )
 
 target_link_libraries(test-mac-frame
     PRIVATE
-    ${COMMON_LIBS}
+        ${COMMON_LIBS}
 )
 
 target_link_libraries(test-message
     PRIVATE
-    ${COMMON_LIBS}
+        ${COMMON_LIBS}
 )
 
 target_link_libraries(test-message-queue
     PRIVATE
-    ${COMMON_LIBS}
+        ${COMMON_LIBS}
 )
 
 target_link_libraries(test-netif
     PRIVATE
-    ${COMMON_LIBS}
+        ${COMMON_LIBS}
 )
 
 target_link_libraries(test-network-data
     PRIVATE
-    ${COMMON_LIBS}
+        ${COMMON_LIBS}
 )
 
 target_link_libraries(test-priority-queue
     PRIVATE
-    ${COMMON_LIBS}
+        ${COMMON_LIBS}
 )
 
 target_link_libraries(test-pskc
     PRIVATE
-    ${COMMON_LIBS}
+        ${COMMON_LIBS}
 )
 
 target_link_libraries(test-string
     PRIVATE
-    ${COMMON_LIBS}
+        ${COMMON_LIBS}
 )
 
 target_link_libraries(test-timer
     PRIVATE
-    ${COMMON_LIBS}
+        ${COMMON_LIBS}
 )
 
 add_test(NAME test-aes COMMAND test-aes)

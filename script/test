@@ -168,7 +168,7 @@ do_clean() {
     rm -rfv "${OT_BUILDDIR}"
 }
 
-do_cert_unit_tests() {
+do_unit() {
     local builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}"
     if [[ ! -d "${builddir}" ]]; then
         echo "Cannot find build directory!"
@@ -392,8 +392,8 @@ main()
                 shift
                 do_cert_suite "$@"
                 ;;
-            cert_unit_tests)
-                do_cert_unit_tests
+            unit_tests)
+                do_unit
                 ;;
             help)
                 print_usage
