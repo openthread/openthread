@@ -160,3 +160,11 @@ jobs:
     - name: Build
       run: |
         script/check-simulation-build
+
+  android:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: |
+        docker run --rm -v $PWD:/build/openthread openthread/android-trusty /build/openthread/script/check-android-build

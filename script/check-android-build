@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2018, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -27,26 +27,28 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-[ -n "$BUILD_TARGET" ] || exit 0
+#
+# Run this command on parent directory of openthread
+#
 
-set -e
+set -euxo pipefail
 
-codecov_upload() {
-    curl -s https://codecov.io/bash > codecov
-    chmod a+x codecov
+check_targets()
+{
+    for target in "$@"; do
+        make showcommands "${target}"
+        test -x "out/target/product/generic/system/bin/${target}"
+    done
 
-    # Assume gcov by default, and llvm-cov if CC is clang
-    if [[ -z $CC ]]; then
-        ./codecov
-    elif  "$CC" --version | grep -q gcc; then
-        ./codecov
-    elif "$CC" --version | grep -q clang; then
-        ./codecov -x "llvm-cov gcov"
-    fi
+    for target in "$@"; do
+        make "clean-${target}" || true
+    done
 }
 
-main() {
-    codecov_upload
+main()
+{
+    USE_OTBR_DAEMON=1 check_targets ot-cli ot-ctl ot-ncp
+    check_targets ot-cli ot-ncp spi-hdlc-adapter
 }
 
 main "$@"

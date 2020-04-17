@@ -1,5 +1,6 @@
+#!/usr/bin/env python3
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,29 +27,49 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-language: python
-python: "3.6"
+import socket
+import struct
+import subprocess
+import sys
+import time
 
-sudo: required
-dist: bionic
+from ipaddress import ip_address
 
-before_install:
-  - travis_retry .travis/before_install.sh
 
-before_script:
-  - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
-      sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6';
-    fi
+def get_maddrs():
+    lines = subprocess.run(['ot-ctl', 'ipmaddr'],
+                           stdout=subprocess.PIPE).stdout.decode().split()
+    return [ip_address(l) for l in lines if l.startswith('ff')]
 
-jobs:
-  include:
-    - env: BUILD_TARGET="android-build" VERBOSE=1
-      os: linux
-      dist: trusty
-      python: "2.7" # The old Android build system only supports python2
-      script: .travis/script.sh
-    - env: BUILD_TARGET="android-build" VERBOSE=1 USE_OTBR_DAEMON=1
-      os: linux
-      dist: trusty
-      python: "2.7" # The old Android build system only supports python2
-      script: .travis/script.sh
+
+def main():
+    group = 'ff02::158'
+    if_index = int(sys.argv[1])
+
+    with socket.socket(socket.AF_INET6, socket.SOCK_DGRAM) as s:
+        s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_MULTICAST_IF, if_index)
+        s.setsockopt(
+            socket.IPPROTO_IPV6, socket.IPV6_JOIN_GROUP,
+            struct.pack('16si', socket.inet_pton(socket.AF_INET6, group),
+                        if_index))
+        time.sleep(2)
+        maddrs = get_maddrs()
+        print(maddrs)
+        if not any(addr == ip_address(group) for addr in maddrs):
+            return -1
+
+        s.setsockopt(
+            socket.IPPROTO_IPV6, socket.IPV6_LEAVE_GROUP,
+            struct.pack('16si', socket.inet_pton(socket.AF_INET6, group),
+                        if_index))
+
+        time.sleep(2)
+        maddrs = get_maddrs()
+        print(maddrs)
+        if any(addr == ip_address(group) for addr in maddrs):
+            return -1
+    return 0
+
+
+if __name__ == '__main__':
+    exit(main())

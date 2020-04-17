@@ -37,7 +37,6 @@ The OpenThread Project follows the "Fork-and-Pull" model for accepting contribut
 Setup your GitHub fork and continuous-integration services:
 
 1. Fork the [OpenThread repository](https://github.com/openthread/openthread) by clicking "Fork" on the web UI.
-2. Enable [Travis CI](https://travis-ci.org/) by logging in the respective service with your GitHub account and enabling your newly created fork.  We use Travis CI for Linux-based continuous integration checks.  All contributions must pass these checks to be accepted.
 
 Setup your local development environment:
 
