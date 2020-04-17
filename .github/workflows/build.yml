@@ -79,26 +79,26 @@ jobs:
         script/check-scan-build
 
   arm-gcc:
-    name: arm-gcc-${{ matrix.ver }}
+    name: arm-gcc-${{ matrix.gcc_ver }}
     runs-on: ubuntu-18.04
     strategy:
       matrix:
         include:
-          - ver: 4
-            download_url: https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q3-update/+download/gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2
-            extract_dir: gcc-arm-none-eabi-4_9-2015q3
-          - ver: 5
-            download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/5_4-2016q3/gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2
-            extract_dir: gcc-arm-none-eabi-5_4-2016q3
-          - ver: 6
-            download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/6-2017q2/gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
-            extract_dir: gcc-arm-none-eabi-6-2017-q2-update
-          - ver: 7
-            download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
-            extract_dir: gcc-arm-none-eabi-7-2018-q2-update
-          - ver: 9
-            download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2019q4/RC2.1/gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2
-            extract_dir: gcc-arm-none-eabi-9-2019-q4-major
+          - gcc_ver: 4
+            gcc_download_url: https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q3-update/+download/gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2
+            gcc_extract_dir: gcc-arm-none-eabi-4_9-2015q3
+          - gcc_ver: 5
+            gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/5_4-2016q3/gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2
+            gcc_extract_dir: gcc-arm-none-eabi-5_4-2016q3
+          - gcc_ver: 6
+            gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/6-2017q2/gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
+            gcc_extract_dir: gcc-arm-none-eabi-6-2017-q2-update
+          - gcc_ver: 7
+            gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
+            gcc_extract_dir: gcc-arm-none-eabi-7-2018-q2-update
+          - gcc_ver: 9
+            gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2019q4/RC2.1/gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2
+            gcc_extract_dir: gcc-arm-none-eabi-9-2019-q4-major
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
@@ -106,28 +106,28 @@ jobs:
         cd /tmp
         sudo apt update
         sudo apt --no-install-recommends install -y lib32z1 ninja-build
-        wget ${{ matrix.download_url }} -O gcc-arm.tar.bz2
+        wget ${{ matrix.gcc_download_url }} -O gcc-arm.tar.bz2
         tar xjf gcc-arm.tar.bz2
     - name: Build
       run: |
-        export PATH=/tmp/${{ matrix.extract_dir }}/bin:$PATH
+        export PATH=/tmp/${{ matrix.gcc_extract_dir }}/bin:$PATH
         script/check-arm-build
 
   gcc:
-    name: gcc-${{ matrix.ver }}
+    name: gcc-${{ matrix.gcc_ver }}
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        ver: [5, 6, 7, 8, 9]
+        gcc_ver: [5, 6, 7, 8, 9]
     env:
-      CC: gcc-${{ matrix.ver }}
-      CXX: g++-${{ matrix.ver }}
+      CC: gcc-${{ matrix.gcc_ver }}
+      CXX: g++-${{ matrix.gcc_ver }}
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
         sudo apt update
-        sudo apt --no-install-recommends install -y gcc-${{ matrix.ver }} g++-${{ matrix.ver }} ninja-build
+        sudo apt --no-install-recommends install -y gcc-${{ matrix.gcc_ver }} g++-${{ matrix.gcc_ver }} ninja-build
     - name: Build
       run: |
         script/check-simulation-build
