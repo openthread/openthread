@@ -378,9 +378,9 @@ public:
     uint16_t GetVersion(void) const { return GetFrameControlField() & kFcfFrameVersionMask; }
 
     /**
-     * This method returns if the current IEEE 802.15.4 frame object's version is 2015.
+     * This method returns if this IEEE 802.15.4 frame's version is 2015.
      *
-     * @returns TRUE if version is 2015 and false otherwise.
+     * @returns TRUE if version is 2015, FALSE otherwise.
      *
      */
     bool IsVersion2015(void) const { return IsVersion2015(GetFrameControlField()); }
@@ -454,12 +454,12 @@ public:
     void SetSequence(uint8_t aSequence) { GetPsdu()[kSequenceIndex] = aSequence; }
 
     /**
-     * This method indicates whether or not the Dst PanId is present in this frame object.
+     * This method indicates whether or not the Destination PAN ID is present.
      *
-     * @returns TRUE if the Dst PanId is present, FALSE otherwise.
+     * @returns TRUE if the Destination PAN ID is present, FALSE otherwise.
      *
      */
-    bool IsDstPanIdPresent() const { return IsDstPanIdPresent(GetFrameControlField()); }
+    bool IsDstPanIdPresent(void) const { return IsDstPanIdPresent(GetFrameControlField()); }
 
     /**
      * This method gets the Destination PAN Identifier.
@@ -486,7 +486,7 @@ public:
      * @retval TRUE if the Destination Address is present, FALSE otherwise.
      *
      */
-    bool IsDstAddrPresent() { return IsDstAddrPresent(GetFrameControlField()); }
+    bool IsDstAddrPresent() const { return IsDstAddrPresent(GetFrameControlField()); }
 
     /**
      * This method gets the Destination Address.
@@ -556,7 +556,7 @@ public:
      * @retval TRUE if the Source Address is present, FALSE otherwise.
      *
      */
-    bool IsSrcAddrPresent() { return IsSrcAddrPresent(GetFrameControlField()); }
+    bool IsSrcAddrPresent(void) const { return IsSrcAddrPresent(GetFrameControlField()); }
 
     /**
      * This method gets the Source Address.
@@ -953,7 +953,7 @@ private:
     uint8_t  FindDstAddrIndex(void) const;
     uint8_t  FindSrcPanIdIndex(void) const;
     uint8_t  FindSrcAddrIndex(void) const;
-    uint8_t  SkipAddrFieldIndex() const;
+    uint8_t  SkipAddrFieldIndex(void) const;
     uint8_t  FindSecurityHeaderIndex(void) const;
     uint8_t  SkipSecurityHeaderIndex(void) const;
     uint8_t  FindPayloadIndex(void) const;

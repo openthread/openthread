@@ -806,7 +806,7 @@ exit:
     return index;
 }
 
-uint8_t Frame::SkipAddrFieldIndex() const
+uint8_t Frame::SkipAddrFieldIndex(void) const
 {
     uint8_t  index = kFcfSize + kDsnSize; // Frame Control field and Sequence Number field
     uint16_t fcf;
