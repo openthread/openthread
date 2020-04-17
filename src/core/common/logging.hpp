@@ -470,11 +470,11 @@ extern "C" {
  *
  */
 #if OPENTHREAD_CONFIG_LOG_BBR == 1
-#define otLogCritBbr(...) otLogCrit(OT_LOG_REGION_BBR, _OT_REGION_BBR_PREFIX aFormat __VA_ARGS__)
-#define otLogWarnBbr(...) otLogWarn(OT_LOG_REGION_BBR, _OT_REGION_BBR_PREFIX aFormat __VA_ARGS__)
-#define otLogNoteBbr(...) otLogNote(OT_LOG_REGION_BBR, _OT_REGION_BBR_PREFIX aFormat __VA_ARGS__)
-#define otLogInfoBbr(...) otLogInfo(OT_LOG_REGION_BBR, _OT_REGION_BBR_PREFIX aFormat __VA_ARGS__)
-#define otLogDebgBbr(...) otLogDebg(OT_LOG_REGION_BBR, _OT_REGION_BBR_PREFIX aFormat __VA_ARGS__)
+#define otLogCritBbr(...) otLogCrit(OT_LOG_REGION_BBR, _OT_REGION_BBR_PREFIX __VA_ARGS__)
+#define otLogWarnBbr(...) otLogWarn(OT_LOG_REGION_BBR, _OT_REGION_BBR_PREFIX __VA_ARGS__)
+#define otLogNoteBbr(...) otLogNote(OT_LOG_REGION_BBR, _OT_REGION_BBR_PREFIX __VA_ARGS__)
+#define otLogInfoBbr(...) otLogInfo(OT_LOG_REGION_BBR, _OT_REGION_BBR_PREFIX __VA_ARGS__)
+#define otLogDebgBbr(...) otLogDebg(OT_LOG_REGION_BBR, _OT_REGION_BBR_PREFIX __VA_ARGS__)
 #else
 #define otLogCritBbr(...)
 #define otLogWarnBbr(...)
