@@ -58,18 +58,24 @@ void Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
     // Sequence Number
     length += kDsnSize;
 
-    // Destination PAN + Address
+    // Destination PAN
+    if (IsDstPanIdPresent(aFcf))
+    {
+        length += sizeof(PanId);
+    }
+
+    // Destination Address
     switch (aFcf & kFcfDstAddrMask)
     {
     case kFcfDstAddrNone:
         break;
 
     case kFcfDstAddrShort:
-        length += sizeof(PanId) + sizeof(ShortAddress);
+        length += sizeof(ShortAddress);
         break;
 
     case kFcfDstAddrExt:
-        length += sizeof(PanId) + sizeof(ExtAddress);
+        length += sizeof(ExtAddress);
         break;
 
     default:
@@ -191,6 +197,38 @@ uint8_t Frame::FindDstPanIdIndex(void) const
 
 exit:
     return index;
+}
+
+bool Frame::IsDstPanIdPresent(uint16_t aFcf)
+{
+    bool present = true;
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    if (IsVersion2015(aFcf))
+    {
+        switch (aFcf & (kFcfDstAddrMask | kFcfSrcAddrMask | kFcfPanidCompression))
+        {
+        case (kFcfDstAddrNone | kFcfSrcAddrNone):
+        case (kFcfDstAddrExt | kFcfSrcAddrNone | kFcfPanidCompression):
+        case (kFcfDstAddrShort | kFcfSrcAddrNone | kFcfPanidCompression):
+        case (kFcfDstAddrNone | kFcfSrcAddrExt):
+        case (kFcfDstAddrNone | kFcfSrcAddrShort):
+        case (kFcfDstAddrNone | kFcfSrcAddrExt | kFcfPanidCompression):
+        case (kFcfDstAddrNone | kFcfSrcAddrShort | kFcfPanidCompression):
+        case (kFcfDstAddrExt | kFcfSrcAddrExt | kFcfPanidCompression):
+            present = false;
+            break;
+        default:
+            break;
+        }
+    }
+    else
+#endif
+    {
+        present = IsDstAddrPresent(aFcf);
+    }
+
+    return present;
 }
 
 otError Frame::GetDstPanId(PanId &aPanId) const
@@ -321,7 +359,7 @@ bool Frame::IsSrcPanIdPresent(uint16_t aFcf) const
         //  Dest Pan ID:        Present
         //  Src Pan ID:         Not Present
         //  Pan ID Compression: 0
-        if ((aFcf & kFcfFrameVersionMask) != kFcfFrameVersion2015 || (aFcf & kFcfDstAddrMask) != kFcfDstAddrExt ||
+        if (!IsVersion2015(aFcf) || (aFcf & kFcfDstAddrMask) != kFcfDstAddrExt ||
             (aFcf & kFcfSrcAddrMask) != kFcfSrcAddrExt)
 #endif
         {
@@ -364,15 +402,21 @@ uint8_t Frame::FindSrcAddrIndex(void) const
     // Frame Control Field and Sequence Number
     index += kFcfSize + kDsnSize;
 
-    // Destination PAN + Address
+    // Destination PAN
+    if (IsDstPanIdPresent(fcf))
+    {
+        index += sizeof(PanId);
+    }
+
+    // Destination Address
     switch (fcf & kFcfDstAddrMask)
     {
     case kFcfDstAddrShort:
-        index += sizeof(PanId) + sizeof(ShortAddress);
+        index += sizeof(ShortAddress);
         break;
 
     case kFcfDstAddrExt:
-        index += sizeof(PanId) + sizeof(ExtAddress);
+        index += sizeof(ExtAddress);
         break;
     }
 
@@ -450,45 +494,35 @@ void Frame::SetSrcAddr(const Address &aAddress)
     }
 }
 
+otError Frame::GetSecurityControlField(uint8_t &aSecurityControlField) const
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t index = FindSecurityHeaderIndex();
+
+    VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_PARSE);
+
+    aSecurityControlField = GetPsdu()[index];
+
+exit:
+    return error;
+}
+
+void Frame::SetSecurityControlField(uint8_t aSecurityControlField)
+{
+    uint8_t index = FindSecurityHeaderIndex();
+
+    OT_ASSERT(index != kInvalidIndex);
+
+    GetPsdu()[index] = aSecurityControlField;
+}
+
 uint8_t Frame::FindSecurityHeaderIndex(void) const
 {
-    uint8_t  index = 0;
-    uint16_t fcf   = GetFrameControlField();
+    uint8_t index;
 
-    VerifyOrExit((fcf & kFcfSecurityEnabled) != 0, index = kInvalidIndex);
-
-    // Frame Control Field and  Sequence Number
-    index += kFcfSize + kDsnSize;
-
-    // Destination PAN + Address
-    switch (fcf & kFcfDstAddrMask)
-    {
-    case kFcfDstAddrShort:
-        index += sizeof(PanId) + sizeof(ShortAddress);
-        break;
-
-    case kFcfDstAddrExt:
-        index += sizeof(PanId) + sizeof(ExtAddress);
-        break;
-    }
-
-    // Source PAN
-    if (IsSrcPanIdPresent(fcf))
-    {
-        index += sizeof(PanId);
-    }
-
-    // Source Address
-    switch (fcf & kFcfSrcAddrMask)
-    {
-    case kFcfSrcAddrShort:
-        index += sizeof(ShortAddress);
-        break;
-
-    case kFcfSrcAddrExt:
-        index += sizeof(ExtAddress);
-        break;
-    }
+    VerifyOrExit(kFcfSize < GetLength(), index = kInvalidIndex);
+    VerifyOrExit(GetSecurityEnabled(), index = kInvalidIndex);
+    index = SkipAddrFieldIndex();
 
 exit:
     return index;
@@ -734,34 +768,75 @@ void Frame::SetPayloadLength(uint16_t aLength)
 
 uint8_t Frame::SkipSecurityHeaderIndex(void) const
 {
-    uint8_t  index = 0;
+    uint8_t  index = SkipAddrFieldIndex();
     uint16_t fcf;
 
-    // Frame Control
-    index += kFcfSize;
-    // Sequence Number
-    index += kDsnSize;
-
-    VerifyOrExit((index + GetFcsSize()) <= GetPsduLength(), index = kInvalidIndex);
-
+    VerifyOrExit(index != kInvalidIndex, OT_NOOP);
     fcf = GetFrameControlField();
 
-    // Destination PAN + Address
+    // Security Control + Frame Counter + Key Identifier
+    if ((fcf & kFcfSecurityEnabled) != 0)
+    {
+        VerifyOrExit(index < GetPsduLength(), index = kInvalidIndex);
+        uint8_t securityControl = *(GetPsdu() + index);
+
+        index += kSecurityControlSize + kFrameCounterSize;
+
+        switch (securityControl & kKeyIdModeMask)
+        {
+        case kKeyIdMode0:
+            index += kKeySourceSizeMode0;
+            break;
+
+        case kKeyIdMode1:
+            index += kKeySourceSizeMode1 + kKeyIndexSize;
+            break;
+
+        case kKeyIdMode2:
+            index += kKeySourceSizeMode2 + kKeyIndexSize;
+            break;
+
+        case kKeyIdMode3:
+            index += kKeySourceSizeMode3 + kKeyIndexSize;
+            break;
+        }
+    }
+
+exit:
+    return index;
+}
+
+uint8_t Frame::SkipAddrFieldIndex(void) const
+{
+    uint8_t  index = kFcfSize + kDsnSize; // Frame Control field and Sequence Number field
+    uint16_t fcf;
+
+    VerifyOrExit((index + GetFcsSize()) <= GetPsduLength(), index = kInvalidIndex);
+    fcf = GetFrameControlField();
+
+    // Destination PAN
+    if (IsDstPanIdPresent(fcf))
+    {
+        index += sizeof(PanId);
+    }
+
+    // Destination Address
     switch (fcf & kFcfDstAddrMask)
     {
     case kFcfDstAddrNone:
         break;
 
     case kFcfDstAddrShort:
-        index += sizeof(PanId) + sizeof(ShortAddress);
+        index += sizeof(ShortAddress);
         break;
 
     case kFcfDstAddrExt:
-        index += sizeof(PanId) + sizeof(ExtAddress);
+        index += sizeof(ExtAddress);
         break;
 
     default:
         ExitNow(index = kInvalidIndex);
+        break;
     }
 
     // Source PAN
@@ -786,35 +861,7 @@ uint8_t Frame::SkipSecurityHeaderIndex(void) const
 
     default:
         ExitNow(index = kInvalidIndex);
-    }
-
-    VerifyOrExit((index + GetFcsSize()) <= GetPsduLength(), index = kInvalidIndex);
-
-    // Security Control + Frame Counter + Key Identifier
-    if ((fcf & kFcfSecurityEnabled) != 0)
-    {
-        uint8_t securityControl = *(GetPsdu() + index);
-
-        index += kSecurityControlSize + kFrameCounterSize;
-
-        switch (securityControl & kKeyIdModeMask)
-        {
-        case kKeyIdMode0:
-            index += kKeySourceSizeMode0;
-            break;
-
-        case kKeyIdMode1:
-            index += kKeySourceSizeMode1 + kKeyIndexSize;
-            break;
-
-        case kKeyIdMode2:
-            index += kKeySourceSizeMode2 + kKeyIndexSize;
-            break;
-
-        case kKeyIdMode3:
-            index += kKeySourceSizeMode3 + kKeyIndexSize;
-            break;
-        }
+        break;
     }
 
 exit:
