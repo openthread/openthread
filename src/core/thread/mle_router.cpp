@@ -4050,10 +4050,10 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
 
     SuccessOrExit(Tlv::ReadUint8Tlv(*aMessage, ThreadTlv::kStatus, status));
 
-    mAddressSolicitRejected = (status != ThreadStatusTlv::kSuccess);
-
     if (status != ThreadStatusTlv::kSuccess)
     {
+        mAddressSolicitRejected = true;
+
         if (IsRouterIdValid(mPreviousRouterId))
         {
             if (HasChildren())
