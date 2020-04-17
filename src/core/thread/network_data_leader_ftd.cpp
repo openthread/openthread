@@ -465,7 +465,7 @@ otError Leader::ValidatePrefix(const PrefixTlv &aPrefix, uint16_t aRloc16)
     // and entries all matching `aRloc16` (no other entry for other
     // RLOCs).
 
-    otError               error                   = OT_ERROR_NONE;
+    otError               error                   = OT_ERROR_PARSE;
     const NetworkDataTlv *subEnd                  = aPrefix.GetNext();
     bool                  foundTempHasRoute       = false;
     bool                  foundStableHasRoute     = false;
@@ -474,7 +474,7 @@ otError Leader::ValidatePrefix(const PrefixTlv &aPrefix, uint16_t aRloc16)
 
     for (const NetworkDataTlv *subCur = aPrefix.GetSubTlvs(); subCur < subEnd; subCur = subCur->GetNext())
     {
-        VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd, error = OT_ERROR_PARSE);
+        VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd, OT_NOOP);
 
         switch (subCur->GetType())
         {
@@ -488,17 +488,17 @@ otError Leader::ValidatePrefix(const PrefixTlv &aPrefix, uint16_t aRloc16)
 
             if (borderRouter->IsStable())
             {
-                VerifyOrExit(!foundStableBorderRouter, error = OT_ERROR_PARSE);
+                VerifyOrExit(!foundStableBorderRouter, OT_NOOP);
                 foundStableBorderRouter = true;
             }
             else
             {
-                VerifyOrExit(!foundTempBorderRouter, error = OT_ERROR_PARSE);
+                VerifyOrExit(!foundTempBorderRouter, OT_NOOP);
                 foundTempBorderRouter = true;
             }
 
-            VerifyOrExit(borderRouter->GetFirstEntry() == borderRouter->GetLastEntry(), error = OT_ERROR_PARSE);
-            VerifyOrExit(borderRouter->GetFirstEntry()->GetRloc() == aRloc16, error = OT_ERROR_PARSE);
+            VerifyOrExit(borderRouter->GetFirstEntry() == borderRouter->GetLastEntry(), OT_NOOP);
+            VerifyOrExit(borderRouter->GetFirstEntry()->GetRloc() == aRloc16, OT_NOOP);
             break;
         }
 
@@ -512,23 +512,28 @@ otError Leader::ValidatePrefix(const PrefixTlv &aPrefix, uint16_t aRloc16)
 
             if (hasRoute->IsStable())
             {
-                VerifyOrExit(!foundStableHasRoute, error = OT_ERROR_PARSE);
+                VerifyOrExit(!foundStableHasRoute, OT_NOOP);
                 foundStableHasRoute = true;
             }
             else
             {
-                VerifyOrExit(!foundTempHasRoute, error = OT_ERROR_PARSE);
+                VerifyOrExit(!foundTempHasRoute, OT_NOOP);
                 foundTempHasRoute = true;
             }
 
-            VerifyOrExit(hasRoute->GetFirstEntry() == hasRoute->GetLastEntry(), error = OT_ERROR_PARSE);
-            VerifyOrExit(hasRoute->GetFirstEntry()->GetRloc() == aRloc16, error = OT_ERROR_PARSE);
+            VerifyOrExit(hasRoute->GetFirstEntry() == hasRoute->GetLastEntry(), OT_NOOP);
+            VerifyOrExit(hasRoute->GetFirstEntry()->GetRloc() == aRloc16, OT_NOOP);
             break;
         }
 
         default:
             break;
         }
+    }
+
+    if (foundStableBorderRouter || foundTempBorderRouter || foundStableHasRoute || foundTempHasRoute)
+    {
+        error = OT_ERROR_NONE;
     }
 
 exit:
@@ -540,13 +545,13 @@ otError Leader::ValidateService(const ServiceTlv &aService, uint16_t aRloc16)
     // Validate that `aService` TLV contains a single well-formed
     // Server sub-TLV associated with `aRloc16`.
 
-    otError               error       = OT_ERROR_NONE;
+    otError               error       = OT_ERROR_PARSE;
     const NetworkDataTlv *subEnd      = aService.GetNext();
     bool                  foundServer = false;
 
     for (const NetworkDataTlv *subCur = aService.GetSubTlvs(); subCur < subEnd; subCur = subCur->GetNext())
     {
-        VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd, error = OT_ERROR_PARSE);
+        VerifyOrExit((subCur + 1) <= subEnd && subCur->GetNext() <= subEnd, OT_NOOP);
 
         switch (subCur->GetType())
         {
@@ -554,16 +559,21 @@ otError Leader::ValidateService(const ServiceTlv &aService, uint16_t aRloc16)
         {
             const ServerTlv *server = static_cast<const ServerTlv *>(subCur);
 
-            VerifyOrExit(!foundServer, error = OT_ERROR_PARSE);
+            VerifyOrExit(!foundServer, OT_NOOP);
             foundServer = true;
 
-            VerifyOrExit(server->IsValid() && server->GetServer16() == aRloc16, error = OT_ERROR_PARSE);
+            VerifyOrExit(server->IsValid() && server->GetServer16() == aRloc16, OT_NOOP);
             break;
         }
 
         default:
             break;
         }
+    }
+
+    if (foundServer)
+    {
+        error = OT_ERROR_NONE;
     }
 
 exit:
