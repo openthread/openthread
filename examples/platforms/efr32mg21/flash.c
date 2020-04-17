@@ -32,14 +32,14 @@
  *   storage for the EFR32 platform using the Silabs Nvm3 interface.
  */
 
-#include <openthread/config.h>
 #include "openthread-core-efr32-config.h"
+#include <openthread/config.h>
 
 #if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE // Defaults to OT NV system
 
+#include "em_msc.h"
 #include <string.h>
 #include <openthread/instance.h>
-#include "em_msc.h"
 
 #define FLASH_PAGE_NUM 4
 #define FLASH_DATA_END_ADDR (FLASH_BASE + FLASH_SIZE)
@@ -101,22 +101,22 @@ void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset
 
 #else // Uses Silabs nvm3 system
 
-#include <openthread/platform/settings.h>
-#include "common/code_utils.hpp"
 #include "nvm3.h"
 #include "nvm3_default.h"
 #include <string.h>
+#include <openthread/platform/settings.h>
+#include "common/code_utils.hpp"
 
-#define NVM3KEY_DOMAIN_OPENTHREAD  0x20000U // NVM3 Default Instance key space region for Thread stack
+#define NVM3KEY_DOMAIN_OPENTHREAD 0x20000U // NVM3 Default Instance key space region for Thread stack
 #define NUM_INDEXED_SETTINGS \
     OPENTHREAD_CONFIG_MLE_MAX_CHILDREN // Indexed key types are only supported for kKeyChildInfo (=='child table').
-#define ENUM_NVM3_KEY_LIST_SIZE 4 // List size used when enumerating nvm3 keys.
+#define ENUM_NVM3_KEY_LIST_SIZE 4      // List size used when enumerating nvm3 keys.
 
 static otError          addSetting(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 static nvm3_ObjectKey_t makeNvm3ObjKey(uint16_t otSettingsKey, int index);
 static otError          mapNvm3Error(Ecode_t nvm3Res);
 
-extern nvm3_Init_t nvm3_defaultInitData;
+extern nvm3_Init_t    nvm3_defaultInitData;
 extern nvm3_Handle_t *nvm3_defaultHandle;
 
 void otPlatSettingsInit(otInstance *aInstance)
