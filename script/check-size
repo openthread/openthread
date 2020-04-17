@@ -27,47 +27,77 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set -e -x -o pipefail
+set -euxo pipefail
 
 setup_arm_gcc_7()
 {
-  if arm-none-eabi-gcc --version | grep -q 'Arm Embedded Processors 7'; then
-    return 0
-  fi
+    if arm-none-eabi-gcc --version | grep -q 'Arm Embedded Processors 7'; then
+        return 0
+    fi
 
-  (cd /tmp/
-   wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
-   tar xjf gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2)
-  export PATH=/tmp/gcc-arm-none-eabi-7-2018-q2-update/bin:$PATH
+    (cd /tmp/ \
+        && wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2 \
+        && tar xjf gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2)
+    export PATH=/tmp/gcc-arm-none-eabi-7-2018-q2-update/bin:$PATH
 
-  arm-none-eabi-gcc --version
+    arm-none-eabi-gcc --version
 }
 
 size_nrf52840()
 {
-    [ ${TRAVIS_PULL_REQUEST} != false ]
-
     mkdir ../output
 
-    export MERGE_BASE_SHA=$(git merge-base HEAD ${TRAVIS_BRANCH})
+    # The first parent should be the merge base
+    MERGE_BASE_SHA="$(git cat-file -p "${GITHUB_SHA}" | grep 'parent ' | head -n1 | cut -d' ' -f2)"
+
+    # Fetch base commit in case it is not present
+    git fetch --depth 1 --no-recurse-submodules origin "${MERGE_BASE_SHA}"
+
+    export OT_MERGE_BASE_SHA
 
     # pull request
-    OPENTHREAD_FLAGS="BORDER_AGENT=1 BORDER_ROUTER=1 CHANNEL_MANAGER=1 CHANNEL_MONITOR=1 CHILD_SUPERVISION=1 COAP=1 COAPS=1 COMMISSIONER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 DIAGNOSTIC=1 DISABLE_DOC=1 DNS_CLIENT=1 ECDSA=1 FULL_LOGS=1 JAM_DETECTION=1 JOINER=1 LINK_RAW=1 MAC_FILTER=1 MTD_NETDIAG=1 SERVICE=1 SLAAC=1 SNTP_CLIENT=1 TIME_SYNC=1 UDP_FORWARD=1"
+    local flags=(
+        "BORDER_AGENT=1"
+        "BORDER_ROUTER=1"
+        "CHANNEL_MANAGER=1"
+        "CHANNEL_MONITOR=1"
+        "CHILD_SUPERVISION=1"
+        "COAP=1"
+        "COAPS=1"
+        "COMMISSIONER=1"
+        "DHCP6_CLIENT=1"
+        "DHCP6_SERVER=1"
+        "DIAGNOSTIC=1"
+        "DISABLE_DOC=1"
+        "DNS_CLIENT=1"
+        "ECDSA=1"
+        "FULL_LOGS=1"
+        "JAM_DETECTION=1"
+        "JOINER=1"
+        "LINK_RAW=1"
+        "MAC_FILTER=1"
+        "MTD_NETDIAG=1"
+        "SERVICE=1"
+        "SLAAC=1"
+        "SNTP_CLIENT=1"
+        "TIME_SYNC=1"
+        "UDP_FORWARD=1"
+    )
 
     git checkout -- .
     git clean -xfd
     ./bootstrap
-    make -f examples/Makefile-nrf52840 ${OPENTHREAD_FLAGS}
+    make -f examples/Makefile-nrf52840 "${flags[@]}"
     mv output/nrf52840 ../output/nrf52840-b
 
-    git checkout -f ${MERGE_BASE_SHA}
+    git checkout -f "${MERGE_BASE_SHA}"
     git submodule update --init
 
     # base branch
     git checkout -- .
     git clean -xfd
     ./bootstrap
-    make -f examples/Makefile-nrf52840 ${OPENTHREAD_FLAGS}
+    make -f examples/Makefile-nrf52840 "${flags[@]}"
     mv output/nrf52840 ../output/nrf52840-a
 
     curl -s "${SIZE_REPORT_URL}/bash" > size-report
@@ -95,22 +125,17 @@ size_nrf52840()
 
 main()
 {
-  case $1 in
-    setup)
-      setup_arm_gcc_7
-      ;;
-    nrf52840)
-      size_nrf52840
-      ;;
-    '')
-      setup_arm_gcc_7
-      size_nrf52840
-      ;;
-    *)
-      echo "USAGE: $0 [setup|nrf52840]"
-      exit 1
-      ;;
-  esac
+    if [[ $# == 0 ]]; then
+        setup_arm_gcc_7
+        size_nrf52840
+    elif [[ "$1" == setup ]]; then
+        setup_arm_gcc_7
+    elif [[ "$1" == nrf52840 ]]; then
+        size_nrf52840
+    else
+        echo "USAGE: $0 [setup|nrf52840]"
+        exit 1
+    fi
 }
 
 main "$@"

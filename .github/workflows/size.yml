@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,29 +26,27 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-language: python
-python: "3.6"
+name: Size
 
-sudo: required
-dist: bionic
-
-before_install:
-  - travis_retry .travis/before_install.sh
-
-before_script:
-  - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
-      sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6';
-    fi
+on: [pull_request]
 
 jobs:
-  include:
-    - env: BUILD_TARGET="android-build" VERBOSE=1
-      os: linux
-      dist: trusty
-      python: "2.7" # The old Android build system only supports python2
-      script: .travis/script.sh
-    - env: BUILD_TARGET="android-build" VERBOSE=1 USE_OTBR_DAEMON=1
-      os: linux
-      dist: trusty
-      python: "2.7" # The old Android build system only supports python2
-      script: .travis/script.sh
+
+  cancel-previous-runs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: rokroskar/workflow-run-cleanup-action@master
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      if: "github.ref != 'refs/heads/master'"
+
+  size-report:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run
+      env:
+        OT_BASE_BRANCH: "${{ github.base_ref }}"
+        SIZE_REPORT_URL: "https://openthread-size-report.glitch.me/size-report/1354027"
+      run: |
+        ./script/check-size
