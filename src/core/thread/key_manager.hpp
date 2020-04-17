@@ -482,6 +482,62 @@ public:
     void SetSecurityPolicyFlags(uint8_t aSecurityPolicyFlags);
 
     /**
+     * This method indicates whether or not obtaining Master key for out-of-band is enabled.
+     *
+     * @retval TRUE   If obtaining Master key for out-of-band is enabled.
+     * @retval FALSE  If obtaining Master key for out-of-band is not enabled.
+     *
+     */
+    bool IsObtainMasterKeyEnabled(void) const
+    {
+        return (mSecurityPolicyFlags & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY) != 0;
+    }
+
+    /**
+     * This method indicates whether or not Native Commissioning using PSKc is allowed.
+     *
+     * @retval TRUE   If Native Commissioning using PSKc is allowed.
+     * @retval FALSE  If Native Commissioning using PSKc is not allowed.
+     *
+     */
+    bool IsNativeCommissioningAllowed(void) const
+    {
+        return (mSecurityPolicyFlags & OT_SECURITY_POLICY_NATIVE_COMMISSIONING) != 0;
+    }
+
+    /**
+     * This method indicates whether or not Thread 1.1 Routers are enabled.
+     *
+     * @retval TRUE   If Thread 1.1 Routers are enabled.
+     * @retval FALSE  If Thread 1.1 Routers are not enabled.
+     *
+     */
+    bool IsRouterEnabled(void) const { return (mSecurityPolicyFlags & OT_SECURITY_POLICY_ROUTERS) != 0; }
+
+    /**
+     * This method indicates whether or not external Commissioner authentication is allowed using PSKc.
+     *
+     * @retval TRUE   If the commissioning sessions by an external Commissioner based on the PSKc are allowed
+     *                to be established and that changes to the Commissioner Dataset by on-mesh nodes are allowed.
+     * @retval FALSE  If the commissioning sessions by an external Commissioner based on the PSKc are not allowed
+     *                to be established and that changes to the Commissioner Dataset by on-mesh nodes are not allowed.
+     *
+     */
+    bool IsExternalCommissionerAllowed(void) const
+    {
+        return (mSecurityPolicyFlags & OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER) != 0;
+    }
+
+    /**
+     * This method indicates whether or not Thread Beacons are enabled.
+     *
+     * @retval TRUE   If Thread Beacons are enabled.
+     * @retval FALSE  If Thread Beacons are not enabled.
+     *
+     */
+    bool IsThreadBeaconEnabled(void) const { return (mSecurityPolicyFlags & OT_SECURITY_POLICY_BEACONS) != 0; }
+
+    /**
      * This static method generates IEEE 802.15.4 nonce byte sequence.
      *
      * @param[in]  aAddress        An extended address.

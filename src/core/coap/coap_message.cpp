@@ -286,7 +286,7 @@ otError Message::SetToken(uint8_t aTokenLength)
 
     OT_ASSERT(aTokenLength <= sizeof(token));
 
-    Random::NonCrypto::FillBuffer(token, aTokenLength);
+    Random::Crypto::FillBuffer(token, aTokenLength);
 
     return SetToken(token, aTokenLength);
 }
@@ -304,7 +304,7 @@ Message *Message::Clone(uint16_t aLength) const
 {
     Message *message = static_cast<Message *>(ot::Message::Clone(aLength));
 
-    VerifyOrExit(message != NULL);
+    VerifyOrExit(message != NULL, OT_NOOP);
 
     memcpy(&message->GetHelpData(), &GetHelpData(), sizeof(GetHelpData()));
 

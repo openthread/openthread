@@ -26,70 +26,27 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_executable(ot-cli
-    main.c
-    $<$<BOOL:${READLINE}>:console_cli.cpp>
-)
+set(CMAKE_SYSTEM_NAME              Generic)
+set(CMAKE_SYSTEM_PROCESSOR         ARM)
 
-set_target_properties(
-    ot-cli
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
+set(CMAKE_C_COMPILER               arm-none-eabi-gcc)
+set(CMAKE_CXX_COMPILER             arm-none-eabi-g++)
+set(CMAKE_ASM_COMPILER             arm-none-eabi-as)
+set(CMAKE_RANLIB                   arm-none-eabi-ranlib)
 
-target_include_directories(ot-cli PRIVATE ${COMMON_INCLUDES})
+set(COMMON_C_FLAGS                 "-mthumb -fdata-sections -ffunction-sections -mcpu=cortex-m0plus -mfloat-abi=soft")
 
-target_compile_definitions(ot-cli PRIVATE
-    $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>
-    OPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_CLI
-)
+set(CMAKE_C_FLAGS                  "${COMMON_C_FLAGS} -std=gnu99")
+set(CMAKE_CXX_FLAGS                "${COMMON_C_FLAGS} -fno-exceptions -fno-rtti")
+set(CMAKE_ASM_FLAGS                "${COMMON_C_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS         "${COMMON_C_FLAGS} -Wl,--gc-sections -specs=nano.specs -specs=nosys.specs")
 
-target_compile_options(ot-cli PRIVATE
-    ${OT_CFLAGS}
-)
+set(CMAKE_C_FLAGS_DEBUG            "-Og -g")
+set(CMAKE_CXX_FLAGS_DEBUG          "-Og -g")
+set(CMAKE_ASM_FLAGS_DEBUG          "-g")
+set(CMAKE_EXE_LINKER_FLAGS_DEBUG   "")
 
-target_link_libraries(ot-cli
-    openthread-cli-ftd
-    ${OT_PLATFORM_LIB}
-    openthread-ftd
-    ${OT_PLATFORM_LIB}
-    mbedcrypto
-    openthread-ncp-ftd
-    $<$<BOOL:${READLINE}>:${OT_READLINE}>
-)
-
-add_executable(ot-ncp
-    main.c
-)
-
-set_target_properties(
-    ot-ncp
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
-target_include_directories(ot-ncp PRIVATE ${COMMON_INCLUDES})
-
-target_compile_definitions(ot-ncp PRIVATE
-    OPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_NCP
-)
-
-target_compile_options(ot-ncp PRIVATE
-    ${OT_CFLAGS}
-)
-
-target_link_libraries(ot-ncp
-    openthread-ncp-ftd
-    ${OT_PLATFORM_LIB}
-    openthread-ftd
-    ${OT_PLATFORM_LIB}
-    mbedcrypto
-    openthread-ncp-ftd
-)
-
-install(TARGETS ot-cli ot-ncp
-    DESTINATION bin)
-
-set(CPACK_PACKAGE_NAME "openthread-standalone")
+set(CMAKE_C_FLAGS_RELEASE          "-Os")
+set(CMAKE_CXX_FLAGS_RELEASE        "-Os")
+set(CMAKE_ASM_FLAGS_RELEASE        "")
+set(CMAKE_EXE_LINKER_FLAGS_RELEASE "")

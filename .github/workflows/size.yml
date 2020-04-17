@@ -26,70 +26,27 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_executable(ot-cli
-    main.c
-    $<$<BOOL:${READLINE}>:console_cli.cpp>
-)
+name: Size
 
-set_target_properties(
-    ot-cli
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
+on: [pull_request]
 
-target_include_directories(ot-cli PRIVATE ${COMMON_INCLUDES})
+jobs:
 
-target_compile_definitions(ot-cli PRIVATE
-    $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>
-    OPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_CLI
-)
+  cancel-previous-runs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: rokroskar/workflow-run-cleanup-action@master
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      if: "github.ref != 'refs/heads/master'"
 
-target_compile_options(ot-cli PRIVATE
-    ${OT_CFLAGS}
-)
-
-target_link_libraries(ot-cli
-    openthread-cli-ftd
-    ${OT_PLATFORM_LIB}
-    openthread-ftd
-    ${OT_PLATFORM_LIB}
-    mbedcrypto
-    openthread-ncp-ftd
-    $<$<BOOL:${READLINE}>:${OT_READLINE}>
-)
-
-add_executable(ot-ncp
-    main.c
-)
-
-set_target_properties(
-    ot-ncp
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
-target_include_directories(ot-ncp PRIVATE ${COMMON_INCLUDES})
-
-target_compile_definitions(ot-ncp PRIVATE
-    OPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_NCP
-)
-
-target_compile_options(ot-ncp PRIVATE
-    ${OT_CFLAGS}
-)
-
-target_link_libraries(ot-ncp
-    openthread-ncp-ftd
-    ${OT_PLATFORM_LIB}
-    openthread-ftd
-    ${OT_PLATFORM_LIB}
-    mbedcrypto
-    openthread-ncp-ftd
-)
-
-install(TARGETS ot-cli ot-ncp
-    DESTINATION bin)
-
-set(CPACK_PACKAGE_NAME "openthread-standalone")
+  size-report:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run
+      env:
+        OT_BASE_BRANCH: "${{ github.base_ref }}"
+        SIZE_REPORT_URL: "https://openthread-size-report.glitch.me/size-report/1354027"
+      run: |
+        ./script/check-size

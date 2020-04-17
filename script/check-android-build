@@ -33,17 +33,6 @@
 
 set -euxo pipefail
 
-#######################################
-# Prepare android build system
-# Globals:
-#   None
-# Arguments:
-#   None
-# Returns:
-#   None
-#######################################
-
-
 check_targets()
 {
     for target in "$@"; do

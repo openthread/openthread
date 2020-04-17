@@ -233,7 +233,7 @@ void Flash::Swap(void)
     {
         otPlatFlashRead(&GetInstance(), mSwapIndex, srcOffset, &record, sizeof(RecordHeader));
 
-        VerifyOrExit(record.IsAddBeginSet());
+        VerifyOrExit(record.IsAddBeginSet(), OT_NOOP);
 
         if (!record.IsValid() || DoesValidRecordExist(srcOffset + record.GetSize(), record.GetKey()))
         {

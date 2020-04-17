@@ -488,7 +488,7 @@ void Diags::TransmitDone(otError aError)
         }
     }
 
-    VerifyOrExit(!mRepeatActive);
+    VerifyOrExit(!mRepeatActive, OT_NOOP);
     TransmitPacket();
 
 exit:

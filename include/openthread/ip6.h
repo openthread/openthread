@@ -418,8 +418,9 @@ otError otIp6Send(otInstance *aInstance, otMessage *aMessage);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aPort     The port value.
  *
- * @retval OT_ERROR_NONE     The port was successfully added to the allowed unsecure port list.
- * @retval OT_ERROR_NO_BUFS  The unsecure port list is full.
+ * @retval OT_ERROR_NONE         The port was successfully added to the allowed unsecure port list.
+ * @retval OT_ERROR_INVALID_ARGS The port is invalid (value 0 is reserved for internal use).
+ * @retval OT_ERROR_NO_BUFS      The unsecure port list is full.
  *
  */
 otError otIp6AddUnsecurePort(otInstance *aInstance, uint16_t aPort);
@@ -434,8 +435,9 @@ otError otIp6AddUnsecurePort(otInstance *aInstance, uint16_t aPort);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aPort     The port value.
  *
- * @retval OT_ERROR_NONE       The port was successfully removed from the allowed unsecure port list.
- * @retval OT_ERROR_NOT_FOUND  The port was not found in the unsecure port list.
+ * @retval OT_ERROR_NONE         The port was successfully removed from the allowed unsecure port list.
+ * @retval OT_ERROR_INVALID_ARGS The port is invalid (value 0 is reserved for internal use).
+ * @retval OT_ERROR_NOT_FOUND    The port was not found in the unsecure port list.
  *
  */
 otError otIp6RemoveUnsecurePort(otInstance *aInstance, uint16_t aPort);

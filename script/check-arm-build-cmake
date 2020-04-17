@@ -104,11 +104,36 @@ build_cc2652()
     cd ..
 }
 
+build_kw41z()
+{
+    local options=("${OT_COMMON_OPTIONS[@]}")
+
+    options+=(
+        "-DOT_PLATFORM=kw41z"
+        "-DCMAKE_TOOLCHAIN_FILE=examples/platforms/kw41z/arm-none-eabi.cmake"
+        "-DOT_COMMISSIONER=on"
+        "-DOT_DHCP6_CLIENT=on"
+        "-DOT_DHCP6_SERVER=on"
+        "-DOT_DNS_CLIENT=on"
+        "-DOT_JOINER=on"
+        "-DOT_SLAAC=on"
+        "-DCMAKE_BUILD_TYPE=Release"
+    )
+
+    reset_source
+    mkdir build
+    cd build
+    cmake -GNinja "${options[@]}" ..
+    ninja
+    cd ..
+}
+
 main()
 {
     build_cc1352
     build_cc2538
     build_cc2652
+    build_kw41z
 }
 
 main "$@"

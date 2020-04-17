@@ -92,7 +92,7 @@ void SourceMatchController::ResetMessageCount(Child &aChild)
 
 void SourceMatchController::SetSrcMatchAsShort(Child &aChild, bool aUseShortAddress)
 {
-    VerifyOrExit(aChild.IsIndirectSourceMatchShort() != aUseShortAddress);
+    VerifyOrExit(aChild.IsIndirectSourceMatchShort() != aUseShortAddress, OT_NOOP);
 
     if (aChild.GetIndirectMessageCount() > 0)
     {

@@ -38,9 +38,9 @@ include("${PROJECT_SOURCE_DIR}/etc/cmake/options.cmake")
 include("${PROJECT_SOURCE_DIR}/etc/cmake/functions.cmake")
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
-    option(OT_COMPILE_WARNING_AS_ERROR "whether to include -Werror with gcc-compatible compilers")
+    option(OT_COMPILE_WARNING_AS_ERROR "whether to include -Werror -pedantic-errors with gcc-compatible compilers")
     if (OT_COMPILE_WARNING_AS_ERROR)
-        set(OT_CFLAGS -Werror)
+        set(OT_CFLAGS -Werror -pedantic-errors)
     endif()
 
     if(OT_COVERAGE)
@@ -50,7 +50,7 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
     endif()
 
     set(OT_CFLAGS
-        $<$<COMPILE_LANGUAGE:C>:${OT_CFLAGS} -Wall -Wextra -Wshadow -pedantic-errors>
+        $<$<COMPILE_LANGUAGE:C>:${OT_CFLAGS} -Wall -Wextra -Wshadow>
         $<$<COMPILE_LANGUAGE:CXX>:${OT_CFLAGS} -Wall -Wextra -Wshadow -Wno-c++14-compat -fno-exceptions>
     )
 endif()
