@@ -1447,7 +1447,7 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
         {
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
             // For Thread 1.2 MED, skip MA registration if the parent is Thread 1.1 device.
-            if (GetParent().IsThreadVersion2())
+            if (GetParent().IsThreadVersion1_1())
             {
                 break;
             }
@@ -4465,14 +4465,19 @@ exit:
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
 // Since Thread 1.2, MTD end device (including rx-on-when-idle or rx-off-when-idle) should
-// register or de-register their multicast address larger than realm local to the parent via
-// MLE Child Update Request.
+// register or de-register their multicast address larger than realm local to its Thread 1.2
+// parent via MLE Child Update Request.
 bool Mle::ShouldRegisterMulticastToParent(void) const
 {
     bool update = false;
 
     VerifyOrExit(IsChild() && !IsFullThreadDevice(), OT_NOOP);
-#if (OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_1)
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    // When multicast subscription changes, different from 1.2 SED, 1.2 MED would not trigger
+    // Child Update Request if the parent is Thread 1.1.
+    VerifyOrExit(!(GetParent().IsThreadVersion1_1()) || !IsRxOnWhenIdle(), OT_NOOP);
+#else
     VerifyOrExit(!IsRxOnWhenIdle(), OT_NOOP);
 #endif
     update = true;

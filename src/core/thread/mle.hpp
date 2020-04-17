@@ -700,6 +700,14 @@ public:
     Router &GetParent(void) { return mParent; }
 
     /**
+     * This method gets the parent when operating in End Device mode.
+     *
+     * @returns A reference to the parent.
+     *
+     */
+    const Router &GetParent(void) const { return mParent; }
+
+    /**
      * This method get the parent candidate.
      *
      * The parent candidate is valid when attempting to attach to a new parent.
