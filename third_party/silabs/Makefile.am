@@ -136,6 +136,7 @@ SILABS_COMMON_SOURCES                                                           
     gecko_sdk_suite/v2.7/hardware/kit/common/bsp/bsp_stk_leds.c                           \
     gecko_sdk_suite/v2.7/platform/emdrv/dmadrv/src/dmadrv.c                               \
     gecko_sdk_suite/v2.7/platform/emdrv/gpiointerrupt/src/gpiointerrupt.c                 \
+    gecko_sdk_suite/v2.7/platform/emdrv/nvm3/src/nvm3_default.c                           \
     gecko_sdk_suite/v2.7/platform/emdrv/nvm3/src/nvm3_hal_flash.c                         \
     gecko_sdk_suite/v2.7/platform/emdrv/nvm3/src/nvm3_lock.c                              \
     gecko_sdk_suite/v2.7/platform/emdrv/uartdrv/src/uartdrv.c                             \
