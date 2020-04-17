@@ -78,6 +78,12 @@ build_all_features()
     cmake -GNinja "${options[@]}" ..
     ninja
     cd "$OT_SRCDIR"
+
+    reset_source
+    mkdir build && cd build
+    cmake -GNinja "${options[@]}" -DOT_OTNS=on -DOT_SIMULATION_VIRTUAL_TIME=on ..
+    ninja
+    cd ..
 }
 
 build_toranj()

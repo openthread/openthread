@@ -62,6 +62,34 @@ jobs:
         ./bootstrap
         make -f examples/Makefile-simulation distcheck
 
+  cli-ftd-otns:
+    runs-on: ubuntu-18.04
+    env:
+      CFLAGS: -m32
+      CXXFLAGS: -m32
+      LDFLAGS: -m32
+      COVERAGE: 1
+      REFERENCE_DEVICE: 1
+      VIRTUAL_TIME: 1
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v1
+      with:
+        go-version: '1.13'
+    - name: Bootstrap
+      run: |
+        sudo apt update
+        sudo apt --no-install-recommends install -y g++-multilib
+        ./bootstrap
+    - name: Run OTNS Tests
+      run: |
+        git clone https://github.com/openthread/ot-ns.git ~/otns
+        export OTDIR=$PWD
+        cd ~/otns
+        ./script/test py-unittests py-unittests
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+
   cli-ftd:
     runs-on: ubuntu-18.04
     env:
