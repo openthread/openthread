@@ -48,7 +48,7 @@
 namespace ot {
 namespace MeshCoP {
 
-DatasetLocal::DatasetLocal(Instance &aInstance, Tlv::Type aType)
+DatasetLocal::DatasetLocal(Instance &aInstance, Dataset::Type aType)
     : InstanceLocator(aInstance)
     , mUpdateTime(0)
     , mType(aType)
@@ -98,14 +98,14 @@ otError DatasetLocal::Read(Dataset &aDataset) const
     error = Get<Settings>().ReadOperationalDataset(IsActive(), aDataset);
     VerifyOrExit(error == OT_ERROR_NONE, aDataset.mLength = 0);
 
-    if (mType == Tlv::kActiveTimestamp)
+    if (mType == Dataset::kActive)
     {
         aDataset.Remove(Tlv::kPendingTimestamp);
         aDataset.Remove(Tlv::kDelayTimer);
     }
     else
     {
-        delayTimer = static_cast<DelayTimerTlv *>(aDataset.Get(Tlv::kDelayTimer));
+        delayTimer = static_cast<DelayTimerTlv *>(aDataset.GetTlv(Tlv::kDelayTimer));
         VerifyOrExit(delayTimer, OT_NOOP);
 
         elapsed = TimerMilli::GetNow() - mUpdateTime;
@@ -136,7 +136,7 @@ otError DatasetLocal::Read(otOperationalDataset &aDataset) const
     error = Read(dataset);
     SuccessOrExit(error);
 
-    dataset.Get(aDataset);
+    dataset.ConvertTo(aDataset);
 
 exit:
     return error;
@@ -147,7 +147,7 @@ otError DatasetLocal::Save(const otOperationalDataset &aDataset)
     otError error = OT_ERROR_NONE;
     Dataset dataset(mType);
 
-    error = dataset.Set(aDataset);
+    error = dataset.SetFrom(aDataset);
     SuccessOrExit(error);
 
     error = Save(dataset);
@@ -167,13 +167,13 @@ otError DatasetLocal::Save(const Dataset &aDataset)
         // do not propagate error back
         Get<Settings>().DeleteOperationalDataset(IsActive());
         mSaved = false;
-        otLogInfoMeshCoP("%s dataset deleted", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
+        otLogInfoMeshCoP("%s dataset deleted", Dataset::TypeToString(mType));
     }
     else
     {
         SuccessOrExit(error = Get<Settings>().SaveOperationalDataset(IsActive(), aDataset));
         mSaved = true;
-        otLogInfoMeshCoP("%s dataset set", mType == Tlv::kActiveTimestamp ? "Active" : "Pending");
+        otLogInfoMeshCoP("%s dataset set", Dataset::TypeToString(mType));
     }
 
     timestamp = aDataset.GetTimestamp();
