@@ -272,4 +272,4 @@ jobs:
     - uses: actions/checkout@v2
     - name: Build
       run: |
-        docker run --rm -it -v $PWD:/build/openthread openthread/android-trusty /build/openthread/script/check-android-build
+        docker run --rm -v $PWD:/build/openthread openthread/android-trusty /build/openthread/script/check-android-build
