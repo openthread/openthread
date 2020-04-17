@@ -35,13 +35,13 @@
 #include "openthread-core-efr32-config.h"
 #include <openthread/config.h>
 
-#if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE // Defaults to OT NV system
+#if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE // Use OT NV system
 
 #include "em_msc.h"
 #include <string.h>
 #include <openthread/instance.h>
 
-#define FLASH_PAGE_NUM 4
+#define FLASH_PAGE_NUM 2
 #define FLASH_DATA_END_ADDR (FLASH_BASE + FLASH_SIZE)
 #define FLASH_DATA_START_ADDR (FLASH_DATA_END_ADDR - (FLASH_PAGE_SIZE * FLASH_PAGE_NUM))
 #define FLASH_SWAP_PAGE_NUM (FLASH_PAGE_NUM / 2)
@@ -99,7 +99,7 @@ void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset
     memcpy(aData, (const uint8_t *)mapAddress(aSwapIndex, aOffset), aSize);
 }
 
-#else // Uses Silabs nvm3 system
+#else // Defaults to Silabs nvm3 system
 
 #include "nvm3.h"
 #include "nvm3_default.h"
