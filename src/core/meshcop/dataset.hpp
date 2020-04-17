@@ -103,7 +103,7 @@ public:
      * @returns A pointer to the TLV or NULL if none is found.
      *
      */
-    Tlv *GetTlv(Tlv::Type aType);
+    Tlv *GetTlv(Tlv::Type aType) { return const_cast<Tlv *>(const_cast<const Dataset *>(this)->GetTlv(aType)); }
 
     /**
      * This method returns a pointer to the TLV with a given type.
@@ -114,6 +114,28 @@ public:
      *
      */
     const Tlv *GetTlv(Tlv::Type aType) const;
+
+    /**
+     * This template method returns a pointer to the TLV with a given template type `TlvType`
+     *
+     * @returns A pointer to the TLV or NULL if none is found.
+     *
+     */
+    template <typename TlvType> TlvType *GetTlv(void)
+    {
+        return static_cast<TlvType *>(GetTlv(static_cast<Tlv::Type>(TlvType::kType)));
+    }
+
+    /**
+     * This template method returns a pointer to the TLV with a given template type `TlvType`
+     *
+     * @returns A pointer to the TLV or NULL if none is found.
+     *
+     */
+    template <typename TlvType> const TlvType *GetTlv(void) const
+    {
+        return static_cast<const TlvType *>(GetTlv(static_cast<Tlv::Type>(TlvType::kType)));
+    }
 
     /**
      * This method returns a pointer to the byte representation of the Dataset.
@@ -189,6 +211,43 @@ public:
      *
      */
     otError SetTlv(const Tlv &aTlv);
+
+    /**
+     * This method sets a TLV with a given TLV Type and Value.
+     *
+     * @param[in] aType     The TLV Type.
+     * @param[in] aValue    A pointer to TLV Value.
+     * @param[in] aLength   The TLV Length in bytes (length of @p aValue).
+     *
+     * @retval OT_ERROR_NONE     Successfully set the TLV.
+     * @retval OT_ERROR_NO_BUFS  Could not set the TLV due to insufficient buffer space.
+     *
+     */
+    otError SetTlv(Tlv::Type aType, const void *aValue, uint8_t aLength);
+
+    /**
+     * This method sets a TLV with a given TLV Type and a `uint16_t` Value.
+     *
+     * @param[in] aType     The TLV Type.
+     * @param[in] aValue    The TLV value (as `uint16_t`).
+     *
+     * @retval OT_ERROR_NONE     Successfully set the TLV.
+     * @retval OT_ERROR_NO_BUFS  Could not set the TLV due to insufficient buffer space.
+     *
+     */
+    otError SetUint16Tlv(Tlv::Type aType, uint16_t aValue);
+
+    /**
+     * This method sets a TLV with a given TLV Type and a `uint32_t` Value.
+     *
+     * @param[in] aType     The TLV Type.
+     * @param[in] aValue    The TLV value (as `uint32_t`).
+     *
+     * @retval OT_ERROR_NONE     Successfully set the TLV.
+     * @retval OT_ERROR_NO_BUFS  Could not set the TLV due to insufficient buffer space.
+     *
+     */
+    otError SetUint32Tlv(Tlv::Type aType, uint32_t aValue);
 
     /**
      * This method sets the Dataset using TLVs stored in a message buffer.
