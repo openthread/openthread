@@ -14,7 +14,7 @@
 
 `toranj` requires `wpantund` to be installed.
 - Please follow [`wpantund` installation guide](https://github.com/openthread/wpantund/blob/master/INSTALL.md#wpantund-installation-guide). Note that `toranj` expects `wpantund` installed from latest master branch.
-- Alternative way to install `wpantund` is to use the same commands from git workflow [Simulation](https://github.com/openthread/openthread/blob/master/.github/workflows/simulation.yml#L336-L341) for build target `toranj-test-framework`.
+- Alternative way to install `wpantund` is to use the same commands from git workflow [Simulation](https://github.com/openthread/openthread/blob/4b55284bd20f99a88e8e2c617ba358a0a5547f5d/.github/workflows/simulation.yml#L336-L341) for build target `toranj-test-framework`.
 
 To run all tests, `start` script can be used. This script will build OpenThread with proper configuration options and starts running all test.
 
