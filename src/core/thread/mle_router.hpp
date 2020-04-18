@@ -320,6 +320,15 @@ public:
     void SetRouterDowngradeThreshold(uint8_t aThreshold) { mRouterDowngradeThreshold = aThreshold; }
 
     /**
+     * This method returns if the REED is expected to become Router soon.
+     *
+     * @retval TRUE   If the REED is going to become Router.
+     * @retval FALSE  Otherwise.
+     *
+     */
+    bool IsExpectedToBecomeRouter(void) const;
+
+    /**
      * This method removes a link to a neighbor.
      *
      * @param[in]  aNeighbor  A reference to the neighbor object.
@@ -830,6 +839,7 @@ private:
     uint32_t mFixedLeaderPartitionId; ///< only for certification testing
     bool     mRouterEligible : 1;
     bool     mAddressSolicitPending : 1;
+    bool     mAddressSolicitRejected : 1;
 
     uint8_t mRouterId;
     uint8_t mPreviousRouterId;
