@@ -60,6 +60,7 @@ LOG_OUTPUT          ?= APP
 endif
 LINK_RAW            ?= 0
 MAC_FILTER          ?= 0
+MLE_LONG_ROUTES     ?= 0
 MTD_NETDIAG         ?= 0
 MULTIPLE_INSTANCE   ?= 0
 OTNS                ?= 0
@@ -197,6 +198,10 @@ endif
 
 ifeq ($(MAC_FILTER),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1
+endif
+
+ifeq ($(MLE_LONG_ROUTES),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE=1
 endif
 
 ifeq ($(MTD_NETDIAG),1)
