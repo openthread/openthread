@@ -2993,6 +2993,9 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
     uint16_t            pendingDatasetOffset = 0;
     bool                dataRequest          = false;
     Tlv                 tlv;
+    RouterIdSet         routerIdSet;
+
+    OT_UNUSED_VARIABLE(routerIdSet);
 
     // Leader Data
     SuccessOrExit(error = ReadLeaderData(aMessage, leaderData));
@@ -3004,6 +3007,16 @@ otError Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &a
         {
             SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
             mRetrieveNewNetworkData = true;
+
+#if OPENTHREAD_FTD
+            if (IsFullThreadDevice())
+            {
+                routerIdSet.Clear();
+                routerIdSet.Add(GetLeaderId());
+                routerIdSet.Add(GetParent().GetRouterId());
+                Get<RouterTable>().UpdateRouterIdSet(0, routerIdSet);
+            }
+#endif
         }
         else
         {

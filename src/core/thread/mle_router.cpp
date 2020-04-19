@@ -3300,7 +3300,7 @@ void MleRouter::RemoveRouterLink(Router &aRouter)
 
 void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 {
-    if (&aNeighbor == &mParent)
+    if (&aNeighbor == &mParent || &aNeighbor == &mParentCandidate)
     {
         if (IsChild())
         {
@@ -3309,6 +3309,8 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
     }
     else if (!IsActiveRouter(aNeighbor.GetRloc16()))
     {
+        OT_ASSERT(mChildTable.GetChildIndex(static_cast<Child &>(aNeighbor)) < kMaxChildren);
+
         if (aNeighbor.IsStateValidOrRestoring())
         {
             Signal(OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED, aNeighbor);
