@@ -3300,6 +3300,8 @@ void MleRouter::RemoveRouterLink(Router &aRouter)
 
 void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 {
+    VerifyOrExit(!aNeighbor.IsStateInvalid());
+
     if (&aNeighbor == &mParent || &aNeighbor == &mParentCandidate)
     {
         if (IsChild())
@@ -3334,6 +3336,9 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 
     aNeighbor.GetLinkInfo().Clear();
     aNeighbor.SetState(Neighbor::kStateInvalid);
+
+exit:
+    return;
 }
 
 Neighbor *MleRouter::GetNeighbor(uint16_t aAddress)
