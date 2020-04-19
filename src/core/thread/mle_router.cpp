@@ -3300,7 +3300,7 @@ void MleRouter::RemoveRouterLink(Router &aRouter)
 
 void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 {
-    VerifyOrExit(!aNeighbor.IsStateInvalid());
+    VerifyOrExit(!aNeighbor.IsStateInvalid(), OT_NOOP);
 
     if (&aNeighbor == &mParent || &aNeighbor == &mParentCandidate)
     {
