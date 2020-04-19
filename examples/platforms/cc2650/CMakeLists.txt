@@ -95,6 +95,4 @@ target_include_directories(openthread-cc2650
         ${OT_PRIVATE_INCLUDES}
         ${PROJECT_SOURCE_DIR}/src/core
         ${PROJECT_SOURCE_DIR}/examples/platforms
-        ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
-        ${PROJECT_SOURCE_DIR}/third_party/mbedtls
 )
