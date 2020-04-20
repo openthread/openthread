@@ -76,8 +76,8 @@ set_target_properties(
 )
 
 target_link_libraries(openthread-posix PUBLIC
-    util
     openthread-platform
+    util
 )
 
 target_compile_definitions(openthread-posix

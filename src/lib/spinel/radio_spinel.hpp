@@ -604,7 +604,7 @@ public:
      * @returns Whether there is pending frame in the buffer.
      *
      */
-    bool HasPendingFrame(void) { return mRxFrameBuffer.HasSavedFrame(); }
+    bool HasPendingFrame(void) const { return mRxFrameBuffer.HasSavedFrame(); }
 
     /**
      * This method gets dataset from NCP radio and saves it.
@@ -786,7 +786,7 @@ private:
     int8_t       mRxSensitivity;
     otError      mTxError;
     char         mVersion[kVersionStringSize];
-    uint8_t      mIeeeEui64[sizeof(uint64_t)];
+    otExtAddress mIeeeEui64;
 
     State mState;
     bool  mIsPromiscuous : 1;     ///< Promiscuous mode.

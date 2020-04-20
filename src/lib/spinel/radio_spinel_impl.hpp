@@ -36,8 +36,6 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-#include <unistd.h>
-
 #include <openthread/dataset.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/settings.h>
@@ -214,7 +212,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio, bool
 
     SuccessOrExit(error = CheckSpinelVersion());
     SuccessOrExit(error = Get(SPINEL_PROP_NCP_VERSION, SPINEL_DATATYPE_UTF8_S, mVersion, sizeof(mVersion)));
-    SuccessOrExit(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_EUI64_S, mIeeeEui64));
+    SuccessOrExit(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_EUI64_S, mIeeeEui64.m8));
 
     if (!IsRcp() && aRestoreDatasetFromNcp)
     {
@@ -1016,7 +1014,7 @@ exit:
 template <typename InterfaceType, typename ProcessContextType>
 otError RadioSpinel<InterfaceType, ProcessContextType>::GetIeeeEui64(uint8_t *aIeeeEui64)
 {
-    memcpy(aIeeeEui64, mIeeeEui64, sizeof(mIeeeEui64));
+    memcpy(aIeeeEui64, mIeeeEui64.m8, sizeof(mIeeeEui64.m8));
 
     return OT_ERROR_NONE;
 }
@@ -1323,8 +1321,6 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SendReset(void)
     VerifyOrExit(packed > 0 && static_cast<size_t>(packed) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = mSpinelInterface.SendFrame(buffer, static_cast<uint16_t>(packed)));
-
-    sleep(0);
 
 exit:
     return error;
