@@ -683,13 +683,17 @@ void SpiInterface::Process(const RadioProcessContext &aContext)
     }
 }
 
-otError SpiInterface::WaitForFrame(const struct timeval &aTimeout)
+otError SpiInterface::WaitForFrame(uint64_t aTimeoutUs)
 {
-    otError        error   = OT_ERROR_NONE;
-    struct timeval timeout = {kSecPerDay, 0};
+    otError        error      = OT_ERROR_NONE;
+    struct timeval spiTimeout = {kSecPerDay, 0};
+    struct timeval timeout;
     fd_set         readFdSet;
     int            ret;
     bool           isDataReady = false;
+
+    timeout.tv_sec  = aTimeoutUs / US_PER_S;
+    timeout.tv_usec = aTimeoutUs % US_PER_S;
 
     FD_ZERO(&readFdSet);
 
@@ -698,8 +702,8 @@ otError SpiInterface::WaitForFrame(const struct timeval &aTimeout)
         if ((isDataReady = CheckInterrupt()))
         {
             // Interrupt pin is asserted, set the timeout to be 0.
-            timeout.tv_sec  = 0;
-            timeout.tv_usec = 0;
+            spiTimeout.tv_sec  = 0;
+            spiTimeout.tv_usec = 0;
         }
         else
         {
@@ -711,13 +715,13 @@ otError SpiInterface::WaitForFrame(const struct timeval &aTimeout)
     else
     {
         // In this case we don't have an interrupt, so we revert to SPI polling.
-        timeout.tv_sec  = 0;
-        timeout.tv_usec = kSpiPollPeriodUs;
+        spiTimeout.tv_sec  = 0;
+        spiTimeout.tv_usec = kSpiPollPeriodUs;
     }
 
-    if (timercmp(&aTimeout, &timeout, <))
+    if (timercmp(&spiTimeout, &timeout, <))
     {
-        timeout = aTimeout;
+        timeout = spiTimeout;
     }
 
     ret = select(mIntGpioValueFd + 1, &readFdSet, NULL, NULL, &timeout);

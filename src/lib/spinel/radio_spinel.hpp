@@ -43,6 +43,62 @@
 namespace ot {
 namespace Spinel {
 
+/**
+ * The class for providing a OpenThread radio interface by talking with a radio-only
+ * co-procesor(RCP). The InterfaceType template parameter should provide the following
+ * methods:
+ *
+ * class InterfaceType {
+ *
+ *    // This constructor initializes the object.
+ *
+ *    // @param[in] aCallback         Callback on frame received
+ *    // @param[in] aCallbackContext  Callback context
+ *    // @param[in] aFrameBuffer      A reference to a `RxFrameBuffer` object.
+ *
+ *    InterFaceType(Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
+ *                  void *                                        aCallbackContext,
+ *                  Spinel::SpinelInterface::RxFrameBuffer &      aFrameBuffer);
+ *
+ *
+ *    // This method encodes and sends a spinel frame to Radio Co-processor (RCP) over the socket.
+ *
+ *    // This is blocking call, i.e., if the socket is not writable, this method waits for it to become writable for
+ *    // up to `kMaxWaitTime` interval.
+ *
+ *    // @param[in] aFrame     A pointer to buffer containing the spinel frame to send.
+ *    // @param[in] aLength    The length (number of bytes) in the frame.
+ *
+ *    // @retval OT_ERROR_NONE     Successfully encoded and sent the spinel frame.
+ *    // @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to encode the frame.
+ *    // @retval OT_ERROR_FAILED   Failed to send due to socket not becoming writable within `kMaxWaitTime`.
+ *
+ *    otError SendFrame(const uint8_t *aFrame, uint16_t aLength);
+ *
+ *
+ *    // This method waits for receiving part or all of spinel frame within specified interval.
+ *
+ *    // @param[in]  aTimeout  The timeout value in micrsoseconds.
+ *
+ *    // @retval OT_ERROR_NONE             Part or all of spinel frame is received.
+ *    // @retval OT_ERROR_RESPONSE_TIMEOUT No spinel frame is received within @p aTimeout.
+ *
+ *    otError WaitForFrame(uint64_t& aTimeoutUs);
+ *
+ *
+ *    // This method performs radio driver processing.
+ *
+ *    // @param[in]   aContext        The context containing fd_sets.
+ *    //                              The type is specified by the user in template parameters.
+ *
+ *    void Process(const ProcessContextType &aContext);
+ *
+ *
+ *    // This method deinitializes the interface to the RCP.
+ *
+ *    void Deinit(void);
+ * };
+ */
 template <typename InterfaceType, typename ProcessContextType> class RadioSpinel
 {
 public:
@@ -466,7 +522,7 @@ public:
     uint64_t GetTxRadioEndUs(void) const { return mTxRadioEndUs; }
 
     /**
-     * This method triggers the I/O process.
+     * This method processes any pending the I/O data.
      *
      * @param[in]  aContext   The process context.
      *

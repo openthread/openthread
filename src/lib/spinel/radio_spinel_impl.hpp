@@ -35,12 +35,7 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <sys/resource.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/wait.h>
-#include <syslog.h>
-#include <termios.h>
+
 #include <unistd.h>
 
 #include <openthread/dataset.h>
@@ -1283,18 +1278,14 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::WaitResponse(void)
 
     do
     {
-        uint64_t       now;
-        uint64_t       remain;
-        struct timeval timeout;
+        uint64_t now;
+        uint64_t remain;
 
         now = otPlatTimeGet();
         VerifyOrDie(end > now, OT_EXIT_RADIO_SPINEL_NO_RESPONSE);
         remain = end - now;
 
-        timeout.tv_sec  = static_cast<time_t>(remain / US_PER_S);
-        timeout.tv_usec = static_cast<suseconds_t>(remain % US_PER_S);
-
-        VerifyOrDie(mSpinelInterface.WaitForFrame(timeout) == OT_ERROR_NONE, OT_EXIT_RADIO_SPINEL_NO_RESPONSE);
+        VerifyOrDie(mSpinelInterface.WaitForFrame(remain) == OT_ERROR_NONE, OT_EXIT_RADIO_SPINEL_NO_RESPONSE);
     } while (mWaitingTid || !mIsReady);
 
     LogIfFail("Error waiting response", mError);

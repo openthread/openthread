@@ -253,14 +253,17 @@ exit:
     return error;
 }
 
-otError HdlcInterface::WaitForFrame(const struct timeval &aTimeout)
+otError HdlcInterface::WaitForFrame(uint64_t aTimeoutUs)
 {
-    otError error = OT_ERROR_NONE;
+    otError        error = OT_ERROR_NONE;
+    struct timeval timeout;
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     struct Event event;
-    uint64_t     delay = static_cast<uint64_t>(aTimeout.tv_sec) * US_PER_S + static_cast<uint64_t>(aTimeout.tv_usec);
 
-    virtualTimeSendSleepEvent(&aTimeout);
+    timeout.tv_sec  = aTimeoutUs / US_PER_S;
+    timeout.tv_usec = aTimeoutUs % US_PER_S;
+
+    virtualTimeSendSleepEvent(&timeout);
     virtualTimeReceiveEvent(&event);
 
     switch (event.mEvent)
@@ -270,7 +273,7 @@ otError HdlcInterface::WaitForFrame(const struct timeval &aTimeout)
         break;
 
     case OT_SIM_EVENT_ALARM_FIRED:
-        VerifyOrExit(event.mDelay <= delay, error = OT_ERROR_RESPONSE_TIMEOUT);
+        VerifyOrExit(event.mDelay <= aTimeoutUs, error = OT_ERROR_RESPONSE_TIMEOUT);
         break;
 
     default:
@@ -278,7 +281,8 @@ otError HdlcInterface::WaitForFrame(const struct timeval &aTimeout)
         break;
     }
 #else  // OPENTHREAD_POSIX_VIRTUAL_TIME
-    struct timeval timeout = aTimeout;
+    timeout.tv_sec = aTimeoutUs / US_PER_S;
+    timeout.tv_usec = aTimeoutUs % US_PER_S;
 
     fd_set read_fds;
     fd_set error_fds;
