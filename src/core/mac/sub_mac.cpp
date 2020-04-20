@@ -637,10 +637,11 @@ void SubMac::SetState(State aState)
 
 void SubMac::SetRadioMacKey(uint8_t aKeyIdMode)
 {
-    uint8_t keyMaterial[kMacKeySize * 3];
-    uint8_t keyLength = 0;
+    const uint8_t *prevKey = NULL;
+    const uint8_t *currKey = NULL;
+    const uint8_t *nextKey = NULL;
 
-    VerifyOrExit(RadioSupportsTransmitSecurity());
+    VerifyOrExit(!ShouldHandleTransmitSecurity());
 
     switch (aKeyIdMode)
     {
@@ -648,17 +649,37 @@ void SubMac::SetRadioMacKey(uint8_t aKeyIdMode)
         break;
 
     case Frame::kKeyIdMode1:
-        // Previous MAC Key
-        memcpy(&keyMaterial[keyLength], mPrevKey, kMacKeySize);
-        keyLength += kMacKeySize;
+        prevKey = GetPreviousMacKey();
+        currKey = GetCurrentMacKey();
+        nextKey = GetNextMacKey();
+        break;
 
-        // Current MAC Key
-        memcpy(&keyMaterial[keyLength], mCurrKey, kMacKeySize);
-        keyLength += kMacKeySize;
+    case Frame::kKeyIdMode2:
+        break;
 
-        // Next MAC Key
-        memcpy(&keyMaterial[keyLength], mNextKey, kMacKeySize);
-        keyLength += kMacKeySize;
+    default:
+        OT_ASSERT(false);
+        break;
+    }
+
+    otPlatRadioSetMacKey(&GetInstance(), aKeyIdMode, kMacKeySize, prevKey, currKey, nextKey);
+
+exit:
+    return;
+}
+
+void SubMac::SetMacKey(uint8_t aKeyIdMode, const uint8_t *aPrevKey, const uint8_t *aCurrKey, const uint8_t *aNextKey)
+{
+    switch (aKeyIdMode)
+    {
+    case Frame::kKeyIdMode0:
+        break;
+    case Frame::kKeyIdMode1:
+        OT_ASSERT(aPrevKey != NULL && aCurrKey != NULL && aNextKey != NULL);
+
+        memcpy(mPrevKey, aPrevKey, kMacKeySize);
+        memcpy(mCurrKey, aCurrKey, kMacKeySize);
+        memcpy(mNextKey, aNextKey, kMacKeySize);
 
         break;
 
@@ -670,24 +691,30 @@ void SubMac::SetRadioMacKey(uint8_t aKeyIdMode)
         break;
     }
 
-    otPlatRadioSetMacKey(&GetInstance(), aKeyIdMode, keyMaterial, keyLength);
-
-exit:
-    return;
+    SetRadioMacKey(aKeyIdMode);
 }
 
-void SubMac::SetMacKey(uint8_t aKeyId, uint8_t *aPrevKey, uint8_t *aCurrKey, uint8_t *aNextKey)
+void SubMac::SetMacKeyId(uint8_t aKeyIdMode, uint8_t aKeyId)
 {
-    OT_ASSERT(aPrevKey != NULL && aCurrKey != NULL && aNextKey != NULL);
+    switch (aKeyIdMode)
+    {
+    case Frame::kKeyIdMode0:
+        break;
 
-    mKeyId = aKeyId;
-    memcpy(mPrevKey, aPrevKey, kMacKeySize);
-    memcpy(mCurrKey, aCurrKey, kMacKeySize);
-    memcpy(mNextKey, aNextKey, kMacKeySize);
+    case Frame::kKeyIdMode1:
+        mKeyId = aKeyId;
+        break;
 
-    SetRadioMacKey(Frame::kKeyIdMode1);
+    case Frame::kKeyIdMode2:
+        break;
+
+    default:
+        OT_ASSERT(false);
+        break;
+    }
+
+    otPlatRadioSetMacKeyId(&GetInstance(), aKeyIdMode, aKeyId);
 }
-
 // LCOV_EXCL_START
 
 const char *SubMac::StateToString(State aState)

@@ -1011,12 +1011,28 @@ exit:
     return error;
 }
 
-otError RadioSpinel::SetMacKey(uint8_t aKeyMode, const uint8_t *aKeyMaterial, uint8_t aKeyLen)
+otError RadioSpinel::SetMacKey(uint8_t        aKeyMode,
+                               uint8_t        aKeySize,
+                               const uint8_t *aPrevKey,
+                               const uint8_t *aCurrKey,
+                               const uint8_t *aNextKey)
 {
     otError error;
 
-    SuccessOrExit(error = Set(SPINEL_PROP_MAC_PROMISCUOUS_MODE, SPINEL_DATATYPE_UINT8_S, aKeyMode,
-                              SPINEL_DATATYPE_DATA_WLEN_S, aKeyMaterial, aKeyLen));
+    SuccessOrExit(error = Set(SPINEL_PROP_RCP_MAC_KEY, SPINEL_DATATYPE_UINT8_S, aKeyMode, SPINEL_DATATYPE_DATA_WLEN_S,
+                              aPrevKey, aKeySize, SPINEL_DATATYPE_DATA_WLEN_S, aCurrKey, aKeySize,
+                              SPINEL_DATATYPE_DATA_WLEN_S, aNextKey, aKeySize));
+
+exit:
+    return error;
+}
+
+otError RadioSpinel::SetMacKeyId(uint8_t aKeyMode, uint8_t aKeyId)
+{
+    otError error;
+
+    SuccessOrExit(
+        error = Set(SPINEL_PROP_RCP_MAC_KEY_ID, SPINEL_DATATYPE_UINT8_S, aKeyMode, SPINEL_DATATYPE_UINT8_S, aKeyId));
 
 exit:
     return error;

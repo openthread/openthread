@@ -82,6 +82,7 @@ public:
     enum
     {
         kInvalidRssiValue = 127, ///< Invalid Received Signal Strength Indicator (RSSI) value.
+        kMacKeySize       = 16,  ///< MAC Key size (bytes)
     };
 
     /**
@@ -348,15 +349,24 @@ public:
     int8_t GetNoiseFloor(void);
 
     /**
-     * This method sets MAC key index and previous, current and next MAC key.
+     * This method sets previous, current and next MAC key.
      *
-     * @param[in] aKeyId    Current MAC key index.
-     * @param[in] aPrevKey  A pointer to the previous MAC key.
-     * @param[in] aCurrKey  A pointer to the current MAC key.
-     * @param[in] aNextKey  A pointer to the next MAC key.
+     * @param[in] aKeyIdMode  MAC key ID mode.
+     * @param[in] aPrevKey    A pointer to the previous MAC key.
+     * @param[in] aCurrKey    A pointer to the current MAC key.
+     * @param[in] aNextKey    A pointer to the next MAC key.
      *
      */
-    void SetMacKey(uint8_t aKeyId, uint8_t *aPrevKey, uint8_t *aCurrKey, uint8_t *aNextKey);
+    void SetMacKey(uint8_t aKeyIdMode, const uint8_t *aPrevKey, const uint8_t *aCurrKey, const uint8_t *aNextKey);
+
+    /**
+     * This method sets MAC key index.
+     *
+     * @param[in] aKeyIdMode  MAC key ID mode.
+     * @param[in] aKeyId      Current MAC key index.
+     *
+     */
+    void SetMacKeyId(uint8_t aKeyIdMode, uint8_t aKeyId);
 
     /**
      * This method returns a pointer to the current MAC key.
@@ -398,7 +408,6 @@ private:
         kUnitBackoffPeriod = 20, ///< Number of symbols (IEEE 802.15.4-2006).
         kMinBackoff        = 1,  ///< Minimum backoff (milliseconds).
         kAckTimeout        = 16, ///< Timeout for waiting on an ACK (milliseconds).
-        kMacKeySize        = 16, ///< MAC Key size (bytes)
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
         kEnergyScanRssiSampleInterval = 128, ///< RSSI sample interval during energy scan, 128 usec

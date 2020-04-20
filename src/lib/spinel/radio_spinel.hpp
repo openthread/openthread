@@ -596,7 +596,12 @@ public:
      *
      */
     void    HandleReceivedFrame(void);
-    otError SetMacKey(uint8_t aKeyMode, const uint8_t *aKeyMaterial, uint8_t aKeyLen);
+    otError SetMacKey(uint8_t        aKeyMode,
+                      uint8_t        aKeySize,
+                      const uint8_t *aPrevKey,
+                      const uint8_t *aCurrKey,
+                      const uint8_t *aNextKey);
+    otError SetMacKeyId(uint8_t aKeyMode, uint8_t aKeyId);
 
     /**
      * This method checks whether the spinel interface is radio-only

@@ -1137,6 +1137,7 @@ typedef uint32_t spinel_capability_t;
  *    Interface    | 0x100 - 0x1FF                  | Interface (e.g., UART)
  *    PIB          | 0x400 - 0x4FF                  | 802.15.4 PIB
  *    Counter      | 0x500 - 0x7FF                  | Counters (MAC, IP, etc).
+ *    RCP          | 0x800 - 0x8FF                  | RCP specific property
  *    Nest         |                0x3BC0 - 0x3BFF | Nest (legacy)
  *    Vendor       |                0x3C00 - 0x3FFF | Vendor specific
  *    Debug        |                0x4000 - 0x43FF | Debug related
@@ -3930,6 +3931,34 @@ enum
     SPINEL_PROP_CNTR_MAC_RETRY_HISTOGRAM = SPINEL_PROP_CNTR__BEGIN + 404,
 
     SPINEL_PROP_CNTR__END = 0x800,
+
+    SPINEL_PROP_RCP__BEGIN = 0x800,
+
+    /// MAC Key
+    /** Format: `Cddd`.
+     *
+     *  `C`: MAC key ID mode
+     *  `d`: previous MAC key material data
+     *  `d`: current MAC key material data
+     *  `d`: next MAC key material data
+     *
+     * The Spinel property is used to set/get MAC key materials to and from RCP.
+     *
+     */
+    SPINEL_PROP_RCP_MAC_KEY = SPINEL_PROP_RCP__BEGIN + 0,
+
+    /// MAC Key ID
+    /** Format: `CC`.
+     *
+     *  `C`: MAC key ID mode
+     *  `C`: MAC key ID
+     *
+     * The Spinel property is used to set/get MAC key ID to and from RCP.
+     *
+     */
+    SPINEL_PROP_RCP_MAC_KEY_ID = SPINEL_PROP_RCP__BEGIN + 1,
+
+    SPINEL_PROP_RCP__END = 0x900,
 
     SPINEL_PROP_NEST__BEGIN = 0x3BC0,
 
