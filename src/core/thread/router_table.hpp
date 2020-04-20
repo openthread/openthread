@@ -266,6 +266,16 @@ public:
     Router *GetRouter(const Mac::ExtAddress &aExtAddress);
 
     /**
+     * This method returns the router table index for a given `Router` instance.
+     *
+     * @param[in]  aRouter  A reference to a `Router`
+     *
+     * @returns The index corresponding to @p aRouter.
+     *
+     */
+    uint16_t GetRouterIndex(const Router &aRouter) const { return static_cast<uint16_t>(&aRouter - mRouters); }
+
+    /**
      * This method retains diagnostic information for a given router.
      *
      * @param[in]   aRouterId    The router ID or RLOC16 for a given router.

@@ -1284,6 +1284,7 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
         if (processRouteTlv)
         {
             SuccessOrExit(error = ProcessRouteTlv(route));
+            aNeighbor = NULL; // aNeighbor is no longer valid after `ProcessRouteTlv`
         }
     }
 
@@ -2237,6 +2238,7 @@ void MleRouter::HandleChildIdRequest(const Message &         aMessage,
     router = mRouterTable.GetRouter(macAddr);
     if (router != NULL)
     {
+        // The `router` here can be invalid
         RemoveNeighbor(*router);
     }
 
@@ -3330,6 +3332,8 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
     }
     else if (aNeighbor.IsStateValid())
     {
+        OT_ASSERT(mRouterTable.GetRouterIndex(static_cast<Router &>(aNeighbor)) < kMaxRouters);
+
         Signal(OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED, aNeighbor);
         mRouterTable.RemoveRouterLink(static_cast<Router &>(aNeighbor));
     }
