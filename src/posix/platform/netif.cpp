@@ -448,7 +448,7 @@ static void mldListenerInit(void)
 {
     struct ipv6_mreq mreq6;
 
-    sMLDMonitorFd          = SocketWithCloseExec(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6, /*aNonBlock=*/true);
+    sMLDMonitorFd          = SocketWithCloseExec(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6, kSocketNonBlock);
     mreq6.ipv6mr_interface = sTunIndex;
     memcpy(&mreq6.ipv6mr_multiaddr, kMLDv2MulticastAddress.mFields.m8, sizeof(kMLDv2MulticastAddress.mFields.m8));
 
@@ -560,7 +560,7 @@ void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
 {
     struct ifreq ifr;
 
-    sIpFd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, /*aNonBlock=*/true);
+    sIpFd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, kSocketNonBlock);
     VerifyOrDie(sIpFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     sNetlinkFd = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);

@@ -83,7 +83,7 @@ otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance)
     return gPlatMcuPowerState;
 }
 
-int SocketWithCloseExec(int aDomain, int aType, int aProtocol, bool aNonBlock)
+int SocketWithCloseExec(int aDomain, int aType, int aProtocol, SocketBlockOption aBlockOption)
 {
     int rval = 0;
     int fd   = -1;
@@ -92,10 +92,10 @@ int SocketWithCloseExec(int aDomain, int aType, int aProtocol, bool aNonBlock)
     VerifyOrExit((fd = socket(aDomain, aType, aProtocol)) != -1, perror("socket(SOCK_CLOEXEC)"));
 
     VerifyOrExit((rval = fcntl(fd, F_GETFD, 0)) != -1, perror("fcntl(F_GETFD)"));
-    rval |= aNonBlock ? O_NONBLOCK | FD_CLOEXEC : FD_CLOEXEC;
+    rval |= aBlockOption == kSocketNonBlock ? O_NONBLOCK | FD_CLOEXEC : FD_CLOEXEC;
     VerifyOrExit((rval = fcntl(fd, F_SETFD, rval)) != -1, perror("fcntl(F_SETFD)"));
 #else
-    aType |= aNonBlock ? SOCK_CLOEXEC | SOCK_NONBLOCK : SOCK_CLOEXEC;
+    aType |= aBlockOption == kSocketNonBlock ? SOCK_CLOEXEC | SOCK_NONBLOCK : SOCK_CLOEXEC;
     VerifyOrExit((fd = socket(aDomain, aType, aProtocol)) != -1, perror("socket(SOCK_CLOEXEC)"));
 #endif
 

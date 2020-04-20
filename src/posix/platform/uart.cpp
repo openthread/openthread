@@ -69,7 +69,7 @@ otError otPlatUartEnable(void)
     // This allows implementing pseudo reset.
     VerifyOrExit(sUartSocket == -1);
 
-    sUartSocket = SocketWithCloseExec(AF_UNIX, SOCK_STREAM, 0, /* aNonBlock=*/true);
+    sUartSocket = SocketWithCloseExec(AF_UNIX, SOCK_STREAM, 0, kSocketNonBlock);
 
     if (sUartSocket == -1)
     {
