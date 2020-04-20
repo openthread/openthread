@@ -392,14 +392,6 @@ public:
      */
     const uint8_t *GetNextMacKey(void) const { return mNextKey; }
 
-    /**
-     * This method prepares key materials and set it to radio driver.
-     *
-     * @param[in] aKeyIdMode  Key ID mode to be set to radio driver.
-     *
-     */
-    void SetRadioMacKey(uint8_t aKeyIdMode);
-
 private:
     enum
     {
@@ -442,6 +434,7 @@ private:
     bool ShouldHandleRetries(void) const;
     bool ShouldHandleEnergyScan(void) const;
 
+    void SetRadioMacKey(uint8_t aKeyIdMode);
     void ProcessTransmitSecurity(void);
     void StartCsmaBackoff(void);
     void BeginTransmit(void);
@@ -457,8 +450,6 @@ private:
 
     void               SetState(State aState);
     static const char *StateToString(State aState);
-
-    static const otExtAddress sMode2ExtAddress;
 
     otRadioCaps        mRadioCaps;
     State              mState;

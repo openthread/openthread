@@ -431,31 +431,16 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_KEY>(void)
     const uint8_t *nextKey;
 
     SuccessOrExit(error = mDecoder.ReadUint8(keyIdMode));
+    VerifyOrExit(keyIdMode == Mac::Frame::kKeyIdMode1);
 
-    switch (keyIdMode)
-    {
-    case Mac::Frame::kKeyIdMode0:
-        break;
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(prevKey, keySize));
+    VerifyOrExit(keySize == Mac::SubMac::kMacKeySize, error = OT_ERROR_PARSE);
 
-    case Mac::Frame::kKeyIdMode1:
-        SuccessOrExit(error = mDecoder.ReadDataWithLen(prevKey, keySize));
-        VerifyOrExit(keySize == Mac::SubMac::kMacKeySize, error = OT_ERROR_PARSE);
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(currKey, keySize));
+    VerifyOrExit(keySize == Mac::SubMac::kMacKeySize, error = OT_ERROR_PARSE);
 
-        SuccessOrExit(error = mDecoder.ReadDataWithLen(currKey, keySize));
-        VerifyOrExit(keySize == Mac::SubMac::kMacKeySize, error = OT_ERROR_PARSE);
-
-        SuccessOrExit(error = mDecoder.ReadDataWithLen(nextKey, keySize));
-        VerifyOrExit(keySize == Mac::SubMac::kMacKeySize, error = OT_ERROR_PARSE);
-
-        break;
-
-    case Mac::Frame::kKeyIdMode2:
-        break;
-
-    default:
-        OT_ASSERT(false);
-        break;
-    }
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(nextKey, keySize));
+    VerifyOrExit(keySize == Mac::SubMac::kMacKeySize, error = OT_ERROR_PARSE);
 
     error = otLinkRawSetMacKey(mInstance, keyIdMode, prevKey, currKey, nextKey);
 
@@ -472,7 +457,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_KEY_ID>(void)
     SuccessOrExit(error = mDecoder.ReadUint8(keyIdMode));
     SuccessOrExit(error = mDecoder.ReadUint8(keyId));
 
-    OT_ASSERT(keyIdMode == Mac::Frame::kKeyIdMode1);
+    VerifyOrExit(keyIdMode == Mac::Frame::kKeyIdMode1);
 
     otLinkRawSetMacKeyId(mInstance, keyIdMode, keyId);
 

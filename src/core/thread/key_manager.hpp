@@ -520,6 +520,12 @@ public:
     bool IsThreadBeaconEnabled(void) const { return (mSecurityPolicyFlags & OT_SECURITY_POLICY_BEACONS) != 0; }
 
     /**
+     * This method updates the MAC keys and MLE key.
+     *
+     */
+    void UpdateKeyMaterial(void);
+
+    /**
      * This static method generates IEEE 802.15.4 nonce byte sequence.
      *
      * @param[in]  aAddress        An extended address.
@@ -544,7 +550,6 @@ private:
         kOneHourIntervalInMsec     = 3600u * 1000u,
     };
 
-    void HandleKeyChange(void);
     void ComputeKey(uint32_t aKeySequence, uint8_t *aKey);
 
     void        StartKeyRotationTimer(void);

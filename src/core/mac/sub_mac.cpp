@@ -45,10 +45,6 @@
 namespace ot {
 namespace Mac {
 
-const otExtAddress SubMac::sMode2ExtAddress = {
-    {0x35, 0x06, 0xfe, 0xb8, 0x23, 0xd4, 0x87, 0x12},
-};
-
 SubMac::SubMac(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mRadioCaps(Get<Radio>().GetCaps())
@@ -238,6 +234,7 @@ void SubMac::ProcessTransmitSecurity(void)
     uint8_t           keyIdMode;
 
     VerifyOrExit(ShouldHandleTransmitSecurity());
+    VerifyOrExit(!mTransmitFrame.IsAnOobFrame());
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (mTransmitFrame.GetTimeIeOffset() != 0)
@@ -247,26 +244,32 @@ void SubMac::ProcessTransmitSecurity(void)
     }
 #endif
 
-    if (processTransmitAesCcm)
+    mTransmitFrame.GetKeyIdMode(keyIdMode);
+
+    switch (keyIdMode)
     {
-        mTransmitFrame.GetKeyIdMode(keyIdMode);
+    case Frame::kKeyIdMode0:
+    case Frame::kKeyIdMode2:
+        processTransmitAesCcm = false;
+        break;
 
-        switch (keyIdMode)
+    case Frame::kKeyIdMode1:
+        mTransmitFrame.SetAesKey(GetCurrentMacKey());
+        if (!mTransmitFrame.IsARetransmission())
         {
-        case Frame::kKeyIdMode0:
-        case Frame::kKeyIdMode1:
-            extAddress = &GetExtAddress();
-            break;
-
-        case Frame::kKeyIdMode2:
-            extAddress = static_cast<const ExtAddress *>(&sMode2ExtAddress);
-            break;
-
-        default:
-            OT_ASSERT(false);
-            break;
+            mTransmitFrame.SetKeyId(mKeyId);
         }
 
+        extAddress = &GetExtAddress();
+        break;
+
+    default:
+        OT_ASSERT(false);
+        break;
+    }
+
+    if (processTransmitAesCcm)
+    {
         mTransmitFrame.ProcessTransmitAesCcm(*extAddress);
     }
 

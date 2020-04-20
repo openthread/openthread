@@ -85,7 +85,6 @@ KeyManager::KeyManager(Instance &aInstance)
 {
     mMasterKey = static_cast<const MasterKey &>(kDefaultMasterKey);
     mPskc.Clear();
-    HandleKeyChange();
 }
 
 void KeyManager::Start(void)
@@ -116,7 +115,7 @@ otError KeyManager::SetMasterKey(const MasterKey &aKey)
         Get<Notifier>().Update(mMasterKey, aKey, OT_CHANGED_MASTER_KEY | OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER));
 
     mKeySequence = 0;
-    HandleKeyChange();
+    UpdateKeyMaterial();
 
     // reset parent frame counters
     parent = &Get<Mle::MleRouter>().GetParent();
@@ -160,7 +159,7 @@ void KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
     hmac.Finish(aKey);
 }
 
-void KeyManager::HandleKeyChange()
+void KeyManager::UpdateKeyMaterial()
 {
     uint8_t prevKey[Crypto::HmacSha256::kHashSize];
     uint8_t currKey[Crypto::HmacSha256::kHashSize];
@@ -193,7 +192,7 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
     }
 
     mKeySequence = aKeySequence;
-    HandleKeyChange();
+    UpdateKeyMaterial();
 
     mMacFrameCounter = 0;
     mMleFrameCounter = 0;

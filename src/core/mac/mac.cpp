@@ -135,6 +135,7 @@ Mac::Mac(Instance &aInstance)
     SetEnabled(true);
     IgnoreError(mSubMac.Enable());
 
+    Get<KeyManager>().UpdateKeyMaterial();
     SetExtendedPanId(static_cast<const ExtendedPanId &>(sExtendedPanidInit));
     IgnoreError(SetNetworkName(sNetworkNameInit));
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
@@ -946,10 +947,20 @@ bool Mac::IsJoinable(void) const
 
 void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
 {
-    KeyManager &keyManager = Get<KeyManager>();
-    uint8_t     keyIdMode;
+    KeyManager &      keyManager = Get<KeyManager>();
+    uint8_t           keyIdMode;
+    const ExtAddress *extAddress            = NULL;
+    bool              processTransmitAesCcm = true;
 
     VerifyOrExit(aFrame.GetSecurityEnabled(), OT_NOOP);
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    if (aFrame.GetTimeIeOffset() != 0)
+    {
+        // Transmit security will be processed after time IE content is updated.
+        processTransmitAesCcm = false;
+    }
+#endif
 
     IgnoreError(aFrame.GetKeyIdMode(keyIdMode));
 
@@ -957,6 +968,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
     {
     case Frame::kKeyIdMode0:
         aFrame.SetAesKey(keyManager.GetKek().GetKey());
+        extAddress = &GetExtAddress();
 
         if (!aFrame.IsARetransmission())
         {
@@ -967,8 +979,6 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
         break;
 
     case Frame::kKeyIdMode1:
-        aFrame.SetAesKey(mSubMac.GetCurrentMacKey());
-
         // If the frame is marked as a retransmission, `MeshForwarder` which
         // prepared the frame should set the frame counter and key id to the
         // same values used in the earlier transmit attempt. For a new frame (not
@@ -979,9 +989,10 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
         {
             aFrame.SetFrameCounter(keyManager.GetMacFrameCounter());
             keyManager.IncrementMacFrameCounter();
-            aFrame.SetKeyId((keyManager.GetCurrentKeySequence() & 0x7f) + 1);
         }
 
+        // For MAC key ID mode 1, the AES CCM* is done at SubMac or Radio if supported
+        processTransmitAesCcm = false;
         break;
 
     case Frame::kKeyIdMode2:
@@ -992,6 +1003,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
         aFrame.SetFrameCounter(mKeyIdMode2FrameCounter);
         aFrame.SetKeySource(keySource);
         aFrame.SetKeyId(0xff);
+        extAddress = static_cast<const ExtAddress *>(&sMode2ExtAddress);
         break;
     }
 
@@ -1000,18 +1012,23 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
         OT_UNREACHABLE_CODE(break);
     }
 
+    if (processTransmitAesCcm)
+    {
+        aFrame.ProcessTransmitAesCcm(*extAddress);
+    }
+
 exit:
     return;
 }
 
 void Mac::BeginTransmit(void)
 {
-    otError  error                 = OT_ERROR_NONE;
-    bool     applyTransmitSecurity = true;
-    TxFrame &sendFrame             = mSubMac.GetTransmitFrame();
+    otError  error     = OT_ERROR_NONE;
+    TxFrame &sendFrame = mSubMac.GetTransmitFrame();
 
     VerifyOrExit(IsEnabled(), error = OT_ERROR_ABORT);
     sendFrame.SetIsARetransmission(false);
+    sendFrame.SetIsAnOob(false);
 
     switch (mOperation)
     {
@@ -1065,7 +1082,7 @@ void Mac::BeginTransmit(void)
 
     case kOperationTransmitOutOfBandFrame:
         sendFrame.CopyFrom(*mOobFrame);
-        applyTransmitSecurity = false;
+        sendFrame.SetIsAnOob(true);
         break;
 
     default:
@@ -1087,7 +1104,7 @@ void Mac::BeginTransmit(void)
     }
 #endif
 
-    if (applyTransmitSecurity)
+    if (!sendFrame.IsAnOobFrame())
     {
         ProcessTransmitSecurity(sendFrame);
     }

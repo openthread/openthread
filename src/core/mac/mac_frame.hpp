@@ -1165,6 +1165,31 @@ public:
      *
      */
     void ProcessTransmitAesCcm(const ExtAddress &aExtAddress);
+
+    /**
+     * This method indicates whether or not it is an out of band frame.
+     *
+     * @retval TRUE  It is an out of band frame.
+     * @retval FALSE It is not an out of band frame.
+     *
+     */
+    bool IsAnOobFrame(void) const { return mInfo.mTxInfo.mIsOob; }
+
+    /**
+     * This method sets the out of band flag attribute.
+     *
+     * @param[in]  aIsOob  TRUE if it is an out of band frame, FALSE otherwise.
+     *
+     */
+    void SetIsAnOob(bool aIsOob) { mInfo.mTxInfo.mIsOob = aIsOob; }
+
+    /**
+     * This method returns the key used for frame encryption and authentication (AES CCM).
+     *
+     * @returns The pointer to the key.
+     *
+     */
+
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * This method sets the Time IE offset.
