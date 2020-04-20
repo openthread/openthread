@@ -286,7 +286,7 @@ otError Message::SetToken(uint8_t aTokenLength)
 
     OT_ASSERT(aTokenLength <= sizeof(token));
 
-    Random::NonCrypto::FillBuffer(token, aTokenLength);
+    Random::Crypto::FillBuffer(token, aTokenLength);
 
     return SetToken(token, aTokenLength);
 }

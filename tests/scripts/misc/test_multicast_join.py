@@ -37,8 +37,8 @@ from ipaddress import ip_address
 
 
 def get_maddrs():
-    lines = subprocess.run(
-        ['ot-ctl', 'ipmaddr'], stdout=subprocess.PIPE).stdout.decode().split()
+    lines = subprocess.run(['ot-ctl', 'ipmaddr'],
+                           stdout=subprocess.PIPE).stdout.decode().split()
     return [ip_address(l) for l in lines if l.startswith('ff')]
 
 
@@ -47,21 +47,21 @@ def main():
     if_index = int(sys.argv[1])
 
     with socket.socket(socket.AF_INET6, socket.SOCK_DGRAM) as s:
-        s.setsockopt(socket.IPPROTO_IPV6,
-                     socket.IPV6_MULTICAST_IF,
-                     if_index)
-        s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_JOIN_GROUP,
-                     struct.pack('16si', socket.inet_pton(socket.AF_INET6, group),
-                                 if_index))
+        s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_MULTICAST_IF, if_index)
+        s.setsockopt(
+            socket.IPPROTO_IPV6, socket.IPV6_JOIN_GROUP,
+            struct.pack('16si', socket.inet_pton(socket.AF_INET6, group),
+                        if_index))
         time.sleep(2)
         maddrs = get_maddrs()
         print(maddrs)
         if not any(addr == ip_address(group) for addr in maddrs):
             return -1
 
-        s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_LEAVE_GROUP,
-                     struct.pack('16si', socket.inet_pton(socket.AF_INET6, group),
-                                 if_index))
+        s.setsockopt(
+            socket.IPPROTO_IPV6, socket.IPV6_LEAVE_GROUP,
+            struct.pack('16si', socket.inet_pton(socket.AF_INET6, group),
+                        if_index))
 
         time.sleep(2)
         maddrs = get_maddrs()

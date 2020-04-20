@@ -47,7 +47,7 @@
 namespace ot {
 namespace MeshCoP {
 
-Dataset::Dataset(Tlv::Type aType)
+Dataset::Dataset(Type aType)
     : mUpdateTime(0)
     , mLength(0)
     , mType(aType)
@@ -75,7 +75,7 @@ exit:
     return rval;
 }
 
-Tlv *Dataset::Get(Tlv::Type aType)
+Tlv *Dataset::GetTlv(Tlv::Type aType)
 {
     Tlv *cur  = reinterpret_cast<Tlv *>(mTlvs);
     Tlv *end  = reinterpret_cast<Tlv *>(mTlvs + mLength);
@@ -95,7 +95,7 @@ exit:
     return rval;
 }
 
-const Tlv *Dataset::Get(Tlv::Type aType) const
+const Tlv *Dataset::GetTlv(Tlv::Type aType) const
 {
     const Tlv *cur  = reinterpret_cast<const Tlv *>(mTlvs);
     const Tlv *end  = reinterpret_cast<const Tlv *>(mTlvs + mLength);
@@ -115,7 +115,7 @@ exit:
     return rval;
 }
 
-void Dataset::Get(otOperationalDataset &aDataset) const
+void Dataset::ConvertTo(otOperationalDataset &aDataset) const
 {
     const Tlv *cur = reinterpret_cast<const Tlv *>(mTlvs);
     const Tlv *end = reinterpret_cast<const Tlv *>(mTlvs + mLength);
@@ -244,7 +244,7 @@ void Dataset::Set(const Dataset &aDataset)
     memcpy(mTlvs, aDataset.mTlvs, aDataset.mLength);
     mLength = aDataset.mLength;
 
-    if (mType == Tlv::kActiveTimestamp)
+    if (mType == kActive)
     {
         Remove(Tlv::kPendingTimestamp);
         Remove(Tlv::kDelayTimer);
@@ -253,7 +253,7 @@ void Dataset::Set(const Dataset &aDataset)
     mUpdateTime = aDataset.GetUpdateTime();
 }
 
-otError Dataset::Set(const otOperationalDataset &aDataset)
+otError Dataset::SetFrom(const otOperationalDataset &aDataset)
 {
     otError error = OT_ERROR_NONE;
 
@@ -263,7 +263,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         tlv.Init();
         tlv.SetSeconds(aDataset.mActiveTimestamp);
         tlv.SetTicks(0);
-        Set(tlv);
+        SetTlv(tlv);
     }
 
     if (aDataset.mComponents.mIsPendingTimestampPresent)
@@ -272,7 +272,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         tlv.Init();
         tlv.SetSeconds(aDataset.mPendingTimestamp);
         tlv.SetTicks(0);
-        Set(tlv);
+        SetTlv(tlv);
     }
 
     if (aDataset.mComponents.mIsDelayPresent)
@@ -280,7 +280,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         MeshCoP::DelayTimerTlv tlv;
         tlv.Init();
         tlv.SetDelayTimer(aDataset.mDelay);
-        Set(tlv);
+        SetTlv(tlv);
     }
 
     if (aDataset.mComponents.mIsChannelPresent)
@@ -288,7 +288,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         MeshCoP::ChannelTlv tlv;
         tlv.Init();
         tlv.SetChannel(aDataset.mChannel);
-        Set(tlv);
+        SetTlv(tlv);
     }
 
     if (aDataset.mComponents.mIsChannelMaskPresent)
@@ -296,7 +296,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         MeshCoP::ChannelMaskTlv tlv;
         tlv.Init();
         tlv.SetChannelMask(aDataset.mChannelMask);
-        Set(tlv);
+        SetTlv(tlv);
     }
 
     if (aDataset.mComponents.mIsExtendedPanIdPresent)
@@ -304,7 +304,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         MeshCoP::ExtendedPanIdTlv tlv;
         tlv.Init();
         tlv.SetExtendedPanId(static_cast<const Mac::ExtendedPanId &>(aDataset.mExtendedPanId));
-        Set(tlv);
+        SetTlv(tlv);
     }
 
     if (aDataset.mComponents.mIsMeshLocalPrefixPresent)
@@ -312,7 +312,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         MeshCoP::MeshLocalPrefixTlv tlv;
         tlv.Init();
         tlv.SetMeshLocalPrefix(static_cast<const Mle::MeshLocalPrefix &>(aDataset.mMeshLocalPrefix));
-        Set(tlv);
+        SetTlv(tlv);
     }
 
     if (aDataset.mComponents.mIsMasterKeyPresent)
@@ -320,7 +320,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         MeshCoP::NetworkMasterKeyTlv tlv;
         tlv.Init();
         tlv.SetNetworkMasterKey(static_cast<const MasterKey &>(aDataset.mMasterKey));
-        Set(tlv);
+        SetTlv(tlv);
     }
 
     if (aDataset.mComponents.mIsNetworkNamePresent)
@@ -328,7 +328,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         MeshCoP::NetworkNameTlv tlv;
         tlv.Init();
         tlv.SetNetworkName(static_cast<const Mac::NetworkName &>(aDataset.mNetworkName).GetAsData());
-        Set(tlv);
+        SetTlv(tlv);
     }
 
     if (aDataset.mComponents.mIsPanIdPresent)
@@ -336,7 +336,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         MeshCoP::PanIdTlv tlv;
         tlv.Init();
         tlv.SetPanId(aDataset.mPanId);
-        Set(tlv);
+        SetTlv(tlv);
     }
 
     if (aDataset.mComponents.mIsPskcPresent)
@@ -344,7 +344,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         MeshCoP::PskcTlv tlv;
         tlv.Init();
         tlv.SetPskc(static_cast<const Pskc &>(aDataset.mPskc));
-        Set(tlv);
+        SetTlv(tlv);
     }
 
     if (aDataset.mComponents.mIsSecurityPolicyPresent)
@@ -353,7 +353,7 @@ otError Dataset::Set(const otOperationalDataset &aDataset)
         tlv.Init();
         tlv.SetRotationTime(aDataset.mSecurityPolicy.mRotationTime);
         tlv.SetFlags(aDataset.mSecurityPolicy.mFlags);
-        Set(tlv);
+        SetTlv(tlv);
     }
 
     mUpdateTime = TimerMilli::GetNow();
@@ -365,15 +365,15 @@ const Timestamp *Dataset::GetTimestamp(void) const
 {
     const Timestamp *timestamp = NULL;
 
-    if (mType == Tlv::kActiveTimestamp)
+    if (mType == kActive)
     {
-        const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(Get(mType));
+        const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(GetTlv(Tlv::kActiveTimestamp));
         VerifyOrExit(tlv != NULL, OT_NOOP);
         timestamp = static_cast<const Timestamp *>(tlv);
     }
     else
     {
-        const PendingTimestampTlv *tlv = static_cast<const PendingTimestampTlv *>(Get(mType));
+        const PendingTimestampTlv *tlv = static_cast<const PendingTimestampTlv *>(GetTlv(Tlv::kPendingTimestamp));
         VerifyOrExit(tlv != NULL, OT_NOOP);
         timestamp = static_cast<const Timestamp *>(tlv);
     }
@@ -384,27 +384,27 @@ exit:
 
 void Dataset::SetTimestamp(const Timestamp &aTimestamp)
 {
-    if (mType == Tlv::kActiveTimestamp)
+    if (mType == kActive)
     {
         ActiveTimestampTlv activeTimestamp;
         activeTimestamp.Init();
         *static_cast<Timestamp *>(&activeTimestamp) = aTimestamp;
-        Set(activeTimestamp);
+        SetTlv(activeTimestamp);
     }
     else
     {
         PendingTimestampTlv pendingTimestamp;
         pendingTimestamp.Init();
         *static_cast<Timestamp *>(&pendingTimestamp) = aTimestamp;
-        Set(pendingTimestamp);
+        SetTlv(pendingTimestamp);
     }
 }
 
-otError Dataset::Set(const Tlv &aTlv)
+otError Dataset::SetTlv(const Tlv &aTlv)
 {
     otError  error          = OT_ERROR_NONE;
     uint16_t bytesAvailable = sizeof(mTlvs) - mLength;
-    Tlv *    old            = Get(aTlv.GetType());
+    Tlv *    old            = GetTlv(aTlv.GetType());
 
     if (old != NULL)
     {
@@ -446,7 +446,7 @@ void Dataset::Remove(Tlv::Type aType)
 {
     Tlv *tlv;
 
-    VerifyOrExit((tlv = Get(aType)) != NULL, OT_NOOP);
+    VerifyOrExit((tlv = GetTlv(aType)) != NULL, OT_NOOP);
     Remove(reinterpret_cast<uint8_t *>(tlv), sizeof(Tlv) + tlv->GetLength());
 
 exit:
@@ -463,7 +463,7 @@ otError Dataset::AppendMleDatasetTlv(Message &aMessage) const
 
     VerifyOrExit(mLength > 0, OT_NOOP);
 
-    type = (mType == Tlv::kActiveTimestamp ? Mle::Tlv::kActiveDataset : Mle::Tlv::kPendingDataset);
+    type = (mType == kActive ? Mle::Tlv::kActiveDataset : Mle::Tlv::kPendingDataset);
 
     tlv.SetType(type);
     tlv.SetLength(static_cast<uint8_t>(mLength) - sizeof(Tlv) - sizeof(Timestamp));
@@ -471,7 +471,8 @@ otError Dataset::AppendMleDatasetTlv(Message &aMessage) const
 
     while (cur < end)
     {
-        if (cur->GetType() == mType)
+        if (((mType == kActive) && (cur->GetType() == Tlv::kActiveTimestamp)) ||
+            ((mType == kPending) && (cur->GetType() == Tlv::kPendingTimestamp)))
         {
             ; // skip Active or Pending Timestamp TLV
         }
@@ -615,7 +616,12 @@ void Dataset::ConvertToActive(void)
 {
     Remove(Tlv::kPendingTimestamp);
     Remove(Tlv::kDelayTimer);
-    mType = Tlv::kActiveTimestamp;
+    mType = kActive;
+}
+
+const char *Dataset::TypeToString(Type aType)
+{
+    return (aType == kActive) ? "Active" : "Pending";
 }
 
 } // namespace MeshCoP

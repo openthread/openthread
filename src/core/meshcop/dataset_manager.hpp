@@ -134,7 +134,7 @@ public:
     /**
      * This method sends a MGMT_SET request to the Leader.
      *
-     * @param[in]  aDataset  The Operational Datset.
+     * @param[in]  aDataset  The Operational Dataset.
      * @param[in]  aTlvs     Any additional raw TLVs to include.
      * @param[in]  aLength   Number of bytes in @p aTlvs.
      *
@@ -173,7 +173,7 @@ protected:
      *
      */
     DatasetManager(Instance &          aInstance,
-                   Tlv::Type           aType,
+                   Dataset::Type       aType,
                    const char *        aUriGet,
                    const char *        aUriSet,
                    TimerMilli::Handler aTimerHandler);
@@ -240,13 +240,6 @@ protected:
      *
      */
     void HandleTimer(void);
-
-    /**
-     * This method re-defines template `Get<Type>()` as the `InstanceLocator` (base class) definition is shadowed by
-     * the public `Get(dataset)` methods in this class.
-     *
-     */
-    template <typename Type> inline Type &Get(void) const { return InstanceLocator::Get<Type>(); }
 
     DatasetLocal mLocal;
     Timestamp    mTimestamp;

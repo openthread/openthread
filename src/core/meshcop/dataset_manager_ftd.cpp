@@ -235,7 +235,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
                 // fall through
 
             default:
-                SuccessOrExit(dataset.Set(data.tlv));
+                SuccessOrExit(dataset.SetTlv(data.tlv));
                 break;
             }
 
@@ -367,80 +367,80 @@ otError ActiveDataset::GenerateLocal(void)
     mLocal.Read(dataset);
 
     // Active Timestamp
-    if (dataset.Get(Tlv::kActiveTimestamp) == NULL)
+    if (dataset.GetTlv(Tlv::kActiveTimestamp) == NULL)
     {
         ActiveTimestampTlv activeTimestampTlv;
         activeTimestampTlv.Init();
         activeTimestampTlv.SetSeconds(0);
         activeTimestampTlv.SetTicks(0);
-        dataset.Set(activeTimestampTlv);
+        dataset.SetTlv(activeTimestampTlv);
     }
 
     // Channel
-    if (dataset.Get(Tlv::kChannel) == NULL)
+    if (dataset.GetTlv(Tlv::kChannel) == NULL)
     {
         ChannelTlv tlv;
         tlv.Init();
         tlv.SetChannel(Get<Mac::Mac>().GetPanChannel());
-        dataset.Set(tlv);
+        dataset.SetTlv(tlv);
     }
 
     // channelMask
-    if (dataset.Get(Tlv::kChannelMask) == NULL)
+    if (dataset.GetTlv(Tlv::kChannelMask) == NULL)
     {
         ChannelMaskTlv tlv;
         tlv.Init();
         tlv.SetChannelMask(Get<Mac::Mac>().GetSupportedChannelMask().GetMask());
-        dataset.Set(tlv);
+        dataset.SetTlv(tlv);
     }
 
     // Extended PAN ID
-    if (dataset.Get(Tlv::kExtendedPanId) == NULL)
+    if (dataset.GetTlv(Tlv::kExtendedPanId) == NULL)
     {
         ExtendedPanIdTlv tlv;
         tlv.Init();
         tlv.SetExtendedPanId(Get<Mac::Mac>().GetExtendedPanId());
-        dataset.Set(tlv);
+        dataset.SetTlv(tlv);
     }
 
     // Mesh-Local Prefix
-    if (dataset.Get(Tlv::kMeshLocalPrefix) == NULL)
+    if (dataset.GetTlv(Tlv::kMeshLocalPrefix) == NULL)
     {
         MeshLocalPrefixTlv tlv;
         tlv.Init();
         tlv.SetMeshLocalPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-        dataset.Set(tlv);
+        dataset.SetTlv(tlv);
     }
 
     // Master Key
-    if (dataset.Get(Tlv::kNetworkMasterKey) == NULL)
+    if (dataset.GetTlv(Tlv::kNetworkMasterKey) == NULL)
     {
         NetworkMasterKeyTlv tlv;
         tlv.Init();
         tlv.SetNetworkMasterKey(Get<KeyManager>().GetMasterKey());
-        dataset.Set(tlv);
+        dataset.SetTlv(tlv);
     }
 
     // Network Name
-    if (dataset.Get(Tlv::kNetworkName) == NULL)
+    if (dataset.GetTlv(Tlv::kNetworkName) == NULL)
     {
         NetworkNameTlv tlv;
         tlv.Init();
         tlv.SetNetworkName(Get<Mac::Mac>().GetNetworkName().GetAsData());
-        dataset.Set(tlv);
+        dataset.SetTlv(tlv);
     }
 
     // Pan ID
-    if (dataset.Get(Tlv::kPanId) == NULL)
+    if (dataset.GetTlv(Tlv::kPanId) == NULL)
     {
         PanIdTlv tlv;
         tlv.Init();
         tlv.SetPanId(Get<Mac::Mac>().GetPanId());
-        dataset.Set(tlv);
+        dataset.SetTlv(tlv);
     }
 
     // PSKc
-    if (dataset.Get(Tlv::kPskc) == NULL)
+    if (dataset.GetTlv(Tlv::kPskc) == NULL)
     {
         PskcTlv tlv;
 
@@ -460,17 +460,17 @@ otError ActiveDataset::GenerateLocal(void)
             tlv.SetPskc(pskc);
         }
 
-        dataset.Set(tlv);
+        dataset.SetTlv(tlv);
     }
 
     // Security Policy
-    if (dataset.Get(Tlv::kSecurityPolicy) == NULL)
+    if (dataset.GetTlv(Tlv::kSecurityPolicy) == NULL)
     {
         SecurityPolicyTlv tlv;
         tlv.Init();
         tlv.SetRotationTime(static_cast<uint16_t>(Get<KeyManager>().GetKeyRotation()));
         tlv.SetFlags(Get<KeyManager>().GetSecurityPolicyFlags());
-        dataset.Set(tlv);
+        dataset.SetTlv(tlv);
     }
 
     SuccessOrExit(error = mLocal.Save(dataset));
@@ -553,14 +553,14 @@ void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Coap::Messa
 
         aMessage.Read(offset, sizeof(Tlv), &data.tlv);
         aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value);
-        dataset.Set(data.tlv);
+        dataset.SetTlv(data.tlv);
         offset += sizeof(Tlv) + data.tlv.GetLength();
     }
 
     // add delay timer tlv
     delayTimer.Init();
     delayTimer.SetDelayTimer(Get<Leader>().GetDelayTimerMinimal());
-    dataset.Set(delayTimer);
+    dataset.SetTlv(delayTimer);
 
     // add pending timestamp tlv
     dataset.SetTimestamp(aTimestamp);

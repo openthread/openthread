@@ -526,8 +526,8 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::ThreadDatasetHandler(con
     otError              error = OT_ERROR_NONE;
     otOperationalDataset opDataset;
     bool                 isActive = ((mWaitingKey == SPINEL_PROP_THREAD_ACTIVE_DATASET) ? true : false);
-    Decoder              decoder;
-    MeshCoP::Dataset     dataset(isActive ? MeshCoP::Tlv::kActiveTimestamp : MeshCoP::Tlv::kPendingTimestamp);
+    Spinel::Decoder      decoder;
+    MeshCoP::Dataset     dataset(isActive ? MeshCoP::Dataset::kActive : MeshCoP::Dataset::kPending);
 
     memset(&opDataset, 0, sizeof(otOperationalDataset));
     decoder.Init(aBuffer, aLength);
@@ -665,7 +665,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::ThreadDatasetHandler(con
     opDataset.mActiveTimestamp                      = 0;
     opDataset.mComponents.mIsActiveTimestampPresent = true;
 
-    SuccessOrExit(error = dataset.Set(opDataset));
+    SuccessOrExit(error = dataset.SetFrom(opDataset));
     SuccessOrExit(error = otPlatSettingsSet(
                       mInstance, isActive ? SettingsBase::kKeyActiveDataset : SettingsBase::kKeyPendingDataset,
                       dataset.GetBytes(), dataset.GetSize()));

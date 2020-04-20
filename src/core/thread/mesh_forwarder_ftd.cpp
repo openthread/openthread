@@ -669,7 +669,7 @@ void MeshForwarder::UpdateRoutes(const uint8_t *     aFrame,
     VerifyOrExit(!aMeshDest.IsBroadcast() && aMeshSource.IsShort(), OT_NOOP);
     SuccessOrExit(GetIp6Header(aFrame, aFrameLength, aMeshSource, aMeshDest, ip6Header));
 
-    if (!ip6Header.GetSource().IsRoutingLocator() && !ip6Header.GetSource().IsAnycastRoutingLocator() &&
+    if (!ip6Header.GetSource().IsIidLocator() &&
         Get<NetworkData::Leader>().IsOnMesh(ip6Header.GetSource()) /* only for on mesh address which may require AQ */)
     {
         if (Get<AddressResolver>().UpdateCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort()) ==

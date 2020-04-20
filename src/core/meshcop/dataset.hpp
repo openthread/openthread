@@ -47,6 +47,10 @@
 namespace ot {
 namespace MeshCoP {
 
+/**
+ * This class represents MeshCop Dataset.
+ *
+ */
 class Dataset
 {
     friend class DatasetLocal;
@@ -60,12 +64,22 @@ public:
     };
 
     /**
+     * This enumeration represents the Dataset type (active or pending).
+     *
+     */
+    enum Type
+    {
+        kActive,  ///< Active Dataset
+        kPending, ///< Pending Dataset
+    };
+
+    /**
      * This constructor initializes the object.
      *
      * @param[in]  aType       The type of the dataset, active or pending.
      *
      */
-    explicit Dataset(Tlv::Type aType);
+    explicit Dataset(Type aType);
 
     /**
      * This method clears the Dataset.
@@ -82,20 +96,24 @@ public:
     bool IsValid(void) const;
 
     /**
-     * This method returns a pointer to the TLV.
+     * This method returns a pointer to the TLV with a given type.
+     *
+     * @param[in] aType  A TLV type.
      *
      * @returns A pointer to the TLV or NULL if none is found.
      *
      */
-    Tlv *Get(Tlv::Type aType);
+    Tlv *GetTlv(Tlv::Type aType);
 
     /**
-     * This method returns a pointer to the TLV.
+     * This method returns a pointer to the TLV with a given type.
+     *
+     * @param[in] aType  The TLV type.
      *
      * @returns A pointer to the TLV or NULL if none is found.
      *
      */
-    const Tlv *Get(Tlv::Type aType) const;
+    const Tlv *GetTlv(Tlv::Type aType) const;
 
     /**
      * This method returns a pointer to the byte representation of the Dataset.
@@ -116,8 +134,10 @@ public:
     /**
      * This method converts the TLV representation to structure representation.
      *
+     * @param[out] aDataset  A reference to `otOperationalDataset` to output the Dataset.
+     *
      */
-    void Get(otOperationalDataset &aDataset) const;
+    void ConvertTo(otOperationalDataset &aDataset) const;
 
     /**
      * This method returns the Dataset size in bytes.
@@ -154,6 +174,8 @@ public:
     /**
      * This method sets the Timestamp value.
      *
+     * @param[in] aTimestamp   A Timestamp.
+     *
      */
     void SetTimestamp(const Timestamp &aTimestamp);
 
@@ -166,7 +188,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Could not set the TLV due to insufficient buffer space.
      *
      */
-    otError Set(const Tlv &aTlv);
+    otError SetTlv(const Tlv &aTlv);
 
     /**
      * This method sets the Dataset using TLVs stored in a message buffer.
@@ -193,15 +215,15 @@ public:
     void Set(const Dataset &aDataset);
 
     /**
-     * This method sets the Dataset.
+     * This method sets the Dataset from a given structure representation.
      *
-     * @param[in]  aDataset  The input Dataset.
+     * @param[in]  aDataset  The input Dataset as otOperationalDataset.
      *
      * @retval OT_ERROR_NONE          Successfully set the Dataset.
      * @retval OT_ERROR_INVALID_ARGS  Dataset is missing Active and/or Pending Timestamp.
      *
      */
-    otError Set(const otOperationalDataset &aDataset);
+    otError SetFrom(const otOperationalDataset &aDataset);
 
     /**
      * This method removes a TLV from the Dataset.
@@ -213,6 +235,8 @@ public:
 
     /**
      * This method appends the MLE Dataset TLV but excluding MeshCoP Sub Timestamp TLV.
+     *
+     * @param[in] aMessage       A message to append to.
      *
      * @retval OT_ERROR_NONE     Successfully append MLE Dataset TLV without MeshCoP Sub Timestamp TLV.
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to append the message with MLE Dataset TLV.
@@ -240,13 +264,21 @@ public:
      */
     void ConvertToActive(void);
 
+    /**
+     * This static method converts a Dataset Type to a string.
+     *
+     * @param[in]  aType   A Dataset type.
+     *
+     */
+    static const char *TypeToString(Type aType);
+
 private:
     void Remove(uint8_t *aStart, uint8_t aLength);
 
     uint8_t   mTlvs[kMaxSize]; ///< The Dataset buffer
     TimeMilli mUpdateTime;     ///< Local time last updated
     uint16_t  mLength;         ///< The number of valid bytes in @var mTlvs
-    Tlv::Type mType;           ///< Active or Pending
+    Type      mType;           ///< Active or Pending
 };
 
 } // namespace MeshCoP

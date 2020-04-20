@@ -78,8 +78,27 @@ jobs:
       run: |
         script/check-scan-build
 
-  arm-gcc-4:
+  arm-gcc:
+    name: arm-gcc-${{ matrix.gcc_ver }}
     runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        include:
+          - gcc_ver: 4
+            gcc_download_url: https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q3-update/+download/gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2
+            gcc_extract_dir: gcc-arm-none-eabi-4_9-2015q3
+          - gcc_ver: 5
+            gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/5_4-2016q3/gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2
+            gcc_extract_dir: gcc-arm-none-eabi-5_4-2016q3
+          - gcc_ver: 6
+            gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/6-2017q2/gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
+            gcc_extract_dir: gcc-arm-none-eabi-6-2017-q2-update
+          - gcc_ver: 7
+            gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
+            gcc_extract_dir: gcc-arm-none-eabi-7-2018-q2-update
+          - gcc_ver: 9
+            gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2019q4/RC2.1/gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2
+            gcc_extract_dir: gcc-arm-none-eabi-9-2019-q4-major
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
@@ -87,152 +106,28 @@ jobs:
         cd /tmp
         sudo apt update
         sudo apt --no-install-recommends install -y lib32z1 ninja-build
-        wget https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q3-update/+download/gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2
-        tar xjf gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2
+        wget ${{ matrix.gcc_download_url }} -O gcc-arm.tar.bz2
+        tar xjf gcc-arm.tar.bz2
     - name: Build
       run: |
-        export PATH=/tmp/gcc-arm-none-eabi-4_9-2015q3/bin:$PATH
+        export PATH=/tmp/${{ matrix.gcc_extract_dir }}/bin:$PATH
         script/check-arm-build
 
-  arm-gcc-5:
+  gcc:
+    name: gcc-${{ matrix.gcc_ver }}
     runs-on: ubuntu-18.04
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        cd /tmp
-        sudo apt update
-        sudo apt --no-install-recommends install -y lib32z1 ninja-build
-        wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/5_4-2016q3/gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2
-        tar xjf gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2
-    - name: Build
-      run: |
-        export PATH=/tmp/gcc-arm-none-eabi-5_4-2016q3/bin:$PATH
-        script/check-arm-build
-
-  arm-gcc-6:
-    runs-on: ubuntu-18.04
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        cd /tmp
-        sudo apt update
-        sudo apt --no-install-recommends install -y ninja-build
-        wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/6-2017q2/gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
-        tar xjf gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
-    - name: Build
-      run: |
-        export PATH=/tmp/gcc-arm-none-eabi-6-2017-q2-update/bin:$PATH
-        script/check-arm-build
-
-  arm-gcc-7:
-    runs-on: ubuntu-18.04
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        cd /tmp
-        sudo apt update
-        sudo apt --no-install-recommends install -y ninja-build
-        wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
-        tar xjf gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
-    - name: Build
-      run: |
-        export PATH=/tmp/gcc-arm-none-eabi-7-2018-q2-update/bin:$PATH
-        script/check-arm-build
-
-  arm-gcc-9:
-    runs-on: ubuntu-18.04
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        cd /tmp
-        sudo apt update
-        sudo apt --no-install-recommends install -y ninja-build
-        wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2019q4/RC2.1/gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2
-        tar xjf gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2
-    - name: Build
-      run: |
-        export PATH=/tmp/gcc-arm-none-eabi-9-2019-q4-major/bin:$PATH
-        script/check-arm-build
-
-  gcc-5:
-    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        gcc_ver: [5, 6, 7, 8, 9]
     env:
-      CC: gcc-5
-      CXX: g++-5
+      CC: gcc-${{ matrix.gcc_ver }}
+      CXX: g++-${{ matrix.gcc_ver }}
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
         sudo apt update
-        sudo apt --no-install-recommends install -y gcc-5 g++-5 ninja-build
-    - name: Build
-      run: |
-        script/check-simulation-build
-        script/check-posix-build
-
-  gcc-6:
-    runs-on: ubuntu-18.04
-    env:
-      CC: gcc-6
-      CXX: g++-6
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        sudo apt update
-        sudo apt --no-install-recommends install -y gcc-6 g++-6 ninja-build
-    - name: Build
-      run: |
-        script/check-simulation-build
-        script/check-posix-build
-
-  gcc-7:
-    runs-on: ubuntu-18.04
-    env:
-      CC: gcc-7
-      CXX: g++-7
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        sudo apt update
-        sudo apt --no-install-recommends install -y gcc-7 g++-7 ninja-build
-    - name: Build
-      run: |
-        script/check-simulation-build
-        script/check-posix-build
-
-  gcc-8:
-    runs-on: ubuntu-18.04
-    env:
-      CC: gcc-8
-      CXX: g++-8
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        sudo apt update
-        sudo apt --no-install-recommends install -y gcc-8 g++-8 ninja-build
-    - name: Build
-      run: |
-        script/check-simulation-build
-        script/check-posix-build
-
-  gcc-9:
-    runs-on: ubuntu-18.04
-    env:
-      CC: gcc-9
-      CXX: g++-9
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        sudo apt update
-        sudo apt --no-install-recommends install -y gcc-9 g++-9 ninja-build
+        sudo apt --no-install-recommends install -y gcc-${{ matrix.gcc_ver }} g++-${{ matrix.gcc_ver }} ninja-build
     - name: Build
       run: |
         script/check-simulation-build
@@ -265,3 +160,11 @@ jobs:
     - name: Build
       run: |
         script/check-simulation-build
+
+  android:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: |
+        docker run --rm -v $PWD:/build/openthread openthread/android-trusty /build/openthread/script/check-android-build

@@ -67,10 +67,7 @@ otError Lowpan::ComputeIid(const Mac::Address &aMacAddr, const Context &aContext
     switch (aMacAddr.GetType())
     {
     case Mac::Address::kTypeShort:
-        aIpAddress.mFields.m16[4] = HostSwap16(0x0000);
-        aIpAddress.mFields.m16[5] = HostSwap16(0x00ff);
-        aIpAddress.mFields.m16[6] = HostSwap16(0xfe00);
-        aIpAddress.SetLocator(aMacAddr.GetShort());
+        aIpAddress.SetIidToLocator(aMacAddr.GetShort());
         break;
 
     case Mac::Address::kTypeExtended:
