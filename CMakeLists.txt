@@ -127,4 +127,3 @@ if(OT_PLATFORM STREQUAL "simulation")
     enable_testing()
     add_subdirectory(tests)
 endif()
-
