@@ -3304,12 +3304,16 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 {
     VerifyOrExit(!aNeighbor.IsStateInvalid(), OT_NOOP);
 
-    if (&aNeighbor == &mParent || &aNeighbor == &mParentCandidate)
+    if (&aNeighbor == &mParent)
     {
         if (IsChild())
         {
             IgnoreError(BecomeDetached());
         }
+    }
+    else if (&aNeighbor == &mParentCandidate)
+    {
+        mParentCandidate.Clear();
     }
     else if (!IsActiveRouter(aNeighbor.GetRloc16()))
     {
