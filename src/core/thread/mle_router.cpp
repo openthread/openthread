@@ -1166,7 +1166,7 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
     const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
     uint8_t linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
     Mac::ExtAddress macAddr;
-    uint16_t        sourceAddress;
+    uint16_t        sourceAddress = 0xFFFF;
     LeaderData      leaderData;
     RouteTlv        route;
     uint32_t        partitionId;
@@ -1423,7 +1423,7 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
     UpdateRoutes(route, routerId);
 
 exit:
-    if (aNeighbor && aNeighbor->GetRloc16() != sourceAddress)
+    if (sourceAddress != 0xFFFF && aNeighbor && aNeighbor->GetRloc16() != sourceAddress)
     {
         // Remove stale neighbors
         RemoveNeighbor(*aNeighbor);
