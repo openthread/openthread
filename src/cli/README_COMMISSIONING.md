@@ -89,7 +89,13 @@ Form a network with the device that has Commissioner support.
 
 ### Start Joiner
 
-1. Start the Joiner process.
+1. Factory reset the device.
+
+   ```bash
+   > factoryreset
+   ```
+
+2. Start the Joiner process.
 
    ```bash
    > ifconfig up
@@ -99,14 +105,14 @@ Form a network with the device that has Commissioner support.
    Join success
    ```
 
-2. Attach to Thread network
+3. Attach to Thread network
 
    ```bash
    > thread start
    Done
    ```
 
-3. After successful attach, validate the device has the same Active Operational Dataset as above.
+4. After successful attach, validate the device has the same Active Operational Dataset as above.
 
    ```bash
    > dataset active
