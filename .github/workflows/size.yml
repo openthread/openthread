@@ -28,7 +28,7 @@
 
 name: Size
 
-on: [pull_request]
+on: [push, pull_request]
 
 jobs:
 
@@ -44,9 +44,15 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v2
+    - name: Bootstrap
+      if: "github.event_name == 'push'"
+      run: |
+        python3 -m pip install --upgrade setuptools wheel
+        python3 -m pip install mdv
     - name: Run
       env:
         OT_BASE_BRANCH: "${{ github.base_ref }}"
         SIZE_REPORT_URL: "https://openthread-size-report.glitch.me/size-report/1354027"
       run: |
+        export PATH=$PATH:$HOME/.local/bin
         ./script/check-size
