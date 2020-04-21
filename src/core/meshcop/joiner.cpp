@@ -619,7 +619,7 @@ void Joiner::HandleTimer(void)
     Finish(error);
 }
 
-// LOCV_EXCL_START
+// LCOV_EXCL_START
 
 const char *Joiner::JoinerStateToString(otJoinerState aState)
 {
