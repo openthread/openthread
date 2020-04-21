@@ -993,7 +993,6 @@ private:
     uint8_t  FindSrcAddrIndex(void) const;
     uint8_t  SkipAddrFieldIndex(void) const;
     uint8_t  FindSecurityHeaderIndex(void) const;
-    uint8_t  SkipAddrField(const uint16_t &fcf) const;
     uint8_t  SkipSecurityHeaderIndex(void) const;
     uint8_t  FindPayloadIndex(void) const;
 
@@ -1011,10 +1010,10 @@ private:
 
     static uint8_t GetKeySourceLength(uint8_t aKeyIdMode);
 
-    static bool IsDstAddrPresent(uint16_t aFcf) { return (aFcf & kFcfDstAddrMask) != kFcfDstAddrNone; }
-    static bool IsDstPanIdPresent(uint16_t aFcf);
-    static bool IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone; }
-    static bool IsVersion2015(uint16_t aFcf) { return (aFcf & kFcfFrameVersionMask) == kFcfFrameVersion2015; }
+    static bool    IsDstAddrPresent(uint16_t aFcf) { return (aFcf & kFcfDstAddrMask) != kFcfDstAddrNone; }
+    static bool    IsDstPanIdPresent(uint16_t aFcf);
+    static bool    IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone; }
+    static bool    IsVersion2015(uint16_t aFcf) { return (aFcf & kFcfFrameVersionMask) == kFcfFrameVersion2015; }
     static uint8_t GetSecurityHeaderLength(uint8_t aSecurityControl);
 };
 

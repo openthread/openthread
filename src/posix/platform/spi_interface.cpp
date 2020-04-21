@@ -59,11 +59,16 @@
 #include <linux/ioctl.h>
 #include <linux/spi/spidev.h>
 
+using ot::Spinel::SpinelInterface;
+
 namespace ot {
 namespace Posix {
 
-SpiInterface::SpiInterface(SpinelInterface::Callbacks &aCallback, SpinelInterface::RxFrameBuffer &aFrameBuffer)
-    : mCallbacks(aCallback)
+SpiInterface::SpiInterface(SpinelInterface::ReceiveFrameCallback aCallback,
+                           void *                                aCallbackContext,
+                           SpinelInterface::RxFrameBuffer &      aFrameBuffer)
+    : mReceiveFrameCallback(aCallback)
+    , mReceiveFrameContext(aCallbackContext)
     , mRxFrameBuffer(aFrameBuffer)
     , mSpiDevFd(-1)
     , mResetGpioValueFd(-1)
@@ -508,7 +513,7 @@ otError SpiInterface::PushPullSpi(void)
             // Upper layer will free the frame buffer.
             discardRxFrame = false;
 
-            mCallbacks.HandleReceivedFrame();
+            mReceiveFrameCallback(mReceiveFrameContext);
         }
     }
 
@@ -658,11 +663,9 @@ void SpiInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMa
     }
 }
 
-void SpiInterface::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
+void SpiInterface::Process(const RadioProcessContext &aContext)
 {
-    OT_UNUSED_VARIABLE(aWriteFdSet);
-
-    if (FD_ISSET(mIntGpioValueFd, &aReadFdSet))
+    if (FD_ISSET(mIntGpioValueFd, aContext.mReadFdSet))
     {
         struct gpioevent_data event;
 
@@ -680,13 +683,17 @@ void SpiInterface::Process(const fd_set &aReadFdSet, const fd_set &aWriteFdSet)
     }
 }
 
-otError SpiInterface::WaitForFrame(const struct timeval &aTimeout)
+otError SpiInterface::WaitForFrame(uint64_t aTimeoutUs)
 {
-    otError        error   = OT_ERROR_NONE;
-    struct timeval timeout = {kSecPerDay, 0};
+    otError        error      = OT_ERROR_NONE;
+    struct timeval spiTimeout = {kSecPerDay, 0};
+    struct timeval timeout;
     fd_set         readFdSet;
     int            ret;
     bool           isDataReady = false;
+
+    timeout.tv_sec  = aTimeoutUs / US_PER_S;
+    timeout.tv_usec = aTimeoutUs % US_PER_S;
 
     FD_ZERO(&readFdSet);
 
@@ -695,8 +702,8 @@ otError SpiInterface::WaitForFrame(const struct timeval &aTimeout)
         if ((isDataReady = CheckInterrupt()))
         {
             // Interrupt pin is asserted, set the timeout to be 0.
-            timeout.tv_sec  = 0;
-            timeout.tv_usec = 0;
+            spiTimeout.tv_sec  = 0;
+            spiTimeout.tv_usec = 0;
         }
         else
         {
@@ -708,13 +715,13 @@ otError SpiInterface::WaitForFrame(const struct timeval &aTimeout)
     else
     {
         // In this case we don't have an interrupt, so we revert to SPI polling.
-        timeout.tv_sec  = 0;
-        timeout.tv_usec = kSpiPollPeriodUs;
+        spiTimeout.tv_sec  = 0;
+        spiTimeout.tv_usec = kSpiPollPeriodUs;
     }
 
-    if (timercmp(&aTimeout, &timeout, <))
+    if (timercmp(&spiTimeout, &timeout, <))
     {
-        timeout = aTimeout;
+        timeout = spiTimeout;
     }
 
     ret = select(mIntGpioValueFd + 1, &readFdSet, NULL, NULL, &timeout);

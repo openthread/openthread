@@ -168,6 +168,17 @@ do_clean() {
     rm -rfv "${OT_BUILDDIR}"
 }
 
+do_unit() {
+    local builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}"
+    if [[ ! -d "${builddir}" ]]; then
+        echo "Cannot find build directory!"
+        exit -1
+    fi
+
+    cd "${builddir}"
+    ninja test
+}
+
 do_cert() {
     export top_builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}"
 
@@ -269,6 +280,7 @@ COMMANDS:
     build           Build project for running tests. This can be used to rebuild the project for changes.
     cert            Run a single thread-cert test. ENVIRONMENTS should be the same as those given to build or update.
     cert_suite      Run a batch of thread-cert tests and summarize the test results. Only echo logs for failing tests.
+    unit            Run all the unit tests. This should be called after simulation is built.
     expect          Run expect tests.
     help            Print this help.
 
@@ -380,6 +392,9 @@ main()
             cert_suite)
                 shift
                 do_cert_suite "$@"
+                ;;
+            unit)
+                do_unit
                 ;;
             help)
                 print_usage

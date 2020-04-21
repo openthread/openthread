@@ -59,7 +59,7 @@ add_library(openthread-posix
     logging.cpp
     misc.cpp
     netif.cpp
-    radio_spinel.cpp
+    radio.cpp
     settings.cpp
     spi_interface.cpp
     system.cpp
@@ -76,6 +76,7 @@ set_target_properties(
 )
 
 target_link_libraries(openthread-posix PUBLIC
+    openthread-platform
     util
 )
 

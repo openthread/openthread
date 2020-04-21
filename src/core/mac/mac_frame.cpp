@@ -806,7 +806,6 @@ uint8_t Frame::SkipSecurityHeaderIndex(void) const
         VerifyOrExit(index < GetPsduLength(), index = kInvalidIndex);
         uint8_t securityControl = *(GetPsdu() + index);
 
-        index += kSecurityControlSize + kFrameCounterSize;
         index += GetSecurityHeaderLength(securityControl);
     }
 
@@ -1074,8 +1073,8 @@ exit:
 
 uint8_t Frame::CalculateFrameLength() const
 {
-    uint8_t  index;
-    uint8_t  securityControl;
+    uint8_t index;
+    uint8_t securityControl;
 
     index = SkipAddrFieldIndex();
     OT_ASSERT(index != kInvalidIndex);

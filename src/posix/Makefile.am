@@ -42,6 +42,7 @@ SUBDIRS                                                                = \
 
 CPPFLAGS_COMMON                                                        = \
     -I$(top_srcdir)/include                                              \
+    -I$(top_srcdir)/src/                                                 \
     -I$(top_srcdir)/src/core                                             \
     -I$(top_srcdir)/src/posix/platform                                   \
     -I$(top_srcdir)/src/posix/platform/include                           \
@@ -54,6 +55,7 @@ CPPFLAGS_COMMON                                                        = \
 LIBTOOLFLAGS_COMMON = --preserve-dup-deps
 
 LDADD_COMMON                                                           = \
+    $(top_builddir)/src/lib/platform/libopenthread-platform.a            \
     $(top_builddir)/src/posix/platform/libopenthread-posix.a             \
     -lutil                                                               \
     $(NULL)

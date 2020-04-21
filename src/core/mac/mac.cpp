@@ -2250,8 +2250,7 @@ otError Mac::StartCsl(void)
     otError   error  = OT_ERROR_NONE;
     Neighbor &parent = Get<Mle::Mle>().GetParent();
 
-    VerifyOrExit(!mRxOnWhenIdle && Get<Mle::MleRouter>().GetRole() == Mle::kRoleChild,
-                 error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!mRxOnWhenIdle && Get<Mle::MleRouter>().GetRole() == Mle::kRoleChild, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(parent.IsEnhancedKeepAliveSupported(), error = OT_ERROR_NOT_CAPABLE);
 
     otPlatRadioEnableCsl(&GetInstance(), mSubMac.GetCslPeriod(), &parent.GetExtAddress());
@@ -2268,8 +2267,8 @@ void Mac::StopCsl(void)
 {
     Neighbor &parent = Get<Mle::Mle>().GetParent();
 
-    VerifyOrExit(mSubMac.IsCslStarted(), OT_NOOP); // This is required to avoid StopCsl is called during initialization and call
-                                          // otPlatRadioEnableCsl
+    VerifyOrExit(mSubMac.IsCslStarted(), OT_NOOP); // This is required to avoid StopCsl is called during initialization
+                                                   // and call otPlatRadioEnableCsl
 
     mSubMac.StopCsl();
 
