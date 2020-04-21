@@ -49,7 +49,7 @@ libopenthread_posix_a_SOURCES             = \
     logging.cpp                             \
     misc.cpp                                \
     netif.cpp                               \
-    radio_spinel.cpp                        \
+    radio.cpp                               \
     settings.cpp                            \
     spi_interface.cpp                       \
     system.cpp                              \
@@ -62,8 +62,6 @@ noinst_HEADERS                            = \
     hdlc_interface.hpp                      \
     openthread-posix-config.h               \
     platform-posix.h                        \
-    radio_spinel.hpp                        \
-    spinel_interface.hpp                    \
     $(NULL)
 
 openthread_HEADERS                        = \
@@ -81,6 +79,7 @@ check_PROGRAMS = test-settings
 
 test_settings_CPPFLAGS                                        = \
     -I$(top_srcdir)/include                                     \
+    -I$(top_srcdir)/src                                         \
     -I$(top_srcdir)/src/core                                    \
     -I$(top_srcdir)/src/posix/platform/include                  \
     -DOPENTHREAD_CONFIG_LOG_PLATFORM=0                          \

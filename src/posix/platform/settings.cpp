@@ -45,9 +45,11 @@
 #include <unistd.h>
 
 #include <openthread/platform/misc.h>
+#include <openthread/platform/radio.h>
 #include <openthread/platform/settings.h>
 
 #include "common/code_utils.hpp"
+#include "common/encoding.hpp"
 
 static const size_t kMaxFileNameSize = sizeof(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH) + 32;
 
@@ -55,20 +57,23 @@ static int sSettingsFd = -1;
 
 static otError platformSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex, int *aSwapFd);
 
-static void getSettingsFileName(char aFileName[kMaxFileNameSize], bool aSwap)
+static void getSettingsFileName(otInstance *aInstance, char aFileName[kMaxFileNameSize], bool aSwap)
 {
     const char *offset = getenv("PORT_OFFSET");
+    uint64_t    nodeId;
 
+    otPlatRadioGetIeeeEui64(aInstance, reinterpret_cast<uint8_t *>(&nodeId));
+    nodeId = ot::Encoding::BigEndian::HostSwap64(nodeId);
     snprintf(aFileName, kMaxFileNameSize, OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH "/%s_%" PRIx64 ".%s",
-             offset == NULL ? "0" : offset, gNodeId, (aSwap ? "swap" : "data"));
+             offset == NULL ? "0" : offset, nodeId, (aSwap ? "swap" : "data"));
 }
 
-static int swapOpen(void)
+static int swapOpen(otInstance *aInstance)
 {
     char fileName[kMaxFileNameSize];
     int  fd;
 
-    getSettingsFileName(fileName, true);
+    getSettingsFileName(aInstance, fileName, true);
 
     fd = open(fileName, O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC, 0600);
     VerifyOrDie(fd != -1, OT_EXIT_ERROR_ERRNO);
@@ -83,8 +88,10 @@ static int swapOpen(void)
  * @param[in]   aLength Number of bytes to copy.
  *
  */
-static void swapWrite(int aFd, uint16_t aLength)
+static void swapWrite(otInstance *aInstance, int aFd, uint16_t aLength)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     const size_t kBlockSize = 512;
     uint8_t      buffer[kBlockSize];
 
@@ -102,13 +109,13 @@ static void swapWrite(int aFd, uint16_t aLength)
     }
 }
 
-static void swapPersist(int aFd)
+static void swapPersist(otInstance *aInstance, int aFd)
 {
     char swapFile[kMaxFileNameSize];
     char dataFile[kMaxFileNameSize];
 
-    getSettingsFileName(swapFile, true);
-    getSettingsFileName(dataFile, false);
+    getSettingsFileName(aInstance, swapFile, true);
+    getSettingsFileName(aInstance, dataFile, false);
 
     VerifyOrDie(0 == close(sSettingsFd), OT_EXIT_ERROR_ERRNO);
     VerifyOrDie(0 == fsync(aFd), OT_EXIT_ERROR_ERRNO);
@@ -117,19 +124,17 @@ static void swapPersist(int aFd)
     sSettingsFd = aFd;
 }
 
-static void swapDiscard(int aFd)
+static void swapDiscard(otInstance *aInstance, int aFd)
 {
     char swapFileName[kMaxFileNameSize];
 
     VerifyOrDie(0 == close(aFd), OT_EXIT_ERROR_ERRNO);
-    getSettingsFileName(swapFileName, true);
+    getSettingsFileName(aInstance, swapFileName, true);
     VerifyOrDie(0 == unlink(swapFileName), OT_EXIT_ERROR_ERRNO);
 }
 
 void otPlatSettingsInit(otInstance *aInstance)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     otError error = OT_ERROR_NONE;
 
     {
@@ -144,7 +149,7 @@ void otPlatSettingsInit(otInstance *aInstance)
     {
         char fileName[kMaxFileNameSize];
 
-        getSettingsFileName(fileName, false);
+        getSettingsFileName(aInstance, fileName, false);
         sSettingsFd = open(fileName, O_RDWR | O_CREAT | O_CLOEXEC, 0600);
     }
 
@@ -258,7 +263,7 @@ otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *a
                     write(swapFd, aValue, aValueLength) == aValueLength,
                 OT_EXIT_FAILURE);
 
-    swapPersist(swapFd);
+    swapPersist(aInstance, swapFd);
 
     return OT_ERROR_NONE;
 }
@@ -268,12 +273,12 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
     OT_UNUSED_VARIABLE(aInstance);
 
     off_t size   = lseek(sSettingsFd, 0, SEEK_END);
-    int   swapFd = swapOpen();
+    int   swapFd = swapOpen(aInstance);
 
     if (size > 0)
     {
         VerifyOrDie(0 == lseek(sSettingsFd, 0, SEEK_SET), OT_EXIT_ERROR_ERRNO);
-        swapWrite(swapFd, static_cast<uint16_t>(size));
+        swapWrite(aInstance, swapFd, static_cast<uint16_t>(size));
     }
 
     VerifyOrDie(write(swapFd, &aKey, sizeof(aKey)) == sizeof(aKey) &&
@@ -281,7 +286,7 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
                     write(swapFd, aValue, aValueLength) == aValueLength,
                 OT_EXIT_FAILURE);
 
-    swapPersist(swapFd);
+    swapPersist(aInstance, swapFd);
 
     return OT_ERROR_NONE;
 }
@@ -314,7 +319,7 @@ static otError platformSettingsDelete(otInstance *aInstance, uint16_t aKey, int 
     otError error  = OT_ERROR_NOT_FOUND;
     off_t   size   = lseek(sSettingsFd, 0, SEEK_END);
     off_t   offset = lseek(sSettingsFd, 0, SEEK_SET);
-    int     swapFd = swapOpen();
+    int     swapFd = swapOpen(aInstance);
 
     assert(swapFd != -1);
     assert(offset == 0);
@@ -339,7 +344,7 @@ static otError platformSettingsDelete(otInstance *aInstance, uint16_t aKey, int 
             if (aIndex == 0)
             {
                 VerifyOrExit(offset == lseek(sSettingsFd, length, SEEK_CUR), error = OT_ERROR_PARSE);
-                swapWrite(swapFd, static_cast<uint16_t>(size - offset));
+                swapWrite(aInstance, swapFd, static_cast<uint16_t>(size - offset));
                 error = OT_ERROR_NONE;
                 break;
             }
@@ -363,7 +368,7 @@ static otError platformSettingsDelete(otInstance *aInstance, uint16_t aKey, int 
         assert(rval == sizeof(length));
         VerifyOrDie(rval == sizeof(length), OT_EXIT_FAILURE);
 
-        swapWrite(swapFd, length);
+        swapWrite(aInstance, swapFd, length);
     }
 
 exit:
@@ -375,11 +380,11 @@ exit:
     }
     else if (error == OT_ERROR_NONE)
     {
-        swapPersist(swapFd);
+        swapPersist(aInstance, swapFd);
     }
     else if (error == OT_ERROR_NOT_FOUND)
     {
-        swapDiscard(swapFd);
+        swapDiscard(aInstance, swapFd);
     }
 
     return error;
@@ -397,7 +402,12 @@ void otPlatSettingsWipe(otInstance *aInstance)
 
 #if SELF_TEST
 
-uint64_t gNodeId = 1;
+void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    memset(aIeeeEui64, 0, sizeof(uint64_t));
+}
 
 int main()
 {

@@ -51,7 +51,7 @@ static uint32_t sUsAlarm     = 0;
 static uint32_t sSpeedUpFactor = 1;
 
 #if !OPENTHREAD_POSIX_VIRTUAL_TIME
-uint64_t platformGetTime(void)
+uint64_t otPlatTimeGet(void)
 {
     struct timespec now;
 
@@ -67,7 +67,7 @@ uint64_t platformGetTime(void)
 
 static uint64_t platformAlarmGetNow(void)
 {
-    return platformGetTime() * sSpeedUpFactor;
+    return otPlatTimeGet() * sSpeedUpFactor;
 }
 
 void platformAlarmInit(uint32_t aSpeedUpFactor)
@@ -98,7 +98,7 @@ void otPlatAlarmMilliStop(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 uint32_t otPlatAlarmMicroGetNow(void)
 {
-    return (uint32_t)(platformGetTime());
+    return (uint32_t)(otPlatTimeGet());
 }
 
 void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)

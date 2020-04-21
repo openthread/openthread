@@ -26,65 +26,18 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_executable(ot-daemon
-    main.c
-)
+include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-set_target_properties(
-    ot-daemon
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
+noinst_LIBRARIES = libopenthread-platform.a
 
-target_include_directories(ot-daemon PRIVATE ${COMMON_INCLUDES})
+libopenthread_platform_a_CPPFLAGS           = \
+    -I$(top_srcdir)/include                   \
+    -I$(top_srcdir)/src/core                  \
+    $(NULL)
 
-target_compile_definitions(ot-daemon PRIVATE
-    OPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_CLI
-)
+libopenthread_platform_a_SOURCES            = \
+    exit_code.c                               \
+    exit_code.h                               \
+    $(NULL)
 
-target_compile_options(ot-daemon PRIVATE
-    ${OT_CFLAGS}
-)
-
-target_link_libraries(ot-daemon PRIVATE
-    openthread-cli-ftd
-    ${OT_PLATFORM_LIB}
-    openthread-ftd
-    ${OT_PLATFORM_LIB}
-    openthread-ncp-ftd
-    mbedcrypto
-)
-
-add_executable(ot-ctl
-    client.cpp
-)
-
-set_target_properties(
-    ot-ctl
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
-target_compile_definitions(ot-ctl PRIVATE
-    $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>
-)
-
-target_compile_options(ot-ctl PRIVATE
-    ${OT_CFLAGS}
-)
-
-target_link_libraries(ot-ctl
-    openthread-platform
-    $<$<BOOL:${READLINE}>:${OT_READLINE}>
-)
-
-target_include_directories(ot-ctl PRIVATE ${COMMON_INCLUDES})
-
-install(TARGETS ot-daemon
-    DESTINATION sbin)
-install(TARGETS ot-ctl
-    DESTINATION bin)
-
-set(CPACK_PACKAGE_NAME "openthread-daemon")
+include $(abs_top_nlbuild_autotools_dir)/automake/post.am

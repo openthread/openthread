@@ -48,48 +48,6 @@ extern "C" {
 #endif
 
 /**
- * This enumeration represents exit codes used when OpenThread exits.
- *
- */
-enum
-{
-    /**
-     * Success.
-     */
-    OT_EXIT_SUCCESS = 0,
-
-    /**
-     * Generic failure.
-     */
-    OT_EXIT_FAILURE = 1,
-
-    /**
-     * Invalid arguments.
-     */
-    OT_EXIT_INVALID_ARGUMENTS = 2,
-
-    /**
-     * Incompatible radio spinel.
-     */
-    OT_EXIT_RADIO_SPINEL_INCOMPATIBLE = 3,
-
-    /**
-     * Unexpected radio spinel reset.
-     */
-    OT_EXIT_RADIO_SPINEL_RESET = 4,
-
-    /**
-     * System call or library function error.
-     */
-    OT_EXIT_ERROR_ERRNO = 5,
-
-    /**
-     * No response from radio spinel.
-     */
-    OT_EXIT_RADIO_SPINEL_NO_RESPONSE = 6,
-};
-
-/**
  * This enumeration represents default parameters for the SPI interface.
  *
  */

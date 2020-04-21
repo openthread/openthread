@@ -201,7 +201,7 @@ void virtualTimeProcess(otInstance *  aInstance,
     virtualTimeRadioSpinelProcess(aInstance, &event);
 }
 
-uint64_t platformGetTime(void)
+uint64_t otPlatTimeGet(void)
 {
     return sNow;
 }
