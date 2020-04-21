@@ -99,6 +99,13 @@ list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_BINARY_DIR}/etc/cmake)
 list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/etc/cmake)
 list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/include)
 
+if(OT_CONFIG)
+    list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
+    message(STATUS "Project core config: \"${OT_CONFIG}\"")
+endif()
+
+list(APPEND OT_PRIVATE_DEFINES ${OT_PLATFORM_DEFINES})
+
 if(OT_PLATFORM STREQUAL "posix")
     list(APPEND OT_PRIVATE_INCLUDES ${PROJECT_SOURCE_DIR}/src/posix/platform)
     add_subdirectory("${PROJECT_SOURCE_DIR}/src/posix/platform")
@@ -106,13 +113,6 @@ elseif(NOT OT_PLATFORM MATCHES "none")
     list(APPEND OT_PRIVATE_INCLUDES ${PROJECT_SOURCE_DIR}/examples/platforms/${OT_PLATFORM})
     add_subdirectory("${PROJECT_SOURCE_DIR}/examples/platforms/${OT_PLATFORM}")
 endif()
-
-if(OT_CONFIG)
-    list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
-    message(STATUS "Project core config: \"${OT_CONFIG}\"")
-endif()
-
-list(APPEND OT_PRIVATE_DEFINES ${OT_PLATFORM_DEFINES})
 
 if(OT_PLATFORM STREQUAL "posix")
     add_subdirectory(src/posix)
