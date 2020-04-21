@@ -163,26 +163,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE
- *
- * The size of heap buffer when DTLS is enabled.
- *
- */
-#ifndef OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE
-#define OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE (4096 * sizeof(void *))
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE_NO_DTLS
- *
- * The size of heap buffer when DTLS is disabled.
- *
- */
-#ifndef OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE_NO_DTLS
-#define OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE_NO_DTLS 2048
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
  *
  * Define as 1 to enable the time synchronization service feature.
