@@ -1423,7 +1423,7 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
     UpdateRoutes(route, routerId);
 
 exit:
-    if (sourceAddress != 0xFFFF && aNeighbor && aNeighbor->GetRloc16() != sourceAddress)
+    if (aNeighbor && aNeighbor->GetRloc16() != sourceAddress)
     {
         // Remove stale neighbors
         RemoveNeighbor(*aNeighbor);
