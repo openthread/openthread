@@ -366,8 +366,7 @@ otError ActiveDataset::GenerateLocal(void)
 
     mLocal.Read(dataset);
 
-    // Active Timestamp
-    if (dataset.GetTlv(Tlv::kActiveTimestamp) == NULL)
+    if (dataset.GetTlv<ActiveTimestampTlv>() == NULL)
     {
         ActiveTimestampTlv activeTimestampTlv;
         activeTimestampTlv.Init();
@@ -376,8 +375,7 @@ otError ActiveDataset::GenerateLocal(void)
         dataset.SetTlv(activeTimestampTlv);
     }
 
-    // Channel
-    if (dataset.GetTlv(Tlv::kChannel) == NULL)
+    if (dataset.GetTlv<ChannelTlv>() == NULL)
     {
         ChannelTlv tlv;
         tlv.Init();
@@ -385,8 +383,7 @@ otError ActiveDataset::GenerateLocal(void)
         dataset.SetTlv(tlv);
     }
 
-    // channelMask
-    if (dataset.GetTlv(Tlv::kChannelMask) == NULL)
+    if (dataset.GetTlv<ChannelMaskTlv>() == NULL)
     {
         ChannelMaskTlv tlv;
         tlv.Init();
@@ -394,62 +391,39 @@ otError ActiveDataset::GenerateLocal(void)
         dataset.SetTlv(tlv);
     }
 
-    // Extended PAN ID
-    if (dataset.GetTlv(Tlv::kExtendedPanId) == NULL)
+    if (dataset.GetTlv<ExtendedPanIdTlv>() == NULL)
     {
-        ExtendedPanIdTlv tlv;
-        tlv.Init();
-        tlv.SetExtendedPanId(Get<Mac::Mac>().GetExtendedPanId());
-        dataset.SetTlv(tlv);
+        dataset.SetTlv(Tlv::kExtendedPanId, &Get<Mac::Mac>().GetExtendedPanId(), sizeof(Mac::ExtendedPanId));
     }
 
-    // Mesh-Local Prefix
-    if (dataset.GetTlv(Tlv::kMeshLocalPrefix) == NULL)
+    if (dataset.GetTlv<MeshLocalPrefixTlv>() == NULL)
     {
-        MeshLocalPrefixTlv tlv;
-        tlv.Init();
-        tlv.SetMeshLocalPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-        dataset.SetTlv(tlv);
+        dataset.SetTlv(Tlv::kMeshLocalPrefix, &Get<Mle::MleRouter>().GetMeshLocalPrefix(),
+                       sizeof(Mle::MeshLocalPrefix));
     }
 
-    // Master Key
-    if (dataset.GetTlv(Tlv::kNetworkMasterKey) == NULL)
+    if (dataset.GetTlv<NetworkMasterKeyTlv>() == NULL)
     {
-        NetworkMasterKeyTlv tlv;
-        tlv.Init();
-        tlv.SetNetworkMasterKey(Get<KeyManager>().GetMasterKey());
-        dataset.SetTlv(tlv);
+        dataset.SetTlv(Tlv::kNetworkMasterKey, &Get<KeyManager>().GetMasterKey(), sizeof(MasterKey));
     }
 
-    // Network Name
-    if (dataset.GetTlv(Tlv::kNetworkName) == NULL)
+    if (dataset.GetTlv<NetworkNameTlv>() == NULL)
     {
-        NetworkNameTlv tlv;
-        tlv.Init();
-        tlv.SetNetworkName(Get<Mac::Mac>().GetNetworkName().GetAsData());
-        dataset.SetTlv(tlv);
+        Mac::NameData nameData = Get<Mac::Mac>().GetNetworkName().GetAsData();
+
+        dataset.SetTlv(Tlv::kNetworkName, nameData.GetBuffer(), nameData.GetLength());
     }
 
-    // Pan ID
-    if (dataset.GetTlv(Tlv::kPanId) == NULL)
+    if (dataset.GetTlv<PanIdTlv>() == NULL)
     {
-        PanIdTlv tlv;
-        tlv.Init();
-        tlv.SetPanId(Get<Mac::Mac>().GetPanId());
-        dataset.SetTlv(tlv);
+        dataset.SetUint16Tlv(Tlv::kPanId, Get<Mac::Mac>().GetPanId());
     }
 
-    // PSKc
-    if (dataset.GetTlv(Tlv::kPskc) == NULL)
+    if (dataset.GetTlv<PskcTlv>() == NULL)
     {
-        PskcTlv tlv;
-
-        tlv.Init();
-
         if (Get<KeyManager>().IsPskcSet())
         {
-            // use configured PSKc
-            tlv.SetPskc(Get<KeyManager>().GetPskc());
+            dataset.SetTlv(Tlv::kPskc, &Get<KeyManager>().GetPskc(), sizeof(Pskc));
         }
         else
         {
@@ -457,14 +431,11 @@ otError ActiveDataset::GenerateLocal(void)
             Pskc pskc;
 
             SuccessOrExit(error = pskc.GenerateRandom());
-            tlv.SetPskc(pskc);
+            dataset.SetTlv(Tlv::kPskc, &pskc, sizeof(Pskc));
         }
-
-        dataset.SetTlv(tlv);
     }
 
-    // Security Policy
-    if (dataset.GetTlv(Tlv::kSecurityPolicy) == NULL)
+    if (dataset.GetTlv<SecurityPolicyTlv>() == NULL)
     {
         SecurityPolicyTlv tlv;
         tlv.Init();
@@ -536,9 +507,8 @@ exit:
 
 void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Coap::Message &aMessage)
 {
-    uint16_t      offset = aMessage.GetOffset();
-    Dataset       dataset(mLocal.GetType());
-    DelayTimerTlv delayTimer;
+    uint16_t offset = aMessage.GetOffset();
+    Dataset  dataset(mLocal.GetType());
 
     VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), OT_NOOP);
 
@@ -558,9 +528,7 @@ void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Coap::Messa
     }
 
     // add delay timer tlv
-    delayTimer.Init();
-    delayTimer.SetDelayTimer(Get<Leader>().GetDelayTimerMinimal());
-    dataset.SetTlv(delayTimer);
+    dataset.SetUint32Tlv(Tlv::kDelayTimer, Get<Leader>().GetDelayTimerMinimal());
 
     // add pending timestamp tlv
     dataset.SetTimestamp(aTimestamp);
