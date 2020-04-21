@@ -205,10 +205,13 @@ private:
     void    ProcessChannel(uint8_t aArgsLength, char *aArgs[]);
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     void ProcessBackboneRouter(uint8_t aArgsLength, char *aArgs[]);
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     otError ProcessBackboneRouterLocal(uint8_t aArgsLength, char *aArgs[]);
 #endif
-#endif
+
+    void ProcessDomainName(uint8_t aArgsLength, char *aArgs[]);
+#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 #if OPENTHREAD_FTD
     void ProcessChild(uint8_t aArgsLength, char *aArgs[]);

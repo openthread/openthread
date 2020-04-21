@@ -200,6 +200,28 @@ exit:
     return error;
 }
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+const char *otThreadGetDomainName(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Mac::Mac>().GetDomainName().GetAsCString();
+}
+
+otError otThreadSetDomainName(otInstance *aInstance, const char *aDomainName)
+{
+    otError   error    = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
+
+    error = instance.Get<Mac::Mac>().SetDomainName(aDomainName);
+
+exit:
+    return error;
+}
+#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+
 uint32_t otThreadGetKeySequenceCounter(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

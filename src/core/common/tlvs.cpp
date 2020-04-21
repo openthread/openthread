@@ -120,12 +120,12 @@ otError Tlv::Find(const Message &aMessage, uint8_t aType, uint16_t *aOffset, uin
     Tlv      tlv;
     uint32_t size;
 
-    VerifyOrExit(offset <= remainingLen);
+    VerifyOrExit(offset <= remainingLen, OT_NOOP);
     remainingLen -= offset;
 
     while (true)
     {
-        VerifyOrExit(sizeof(Tlv) <= remainingLen);
+        VerifyOrExit(sizeof(Tlv) <= remainingLen, OT_NOOP);
         aMessage.Read(offset, sizeof(Tlv), &tlv);
 
         if (tlv.mLength != kExtendedLength)
@@ -136,14 +136,14 @@ otError Tlv::Find(const Message &aMessage, uint8_t aType, uint16_t *aOffset, uin
         {
             ExtendedTlv extTlv;
 
-            VerifyOrExit(sizeof(ExtendedTlv) <= remainingLen);
+            VerifyOrExit(sizeof(ExtendedTlv) <= remainingLen, OT_NOOP);
             aMessage.Read(offset, sizeof(ExtendedTlv), &extTlv);
 
-            VerifyOrExit(extTlv.GetLength() <= (remainingLen - sizeof(ExtendedTlv)));
+            VerifyOrExit(extTlv.GetLength() <= (remainingLen - sizeof(ExtendedTlv)), OT_NOOP);
             size = extTlv.GetSize();
         }
 
-        VerifyOrExit(size <= remainingLen);
+        VerifyOrExit(size <= remainingLen, OT_NOOP);
 
         if (tlv.GetType() == aType)
         {
@@ -268,7 +268,7 @@ otError Tlv::AppendTlv(Message &aMessage, uint8_t aType, const uint8_t *aValue, 
     tlv.SetLength(aLength);
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
 
-    VerifyOrExit(aLength > 0);
+    VerifyOrExit(aLength > 0, OT_NOOP);
     error = aMessage.Append(aValue, aLength);
 
 exit:

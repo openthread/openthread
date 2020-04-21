@@ -597,6 +597,18 @@ protected:
                                          uint8_t        aTlvsLength);
 
     /**
+     * This method indicates whether there is space in Network Data to insert/append new info and grow it by a given
+     * number of bytes.
+     *
+     * @param[in]  aSize  The number of bytes to grow the Network Data.
+     *
+     * @retval TRUE   There is space to grow Network Data by @p aSize bytes.
+     * @retval FALSE  There is no space left to grow Network Data by @p aSize bytes.
+     *
+     */
+    bool CanInsert(uint16_t aSize) const { return (mLength + aSize <= kMaxSize); }
+
+    /**
      * This method grows the Network Data to append a TLV with a requested size.
      *
      * On success, the returned TLV is not initialized (i.e., the TLV Length field is not set) but the requested
@@ -608,7 +620,7 @@ protected:
      *          Data with requested @p aTlvSize number of bytes.
      *
      */
-    NetworkDataTlv *AppendTlv(uint8_t aTlvSize);
+    NetworkDataTlv *AppendTlv(uint16_t aTlvSize);
 
     /**
      * This method inserts bytes into the Network Data.
@@ -818,33 +830,21 @@ private:
     class NetworkDataIterator
     {
     public:
-        enum Type
-        {
-            kTypeOnMeshPrefix  = 0,
-            kTypeExternalRoute = 1,
-            kTypeService       = 2,
-        };
-
         explicit NetworkDataIterator(Iterator &aIterator)
             : mIteratorBuffer(reinterpret_cast<uint8_t *>(&aIterator))
         {
         }
 
-        uint8_t GetTlvOffset(void) const { return mIteratorBuffer[kTlvPosition]; }
-        uint8_t GetSubTlvOffset(void) const { return mIteratorBuffer[kSubTlvPosition]; }
-        uint8_t GetEntryIndex(void) const { return mIteratorBuffer[kEntryPosition]; }
-        Type    GetType(void) const { return static_cast<Type>(mIteratorBuffer[kTypePosition]); }
-        void    SetTlvOffset(uint8_t aOffset) { mIteratorBuffer[kTlvPosition] = aOffset; }
-        void    SetSubTlvOffset(uint8_t aOffset) { mIteratorBuffer[kSubTlvPosition] = aOffset; }
-        void    SetEntryIndex(uint8_t aIndex) { mIteratorBuffer[kEntryPosition] = aIndex; }
-        void    SetType(Type aType) { mIteratorBuffer[kTypePosition] = static_cast<uint8_t>(aType); }
-
-        bool IsNewEntry(void) const { return GetEntryIndex() == 0; }
-        void MarkEntryAsNotNew(void) { SetEntryIndex(1); }
-
         const NetworkDataTlv *GetTlv(const uint8_t *aTlvs) const
         {
             return reinterpret_cast<const NetworkDataTlv *>(aTlvs + GetTlvOffset());
+        }
+
+        void AdvanceTlv(const uint8_t *aTlvs)
+        {
+            SaveTlvOffset(GetTlv(aTlvs)->GetNext(), aTlvs);
+            SetSubTlvOffset(0);
+            SetEntryIndex(0);
         }
 
         const NetworkDataTlv *GetSubTlv(const NetworkDataTlv *aSubTlvs) const
@@ -852,6 +852,32 @@ private:
             return reinterpret_cast<const NetworkDataTlv *>(reinterpret_cast<const uint8_t *>(aSubTlvs) +
                                                             GetSubTlvOffset());
         }
+
+        void AdvaceSubTlv(const NetworkDataTlv *aSubTlvs)
+        {
+            SaveSubTlvOffset(GetSubTlv(aSubTlvs)->GetNext(), aSubTlvs);
+            SetEntryIndex(0);
+        }
+
+        uint8_t GetAndAdvanceIndex(void) { return mIteratorBuffer[kEntryPosition]++; }
+
+        bool IsNewEntry(void) const { return GetEntryIndex() == 0; }
+        void MarkEntryAsNotNew(void) { SetEntryIndex(1); }
+
+    private:
+        enum
+        {
+            kTlvPosition    = 0,
+            kSubTlvPosition = 1,
+            kEntryPosition  = 2,
+        };
+
+        uint8_t GetTlvOffset(void) const { return mIteratorBuffer[kTlvPosition]; }
+        uint8_t GetSubTlvOffset(void) const { return mIteratorBuffer[kSubTlvPosition]; }
+        void    SetSubTlvOffset(uint8_t aOffset) { mIteratorBuffer[kSubTlvPosition] = aOffset; }
+        void    SetTlvOffset(uint8_t aOffset) { mIteratorBuffer[kTlvPosition] = aOffset; }
+        uint8_t GetEntryIndex(void) const { return mIteratorBuffer[kEntryPosition]; }
+        void    SetEntryIndex(uint8_t aIndex) { mIteratorBuffer[kEntryPosition] = aIndex; }
 
         void SaveTlvOffset(const NetworkDataTlv *aTlv, const uint8_t *aTlvs)
         {
@@ -864,45 +890,23 @@ private:
                                                  reinterpret_cast<const uint8_t *>(aSubTlvs)));
         }
 
-    private:
-        enum
-        {
-            kTlvPosition    = 0,
-            kSubTlvPosition = 1,
-            kEntryPosition  = 2,
-            kTypePosition   = 3,
-        };
-
         uint8_t *mIteratorBuffer;
     };
+
+    struct Config
+    {
+        OnMeshPrefixConfig * mOnMeshPrefix;
+        ExternalRouteConfig *mExternalRoute;
+        ServiceConfig *      mService;
+    };
+
+    otError Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfig) const;
 
     static void RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, PrefixTlv &aPrefix);
     static void RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, ServiceTlv &aService);
 
     static void Remove(uint8_t *aData, uint8_t &aDataLength, uint8_t *aRemoveStart, uint8_t aRemoveLength);
     static void RemoveTlv(uint8_t *aData, uint8_t &aDataLength, NetworkDataTlv *aTlv);
-
-    const NetworkDataTlv *FindTlv(NetworkDataIterator &aIterator, NetworkDataTlv::Type aTlvType) const;
-    void                  IterateToNextTlv(NetworkDataIterator &aIterator) const;
-    const NetworkDataTlv *FindSubTlv(NetworkDataIterator & aIterator,
-                                     NetworkDataTlv::Type  aSubTlvType,
-                                     const NetworkDataTlv *aSubTlvs,
-                                     const NetworkDataTlv *aSubTlvsEnd) const;
-    void                  IterateToNextSubTlv(NetworkDataIterator &aIterator, const NetworkDataTlv *aSubTlvs) const;
-
-    template <typename TlvType> const TlvType *FindTlv(NetworkDataIterator &aIterator) const
-    {
-        return static_cast<const TlvType *>(FindTlv(aIterator, static_cast<NetworkDataTlv::Type>(TlvType::kType)));
-    }
-
-    template <typename TlvType>
-    const TlvType *FindSubTlv(NetworkDataIterator & aIterator,
-                              const NetworkDataTlv *aSubTlvs,
-                              const NetworkDataTlv *aSubTlvsEnd) const
-    {
-        return static_cast<const TlvType *>(
-            FindSubTlv(aIterator, static_cast<NetworkDataTlv::Type>(TlvType::kType), aSubTlvs, aSubTlvsEnd));
-    }
 
     const Type mType;
 };

@@ -150,7 +150,7 @@ void NcpUart::EncodeAndSendToUart(void)
                 otPlatWakeHost();
             }
 
-            VerifyOrExit(!super_t::ShouldDeferHostSend());
+            VerifyOrExit(!super_t::ShouldDeferHostSend(), OT_NOOP);
             SuccessOrExit(mFrameEncoder.BeginFrame());
 
             txFrameBuffer.OutFrameBegin();

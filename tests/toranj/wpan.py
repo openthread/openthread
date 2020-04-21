@@ -560,7 +560,7 @@ class Node(object):
             'add-route ' + route_prefix +
             (' -l {}'.format(prefix_len) if prefix_len is not None else '') +
             (' -p {}'.format(priority) if priority is not None else '') +
-            ('' if stable else '-n'))
+            ('' if stable else ' -n'))
 
     def remove_route(self,
                      route_prefix,

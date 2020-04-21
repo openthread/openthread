@@ -1,6 +1,5 @@
-#!/bin/bash
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -27,26 +26,58 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-[ -n "$BUILD_TARGET" ] || exit 0
+set(OT_PLATFORM_LIB "openthread-kw41z" PARENT_SCOPE)
 
-set -e
+if(NOT OT_CONFIG)
+    set(OT_CONFIG "openthread-core-kw41z-config.h")
+    set(OT_CONFIG ${OT_CONFIG} PARENT_SCOPE)
+endif()
 
-codecov_upload() {
-    curl -s https://codecov.io/bash > codecov
-    chmod a+x codecov
+list(APPEND OT_PLATFORM_DEFINES
+    "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-kw41z-config-check.h\""
+)
+set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
-    # Assume gcov by default, and llvm-cov if CC is clang
-    if [[ -z $CC ]]; then
-        ./codecov
-    elif  "$CC" --version | grep -q gcc; then
-        ./codecov
-    elif "$CC" --version | grep -q clang; then
-        ./codecov -x "llvm-cov gcov"
-    fi
-}
+list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
 
-main() {
-    codecov_upload
-}
+add_library(openthread-kw41z
+    alarm.c
+    diag.c
+    entropy.c
+    flash.c
+    logging.c
+    misc.c
+    radio.c
+    system.c
+    uart.c
+)
 
-main "$@"
+set_property(TARGET openthread-kw41z PROPERTY C_STANDARD 99)
+target_link_libraries(openthread-kw41z PRIVATE nxp-kw41z-driver)
+target_link_options(openthread-kw41z PRIVATE -T${PROJECT_SOURCE_DIR}/examples/platforms/kw41z/MKW41Z512xxx4.ld)
+target_link_options(openthread-kw41z PRIVATE -Wl,-Map=$<TARGET_PROPERTY:NAME>.map)
+
+target_compile_definitions(openthread-kw41z
+    PUBLIC
+        ${OT_PLATFORM_DEFINES}
+    PRIVATE
+        ${OT_PRIVATE_DEFINES}
+)
+
+target_compile_options(openthread-kw41z
+    PRIVATE
+        ${OT_CFLAGS}
+        -Wno-unknown-pragmas
+        -Wno-sign-compare
+        -Wno-unused-function
+        -Wno-unused-parameter
+        -Wno-empty-body
+)
+
+target_include_directories(openthread-kw41z
+    PRIVATE
+        ${OT_PUBLIC_INCLUDES}
+        ${OT_PRIVATE_INCLUDES}
+        ${PROJECT_SOURCE_DIR}/examples/platforms
+        ${PROJECT_SOURCE_DIR}/src/core
+)

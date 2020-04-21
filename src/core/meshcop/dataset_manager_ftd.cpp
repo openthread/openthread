@@ -92,18 +92,18 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
     channel.SetLength(0);
     pendingTimestamp.SetLength(0);
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
+    VerifyOrExit(Get<Mle::MleRouter>().IsLeader(), OT_NOOP);
 
     // verify that TLV data size is less than maximum TLV value size
     while (offset < aMessage.GetLength())
     {
         aMessage.Read(offset, sizeof(tlv), &tlv);
-        VerifyOrExit(tlv.GetLength() <= Dataset::kMaxValueSize);
+        VerifyOrExit(tlv.GetLength() <= Dataset::kMaxValueSize, OT_NOOP);
         offset += sizeof(tlv) + tlv.GetLength();
     }
 
     // verify that does not overflow dataset buffer
-    VerifyOrExit((offset - aMessage.GetOffset()) <= Dataset::kMaxSize);
+    VerifyOrExit((offset - aMessage.GetOffset()) <= Dataset::kMaxSize, OT_NOOP);
 
     type = (strcmp(mUriSet, OT_URI_PATH_ACTIVE_SET) == 0 ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp);
 
@@ -112,23 +112,23 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
         ExitNow();
     }
 
-    VerifyOrExit(activeTimestamp.IsValid());
+    VerifyOrExit(activeTimestamp.IsValid(), OT_NOOP);
 
     if (Tlv::GetTlv(aMessage, Tlv::kPendingTimestamp, sizeof(pendingTimestamp), pendingTimestamp) == OT_ERROR_NONE)
     {
-        VerifyOrExit(pendingTimestamp.IsValid());
+        VerifyOrExit(pendingTimestamp.IsValid(), OT_NOOP);
     }
 
     // verify the request includes a timestamp that is ahead of the locally stored value
     timestamp = (type == Tlv::kActiveTimestamp) ? static_cast<Timestamp *>(&activeTimestamp)
                                                 : static_cast<Timestamp *>(&pendingTimestamp);
 
-    VerifyOrExit(mLocal.Compare(timestamp) > 0);
+    VerifyOrExit(mLocal.Compare(timestamp) > 0, OT_NOOP);
 
     // check channel
     if (Tlv::GetTlv(aMessage, Tlv::kChannel, sizeof(channel), channel) == OT_ERROR_NONE)
     {
-        VerifyOrExit(channel.IsValid());
+        VerifyOrExit(channel.IsValid(), OT_NOOP);
 
         if (channel.GetChannel() != Get<Mac::Mac>().GetPanChannel())
         {
@@ -167,7 +167,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
         // no change to master key, active timestamp must be ahead
         const Timestamp *localActiveTimestamp = Get<ActiveDataset>().GetTimestamp();
 
-        VerifyOrExit(localActiveTimestamp == NULL || localActiveTimestamp->Compare(activeTimestamp) > 0);
+        VerifyOrExit(localActiveTimestamp == NULL || localActiveTimestamp->Compare(activeTimestamp) > 0, OT_NOOP);
     }
 
     // check commissioner session id
@@ -180,11 +180,11 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
         localId = static_cast<const CommissionerSessionIdTlv *>(
             Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kCommissionerSessionId));
 
-        VerifyOrExit(localId != NULL && localId->GetCommissionerSessionId() == sessionId);
+        VerifyOrExit(localId != NULL && localId->GetCommissionerSessionId() == sessionId, OT_NOOP);
     }
 
     // verify an MGMT_ACTIVE_SET.req from a Commissioner does not affect connectivity
-    VerifyOrExit(!isUpdateFromCommissioner || type == Tlv::kPendingTimestamp || !doesAffectConnectivity);
+    VerifyOrExit(!isUpdateFromCommissioner || type == Tlv::kPendingTimestamp || !doesAffectConnectivity, OT_NOOP);
 
     if (isUpdateFromCommissioner)
     {
@@ -206,10 +206,11 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
                 uint8_t value[Dataset::kMaxValueSize];
             } OT_TOOL_PACKED_END data;
 
-            VerifyOrExit(aMessage.Read(offset, sizeof(Tlv), &data.tlv) == sizeof(Tlv));
-            VerifyOrExit(data.tlv.GetLength() <= sizeof(data.value));
+            VerifyOrExit(aMessage.Read(offset, sizeof(Tlv), &data.tlv) == sizeof(Tlv), OT_NOOP);
+            VerifyOrExit(data.tlv.GetLength() <= sizeof(data.value), OT_NOOP);
 
-            VerifyOrExit(aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value) == data.tlv.GetLength());
+            VerifyOrExit(aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value) == data.tlv.GetLength(),
+                         OT_NOOP);
 
             switch (data.tlv.GetType())
             {
@@ -234,7 +235,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
                 // fall through
 
             default:
-                SuccessOrExit(dataset.Set(data.tlv));
+                SuccessOrExit(dataset.SetTlv(data.tlv));
                 break;
             }
 
@@ -259,7 +260,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
 
         localSessionId = static_cast<const CommissionerSessionIdTlv *>(
             Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kCommissionerSessionId));
-        VerifyOrExit(localSessionId != NULL);
+        VerifyOrExit(localSessionId != NULL, OT_NOOP);
 
         SuccessOrExit(
             Get<Mle::MleRouter>().GetCommissionerAloc(destination, localSessionId->GetCommissionerSessionId()));
@@ -366,80 +367,80 @@ otError ActiveDataset::GenerateLocal(void)
     mLocal.Read(dataset);
 
     // Active Timestamp
-    if (dataset.Get(Tlv::kActiveTimestamp) == NULL)
+    if (dataset.GetTlv(Tlv::kActiveTimestamp) == NULL)
     {
         ActiveTimestampTlv activeTimestampTlv;
         activeTimestampTlv.Init();
         activeTimestampTlv.SetSeconds(0);
         activeTimestampTlv.SetTicks(0);
-        dataset.Set(activeTimestampTlv);
+        dataset.SetTlv(activeTimestampTlv);
     }
 
     // Channel
-    if (dataset.Get(Tlv::kChannel) == NULL)
+    if (dataset.GetTlv(Tlv::kChannel) == NULL)
     {
         ChannelTlv tlv;
         tlv.Init();
         tlv.SetChannel(Get<Mac::Mac>().GetPanChannel());
-        dataset.Set(tlv);
+        dataset.SetTlv(tlv);
     }
 
     // channelMask
-    if (dataset.Get(Tlv::kChannelMask) == NULL)
+    if (dataset.GetTlv(Tlv::kChannelMask) == NULL)
     {
         ChannelMaskTlv tlv;
         tlv.Init();
         tlv.SetChannelMask(Get<Mac::Mac>().GetSupportedChannelMask().GetMask());
-        dataset.Set(tlv);
+        dataset.SetTlv(tlv);
     }
 
     // Extended PAN ID
-    if (dataset.Get(Tlv::kExtendedPanId) == NULL)
+    if (dataset.GetTlv(Tlv::kExtendedPanId) == NULL)
     {
         ExtendedPanIdTlv tlv;
         tlv.Init();
         tlv.SetExtendedPanId(Get<Mac::Mac>().GetExtendedPanId());
-        dataset.Set(tlv);
+        dataset.SetTlv(tlv);
     }
 
     // Mesh-Local Prefix
-    if (dataset.Get(Tlv::kMeshLocalPrefix) == NULL)
+    if (dataset.GetTlv(Tlv::kMeshLocalPrefix) == NULL)
     {
         MeshLocalPrefixTlv tlv;
         tlv.Init();
         tlv.SetMeshLocalPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-        dataset.Set(tlv);
+        dataset.SetTlv(tlv);
     }
 
     // Master Key
-    if (dataset.Get(Tlv::kNetworkMasterKey) == NULL)
+    if (dataset.GetTlv(Tlv::kNetworkMasterKey) == NULL)
     {
         NetworkMasterKeyTlv tlv;
         tlv.Init();
         tlv.SetNetworkMasterKey(Get<KeyManager>().GetMasterKey());
-        dataset.Set(tlv);
+        dataset.SetTlv(tlv);
     }
 
     // Network Name
-    if (dataset.Get(Tlv::kNetworkName) == NULL)
+    if (dataset.GetTlv(Tlv::kNetworkName) == NULL)
     {
         NetworkNameTlv tlv;
         tlv.Init();
         tlv.SetNetworkName(Get<Mac::Mac>().GetNetworkName().GetAsData());
-        dataset.Set(tlv);
+        dataset.SetTlv(tlv);
     }
 
     // Pan ID
-    if (dataset.Get(Tlv::kPanId) == NULL)
+    if (dataset.GetTlv(Tlv::kPanId) == NULL)
     {
         PanIdTlv tlv;
         tlv.Init();
         tlv.SetPanId(Get<Mac::Mac>().GetPanId());
-        dataset.Set(tlv);
+        dataset.SetTlv(tlv);
     }
 
     // PSKc
-    if (dataset.Get(Tlv::kPskc) == NULL)
+    if (dataset.GetTlv(Tlv::kPskc) == NULL)
     {
         PskcTlv tlv;
 
@@ -459,17 +460,17 @@ otError ActiveDataset::GenerateLocal(void)
             tlv.SetPskc(pskc);
         }
 
-        dataset.Set(tlv);
+        dataset.SetTlv(tlv);
     }
 
     // Security Policy
-    if (dataset.Get(Tlv::kSecurityPolicy) == NULL)
+    if (dataset.GetTlv(Tlv::kSecurityPolicy) == NULL)
     {
         SecurityPolicyTlv tlv;
         tlv.Init();
         tlv.SetRotationTime(static_cast<uint16_t>(Get<KeyManager>().GetKeyRotation()));
         tlv.SetFlags(Get<KeyManager>().GetSecurityPolicyFlags());
-        dataset.Set(tlv);
+        dataset.SetTlv(tlv);
     }
 
     SuccessOrExit(error = mLocal.Save(dataset));
@@ -539,7 +540,7 @@ void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Coap::Messa
     Dataset       dataset(mLocal.GetType());
     DelayTimerTlv delayTimer;
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsAttached());
+    VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), OT_NOOP);
 
     while (offset < aMessage.GetLength())
     {
@@ -552,14 +553,14 @@ void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Coap::Messa
 
         aMessage.Read(offset, sizeof(Tlv), &data.tlv);
         aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value);
-        dataset.Set(data.tlv);
+        dataset.SetTlv(data.tlv);
         offset += sizeof(Tlv) + data.tlv.GetLength();
     }
 
     // add delay timer tlv
     delayTimer.Init();
     delayTimer.SetDelayTimer(Get<Leader>().GetDelayTimerMinimal());
-    dataset.Set(delayTimer);
+    dataset.SetTlv(delayTimer);
 
     // add pending timestamp tlv
     dataset.SetTimestamp(aTimestamp);

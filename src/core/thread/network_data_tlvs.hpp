@@ -124,6 +124,22 @@ public:
     void SetLength(uint8_t aLength) { mLength = aLength; }
 
     /**
+     * This methods increases the Length value by a given amount.
+     *
+     * @param[in]  aIncrement  The increment amount to increase the length.
+     *
+     */
+    void IncreaseLength(uint8_t aIncrement) { mLength += aIncrement; }
+
+    /**
+     * This methods decreases the Length value by a given amount.
+     *
+     * @param[in]  aDecrement  The decrement amount to decrease the length.
+     *
+     */
+    void DecreaseLength(uint8_t aDecrement) { mLength -= aDecrement; }
+
+    /**
      * This method returns the TLV's total size (number of bytes) including Type, Length, and Value fields.
      *
      * @returns The total size include Type, Length, and Value fields.
@@ -271,6 +287,20 @@ public:
      *
      */
     const HasRouteEntry *GetNext(void) const { return (this + 1); }
+
+    /**
+     * This method indicates whether two entries fully match.
+     *
+     * @param[in]  aOtherEntry  Another entry to compare with it.
+     *
+     * @retval TRUE  The two entries are equal.
+     * @retval FALSE The two entries are not equal.
+     *
+     */
+    bool operator==(const HasRouteEntry &aOtherEntry) const
+    {
+        return (memcmp(this, &aOtherEntry, sizeof(HasRouteEntry)) == 0);
+    }
 
 private:
     enum
@@ -506,6 +536,19 @@ public:
         SetLength(sizeof(*this) - sizeof(NetworkDataTlv) + BitVectorBytes(mPrefixLength) + aLength);
     }
 
+    /**
+     * This static method calculates the total size (number of bytes) of a Prefix TLV with a given Prefix Length value.
+     *
+     * Note that the returned size does include the Type and Length fields in the TLV, but does not account for any
+     * sub TLVs of the Prefix TLV.
+     *
+     * @param[in]  aPrefixLength     A Prefix Length in bits.
+
+     * @returns    The size (number of bytes) of the Prefix TLV.
+     *
+     */
+    static uint16_t CalculateSize(uint8_t aPrefixLength) { return sizeof(PrefixTlv) + BitVectorBytes(aPrefixLength); }
+
 private:
     uint8_t mDomainId;
     uint8_t mPrefixLength;
@@ -687,6 +730,20 @@ public:
      */
     const BorderRouterEntry *GetNext(void) const { return (this + 1); }
 
+    /**
+     * This method indicates whether two entries fully match.
+     *
+     * @param[in]  aOtherEntry  Another entry to compare with it.
+     *
+     * @retval TRUE  The two entries are equal.
+     * @retval FALSE The two entries are not equal.
+     *
+     */
+    bool operator==(const BorderRouterEntry &aOtherEntry) const
+    {
+        return (memcmp(this, &aOtherEntry, sizeof(BorderRouterEntry)) == 0);
+    }
+
 private:
     uint16_t mRloc;
     uint16_t mFlags;
@@ -811,16 +868,19 @@ public:
     };
 
     /**
-     * This method initializes the TLV.
+     * This method initializes the Context TLV.
+     *
+     * @param[in]  aConextId   The Context ID value.
+     * @param[in]  aLength     The Context Length value.
      *
      */
-    void Init(void)
+    void Init(uint8_t aContextId, uint8_t aConextLength)
     {
         NetworkDataTlv::Init();
         SetType(kTypeContext);
-        SetLength(2);
-        mFlags         = 0;
-        mContextLength = 0;
+        SetLength(sizeof(ContextTlv) - sizeof(NetworkDataTlv));
+        mFlags         = ((aContextId << kContextIdOffset) & kContextIdMask);
+        mContextLength = aConextLength;
     }
 
     /**
@@ -853,31 +913,12 @@ public:
     uint8_t GetContextId(void) const { return mFlags & kContextIdMask; }
 
     /**
-     * This method sets the Context ID value.
-     *
-     * @param[in]  aContextId  The Context ID value.
-     *
-     */
-    void SetContextId(uint8_t aContextId)
-    {
-        mFlags = (mFlags & ~kContextIdMask) | ((aContextId << kContextIdOffset) & kContextIdMask);
-    }
-
-    /**
      * This method returns the Context Length value.
      *
      * @returns The Context Length value.
      *
      */
     uint8_t GetContextLength(void) const { return mContextLength; }
-
-    /**
-     * This method sets the Context Length value.
-     *
-     * @param[in]  aLength  The Context Length value.
-     *
-     */
-    void SetContextLength(uint8_t aLength) { mContextLength = aLength; }
 
 private:
     enum
@@ -974,7 +1015,9 @@ public:
         uint8_t length = GetLength();
 
         return (length >= sizeof(mFlagsServiceId)) &&
-               (length >= kMinLength + (IsThreadEnterprise() ? 0 : sizeof(uint32_t))) && (length >= GetFieldsLength());
+               (length >= kMinLength + (IsThreadEnterprise() ? 0 : sizeof(uint32_t))) &&
+               (static_cast<uint16_t>(length) + sizeof(NetworkDataTlv) >=
+                CalculateSize(GetEnterpriseNumber(), GetServiceDataLength()));
     }
 
     /**
@@ -1080,7 +1123,7 @@ public:
      * @returns    The size (number of bytes) of the Service TLV.
      *
      */
-    static uint16_t GetSize(uint32_t aEnterpriseNumber, uint8_t aServiceDataLength)
+    static uint16_t CalculateSize(uint32_t aEnterpriseNumber, uint8_t aServiceDataLength)
     {
         return sizeof(NetworkDataTlv) + kMinLength + aServiceDataLength +
                ((aEnterpriseNumber == kThreadEnterpriseNumber) ? 0 : sizeof(uint32_t) /* mEnterpriseNumber  */);
@@ -1133,14 +1176,20 @@ public:
     };
 
     /**
-     * This method initializes the TLV.
+     * This method initializes the Server TLV.
+     *
+     * @param[in] aServer16          The Server16 value.
+     * @param[in] aServerData        The Server Data.
+     * @param[in] aServerDataLength  Server Data length in bytes.
      *
      */
-    void Init(void)
+    void Init(uint16_t aServer16, const uint8_t *aServerData, uint8_t aServerDataLength)
     {
         NetworkDataTlv::Init();
         SetType(kTypeServer);
-        SetLength(sizeof(*this) - sizeof(NetworkDataTlv));
+        SetServer16(aServer16);
+        memcpy(reinterpret_cast<uint8_t *>(this) + sizeof(*this), aServerData, aServerDataLength);
+        SetLength(sizeof(*this) - sizeof(NetworkDataTlv) + aServerDataLength);
     }
 
     /**
@@ -1153,42 +1202,28 @@ public:
     bool IsValid(void) const { return GetLength() >= (sizeof(*this) - sizeof(NetworkDataTlv)); }
 
     /**
-     * This method returns the S_server_16 value.
+     * This method returns the Server16 value.
      *
-     * @returns The S_server_16 value.
+     * @returns The Server16 value.
      *
      */
     uint16_t GetServer16(void) const { return HostSwap16(mServer16); }
 
-    /**
-     * This method sets the S_server_16 value.
+    /*
+     * This method sets the Server16 value.
      *
-     * @param[in]  aServer16  The S_server_16 value.
+     * @param[in]  aServer16  The Server16 value.
      *
      */
     void SetServer16(uint16_t aServer16) { mServer16 = HostSwap16(aServer16); }
 
     /**
-     * This method returns a pointer to the Server Data.
+     * This method returns the Server Data.
      *
      * @returns A pointer to the Server Data.
      *
      */
     const uint8_t *GetServerData(void) const { return reinterpret_cast<const uint8_t *>(this) + sizeof(*this); }
-
-    /**
-     * This method sets Server Data to the given values.
-     *
-     * Caller must ensure that there is enough memory allocated.
-     *
-     * @param aServerData       pointer to the server data to use
-     * @param aServerDataLength length of the provided server data in bytes
-     */
-    void SetServerData(const uint8_t *aServerData, uint8_t aServerDataLength)
-    {
-        SetLength(sizeof(*this) - sizeof(NetworkDataTlv) + aServerDataLength);
-        memcpy(reinterpret_cast<uint8_t *>(this) + sizeof(*this), aServerData, aServerDataLength);
-    }
 
     /**
      * This method returns the Server Data length in bytes.
@@ -1197,6 +1232,32 @@ public:
      *
      */
     uint8_t GetServerDataLength(void) const { return GetLength() - (sizeof(*this) - sizeof(NetworkDataTlv)); }
+
+    /**
+     * This method indicates whether two Server TLVs fully match.
+     *
+     * @param[in]  aOther  Another Server TLV to compare with it.
+     *
+     * @retval TRUE  The two TLVs are equal.
+     * @retval FALSE The two TLVs are not equal.
+     *
+     */
+    bool operator==(const ServerTlv &aOther) const
+    {
+        return (GetLength() == aOther.GetLength()) && (memcmp(GetValue(), aOther.GetValue(), GetLength()) == 0);
+    }
+
+    /**
+     * This static method calculates the total size (number of bytes) of a Service TLV with a given Server Data length.
+     *
+     * Note that the returned size does include the Type and Length fields in the TLV.
+     *
+     * @param[in]  aServerDataLength    Server Data length in bytes.
+     *
+     * @returns    The size (number of bytes) of the Server TLV.
+     *
+     */
+    static uint16_t CalculateSize(uint8_t aServerDataLength) { return sizeof(ServerTlv) + aServerDataLength; }
 
 private:
     uint16_t mServer16;

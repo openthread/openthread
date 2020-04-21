@@ -367,10 +367,10 @@ void BorderAgent::HandleStateChanged(Notifier::Callback &aCallback, otChangedFla
 
 void BorderAgent::HandleStateChanged(otChangedFlags aFlags)
 {
-    VerifyOrExit((aFlags & (OT_CHANGED_THREAD_ROLE | OT_CHANGED_COMMISSIONER_STATE)) != 0);
+    VerifyOrExit((aFlags & (OT_CHANGED_THREAD_ROLE | OT_CHANGED_COMMISSIONER_STATE)) != 0, OT_NOOP);
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-    VerifyOrExit(Get<MeshCoP::Commissioner>().IsDisabled());
+    VerifyOrExit(Get<MeshCoP::Commissioner>().IsDisabled(), OT_NOOP);
 #endif
 
     if (Get<Mle::MleRouter>().IsAttached())
@@ -544,7 +544,7 @@ void BorderAgent::HandleRelayTransmit(const Coap::Message &aMessage)
     Ip6::MessageInfo messageInfo;
     uint16_t         offset = 0;
 
-    VerifyOrExit(aMessage.IsNonConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST);
+    VerifyOrExit(aMessage.IsNonConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, OT_NOOP);
 
     SuccessOrExit(error = Tlv::ReadUint16Tlv(aMessage, Tlv::kJoinerRouterLocator, joinerRouterRloc));
 

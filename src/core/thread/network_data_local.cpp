@@ -251,21 +251,22 @@ otError Local::AddService(uint32_t       aEnterpriseNumber,
     otError     error = OT_ERROR_NONE;
     ServiceTlv *serviceTlv;
     ServerTlv * serverTlv;
-    size_t      serviceTlvSize =
-        ServiceTlv::GetSize(aEnterpriseNumber, aServiceDataLength) + sizeof(ServerTlv) + aServerDataLength;
+    uint16_t    serviceTlvSize =
+        ServiceTlv::CalculateSize(aEnterpriseNumber, aServiceDataLength) + sizeof(ServerTlv) + aServerDataLength;
 
     RemoveService(aEnterpriseNumber, aServiceData, aServiceDataLength);
 
     VerifyOrExit(serviceTlvSize <= kMaxSize, error = OT_ERROR_NO_BUFS);
 
-    serviceTlv = static_cast<ServiceTlv *>(AppendTlv(static_cast<uint8_t>(serviceTlvSize)));
+    serviceTlv = static_cast<ServiceTlv *>(AppendTlv(serviceTlvSize));
     VerifyOrExit(serviceTlv != NULL, error = OT_ERROR_NO_BUFS);
 
     serviceTlv->Init(/* aServiceId */ 0, aEnterpriseNumber, aServiceData, aServiceDataLength);
     serviceTlv->SetSubTlvsLength(sizeof(ServerTlv) + aServerDataLength);
 
     serverTlv = static_cast<ServerTlv *>(serviceTlv->GetSubTlvs());
-    serverTlv->Init();
+
+    serverTlv->Init(Get<Mle::MleRouter>().GetRloc16(), aServerData, aServerDataLength);
 
     // According to Thread spec 1.1.1, section 5.18.6 Service TLV:
     // "The Stable flag is set if any of the included sub-TLVs have their Stable flag set."
@@ -275,9 +276,6 @@ otError Local::AddService(uint32_t       aEnterpriseNumber,
         serviceTlv->SetStable();
         serverTlv->SetStable();
     }
-
-    serverTlv->SetServer16(Get<Mle::MleRouter>().GetRloc16());
-    serverTlv->SetServerData(aServerData, aServerDataLength);
 
     otDumpDebgNetData("add service done", mTlvs, mLength);
 
@@ -361,8 +359,7 @@ otError Local::UpdateInconsistentServerData(Coap::ResponseHandler aHandler, void
 #if OPENTHREAD_FTD
 
     // Don't send this Server Data Notification if the device is going to upgrade to Router
-    if (Get<Mle::MleRouter>().IsRouterEligible() && !Get<Mle::MleRouter>().IsRouterOrLeader() &&
-        (Get<RouterTable>().GetActiveRouterCount() < Get<Mle::MleRouter>().GetRouterUpgradeThreshold()))
+    if (Get<Mle::MleRouter>().IsExpectedToBecomeRouter())
     {
         ExitNow(error = OT_ERROR_INVALID_STATE);
     }

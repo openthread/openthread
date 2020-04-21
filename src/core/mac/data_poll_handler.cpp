@@ -134,12 +134,12 @@ void DataPollHandler::HandleDataPoll(Mac::RxFrame &aFrame)
     Child *      child;
     uint16_t     indirectMsgCount;
 
-    VerifyOrExit(aFrame.GetSecurityEnabled());
-    VerifyOrExit(!Get<Mle::MleRouter>().IsDetached());
+    VerifyOrExit(aFrame.GetSecurityEnabled(), OT_NOOP);
+    VerifyOrExit(!Get<Mle::MleRouter>().IsDetached(), OT_NOOP);
 
     SuccessOrExit(aFrame.GetSrcAddr(macSource));
     child = Get<ChildTable>().FindChild(macSource, Child::kInStateValidOrRestoring);
-    VerifyOrExit(child != NULL);
+    VerifyOrExit(child != NULL, OT_NOOP);
 
     child->SetLastHeard(TimerMilli::GetNow());
     child->ResetLinkFailures();
@@ -208,7 +208,7 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError
 {
     Child *child = mIndirectTxChild;
 
-    VerifyOrExit(child != NULL);
+    VerifyOrExit(child != NULL, OT_NOOP);
 
     mIndirectTxChild = NULL;
     HandleSentFrame(aFrame, aError, *child);
@@ -395,7 +395,7 @@ void DataPollHandler::UpdateCslTimer(void)
     uint32_t  nextDelay;
     TimeMicro now;
 
-    VerifyOrExit(mCslTxChild == NULL && !mCslTimer.IsRunning());
+    VerifyOrExit(mCslTxChild == NULL && !mCslTimer.IsRunning(), OT_NOOP);
 
     now       = TimerMicro::GetNow();
     radioNow  = otPlatRadioGetNow();
@@ -425,7 +425,7 @@ void DataPollHandler::UpdateCslTimer(void)
         }
     }
 
-    VerifyOrExit(nextDelay < TimeMicro::kMaxDuration);
+    VerifyOrExit(nextDelay < TimeMicro::kMaxDuration, OT_NOOP);
 
     mCslTimer.StartAt(now, nextDelay);
     otLogDebgMac("Next CSL Transmit request in %u us", nextDelay);

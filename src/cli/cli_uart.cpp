@@ -294,7 +294,7 @@ int Uart::Output(const char *aBuf, uint16_t aBufLength)
 
 void Uart::Send(void)
 {
-    VerifyOrExit(mSendLength == 0);
+    VerifyOrExit(mSendLength == 0, OT_NOOP);
 
     if (mTxLength > kTxBufferSize - mTxHead)
     {

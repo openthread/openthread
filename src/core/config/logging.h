@@ -257,6 +257,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_BBR
+ *
+ * Note: available since Thread 1.2.
+ *
+ * Define to enable Backbone Router (BBR) region logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_BBR
+#define OPENTHREAD_CONFIG_LOG_BBR 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
  *
  * Define to prepend the log level to all log messages.

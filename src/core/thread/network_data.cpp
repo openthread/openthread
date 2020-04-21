@@ -104,67 +104,6 @@ exit:
     return tlv;
 }
 
-const NetworkDataTlv *NetworkData::FindTlv(NetworkDataIterator &aIterator, NetworkDataTlv::Type aTlvType) const
-{
-    const NetworkDataTlv *start = aIterator.GetTlv(mTlvs);
-    const NetworkDataTlv *tlv;
-
-    tlv = FindTlv(start, GetTlvsEnd(), aTlvType);
-    VerifyOrExit(tlv != NULL);
-
-    if (tlv != start)
-    {
-        aIterator.SaveTlvOffset(tlv, mTlvs);
-        aIterator.SetSubTlvOffset(0);
-        aIterator.SetEntryIndex(0);
-    }
-
-exit:
-    return tlv;
-}
-
-void NetworkData::IterateToNextTlv(NetworkDataIterator &aIterator) const
-{
-    const NetworkDataTlv *tlv = aIterator.GetTlv(mTlvs);
-
-    tlv = tlv->GetNext();
-
-    aIterator.SaveTlvOffset(tlv, mTlvs);
-    aIterator.SetSubTlvOffset(0);
-    aIterator.SetEntryIndex(0);
-}
-
-const NetworkDataTlv *NetworkData::FindSubTlv(NetworkDataIterator & aIterator,
-                                              NetworkDataTlv::Type  aSubTlvType,
-                                              const NetworkDataTlv *aSubTlvs,
-                                              const NetworkDataTlv *aSubTlvsEnd) const
-{
-    const NetworkDataTlv *subStart = aIterator.GetSubTlv(aSubTlvs);
-    const NetworkDataTlv *subTlv;
-
-    subTlv = FindTlv(subStart, aSubTlvsEnd, aSubTlvType);
-    VerifyOrExit(subTlv != NULL);
-
-    if (subTlv != subStart)
-    {
-        aIterator.SaveSubTlvOffset(subTlv, aSubTlvs);
-        aIterator.SetEntryIndex(0);
-    }
-
-exit:
-    return subTlv;
-}
-
-void NetworkData::IterateToNextSubTlv(NetworkDataIterator &aIterator, const NetworkDataTlv *aSubTlvs) const
-{
-    const NetworkDataTlv *subTlv = aIterator.GetSubTlv(aSubTlvs);
-
-    subTlv = subTlv->GetNext();
-
-    aIterator.SaveSubTlvOffset(subTlv, aSubTlvs);
-    aIterator.SetEntryIndex(0);
-}
-
 otError NetworkData::GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength) const
 {
     otError error = OT_ERROR_NONE;
@@ -191,46 +130,13 @@ otError NetworkData::GetNextOnMeshPrefix(Iterator &aIterator, OnMeshPrefixConfig
 
 otError NetworkData::GetNextOnMeshPrefix(Iterator &aIterator, uint16_t aRloc16, OnMeshPrefixConfig &aConfig) const
 {
-    otError             error = OT_ERROR_NOT_FOUND;
-    NetworkDataIterator iterator(aIterator);
+    Config config;
 
-    for (const PrefixTlv *prefix; (prefix = FindTlv<PrefixTlv>(iterator)) != NULL; IterateToNextTlv(iterator))
-    {
-        for (const BorderRouterTlv *borderRouter;
-             (borderRouter = FindSubTlv<BorderRouterTlv>(iterator, prefix->GetSubTlvs(), prefix->GetNext())) != NULL;
-             IterateToNextSubTlv(iterator, prefix->GetSubTlvs()))
-        {
-            for (uint8_t index = iterator.GetEntryIndex(); index < borderRouter->GetNumEntries(); index++)
-            {
-                if (aRloc16 == Mac::kShortAddrBroadcast || borderRouter->GetEntry(index)->GetRloc() == aRloc16)
-                {
-                    const BorderRouterEntry *borderRouterEntry = borderRouter->GetEntry(index);
+    config.mOnMeshPrefix  = &aConfig;
+    config.mExternalRoute = NULL;
+    config.mService       = NULL;
 
-                    memset(&aConfig, 0, sizeof(aConfig));
-                    memcpy(&aConfig.mPrefix.mPrefix, prefix->GetPrefix(), BitVectorBytes(prefix->GetPrefixLength()));
-                    aConfig.mPrefix.mLength = prefix->GetPrefixLength();
-                    aConfig.mPreference     = borderRouterEntry->GetPreference();
-                    aConfig.mPreferred      = borderRouterEntry->IsPreferred();
-                    aConfig.mSlaac          = borderRouterEntry->IsSlaac();
-                    aConfig.mDhcp           = borderRouterEntry->IsDhcp();
-                    aConfig.mConfigure      = borderRouterEntry->IsConfigure();
-                    aConfig.mDefaultRoute   = borderRouterEntry->IsDefaultRoute();
-                    aConfig.mOnMesh         = borderRouterEntry->IsOnMesh();
-                    aConfig.mStable         = borderRouter->IsStable();
-                    aConfig.mRloc16         = borderRouterEntry->GetRloc();
-                    aConfig.mNdDns          = borderRouterEntry->IsNdDns();
-                    aConfig.mDp             = borderRouterEntry->IsDp();
-
-                    iterator.SetEntryIndex(index + 1);
-
-                    ExitNow(error = OT_ERROR_NONE);
-                }
-            }
-        }
-    }
-
-exit:
-    return error;
+    return Iterate(aIterator, aRloc16, config);
 }
 
 otError NetworkData::GetNextExternalRoute(Iterator &aIterator, ExternalRouteConfig &aConfig) const
@@ -240,39 +146,13 @@ otError NetworkData::GetNextExternalRoute(Iterator &aIterator, ExternalRouteConf
 
 otError NetworkData::GetNextExternalRoute(Iterator &aIterator, uint16_t aRloc16, ExternalRouteConfig &aConfig) const
 {
-    otError             error = OT_ERROR_NOT_FOUND;
-    NetworkDataIterator iterator(aIterator);
+    Config config;
 
-    for (const PrefixTlv *prefix; (prefix = FindTlv<PrefixTlv>(iterator)) != NULL; IterateToNextTlv(iterator))
-    {
-        for (const HasRouteTlv *hasRoute;
-             (hasRoute = FindSubTlv<HasRouteTlv>(iterator, prefix->GetSubTlvs(), prefix->GetNext())) != NULL;
-             IterateToNextSubTlv(iterator, prefix->GetSubTlvs()))
-        {
-            for (uint8_t index = iterator.GetEntryIndex(); index < hasRoute->GetNumEntries(); index++)
-            {
-                if (aRloc16 == Mac::kShortAddrBroadcast || hasRoute->GetEntry(index)->GetRloc() == aRloc16)
-                {
-                    const HasRouteEntry *hasRouteEntry = hasRoute->GetEntry(index);
+    config.mOnMeshPrefix  = NULL;
+    config.mExternalRoute = &aConfig;
+    config.mService       = NULL;
 
-                    memset(&aConfig, 0, sizeof(aConfig));
-                    memcpy(&aConfig.mPrefix.mPrefix, prefix->GetPrefix(), BitVectorBytes(prefix->GetPrefixLength()));
-                    aConfig.mPrefix.mLength      = prefix->GetPrefixLength();
-                    aConfig.mPreference          = hasRouteEntry->GetPreference();
-                    aConfig.mStable              = hasRoute->IsStable();
-                    aConfig.mRloc16              = hasRouteEntry->GetRloc();
-                    aConfig.mNextHopIsThisDevice = (hasRouteEntry->GetRloc() == Get<Mle::MleRouter>().GetRloc16());
-
-                    iterator.SetEntryIndex(index + 1);
-
-                    ExitNow(error = OT_ERROR_NONE);
-                }
-            }
-        }
-    }
-
-exit:
-    return error;
+    return Iterate(aIterator, aRloc16, config);
 }
 
 otError NetworkData::GetNextService(Iterator &aIterator, ServiceConfig &aConfig) const
@@ -282,38 +162,183 @@ otError NetworkData::GetNextService(Iterator &aIterator, ServiceConfig &aConfig)
 
 otError NetworkData::GetNextService(Iterator &aIterator, uint16_t aRloc16, ServiceConfig &aConfig) const
 {
+    Config config;
+
+    config.mOnMeshPrefix  = NULL;
+    config.mExternalRoute = NULL;
+    config.mService       = &aConfig;
+
+    return Iterate(aIterator, aRloc16, config);
+}
+
+otError NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfig) const
+{
+    // Iterate to the next entry in Network Data matching `aRloc16`
+    // (can be set to `Mac::kShortAddrBroadcast` to allow any RLOC).
+    // The `aIterator` is used to track and save the current position.
+    // On input, the non-NULL pointer members in `aConfig` specify the
+    // Network Data entry types (`mOnMeshPrefix`, `mExternalRoute`,
+    // `mService`) to iterate over. On successful exit, the `aConfig`
+    // is updated such that only one member pointer is not NULL
+    // indicating the type of entry and the non-NULL config is updated
+    // with the entry info.
+
     otError             error = OT_ERROR_NOT_FOUND;
     NetworkDataIterator iterator(aIterator);
 
-    for (const ServiceTlv *service; (service = FindTlv<ServiceTlv>(iterator)) != NULL; IterateToNextTlv(iterator))
+    for (const NetworkDataTlv *cur; (cur = iterator.GetTlv(mTlvs)) < GetTlvsEnd(); iterator.AdvanceTlv(mTlvs))
     {
-        for (const ServerTlv *server;
-             (server = FindSubTlv<ServerTlv>(iterator, service->GetSubTlvs(), service->GetNext())) != NULL;
-             IterateToNextSubTlv(iterator, service->GetSubTlvs()))
+        const NetworkDataTlv *subTlvs = NULL;
+
+        switch (cur->GetType())
         {
-            if (!iterator.IsNewEntry())
+        case NetworkDataTlv::kTypePrefix:
+            if ((aConfig.mOnMeshPrefix != NULL) || (aConfig.mExternalRoute != NULL))
             {
-                continue;
+                subTlvs = static_cast<const PrefixTlv *>(cur)->GetSubTlvs();
             }
-
-            if ((aRloc16 == Mac::kShortAddrBroadcast) || (server->GetServer16() == aRloc16))
+            break;
+        case NetworkDataTlv::kTypeService:
+            if (aConfig.mService != NULL)
             {
-                memset(&aConfig, 0, sizeof(aConfig));
+                subTlvs = static_cast<const ServiceTlv *>(cur)->GetSubTlvs();
+            }
+            break;
+        default:
+            break;
+        }
 
-                aConfig.mServiceId         = service->GetServiceId();
-                aConfig.mEnterpriseNumber  = service->GetEnterpriseNumber();
-                aConfig.mServiceDataLength = service->GetServiceDataLength();
+        if (subTlvs == NULL)
+        {
+            continue;
+        }
 
-                memcpy(&aConfig.mServiceData, service->GetServiceData(), service->GetServiceDataLength());
+        for (const NetworkDataTlv *subCur; (subCur = iterator.GetSubTlv(subTlvs)) < cur->GetNext();
+             iterator.AdvaceSubTlv(subTlvs))
+        {
+            if (cur->GetType() == NetworkDataTlv::kTypePrefix)
+            {
+                const PrefixTlv *prefix = static_cast<const PrefixTlv *>(cur);
 
-                aConfig.mServerConfig.mStable           = server->IsStable();
-                aConfig.mServerConfig.mServerDataLength = server->GetServerDataLength();
-                memcpy(&aConfig.mServerConfig.mServerData, server->GetServerData(), server->GetServerDataLength());
-                aConfig.mServerConfig.mRloc16 = server->GetServer16();
+                switch (subCur->GetType())
+                {
+                case NetworkDataTlv::kTypeBorderRouter:
+                {
+                    const BorderRouterTlv *borderRouter = static_cast<const BorderRouterTlv *>(subCur);
 
-                iterator.MarkEntryAsNotNew();
+                    if (aConfig.mOnMeshPrefix == NULL)
+                    {
+                        continue;
+                    }
 
-                ExitNow(error = OT_ERROR_NONE);
+                    for (uint8_t index; (index = iterator.GetAndAdvanceIndex()) < borderRouter->GetNumEntries();)
+                    {
+                        if (aRloc16 == Mac::kShortAddrBroadcast || borderRouter->GetEntry(index)->GetRloc() == aRloc16)
+                        {
+                            const BorderRouterEntry *borderRouterEntry = borderRouter->GetEntry(index);
+
+                            aConfig.mExternalRoute = NULL;
+                            aConfig.mService       = NULL;
+                            memset(aConfig.mOnMeshPrefix, 0, sizeof(OnMeshPrefixConfig));
+
+                            memcpy(&aConfig.mOnMeshPrefix->mPrefix.mPrefix, prefix->GetPrefix(),
+                                   BitVectorBytes(prefix->GetPrefixLength()));
+                            aConfig.mOnMeshPrefix->mPrefix.mLength = prefix->GetPrefixLength();
+                            aConfig.mOnMeshPrefix->mPreference     = borderRouterEntry->GetPreference();
+                            aConfig.mOnMeshPrefix->mPreferred      = borderRouterEntry->IsPreferred();
+                            aConfig.mOnMeshPrefix->mSlaac          = borderRouterEntry->IsSlaac();
+                            aConfig.mOnMeshPrefix->mDhcp           = borderRouterEntry->IsDhcp();
+                            aConfig.mOnMeshPrefix->mConfigure      = borderRouterEntry->IsConfigure();
+                            aConfig.mOnMeshPrefix->mDefaultRoute   = borderRouterEntry->IsDefaultRoute();
+                            aConfig.mOnMeshPrefix->mOnMesh         = borderRouterEntry->IsOnMesh();
+                            aConfig.mOnMeshPrefix->mStable         = borderRouter->IsStable();
+                            aConfig.mOnMeshPrefix->mRloc16         = borderRouterEntry->GetRloc();
+                            aConfig.mOnMeshPrefix->mNdDns          = borderRouterEntry->IsNdDns();
+                            aConfig.mOnMeshPrefix->mDp             = borderRouterEntry->IsDp();
+
+                            ExitNow(error = OT_ERROR_NONE);
+                        }
+                    }
+
+                    break;
+                }
+
+                case NetworkDataTlv::kTypeHasRoute:
+                {
+                    const HasRouteTlv *hasRoute = static_cast<const HasRouteTlv *>(subCur);
+
+                    if (aConfig.mExternalRoute == NULL)
+                    {
+                        continue;
+                    }
+
+                    for (uint8_t index; (index = iterator.GetAndAdvanceIndex()) < hasRoute->GetNumEntries();)
+                    {
+                        if (aRloc16 == Mac::kShortAddrBroadcast || hasRoute->GetEntry(index)->GetRloc() == aRloc16)
+                        {
+                            const HasRouteEntry *hasRouteEntry = hasRoute->GetEntry(index);
+
+                            aConfig.mOnMeshPrefix = NULL;
+                            aConfig.mService      = NULL;
+                            memset(aConfig.mExternalRoute, 0, sizeof(ExternalRouteConfig));
+
+                            memcpy(&aConfig.mExternalRoute->mPrefix.mPrefix, prefix->GetPrefix(),
+                                   BitVectorBytes(prefix->GetPrefixLength()));
+                            aConfig.mExternalRoute->mPrefix.mLength = prefix->GetPrefixLength();
+                            aConfig.mExternalRoute->mPreference     = hasRouteEntry->GetPreference();
+                            aConfig.mExternalRoute->mStable         = hasRoute->IsStable();
+                            aConfig.mExternalRoute->mRloc16         = hasRouteEntry->GetRloc();
+                            aConfig.mExternalRoute->mNextHopIsThisDevice =
+                                (hasRouteEntry->GetRloc() == Get<Mle::MleRouter>().GetRloc16());
+
+                            ExitNow(error = OT_ERROR_NONE);
+                        }
+                    }
+
+                    break;
+                }
+
+                default:
+                    break;
+                }
+            }
+            else // cur is `ServiceTLv`
+            {
+                const ServiceTlv *service = static_cast<const ServiceTlv *>(cur);
+
+                if (subCur->GetType() == NetworkDataTlv::kTypeServer)
+                {
+                    const ServerTlv *server = static_cast<const ServerTlv *>(subCur);
+
+                    if (!iterator.IsNewEntry())
+                    {
+                        continue;
+                    }
+
+                    if ((aRloc16 == Mac::kShortAddrBroadcast) || (server->GetServer16() == aRloc16))
+                    {
+                        aConfig.mOnMeshPrefix  = NULL;
+                        aConfig.mExternalRoute = NULL;
+                        memset(aConfig.mService, 0, sizeof(ServiceConfig));
+
+                        aConfig.mService->mServiceId         = service->GetServiceId();
+                        aConfig.mService->mEnterpriseNumber  = service->GetEnterpriseNumber();
+                        aConfig.mService->mServiceDataLength = service->GetServiceDataLength();
+
+                        memcpy(&aConfig.mService->mServiceData, service->GetServiceData(),
+                               service->GetServiceDataLength());
+
+                        aConfig.mService->mServerConfig.mStable           = server->IsStable();
+                        aConfig.mService->mServerConfig.mServerDataLength = server->GetServerDataLength();
+                        memcpy(&aConfig.mService->mServerConfig.mServerData, server->GetServerData(),
+                               server->GetServerDataLength());
+                        aConfig.mService->mServerConfig.mRloc16 = server->GetServer16();
+
+                        iterator.MarkEntryAsNotNew();
+
+                        ExitNow(error = OT_ERROR_NONE);
+                    }
+                }
             }
         }
     }
@@ -644,7 +669,7 @@ const PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix,
     {
         prefixTlv = FindTlv<PrefixTlv>(start, end);
 
-        VerifyOrExit(prefixTlv != NULL);
+        VerifyOrExit(prefixTlv != NULL, OT_NOOP);
 
         if (prefixTlv->GetPrefixLength() == aPrefixLength &&
             PrefixMatch(prefixTlv->GetPrefix(), aPrefix, aPrefixLength) >= aPrefixLength)
@@ -694,7 +719,7 @@ const ServiceTlv *NetworkData::FindService(uint32_t       aEnterpriseNumber,
     {
         serviceTlv = FindTlv<ServiceTlv>(start, end);
 
-        VerifyOrExit(serviceTlv != NULL);
+        VerifyOrExit(serviceTlv != NULL, OT_NOOP);
 
         if ((serviceTlv->GetEnterpriseNumber() == aEnterpriseNumber) &&
             (serviceTlv->GetServiceDataLength() == aServiceDataLength) &&
@@ -712,14 +737,14 @@ exit:
     return serviceTlv;
 }
 
-NetworkDataTlv *NetworkData::AppendTlv(uint8_t aTlvSize)
+NetworkDataTlv *NetworkData::AppendTlv(uint16_t aTlvSize)
 {
     NetworkDataTlv *tlv;
 
-    VerifyOrExit(mLength + aTlvSize <= kMaxSize, tlv = NULL);
+    VerifyOrExit(CanInsert(aTlvSize), tlv = NULL);
 
     tlv = GetTlvsEnd();
-    mLength += aTlvSize;
+    mLength += static_cast<uint8_t>(aTlvSize);
 
 exit:
     return tlv;
@@ -729,7 +754,7 @@ void NetworkData::Insert(void *aStart, uint8_t aLength)
 {
     uint8_t *start = reinterpret_cast<uint8_t *>(aStart);
 
-    OT_ASSERT(aLength + mLength <= sizeof(mTlvs) && mTlvs <= start && start <= mTlvs + mLength);
+    OT_ASSERT(CanInsert(aLength) && mTlvs <= start && start <= mTlvs + mLength);
     memmove(start + aLength, start, mLength - static_cast<size_t>(start - mTlvs));
     mLength += aLength;
 }
@@ -804,59 +829,33 @@ exit:
 
 otError NetworkData::GetNextServer(Iterator &aIterator, uint16_t &aRloc16) const
 {
-    otError             error = OT_ERROR_NONE;
-    NetworkDataIterator iterator(aIterator);
+    otError             error;
+    OnMeshPrefixConfig  prefixConfig;
+    ExternalRouteConfig routeConfig;
+    ServiceConfig       serviceConfig;
+    Config              config;
 
-    while (true)
+    config.mOnMeshPrefix  = &prefixConfig;
+    config.mExternalRoute = &routeConfig;
+    config.mService       = &serviceConfig;
+
+    SuccessOrExit(error = Iterate(aIterator, Mac::kShortAddrBroadcast, config));
+
+    if (config.mOnMeshPrefix != NULL)
     {
-        switch (iterator.GetType())
-        {
-        case NetworkDataIterator::kTypeOnMeshPrefix:
-        {
-            OnMeshPrefixConfig prefixConfig;
-
-            if (GetNextOnMeshPrefix(aIterator, prefixConfig) == OT_ERROR_NONE)
-            {
-                aRloc16 = prefixConfig.mRloc16;
-                ExitNow();
-            }
-
-            iterator.SetType(NetworkDataIterator::kTypeExternalRoute);
-            break;
-        }
-
-        case NetworkDataIterator::kTypeExternalRoute:
-        {
-            ExternalRouteConfig routeConfig;
-
-            if (GetNextExternalRoute(aIterator, routeConfig) == OT_ERROR_NONE)
-            {
-                aRloc16 = routeConfig.mRloc16;
-                ExitNow();
-            }
-
-            iterator.SetType(NetworkDataIterator::kTypeService);
-            break;
-        }
-
-        case NetworkDataIterator::kTypeService:
-        {
-            ServiceConfig serviceConfig;
-
-            if (GetNextService(aIterator, serviceConfig) == OT_ERROR_NONE)
-            {
-                aRloc16 = serviceConfig.mServerConfig.mRloc16;
-                ExitNow();
-            }
-
-            ExitNow(error = OT_ERROR_NOT_FOUND);
-        }
-        }
-
-        // Reset the iterator for next type.
-        iterator.SetTlvOffset(0);
-        iterator.SetSubTlvOffset(0);
-        iterator.SetEntryIndex(0);
+        aRloc16 = config.mOnMeshPrefix->mRloc16;
+    }
+    else if (config.mExternalRoute != NULL)
+    {
+        aRloc16 = config.mExternalRoute->mRloc16;
+    }
+    else if (config.mService != NULL)
+    {
+        aRloc16 = config.mService->mServerConfig.mRloc16;
+    }
+    else
+    {
+        OT_ASSERT(false);
     }
 
 exit:

@@ -41,6 +41,7 @@
 #include <openthread/backbone_router_ftd.h>
 
 #include "backbone_router/leader.hpp"
+#include "common/locator.hpp"
 #include "net/netif.hpp"
 #include "thread/network_data.hpp"
 
@@ -199,7 +200,7 @@ private:
     otError RemoveService(void);
     void    AddDomainPrefixToNetworkData(void);
     void    RemoveDomainPrefixFromNetworkData(void);
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_NETDATA == 1)
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_BBR == 1)
     void LogBackboneRouterService(const char *aAction, otError aError);
     void LogDomainPrefix(const char *aAction, otError aError);
 #else

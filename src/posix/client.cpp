@@ -176,17 +176,17 @@ static void SendBlockingCommand(int aArgc, char *aArgv[])
 
     for (int i = 0; i < aArgc; i++)
     {
-        VerifyOrExit(DoWrite(sSessionFd, aArgv[i], strlen(aArgv[i])));
-        VerifyOrExit(DoWrite(sSessionFd, " ", 1));
+        VerifyOrExit(DoWrite(sSessionFd, aArgv[i], strlen(aArgv[i])), OT_NOOP);
+        VerifyOrExit(DoWrite(sSessionFd, " ", 1), OT_NOOP);
     }
-    VerifyOrExit(DoWrite(sSessionFd, "\n", 1));
+    VerifyOrExit(DoWrite(sSessionFd, "\n", 1), OT_NOOP);
 
     while (true)
     {
         ssize_t rval = read(sSessionFd, buffer, sizeof(buffer));
 
-        VerifyOrExit(rval >= 0);
-        VerifyOrExit(DoWrite(STDOUT_FILENO, buffer, static_cast<size_t>(rval)));
+        VerifyOrExit(rval >= 0, OT_NOOP);
+        VerifyOrExit(DoWrite(STDOUT_FILENO, buffer, static_cast<size_t>(rval)), OT_NOOP);
         for (ssize_t i = 0; i < rval; i++)
         {
             if (FindDone(&doneState, buffer[i]) || FindError(&errorState, buffer[i]))

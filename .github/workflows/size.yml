@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 #
 #  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
@@ -27,49 +26,27 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import socket
-import struct
-import subprocess
-import sys
-import time
+name: Size
 
-from ipaddress import ip_address
+on: [pull_request]
 
+jobs:
 
-def get_maddrs():
-    lines = subprocess.run(
-        ['ot-ctl', 'ipmaddr'], stdout=subprocess.PIPE).stdout.decode().split()
-    return [ip_address(l) for l in lines if l.startswith('ff')]
+  cancel-previous-runs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: rokroskar/workflow-run-cleanup-action@master
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      if: "github.ref != 'refs/heads/master'"
 
-
-def main():
-    group = 'ff02::158'
-    if_index = int(sys.argv[1])
-
-    with socket.socket(socket.AF_INET6, socket.SOCK_DGRAM) as s:
-        s.setsockopt(socket.IPPROTO_IPV6,
-                     socket.IPV6_MULTICAST_IF,
-                     if_index)
-        s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_JOIN_GROUP,
-                     struct.pack('16si', socket.inet_pton(socket.AF_INET6, group),
-                                 if_index))
-        time.sleep(2)
-        maddrs = get_maddrs()
-        print(maddrs)
-        if not any(addr == ip_address(group) for addr in maddrs):
-            return -1
-
-        s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_LEAVE_GROUP,
-                     struct.pack('16si', socket.inet_pton(socket.AF_INET6, group),
-                                 if_index))
-
-        time.sleep(2)
-        maddrs = get_maddrs()
-        print(maddrs)
-        if any(addr == ip_address(group) for addr in maddrs):
-            return -1
-    return 0
-
-
-if __name__ == '__main__':
-    exit(main())
+  size-report:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run
+      env:
+        OT_BASE_BRANCH: "${{ github.base_ref }}"
+        SIZE_REPORT_URL: "https://openthread-size-report.glitch.me/size-report/1354027"
+      run: |
+        ./script/check-size

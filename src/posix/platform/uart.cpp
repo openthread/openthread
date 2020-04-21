@@ -67,9 +67,9 @@ otError otPlatUartEnable(void)
     int                ret;
 
     // This allows implementing pseudo reset.
-    VerifyOrExit(sUartSocket == -1);
+    VerifyOrExit(sUartSocket == -1, OT_NOOP);
 
-    sUartSocket = SocketWithCloseExec(AF_UNIX, SOCK_STREAM, 0);
+    sUartSocket = SocketWithCloseExec(AF_UNIX, SOCK_STREAM, 0, kSocketNonBlock);
 
     if (sUartSocket == -1)
     {
@@ -169,7 +169,7 @@ otError otPlatUartFlush(void)
 
 void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd)
 {
-    VerifyOrExit(sEnabled);
+    VerifyOrExit(sEnabled, OT_NOOP);
 
     if (aReadFdSet != NULL)
     {
@@ -221,7 +221,7 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
     ssize_t rval;
     int     fd;
 
-    VerifyOrExit(sEnabled);
+    VerifyOrExit(sEnabled, OT_NOOP);
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
     if (FD_ISSET(sUartSocket, aErrorFdSet))
     {
@@ -240,7 +240,7 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
         otPlatUartSendDone();
     }
 
-    VerifyOrExit(sSessionSocket != -1);
+    VerifyOrExit(sSessionSocket != -1, OT_NOOP);
 
     if (FD_ISSET(sSessionSocket, aErrorFdSet))
     {
@@ -248,7 +248,7 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
         sSessionSocket = -1;
     }
 
-    VerifyOrExit(sSessionSocket != -1);
+    VerifyOrExit(sSessionSocket != -1, OT_NOOP);
 
     fd = sSessionSocket;
 #else  // OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
@@ -311,7 +311,7 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
 #endif
         }
 
-        VerifyOrExit(rval > 0);
+        VerifyOrExit(rval > 0, OT_NOOP);
 
         sWriteBuffer += (uint16_t)rval;
         sWriteLength -= (uint16_t)rval;

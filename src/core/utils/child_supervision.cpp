@@ -66,7 +66,7 @@ Child *ChildSupervisor::GetDestination(const Message &aMessage) const
     Child *  child = NULL;
     uint16_t childIndex;
 
-    VerifyOrExit(aMessage.GetType() == Message::kTypeSupervision);
+    VerifyOrExit(aMessage.GetType() == Message::kTypeSupervision, OT_NOOP);
 
     aMessage.Read(0, sizeof(childIndex), &childIndex);
     child = Get<ChildTable>().GetChildAtIndex(childIndex);
@@ -80,10 +80,10 @@ void ChildSupervisor::SendMessage(Child &aChild)
     Message *message = NULL;
     uint16_t childIndex;
 
-    VerifyOrExit(aChild.GetIndirectMessageCount() == 0);
+    VerifyOrExit(aChild.GetIndirectMessageCount() == 0, OT_NOOP);
 
     message = Get<MessagePool>().New(Message::kTypeSupervision, sizeof(uint8_t));
-    VerifyOrExit(message != NULL);
+    VerifyOrExit(message != NULL, OT_NOOP);
 
     // Supervision message is an empty payload 15.4 data frame.
     // The child index is stored here in the message content to allow
@@ -118,7 +118,7 @@ void ChildSupervisor::HandleTimer(Timer &aTimer)
 
 void ChildSupervisor::HandleTimer(void)
 {
-    VerifyOrExit(mSupervisionInterval != 0);
+    VerifyOrExit(mSupervisionInterval != 0, OT_NOOP);
 
     for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValid); !iter.IsDone(); iter++)
     {
@@ -209,7 +209,8 @@ void SupervisionListener::UpdateOnReceive(const Mac::Address &aSourceAddress, bo
     // If listener is enabled and device is a child and it received a secure frame from its parent, restart the timer.
 
     VerifyOrExit(mTimer.IsRunning() && aIsSecure && Get<Mle::MleRouter>().IsChild() &&
-                 (Get<Mle::MleRouter>().GetNeighbor(aSourceAddress) == &Get<Mle::MleRouter>().GetParent()));
+                     (Get<Mle::MleRouter>().GetNeighbor(aSourceAddress) == &Get<Mle::MleRouter>().GetParent()),
+                 OT_NOOP);
 
     RestartTimer();
 
@@ -236,7 +237,7 @@ void SupervisionListener::HandleTimer(Timer &aTimer)
 
 void SupervisionListener::HandleTimer(void)
 {
-    VerifyOrExit(Get<Mle::MleRouter>().IsChild() && !Get<MeshForwarder>().GetRxOnWhenIdle());
+    VerifyOrExit(Get<Mle::MleRouter>().IsChild() && !Get<MeshForwarder>().GetRxOnWhenIdle(), OT_NOOP);
 
     otLogWarnUtil("Supervision timeout. No frame from parent in %d sec", mTimeout);
 

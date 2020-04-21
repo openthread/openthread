@@ -68,6 +68,10 @@ const otExtendedPanId Mac::sExtendedPanidInit = {
 
 const char Mac::sNetworkNameInit[] = "OpenThread";
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+const char Mac::sDomainNameInit[] = "Thread";
+#endif
+
 Mac::Mac(Instance &aInstance)
     : InstanceLocator(aInstance)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE && OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
@@ -102,6 +106,9 @@ Mac::Mac(Instance &aInstance)
     , mRadioChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mSupportedChannelMask(Get<Radio>().GetSupportedChannelMask())
     , mNetworkName()
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    , mDomainName()
+#endif
     , mScanChannel(Radio::kChannelMin)
     , mScanDuration(0)
     , mScanChannelMask()
@@ -133,6 +140,9 @@ Mac::Mac(Instance &aInstance)
 
     SetExtendedPanId(static_cast<const ExtendedPanId &>(sExtendedPanidInit));
     SetNetworkName(sNetworkNameInit);
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    SetDomainName(sDomainNameInit);
+#endif
     SetPanId(mPanId);
     SetExtAddress(randomExtAddress);
     SetShortAddress(GetShortAddress());
@@ -292,7 +302,7 @@ void Mac::PerformActiveScan(void)
 
 void Mac::ReportActiveScanResult(const RxFrame *aBeaconFrame)
 {
-    VerifyOrExit(mActiveScanHandler != NULL);
+    VerifyOrExit(mActiveScanHandler != NULL, OT_NOOP);
 
     if (aBeaconFrame == NULL)
     {
@@ -349,7 +359,7 @@ void Mac::ReportEnergyScanResult(int8_t aRssi)
 {
     EnergyScanResult result;
 
-    VerifyOrExit((mEnergyScanHandler != NULL) && (aRssi != kInvalidRssiValue));
+    VerifyOrExit((mEnergyScanHandler != NULL) && (aRssi != kInvalidRssiValue), OT_NOOP);
 
     result.mChannel = mScanChannel;
     result.mMaxRssi = aRssi;
@@ -368,7 +378,7 @@ void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
 
 void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 {
-    VerifyOrExit(mRxOnWhenIdle != aRxOnWhenIdle);
+    VerifyOrExit(mRxOnWhenIdle != aRxOnWhenIdle, OT_NOOP);
 
     mRxOnWhenIdle = aRxOnWhenIdle;
 
@@ -427,7 +437,7 @@ otError Mac::SetPanChannel(uint8_t aChannel)
 
     mCcaSuccessRateTracker.Reset();
 
-    VerifyOrExit(!mUsingTemporaryChannel);
+    VerifyOrExit(!mUsingTemporaryChannel, OT_NOOP);
 
     mRadioChannel = mPanChannel;
 
@@ -485,7 +495,7 @@ void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
 
 otError Mac::SetNetworkName(const char *aNameString)
 {
-    // When setting Network Name from a string, we treat it as `Data`
+    // When setting Network Name from a string, we treat it as `NameData`
     // with `kMaxSize + 1` chars. `NetworkName::Set(data)` will look
     // for null char in the data (within its given size) to calculate
     // the name's length and ensure that the name fits in `kMaxSize`
@@ -493,14 +503,14 @@ otError Mac::SetNetworkName(const char *aNameString)
     // longer than `kMaxSize` is correctly rejected (returning error
     // `OT_ERROR_INVALID_ARGS`).
 
-    NetworkName::Data data(aNameString, NetworkName::kMaxSize + 1);
+    NameData data(aNameString, NetworkName::kMaxSize + 1);
 
     return SetNetworkName(data);
 }
 
-otError Mac::SetNetworkName(const NetworkName::Data &aName)
+otError Mac::SetNetworkName(const NameData &aNameData)
 {
-    otError error = mNetworkName.Set(aName);
+    otError error = mNetworkName.Set(aNameData);
 
     if (error == OT_ERROR_ALREADY)
     {
@@ -515,6 +525,35 @@ otError Mac::SetNetworkName(const NetworkName::Data &aName)
 exit:
     return error;
 }
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+otError Mac::SetDomainName(const char *aNameString)
+{
+    // When setting Domain Name from a string, we treat it as `NameData`
+    // with `kMaxSize + 1` chars. `DomainName::Set(data)` will look
+    // for null char in the data (within its given size) to calculate
+    // the name's length and ensure that the name fits in `kMaxSize`
+    // chars. The `+ 1` ensures that a `aNameString` with length
+    // longer than `kMaxSize` is correctly rejected (returning error
+    // `OT_ERROR_INVALID_ARGS`).
+
+    NameData data(aNameString, DomainName::kMaxSize + 1);
+
+    return SetDomainName(data);
+}
+
+otError Mac::SetDomainName(const NameData &aNameData)
+{
+    otError error = mDomainName.Set(aNameData);
+
+    if (error == OT_ERROR_ALREADY)
+    {
+        error = OT_ERROR_NONE;
+    }
+
+    return error;
+}
+#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 void Mac::SetPanId(PanId aPanId)
 {
@@ -614,7 +653,7 @@ void Mac::UpdateIdleMode(void)
 {
     bool shouldSleep = !mRxOnWhenIdle && !mPromiscuous;
 
-    VerifyOrExit(mOperation == kOperationIdle);
+    VerifyOrExit(mOperation == kOperationIdle, OT_NOOP);
 
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
     if (mShouldDelaySleep)
@@ -722,7 +761,7 @@ void Mac::HandleOperationTask(Tasklet &aTasklet)
 
 void Mac::PerformNextOperation(void)
 {
-    VerifyOrExit(mOperation == kOperationIdle);
+    VerifyOrExit(mOperation == kOperationIdle, OT_NOOP);
 
     if (!mEnabled)
     {
@@ -929,7 +968,7 @@ void Mac::PrepareBeacon(TxFrame &aFrame)
 
     beaconPayload = reinterpret_cast<BeaconPayload *>(beacon->GetPayload());
 
-    if (Get<KeyManager>().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_BEACONS)
+    if (Get<KeyManager>().IsThreadBeaconEnabled())
     {
         beaconPayload->Init();
 
@@ -957,7 +996,7 @@ bool Mac::ShouldSendBeacon(void) const
 {
     bool shouldSend = false;
 
-    VerifyOrExit(mEnabled);
+    VerifyOrExit(mEnabled, OT_NOOP);
 
     shouldSend = IsBeaconEnabled();
 
@@ -994,7 +1033,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame, bool aProcessAesCcm)
     uint8_t           keyIdMode;
     const ExtAddress *extAddress = NULL;
 
-    VerifyOrExit(aFrame.GetSecurityEnabled());
+    VerifyOrExit(aFrame.GetSecurityEnabled(), OT_NOOP);
 
     aFrame.GetKeyIdMode(keyIdMode);
 
@@ -1230,7 +1269,7 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
     Address   dstAddr;
     Neighbor *neighbor;
 
-    VerifyOrExit(!aFrame.IsEmpty());
+    VerifyOrExit(!aFrame.IsEmpty(), OT_NOOP);
 
     aFrame.GetDstAddr(dstAddr);
     neighbor = Get<Mle::MleRouter>().GetNeighbor(dstAddr);
@@ -1529,12 +1568,12 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
     {
     case Frame::kKeyIdMode0:
         macKey = keyManager.GetKek().GetKey();
-        VerifyOrExit(macKey != NULL);
+        VerifyOrExit(macKey != NULL, OT_NOOP);
         extAddress = &aSrcAddr.GetExtended();
         break;
 
     case Frame::kKeyIdMode1:
-        VerifyOrExit(aNeighbor != NULL);
+        VerifyOrExit(aNeighbor != NULL, OT_NOOP);
 
         aFrame.GetKeyId(keyid);
         keyid--;
@@ -1566,14 +1605,14 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
 
         if (aNeighbor->IsStateValid())
         {
-            VerifyOrExit(keySequence >= aNeighbor->GetKeySequence());
+            VerifyOrExit(keySequence >= aNeighbor->GetKeySequence(), OT_NOOP);
 
             if (keySequence == aNeighbor->GetKeySequence())
             {
                 // If frame counter is one off, then frame is a duplicate.
                 VerifyOrExit((frameCounter + 1) != aNeighbor->GetLinkFrameCounter(), error = OT_ERROR_DUPLICATED);
 
-                VerifyOrExit(frameCounter >= aNeighbor->GetLinkFrameCounter());
+                VerifyOrExit(frameCounter >= aNeighbor->GetLinkFrameCounter(), OT_NOOP);
             }
         }
 
@@ -1609,7 +1648,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
     aesCcm.Finalize(tag, &tagLength);
 
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    VerifyOrExit(memcmp(tag, aFrame.GetFooter(), tagLength) == 0);
+    VerifyOrExit(memcmp(tag, aFrame.GetFooter(), tagLength) == 0, OT_NOOP);
 #endif
 
     if ((keyIdMode == Frame::kKeyIdMode1) && aNeighbor->IsStateValid())
@@ -1762,7 +1801,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
         // so the duplicate frame will not be passed to next
         // layer (`MeshForwarder`).
 
-        VerifyOrExit(mOperation == kOperationWaitingForData);
+        VerifyOrExit(mOperation == kOperationWaitingForData, OT_NOOP);
 
         // Fall through
 
@@ -2135,7 +2174,7 @@ uint8_t Mac::GetTimeIeOffset(const Frame &aFrame)
     const uint8_t *cur    = NULL;
 
     cur = reinterpret_cast<const uint8_t *>(aFrame.GetTimeIe());
-    VerifyOrExit(cur != NULL);
+    VerifyOrExit(cur != NULL, OT_NOOP);
 
     cur += sizeof(VendorIeHeader);
     offset = static_cast<uint8_t>(cur - base);
@@ -2148,7 +2187,7 @@ exit:
 #if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
 void Mac::SetCslChannel(uint8_t aChannel)
 {
-    VerifyOrExit(GetCslChannel() != aChannel);
+    VerifyOrExit(GetCslChannel() != aChannel, OT_NOOP);
 
     mSubMac.SetCslChannel(aChannel);
 
@@ -2162,7 +2201,7 @@ exit:
 
 void Mac::SetCslPeriod(uint16_t aPeriod)
 {
-    VerifyOrExit(GetCslPeriod() != aPeriod);
+    VerifyOrExit(GetCslPeriod() != aPeriod, OT_NOOP);
 
     mSubMac.SetCslPeriod(aPeriod);
 
@@ -2185,7 +2224,7 @@ exit:
 
 void Mac::SetCslTimeout(uint32_t aTimeout)
 {
-    VerifyOrExit(GetCslTimeout() != aTimeout);
+    VerifyOrExit(GetCslTimeout() != aTimeout, OT_NOOP);
 
     mSubMac.SetCslTimeout(aTimeout);
 
@@ -2211,7 +2250,7 @@ otError Mac::StartCsl(void)
     otError   error  = OT_ERROR_NONE;
     Neighbor &parent = Get<Mle::Mle>().GetParent();
 
-    VerifyOrExit(!mRxOnWhenIdle && Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_CHILD,
+    VerifyOrExit(!mRxOnWhenIdle && Get<Mle::MleRouter>().GetRole() == Mle::kRoleChild,
                  error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(parent.IsEnhancedKeepAliveSupported(), error = OT_ERROR_NOT_CAPABLE);
 
@@ -2229,7 +2268,7 @@ void Mac::StopCsl(void)
 {
     Neighbor &parent = Get<Mle::Mle>().GetParent();
 
-    VerifyOrExit(mSubMac.IsCslStarted()); // This is required to avoid StopCsl is called during initialization and call
+    VerifyOrExit(mSubMac.IsCslStarted(), OT_NOOP); // This is required to avoid StopCsl is called during initialization and call
                                           // otPlatRadioEnableCsl
 
     mSubMac.StopCsl();
@@ -2248,7 +2287,7 @@ void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
     Child *        child = Get<ChildTable>().FindChild(aSrcAddr, Child::kInStateAnyExceptInvalid);
     const CslIe *  csl   = reinterpret_cast<const CslIe *>(cur + sizeof(HeaderIe));
 
-    VerifyOrExit(cur != NULL && child != NULL && aFrame.GetSecurityEnabled());
+    VerifyOrExit(cur != NULL && child != NULL && aFrame.GetSecurityEnabled(), OT_NOOP);
 
     child->SetCslPeriod(csl->GetPeriod());
     // Use ceiling to ensure the the time diff will be within OT_US_PER_TEN_SYMBOLS
@@ -2276,7 +2315,7 @@ otError Mac::AppendHeaderIe(TxFrame &aFrame, bool aIsTimeSync) const
     otError      error   = OT_ERROR_NONE;
     uint8_t      ieCount = 0;
 
-    VerifyOrExit(aFrame.IsVersion2015() && aFrame.IsIePresent());
+    VerifyOrExit(aFrame.IsVersion2015() && aFrame.IsIePresent(), OT_NOOP);
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (aIsTimeSync)
