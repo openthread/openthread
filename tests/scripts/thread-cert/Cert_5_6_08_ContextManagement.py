@@ -29,46 +29,34 @@
 
 import unittest
 
-import config
-import node
+import thread_cert
 
 LEADER = 1
 ROUTER = 2
 ED = 3
 
 
-class Cert_5_6_8_ContextManagement(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 4):
-            self.nodes[i] = node.Node(i, (i == ED), simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-        self.nodes[LEADER].set_context_reuse_delay(10)
-
-        self.nodes[ROUTER].set_panid(0xface)
-        self.nodes[ROUTER].set_mode('rsdn')
-        self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER].enable_whitelist()
-        self.nodes[ROUTER].set_router_selection_jitter(1)
-
-        self.nodes[ED].set_panid(0xface)
-        self.nodes[ED].set_mode('rsn')
-        self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED].enable_whitelist()
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_5_6_8_ContextManagement(thread_cert.TestCase):
+    topology = {
+        LEADER: {
+            'context_reuse_delay': 10,
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [ROUTER, ED]
+        },
+        ROUTER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        ED: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [LEADER]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()

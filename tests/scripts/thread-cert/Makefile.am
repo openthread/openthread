@@ -128,6 +128,7 @@ EXTRA_DIST                                                         = \
     command.py                                                       \
     common.py                                                        \
     config.py                                                        \
+    debug.py                                                         \
     dtls.py                                                          \
     ipv6.py                                                          \
     lowpan.py                                                        \
@@ -160,6 +161,7 @@ EXTRA_DIST                                                         = \
     test_network_data.py                                             \
     test_network_layer.py                                            \
     test_reed_address_solicit_rejected.py                            \
+    thread_cert.py                                                   \
     tlvs_parsing.py                                                  \
     $(NULL)
 

@@ -29,51 +29,41 @@
 
 import unittest
 
-import node
-import mle
-import config
 import command
+import config
+import mle
+import thread_cert
 
 DUT_LEADER = 1
 ROUTER1 = 2
 ROUTER2 = 3
 
 
-class Cert_5_3_6_RouterIdMask(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 4):
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
-
-        self.nodes[DUT_LEADER].set_panid(0xface)
-        self.nodes[DUT_LEADER].set_mode('rsdn')
-        self.nodes[DUT_LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[DUT_LEADER].enable_whitelist()
-
-        self.nodes[ROUTER1].set_panid(0xface)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[DUT_LEADER].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER2].set_panid(0xface)
-        self.nodes[ROUTER2].set_mode('rsdn')
-        self._setUpRouter2()
+class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
+    topology = {
+        DUT_LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [ROUTER1]
+        },
+        ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [DUT_LEADER, ROUTER2]
+        },
+        ROUTER2: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [ROUTER1]
+        },
+    }
 
     def _setUpRouter2(self):
         self.nodes[ROUTER2].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[ROUTER2].enable_whitelist()
         self.nodes[ROUTER2].set_router_selection_jitter(1)
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
 
     def test(self):
         # 1

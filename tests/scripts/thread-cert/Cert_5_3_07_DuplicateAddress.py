@@ -29,10 +29,10 @@
 
 import unittest
 
-import node
 import command
 import config
 import mle
+import thread_cert
 
 DUT_LEADER = 1
 ROUTER1 = 2
@@ -44,56 +44,44 @@ MED3 = 6
 MTDS = [MED1, SED1, MED3]
 
 
-class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 7):
-            self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
-
-        self.nodes[DUT_LEADER].set_panid(0xface)
-        self.nodes[DUT_LEADER].set_mode('rsdn')
-        self.nodes[DUT_LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[DUT_LEADER].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[DUT_LEADER].add_whitelist(self.nodes[MED3].get_addr64())
-        self.nodes[DUT_LEADER].enable_whitelist()
-
-        self.nodes[ROUTER1].set_panid(0xface)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[DUT_LEADER].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[MED1].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER2].set_panid(0xface)
-        self.nodes[ROUTER2].set_mode('rsdn')
-        self.nodes[ROUTER2].add_whitelist(self.nodes[DUT_LEADER].get_addr64())
-        self.nodes[ROUTER2].add_whitelist(self.nodes[SED1].get_addr64())
-        self.nodes[ROUTER2].enable_whitelist()
-        self.nodes[ROUTER2].set_router_selection_jitter(1)
-
-        self.nodes[MED1].set_panid(0xface)
-        self.nodes[MED1].set_mode('rsn')
-        self.nodes[MED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[MED1].enable_whitelist()
-
-        self.nodes[SED1].set_panid(0xface)
-        self.nodes[SED1].set_mode('s')
-        self.nodes[SED1].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[SED1].enable_whitelist()
-
-        self.nodes[MED3].set_panid(0xface)
-        self.nodes[MED3].set_mode('rsn')
-        self.nodes[MED3].add_whitelist(self.nodes[DUT_LEADER].get_addr64())
-        self.nodes[MED3].enable_whitelist()
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_5_3_7_DuplicateAddress(thread_cert.TestCase):
+    topology = {
+        DUT_LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [ROUTER1, ROUTER2, MED3]
+        },
+        ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [DUT_LEADER, MED1]
+        },
+        ROUTER2: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [DUT_LEADER, SED1]
+        },
+        MED1: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [ROUTER1]
+        },
+        SED1: {
+            'is_mtd': True,
+            'mode': 's',
+            'panid': 0xface,
+            'whitelist': [ROUTER2]
+        },
+        MED3: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [DUT_LEADER]
+        },
+    }
 
     def test(self):
         # 1

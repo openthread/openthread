@@ -29,8 +29,7 @@
 
 import unittest
 
-import config
-import node
+import thread_cert
 
 LEADER = 1
 ROUTER1 = 2
@@ -42,47 +41,45 @@ ED3 = 6
 MTDS = [ED1, ED2, ED3]
 
 
-class Cert_5_5_3_SplitMergeChildren(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 7):
-            self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self._setUpLeader()
-
-        self.nodes[ROUTER1].set_panid(0xface)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[ED2].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[ED3].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER2].set_panid(0xface)
-        self.nodes[ROUTER2].set_mode('rsdn')
-        self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER2].enable_whitelist()
-        self.nodes[ROUTER2].set_router_selection_jitter(1)
-
-        self.nodes[ED1].set_panid(0xface)
-        self.nodes[ED1].set_mode('rsn')
-        self.nodes[ED1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED1].enable_whitelist()
-
-        self.nodes[ED2].set_panid(0xface)
-        self.nodes[ED2].set_mode('rsn')
-        self.nodes[ED2].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ED2].enable_whitelist()
-
-        self.nodes[ED3].set_panid(0xface)
-        self.nodes[ED3].set_mode('rsn')
-        self.nodes[ED3].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ED3].enable_whitelist()
+class Cert_5_5_3_SplitMergeChildren(thread_cert.TestCase):
+    topology = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [ROUTER1, ROUTER2, ED1]
+        },
+        ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, ED2, ED3]
+        },
+        ROUTER2: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        ED1: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [LEADER]
+        },
+        ED2: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [ROUTER1]
+        },
+        ED3: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [ROUTER1]
+        },
+    }
 
     def _setUpLeader(self):
         self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
@@ -90,12 +87,6 @@ class Cert_5_5_3_SplitMergeChildren(unittest.TestCase):
         self.nodes[LEADER].add_whitelist(self.nodes[ED1].get_addr64())
         self.nodes[LEADER].enable_whitelist()
         self.nodes[LEADER].set_router_selection_jitter(1)
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
 
     def test(self):
         self.nodes[LEADER].start()

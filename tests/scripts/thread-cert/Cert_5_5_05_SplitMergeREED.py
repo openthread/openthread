@@ -29,8 +29,7 @@
 
 import unittest
 
-import config
-import node
+import thread_cert
 
 LEADER = 1
 ROUTER1 = 2
@@ -40,47 +39,114 @@ ROUTER15 = 16
 REED1 = 17
 
 
-class Cert_5_5_5_SplitMergeREED(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 18):
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        for i in range(ROUTER2, ROUTER15 + 1):
-            self.nodes[LEADER].add_whitelist(self.nodes[i].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        for i in range(ROUTER2, ROUTER15 + 1):
-            self.nodes[i].set_panid(0xface)
-            self.nodes[i].set_mode('rsdn')
-            self.nodes[i].add_whitelist(self.nodes[LEADER].get_addr64())
-            self.nodes[i].enable_whitelist()
-            self.nodes[i].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER1].set_panid(0xface)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[ROUTER3].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER2].add_whitelist(self.nodes[REED1].get_addr64())
-        self.nodes[ROUTER3].add_whitelist(self.nodes[ROUTER1].get_addr64())
-
-        self.nodes[REED1].set_panid(0xface)
-        self.nodes[REED1].set_mode('rsdn')
-        self.nodes[REED1].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[REED1].enable_whitelist()
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_5_5_5_SplitMergeREED(thread_cert.TestCase):
+    topology = {
+        LEADER: {
+            'mode':
+                'rsdn',
+            'panid':
+                0xface,
+            'whitelist': [
+                ROUTER2, ROUTER3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+                ROUTER15
+            ]
+        },
+        ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [ROUTER3]
+        },
+        ROUTER2: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, REED1]
+        },
+        ROUTER3: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, ROUTER1]
+        },
+        5: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        6: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        7: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        8: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        9: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        10: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        11: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        12: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        13: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        14: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        15: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        ROUTER15: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        REED1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [ROUTER2]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()

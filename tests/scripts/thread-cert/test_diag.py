@@ -27,24 +27,18 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import unittest
 import time
+import unittest
 
-import node
-import config
+import thread_cert
 
 
-class TestDiag(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-        self.node = node.Node(1, False, simulator=self.simulator)
-
-    def tearDown(self):
-        self.node.destroy()
-        self.simulator.stop()
+class TestDiag(thread_cert.TestCase):
+    topology = {1: None}
 
     def test(self):
+        self.node = self.nodes[1]
+
         cases = [
             ('diag\n', 'diagnostics mode is disabled\r\n'),
             ('diag send 10 100\n', 'Error 13: InvalidState\r\n'),

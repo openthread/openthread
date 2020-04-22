@@ -30,7 +30,7 @@
 import unittest
 
 import config
-import node
+import thread_cert
 
 KEY1 = '00112233445566778899aabbccddeeff'
 KEY2 = 'ffeeddccbbaa99887766554433221100'
@@ -48,75 +48,71 @@ SED1 = 6
 MTDS = [ED1, SED1]
 
 
-class Cert_9_2_18_RollBackActiveTimestamp(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 7):
-            self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
-
-        self.nodes[COMMISSIONER].set_active_dataset(1,
-                                                    channel=CHANNEL_INIT,
-                                                    panid=PANID_INIT,
-                                                    master_key=KEY1)
-        self.nodes[COMMISSIONER].set_mode('rsdn')
-        self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[COMMISSIONER].enable_whitelist()
-        self.nodes[COMMISSIONER].set_router_selection_jitter(1)
-
-        self.nodes[LEADER].set_active_dataset(1,
-                                              channel=CHANNEL_INIT,
-                                              panid=PANID_INIT,
-                                              master_key=KEY1)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].set_partition_id(0xffffffff)
-        self.nodes[LEADER].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-        self.nodes[LEADER].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER1].set_active_dataset(1,
-                                               channel=CHANNEL_INIT,
-                                               panid=PANID_INIT,
-                                               master_key=KEY1)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[ED1].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[SED1].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER2].set_active_dataset(1,
-                                               channel=CHANNEL_INIT,
-                                               panid=PANID_INIT,
-                                               master_key=KEY1)
-        self.nodes[ROUTER2].set_mode('rsdn')
-        self.nodes[ROUTER2].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ROUTER2].enable_whitelist()
-        self.nodes[ROUTER2].set_router_selection_jitter(1)
-
-        self.nodes[ED1].set_channel(CHANNEL_INIT)
-        self.nodes[ED1].set_masterkey(KEY1)
-        self.nodes[ED1].set_mode('rsn')
-        self.nodes[ED1].set_panid(PANID_INIT)
-        self.nodes[ED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ED1].enable_whitelist()
-
-        self.nodes[SED1].set_channel(CHANNEL_INIT)
-        self.nodes[SED1].set_masterkey(KEY1)
-        self.nodes[SED1].set_mode('s')
-        self.nodes[SED1].set_panid(PANID_INIT)
-        self.nodes[SED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[SED1].enable_whitelist()
-        self.nodes[SED1].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
+class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
+    topology = {
+        COMMISSIONER: {
+            'active_dataset': {
+                'timestamp': 1,
+                'panid': PANID_INIT,
+                'channel': CHANNEL_INIT,
+                'master_key': '00112233445566778899aabbccddeeff'
+            },
+            'mode': 'rsdn',
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        LEADER: {
+            'active_dataset': {
+                'timestamp': 1,
+                'panid': PANID_INIT,
+                'channel': CHANNEL_INIT,
+                'master_key': '00112233445566778899aabbccddeeff'
+            },
+            'mode': 'rsdn',
+            'partition_id': 0xffffffff,
+            'router_selection_jitter': 1,
+            'whitelist': [COMMISSIONER, ROUTER1]
+        },
+        ROUTER1: {
+            'active_dataset': {
+                'timestamp': 1,
+                'panid': PANID_INIT,
+                'channel': CHANNEL_INIT,
+                'master_key': '00112233445566778899aabbccddeeff'
+            },
+            'mode': 'rsdn',
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, ROUTER2, ED1, SED1]
+        },
+        ROUTER2: {
+            'active_dataset': {
+                'timestamp': 1,
+                'panid': PANID_INIT,
+                'channel': CHANNEL_INIT,
+                'master_key': '00112233445566778899aabbccddeeff'
+            },
+            'mode': 'rsdn',
+            'router_selection_jitter': 1,
+            'whitelist': [ROUTER1]
+        },
+        ED1: {
+            'channel': CHANNEL_INIT,
+            'is_mtd': True,
+            'masterkey': '00112233445566778899aabbccddeeff',
+            'mode': 'rsn',
+            'panid': PANID_INIT,
+            'whitelist': [ROUTER1]
+        },
+        SED1: {
+            'channel': CHANNEL_INIT,
+            'is_mtd': True,
+            'masterkey': '00112233445566778899aabbccddeeff',
+            'mode': 's',
+            'panid': PANID_INIT,
+            'timeout': config.DEFAULT_CHILD_TIMEOUT,
+            'whitelist': [ROUTER1]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()
