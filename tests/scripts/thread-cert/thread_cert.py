@@ -39,7 +39,7 @@ DEFAULT_PARAMS = {
     'mode': 'rsdn',
     'panid': 0xface,
     'whitelist': None,
-    'version': '1.2',
+    'version': '1.1',
 }
 """Default configurations when creating nodes."""
 
