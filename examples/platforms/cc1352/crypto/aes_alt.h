@@ -71,8 +71,7 @@ void mbedtls_aes_free(mbedtls_aes_context *ctx);
  * @retval 0                                   If successful
  * @retval MBEDTLS_ERR_AES_INVALID_KEY_LENGTH  If keybits was not 128
  */
-int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key,
-                           unsigned int keybits);
+int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits);
 
 /**
  * @brief          AES key schedule (decryption)
@@ -84,8 +83,7 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key,
  * @retval 0                                   If successful
  * @retval MBEDTLS_ERR_AES_INVALID_KEY_LENGTH  If keybits was not 128
  */
-int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key,
-                           unsigned int keybits);
+int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits);
 
 /**
  * \brief          AES-ECB block encryption/decryption
@@ -99,8 +97,7 @@ int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key,
  * @retval 0                        If successful
  * @retval AES_KEYSTORE_READ_ERROR  If the indicated keystore ram could not be read
  */
-int mbedtls_aes_crypt_ecb(mbedtls_aes_context *ctx, int mode, const unsigned char input[16],
-                          unsigned char output[16]);
+int mbedtls_aes_crypt_ecb(mbedtls_aes_context *ctx, int mode, const unsigned char input[16], unsigned char output[16]);
 
 #ifdef __cplusplus
 }

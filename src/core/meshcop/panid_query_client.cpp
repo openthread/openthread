@@ -63,12 +63,10 @@ otError PanIdQueryClient::SendQuery(uint16_t                            aPanId,
                                     otCommissionerPanIdConflictCallback aCallback,
                                     void *                              aContext)
 {
-    otError                           error = OT_ERROR_NONE;
-    MeshCoP::CommissionerSessionIdTlv sessionId;
-    MeshCoP::ChannelMaskTlv           channelMask;
-    MeshCoP::PanIdTlv                 panId;
-    Ip6::MessageInfo                  messageInfo;
-    Coap::Message *                   message = NULL;
+    otError                 error = OT_ERROR_NONE;
+    MeshCoP::ChannelMaskTlv channelMask;
+    Ip6::MessageInfo        messageInfo;
+    Coap::Message *         message = NULL;
 
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = OT_ERROR_INVALID_STATE);
     VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Coap::Coap>())) != NULL, error = OT_ERROR_NO_BUFS);
@@ -78,17 +76,14 @@ otError PanIdQueryClient::SendQuery(uint16_t                            aPanId,
                                     OT_COAP_CODE_POST, OT_URI_PATH_PANID_QUERY));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    sessionId.Init();
-    sessionId.SetCommissionerSessionId(Get<MeshCoP::Commissioner>().GetSessionId());
-    SuccessOrExit(error = message->AppendTlv(sessionId));
+    SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, MeshCoP::Tlv::kCommissionerSessionId,
+                                               Get<MeshCoP::Commissioner>().GetSessionId()));
 
     channelMask.Init();
     channelMask.SetChannelMask(aChannelMask);
-    SuccessOrExit(error = message->AppendTlv(channelMask));
+    SuccessOrExit(error = channelMask.AppendTo(*message));
 
-    panId.Init();
-    panId.SetPanId(aPanId);
-    SuccessOrExit(error = message->AppendTlv(panId));
+    SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, MeshCoP::Tlv::kPanId, aPanId));
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(aAddress);
@@ -118,22 +113,21 @@ void PanIdQueryClient::HandleConflict(void *aContext, otMessage *aMessage, const
 
 void PanIdQueryClient::HandleConflict(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    MeshCoP::PanIdTlv panId;
-    Ip6::MessageInfo  responseInfo(aMessageInfo);
-    uint32_t          mask;
+    uint16_t         panId;
+    Ip6::MessageInfo responseInfo(aMessageInfo);
+    uint32_t         mask;
 
-    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST);
+    VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, OT_NOOP);
 
     otLogInfoMeshCoP("received panid conflict");
 
-    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPanId, sizeof(panId), panId));
-    VerifyOrExit(panId.IsValid());
+    SuccessOrExit(Tlv::ReadUint16Tlv(aMessage, MeshCoP::Tlv::kPanId, panId));
 
-    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
+    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0, OT_NOOP);
 
     if (mCallback != NULL)
     {
-        mCallback(panId.GetPanId(), mask, mContext);
+        mCallback(panId, mask, mContext);
     }
 
     SuccessOrExit(Get<Coap::Coap>().SendEmptyAck(aMessage, responseInfo));

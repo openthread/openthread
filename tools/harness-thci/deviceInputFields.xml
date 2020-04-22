@@ -89,6 +89,10 @@
               validation="baud-rate"
               hint="eg: 115200">115200
         </ITEM>
+        <ITEM type="hidden"
+              label = ""
+              forParam="Param9">stty cols 256
+        </ITEM>
     </DEVICE>
     <DEVICE name="OpenThread_WpanCtl_SSH" thumbnail="OpenThread_WpanCtl.png" description = "OpenThread_WpanCtl: Wpantund + NCP (SSH)" THCI="OpenThread_WpanCtl">
         <ITEM label="IP addr"
@@ -103,8 +107,25 @@
               validation="port"
               hint="eg: 4901">22
         </ITEM>
-        <ITEM type="hidden" label = ""
+        <ITEM type="hidden"
+              label = ""
               forParam="Param5">ip
+        </ITEM>
+        <ITEM type="hidden"
+              label = ""
+              forParam="Param6">pi
+        </ITEM>
+        <ITEM type="hidden"
+              label = ""
+              forParam="Param7">raspberry
+        </ITEM>
+        <ITEM type="hidden"
+              label = ""
+              forParam="Param8">pi@raspberrypi, sudo wpanctl -I wpan0, wpan0
+        </ITEM>
+        <ITEM type="hidden"
+              label = ""
+              forParam="Param9">stty cols 256
         </ITEM>
      </DEVICE>
 </DEVICE_FIELDS>

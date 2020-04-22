@@ -86,7 +86,7 @@ exit:
 
 void NcpBase::HandleParentResponseInfo(otThreadParentResponseInfo *aInfo, void *aContext)
 {
-    VerifyOrExit(aInfo && aContext);
+    VerifyOrExit(aInfo && aContext, OT_NOOP);
 
     static_cast<NcpBase *>(aContext)->HandleParentResponseInfo(*aInfo);
 
@@ -96,7 +96,7 @@ exit:
 
 void NcpBase::HandleParentResponseInfo(const otThreadParentResponseInfo &aInfo)
 {
-    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(SPINEL_PROP_PARENT_RESPONSE_INFO));
+    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(SPINEL_PROP_PARENT_RESPONSE_INFO), OT_NOOP);
 
     SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
                                       SPINEL_PROP_PARENT_RESPONSE_INFO));
@@ -134,7 +134,7 @@ void NcpBase::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNe
         // Fall through
     case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
         property = SPINEL_PROP_THREAD_CHILD_TABLE;
-        VerifyOrExit(!aEntry.mInfo.mChild.mIsStateRestoring);
+        VerifyOrExit(!aEntry.mInfo.mChild.mIsStateRestoring, OT_NOOP);
         break;
 
     case OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED:
@@ -148,7 +148,7 @@ void NcpBase::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNe
         ExitNow();
     }
 
-    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(property));
+    VerifyOrExit(!mChangedPropsSet.IsPropertyFiltered(property), OT_NOOP);
 
     SuccessOrExit(error = mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, command, property));
 
@@ -294,17 +294,17 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED>(void)
 {
-    return mEncoder.WriteBool(otThreadIsRouterRoleEnabled(mInstance));
+    return mEncoder.WriteBool(otThreadIsRouterEligible(mInstance));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED>(void)
 {
-    bool    enabled;
+    bool    eligible;
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = mDecoder.ReadBool(enabled));
+    SuccessOrExit(error = mDecoder.ReadBool(eligible));
 
-    otThreadSetRouterRoleEnabled(mInstance, enabled);
+    error = otThreadSetRouterEligible(mInstance, eligible);
 
 exit:
     return error;
@@ -773,8 +773,8 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_MESHCOP_COMMISSIONER_GENERATE_PSK
     SuccessOrExit(error = mDecoder.ReadDataWithLen(extPanIdData, length));
     VerifyOrExit(length == sizeof(spinel_net_xpanid_t), error = OT_ERROR_PARSE);
 
-    SuccessOrExit(error = otCommissionerGeneratePskc(passPhrase, networkName,
-                                                     reinterpret_cast<const otExtendedPanId *>(extPanIdData), &pskc));
+    SuccessOrExit(error = otDatasetGeneratePskc(passPhrase, reinterpret_cast<const otNetworkName *>(networkName),
+                                                reinterpret_cast<const otExtendedPanId *>(extPanIdData), &pskc));
 
     SuccessOrExit(
         error = mEncoder.BeginFrame(aHeader, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_MESHCOP_COMMISSIONER_GENERATE_PSKC));
@@ -911,22 +911,59 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_ADDRESS_CACHE_TABLE>(void)
 {
-    otError         error = OT_ERROR_NONE;
-    otEidCacheEntry entry;
+    otError              error = OT_ERROR_NONE;
+    otCacheEntryIterator iterator;
+    otCacheEntryInfo     entry;
+
+    memset(&iterator, 0, sizeof(iterator));
 
     for (uint8_t index = 0;; index++)
     {
-        SuccessOrExit(otThreadGetEidCacheEntry(mInstance, index, &entry));
-
-        if (!entry.mValid)
-        {
-            continue;
-        }
+        SuccessOrExit(otThreadGetNextCacheEntry(mInstance, &entry, &iterator));
 
         SuccessOrExit(error = mEncoder.OpenStruct());
         SuccessOrExit(error = mEncoder.WriteIp6Address(entry.mTarget));
         SuccessOrExit(error = mEncoder.WriteUint16(entry.mRloc16));
-        SuccessOrExit(error = mEncoder.WriteUint8(entry.mAge));
+        SuccessOrExit(error = mEncoder.WriteUint8(index));
+
+        switch (entry.mState)
+        {
+        case OT_CACHE_ENTRY_STATE_CACHED:
+            SuccessOrExit(error = mEncoder.WriteUint8(SPINEL_ADDRESS_CACHE_ENTRY_STATE_CACHED));
+            break;
+        case OT_CACHE_ENTRY_STATE_SNOOPED:
+            SuccessOrExit(error = mEncoder.WriteUint8(SPINEL_ADDRESS_CACHE_ENTRY_STATE_SNOOPED));
+            break;
+        case OT_CACHE_ENTRY_STATE_QUERY:
+            SuccessOrExit(error = mEncoder.WriteUint8(SPINEL_ADDRESS_CACHE_ENTRY_STATE_QUERY));
+            break;
+        case OT_CACHE_ENTRY_STATE_RETRY_QUERY:
+            SuccessOrExit(error = mEncoder.WriteUint8(SPINEL_ADDRESS_CACHE_ENTRY_STATE_RETRY_QUERY));
+            break;
+        }
+
+        SuccessOrExit(error = mEncoder.OpenStruct());
+
+        if (entry.mState == OT_CACHE_ENTRY_STATE_CACHED)
+        {
+            SuccessOrExit(error = mEncoder.WriteBool(entry.mValidLastTrans));
+            SuccessOrExit(error = mEncoder.WriteUint32(entry.mLastTransTime));
+            SuccessOrExit(error = mEncoder.WriteIp6Address(entry.mMeshLocalEid));
+        }
+
+        SuccessOrExit(error = mEncoder.CloseStruct());
+
+        SuccessOrExit(error = mEncoder.OpenStruct());
+
+        if (entry.mState != OT_CACHE_ENTRY_STATE_CACHED)
+        {
+            SuccessOrExit(error = mEncoder.WriteBool(entry.mCanEvict));
+            SuccessOrExit(error = mEncoder.WriteUint16(entry.mTimeout));
+            SuccessOrExit(error = mEncoder.WriteUint16(entry.mRetryDelay));
+        }
+
+        SuccessOrExit(error = mEncoder.CloseStruct());
+
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
 

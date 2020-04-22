@@ -92,6 +92,31 @@ enum
 };
 
 /**
+ * This type defines the function pointer called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
+ *
+ */
+typedef otHandleActiveScanResult ActiveScanHandler;
+
+/**
+ * This type defines an Active Scan result.
+ *
+ */
+typedef otActiveScanResult ActiveScanResult;
+
+/**
+ * This type defines the function pointer which is called during an Energy Scan when the scan result for a channel is
+ * ready or when the scan completes.
+ *
+ */
+typedef otHandleEnergyScanResult EnergyScanHandler;
+
+/**
+ * This type defines an Energy Scan result.
+ *
+ */
+typedef otEnergyScanResult EnergyScanResult;
+
+/**
  * This class implements the IEEE 802.15.4 MAC.
  *
  */
@@ -109,51 +134,19 @@ public:
     explicit Mac(Instance &aInstance);
 
     /**
-     * This function pointer is called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
-     *
-     * @param[in]  aInstance      A reference to the OpenThread instance.
-     * @param[in]  aBeaconFrame   A pointer to the Beacon frame or NULL to indicate end of Active Scan operation.
-     *
-     */
-    typedef void (*ActiveScanHandler)(Instance &aInstance, RxFrame *aBeaconFrame);
-
-    /**
      * This method starts an IEEE 802.15.4 Active Scan.
      *
      * @param[in]  aScanChannels  A bit vector indicating which channels to scan. Zero is mapped to all channels.
      * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel. Zero duration maps to
      *                            default value `kScanDurationDefault` = 300 ms.
      * @param[in]  aHandler       A pointer to a function that is called on receiving an IEEE 802.15.4 Beacon.
+     * @param[in]  aContext       A pointer to an arbitrary context (used when invoking `aHandler` callback).
      *
      * @retval OT_ERROR_NONE  Successfully scheduled the Active Scan request.
      * @retval OT_ERROR_BUSY  Could not schedule the scan (a scan is ongoing or scheduled).
      *
      */
-    otError ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler);
-
-    /**
-     * This method converts a beacon frame to an active scan result of type `otActiveScanResult`.
-     *
-     * @param[in]  aBeaconFrame             A pointer to a beacon frame.
-     * @param[out] aResult                  A reference to `otActiveScanResult` where the result is stored.
-     *
-     * @retval OT_ERROR_NONE            Successfully converted the beacon into active scan result.
-     * @retval OT_ERROR_INVALID_ARGS    The @a aBeaconFrame was NULL.
-     * @retval OT_ERROR_PARSE           Failed parsing the beacon frame.
-     *
-     */
-    otError ConvertBeaconToActiveScanResult(RxFrame *aBeaconFrame, otActiveScanResult &aResult);
-
-    /**
-     * This function pointer is called during an Energy Scan when the result for a channel is ready or the scan
-     * completes.
-     *
-     * @param[in]  aInstance A reference to the OpenThread instance.
-     * @param[in]  aResult   A valid pointer to the energy scan result information or NULL when the energy scan
-     *                       completes.
-     *
-     */
-    typedef void (*EnergyScanHandler)(Instance &aInstance, otEnergyScanResult *aResult);
+    otError ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext);
 
     /**
      * This method starts an IEEE 802.15.4 Energy Scan.
@@ -162,12 +155,13 @@ public:
      * @param[in]  aScanDuration     The time in milliseconds to spend scanning each channel. If the duration is set to
      *                               zero, a single RSSI sample will be taken per channel.
      * @param[in]  aHandler          A pointer to a function called to pass on scan result or indicate scan completion.
+     * @param[in]  aContext          A pointer to an arbitrary context (used when invoking @p aHandler callback).
      *
      * @retval OT_ERROR_NONE  Accepted the Energy Scan request.
      * @retval OT_ERROR_BUSY  Could not start the energy scan.
      *
      */
-    otError EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergyScanHandler aHandler);
+    otError EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergyScanHandler aHandler, void *aContext);
 
     /**
      * This method indicates the energy scan for the current channel is complete.
@@ -373,7 +367,39 @@ public:
      * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
      *
      */
-    otError SetNetworkName(const NetworkName::Data &aNameData);
+    otError SetNetworkName(const NameData &aNameData);
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    /**
+     * This method returns the Thread Domain Name.
+     *
+     * @returns The Thread Domain Name.
+     *
+     */
+    const DomainName &GetDomainName(void) const { return mDomainName; }
+
+    /**
+     * This method sets the Thread Domain Name.
+     *
+     * @param[in]  aNameString   A pointer to a string character array. Must be null terminated.
+     *
+     * @retval OT_ERROR_NONE           Successfully set the Thread Domain Name.
+     * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
+     *
+     */
+    otError SetDomainName(const char *aNameString);
+
+    /**
+     * This method sets the Thread Domain Name.
+     *
+     * @param[in]  aNameData     A name data (pointer to char buffer and length).
+     *
+     * @retval OT_ERROR_NONE           Successfully set the Thread Domain Name.
+     * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
+     *
+     */
+    otError SetDomainName(const NameData &aNameData);
+#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
     /**
      * This method returns the IEEE 802.15.4 PAN ID.
@@ -567,7 +593,7 @@ public:
      * This method resets mac counters
      *
      */
-    void ResetCounters(void);
+    void ResetCounters(void) { memset(&mCounters, 0, sizeof(mCounters)); }
 
     /**
      * This method returns the MAC counter.
@@ -577,13 +603,45 @@ public:
      */
     otMacCounters &GetCounters(void) { return mCounters; }
 
+#if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+    /**
+     * This method returns the MAC retry histogram for direct transmission.
+     *
+     * @param[out]  aNumberOfEntries    A reference to where the size of returned histogram array is placed.
+     *
+     * @returns     A pointer to the histogram of retries (in a form of an array).
+     *              The n-th element indicates that the packet has been sent with n-th retry.
+     *
+     */
+    const uint32_t *GetDirectRetrySuccessHistogram(uint8_t &aNumberOfEntries);
+
+#if OPENTHREAD_FTD
+    /**
+     * This method returns the MAC retry histogram for indirect transmission.
+     *
+     * @param[out]  aNumberOfEntries    A reference to where the size of returned histogram array is placed.
+     *
+     * @returns     A pointer to the histogram of retries (in a form of an array).
+     *              The n-th element indicates that the packet has been sent with n-th retry.
+     *
+     */
+    const uint32_t *GetIndirectRetrySuccessHistogram(uint8_t &aNumberOfEntries);
+#endif
+
+    /**
+     * This method resets MAC retry histogram.
+     *
+     */
+    void ResetRetrySuccessHistogram(void);
+#endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+
     /**
      * This method returns the noise floor value (currently use the radio receive sensitivity value).
      *
      * @returns The noise floor value in dBm.
      *
      */
-    int8_t GetNoiseFloor(void);
+    int8_t GetNoiseFloor(void) { return mSubMac.GetNoiseFloor(); }
 
     /**
      * This method returns the current CCA (Clear Channel Assessment) failure rate.
@@ -636,6 +694,29 @@ private:
         kOperationTransmitOutOfBandFrame,
     };
 
+#if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+    struct RetryHistogram
+    {
+        /**
+         * Histogram of number of retries for a single direct packet until success
+         * [0 retry: packet count, 1 retry: packet count, 2 retry : packet count ...
+         *  until max retry limit: packet count]
+         *
+         *  The size of the array is OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT.
+         */
+        uint32_t mTxDirectRetrySuccess[OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_DIRECT];
+
+        /**
+         * Histogram of number of retries for a single indirect packet until success
+         * [0 retry: packet count, 1 retry: packet count, 2 retry : packet count ...
+         *  until max retry limit: packet count]
+         *
+         *  The size of the array is OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT.
+         */
+        uint32_t mTxIndirectRetrySuccess[OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_MAX_SIZE_COUNT_INDIRECT];
+    };
+#endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+
     /**
      * This method processes transmit security on the frame which is going to be sent.
      *
@@ -661,7 +742,6 @@ private:
     bool    IsJoinable(void) const;
     void    BeginTransmit(void);
     bool    HandleMacCommand(RxFrame &aFrame);
-    Frame * GetOperationFrame(void);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
@@ -670,6 +750,8 @@ private:
     void    Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration);
     otError UpdateScanChannel(void);
     void    PerformActiveScan(void);
+    void    ReportActiveScanResult(const RxFrame *aBeaconFrame);
+    otError ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveScanResult &aResult);
     void    PerformEnergyScan(void);
     void    ReportEnergyScanResult(int8_t aRssi);
 
@@ -687,6 +769,7 @@ private:
     static const otExtAddress    sMode2ExtAddress;
     static const otExtendedPanId sExtendedPanidInit;
     static const char            sNetworkNameInit[];
+    static const char            sDomainNameInit[];
 
     bool mEnabled : 1;
     bool mPendingActiveScan : 1;
@@ -719,18 +802,24 @@ private:
     ChannelMask   mSupportedChannelMask;
     ExtendedPanId mExtendedPanId;
     NetworkName   mNetworkName;
-    uint8_t       mScanChannel;
-    uint16_t      mScanDuration;
-    ChannelMask   mScanChannelMask;
-    uint8_t       mMaxFrameRetriesDirect;
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    DomainName mDomainName;
+#endif
+    uint8_t     mScanChannel;
+    uint16_t    mScanDuration;
+    ChannelMask mScanChannelMask;
+    uint8_t     mMaxFrameRetriesDirect;
 #if OPENTHREAD_FTD
     uint8_t mMaxFrameRetriesIndirect;
 #endif
+
     union
     {
         ActiveScanHandler mActiveScanHandler;
         EnergyScanHandler mEnergyScanHandler;
     };
+
+    void *mScanHandlerContext;
 
     SubMac             mSubMac;
     Tasklet            mOperationTask;
@@ -740,6 +829,9 @@ private:
     uint32_t           mKeyIdMode2FrameCounter;
     SuccessRateTracker mCcaSuccessRateTracker;
     uint16_t           mCcaSampleCount;
+#if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+    RetryHistogram mRetryHistogram;
+#endif
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     Filter mFilter;

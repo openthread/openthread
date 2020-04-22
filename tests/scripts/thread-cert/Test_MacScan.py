@@ -37,6 +37,7 @@ ROUTER = 2
 
 
 class Test_MacScan(unittest.TestCase):
+
     def setUp(self):
         self.nodes = {}
         for i in range(1, 3):

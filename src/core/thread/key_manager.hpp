@@ -98,6 +98,12 @@ class Pskc : public otPskc
 {
 public:
     /**
+     * This method clears the PSKc (sets all bytes to zero).
+     *
+     */
+    void Clear(void) { memset(this, 0, sizeof(*this)); }
+
+    /**
      * This method evaluates whether or not the Thread PSKc values match.
      *
      * @param[in]  aOther  The Thread PSKc to compare.
@@ -132,6 +138,55 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
+ *
+ * This class represents a Key Encryption Key (KEK).
+ *
+ */
+class Kek
+{
+    friend class KeyManager;
+
+public:
+    enum
+    {
+        kSize = 16, // KEK size in bytes.
+    };
+
+    /**
+     * This method returns the KEK.
+     *
+     * @returns A pointer to buffer containing the KEK.
+     *
+     */
+    const uint8_t *GetKey(void) const { return m8; }
+
+    /**
+     * This method evaluates whether or not two KEKs match.
+     *
+     * @param[in]  aOther  The KEK to compare.
+     *
+     * @retval TRUE   If the KEKs match.
+     * @retval FALSE  If the KEKs do not match.
+     *
+     */
+    bool operator==(const Kek &aOther) const { return memcmp(m8, aOther.m8, sizeof(Kek)) == 0; }
+
+    /**
+     * This method evaluates whether or not the KEK match.
+     *
+     * @param[in]  aOther  The KEK to compare.
+     *
+     * @retval TRUE   If the KEK do not match.
+     * @retval FALSE  If the KEK match.
+     *
+     */
+    bool operator!=(const Kek &aOther) const { return !(*this == aOther); }
+
+private:
+    uint8_t m8[kSize]; ///< Buffer containing the KEK.
+};
+
+/**
  * This class defines Thread Key Manager.
  *
  */
@@ -140,8 +195,7 @@ class KeyManager : public InstanceLocator
 public:
     enum
     {
-        kMaxKeyLength = 16,
-        kNonceSize    = 13, ///< Size of IEEE 802.15.4 Nonce (bytes).
+        kNonceSize = 13, ///< Size of IEEE 802.15.4 Nonce (bytes).
     };
 
     /**
@@ -330,7 +384,15 @@ public:
      * @returns A pointer to the KEK.
      *
      */
-    const uint8_t *GetKek(void) const { return mKek; }
+    const Kek &GetKek(void) const { return mKek; }
+
+    /**
+     * This method sets the KEK.
+     *
+     * @param[in]  aKek  A KEK.
+     *
+     */
+    void SetKek(const Kek &aKek);
 
     /**
      * This method sets the KEK.
@@ -420,6 +482,62 @@ public:
     void SetSecurityPolicyFlags(uint8_t aSecurityPolicyFlags);
 
     /**
+     * This method indicates whether or not obtaining Master key for out-of-band is enabled.
+     *
+     * @retval TRUE   If obtaining Master key for out-of-band is enabled.
+     * @retval FALSE  If obtaining Master key for out-of-band is not enabled.
+     *
+     */
+    bool IsObtainMasterKeyEnabled(void) const
+    {
+        return (mSecurityPolicyFlags & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY) != 0;
+    }
+
+    /**
+     * This method indicates whether or not Native Commissioning using PSKc is allowed.
+     *
+     * @retval TRUE   If Native Commissioning using PSKc is allowed.
+     * @retval FALSE  If Native Commissioning using PSKc is not allowed.
+     *
+     */
+    bool IsNativeCommissioningAllowed(void) const
+    {
+        return (mSecurityPolicyFlags & OT_SECURITY_POLICY_NATIVE_COMMISSIONING) != 0;
+    }
+
+    /**
+     * This method indicates whether or not Thread 1.1 Routers are enabled.
+     *
+     * @retval TRUE   If Thread 1.1 Routers are enabled.
+     * @retval FALSE  If Thread 1.1 Routers are not enabled.
+     *
+     */
+    bool IsRouterEnabled(void) const { return (mSecurityPolicyFlags & OT_SECURITY_POLICY_ROUTERS) != 0; }
+
+    /**
+     * This method indicates whether or not external Commissioner authentication is allowed using PSKc.
+     *
+     * @retval TRUE   If the commissioning sessions by an external Commissioner based on the PSKc are allowed
+     *                to be established and that changes to the Commissioner Dataset by on-mesh nodes are allowed.
+     * @retval FALSE  If the commissioning sessions by an external Commissioner based on the PSKc are not allowed
+     *                to be established and that changes to the Commissioner Dataset by on-mesh nodes are not allowed.
+     *
+     */
+    bool IsExternalCommissionerAllowed(void) const
+    {
+        return (mSecurityPolicyFlags & OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER) != 0;
+    }
+
+    /**
+     * This method indicates whether or not Thread Beacons are enabled.
+     *
+     * @retval TRUE   If Thread Beacons are enabled.
+     * @retval FALSE  If Thread Beacons are not enabled.
+     *
+     */
+    bool IsThreadBeaconEnabled(void) const { return (mSecurityPolicyFlags & OT_SECURITY_POLICY_BEACONS) != 0; }
+
+    /**
      * This static method generates IEEE 802.15.4 nonce byte sequence.
      *
      * @param[in]  aAddress        An extended address.
@@ -473,7 +591,7 @@ private:
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     Pskc mPskc;
 #endif
-    uint8_t  mKek[kMaxKeyLength];
+    Kek      mKek;
     uint32_t mKekFrameCounter;
 
     uint8_t mSecurityPolicyFlags;

@@ -35,12 +35,12 @@
 
 #include "openthread-core-config.h"
 
-#include "ncp/hdlc.hpp"
+#include "lib/hdlc/hdlc.hpp"
 #include "ncp/ncp_base.hpp"
 
-#if OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
+#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 #include "spinel_encrypter.hpp"
-#endif // OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
 namespace ot {
 namespace Ncp {
@@ -85,19 +85,19 @@ private:
         kFinalizingFrame, // Finalizing a frame.
     };
 
-#if OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
+#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
     /**
-     * Wraps NcpFrameBuffer allowing to read data through spinel encrypter.
+     * Wraps Spinel::Buffer allowing to read data through spinel encrypter.
      * Creates additional buffers to allow transforming of the whole spinel frames.
      */
-    class NcpFrameBufferEncrypterReader
+    class Spinel::BufferEncrypterReader
     {
     public:
         /**
          * C-tor.
-         * Takes a reference to NcpFrameBuffer in order to read spinel frames.
+         * Takes a reference to Spinel::Buffer in order to read spinel frames.
          */
-        explicit NcpFrameBufferEncrypterReader(NcpFrameBuffer &aTxFrameBuffer);
+        explicit Spinel::BufferEncrypterReader(Spinel::Buffer &aTxFrameBuffer);
         bool    IsEmpty(void) const;
         otError OutFrameBegin(void);
         bool    OutFrameHasEnded(void);
@@ -107,12 +107,12 @@ private:
     private:
         void Reset(void);
 
-        NcpFrameBuffer &mTxFrameBuffer;
+        Spinel::Buffer &mTxFrameBuffer;
         uint8_t         mDataBuffer[kRxBufferSize];
         size_t          mDataBufferReadIndex;
         size_t          mOutputDataLength;
     };
-#endif // OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
     void EncodeAndSendToUart(void);
     void HandleFrame(otError aError);
@@ -123,9 +123,9 @@ private:
     static void EncodeAndSendToUart(Tasklet &aTasklet);
     static void HandleFrame(void *aContext, otError aError);
     static void HandleFrameAddedToNcpBuffer(void *                   aContext,
-                                            NcpFrameBuffer::FrameTag aTag,
-                                            NcpFrameBuffer::Priority aPriority,
-                                            NcpFrameBuffer *         aNcpFrameBuffer);
+                                            Spinel::Buffer::FrameTag aTag,
+                                            Spinel::Buffer::Priority aPriority,
+                                            Spinel::Buffer *         aBuffer);
 
     Hdlc::Encoder                        mFrameEncoder;
     Hdlc::Decoder                        mFrameDecoder;
@@ -136,9 +136,9 @@ private:
     bool                                 mUartSendImmediate;
     Tasklet                              mUartSendTask;
 
-#if OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
-    NcpFrameBufferEncrypterReader mTxFrameBufferEncrypterReader;
-#endif // OPENTHREAD_CONFIG_NCP_SPI_ENABLENEL_ENCRYPTER
+#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
+    Spinel::BufferEncrypterReader mTxFrameBufferEncrypterReader;
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 };
 
 } // namespace Ncp

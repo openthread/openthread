@@ -45,7 +45,7 @@ Notifier::Callback::Callback(Instance &aInstance, Handler aHandler, void *aOwner
     , mHandler(aHandler)
     , mNext(NULL)
 {
-    assert(aHandler != NULL);
+    OT_ASSERT(aHandler != NULL);
     aInstance.Get<Notifier>().RegisterCallback(*this);
 }
 
@@ -54,7 +54,7 @@ Notifier::Notifier(Instance &aInstance)
     , mFlagsToSignal(0)
     , mSignaledFlags(0)
     , mTask(aInstance, &Notifier::HandleStateChanged, this)
-    , mCallbacks(NULL)
+    , mCallbacks()
 {
     for (unsigned int i = 0; i < kMaxExternalHandlers; i++)
     {
@@ -65,8 +65,7 @@ Notifier::Notifier(Instance &aInstance)
 
 void Notifier::RegisterCallback(Callback &aCallback)
 {
-    aCallback.mNext = mCallbacks;
-    mCallbacks      = &aCallback;
+    mCallbacks.Push(aCallback);
 }
 
 otError Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aContext)
@@ -74,7 +73,7 @@ otError Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aCont
     otError           error          = OT_ERROR_NONE;
     ExternalCallback *unusedCallback = NULL;
 
-    VerifyOrExit(aCallback != NULL);
+    VerifyOrExit(aCallback != NULL, OT_NOOP);
 
     for (unsigned int i = 0; i < kMaxExternalHandlers; i++)
     {
@@ -104,7 +103,7 @@ exit:
 
 void Notifier::RemoveCallback(otStateChangedCallback aCallback, void *aContext)
 {
-    VerifyOrExit(aCallback != NULL);
+    VerifyOrExit(aCallback != NULL, OT_NOOP);
 
     for (unsigned int i = 0; i < kMaxExternalHandlers; i++)
     {
@@ -145,13 +144,13 @@ void Notifier::HandleStateChanged(void)
 {
     otChangedFlags flags = mFlagsToSignal;
 
-    VerifyOrExit(flags != 0);
+    VerifyOrExit(flags != 0, OT_NOOP);
 
     mFlagsToSignal = 0;
 
     LogChangedFlags(flags);
 
-    for (Callback *callback = mCallbacks; callback != NULL; callback = callback->mNext)
+    for (Callback *callback = mCallbacks.GetHead(); callback != NULL; callback = callback->GetNext())
     {
         callback->Invoke(flags);
     }
@@ -183,7 +182,7 @@ void Notifier::LogChangedFlags(otChangedFlags aFlags) const
 
     for (uint8_t bit = 0; bit < sizeof(otChangedFlags) * CHAR_BIT; bit++)
     {
-        VerifyOrExit(flags != 0);
+        VerifyOrExit(flags != 0, OT_NOOP);
 
         if (flags & (1 << bit))
         {
@@ -309,12 +308,26 @@ const char *Notifier::FlagToString(otChangedFlags aFlag) const
         retval = "ChanMask";
         break;
 
-    case OT_CHANGED_BORDER_AGENT_STATE:
-        retval = "BorderAgentState";
+    case OT_CHANGED_COMMISSIONER_STATE:
+        retval = "CommissionerState";
         break;
 
     case OT_CHANGED_THREAD_NETIF_STATE:
         retval = "NetifState";
+        break;
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    case OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE:
+        retval = "BbrState";
+        break;
+
+    case OT_CHANGED_THREAD_BACKBONE_ROUTER_LOCAL:
+        retval = "BbrLocal";
+        break;
+#endif
+
+    case OT_CHANGED_JOINER_STATE:
+        retval = "JoinerState";
         break;
 
     default:

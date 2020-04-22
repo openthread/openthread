@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -37,10 +37,6 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
- 
-#include "nordic_common.h"
-
-#if NRF_MODULE_ENABLED(APP_USBD_NRF_DFU_TRIGGER)
 #include "nrf_dfu_trigger_usb.h"
 #include "app_usbd.h"
 #include "app_usbd_nrf_dfu_trigger.h"
@@ -53,9 +49,17 @@
 #include "nrf_log.h"
 NRF_LOG_MODULE_REGISTER();
 
-
 #ifndef BSP_SELF_PINRESET_PIN
 #error "This module is intended to be used with boards that have the GP pin shortened with the RESET pin."
+#endif
+
+/**
+ * @brief Enable power USB detection.
+ *
+ * Configure if the example supports USB port connection.
+ */
+#ifndef USBD_POWER_DETECTION
+#define USBD_POWER_DETECTION true
 #endif
 
 #define DFU_FLASH_PAGE_SIZE  (NRF_FICR->CODEPAGESIZE)
@@ -237,6 +241,3 @@ ret_code_t nrf_dfu_trigger_usb_init(void)
 
     return ret;
 }
-
-#endif /* NRF_MODULE_ENABLED(APP_USBD_NRF_DFU_TRIGGER) */
-

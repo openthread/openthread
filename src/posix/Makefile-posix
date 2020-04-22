@@ -38,6 +38,7 @@ DEBUG                                ?= 0
 BORDER_AGENT                         ?= 1
 BORDER_ROUTER                        ?= 1
 COAP                                 ?= 1
+COAP_OBSERVE                         ?= 1
 COAPS                                ?= 1
 COMMISSIONER                         ?= 1
 CHANNEL_MANAGER                      ?= 1
@@ -48,6 +49,7 @@ DHCP6_CLIENT                         ?= 1
 DHCP6_SERVER                         ?= 1
 DIAGNOSTIC                           ?= 1
 DNS_CLIENT                           ?= 1
+DYNAMIC_LOG_LEVEL                    ?= 1
 ECDSA                                ?= 1
 IP6_FRAGM                            ?= 1
 JAM_DETECTION                        ?= 1
@@ -74,13 +76,13 @@ configure_OPTIONS                   = \
     --enable-cli                      \
     --enable-ftd                      \
     --enable-ncp                      \
-    --enable-posix-app                \
+    --with-platform=posix             \
     $(NULL)
 
 # Platform specific switches
 
 ifeq ($(DAEMON),1)
-configure_OPTIONS              += --enable-posix-app-daemon
+configure_OPTIONS              += --enable-posix-daemon
 endif
 
 ifneq ($(DEBUG),1)
@@ -99,6 +101,12 @@ endif
 
 ifneq ($(READLINE),)
 configure_OPTIONS              += --with-readline=$(READLINE)
+endif
+
+ifeq ($(RCP_BUS),spi)
+COMMONCFLAGS                   += -DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_SPI
+else
+COMMONCFLAGS                   += -DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_UART
 endif
 
 ifeq ($(VIRTUAL_TIME),1)

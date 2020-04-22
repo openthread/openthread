@@ -75,8 +75,8 @@ otError UdpSocket::Open(otUdpReceive aHandler, void *aContext)
 {
     otError error = OT_ERROR_NONE;
 
-    memset(&mSockName, 0, sizeof(mSockName));
-    memset(&mPeerName, 0, sizeof(mPeerName));
+    GetSockName().Clear();
+    GetPeerName().Clear();
     mHandler = aHandler;
     mContext = aContext;
 
@@ -142,8 +142,8 @@ otError UdpSocket::Close(void)
 #endif
 
     Get<Udp>().RemoveSocket(*this);
-    memset(&mSockName, 0, sizeof(mSockName));
-    memset(&mPeerName, 0, sizeof(mPeerName));
+    GetSockName().Clear();
+    GetPeerName().Clear();
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 exit:
@@ -205,8 +205,8 @@ exit:
 Udp::Udp(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEphemeralPort(kDynamicPortMin)
-    , mReceivers(NULL)
-    , mSockets(NULL)
+    , mReceivers()
+    , mSockets()
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     , mUdpForwarderContext(NULL)
     , mUdpForwarder(NULL)
@@ -216,86 +216,32 @@ Udp::Udp(Instance &aInstance)
 
 otError Udp::AddReceiver(UdpReceiver &aReceiver)
 {
-    otError error = OT_ERROR_NONE;
-
-    for (UdpReceiver *cur = mReceivers; cur; cur = cur->GetNext())
-    {
-        if (cur == &aReceiver)
-        {
-            ExitNow(error = OT_ERROR_ALREADY);
-        }
-    }
-
-    aReceiver.SetNext(mReceivers);
-    mReceivers = &aReceiver;
-
-exit:
-    return error;
+    return mReceivers.Add(aReceiver);
 }
 
 otError Udp::RemoveReceiver(UdpReceiver &aReceiver)
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    otError error;
 
-    if (mReceivers == &aReceiver)
-    {
-        mReceivers = mReceivers->GetNext();
-        aReceiver.SetNext(NULL);
-        error = OT_ERROR_NONE;
-    }
-    else
-    {
-        for (UdpReceiver *handler = mReceivers; handler; handler = handler->GetNext())
-        {
-            if (handler->GetNext() == &aReceiver)
-            {
-                handler->SetNext(aReceiver.GetNext());
-                aReceiver.SetNext(NULL);
-                error = OT_ERROR_NONE;
-                break;
-            }
-        }
-    }
+    SuccessOrExit(error = mReceivers.Remove(aReceiver));
+    aReceiver.SetNext(NULL);
 
+exit:
     return error;
 }
 
 void Udp::AddSocket(UdpSocket &aSocket)
 {
-    for (UdpSocket *cur = mSockets; cur; cur = cur->GetNext())
-    {
-        if (cur == &aSocket)
-        {
-            ExitNow();
-        }
-    }
-
-    aSocket.SetNext(mSockets);
-    mSockets = &aSocket;
-
-exit:
-    return;
+    mSockets.Add(aSocket);
 }
 
 void Udp::RemoveSocket(UdpSocket &aSocket)
 {
-    if (mSockets == &aSocket)
-    {
-        mSockets = mSockets->GetNext();
-    }
-    else
-    {
-        for (UdpSocket *socket = mSockets; socket; socket = socket->GetNext())
-        {
-            if (socket->GetNext() == &aSocket)
-            {
-                socket->SetNext(aSocket.GetNext());
-                break;
-            }
-        }
-    }
-
+    SuccessOrExit(mSockets.Remove(aSocket));
     aSocket.SetNext(NULL);
+
+exit:
+    return;
 }
 
 uint16_t Udp::GetEphemeralPort(void)
@@ -319,7 +265,7 @@ Message *Udp::NewMessage(uint16_t aReserved, const otMessageSettings *aSettings)
     return Get<Ip6>().NewMessage(sizeof(UdpHeader) + aReserved, aSettings);
 }
 
-otError Udp::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto aIpProto)
+otError Udp::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto)
 {
     otError error = OT_ERROR_NONE;
 
@@ -379,12 +325,12 @@ otError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     aMessageInfo.mSockPort = udpHeader.GetDestinationPort();
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    VerifyOrExit(IsMle(GetInstance(), aMessageInfo.mSockPort));
+    VerifyOrExit(IsMle(GetInstance(), aMessageInfo.mSockPort), OT_NOOP);
 #endif
 
-    for (UdpReceiver *receiver = mReceivers; receiver; receiver = receiver->GetNext())
+    for (UdpReceiver *receiver = mReceivers.GetHead(); receiver; receiver = receiver->GetNext())
     {
-        VerifyOrExit(!receiver->HandleMessage(aMessage, aMessageInfo));
+        VerifyOrExit(!receiver->HandleMessage(aMessage, aMessageInfo), OT_NOOP);
     }
 
     HandlePayload(aMessage, aMessageInfo);
@@ -396,7 +342,7 @@ exit:
 void Udp::HandlePayload(Message &aMessage, MessageInfo &aMessageInfo)
 {
     // find socket
-    for (UdpSocket *socket = mSockets; socket; socket = socket->GetNext())
+    for (UdpSocket *socket = mSockets.GetHead(); socket; socket = socket->GetNext())
     {
         if (socket->GetSockName().mPort != aMessageInfo.GetSockPort())
         {
@@ -425,7 +371,7 @@ void Udp::HandlePayload(Message &aMessage, MessageInfo &aMessageInfo)
         }
 
         aMessage.RemoveHeader(aMessage.GetOffset());
-        assert(aMessage.GetOffset() == 0);
+        OT_ASSERT(aMessage.GetOffset() == 0);
         socket->HandleUdpReceive(aMessage, aMessageInfo);
         break;
     }

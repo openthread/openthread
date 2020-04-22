@@ -52,7 +52,7 @@ void otCryptoHmacSha256(const uint8_t *aKey,
 {
     HmacSha256 hmac;
 
-    assert((aKey != NULL) && (aBuf != NULL) && (aHash != NULL));
+    OT_ASSERT((aKey != NULL) && (aBuf != NULL) && (aHash != NULL));
 
     hmac.Start(aKey, aKeyLength);
     hmac.Update(aBuf, aBufLength);
@@ -75,21 +75,21 @@ void otCryptoAesCcm(const uint8_t *aKey,
     AesCcm  aesCcm;
     uint8_t tagLength;
 
-    assert((aKey != NULL) && (aNonce != NULL) && (aPlainText != NULL) && (aCipherText != NULL) && (aTag != NULL));
+    OT_ASSERT((aKey != NULL) && (aNonce != NULL) && (aPlainText != NULL) && (aCipherText != NULL) && (aTag != NULL));
 
     aesCcm.SetKey(aKey, aKeyLength);
     SuccessOrExit(aesCcm.Init(aHeaderLength, aLength, aTagLength, aNonce, aNonceLength));
 
     if (aHeaderLength != 0)
     {
-        assert(aHeader != NULL);
+        OT_ASSERT(aHeader != NULL);
         aesCcm.Header(aHeader, aHeaderLength);
     }
 
     aesCcm.Payload(aPlainText, aCipherText, aLength, aEncrypt);
     aesCcm.Finalize(aTag, &tagLength);
 
-    assert(aTagLength == tagLength);
+    OT_ASSERT(aTagLength == tagLength);
 
 exit:
     return;

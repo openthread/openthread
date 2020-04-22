@@ -36,6 +36,15 @@
 
 #include "openthread-core-config.h"
 
+#ifndef BYTE_ORDER_BIG_ENDIAN
+#if defined(WORDS_BIGENDIAN) || \
+    defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#define BYTE_ORDER_BIG_ENDIAN 1
+#else
+#define BYTE_ORDER_BIG_ENDIAN 0
+#endif
+#endif
+
 #include <limits.h>
 #include <stdint.h>
 

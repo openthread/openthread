@@ -81,6 +81,8 @@ CPPFLAGS                       += \
 
 CFLAGS                         += \
     $(COMMONCFLAGS)               \
+    -D_BSD_SOURCE=1               \
+    -D_DEFAULT_SOURCE=1           \
     $(target_CFLAGS)              \
     $(NULL)
 

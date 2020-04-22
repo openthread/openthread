@@ -28,12 +28,13 @@
 
 #include "common/code_utils.hpp"
 #include "thread/link_quality.hpp"
-#include "utils/wrap_string.h"
 
 #include "test_platform.h"
 #include "test_util.h"
 
 namespace ot {
+
+static ot::Instance *sInstance;
 
 enum
 {
@@ -90,6 +91,10 @@ void TestLinkQualityData(RssTestData aRssData)
     int8_t          rss, ave, min, max;
     size_t          i;
 
+    sInstance = testInitInstance();
+    VerifyOrQuit(sInstance != NULL, "Null instance");
+    linkInfo.Init(*sInstance);
+
     printf("- - - - - - - - - - - - - - - - - -\n");
     linkInfo.Clear();
     min = kMinRssValue;
@@ -100,7 +105,7 @@ void TestLinkQualityData(RssTestData aRssData)
         rss = aRssData.mRssList[i];
         min = MIN_RSS(rss, min);
         max = MAX_RSS(rss, max);
-        linkInfo.AddRss(sNoiseFloor, rss);
+        linkInfo.AddRss(rss);
         VerifyOrQuit(linkInfo.GetLastRss() == rss, "TestLinkQualityInfo failed - GetLastRss() is incorrect");
         ave = linkInfo.GetAverageRss();
         VerifyOrQuit(ave >= min, "TestLinkQualityInfo failed - GetAverageRss() is smaller than min value.");
@@ -486,7 +491,6 @@ void TestSuccessRateTracker(void)
 
 } // namespace ot
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     ot::TestRssAveraging();
@@ -495,4 +499,3 @@ int main(void)
     printf("\nAll tests passed\n");
     return 0;
 }
-#endif

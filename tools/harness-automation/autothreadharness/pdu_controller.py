@@ -44,6 +44,7 @@ logger = logging.getLogger(__name__)
 
 
 class PduController(object):
+
     def open(self, **params):
         """Open PDU controller connection"""
         raise NotImplementedError
@@ -71,6 +72,7 @@ class DummyPduController(PduController):
 
 
 class ApcPduController(PduController):
+
     def __init__(self):
         self.tn = None
 
@@ -168,6 +170,7 @@ class ApcPduController(PduController):
 
 
 class NordicBoardPduController(PduController):
+
     def open(self, **params):
         pass
 
@@ -178,7 +181,8 @@ class NordicBoardPduController(PduController):
         boards_serial_numbers = params['boards_serial_numbers']
 
         for serial_number in boards_serial_numbers:
-            logger.info('Resetting board with the serial number: %s', serial_number)
+            logger.info('Resetting board with the serial number: %s',
+                        serial_number)
             self._pin_reset(serial_number)
 
     def close(self):
@@ -186,10 +190,12 @@ class NordicBoardPduController(PduController):
 
 
 class IpPowerSocketPduController(PduController):
+
     def open(self, **params):
         self._base_url = 'http://{}/outs.cgi?out'.format(params['ip'])
         password_manager = HTTPPasswordMgrWithDefaultRealm()
-        password_manager.add_password(None, self._base_url, params['user'], params['pass'])
+        password_manager.add_password(None, self._base_url, params['user'],
+                                      params['pass'])
         authentication_handler = HTTPBasicAuthHandler(password_manager)
         self._opener = build_opener(authentication_handler)
 
@@ -216,6 +222,7 @@ class IpPowerSocketPduController(PduController):
 
 
 class ManualPduController(PduController):
+
     def open(self, **kwargs):
         pass
 

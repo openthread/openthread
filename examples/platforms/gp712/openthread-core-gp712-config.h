@@ -42,4 +42,15 @@
  */
 #define OPENTHREAD_CONFIG_PLATFORM_INFO "GP712"
 
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_INFO
+ *
+ * Define to 1 to enable otPlatFlash* APIs to support non-volatile storage.
+ *
+ * When defined to 1, the platform MUST implement the otPlatFlash* APIs
+ * instead of the otPlatSettings*
+ *
+ */
+#define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 1
+
 #endif // OPENTHREAD_CORE_GP712_CONFIG_H_

@@ -1,7 +1,7 @@
 
 VERSION=0.1
 
-all: arm32v7_linux x86_linux sim
+all: arm32v7_linux x86_linux simulation
 
 arm32v7_linux: arm32v7_ubuntu_wpantund
 	docker build -t openthread/wpantund_arm32v7_linux arm32v7_ubuntu_wpantund && \
@@ -15,11 +15,11 @@ x86_linux: x86_ubuntu_wpantund
 	docker tag openthread/wpantund_amd64_linux openthread/wpantund_amd64_linux:$(VERSION) && \
 	docker push openthread/wpantund_amd64_linux:$(VERSION)
 
-sim: ot_sim
-	docker build -t openthread/sim ot_sim && \
-	docker push openthread/sim && \
-	docker tag openthread/sim openthread/sim:$(VERSION) && \
-	docker push openthread/sim:$(VERSION)
+simulation: ot_simulation
+	docker build -t openthread/simulation ot_sim && \
+	docker push openthread/simulation && \
+	docker tag openthread/simulation openthread/simulation:$(VERSION) && \
+	docker push openthread/simulation:$(VERSION)
 
 publish_manifest:
 	docker manifest create openthread/wpantund openthread/wpantund_arm32v7_linux openthread/wpantund_amd64_linux

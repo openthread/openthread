@@ -46,7 +46,7 @@ otError otServerGetNetDataLocal(otInstance *aInstance, bool aStable, uint8_t *aD
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aData != NULL && aDataLength != NULL);
+    OT_ASSERT(aData != NULL && aDataLength != NULL);
 
     return instance.Get<NetworkData::Local>().GetNetworkData(aStable, aData, *aDataLength);
 }
@@ -84,24 +84,13 @@ exit:
     return error;
 }
 
-otError otServerGetNextLeaderService(otInstance *aInstance, otNetworkDataIterator *aIterator, otServiceConfig *aConfig)
-{
-    otError   error    = OT_ERROR_NONE;
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    VerifyOrExit(aIterator && aConfig, error = OT_ERROR_INVALID_ARGS);
-
-    error = instance.Get<NetworkData::Leader>().GetNextService(*aIterator, *aConfig);
-
-exit:
-    return error;
-}
-
 otError otServerRegister(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<NetworkData::Local>().SendServerDataNotification();
+    instance.Get<NetworkData::Notifier>().HandleServerDataUpdated();
+
+    return OT_ERROR_NONE;
 }
 
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE

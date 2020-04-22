@@ -33,8 +33,6 @@
 
 #include "mac_filter.hpp"
 
-#include "utils/wrap_string.h"
-
 #include "common/code_utils.hpp"
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
@@ -77,7 +75,7 @@ Filter::FilterEntry *Filter::FindAvailableEntry(void)
 
     for (entry = &mFilterEntries[0]; entry < OT_ARRAY_END(mFilterEntries); entry++)
     {
-        VerifyOrExit(entry->IsInUse());
+        VerifyOrExit(entry->IsInUse(), OT_NOOP);
     }
 
     entry = NULL;
@@ -234,7 +232,7 @@ otError Filter::GetNextRssIn(Iterator &aIterator, Entry &aEntry)
     // Return the default RssIn at the end of list
     if ((aIterator == OT_ARRAY_LENGTH(mFilterEntries)) && (mDefaultRssIn != kFixedRssDisabled))
     {
-        memset(&aEntry.mExtAddress, 0xff, OT_EXT_ADDRESS_SIZE);
+        static_cast<ExtAddress &>(aEntry.mExtAddress).Fill(0xff);
         aEntry.mRssIn = mDefaultRssIn;
         error         = OT_ERROR_NONE;
         aIterator++;

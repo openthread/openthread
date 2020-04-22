@@ -46,6 +46,31 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_MAX_SNOOP_ENTRIES
+ *
+ * The maximum number of EID-to-RLOC cache entries that can be used for "snoop optimization" where an entry is created
+ * by inspecting a received message.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_MAX_SNOOP_ENTRIES
+#define OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_MAX_SNOOP_ENTRIES 2
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_TMF_SNOOP_CACHE_ENTRY_TIMEOUT
+ *
+ * The timeout value (in seconds) blocking eviction of an address cache entry created through snoop optimization (i.e.,
+ * inspection of a received message). After the timeout expires the entry can be reclaimed again. This timeout allows
+ * a longer response delay for a received message giving more chance that a snooped entry will be used (avoiding
+ * sending Address Query when a response message is sent to same destination from which the message was received
+ * earlier).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TMF_SNOOP_CACHE_ENTRY_TIMEOUT
+#define OPENTHREAD_CONFIG_TMF_SNOOP_CACHE_ENTRY_TIMEOUT 3
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_TIMEOUT
  *
  * The timeout value (in seconds) waiting for a address notification response after sending an address query.

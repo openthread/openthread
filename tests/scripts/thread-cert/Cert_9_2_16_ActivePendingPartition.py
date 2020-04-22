@@ -45,6 +45,7 @@ ROUTER2 = 4
 
 
 class Cert_9_2_16_ActivePendingPartition(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -52,17 +53,17 @@ class Cert_9_2_16_ActivePendingPartition(unittest.TestCase):
         for i in range(1, 5):
             self.nodes[i] = node.Node(i, simulator=self.simulator)
 
-        self.nodes[COMMISSIONER].set_active_dataset(
-            1, channel=CHANNEL_INIT, panid=PANID_INIT
-        )
+        self.nodes[COMMISSIONER].set_active_dataset(1,
+                                                    channel=CHANNEL_INIT,
+                                                    panid=PANID_INIT)
         self.nodes[COMMISSIONER].set_mode('rsdn')
         self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[COMMISSIONER].enable_whitelist()
         self.nodes[COMMISSIONER].set_router_selection_jitter(1)
 
-        self.nodes[LEADER].set_active_dataset(
-            1, channel=CHANNEL_INIT, panid=PANID_INIT
-        )
+        self.nodes[LEADER].set_active_dataset(1,
+                                              channel=CHANNEL_INIT,
+                                              panid=PANID_INIT)
         self.nodes[LEADER].set_mode('rsdn')
         self.nodes[LEADER].set_partition_id(0xffffffff)
         self.nodes[LEADER].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
@@ -70,18 +71,18 @@ class Cert_9_2_16_ActivePendingPartition(unittest.TestCase):
         self.nodes[LEADER].enable_whitelist()
         self.nodes[LEADER].set_router_selection_jitter(1)
 
-        self.nodes[ROUTER1].set_active_dataset(
-            1, channel=CHANNEL_INIT, panid=PANID_INIT
-        )
+        self.nodes[ROUTER1].set_active_dataset(1,
+                                               channel=CHANNEL_INIT,
+                                               panid=PANID_INIT)
         self.nodes[ROUTER1].set_mode('rsdn')
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[ROUTER2].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
         self.nodes[ROUTER1].set_router_selection_jitter(1)
 
-        self.nodes[ROUTER2].set_active_dataset(
-            1, channel=CHANNEL_INIT, panid=PANID_INIT
-        )
+        self.nodes[ROUTER2].set_active_dataset(1,
+                                               channel=CHANNEL_INIT,
+                                               panid=PANID_INIT)
         self.nodes[ROUTER2].set_mode('rsdn')
         self._setUpRouter2()
 
@@ -135,27 +136,22 @@ class Cert_9_2_16_ActivePendingPartition(unittest.TestCase):
         )
         self.simulator.go(5)
 
-        self.nodes[COMMISSIONER].send_mgmt_active_set(
-            active_timestamp=15, network_name='threadCert'
-        )
+        self.nodes[COMMISSIONER].send_mgmt_active_set(active_timestamp=15,
+                                                      network_name='threadCert')
         self.simulator.go(100)
 
         self.nodes[ROUTER2].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
-        self.assertEqual(
-            self.nodes[COMMISSIONER].get_network_name(), NETWORK_NAME_FINAL
-        )
-        self.assertEqual(
-            self.nodes[LEADER].get_network_name(), NETWORK_NAME_FINAL
-        )
-        self.assertEqual(
-            self.nodes[ROUTER1].get_network_name(), NETWORK_NAME_FINAL
-        )
-        self.assertEqual(
-            self.nodes[ROUTER2].get_network_name(), NETWORK_NAME_FINAL
-        )
+        self.assertEqual(self.nodes[COMMISSIONER].get_network_name(),
+                         NETWORK_NAME_FINAL)
+        self.assertEqual(self.nodes[LEADER].get_network_name(),
+                         NETWORK_NAME_FINAL)
+        self.assertEqual(self.nodes[ROUTER1].get_network_name(),
+                         NETWORK_NAME_FINAL)
+        self.assertEqual(self.nodes[ROUTER2].get_network_name(),
+                         NETWORK_NAME_FINAL)
 
         self.simulator.go(100)
 

@@ -27,32 +27,108 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set -e -x -o pipefail
+#
+# The script to check or format source code of OpenThread.
+#
+# Format python and c/c++:
+#
+#     script/make-pretty
+#
+# Format python only:
+#
+#     script/make-pretty python
+#
+# Format c/c++ only:
+#
+#     script/make-pretty clang
+#
+# Check only:
+#
+#     script/make-pretty check clang
+#     script/make-pretty check python
+#
 
-readonly TMP_DIR="/tmp/ot-make-pretty-$(date +%Y%m%d%H%M%S)"
-readonly SRC_DIR="$PWD"
+set -euo pipefail
 
-at_exit()
+readonly OT_CLANG_DIRS=(examples include src tests tools)
+readonly OT_PYTHON_DIRS=(tests tools)
+readonly OT_BUILD_JOBS=$(getconf _NPROCESSORS_ONLN)
+readonly OT_CLANG_SOURCES=('*.c' '*.cc' '*.cpp' '*.h' '*.hpp')
+
+do_clang_format()
 {
-    EXIT_CODE=$?
+    echo -e '====================='
+    echo -e '     format c/c++'
+    echo -e '====================='
 
-    [[ ! -d "${TMP_DIR}" ]] || rm -rf "${TMP_DIR}"
-    exit $EXIT_CODE
+    git ls-files "${OT_CLANG_SOURCES[@]}" | grep -E "^($(echo "${OT_CLANG_DIRS[@]}" | tr ' ' '|'))" \
+        | xargs -n3 -P"${OT_BUILD_JOBS}" script/clang-format -style=file -i -verbose
 }
 
-make_pretty()
+do_clang_check()
 {
-    ./bootstrap
-    mkdir "${TMP_DIR}"
-    cd "${TMP_DIR}"
-    "${SRC_DIR}/configure"
-    make pretty
+    echo -e '====================='
+    echo -e '     check c/c++'
+    echo -e '====================='
+
+    git ls-files "${OT_CLANG_SOURCES[@]}" | grep -E "^($(echo "${OT_CLANG_DIRS[@]}" | tr ' ' '|'))" \
+        | xargs -n3 -P"${OT_BUILD_JOBS}" script/clang-format-check
+}
+
+do_python_format()
+{
+    echo -e '======================'
+    echo -e '     format python'
+    echo -e '======================'
+
+    git ls-files '*.py' | grep -E "^($(echo "${OT_PYTHON_DIRS[@]}" | tr ' ' '|'))" \
+        | xargs -n10 -P"${OT_BUILD_JOBS}" python3 -m yapf --verbose --style google -ipr
+}
+
+do_python_check()
+{
+    echo -e '====================='
+    echo -e '     check python'
+    echo -e '====================='
+
+    git ls-files '*.py' | grep -E "^($(echo "${OT_PYTHON_DIRS[@]}" | tr ' ' '|'))" \
+        | xargs -n10 -P"${OT_BUILD_JOBS}" python3 -m yapf --verbose --style google -dpr
+}
+
+do_check()
+{
+    if [ $# == 0 ]; then
+        do_python_check
+        do_clang_check
+    elif [ "$1" == 'clang' ]; then
+        do_clang_check
+    elif [ "$1" == 'python' ]; then
+        do_python_check
+    else
+        >&2 echo "Unsupported check: $1. Supported: clang, python"
+        # 128 for Invalid arguments
+        exit 128
+    fi
 }
 
 main()
 {
-    trap at_exit INT TERM EXIT
-    make_pretty
+    if [ $# == 0 ]; then
+        do_clang_format
+        do_python_format
+    elif [ "$1" == 'python' ]; then
+        do_python_format
+    elif [ "$1" == 'clang' ]; then
+        do_clang_format
+    elif [ "$1" == 'check' ]; then
+        shift
+        do_check "$@"
+    else
+        >&2 echo "Unsupported action: $1. Supported: clang, python"
+        # 128 for Invalid arguments
+        exit 128
+    fi
+
 }
 
 main "$@"

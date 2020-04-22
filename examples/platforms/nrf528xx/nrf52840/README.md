@@ -109,7 +109,7 @@ Config:NCP:SocketPath "system:/usr/bin/spi-hdlc-adapter --gpio-int /sys/class/gp
 
 In this example, [spi-hdlc-adapter][spi-hdlc-adapter] is a tool that you can use to communicate between NCP and wpantund over SPI. For this example, `spi-hdlc-adapter` is installed in `/usr/bin`.
 
-The default SPI Slave pin configuration for nRF52840 is defined in `examples/platforms/nrf52840/platform-config.h`.
+The default SPI Slave pin configuration for nRF52840 is defined in `examples/platforms/nrf52840/transport-config.h`.
 
 Note that the native SPI Slave support is not intended to be used with Engineering sample A of the nRF52840 chip due to
 single transfer size limitation.
@@ -144,7 +144,7 @@ When building an external application with OpenThread libraries and CryptoCell 3
   - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_tls_vanilla.a`
   - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_x509_vanilla.a`
   - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_base_vanilla.a`
-  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libnrf_cc310_platform_0.9.1.a`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libnrf_cc310_platform_0.9.2.a`
 - Include directories:
   - `third_party/NordicSemiconductor/libraries/nrf_security/mbedtls_platform_config`
   - `third_party/NordicSemiconductor/libraries/nrf_security/include`
@@ -209,7 +209,7 @@ When building an external application that uses RTOS with OpenThread libraries a
   - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_tls_vanilla.a`
   - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_x509_vanilla.a`
   - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_base_vanilla.a`
-  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libnrf_cc310_platform_0.9.1.a`
+  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libnrf_cc310_platform_0.9.2.a`
 - Include directories:
   - `third_party/NordicSemiconductor/libraries/nrf_security/mbedtls_platform_config`
   - `third_party/NordicSemiconductor/libraries/nrf_security/include`

@@ -61,17 +61,17 @@ public:
     /**
      * This method interprets a list of CLI arguments.
      *
-     * @param[in]  argc  The number of elements in argv.
-     * @param[in]  argv  A pointer to an array of command line arguments.
+     * @param[in]  aArgsLength  The number of elements in @p aArgs.
+     * @param[in]  aArgs        An array of command line arguments.
      *
      */
-    otError Process(int argc, char *argv[]);
+    otError Process(uint8_t aArgsLength, char *aArgs[]);
 
 private:
     struct Command
     {
         const char *mName;
-        otError (UdpExample::*mCommand)(int argc, char *argv[]);
+        otError (UdpExample::*mCommand)(uint8_t aArgsLength, char *aArgs[]);
     };
 
     enum PayloadType
@@ -81,12 +81,12 @@ private:
         kTypeHexString = 2,
     };
 
-    otError ProcessHelp(int argc, char *argv[]);
-    otError ProcessBind(int argc, char *argv[]);
-    otError ProcessClose(int argc, char *argv[]);
-    otError ProcessConnect(int argc, char *argv[]);
-    otError ProcessOpen(int argc, char *argv[]);
-    otError ProcessSend(int argc, char *argv[]);
+    otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessBind(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessClose(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessConnect(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessOpen(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessSend(uint8_t aArgsLength, char *aArgs[]);
     otError WriteCharToBuffer(otMessage *aMessage, uint16_t aSize);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);

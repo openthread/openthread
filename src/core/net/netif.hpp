@@ -36,6 +36,7 @@
 
 #include "openthread-core-config.h"
 
+#include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/tasklet.hpp"
@@ -62,11 +63,17 @@ class Ip6;
  * This class implements an IPv6 network interface unicast address.
  *
  */
-class NetifUnicastAddress : public otNetifAddress
+class NetifUnicastAddress : public otNetifAddress, public LinkedListEntry<NetifUnicastAddress>
 {
     friend class Netif;
 
 public:
+    /**
+     * This method clears the object (setting all fields to zero).
+     *
+     */
+    void Clear(void) { memset(this, 0, sizeof(*this)); }
+
     /**
      * This method returns the unicast address.
      *
@@ -94,32 +101,28 @@ public:
         return mScopeOverrideValid ? static_cast<uint8_t>(mScopeOverride) : GetAddress().GetScope();
     }
 
-    /**
-     * This method returns the next unicast address assigned to the interface.
-     *
-     * @returns A pointer to the next unicast address.
-     *
-     */
-    const NetifUnicastAddress *GetNext(void) const { return static_cast<const NetifUnicastAddress *>(mNext); }
-
-    /**
-     * This method returns the next unicast address assigned to the interface.
-     *
-     * @returns A pointer to the next unicast address.
-     *
-     */
-    NetifUnicastAddress *GetNext(void) { return static_cast<NetifUnicastAddress *>(mNext); }
+private:
+    // In an unused/available entry (i.e., entry not present in a linked
+    // list), the next pointer is set to point back to the entry itself.
+    bool IsInUse(void) const { return GetNext() != this; }
+    void MarkAsNotInUse(void) { SetNext(this); }
 };
 
 /**
  * This class implements an IPv6 network interface multicast address.
  *
  */
-class NetifMulticastAddress : public otNetifMulticastAddress
+class NetifMulticastAddress : public otNetifMulticastAddress, public LinkedListEntry<NetifMulticastAddress>
 {
     friend class Netif;
 
 public:
+    /**
+     * This method clears the object (setting all fields to zero).
+     *
+     */
+    void Clear(void) { memset(this, 0, sizeof(*this)); }
+
     /**
      * This method returns the multicast address.
      *
@@ -154,15 +157,22 @@ public:
     {
         return static_cast<NetifMulticastAddress *>(const_cast<otNetifMulticastAddress *>(mNext));
     }
+
+private:
+    // In an unused/available entry (i.e., entry not present in a linked
+    // list), the next pointer is set to point back to the entry itself.
+    bool IsInUse(void) const { return GetNext() != this; }
+    void MarkAsNotInUse(void) { mNext = this; }
 };
 
 /**
  * This class implements an IPv6 network interface.
  *
  */
-class Netif : public InstanceLocator
+class Netif : public InstanceLocator, public LinkedListEntry<Netif>
 {
     friend class Ip6;
+    friend class Address;
 
 public:
     /**
@@ -172,13 +182,6 @@ public:
      *
      */
     Netif(Instance &aInstance);
-
-    /**
-     * This method returns the next network interface in the list.
-     *
-     * @returns A pointer to the next network interface.
-     */
-    Netif *GetNext(void) const { return mNext; }
 
     /**
      * This method registers a callback to notify internal IPv6 address changes.
@@ -195,7 +198,7 @@ public:
      * @returns A pointer to the list of unicast addresses.
      *
      */
-    const NetifUnicastAddress *GetUnicastAddresses(void) const { return mUnicastAddresses; }
+    const NetifUnicastAddress *GetUnicastAddresses(void) const { return mUnicastAddresses.GetHead(); }
 
     /**
      * This method adds a unicast address to the network interface.
@@ -272,9 +275,11 @@ public:
     bool IsMulticastSubscribed(const Address &aAddress) const;
 
     /**
-     * This method subscribes the network interface to the link-local and realm-local all routers address.
+     * This method subscribes the network interface to the link-local and realm-local all routers addresses.
      *
-     * @retval OT_ERROR_NONE     Successfully subscribed to the link-local and realm-local all routers address
+     * @note This method MUST be called after `SubscribeAllNodesMulticast()` or its behavior is undefined.
+     *
+     * @retval OT_ERROR_NONE     Successfully subscribed to the link-local and realm-local all routers addresses.
      * @retval OT_ERROR_ALREADY  The multicast addresses are already subscribed.
      *
      */
@@ -295,7 +300,7 @@ public:
      * @returns A pointer to the list of multicast addresses.
      *
      */
-    const NetifMulticastAddress *GetMulticastAddresses(void) const { return mMulticastAddresses; }
+    const NetifMulticastAddress *GetMulticastAddresses(void) const { return mMulticastAddresses.GetHead(); }
 
     /**
      * This method subscribes the network interface to a multicast address.
@@ -341,7 +346,6 @@ public:
      * @retval OT_ERROR_NONE           Successfully subscribed to @p aAddress.
      * @retval OT_ERROR_ALREADY        The multicast address is already subscribed.
      * @retval OT_ERROR_INVALID_ARGS   The address indicated by @p aAddress is an internal multicast address.
-     * @retval OT_ERROR_INVALID_STATE  The Network Interface is not up.
      * @retval OT_ERROR_NO_BUFS        The maximum number of allowed external multicast addresses are already added.
      *
      */
@@ -383,18 +387,26 @@ public:
 
 protected:
     /**
-     * This method subscribes the network interface to the realm-local all MPL forwarders, link-local and
-     * realm-local all nodes address.
+     * This method subscribes the network interface to the realm-local all MPL forwarders, link-local, and realm-local
+     * all nodes address.
+     *
+     * @retval OT_ERROR_NONE     Successfully subscribed to all addresses.
+     * @retval OT_ERROR_ALREADY  The multicast addresses are already subscribed.
      *
      */
-    void SubscribeAllNodesMulticast(void);
+    otError SubscribeAllNodesMulticast(void);
 
     /**
      * This method unsubscribes the network interface from the realm-local all MPL forwarders, link-local and
      * realm-local all nodes address.
      *
+     * @note This method MUST be called after `UnsubscribeAllRoutersMulticast()` or its behavior is undefined
+     *
+     * @retval OT_ERROR_NONE          Successfully unsubscribed from all addresses.
+     * @retval OT_ERROR_NOT_FOUND     The multicast addresses were not found.
+     *
      */
-    void UnsubscribeAllNodesMulticast(void);
+    otError UnsubscribeAllNodesMulticast(void);
 
 private:
     enum
@@ -402,10 +414,9 @@ private:
         kMulticastPrefixLength = 128, ///< Multicast prefix length used to notify internal address changes.
     };
 
-    NetifUnicastAddress *  mUnicastAddresses;
-    NetifMulticastAddress *mMulticastAddresses;
-    bool                   mMulticastPromiscuous;
-    Netif *                mNext;
+    LinkedList<NetifUnicastAddress>   mUnicastAddresses;
+    LinkedList<NetifMulticastAddress> mMulticastAddresses;
+    bool                              mMulticastPromiscuous;
 
     otIp6AddressCallback mAddressCallback;
     void *               mAddressCallbackContext;

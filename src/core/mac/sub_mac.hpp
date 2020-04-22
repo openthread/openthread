@@ -311,6 +311,14 @@ public:
     otError Send(void);
 
     /**
+     * This method gets the number of transmit retries of last transmit packet.
+     *
+     * @returns Number of transmit retries.
+     *
+     */
+    uint8_t GetTransmitRetries(void) const { return mTransmitRetries; }
+
+    /**
      * This method gets the most recent RSSI measurement.
      *
      * @returns The RSSI in dBm when it is valid. `kInvalidRssiValue` when RSSI is invalid.
@@ -330,6 +338,14 @@ public:
      *
      */
     otError EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration);
+
+    /**
+     * This method returns the noise floor value (currently use the radio receive sensitivity value).
+     *
+     * @returns The noise floor value in dBm.
+     *
+     */
+    int8_t GetNoiseFloor(void);
 
 private:
     enum

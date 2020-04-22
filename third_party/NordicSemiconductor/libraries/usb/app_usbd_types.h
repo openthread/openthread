@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2019, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -75,16 +75,17 @@ extern "C" {
  * @brief Change given decimal version values to 4 digits in BCD notation.
  *
  * USB specification uses 4 digits BCD version notation in many descriptors.
- * This macro changes 2 values to 4 BCD digits (one 16 bit value)
+ * This macro changes 3 values to 4 BCD digits (one 16 bit value)
  * that describes version in USB standard.
  *
  * @param[in] major Major version.
  * @param[in] minor Minor version.
+ * @param[in] sub   Sub-minor version.
  *
  * @return Calculated 16 bit value with BCD representation of the version.
  */
-#define APP_USBD_BCD_VER_MAKE(major, minor) \
-    ((APP_USBD_BCD_2_MAKE(major) << 8) | APP_USBD_BCD_2_MAKE(minor))
+#define APP_USBD_BCD_VER_MAKE(major, minor, sub) \
+    ((APP_USBD_BCD_2_MAKE(major) << 8) | (minor) << 4 | (sub))
 
 /**
  * @brief Combine endpoint address and its interval.

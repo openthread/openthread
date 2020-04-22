@@ -39,7 +39,7 @@
 
 #include <openthread/error.h>
 
-#include "spinel.h"
+#include "lib/spinel/spinel.h"
 
 namespace ot {
 namespace Ncp {

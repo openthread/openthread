@@ -44,7 +44,10 @@
 #include <openthread/platform/logging.h>
 
 #include "common/random_manager.hpp"
+#include "common/tasklet.hpp"
+#include "common/timer.hpp"
 #include "diags/factory_diags.hpp"
+#include "radio/radio.hpp"
 
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 #include "common/message.hpp"
@@ -70,11 +73,23 @@
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 #include "utils/channel_monitor.hpp"
 #endif
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+#include "backbone_router/leader.hpp"
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#include "backbone_router/local.hpp"
+#endif
+
+#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
 #include "common/extension.hpp"
 #endif
-
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+#include "utils/otns.hpp"
+#endif
 /**
  * @addtogroup core-instance
  *
@@ -165,7 +180,7 @@ public:
      *
      */
     otLogLevel GetLogLevel(void) const
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
     {
         return mLogLevel;
     }
@@ -175,14 +190,18 @@ public:
     }
 #endif
 
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
     /**
      * This method sets the log level.
      *
      * @param[in] aLogLevel  A log level.
      *
      */
-    void SetLogLevel(otLogLevel aLogLevel) { mLogLevel = aLogLevel; }
+    void SetLogLevel(otLogLevel aLogLevel)
+    {
+        OT_ASSERT(aLogLevel <= OT_LOG_LEVEL_DEBG && aLogLevel >= OT_LOG_LEVEL_NONE);
+        mLogLevel = aLogLevel;
+    }
 #endif
 
     /**
@@ -211,55 +230,17 @@ public:
      */
     otError ErasePersistentInfo(void);
 
-    /**
-     * This method registers the active scan callback.
-     *
-     * Subsequent calls to this method will overwrite the previous callback handler.
-     *
-     * @param[in]  aCallback   A pointer to the callback function pointer.
-     * @param[in]  aContext    A pointer to application-specific context.
-     *
-     */
-    void RegisterActiveScanCallback(otHandleActiveScanResult aCallback, void *aContext);
-
-    /**
-     * This method invokes the previously registered active scan callback with a given scan result.
-     *
-     * @param[in]  aResult     A pointer to active scan result.
-     *
-     */
-    void InvokeActiveScanCallback(otActiveScanResult *aResult) const;
-
-    /**
-     * This method registers the energy scan callback.
-     *
-     * Subsequent calls to this method will overwrite the previous callback handler.
-     *
-     * @param[in]  aCallback   A pointer to the callback function pointer.
-     * @param[in]  aContext    A pointer to application-specific context.
-     *
-     */
-    void RegisterEnergyScanCallback(otHandleEnergyScanResult aCallback, void *aContext);
-
-    /**
-     * This method invokes the previously registered energy scan callback with a given result.
-     *
-     * @param[in]  aResult     A pointer to energy scan result.
-     *
-     */
-    void InvokeEnergyScanCallback(otEnergyScanResult *aResult) const;
-
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     void HeapFree(void *aPointer)
     {
-        assert(mFree != NULL);
+        OT_ASSERT(mFree != NULL);
 
         mFree(aPointer);
     }
 
     void *HeapCAlloc(size_t aCount, size_t aSize)
     {
-        assert(mCAlloc != NULL);
+        OT_ASSERT(mCAlloc != NULL);
 
         return mCAlloc(aCount, aSize);
     }
@@ -358,14 +339,10 @@ private:
     // Notifier, Settings, and MessagePool are initialized  before
     // other member variables since other classes/objects from their
     // constructor may use them.
-    Notifier    mNotifier;
-    Settings    mSettings;
-    MessagePool mMessagePool;
-
-    otHandleActiveScanResult mActiveScanCallback;
-    void *                   mActiveScanCallbackContext;
-    otHandleEnergyScanResult mEnergyScanCallback;
-    void *                   mEnergyScanCallbackContext;
+    Notifier       mNotifier;
+    Settings       mSettings;
+    SettingsDriver mSettingsDriver;
+    MessagePool    mMessagePool;
 
     Ip6::Ip6    mIp6;
     ThreadNetif mThreadNetif;
@@ -390,12 +367,16 @@ private:
     AnnounceSender mAnnounceSender;
 #endif
 
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+    Utils::Otns mOtns;
+#endif
+
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     Mac::LinkRaw mLinkRaw;
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
     otLogLevel mLogLevel;
 #endif
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
@@ -430,6 +411,11 @@ template <> inline Settings &Instance::Get(void)
     return mSettings;
 }
 
+template <> inline SettingsDriver &Instance::Get(void)
+{
+    return mSettingsDriver;
+}
+
 template <> inline MeshForwarder &Instance::Get(void)
 {
     return mThreadNetif.mMeshForwarder;
@@ -445,6 +431,7 @@ template <> inline Mle::MleRouter &Instance::Get(void)
     return mThreadNetif.mMleRouter;
 }
 
+#if OPENTHREAD_FTD
 template <> inline ChildTable &Instance::Get(void)
 {
     return mThreadNetif.mMleRouter.mChildTable;
@@ -454,6 +441,7 @@ template <> inline RouterTable &Instance::Get(void)
 {
     return mThreadNetif.mMleRouter.mRouterTable;
 }
+#endif
 
 template <> inline Ip6::Netif &Instance::Get(void)
 {
@@ -566,6 +554,13 @@ template <> inline NetworkData::Leader &Instance::Get(void)
 {
     return mThreadNetif.mNetworkDataLeader;
 }
+
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+template <> inline NetworkData::Notifier &Instance::Get(void)
+{
+    return mThreadNetif.mNetworkDataNotifier;
+}
+#endif
 
 template <> inline Ip6::Udp &Instance::Get(void)
 {
@@ -716,6 +711,27 @@ template <> inline MessagePool &Instance::Get(void)
 {
     return mMessagePool;
 }
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+template <> inline BackboneRouter::Leader &Instance::Get(void)
+{
+    return mThreadNetif.mBackboneRouterLeader;
+}
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+template <> inline BackboneRouter::Local &Instance::Get(void)
+{
+    return mThreadNetif.mBackboneRouterLocal;
+}
+#endif
+#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+template <> inline Utils::Otns &Instance::Get(void)
+{
+    return mOtns;
+}
+#endif
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 

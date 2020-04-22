@@ -43,6 +43,7 @@
 #include <openthread/platform/alarm-milli.h>
 
 #include "common/debug.hpp"
+#include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"
 #include "common/time.hpp"
@@ -65,9 +66,10 @@ class TimerMilliScheduler;
  * This class implements a timer.
  *
  */
-class Timer : public InstanceLocator, public OwnerLocator
+class Timer : public InstanceLocator, public OwnerLocator, public LinkedListEntry<Timer>
 {
     friend class TimerScheduler;
+    friend class LinkedListEntry<Timer>;
 
 public:
     /**
@@ -273,7 +275,7 @@ protected:
      */
     explicit TimerScheduler(Instance &aInstance)
         : InstanceLocator(aInstance)
-        , mHead(NULL)
+        , mTimerList()
     {
     }
 
@@ -311,7 +313,7 @@ protected:
      */
     void SetAlarm(const AlarmApi &aAlarmApi);
 
-    Timer *mHead;
+    LinkedList<Timer> mTimerList;
 };
 
 /**

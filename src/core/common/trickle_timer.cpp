@@ -61,7 +61,7 @@ TrickleTimer::TrickleTimer(Instance &aInstance,
     , mIsRunning(false)
     , mInTransmitPhase(false)
 {
-    assert(aTransmitHandler != NULL);
+    OT_ASSERT(aTransmitHandler != NULL);
 }
 
 otError TrickleTimer::Start(uint32_t aIntervalMin, uint32_t aIntervalMax, Mode aMode)
@@ -95,7 +95,7 @@ void TrickleTimer::IndicateInconsistent(void)
 {
     // If interval is equal to minimum when an "inconsistent" event
     // is received, do nothing.
-    VerifyOrExit(mIsRunning && (mInterval != mIntervalMin));
+    VerifyOrExit(mIsRunning && (mInterval != mIntervalMin), OT_NOOP);
 
     mInterval = mIntervalMin;
     StartNewInterval();

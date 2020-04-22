@@ -30,6 +30,10 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES = libopenthread-kw41z.a
 
+# Do not enable -Wundef for this platform
+override CFLAGS                              := $(filter-out -Wundef,$(CFLAGS))
+override CXXFLAGS                            := $(filter-out -Wundef,$(CXXFLAGS))
+
 libopenthread_kw41z_a_CPPFLAGS                                                                     = \
     -DCPU_MKW41Z512VHT4                                                                              \
     -I$(top_srcdir)/include                                                                          \
@@ -92,10 +96,6 @@ libopenthread_kw41z_a_SOURCES                                                   
     $(NULL)
 
 libopenthread_kw41z_a_SOURCES                                                                     += \
-    $(PLATFORM_SOURCES)                                                                              \
-    $(NULL)
-
-PRETTY_FILES                                                                                       = \
     $(PLATFORM_SOURCES)                                                                              \
     $(NULL)
 

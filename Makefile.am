@@ -37,7 +37,7 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-mtd                      \
     --enable-ncp                      \
     --enable-radio-only               \
-    --with-examples=posix             \
+    --with-examples=simulation        \
     $(NULL)
 
 SUBDIRS                             = \
@@ -69,14 +69,6 @@ dist_doc_DATA                       = \
 
 DISTCLEANFILES                      = \
     .local-version                    \
-    $(NULL)
-
-PRETTY_SUBDIRS                      = \
-    examples                          \
-    include                           \
-    src                               \
-    tests                             \
-    tools                             \
     $(NULL)
 
 # Ignore the pseudo flash files on Posix platform during diskcheck

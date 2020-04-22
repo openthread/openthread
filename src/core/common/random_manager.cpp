@@ -35,7 +35,7 @@
 
 #include <openthread/platform/entropy.h>
 
-#ifndef OPENTHREAD_RADIO
+#if !OPENTHREAD_RADIO
 #include <mbedtls/entropy_poll.h>
 #endif
 
@@ -49,7 +49,7 @@ namespace ot {
 uint16_t                     RandomManager::sInitCount = 0;
 RandomManager::NonCryptoPrng RandomManager::sPrng;
 
-#ifndef OPENTHREAD_RADIO
+#if !OPENTHREAD_RADIO
 RandomManager::Entropy       RandomManager::sEntropy;
 RandomManager::CryptoCtrDrbg RandomManager::sCtrDrbg;
 #endif
@@ -59,19 +59,21 @@ RandomManager::RandomManager(void)
     uint32_t seed;
     otError  error;
 
-    assert(sInitCount < 0xffff);
+    OT_UNUSED_VARIABLE(error);
 
-    VerifyOrExit(sInitCount == 0);
+    OT_ASSERT(sInitCount < 0xffff);
 
-#ifndef OPENTHREAD_RADIO
+    VerifyOrExit(sInitCount == 0, OT_NOOP);
+
+#if !OPENTHREAD_RADIO
     sEntropy.Init();
     sCtrDrbg.Init();
 
     error = Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&seed), sizeof(seed));
-    assert(error == OT_ERROR_NONE);
+    OT_ASSERT(error == OT_ERROR_NONE);
 #else
     error = otPlatEntropyGet(reinterpret_cast<uint8_t *>(&seed), sizeof(seed));
-    assert(error == OT_ERROR_NONE);
+    OT_ASSERT(error == OT_ERROR_NONE);
 #endif
 
     sPrng.Init(seed);
@@ -82,12 +84,12 @@ exit:
 
 RandomManager::~RandomManager(void)
 {
-    assert(sInitCount > 0);
+    OT_ASSERT(sInitCount > 0);
 
     sInitCount--;
-    VerifyOrExit(sInitCount == 0);
+    VerifyOrExit(sInitCount == 0, OT_NOOP);
 
-#ifndef OPENTHREAD_RADIO
+#if !OPENTHREAD_RADIO
     sCtrDrbg.Deinit();
     sEntropy.Deinit();
 #endif
@@ -98,7 +100,7 @@ exit:
 
 uint32_t RandomManager::NonCryptoGetUint32(void)
 {
-    assert(sInitCount > 0);
+    OT_ASSERT(sInitCount > 0);
 
     return sPrng.GetNext();
 }
@@ -141,7 +143,7 @@ uint32_t RandomManager::NonCryptoPrng::GetNext(void)
     return mlcg;
 }
 
-#ifndef OPENTHREAD_RADIO
+#if !OPENTHREAD_RADIO
 
 //-------------------------------------------------------------------
 // Entropy
@@ -173,7 +175,7 @@ int RandomManager::Entropy::HandleMbedtlsEntropyPoll(void *         aData,
     SuccessOrExit(otPlatEntropyGet(reinterpret_cast<uint8_t *>(aOutput), static_cast<uint16_t>(aInLen)));
     rval = 0;
 
-    VerifyOrExit(aOutLen != NULL);
+    VerifyOrExit(aOutLen != NULL, OT_NOOP);
     *aOutLen = aInLen;
 
 exit:
@@ -203,6 +205,6 @@ otError RandomManager::CryptoCtrDrbg::FillBuffer(uint8_t *aBuffer, uint16_t aSiz
         mbedtls_ctr_drbg_random(&mCtrDrbg, static_cast<unsigned char *>(aBuffer), static_cast<size_t>(aSize)));
 }
 
-#endif // #ifndef OPENTHREAD_RADIO
+#endif // #if !OPENTHREAD_RADIO
 
 } // namespace ot

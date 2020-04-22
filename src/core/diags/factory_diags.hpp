@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include <string.h>
+
 #include <openthread/platform/radio.h>
 
 #include "common/locator.hpp"
@@ -69,13 +71,17 @@ public:
     /**
      * This method processes a factory diagnostics command line.
      *
-     * @param[in]   aArgCount      The argument counter of diagnostics command line.
-     * @param[in]   aArgVector     The argument vector of diagnostics command line.
+     * @param[in]   aArgsLength    The number of args in @p aArgs.
+     * @param[in]   aArgs          The arguments of diagnostics command line.
      * @param[out]  aOutput        The diagnostics execution result.
      * @param[in]   aOutputMaxLen  The output buffer size.
      *
+     * @retval  OT_ERROR_INVALID_ARGS       The command is supported but invalid arguments provided.
+     * @retval  OT_ERROR_NONE               The command is successfully process.
+     * @retval  OT_ERROR_NOT_IMPLEMENTED    The command is not supported.
+     *
      */
-    void ProcessCmd(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessCmd(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
 
     /**
      * This method indicates whether or not the factory diagnostics mode is enabled.
@@ -117,11 +123,13 @@ private:
     struct Command
     {
         const char *mName;
-        void (Diags::*mCommand)(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+        otError (Diags::*mCommand)(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
     };
 
     struct Stats
     {
+        void Clear(void) { memset(this, 0, sizeof(*this)); }
+
         uint32_t mReceivedPackets;
         uint32_t mSentPackets;
         int8_t   mFirstRssi;
@@ -130,14 +138,14 @@ private:
         uint8_t  mLastLqi;
     };
 
-    void ProcessChannel(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
-    void ProcessPower(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
-    void ProcessRadio(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
-    void ProcessRepeat(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
-    void ProcessSend(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
-    void ProcessStart(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
-    void ProcessStats(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
-    void ProcessStop(int aArgCount, char *aArgVector[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessChannel(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessPower(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessRadio(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessRepeat(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessSend(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessStart(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessStats(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    otError ProcessStop(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
 
     void TransmitPacket(void);
 
@@ -147,7 +155,7 @@ private:
     static const struct Command sCommands[];
 
 #if !OPENTHREAD_RADIO
-    struct Stats mStats;
+    Stats mStats;
 
     otRadioFrame *mTxPacket;
     uint32_t      mTxPeriod;

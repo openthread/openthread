@@ -27,7 +27,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-
 import unittest
 
 from autothreadharness.harness_case import HarnessCase
@@ -37,6 +36,7 @@ class MED_6_3_2(HarnessCase):
     role = HarnessCase.ROLE_MED
     case = '6 3 2'
     golden_devices_required = 1
+    case_need_shield = True
 
     def on_dialog(self, dialog, title):
         pass

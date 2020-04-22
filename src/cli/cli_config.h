@@ -65,4 +65,14 @@
 #define OPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE 1024
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_UART_CLI_RAW
+ *
+ * TODO: complete.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_UART_CLI_RAW
+#define OPENTHREAD_CONFIG_UART_CLI_RAW 0
+#endif
+
 #endif // CONFIG_CLI_H_

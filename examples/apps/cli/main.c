@@ -37,13 +37,17 @@
 
 #include "openthread-system.h"
 
-#if OPENTHREAD_EXAMPLES_POSIX
+#if OPENTHREAD_EXAMPLES_SIMULATION
 #include <setjmp.h>
 #include <unistd.h>
 
 jmp_buf gResetJump;
 
 void __gcov_flush();
+#endif
+
+#ifndef OPENTHREAD_ENABLE_COVERAGE
+#define OPENTHREAD_ENABLE_COVERAGE 0
 #endif
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
@@ -67,7 +71,7 @@ int main(int argc, char *argv[])
 {
     otInstance *instance;
 
-#if OPENTHREAD_EXAMPLES_POSIX
+#if OPENTHREAD_EXAMPLES_SIMULATION
     if (setjmp(gResetJump))
     {
         alarm(0);

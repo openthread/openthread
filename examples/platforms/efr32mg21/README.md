@@ -36,8 +36,8 @@ $ ./script/bootstrap
 
 2. Install Flex (Gecko) SDK including RAIL Library from Simplicity Studio.
    - Connect EFR32MG21 Wireless Starter Kit to Simplicity Studio.
-   - Find Flex SDK v2.6 in the Software Update page and click Install.
-   - Flex SDK v2.6 will be installed in the path: `/SimplicityStudio_v4/developer/sdks/gecko_sdk_suite`.
+   - Find Flex SDK v2.7 in the Software Update page and click Install.
+   - Flex SDK v2.7 will be installed in the path: `/SimplicityStudio_v4/developer/sdks/gecko_sdk_suite`.
 
 For more information on configuring, building, and installing applications for the Wireless Gecko (EFR32)
 portfolio using FLEX, see [Getting Started with the Silicon Labs Flex Software Development Kit for the 
@@ -72,7 +72,7 @@ file core_cm33.h:
 core_cm33.h can be found at:
 
 ```
-<path-to-Simplicity-Studio>/developer/sdks/gecko_sdk_suite/v2.6/platform/CMSIS/Include
+<path-to-Simplicity-Studio>/developer/sdks/gecko_sdk_suite/v2.7/platform/CMSIS/Include
 ```
 
 4. Build OpenThread Firmware (CLI example) on EFR32 platform.
@@ -213,4 +213,4 @@ The following toolchain has been used for testing and verification:
    - gcc version 7.3.1
 
 The EFR32 example has been verified with following Flex SDK/RAIL Library version:
-   - Flex SDK version 2.6.0.0
+   - Flex SDK version 2.7.0.0

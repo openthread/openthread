@@ -74,7 +74,8 @@ public:
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      * @retval OT_ERROR_NONE           Successfully started the Commissioner service.
-     * @retval OT_ERROR_INVALID_STATE  Commissioner is already started.
+     * @retval OT_ERROR_ALREADY        Commissioner is already started.
+     * @retval OT_ERROR_INVALID_STATE  Device is not currently attached to a network.
      *
      */
     otError Start(otCommissionerStateCallback  aStateCallback,
@@ -84,11 +85,13 @@ public:
     /**
      * This method stops the Commissioner service.
      *
-     * @retval OT_ERROR_NONE           Successfully stopped the Commissioner service.
-     * @retval OT_ERROR_INVALID_STATE  Commissioner is already stopped.
+     * @param[in]  aResign      Whether send LEAD_KA.req to resign as Commissioner
+     *
+     * @retval OT_ERROR_NONE     Successfully stopped the Commissioner service.
+     * @retval OT_ERROR_ALREADY  Commissioner is already stopped.
      *
      */
-    otError Stop(void);
+    otError Stop(bool aResign);
 
     /**
      * This method clears all Joiner entries.
@@ -171,6 +174,14 @@ public:
     bool IsActive(void) const { return mState == OT_COMMISSIONER_STATE_ACTIVE; }
 
     /**
+     * This method indicates whether or not the Commissioner role is disabled.
+     *
+     * @returns TRUE if the Commissioner role is disabled, FALSE otherwise.
+     *
+     */
+    bool IsDisabled(void) const { return mState == OT_COMMISSIONER_STATE_DISABLED; }
+
+    /**
      * This function returns the Commissioner State.
      *
      * @param[in]  aInstance  A pointer to an OpenThread instance.
@@ -210,25 +221,6 @@ public:
     otError SendMgmtCommissionerSetRequest(const otCommissioningDataset &aDataset,
                                            const uint8_t *               aTlvs,
                                            uint8_t                       aLength);
-
-    /**
-     * This static method generates PSKc.
-     *
-     * PSKc is used to establish the Commissioner Session.
-     *
-     * @param[in]  aPassPhrase   The commissioning passphrase.
-     * @param[in]  aNetworkName  The network name for PSKc computation.
-     * @param[in]  aExtPanId     The extended pan id for PSKc computation.
-     * @param[out] aPskc         A reference to a PSKc where the generated PSKc will be placed.
-     *
-     * @retval OT_ERROR_NONE          Successfully generate PSKc.
-     * @retval OT_ERROR_INVALID_ARGS  If the length of passphrase is out of range.
-     *
-     */
-    static otError GeneratePskc(const char *              aPassPhrase,
-                                const char *              aNetworkName,
-                                const Mac::ExtendedPanId &aExtPanId,
-                                Pskc &                    aPskc);
 
     /**
      * This method returns a reference to the AnnounceBeginClient instance.
@@ -320,6 +312,7 @@ private:
     otError SendCommissionerSet(void);
     otError SendPetition(void);
     otError SendKeepAlive(void);
+    otError SendKeepAlive(uint16_t aSessionId);
 
     void SetState(otCommissionerState aState);
     void SignalJoinerEvent(otCommissionerJoinerEvent aEvent, const Mac::ExtAddress &aJoinerId);

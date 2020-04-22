@@ -82,7 +82,6 @@ wpan.Node.init_all_nodes()
 #   |       |
 #  fed1    sed2
 
-
 r1.whitelist_node(r2)
 r2.whitelist_node(r1)
 
@@ -132,8 +131,7 @@ def check_addresses_and_prefixes():
     for prefix in [IP6_PREFIX_1, IP6_PREFIX_2, IP6_PREFIX_3]:
         for node in all_nodes:
             prefixes = wpan.parse_on_mesh_prefix_result(
-                node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES)
-            )
+                node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
             for p in prefixes:
                 if p.prefix == prefix:
                     verify(p.prefix_len == '64')
@@ -148,8 +146,7 @@ def check_addresses_and_prefixes():
                     break
             else:  # `for` loop finished without finding the prefix.
                 raise wpan.VerifyError(
-                    'Did not find prefix {} on node {}'.format(prefix, node)
-                )
+                    'Did not find prefix {} on node {}'.format(prefix, node))
 
     # Verify that IPv6 address of `sed2` is present on `r2` (its parent)
     # "Thread:ChildTable:Addresses".
@@ -177,8 +174,7 @@ def check_address_prefix_removed():
     # Verify that the related prefix is also removed on all nodes
     for node in all_nodes:
         prefixes = wpan.parse_on_mesh_prefix_result(
-            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES)
-        )
+            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
         for p in prefixes:
             verify(p.prefix != IP6_PREFIX_1)
 

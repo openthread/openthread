@@ -37,14 +37,13 @@
 
 #include "common/logging.hpp"
 #include "common/new.hpp"
-#include "thread/router_table.hpp"
 
 namespace ot {
 
 #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 // Define the raw storage used for OpenThread instance (in single-instance case).
-otDEFINE_ALIGNED_VAR(gInstanceRaw, sizeof(Instance), uint64_t);
+OT_DEFINE_ALIGNED_VAR(gInstanceRaw, sizeof(Instance), uint64_t);
 
 #endif
 
@@ -76,11 +75,8 @@ Instance::Instance(void)
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     , mNotifier(*this)
     , mSettings(*this)
+    , mSettingsDriver(*this)
     , mMessagePool(*this)
-    , mActiveScanCallback(NULL)
-    , mActiveScanCallbackContext(NULL)
-    , mEnergyScanCallback(NULL)
-    , mEnergyScanCallbackContext(NULL)
     , mIp6(*this)
     , mThreadNetif(*this)
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
@@ -98,12 +94,15 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
     , mAnnounceSender(*this)
 #endif
+#if OPENTHREAD_CONFIG_OTNS_ENABLE
+    , mOtns(*this)
+#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     , mLinkRaw(*this)
 #endif
-#if OPENTHREAD_CONFIG_ENABLE_DYNAMIC_LOG_LEVEL
-    , mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_INITIAL_LOG_LEVEL))
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+    , mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL_INIT))
 #endif
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     , mExtension(Extension::ExtensionBase::Init(*this))
@@ -121,7 +120,7 @@ Instance &Instance::InitSingle(void)
 {
     Instance *instance = &Get();
 
-    VerifyOrExit(!instance->mIsInitialized);
+    VerifyOrExit(!instance->mIsInitialized, OT_NOOP);
 
     instance = new (&gInstanceRaw) Instance();
 
@@ -185,7 +184,7 @@ void Instance::AfterInit(void)
 
 void Instance::Finalize(void)
 {
-    VerifyOrExit(mIsInitialized);
+    VerifyOrExit(mIsInitialized, OT_NOOP);
 
     mIsInitialized = false;
 
@@ -222,40 +221,13 @@ otError Instance::ErasePersistentInfo(void)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
     Get<Settings>().Wipe();
 
 exit:
     return error;
 }
 
-void Instance::RegisterActiveScanCallback(otHandleActiveScanResult aCallback, void *aContext)
-{
-    mActiveScanCallback        = aCallback;
-    mActiveScanCallbackContext = aContext;
-}
-
-void Instance::InvokeActiveScanCallback(otActiveScanResult *aResult) const
-{
-    if (mActiveScanCallback != NULL)
-    {
-        mActiveScanCallback(aResult, mActiveScanCallbackContext);
-    }
-}
-
-void Instance::RegisterEnergyScanCallback(otHandleEnergyScanResult aCallback, void *aContext)
-{
-    mEnergyScanCallback        = aCallback;
-    mEnergyScanCallbackContext = aContext;
-}
-
-void Instance::InvokeEnergyScanCallback(otEnergyScanResult *aResult) const
-{
-    if (mEnergyScanCallback != NULL)
-    {
-        mEnergyScanCallback(aResult, mEnergyScanCallbackContext);
-    }
-}
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 } // namespace ot

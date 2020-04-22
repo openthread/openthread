@@ -1,3 +1,27 @@
+1.6.16 (2020-01-23)
+
+        * Allow absolute paths in PRETTY_FILES.
+
+1.6.15 (2019-12-06)
+
+        * Remove redundant libtool m4 libraries.
+
+1.6.14 (2019-07-16)
+
+        * Update MANIFEST to ensure that 'make dist' works correctly.
+
+1.6.13 (2019-07-16)
+
+        * Update coreutils to a newer version s.t. they build cleanly
+          on linux systems with GLIBC 2.28 or newer.  Remove the strip
+          from install libraries to allow coreutils to be installed on
+          Mac OS systems.
+	
+1.6.12 (2019-06-11)
+
+        * install-headers target now depends on BUILT_SOURCES to
+          enable installation of generated headers
+
 1.6.11 (2019-05-23)
 
         * Changed the bootstrap shebang from sh to bash to address a

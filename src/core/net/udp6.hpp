@@ -38,6 +38,7 @@
 
 #include <openthread/udp.h>
 
+#include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "net/ip6_headers.hpp"
 
@@ -60,7 +61,7 @@ class Udp;
  * This class implements a UDP receiver.
  *
  */
-class UdpReceiver : public otUdpReceiver
+class UdpReceiver : public otUdpReceiver, public LinkedListEntry<UdpReceiver>
 {
     friend class Udp;
 
@@ -80,9 +81,6 @@ public:
     }
 
 private:
-    UdpReceiver *GetNext(void) { return static_cast<UdpReceiver *>(mNext); }
-    void         SetNext(UdpReceiver *aReceiver) { mNext = static_cast<otUdpReceiver *>(aReceiver); }
-
     bool HandleMessage(Message &aMessage, const MessageInfo &aMessageInfo)
     {
         return mHandler(mContext, &aMessage, &aMessageInfo);
@@ -93,7 +91,7 @@ private:
  * This class implements a UDP/IPv6 socket.
  *
  */
-class UdpSocket : public otUdpSocket, public InstanceLocator
+class UdpSocket : public otUdpSocket, public InstanceLocator, public LinkedListEntry<UdpSocket>
 {
     friend class Udp;
 
@@ -202,9 +200,6 @@ public:
     SockAddr &GetPeerName(void) { return *static_cast<SockAddr *>(&mPeerName); }
 
 private:
-    UdpSocket *GetNext(void) { return static_cast<UdpSocket *>(mNext); }
-    void       SetNext(UdpSocket *socket) { mNext = static_cast<otUdpSocket *>(socket); }
-
     void HandleUdpReceive(Message &aMessage, const MessageInfo &aMessageInfo)
     {
         mHandler(mContext, &aMessage, &aMessageInfo);
@@ -296,7 +291,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffer to add the IPv6 headers.
      *
      */
-    otError SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto aIpProto);
+    otError SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
 
     /**
      * This method handles a received UDP message.
@@ -329,7 +324,7 @@ public:
     void UpdateChecksum(Message &aMessage, uint16_t aChecksum);
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    otUdpSocket *GetUdpSockets(void) { return mSockets; }
+    otUdpSocket *GetUdpSockets(void) { return mSockets.GetHead(); }
 #endif
 
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
@@ -354,9 +349,9 @@ private:
         kDynamicPortMax = 65535, ///< Service Name and Transport Protocol Port Number Registry
     };
 
-    uint16_t     mEphemeralPort;
-    UdpReceiver *mReceivers;
-    UdpSocket *  mSockets;
+    uint16_t                mEphemeralPort;
+    LinkedList<UdpReceiver> mReceivers;
+    LinkedList<UdpSocket>   mSockets;
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     void *         mUdpForwarderContext;
     otUdpForwarder mUdpForwarder;

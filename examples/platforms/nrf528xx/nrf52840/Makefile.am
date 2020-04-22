@@ -32,38 +32,64 @@ lib_LIBRARIES                                                                   
     libopenthread-nrf52840.a                                                                                 \
     libopenthread-nrf52840-sdk.a                                                                             \
     libopenthread-nrf52840-softdevice-sdk.a                                                                  \
+    libopenthread-nrf52840-transport.a                                                                       \
     $(NULL)
 
 # Do not enable -pedantic-errors for nRF52840 driver library
 override CFLAGS                                      := $(filter-out -pedantic-errors,$(CFLAGS))
 override CXXFLAGS                                    := $(filter-out -pedantic-errors,$(CXXFLAGS))
 
+# Do not enable -Wundef for nRF52840 driver library
+override CFLAGS                                      := $(filter-out -Wundef,$(CFLAGS))
+override CXXFLAGS                                    := $(filter-out -Wundef,$(CXXFLAGS))
+
 COMMONCPPFLAGS                                                                                             = \
     -DCONFIG_GPIO_AS_PINRESET                                                                                \
     -DNRF52840_XXAA                                                                                          \
+    -DUSE_APP_CONFIG=1                                                                                       \
     -I$(srcdir)                                                                                              \
     -I$(top_srcdir)/include                                                                                  \
     -I$(top_srcdir)/examples/platforms                                                                       \
     -I$(top_srcdir)/examples/platforms/nrf528xx/src                                                          \
+    -I$(top_srcdir)/examples/platforms/nrf528xx/src/transport                                                \
     -I$(top_srcdir)/src/core                                                                                 \
-    -I$(top_srcdir)/third_party/NordicSemiconductor                                                          \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/cmsis                                                    \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/dependencies                                             \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/clock                                            \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/common                                           \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio                                            \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/fem/simple_gpio                            \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/hal                                        \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/fem/three_pin_gpio                         \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/mac_features                               \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/mac_features/ack_generator                 \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch                                       \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch/raal                                  \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch/raal/softdevice                       \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/lp_timer                          \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/temperature                       \
+    -Wno-unused-parameter                                                                                    \
+    $(NULL)
+
+# Only reference the SDK header files included in third_party/NordicSemiconductor
+# when building the example applications.
+#
+# When building just the platform libraries, the caller of configure is expected
+# to provide the correct -I arguments to locate the necessary header files in an
+# external copy of the Nordic nRF5 SDK.
+#
+# Note that an exception is made for the 802.15.4 radio driver, which is always
+# built using the sources in third_party/NordicSemiconductor/drivers/radio.
+if OPENTHREAD_ENABLE_EXAMPLES
+COMMONCPPFLAGS                                                                                            += \
+    -I$(top_srcdir)/third_party/NordicSemiconductor                                                          \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/cmsis                                                    \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/config                                                   \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/config/nrf52840/config                                   \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/dependencies                                             \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/clock                                            \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/common                                           \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/power                                            \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/systick                                          \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/usbd                                             \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/app_error                                      \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/atfifo                                         \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/atomic                                         \
+    -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/block_dev                                      \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/delay                                          \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/usb                                            \
     -I$(top_srcdir)/third_party/NordicSemiconductor/libraries/usb/config                                     \
@@ -78,7 +104,9 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/soc                                                 \
     -I$(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers                                  \
     -I$(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf52                            \
+    -Wno-unused-parameter                                                                                    \
     $(NULL)
+endif
 
 PLATFORM_COMMON_SOURCES                                                                                    = \
     src/alarm.c                                                                                              \
@@ -89,11 +117,15 @@ PLATFORM_COMMON_SOURCES                                                         
     src/logging.c                                                                                            \
     src/misc.c                                                                                               \
     src/radio.c                                                                                              \
-    src/spi-slave.c                                                                                          \
     src/system.c                                                                                             \
     src/temp.c                                                                                               \
-    src/uart.c                                                                                               \
-    src/usb-cdc-uart.c                                                                                       \
+    $(NULL)
+
+TRANSPORT_SOURCES                                                                                          = \
+    src/transport/spi-slave.c                                                                                \
+    src/transport/uart.c                                                                                     \
+    src/transport/usb-cdc-uart.c                                                                             \
+    src/transport/transport.c                                                                                \
     $(NULL)
 
 SINGLEPHY_SOURCES                                                                                          = \
@@ -107,8 +139,6 @@ SOFTDEVICE_SOURCES                                                              
     $(NULL)
 
 SOFTDEVICE_CPPFLAGS                                                                                        = \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch/raal/softdevice                       \
-    -I$(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers                                  \
     -DSOFTDEVICE_PRESENT                                                                                     \
     -DS140                                                                                                   \
     $(NULL)
@@ -148,6 +178,14 @@ libopenthread_nrf52840_softdevice_sdk_a_SOURCES                                 
     $(SOFTDEVICE_SOURCES)                                                                                    \
     $(NULL)
 
+libopenthread_nrf52840_transport_a_CPPFLAGS                                                                = \
+    $(COMMONCPPFLAGS)                                                                                        \
+    $(NULL)
+
+libopenthread_nrf52840_transport_a_SOURCES                                                                 = \
+    $(TRANSPORT_SOURCES)                                                                                     \
+    $(NULL)
+
 Dash                                                                                                       = -
 
 libopenthread_nrf52840_a_LIBADD                                                                            = \
@@ -158,6 +196,9 @@ libopenthread_nrf52840_sdk_a_LIBADD                                             
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 libopenthread_nrf52840_softdevice_sdk_a_LIBADD                                                             = \
+    $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
+
+libopenthread_nrf52840_transport_a_LIBADD                                                                  = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

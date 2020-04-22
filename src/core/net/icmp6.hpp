@@ -39,6 +39,7 @@
 #include <openthread/icmp6.h>
 
 #include "common/encoding.hpp"
+#include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "net/ip6_headers.hpp"
 
@@ -99,6 +100,15 @@ public:
         kCodeDstUnreachNoRoute = OT_ICMP6_CODE_DST_UNREACH_NO_ROUTE, ///< Destination Unreachable No Route
         kCodeFragmReasTimeEx   = OT_ICMP6_CODE_FRAGM_REAS_TIME_EX,   ///< Fragment Reassembly Time Exceeded
     };
+
+    /**
+     * This method indicates whether the ICMPv6 message is an error message.
+     *
+     * @retval TRUE if the ICMPv6 message is an error message.
+     * @retval FALSE if the ICMPv6 message is an informational message.
+     *
+     */
+    bool IsError(void) const { return mType < OT_ICMP6_TYPE_ECHO_REQUEST; }
 
     /**
      * This method returns the ICMPv6 message type.
@@ -201,7 +211,7 @@ public:
  * This class implements ICMPv6 message handlers.
  *
  */
-class IcmpHandler : public otIcmp6Handler
+class IcmpHandler : public otIcmp6Handler, public LinkedListEntry<IcmpHandler>
 {
     friend class Icmp;
 
@@ -225,8 +235,6 @@ private:
     {
         mReceiveCallback(mContext, &aMessage, &aMessageInfo, &aIcmp6Header);
     }
-
-    IcmpHandler *GetNext(void) { return static_cast<IcmpHandler *>(mNext); }
 };
 
 /**
@@ -285,7 +293,7 @@ public:
      * @param[in]  aType         The ICMPv6 message type.
      * @param[in]  aCode         The ICMPv6 message code.
      * @param[in]  aMessageInfo  A reference to the message info.
-     * @param[in]  aHeader       The IPv6 header of the error-causing message.
+     * @param[in]  aMessage      The error-causing IPv6 message.
      *
      * @retval OT_ERROR_NONE     Successfully enqueued the ICMPv6 error message.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffers available.
@@ -294,7 +302,7 @@ public:
     otError SendError(IcmpHeader::Type   aType,
                       IcmpHeader::Code   aCode,
                       const MessageInfo &aMessageInfo,
-                      const Header &     aHeader);
+                      const Message &    aMessage);
 
     /**
      * This method handles an ICMPv6 message.
@@ -347,7 +355,7 @@ public:
 private:
     otError HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo);
 
-    IcmpHandler *mHandlers;
+    LinkedList<IcmpHandler> mHandlers;
 
     uint16_t        mEchoSequence;
     otIcmp6EchoMode mEchoMode;

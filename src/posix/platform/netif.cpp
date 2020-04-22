@@ -30,14 +30,15 @@
  * @file
  *   This file implements the platform network on Linux.
  */
-#include "openthread-core-config.h"
+
+#include "openthread-posix-config.h"
 #include "platform-posix.h"
 
 #include <arpa/inet.h>
 #include <assert.h>
 #include <fcntl.h>
 #include <ifaddrs.h>
-#if __linux__
+#ifdef __linux__
 #include <linux/if_tun.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
@@ -67,6 +68,8 @@
 #define OPENTHREAD_POSIX_TUN_DEVICE "/dev/net/tun"
 #endif // OPENTHREAD_TUN_DEVICE
 
+// Some platforms will include linux/ipv6.h in netinet/in.h
+#if !defined(_IPV6_H) && !defined(_UAPI_IPV6_H)
 // from linux/ipv6.h
 struct in6_ifreq
 {
@@ -74,13 +77,44 @@ struct in6_ifreq
     __u32           ifr6_prefixlen;
     int             ifr6_ifindex;
 };
+#endif
 
-static otInstance * sInstance  = NULL;
-static int          sTunFd     = -1; ///< Used to exchange IPv6 packets.
-static int          sIpFd      = -1; ///< Used to manage IPv6 stack on Thread interface.
-static int          sNetlinkFd = -1; ///< Used to receive netlink events.
-static unsigned int sTunIndex  = 0;
+static otInstance * sInstance     = NULL;
+static int          sTunFd        = -1; ///< Used to exchange IPv6 packets.
+static int          sIpFd         = -1; ///< Used to manage IPv6 stack on Thread interface.
+static int          sNetlinkFd    = -1; ///< Used to receive netlink events.
+static int          sMLDMonitorFd = -1; ///< Used to receive MLD events.
+static unsigned int sTunIndex     = 0;
 static char         sTunName[IFNAMSIZ];
+// ff02::16
+static const otIp6Address kMLDv2MulticastAddress = {
+    {{0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16}}};
+
+OT_TOOL_PACKED_BEGIN
+struct MLDv2Header
+{
+    uint8_t  mType;
+    uint8_t  _rsv0;
+    uint16_t mChecksum;
+    uint16_t _rsv1;
+    uint16_t mNumRecords;
+} OT_TOOL_PACKED_END;
+
+OT_TOOL_PACKED_BEGIN
+struct MLDv2Record
+{
+    uint8_t         mRecordType;
+    uint8_t         mAuxDataLen;
+    uint16_t        mNumSources;
+    struct in6_addr mMulticastAddress;
+} OT_TOOL_PACKED_END;
+
+enum
+{
+    kICMPv6MLDv2Type                      = 143,
+    kICMPv6MLDv2RecordChangeToExcludeType = 3,
+    kICMPv6MLDv2RecordChangeToIncludeType = 4,
+};
 
 static const size_t kMaxIp6Size = 1536;
 
@@ -125,7 +159,7 @@ static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress,
 
     assert(sInstance == aInstance);
 
-    VerifyOrExit(sIpFd > 0);
+    VerifyOrExit(sIpFd > 0, OT_NOOP);
     memcpy(&mreq.ipv6mr_multiaddr, &aAddress, sizeof(mreq.ipv6mr_multiaddr));
     mreq.ipv6mr_interface = sTunIndex;
 
@@ -146,7 +180,7 @@ static void UpdateLink(otInstance *aInstance)
 
     assert(sInstance == aInstance);
 
-    VerifyOrExit(sIpFd > 0);
+    VerifyOrExit(sIpFd > 0, OT_NOOP);
     memset(&ifr, 0, sizeof(ifr));
     strncpy(ifr.ifr_name, sTunName, sizeof(ifr.ifr_name));
     VerifyOrExit(ioctl(sIpFd, SIOCGIFFLAGS, &ifr) == 0, perror("ioctl"); error = OT_ERROR_FAILED);
@@ -201,7 +235,7 @@ static void processReceive(otMessage *aMessage, void *aContext)
 
     assert(sInstance == aContext);
 
-    VerifyOrExit(sTunFd > 0);
+    VerifyOrExit(sTunFd > 0, OT_NOOP);
 
     VerifyOrExit(otMessageRead(aMessage, 0, packet, sizeof(packet)) == length, error = OT_ERROR_NO_BUFS);
 
@@ -262,7 +296,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
     size_t            rtaLength;
     otError           error = OT_ERROR_NONE;
 
-    VerifyOrExit(ifaddr->ifa_index == static_cast<unsigned int>(sTunIndex) && ifaddr->ifa_family == AF_INET6);
+    VerifyOrExit(ifaddr->ifa_index == static_cast<unsigned int>(sTunIndex) && ifaddr->ifa_family == AF_INET6, OT_NOOP);
 
     rtaLength = IFA_PAYLOAD(aNetlinkMessage);
 
@@ -332,7 +366,7 @@ static void processNetifLinkEvent(otInstance *aInstance, struct nlmsghdr *aNetli
     struct ifinfomsg *ifinfo = reinterpret_cast<struct ifinfomsg *>(NLMSG_DATA(aNetlinkMessage));
     otError           error  = OT_ERROR_NONE;
 
-    VerifyOrExit(ifinfo->ifi_index == static_cast<int>(sTunIndex));
+    VerifyOrExit(ifinfo->ifi_index == static_cast<int>(sTunIndex), OT_NOOP);
     SuccessOrExit(error = otIp6SetEnabled(aInstance, ifinfo->ifi_flags & IFF_UP));
 
 exit:
@@ -354,7 +388,7 @@ static void processNetifEvent(otInstance *aInstance)
 
     length = recv(sNetlinkFd, buffer, sizeof(buffer), 0);
 
-    VerifyOrExit(length > 0);
+    VerifyOrExit(length > 0, OT_NOOP);
 
     for (struct nlmsghdr *msg = reinterpret_cast<struct nlmsghdr *>(buffer); NLMSG_OK(msg, length);
          msg                  = NLMSG_NEXT(msg, length))
@@ -380,15 +414,156 @@ exit:
     return;
 }
 
-void platformNetifInit(otInstance *aInstance)
+void platformNetifDeinit(void)
+{
+    if (sTunFd != -1)
+    {
+        close(sTunFd);
+        sTunFd = -1;
+    }
+
+    if (sIpFd != -1)
+    {
+        close(sIpFd);
+        sIpFd = -1;
+    }
+
+    if (sNetlinkFd != -1)
+    {
+        close(sNetlinkFd);
+        sNetlinkFd = -1;
+    }
+
+    if (sMLDMonitorFd != -1)
+    {
+        close(sMLDMonitorFd);
+        sMLDMonitorFd = -1;
+    }
+
+    sTunIndex = 0;
+}
+
+static void mldListenerInit(void)
+{
+    struct ipv6_mreq mreq6;
+
+    sMLDMonitorFd          = SocketWithCloseExec(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6, kSocketNonBlock);
+    mreq6.ipv6mr_interface = sTunIndex;
+    memcpy(&mreq6.ipv6mr_multiaddr, kMLDv2MulticastAddress.mFields.m8, sizeof(kMLDv2MulticastAddress.mFields.m8));
+
+    VerifyOrDie(setsockopt(sMLDMonitorFd, IPPROTO_IPV6, IPV6_JOIN_GROUP, &mreq6, sizeof(mreq6)) == 0, OT_EXIT_FAILURE);
+    VerifyOrDie(setsockopt(sMLDMonitorFd, SOL_SOCKET, SO_BINDTODEVICE, sTunName,
+                           static_cast<socklen_t>(strnlen(sTunName, IFNAMSIZ))) == 0,
+                OT_EXIT_FAILURE);
+}
+
+static void processMLDEvent(otInstance *aInstance)
+{
+    const size_t        kMaxMLDEvent = 8192;
+    uint8_t             buffer[kMaxMLDEvent];
+    ssize_t             bufferLen = -1;
+    struct sockaddr_in6 srcAddr;
+    socklen_t           addrLen  = sizeof(srcAddr);
+    bool                fromSelf = false;
+    MLDv2Header *       hdr      = reinterpret_cast<MLDv2Header *>(buffer);
+    size_t              offset;
+    uint8_t             type;
+    struct ifaddrs *    ifAddrs = NULL;
+
+    bufferLen = recvfrom(sMLDMonitorFd, buffer, sizeof(buffer), 0, reinterpret_cast<sockaddr *>(&srcAddr), &addrLen);
+    VerifyOrExit(bufferLen > 0, OT_NOOP);
+
+    type = buffer[0];
+    VerifyOrExit(type == kICMPv6MLDv2Type && bufferLen >= static_cast<ssize_t>(sizeof(MLDv2Header)), OT_NOOP);
+
+    // Check whether it is sent by self
+    VerifyOrExit(getifaddrs(&ifAddrs) == 0, OT_NOOP);
+    for (struct ifaddrs *ifAddr = ifAddrs; ifAddr != NULL; ifAddr = ifAddr->ifa_next)
+    {
+        if (ifAddr->ifa_addr != NULL && ifAddr->ifa_addr->sa_family == AF_INET6 &&
+            strncmp(sTunName, ifAddr->ifa_name, IFNAMSIZ) == 0)
+        {
+            struct sockaddr_in6 *addr6 = reinterpret_cast<struct sockaddr_in6 *>(ifAddr->ifa_addr);
+
+            if (memcmp(&addr6->sin6_addr, &srcAddr.sin6_addr, sizeof(in6_addr)) == 0)
+            {
+                fromSelf = true;
+                break;
+            }
+        }
+    }
+    VerifyOrExit(fromSelf, OT_NOOP);
+
+    hdr    = reinterpret_cast<MLDv2Header *>(buffer);
+    offset = sizeof(MLDv2Header);
+
+    for (size_t i = 0; i < ntohs(hdr->mNumRecords) && offset < static_cast<size_t>(bufferLen); i++)
+    {
+        if (static_cast<size_t>(bufferLen) >= (sizeof(MLDv2Record) + offset))
+        {
+            MLDv2Record *record = reinterpret_cast<MLDv2Record *>(&buffer[offset]);
+
+            otError      err;
+            otIp6Address address;
+            char         addressString[INET6_ADDRSTRLEN + 1];
+
+            memcpy(&address.mFields.m8, &record->mMulticastAddress, sizeof(address.mFields.m8));
+            inet_ntop(AF_INET6, &record->mMulticastAddress, addressString, sizeof(addressString));
+            if (record->mRecordType == kICMPv6MLDv2RecordChangeToIncludeType)
+            {
+                err = otIp6SubscribeMulticastAddress(aInstance, &address);
+                if (err == OT_ERROR_ALREADY)
+                {
+                    otLogNotePlat(
+                        "Will not subscribe duplicate multicast address %s",
+                        inet_ntop(AF_INET6, &record->mMulticastAddress, addressString, sizeof(addressString)));
+                }
+                else if (err != OT_ERROR_NONE)
+                {
+                    otLogWarnPlat("Failed to subscribe multicast address %s: %s", addressString,
+                                  otThreadErrorToString(err));
+                }
+                else
+                {
+                    otLogDebgPlat("Subscribed multicast address %s", addressString);
+                }
+            }
+            else if (record->mRecordType == kICMPv6MLDv2RecordChangeToExcludeType)
+            {
+                err = otIp6UnsubscribeMulticastAddress(aInstance, &address);
+                if (err != OT_ERROR_NONE)
+                {
+                    otLogWarnPlat("Failed to unsubscribe multicast address %s: %s", addressString,
+                                  otThreadErrorToString(err));
+                }
+                else
+                {
+                    otLogDebgPlat("Unsubscribed multicast address %s", addressString);
+                }
+            }
+
+            offset += sizeof(MLDv2Record) + sizeof(in6_addr) * ntohs(record->mNumSources);
+        }
+    }
+
+exit:
+    if (ifAddrs)
+    {
+        freeifaddrs(ifAddrs);
+    }
+
+    return;
+}
+
+void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
 {
     struct ifreq ifr;
 
-    sIpFd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP);
-    VerifyOrExit(sIpFd >= 0);
+    sIpFd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, kSocketNonBlock);
+    VerifyOrDie(sIpFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     sNetlinkFd = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
-    VerifyOrExit(sNetlinkFd > 0);
+    VerifyOrDie(sNetlinkFd > 0, OT_EXIT_ERROR_ERRNO);
 
     otIcmp6SetEchoMode(aInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
 
@@ -398,64 +573,49 @@ void platformNetifInit(otInstance *aInstance)
         memset(&sa, 0, sizeof(sa));
         sa.nl_family = AF_NETLINK;
         sa.nl_groups = RTMGRP_LINK | RTMGRP_IPV6_IFADDR;
-        VerifyOrExit(bind(sNetlinkFd, reinterpret_cast<struct sockaddr *>(&sa), sizeof(sa)) == 0);
+        VerifyOrDie(bind(sNetlinkFd, reinterpret_cast<struct sockaddr *>(&sa), sizeof(sa)) == 0, OT_EXIT_ERROR_ERRNO);
     }
 
-    sTunFd = open(OPENTHREAD_POSIX_TUN_DEVICE, O_RDWR | O_CLOEXEC);
-    VerifyOrExit(sTunFd > 0, otLogCritPlat("Unable to open tun device %s", OPENTHREAD_POSIX_TUN_DEVICE));
+    sTunFd = open(OPENTHREAD_POSIX_TUN_DEVICE, O_RDWR | O_CLOEXEC | O_NONBLOCK);
+    VerifyOrDie(sTunFd > 0, OT_EXIT_ERROR_ERRNO);
 
     memset(&ifr, 0, sizeof(ifr));
     ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
-    strncpy(ifr.ifr_name, "wpan%d", IFNAMSIZ);
 
-    VerifyOrExit(ioctl(sTunFd, TUNSETIFF, static_cast<void *>(&ifr)) == 0,
-                 otLogCritPlat("Unable to configure tun device %s", OPENTHREAD_POSIX_TUN_DEVICE));
-    VerifyOrExit(ioctl(sTunFd, TUNSETLINK, ARPHRD_VOID) == 0,
-                 otLogCritPlat("Unable to set link type of tun device %s", OPENTHREAD_POSIX_TUN_DEVICE));
+    if (aInterfaceName)
+    {
+        VerifyOrDie(strlen(aInterfaceName) < IFNAMSIZ, OT_EXIT_INVALID_ARGUMENTS);
+
+        strncpy(ifr.ifr_name, aInterfaceName, IFNAMSIZ);
+    }
+    else
+    {
+        strncpy(ifr.ifr_name, "wpan%d", IFNAMSIZ);
+    }
+
+    VerifyOrDie(ioctl(sTunFd, TUNSETIFF, static_cast<void *>(&ifr)) == 0, OT_EXIT_ERROR_ERRNO);
+    VerifyOrDie(ioctl(sTunFd, TUNSETLINK, ARPHRD_VOID) == 0, OT_EXIT_ERROR_ERRNO);
 
     sTunIndex = if_nametoindex(ifr.ifr_name);
-    VerifyOrExit(sTunIndex > 0);
+    VerifyOrDie(sTunIndex > 0, OT_EXIT_FAILURE);
 
     strncpy(sTunName, ifr.ifr_name, sizeof(sTunName));
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     platformUdpInit(sTunName);
 #endif
+    mldListenerInit();
 
     otIp6SetReceiveCallback(aInstance, processReceive, aInstance);
     otIp6SetAddressCallback(aInstance, processAddressChange, aInstance);
     otSetStateChangedCallback(aInstance, processStateChange, aInstance);
     sInstance = aInstance;
-
-exit:
-    if (sTunIndex == 0)
-    {
-        if (sTunFd != -1)
-        {
-            close(sTunFd);
-            sTunFd = -1;
-        }
-
-        if (sIpFd != -1)
-        {
-            close(sIpFd);
-            sIpFd = -1;
-        }
-
-        if (sNetlinkFd != -1)
-        {
-            close(sNetlinkFd);
-            sNetlinkFd = -1;
-        }
-
-        DieNow(OT_EXIT_FAILURE);
-    }
 }
 
 void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd)
 {
     OT_UNUSED_VARIABLE(aWriteFdSet);
 
-    VerifyOrExit(sTunIndex > 0);
+    VerifyOrExit(sTunIndex > 0, OT_NOOP);
 
     assert(sTunFd > 0);
     assert(sNetlinkFd > 0);
@@ -465,6 +625,8 @@ void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *a
     FD_SET(sTunFd, aErrorFdSet);
     FD_SET(sNetlinkFd, aReadFdSet);
     FD_SET(sNetlinkFd, aErrorFdSet);
+    FD_SET(sMLDMonitorFd, aReadFdSet);
+    FD_SET(sMLDMonitorFd, aErrorFdSet);
 
     if (sTunFd > *aMaxFd)
     {
@@ -476,6 +638,10 @@ void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *a
         *aMaxFd = sNetlinkFd;
     }
 
+    if (sMLDMonitorFd > *aMaxFd)
+    {
+        *aMaxFd = sMLDMonitorFd;
+    }
 exit:
     return;
 }
@@ -483,7 +649,7 @@ exit:
 void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet)
 {
     OT_UNUSED_VARIABLE(aWriteFdSet);
-    VerifyOrExit(sTunIndex > 0);
+    VerifyOrExit(sTunIndex > 0, OT_NOOP);
 
     if (FD_ISSET(sTunFd, aErrorFdSet))
     {
@@ -497,6 +663,12 @@ void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, c
         DieNow(OT_EXIT_FAILURE);
     }
 
+    if (FD_ISSET(sMLDMonitorFd, aErrorFdSet))
+    {
+        close(sNetlinkFd);
+        DieNow(OT_EXIT_FAILURE);
+    }
+
     if (FD_ISSET(sTunFd, aReadFdSet))
     {
         processTransmit(sInstance);
@@ -505,6 +677,11 @@ void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, c
     if (FD_ISSET(sNetlinkFd, aReadFdSet))
     {
         processNetifEvent(sInstance);
+    }
+
+    if (FD_ISSET(sMLDMonitorFd, aReadFdSet))
+    {
+        processMLDEvent(sInstance);
     }
 
 exit:

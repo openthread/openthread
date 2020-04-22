@@ -60,7 +60,7 @@ namespace Ncp {
 
 #if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK == 0
 
-static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
+static OT_DEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
 
 extern "C" void otNcpInit(otInstance *aInstance)
 {
@@ -71,7 +71,7 @@ extern "C" void otNcpInit(otInstance *aInstance)
 
     if (ncpSpi == NULL || ncpSpi != NcpBase::GetNcpInstance())
     {
-        assert(false);
+        OT_ASSERT(false);
     }
 }
 
@@ -110,7 +110,7 @@ NcpSpi::NcpSpi(Instance *aInstance)
     // reset flag was set.
 
     otPlatSpiSlavePrepareTransaction(mEmptySendFrameZeroAccept, kSpiHeaderSize, mEmptyReceiveFrame, kSpiHeaderSize,
-                                     /* aRequestTras */ true);
+                                     /* aRequestTransactionFlag */ true);
 }
 
 bool NcpSpi::SpiTransactionComplete(void *   aContext,
@@ -144,8 +144,9 @@ bool NcpSpi::SpiTransactionComplete(uint8_t *aOutputBuf,
     SpiFrame inputFrame(aInputBuf);
     SpiFrame sendFrame(mSendFrame);
 
-    VerifyOrExit((aTransLen >= kSpiHeaderSize) && (aInputLen >= kSpiHeaderSize) && (aOutputLen >= kSpiHeaderSize));
-    VerifyOrExit(inputFrame.IsValid() && outputFrame.IsValid());
+    VerifyOrExit((aTransLen >= kSpiHeaderSize) && (aInputLen >= kSpiHeaderSize) && (aOutputLen >= kSpiHeaderSize),
+                 OT_NOOP);
+    VerifyOrExit(inputFrame.IsValid() && outputFrame.IsValid(), OT_NOOP);
 
     transDataLen = aTransLen - kSpiHeaderSize;
 
@@ -241,11 +242,11 @@ void NcpSpi::SpiTransactionProcess(void)
 }
 
 void NcpSpi::HandleFrameAddedToTxBuffer(void *                   aContext,
-                                        NcpFrameBuffer::FrameTag aTag,
-                                        NcpFrameBuffer::Priority aPriority,
-                                        NcpFrameBuffer *         aNcpFrameBuffer)
+                                        Spinel::Buffer::FrameTag aTag,
+                                        Spinel::Buffer::Priority aPriority,
+                                        Spinel::Buffer *         aBuffer)
 {
-    OT_UNUSED_VARIABLE(aNcpFrameBuffer);
+    OT_UNUSED_VARIABLE(aBuffer);
     OT_UNUSED_VARIABLE(aTag);
     OT_UNUSED_VARIABLE(aPriority);
 
@@ -259,7 +260,7 @@ void NcpSpi::PrepareNextSpiSendFrame(void)
     uint16_t readLength;
     SpiFrame sendFrame(mSendFrame);
 
-    VerifyOrExit(!mTxFrameBuffer.IsEmpty());
+    VerifyOrExit(!mTxFrameBuffer.IsEmpty(), OT_NOOP);
 
     if (ShouldWakeHost())
     {
@@ -269,14 +270,14 @@ void NcpSpi::PrepareNextSpiSendFrame(void)
     SuccessOrExit(error = mTxFrameBuffer.OutFrameBegin());
 
     frameLength = mTxFrameBuffer.OutFrameGetLength();
-    assert(frameLength <= kSpiBufferSize - kSpiHeaderSize);
+    OT_ASSERT(frameLength <= kSpiBufferSize - kSpiHeaderSize);
 
     // The "accept length" in `mSendFrame` is already updated based
     // on current state of receive. It is changed either from the
     // `SpiTransactionComplete()` callback or from `HandleRxFrame()`.
 
     readLength = mTxFrameBuffer.OutFrameRead(frameLength, sendFrame.GetData());
-    assert(readLength == frameLength);
+    OT_ASSERT(readLength == frameLength);
 
     sendFrame.SetHeaderDataLen(frameLength);
     mSendFrameLength = frameLength + kSpiHeaderSize;

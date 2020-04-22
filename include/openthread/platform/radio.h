@@ -123,6 +123,7 @@ enum
     OT_RADIO_CAPS_ENERGY_SCAN      = 1 << 1, ///< Radio supports Energy Scans.
     OT_RADIO_CAPS_TRANSMIT_RETRIES = 1 << 2, ///< Radio supports tx retry logic with collision avoidance (CSMA).
     OT_RADIO_CAPS_CSMA_BACKOFF     = 1 << 3, ///< Radio supports CSMA backoff for frame transmission (but no retry).
+    OT_RADIO_CAPS_SLEEP_TO_TX      = 1 << 4, ///< Radio supports direct transition from sleep to TX with CSMA.
 };
 
 #define OT_PANID_BROADCAST 0xffff ///< IEEE 802.15.4 Broadcast PAN ID
@@ -230,6 +231,7 @@ typedef enum otRadioState
     OT_RADIO_STATE_SLEEP    = 1,
     OT_RADIO_STATE_RECEIVE  = 2,
     OT_RADIO_STATE_TRANSMIT = 3,
+    OT_RADIO_STATE_INVALID  = 255,
 } otRadioState;
 
 /**
@@ -243,6 +245,10 @@ typedef enum otRadioState
  *  +----------+  Disable() +-------+   Sleep()  +---------+   Receive()   +----------+
  *                                    (Radio OFF)                 or
  *                                                        signal TransmitDone
+ *
+ * During the IEEE 802.15.4 data request command the transition Sleep->Receive->Transmit
+ * can be shortened to direct transition from Sleep to Transmit if the platform supports
+ * the OT_RADIO_CAPS_SLEEP_TO_TX capability.
  */
 
 /**
@@ -557,7 +563,9 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance);
  * requesting transmission.  The channel and transmit power are also included in the otRadioFrame structure.
  *
  * The transmit sequence consists of:
- * 1. Transitioning the radio to Transmit from Receive.
+ * 1. Transitioning the radio to Transmit from one of the following states:
+ *    - Receive if RX is on when the device is idle or OT_RADIO_CAPS_SLEEP_TO_TX is not supported
+ *    - Sleep if RX is off when the device is idle and OT_RADIO_CAPS_SLEEP_TO_TX is supported.
  * 2. Transmits the psdu on the given channel and at the given transmit power.
  *
  * @param[in] aInstance  The OpenThread instance structure.

@@ -163,19 +163,14 @@ private:
          * @param[in]  aContextId        The 6LoWPAN Context ID.
          *
          */
-        void Set(const otIp6Prefix &aPrefix, const otMeshLocalPrefix &aMeshLocalPrefix, uint8_t aContextId)
+        void Set(const otIp6Prefix &aPrefix, const Mle::MeshLocalPrefix &aMeshLocalPrefix, uint8_t aContextId)
         {
             mPrefix = aPrefix;
 
-            memcpy(&mAloc.mAddress, &aMeshLocalPrefix, OT_IP6_PREFIX_SIZE);
-            mAloc.mAddress.mFields.m16[4] = HostSwap16(0x0000);
-            mAloc.mAddress.mFields.m16[5] = HostSwap16(0x00ff);
-            mAloc.mAddress.mFields.m16[6] = HostSwap16(0xfe00);
-            mAloc.mAddress.mFields.m8[14] = Ip6::Address::kAloc16Mask;
-            mAloc.mAddress.mFields.m8[15] = aContextId;
-            mAloc.mPrefixLength           = 64;
-            mAloc.mPreferred              = true;
-            mAloc.mValid                  = true;
+            mAloc.GetAddress().SetToAnycastLocator(aMeshLocalPrefix, (Ip6::Address::kAloc16Mask << 8) + aContextId);
+            mAloc.mPrefixLength = OT_IP6_PREFIX_BITSIZE;
+            mAloc.mPreferred    = true;
+            mAloc.mValid        = true;
         }
 
     private:

@@ -101,7 +101,7 @@ static void mutex_init(nrf_cc310_platform_mutex_t *mutex)
  */
 static void mutex_free(nrf_cc310_platform_mutex_t *mutex)
 {
-    SemaphoreHandle_t *p_mutex;
+    SemaphoreHandle_t p_mutex;
 
     /* Ensure that the mutex is valid (not NULL) */
     if (mutex == NULL) {
@@ -113,9 +113,9 @@ static void mutex_free(nrf_cc310_platform_mutex_t *mutex)
         return;
     }
 
-    p_mutex = (SemaphoreHandle_t*) mutex->mutex;
+    p_mutex = (SemaphoreHandle_t)mutex->mutex;
 
-    vSemaphoreDelete(*p_mutex);
+    vSemaphoreDelete(p_mutex);
 
     /* Reset the mutex to invalid state */
     mutex->flags = NRF_CC310_PLATFORM_MUTEX_MASK_INVALID;
@@ -127,7 +127,7 @@ static void mutex_free(nrf_cc310_platform_mutex_t *mutex)
 static int mutex_lock(nrf_cc310_platform_mutex_t *mutex)
 {
     int ret;
-    SemaphoreHandle_t *p_mutex;
+    SemaphoreHandle_t p_mutex;
 
     /* Ensure that the mutex is valid (not NULL) */
     if (mutex == NULL) {
@@ -139,7 +139,7 @@ static int mutex_lock(nrf_cc310_platform_mutex_t *mutex)
         return NRF_CC310_PLATFORM_ERROR_MUTEX_NOT_INITIALIZED;
     }
 
-    p_mutex = (SemaphoreHandle_t*) mutex->mutex;
+    p_mutex = (SemaphoreHandle_t)mutex->mutex;
 
     ret = xSemaphoreTake(p_mutex, portMAX_DELAY);
     if (ret == pdTRUE) {
@@ -156,7 +156,7 @@ static int mutex_lock(nrf_cc310_platform_mutex_t *mutex)
 static int mutex_unlock(nrf_cc310_platform_mutex_t * mutex)
 {
     int ret;
-    SemaphoreHandle_t *p_mutex;
+    SemaphoreHandle_t p_mutex;
 
     /* Ensure that the mutex is valid (not NULL) */
     if (mutex == NULL) {
@@ -168,7 +168,7 @@ static int mutex_unlock(nrf_cc310_platform_mutex_t * mutex)
         return NRF_CC310_PLATFORM_ERROR_MUTEX_NOT_INITIALIZED;
     }
 
-    p_mutex = (SemaphoreHandle_t*);
+    p_mutex = (SemaphoreHandle_t)mutex->mutex;
 
     ret = xSemaphoreGive(p_mutex);
     if (ret != pdTRUE) {
@@ -203,8 +203,7 @@ const nrf_cc310_platform_mutexes_t mutexes =
 
 /** @brief Function to initiialize the nrf_cc310_platform mutex APIs.
  */
-int nrf_cc310_platform_mutex_init(void)
+void nrf_cc310_platform_mutex_init(void)
 {
     nrf_cc310_platform_set_mutexes(&mutex_apis, &mutexes);
-    return NRF_CC310_PLATFORM_SUCCESS;
 }

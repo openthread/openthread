@@ -32,6 +32,7 @@
  *   This file includes the platform-specific initializers.
  */
 
+#include <assert.h>
 #include <string.h>
 
 #include "openthread-system.h"
@@ -41,13 +42,15 @@
 
 #include "bsp.h"
 #include "em_chip.h"
+#include "em_cmu.h"
 #include "em_core.h"
 #include "em_emu.h"
 #include "em_system.h"
 #include "hal-config.h"
 #include "hal_common.h"
 #include "rail.h"
-#include "rtcdriver.h"
+#include "sl_mpu.h"
+#include "sl_sleeptimer.h"
 
 #include "openthread-core-efr32-config.h"
 #include "platform-efr32.h"
@@ -70,21 +73,27 @@ void otSysInit(int argc, char *argv[])
 {
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
+    sl_status_t status;
 
     __disable_irq();
 
 #undef FIXED_EXCEPTION
 #define FIXED_EXCEPTION(vectorNumber, functionName, deviceIrqn, deviceIrqHandler)
 #define EXCEPTION(vectorNumber, functionName, deviceIrqn, deviceIrqHandler, priorityLevel, subpriority) \
-    NVIC_SetPriority(deviceIrqn, NVIC_EncodePriority(PRIGROUP_POSITION, priorityLevel, subpriority));
+    NVIC_SetPriority(deviceIrqn, NVIC_EncodePriority(PRIGROUP_POSITION - 1, priorityLevel, subpriority));
 #include NVIC_CONFIG
 #undef EXCEPTION
 
-    NVIC_SetPriorityGrouping(PRIGROUP_POSITION);
+    NVIC_SetPriorityGrouping(PRIGROUP_POSITION - 1);
     CHIP_Init();
     halInitChipSpecific();
     BSP_Init(BSP_INIT_BCC);
-    RTCDRV_Init();
+
+    CMU_OscillatorEnable(cmuOsc_LFRCO, true, true);
+    CMU_ClockEnable(cmuClock_RTCC, true);
+
+    status = sl_sleeptimer_init();
+    assert(status == SL_STATUS_OK);
 
 #if (HAL_FEM_ENABLE)
     initFem();

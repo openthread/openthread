@@ -79,7 +79,7 @@ DataPollHandler::DataPollHandler(Instance &aInstance)
 
 void DataPollHandler::Clear(void)
 {
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
     {
         Child &child = *iter.GetChild();
         child.SetDataPollPending(false);
@@ -130,12 +130,12 @@ void DataPollHandler::HandleDataPoll(Mac::RxFrame &aFrame)
     Child *      child;
     uint16_t     indirectMsgCount;
 
-    VerifyOrExit(aFrame.GetSecurityEnabled());
-    VerifyOrExit(Get<Mle::MleRouter>().GetRole() != OT_DEVICE_ROLE_DETACHED);
+    VerifyOrExit(aFrame.GetSecurityEnabled(), OT_NOOP);
+    VerifyOrExit(!Get<Mle::MleRouter>().IsDetached(), OT_NOOP);
 
     SuccessOrExit(aFrame.GetSrcAddr(macSource));
-    child = Get<ChildTable>().FindChild(macSource, ChildTable::kInStateValidOrRestoring);
-    VerifyOrExit(child != NULL);
+    child = Get<ChildTable>().FindChild(macSource, Child::kInStateValidOrRestoring);
+    VerifyOrExit(child != NULL, OT_NOOP);
 
     child->SetLastHeard(TimerMilli::GetNow());
     child->ResetLinkFailures();
@@ -204,7 +204,7 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError
 {
     Child *child = mIndirectTxChild;
 
-    VerifyOrExit(child != NULL);
+    VerifyOrExit(child != NULL, OT_NOOP);
 
     mIndirectTxChild = NULL;
     HandleSentFrame(aFrame, aError, *child);
@@ -277,7 +277,7 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError
         break;
 
     default:
-        assert(false);
+        OT_ASSERT(false);
         break;
     }
 
@@ -289,7 +289,7 @@ exit:
 
 void DataPollHandler::ProcessPendingPolls(void)
 {
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValidOrRestoring); !iter.IsDone(); iter++)
     {
         Child *child = iter.GetChild();
 

@@ -47,6 +47,12 @@
 #include "meshcop/commissioner.hpp"
 #endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+#include "backbone_router/leader.hpp"
+#endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#include "backbone_router/local.hpp"
+#endif
 #include "meshcop/dataset_manager.hpp"
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
@@ -54,7 +60,7 @@
 #endif // OPENTHREAD_CONFIG_JOINER_ENABLE
 
 #include "meshcop/joiner_router.hpp"
-#include "meshcop/leader.hpp"
+#include "meshcop/meshcop_leader.hpp"
 #include "net/dhcp6.hpp"
 #include "net/dhcp6_client.hpp"
 #include "net/dhcp6_server.hpp"
@@ -70,6 +76,7 @@
 #include "thread/mle.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/network_data_local.hpp"
+#include "thread/network_data_notifier.hpp"
 #include "thread/network_diagnostic.hpp"
 #include "thread/panid_query_server.hpp"
 #include "thread/time_sync_service.hpp"
@@ -191,6 +198,9 @@ private:
     NetworkData::Local mNetworkDataLocal;
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     NetworkData::Leader mNetworkDataLeader;
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+    NetworkData::Notifier mNetworkDataNotifier;
+#endif
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     NetworkDiagnostic::NetworkDiagnostic mNetworkDiagnostic;
 #endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
@@ -221,6 +231,12 @@ private:
     AddressResolver       mAddressResolver;
 #endif // OPENTHREAD_FTD
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    BackboneRouter::Leader mBackboneRouterLeader;
+#endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    BackboneRouter::Local mBackboneRouterLocal;
+#endif
     Utils::ChildSupervisor     mChildSupervisor;
     Utils::SupervisionListener mSupervisionListener;
     AnnounceBeginServer        mAnnounceBegin;

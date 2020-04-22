@@ -237,10 +237,7 @@ public:
      * @param[in] aExtAddress  The IEEE 802.15.4 Extended Address stored in little-endian byte order.
      *
      */
-    void SetExtendedAddress(const Mac::ExtAddress &aExtAddress)
-    {
-        otPlatRadioSetExtendedAddress(GetInstance(), &aExtAddress);
-    }
+    void SetExtendedAddress(const Mac::ExtAddress &aExtAddress);
 
     /**
      * This method sets the Short Address for address filtering.
@@ -248,7 +245,7 @@ public:
      * @param[in] aShortAddress  The IEEE 802.15.4 Short Address.
      *
      */
-    void SetShortAddress(Mac::ShortAddress aShortAddress) { otPlatRadioSetShortAddress(GetInstance(), aShortAddress); }
+    void SetShortAddress(Mac::ShortAddress aShortAddress);
 
     /**
      * This method gets the radio's transmit power in dBm.
@@ -295,7 +292,7 @@ public:
      * @retval OT_ERROR_NOT_IMPLEMENTED  CCA ED threshold configuration via dBm is not implemented.
      *
      */
-    otError SetCcaEnergyDetectThreshold(int8_t &aThreshold)
+    otError SetCcaEnergyDetectThreshold(int8_t aThreshold)
     {
         return otPlatRadioSetCcaEnergyDetectThreshold(GetInstance(), aThreshold);
     }
@@ -316,6 +313,18 @@ public:
      *
      */
     void SetPromiscuous(bool aEnable) { otPlatRadioSetPromiscuous(GetInstance(), aEnable); }
+
+    /**
+     * This method returns the current state of the radio.
+     *
+     * This function is not required by OpenThread. It may be used for debugging and/or application-specific purposes.
+     *
+     * @note This function may be not implemented. In this case it always returns OT_RADIO_STATE_INVALID state.
+     *
+     * @return  Current state of the radio.
+     *
+     */
+    otRadioState GetState(void) { return otPlatRadioGetState(GetInstance()); }
 
     /**
      * This method enables the radio.

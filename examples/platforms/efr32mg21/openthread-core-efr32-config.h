@@ -62,7 +62,7 @@
  * Define to 1 if you want to enable physical layer to support OQPSK modulation in 2.4GHz band.
  *
  */
-#ifdef RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT
+#if RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT
 #define OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT 1
 #else
 #define OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT 0
@@ -101,28 +101,14 @@
 #define OPENTHREAD_CONFIG_SOFTWARE_ENERGY_SCAN_ENABLE 1
 
 /**
- * @def SETTINGS_CONFIG_BASE_ADDRESS
+ * @def OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
  *
- * The base address of settings.
+ * Define to 1 to enable otPlatFlash* APIs to support non-volatile storage.
  *
- */
-#define SETTINGS_CONFIG_BASE_ADDRESS 0
-
-/**
- * @def SETTINGS_CONFIG_PAGE_SIZE
- *
- * The page size of settings.
+ * When defined to 1, the platform MUST implement the otPlatFlash* APIs instead of the otPlatSettings* APIs.
  *
  */
-#define SETTINGS_CONFIG_PAGE_SIZE FLASH_PAGE_SIZE
-
-/**
- * @def SETTINGS_CONFIG_PAGE_NUM
- *
- * The page number of settings.
- *
- */
-#define SETTINGS_CONFIG_PAGE_NUM 4
+#define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 0
 
 /**
  * @def RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM

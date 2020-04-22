@@ -157,7 +157,7 @@ public:
          * This callback method requests a frame to be prepared for indirect transmission to a given sleepy child.
          *
          * @param[out] aFrame    A reference to a MAC frame where the new frame would be placed.
-         * @prarm[out] aContext  A reference to a `FrameContext` where the context for the new frame would be placed.
+         * @param[out] aContext  A reference to a `FrameContext` where the context for the new frame would be placed.
          * @param[in]  aChild    The child for which to prepare the frame.
          *
          * @retval OT_ERROR_NONE   Frame was prepared successfully

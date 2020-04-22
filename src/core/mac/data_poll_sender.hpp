@@ -40,6 +40,7 @@
 #include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
+#include "thread/topology.hpp"
 
 namespace ot {
 
@@ -166,12 +167,16 @@ public:
     void HandlePollTimeout(void);
 
     /**
-     * This method informs the data poll sender that a mac frame has been received. It checks the "frame pending" in
-     * the received frame header and if it is set, data poll sender will send an immediate data poll to retrieve the
-     * pending frame.
+     * This method informs the data poll sender to process a MAC frame.
+     *
+     *   1. Data Frame: send an immediate data poll if "frame pending" is set.
+     *   2. Ack Frame for a secured data frame in version 1.2 or newer: send an immediate data poll if
+     *      "frame pending" is set, otherwise reset the keep-alive timer for sending next poll.
+     *
+     * @param[in] aFrame     The frame to process.
      *
      */
-    void CheckFramePending(Mac::RxFrame &aFrame);
+    void ProcessFrame(const Mac::RxFrame &aFrame);
 
     /**
      * This method asks the data poll sender to recalculate the poll period.
@@ -232,6 +237,12 @@ public:
     uint32_t GetKeepAlivePollPeriod(void) const;
 
     /**
+     * This method resets the timer for sending keep-alive messages.
+     *
+     */
+    void ResetKeepAliveTimer(void);
+
+    /**
      * This method returns the default maximum poll period.
      *
      * The default poll period is determined based on the child timeout interval, ensuing the child would send data poll
@@ -266,10 +277,11 @@ private:
         kRecalculatePollPeriod,
     };
 
-    void        ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector);
-    uint32_t    CalculatePollPeriod(void) const;
-    static void HandlePollTimer(Timer &aTimer);
-    static void UpdateIfLarger(uint32_t &aPreiod, uint32_t aNewPeriod);
+    void            ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector);
+    uint32_t        CalculatePollPeriod(void) const;
+    const Neighbor &GetParent(void) const;
+    static void     HandlePollTimer(Timer &aTimer);
+    static void     UpdateIfLarger(uint32_t &aPeriod, uint32_t aNewPeriod);
 
     TimeMilli mTimerStartTime;
     uint32_t  mPollPeriod;

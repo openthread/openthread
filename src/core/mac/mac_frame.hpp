@@ -39,8 +39,6 @@
 #include <limits.h>
 #include <stdint.h>
 
-#include "utils/wrap_string.h"
-
 #include "common/encoding.hpp"
 #include "mac/mac_types.hpp"
 
@@ -363,12 +361,29 @@ public:
     uint8_t GetType(void) const { return GetPsdu()[0] & kFcfFrameTypeMask; }
 
     /**
+     * This method returns whether the frame is an Ack frame.
+     *
+     * @retval TRUE   If this is an Ack.
+     * @retval FALSE  If this is not an Ack.
+     *
+     */
+    bool IsAck(void) const { return GetType() == kFcfFrameAck; }
+
+    /**
      * This method returns the IEEE 802.15.4 Frame Version.
      *
      * @returns The IEEE 802.15.4 Frame Version.
      *
      */
     uint16_t GetVersion(void) const { return GetFrameControlField() & kFcfFrameVersionMask; }
+
+    /**
+     * This method returns if this IEEE 802.15.4 frame's version is 2015.
+     *
+     * @returns TRUE if version is 2015, FALSE otherwise.
+     *
+     */
+    bool IsVersion2015(void) const { return IsVersion2015(GetFrameControlField()); }
 
     /**
      * This method indicates whether or not security is enabled.
@@ -439,6 +454,14 @@ public:
     void SetSequence(uint8_t aSequence) { GetPsdu()[kSequenceIndex] = aSequence; }
 
     /**
+     * This method indicates whether or not the Destination PAN ID is present.
+     *
+     * @returns TRUE if the Destination PAN ID is present, FALSE otherwise.
+     *
+     */
+    bool IsDstPanIdPresent(void) const { return IsDstPanIdPresent(GetFrameControlField()); }
+
+    /**
      * This method gets the Destination PAN Identifier.
      *
      * @param[out]  aPanId  The Destination PAN Identifier.
@@ -456,6 +479,14 @@ public:
      *
      */
     void SetDstPanId(PanId aPanId);
+
+    /**
+     * This method indicates whether or not the Destination Address is present for this object.
+     *
+     * @retval TRUE if the Destination Address is present, FALSE otherwise.
+     *
+     */
+    bool IsDstAddrPresent() const { return IsDstAddrPresent(GetFrameControlField()); }
 
     /**
      * This method gets the Destination Address.
@@ -520,6 +551,14 @@ public:
     otError SetSrcPanId(PanId aPanId);
 
     /**
+     * This method indicates whether or not the Source Address is present for this object.
+     *
+     * @retval TRUE if the Source Address is present, FALSE otherwise.
+     *
+     */
+    bool IsSrcAddrPresent(void) const { return IsSrcAddrPresent(GetFrameControlField()); }
+
+    /**
      * This method gets the Source Address.
      *
      * @param[out]  aAddress  The Source Address.
@@ -552,6 +591,25 @@ public:
      *
      */
     void SetSrcAddr(const Address &aAddress);
+
+    /**
+     * This method gets the Security Control Field.
+     *
+     * @param[out]  aSecurityControlField  The Security Control Field.
+     *
+     * @retval OT_ERROR_NONE   Successfully retrieved the Security Level Identifier.
+     * @retval OT_ERROR_PARSE  Failed to find the security control field in the frame.
+     *
+     */
+    otError GetSecurityControlField(uint8_t &aSecurityControlField) const;
+
+    /**
+     * This method sets the Security Control Field.
+     *
+     * @param[in]  aSecurityControlField  The Security Control Field.
+     *
+     */
+    void SetSecurityControlField(uint8_t aSecurityControlField);
 
     /**
      * This method gets the Security Level Identifier.
@@ -895,6 +953,7 @@ private:
     uint8_t  FindDstAddrIndex(void) const;
     uint8_t  FindSrcPanIdIndex(void) const;
     uint8_t  FindSrcAddrIndex(void) const;
+    uint8_t  SkipAddrFieldIndex(void) const;
     uint8_t  FindSecurityHeaderIndex(void) const;
     uint8_t  SkipSecurityHeaderIndex(void) const;
     uint8_t  FindPayloadIndex(void) const;
@@ -903,6 +962,11 @@ private:
 #endif
 
     static uint8_t GetKeySourceLength(uint8_t aKeyIdMode);
+
+    static bool IsDstAddrPresent(uint16_t aFcf) { return (aFcf & kFcfDstAddrMask) != kFcfDstAddrNone; }
+    static bool IsDstPanIdPresent(uint16_t aFcf);
+    static bool IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone; }
+    static bool IsVersion2015(uint16_t aFcf) { return (aFcf & kFcfFrameVersionMask) == kFcfFrameVersion2015; }
 };
 
 /**
@@ -1133,6 +1197,7 @@ public:
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 };
 
+OT_TOOL_PACKED_BEGIN
 class Beacon
 {
 public:
@@ -1166,12 +1231,20 @@ public:
     }
 
     /**
-     * This method returns the pointer to the beacon payload address.
+     * This method returns the pointer to the beacon payload.
      *
-     * @retval A pointer to the beacon payload address.
+     * @returns A pointer to the beacon payload.
      *
      */
     uint8_t *GetPayload(void) { return reinterpret_cast<uint8_t *>(this) + sizeof(*this); }
+
+    /**
+     * This method returns the pointer to the beacon payload.
+     *
+     * @returns A pointer to the beacon payload.
+     *
+     */
+    const uint8_t *GetPayload(void) const { return reinterpret_cast<const uint8_t *>(this) + sizeof(*this); }
 
 private:
     uint16_t mSuperframeSpec;
@@ -1287,7 +1360,7 @@ public:
     {
         mFlags |= kJoiningFlag;
 
-#if OPENTHREAD_CONFIG_MAC_JOIN_BEACON_VERSION != kProtocolVersion
+#if OPENTHREAD_CONFIG_MAC_JOIN_BEACON_VERSION != 2 // check against kProtocolVersion
         mFlags &= ~kVersionMask;
         mFlags |= OPENTHREAD_CONFIG_MAC_JOIN_BEACON_VERSION << kVersionOffset;
 #endif
@@ -1296,18 +1369,18 @@ public:
     /**
      * This method gets the Network Name field.
      *
-     * @returns The Network Name field as `NetworkName::Data`.
+     * @returns The Network Name field as `NameData`.
      *
      */
-    NetworkName::Data GetNetworkName(void) const { return NetworkName::Data(mNetworkName, sizeof(mNetworkName)); }
+    NameData GetNetworkName(void) const { return NameData(mNetworkName, sizeof(mNetworkName)); }
 
     /**
      * This method sets the Network Name field.
      *
-     * @param[in]  aNameData  The Network Name (as a `NetworkName::Data`).
+     * @param[in]  aNameData  The Network Name (as a `NameData`).
      *
      */
-    void SetNetworkName(const NetworkName::Data &aNameData) { aNameData.CopyTo(mNetworkName, sizeof(mNetworkName)); }
+    void SetNetworkName(const NameData &aNameData) { aNameData.CopyTo(mNetworkName, sizeof(mNetworkName)); }
 
     /**
      * This method returns the Extended PAN ID field.

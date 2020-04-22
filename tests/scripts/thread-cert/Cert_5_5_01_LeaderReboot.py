@@ -40,6 +40,7 @@ DUT_ROUTER1 = 2
 
 
 class Cert_5_5_1_LeaderReboot(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -54,15 +55,13 @@ class Cert_5_5_1_LeaderReboot(unittest.TestCase):
         self.nodes[DUT_ROUTER1].set_panid(0xface)
         self.nodes[DUT_ROUTER1].set_mode('rsdn')
         self.nodes[DUT_ROUTER1].add_whitelist(
-            self.nodes[DUT_LEADER].get_addr64()
-        )
+            self.nodes[DUT_LEADER].get_addr64())
         self.nodes[DUT_ROUTER1].enable_whitelist()
         self.nodes[DUT_ROUTER1].set_router_selection_jitter(1)
 
     def _setUpLeader(self):
         self.nodes[DUT_LEADER].add_whitelist(
-            self.nodes[DUT_ROUTER1].get_addr64()
-        )
+            self.nodes[DUT_ROUTER1].get_addr64())
         self.nodes[DUT_LEADER].enable_whitelist()
 
     def tearDown(self):
@@ -93,13 +92,11 @@ class Cert_5_5_1_LeaderReboot(unittest.TestCase):
 
         # Send a harness helper ping to the DUT
         router1_rloc = self.nodes[DUT_ROUTER1].get_ip6_address(
-            config.ADDRESS_TYPE.RLOC
-        )
+            config.ADDRESS_TYPE.RLOC)
         self.assertTrue(self.nodes[DUT_LEADER].ping(router1_rloc))
 
         leader_rloc = self.nodes[DUT_LEADER].get_ip6_address(
-            config.ADDRESS_TYPE.RLOC
-        )
+            config.ADDRESS_TYPE.RLOC)
         self.assertTrue(self.nodes[DUT_ROUTER1].ping(leader_rloc))
 
         # 3 DUT_LEADER: Reset DUT_LEADER
@@ -116,9 +113,8 @@ class Cert_5_5_1_LeaderReboot(unittest.TestCase):
 
         # Verify DUT_LEADER didn't send MLE Advertisement messages
         leader_messages = self.simulator.get_messages_sent_by(DUT_LEADER)
-        msg = leader_messages.next_mle_message(
-            mle.CommandType.ADVERTISEMENT, False
-        )
+        msg = leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT,
+                                               False)
         self.assertTrue(msg is None)
 
         self.nodes[DUT_LEADER].start()
@@ -153,8 +149,7 @@ class Cert_5_5_1_LeaderReboot(unittest.TestCase):
             )
         else:
             msg = router1_messages_temp.next_mle_message(
-                mle.CommandType.LINK_ACCEPT_AND_REQUEST
-            )
+                mle.CommandType.LINK_ACCEPT_AND_REQUEST)
             self.assertTrue(msg is not None)
             command.check_link_accept(
                 msg,
@@ -167,18 +162,14 @@ class Cert_5_5_1_LeaderReboot(unittest.TestCase):
 
         # 6 DUT_LEADER: Verify DUT_LEADER didn't send a Parent Request message
         msg = leader_messages_temp.next_mle_message(
-            mle.CommandType.PARENT_REQUEST, False
-        )
+            mle.CommandType.PARENT_REQUEST, False)
         self.assertTrue(msg is None)
 
         # 7 ALL: Verify connectivity by sending an ICMPv6 Echo Request from
         # DUT_LEADER to DUT_ROUTER1 link local address
         router1_link_local_address = self.nodes[DUT_ROUTER1].get_ip6_address(
-            config.ADDRESS_TYPE.LINK_LOCAL
-        )
-        self.assertTrue(
-            self.nodes[DUT_LEADER].ping(router1_link_local_address)
-        )
+            config.ADDRESS_TYPE.LINK_LOCAL)
+        self.assertTrue(self.nodes[DUT_LEADER].ping(router1_link_local_address))
 
 
 if __name__ == '__main__':

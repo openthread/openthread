@@ -57,10 +57,19 @@ AddressResolver::AddressResolver(Instance &aInstance)
     , mAddressError(OT_URI_PATH_ADDRESS_ERROR, &AddressResolver::HandleAddressError, this)
     , mAddressQuery(OT_URI_PATH_ADDRESS_QUERY, &AddressResolver::HandleAddressQuery, this)
     , mAddressNotification(OT_URI_PATH_ADDRESS_NOTIFY, &AddressResolver::HandleAddressNotification, this)
+    , mCachedList()
+    , mSnoopedList()
+    , mQueryList()
+    , mQueryRetryList()
+    , mUnusedList()
     , mIcmpHandler(&AddressResolver::HandleIcmpReceive, this)
     , mTimer(aInstance, &AddressResolver::HandleTimer, this)
 {
-    Clear();
+    for (CacheEntry *entry = &mCacheEntries[0]; entry < OT_ARRAY_END(mCacheEntries); entry++)
+    {
+        entry->Init(GetInstance());
+        mUnusedList.Push(*entry);
+    }
 
     Get<Coap::Coap>().AddResource(mAddressError);
     Get<Coap::Coap>().AddResource(mAddressQuery);
@@ -71,23 +80,100 @@ AddressResolver::AddressResolver(Instance &aInstance)
 
 void AddressResolver::Clear(void)
 {
-    memset(&mCache, 0, sizeof(mCache));
+    CacheEntryList *lists[] = {&mCachedList, &mSnoopedList, &mQueryList, &mQueryRetryList};
 
-    for (uint8_t i = 0; i < kCacheEntries; i++)
+    for (uint8_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
     {
-        mCache[i].mAge = i;
+        CacheEntryList *list = lists[index];
+        CacheEntry *    entry;
+
+        while ((entry = list->Pop()) != NULL)
+        {
+            if (list == &mQueryList)
+            {
+                Get<MeshForwarder>().HandleResolved(entry->GetTarget(), OT_ERROR_DROP);
+            }
+
+            mUnusedList.Push(*entry);
+        }
     }
 }
 
-otError AddressResolver::GetEntry(uint8_t aIndex, otEidCacheEntry &aEntry) const
+otError AddressResolver::GetNextCacheEntry(EntryInfo &aInfo, Iterator &aIterator) const
 {
-    otError error = OT_ERROR_NONE;
+    otError               error = OT_ERROR_NONE;
+    const CacheEntryList *list;
+    const CacheEntry *    entry;
 
-    VerifyOrExit(aIndex < kCacheEntries, error = OT_ERROR_INVALID_ARGS);
-    aEntry.mTarget = mCache[aIndex].mTarget;
-    aEntry.mRloc16 = mCache[aIndex].mRloc16;
-    aEntry.mAge    = mCache[aIndex].mAge;
-    aEntry.mValid  = mCache[aIndex].mState == Cache::kStateCached;
+    list  = reinterpret_cast<const CacheEntryList *>(aIterator.mData[kIteratorListIndex]);
+    entry = reinterpret_cast<const CacheEntry *>(aIterator.mData[kIteratorEntryIndex]);
+
+    while (entry == NULL)
+    {
+        if (list == NULL)
+        {
+            list = &mCachedList;
+        }
+        else if (list == &mCachedList)
+        {
+            list = &mSnoopedList;
+        }
+        else if (list == &mSnoopedList)
+        {
+            list = &mQueryList;
+        }
+        else if (list == &mQueryList)
+        {
+            list = &mQueryRetryList;
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_NOT_FOUND);
+        }
+
+        entry = list->GetHead();
+    }
+
+    // Update the iterator then populate the `aInfo`.
+
+    aIterator.mData[kIteratorEntryIndex] = entry->GetNext();
+    aIterator.mData[kIteratorListIndex]  = list;
+
+    memset(&aInfo, 0, sizeof(aInfo));
+    aInfo.mTarget = entry->GetTarget();
+    aInfo.mRloc16 = entry->GetRloc16();
+
+    if (list == &mCachedList)
+    {
+        aInfo.mState          = OT_CACHE_ENTRY_STATE_CACHED;
+        aInfo.mCanEvict       = true;
+        aInfo.mValidLastTrans = entry->IsLastTransactionTimeValid();
+
+        VerifyOrExit(entry->IsLastTransactionTimeValid(), OT_NOOP);
+
+        aInfo.mLastTransTime = entry->GetLastTransactionTime();
+        static_cast<Ip6::Address &>(aInfo.mMeshLocalEid).SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+        static_cast<Ip6::Address &>(aInfo.mMeshLocalEid).SetIid(entry->GetMeshLocalIid());
+
+        ExitNow();
+    }
+
+    if (list == &mSnoopedList)
+    {
+        aInfo.mState = OT_CACHE_ENTRY_STATE_SNOOPED;
+    }
+    else if (list == &mQueryList)
+    {
+        aInfo.mState = OT_CACHE_ENTRY_STATE_QUERY;
+    }
+    else
+    {
+        aInfo.mState = OT_CACHE_ENTRY_STATE_RETRY_QUERY;
+    }
+
+    aInfo.mCanEvict   = entry->CanEvict();
+    aInfo.mTimeout    = entry->GetTimeout();
+    aInfo.mRetryDelay = entry->GetRetryDelay();
 
 exit:
     return error;
@@ -95,191 +181,262 @@ exit:
 
 void AddressResolver::Remove(uint8_t aRouterId)
 {
-    for (int i = 0; i < kCacheEntries; i++)
-    {
-        if (Mle::Mle::GetRouterId(mCache[i].mRloc16) == aRouterId)
-        {
-            InvalidateCacheEntry(mCache[i], kReasonRemovingRouterId);
-        }
-    }
+    Remove(Mle::Mle::Rloc16FromRouterId(aRouterId), /* aMatchRouterId */ true);
 }
 
 void AddressResolver::Remove(uint16_t aRloc16)
 {
-    for (int i = 0; i < kCacheEntries; i++)
+    Remove(aRloc16, /* aMatchRouterId */ false);
+}
+
+AddressResolver::CacheEntry *AddressResolver::GetEntryAfter(CacheEntry *aPrev, CacheEntryList &aList)
+{
+    return (aPrev == NULL) ? aList.GetHead() : aPrev->GetNext();
+}
+
+void AddressResolver::Remove(Mac::ShortAddress aRloc16, bool aMatchRouterId)
+{
+    CacheEntryList *lists[] = {&mCachedList, &mSnoopedList};
+
+    for (uint8_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
     {
-        if (mCache[i].mRloc16 == aRloc16)
+        CacheEntryList *list = lists[index];
+        CacheEntry *    prev = NULL;
+        CacheEntry *    entry;
+
+        while ((entry = GetEntryAfter(prev, *list)) != NULL)
         {
-            InvalidateCacheEntry(mCache[i], kReasonRemovingRloc16);
+            if ((aMatchRouterId && Mle::Mle::RouterIdMatch(entry->GetRloc16(), aRloc16)) ||
+                (!aMatchRouterId && (entry->GetRloc16() == aRloc16)))
+            {
+                RemoveCacheEntry(*entry, *list, prev, aMatchRouterId ? kReasonRemovingRouterId : kReasonRemovingRloc16);
+                mUnusedList.Push(*entry);
+
+                // If the entry is removed from list, we keep the same
+                // `prev` pointer.
+            }
+            else
+            {
+                prev = entry;
+            }
         }
     }
+}
+
+AddressResolver::CacheEntry *AddressResolver::FindCacheEntryInList(CacheEntryList &    aList,
+                                                                   const Ip6::Address &aEid,
+                                                                   CacheEntry *&       aPrevEntry)
+{
+    CacheEntry *entry;
+
+    for (CacheEntry *prev = NULL; (entry = GetEntryAfter(prev, aList)) != NULL; prev = entry)
+    {
+        if (entry->GetTarget() == aEid)
+        {
+            aPrevEntry = prev;
+            break;
+        }
+    }
+
+    return entry;
+}
+
+AddressResolver::CacheEntry *AddressResolver::FindCacheEntry(const Ip6::Address &aEid,
+                                                             CacheEntryList *&   aList,
+                                                             CacheEntry *&       aPrevEntry)
+{
+    CacheEntry *    entry   = NULL;
+    CacheEntryList *lists[] = {&mCachedList, &mSnoopedList, &mQueryList, &mQueryRetryList};
+
+    for (uint8_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
+    {
+        aList = lists[index];
+        entry = FindCacheEntryInList(*aList, aEid, aPrevEntry);
+        VerifyOrExit(entry == NULL, OT_NOOP);
+    }
+
+exit:
+    return entry;
 }
 
 void AddressResolver::Remove(const Ip6::Address &aEid)
 {
-    for (int i = 0; i < kCacheEntries; i++)
-    {
-        if (mCache[i].mState == Cache::kStateInvalid || mCache[i].mTarget != aEid)
-        {
-            continue;
-        }
-
-        InvalidateCacheEntry(mCache[i], kReasonRemovingEid);
-        break;
-    }
+    Remove(aEid, kReasonRemovingEid);
 }
 
-AddressResolver::Cache *AddressResolver::NewCacheEntry(void)
+void AddressResolver::Remove(const Ip6::Address &aEid, Reason aReason)
 {
-    Cache *rval = NULL;
+    CacheEntry *    entry;
+    CacheEntry *    prev;
+    CacheEntryList *list;
 
-    for (int i = 0; i < kCacheEntries; i++)
-    {
-        if (mCache[i].mState == Cache::kStateQuery && mCache[i].mFailures == 0)
-        {
-            continue;
-        }
+    entry = FindCacheEntry(aEid, list, prev);
+    VerifyOrExit(entry != NULL, OT_NOOP);
 
-        if (rval == NULL || rval->mAge < mCache[i].mAge)
-        {
-            rval = &mCache[i];
-        }
-    }
+    RemoveCacheEntry(*entry, *list, prev, aReason);
+    mUnusedList.Push(*entry);
 
-    if (rval != NULL)
-    {
-        InvalidateCacheEntry(*rval, kReasonEvictingForNewEntry);
-    }
-
-    return rval;
+exit:
+    return;
 }
 
-void AddressResolver::MarkCacheEntryAsUsed(Cache &aEntry)
+AddressResolver::CacheEntry *AddressResolver::NewCacheEntry(bool aSnoopedEntry)
 {
-    for (int i = 0; i < kCacheEntries; i++)
+    CacheEntry *    newEntry  = NULL;
+    CacheEntry *    prevEntry = NULL;
+    CacheEntryList *lists[]   = {&mSnoopedList, &mQueryRetryList, &mQueryList, &mCachedList};
+
+    // The following order is used when trying to allocate a new cache
+    // entry: First the unused list is checked, followed by the list
+    // of snooped entries, then query-retry list (entries in delay
+    // retry timeout wait due to a prior query failing to get a
+    // response), then the query list (entries actively querying and
+    // waiting for address notification response), and finally the
+    // cached (in-use) list. Within each list the oldest entry is
+    // reclaimed first (the list's tail). We also make sure the entry
+    // can be evicted (e.g., first time query entries can not be
+    // evicted till timeout).
+
+    newEntry = mUnusedList.Pop();
+    VerifyOrExit(newEntry == NULL, OT_NOOP);
+
+    for (uint8_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
     {
-        if (mCache[i].mAge < aEntry.mAge)
+        CacheEntryList *list = lists[index];
+        CacheEntry *    prev;
+        CacheEntry *    entry;
+        uint16_t        numNonEvictable = 0;
+
+        for (prev = NULL; (entry = GetEntryAfter(prev, *list)) != NULL; prev = entry)
         {
-            mCache[i].mAge++;
+            if ((list != &mCachedList) && !entry->CanEvict())
+            {
+                numNonEvictable++;
+                continue;
+            }
+
+            newEntry  = entry;
+            prevEntry = prev;
+        }
+
+        if (newEntry != NULL)
+        {
+            RemoveCacheEntry(*newEntry, *list, prevEntry, kReasonEvictingForNewEntry);
+            ExitNow();
+        }
+
+        if (aSnoopedEntry && (list == &mSnoopedList))
+        {
+            // Check if the new entry is being requested for "snoop
+            // optimization" (i.e., inspection of a received message).
+            // When a new snooped entry is added, we do not allow it
+            // to be evicted for a short timeout. This allows some
+            // delay for a response message to use the entry (if entry
+            // is used it will be moved to the cached list). If a
+            // snooped entry is not used after the timeout, we allow
+            // it to be evicted. To ensure snooped entries do not
+            // overwrite other cached entries, we limit the number of
+            // snooped entries that are in timeout mode and cannot be
+            // evicted by `kMaxNonEvictableSnoopedEntries`.
+
+            VerifyOrExit(numNonEvictable < kMaxNonEvictableSnoopedEntries, OT_NOOP);
         }
     }
 
-    aEntry.mAge = 0;
+exit:
+    return newEntry;
 }
 
-const char *AddressResolver::ConvertInvalidationReasonToString(InvalidationReason aReason)
+void AddressResolver::RemoveCacheEntry(CacheEntry &    aEntry,
+                                       CacheEntryList &aList,
+                                       CacheEntry *    aPrevEntry,
+                                       Reason          aReason)
 {
-    const char *str = "";
+    aList.PopAfter(aPrevEntry);
 
-    switch (aReason)
+    if (&aList == &mQueryList)
     {
-    case kReasonRemovingRouterId:
-        str = "removing router id";
-        break;
-
-    case kReasonRemovingRloc16:
-        str = "removing rloc16";
-        break;
-
-    case kReasonReceivedIcmpDstUnreachNoRoute:
-        str = "received icmp no route";
-        break;
-
-    case kReasonEvictingForNewEntry:
-        str = "evicting for new entry";
-        break;
-
-    case kReasonRemovingEid:
-        str = "removing eid";
-        break;
+        Get<MeshForwarder>().HandleResolved(aEntry.GetTarget(), OT_ERROR_DROP);
     }
 
-    return str;
-}
-
-void AddressResolver::InvalidateCacheEntry(Cache &aEntry, InvalidationReason aReason)
-{
-    OT_UNUSED_VARIABLE(aReason);
-
-    for (int i = 0; i < kCacheEntries; i++)
-    {
-        if (mCache[i].mAge > aEntry.mAge)
-        {
-            mCache[i].mAge--;
-        }
-    }
-
-    switch (aEntry.mState)
-    {
-    case Cache::kStateCached:
-        otLogNoteArp("Cache entry removed: %s, 0x%04x - %s", aEntry.mTarget.ToString().AsCString(), aEntry.mRloc16,
-                     ConvertInvalidationReasonToString(aReason));
-        break;
-
-    case Cache::kStateQuery:
-        otLogNoteArp("Cache entry (query mode) removed: %s, timeout:%d, retry:%d - %s",
-                     aEntry.mTarget.ToString().AsCString(), aEntry.mTimeout, aEntry.mRetryTimeout,
-                     ConvertInvalidationReasonToString(aReason));
-        break;
-
-    default:
-        break;
-    }
-
-    aEntry.mAge   = kCacheEntries - 1;
-    aEntry.mState = Cache::kStateInvalid;
+    LogCacheEntryChange(kEntryRemoved, aReason, aEntry, &aList);
 }
 
 otError AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    otError         error = OT_ERROR_NONE;
+    CacheEntryList *list;
+    CacheEntry *    entry;
+    CacheEntry *    prev;
 
-    for (int i = 0; i < kCacheEntries; i++)
+    entry = FindCacheEntry(aEid, list, prev);
+    VerifyOrExit(entry != NULL, error = OT_ERROR_NOT_FOUND);
+
+    if ((list == &mCachedList) || (list == &mSnoopedList))
     {
-        if (mCache[i].mState == Cache::kStateInvalid || mCache[i].mTarget != aEid)
-        {
-            continue;
-        }
+        VerifyOrExit(entry->GetRloc16() != aRloc16, OT_NOOP);
+        entry->SetRloc16(aRloc16);
+    }
+    else
+    {
+        // Entry is in `mQueryList` or `mQueryRetryList`. Remove it
+        // from its current list, update it, and then add it to the
+        // `mCachedList`.
 
-        if (mCache[i].mRloc16 != aRloc16)
-        {
-            // not updating the age here is intentional because this cache entry is not actually being used
-            mCache[i].mRloc16 = aRloc16;
+        list->PopAfter(prev);
 
-            if (mCache[i].mState != Cache::kStateCached)
-            {
-                mCache[i].mRetryTimeout        = 0;
-                mCache[i].mLastTransactionTime = static_cast<uint32_t>(kLastTransactionTimeInvalid);
-                mCache[i].mTimeout             = 0;
-                mCache[i].mFailures            = 0;
-                mCache[i].mState               = Cache::kStateCached;
+        entry->SetRloc16(aRloc16);
+        entry->MarkLastTransactionTimeAsInvalid();
+        mCachedList.Push(*entry);
 
-                Get<MeshForwarder>().HandleResolved(aEid, OT_ERROR_NONE);
-            }
-
-            otLogNoteArp("Cache entry updated (snoop): %s, 0x%04x", aEid.ToString().AsCString(), aRloc16);
-        }
-
-        error = OT_ERROR_NONE;
+        Get<MeshForwarder>().HandleResolved(aEid, OT_ERROR_NONE);
     }
 
+    LogCacheEntryChange(kEntryUpdated, kReasonSnoop, *entry);
+
+exit:
     return error;
 }
 
-otError AddressResolver::AddCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
+otError AddressResolver::AddSnoopedCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
 {
-    otError error = OT_ERROR_NONE;
-    Cache * entry = NewCacheEntry();
+    otError     error           = OT_ERROR_NONE;
+    uint16_t    numNonEvictable = 0;
+    CacheEntry *entry;
 
+    entry = NewCacheEntry(/* aSnoopedEntry */ true);
     VerifyOrExit(entry != NULL, error = OT_ERROR_NO_BUFS);
 
-    entry->mTarget   = aEid;
-    entry->mRloc16   = aRloc16;
-    entry->mTimeout  = 0;
-    entry->mFailures = 0;
-    entry->mState    = Cache::kStateCached;
+    for (CacheEntry *snooped = mSnoopedList.GetHead(); snooped != NULL; snooped = snooped->GetNext())
+    {
+        if (!snooped->CanEvict())
+        {
+            numNonEvictable++;
+        }
+    }
 
-    MarkCacheEntryAsUsed(*entry);
+    entry->SetTarget(aEid);
+    entry->SetRloc16(aRloc16);
+
+    if (numNonEvictable < kMaxNonEvictableSnoopedEntries)
+    {
+        entry->SetCanEvict(false);
+        entry->SetTimeout(kSnoopBlockEvictionTimeout);
+
+        if (!mTimer.IsRunning())
+        {
+            mTimer.Start(kStateUpdatePeriod);
+        }
+    }
+    else
+    {
+        entry->SetCanEvict(true);
+        entry->SetTimeout(0);
+    }
+
+    mSnoopedList.Push(*entry);
+
+    LogCacheEntryChange(kEntryAdded, kReasonSnoop, *entry);
 
 exit:
     return error;
@@ -287,83 +444,105 @@ exit:
 
 void AddressResolver::RestartAddressQueries(void)
 {
-    for (int i = 0; i < kCacheEntries; i++)
+    CacheEntry *tail;
+
+    // We move all entries from `mQueryRetryList` at the tail of
+    // `mQueryList` and then (re)send Address Query for all entries in
+    // the updated `mQueryList`.
+
+    tail = mQueryList.GetTail();
+
+    if (tail == NULL)
     {
-        Cache &entry = mCache[i];
+        mQueryList.SetHead(mQueryRetryList.GetHead());
+    }
+    else
+    {
+        tail->SetNext(mQueryRetryList.GetHead());
+    }
 
-        if (entry.mState != Cache::kStateQuery)
-        {
-            continue;
-        }
+    mQueryRetryList.Clear();
 
-        SendAddressQuery(entry.mTarget);
+    for (CacheEntry *entry = mQueryList.GetHead(); entry != NULL; entry = entry->GetNext())
+    {
+        SendAddressQuery(entry->GetTarget());
 
-        entry.mTimeout      = kAddressQueryTimeout;
-        entry.mFailures     = 0;
-        entry.mRetryTimeout = kAddressQueryInitialRetryDelay;
+        entry->SetTimeout(kAddressQueryTimeout);
+        entry->SetRetryDelay(kAddressQueryInitialRetryDelay);
+        entry->SetCanEvict(false);
     }
 }
 
 otError AddressResolver::Resolve(const Ip6::Address &aEid, uint16_t &aRloc16)
 {
-    otError error = OT_ERROR_NONE;
-    Cache * entry = NULL;
+    otError         error = OT_ERROR_NONE;
+    CacheEntry *    entry;
+    CacheEntry *    prev;
+    CacheEntryList *list;
 
-    for (int i = 0; i < kCacheEntries; i++)
-    {
-        if (mCache[i].mState != Cache::kStateInvalid)
-        {
-            if (mCache[i].mTarget == aEid)
-            {
-                entry = &mCache[i];
-                break;
-            }
-        }
-    }
+    entry = FindCacheEntry(aEid, list, prev);
 
     if (entry == NULL)
     {
-        entry = NewCacheEntry();
+        // If the entry is not present in any of the lists, try to
+        // allocate a new entry and perform address query. We do not
+        // allow first-time address query entries to be evicted till
+        // timeout.
+
+        entry = NewCacheEntry(/* aSnoopedEntry */ false);
+        VerifyOrExit(entry != NULL, error = OT_ERROR_NO_BUFS);
+
+        entry->SetTarget(aEid);
+        entry->SetRloc16(Mac::kShortAddrInvalid);
+        entry->SetRetryDelay(kAddressQueryInitialRetryDelay);
+        entry->SetCanEvict(false);
+        list = NULL;
     }
 
-    VerifyOrExit(entry != NULL, error = OT_ERROR_NO_BUFS);
-
-    switch (entry->mState)
+    if ((list == &mCachedList) || (list == &mSnoopedList))
     {
-    case Cache::kStateInvalid:
-        SuccessOrExit(error = SendAddressQuery(aEid));
-        entry->mTarget       = aEid;
-        entry->mRloc16       = Mac::kShortAddrInvalid;
-        entry->mTimeout      = kAddressQueryTimeout;
-        entry->mFailures     = 0;
-        entry->mRetryTimeout = kAddressQueryInitialRetryDelay;
-        entry->mState        = Cache::kStateQuery;
-        error                = OT_ERROR_ADDRESS_QUERY;
-        break;
+        // Remove the entry from its current list and push it at the
+        // head of cached list.
 
-    case Cache::kStateQuery:
-        if (entry->mTimeout > 0)
+        list->PopAfter(prev);
+
+        if (list == &mSnoopedList)
         {
-            error = OT_ERROR_ADDRESS_QUERY;
-        }
-        else if (entry->mTimeout == 0 && entry->mRetryTimeout == 0)
-        {
-            SuccessOrExit(error = SendAddressQuery(aEid));
-            entry->mTimeout = kAddressQueryTimeout;
-            error           = OT_ERROR_ADDRESS_QUERY;
-        }
-        else
-        {
-            error = OT_ERROR_DROP;
+            entry->MarkLastTransactionTimeAsInvalid();
         }
 
-        break;
-
-    case Cache::kStateCached:
-        aRloc16 = entry->mRloc16;
-        MarkCacheEntryAsUsed(*entry);
-        break;
+        mCachedList.Push(*entry);
+        aRloc16 = entry->GetRloc16();
+        ExitNow();
     }
+
+    if (list == &mQueryList)
+    {
+        ExitNow(error = OT_ERROR_ADDRESS_QUERY);
+    }
+
+    if (list == &mQueryRetryList)
+    {
+        // Allow an entry in query-retry mode to resend an Address
+        // Query again only if the timeout (retry delay interval) is
+        // expired.
+
+        VerifyOrExit(entry->IsTimeoutZero(), error = OT_ERROR_DROP);
+        mQueryRetryList.PopAfter(prev);
+    }
+
+    entry->SetTimeout(kAddressQueryTimeout);
+
+    error = SendAddressQuery(aEid);
+    VerifyOrExit(error == OT_ERROR_NONE, mUnusedList.Push(*entry));
+
+    if (list == NULL)
+    {
+        LogCacheEntryChange(kEntryAdded, kReasonQueryRequest, *entry);
+    }
+
+    mQueryList.Push(*entry);
+    error = OT_ERROR_ADDRESS_QUERY;
 
 exit:
     return error;
@@ -373,7 +552,6 @@ otError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
 {
     otError          error;
     Coap::Message *  message;
-    ThreadTargetTlv  targetTlv;
     Ip6::MessageInfo messageInfo;
 
     VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
@@ -382,12 +560,10 @@ otError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
     SuccessOrExit(error = message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_QUERY));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    targetTlv.Init();
-    targetTlv.SetTarget(aEid);
-    SuccessOrExit(error = message->AppendTlv(targetTlv));
+    SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kTarget, aEid.mFields.m8, sizeof(aEid)));
 
-    messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xff03);
-    messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(0x0002);
+    messageInfo.GetPeerAddr().SetToRealmLocalAllRoutersMulticast();
+
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
 
@@ -418,97 +594,75 @@ void AddressResolver::HandleAddressNotification(void *aContext, otMessage *aMess
 
 void AddressResolver::HandleAddressNotification(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadTargetTlv              targetTlv;
-    ThreadMeshLocalEidTlv        mlIidTlv;
-    ThreadRloc16Tlv              rloc16Tlv;
-    ThreadLastTransactionTimeTlv lastTransactionTimeTlv;
-    uint32_t                     lastTransactionTime;
+    Ip6::Address    target;
+    uint8_t         meshLocalIid[Ip6::Address::kInterfaceIdentifierSize];
+    uint16_t        rloc16;
+    uint32_t        lastTransactionTime;
+    CacheEntryList *list;
+    CacheEntry *    entry;
+    CacheEntry *    prev;
 
-    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST);
+    VerifyOrExit(aMessage.IsConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, OT_NOOP);
 
-    SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kTarget, sizeof(targetTlv), targetTlv));
-    VerifyOrExit(targetTlv.IsValid());
-    targetTlv.Init(); // reset TLV length
+    SuccessOrExit(Tlv::ReadTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
+    SuccessOrExit(Tlv::ReadTlv(aMessage, ThreadTlv::kMeshLocalEid, meshLocalIid, sizeof(meshLocalIid)));
+    SuccessOrExit(Tlv::ReadUint16Tlv(aMessage, ThreadTlv::kRloc16, rloc16));
 
-    SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kMeshLocalEid, sizeof(mlIidTlv), mlIidTlv));
-    VerifyOrExit(mlIidTlv.IsValid());
-    mlIidTlv.Init(); // reset TLV length
-
-    SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rloc16Tlv), rloc16Tlv));
-    VerifyOrExit(rloc16Tlv.IsValid());
-
-    lastTransactionTime = 0;
-
-    if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kLastTransactionTime, sizeof(lastTransactionTimeTlv),
-                          lastTransactionTimeTlv) == OT_ERROR_NONE)
+    switch (Tlv::ReadUint32Tlv(aMessage, ThreadTlv::kLastTransactionTime, lastTransactionTime))
     {
-        VerifyOrExit(lastTransactionTimeTlv.IsValid());
-        lastTransactionTime = lastTransactionTimeTlv.GetTime();
+    case OT_ERROR_NONE:
+        break;
+    case OT_ERROR_NOT_FOUND:
+        lastTransactionTime = 0;
+        break;
+    default:
+        ExitNow();
     }
 
-    otLogInfoArp("Received address notification from 0x%04x for %s to 0x%04x",
-                 HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]), targetTlv.GetTarget().ToString().AsCString(),
-                 rloc16Tlv.GetRloc16());
+    otLogInfoArp("Received address notification from 0x%04x for %s to 0x%04x", aMessageInfo.GetPeerAddr().GetLocator(),
+                 target.ToString().AsCString(), rloc16);
 
-    for (int i = 0; i < kCacheEntries; i++)
+    entry = FindCacheEntry(target, list, prev);
+    VerifyOrExit(entry != NULL, OT_NOOP);
+
+    if (list == &mCachedList)
     {
-        if (mCache[i].mTarget != targetTlv.GetTarget())
+        if (entry->IsLastTransactionTimeValid())
         {
-            continue;
-        }
+            // Receiving multiple Address Notification for an EID from
+            // different mesh-local IIDs indicates address is in use
+            // by more than one device. Try to resolve the duplicate
+            // address by sending an Address Error message.
 
-        switch (mCache[i].mState)
-        {
-        case Cache::kStateInvalid:
-            break;
+            VerifyOrExit(entry->HasMeshLocalIid(meshLocalIid), SendAddressError(target, meshLocalIid, NULL));
 
-        case Cache::kStateCached:
-            if (mCache[i].mLastTransactionTime != kLastTransactionTimeInvalid)
-            {
-                if (memcmp(mCache[i].mMeshLocalIid, mlIidTlv.GetIid(), sizeof(mCache[i].mMeshLocalIid)) != 0)
-                {
-                    SendAddressError(targetTlv, mlIidTlv, NULL);
-                    ExitNow();
-                }
-
-                if (lastTransactionTime >= mCache[i].mLastTransactionTime)
-                {
-                    ExitNow();
-                }
-            }
-
-            // fall through
-
-        case Cache::kStateQuery:
-            memcpy(mCache[i].mMeshLocalIid, mlIidTlv.GetIid(), sizeof(mCache[i].mMeshLocalIid));
-            mCache[i].mRloc16              = rloc16Tlv.GetRloc16();
-            mCache[i].mRetryTimeout        = 0;
-            mCache[i].mLastTransactionTime = lastTransactionTime;
-            mCache[i].mTimeout             = 0;
-            mCache[i].mFailures            = 0;
-            mCache[i].mState               = Cache::kStateCached;
-            MarkCacheEntryAsUsed(mCache[i]);
-
-            otLogNoteArp("Cache entry updated (notification): %s, 0x%04x, lastTrans:%d",
-                         targetTlv.GetTarget().ToString().AsCString(), rloc16Tlv.GetRloc16(), lastTransactionTime);
-
-            if (Get<Coap::Coap>().SendEmptyAck(aMessage, aMessageInfo) == OT_ERROR_NONE)
-            {
-                otLogInfoArp("Sending address notification acknowledgment");
-            }
-
-            Get<MeshForwarder>().HandleResolved(targetTlv.GetTarget(), OT_ERROR_NONE);
-            break;
+            VerifyOrExit(lastTransactionTime < entry->GetLastTransactionTime(), OT_NOOP);
         }
     }
+
+    entry->SetRloc16(rloc16);
+    entry->SetMeshLocalIid(meshLocalIid);
+    entry->SetLastTransactionTime(lastTransactionTime);
+
+    list->PopAfter(prev);
+    mCachedList.Push(*entry);
+
+    LogCacheEntryChange(kEntryUpdated, kReasonReceivedNotification, *entry);
+
+    if (Get<Coap::Coap>().SendEmptyAck(aMessage, aMessageInfo) == OT_ERROR_NONE)
+    {
+        otLogInfoArp("Sending address notification acknowledgment");
+    }
+
+    Get<MeshForwarder>().HandleResolved(target, OT_ERROR_NONE);
 
 exit:
     return;
 }
 
-otError AddressResolver::SendAddressError(const ThreadTargetTlv &      aTarget,
-                                          const ThreadMeshLocalEidTlv &aEid,
-                                          const Ip6::Address *         aDestination)
+otError AddressResolver::SendAddressError(const Ip6::Address &aTarget,
+                                          const uint8_t *     aMeshLocalIid,
+                                          const Ip6::Address *aDestination)
 {
     otError          error;
     Coap::Message *  message;
@@ -520,13 +674,13 @@ otError AddressResolver::SendAddressError(const ThreadTargetTlv &      aTarget,
     SuccessOrExit(error = message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_ERROR));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    SuccessOrExit(error = message->AppendTlv(aTarget));
-    SuccessOrExit(error = message->AppendTlv(aEid));
+    SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kTarget, aTarget.mFields.m8, sizeof(aTarget)));
+    SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kMeshLocalEid, aMeshLocalIid,
+                                         Ip6::Address::kInterfaceIdentifierSize));
 
     if (aDestination == NULL)
     {
-        messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xff03);
-        messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(0x0002);
+        messageInfo.GetPeerAddr().SetToRealmLocalAllRoutersMulticast();
     }
     else
     {
@@ -538,7 +692,7 @@ otError AddressResolver::SendAddressError(const ThreadTargetTlv &      aTarget,
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
 
-    otLogInfoArp("Sending address error for target %s", aTarget.GetTarget().ToString().AsCString());
+    otLogInfoArp("Sending address error for target %s", aTarget.ToString().AsCString());
 
 exit:
 
@@ -558,14 +712,13 @@ void AddressResolver::HandleAddressError(void *aContext, otMessage *aMessage, co
 
 void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    otError               error = OT_ERROR_NONE;
-    ThreadTargetTlv       targetTlv;
-    ThreadMeshLocalEidTlv mlIidTlv;
-    Mac::ExtAddress       macAddr;
-    Ip6::Address          destination;
+    otError         error = OT_ERROR_NONE;
+    Ip6::Address    target;
+    uint8_t         meshLocalIid[Ip6::Address::kInterfaceIdentifierSize];
+    Mac::ExtAddress macAddr;
+    Ip6::Address    destination;
 
-    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST,
-                 error = OT_ERROR_DROP);
+    VerifyOrExit(aMessage.GetCode() == OT_COAP_CODE_POST, error = OT_ERROR_DROP);
 
     otLogInfoArp("Received address error notification");
 
@@ -577,19 +730,14 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
         }
     }
 
-    SuccessOrExit(error = ThreadTlv::GetTlv(aMessage, ThreadTlv::kTarget, sizeof(targetTlv), targetTlv));
-    VerifyOrExit(targetTlv.IsValid(), error = OT_ERROR_PARSE);
-    targetTlv.Init(); // reset TLV length
-
-    SuccessOrExit(error = ThreadTlv::GetTlv(aMessage, ThreadTlv::kMeshLocalEid, sizeof(mlIidTlv), mlIidTlv));
-    VerifyOrExit(mlIidTlv.IsValid(), error = OT_ERROR_PARSE);
-    mlIidTlv.Init(); // reset TLV length
+    SuccessOrExit(error = Tlv::ReadTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
+    SuccessOrExit(error = Tlv::ReadTlv(aMessage, ThreadTlv::kMeshLocalEid, meshLocalIid, sizeof(meshLocalIid)));
 
     for (const Ip6::NetifUnicastAddress *address = Get<ThreadNetif>().GetUnicastAddresses(); address;
          address                                 = address->GetNext())
     {
-        if (address->GetAddress() == targetTlv.GetTarget() &&
-            memcmp(Get<Mle::MleRouter>().GetMeshLocal64().GetIid(), mlIidTlv.GetIid(), 8))
+        if (address->GetAddress() == target &&
+            memcmp(Get<Mle::MleRouter>().GetMeshLocal64().GetIid(), meshLocalIid, sizeof(meshLocalIid)))
         {
             // Target EID matches address and Mesh Local EID differs
             Get<ThreadNetif>().RemoveUnicastAddress(*address);
@@ -597,10 +745,10 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
         }
     }
 
-    macAddr.Set(mlIidTlv.GetIid());
+    macAddr.Set(meshLocalIid);
     macAddr.ToggleLocal();
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValid); !iter.IsDone(); iter++)
     {
         Child &child = *iter.GetChild();
 
@@ -614,13 +762,11 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
             // Mesh Local EID differs, so check whether Target EID
             // matches a child address and if so remove it.
 
-            if (child.RemoveIp6Address(GetInstance(), targetTlv.GetTarget()) == OT_ERROR_NONE)
+            if (child.RemoveIp6Address(target) == OT_ERROR_NONE)
             {
-                memset(&destination, 0, sizeof(destination));
-                destination.mFields.m16[0] = HostSwap16(0xfe80);
-                destination.SetIid(child.GetExtAddress());
+                SuccessOrExit(error = Get<Mle::Mle>().GetLocatorAddress(destination, child.GetRloc16()));
 
-                SendAddressError(targetTlv, mlIidTlv, &destination);
+                SendAddressError(target, meshLocalIid, &destination);
                 ExitNow();
             }
         }
@@ -642,31 +788,24 @@ void AddressResolver::HandleAddressQuery(void *aContext, otMessage *aMessage, co
 
 void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadTargetTlv              targetTlv;
-    ThreadMeshLocalEidTlv        mlIidTlv;
-    ThreadLastTransactionTimeTlv lastTransactionTimeTlv;
+    Ip6::Address target;
+    uint32_t     lastTransactionTime;
 
-    VerifyOrExit(aMessage.GetType() == OT_COAP_TYPE_NON_CONFIRMABLE && aMessage.GetCode() == OT_COAP_CODE_POST);
+    VerifyOrExit(aMessage.IsNonConfirmable() && aMessage.GetCode() == OT_COAP_CODE_POST, OT_NOOP);
 
-    SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kTarget, sizeof(targetTlv), targetTlv));
-    VerifyOrExit(targetTlv.IsValid());
-    targetTlv.Init(); // reset TLV length
+    SuccessOrExit(Tlv::ReadTlv(aMessage, ThreadTlv::kTarget, &target, sizeof(target)));
 
-    mlIidTlv.Init();
+    otLogInfoArp("Received address query from 0x%04x for target %s", aMessageInfo.GetPeerAddr().GetLocator(),
+                 target.ToString().AsCString());
 
-    lastTransactionTimeTlv.Init();
-
-    otLogInfoArp("Received address query from 0x%04x for target %s",
-                 HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]), targetTlv.GetTarget().ToString().AsCString());
-
-    if (Get<ThreadNetif>().IsUnicastAddress(targetTlv.GetTarget()))
+    if (Get<ThreadNetif>().IsUnicastAddress(target))
     {
-        mlIidTlv.SetIid(Get<Mle::MleRouter>().GetMeshLocal64().GetIid());
-        SendAddressQueryResponse(targetTlv, mlIidTlv, NULL, aMessageInfo.GetPeerAddr());
+        SendAddressQueryResponse(target, Get<Mle::MleRouter>().GetMeshLocal64().GetIid(), NULL,
+                                 aMessageInfo.GetPeerAddr());
         ExitNow();
     }
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValid); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValid); !iter.IsDone(); iter++)
     {
         Child &child = *iter.GetChild();
 
@@ -675,11 +814,15 @@ void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::Mes
             continue;
         }
 
-        if (child.HasIp6Address(GetInstance(), targetTlv.GetTarget()))
+        if (child.HasIp6Address(target))
         {
-            mlIidTlv.SetIid(child.GetExtAddress());
-            lastTransactionTimeTlv.SetTime(TimerMilli::GetNow() - child.GetLastHeard());
-            SendAddressQueryResponse(targetTlv, mlIidTlv, &lastTransactionTimeTlv, aMessageInfo.GetPeerAddr());
+            Mac::ExtAddress addr;
+
+            // Convert extended address to IID.
+            addr = child.GetExtAddress();
+            addr.ToggleLocal();
+            lastTransactionTime = TimerMilli::GetNow() - child.GetLastHeard();
+            SendAddressQueryResponse(target, addr.m8, &lastTransactionTime, aMessageInfo.GetPeerAddr());
             ExitNow();
         }
     }
@@ -688,14 +831,13 @@ exit:
     return;
 }
 
-void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &             aTargetTlv,
-                                               const ThreadMeshLocalEidTlv &       aMlEidTlv,
-                                               const ThreadLastTransactionTimeTlv *aLastTransactionTimeTlv,
-                                               const Ip6::Address &                aDestination)
+void AddressResolver::SendAddressQueryResponse(const Ip6::Address &aTarget,
+                                               const uint8_t *     aMeshLocalIid,
+                                               const uint32_t *    aLastTransactionTime,
+                                               const Ip6::Address &aDestination)
 {
     otError          error;
     Coap::Message *  message;
-    ThreadRloc16Tlv  rloc16Tlv;
     Ip6::MessageInfo messageInfo;
 
     VerifyOrExit((message = Get<Coap::Coap>().NewMessage()) != NULL, error = OT_ERROR_NO_BUFS);
@@ -704,16 +846,14 @@ void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &          
     SuccessOrExit(error = message->AppendUriPathOptions(OT_URI_PATH_ADDRESS_NOTIFY));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    SuccessOrExit(error = message->AppendTlv(aTargetTlv));
-    SuccessOrExit(error = message->AppendTlv(aMlEidTlv));
+    SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kTarget, aTarget.mFields.m8, sizeof(aTarget)));
+    SuccessOrExit(error = Tlv::AppendTlv(*message, ThreadTlv::kMeshLocalEid, aMeshLocalIid,
+                                         Ip6::Address::kInterfaceIdentifierSize));
+    SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, ThreadTlv::kRloc16, Get<Mle::MleRouter>().GetRloc16()));
 
-    rloc16Tlv.Init();
-    rloc16Tlv.SetRloc16(Get<Mle::MleRouter>().GetRloc16());
-    SuccessOrExit(error = message->AppendTlv(rloc16Tlv));
-
-    if (aLastTransactionTimeTlv != NULL)
+    if (aLastTransactionTime != NULL)
     {
-        SuccessOrExit(error = message->AppendTlv(*aLastTransactionTimeTlv));
+        SuccessOrExit(error = Tlv::AppendUint32Tlv(*message, ThreadTlv::kLastTransactionTime, *aLastTransactionTime));
     }
 
     messageInfo.SetPeerAddr(aDestination);
@@ -722,7 +862,7 @@ void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &          
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo));
 
-    otLogInfoArp("Sending address notification for target %s", aTargetTlv.GetTarget().ToString().AsCString());
+    otLogInfoArp("Sending address notification for target %s", aTarget.ToString().AsCString());
 
 exit:
 
@@ -739,44 +879,77 @@ void AddressResolver::HandleTimer(Timer &aTimer)
 
 void AddressResolver::HandleTimer(void)
 {
-    bool continueTimer = false;
+    bool        continueTimer = false;
+    CacheEntry *prev;
+    CacheEntry *entry;
 
-    for (int i = 0; i < kCacheEntries; i++)
+    for (entry = mSnoopedList.GetHead(); entry != NULL; entry = entry->GetNext())
     {
-        if (mCache[i].mState != Cache::kStateQuery)
+        if (entry->IsTimeoutZero())
         {
             continue;
         }
 
         continueTimer = true;
+        entry->DecrementTimeout();
 
-        if (mCache[i].mTimeout > 0)
+        if (entry->IsTimeoutZero())
         {
-            mCache[i].mTimeout--;
-
-            if (mCache[i].mTimeout == 0)
-            {
-                mCache[i].mRetryTimeout =
-                    static_cast<uint16_t>(kAddressQueryInitialRetryDelay * (1 << mCache[i].mFailures));
-
-                if (mCache[i].mRetryTimeout < kAddressQueryMaxRetryDelay)
-                {
-                    mCache[i].mFailures++;
-                }
-                else
-                {
-                    mCache[i].mRetryTimeout = kAddressQueryMaxRetryDelay;
-                }
-
-                otLogInfoArp("Timed out waiting for address notification for %s, retry: %d",
-                             mCache[i].mTarget.ToString().AsCString(), mCache[i].mRetryTimeout);
-
-                Get<MeshForwarder>().HandleResolved(mCache[i].mTarget, OT_ERROR_DROP);
-            }
+            entry->SetCanEvict(true);
         }
-        else if (mCache[i].mRetryTimeout > 0)
+    }
+
+    for (entry = mQueryRetryList.GetHead(); entry != NULL; entry = entry->GetNext())
+    {
+        if (entry->IsTimeoutZero())
         {
-            mCache[i].mRetryTimeout--;
+            continue;
+        }
+
+        continueTimer = true;
+        entry->DecrementTimeout();
+    }
+
+    prev = NULL;
+
+    while ((entry = GetEntryAfter(prev, mQueryList)) != NULL)
+    {
+        OT_ASSERT(!entry->IsTimeoutZero());
+
+        continueTimer = true;
+        entry->DecrementTimeout();
+
+        if (entry->IsTimeoutZero())
+        {
+            uint16_t retryDelay = entry->GetRetryDelay();
+
+            entry->SetTimeout(retryDelay);
+
+            retryDelay <<= 1;
+
+            if (retryDelay > kAddressQueryMaxRetryDelay)
+            {
+                retryDelay = kAddressQueryMaxRetryDelay;
+            }
+
+            entry->SetRetryDelay(retryDelay);
+            entry->SetCanEvict(true);
+
+            // Move the entry from `mQueryList` to `mQueryRetryList`
+            mQueryList.PopAfter(prev);
+            mQueryRetryList.Push(*entry);
+
+            otLogInfoArp("Timed out waiting for address notification for %s, retry: %d",
+                         entry->GetTarget().ToString().AsCString(), entry->GetTimeout());
+
+            Get<MeshForwarder>().HandleResolved(entry->GetTarget(), OT_ERROR_DROP);
+
+            // When the entry is removed from `mQueryList`
+            // we keep the `prev` pointer same as before.
+        }
+        else
+        {
+            prev = entry;
         }
     }
 
@@ -806,21 +979,132 @@ void AddressResolver::HandleIcmpReceive(Message &               aMessage,
 
     Ip6::Header ip6Header;
 
-    VerifyOrExit(aIcmpHeader.GetType() == Ip6::IcmpHeader::kTypeDstUnreach);
-    VerifyOrExit(aIcmpHeader.GetCode() == Ip6::IcmpHeader::kCodeDstUnreachNoRoute);
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(ip6Header), &ip6Header) == sizeof(ip6Header));
+    VerifyOrExit(aIcmpHeader.GetType() == Ip6::IcmpHeader::kTypeDstUnreach, OT_NOOP);
+    VerifyOrExit(aIcmpHeader.GetCode() == Ip6::IcmpHeader::kCodeDstUnreachNoRoute, OT_NOOP);
+    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(ip6Header), &ip6Header) == sizeof(ip6Header), OT_NOOP);
 
-    for (int i = 0; i < kCacheEntries; i++)
-    {
-        if (mCache[i].mState != Cache::kStateInvalid && mCache[i].mTarget == ip6Header.GetDestination())
-        {
-            InvalidateCacheEntry(mCache[i], kReasonReceivedIcmpDstUnreachNoRoute);
-            break;
-        }
-    }
+    Remove(ip6Header.GetDestination(), kReasonReceivedIcmpDstUnreachNoRoute);
 
 exit:
     return;
+}
+
+// LCOV_EXCL_START
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_ARP == 1)
+
+void AddressResolver::LogCacheEntryChange(EntryChange       aChange,
+                                          Reason            aReason,
+                                          const CacheEntry &aEntry,
+                                          CacheEntryList *  aList)
+{
+    const char *change = "";
+    const char *reason = "";
+
+    switch (aChange)
+    {
+    case kEntryAdded:
+        change = "added";
+        break;
+    case kEntryUpdated:
+        change = "updated";
+        break;
+    case kEntryRemoved:
+        change = "removed";
+        break;
+    }
+
+    switch (aReason)
+    {
+    case kReasonQueryRequest:
+        reason = "query request";
+        break;
+    case kReasonSnoop:
+        reason = "snoop";
+        break;
+    case kReasonReceivedNotification:
+        reason = "rx notification";
+        break;
+    case kReasonRemovingRouterId:
+        reason = "removing router id";
+        break;
+    case kReasonRemovingRloc16:
+        reason = "removing rloc16";
+        break;
+    case kReasonReceivedIcmpDstUnreachNoRoute:
+        reason = "rx icmp no route";
+        break;
+    case kReasonEvictingForNewEntry:
+        reason = "evicting for new entry";
+        break;
+    case kReasonRemovingEid:
+        reason = "removing eid";
+        break;
+    }
+
+    otLogNoteArp("Cache entry %s: %s, 0x%04x%s%s - %s", change, aEntry.GetTarget().ToString().AsCString(),
+                 aEntry.GetRloc16(), (aList == NULL) ? "" : ", list:", ListToString(aList), reason);
+}
+
+const char *AddressResolver::ListToString(const CacheEntryList *aList) const
+{
+    const char *str = "";
+
+    VerifyOrExit(aList != &mCachedList, str = "cached");
+    VerifyOrExit(aList != &mSnoopedList, str = "snooped");
+    VerifyOrExit(aList != &mQueryList, str = "query");
+    VerifyOrExit(aList != &mQueryRetryList, str = "query-retry");
+
+exit:
+    return str;
+}
+
+#else // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_ARP == 1)
+
+void AddressResolver::LogCacheEntryChange(EntryChange, Reason, const CacheEntry &, CacheEntryList *)
+{
+}
+
+#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_ARP == 1)
+
+// LCOV_EXCL_STOP
+
+//---------------------------------------------------------------------------------------------------------------------
+// AddressResolver::CacheEntry
+
+void AddressResolver::CacheEntry::Init(Instance &aInstance)
+{
+    InstanceLocatorInit::Init(aInstance);
+    mNextIndex = kNoNextIndex;
+}
+
+AddressResolver::CacheEntry *AddressResolver::CacheEntry::GetNext(void)
+{
+    return (mNextIndex == kNoNextIndex) ? NULL : &Get<AddressResolver>().mCacheEntries[mNextIndex];
+}
+
+const AddressResolver::CacheEntry *AddressResolver::CacheEntry::GetNext(void) const
+{
+    return (mNextIndex == kNoNextIndex) ? NULL : &Get<AddressResolver>().mCacheEntries[mNextIndex];
+}
+
+void AddressResolver::CacheEntry::SetNext(CacheEntry *aEntry)
+{
+    VerifyOrExit(aEntry != NULL, mNextIndex = kNoNextIndex);
+    mNextIndex = static_cast<uint16_t>(aEntry - Get<AddressResolver>().mCacheEntries);
+
+exit:
+    return;
+}
+
+bool AddressResolver::CacheEntry::HasMeshLocalIid(const uint8_t *aIid) const
+{
+    return memcmp(mInfo.mCached.mMeshLocalIid, aIid, Ip6::Address::kInterfaceIdentifierSize) == 0;
+}
+
+void AddressResolver::CacheEntry::SetMeshLocalIid(const uint8_t *aIid)
+{
+    memcpy(mInfo.mCached.mMeshLocalIid, aIid, Ip6::Address::kInterfaceIdentifierSize);
 }
 
 } // namespace ot

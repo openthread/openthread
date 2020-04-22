@@ -105,7 +105,7 @@ uint16_t ChannelMonitor::GetChannelOccupancy(uint8_t aChannel) const
 {
     uint16_t occupancy = 0;
 
-    VerifyOrExit((Radio::kChannelMin <= aChannel) && (aChannel <= Radio::kChannelMax));
+    VerifyOrExit((Radio::kChannelMin <= aChannel) && (aChannel <= Radio::kChannelMax), OT_NOOP);
     occupancy = mChannelOccupancy[aChannel - Radio::kChannelMin];
 
 exit:
@@ -119,17 +119,17 @@ void ChannelMonitor::HandleTimer(Timer &aTimer)
 
 void ChannelMonitor::HandleTimer(void)
 {
-    Get<Mac::Mac>().EnergyScan(mScanChannelMasks[mChannelMaskIndex], 0, &ChannelMonitor::HandleEnergyScanResult);
+    Get<Mac::Mac>().EnergyScan(mScanChannelMasks[mChannelMaskIndex], 0, &ChannelMonitor::HandleEnergyScanResult, this);
 
     mTimer.StartAt(mTimer.GetFireTime(), Random::NonCrypto::AddJitter(kTimerInterval, kMaxJitterInterval));
 }
 
-void ChannelMonitor::HandleEnergyScanResult(Instance &aInstance, otEnergyScanResult *aResult)
+void ChannelMonitor::HandleEnergyScanResult(Mac::EnergyScanResult *aResult, void *aContext)
 {
-    aInstance.Get<ChannelMonitor>().HandleEnergyScanResult(aResult);
+    static_cast<ChannelMonitor *>(aContext)->HandleEnergyScanResult(aResult);
 }
 
-void ChannelMonitor::HandleEnergyScanResult(otEnergyScanResult *aResult)
+void ChannelMonitor::HandleEnergyScanResult(Mac::EnergyScanResult *aResult)
 {
     if (aResult == NULL)
     {
@@ -151,7 +151,7 @@ void ChannelMonitor::HandleEnergyScanResult(otEnergyScanResult *aResult)
         uint32_t newValue     = 0;
         uint32_t weight;
 
-        assert(channelIndex < kNumChannels);
+        OT_ASSERT(channelIndex < kNumChannels);
 
         otLogDebgUtil("ChannelMonitor: channel: %d, rssi:%d", aResult->mChannel, aResult->mMaxRssi);
 

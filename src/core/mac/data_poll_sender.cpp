@@ -62,6 +62,13 @@ DataPollSender::DataPollSender(Instance &aInstance)
 {
 }
 
+const Neighbor &DataPollSender::GetParent(void) const
+{
+    const Neighbor &parentCandidate = Get<Mle::MleRouter>().GetParentCandidate();
+
+    return parentCandidate.IsStateValid() ? parentCandidate : Get<Mle::MleRouter>().GetParent();
+}
+
 otError DataPollSender::StartPolling(void)
 {
     otError error = OT_ERROR_NONE;
@@ -90,14 +97,12 @@ void DataPollSender::StopPolling(void)
 
 otError DataPollSender::SendDataPoll(void)
 {
-    otError   error;
-    Neighbor *parent;
+    otError error;
 
     VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(!Get<Mac::Mac>().GetRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
 
-    parent = Get<Mle::MleRouter>().GetParentCandidate();
-    VerifyOrExit((parent != NULL) && parent->IsStateValidOrRestoring(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(GetParent().IsStateValidOrRestoring(), error = OT_ERROR_INVALID_STATE);
 
     mTimer.Stop();
 
@@ -133,18 +138,20 @@ exit:
 
 otError DataPollSender::GetPollDestinationAddress(Mac::Address &aDest) const
 {
-    otError   error  = OT_ERROR_NONE;
-    Neighbor *parent = Get<Mle::MleRouter>().GetParentCandidate();
+    otError         error  = OT_ERROR_NONE;
+    const Neighbor &parent = GetParent();
 
-    VerifyOrExit((parent != NULL) && parent->IsStateValidOrRestoring(), error = OT_ERROR_ABORT);
+    VerifyOrExit(parent.IsStateValidOrRestoring(), error = OT_ERROR_ABORT);
 
-    if ((Get<Mac::Mac>().GetShortAddress() == Mac::kShortAddrInvalid) || (parent != Get<Mle::MleRouter>().GetParent()))
+    // Use extended address attaching to a new parent (i.e. parent is the parent candidate).
+    if ((Get<Mac::Mac>().GetShortAddress() == Mac::kShortAddrInvalid) ||
+        (&parent == &Get<Mle::MleRouter>().GetParentCandidate()))
     {
-        aDest.SetExtended(parent->GetExtAddress());
+        aDest.SetExtended(parent.GetExtAddress());
     }
     else
     {
-        aDest.SetShort(parent->GetRloc16());
+        aDest.SetShort(parent.GetRloc16());
     }
 
 exit:
@@ -197,7 +204,7 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, otError aError)
     Mac::Address macDest;
     bool         shouldRecalculatePollPeriod = false;
 
-    VerifyOrExit(mEnabled);
+    VerifyOrExit(mEnabled, OT_NOOP);
 
     if (!aFrame.IsEmpty())
     {
@@ -205,7 +212,7 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, otError aError)
         Get<MeshForwarder>().UpdateNeighborOnSentFrame(aFrame, aError, macDest);
     }
 
-    if (Get<Mle::MleRouter>().GetParentCandidate()->IsStateInvalid())
+    if (GetParent().IsStateInvalid())
     {
         StopPolling();
         Get<Mle::MleRouter>().BecomeDetached();
@@ -281,7 +288,7 @@ void DataPollSender::HandlePollTimeout(void)
     // a data poll indicated that a frame was pending, but no frame
     // was received after timeout interval.
 
-    VerifyOrExit(mEnabled);
+    VerifyOrExit(mEnabled, OT_NOOP);
 
     mPollTimeoutCounter++;
 
@@ -300,9 +307,9 @@ exit:
     return;
 }
 
-void DataPollSender::CheckFramePending(Mac::RxFrame &aFrame)
+void DataPollSender::ProcessFrame(const Mac::RxFrame &aFrame)
 {
-    VerifyOrExit(mEnabled);
+    VerifyOrExit(mEnabled, OT_NOOP);
 
     mPollTimeoutCounter = 0;
 
@@ -310,6 +317,12 @@ void DataPollSender::CheckFramePending(Mac::RxFrame &aFrame)
     {
         SendDataPoll();
     }
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    else if (aFrame.IsAck())
+    {
+        ResetKeepAliveTimer();
+    }
+#endif
 
 exit:
     return;
@@ -370,11 +383,11 @@ otError DataPollSender::StopFastPolls(void)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mFastPollsUsers != 0);
+    VerifyOrExit(mFastPollsUsers != 0, OT_NOOP);
 
     // If `mFastPollsUsers` hits the max, let it be cleared
     // from `HandlePollSent()` (after all fast polls are sent).
-    VerifyOrExit(mFastPollsUsers < kMaxFastPollsUsers);
+    VerifyOrExit(mFastPollsUsers < kMaxFastPollsUsers, OT_NOOP);
 
     mFastPollsUsers--;
 
@@ -385,6 +398,15 @@ otError DataPollSender::StopFastPolls(void)
 
 exit:
     return error;
+}
+
+void DataPollSender::ResetKeepAliveTimer(void)
+{
+    if (mTimer.IsRunning() && mPollPeriod == GetDefaultPollPeriod())
+    {
+        mTimerStartTime = TimerMilli::GetNow();
+        mTimer.StartAt(mTimerStartTime, mPollPeriod);
+    }
 }
 
 void DataPollSender::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
@@ -430,11 +452,11 @@ void DataPollSender::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
     }
 }
 
-void DataPollSender::UpdateIfLarger(uint32_t &aPreiod, uint32_t aNewPeriod)
+void DataPollSender::UpdateIfLarger(uint32_t &aPeriod, uint32_t aNewPeriod)
 {
-    if (aPreiod > aNewPeriod)
+    if (aPeriod > aNewPeriod)
     {
-        aPreiod = aNewPeriod;
+        aPeriod = aNewPeriod;
     }
 }
 

@@ -33,10 +33,12 @@ ot_platform_headers                     = \
     alarm-milli.h                         \
     ble.h                                 \
     diag.h                                \
+    flash.h                               \
     entropy.h                             \
     memory.h                              \
     misc.h                                \
     logging.h                             \
+    otns.h                                \
     radio.h                               \
     time.h                                \
     uart.h                                \

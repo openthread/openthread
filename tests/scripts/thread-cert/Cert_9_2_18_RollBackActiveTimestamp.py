@@ -49,6 +49,7 @@ MTDS = [ED1, SED1]
 
 
 class Cert_9_2_18_RollBackActiveTimestamp(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -56,17 +57,19 @@ class Cert_9_2_18_RollBackActiveTimestamp(unittest.TestCase):
         for i in range(1, 7):
             self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
 
-        self.nodes[COMMISSIONER].set_active_dataset(
-            1, channel=CHANNEL_INIT, panid=PANID_INIT, master_key=KEY1
-        )
+        self.nodes[COMMISSIONER].set_active_dataset(1,
+                                                    channel=CHANNEL_INIT,
+                                                    panid=PANID_INIT,
+                                                    master_key=KEY1)
         self.nodes[COMMISSIONER].set_mode('rsdn')
         self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[COMMISSIONER].enable_whitelist()
         self.nodes[COMMISSIONER].set_router_selection_jitter(1)
 
-        self.nodes[LEADER].set_active_dataset(
-            1, channel=CHANNEL_INIT, panid=PANID_INIT, master_key=KEY1
-        )
+        self.nodes[LEADER].set_active_dataset(1,
+                                              channel=CHANNEL_INIT,
+                                              panid=PANID_INIT,
+                                              master_key=KEY1)
         self.nodes[LEADER].set_mode('rsdn')
         self.nodes[LEADER].set_partition_id(0xffffffff)
         self.nodes[LEADER].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
@@ -74,9 +77,10 @@ class Cert_9_2_18_RollBackActiveTimestamp(unittest.TestCase):
         self.nodes[LEADER].enable_whitelist()
         self.nodes[LEADER].set_router_selection_jitter(1)
 
-        self.nodes[ROUTER1].set_active_dataset(
-            1, channel=CHANNEL_INIT, panid=PANID_INIT, master_key=KEY1
-        )
+        self.nodes[ROUTER1].set_active_dataset(1,
+                                               channel=CHANNEL_INIT,
+                                               panid=PANID_INIT,
+                                               master_key=KEY1)
         self.nodes[ROUTER1].set_mode('rsdn')
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[ROUTER2].get_addr64())
@@ -85,9 +89,10 @@ class Cert_9_2_18_RollBackActiveTimestamp(unittest.TestCase):
         self.nodes[ROUTER1].enable_whitelist()
         self.nodes[ROUTER1].set_router_selection_jitter(1)
 
-        self.nodes[ROUTER2].set_active_dataset(
-            1, channel=CHANNEL_INIT, panid=PANID_INIT, master_key=KEY1
-        )
+        self.nodes[ROUTER2].set_active_dataset(1,
+                                               channel=CHANNEL_INIT,
+                                               panid=PANID_INIT,
+                                               master_key=KEY1)
         self.nodes[ROUTER2].set_mode('rsdn')
         self.nodes[ROUTER2].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[ROUTER2].enable_whitelist()
@@ -136,9 +141,8 @@ class Cert_9_2_18_RollBackActiveTimestamp(unittest.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
-        self.nodes[COMMISSIONER].send_mgmt_active_set(
-            active_timestamp=20000, network_name='GRL'
-        )
+        self.nodes[COMMISSIONER].send_mgmt_active_set(active_timestamp=20000,
+                                                      network_name='GRL')
         self.simulator.go(5)
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(

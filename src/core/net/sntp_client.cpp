@@ -28,8 +28,6 @@
 
 #include "sntp_client.hpp"
 
-#include "utils/wrap_string.h"
-
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -179,7 +177,7 @@ Message *Client::NewMessage(const Header &aHeader)
 {
     Message *message = NULL;
 
-    VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != NULL);
+    VerifyOrExit((message = mSocket.NewMessage(sizeof(aHeader))) != NULL, OT_NOOP);
     message->Prepend(&aHeader, sizeof(aHeader));
     message->SetOffset(0);
 
@@ -358,10 +356,10 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     Message *     message  = NULL;
     uint64_t      unixTime = 0;
 
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(responseHeader), &responseHeader) ==
-                 sizeof(responseHeader));
+    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(responseHeader), &responseHeader) == sizeof(responseHeader),
+                 OT_NOOP);
 
-    VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != NULL);
+    VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != NULL, OT_NOOP);
 
     // Check if response came from the server.
     VerifyOrExit(responseHeader.GetMode() == Header::kModeServer, error = OT_ERROR_FAILED);

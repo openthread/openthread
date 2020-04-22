@@ -71,6 +71,8 @@ extern uint64_t gInstanceRaw[];
  */
 class InstanceLocator
 {
+    friend class InstanceLocatorInit;
+
 public:
     /**
      * This method returns a reference to the parent OpenThread Instance.
@@ -79,7 +81,7 @@ public:
      *
      */
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    Instance &GetInstance(void) const { return mInstance; }
+    Instance &GetInstance(void) const { return *mInstance; }
 #else
     Instance &GetInstance(void) const { return *reinterpret_cast<Instance *>(&gInstanceRaw); }
 #endif
@@ -101,21 +103,62 @@ protected:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aInstance  A pointer to the otInstance.
+     * @param[in]  aInstance  A reference to the OpenThread Instance.
      *
      */
     explicit InstanceLocator(Instance &aInstance)
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-        : mInstance(aInstance)
+        : mInstance(&aInstance)
 #endif
     {
         OT_UNUSED_VARIABLE(aInstance);
     }
 
-#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 private:
-    Instance &mInstance;
+    InstanceLocator(void) {}
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    Instance *mInstance;
 #endif
+};
+
+/**
+ * This class implements a locator for an OpenThread Instance object.
+ *
+ * The `InstanceLocatorInit` is similar to `InstanceLocator` but provides a default constructor (instead of a
+ * parameterized one) and allows an inheriting class to initialize the object (set the OpenThread Instance) post
+ * constructor call using the `Init()` method. This class is intended for types that require a default constructor and
+ * cannot use a parameterized one. (e.g., `Neighbor`/`Child`/`Router` classes which are used as a C array element type
+ * in`ChildTable`/`RouterTable`).
+ *
+ * The inheriting class from `InstanceLocatorInit` should ensure that object is properly initialized after the object
+ * is created and more importantly that it is re-initialized when/if it is cleared or reset.
+ *
+ */
+class InstanceLocatorInit : public InstanceLocator
+{
+protected:
+    /**
+     * This is the default constructor for the `InstanceLocatorInit` object.
+     *
+     */
+    InstanceLocatorInit(void)
+        : InstanceLocator()
+    {
+    }
+
+    /**
+     * This method (re)initializes the object and sets the OpenThread Instance.
+     *
+     * @param[in] aInstance  A reference to the OpenThread Instance.
+     */
+    void Init(Instance &aInstance)
+    {
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+        mInstance = &aInstance;
+#endif
+        OT_UNUSED_VARIABLE(aInstance);
+    }
 };
 
 /**

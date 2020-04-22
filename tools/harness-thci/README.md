@@ -71,7 +71,14 @@ in the ‘Configure Test Bed’ Page of Test Harness. The configuration is as fo
 
 4. Copy "OpenThread_WpanCtl.png" to `C:\GRL\Thread1.1\Web\images`.
 
-5. Copy "deviceInputFields.xml" to `C:\GRL\Thread1.1\Web\data`.
+5. Modify the Device section "forParam" values referring to the following indication then
+   Copy "deviceInputFields.xml" to `C:\GRL\Thread1.1\Web\data`.
+        TelnetIP : device's IP address
+        Param5 : 'ip' for SSH login
+        Param6 : SSH username
+        Param7 : SSH password
+        Param8 : comma separated CLI prompt, Wpan command prefix, Wpan interface
+        Param9 : comma separated device's setting commands before test
 
 6. Copy "OpenThread_WpanCtl.py" to `C:\GRL\Thread1.1\Thread_Harness\THCI`.
 

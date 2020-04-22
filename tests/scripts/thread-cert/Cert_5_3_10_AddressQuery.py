@@ -43,6 +43,7 @@ MED1 = 5
 
 
 class Cert_5_3_10_AddressQuery(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -158,9 +159,8 @@ class Cert_5_3_10_AddressQuery(unittest.TestCase):
         # Verify DUT_ROUTER2 sent an Address Notification message
         dut_router2_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
         msg = dut_router2_messages.next_coap_message('0.02', '/a/an')
-        command.check_address_notification(
-            msg, self.nodes[DUT_ROUTER2], self.nodes[BR]
-        )
+        command.check_address_notification(msg, self.nodes[DUT_ROUTER2],
+                                           self.nodes[BR])
 
         # 5 MED1: MED1 sends an ICMPv6 Echo Request to ROUTER1 using GUA 2003::
         # address
@@ -181,8 +181,7 @@ class Cert_5_3_10_AddressQuery(unittest.TestCase):
 
         # Verify DUT_ROUTER2 forwarded ICMPv6 Echo Reply to MED1
         msg = dut_router2_messages_temp.get_icmp_message(
-            ipv6.ICMP_ECHO_RESPONSE
-        )
+            ipv6.ICMP_ECHO_RESPONSE)
         assert (
             msg is not None
         ), "Error: The DUT_ROUTER2 didn't forward ICMPv6 Echo Reply to MED1"
@@ -199,16 +198,14 @@ class Cert_5_3_10_AddressQuery(unittest.TestCase):
 
         # Verify the DUT_ROUTER2 has removed all entries based on ROUTER1's
         # Router ID
-        command.check_router_id_cached(
-            self.nodes[DUT_ROUTER2], router1_id, False
-        )
+        command.check_router_id_cached(self.nodes[DUT_ROUTER2], router1_id,
+                                       False)
 
         # Verify DUT_ROUTER2 sent an Address Query Request
         dut_router2_messages = self.simulator.get_messages_sent_by(DUT_ROUTER2)
         msg = dut_router2_messages.next_coap_message('0.02', '/a/aq')
         msg.assertSentToDestinationAddress(
-            config.REALM_LOCAL_ALL_ROUTERS_ADDRESS
-        )
+            config.REALM_LOCAL_ALL_ROUTERS_ADDRESS)
 
         # 7 MED1: Power off MED1 and wait to allow DUT_ROUTER2 to timeout the
         # child

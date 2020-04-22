@@ -47,6 +47,7 @@ namespace ot {
 namespace MeshCoP {
 
 using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
 /**
  * This class implements Timestamp generation and parsing.
@@ -60,11 +61,7 @@ public:
      * This method initializes the Timestamp
      *
      */
-    void Init(void)
-    {
-        memset(mSeconds, 0, sizeof(mSeconds));
-        mTicks = 0;
-    }
+    void Init(void) { memset(this, 0, sizeof(*this)); }
 
     /**
      * This method compares this timestamp to another.
@@ -86,14 +83,7 @@ public:
      */
     uint64_t GetSeconds(void) const
     {
-        uint64_t seconds = 0;
-
-        for (size_t i = 0; i < sizeof(mSeconds); i++)
-        {
-            seconds = (seconds << 8) | mSeconds[i];
-        }
-
-        return seconds;
+        return (static_cast<uint64_t>(HostSwap16(mSeconds16)) << 32) + HostSwap32(mSeconds32);
     }
 
     /**
@@ -104,10 +94,8 @@ public:
      */
     void SetSeconds(uint64_t aSeconds)
     {
-        for (size_t i = 0; i < sizeof(mSeconds); i++, aSeconds >>= 8)
-        {
-            mSeconds[sizeof(mSeconds) - 1 - i] = aSeconds & 0xff;
-        }
+        mSeconds16 = HostSwap16(static_cast<uint16_t>(aSeconds >> 32));
+        mSeconds32 = HostSwap32(static_cast<uint32_t>(aSeconds & 0xffffffff));
     }
 
     /**
@@ -150,8 +138,6 @@ public:
     }
 
 private:
-    uint8_t mSeconds[6];
-
     enum
     {
         kTicksOffset         = 1,
@@ -159,6 +145,9 @@ private:
         kAuthoritativeOffset = 0,
         kAuthoritativeMask   = 1 << kAuthoritativeOffset,
     };
+
+    uint16_t mSeconds16; // bits 32-47
+    uint32_t mSeconds32; // bits 0-31
     uint16_t mTicks;
 } OT_TOOL_PACKED_END;
 

@@ -91,7 +91,7 @@ public:
     void ReadFrom(const Message &aMessage)
     {
         uint16_t length = aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
-        assert(length == sizeof(*this));
+        OT_ASSERT(length == sizeof(*this));
         OT_UNUSED_VARIABLE(length);
     }
 
@@ -206,7 +206,7 @@ private:
     Message *FindRelatedQuery(const Header &aResponseHeader, QueryMetadata &aQueryMetadata);
     void     FinalizeDnsTransaction(Message &            aQuery,
                                     const QueryMetadata &aQueryMetadata,
-                                    otIp6Address *       aAddress,
+                                    const otIp6Address * aAddress,
                                     uint32_t             aTtl,
                                     otError              aResult);
 

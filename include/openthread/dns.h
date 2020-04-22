@@ -85,11 +85,11 @@ typedef struct otDnsQuery
  * @retval  OT_ERROR_FAILED            A response was received but status code is different than success.
  *
  */
-typedef void (*otDnsResponseHandler)(void *        aContext,
-                                     const char *  aHostname,
-                                     otIp6Address *aAddress,
-                                     uint32_t      aTtl,
-                                     otError       aResult);
+typedef void (*otDnsResponseHandler)(void *              aContext,
+                                     const char *        aHostname,
+                                     const otIp6Address *aAddress,
+                                     uint32_t            aTtl,
+                                     otError             aResult);
 
 /**
  * This function sends a DNS query for AAAA (IPv6) record.

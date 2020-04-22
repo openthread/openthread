@@ -42,9 +42,6 @@
 
 using namespace ot;
 
-static void HandleActiveScanResult(Instance &aInstance, Mac::RxFrame *aFrame);
-static void HandleEnergyScanResult(Instance &aInstance, otEnergyScanResult *aResult);
-
 uint8_t otLinkGetChannel(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -77,7 +74,7 @@ otError otLinkSetChannel(otInstance *aInstance, uint8_t aChannel)
     }
 #endif
 
-    VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
 
     SuccessOrExit(error = instance.Get<Mac::Mac>().SetPanChannel(aChannel));
     instance.Get<MeshCoP::ActiveDataset>().Clear();
@@ -99,7 +96,7 @@ otError otLinkSetSupportedChannelMask(otInstance *aInstance, uint32_t aChannelMa
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
 
     instance.Get<Mac::Mac>().SetSupportedChannelMask(static_cast<Mac::ChannelMask>(aChannelMask));
 
@@ -119,8 +116,8 @@ otError otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExt
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aExtAddress != NULL);
-    VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    OT_ASSERT(aExtAddress != NULL);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
 
     instance.Get<Mac::Mac>().SetExtAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
 
@@ -149,7 +146,7 @@ otError otLinkSetPanId(otInstance *aInstance, otPanId aPanId)
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
 
     instance.Get<Mac::Mac>().SetPanId(aPanId);
     instance.Get<MeshCoP::ActiveDataset>().Clear();
@@ -239,7 +236,7 @@ otError otLinkFilterAddAddress(otInstance *aInstance, const otExtAddress *aExtAd
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aExtAddress != NULL);
+    OT_ASSERT(aExtAddress != NULL);
 
     return instance.Get<Mac::Filter>().AddAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
 }
@@ -248,7 +245,7 @@ otError otLinkFilterRemoveAddress(otInstance *aInstance, const otExtAddress *aEx
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aExtAddress != NULL);
+    OT_ASSERT(aExtAddress != NULL);
 
     return instance.Get<Mac::Filter>().RemoveAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
 }
@@ -264,7 +261,7 @@ otError otLinkFilterGetNextAddress(otInstance *aInstance, otMacFilterIterator *a
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aIterator != NULL && aEntry != NULL);
+    OT_ASSERT(aIterator != NULL && aEntry != NULL);
 
     return instance.Get<Mac::Filter>().GetNextAddress(*aIterator, *aEntry);
 }
@@ -294,7 +291,7 @@ otError otLinkFilterGetNextRssIn(otInstance *aInstance, otMacFilterIterator *aIt
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aIterator != NULL && aEntry != NULL);
+    OT_ASSERT(aIterator != NULL && aEntry != NULL);
 
     return instance.Get<Mac::Filter>().GetNextRssIn(*aIterator, *aEntry);
 }
@@ -314,6 +311,38 @@ int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality
 }
 
 #endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+
+#if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+const uint32_t *otLinkGetTxDirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Mac::Mac>().GetDirectRetrySuccessHistogram(*aNumberOfEntries);
+}
+
+const uint32_t *otLinkGetTxIndirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries)
+{
+    const uint32_t *histogram = NULL;
+
+#if OPENTHREAD_FTD
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    histogram = instance.Get<Mac::Mac>().GetIndirectRetrySuccessHistogram(*aNumberOfEntries);
+#else
+    OT_UNUSED_VARIABLE(aInstance);
+    *aNumberOfEntries = 0;
+#endif
+
+    return histogram;
+}
+
+void otLinkResetTxRetrySuccessHistogram(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Mac::Mac>().ResetRetrySuccessHistogram();
+}
+#endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 
 void otLinkSetPcapCallback(otInstance *aInstance, otLinkPcapCallback aPcapCallback, void *aCallbackContext)
 {
@@ -386,8 +415,7 @@ otError otLinkActiveScan(otInstance *             aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.RegisterActiveScanCallback(aCallback, aCallbackContext);
-    return instance.Get<Mac::Mac>().ActiveScan(aScanChannels, aScanDuration, &HandleActiveScanResult);
+    return instance.Get<Mac::Mac>().ActiveScan(aScanChannels, aScanDuration, aCallback, aCallbackContext);
 }
 
 bool otLinkIsActiveScanInProgress(otInstance *aInstance)
@@ -395,21 +423,6 @@ bool otLinkIsActiveScanInProgress(otInstance *aInstance)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.Get<Mac::Mac>().IsActiveScanInProgress();
-}
-
-void HandleActiveScanResult(Instance &aInstance, Mac::RxFrame *aFrame)
-{
-    if (aFrame == NULL)
-    {
-        aInstance.InvokeActiveScanCallback(NULL);
-    }
-    else
-    {
-        otActiveScanResult result;
-
-        aInstance.Get<Mac::Mac>().ConvertBeaconToActiveScanResult(aFrame, result);
-        aInstance.InvokeActiveScanCallback(&result);
-    }
 }
 
 otError otLinkEnergyScan(otInstance *             aInstance,
@@ -420,13 +433,7 @@ otError otLinkEnergyScan(otInstance *             aInstance,
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.RegisterEnergyScanCallback(aCallback, aCallbackContext);
-    return instance.Get<Mac::Mac>().EnergyScan(aScanChannels, aScanDuration, &HandleEnergyScanResult);
-}
-
-void HandleEnergyScanResult(Instance &aInstance, otEnergyScanResult *aResult)
-{
-    aInstance.InvokeEnergyScanCallback(aResult);
+    return instance.Get<Mac::Mac>().EnergyScan(aScanChannels, aScanDuration, aCallback, aCallbackContext);
 }
 
 bool otLinkIsEnergyScanInProgress(otInstance *aInstance)

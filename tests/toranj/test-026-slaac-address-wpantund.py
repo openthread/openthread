@@ -80,26 +80,21 @@ def verify_prefix(
     """
     for node in node_list:
         prefixes = wpan.parse_on_mesh_prefix_result(
-            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES)
-        )
+            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
         for p in prefixes:
             if p.prefix == prefix:
-                if (
-                    int(p.prefix_len) == prefix_len
-                    and p.is_stable() == stable
-                    and p.is_on_mesh() == on_mesh
-                    and p.is_def_route() == default_route
-                    and p.is_slaac() == slaac
-                    and p.is_dhcp() == dhcp
-                    and p.is_config() == configure
-                    and p.is_preferred() == preferred
-                    and p.priority == priority
-                ):
+                if (int(p.prefix_len) == prefix_len and
+                        p.is_stable() == stable and
+                        p.is_on_mesh() == on_mesh and
+                        p.is_def_route() == default_route and
+                        p.is_slaac() == slaac and p.is_dhcp() == dhcp and
+                        p.is_config() == configure and
+                        p.is_preferred() == preferred and
+                        p.priority == priority):
                     break
         else:
-            raise wpan.VerifyError(
-                "Did not find prefix {} on node {}".format(prefix, node)
-            )
+            raise wpan.VerifyError("Did not find prefix {} on node {}".format(
+                prefix, node))
 
 
 def verify_no_prefix(node_list, prefix):
@@ -108,8 +103,7 @@ def verify_no_prefix(node_list, prefix):
     """
     for node in node_list:
         prefixes = wpan.parse_on_mesh_prefix_result(
-            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES)
-        )
+            node.get(wpan.WPAN_THREAD_ON_MESH_PREFIXES))
         for p in prefixes:
             verify(not p.prefix == prefix)
 

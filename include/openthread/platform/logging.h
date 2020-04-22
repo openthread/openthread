@@ -134,6 +134,7 @@ typedef enum otLogRegion
     OT_LOG_REGION_CLI      = 14, ///< CLI
     OT_LOG_REGION_CORE     = 15, ///< OpenThread Core
     OT_LOG_REGION_UTIL     = 16, ///< Utility module
+    OT_LOG_REGION_BBR      = 17, ///< Backbone Router (available since Thread 1.2)
 } otLogRegion;
 
 /**
@@ -146,17 +147,6 @@ typedef enum otLogRegion
  *
  */
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...);
-
-/**
- * This function outputs logs.
- *
- * @param[in]  aLogLevel   The log level.
- * @param[in]  aLogRegion  The log region.
- * @param[in]  aFormat     A pointer to the format string.
- * @param[in]  ap          va_list matching information for aFormat
- *
- */
-void otPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list ap);
 
 /**
  * @}

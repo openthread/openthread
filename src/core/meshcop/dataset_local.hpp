@@ -54,7 +54,7 @@ public:
      * @param[in]  aType      The type of the dataset, active or pending.
      *
      */
-    DatasetLocal(Instance &aInstance, Tlv::Type aType);
+    DatasetLocal(Instance &aInstance, Dataset::Type aType);
 
     /**
      * This method indicates whether this is an Active or Pending Dataset.
@@ -63,7 +63,7 @@ public:
      * @retval Tlv::kPendingTimetamp when this is a Pending Dataset.
      *
      */
-    Tlv::Type GetType(void) const { return mType; }
+    Dataset::Type GetType(void) const { return mType; }
 
     /**
      * This method clears the Dataset.
@@ -161,14 +161,14 @@ public:
     int Compare(const Timestamp *aCompare);
 
 private:
-    bool IsActive(void) const { return (mType == Tlv::kActiveTimestamp); }
+    bool IsActive(void) const { return (mType == Dataset::kActive); }
     void SetTimestamp(const Dataset &aDataset);
 
-    Timestamp mTimestamp;            ///< Active or Pending Timestamp
-    TimeMilli mUpdateTime;           ///< Local time last updated
-    Tlv::Type mType;                 ///< Active or Pending
-    bool      mTimestampPresent : 1; ///< Whether a timestamp is present
-    bool      mSaved : 1;            ///< Whether a dataset is saved in non-volatile
+    Timestamp     mTimestamp;            ///< Active or Pending Timestamp
+    TimeMilli     mUpdateTime;           ///< Local time last updated
+    Dataset::Type mType;                 ///< Active or Pending
+    bool          mTimestampPresent : 1; ///< Whether a timestamp is present
+    bool          mSaved : 1;            ///< Whether a dataset is saved in non-volatile
 };
 
 } // namespace MeshCoP

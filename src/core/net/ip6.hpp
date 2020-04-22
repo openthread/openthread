@@ -182,7 +182,7 @@ public:
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffer to add the IPv6 headers.
      *
      */
-    otError SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto aIpProto);
+    otError SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
 
     /**
      * This method sends a raw IPv6 datagram with a fully formed IPv6 header.
@@ -250,7 +250,7 @@ public:
     static uint16_t ComputePseudoheaderChecksum(const Address &aSource,
                                                 const Address &aDestination,
                                                 uint16_t       aLength,
-                                                IpProto        aProto);
+                                                uint8_t        aProto);
 
     /**
      * This method registers a callback to provide received raw IPv6 datagrams.
@@ -332,7 +332,7 @@ public:
      * @returns The string representation of an IP protocol enumeration.
      *
      */
-    static const char *IpProtoToString(IpProto aIpProto);
+    static const char *IpProtoToString(uint8_t aIpProto);
 
 private:
     enum
@@ -357,7 +357,7 @@ private:
                                    bool         aForward,
                                    bool         aFromNcpHost,
                                    bool         aReceive);
-    otError FragmentDatagram(Message &aMessage, IpProto aIpProto);
+    otError FragmentDatagram(Message &aMessage, uint8_t aIpProto);
     otError HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromNcpHost);
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
     void        CleanupFragmentationBuffer(void);

@@ -37,8 +37,6 @@
 
 #include "openthread-core-config.h"
 
-#include "utils/wrap_string.h"
-
 #include <openthread/commissioner.h>
 #include <openthread/dataset.h>
 #include <openthread/platform/radio.h>
@@ -46,17 +44,18 @@
 #include "common/crc16.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
+#include "common/string.hpp"
 #include "common/tlvs.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
 #include "radio/radio.hpp"
 #include "thread/key_manager.hpp"
+#include "thread/mle_types.hpp"
 
 namespace ot {
 namespace MeshCoP {
 
-using ot::Encoding::Reverse32;
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
 
@@ -191,6 +190,63 @@ public:
      */
     static bool IsValid(const Tlv &aTlv);
 
+    /**
+     * This static method searches in a given sequence of TLVs to find the first TLV with a given template Type.
+     *
+     * @param[in]  aTlvsStart  A pointer to the start of the sequence of TLVs to search within.
+     * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
+     * @param[in]  aType       The TLV Type to search for.
+     *
+     * @returns A pointer to the TLV if found, or NULL if not found.
+     *
+     */
+    static Tlv *FindTlv(uint8_t *aTlvsStart, uint16_t aTlvsLength, Type aType)
+    {
+        return const_cast<Tlv *>(FindTlv(const_cast<const uint8_t *>(aTlvsStart), aTlvsLength, aType));
+    }
+
+    /**
+     * This static method searches in a given sequence of TLVs to find the first TLV with a given template Type.
+     *
+     * @param[in]  aTlvsStart  A pointer to the start of the sequence of TLVs to search within.
+     * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
+     * @param[in]  aType       The TLV Type to search for.
+     *
+     * @returns A pointer to the TLV if found, or NULL if not found.
+     *
+     */
+    static const Tlv *FindTlv(const uint8_t *aTlvsStart, uint16_t aTlvsLength, Type aType);
+
+    /**
+     * This static template method searches in a given sequence of TLVs to find the first TLV with a give template
+     * `TlvType`.
+     *
+     * @param[in]  aTlvsStart  A pointer to the start of the sequence of TLVs to search within.
+     * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
+     *
+     * @returns A pointer to the TLV if found, or NULL if not found.
+     *
+     */
+    template <typename TlvType> static TlvType *FindTlv(uint8_t *aTlvsStart, uint16_t aTlvsLength)
+    {
+        return static_cast<TlvType *>(FindTlv(aTlvsStart, aTlvsLength, static_cast<Tlv::Type>(TlvType::kType)));
+    }
+
+    /**
+     * This static template method searches in a given sequence of TLVs to find the first TLV with a give template
+     * `TlvType`.
+     *
+     * @param[in]  aTlvsStart  A pointer to the start of the sequence of TLVs to search within.
+     * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
+     *
+     * @returns A pointer to the TLV if found, or NULL if not found.
+     *
+     */
+    template <typename TlvType> static const TlvType *FindTlv(const uint8_t *aTlvsStart, uint16_t aTlvsLength)
+    {
+        return static_cast<const TlvType *>(FindTlv(aTlvsStart, aTlvsLength, static_cast<Tlv::Type>(TlvType::kType)));
+    }
+
 } OT_TOOL_PACKED_END;
 
 /**
@@ -226,6 +282,11 @@ OT_TOOL_PACKED_BEGIN
 class ChannelTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kChannel, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -291,6 +352,11 @@ OT_TOOL_PACKED_BEGIN
 class PanIdTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kPanId, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -338,6 +404,11 @@ OT_TOOL_PACKED_BEGIN
 class ExtendedPanIdTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kExtendedPanId, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -385,6 +456,11 @@ OT_TOOL_PACKED_BEGIN
 class NetworkNameTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kNetworkName, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -407,18 +483,18 @@ public:
     /**
      * This method gets the Network Name value.
      *
-     * @returns The Network Name value (as `NetworkName::Data`).
+     * @returns The Network Name value (as `NameData`).
      *
      */
-    Mac::NetworkName::Data GetNetworkName(void) const;
+    Mac::NameData GetNetworkName(void) const;
 
     /**
      * This method sets the Network Name value.
      *
-     * @param[in] aNameData   A Network Name value (as `NetworkName::Data`).
+     * @param[in] aNameData   A Network Name value (as `NameData`).
      *
      */
-    void SetNetworkName(const Mac::NetworkName::Data &aNameData);
+    void SetNetworkName(const Mac::NameData &aNameData);
 
 private:
     char mNetworkName[Mac::NetworkName::kMaxSize];
@@ -432,6 +508,11 @@ OT_TOOL_PACKED_BEGIN
 class PskcTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kPskc, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -479,6 +560,11 @@ OT_TOOL_PACKED_BEGIN
 class NetworkMasterKeyTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kNetworkMasterKey, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -526,6 +612,11 @@ OT_TOOL_PACKED_BEGIN
 class NetworkKeySequenceTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kNetworkKeySequence, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -573,6 +664,11 @@ OT_TOOL_PACKED_BEGIN
 class MeshLocalPrefixTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kMeshLocalPrefix, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -606,7 +702,7 @@ public:
      * @returns The Mesh Local Prefix value.
      *
      */
-    const otMeshLocalPrefix &GetMeshLocalPrefix(void) const { return mMeshLocalPrefix; }
+    const Mle::MeshLocalPrefix &GetMeshLocalPrefix(void) const { return mMeshLocalPrefix; }
 
     /**
      * This method sets the Mesh Local Prefix value.
@@ -614,10 +710,10 @@ public:
      * @param[in]  aMeshLocalPrefix  A pointer to the Mesh Local Prefix value.
      *
      */
-    void SetMeshLocalPrefix(const otMeshLocalPrefix &aMeshLocalPrefix) { mMeshLocalPrefix = aMeshLocalPrefix; }
+    void SetMeshLocalPrefix(const Mle::MeshLocalPrefix &aMeshLocalPrefix) { mMeshLocalPrefix = aMeshLocalPrefix; }
 
 private:
-    otMeshLocalPrefix mMeshLocalPrefix;
+    Mle::MeshLocalPrefix mMeshLocalPrefix;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -628,6 +724,11 @@ OT_TOOL_PACKED_BEGIN
 class SteeringDataTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kSteeringData, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -761,6 +862,11 @@ OT_TOOL_PACKED_BEGIN
 class BorderAgentLocatorTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kBorderAgentLocator, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -810,7 +916,8 @@ class CommissionerIdTlv : public Tlv
 public:
     enum
     {
-        kMaxLength = 64, ///< maximum length (bytes)
+        kType      = kCommissionerId, ///< The TLV Type.
+        kMaxLength = 64,              ///< maximum length (bytes)
     };
 
     /**
@@ -850,7 +957,7 @@ public:
      */
     void SetCommissionerId(const char *aCommissionerId)
     {
-        size_t length = strnlen(aCommissionerId, sizeof(mCommissionerId));
+        uint16_t length = StringLength(aCommissionerId, sizeof(mCommissionerId));
         memcpy(mCommissionerId, aCommissionerId, length);
         SetLength(static_cast<uint8_t>(length));
     }
@@ -867,6 +974,11 @@ OT_TOOL_PACKED_BEGIN
 class CommissionerSessionIdTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kCommissionerSessionId, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -914,6 +1026,11 @@ OT_TOOL_PACKED_BEGIN
 class SecurityPolicyTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kSecurityPolicy, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -987,6 +1104,11 @@ OT_TOOL_PACKED_BEGIN
 class ActiveTimestampTlv : public Tlv, public Timestamp
 {
 public:
+    enum
+    {
+        kType = kActiveTimestamp, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -1009,53 +1131,6 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Commissioner UDP Port TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class CommissionerUdpPortTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kCommissionerUdpPort);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the UDP Port value.
-     *
-     * @returns The UDP Port value.
-     *
-     */
-    uint16_t GetUdpPort(void) const { return HostSwap16(mUdpPort); }
-
-    /**
-     * This method sets the UDP Port value.
-     *
-     * @param[in]  aUdpPort  The UDP Port value.
-     *
-     */
-    void SetUdpPort(uint16_t aUdpPort) { mUdpPort = HostSwap16(aUdpPort); }
-
-private:
-    uint16_t mUdpPort;
-} OT_TOOL_PACKED_END;
-
-/**
  * This class implements State TLV generation and parsing.
  *
  */
@@ -1063,6 +1138,11 @@ OT_TOOL_PACKED_BEGIN
 class StateTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kState, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -1088,9 +1168,9 @@ public:
      */
     enum State
     {
-        kReject  = -1, ///< Reject
-        kPending = 0,  ///< Pending
-        kAccept  = 1,  ///< Accept
+        kReject  = 0xff, ///< Reject (-1)
+        kPending = 0,    ///< Pending
+        kAccept  = 1,    ///< Accept
     };
 
     /**
@@ -1121,6 +1201,11 @@ OT_TOOL_PACKED_BEGIN
 class JoinerUdpPortTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kJoinerUdpPort, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -1161,147 +1246,6 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Joiner IID TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class JoinerIidTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kJoinerIid);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns a pointer to the Joiner IID.
-     *
-     * @returns A pointer to the Joiner IID.
-     *
-     */
-    const uint8_t *GetIid(void) const { return mIid; }
-
-    /**
-     * This method sets the Joiner IID.
-     *
-     * @param[in]  aIid  A pointer to the Joiner IID.
-     *
-     */
-    void SetIid(const uint8_t *aIid) { memcpy(mIid, aIid, sizeof(mIid)); }
-
-private:
-    uint8_t mIid[8];
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Joiner Router Locator TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class JoinerRouterLocatorTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kJoinerRouterLocator);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the Joiner Router Locator value.
-     *
-     * @returns The Joiner Router Locator value.
-     *
-     */
-    uint16_t GetJoinerRouterLocator(void) const { return HostSwap16(mLocator); }
-
-    /**
-     * This method sets the Joiner Router Locator value.
-     *
-     * @param[in]  aJoinerRouterLocator  The Joiner Router Locator value.
-     *
-     */
-    void SetJoinerRouterLocator(uint16_t aLocator) { mLocator = HostSwap16(aLocator); }
-
-private:
-    uint16_t mLocator;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Joiner Router KEK TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class JoinerRouterKekTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kJoinerRouterKek);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns a pointer to the Joiner Router KEK.
-     *
-     * @returns A pointer to the Joiner Router KEK.
-     *
-     */
-    const uint8_t *GetKek(void) const { return mKek; }
-
-    /**
-     * This method sets the Joiner Router KEK.
-     *
-     * @param[in]  aIid  A pointer to the Joiner Router KEK.
-     *
-     */
-    void SetKek(const uint8_t *aKek) { memcpy(mKek, aKek, sizeof(mKek)); }
-
-private:
-    uint8_t mKek[16];
-} OT_TOOL_PACKED_END;
-
-/**
  * This class implements Pending Timestamp TLV generation and parsing.
  *
  */
@@ -1309,6 +1253,11 @@ OT_TOOL_PACKED_BEGIN
 class PendingTimestampTlv : public Tlv, public Timestamp
 {
 public:
+    enum
+    {
+        kType = kPendingTimestamp, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -1338,6 +1287,11 @@ OT_TOOL_PACKED_BEGIN
 class DelayTimerTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kDelayTimer, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -1541,7 +1495,7 @@ public:
      * @returns The Channel Mask value.
      *
      */
-    uint32_t GetMask(void) const { return Reverse32(HostSwap32(mMask)); }
+    uint32_t GetMask(void) const { return Encoding::Reverse32(HostSwap32(mMask)); }
 
     /**
      * This method sets the Channel Mask value.
@@ -1549,7 +1503,7 @@ public:
      * @param[in]  aMask  The Channel Mask value.
      *
      */
-    void SetMask(uint32_t aMask) { mMask = HostSwap32(Reverse32(aMask)); }
+    void SetMask(uint32_t aMask) { mMask = HostSwap32(Encoding::Reverse32(aMask)); }
 
 private:
     uint32_t mMask;
@@ -1563,6 +1517,11 @@ OT_TOOL_PACKED_BEGIN
 class ChannelMaskBaseTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kChannelMask, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -1654,147 +1613,6 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Count TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class CountTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kCount);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the Count value.
-     *
-     * @returns The Count value.
-     *
-     */
-    uint8_t GetCount(void) const { return mCount; }
-
-    /**
-     * This method sets the Count value.
-     *
-     * @param[in]  aCount  The Count value.
-     *
-     */
-    void SetCount(uint8_t aCount) { mCount = aCount; }
-
-private:
-    uint8_t mCount;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Period TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class PeriodTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kPeriod);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the Period value.
-     *
-     * @returns The Period value.
-     *
-     */
-    uint16_t GetPeriod(void) const { return HostSwap16(mPeriod); }
-
-    /**
-     * This method sets the Period value.
-     *
-     * @param[in]  aPeriod  The Period value.
-     *
-     */
-    void SetPeriod(uint16_t aPeriod) { mPeriod = HostSwap16(aPeriod); }
-
-private:
-    uint16_t mPeriod;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Scan Duration TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class ScanDurationTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kScanDuration);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the Scan Duration value.
-     *
-     * @returns The Scan Duration value.
-     *
-     */
-    uint16_t GetScanDuration(void) const { return HostSwap16(mScanDuration); }
-
-    /**
-     * This method sets the Scan Duration value.
-     *
-     * @param[in]  aScanDuration  The Scan Duration value.
-     *
-     */
-    void SetScanDuration(uint16_t aScanDuration) { mScanDuration = HostSwap16(aScanDuration); }
-
-private:
-    uint16_t mScanDuration;
-} OT_TOOL_PACKED_END;
-
-/**
  * This class implements Energy List TLV generation and parsing.
  *
  */
@@ -1802,6 +1620,11 @@ OT_TOOL_PACKED_BEGIN
 class EnergyListTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kEnergyList, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -1832,7 +1655,8 @@ class ProvisioningUrlTlv : public Tlv
 public:
     enum
     {
-        kMaxLength = OT_PROVISIONING_URL_MAX_SIZE, // Maximum number of chars in the Provisioning URL string.
+        kType      = kProvisioningUrl,             ///< The TLV Type.
+        kMaxLength = OT_PROVISIONING_URL_MAX_SIZE, ///< Maximum number of chars in the Provisioning URL string.
     };
 
     /**
@@ -1872,7 +1696,7 @@ public:
      */
     void SetProvisioningUrl(const char *aProvisioningUrl)
     {
-        size_t len = aProvisioningUrl ? strnlen(aProvisioningUrl, kMaxLength) : 0;
+        uint16_t len = aProvisioningUrl ? StringLength(aProvisioningUrl, kMaxLength) : 0;
 
         SetLength(static_cast<uint8_t>(len));
 
@@ -1894,6 +1718,11 @@ OT_TOOL_PACKED_BEGIN
 class VendorNameTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kVendorName, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -1931,7 +1760,7 @@ public:
      */
     void SetVendorName(const char *aVendorName)
     {
-        size_t len = (aVendorName == NULL) ? 0 : strnlen(aVendorName, sizeof(mVendorName));
+        uint16_t len = (aVendorName == NULL) ? 0 : StringLength(aVendorName, sizeof(mVendorName));
 
         SetLength(static_cast<uint8_t>(len));
 
@@ -1958,6 +1787,11 @@ OT_TOOL_PACKED_BEGIN
 class VendorModelTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kVendorModel, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -1995,7 +1829,7 @@ public:
      */
     void SetVendorModel(const char *aVendorModel)
     {
-        size_t len = (aVendorModel == NULL) ? 0 : strnlen(aVendorModel, sizeof(mVendorModel));
+        uint16_t len = (aVendorModel == NULL) ? 0 : StringLength(aVendorModel, sizeof(mVendorModel));
 
         SetLength(static_cast<uint8_t>(len));
 
@@ -2022,6 +1856,11 @@ OT_TOOL_PACKED_BEGIN
 class VendorSwVersionTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kVendorSwVersion, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -2059,7 +1898,7 @@ public:
      */
     void SetVendorSwVersion(const char *aVendorSwVersion)
     {
-        size_t len = (aVendorSwVersion == NULL) ? 0 : strnlen(aVendorSwVersion, sizeof(mVendorSwVersion));
+        uint16_t len = (aVendorSwVersion == NULL) ? 0 : StringLength(aVendorSwVersion, sizeof(mVendorSwVersion));
 
         SetLength(static_cast<uint8_t>(len));
 
@@ -2086,6 +1925,11 @@ OT_TOOL_PACKED_BEGIN
 class VendorDataTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kVendorData, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -2123,7 +1967,7 @@ public:
      */
     void SetVendorData(const char *aVendorData)
     {
-        size_t len = (aVendorData == NULL) ? 0 : strnlen(aVendorData, sizeof(mVendorData));
+        uint16_t len = (aVendorData == NULL) ? 0 : StringLength(aVendorData, sizeof(mVendorData));
 
         SetLength(static_cast<uint8_t>(len));
 
@@ -2150,6 +1994,11 @@ OT_TOOL_PACKED_BEGIN
 class VendorStackVersionTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kVendorStackVersion, ///< The TLV Type.
+    };
+
     /**
      * Default constructor.
      *
@@ -2304,44 +2153,6 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements IPv6 Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class IPv6AddressTlv : public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kIPv6Address);
-        SetLength(sizeof(mAddress));
-    }
-
-    /**
-     * This method returns the IPv6 Address.
-     *
-     * @returns A reference to the IPv6 Address.
-     *
-     */
-    const Ip6::Address &GetAddress(void) const { return mAddress; }
-
-    /**
-     * This method sets the IPv6 Address.
-     *
-     * @param[in]   aAddress    A reference to the IPv6 Address.
-     *
-     */
-    void SetAddress(const Ip6::Address &aAddress) { mAddress = aAddress; }
-
-private:
-    Ip6::Address mAddress;
-} OT_TOOL_PACKED_END;
-
-/**
  * This class implements UDP Encapsulation TLV generation and parsing.
  *
  */
@@ -2349,6 +2160,11 @@ OT_TOOL_PACKED_BEGIN
 class UdpEncapsulationTlv : public ExtendedTlv
 {
 public:
+    enum
+    {
+        kType = MeshCoP::Tlv::kUdpEncapsulation, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -2429,6 +2245,11 @@ OT_TOOL_PACKED_BEGIN
 class DiscoveryRequestTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kDiscoveryRequest, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *
@@ -2516,6 +2337,11 @@ OT_TOOL_PACKED_BEGIN
 class DiscoveryResponseTlv : public Tlv
 {
 public:
+    enum
+    {
+        kType = kDiscoveryResponse, ///< The TLV Type.
+    };
+
     /**
      * This method initializes the TLV.
      *

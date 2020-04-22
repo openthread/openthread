@@ -39,6 +39,7 @@ MED1 = 3
 
 
 class Cert_5_3_11_AddressQueryTimeoutIntervals(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 

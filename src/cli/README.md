@@ -5,8 +5,30 @@ command line interface. Use the CLI to play with OpenThread, which
 can also be used with additional application code. The
 OpenThread test scripts use the CLI to execute test cases.
 
+## Separator and escaping characters
+
+The whitespace character (`' '`) is used to delimit the command name
+and the different arguments, together with tab (`'\t'`) and new line
+characters (`'\r'`, `'\n'`).
+
+Some arguments might require to accept whitespaces on them. For those
+cases the backslash character (`'\'`) can be used to escape separators
+or the backslash itself.
+
+Example:
+
+```bash
+> networkname Test\ Network
+Done
+> networkname
+Test Network
+Done
+>
+```
+
 ## OpenThread Command List
 
+* [bbr](#bbr)
 * [bufferinfo](#bufferinfo)
 * [channel](#channel)
 * [child](#child-list)
@@ -23,6 +45,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [diag](#diag)
 * [discover](#discover-channel)
 * [dns](#dns-resolve-hostname-dns-server-ip-dns-server-port)
+* [domainname](#domainname)
 * [eidcache](#eidcache)
 * [eui64](#eui64)
 * [extaddr](#extaddr)
@@ -38,7 +61,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [leaderpartitionid](#leaderpartitionid)
 * [leaderweight](#leaderweight)
 * [linkquality](#linkquality-extaddr)
-* [logfilename](#logfilename-filename)
+* [log](#log-filename-filename)
 * [mac](#mac-retries-direct)
 * [macfilter](#macfilter)
 * [masterkey](#masterkey)
@@ -53,17 +76,19 @@ OpenThread test scripts use the CLI to execute test cases.
 * [panid](#panid)
 * [parent](#parent)
 * [parentpriority](#parentpriority)
-* [ping](#ping-ipaddr-size-count-interval)
+* [ping](#ping-ipaddr-size-count-interval-hoplimit)
 * [pollperiod](#pollperiod-pollperiod)
-* [prefix](#prefix-add-prefix-pvdcsr-prf)
+* [preferrouterid](#preferrouterid-routerid)
+* [prefix](#prefix-add-prefix-padcrosnD-prf)
 * [promiscuous](#promiscuous)
+* [pskc](#pskc--p-keypassphrase)
 * [releaserouterid](#releaserouterid-routerid)
 * [reset](#reset)
 * [rloc16](#rloc16)
 * [route](#route-add-prefix-s-prf)
 * [router](#router-list)
 * [routerdowngradethreshold](#routerdowngradethreshold)
-* [routerrole](#routerrole)
+* [routereligible](#routereligible)
 * [routerselectionjitter](#routerselectionjitter)
 * [routerupgradethreshold](#routerupgradethreshold)
 * [scan](#scan-channel)
@@ -76,6 +101,131 @@ OpenThread test scripts use the CLI to execute test cases.
 * [version](#version)
 
 ## OpenThread Command Details
+
+### bbr
+
+Show current Primary Backbone Router information for Thread 1.2 device.
+
+```bash
+> bbr
+BBR Primary:
+server16: 0xE400
+seqno:    10
+delay:    120 secs
+timeout:  300 secs
+Done
+```
+
+```bash
+> bbr
+BBR Primary: None
+Done
+```
+
+### bbr state
+Show local Backbone state ([`Disabled`,`Primary`, `Secondary`]) for Thread 1.2 FTD.
+
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+
+```bash
+> bbr state
+Disabled
+Done
+
+> bbr state
+Primary
+Done
+
+> bbr state
+Secondary
+Done
+```
+
+### bbr enable
+Enable Backbone Router Service for Thread 1.2 FTD.
+`SRV_DATA.ntf` would be triggerred for attached device if there is no
+Backbone Router Service in Thread Network Data.
+
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+```bash
+> bbr enable
+Done
+```
+
+### bbr disable
+Disable Backbone Router Service for Thread 1.2 FTD.
+`SRV_DATA.ntf` would be triggerred if Backbone Router is Primary state.
+o
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+```bash
+> bbr disable
+Done
+```
+
+### bbr register
+Register Backbone Router Service for Thread 1.2 FTD.
+`SRV_DATA.ntf` would be triggerred for attached device.
+
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+```bash
+> bbr register
+Done
+```
+
+### bbr config
+
+Show local Backbone Router configuration for Thread 1.2 FTD.
+
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+```bash
+> bbr config
+seqno:    10
+delay:    120 secs
+timeout:  300 secs
+Done
+```
+
+### bbr config \[seqno \<seqno\>\] \[delay \<delay\>\] \[timeout \<timeout\>\]
+
+Configure local Backbone Router configuration for Thread 1.2 FTD.
+`bbr register` should be issued explicitly to register Backbone Router service to Leader for
+Secondary Backbone Router. `SRV_DATA.ntf` would be initiated automatically if BBR Dataset
+changes for Primary Backbone Router.
+
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+```bash
+> bbr config seqno 20 delay 30
+Done
+```
+
+### bbr jitter
+
+Show jitter (in seconds) for Backbone Router registration for Thread 1.2 FTD.
+
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+```bash
+> bbr jitter
+20
+Done
+```
+
+### bbr jitter \<jitter\>
+
+Set jitter (in seconds) for Backbone Router registration for Thread 1.2 FTD.
+
+`OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+
+```bash
+> bbr jitter 10
+Done
+```
 
 ### bufferinfo
 
@@ -185,6 +335,28 @@ Get the list of IP addresses stored for MTD children.
 Done
 ```
 
+### childip max
+
+Get the maximum number of IP addresses that each MTD child may register with this device as parent.
+
+```bash
+> childip max
+4
+Done
+```
+
+### childip max \<count\>
+
+Set the maximum number of IP addresses that each MTD child may register with this device as parent.
+0 to clear the setting and restore the default.
+
+`OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is required.
+
+```bash
+> childip max 2
+Done
+```
+
 ### childmax
 
 Get the Thread maximum number of allowed children.
@@ -247,7 +419,7 @@ Done
 Get the supported counter names.
 
 ```bash
->counters
+> counters
 mac
 mle
 Done
@@ -301,6 +473,17 @@ Attach Attempts: 1
 Partition Id Changes: 1
 Better Partition Attach Attempts: 0
 Parent Changes: 0
+Done
+```
+
+### counters \<countername\> reset
+
+Reset the counter value.
+
+```bash
+> counters mac reset
+Done
+> counters mle reset
 Done
 ```
 
@@ -373,6 +556,25 @@ The latter two parameters have following default values:
 > DNS response for ipv6.google.com - 2a00:1450:401b:801:0:0:0:200e TTL: 300
 ```
 
+### domainname
+
+Get the Thread Domain Name for Thread 1.2 device.
+
+```bash
+> domainname
+Thread
+Done
+```
+
+### domainname \<name\>
+
+Set the Thread Domain Name for Thread 1.2 device.
+
+```bash
+> domainname Test\ Thread
+Done
+```
+
 ### eidcache
 
 Print the EID-to-RLOC cache entries.
@@ -417,6 +619,8 @@ Done
 ### extpanid
 
 Get the Thread Extended PAN ID value.
+
+**NOTE** The current commissioning credential becomes stale after changing this value. Use [pskc](#pskc--p-keypassphrase) to reset.
 
 ```bash
 > extpanid
@@ -705,14 +909,33 @@ Set the link quality on the link to a given extended address.
 Done
 ```
 
-### logfilename \<filename\>
+### log filename \<filename\>
 
-- Note: POSIX Platform Only, ie: `OPENTHREAD_EXAMPLES_POSIX`
+- Note: Simulation Only, ie: `OPENTHREAD_EXAMPLES_SIMULATION`
 - Requires `OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART`
 
 Specifies filename to capture otPlatLog() messages, useful when
 debugging automated test scripts on Linux when logging disrupts
 the automated test scripts.
+
+### log level
+
+Get the log level.
+
+```bash
+> log level
+1
+Done
+```
+
+### log level \<level\>
+
+Set the log level.
+
+```bash
+> log level 4
+Done
+```
 
 ### masterkey
 
@@ -813,12 +1036,27 @@ If \<addr\> is unicast address, `Diagnostic Get` will be sent.
 if \<addr\> is multicast address, `Diagnostic Query` will be sent.
 
 ```bash
-> networkdiagnostic get fdde:ad00:beef:0:0:ff:fe00:f400 0 1 6
-DIAG_GET.rsp: 00088e18ad17a24b0b740102f400060841dcb82d40bac63d
+> networkdiagnostic get fdde:ad00:beef:0:0:ff:fe00:fc00 0 1 6
+> DIAG_GET.rsp/ans: 00080e336e1c41494e1c01020c000608640b0f674074c503
+Ext Address: '0e336e1c41494e1c'
+Rloc16: 0x0c00
+Leader Data:
+    PartitionId: 0x640b0f67
+    Weighting: 64
+    DataVersion: 116
+    StableDataVersion: 197
+    LeaderRouterId: 0x03
+Done
 
 > networkdiagnostic get ff02::1 0 1
-DIAG_GET.rsp: 0008567e31a79667a8cc0102f000
-DIAG_GET.rsp: 0008aaa7e584759e4e6401025400
+> DIAG_GET.rsp/ans: 00080e336e1c41494e1c01020c00
+Ext Address: '0e336e1c41494e1c'
+Rloc16: 0x0c00
+Done
+DIAG_GET.rsp/ans: 00083efcdb7e3f9eb0f201021800
+Ext Address: '3efcdb7e3f9eb0f2'
+Rloc16: 0x1800
+Done
 ```
 
 ### networkdiagnostic reset \<addr\> \<type\> ..
@@ -862,6 +1100,8 @@ Done
 ### networkname \<name\>
 
 Set the Thread Network Name.
+
+**NOTE** The current commissioning credential becomes stale after changing this value. Use [pskc](#pskc--p-keypassphrase) to reset.
 
 ```bash
 > networkname OpenThread
@@ -926,17 +1166,20 @@ Set the assigned parent priority value: 1, 0, -1 or -2.
 Done
 ```
 
-### ping \<ipaddr\> [size] [count] [interval]
+### ping \<ipaddr\> [size] [count] [interval] [hoplimit]
 
 Send an ICMPv6 Echo Request.
 
 * size: The number of data bytes to be sent.
 * count: The number of ICMPv6 Echo Requests to be sent.
 * interval: The interval between two consecutive ICMPv6 Echo Requests in seconds. The value may have fractional form, for example `0.5`.
+* hoplimit: The hoplimit of ICMPv6 Echo Request to be sent.
 
 ```bash
 > ping fdde:ad00:beef:0:558:f56b:d688:799
 16 bytes from fdde:ad00:beef:0:558:f56b:d688:799: icmp_seq=1 hlim=64 time=28ms
+
+> ping ff05::1 100 1 1 1
 ```
 
 ### ping stop
@@ -967,19 +1210,44 @@ Set the customized data poll period for sleepy end device (milliseconds >= 10ms)
 Done
 ```
 
+### pskc [-p] \<key\>|\<passphrase\>
+
+With `-p` generate pskc from \<passphrase\> (UTF-8 encoded) together with **current** network name and extended PAN ID, otherwise set pskc as \<key\> (hex format).
+
+```bash
+> pskc 67c0c203aa0b042bfb5381c47aef4d9e
+Done
+> pskc -p 123456
+Done
+```
+
+### preferrouterid \<routerid\>
+Prefer a Router ID when solicit router id from Leader.
+
+```bash
+> preferrouterid 16
+Done
+```
+
 ### prefix
 
 Get the prefix list in the local Network Data.
+Note: For the Thread 1.2 border router with backbone capability, the local Domain
+      Prefix would be listed as well (with flag `D`), with preceeding `- ` if backbone
+      functionality is disabled.
 
 ```bash
 > prefix
 2001:dead:beef:cafe::/64 paros med
+- fd00:7d03:7d03:7d03::/64 prosD med
 Done
 ```
 
-### prefix add \<prefix\> [pvdcsr] [prf]
+### prefix add \<prefix\> [padcrosnD] [prf]
 
 Add a valid prefix to the Network Data.
+
+Note: The Domain Prefix flag (`D`) is only available for Thread 1.2.
 
 * p: Preferred flag
 * a: Stateless IPv6 Address Autoconfiguration flag
@@ -988,10 +1256,15 @@ Add a valid prefix to the Network Data.
 * r: Default Route flag
 * o: On Mesh flag
 * s: Stable flag
+* n: Nd Dns flag
+* D: Domain Prefix flag
 * prf: Default router preference, which may be 'high', 'med', or 'low'.
 
 ```bash
 > prefix add 2001:dead:beef:cafe::/64 paros med
+Done
+
+> prefix add fd00:7d03:7d03:7d03::/64 prosD med
 Done
 ```
 
@@ -1164,31 +1437,31 @@ Set the ROUTER_DOWNGRADE_THRESHOLD value.
 Done
 ```
 
-### routerrole
+### routereligible
 
 Indicates whether the router role is enabled or disabled.
 
 ```bash
-> routerrole
+> routereligible
 Enabled
 Done
 ```
 
-### routerrole enable
+### routereligible enable
 
 Enable the router role.
 
 ```bash
-> routerrole enable
+> routereligible enable
 Done
 ```
 
-### routerrole disable
+### routereligible disable
 
 Disable the router role.
 
 ```bash
-> routerrole disable
+> routereligible disable
 Done
 ```
 
@@ -1585,6 +1858,8 @@ Add service to the Network Data.
 ```bash
 > service add 44970 foo bar
 Done
+> netdataregister
+Done
 > ipaddr
 fdde:ad00:beef:0:0:ff:fe00:fc10
 fdde:ad00:beef:0:0:ff:fe00:fc00
@@ -1600,6 +1875,14 @@ Remove service from Network Data.
 
 ```bash
 > service remove 44970 foo
+Done
+> netdataregister
+Done
+> ipaddr
+fdde:ad00:beef:0:0:ff:fe00:fc00
+fdde:ad00:beef:0:0:ff:fe00:7c00
+fe80:0:0:0:1486:2f57:3c:6e10
+fdde:ad00:beef:0:8ca4:19ed:217a:eff9
 Done
 ```
 

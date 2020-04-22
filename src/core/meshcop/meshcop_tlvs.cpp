@@ -83,7 +83,32 @@ bool Tlv::IsValid(const Tlv &aTlv)
     return rval;
 }
 
-Mac::NetworkName::Data NetworkNameTlv::GetNetworkName(void) const
+const Tlv *Tlv::FindTlv(const uint8_t *aTlvsStart, uint16_t aTlvsLength, Type aType)
+{
+    const Tlv *tlv;
+    const Tlv *end = reinterpret_cast<const Tlv *>(aTlvsStart + aTlvsLength);
+
+    for (tlv = reinterpret_cast<const Tlv *>(aTlvsStart); tlv < end; tlv = tlv->GetNext())
+    {
+        VerifyOrExit((tlv + 1) <= end, tlv = NULL);
+        VerifyOrExit(!tlv->IsExtended() ||
+                         (reinterpret_cast<const ExtendedTlv *>(tlv) + 1 <= reinterpret_cast<const ExtendedTlv *>(end)),
+                     tlv = NULL);
+        VerifyOrExit(tlv->GetNext() <= end, tlv = NULL);
+
+        if (tlv->GetType() == aType)
+        {
+            ExitNow();
+        }
+    }
+
+    tlv = NULL;
+
+exit:
+    return tlv;
+}
+
+Mac::NameData NetworkNameTlv::GetNetworkName(void) const
 {
     uint8_t len = GetLength();
 
@@ -92,10 +117,10 @@ Mac::NetworkName::Data NetworkNameTlv::GetNetworkName(void) const
         len = sizeof(mNetworkName);
     }
 
-    return Mac::NetworkName::Data(mNetworkName, len);
+    return Mac::NameData(mNetworkName, len);
 }
 
-void NetworkNameTlv::SetNetworkName(const Mac::NetworkName::Data &aNameData)
+void NetworkNameTlv::SetNetworkName(const Mac::NameData &aNameData)
 {
     uint8_t len;
 
@@ -139,10 +164,10 @@ bool ChannelTlv::IsValid(void) const
 {
     bool ret = false;
 
-    VerifyOrExit(GetLength() == sizeof(*this) - sizeof(Tlv));
-    VerifyOrExit(mChannelPage <= OT_RADIO_CHANNEL_PAGE_MAX);
-    VerifyOrExit((1U << mChannelPage) & Radio::kSupportedChannelPages);
-    VerifyOrExit(Radio::kChannelMin <= GetChannel() && GetChannel() <= Radio::kChannelMax);
+    VerifyOrExit(GetLength() == sizeof(*this) - sizeof(Tlv), OT_NOOP);
+    VerifyOrExit(mChannelPage <= OT_RADIO_CHANNEL_PAGE_MAX, OT_NOOP);
+    VerifyOrExit((1U << mChannelPage) & Radio::kSupportedChannelPages, OT_NOOP);
+    VerifyOrExit(Radio::kChannelMin <= GetChannel() && GetChannel() <= Radio::kChannelMax, OT_NOOP);
     ret = true;
 
 exit:
@@ -175,7 +200,7 @@ const ChannelMaskEntryBase *ChannelMaskBaseTlv::GetFirstEntry(void) const
 {
     const ChannelMaskEntryBase *entry = NULL;
 
-    VerifyOrExit(GetLength() >= sizeof(ChannelMaskEntryBase));
+    VerifyOrExit(GetLength() >= sizeof(ChannelMaskEntryBase), OT_NOOP);
 
     entry = reinterpret_cast<const ChannelMaskEntryBase *>(GetValue());
     VerifyOrExit(GetLength() >= entry->GetEntrySize(), entry = NULL);
@@ -199,7 +224,7 @@ void ChannelMaskTlv::SetChannelMask(uint32_t aChannelMask)
 #if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
     if (aChannelMask & OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK)
     {
-        assert(entry != NULL);
+        OT_ASSERT(entry != NULL);
         entry->Init();
         entry->SetChannelPage(OT_RADIO_CHANNEL_PAGE_2);
         entry->SetMask(aChannelMask & OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK);
@@ -213,7 +238,7 @@ void ChannelMaskTlv::SetChannelMask(uint32_t aChannelMask)
 #if OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
     if (aChannelMask & OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK)
     {
-        assert(entry != NULL);
+        OT_ASSERT(entry != NULL);
         entry->Init();
         entry->SetChannelPage(OT_RADIO_CHANNEL_PAGE_0);
         entry->SetMask(aChannelMask & OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK);
@@ -233,7 +258,7 @@ uint32_t ChannelMaskTlv::GetChannelMask(void) const
 
     for (; cur < end; cur = static_cast<const ChannelMaskEntry *>(cur->GetNext()))
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end);
+        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, OT_NOOP);
 
 #if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
         if (cur->GetChannelPage() == OT_RADIO_CHANNEL_PAGE_2)
@@ -268,7 +293,7 @@ uint32_t ChannelMaskTlv::GetChannelMask(const Message &aMessage)
         ChannelMaskEntry entry;
 
         aMessage.Read(offset, sizeof(ChannelMaskEntryBase), &entry);
-        VerifyOrExit(offset + entry.GetEntrySize() <= end);
+        VerifyOrExit(offset + entry.GetEntrySize() <= end, OT_NOOP);
 
         switch (entry.GetChannelPage())
         {

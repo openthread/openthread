@@ -30,7 +30,6 @@
 
 #include "common/debug.hpp"
 #include "crypto/aes_ccm.hpp"
-#include "utils/wrap_string.h"
 
 #include "test_platform.h"
 #include "test_util.h"
@@ -134,7 +133,6 @@ void TestMacCommandFrame()
     VerifyOrQuit(memcmp(test, decrypted, sizeof(decrypted)) == 0, "TestMacCommandFrame decrypt failed\n");
 }
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestMacBeaconFrame();
@@ -142,4 +140,3 @@ int main(void)
     printf("All tests passed\n");
     return 0;
 }
-#endif

@@ -46,7 +46,7 @@
 #include <openthread/platform/toolchain.h>
 
 #include <common/logging.hpp>
-#include <drivers/radio/nrf_802154.h>
+#include <nrf_802154.h>
 #include <utils/code_utils.h>
 
 typedef enum
@@ -59,7 +59,7 @@ typedef enum
 struct PlatformDiagCommand
 {
     const char *mName;
-    void (*mCommand)(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
+    otError (*mCommand)(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
 };
 
 struct PlatformDiagMessage
@@ -88,10 +88,10 @@ static struct PlatformDiagMessage sDiagMessage      = {.mMessageDescriptor = "Di
                                                   .mID                = 0,
                                                   .mCnt               = 0};
 
-static otError parseLong(char *argv, long *aValue)
+static otError parseLong(char *aArgs, long *aValue)
 {
     char *endptr;
-    *aValue = strtol(argv, &endptr, 0);
+    *aValue = strtol(aArgs, &endptr, 0);
     return (*endptr == '\0') ? OT_ERROR_NONE : OT_ERROR_PARSE;
 }
 
@@ -111,7 +111,11 @@ static bool startCarrierTransmision(void)
     return nrf_802154_continuous_carrier();
 }
 
-static void processListen(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+static otError processListen(otInstance *aInstance,
+                             uint8_t     aArgsLength,
+                             char *      aArgs[],
+                             char *      aOutput,
+                             size_t      aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -119,7 +123,7 @@ static void processListen(otInstance *aInstance, int argc, char *argv[], char *a
 
     otEXPECT_ACTION(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
 
-    if (argc == 0)
+    if (aArgsLength == 0)
     {
         snprintf(aOutput, aOutputMaxLen, "listen: %s\r\n", sListen == true ? "yes" : "no");
     }
@@ -127,7 +131,7 @@ static void processListen(otInstance *aInstance, int argc, char *argv[], char *a
     {
         long value;
 
-        error = parseLong(argv[0], &value);
+        error = parseLong(aArgs[0], &value);
         otEXPECT(error == OT_ERROR_NONE);
         sListen = (bool)(value);
         snprintf(aOutput, aOutputMaxLen, "set listen to %s\r\nstatus 0x%02x\r\n", sListen == true ? "yes" : "no",
@@ -136,9 +140,10 @@ static void processListen(otInstance *aInstance, int argc, char *argv[], char *a
 
 exit:
     appendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
 }
 
-static void processID(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+static otError processID(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -146,7 +151,7 @@ static void processID(otInstance *aInstance, int argc, char *argv[], char *aOutp
 
     otEXPECT_ACTION(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
 
-    if (argc == 0)
+    if (aArgsLength == 0)
     {
         snprintf(aOutput, aOutputMaxLen, "ID: %" PRId16 "\r\n", sID);
     }
@@ -154,7 +159,7 @@ static void processID(otInstance *aInstance, int argc, char *argv[], char *aOutp
     {
         long value;
 
-        error = parseLong(argv[0], &value);
+        error = parseLong(aArgs[0], &value);
         otEXPECT(error == OT_ERROR_NONE);
         otEXPECT_ACTION(value >= 0, error = OT_ERROR_INVALID_ARGS);
         sID = (int16_t)(value);
@@ -163,21 +168,26 @@ static void processID(otInstance *aInstance, int argc, char *argv[], char *aOutp
 
 exit:
     appendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
 }
 
-static void processTransmit(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+static otError processTransmit(otInstance *aInstance,
+                               uint8_t     aArgsLength,
+                               char *      aArgs[],
+                               char *      aOutput,
+                               size_t      aOutputMaxLen)
 {
     otError error = OT_ERROR_NONE;
 
     otEXPECT_ACTION(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
 
-    if (argc == 0)
+    if (aArgsLength == 0)
     {
         snprintf(aOutput, aOutputMaxLen,
                  "transmit will send %" PRId32 " diagnostic messages with %" PRIu32 " ms interval\r\nstatus 0x%02x\r\n",
                  sTxRequestedCount, sTxPeriod, error);
     }
-    else if (strcmp(argv[0], "stop") == 0)
+    else if (strcmp(aArgs[0], "stop") == 0)
     {
         otEXPECT_ACTION(sTransmitMode != kDiagTransmitModeIdle, error = OT_ERROR_INVALID_STATE);
 
@@ -186,7 +196,7 @@ static void processTransmit(otInstance *aInstance, int argc, char *argv[], char 
         sTransmitMode = kDiagTransmitModeIdle;
         otPlatRadioReceive(aInstance, sChannel);
     }
-    else if (strcmp(argv[0], "start") == 0)
+    else if (strcmp(aArgs[0], "start") == 0)
     {
         otEXPECT_ACTION(sTransmitMode == kDiagTransmitModeIdle, error = OT_ERROR_INVALID_STATE);
 
@@ -199,7 +209,7 @@ static void processTransmit(otInstance *aInstance, int argc, char *argv[], char 
                  "sending %" PRId32 " diagnostic messages with %" PRIu32 " ms interval\r\nstatus 0x%02x\r\n",
                  sTxRequestedCount, sTxPeriod, error);
     }
-    else if (strcmp(argv[0], "carrier") == 0)
+    else if (strcmp(aArgs[0], "carrier") == 0)
     {
         otEXPECT_ACTION(sTransmitMode == kDiagTransmitModeIdle, error = OT_ERROR_INVALID_STATE);
 
@@ -210,26 +220,26 @@ static void processTransmit(otInstance *aInstance, int argc, char *argv[], char 
         snprintf(aOutput, aOutputMaxLen, "sending carrier on channel %d with tx power %d\r\nstatus 0x%02x\r\n",
                  sChannel, sTxPower, error);
     }
-    else if (strcmp(argv[0], "interval") == 0)
+    else if (strcmp(aArgs[0], "interval") == 0)
     {
         long value;
 
-        otEXPECT_ACTION(argc == 2, error = OT_ERROR_INVALID_ARGS);
+        otEXPECT_ACTION(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
 
-        error = parseLong(argv[1], &value);
+        error = parseLong(aArgs[1], &value);
         otEXPECT(error == OT_ERROR_NONE);
         otEXPECT_ACTION(value > 0, error = OT_ERROR_INVALID_ARGS);
         sTxPeriod = (uint32_t)(value);
         snprintf(aOutput, aOutputMaxLen, "set diagnostic messages interval to %" PRIu32 " ms\r\nstatus 0x%02x\r\n",
                  sTxPeriod, error);
     }
-    else if (strcmp(argv[0], "count") == 0)
+    else if (strcmp(aArgs[0], "count") == 0)
     {
         long value;
 
-        otEXPECT_ACTION(argc == 2, error = OT_ERROR_INVALID_ARGS);
+        otEXPECT_ACTION(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
 
-        error = parseLong(argv[1], &value);
+        error = parseLong(aArgs[1], &value);
         otEXPECT(error == OT_ERROR_NONE);
         otEXPECT_ACTION((value > 0) || (value == -1), error = OT_ERROR_INVALID_ARGS);
         sTxRequestedCount = (uint32_t)(value);
@@ -243,9 +253,14 @@ static void processTransmit(otInstance *aInstance, int argc, char *argv[], char 
 
 exit:
     appendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
 }
 
-static void processGpio(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+static otError processGpio(otInstance *aInstance,
+                           uint8_t     aArgsLength,
+                           char *      aArgs[],
+                           char *      aOutput,
+                           size_t      aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -254,12 +269,12 @@ static void processGpio(otInstance *aInstance, int argc, char *argv[], char *aOu
 
     otEXPECT_ACTION(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
 
-    if (argc == 1)
+    if (aArgsLength == 1)
     {
         uint32_t           value;
         nrf_gpio_pin_dir_t pindir;
 
-        error = parseLong(argv[0], &pinnum);
+        error = parseLong(aArgs[0], &pinnum);
         otEXPECT(error == OT_ERROR_NONE);
 
         pindir = nrf_gpio_pin_dir_get(pinnum);
@@ -275,40 +290,40 @@ static void processGpio(otInstance *aInstance, int argc, char *argv[], char *aOu
 
         snprintf(aOutput, aOutputMaxLen, "gpio %d = %d\r\n", (uint8_t)pinnum, (uint8_t)value);
     }
-    else if (strcmp(argv[0], "set") == 0)
+    else if (strcmp(aArgs[0], "set") == 0)
     {
-        otEXPECT_ACTION(argc == 2, error = OT_ERROR_INVALID_ARGS);
-        error = parseLong(argv[1], &pinnum);
+        otEXPECT_ACTION(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
+        error = parseLong(aArgs[1], &pinnum);
         otEXPECT(error == OT_ERROR_NONE);
 
         nrf_gpio_pin_set(pinnum);
 
         snprintf(aOutput, aOutputMaxLen, "gpio %d = 1\r\n", (uint8_t)pinnum);
     }
-    else if (strcmp(argv[0], "clr") == 0)
+    else if (strcmp(aArgs[0], "clr") == 0)
     {
-        otEXPECT_ACTION(argc == 2, error = OT_ERROR_INVALID_ARGS);
-        error = parseLong(argv[1], &pinnum);
+        otEXPECT_ACTION(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
+        error = parseLong(aArgs[1], &pinnum);
         otEXPECT(error == OT_ERROR_NONE);
 
         nrf_gpio_pin_clear(pinnum);
 
         snprintf(aOutput, aOutputMaxLen, "gpio %d = 0\r\n", (uint8_t)pinnum);
     }
-    else if (strcmp(argv[0], "out") == 0)
+    else if (strcmp(aArgs[0], "out") == 0)
     {
-        otEXPECT_ACTION(argc == 2, error = OT_ERROR_INVALID_ARGS);
-        error = parseLong(argv[1], &pinnum);
+        otEXPECT_ACTION(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
+        error = parseLong(aArgs[1], &pinnum);
         otEXPECT(error == OT_ERROR_NONE);
 
         nrf_gpio_cfg_output(pinnum);
 
         snprintf(aOutput, aOutputMaxLen, "gpio %d: out\r\n", (uint8_t)pinnum);
     }
-    else if (strcmp(argv[0], "in") == 0)
+    else if (strcmp(aArgs[0], "in") == 0)
     {
-        otEXPECT_ACTION(argc == 2, error = OT_ERROR_INVALID_ARGS);
-        error = parseLong(argv[1], &pinnum);
+        otEXPECT_ACTION(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
+        error = parseLong(aArgs[1], &pinnum);
         otEXPECT(error == OT_ERROR_NONE);
 
         nrf_gpio_cfg_input(pinnum, NRF_GPIO_PIN_NOPULL);
@@ -322,18 +337,23 @@ static void processGpio(otInstance *aInstance, int argc, char *argv[], char *aOu
 
 exit:
     appendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
 }
 
-static void processTemp(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+static otError processTemp(otInstance *aInstance,
+                           uint8_t     aArgsLength,
+                           char *      aArgs[],
+                           char *      aOutput,
+                           size_t      aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(argv);
+    OT_UNUSED_VARIABLE(aArgs);
 
     otError error = OT_ERROR_NONE;
     int32_t temperature;
 
     otEXPECT_ACTION(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
-    otEXPECT_ACTION(argc == 0, error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(aArgsLength == 0, error = OT_ERROR_INVALID_ARGS);
 
     temperature = nrf5TempGet();
 
@@ -343,9 +363,14 @@ static void processTemp(otInstance *aInstance, int argc, char *argv[], char *aOu
 
 exit:
     appendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
 }
 
-static void processCcaThreshold(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+static otError processCcaThreshold(otInstance *aInstance,
+                                   uint8_t     aArgsLength,
+                                   char *      aArgs[],
+                                   char *      aOutput,
+                                   size_t      aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -354,7 +379,7 @@ static void processCcaThreshold(otInstance *aInstance, int argc, char *argv[], c
 
     otEXPECT_ACTION(otPlatDiagModeGet(), error = OT_ERROR_INVALID_STATE);
 
-    if (argc == 0)
+    if (aArgsLength == 0)
     {
         nrf_802154_cca_cfg_get(&ccaConfig);
 
@@ -363,7 +388,7 @@ static void processCcaThreshold(otInstance *aInstance, int argc, char *argv[], c
     else
     {
         long value;
-        error = parseLong(argv[0], &value);
+        error = parseLong(aArgs[0], &value);
         otEXPECT(error == OT_ERROR_NONE);
         otEXPECT_ACTION(value >= 0 && value <= 0xFF, error = OT_ERROR_INVALID_ARGS);
 
@@ -377,6 +402,7 @@ static void processCcaThreshold(otInstance *aInstance, int argc, char *argv[], c
 
 exit:
     appendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
 }
 
 const struct PlatformDiagCommand sCommands[] = {
@@ -388,23 +414,26 @@ const struct PlatformDiagCommand sCommands[] = {
     {"transmit", &processTransmit},
 };
 
-void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+otError otPlatDiagProcess(otInstance *aInstance,
+                          uint8_t     aArgsLength,
+                          char *      aArgs[],
+                          char *      aOutput,
+                          size_t      aOutputMaxLen)
 {
-    size_t i;
+    otError error = OT_ERROR_INVALID_COMMAND;
+    size_t  i;
 
     for (i = 0; i < otARRAY_LENGTH(sCommands); i++)
     {
-        if (strcmp(argv[0], sCommands[i].mName) == 0)
+        if (strcmp(aArgs[0], sCommands[i].mName) == 0)
         {
-            sCommands[i].mCommand(aInstance, argc - 1, argc > 1 ? &argv[1] : NULL, aOutput, aOutputMaxLen);
+            error = sCommands[i].mCommand(aInstance, aArgsLength - 1, aArgsLength > 1 ? &aArgs[1] : NULL, aOutput,
+                                          aOutputMaxLen);
             break;
         }
     }
 
-    if (i == otARRAY_LENGTH(sCommands))
-    {
-        snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
-    }
+    return error;
 }
 
 void otPlatDiagModeSet(bool aMode)
@@ -415,6 +444,9 @@ void otPlatDiagModeSet(bool aMode)
     {
         otPlatRadioReceive(NULL, sChannel);
         otPlatRadioSleep(NULL);
+
+        // Clear all remaining events before switching to MAC callbacks.
+        nrf5RadioClearPendingEvents();
     }
     else
     {

@@ -38,8 +38,12 @@
 
 #include <stdint.h>
 
+#include "common/encoding.hpp"
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
+#include "thread/mle_types.hpp"
+
+using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 namespace Ip6 {
@@ -77,8 +81,6 @@ public:
     {
         kInterfaceIdentifierSize = 8,  ///< Interface Identifier size in bytes.
         kIp6AddressStringSize    = 40, ///< Max buffer size in bytes to store an IPv6 address in string format.
-        kMeshLocalPrefixLength   = 64, ///< Length of Thread mesh local prefix.
-        kMeshLocalPrefixSize     = 8,  ///< Mesh local prefix size in bytes.
     };
 
     /**
@@ -127,15 +129,6 @@ public:
     bool IsLoopback(void) const;
 
     /**
-     * This method indicates whether or not the IPv6 address scope is Interface-Local.
-     *
-     * @retval TRUE   If the IPv6 address scope is Interface-Local.
-     * @retval FALSE  If the IPv6 address scope is not Interface-Local.
-     *
-     */
-    bool IsInterfaceLocal(void) const;
-
-    /**
      * This method indicates whether or not the IPv6 address scope is Link-Local.
      *
      * @retval TRUE   If the IPv6 address scope is Link-Local.
@@ -145,13 +138,30 @@ public:
     bool IsLinkLocal(void) const;
 
     /**
+     * This methods sets the IPv6 address to a Link-Local address with Interface Identifier generated from a given
+     * MAC Extended Address.
+     *
+     * @param[in]  aExtAddress  A MAC Extended Address (used to generate the IID).
+     *
+     */
+    void SetToLinkLocalAddress(const Mac::ExtAddress &aExtAddress);
+
+    /**
+     * This methods sets the IPv6 address to a Link-Local address with a given Interface Identifier.
+     *
+     * @param[in]  aIid   A pointer to a buffer containing the Interface Identifier.
+     *
+     */
+    void SetToLinkLocalAddress(const uint8_t *aIid);
+
+    /**
      * This method indicates whether or not the IPv6 address is multicast address.
      *
      * @retval TRUE   If the IPv6 address is a multicast address.
      * @retval FALSE  If the IPv6 address scope is not a multicast address.
      *
      */
-    bool IsMulticast(void) const;
+    bool IsMulticast(void) const { return mFields.m8[0] == 0xff; }
 
     /**
      * This method indicates whether or not the IPv6 address is a link-local multicast address.
@@ -163,7 +173,7 @@ public:
     bool IsLinkLocalMulticast(void) const;
 
     /**
-     * This method indicates whether or not the IPv6 address is a link-local all nodes multicast address.
+     * This method indicates whether or not the IPv6 address is a link-local all nodes multicast address (ff02::01).
      *
      * @retval TRUE   If the IPv6 address is a link-local all nodes multicast address.
      * @retval FALSE  If the IPv6 address is not a link-local all nodes multicast address.
@@ -172,13 +182,25 @@ public:
     bool IsLinkLocalAllNodesMulticast(void) const;
 
     /**
-     * This method indicates whether or not the IPv6 address is a link-local all routers multicast address.
+     * This method sets the IPv6 address to the link-local all nodes multicast address (ff02::01).
+     *
+     */
+    void SetToLinkLocalAllNodesMulticast(void);
+
+    /**
+     * This method indicates whether or not the IPv6 address is a link-local all routers multicast address (ff02::02).
      *
      * @retval TRUE   If the IPv6 address is a link-local all routers multicast address.
      * @retval FALSE  If the IPv6 address is not a link-local all routers multicast address.
      *
      */
     bool IsLinkLocalAllRoutersMulticast(void) const;
+
+    /**
+     * This method sets the IPv6 address to the link-local all routers multicast address (ff02::02).
+     *
+     */
+    void SetToLinkLocalAllRoutersMulticast(void);
 
     /**
      * This method indicates whether or not the IPv6 address is a realm-local multicast address.
@@ -190,7 +212,7 @@ public:
     bool IsRealmLocalMulticast(void) const;
 
     /**
-     * This method indicates whether or not the IPv6 address is a realm-local all nodes multicast address.
+     * This method indicates whether or not the IPv6 address is a realm-local all nodes multicast address (ff03::01).
      *
      * @retval TRUE   If the IPv6 address is a realm-local all nodes multicast address.
      * @retval FALSE  If the IPv6 address is not a realm-local all nodes multicast address.
@@ -199,7 +221,13 @@ public:
     bool IsRealmLocalAllNodesMulticast(void) const;
 
     /**
-     * This method indicates whether or not the IPv6 address is a realm-local all routers multicast address.
+     * This method sets the IPv6 address to the realm-local all nodes multicast address (ff03::01)
+     *
+     */
+    void SetToRealmLocalAllNodesMulticast(void);
+
+    /**
+     * This method indicates whether or not the IPv6 address is a realm-local all routers multicast address (ff03::02).
      *
      * @retval TRUE   If the IPv6 address is a realm-local all routers multicast address.
      * @retval FALSE  If the IPv6 address is not a realm-local all routers multicast address.
@@ -208,13 +236,25 @@ public:
     bool IsRealmLocalAllRoutersMulticast(void) const;
 
     /**
-     * This method indicates whether or not the IPv6 address is a realm-local all MPL forwarders address.
+     * This method sets the IPv6 address to the realm-local all routers multicast address (ff03::02).
+     *
+     */
+    void SetToRealmLocalAllRoutersMulticast(void);
+
+    /**
+     * This method indicates whether or not the IPv6 address is a realm-local all MPL forwarders address (ff03::fc).
      *
      * @retval TRUE   If the IPv6 address is a realm-local all MPL forwarders address.
      * @retval FALSE  If the IPv6 address is not a realm-local all MPL forwarders address.
      *
      */
     bool IsRealmLocalAllMplForwarders(void) const;
+
+    /**
+     * This method sets the the IPv6 address to the realm-local all MPL forwarders address (ff03::fc).
+     *
+     */
+    void SetToRealmLocalAllMplForwarders(void);
 
     /**
      * This method indicates whether or not the IPv6 address is multicast larger than realm local.
@@ -226,34 +266,7 @@ public:
     bool IsMulticastLargerThanRealmLocal(void) const;
 
     /**
-     * This method indicates whether or not the IPv6 address is a RLOC address.
-     *
-     * @retval TRUE   If the IPv6 address is a RLOC address.
-     * @retval FALSE  If the IPv6 address is not a RLOC address.
-     *
-     */
-    bool IsRoutingLocator(void) const;
-
-    /**
-     * This method indicates whether or not the IPv6 address is an Anycast RLOC address.
-     *
-     * @retval TRUE   If the IPv6 address is an Anycast RLOC address.
-     * @retval FALSE  If the IPv6 address is not an Anycast RLOC address.
-     *
-     */
-    bool IsAnycastRoutingLocator(void) const;
-
-    /**
-     * This method indicates whether or not the IPv6 address is an Anycast Service Locator.
-     *
-     * @retval TRUE   If the IPv6 address is an Anycast Service Locator.
-     * @retval FALSE  If the IPv6 address is not an Anycast Service Locator.
-     *
-     */
-    bool IsAnycastServiceLocator(void) const;
-
-    /**
-     * This method indicates whether or not the IPv6 address is Subnet-Router Anycast (RFC 4291),
+     * This method indicates whether or not the IPv6 address is Subnet-Router Anycast (RFC 4291).
      *
      * @retval TRUE   If the IPv6 address is a Subnet-Router Anycast address.
      * @retval FALSE  If the IPv6 address is not a Subnet-Router Anycast address.
@@ -262,7 +275,7 @@ public:
     bool IsSubnetRouterAnycast(void) const;
 
     /**
-     * This method indicates whether or not the IPv6 address is Reserved Subnet Anycast (RFC 2526),
+     * This method indicates whether or not the IPv6 address is Reserved Subnet Anycast (RFC 2526).
      *
      * @retval TRUE   If the IPv6 address is a Reserved Subnet Anycast address.
      * @retval FALSE  If the IPv6 address is not a Reserved Subnet Anycast address.
@@ -271,7 +284,7 @@ public:
     bool IsReservedSubnetAnycast(void) const;
 
     /**
-     * This method indicates whether or not the IPv6 address contains Reserved IPv6 IID (RFC 5453),
+     * This method indicates whether or not the IPv6 address contains Reserved IPv6 IID (RFC 5453).
      *
      * @retval TRUE   If the IPv6 address contains a reserved IPv6 IID.
      * @retval FALSE  If the IPv6 address does not contain a reserved IPv6 IID.
@@ -280,12 +293,151 @@ public:
     bool IsIidReserved(void) const;
 
     /**
-     * This method returns a pointer to the Interface Identifier.
+     * This method indicates whether or not the Interface Identifier (IID) of the IPv6 address matches the locator
+     * pattern (`0000:00ff:fe00:xxxx`).
      *
-     * @returns A pointer to the Interface Identifier.
+     * @retval TRUE   If the IPv6 address IID matches the locator pattern
+     * @retval FALSE  If the IPv6 address IID does not match the locator pattern
      *
      */
-    const uint8_t *GetIid(void) const;
+    bool IsIidLocator(void) const;
+
+    /**
+     * This method indicates whether or not the IPv6 address's Interface Identifier (IID) matches a Routing Locator
+     * (RLOC).
+     *
+     * In addition to checking that the IID matches the locator pattern (`0000:00ff:fe00:xxxx`), this method also
+     * checks that the locator value is a valid RLOC16.
+     *
+     * @retval TRUE   If the IPv6 address's IID matches a RLOC address.
+     * @retval FALSE  If the IPv6 address's IID does not match a RLOC address.
+     *
+     */
+    bool IsIidRoutingLocator(void) const;
+
+    /**
+     * This method indicates whether or not the IPv6 address's Interface Identifier (IID) matches an Anycast Locator
+     * (ALOC).
+     *
+     * In addition to checking that the IID matches the locator pattern (`0000:00ff:fe00:xxxx`), this method also
+     * checks that the locator value is any valid ALOC16 (0xfc00 - 0xfcff).
+     *
+     * @retval TRUE   If the IPv6 address's IID matches a ALOC address.
+     * @retval FALSE  If the IPv6 address's IID does not match a ALOC address.
+     *
+     */
+    bool IsIidAnycastLocator(void) const;
+
+    /**
+     * This method indicates whether or not the IPv6 address's Interface Identifier (IID) matches a Service Anycast
+     * Locator (ALOC).
+     *
+     * In addition to checking that the IID matches the locator pattern (`0000:00ff:fe00:xxxx`), this method also
+     * checks that the locator value is a valid Service ALOC16 (0xfc10 – 0xfc2f).
+     *
+     * @retval TRUE   If the IPv6 address's IID matches a ALOC address.
+     * @retval FALSE  If the IPv6 address's IID does not match a ALOC address.
+     *
+     */
+    bool IsIidAnycastServiceLocator(void) const;
+
+    /**
+     * This method gets the IPv6 address locator.
+     *
+     * @returns RLOC16 or ALOC16.
+     *
+     */
+    uint16_t GetLocator(void) const { return HostSwap16(mFields.m16[7]); }
+
+    /**
+     * This method sets the IPv6 address locator.
+     *
+     * This method only changes the last 2 bytes of the address and keeps the rest of the address as before.
+     *
+     * @param[in]  aLocator   RLOC16 or ALOC16.
+     *
+     */
+    void SetLocator(uint16_t aLocator) { mFields.m16[7] = HostSwap16(aLocator); }
+
+    /**
+     * This method sets the IPv6 address to a Routing Locator (RLOC) IPv6 address with a given Mesh-local prefix and
+     * RLOC16 value.
+     *
+     * @param[in]  aMeshLocalPrefix  A Mesh Local Prefix.
+     * @param[in]  aRloc16           A RLOC16 value.
+     *
+     */
+    void SetToRoutingLocator(const Mle::MeshLocalPrefix &aMeshLocalPrefix, uint16_t aRloc16)
+    {
+        SetToLocator(aMeshLocalPrefix, aRloc16);
+    }
+
+    /**
+     * This method sets the IPv6 address to a Anycast Locator (ALOC) IPv6 address with a given Mesh-local prefix and
+     * ALOC16 value.
+     *
+     * @param[in]  aMeshLocalPrefix  A Mesh Local Prefix.
+     * @param[in]  aAloc16           A ALOC16 value.
+     *
+     */
+    void SetToAnycastLocator(const Mle::MeshLocalPrefix &aMeshLocalPrefix, uint16_t aAloc16)
+    {
+        SetToLocator(aMeshLocalPrefix, aAloc16);
+    }
+
+    /**
+     * This method sets the IPv6 address prefix.
+     *
+     * This method only changes the first @p aPrefixLength bits of the address and keeps the rest of the bits in the
+     * address as before.
+     *
+     * @param[in]  aPrefix         A buffer containing the prefix
+     * @param[in]  aPrefixLength   The prefix length (in bits).
+     *
+     */
+    void SetPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength);
+
+    /**
+     * This method sets the IPv6 address prefix to the given Mesh Local Prefix.
+     *
+     * @param[in]  aMeshLocalPrefix   A Mesh Local Prefix.
+     *
+     */
+    void SetPrefix(const Mle::MeshLocalPrefix &aMeshLocalPrefix)
+    {
+        SetPrefix(aMeshLocalPrefix.m8, Mle::MeshLocalPrefix::kLength);
+    }
+
+    /**
+     * This method sets the prefix content of the Prefix-Based Multicast Address.
+     *
+     * @param[in]  aPrefix         A buffer containing the prefix.
+     * @param[in]  aPrefixLength   The prefix length (in bits).
+     *
+     */
+    void SetMulticastNetworkPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength);
+
+    /**
+     * This method sets the prefix content of Mesh Local Prefix-Based Multicast Address.
+     *
+     * @param[in]  aMeshLocalPrefix   A reference to the Mesh Local Prefix.
+     *
+     */
+    void SetMulticastNetworkPrefix(const Mle::MeshLocalPrefix &aMeshLocalPrefix)
+    {
+        SetMulticastNetworkPrefix(aMeshLocalPrefix.m8, Mle::MeshLocalPrefix::kLength);
+    }
+
+    /**
+     * This method sets the prefix content of Prefix-Based Multicast Address.
+     *
+     * @param[in]  aPrefix A reference to an IPv6 Prefix.
+     *
+     */
+    void SetMulticastNetworkPrefix(const otIp6Prefix &aPrefix)
+    {
+        SetMulticastNetworkPrefix(aPrefix.mPrefix.mFields.m8, aPrefix.mLength);
+    }
 
     /**
      * This method returns a pointer to the Interface Identifier.
@@ -293,7 +445,15 @@ public:
      * @returns A pointer to the Interface Identifier.
      *
      */
-    uint8_t *GetIid(void);
+    const uint8_t *GetIid(void) const { return mFields.m8 + kInterfaceIdentifierOffset; }
+
+    /**
+     * This method returns a pointer to the Interface Identifier.
+     *
+     * @returns A pointer to the Interface Identifier.
+     *
+     */
+    uint8_t *GetIid(void) { return mFields.m8 + kInterfaceIdentifierOffset; }
 
     /**
      * This method sets the Interface Identifier.
@@ -310,6 +470,15 @@ public:
      *
      */
     void SetIid(const Mac::ExtAddress &aExtAddress);
+
+    /**
+     * This method sets the Interface Identifier to Routing/Anycast Locator pattern `0000:00ff:fe00:xxxx` with a given
+     * locator (RLOC16 or ALOC16) value.
+     *
+     * @param[in]  aLocator    RLOC16 or ALOC16.
+     *
+     */
+    void SetIidToLocator(uint16_t aLocator);
 
     /**
      * This method converts the IPv6 Interface Identifier to an IEEE 802.15.4 Extended Address.
@@ -399,10 +568,21 @@ public:
     static uint8_t PrefixMatch(const uint8_t *aPrefixA, const uint8_t *aPrefixB, uint8_t aMaxLength);
 
 private:
+    void SetPrefix(uint8_t aOffset, const uint8_t *aPrefix, uint8_t aPrefixLength);
+    void SetToLocator(const Mle::MeshLocalPrefix &aMeshLocalPrefix, uint16_t aLocator);
+
+    static const Address &GetLinkLocalAllNodesMulticast(void);
+    static const Address &GetLinkLocalAllRoutersMulticast(void);
+    static const Address &GetRealmLocalAllNodesMulticast(void);
+    static const Address &GetRealmLocalAllRoutersMulticast(void);
+    static const Address &GetRealmLocalAllMplForwarders(void);
+
     enum
     {
-        kInterfaceIdentifierOffset = 8, ///< Interface Identifier offset in bytes.
-        kIp4AddressSize            = 4  ///< Size of the IPv4 address.
+        kInterfaceIdentifierOffset          = 8, ///< Interface Identifier offset in bytes.
+        kIp4AddressSize                     = 4, ///< Size of the IPv4 address.
+        kMulticastNetworkPrefixLengthOffset = 3, ///< Prefix-Based Multicast Address (RFC3306).
+        kMulticastNetworkPrefixOffset       = 4, ///< Prefix-Based Multicast Address (RFC3306).
     };
 } OT_TOOL_PACKED_END;
 

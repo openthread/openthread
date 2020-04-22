@@ -34,12 +34,15 @@
 #ifndef POSIX_APP_HDLC_INTERFACE_HPP_
 #define POSIX_APP_HDLC_INTERFACE_HPP_
 
-#include "platform-config.h"
+#include "openthread-posix-config.h"
+#include "platform-posix.h"
+#include "lib/hdlc/hdlc.hpp"
+#include "lib/spinel/spinel_interface.hpp"
 
-#include "ncp/hdlc.hpp"
+#if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_UART
 
 namespace ot {
-namespace PosixApp {
+namespace Posix {
 
 /**
  * This class defines an HDLC interface to the Radio Co-processor (RCP)
@@ -48,49 +51,17 @@ namespace PosixApp {
 class HdlcInterface
 {
 public:
-    enum
-    {
-        kMaxFrameSize = 2048, ///< Maximum frame size (number of bytes).
-        kMaxWaitTime  = 2000, ///< Maximum wait time in Milliseconds for socket to become writable (see `SendFrame`).
-    };
-
-    /**
-     * This type defines a receive frame buffer to store received (and decoded) frame(s).
-     *
-     * @note The receive frame buffer is an `Hdlc::MultiFrameBuffer` and therefore it is capable of storing multiple
-     * frames in a FIFO queue manner.
-     *
-     */
-    typedef Hdlc::MultiFrameBuffer<kMaxFrameSize> RxFrameBuffer;
-
-    /**
-     * This class defines the callbacks provided by `HdlcInterfac` to its owner/user.
-     *
-     */
-    class Callbacks
-    {
-    public:
-        /**
-         * This callback is invoked to notify owner/user of `HdlcInterface` of a received (and decoded) frame.
-         *
-         * The newly received frame is available in `RxFrameBuffer` from `HdlcInterface::GetRxFrameBuffer()`. The
-         * user can read and process the frame. The callback is expected to either discard the new frame using
-         * `RxFrameBuffer::DiscardFrame()` or save the frame using `RxFrameBuffer::SaveFrame()` to be read and
-         * processed later.
-         *
-         * @param[in] aHdlcInterface    A reference to the `HdlcInterface` object.
-         *
-         */
-        void HandleReceivedFrame(HdlcInterface &aHdlcInterface);
-    };
-
     /**
      * This constructor initializes the object.
      *
-     * @param[in] aCallback   A reference to a `Callback` object.
+     * @param[in] aCallback         Callback on frame received
+     * @param[in] aCallbackContext  Callback context
+     * @param[in] aFrameBuffer      A reference to a `RxFrameBuffer` object.
      *
      */
-    explicit HdlcInterface(Callbacks &aCallbacks);
+    HdlcInterface(Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
+                  void *                                        aCallbackContext,
+                  Spinel::SpinelInterface::RxFrameBuffer &      aFrameBuffer);
 
     /**
      * This destructor deinitializes the object.
@@ -101,18 +72,16 @@ public:
     /**
      * This method initializes the interface to the Radio Co-processor (RCP)
      *
-     * @note This method should be called before reading and sending frames to the interface.
+     * @note This method should be called before reading and sending spinel frames to the interface.
      *
-     *
-     * @param[in]   aRadioFile    The path to either a UART device or an executable.
-     * @param[in]   aRadioConfig  Parameters to be given to the device or executable.
+     * @param[in]  aPlatformConfig  Platform configuration structure.
      *
      * @retval OT_ERROR_NONE          The interface is initialized successfully
      * @retval OT_ERROR_ALREADY       The interface is already initialized.
      * @retval OT_ERROR_INVALID_ARGS  The UART device or executable cannot be found or failed to open/run.
      *
      */
-    otError Init(const char *aRadioFile, const char *aRadioConfig);
+    otError Init(const otPlatformConfig &aPlatformConfig);
 
     /**
      * This method deinitializes the interface to the RCP.
@@ -121,22 +90,65 @@ public:
     void Deinit(void);
 
     /**
+     * This method encodes and sends a spinel frame to Radio Co-processor (RCP) over the socket.
      *
-     * This method returns the socket file descriptor associated with the interface.
+     * This is blocking call, i.e., if the socket is not writable, this method waits for it to become writable for
+     * up to `kMaxWaitTime` interval.
      *
-     * @returns The associated socket file descriptor, or -1 if interface is not initializes.
+     * @param[in] aFrame     A pointer to buffer containing the spinel frame to send.
+     * @param[in] aLength    The length (number of bytes) in the frame.
+     *
+     * @retval OT_ERROR_NONE     Successfully encoded and sent the spinel frame.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to encode the frame.
+     * @retval OT_ERROR_FAILED   Failed to send due to socket not becoming writable within `kMaxWaitTime`.
      *
      */
-    int GetSocket(void) const { return mSockFd; }
+    otError SendFrame(const uint8_t *aFrame, uint16_t aLength);
 
     /**
-     * This method indicates whether the `HdclInterface` is currently decoding a received frame or not.
+     * This method waits for receiving part or all of spinel frame within specified interval.
      *
-     * @returns  TRUE if currently decoding a received frame, FALSE otherwise.
+     * @param[in]  aTimeout  The timeout value in microseconds.
+     *
+     * @retval OT_ERROR_NONE             Part or all of spinel frame is received.
+     * @retval OT_ERROR_RESPONSE_TIMEOUT No spinel frame is received within @p aTimeout.
      *
      */
-    bool IsDecoding(void) const { return mIsDecoding; }
+    otError WaitForFrame(uint64_t aTimeoutUs);
 
+    /**
+     * This method updates the file descriptor sets with file descriptors used by the radio driver.
+     *
+     * @param[inout]  aReadFdSet   A reference to the read file descriptors.
+     * @param[inout]  aWriteFdSet  A reference to the write file descriptors.
+     * @param[inout]  aMaxFd       A reference to the max file descriptor.
+     * @param[inout]  aTimeout     A reference to the timeout.
+     *
+     */
+    void UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout);
+
+    /**
+     * This method performs radio driver processing.
+     *
+     * @param[in]   aContext        The context containing fd_sets.
+     *
+     */
+    void Process(const RadioProcessContext &aContext);
+
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+    /**
+     * This method process read data (decode the data).
+     *
+     * This method is intended only for virtual time simulation. Its behavior is similar to `Read()` but instead of
+     * reading the data from the radio socket, it uses the given data in @p `aEvent`.
+     *
+     * @param[in] aEvent   The data event.
+     *
+     */
+    void Process(const Event &aEvent) { Decode(aEvent.mData, aEvent.mDataLength); }
+#endif
+
+private:
     /**
      * This method instructs `HdlcInterface` to read and decode data from radio over the socket.
      *
@@ -146,53 +158,6 @@ public:
      */
     void Read(void);
 
-    /**
-     * This method gets the `RxFrameBuffer`.
-     *
-     * The receive frame buffer is an `Hdlc::MultiFrameBuffer` and therefore it is capable of storing multiple
-     * frames in a FIFO queue manner. The `RxFrameBuffer` contains the decoded received frames.
-     *
-     * Wen during `Read()` the `Callbacks::HandleReceivedFrame()` is invoked, the newly received decoded frame is
-     * available in the receive frame buffer. The callback is expected to either process and then discard the frame
-     * (using `RxFrameBuffer::DiscardFrame()` method) or save the frame (using `RxFrameBuffer::SaveFrame()` so that
-     * it can be read later.
-     *
-     * @returns A reference to receive frame buffer containing newly received frame or previously saved frames.
-     *
-     */
-    RxFrameBuffer &GetRxFrameBuffer(void) { return mRxFrameBuffer; }
-
-    /**
-     * This method encodes and sends a frame to Radio Co-processor (RCP) over the socket.
-     *
-     * This is blocking call, i.e., if the socket is not writable, this method waits for it to become writable for
-     * up to `kMaxWaitTime` interval.
-     *
-     * @param[in] aFrame     A pointer to buffer containing the frame to send.
-     * @param[in] aLength    The length (number of bytes) in the frame.
-     *
-     * @retval OT_ERROR_NONE     Successfully encoded and sent the frame.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to encode the frame.
-     * @retval OT_ERROR_FAILED   Failed to send due to socket not becoming writable within `kMaxWaitTime`.
-     *
-     */
-    otError SendFrame(const uint8_t *aFrame, uint16_t aLength);
-
-#if OPENTHREAD_POSIX_VIRTUAL_TIME
-    /**
-     * This method process read data (decode the data).
-     *
-     * This method is intended only for virtual time simulation. Its behavior is similar to `Read()` but instead of
-     * reading the data from the radio socket, it uses the given data in the buffer `aBuffer`.
-     *
-     * @param[in] aBuffer  A pointer to buffer containing data.
-     * @param[in] aLength  The length (number of bytes) in the buffer.
-     *
-     */
-    void ProcessReadData(const uint8_t *aBuffer, uint16_t aLength) { Decode(aBuffer, aLength); }
-#endif
-
-private:
     /**
      * This method waits for the socket file descriptor associated with the HDLC interface to become writable within
      * `kMaxWaitTime` interval.
@@ -234,18 +199,30 @@ private:
     void        HandleHdlcFrame(otError aError);
 
     static int OpenFile(const char *aFile, const char *aConfig);
-#if OPENTHREAD_CONFIG_POSIX_APP_ENABLE_PTY_DEVICE
+#if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
     static int ForkPty(const char *aCommand, const char *aArguments);
 #endif
 
-    Callbacks &   mCallbacks;
+    enum
+    {
+        kMaxFrameSize = Spinel::SpinelInterface::kMaxFrameSize,
+        kMaxWaitTime  = 2000, ///< Maximum wait time in Milliseconds for socket to become writable (see `SendFrame`).
+    };
+
+    Spinel::SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
+    void *                                        mReceiveFrameContext;
+    Spinel::SpinelInterface::RxFrameBuffer &      mReceiveFrameBuffer;
+
     int           mSockFd;
-    bool          mIsDecoding;
-    RxFrameBuffer mRxFrameBuffer;
     Hdlc::Decoder mHdlcDecoder;
+
+    // Non-copyable, intentionally not implemented.
+    HdlcInterface(const HdlcInterface &);
+    HdlcInterface &operator=(const HdlcInterface &);
 };
 
-} // namespace PosixApp
+} // namespace Posix
 } // namespace ot
 
+#endif // OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_UART
 #endif // POSIX_APP_HDLC_INTERFACE_HPP_

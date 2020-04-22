@@ -33,6 +33,8 @@
 
 #include "src_match_controller.hpp"
 
+#if OPENTHREAD_FTD
+
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -90,7 +92,7 @@ void SourceMatchController::ResetMessageCount(Child &aChild)
 
 void SourceMatchController::SetSrcMatchAsShort(Child &aChild, bool aUseShortAddress)
 {
-    VerifyOrExit(aChild.IsIndirectSourceMatchShort() != aUseShortAddress);
+    VerifyOrExit(aChild.IsIndirectSourceMatchShort() != aUseShortAddress, OT_NOOP);
 
     if (aChild.GetIndirectMessageCount() > 0)
     {
@@ -210,7 +212,7 @@ otError SourceMatchController::AddPendingEntries(void)
 {
     otError error = OT_ERROR_NONE;
 
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateValidOrRestoring); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateValidOrRestoring); !iter.IsDone(); iter++)
     {
         if (iter.GetChild()->IsIndirectSourceMatchPending())
         {
@@ -224,3 +226,5 @@ exit:
 }
 
 } // namespace ot
+
+#endif // OPENTHREAD_FTD

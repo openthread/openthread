@@ -1,5 +1,7 @@
 [![OpenThread][ot-logo]][ot-repo]
-[![Build Status][ot-travis-svg]][ot-travis]
+[![Build][ot-gh-action-build-svg]][ot-gh-action-build]
+[![Simulation][ot-gh-action-simulation-svg]][ot-gh-action-simulation]
+[![Language grade: C/C++][ot-lgtm-svg]][ot-lgtm]
 [![Coverage Status][ot-codecov-svg]][ot-codecov]
 [![Build Status][ot-docker-dev-svg]][ot-docker-dev]
 
@@ -23,8 +25,12 @@ More information about Thread can be found at [threadgroup.org](http://threadgro
 [thread]: http://threadgroup.org/technology/ourtechnology
 [ot-repo]: https://github.com/openthread/openthread
 [ot-logo]: doc/images/openthread_logo.png
-[ot-travis]: https://travis-ci.org/openthread/openthread
-[ot-travis-svg]: https://travis-ci.org/openthread/openthread.svg?branch=master
+[ot-gh-action-build]: https://github.com/openthread/openthread/actions?query=workflow%3ABuild+branch%3Amaster+event%3Apush
+[ot-gh-action-build-svg]: https://github.com/openthread/openthread/workflows/Build/badge.svg?branch=master&event=push
+[ot-gh-action-simulation]: https://github.com/openthread/openthread/actions?query=workflow%3ASimulation+branch%3Amaster+event%3Apush
+[ot-gh-action-simulation-svg]: https://github.com/openthread/openthread/workflows/Simulation/badge.svg?branch=master&event=push
+[ot-lgtm]: https://lgtm.com/projects/g/openthread/openthread/context:cpp
+[ot-lgtm-svg]: https://img.shields.io/lgtm/grade/cpp/g/openthread/openthread.svg?logo=lgtm&logoWidth=18
 [ot-codecov]: https://codecov.io/gh/openthread/openthread
 [ot-codecov-svg]: https://codecov.io/gh/openthread/openthread/branch/master/graph/badge.svg
 [ot-docker-dev]: https://hub.docker.com/r/openthread/environment
@@ -32,7 +38,7 @@ More information about Thread can be found at [threadgroup.org](http://threadgro
 
 # Who supports OpenThread?
 
-<a href="https://www.arm.com/"><img src="doc/images/ot-contrib-arm.png" alt="ARM" width="200px"></a><a href="https://www.cascoda.com/"><img src="doc/images/ot-contrib-cascoda.png" alt="Cascoda" width="200px"></a><a href="https://www.google.com/"><img src="doc/images/ot-contrib-google.png" alt="Google" width="200px"></a><a href="http://www.nordicsemi.com/"><img src="doc/images/ot-contrib-nordic.png" alt="Nordic" width="200px"></a><a href="http://www.nxp.com/"><img src="doc/images/ot-contrib-nxp.png" alt="NXP" width="200px"></a><a href="https://www.particle.io/"><img src="doc/images/ot-contrib-particle.png" alt="Particle" width="200px"></a><a href="http://www.qorvo.com/"><img src="doc/images/ot-contrib-qorvo.png" alt="Qorvo" width="200px"></a><a href="https://www.qualcomm.com/"><img src="doc/images/ot-contrib-qc.png" alt="Qualcomm" width="200px"></a><a href="https://www.samsung.com/"><img src="doc/images/ot-contrib-samsung.png" alt="Samsung" width="200px"></a><a href="https://www.silabs.com/"><img src="doc/images/ot-contrib-silabs.png" alt="Silicon Labs" width="200px"></a><a href="https://www.st.com/"><img src="doc/images/ot-contrib-stm.png" alt="STMicroelectronics" width="200px"></a><a href="https://www.synopsys.com/"><img src="doc/images/ot-contrib-synopsys.png" alt="Synopsys" width="200px"></a><a href="https://www.ti.com/"><img src="doc/images/ot-contrib-ti.png" alt="Texas Instruments" width="200px"></a><a href="https://www.zephyrproject.org/"><img src="doc/images/ot-contrib-zephyr.png" alt="Zephyr Project" width="200px"></a>
+<a href="https://www.arm.com/"><img src="doc/images/ot-contrib-arm.png" alt="ARM" width="200px"></a><a href="https://www.cascoda.com/"><img src="doc/images/ot-contrib-cascoda.png" alt="Cascoda" width="200px"></a><a href="https://www.google.com/"><img src="doc/images/ot-contrib-google.png" alt="Google" width="200px"></a><a href="http://www.nordicsemi.com/"><img src="doc/images/ot-contrib-nordic.png" alt="Nordic" width="200px"></a><a href="http://www.nxp.com/"><img src="doc/images/ot-contrib-nxp.png" alt="NXP" width="200px"></a><a href="http://www.qorvo.com/"><img src="doc/images/ot-contrib-qorvo.png" alt="Qorvo" width="200px"></a><a href="https://www.qualcomm.com/"><img src="doc/images/ot-contrib-qc.png" alt="Qualcomm" width="200px"></a><a href="https://www.samsung.com/"><img src="doc/images/ot-contrib-samsung.png" alt="Samsung" width="200px"></a><a href="https://www.silabs.com/"><img src="doc/images/ot-contrib-silabs.png" alt="Silicon Labs" width="200px"></a><a href="https://www.st.com/"><img src="doc/images/ot-contrib-stm.png" alt="STMicroelectronics" width="200px"></a><a href="https://www.synopsys.com/"><img src="doc/images/ot-contrib-synopsys.png" alt="Synopsys" width="200px"></a><a href="https://www.ti.com/"><img src="doc/images/ot-contrib-ti.png" alt="Texas Instruments" width="200px"></a><a href="https://www.zephyrproject.org/"><img src="doc/images/ot-contrib-zephyr.png" alt="Zephyr Project" width="200px"></a>
 
 # Getting started
 

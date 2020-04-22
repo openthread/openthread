@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/netdiag.h>
+
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "net/udp6.hpp"
@@ -98,6 +100,10 @@ public:
      */
     otError SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
 
+    static otError GetNextDiagTlv(const otMessage &      aMessage,
+                                  otNetworkDiagIterator &aIterator,
+                                  otNetworkDiagTlv &     aNetworkDiagTlv);
+
 private:
     otError AppendIp6AddressList(Message &aMessage);
     otError AppendChildTable(Message &aMessage);
@@ -114,7 +120,7 @@ private:
                                             otMessage *          aMessage,
                                             const otMessageInfo *aMessageInfo,
                                             otError              aResult);
-    void HandleDiagnosticGetResponse(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, otError aResult);
+    void HandleDiagnosticGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError aResult);
 
     static void HandleDiagnosticGetAnswer(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleDiagnosticGetAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

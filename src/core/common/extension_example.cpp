@@ -62,13 +62,13 @@ public:
 // `ExtensionBase` API
 // ----------------------------------------------------------------------------
 
-static otDEFINE_ALIGNED_VAR(sExtensionRaw, sizeof(Extension), uint64_t);
+static OT_DEFINE_ALIGNED_VAR(sExtensionRaw, sizeof(Extension), uint64_t);
 
 ExtensionBase &ExtensionBase::Init(Instance &aInstance)
 {
     ExtensionBase *ext = reinterpret_cast<ExtensionBase *>(&sExtensionRaw);
 
-    VerifyOrExit(!ext->mIsInitialized);
+    VerifyOrExit(!ext->mIsInitialized, OT_NOOP);
 
     ext = new (&sExtensionRaw) Extension(aInstance);
 

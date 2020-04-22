@@ -36,6 +36,10 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#if OPENTHREAD_POSIX
+#include <signal.h>
+#include <sys/types.h>
+#endif
 
 #include <openthread/cli.h>
 #include <openthread/platform/logging.h>
@@ -48,7 +52,6 @@
 #include "common/new.hpp"
 #include "common/tasklet.hpp"
 #include "utils/static_assert.hpp"
-#include "utils/wrap_string.h"
 
 #if OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
 #include <openthread/platform/debug_uart.h>
@@ -99,7 +102,7 @@ OT_STATIC_ASSERT(OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH <= OPENTHREAD_CONFIG_CLI_
 namespace ot {
 namespace Cli {
 
-static otDEFINE_ALIGNED_VAR(sCliUartRaw, sizeof(Uart), uint64_t);
+static OT_DEFINE_ALIGNED_VAR(sCliUartRaw, sizeof(Uart), uint64_t);
 
 extern "C" void otCliUartInit(otInstance *aInstance)
 {
@@ -156,6 +159,10 @@ void Uart::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
 
 #if !OPENTHREAD_CONFIG_UART_CLI_RAW
 #if OPENTHREAD_POSIX
+
+        case 0x03: // ASCII for Ctrl-C
+            kill(0, SIGINT);
+            break;
 
         case 0x04: // ASCII for Ctrl-D
             exit(EXIT_SUCCESS);
@@ -287,7 +294,7 @@ int Uart::Output(const char *aBuf, uint16_t aBufLength)
 
 void Uart::Send(void)
 {
-    VerifyOrExit(mSendLength == 0);
+    VerifyOrExit(mSendLength == 0, OT_NOOP);
 
     if (mTxLength > kTxBufferSize - mTxHead)
     {

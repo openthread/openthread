@@ -36,11 +36,13 @@ DIST_SUBDIRS                            = \
     cc2650                                \
     cc2652                                \
     efr32mg12                             \
+    efr32mg13                             \
     efr32mg21                             \
     gp712                                 \
+    jn5189                                \
     kw41z                                 \
     nrf528xx                              \
-    posix                                 \
+    simulation                            \
     qpg6095                               \
     samr21                                \
     utils                                 \
@@ -52,74 +54,64 @@ SUBDIRS                                 = \
     utils                                 \
     $(NULL)
 
-if OPENTHREAD_EXAMPLES_CC1352
+if OPENTHREAD_PLATFORM_CC1352
 SUBDIRS                                += cc1352
 endif
 
-if OPENTHREAD_EXAMPLES_CC2538
+if OPENTHREAD_PLATFORM_CC2538
 SUBDIRS                                += cc2538
 endif
 
-if OPENTHREAD_EXAMPLES_CC2650
+if OPENTHREAD_PLATFORM_CC2650
 SUBDIRS                                += cc2650
 endif
 
-if OPENTHREAD_EXAMPLES_CC2652
+if OPENTHREAD_PLATFORM_CC2652
 SUBDIRS                                += cc2652
 endif
 
-if OPENTHREAD_EXAMPLES_EFR32MG12
+if OPENTHREAD_PLATFORM_EFR32MG12
 SUBDIRS                                += efr32mg12
 endif
 
-if OPENTHREAD_EXAMPLES_EFR32MG21
+if OPENTHREAD_PLATFORM_EFR32MG13
+SUBDIRS                                += efr32mg13
+endif
+
+if OPENTHREAD_PLATFORM_EFR32MG21
 SUBDIRS                                += efr32mg21
 endif
 
-if OPENTHREAD_EXAMPLES_GP712
+if OPENTHREAD_PLATFORM_GP712
 SUBDIRS                                += gp712
 endif
 
-if OPENTHREAD_EXAMPLES_KW41Z
+if OPENTHREAD_PLATFORM_JN5189
+SUBDIRS                                += jn5189
+endif
+
+if OPENTHREAD_PLATFORM_KW41Z
 SUBDIRS                                += kw41z
 endif
 
-if OPENTHREAD_EXAMPLES_NRF528XX
+if OPENTHREAD_PLATFORM_NRF528XX
 SUBDIRS                                += nrf528xx
 endif
 
-if OPENTHREAD_EXAMPLES_POSIX
-SUBDIRS                                += posix
+if OPENTHREAD_PLATFORM_SIMULATION
+SUBDIRS                                += simulation
 endif
 
-if OPENTHREAD_EXAMPLES_QPG6095
+if OPENTHREAD_PLATFORM_QPG6095
 SUBDIRS                                += qpg6095
 endif
 
-if OPENTHREAD_EXAMPLES_SAMR21
+if OPENTHREAD_PLATFORM_SAMR21
 SUBDIRS                                += samr21
 endif
 
 noinst_HEADERS                          = \
     openthread-system.h                   \
-    $(NULL)
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    cc1352                                \
-    cc2538                                \
-    cc2650                                \
-    cc2652                                \
-    efr32mg12                             \
-    efr32mg21                             \
-    gp712                                 \
-    kw41z                                 \
-    nrf528xx                              \
-    posix                                 \
-    qpg6095                               \
-    samr21                                \
-    utils                                 \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

@@ -6,7 +6,7 @@
  *  modification, are permitted provided that the following conditions are met:
  *  1. Redistributions of source code must retain the above copyright
  *     notice, this list of conditions and the following disclaimer.
- >*  2. Redistributions in binary form must reproduce the above copyright
+ *  2. Redistributions in binary form must reproduce the above copyright
  *     notice, this list of conditions and the following disclaimer in the
  *     documentation and/or other materials provided with the distribution.
  *  3. Neither the name of the copyright holder nor the
@@ -34,6 +34,8 @@
 
 #ifndef OPENTHREAD_CORE_DEFAULT_CONFIG_H_
 #define OPENTHREAD_CORE_DEFAULT_CONFIG_H_
+
+#include "config/coap.h"
 
 /**
  * @def OPENTHREAD_CONFIG_STACK_VENDOR_OUI
@@ -76,26 +78,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
- *
- * Define to 1 to enable the Border Agent service.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-#define OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE 0
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
- *
- * Define to 1 to enable the Border Router service.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-#define OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE 0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_ECDSA_ENABLE
  *
  * Define to 1 to enable ECDSA support.
@@ -123,16 +105,6 @@
  */
 #ifndef OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 #define OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE 0
-#endif
-
-/**
- * @def OPENTHREAD_ENABLE_POSIX_APP_DAEMON
- *
- * Define to 1 to enable posix-app daemon support.
- *
- */
-#ifndef OPENTHREAD_ENABLE_POSIX_APP_DAEMON
-#define OPENTHREAD_ENABLE_POSIX_APP_DAEMON 0
 #endif
 
 /**
@@ -261,6 +233,20 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT
+ *
+ * Define as 1 to enable bultin mbedtls management.
+ *
+ * OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT determines whether to manage mbedTLS memory
+ * allocation and debug config internally.  If not configured, the default is to enable builtin
+ * management if builtin mbedtls is enabled and disable it otherwise.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT
+#define OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE
  *
  * The size of heap buffer when DTLS is enabled.
@@ -285,6 +271,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+ *
+ * Enable the external heap.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+#define OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH
  *
  * The size of dtls application data when the CoAP Secure API is enabled.
@@ -292,6 +288,16 @@
  */
 #ifndef OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH
 #define OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH 1400
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ASSERT_ENABLE
+ *
+ * Define as 1 to enable assert function `OT_ASSERT()` within OpenThread code and its libraries.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ASSERT_ENABLE
+#define OPENTHREAD_CONFIG_ASSERT_ENABLE 1
 #endif
 
 /**
@@ -324,6 +330,18 @@
  */
 #ifndef OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH
 #define OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH "tmp"
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+ *
+ * Define to 1 to enable otPlatFlash* APIs to support non-volatile storage.
+ *
+ * When defined to 1, the platform MUST implement the otPlatFlash* APIs instead of the otPlatSettings* APIs.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+#define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 0
 #endif
 
 /**
@@ -420,6 +438,16 @@
  */
 #ifndef OPENTHREAD_CONFIG_LEGACY_ENABLE
 #define OPENTHREAD_CONFIG_LEGACY_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_OTNS_ENABLE
+ *
+ * Define to 1 to enable OTNS interactions.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_OTNS_ENABLE
+#define OPENTHREAD_CONFIG_OTNS_ENABLE 0
 #endif
 
 #endif // OPENTHREAD_CORE_DEFAULT_CONFIG_H_

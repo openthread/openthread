@@ -84,7 +84,7 @@ KeyManager::KeyManager(Instance &aInstance)
     , mIsPskcSet(false)
 {
     mMasterKey = static_cast<const MasterKey &>(kDefaultMasterKey);
-    memset(&mPskc, 0, sizeof(mPskc));
+    mPskc.Clear();
     ComputeKey(mKeySequence, mKey);
 }
 
@@ -119,11 +119,12 @@ otError KeyManager::SetMasterKey(const MasterKey &aKey)
     ComputeKey(mKeySequence, mKey);
 
     // reset parent frame counters
-    parent = Get<Mle::MleRouter>().GetParent();
+    parent = &Get<Mle::MleRouter>().GetParent();
     parent->SetKeySequence(0);
     parent->SetLinkFrameCounter(0);
     parent->SetMleFrameCounter(0);
 
+#if OPENTHREAD_FTD
     // reset router frame counters
     for (RouterTable::Iterator iter(GetInstance()); !iter.IsDone(); iter++)
     {
@@ -133,12 +134,13 @@ otError KeyManager::SetMasterKey(const MasterKey &aKey)
     }
 
     // reset child frame counters
-    for (ChildTable::Iterator iter(GetInstance(), ChildTable::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
+    for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
     {
         iter.GetChild()->SetKeySequence(0);
         iter.GetChild()->SetLinkFrameCounter(0);
         iter.GetChild()->SetMleFrameCounter(0);
     }
+#endif
 
 exit:
     return error;
@@ -167,7 +169,7 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
         if (mKeySwitchGuardEnabled)
         {
             // Check if the guard timer has expired if key rotation is requested.
-            VerifyOrExit(mHoursSinceKeyRotation >= mKeySwitchGuardTime);
+            VerifyOrExit(mHoursSinceKeyRotation >= mKeySwitchGuardTime, OT_NOOP);
             StartKeyRotationTimer();
         }
 
@@ -218,9 +220,15 @@ void KeyManager::IncrementMleFrameCounter(void)
     }
 }
 
+void KeyManager::SetKek(const Kek &aKek)
+{
+    mKek             = aKek;
+    mKekFrameCounter = 0;
+}
+
 void KeyManager::SetKek(const uint8_t *aKek)
 {
-    memcpy(mKek, aKek, sizeof(mKek));
+    memcpy(mKek.m8, aKek, sizeof(mKek));
     mKekFrameCounter = 0;
 }
 

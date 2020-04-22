@@ -43,6 +43,7 @@ MED = 3
 
 
 class Cert_6_1_2_REEDAttach_MED(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -99,9 +100,8 @@ class Cert_6_1_2_REEDAttach_MED(unittest.TestCase):
         check_parent_request(msg, is_first_request=False)
 
         # Step 6 - DUT sends Child ID Request
-        msg = med_messages.next_mle_message(
-            mle.CommandType.CHILD_ID_REQUEST, sent_to_node=self.nodes[REED]
-        )
+        msg = med_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST,
+                                            sent_to_node=self.nodes[REED])
         check_child_id_request(
             msg,
             address_registration=CheckType.CONTAIN,
@@ -117,8 +117,7 @@ class Cert_6_1_2_REEDAttach_MED(unittest.TestCase):
 
         # Step 8 - DUT sends Child Update messages
         msg = med_messages.next_mle_message(
-            mle.CommandType.CHILD_UPDATE_REQUEST
-        )
+            mle.CommandType.CHILD_UPDATE_REQUEST)
         check_child_update_request_from_child(
             msg,
             source_address=CheckType.CONTAIN,

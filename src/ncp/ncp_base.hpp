@@ -51,12 +51,11 @@
 #include "changed_props_set.hpp"
 #include "common/instance.hpp"
 #include "common/tasklet.hpp"
-#include "ncp/ncp_buffer.hpp"
-#include "ncp/spinel_decoder.hpp"
-#include "ncp/spinel_encoder.hpp"
+#include "lib/spinel/spinel.h"
+#include "lib/spinel/spinel_buffer.hpp"
+#include "lib/spinel/spinel_decoder.hpp"
+#include "lib/spinel/spinel_encoder.hpp"
 #include "utils/static_assert.hpp"
-
-#include "spinel.h"
 
 namespace ot {
 namespace Ncp {
@@ -202,14 +201,27 @@ protected:
         uint32_t     mPropKeyOrStatus : 24; ///< 3 bytes for either property key or spinel status.
     };
 
-    NcpFrameBuffer::FrameTag GetLastOutboundFrameTag(void);
+    struct HandlerEntry
+    {
+        spinel_prop_key_t        mKey;
+        NcpBase::PropertyHandler mHandler;
+    };
+
+    Spinel::Buffer::FrameTag GetLastOutboundFrameTag(void);
 
     otError HandleCommand(uint8_t aHeader);
 
-    PropertyHandler FindGetPropertyHandler(spinel_prop_key_t aKey);
-    PropertyHandler FindSetPropertyHandler(spinel_prop_key_t aKey);
-    PropertyHandler FindInsertPropertyHandler(spinel_prop_key_t aKey);
-    PropertyHandler FindRemovePropertyHandler(spinel_prop_key_t aKey);
+#if __cplusplus >= 201103L
+    static constexpr bool AreHandlerEntriesSorted(const HandlerEntry *aHandlerEntries, size_t aSize);
+#endif
+
+    static PropertyHandler FindPropertyHandler(const HandlerEntry *aHandlerEntries,
+                                               size_t              aSize,
+                                               spinel_prop_key_t   aKey);
+    static PropertyHandler FindGetPropertyHandler(spinel_prop_key_t aKey);
+    static PropertyHandler FindSetPropertyHandler(spinel_prop_key_t aKey);
+    static PropertyHandler FindInsertPropertyHandler(spinel_prop_key_t aKey);
+    static PropertyHandler FindRemovePropertyHandler(spinel_prop_key_t aKey);
 
     bool    HandlePropertySetForSpecialProperties(uint8_t aHeader, spinel_prop_key_t aKey, otError &aError);
     otError HandleCommandPropertySet(uint8_t aHeader, spinel_prop_key_t aKey);
@@ -246,10 +258,10 @@ protected:
     void        UpdateChangedProps(void);
 
     static void HandleFrameRemovedFromNcpBuffer(void *                   aContext,
-                                                NcpFrameBuffer::FrameTag aFrameTag,
-                                                NcpFrameBuffer::Priority aPriority,
-                                                NcpFrameBuffer *         aNcpBuffer);
-    void        HandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag);
+                                                Spinel::Buffer::FrameTag aFrameTag,
+                                                Spinel::Buffer::Priority aPriority,
+                                                Spinel::Buffer *         aNcpBuffer);
+    void        HandleFrameRemovedFromNcpBuffer(Spinel::Buffer::FrameTag aFrameTag);
 
     otError EncodeChannelMask(uint32_t aChannelMask);
     otError DecodeChannelMask(uint32_t &aChannelMask);
@@ -352,9 +364,7 @@ protected:
     otError CommandHandler_POKE(uint8_t aHeader);
 #endif
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    otError CommandHandler_NET_SAVE(uint8_t aHeader);
     otError CommandHandler_NET_CLEAR(uint8_t aHeader);
-    otError CommandHandler_NET_RECALL(uint8_t aHeader);
 #endif
 
     // ----------------------------------------------------------------------------
@@ -461,7 +471,7 @@ protected:
      * @param[in] aFrameTag    The tag of the frame removed from NCP buffer.
      *
      */
-    void VendorHandleFrameRemovedFromNcpBuffer(NcpFrameBuffer::FrameTag aFrameTag);
+    void VendorHandleFrameRemovedFromNcpBuffer(Spinel::Buffer::FrameTag aFrameTag);
 
     /**
      * This method defines a vendor "get property handler" hook to process vendor spinel properties.
@@ -509,9 +519,9 @@ protected:
                                                bool aDeviceType,
                                                bool aNetworkData);
     Instance *             mInstance;
-    NcpFrameBuffer         mTxFrameBuffer;
-    SpinelEncoder          mEncoder;
-    SpinelDecoder          mDecoder;
+    Spinel::Buffer         mTxFrameBuffer;
+    Spinel::Encoder        mEncoder;
+    Spinel::Decoder        mDecoder;
     bool                   mHostPowerStateInProgress;
 
     enum
@@ -533,7 +543,7 @@ protected:
     ChangedPropsSet mChangedPropsSet;
 
     spinel_host_power_state_t mHostPowerState;
-    NcpFrameBuffer::FrameTag  mHostPowerReplyFrameTag;
+    Spinel::Buffer::FrameTag  mHostPowerReplyFrameTag;
     uint8_t                   mHostPowerStateHeader;
 
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
@@ -595,6 +605,8 @@ protected:
     uint32_t mTxSpinelFrameCounter;         // Number of sent (outbound) spinel frames.
 
     bool mDidInitialUpdates;
+
+    uint64_t mLogTimestampBase; // Timestamp base used for logging
 };
 
 } // namespace Ncp

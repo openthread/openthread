@@ -38,14 +38,12 @@
 
 #include <stdint.h>
 
-#include "utils/wrap_string.h"
-
 #include <openthread/message.h>
 #include <openthread/platform/messagepool.h>
 
 #include "common/code_utils.hpp"
+#include "common/encoding.hpp"
 #include "common/locator.hpp"
-#include "common/tlvs.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/link_quality.hpp"
 
@@ -107,7 +105,7 @@ struct MessageInfo
     uint8_t mSubType : 4;      ///< Identifies the message sub type.
     bool    mDirectTx : 1;     ///< Used to indicate whether a direct transmission is required.
     bool    mLinkSecurity : 1; ///< Indicates whether or not link security is enabled.
-    uint8_t mPriority : 2;     ///< Identifies the message priority level (lower value is higher priority).
+    uint8_t mPriority : 2;     ///< Identifies the message priority level (higher value is higher priority).
     bool    mInPriorityQ : 1;  ///< Indicates whether the message is queued in normal or priority queue.
     bool    mTxSuccess : 1;    ///< Indicates whether the direct tx of the message was successful.
     bool    mDoNotEvict : 1;   ///< Indicates whether or not this message may be evicted.
@@ -208,6 +206,7 @@ public:
         kTypeIp6         = 0, ///< A full uncompressed IPv6 packet
         kType6lowpan     = 1, ///< A 6lowpan frame
         kTypeSupervision = 2, ///< A child supervision frame.
+        kTypeOther       = 3, ///< Other (data) message.
     };
 
     enum
@@ -400,19 +399,6 @@ public:
      *
      */
     otError Append(const void *aBuf, uint16_t aLength);
-
-    /**
-     * This method appends a TLV to the end of the message.
-     *
-     * On success, this method grows the message by the size of the TLV.
-     *
-     * @param[in]  aTlv     A reference to a TLV.
-     *
-     * @retval OT_ERROR_NONE     Successfully appended the TLV to the message.
-     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
-     *
-     */
-    otError AppendTlv(const Tlv &aTlv);
 
     /**
      * This method reads bytes from the message.
@@ -737,6 +723,17 @@ public:
         return (!mBuffer.mHead.mInfo.mInPriorityQ) ? mBuffer.mHead.mInfo.mQueue.mMessage : NULL;
     }
 
+    /**
+     * This method returns a pointer to the priority message queue (if any) where this message is queued.
+     *
+     * @returns A pointer to the priority queue or NULL if not in any priority queue.
+     *
+     */
+    PriorityQueue *GetPriorityQueue(void) const
+    {
+        return (mBuffer.mHead.mInfo.mInPriorityQ) ? mBuffer.mHead.mInfo.mQueue.mPriority : NULL;
+    }
+
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * This method indicates whether or not the message is also used for time sync purpose.
@@ -823,17 +820,6 @@ private:
      *
      */
     void SetMessageQueue(MessageQueue *aMessageQueue);
-
-    /**
-     * This method returns a pointer to the priority message queue (if any) where this message is queued.
-     *
-     * @returns A pointer to the priority queue or NULL if not in any priority queue.
-     *
-     */
-    PriorityQueue *GetPriorityQueue(void) const
-    {
-        return (mBuffer.mHead.mInfo.mInPriorityQ) ? mBuffer.mHead.mInfo.mQueue.mPriority : NULL;
-    }
 
     /**
      * This method sets the message queue information for the message.

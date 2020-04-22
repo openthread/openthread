@@ -200,8 +200,8 @@ private:
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
-    static void HandleEnergyScanResult(Instance &aInstance, otEnergyScanResult *aResult);
-    void        HandleEnergyScanResult(otEnergyScanResult *aResult);
+    static void HandleEnergyScanResult(Mac::EnergyScanResult *aResult, void *aContext);
+    void        HandleEnergyScanResult(Mac::EnergyScanResult *aResult);
     void        LogResults(void);
 
     static const uint32_t mScanChannelMasks[kNumChannelMasks];

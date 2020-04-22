@@ -26,67 +26,24 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <ctype.h>
-
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "ncp/spinel_decoder.hpp"
+#include "lib/spinel/spinel_decoder.hpp"
 
-#include "test_util.h"
+#include "test_util.hpp"
 
 namespace ot {
-namespace Ncp {
+namespace Spinel {
 
 enum
 {
     kTestBufferSize = 800,
 };
 
-// Dump the buffer content to screen.
-void DumpBuffer(const char *aTextMessage, uint8_t *aBuffer, uint16_t aBufferLength)
+void TestDecoder(void)
 {
-    enum
-    {
-        kBytesPerLine = 32, // Number of bytes per line.
-    };
-
-    char     charBuff[kBytesPerLine + 1];
-    uint16_t counter;
-    uint8_t  byte;
-
-    printf("\n%s - len = %u\n    ", aTextMessage, aBufferLength);
-
-    counter = 0;
-
-    while (aBufferLength--)
-    {
-        byte = *aBuffer++;
-        printf("%02X ", byte);
-        charBuff[counter] = isprint(byte) ? static_cast<char>(byte) : '.';
-        counter++;
-
-        if (counter == kBytesPerLine)
-        {
-            charBuff[counter] = 0;
-            printf("    %s\n    ", charBuff);
-            counter = 0;
-        }
-    }
-
-    charBuff[counter] = 0;
-
-    while (counter++ < kBytesPerLine)
-    {
-        printf("   ");
-    }
-
-    printf("    %s\n", charBuff);
-}
-
-void TestSpinelDecoder(void)
-{
-    uint8_t       buffer[kTestBufferSize];
-    SpinelDecoder decoder;
+    uint8_t         buffer[kTestBufferSize];
+    Spinel::Decoder decoder;
 
     spinel_ssize_t frameLen;
 
@@ -637,7 +594,7 @@ void TestSpinelDecoder(void)
         SuccessOrQuit(decoder.CloseStruct(), "CloseStruct() failed.");
         SuccessOrQuit(decoder.ReadUint16(u16), "ReadUint16() failed.");
 
-        // `ResetToSaved()` should fail sicne the enclosing struct for the saved position is closed.
+        // `ResetToSaved()` should fail since the enclosing struct for the saved position is closed.
         VerifyOrQuit(decoder.ResetToSaved() == OT_ERROR_INVALID_STATE, "ResetToSaved() did not fail.");
     }
 
@@ -681,14 +638,12 @@ void TestSpinelDecoder(void)
     printf(" -- PASS\n");
 }
 
-} // namespace Ncp
+} // namespace Spinel
 } // namespace ot
 
-#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
-    ot::Ncp::TestSpinelDecoder();
+    ot::Spinel::Decoder();
     printf("\nAll tests passed.\n");
     return 0;
 }
-#endif

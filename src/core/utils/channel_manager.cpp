@@ -102,9 +102,9 @@ void ChannelManager::PreparePendingDataset(void)
     otOperationalDataset dataset;
     otError              error;
 
-    VerifyOrExit(mState == kStateChangeRequested);
+    VerifyOrExit(mState == kStateChangeRequested, OT_NOOP);
 
-    VerifyOrExit(mChannel != Get<Mac::Mac>().GetPanChannel());
+    VerifyOrExit(mChannel != Get<Mac::Mac>().GetPanChannel(), OT_NOOP);
 
     if (Get<MeshCoP::PendingDataset>().Read(dataset) == OT_ERROR_NONE)
     {
@@ -140,7 +140,7 @@ void ChannelManager::PreparePendingDataset(void)
         // situation where a channel change request comes right after the
         // network is formed but before the active dataset is created.
 
-        if (Get<Mle::Mle>().GetRole() != OT_DEVICE_ROLE_DISABLED)
+        if (!Get<Mle::Mle>().IsDisabled())
         {
             mTimer.Start(kPendingDatasetTxRetryInterval);
         }
@@ -259,8 +259,8 @@ void ChannelManager::HandleStateChanged(Notifier::Callback &aCallback, otChanged
 
 void ChannelManager::HandleStateChanged(otChangedFlags aChangedFlags)
 {
-    VerifyOrExit((aChangedFlags & OT_CHANGED_THREAD_CHANNEL) != 0);
-    VerifyOrExit(mChannel == Get<Mac::Mac>().GetPanChannel());
+    VerifyOrExit((aChangedFlags & OT_CHANGED_THREAD_CHANNEL) != 0, OT_NOOP);
+    VerifyOrExit(mChannel == Get<Mac::Mac>().GetPanChannel(), OT_NOOP);
 
     mState = kStateIdle;
     StartAutoSelectTimer();
@@ -345,9 +345,9 @@ otError ChannelManager::RequestChannelSelect(bool aSkipQualityCheck)
     otLogInfoUtil("ChannelManager: Request to select channel (skip quality check: %s)",
                   aSkipQualityCheck ? "yes" : "no");
 
-    VerifyOrExit(Get<Mle::Mle>().GetRole() != OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!Get<Mle::Mle>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
 
-    VerifyOrExit(aSkipQualityCheck || ShouldAttemptChannelChange());
+    VerifyOrExit(aSkipQualityCheck || ShouldAttemptChannelChange(), OT_NOOP);
 
     SuccessOrExit(error = FindBetterChannel(newChannel, newOccupancy));
 
@@ -389,7 +389,7 @@ exit:
 
 void ChannelManager::StartAutoSelectTimer(void)
 {
-    VerifyOrExit(mState == kStateIdle);
+    VerifyOrExit(mState == kStateIdle, OT_NOOP);
 
     if (mAutoSelectEnabled)
     {

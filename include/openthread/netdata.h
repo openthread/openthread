@@ -65,7 +65,7 @@ typedef struct otBorderRouterConfig
     /**
      * A 2-bit signed integer indicating router preference as defined in RFC 4191.
      */
-    int mPreference : 2;
+    signed int mPreference : 2;
 
     /**
      * TRUE, if @p mPrefix is preferred.  FALSE, otherwise.
@@ -103,6 +103,18 @@ typedef struct otBorderRouterConfig
     bool mStable : 1;
 
     /**
+     * TRUE, if this border router is able to supply DNS infomration obtained via ND.  FALSE, otherwise.
+     */
+    bool mNdDns : 1;
+
+    /**
+     * TRUE, if this prefix is a Thread Domain Prefix.  FALSE, otherwise.
+     *
+     * Note: Domain Prefix is introduced since Thread 1.2.
+     */
+    bool mDp : 1;
+
+    /**
      * The Border Agent Rloc.
      */
     uint16_t mRloc16;
@@ -129,7 +141,7 @@ typedef struct otExternalRouteConfig
     /**
      * A 2-bit signed integer indicating router preference as defined in RFC 4191.
      */
-    int mPreference : 2;
+    signed int mPreference : 2;
 
     /**
      * TRUE, if this configuration is considered Stable Network Data.  FALSE, otherwise.
@@ -157,8 +169,37 @@ typedef enum otRoutePreference
     OT_ROUTE_PREFERENCE_HIGH = 1,  ///< High route preference.
 } otRoutePreference;
 
+#define OT_SERVICE_DATA_MAX_SIZE 252 ///< Maximum size of Service Data in bytes.
+#define OT_SERVER_DATA_MAX_SIZE \
+    248 ///< Maximum size of Server Data in bytes. This is theoretical limit, practical one is much lower.
+
 /**
- * This method provides a full or stable copy of the Leader's Thread Network Data.
+ * This structure represents a Server configuration.
+ *
+ */
+typedef struct otServerConfig
+{
+    bool     mStable : 1;       ///< TRUE, if this configuration is considered Stable Network Data. FALSE, otherwise.
+    uint8_t  mServerDataLength; ///< Length of server data.
+    uint8_t  mServerData[OT_SERVER_DATA_MAX_SIZE]; ///< Server data bytes.
+    uint16_t mRloc16;                              ///< The Server RLOC16.
+} otServerConfig;
+
+/**
+ * This structure represents a Service configuration.
+ *
+ */
+typedef struct otServiceConfig
+{
+    uint8_t        mServiceId;         ///< Used to return Service ID when iterating over the partition's Network Data.
+    uint32_t       mEnterpriseNumber;  ///< IANA Enterprise Number.
+    uint8_t        mServiceDataLength; ///< Length of service data.
+    uint8_t        mServiceData[OT_SERVICE_DATA_MAX_SIZE]; ///< Service data bytes.
+    otServerConfig mServerConfig;                          ///< The Server configuration.
+} otServiceConfig;
+
+/**
+ * This method provides a full or stable copy of the Partition's Thread Network Data.
  *
  * @param[in]     aInstance    A pointer to an OpenThread instance.
  * @param[in]     aStable      TRUE when copying the stable version, FALSE when copying the full version.
@@ -198,6 +239,20 @@ otError otNetDataGetNextOnMeshPrefix(otInstance *           aInstance,
  *
  */
 otError otNetDataGetNextRoute(otInstance *aInstance, otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig);
+
+/**
+ * This function gets the next service in the partition's Network Data.
+ *
+ * @param[in]     aInstance  A pointer to an OpenThread instance.
+ * @param[inout]  aIterator  A pointer to the Network Data iterator context. To get the first service entry
+                             it should be set to OT_NETWORK_DATA_ITERATOR_INIT.
+ * @param[out]    aConfig    A pointer to where the service information will be placed.
+ *
+ * @retval OT_ERROR_NONE       Successfully found the next service.
+ * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the partition's Network Data.
+ *
+ */
+otError otNetDataGetNextService(otInstance *aInstance, otNetworkDataIterator *aIterator, otServiceConfig *aConfig);
 
 /**
  * Get the Network Data Version.

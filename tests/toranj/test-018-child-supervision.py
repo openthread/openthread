@@ -95,8 +95,7 @@ verify(int(child.get(wpan.WPAN_THREAD_CHILD_TIMEOUT), 0) == CHILD_TIMEOUT)
 
 # Verify the child table on parent contains the child with correct timeout
 child_table = wpan.parse_child_table_result(
-    parent.get(wpan.WPAN_THREAD_CHILD_TABLE)
-)
+    parent.get(wpan.WPAN_THREAD_CHILD_TABLE))
 verify(len(child_table) == 1)
 verify(int(child_table[0].timeout, 0) == CHILD_TIMEOUT)
 
@@ -113,16 +112,14 @@ parent.set(wpan.WPAN_MAC_WHITELIST_ENABLED, '1')
 
 def check_child_is_removed_from_parent_child_table():
     child_table = wpan.parse_child_table_result(
-        parent.get(wpan.WPAN_THREAD_CHILD_TABLE)
-    )
+        parent.get(wpan.WPAN_THREAD_CHILD_TABLE))
     verify(len(child_table) == 0)
 
 
 # wait till child is removed from parent's child table
 # after this child should still be associated
-wpan.verify_within(
-    check_child_is_removed_from_parent_child_table, CHILD_TIMEOUT / speedup + 2
-)
+wpan.verify_within(check_child_is_removed_from_parent_child_table,
+                   CHILD_TIMEOUT / speedup + 2)
 verify(child.is_associated())
 
 # Enable supervision check on child and expect the child to
@@ -138,17 +135,15 @@ def check_child_is_detached():
     verify(not child.is_associated())
 
 
-wpan.verify_within(
-    check_child_is_detached, CHILD_SUPERVISION_CHECK_TIMEOUT / speedup + 8
-)
+wpan.verify_within(check_child_is_detached,
+                   CHILD_SUPERVISION_CHECK_TIMEOUT / speedup + 8)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Enable child supervision on parent and disable white-listing
 
-parent.set(
-    wpan.WPAN_CHILD_SUPERVISION_INTERVAL, str(PARENT_SUPERVISION_INTERVAL)
-)
+parent.set(wpan.WPAN_CHILD_SUPERVISION_INTERVAL,
+           str(PARENT_SUPERVISION_INTERVAL))
 parent.set(wpan.WPAN_MAC_WHITELIST_ENABLED, '0')
 
 # Wait for the child to attach back
@@ -171,9 +166,8 @@ time.sleep(PARENT_SUPERVISION_INTERVAL * 1.2 / speedup)
 # used. Note that supervision interval on parent is set to 1 sec.
 
 verify(
-    int(parent.get("NCP:Counter:TX_PKT_UNICAST"), 0)
-    >= parent_unicast_tx_count + 1
-)
+    int(parent.get("NCP:Counter:TX_PKT_UNICAST"), 0) >=
+    parent_unicast_tx_count + 1)
 
 verify(child.is_associated())
 

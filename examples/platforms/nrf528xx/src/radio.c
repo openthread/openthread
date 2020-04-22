@@ -71,6 +71,8 @@
 #define FRAME_PENDING_OFFSET  1            ///< Byte containing pending bit (+1 for frame length byte).
 #define FRAME_PENDING_BIT     (1 << 4)     ///< Frame Pending bit.
 
+#define RSSI_SETTLE_TIME_US   40           ///< RSSI settle time in microseconds.
+
 #if defined(__ICCARM__)
 _Pragma("diag_suppress=Pe167")
 #endif
@@ -85,13 +87,13 @@ enum
 
 static bool sDisabled;
 
-static otExtAddress sExtAddress;
 static otError      sReceiveError = OT_ERROR_NONE;
 static otRadioFrame sReceivedFrames[NRF_802154_RX_BUFFERS];
 static otRadioFrame sTransmitFrame;
 static uint8_t      sTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE + 1];
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+static otExtAddress  sExtAddress;
 static otRadioIeInfo sTransmitIeInfo;
 static otInstance *  sInstance = NULL;
 #endif
@@ -222,12 +224,12 @@ void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
-
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     for (size_t i = 0; i < sizeof(*aExtAddress); i++)
     {
         sExtAddress.m8[i] = aExtAddress->m8[sizeof(*aExtAddress) - 1 - i];
     }
-
+#endif
     nrf_802154_extended_address_set(aExtAddress->m8);
 }
 
@@ -252,6 +254,21 @@ void nrf5RadioDeinit(void)
     nrf_802154_sleep();
     nrf_802154_deinit();
     sPendingEvents = 0;
+}
+
+void nrf5RadioClearPendingEvents(void)
+{
+    sPendingEvents = 0;
+
+    for (uint32_t i = 0; i < NRF_802154_RX_BUFFERS; i++)
+    {
+        if (sReceivedFrames[i].mPsdu != NULL)
+        {
+            uint8_t *bufferAddress   = &sReceivedFrames[i].mPsdu[-1];
+            sReceivedFrames[i].mPsdu = NULL;
+            nrf_802154_buffer_free_raw(bufferAddress);
+        }
+    }
 }
 
 otRadioState otPlatRadioGetState(otInstance *aInstance)
@@ -398,6 +415,12 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
+    // Ensure the RSSI measurement is done after RSSI settling time.
+    // This is necessary for the Channel Monitor feature which quickly switches between channels.
+    NRFX_DELAY_US(RSSI_SETTLE_TIME_US);
+
+    nrf_802154_rssi_measure_begin();
+
     return nrf_802154_rssi_last_get();
 }
 
@@ -405,7 +428,8 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    return (otRadioCaps)(OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF);
+    return (otRadioCaps)(OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF |
+                         OT_RADIO_CAPS_SLEEP_TO_TX);
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
@@ -556,7 +580,7 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
     }
     else
     {
-        *aPower = sDefaultTxPower;
+        *aPower = nrf_802154_tx_power_get();
     }
 
     return error;

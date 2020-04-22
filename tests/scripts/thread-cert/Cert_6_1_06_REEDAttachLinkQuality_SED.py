@@ -40,6 +40,7 @@ SED = 4
 
 
 class Cert_6_1_6_REEDAttachLinkQuality_SED(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -63,9 +64,8 @@ class Cert_6_1_6_REEDAttachLinkQuality_SED(unittest.TestCase):
         self.nodes[ROUTER2].set_panid(0xface)
         self.nodes[ROUTER2].set_mode('rsdn')
         self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER2].add_whitelist(
-            self.nodes[SED].get_addr64(), rssi=-85
-        )
+        self.nodes[ROUTER2].add_whitelist(self.nodes[SED].get_addr64(),
+                                          rssi=-85)
         self.nodes[ROUTER2].enable_whitelist()
         self.nodes[ROUTER2].set_router_selection_jitter(1)
 
@@ -141,9 +141,7 @@ class Cert_6_1_6_REEDAttachLinkQuality_SED(unittest.TestCase):
         self.assertEqual(0, scan_mask_tlv.end_device)
 
         # 4 - Router2
-        msg = router2_messages.next_mle_message(
-            mle.CommandType.PARENT_RESPONSE
-        )
+        msg = router2_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
         msg.assertSentToNode(self.nodes[SED])
 
         # 5 - SED
@@ -160,9 +158,7 @@ class Cert_6_1_6_REEDAttachLinkQuality_SED(unittest.TestCase):
         self.assertEqual(1, scan_mask_tlv.end_device)
 
         # 6 - REED
-        msg = router2_messages.next_mle_message(
-            mle.CommandType.PARENT_RESPONSE
-        )
+        msg = router2_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
         msg.assertSentToNode(self.nodes[SED])
 
         msg = reed_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)

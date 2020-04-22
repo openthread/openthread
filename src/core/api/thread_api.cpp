@@ -38,7 +38,6 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
-#include "common/logging.hpp"
 #include "common/settings.hpp"
 
 using namespace ot;
@@ -67,18 +66,16 @@ const otExtendedPanId *otThreadGetExtendedPanId(otInstance *aInstance)
 
 otError otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *aExtendedPanId)
 {
-    otError           error    = OT_ERROR_NONE;
-    Instance &        instance = *static_cast<Instance *>(aInstance);
-    otMeshLocalPrefix prefix;
+    otError                   error    = OT_ERROR_NONE;
+    Instance &                instance = *static_cast<Instance *>(aInstance);
+    const Mac::ExtendedPanId &extPanId = *static_cast<const Mac::ExtendedPanId *>(aExtendedPanId);
+    Mle::MeshLocalPrefix      prefix;
 
-    VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
 
-    instance.Get<Mac::Mac>().SetExtendedPanId(*static_cast<const Mac::ExtendedPanId *>(aExtendedPanId));
+    instance.Get<Mac::Mac>().SetExtendedPanId(extPanId);
 
-    prefix.m8[0] = 0xfd;
-    memcpy(&prefix.m8[1], aExtendedPanId->m8, 5);
-    prefix.m8[6] = 0x00;
-    prefix.m8[7] = 0x00;
+    prefix.SetFromExtendedPanId(extPanId);
     instance.Get<Mle::MleRouter>().SetMeshLocalPrefix(prefix);
 
     instance.Get<MeshCoP::ActiveDataset>().Clear();
@@ -92,7 +89,7 @@ otError otThreadGetLeaderRloc(otInstance *aInstance, otIp6Address *aLeaderRloc)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aLeaderRloc != NULL);
+    OT_ASSERT(aLeaderRloc != NULL);
 
     return instance.Get<Mle::MleRouter>().GetLeaderAddress(*static_cast<Ip6::Address *>(aLeaderRloc));
 }
@@ -126,9 +123,9 @@ otError otThreadSetMasterKey(otInstance *aInstance, const otMasterKey *aKey)
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert(aKey != NULL);
+    OT_ASSERT(aKey != NULL);
 
-    VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
 
     error = instance.Get<KeyManager>().SetMasterKey(*static_cast<const MasterKey *>(aKey));
     instance.Get<MeshCoP::ActiveDataset>().Clear();
@@ -164,9 +161,9 @@ otError otThreadSetMeshLocalPrefix(otInstance *aInstance, const otMeshLocalPrefi
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
 
-    instance.Get<Mle::MleRouter>().SetMeshLocalPrefix(*aMeshLocalPrefix);
+    instance.Get<Mle::MleRouter>().SetMeshLocalPrefix(*static_cast<const Mle::MeshLocalPrefix *>(aMeshLocalPrefix));
     instance.Get<MeshCoP::ActiveDataset>().Clear();
     instance.Get<MeshCoP::PendingDataset>().Clear();
 
@@ -193,7 +190,7 @@ otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_DISABLED, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
 
     error = instance.Get<Mac::Mac>().SetNetworkName(aNetworkName);
     instance.Get<MeshCoP::ActiveDataset>().Clear();
@@ -202,6 +199,28 @@ otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
 exit:
     return error;
 }
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+const char *otThreadGetDomainName(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Mac::Mac>().GetDomainName().GetAsCString();
+}
+
+otError otThreadSetDomainName(otInstance *aInstance, const char *aDomainName)
+{
+    otError   error    = OT_ERROR_NONE;
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
+
+    error = instance.Get<Mac::Mac>().SetDomainName(aDomainName);
+
+exit:
+    return error;
+}
+#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 uint32_t otThreadGetKeySequenceCounter(otInstance *aInstance)
 {
@@ -249,7 +268,7 @@ otError otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterato
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    assert((aInfo != NULL) && (aIterator != NULL));
+    OT_ASSERT((aInfo != NULL) && (aIterator != NULL));
 
     return instance.Get<Mle::MleRouter>().GetNextNeighborInfo(*aIterator, *aInfo);
 }
@@ -264,31 +283,36 @@ otDeviceRole otThreadGetDeviceRole(otInstance *aInstance)
 otError otThreadGetLeaderData(otInstance *aInstance, otLeaderData *aLeaderData)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
+    otError   error    = OT_ERROR_NONE;
 
-    assert(aLeaderData != NULL);
+    OT_ASSERT(aLeaderData != NULL);
 
-    return instance.Get<Mle::MleRouter>().GetLeaderData(*aLeaderData);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsAttached(), error = OT_ERROR_DETACHED);
+    *aLeaderData = instance.Get<Mle::MleRouter>().GetLeaderData();
+
+exit:
+    return error;
 }
 
 uint8_t otThreadGetLeaderRouterId(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::MleRouter>().GetLeaderDataTlv().GetLeaderRouterId();
+    return instance.Get<Mle::MleRouter>().GetLeaderId();
 }
 
 uint8_t otThreadGetLeaderWeight(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::MleRouter>().GetLeaderDataTlv().GetWeighting();
+    return instance.Get<Mle::MleRouter>().GetLeaderData().GetWeighting();
 }
 
 uint32_t otThreadGetPartitionId(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Mle::MleRouter>().GetLeaderDataTlv().GetPartitionId();
+    return instance.Get<Mle::MleRouter>().GetLeaderData().GetPartitionId();
 }
 
 uint16_t otThreadGetRloc16(otInstance *aInstance)
@@ -304,18 +328,18 @@ otError otThreadGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
     otError   error    = OT_ERROR_NONE;
     Router *  parent;
 
-    assert(aParentInfo != NULL);
+    OT_ASSERT(aParentInfo != NULL);
 
     // Reference device needs get the original parent's info even after the node state changed.
 #if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    VerifyOrExit(instance.Get<Mle::MleRouter>().GetRole() == OT_DEVICE_ROLE_CHILD, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsChild(), error = OT_ERROR_INVALID_STATE);
 #endif
 
-    parent = instance.Get<Mle::MleRouter>().GetParent();
+    parent = &instance.Get<Mle::MleRouter>().GetParent();
 
     aParentInfo->mExtAddress     = parent->GetExtAddress();
     aParentInfo->mRloc16         = parent->GetRloc16();
-    aParentInfo->mRouterId       = Mle::Mle::GetRouterId(parent->GetRloc16());
+    aParentInfo->mRouterId       = Mle::Mle::RouterIdFromRloc16(parent->GetRloc16());
     aParentInfo->mNextHop        = parent->GetNextHop();
     aParentInfo->mPathCost       = parent->GetCost();
     aParentInfo->mLinkQualityIn  = parent->GetLinkInfo().GetLinkQuality();
@@ -334,12 +358,10 @@ otError otThreadGetParentAverageRssi(otInstance *aInstance, int8_t *aParentRssi)
 {
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
-    Router *  parent;
 
-    assert(aParentRssi != NULL);
+    OT_ASSERT(aParentRssi != NULL);
 
-    parent       = instance.Get<Mle::MleRouter>().GetParent();
-    *aParentRssi = parent->GetLinkInfo().GetAverageRss();
+    *aParentRssi = instance.Get<Mle::MleRouter>().GetParent().GetLinkInfo().GetAverageRss();
 
     VerifyOrExit(*aParentRssi != OT_RADIO_RSSI_INVALID, error = OT_ERROR_FAILED);
 
@@ -351,51 +373,16 @@ otError otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aLastRssi)
 {
     otError   error    = OT_ERROR_NONE;
     Instance &instance = *static_cast<Instance *>(aInstance);
-    Router *  parent;
 
-    assert(aLastRssi != NULL);
+    OT_ASSERT(aLastRssi != NULL);
 
-    parent     = instance.Get<Mle::MleRouter>().GetParent();
-    *aLastRssi = parent->GetLinkInfo().GetLastRss();
+    *aLastRssi = instance.Get<Mle::MleRouter>().GetParent().GetLinkInfo().GetLastRss();
 
     VerifyOrExit(*aLastRssi != OT_RADIO_RSSI_INVALID, error = OT_ERROR_FAILED);
 
 exit:
     return error;
 }
-
-#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
-void otThreadSetReceiveDiagnosticGetCallback(otInstance *                   aInstance,
-                                             otReceiveDiagnosticGetCallback aCallback,
-                                             void *                         aCallbackContext)
-{
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<NetworkDiagnostic::NetworkDiagnostic>().SetReceiveDiagnosticGetCallback(aCallback, aCallbackContext);
-}
-
-otError otThreadSendDiagnosticGet(otInstance *        aInstance,
-                                  const otIp6Address *aDestination,
-                                  const uint8_t       aTlvTypes[],
-                                  uint8_t             aCount)
-{
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<NetworkDiagnostic::NetworkDiagnostic>().SendDiagnosticGet(
-        *static_cast<const Ip6::Address *>(aDestination), aTlvTypes, aCount);
-}
-
-otError otThreadSendDiagnosticReset(otInstance *        aInstance,
-                                    const otIp6Address *aDestination,
-                                    const uint8_t       aTlvTypes[],
-                                    uint8_t             aCount)
-{
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<NetworkDiagnostic::NetworkDiagnostic>().SendDiagnosticReset(
-        *static_cast<const Ip6::Address *>(aDestination), aTlvTypes, aCount);
-}
-#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 
 otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
 {
@@ -416,7 +403,7 @@ otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
 
 uint16_t otThreadGetVersion(void)
 {
-    return OPENTHREAD_THREAD_VERSION;
+    return OPENTHREAD_CONFIG_THREAD_VERSION;
 }
 
 bool otThreadIsSingleton(otInstance *aInstance)

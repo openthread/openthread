@@ -38,11 +38,14 @@
 
 #include <ctype.h>
 #include <stdio.h>
-#include "utils/wrap_string.h"
+
+#if OPENTHREAD_CONFIG_ASSERT_ENABLE
 
 #if defined(OPENTHREAD_TARGET_DARWIN) || defined(OPENTHREAD_TARGET_LINUX)
 
 #include <assert.h>
+
+#define OT_ASSERT(cond) assert(cond)
 
 #elif OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
 
@@ -56,7 +59,7 @@
 #define FILE_NAME __FILE__
 #endif
 
-#define assert(cond)                               \
+#define OT_ASSERT(cond)                            \
     do                                             \
     {                                              \
         if (!(cond))                               \
@@ -70,17 +73,23 @@
 
 #else
 
-#define assert(cond)  \
-    do                \
-    {                 \
-        if (!(cond))  \
-        {             \
-            while (1) \
-            {         \
-            }         \
-        }             \
+#define OT_ASSERT(cond) \
+    do                  \
+    {                   \
+        if (!(cond))    \
+        {               \
+            while (1)   \
+            {           \
+            }           \
+        }               \
     } while (0)
 
-#endif
+#endif // OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
+
+#else
+
+#define OT_ASSERT(cond)
+
+#endif // OPENTHREAD_CONFIG_ASSERT_ENABLE
 
 #endif // DEBUG_HPP_

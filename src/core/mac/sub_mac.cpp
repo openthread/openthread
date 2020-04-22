@@ -61,7 +61,7 @@ SubMac::SubMac(Instance &aInstance)
     , mPcapCallbackContext(NULL)
     , mTimer(aInstance, &SubMac::HandleTimer, this)
 {
-    memset(mExtAddress.m8, 0, sizeof(mExtAddress));
+    mExtAddress.Clear();
 }
 
 otRadioCaps SubMac::GetCaps(void) const
@@ -130,14 +130,14 @@ otError SubMac::Enable(void)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mState == kStateDisabled);
+    VerifyOrExit(mState == kStateDisabled, OT_NOOP);
 
     SuccessOrExit(error = Get<Radio>().Enable());
     SuccessOrExit(error = Get<Radio>().Sleep());
     SetState(kStateSleep);
 
 exit:
-    assert(error == OT_ERROR_NONE);
+    OT_ASSERT(error == OT_ERROR_NONE);
     return error;
 }
 
@@ -231,14 +231,6 @@ void SubMac::StartCsmaBackoff(void)
 
     VerifyOrExit(ShouldHandleCsmaBackOff(), BeginTransmit());
 
-#if OPENTHREAD_CONFIG_MAC_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
-    if ((mTransmitRetries > 0) && (mTransmitRetries == mTransmitFrame.GetMaxFrameRetries()))
-    {
-        BeginTransmit();
-        ExitNow();
-    }
-#endif
-
     if (backoffExponent > kMaxBE)
     {
         backoffExponent = kMaxBE;
@@ -270,21 +262,17 @@ void SubMac::BeginTransmit(void)
 {
     otError error;
 
-    VerifyOrExit(mState == kStateCsmaBackoff);
+    OT_UNUSED_VARIABLE(error);
 
-#if OPENTHREAD_CONFIG_MAC_DISABLE_CSMA_CA_ON_LAST_ATTEMPT
-    if ((mTransmitRetries > 0) && (mTransmitRetries == mTransmitFrame.GetMaxFrameRetries()))
-    {
-        mTransmitFrame.SetCsmaCaEnabled(false);
-    }
-    else
-#endif
-    {
-        mTransmitFrame.SetCsmaCaEnabled(true);
-    }
+    VerifyOrExit(mState == kStateCsmaBackoff, OT_NOOP);
 
-    error = Get<Radio>().Receive(mTransmitFrame.GetChannel());
-    assert(error == OT_ERROR_NONE);
+    mTransmitFrame.SetCsmaCaEnabled(true);
+
+    if ((mRadioCaps & OT_RADIO_CAPS_SLEEP_TO_TX) == 0)
+    {
+        error = Get<Radio>().Receive(mTransmitFrame.GetChannel());
+        OT_ASSERT(error == OT_ERROR_NONE);
+    }
 
     SetState(kStateTransmit);
 
@@ -294,7 +282,7 @@ void SubMac::BeginTransmit(void)
     }
 
     error = Get<Radio>().Transmit(mTransmitFrame);
-    assert(error == OT_ERROR_NONE);
+    OT_ASSERT(error == OT_ERROR_NONE);
 
 exit:
     return;
@@ -345,7 +333,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aEr
         break;
 
     default:
-        assert(false);
+        OT_ASSERT(false);
         OT_UNREACHABLE_CODE(ExitNow());
     }
 
@@ -370,11 +358,10 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aEr
     if (shouldRetx)
     {
         mTransmitRetries++;
+        aFrame.SetIsARetransmission(true);
         StartCsmaBackoff();
         ExitNow();
     }
-
-    mTransmitRetries = 0;
 
     SetState(kStateReceive);
 
@@ -387,6 +374,11 @@ exit:
 int8_t SubMac::GetRssi(void) const
 {
     return Get<Radio>().GetRssi();
+}
+
+int8_t SubMac::GetNoiseFloor(void)
+{
+    return Get<Radio>().GetReceiveSensitivity();
 }
 
 otError SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
@@ -414,7 +406,7 @@ otError SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
     else if (ShouldHandleEnergyScan())
     {
         error = Get<Radio>().Receive(aScanChannel);
-        assert(error == OT_ERROR_NONE);
+        OT_ASSERT(error == OT_ERROR_NONE);
 
         SetState(kStateEnergyScan);
         mEnergyScanMaxRssi = kInvalidRssiValue;
@@ -432,6 +424,8 @@ exit:
 
 void SubMac::SampleRssi(void)
 {
+    OT_ASSERT(!RadioSupportsEnergyScan());
+
     int8_t rssi = GetRssi();
 
     if (rssi != kInvalidRssiValue)
@@ -444,7 +438,11 @@ void SubMac::SampleRssi(void)
 
     if (TimerMilli::GetNow() < mEnergyScanEndTime)
     {
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+        mTimer.StartAt(mTimer.GetFireTime(), kEnergyScanRssiSampleInterval * 1000UL);
+#else
         mTimer.StartAt(mTimer.GetFireTime(), kEnergyScanRssiSampleInterval);
+#endif
     }
     else
     {
@@ -493,7 +491,7 @@ bool SubMac::ShouldHandleCsmaBackOff(void) const
     VerifyOrExit(!RadioSupportsCsmaBackoff(), swCsma = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled());
+    VerifyOrExit(Get<LinkRaw>().IsEnabled(), OT_NOOP);
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
@@ -511,7 +509,7 @@ bool SubMac::ShouldHandleAckTimeout(void) const
     VerifyOrExit(!RadioSupportsAckTimeout(), swAckTimeout = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled());
+    VerifyOrExit(Get<LinkRaw>().IsEnabled(), OT_NOOP);
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
@@ -529,7 +527,7 @@ bool SubMac::ShouldHandleRetries(void) const
     VerifyOrExit(!RadioSupportsRetries(), swRetries = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled());
+    VerifyOrExit(Get<LinkRaw>().IsEnabled(), OT_NOOP);
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
@@ -547,7 +545,7 @@ bool SubMac::ShouldHandleEnergyScan(void) const
     VerifyOrExit(!RadioSupportsEnergyScan(), swEnergyScan = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled());
+    VerifyOrExit(Get<LinkRaw>().IsEnabled(), OT_NOOP);
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO

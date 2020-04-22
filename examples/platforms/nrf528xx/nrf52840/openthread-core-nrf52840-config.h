@@ -173,33 +173,15 @@
 #endif
 
 /**
- * @def SETTINGS_CONFIG_BASE_ADDRESS
+ * @def OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
  *
- * The base address of settings.
+ * Define to 1 to enable otPlatFlash* APIs to support non-volatile storage.
  *
- */
-#ifndef SETTINGS_CONFIG_BASE_ADDRESS
-#define SETTINGS_CONFIG_BASE_ADDRESS 0
-#endif
-
-/**
- * @def SETTINGS_CONFIG_PAGE_SIZE
- *
- * The page size of settings.
+ * When defined to 1, the platform MUST implement the otPlatFlash* APIs instead of the otPlatSettings* APIs.
  *
  */
-#ifndef SETTINGS_CONFIG_PAGE_SIZE
-#define SETTINGS_CONFIG_PAGE_SIZE 4096
-#endif
-
-/**
- * @def SETTINGS_CONFIG_PAGE_NUM
- *
- * The page number of settings.
- *
- */
-#ifndef SETTINGS_CONFIG_PAGE_NUM
-#define SETTINGS_CONFIG_PAGE_NUM 4
+#ifndef OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+#define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 1
 #endif
 
 /**
@@ -254,6 +236,26 @@
  */
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 #define OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT 1
+#endif
+
+/**
+ * @def RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
+ *
+ * The number of short source address table entries.
+ *
+ */
+#ifndef RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
+#define RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM 0
+#endif
+
+/**
+ * @def RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
+ *
+ * The number of extended source address table entries.
+ *
+ */
+#ifndef RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
+#define RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM 0
 #endif
 
 /*

@@ -69,8 +69,8 @@ private:
     static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleRequest(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleScanResult(Instance &aInstance, otEnergyScanResult *aResult);
-    void        HandleScanResult(otEnergyScanResult *aResult);
+    static void HandleScanResult(Mac::EnergyScanResult *aResult, void *aContext);
+    void        HandleScanResult(Mac::EnergyScanResult *aResult);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);

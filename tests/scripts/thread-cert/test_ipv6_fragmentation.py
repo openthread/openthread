@@ -29,6 +29,7 @@
 
 import unittest
 
+import common
 import config
 import node
 
@@ -71,21 +72,24 @@ class TestIPv6Fragmentation(unittest.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
-        mleid_leader = self.nodes[LEADER].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
-        mleid_router = self.nodes[ROUTER].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+        mleid_leader = self.nodes[LEADER].get_ip6_address(
+            config.ADDRESS_TYPE.ML_EID)
+        mleid_router = self.nodes[ROUTER].get_ip6_address(
+            config.ADDRESS_TYPE.ML_EID)
 
-        self.nodes[LEADER].udp_start("::", 12345)
-        self.nodes[ROUTER].udp_start("::", 12345)
+        self.nodes[LEADER].udp_start("::", common.UDP_TEST_PORT)
+        self.nodes[ROUTER].udp_start("::", common.UDP_TEST_PORT)
 
-        self.nodes[LEADER].udp_send(1952, mleid_router, 12345)
+        self.nodes[LEADER].udp_send(1952, mleid_router, common.UDP_TEST_PORT)
         self.simulator.go(5)
         self.nodes[ROUTER].udp_check_rx(1952)
 
-        self.nodes[ROUTER].udp_send(1831, mleid_leader, 12345)
+        self.nodes[ROUTER].udp_send(1831, mleid_leader, common.UDP_TEST_PORT)
         self.simulator.go(5)
         self.nodes[LEADER].udp_check_rx(1831)
 
-        self.nodes[ROUTER].udp_send(1953, mleid_leader, 12345, False)
+        self.nodes[ROUTER].udp_send(1953, mleid_leader, common.UDP_TEST_PORT,
+                                    False)
 
         self.nodes[ROUTER].udp_stop()
         self.nodes[LEADER].udp_stop()

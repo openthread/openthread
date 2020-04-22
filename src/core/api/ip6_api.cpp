@@ -191,7 +191,7 @@ otMessage *otIp6NewMessageFromBuffer(otInstance *             aInstance,
     Instance &instance = *static_cast<Instance *>(aInstance);
     Message * message;
 
-    VerifyOrExit((message = instance.Get<Ip6::Ip6>().NewMessage(aData, aDataLength, aSettings)) != NULL);
+    VerifyOrExit((message = instance.Get<Ip6::Ip6>().NewMessage(aData, aDataLength, aSettings)) != NULL, OT_NOOP);
 
 exit:
     return message;
@@ -237,7 +237,7 @@ otError otIp6AddressFromString(const char *aString, otIp6Address *aAddress)
 
 uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond)
 {
-    assert(aFirst != NULL && aSecond != NULL);
+    OT_ASSERT(aFirst != NULL && aSecond != NULL);
 
     return static_cast<const Ip6::Address *>(aFirst)->PrefixMatch(*static_cast<const Ip6::Address *>(aSecond));
 }

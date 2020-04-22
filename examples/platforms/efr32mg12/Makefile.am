@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2017, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -28,22 +28,26 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                                 = libopenthread-efr32mg12.a
+lib_LIBRARIES = libopenthread-efr32mg12.a
 
 # Do not enable -Wconversion for rail
-override CFLAGS                              := $(filter-out -Wconversion,$(CFLAGS))
-override CXXFLAGS                            := $(filter-out -Wconversion,$(CXXFLAGS))
+override CFLAGS   := $(filter-out -Wconversion,$(CFLAGS))
+override CXXFLAGS := $(filter-out -Wconversion,$(CXXFLAGS))
 
 # Do not enable -pedantic-errors for rail
-override CFLAGS                              := $(filter-out -pedantic-errors,$(CFLAGS))
-override CXXFLAGS                            := $(filter-out -pedantic-errors,$(CXXFLAGS))
+override CFLAGS   := $(filter-out -pedantic-errors,$(CFLAGS))
+override CXXFLAGS := $(filter-out -pedantic-errors,$(CXXFLAGS))
 
-EFR32_BOARD_DIR                               = $(shell echo $(BOARD) | tr A-Z a-z)
+# Do not enable -Wundef for rail
+override CFLAGS   := $(filter-out -Wundef,$(CFLAGS))
+override CXXFLAGS := $(filter-out -Wundef,$(CXXFLAGS))
 
-EFR32MG_SDK_SRCDIR                            = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.6
+EFR32_BOARD_DIR = $(shell echo $(BOARD) | tr A-Z a-z)
+
+SDK_SRC_DIR = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v2.7
 
 libopenthread_efr32mg12_a_CPPFLAGS                                            = \
-    -DPLATFORM_HEADER=\"@top_builddir@/third_party/silabs/gecko_sdk_suite/v2.6/platform/base/hal/micro/cortexm3/compiler/gcc.h\" \
+    -DPLATFORM_HEADER=\"platform/base/hal/micro/cortexm3/compiler/gcc.h\"       \
     -DNVIC_CONFIG=\"platform/base/hal/micro/cortexm3/efm32/nvic-config.h\"      \
     -Wno-sign-compare                                                           \
     -DCORTEXM3                                                                  \
@@ -51,39 +55,44 @@ libopenthread_efr32mg12_a_CPPFLAGS                                            = 
     -DMICRO=EMBER_MICRO_CORTEXM3_EFR32                                          \
     -DCORTEXM3_EFM32_MICRO                                                      \
     -DPLAT=EMBER_PLATFORM_CORTEXM3                                              \
-    -I$(top_srcdir)/include                                                     \
     -I$(top_srcdir)/examples/platforms                                          \
     -I$(top_srcdir)/examples/platforms/efr32mg12/$(EFR32_BOARD_DIR)             \
+    -I$(top_srcdir)/include                                                     \
     -I$(top_srcdir)/src/core                                                    \
     -I$(top_srcdir)/third_party/silabs/rail_config                              \
-    -I$(EFR32MG_SDK_SRCDIR)                                                     \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/common                      \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/chip/efr32                  \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/protocol/ieee802154         \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/chip/efr32/rf/common/cortex \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/hal                         \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/hal/efr32                   \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/radio/rail_lib/plugin/pa-conversions       \
-    -I$(EFR32MG_SDK_SRCDIR)/hardware/kit/common/bsp                             \
-    -I$(EFR32MG_SDK_SRCDIR)/hardware/kit/EFR32MG12_$(BOARD)/config              \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/base/                                      \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/base/hal                                   \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/base/hal/micro/cortexm3/efm32              \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/base/hal/micro/cortexm3/efm32/config       \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/base/hal/plugin                            \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/CMSIS/Include                              \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/Device/SiliconLabs/EFR32MG12P/Include      \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/common/inc                           \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/gpiointerrupt/inc                    \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/uartdrv/inc                          \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/uartdrv/config                       \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/ustimer/inc                          \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/dmadrv/inc                           \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/dmadrv/config                        \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/emdrv/rtcdrv/inc                           \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/emlib/inc                                  \
-    -I$(EFR32MG_SDK_SRCDIR)/platform/halconfig/inc/hal-config                   \
-    -I$(EFR32MG_SDK_SRCDIR)/util/plugin/plugin-common/fem-control               \
+    -I$(SDK_SRC_DIR)                                                            \
+    -I$(SDK_SRC_DIR)/hardware/kit/common/bsp                                    \
+    -I$(SDK_SRC_DIR)/hardware/kit/common/drivers                                \
+    -I$(SDK_SRC_DIR)/hardware/kit/EFR32MG12_$(BOARD)/config                     \
+    -I$(SDK_SRC_DIR)/platform/base/hal/micro/cortexm3/efm32                     \
+    -I$(SDK_SRC_DIR)/platform/base/hal/micro/cortexm3/efm32/config              \
+    -I$(SDK_SRC_DIR)/platform/common/inc                                        \
+    -I$(SDK_SRC_DIR)/platform/CMSIS/Include                                     \
+    -I$(SDK_SRC_DIR)/platform/Device/SiliconLabs/EFR32MG12P/Include             \
+    -I$(SDK_SRC_DIR)/platform/emdrv/common/inc                                  \
+    -I$(SDK_SRC_DIR)/platform/emdrv/gpiointerrupt/inc                           \
+    -I$(SDK_SRC_DIR)/platform/emdrv/uartdrv/inc                                 \
+    -I$(SDK_SRC_DIR)/platform/emdrv/uartdrv/config                              \
+    -I$(SDK_SRC_DIR)/platform/emdrv/ustimer/inc                                 \
+    -I$(SDK_SRC_DIR)/platform/emdrv/dmadrv/inc                                  \
+    -I$(SDK_SRC_DIR)/platform/emdrv/dmadrv/config                               \
+    -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/inc                                    \
+    -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config                                 \
+    -I$(SDK_SRC_DIR)/platform/emlib/inc                                         \
+    -I$(SDK_SRC_DIR)/platform/halconfig/inc/hal-config                          \
+    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32                         \
+    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg1x               \
+    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/rf/common/cortex        \
+    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/common                             \
+    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/hal                                \
+    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/hal/efr32                          \
+    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/protocol/ieee802154                \
+    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions              \
+    -I$(SDK_SRC_DIR)/platform/service/mpu/inc                                   \
+    -I$(SDK_SRC_DIR)/platform/service/sleeptimer/config                         \
+    -I$(SDK_SRC_DIR)/platform/service/sleeptimer/inc                            \
+    -I$(SDK_SRC_DIR)/util/plugin/plugin-common/fem-control                      \
+    -I$(SDK_SRC_DIR)/util/third_party/mbedtls/sl_crypto/include                 \
     -Wno-unused-parameter                                                       \
     -Wno-missing-field-initializers                                             \
     $(NULL)
@@ -116,11 +125,7 @@ libopenthread_efr32mg12_a_SOURCES                                             = 
     $(PLATFORM_SOURCES)                                                         \
     $(NULL)
 
-PRETTY_FILES                                                                  = \
-    $(PLATFORM_SOURCES)                                                         \
-    $(NULL)
-
-Dash                                                                                                 = -
+Dash = -
 libopenthread_efr32mg12_a_LIBADD                                                                     = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")             \
     $(shell find $(top_builddir)/third_party/jlink/SEGGER_RTT_V640/RTT $(Dash)type f $(Dash)name "*.o")
@@ -128,13 +133,9 @@ libopenthread_efr32mg12_a_LIBADD                                                
 DIST_SUBDIRS                                                                  = \
     sleepy-demo                                                                 \
     $(NULL)
-    
+
 SUBDIRS                                                                       = \
     sleepy-demo                                                                 \
     $(NULL)
 
-PRETTY_SUBDIRS                                                                = \
-    sleepy-demo                                                                 \
-    $(NULL)
-    
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

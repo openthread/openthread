@@ -41,6 +41,7 @@ ROUTER2 = 5
 
 
 class Cert_5_1_09_REEDAttachConnectivity(unittest.TestCase):
+
     def setUp(self):
         self.simulator = config.create_default_simulator()
 
@@ -161,8 +162,7 @@ class Cert_5_1_09_REEDAttachConnectivity(unittest.TestCase):
 
         # 6 - Router2
         msg = router2_messages.next_mle_message(
-            mle.CommandType.CHILD_ID_REQUEST
-        )
+            mle.CommandType.CHILD_ID_REQUEST)
         msg.assertSentToNode(self.nodes[REED1])
         msg.assertMleMessageContainsTlv(mle.Response)
         msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)

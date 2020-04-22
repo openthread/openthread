@@ -34,13 +34,12 @@
 #include "ip6_address.hpp"
 
 #include <stdio.h>
-#include "utils/wrap_string.h"
 
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
+#include "net/netif.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
 
 namespace ot {
@@ -63,12 +62,21 @@ bool Address::IsLoopback(void) const
 
 bool Address::IsLinkLocal(void) const
 {
-    return (mFields.m8[0] == 0xfe) && ((mFields.m8[1] & 0xc0) == 0x80);
+    return (mFields.m16[0] & HostSwap16(0xffc0)) == HostSwap16(0xfe80);
 }
 
-bool Address::IsMulticast(void) const
+void Address::SetToLinkLocalAddress(const Mac::ExtAddress &aExtAddress)
 {
-    return mFields.m8[0] == 0xff;
+    mFields.m32[0] = HostSwap32(0xfe800000);
+    mFields.m32[1] = 0;
+    SetIid(aExtAddress);
+}
+
+void Address::SetToLinkLocalAddress(const uint8_t *aIid)
+{
+    mFields.m32[0] = HostSwap32(0xfe800000);
+    mFields.m32[1] = 0;
+    SetIid(aIid);
 }
 
 bool Address::IsLinkLocalMulticast(void) const
@@ -78,14 +86,22 @@ bool Address::IsLinkLocalMulticast(void) const
 
 bool Address::IsLinkLocalAllNodesMulticast(void) const
 {
-    return (mFields.m32[0] == HostSwap32(0xff020000) && mFields.m32[1] == 0 && mFields.m32[2] == 0 &&
-            mFields.m32[3] == HostSwap32(0x01));
+    return (*this == GetLinkLocalAllNodesMulticast());
+}
+
+void Address::SetToLinkLocalAllNodesMulticast(void)
+{
+    *this = GetLinkLocalAllNodesMulticast();
 }
 
 bool Address::IsLinkLocalAllRoutersMulticast(void) const
 {
-    return (mFields.m32[0] == HostSwap32(0xff020000) && mFields.m32[1] == 0 && mFields.m32[2] == 0 &&
-            mFields.m32[3] == HostSwap32(0x02));
+    return (*this == GetLinkLocalAllRoutersMulticast());
+}
+
+void Address::SetToLinkLocalAllRoutersMulticast(void)
+{
+    *this = GetLinkLocalAllRoutersMulticast();
 }
 
 bool Address::IsRealmLocalMulticast(void) const
@@ -100,39 +116,32 @@ bool Address::IsMulticastLargerThanRealmLocal(void) const
 
 bool Address::IsRealmLocalAllNodesMulticast(void) const
 {
-    return (mFields.m32[0] == HostSwap32(0xff030000) && mFields.m32[1] == 0 && mFields.m32[2] == 0 &&
-            mFields.m32[3] == HostSwap32(0x01));
+    return (*this == GetRealmLocalAllNodesMulticast());
+}
+
+void Address::SetToRealmLocalAllNodesMulticast(void)
+{
+    *this = GetRealmLocalAllNodesMulticast();
 }
 
 bool Address::IsRealmLocalAllRoutersMulticast(void) const
 {
-    return (mFields.m32[0] == HostSwap32(0xff030000) && mFields.m32[1] == 0 && mFields.m32[2] == 0 &&
-            mFields.m32[3] == HostSwap32(0x02));
+    return (*this == GetRealmLocalAllRoutersMulticast());
+}
+
+void Address::SetToRealmLocalAllRoutersMulticast(void)
+{
+    *this = GetRealmLocalAllRoutersMulticast();
 }
 
 bool Address::IsRealmLocalAllMplForwarders(void) const
 {
-    return (mFields.m32[0] == HostSwap32(0xff030000) && mFields.m32[1] == 0 && mFields.m32[2] == 0 &&
-            mFields.m32[3] == HostSwap32(0xfc));
+    return (*this == GetRealmLocalAllMplForwarders());
 }
 
-bool Address::IsRoutingLocator(void) const
+void Address::SetToRealmLocalAllMplForwarders(void)
 {
-    return (mFields.m16[4] == HostSwap16(0x0000) && mFields.m16[5] == HostSwap16(0x00ff) &&
-            mFields.m16[6] == HostSwap16(0xfe00) && mFields.m8[14] < kAloc16Mask &&
-            (mFields.m8[14] & kRloc16ReservedBitMask) == 0);
-}
-
-bool Address::IsAnycastRoutingLocator(void) const
-{
-    return (mFields.m16[4] == HostSwap16(0x0000) && mFields.m16[5] == HostSwap16(0x00ff) &&
-            mFields.m16[6] == HostSwap16(0xfe00) && mFields.m8[14] == kAloc16Mask);
-}
-
-bool Address::IsAnycastServiceLocator(void) const
-{
-    return IsAnycastRoutingLocator() && (mFields.m16[7] >= HostSwap16(Mle::kAloc16ServiceStart)) &&
-           (mFields.m16[7] <= HostSwap16(Mle::kAloc16ServiceEnd));
+    *this = GetRealmLocalAllMplForwarders();
 }
 
 bool Address::IsSubnetRouterAnycast(void) const
@@ -148,17 +157,65 @@ bool Address::IsReservedSubnetAnycast(void) const
 
 bool Address::IsIidReserved(void) const
 {
-    return IsSubnetRouterAnycast() || IsReservedSubnetAnycast() || IsAnycastRoutingLocator();
+    return IsSubnetRouterAnycast() || IsReservedSubnetAnycast() || IsIidAnycastLocator();
 }
 
-const uint8_t *Address::GetIid(void) const
+bool Address::IsIidLocator(void) const
 {
-    return mFields.m8 + kInterfaceIdentifierOffset;
+    // IID pattern 0000:00ff:fe00:xxxx
+    return (mFields.m32[2] == HostSwap32(0x000000ff) && mFields.m16[6] == HostSwap16(0xfe00));
 }
 
-uint8_t *Address::GetIid(void)
+bool Address::IsIidRoutingLocator(void) const
 {
-    return mFields.m8 + kInterfaceIdentifierOffset;
+    return (IsIidLocator() && (mFields.m8[14] < kAloc16Mask) && ((mFields.m8[14] & kRloc16ReservedBitMask) == 0));
+}
+
+bool Address::IsIidAnycastLocator(void) const
+{
+    // Anycast locator range 0xfc00- 0xfcff (`kAloc16Max` is 0xfc)
+    return (IsIidLocator() && (mFields.m8[14] == kAloc16Mask));
+}
+
+bool Address::IsIidAnycastServiceLocator(void) const
+{
+    uint16_t locator = GetLocator();
+
+    return (IsIidLocator() && (locator >= Mle::kAloc16ServiceStart) && (locator <= Mle::kAloc16ServiceEnd));
+}
+
+void Address::SetPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
+{
+    SetPrefix(0, aPrefix, aPrefixLength);
+}
+
+void Address::SetPrefix(uint8_t aOffset, const uint8_t *aPrefix, uint8_t aPrefixLength)
+{
+    uint8_t bytes     = aPrefixLength / CHAR_BIT;
+    uint8_t extraBits = aPrefixLength % CHAR_BIT;
+
+    OT_ASSERT(aPrefixLength <= (sizeof(Address) - aOffset) * CHAR_BIT);
+
+    memcpy(mFields.m8 + aOffset, aPrefix, bytes);
+
+    if (extraBits > 0)
+    {
+        uint8_t index = aOffset + bytes;
+        uint8_t mask  = ((0x80 >> (extraBits - 1)) - 1);
+
+        // `mask` has its higher (msb) `extraBits` bits as `0` and the reminaing as `1`.
+        // Example with `extraBits` = 3:
+        // ((0x80 >> 2) - 1) = (0b0010_0000 - 1) = 0b0001_1111
+
+        mFields.m8[index] &= mask;
+        mFields.m8[index] |= (aPrefix[index] & ~mask);
+    }
+}
+
+void Address::SetMulticastNetworkPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
+{
+    SetPrefix(kMulticastNetworkPrefixOffset, aPrefix, aPrefixLength);
+    mFields.m8[kMulticastNetworkPrefixLengthOffset] = aPrefixLength;
 }
 
 void Address::SetIid(const uint8_t *aIid)
@@ -173,6 +230,20 @@ void Address::SetIid(const Mac::ExtAddress &aExtAddress)
     addr = aExtAddress;
     addr.ToggleLocal();
     addr.CopyTo(mFields.m8 + kInterfaceIdentifierOffset);
+}
+
+void Address::SetIidToLocator(uint16_t aLocator)
+{
+    // Locator IID pattern `0000:00ff:fe00:xxxx`
+    mFields.m32[2] = HostSwap32(0x000000ff);
+    mFields.m16[6] = HostSwap16(0xfe00);
+    mFields.m16[7] = HostSwap16(aLocator);
+}
+
+void Address::SetToLocator(const Mle::MeshLocalPrefix &aMeshLocalPrefix, uint16_t aLocator)
+{
+    SetPrefix(aMeshLocalPrefix);
+    SetIidToLocator(aLocator);
 }
 
 void Address::ToExtAddress(Mac::ExtAddress &aExtAddress) const
@@ -268,7 +339,7 @@ otError Address::FromString(const char *aBuf)
     char        ch;
     uint8_t     d;
 
-    memset(mFields.m8, 0, 16);
+    Clear();
 
     dst--;
 
@@ -387,6 +458,31 @@ Address::InfoString Address::ToString(void) const
     return InfoString("%x:%x:%x:%x:%x:%x:%x:%x", HostSwap16(mFields.m16[0]), HostSwap16(mFields.m16[1]),
                       HostSwap16(mFields.m16[2]), HostSwap16(mFields.m16[3]), HostSwap16(mFields.m16[4]),
                       HostSwap16(mFields.m16[5]), HostSwap16(mFields.m16[6]), HostSwap16(mFields.m16[7]));
+}
+
+const Address &Address::GetLinkLocalAllNodesMulticast(void)
+{
+    return static_cast<const Address &>(Netif::kLinkLocalAllNodesMulticastAddress.mAddress);
+}
+
+const Address &Address::GetLinkLocalAllRoutersMulticast(void)
+{
+    return static_cast<const Address &>(Netif::kLinkLocalAllRoutersMulticastAddress.mAddress);
+}
+
+const Address &Address::GetRealmLocalAllNodesMulticast(void)
+{
+    return static_cast<const Address &>(Netif::kRealmLocalAllNodesMulticastAddress.mAddress);
+}
+
+const Address &Address::GetRealmLocalAllRoutersMulticast(void)
+{
+    return static_cast<const Address &>(Netif::kRealmLocalAllRoutersMulticastAddress.mAddress);
+}
+
+const Address &Address::GetRealmLocalAllMplForwarders(void)
+{
+    return static_cast<const Address &>(Netif::kRealmLocalAllMplForwardersMulticastAddress.mAddress);
 }
 
 } // namespace Ip6

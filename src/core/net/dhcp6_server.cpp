@@ -183,11 +183,11 @@ void Dhcp6Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aM
     Dhcp6Header  header;
     otIp6Address dst = aMessageInfo.mPeerAddr;
 
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(header), &header) == sizeof(header));
+    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(header), &header) == sizeof(header), OT_NOOP);
     aMessage.MoveOffset(sizeof(header));
 
     // discard if not solicit type
-    VerifyOrExit((header.GetType() == kTypeSolicit));
+    VerifyOrExit((header.GetType() == kTypeSolicit), OT_NOOP);
 
     ProcessSolicit(aMessage, dst, header.GetTransactionId());
 
@@ -204,14 +204,14 @@ void Dhcp6Server::ProcessSolicit(Message &aMessage, otIp6Address &aDst, uint8_t 
     uint16_t         length = aMessage.GetLength() - aMessage.GetOffset();
 
     // Client Identifier (discard if not present)
-    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionClientIdentifier)) > 0);
+    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionClientIdentifier)) > 0, OT_NOOP);
     SuccessOrExit(ProcessClientIdentifier(aMessage, optionOffset, clientIdentifier));
 
     // Server Identifier (assuming Rapid Commit, discard if present)
-    VerifyOrExit(FindOption(aMessage, offset, length, kOptionServerIdentifier) == 0);
+    VerifyOrExit(FindOption(aMessage, offset, length, kOptionServerIdentifier) == 0, OT_NOOP);
 
     // Rapid Commit (assuming Rapid Commit, discard if not present)
-    VerifyOrExit(FindOption(aMessage, offset, length, kOptionRapidCommit) > 0);
+    VerifyOrExit(FindOption(aMessage, offset, length, kOptionRapidCommit) > 0, OT_NOOP);
 
     // Elapsed Time if present
     if ((optionOffset = FindOption(aMessage, offset, length, kOptionElapsedTime)) > 0)
@@ -220,7 +220,7 @@ void Dhcp6Server::ProcessSolicit(Message &aMessage, otIp6Address &aDst, uint8_t 
     }
 
     // IA_NA (discard if not present)
-    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionIaNa)) > 0);
+    VerifyOrExit((optionOffset = FindOption(aMessage, offset, length, kOptionIaNa)) > 0, OT_NOOP);
     SuccessOrExit(ProcessIaNa(aMessage, optionOffset, iana));
 
     SuccessOrExit(SendReply(aDst, aTransactionId, clientIdentifier, iana));
@@ -237,7 +237,7 @@ uint16_t Dhcp6Server::FindOption(Message &aMessage, uint16_t aOffset, uint16_t a
     while (aOffset <= end)
     {
         Dhcp6Option option;
-        VerifyOrExit(aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option));
+        VerifyOrExit(aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option), OT_NOOP);
 
         if (option.GetCode() == aCode)
         {
@@ -291,7 +291,7 @@ otError Dhcp6Server::ProcessIaNa(Message &aMessage, uint16_t aOffset, IaNa &aIaN
 
     while (length > 0)
     {
-        VerifyOrExit((optionOffset = FindOption(aMessage, aOffset, length, kOptionIaAddress)) > 0);
+        VerifyOrExit((optionOffset = FindOption(aMessage, aOffset, length, kOptionIaAddress)) > 0, OT_NOOP);
         SuccessOrExit(error = ProcessIaAddress(aMessage, optionOffset));
 
         length -= ((optionOffset - aOffset) + sizeof(IaAddress));
@@ -464,7 +464,7 @@ otError Dhcp6Server::AddIaAddress(Message &aMessage, const Ip6::Address &aPrefix
     IaAddress option;
 
     option.Init();
-    memcpy(option.GetAddress().mFields.m8, &aPrefix, OT_IP6_PREFIX_SIZE);
+    option.GetAddress().SetPrefix(aPrefix.mFields.m8, OT_IP6_PREFIX_BITSIZE);
     option.GetAddress().SetIid(*reinterpret_cast<Mac::ExtAddress *>(aClientId.GetDuidLinkLayerAddress()));
     option.SetPreferredLifetime(OT_DHCP6_DEFAULT_PREFERRED_LIFETIME);
     option.SetValidLifetime(OT_DHCP6_DEFAULT_VALID_LIFETIME);

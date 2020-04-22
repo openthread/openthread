@@ -50,7 +50,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     otInstance *instance = NULL;
     uint8_t *   buf      = NULL;
 
-    VerifyOrExit(size <= 65536);
+    VerifyOrExit(size <= 65536, OT_NOOP);
 
     FuzzerPlatformInit();
 
@@ -67,7 +67,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     otPlatUartReceived(buf, (uint16_t)size);
 
-    VerifyOrExit(!FuzzerPlatformResetWasRequested());
+    VerifyOrExit(!FuzzerPlatformResetWasRequested(), OT_NOOP);
 
     for (int i = 0; i < MAX_ITERATIONS; i++)
     {

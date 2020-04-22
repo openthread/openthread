@@ -317,7 +317,10 @@ int mbedtls_ecp_check_budget( const mbedtls_ecp_group *grp,
 #define MBEDTLS_ECP_BUDGET( ops )   /* no-op; for compatibility */
 
 /* We want to declare restartable versions of existing functions anyway */
+#if !defined(MBEDTLS_ECP_RESTART_CTX_DECLARED)
+#define MBEDTLS_ECP_RESTART_CTX_DECLARED
 typedef void mbedtls_ecp_restart_ctx;
+#endif /* MBEDTLS_ECP_RESTART_CTX_DECLARED */
 
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 
