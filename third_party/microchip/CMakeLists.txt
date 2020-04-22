@@ -51,7 +51,9 @@ add_library(samr21-driver
     asf/thirdparty/wireless/services/trx_access/trx_access.c
 )
 
-string(REPLACE "-pedantic-errors" "" OT_CFLAGS "${OT_CFLAGS}")
+if(OT_CFLAGS MATCHES "-pedantic-errors")
+    string(REPLACE "-pedantic-errors" "" OT_CFLAGS "${OT_CFLAGS}")
+endif()
 
 target_link_options(samr21-driver
     PUBLIC

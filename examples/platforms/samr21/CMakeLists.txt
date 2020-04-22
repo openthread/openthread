@@ -62,7 +62,9 @@ add_library(openthread-samr21
 
 set_property(TARGET openthread-samr21 PROPERTY C_STANDARD 99)
 
-string(REPLACE "-pedantic-errors" "" OT_CFLAGS "${OT_CFLAGS}")
+if(OT_CFLAGS MATCHES "-pedantic-errors")
+    string(REPLACE "-pedantic-errors" "" OT_CFLAGS "${OT_CFLAGS}")
+endif()
 
 target_link_libraries(openthread-samr21
     PUBLIC

@@ -39,12 +39,19 @@ list(APPEND OT_PLATFORM_DEFINES
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
 list(APPEND OT_PRIVATE_DEFINES "MBEDTLS_USER_CONFIG_FILE=\"qpg6095-mbedtls-config.h\"")
+
 list(APPEND OT_PUBLIC_INCLUDES
     "${CMAKE_CURRENT_SOURCE_DIR}/crypto"
 )
 set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
-string(REPLACE "-pedantic-errors" "" OT_CFLAGS "${OT_CFLAGS}")
-string(REPLACE "-Wno-c++14-compat" "" OT_CFLAGS "${OT_CFLAGS}")
+
+if(OT_CFLAGS MATCHES "-pedantic-errors")
+    string(REPLACE "-pedantic-errors" "" OT_CFLAGS "${OT_CFLAGS}")
+endif()
+
+if(OT_CFLAGS MATCHES "-Wno-c\\+\\+14-compat")
+    string(REPLACE "-Wno-c++14-compat" "" OT_CFLAGS "${OT_CFLAGS}")
+endif()
 
 list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
 
