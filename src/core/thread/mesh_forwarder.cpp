@@ -1102,8 +1102,11 @@ void MeshForwarder::HandleFragment(const uint8_t *         aFrame,
         message->SetNetworkTimeOffset(aLinkInfo.mNetworkTimeOffset);
 #endif
 
-        // Security Check
         VerifyOrExit(Get<Ip6::Filter>().Accept(*message), error = OT_ERROR_DROP);
+
+#if OPENTHREAD_FTD
+        SendIcmpErrorIfDstUnreach(*message, aMacSource, aMacDest);
+#endif
 
         // Allow re-assembly of only one message at a time on a SED by clearing
         // any remaining fragments in reassembly list upon receiving of a new
@@ -1301,8 +1304,11 @@ void MeshForwarder::HandleLowpanHC(const uint8_t *         aFrame,
     message->SetNetworkTimeOffset(aLinkInfo.mNetworkTimeOffset);
 #endif
 
-    // Security Check
     VerifyOrExit(Get<Ip6::Filter>().Accept(*message), error = OT_ERROR_DROP);
+
+#if OPENTHREAD_FTD
+    SendIcmpErrorIfDstUnreach(*message, aMacSource, aMacDest);
+#endif
 
 exit:
 

@@ -336,6 +336,9 @@ private:
         kMessageEvict,           ///< Indicates that the message was evicted.
     };
 
+    void    SendIcmpErrorIfDstUnreach(const Message &     aMessage,
+                                      const Mac::Address &aMacSource,
+                                      const Mac::Address &aMacDest);
     otError CheckReachability(const uint8_t *     aFrame,
                               uint16_t            aFrameLength,
                               const Mac::Address &aMeshSource,
