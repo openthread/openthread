@@ -32,6 +32,7 @@
 #include "cc2650_radio.h"
 #include <assert.h>
 #include <utils/code_utils.h>
+#include <utils/encoding.h>
 #include <openthread/random_noncrypto.h> /* to seed the CSMA-CA funciton */
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
@@ -1528,7 +1529,7 @@ otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress
     OT_UNUSED_VARIABLE(aInstance);
 
     otError  error      = OT_ERROR_NONE;
-    uint64_t extAddress = *(uint64_t *)aExtAddress;
+    uint64_t extAddress = otEncodingReadUint64Le(aExtAddress->m8);
     uint8_t  idx        = rfCoreFindExtSrcMatchIdx(&extAddress);
 
     if (idx == CC2650_SRC_MATCH_NONE)
@@ -1562,7 +1563,7 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddre
     OT_UNUSED_VARIABLE(aInstance);
 
     otError  error      = OT_ERROR_NONE;
-    uint64_t extAddress = *(uint64_t *)aExtAddress;
+    uint64_t extAddress = otEncodingReadUint64Le(aExtAddress->m8);
     uint8_t  idx;
 
     otEXPECT_ACTION((idx = rfCoreFindExtSrcMatchIdx(&extAddress)) != CC2650_SRC_MATCH_NONE,
@@ -1761,7 +1762,7 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aA
     if (sState == cc2650_stateReceive)
     {
         otEXPECT(rfCoreExecuteAbortCmd() == CMDSTA_Done);
-        sReceiveCmd.localExtAddr = *((uint64_t *)(aAddress));
+        sReceiveCmd.localExtAddr = otEncodingReadUint64Le(aAddress->m8);
         otEXPECT(rfCoreClearReceiveQueue(&sRxDataQueue) == CMDSTA_Done);
         otEXPECT(rfCoreSendReceiveCmd() == CMDSTA_Done);
         /* the interrupt from abort changed our state to sleep */
@@ -1769,7 +1770,7 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aA
     }
     else if (sState != cc2650_stateTransmit)
     {
-        sReceiveCmd.localExtAddr = *((uint64_t *)(aAddress));
+        sReceiveCmd.localExtAddr = otEncodingReadUint64Le(aAddress->m8);
     }
 
 exit:
