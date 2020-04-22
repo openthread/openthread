@@ -31,8 +31,8 @@
  *   This file includes macros for validating runtime conditions.
  */
 
-#ifndef ENCODING_H
-#define ENCODING_H
+#ifndef PLATFORM_UTILS_ENCODING_H
+#define PLATFORM_UTILS_ENCODING_H
 
 #include <stdint.h>
 
@@ -40,7 +40,11 @@
  * Converts a 64-bit unsigned integer stored as a little-endian byte
  * array to uint64_t.
  *
- * @parma[in]  aSource  The byte array.
+ * Allows for the array to be byte-aligned, so that loading the
+ * uint64_t value via this function avoids a processor exception due
+ * to unaligned access.
+ *
+ * @param[in]  aSource  The byte array.
  *
  * @returns The 64-bit value as a uint64_t.
  *
@@ -61,4 +65,4 @@ static inline uint64_t otEncodingReadUint64Le(const uint8_t *aSource)
     return value;
 }
 
-#endif // ENCODING_H
+#endif // PLATFORM_UTILS_ENCODING_H
