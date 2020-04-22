@@ -28,7 +28,6 @@
 #
 from enum import Enum
 import os
-import shutil
 
 from tlvs_parsing import SubTlvsFactory
 import coap
@@ -106,6 +105,8 @@ VIRTUAL_TIME = int(os.getenv('VIRTUAL_TIME', 0))
 LEADER_NOTIFY_SED_BY_CHILD_UPDATE_REQUEST = True
 
 PROTOCOL_VERSION = 2
+
+PORT_OFFSET = int(os.getenv('PORT_OFFSET', '0'))
 
 
 def create_default_network_data_prefix_sub_tlvs_factories():
@@ -568,8 +569,12 @@ def create_default_thread_sniffer():
 
 
 def create_default_simulator():
-    shutil.rmtree("tmp", ignore_errors=True)
+    _clear_tmp_files()
 
     if VIRTUAL_TIME:
         return simulator.VirtualTime()
     return simulator.RealTime()
+
+
+def _clear_tmp_files():
+    os.system(f"rm -f tmp/{PORT_OFFSET}_*.flash tmp/{PORT_OFFSET}_*.data tmp/{PORT_OFFSET}_*.swap")
