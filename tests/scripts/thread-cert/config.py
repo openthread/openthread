@@ -28,6 +28,7 @@
 #
 from enum import Enum
 import os
+import shutil
 
 from tlvs_parsing import SubTlvsFactory
 import coap
@@ -567,6 +568,8 @@ def create_default_thread_sniffer():
 
 
 def create_default_simulator():
+    shutil.rmtree("tmp", ignore_errors=True)
+
     if VIRTUAL_TIME:
         return simulator.VirtualTime()
     return simulator.RealTime()
