@@ -80,6 +80,8 @@ class Node:
 
         self._initialized = True
 
+        self.set_extpanid(config.EXTENDED_PANID)
+
     def __init_sim(self, nodeid, mode):
         """ Initialize a simulation node. """
 
@@ -549,6 +551,10 @@ class Node:
         self.send_command('eui64')
         return self._expect_result('[0-9a-fA-F]{16}')
 
+    def set_extpanid(self, extpanid):
+        self.send_command('extpanid %s' % extpanid)
+        self._expect('Done')
+
     def get_joiner_id(self):
         self.send_command('joiner id')
         return self._expect_result('[0-9a-fA-F]{16}')
@@ -1004,6 +1010,11 @@ class Node:
             self.send_command(cmd)
             self._expect('Done')
 
+        # Set the meshlocal prefix in config.py
+        self.send_command('dataset meshlocalprefix %s' %
+                          config.MESH_LOCAL_PREFIX.split('/')[0])
+        self._expect('Done')
+
         self.send_command('dataset commit active')
         self._expect('Done')
 
@@ -1032,6 +1043,11 @@ class Node:
             cmd = 'dataset channel %d' % channel
             self.send_command(cmd)
             self._expect('Done')
+
+        # Set the meshlocal prefix in config.py
+        self.send_command('dataset meshlocalprefix %s' %
+                          config.MESH_LOCAL_PREFIX.split('/')[0])
+        self._expect('Done')
 
         self.send_command('dataset commit pending')
         self._expect('Done')

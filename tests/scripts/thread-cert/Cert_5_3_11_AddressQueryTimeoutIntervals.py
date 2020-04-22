@@ -86,7 +86,7 @@ class Cert_5_3_11_AddressQueryTimeoutIntervals(unittest.TestCase):
 
         # 2 MED1: MED1 sends an ICMPv6 Echo Request to a non-existent
         # mesh-local address X
-        X = "fd00:db8:0000:aa55:aa55:aa55:aa55"
+        X = "fd00:db8:0000:0000:aa55:aa55:aa55:aa55"
         self.assertFalse(self.nodes[MED1].ping(X))
 
         self.simulator.go(config.AQ_TIMEOUT)

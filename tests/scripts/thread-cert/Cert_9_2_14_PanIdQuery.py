@@ -104,7 +104,7 @@ class Cert_9_2_14_PanIdQuery(unittest.TestCase):
         self.nodes[COMMISSIONER].panid_query(0xdead, 0xffffffff, ipaddr)
 
         self.nodes[COMMISSIONER].panid_query(0xdead, 0xffffffff,
-                                             'ff33:0040:fd00:db8:0:0:1')
+                                             'ff33:0040:fd00:db8:0:0:0:1')
 
         self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
 
