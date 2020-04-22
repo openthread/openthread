@@ -27,11 +27,14 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+import os
 import unittest
 
 import config
 import debug
 from node import Node
+
+PORT_OFFSET = int(os.getenv('PORT_OFFSET', "0"))
 
 DEFAULT_PARAMS = {
     'is_mtd': False,
@@ -53,14 +56,14 @@ class TestCase(unittest.TestCase):
     The `topology` member of sub-class is used to create test topology.
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.simulator = config.create_default_simulator()
-        self.nodes = {}
-
     def setUp(self):
         """Create simulator, nodes and apply configurations.
         """
+        self._clean_up_tmp()
+
+        self.simulator = config.create_default_simulator()
+        self.nodes = {}
+
         initial_topology = {}
         for i, params in self.topology.items():
             if params:
@@ -159,7 +162,10 @@ class TestCase(unittest.TestCase):
         for node in list(self.nodes.values()):
             node.stop()
             node.destroy()
+
         self.simulator.stop()
+        del self.nodes
+        del self.simulator
 
     def flush_all(self):
         """Flush away all captured messages of all nodes.
@@ -177,3 +183,11 @@ class TestCase(unittest.TestCase):
         for i in nodes:
             if i in list(self.nodes.keys()):
                 self.simulator.get_messages_sent_by(i)
+
+    def _clean_up_tmp(self):
+        """
+        Clean up node files in tmp directory
+        """
+        os.system(
+            f"rm -f tmp/{PORT_OFFSET}_*.flash tmp/{PORT_OFFSET}_*.data tmp/{PORT_OFFSET}_*.swap"
+        )
