@@ -124,7 +124,7 @@ static const struct option kOptions[] = {{"debug-level", required_argument, NULL
                                          {"ncp-dataset", no_argument, NULL, ARG_RESTORE_NCP_DATASET},
                                          {"time-speed", required_argument, NULL, 's'},
                                          {"verbose", no_argument, NULL, 'v'},
-#if OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
                                          {"gpio-int-dev", required_argument, NULL, ARG_SPI_GPIO_INT_DEV},
                                          {"gpio-int-line", required_argument, NULL, ARG_SPI_GPIO_INT_LINE},
                                          {"gpio-reset-dev", required_argument, NULL, ARG_SPI_GPIO_RESET_DEV},
@@ -135,7 +135,7 @@ static const struct option kOptions[] = {{"debug-level", required_argument, NULL
                                          {"spi-reset-delay", required_argument, NULL, ARG_SPI_RESET_DELAY},
                                          {"spi-align-allowance", required_argument, NULL, ARG_SPI_ALIGN_ALLOWANCE},
                                          {"spi-small-packet", required_argument, NULL, ARG_SPI_SMALL_PACKET},
-#endif
+#endif // OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
                                          {0, 0, 0, 0}};
 
 static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
@@ -154,7 +154,7 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    -s  --time-speed factor       Time speed up factor.\n"
             "    -v  --verbose                 Also log to stderr.\n",
             aProgramName);
-#if OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
     fprintf(aStream,
             "        --gpio-int-dev[=gpio-device-path]\n"
             "                                  Specify a path to the Linux sysfs-exported GPIO device for the\n"
