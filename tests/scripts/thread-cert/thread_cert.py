@@ -78,8 +78,7 @@ class TestCase(unittest.TestCase):
             )
             self.nodes[i].set_panid(params['panid'])
             self.nodes[i].set_mode(params['mode'])
-            self.nodes[i].set_addr64('0x' +
-                                     format(EXTENDED_ADDRESS_BASE + i, '016x'))
+
             if 'partition_id' in params:
                 self.nodes[i].set_partition_id(params['partition_id'])
             if 'channel' in params:
