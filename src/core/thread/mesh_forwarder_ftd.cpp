@@ -500,11 +500,6 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessa
     }
 
 exit:
-    if (error == OT_ERROR_NO_ROUTE)
-    {
-        SendDestinationUnreachable(mMeshSource, aMessage);
-    }
-
     return error;
 }
 
@@ -519,6 +514,35 @@ otError MeshForwarder::GetIp6Header(const uint8_t *     aFrame,
 
     return DecompressIp6Header(aFrame, aFrameLength, aMacSource, aMacDest, aIp6Header, headerLength,
                                nextHeaderCompressed);
+}
+
+void MeshForwarder::SendIcmpErrorIfDstUnreach(const Message &     aMessage,
+                                              const Mac::Address &aMacSource,
+                                              const Mac::Address &aMacDest)
+{
+    otError     error;
+    Ip6::Header ip6header;
+    Child *     child;
+
+    VerifyOrExit(aMacSource.IsShort() && aMacDest.IsShort(), OT_NOOP);
+
+    child = Get<ChildTable>().FindChild(aMacSource.GetShort(), Child::kInStateAnyExceptInvalid);
+    VerifyOrExit((child == NULL) || child->IsFullThreadDevice(), OT_NOOP);
+
+    aMessage.Read(0, sizeof(ip6header), &ip6header);
+    VerifyOrExit(!ip6header.GetDestination().IsMulticast() &&
+                     Get<NetworkData::Leader>().IsOnMesh(ip6header.GetDestination()),
+                 OT_NOOP);
+
+    error = Get<Mle::MleRouter>().CheckReachability(aMacDest.GetShort(), ip6header);
+
+    if (error == OT_ERROR_NO_ROUTE)
+    {
+        SendDestinationUnreachable(aMacSource.GetShort(), aMessage);
+    }
+
+exit:
+    return;
 }
 
 otError MeshForwarder::CheckReachability(const uint8_t *     aFrame,
