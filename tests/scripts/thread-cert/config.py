@@ -621,3 +621,4 @@ def create_default_simulator():
     if VIRTUAL_TIME:
         return simulator.VirtualTime()
     return simulator.RealTime()
+  
