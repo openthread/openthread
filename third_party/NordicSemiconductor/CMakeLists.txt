@@ -30,14 +30,16 @@ set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
-    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/drivers/radio
-    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/drivers/radio/fem
-    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/drivers/radio/fem/three_pin_gpio
-    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/drivers/radio/rsch
-    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/drivers/radio/rsch/raal
-    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/drivers/radio/rsch/raal/softdevice
-    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/drivers/radio/mac_features
-    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/drivers/radio/mac_features/ack_generator
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/radio
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/radio/fem
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/radio/fem/three_pin_gpio
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/radio/mac_features
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/radio/mac_features/ack_generator
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/radio/platform/temperature
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/radio/platform/lp_timer
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/radio/rsch
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/radio/rsch/raal
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/radio/rsch/raal/softdevice
 )
 
 set(COMMON_FLAG
@@ -322,6 +324,7 @@ elseif(OT_PLATFORM STREQUAL "nrf52840")
             ${RADIO_DRIVER_SOURCES}
             ${RADIO_DRIVER_SINGLE_PHY_SOURCES}
     )
+
     add_library(nordicsemi-nrf52840-radio-driver-softdevice)
     target_compile_definitions(nordicsemi-nrf52840-radio-driver-softdevice
         PRIVATE
@@ -351,4 +354,19 @@ else()
     message(FATAL_ERROR "Platform unknown: ${OT_PLATFORM}")
 endif()
 
+add_library(nordicsemi-mbedtls INTERFACE)
+
+target_link_libraries(nordicsemi-mbedtls
+    INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libmbedcrypto_glue.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libmbedcrypto_glue_cc310.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libmbedcrypto_glue_vanilla.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libmbedcrypto_vanilla_backend.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libmbedtls_tls_vanilla.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libmbedtls_x509_vanilla.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libmbedtls_base_vanilla.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libnrf_cc310_platform_0.9.2.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libmbedcrypto_cc310_backend.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/libraries/nrf_security/lib/libmbedtls_base_vanilla.a
+)
 

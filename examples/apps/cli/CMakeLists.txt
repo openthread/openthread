@@ -67,8 +67,8 @@ else()
         ${OT_PLATFORM_LIB}
         openthread-mtd
         ${OT_PLATFORM_LIB}
+        ${OT_MBEDTLS}
     )
-endif()
 
 if(OT_MTD)
     include(mtd.cmake)
