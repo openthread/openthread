@@ -303,12 +303,11 @@ void SubMac::BeginTransmit(void)
 
     OT_UNUSED_VARIABLE(error);
 
-    VerifyOrExit(mState == kStateCsmaBackoff
 #if OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
-                     || mState == kStateCslTransmit
+    VerifyOrExit(mState == kStateCsmaBackoff || mState == kStateCslTransmit, OT_NOOP);
+#else
+    VerifyOrExit(mState == kStateCsmaBackoff, OT_NOOP);
 #endif
-                 ,
-                 OT_NOOP);
 
     mTransmitFrame.SetCsmaCaEnabled(true);
 
