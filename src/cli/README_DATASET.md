@@ -8,22 +8,22 @@ Thread network configuration parameters are managed using Active and Pending Ope
 
 The Active Operational Dataset includes parameters that are currently in use across an entire Thread network. The Active Operational Dataset contains:
 
-* Active Timestamp
-* Channel
-* Channel Mask
-* Extended PAN ID
-* Mesh-Local Prefix
-* Network Name
-* PAN ID
-* PSKc
-* Security Policy
+- Active Timestamp
+- Channel
+- Channel Mask
+- Extended PAN ID
+- Mesh-Local Prefix
+- Network Name
+- PAN ID
+- PSKc
+- Security Policy
 
 ### Pending Operational Dataset
 
 The Pending Operational Dataset is used to communicate changes to the Active Operational Dataset before they take effect. The Pending Operational Dataset contains all the parameters from the Active Operational Dataset, with the addition of:
 
-* Delay Timer
-* Pending Timestamp
+- Delay Timer
+- Pending Timestamp
 
 ## Quick Start
 
@@ -31,38 +31,38 @@ The Pending Operational Dataset is used to communicate changes to the Active Ope
 
 1. Generate and view new network configuration.
 
-    ```bash
-    > dataset init new
-    Done
-    > dataset
-    Active Timestamp: 1
-    Channel: 13
-    Channel Mask: 07fff800
-    Ext PAN ID: d63e8e3e495ebbc3
-    Mesh Local Prefix: fd3d:b50b:f96d:722d/64
-    Master Key: dfd34f0f05cad978ec4e32b0413038ff
-    Network Name: OpenThread-8f28
-    PAN ID: 0x8f28
-    PSKc: c23a76e98f1a6483639b1ac1271e2e27
-    Security Policy: 0, onrcb
-    Done
-    ```
+   ```bash
+   > dataset init new
+   Done
+   > dataset
+   Active Timestamp: 1
+   Channel: 13
+   Channel Mask: 07fff800
+   Ext PAN ID: d63e8e3e495ebbc3
+   Mesh Local Prefix: fd3d:b50b:f96d:722d/64
+   Master Key: dfd34f0f05cad978ec4e32b0413038ff
+   Network Name: OpenThread-8f28
+   PAN ID: 0x8f28
+   PSKc: c23a76e98f1a6483639b1ac1271e2e27
+   Security Policy: 0, onrcb
+   Done
+   ```
 
 2. Commit new dataset to the Active Operational Dataset in non-volatile storage.
 
-    ```bash
-    dataset commit active
-    Done
-    ```
+   ```bash
+   dataset commit active
+   Done
+   ```
 
 3. Enable Thread interface
 
-    ```bash
-    > ifconfig up
-    Done
-    > thread start
-    Done
-    ```
+   ```bash
+   > ifconfig up
+   Done
+   > thread start
+   Done
+   ```
 
 ### Attach to Existing Network
 
@@ -74,38 +74,38 @@ After the device successfully attaches to a Thread network, the device will retr
 
 1. Create a partial Active Operational Dataset.
 
-    ```bash
-    > dataset masterkey dfd34f0f05cad978ec4e32b0413038ff
-    Done
-    > dataset commit active
-    Done
-    ```
+   ```bash
+   > dataset masterkey dfd34f0f05cad978ec4e32b0413038ff
+   Done
+   > dataset commit active
+   Done
+   ```
 
 2. Enable Thread interface.
 
-    ```bash
-    > ifconfig up
-    Done
-    > thread start
-    Done
-    ```
+   ```bash
+   > ifconfig up
+   Done
+   > thread start
+   Done
+   ```
 
 3. After attaching, validate that the device received the complete Active Operational Dataset.
 
-    ```bash
-    > dataset active
-    Active Timestamp: 1
-    Channel: 13
-    Channel Mask: 07fff800
-    Ext PAN ID: d63e8e3e495ebbc3
-    Mesh Local Prefix: fd3d:b50b:f96d:722d/64
-    Master Key: dfd34f0f05cad978ec4e32b0413038ff
-    Network Name: OpenThread-8f28
-    PAN ID: 0x8f28
-    PSKc: c23a76e98f1a6483639b1ac1271e2e27
-    Security Policy: 0, onrcb
-    Done
-    ```
+   ```bash
+   > dataset active
+   Active Timestamp: 1
+   Channel: 13
+   Channel Mask: 07fff800
+   Ext PAN ID: d63e8e3e495ebbc3
+   Mesh Local Prefix: fd3d:b50b:f96d:722d/64
+   Master Key: dfd34f0f05cad978ec4e32b0413038ff
+   Network Name: OpenThread-8f28
+   PAN ID: 0x8f28
+   PSKc: c23a76e98f1a6483639b1ac1271e2e27
+   Security Policy: 0, onrcb
+   Done
+   ```
 
 ## Command List
 
@@ -395,11 +395,11 @@ Usage: `dataset securitypolicy <rotationtime> [onrcb]`
 
 Set security policy.
 
-* o: Obtaining the Master Key for out-of-band commissioning is enabled.
-* n: Native Commissioning using PSKc is allowed.
-* r: Thread 1.x Routers are enabled.
-* c: External Commissioner authentication is allowed using PSKc.
-* b: Thread 1.x Beacons are enabled.
+- o: Obtaining the Master Key for out-of-band commissioning is enabled.
+- n: Native Commissioning using PSKc is allowed.
+- r: Thread 1.x Routers are enabled.
+- c: External Commissioner authentication is allowed using PSKc.
+- b: Thread 1.x Beacons are enabled.
 
 ```bash
 > dataset securitypolicy 672 onrcb
