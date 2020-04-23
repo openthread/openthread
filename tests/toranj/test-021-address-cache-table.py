@@ -226,7 +226,27 @@ recver = c2.prepare_rx(sender)
 wpan.Node.perform_async_tx_rx()
 verify(sender.was_successful and recver.was_successful)
 
-# The address cache table on r1 should still be the same as before.
+# The address cache table on r1 should have c2's address removed.
+
+addr_cache_table = wpan.parse_address_cache_table_result(
+    r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+verify(len(addr_cache_table) == 1)
+
+for entry in addr_cache_table:
+    if entry.address == c3_address:
+        # Entry for c3 should still point towards c3
+        verify(entry.rloc16 == c3_rloc)
+    else:
+        raise (wpan.VerifyError("Unknown entry in the address cache table"))
+
+# Send a UDP message from r1 to c2.
+
+sender = r1.prepare_tx(r1_address, c2_address, "Hi again c2")
+recver = c2.prepare_rx(sender)
+wpan.Node.perform_async_tx_rx()
+verify(sender.was_successful and recver.was_successful)
+
+# The address cache table on r1 should have both c1 and c2.
 
 addr_cache_table = wpan.parse_address_cache_table_result(
     r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
@@ -234,13 +254,50 @@ verify(len(addr_cache_table) == 2)
 
 for entry in addr_cache_table:
     if entry.address == c2_address:
-        # Entry for c2 should still point towards r2
-        verify(entry.rloc16 == r2_rloc)
+        # Entry for c2 should point towards r3
+        verify(entry.rloc16 == r3_rloc)
     elif entry.address == c3_address:
         # Entry for c3 should still point towards c3
         verify(entry.rloc16 == c3_rloc)
     else:
         raise (wpan.VerifyError("Unknown entry in the address cache table"))
+
+# Force c2 to switch its parent from r3 to r2
+
+c2.set(
+    wpan.WPAN_CHILD_SUPERVISION_CHECK_TIMEOUT,
+    str(CHILD_SUPERVISION_CHECK_TIMEOUT),
+)
+r2.set(wpan.WPAN_CHILD_SUPERVISION_INTERVAL, str(PARENT_SUPERVISION_INTERVAL))
+
+r3.un_whitelist_node(c2)
+r2.whitelist_node(c2)
+c2.whitelist_node(r2)
+
+# Wait for c2 to detach from r3 and attach to r2.
+#
+# Upon re-attach, previous parent r3 is notified and should remove c2 from
+# its child table.
+
+
+def check_c2_is_removed_from_r3_child_table():
+    child_table = wpan.parse_list(r3.get(wpan.WPAN_THREAD_CHILD_TABLE))
+    verify(len(child_table) == 1)
+
+
+wpan.verify_within(check_c2_is_removed_from_r3_child_table, REATTACH_WAIT_TIME)
+
+# Verify that both c2 is a child of r2
+
+child_table = wpan.parse_list(r2.get(wpan.WPAN_THREAD_CHILD_TABLE))
+verify(len(child_table) == 1)
+
+# New network topology
+#
+#     r1 ---- r2 ---- r3
+#     |       |       |
+#     |       |       |
+#     c1      c2(s)   c3
 
 # Send a UDP message from c2 to c1.
 # This message will be forwarded by r1 to its FED child c1.
@@ -250,7 +307,76 @@ recver = c1.prepare_rx(sender)
 wpan.Node.perform_async_tx_rx()
 verify(sender.was_successful and recver.was_successful)
 
-# r1 upon receiving and forwarding the message from c2 (through r3 now) should
+# r1 upon receiving and forwarding the message from c2 (through r2 now) should
+# update its address cache table for c2 (address cache update through snooping).
+#
+# verify that the address cache table is updated correctly.
+
+addr_cache_table = wpan.parse_address_cache_table_result(
+    r1.get(wpan.WPAN_THREAD_ADDRESS_CACHE_TABLE))
+verify(len(addr_cache_table) == 2)
+
+for entry in addr_cache_table:
+    if entry.address == c2_address:
+        # Entry for c2's address should now point to r2
+        verify(entry.rloc16 == r2_rloc)
+    elif entry.address == c3_address:
+        # Entry for c3's address should still point to c3
+        verify(entry.rloc16 == c3_rloc)
+    else:
+        raise (wpan.VerifyError("Unknown entry in the address cache table"))
+
+# Force c2 to switch its parent from r2 to r3
+
+CHILD_SUPERVISION_CHECK_TIMEOUT = 2
+PARENT_SUPERVISION_INTERVAL = 1
+
+REATTACH_WAIT_TIME = CHILD_SUPERVISION_CHECK_TIMEOUT / speedup + 6
+
+c2.set(
+    wpan.WPAN_CHILD_SUPERVISION_CHECK_TIMEOUT,
+    str(CHILD_SUPERVISION_CHECK_TIMEOUT),
+)
+r3.set(wpan.WPAN_CHILD_SUPERVISION_INTERVAL, str(PARENT_SUPERVISION_INTERVAL))
+
+r2.un_whitelist_node(c2)
+r3.whitelist_node(c2)
+c2.whitelist_node(r3)
+
+# Wait for c2 to detach from r2 and attach to r3.
+#
+# Upon re-attach, previous parent r2 is notified and should remove c2 from
+# its child table.
+
+
+def check_c2_is_removed_from_r2_child_table():
+    child_table = wpan.parse_list(r2.get(wpan.WPAN_THREAD_CHILD_TABLE))
+    verify(len(child_table) == 0)
+
+
+wpan.verify_within(check_c2_is_removed_from_r2_child_table, REATTACH_WAIT_TIME)
+
+# Verify that both c2, c3 are children of r3
+
+child_table = wpan.parse_list(r3.get(wpan.WPAN_THREAD_CHILD_TABLE))
+verify(len(child_table) == 2)
+
+# New network topology
+#
+#     r1 ---- r2 ---- r3
+#     |               /\
+#     |              /  \
+#     c1           c2(s) c3
+
+# Send a UDP message from c2 to c1.
+# This message will be forwarded by r1 to its FED child c1.
+
+sender = c2.prepare_tx(c2_address, c1_address, "Hi c1 child of r1")
+recver = c1.prepare_rx(sender)
+wpan.Node.perform_async_tx_rx()
+verify(sender.was_successful and recver.was_successful)
+
+# r1 upon receiving and forwarding the message from c2 (through r2 now) should
 # update its address cache table for c2 (address cache update through snooping).
 #
 # verify that the address cache table is updated correctly.
