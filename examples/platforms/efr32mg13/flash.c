@@ -32,68 +32,92 @@
  *   storage for the EFR32 platform using the Silabs Nvm3 interface.
  */
 
+#include "openthread-core-efr32-config.h"
 #include <openthread/config.h>
-#include <openthread/platform/settings.h>
 
-#if !OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE // Use OT NV system
 
-#include "nvm3.h"
-#include "nvm3_hal_flash.h"
+#include "em_msc.h"
 #include <string.h>
-#include "common/code_utils.hpp"
+#include <openthread/instance.h>
 
-// Two macros are provided to support the creation of the Silicon Labs NVM3 area and
-// initialization data- NVM3_DEFINE_SECTION_STATIC_DATA() and NVM3_DEFINE_SECTION_INIT_DATA().
-// A linker section called 'name'_section is defined by NVM3_DEFINE_SECTION_STATIC_DATA().
-// The NVM3 area is placed at the top of the device FLASH section by the linker script
-// file: e.g. efr32mgxx.ld
-// An error is returned by nvm3_open() on alignment or size violation.
+#define FLASH_PAGE_NUM 2
+#define FLASH_DATA_END_ADDR (FLASH_BASE + FLASH_SIZE)
+#define FLASH_DATA_START_ADDR (FLASH_DATA_END_ADDR - (FLASH_PAGE_SIZE * FLASH_PAGE_NUM))
+#define FLASH_SWAP_PAGE_NUM (FLASH_PAGE_NUM / 2)
+#define FLASH_SWAP_SIZE (FLASH_PAGE_SIZE * FLASH_SWAP_PAGE_NUM)
 
-// Local version of SDK macro (avoids uninitialized var compile error).
-#define OT_NVM3_DEFINE_SECTION_STATIC_DATA(name, nvmSize, cacheSize) \
-    static nvm3_CacheEntry_t name##_cache[cacheSize];                \
-    static uint8_t           name##_nvm[nvmSize] SL_ATTRIBUTE_SECTION(STRINGIZE(name##_section))
+static inline uint32_t mapAddress(uint8_t aSwapIndex, uint32_t aOffset)
+{
+    uint32_t address;
 
-// Local version of SDK macro (allows OT to configure the maximum nvm3 object size and headroom).
-#define OT_NVM3_DEFINE_SECTION_INIT_DATA(name, maxObjectSize, repackHeadroom) \
-    static nvm3_Init_t name = {                                               \
-        (nvm3_HalPtr_t)name##_nvm,                                            \
-        sizeof(name##_nvm),                                                   \
-        name##_cache,                                                         \
-        sizeof(name##_cache) / sizeof(nvm3_CacheEntry_t),                     \
-        maxObjectSize,                                                        \
-        repackHeadroom,                                                       \
-        &nvm3_halFlashHandle,                                                 \
+    address = FLASH_DATA_START_ADDR + aOffset;
+
+    if (aSwapIndex)
+    {
+        address += FLASH_SWAP_SIZE;
     }
 
-#define NUM_SETTINGS_OBJECTS 7 // == number of enumerated Settings key types (in settings.hpp).
+    return address;
+}
+
+void otPlatFlashInit(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+uint32_t otPlatFlashGetSwapSize(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return FLASH_SWAP_SIZE;
+}
+
+void otPlatFlashErase(otInstance *aInstance, uint8_t aSwapIndex)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    uint32_t address = mapAddress(aSwapIndex, 0);
+
+    for (uint32_t n = 0; n < FLASH_SWAP_PAGE_NUM; n++, address += FLASH_PAGE_SIZE)
+    {
+        MSC_ErasePage((uint32_t *)address);
+    }
+}
+
+void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, const void *aData, uint32_t aSize)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    MSC_WriteWord((uint32_t *)mapAddress(aSwapIndex, aOffset), aData, aSize);
+}
+
+void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, void *aData, uint32_t aSize)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    memcpy(aData, (const uint8_t *)mapAddress(aSwapIndex, aOffset), aSize);
+}
+
+#else // Defaults to Silabs nvm3 system
+
+#include "nvm3.h"
+#include "nvm3_default.h"
+#include <string.h>
+#include <openthread/platform/settings.h>
+#include "common/code_utils.hpp"
+
+#define NVM3KEY_DOMAIN_OPENTHREAD 0x20000U // NVM3 Default Instance key space region for Thread stack
 #define NUM_INDEXED_SETTINGS \
     OPENTHREAD_CONFIG_MLE_MAX_CHILDREN // Indexed key types are only supported for kKeyChildInfo (=='child table').
-#define NUM_USER_OBJECTS 16 // User nvm3 objects (nvm3 key range 0x0000 -> 0xDFFF is available for user data).
-
-#define OT_NVM3_FLASH_NUM_PAGES 4               // Note- nvm3 requires minimum of 3 pages.
-#define OT_NVM3_FLASH_PAGE_SIZE FLASH_PAGE_SIZE // Device flash page size (MG12/MG13=2K, MG21=8K)
-#define OT_NVM3_FLASH_SIZE OT_NVM3_FLASH_NUM_PAGES *OT_NVM3_FLASH_PAGE_SIZE
-#define OT_NVM3_MAX_NUM_OBJECTS NUM_SETTINGS_OBJECTS + NUM_INDEXED_SETTINGS + NUM_USER_OBJECTS
-#define OT_NVM3_MAX_OBJECT_SIZE 256
-#define OT_NVM3_REPACK_HEADROOM 64 // Threshold for automatic nvm3 flash repacking.
-
-#define OT_NVM3_SETTINGS_KEY_PREFIX 0xE000 // (=> key range 0x0000-0xDFFF is available for OT User nvm3 objects).
-
-#define ENUM_NVM3_KEY_LIST_SIZE 4 // List size used when enumerating nvm3 keys.
-
-static nvm3_Handle_t handle = {NULL};
+#define ENUM_NVM3_KEY_LIST_SIZE 4      // List size used when enumerating nvm3 keys.
 
 static otError          addSetting(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 static nvm3_ObjectKey_t makeNvm3ObjKey(uint16_t otSettingsKey, int index);
 static otError          mapNvm3Error(Ecode_t nvm3Res);
 
-// Declare OT NVM3 data area and cache.
-// OT data area should be enough for OT 'Settings' and whatwever User data is required.
-
-OT_NVM3_DEFINE_SECTION_STATIC_DATA(otNvm3, OT_NVM3_FLASH_SIZE, OT_NVM3_MAX_NUM_OBJECTS);
-
-OT_NVM3_DEFINE_SECTION_INIT_DATA(otNvm3, OT_NVM3_MAX_OBJECT_SIZE, OT_NVM3_REPACK_HEADROOM);
+extern nvm3_Init_t    nvm3_defaultInitData;
+extern nvm3_Handle_t *nvm3_defaultHandle;
 
 void otPlatSettingsInit(otInstance *aInstance)
 {
@@ -102,22 +126,21 @@ void otPlatSettingsInit(otInstance *aInstance)
     otError err;
     bool    needClose = false;
 
-    err = mapNvm3Error(nvm3_open(&handle, &otNvm3));
+    err = mapNvm3Error(nvm3_open(nvm3_defaultHandle, &nvm3_defaultInitData));
     SuccessOrExit(err);
     needClose = true;
 
 exit:
     if (needClose)
     {
-        nvm3_close(&handle);
+        nvm3_close(nvm3_defaultHandle);
     }
 }
 
 void otPlatSettingsDeinit(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-
-    nvm3_close(&handle);
+    nvm3_close(nvm3_defaultHandle);
 }
 
 otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
@@ -133,7 +156,7 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
     bool     needClose   = false;
     uint16_t valueLength = 0;
 
-    err = mapNvm3Error(nvm3_open(&handle, &otNvm3));
+    err = mapNvm3Error(nvm3_open(nvm3_defaultHandle, &nvm3_defaultInitData));
     SuccessOrExit(err);
     needClose = true;
 
@@ -145,7 +168,7 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
     {
         // Get the next nvm3 key list.
         nvm3_ObjectKey_t keys[ENUM_NVM3_KEY_LIST_SIZE]; // List holds the next set of nvm3 keys.
-        size_t           objCnt = nvm3_enumObjects(&handle, keys, ENUM_NVM3_KEY_LIST_SIZE, nvm3Key,
+        size_t           objCnt = nvm3_enumObjects(nvm3_defaultHandle, keys, ENUM_NVM3_KEY_LIST_SIZE, nvm3Key,
                                          makeNvm3ObjKey(aKey, NUM_INDEXED_SETTINGS));
         for (size_t i = 0; i < objCnt; ++i)
         {
@@ -154,7 +177,7 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
             {
                 uint32_t objType;
                 size_t   objLen;
-                err = mapNvm3Error(nvm3_getObjectInfo(&handle, nvm3Key, &objType, &objLen));
+                err = mapNvm3Error(nvm3_getObjectInfo(nvm3_defaultHandle, nvm3Key, &objType, &objLen));
                 if (err == OT_ERROR_NONE)
                 {
                     valueLength = objLen;
@@ -165,7 +188,7 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
                         // Read all nvm3 obj bytes into a tmp buffer, then copy the required
                         // number of bytes to the read destination buffer.
                         uint8_t *buf = malloc(valueLength);
-                        err          = mapNvm3Error(nvm3_readData(&handle, nvm3Key, buf, valueLength));
+                        err          = mapNvm3Error(nvm3_readData(nvm3_defaultHandle, nvm3Key, buf, valueLength));
                         if (err == OT_ERROR_NONE)
                         {
                             memcpy(aValue, buf, (valueLength < *aValueLength) ? valueLength : *aValueLength);
@@ -190,7 +213,7 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
 exit:
     if (needClose)
     {
-        nvm3_close(&handle);
+        nvm3_close(nvm3_defaultHandle);
     }
 
     if (aValueLength != NULL)
@@ -223,7 +246,6 @@ exit:
 otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
     OT_UNUSED_VARIABLE(aInstance);
-
     return addSetting(aKey, aValue, aValueLength);
 }
 
@@ -239,7 +261,7 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
     otError err;
     bool    needClose = false;
 
-    err = mapNvm3Error(nvm3_open(&handle, &otNvm3));
+    err = mapNvm3Error(nvm3_open(nvm3_defaultHandle, &nvm3_defaultInitData));
     SuccessOrExit(err);
     needClose = true;
 
@@ -251,7 +273,7 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
     {
         // Get the next nvm3 key list.
         nvm3_ObjectKey_t keys[ENUM_NVM3_KEY_LIST_SIZE]; // List holds the next set of nvm3 keys.
-        size_t           objCnt = nvm3_enumObjects(&handle, keys, ENUM_NVM3_KEY_LIST_SIZE, nvm3Key,
+        size_t           objCnt = nvm3_enumObjects(nvm3_defaultHandle, keys, ENUM_NVM3_KEY_LIST_SIZE, nvm3Key,
                                          makeNvm3ObjKey(aKey, NUM_INDEXED_SETTINGS));
         for (size_t i = 0; i < objCnt; ++i)
         {
@@ -260,11 +282,11 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
             {
                 uint32_t objType;
                 size_t   objLen;
-                err = mapNvm3Error(nvm3_getObjectInfo(&handle, nvm3Key, &objType, &objLen));
+                err = mapNvm3Error(nvm3_getObjectInfo(nvm3_defaultHandle, nvm3Key, &objType, &objLen));
                 if (err == OT_ERROR_NONE)
                 {
                     // Delete the nvm3 object.
-                    err = mapNvm3Error(nvm3_deleteObject(&handle, nvm3Key));
+                    err = mapNvm3Error(nvm3_deleteObject(nvm3_defaultHandle, nvm3Key));
                     SuccessOrExit(err);
                 }
                 if (aIndex != -1)
@@ -286,7 +308,7 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 exit:
     if (needClose)
     {
-        nvm3_close(&handle);
+        nvm3_close(nvm3_defaultHandle);
     }
 
     return err;
@@ -314,7 +336,7 @@ static otError addSetting(uint16_t aKey, const uint8_t *aValue, uint16_t aValueL
     otError err;
     bool    needClose = false;
 
-    err = mapNvm3Error(nvm3_open(&handle, &otNvm3));
+    err = mapNvm3Error(nvm3_open(nvm3_defaultHandle, &nvm3_defaultInitData));
     SuccessOrExit(err);
     needClose = true;
 
@@ -331,12 +353,12 @@ static otError addSetting(uint16_t aKey, const uint8_t *aValue, uint16_t aValueL
 
             uint32_t objType;
             size_t   objLen;
-            err = mapNvm3Error(nvm3_getObjectInfo(&handle, nvm3Key, &objType, &objLen));
+            err = mapNvm3Error(nvm3_getObjectInfo(nvm3_defaultHandle, nvm3Key, &objType, &objLen));
             if (err == OT_ERROR_NOT_FOUND)
             {
                 // Use this index for the new nvm3 object.
                 // Write the binary data to nvm3 (Creates nvm3 object if required).
-                err = mapNvm3Error(nvm3_writeData(&handle, nvm3Key, aValue, aValueLength));
+                err = mapNvm3Error(nvm3_writeData(nvm3_defaultHandle, nvm3Key, aValue, aValueLength));
                 break;
             }
             else if (err != OT_ERROR_NONE)
@@ -349,14 +371,14 @@ static otError addSetting(uint16_t aKey, const uint8_t *aValue, uint16_t aValueL
 exit:
     if (needClose)
     {
-        nvm3_close(&handle);
+        nvm3_close(nvm3_defaultHandle);
     }
     return err;
 }
 
 static nvm3_ObjectKey_t makeNvm3ObjKey(uint16_t otSettingsKey, int index)
 {
-    return (OT_NVM3_SETTINGS_KEY_PREFIX | (otSettingsKey << 8) | (index & 0xFF));
+    return (NVM3KEY_DOMAIN_OPENTHREAD | (otSettingsKey << 8) | (index & 0xFF));
 }
 
 static otError mapNvm3Error(Ecode_t nvm3Res)
@@ -381,4 +403,4 @@ static otError mapNvm3Error(Ecode_t nvm3Res)
     return err;
 }
 
-#endif // !OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+#endif // OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE

@@ -227,15 +227,15 @@ SECTIONS
   PROVIDE(__stack = __StackTop);
 
   /*******************************************************************/
-  /* Define 8K (2000H) byte flash block for OT nvm3-                 */
-  /* ( == 4 x Flash Pages as configured in flash.c)                  */
-  .otNvm3_block (LENGTH(FLASH) - 0x2000) (NOLOAD):
-  {
-    . = ALIGN (8192);
-    __nvm3OtBase = .;
-    KEEP(*(otNvm3_section));
-    __nvm3OtCeiling = .;
+  /* Define flash block for nvm3                                     */
+  .nvm (DSECT) : {
+    KEEP(*(.simee*))
   } > FLASH
+
+  linker_nvm_end = ORIGIN(FLASH) + LENGTH(FLASH);
+  linker_nvm_begin = linker_nvm_end - SIZEOF(.nvm);
+  linker_nvm_size = SIZEOF(.nvm);
+  __nvm3Base = linker_nvm_begin;
   /*******************************************************************/
 
   /* Check if data + heap + stack exceeds RAM limit */
