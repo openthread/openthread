@@ -311,7 +311,7 @@ endif # OPENTHREAD_ENABLE_VENDOR_EXTENSION
 
 HEADERS_COMMON                             = \
     openthread-core-config.h                 \
-	openthread-thread_v1_2-core-default-config.h \
+    openthread-thread_v1_2-core-default-config.h \
     backbone_router/leader.hpp               \
     backbone_router/local.hpp                \
     coap/coap.hpp                            \
