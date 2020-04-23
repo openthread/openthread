@@ -404,13 +404,17 @@ exit:
     return error;
 }
 
-otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, const Message &aMessage)
+otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessage)
 {
     Mle::MleRouter &mle   = Get<Mle::MleRouter>();
     otError         error = OT_ERROR_NONE;
     Neighbor *      neighbor;
 
-    if (mle.IsRoutingLocator(ip6Header.GetDestination()))
+    if (aMessage.GetOffset() > 0)
+    {
+        mMeshDest = aMessage.GetMeshDest();
+    }
+    else if (mle.IsRoutingLocator(ip6Header.GetDestination()))
     {
         uint16_t rloc16 = ip6Header.GetDestination().GetLocator();
         VerifyOrExit(mle.IsRouterIdValid(Mle::Mle::RouterIdFromRloc16(rloc16)), error = OT_ERROR_DROP);
@@ -485,6 +489,7 @@ otError MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, const Message &
     mMeshSource = Get<Mac::Mac>().GetShortAddress();
 
     SuccessOrExit(error = mle.CheckReachability(mMeshDest, ip6Header));
+    aMessage.SetMeshDest(mMeshDest);
     mMacDest.SetShort(mle.GetNextHop(mMeshDest));
 
     if (mMacDest.GetShort() != mMeshDest)
