@@ -4476,7 +4476,7 @@ bool Mle::ShouldRegisterMulticastToParent(void) const
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     // When multicast subscription changes, different from 1.2 SED, 1.2 MED would not trigger
     // Child Update Request if the parent is Thread 1.1.
-    VerifyOrExit(!(GetParent().IsThreadVersion1_1()) || !IsRxOnWhenIdle(), OT_NOOP);
+    VerifyOrExit(!GetParent().IsThreadVersion1_1() || !IsRxOnWhenIdle(), OT_NOOP);
 #else
     VerifyOrExit(!IsRxOnWhenIdle(), OT_NOOP);
 #endif
