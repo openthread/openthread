@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,78 +26,74 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(OT_PLATFORM_LIB "openthread-posix" PARENT_SCOPE)
-
-option(OT_DAEMON "Enable daemon mode" OFF)
-if(OT_DAEMON)
-    list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE=1")
-endif()
-
-option(OT_POSIX_VIRTUAL_TIME "enable virtual time" OFF)
-if(OT_POSIX_VIRTUAL_TIME)
-    list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_POSIX_VIRTUAL_TIME=1")
-endif()
+set(OT_PLATFORM_LIB "openthread-samr21" PARENT_SCOPE)
 
 if(NOT OT_CONFIG)
-    set(OT_CONFIG "openthread-core-posix-config.h")
+    set(OT_CONFIG "openthread-core-samr21-config.h")
     set(OT_CONFIG ${OT_CONFIG} PARENT_SCOPE)
 endif()
 
 list(APPEND OT_PLATFORM_DEFINES
-    "OPENTHREAD_POSIX=1"
-    "OPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_UART"
+    "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-samr21-config-check.h\""
 )
-
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
+
+list(APPEND OT_PRIVATE_DEFINES "MBEDTLS_USER_CONFIG_FILE=\"samr21-mbedtls-config.h\"")
+list(APPEND OT_PUBLIC_INCLUDES
+    "${PROJECT_SOURCE_DIR}/examples/platforms/samr21/crypto"
+)
+set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
 
 list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
 
-add_library(openthread-posix
-    alarm.cpp
-    entropy.cpp
-    hdlc_interface.cpp
-    logging.cpp
-    misc.cpp
-    netif.cpp
-    radio.cpp
-    settings.cpp
-    spi_interface.cpp
-    system.cpp
-    uart.cpp
-    udp.cpp
-    virtual_time.cpp
+add_library(openthread-samr21
+    alarm.c
+    crypto/aes_alt.c
+    cxx_helpers.c
+    diag.c
+    entropy.c
+    flash.c
+    logging.c
+    misc.c
+    radio.c
+    system.c
+    uart.c
 )
 
-set_target_properties(
-    openthread-posix
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
+set_property(TARGET openthread-samr21 PROPERTY C_STANDARD 99)
 
-target_link_libraries(openthread-posix PUBLIC
-    openthread-platform
-    util
-)
+if(OT_CFLAGS MATCHES "-pedantic-errors")
+    string(REPLACE "-pedantic-errors" "" OT_CFLAGS "${OT_CFLAGS}")
+endif()
 
-target_compile_definitions(openthread-posix
+target_link_libraries(openthread-samr21
     PUBLIC
-        ${OT_PUBLIC_DEFINES}
+        samr21-driver
     PRIVATE
+        mbedtls
+)
+
+target_link_options(openthread-samr21
+    PUBLIC
+        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
+)
+
+target_compile_definitions(openthread-samr21
+    PUBLIC
         ${OT_PLATFORM_DEFINES}
+    PRIVATE
         ${OT_PRIVATE_DEFINES}
 )
 
-target_compile_options(openthread-posix PRIVATE
-    ${OT_CFLAGS}
+target_compile_options(openthread-samr21
+    PRIVATE
+        ${OT_CFLAGS}
 )
 
-target_include_directories(openthread-posix PRIVATE
-    ${OT_PUBLIC_INCLUDES}
-    ${OT_PRIVATE_INCLUDES}
-    ${PROJECT_SOURCE_DIR}/src
-    ${PROJECT_SOURCE_DIR}/src/core
-    ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
-    PUBLIC
-        ${PROJECT_SOURCE_DIR}/src/posix/platform/include
+target_include_directories(openthread-samr21
+    PRIVATE
+        ${OT_PUBLIC_INCLUDES}
+        ${OT_PRIVATE_INCLUDES}
+        ${PROJECT_SOURCE_DIR}/src/core
+        ${PROJECT_SOURCE_DIR}/examples/platforms
 )

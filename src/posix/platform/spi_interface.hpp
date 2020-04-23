@@ -42,7 +42,7 @@
 
 #include <openthread/openthread-system.h>
 
-#if OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
 
 #include "ncp/ncp_spi.hpp"
 
@@ -231,5 +231,5 @@ private:
 } // namespace Posix
 } // namespace ot
 
-#endif // OPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE
+#endif // OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
 #endif // POSIX_APP_SPI_INTERFACE_HPP_

@@ -103,10 +103,10 @@ ifneq ($(READLINE),)
 configure_OPTIONS              += --with-readline=$(READLINE)
 endif
 
-ifeq ($(RCP_SPI),1)
-COMMONCFLAGS                   += -DOPENTHREAD_POSIX_CONFIG_RCP_SPI_ENABLE=1
+ifeq ($(RCP_BUS),spi)
+COMMONCFLAGS                   += -DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_SPI
 else
-COMMONCFLAGS                   += -DOPENTHREAD_POSIX_CONFIG_RCP_UART_ENABLE=1
+COMMONCFLAGS                   += -DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_UART
 endif
 
 ifeq ($(VIRTUAL_TIME),1)

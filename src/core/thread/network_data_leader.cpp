@@ -485,22 +485,11 @@ const MeshCoP::Tlv *LeaderBase::GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aT
 {
     const MeshCoP::Tlv *  rval = NULL;
     const NetworkDataTlv *commissioningDataTlv;
-    const MeshCoP::Tlv *  cur;
-    const MeshCoP::Tlv *  end;
 
     commissioningDataTlv = GetCommissioningData();
     VerifyOrExit(commissioningDataTlv != NULL, OT_NOOP);
 
-    cur = reinterpret_cast<const MeshCoP::Tlv *>(commissioningDataTlv->GetValue());
-    end = reinterpret_cast<const MeshCoP::Tlv *>(commissioningDataTlv->GetValue() + commissioningDataTlv->GetLength());
-
-    for (; cur < end; cur = cur->GetNext())
-    {
-        if (cur->GetType() == aType)
-        {
-            ExitNow(rval = cur);
-        }
-    }
+    rval = MeshCoP::Tlv::FindTlv(commissioningDataTlv->GetValue(), commissioningDataTlv->GetLength(), aType);
 
 exit:
     return rval;

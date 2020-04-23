@@ -26,33 +26,9 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-name: Size
+add_library(qpg6095-driver INTERFACE)
 
-on: [push, pull_request]
-
-jobs:
-
-  cancel-previous-runs:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: rokroskar/workflow-run-cleanup-action@master
-      env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      if: "github.ref != 'refs/heads/master'"
-
-  size-report:
-    runs-on: ubuntu-18.04
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      if: "github.event_name == 'push'"
-      run: |
-        python3 -m pip install --upgrade setuptools wheel
-        python3 -m pip install mdv
-    - name: Run
-      env:
-        OT_BASE_BRANCH: "${{ github.base_ref }}"
-        SIZE_REPORT_URL: "https://openthread-size-report.glitch.me/size-report/1354027"
-      run: |
-        export PATH=$PATH:$HOME/.local/bin
-        ./script/check-size
+target_link_libraries(qpg6095-driver
+    INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/qpg6095/libQorvoQPG6095.a
+)

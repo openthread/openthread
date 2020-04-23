@@ -26,33 +26,16 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-name: Size
+if(OT_PLATFORM STREQUAL "cc2650")
+    add_library(cc26x0-driver INTERFACE)
 
-on: [push, pull_request]
+    target_link_libraries(cc26x0-driver
+        INTERFACE
+            ${CMAKE_CURRENT_SOURCE_DIR}/devices/cc26x0/driverlib/bin/gcc/driverlib.a
+    )
 
-jobs:
-
-  cancel-previous-runs:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: rokroskar/workflow-run-cleanup-action@master
-      env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      if: "github.ref != 'refs/heads/master'"
-
-  size-report:
-    runs-on: ubuntu-18.04
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      if: "github.event_name == 'push'"
-      run: |
-        python3 -m pip install --upgrade setuptools wheel
-        python3 -m pip install mdv
-    - name: Run
-      env:
-        OT_BASE_BRANCH: "${{ github.base_ref }}"
-        SIZE_REPORT_URL: "https://openthread-size-report.glitch.me/size-report/1354027"
-      run: |
-        export PATH=$PATH:$HOME/.local/bin
-        ./script/check-size
+    target_link_options(cc26x0-driver
+        INTERFACE
+            -T${CMAKE_CURRENT_SOURCE_DIR}/devices/cc26x0/linker_files/cc26x0f128.lds
+    )
+endif()

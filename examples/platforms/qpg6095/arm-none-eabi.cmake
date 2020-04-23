@@ -26,33 +26,27 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-name: Size
+set(CMAKE_SYSTEM_NAME              Generic)
+set(CMAKE_SYSTEM_PROCESSOR         ARM)
 
-on: [push, pull_request]
+set(CMAKE_C_COMPILER               arm-none-eabi-gcc)
+set(CMAKE_CXX_COMPILER             arm-none-eabi-g++)
+set(CMAKE_ASM_COMPILER             arm-none-eabi-as)
+set(CMAKE_RANLIB                   arm-none-eabi-ranlib)
 
-jobs:
+set(COMMON_C_FLAGS                 "-mcpu=cortex-m4 -mthumb -fdata-sections -ffunction-sections")
 
-  cancel-previous-runs:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: rokroskar/workflow-run-cleanup-action@master
-      env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      if: "github.ref != 'refs/heads/master'"
+set(CMAKE_C_FLAGS                  "${COMMON_C_FLAGS} -std=gnu99")
+set(CMAKE_CXX_FLAGS                "${COMMON_C_FLAGS} -fno-exceptions -fno-rtti")
+set(CMAKE_ASM_FLAGS                "${COMMON_C_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS         "${COMMON_C_FLAGS} -specs=nano.specs -specs=nosys.specs -Wl,--gc-sections")
 
-  size-report:
-    runs-on: ubuntu-18.04
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      if: "github.event_name == 'push'"
-      run: |
-        python3 -m pip install --upgrade setuptools wheel
-        python3 -m pip install mdv
-    - name: Run
-      env:
-        OT_BASE_BRANCH: "${{ github.base_ref }}"
-        SIZE_REPORT_URL: "https://openthread-size-report.glitch.me/size-report/1354027"
-      run: |
-        export PATH=$PATH:$HOME/.local/bin
-        ./script/check-size
+set(CMAKE_C_FLAGS_DEBUG            "-Og -g")
+set(CMAKE_CXX_FLAGS_DEBUG          "-Og -g")
+set(CMAKE_ASM_FLAGS_DEBUG          "-g")
+set(CMAKE_EXE_LINKER_FLAGS_DEBUG   "")
+
+set(CMAKE_C_FLAGS_RELEASE          "-Os")
+set(CMAKE_CXX_FLAGS_RELEASE        "-Os")
+set(CMAKE_ASM_FLAGS_RELEASE        "")
+set(CMAKE_EXE_LINKER_FLAGS_RELEASE "")

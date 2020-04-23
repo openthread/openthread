@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2020, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,69 +26,43 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_PLATFORM_CONFIG_H_
-#define OPENTHREAD_PLATFORM_CONFIG_H_
-
-#include "openthread-core-config.h"
-
 /**
  * @file
- * @brief
- *   This file includes the POSIX platform-specific configurations.
+ *   This file includes macros for validating runtime conditions.
  */
+
+#ifndef PLATFORM_UTILS_ENCODING_H
+#define PLATFORM_UTILS_ENCODING_H
+
+#include <stdint.h>
 
 /**
- * @def OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
+ * Converts a 64-bit unsigned integer stored as a little-endian byte
+ * array to uint64_t.
  *
- * Define as 1 to enable PTY RCP support.
+ * Allows for the array to be byte-aligned, so that loading the
+ * uint64_t value via this function avoids a processor exception due
+ * to unaligned access.
  *
- */
-#ifndef OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
-#define OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE 1
-#endif
-
-/**
- * @def OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME
+ * @param[in]  aSource  The byte array.
  *
- * Define socket basename used by POSIX app daemon.
+ * @returns The 64-bit value as a uint64_t.
  *
  */
-#ifndef OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME
-#define OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME "/tmp/openthread"
-#endif
+static inline uint64_t otEncodingReadUint64Le(const uint8_t *aSource)
+{
+    uint64_t value = 0;
 
-/**
- * @def OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
- *
- * Define to 1 to enable POSIX daemon.
- *
- */
-#ifndef OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-#define OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE 0
-#endif
+    value |= (uint64_t)aSource[0];
+    value |= ((uint64_t)aSource[1]) << 8;
+    value |= ((uint64_t)aSource[2]) << 16;
+    value |= ((uint64_t)aSource[3]) << 24;
+    value |= ((uint64_t)aSource[4]) << 32;
+    value |= ((uint64_t)aSource[5]) << 40;
+    value |= ((uint64_t)aSource[6]) << 48;
+    value |= ((uint64_t)aSource[7]) << 56;
 
-/**
- * RCP bus UART.
- *
- * @note This value is also for simulated UART bus.
- *
- */
-#define OT_POSIX_RCP_BUS_UART 1
+    return value;
+}
 
-/**
- * RCP bus SPI.
- *
- */
-#define OT_POSIX_RCP_BUS_SPI 2
-
-/**
- * @def OPENTHREAD_POSIX_CONFIG_RCP_BUS
- *
- * This setting configures what type of RCP bus to use.
- *
- */
-#ifndef OPENTHREAD_POSIX_CONFIG_RCP_BUS
-#define OPENTHREAD_POSIX_CONFIG_RCP_BUS OT_POSIX_RCP_BUS_UART
-#endif
-
-#endif // OPENTHREAD_PLATFORM_CONFIG_H_
+#endif // PLATFORM_UTILS_ENCODING_H

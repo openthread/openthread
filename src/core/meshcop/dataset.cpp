@@ -37,6 +37,7 @@
 #include <stdio.h>
 
 #include "common/code_utils.hpp"
+#include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
@@ -46,6 +47,9 @@
 
 namespace ot {
 namespace MeshCoP {
+
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
 Dataset::Dataset(Type aType)
     : mUpdateTime(0)
@@ -75,44 +79,9 @@ exit:
     return rval;
 }
 
-Tlv *Dataset::GetTlv(Tlv::Type aType)
-{
-    Tlv *cur  = reinterpret_cast<Tlv *>(mTlvs);
-    Tlv *end  = reinterpret_cast<Tlv *>(mTlvs + mLength);
-    Tlv *rval = NULL;
-
-    while (cur < end)
-    {
-        if (cur->GetType() == aType)
-        {
-            ExitNow(rval = cur);
-        }
-
-        cur = cur->GetNext();
-    }
-
-exit:
-    return rval;
-}
-
 const Tlv *Dataset::GetTlv(Tlv::Type aType) const
 {
-    const Tlv *cur  = reinterpret_cast<const Tlv *>(mTlvs);
-    const Tlv *end  = reinterpret_cast<const Tlv *>(mTlvs + mLength);
-    const Tlv *rval = NULL;
-
-    while (cur < end)
-    {
-        if (cur->GetType() == aType)
-        {
-            ExitNow(rval = cur);
-        }
-
-        cur = cur->GetNext();
-    }
-
-exit:
-    return rval;
+    return Tlv::FindTlv(mTlvs, mLength, aType);
 }
 
 void Dataset::ConvertTo(otOperationalDataset &aDataset) const
@@ -230,9 +199,7 @@ void Dataset::ConvertTo(otOperationalDataset &aDataset) const
         }
 
         default:
-        {
             break;
-        }
         }
 
         cur = cur->GetNext();
@@ -259,7 +226,7 @@ otError Dataset::SetFrom(const otOperationalDataset &aDataset)
 
     if (aDataset.mComponents.mIsActiveTimestampPresent)
     {
-        MeshCoP::ActiveTimestampTlv tlv;
+        ActiveTimestampTlv tlv;
         tlv.Init();
         tlv.SetSeconds(aDataset.mActiveTimestamp);
         tlv.SetTicks(0);
@@ -268,7 +235,7 @@ otError Dataset::SetFrom(const otOperationalDataset &aDataset)
 
     if (aDataset.mComponents.mIsPendingTimestampPresent)
     {
-        MeshCoP::PendingTimestampTlv tlv;
+        PendingTimestampTlv tlv;
         tlv.Init();
         tlv.SetSeconds(aDataset.mPendingTimestamp);
         tlv.SetTicks(0);
@@ -277,15 +244,12 @@ otError Dataset::SetFrom(const otOperationalDataset &aDataset)
 
     if (aDataset.mComponents.mIsDelayPresent)
     {
-        MeshCoP::DelayTimerTlv tlv;
-        tlv.Init();
-        tlv.SetDelayTimer(aDataset.mDelay);
-        SetTlv(tlv);
+        SetUint32Tlv(Tlv::kDelayTimer, aDataset.mDelay);
     }
 
     if (aDataset.mComponents.mIsChannelPresent)
     {
-        MeshCoP::ChannelTlv tlv;
+        ChannelTlv tlv;
         tlv.Init();
         tlv.SetChannel(aDataset.mChannel);
         SetTlv(tlv);
@@ -293,7 +257,7 @@ otError Dataset::SetFrom(const otOperationalDataset &aDataset)
 
     if (aDataset.mComponents.mIsChannelMaskPresent)
     {
-        MeshCoP::ChannelMaskTlv tlv;
+        ChannelMaskTlv tlv;
         tlv.Init();
         tlv.SetChannelMask(aDataset.mChannelMask);
         SetTlv(tlv);
@@ -301,55 +265,39 @@ otError Dataset::SetFrom(const otOperationalDataset &aDataset)
 
     if (aDataset.mComponents.mIsExtendedPanIdPresent)
     {
-        MeshCoP::ExtendedPanIdTlv tlv;
-        tlv.Init();
-        tlv.SetExtendedPanId(static_cast<const Mac::ExtendedPanId &>(aDataset.mExtendedPanId));
-        SetTlv(tlv);
+        SetTlv(Tlv::kExtendedPanId, &aDataset.mExtendedPanId, sizeof(Mac::ExtendedPanId));
     }
 
     if (aDataset.mComponents.mIsMeshLocalPrefixPresent)
     {
-        MeshCoP::MeshLocalPrefixTlv tlv;
-        tlv.Init();
-        tlv.SetMeshLocalPrefix(static_cast<const Mle::MeshLocalPrefix &>(aDataset.mMeshLocalPrefix));
-        SetTlv(tlv);
+        SetTlv(Tlv::kMeshLocalPrefix, &aDataset.mMeshLocalPrefix, sizeof(Mle::MeshLocalPrefix));
     }
 
     if (aDataset.mComponents.mIsMasterKeyPresent)
     {
-        MeshCoP::NetworkMasterKeyTlv tlv;
-        tlv.Init();
-        tlv.SetNetworkMasterKey(static_cast<const MasterKey &>(aDataset.mMasterKey));
-        SetTlv(tlv);
+        SetTlv(Tlv::kNetworkMasterKey, &aDataset.mMasterKey, sizeof(MasterKey));
     }
 
     if (aDataset.mComponents.mIsNetworkNamePresent)
     {
-        MeshCoP::NetworkNameTlv tlv;
-        tlv.Init();
-        tlv.SetNetworkName(static_cast<const Mac::NetworkName &>(aDataset.mNetworkName).GetAsData());
-        SetTlv(tlv);
+        Mac::NameData nameData = static_cast<const Mac::NetworkName &>(aDataset.mNetworkName).GetAsData();
+
+        SetTlv(Tlv::kNetworkName, nameData.GetBuffer(), nameData.GetLength());
     }
 
     if (aDataset.mComponents.mIsPanIdPresent)
     {
-        MeshCoP::PanIdTlv tlv;
-        tlv.Init();
-        tlv.SetPanId(aDataset.mPanId);
-        SetTlv(tlv);
+        SetUint16Tlv(Tlv::kPanId, aDataset.mPanId);
     }
 
     if (aDataset.mComponents.mIsPskcPresent)
     {
-        MeshCoP::PskcTlv tlv;
-        tlv.Init();
-        tlv.SetPskc(static_cast<const Pskc &>(aDataset.mPskc));
-        SetTlv(tlv);
+        SetTlv(Tlv::kPskc, &aDataset.mPskc, sizeof(Pskc));
     }
 
     if (aDataset.mComponents.mIsSecurityPolicyPresent)
     {
-        MeshCoP::SecurityPolicyTlv tlv;
+        SecurityPolicyTlv tlv;
         tlv.Init();
         tlv.SetRotationTime(aDataset.mSecurityPolicy.mRotationTime);
         tlv.SetFlags(aDataset.mSecurityPolicy.mFlags);
@@ -367,13 +315,13 @@ const Timestamp *Dataset::GetTimestamp(void) const
 
     if (mType == kActive)
     {
-        const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(GetTlv(Tlv::kActiveTimestamp));
+        const ActiveTimestampTlv *tlv = GetTlv<ActiveTimestampTlv>();
         VerifyOrExit(tlv != NULL, OT_NOOP);
         timestamp = static_cast<const Timestamp *>(tlv);
     }
     else
     {
-        const PendingTimestampTlv *tlv = static_cast<const PendingTimestampTlv *>(GetTlv(Tlv::kPendingTimestamp));
+        const PendingTimestampTlv *tlv = GetTlv<PendingTimestampTlv>();
         VerifyOrExit(tlv != NULL, OT_NOOP);
         timestamp = static_cast<const Timestamp *>(tlv);
     }
@@ -384,49 +332,59 @@ exit:
 
 void Dataset::SetTimestamp(const Timestamp &aTimestamp)
 {
-    if (mType == kActive)
-    {
-        ActiveTimestampTlv activeTimestamp;
-        activeTimestamp.Init();
-        *static_cast<Timestamp *>(&activeTimestamp) = aTimestamp;
-        SetTlv(activeTimestamp);
-    }
-    else
-    {
-        PendingTimestampTlv pendingTimestamp;
-        pendingTimestamp.Init();
-        *static_cast<Timestamp *>(&pendingTimestamp) = aTimestamp;
-        SetTlv(pendingTimestamp);
-    }
+    SetTlv((mType == kActive) ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp, &aTimestamp, sizeof(Timestamp));
 }
 
-otError Dataset::SetTlv(const Tlv &aTlv)
+otError Dataset::SetTlv(Tlv::Type aType, const void *aValue, uint8_t aLength)
 {
     otError  error          = OT_ERROR_NONE;
     uint16_t bytesAvailable = sizeof(mTlvs) - mLength;
-    Tlv *    old            = GetTlv(aTlv.GetType());
+    Tlv *    old            = GetTlv(aType);
+    Tlv      tlv;
 
     if (old != NULL)
     {
         bytesAvailable += sizeof(Tlv) + old->GetLength();
     }
 
-    VerifyOrExit(sizeof(Tlv) + aTlv.GetLength() <= bytesAvailable, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(sizeof(Tlv) + aLength <= bytesAvailable, error = OT_ERROR_NO_BUFS);
 
-    // remove old TLV
     if (old != NULL)
     {
         Remove(reinterpret_cast<uint8_t *>(old), sizeof(Tlv) + old->GetLength());
     }
 
-    // add new TLV
-    memcpy(mTlvs + mLength, &aTlv, sizeof(Tlv) + aTlv.GetLength());
-    mLength += sizeof(Tlv) + aTlv.GetLength();
+    tlv.SetType(aType);
+    tlv.SetLength(aLength);
+    memcpy(mTlvs + mLength, &tlv, sizeof(Tlv));
+    mLength += sizeof(Tlv);
+
+    memcpy(mTlvs + mLength, aValue, aLength);
+    mLength += aLength;
 
     mUpdateTime = TimerMilli::GetNow();
 
 exit:
     return error;
+}
+
+otError Dataset::SetTlv(const Tlv &aTlv)
+{
+    return SetTlv(aTlv.GetType(), aTlv.GetValue(), aTlv.GetLength());
+}
+
+otError Dataset::SetUint16Tlv(Tlv::Type aType, uint16_t aValue)
+{
+    uint16_t value16 = HostSwap16(aValue);
+
+    return SetTlv(aType, &value16, sizeof(uint16_t));
+}
+
+otError Dataset::SetUint32Tlv(Tlv::Type aType, uint32_t aValue)
+{
+    uint32_t value32 = HostSwap32(aValue);
+
+    return SetTlv(aType, &value32, sizeof(uint32_t));
 }
 
 otError Dataset::Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength)
@@ -600,9 +558,7 @@ otError Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdat
         }
 
         default:
-        {
             break;
-        }
         }
 
         cur = cur->GetNext();

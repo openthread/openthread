@@ -68,7 +68,11 @@ const char *otExitCodeToString(uint8_t aExitCode)
         break;
 
     case OT_EXIT_ERROR_ERRNO:
+#ifdef errno
         retval = strerror(errno);
+#else
+        retval = "ErrorNo";
+#endif
         break;
 
     default:
