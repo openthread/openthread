@@ -80,6 +80,24 @@ build_cc2538()
     cd ..
 }
 
+build_cc2650()
+{
+    local options=("${OT_COMMON_OPTIONS[@]}")
+
+    options+=(
+        "-DOT_PLATFORM=cc2650"
+        "-DCMAKE_TOOLCHAIN_FILE=examples/platforms/cc2650/arm-none-eabi.cmake"
+        "-DCMAKE_BUILD_TYPE=Release"
+    )
+
+    reset_source
+    mkdir build
+    cd build
+    cmake -GNinja "${options[@]}" ..
+    ninja ot-cli-mtd ot-ncp-mtd
+    cd ..
+}
+
 build_cc2652()
 {
     local options=("${OT_COMMON_OPTIONS[@]}")
@@ -128,12 +146,66 @@ build_kw41z()
     cd ..
 }
 
+build_qpg6095()
+{
+    local options=("${OT_COMMON_OPTIONS[@]}")
+
+    options+=(
+        "-DOT_PLATFORM=qpg6095"
+        "-DCMAKE_TOOLCHAIN_FILE=examples/platforms/qpg6095/arm-none-eabi.cmake"
+        "-DOT_COMMISSIONER=on"
+        "-DOT_DHCP6_CLIENT=on"
+        "-DOT_DHCP6_SERVER=on"
+        "-DOT_DNS_CLIENT=on"
+        "-DOT_JOINER=on"
+        "-DOT_SLAAC=on"
+        "-DCMAKE_BUILD_TYPE=Release"
+    )
+
+    reset_source
+    mkdir build
+    cd build
+    cmake -GNinja "${options[@]}" ..
+    ninja
+    cd ..
+}
+
+build_samr21()
+{
+    local options=("${OT_COMMON_OPTIONS[@]}")
+
+    options+=(
+        "-DOT_PLATFORM=samr21"
+        "-DCMAKE_TOOLCHAIN_FILE=examples/platforms/samr21/arm-none-eabi.cmake"
+        "-DOT_COMMISSIONER=on"
+        "-DOT_DHCP6_CLIENT=on"
+        "-DOT_DHCP6_SERVER=on"
+        "-DOT_DNS_CLIENT=on"
+        "-DOT_JOINER=on"
+        "-DOT_SLAAC=on"
+        "-DCMAKE_BUILD_TYPE=Release"
+    )
+
+    reset_source
+    wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.45.0.85.zip || die
+    unzip -qq asf-standalone-archive-3.45.0.85.zip || die
+    mv xdk-asf-3.45.0 third_party/microchip/asf || die
+    mkdir build
+    cd build
+    cmake -GNinja "${options[@]}" ..
+    ninja
+    cd ..
+}
+
 main()
 {
     build_cc1352
     build_cc2538
+    build_cc2650
     build_cc2652
     build_kw41z
+    build_qpg6095
+    build_samr21
 }
 
 main "$@"
