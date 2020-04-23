@@ -75,12 +75,16 @@ check() {
     # Cover setting a valid network interface name.
     readonly VALID_NETIF_NAME="wan$(date +%H%M%S)"
 
+    local options=(
+        '--supported-channel-mask=0xffffffff'
+    )
+
     if [[ "${DAEMON}" = 1 ]]; then
-        sudo "$(pwd)/$(ls output/posix/*linux*/bin/ot-daemon)" -I "${VALID_NETIF_NAME}" ${CORE_PTY} &
+        sudo "$(pwd)/$(ls output/posix/*linux*/bin/ot-daemon)" "${options[@]}" -I "${VALID_NETIF_NAME}" ${CORE_PTY} &
         sleep 1
         OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-ctl)"
     else
-        OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli) ${CORE_PTY}"
+        OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli) "${options[@]}" ${CORE_PTY}"
     fi
 
     sudo ${OT_CLI_CMD} -I "${VALID_NETIF_NAME}" -n
