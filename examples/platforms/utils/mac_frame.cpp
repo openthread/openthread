@@ -125,3 +125,32 @@ void otMacFrameProcessTransmitAesCcm(otRadioFrame *aFrame, const otExtAddress *a
 {
     static_cast<Mac::TxFrame *>(aFrame)->ProcessTransmitAesCcm(*static_cast<const Mac::ExtAddress *>(aExtAddress));
 }
+
+bool otMacFrameIsVersion2015(const otRadioFrame *aFrame)
+{
+    return static_cast<const Mac::Frame *>(aFrame)->IsVersion2015();
+}
+
+void otMacFrameGenerateImmAck(const otRadioFrame *aFrame, bool aIsFramePending, otRadioFrame *aAckFrame)
+{
+    static_cast<Mac::Frame *>(aAckFrame)->GenerateImmAck(static_cast<const Mac::Frame *>(aFrame), aIsFramePending);
+}
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+void otMacFrameGenerateEnhAck(const otRadioFrame *aFrame,
+                              bool                aIsFramePending,
+                              const uint8_t *     aIeData,
+                              uint8_t             aIeLength,
+                              otRadioFrame *      aAckFrame)
+{
+    static_cast<Mac::Frame *>(aAckFrame)->GenerateEnhAck(static_cast<const Mac::Frame *>(aFrame), aIsFramePending,
+                                                         aIeData, aIeLength);
+}
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+otError otMacFrameSetCslIe(otRadioFrame *aFrame, uint16_t aCslPeriod, uint16_t aCslPhase)
+{
+    return static_cast<Mac::Frame *>(aFrame)->SetCslIe(aCslPeriod, aCslPhase);
+}
+#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT

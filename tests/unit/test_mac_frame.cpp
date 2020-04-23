@@ -277,7 +277,6 @@ void TestMacHeader(void)
         frame.mPsdu = psdu;
 
         frame.InitMacHeader(tests[i].fcf, tests[i].secCtl);
-        printf("%d\n", frame.GetHeaderLength());
         VerifyOrQuit(frame.GetHeaderLength() == tests[i].headerLength, "MacHeader test failed");
     }
 }
@@ -469,6 +468,135 @@ void TestMacFrameApi(void)
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 }
 
+void TestMacFrameAckGeneration(void)
+{
+    Mac::Frame receivedFrame;
+    Mac::Frame ackFrame;
+    uint8_t    ackFrameBuffer[100];
+
+    ackFrame.mPsdu   = ackFrameBuffer;
+    ackFrame.mLength = sizeof(ackFrameBuffer);
+
+    // Received Frame 1
+    // IEEE 802.15.4 Data
+    //   Frame Control Field: 0xdc61
+    //     .... .... .... .001 = Frame Type: Data (0x1)
+    //     .... .... .... 0... = Security Enabled: False
+    //     .... .... ...0 .... = Frame Pending: False
+    //     .... .... ..1. .... = Acknowledge Request: True
+    //     .... .... .1.. .... = PAN ID Compression: True
+    //     .... ...0 .... .... = Sequence Number Suppression: False
+    //     .... ..0. .... .... = Information Elements Present: False
+    //     .... 11.. .... .... = Destination Addressing Mode: Long/64-bit (0x3)
+    //     ..01 .... .... .... = Frame Version: IEEE Std 802.15.4-2006 (1)
+    //     11.. .... .... .... = Source Addressing Mode: Long/64-bit (0x3)
+    //  Sequence Number: 189
+    //  Destination PAN: 0xface
+    //  Destination: 16:6e:0a:00:00:00:00:01 (16:6e:0a:00:00:00:00:01)
+    //  Extended Source: 16:6e:0a:00:00:00:00:02 (16:6e:0a:00:00:00:00:02)
+    uint8_t data_psdu1[]  = {0x61, 0xdc, 0xbd, 0xce, 0xfa, 0x01, 0x00, 0x00, 0x00, 0x00, 0x0a, 0x6e, 0x16, 0x02,
+                            0x00, 0x00, 0x00, 0x00, 0x0a, 0x6e, 0x16, 0x7f, 0x33, 0xf0, 0x4d, 0x4c, 0x4d, 0x4c,
+                            0x8b, 0xf0, 0x00, 0x15, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xc2,
+                            0x57, 0x9c, 0x31, 0xb3, 0x2a, 0xa1, 0x86, 0xba, 0x9a, 0xed, 0x5a, 0xb9, 0xa3, 0x59,
+                            0x88, 0xeb, 0xbb, 0x0d, 0xc3, 0xed, 0xeb, 0x8a, 0x53, 0xa6, 0xed, 0xf7, 0xdd, 0x45,
+                            0x6e, 0xf7, 0x9a, 0x17, 0xb4, 0xab, 0xc6, 0x75, 0x71, 0x46, 0x37, 0x93, 0x4a, 0x32,
+                            0xb1, 0x21, 0x9f, 0x9d, 0xb3, 0x65, 0x27, 0xd5, 0xfc, 0x50, 0x16, 0x90, 0xd2, 0xd4};
+    receivedFrame.mPsdu   = data_psdu1;
+    receivedFrame.mLength = sizeof(data_psdu1);
+
+    ackFrame.GenerateImmAck(&receivedFrame, false);
+    VerifyOrQuit(ackFrame.mLength == Mac::Frame::kImmAckLength,
+                 "Mac::Frame::GenerateImmAck() failed, length incorrect\n");
+    VerifyOrQuit(ackFrame.GetType() == Mac::Frame::kFcfFrameAck,
+                 "Mac::Frame::GenerateImmAck() failed, GetType() incorrect\n");
+    VerifyOrQuit(ackFrame.GetSecurityEnabled() == false,
+                 "Mac::Frame::GenerateImmAck failed, GetSecurityEnabled() incorrect\n");
+    VerifyOrQuit(ackFrame.GetFramePending() == false,
+                 "Mac::Frame::GenerateImmAck failed, GetFramePending() incorrect\n");
+    VerifyOrQuit(ackFrame.GetAckRequest() == false, "Mac::Frame::GenerateImmAck failed, GetAckRequest() incorrect\n");
+    VerifyOrQuit(ackFrame.IsIePresent() == false, "Mac::Frame::GenerateImmAck failed, IsIePresent() incorrect\n");
+    VerifyOrQuit(ackFrame.IsDstPanIdPresent() == false,
+                 "Mac::Frame::GenerateImmAck failed, IsDstPanIdPresent() incorrect\n");
+    VerifyOrQuit(ackFrame.IsDstAddrPresent() == false,
+                 "Mac::Frame::GenerateImmAck failed, IsDstAddrPresent() incorrect\n");
+    VerifyOrQuit(ackFrame.IsSrcAddrPresent() == false,
+                 "Mac::Frame::GenerateImmAck failed, IsSrcAddrPresent() incorrect\n");
+    VerifyOrQuit(ackFrame.GetVersion() == Mac::Frame::kFcfFrameVersion2006,
+                 "Mac::Frame::GenerateImmAck failed, GetVersion() incorrect\n");
+    VerifyOrQuit(ackFrame.GetSequence() == 189, "Mac::Frame::GenerateImmAck failed, GetSequence() incorrect\n");
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    // Received Frame 2
+    // IEEE 802.15.4 Data
+    //   Frame Control Field: 0xa869, Frame Type: Data, Security Enabled, Acknowledge Request, PAN ID Compression,
+    //   Destination Addressing Mode: Short/16-bit, Frame Version: IEEE Std 802.15.4-2015, Source Addressing Mode:
+    //   Short/16-bit
+    //     .... .... .... .001 = Frame Type: Data (0x1)
+    //     .... .... .... 1... = Security Enabled: True
+    //     .... .... ...0 .... = Frame Pending: False
+    //     .... .... ..1. .... = Acknowledge Request: True
+    //     .... .... .1.. .... = PAN ID Compression: True
+    //     .... ...0 .... .... = Sequence Number Suppression: False
+    //     .... ..0. .... .... = Information Elements Present: False
+    //     .... 10.. .... .... = Destination Addressing Mode: Short/16-bit (0x2)
+    //     ..10 .... .... .... = Frame Version: IEEE Std 802.15.4-2015 (2)
+    //     10.. .... .... .... = Source Addressing Mode: Short/16-bit (0x2)
+    //   Sequence Number: 142
+    //   Destination PAN: 0xface
+    //   Destination: 0x2402
+    //   Source: 0x2400
+    //   [Extended Source: 16:6e:0a:00:00:00:00:01 (16:6e:0a:00:00:00:00:01)]
+    //   [Origin: 2]
+    //   Auxiliary Security Header
+    //     Security Control Field: 0x0d, Security Level: Encryption with 32-bit Message Integrity Code, Key Identifier
+    //     Mode: Indexed Key using the Default Key Source
+    //       .... .101 = Security Level: Encryption with 32-bit Message Integrity Code (0x5)
+    //       ...0 1... = Key Identifier Mode: Indexed Key using the Default Key Source (0x1)
+    //       ..0. .... = Frame Counter Suppression: False
+    //       .0.. .... = ASN in Nonce: False
+    //       0... .... = Reserved: 0x0
+    //     Frame Counter: 2
+    //     Key Identifier Field
+    //       Key Index: 0x01
+    //   MIC: f94e5870
+    //   [Key Number: 0]
+    //   FCS: 0x8c40 (Correct)
+    uint8_t data_psdu2[]  = {0x69, 0xa8, 0x8e, 0xce, 0xfa, 0x02, 0x24, 0x00, 0x24, 0x0d, 0x02,
+                            0x00, 0x00, 0x00, 0x01, 0x6b, 0x64, 0x60, 0x08, 0x55, 0xb8, 0x10,
+                            0x18, 0xc7, 0x40, 0x2e, 0xfb, 0xf3, 0xda, 0xf9, 0x4e, 0x58, 0x70};
+    receivedFrame.mPsdu   = data_psdu2;
+    receivedFrame.mLength = sizeof(data_psdu2);
+
+    uint8_t     ie_data[6] = {0x04, 0x0d, 0x21, 0x0c, 0x35, 0x0c};
+    Mac::CslIe *csl;
+
+    ackFrame.GenerateEnhAck(&receivedFrame, false, ie_data, sizeof(ie_data));
+    csl = reinterpret_cast<Mac::CslIe *>(ackFrame.GetHeaderIe(Mac::Frame::kHeaderIeCsl) + sizeof(Mac::HeaderIe));
+    VerifyOrQuit(ackFrame.mLength == 23,
+                 "Mac::Frame::GenerateEnhAck() failed, length incorrect\n"); // 23 is the length of the correct ack
+    VerifyOrQuit(ackFrame.GetType() == Mac::Frame::kFcfFrameAck,
+                 "Mac::Frame::GenerateEnhAck() failed, GetType() incorrect\n");
+    VerifyOrQuit(ackFrame.GetSecurityEnabled() == true,
+                 "Mac::Frame::GenerateEnhAck failed, GetSecurityEnabled() incorrect\n");
+    VerifyOrQuit(ackFrame.IsIePresent() == true, "Mac::Frame::GenerateEnhAck failed, IsIePresent() incorrect\n");
+    VerifyOrQuit(ackFrame.IsDstPanIdPresent() == false,
+                 "Mac::Frame::GenerateEnhAck failed, IsDstPanIdPresent() incorrect\n");
+    VerifyOrQuit(ackFrame.IsDstAddrPresent() == true,
+                 "Mac::Frame::GenerateEnhAck failed, IsDstAddrPresent() incorrect\n");
+    VerifyOrQuit(ackFrame.IsSrcAddrPresent() == false,
+                 "Mac::Frame::GenerateEnhAck failed, IsSrcAddrPresent() incorrect\n");
+    VerifyOrQuit(ackFrame.GetVersion() == Mac::Frame::kFcfFrameVersion2015,
+                 "Mac::Frame::GenerateEnhAck failed, GetVersion() incorrect\n");
+    VerifyOrQuit(ackFrame.GetSequence() == 142, "Mac::Frame::GenerateEnhAck failed, GetSequence() incorrect\n");
+    VerifyOrQuit(csl->GetPeriod() == 3125 && csl->GetPhase() == 3105,
+                 "Mac::Frame::GenerateEnhAck failed, CslIe incorrect\n");
+
+    ackFrame.SetCslIe(123, 456);
+    csl = reinterpret_cast<Mac::CslIe *>(ackFrame.GetHeaderIe(Mac::Frame::kHeaderIeCsl) + sizeof(Mac::HeaderIe));
+    VerifyOrQuit(csl->GetPeriod() == 123 && csl->GetPhase() == 456, "Mac::Frame::SetCslIe failed, CslIe incorrect\n");
+#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+}
+
 } // namespace ot
 
 int main(void)
@@ -478,6 +606,7 @@ int main(void)
     ot::TestMacHeader();
     ot::TestMacChannelMask();
     ot::TestMacFrameApi();
+    ot::TestMacFrameAckGeneration();
     printf("All tests passed\n");
     return 0;
 }

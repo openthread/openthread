@@ -174,6 +174,18 @@ void Frame::SetAckRequest(bool aAckRequest)
     }
 }
 
+void Frame::SetPanIdCompression(bool aPanIdCompression)
+{
+    if (aPanIdCompression)
+    {
+        GetPsdu()[0] |= kFcfPanidCompression;
+    }
+    else
+    {
+        GetPsdu()[0] &= ~kFcfPanidCompression;
+    }
+}
+
 void Frame::SetFramePending(bool aFramePending)
 {
     if (aFramePending)
@@ -253,7 +265,11 @@ void Frame::SetDstPanId(PanId aPanId)
 
 uint8_t Frame::FindDstAddrIndex(void) const
 {
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    return kFcfSize + kDsnSize + (IsDstPanIdPresent() ? sizeof(PanId) : 0);
+#else
     return kFcfSize + kDsnSize + sizeof(PanId);
+#endif
 }
 
 otError Frame::GetDstAddr(Address &aAddress) const
@@ -346,7 +362,7 @@ exit:
     return index;
 }
 
-bool Frame::IsSrcPanIdPresent(uint16_t aFcf) const
+bool Frame::IsSrcPanIdPresent(uint16_t aFcf)
 {
     bool srcPanIdPresent = false;
 
@@ -766,6 +782,32 @@ void Frame::SetPayloadLength(uint16_t aLength)
     SetPsduLength(GetHeaderLength() + GetFooterLength() + aLength);
 }
 
+uint8_t Frame::GetSecurityHeaderLength(uint8_t aSecurityControl)
+{
+    uint8_t length = kSecurityControlSize + kFrameCounterSize;
+
+    switch (aSecurityControl & kKeyIdModeMask)
+    {
+    case kKeyIdMode0:
+        length += kKeySourceSizeMode0;
+        break;
+
+    case kKeyIdMode1:
+        length += kKeySourceSizeMode1 + kKeyIndexSize;
+        break;
+
+    case kKeyIdMode2:
+        length += kKeySourceSizeMode2 + kKeyIndexSize;
+        break;
+
+    case kKeyIdMode3:
+        length += kKeySourceSizeMode3 + kKeyIndexSize;
+        break;
+    }
+
+    return length;
+}
+
 uint8_t Frame::SkipSecurityHeaderIndex(void) const
 {
     uint8_t  index = SkipAddrFieldIndex();
@@ -780,26 +822,7 @@ uint8_t Frame::SkipSecurityHeaderIndex(void) const
         VerifyOrExit(index < GetPsduLength(), index = kInvalidIndex);
         uint8_t securityControl = *(GetPsdu() + index);
 
-        index += kSecurityControlSize + kFrameCounterSize;
-
-        switch (securityControl & kKeyIdModeMask)
-        {
-        case kKeyIdMode0:
-            index += kKeySourceSizeMode0;
-            break;
-
-        case kKeyIdMode1:
-            index += kKeySourceSizeMode1 + kKeyIndexSize;
-            break;
-
-        case kKeyIdMode2:
-            index += kKeySourceSizeMode2 + kKeyIndexSize;
-            break;
-
-        case kKeyIdMode3:
-            index += kKeySourceSizeMode3 + kKeyIndexSize;
-            break;
-        }
+        index += GetSecurityHeaderLength(securityControl);
     }
 
 exit:
@@ -932,6 +955,143 @@ const uint8_t *Frame::GetFooter(void) const
     return GetPsdu() + GetPsduLength() - GetFooterLength();
 }
 
+void Frame::GenerateImmAck(const Frame *aFrame, bool aIsFramePending)
+{
+    memset(this->mPsdu, 0, this->mLength);
+
+    this->mPsdu[0] |= kFcfFrameAck;
+    if (aIsFramePending)
+    {
+        this->mPsdu[0] |= kFcfFramePending;
+    }
+    reinterpret_cast<uint16_t *>(this->mPsdu)[0] |= aFrame->GetVersion();
+
+    this->mPsdu[2] = aFrame->GetSequence();
+
+    this->mLength = kImmAckLength;
+}
+
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+void Frame::GenerateEnhAck(const Frame *aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength)
+{
+    uint8_t footerLength;
+
+    SetFrameControlFieldForAck(aFrame, aIsFramePending, aIeLength, this);
+    this->mPsdu[2] = aFrame->GetSequence();
+    SetDstPanIdAndAddrForAck(aFrame, this);
+    SetSecurityHeaderForAck(aFrame, this);
+
+    if (aIeLength > 0)
+    {
+        this->SetPsduLength(kInvalidIndex); // At this time the lenght of ACK hasn't been determined, set it to
+                                            // `kInvalidIndex` to find call FindHeaderIeIndex method
+        memcpy(this->GetPsdu() + this->FindHeaderIeIndex(), aIeData, aIeLength);
+    }
+
+    footerLength = this->GetFooterLength();
+    OT_ASSERT(footerLength != kInvalidIndex);
+    this->mLength = this->FindHeaderIeIndex() + aIeLength + this->GetFooterLength();
+}
+#endif
+
+void Frame::SetFrameControlFieldForAck(const Frame *aFrame,
+                                       bool         aIsFramePending,
+                                       uint8_t      aIeLength,
+                                       Frame *      aAckFrame) const
+{
+    memset(aAckFrame->mPsdu, 0, kFcfSize);
+    aAckFrame->mPsdu[0] |= kFcfFrameAck;
+    reinterpret_cast<uint16_t *>(aAckFrame->mPsdu)[0] |= kFcfFrameVersion2015;
+
+    if (aIsFramePending)
+    {
+        aAckFrame->mPsdu[0] |= kFcfFramePending;
+    }
+
+    if (aFrame->GetSecurityEnabled())
+    {
+        aAckFrame->mPsdu[0] |= kFcfSecurityEnabled;
+    }
+
+    aAckFrame->SetPanIdCompression(aFrame->GetPanIdCompression());
+
+    // Dst addr mode
+    if ((aFrame->GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrExt)
+    {
+        reinterpret_cast<uint16_t *>(aAckFrame->mPsdu)[0] |= kFcfDstAddrExt;
+    }
+    else if ((aFrame->GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrShort)
+    {
+        reinterpret_cast<uint16_t *>(aAckFrame->mPsdu)[0] |= kFcfDstAddrShort;
+    }
+    else
+    {
+        reinterpret_cast<uint16_t *>(aAckFrame->mPsdu)[0] |= kFcfDstAddrNone;
+    }
+
+    reinterpret_cast<uint16_t *>(aAckFrame->mPsdu)[0] |= kFcfSrcAddrNone;
+
+    if (aIeLength > 0)
+    {
+        reinterpret_cast<uint16_t *>(aAckFrame->mPsdu)[0] |= kFcfIePresent;
+    }
+}
+
+otError Frame::SetDstPanIdAndAddrForAck(const Frame *aFrame, Frame *aAckFrame) const
+{
+    otError  error = OT_ERROR_NONE;
+    uint16_t fcf   = aFrame->GetFrameControlField();
+    PanId    panId;
+    Address  address;
+
+    if (IsSrcPanIdPresent(fcf))
+    {
+        SuccessOrExit(error = aFrame->GetSrcPanId(panId));
+    }
+    else if (IsDstPanIdPresent(fcf))
+    {
+        SuccessOrExit(error = aFrame->GetDstPanId(panId));
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+
+    if (aAckFrame->IsDstPanIdPresent())
+    {
+        aAckFrame->SetDstPanId(panId);
+    }
+
+    if (aFrame->IsSrcAddrPresent(fcf))
+    {
+        SuccessOrExit(error = aFrame->GetSrcAddr(address));
+        aAckFrame->SetDstAddr(address);
+    }
+
+exit:
+    printf("SetDstPanIdAndAddr, error:%u\n", error);
+    return error;
+}
+
+otError Frame::SetSecurityHeaderForAck(const Frame *aFrame, Frame *aAckFrame) const
+{
+    otError  error                = OT_ERROR_NONE;
+    uint8_t  securityControlField = 0;
+    uint32_t frameCounter         = 0;
+    uint8_t  keyId                = 0;
+
+    SuccessOrExit(error = aFrame->GetSecurityControlField(securityControlField));
+    SuccessOrExit(error = aFrame->GetFrameCounter(frameCounter));
+    SuccessOrExit(error = aFrame->GetKeyId(keyId));
+
+    aAckFrame->SetSecurityControlField(securityControlField);
+    aAckFrame->SetFrameCounter(frameCounter);
+    aAckFrame->SetKeyId(keyId);
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 uint8_t Frame::FindHeaderIeIndex(void) const
 {
@@ -1005,6 +1165,24 @@ exit:
     return cur;
 }
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+otError Frame::SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase)
+{
+    otError  error = OT_ERROR_NONE;
+    uint8_t *cur   = GetHeaderIe(Frame::kHeaderIeCsl);
+    CslIe *  csl;
+
+    VerifyOrExit(cur != NULL, error = OT_ERROR_PARSE);
+
+    csl = reinterpret_cast<CslIe *>(cur + sizeof(HeaderIe));
+    csl->SetPeriod(aCslPeriod);
+    csl->SetPhase(aCslPhase);
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 const TimeIe *Frame::GetTimeIe(void) const

@@ -212,12 +212,13 @@
  * Define as 1 to support IEEE 802.15.4-2015 Header IE (Information Element) generation and parsing, it must be set
  * to support following features:
  *    1. Time synchronization service feature (i.e., OPENTHREAD_CONFIG_TIME_SYNC_ENABLE is set).
+ *    2. Thread 1.2.
  *
  * @note If it's enabled, platform must support interrupt context and concurrent access AES.
  *
  */
 #ifndef OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE || (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 #define OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT 1
 #else
 #define OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT 0
@@ -252,6 +253,28 @@
  */
 #ifndef OPENTHREAD_CONFIG_MAC_RETX_POLL_PERIOD
 #define OPENTHREAD_CONFIG_MAC_RETX_POLL_PERIOD 1000
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE
+ *
+ * This setting configures csl transmit feature in Thread 1.2.
+ * This is compulsory for 1.2 FTD.
+ *
+ */
+#define OPENTHREAD_CONFIG_CSL_TRANSMITTER_ENABLE \
+    (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2) && OPENTHREAD_FTD
+
+/**
+ * @def OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+ *
+ * This setting configures csl receiver feature in Thread 1.2.
+ * This is compulsory for 1.2 MTD, optional for 1.2 FTD.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+#define OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE \
+    (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2) && OPENTHREAD_MTD
 #endif
 
 #endif // CONFIG_MAC_H_

@@ -38,6 +38,8 @@
 
 #include <openthread/platform/radio.h>
 
+#include "openthread-core-config.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -160,6 +162,55 @@ uint8_t otMacFrameGetSequence(const otRadioFrame *aFrame);
  *
  */
 void otMacFrameProcessTransmitAesCcm(otRadioFrame *aFrame, const otExtAddress *aExtAddress);
+
+/**
+ * Tell if the version of @p aFrame is 2015.
+ *
+ * @param[in]   aFrame          A pointer to the frame.
+ *
+ * @retval  true    It is a version 2015 frame.
+ * @retval  false   It is not a version 2015 frame.
+ *
+ */
+bool otMacFrameIsVersion2015(const otRadioFrame *aFrame);
+
+/**
+ * Generate Imm-Ack for @p aFrame.
+ *
+ * @param[in]    aFrame             A pointer to the frame.
+ * @param[in]    aIsFramePending    If the ACK's frame pending bit should be set.
+ * @param[out]   aAckFrame          A pointer to the ack frame to be generated.
+ *
+ */
+void otMacFrameGenerateImmAck(const otRadioFrame *aFrame, bool aIsFramePending, otRadioFrame *aAckFrame);
+
+/**
+ * Generate Enh-Ack for @p aFrame.
+ *
+ * @param[in]    aFrame             A pointer to the frame.
+ * @param[in]    aIsFramePending    If the ACK's frame pending bit should be set.
+ * @param[in]    aIeData            A pointer to the IE data pattern of the ACK to be sent.
+ * @param[in]    aIeLength          The length of IE data pattern of the ACK to be sent.
+ * @param[out]   aAckFrame          A pointer to the ack frame to be generated.
+ *
+ */
+void otMacFrameGenerateEnhAck(const otRadioFrame *aFrame,
+                              bool                aIsFramePending,
+                              const uint8_t *     aIeData,
+                              uint8_t             aIeLength,
+                              otRadioFrame *      aAckFrame);
+
+/**
+ * Set CSL IE content into the frame.
+ *
+ * @param[in]    aFrame         A pointer to the frame to be modified.
+ * @param[in]    aCslPeriod     CSL Period in CSL IE.
+ * @param[in]    aCslPhase      CSL Phase in CSL IE.
+ *
+ * @retval  OT_ERROR_NONE   Successfully modify CSL IE in the frame.
+ * @retval  OT_ERROR_PARSE  CSL IE is not found into the frame.
+ */
+otError otMacFrameSetCslIe(otRadioFrame *aFrame, uint16_t aCslPeriod, uint16_t aCslPhase);
 
 #ifdef __cplusplus
 } // extern "C"

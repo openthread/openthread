@@ -394,6 +394,8 @@ jobs:
       run: |
         ./bootstrap
         ./script/test build
+      run: |
+        ./script/test unit
     - name: Run
       run: |
         ./script/test cert_suite tests/scripts/thread-cert/v1_2_*
