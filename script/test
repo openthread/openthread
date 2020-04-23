@@ -32,7 +32,6 @@
 
 set -euo pipefail
 
-readonly OT_BUILD_JOBS=$(getconf _NPROCESSORS_ONLN)
 readonly OT_BUILDDIR="$(pwd)/build"
 readonly OT_SRCDIR="$(pwd)"
 readonly OT_TEST_COMMON_OPTIONS=(
@@ -317,24 +316,41 @@ EXAMPLES:
 
 do_package() {
     local builddir="${OT_BUILDDIR}/cmake/openthread-sim"
+    local options=(
+        "-DOT_BORDER_AGENT=ON"
+        "-DOT_BORDER_ROUTER=ON"
+        "-DOT_CHILD_SUPERVISION=ON"
+        "-DOT_COMMISSIONER=ON"
+        "-DOT_DIAGNOSTIC=ON"
+        "-DOT_IP6_FRAGM=ON"
+        "-DOT_JAM_DETECTION=ON"
+        "-DOT_JOINER=ON"
+        "-DOT_LOG_LEVEL_DYNAMIC=ON"
+        "-DOT_MAC_FILTER=ON"
+        "-DOT_SERVICE=ON"
+        "-DOT_SLAAC=ON"
+    )
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
-        && cmake "${OT_SRCDIR}" -DOT_PLATFORM="simulation" \
-        && make -j"${OT_BUILD_JOBS}" package \
+        && cmake -GNinja "${OT_SRCDIR}" -DOT_PLATFORM="simulation" \
+        "${options[@]}" \
+        && ninja package \
         && ls "${builddir}"/openthread-simulation-*.deb)
 
     builddir="${OT_BUILDDIR}/cmake/openthread-host"
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
-        && cmake "${OT_SRCDIR}" -DOT_PLATFORM="posix" \
-        && make -j"${OT_BUILD_JOBS}" package \
+        && cmake -GNinja "${OT_SRCDIR}" -DOT_PLATFORM="posix" \
+        "${options[@]}" \
+        && ninja package \
         && ls "${builddir}"/openthread-standalone-*.deb)
 
     builddir="${OT_BUILDDIR}/cmake/openthread-daemon"
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
-        && cmake "${OT_SRCDIR}" -DOT_PLATFORM="posix" -DOT_DAEMON=1 -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 \
-        && make -j"${OT_BUILD_JOBS}" package \
+        && cmake -GNinja "${OT_SRCDIR}" -DOT_PLATFORM="posix" -DOT_DAEMON=1 -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 \
+        "${options[@]}" \
+        && ninja package \
         && ls "${builddir}"/openthread-daemon-*.deb)
 }
 
