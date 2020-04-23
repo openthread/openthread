@@ -339,6 +339,17 @@ void platformRadioInit(void)
 #endif
 }
 
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+uint16_t getCslPhase()
+{
+    uint32_t curTime       = otPlatAlarmMicroGetNow();
+    uint32_t cslPeriodInUs = sCslPeriod * OT_US_PER_TEN_SYMBOLS;
+    uint32_t diff = ((sCslSampleTime % cslPeriodInUs) - (curTime % cslPeriodInUs) + cslPeriodInUs) % cslPeriodInUs;
+
+    return (uint16_t)(diff / OT_US_PER_TEN_SYMBOLS);
+}
+#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -554,6 +565,13 @@ void radioSendMessage(otInstance *aInstance)
     }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
+#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+    if (sCslPeriod > 0)
+    {
+        otMacFrameSetCslIe(&sTransmitFrame, (uint16_t)sCslPeriod, getCslPhase());
+    }
+#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
+
     if (processTransmitAesCcm)
     {
         otMacFrameProcessTransmitAesCcm(&sTransmitFrame, &sExtAddress);
@@ -750,17 +768,6 @@ void radioGenerateAck(void)
         otMacFrameGenerateImmAck(&sReceiveFrame, sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending, &sAckFrame);
     }
 }
-
-#if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
-uint16_t getCslPhase()
-{
-    uint32_t curTime       = otPlatAlarmMicroGetNow();
-    uint32_t cslPeriodInUs = sCslPeriod * OT_US_PER_TEN_SYMBOLS;
-    uint32_t diff = ((sCslSampleTime % cslPeriodInUs) - (curTime % cslPeriodInUs) + cslPeriodInUs) % cslPeriodInUs;
-
-    return (uint16_t)(diff / OT_US_PER_TEN_SYMBOLS);
-}
-#endif // OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
 
 void radioSendAck(otInstance *aInstance)
 {
