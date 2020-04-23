@@ -1,5 +1,4 @@
-OpenThread POSIX app
-====================
+# OpenThread POSIX app
 
 OpenThread supports running its core on POSIX and transmits radio frames through a radio transceiver.
 
@@ -17,8 +16,7 @@ The figure below shows the architecture of OpenThread running in transceiver mod
          POSIX                                          Chip
 ```
 
-Build
------
+## Build
 
 ```sh
 # build core for POSIX
@@ -27,11 +25,9 @@ make -f src/posix/Makefile-posix
 make -f examples/Makefile-xxxx
 ```
 
-Test
-----
+## Test
 
-**NOTE** Assuming the build system is 64bit Linux, you can use the normal OpenThread CLI as described in the [command line document](../../src/cli/README.md).
-You can also perform radio diagnostics using the command [diag](../../src/core/diags/README.md).
+**NOTE** Assuming the build system is 64bit Linux, you can use the normal OpenThread CLI as described in the [command line document](../../src/cli/README.md). You can also perform radio diagnostics using the command [diag](../../src/core/diags/README.md).
 
 ### With Simulation
 
@@ -44,7 +40,7 @@ make -f examples/Makefile-simulation
 
 #### nRF52840
 
-* USB=0
+- USB=0
 
 ```sh
 make -f examples/Makefile-nrf52840
@@ -65,7 +61,7 @@ EOF
 ./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli /dev/ttyACM0 115200
 ```
 
-* USB=1
+- USB=1
 
 ```sh
 # without USB=1 may result in failure for serial port issue
@@ -86,10 +82,9 @@ python cc2538-bsl/cc2538-bsl.py -b 460800 -e -w -v -p /dev/ttyUSB0 ot-rcp.bin
 ./output/posix/x86_64-unknown-linux-gnu/bin/ot-cli /dev/ttyUSB0 115200
 ```
 
-Wpantund Support
-----------------
+## Wpantund Support
 
-**NOTE** Assuming the build system is 64bit Linux and *wpantund* is already installed and **stopped**.
+**NOTE** Assuming the build system is 64bit Linux and _wpantund_ is already installed and **stopped**.
 
 ### With Simulation
 
@@ -106,11 +101,9 @@ sudo wpantund -s 'system:./output/posix/x86_64-unknown-linux-gnu/bin/ot-ncp /dev
 sudo wpantund -s 'system:./output/posix/x86_64-unknown-linux-gnu/bin/ot-ncp /dev/ttyUSB0 115200'
 ```
 
-Daemon Mode Support
--------------------
+## Daemon Mode Support
 
-OpenThread Posix Daemon mode uses a unix socket as input and output, so that OpenThread core can run as a service. And a client
-can communicate with it by connecting to the socket. The protocol is OpenThread CLI.
+OpenThread Posix Daemon mode uses a unix socket as input and output, so that OpenThread core can run as a service. And a client can communicate with it by connecting to the socket. The protocol is OpenThread CLI.
 
 ```
 # build daemon mode core stack for POSIX

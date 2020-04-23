@@ -1,14 +1,11 @@
 # OpenThread on SAMR21 Example
 
-This directory contains example platform drivers for the [Microchip ATSAMR21G18A][samr21]
-based on [SAM R21 Xplained Pro Evaluation Kit][SAMR21_XPLAINED_PRO].
+This directory contains example platform drivers for the [Microchip ATSAMR21G18A][samr21] based on [SAM R21 Xplained Pro Evaluation Kit][samr21_xplained_pro].
 
 [samr21]: http://www.microchip.com/wwwproducts/en/ATSAMR21G18A
-[SAMR21_XPLAINED_PRO]: https://www.microchip.com/DevelopmentTools/ProductDetails/ATSAMR21-XPRO
+[samr21_xplained_pro]: https://www.microchip.com/DevelopmentTools/ProductDetails/ATSAMR21-XPRO
 
-The example platform drivers are intended to present the minimal code
-necessary to support OpenThread. See the "Run the example with SAMR21 boards" section below
-for an example using basic OpenThread capabilities.
+The example platform drivers are intended to present the minimal code necessary to support OpenThread. See the "Run the example with SAMR21 boards" section below for an example using basic OpenThread capabilities.
 
 ## Toolchain
 
@@ -16,8 +13,7 @@ Download and install the [GNU toolchain for ARM Cortex-M][gnu-toolchain].
 
 [gnu-toolchain]: https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm
 
-In a Bash terminal, follow these instructions to install the GNU toolchain and
-other dependencies.
+In a Bash terminal, follow these instructions to install the GNU toolchain and other dependencies.
 
 ```bash
 $ cd <path-to-openthread>
@@ -26,14 +22,14 @@ $ ./script/bootstrap
 
 ## Build Examples
 
-1. Download [Advanced Software Framework (ASF)][ASF].
+1. Download [Advanced Software Framework (ASF)][asf].
 
-[ASF]: https://www.microchip.com/mplab/avr-support/advanced-software-framework
+[asf]: https://www.microchip.com/mplab/avr-support/advanced-software-framework
 
 2. Unzip it to <path-to-openthread>/third_party/microchip folder
 
 ```bash
-$ unzip asf-standalone-archive-3.45.0.85.zip 
+$ unzip asf-standalone-archive-3.45.0.85.zip
 $ cp xdk-asf-3.45.0 -rf  <path-to-openthread>/third_party/microchip/asf
 ```
 
@@ -46,34 +42,32 @@ $ make -f examples/Makefile-samr21
 ```
 
 4. This example can be built for other SAMR21 based modules e.g.:
-* [ATSAMR21G18-MR210UA][MODULE-MR210UA]
-* [ATSAMR21B18-MZ210PA][MODULE-MZ210PA]
+
+- [ATSAMR21G18-MR210UA][module-mr210ua]
+- [ATSAMR21B18-MZ210PA][module-mz210pa]
 
 To build for these modules set BOARD variable in command line as following:
+
 ```bash
 $ make -f examples/Makefile-samr21 BOARD=<MODULE>
 ```
 
 where:
 
-
 | `<module>`            | Board                               |
-| ----------------------|-------------------------------------|
+| --------------------- | ----------------------------------- |
 | `SAMR21_XPLAINED_PRO` | SAM R21 Xplained Pro Evaluation Kit |
 | `SAMR21G18_MODULE`    | ATSAMR21G18-MR210UA                 |
 | `SAMR21B18_MODULE`    | ATSAMR21B18-MZ210PA                 |
 
-[MODULE-MR210UA]: http://ww1.microchip.com/downloads/en/devicedoc/atmel-42475-atsamr21g18-mr210ua_datasheet.pdf
-[MODULE-MZ210PA]: http://ww1.microchip.com/downloads/en/devicedoc/atmel-42486-atsamr21b18-mz210pa_datasheet.pdf
+[module-mr210ua]: http://ww1.microchip.com/downloads/en/devicedoc/atmel-42475-atsamr21g18-mr210ua_datasheet.pdf
+[module-mz210pa]: http://ww1.microchip.com/downloads/en/devicedoc/atmel-42486-atsamr21b18-mz210pa_datasheet.pdf
 
-
-After a successful build, the `elf` files are found in
-`<path-to-openthread>/output/samr21/bin`.
+After a successful build, the `elf` files are found in `<path-to-openthread>/output/samr21/bin`.
 
 ## Flash Binaries
 
-Compiled binaries may be flashed onto the SAM R21 Xplained Pro using embedded
-debugger EDBG.
+Compiled binaries may be flashed onto the SAM R21 Xplained Pro using embedded debugger EDBG.
 
 ```bash
 $ openocd -f board/atmel_samr21_xplained_pro.cfg
@@ -86,9 +80,9 @@ $ (gdb) c
 ```
 
 ## Run the example with SAM R21 Xplained Pro boards
+
 1. Flash two SAM R21 Xplained Pro boards with the `CLI example` firmware (as shown above).
-2. Open terminal to first device `/dev/ttyACM0` (serial port settings: 115200 8-N-1).
-   Type `help` for a list of commands.
+2. Open terminal to first device `/dev/ttyACM0` (serial port settings: 115200 8-N-1). Type `help` for a list of commands.
 
    ```bash
    > help
@@ -147,13 +141,13 @@ $ (gdb) c
 
    wait a couple of seconds...
 
-   > state
-   leader
-   Done
+   > state leader Done
+
    ```
 
-4. Open terminal to second device `/dev/ttyACM1` (serial port settings: 115200 8-N-1)
-   and attach it to the Thread network as a Router.
+   ```
+
+4. Open terminal to second device `/dev/ttyACM1` (serial port settings: 115200 8-N-1) and attach it to the Thread network as a Router.
 
    ```bash
    > dataset masterkey dfd34f0f05cad978ec4e32b0413038ff
@@ -192,8 +186,7 @@ $ (gdb) c
    16 bytes from fd3d:b50b:f96d:722d:558:f56b:d688:799: icmp_seq=1 hlim=64 time=24ms
    ```
 
-The above example demonstrates basic OpenThread capabilities. Enable more features/roles (e.g. commissioner,
-joiner, DHCPv6 Server/Client, etc.) by assigning compile-options before compiling.
+The above example demonstrates basic OpenThread capabilities. Enable more features/roles (e.g. commissioner, joiner, DHCPv6 Server/Client, etc.) by assigning compile-options before compiling.
 
 ```bash
 $ cd <path-to-openthread>
@@ -201,14 +194,15 @@ $ ./bootstrap
 $ make -f examples/Makefile-samr21 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1
 ```
 
-For a list of all available commands, visit [OpenThread CLI Reference README.md][CLI].
+For a list of all available commands, visit [OpenThread CLI Reference README.md][cli].
 
-[CLI]: https://github.com/openthread/openthread/blob/master/src/cli/README.md
+[cli]: https://github.com/openthread/openthread/blob/master/src/cli/README.md
 
 ## Other boards
 
 ## Verification
 
 The following toolchain has been used for testing and verification:
-   - gcc version 7.3.1
-   - Advanced Software Framework (ASF) version 3.45.0
+
+- gcc version 7.3.1
+- Advanced Software Framework (ASF) version 3.45.0

@@ -1,8 +1,6 @@
-OpenThread Certification Tests
-==============================
+# OpenThread Certification Tests
 
-Inspector
---------
+## Inspector
 
 Inspect nodes status by the following modification:
 
@@ -37,14 +35,15 @@ face
 ### CLI reference
 
 #### `#` mode
+
 This is selection mode. You may select the node to inspect here.
 
-- `list`      - list available nodes.
-- `exit`      - end inspecting, continue running test case.
-- \<number\>   - select the node with id \<number\>. This will result in entering `>`  mode.
+- `list` - list available nodes.
+- `exit` - end inspecting, continue running test case.
+- \<number\> - select the node with id \<number\>. This will result in entering `>` mode.
 
 #### `>` mode
+
 This is node mode. You may run OpenThread CLI here.
 
-* `exit`      - go back to `#` mode.
-
+- `exit` - go back to `#` mode.
