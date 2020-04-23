@@ -1166,7 +1166,7 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
     const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
     uint8_t linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->mRss);
     Mac::ExtAddress macAddr;
-    uint16_t        sourceAddress = 0xFFFF;
+    uint16_t        sourceAddress = Mac::kShortAddrInvalid;
     LeaderData      leaderData;
     RouteTlv        route;
     uint32_t        partitionId;
