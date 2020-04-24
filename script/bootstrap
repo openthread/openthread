@@ -87,7 +87,7 @@ install_packages_brew()
 
     # add clang-format for pretty
     CLANG_FORMAT_VERSION="clang-format version 6.0"
-    command -v clang-format-6.0 || (command -v clang-format && (clang-format --version | grep -q "${CLANG_FORMAT_VERSION}")) || {
+    command -v clang-format-6.0 || (command -v clang-format && (clang-format --version | grep -q "$CLANG_FORMAT_VERSION")) || {
         brew install llvm@6
         sudo ln -s "$(brew --prefix llvm@6)/bin/clang-format" /usr/local/bin/clang-format-6.0
     }
@@ -113,7 +113,7 @@ install_packages()
     elif command -v brew; then
         PM=brew
     fi
-    install_packages_$PM
+    install_packages_"$PM"
 }
 
 main()

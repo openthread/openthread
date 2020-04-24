@@ -121,7 +121,7 @@ build_nest_common()
         --with-examples=simulation \
         --disable-docs \
         --disable-tests
-    make -j"${OT_BUILD_JOBS}"
+    make -j"$OT_BUILD_JOBS"
     cd ..
 
     options=(
@@ -143,7 +143,7 @@ build_nest_common()
         --disable-docs \
         --disable-tests \
         --with-examples=simulation
-    make -j"${OT_BUILD_JOBS}"
+    make -j"$OT_BUILD_JOBS"
     cd ..
 
     options=(
@@ -163,7 +163,7 @@ build_nest_common()
         --disable-tests \
         --with-vendor-extension=../src/core/common/extension_example.cpp \
         --with-ncp-vendor-hook-source=../src/ncp/example_vendor_hook.cpp
-    make -j"${OT_BUILD_JOBS}"
+    make -j"$OT_BUILD_JOBS"
     cd ..
 }
 

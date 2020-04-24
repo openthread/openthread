@@ -36,12 +36,12 @@ set -euxo pipefail
 check_targets()
 {
     for target in "$@"; do
-        make showcommands "${target}"
-        test -x "out/target/product/generic/system/bin/${target}"
+        make showcommands "$target"
+        test -x "out/target/product/generic/system/bin/$target"
     done
 
     for target in "$@"; do
-        make "clean-${target}" || true
+        make "clean-$target" || true
     done
 }
 

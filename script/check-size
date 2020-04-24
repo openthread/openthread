@@ -31,7 +31,7 @@ set -euo pipefail
 
 readonly OT_TMP_DIR=/tmp/ot-size-report
 readonly OT_SHA_NEW=${GITHUB_SHA:-$(git rev-parse HEAD)}
-readonly OT_SHA_OLD="$(git cat-file -p "${OT_SHA_NEW}" | grep 'parent ' | head -n1 | cut -d' ' -f2)"
+readonly OT_SHA_OLD="$(git cat-file -p "$OT_SHA_NEW" | grep 'parent ' | head -n1 | cut -d' ' -f2)"
 readonly OT_REPORT_FILE=/tmp/size_report
 
 setup_arm_gcc_7()
@@ -43,7 +43,7 @@ setup_arm_gcc_7()
     (cd /tmp/ \
         && wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2 \
         && tar xjf gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2)
-    export PATH=/tmp/gcc-arm-none-eabi-7-2018-q2-update/bin:$PATH
+    export PATH=/tmp/gcc-arm-none-eabi-7-2018-q2-update/bin:"$PATH"
 
     arm-none-eabi-gcc --version
 }
@@ -64,19 +64,19 @@ markdown_size()
     local name
     name=$(basename "$1")
 
-    read -r -a size_old <<< "$(size "$1" | awk '{text+=$1} {bss+=$2} {data+=$3} {total+=$4} END {printf "%d %d %d %d", text, bss, data, total}')"
-    read -r -a size_new <<< "$(size "$2" | awk '{text+=$1} {bss+=$2} {data+=$3} {total+=$4} END {printf "%d %d %d %d", text, bss, data, total}')"
+    read -r -a size_old <<<"$(size "$1" | awk '{text+=$1} {bss+=$2} {data+=$3} {total+=$4} END {printf "%d %d %d %d", text, bss, data, total}')"
+    read -r -a size_new <<<"$(size "$2" | awk '{text+=$1} {bss+=$2} {data+=$3} {total+=$4} END {printf "%d %d %d %d", text, bss, data, total}')"
 
     local -a size_diff
 
     for i in 0 1 2 3; do
         size_diff[$i]="$((size_new["$i"] - size_old["$i"]))"
-        if [[ "${size_diff["$i"]}" != 0 ]]; then
+        if [[ ${size_diff["$i"]} != 0 ]]; then
             size_diff["$i"]=$(printf '%+d' "${size_diff["$i"]}")
         fi
     done
 
-    echo "| ${name} | -${OT_SHA_OLD:0:7} | ${size_old[0]} | ${size_old[1]} | ${size_old[2]} | ${size_old[3]} |"
+    echo "| $name | -${OT_SHA_OLD:0:7} | ${size_old[0]} | ${size_old[1]} | ${size_old[2]} | ${size_old[3]} |"
     echo "|  | +${OT_SHA_NEW:0:7} | ${size_new[0]} | ${size_new[1]} | ${size_new[2]} | ${size_new[3]} |"
     echo "|  | +/- | ${size_diff[0]} | ${size_diff[1]} | ${size_diff[2]} | ${size_diff[3]} |"
 }
@@ -86,14 +86,14 @@ markdown()
     case "$1" in
         init)
             shift
-            markdown_init "$@" > "${OT_REPORT_FILE}"
+            markdown_init "$@" >"$OT_REPORT_FILE"
             ;;
         size)
             shift
-            markdown_size "$@" >> "${OT_REPORT_FILE}"
+            markdown_size "$@" >>"$OT_REPORT_FILE"
             ;;
         post)
-            mdv "${OT_REPORT_FILE}"
+            mdv "$OT_REPORT_FILE"
             ;;
     esac
 }
@@ -128,57 +128,57 @@ size_nrf52840()
         "UDP_FORWARD=1"
     )
 
-    rm -rf "${OT_TMP_DIR}"
+    rm -rf "$OT_TMP_DIR"
 
     # new commit
-    mkdir -p "${OT_TMP_DIR}/b"
-    git archive "${OT_SHA_NEW}" | tar x -C "${OT_TMP_DIR}/b"
+    mkdir -p "$OT_TMP_DIR/b"
+    git archive "$OT_SHA_NEW" | tar x -C "$OT_TMP_DIR/b"
 
-    (cd "${OT_TMP_DIR}/b" \
+    (cd "$OT_TMP_DIR/b" \
         && ./bootstrap \
         && make -f examples/Makefile-nrf52840 "${flags[@]}")
 
     # old commit
     if [[ "${GITHUB_ACTIONS+x}" ]]; then
-        git fetch --depth 1 --no-recurse-submodules origin "${OT_SHA_OLD}"
+        git fetch --depth 1 --no-recurse-submodules origin "$OT_SHA_OLD"
     fi
 
-    mkdir -p "${OT_TMP_DIR}/a"
-    git archive "${OT_SHA_OLD}" | tar x -C "${OT_TMP_DIR}/a"
-    (cd "${OT_TMP_DIR}/a" \
+    mkdir -p "$OT_TMP_DIR/a"
+    git archive "$OT_SHA_OLD" | tar x -C "$OT_TMP_DIR/a"
+    (cd "$OT_TMP_DIR/a" \
         && ./bootstrap \
         && make -f examples/Makefile-nrf52840 "${flags[@]}")
 
     local reporter
 
     # not on GitHub Actions or not a pull request event
-    if [[ ! "${GITHUB_ACTIONS+x}" || ! "${GITHUB_REF-}" =~ ^refs/pull/[0-9]+/merge ]]; then
+    if [[ ! ${GITHUB_ACTIONS+x} || ! ${GITHUB_REF-} =~ ^refs/pull/[0-9]+/merge ]]; then
         reporter=markdown
     else
         reporter=./size-report
-        curl -s "${SIZE_REPORT_URL}/bash" > size-report
+        curl -s "$SIZE_REPORT_URL/bash" >size-report
         chmod a+x size-report
         export OT_SHA_NEW OT_SHA_OLD
     fi
 
-    "${reporter}" init OpenThread
+    "$reporter" init OpenThread
 
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-cli-ftd "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-cli-ftd
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-cli-mtd "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-cli-mtd
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-ncp-ftd "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-ncp-ftd
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-ncp-mtd "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-ncp-mtd
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-rcp     "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-rcp
+    "$reporter" size "$OT_TMP_DIR"/a/output/nrf52840/bin/ot-cli-ftd "$OT_TMP_DIR"/b/output/nrf52840/bin/ot-cli-ftd
+    "$reporter" size "$OT_TMP_DIR"/a/output/nrf52840/bin/ot-cli-mtd "$OT_TMP_DIR"/b/output/nrf52840/bin/ot-cli-mtd
+    "$reporter" size "$OT_TMP_DIR"/a/output/nrf52840/bin/ot-ncp-ftd "$OT_TMP_DIR"/b/output/nrf52840/bin/ot-ncp-ftd
+    "$reporter" size "$OT_TMP_DIR"/a/output/nrf52840/bin/ot-ncp-mtd "$OT_TMP_DIR"/b/output/nrf52840/bin/ot-ncp-mtd
+    "$reporter" size "$OT_TMP_DIR"/a/output/nrf52840/bin/ot-rcp "$OT_TMP_DIR"/b/output/nrf52840/bin/ot-rcp
 
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-cli-ftd.a "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-cli-ftd.a
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-cli-mtd.a "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-cli-mtd.a
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-ftd.a     "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-ftd.a
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-mtd.a     "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-mtd.a
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-ncp-ftd.a "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-ncp-ftd.a
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-ncp-mtd.a "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-ncp-mtd.a
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-rcp.a     "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-rcp.a
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-radio.a   "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-radio.a
+    "$reporter" size "$OT_TMP_DIR"/a/output/nrf52840/lib/libopenthread-cli-ftd.a "$OT_TMP_DIR"/b/output/nrf52840/lib/libopenthread-cli-ftd.a
+    "$reporter" size "$OT_TMP_DIR"/a/output/nrf52840/lib/libopenthread-cli-mtd.a "$OT_TMP_DIR"/b/output/nrf52840/lib/libopenthread-cli-mtd.a
+    "$reporter" size "$OT_TMP_DIR"/a/output/nrf52840/lib/libopenthread-ftd.a "$OT_TMP_DIR"/b/output/nrf52840/lib/libopenthread-ftd.a
+    "$reporter" size "$OT_TMP_DIR"/a/output/nrf52840/lib/libopenthread-mtd.a "$OT_TMP_DIR"/b/output/nrf52840/lib/libopenthread-mtd.a
+    "$reporter" size "$OT_TMP_DIR"/a/output/nrf52840/lib/libopenthread-ncp-ftd.a "$OT_TMP_DIR"/b/output/nrf52840/lib/libopenthread-ncp-ftd.a
+    "$reporter" size "$OT_TMP_DIR"/a/output/nrf52840/lib/libopenthread-ncp-mtd.a "$OT_TMP_DIR"/b/output/nrf52840/lib/libopenthread-ncp-mtd.a
+    "$reporter" size "$OT_TMP_DIR"/a/output/nrf52840/lib/libopenthread-rcp.a "$OT_TMP_DIR"/b/output/nrf52840/lib/libopenthread-rcp.a
+    "$reporter" size "$OT_TMP_DIR"/a/output/nrf52840/lib/libopenthread-radio.a "$OT_TMP_DIR"/b/output/nrf52840/lib/libopenthread-radio.a
 
-    "${reporter}" post
+    "$reporter" post
 }
 
 main()
@@ -186,9 +186,9 @@ main()
     if [[ $# == 0 ]]; then
         setup
         size_nrf52840
-    elif [[ "$1" == setup ]]; then
+    elif [[ $1 == setup ]]; then
         setup
-    elif [[ "$1" == nrf52840 ]]; then
+    elif [[ $1 == nrf52840 ]]; then
         size_nrf52840
     else
         echo "USAGE: $0 [setup|nrf52840]"

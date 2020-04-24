@@ -78,9 +78,9 @@ do_scan_build()
     )
     options+=(
         "-DMBEDTLS_DEBUG_C"
-        "-I$(pwd)/third_party/mbedtls"
-        "-I$(pwd)/third_party/mbedtls/repo/include"
-        "-DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
+        "-I$PWD/third_party/mbedtls"
+        "-I$PWD/third_party/mbedtls/repo/include"
+        '-DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"'
     )
 
     configure_options=(
@@ -96,11 +96,11 @@ do_scan_build()
 
     export CPPFLAGS="${options[*]} -DOPENTHREAD_CONFIG_NCP_SPI_ENABLE=1"
     scan-build ./configure "${configure_options[@]}"
-    scan-build --status-bugs -analyze-headers -v make -j"${OT_BUILD_JOBS}"
+    scan-build --status-bugs -analyze-headers -v make -j"$OT_BUILD_JOBS"
 
     export CPPFLAGS="${options[*]} -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
     scan-build ./configure "${configure_options[@]}"
-    scan-build --status-bugs -analyze-headers -v make -j"${OT_BUILD_JOBS}"
+    scan-build --status-bugs -analyze-headers -v make -j"$OT_BUILD_JOBS"
 }
 
 main()

@@ -35,7 +35,8 @@
 
 set -euo pipefail
 
-die() {
+die()
+{
     echo " *** ERROR:  $*"
     exit 1
 }
@@ -44,7 +45,7 @@ die() {
 # Exit status is 0 if inputs are the same, 1 if different, 2 if trouble.
 
 for file in "$@"; do
-    echo "Checking ${file}"
-    "$(dirname "$0")"/clang-format -style=file "${file}" | diff -u "${file}" - || die "${file} is not pretty."
-    [ -z "$(tail -c1 "${file}")" ] || die "${file} misses EOF newline."
+    echo "Checking $file"
+    "$(dirname "$0")"/clang-format -style=file "$file" | diff -u "$file" - || die "$file is not pretty."
+    [ -z "$(tail -c1 "$file")" ] || die "$file misses EOF newline."
 done
