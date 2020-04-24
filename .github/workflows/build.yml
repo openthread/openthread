@@ -51,7 +51,7 @@ jobs:
         sudo apt autoremove
         sudo apt --no-install-recommends install -y clang-tools clang-format-6.0
         clang-format-6.0 --version
-        python3 -m pip install yapf
+        python3 -m pip install yapf==0.29.0
     - name: Check
       run: |
         script/make-pretty check
