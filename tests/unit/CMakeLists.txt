@@ -34,7 +34,7 @@ set(COMMON_SOURCES
 set(COMMON_LIBS
     openthread-ftd
     openthread-ncp-ftd
-    mbedtls
+    openthread-mbedtls
     util
 )
 

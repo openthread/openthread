@@ -71,7 +71,7 @@ target_link_libraries(openthread-cc2650
     PUBLIC
         cc26x0-driver
     PRIVATE
-        mbedtls
+        openthread-mbedtls
         openthread-platform-utils
 )
 
