@@ -129,8 +129,8 @@
 #include <net/if_tun.h>
 #endif
 
-#include <string.h>
 #include <errno.h>
+#include <string.h>
 #endif
 
 #include <openthread/icmp6.h>
@@ -447,8 +447,8 @@ static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress,
     if ((err != 0) && (errno == EINVAL) && (IN6_IS_ADDR_MC_LINKLOCAL(&mreq.ipv6mr_multiaddr)))
     {
         // FIX ME
-        //	on mac OS (and FreeBSD), the first time we run (but not subsequently), we get a failure on this particular
-        //join 	do we need to bring up the interface at least once prior to joining?
+        // on mac OS (and FreeBSD), the first time we run (but not subsequently), we get a failure on this particular
+        // join. do we need to bring up the interface at least once prior to joining?
 
         char addressString[INET6_ADDRSTRLEN + 1];
         inet_ntop(AF_INET6, mreq.ipv6mr_multiaddr.s6_addr, addressString, sizeof(addressString));
