@@ -1392,6 +1392,8 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
     uint8_t                  length      = 0;
     uint8_t                  counter     = 0;
     uint16_t                 startOffset = aMessage.GetLength();
+    uint8_t                  iterator    = 0; // used to iterate external multicast addresses.
+    Ip6::Address             address;
 
     tlv.SetType(Tlv::kAddressRegistration);
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
@@ -1434,15 +1436,28 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
         VerifyOrExit(counter < OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER, OT_NOOP);
     }
 
-    // For sleepy end device, register external multicast addresses to the parent for indirect transmission
-    if (!IsRxOnWhenIdle())
+    // Append external multicast addresses.  For sleepy end device,
+    // register all external multicast addresses with the parent for
+    // indirect transmission. Since Thread 1.2, non-sleepy MED should
+    // also register external multicast addresses of scope larger than
+    // realm with a 1.2 or higher parent.
+    if (!IsRxOnWhenIdle()
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+        || !GetParent().IsThreadVersion1p1()
+#endif
+    )
     {
-        uint8_t      iterator = 0;
-        Ip6::Address address;
-
-        // append external multicast address
         while (Get<ThreadNetif>().GetNextExternalMulticast(iterator, address) == OT_ERROR_NONE)
         {
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+            // For Thread 1.2 MED, skip multicast address with scope not
+            // larger than realm local when registering.
+            if (IsRxOnWhenIdle() && !address.IsMulticastLargerThanRealmLocal())
+            {
+                continue;
+            }
+#endif
+
             entry.SetUncompressed();
             entry.SetIp6Address(address);
             SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
@@ -1571,7 +1586,16 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
 
     if ((aFlags & (OT_CHANGED_IP6_MULTICAST_SUBSCRIBED | OT_CHANGED_IP6_MULTICAST_UNSUBSCRIBED)) != 0)
     {
-        if (IsChild() && !IsFullThreadDevice() && !IsRxOnWhenIdle())
+        // When multicast subscription changes, SED always notifies its parent as it depends on its
+        // parent for indirect transmission. Since Thread 1.2, MED MAY also notify its parent of 1.2
+        // or higher version as it could depend on its parent to perform Multicast Listener Report.
+        if (IsChild() && !IsFullThreadDevice() &&
+            (!IsRxOnWhenIdle()
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+             || !GetParent().IsThreadVersion1p1()
+#endif
+                 ))
+
         {
             mChildUpdateRequestState = kChildUpdateRequestPending;
             ScheduleMessageTransmissionTimer();
