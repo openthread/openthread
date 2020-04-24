@@ -38,7 +38,7 @@ if(OT_PLATFORM STREQUAL "cc2650")
         INTERFACE
             -T${CMAKE_CURRENT_SOURCE_DIR}/devices/cc26x0/linker_files/cc26x0f128.lds
     )
-elseif(OT_PLATFORM MATCHES "cc(13|26)[0-9]2")
+elseif(OT_PLATFORM STREQUAL "cc1352" OR OT_PLATFORM STREQUAL "cc2652")
     add_library(cc13x2-cc26x2-driver INTERFACE)
 
     target_link_libraries(cc13x2-cc26x2-driver
