@@ -49,9 +49,10 @@ jobs:
         sudo apt update
         sudo apt remove -y clang-6.0 libclang-common-6.0-dev libclang1-6.0 libllvm6.0
         sudo apt autoremove
-        sudo apt --no-install-recommends install -y clang-tools clang-format-6.0
-        clang-format-6.0 --version
+        sudo apt --no-install-recommends install -y cargo clang-tools clang-format-6.0 shellcheck
         python3 -m pip install yapf==0.29.0
+        sudo snap install shfmt
+        cargo install --version 4.1.2 shellharden
     - name: Check
       run: |
         script/make-pretty check
