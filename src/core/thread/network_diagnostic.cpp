@@ -1029,7 +1029,7 @@ exit:
     if (error == OT_ERROR_NONE)
     {
         aNetworkDiagTlv.mType = tlv.GetType();
-        aIterator             = offset - message.GetOffset();
+        aIterator             = static_cast<uint16_t>(offset - message.GetOffset() + tlv.GetSize());
     }
     return error;
 }
