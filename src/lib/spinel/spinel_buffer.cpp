@@ -153,7 +153,7 @@ uint8_t *Buffer::GetUpdatedBufPtr(uint8_t *aBufPtr, uint16_t aOffset, Direction 
 
     case kUnknown:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 
     return ptr;
@@ -196,7 +196,7 @@ uint16_t Buffer::GetDistance(const uint8_t *aStartPtr, const uint8_t *aEndPtr, D
 
     case kUnknown:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 
     return static_cast<uint16_t>(distance);

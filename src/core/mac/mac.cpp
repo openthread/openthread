@@ -1005,7 +1005,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame, bool aProcessAesCcm)
 
     default:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 
     if (aProcessAesCcm)
@@ -1084,7 +1084,7 @@ void Mac::BeginTransmit(void)
 
     default:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -1381,7 +1381,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
 
     default:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 
 exit:
@@ -1422,7 +1422,7 @@ void Mac::HandleTimer(void)
 
     default:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 }
 
@@ -1513,7 +1513,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
 
     default:
         ExitNow();
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 
     KeyManager::GenerateNonce(*extAddress, frameCounter, securityLevel, nonce);

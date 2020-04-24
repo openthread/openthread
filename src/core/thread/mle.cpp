@@ -1703,7 +1703,7 @@ void Mle::HandleAttachTimer(void)
     {
     case kAttachStateIdle:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
 
     case kAttachStateProcessAnnounce:
         ProcessAnnounce();
@@ -2315,7 +2315,7 @@ otError Mle::SendChildUpdateRequest(void)
     case kRoleRouter:
     case kRoleLeader:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 
     destination.SetToLinkLocalAddress(mParent.GetExtAddress());
@@ -3638,7 +3638,7 @@ otError Mle::HandleChildUpdateResponse(const Message &         aMessage,
 
     default:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 
     // Status
@@ -3717,7 +3717,7 @@ otError Mle::HandleChildUpdateResponse(const Message &         aMessage,
 
     default:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 
 exit:
