@@ -357,7 +357,7 @@ public:
      * @returns TRUE if it is a valid Thread 1.1 neighbor, FALSE otherwise.
      *
      */
-    bool IsThreadVersion1_1(void) const { return mState != kStateInvalid && mVersion == OT_THREAD_VERSION_1_1; }
+    bool IsThreadVersion1p1(void) const { return mState != kStateInvalid && mVersion == OT_THREAD_VERSION_1_1; }
 
     /**
      * This method indicates whether Enhanced Keep-Alive is supported or not.
