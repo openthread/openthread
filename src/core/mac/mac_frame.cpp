@@ -48,20 +48,21 @@ namespace Mac {
 
 void Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
 {
-    uint8_t *bytes  = GetPsdu();
-    uint8_t  length = 0;
+    uint8_t *bytes = GetPsdu();
+
+    mLength = 0;
 
     // Frame Control Field
     Encoding::LittleEndian::WriteUint16(aFcf, bytes);
-    length += kFcfSize;
+    mLength += kFcfSize;
 
     // Sequence Number
-    length += kDsnSize;
+    mLength += kDsnSize;
 
     // Destination PAN
     if (IsDstPanIdPresent(aFcf))
     {
-        length += sizeof(PanId);
+        mLength += sizeof(PanId);
     }
 
     // Destination Address
@@ -71,11 +72,11 @@ void Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
         break;
 
     case kFcfDstAddrShort:
-        length += sizeof(ShortAddress);
+        mLength += sizeof(ShortAddress);
         break;
 
     case kFcfDstAddrExt:
-        length += sizeof(ExtAddress);
+        mLength += sizeof(ExtAddress);
         break;
 
     default:
@@ -85,7 +86,7 @@ void Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
     // Source PAN
     if (IsSrcPanIdPresent(aFcf))
     {
-        length += sizeof(PanId);
+        mLength += sizeof(PanId);
     }
 
     // Source Address
@@ -95,11 +96,11 @@ void Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
         break;
 
     case kFcfSrcAddrShort:
-        length += sizeof(ShortAddress);
+        mLength += sizeof(ShortAddress);
         break;
 
     case kFcfSrcAddrExt:
-        length += sizeof(ExtAddress);
+        mLength += sizeof(ExtAddress);
         break;
 
     default:
@@ -109,29 +110,29 @@ void Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
     // Security Header
     if (aFcf & kFcfSecurityEnabled)
     {
-        bytes[length] = aSecurityControl;
+        bytes[mLength] = aSecurityControl;
 
         if (aSecurityControl & kSecLevelMask)
         {
-            length += kSecurityControlSize + kFrameCounterSize;
+            mLength += kSecurityControlSize + kFrameCounterSize;
         }
 
         switch (aSecurityControl & kKeyIdModeMask)
         {
         case kKeyIdMode0:
-            length += kKeySourceSizeMode0;
+            mLength += kKeySourceSizeMode0;
             break;
 
         case kKeyIdMode1:
-            length += kKeySourceSizeMode1 + kKeyIndexSize;
+            mLength += kKeySourceSizeMode1 + kKeyIndexSize;
             break;
 
         case kKeyIdMode2:
-            length += kKeySourceSizeMode2 + kKeyIndexSize;
+            mLength += kKeySourceSizeMode2 + kKeyIndexSize;
             break;
 
         case kKeyIdMode3:
-            length += kKeySourceSizeMode3 + kKeyIndexSize;
+            mLength += kKeySourceSizeMode3 + kKeyIndexSize;
             break;
         }
     }
@@ -139,10 +140,10 @@ void Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
     // Command ID
     if ((aFcf & kFcfFrameTypeMask) == kFcfFrameMacCmd)
     {
-        length += kCommandIdSize;
+        mLength += kCommandIdSize;
     }
 
-    SetPsduLength(length + GetFooterLength());
+    mLength += GetFooterLength();
 }
 
 uint16_t Frame::GetFrameControlField(void) const
