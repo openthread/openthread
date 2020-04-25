@@ -93,10 +93,11 @@ class Cert_5_3_2_RealmLocal(unittest.TestCase):
                                                 size=256))
         self.assertTrue(self.nodes[LEADER].ping('ff03::1', num_responses=2))
 
-        self.assertTrue(self.nodes[LEADER].ping(
-            'ff33:0040:fdde:ad00:beef:0:0:1', num_responses=2, size=256))
-        self.assertTrue(self.nodes[LEADER].ping(
-            'ff33:0040:fdde:ad00:beef:0:0:1', num_responses=2))
+        self.assertTrue(self.nodes[LEADER].ping('ff33:0040:fd00:db8:0:0:0:1',
+                                                num_responses=2,
+                                                size=256))
+        self.assertTrue(self.nodes[LEADER].ping('ff33:0040:fd00:db8:0:0:0:1',
+                                                num_responses=2))
 
 
 if __name__ == '__main__':
