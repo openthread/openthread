@@ -487,8 +487,8 @@ static void UpdateLink(otInstance *aInstance)
     ot_state = otIp6IsEnabled(aInstance);
 
     otLogNotePlat("thread: changing interface state to %s%s.\n", ot_state ? "UP" : "DOWN",
-                  ( if_state == ot_state ) ? " (already set, ignoring)" : "");
-    if ( if_state != ot_state )
+                  (if_state == ot_state) ? " (already set, ignoring)" : "");
+    if (if_state != ot_state)
     {
         ifr.ifr_flags = ot_state ? (ifr.ifr_flags | IFF_UP) : (ifr.ifr_flags & ~IFF_UP);
         VerifyOrExit(ioctl(sIpFd, SIOCSIFFLAGS, &ifr) == 0, perror("ioctl"); error = OT_ERROR_FAILED);
