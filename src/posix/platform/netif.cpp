@@ -368,7 +368,7 @@ static void UpdateUnicast(otInstance *aInstance, const otIp6Address &aAddress, u
 
     assert(sInstance == aInstance);
 
-    VerifyOrExit(sIpFd > 0, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(sIpFd >= 0, error = OT_ERROR_INVALID_STATE);
 
 #if defined(__linux__)
     {
@@ -473,24 +473,24 @@ static void UpdateLink(otInstance *aInstance)
 {
     otError      error = OT_ERROR_NONE;
     struct ifreq ifr;
-    bool         needs_change = false;
-    bool         new_state    = false;
+    bool         if_state = false;
+    bool         ot_state = false;
 
     assert(sInstance == aInstance);
 
-    VerifyOrExit(sIpFd > 0, OT_NOOP);
+    VerifyOrExit(sIpFd >= 0, OT_NOOP);
     memset(&ifr, 0, sizeof(ifr));
     strncpy(ifr.ifr_name, sTunName, sizeof(ifr.ifr_name));
     VerifyOrExit(ioctl(sIpFd, SIOCGIFFLAGS, &ifr) == 0, perror("ioctl"); error = OT_ERROR_FAILED);
 
-    new_state    = ((ifr.ifr_flags & IFF_UP) == IFF_UP) ? true : false;
-    needs_change = (new_state == otIp6IsEnabled(aInstance));
+    if_state = ((ifr.ifr_flags & IFF_UP) == IFF_UP) ? true : false;
+    ot_state = otIp6IsEnabled(aInstance);
 
-    otLogNotePlat("thread: changing interface state to %s%s.\n", new_state ? "UP" : "DOWN",
-                  needs_change ? "" : " (already set, ignoring)");
-    if (needs_change)
+    otLogNotePlat("thread: changing interface state to %s%s.\n", ot_state ? "UP" : "DOWN",
+                  ( if_state == ot_state ) ? " (already set, ignoring)" : "");
+    if ( if_state != ot_state )
     {
-        ifr.ifr_flags = new_state ? (ifr.ifr_flags | IFF_UP) : (ifr.ifr_flags & ~IFF_UP);
+        ifr.ifr_flags = ot_state ? (ifr.ifr_flags | IFF_UP) : (ifr.ifr_flags & ~IFF_UP);
         VerifyOrExit(ioctl(sIpFd, SIOCSIFFLAGS, &ifr) == 0, perror("ioctl"); error = OT_ERROR_FAILED);
     }
 
