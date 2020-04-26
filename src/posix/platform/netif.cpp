@@ -1355,7 +1355,7 @@ static void platformConfigureTunDevice(otInstance *aInstance,
     err        = getsockopt(sTunFd, SYSPROTO_CONTROL, UTUN_OPT_IFNAME, deviceName, &devNameLen);
     VerifyOrDie(err == 0, OT_EXIT_ERROR_ERRNO);
 
-    fprintf(stderr, "Tunnel device name = '%s'\r\n", deviceName);
+    otLogInfoPlat("Tunnel device name = '%s'\r\n", deviceName);
 }
 #endif
 
