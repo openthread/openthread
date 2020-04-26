@@ -40,7 +40,6 @@
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 #include "crypto/aes_ccm.hpp"
-#include "thread/key_manager.hpp"
 #endif
 
 namespace ot {
@@ -1021,7 +1020,7 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 #else
     uint32_t       frameCounter = 0;
     uint8_t        securityLevel;
-    uint8_t        nonce[KeyManager::kNonceSize];
+    uint8_t        nonce[Crypto::AesCcm::kNonceSize];
     uint8_t        tagLength;
     Crypto::AesCcm aesCcm;
     otError        error;
@@ -1031,7 +1030,7 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
     SuccessOrExit(error = GetSecurityLevel(securityLevel));
     SuccessOrExit(error = GetFrameCounter(frameCounter));
 
-    KeyManager::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
+    Crypto::AesCcm::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
 
     aesCcm.SetKey(GetAesKey(), 16);
     tagLength = GetFooterLength() - Frame::kFcsSize;

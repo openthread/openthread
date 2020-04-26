@@ -193,11 +193,6 @@ private:
 class KeyManager : public InstanceLocator
 {
 public:
-    enum
-    {
-        kNonceSize = 13, ///< Size of IEEE 802.15.4 Nonce (bytes).
-    };
-
     /**
      * This constructor initializes the object.
      *
@@ -524,20 +519,6 @@ public:
      *
      */
     void UpdateKeyMaterial(void);
-
-    /**
-     * This static method generates IEEE 802.15.4 nonce byte sequence.
-     *
-     * @param[in]  aAddress        An extended address.
-     * @param[in]  aFrameCounter   A frame counter.
-     * @param[in]  aSecurityLevel  A security level.
-     * @param[out] aNonce          A buffer (with `kNonceSize` bytes) to place the generated nonce.
-     *
-     */
-    static void GenerateNonce(const Mac::ExtAddress &aAddress,
-                              uint32_t               aFrameCounter,
-                              uint8_t                aSecurityLevel,
-                              uint8_t *              aNonce);
 
 private:
     enum

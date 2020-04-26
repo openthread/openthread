@@ -250,6 +250,7 @@ void SubMac::ProcessTransmitSecurity(void)
     {
     case Frame::kKeyIdMode0:
     case Frame::kKeyIdMode2:
+        // For key Id mode 0 and 2, the security is handled by Mac
         processTransmitAesCcm = false;
         break;
 
