@@ -160,9 +160,6 @@ Diags::Diags(Instance &aInstance)
     , mRepeatActive(false)
 {
     mStats.Clear();
-
-    otPlatDiagChannelSet(mChannel);
-    otPlatDiagTxPowerSet(mTxPower);
 }
 
 otError Diags::ProcessChannel(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
@@ -290,6 +287,9 @@ otError Diags::ProcessStart(uint8_t aArgsLength, char *aArgs[], char *aOutput, s
     OT_UNUSED_VARIABLE(aArgs);
 
     otError error = OT_ERROR_NONE;
+
+    otPlatDiagChannelSet(mChannel);
+    otPlatDiagTxPowerSet(mTxPower);
 
     Get<Radio>().Enable();
     Get<Radio>().SetPromiscuous(true);
