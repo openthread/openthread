@@ -33,6 +33,12 @@ option(OT_BUILD_EXECUTABLES "Build executables" ON)
 option(OT_BUILTIN_MBEDTLS "Enable builtin mbedTLS" ON)
 option(OT_COVERAGE "enable coverage" OFF)
 
+include(TestBigEndian)
+TEST_BIG_ENDIAN(OT_BIG_ENDIAN)
+if(OT_BIG_ENDIAN)
+    list(APPEND OT_PRIVATE_DEFINES "BYTE_ORDER_BIG_ENDIAN=1")
+endif()
+
 include("${PROJECT_SOURCE_DIR}/etc/cmake/checks.cmake")
 include("${PROJECT_SOURCE_DIR}/etc/cmake/options.cmake")
 include("${PROJECT_SOURCE_DIR}/etc/cmake/functions.cmake")
