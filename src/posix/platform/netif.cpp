@@ -1419,8 +1419,7 @@ static void platformConfigureNetLink(void)
 #elif defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
     sNetlinkFd = socket(PF_ROUTE, SOCK_RAW, 0);
 #else
-    // unknown platform...
-    sNetlinkFd = -1;
+#error "!! Unknown platform !!"
 #endif
     VerifyOrDie(sNetlinkFd >= 0, OT_EXIT_ERROR_ERRNO);
 
