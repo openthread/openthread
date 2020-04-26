@@ -1458,7 +1458,7 @@ static void platformConfigureNetLink(void)
         status = fcntl(sNetlinkFd, F_SETFL, O_NONBLOCK);
         VerifyOrDie(status == 0, OT_EXIT_ERROR_ERRNO);
     }
-#endif
+#endif // defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
 }
 
 void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
