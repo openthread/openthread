@@ -431,7 +431,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_KEY>(void)
     const uint8_t *nextKey;
 
     SuccessOrExit(error = mDecoder.ReadUint8(keyIdMode));
-    VerifyOrExit(keyIdMode == Mac::Frame::kKeyIdMode1);
+    VerifyOrExit(keyIdMode == Mac::Frame::kKeyIdMode1, error = OT_ERROR_INVALID_ARGS);
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(prevKey, keySize));
     VerifyOrExit(keySize == Mac::SubMac::kMacKeySize, error = OT_ERROR_PARSE);
@@ -457,7 +457,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_KEY_ID>(void)
     SuccessOrExit(error = mDecoder.ReadUint8(keyIdMode));
     SuccessOrExit(error = mDecoder.ReadUint8(keyId));
 
-    VerifyOrExit(keyIdMode == Mac::Frame::kKeyIdMode1);
+    VerifyOrExit(keyIdMode == Mac::Frame::kKeyIdMode1, error = OT_ERROR_INVALID_ARGS);
 
     otLinkRawSetMacKeyId(mInstance, keyIdMode, keyId);
 

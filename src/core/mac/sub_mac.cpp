@@ -233,8 +233,8 @@ void SubMac::ProcessTransmitSecurity(void)
     bool              processTransmitAesCcm = true;
     uint8_t           keyIdMode;
 
-    VerifyOrExit(ShouldHandleTransmitSecurity());
-    VerifyOrExit(!mTransmitFrame.IsAnOobFrame());
+    VerifyOrExit(ShouldHandleTransmitSecurity(), OT_NOOP);
+    VerifyOrExit(!mTransmitFrame.IsAnOobFrame(), OT_NOOP);
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (mTransmitFrame.GetTimeIeOffset() != 0)
@@ -546,7 +546,7 @@ bool SubMac::ShouldHandleTransmitSecurity(void) const
     VerifyOrExit(!RadioSupportsTransmitSecurity(), swTxSecurity = false);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(Get<LinkRaw>().IsEnabled());
+    VerifyOrExit(Get<LinkRaw>().IsEnabled(), OT_NOOP);
 #endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE || OPENTHREAD_RADIO
@@ -644,7 +644,7 @@ void SubMac::SetRadioMacKey(uint8_t aKeyIdMode)
     const uint8_t *currKey = NULL;
     const uint8_t *nextKey = NULL;
 
-    VerifyOrExit(!ShouldHandleTransmitSecurity());
+    VerifyOrExit(!ShouldHandleTransmitSecurity(), OT_NOOP);
 
     switch (aKeyIdMode)
     {

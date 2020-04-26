@@ -1011,11 +1011,12 @@ exit:
     return error;
 }
 
-otError RadioSpinel::SetMacKey(uint8_t        aKeyMode,
-                               uint8_t        aKeySize,
-                               const uint8_t *aPrevKey,
-                               const uint8_t *aCurrKey,
-                               const uint8_t *aNextKey)
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::SetMacKey(uint8_t        aKeyMode,
+                                                                  uint8_t        aKeySize,
+                                                                  const uint8_t *aPrevKey,
+                                                                  const uint8_t *aCurrKey,
+                                                                  const uint8_t *aNextKey)
 {
     otError error;
 
@@ -1027,7 +1028,8 @@ exit:
     return error;
 }
 
-otError RadioSpinel::SetMacKeyId(uint8_t aKeyMode, uint8_t aKeyId)
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::SetMacKeyId(uint8_t aKeyMode, uint8_t aKeyId)
 {
     otError error;
 
