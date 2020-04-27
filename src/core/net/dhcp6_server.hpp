@@ -83,6 +83,12 @@ public:
      */
     otError UpdateService();
 
+    /**
+     * This method applies the Mesh Local Prefix.
+     *
+     */
+    void ApplyMeshLocalPrefix(void);
+
 private:
     class PrefixAgent
     {

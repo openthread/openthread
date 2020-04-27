@@ -953,6 +953,18 @@ void Mle::ApplyMeshLocalPrefix(void)
         Get<ThreadNetif>().AddUnicastAddress(mLeaderAloc);
     }
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+    Get<MeshCoP::Commissioner>().ApplyMeshLocalPrefix();
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    Get<MeshCoP::BorderAgent>().ApplyMeshLocalPrefix();
+#endif
+
+#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
+    Get<Dhcp6::Dhcp6Server>().ApplyMeshLocalPrefix();
+#endif
+
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
     for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mServiceAlocs); i++)
