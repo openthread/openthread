@@ -61,7 +61,7 @@ SubMac::SubMac(Instance &aInstance)
     , mPcapCallbackContext(NULL)
     , mFrameCounter(0)
     , mKeyId(0)
-    , mTimer(aInstance, &SubMac::HandleTimer, this)
+    , mTimer(aInstance, SubMac::HandleTimer, this)
 {
     mExtAddress.Clear();
     mPrevKey.Clear();

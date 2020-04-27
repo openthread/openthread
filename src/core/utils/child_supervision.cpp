@@ -50,7 +50,7 @@ namespace Utils {
 ChildSupervisor::ChildSupervisor(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSupervisionInterval(kDefaultSupervisionInterval)
-    , mTimer(aInstance, &ChildSupervisor::HandleTimer, this)
+    , mTimer(aInstance, ChildSupervisor::HandleTimer, this)
     , mNotifierCallback(aInstance, &ChildSupervisor::HandleStateChanged, this)
 {
 }
@@ -180,7 +180,7 @@ void ChildSupervisor::HandleStateChanged(otChangedFlags aFlags)
 SupervisionListener::SupervisionListener(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimeout(0)
-    , mTimer(aInstance, &SupervisionListener::HandleTimer, this)
+    , mTimer(aInstance, SupervisionListener::HandleTimer, this)
 {
     SetTimeout(kDefaultTimeout);
 }

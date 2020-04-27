@@ -707,7 +707,7 @@ ActiveDataset::ActiveDataset(Instance &aInstance)
                      Dataset::kActive,
                      OT_URI_PATH_ACTIVE_GET,
                      OT_URI_PATH_ACTIVE_SET,
-                     &ActiveDataset::HandleTimer)
+                     ActiveDataset::HandleTimer)
     , mResourceGet(OT_URI_PATH_ACTIVE_GET, &ActiveDataset::HandleGet, this)
 #if OPENTHREAD_FTD
     , mResourceSet(OT_URI_PATH_ACTIVE_SET, &ActiveDataset::HandleSet, this)
@@ -755,8 +755,8 @@ PendingDataset::PendingDataset(Instance &aInstance)
                      Dataset::kPending,
                      OT_URI_PATH_PENDING_GET,
                      OT_URI_PATH_PENDING_SET,
-                     &PendingDataset::HandleTimer)
-    , mDelayTimer(aInstance, &PendingDataset::HandleDelayTimer, this)
+                     PendingDataset::HandleTimer)
+    , mDelayTimer(aInstance, PendingDataset::HandleDelayTimer, this)
     , mResourceGet(OT_URI_PATH_PENDING_GET, &PendingDataset::HandleGet, this)
 #if OPENTHREAD_FTD
     , mResourceSet(OT_URI_PATH_PENDING_SET, &PendingDataset::HandleSet, this)

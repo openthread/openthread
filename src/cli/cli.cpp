@@ -253,7 +253,7 @@ Interpreter::Interpreter(Instance *aInstance)
     , mPingHopLimit(0)
     , mPingAllowZeroHopLimit(false)
     , mPingIdentifier(0)
-    , mPingTimer(*aInstance, &Interpreter::HandlePingTimer, this)
+    , mPingTimer(*aInstance, Interpreter::HandlePingTimer, this)
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     , mResolvingInProgress(0)
 #endif

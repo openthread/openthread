@@ -46,11 +46,11 @@ namespace Ip6 {
 Mpl::Mpl(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mMatchingAddress(NULL)
-    , mSeedSetTimer(aInstance, &Mpl::HandleSeedSetTimer, this)
+    , mSeedSetTimer(aInstance, Mpl::HandleSeedSetTimer, this)
     , mSeedId(0)
     , mSequence(0)
 #if OPENTHREAD_FTD
-    , mRetransmissionTimer(aInstance, &Mpl::HandleRetransmissionTimer, this)
+    , mRetransmissionTimer(aInstance, Mpl::HandleRetransmissionTimer, this)
     , mTimerExpirations(0)
 #endif
 {
