@@ -79,6 +79,7 @@ target_link_options(openthread-cc1352
 target_link_options(openthread-cc1352
     PUBLIC
         -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
+        -Wl,--gc-sections
 )
 
 target_compile_definitions(openthread-cc1352
