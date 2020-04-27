@@ -746,6 +746,20 @@ void BorderAgent::SetState(otBorderAgentState aState)
     }
 }
 
+void BorderAgent::ApplyMeshLocalPrefix(void)
+{
+    VerifyOrExit(mState == OT_BORDER_AGENT_STATE_ACTIVE, OT_NOOP);
+
+    if (Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc) == OT_ERROR_NONE)
+    {
+        mCommissionerAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+        Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
+    }
+
+exit:
+    return;
+}
+
 } // namespace MeshCoP
 } // namespace ot
 

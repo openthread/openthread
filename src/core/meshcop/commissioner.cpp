@@ -1094,6 +1094,18 @@ exit:
     return error;
 }
 
+void Commissioner::ApplyMeshLocalPrefix(void)
+{
+    VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, OT_NOOP);
+
+    Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
+    mCommissionerAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+    Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
+
+exit:
+    return;
+}
+
 // LCOV_EXCL_START
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MLE == 1)

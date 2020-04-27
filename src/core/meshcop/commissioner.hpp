@@ -246,6 +246,12 @@ public:
      */
     PanIdQueryClient &GetPanIdQueryClient(void) { return mPanIdQuery; }
 
+    /**
+     * This method applies the Mesh Local Prefix.
+     *
+     */
+    void ApplyMeshLocalPrefix(void);
+
 private:
     enum
     {
