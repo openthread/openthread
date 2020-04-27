@@ -1051,7 +1051,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::EnableSrcMatch(bool aEna
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-otError RadioSpinel<InterfaceType, ProcessContextType>::AddSrcMatchShortEntry(const uint16_t aShortAddress)
+otError RadioSpinel<InterfaceType, ProcessContextType>::AddSrcMatchShortEntry(uint16_t aShortAddress)
 {
     return Insert(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, SPINEL_DATATYPE_UINT16_S, aShortAddress);
 }
@@ -1063,7 +1063,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::AddSrcMatchExtEntry(cons
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-otError RadioSpinel<InterfaceType, ProcessContextType>::ClearSrcMatchShortEntry(const uint16_t aShortAddress)
+otError RadioSpinel<InterfaceType, ProcessContextType>::ClearSrcMatchShortEntry(uint16_t aShortAddress)
 {
     return Remove(SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES, SPINEL_DATATYPE_UINT16_S, aShortAddress);
 }

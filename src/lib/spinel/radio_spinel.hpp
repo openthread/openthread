@@ -354,7 +354,7 @@ public:
      * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
      * @retval  OT_ERROR_NO_BUFS            No available entry in the source match table.
      */
-    otError AddSrcMatchShortEntry(const uint16_t aShortAddress);
+    otError AddSrcMatchShortEntry(uint16_t aShortAddress);
 
     /**
      * This method removes a short address from the source address match table.
@@ -367,7 +367,7 @@ public:
      * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
      * @retval  OT_ERROR_NO_ADDRESS         The short address is not in source address match table.
      */
-    otError ClearSrcMatchShortEntry(const uint16_t aShortAddress);
+    otError ClearSrcMatchShortEntry(uint16_t aShortAddress);
 
     /**
      * Clear all short addresses from the source address match table.

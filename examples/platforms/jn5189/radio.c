@@ -438,7 +438,7 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
     sIsFpEnabled = aEnable;
 }
 
-otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, uint16_t aShortAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -483,7 +483,7 @@ otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress
     return error;
 }
 
-otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, uint16_t aShortAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
