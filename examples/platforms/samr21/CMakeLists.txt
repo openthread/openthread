@@ -75,6 +75,7 @@ target_link_libraries(openthread-samr21
 
 target_link_options(openthread-samr21
     PUBLIC
+        -Wl,--gc-sections
         -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
 )
 

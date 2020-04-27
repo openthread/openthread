@@ -77,6 +77,7 @@ target_link_libraries(openthread-cc2650
 
 target_link_options(openthread-cc2650
     PUBLIC
+        -Wl,--gc-sections
         -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
 )
 
