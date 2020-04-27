@@ -1360,6 +1360,26 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
     VerifyOrExit(aMode != kAppendMeshLocalOnly, OT_NOOP);
     counter++;
 
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+    {
+        const Ip6::Address *dua = Get<DuaManager>().GetDomainUnicastAddress();
+
+        if (dua && Get<ThreadNetif>().IsUnicastAddress(*dua))
+        {
+            error = Get<NetworkData::Leader>().GetContext(*dua, context);
+
+            OT_ASSERT(error == OT_ERROR_NONE);
+
+            // Prioritize DUA, compressed entry
+            entry.SetContextId(context.mContextId);
+            entry.SetIid(dua->GetIid());
+            SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
+            length += entry.GetLength();
+            counter++;
+        }
+    }
+#endif // OPENTHREAD_CONFIG_DUA_ENABLE
+
     for (const Ip6::NetifUnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr; addr = addr->GetNext())
     {
         if (addr->GetAddress().IsLinkLocal() || IsRoutingLocator(addr->GetAddress()) ||
@@ -1367,6 +1387,14 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
         {
             continue;
         }
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+        // Here skips DUA which was appended already.
+        if (&addr->GetAddress() == Get<DuaManager>().GetDomainUnicastAddress())
+        {
+            continue;
+        }
+#endif
 
         if (Get<NetworkData::Leader>().GetContext(addr->GetAddress(), context) == OT_ERROR_NONE)
         {
