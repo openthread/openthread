@@ -816,13 +816,8 @@ void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::Mes
 
         if (child.HasIp6Address(target))
         {
-            Mac::ExtAddress addr;
-
-            // Convert extended address to IID.
-            addr = child.GetExtAddress();
-            addr.ToggleLocal();
             lastTransactionTime = TimerMilli::GetNow() - child.GetLastHeard();
-            SendAddressQueryResponse(target, addr.m8, &lastTransactionTime, aMessageInfo.GetPeerAddr());
+            SendAddressQueryResponse(target, child.GetMeshLocalIid(), &lastTransactionTime, aMessageInfo.GetPeerAddr());
             ExitNow();
         }
     }

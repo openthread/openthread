@@ -585,6 +585,14 @@ public:
     otError GetMeshLocalIp6Address(Ip6::Address &aAddress) const;
 
     /**
+     * This method returns a pointer to the Mesh Local Interface Identifier.
+     *
+     * @returns a pointer to the Mesh Local Interface Identifier.
+     *
+     */
+    const uint8_t *GetMeshLocalIid(void) const { return mMeshLocalIid; }
+
+    /**
      * This method gets the next IPv6 address in the list.
      *
      * @param[inout] aIterator           A reference to an IPv6 address iterator.
