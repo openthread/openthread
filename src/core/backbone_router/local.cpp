@@ -57,6 +57,32 @@ Local::Local(Instance &aInstance)
     , mIsServiceAdded(false)
 {
     mDomainPrefixConfig.mPrefix.mLength = 0;
+
+    // Primary Backbone Router Aloc
+    mBackboneRouterPrimaryAloc.Clear();
+
+    mBackboneRouterPrimaryAloc.mPrefixLength       = Mle::MeshLocalPrefix::kLength;
+    mBackboneRouterPrimaryAloc.mPreferred          = true;
+    mBackboneRouterPrimaryAloc.mValid              = true;
+    mBackboneRouterPrimaryAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
+    mBackboneRouterPrimaryAloc.mScopeOverrideValid = true;
+    mBackboneRouterPrimaryAloc.GetAddress().SetLocator(Mle::kAloc16BackboneRouterPrimary);
+
+    // All Network Backbone Routers Multicast Address.
+    mAllNetworkBackboneRouters.Clear();
+
+    mAllNetworkBackboneRouters.GetAddress().mFields.m8[0]  = 0xff; // Multicast
+    mAllNetworkBackboneRouters.GetAddress().mFields.m8[1]  = 0x32; // Flags = 3, Scope = 2
+    mAllNetworkBackboneRouters.GetAddress().mFields.m8[2]  = 0;    // Reserved
+    mAllNetworkBackboneRouters.GetAddress().mFields.m8[15] = 3;    // Group ID = 3
+
+    // All Domain Backbone Routers Multicast Address.
+    mAllDomainBackboneRouters.Clear();
+
+    mAllDomainBackboneRouters.GetAddress().mFields.m8[0]  = 0xff; // Multicast
+    mAllDomainBackboneRouters.GetAddress().mFields.m8[1]  = 0x32; // Flags = 3, Scope = 2
+    mAllDomainBackboneRouters.GetAddress().mFields.m8[2]  = 0;    // Reserved
+    mAllDomainBackboneRouters.GetAddress().mFields.m8[15] = 3;    // Group ID = 3
 }
 
 void Local::SetEnabled(bool aEnable)
@@ -194,7 +220,30 @@ void Local::SetState(BackboneRouterState aState)
 {
     VerifyOrExit(mState != aState, OT_NOOP);
 
+    if (mState == OT_BACKBONE_ROUTER_STATE_DISABLED)
+    {
+        // Subscribe All Network Backbone Routers Multicast Address for both Secondary and Primary state.
+        mAllNetworkBackboneRouters.GetAddress().SetMulticastNetworkPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+        Get<ThreadNetif>().SubscribeMulticast(mAllNetworkBackboneRouters);
+    }
+    else if (aState == OT_BACKBONE_ROUTER_STATE_DISABLED)
+    {
+        Get<ThreadNetif>().UnsubscribeMulticast(mAllNetworkBackboneRouters);
+    }
+
+    if (mState == OT_BACKBONE_ROUTER_STATE_PRIMARY)
+    {
+        Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc);
+    }
+    else if (aState == OT_BACKBONE_ROUTER_STATE_PRIMARY)
+    {
+        // Add Primary Backbone Router Aloc for Primary Backbone Router.
+        mBackboneRouterPrimaryAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+        Get<ThreadNetif>().AddUnicastAddress(mBackboneRouterPrimaryAloc);
+    }
+
     mState = aState;
+
     Get<Notifier>().Signal(OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE);
 
 exit:
@@ -296,6 +345,48 @@ void Local::SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig)
     {
         AddDomainPrefixToNetworkData();
     }
+}
+
+void Local::ApplyMeshLocalPrefix(void)
+{
+    VerifyOrExit(IsEnabled(), OT_NOOP);
+
+    Get<ThreadNetif>().UnsubscribeMulticast(mAllNetworkBackboneRouters);
+    mAllNetworkBackboneRouters.GetAddress().SetMulticastNetworkPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+    Get<ThreadNetif>().SubscribeMulticast(mAllNetworkBackboneRouters);
+
+    if (IsPrimary())
+    {
+        Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc);
+        mBackboneRouterPrimaryAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+        Get<ThreadNetif>().AddUnicastAddress(mBackboneRouterPrimaryAloc);
+    }
+
+exit:
+    return;
+}
+
+void Local::UpdateAllDomainBackboneRouters(Leader::DomainPrefixState aState)
+{
+    if (!IsEnabled())
+    {
+        Get<ThreadNetif>().UnsubscribeMulticast(mAllDomainBackboneRouters);
+        ExitNow();
+    }
+
+    if (aState == Leader::kDomainPrefixRemoved || aState == Leader::kDomainPrefixRefreshed)
+    {
+        Get<ThreadNetif>().UnsubscribeMulticast(mAllDomainBackboneRouters);
+    }
+
+    if (aState == Leader::kDomainPrefixAdded || aState == Leader::kDomainPrefixRefreshed)
+    {
+        mAllDomainBackboneRouters.GetAddress().SetMulticastNetworkPrefix(*Get<Leader>().GetDomainPrefix());
+        Get<ThreadNetif>().SubscribeMulticast(mAllDomainBackboneRouters);
+    }
+
+exit:
+    return;
 }
 
 void Local::RemoveDomainPrefixFromNetworkData(void)

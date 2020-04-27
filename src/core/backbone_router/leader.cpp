@@ -280,7 +280,7 @@ void Leader::UpdateDomainPrefixConfig(void)
     LogDomainPrefix(state, mDomainPrefix);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    Get<Mle::Mle>().UpdateAllDomainBackboneRouters(state);
+    Get<Local>().UpdateAllDomainBackboneRouters(state);
 #endif
 }
 
