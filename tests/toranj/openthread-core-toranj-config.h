@@ -453,5 +453,5 @@
  * Define to 1 if you want to enable software transmission security logic.
  *
  */
-#define OPENTHREAD_CONFIG_SOFTWARE_TX_SECURITY_ENABLE 1
+#define OPENTHREAD_CONFIG_SOFTWARE_TX_SECURITY_ENABLE 0
 #endif // OPENTHREAD_RADIO
