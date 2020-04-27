@@ -63,22 +63,24 @@
 
 #if USE_TUN && USE_APPLE_UTUN
 #error "You may not use both tun and utun."
-#endif
+#endif // USE_TUN && USE_APPLE_UTUN
 
-#endif
+#endif // defined(__APPLE__)
 
 #include <arpa/inet.h>
 #include <assert.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <ifaddrs.h>
 #ifdef __linux__
 #include <linux/if_tun.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
-#endif
+#endif // __linux__
 #include <net/if.h>
 #include <net/if_arp.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
 #include <sys/socket.h>
@@ -90,7 +92,7 @@
 #include <netinet/in.h>
 #if defined(__APPLE__) || defined(__FreeBSD__)
 #include <net/if_var.h>
-#endif
+#endif // defined(__APPLE__) || defined(__FreeBSD__)
 #include <net/route.h>
 #include <netinet6/in6_var.h>
 //
@@ -103,35 +105,30 @@
 #include <netinet6/nd6.h> // ND6_INFINITE_LIFETIME
 #else
 #define ND6_INFINITE_LIFETIME 0xffffffff
-#endif
+#endif // !(defined(__APPLE__) || defined(__FreeBSD__))
+
 #include <net/if_dl.h> // struct sockaddr_dl
 
 #ifdef __APPLE__
 #if USE_APPLE_UTUN
 #include <net/if_utun.h>
-#endif
+#endif // USE_APPLE_UTUN
 
 #if USE_TUN
 #include <sys/ioccom.h>
 // FIX ME: include the tun_ioctl.h file (challenging, as it's location depends on where the developer puts it)
 #define TUNSIFHEAD _IOW('t', 96, int)
 #define TUNGIFHEAD _IOR('t', 97, int)
-#endif
+#endif // USE_TUN
 
 #include <sys/kern_control.h>
-#endif
+#endif // defined(__APPLE__)
 
-#ifdef __NetBSD__
+#if defined(__NetBSD__) || defined(__FreeBSD__)
 #include <net/if_tun.h>
-#endif
+#endif // defined(__NetBSD__) || defined(__FreeBSD__)
 
-#ifdef __FreeBSD__
-#include <net/if_tun.h>
-#endif
-
-#include <errno.h>
-#include <string.h>
-#endif
+#endif // defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
 
 #include <openthread/icmp6.h>
 #include <openthread/instance.h>
@@ -172,7 +169,7 @@ struct in6_ifreq
     __u32           ifr6_prefixlen;
     int             ifr6_ifindex;
 };
-#endif
+#endif // defined(__linux__) && !defined(_IPV6_H) && !defined(_UAPI_IPV6_H)
 
 #if defined(RTM_NEWMADDR) || defined(__NetBSD__)
 // on some BSDs (mac OS, FreeBSD), we get RTM_NEWMADDR/RTM_DELMADDR messages, so we don't need to monitor using MLD
@@ -184,7 +181,7 @@ struct in6_ifreq
 // MLDv2 messages to know when mulicast memberships change
 // 		https://stackoverflow.com/questions/37346289/using-netlink-is-it-possible-to-listen-whenever-multicast-group-membership-is-ch
 #define OPENTHREAD_POSIX_USE_MLD_MONITOR 1
-#endif
+#endif // defined(RTM_NEWMADDR) || defined(__NetBSD__)
 
 // some platforms (like NetBSD) do not have RTM_NEWMADDR/RTM_DELMADDR messages, and they ALSO lack
 // working MLDv2 support.  for those platforms, we must tell the OpenThread interface to
@@ -244,56 +241,10 @@ enum
 
 static const size_t kMaxIp6Size = 1536;
 
-static bool gLogPackets = false;
-
-static void dump_hex(const void *buffer, size_t len)
-{
-    char           ascii_buffer[sizeof("xxxx xxxx") + 1];
-    const uint8_t *buf = (const uint8_t *)buffer;
-    size_t         i;
-    ascii_buffer[0] = 0;
-    for (i = 0; i < len; i++)
-    {
-        uint16_t val = (*buf) & 0x00FF;
-        buf++;
-
-        ascii_buffer[i % 8]     = isprint(val) ? (char)val : '.';
-        ascii_buffer[i % 8 + 1] = 0;
-
-        if ((i % 8) == 0)
-        {
-            if (i != 0)
-            {
-                fprintf(stderr, "\r\n");
-            }
-            fprintf(stderr, "\t");
-        }
-        if ((i % 4) == 0)
-            fprintf(stderr, "\t");
-
-        fprintf(stderr, "%02hX ", val);
-
-        if (((i + 1) % 8) == 0)
-        {
-            fprintf(stderr, "\t%s", ascii_buffer);
-            ascii_buffer[0] = 0;
-        }
-    }
-    while ((i % 8) != 0)
-    {
-        if ((i % 4) == 0)
-        {
-            fprintf(stderr, "\t");
-        }
-
-        fprintf(stderr, "   ");
-        i++;
-    }
-    fprintf(stderr, "\t%s\r\n", ascii_buffer);
-}
+#define OPENTHREAD_POSIX_LOG_TUN_PACKETS 0
 
 #if !defined(__linux__)
-static bool unicastAddressIsSubscribed(otInstance *aInstance, const otNetifAddress *netAddr)
+static bool UnicastAddressIsSubscribed(otInstance *aInstance, const otNetifAddress *netAddr)
 {
     const otNetifAddress *address = otIp6GetUnicastAddresses(aInstance);
 
@@ -313,52 +264,27 @@ static bool unicastAddressIsSubscribed(otInstance *aInstance, const otNetifAddre
 #endif
 
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
-static inline void apply_mask(struct in6_addr *address, uint8_t mask)
+static const uint8_t allOnes[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
+static void InitNetaskWithPrefixLength(struct in6_addr *address, uint8_t prefixLen)
 {
-    if (mask > 128)
+#define MAX_PREFIX_LENGTH (OT_IP6_ADDRESS_SIZE * CHAR_BIT)
+    if (prefixLen > MAX_PREFIX_LENGTH)
     {
-        mask = 128;
+        prefixLen = MAX_PREFIX_LENGTH;
     }
 
-    memset((void *)(address->s6_addr + ((mask + 7) / 8)), 0, 16 - ((mask + 7) / 8));
+    ot::Ip6::Address addr;
 
-    if (mask % 8)
-    {
-        address->s6_addr[mask / 8] &= ~(0xFF >> (mask % 8));
-    }
+    addr.Clear();
+    addr.SetPrefix(allOnes, prefixLen);
+    memcpy(address, addr.mFields.m8, sizeof(addr.mFields.m8));
 }
 
-static unsigned int calculate_prefix_len(const struct sockaddr_in6 *sa6)
+static uint8_t NetmaskToPrefixLength(const struct sockaddr_in6 *netmask)
 {
-    unsigned int result = 0;
-
-    unsigned int i;
-
-    for (i = 0; i < sizeof(sa6->sin6_addr.s6_addr); i++)
-    {
-        if (sa6->sin6_addr.s6_addr[i] == 0xFF)
-        {
-            result += 8;
-            continue;
-        }
-        else
-        {
-            int     j;
-            uint8_t byte = sa6->sin6_addr.s6_addr[i];
-
-            for (j = 7; j >= 0; j--)
-            {
-                if (byte & (1 << j))
-                    result++;
-                else
-                    break;
-            }
-
-            break;
-        }
-    }
-
-    return result;
+    return ot::Ip6::Address::PrefixMatch(netmask->sin6_addr.s6_addr, allOnes, 128);
 }
 #endif
 
@@ -399,8 +325,7 @@ static void UpdateUnicast(otInstance *aInstance, const otIp6Address &aAddress, u
         memcpy(&ifr6.ifra_addr.sin6_addr, &aAddress, sizeof(struct in6_addr));
         ifr6.ifra_prefixmask.sin6_family = AF_INET6;
         ifr6.ifra_prefixmask.sin6_len    = sizeof(ifr6.ifra_prefixmask);
-        memset(&ifr6.ifra_prefixmask.sin6_addr, 0xFF, 16);
-        apply_mask(&ifr6.ifra_prefixmask.sin6_addr, aPrefixLength);
+        InitNetaskWithPrefixLength(&ifr6.ifra_prefixmask.sin6_addr, aPrefixLength);
         ifr6.ifra_lifetime.ia6t_vltime    = ND6_INFINITE_LIFETIME;
         ifr6.ifra_lifetime.ia6t_pltime    = ND6_INFINITE_LIFETIME;
 
@@ -444,18 +369,21 @@ static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress,
 
     int err;
     err = setsockopt(sIpFd, IPPROTO_IPV6, (aIsAdded ? IPV6_JOIN_GROUP : IPV6_LEAVE_GROUP), &mreq, sizeof(mreq));
+#if defined(__APPLE__) || defined(__FreeBSD__)
     if ((err != 0) && (errno == EINVAL) && (IN6_IS_ADDR_MC_LINKLOCAL(&mreq.ipv6mr_multiaddr)))
     {
         // FIX ME
         // on mac OS (and FreeBSD), the first time we run (but not subsequently), we get a failure on this particular
         // join. do we need to bring up the interface at least once prior to joining?
-
+        // we need to figure out why so we can get rid of this workaround
         char addressString[INET6_ADDRSTRLEN + 1];
+
         inet_ntop(AF_INET6, mreq.ipv6mr_multiaddr.s6_addr, addressString, sizeof(addressString));
         otLogWarnPlat("ignoring %s failure (EINVAL) for MC LINKLOCAL address (%s)",
                       aIsAdded ? "IPV6_JOIN_GROUP" : "IPV6_LEAVE_GROUP", addressString);
         err = 0;
     }
+#endif
 
     if (err != 0)
     {
@@ -473,8 +401,8 @@ static void UpdateLink(otInstance *aInstance)
 {
     otError      error = OT_ERROR_NONE;
     struct ifreq ifr;
-    bool         if_state = false;
-    bool         ot_state = false;
+    bool         ifState = false;
+    bool         otState = false;
 
     assert(sInstance == aInstance);
 
@@ -483,14 +411,14 @@ static void UpdateLink(otInstance *aInstance)
     strncpy(ifr.ifr_name, sTunName, sizeof(ifr.ifr_name));
     VerifyOrExit(ioctl(sIpFd, SIOCGIFFLAGS, &ifr) == 0, perror("ioctl"); error = OT_ERROR_FAILED);
 
-    if_state = ((ifr.ifr_flags & IFF_UP) == IFF_UP) ? true : false;
-    ot_state = otIp6IsEnabled(aInstance);
+    ifState = ((ifr.ifr_flags & IFF_UP) == IFF_UP) ? true : false;
+    otState = otIp6IsEnabled(aInstance);
 
-    otLogNotePlat("changing interface state to %s%s.", ot_state ? "UP" : "DOWN",
-                  (if_state == ot_state) ? " (already done, ignoring)" : "");
-    if (if_state != ot_state)
+    otLogNotePlat("changing interface state to %s%s.", otState ? "UP" : "DOWN",
+                  (ifState == otState) ? " (already done, ignoring)" : "");
+    if (ifState != otState)
     {
-        ifr.ifr_flags = ot_state ? (ifr.ifr_flags | IFF_UP) : (ifr.ifr_flags & ~IFF_UP);
+        ifr.ifr_flags = otState ? (ifr.ifr_flags | IFF_UP) : (ifr.ifr_flags & ~IFF_UP);
         VerifyOrExit(ioctl(sIpFd, SIOCSIFFLAGS, &ifr) == 0, perror("ioctl"); error = OT_ERROR_FAILED);
     }
 
@@ -528,11 +456,12 @@ static void processStateChange(otChangedFlags aFlags, void *aContext)
 static void processReceive(otMessage *aMessage, void *aContext)
 {
     char     packet[kMaxIp6Size + 4];
-    otError  error      = OT_ERROR_NONE;
-    uint16_t length     = otMessageGetLength(aMessage);
-    size_t   offset     = 0;
-    uint16_t max_length = sizeof(packet) - 4;
+    otError  error     = OT_ERROR_NONE;
+    uint16_t length    = otMessageGetLength(aMessage);
+    size_t   offset    = 0;
+    uint16_t maxLength = sizeof(packet) - 4;
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+    // BSD tunnel drivers use (for legacy reasons) a 4-byte header to determine the address family of the packet
     offset += 4;
 #endif
 
@@ -540,7 +469,12 @@ static void processReceive(otMessage *aMessage, void *aContext)
 
     VerifyOrExit(sTunFd > 0, OT_NOOP);
 
-    VerifyOrExit(otMessageRead(aMessage, 0, &packet[offset], max_length) == length, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(otMessageRead(aMessage, 0, &packet[offset], maxLength) == length, error = OT_ERROR_NO_BUFS);
+
+#if OPENTHREAD_POSIX_LOG_TUN_PACKETS
+    otLogInfoPlat("Packet from NCP (%hu bytes)", static_cast<uint16_t>(length));
+    otDumpInfo(OT_LOG_REGION_PLATFORM, "", &packet[offset], length);
+#endif
 
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
     packet[0] = 0;
@@ -549,13 +483,6 @@ static void processReceive(otMessage *aMessage, void *aContext)
     packet[3] = (PF_INET6 << 0) & 0xFF;
     length += 4;
 #endif
-
-    if (gLogPackets)
-    {
-        fprintf(stderr, "Packet from NCP (%hu bytes)\r\n", (uint16_t)(length - 4));
-        dump_hex(&packet[4], length - 4);
-        fflush(stdout);
-    }
 
     VerifyOrExit(write(sTunFd, packet, length) == length, perror("write"); error = OT_ERROR_FAILED);
 
@@ -589,6 +516,7 @@ static void processTransmit(otInstance *aInstance)
     VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+    // BSD tunnel drivers have (for legacy reasons), may have a 4-byte header on them
     if ((rval >= 4) && (packet[0] == 0) && (packet[1] == 0))
     {
         rval -= 4;
@@ -596,12 +524,10 @@ static void processTransmit(otInstance *aInstance)
     }
 #endif
 
-    if (gLogPackets)
-    {
-        fprintf(stderr, "Packet to NCP (%ld bytes)\r\n", (long)rval);
-        dump_hex(&packet[offset], (size_t)rval);
-        fflush(stdout);
-    }
+#if OPENTHREAD_POSIX_LOG_TUN_PACKETS
+    otLogInfoPlat("Packet to NCP (%hu bytes)", static_cast<uint16_t>(rval));
+    otDumpInfo(OT_LOG_REGION_PLATFORM, "", &packet[offset], static_cast<size_t>(rval));
+#endif
 
     SuccessOrExit(error = otMessageAppend(message, &packet[offset], static_cast<uint16_t>(rval)));
 
@@ -908,9 +834,9 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm) 
                 bool           subscribed;
 
                 netAddr.mAddress      = addr;
-                netAddr.mPrefixLength = (uint8_t)calculate_prefix_len(&netmask);
+                netAddr.mPrefixLength = NetmaskToPrefixLength(&netmask);
 
-                subscribed = unicastAddressIsSubscribed(aInstance, &netAddr);
+                subscribed = UnicastAddressIsSubscribed(aInstance, &netAddr);
 
                 if (subscribed)
                 {
@@ -933,8 +859,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm) 
                         memcpy(&ifr6.ifra_addr.sin6_addr, &addr6.sin6_addr, sizeof(struct in6_addr));
                         ifr6.ifra_prefixmask.sin6_family = AF_INET6;
                         ifr6.ifra_prefixmask.sin6_len    = sizeof(ifr6.ifra_prefixmask);
-                        memset(&ifr6.ifra_prefixmask.sin6_addr, 0xFF, 16);
-                        apply_mask(&ifr6.ifra_prefixmask.sin6_addr, netAddr.mPrefixLength);
+                        InitNetaskWithPrefixLength(&ifr6.ifra_prefixmask.sin6_addr, netAddr.mPrefixLength);
                         ifr6.ifra_lifetime.ia6t_vltime = ND6_INFINITE_LIFETIME;
                         ifr6.ifra_lifetime.ia6t_pltime = ND6_INFINITE_LIFETIME;
 
@@ -1374,7 +1299,6 @@ static otError destroyTunnel(void)
     error = OT_ERROR_NONE;
 
 exit:
-
     return error;
 }
 #endif
@@ -1468,10 +1392,7 @@ void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
     sIpFd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, kSocketNonBlock);
     VerifyOrDie(sIpFd >= 0, OT_EXIT_ERROR_ERRNO);
 
-    otIcmp6SetEchoMode(aInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
-
     platformConfigureNetLink();
-
     platformConfigureTunDevice(aInstance, aInterfaceName, sTunName, sizeof(sTunName));
 
     sTunIndex = if_nametoindex(sTunName);
@@ -1484,10 +1405,10 @@ void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
     mldListenerInit();
 #endif
 
+    otIcmp6SetEchoMode(aInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
     otIp6SetReceiveCallback(aInstance, processReceive, aInstance);
     otIp6SetAddressCallback(aInstance, processAddressChange, aInstance);
     otSetStateChangedCallback(aInstance, processStateChange, aInstance);
-
 #if OPENTHREAD_POSIX_MULTICAST_PROMISCUOUS_REQUIRED
     otIp6SetMulticastPromiscuousEnabled(aInstance, true);
 #endif
