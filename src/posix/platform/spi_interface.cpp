@@ -692,8 +692,8 @@ otError SpiInterface::WaitForFrame(uint64_t aTimeoutUs)
     int            ret;
     bool           isDataReady = false;
 
-    timeout.tv_sec  = aTimeoutUs / US_PER_S;
-    timeout.tv_usec = aTimeoutUs % US_PER_S;
+    timeout.tv_sec  = static_cast<time_t>(aTimeoutUs / US_PER_S);
+    timeout.tv_usec = static_cast<suseconds_t>(aTimeoutUs % US_PER_S);
 
     FD_ZERO(&readFdSet);
 
