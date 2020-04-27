@@ -452,14 +452,14 @@ static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress,
 
         char addressString[INET6_ADDRSTRLEN + 1];
         inet_ntop(AF_INET6, mreq.ipv6mr_multiaddr.s6_addr, addressString, sizeof(addressString));
-        otLogWarnPlat("thread: ignoring %s failure (EINVAL) for MC LINKLOCAL address (%s)\r\n",
+        otLogWarnPlat("ignoring %s failure (EINVAL) for MC LINKLOCAL address (%s)",
                       aIsAdded ? "IPV6_JOIN_GROUP" : "IPV6_LEAVE_GROUP", addressString);
         err = 0;
     }
 
     if (err != 0)
     {
-        otLogWarnPlat(stderr, "%s failure (%d)\r\n", aIsAdded ? "IPV6_JOIN_GROUP" : "IPV6_LEAVE_GROUP", errno);
+        otLogWarnPlat("%s failure (%d)", aIsAdded ? "IPV6_JOIN_GROUP" : "IPV6_LEAVE_GROUP", errno);
     }
 
     VerifyOrExit(err == 0, perror("setsockopt"); error = OT_ERROR_FAILED);
@@ -486,8 +486,8 @@ static void UpdateLink(otInstance *aInstance)
     if_state = ((ifr.ifr_flags & IFF_UP) == IFF_UP) ? true : false;
     ot_state = otIp6IsEnabled(aInstance);
 
-    otLogNotePlat("thread: changing interface state to %s%s.\n", ot_state ? "UP" : "DOWN",
-                  (if_state == ot_state) ? " (already set, ignoring)" : "");
+    otLogNotePlat("changing interface state to %s%s.", ot_state ? "UP" : "DOWN",
+                  (if_state == ot_state) ? " (already done, ignoring)" : "");
     if (if_state != ot_state)
     {
         ifr.ifr_flags = ot_state ? (ifr.ifr_flags | IFF_UP) : (ifr.ifr_flags & ~IFF_UP);
@@ -672,14 +672,14 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                     if ((error == OT_ERROR_NONE) || (error == OT_ERROR_ALREADY))
                     {
                         otLogNotePlat(
-                            "thread: ADD [U] %s%s\r\n",
+                            "ADD [U] %s%s",
                             inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
                             error == OT_ERROR_ALREADY ? " (already subscribed, ignored)" : "");
                     }
                     else
                     {
                         otLogWarnPlat(
-                            "thread: ADD [U] %s failed (%s)\r\n",
+                            "ADD [U] %s failed (%s)",
                             inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
                             otThreadErrorToString(error));
                     }
@@ -696,7 +696,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                     if ((error == OT_ERROR_NONE) || (error == OT_ERROR_ALREADY))
                     {
                         otLogNotePlat(
-                            stderr, "thread: ADD [M] %s%s\r\n",
+                            stderr, "ADD [M] %s%s",
                             inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
                             error == OT_ERROR_ALREADY ? " (already subscribed, ignored)" : "");
                         error = OT_ERROR_NONE;
@@ -704,7 +704,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                     else
                     {
                         otLogWarnPlat(
-                            "thread: ADD [M] %s failed (%s)\r\n",
+                            "ADD [M] %s failed (%s)",
                             inet_ntop(AF_INET6, mreq.ipv6mr_multiaddr.s6_addr, addressString, sizeof(addressString)),
                             otThreadErrorToString(error));
                     }
@@ -719,7 +719,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                     if ((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_FOUND))
                     {
                         otLogNotePlat(
-                            "thread: DEL [U] %s%s\r\n",
+                            "DEL [U] %s%s",
                             inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
                             error == OT_ERROR_NOT_FOUND ? " (not found, ignored)" : "");
 
@@ -728,7 +728,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                     else
                     {
                         otLogWarnPlat(
-                            "thread: DEL [U] %s failure (%d)\r\n",
+                            "DEL [U] %s failure (%d)",
                             inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)), error);
                     }
                 }
@@ -738,7 +738,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                     if ((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_FOUND))
                     {
                         otLogNotePlat(
-                            "thread: DEL [M] %s%s\r\n",
+                            "DEL [M] %s%s",
                             inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
                             error == OT_ERROR_NOT_FOUND ? " (not found, ignored)" : "");
                         error = OT_ERROR_NONE;
@@ -746,7 +746,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                     else
                     {
                         otLogWarnPlat(
-                            "thread: DEL [M] %s failure (%d)\r\n",
+                            "DEL [M] %s failure (%d)",
                             inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)), error);
                     }
                 }
@@ -759,7 +759,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
         }
 
         default:
-            otLogWarnPlat("thread: unexpected address type (%d)\n", (int)rta->rta_type);
+            otLogWarnPlat("unexpected address type (%d).", (int)rta->rta_type);
             break;
         }
     }
@@ -915,7 +915,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm) 
                 if (subscribed)
                 {
                     inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString));
-                    otLogNotePlat("thread: ADD [U] %s (already subscribed, ignored)\r\n", addressString);
+                    otLogNotePlat("ADD [U] %s (already subscribed, ignored)", addressString);
                 }
                 else
                 {
@@ -949,13 +949,13 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm) 
                         if (err != 0)
                         {
                             otLogWarnPlat(
-                                "thread: error (%d) removing stack-addded link-local address %s\r\n", errno,
+                                "error (%d) removing stack-addded link-local address %s", errno,
                                 inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)));
                         }
                         else
                         {
                             otLogNotePlat(
-                                "thread:         %s (removed stack-added link-local)\r\n",
+                                "        %s (removed stack-added link-local)",
                                 inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)));
                         }
                     }
@@ -967,14 +967,14 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm) 
                         if ((error == OT_ERROR_NONE) || (error == OT_ERROR_ALREADY))
                         {
                             otLogNotePlat(
-                                "thread: ADD [U] %s%s\r\n",
+                                "ADD [U] %s%s",
                                 inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
                                 error == OT_ERROR_ALREADY ? " (already subscribed, ignored)" : "");
                         }
                         else
                         {
                             otLogWarnPlat(
-                                "thread: ADD [U] %s failed (%s)\r\n",
+                                "ADD [U] %s failed (%s)",
                                 inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
                                 otThreadErrorToString(error));
                         }
@@ -989,17 +989,16 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm) 
                 error = otIp6SubscribeMulticastAddress(aInstance, &addr);
                 if ((error == OT_ERROR_NONE) || (error == OT_ERROR_ALREADY))
                 {
-                    otLogNotePlat(stderr, "thread: ADD [M] %s%s\r\n",
+                    otLogNotePlat("ADD [M] %s%s",
                                   inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
                                   error == OT_ERROR_ALREADY ? " (already subscribed, ignored)" : "");
                     error = OT_ERROR_NONE;
                 }
                 else
                 {
-                    otLogWarnPlat(
-                        "thread: ADD [M] %s failed (%s)\r\n",
-                        inet_ntop(AF_INET6, mreq.ipv6mr_multiaddr.s6_addr, addressString, sizeof(addressString)),
-                        otThreadErrorToString(error));
+                    otLogWarnPlat("ADD [M] %s failed (%s)",
+                                  inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
+                                  otThreadErrorToString(error));
                 }
                 SuccessOrExit(error);
             }
@@ -1015,7 +1014,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm) 
                 error = otIp6RemoveUnicastAddress(aInstance, &addr);
                 if ((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_FOUND))
                 {
-                    otLogNotePlat("thread: DEL [U] %s%s\r\n",
+                    otLogNotePlat("DEL [U] %s%s",
                                   inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
                                   error == OT_ERROR_NOT_FOUND ? " (not found, ignored)" : "");
 
@@ -1023,7 +1022,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm) 
                 }
                 else
                 {
-                    otLogWarnPlat("thread: DEL [U] %s failure (%d)\r\n",
+                    otLogWarnPlat("DEL [U] %s failure (%d)",
                                   inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
                                   error);
                 }
@@ -1033,14 +1032,14 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm) 
                 error = otIp6UnsubscribeMulticastAddress(aInstance, &addr);
                 if ((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_FOUND))
                 {
-                    otLogNotePlat("thread: DEL [M] %s%s\r\n",
+                    otLogNotePlat("DEL [M] %s%s",
                                   inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
                                   error == OT_ERROR_NOT_FOUND ? " (not found, ignored)" : "");
                     error = OT_ERROR_NONE;
                 }
                 else
                 {
-                    otLogWarnPlat("thread: DEL [M] %s failure (%d)\r\n",
+                    otLogWarnPlat("DEL [M] %s failure (%d)",
                                   inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
                                   error);
                 }
@@ -1114,7 +1113,7 @@ static void processNetifEvent(otInstance *aInstance)
 #if defined(RTM_NEWMADDR) && defined(RTM_DELMADDR)
         case RTM_NEWMADDR:
         case RTM_DELMADDR:
-            processNetifAddrEvent(aInstance, msg); //, (size_t)length );
+            processNetifAddrEvent(aInstance, msg);
             break;
 #endif
 
@@ -1124,9 +1123,13 @@ static void processNetifEvent(otInstance *aInstance)
             break;
 #endif
 
+#if defined(ROUTE_FILTER) || defined(RO_MSGFILTER) || defined(__linux__)
         default:
-            otLogWarnPlat("thread: unhandled/unexpected netlink/route message (%d)\n", (int)msg->nlmsg_type);
+            otLogWarnPlat("unhandled/unexpected netlink/route message (%d).", (int)msg->nlmsg_type);
             break;
+#else
+            // this platform doesn't support filtering, so we expect messages of other types...we just ignore them
+#endif
         }
     }
 
@@ -1355,7 +1358,7 @@ static void platformConfigureTunDevice(otInstance *aInstance,
     err        = getsockopt(sTunFd, SYSPROTO_CONTROL, UTUN_OPT_IFNAME, deviceName, &devNameLen);
     VerifyOrDie(err == 0, OT_EXIT_ERROR_ERRNO);
 
-    otLogInfoPlat("Tunnel device name = '%s'\r\n", deviceName);
+    otLogInfoPlat("Tunnel device name = '%s'", deviceName);
 }
 #endif
 
