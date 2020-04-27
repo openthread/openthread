@@ -39,6 +39,7 @@ Done
 - [discover](#discover-channel)
 - [dns](#dns-resolve-hostname-dns-server-ip-dns-server-port)
 - [domainname](#domainname)
+- [dua](#dua-iid)
 - [eidcache](#eidcache)
 - [eui64](#eui64)
 - [extaddr](#extaddr)
@@ -558,6 +559,34 @@ Set the Thread Domain Name for Thread 1.2 device.
 
 ```bash
 > domainname Test\ Thread
+Done
+```
+
+### dua iid
+
+Get the Interface Identifier mannually specified for Thread Domain Unicast Address on Thread 1.2 device.
+
+```bash
+> dua iid
+0004000300020001
+Done
+```
+
+### dua iid \<iid\>
+
+Set the Interface Identifier mannually specified for Thread Domain Unicast Address on Thread 1.2 device.
+
+```bash
+> dua iid 0004000300020001
+Done
+```
+
+### dua iid clear
+
+Clear the Interface Identifier mannually specified for Thread Domain Unicast Address on Thread 1.2 device.
+
+```bash
+> dua iid clear
 Done
 ```
 

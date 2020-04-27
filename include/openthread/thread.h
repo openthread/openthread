@@ -477,7 +477,7 @@ otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName);
 /**
  * Get the Thread Domain Name.
  *
- * This function is only availble since Thread 1.2.
+ * This function is only available since Thread 1.2.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -491,7 +491,7 @@ const char *otThreadGetDomainName(otInstance *aInstance);
 /**
  * Set the Thread Domain Name.
  *
- * This function is only availble since Thread 1.2.
+ * This function is only available since Thread 1.2.
  * This function succeeds only when Thread protocols are disabled.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
@@ -504,6 +504,35 @@ const char *otThreadGetDomainName(otInstance *aInstance);
  *
  */
 otError otThreadSetDomainName(otInstance *aInstance, const char *aDomainName);
+
+/**
+ * Set/Clear the Interface Identifier manually specified for the Thread Domain Unicast Address.
+ *
+ * This function is only available since Thread 1.2 when `OPENTHREAD_CONFIG_DUA_ENABLE` is enabled.
+ *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aIid        A pointer to the Interface Identifier to set or NULL to clear.
+ *
+ * @retval OT_ERROR_NONE           Successfully set/cleared the Interface Identifier.
+ * @retval OT_ERROR_INVALID_ARGS   The specified Interface Identifier is reserved.
+ *
+ * @sa otThreadGetFixedDuaInterfaceIdentifier
+ */
+otError otThreadSetFixedDuaInterfaceIdentifier(otInstance *aInstance, const otIp6InterfaceIdentifier *aIid);
+
+/**
+ * Get the Interface Identifier manually specified for the Thread Domain Unicast Address.
+ *
+ * This function is only available since Thread 1.2 when `OPENTHREAD_CONFIG_DUA_ENABLE` is enabled.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to the Interface Identifier which was set manually, or NULL if none was set.
+ *
+ * @sa otThreadSetFixedDuaInterfaceIdentifier
+ *
+ */
+const otIp6InterfaceIdentifier *otThreadGetFixedDuaInterfaceIdentifier(otInstance *aInstance);
 
 /**
  * Get the thrKeySequenceCounter.
