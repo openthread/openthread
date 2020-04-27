@@ -118,6 +118,7 @@ build_posix()
         "-DOT_PLATFORM=posix"
         "-DOT_READLINE=readline"
         "-DOT_THREAD_VERSION=${version}"
+        "-DOT_POSIX_MAX_POWER_TABLE=ON"
     )
 
     if [[ "${VIRTUAL_TIME}" == 1 ]]; then
@@ -238,16 +239,21 @@ do_cert_suite() {
 do_expect()
 {
     local ot_command
+    local rcp_command=
+    local test_pattern
 
     if [[ "${NODE_MODE}" == rcp ]]; then
-        ot_command="${OT_CLI_PATH} ${RADIO_DEVICE}"
+        ot_command="${OT_CLI_PATH}"
+        rcp_command="${RADIO_DEVICE}"
+        test_pattern='posix-*.exp'
     else
         ot_command="${OT_BUILDDIR}/cmake/openthread-simulation-${THREAD_VERSION}/examples/apps/cli/ot-cli-ftd"
+        test_pattern='cli-*.exp'
     fi
 
     while read -r script; do
         rm -rf tmp
-        OT_COMMAND="${ot_command}" "${script}" || {
+        OT_COMMAND="${ot_command}" RCP_COMMAND="${rcp_command}" "${script}" || {
             local exit_code=$?
             echo -e "${COLOR_FAIL}FAIL${COLOR_NONE} ${script}"
             exit "${exit_code}"
@@ -257,7 +263,7 @@ do_expect()
         if [[ $# != 0 ]]; then
             for script in "$@"; do echo ${script}; done
         else
-            find tests/scripts/expect -type f -executable
+            find tests/scripts/expect -type f -executable -name "${test_pattern}"
         fi
     )
 

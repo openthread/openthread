@@ -83,12 +83,11 @@
 
 typedef struct PosixConfig
 {
-    otPlatformConfig mPlatformConfig;       ///< Platform configuration.
-    uint32_t         mSupportedChannelMask; ///< Supported channel mask.
-    otLogLevel       mLogLevel;             ///< Debug level of logging.
-    bool             mIsDryRun;             ///< Dry run.
-    bool             mPrintRadioVersion;    ///< Whether to print radio firmware version.
-    bool             mIsVerbose;            ///< Whether to print log to stderr.
+    otPlatformConfig mPlatformConfig;    ///< Platform configuration.
+    otLogLevel       mLogLevel;          ///< Debug level of logging.
+    bool             mIsDryRun;          ///< Dry run.
+    bool             mPrintRadioVersion; ///< Whether to print radio firmware version.
+    bool             mIsVerbose;         ///< Whether to print log to stderr.
 } PosixConfig;
 
 static jmp_buf gResetJump;
@@ -101,47 +100,49 @@ void __gcov_flush();
  */
 enum
 {
-    ARG_PRINT_RADIO_VERSION    = 1001,
-    ARG_NO_RADIO_RESET         = 1002,
-    ARG_RESTORE_NCP_DATASET    = 1003,
-    ARG_SPI_GPIO_INT_DEV       = 1011,
-    ARG_SPI_GPIO_INT_LINE      = 1012,
-    ARG_SPI_GPIO_RESET_DEV     = 1013,
-    ARG_SPI_GPIO_RESET_LINE    = 1014,
-    ARG_SPI_MODE               = 1015,
-    ARG_SPI_SPEED              = 1016,
-    ARG_SPI_CS_DELAY           = 1017,
-    ARG_SPI_RESET_DELAY        = 1018,
-    ARG_SPI_ALIGN_ALLOWANCE    = 1019,
-    ARG_SPI_SMALL_PACKET       = 1020,
-    ARG_SUPPORTED_CHANNEL_MASK = 1021,
+    ARG_PRINT_RADIO_VERSION = 1001,
+    ARG_NO_RADIO_RESET      = 1002,
+    ARG_RESTORE_NCP_DATASET = 1003,
+    ARG_SPI_GPIO_INT_DEV    = 1011,
+    ARG_SPI_GPIO_INT_LINE   = 1012,
+    ARG_SPI_GPIO_RESET_DEV  = 1013,
+    ARG_SPI_GPIO_RESET_LINE = 1014,
+    ARG_SPI_MODE            = 1015,
+    ARG_SPI_SPEED           = 1016,
+    ARG_SPI_CS_DELAY        = 1017,
+    ARG_SPI_RESET_DELAY     = 1018,
+    ARG_SPI_ALIGN_ALLOWANCE = 1019,
+    ARG_SPI_SMALL_PACKET    = 1020,
+    ARG_MAX_POWER_TABLE     = 1021,
 
 };
 
-static const struct option kOptions[] = {
-    {"debug-level", required_argument, NULL, 'd'},
-    {"dry-run", no_argument, NULL, 'n'},
-    {"help", no_argument, NULL, 'h'},
-    {"interface-name", required_argument, NULL, 'I'},
-    {"no-reset", no_argument, NULL, ARG_NO_RADIO_RESET},
-    {"radio-version", no_argument, NULL, ARG_PRINT_RADIO_VERSION},
-    {"ncp-dataset", no_argument, NULL, ARG_RESTORE_NCP_DATASET},
-    {"supported-channel-mask", required_argument, NULL, ARG_SUPPORTED_CHANNEL_MASK},
-    {"time-speed", required_argument, NULL, 's'},
-    {"verbose", no_argument, NULL, 'v'},
+static const struct option kOptions[] = {{"debug-level", required_argument, NULL, 'd'},
+                                         {"dry-run", no_argument, NULL, 'n'},
+                                         {"help", no_argument, NULL, 'h'},
+                                         {"interface-name", required_argument, NULL, 'I'},
+                                         {"max-power-table", required_argument, NULL, ARG_MAX_POWER_TABLE},
+                                         {"no-reset", no_argument, NULL, ARG_NO_RADIO_RESET},
+                                         {"radio-version", no_argument, NULL, ARG_PRINT_RADIO_VERSION},
+                                         {"ncp-dataset", no_argument, NULL, ARG_RESTORE_NCP_DATASET},
+                                         {"time-speed", required_argument, NULL, 's'},
+                                         {"verbose", no_argument, NULL, 'v'},
+#if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
+                                         {"max-power-table", required_argument, NULL, ARG_MAX_POWER_TABLE},
+#endif
 #if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
-    {"gpio-int-dev", required_argument, NULL, ARG_SPI_GPIO_INT_DEV},
-    {"gpio-int-line", required_argument, NULL, ARG_SPI_GPIO_INT_LINE},
-    {"gpio-reset-dev", required_argument, NULL, ARG_SPI_GPIO_RESET_DEV},
-    {"gpio-reset-line", required_argument, NULL, ARG_SPI_GPIO_RESET_LINE},
-    {"spi-mode", required_argument, NULL, ARG_SPI_MODE},
-    {"spi-speed", required_argument, NULL, ARG_SPI_SPEED},
-    {"spi-cs-delay", required_argument, NULL, ARG_SPI_CS_DELAY},
-    {"spi-reset-delay", required_argument, NULL, ARG_SPI_RESET_DELAY},
-    {"spi-align-allowance", required_argument, NULL, ARG_SPI_ALIGN_ALLOWANCE},
-    {"spi-small-packet", required_argument, NULL, ARG_SPI_SMALL_PACKET},
+                                         {"gpio-int-dev", required_argument, NULL, ARG_SPI_GPIO_INT_DEV},
+                                         {"gpio-int-line", required_argument, NULL, ARG_SPI_GPIO_INT_LINE},
+                                         {"gpio-reset-dev", required_argument, NULL, ARG_SPI_GPIO_RESET_DEV},
+                                         {"gpio-reset-line", required_argument, NULL, ARG_SPI_GPIO_RESET_LINE},
+                                         {"spi-mode", required_argument, NULL, ARG_SPI_MODE},
+                                         {"spi-speed", required_argument, NULL, ARG_SPI_SPEED},
+                                         {"spi-cs-delay", required_argument, NULL, ARG_SPI_CS_DELAY},
+                                         {"spi-reset-delay", required_argument, NULL, ARG_SPI_RESET_DELAY},
+                                         {"spi-align-allowance", required_argument, NULL, ARG_SPI_ALIGN_ALLOWANCE},
+                                         {"spi-small-packet", required_argument, NULL, ARG_SPI_SMALL_PACKET},
 #endif // OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
-    {0, 0, 0, 0}};
+                                         {0, 0, 0, 0}};
 
 static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
 {
@@ -153,6 +154,8 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    -h  --help                    Display this usage information.\n"
             "    -I  --interface-name name     Thread network interface name.\n"
             "    -n  --dry-run                 Just verify if arguments is valid and radio spinel is compatible.\n"
+            "        --max-power-table         Max power for channels in ascendent order separated by commas,\n"
+            "                                  Special value 0x7f disable a channel.\n"
             "        --no-reset                Do not send Spinel reset command to RCP on initialization.\n"
             "        --radio-version           Print radio firmware version.\n"
             "        --ncp-dataset             Retrieve and save NCP dataset to file.\n"
@@ -199,7 +202,6 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     aConfig->mPlatformConfig.mSpiSmallPacketSize = OT_PLATFORM_CONFIG_SPI_DEFAULT_SMALL_PACKET_SIZE;
     aConfig->mPlatformConfig.mSpiMode            = OT_PLATFORM_CONFIG_SPI_DEFAULT_MODE;
     aConfig->mLogLevel                           = OT_LOG_LEVEL_CRIT;
-    aConfig->mSupportedChannelMask               = 0xffffffff;
 
     optind = 1;
 
@@ -282,9 +284,11 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         case ARG_SPI_SMALL_PACKET:
             aConfig->mPlatformConfig.mSpiSmallPacketSize = (uint8_t)atoi(optarg);
             break;
-        case ARG_SUPPORTED_CHANNEL_MASK:
-            aConfig->mSupportedChannelMask = (uint32_t)atoi(optarg);
+#if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
+        case ARG_MAX_POWER_TABLE:
+            aConfig->mPlatformConfig.mMaxPowerTable = optarg;
             break;
+#endif
         case '?':
             PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
             break;
@@ -335,8 +339,6 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
     {
         exit(OT_EXIT_SUCCESS);
     }
-
-    otLinkSetSupportedChannelMask(instance, config.mSupportedChannelMask);
 
     return instance;
 }

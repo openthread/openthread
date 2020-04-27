@@ -32,7 +32,9 @@
  */
 
 #include "platform-posix.h"
+
 #include "lib/spinel/radio_spinel.hpp"
+#include "posix/platform/max_power_table.hpp"
 
 #if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_UART
 #include "hdlc_interface.hpp"
@@ -49,6 +51,8 @@ static ot::Spinel::RadioSpinel<ot::Posix::SpiInterface, RadioProcessContext> sRa
 #else
 #error "OPENTHREAD_POSIX_CONFIG_RCP_BUS only allows OT_POSIX_RCP_BUS_UART and OT_POSIX_RCP_BUS_SPI!"
 #endif
+
+static ot::Posix::MaxPowerTable sMaxPowerTable;
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
@@ -89,6 +93,22 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 
 void platformRadioInit(const otPlatformConfig *aPlatformConfig)
 {
+#if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
+    if (aPlatformConfig->mMaxPowerTable != NULL)
+    {
+        uint8_t     channel = ot::Radio::kChannelMin;
+        const char *power   = NULL;
+
+        for (power = strtok(const_cast<char *>(aPlatformConfig->mMaxPowerTable), ",");
+             power != NULL && channel <= ot::Radio::kChannelMax; power = strtok(NULL, ","))
+        {
+            sMaxPowerTable.SetTransmitPower(channel++, static_cast<int8_t>(strtol(power, NULL, 0)));
+        }
+
+        VerifyOrDie(power == NULL, OT_EXIT_INVALID_ARGUMENTS);
+    }
+#endif
+
     SuccessOrDie(sRadioSpinel.GetSpinelInterface().Init(*aPlatformConfig));
     sRadioSpinel.Init(aPlatformConfig->mResetRadio, aPlatformConfig->mRestoreDatasetFromNcp);
 }
@@ -124,7 +144,16 @@ otError otPlatRadioSleep(otInstance *aInstance)
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.Receive(aChannel);
+
+    otError error;
+
+#if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
+    SuccessOrExit(error = otPlatRadioSetTransmitPower(aInstance, sMaxPowerTable.GetTransmitPower(aChannel)));
+#endif
+    error = sRadioSpinel.Receive(aChannel);
+
+exit:
+    return error;
 }
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
@@ -403,13 +432,21 @@ void otPlatDiagAlarmCallback(otInstance *aInstance)
 uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.GetRadioChannelMask(false);
+    return
+#if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
+        sMaxPowerTable.GetAllowedChannelMask() &
+#endif
+        sRadioSpinel.GetRadioChannelMask(false);
 }
 
 uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.GetRadioChannelMask(true);
+    return
+#if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
+        sMaxPowerTable.GetAllowedChannelMask() &
+#endif
+        sRadioSpinel.GetRadioChannelMask(true);
 }
 
 otRadioState otPlatRadioGetState(otInstance *aInstance)
