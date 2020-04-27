@@ -875,7 +875,7 @@ uint32_t getSrcMatchEntriesEnableStatus(bool aShort)
     return status;
 }
 
-int8_t findSrcMatchShortEntry(const uint16_t aShortAddress)
+int8_t findSrcMatchShortEntry(uint16_t aShortAddress)
 {
     int8_t    entry = -1;
     uint16_t  shortAddr;
@@ -1036,7 +1036,7 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
     }
 }
 
-otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, uint16_t aShortAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -1086,7 +1086,7 @@ exit:
     return error;
 }
 
-otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, uint16_t aShortAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
