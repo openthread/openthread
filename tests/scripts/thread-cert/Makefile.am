@@ -78,6 +78,7 @@ EXTRA_DIST                                                         = \
     Cert_5_6_07_NetworkDataRequestREED.py                            \
     Cert_5_6_08_ContextManagement.py                                 \
     Cert_5_6_09_NetworkDataForwarding.py                             \
+    Cert_5_7_01_CoapDiagCommands_A.py                                \
     Cert_5_8_01_KeySynchronization.py                                \
     Cert_5_8_02_KeyIncrement.py                                      \
     Cert_5_8_03_KeyIncrementRollOver.py                              \
@@ -136,6 +137,7 @@ EXTRA_DIST                                                         = \
     mle.py                                                           \
     net_crypto.py                                                    \
     network_data.py                                                  \
+    network_diag.py                                                  \
     network_layer.py                                                 \
     node.py                                                          \
     pcap.py                                                          \
@@ -227,6 +229,7 @@ check_SCRIPTS                                                      = \
     Cert_5_6_07_NetworkDataRequestREED.py                            \
     Cert_5_6_08_ContextManagement.py                                 \
     Cert_5_6_09_NetworkDataForwarding.py                             \
+    Cert_5_7_01_CoapDiagCommands_A.py                                \
     Cert_5_8_01_KeySynchronization.py                                \
     Cert_5_8_02_KeyIncrement.py                                      \
     Cert_5_8_03_KeyIncrementRollOver.py                              \
@@ -295,6 +298,7 @@ XFAIL_NCP_TESTS                                                    = \
     test_reed_address_solicit_rejected.py                            \
     test_service.py                                                  \
     Cert_5_3_10_AddressQuery.py                                      \
+    Cert_5_7_01_CoapDiagCommands_A.py                                \
     Cert_8_1_01_Commissioning.py                                     \
     Cert_8_1_02_Commissioning.py                                     \
     Cert_8_2_01_JoinerRouter.py                                      \
