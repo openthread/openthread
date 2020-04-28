@@ -170,10 +170,13 @@ otError Commissioner::Start(otCommissionerStateCallback  aStateCallback,
     SetState(OT_COMMISSIONER_STATE_PETITION);
 
 exit:
-    if (error != OT_ERROR_NONE && error != OT_ERROR_ALREADY)
+    if (error != OT_ERROR_NONE)
     {
         otLogWarnMeshCoP("Failed to start commissioner: %s", otThreadErrorToString(error));
-        Get<Coap::CoapSecure>().Stop();
+        if (error != OT_ERROR_ALREADY)
+        {
+            Get<Coap::CoapSecure>().Stop();
+        }
     }
 
     return error;
@@ -210,7 +213,7 @@ otError Commissioner::Stop(bool aResign)
     }
 
 exit:
-    if (error != OT_ERROR_NONE && error != OT_ERROR_ALREADY)
+    if (error != OT_ERROR_NONE)
     {
         otLogWarnMeshCoP("Failed to stop Commissioner: %s", otThreadErrorToString(error));
     }
