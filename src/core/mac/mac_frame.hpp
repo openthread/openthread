@@ -1051,6 +1051,23 @@ public:
     bool IsAckedWithFramePending(void) const { return mInfo.mRxInfo.mAckedWithFramePending; }
 
     /**
+     * This method indicates whether or not the received frame is an out-of-band frame.
+     *
+     * @retval TRUE   This is an out-of-band frame.
+     * @retval FALSE  This is not an out-of-band frame.
+     *
+     */
+    bool IsAnOutofband(void) const { return mInfo.mRxInfo.mIsAnOob; }
+
+    /**
+     * This method sets the out-of-band frame flag attribute.
+     *
+     * @param[in]  aIsAnOob  TRUE if frame is an out-of-band frame, FALSE otherwise.
+     *
+     */
+    void SetIsAnOutofband(bool aIsAnOob) { mInfo.mRxInfo.mIsAnOob = aIsAnOob; }
+
+    /**
      * This method returns the timestamp when the frame was received.
      *
      * @returns The timestamp when the frame was received, in microseconds.

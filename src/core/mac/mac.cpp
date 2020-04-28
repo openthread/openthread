@@ -986,8 +986,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
         ExitNow();
         break;
 
-    case Frame::kKeyIdMode2:
-    {
+    case Frame::kKeyIdMode2: {
         const uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
         aFrame.SetAesKey(static_cast<const Key &>(sMode2Key));
         mKeyIdMode2FrameCounter++;
@@ -1369,6 +1368,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
 #endif
 
     case kOperationTransmitOutOfBandFrame:
+        mCounters.mTxOther++;
         FinishOperation();
         PerformNextOperation();
         break;
@@ -1574,6 +1574,15 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
     IgnoreError(aFrame->GetSrcAddr(srcaddr));
     IgnoreError(aFrame->GetDstAddr(dstaddr));
+    // count out-of-band frames
+    if (aFrame->IsAnOutofband())
+    {
+        mCounters.mRxOther++;
+        ExitNow();
+    }
+
+    aFrame->GetSrcAddr(srcaddr);
+    aFrame->GetDstAddr(dstaddr);
     neighbor = Get<Mle::MleRouter>().GetNeighbor(srcaddr);
 
     // Destination Address Filtering

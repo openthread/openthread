@@ -239,6 +239,7 @@ typedef struct otRadioFrame
 
             // Flags
             bool mAckedWithFramePending : 1; /// This indicates if this frame was acknowledged with frame pending set.
+            bool mIsAnOob;                   ///< True if this frame is an out-of-band frame.
         } mRxInfo;
     } mInfo;
 } otRadioFrame;
