@@ -523,14 +523,6 @@ public:
     void SetDstAddr(const Address &aAddress);
 
     /**
-     * This method indicates whether or not the Src PanId is present.
-     *
-     * @returns TRUE if the Src PanId is present, FALSE otherwise.
-     *
-     */
-    bool IsSrcPanIdPresent(uint16_t aFcf) const;
-
-    /**
      * This method gets the Source PAN Identifier.
      *
      * @param[out]  aPanId  The Source PAN Identifier.
@@ -945,6 +937,7 @@ private:
     enum
     {
         kInvalidIndex  = 0xff,
+        kInvalidSize   = kInvalidIndex,
         kSequenceIndex = kFcfSize,
     };
 
@@ -966,7 +959,12 @@ private:
     static bool IsDstAddrPresent(uint16_t aFcf) { return (aFcf & kFcfDstAddrMask) != kFcfDstAddrNone; }
     static bool IsDstPanIdPresent(uint16_t aFcf);
     static bool IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone; }
+    static bool IsSrcPanIdPresent(uint16_t aFcf);
     static bool IsVersion2015(uint16_t aFcf) { return (aFcf & kFcfFrameVersionMask) == kFcfFrameVersion2015; }
+
+    static uint8_t CalculateAddrFieldSize(uint16_t aFcf);
+    static uint8_t CalculateSecurityHeaderSize(uint8_t aSecurityControl);
+    static uint8_t CalculateMicSize(uint8_t aSecurityControl);
 };
 
 /**
