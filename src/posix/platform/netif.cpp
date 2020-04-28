@@ -558,6 +558,11 @@ static void logAddrEvent(bool isAdd, bool isUnicast, struct sockaddr_in6 &addr6,
 {
     char addressString[INET6_ADDRSTRLEN + 1];
 
+    // these parameters may not be used if logging is disabled at compile time
+    OT_UNUSED_VARIABLE(isUnicast);
+    OT_UNUSED_VARIABLE(addr6);
+    OT_UNUSED_VARIABLE(addressString);
+
     if ((error == OT_ERROR_NONE) || ((isAdd) && (error == OT_ERROR_ALREADY)) ||
         ((!isAdd) && (error == OT_ERROR_NOT_FOUND)))
     {
@@ -582,9 +587,6 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
     size_t              rtaLength;
     otError             error = OT_ERROR_NONE;
     struct sockaddr_in6 addr6;
-    char                addressString[INET6_ADDRSTRLEN + 1];
-
-    (void)addressString; // to silence warnings if otLog...Plat is defined as a no-op
 
     VerifyOrExit(ifaddr->ifa_index == static_cast<unsigned int>(sTunIndex) && ifaddr->ifa_family == AF_INET6, OT_NOOP);
 
@@ -829,7 +831,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
                         struct in6_aliasreq ifr6;
                         char                addressString[INET6_ADDRSTRLEN + 1];
 
-                        (void)addressString; // if otLog*Plat is disabled, we'll get a warning
+                        OT_UNUSED_VARIABLE(addressString); // if otLog*Plat is disabled, we'll get a warning
 
                         memset(&ifr6, 0, sizeof(ifr6));
                         strlcpy(ifr6.ifra_name, sTunName, sizeof(ifr6.ifra_name));
