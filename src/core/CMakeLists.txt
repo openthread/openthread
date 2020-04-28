@@ -245,10 +245,10 @@ target_sources(openthread-radio PRIVATE
 
 target_link_libraries(openthread-ftd
     PRIVATE
-        openthread-mbedtls
+        ${OT_MBEDTLS}
 )
 
 target_link_libraries(openthread-mtd
     PRIVATE
-        openthread-mbedtls
+        ${OT_MBEDTLS}
 )

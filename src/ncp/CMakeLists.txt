@@ -105,7 +105,7 @@ target_link_libraries(openthread-ncp-ftd
     PUBLIC
         openthread-ftd
     PRIVATE
-        openthread-mbedtls
+        ${OT_MBEDTLS}
         openthread-hdlc
         openthread-spinel-ncp
 )
@@ -114,7 +114,7 @@ target_link_libraries(openthread-ncp-mtd
     PUBLIC
         openthread-mtd
     PRIVATE
-        openthread-mbedtls
+        ${OT_MBEDTLS}
         openthread-hdlc
         openthread-spinel-ncp
 )

@@ -70,7 +70,7 @@ target_link_libraries(openthread-samr21
     PUBLIC
         samr21-driver
     PRIVATE
-        openthread-mbedtls
+        ${OT_MBEDTLS}
 )
 
 target_link_options(openthread-samr21
