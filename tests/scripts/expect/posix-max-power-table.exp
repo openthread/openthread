@@ -39,4 +39,18 @@ expect "Done"
 send "channel preferred\n"
 expect "0x3fff800"
 expect "Done"
+send "\x04"
+expect eof
+# allows all channels by default
+spawn $env(OT_COMMAND) $env(RCP_COMMAND) 1
+set timeout 1
+expect_after {
+    timeout { exit 1 }
+}
+send "channel supported\n"
+expect "0x7fff800"
+expect "Done"
+send "channel preferred\n"
+expect "0x7fff800"
+expect "Done"
 send_user "\r\n"

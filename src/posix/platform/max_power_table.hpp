@@ -61,7 +61,7 @@ public:
     /**
      * This method gets the allowed channel masks.
      *
-     * All channels of max power value of 0xff is considered forbidden.
+     * All channels of max power value of 0x7f is considered forbidden.
      *
      */
     uint32_t GetAllowedChannelMask(void) const

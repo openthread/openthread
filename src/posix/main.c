@@ -201,7 +201,10 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     aConfig->mPlatformConfig.mSpiAlignAllowance  = OT_PLATFORM_CONFIG_SPI_DEFAULT_ALIGN_ALLOWANCE;
     aConfig->mPlatformConfig.mSpiSmallPacketSize = OT_PLATFORM_CONFIG_SPI_DEFAULT_SMALL_PACKET_SIZE;
     aConfig->mPlatformConfig.mSpiMode            = OT_PLATFORM_CONFIG_SPI_DEFAULT_MODE;
-    aConfig->mLogLevel                           = OT_LOG_LEVEL_CRIT;
+#if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
+    aConfig->mPlatformConfig.mMaxPowerTable = "20";
+#endif
+    aConfig->mLogLevel = OT_LOG_LEVEL_CRIT;
 
     optind = 1;
 

@@ -106,6 +106,13 @@ void platformRadioInit(const otPlatformConfig *aPlatformConfig)
         }
 
         VerifyOrDie(power == NULL, OT_EXIT_INVALID_ARGUMENTS);
+
+        // Use the last power if omitted.
+        while (channel <= ot::Radio::kChannelMax)
+        {
+            sMaxPowerTable.SetTransmitPower(channel, sMaxPowerTable.GetTransmitPower(channel - 1));
+            ++channel;
+        }
     }
 #endif
 
