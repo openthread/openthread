@@ -124,8 +124,18 @@ public:
      */
     const Ip6::InterfaceIdentifier &GetFixedDuaInterfaceIdentifier(void) const { return mFixedDuaInterfaceIdentifier; }
 
+    /*
+     * This method restores duplicate address detection information from non-volatile memory.
+     *
+     * @retval OT_ERROR_NONE       Successfully restored the duplicatee address detection information.
+     * @retval OT_ERROR_NOT_FOUND  There is no valid Dad Counter stored in non-volatile memory.
+     *
+     */
+    otError Restore(void);
+
 private:
     otError GenerateDomainUnicastAddressIid(void);
+    otError Store(void);
 
     Ip6::InterfaceIdentifier mFixedDuaInterfaceIdentifier;
     Ip6::NetifUnicastAddress mDomainUnicastAddress;
