@@ -10,10 +10,9 @@ $ ./bootstrap
 $ make -f src/posix/Makefile-posix
 ```
 
-After a successful build, the `elf` files are found in
-`<path-to-openthread>/output/posix/<platform>/bin`.
+After a successful build, the `elf` files are found in `<path-to-openthread>/output/posix/<platform>/bin`.
 
-## 
+##
 
 ## Interact
 

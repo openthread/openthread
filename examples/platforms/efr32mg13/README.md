@@ -1,19 +1,13 @@
 # OpenThread on EFR32MG13 Example
 
-This directory contains example platform drivers for the [Silicon Labs EFR32MG13][efr32mg13]
-based on [EFR32™ Mighty Gecko Wireless Starter Kit][SLWSTK6000B].
+This directory contains example platform drivers for the [Silicon Labs EFR32MG13][efr32mg13] based on [EFR32™ Mighty Gecko Wireless Starter Kit][slwstk6000b].
 
 [efr32mg]: http://www.silabs.com/products/wireless/mesh-networking/efr32mg-mighty-gecko-zigbee-thread-soc
-[SLWSTK6000B]: http://www.silabs.com/products/development-tools/wireless/mesh-networking/mighty-gecko-starter-kit
+[slwstk6000b]: http://www.silabs.com/products/development-tools/wireless/mesh-networking/mighty-gecko-starter-kit
 
-The example platform drivers are intended to present the minimal code
-necessary to support OpenThread. [EFR32MG13P SoC][efr32mg13p]
-has rich memory and peripheral resources which can support all OpenThread
-capabilities. See the "Run the example with EFR32MG13 boards" section below
-for an example using basic OpenThread capabilities.
+The example platform drivers are intended to present the minimal code necessary to support OpenThread. [EFR32MG13P SoC][efr32mg13p] has rich memory and peripheral resources which can support all OpenThread capabilities. See the "Run the example with EFR32MG13 boards" section below for an example using basic OpenThread capabilities.
 
-See [sleepy-demo/README.md](sleepy-demo/README.md) for instructions for an example that uses the low-energy
-modes of the EFR32MG13 when running as a Sleepy End Device.
+See [sleepy-demo/README.md](sleepy-demo/README.md) for instructions for an example that uses the low-energy modes of the EFR32MG13 when running as a Sleepy End Device.
 
 [efr32mg13p]: http://www.silabs.com/products/wireless/mesh-networking/efr32mg-mighty-gecko-zigbee-thread-soc/device.EFR32MG13P432F1024GL125
 
@@ -23,8 +17,7 @@ Download and install the [GNU toolchain for ARM Cortex-M][gnu-toolchain].
 
 [gnu-toolchain]: https://developer.arm.com/open-source/gnu-toolchain/gnu-rm
 
-In a Bash terminal, follow these instructions to install the GNU toolchain and
-other dependencies.
+In a Bash terminal, follow these instructions to install the GNU toolchain and other dependencies.
 
 ```bash
 $ cd <path-to-openthread>
@@ -42,15 +35,13 @@ $ ./script/bootstrap
    - Find Flex SDK v2.7 in the Software Update page and click Install.
    - Flex SDK v2.7 will be installed in the path: `/SimplicityStudio_v4/developer/sdks/gecko_sdk_suite`.
 
-For more information on configuring, building, and installing applications for the Wireless Gecko (EFR32)
-portfolio using FLEX, see [Getting Started with the Silicon Labs Flex Software Development Kit for the 
-Wireless Gecko (EFR32™) Portfolio][QSG138]. For more information
-on RAIL, see [Radio Abstraction Interface Layer][rail].
+For more information on configuring, building, and installing applications for the Wireless Gecko (EFR32) portfolio using FLEX, see [Getting Started with the Silicon Labs Flex Software Development Kit for the Wireless Gecko (EFR32™) Portfolio][qsg138]. For more information on RAIL, see [Radio Abstraction Interface Layer][rail].
 
-[QSG138]: https://www.silabs.com/documents/public/quick-start-guides/qsg138-flex-efr32.pdf
+[qsg138]: https://www.silabs.com/documents/public/quick-start-guides/qsg138-flex-efr32.pdf
 [rail]: http://www.silabs.com/products/development-tools/software/radio-abstraction-interface-layer-sdk
 
 3. Configure the path to Flex SDK source code.
+
 ```bash
 $ cd <path-to-openthread>/third_party
 $ mkdir silabs
@@ -59,6 +50,7 @@ $ cp -rf gecko_sdk_suite <path-to-openthread>/third_party/silabs/
 ```
 
 Alternatively create a symbolic link to the Flex SDK source code.
+
 ```bash
 $ cd <path-to-openthread>/third_party
 $ mkdir silabs
@@ -66,22 +58,23 @@ $ ln -s <path-to-Simplicity-Studio>/developer/sdks/gecko_sdk_suite silabs/gecko_
 ```
 
 4. Build OpenThread Firmware (CLI example) on EFR32 platform.
+
 ```bash
 $ cd <path-to-openthread>
 $ ./bootstrap
 ```
+
 For EFR32MG13™ Mighty Gecko Wireless Starter Kit:
+
 ```bash
 $ make -f examples/Makefile-efr32mg13 BOARD=BRD4168A
 ```
 
-After a successful build, the `elf` files are found in
-`<path-to-openthread>/output/efr32mg13/bin`.
+After a successful build, the `elf` files are found in `<path-to-openthread>/output/efr32mg13/bin`.
 
 ## Flash Binaries
 
-Compiled binaries may be flashed onto the EFR32 using [JLinkGDBServer][jlinkgdbserver].
-EFR32 Starter kit mainboard integrates an on-board SEGGER J-Link debugger.
+Compiled binaries may be flashed onto the EFR32 using [JLinkGDBServer][jlinkgdbserver]. EFR32 Starter kit mainboard integrates an on-board SEGGER J-Link debugger.
 
 [jlinkgdbserver]: https://www.segger.com/jlink-gdb-server.html
 
@@ -98,8 +91,7 @@ $ (gdb) c
 
 Note: Support for the "EFR32MG13PxxxF1024" device was added to JLinkGDBServer V6.14d.
 
-Or 
-Compiled binaries also may be flashed onto the specified EFR32 dev board using [J-Link Commander][j-link-commander].
+Or Compiled binaries also may be flashed onto the specified EFR32 dev board using [J-Link Commander][j-link-commander].
 
 [j-link-commander]: https://www.segger.com/products/debug-probes/j-link/tools/j-link-commander/
 
@@ -126,16 +118,12 @@ $ arm-none-eabi-objcopy -O ihex ot-cli-ftd ot-cli-ftd.ihex
 $ <path-to-simplicity-studio>/developer/adapter_packs/commander/commander
 ```
 
-In the J-Link Device drop-down list select the serial number of the device to flash.  Click the Adapter Connect button.
-Esnure the Debug Interface drop-down list is set to SWD and click the Target Connect button.
-Click on the Flash icon on the left side of the window to switch to the flash page.
-In the Flash MCU pane enter the path of the ot-cli-ftd.s37 file or choose the file with the Browse... button.
-Click the Flash button located under the Browse... button.
+In the J-Link Device drop-down list select the serial number of the device to flash. Click the Adapter Connect button. Esnure the Debug Interface drop-down list is set to SWD and click the Target Connect button. Click on the Flash icon on the left side of the window to switch to the flash page. In the Flash MCU pane enter the path of the ot-cli-ftd.s37 file or choose the file with the Browse... button. Click the Flash button located under the Browse... button.
 
 ## Run the example with EFR32MG13 boards
+
 1. Flash two EFR32 boards with the `CLI example` firmware (as shown above).
-2. Open terminal to first device `/dev/ttyACM0` (serial port settings: 115200 8-N-1).
-   Type `help` for a list of commands.
+2. Open terminal to first device `/dev/ttyACM0` (serial port settings: 115200 8-N-1). Type `help` for a list of commands.
 
    ```bash
    > help
@@ -198,8 +186,7 @@ Click the Flash button located under the Browse... button.
    Done
    ```
 
-4. Open terminal to second device `/dev/ttyACM1` (serial port settings: 115200 8-N-1)
-   and attach it to the Thread network as a Router.
+4. Open terminal to second device `/dev/ttyACM1` (serial port settings: 115200 8-N-1) and attach it to the Thread network as a Router.
 
    ```bash
    > dataset masterkey dfd34f0f05cad978ec4e32b0413038ff
@@ -238,8 +225,7 @@ Click the Flash button located under the Browse... button.
    16 bytes from fd3d:b50b:f96d:722d:558:f56b:d688:799: icmp_seq=1 hlim=64 time=24ms
    ```
 
-The above example demonstrates basic OpenThread capabilities. Enable more features/roles (e.g. commissioner,
-joiner, DHCPv6 Server/Client, etc.) by assigning compile-options before compiling.
+The above example demonstrates basic OpenThread capabilities. Enable more features/roles (e.g. commissioner, joiner, DHCPv6 Server/Client, etc.) by assigning compile-options before compiling.
 
 ```bash
 $ cd <path-to-openthread>
@@ -247,14 +233,16 @@ $ ./bootstrap
 $ make -f examples/Makefile-efr32mg13 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1
 ```
 
-For a list of all available commands, visit [OpenThread CLI Reference README.md][CLI].
+For a list of all available commands, visit [OpenThread CLI Reference README.md][cli].
 
-[CLI]: https://github.com/openthread/openthread/blob/master/src/cli/README.md
+[cli]: https://github.com/openthread/openthread/blob/master/src/cli/README.md
 
 ## Verification
 
 The following toolchain has been used for testing and verification:
-   - gcc version 7.3.1
+
+- gcc version 7.3.1
 
 The EFR32 example has been verified with following Flex SDK/RAIL Library version:
-   - Flex SDK version 2.7.0.0
+
+- Flex SDK version 2.7.0.0

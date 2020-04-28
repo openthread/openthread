@@ -353,17 +353,12 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
 
     if (aLength == 0)
     {
-        const Tlv *cur = reinterpret_cast<const Tlv *>(dataset.GetBytes());
-        const Tlv *end = reinterpret_cast<const Tlv *>(dataset.GetBytes() + dataset.GetSize());
-
-        while (cur < end)
+        for (const Tlv *cur = dataset.GetTlvsStart(); cur < dataset.GetTlvsEnd(); cur = cur->GetNext())
         {
             if (cur->GetType() != Tlv::kNetworkMasterKey || Get<KeyManager>().IsObtainMasterKeyEnabled())
             {
                 SuccessOrExit(error = cur->AppendTo(*message));
             }
-
-            cur = cur->GetNext();
         }
     }
     else
@@ -417,11 +412,10 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
 
     if (Get<Commissioner>().IsActive())
     {
-        const Tlv *cur          = reinterpret_cast<const Tlv *>(aTlvs);
         const Tlv *end          = reinterpret_cast<const Tlv *>(aTlvs + aLength);
         bool       hasSessionId = false;
 
-        for (; cur < end; cur = cur->GetNext())
+        for (const Tlv *cur = reinterpret_cast<const Tlv *>(aTlvs); cur < end; cur = cur->GetNext())
         {
             VerifyOrExit((cur + 1) <= end, error = OT_ERROR_INVALID_ARGS);
 
@@ -445,8 +439,8 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     {
         ActiveTimestampTlv timestamp;
         timestamp.Init();
-        static_cast<Timestamp *>(&timestamp)->SetSeconds(aDataset.mActiveTimestamp);
-        static_cast<Timestamp *>(&timestamp)->SetTicks(0);
+        timestamp.SetSeconds(aDataset.mActiveTimestamp);
+        timestamp.SetTicks(0);
         SuccessOrExit(error = timestamp.AppendTo(*message));
     }
 
@@ -454,8 +448,8 @@ otError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, con
     {
         PendingTimestampTlv timestamp;
         timestamp.Init();
-        static_cast<Timestamp *>(&timestamp)->SetSeconds(aDataset.mPendingTimestamp);
-        static_cast<Timestamp *>(&timestamp)->SetTicks(0);
+        timestamp.SetSeconds(aDataset.mPendingTimestamp);
+        timestamp.SetTicks(0);
         SuccessOrExit(error = timestamp.AppendTo(*message));
     }
 

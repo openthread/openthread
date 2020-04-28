@@ -113,7 +113,7 @@ class Cert_9_2_13_EnergyScan(unittest.TestCase):
         self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3E8, ipaddr)
 
         self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3E8,
-                                             'ff33:0040:fdde:ad00:beef:0:0:1')
+                                             'ff33:0040:fd00:db8:0:0:0:1')
 
         self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
 

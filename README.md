@@ -1,18 +1,10 @@
-[![OpenThread][ot-logo]][ot-repo]
-[![Build][ot-gh-action-build-svg]][ot-gh-action-build]
-[![Simulation][ot-gh-action-simulation-svg]][ot-gh-action-simulation]
-[![Language grade: C/C++][ot-lgtm-svg]][ot-lgtm]
-[![Coverage Status][ot-codecov-svg]][ot-codecov]
-[![Build Status][ot-docker-dev-svg]][ot-docker-dev]
+[![OpenThread][ot-logo]][ot-repo] [![Build][ot-gh-action-build-svg]][ot-gh-action-build] [![Simulation][ot-gh-action-simulation-svg]][ot-gh-action-simulation] [![Language grade: C/C++][ot-lgtm-svg]][ot-lgtm] [![Coverage Status][ot-codecov-svg]][ot-codecov] [![Build Status][ot-docker-dev-svg]][ot-docker-dev]
 
 ---
 
 # What is OpenThread?
 
-OpenThread released by Google is...
-<a href="http://threadgroup.org/technology/ourtechnology#certifiedproducts">
-<img src="https://cdn.rawgit.com/openthread/openthread/ab4c4e1e/doc/images/certified.svg" alt="Thread Certified Component" width="150px" align="right">
-</a>
+OpenThread released by Google is... <a href="http://threadgroup.org/technology/ourtechnology#certifiedproducts"> <img src="https://cdn.rawgit.com/openthread/openthread/ab4c4e1e/doc/images/certified.svg" alt="Thread Certified Component" width="150px" align="right"> </a>
 
 **...an open-source implementation of the [Thread](http://threadgroup.org/technology/ourtechnology) networking protocol.** Google Nest has released OpenThread to make the technology used in Nest products more broadly available to developers to accelerate the development of products for the connected home.
 
@@ -44,12 +36,12 @@ More information about Thread can be found at [threadgroup.org](http://threadgro
 
 All end-user documentation and guides are located at [openthread.io](https://openthread.io). If you're looking to do things like...
 
-* Learn more about OpenThread features and enhancements
-* Use OpenThread in your products
-* Learn how to build and configure a Thread network
-* Port OpenThread to a new platform
-* Build an application on top of OpenThread
-* Certify a product using OpenThread
+- Learn more about OpenThread features and enhancements
+- Use OpenThread in your products
+- Learn how to build and configure a Thread network
+- Port OpenThread to a new platform
+- Build an application on top of OpenThread
+- Certify a product using OpenThread
 
 ...then [openthread.io](https://openthread.io) is the place for you.
 
@@ -77,8 +69,8 @@ Please only use the OpenThread name and marks when accurately referencing this s
 
 There are numerous avenues for OpenThread support:
 
-* Bugs and feature requests — [submit to the Issue Tracker](https://github.com/openthread/openthread/issues)
-* Stack Overflow — [post questions using the `openthread` tag](http://stackoverflow.com/questions/tagged/openthread)
-* Google Groups — [discussion and announcements at openthread-users](https://groups.google.com/forum/#!forum/openthread-users)
+- Bugs and feature requests — [submit to the Issue Tracker](https://github.com/openthread/openthread/issues)
+- Stack Overflow — [post questions using the `openthread` tag](http://stackoverflow.com/questions/tagged/openthread)
+- Google Groups — [discussion and announcements at openthread-users](https://groups.google.com/forum/#!forum/openthread-users)
 
 The openthread-users Google Group is the recommended place for users to discuss OpenThread and interact directly with the OpenThread team.

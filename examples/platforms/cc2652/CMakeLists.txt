@@ -75,6 +75,7 @@ target_link_libraries(openthread-cc2652
 target_link_options(openthread-cc2652
     PUBLIC
         -T${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2/linker_files/cc26x2r1f.lds
+        -Wl,--gc-sections
         -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
 )
 

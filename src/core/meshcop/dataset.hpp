@@ -290,7 +290,7 @@ public:
      * @param[in] aType The type of a specific TLV.
      *
      */
-    void Remove(Tlv::Type aType);
+    void RemoveTlv(Tlv::Type aType);
 
     /**
      * This method appends the MLE Dataset TLV but excluding MeshCoP Sub Timestamp TLV.
@@ -324,6 +324,42 @@ public:
     void ConvertToActive(void);
 
     /**
+     * This method returns a pointer to the start of Dataset TLVs sequence.
+     *
+     * @return  A pointer to the start of Dataset TLVs sequence.
+     *
+     */
+    Tlv *GetTlvsStart(void) { return reinterpret_cast<Tlv *>(mTlvs); }
+
+    /**
+     * This method returns a pointer to the start of Dataset TLVs sequence.
+     *
+     * @return  A pointer to start of Dataset TLVs sequence.
+     *
+     */
+    const Tlv *GetTlvsStart(void) const { return reinterpret_cast<const Tlv *>(mTlvs); }
+
+    /**
+     * This method returns a pointer to the past-the-end of Dataset TLVs sequence.
+     *
+     * Note that past-the-end points to the byte after the end of the last TLV in Dataset TLVs sequence.
+     *
+     * @return  A pointer to past-the-end of Dataset TLVs sequence.
+     *
+     */
+    Tlv *GetTlvsEnd(void) { return reinterpret_cast<Tlv *>(mTlvs + mLength); }
+
+    /**
+     * This method returns a pointer to the past-the-end of Dataset TLVs sequence.
+     *
+     * Note that past-the-end points to the byte after the end of the last TLV in Dataset TLVs sequence.
+     *
+     * @return  A pointer to past-the-end of Dataset TLVs sequence.
+     *
+     */
+    const Tlv *GetTlvsEnd(void) const { return reinterpret_cast<const Tlv *>(mTlvs + mLength); }
+
+    /**
      * This static method converts a Dataset Type to a string.
      *
      * @param[in]  aType   A Dataset type.
@@ -332,7 +368,7 @@ public:
     static const char *TypeToString(Type aType);
 
 private:
-    void Remove(uint8_t *aStart, uint8_t aLength);
+    void RemoveTlv(Tlv *aTlv);
 
     uint8_t   mTlvs[kMaxSize]; ///< The Dataset buffer
     TimeMilli mUpdateTime;     ///< Local time last updated

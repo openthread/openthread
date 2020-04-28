@@ -992,6 +992,7 @@ private:
     enum
     {
         kInvalidIndex  = 0xff,
+        kInvalidSize   = kInvalidIndex,
         kSequenceIndex = kFcfSize,
     };
 
@@ -1016,12 +1017,16 @@ private:
 
     static uint8_t GetKeySourceLength(uint8_t aKeyIdMode);
 
-    static bool    IsSrcPanIdPresent(uint16_t aFcf);
     static bool    IsDstAddrPresent(uint16_t aFcf) { return (aFcf & kFcfDstAddrMask) != kFcfDstAddrNone; }
     static bool    IsDstPanIdPresent(uint16_t aFcf);
     static bool    IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone; }
+    static bool    IsSrcPanIdPresent(uint16_t aFcf);
     static bool    IsVersion2015(uint16_t aFcf) { return (aFcf & kFcfFrameVersionMask) == kFcfFrameVersion2015; }
     static uint8_t GetSecurityHeaderLength(uint8_t aSecurityControl);
+
+    static uint8_t CalculateAddrFieldSize(uint16_t aFcf);
+    static uint8_t CalculateSecurityHeaderSize(uint8_t aSecurityControl);
+    static uint8_t CalculateMicSize(uint8_t aSecurityControl);
 };
 
 /**

@@ -1,29 +1,26 @@
-git-squash-merge tool
-================
+# git-squash-merge tool
 
-`git-squash-merge` is a bash script to help squash merge a given branch
-into the current branch. This tool is helpful for synchronizing
-git repositories which work with `gerrit`.
+`git-squash-merge` is a bash script to help squash merge a given branch into the current branch. This tool is helpful for synchronizing git repositories which work with `gerrit`.
 
-This command squash merges all commits from a given branch into the current branch.
-By default the changes are committed with a commit message containing the list
-of all squashed commits.
+This command squash merges all commits from a given branch into the current branch. By default the changes are committed with a commit message containing the list of all squashed commits.
 
-## Syntax ##
+## Syntax
 
 ```
 git-squash-merge [--no-list] [--no-commit] <branch> [<commit msg>]"
 ```
 
-## Parameters ##
-*  `<branch>` specifies the name of branch to merge into current branch.
-*  `<commit msg>` is an optional parameter specifying text to add to the commit message.
+## Parameters
 
-## Options ##
-* `--no-list` when used the commit message will not include the list of squashed commits.
-* `--no-commit` when used, the tool squashes and stages the changes but does not commit"
+- `<branch>` specifies the name of branch to merge into current branch.
+- `<commit msg>` is an optional parameter specifying text to add to the commit message.
 
-## Example of Use ##
+## Options
+
+- `--no-list` when used the commit message will not include the list of squashed commits.
+- `--no-commit` when used, the tool squashes and stages the changes but does not commit"
+
+## Example of Use
 
 ```
 ~/sw/openthread $ ./tools/gerrit/git-squash-merge.sh github/master "OpenThread GitHub sync"

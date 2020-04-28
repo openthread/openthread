@@ -78,6 +78,7 @@ target_link_libraries(openthread-qpg6095
 target_link_options(openthread-qpg6095
     PUBLIC
         -T${CMAKE_CURRENT_SOURCE_DIR}/qpg6095.ld
+        -Wl,--gc-sections
         -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
 )
 

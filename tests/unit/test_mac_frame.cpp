@@ -237,36 +237,37 @@ void TestMacHeader(void)
         uint16_t fcf;
         uint8_t  secCtl;
         uint8_t  headerLength;
+        uint8_t  footerLength;
     } tests[] = {
-        {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrNone | Mac::Frame::kFcfSrcAddrNone, 0, 3},
-        {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrNone | Mac::Frame::kFcfSrcAddrShort, 0, 7},
-        {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrNone | Mac::Frame::kFcfSrcAddrExt, 0, 13},
-        {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrShort | Mac::Frame::kFcfSrcAddrNone, 0, 7},
-        {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrExt | Mac::Frame::kFcfSrcAddrNone, 0, 13},
-        {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrShort | Mac::Frame::kFcfSrcAddrShort, 0, 11},
-        {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrShort | Mac::Frame::kFcfSrcAddrExt, 0, 17},
-        {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrExt | Mac::Frame::kFcfSrcAddrShort, 0, 17},
-        {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrExt | Mac::Frame::kFcfSrcAddrExt, 0, 23},
+        {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrNone | Mac::Frame::kFcfSrcAddrNone, 0, 3, 2},
+        {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrNone | Mac::Frame::kFcfSrcAddrShort, 0, 7, 2},
+        {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrNone | Mac::Frame::kFcfSrcAddrExt, 0, 13, 2},
+        {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrShort | Mac::Frame::kFcfSrcAddrNone, 0, 7, 2},
+        {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrExt | Mac::Frame::kFcfSrcAddrNone, 0, 13, 2},
+        {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrShort | Mac::Frame::kFcfSrcAddrShort, 0, 11, 2},
+        {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrShort | Mac::Frame::kFcfSrcAddrExt, 0, 17, 2},
+        {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrExt | Mac::Frame::kFcfSrcAddrShort, 0, 17, 2},
+        {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrExt | Mac::Frame::kFcfSrcAddrExt, 0, 23, 2},
 
         {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrShort | Mac::Frame::kFcfSrcAddrShort |
              Mac::Frame::kFcfPanidCompression,
-         0, 9},
+         0, 9, 2},
         {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrShort | Mac::Frame::kFcfSrcAddrExt |
              Mac::Frame::kFcfPanidCompression,
-         0, 15},
+         0, 15, 2},
         {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrExt | Mac::Frame::kFcfSrcAddrShort |
              Mac::Frame::kFcfPanidCompression,
-         0, 15},
+         0, 15, 2},
         {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrExt | Mac::Frame::kFcfSrcAddrExt |
              Mac::Frame::kFcfPanidCompression,
-         0, 21},
+         0, 21, 2},
 
         {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrShort | Mac::Frame::kFcfSrcAddrShort |
              Mac::Frame::kFcfPanidCompression | Mac::Frame::kFcfSecurityEnabled,
-         Mac::Frame::kSecMic32 | Mac::Frame::kKeyIdMode1, 15},
+         Mac::Frame::kSecMic32 | Mac::Frame::kKeyIdMode1, 15, 6},
         {Mac::Frame::kFcfFrameVersion2006 | Mac::Frame::kFcfDstAddrShort | Mac::Frame::kFcfSrcAddrShort |
              Mac::Frame::kFcfPanidCompression | Mac::Frame::kFcfSecurityEnabled,
-         Mac::Frame::kSecMic32 | Mac::Frame::kKeyIdMode2, 19},
+         Mac::Frame::kSecMic32 | Mac::Frame::kKeyIdMode2, 19, 6},
     };
 
     for (unsigned i = 0; i < OT_ARRAY_LENGTH(tests); i++)
@@ -274,10 +275,13 @@ void TestMacHeader(void)
         uint8_t      psdu[Mac::Frame::kMtu];
         Mac::TxFrame frame;
 
-        frame.mPsdu = psdu;
+        frame.mPsdu   = psdu;
+        frame.mLength = 0;
 
         frame.InitMacHeader(tests[i].fcf, tests[i].secCtl);
         VerifyOrQuit(frame.GetHeaderLength() == tests[i].headerLength, "MacHeader test failed");
+        VerifyOrQuit(frame.GetFooterLength() == tests[i].footerLength, "MacHeader test failed");
+        VerifyOrQuit(frame.GetLength() == tests[i].headerLength + tests[i].footerLength, "MacHeader test failed");
     }
 }
 

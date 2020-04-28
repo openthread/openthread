@@ -29,6 +29,7 @@
 
 import binascii
 
+import ipaddress
 import ipv6
 import network_data
 import network_layer
@@ -586,11 +587,24 @@ def get_sub_tlv(tlvs, tlv_type):
             return sub_tlv
 
 
-def check_address_registration_tlv(addr_reg_tlv, address_set):
-    """Verify all addresses contained in address_set are contained in add_reg_tlv
+def check_address_registration_tlv(
+    command_msg,
+    full_address,
+):
+    """Check whether or not a full IPv6 address in AddressRegistrationTlv.
     """
-    assert all(addr in addr_reg_tlv.addresses for addr in address_set
-              ), 'Some addresses are not included in AddressRegistration TLV'
+    found = False
+    addr = ipaddress.ip_address(full_address)
+    addresses = command_msg.assertMleMessageContainsTlv(
+        mle.AddressRegistration).addresses
+
+    for item in addresses:
+        if isinstance(item, mle.AddressFull) and ipaddress.ip_address(
+                item.ipv6_address) == addr:
+            found = True
+            break
+
+    return found
 
 
 def assert_contains_tlv(tlvs, check_type, tlv_type):

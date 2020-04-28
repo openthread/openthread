@@ -6,10 +6,10 @@ See [README_COMMISSIONING.md](README_COMMISSIONING.md).
 
 ## Command List
 
-* [help](#help)
-* [id](#id)
-* [start](#start)
-* [stop](#stop)
+- [help](#help)
+- [id](#id)
+- [start](#start)
+- [stop](#stop)
 
 ## Command Details
 
@@ -46,8 +46,8 @@ Usage: `joiner start <pskd> [provisioning-url]`
 
 Start the Joiner role.
 
-* pskd: Pre-Shared Key for the Joiner.
-* provisioning-url: Provisioning URL for the Joiner (optional).
+- pskd: Pre-Shared Key for the Joiner.
+- provisioning-url: Provisioning URL for the Joiner (optional).
 
 This command will cause the device to start the Joiner process.
 

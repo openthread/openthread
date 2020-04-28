@@ -60,6 +60,10 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt update
+        sudo apt --no-install-recommends install -y ninja-build
     - name: Package
       run: |
         script/test package

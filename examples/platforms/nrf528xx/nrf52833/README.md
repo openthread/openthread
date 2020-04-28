@@ -1,11 +1,11 @@
 # OpenThread on nRF52833 Example
 
-This directory contains example platform drivers for [Nordic Semiconductor nRF52833 SoC][nRF52833].
+This directory contains example platform drivers for [Nordic Semiconductor nRF52833 SoC][nrf52833].
 
-To facilitate Thread products development with the nRF52833 platform, Nordic Semiconductor provides <i>nRF5 SDK for Thread and Zigbee</i>. See [Nordic Semiconductor's nRF5 SDK for Thread and Zigbee][nRF5-SDK-section] section for more details.
+To facilitate Thread products development with the nRF52833 platform, Nordic Semiconductor provides <i>nRF5 SDK for Thread and Zigbee</i>. See [Nordic Semiconductor's nRF5 SDK for Thread and Zigbee][nrf5-sdk-section] section for more details.
 
-[nRF52833]: https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF52833
-[nRF5-SDK-section]: #nordic-semiconductors-nrf5-sdk-for-thread-and-zigbee
+[nrf52833]: https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF52833
+[nrf5-sdk-section]: #nordic-semiconductors-nrf5-sdk-for-thread-and-zigbee
 
 ## Prerequisites
 
@@ -26,13 +26,13 @@ $ ./script/bootstrap
 
 ### Flashing and debugging tools
 
-[nRF5-Command-Line-Tools]: https://www.nordicsemi.com/Software-and-Tools/Development-Tools/nRF5-Command-Line-Tools
+[nrf5-command-line-tools]: https://www.nordicsemi.com/Software-and-Tools/Development-Tools/nRF5-Command-Line-Tools
 
-Install the [nRF5 Command Line Tools][nRF5-Command-Line-Tools] to flash, debug, and make use of logging features on the nRF52833 DK with SEGGER J-Link.
+Install the [nRF5 Command Line Tools][nrf5-command-line-tools] to flash, debug, and make use of logging features on the nRF52833 DK with SEGGER J-Link.
 
 ## Building the examples
 
- To build the examples, run the following command in Bash:
+To build the examples, run the following command in Bash:
 
 ```bash
 $ cd <path-to-openthread>
@@ -40,50 +40,48 @@ $ ./bootstrap
 $ make -f examples/Makefile-nrf52833
 ```
 
-After a successful build, the `elf` files can be found in
-`<path-to-openthread>/output/nrf52833/bin`.
-You can convert them to hex using `arm-none-eabi-objcopy`:
+After a successful build, the `elf` files can be found in `<path-to-openthread>/output/nrf52833/bin`. You can convert them to hex using `arm-none-eabi-objcopy`:
+
 ```bash
 $ arm-none-eabi-objcopy -O ihex ot-cli-ftd ot-cli-ftd.hex
 ```
 
 ### USB CDC ACM support
 
-You can build the libraries with support for the native USB CDC ACM as a serial transport.
-To do so, build the firmware with the following parameter:
+You can build the libraries with support for the native USB CDC ACM as a serial transport. To do so, build the firmware with the following parameter:
+
 ```
 $ make -f examples/Makefile-nrf52833 USB=1
 ```
 
 Note that the USB CDC ACM serial transport is not supported with Engineering sample A of the nRF52833 chip.
 
-If you are using Windows 7 or earlier, you must load an additional USB CDC driver.
-The driver can be found in `third_party/NordicSemiconductor/libraries/usb/nordic_cdc_acm_example.inf`.
+If you are using Windows 7 or earlier, you must load an additional USB CDC driver. The driver can be found in `third_party/NordicSemiconductor/libraries/usb/nordic_cdc_acm_example.inf`.
 
 ### Bootloader support
 
 The examples support the following bootloaders for performing a Device Firmware Upgrade (DFU):
-* USB bootloader
-* UART bootloader
-* BLE bootloader
+
+- USB bootloader
+- UART bootloader
+- BLE bootloader
 
 The support for a particular bootloader can be enabled with the following switches:
-* USB: `BOOTLOADER=USB`
-* UART: `BOOTLOADER=UART`
-* BLE: `BOOTLOADER=BLE`
+
+- USB: `BOOTLOADER=USB`
+- UART: `BOOTLOADER=UART`
+- BLE: `BOOTLOADER=BLE`
 
 ### Native SPI support
 
-You can build the libraries with support for native SPI Slave.
-To build the libraries, run make with the following parameter:
+You can build the libraries with support for native SPI Slave. To build the libraries, run make with the following parameter:
 
 ```
 $ make -f examples/Makefile-nrf52833 NCP_SPI=1
 ```
 
-With this option enabled, SPI communication between the NCP example and wpantund is possible
-(provided that the wpantund host supports SPI Master). To achieve that, an appropriate SPI device
-should be chosen in wpantund configuration file, `/etc/wpantund.conf`. You can find an example below.
+With this option enabled, SPI communication between the NCP example and wpantund is possible (provided that the wpantund host supports SPI Master). To achieve that, an appropriate SPI device should be chosen in wpantund configuration file, `/etc/wpantund.conf`. You can find an example below.
+
 ```
 Config:NCP:SocketPath "system:/usr/bin/spi-hdlc-adapter --gpio-int /sys/class/gpio/gpio25 /dev/spidev0.0"
 ```
@@ -92,8 +90,7 @@ In this example, [spi-hdlc-adapter][spi-hdlc-adapter] is a tool that you can use
 
 The default SPI Slave pin configuration for nRF52833 is defined in `examples/platforms/nrf52833/transport-config.h`.
 
-Note that the native SPI Slave support is not intended to be used with Engineering sample A of the nRF52833 chip due to
-single transfer size limitation.
+Note that the native SPI Slave support is not intended to be used with Engineering sample A of the nRF52833 chip due to single transfer size limitation.
 
 [spi-hdlc-adapter]: https://github.com/openthread/openthread/tree/master/tools/spi-hdlc-adapter
 
@@ -106,7 +103,9 @@ You can prefix the compiler command using the CCPREFIX parameter. This speeds up
 ```
 $ make -f examples/Makefile-nrf52833 USB=1 CCPREFIX=ccache
 ```
+
 ### Optional mbedTLS threading support
+
 By default, mbedTLS library is built without support for multiple threads. You can enable this built-in support by building OpenThread with the following parameter:
 
 ```
@@ -134,8 +133,9 @@ See [mbedTls Thread Safety and Multi Threading][mbedtls-thread-safety-and-multi-
 When the Thread device is configured to obtain the Thread Network security credentials with either Thread Commissioning or an out-of-band method, the extended MAC address should be constructed out of the globally unique IEEE EUI-64.
 
 The IEEE EUI-64 address consists of two parts:
- - 24 bits of MA-L (MAC Address Block Large), formerly called OUI (Organizationally Unique Identifier)
- - 40-bit device unique identifier
+
+- 24 bits of MA-L (MAC Address Block Large), formerly called OUI (Organizationally Unique Identifier)
+- 40-bit device unique identifier
 
 By default, the device uses Nordic Semiconductor's MA-L (f4-ce-36). You can modify it by overwriting the `OPENTHREAD_CONFIG_STACK_VENDOR_OUI` define, located in the `openthread-core-nrf52833-config.h` file. This value must be publicly registered by the IEEE Registration Authority.
 
@@ -145,8 +145,7 @@ After the Thread Network security credentials have been successfully obtained, t
 
 ## Flashing the binaries
 
-Flash the compiled binaries onto nRF52833 using `nrfjprog` which is
-part of the [nRF5 Command Line Tools][nRF5-Command-Line-Tools].
+Flash the compiled binaries onto nRF52833 using `nrfjprog` which is part of the [nRF5 Command Line Tools][nrf5-command-line-tools].
 
 ```bash
 $ nrfjprog -f nrf52 --chiperase --program output/nrf52833/bin/ot-cli-ftd.hex --reset
@@ -164,12 +163,11 @@ To test the example:
 
    b. Connect to the used COM port with the following direct UART settings:
 
-   * Baud rate: 115200
-   * 8 data bits
-   * 1 stop bit
-   * No parity
-   * HW flow control: RTS/CTS
-     This allows you to view the raw UART output.
+   - Baud rate: 115200
+   - 8 data bits
+   - 1 stop bit
+   - No parity
+   - HW flow control: RTS/CTS This allows you to view the raw UART output.
 
      On Linux system a port name should be called e.g. `/dev/ttyACM0` or `/dev/ttyACM1`.
 
@@ -251,9 +249,9 @@ To test the example:
    16 bytes from fd3d:b50b:f96d:722d:558:f56b:d688:799: icmp_seq=1 hlim=64 time=24ms
    ```
 
-For a list of all available commands, visit [OpenThread CLI Reference README.md][CLI].
+For a list of all available commands, visit [OpenThread CLI Reference README.md][cli].
 
-[CLI]: ./../../../src/cli/README.md
+[cli]: ./../../../src/cli/README.md
 
 ## SEGGER J-Link tools
 
@@ -261,12 +259,12 @@ SEGGER J-Link tools allow to debug and flash generated firmware using on-board d
 
 ### Working with RTT logging
 
-By default, the OpenThread's logging module provides functions to output logging
-information over SEGGER's Real Time Transfer (RTT).
+By default, the OpenThread's logging module provides functions to output logging information over SEGGER's Real Time Transfer (RTT).
 
 You can set the desired log level by using the `OPENTHREAD_CONFIG_LOG_LEVEL` define.
 
 To enable the highest verbosity level, append `FULL_LOGS` flag to the `make` command:
+
 ```
 $ make -f examples/Makefile-nrf52833 FULL_LOGS=1
 ```
@@ -282,10 +280,13 @@ $ make -f examples/Makefile-nrf52833 FULL_LOGS=1
 
 1. Connect the DK to your machine with a USB cable.
 2. Run `JLinkExe` to connect to the target. For example:
+
 ```
 JLinkExe -device NRF52833_XXAA -if SWD -speed 4000 -autoconnect 1 -SelectEmuBySN <SEGGER_ID> -RTTTelnetPort 19021
 ```
+
 3. Run `JLinkRTTTelnet` to obtain the RTT logs from the connected device in a separate console. For example:
+
 ```
 JLinkRTTClient -RTTTelnetPort 19021
 ```
@@ -301,22 +302,28 @@ Depending on your version, due to a known issue in SEGGER's J-Link firmware, you
 3. From the Specify Target Device dropdown menu, select `NRF52833_XXAA`.
 4. From the Target Interface & Speed dropdown menu, select `SWD`.
 5. Run the following command:
+
 ```
 MSDDisable
 ```
+
 6. Power cycle the DK.
 
 #### Disabling the Mass Storage Device on Linux
 
 1. Connect the DK to your machine with a USB cable.
 2. Run `JLinkExe` to connect to the target. For example:
+
 ```
 JLinkExe -device NRF52833_XXAA -if SWD -speed 4000 -autoconnect 1 -SelectEmuBySN <SEGGER_ID>
 ```
+
 3. Run the following command:
+
 ```
 MSDDisable
 ```
+
 4. Power cycle the DK.
 
 ### Hardware Flow Control detection
@@ -334,61 +341,67 @@ To avoid potential race conditions, you can force HWFC and bypass the runtime au
 3. From the Specify Target Device dropdown menu, select `NRF52833_XXAA`.
 4. From the Target Interface & Speed dropdown menu, select `SWD`.
 5. Run the following command:
+
 ```
 SetHWFC Force
 ```
+
 6. Power cycle the DK.
 
 #### Disabling the HWFC detection on Linux
 
 1. Connect the DK to your machine with a USB cable.
 2. Run `JLinkExe` to connect to the target. For example:
+
 ```
 JLinkExe -device NRF52833_XXAA -if SWD -speed 4000 -autoconnect 1 -SelectEmuBySN <SEGGER_ID>
 ```
+
 3. Run the following command:
+
 ```
 SetHWFC Force
 ```
+
 4. Power cycle the DK.
 
-You can find more details [here][J-Link-OB].
+You can find more details [here][j-link-ob].
 
-[J-Link-OB]: https://wiki.segger.com/J-Link_OB_SAM3U_NordicSemi#Hardware_flow_control_support
+[j-link-ob]: https://wiki.segger.com/J-Link_OB_SAM3U_NordicSemi#Hardware_flow_control_support
 
 ## Diagnostic module
 
-nRF52833 port extends [OpenThread Diagnostics Module][DIAG].
+nRF52833 port extends [OpenThread Diagnostics Module][diag].
 
-You can read about all the features [here][nRFDIAG].
+You can read about all the features [here][nrfdiag].
 
-[DIAG]: ./../../../src/core/diags/README.md
-[nRFDIAG]: ./../DIAG.md
+[diag]: ./../../../src/core/diags/README.md
+[nrfdiag]: ./../DIAG.md
 
 ## Radio driver documentation
 
-The radio driver comes with documentation that describes the operation of state
-machines in this module. To open the `*.uml` sequence diagrams, use [PlantUML][PlantUML-url].
+The radio driver comes with documentation that describes the operation of state machines in this module. To open the `*.uml` sequence diagrams, use [PlantUML][plantuml-url].
 
-[PlantUML-url]: http://plantuml.com/
+[plantuml-url]: http://plantuml.com/
 
 # Nordic Semiconductor's nRF5 SDK for Thread and Zigbee
 
-Use [nRF5 Software Development Kit (SDK) for Thread and Zigbee][nRF5-SDK-Thread-Zigbee] when developing Thread products with Nordic Semiconductor's advanced nRF52840, nRF52833 or nRF52811 SoCs.
+Use [nRF5 Software Development Kit (SDK) for Thread and Zigbee][nrf5-sdk-thread-zigbee] when developing Thread products with Nordic Semiconductor's advanced nRF52840, nRF52833 or nRF52811 SoCs.
 
 The <i>nRF5 SDK for Thread and Zigbee</i> includes:
- - a pre-built OpenThread stack for the Nordic nRF52840, nRF52833 and nRF52811 SoCs,
- - support for hardware-accelerated cryptographic operations using ARM® CryptoCell-310,
- - unique Thread/Bluetooth Low Energy dynamic multiprotocol solution which allows for concurrent operation of Thread and Bluetooth Low Energy utilizing OpenThread and SoftDevice (Nordic’s Bluetooth Low Energy stack) with accompanying example applications,
- - Thread/Bluetooth Low Energy switched multiprotocol solution with accompanying example applications,
- - unique support for DFU-over-Thread (Device Firmware Upgrade),
- - examples to demonstrate interactions between nodes performing different Thread roles with the use of OpenThread and CoAP, CoAP Secure or MQTT-SN protocols,
- - support for OpenThread Network Co-Processor (NCP) and Radio Co-Processor (RCP) using UART, USB or SPI transport protocol,
- - Border Router and cloud connectivity example (e.g. with Google Cloud Platform),
- - Thread native commissioning with NFC example,
- - example applications demonstrating the use of FreeRTOS with OpenThread,
- - support for IAR, Keil MDK-ARM and SEGGER Embedded Studio (SES) IDEs for OpenThread stack and all example applications,
- - range of PC tools including Thread Topology Monitor and nRF Sniffer for 802.15.4,
- - software modules inherited from the nRF5 SDK e.g. peripheral drivers, NFC libraries, Bluetooth Low Energy libraries etc.
 
-[nRF5-SDK-Thread-Zigbee]: https://www.nordicsemi.com/Software-and-Tools/Software/nRF5-SDK-for-Thread-and-Zigbee
+- a pre-built OpenThread stack for the Nordic nRF52840, nRF52833 and nRF52811 SoCs,
+- support for hardware-accelerated cryptographic operations using ARM® CryptoCell-310,
+- unique Thread/Bluetooth Low Energy dynamic multiprotocol solution which allows for concurrent operation of Thread and Bluetooth Low Energy utilizing OpenThread and SoftDevice (Nordic’s Bluetooth Low Energy stack) with accompanying example applications,
+- Thread/Bluetooth Low Energy switched multiprotocol solution with accompanying example applications,
+- unique support for DFU-over-Thread (Device Firmware Upgrade),
+- examples to demonstrate interactions between nodes performing different Thread roles with the use of OpenThread and CoAP, CoAP Secure or MQTT-SN protocols,
+- support for OpenThread Network Co-Processor (NCP) and Radio Co-Processor (RCP) using UART, USB or SPI transport protocol,
+- Border Router and cloud connectivity example (e.g. with Google Cloud Platform),
+- Thread native commissioning with NFC example,
+- example applications demonstrating the use of FreeRTOS with OpenThread,
+- support for IAR, Keil MDK-ARM and SEGGER Embedded Studio (SES) IDEs for OpenThread stack and all example applications,
+- range of PC tools including Thread Topology Monitor and nRF Sniffer for 802.15.4,
+- software modules inherited from the nRF5 SDK e.g. peripheral drivers, NFC libraries, Bluetooth Low Energy libraries etc.
+
+[nrf5-sdk-thread-zigbee]: https://www.nordicsemi.com/Software-and-Tools/Software/nRF5-SDK-for-Thread-and-Zigbee

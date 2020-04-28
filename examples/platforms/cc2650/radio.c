@@ -432,7 +432,7 @@ static uint_fast8_t rfCoreModifySourceMatchEntry(uint8_t aEntryNo, cc2650_addres
  * @return The index where the address was found.
  * @retval CC2650_SRC_MATCH_NONE The address was not found.
  */
-static uint8_t rfCoreFindShortSrcMatchIdx(const uint16_t aAddress)
+static uint8_t rfCoreFindShortSrcMatchIdx(uint16_t aAddress)
 {
     uint8_t i;
     uint8_t ret = CC2650_SRC_MATCH_NONE;
@@ -1460,7 +1460,7 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 /**
  * Function documented in platform/radio.h
  */
-otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, uint16_t aShortAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -1494,7 +1494,7 @@ exit:
 /**
  * Function documented in platform/radio.h
  */
-otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, uint16_t aShortAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
 

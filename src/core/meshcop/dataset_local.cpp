@@ -100,8 +100,8 @@ otError DatasetLocal::Read(Dataset &aDataset) const
 
     if (mType == Dataset::kActive)
     {
-        aDataset.Remove(Tlv::kPendingTimestamp);
-        aDataset.Remove(Tlv::kDelayTimer);
+        aDataset.RemoveTlv(Tlv::kPendingTimestamp);
+        aDataset.RemoveTlv(Tlv::kDelayTimer);
     }
     else
     {
@@ -196,32 +196,8 @@ exit:
 
 int DatasetLocal::Compare(const Timestamp *aCompare)
 {
-    int rval = 1;
-
-    if (aCompare == NULL)
-    {
-        if (!mTimestampPresent)
-        {
-            rval = 0;
-        }
-        else
-        {
-            rval = -1;
-        }
-    }
-    else
-    {
-        if (!mTimestampPresent)
-        {
-            rval = 1;
-        }
-        else
-        {
-            rval = mTimestamp.Compare(*aCompare);
-        }
-    }
-
-    return rval;
+    return (aCompare == NULL) ? (!mTimestampPresent ? 0 : -1)
+                              : (!mTimestampPresent ? 1 : mTimestamp.Compare(*aCompare));
 }
 
 } // namespace MeshCoP
