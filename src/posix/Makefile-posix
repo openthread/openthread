@@ -96,7 +96,7 @@ ifneq ($(HOST),)
 configure_OPTIONS              += --host=$(HOST)
 endif
 
-ifneq ($(MAX_POWER_TABLE),1)
+ifeq ($(MAX_POWER_TABLE),1)
 COMMONCFLAGS                   += -DOPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE=1
 endif
 

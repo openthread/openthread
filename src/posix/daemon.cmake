@@ -41,6 +41,7 @@ target_include_directories(ot-daemon PRIVATE ${COMMON_INCLUDES})
 
 target_compile_definitions(ot-daemon PRIVATE
     OPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_CLI
+    ${OT_PLATFORM_DEFINES}
 )
 
 target_compile_options(ot-daemon PRIVATE
@@ -69,6 +70,7 @@ set_target_properties(
 
 target_compile_definitions(ot-ctl PRIVATE
     $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>
+    ${OT_PLATFORM_DEFINES}
 )
 
 target_compile_options(ot-ctl PRIVATE
