@@ -1057,15 +1057,7 @@ public:
      * @retval FALSE  This is not an out-of-band frame.
      *
      */
-    bool IsAnOutofband(void) const { return mInfo.mRxInfo.mIsAnOob; }
-
-    /**
-     * This method sets the out-of-band frame flag attribute.
-     *
-     * @param[in]  aIsAnOob  TRUE if frame is an out-of-band frame, FALSE otherwise.
-     *
-     */
-    void SetIsAnOutofband(bool aIsAnOob) { mInfo.mRxInfo.mIsAnOob = aIsAnOob; }
+    bool IsOobFrame(void) const { return mInfo.mRxInfo.mIsOobFrame; }
 
     /**
      * This method returns the timestamp when the frame was received.

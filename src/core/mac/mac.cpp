@@ -1576,7 +1576,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
     IgnoreError(aFrame->GetSrcAddr(srcaddr));
     IgnoreError(aFrame->GetDstAddr(dstaddr));
     // count out-of-band frames
-    if (aFrame->IsAnOutofband())
+    if (aFrame->IsOobFrame())
     {
         mCounters.mRxOther++;
         ExitNow();
