@@ -30,8 +30,8 @@ cmake_minimum_required(VERSION 3.13.1)
 project(openthread)
 
 option(OT_BUILD_EXECUTABLES "Build executables" ON)
-option(OT_BUILTIN_MBEDTLS "Enable builtin mbedTLS" ON)
 option(OT_COVERAGE "enable coverage" OFF)
+set(OT_EXTERNAL_MBEDTLS "" CACHE STRING "Specify external mbedtls library")
 
 include(TestBigEndian)
 TEST_BIG_ENDIAN(OT_BIG_ENDIAN)

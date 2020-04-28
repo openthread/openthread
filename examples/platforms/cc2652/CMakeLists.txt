@@ -70,7 +70,7 @@ set_property(TARGET openthread-cc2652 PROPERTY C_STANDARD 99)
 target_link_libraries(openthread-cc2652
     PRIVATE
         "${PROJECT_SOURCE_DIR}/third_party/ti/devices/cc13x2_cc26x2/driverlib/bin/gcc/driverlib.a"
-        mbedtls
+        ${OT_MBEDTLS}
 )
 target_link_options(openthread-cc2652
     PUBLIC
