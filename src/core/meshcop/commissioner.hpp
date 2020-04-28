@@ -128,15 +128,16 @@ public:
     /**
      * This method removes a Joiner entry.
      *
-     * @param[in]  aEui64          A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.
-     * @param[in]  aDelay          The delay to remove Joiner (in seconds).
+     * @param[in]  aEui64         A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.
+     * @param[in]  aDelay         The delay to remove Joiner (in seconds).
+     * @param[in]  aNotifyLeader  Whether or not to send MGMT_COMMISSISONER_SET.req to notify Leader.
      *
      * @retval OT_ERROR_NONE           Successfully added the Joiner.
      * @retval OT_ERROR_NOT_FOUND      The Joiner specified by @p aEui64 was not found.
      * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
      *
      */
-    otError RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDelay);
+    otError RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDelay, bool aNotifyLeader = true);
 
     /**
      * This method gets the Provisioning URL.
