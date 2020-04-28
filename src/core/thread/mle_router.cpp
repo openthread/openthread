@@ -2836,8 +2836,7 @@ otError MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Me
         case MeshCoP::Tlv::kExtendedPanId:
             aMessage.Read(offset, sizeof(extPanId), &extPanId);
             VerifyOrExit(extPanId.IsValid(), error = OT_ERROR_PARSE);
-            VerifyOrExit(Get<Mac::Mac>().GetExtendedPanId() != extPanId.GetExtendedPanId(),
-                         error = OT_ERROR_ADDRESS_FILTERED);
+            VerifyOrExit(Get<Mac::Mac>().GetExtendedPanId() != extPanId.GetExtendedPanId(), error = OT_ERROR_DROP);
 
             break;
 
