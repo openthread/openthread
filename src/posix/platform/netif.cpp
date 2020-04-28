@@ -550,6 +550,30 @@ exit:
     }
 }
 
+#define kAddAddress true
+#define kRemoveAddress false
+#define kUnicastAddress true
+#define kMulticastAddress false
+static void logAddrEvent(bool isAdd, bool isUnicast, struct sockaddr_in6 &addr6, otError error)
+{
+    char addressString[INET6_ADDRSTRLEN + 1];
+
+    if ((error == OT_ERROR_NONE) || ((isAdd) && (error == OT_ERROR_ALREADY)) ||
+        ((!isAdd) && (error == OT_ERROR_NOT_FOUND)))
+    {
+        otLogNotePlat("%s [%s] %s%s", isAdd ? "ADD" : "DEL", isUnicast ? "U" : "M",
+                      inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
+                      error == OT_ERROR_ALREADY ? " (already subscribed, ignored)"
+                                                : error == OT_ERROR_NOT_FOUND ? " (not found, ignored)" : "");
+    }
+    else
+    {
+        otLogWarnPlat("%s [%s] %s failed (%s)", isAdd ? "ADD" : "DEL", isUnicast ? "U" : "M",
+                      inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
+                      otThreadErrorToString(error));
+    }
+}
+
 #if defined(__linux__)
 
 static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetlinkMessage)
@@ -594,23 +618,6 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                     netAddr.mPrefixLength = ifaddr->ifa_prefixlen;
 
                     error = otIp6AddUnicastAddress(aInstance, &netAddr);
-
-                    if ((error == OT_ERROR_NONE) || (error == OT_ERROR_ALREADY))
-                    {
-                        otLogNotePlat(
-                            "ADD [U] %s%s",
-                            inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
-                            error == OT_ERROR_ALREADY ? " (already subscribed, ignored)" : "");
-                    }
-                    else
-                    {
-                        otLogWarnPlat(
-                            "ADD [U] %s failed (%s)",
-                            inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
-                            otThreadErrorToString(error));
-                    }
-
-                    SuccessOrExit(error);
                 }
                 else
                 {
@@ -619,63 +626,34 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                     netAddr.mAddress = addr;
 
                     error = otIp6SubscribeMulticastAddress(aInstance, &addr);
-                    if ((error == OT_ERROR_NONE) || (error == OT_ERROR_ALREADY))
-                    {
-                        otLogNotePlat(
-                            stderr, "ADD [M] %s%s",
-                            inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
-                            error == OT_ERROR_ALREADY ? " (already subscribed, ignored)" : "");
-                        error = OT_ERROR_NONE;
-                    }
-                    else
-                    {
-                        otLogWarnPlat(
-                            "ADD [M] %s failed (%s)",
-                            inet_ntop(AF_INET6, mreq.ipv6mr_multiaddr.s6_addr, addressString, sizeof(addressString)),
-                            otThreadErrorToString(error));
-                    }
-                    SuccessOrExit(error);
                 }
+
+                logAddrEvent(kAddAddress, !addr.IsMulticast(), addr6, error);
+                if (error == OT_ERROR_ALREADY)
+                {
+                    error = OT_ERROR_NONE;
+                }
+
+                SuccessOrExit(error);
             }
             else if (aNetlinkMessage->nlmsg_type == RTM_DELADDR)
             {
                 if (!addr.IsMulticast())
                 {
                     error = otIp6RemoveUnicastAddress(aInstance, &addr);
-                    if ((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_FOUND))
-                    {
-                        otLogNotePlat(
-                            "DEL [U] %s%s",
-                            inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
-                            error == OT_ERROR_NOT_FOUND ? " (not found, ignored)" : "");
-
-                        error = OT_ERROR_NONE;
-                    }
-                    else
-                    {
-                        otLogWarnPlat(
-                            "DEL [U] %s failure (%d)",
-                            inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)), error);
-                    }
                 }
                 else
                 {
                     error = otIp6UnsubscribeMulticastAddress(aInstance, &addr);
-                    if ((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_FOUND))
-                    {
-                        otLogNotePlat(
-                            "DEL [M] %s%s",
-                            inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
-                            error == OT_ERROR_NOT_FOUND ? " (not found, ignored)" : "");
-                        error = OT_ERROR_NONE;
-                    }
-                    else
-                    {
-                        otLogWarnPlat(
-                            "DEL [M] %s failure (%d)",
-                            inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)), error);
-                    }
                 }
+
+                logAddrEvent(kRemoveAddress, !addr.IsMulticast(), addr6, error);
+                if (error == OT_ERROR_NOT_FOUND)
+                {
+                    error = OT_ERROR_NONE;
+                }
+
+                SuccessOrExit(error);
             }
             else
             {
@@ -724,7 +702,6 @@ exit:
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
 
 #if defined(__FreeBSD__)
-// is this needed?
 #define ROUNDUP(a) ((a) > 0 ? (1 + (((a)-1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
 #endif
 
@@ -740,7 +717,7 @@ exit:
 #define SA_SIZE(sa) RT_ROUNDUP(sa->sa_len)
 #endif
 
-static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm) //, size_t buffer_len)
+static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
 {
     otError            error;
     struct ifa_msghdr *ifam;
@@ -755,7 +732,6 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm) 
     unsigned int        i;
     struct sockaddr *   sa;
     bool                is_link_local;
-    char                addressString[INET6_ADDRSTRLEN + 1];
     size_t              buffer_len = rtm->rtm_msglen;
 
     addr6.sin6_family   = 0;
@@ -840,8 +816,8 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm) 
 
                 if (subscribed)
                 {
-                    inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString));
-                    otLogNotePlat("ADD [U] %s (already subscribed, ignored)", addressString);
+                    logAddrEvent(kAddAddress, kUnicastAddress, addr6, OT_ERROR_ALREADY);
+                    error = OT_ERROR_NONE;
                 }
                 else
                 {
@@ -851,6 +827,9 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm) 
 
                         int                 err;
                         struct in6_aliasreq ifr6;
+                        char                addressString[INET6_ADDRSTRLEN + 1];
+
+                        (void)addressString; // if otLog*Plat is disabled, we'll get a warning
 
                         memset(&ifr6, 0, sizeof(ifr6));
                         strlcpy(ifr6.ifra_name, sTunName, sizeof(ifr6.ifra_name));
@@ -876,35 +855,27 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm) 
                             otLogWarnPlat(
                                 "error (%d) removing stack-addded link-local address %s", errno,
                                 inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)));
+                            error = OT_ERROR_FAILED;
                         }
                         else
                         {
                             otLogNotePlat(
                                 "        %s (removed stack-added link-local)",
                                 inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)));
+                            error = OT_ERROR_NONE;
                         }
                     }
                     else
                     {
-                        // we don't know about this address -- we need to add it
                         error = otIp6AddUnicastAddress(aInstance, &netAddr);
-
-                        if ((error == OT_ERROR_NONE) || (error == OT_ERROR_ALREADY))
+                        logAddrEvent(kAddAddress, kUnicastAddress, addr6, error);
+                        if (error == OT_ERROR_ALREADY)
                         {
-                            otLogNotePlat(
-                                "ADD [U] %s%s",
-                                inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
-                                error == OT_ERROR_ALREADY ? " (already subscribed, ignored)" : "");
-                        }
-                        else
-                        {
-                            otLogWarnPlat(
-                                "ADD [U] %s failed (%s)",
-                                inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
-                                otThreadErrorToString(error));
+                            error = OT_ERROR_NONE;
                         }
                     }
                 }
+                SuccessOrExit(error);
             }
             else
             {
@@ -912,18 +883,10 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm) 
                 netAddr.mAddress = addr;
 
                 error = otIp6SubscribeMulticastAddress(aInstance, &addr);
-                if ((error == OT_ERROR_NONE) || (error == OT_ERROR_ALREADY))
+                logAddrEvent(kAddAddress, kMulticastAddress, addr6, error);
+                if (error == OT_ERROR_ALREADY)
                 {
-                    otLogNotePlat("ADD [M] %s%s",
-                                  inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
-                                  error == OT_ERROR_ALREADY ? " (already subscribed, ignored)" : "");
                     error = OT_ERROR_NONE;
-                }
-                else
-                {
-                    otLogWarnPlat("ADD [M] %s failed (%s)",
-                                  inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
-                                  otThreadErrorToString(error));
                 }
                 SuccessOrExit(error);
             }
@@ -937,38 +900,22 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm) 
             if (!addr.IsMulticast())
             {
                 error = otIp6RemoveUnicastAddress(aInstance, &addr);
-                if ((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_FOUND))
+                logAddrEvent(kRemoveAddress, kUnicastAddress, addr6, error);
+                if (error == OT_ERROR_NOT_FOUND)
                 {
-                    otLogNotePlat("DEL [U] %s%s",
-                                  inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
-                                  error == OT_ERROR_NOT_FOUND ? " (not found, ignored)" : "");
-
                     error = OT_ERROR_NONE;
-                }
-                else
-                {
-                    otLogWarnPlat("DEL [U] %s failure (%d)",
-                                  inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
-                                  error);
                 }
             }
             else
             {
                 error = otIp6UnsubscribeMulticastAddress(aInstance, &addr);
-                if ((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_FOUND))
+                logAddrEvent(kRemoveAddress, kMulticastAddress, addr6, error);
+                if (error == OT_ERROR_NOT_FOUND)
                 {
-                    otLogNotePlat("DEL [M] %s%s",
-                                  inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
-                                  error == OT_ERROR_NOT_FOUND ? " (not found, ignored)" : "");
                     error = OT_ERROR_NONE;
                 }
-                else
-                {
-                    otLogWarnPlat("DEL [M] %s failure (%d)",
-                                  inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
-                                  error);
-                }
             }
+            SuccessOrExit(error);
         }
     }
 
