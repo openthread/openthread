@@ -1445,6 +1445,8 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
     VerifyOrExit(aFrame.GetSecurityEnabled(), error = OT_ERROR_NONE);
 
     aFrame.GetSecurityLevel(securityLevel);
+    VerifyOrExit(securityLevel == Frame::kSecEncMic32, OT_NOOP);
+
     aFrame.GetFrameCounter(frameCounter);
     otLogDebgMac("Rx security - frame counter %u", frameCounter);
 
