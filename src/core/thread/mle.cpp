@@ -967,7 +967,7 @@ void Mle::ApplyMeshLocalPrefix(void)
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
-    for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mServiceAlocs); i++)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mServiceAlocs); i++)
     {
         if (mServiceAlocs[i].GetAddress().GetLocator() != Mac::kShortAddrInvalid)
         {
@@ -1613,9 +1613,9 @@ void Mle::UpdateServiceAlocs(void)
     uint16_t              rloc               = GetRloc16();
     uint16_t              serviceAloc        = 0;
     uint8_t               serviceId          = 0;
-    int                   i                  = 0;
     NetworkData::Iterator serviceIterator    = NetworkData::kIteratorInit;
-    int                   serviceAlocsLength = OT_ARRAY_LENGTH(mServiceAlocs);
+    size_t                serviceAlocsLength = OT_ARRAY_LENGTH(mServiceAlocs);
+    size_t                i                  = 0;
 
     VerifyOrExit(!IsDisabled(), OT_NOOP);
 
