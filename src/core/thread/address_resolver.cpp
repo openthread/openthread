@@ -82,7 +82,7 @@ void AddressResolver::Clear(void)
 {
     CacheEntryList *lists[] = {&mCachedList, &mSnoopedList, &mQueryList, &mQueryRetryList};
 
-    for (uint8_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
+    for (size_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
     {
         CacheEntryList *list = lists[index];
         CacheEntry *    entry;
@@ -198,7 +198,7 @@ void AddressResolver::Remove(Mac::ShortAddress aRloc16, bool aMatchRouterId)
 {
     CacheEntryList *lists[] = {&mCachedList, &mSnoopedList};
 
-    for (uint8_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
+    for (size_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
     {
         CacheEntryList *list = lists[index];
         CacheEntry *    prev = NULL;
@@ -248,7 +248,7 @@ AddressResolver::CacheEntry *AddressResolver::FindCacheEntry(const Ip6::Address 
     CacheEntry *    entry   = NULL;
     CacheEntryList *lists[] = {&mCachedList, &mSnoopedList, &mQueryList, &mQueryRetryList};
 
-    for (uint8_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
+    for (size_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
     {
         aList = lists[index];
         entry = FindCacheEntryInList(*aList, aEid, aPrevEntry);
@@ -300,7 +300,7 @@ AddressResolver::CacheEntry *AddressResolver::NewCacheEntry(bool aSnoopedEntry)
     newEntry = mUnusedList.Pop();
     VerifyOrExit(newEntry == NULL, OT_NOOP);
 
-    for (uint8_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
+    for (size_t index = 0; index < OT_ARRAY_LENGTH(lists); index++)
     {
         CacheEntryList *list = lists[index];
         CacheEntry *    prev;

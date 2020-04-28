@@ -3902,7 +3902,8 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 {
     char *  aArgs[kMaxArgs] = {NULL};
     char *  cmd;
-    uint8_t aArgsLength = 0, i = 0;
+    uint8_t aArgsLength = 0;
+    size_t  i           = 0;
 
     mServer = &aServer;
 
