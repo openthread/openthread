@@ -245,7 +245,7 @@ void Frame::SetDstAddr(const Address &aAddress)
 
     default:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 }
 
@@ -423,7 +423,7 @@ void Frame::SetSrcAddr(const Address &aAddress)
 
     default:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 }
 
@@ -802,7 +802,7 @@ uint8_t Frame::CalculateAddrFieldSize(uint16_t aFcf)
 
     default:
         ExitNow(size = kInvalidSize);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 
     if (IsSrcPanIdPresent(aFcf))
@@ -825,7 +825,7 @@ uint8_t Frame::CalculateAddrFieldSize(uint16_t aFcf)
 
     default:
         ExitNow(size = kInvalidSize);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 
 exit:

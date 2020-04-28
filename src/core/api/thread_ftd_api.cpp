@@ -363,7 +363,7 @@ int8_t otThreadGetParentPriority(otInstance *aInstance)
     return instance.Get<Mle::MleRouter>().GetAssignParentPriority();
 }
 
-otError otThreadSetParentPriority(otInstance *aInstance, const int8_t aParentPriority)
+otError otThreadSetParentPriority(otInstance *aInstance, int8_t aParentPriority)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 

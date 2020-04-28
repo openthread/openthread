@@ -221,7 +221,7 @@ void Local::UpdateRloc(PrefixTlv &aPrefix)
 
         default:
             OT_ASSERT(false);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
     }
 }
@@ -311,7 +311,7 @@ void Local::UpdateRloc(ServiceTlv &aService)
 
         default:
             OT_ASSERT(false);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
     }
 }
@@ -345,7 +345,7 @@ void Local::UpdateRloc(void)
 
         default:
             OT_ASSERT(false);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
     }
 }

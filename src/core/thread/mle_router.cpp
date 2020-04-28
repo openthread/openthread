@@ -168,7 +168,7 @@ otError MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
 
     default:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 
 exit:
@@ -445,7 +445,7 @@ otError MleRouter::SendAdvertisement(void)
     case kRoleDisabled:
     case kRoleDetached:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
 
     case kRoleChild:
         break;
@@ -490,7 +490,7 @@ otError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
     {
     case kRoleDisabled:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
 
     case kRoleDetached:
         SuccessOrExit(error = AppendTlvRequest(*message, detachedTlvs, sizeof(detachedTlvs)));
@@ -906,7 +906,7 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
     {
     case kRoleDisabled:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
 
     case kRoleDetached:
         // Address16
@@ -1756,7 +1756,7 @@ void MleRouter::HandleStateUpdateTimer(void)
     {
     case kRoleDisabled:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
 
     case kRoleDetached:
         if (mChallengeTimeout == 0)
@@ -1840,7 +1840,7 @@ void MleRouter::HandleStateUpdateTimer(void)
         case Neighbor::kStateParentResponse:
         case Neighbor::kStateLinkRequest:
             OT_ASSERT(false);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
 
         if (TimerMilli::GetNow() - child.GetLastHeard() >= timeout)
@@ -2291,7 +2291,7 @@ otError MleRouter::HandleChildIdRequest(const Message &         aMessage,
     case kRoleDisabled:
     case kRoleDetached:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
 
     case kRoleChild:
         child->SetState(Neighbor::kStateChildIdRequest);
@@ -4163,7 +4163,7 @@ void MleRouter::HandleAddressSolicit(Coap::Message &aMessage, const Ip6::Message
 
     default:
         ExitNow(error = OT_ERROR_PARSE);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 
     switch (Tlv::ReadUint16Tlv(aMessage, ThreadTlv::kRloc16, rloc16))

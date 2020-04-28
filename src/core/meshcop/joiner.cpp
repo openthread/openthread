@@ -598,7 +598,7 @@ void Joiner::HandleTimer(void)
     case OT_JOINER_STATE_DISCOVER:
     case OT_JOINER_STATE_CONNECT:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
 
     case OT_JOINER_STATE_CONNECTED:
     case OT_JOINER_STATE_ENTRUST:
