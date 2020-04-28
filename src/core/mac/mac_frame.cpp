@@ -720,32 +720,6 @@ void Frame::SetPayloadLength(uint16_t aLength)
     SetPsduLength(GetHeaderLength() + GetFooterLength() + aLength);
 }
 
-uint8_t Frame::GetSecurityHeaderLength(uint8_t aSecurityControl)
-{
-    uint8_t length = kSecurityControlSize + kFrameCounterSize;
-
-    switch (aSecurityControl & kKeyIdModeMask)
-    {
-    case kKeyIdMode0:
-        length += kKeySourceSizeMode0;
-        break;
-
-    case kKeyIdMode1:
-        length += kKeySourceSizeMode1 + kKeyIndexSize;
-        break;
-
-    case kKeyIdMode2:
-        length += kKeySourceSizeMode2 + kKeyIndexSize;
-        break;
-
-    case kKeyIdMode3:
-        length += kKeySourceSizeMode3 + kKeyIndexSize;
-        break;
-    }
-
-    return length;
-}
-
 uint8_t Frame::SkipSecurityHeaderIndex(void) const
 {
     uint8_t index = SkipAddrFieldIndex();
