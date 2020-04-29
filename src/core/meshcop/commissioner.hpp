@@ -62,10 +62,10 @@ public:
      * Joiner operation flags.
      *
      */
-    enum JoinerOperationFlag
+    enum JoinerOpFlag
     {
-        kDefault         = 0,      ///< The default flags
-        kNotNotifyLeader = 1 << 0, ///< Do not notify Leader
+        kJoinerOpFlagDefault         = 0,      ///< The default flags
+        kJoinerOpFlagNotNotifyLeader = 1 << 0, ///< Do not notify Leader
     };
 
     /**
@@ -147,9 +147,7 @@ public:
      * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
      *
      */
-    otError RemoveJoiner(const Mac::ExtAddress *aEui64,
-                         uint32_t               aDelay,
-                         JoinerOperationFlag    flags = JoinerOperationFlag::kDefault);
+    otError RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDelay, JoinerOpFlag flags = kJoinerOpFlagDefault);
 
     /**
      * This method gets the Provisioning URL.

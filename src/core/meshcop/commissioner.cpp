@@ -284,7 +284,7 @@ otError Commissioner::AddJoiner(const Mac::ExtAddress *aEui64, const char *aPskd
 
     VerifyOrExit(StringLength(aPskd, Dtls::kPskMaxLength + 1) <= Dtls::kPskMaxLength, error = OT_ERROR_INVALID_ARGS);
 
-    RemoveJoiner(aEui64, 0, JoinerOperationFlag::kNotNotifyLeader); // remove immediately
+    RemoveJoiner(aEui64, 0, kJoinerOpFlagNotNotifyLeader); // remove immediately
 
     for (Joiner *joiner = &mJoiners[0]; joiner < OT_ARRAY_END(mJoiners); joiner++)
     {
@@ -348,11 +348,11 @@ exit:
     return error;
 }
 
-otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDelay, JoinerOperationFlag flags)
+otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDelay, JoinerOpFlag flags)
 {
     otError error = OT_ERROR_NOT_FOUND;
 
-    OT_ASSERT(!(flags & JoinerOperationFlag::kNotNotifyLeader) || aDelay == 0);
+    OT_ASSERT(!(flags & kJoinerOpFlagNotNotifyLeader) || aDelay == 0);
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
 
@@ -391,7 +391,7 @@ otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDela
 
             joiner->mValid = false;
             UpdateJoinerExpirationTimer();
-            if ((flags & JoinerOperationFlag::kNotNotifyLeader) == 0)
+            if ((flags & kJoinerOpFlagNotNotifyLeader) == 0)
             {
                 SendCommissionerSet();
             }
