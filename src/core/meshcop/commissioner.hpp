@@ -59,6 +59,16 @@ class Commissioner : public InstanceLocator
 {
 public:
     /**
+     * Joiner operation flags.
+     *
+     */
+    enum JoinerOperationFlag
+    {
+        kDefault         = 0,      ///< The default flags
+        kNotNotifyLeader = 1 << 0, ///< Do not notify Leader
+    };
+
+    /**
      * This constructor initializes the Commissioner object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
@@ -137,7 +147,9 @@ public:
      * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
      *
      */
-    otError RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDelay, bool aNotifyLeader = true);
+    otError RemoveJoiner(const Mac::ExtAddress *aEui64,
+                         uint32_t               aDelay,
+                         JoinerOperationFlag    flags = JoinerOperationFlag::kDefault);
 
     /**
      * This method gets the Provisioning URL.
