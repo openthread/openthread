@@ -185,6 +185,7 @@ jobs:
         brew install automake ninja
     - name: Build
       run: |
+        script/check-posix-build
         script/check-simulation-build
 
   android:
