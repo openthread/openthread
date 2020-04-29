@@ -121,7 +121,6 @@ static const struct option kOptions[] = {{"debug-level", required_argument, NULL
                                          {"dry-run", no_argument, NULL, 'n'},
                                          {"help", no_argument, NULL, 'h'},
                                          {"interface-name", required_argument, NULL, 'I'},
-                                         {"max-power-table", required_argument, NULL, ARG_MAX_POWER_TABLE},
                                          {"no-reset", no_argument, NULL, ARG_NO_RADIO_RESET},
                                          {"radio-version", no_argument, NULL, ARG_PRINT_RADIO_VERSION},
                                          {"ncp-dataset", no_argument, NULL, ARG_RESTORE_NCP_DATASET},
@@ -154,8 +153,6 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    -h  --help                    Display this usage information.\n"
             "    -I  --interface-name name     Thread network interface name.\n"
             "    -n  --dry-run                 Just verify if arguments is valid and radio spinel is compatible.\n"
-            "        --max-power-table         Max power for channels in ascendent order separated by commas,\n"
-            "                                  Special value 0x7f disable a channel.\n"
             "        --no-reset                Do not send Spinel reset command to RCP on initialization.\n"
             "        --radio-version           Print radio firmware version.\n"
             "        --ncp-dataset             Retrieve and save NCP dataset to file.\n"
@@ -185,6 +182,13 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "                                  MISO frame. Max value is 16.\n"
             "        --spi-small-packet=[n]    Specify the smallest packet we can receive in a single transaction.\n"
             "                                  (larger packets will require two transactions). Default value is 32.\n");
+#endif
+#if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
+    fprintf(aStream,
+            "        --max-power-table         Max power for channels in ascendent order separated by commas,\n"
+            "                                  If the number of values is less than that of supported channels,\n"
+            "                                  the last value will be applied to all remaining channels.\n"
+            "                                  Special value 0x7f disable a channel.\n");
 #endif
     exit(aExitCode);
 }
