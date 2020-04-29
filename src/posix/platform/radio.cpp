@@ -34,7 +34,6 @@
 #include "platform-posix.h"
 
 #include "lib/spinel/radio_spinel.hpp"
-#include "posix/platform/max_power_table.hpp"
 
 #if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_UART
 #include "hdlc_interface.hpp"
@@ -52,7 +51,11 @@ static ot::Spinel::RadioSpinel<ot::Posix::SpiInterface, RadioProcessContext> sRa
 #error "OPENTHREAD_POSIX_CONFIG_RCP_BUS only allows OT_POSIX_RCP_BUS_UART and OT_POSIX_RCP_BUS_SPI!"
 #endif
 
+#if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
+#include "posix/platform/max_power_table.hpp"
+
 static ot::Posix::MaxPowerTable sMaxPowerTable;
+#endif
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
@@ -94,25 +97,28 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 void platformRadioInit(const otPlatformConfig *aPlatformConfig)
 {
 #if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
+    uint8_t channel = ot::Radio::kChannelMin;
+    int8_t  power   = ot::Posix::MaxPowerTable::kPowerDefault;
+
     if (aPlatformConfig->mMaxPowerTable != NULL)
     {
-        uint8_t     channel = ot::Radio::kChannelMin;
-        const char *power   = NULL;
+        const char *str = NULL;
 
-        for (power = strtok(const_cast<char *>(aPlatformConfig->mMaxPowerTable), ",");
-             power != NULL && channel <= ot::Radio::kChannelMax; power = strtok(NULL, ","))
+        for (str = strtok(const_cast<char *>(aPlatformConfig->mMaxPowerTable), ",");
+             str != NULL && channel <= ot::Radio::kChannelMax; str = strtok(NULL, ","))
         {
-            sMaxPowerTable.SetTransmitPower(channel++, static_cast<int8_t>(strtol(power, NULL, 0)));
+            power = static_cast<int8_t>(strtol(str, NULL, 0));
+            sMaxPowerTable.SetTransmitPower(channel++, power);
         }
 
-        VerifyOrDie(power == NULL, OT_EXIT_INVALID_ARGUMENTS);
+        VerifyOrDie(str == NULL, OT_EXIT_INVALID_ARGUMENTS);
+    }
 
-        // Use the last power if omitted.
-        while (channel <= ot::Radio::kChannelMax)
-        {
-            sMaxPowerTable.SetTransmitPower(channel, sMaxPowerTable.GetTransmitPower(channel - 1));
-            ++channel;
-        }
+    // Use the last power if omitted.
+    while (channel <= ot::Radio::kChannelMax)
+    {
+        sMaxPowerTable.SetTransmitPower(channel, power);
+        ++channel;
     }
 #endif
 

@@ -37,6 +37,8 @@ namespace Posix {
 class MaxPowerTable
 {
 public:
+    static const int8_t kPowerDefault = 30; ///< Default power 1 watt (30 dBm).
+
     MaxPowerTable(void) { memset(mPowerTable, kPowerForbidden, sizeof(mPowerTable)); }
 
     /**
