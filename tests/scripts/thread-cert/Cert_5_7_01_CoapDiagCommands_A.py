@@ -33,8 +33,7 @@ import config
 import mle
 import network_diag
 import network_layer
-import node
-
+import thread_cert
 from network_diag import TlvType
 
 LEADER = 1
@@ -48,58 +47,35 @@ DUT = ROUTER1
 MTDS = [MED1, SED1]
 
 
-class Cert_5_7_01_CoapDiagCommands_A(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 7):
-            self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[ROUTER1].set_panid(0xface)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[REED1].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[SED1].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[MED1].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[FED1].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[REED1].set_panid(0xface)
-        self.nodes[REED1].set_mode('rsdn')
-        self.nodes[REED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[REED1].set_router_upgrade_threshold(0)
-        self.nodes[REED1].enable_whitelist()
-
-        self.nodes[SED1].set_panid(0xface)
-        self.nodes[SED1].set_mode('s')
-        self.nodes[SED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[SED1].enable_whitelist()
-        self.nodes[SED1].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
-
-        self.nodes[MED1].set_panid(0xface)
-        self.nodes[MED1].set_mode('rsn')
-        self.nodes[MED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[MED1].enable_whitelist()
-
-        self.nodes[FED1].set_panid(0xface)
-        self.nodes[FED1].set_mode('rsdn')
-        self.nodes[FED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[FED1].set_router_upgrade_threshold(0)
-        self.nodes[FED1].enable_whitelist()
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_5_7_01_CoapDiagCommands_A(thread_cert.TestCase):
+    topology = {
+        LEADER: {
+            'whitelist': [ROUTER1],
+        },
+        ROUTER1: {
+            'whitelist': [LEADER, REED1, SED1, MED1, FED1],
+            'router_selection_jitter': 1
+        },
+        REED1: {
+            'whitelist': [ROUTER1],
+            'router_upgrade_threshold': 0
+        },
+        SED1: {
+            'is_mtd': True,
+            'mode': 's',
+            'whitelist': [ROUTER1],
+            'timeout': config.DEFAULT_CHILD_TIMEOUT
+        },
+        MED1: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'whitelist': [ROUTER1]
+        },
+        FED1: {
+            'whitelist': [ROUTER1],
+            'router_upgrade_threshold': 0
+        },
+    }
 
     def test(self):
         # 1 - Form topology

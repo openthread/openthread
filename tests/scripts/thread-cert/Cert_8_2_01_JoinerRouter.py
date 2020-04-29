@@ -29,46 +29,32 @@
 
 import unittest
 
-import config
-import node
+import thread_cert
 
 COMMISSIONER = 1
 JOINER_ROUTER = 2
 JOINER = 3
 
 
-class Cert_8_2_01_JoinerRouter(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 4):
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
-
-        self.nodes[COMMISSIONER].set_panid(0xface)
-        self.nodes[COMMISSIONER].set_mode('rsdn')
-        self.nodes[COMMISSIONER].set_masterkey(
-            'deadbeefdeadbeefdeadbeefdeadbeef')
-        self.nodes[COMMISSIONER].enable_whitelist()
-        self.nodes[COMMISSIONER].set_router_selection_jitter(1)
-
-        self.nodes[JOINER_ROUTER].set_mode('rsdn')
-        self.nodes[JOINER_ROUTER].set_masterkey(
-            '00112233445566778899aabbccddeeff')
-        self.nodes[JOINER_ROUTER].enable_whitelist()
-        self.nodes[JOINER_ROUTER].set_router_selection_jitter(1)
-
-        self.nodes[JOINER].set_mode('rsdn')
-        self.nodes[JOINER].set_masterkey('00112233445566778899aabbccddeeff')
-        self.nodes[JOINER].enable_whitelist()
-        self.nodes[JOINER].set_router_selection_jitter(1)
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_8_2_01_JoinerRouter(thread_cert.TestCase):
+    topology = {
+        COMMISSIONER: {
+            'masterkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+        JOINER_ROUTER: {
+            'masterkey': '00112233445566778899aabbccddeeff',
+            'mode': 'rsdn',
+            'router_selection_jitter': 1
+        },
+        JOINER: {
+            'masterkey': '00112233445566778899aabbccddeeff',
+            'mode': 'rsdn',
+            'router_selection_jitter': 1
+        },
+    }
 
     def test(self):
         self.nodes[COMMISSIONER].interface_up()

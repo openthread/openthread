@@ -29,6 +29,7 @@
 
 import unittest
 
+import thread_cert
 from command import (
     check_child_update_request_from_child,
     check_child_update_request_from_parent,
@@ -40,7 +41,6 @@ from command import NetworkDataCheck, PrefixesCheck, SinglePrefixCheck
 
 import config
 import mle
-import node
 
 LEADER = 1
 ROUTER = 2
@@ -50,44 +50,33 @@ MED1 = 4
 MTDS = [SED1, MED1]
 
 
-class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 5):
-            self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[SED1].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[MED1].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[ROUTER].set_panid(0xface)
-        self.nodes[ROUTER].set_mode('rsdn')
-        self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER].enable_whitelist()
-        self.nodes[ROUTER].set_router_selection_jitter(1)
-
-        self.nodes[SED1].set_panid(0xface)
-        self.nodes[SED1].set_mode('s')
-        self.nodes[SED1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[SED1].enable_whitelist()
-        self.nodes[SED1].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
-
-        self.nodes[MED1].set_panid(0xface)
-        self.nodes[MED1].set_mode('rsn')
-        self.nodes[MED1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[MED1].enable_whitelist()
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_7_1_3_BorderRouterAsLeader(thread_cert.TestCase):
+    topology = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [ROUTER, SED1, MED1]
+        },
+        ROUTER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        SED1: {
+            'is_mtd': True,
+            'mode': 's',
+            'panid': 0xface,
+            'timeout': config.DEFAULT_CHILD_TIMEOUT,
+            'whitelist': [LEADER]
+        },
+        MED1: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [LEADER]
+        },
+    }
 
     def test(self):
         # 1 - All

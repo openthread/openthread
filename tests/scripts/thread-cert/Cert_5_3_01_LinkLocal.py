@@ -29,34 +29,25 @@
 
 import unittest
 
-import node
 import config
+import thread_cert
 
 LEADER = 1
 DUT_ROUTER1 = 2
 
 
-class Cert_5_3_1_LinkLocal(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 3):
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-
-        self.nodes[DUT_ROUTER1].set_panid(0xface)
-        self.nodes[DUT_ROUTER1].set_mode('rsdn')
-        self.nodes[DUT_ROUTER1].set_router_selection_jitter(1)
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_5_3_1_LinkLocal(thread_cert.TestCase):
+    topology = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface
+        },
+        DUT_ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+    }
 
     def test(self):
         # 1

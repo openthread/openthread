@@ -29,37 +29,33 @@
 
 import unittest
 
-import config
-import node
+import thread_cert
 
 COMMISSIONER = 1
 LEADER = 2
 
 
-class Cert_9_2_04_ActiveDataset(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 3):
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
-
-        self.nodes[COMMISSIONER].set_active_dataset(
-            10, panid=0xface, master_key='000102030405060708090a0b0c0d0e0f')
-        self.nodes[COMMISSIONER].set_mode('rsdn')
-        self.nodes[COMMISSIONER].set_router_selection_jitter(1)
-
-        self.nodes[LEADER].set_active_dataset(
-            10, panid=0xface, master_key='000102030405060708090a0b0c0d0e0f')
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].set_router_selection_jitter(1)
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
+    topology = {
+        COMMISSIONER: {
+            'active_dataset': {
+                'timestamp': 10,
+                'panid': 0xface,
+                'master_key': '000102030405060708090a0b0c0d0e0f'
+            },
+            'mode': 'rsdn',
+            'router_selection_jitter': 1
+        },
+        LEADER: {
+            'active_dataset': {
+                'timestamp': 10,
+                'panid': 0xface,
+                'master_key': '000102030405060708090a0b0c0d0e0f'
+            },
+            'mode': 'rsdn',
+            'router_selection_jitter': 1
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()

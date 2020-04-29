@@ -30,10 +30,9 @@
 import unittest
 
 import command
-import config
 import dtls
 import mle
-import node
+import thread_cert
 
 from command import CheckType
 
@@ -41,29 +40,19 @@ COMMISSIONER = 1
 JOINER = 2
 
 
-class Cert_8_1_01_Commissioning(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 3):
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
-
-        self.nodes[COMMISSIONER].set_panid(0xface)
-        self.nodes[COMMISSIONER].set_mode('rsdn')
-        self.nodes[COMMISSIONER].set_masterkey(
-            '00112233445566778899aabbccddeeff')
-
-        self.nodes[JOINER].set_mode('rsdn')
-        self.nodes[JOINER].set_masterkey('deadbeefdeadbeefdeadbeefdeadbeef')
-        self.nodes[JOINER].set_router_selection_jitter(1)
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_8_1_01_Commissioning(thread_cert.TestCase):
+    topology = {
+        COMMISSIONER: {
+            'masterkey': '00112233445566778899aabbccddeeff',
+            'mode': 'rsdn',
+            'panid': 0xface
+        },
+        JOINER: {
+            'masterkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
+            'mode': 'rsdn',
+            'router_selection_jitter': 1
+        },
+    }
 
     def test(self):
         self.nodes[COMMISSIONER].interface_up()

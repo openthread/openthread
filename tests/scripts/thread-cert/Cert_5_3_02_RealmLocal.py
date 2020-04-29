@@ -29,8 +29,8 @@
 
 import unittest
 
-import node
 import config
+import thread_cert
 
 LEADER = 1
 ROUTER1 = 2
@@ -38,45 +38,33 @@ DUT_ROUTER2 = 3
 SED1 = 4
 
 
-class Cert_5_3_2_RealmLocal(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 5):
-            self.nodes[i] = node.Node(i, (i == SED1), simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[ROUTER1].set_panid(0xface)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[DUT_ROUTER2].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[DUT_ROUTER2].set_panid(0xface)
-        self.nodes[DUT_ROUTER2].set_mode('rsdn')
-        self.nodes[DUT_ROUTER2].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[DUT_ROUTER2].add_whitelist(self.nodes[SED1].get_addr64())
-        self.nodes[DUT_ROUTER2].enable_whitelist()
-        self.nodes[DUT_ROUTER2].set_router_selection_jitter(1)
-
-        self.nodes[SED1].set_panid(0xface)
-        self.nodes[SED1].set_mode('sn')
-        self.nodes[SED1].add_whitelist(self.nodes[DUT_ROUTER2].get_addr64())
-        self.nodes[SED1].enable_whitelist()
-        self.nodes[SED1].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
+    topology = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [ROUTER1]
+        },
+        ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, DUT_ROUTER2]
+        },
+        DUT_ROUTER2: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [ROUTER1, SED1]
+        },
+        SED1: {
+            'is_mtd': True,
+            'mode': 'sn',
+            'panid': 0xface,
+            'timeout': config.DEFAULT_CHILD_TIMEOUT,
+            'whitelist': [DUT_ROUTER2]
+        },
+    }
 
     def test(self):
         # 1
