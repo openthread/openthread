@@ -89,7 +89,7 @@ build_simulation()
     local builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${version}"
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
-        && cmake -GNinja "${OT_SRCDIR}" "${options[@]}" "${ot_extra_options[@]}" \
+        && cmake -GNinja "${options[@]}" "${ot_extra_options[@]}" "${OT_SRCDIR}" \
         && ninja)
 
     if [[ "${version}" == "1.2" ]]; then
@@ -103,7 +103,7 @@ build_simulation()
         local builddir="${OT_BUILDDIR}/cmake/openthread-simulation-${version}-bbr"
         (mkdir -p "${builddir}" \
             && cd "${builddir}" \
-            && cmake -GNinja "${OT_SRCDIR}" "${options[@]}" "${ot_extra_options[@]}" \
+            && cmake -GNinja "${options[@]}" "${ot_extra_options[@]}" "${OT_SRCDIR}" \
             && ninja)
 
     fi
@@ -127,7 +127,7 @@ build_posix()
     local builddir="${OT_BUILDDIR}/cmake/openthread-posix-${version}"
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
-        && cmake -GNinja "${OT_SRCDIR}" "${options[@]}" "${ot_extra_options[@]}" \
+        && cmake -GNinja "${options[@]}" "${ot_extra_options[@]}" "${OT_SRCDIR}" \
         && ninja)
 
     if [[ "${version}" == "1.2" ]]; then
@@ -141,7 +141,7 @@ build_posix()
         local builddir="${OT_BUILDDIR}/cmake/openthread-posix-${version}-bbr"
         (mkdir -p "${builddir}" \
             && cd "${builddir}" \
-            && cmake -GNinja "${OT_SRCDIR}" "${options[@]}" "${ot_extra_options[@]}" \
+            && cmake -GNinja "${options[@]}" "${ot_extra_options[@]}" "${OT_SRCDIR}" \
             && ninja)
     fi
 }
@@ -332,22 +332,22 @@ do_package() {
     )
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
-        && cmake -GNinja "${OT_SRCDIR}" -DOT_PLATFORM="simulation" "${options[@]}" "${ot_extra_options[@]}" \
+        && cmake -GNinja -DOT_PLATFORM="simulation" "${options[@]}" "${ot_extra_options[@]}" "${OT_SRCDIR}" \
         && ninja package \
         && ls "${builddir}"/openthread-simulation-*.deb)
 
     builddir="${OT_BUILDDIR}/cmake/openthread-host"
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
-        && cmake -GNinja "${OT_SRCDIR}" -DOT_PLATFORM="posix" "${options[@]}" "${ot_extra_options[@]}" \
+        && cmake -GNinja -DOT_PLATFORM="posix" "${options[@]}" "${ot_extra_options[@]}" "${OT_SRCDIR}" \
         && ninja package \
         && ls "${builddir}"/openthread-standalone-*.deb)
 
     builddir="${OT_BUILDDIR}/cmake/openthread-daemon"
     (mkdir -p "${builddir}" \
         && cd "${builddir}" \
-        && cmake -GNinja "${OT_SRCDIR}" -DOT_PLATFORM="posix" \
-        -DOT_DAEMON=1 -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 "${options[@]}" "${ot_extra_options[@]}" \
+        && cmake -GNinja -DOT_PLATFORM="posix" \
+        -DOT_DAEMON=1 -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 "${options[@]}" "${ot_extra_options[@]}" "${OT_SRCDIR}" \
         && ninja package \
         && ls "${builddir}"/openthread-daemon-*.deb)
 }
@@ -378,6 +378,7 @@ envsetup()
     fi
 
     read -r -a ot_extra_options <<< "${OT_OPTIONS-}"
+    ot_extra_options=${ot_extra_options:-}
 }
 
 main()
