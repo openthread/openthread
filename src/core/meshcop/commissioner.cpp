@@ -348,11 +348,11 @@ exit:
     return error;
 }
 
-otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDelay, JoinerOpFlag flags)
+otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDelay, JoinerOpFlag aFlags)
 {
     otError error = OT_ERROR_NOT_FOUND;
 
-    OT_ASSERT(!(flags & kJoinerOpFlagNotNotifyLeader) || aDelay == 0);
+    OT_ASSERT(!(aFlags & kJoinerOpFlagNotNotifyLeader) || aDelay == 0);
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, error = OT_ERROR_INVALID_STATE);
 
@@ -391,7 +391,7 @@ otError Commissioner::RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDela
 
             joiner->mValid = false;
             UpdateJoinerExpirationTimer();
-            if ((flags & kJoinerOpFlagNotNotifyLeader) == 0)
+            if ((aFlags & kJoinerOpFlagNotNotifyLeader) == 0)
             {
                 SendCommissionerSet();
             }
