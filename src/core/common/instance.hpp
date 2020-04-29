@@ -261,6 +261,9 @@ public:
      *
      */
     Utils::Heap &GetHeap(void) { return mHeap; }
+#else
+    void  HeapFree(void *aPointer) { otPlatFree(aPointer); }
+    void *HeapCAlloc(size_t aCount, size_t aSize) { return otPlatCAlloc(aCount, aSize); }
 #endif // OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
