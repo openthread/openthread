@@ -2954,6 +2954,10 @@ enum
      *        (use Thread stack default if not specified)
      *  `b` : Set to true to enable CSMA-CA for this packet, false otherwise.
      *        (default true).
+     *  `b` : Set to true to indicate it is a retransmission packet, false otherwise.
+     *        (default false).
+     *  `b` : Set to true to indicate it is an out of band packet, false otherwise.
+     *        (default false).
      *
      */
     SPINEL_PROP_STREAM_RAW = SPINEL_PROP_STREAM__BEGIN + 1,

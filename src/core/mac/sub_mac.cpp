@@ -90,9 +90,13 @@ otRadioCaps SubMac::GetCaps(void) const
     caps |= OT_RADIO_CAPS_ENERGY_SCAN;
 #endif
 
+#if OPENTHREAD_CONFIG_SOFTWARE_TX_SECURITY_ENABLE
+    caps |= OT_RADIO_CAPS_TRANSMIT_SEC;
+#endif
+
 #else
     caps = OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF | OT_RADIO_CAPS_TRANSMIT_RETRIES |
-           OT_RADIO_CAPS_ENERGY_SCAN;
+           OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_TRANSMIT_SEC;
 #endif
 
     return caps;
@@ -234,6 +238,7 @@ void SubMac::ProcessTransmitSecurity(void)
     uint8_t           keyIdMode;
 
     VerifyOrExit(ShouldHandleTransmitSecurity(), OT_NOOP);
+    VerifyOrExit(mTransmitFrame.GetSecurityEnabled(), OT_NOOP);
     VerifyOrExit(!mTransmitFrame.IsAnOobFrame(), OT_NOOP);
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -639,44 +644,12 @@ void SubMac::SetState(State aState)
     }
 }
 
-void SubMac::SetRadioMacKey(uint8_t aKeyIdMode)
-{
-    const uint8_t *prevKey = NULL;
-    const uint8_t *currKey = NULL;
-    const uint8_t *nextKey = NULL;
-
-    VerifyOrExit(!ShouldHandleTransmitSecurity(), OT_NOOP);
-
-    switch (aKeyIdMode)
-    {
-    case Frame::kKeyIdMode0:
-        break;
-
-    case Frame::kKeyIdMode1:
-        prevKey = GetPreviousMacKey();
-        currKey = GetCurrentMacKey();
-        nextKey = GetNextMacKey();
-        break;
-
-    case Frame::kKeyIdMode2:
-        break;
-
-    default:
-        OT_ASSERT(false);
-        break;
-    }
-
-    otPlatRadioSetMacKey(&GetInstance(), aKeyIdMode, kMacKeySize, prevKey, currKey, nextKey);
-
-exit:
-    return;
-}
-
 void SubMac::SetMacKey(uint8_t aKeyIdMode, const uint8_t *aPrevKey, const uint8_t *aCurrKey, const uint8_t *aNextKey)
 {
     switch (aKeyIdMode)
     {
     case Frame::kKeyIdMode0:
+    case Frame::kKeyIdMode2:
         break;
     case Frame::kKeyIdMode1:
         OT_ASSERT(aPrevKey != NULL && aCurrKey != NULL && aNextKey != NULL);
@@ -687,15 +660,17 @@ void SubMac::SetMacKey(uint8_t aKeyIdMode, const uint8_t *aPrevKey, const uint8_
 
         break;
 
-    case Frame::kKeyIdMode2:
-        break;
-
     default:
         OT_ASSERT(false);
         break;
     }
 
-    SetRadioMacKey(aKeyIdMode);
+    VerifyOrExit(!ShouldHandleTransmitSecurity(), OT_NOOP);
+
+    Get<Radio>().SetMacKey(aKeyIdMode, kMacKeySize, aPrevKey, aCurrKey, aNextKey);
+
+exit:
+    return;
 }
 
 void SubMac::SetMacKeyId(uint8_t aKeyIdMode, uint8_t aKeyId)
@@ -703,13 +678,11 @@ void SubMac::SetMacKeyId(uint8_t aKeyIdMode, uint8_t aKeyId)
     switch (aKeyIdMode)
     {
     case Frame::kKeyIdMode0:
+    case Frame::kKeyIdMode2:
         break;
 
     case Frame::kKeyIdMode1:
         mKeyId = aKeyId;
-        break;
-
-    case Frame::kKeyIdMode2:
         break;
 
     default:
@@ -717,7 +690,12 @@ void SubMac::SetMacKeyId(uint8_t aKeyIdMode, uint8_t aKeyId)
         break;
     }
 
-    otPlatRadioSetMacKeyId(&GetInstance(), aKeyIdMode, aKeyId);
+    VerifyOrExit(!ShouldHandleTransmitSecurity(), OT_NOOP);
+
+    Get<Radio>().SetMacKeyId(aKeyIdMode, aKeyId);
+
+exit:
+    return;
 }
 // LCOV_EXCL_START
 

@@ -1183,13 +1183,6 @@ public:
      */
     void SetIsAnOob(bool aIsOob) { mInfo.mTxInfo.mIsOob = aIsOob; }
 
-    /**
-     * This method returns the key used for frame encryption and authentication (AES CCM).
-     *
-     * @returns The pointer to the key.
-     *
-     */
-
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * This method sets the Time IE offset.

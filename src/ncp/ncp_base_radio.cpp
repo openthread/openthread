@@ -357,6 +357,8 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     const uint8_t *payloadPtr;
     uint16_t       payloadLen;
     bool           csmaEnable;
+    bool           isARetx;
+    bool           isOob;
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(payloadPtr, payloadLen));
     VerifyOrExit(payloadLen <= OT_RADIO_FRAME_MAX_SIZE, error = OT_ERROR_PARSE);
@@ -373,6 +375,8 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     aFrame.mInfo.mTxInfo.mMaxCsmaBackoffs = OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT;
     aFrame.mInfo.mTxInfo.mMaxFrameRetries = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT;
     aFrame.mInfo.mTxInfo.mCsmaCaEnabled   = true;
+    aFrame.mInfo.mTxInfo.mIsARetx         = false;
+    aFrame.mInfo.mTxInfo.mIsOob           = false;
 
     // All the next parameters are optional. Note that even if the
     // decoder fails to parse any of optional parameters we still want to
@@ -382,7 +386,11 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     SuccessOrExit(mDecoder.ReadUint8(aFrame.mInfo.mTxInfo.mMaxCsmaBackoffs));
     SuccessOrExit(mDecoder.ReadUint8(aFrame.mInfo.mTxInfo.mMaxFrameRetries));
     SuccessOrExit(mDecoder.ReadBool(csmaEnable));
+    SuccessOrExit(mDecoder.ReadBool(isARetx));
+    SuccessOrExit(mDecoder.ReadBool(isOob));
     aFrame.mInfo.mTxInfo.mCsmaCaEnabled = csmaEnable;
+    aFrame.mInfo.mTxInfo.mIsARetx       = isARetx;
+    aFrame.mInfo.mTxInfo.mIsOob         = isOob;
 
 exit:
     return error;
@@ -434,13 +442,13 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_KEY>(void)
     VerifyOrExit(keyIdMode == Mac::Frame::kKeyIdMode1, error = OT_ERROR_INVALID_ARGS);
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(prevKey, keySize));
-    VerifyOrExit(keySize == Mac::SubMac::kMacKeySize, error = OT_ERROR_PARSE);
+    VerifyOrExit(keySize == Mac::SubMac::kMacKeySize, error = OT_ERROR_INVALID_ARGS);
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(currKey, keySize));
-    VerifyOrExit(keySize == Mac::SubMac::kMacKeySize, error = OT_ERROR_PARSE);
+    VerifyOrExit(keySize == Mac::SubMac::kMacKeySize, error = OT_ERROR_INVALID_ARGS);
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(nextKey, keySize));
-    VerifyOrExit(keySize == Mac::SubMac::kMacKeySize, error = OT_ERROR_PARSE);
+    VerifyOrExit(keySize == Mac::SubMac::kMacKeySize, error = OT_ERROR_INVALID_ARGS);
 
     error = otLinkRawSetMacKey(mInstance, keyIdMode, prevKey, currKey, nextKey);
 
@@ -459,7 +467,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_KEY_ID>(void)
 
     VerifyOrExit(keyIdMode == Mac::Frame::kKeyIdMode1, error = OT_ERROR_INVALID_ARGS);
 
-    otLinkRawSetMacKeyId(mInstance, keyIdMode, keyId);
+    error = otLinkRawSetMacKeyId(mInstance, keyIdMode, keyId);
 
 exit:
     return error;

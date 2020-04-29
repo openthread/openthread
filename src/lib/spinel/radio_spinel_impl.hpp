@@ -1020,9 +1020,11 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SetMacKey(uint8_t       
 {
     otError error;
 
-    SuccessOrExit(error = Set(SPINEL_PROP_RCP_MAC_KEY, SPINEL_DATATYPE_UINT8_S, aKeyMode, SPINEL_DATATYPE_DATA_WLEN_S,
-                              aPrevKey, aKeySize, SPINEL_DATATYPE_DATA_WLEN_S, aCurrKey, aKeySize,
-                              SPINEL_DATATYPE_DATA_WLEN_S, aNextKey, aKeySize));
+    SuccessOrExit(
+        error = Set(
+            SPINEL_PROP_RCP_MAC_KEY,
+            SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_WLEN_S,
+            aKeyMode, aPrevKey, aKeySize, aCurrKey, aKeySize, aNextKey, aKeySize));
 
 exit:
     return error;
@@ -1034,7 +1036,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SetMacKeyId(uint8_t aKey
     otError error;
 
     SuccessOrExit(
-        error = Set(SPINEL_PROP_RCP_MAC_KEY_ID, SPINEL_DATATYPE_UINT8_S, aKeyMode, SPINEL_DATATYPE_UINT8_S, aKeyId));
+        error = Set(SPINEL_PROP_RCP_MAC_KEY_ID, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT8_S, aKeyMode, aKeyId));
 
 exit:
     return error;
@@ -1505,7 +1507,8 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Transmit(otRadioFrame &a
                                     SPINEL_DATATYPE_BOOL_S, // CsmaCaEnabled
                     mTransmitFrame->mPsdu, mTransmitFrame->mLength, mTransmitFrame->mChannel,
                     mTransmitFrame->mInfo.mTxInfo.mMaxCsmaBackoffs, mTransmitFrame->mInfo.mTxInfo.mMaxFrameRetries,
-                    mTransmitFrame->mInfo.mTxInfo.mCsmaCaEnabled);
+                    mTransmitFrame->mInfo.mTxInfo.mCsmaCaEnabled, mTransmitFrame->mInfo.mTxInfo.mIsARetx,
+                    mTransmitFrame->mInfo.mTxInfo.mIsOob);
 
     if (error == OT_ERROR_NONE)
     {

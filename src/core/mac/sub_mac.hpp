@@ -434,7 +434,6 @@ private:
     bool ShouldHandleRetries(void) const;
     bool ShouldHandleEnergyScan(void) const;
 
-    void SetRadioMacKey(uint8_t aKeyIdMode);
     void ProcessTransmitSecurity(void);
     void StartCsmaBackoff(void);
     void BeginTransmit(void);
