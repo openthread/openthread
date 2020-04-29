@@ -38,8 +38,6 @@
 
 #include <openthread/platform/radio.h>
 
-#include "openthread-core-config.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -181,8 +179,11 @@ bool otMacFrameIsVersion2015(const otRadioFrame *aFrame);
  * @param[in]    aIsFramePending    If the ACK's frame pending bit should be set.
  * @param[out]   aAckFrame          A pointer to the ack frame to be generated.
  *
+ * @retval  OT_ERROR_NONE           Successfully generate Imm Ack in aAckFrame.
+ * @retval  OT_ERROR_INVALID_ARGS   The arguments are incorrect.
+ *
  */
-void otMacFrameGenerateImmAck(const otRadioFrame *aFrame, bool aIsFramePending, otRadioFrame *aAckFrame);
+otError otMacFrameGenerateImmAck(const otRadioFrame *aFrame, bool aIsFramePending, otRadioFrame *aAckFrame);
 
 /**
  * Generate Enh-Ack for @p aFrame.
@@ -193,12 +194,16 @@ void otMacFrameGenerateImmAck(const otRadioFrame *aFrame, bool aIsFramePending, 
  * @param[in]    aIeLength          The length of IE data pattern of the ACK to be sent.
  * @param[out]   aAckFrame          A pointer to the ack frame to be generated.
  *
+ * @retval  OT_ERROR_NONE           Successfully generate Enh Ack in aAckFrame.
+ * @retval  OT_ERROR_INVALID_ARGS   The arguments are incorrect.
+ * @retval  OT_ERROR_PARSE          `aFrame` has incorrect format.
+ *
  */
-void otMacFrameGenerateEnhAck(const otRadioFrame *aFrame,
-                              bool                aIsFramePending,
-                              const uint8_t *     aIeData,
-                              uint8_t             aIeLength,
-                              otRadioFrame *      aAckFrame);
+otError otMacFrameGenerateEnhAck(const otRadioFrame *aFrame,
+                                 bool                aIsFramePending,
+                                 const uint8_t *     aIeData,
+                                 uint8_t             aIeLength,
+                                 otRadioFrame *      aAckFrame);
 
 /**
  * Set CSL IE content into the frame.

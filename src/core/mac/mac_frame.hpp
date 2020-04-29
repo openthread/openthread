@@ -289,7 +289,6 @@ public:
         kMic64Size  = 64 / CHAR_BIT,
         kMic128Size = 128 / CHAR_BIT,
         kMaxMicSize = kMic128Size,
-        kCrcSize    = 2,
 
         kKeyIdMode0    = 0 << 3,
         kKeyIdMode1    = 1 << 3,
@@ -442,14 +441,6 @@ public:
     bool GetPanIdCompression(void) const { return (GetFrameControlField() & kFcfPanidCompression) != 0; }
 
     /**
-     * This method sets the PanId Compression bit.
-     *
-     * @param[in]  aPanIdCompression  The PanId Compression bit.
-     *
-     */
-    void SetPanIdCompression(bool aPanIdCompression);
-
-    /**
      * This method indicates whether or not IEs present.
      *
      * @retval TRUE   If IEs present.
@@ -542,6 +533,14 @@ public:
      *
      */
     void SetDstAddr(const Address &aAddress);
+
+    /**
+     * This method indicates whether or not the Source Address is present for this object.
+     *
+     * @retval TRUE if the Source Address is present, FALSE otherwise.
+     *
+     */
+    bool IsSrcPanIdPresent() const { return IsSrcPanIdPresent(GetFrameControlField()); };
 
     /**
      * This method gets the Source PAN Identifier.
@@ -968,27 +967,7 @@ public:
      */
     InfoString ToInfoString(void) const;
 
-    /**
-     * Generate Imm-Ack in this frame object.
-     *
-     * @param[in]    aFrame             A pointer to the incoming frame.
-     * @param[in]    aIsFramePending    If the ACK's frame pending bit should be set.
-     *
-     */
-    void GenerateImmAck(const Frame *aFrame, bool aIsFramePending);
-
-    /**
-     * Generate Enh-Ack in this frame object.
-     *
-     * @param[in]    aFrame             A pointer to the frame.
-     * @param[in]    aIsFramePending    If the ACK's frame pending bit should be set.
-     * @param[in]    aIeData            A pointer to the IE data pattern of the ACK to be sent.
-     * @param[in]    aIeLength          The length of IE data pattern of the ACK to be sent.
-     *
-     */
-    void GenerateEnhAck(const Frame *aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength);
-
-private:
+protected:
     enum
     {
         kInvalidIndex  = 0xff,
@@ -1008,12 +987,6 @@ private:
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     uint8_t FindHeaderIeIndex(void) const;
 #endif
-    void    SetFrameControlFieldForAck(const Frame *aFrame,
-                                       bool         aIsFramePending,
-                                       uint8_t      aIeLength,
-                                       Frame *      aAckFrame) const;
-    otError SetDstPanIdAndAddrForAck(const Frame *aFrame, Frame *aAckFrame) const;
-    otError SetSecurityHeaderForAck(const Frame *aFrame, Frame *aAckFrame) const;
 
     static uint8_t GetKeySourceLength(uint8_t aKeyIdMode);
 
@@ -1035,6 +1008,8 @@ private:
 class RxFrame : public Frame
 {
 public:
+    friend class TxFrame;
+
     /**
      * This method returns the RSSI in dBm used for reception.
      *
@@ -1254,6 +1229,26 @@ public:
      */
     void SetTimeSyncSeq(uint8_t aTimeSyncSeq) { mInfo.mTxInfo.mIeInfo->mTimeSyncSeq = aTimeSyncSeq; }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+    /**
+     * Generate Imm-Ack in this frame object.
+     *
+     * @param[in]    aFrame             A reference to the incoming frame.
+     * @param[in]    aIsFramePending    If the ACK's frame pending bit should be set.
+     *
+     */
+    otError GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending);
+
+    /**
+     * Generate Enh-Ack in this frame object.
+     *
+     * @param[in]    aFrame             A reference to the incoming frame.
+     * @param[in]    aIsFramePending    If the ACK's frame pending bit should be set.
+     * @param[in]    aIeData            A pointer to the IE data pattern of the ACK to be sent.
+     * @param[in]    aIeLength          The length of IE data pattern of the ACK to be sent.
+     *
+     */
+    otError GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength);
 };
 
 OT_TOOL_PACKED_BEGIN

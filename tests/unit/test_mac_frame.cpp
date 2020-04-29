@@ -474,9 +474,9 @@ void TestMacFrameApi(void)
 
 void TestMacFrameAckGeneration(void)
 {
-    Mac::Frame receivedFrame;
-    Mac::Frame ackFrame;
-    uint8_t    ackFrameBuffer[100];
+    Mac::RxFrame receivedFrame;
+    Mac::TxFrame ackFrame;
+    uint8_t      ackFrameBuffer[100];
 
     ackFrame.mPsdu   = ackFrameBuffer;
     ackFrame.mLength = sizeof(ackFrameBuffer);
@@ -508,7 +508,7 @@ void TestMacFrameAckGeneration(void)
     receivedFrame.mPsdu   = data_psdu1;
     receivedFrame.mLength = sizeof(data_psdu1);
 
-    ackFrame.GenerateImmAck(&receivedFrame, false);
+    ackFrame.GenerateImmAck(receivedFrame, false);
     VerifyOrQuit(ackFrame.mLength == Mac::Frame::kImmAckLength,
                  "Mac::Frame::GenerateImmAck() failed, length incorrect\n");
     VerifyOrQuit(ackFrame.GetType() == Mac::Frame::kFcfFrameAck,
@@ -574,7 +574,7 @@ void TestMacFrameAckGeneration(void)
     uint8_t     ie_data[6] = {0x04, 0x0d, 0x21, 0x0c, 0x35, 0x0c};
     Mac::CslIe *csl;
 
-    ackFrame.GenerateEnhAck(&receivedFrame, false, ie_data, sizeof(ie_data));
+    ackFrame.GenerateEnhAck(receivedFrame, false, ie_data, sizeof(ie_data));
     csl = reinterpret_cast<Mac::CslIe *>(ackFrame.GetHeaderIe(Mac::Frame::kHeaderIeCsl) + sizeof(Mac::HeaderIe));
     VerifyOrQuit(ackFrame.mLength == 23,
                  "Mac::Frame::GenerateEnhAck() failed, length incorrect\n"); // 23 is the length of the correct ack

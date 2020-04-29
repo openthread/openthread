@@ -131,20 +131,35 @@ bool otMacFrameIsVersion2015(const otRadioFrame *aFrame)
     return static_cast<const Mac::Frame *>(aFrame)->IsVersion2015();
 }
 
-void otMacFrameGenerateImmAck(const otRadioFrame *aFrame, bool aIsFramePending, otRadioFrame *aAckFrame)
+otError otMacFrameGenerateImmAck(const otRadioFrame *aFrame, bool aIsFramePending, otRadioFrame *aAckFrame)
 {
-    static_cast<Mac::Frame *>(aAckFrame)->GenerateImmAck(static_cast<const Mac::Frame *>(aFrame), aIsFramePending);
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aFrame != NULL && aAckFrame != NULL, error = OT_ERROR_INVALID_ARGS);
+
+    error = static_cast<Mac::TxFrame *>(aAckFrame)->GenerateImmAck(*static_cast<const Mac::RxFrame *>(aFrame),
+                                                                   aIsFramePending);
+
+exit:
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-void otMacFrameGenerateEnhAck(const otRadioFrame *aFrame,
-                              bool                aIsFramePending,
-                              const uint8_t *     aIeData,
-                              uint8_t             aIeLength,
-                              otRadioFrame *      aAckFrame)
+otError otMacFrameGenerateEnhAck(const otRadioFrame *aFrame,
+                                 bool                aIsFramePending,
+                                 const uint8_t *     aIeData,
+                                 uint8_t             aIeLength,
+                                 otRadioFrame *      aAckFrame)
 {
-    static_cast<Mac::Frame *>(aAckFrame)->GenerateEnhAck(static_cast<const Mac::Frame *>(aFrame), aIsFramePending,
-                                                         aIeData, aIeLength);
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aFrame != NULL && aAckFrame != NULL, error = OT_ERROR_INVALID_ARGS);
+
+    error = static_cast<Mac::TxFrame *>(aAckFrame)->GenerateEnhAck(*static_cast<const Mac::RxFrame *>(aFrame),
+                                                                   aIsFramePending, aIeData, aIeLength);
+
+exit:
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_CSL_RECEIVER_ENABLE
