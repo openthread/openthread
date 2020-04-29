@@ -98,6 +98,7 @@
  *
  * @{
  *
+ * @defgroup api-backbone-router     Backbone Router
  * @defgroup api-channel-manager     Channel Manager
  * @defgroup api-channel-monitor     Channel Monitoring
  * @defgroup api-child-supervision   Child Supervision
@@ -151,6 +152,7 @@
  * @defgroup plat-memory              Memory
  * @defgroup plat-messagepool         Message Pool
  * @defgroup plat-misc                Miscellaneous
+ * @defgroup plat-otns                OpenThread Network Simulator
  * @defgroup plat-radio               Radio
  * @defgroup plat-settings            Settings
  * @defgroup plat-spi-slave           SPI Slave
