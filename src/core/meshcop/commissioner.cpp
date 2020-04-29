@@ -173,7 +173,10 @@ exit:
     if (error != OT_ERROR_NONE)
     {
         otLogWarnMeshCoP("Failed to start commissioner: %s", otThreadErrorToString(error));
-        Get<Coap::CoapSecure>().Stop();
+        if (error != OT_ERROR_ALREADY)
+        {
+            Get<Coap::CoapSecure>().Stop();
+        }
     }
 
     return error;
