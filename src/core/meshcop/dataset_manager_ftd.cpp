@@ -199,20 +199,11 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
 
         while (offset < aMessage.GetLength())
         {
-            OT_TOOL_PACKED_BEGIN
-            struct
-            {
-                Tlv     tlv;
-                uint8_t value[Dataset::kMaxValueSize];
-            } OT_TOOL_PACKED_END data;
+            DatasetTlv datasetTlv;
 
-            VerifyOrExit(aMessage.Read(offset, sizeof(Tlv), &data.tlv) == sizeof(Tlv), OT_NOOP);
-            VerifyOrExit(data.tlv.GetLength() <= sizeof(data.value), OT_NOOP);
+            SuccessOrExit(datasetTlv.ReadFromMessage(aMessage, offset));
 
-            VerifyOrExit(aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value) == data.tlv.GetLength(),
-                         OT_NOOP);
-
-            switch (data.tlv.GetType())
+            switch (datasetTlv.GetType())
             {
             case Tlv::kCommissionerSessionId:
                 // do not store Commissioner Session ID TLV
@@ -220,26 +211,26 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
 
             case Tlv::kDelayTimer:
             {
-                DelayTimerTlv *delayTimerTlv = static_cast<DelayTimerTlv *>(&data.tlv);
+                DelayTimerTlv &delayTimerTlv = static_cast<DelayTimerTlv &>(static_cast<Tlv &>(datasetTlv));
 
-                if (doesAffectMasterKey && delayTimerTlv->GetDelayTimer() < DelayTimerTlv::kDelayTimerDefault)
+                if (doesAffectMasterKey && delayTimerTlv.GetDelayTimer() < DelayTimerTlv::kDelayTimerDefault)
                 {
-                    delayTimerTlv->SetDelayTimer(DelayTimerTlv::kDelayTimerDefault);
+                    delayTimerTlv.SetDelayTimer(DelayTimerTlv::kDelayTimerDefault);
                 }
-                else if (delayTimerTlv->GetDelayTimer() < Get<Leader>().GetDelayTimerMinimal())
+                else if (delayTimerTlv.GetDelayTimer() < Get<Leader>().GetDelayTimerMinimal())
                 {
-                    delayTimerTlv->SetDelayTimer(Get<Leader>().GetDelayTimerMinimal());
+                    delayTimerTlv.SetDelayTimer(Get<Leader>().GetDelayTimerMinimal());
                 }
             }
 
                 // fall through
 
             default:
-                SuccessOrExit(dataset.SetTlv(data.tlv));
+                SuccessOrExit(dataset.SetTlv(datasetTlv));
                 break;
             }
 
-            offset += sizeof(Tlv) + data.tlv.GetLength();
+            offset += static_cast<uint16_t>(datasetTlv.GetSize());
         }
 
         SuccessOrExit(Save(dataset));
@@ -302,6 +293,19 @@ exit:
     {
         message->Free();
     }
+}
+
+otError DatasetManager::DatasetTlv::ReadFromMessage(const Message &aMessage, uint16_t aOffset)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aMessage.Read(aOffset, sizeof(Tlv), this) == sizeof(Tlv), error = OT_ERROR_PARSE);
+    VerifyOrExit(GetLength() <= kMaxValueSize, error = OT_ERROR_PARSE);
+    VerifyOrExit(aMessage.Read(aOffset + sizeof(Tlv), GetLength(), mValue) == GetLength(), error = OT_ERROR_PARSE);
+    VerifyOrExit(Tlv::IsValid(*this), error = OT_ERROR_PARSE);
+
+exit:
+    return error;
 }
 
 otError ActiveDataset::CreateNewNetwork(otOperationalDataset &aDataset)
@@ -514,17 +518,11 @@ void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Coap::Messa
 
     while (offset < aMessage.GetLength())
     {
-        OT_TOOL_PACKED_BEGIN
-        struct
-        {
-            Tlv     tlv;
-            uint8_t value[Dataset::kMaxValueSize];
-        } OT_TOOL_PACKED_END data;
+        DatasetTlv datasetTlv;
 
-        aMessage.Read(offset, sizeof(Tlv), &data.tlv);
-        aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value);
-        dataset.SetTlv(data.tlv);
-        offset += sizeof(Tlv) + data.tlv.GetLength();
+        SuccessOrExit(datasetTlv.ReadFromMessage(aMessage, offset));
+        offset += static_cast<uint16_t>(datasetTlv.GetSize());
+        dataset.SetTlv(datasetTlv);
     }
 
     // add delay timer tlv
