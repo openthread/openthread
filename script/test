@@ -378,7 +378,7 @@ envsetup()
     fi
 
     read -r -a ot_extra_options <<< "${OT_OPTIONS-}"
-    ot_extra_options=${ot_extra_options:-}
+    ot_extra_options=${ot_extra_options:-()}
 }
 
 main()
