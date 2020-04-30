@@ -153,6 +153,28 @@ jobs:
     - name: Codecov
       uses: codecov/codecov-action@v1
 
+  multiple-instance:
+    runs-on: ubuntu-18.04
+    env:
+      COVERAGE: 1
+      MULTIPLE_INSTANCE: 1
+      REFERENCE_DEVICE: 1
+      VIRTUAL_TIME: 1
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+    - name: Build
+      run: |
+        ./bootstrap
+        make -f examples/Makefile-simulation
+    - name: Run
+      run: |
+        VERBOSE=1 make -f examples/Makefile-simulation check
+    - name: Codecov
+      uses: codecov/codecov-action@v1
+
   ncp:
     runs-on: ubuntu-18.04
     env:
