@@ -154,23 +154,10 @@ jobs:
       - name: Bootstrap
         run: |
           sudo apt update
-          sudo apt --no-install-recommends install -y clang-${{ matrix.clang_ver }} clang++-${{ matrix.clang_ver }} g++-multilib
+          sudo apt --no-install-recommends install -y clang-${{ matrix.clang_ver }} clang++-${{ matrix.clang_ver }} g++-multilib ninja-build
       - name: Build
         run: |
           script/check-posix-build
-
-  posix-spi:
-    name: posix-spi
-    runs-on: ubuntu-18.04
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        sudo apt-get update
-        sudo apt-get --no-install-recommends install -y cmake ninja-build
-    - name: Build
-      run: |
-        mkdir build && cd build && cmake -GNinja -DOT_COMPILE_WARNING_AS_ERROR=on -DOT_PLATFORM=posix -DOT_POSIX_CONFIG_RCP_BUS=SPI .. && ninja
 
   gn:
     runs-on: ubuntu-18.04

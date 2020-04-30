@@ -42,7 +42,7 @@ build()
     make -f src/posix/Makefile-posix
 
     reset_source
-    make -f src/posix/Makefile-posix RCP_SP=1
+    make -f src/posix/Makefile-posix RCP_BUS=spi
 }
 
 main()

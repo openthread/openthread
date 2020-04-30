@@ -421,10 +421,10 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
     {
         struct termios tios;
 
-        int  speed  = 115200;
-        int  cstopb = 1;
-        char parity = 'N';
-        char flow   = 'N';
+        unsigned int speed  = 115200;
+        int          cstopb = 1;
+        char         parity = 'N';
+        char         flow   = 'N';
 
         VerifyOrExit((rval = tcgetattr(fd, &tios)) == 0, OT_NOOP);
 
