@@ -49,6 +49,10 @@ target_include_directories(ot-ncp-ftd PRIVATE ${COMMON_INCLUDES})
 target_include_directories(ot-ncp-mtd PRIVATE ${COMMON_INCLUDES})
 target_include_directories(ot-rcp PRIVATE ${COMMON_INCLUDES})
 
+target_compile_definitions(ot-ncp-ftd PRIVATE ${OT_PRIVATE_DEFINES})
+target_compile_definitions(ot-ncp-mtd PRIVATE ${OT_PRIVATE_DEFINES})
+target_compile_definitions(ot-rcp PRIVATE ${OT_PRIVATE_DEFINES})
+
 target_link_libraries(ot-ncp-ftd
     openthread-ncp-ftd
     ${OT_PLATFORM_LIB}
