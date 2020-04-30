@@ -111,6 +111,11 @@ if(OT_ECDSA)
     list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_CONFIG_ECDSA_ENABLE=1")
 endif()
 
+option(OT_DUA "enable Domain Unicast Address feature for Thread 1.2")
+if(OT_DUA)
+    list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_CONFIG_DUA_ENABLE=1")
+endif()
+
 option(OT_EXTERNAL_HEAP "enable external heap support")
 if(OT_EXTERNAL_HEAP)
     list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_CONFIG_EXTERNAL_HEAP_ENABLE=1")

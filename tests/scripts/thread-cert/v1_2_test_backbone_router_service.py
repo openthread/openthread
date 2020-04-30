@@ -59,9 +59,12 @@ BBR_REGISTRATION_JITTER = 5
  4) Configure BBR_2 with highest sequence number and explicitly trigger SRV_DATA.ntf.
     BBR_2 would become Primary and BBR_1 would change to Secondary with sequence
     number increased by 1.
+    a) Check communication via DUA.
  5) Stop BBR_2, BBR_1 would become Primary after detecting there is no available
     Backbone Router Service in Thread Network.
  6) Bring back BBR_2, and it would become Secondary.
+    a) Check the uniqueness of DUA by comparing the one in above 4a).
+    b) Check communication via DUA.
 
 """
 
@@ -221,6 +224,10 @@ class TestBackboneRouterService(thread_cert.TestCase):
         assert self.nodes[BBR_1].get_backbone_router()['seqno'] == (
             BBR_1_SEQNO + 1)
 
+        # 4a) Check communication via DUA.
+        bbr2_dua = self.nodes[BBR_2].get_addr(config.DOMAIN_PREFIX)
+        self.assertTrue(self.nodes[BBR_1].ping(bbr2_dua))
+
         # 5) Stop BBR_2, BBR_1 becomes Primary after detecting there is no
         #    available Backbone Router Service.
         self.nodes[BBR_2].reset()
@@ -253,6 +260,14 @@ class TestBackboneRouterService(thread_cert.TestCase):
 
         assert self.nodes[BBR_1].has_ipmaddr(config.ALL_NETWORK_BBRS_ADDRESS)
         assert self.nodes[BBR_1].has_ipmaddr(config.ALL_DOMAIN_BBRS_ADDRESS)
+
+        # 6a) Check the uniqueness of DUA by comparing the one in above 4a).
+        bbr2_dua2 = self.nodes[BBR_2].get_addr(config.DOMAIN_PREFIX)
+        assert bbr2_dua == bbr2_dua2, 'Error: Unexpected different DUA (%s v.s. %s)'.format(
+            bbr2_dua, bbr2_dua2)
+
+        # 6b) Check communication via DUA
+        self.assertTrue(self.nodes[BBR_1].ping(bbr2_dua))
 
 
 if __name__ == '__main__':
