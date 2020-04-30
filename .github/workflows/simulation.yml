@@ -65,9 +65,6 @@ jobs:
   multiple-instance:
     runs-on: ubuntu-18.04
     env:
-      CFLAGS: -m32
-      CXXFLAGS: -m32
-      LDFLAGS: -m32
       COVERAGE: 1
       MULTIPLE_INSTANCE: 1
       REFERENCE_DEVICE: 1
