@@ -47,6 +47,7 @@ DIAGNOSTIC          ?= 0
 DISABLE_DOC         ?= 0
 DISABLE_TOOLS       ?= 0
 DNS_CLIENT          ?= 0
+DUA                 ?= 0
 DYNAMIC_LOG_LEVEL   ?= 0
 ECDSA               ?= 0
 EXTERNAL_HEAP       ?= 0
@@ -147,6 +148,10 @@ endif
 
 ifeq ($(DNS_CLIENT),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1
+endif
+
+ifeq ($(DUA),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DUA_ENABLE=1
 endif
 
 ifeq ($(DYNAMIC_LOG_LEVEL),1)

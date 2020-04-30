@@ -282,6 +282,10 @@ void Leader::UpdateDomainPrefixConfig(void)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     Get<Local>().UpdateAllDomainBackboneRouters(state);
 #endif
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+    Get<DuaManager>().UpdateDomainUnicastAddress(state);
+#endif
 }
 
 } // namespace BackboneRouter

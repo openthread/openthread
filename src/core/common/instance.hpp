@@ -713,6 +713,7 @@ template <> inline MessagePool &Instance::Get(void)
 }
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+
 template <> inline BackboneRouter::Leader &Instance::Get(void)
 {
     return mThreadNetif.mBackboneRouterLeader;
@@ -724,6 +725,14 @@ template <> inline BackboneRouter::Local &Instance::Get(void)
     return mThreadNetif.mBackboneRouterLocal;
 }
 #endif
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+template <> inline DuaManager &Instance::Get(void)
+{
+    return mThreadNetif.mDuaManager;
+}
+#endif
+
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
