@@ -44,6 +44,7 @@ jobs:
     runs-on: ubuntu-18.04
     env:
       COVERAGE: 1
+      TORANJ_RADIO : 15.4
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
@@ -81,6 +82,7 @@ jobs:
     env:
       COVERAGE: 1
       TORANJ_POSIX_RCP_MODEL: 1
+      TORANJ_RADIO : 15.4
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
@@ -113,10 +115,111 @@ jobs:
         name: cov-toranj-rcp
         path: tmp/coverage.info
 
+  toranj-ncp-trel:
+    runs-on: ubuntu-18.04
+    env:
+      COVERAGE: 1
+      TORANJ_RADIO : trel
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get --no-install-recommends install -y dbus libdbus-1-dev
+        sudo apt-get --no-install-recommends install -y autoconf-archive
+        sudo apt-get --no-install-recommends install -y bsdtar
+        sudo apt-get --no-install-recommends install -y libtool
+        sudo apt-get --no-install-recommends install -y libglib2.0-dev
+        sudo apt-get --no-install-recommends install -y libboost-dev libboost-signals-dev
+        sudo apt-get --no-install-recommends install -y lcov
+
+        git clone --depth=1 --branch=master https://github.com/openthread/wpantund.git
+        cd wpantund
+        ./bootstrap.sh
+        ./configure
+        sudo make -j2
+        sudo make install
+    - name: Build & Run
+      run: |
+        top_builddir=$(pwd)/build/toranj ./tests/toranj/start.sh
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
+      with:
+        name: cov-toranj-ncp-trel
+        path: tmp/coverage.info
+
+  toranj-rcp-trel:
+    runs-on: ubuntu-18.04
+    env:
+      COVERAGE: 1
+      TORANJ_POSIX_RCP_MODEL: 1
+      TORANJ_RADIO : trel
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get --no-install-recommends install -y dbus libdbus-1-dev
+        sudo apt-get --no-install-recommends install -y autoconf-archive
+        sudo apt-get --no-install-recommends install -y bsdtar
+        sudo apt-get --no-install-recommends install -y libtool
+        sudo apt-get --no-install-recommends install -y libglib2.0-dev
+        sudo apt-get --no-install-recommends install -y libboost-dev libboost-signals-dev
+        sudo apt-get --no-install-recommends install -y lcov
+
+        git clone --depth=1 --branch=master https://github.com/openthread/wpantund.git
+        cd wpantund
+        ./bootstrap.sh
+        ./configure
+        sudo make -j2
+        sudo make install
+    - name: Build & Run
+      run: |
+        top_builddir=$(pwd)/build/toranj ./tests/toranj/start.sh
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
+      with:
+        name: cov-toranj-rcp-trel
+        path: tmp/coverage.info
+
+  toranj-ncp-multi:
+    runs-on: ubuntu-18.04
+    env:
+      COVERAGE: 1
+      TORANJ_RADIO : multi
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get --no-install-recommends install -y dbus libdbus-1-dev
+        sudo apt-get --no-install-recommends install -y autoconf-archive
+        sudo apt-get --no-install-recommends install -y bsdtar
+        sudo apt-get --no-install-recommends install -y libtool
+        sudo apt-get --no-install-recommends install -y libglib2.0-dev
+        sudo apt-get --no-install-recommends install -y libboost-dev libboost-signals-dev
+        sudo apt-get --no-install-recommends install -y lcov
+
+        git clone --depth=1 --branch=master https://github.com/openthread/wpantund.git
+        cd wpantund
+        ./bootstrap.sh
+        ./configure
+        sudo make -j2
+        sudo make install
+    - name: Build & Run
+      run: |
+        top_builddir=$(pwd)/build/toranj ./tests/toranj/start.sh
+
   upload-coverage:
     needs:
     - toranj-ncp
     - toranj-rcp
+    - toranj-ncp-trel
+    - toranj-rcp-trel
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v2
