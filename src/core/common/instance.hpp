@@ -42,6 +42,9 @@
 #include <openthread/error.h>
 #include <openthread/heap.h>
 #include <openthread/platform/logging.h>
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#include <openthread/platform/memory.h>
+#endif
 
 #include "common/random_manager.hpp"
 #include "common/tasklet.hpp"
