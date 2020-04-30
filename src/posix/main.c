@@ -185,10 +185,10 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
 #endif
 #if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
     fprintf(aStream,
-            "        --max-power-table         Max power for channels in ascendent order separated by commas,\n"
+            "        --max-power-table         Max power for channels in ascending order separated by commas,\n"
             "                                  If the number of values is less than that of supported channels,\n"
             "                                  the last value will be applied to all remaining channels.\n"
-            "                                  Special value 0x7f disable a channel.\n");
+            "                                  Special value 0x7f disables a channel.\n");
 #endif
     exit(aExitCode);
 }
