@@ -85,7 +85,7 @@ jobs:
         make -f examples/Makefile-simulation
     - name: Run
       run: |
-        make -f examples/Makefile-simulation check
+        VERBOSE=1 make -f examples/Makefile-simulation check
     - name: Codecov
       uses: codecov/codecov-action@v1
 
