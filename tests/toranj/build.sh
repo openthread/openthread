@@ -134,6 +134,7 @@ case ${build_config} in
             --with-examples=simulation \
             "${configure_options[@]}" || die
         make -j 8 || die
+        cp -p ${top_builddir}/examples/apps/ncp/ot-ncp-ftd ${top_builddir}/examples/apps/ncp/ot-ncp-ftd-15.4
         ;;
 
     ncp-trel)
@@ -150,6 +151,7 @@ case ${build_config} in
             --with-examples=simulation \
             "${configure_options[@]}" || die
         make -j 8 || die
+        cp -p ${top_builddir}/examples/apps/ncp/ot-ncp-ftd ${top_builddir}/examples/apps/ncp/ot-ncp-ftd-trel
         ;;
 
     ncp-15.4+trel | ncp-trel+15.4)
@@ -166,6 +168,7 @@ case ${build_config} in
             --with-examples=simulation \
             "${configure_options[@]}" || die
         make -j 8 || die
+        cp -p ${top_builddir}/examples/apps/ncp/ot-ncp-ftd ${top_builddir}/examples/apps/ncp/ot-ncp-ftd-15.4-trel
         ;;
 
     rcp)

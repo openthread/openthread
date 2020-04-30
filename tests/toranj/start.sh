@@ -75,8 +75,8 @@ run()
             return
         fi
 
-        # We allow a failed test to be retried up to 3 attempts.
-        if [ "$counter" -lt 2 ]; then
+        # We allow a failed test to be retried up to 7 attempts.
+        if [ "$counter" -lt 7 ]; then
             counter=$((counter + 1))
             echo Attempt $counter running "$1" failed. Trying again.
             cleanup
@@ -91,6 +91,10 @@ run()
 }
 
 cd "$(dirname "$0")" || die "cd failed"
+
+if [ -z "${top_builddir}" ]; then
+    top_builddir=.
+fi
 
 if [ "$COVERAGE" = 1 ]; then
     coverage_option="--enable-coverage"
@@ -108,8 +112,17 @@ case $TORANJ_POSIX_RCP_MODEL in
 esac
 
 if [ "$use_posix_with_rcp" = "no" ]; then
-    ./build.sh ${coverage_option} ncp-"${TORANJ_RADIO}" || die "ncp build failed"
-
+    if [ "$TORANJ_RADIO" = "multi" ]; then
+        # Build all combinations
+        ./build.sh ${coverage_option} ncp-15.4 || die "ncp-15.4 build failed"
+        (cd ${top_builddir} && make clean) || die "cd and clean failed"
+        ./build.sh ${coverage_option} ncp-trel || die "ncp-trel build failed"
+        (cd ${top_builddir} && make clean) || die "cd and clean failed"
+        ./build.sh ${coverage_option} ncp-15.4+trel || die "ncp-15.4+trel build failed"
+        (cd ${top_builddir} && make clean) || die "cd and clean failed"
+    else
+        ./build.sh ${coverage_option} ncp-"${TORANJ_RADIO}" || die "ncp build failed"
+    fi
 else
     ./build.sh ${coverage_option} rcp || die "rcp build failed"
     ./build.sh ${coverage_option} posix-"${TORANJ_RADIO}" || die "posix build failed"
@@ -120,6 +133,17 @@ else
 fi
 
 cleanup
+
+if [ "$TORANJ_RADIO" = "multi" ]; then
+    run test-700-multi-radio-join.py
+    run test-701-multi-radio-probe.py
+    run test-702-multi-radio-discovery-by-rx.py
+    run test-703-multi-radio-mesh-header-msg.py
+    run test-704-multi-radio-scan.py
+    run test-705-multi-radio-discover-scan.py
+
+    exit 0
+fi
 
 run test-001-get-set.py
 run test-002-form.py

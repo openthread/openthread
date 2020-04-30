@@ -122,6 +122,9 @@ WPAN_OT_MSG_BUFFER_COUNTERS = "OpenThread:MsgBufferCounters"
 WPAN_OT_MSG_BUFFER_COUNTERS_AS_STRING = "OpenThread:MsgBufferCounters:AsString"
 WPAN_OT_DEBUG_TEST_ASSERT = "OpenThread:Debug:TestAssert"
 WPAN_OT_DEBUG_TEST_WATCHDOG = "OpenThread:Debug:TestWatchdog"
+WPAN_OT_SUPPORTED_RADIO_LINKS = "OpenThread:SupportedRadioLinks"
+WPAN_OT_NEIGHBOR_TABLE_MULTI_RADIO_INFO = "OpenThread:NeighborTable::MultiRadioInfo"
+WPAN_OT_TREL_TEST_MODE_ENABLE = "OpenThread:Trel:TestMode:Enable"
 
 WPAN_MAC_ALLOWLIST_ENABLED = "MAC:Allowlist:Enabled"
 WPAN_MAC_ALLOWLIST_ENTRIES = "MAC:Allowlist:Entries"
@@ -229,6 +232,13 @@ MCU_POWER_STATE_LOW_POWER = '"low-power"'
 MCU_POWER_STATE_OFF = '"off"'
 
 # -----------------------------------------------------------------------------------------------------------------------
+# Node Radio Link Types (Use as input to `Node()` initializer)
+
+NODE_15_4 = "-15.4"
+NODE_TREL = "-trel"
+NODE_15_4_TREL = "-15.4-trel"
+
+# -----------------------------------------------------------------------------------------------------------------------
 # Node types (from `WPAN_NODE_TYPE` property)
 
 NODE_TYPE_UNKNOWN = '"unknown"'
@@ -261,6 +271,13 @@ THREAD_MODE_FLAG_FULL_NETWORK_DATA = (1 << 0)
 THREAD_MODE_FLAG_FULL_THREAD_DEV = (1 << 1)
 THREAD_MODE_FLAG_RX_ON_WHEN_IDLE = (1 << 3)
 
+# -----------------------------------------------------------------------------------------------------------------------
+# Radio Link type
+
+RADIO_LINK_IEEE_802_15_4 = "IEEE_802_15_4"
+RADIO_LINK_TREL_UDP6 = "TREL_UDP6"
+RADIO_LINK_TOBLE = "TOBLE"
+
 _OT_BUILDDIR = os.getenv('top_builddir', '../..')
 _WPANTUND_PREFIX = os.getenv('WPANTUND_PREFIX', '/usr/local')
 
@@ -281,7 +298,6 @@ def _log(text, new_line=True, flush=True):
 
 class Node(object):
     """ A wpantund OT NCP instance """
-
     # defines the default verbosity setting (can be changed per `Node`)
     _VERBOSE = os.getenv('TORANJ_VERBOSE', 'no').lower() in ['true', '1', 't', 'y', 'yes', 'on']
     _SPEED_UP_FACTOR = 1  # defines the default time speed up factor
@@ -312,7 +328,7 @@ class Node(object):
     _cur_index = _START_INDEX
     _all_nodes = weakref.WeakSet()
 
-    def __init__(self, verbose=_VERBOSE):
+    def __init__(self, radios=None, verbose=_VERBOSE):
         """Creates a new `Node` instance"""
 
         index = Node._cur_index
@@ -330,10 +346,11 @@ class Node(object):
             self._use_posix_with_rcp = False
 
         if self._use_posix_with_rcp:
-            ncp_socket_path = 'system:{} -s {} spinel+hdlc+uart://{}?forkpty-arg={}'.format(
-                self._OT_NCP_FTD_POSIX, self._SPEED_UP_FACTOR, self._OT_RCP, index)
+            ncp_socket_path = 'system:{}{} -s {} spinel+hdlc+uart://{}?forkpty-arg={}'.format(
+                self._OT_NCP_FTD_POSIX, '' if radios is None else radios, self._SPEED_UP_FACTOR, self._OT_RCP, index)
         else:
-            ncp_socket_path = 'system:{} {} {}'.format(self._OT_NCP_FTD, index, self._SPEED_UP_FACTOR)
+            ncp_socket_path = 'system:{}{} {} {}'.format(self._OT_NCP_FTD, '' if radios is None else radios, index,
+                                                         self._SPEED_UP_FACTOR)
 
         cmd = self._WPANTUND + \
             ' -o Config:NCP:SocketPath \"{}\"'.format(ncp_socket_path) + \
@@ -1536,3 +1553,63 @@ class InterfaceRoute(object):
 def parse_interface_routes_result(interface_routes_list):
     """ Parses interface routes list string and returns an array of `InterfaceRoute` objects"""
     return [InterfaceRoute(item) for item in interface_routes_list.split('\n')[1:-1]]
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+class MultiRadioEntry(object):
+    """ This object encapsulates a multi radio info entry"""
+
+    def __init__(self, text):
+
+        # Example of expected text:
+        #
+        # `\t"0EB758375B4976E7, RLOC16:f403, Radios:[IEEE_802_15_4(200), TREL_UDP6(255)]"`
+        #
+
+        # We get rid of the first two chars `\t"' and last char '"', split the rest using whitespace as separator.
+        # Then remove any ',' at end of items in the list.
+        items = [item[:-1] if item[-1] == ',' else item for item in text[2:-1].split()]
+
+        # First item is the extended address
+        self._ext_address = items[0]
+
+        # Second items is 'RLCO16:{rloc}'
+        self._rloc16 = items[1].split(':')[1]
+
+        # Join back rest of items, split using ":" to get list of radios of form "[IEEE_802_15_4(200) TREL_UDP6(255)]"
+        radios = " ".join(items[2:]).split(":")[1]
+
+        if radios != "[]":
+            # Get rid of `[ and `]`, then split using " ",  then convert to dictionary mapping radio type
+            # to its preference value.
+            self._radios = {radio.split("(")[0]: radio.split("(")[1][:-1] for radio in radios[1:-1].split(' ')}
+        else:
+            self._radios = {}
+
+    @property
+    def ext_address(self):
+        return self._ext_address
+
+    @property
+    def rloc16(self):
+        return self._rloc16
+
+    @property
+    def radios(self):
+        return self._radios
+
+    def supports(self, radio_type):
+        return radio_type in self._radios
+
+    def preference(self, radio_type):
+        return int(self._radios[radio_type], 0) if self.supports(radio_type) else None
+
+    def __repr__(self):
+        return 'MultiRadioEntry({})'.format(self.__dict__)
+
+
+def parse_multi_radio_result(multi_radio_list):
+    """ Parses multi radio neighbor list string and returns an array of `MultiRadioEntry` objects"""
+    return [MultiRadioEntry(item) for item in multi_radio_list.split('\n')[1:-1]]
