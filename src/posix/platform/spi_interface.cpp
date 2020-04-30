@@ -401,7 +401,7 @@ otError SpiInterface::PushPullSpi(void)
     SuccessOrExit(error = mRxFrameBuffer.SetSkipLength(kSpiFrameHeaderSize));
 
     // Check whether the remaining frame buffer has enough space to store the data to be received.
-    VerifyOrExit(mRxFrameBuffer.GetFrameMaxLength() >= spiTransferBytes + mSpiAlignAllowance);
+    VerifyOrExit(mRxFrameBuffer.GetFrameMaxLength() >= spiTransferBytes + mSpiAlignAllowance, OT_NOOP);
 
     // Point to the start of the reserved buffer.
     spiRxFrameBuffer = mRxFrameBuffer.GetFrame() - kSpiFrameHeaderSize;
