@@ -103,14 +103,16 @@ set(OT_LOG_OUTPUT_VALUES
 if(OT_REFERENCE_DEVICE AND NOT OT_PLATFORM STREQUAL "posix")
     set(OT_LOG_OUTPUT "APP" CACHE STRING "Set log output to application for reference device")
 else()
-    set(OT_LOG_OUTPUT "PLATFORM_DEFINED" CACHE STRING "Where the log output goes to")
+    set(OT_LOG_OUTPUT "" CACHE STRING "Where log output goes to")
 endif()
 set_property(CACHE OT_LOG_OUTPUT PROPERTY STRINGS ${OT_LOG_OUTPUT_VALUES})
-if(NOT OT_LOG_OUTPUT IN_LIST OT_LOG_OUTPUT_VALUES)
-    message(FATAL_ERROR "Log output unknown: ${OT_LOG_OUTPUT}")
+if(OT_LOG_OUTPUT)
+    if(NOT OT_LOG_OUTPUT IN_LIST OT_LOG_OUTPUT_VALUES)
+        message(FATAL_ERROR "Log output unknown: ${OT_LOG_OUTPUT}")
+    endif()
+    list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_${OT_LOG_OUTPUT}")
+    message(STATUS "Log output: ${OT_LOG_OUTPUT}")
 endif()
-message(STATUS "Log output: ${OT_LOG_OUTPUT}")
-list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_${OT_LOG_OUTPUT}")
 
 # OT_CONFIG allows users to specify the path to OpenThread project core
 # config header file. The default value of this parameter is empty string.
