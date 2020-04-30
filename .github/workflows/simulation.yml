@@ -150,6 +150,7 @@ jobs:
       run: |
         sudo apt --no-install-recommends install -y expect ninja-build
         ./script/test build expect
+        VIRTUAL_TIME=0 NODE_MODE=rcp ./script/test clean build expect
     - name: Codecov
       uses: codecov/codecov-action@v1
 

@@ -1,3 +1,4 @@
+#!/usr/bin/expect -f
 #
 #  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
@@ -26,67 +27,30 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_executable(ot-daemon
-    main.c
-)
-
-set_target_properties(
-    ot-daemon
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
-target_include_directories(ot-daemon PRIVATE ${COMMON_INCLUDES})
-
-target_compile_definitions(ot-daemon PRIVATE
-    OPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_CLI
-    ${OT_PLATFORM_DEFINES}
-)
-
-target_compile_options(ot-daemon PRIVATE
-    ${OT_CFLAGS}
-)
-
-target_link_libraries(ot-daemon PRIVATE
-    openthread-cli-ftd
-    ${OT_PLATFORM_LIB}
-    openthread-ftd
-    ${OT_PLATFORM_LIB}
-    openthread-ncp-ftd
-    mbedcrypto
-)
-
-add_executable(ot-ctl
-    client.cpp
-)
-
-set_target_properties(
-    ot-ctl
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
-target_compile_definitions(ot-ctl PRIVATE
-    $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>
-    ${OT_PLATFORM_DEFINES}
-)
-
-target_compile_options(ot-ctl PRIVATE
-    ${OT_CFLAGS}
-)
-
-target_link_libraries(ot-ctl
-    openthread-platform
-    $<$<BOOL:${READLINE}>:${OT_READLINE}>
-)
-
-target_include_directories(ot-ctl PRIVATE ${COMMON_INCLUDES})
-
-install(TARGETS ot-daemon
-    DESTINATION sbin)
-install(TARGETS ot-ctl
-    DESTINATION bin)
-
-set(CPACK_PACKAGE_NAME "openthread-daemon")
+# allows 11-25 and forbidden 26
+spawn $env(OT_COMMAND) --max-power-table 11,12,13,14,15,16,17,18,19,20,21,22,23,24,-1,0x7f $env(RCP_COMMAND) 1
+set timeout 1
+expect_after {
+    timeout { exit 1 }
+}
+send "channel supported\n"
+expect "0x3fff800"
+expect "Done"
+send "channel preferred\n"
+expect "0x3fff800"
+expect "Done"
+send "\x04"
+expect eof
+# allows all channels by default
+spawn $env(OT_COMMAND) $env(RCP_COMMAND) 1
+set timeout 1
+expect_after {
+    timeout { exit 1 }
+}
+send "channel supported\n"
+expect "0x7fff800"
+expect "Done"
+send "channel preferred\n"
+expect "0x7fff800"
+expect "Done"
+send_user "\r\n"
