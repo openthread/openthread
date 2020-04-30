@@ -80,11 +80,11 @@ verify(j.get(wpan.WPAN_STATE) == wpan.STATE_COMMISSIONED)
 j.joiner_attach()
 
 
-def joiner_is_asscoated():
+def joiner_is_associated():
     verify(j.is_associated())
 
 
-wpan.verify_within(joiner_is_asscoated, WAIT_TIME)
+wpan.verify_within(joiner_is_associated, WAIT_TIME)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished
