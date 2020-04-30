@@ -161,7 +161,10 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     otError error;
 
 #if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
-    SuccessOrExit(error = otPlatRadioSetTransmitPower(aInstance, sMaxPowerTable.GetTransmitPower(aChannel)));
+    if (sRadioSpinel.GetChannel() != aChannel)
+    {
+        SuccessOrExit(error = otPlatRadioSetTransmitPower(aInstance, sMaxPowerTable.GetTransmitPower(aChannel)));
+    }
 #endif
     SuccessOrExit(error = sRadioSpinel.Receive(aChannel));
 
