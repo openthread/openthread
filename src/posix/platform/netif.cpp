@@ -1210,12 +1210,12 @@ static void platformConfigureTunDevice(otInstance *aInstance,
 
     (void)aInstance;
 
-    sTunFd = NonBlockSocketWithCloseExec(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL);
+    sTunFd = SocketWithCloseExec(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL, kSocketNonBlock);
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     memset(&info, 0, sizeof(info));
     strncpy(info.ctl_name, UTUN_CONTROL_NAME, strlen(UTUN_CONTROL_NAME));
-    err = ioctl(fd, CTLIOCGINFO, &info);
+    err = ioctl(sTunFd, CTLIOCGINFO, &info);
     VerifyOrDie(err == 0, OT_EXIT_ERROR_ERRNO);
 
     addr.sc_id      = info.ctl_id;
