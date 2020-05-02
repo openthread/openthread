@@ -96,15 +96,15 @@ otError Joiner::Start(const char *     aPskd,
                       void *           aContext)
 {
     otError         error;
-    Mac::ExtAddress joinerId;
+    Mac::ExtAddress extAddress;
 
     otLogInfoMeshCoP("Joiner starting");
 
     VerifyOrExit(mState == OT_JOINER_STATE_IDLE, error = OT_ERROR_BUSY);
 
-    // Use extended address based on factory-assigned IEEE EUI-64
-    GetJoinerId(joinerId);
-    Get<Mac::Mac>().SetExtAddress(joinerId);
+    // Use random-generated extended address.
+    extAddress.GenerateRandom();
+    Get<Mac::Mac>().SetExtAddress(extAddress);
     Get<Mle::MleRouter>().UpdateLinkLocalAddress();
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().Start(kJoinerUdpPort));
@@ -222,6 +222,8 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult, void *aContext)
 
 void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
 {
+    Mac::ExtAddress joinerId;
+
     VerifyOrExit(mState == OT_JOINER_STATE_DISCOVER, OT_NOOP);
 
     if (aResult != NULL)
@@ -230,6 +232,11 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
     }
     else
     {
+        // Use extended address based on factory-assigned IEEE EUI-64
+        GetJoinerId(joinerId);
+        Get<Mac::Mac>().SetExtAddress(joinerId);
+        Get<Mle::MleRouter>().UpdateLinkLocalAddress();
+
         mJoinerRouterIndex = 0;
         TryNextJoinerRouter(OT_ERROR_NONE);
     }
