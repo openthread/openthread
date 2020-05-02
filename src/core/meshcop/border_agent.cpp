@@ -376,11 +376,11 @@ void BorderAgent::HandleStateChanged(otChangedFlags aFlags)
 
     if (Get<Mle::MleRouter>().IsAttached())
     {
-        Start();
+        IgnoreError(Start());
     }
     else
     {
-        Stop();
+        IgnoreError(Stop());
     }
 
 exit:
@@ -754,7 +754,7 @@ void BorderAgent::ApplyMeshLocalPrefix(void)
     if (Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc) == OT_ERROR_NONE)
     {
         mCommissionerAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-        Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
+        IgnoreError(Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc));
     }
 
 exit:

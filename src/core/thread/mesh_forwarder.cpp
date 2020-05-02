@@ -1274,7 +1274,7 @@ otError MeshForwarder::FrameToMessage(const uint8_t *     aFrame,
 
     SuccessOrExit(error = aMessage->SetLength(aMessage->GetLength() + aFrameLength));
     aMessage->Write(aMessage->GetOffset(), aFrameLength, aFrame);
-    aMessage->MoveOffset(aFrameLength);
+    IgnoreError(aMessage->MoveOffset(aFrameLength));
 
 exit:
     return error;

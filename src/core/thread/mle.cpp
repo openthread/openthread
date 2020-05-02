@@ -161,8 +161,8 @@ Mle::Mle(Instance &aInstance)
 
     // mesh-local 64
     mMeshLocal64.Clear();
-    Random::Crypto::FillBuffer(mMeshLocal64.GetAddress().mFields.m8 + OT_IP6_PREFIX_SIZE,
-                               OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE);
+    IgnoreError(Random::Crypto::FillBuffer(mMeshLocal64.GetAddress().mFields.m8 + OT_IP6_PREFIX_SIZE,
+                               OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE));
 
     mMeshLocal64.mPrefixLength       = MeshLocalPrefix::kLength;
     mMeshLocal64.mPreferred          = true;
@@ -1550,8 +1550,8 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
         if (!Get<ThreadNetif>().IsUnicastAddress(mMeshLocal64.GetAddress()))
         {
             // Mesh Local EID was removed, choose a new one and add it back
-            Random::Crypto::FillBuffer(mMeshLocal64.GetAddress().mFields.m8 + OT_IP6_PREFIX_SIZE,
-                                       OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE);
+            IgnoreError(Random::Crypto::FillBuffer(mMeshLocal64.GetAddress().mFields.m8 + OT_IP6_PREFIX_SIZE,
+                                       OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE));
 
             IgnoreError(Get<ThreadNetif>().AddUnicastAddress(mMeshLocal64));
             Get<Notifier>().Signal(OT_CHANGED_THREAD_ML_ADDR);

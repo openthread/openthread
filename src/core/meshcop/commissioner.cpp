@@ -1107,9 +1107,9 @@ void Commissioner::ApplyMeshLocalPrefix(void)
 {
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, OT_NOOP);
 
-    Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
+    IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc));
     mCommissionerAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-    Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
+    IgnoreError(Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc));
 
 exit:
     return;

@@ -238,7 +238,7 @@ void Slaac::Update(UpdateMode aMode)
                     slaacAddr->mPreferred    = config.mPreferred;
                     slaacAddr->mValid        = true;
 
-                    GenerateIid(*slaacAddr);
+                    IgnoreError(GenerateIid(*slaacAddr));
 
                     otLogInfoUtil("SLAAC: Adding address %s", slaacAddr->GetAddress().ToString().AsCString());
 
@@ -342,7 +342,7 @@ void Slaac::GetIidSecretKey(IidSecretKey &aKey) const
 
     if (error != OT_ERROR_NONE)
     {
-        Random::Crypto::FillBuffer(aKey.m8, sizeof(IidSecretKey));
+        IgnoreError(Random::Crypto::FillBuffer(aKey.m8, sizeof(IidSecretKey)));
     }
 
     IgnoreError(Get<Settings>().SaveSlaacIidSecretKey(aKey));

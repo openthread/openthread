@@ -428,7 +428,7 @@ otError ActiveDataset::GenerateLocal(void)
     {
         if (Get<KeyManager>().IsPskcSet())
         {
-            dataset.SetTlv(Tlv::kPskc, &Get<KeyManager>().GetPskc(), sizeof(Pskc));
+            IgnoreError(dataset.SetTlv(Tlv::kPskc, &Get<KeyManager>().GetPskc(), sizeof(Pskc)));
         }
         else
         {
@@ -436,7 +436,7 @@ otError ActiveDataset::GenerateLocal(void)
             Pskc pskc;
 
             SuccessOrExit(error = pskc.GenerateRandom());
-            dataset.SetTlv(Tlv::kPskc, &pskc, sizeof(Pskc));
+            IgnoreError(dataset.SetTlv(Tlv::kPskc, &pskc, sizeof(Pskc)));
         }
     }
 
@@ -527,7 +527,7 @@ void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Coap::Messa
     }
 
     // add delay timer tlv
-    dataset.SetUint32Tlv(Tlv::kDelayTimer, Get<Leader>().GetDelayTimerMinimal());
+    IgnoreError(dataset.SetUint32Tlv(Tlv::kDelayTimer, Get<Leader>().GetDelayTimerMinimal()));
 
     // add pending timestamp tlv
     dataset.SetTimestamp(aTimestamp);

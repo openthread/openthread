@@ -489,9 +489,9 @@ void Dhcp6Server::ApplyMeshLocalPrefix(void)
         if (mPrefixAgents[i].IsValid())
         {
             PrefixAgent *entry = &mPrefixAgents[i];
-            Get<ThreadNetif>().RemoveUnicastAddress(entry->GetAloc());
+            IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(entry->GetAloc()));
             entry->GetAloc().GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-            Get<ThreadNetif>().AddUnicastAddress(entry->GetAloc());
+            IgnoreError(Get<ThreadNetif>().AddUnicastAddress(entry->GetAloc()));
         }
     }
 }
