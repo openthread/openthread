@@ -96,15 +96,15 @@ otError Joiner::Start(const char *     aPskd,
                       void *           aContext)
 {
     otError         error;
-    Mac::ExtAddress extAddress;
+    Mac::ExtAddress randomAddress;
 
     otLogInfoMeshCoP("Joiner starting");
 
     VerifyOrExit(mState == OT_JOINER_STATE_IDLE, error = OT_ERROR_BUSY);
 
     // Use random-generated extended address.
-    extAddress.GenerateRandom();
-    Get<Mac::Mac>().SetExtAddress(extAddress);
+    randomAddress.GenerateRandom();
+    Get<Mac::Mac>().SetExtAddress(randomAddress);
     Get<Mle::MleRouter>().UpdateLinkLocalAddress();
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().Start(kJoinerUdpPort));
