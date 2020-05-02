@@ -602,8 +602,8 @@ void MeshForwarder::SendDestinationUnreachable(uint16_t aMeshSource, const Messa
     messageInfo.GetPeerAddr() = Get<Mle::MleRouter>().GetMeshLocal16();
     messageInfo.GetPeerAddr().SetLocator(aMeshSource);
 
-    IgnoreError(Get<Ip6::Icmp>().SendError(Ip6::IcmpHeader::kTypeDstUnreach, Ip6::IcmpHeader::kCodeDstUnreachNoRoute, messageInfo,
-                               aMessage));
+    IgnoreError(Get<Ip6::Icmp>().SendError(Ip6::IcmpHeader::kTypeDstUnreach, Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
+                                           messageInfo, aMessage));
 }
 
 void MeshForwarder::HandleMesh(uint8_t *               aFrame,
