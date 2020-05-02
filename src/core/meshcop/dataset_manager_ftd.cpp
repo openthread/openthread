@@ -397,13 +397,14 @@ otError ActiveDataset::GenerateLocal(void)
 
     if (dataset.GetTlv<ExtendedPanIdTlv>() == NULL)
     {
-        IgnoreError(dataset.SetTlv(Tlv::kExtendedPanId, &Get<Mac::Mac>().GetExtendedPanId(), sizeof(Mac::ExtendedPanId)));
+        IgnoreError(
+            dataset.SetTlv(Tlv::kExtendedPanId, &Get<Mac::Mac>().GetExtendedPanId(), sizeof(Mac::ExtendedPanId)));
     }
 
     if (dataset.GetTlv<MeshLocalPrefixTlv>() == NULL)
     {
         IgnoreError(dataset.SetTlv(Tlv::kMeshLocalPrefix, &Get<Mle::MleRouter>().GetMeshLocalPrefix(),
-                       sizeof(Mle::MeshLocalPrefix)));
+                                   sizeof(Mle::MeshLocalPrefix)));
     }
 
     if (dataset.GetTlv<NetworkMasterKeyTlv>() == NULL)

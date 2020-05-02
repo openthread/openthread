@@ -136,7 +136,7 @@ void Dataset::ConvertTo(otOperationalDataset &aDataset) const
 
         case Tlv::kNetworkName:
             IgnoreError(static_cast<Mac::NetworkName &>(aDataset.mNetworkName)
-                .Set(static_cast<const NetworkNameTlv *>(cur)->GetNetworkName()));
+                            .Set(static_cast<const NetworkNameTlv *>(cur)->GetNetworkName()));
             aDataset.mComponents.mIsNetworkNamePresent = true;
             break;
 
@@ -296,7 +296,8 @@ exit:
 
 void Dataset::SetTimestamp(const Timestamp &aTimestamp)
 {
-    IgnoreError(SetTlv((mType == kActive) ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp, &aTimestamp, sizeof(Timestamp)));
+    IgnoreError(
+        SetTlv((mType == kActive) ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp, &aTimestamp, sizeof(Timestamp)));
 }
 
 otError Dataset::SetTlv(Tlv::Type aType, const void *aValue, uint8_t aLength)

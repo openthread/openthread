@@ -833,7 +833,8 @@ void Commissioner::HandleLeaderKeepAliveResponse(Coap::Message *         aMessag
     uint8_t state;
 
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, OT_NOOP);
-    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED, IgnoreError(Stop(/* aResign */ false)));
+    VerifyOrExit(aResult == OT_ERROR_NONE && aMessage->GetCode() == OT_COAP_CODE_CHANGED,
+                 IgnoreError(Stop(/* aResign */ false)));
 
     otLogInfoMeshCoP("received Leader keep-alive response");
 
