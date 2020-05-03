@@ -1206,7 +1206,7 @@ extern "C" {
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE
 #define otDumpNote(aRegion, aId, aBuf, aLength) otDump(OT_LOG_LEVEL_NOTE, aRegion, aId, aBuf, aLength)
 #else
-#define otDumpInfo(aRegion, aId, aBuf, aLength)
+#define otDumpNote(aRegion, aId, aBuf, aLength)
 #endif
 
 /**
