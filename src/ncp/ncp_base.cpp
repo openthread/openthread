@@ -2253,7 +2253,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>(
         OT_UNREACHABLE_CODE(break);
     }
 
-    otLoggingSetLevel(logLevel);
+    IgnoreError(otLoggingSetLevel(logLevel));
 
 exit:
     return error;
