@@ -51,6 +51,7 @@ DuaManager::DuaManager(Instance &aInstance)
 {
     mDomainUnicastAddress.Clear();
     mDomainUnicastAddress.mPreferred          = true;
+    mDomainUnicastAddress.mValid              = true;
     mDomainUnicastAddress.mScopeOverride      = Ip6::Address::kGlobalScope;
     mDomainUnicastAddress.mScopeOverrideValid = true;
 }
@@ -79,7 +80,6 @@ void DuaManager::UpdateDomainUnicastAddress(BackboneRouter::Leader::DomainPrefix
 
     if (Get<Utils::Slaac>().GenerateIid(mDomainUnicastAddress, NULL, 0, &mDadCounter) == OT_ERROR_NONE)
     {
-        mDomainUnicastAddress.mValid = true;
         Get<ThreadNetif>().AddUnicastAddress(mDomainUnicastAddress);
     }
     else

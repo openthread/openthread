@@ -82,15 +82,12 @@ public:
     void UpdateDomainUnicastAddress(BackboneRouter::Leader::DomainPrefixState aState);
 
     /**
-     * This method returns a pointer to the Domain Unicast Address.
+     * This method returns a reference to the Domain Unicast Address.
      *
-     * @returns A pointer to the Domain Unicast Address or NULL if no valid Domain Unicast Address.
+     * @returns A reference to the Domain Unicast Address.
      *
      */
-    const Ip6::Address *GetDomainUnicastAddress(void) const
-    {
-        return mDomainUnicastAddress.mValid ? &mDomainUnicastAddress.GetAddress() : NULL;
-    }
+    const Ip6::Address &GetDomainUnicastAddress(void) const { return mDomainUnicastAddress.GetAddress(); }
 
 private:
     Ip6::NetifUnicastAddress mDomainUnicastAddress;

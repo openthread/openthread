@@ -1362,17 +1362,18 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     {
-        const Ip6::Address *dua = Get<DuaManager>().GetDomainUnicastAddress();
+        // Cache Domain Unicast Address.
+        address = Get<DuaManager>().GetDomainUnicastAddress();
 
-        if (dua && Get<ThreadNetif>().IsUnicastAddress(*dua))
+        if (Get<ThreadNetif>().IsUnicastAddress(address))
         {
-            error = Get<NetworkData::Leader>().GetContext(*dua, context);
+            error = Get<NetworkData::Leader>().GetContext(address, context);
 
             OT_ASSERT(error == OT_ERROR_NONE);
 
             // Prioritize DUA, compressed entry
             entry.SetContextId(context.mContextId);
-            entry.SetIid(dua->GetIid());
+            entry.SetIid(address.GetIid());
             SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
             length += entry.GetLength();
             counter++;
@@ -1390,7 +1391,7 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
         // Here skips DUA which was appended already.
-        if (&addr->GetAddress() == Get<DuaManager>().GetDomainUnicastAddress())
+        if (addr->GetAddress() == address)
         {
             continue;
         }
