@@ -74,6 +74,7 @@
 #else
 #error "Unknown posix app type!"
 #endif
+#include <common/code_utils.hpp>
 #include <lib/platform/exit_code.h>
 #include <openthread/openthread-system.h>
 
@@ -326,7 +327,7 @@ static otInstance *InitInstance(int aArgCount, char *aArgVector[])
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
     syslog(LOG_INFO, "Running %s", otGetVersionString());
     syslog(LOG_INFO, "Thread version: %hu", otThreadGetVersion());
-    otLoggingSetLevel(config.mLogLevel);
+    IgnoreError(otLoggingSetLevel(config.mLogLevel));
 
     instance = otSysInit(&config.mPlatformConfig);
 
