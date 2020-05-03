@@ -42,6 +42,10 @@ override CXXFLAGS                                    := $(filter-out -pedantic-e
 override CFLAGS                                      := $(filter-out -Wundef,$(CFLAGS))
 override CXXFLAGS                                    := $(filter-out -Wundef,$(CXXFLAGS))
 
+# Do not enable -Wcast-align for nRF52811 driver library
+override CFLAGS                                      := $(filter-out -Wcast-align,$(CFLAGS))
+override CXXFLAGS                                    := $(filter-out -Wcast-align,$(CXXFLAGS))
+
 COMMONCPPFLAGS                                                                                             = \
     -DCONFIG_GPIO_AS_PINRESET                                                                                \
     -DNRF52811_XXAA                                                                                          \
