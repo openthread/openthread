@@ -28,8 +28,6 @@
 
 #include "flash.hpp"
 
-#include <stdio.h>
-
 #include <openthread/platform/flash.h>
 
 #include "common/code_utils.hpp"
@@ -124,7 +122,7 @@ otError Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueL
     {
         otPlatFlashRead(&GetInstance(), mSwapIndex, offset, &record, sizeof(record));
 
-        if ((record.GetKey() != aKey) || !record.IsValid())
+        if (record.GetKey() != aKey)
         {
             continue;
         }
@@ -132,6 +130,11 @@ otError Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueL
         if (record.IsFirst())
         {
             index = 0;
+        }
+
+        if (!record.IsValid())
+        {
+            continue;
         }
 
         if (index == aIndex)
@@ -211,7 +214,7 @@ bool Flash::DoesValidRecordExist(uint32_t aOffset, uint16_t aKey) const
     {
         otPlatFlashRead(&GetInstance(), mSwapIndex, aOffset, &record, sizeof(record));
 
-        if (record.IsValid() && record.IsFirst() && (record.GetKey() == aKey))
+        if (record.IsAddCompleteSet() && record.IsFirst() && (record.GetKey() == aKey))
         {
             ExitNow(rval = true);
         }
@@ -256,14 +259,14 @@ exit:
 otError Flash::Delete(uint16_t aKey, int aIndex)
 {
     otError      error = OT_ERROR_NOT_FOUND;
-    int          index = 0; // This must be initalized to 0. See [Note] below.
+    int          index = 0;
     RecordHeader record;
 
     for (uint32_t offset = kSwapMarkerSize; offset < mSwapUsed; offset += record.GetSize())
     {
         otPlatFlashRead(&GetInstance(), mSwapIndex, offset, &record, sizeof(record));
 
-        if ((record.GetKey() != aKey) || !record.IsValid())
+        if (record.GetKey() != aKey)
         {
             continue;
         }
@@ -273,21 +276,16 @@ otError Flash::Delete(uint16_t aKey, int aIndex)
             index = 0;
         }
 
+        if (!record.IsValid())
+        {
+            continue;
+        }
+
         if ((aIndex == index) || (aIndex == -1))
         {
             record.SetDeleted();
             otPlatFlashWrite(&GetInstance(), mSwapIndex, offset, &record, sizeof(record));
             error = OT_ERROR_NONE;
-        }
-
-        /* [Note] If the operation gets interrupted here and aIndex is 0, the next record (index == 1) will never get
-         * marked as first. However, this is not actually an issue because all the methods that iterate over the
-         * settings area initialize the index to 0, without expecting any record to be effectively marked as first. */
-
-        if ((index == 1) && (aIndex == 0))
-        {
-            record.SetFirst();
-            otPlatFlashWrite(&GetInstance(), mSwapIndex, offset, &record, sizeof(record));
         }
 
         index++;

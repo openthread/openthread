@@ -182,6 +182,54 @@ void TestFlash(void)
         VerifyOrQuit(length == key, "Get() did not return expected length");
         VerifyOrQuit(memcmp(readBuffer, writeBuffer, length) == 0, "Get() did not return expected value");
     }
+
+    // Test for the mark-first elision
+
+    {
+        uint16_t length;
+
+        flash.Wipe();
+        SuccessOrQuit(flash.Add(0, writeBuffer, 1), "Add() failed");
+        SuccessOrQuit(flash.Add(0, writeBuffer, 2), "Add() failed");
+        SuccessOrQuit(flash.Set(0, writeBuffer, 3), "Set() failed");
+        SuccessOrQuit(flash.Add(0, writeBuffer, 4), "Add() failed");
+        SuccessOrQuit(flash.Add(0, writeBuffer, 5), "Add() failed");
+
+        SuccessOrQuit(flash.Get(0, 0, readBuffer, &length), "Get() failed");
+        SuccessOrQuit(flash.Get(0, 1, readBuffer, &length), "Get() failed");
+        SuccessOrQuit(flash.Get(0, 2, readBuffer, &length), "Get() failed");
+
+        SuccessOrQuit(flash.Delete(0, 0), "Delete() failed");
+
+        SuccessOrQuit(flash.Get(0, 0, readBuffer, &length), "Get() failed");
+        VerifyOrQuit(length == 4, "Get() did not return expected length");
+
+        SuccessOrQuit(flash.Get(0, 1, readBuffer, &length), "Get() failed");
+        VerifyOrQuit(length == 5, "Get() did not return expected length");
+
+        flash.Wipe();
+        SuccessOrQuit(flash.Add(0, writeBuffer, 1), "Add() failed");
+        SuccessOrQuit(flash.Add(0, writeBuffer, 2), "Add() failed");
+        SuccessOrQuit(flash.Set(0, writeBuffer, 3), "Set() failed");
+        SuccessOrQuit(flash.Add(0, writeBuffer, 4), "Add() failed");
+        SuccessOrQuit(flash.Add(0, writeBuffer, 5), "Add() failed");
+        SuccessOrQuit(flash.Add(0, writeBuffer, 180), "Add() failed");
+        SuccessOrQuit(flash.Add(0, writeBuffer, 248), "Add() failed");
+        SuccessOrQuit(flash.Add(0, writeBuffer, 248), "Add() failed");
+        SuccessOrQuit(flash.Add(0, writeBuffer, 248), "Add() failed");
+        SuccessOrQuit(flash.Add(0, writeBuffer, 248), "Add() failed");
+        SuccessOrQuit(flash.Add(0, writeBuffer, 248), "Add() failed");
+        SuccessOrQuit(flash.Add(0, writeBuffer, 248), "Add() failed");
+        SuccessOrQuit(flash.Add(0, writeBuffer, 248), "Add() failed");
+        SuccessOrQuit(flash.Delete(0, 0), "Delete() failed");
+        SuccessOrQuit(flash.Add(0, writeBuffer, 6), "Add() failed");
+
+        SuccessOrQuit(flash.Get(0, 0, readBuffer, &length), "Get() failed");
+        VerifyOrQuit(length == 4, "Get() did not return expected length");
+
+        SuccessOrQuit(flash.Get(0, 1, readBuffer, &length), "Get() failed");
+        VerifyOrQuit(length == 5, "Get() did not return expected length");
+    }
 }
 
 } // namespace ot
