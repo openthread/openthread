@@ -679,7 +679,7 @@ void SpiInterface::Process(const RadioProcessContext &aContext)
     if (mSpiTxIsReady || CheckInterrupt())
     {
         // We guard this with the above check because we don't want to overwrite any previously received frames.
-        PushPullSpi();
+        IgnoreError(PushPullSpi());
     }
 }
 
@@ -737,7 +737,7 @@ otError SpiInterface::WaitForFrame(uint64_t aTimeoutUs)
 
     if (isDataReady)
     {
-        PushPullSpi();
+        IgnoreError(PushPullSpi());
     }
     else if (ret == 0)
     {
@@ -764,7 +764,7 @@ otError SpiInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
     mSpiTxIsReady     = true;
     mSpiTxPayloadSize = aLength;
 
-    PushPullSpi();
+    IgnoreError(PushPullSpi());
 
 exit:
     return error;
