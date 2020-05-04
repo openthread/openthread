@@ -37,20 +37,143 @@
 #include "test_platform.h"
 #include "test_util.h"
 
+#include "test_flash/flash_v1.hpp"
+
 namespace ot {
 
-void TestFlash(void)
-{
 #if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+class FlashTest
+{
+public:
+    FlashTest(Instance *aInstance)
+        : mFlashV2(*aInstance)
+    {
+    }
+
+    void SetReaderWriter(bool aReadNew, bool aWriteNew)
+    {
+        mReadNew  = aReadNew;
+        mWriteNew = aWriteNew;
+    }
+
+    void Init(void)
+    {
+        testFlashSet(0);
+        mFlashV1.Init();
+
+        testFlashSet(1);
+        mFlashV2.Init();
+    }
+
+    otError Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const
+    {
+        otError error;
+        if (mReadNew)
+        {
+            testFlashSet(1);
+            error = mFlashV2.Get(aKey, aIndex, aValue, aValueLength);
+        }
+        else
+        {
+            testFlashSet(0);
+            error = mFlashV1.Get(aKey, aIndex, aValue, aValueLength);
+        }
+        return error;
+    }
+
+    otError Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+    {
+        otError error;
+        if (mWriteNew)
+        {
+            testFlashSet(1);
+            error = mFlashV2.Set(aKey, aValue, aValueLength);
+        }
+        else
+        {
+            testFlashSet(0);
+            error = mFlashV1.Set(aKey, aValue, aValueLength);
+            LegacyPrepare();
+        }
+        return error;
+    }
+
+    otError Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+    {
+        otError error;
+        if (mWriteNew)
+        {
+            testFlashSet(1);
+            error = mFlashV2.Add(aKey, aValue, aValueLength);
+        }
+        else
+        {
+            testFlashSet(0);
+            error = mFlashV1.Add(aKey, aValue, aValueLength);
+            LegacyPrepare();
+        }
+        return error;
+    }
+
+    otError Delete(uint16_t aKey, int aIndex)
+    {
+        otError error;
+        if (mWriteNew)
+        {
+            testFlashSet(1);
+            error = mFlashV2.Delete(aKey, aIndex);
+        }
+        else
+        {
+            testFlashSet(0);
+            error = mFlashV1.Delete(aKey, aIndex);
+            LegacyPrepare();
+        }
+        return error;
+    }
+
+    void Wipe(void)
+    {
+        if (mWriteNew)
+        {
+            testFlashSet(1);
+            mFlashV2.Wipe();
+        }
+        else
+        {
+            testFlashSet(0);
+            mFlashV1.Wipe();
+            LegacyPrepare();
+        }
+    }
+
+private:
+    void LegacyPrepare()
+    {
+        if (!mWriteNew && mReadNew)
+        {
+            testFlashCopy();
+            testFlashSet(1);
+            mFlashV2.Init();
+        }
+    }
+
+    FlashV1 mFlashV1;
+    Flash   mFlashV2;
+
+    bool mReadNew;
+    bool mWriteNew;
+};
+
+void TestFlash(FlashTest &flash)
+{
     uint8_t readBuffer[256];
     uint8_t writeBuffer[256];
 
-    Instance *instance = testInitInstance();
-    Flash     flash(*instance);
-
     for (uint32_t i = 0; i < sizeof(readBuffer); i++)
     {
-        readBuffer[i] = i & 0xff;
+        readBuffer[i]  = i & 0xff;
+        writeBuffer[i] = 0x55;
     }
 
     flash.Init();
@@ -123,7 +246,7 @@ void TestFlash(void)
 
         if ((index % 4) == 0)
         {
-            SuccessOrQuit(flash.Set(0, writeBuffer, length), "Add() failed");
+            SuccessOrQuit(flash.Set(0, writeBuffer, length), "Set() failed");
         }
         else
         {
@@ -183,14 +306,42 @@ void TestFlash(void)
         VerifyOrQuit(length == key, "Get() did not return expected length");
         VerifyOrQuit(memcmp(readBuffer, writeBuffer, length) == 0, "Get() did not return expected value");
     }
-#endif // OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
 }
+
+void TestFlash(void)
+{
+    Instance *instance = testInitInstance();
+
+    FlashTest flashTest(instance);
+
+    // old read vs old write
+    testFlashReset();
+    flashTest.SetReaderWriter(false, false);
+    TestFlash(flashTest);
+
+    // new read vs new write
+    testFlashReset();
+    flashTest.SetReaderWriter(true, true);
+    TestFlash(flashTest);
+
+#if 0
+    // new read vs old write
+    testFlashReset();
+    flashTest.SetReaderWriter(true, false);
+    TestFlash(flashTest);
+    printf("Format v2 Legacy compatibility passed\n");
+#endif
+}
+
+#endif // OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
 
 } // namespace ot
 
 int main(void)
 {
+#if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
     ot::TestFlash();
+#endif
     printf("All tests passed\n");
     return 0;
 }

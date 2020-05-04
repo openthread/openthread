@@ -142,6 +142,7 @@ add_test(NAME test-child-table COMMAND test-child-table)
 add_executable(test-flash
     ${COMMON_SOURCES}
     test_flash.cpp
+    test_flash/flash_v1.cpp
 )
 
 target_include_directories(test-flash
