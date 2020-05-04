@@ -64,6 +64,7 @@ void DuaManager::UpdateDomainUnicastAddress(BackboneRouter::Leader::DomainPrefix
         (aState == BackboneRouter::Leader::kDomainPrefixRefreshed))
     {
         Get<ThreadNetif>().RemoveUnicastAddress(mDomainUnicastAddress);
+        mDomainUnicastAddress.GetAddress().Clear();
     }
 
     VerifyOrExit((aState == BackboneRouter::Leader::kDomainPrefixAdded) ||
@@ -74,7 +75,6 @@ void DuaManager::UpdateDomainUnicastAddress(BackboneRouter::Leader::DomainPrefix
 
     OT_ASSERT(prefix != NULL);
 
-    mDomainUnicastAddress.GetAddress().Clear();
     mDomainUnicastAddress.GetAddress().SetPrefix(prefix->mPrefix.mFields.m8, prefix->mLength);
     mDomainUnicastAddress.mPrefixLength = prefix->mLength;
 
@@ -84,6 +84,7 @@ void DuaManager::UpdateDomainUnicastAddress(BackboneRouter::Leader::DomainPrefix
     }
     else
     {
+        mDomainUnicastAddress.GetAddress().Clear();
         otLogWarnCore("Failed to generate valid DUA");
     }
 
