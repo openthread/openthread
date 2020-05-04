@@ -50,48 +50,50 @@ configure_OPTIONS               = \
     --with-ncp-bus=uart           \
     --enable-radio-only           \
     --enable-linker-map           \
-    --with-examples=jn5189        \
+    --with-examples=k32w061       \
     $(NULL)
 
 ifneq ($(DISABLE_BUILTIN_MBEDTLS), 1)
-configure_OPTIONS              += MBEDTLS_CPPFLAGS="$(JN5189_MBEDTLS_CPPFLAGS)"
+configure_OPTIONS              += MBEDTLS_CPPFLAGS="$(K32W061_MBEDTLS_CPPFLAGS)"
 endif
 
-JN5189_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"mbedtls-config.h\"'
-JN5189_MBEDTLS_CPPFLAGS += -DMBEDTLS_USER_CONFIG_FILE='\"jn5189-mbedtls-config.h\"'
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/include/
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189DK6/
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189DK6/devices/JN5189
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189DK6/middleware/mbedtls/port/ksdk/
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189DK6/devices/JN5189/drivers/
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189DK6/devices/JN5189/utilities/
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189DK6/devices/JN5189/utilities/debug-console/
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189DK6/devices/JN5189/utilities/str/
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189DK6/drivers/components/serial_manager/
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189DK6/drivers/components/uart/
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/JN5189DK6/CMSIS/Include/
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include/
-JN5189_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include/mbedtls/
+K32W061_MBEDTLS_CPPFLAGS  = -DMBEDTLS_CONFIG_FILE='\"mbedtls-config.h\"'
+K32W061_MBEDTLS_CPPFLAGS += -DMBEDTLS_USER_CONFIG_FILE='\"k32w061-mbedtls-config.h\"'
+K32W061_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/include/
+K32W061_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/
+K32W061_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/K32W061DK6/
+K32W061_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/K32W061DK6/devices/K32W061
+K32W061_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/K32W061DK6/middleware/mbedtls/port/ksdk/
+K32W061_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/K32W061DK6/devices/K32W061/drivers/
+K32W061_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/K32W061DK6/devices/K32W061/utilities/
+K32W061_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/K32W061DK6/devices/K32W061/utilities/debug-console/
+K32W061_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/K32W061DK6/devices/K32W061/utilities/str/
+K32W061_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/K32W061DK6/drivers/components/serial_manager/
+K32W061_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/K32W061DK6/drivers/components/uart/
+
+K32W061_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/nxp/K32W061DK6/CMSIS/Include/
+K32W061_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/
+K32W061_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include/
+K32W061_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/mbedtls/repo/include/mbedtls/
 
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
-CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-jn5189-config.h\"'
-CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/k32w/jn5189/
-SIGN_IMAGE_PATH = $(AbsTopSourceDir)/third_party/nxp/JN5189DK6/tools/imagetool/
+CONFIG_FILE      = OPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-k32w061-config.h\"'
+CONFIG_FILE_PATH = $(AbsTopSourceDir)/examples/platforms/k32w/k32w061/
+SIGN_IMAGE_PATH = $(AbsTopSourceDir)/third_party/nxp/K32W061DK6/tools/imagetool/
 
 COMMONCFLAGS                          := \
     -fdata-sections                      \
     -ffunction-sections                  \
     -Os                                  \
     -g                                   \
-	-DCPU_JN518X                         \
-	-DCPU_JN518X_REV=2                   \
-	-DJENNIC_CHIP_FAMILY_JN518x          \
-	-DJENNIC_CHIP_FAMILY_NAME=_JN518x    \
-	-DSDK_DEBUGCONSOLE=0                 \
+    -DCPU_K32W061HN                      \
+    -DCPU_JN518X                         \
+    -DCPU_JN518X_REV=2                   \
+    -DJENNIC_CHIP_FAMILY_JN518x          \
+    -DJENNIC_CHIP_FAMILY_NAME=_JN518x    \
+    -DSDK_DEBUGCONSOLE=0                 \
     -D$(CONFIG_FILE)                     \
     -I$(CONFIG_FILE_PATH)                \
     $(NULL)
@@ -140,7 +142,7 @@ ResultPath                      = output
 TopResultDir                    = $(ResultPath)
 AbsTopResultDir                 = $(PWD)/$(TopResultDir)
 
-TargetTuple                     = jn5189
+TargetTuple                     = k32w061
 
 ARCHS                           = cortex-m4
 
