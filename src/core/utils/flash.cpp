@@ -310,12 +310,12 @@ void Flash::Record::Write(Instance &aInstance, uint8_t aSwapIndex, uint32_t aOff
 
 void Flash::RecordHeader::WriteProgressMarkers(Instance &aInstance, uint8_t aSwapIndex, uint32_t aOffset)
 {
-    otPlatFlashWrite(&aInstance, aSwapIndex, aOffset + offsetof(RecordHeader, mWord1), &mWord1, sizeof(mWord1));
+    otPlatFlashWrite(&aInstance, aSwapIndex, aOffset, &mWord1, sizeof(mWord1));
 }
 
 void Flash::RecordHeader::WriteFirstAndDeletedFlags(Instance &aInstance, uint8_t aSwapIndex, uint32_t aOffset)
 {
-    otPlatFlashWrite(&aInstance, aSwapIndex, aOffset + offsetof(RecordHeader, mWord2), &mWord2, sizeof(mWord2));
+    otPlatFlashWrite(&aInstance, aSwapIndex, aOffset + sizeof(mWord1), &mWord2, sizeof(mWord2));
 }
 
 void Flash::RecordHeader::ReadHeader(Instance &aInstance, uint8_t aSwapIndex, uint32_t aOffset)
