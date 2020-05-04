@@ -49,11 +49,12 @@
 static uint8_t  sSettingsBuf[SETTINGS_BUFFER_SIZE];
 static uint16_t sSettingsBufLength;
 
+OT_TOOL_PACKED_BEGIN
 struct settingsBlock
 {
     uint16_t key;
     uint16_t length;
-};
+} OT_TOOL_PACKED_END;
 
 // settings API
 void otPlatSettingsInit(otInstance *aInstance)
