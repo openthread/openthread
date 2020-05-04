@@ -37,15 +37,118 @@
 #include "test_platform.h"
 #include "test_util.h"
 
+#include "test_flash/flash_v1.hpp"
+
 namespace ot {
 
-void TestFlash(void)
+class FlashTest
+{
+public:
+    FlashTest(Instance *aInstance)
+        : mFlashV2(*aInstance)
+    {
+    }
+
+    void SetReaderWriter(bool aReadNew, bool aWriteNew)
+    {
+        mReadNew  = aReadNew;
+        mWriteNew = aWriteNew;
+    }
+
+    void Init(void)
+    {
+        mFlashV1.Init();
+        mFlashV2.Init();
+    }
+
+    otError Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const
+    {
+        otError error;
+        if (mReadNew)
+        {
+            error = mFlashV2.Get(aKey, aIndex, aValue, aValueLength);
+        }
+        else
+        {
+            error = mFlashV1.Get(aKey, aIndex, aValue, aValueLength);
+        }
+        return error;
+    }
+
+    otError Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+    {
+        otError error;
+        if (mWriteNew)
+        {
+            error = mFlashV2.Set(aKey, aValue, aValueLength);
+            mFlashV1.Init();
+        }
+        else
+        {
+            error = mFlashV1.Set(aKey, aValue, aValueLength);
+            mFlashV2.Init();
+        }
+        return error;
+    }
+
+    otError Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+    {
+        otError error;
+        if (mWriteNew)
+        {
+            error = mFlashV2.Add(aKey, aValue, aValueLength);
+            mFlashV1.Init();
+        }
+        else
+        {
+            error = mFlashV1.Add(aKey, aValue, aValueLength);
+            mFlashV2.Init();
+        }
+        return error;
+    }
+
+    otError Delete(uint16_t aKey, int aIndex)
+    {
+        otError error;
+        if (mWriteNew)
+        {
+            error = mFlashV2.Delete(aKey, aIndex);
+            mFlashV1.Init();
+        }
+        else
+        {
+            error = mFlashV1.Delete(aKey, aIndex);
+            mFlashV2.Init();
+        }
+        return error;
+    }
+
+    void Wipe(void)
+    {
+        if (mWriteNew)
+        {
+            mFlashV2.Wipe();
+            mFlashV1.Init();
+        }
+        else
+        {
+            mFlashV1.Wipe();
+            mFlashV2.Init();
+        }
+    }
+
+private:
+    FlashV1 mFlashV1;
+    Flash   mFlashV2;
+
+    bool mReadNew;
+    bool mWriteNew;
+};
+
+void TestFlash(FlashTest &flash)
 {
     uint8_t readBuffer[256];
     uint8_t writeBuffer[256];
-
-    Instance *instance = testInitInstance();
-    Flash     flash(*instance);
 
     for (uint32_t i = 0; i < sizeof(readBuffer); i++)
     {
@@ -230,6 +333,28 @@ void TestFlash(void)
         SuccessOrQuit(flash.Get(0, 1, readBuffer, &length), "Get() failed");
         VerifyOrQuit(length == 5, "Get() did not return expected length");
     }
+}
+
+void TestFlash(void)
+{
+    Instance *instance = testInitInstance();
+
+    FlashTest flashTest(instance);
+
+    testPlatResetToDefaults();
+    g_flashIgnoreMultipleWrites = false;
+    flashTest.SetReaderWriter(true, true);
+    TestFlash(flashTest);
+
+    testPlatResetToDefaults();
+    g_flashIgnoreMultipleWrites = true;
+    flashTest.SetReaderWriter(false, false);
+    TestFlash(flashTest);
+
+    testPlatResetToDefaults();
+    g_flashIgnoreMultipleWrites = true;
+    flashTest.SetReaderWriter(true, false);
+    TestFlash(flashTest);
 }
 
 } // namespace ot

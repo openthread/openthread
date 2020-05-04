@@ -175,7 +175,7 @@ test_child_table_LDADD       = $(COMMON_LDADD)
 test_child_table_SOURCES     = $(COMMON_SOURCES) test_child_table.cpp
 
 test_flash_LDADD             = $(COMMON_LDADD)
-test_flash_SOURCES           = $(COMMON_SOURCES) test_flash.cpp
+test_flash_SOURCES           = $(COMMON_SOURCES) test_flash.cpp test_flash/flash_v1.cpp
 
 test_hdlc_LDADD              = $(COMMON_LDADD)
 test_hdlc_SOURCES            = $(COMMON_SOURCES) test_hdlc.cpp
