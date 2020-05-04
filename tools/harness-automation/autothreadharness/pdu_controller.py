@@ -312,7 +312,7 @@ class EatonPduController(PduController):
         oid = self._outlet_oid_get(cmd, socket)
 
         # Values other than 1 does not make sense with commands other than "set_reboot_delay".
-        if cmd is not 'set_reboot_delay':
+        if cmd != 'set_reboot_delay':
             value = 1
 
         self._oid_set(oid, value)
@@ -393,7 +393,7 @@ class EatonPduController(PduController):
         self._udp_transport_target = None
         self._context = None
 
-    def reboot(self, sockets, sleep_after_off=10, sleep_after_on=5):
+    def reboot(self, **params):
         """
         Reboots the sockets specified in the constructor with off and on delays.
 
@@ -401,10 +401,10 @@ class EatonPduController(PduController):
             sockets (list(int)): sockets to reboot
         """
 
-        logger.info('Executing power cycle for: {}'.format(sockets))
-        self.turn_off(sockets)
+        logger.info('Executing power cycle for: {}'.format(params['sockets']))
+        self.turn_off(params['sockets'])
         time.sleep(10)
-        self.turn_on(sockets)
+        self.turn_on(params['sockets'])
         time.sleep(5)
 
 
