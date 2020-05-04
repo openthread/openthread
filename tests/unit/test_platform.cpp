@@ -51,9 +51,15 @@ enum
 {
     FLASH_SWAP_SIZE = 2048,
     FLASH_SWAP_NUM  = 2,
+
+    FLASH_WORD_SIZE       = 4,
+    FLASH_WORD_MAX_WRITES = 2,
+    FLASH_WORD_NUM        = FLASH_SWAP_SIZE * FLASH_SWAP_NUM / FLASH_WORD_SIZE,
 };
 
-uint8_t g_flash[FLASH_SWAP_SIZE * FLASH_SWAP_NUM];
+bool    g_flashIgnoreMultipleWrites;
+uint8_t g_flashWriteCount[FLASH_WORD_NUM];
+uint8_t g_flash[FLASH_WORD_NUM * FLASH_WORD_SIZE];
 
 void testPlatResetToDefaults(void)
 {
@@ -73,6 +79,9 @@ void testPlatResetToDefaults(void)
     g_testPlatRadioReceive            = NULL;
     g_testPlatRadioTransmit           = NULL;
     g_testPlatRadioGetTransmitBuffer  = NULL;
+
+    memset(g_flash, 0xff, sizeof(g_flash));
+    memset(g_flashWriteCount, 0, sizeof(g_flashWriteCount));
 }
 
 ot::Instance *testInitInstance(void)
@@ -554,8 +563,6 @@ void otPlatSettingsWipe(otInstance *aInstance)
 void otPlatFlashInit(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-
-    memset(g_flash, 0xff, sizeof(g_flash));
 }
 
 uint32_t otPlatFlashGetSwapSize(otInstance *aInstance)
@@ -570,12 +577,15 @@ void otPlatFlashErase(otInstance *aInstance, uint8_t aSwapIndex)
     OT_UNUSED_VARIABLE(aInstance);
 
     uint32_t address;
+    uint32_t wordAddress;
 
     VerifyOrQuit(aSwapIndex < FLASH_SWAP_NUM, "aSwapIndex invalid");
 
-    address = aSwapIndex ? FLASH_SWAP_SIZE : 0;
+    address     = aSwapIndex ? FLASH_SWAP_SIZE : 0;
+    wordAddress = address / FLASH_WORD_SIZE;
 
     memset(g_flash + address, 0xff, FLASH_SWAP_SIZE);
+    memset(g_flashWriteCount + wordAddress, 0, FLASH_SWAP_SIZE / FLASH_WORD_SIZE);
 }
 
 void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, void *aData, uint32_t aSize)
@@ -598,16 +608,33 @@ void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffse
     OT_UNUSED_VARIABLE(aInstance);
 
     uint32_t address;
+    uint32_t wordAddress;
 
     VerifyOrQuit(aSwapIndex < FLASH_SWAP_NUM, "aSwapIndex invalid");
     VerifyOrQuit(aSize <= FLASH_SWAP_SIZE, "aSize invalid");
     VerifyOrQuit(aOffset <= (FLASH_SWAP_SIZE - aSize), "aOffset + aSize invalid");
+    VerifyOrQuit((aOffset % FLASH_WORD_SIZE) == 0, "aOffset invalid");
+    VerifyOrQuit((aSize % FLASH_WORD_SIZE) == 0, "aSize invalid");
 
     address = aSwapIndex ? FLASH_SWAP_SIZE : 0;
+    address += aOffset;
 
     for (uint32_t index = 0; index < aSize; index++)
     {
-        g_flash[address + aOffset + index] &= ((uint8_t *)aData)[index];
+        g_flash[address + index] &= ((uint8_t *)aData)[index];
+    }
+
+    wordAddress = address / FLASH_WORD_SIZE;
+    aSize /= FLASH_WORD_SIZE;
+
+    for (uint32_t index = 0; index < aSize; index++)
+    {
+        g_flashWriteCount[wordAddress + index]++;
+        if (!g_flashIgnoreMultipleWrites)
+        {
+            VerifyOrQuit(g_flashWriteCount[wordAddress + index] <= FLASH_WORD_MAX_WRITES,
+                         "Too many writes to the same word");
+        }
     }
 }
 

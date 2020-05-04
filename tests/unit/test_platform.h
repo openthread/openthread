@@ -83,6 +83,8 @@ extern testPlatRadioReceive            g_testPlatRadioReceive;
 extern testPlatRadioTransmit           g_testPlatRadioTransmit;
 extern testPlatRadioGetTransmitBuffer  g_testPlatRadioGetTransmitBuffer;
 
+extern bool g_flashIgnoreMultipleWrites;
+
 ot::Instance *testInitInstance(void);
 void          testFreeInstance(otInstance *aInstance);
 
