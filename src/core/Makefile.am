@@ -352,6 +352,7 @@ HEADERS_COMMON                             = \
     config/diag.h                            \
     config/dns_client.h                      \
     config/ip6.h                             \
+    config/flash.h                           \
     config/joiner.h                          \
     config/link_quality.h                    \
     config/link_raw.h                        \

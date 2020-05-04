@@ -149,39 +149,83 @@ private:
     public:
         void Init(uint16_t aKey, bool aFirst)
         {
-            mKey   = aKey;
-            mFlags = kFlagsInit & ~kFlagAddBegin;
+            mWord1.mKey   = aKey;
+            mWord1.mFlags = kFlagsInit & ~kFlagAddBegin;
+
+            mWord2.mFlags  = kFlagsInit;
+            mWord2.mLength = 0;
 
             if (aFirst)
             {
-                mFlags &= ~kFlagFirst;
+                SetFirst();
             }
-
-            mLength   = 0;
-            mReserved = 0xffff;
         };
 
-        uint16_t GetKey(void) const { return mKey; }
-        void     SetKey(uint16_t aKey) { mKey = aKey; }
+        uint16_t GetKey(void) const { return mWord1.mKey; }
+        void     SetKey(uint16_t aKey) { mWord1.mKey = aKey; }
 
-        uint16_t GetLength(void) const { return mLength; }
-        void     SetLength(uint16_t aLength) { mLength = aLength; }
+        uint16_t GetLength(void) const { return mWord2.mLength; }
+        void     SetLength(uint16_t aLength) { mWord2.mLength = aLength; }
 
-        uint16_t GetSize(void) const { return sizeof(*this) + ((mLength + 3) & 0xfffc); }
+        uint16_t GetSize(void) const { return sizeof(*this) + ((mWord2.mLength + 3) & 0xfffc); }
 
-        bool IsValid(void) const { return ((mFlags & (kFlagAddComplete | kFlagDelete)) == kFlagDelete); }
+        bool IsValid(void) const { return IsAddCompleteSet() && !IsDeleted(); }
 
-        bool IsAddBeginSet(void) const { return (mFlags & kFlagAddBegin) == 0; }
-        void SetAddBeginFlag(void) { mFlags &= ~kFlagAddBegin; }
+        bool IsAddBeginSet(void) const { return (mWord1.mFlags & kFlagAddBegin) == 0; }
+        void SetAddBeginFlag(void) { mWord1.mFlags &= ~kFlagAddBegin; }
 
-        bool IsAddCompleteSet(void) const { return (mFlags & kFlagAddComplete) == 0; }
-        void SetAddCompleteFlag(void) { mFlags &= ~kFlagAddComplete; }
+        bool IsAddCompleteSet(void) const { return (mWord1.mFlags & kFlagAddComplete) == 0; }
+        void SetAddCompleteFlag(void) { mWord1.mFlags &= ~kFlagAddComplete; }
 
-        bool IsDeleted(void) const { return (mFlags & kFlagDelete) == 0; }
-        void SetDeleted(void) { mFlags &= ~kFlagDelete; }
+        bool IsDeleted(void) const
+        {
+            bool deleted = false;
+#if !OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE_NEW_FORMAT || \
+    OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE_LEGACY_FORMAT_SUPPORT
+            deleted |= ((mWord1.mFlags & kFlagDelete) == 0);
+#endif
+#if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE_NEW_FORMAT
+            deleted |= ((mWord2.mFlags & kFlagDelete) == 0);
+#endif
+            return deleted;
+        }
 
-        bool IsFirst(void) const { return (mFlags & kFlagFirst) == 0; }
-        void SetFirst(void) { mFlags &= ~kFlagFirst; }
+        void SetDeleted(void)
+        {
+#if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE_NEW_FORMAT
+            mWord2.mFlags &= ~kFlagDelete;
+#else
+            mWord1.mFlags &= ~kFlagDelete;
+#endif
+        }
+
+        bool IsFirst(void) const
+        {
+            bool first = false;
+#if !OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE_NEW_FORMAT || \
+    OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE_LEGACY_FORMAT_SUPPORT
+            first |= ((mWord1.mFlags & kFlagFirst) == 0);
+#endif
+#if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE_NEW_FORMAT
+            first |= ((mWord2.mFlags & kFlagFirst) == 0);
+#endif
+            return first;
+        }
+
+        void SetFirst(void)
+        {
+#if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE_NEW_FORMAT
+            mWord2.mFlags &= ~kFlagFirst;
+#else
+            mWord1.mFlags &= ~kFlagFirst;
+#endif
+        }
+
+        void WriteProgressMarkers(Instance &aInstance, uint8_t aSwapIndex, uint32_t aOffset);
+        void WriteFirstAndDeletedFlags(Instance &aInstance, uint8_t aSwapIndex, uint32_t aOffset);
+
+        void ReadHeader(Instance &aInstance, uint8_t aSwapIndex, uint32_t aOffset);
+        void ReadData(Instance &aInstance, uint8_t aSwapIndex, uint32_t aOffset, void *aData, uint32_t aSize);
 
     private:
         enum
@@ -193,10 +237,19 @@ private:
             kFlagFirst       = 1 << 3, ///< 0 indicates first record for key, 1 otherwise.
         };
 
-        uint16_t mKey;
-        uint16_t mFlags;
-        uint16_t mLength;
-        uint16_t mReserved;
+        OT_TOOL_PACKED_BEGIN
+        struct
+        {
+            uint16_t mKey;
+            uint16_t mFlags;
+        } OT_TOOL_PACKED_END mWord1;
+
+        OT_TOOL_PACKED_BEGIN
+        struct
+        {
+            uint16_t mLength;
+            uint16_t mFlags;
+        } OT_TOOL_PACKED_END mWord2;
     } OT_TOOL_PACKED_END;
 
     OT_TOOL_PACKED_BEGIN
@@ -210,6 +263,10 @@ private:
             memcpy(mData, aData, aDataLength);
             SetLength(aDataLength);
         }
+
+        void Write(Instance &aInstance, uint8_t aSwapIndex, uint32_t aOffset);
+
+        void Read(Instance &aInstance, uint8_t aSwapIndex, uint32_t aOffset);
 
     private:
         enum

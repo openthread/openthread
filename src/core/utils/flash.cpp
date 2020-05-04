@@ -66,7 +66,8 @@ void Flash::Init(void)
 
     for (mSwapUsed = kSwapMarkerSize; mSwapUsed <= mSwapSize - sizeof(record); mSwapUsed += record.GetSize())
     {
-        otPlatFlashRead(&GetInstance(), mSwapIndex, mSwapUsed, &record, sizeof(record));
+        record.ReadHeader(GetInstance(), mSwapIndex, mSwapUsed);
+
         if (!record.IsAddBeginSet())
         {
             break;
@@ -120,7 +121,7 @@ otError Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueL
 
     for (offset = kSwapMarkerSize; offset < mSwapUsed; offset += record.GetSize())
     {
-        otPlatFlashRead(&GetInstance(), mSwapIndex, offset, &record, sizeof(record));
+        record.ReadHeader(GetInstance(), mSwapIndex, offset);
 
         if (record.GetKey() != aKey)
         {
@@ -148,7 +149,7 @@ otError Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueL
                     readLength = record.GetLength();
                 }
 
-                otPlatFlashRead(&GetInstance(), mSwapIndex, offset + sizeof(record), aValue, readLength);
+                record.ReadData(GetInstance(), mSwapIndex, offset, aValue, readLength);
             }
 
             valueLength = record.GetLength();
@@ -194,10 +195,9 @@ otError Flash::Add(uint16_t aKey, bool aFirst, const uint8_t *aValue, uint16_t a
         VerifyOrExit((mSwapSize - record.GetSize()) >= mSwapUsed, error = OT_ERROR_NO_BUFS);
     }
 
-    otPlatFlashWrite(&GetInstance(), mSwapIndex, mSwapUsed, &record, record.GetSize());
-
+    record.Write(GetInstance(), mSwapIndex, mSwapUsed);
     record.SetAddCompleteFlag();
-    otPlatFlashWrite(&GetInstance(), mSwapIndex, mSwapUsed, &record, sizeof(RecordHeader));
+    record.WriteProgressMarkers(GetInstance(), mSwapIndex, mSwapUsed);
 
     mSwapUsed += record.GetSize();
 
@@ -212,7 +212,7 @@ bool Flash::DoesValidRecordExist(uint32_t aOffset, uint16_t aKey) const
 
     for (; aOffset < mSwapUsed; aOffset += record.GetSize())
     {
-        otPlatFlashRead(&GetInstance(), mSwapIndex, aOffset, &record, sizeof(record));
+        record.ReadHeader(GetInstance(), mSwapIndex, aOffset);
 
         if (record.IsAddCompleteSet() && record.IsFirst() && (record.GetKey() == aKey))
         {
@@ -234,7 +234,7 @@ void Flash::Swap(void)
 
     for (uint32_t srcOffset = kSwapMarkerSize; srcOffset < mSwapUsed; srcOffset += record.GetSize())
     {
-        otPlatFlashRead(&GetInstance(), mSwapIndex, srcOffset, &record, sizeof(RecordHeader));
+        record.ReadHeader(GetInstance(), mSwapIndex, srcOffset);
 
         VerifyOrExit(record.IsAddBeginSet(), OT_NOOP);
 
@@ -243,8 +243,8 @@ void Flash::Swap(void)
             continue;
         }
 
-        otPlatFlashRead(&GetInstance(), mSwapIndex, srcOffset, &record, record.GetSize());
-        otPlatFlashWrite(&GetInstance(), dstIndex, dstOffset, &record, record.GetSize());
+        record.Read(GetInstance(), mSwapIndex, srcOffset);
+        record.Write(GetInstance(), dstIndex, dstOffset);
         dstOffset += record.GetSize();
     }
 
@@ -264,7 +264,7 @@ otError Flash::Delete(uint16_t aKey, int aIndex)
 
     for (uint32_t offset = kSwapMarkerSize; offset < mSwapUsed; offset += record.GetSize())
     {
-        otPlatFlashRead(&GetInstance(), mSwapIndex, offset, &record, sizeof(record));
+        record.ReadHeader(GetInstance(), mSwapIndex, offset);
 
         if (record.GetKey() != aKey)
         {
@@ -284,7 +284,7 @@ otError Flash::Delete(uint16_t aKey, int aIndex)
         if ((aIndex == index) || (aIndex == -1))
         {
             record.SetDeleted();
-            otPlatFlashWrite(&GetInstance(), mSwapIndex, offset, &record, sizeof(record));
+            record.WriteFirstAndDeletedFlags(GetInstance(), mSwapIndex, offset);
             error = OT_ERROR_NONE;
         }
 
@@ -301,6 +301,40 @@ void Flash::Wipe(void)
 
     mSwapIndex = 0;
     mSwapUsed  = sizeof(sSwapActive);
+}
+
+void Flash::Record::Write(Instance &aInstance, uint8_t aSwapIndex, uint32_t aOffset)
+{
+    otPlatFlashWrite(&aInstance, aSwapIndex, aOffset, this, GetSize());
+}
+
+void Flash::RecordHeader::WriteProgressMarkers(Instance &aInstance, uint8_t aSwapIndex, uint32_t aOffset)
+{
+    otPlatFlashWrite(&aInstance, aSwapIndex, aOffset + offsetof(RecordHeader, mWord1), &mWord1, sizeof(mWord1));
+}
+
+void Flash::RecordHeader::WriteFirstAndDeletedFlags(Instance &aInstance, uint8_t aSwapIndex, uint32_t aOffset)
+{
+    otPlatFlashWrite(&aInstance, aSwapIndex, aOffset + offsetof(RecordHeader, mWord2), &mWord2, sizeof(mWord2));
+}
+
+void Flash::RecordHeader::ReadHeader(Instance &aInstance, uint8_t aSwapIndex, uint32_t aOffset)
+{
+    otPlatFlashRead(&aInstance, aSwapIndex, aOffset, this, sizeof(*this));
+}
+
+void Flash::RecordHeader::ReadData(Instance &aInstance,
+                                   uint8_t   aSwapIndex,
+                                   uint32_t  aOffset,
+                                   void *    aData,
+                                   uint32_t  aSize)
+{
+    otPlatFlashRead(&aInstance, aSwapIndex, aOffset + sizeof(*this), aData, aSize);
+}
+
+void Flash::Record::Read(Instance &aInstance, uint8_t aSwapIndex, uint32_t aOffset)
+{
+    otPlatFlashRead(&aInstance, aSwapIndex, aOffset, this, GetSize());
 }
 
 } // namespace ot
