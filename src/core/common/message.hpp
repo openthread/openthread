@@ -93,8 +93,9 @@ struct MessageInfo
     uint16_t    mOffset;      ///< A byte offset within the message.
     RssAverager mRssAverager; ///< The averager maintaining the received signal strength (RSS) average.
 
-    uint8_t mChildMask[kChildMaskBytes]; ///< A bit-vector to indicate which sleepy children need to receive this.
-    uint8_t mTimeout;                    ///< Seconds remaining before dropping the message.
+    uint8_t  mChildMask[kChildMaskBytes]; ///< A bit-vector to indicate which sleepy children need to receive this.
+    uint16_t mMeshDest;                   ///< Used for unicast non-link-local messages.
+    uint8_t  mTimeout;                    ///< Seconds remaining before dropping the message.
     union
     {
         uint16_t mPanId;   ///< Used for MLE Discover Request and Response messages.
@@ -515,6 +516,26 @@ public:
      *
      */
     bool IsChildPending(void) const;
+
+    /**
+     * This method returns the RLOC16 of the mesh destination.
+     *
+     * @note Only use this for non-link-local unicast messages.
+     *
+     * @returns The IEEE 802.15.4 Destination PAN ID.
+     *
+     */
+    uint16_t GetMeshDest(void) const { return mBuffer.mHead.mInfo.mMeshDest; }
+
+    /**
+     * This method sets the RLOC16 of the mesh destination.
+     *
+     * @note Only use this when sending non-link-local unicast messages.
+     *
+     * @param[in]  aMeshDest  The IEEE 802.15.4 Destination PAN ID.
+     *
+     */
+    void SetMeshDest(uint16_t aMeshDest) { mBuffer.mHead.mInfo.mMeshDest = aMeshDest; }
 
     /**
      * This method returns the IEEE 802.15.4 Destination PAN ID.

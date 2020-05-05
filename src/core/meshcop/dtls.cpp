@@ -780,7 +780,7 @@ void Dtls::HandleTimer(void)
 
     default:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 }
 
@@ -826,7 +826,7 @@ void Dtls::Process(void)
             case MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY:
                 mbedtls_ssl_close_notify(&mSsl);
                 ExitNow(shouldDisconnect = true);
-                break;
+                OT_UNREACHABLE_CODE(break);
 
             case MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED:
                 break;
@@ -834,7 +834,7 @@ void Dtls::Process(void)
             case MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE:
                 mbedtls_ssl_close_notify(&mSsl);
                 ExitNow(shouldDisconnect = true);
-                break;
+                OT_UNREACHABLE_CODE(break);
 
             case MBEDTLS_ERR_SSL_INVALID_MAC:
                 if (mSsl.state != MBEDTLS_SSL_HANDSHAKE_OVER)

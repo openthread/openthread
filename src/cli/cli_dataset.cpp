@@ -191,7 +191,7 @@ otError Dataset::Process(uint8_t aArgsLength, char *aArgs[])
         ExitNow(error = Print(sDataset));
     }
 
-    for (unsigned int i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
         if (strcmp(aArgs[0], sCommands[i].mName) == 0)
         {
@@ -209,7 +209,7 @@ otError Dataset::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    for (unsigned int i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(sCommands); i++)
     {
         mInterpreter.mServer->OutputFormat("%s\r\n", sCommands[i].mName);
     }

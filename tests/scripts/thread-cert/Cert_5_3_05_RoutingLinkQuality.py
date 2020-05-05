@@ -29,9 +29,9 @@
 
 import unittest
 
-import node
-import config
 import command
+import config
+import thread_cert
 
 LEADER = 1
 DUT_ROUTER1 = 2
@@ -39,47 +39,32 @@ ROUTER2 = 3
 ROUTER3 = 4
 
 
-class Cert_5_3_5_RoutingLinkQuality(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 5):
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[DUT_ROUTER1].set_panid(0xface)
-        self.nodes[DUT_ROUTER1].set_mode('rsdn')
-        self.nodes[DUT_ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[DUT_ROUTER1].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[DUT_ROUTER1].add_whitelist(self.nodes[ROUTER3].get_addr64())
-        self.nodes[DUT_ROUTER1].enable_whitelist()
-        self.nodes[DUT_ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER2].set_panid(0xface)
-        self.nodes[ROUTER2].set_mode('rsdn')
-        self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER2].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64())
-        self.nodes[ROUTER2].enable_whitelist()
-        self.nodes[ROUTER2].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER3].set_panid(0xface)
-        self.nodes[ROUTER3].set_mode('rsdn')
-        self.nodes[ROUTER3].add_whitelist(self.nodes[DUT_ROUTER1].get_addr64())
-        self.nodes[ROUTER3].enable_whitelist()
-        self.nodes[ROUTER3].set_router_selection_jitter(1)
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_5_3_5_RoutingLinkQuality(thread_cert.TestCase):
+    topology = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [DUT_ROUTER1, ROUTER2]
+        },
+        DUT_ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, ROUTER2, ROUTER3]
+        },
+        ROUTER2: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, DUT_ROUTER1]
+        },
+        ROUTER3: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [DUT_ROUTER1]
+        },
+    }
 
     def test(self):
         # 1

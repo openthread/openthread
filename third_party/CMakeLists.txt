@@ -26,12 +26,13 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_BUILTIN_MBEDTLS)
+if(NOT OT_EXTERNAL_MBEDTLS)
     add_subdirectory(mbedtls)
 endif()
+
 if(OT_PLATFORM STREQUAL "kw41z")
     add_subdirectory(nxp)
-elseif(OT_PLATFORM STREQUAL "cc2650")
+elseif(OT_PLATFORM MATCHES "cc*")
     add_subdirectory(ti)
 elseif(OT_PLATFORM STREQUAL "qpg6095")
     add_subdirectory(Qorvo)

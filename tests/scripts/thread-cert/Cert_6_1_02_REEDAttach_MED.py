@@ -29,51 +29,40 @@
 
 import unittest
 
+import thread_cert
 from command import check_parent_request
 from command import check_child_id_request
 from command import check_child_update_request_from_child
 from command import CheckType
 import config
 import mle
-import node
 
 LEADER = 1
 REED = 2
 MED = 3
 
 
-class Cert_6_1_2_REEDAttach_MED(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 4):
-            self.nodes[i] = node.Node(i, (i == MED), simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[REED].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[REED].set_panid(0xface)
-        self.nodes[REED].set_mode('rsdn')
-        self.nodes[REED].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[REED].add_whitelist(self.nodes[MED].get_addr64())
-        self.nodes[REED].enable_whitelist()
-        self.nodes[REED].set_router_upgrade_threshold(0)
-
-        self.nodes[MED].set_panid(0xface)
-        self.nodes[MED].set_mode('rsn')
-        self.nodes[MED].add_whitelist(self.nodes[REED].get_addr64())
-        self.nodes[MED].enable_whitelist()
-        self.nodes[MED].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_6_1_2_REEDAttach_MED(thread_cert.TestCase):
+    topology = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [REED]
+        },
+        REED: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_upgrade_threshold': 0,
+            'whitelist': [LEADER, MED]
+        },
+        MED: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'timeout': config.DEFAULT_CHILD_TIMEOUT,
+            'whitelist': [REED]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()

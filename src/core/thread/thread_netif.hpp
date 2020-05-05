@@ -53,6 +53,11 @@
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 #include "backbone_router/local.hpp"
 #endif
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+#include "thread/dua_manager.hpp"
+#endif
+
 #include "meshcop/dataset_manager.hpp"
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
@@ -236,6 +241,9 @@ private:
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     BackboneRouter::Local mBackboneRouterLocal;
+#endif
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+    DuaManager mDuaManager;
 #endif
     Utils::ChildSupervisor     mChildSupervisor;
     Utils::SupervisionListener mSupervisionListener;

@@ -29,10 +29,10 @@
 
 import unittest
 
-import node
-import config
 import command
+import config
 import mle
+import thread_cert
 
 LEADER = 1
 DUT_ROUTER1 = 2
@@ -40,26 +40,175 @@ ROUTER2 = 3
 ROUTER24 = 24
 
 
-class Cert_5_2_06_RouterDowngrade(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 25):
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
-            self.nodes[i].set_panid()
-            self.nodes[i].set_mode('rsdn')
-            self.nodes[i].set_router_selection_jitter(1)
-            if i != DUT_ROUTER1:
-                self.nodes[i].set_router_upgrade_threshold(32)
-                self.nodes[i].set_router_downgrade_threshold(32)
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
+    topology = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        DUT_ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+        ROUTER2: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        4: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        5: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        6: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        7: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        8: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        9: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        10: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        11: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        12: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        13: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        14: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        15: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        16: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        17: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        18: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        19: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        20: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        21: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        22: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        23: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+        ROUTER24: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_downgrade_threshold': 32,
+            'router_selection_jitter': 1,
+            'router_upgrade_threshold': 32
+        },
+    }
 
     def test(self):
         # 1 Ensure topology is formed correctly without ROUTER24.

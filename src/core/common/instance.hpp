@@ -42,6 +42,9 @@
 #include <openthread/error.h>
 #include <openthread/heap.h>
 #include <openthread/platform/logging.h>
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#include <openthread/platform/memory.h>
+#endif
 
 #include "common/random_manager.hpp"
 #include "common/tasklet.hpp"
@@ -261,6 +264,9 @@ public:
      *
      */
     Utils::Heap &GetHeap(void) { return mHeap; }
+#else
+    void  HeapFree(void *aPointer) { otPlatFree(aPointer); }
+    void *HeapCAlloc(size_t aCount, size_t aSize) { return otPlatCAlloc(aCount, aSize); }
 #endif // OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
@@ -713,6 +719,7 @@ template <> inline MessagePool &Instance::Get(void)
 }
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+
 template <> inline BackboneRouter::Leader &Instance::Get(void)
 {
     return mThreadNetif.mBackboneRouterLeader;
@@ -724,6 +731,14 @@ template <> inline BackboneRouter::Local &Instance::Get(void)
     return mThreadNetif.mBackboneRouterLocal;
 }
 #endif
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+template <> inline DuaManager &Instance::Get(void)
+{
+    return mThreadNetif.mDuaManager;
+}
+#endif
+
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE

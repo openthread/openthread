@@ -48,7 +48,7 @@ at_exit() {
 
 build() {
     make -f examples/Makefile-simulation
-    make -f src/posix/Makefile-posix PLATFORM_NETIF=1 PLATFORM_UDP=1 UDP_FORWARD=0
+    make -f src/posix/Makefile-posix PLATFORM_NETIF=1 PLATFORM_UDP=1 UDP_FORWARD=0 MAX_POWER_TABLE=1
 }
 
 check() {
@@ -75,12 +75,16 @@ check() {
     # Cover setting a valid network interface name.
     readonly VALID_NETIF_NAME="wan$(date +%H%M%S)"
 
+    local options=(
+        '--max-power-table=11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26'
+    )
+
     if [[ "${DAEMON}" = 1 ]]; then
-        sudo "$(pwd)/$(ls output/posix/*linux*/bin/ot-daemon)" -I "${VALID_NETIF_NAME}" ${CORE_PTY} &
+        sudo "$(pwd)/$(ls output/posix/*linux*/bin/ot-daemon)" "${options[@]}" -I "${VALID_NETIF_NAME}" ${CORE_PTY} &
         sleep 1
         OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-ctl)"
     else
-        OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli) ${CORE_PTY}"
+        OT_CLI_CMD="$(pwd)/$(ls output/posix/*linux*/bin/ot-cli) "${options[@]}" ${CORE_PTY}"
     fi
 
     sudo ${OT_CLI_CMD} -I "${VALID_NETIF_NAME}" -n

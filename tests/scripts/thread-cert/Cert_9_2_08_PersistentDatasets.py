@@ -30,7 +30,7 @@
 import unittest
 
 import config
-import node
+import thread_cert
 
 COMMISSIONER = 1
 LEADER = 2
@@ -48,48 +48,54 @@ COMMISSIONER_PENDING_PANID = 0xafce
 MTDS = [ED, SED]
 
 
-class Cert_9_2_8_PersistentDatasets(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 6):
-            self.nodes[i] = node.Node(i, (i in MTDS), simulator=self.simulator)
-
-        self.nodes[COMMISSIONER].set_active_dataset(LEADER_ACTIVE_TIMESTAMP,
-                                                    panid=PANID_INIT,
-                                                    channel=CHANNEL_INIT)
-        self.nodes[COMMISSIONER].set_mode('rsdn')
-        self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[COMMISSIONER].enable_whitelist()
-        self.nodes[COMMISSIONER].set_router_selection_jitter(1)
-
-        self.nodes[LEADER].set_active_dataset(LEADER_ACTIVE_TIMESTAMP,
-                                              panid=PANID_INIT,
-                                              channel=CHANNEL_INIT)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[SED].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[ROUTER].set_active_dataset(LEADER_ACTIVE_TIMESTAMP,
-                                              panid=PANID_INIT,
-                                              channel=CHANNEL_INIT)
-        self.nodes[ROUTER].set_mode('rsdn')
-        self._setUpRouter()
-
-        self.nodes[ED].set_channel(CHANNEL_INIT)
-        self.nodes[ED].set_panid(PANID_INIT)
-        self.nodes[ED].set_mode('rsn')
-        self._setUpEd()
-
-        self.nodes[SED].set_channel(CHANNEL_INIT)
-        self.nodes[SED].set_panid(PANID_INIT)
-        self.nodes[SED].set_mode('s')
-        self._setUpSed()
+class Cert_9_2_8_PersistentDatasets(thread_cert.TestCase):
+    topology = {
+        COMMISSIONER: {
+            'active_dataset': {
+                'timestamp': LEADER_ACTIVE_TIMESTAMP,
+                'panid': PANID_INIT,
+                'channel': CHANNEL_INIT
+            },
+            'mode': 'rsdn',
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        LEADER: {
+            'active_dataset': {
+                'timestamp': LEADER_ACTIVE_TIMESTAMP,
+                'panid': PANID_INIT,
+                'channel': CHANNEL_INIT
+            },
+            'mode': 'rsdn',
+            'whitelist': [COMMISSIONER, ROUTER, ED, SED]
+        },
+        ROUTER: {
+            'active_dataset': {
+                'timestamp': LEADER_ACTIVE_TIMESTAMP,
+                'panid': PANID_INIT,
+                'channel': CHANNEL_INIT
+            },
+            'mode': 'rsdn',
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+        ED: {
+            'channel': CHANNEL_INIT,
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': PANID_INIT,
+            'timeout': config.DEFAULT_CHILD_TIMEOUT,
+            'whitelist': [LEADER]
+        },
+        SED: {
+            'channel': CHANNEL_INIT,
+            'is_mtd': True,
+            'mode': 's',
+            'panid': PANID_INIT,
+            'timeout': config.DEFAULT_CHILD_TIMEOUT,
+            'whitelist': [LEADER]
+        },
+    }
 
     def _setUpRouter(self):
         self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
@@ -105,11 +111,6 @@ class Cert_9_2_8_PersistentDatasets(unittest.TestCase):
         self.nodes[SED].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[SED].enable_whitelist()
         self.nodes[SED].set_timeout(config.DEFAULT_CHILD_TIMEOUT)
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
 
     def test(self):
         self.nodes[LEADER].start()

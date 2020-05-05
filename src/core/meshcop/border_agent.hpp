@@ -86,6 +86,12 @@ public:
      */
     otBorderAgentState GetState(void) const { return mState; }
 
+    /**
+     * This method applies the Mesh Local Prefix.
+     *
+     */
+    void ApplyMeshLocalPrefix(void);
+
 private:
     static void HandleStateChanged(Notifier::Callback &aCallback, otChangedFlags aFlags);
     void        HandleStateChanged(otChangedFlags aFlags);

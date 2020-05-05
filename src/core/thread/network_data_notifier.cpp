@@ -97,7 +97,7 @@ exit:
         break;
     default:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 }
 
@@ -157,7 +157,7 @@ void Notifier::HandleCoapResponse(otError aResult)
 
     default:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 }
 

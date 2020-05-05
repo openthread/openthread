@@ -286,6 +286,14 @@ public:
      */
     otRadioState GetState(void) const;
 
+    /**
+     * This method gets the current receiving channel.
+     *
+     * @returns Current receiving channel.
+     *
+     */
+    uint8_t GetChannel(void) const { return mChannel; }
+
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
     /**
      * Enable the radio coex.

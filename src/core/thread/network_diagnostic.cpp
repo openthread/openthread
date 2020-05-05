@@ -820,7 +820,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
 
             aNetworkDiagTlv.mData.mExtAddress = *extMacAddr.GetMacAddr();
             ExitNow(error = OT_ERROR_NONE);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
 
         case NetworkDiagnosticTlv::kAddress16:
@@ -833,7 +833,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
 
             aNetworkDiagTlv.mData.mAddr16 = addr16.GetRloc16();
             ExitNow(error = OT_ERROR_NONE);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
 
         case NetworkDiagnosticTlv::kMode:
@@ -846,7 +846,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
 
             ParseMode(linkMode.GetMode(), aNetworkDiagTlv.mData.mMode);
             ExitNow(error = OT_ERROR_NONE);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
 
         case NetworkDiagnosticTlv::kTimeout:
@@ -859,7 +859,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
 
             aNetworkDiagTlv.mData.mTimeout = timeout.GetTimeout();
             ExitNow(error = OT_ERROR_NONE);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
 
         case NetworkDiagnosticTlv::kConnectivity:
@@ -872,7 +872,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
 
             ParseConnectivity(connectivity, aNetworkDiagTlv.mData.mConnectivity);
             ExitNow(error = OT_ERROR_NONE);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
 
         case NetworkDiagnosticTlv::kRoute:
@@ -886,7 +886,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
 
             ParseRoute(route, aNetworkDiagTlv.mData.mRoute);
             ExitNow(error = OT_ERROR_NONE);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
 
         case NetworkDiagnosticTlv::kLeaderData:
@@ -899,7 +899,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
 
             ParseLeaderData(leaderData, aNetworkDiagTlv.mData.mLeaderData);
             ExitNow(error = OT_ERROR_NONE);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
 
         case NetworkDiagnosticTlv::kNetworkData:
@@ -915,7 +915,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
             memcpy(aNetworkDiagTlv.mData.mNetworkData.m8, networkData.GetNetworkData(), networkData.GetLength());
             aNetworkDiagTlv.mData.mNetworkData.mCount = networkData.GetLength();
             ExitNow(error = OT_ERROR_NONE);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
 
         case NetworkDiagnosticTlv::kIp6AddressList:
@@ -930,7 +930,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
 
             aNetworkDiagTlv.mData.mIp6AddrList.mCount = ip6AddrList.GetLength() / OT_IP6_ADDRESS_SIZE;
             ExitNow(error = OT_ERROR_NONE);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
 
         case NetworkDiagnosticTlv::kMacCounters:
@@ -943,7 +943,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
 
             ParseMacCounters(macCounters, aNetworkDiagTlv.mData.mMacCounters);
             ExitNow(error = OT_ERROR_NONE);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
 
         case NetworkDiagnosticTlv::kBatteryLevel:
@@ -956,7 +956,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
 
             aNetworkDiagTlv.mData.mBatteryLevel = batteryLevel.GetBatteryLevel();
             ExitNow(error = OT_ERROR_NONE);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
 
         case NetworkDiagnosticTlv::kSupplyVoltage:
@@ -969,7 +969,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
 
             aNetworkDiagTlv.mData.mSupplyVoltage = supplyVoltage.GetSupplyVoltage();
             ExitNow(error = OT_ERROR_NONE);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
 
         case NetworkDiagnosticTlv::kChildTable:
@@ -988,7 +988,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
             }
             aNetworkDiagTlv.mData.mChildTable.mCount = childTable.GetNumEntries();
             ExitNow(error = OT_ERROR_NONE);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
 
         case NetworkDiagnosticTlv::kChannelPages:
@@ -1000,7 +1000,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
 
             aNetworkDiagTlv.mData.mChannelPages.mCount = tlv.GetLength();
             ExitNow(error = OT_ERROR_NONE);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
 
         case NetworkDiagnosticTlv::kMaxChildTimeout:
@@ -1013,7 +1013,7 @@ otError NetworkDiagnostic::GetNextDiagTlv(const otMessage &      aMessage,
 
             aNetworkDiagTlv.mData.mMaxChildTimeout = maxChildTimeout.GetTimeout();
             ExitNow(error = OT_ERROR_NONE);
-            break;
+            OT_UNREACHABLE_CODE(break);
         }
 
         default:

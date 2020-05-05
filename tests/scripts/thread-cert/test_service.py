@@ -30,8 +30,8 @@
 import re
 import unittest
 
-import node
 import config
+import thread_cert
 
 LEADER = 1
 ROUTER1 = 2
@@ -48,46 +48,32 @@ SRV_1_SERVICE_DATA = 'baz'
 SRV_1_SERVER_DATA = 'qux'
 
 
-class Test_Service(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 4):
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-        self.nodes[LEADER].set_channel(12)
-        self.nodes[LEADER].set_network_name('OpenThread')
-
-        self.nodes[ROUTER1].set_panid(0xface)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_channel(12)
-        self.nodes[ROUTER1].set_network_name('OpenThread')
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER2].set_panid(0xface)
-        self.nodes[ROUTER2].set_mode('rsdn')
-        self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER2].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ROUTER2].enable_whitelist()
-        self.nodes[ROUTER2].set_channel(12)
-        self.nodes[ROUTER2].set_network_name('OpenThread')
-        self.nodes[ROUTER2].set_router_selection_jitter(1)
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Test_Service(thread_cert.TestCase):
+    topology = {
+        LEADER: {
+            'channel': 12,
+            'mode': 'rsdn',
+            'network_name': 'OpenThread',
+            'panid': 0xface,
+            'whitelist': [ROUTER1, ROUTER2]
+        },
+        ROUTER1: {
+            'channel': 12,
+            'mode': 'rsdn',
+            'network_name': 'OpenThread',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, ROUTER2]
+        },
+        ROUTER2: {
+            'channel': 12,
+            'mode': 'rsdn',
+            'network_name': 'OpenThread',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, ROUTER1]
+        },
+    }
 
     def hasAloc(self, node_id, service_id):
         for addr in self.nodes[node_id].get_ip6_address(

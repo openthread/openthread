@@ -336,6 +336,9 @@ private:
         kMessageEvict,           ///< Indicates that the message was evicted.
     };
 
+    void    SendIcmpErrorIfDstUnreach(const Message &     aMessage,
+                                      const Mac::Address &aMacSource,
+                                      const Mac::Address &aMacDest);
     otError CheckReachability(const uint8_t *     aFrame,
                               uint16_t            aFrameLength,
                               const Mac::Address &aMeshSource,
@@ -392,7 +395,7 @@ private:
     void    SendMesh(Message &aMessage, Mac::TxFrame &aFrame);
     void    SendDestinationUnreachable(uint16_t aMeshSource, const Message &aMessage);
     otError UpdateIp6Route(Message &aMessage);
-    otError UpdateIp6RouteFtd(Ip6::Header &ip6Header, const Message &aMessage);
+    otError UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessage);
     otError UpdateMeshRoute(Message &aMessage);
     bool    UpdateReassemblyList(void);
     bool    UpdateFragmentLifetime(void);

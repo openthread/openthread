@@ -39,8 +39,12 @@ ROUTER_1 = 2
 
 class Router_5_1_01(thread_cert.TestCase):
     topology = {
-        LEADER: None,
-        ROUTER_1: None,
+        LEADER: {
+            'version': '1.2'
+        },
+        ROUTER_1: {
+            'version': '1.2'
+        },
     }
     """All nodes are created with default configurations"""
 

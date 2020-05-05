@@ -278,7 +278,7 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError
 
     default:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 
     mCallbacks.HandleSentFrameToChild(aFrame, mFrameContext, aError, aChild);

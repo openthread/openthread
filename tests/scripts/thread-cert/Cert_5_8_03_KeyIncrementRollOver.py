@@ -29,41 +29,29 @@
 
 import unittest
 
-import config
-import node
+import thread_cert
 
 LEADER = 1
 ROUTER = 2
 
 
-class Cert_5_8_3_KeyIncrementRollOver(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 3):
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-        self.nodes[LEADER].set_key_switch_guardtime(0)
-        self.nodes[LEADER].set_key_sequence_counter(127)
-
-        self.nodes[ROUTER].set_panid(0xface)
-        self.nodes[ROUTER].set_mode('rsdn')
-        self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER].enable_whitelist()
-        self.nodes[ROUTER].set_key_switch_guardtime(0)
-        self.nodes[ROUTER].set_router_selection_jitter(1)
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_5_8_3_KeyIncrementRollOver(thread_cert.TestCase):
+    topology = {
+        LEADER: {
+            'key_sequence_counter': 127,
+            'key_switch_guardtime': 0,
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [ROUTER]
+        },
+        ROUTER: {
+            'key_switch_guardtime': 0,
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()

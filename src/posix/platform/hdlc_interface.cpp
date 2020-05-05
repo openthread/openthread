@@ -260,8 +260,8 @@ otError HdlcInterface::WaitForFrame(uint64_t aTimeoutUs)
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     struct Event event;
 
-    timeout.tv_sec  = aTimeoutUs / US_PER_S;
-    timeout.tv_usec = aTimeoutUs % US_PER_S;
+    timeout.tv_sec  = static_cast<time_t>(aTimeoutUs / US_PER_S);
+    timeout.tv_usec = static_cast<suseconds_t>(aTimeoutUs % US_PER_S);
 
     virtualTimeSendSleepEvent(&timeout);
     virtualTimeReceiveEvent(&event);
@@ -281,8 +281,8 @@ otError HdlcInterface::WaitForFrame(uint64_t aTimeoutUs)
         break;
     }
 #else  // OPENTHREAD_POSIX_VIRTUAL_TIME
-    timeout.tv_sec = aTimeoutUs / US_PER_S;
-    timeout.tv_usec = aTimeoutUs % US_PER_S;
+    timeout.tv_sec = static_cast<time_t>(aTimeoutUs / US_PER_S);
+    timeout.tv_usec = static_cast<suseconds_t>(aTimeoutUs % US_PER_S);
 
     fd_set read_fds;
     fd_set error_fds;
@@ -421,10 +421,10 @@ int HdlcInterface::OpenFile(const char *aFile, const char *aConfig)
     {
         struct termios tios;
 
-        int  speed  = 115200;
-        int  cstopb = 1;
-        char parity = 'N';
-        char flow   = 'N';
+        unsigned int speed  = 115200;
+        int          cstopb = 1;
+        char         parity = 'N';
+        char         flow   = 'N';
 
         VerifyOrExit((rval = tcgetattr(fd, &tios)) == 0, OT_NOOP);
 

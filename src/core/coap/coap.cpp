@@ -309,7 +309,7 @@ otError CoapBase::SendHeaderResponse(Message::Code aCode, const Message &aReques
 
     default:
         ExitNow(error = OT_ERROR_INVALID_ARGS);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 
     SuccessOrExit(error = message->SetToken(aRequest.GetToken(), aRequest.GetTokenLength()));

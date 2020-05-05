@@ -207,7 +207,7 @@ otError SubMac::Send(void)
     case kStateTransmit:
     case kStateEnergyScan:
         ExitNow(error = OT_ERROR_INVALID_STATE);
-        break;
+        OT_UNREACHABLE_CODE(break);
 
     case kStateSleep:
     case kStateReceive:

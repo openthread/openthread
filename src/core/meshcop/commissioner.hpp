@@ -59,6 +59,16 @@ class Commissioner : public InstanceLocator
 {
 public:
     /**
+     * Joiner operation flags.
+     *
+     */
+    enum JoinerOpFlag
+    {
+        kJoinerOpFlagDefault         = 0,      ///< The default flags
+        kJoinerOpFlagNotNotifyLeader = 1 << 0, ///< Do not notify Leader
+    };
+
+    /**
      * This constructor initializes the Commissioner object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
@@ -128,15 +138,17 @@ public:
     /**
      * This method removes a Joiner entry.
      *
-     * @param[in]  aEui64          A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.
-     * @param[in]  aDelay          The delay to remove Joiner (in seconds).
+     * @param[in]  aEui64         A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.
+     * @param[in]  aDelay         The delay to remove Joiner (in seconds).
+     * @param[in]  aFlags         The flags for removing the Joiner.
      *
      * @retval OT_ERROR_NONE           Successfully added the Joiner.
      * @retval OT_ERROR_NOT_FOUND      The Joiner specified by @p aEui64 was not found.
      * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
      *
+     * @sa JoinerOpFlag
      */
-    otError RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDelay);
+    otError RemoveJoiner(const Mac::ExtAddress *aEui64, uint32_t aDelay, JoinerOpFlag aFlags = kJoinerOpFlagDefault);
 
     /**
      * This method gets the Provisioning URL.
@@ -245,6 +257,12 @@ public:
      *
      */
     PanIdQueryClient &GetPanIdQueryClient(void) { return mPanIdQuery; }
+
+    /**
+     * This method applies the Mesh Local Prefix.
+     *
+     */
+    void ApplyMeshLocalPrefix(void);
 
 private:
     enum

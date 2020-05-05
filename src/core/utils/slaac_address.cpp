@@ -167,6 +167,12 @@ void Slaac::Update(UpdateMode aMode)
                 {
                     otIp6Prefix &prefix = config.mPrefix;
 
+                    if (config.mDp)
+                    {
+                        // Skip domain prefix which is processed in MLE.
+                        continue;
+                    }
+
                     if (config.mSlaac && !ShouldFilter(prefix) && (prefix.mLength == slaacAddr->mPrefixLength) &&
                         (slaacAddr->GetAddress().PrefixMatch(prefix.mPrefix) >= prefix.mLength))
                     {
@@ -196,7 +202,7 @@ void Slaac::Update(UpdateMode aMode)
         {
             otIp6Prefix &prefix = config.mPrefix;
 
-            if (!config.mSlaac || ShouldFilter(prefix))
+            if (config.mDp || !config.mSlaac || ShouldFilter(prefix))
             {
                 continue;
             }
@@ -252,7 +258,10 @@ void Slaac::Update(UpdateMode aMode)
     }
 }
 
-void Slaac::GenerateIid(Ip6::NetifUnicastAddress &aAddress) const
+otError Slaac::GenerateIid(Ip6::NetifUnicastAddress &aAddress,
+                           uint8_t *                 aNetworkId,
+                           uint8_t                   aNetworkIdLength,
+                           uint8_t *                 aDadCounter) const
 {
     /*
      *  This method generates a semantically opaque IID per RFC 7217.
@@ -262,15 +271,16 @@ void Slaac::GenerateIid(Ip6::NetifUnicastAddress &aAddress) const
      *  - RID is random (but stable) Identifier.
      *  - For pseudo-random function `F()` SHA-256 is used in this method.
      *  - `Net_Iface` is set to constant string "wpan".
-     *  - `Network_ID` is not used (optional per RF-7217).
+     *  - `Network_ID` is not used if `aNetworkId` is NULL (optional per RF-7217).
      *  - The `secret_key` is randomly generated on first use (using true
      *    random number generator) and saved in non-volatile settings for
      *    future use.
      *
      */
 
+    otError        error      = OT_ERROR_FAILED;
     const uint8_t  netIface[] = {'w', 'p', 'a', 'n'};
-    uint16_t       dadCounter;
+    uint8_t        dadCounter = aDadCounter ? *aDadCounter : 0;
     IidSecretKey   secretKey;
     Crypto::Sha256 sha256;
     uint8_t        hash[Crypto::Sha256::kHashSize];
@@ -280,10 +290,16 @@ void Slaac::GenerateIid(Ip6::NetifUnicastAddress &aAddress) const
 
     GetIidSecretKey(secretKey);
 
-    for (dadCounter = 0; dadCounter < kMaxIidCreationAttempts; dadCounter++)
+    for (uint16_t count = 0; count < kMaxIidCreationAttempts; count++, dadCounter++)
     {
         sha256.Start();
         sha256.Update(aAddress.mAddress.mFields.m8, BitVectorBytes(aAddress.mPrefixLength));
+
+        if (aNetworkId)
+        {
+            sha256.Update(aNetworkId, aNetworkIdLength);
+        }
+
         sha256.Update(netIface, sizeof(netIface));
         sha256.Update(reinterpret_cast<uint8_t *>(&dadCounter), sizeof(dadCounter));
         sha256.Update(secretKey.m8, sizeof(IidSecretKey));
@@ -291,18 +307,25 @@ void Slaac::GenerateIid(Ip6::NetifUnicastAddress &aAddress) const
 
         aAddress.GetAddress().SetIid(&hash[0]);
 
-        // Exit and return the address if the IID is not reserved,
-        // otherwise, try again with a new dadCounter
+        // If the IID is reserved, try again with a new dadCounter
+        if (aAddress.GetAddress().IsIidReserved())
+        {
+            continue;
+        }
 
-        VerifyOrExit(aAddress.GetAddress().IsIidReserved(), OT_NOOP);
+        if (aDadCounter)
+        {
+            *aDadCounter = dadCounter;
+        }
+
+        // Exit and return the address if the IID is not reserved,
+        ExitNow(error = OT_ERROR_NONE);
     }
 
-    otLogWarnUtil("SLAAC: Failed to generate a non-reserved IID after %d attempts", dadCounter);
-    Random::Crypto::FillBuffer(hash, Ip6::Address::kInterfaceIdentifierSize);
-    aAddress.GetAddress().SetIid(&hash[0]);
+    otLogWarnUtil("SLAAC: Failed to generate a non-reserved IID after %d attempts", kMaxIidCreationAttempts);
 
 exit:
-    return;
+    return error;
 }
 
 void Slaac::GetIidSecretKey(IidSecretKey &aKey) const

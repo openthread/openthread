@@ -137,6 +137,28 @@ jobs:
         script/check-simulation-build
         script/check-posix-build
 
+  clang-m32:
+    name: clang-m32-${{ matrix.clang_ver }}
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        clang_ver: [9]
+    env:
+      CC: clang-${{ matrix.clang_ver }}
+      CXX: clang++-${{ matrix.clang_ver }}
+      CFLAGS: -m32 -Wconversion
+      CXXFLAGS: -m32 -Wconversion
+      LDFLAGS: -m32
+    steps:
+      - uses: actions/checkout@v2
+      - name: Bootstrap
+        run: |
+          sudo apt update
+          sudo apt --no-install-recommends install -y clang-${{ matrix.clang_ver }} clang++-${{ matrix.clang_ver }} g++-multilib ninja-build
+      - name: Build
+        run: |
+          script/check-posix-build
+
   gn:
     runs-on: ubuntu-18.04
     steps:
@@ -163,6 +185,7 @@ jobs:
         brew install automake ninja
     - name: Build
       run: |
+        script/check-posix-build
         script/check-simulation-build
 
   android:

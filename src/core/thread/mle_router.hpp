@@ -897,6 +897,11 @@ public:
     static bool IsRouterIdValid(uint8_t aRouterId) { return aRouterId <= kMaxRouterId; }
 
     otError SendChildUpdateRequest(void) { return Mle::SendChildUpdateRequest(); }
+
+    otError CheckReachability(uint16_t aMeshDest, Ip6::Header &aIp6Header)
+    {
+        return Mle::CheckReachability(aMeshDest, aIp6Header);
+    }
 };
 
 #endif // OPENTHREAD_MTD

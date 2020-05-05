@@ -29,38 +29,27 @@
 
 import unittest
 
-import config
-import node
+import thread_cert
 
 LEADER = 1
 ED = 2
 
 
-class Cert_6_3_2_NetworkDataUpdate(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 3):
-            self.nodes[i] = node.Node(i, (i == ED), simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ED].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[ED].set_panid(0xface)
-        self.nodes[ED].set_mode('rsn')
-        self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED].enable_whitelist()
-        self.nodes[ED].set_timeout(10)
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_6_3_2_NetworkDataUpdate(thread_cert.TestCase):
+    topology = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [ED]
+        },
+        ED: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'timeout': 10,
+            'whitelist': [LEADER]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()

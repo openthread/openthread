@@ -1035,7 +1035,7 @@ otError NcpBase::HandleCommandPropertyInsertRemove(uint8_t aHeader, spinel_prop_
 
     default:
         OT_ASSERT(false);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 
     VerifyOrExit(handler != NULL, error = PrepareLastStatusResponse(aHeader, SPINEL_STATUS_PROP_NOT_FOUND));
@@ -2250,7 +2250,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_NCP_LOG_LEVEL>(
 
     default:
         ExitNow(error = OT_ERROR_INVALID_ARGS);
-        break;
+        OT_UNREACHABLE_CODE(break);
     }
 
     otLoggingSetLevel(logLevel);

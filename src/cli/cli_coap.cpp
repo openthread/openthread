@@ -201,7 +201,7 @@ otError Coap::ProcessResource(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    return OT_ERROR_NONE;
+    return error;
 }
 
 otError Coap::ProcessSet(uint8_t aArgsLength, char *aArgs[])

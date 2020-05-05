@@ -28,12 +28,12 @@
 #
 
 import unittest
-import ipv6
 
-import node
-import mle
-import config
 import command
+import config
+import ipv6
+import mle
+import thread_cert
 
 LEADER = 1
 DUT_ROUTER1 = 2
@@ -42,23 +42,94 @@ DUT_REED = 17
 MLE_MIN_LINKS = 3
 
 
-class Cert_5_2_7_REEDSynchronization(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 18):
-            self.nodes[i] = node.Node(i, simulator=self.simulator)
-            self.nodes[i].set_panid(0xface)
-            self.nodes[i].set_mode('rsdn')
-            self.nodes[i].set_router_selection_jitter(1)
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_5_2_7_REEDSynchronization(thread_cert.TestCase):
+    topology = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+        DUT_ROUTER1: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+        3: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+        4: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+        5: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+        6: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+        7: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+        8: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+        9: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+        10: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+        11: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+        12: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+        13: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+        14: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+        15: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+        16: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+        DUT_REED: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1
+        },
+    }
 
     def test(self):
         # 1. Ensure topology is formed correctly without DUT_ROUTER1.

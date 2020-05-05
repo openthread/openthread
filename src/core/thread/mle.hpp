@@ -45,9 +45,6 @@
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/topology.hpp"
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-#include "backbone_router/leader.hpp"
-#endif
 
 namespace ot {
 
@@ -616,8 +613,6 @@ public:
     /**
      * This method applies the Mesh Local Prefix.
      *
-     * @param[in]  aPrefix  A reference to the Mesh Local Prefix.
-     *
      */
     void ApplyMeshLocalPrefix(void);
 
@@ -657,39 +652,6 @@ public:
     {
         return mRealmLocalAllThreadNodes.GetAddress();
     }
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    /**
-     * This method returns a reference to the All Network Backbone Routers Multicast Address.
-     *
-     * @returns A reference to the All Network Backbone Routers Multicast Address.
-     *
-     */
-    const Ip6::Address &GetAllNetworkBackboneRoutersAddress(void) const
-    {
-        return mAllNetworkBackboneRouters.GetAddress();
-    }
-
-    /**
-     * This method returns a reference to the All Domain Backbone Routers Multicast Address.
-     *
-     * @returns A reference to the All Domain Backbone Routers Multicast Address.
-     *
-     */
-    const Ip6::Address &GetAllDomainBackboneRoutersAddress(void) const
-    {
-        return mAllDomainBackboneRouters.GetAddress();
-    }
-
-    /**
-     * This method updates the subscription of All Domain Backbone Routers Multicast Address.
-     *
-     * @param[in]  aState  The Domain Prefix state or state change.
-     *
-     */
-    void UpdateAllDomainBackboneRouters(BackboneRouter::Leader::DomainPrefixState aState);
-
-#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
     /**
      * This method gets the parent when operating in End Device mode.
@@ -1868,12 +1830,6 @@ private:
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     Ip6::NetifUnicastAddress mServiceAlocs[kMaxServiceAlocs];
-#endif
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    Ip6::NetifUnicastAddress   mBackboneRouterPrimaryAloc;
-    Ip6::NetifMulticastAddress mAllNetworkBackboneRouters;
-    Ip6::NetifMulticastAddress mAllDomainBackboneRouters;
 #endif
 
     otMleCounters mCounters;

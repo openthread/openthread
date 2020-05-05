@@ -83,13 +83,25 @@ build_all_features()
         "-DOPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1"
     )
 
+    local options_1_2=(
+        "-DOPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE=1"
+    )
+
     export CPPFLAGS="${options[*]} -DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_NONE"
     reset_source
     make -f examples/Makefile-simulation
 
-    export CPPFLAGS="${options[*]} -DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG"
+    export CPPFLAGS="${options[*]}"
     reset_source
-    make -f examples/Makefile-simulation
+    make -f examples/Makefile-simulation FULL_LOGS=1
+
+    export CPPFLAGS="${options[*]} ${options_1_2[*]} -DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_NONE"
+    reset_source
+    make -f examples/Makefile-simulation THREAD_VERSION=1.2
+
+    export CPPFLAGS="${options[*]} ${options_1_2[*]}"
+    reset_source
+    make -f examples/Makefile-simulation THREAD_VERSION=1.2 FULL_LOGS=1
 
     export CPPFLAGS="${options[*]} -DOPENTHREAD_CONFIG_ASSERT_ENABLE=0"
     reset_source

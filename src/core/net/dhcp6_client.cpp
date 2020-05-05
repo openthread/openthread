@@ -76,7 +76,7 @@ void Dhcp6Client::UpdateAddresses(void)
     NetworkData::OnMeshPrefixConfig config;
 
     // remove addresses directly if prefix not valid in network data
-    for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); i++)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); i++)
     {
         IdentityAssociation &ia = mIdentityAssociations[i];
 
@@ -123,7 +123,7 @@ void Dhcp6Client::UpdateAddresses(void)
 
         found = false;
 
-        for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); i++)
+        for (size_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); i++)
         {
             if (mIdentityAssociations[i].mStatus == kIaStatusInvalid)
             {
@@ -194,7 +194,7 @@ bool Dhcp6Client::ProcessNextIdentityAssociation()
 
     mTrickleTimer.Stop();
 
-    for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); ++i)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); ++i)
     {
         if (mIdentityAssociations[i].mStatus != kIaStatusSolicit)
         {
@@ -341,7 +341,7 @@ otError Dhcp6Client::AppendIaNa(Message &aMessage, uint16_t aRloc16)
 
     VerifyOrExit(mIdentityAssociationCurrent != NULL, error = OT_ERROR_DROP);
 
-    for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); ++i)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); ++i)
     {
         if (mIdentityAssociations[i].mStatus == kIaStatusInvalid ||
             mIdentityAssociations[i].mStatus == kIaStatusSolicitReplied)
@@ -378,7 +378,7 @@ otError Dhcp6Client::AppendIaAddress(Message &aMessage, uint16_t aRloc16)
 
     option.Init();
 
-    for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); ++i)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); ++i)
     {
         if ((mIdentityAssociations[i].mStatus == kIaStatusSolicit ||
              mIdentityAssociations[i].mStatus == kIaStatusSoliciting) &&
@@ -571,7 +571,7 @@ otError Dhcp6Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
                   (option.GetLength() == (sizeof(option) - sizeof(Dhcp6Option)))),
                  error = OT_ERROR_PARSE);
 
-    for (uint8_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); ++i)
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(mIdentityAssociations); ++i)
     {
         IdentityAssociation &ia = mIdentityAssociations[i];
 

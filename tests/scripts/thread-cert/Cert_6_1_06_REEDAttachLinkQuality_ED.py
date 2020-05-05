@@ -29,9 +29,8 @@
 
 import unittest
 
-import config
 import mle
-import node
+import thread_cert
 
 LEADER = 1
 REED = 2
@@ -39,46 +38,32 @@ ROUTER2 = 3
 ED = 4
 
 
-class Cert_6_1_6_REEDAttachLinkQuality_ED(unittest.TestCase):
-
-    def setUp(self):
-        self.simulator = config.create_default_simulator()
-
-        self.nodes = {}
-        for i in range(1, 5):
-            self.nodes[i] = node.Node(i, (i == ED), simulator=self.simulator)
-
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[REED].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[REED].set_panid(0xface)
-        self.nodes[REED].set_mode('rsdn')
-        self.nodes[REED].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[REED].add_whitelist(self.nodes[ED].get_addr64())
-        self.nodes[REED].set_router_upgrade_threshold(0)
-        self.nodes[REED].enable_whitelist()
-
-        self.nodes[ROUTER2].set_panid(0xface)
-        self.nodes[ROUTER2].set_mode('rsdn')
-        self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER2].add_whitelist(self.nodes[ED].get_addr64(), rssi=-85)
-        self.nodes[ROUTER2].enable_whitelist()
-        self.nodes[ROUTER2].set_router_selection_jitter(1)
-
-        self.nodes[ED].set_panid(0xface)
-        self.nodes[ED].set_mode('rsn')
-        self.nodes[ED].add_whitelist(self.nodes[REED].get_addr64())
-        self.nodes[ED].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[ED].enable_whitelist()
-
-    def tearDown(self):
-        for n in list(self.nodes.values()):
-            n.stop()
-            n.destroy()
-        self.simulator.stop()
+class Cert_6_1_6_REEDAttachLinkQuality_ED(thread_cert.TestCase):
+    topology = {
+        LEADER: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'whitelist': [REED, ROUTER2]
+        },
+        REED: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_upgrade_threshold': 0,
+            'whitelist': [LEADER, ED]
+        },
+        ROUTER2: {
+            'mode': 'rsdn',
+            'panid': 0xface,
+            'router_selection_jitter': 1,
+            'whitelist': [LEADER, (ED, -85)]
+        },
+        ED: {
+            'is_mtd': True,
+            'mode': 'rsn',
+            'panid': 0xface,
+            'whitelist': [REED, ROUTER2]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()
