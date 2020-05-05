@@ -236,6 +236,33 @@ target_link_libraries(test-heap
 
 add_test(NAME test-heap COMMAND test-heap)
 
+add_executable(test-hkdf-sha256
+    ${COMMON_SOURCES}
+    test_hkdf_sha256.cpp
+)
+
+target_include_directories(test-hkdf-sha256
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_definitions(test-hkdf-sha256
+    PRIVATE
+        ${OT_PRIVATE_DEFINES}
+)
+
+target_compile_options(test-hkdf-sha256
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(test-hkdf-sha256
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME test-hkdf-sha256 COMMAND test-hkdf-sha256)
+
 add_executable(test-hmac-sha256
     test_hmac_sha256.cpp
 )
@@ -668,6 +695,7 @@ set_target_properties(
     test-dns
     test-flash
     test-heap
+    test-hkdf-sha256
     test-hmac-sha256
     test-ip6-address
     test-link-quality

@@ -114,6 +114,7 @@ check_PROGRAMS                                                     += \
     test-dns                                                          \
     test-flash                                                        \
     test-heap                                                         \
+    test-hkdf-sha256                                                  \
     test-hmac-sha256                                                  \
     test-ip6-address                                                  \
     test-link-quality                                                 \
@@ -200,6 +201,9 @@ test_hdlc_SOURCES            = $(COMMON_SOURCES) test_hdlc.cpp
 
 test_heap_LDADD              = $(COMMON_LDADD)
 test_heap_SOURCES            = $(COMMON_SOURCES) test_heap.cpp
+
+test_hkdf_sha256_LDADD       = $(COMMON_LDADD)
+test_hkdf_sha256_SOURCES     = $(COMMON_SOURCES) test_hkdf_sha256.cpp
 
 test_hmac_sha256_LDADD       = $(COMMON_LDADD)
 test_hmac_sha256_SOURCES     = $(COMMON_SOURCES) test_hmac_sha256.cpp
