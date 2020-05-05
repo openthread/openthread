@@ -30,7 +30,7 @@
 
 #include <ctype.h>
 
-void DumpBuffer(const char *aTextMessage, uint8_t *aBuffer, uint16_t aBufferLength)
+void DumpBuffer(const char *aTextMessage, const uint8_t *aBuffer, uint16_t aBufferLength)
 {
     enum
     {
