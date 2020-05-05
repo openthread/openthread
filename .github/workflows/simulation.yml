@@ -415,10 +415,9 @@ jobs:
       run: |
         ./bootstrap
         ./script/test build
-      run: |
-        ./script/test unit
     - name: Run
       run: |
+        ./script/test unit
         ./script/test cert_suite tests/scripts/thread-cert/v1_2_*
     - name: Codecov
       uses: codecov/codecov-action@v1
