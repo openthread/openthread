@@ -319,7 +319,7 @@ public:
 
         kInfoStringSize = 110, ///< Max chars needed for the info string representation (@sa ToInfoString()).
 
-        kImmAckLength = 5,
+        kImmAckLength = kFcfSize + kDsnSize + kFcsSize,
     };
 
     /**
@@ -972,6 +972,7 @@ protected:
     {
         kInvalidIndex  = 0xff,
         kInvalidSize   = kInvalidIndex,
+        kMaxPsduSize   = kInvalidSize - 1,
         kSequenceIndex = kFcfSize,
     };
 
@@ -1237,7 +1238,7 @@ public:
      * @param[in]    aIsFramePending    If the ACK's frame pending bit should be set.
      *
      */
-    otError GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending);
+    void GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending);
 
     /**
      * Generate Enh-Ack in this frame object.
@@ -1246,6 +1247,10 @@ public:
      * @param[in]    aIsFramePending    If the ACK's frame pending bit should be set.
      * @param[in]    aIeData            A pointer to the IE data pattern of the ACK to be sent.
      * @param[in]    aIeLength          The length of IE data pattern of the ACK to be sent.
+     *
+     * @retval  OT_ERROR_NONE           Successfully generate Enh Ack in aAckFrame.
+     * @retval  OT_ERROR_INVALID_ARGS   The arguments are incorrect.
+     * @retval  OT_ERROR_PARSE          `aFrame` has incorrect format.
      *
      */
     otError GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength);
@@ -1481,7 +1486,7 @@ public:
      * @returns the CSL Period.
      *
      */
-    uint16_t GetPeriod(void) const { return mPeriod; }
+    uint16_t GetPeriod(void) const { return Encoding::LittleEndian::HostSwap16(mPeriod); }
 
     /**
      * This method sets the CSL Period.
@@ -1489,7 +1494,7 @@ public:
      * @param[in]  aPeriod  The CSL Period.
      *
      */
-    void SetPeriod(uint16_t aPeriod) { mPeriod = aPeriod; }
+    void SetPeriod(uint16_t aPeriod) { mPeriod = Encoding::LittleEndian::HostSwap16(aPeriod); }
 
     /**
      * This method returns the CSL Phase.
@@ -1497,7 +1502,7 @@ public:
      * @returns the CSL Phase.
      *
      */
-    uint16_t GetPhase(void) const { return mPhase; }
+    uint16_t GetPhase(void) const { return Encoding::LittleEndian::HostSwap16(mPhase); }
 
     /**
      * This method sets the CSL Phase.
@@ -1505,7 +1510,7 @@ public:
      * @param[in]  aPhase  The CSL Phase.
      *
      */
-    void SetPhase(uint16_t aPhase) { mPhase = aPhase; }
+    void SetPhase(uint16_t aPhase) { mPhase = Encoding::LittleEndian::HostSwap16(aPhase); }
 
 private:
     uint16_t mPhase;

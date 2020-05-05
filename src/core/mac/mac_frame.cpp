@@ -1070,26 +1070,22 @@ exit:
 #endif // OPENTHREAD_RADIO
 }
 
-otError TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
+void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
 {
-    uint16_t fcf = 0;
+    uint16_t fcf = kFcfFrameAck | aFrame.GetVersion();
 
     mChannel = aFrame.mChannel;
     memset(&mInfo.mTxInfo, 0, sizeof(mInfo.mTxInfo));
 
-    fcf |= kFcfFrameAck;
     if (aIsFramePending)
     {
         fcf |= kFcfFramePending;
     }
-    fcf |= aFrame.GetVersion();
     Encoding::LittleEndian::WriteUint16(fcf, mPsdu);
 
-    mPsdu[2] = aFrame.GetSequence();
+    mPsdu[kSequenceIndex] = aFrame.GetSequence();
 
     mLength = kImmAckLength;
-
-    return OT_ERROR_NONE;
 }
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
@@ -1097,7 +1093,7 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
 {
     otError error = OT_ERROR_NONE;
 
-    uint16_t fcf = 0;
+    uint16_t fcf = kFcfFrameAck | kFcfFrameVersion2015 | kFcfSrcAddrNone;
     Address  address;
     PanId    panId;
     uint8_t  footerLength;
@@ -1109,8 +1105,6 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
     memset(&mInfo.mTxInfo, 0, sizeof(mInfo.mTxInfo));
 
     // Set frame control field
-    fcf |= kFcfFrameAck | kFcfFrameVersion2015;
-
     if (aIsFramePending)
     {
         fcf |= kFcfFramePending;
@@ -1140,8 +1134,6 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
         fcf |= kFcfDstAddrNone;
     }
 
-    fcf |= kFcfSrcAddrNone;
-
     if (aIeLength > 0)
     {
         fcf |= kFcfIePresent;
@@ -1150,7 +1142,7 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
     Encoding::LittleEndian::WriteUint16(fcf, mPsdu);
 
     // Set sequence number
-    mPsdu[2] = aFrame.GetSequence();
+    mPsdu[kSequenceIndex] = aFrame.GetSequence();
 
     // Set address field
     if (aFrame.IsSrcPanIdPresent())
@@ -1189,8 +1181,8 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
     // Set header IE
     if (aIeLength > 0)
     {
-        SetPsduLength(kInvalidIndex); // At this time the length of ACK hasn't been determined, set it to
-                                      // `kInvalidIndex` to find call FindHeaderIeIndex method
+        SetPsduLength(kMaxPsduSize); // At this time the length of ACK hasn't been determined, set it to
+                                     // `kInvalidIndex` to find call FindHeaderIeIndex method
         memcpy(GetPsdu() + FindHeaderIeIndex(), aIeData, aIeLength);
     }
 
