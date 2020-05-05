@@ -137,8 +137,7 @@ otError otMacFrameGenerateImmAck(const otRadioFrame *aFrame, bool aIsFramePendin
 
     VerifyOrExit(aFrame != NULL && aAckFrame != NULL, error = OT_ERROR_INVALID_ARGS);
 
-    static_cast<Mac::TxFrame *>(aAckFrame)->GenerateImmAck(*static_cast<const Mac::RxFrame *>(aFrame),
-                                                                   aIsFramePending);
+    static_cast<Mac::TxFrame *>(aAckFrame)->GenerateImmAck(*static_cast<const Mac::RxFrame *>(aFrame), aIsFramePending);
 
 exit:
     return error;
