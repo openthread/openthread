@@ -1174,6 +1174,8 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
     SuccessOrExit(error = aFrame.GetFrameCounter(frameCounter));
     SuccessOrExit(error = aFrame.GetKeyId(keyId));
 
+    SetPsduLength(kMaxPsduSize); // At this time the length of ACK hasn't been determined, set it to
+                                 // `kMaxPsduSize` to call methods that check frame length.
     SetSecurityControlField(securityControlField);
     SetFrameCounter(frameCounter);
     SetKeyId(keyId);
@@ -1181,8 +1183,6 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
     // Set header IE
     if (aIeLength > 0)
     {
-        SetPsduLength(kMaxPsduSize); // At this time the length of ACK hasn't been determined, set it to
-                                     // `kInvalidIndex` to find call FindHeaderIeIndex method
         memcpy(GetPsdu() + FindHeaderIeIndex(), aIeData, aIeLength);
     }
 
