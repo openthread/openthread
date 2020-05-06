@@ -41,6 +41,8 @@ import mesh_cop
 import message
 import pcap
 
+from message import DropPacketException
+
 
 def dbg_print(*args):
     if False:
@@ -183,6 +185,10 @@ class VirtualTime(BaseSimulator):
             messages = self._message_factory.create(io.BytesIO(message))
             self.devices[addr]['msgs'] += messages
 
+        except DropPacketException:
+            print(
+                "Drop current packet because it cannot be handled in test scripts"
+            )
         except Exception as e:
             # Just print the exception to the console
             print("EXCEPTION: %s" % e)

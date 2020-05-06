@@ -41,6 +41,10 @@ import mle
 from enum import IntEnum
 
 
+class DropPacketException(Exception):
+    pass
+
+
 class MessageType(IntEnum):
     MLE = 0
     COAP = 1
@@ -598,30 +602,38 @@ class MessageFactory:
         self._lowpan_parser.set_lowpan_context(cid, prefix)
 
     def create(self, data):
-        message = Message()
-        message.channel = struct.unpack(">B", data.read(1))
+        try:
+            message = Message()
+            message.channel = struct.unpack(">B", data.read(1))
 
-        # Parse MAC header
-        mac_frame = self._parse_mac_frame(data)
-        message.mac_header = mac_frame.header
+            # Parse MAC header
+            mac_frame = self._parse_mac_frame(data)
+            message.mac_header = mac_frame.header
 
-        if message.mac_header.frame_type != mac802154.MacHeader.FrameType.DATA:
-            return [message]
+            if message.mac_header.frame_type != mac802154.MacHeader.FrameType.DATA:
+                return [message]
 
-        message_info = common.MessageInfo()
-        message_info.source_mac_address = message.mac_header.src_address
-        message_info.destination_mac_address = message.mac_header.dest_address
+            message_info = common.MessageInfo()
+            message_info.source_mac_address = message.mac_header.src_address
+            message_info.destination_mac_address = message.mac_header.dest_address
 
-        # Create stream with 6LoWPAN datagram
-        lowpan_payload = io.BytesIO(mac_frame.payload.data)
+            # Create stream with 6LoWPAN datagram
+            lowpan_payload = io.BytesIO(mac_frame.payload.data)
 
-        ipv6_packet = self._lowpan_parser.parse(lowpan_payload, message_info)
-        if ipv6_packet is None:
-            return [message]
+            ipv6_packet = self._lowpan_parser.parse(lowpan_payload,
+                                                    message_info)
+            if ipv6_packet is None:
+                return [message]
 
-        message.ipv6_packet = ipv6_packet
+            message.ipv6_packet = ipv6_packet
 
-        if message.type == MessageType.MLE:
-            self._add_device_descriptors(message)
+            if message.type == MessageType.MLE:
+                self._add_device_descriptors(message)
 
-        return message.try_extract_dtls_messages()
+            return message.try_extract_dtls_messages()
+
+        except mac802154.KeyIdMode0Exception:
+            print(
+                'Received packet with key_id_mode = 0, cannot be handled in test scripts'
+            )
+            raise DropPacketException
