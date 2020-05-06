@@ -435,12 +435,32 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance);
  */
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
 
+/**
+ * Update MAC keys.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ * @param[in]   aKeyIdMode   The key ID mode.
+ * @param[in]   aKeyIdSize   The key size.
+ * @param[in]   aPrevKey     A pointer to the previous MAC key.
+ * @param[in]   aCurrKey     A pointer to the current MAC key.
+ * @param[in]   aNextKey     A pointer to the next MAC key.
+ *
+ */
 void otPlatRadioSetMacKey(otInstance *   aInstance,
                           uint8_t        aKeyMode,
                           uint8_t        aKeySize,
                           const uint8_t *aPrevKey,
                           const uint8_t *aCurrKey,
                           const uint8_t *aNextKey);
+
+/**
+ * Update MAC key index.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ * @param[in]   aKeyIdMode   The key ID mode.
+ * @param[in]   aKeyId       The key index.
+ *
+ */
 void otPlatRadioSetMacKeyId(otInstance *aInstance, uint8_t aKeyMode, uint8_t aKeyId);
 
 /**
