@@ -807,7 +807,7 @@ void Mle::SetStateChild(uint16_t aRloc16)
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
-    InformPreviousParent();
+    IgnoreError(InformPreviousParent());
     mPreviousParentRloc = mParent.GetRloc16();
 #endif
 }
