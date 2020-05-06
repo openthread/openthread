@@ -383,6 +383,38 @@ public:
      */
     const Key &GetNextMacKey(void) const { return mNextKey; }
 
+    /**
+     * This method returns the current MAC frame counter value.
+     *
+     * @returns The current MAC frame counter value.
+     *
+     */
+    uint32_t GetMacFrameCounter(void) const;
+
+    /**
+     * This method returns the current Stored MAC Frame Counter value.
+     *
+     * @returns The current stored MAC frame counter value.
+     *
+     */
+    uint32_t GetStoredMacFrameCounter(void) const;
+
+    /**
+     * This method sets the current MAC Frame Counter value.
+     *
+     * @param[in] aMacFrameCounter  The MAC Frame Counter value.
+     *
+     */
+    void SetMacFrameCounter(uint32_t aMacFrameCounter);
+
+    /**
+     * This method sets the MAC Frame Counter value which is stored in non-volatile memory.
+     *
+     * @param[in] aStoredMacFrameCounter  The stored MAC Frame Counter value.
+     *
+     */
+    void SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter);
+
 private:
     enum
     {
@@ -426,6 +458,7 @@ private:
     bool ShouldHandleEnergyScan(void) const;
 
     void ProcessTransmitSecurity(void);
+    void IncrementMacFrameCounter(void);
     void StartCsmaBackoff(void);
     void BeginTransmit(void);
     void SampleRssi(void);
@@ -458,6 +491,8 @@ private:
     Key                mCurrKey;
     Key                mNextKey;
     uint8_t            mKeyId;
+    uint32_t           mMacFrameCounter;
+    uint32_t           mStoredMacFrameCounter;
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     TimerMicro mTimer;
 #else

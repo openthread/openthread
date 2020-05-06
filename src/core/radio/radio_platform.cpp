@@ -139,3 +139,31 @@ OT_TOOL_WEAK void otPlatRadioSetMacKey(otInstance *    aInstance,
     OT_UNUSED_VARIABLE(aCurrKey);
     OT_UNUSED_VARIABLE(aNextKey);
 }
+
+OT_TOOL_WEAK otError otPlatRadioGetMacFrameCounter(otInstance *aInstance, uint32_t *aMacFrameCounter)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aMacFrameCounter);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+OT_TOOL_WEAK otError otPlatRadioGetStoredMacFrameCounter(otInstance *aInstance, uint32_t *aStoredMacFrameCounter)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aStoredMacFrameCounter);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+OT_TOOL_WEAK void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aMacFrameCounter);
+}
+
+OT_TOOL_WEAK void otPlatRadioSetStoredMacFrameCounter(otInstance *aInstance, uint32_t aStoredMacFrameCounter)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aStoredMacFrameCounter);
+}

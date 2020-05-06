@@ -618,6 +618,44 @@ public:
                       const otMacKey &aNextKey);
 
     /**
+     * This method gets the current MAC frame counter value.
+     *
+     * @param[out] aMacFrameCounter  A reference to output the MAC frame counter.
+     *
+     * @retval OT_ERROR_NONE             Successfully get the MAC frame counter value.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  MAC frame counter is not implemented in radio.
+     *
+     */
+    otError GetMacFrameCounter(uint32_t &aMacFrameCounter);
+
+    /**
+     * This method gets the current stored MAC frame counter value.
+     *
+     * @param[out] aStoredMacFrameCounter  A reference to output the stored MAC frame counter.
+     *
+     * @retval OT_ERROR_NONE             Successfully get the stored MAC frame counter value.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  Stored MAC frame counter is not implemented in radio.
+     *
+     */
+    otError GetStoredMacFrameCounter(uint32_t &aStoredMacFrameCounter);
+
+    /**
+     * This method sets the current MAC Frame Counter value.
+     *
+     * @param[in]   aMacFrameCounter  The MAC Frame Counter value.
+     *
+     */
+    otError SetMacFrameCounter(uint32_t aMacFrameCounter);
+
+    /**
+     * This method sets the MAC Frame Counter value which is stored in non-volatile memory.
+     *
+     * @param[in]   aStoredMacFrameCounter  The stored MAC Frame Counter value.
+     *
+     */
+    otError SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter);
+
+    /**
      * This method checks whether the spinel interface is radio-only
      *
      * @retval  TRUE    The radio chip is in radio-only mode.

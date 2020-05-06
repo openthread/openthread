@@ -264,6 +264,44 @@ public:
                       const Key &aNextKey);
 
     /**
+     * This method gets the current MAC frame counter value.
+     *
+     * @returns The MAC frame counter.
+     *
+     */
+    uint32_t GetMacFrameCounter(void);
+
+    /**
+     * This method gets the current stored MAC frame counter value.
+     *
+     * @returns The stored MAC frame counter.
+     *
+     */
+    uint32_t GetStoredMacFrameCounter(void);
+
+    /**
+     * This method sets the current MAC Frame Counter value.
+     *
+     * @param[in] aMacFrameCounter  The MAC Frame Counter value.
+     *
+     * @retval OT_ERROR_NONE             If successful.
+     * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+     *
+     */
+    otError SetMacFrameCounter(uint32_t aMacFrameCounter);
+
+    /**
+     * This method sets the MAC Frame Counter value which is stored in non-volatile memory.
+     *
+     * @param[in] aStoredMacFrameCounter  The stored MAC Frame Counter value.
+     *
+     * @retval OT_ERROR_NONE             If successful.
+     * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+     *
+     */
+    otError SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter);
+
+    /**
      * This method records the status of a frame transmission attempt and is mainly used for logging failures.
      *
      * Unlike `HandleTransmitDone` which is called after all transmission attempts of frame to indicate final status

@@ -1031,6 +1031,49 @@ exit:
 }
 
 template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::GetMacFrameCounter(uint32_t &aMacFrameCounter)
+{
+    otError error = Get(SPINEL_PROP_RCP_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S, &aMacFrameCounter);
+
+    LogIfFail("Get MAC frame counter failed", error);
+
+    return error;
+}
+
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::GetStoredMacFrameCounter(uint32_t &aStoredMacFrameCounter)
+{
+    otError error = Get(SPINEL_PROP_RCP_STORED_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S, &aStoredMacFrameCounter);
+
+    LogIfFail("Get stored MAC frame counter failed", error);
+
+    return error;
+}
+
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::SetMacFrameCounter(uint32_t aMacFrameCounter)
+{
+    otError error;
+
+    SuccessOrExit(error = Set(SPINEL_PROP_RCP_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S, aMacFrameCounter));
+
+exit:
+    return error;
+}
+
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter)
+{
+    otError error;
+
+    SuccessOrExit(error =
+                      Set(SPINEL_PROP_RCP_STORED_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S, aStoredMacFrameCounter));
+
+exit:
+    return error;
+}
+
+template <typename InterfaceType, typename ProcessContextType>
 otError RadioSpinel<InterfaceType, ProcessContextType>::GetIeeeEui64(uint8_t *aIeeeEui64)
 {
     memcpy(aIeeeEui64, mIeeeEui64.m8, sizeof(mIeeeEui64.m8));

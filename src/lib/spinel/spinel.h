@@ -3952,6 +3952,26 @@ enum
      */
     SPINEL_PROP_RCP_MAC_KEY = SPINEL_PROP_RCP__BEGIN + 0,
 
+    /// MAC Frame Counter
+    /** Format: `L`.
+     *
+     *  `L`: MAC frame counter
+     *
+     * The Spinel property is used to set/get MAC frame counter to and from RCP.
+     *
+     */
+    SPINEL_PROP_RCP_MAC_FRAME_COUNTER = SPINEL_PROP_RCP__BEGIN + 1,
+
+    /// Stored MAC Frame Counter
+    /** Format: `L`.
+     *
+     *  `L`: Stored MAC frame counter
+     *
+     * The Spinel property is used to set/get stored MAC frame counter to and from RCP.
+     *
+     */
+    SPINEL_PROP_RCP_STORED_MAC_FRAME_COUNTER = SPINEL_PROP_RCP__BEGIN + 2,
+
     SPINEL_PROP_RCP__END = 0x900,
 
     SPINEL_PROP_NEST__BEGIN = 0x3BC0,

@@ -485,3 +485,29 @@ void otPlatRadioSetMacKey(otInstance *    aInstance,
     SuccessOrDie(sRadioSpinel.SetMacKey(aKeyIdMode, aKeyId, *aPrevKey, *aCurrKey, *aNextKey));
     OT_UNUSED_VARIABLE(aInstance);
 }
+
+otError otPlatRadioGetMacFrameCounter(otInstance *aInstance, uint32_t *aMacFrameCounter)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    assert(aMacFrameCounter != NULL);
+    return sRadioSpinel.GetMacFrameCounter(*aMacFrameCounter);
+}
+
+otError otPlatRadioGetStoredMacFrameCounter(otInstance *aInstance, uint32_t *aStoredMacFrameCounter)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    assert(aStoredMacFrameCounter != NULL);
+    return sRadioSpinel.GetStoredMacFrameCounter(*aStoredMacFrameCounter);
+}
+
+void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
+{
+    SuccessOrDie(sRadioSpinel.SetMacFrameCounter(aMacFrameCounter));
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+void otPlatRadioSetStoredMacFrameCounter(otInstance *aInstance, uint32_t aStoredMacFrameCounter)
+{
+    SuccessOrDie(sRadioSpinel.SetStoredMacFrameCounter(aStoredMacFrameCounter));
+    OT_UNUSED_VARIABLE(aInstance);
+}

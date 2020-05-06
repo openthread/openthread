@@ -233,6 +233,26 @@ otError otLinkRawSetMacKey(otInstance *    aInstance,
         *static_cast<const Mac::Key *>(aNextKey));
 }
 
+uint32_t otLinkRawGetMacFrameCounter(otInstance *aInstance)
+{
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().GetMacFrameCounter();
+}
+
+uint32_t otLinkRawGetStoredMacFrameCounter(otInstance *aInstance)
+{
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().GetStoredMacFrameCounter();
+}
+
+otError otLinkRawSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
+{
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetMacFrameCounter(aMacFrameCounter);
+}
+
+otError otLinkRawSetStoredMacFrameCounter(otInstance *aInstance, uint32_t aStoredMacFrameCounter)
+{
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetStoredMacFrameCounter(aStoredMacFrameCounter);
+}
+
 #if OPENTHREAD_RADIO
 
 otDeviceRole otThreadGetDeviceRole(otInstance *aInstance)

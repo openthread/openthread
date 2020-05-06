@@ -268,6 +268,56 @@ public:
     }
 
     /**
+     * This method gets the current MAC frame counter value.
+     *
+     * @param[out] aMacFrameCounter  A reference to output the MAC frame counter.
+     *
+     * @retval OT_ERROR_NONE             Successfully get the MAC frame counter value.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  MAC frame counter is not implemented in radio.
+     *
+     */
+    otError GetMacFrameCounter(uint32_t &aMacFrameCounter)
+    {
+        return otPlatRadioGetMacFrameCounter(GetInstance(), &aMacFrameCounter);
+    }
+
+    /**
+     * This method gets the current stored MAC frame counter value.
+     *
+     * @param[out] aStoredMacFrameCounter  A reference to output the stored MAC frame counter.
+     *
+     * @retval OT_ERROR_NONE             Successfully get the stored MAC frame counter value.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  Stored MAC frame counter is not implemented in radio.
+     *
+     */
+    otError GetStoredMacFrameCounter(uint32_t &aStoredMacFrameCounter)
+    {
+        return otPlatRadioGetStoredMacFrameCounter(GetInstance(), &aStoredMacFrameCounter);
+    }
+
+    /**
+     * This method sets the current MAC Frame Counter value.
+     *
+     * @param[in] aMacFrameCounter  The MAC Frame Counter value.
+     *
+     */
+    void SetMacFrameCounter(uint32_t aMacFrameCounter)
+    {
+        otPlatRadioSetMacFrameCounter(GetInstance(), aMacFrameCounter);
+    }
+
+    /**
+     * This method sets the MAC Frame Counter value which is stored in non-volatile memory.
+     *
+     * @param[in] aStoredMacFrameCounter  The stored MAC Frame Counter value.
+     *
+     */
+    void SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter)
+    {
+        otPlatRadioSetStoredMacFrameCounter(GetInstance(), aStoredMacFrameCounter);
+    }
+
+    /**
      * This method gets the radio's transmit power in dBm.
      *
      * @param[out] aPower    A reference to output the transmit power in dBm.

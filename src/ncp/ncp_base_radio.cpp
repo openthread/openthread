@@ -461,6 +461,42 @@ exit:
     return error;
 }
 
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_MAC_FRAME_COUNTER>(void)
+{
+    return mEncoder.WriteUintPacked(otLinkRawGetMacFrameCounter(mInstance));
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_STORED_MAC_FRAME_COUNTER>(void)
+{
+    return mEncoder.WriteUintPacked(otLinkRawGetStoredMacFrameCounter(mInstance));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_FRAME_COUNTER>(void)
+{
+    otError  error = OT_ERROR_NONE;
+    uint32_t frameCounter;
+
+    SuccessOrExit(error = mDecoder.ReadUint32(frameCounter));
+
+    error = otLinkRawSetMacFrameCounter(mInstance, frameCounter);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_STORED_MAC_FRAME_COUNTER>(void)
+{
+    otError  error = OT_ERROR_NONE;
+    uint32_t frameCounter;
+
+    SuccessOrExit(error = mDecoder.ReadUint32(frameCounter));
+
+    error = otLinkRawSetStoredMacFrameCounter(mInstance, frameCounter);
+
+exit:
+    return error;
+}
+
 } // namespace Ncp
 } // namespace ot
 

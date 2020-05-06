@@ -60,6 +60,8 @@ SubMac::SubMac(Instance &aInstance)
     , mPcapCallback(NULL)
     , mPcapCallbackContext(NULL)
     , mKeyId(0)
+    , mMacFrameCounter(0)
+    , mStoredMacFrameCounter(0)
     , mTimer(aInstance, &SubMac::HandleTimer, this)
 {
     mExtAddress.Clear();
@@ -650,6 +652,67 @@ void SubMac::SetMacKey(uint8_t    aKeyIdMode,
     VerifyOrExit(!ShouldHandleTransmitSecurity(), OT_NOOP);
 
     Get<Radio>().SetMacKey(aKeyIdMode, aKeyId, aPrevKey, aCurrKey, aNextKey);
+
+exit:
+    return;
+}
+
+void SubMac::IncrementMacFrameCounter(void)
+{
+    mMacFrameCounter++;
+
+    if (mMacFrameCounter >= mStoredMacFrameCounter)
+    {
+        // Todo: indicate upper layer to save the current MAC frame counter
+        // Get<ot::Mle::MleRouter>().Store();
+    }
+}
+
+uint32_t SubMac::GetMacFrameCounter(void) const
+{
+    uint32_t macFrameCounter;
+
+    // MAC frame counter is maintained by SubMac if radio does not supports Tx AES
+    VerifyOrExit(!ShouldHandleTransmitSecurity(), macFrameCounter = mMacFrameCounter);
+
+    IgnoreError(Get<Radio>().GetMacFrameCounter(macFrameCounter));
+
+exit:
+    return macFrameCounter;
+}
+
+uint32_t SubMac::GetStoredMacFrameCounter(void) const
+{
+    uint32_t storedMacFrameCounter;
+
+    // Stored MAC frame counter is maintained by SubMac if radio does not supports Tx AES
+    VerifyOrExit(!ShouldHandleTransmitSecurity(), storedMacFrameCounter = mStoredMacFrameCounter);
+
+    IgnoreError(Get<Radio>().GetStoredMacFrameCounter(storedMacFrameCounter));
+
+exit:
+    return storedMacFrameCounter;
+}
+
+void SubMac::SetMacFrameCounter(uint32_t aMacFrameCounter)
+{
+    mMacFrameCounter = aMacFrameCounter;
+
+    VerifyOrExit(!ShouldHandleTransmitSecurity(), OT_NOOP);
+
+    Get<Radio>().SetMacFrameCounter(aMacFrameCounter);
+
+exit:
+    return;
+}
+
+void SubMac::SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter)
+{
+    mStoredMacFrameCounter = aStoredMacFrameCounter;
+
+    VerifyOrExit(!ShouldHandleTransmitSecurity(), OT_NOOP);
+
+    Get<Radio>().SetStoredMacFrameCounter(aStoredMacFrameCounter);
 
 exit:
     return;

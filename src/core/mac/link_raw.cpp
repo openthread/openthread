@@ -220,6 +220,38 @@ exit:
     return error;
 }
 
+uint32_t LinkRaw::GetMacFrameCounter(void)
+{
+    return mSubMac.GetMacFrameCounter();
+}
+
+uint32_t LinkRaw::GetStoredMacFrameCounter(void)
+{
+    return mSubMac.GetStoredMacFrameCounter();
+}
+
+otError LinkRaw::SetMacFrameCounter(uint32_t aMacFrameCounter)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    mSubMac.SetMacFrameCounter(aMacFrameCounter);
+
+exit:
+    return error;
+}
+
+otError LinkRaw::SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    mSubMac.SetStoredMacFrameCounter(aStoredMacFrameCounter);
+
+exit:
+    return error;
+}
+
 // LCOV_EXCL_START
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)

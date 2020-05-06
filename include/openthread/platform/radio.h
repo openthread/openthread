@@ -476,6 +476,56 @@ void otPlatRadioSetMacKey(otInstance *    aInstance,
                           const otMacKey *aNextKey);
 
 /**
+ * This method gets the current MAC frame counter value.
+ *
+ * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
+ *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[out] aMacFrameCounter  The MAC frame counter.
+ *
+ * @retval OT_ERROR_NONE             Successfully get the MAC frame counter value.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  MAC frame counter is not implemented in radio.
+ *
+ */
+otError otPlatRadioGetMacFrameCounter(otInstance *aInstance, uint32_t *aMacFrameCounter);
+
+/**
+ * This method gets the current stored MAC frame counter value.
+ *
+ * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
+ *
+ * @param[in]  aInstance               A pointer to an OpenThread instance.
+ * @param[out] aStoredMacFrameCounter  The stored MAC frame counter.
+ *
+ * @retval OT_ERROR_NONE             Successfully get the stored MAC frame counter value.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  Stored MAC frame counter is not implemented in radio.
+ *
+ */
+otError otPlatRadioGetStoredMacFrameCounter(otInstance *aInstance, uint32_t *aMacFrameCounter);
+
+/**
+ * This method sets the current MAC Frame Counter value.
+ *
+ * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
+ *
+ * @param[in]   aInstance         A pointer to an OpenThread instance.
+ * @param[in]   aMacFrameCounter  The MAC Frame Counter value.
+ *
+ */
+void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter);
+
+/**
+ * This method sets the MAC Frame Counter value which is stored in non-volatile memory.
+ *
+ * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
+ *
+ * @param[in]   aInstance               A pointer to an OpenThread instance.
+ * @param[in]   aStoredMacFrameCounter  The stored MAC Frame Counter value.
+ *
+ */
+void otPlatRadioSetStoredMacFrameCounter(otInstance *aInstance, uint32_t aStoredMacFrameCounter);
+
+/**
  * @}
  *
  */
