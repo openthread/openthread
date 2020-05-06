@@ -191,7 +191,7 @@ typedef struct otMacCounters
     /**
      * The total number of unique other MAC frame transmission requests.
      *
-     * This counter is currently unused.
+     * This counter is currently used for counting out-of-band frames.
      *
      */
     uint32_t mTxOther;
@@ -303,6 +303,8 @@ typedef struct otMacCounters
 
     /**
      * The total number of other types of frames received.
+     *
+     * This counter is also used to count out-of-band frames if needed.
      *
      */
     uint32_t mRxOther;
