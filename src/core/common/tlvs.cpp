@@ -59,7 +59,7 @@ otError Tlv::AppendTo(Message &aMessage) const
 {
     uint32_t size = GetSize();
 
-    OT_ASSERT(size <= UINT16_MAX);
+    // OT_ASSERT(size <= UINT16_MAX);
 
     return aMessage.Append(this, static_cast<uint16_t>(size));
 }
