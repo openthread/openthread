@@ -51,6 +51,7 @@ DuaManager::DuaManager(Instance &aInstance)
 {
     mDomainUnicastAddress.Clear();
     mDomainUnicastAddress.mPreferred          = true;
+    mDomainUnicastAddress.mValid              = true;
     mDomainUnicastAddress.mScopeOverride      = Ip6::Address::kGlobalScope;
     mDomainUnicastAddress.mScopeOverrideValid = true;
 }
@@ -63,6 +64,7 @@ void DuaManager::UpdateDomainUnicastAddress(BackboneRouter::Leader::DomainPrefix
         (aState == BackboneRouter::Leader::kDomainPrefixRefreshed))
     {
         Get<ThreadNetif>().RemoveUnicastAddress(mDomainUnicastAddress);
+        mDomainUnicastAddress.GetAddress().Clear();
     }
 
     VerifyOrExit((aState == BackboneRouter::Leader::kDomainPrefixAdded) ||
@@ -73,17 +75,16 @@ void DuaManager::UpdateDomainUnicastAddress(BackboneRouter::Leader::DomainPrefix
 
     OT_ASSERT(prefix != NULL);
 
-    mDomainUnicastAddress.GetAddress().Clear();
     mDomainUnicastAddress.GetAddress().SetPrefix(prefix->mPrefix.mFields.m8, prefix->mLength);
     mDomainUnicastAddress.mPrefixLength = prefix->mLength;
 
     if (Get<Utils::Slaac>().GenerateIid(mDomainUnicastAddress, NULL, 0, &mDadCounter) == OT_ERROR_NONE)
     {
-        mDomainUnicastAddress.mValid = true;
         Get<ThreadNetif>().AddUnicastAddress(mDomainUnicastAddress);
     }
     else
     {
+        mDomainUnicastAddress.GetAddress().Clear();
         otLogWarnCore("Failed to generate valid DUA");
     }
 
