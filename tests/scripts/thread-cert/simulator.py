@@ -41,8 +41,6 @@ import mesh_cop
 import message
 import pcap
 
-from message import DropPacketException
-
 
 def dbg_print(*args):
     if False:
@@ -177,15 +175,15 @@ class VirtualTime(BaseSimulator):
         self.sock.close()
         self.sock = None
 
-    def _add_message(self, nodeid, message):
+    def _add_message(self, nodeid, message_obj):
         addr = ('127.0.0.1', self.port + nodeid)
 
         # Ignore any exceptions
         try:
-            messages = self._message_factory.create(io.BytesIO(message))
+            messages = self._message_factory.create(io.BytesIO(message_obj))
             self.devices[addr]['msgs'] += messages
 
-        except DropPacketException:
+        except message.DropPacketException:
             print(
                 "Drop current packet because it cannot be handled in test scripts"
             )
