@@ -709,16 +709,7 @@ private:
     };
 #endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 
-    /**
-     * This method processes transmit security on the frame which is going to be sent.
-     *
-     * This method prepares the frame and fills Mac auxiliary header.
-     *
-     * @param[in]  aFrame          A reference to the MAC frame buffer which is going to be sent.
-     *
-     */
-    void ProcessTransmitSecurity(TxFrame &aFrame);
-
+    void    ProcessTransmitSecurity(TxFrame &aFrame);
     otError ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
     void    UpdateIdleMode(void);
     void    StartOperation(Operation aOperation);

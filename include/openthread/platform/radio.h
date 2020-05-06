@@ -437,6 +437,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
 
 /**
  * Update MAC keys.
+ * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[in]   aKeyIdMode   The key ID mode.
@@ -455,6 +456,7 @@ void otPlatRadioSetMacKey(otInstance *   aInstance,
 
 /**
  * Update MAC key index.
+ * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[in]   aKeyIdMode   The key ID mode.

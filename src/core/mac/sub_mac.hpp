@@ -349,7 +349,7 @@ public:
     int8_t GetNoiseFloor(void);
 
     /**
-     * This method sets previous, current and next MAC key.
+     * This method sets the previous, current, and next MAC key.
      *
      * @param[in] aKeyIdMode  MAC key ID mode.
      * @param[in] aPrevKey    A pointer to the previous MAC key.
