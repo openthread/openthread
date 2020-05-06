@@ -71,6 +71,8 @@ extern "C" {
  *
  * @note This is currently only available with clang (C++17 implements it
  *       as attribute [[nodiscard]]).
+ * @note To suppress the 'unused-result' warning/error, please use the
+ *       '-Wno-unused-result' compiler option.
  *
  */
 #if defined(__clang__)
