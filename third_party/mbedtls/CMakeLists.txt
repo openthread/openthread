@@ -33,7 +33,7 @@ set(OT_MBEDTLS_CONFIG_FILE "" CACHE STRING "The mbedTLS config file")
 set(ENABLE_TESTING OFF CACHE BOOL "Disable mbedtls test" FORCE)
 set(ENABLE_PROGRAMS OFF CACHE BOOL "Disable mbetls program" FORCE)
 
-add_subdirectory(repo)
+add_subdirectory(repo EXCLUDE_FROM_ALL)
 
 target_compile_definitions(mbedtls
     PUBLIC
