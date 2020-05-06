@@ -135,7 +135,7 @@ elseif(NOT OT_PLATFORM MATCHES "none")
 endif()
 
 add_subdirectory(src)
-add_subdirectory(third_party)
+add_subdirectory(third_party EXCLUDE_FROM_ALL)
 
 if(OT_PLATFORM STREQUAL "simulation")
     enable_testing()
