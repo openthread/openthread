@@ -174,7 +174,7 @@ void Dtls::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageI
 
         sockAddr.mAddress = aMessageInfo.GetPeerAddr();
         sockAddr.mPort    = aMessageInfo.GetPeerPort();
-        mSocket.Connect(sockAddr);
+        IgnoreError(mSocket.Connect(sockAddr));
 
         mPeerAddress.SetPeerAddr(aMessageInfo.GetPeerAddr());
         mPeerAddress.SetPeerPort(aMessageInfo.GetPeerPort());
@@ -202,7 +202,7 @@ void Dtls::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageI
 #ifdef MBEDTLS_SSL_SRV_C
     if (mState == MeshCoP::Dtls::kStateConnecting)
     {
-        SetClientId(mPeerAddress.GetPeerAddr().mFields.m8, sizeof(mPeerAddress.GetPeerAddr().mFields));
+        IgnoreError(SetClientId(mPeerAddress.GetPeerAddr().mFields.m8, sizeof(mPeerAddress.GetPeerAddr().mFields)));
     }
 #endif
 
@@ -414,7 +414,7 @@ void Dtls::Close(void)
     mTransportContext  = NULL;
     mTimerSet          = false;
 
-    mSocket.Close();
+    IgnoreError(mSocket.Close());
     mTimer.Stop();
 }
 
@@ -427,7 +427,7 @@ void Dtls::Disconnect(void)
     mTimer.Start(kGuardTimeNewConnectionMilli);
 
     new (&mPeerAddress) Ip6::MessageInfo();
-    mSocket.Connect(Ip6::SockAddr());
+    IgnoreError(mSocket.Connect(Ip6::SockAddr()));
 
     FreeMbedtls();
 
@@ -636,7 +636,7 @@ int Dtls::HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength)
     }
 
     rval = mReceiveMessage->Read(mReceiveMessage->GetOffset(), static_cast<uint16_t>(aLength), aBuf);
-    mReceiveMessage->MoveOffset(rval);
+    IgnoreError(mReceiveMessage->MoveOffset(rval));
 
 exit:
     return rval;

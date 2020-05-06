@@ -76,9 +76,9 @@ void Leader::Reset(void)
 
 void Leader::Start(void)
 {
-    Get<Coap::Coap>().AddResource(mServerData);
-    Get<Coap::Coap>().AddResource(mCommissioningDataGet);
-    Get<Coap::Coap>().AddResource(mCommissioningDataSet);
+    IgnoreError(Get<Coap::Coap>().AddResource(mServerData));
+    IgnoreError(Get<Coap::Coap>().AddResource(mCommissioningDataGet));
+    IgnoreError(Get<Coap::Coap>().AddResource(mCommissioningDataSet));
 }
 
 void Leader::Stop(void)
@@ -160,7 +160,8 @@ void Leader::HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &a
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kThreadNetworkData, sizeof(networkData), networkData) == OT_ERROR_NONE)
     {
         VerifyOrExit(networkData.IsValid(), OT_NOOP);
-        RegisterNetworkData(aMessageInfo.GetPeerAddr().GetLocator(), networkData.GetTlvs(), networkData.GetLength());
+        IgnoreError(RegisterNetworkData(aMessageInfo.GetPeerAddr().GetLocator(), networkData.GetTlvs(),
+                                        networkData.GetLength()));
     }
 
     SuccessOrExit(Get<Coap::Coap>().SendEmptyAck(aMessage, aMessageInfo));
@@ -264,7 +265,7 @@ void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageI
         }
     }
 
-    SetCommissioningData(tlvs, static_cast<uint8_t>(length));
+    IgnoreError(SetCommissioningData(tlvs, static_cast<uint8_t>(length)));
 
     state = MeshCoP::StateTlv::kAccept;
 
@@ -288,7 +289,7 @@ void Leader::HandleCommissioningGet(Coap::Message &aMessage, const Ip6::MessageI
     uint16_t offset;
 
     SuccessOrExit(Tlv::GetValueOffset(aMessage, MeshCoP::Tlv::kGet, offset, length));
-    aMessage.SetOffset(offset);
+    IgnoreError(aMessage.SetOffset(offset));
 
 exit:
     SendCommissioningGetResponse(aMessage, length, aMessageInfo);
@@ -346,7 +347,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
     if (message->GetLength() == message->GetOffset())
     {
         // no payload, remove coap payload marker
-        message->SetLength(message->GetLength() - 1);
+        IgnoreError(message->SetLength(message->GetLength() - 1));
     }
 
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, aMessageInfo));

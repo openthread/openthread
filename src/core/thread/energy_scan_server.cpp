@@ -59,7 +59,7 @@ EnergyScanServer::EnergyScanServer(Instance &aInstance)
     , mNotifierCallback(aInstance, &EnergyScanServer::HandleStateChanged, this)
     , mEnergyScan(OT_URI_PATH_ENERGY_SCAN, &EnergyScanServer::HandleRequest, this)
 {
-    Get<Coap::Coap>().AddResource(mEnergyScan);
+    IgnoreError(Get<Coap::Coap>().AddResource(mEnergyScan));
 }
 
 void EnergyScanServer::HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -118,11 +118,11 @@ void EnergyScanServer::HandleTimer(void)
     {
         // grab the lowest channel to scan
         uint32_t channelMask = mChannelMaskCurrent & ~(mChannelMaskCurrent - 1);
-        Get<Mac::Mac>().EnergyScan(channelMask, mScanDuration, HandleScanResult, this);
+        IgnoreError(Get<Mac::Mac>().EnergyScan(channelMask, mScanDuration, HandleScanResult, this));
     }
     else
     {
-        SendReport();
+        IgnoreError(SendReport());
     }
 
 exit:

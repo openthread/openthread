@@ -82,7 +82,7 @@ otError otCoapMessageSetToken(otMessage *aMessage, const uint8_t *aToken, uint8_
 
 void otCoapMessageGenerateToken(otMessage *aMessage, uint8_t aTokenLength)
 {
-    static_cast<Coap::Message *>(aMessage)->SetToken(aTokenLength);
+    IgnoreError(static_cast<Coap::Message *>(aMessage)->SetToken(aTokenLength));
 }
 
 otError otCoapMessageAppendContentFormatOption(otMessage *aMessage, otCoapOptionContentFormat aContentFormat)

@@ -241,7 +241,7 @@ void SupervisionListener::HandleTimer(void)
 
     otLogWarnUtil("Supervision timeout. No frame from parent in %d sec", mTimeout);
 
-    Get<Mle::MleRouter>().SendChildUpdateRequest();
+    IgnoreError(Get<Mle::MleRouter>().SendChildUpdateRequest());
 
 exit:
     RestartTimer();

@@ -1058,22 +1058,22 @@ Frame::InfoString Frame::ToInfoString(void) const
     uint8_t    commandId, type;
     Address    src, dst;
 
-    string.Append("len:%d, seqnum:%d, type:", GetLength(), GetSequence());
+    IgnoreError(string.Append("len:%d, seqnum:%d, type:", GetLength(), GetSequence()));
 
     type = GetType();
 
     switch (type)
     {
     case kFcfFrameBeacon:
-        string.Append("Beacon");
+        IgnoreError(string.Append("Beacon"));
         break;
 
     case kFcfFrameData:
-        string.Append("Data");
+        IgnoreError(string.Append("Data"));
         break;
 
     case kFcfFrameAck:
-        string.Append("Ack");
+        IgnoreError(string.Append("Ack"));
         break;
 
     case kFcfFrameMacCmd:
@@ -1085,30 +1085,31 @@ Frame::InfoString Frame::ToInfoString(void) const
         switch (commandId)
         {
         case kMacCmdDataRequest:
-            string.Append("Cmd(DataReq)");
+            IgnoreError(string.Append("Cmd(DataReq)"));
             break;
 
         case kMacCmdBeaconRequest:
-            string.Append("Cmd(BeaconReq)");
+            IgnoreError(string.Append("Cmd(BeaconReq)"));
             break;
 
         default:
-            string.Append("Cmd(%d)", commandId);
+            IgnoreError(string.Append("Cmd(%d)", commandId));
             break;
         }
 
         break;
 
     default:
-        string.Append("%d", type);
+        IgnoreError(string.Append("%d", type));
         break;
     }
 
-    GetSrcAddr(src);
-    GetDstAddr(dst);
+    IgnoreError(GetSrcAddr(src));
+    IgnoreError(GetDstAddr(dst));
 
-    string.Append(", src:%s, dst:%s, sec:%s, ackreq:%s", src.ToString().AsCString(), dst.ToString().AsCString(),
-                  GetSecurityEnabled() ? "yes" : "no", GetAckRequest() ? "yes" : "no");
+    IgnoreError(string.Append(", src:%s, dst:%s, sec:%s, ackreq:%s", src.ToString().AsCString(),
+                              dst.ToString().AsCString(), GetSecurityEnabled() ? "yes" : "no",
+                              GetAckRequest() ? "yes" : "no"));
 
     return string;
 }
@@ -1117,7 +1118,7 @@ BeaconPayload::InfoString BeaconPayload::ToInfoString(void) const
 {
     NetworkName name;
 
-    name.Set(GetNetworkName());
+    IgnoreError(name.Set(GetNetworkName()));
 
     return InfoString("name:%s, xpanid:%s, id:%d, ver:%d, joinable:%s, native:%s", name.GetAsCString(),
                       mExtendedPanId.ToString().AsCString(), GetProtocolId(), GetProtocolVersion(),

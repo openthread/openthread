@@ -241,11 +241,11 @@ void SubMac::StartCsmaBackoff(void)
 
     if (mRxOnWhenBackoff)
     {
-        Get<Radio>().Receive(mTransmitFrame.GetChannel());
+        IgnoreError(Get<Radio>().Receive(mTransmitFrame.GetChannel()));
     }
     else
     {
-        Get<Radio>().Sleep();
+        IgnoreError(Get<Radio>().Sleep());
     }
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
@@ -400,7 +400,7 @@ otError SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
 
     if (RadioSupportsEnergyScan())
     {
-        Get<Radio>().EnergyScan(aScanChannel, aScanDuration);
+        IgnoreError(Get<Radio>().EnergyScan(aScanChannel, aScanDuration));
         SetState(kStateEnergyScan);
     }
     else if (ShouldHandleEnergyScan())
@@ -471,7 +471,7 @@ void SubMac::HandleTimer(void)
 
     case kStateTransmit:
         otLogDebgMac("Ack timer timed out");
-        Get<Radio>().Receive(mTransmitFrame.GetChannel());
+        IgnoreError(Get<Radio>().Receive(mTransmitFrame.GetChannel()));
         HandleTransmitDone(mTransmitFrame, NULL, OT_ERROR_NO_ACK);
         break;
 

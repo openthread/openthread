@@ -184,7 +184,7 @@ void Leader::UpdateBackboneRouterPrimary(void)
     BackboneRouterConfig config;
     State                state;
 
-    Get<NetworkData::Leader>().GetBackboneRouterPrimary(config);
+    IgnoreError(Get<NetworkData::Leader>().GetBackboneRouterPrimary(config));
 
     if (config.mServer16 != mConfig.mServer16)
     {

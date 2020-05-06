@@ -680,7 +680,7 @@ public:
      * @param[in] aRss A new RSS value (in dBm) to be added to average.
      *
      */
-    void AddRss(int8_t aRss) { mBuffer.mHead.mInfo.mRssAverager.Add(aRss); }
+    void AddRss(int8_t aRss) { IgnoreError(mBuffer.mHead.mInfo.mRssAverager.Add(aRss)); }
 
     /**
      * This method returns the average RSS (Received Signal Strength) associated with the message.

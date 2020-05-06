@@ -173,7 +173,7 @@ void Instance::AfterInit(void)
     // Restore datasets and network information
 
     Get<Settings>().Init();
-    Get<Mle::MleRouter>().Restore();
+    IgnoreError(Get<Mle::MleRouter>().Restore());
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
@@ -189,14 +189,14 @@ void Instance::Finalize(void)
     mIsInitialized = false;
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    IgnoreReturnValue(otThreadSetEnabled(this, false));
-    IgnoreReturnValue(otIp6SetEnabled(this, false));
-    IgnoreReturnValue(otLinkSetEnabled(this, false));
+    IgnoreError(otThreadSetEnabled(this, false));
+    IgnoreError(otIp6SetEnabled(this, false));
+    IgnoreError(otLinkSetEnabled(this, false));
 
     Get<Settings>().Deinit();
 #endif
 
-    Get<Mac::SubMac>().Disable();
+    IgnoreError(Get<Mac::SubMac>().Disable());
 
 #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 

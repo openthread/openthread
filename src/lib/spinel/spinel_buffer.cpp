@@ -93,7 +93,7 @@ void Buffer::Clear(void)
 
     while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
-        otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
+        IgnoreError(otMessageQueueDequeue(&mWriteFrameMessageQueue, message));
 
         // Note that messages associated with current (unfinished) input frame
         // are not yet owned by the `Buffer` and therefore should not
@@ -104,7 +104,7 @@ void Buffer::Clear(void)
     {
         while ((message = otMessageQueueGetHead(&mMessageQueue[priority])) != NULL)
         {
-            otMessageQueueDequeue(&mMessageQueue[priority], message);
+            IgnoreError(otMessageQueueDequeue(&mMessageQueue[priority], message));
             otMessageFree(message);
         }
     }
@@ -317,7 +317,7 @@ void Buffer::InFrameDiscard(void)
 #if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
-        otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
+        IgnoreError(otMessageQueueDequeue(&mWriteFrameMessageQueue, message));
 
         // Note that messages associated with current (unfinished) input frame
         // being discarded, are not yet owned by the `Buffer` and
@@ -520,8 +520,8 @@ otError Buffer::InFrameEnd(void)
     // Move all the messages from the frame queue to the main queue.
     while ((message = otMessageQueueGetHead(&mWriteFrameMessageQueue)) != NULL)
     {
-        otMessageQueueDequeue(&mWriteFrameMessageQueue, message);
-        otMessageQueueEnqueue(&mMessageQueue[mWriteDirection], message);
+        IgnoreError(otMessageQueueDequeue(&mWriteFrameMessageQueue, message));
+        IgnoreError(otMessageQueueEnqueue(&mMessageQueue[mWriteDirection], message));
     }
 #endif
 
@@ -745,7 +745,7 @@ uint8_t Buffer::OutFrameReadByte(void)
             // If there is no message, move to next segment (if any).
             if (error != OT_ERROR_NONE)
             {
-                OutFramePrepareSegment();
+                IgnoreError(OutFramePrepareSegment());
             }
         }
 
@@ -766,7 +766,7 @@ uint8_t Buffer::OutFrameReadByte(void)
             // If no more bytes in the message, move to next segment (if any).
             if (error != OT_ERROR_NONE)
             {
-                OutFramePrepareSegment();
+                IgnoreError(OutFramePrepareSegment());
             }
         }
 #endif
@@ -831,7 +831,7 @@ otError Buffer::OutFrameRemove(void)
 
             if ((message = otMessageQueueGetHead(&mMessageQueue[mReadDirection])) != NULL)
             {
-                otMessageQueueDequeue(&mMessageQueue[mReadDirection], message);
+                IgnoreError(otMessageQueueDequeue(&mMessageQueue[mReadDirection], message));
                 otMessageFree(message);
             }
         }

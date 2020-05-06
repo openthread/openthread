@@ -53,7 +53,7 @@ PanIdQueryServer::PanIdQueryServer(Instance &aInstance)
     , mTimer(aInstance, &PanIdQueryServer::HandleTimer, this)
     , mPanIdQuery(OT_URI_PATH_PANID_QUERY, &PanIdQueryServer::HandleQuery, this)
 {
-    Get<Coap::Coap>().AddResource(mPanIdQuery);
+    IgnoreError(Get<Coap::Coap>().AddResource(mPanIdQuery));
 }
 
 void PanIdQueryServer::HandleQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -104,7 +104,7 @@ void PanIdQueryServer::HandleScanResult(Mac::ActiveScanResult *aScanResult)
     }
     else if (mChannelMask != 0)
     {
-        SendConflict();
+        IgnoreError(SendConflict());
     }
 }
 
@@ -150,7 +150,7 @@ void PanIdQueryServer::HandleTimer(Timer &aTimer)
 
 void PanIdQueryServer::HandleTimer(void)
 {
-    Get<Mac::Mac>().ActiveScan(mChannelMask, 0, HandleScanResult, this);
+    IgnoreError(Get<Mac::Mac>().ActiveScan(mChannelMask, 0, HandleScanResult, this));
     mChannelMask = 0;
 }
 

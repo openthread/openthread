@@ -250,7 +250,7 @@ void otThreadSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRouterJitt
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.Get<Mle::MleRouter>().SetRouterSelectionJitter(aRouterJitter);
+    IgnoreError(instance.Get<Mle::MleRouter>().SetRouterSelectionJitter(aRouterJitter));
 }
 
 otError otThreadGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChildInfo *aChildInfo)

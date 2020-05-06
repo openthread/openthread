@@ -124,7 +124,7 @@ public:
     {
         va_list args;
         va_start(args, aFormat);
-        Write(mBuffer, kSize, mLength, aFormat, args);
+        IgnoreError(Write(mBuffer, kSize, mLength, aFormat, args));
         va_end(args);
     }
 

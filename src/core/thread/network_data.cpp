@@ -810,7 +810,7 @@ otError NetworkData::SendServerDataNotification(uint16_t aRloc16, Coap::Response
         SuccessOrExit(error = Tlv::AppendUint16Tlv(*message, ThreadTlv::kRloc16, aRloc16));
     }
 
-    Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr());
+    IgnoreError(Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = Get<Coap::Coap>().SendMessage(*message, messageInfo, aHandler, aContext));
