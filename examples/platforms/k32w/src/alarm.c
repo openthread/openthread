@@ -32,6 +32,9 @@
  *
  */
 
+/* Openthread configuration */
+#include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
+
 #include "fsl_clock.h"
 #include "fsl_ctimer.h"
 #include "fsl_wtimer.h"
@@ -124,7 +127,7 @@ void K32WAlarmProcess(otInstance *aInstance)
 {
     if (sEventFired)
     {
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
         if (otPlatDiagModeGet())
         {

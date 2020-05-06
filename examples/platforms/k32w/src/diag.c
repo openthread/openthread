@@ -32,12 +32,15 @@
  *
  */
 
+/* Openthread configuration */
+#include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
+
 #include <stdio.h>
 #include <openthread/config.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
 
-#if OPENTHREAD_ENABLE_DIAG
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
 /**
  * Diagnostics mode variables.

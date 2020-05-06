@@ -191,4 +191,25 @@
  *
  */
 #define OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE 1
-#endif  // OPENTHREAD_CORE_K32W061_CONFIG_H_
+
+/**
+ * @def OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+ *
+ * Define as 1 to enable the time synchronization service feature.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#define OPENTHREAD_CONFIG_TIME_SYNC_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DIAG_ENABLE
+ *
+ * Define as 1 to enable the diag feature.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DIAG_ENABLE
+#define OPENTHREAD_CONFIG_DIAG_ENABLE 0
+#endif
+
+#endif // OPENTHREAD_CORE_K32W061_CONFIG_H_

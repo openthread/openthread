@@ -95,6 +95,7 @@ COMMONCFLAGS                          := \
     -DJENNIC_CHIP_FAMILY_NAME=_JN518x    \
     -DSDK_DEBUGCONSOLE=0                 \
     -D$(CONFIG_FILE)                     \
+    -DUSE_RTOS=0                         \
     -I$(CONFIG_FILE_PATH)                \
     $(NULL)
 

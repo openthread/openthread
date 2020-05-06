@@ -28,9 +28,9 @@
 
 #include "fsl_device_registers.h"
 #include "fsl_flash.h"
+#include "openthread/platform/flash.h"
 #include "openthread-core-config.h"
 #include <utils/code_utils.h>
-#include <utils/flash.h>
 #include "openthread/platform/alarm-milli.h"
 
 #define USE_MEM_COPY_FOR_READ 0
@@ -50,8 +50,10 @@ static bool     mapToNvFlashAddress(uint32_t *aAddress);
 static void     copyFromFlash(uint8_t *pDst, uint8_t *pSrc, uint32_t cBytes);
 static uint32_t blankCheckAndErase(uint8_t *pageAddr);
 
-otError utilsFlashInit(void)
+void otPlatFlashInit(otInstance *aInstance)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     extern uint32_t __nv_storage_start_address;
     extern uint32_t __nv_storage_end_address;
 
@@ -59,13 +61,6 @@ otError utilsFlashInit(void)
 
     sNvFlashStartAddr = (uint32_t)&__nv_storage_start_address;
     sNvFlashEndAddr   = (uint32_t)&__nv_storage_end_address;
-
-    return OT_ERROR_NONE;
-}
-
-uint32_t utilsFlashGetSize(void)
-{
-    return sNvFlashEndAddr - sNvFlashStartAddr;
 }
 
 otError utilsFlashErasePage(uint32_t aAddress)
@@ -91,30 +86,16 @@ exit:
     return error;
 }
 
-otError utilsFlashStatusWait(uint32_t aTimeout)
-{
-    otError  error = OT_ERROR_BUSY;
-    uint32_t start = otPlatAlarmMilliGetNow();
-
-    do
-    {
-        if (FLASH->INT_STATUS & FLASH_DONE)
-        {
-            error = OT_ERROR_NONE;
-            break;
-        }
-    } while (aTimeout && ((otPlatAlarmMilliGetNow() - start) < aTimeout));
-
-    return error;
-}
-
-uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, const void *aData, uint32_t aSize)
 {
     uint32_t result = 0;
     status_t status;
-    uint32_t address = aAddress;
+    uint32_t address = aOffset;
     uint32_t alignAddr;
     uint32_t bytes;
+
+	OT_UNUSED_VARIABLE(aInstance);
+	OT_UNUSED_VARIABLE(aSwapIndex);
 
     /* Map address to NV Flash space and check boundaries */
     if (mapToNvFlashAddress(&address))
@@ -182,13 +163,19 @@ uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
     }
 
 exit:
-    return result;
+    /* workaround for flash write issue */
+    if (result)
+    {
+        result = 0;
+    }
 }
 
-uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, void *aData, uint32_t aSize)
 {
-    uint32_t address = aAddress;
-    uint32_t result  = 0;
+    uint32_t address = aOffset;
+
+    OT_UNUSED_VARIABLE(aInstance);
+	OT_UNUSED_VARIABLE(aSwapIndex);
 
     /* Map address to NV Flash space and check boundaries */
     if (mapToNvFlashAddress(&address))
@@ -197,11 +184,8 @@ uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
         if ((address + aSize) <= sNvFlashEndAddr)
         {
             copyFromFlash(aData, (uint8_t *)address, aSize);
-            result = aSize;
         }
     }
-
-    return result;
 }
 
 static bool mapToNvFlashAddress(uint32_t *aAddress)
