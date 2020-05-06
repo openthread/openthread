@@ -34,9 +34,9 @@
 /* NXP UART includes */
 #include "board.h"
 #include "fsl_clock.h"
+#include "fsl_flexcomm.h"
 #include "fsl_reset.h"
 #include "fsl_usart.h"
-#include "fsl_flexcomm.h"
 
 /* Openthread general includes */
 #include <utils/code_utils.h>
@@ -206,8 +206,8 @@ static void K32WProcessReceive(void)
 
 static void USART0_IRQHandler(USART_Type *base, usart_handle_t *handle)
 {
-   (void)base;
-   (void)handle;
+    (void)base;
+    (void)handle;
 
     bool isReceiveEnabled = true;
     bool isSendEnabled    = (sUartHandle.txDataSize != 0);

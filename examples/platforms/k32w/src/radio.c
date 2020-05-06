@@ -67,7 +67,7 @@ extern void BOARD_LedDongleToggle(void);
 #define SYMBOLS_TO_US(symbols) ((symbols)*US_PER_SYMBOL)
 #define US_TO_MILI_DIVIDER (1000)
 
-#define MAX_FP_ADDRS (10)     /* max number of frame pending children */
+#define MAX_FP_ADDRS (10)   /* max number of frame pending children */
 #define K32W_RX_BUFFERS (8) /* max number of RX buffers */
 
 /* check IEEE Std. 802.15.4 - 2015: Table 8-81 - MAC sublayer constants */
@@ -154,18 +154,18 @@ typedef enum
 } frameConversionType;
 
 /* Private functions declaration */
-static void    K32WISR(uint32_t u32IntBitmap);
-static void    K32WProcessMacHeader(tsRxFrameFormat *aRxFrame);
-static void    K32WProcessRxFrames(otInstance *aInstance);
-static void    K32WProcessTxFrame(otInstance *aInstance);
-static bool    K32WCheckIfFpRequired(tsRxFrameFormat *aRxFrame);
-static bool_t  K32WIsDataReq(tsRxFrameFormat *aRxFrame);
-static otError K32WFrameConversion(tsRxFrameFormat *   aMacFormatFrame,
-                                     otRadioFrame *      aOtFrame,
-                                     frameConversionType convType);
-static void    K32WCopy(uint8_t *aFieldValue, uint8_t **aPsdu, uint8_t copySize, frameConversionType convType);
-static void    K32WResetRxRingBuffer(rxRingBuffer *aRxRing);
-static void    K32WPushRxRingBuffer(rxRingBuffer *aRxRing, tsRxFrameFormat *aRxFrame);
+static void             K32WISR(uint32_t u32IntBitmap);
+static void             K32WProcessMacHeader(tsRxFrameFormat *aRxFrame);
+static void             K32WProcessRxFrames(otInstance *aInstance);
+static void             K32WProcessTxFrame(otInstance *aInstance);
+static bool             K32WCheckIfFpRequired(tsRxFrameFormat *aRxFrame);
+static bool_t           K32WIsDataReq(tsRxFrameFormat *aRxFrame);
+static otError          K32WFrameConversion(tsRxFrameFormat *   aMacFormatFrame,
+                                            otRadioFrame *      aOtFrame,
+                                            frameConversionType convType);
+static void             K32WCopy(uint8_t *aFieldValue, uint8_t **aPsdu, uint8_t copySize, frameConversionType convType);
+static void             K32WResetRxRingBuffer(rxRingBuffer *aRxRing);
+static void             K32WPushRxRingBuffer(rxRingBuffer *aRxRing, tsRxFrameFormat *aRxFrame);
 static tsRxFrameFormat *K32WPopRxRingBuffer(rxRingBuffer *aRxRing);
 static bool             K32WIsEmptyRxRingBuffer(rxRingBuffer *aRxRing);
 static tsRxFrameFormat *K32WGetFrame(tsRxFrameFormat *aRxFrame, uint8_t *aRxFrameIndex);
@@ -178,11 +178,11 @@ static otInstance * sInstance;    /* Saved OT Instance */
 static int8_t       sTxPwrLevel;  /* Default power is 0 dBm */
 static uint8_t      sChannel = 0; /* Default channel - must be invalid so it
                                      updates the first time it is set */
-static bool_t   sIsFpEnabled; /* Frame Pending enabled? */
-static uint16_t sPanId;       /* PAN ID currently in use */
-static uint16_t sShortAddress;
+static bool_t    sIsFpEnabled;    /* Frame Pending enabled? */
+static uint16_t  sPanId;          /* PAN ID currently in use */
+static uint16_t  sShortAddress;
 static tsExtAddr sExtAddress;
-static uint64_t sCustomExtAddr = 0;
+static uint64_t  sCustomExtAddr = 0;
 
 static fpNeighShortAddr sFpShortAddr[MAX_FP_ADDRS]; /* Frame Pending short addresses array */
 static uint16_t         sFpShortAddrMask;           /* Mask - sFpShortAddr valid entries */
@@ -191,7 +191,7 @@ static fpNeighExtAddr sFpExtAddr[MAX_FP_ADDRS]; /* Frame Pending extended addres
 static uint16_t       sFpExtAddrMask;           /* Mask - sFpExtAddr is valid */
 
 static rxRingBuffer     sRxRing;                       /* Receive Ring Buffer */
-static tsRxFrameFormat  sRxFrame[K32W_RX_BUFFERS];   /* RX Buffers */
+static tsRxFrameFormat  sRxFrame[K32W_RX_BUFFERS];     /* RX Buffers */
 static tsRxFrameFormat *sRxFrameInProcess;             /* RX Frame currently in processing */
 static bool_t           sIsRxDisabled;                 /* TRUE if RX was disabled due to no RX bufs */
 static uint8_t          sRxFrameIndex;                 /* Index tracking the sRxFrame array */
@@ -204,7 +204,7 @@ static tsRxFrameFormat sRxAckFrame;                      /* Frame used for keepi
 static otRadioFrame    sRxOtFrame;                       /* Used for TX/RX frame conversion */
 static uint8           sRxData[OT_RADIO_FRAME_MAX_SIZE]; /* mPsdu buffer for sRxOtFrame */
 
-static bool         sRadioInitForLp = FALSE;
+static bool         sRadioInitForLp    = FALSE;
 static bool         sPromiscuousEnable = FALSE;
 static bool         sTxDone;                          /* TRUE if a TX frame was sent into the air */
 static otError      sTxStatus;                        /* Status of the latest TX operation */
@@ -231,7 +231,6 @@ WEAK void App_AllowDeviceToSleep()
  */
 WEAK void App_DisallowDeviceToSleep()
 {
-
 }
 
 /**
@@ -244,7 +243,7 @@ WEAK void BOARD_LedDongleToggle()
 
 void App_SetCustomEui64(uint8_t *aIeeeEui64)
 {
-    memcpy((uint8_t*)&sCustomExtAddr, aIeeeEui64, sizeof(sCustomExtAddr));
+    memcpy((uint8_t *)&sCustomExtAddr, aIeeeEui64, sizeof(sCustomExtAddr));
 }
 
 void K32WRadioInit(void)
@@ -285,7 +284,7 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
     }
     else
     {
-        memcpy(aIeeeEui64,(uint8_t*)&sCustomExtAddr, sizeof(sCustomExtAddr));
+        memcpy(aIeeeEui64, (uint8_t *)&sCustomExtAddr, sizeof(sCustomExtAddr));
     }
 }
 
@@ -394,9 +393,9 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    otError error            = OT_ERROR_NONE;
-    bool_t  isNewFrameNeeded = TRUE;
-    otRadioState tempState = sState;
+    otError      error            = OT_ERROR_NONE;
+    bool_t       isNewFrameNeeded = TRUE;
+    otRadioState tempState        = sState;
 
     otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) && (sState != OT_RADIO_STATE_DISABLED)),
                     error = OT_ERROR_INVALID_STATE);
@@ -587,7 +586,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 
     int8_t  rssidBm       = 127;
     int16_t rssiValSigned = 0;
-    bool_t stateChanged = FALSE;
+    bool_t  stateChanged  = FALSE;
 
     /* in RCP designs, the RSSI function is called while the radio is in
      * OT_RADIO_STATE_RECEIVE. Turn off the radio before reading RSSI,
@@ -678,7 +677,7 @@ otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
     otRadioState tempState = sState;
-    sState = OT_RADIO_STATE_SLEEP;
+    sState                 = OT_RADIO_STATE_SLEEP;
 
     /* trim the values to the radio capabilities */
     if (aPower < K32W_RADIO_MIN_TX_POWER_DBM)
@@ -744,85 +743,83 @@ static void K32WISR(uint32_t u32IntBitmap)
 
     switch (sState)
     {
-        case OT_RADIO_STATE_RECEIVE:
+    case OT_RADIO_STATE_RECEIVE:
 
-            /* no rx errors */
-            if (0 == u32MMAC_GetRxErrors())
+        /* no rx errors */
+        if (0 == u32MMAC_GetRxErrors())
+        {
+            if (u32IntBitmap & E_MMAC_INT_RX_HEADER)
             {
-                if (u32IntBitmap & E_MMAC_INT_RX_HEADER)
-                {
-                    /* go back one index from current frame index */
-                    pRxFrame = &sRxFrame[(sRxFrameIndex + K32W_RX_BUFFERS - 1) % K32W_RX_BUFFERS];
+                /* go back one index from current frame index */
+                pRxFrame = &sRxFrame[(sRxFrameIndex + K32W_RX_BUFFERS - 1) % K32W_RX_BUFFERS];
 
-                    /* FP processing first */
-                    K32WProcessMacHeader(pRxFrame);
+                /* FP processing first */
+                K32WProcessMacHeader(pRxFrame);
 
-                    /* RX interrupt fired so it's safe to consume the frame */
-                    K32WPushRxRingBuffer(&sRxRing, pRxFrame);
+                /* RX interrupt fired so it's safe to consume the frame */
+                K32WPushRxRingBuffer(&sRxRing, pRxFrame);
 
-                    if (0 == (pRxFrame->sFrameBody.u16FCF & kFcfAckRequest))
-                    {
-                        K32WEnableReceive(TRUE);
-                    }
-                }
-                else if (u32IntBitmap & E_MMAC_INT_RX_COMPLETE)
+                if (0 == (pRxFrame->sFrameBody.u16FCF & kFcfAckRequest))
                 {
                     K32WEnableReceive(TRUE);
                 }
             }
-            else
+            else if (u32IntBitmap & E_MMAC_INT_RX_COMPLETE)
             {
-                /* restart RX and keep same buffer as data received contains errors */
-                K32WEnableReceive(FALSE);
+                K32WEnableReceive(TRUE);
+            }
+        }
+        else
+        {
+            /* restart RX and keep same buffer as data received contains errors */
+            K32WEnableReceive(FALSE);
+        }
+
+        BOARD_LedDongleToggle();
+        break;
+    case OT_RADIO_STATE_TRANSMIT:
+
+        if (u32IntBitmap & E_MMAC_INT_TX_COMPLETE)
+        {
+            uint32_t txErrors = u32MMAC_GetTxErrors();
+            sTxDone           = TRUE;
+
+            if (txErrors & E_MMAC_TXSTAT_CCA_BUSY)
+            {
+                sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
+            }
+            else if (txErrors & E_MMAC_TXSTAT_NO_ACK)
+            {
+                sTxStatus = OT_ERROR_NO_ACK;
+            }
+            else if (txErrors & E_MMAC_TXSTAT_ABORTED)
+            {
+                sTxStatus = OT_ERROR_ABORT;
+            }
+            else if ((txErrors & E_MMAC_TXSTAT_TXPCTO) || (txErrors & E_MMAC_TXSTAT_TXTO))
+            {
+                /* The JN518x/K32W0x1 has a TXTO timeout that we are using to catch and cope with the curious
+                hang-up issue */
+                vMMAC_AbortRadio();
+
+                /* Describe failure as a CCA failure for onward processing */
+                sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
+            }
+
+            /* go to RX and restore channel */
+            if (sChannel != sTxOtFrame.mChannel)
+            {
+                vMMAC_SetChannelAndPower(sChannel, sTxPwrLevel);
             }
 
             BOARD_LedDongleToggle();
-            break;
-        case OT_RADIO_STATE_TRANSMIT:
+            sState = OT_RADIO_STATE_RECEIVE;
+            K32WEnableReceive(TRUE);
+        }
+        break;
 
-            if (u32IntBitmap & E_MMAC_INT_TX_COMPLETE)
-            {
-                uint32_t txErrors = u32MMAC_GetTxErrors();
-                sTxDone = TRUE;
-
-                if (txErrors & E_MMAC_TXSTAT_CCA_BUSY)
-                {
-                    sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
-                }
-                else if (txErrors & E_MMAC_TXSTAT_NO_ACK)
-                {
-                    sTxStatus = OT_ERROR_NO_ACK;
-                }
-                else if (txErrors & E_MMAC_TXSTAT_ABORTED)
-                {
-                    sTxStatus = OT_ERROR_ABORT;
-                }
-                else if ((txErrors & E_MMAC_TXSTAT_TXPCTO) ||
-                         (txErrors & E_MMAC_TXSTAT_TXTO))
-                {
-                    /* The JN518x/K32W0x1 has a TXTO timeout that we are using to catch and cope with the curious
-                    hang-up issue */
-                    vMMAC_AbortRadio();
-
-                    /* Describe failure as a CCA failure for onward processing */
-                    sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
-                }
-
-                /* go to RX and restore channel */
-                if (sChannel != sTxOtFrame.mChannel)
-                {
-                    vMMAC_SetChannelAndPower(sChannel, sTxPwrLevel);
-                }
-
-                BOARD_LedDongleToggle();
-                sState  = OT_RADIO_STATE_RECEIVE;
-                K32WEnableReceive(TRUE);
-
-            }
-            break;
-
-        default:
-            break;
+    default:
+        break;
     }
 }
 /**
@@ -1028,8 +1025,8 @@ static void K32WProcessTxFrame(otInstance *aInstance)
  * @return    OT_ERROR_PARSE     Conversion failed due to parsing error
  */
 static otError K32WFrameConversion(tsRxFrameFormat *   aMacFormatFrame,
-                                     otRadioFrame *      aOtFrame,
-                                     frameConversionType convType)
+                                   otRadioFrame *      aOtFrame,
+                                   frameConversionType convType)
 {
     tsMacFrame *pMacFrame         = &aMacFormatFrame->sFrameBody;
     uint8_t *   pSavedStartRxPSDU = aOtFrame->mPsdu;

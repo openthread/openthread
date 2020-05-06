@@ -39,7 +39,6 @@
 #include <stdlib.h>
 #include <utils/code_utils.h>
 
-
 void JN5189RandomInit(void)
 {
     trng_config_t config;
@@ -56,7 +55,6 @@ void JN5189RandomInit(void)
 
 exit:
     return;
-
 }
 
 uint32_t otPlatRandomGet(void)

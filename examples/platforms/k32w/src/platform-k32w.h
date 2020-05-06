@@ -35,8 +35,8 @@
 #ifndef PLATFORM_K32W_H_
 #define PLATFORM_K32W_H_
 
-#include <openthread/config.h>
 #include <openthread-core-config.h>
+#include <openthread/config.h>
 
 #include <stdint.h>
 
@@ -90,4 +90,4 @@ void K32WUartProcess(void);
  *
  */
 void K32WWriteBlocking(const uint8_t *aBuf, uint32_t len);
-#endif  // PLATFORM_K32W_H_
+#endif // PLATFORM_K32W_H_

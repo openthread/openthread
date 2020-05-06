@@ -26,9 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "openthread/platform/flash.h"
 #include "fsl_device_registers.h"
 #include "fsl_flash.h"
-#include "openthread/platform/flash.h"
 #include "openthread-core-config.h"
 #include <utils/code_utils.h>
 #include "openthread/platform/alarm-milli.h"
@@ -42,7 +42,7 @@
 #define ONE_PAGE 1
 #define BYTES_ALINGMENT 16
 
-uint8_t pageBuffer[FLASH_PAGE_SIZE] __attribute__ ((aligned (4))) = {0};
+uint8_t         pageBuffer[FLASH_PAGE_SIZE] __attribute__((aligned(4))) = {0};
 static uint32_t sNvFlashStartAddr;
 static uint32_t sNvFlashEndAddr;
 
@@ -94,8 +94,8 @@ void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffse
     uint32_t alignAddr;
     uint32_t bytes;
 
-	OT_UNUSED_VARIABLE(aInstance);
-	OT_UNUSED_VARIABLE(aSwapIndex);
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aSwapIndex);
 
     /* Map address to NV Flash space and check boundaries */
     if (mapToNvFlashAddress(&address))
@@ -175,7 +175,7 @@ void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset
     uint32_t address = aOffset;
 
     OT_UNUSED_VARIABLE(aInstance);
-	OT_UNUSED_VARIABLE(aSwapIndex);
+    OT_UNUSED_VARIABLE(aSwapIndex);
 
     /* Map address to NV Flash space and check boundaries */
     if (mapToNvFlashAddress(&address))

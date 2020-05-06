@@ -147,7 +147,7 @@ static uint32_t sSettingsPageNum;
 
 /* linker file symbol for the number of flash sectors used for NVM */
 extern uint32_t NV_STORAGE_MAX_SECTORS;
-extern uint8_t pageBuffer[];
+extern uint8_t  pageBuffer[];
 
 /**
  * Calculates the aligned length of data for current settings block based on Compact flag
@@ -378,7 +378,7 @@ static otError addSetting(otInstance *   aInstance,
 
     SET_FLASH_BLOCK_FLAG(addBlock.block.flag, OT_FLASH_BLOCK_ADD_COMPLETE_FLAG);
     otPlatFlashWrite(aInstance, 0, sSettingsBaseAddress + sSettingsUsedSize, (uint8_t *)(&addBlock.block),
-                    sizeof(struct settingsBlock) + addBlock.block.length);
+                     sizeof(struct settingsBlock) + addBlock.block.length);
     /* The next settings block will be written to the next flash page to optimize the number of
      * writes made to a page */
     sSettingsUsedSize +=
@@ -393,11 +393,11 @@ void otPlatSettingsInit(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    uint8_t index;
+    uint8_t              index;
     struct settingsBlock block;
 
     /* exported symbol from linker file */
-    sSettingsPageNum = (uint32_t)&NV_STORAGE_MAX_SECTORS;
+    sSettingsPageNum      = (uint32_t)&NV_STORAGE_MAX_SECTORS;
     uint32_t settingsSize = SETTINGS_CONFIG_PAGE_SIZE * sSettingsPageNum / 2;
 
     sSettingsBaseAddress = SETTINGS_CONFIG_BASE_ADDRESS;
@@ -611,8 +611,7 @@ void otPlatSettingsWipe(otInstance *aInstance)
      * maximize wear leveling */
     if (SETTINGS_CONFIG_BASE_ADDRESS == sSettingsBaseAddress)
     {
-        sSettingsBaseAddress =
-            SETTINGS_CONFIG_BASE_ADDRESS + (SETTINGS_CONFIG_PAGE_SIZE * sSettingsPageNum / 2);
+        sSettingsBaseAddress = SETTINGS_CONFIG_BASE_ADDRESS + (SETTINGS_CONFIG_PAGE_SIZE * sSettingsPageNum / 2);
     }
     else
     {
