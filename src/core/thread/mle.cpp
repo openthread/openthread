@@ -1361,23 +1361,21 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
     counter++;
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
+    // Cache Domain Unicast Address.
+    address = Get<DuaManager>().GetDomainUnicastAddress();
+
+    if (Get<ThreadNetif>().IsUnicastAddress(address))
     {
-        // Cache Domain Unicast Address.
-        address = Get<DuaManager>().GetDomainUnicastAddress();
+        error = Get<NetworkData::Leader>().GetContext(address, context);
 
-        if (Get<ThreadNetif>().IsUnicastAddress(address))
-        {
-            error = Get<NetworkData::Leader>().GetContext(address, context);
+        OT_ASSERT(error == OT_ERROR_NONE);
 
-            OT_ASSERT(error == OT_ERROR_NONE);
-
-            // Prioritize DUA, compressed entry
-            entry.SetContextId(context.mContextId);
-            entry.SetIid(address.GetIid());
-            SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
-            length += entry.GetLength();
-            counter++;
-        }
+        // Prioritize DUA, compressed entry
+        entry.SetContextId(context.mContextId);
+        entry.SetIid(address.GetIid());
+        SuccessOrExit(error = aMessage.Append(&entry, entry.GetLength()));
+        length += entry.GetLength();
+        counter++;
     }
 #endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
@@ -1390,7 +1388,7 @@ otError Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMod
         }
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
-        // Here skips DUA which was appended already.
+        // Skip DUA that was already appended above.
         if (addr->GetAddress() == address)
         {
             continue;
