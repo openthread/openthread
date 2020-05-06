@@ -83,7 +83,7 @@ void TestString(void)
     VerifyOrQuit(str1.GetLength() == 0, "GetLength() failed for empty string");
     VerifyOrQuit(strcmp(str1.AsCString(), "") == 0, "String content is incorrect");
 
-    str1.Set("%d", 12);
+    IgnoreError(str1.Set("%d", 12));
     VerifyOrQuit(str1.GetLength() == 2, "GetLength() failed");
     VerifyOrQuit(strcmp(str1.AsCString(), "12") == 0, "String content is incorrect");
     PrintString("str1", str1);

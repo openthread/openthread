@@ -1942,13 +1942,13 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MCU_POWER_STATE>(void
     {
         if (otThreadGetDeviceRole(mInstance) != OT_DEVICE_ROLE_DISABLED)
         {
-            otThreadSetEnabled(mInstance, false);
+            IgnoreError(otThreadSetEnabled(mInstance, false));
             StopLegacy();
         }
 
         if (otIp6IsEnabled(mInstance))
         {
-            otIp6SetEnabled(mInstance, false);
+            IgnoreError(otIp6SetEnabled(mInstance, false));
         }
     }
 #endif // #if OPENTHREAD_FTD || OPENTHREAD_MTD

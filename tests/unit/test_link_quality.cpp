@@ -174,7 +174,7 @@ void TestRssAveraging(void)
     // Adding a single value
     rss = -70;
     printf("AddRss(%d): ", rss);
-    rssAverager.Add(rss);
+    IgnoreError(rssAverager.Add(rss));
     VerifyOrQuit(rssAverager.GetAverage() == rss, "TestLinkQualityInfo - GetAverage() failed after a single AddRss().");
     VerifyRawRssValue(rssAverager);
     PrintOutcome(rssAverager);
@@ -202,7 +202,7 @@ void TestRssAveraging(void)
 
         for (i = 0; i < kNumRssAdds; i++)
         {
-            rssAverager.Add(rss);
+            IgnoreError(rssAverager.Add(rss));
             VerifyOrQuit(rssAverager.GetAverage() == rss,
                          "TestLinkQualityInfo failed - GetAverage() returned incorrect value.");
             VerifyRawRssValue(rssAverager);
@@ -229,8 +229,8 @@ void TestRssAveraging(void)
 
             rss2 = rssValues[k];
             rssAverager.Reset();
-            rssAverager.Add(rss);
-            rssAverager.Add(rss2);
+            IgnoreError(rssAverager.Add(rss));
+            IgnoreError(rssAverager.Add(rss2));
             printf("AddRss(%4d), AddRss(%4d): ", rss, rss2);
             VerifyOrQuit(rssAverager.GetAverage() == ((rss + rss2) >> 1),
                          "TestLinkQualityInfo failed - GetAverage() returned incorrect value.");
@@ -260,10 +260,10 @@ void TestRssAveraging(void)
 
             for (i = 0; i < kNumRssAdds; i++)
             {
-                rssAverager.Add(rss);
+                IgnoreError(rssAverager.Add(rss));
             }
 
-            rssAverager.Add(rss2);
+            IgnoreError(rssAverager.Add(rss2));
             printf("AddRss(%4d) %d times, AddRss(%4d): ", rss, kNumRssAdds, rss2);
             ave = rssAverager.GetAverage();
             VerifyOrQuit(ave >= MIN_RSS(rss, rss2),
@@ -296,8 +296,8 @@ void TestRssAveraging(void)
 
             for (i = 0; i < kNumRssAdds; i++)
             {
-                rssAverager.Add(rss);
-                rssAverager.Add(rss2);
+                IgnoreError(rssAverager.Add(rss));
+                IgnoreError(rssAverager.Add(rss2));
                 ave = rssAverager.GetAverage();
                 VerifyOrQuit(ave >= MIN_RSS(rss, rss2),
                              "TestLinkQualityInfo failed - GetAverage() is smaller than min value.");
@@ -331,7 +331,7 @@ void TestRssAveraging(void)
         for (j = 1; j <= 8; j++)
         {
             rss = GetRandomRss();
-            rssAverager.Add(rss);
+            IgnoreError(rssAverager.Add(rss));
             sum += rss;
             mean = static_cast<double>(sum) / j;
             VerifyOrQuit(ABS(rssAverager.GetAverage() - mean) < 1, "Average does not match the arithmetic mean!");
