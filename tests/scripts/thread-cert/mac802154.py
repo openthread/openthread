@@ -43,7 +43,11 @@ from net_crypto import (
 
 
 class KeyIdMode0Exception(Exception):
-    """Raised when key id mode of packet is 0. Such packet wouldn't be handled in test scripts, but it's not abnormal behavior"""
+    """
+    Raised when key id mode of packet is 0.
+    Such packet wouldn't be handled in test scripts,
+    but it's not abnormal behavior.
+    """
     pass
 
 
