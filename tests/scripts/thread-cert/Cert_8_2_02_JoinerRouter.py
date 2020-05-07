@@ -87,8 +87,7 @@ class Cert_8_2_02_JoinerRouter(thread_cert.TestCase):
             self.nodes[JOINER_ROUTER].get_addr64())
 
         self.nodes[JOINER].enable_whitelist()
-        self.nodes[JOINER].add_whitelist(
-            self.nodes[JOINER_ROUTER].get_addr64())
+        self.nodes[JOINER].add_whitelist(self.nodes[JOINER_ROUTER].get_addr64())
 
         self.nodes[JOINER].interface_up()
         self.nodes[JOINER].joiner_start('20DKSP')
