@@ -304,7 +304,7 @@ typedef struct otMacCounters
     /**
      * The total number of other types of frames received.
      *
-     * This counter is also used to count out-of-band frames if needed.
+     * These include received frames during active/energy scan, other type frames and out-of-band frames if needed.
      *
      */
     uint32_t mRxOther;

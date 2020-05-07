@@ -986,8 +986,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
         ExitNow();
         break;
 
-    case Frame::kKeyIdMode2:
-    {
+    case Frame::kKeyIdMode2: {
         const uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
         aFrame.SetAesKey(static_cast<const Key &>(sMode2Key));
         mKeyIdMode2FrameCounter++;
@@ -1581,6 +1580,10 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
         mCounters.mRxOther++;
         ExitNow();
     }
+
+    // Ensure we have a valid frame before attempting to read any contents of
+    // the buffer received from the radio.
+    SuccessOrExit(error = aFrame->ValidatePsdu());
 
     aFrame->GetSrcAddr(srcaddr);
     aFrame->GetDstAddr(dstaddr);

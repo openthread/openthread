@@ -1052,8 +1052,8 @@ public:
 
     /**
      * This method indicates whether or not the received frame is an out-of-band frame.
-     * This method is used for counting out-of-band frames purpose when
-     * mInfo.mRxInfo.mIsOobFrame is set to be True.
+     * This is used for counting out-of-band frames purpose when
+     * mInfo.mRxInfo.mIsOobFrame is set to be True by radio driver.
      *
      * @retval TRUE   This is an out-of-band frame.
      * @retval FALSE  This is not an out-of-band frame.
