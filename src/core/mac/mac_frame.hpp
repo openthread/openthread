@@ -1167,10 +1167,10 @@ public:
     void ProcessTransmitAesCcm(const ExtAddress &aExtAddress);
 
     /**
-     * This method indicates whether or not stack needs to skip AES processing of the frame.
+     * This method indicates whether or not SubMac needs to skip AES processing of the frame.
      *
-     * @retval TRUE  Stack needs to skip AES processing of the frame.
-     * @retval FALSE Stack needs to do AES processing of the frame.
+     * @retval TRUE  SubMac needs to skip AES processing of the frame.
+     * @retval FALSE SubMac needs to do AES processing of the frame.
      *
      */
     bool ShouldSkipAes(void) const { return mInfo.mTxInfo.mSkipAes; }
@@ -1178,7 +1178,7 @@ public:
     /**
      * This method sets the skip AES flag attribute.
      *
-     * @param[in]  aSkipAes  TRUE if stack needs to skip AES processing of the frame, FALSE otherwise.
+     * @param[in]  aSkipAes  TRUE if SubMac needs to skip AES processing of the frame, FALSE otherwise.
      *
      */
     void SetSkipAes(bool aSkipAes) { mInfo.mTxInfo.mSkipAes = aSkipAes; }
@@ -1198,7 +1198,7 @@ public:
      * @returns The Time IE offset, 0 means no Time IE.
      *
      */
-    uint8_t GetTimeIeOffset(void) { return mInfo.mTxInfo.mIeInfo->mTimeIeOffset; }
+    uint8_t GetTimeIeOffset(void) const { return mInfo.mTxInfo.mIeInfo->mTimeIeOffset; }
 
     /**
      * This method sets the offset to network time.

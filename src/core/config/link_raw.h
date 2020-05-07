@@ -84,7 +84,9 @@
 /**
  * @def OPENTHREAD_CONFIG_SOFTWARE_TX_SECURITY_ENABLE
  *
- * Define to 1 if you want to enable software transmission security logic.
+ * Define to 1 to enable software transmission security logic.
+ *
+ * Applicable only if raw link layer API is enabled (i.e., `OPENTHREAD_CONFIG_LINK_RAW_ENABLE` is set).
  *
  */
 #ifndef OPENTHREAD_CONFIG_SOFTWARE_TX_SECURITY_ENABLE

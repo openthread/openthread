@@ -24,7 +24,7 @@ EXTRA_DIST                                    = \
 lib_LIBRARIES                                 = \
     libmbedcrypto.a                             \
     libmbedcrypto_radio.a                       \
-	$(NULL)
+    $(NULL)
 
 # Do not enable -Wconversion for mbedtls
 override CFLAGS                              := $(filter-out -Wconversion,$(CFLAGS))

@@ -2956,7 +2956,7 @@ enum
      *        (default true).
      *  `b` : Set to true to indicate it is a retransmission packet, false otherwise.
      *        (default false).
-     *  `b` : Set to true to indicate it is stack should skip AES processing, false otherwise.
+     *  `b` : Set to true to indicate that SubMac should skip AES processing, false otherwise.
      *        (default false).
      *
      */

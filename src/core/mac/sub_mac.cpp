@@ -63,9 +63,9 @@ SubMac::SubMac(Instance &aInstance)
     , mTimer(aInstance, &SubMac::HandleTimer, this)
 {
     mExtAddress.Clear();
-    memset(mPrevKey, 0, kMacKeySize);
-    memset(mCurrKey, 0, kMacKeySize);
-    memset(mNextKey, 0, kMacKeySize);
+    memset(mPrevKey, 0, sizeof(mPrevKey));
+    memset(mCurrKey, 0, sizeof(mCurrKey));
+    memset(mNextKey, 0, sizeof(mNextKey));
 }
 
 otRadioCaps SubMac::GetCaps(void) const
@@ -654,9 +654,9 @@ void SubMac::SetMacKey(uint8_t aKeyIdMode, const uint8_t *aPrevKey, const uint8_
     case Frame::kKeyIdMode1:
         OT_ASSERT(aPrevKey != NULL && aCurrKey != NULL && aNextKey != NULL);
 
-        memcpy(mPrevKey, aPrevKey, kMacKeySize);
-        memcpy(mCurrKey, aCurrKey, kMacKeySize);
-        memcpy(mNextKey, aNextKey, kMacKeySize);
+        memcpy(mPrevKey, aPrevKey, sizeof(mPrevKey));
+        memcpy(mCurrKey, aCurrKey, sizeof(mCurrKey));
+        memcpy(mNextKey, aNextKey, sizeof(mNextKey));
 
         break;
 
