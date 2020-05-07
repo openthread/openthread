@@ -261,7 +261,10 @@ public:
                    uint8_t        aKeySize,
                    const uint8_t *aPrevKey,
                    const uint8_t *aCurrKey,
-                   const uint8_t *aNextKey);
+                   const uint8_t *aNextKey)
+    {
+        otPlatRadioSetMacKey(GetInstance(), aKeyIdMode, aKeySize, aPrevKey, aCurrKey, aNextKey);
+    }
 
     /**
      * This method sets MAC key index.
@@ -270,7 +273,7 @@ public:
      * @param[in] aKeyId      Current MAC key index.
      *
      */
-    void SetMacKeyId(uint8_t aKeyIdMode, uint8_t aKeyId);
+    void SetMacKeyId(uint8_t aKeyIdMode, uint8_t aKeyId) { otPlatRadioSetMacKeyId(GetInstance(), aKeyIdMode, aKeyId); }
 
     /**
      * This method gets the radio's transmit power in dBm.

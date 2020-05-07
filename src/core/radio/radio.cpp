@@ -51,18 +51,4 @@ void Radio::SetShortAddress(Mac::ShortAddress aShortAddress)
 #endif
 }
 
-void Radio::SetMacKey(uint8_t        aKeyIdMode,
-                      uint8_t        aKeySize,
-                      const uint8_t *aPrevKey,
-                      const uint8_t *aCurrKey,
-                      const uint8_t *aNextKey)
-{
-    otPlatRadioSetMacKey(GetInstance(), aKeyIdMode, aKeySize, aPrevKey, aCurrKey, aNextKey);
-}
-
-void Radio::SetMacKeyId(uint8_t aKeyIdMode, uint8_t aKeyId)
-{
-    otPlatRadioSetMacKeyId(GetInstance(), aKeyIdMode, aKeyId);
-}
-
 } // namespace ot
