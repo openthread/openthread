@@ -115,6 +115,8 @@ private:
         kJoinerUdpPort         = OPENTHREAD_CONFIG_JOINER_UDP_PORT,
         kConfigExtAddressDelay = 100,  ///< [milliseconds]
         kReponseTimeout        = 4000, ///< Maximum wait time to receive response [milliseconds].
+        kMinPskdLength         = 6,    ///< Minimum PSKd length.
+        kMaxPskdLength         = 32,   ///< Maximum PSKd Length.
     };
 
     struct JoinerRouter
@@ -125,6 +127,8 @@ private:
         uint8_t         mChannel;
         uint8_t         mPriority;
     };
+
+    static otError ValidatePskd(const char *aPskd);
 
     static void HandleDiscoverResult(otActiveScanResult *aResult, void *aContext);
     void        HandleDiscoverResult(otActiveScanResult *aResult);

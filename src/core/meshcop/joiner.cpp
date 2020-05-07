@@ -86,6 +86,27 @@ exit:
     return;
 }
 
+otError Joiner::ValidatePskd(const char *aPskd)
+{
+    otError error      = OT_ERROR_INVALID_ARGS;
+    size_t  pskdLength = strlen(aPskd);
+
+    VerifyOrExit(pskdLength >= kMinPskdLength && pskdLength <= kMaxPskdLength, OT_NOOP);
+
+    for (size_t i = 0; i < pskdLength; i++)
+    {
+        char c = aPskd[i];
+
+        VerifyOrExit(isdigit(c) || isupper(c), OT_NOOP);
+        VerifyOrExit(c != 'I' && c != 'O' && c != 'Q' && c != 'Z', OT_NOOP);
+    }
+
+    error = OT_ERROR_NONE;
+
+exit:
+    return error;
+}
+
 otError Joiner::Start(const char *     aPskd,
                       const char *     aProvisioningUrl,
                       const char *     aVendorName,
@@ -101,6 +122,8 @@ otError Joiner::Start(const char *     aPskd,
     otLogInfoMeshCoP("Joiner starting");
 
     VerifyOrExit(mState == OT_JOINER_STATE_IDLE, error = OT_ERROR_BUSY);
+
+    SuccessOrExit(error = ValidatePskd(aPskd));
 
     // Use random-generated extended address.
     randomAddress.GenerateRandom();
