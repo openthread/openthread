@@ -32,6 +32,10 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 override CFLAGS                                      := $(filter-out -Wundef,$(CFLAGS))
 override CXXFLAGS                                    := $(filter-out -Wundef,$(CXXFLAGS))
 
+# Do not enable -Wcast-align for jlink library
+override CFLAGS                                      := $(filter-out -Wcast-align,$(CFLAGS))
+override CXXFLAGS                                    := $(filter-out -Wcast-align,$(CXXFLAGS))
+
 lib_LIBRARIES                                             = libjlinkrtt.a
 
 libjlinkrtt_a_CPPFLAGS                                    = \

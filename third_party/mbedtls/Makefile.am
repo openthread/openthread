@@ -31,6 +31,10 @@ override CXXFLAGS                            := $(filter-out -Wconversion,$(CXXF
 override CFLAGS                              := $(filter-out -pedantic-errors,$(CFLAGS))
 override CXXFLAGS                            := $(filter-out -pedantic-errors,$(CXXFLAGS))
 
+# Do not enable -Wcast-align for mbedtls
+override CFLAGS                              := $(filter-out -Wcast-align,$(CFLAGS))
+override CXXFLAGS                            := $(filter-out -Wcast-align,$(CXXFLAGS))
+
 MBEDTLS_SRCDIR                                = $(top_srcdir)/third_party/mbedtls/repo
 
 libmbedcrypto_a_CPPFLAGS                      = \
