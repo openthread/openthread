@@ -67,6 +67,7 @@ add_library(openthread-posix
     misc.cpp
     netif.cpp
     radio.cpp
+    radio_url.cpp
     settings.cpp
     spi_interface.cpp
     system.cpp

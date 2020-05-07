@@ -281,6 +281,7 @@ LOCAL_SRC_FILES                                          := \
     src/posix/platform/misc.cpp                             \
     src/posix/platform/netif.cpp                            \
     src/posix/platform/radio.cpp                            \
+    src/posix/platform/radio_url.cpp                        \
     src/posix/platform/settings.cpp                         \
     src/posix/platform/spi_interface.cpp                    \
     src/posix/platform/system.cpp                           \
