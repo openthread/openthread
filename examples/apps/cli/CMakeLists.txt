@@ -36,39 +36,24 @@ if(OT_FTD)
     include(ftd.cmake)
 target_include_directories(ot-cli-ftd PRIVATE ${COMMON_INCLUDES})
 target_include_directories(ot-cli-mtd PRIVATE ${COMMON_INCLUDES})
-if(OT_BUILTIN_MBEDTLS)
-    target_link_libraries(ot-cli-ftd PRIVATE
-        openthread-cli-ftd
-        ${OT_PLATFORM_LIB}
-        openthread-ftd
-        ${OT_PLATFORM_LIB}
-        mbedcrypto
-        ot-config
-    )
 
-    target_link_libraries(ot-cli-mtd PRIVATE
-        openthread-cli-mtd
-        ${OT_PLATFORM_LIB}
-        openthread-mtd
-        ${OT_PLATFORM_LIB}
-        mbedcrypto
-        ot-config
-    )
-else()
-    target_link_libraries(ot-cli-ftd
-        openthread-cli-ftd
-        ${OT_PLATFORM_LIB}
-        openthread-ftd
-        ${OT_PLATFORM_LIB}
-    )
+target_link_libraries(ot-cli-ftd PRIVATE
+    openthread-cli-ftd
+    ${OT_PLATFORM_LIB}
+    openthread-ftd
+    ${OT_PLATFORM_LIB}
+    ${OT_MBEDTLS}
+    ot-config
+)
 
-    target_link_libraries(ot-cli-mtd
-        openthread-cli-mtd
-        ${OT_PLATFORM_LIB}
-        openthread-mtd
-        ${OT_PLATFORM_LIB}
-        ${OT_MBEDTLS}
-    )
+target_link_libraries(ot-cli-mtd PRIVATE
+    openthread-cli-mtd
+    ${OT_PLATFORM_LIB}
+    openthread-mtd
+    ${OT_PLATFORM_LIB}
+    ${OT_MBEDTLS}
+    ot-config
+)
 
 if(OT_MTD)
     include(mtd.cmake)

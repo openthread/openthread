@@ -27,13 +27,13 @@
 #
 
 if(OT_NCP_SPI)
-    list(APPEND OT_PRIVATE_DEFINES "SPIS_AS_SERIAL_TRANSPORT=1")
+    target_compile_definitions(ot-config INTERFACE "SPIS_AS_SERIAL_TRANSPORT=1")
 endif()
 option(OT_USB "enable nrf USB support")
 if(OT_USB)
-   list(APPEND OT_PRIVATE_DEFINES "USB_CDC_AS_SERIAL_TRANSPORT=1")
+    target_compile_definitions(ot-config INTERFACE "USB_CDC_AS_SERIAL_TRANSPORT=1")
 else()
-   list(APPEND OT_PRIVATE_DEFINES "UART_AS_SERIAL_TRANSPORT=1")
+    target_compile_definitions(ot-config INTERFACE "UART_AS_SERIAL_TRANSPORT=1")
 endif()
 
 set(NRF_COMM_SOURCES
@@ -65,6 +65,12 @@ set(NRF_SOFTDEVICE_SOURCES
     src/softdevice.c
 )
 
+set(NRF_INCLUDES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/examples/platforms
+    ${PROJECT_SOURCE_DIR}/src/core
+)
+
 if(OT_PLATFORM STREQUAL "nrf52840")
     set(NRF52840_3RD_LIBS
         nordicsemi-nrf52840-radio-driver
@@ -74,4 +80,3 @@ if(OT_PLATFORM STREQUAL "nrf52840")
     )
     include(nrf52840/nrf52840.cmake)
 endif()
-

@@ -41,4 +41,13 @@ target_link_libraries(ot-ncp-ftd PRIVATE
     ot-config
 )
 
+target_link_libraries(ot-ncp-mtd PRIVATE
+    openthread-ncp-mtd
+    ${OT_PLATFORM_LIB}
+    openthread-mtd
+    ${OT_PLATFORM_LIB}
+    ${OT_MBEDTLS}
+    ot-config
+)
+
 install(TARGETS ot-ncp-ftd DESTINATION bin)
