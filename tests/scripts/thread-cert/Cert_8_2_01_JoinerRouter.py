@@ -70,11 +70,6 @@ class Cert_8_2_01_JoinerRouter(thread_cert.TestCase):
             self.nodes[JOINER].get_eui64(), 'PSKD02')
         self.simulator.go(5)
 
-        self.nodes[COMMISSIONER].add_whitelist(
-            self.nodes[JOINER_ROUTER].get_joiner_id())
-        self.nodes[JOINER_ROUTER].add_whitelist(
-            self.nodes[COMMISSIONER].get_addr64())
-
         self.nodes[JOINER_ROUTER].interface_up()
         self.nodes[JOINER_ROUTER].joiner_start('PSKD01')
         self.simulator.go(10)
@@ -83,16 +78,17 @@ class Cert_8_2_01_JoinerRouter(thread_cert.TestCase):
             self.nodes[COMMISSIONER].get_masterkey(),
         )
 
-        self.nodes[COMMISSIONER].add_whitelist(
-            self.nodes[JOINER_ROUTER].get_addr64())
-
         self.nodes[JOINER_ROUTER].thread_start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[JOINER_ROUTER].get_state(), 'router')
 
-        self.nodes[JOINER_ROUTER].add_whitelist(
-            self.nodes[JOINER].get_joiner_id())
-        self.nodes[JOINER].add_whitelist(self.nodes[JOINER_ROUTER].get_addr64())
+        self.nodes[COMMISSIONER].enable_whitelist()
+        self.nodes[COMMISSIONER].add_whitelist(
+            self.nodes[JOINER_ROUTER].get_addr64())
+
+        self.nodes[JOINER].enable_whitelist()
+        self.nodes[JOINER].add_whitelist(
+            self.nodes[JOINER_ROUTER].get_addr64())
 
         self.nodes[JOINER].interface_up()
         self.nodes[JOINER].joiner_start('PSKD02')
@@ -101,8 +97,6 @@ class Cert_8_2_01_JoinerRouter(thread_cert.TestCase):
             self.nodes[JOINER].get_masterkey(),
             self.nodes[COMMISSIONER].get_masterkey(),
         )
-
-        self.nodes[JOINER_ROUTER].add_whitelist(self.nodes[JOINER].get_addr64())
 
         self.nodes[JOINER].thread_start()
         self.simulator.go(5)
