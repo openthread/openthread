@@ -91,7 +91,7 @@ otError Joiner::ValidatePskd(const char *aPskd)
     otError error      = OT_ERROR_INVALID_ARGS;
     size_t  pskdLength = strlen(aPskd);
 
-    OT_STATIC_ASSERT(kPskdMaxLength <= Dtls::kPskMaxLength,
+    OT_STATIC_ASSERT(static_cast<uint8_t>(kPskdMaxLength) <= static_cast<uint8_t>(Dtls::kPskMaxLength),
                      "The maximum length of DTLS PSK is smaller than joiner PSKd");
 
     VerifyOrExit(pskdLength >= kPskdMinLength && pskdLength <= kPskdMaxLength, OT_NOOP);
