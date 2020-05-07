@@ -75,7 +75,7 @@ extern "C" {
  *       '-Wno-unused-result' compiler option.
  *
  */
-#if defined(__clang__)
+#if defined(__clang__) && (__clang_major__ >= 4 || (__clang_major__ >= 3 && __clang_minor__ >= 9))
 #define OT_MUST_USE_RESULT __attribute__((warn_unused_result))
 #else
 #define OT_MUST_USE_RESULT
