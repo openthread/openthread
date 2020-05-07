@@ -88,6 +88,8 @@ target_compile_definitions(openthread-samr21
 
 target_compile_options(openthread-samr21
     PRIVATE
+        -Wno-implicit-function-declaration
+        -Wno-expansion-to-defined
         ${OT_CFLAGS}
 )
 

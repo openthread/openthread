@@ -80,10 +80,10 @@ target_compile_options(samr21-driver
     PUBLIC
         -Werror
         -Wno-unused-parameter
-        -Wno-implicit-function-declaration
-        -Wno-expansion-to-defined
         -fno-strict-aliasing
     PRIVATE
+        -Wno-implicit-function-declaration
+        -Wno-expansion-to-defined
         ${OT_CFLAGS}
 )
 
