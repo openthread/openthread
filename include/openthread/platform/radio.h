@@ -197,7 +197,7 @@ typedef struct otRadioFrame
             uint8_t        mMaxFrameRetries;   ///< Maximum number of retries allowed after a transmission failure.
             bool           mIsARetx : 1;       ///< True if this frame is a retransmission (ignored by radio driver).
             bool           mCsmaCaEnabled : 1; ///< Set to true to enable CSMA-CA for this packet, false otherwise.
-            bool           mIsOob : 1;         ///< True if this frame is an out of band frame.
+            bool           mSkipAes : 1;       ///< True if stack should skip the AES processing of this frame.
         } mTxInfo;
 
         /**

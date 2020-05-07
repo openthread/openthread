@@ -1028,7 +1028,7 @@ void Mac::BeginTransmit(void)
 
     VerifyOrExit(IsEnabled(), error = OT_ERROR_ABORT);
     sendFrame.SetIsARetransmission(false);
-    sendFrame.SetIsAnOob(false);
+    sendFrame.SetSkipAes(false);
 
     switch (mOperation)
     {
@@ -1082,7 +1082,7 @@ void Mac::BeginTransmit(void)
 
     case kOperationTransmitOutOfBandFrame:
         sendFrame.CopyFrom(*mOobFrame);
-        sendFrame.SetIsAnOob(true);
+        sendFrame.SetSkipAes(true);
         break;
 
     default:
@@ -1104,7 +1104,7 @@ void Mac::BeginTransmit(void)
     }
 #endif
 
-    if (!sendFrame.IsAnOobFrame())
+    if (!sendFrame.ShouldSkipAes())
     {
         ProcessTransmitSecurity(sendFrame);
     }

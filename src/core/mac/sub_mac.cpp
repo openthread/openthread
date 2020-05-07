@@ -239,7 +239,7 @@ void SubMac::ProcessTransmitSecurity(void)
 
     VerifyOrExit(ShouldHandleTransmitSecurity(), OT_NOOP);
     VerifyOrExit(mTransmitFrame.GetSecurityEnabled(), OT_NOOP);
-    VerifyOrExit(!mTransmitFrame.IsAnOobFrame(), OT_NOOP);
+    VerifyOrExit(!mTransmitFrame.ShouldSkipAes(), OT_NOOP);
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (mTransmitFrame.GetTimeIeOffset() != 0)

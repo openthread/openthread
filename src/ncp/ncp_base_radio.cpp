@@ -358,7 +358,7 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     uint16_t       payloadLen;
     bool           csmaEnable;
     bool           isARetx;
-    bool           isOob;
+    bool           skipAes;
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(payloadPtr, payloadLen));
     VerifyOrExit(payloadLen <= OT_RADIO_FRAME_MAX_SIZE, error = OT_ERROR_PARSE);
@@ -376,7 +376,7 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     aFrame.mInfo.mTxInfo.mMaxFrameRetries = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT;
     aFrame.mInfo.mTxInfo.mCsmaCaEnabled   = true;
     aFrame.mInfo.mTxInfo.mIsARetx         = false;
-    aFrame.mInfo.mTxInfo.mIsOob           = false;
+    aFrame.mInfo.mTxInfo.mSkipAes         = false;
 
     // All the next parameters are optional. Note that even if the
     // decoder fails to parse any of optional parameters we still want to
@@ -387,10 +387,10 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     SuccessOrExit(mDecoder.ReadUint8(aFrame.mInfo.mTxInfo.mMaxFrameRetries));
     SuccessOrExit(mDecoder.ReadBool(csmaEnable));
     SuccessOrExit(mDecoder.ReadBool(isARetx));
-    SuccessOrExit(mDecoder.ReadBool(isOob));
+    SuccessOrExit(mDecoder.ReadBool(skipAes));
     aFrame.mInfo.mTxInfo.mCsmaCaEnabled = csmaEnable;
     aFrame.mInfo.mTxInfo.mIsARetx       = isARetx;
-    aFrame.mInfo.mTxInfo.mIsOob         = isOob;
+    aFrame.mInfo.mTxInfo.mSkipAes       = skipAes;
 
 exit:
     return error;

@@ -1167,21 +1167,21 @@ public:
     void ProcessTransmitAesCcm(const ExtAddress &aExtAddress);
 
     /**
-     * This method indicates whether or not it is an out of band frame.
+     * This method indicates whether or not stack needs to skip AES processing of the frame.
      *
-     * @retval TRUE  It is an out of band frame.
-     * @retval FALSE It is not an out of band frame.
+     * @retval TRUE  Stack needs to skip AES processing of the frame.
+     * @retval FALSE Stack needs to do AES processing of the frame.
      *
      */
-    bool IsAnOobFrame(void) const { return mInfo.mTxInfo.mIsOob; }
+    bool ShouldSkipAes(void) const { return mInfo.mTxInfo.mSkipAes; }
 
     /**
-     * This method sets the out of band flag attribute.
+     * This method sets the skip AES flag attribute.
      *
-     * @param[in]  aIsOob  TRUE if it is an out of band frame, FALSE otherwise.
+     * @param[in]  aSkipAes  TRUE if stack needs to skip AES processing of the frame, FALSE otherwise.
      *
      */
-    void SetIsAnOob(bool aIsOob) { mInfo.mTxInfo.mIsOob = aIsOob; }
+    void SetSkipAes(bool aSkipAes) { mInfo.mTxInfo.mSkipAes = aSkipAes; }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
