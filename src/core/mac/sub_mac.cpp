@@ -249,7 +249,7 @@ void SubMac::ProcessTransmitSecurity(void)
     }
 #endif
 
-    mTransmitFrame.GetKeyIdMode(keyIdMode);
+    IgnoreError(mTransmitFrame.GetKeyIdMode(keyIdMode));
 
     switch (keyIdMode)
     {
