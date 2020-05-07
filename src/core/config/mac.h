@@ -254,4 +254,54 @@
 #define OPENTHREAD_CONFIG_MAC_RETX_POLL_PERIOD 1000
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_SOFTWARE_ACK_TIMEOUT_ENABLE
+ *
+ * Define to 1 to enable software ACK timeout logic.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SOFTWARE_ACK_TIMEOUT_ENABLE
+#define OPENTHREAD_CONFIG_SOFTWARE_ACK_TIMEOUT_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SOFTWARE_RETRANSMIT_ENABLE
+ *
+ * Define to 1 to enable software retransmission logic.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SOFTWARE_RETRANSMIT_ENABLE
+#define OPENTHREAD_CONFIG_SOFTWARE_RETRANSMIT_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE
+ *
+ * Define to 1 to enable software CSMA-CA backoff logic.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE
+#define OPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SOFTWARE_TX_SECURITY_ENABLE
+ *
+ * Define to 1 to enable software transmission security logic.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SOFTWARE_TX_SECURITY_ENABLE
+#define OPENTHREAD_CONFIG_SOFTWARE_TX_SECURITY_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SOFTWARE_ENERGY_SCAN_ENABLE
+ *
+ * Define to 1 to enable software energy scanning logic.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SOFTWARE_ENERGY_SCAN_ENABLE
+#define OPENTHREAD_CONFIG_SOFTWARE_ENERGY_SCAN_ENABLE 0
+#endif
+
 #endif // CONFIG_MAC_H_
