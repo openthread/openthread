@@ -38,6 +38,10 @@ lib_LIBRARIES                                                                   
 override CFLAGS                                      := $(filter-out -pedantic-errors,$(CFLAGS))
 override CXXFLAGS                                    := $(filter-out -pedantic-errors,$(CXXFLAGS))
 
+# Do not enable -Wcast-align for k32w061 driver library
+override CFLAGS                                      := $(filter-out -Wcast-align,$(CFLAGS))
+override CXXFLAGS                                    := $(filter-out -Wcast-align,$(CXXFLAGS))
+
 LIB_FLAGS                                                                                                            = \
     -DCPU_K32W061HN                                                                                                    \
     -DCPU_JN518X                                                                                                       \
