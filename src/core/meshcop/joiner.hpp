@@ -117,6 +117,7 @@ public:
      * I, O, Q, and Z for readability) with a minimum length of 6 such
      * characters and a maximum length of 32 such characters.
      *
+     * param[in]  aPskd  The PSKd to validate.
      * @retval OT_ERROR_NONE          The PSKd is valid.
      * @retval OT_ERROR_INVALID_ARGS  The PSKd is invalid.
      *
