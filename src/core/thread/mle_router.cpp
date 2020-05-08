@@ -229,10 +229,8 @@ void MleRouter::HandleDetachStart(void)
     mStateUpdateTimer.Stop();
 }
 
-otError MleRouter::HandleChildStart(AttachMode aMode)
+void MleRouter::HandleChildStart(AttachMode aMode)
 {
-    otError error = OT_ERROR_NONE;
-
     // reset `rejected` flag whenever REED becomes child.
     mAddressSolicitRejected = false;
 
@@ -248,7 +246,7 @@ otError MleRouter::HandleChildStart(AttachMode aMode)
 
     IgnoreError(Get<ThreadNetif>().SubscribeAllRoutersMulticast());
 
-    VerifyOrExit(IsRouterIdValid(mPreviousRouterId), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(IsRouterIdValid(mPreviousRouterId), OT_NOOP);
 
     switch (aMode)
     {
@@ -306,8 +304,6 @@ exit:
     {
         SetRouterId(kInvalidRouterId);
     }
-
-    return error;
 }
 
 void MleRouter::SetStateRouter(uint16_t aRloc16)
