@@ -758,7 +758,7 @@ private:
     otError ProcessRouteTlv(const RouteTlv &aRoute);
     void    StopAdvertiseTimer(void);
     otError SendAddressSolicit(ThreadStatusTlv::Status aStatus);
-    otError SendAddressRelease(void);
+    void    SendAddressRelease(void);
     void    SendAddressSolicitResponse(const Coap::Message &   aRequest,
                                        const Router *          aRouter,
                                        const Ip6::MessageInfo &aMessageInfo);

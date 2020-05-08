@@ -251,7 +251,7 @@ void MleRouter::HandleChildStart(AttachMode aMode)
     switch (aMode)
     {
     case kAttachSameDowngrade:
-        IgnoreError(SendAddressRelease());
+        SendAddressRelease();
 
         // reset children info if any
         if (HasChildren())
@@ -3961,7 +3961,7 @@ exit:
     return error;
 }
 
-otError MleRouter::SendAddressRelease(void)
+void MleRouter::SendAddressRelease(void)
 {
     otError          error = OT_ERROR_NONE;
     Ip6::MessageInfo messageInfo;
@@ -3986,12 +3986,15 @@ otError MleRouter::SendAddressRelease(void)
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        message->Free();
-    }
+        otLogWarnMle("Failed to send Address Release: %s", otThreadErrorToString(error));
 
-    return error;
+        if (message != NULL)
+        {
+            message->Free();
+        }
+    }
 }
 
 void MleRouter::HandleAddressSolicitResponse(void *               aContext,
