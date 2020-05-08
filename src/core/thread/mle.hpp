@@ -1718,22 +1718,18 @@ private:
     void        ScheduleMessageTransmissionTimer(void);
     otError     ReadChallengeOrResponse(const Message &aMessage, uint8_t aTlvType, Challenge &aBuffer);
 
-    otError HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
-    otError HandleChildIdResponse(const Message &         aMessage,
-                                  const Ip6::MessageInfo &aMessageInfo,
-                                  const Neighbor *        aNeighbor);
-    otError HandleChildUpdateRequest(const Message &         aMessage,
-                                     const Ip6::MessageInfo &aMessageInfo,
-                                     Neighbor *              aNeighbor);
-    otError HandleChildUpdateResponse(const Message &         aMessage,
-                                      const Ip6::MessageInfo &aMessageInfo,
-                                      const Neighbor *        aNeighbor);
-    otError HandleDataResponse(const Message &         aMessage,
+    void HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
+    void HandleChildIdResponse(const Message &         aMessage,
                                const Ip6::MessageInfo &aMessageInfo,
                                const Neighbor *        aNeighbor);
-    otError HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence);
-    otError HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
+    void HandleChildUpdateResponse(const Message &         aMessage,
+                                   const Ip6::MessageInfo &aMessageInfo,
+                                   const Neighbor *        aNeighbor);
+    void HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor);
+    void HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence);
+    void HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     otError HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void    ProcessAnnounce(void);
     bool    HasUnregisteredAddress(void);
