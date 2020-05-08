@@ -41,6 +41,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
+#include "common/string.hpp"
 #include "meshcop/meshcop.hpp"
 #include "radio/radio.hpp"
 #include "thread/thread_netif.hpp"
@@ -89,7 +90,7 @@ exit:
 otError Joiner::ValidatePskd(const char *aPskd)
 {
     otError error      = OT_ERROR_INVALID_ARGS;
-    size_t  pskdLength = strlen(aPskd);
+    size_t  pskdLength = StringLength(aPskd, kPskdMaxLength + 1);
 
     OT_STATIC_ASSERT(static_cast<uint8_t>(kPskdMaxLength) <= static_cast<uint8_t>(Dtls::kPskMaxLength),
                      "The maximum length of DTLS PSK is smaller than joiner PSKd");
