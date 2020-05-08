@@ -963,7 +963,7 @@ static void processNetifEvent(otInstance *aInstance)
     VerifyOrExit(length > 0, OT_NOOP);
 
 #if defined(__linux__)
-    for (struct nlmsghdr *msg = reinterpret_cast<struct nlmsghdr *>(buffer); NLMSG_OK(msg, length);
+    for (struct nlmsghdr *msg = reinterpret_cast<struct nlmsghdr *>(buffer); NLMSG_OK(msg, static_cast<size_t>(length));
          msg                  = NLMSG_NEXT(msg, length))
     {
 #else
@@ -1363,7 +1363,7 @@ void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
     otIcmp6SetEchoMode(aInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
     otIp6SetReceiveCallback(aInstance, processReceive, aInstance);
     otIp6SetAddressCallback(aInstance, processAddressChange, aInstance);
-    otSetStateChangedCallback(aInstance, processStateChange, aInstance);
+    SuccessOrDie(otSetStateChangedCallback(aInstance, processStateChange, aInstance));
 #if OPENTHREAD_POSIX_MULTICAST_PROMISCUOUS_REQUIRED
     otIp6SetMulticastPromiscuousEnabled(aInstance, true);
 #endif

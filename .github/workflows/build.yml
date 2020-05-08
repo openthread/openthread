@@ -57,7 +57,20 @@ jobs:
         script/make-pretty check
 
   package:
+    name: package-${{ matrix.compiler }}
     runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        include:
+          - compiler: gcc
+            compiler_c: gcc
+            compiler_cpp: g++
+          - compiler: clang
+            compiler_c: clang
+            compiler_cpp: clang++
+    env:
+      CC: ${{ matrix.compiler_c }}
+      CXX: ${{ matrix.compiler_cpp }}
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
