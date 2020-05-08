@@ -175,14 +175,18 @@ class VirtualTime(BaseSimulator):
         self.sock.close()
         self.sock = None
 
-    def _add_message(self, nodeid, message):
+    def _add_message(self, nodeid, message_obj):
         addr = ('127.0.0.1', self.port + nodeid)
 
         # Ignore any exceptions
         try:
-            messages = self._message_factory.create(io.BytesIO(message))
+            messages = self._message_factory.create(io.BytesIO(message_obj))
             self.devices[addr]['msgs'] += messages
 
+        except message.DropPacketException:
+            print(
+                'Drop current packet because it cannot be handled in test scripts'
+            )
         except Exception as e:
             # Just print the exception to the console
             print("EXCEPTION: %s" % e)
