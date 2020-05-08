@@ -2955,7 +2955,7 @@ void Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aM
         // running out the specified number. E.g. other component also trigger fast poll, and
         // is waiting for response; or the corner case where multiple Mle Data Request attempts
         // happened due to the retransmission mechanism.
-        IgnoreError(Get<DataPollSender>().StopFastPolls());
+        Get<DataPollSender>().StopFastPolls();
     }
 
 exit:

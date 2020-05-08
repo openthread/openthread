@@ -378,10 +378,8 @@ void DataPollSender::SendFastPolls(uint8_t aNumFastPolls)
     }
 }
 
-otError DataPollSender::StopFastPolls(void)
+void DataPollSender::StopFastPolls(void)
 {
-    otError error = OT_ERROR_NONE;
-
     VerifyOrExit(mFastPollsUsers != 0, OT_NOOP);
 
     // If `mFastPollsUsers` hits the max, let it be cleared
@@ -390,13 +388,13 @@ otError DataPollSender::StopFastPolls(void)
 
     mFastPollsUsers--;
 
-    VerifyOrExit(mFastPollsUsers == 0, error = OT_ERROR_BUSY);
+    VerifyOrExit(mFastPollsUsers == 0, OT_NOOP);
 
     mRemainingFastPolls = 0;
     ScheduleNextPoll(kRecalculatePollPeriod);
 
 exit:
-    return error;
+    return;
 }
 
 void DataPollSender::ResetKeepAliveTimer(void)
