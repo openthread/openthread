@@ -215,11 +215,8 @@ public:
     /**
      * This method asks data poll sender to stop fast polls when the expecting response is received.
      *
-     * @retval OT_ERROR_NONE            Successfully stopped fast polls when no other responses are expected.
-     * @retval OT_ERROR_BUSY            There are other callers who are waiting for responses.
-     *
      */
-    otError StopFastPolls(void);
+    void StopFastPolls(void);
 
     /**
      * This method gets the maximum data polling period in use.
