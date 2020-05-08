@@ -3687,7 +3687,7 @@ exit:
         // children info to ensure that the non-volatile settings remain
         // consistent with the child table.
 
-        IgnoreError(RefreshStoredChildren());
+        RefreshStoredChildren();
     }
 }
 
@@ -3724,19 +3724,17 @@ otError MleRouter::StoreChild(const Child &aChild)
     return Get<Settings>().AddChildInfo(childInfo);
 }
 
-otError MleRouter::RefreshStoredChildren(void)
+void MleRouter::RefreshStoredChildren(void)
 {
-    otError error = OT_ERROR_NONE;
-
-    SuccessOrExit(error = Get<Settings>().DeleteChildInfo());
+    SuccessOrExit(Get<Settings>().DeleteChildInfo());
 
     for (ChildTable::Iterator iter(GetInstance(), Child::kInStateAnyExceptInvalid); !iter.IsDone(); iter++)
     {
-        SuccessOrExit(error = StoreChild(*iter.GetChild()));
+        SuccessOrExit(StoreChild(*iter.GetChild()));
     }
 
 exit:
-    return error;
+    return;
 }
 
 otError MleRouter::GetChildInfo(Child &aChild, otChildInfo &aChildInfo)
