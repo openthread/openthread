@@ -345,7 +345,29 @@
 #define SPINEL_PROTOCOL_VERSION_THREAD_MAJOR 4
 #define SPINEL_PROTOCOL_VERSION_THREAD_MINOR 3
 
+/**
+ * @def SPINEL_FRAME_MAX_SIZE
+ *
+ *  The maximum size of SPINEL frame.
+ *
+ */
 #define SPINEL_FRAME_MAX_SIZE 1300
+
+/**
+ * @def SPINEL_FRAME_MAX_COMMAND_HEADER_SIZE
+ *
+ *  The maximum size of SPINEL command header.
+ *
+ */
+#define SPINEL_FRAME_MAX_COMMAND_HEADER_SIZE 4
+
+/**
+ * @def SPINEL_FRAME_MAX_PAYLOAD_SIZE
+ *
+ *  The maximum size of SPINEL command payload.
+ *
+ */
+#define SPINEL_FRAME_MAX_COMMAND_PAYLOAD_SIZE (SPINEL_FRAME_MAX_SIZE - SPINEL_FRAME_MAX_COMMAND_HEADER_SIZE)
 
 /**
  * @def SPINEL_ENCRYPTER_EXTRA_DATA_SIZE
