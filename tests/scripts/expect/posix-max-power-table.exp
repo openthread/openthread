@@ -53,4 +53,5 @@ expect "Done"
 send "channel preferred\n"
 expect "0x7fff800"
 expect "Done"
-send_user "\r\n"
+send "\x04"
+expect eof

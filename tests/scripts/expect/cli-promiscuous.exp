@@ -32,19 +32,15 @@ set timeout 1
 expect_after {
     timeout { exit 1 }
 }
-send "log level\n"
-expect "1\r\nDone\r\n"
-send "log level 5\n"
-expect "Done"
-send "log level\n"
-expect "5\r\nDone\r\n"
-send "log level -1\n"
-expect "Error 7: InvalidArgs\r\n"
-send "log level 6\n"
-expect "Error 7: InvalidArgs\r\n"
-send "log a\n"
-expect "Error 7: InvalidArgs\r\n"
-send "log level 1 2\n"
+send "promiscuous\n"
+expect "Disabled\r\nDone\r\n"
+send "promiscuous enable\n"
+expect "Done\r\n"
+send "promiscuous\n"
+expect "Enabled\r\nDone\r\n"
+send "promiscuous disable\n"
+expect "Done\r\n"
+send "promiscuous a\n"
 expect "Error 7: InvalidArgs\r\n"
 send "\x04"
 expect eof

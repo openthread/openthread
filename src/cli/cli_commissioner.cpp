@@ -191,7 +191,7 @@ otError Commissioner::ProcessMgmtGet(uint8_t aArgsLength, char *aArgs[])
             value = static_cast<long>(strlen(aArgs[index]) + 1) / 2;
             VerifyOrExit(static_cast<size_t>(value) <= (sizeof(tlvs) - static_cast<size_t>(length)),
                          error = OT_ERROR_NO_BUFS);
-            VerifyOrExit(Interpreter::Hex2Bin(aArgs[index], tlvs + length, static_cast<uint16_t>(value)) >= 0,
+            VerifyOrExit(Interpreter::Hex2Bin(aArgs[index], tlvs + length, static_cast<uint16_t>(value)) == value,
                          error = OT_ERROR_INVALID_ARGS);
             length += value;
         }
@@ -243,8 +243,8 @@ otError Commissioner::ProcessMgmtSet(uint8_t aArgsLength, char *aArgs[])
             dataset.mIsSteeringDataSet = true;
             length                     = static_cast<int>((strlen(aArgs[index]) + 1) / 2);
             VerifyOrExit(static_cast<size_t>(length) <= OT_STEERING_DATA_MAX_LENGTH, error = OT_ERROR_NO_BUFS);
-            VerifyOrExit(Interpreter::Hex2Bin(aArgs[index], dataset.mSteeringData.m8, static_cast<uint16_t>(length)) >=
-                             0,
+            VerifyOrExit(Interpreter::Hex2Bin(aArgs[index], dataset.mSteeringData.m8, static_cast<uint16_t>(length)) ==
+                             length,
                          error = OT_ERROR_INVALID_ARGS);
             dataset.mSteeringData.mLength = static_cast<uint8_t>(length);
             length                        = 0;
@@ -261,7 +261,7 @@ otError Commissioner::ProcessMgmtSet(uint8_t aArgsLength, char *aArgs[])
             VerifyOrExit(++index < aArgsLength, error = OT_ERROR_INVALID_ARGS);
             length = static_cast<int>((strlen(aArgs[index]) + 1) / 2);
             VerifyOrExit(static_cast<size_t>(length) <= sizeof(tlvs), error = OT_ERROR_NO_BUFS);
-            VerifyOrExit(Interpreter::Hex2Bin(aArgs[index], tlvs, static_cast<uint16_t>(length)) >= 0,
+            VerifyOrExit(Interpreter::Hex2Bin(aArgs[index], tlvs, static_cast<uint16_t>(length)) == length,
                          error = OT_ERROR_INVALID_ARGS);
         }
         else
