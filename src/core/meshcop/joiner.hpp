@@ -118,6 +118,7 @@ public:
      * characters and a maximum length of 32 such characters.
      *
      * param[in]  aPskd  The PSKd to validate.
+     *
      * @retval OT_ERROR_NONE          The PSKd is valid.
      * @retval OT_ERROR_INVALID_ARGS  The PSKd is invalid.
      *
