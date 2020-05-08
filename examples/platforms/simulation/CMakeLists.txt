@@ -79,6 +79,7 @@ if(LIBRT)
 endif()
 
 target_link_libraries(openthread-simulation PRIVATE openthread-platform-utils)
+target_link_libraries(openthread-simulation PRIVATE openthread-platform)
 
 target_compile_definitions(openthread-simulation
     PUBLIC
@@ -95,6 +96,7 @@ target_include_directories(openthread-simulation PRIVATE
     ${OT_PUBLIC_INCLUDES}
     ${OT_PRIVATE_INCLUDES}
     ${PROJECT_SOURCE_DIR}/examples/platforms
+    ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
 )
 

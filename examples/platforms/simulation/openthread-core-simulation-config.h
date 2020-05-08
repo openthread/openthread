@@ -155,4 +155,14 @@
 #define OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE 1
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_LOG_PLATFORM
+ *
+ * Define to enable platform region logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_PLATFORM
+#define OPENTHREAD_CONFIG_LOG_PLATFORM 1
+#endif
+
 #endif // OPENTHREAD_CORE_SIMULATION_CONFIG_H_

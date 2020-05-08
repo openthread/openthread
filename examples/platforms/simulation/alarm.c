@@ -57,6 +57,9 @@ timer_t sMicroTimer;
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 
+#include "core/common/logging.hpp"
+#include "lib/platform/exit_code.h"
+
 #define MS_PER_S 1000
 #define NS_PER_US 1000
 #define US_PER_MS 1000
@@ -77,6 +80,8 @@ static void microTimerHandler(int aSignal, siginfo_t *aSignalInfo, void *aUserCo
 {
     assert(aSignal == OPENTHREAD_CONFIG_MICRO_TIMER_SIGNAL);
     assert(aSignalInfo->si_value.sival_ptr == &sMicroTimer);
+    (void)aSignal;
+    (void)aSignalInfo;
     (void)aUserContext;
 }
 #endif
@@ -126,7 +131,7 @@ uint64_t platformGetNow(void)
     err = clock_gettime(CLOCK_MONOTONIC, &now);
 #endif
 
-    assert(err == 0);
+    VerifyOrDie(err == 0, OT_EXIT_ERROR_ERRNO);
 
     return (uint64_t)now.tv_sec * sSpeedUpFactor * US_PER_S + (uint64_t)now.tv_nsec * sSpeedUpFactor / NS_PER_US;
 }
