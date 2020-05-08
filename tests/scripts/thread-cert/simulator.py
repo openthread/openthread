@@ -185,7 +185,7 @@ class VirtualTime(BaseSimulator):
 
         except message.DropPacketException:
             print(
-                "Drop current packet because it cannot be handled in test scripts"
+                'Drop current packet because it cannot be handled in test scripts'
             )
         except Exception as e:
             # Just print the exception to the console
