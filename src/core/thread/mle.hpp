@@ -794,16 +794,6 @@ public:
     otError GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const;
 
     /**
-     * This method adds Leader's ALOC to its Thread interface.
-     *
-     * @retval OT_ERROR_NONE            Successfully added the Leader's ALOC.
-     * @retval OT_ERROR_BUSY            The Leader's ALOC address was already added.
-     * @retval OT_ERROR_INVALID_STATE   The device's role is not Leader.
-     *
-     */
-    otError AddLeaderAloc(void);
-
-    /**
      * This method returns the most recently received Leader Data.
      *
      * @returns  A reference to the most recently received Leader Data.
@@ -1643,6 +1633,8 @@ protected:
     static const char *ReattachStateToString(ReattachState aState);
 #endif
 
+    Ip6::NetifUnicastAddress mLeaderAloc; ///< Leader anycast locator
+
     LeaderData    mLeaderData;               ///< Last received Leader Data TLV.
     bool          mRetrieveNewNetworkData;   ///< Indicating new Network Data is needed if set.
     DeviceRole    mRole;                     ///< Current Thread role.
@@ -1821,8 +1813,6 @@ private:
     uint8_t  mAlternateChannel;
     uint16_t mAlternatePanId;
     uint64_t mAlternateTimestamp;
-
-    Ip6::NetifUnicastAddress mLeaderAloc;
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     Ip6::NetifUnicastAddress mServiceAlocs[kMaxServiceAlocs];
