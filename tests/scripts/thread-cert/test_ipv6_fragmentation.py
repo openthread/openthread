@@ -77,9 +77,6 @@ class TestIPv6Fragmentation(thread_cert.TestCase):
         self.simulator.go(5)
         self.nodes[LEADER].udp_check_rx(1831)
 
-        self.nodes[ROUTER].udp_send(1953, mleid_leader, common.UDP_TEST_PORT,
-                                    False)
-
         self.nodes[ROUTER].udp_stop()
         self.nodes[LEADER].udp_stop()
 
