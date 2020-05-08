@@ -2652,12 +2652,12 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         {
 #if OPENTHREAD_FTD
         case Header::kCommandDiscoveryRequest:
-            IgnoreError(Get<MleRouter>().HandleDiscoveryRequest(aMessage, aMessageInfo));
+            Get<MleRouter>().HandleDiscoveryRequest(aMessage, aMessageInfo);
             break;
 #endif
 
         case Header::kCommandDiscoveryResponse:
-            IgnoreError(HandleDiscoveryResponse(aMessage, aMessageInfo));
+            HandleDiscoveryResponse(aMessage, aMessageInfo);
             break;
 
         default:
@@ -2774,35 +2774,35 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     switch (command)
     {
     case Header::kCommandAdvertisement:
-        IgnoreError(HandleAdvertisement(aMessage, aMessageInfo, neighbor));
+        HandleAdvertisement(aMessage, aMessageInfo, neighbor);
         break;
 
     case Header::kCommandDataResponse:
-        IgnoreError(HandleDataResponse(aMessage, aMessageInfo, neighbor));
+        HandleDataResponse(aMessage, aMessageInfo, neighbor);
         break;
 
     case Header::kCommandParentResponse:
-        IgnoreError(HandleParentResponse(aMessage, aMessageInfo, keySequence));
+        HandleParentResponse(aMessage, aMessageInfo, keySequence);
         break;
 
     case Header::kCommandChildIdResponse:
-        IgnoreError(HandleChildIdResponse(aMessage, aMessageInfo, neighbor));
+        HandleChildIdResponse(aMessage, aMessageInfo, neighbor);
         break;
 
     case Header::kCommandAnnounce:
-        IgnoreError(HandleAnnounce(aMessage, aMessageInfo));
+        HandleAnnounce(aMessage, aMessageInfo);
         break;
 
     case Header::kCommandChildUpdateRequest:
 #if OPENTHREAD_FTD
         if (IsRouterOrLeader())
         {
-            IgnoreError(Get<MleRouter>().HandleChildUpdateRequest(aMessage, aMessageInfo, keySequence));
+            Get<MleRouter>().HandleChildUpdateRequest(aMessage, aMessageInfo, keySequence);
         }
         else
 #endif
         {
-            IgnoreError(HandleChildUpdateRequest(aMessage, aMessageInfo, neighbor));
+            HandleChildUpdateRequest(aMessage, aMessageInfo, neighbor);
         }
 
         break;
@@ -2811,39 +2811,39 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 #if OPENTHREAD_FTD
         if (IsRouterOrLeader())
         {
-            IgnoreError(Get<MleRouter>().HandleChildUpdateResponse(aMessage, aMessageInfo, keySequence, neighbor));
+            Get<MleRouter>().HandleChildUpdateResponse(aMessage, aMessageInfo, keySequence, neighbor);
         }
         else
 #endif
         {
-            IgnoreError(HandleChildUpdateResponse(aMessage, aMessageInfo, neighbor));
+            HandleChildUpdateResponse(aMessage, aMessageInfo, neighbor);
         }
 
         break;
 
 #if OPENTHREAD_FTD
     case Header::kCommandLinkRequest:
-        IgnoreError(Get<MleRouter>().HandleLinkRequest(aMessage, aMessageInfo, neighbor));
+        Get<MleRouter>().HandleLinkRequest(aMessage, aMessageInfo, neighbor);
         break;
 
     case Header::kCommandLinkAccept:
-        IgnoreError(Get<MleRouter>().HandleLinkAccept(aMessage, aMessageInfo, keySequence, neighbor));
+        Get<MleRouter>().HandleLinkAccept(aMessage, aMessageInfo, keySequence, neighbor);
         break;
 
     case Header::kCommandLinkAcceptAndRequest:
-        IgnoreError(Get<MleRouter>().HandleLinkAcceptAndRequest(aMessage, aMessageInfo, keySequence, neighbor));
+        Get<MleRouter>().HandleLinkAcceptAndRequest(aMessage, aMessageInfo, keySequence, neighbor);
         break;
 
     case Header::kCommandDataRequest:
-        IgnoreError(Get<MleRouter>().HandleDataRequest(aMessage, aMessageInfo, neighbor));
+        Get<MleRouter>().HandleDataRequest(aMessage, aMessageInfo, neighbor);
         break;
 
     case Header::kCommandParentRequest:
-        IgnoreError(Get<MleRouter>().HandleParentRequest(aMessage, aMessageInfo));
+        Get<MleRouter>().HandleParentRequest(aMessage, aMessageInfo);
         break;
 
     case Header::kCommandChildIdRequest:
-        IgnoreError(Get<MleRouter>().HandleChildIdRequest(aMessage, aMessageInfo, keySequence));
+        Get<MleRouter>().HandleChildIdRequest(aMessage, aMessageInfo, keySequence);
         break;
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -2867,7 +2867,7 @@ exit:
     return;
 }
 
-otError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor)
+void Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor)
 {
     otError    error = OT_ERROR_NONE;
     uint16_t   sourceAddress;
@@ -2952,13 +2952,9 @@ exit:
     {
         otLogWarnMle("Failed to process Advertisement: %s", otThreadErrorToString(error));
     }
-
-    return error;
 }
 
-otError Mle::HandleDataResponse(const Message &         aMessage,
-                                const Ip6::MessageInfo &aMessageInfo,
-                                const Neighbor *        aNeighbor)
+void Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor)
 {
     otError error;
 
@@ -2984,8 +2980,6 @@ exit:
     {
         otLogWarnMle("Failed to process Data Response: %s", otThreadErrorToString(error));
     }
-
-    return error;
 }
 
 bool Mle::IsNetworkDataNewer(const LeaderData &aLeaderData)
@@ -3220,7 +3214,7 @@ exit:
     return rval;
 }
 
-otError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence)
+void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence)
 {
     otError                 error    = OT_ERROR_NONE;
     const otThreadLinkInfo *linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
@@ -3424,13 +3418,11 @@ exit:
     {
         otLogWarnMle("Failed to process Parent Response: %s", otThreadErrorToString(error));
     }
-
-    return error;
 }
 
-otError Mle::HandleChildIdResponse(const Message &         aMessage,
-                                   const Ip6::MessageInfo &aMessageInfo,
-                                   const Neighbor *        aNeighbor)
+void Mle::HandleChildIdResponse(const Message &         aMessage,
+                                const Ip6::MessageInfo &aMessageInfo,
+                                const Neighbor *        aNeighbor)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
@@ -3554,13 +3546,9 @@ exit:
     {
         otLogWarnMle("Failed to process Child ID Response: %s", otThreadErrorToString(error));
     }
-
-    return error;
 }
 
-otError Mle::HandleChildUpdateRequest(const Message &         aMessage,
-                                      const Ip6::MessageInfo &aMessageInfo,
-                                      Neighbor *              aNeighbor)
+void Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor)
 {
     static const uint8_t kMaxResponseTlvs = 6;
 
@@ -3649,13 +3637,11 @@ exit:
     {
         otLogWarnMle("Failed to process Child Update Request from parent: %s", otThreadErrorToString(error));
     }
-
-    return error;
 }
 
-otError Mle::HandleChildUpdateResponse(const Message &         aMessage,
-                                       const Ip6::MessageInfo &aMessageInfo,
-                                       const Neighbor *        aNeighbor)
+void Mle::HandleChildUpdateResponse(const Message &         aMessage,
+                                    const Ip6::MessageInfo &aMessageInfo,
+                                    const Neighbor *        aNeighbor)
 {
     otError   error = OT_ERROR_NONE;
     uint8_t   status;
@@ -3778,11 +3764,9 @@ exit:
     {
         otLogWarnMle("Failed to process Child Update Response: %s", otThreadErrorToString(error));
     }
-
-    return error;
 }
 
-otError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
@@ -3852,8 +3836,6 @@ exit:
     {
         otLogWarnMle("Failed to process Announce: %s", otThreadErrorToString(error));
     }
-
-    return error;
 }
 
 void Mle::ProcessAnnounce(void)
@@ -3878,7 +3860,7 @@ void Mle::ProcessAnnounce(void)
     IgnoreError(Start(/* aAnnounceAttach */ true));
 }
 
-otError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     otError                       error    = OT_ERROR_NONE;
     const otThreadLinkInfo *      linkInfo = static_cast<const otThreadLinkInfo *>(aMessageInfo.GetLinkInfo());
@@ -3977,8 +3959,6 @@ exit:
     {
         otLogWarnMle("Failed to process Discovery Response: %s", otThreadErrorToString(error));
     }
-
-    return error;
 }
 
 Neighbor *Mle::GetNeighbor(uint16_t aAddress)
