@@ -206,8 +206,8 @@ bool Dhcp6Client::ProcessNextIdentityAssociation()
 
         mIdentityAssociationCurrent = &mIdentityAssociations[i];
 
-        IgnoreError(mTrickleTimer.Start(Time::SecToMsec(kTrickleTimerImin), Time::SecToMsec(kTrickleTimerImax),
-                                        TrickleTimer::kModeNormal));
+        mTrickleTimer.Start(Time::SecToMsec(kTrickleTimerImin), Time::SecToMsec(kTrickleTimerImax),
+                            TrickleTimer::kModeNormal);
 
         mTrickleTimer.IndicateInconsistent();
 
