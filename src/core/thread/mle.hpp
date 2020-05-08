@@ -1758,7 +1758,7 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
-    otError InformPreviousParent(void);
+    void InformPreviousParent(void);
 #endif
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE

@@ -807,7 +807,7 @@ void Mle::SetStateChild(uint16_t aRloc16)
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
-    IgnoreError(InformPreviousParent());
+    InformPreviousParent();
     mPreviousParentRloc = mParent.GetRloc16();
 #endif
 }
@@ -4052,7 +4052,7 @@ otError Mle::CheckReachability(uint16_t aMeshDest, Ip6::Header &aIp6Header)
 }
 
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
-otError Mle::InformPreviousParent(void)
+void Mle::InformPreviousParent(void)
 {
     otError          error   = OT_ERROR_NONE;
     Message *        message = NULL;
@@ -4085,8 +4085,6 @@ exit:
             message->Free();
         }
     }
-
-    return error;
 }
 #endif // OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
 
