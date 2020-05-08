@@ -1081,20 +1081,6 @@ exit:
     return error;
 }
 
-otError Mle::AddLeaderAloc(void)
-{
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(IsLeader(), error = OT_ERROR_INVALID_STATE);
-
-    SuccessOrExit(error = GetLeaderAloc(mLeaderAloc.GetAddress()));
-
-    error = Get<ThreadNetif>().AddUnicastAddress(mLeaderAloc);
-
-exit:
-    return error;
-}
-
 const LeaderData &Mle::GetLeaderData(void)
 {
     mLeaderData.SetDataVersion(Get<NetworkData::Leader>().GetVersion());
