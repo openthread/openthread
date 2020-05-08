@@ -2676,7 +2676,7 @@ void MleRouter::HandleDataRequest(const Message &         aMessage,
         tlvs[numTlvs++] = Tlv::kPendingDataset;
     }
 
-    IgnoreError(SendDataResponse(aMessageInfo.GetPeerAddr(), tlvs, numTlvs, 0));
+    SendDataResponse(aMessageInfo.GetPeerAddr(), tlvs, numTlvs, 0);
 
 exit:
 
@@ -2697,7 +2697,7 @@ void MleRouter::HandleNetworkDataUpdateRouter(void)
     destination.SetToLinkLocalAllNodesMulticast();
 
     delay = IsLeader() ? 0 : Random::NonCrypto::GetUint16InRange(0, kUnsolicitedDataResponseJitter);
-    IgnoreError(SendDataResponse(destination, tlvs, sizeof(tlvs), delay));
+    SendDataResponse(destination, tlvs, sizeof(tlvs), delay);
 
     SynchronizeChildNetworkData();
 
@@ -3185,10 +3185,10 @@ exit:
     }
 }
 
-otError MleRouter::SendDataResponse(const Ip6::Address &aDestination,
-                                    const uint8_t *     aTlvs,
-                                    uint8_t             aTlvsLength,
-                                    uint16_t            aDelay)
+void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
+                                 const uint8_t *     aTlvs,
+                                 uint8_t             aTlvsLength,
+                                 uint16_t            aDelay)
 {
     otError   error   = OT_ERROR_NONE;
     Message * message = NULL;
@@ -3248,12 +3248,15 @@ otError MleRouter::SendDataResponse(const Ip6::Address &aDestination,
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        message->Free();
-    }
+        otLogWarnMle("Failed to send Data Response: %s", otThreadErrorToString(error));
 
-    return error;
+        if (message != NULL)
+        {
+            message->Free();
+        }
+    }
 }
 
 bool MleRouter::IsMinimalChild(uint16_t aRloc16)
