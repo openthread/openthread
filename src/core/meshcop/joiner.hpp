@@ -113,8 +113,8 @@ public:
      * This method validates the PSKd.
      *
      * Per Thread specification, a Joining Device Credential is encoded as
-     * uppercase alphanumeric characters (base32-thread: 0-9,A-Y excluding
-     * I,O,Q, and Z for readability) with a minimum length of 6 such
+     * uppercase alphanumeric characters (base32-thread: 0-9, A-Z excluding
+     * I, O, Q, and Z for readability) with a minimum length of 6 such
      * characters and a maximum length of 32 such characters.
      *
      * @retval OT_ERROR_NONE          The PSKd is valid.
