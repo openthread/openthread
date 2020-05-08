@@ -723,7 +723,7 @@ private:
     otError AppendPendingDataset(Message &aMessage);
     otError GetChildInfo(Child &aChild, otChildInfo &aChildInfo);
     void    GetNeighborInfo(Neighbor &aNeighbor, otNeighborInfo &aNeighInfo);
-    otError RefreshStoredChildren(void);
+    void    RefreshStoredChildren(void);
     void    HandleDetachStart(void);
     void    HandleChildStart(AttachMode aMode);
     void    HandleLinkRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
