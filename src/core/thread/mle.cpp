@@ -790,7 +790,7 @@ void Mle::SetStateChild(uint16_t aRloc16)
 #if OPENTHREAD_FTD
     if (IsFullThreadDevice())
     {
-        IgnoreError(Get<MleRouter>().HandleChildStart(mParentRequestMode));
+        Get<MleRouter>().HandleChildStart(mParentRequestMode);
     }
 #endif
 

@@ -725,7 +725,7 @@ private:
     void    GetNeighborInfo(Neighbor &aNeighbor, otNeighborInfo &aNeighInfo);
     otError RefreshStoredChildren(void);
     void    HandleDetachStart(void);
-    otError HandleChildStart(AttachMode aMode);
+    void    HandleChildStart(AttachMode aMode);
     void    HandleLinkRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
     void    HandleLinkAccept(const Message &         aMessage,
                              const Ip6::MessageInfo &aMessageInfo,
