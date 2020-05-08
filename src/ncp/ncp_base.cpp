@@ -285,7 +285,7 @@ NcpBase::NcpBase(Instance *aInstance)
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
     mChangedPropsSet.AddLastStatus(SPINEL_STATUS_RESET_UNKNOWN);
-    IgnoreError(mUpdateChangedPropsTask.Post());
+    mUpdateChangedPropsTask.Post();
 
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     aInstance->Get<Extension::ExtensionBase>().SignalNcpInit(*this);
@@ -499,7 +499,7 @@ exit:
     if (error == OT_ERROR_NO_BUFS)
     {
         mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
-        IgnoreError(mUpdateChangedPropsTask.Post());
+        mUpdateChangedPropsTask.Post();
     }
 
     return error;
@@ -643,7 +643,7 @@ exit:
     if (error == OT_ERROR_NO_BUFS)
     {
         mChangedPropsSet.AddLastStatus(SPINEL_STATUS_NOMEM);
-        IgnoreError(mUpdateChangedPropsTask.Post());
+        mUpdateChangedPropsTask.Post();
     }
 }
 
@@ -1188,7 +1188,7 @@ otError NcpBase::CommandHandler_RESET(uint8_t aHeader)
     if (error != OT_ERROR_NONE)
     {
         mChangedPropsSet.AddLastStatus(SPINEL_STATUS_RESET_UNKNOWN);
-        IgnoreError(mUpdateChangedPropsTask.Post());
+        mUpdateChangedPropsTask.Post();
     }
 
     sNcpInstance = NULL;

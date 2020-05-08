@@ -392,7 +392,7 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
         {
             mTimer.Stop();
             FinishOperation();
-            IgnoreError(mOperationTask.Post());
+            mOperationTask.Post();
         }
 
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
@@ -697,7 +697,7 @@ void Mac::StartOperation(Operation aOperation)
 
     if (mOperation == kOperationIdle)
     {
-        IgnoreError(mOperationTask.Post());
+        mOperationTask.Post();
     }
 }
 

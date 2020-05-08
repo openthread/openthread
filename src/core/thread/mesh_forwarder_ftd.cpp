@@ -136,7 +136,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
         break;
     }
 
-    IgnoreError(mScheduleTransmissionTask.Post());
+    mScheduleTransmissionTask.Post();
 
 exit:
     return error;
@@ -178,7 +178,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, otError aError)
 
     if (enqueuedMessage)
     {
-        IgnoreError(mScheduleTransmissionTask.Post());
+        mScheduleTransmissionTask.Post();
     }
 }
 
