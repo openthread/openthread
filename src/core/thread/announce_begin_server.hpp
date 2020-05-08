@@ -58,16 +58,6 @@ public:
     explicit AnnounceBeginServer(Instance &aInstance);
 
     /**
-     * This method begins the MLE Announce transmission process using Count=3 and Period=1s.
-     *
-     * @param[in]  aChannelMask   The channels to use for transmission.
-     *
-     * @retval OT_ERROR_NONE  Successfully started the transmission process.
-     *
-     */
-    otError SendAnnounce(uint32_t aChannelMask);
-
-    /**
      * This method begins the MLE Announce transmission process.
      *
      * @param[in]  aChannelMask   The channels to use for transmission.
@@ -77,7 +67,7 @@ public:
      * @retval OT_ERROR_NONE  Successfully started the transmission process.
      *
      */
-    otError SendAnnounce(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod);
+    void SendAnnounce(uint32_t aChannelMask, uint8_t aCount = kDefaultCount, uint16_t aPeriod = kDefaultPeriod);
 
 private:
     enum

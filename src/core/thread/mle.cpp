@@ -823,7 +823,7 @@ void Mle::InformPreviousChannel(void)
 #endif
 
     mAlternatePanId = Mac::kPanIdBroadcast;
-    IgnoreError(Get<AnnounceBeginServer>().SendAnnounce(1 << mAlternateChannel));
+    Get<AnnounceBeginServer>().SendAnnounce(1 << mAlternateChannel);
 
 exit:
     return;
@@ -2441,16 +2441,16 @@ exit:
     return error;
 }
 
-otError Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce)
+void Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce)
 {
     Ip6::Address destination;
 
     destination.SetToLinkLocalAllNodesMulticast();
 
-    return SendAnnounce(aChannel, aOrphanAnnounce, destination);
+    SendAnnounce(aChannel, aOrphanAnnounce, destination);
 }
 
-otError Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Address &aDestination)
+void Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Address &aDestination)
 {
     otError            error = OT_ERROR_NONE;
     ChannelTlv         channel;
@@ -2494,8 +2494,6 @@ exit:
     {
         message->Free();
     }
-
-    return error;
 }
 
 otError Mle::SendOrphanAnnounce(void)
@@ -2510,7 +2508,7 @@ otError Mle::SendOrphanAnnounce(void)
 
     SuccessOrExit(error = channelMask.GetNextChannel(mAnnounceChannel));
 
-    IgnoreError(SendAnnounce(mAnnounceChannel, true));
+    SendAnnounce(mAnnounceChannel, true);
 
 exit:
     return error;
@@ -3802,10 +3800,10 @@ void Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessa
     }
     else if (localTimestamp->Compare(timestamp) < 0)
     {
-        IgnoreError(SendAnnounce(channel, false));
+        SendAnnounce(channel, false);
 
 #if OPENTHREAD_CONFIG_MLE_SEND_UNICAST_ANNOUNCE_RESPONSE
-        IgnoreError(SendAnnounce(channel, false, aMessageInfo.GetPeerAddr()));
+        SendAnnounce(channel, false, aMessageInfo.GetPeerAddr());
 #endif
     }
     else
