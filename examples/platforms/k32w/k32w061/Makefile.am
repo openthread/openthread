@@ -97,7 +97,7 @@ PLATFORM_SOURCES                                                                
     src/settings_k32w.c                                                                                                \
     @top_builddir@/third_party/nxp/K32W061DK6/devices/K32W061/utilities/fsl_assert.c                                   \
     @top_builddir@/third_party/nxp/K32W061DK6/middleware/mbedtls/port/ksdk/aes_alt.c                                   \
-    @top_builddir@/third_party/nxp/k32w061DK6/middleware/mbedtls/port/ksdk/ksdk_mbedtls.c                              \
+    @top_builddir@/third_party/nxp/K32W061DK6/middleware/mbedtls/port/ksdk/ksdk_mbedtls.c                              \
     $(NULL)
 
 libopenthread_k32w061_sdk_a_SOURCES                                                                                  = \
