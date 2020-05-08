@@ -403,8 +403,8 @@ void MleRouter::ResetAdvertiseInterval(void)
 
     if (!mAdvertiseTimer.IsRunning())
     {
-        IgnoreError(mAdvertiseTimer.Start(Time::SecToMsec(kAdvertiseIntervalMin),
-                                          Time::SecToMsec(kAdvertiseIntervalMax), TrickleTimer::kModeNormal));
+        mAdvertiseTimer.Start(Time::SecToMsec(kAdvertiseIntervalMin), Time::SecToMsec(kAdvertiseIntervalMax),
+                              TrickleTimer::kModeNormal);
     }
 
     mAdvertiseTimer.IndicateInconsistent();
@@ -1783,9 +1783,9 @@ void MleRouter::HandleStateUpdateTimer(void)
             {
                 SendAdvertisement();
 
-                IgnoreError(mAdvertiseTimer.Start(Time::SecToMsec(kReedAdvertiseInterval),
-                                                  Time::SecToMsec(kReedAdvertiseInterval + kReedAdvertiseJitter),
-                                                  TrickleTimer::kModePlainTimer));
+                mAdvertiseTimer.Start(Time::SecToMsec(kReedAdvertiseInterval),
+                                      Time::SecToMsec(kReedAdvertiseInterval + kReedAdvertiseJitter),
+                                      TrickleTimer::kModePlainTimer);
             }
 
             ExitNow();
