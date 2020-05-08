@@ -762,7 +762,7 @@ private:
     void    SendAddressSolicitResponse(const Coap::Message &   aRequest,
                                        const Router *          aRouter,
                                        const Ip6::MessageInfo &aMessageInfo);
-    otError SendAdvertisement(void);
+    void    SendAdvertisement(void);
     otError SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
                            Neighbor *              aNeighbor,
                            const RequestedTlvs &   aRequestedTlvs,
