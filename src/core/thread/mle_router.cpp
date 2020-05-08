@@ -386,7 +386,7 @@ bool MleRouter::HandleAdvertiseTimer(void)
 
     VerifyOrExit(IsRouterEligible(), continueTrickle = false);
 
-    IgnoreError(SendAdvertisement());
+    SendAdvertisement();
 
 exit:
     return continueTrickle;
@@ -413,7 +413,7 @@ exit:
     return;
 }
 
-otError MleRouter::SendAdvertisement(void)
+void MleRouter::SendAdvertisement(void)
 {
     otError      error = OT_ERROR_NONE;
     Ip6::Address destination;
@@ -460,12 +460,15 @@ otError MleRouter::SendAdvertisement(void)
 
 exit:
 
-    if (error != OT_ERROR_NONE && message != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        message->Free();
-    }
+        otLogWarnMle("Failed to send Advertisement: %s", otThreadErrorToString(error));
 
-    return error;
+        if (message != NULL)
+        {
+            message->Free();
+        }
+    }
 }
 
 otError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
@@ -1778,7 +1781,7 @@ void MleRouter::HandleStateUpdateTimer(void)
 
             if (!mAdvertiseTimer.IsRunning())
             {
-                IgnoreError(SendAdvertisement());
+                SendAdvertisement();
 
                 IgnoreError(mAdvertiseTimer.Start(Time::SecToMsec(kReedAdvertiseInterval),
                                                   Time::SecToMsec(kReedAdvertiseInterval + kReedAdvertiseJitter),
