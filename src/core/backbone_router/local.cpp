@@ -233,7 +233,7 @@ void Local::SetState(BackboneRouterState aState)
 
     if (mState == OT_BACKBONE_ROUTER_STATE_PRIMARY)
     {
-        IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc));
+        Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc);
     }
     else if (aState == OT_BACKBONE_ROUTER_STATE_PRIMARY)
     {
@@ -357,7 +357,7 @@ void Local::ApplyMeshLocalPrefix(void)
 
     if (IsPrimary())
     {
-        IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc));
+        Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc);
         mBackboneRouterPrimaryAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
         Get<ThreadNetif>().AddUnicastAddress(mBackboneRouterPrimaryAloc);
     }

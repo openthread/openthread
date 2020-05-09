@@ -213,11 +213,16 @@ public:
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval OT_ERROR_NONE       Successfully removed the unicast address.
-     * @retval OT_ERROR_NOT_FOUND  The unicast address wasn't found to be removed.
+     */
+    void RemoveUnicastAddress(const NetifUnicastAddress &aAddress);
+
+    /**
+     * This method indicates whether a unicast address is added to the network interface.
+     *
+     * @param[in]  aAddress  A reference to the unicast address.
      *
      */
-    otError RemoveUnicastAddress(const NetifUnicastAddress &aAddress);
+    bool HasUnicastAddress(const NetifUnicastAddress &aAddress) const { return mUnicastAddresses.Contains(aAddress); }
 
     /**
      * This method adds an external (to OpenThread) unicast address to the network interface.

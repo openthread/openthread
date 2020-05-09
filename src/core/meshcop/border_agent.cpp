@@ -660,7 +660,7 @@ void BorderAgent::HandleConnected(bool aConnected)
     else
     {
         otLogInfoMeshCoP("Commissioner disconnected");
-        IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc));
+        Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
         SetState(OT_BORDER_AGENT_STATE_STARTED);
     }
 }
@@ -751,8 +751,9 @@ void BorderAgent::ApplyMeshLocalPrefix(void)
 {
     VerifyOrExit(mState == OT_BORDER_AGENT_STATE_ACTIVE, OT_NOOP);
 
-    if (Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc) == OT_ERROR_NONE)
+    if (Get<ThreadNetif>().HasUnicastAddress(mCommissionerAloc))
     {
+        Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
         mCommissionerAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
         Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
     }
