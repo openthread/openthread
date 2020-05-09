@@ -122,11 +122,11 @@ void TestNetifMulticastAddresses(void)
     netif.SubscribeAllNodesMulticast();
     VerifyMulticastAddressList(netif, &addresses[2], 3);
 
-    SuccessOrQuit(netif.SubscribeAllRoutersMulticast(), "SubscribeAllRoutersMulticast() failed");
+    netif.SubscribeAllRoutersMulticast();
     VerifyMulticastAddressList(netif, &addresses[0], 5);
 
-    VerifyOrQuit(netif.SubscribeAllRoutersMulticast() == OT_ERROR_ALREADY,
-                 "SubscribeAllRoutersMulticast() did not fail when already subscribed");
+    netif.SubscribeAllRoutersMulticast();
+    VerifyMulticastAddressList(netif, &addresses[0], 5);
 
     SuccessOrQuit(netif.UnsubscribeAllRoutersMulticast(), "UnsubscribeAllRoutersMulticast() failed");
     VerifyMulticastAddressList(netif, &addresses[2], 3);
@@ -157,11 +157,11 @@ void TestNetifMulticastAddresses(void)
     netif.SubscribeAllNodesMulticast();
     VerifyMulticastAddressList(netif, &addresses[2], 5);
 
-    SuccessOrQuit(netif.SubscribeAllRoutersMulticast(), "SubscribeAllRoutersMulticast() failed");
+    netif.SubscribeAllRoutersMulticast();
     VerifyMulticastAddressList(netif, &addresses[0], 7);
 
-    VerifyOrQuit(netif.SubscribeAllRoutersMulticast() == OT_ERROR_ALREADY,
-                 "SubscribeAllRoutersMulticast() did not fail when already subscribed");
+    netif.SubscribeAllRoutersMulticast();
+    VerifyMulticastAddressList(netif, &addresses[0], 7);
 
     IgnoreError(address.FromString(kTestAddress3));
     SuccessOrQuit(netif.SubscribeExternalMulticast(address), "SubscribeExternalMulticast() failed");

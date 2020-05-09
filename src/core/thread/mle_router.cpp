@@ -244,7 +244,7 @@ void MleRouter::HandleChildStart(AttachMode aMode)
         Get<Mac::Mac>().SetBeaconEnabled(true);
     }
 
-    IgnoreError(Get<ThreadNetif>().SubscribeAllRoutersMulticast());
+    Get<ThreadNetif>().SubscribeAllRoutersMulticast();
 
     VerifyOrExit(IsRouterIdValid(mPreviousRouterId), OT_NOOP);
 
@@ -318,7 +318,7 @@ void MleRouter::SetStateRouter(uint16_t aRloc16)
     StopAdvertiseTimer();
     ResetAdvertiseInterval();
 
-    IgnoreError(Get<ThreadNetif>().SubscribeAllRoutersMulticast());
+    Get<ThreadNetif>().SubscribeAllRoutersMulticast();
     mPreviousPartitionIdRouter = mLeaderData.GetPartitionId();
     Get<NetworkData::Leader>().Stop();
     Get<Ip6::Ip6>().SetForwardingEnabled(true);
@@ -349,7 +349,7 @@ void MleRouter::SetStateLeader(uint16_t aRloc16)
     IgnoreError(GetLeaderAloc(mLeaderAloc.GetAddress()));
     Get<ThreadNetif>().AddUnicastAddress(mLeaderAloc);
 
-    IgnoreError(Get<ThreadNetif>().SubscribeAllRoutersMulticast());
+    Get<ThreadNetif>().SubscribeAllRoutersMulticast();
     mPreviousPartitionIdRouter = mLeaderData.GetPartitionId();
     mStateUpdateTimer.Start(kStateUpdatePeriod);
 
