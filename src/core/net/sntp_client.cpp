@@ -195,7 +195,7 @@ Message *Client::CopyAndEnqueueMessage(const Message &aMessage, const QueryMetad
 
     // Append the copy with retransmission data and add it to the queue.
     SuccessOrExit(error = aQueryMetadata.AppendTo(*messageCopy));
-    IgnoreError(mPendingQueries.Enqueue(*messageCopy));
+    mPendingQueries.Enqueue(*messageCopy);
 
     mRetransmissionTimer.FireAtIfEarlier(aQueryMetadata.mTransmissionTime);
 

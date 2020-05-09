@@ -2587,7 +2587,7 @@ otError Mle::AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestinat
     metadata.mDestination = aDestination;
 
     SuccessOrExit(error = metadata.AppendTo(aMessage));
-    IgnoreError(mDelayedResponses.Enqueue(aMessage));
+    mDelayedResponses.Enqueue(aMessage);
 
     mDelayedResponseTimer.FireAtIfEarlier(metadata.mSendTime);
 

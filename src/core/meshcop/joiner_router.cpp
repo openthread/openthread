@@ -247,7 +247,7 @@ void JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInf
 
     SuccessOrExit(error = metadata.AppendTo(*message));
 
-    IgnoreError(mDelayedJoinEnts.Enqueue(*message));
+    mDelayedJoinEnts.Enqueue(*message);
 
     if (!mTimer.IsRunning())
     {

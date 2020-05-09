@@ -176,13 +176,10 @@ otError CoapSecure::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessage
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    otError error;
-
-    SuccessOrExit(error = mTransmitQueue.Enqueue(aMessage));
+    mTransmitQueue.Enqueue(aMessage);
     mTransmitTask.Post();
 
-exit:
-    return error;
+    return OT_ERROR_NONE;
 }
 
 void CoapSecure::HandleDtlsConnected(void *aContext, bool aConnected)

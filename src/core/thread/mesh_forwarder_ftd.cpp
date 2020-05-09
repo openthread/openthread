@@ -52,7 +52,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
 
     IgnoreError(aMessage.SetOffset(0));
     aMessage.SetDatagramTag(0);
-    SuccessOrExit(error = mSendQueue.Enqueue(aMessage));
+    mSendQueue.Enqueue(aMessage);
 
     switch (aMessage.GetType())
     {
@@ -138,7 +138,6 @@ otError MeshForwarder::SendMessage(Message &aMessage)
 
     mScheduleTransmissionTask.Post();
 
-exit:
     return error;
 }
 
@@ -165,7 +164,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, otError aError)
 
             if (aError == OT_ERROR_NONE)
             {
-                IgnoreError(mSendQueue.Enqueue(*cur));
+                mSendQueue.Enqueue(*cur);
                 enqueuedMessage = true;
             }
             else

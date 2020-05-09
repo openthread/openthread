@@ -437,7 +437,7 @@ Message *CoapBase::CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopy
 
     mRetransmissionTimer.FireAtIfEarlier(aMetadata.mNextTimerShot);
 
-    IgnoreError(mPendingRequests.Enqueue(*messageCopy));
+    mPendingRequests.Enqueue(*messageCopy);
 
 exit:
 
@@ -848,7 +848,7 @@ void ResponsesQueue::EnqueueResponse(Message &               aMessage,
 
     VerifyOrExit(metadata.AppendTo(*responseCopy) == OT_ERROR_NONE, responseCopy->Free());
 
-    IgnoreError(mQueue.Enqueue(*responseCopy));
+    mQueue.Enqueue(*responseCopy);
 
     mTimer.FireAtIfEarlier(metadata.mDequeueTime);
 

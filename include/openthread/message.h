@@ -321,11 +321,8 @@ void otMessageQueueInit(otMessageQueue *aQueue);
  * @param[in]  aQueue    A pointer to the message queue.
  * @param[in]  aMessage  The message to add.
  *
- * @retval OT_ERROR_NONE     Successfully added the message to the queue.
- * @retval OT_ERROR_ALREADY  The message is already enqueued in a queue.
- *
  */
-otError otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage *aMessage);
+void otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage *aMessage);
 
 /**
  * This function adds a message at the head/front of the given message queue.
@@ -333,11 +330,8 @@ otError otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage *aMessage);
  * @param[in]  aQueue    A pointer to the message queue.
  * @param[in]  aMessage  The message to add.
  *
- * @retval OT_ERROR_NONE     Successfully added the message to the queue.
- * @retval OT_ERROR_ALREADY  The message is already enqueued in a queue.
- *
  */
-otError otMessageQueueEnqueueAtHead(otMessageQueue *aQueue, otMessage *aMessage);
+void otMessageQueueEnqueueAtHead(otMessageQueue *aQueue, otMessage *aMessage);
 
 /**
  * This function removes a message from the given message queue.
