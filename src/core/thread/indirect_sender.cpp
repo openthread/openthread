@@ -84,15 +84,14 @@ exit:
     mEnabled = false;
 }
 
-otError IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChild)
+void IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChild)
 {
-    otError  error = OT_ERROR_NONE;
     uint16_t childIndex;
 
-    VerifyOrExit(!aChild.IsRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
+    OT_ASSERT(!aChild.IsRxOnWhenIdle());
 
     childIndex = Get<ChildTable>().GetChildIndex(aChild);
-    VerifyOrExit(!aMessage.GetChildMask(childIndex), error = OT_ERROR_ALREADY);
+    VerifyOrExit(!aMessage.GetChildMask(childIndex), OT_NOOP);
 
     aMessage.SetChildMask(childIndex);
     mSourceMatchController.IncrementMessageCount(aChild);
@@ -100,7 +99,7 @@ otError IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChil
     RequestMessageUpdate(aChild);
 
 exit:
-    return error;
+    return;
 }
 
 otError IndirectSender::RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild)

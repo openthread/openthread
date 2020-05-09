@@ -87,7 +87,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
 
                         if (!child.IsRxOnWhenIdle())
                         {
-                            IgnoreError(mIndirectSender.AddMessageForSleepyChild(aMessage, child));
+                            mIndirectSender.AddMessageForSleepyChild(aMessage, child);
                         }
                     }
                 }
@@ -101,7 +101,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
 
                         if (mle.IsSleepyChildSubscribed(ip6Header.GetDestination(), child))
                         {
-                            IgnoreError(mIndirectSender.AddMessageForSleepyChild(aMessage, child));
+                            mIndirectSender.AddMessageForSleepyChild(aMessage, child);
                         }
                     }
                 }
@@ -112,7 +112,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
         {
             // destined for a sleepy child
             Child &child = *static_cast<Child *>(neighbor);
-            IgnoreError(mIndirectSender.AddMessageForSleepyChild(aMessage, child));
+            mIndirectSender.AddMessageForSleepyChild(aMessage, child);
         }
         else
         {
@@ -127,7 +127,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
     {
         Child *child = Get<Utils::ChildSupervisor>().GetDestination(aMessage);
         OT_ASSERT((child != NULL) && !child->IsRxOnWhenIdle());
-        IgnoreError(mIndirectSender.AddMessageForSleepyChild(aMessage, *child));
+        mIndirectSender.AddMessageForSleepyChild(aMessage, *child);
         break;
     }
 
