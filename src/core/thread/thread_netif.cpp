@@ -137,7 +137,7 @@ void ThreadNetif::Up(void)
 
     mIsUp = true;
 
-    IgnoreError(SubscribeAllNodesMulticast());
+    SubscribeAllNodesMulticast();
     IgnoreError(Get<Mle::MleRouter>().Enable());
     IgnoreError(Get<Coap::Coap>().Start(kCoapUdpPort));
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE

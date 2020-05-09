@@ -51,7 +51,7 @@ public:
 
     // Provide `protected` methods in `Netif` as `public` from `TestNetif`
     // so that we can verify their behavior in this test
-    otError SubscribeAllNodesMulticast(void) { return Ip6::Netif::SubscribeAllNodesMulticast(); }
+    void    SubscribeAllNodesMulticast(void) { Ip6::Netif::SubscribeAllNodesMulticast(); }
     otError UnsubscribeAllNodesMulticast(void) { return Ip6::Netif::UnsubscribeAllNodesMulticast(); }
 };
 
@@ -116,12 +116,11 @@ void TestNetifMulticastAddresses(void)
 
     VerifyMulticastAddressList(netif, addresses, 0);
 
-    SuccessOrQuit(netif.SubscribeAllNodesMulticast(), "SubscribeAllNodesMulticast() failed");
-
+    netif.SubscribeAllNodesMulticast();
     VerifyMulticastAddressList(netif, &addresses[2], 3);
 
-    VerifyOrQuit(netif.SubscribeAllNodesMulticast() == OT_ERROR_ALREADY,
-                 "SubscribeAllNodesMulticast() did not fail when already subscribed");
+    netif.SubscribeAllNodesMulticast();
+    VerifyMulticastAddressList(netif, &addresses[2], 3);
 
     SuccessOrQuit(netif.SubscribeAllRoutersMulticast(), "SubscribeAllRoutersMulticast() failed");
     VerifyMulticastAddressList(netif, &addresses[0], 5);
@@ -152,11 +151,11 @@ void TestNetifMulticastAddresses(void)
     SuccessOrQuit(netif.SubscribeExternalMulticast(address), "SubscribeExternalMulticast() failed");
     VerifyMulticastAddressList(netif, &addresses[5], 2);
 
-    SuccessOrQuit(netif.SubscribeAllNodesMulticast(), "SubscribeAllNodesMulticast() failed");
+    netif.SubscribeAllNodesMulticast();
     VerifyMulticastAddressList(netif, &addresses[2], 5);
 
-    VerifyOrQuit(netif.SubscribeExternalMulticast(address) == OT_ERROR_ALREADY,
-                 "SubscribeExternalMulticast() did not fail when address was already subscribed");
+    netif.SubscribeAllNodesMulticast();
+    VerifyMulticastAddressList(netif, &addresses[2], 5);
 
     SuccessOrQuit(netif.SubscribeAllRoutersMulticast(), "SubscribeAllRoutersMulticast() failed");
     VerifyMulticastAddressList(netif, &addresses[0], 7);
