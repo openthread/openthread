@@ -452,11 +452,9 @@ exit:
     return;
 }
 
-otError Netif::RemoveUnicastAddress(const NetifUnicastAddress &aAddress)
+void Netif::RemoveUnicastAddress(const NetifUnicastAddress &aAddress)
 {
-    otError error;
-
-    SuccessOrExit(error = mUnicastAddresses.Remove(aAddress));
+    SuccessOrExit(mUnicastAddresses.Remove(aAddress));
 
     Get<Notifier>().Signal(aAddress.mRloc ? OT_CHANGED_THREAD_RLOC_REMOVED : OT_CHANGED_IP6_ADDRESS_REMOVED);
 
@@ -464,7 +462,7 @@ otError Netif::RemoveUnicastAddress(const NetifUnicastAddress &aAddress)
     mAddressCallback(&aAddress.mAddress, aAddress.mPrefixLength, /* IsAdded */ false, mAddressCallbackContext);
 
 exit:
-    return error;
+    return;
 }
 
 otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)

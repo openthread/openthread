@@ -104,7 +104,7 @@ void Dhcp6Client::UpdateAddresses(void)
 
         if (!found)
         {
-            IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(ia.mNetifAddress));
+            Get<ThreadNetif>().RemoveUnicastAddress(ia.mNetifAddress);
             mIdentityAssociations[i].mStatus = kIaStatusInvalid;
         }
     }

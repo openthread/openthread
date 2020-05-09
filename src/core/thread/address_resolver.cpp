@@ -742,7 +742,7 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
             memcmp(Get<Mle::MleRouter>().GetMeshLocal64().GetIid(), meshLocalIid, sizeof(meshLocalIid)))
         {
             // Target EID matches address and Mesh Local EID differs
-            IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(*address));
+            Get<ThreadNetif>().RemoveUnicastAddress(*address);
             ExitNow();
         }
     }

@@ -224,7 +224,7 @@ otError Mle::Disable(void)
 
     Stop(false);
     SuccessOrExit(error = mSocket.Close());
-    SuccessOrExit(error = Get<ThreadNetif>().RemoveUnicastAddress(mLinkLocal64));
+    Get<ThreadNetif>().RemoveUnicastAddress(mLinkLocal64);
 
 exit:
     return error;
@@ -303,8 +303,8 @@ void Mle::Stop(bool aClearNetworkDatasets)
     SetStateDetached();
     IgnoreError(Get<ThreadNetif>().UnsubscribeMulticast(mRealmLocalAllThreadNodes));
     IgnoreError(Get<ThreadNetif>().UnsubscribeMulticast(mLinkLocalAllThreadNodes));
-    IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal16));
-    IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal64));
+    Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal16);
+    Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal64);
 
     SetRole(kRoleDisabled);
 
@@ -747,7 +747,7 @@ void Mle::SetStateDetached(void)
 
     if (IsLeader())
     {
-        IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mLeaderAloc));
+        Get<ThreadNetif>().RemoveUnicastAddress(mLeaderAloc);
     }
 
     SetRole(kRoleDetached);
@@ -773,7 +773,7 @@ void Mle::SetStateChild(uint16_t aRloc16)
 {
     if (IsLeader())
     {
-        IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mLeaderAloc));
+        Get<ThreadNetif>().RemoveUnicastAddress(mLeaderAloc);
     }
 
     SetRloc16(aRloc16);
@@ -896,7 +896,7 @@ exit:
 
 void Mle::UpdateLinkLocalAddress(void)
 {
-    IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mLinkLocal64));
+    Get<ThreadNetif>().RemoveUnicastAddress(mLinkLocal64);
     mLinkLocal64.GetAddress().SetIid(Get<Mac::Mac>().GetExtAddress());
     Get<ThreadNetif>().AddUnicastAddress(mLinkLocal64);
 
@@ -909,11 +909,11 @@ void Mle::SetMeshLocalPrefix(const MeshLocalPrefix &aMeshLocalPrefix)
 
     if (Get<ThreadNetif>().IsUp())
     {
-        IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mLeaderAloc));
+        Get<ThreadNetif>().RemoveUnicastAddress(mLeaderAloc);
 
         // We must remove the old addresses before adding the new ones.
-        IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal64));
-        IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal16));
+        Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal64);
+        Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal16);
         IgnoreError(Get<ThreadNetif>().UnsubscribeMulticast(mLinkLocalAllThreadNodes));
         IgnoreError(Get<ThreadNetif>().UnsubscribeMulticast(mRealmLocalAllThreadNodes));
     }
@@ -972,7 +972,7 @@ void Mle::ApplyMeshLocalPrefix(void)
     {
         if (mServiceAlocs[i].GetAddress().GetLocator() != Mac::kShortAddrInvalid)
         {
-            IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mServiceAlocs[i]));
+            Get<ThreadNetif>().RemoveUnicastAddress(mServiceAlocs[i]);
             mServiceAlocs[i].GetAddress().SetPrefix(GetMeshLocalPrefix());
             Get<ThreadNetif>().AddUnicastAddress(mServiceAlocs[i]);
         }
@@ -1009,7 +1009,7 @@ void Mle::SetRloc16(uint16_t aRloc16)
         }
     }
 
-    IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal16));
+    Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal16);
 
     Get<Mac::Mac>().SetShortAddress(aRloc16);
     Get<Ip6::Mpl>().SetSeedId(aRloc16);
@@ -1641,7 +1641,7 @@ void Mle::UpdateServiceAlocs(void)
         if ((serviceAloc != Mac::kShortAddrInvalid) &&
             (!Get<NetworkData::Leader>().ContainsService(Mle::ServiceIdFromAloc(serviceAloc), rloc)))
         {
-            IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mServiceAlocs[i]));
+            Get<ThreadNetif>().RemoveUnicastAddress(mServiceAlocs[i]);
             mServiceAlocs[i].GetAddress().SetLocator(Mac::kShortAddrInvalid);
         }
     }

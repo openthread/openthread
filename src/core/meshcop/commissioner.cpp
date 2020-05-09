@@ -193,7 +193,7 @@ otError Commissioner::Stop(bool aResign)
 
     if (mState == OT_COMMISSIONER_STATE_ACTIVE)
     {
-        IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc));
+        Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
         RemoveCoapResources();
         ClearJoiners();
         needResign = true;
@@ -1110,7 +1110,7 @@ void Commissioner::ApplyMeshLocalPrefix(void)
 {
     VerifyOrExit(mState == OT_COMMISSIONER_STATE_ACTIVE, OT_NOOP);
 
-    IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc));
+    Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
     mCommissionerAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
     Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
 
