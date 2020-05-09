@@ -258,9 +258,8 @@ exit:
     return;
 }
 
-otError Netif::UnsubscribeAllRoutersMulticast(void)
+void Netif::UnsubscribeAllRoutersMulticast(void)
 {
-    otError                error;
     NetifMulticastAddress *prev;
     NetifMulticastAddress &linkLocalAllRoutersAddress = static_cast<NetifMulticastAddress &>(
         const_cast<otNetifMulticastAddress &>(kLinkLocalAllRoutersMulticastAddress));
@@ -277,7 +276,7 @@ otError Netif::UnsubscribeAllRoutersMulticast(void)
     // to point to `LinkLocalAll` instead (so that tail contains the
     // three fixed addresses at end of the chain).
 
-    SuccessOrExit(error = mMulticastAddresses.Find(linkLocalAllRoutersAddress, prev));
+    SuccessOrExit(mMulticastAddresses.Find(linkLocalAllRoutersAddress, prev));
 
     if (prev == NULL)
     {
@@ -299,7 +298,7 @@ otError Netif::UnsubscribeAllRoutersMulticast(void)
     }
 
 exit:
-    return error;
+    return;
 }
 
 void Netif::SubscribeMulticast(NetifMulticastAddress &aAddress)

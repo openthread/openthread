@@ -219,7 +219,7 @@ void MleRouter::StopLeader(void)
     Get<MeshCoP::PendingDataset>().StopLeader();
     StopAdvertiseTimer();
     Get<NetworkData::Leader>().Stop();
-    IgnoreError(Get<ThreadNetif>().UnsubscribeAllRoutersMulticast());
+    Get<ThreadNetif>().UnsubscribeAllRoutersMulticast();
 }
 
 void MleRouter::HandleDetachStart(void)

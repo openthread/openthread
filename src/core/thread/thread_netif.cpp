@@ -169,7 +169,7 @@ void ThreadNetif::Down(void)
     IgnoreError(Get<Mle::MleRouter>().Disable());
     RemoveAllExternalUnicastAddresses();
     UnsubscribeAllExternalMulticastAddresses();
-    IgnoreError(UnsubscribeAllRoutersMulticast());
+    UnsubscribeAllRoutersMulticast();
     UnsubscribeAllNodesMulticast();
 
     mIsUp = false;
