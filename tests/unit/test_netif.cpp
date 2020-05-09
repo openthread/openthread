@@ -128,11 +128,11 @@ void TestNetifMulticastAddresses(void)
     netif.SubscribeAllRoutersMulticast();
     VerifyMulticastAddressList(netif, &addresses[0], 5);
 
-    SuccessOrQuit(netif.UnsubscribeAllRoutersMulticast(), "UnsubscribeAllRoutersMulticast() failed");
+    netif.UnsubscribeAllRoutersMulticast();
     VerifyMulticastAddressList(netif, &addresses[2], 3);
 
-    VerifyOrQuit(netif.UnsubscribeAllRoutersMulticast() == OT_ERROR_NOT_FOUND,
-                 "UnsubscribeAllRoutersMulticast() did not fail when not subscribed");
+    netif.UnsubscribeAllRoutersMulticast();
+    VerifyMulticastAddressList(netif, &addresses[2], 3);
 
     IgnoreError(netifAddress.GetAddress().FromString(kTestAddress1));
     netif.SubscribeMulticast(netifAddress);
@@ -175,11 +175,11 @@ void TestNetifMulticastAddresses(void)
     VerifyOrQuit(netif.UnsubscribeExternalMulticast(address) == OT_ERROR_INVALID_ARGS,
                  "UnsubscribeExternalMulticast() did not fail when address was fixed address");
 
-    SuccessOrQuit(netif.UnsubscribeAllRoutersMulticast(), "UnsubscribeAllRoutersMulticast() failed");
+    netif.UnsubscribeAllRoutersMulticast();
     VerifyMulticastAddressList(netif, &addresses[2], 6);
 
-    VerifyOrQuit(netif.UnsubscribeAllRoutersMulticast() == OT_ERROR_NOT_FOUND,
-                 "UnsubscribeAllRoutersMulticast() did not fail when not subscribed");
+    netif.UnsubscribeAllRoutersMulticast();
+    VerifyMulticastAddressList(netif, &addresses[2], 6);
 
     netif.UnsubscribeAllExternalMulticastAddresses();
     VerifyMulticastAddressList(netif, &addresses[2], 4);

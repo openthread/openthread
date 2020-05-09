@@ -287,11 +287,8 @@ public:
     /**
      * This method unsubscribes the network interface to the link-local and realm-local all routers address.
      *
-     * @retval OT_ERROR_NONE       Successfully unsubscribed from the link-local and realm-local all routers address
-     * @retval OT_ERROR_NOT_FOUND  The multicast addresses were not found.
-     *
      */
-    otError UnsubscribeAllRoutersMulticast(void);
+    void UnsubscribeAllRoutersMulticast(void);
 
     /**
      * This method returns a pointer to the list of multicast addresses.
