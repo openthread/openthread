@@ -375,7 +375,7 @@ void CoapBase::HandleRetransmissionTimer(void)
                 messageInfo.SetPeerPort(metadata.mDestinationPort);
                 messageInfo.SetSockAddr(metadata.mSourceAddress);
 
-                IgnoreError(SendCopy(*message, messageInfo));
+                SendCopy(*message, messageInfo);
             }
         }
 
@@ -465,7 +465,7 @@ void CoapBase::DequeueMessage(Message &aMessage)
     // the timer would just shoot earlier and then it'd be setup again.
 }
 
-otError CoapBase::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void CoapBase::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     otError  error;
     Message *messageCopy = NULL;
@@ -478,12 +478,15 @@ otError CoapBase::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMes
 
 exit:
 
-    if (error != OT_ERROR_NONE && messageCopy != NULL)
+    if (error != OT_ERROR_NONE)
     {
-        messageCopy->Free();
-    }
+        otLogWarnCoap("Failed to send copy: %s", otThreadErrorToString(error));
 
-    return error;
+        if (messageCopy != NULL)
+        {
+            messageCopy->Free();
+        }
+    }
 }
 
 Message *CoapBase::FindRelatedRequest(const Message &         aResponse,
