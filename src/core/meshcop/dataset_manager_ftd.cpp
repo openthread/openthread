@@ -256,7 +256,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
         SuccessOrExit(
             Get<Mle::MleRouter>().GetCommissionerAloc(destination, localSessionId->GetCommissionerSessionId()));
 
-        IgnoreError(Get<Leader>().SendDatasetChanged(destination));
+        Get<Leader>().SendDatasetChanged(destination);
     }
 
 exit:

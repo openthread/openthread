@@ -77,11 +77,8 @@ public:
      *
      * @param[in]  aAddress   The IPv6 address of destination.
      *
-     * @retval OT_ERROR_NONE     Successfully send MGMT_DATASET_CHANGED message.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers to generate a MGMT_DATASET_CHANGED message.
-     *
      */
-    otError SendDatasetChanged(const Ip6::Address &aAddress);
+    void SendDatasetChanged(const Ip6::Address &aAddress);
 
     /**
      * This method sets minimal delay timer.
@@ -119,13 +116,13 @@ private:
 
     static void HandlePetition(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandlePetition(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError     SendPetitionResponse(const Coap::Message &   aRequest,
+    void        SendPetitionResponse(const Coap::Message &   aRequest,
                                      const Ip6::MessageInfo &aMessageInfo,
                                      StateTlv::State         aState);
 
     static void HandleKeepAlive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError     SendKeepAliveResponse(const Coap::Message &   aRequest,
+    void        SendKeepAliveResponse(const Coap::Message &   aRequest,
                                       const Ip6::MessageInfo &aMessageInfo,
                                       StateTlv::State         aState);
 
