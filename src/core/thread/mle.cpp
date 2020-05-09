@@ -898,7 +898,7 @@ void Mle::UpdateLinkLocalAddress(void)
 {
     IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mLinkLocal64));
     mLinkLocal64.GetAddress().SetIid(Get<Mac::Mac>().GetExtAddress());
-    IgnoreError(Get<ThreadNetif>().AddUnicastAddress(mLinkLocal64));
+    Get<ThreadNetif>().AddUnicastAddress(mLinkLocal64);
 
     Get<Notifier>().Signal(OT_CHANGED_THREAD_LL_ADDR);
 }
@@ -939,19 +939,19 @@ void Mle::ApplyMeshLocalPrefix(void)
     VerifyOrExit(!IsDisabled(), OT_NOOP);
 
     // Add the addresses back into the table.
-    IgnoreError(Get<ThreadNetif>().AddUnicastAddress(mMeshLocal64));
+    Get<ThreadNetif>().AddUnicastAddress(mMeshLocal64);
     IgnoreError(Get<ThreadNetif>().SubscribeMulticast(mLinkLocalAllThreadNodes));
     IgnoreError(Get<ThreadNetif>().SubscribeMulticast(mRealmLocalAllThreadNodes));
 
     if (IsAttached())
     {
-        IgnoreError(Get<ThreadNetif>().AddUnicastAddress(mMeshLocal16));
+        Get<ThreadNetif>().AddUnicastAddress(mMeshLocal16);
     }
 
     // update Leader ALOC
     if (IsLeader())
     {
-        IgnoreError(Get<ThreadNetif>().AddUnicastAddress(mLeaderAloc));
+        Get<ThreadNetif>().AddUnicastAddress(mLeaderAloc);
     }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
@@ -974,7 +974,7 @@ void Mle::ApplyMeshLocalPrefix(void)
         {
             IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mServiceAlocs[i]));
             mServiceAlocs[i].GetAddress().SetPrefix(GetMeshLocalPrefix());
-            IgnoreError(Get<ThreadNetif>().AddUnicastAddress(mServiceAlocs[i]));
+            Get<ThreadNetif>().AddUnicastAddress(mServiceAlocs[i]);
         }
     }
 
@@ -1018,7 +1018,7 @@ void Mle::SetRloc16(uint16_t aRloc16)
     {
         // mesh-local 16
         mMeshLocal16.GetAddress().SetLocator(aRloc16);
-        IgnoreError(Get<ThreadNetif>().AddUnicastAddress(mMeshLocal16));
+        Get<ThreadNetif>().AddUnicastAddress(mMeshLocal16);
 #if OPENTHREAD_FTD
         Get<AddressResolver>().RestartAddressQueries();
 #endif
@@ -1539,7 +1539,7 @@ void Mle::HandleStateChanged(otChangedFlags aFlags)
             IgnoreError(Random::Crypto::FillBuffer(mMeshLocal64.GetAddress().mFields.m8 + OT_IP6_PREFIX_SIZE,
                                                    OT_IP6_ADDRESS_SIZE - OT_IP6_PREFIX_SIZE));
 
-            IgnoreError(Get<ThreadNetif>().AddUnicastAddress(mMeshLocal64));
+            Get<ThreadNetif>().AddUnicastAddress(mMeshLocal64);
             Get<Notifier>().Signal(OT_CHANGED_THREAD_ML_ADDR);
         }
 
@@ -1669,7 +1669,7 @@ void Mle::UpdateServiceAlocs(void)
                 if (serviceAloc == Mac::kShortAddrInvalid)
                 {
                     SuccessOrExit(GetServiceAloc(serviceId, mServiceAlocs[i].GetAddress()));
-                    IgnoreError(Get<ThreadNetif>().AddUnicastAddress(mServiceAlocs[i]));
+                    Get<ThreadNetif>().AddUnicastAddress(mServiceAlocs[i]);
                     break;
                 }
             }

@@ -239,7 +239,7 @@ void Local::SetState(BackboneRouterState aState)
     {
         // Add Primary Backbone Router Aloc for Primary Backbone Router.
         mBackboneRouterPrimaryAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-        IgnoreError(Get<ThreadNetif>().AddUnicastAddress(mBackboneRouterPrimaryAloc));
+        Get<ThreadNetif>().AddUnicastAddress(mBackboneRouterPrimaryAloc);
     }
 
     mState = aState;
@@ -359,7 +359,7 @@ void Local::ApplyMeshLocalPrefix(void)
     {
         IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc));
         mBackboneRouterPrimaryAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-        IgnoreError(Get<ThreadNetif>().AddUnicastAddress(mBackboneRouterPrimaryAloc));
+        Get<ThreadNetif>().AddUnicastAddress(mBackboneRouterPrimaryAloc);
     }
 
 exit:

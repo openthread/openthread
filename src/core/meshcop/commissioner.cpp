@@ -752,7 +752,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Message *         aMessage
     }
 
     IgnoreError(Get<Mle::MleRouter>().GetCommissionerAloc(mCommissionerAloc.GetAddress(), mSessionId));
-    IgnoreError(Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc));
+    Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
 
     AddCoapResources();
     SetState(OT_COMMISSIONER_STATE_ACTIVE);
@@ -1112,7 +1112,7 @@ void Commissioner::ApplyMeshLocalPrefix(void)
 
     IgnoreError(Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc));
     mCommissionerAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-    IgnoreError(Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc));
+    Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
 
 exit:
     return;

@@ -347,7 +347,7 @@ void MleRouter::SetStateLeader(uint16_t aRloc16)
     StopAdvertiseTimer();
     ResetAdvertiseInterval();
     IgnoreError(GetLeaderAloc(mLeaderAloc.GetAddress()));
-    IgnoreError(Get<ThreadNetif>().AddUnicastAddress(mLeaderAloc));
+    Get<ThreadNetif>().AddUnicastAddress(mLeaderAloc);
 
     IgnoreError(Get<ThreadNetif>().SubscribeAllRoutersMulticast());
     mPreviousPartitionIdRouter = mLeaderData.GetPartitionId();
